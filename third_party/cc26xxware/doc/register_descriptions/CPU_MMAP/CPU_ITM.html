@@ -1,0 +1,2630 @@
+<HTML>
+<HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<link href="..//elements/mmap.css" rel="stylesheet" type="text/css">
+<TITLE>CPU_ITM</TITLE>
+</HEAD>
+<BODY class=mmapBody>
+<h2 class="mmapCellTitle">
+  <a name="Top_Tag">CPU_ITM</a>
+</h2>
+<P>Instance: CPU_ITM<BR>
+Component: CPU_ITM<BR>
+Base address: 0xE0000000</P>
+<BR>
+<P>Cortex-M&#39;s Instrumentation Trace Macrocell (ITM)</P>
+ <H3 class="mmapRegisterSummaryTitle"><A name="CPU_ITM"></A><A href="CPU_MMAP.html"> TOP</A>:<B>CPU_ITM</B> Register Summary</H3>
+<TABLE cellspacing="0" class="mmapRegisterSummaryTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">
+  <P>Register Name</P>
+</TD>
+<TD class="cellTopCol2">
+  <P>Type</P>
+</TD>
+<TD class="cellTopCol3">
+  <P>Register Width (Bits)</P>
+</TD>
+<TD class="cellTopCol4">
+  <P>Register Reset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Address Offset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Physical Address</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM0">STIM0</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0000</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM1">STIM1</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0004</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0004</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM2">STIM2</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0008</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0008</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM3">STIM3</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 000C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 000C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM4">STIM4</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0010</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0010</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM5">STIM5</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0014</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0014</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM6">STIM6</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0018</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0018</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM7">STIM7</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 001C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 001C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM8">STIM8</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0020</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0020</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM9">STIM9</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0024</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0024</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM10">STIM10</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0028</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0028</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM11">STIM11</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 002C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 002C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM12">STIM12</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0030</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0030</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM13">STIM13</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0034</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0034</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM14">STIM14</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0038</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0038</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM15">STIM15</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 003C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 003C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM16">STIM16</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0040</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0040</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM17">STIM17</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0044</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0044</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM18">STIM18</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0048</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0048</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM19">STIM19</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 004C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 004C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM20">STIM20</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0050</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0050</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM21">STIM21</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0054</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0054</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM22">STIM22</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0058</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0058</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM23">STIM23</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 005C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 005C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM24">STIM24</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0060</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0060</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM25">STIM25</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0064</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0064</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM26">STIM26</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0068</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0068</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM27">STIM27</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 006C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 006C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM28">STIM28</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0070</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0070</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM29">STIM29</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0074</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0074</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM30">STIM30</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0078</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0078</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STIM31">STIM31</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xXXXX XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 007C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 007C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TER">TER</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0E00</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0E00</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TPR">TPR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0E40</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0E40</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TCR">TCR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0E80</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0E80</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#LAR">LAR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0FB0</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0FB0</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#LSR">LSR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0003</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0FB4</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 0FB4</P>
+</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterSummaryTitle"><A href="CPU_MMAP.html"> TOP</A>:CPU_ITM Register Descriptions</H3>
+<H3 class="mmapRegisterTitle"><A name="STIM0"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM0</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0000</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 0</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM0_STIM0">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM0</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA0">TER.STIMENA0</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM1"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM1</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0004</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 1</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM1_STIM1">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM1</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA1">TER.STIMENA1</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM2"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM2</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0008</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0008</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0008</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 2</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM2_STIM2">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM2</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA2">TER.STIMENA2</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM3"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM3</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 000C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 000C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 000C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 3</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM3_STIM3">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM3</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA3">TER.STIMENA3</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM4"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM4</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0010</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 4</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM4_STIM4">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM4</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA4">TER.STIMENA4</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM5"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM5</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0014</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0014</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0014</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 5</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM5_STIM5">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM5</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA5">TER.STIMENA5</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM6"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM6</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0018</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 6</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM6_STIM6">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM6</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA6">TER.STIMENA6</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM7"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM7</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 001C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 001C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 001C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 7</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM7_STIM7">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM7</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA7">TER.STIMENA7</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM8"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM8</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0020</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0020</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0020</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 8</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM8_STIM8">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM8</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA8">TER.STIMENA8</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM9"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM9</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0024</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0024</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0024</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 9</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM9_STIM9">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM9</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA9">TER.STIMENA9</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM10"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM10</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0028</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0028</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0028</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 10</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM10_STIM10">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM10</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA10">TER.STIMENA10</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM11"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM11</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 002C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 002C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 002C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 11</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM11_STIM11">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM11</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA11">TER.STIMENA11</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM12"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM12</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0030</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0030</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0030</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 12</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM12_STIM12">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM12</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA12">TER.STIMENA12</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM13"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM13</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0034</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0034</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0034</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 13</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM13_STIM13">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM13</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA13">TER.STIMENA13</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM14"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM14</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0038</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0038</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0038</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 14</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM14_STIM14">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM14</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA14">TER.STIMENA14</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM15"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM15</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 003C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 003C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 003C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 15</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM15_STIM15">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM15</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA15">TER.STIMENA15</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM16"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM16</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0040</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0040</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0040</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 16</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM16_STIM16">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM16</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA16">TER.STIMENA16</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM17"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM17</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0044</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0044</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0044</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 17</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM17_STIM17">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM17</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA17">TER.STIMENA17</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM18"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM18</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0048</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0048</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0048</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 18</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM18_STIM18">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM18</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA18">TER.STIMENA18</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM19"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM19</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 004C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 004C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 004C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 19</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM19_STIM19">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM19</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA19">TER.STIMENA19</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM20"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM20</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0050</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0050</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0050</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 20</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM20_STIM20">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM20</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA20">TER.STIMENA20</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM21"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM21</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0054</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0054</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0054</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 21</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM21_STIM21">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM21</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA21">TER.STIMENA21</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM22"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM22</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0058</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0058</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0058</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 22</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM22_STIM22">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM22</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA22">TER.STIMENA22</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM23"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM23</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 005C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 005C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 005C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 23</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM23_STIM23">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM23</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA23">TER.STIMENA23</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM24"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM24</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0060</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0060</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0060</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 24</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM24_STIM24">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM24</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA24">TER.STIMENA24</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM25"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM25</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0064</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0064</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0064</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 25</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM25_STIM25">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM25</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA25">TER.STIMENA25</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM26"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM26</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0068</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0068</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0068</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 26</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM26_STIM26">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM26</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA26">TER.STIMENA26</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM27"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM27</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 006C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 006C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 006C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 27</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM27_STIM27">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM27</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA27">TER.STIMENA27</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM28"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM28</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0070</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0070</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0070</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 28</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM28_STIM28">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM28</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA28">TER.STIMENA28</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM29"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM29</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0074</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0074</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0074</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 29</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM29_STIM29">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM29</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA29">TER.STIMENA29</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM30"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM30</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0078</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0078</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0078</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 30</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM30_STIM30">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM30</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA30">TER.STIMENA30</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STIM31"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:STIM31</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 007C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 007C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 007C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Stimulus Port 31</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STIM31_STIM31">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIM31</TD>
+<TD class="cellBitfieldCol3" colspan="3">A write to this location causes data to be written into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> if <A class="xref" href="#TER_STIMENA31">TER.STIMENA31</A> is set. Reading from the stimulus port returns the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> status in bit [0]: 0 = full, 1 = not full. The polled <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interface does not provide an atomic read-modify-write, so it&#39;s users responsibility to ensure exclusive read-modify-write if this <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> port is used concurrently by interrupts or other threads.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX XXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TER"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:TER</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0E00</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0E00</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0E00</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Trace Enable<BR>
+Use the Trace Enable Register to generate trace data by writing to the corresponding stimulus port. Note: Privileged writes are accepted to this register if <A class="xref" href="#TCR_ITMENA">TCR.ITMENA</A> is set. User writes are accepted to this register if <A class="xref" href="#TCR_ITMENA">TCR.ITMENA</A> is set and the appropriate privilege mask is cleared. Privileged access to the stimulus ports enables an <A class="mmap_legend_link" href="../legend.html#RTOS">RTOS</A> kernel to guarantee instrumentation slots or bandwidth as required.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA31">31</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA31</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 31.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA30">30</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA30</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 30.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA29">29</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA29</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 29.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA28">28</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA28</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 28.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA27">27</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA27</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 27.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA26">26</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA26</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 26.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA25">25</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA25</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 25.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA24">24</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA24</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 24.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA23">23</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA23</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 23.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA22">22</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA22</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 22.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA21">21</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA21</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 21.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA20">20</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA20</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 20.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA19">19</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA19</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 19.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA18">18</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA18</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 18.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA17">17</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA17</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 17.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA16">16</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA16</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 16.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA15">15</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA15</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 15.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA14">14</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA14</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 14.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA13">13</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA13</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 13.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA12">12</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA12</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 12.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA11">11</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA11</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 11.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA10">10</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA10</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 10.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA9">9</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA9</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 9.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA8">8</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 8.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA7">7</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA7</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 7.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA6">6</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA6</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 6.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA5">5</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA5</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 5.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA4">4</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA4</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 4.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA3">3</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA3</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 3.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA2">2</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 2.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA1">1</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 1.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TER_STIMENA0">0</a>
+</TD>
+<TD class="cellBitfieldCol2">STIMENA0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable tracing on <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus port 0.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TPR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:TPR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0E40</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0E40</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0E40</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Trace Privilege<BR>
+This register is used to enable an operating system to control which stimulus ports are accessible by user code. This register can only be used in privileged mode.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TPR_RESERVED4">31:4</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED4</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TPR_PRIVMASK">3:0</a>
+</TD>
+<TD class="cellBitfieldCol2">PRIVMASK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit mask to enable unprivileged (User) access to <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> stimulus ports:<BR>
+<BR>
+Bit [0] enables stimulus ports 0, 1, ..., and 7.<BR>
+Bit [1] enables stimulus ports 8, 9, ..., and 15.<BR>
+Bit [2] enables stimulus ports 16, 17, ..., and 23.<BR>
+Bit [3] enables stimulus ports 24, 25, ..., and 31.<BR>
+<BR>
+0: User access allowed to stimulus ports<BR>
+1: Privileged access only to stimulus ports</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TCR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:TCR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0E80</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0E80</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0E80</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Trace Control<BR>
+Use this register to configure and control <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> transfers. This register can only be written in privilege mode. <A class="mmap_legend_link" href="../legend.html#DWT">DWT</A> is not enabled in the <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> block. However, <A class="mmap_legend_link" href="../legend.html#DWT">DWT</A> stimulus entry into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is controlled by <A class="xref" href="#TCR_DWTENA">DWTENA</A>. If <A class="mmap_legend_link" href="../legend.html#DWT">DWT</A> requires timestamping, the <A class="xref" href="#TCR_TSENA">TSENA</A> bit must be set.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TCR_RESERVED24">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED24</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TCR_BUSY">23</a>
+</TD>
+<TD class="cellBitfieldCol2">BUSY</TD>
+<TD class="cellBitfieldCol3" colspan="3">Set when <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> events present and being drained.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TCR_ATBID">22:16</a>
+</TD>
+<TD class="cellBitfieldCol2">ATBID</TD>
+<TD class="cellBitfieldCol3" colspan="3">Trace Bus <A class="mmap_legend_link" href="../legend.html#ID">ID</A> for CoreSight system. Optional identifier for multi-source trace stream formatting. If multi-source trace is in use, this field must be written with a non-zero value.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TCR_RESERVED10">15:10</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED10</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TCR_TSPRESCALE">9:8</a>
+</TD>
+<TD class="cellBitfieldCol2">TSPRESCALE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Timestamp prescaler<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NOPRESCALING</TD>
+<TD class="cellEnumTableCol3">No prescaling</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">DIV4</TD>
+<TD class="cellEnumTableCol3">Divide by 4</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">DIV16</TD>
+<TD class="cellEnumTableCol3">Divide by 16</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">DIV64</TD>
+<TD class="cellEnumTableCol3">Divide by 64</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TCR_RESERVED5">7:5</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED5</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TCR_SWOENA">4</a>
+</TD>
+<TD class="cellBitfieldCol2">SWOENA</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enables asynchronous clocking of the timestamp counter (when <A class="xref" href="#TCR_TSENA">TSENA</A> = 1). If <A class="xref" href="#TCR_TSENA">TSENA</A> = 0, writing this bit to 1 does not enable asynchronous clocking of the timestamp counter.<BR>
+<BR>
+0x0: Mode disabled. Timestamp counter uses system clock from the core and counts continuously.<BR>
+0x1: Timestamp counter uses lineout (data related) clock from <A class="mmap_legend_link" href="../legend.html#TPIU">TPIU</A> interface. The timestamp counter is held in reset while the output line is idle.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TCR_DWTENA">3</a>
+</TD>
+<TD class="cellBitfieldCol2">DWTENA</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enables the <A class="mmap_legend_link" href="../legend.html#DWT">DWT</A> stimulus (hardware event packet emission to the <A class="mmap_legend_link" href="../legend.html#TPIU">TPIU</A> from the <A class="mmap_legend_link" href="../legend.html#DWT">DWT</A>)</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TCR_SYNCENA">2</a>
+</TD>
+<TD class="cellBitfieldCol2">SYNCENA</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enables synchronization packet transmission for a synchronous TPIU.<BR>
+<A class="xref" href="CPU_DWT.html#CTRL_SYNCTAP">CPU_DWT:CTRL.SYNCTAP</A> must be configured for the correct synchronization speed.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TCR_TSENA">1</a>
+</TD>
+<TD class="cellBitfieldCol2">TSENA</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enables differential timestamps. Differential timestamps are emitted when a packet is written to the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> with a non-zero timestamp counter, and when the timestamp counter overflows. Timestamps are emitted during idle times after a fixed number of two million cycles. This provides a time reference for packets and inter-packet gaps. If <A class="xref" href="#TCR_SWOENA">SWOENA</A> (bit [4]) is set, timestamps are triggered by activity on the internal trace bus only. In this case there is no regular timestamp output when the <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> is idle.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TCR_ITMENA">0</a>
+</TD>
+<TD class="cellBitfieldCol2">ITMENA</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enables <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A>. This is the master enable, and must be set before <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> Stimulus and Trace Enable registers can be written.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="LAR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:LAR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0FB0</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0FB0</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0FB0</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Lock Access <BR>
+This register is used to prevent write accesses to the Control Registers: <A class="xref" href="#TER">TER</A>, <A class="xref" href="#TPR">TPR</A> and <A class="xref" href="#TCR">TCR</A>.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="LAR_LOCK_ACCESS">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">LOCK_ACCESS</TD>
+<TD class="cellBitfieldCol3" colspan="3">A privileged write of 0xC5ACCE55 enables more write access to Control Registers <A class="xref" href="#TER">TER</A>, <A class="xref" href="#TPR">TPR</A> and <A class="xref" href="#TCR">TCR</A>. An invalid write removes write access.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="LSR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ITM</A>:LSR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0FB4</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 0FB4</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 0FB4</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Lock Status<BR>
+Use this register to enable write accesses to the Control Register.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="LSR_RESERVED3">31:3</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED3</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b0 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="LSR_BYTEACC">2</a>
+</TD>
+<TD class="cellBitfieldCol2">BYTEACC</TD>
+<TD class="cellBitfieldCol3" colspan="3">Reads 0 which means 8-bit lock access is not be implemented.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="LSR_ACCESS">1</a>
+</TD>
+<TD class="cellBitfieldCol2">ACCESS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Write access to component is blocked. All writes are ignored, reads are permitted.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="LSR_PRESENT">0</a>
+</TD>
+<TD class="cellBitfieldCol2">PRESENT</TD>
+<TD class="cellBitfieldCol3" colspan="3">Indicates that a lock mechanism exists for this component.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+</TABLE>
+<BR>
+<BR>
+<hr><table class="footer"><tr><td>&copy; 2015 - 2016. Texas Instruments | All Rights Reserved</td></tr></table>
+</BODY>
+</HTML>

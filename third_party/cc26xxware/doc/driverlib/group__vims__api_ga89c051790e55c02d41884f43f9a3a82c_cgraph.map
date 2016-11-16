@@ -1,0 +1,4 @@
+<map id="VIMSModeSafeSet" name="VIMSModeSafeSet">
+<area shape="rect" id="node2" href="$group__vims__api.html#gaf2a0eaa5209f808c8e83f9dd3b0200f8" title="Get the current operational mode of the VIMS. " alt="" coords="193,5,305,32"/>
+<area shape="rect" id="node3" href="$group__vims__api.html#ga1383305e90b9bd37527da503a9997c82" title="Set the operational mode of the VIMS. " alt="" coords="194,56,305,83"/>
+</map>

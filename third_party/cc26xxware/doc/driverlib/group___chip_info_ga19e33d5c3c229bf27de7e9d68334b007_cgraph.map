@@ -1,0 +1,5 @@
+<map id="ChipInfo_GetChipType" name="ChipInfo_GetChipType">
+<area shape="rect" id="node2" href="$group___chip_info.html#gacfee7f11b6d733795e07796903fd065a" title="Returns the 32 bits USER_ID field. " alt="" coords="225,5,369,32"/>
+<area shape="rect" id="node3" href="$group___chip_info.html#gaca76b9c316d9123a5b337fa715811ccc" title="Returns chip family member. " alt="" coords="212,56,383,83"/>
+<area shape="rect" id="node4" href="$group___chip_info.html#ga5becf5c53f75421ba924094c8e7e8411" title="Returns the internal chip HW revision code. " alt="" coords="431,56,661,83"/>
+</map>

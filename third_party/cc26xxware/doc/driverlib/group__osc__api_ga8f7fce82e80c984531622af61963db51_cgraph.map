@@ -1,0 +1,4 @@
+<map id="OSCHF_GetStartupTime" name="OSCHF_GetStartupTime">
+<area shape="rect" id="node2" href="$group__aonrtc__api.html#gaab6fd87d7bbf5e8f2575504d2d5c1afa" title="Get the current value of the RTC counter in a format that matches RTC compare values. " alt="" coords="229,5,468,32"/>
+<area shape="rect" id="node3" href="$group__aonbatmon__api.html#gadc33e3e057f96ec6fc9fff57bd64de57" title="Get the current temperature measurement as a signed value in Deg Celsius. " alt="" coords="229,56,468,83"/>
+</map>

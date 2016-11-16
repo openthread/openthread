@@ -1,0 +1,190 @@
+<HTML>
+<HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<link href="..//elements/mmap.css" rel="stylesheet" type="text/css">
+<TITLE>RFC_PWR</TITLE>
+</HEAD>
+<BODY class=mmapBody>
+<h2 class="mmapCellTitle">
+  <a name="Top_Tag">RFC_PWR</a>
+</h2>
+<P>Instance: RFC_PWR<BR>
+Component: RFC_PWR<BR>
+Base address: 0x40040000</P>
+<BR>
+<P>RF Core Power Management</P>
+ <H3 class="mmapRegisterSummaryTitle"><A name="RFC_PWR"></A><A href="CPU_MMAP.html"> TOP</A>:<B>RFC_PWR</B> Register Summary</H3>
+<TABLE cellspacing="0" class="mmapRegisterSummaryTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">
+  <P>Register Name</P>
+</TD>
+<TD class="cellTopCol2">
+  <P>Type</P>
+</TD>
+<TD class="cellTopCol3">
+  <P>Register Width (Bits)</P>
+</TD>
+<TD class="cellTopCol4">
+  <P>Register Reset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Address Offset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Physical Address</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#PWMCLKEN">PWMCLKEN</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0001</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4004 0000</P>
+</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterSummaryTitle"><A href="CPU_MMAP.html"> TOP</A>:RFC_PWR Register Descriptions</H3>
+<H3 class="mmapRegisterTitle"><A name="PWMCLKEN"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">RFC_PWR</A>:PWMCLKEN</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4004 0000</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4004 0000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">RF Core Power Management and Clock Enable</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="PWMCLKEN_RESERVED11">31:11</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED11</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b0 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="PWMCLKEN_RFCTRC">10</a>
+</TD>
+<TD class="cellBitfieldCol2">RFCTRC</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enable clock to the RF Core Tracer (<A class="mmap_legend_link" href="../legend.html#RFCTRC">RFCTRC</A>) module.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="PWMCLKEN_FSCA">9</a>
+</TD>
+<TD class="cellBitfieldCol2">FSCA</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enable clock to the Frequency Synthesizer Calibration Accelerator (<A class="mmap_legend_link" href="../legend.html#FSCA">FSCA</A>) module.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="PWMCLKEN_PHA">8</a>
+</TD>
+<TD class="cellBitfieldCol2">PHA</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enable clock to the Packet Handling Accelerator (<A class="mmap_legend_link" href="../legend.html#PHA">PHA</A>) module.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="PWMCLKEN_RAT">7</a>
+</TD>
+<TD class="cellBitfieldCol2">RAT</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enable clock to the Radio Timer (<A class="mmap_legend_link" href="../legend.html#RAT">RAT</A>) module.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="PWMCLKEN_RFERAM">6</a>
+</TD>
+<TD class="cellBitfieldCol2">RFERAM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enable clock to the RF Engine RAM module.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="PWMCLKEN_RFE">5</a>
+</TD>
+<TD class="cellBitfieldCol2">RFE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enable clock to the RF Engine (<A class="mmap_legend_link" href="../legend.html#RFE">RFE</A>) module.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="PWMCLKEN_MDMRAM">4</a>
+</TD>
+<TD class="cellBitfieldCol2">MDMRAM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enable clock to the Modem RAM module.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="PWMCLKEN_MDM">3</a>
+</TD>
+<TD class="cellBitfieldCol2">MDM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enable clock to the Modem (<A class="mmap_legend_link" href="../legend.html#MDM">MDM</A>) module.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="PWMCLKEN_CPERAM">2</a>
+</TD>
+<TD class="cellBitfieldCol2">CPERAM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enable clock to the Command and Packet Engine (<A class="mmap_legend_link" href="../legend.html#CPE">CPE</A>) RAM module. As part of RF Core initialization, set this bit together with <A class="xref" href="#PWMCLKEN_CPE">CPE</A> bit to enable <A class="mmap_legend_link" href="../legend.html#CPE">CPE</A> to boot.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="PWMCLKEN_CPE">1</a>
+</TD>
+<TD class="cellBitfieldCol2">CPE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enable processor clock (hclk) to the Command and Packet Engine (<A class="mmap_legend_link" href="../legend.html#CPE">CPE</A>). As part of RF Core initialization, set this bit together with <A class="xref" href="#PWMCLKEN_CPERAM">CPERAM</A> bit to enable <A class="mmap_legend_link" href="../legend.html#CPE">CPE</A> to boot.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="PWMCLKEN_RFC">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RFC</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enable essential clocks for the RF Core interface. This includes the interconnect, the radio doorbell <A class="mmap_legend_link" href="../legend.html#DBELL">DBELL</A> command interface, the power management (PWR) clock control module, and bus clock (sclk) for the CPE. To remove possibility of locking yourself out from the RF Core, this bit can not be cleared. If you need to disable all clocks to the RF Core, see the <A class="xref" href="PRCM.html#RFCCLKG_CLK_EN">PRCM:RFCCLKG.CLK_EN</A> register.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+</TABLE>
+<BR>
+<BR>
+<hr><table class="footer"><tr><td>&copy; 2015 - 2016. Texas Instruments | All Rights Reserved</td></tr></table>
+</BODY>
+</HTML>

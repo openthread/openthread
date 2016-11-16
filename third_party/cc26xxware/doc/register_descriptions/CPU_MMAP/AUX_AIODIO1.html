@@ -1,0 +1,812 @@
+<HTML>
+<HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<link href="..//elements/mmap.css" rel="stylesheet" type="text/css">
+<TITLE>AUX_AIODIO1</TITLE>
+</HEAD>
+<BODY class=mmapBody>
+<h2 class="mmapCellTitle">
+  <a name="Top_Tag">AUX_AIODIO1</a>
+</h2>
+<P>Instance: AUX_AIODIO1<BR>
+Component: AUX_AIODIO<BR>
+Base address: 0x400C2000</P>
+<BR>
+<P>AUX Analog/Digital Input Output Controller</P>
+ <H3 class="mmapRegisterSummaryTitle"><A name="AUX_AIODIO1"></A><A href="CPU_MMAP.html"> TOP</A>:<B>AUX_AIODIO1</B> Register Summary</H3>
+<TABLE cellspacing="0" class="mmapRegisterSummaryTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">
+  <P>Register Name</P>
+</TD>
+<TD class="cellTopCol2">
+  <P>Type</P>
+</TD>
+<TD class="cellTopCol3">
+  <P>Register Width (Bits)</P>
+</TD>
+<TD class="cellTopCol4">
+  <P>Register Reset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Address Offset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Physical Address</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#GPIODOUT">GPIODOUT</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C 2000</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#IOMODE">IOMODE</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0004</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C 2004</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#GPIODIN">GPIODIN</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0008</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C 2008</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#GPIODOUTSET">GPIODOUTSET</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 000C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C 200C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#GPIODOUTCLR">GPIODOUTCLR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0010</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C 2010</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#GPIODOUTTGL">GPIODOUTTGL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0014</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C 2014</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#GPIODIE">GPIODIE</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0018</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C 2018</P>
+</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterSummaryTitle"><A href="CPU_MMAP.html"> TOP</A>:AUX_AIODIO1 Register Descriptions</H3>
+<H3 class="mmapRegisterTitle"><A name="GPIODOUT"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_AIODIO1</A>:GPIODOUT</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C 2000</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C 2000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">General Purpose Input/Output Data Out<BR>
+<BR>
+This register is used to set data on the pads assigned to AUX</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="GPIODOUT_RESERVED8">31:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="GPIODOUT_IO7_0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">IO7_0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Output values for <A class="mmap_legend_link" href="../legend.html#AUXIO0">AUXIO0</A> through <A class="mmap_legend_link" href="../legend.html#AUXIO7">AUXIO7</A> (for <A class="mmap_legend_link" href="../legend.html#AIODIO0">AIODIO0</A>) or <A class="mmap_legend_link" href="../legend.html#AUXIO8">AUXIO8</A> through <A class="mmap_legend_link" href="../legend.html#AUXIO15">AUXIO15</A> (for <A class="mmap_legend_link" href="../legend.html#AIODIO1">AIODIO1</A>).</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="IOMODE"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_AIODIO1</A>:IOMODE</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C 2004</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C 2004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Input Output Mode<BR>
+<BR>
+Controls pull-up pull-down and output mode for the IO pins assigned to AUX</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IOMODE_RESERVED16">31:16</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED16</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IOMODE_IO7">15:14</a>
+</TD>
+<TD class="cellBitfieldCol2">IO7</TD>
+<TD class="cellBitfieldCol3" colspan="3">Selects mode for <A class="mmap_legend_link" href="../legend.html#AUXIO7">AUXIO7</A> (for <A class="mmap_legend_link" href="../legend.html#AIODIO0">AIODIO0</A>) or <A class="mmap_legend_link" href="../legend.html#AUXIO15">AUXIO15</A> (for <A class="mmap_legend_link" href="../legend.html#AIODIO1">AIODIO1</A>).<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">OUT</TD>
+<TD class="cellEnumTableCol3">Output</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">IN</TD>
+<TD class="cellEnumTableCol3">Digital input with <A class="xref" href="#GPIODIE">GPIODIE</A> bit 7 = 1<BR>
+Analog input/output with <A class="xref" href="#GPIODIE">GPIODIE</A> bit 7 = 0</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">OPEN_DRAIN</TD>
+<TD class="cellEnumTableCol3">Open-drain: The pin is driven low when the corresponding <A class="xref" href="#GPIODOUT">GPIODOUT</A> bit is 0, and otherwise tri-stated or pulled depending on the corresponding <A class="mmap_legend_link" href="../legend.html#IOC">IOC</A> configuration.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">OPEN_SOURCE</TD>
+<TD class="cellEnumTableCol3">Open-source: The pin is driven high when the corresponding <A class="xref" href="#GPIODOUT">GPIODOUT</A> bit is 1, and otherwise tri-stated or pulled depending on the corresponding <A class="mmap_legend_link" href="../legend.html#IOC">IOC</A> configuration.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IOMODE_IO6">13:12</a>
+</TD>
+<TD class="cellBitfieldCol2">IO6</TD>
+<TD class="cellBitfieldCol3" colspan="3">Selects mode for <A class="mmap_legend_link" href="../legend.html#AUXIO6">AUXIO6</A> (for <A class="mmap_legend_link" href="../legend.html#AIODIO0">AIODIO0</A>) or <A class="mmap_legend_link" href="../legend.html#AUXIO14">AUXIO14</A> (for <A class="mmap_legend_link" href="../legend.html#AIODIO1">AIODIO1</A>).<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">OUT</TD>
+<TD class="cellEnumTableCol3">Output</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">IN</TD>
+<TD class="cellEnumTableCol3">Digital input with <A class="xref" href="#GPIODIE">GPIODIE</A> bit 6 = 1<BR>
+Analog input/output with <A class="xref" href="#GPIODIE">GPIODIE</A> bit 6 = 0</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">OPEN_DRAIN</TD>
+<TD class="cellEnumTableCol3">Open-drain: The pin is driven low when the corresponding <A class="xref" href="#GPIODOUT">GPIODOUT</A> bit is 0, and otherwise tri-stated or pulled depending on the corresponding <A class="mmap_legend_link" href="../legend.html#IOC">IOC</A> configuration.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">OPEN_SOURCE</TD>
+<TD class="cellEnumTableCol3">Open-source: The pin is driven high when the corresponding <A class="xref" href="#GPIODOUT">GPIODOUT</A> bit is 1, and otherwise tri-stated or pulled depending on the corresponding <A class="mmap_legend_link" href="../legend.html#IOC">IOC</A> configuration.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IOMODE_IO5">11:10</a>
+</TD>
+<TD class="cellBitfieldCol2">IO5</TD>
+<TD class="cellBitfieldCol3" colspan="3">Selects mode for <A class="mmap_legend_link" href="../legend.html#AUXIO5">AUXIO5</A> (for <A class="mmap_legend_link" href="../legend.html#AIODIO0">AIODIO0</A>) or <A class="mmap_legend_link" href="../legend.html#AUXIO13">AUXIO13</A> (for <A class="mmap_legend_link" href="../legend.html#AIODIO1">AIODIO1</A>).<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">OUT</TD>
+<TD class="cellEnumTableCol3">Output</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">IN</TD>
+<TD class="cellEnumTableCol3">Digital input with <A class="xref" href="#GPIODIE">GPIODIE</A> bit 5 = 1<BR>
+Analog input/output with <A class="xref" href="#GPIODIE">GPIODIE</A> bit 5 = 0</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">OPEN_DRAIN</TD>
+<TD class="cellEnumTableCol3">Open-drain: The pin is driven low when the corresponding <A class="xref" href="#GPIODOUT">GPIODOUT</A> bit is 0, and otherwise tri-stated or pulled depending on the corresponding <A class="mmap_legend_link" href="../legend.html#IOC">IOC</A> configuration.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">OPEN_SOURCE</TD>
+<TD class="cellEnumTableCol3">Open-source: The pin is driven high when the corresponding <A class="xref" href="#GPIODOUT">GPIODOUT</A> bit is 1, and otherwise tri-stated or pulled depending on the corresponding <A class="mmap_legend_link" href="../legend.html#IOC">IOC</A> configuration.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IOMODE_IO4">9:8</a>
+</TD>
+<TD class="cellBitfieldCol2">IO4</TD>
+<TD class="cellBitfieldCol3" colspan="3">Selects mode for <A class="mmap_legend_link" href="../legend.html#AUXIO4">AUXIO4</A> (for <A class="mmap_legend_link" href="../legend.html#AIODIO0">AIODIO0</A>) or <A class="mmap_legend_link" href="../legend.html#AUXIO12">AUXIO12</A> (for <A class="mmap_legend_link" href="../legend.html#AIODIO1">AIODIO1</A>).<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">OUT</TD>
+<TD class="cellEnumTableCol3">Output</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">IN</TD>
+<TD class="cellEnumTableCol3">Digital input with <A class="xref" href="#GPIODIE">GPIODIE</A> bit 4 = 1<BR>
+Analog input/output with <A class="xref" href="#GPIODIE">GPIODIE</A> bit 4 = 0</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">OPEN_DRAIN</TD>
+<TD class="cellEnumTableCol3">Open-drain: The pin is driven low when the corresponding <A class="xref" href="#GPIODOUT">GPIODOUT</A> bit is 0, and otherwise tri-stated or pulled depending on the corresponding <A class="mmap_legend_link" href="../legend.html#IOC">IOC</A> configuration.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">OPEN_SOURCE</TD>
+<TD class="cellEnumTableCol3">Open-source: The pin is driven high when the corresponding <A class="xref" href="#GPIODOUT">GPIODOUT</A> bit is 1, and otherwise tri-stated or pulled depending on the corresponding <A class="mmap_legend_link" href="../legend.html#IOC">IOC</A> configuration.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IOMODE_IO3">7:6</a>
+</TD>
+<TD class="cellBitfieldCol2">IO3</TD>
+<TD class="cellBitfieldCol3" colspan="3">Selects mode for <A class="mmap_legend_link" href="../legend.html#AUXIO3">AUXIO3</A> (for AIODIO0) or <A class="mmap_legend_link" href="../legend.html#AUXIO11">AUXIO11</A> (for AIODIO1).<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">OUT</TD>
+<TD class="cellEnumTableCol3">Output</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">IN</TD>
+<TD class="cellEnumTableCol3">Digital input with <A class="xref" href="#GPIODIE">GPIODIE</A> bit 3 = 1<BR>
+Analog input/output with <A class="xref" href="#GPIODIE">GPIODIE</A> bit 3 = 0</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">OPEN_DRAIN</TD>
+<TD class="cellEnumTableCol3">Open-drain: The pin is driven low when the corresponding <A class="xref" href="#GPIODOUT">GPIODOUT</A> bit is 0, and otherwise tri-stated or pulled depending on the corresponding <A class="mmap_legend_link" href="../legend.html#IOC">IOC</A> configuration.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">OPEN_SOURCE</TD>
+<TD class="cellEnumTableCol3">Open-source: The pin is driven high when the corresponding <A class="xref" href="#GPIODOUT">GPIODOUT</A> bit is 1, and otherwise tri-stated or pulled depending on the corresponding <A class="mmap_legend_link" href="../legend.html#IOC">IOC</A> configuration.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IOMODE_IO2">5:4</a>
+</TD>
+<TD class="cellBitfieldCol2">IO2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Selects mode for <A class="mmap_legend_link" href="../legend.html#AUXIO2">AUXIO2</A> (for <A class="mmap_legend_link" href="../legend.html#AIODIO0">AIODIO0</A>) or <A class="mmap_legend_link" href="../legend.html#AUXIO10">AUXIO10</A> (for <A class="mmap_legend_link" href="../legend.html#AIODIO1">AIODIO1</A>).<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">OUT</TD>
+<TD class="cellEnumTableCol3">Output</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">IN</TD>
+<TD class="cellEnumTableCol3">Digital input with <A class="xref" href="#GPIODIE">GPIODIE</A> bit 2 = 1<BR>
+Analog input/output with <A class="xref" href="#GPIODIE">GPIODIE</A> bit 2 = 0</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">OPEN_DRAIN</TD>
+<TD class="cellEnumTableCol3">Open-drain: The pin is driven low when the corresponding <A class="xref" href="#GPIODOUT">GPIODOUT</A> bit is 0, and otherwise tri-stated or pulled depending on the corresponding <A class="mmap_legend_link" href="../legend.html#IOC">IOC</A> configuration.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">OPEN_SOURCE</TD>
+<TD class="cellEnumTableCol3">Open-source: The pin is driven high when the corresponding <A class="xref" href="#GPIODOUT">GPIODOUT</A> bit is 1, and otherwise tri-stated or pulled depending on the corresponding <A class="mmap_legend_link" href="../legend.html#IOC">IOC</A> configuration.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IOMODE_IO1">3:2</a>
+</TD>
+<TD class="cellBitfieldCol2">IO1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Selects mode for <A class="mmap_legend_link" href="../legend.html#AUXIO1">AUXIO1</A> (for <A class="mmap_legend_link" href="../legend.html#AIODIO0">AIODIO0</A>) or <A class="mmap_legend_link" href="../legend.html#AUXIO9">AUXIO9</A> (for <A class="mmap_legend_link" href="../legend.html#AIODIO1">AIODIO1</A>).<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">OUT</TD>
+<TD class="cellEnumTableCol3">Output</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">IN</TD>
+<TD class="cellEnumTableCol3">Digital input with <A class="xref" href="#GPIODIE">GPIODIE</A> bit 1 = 1<BR>
+Analog input/output with <A class="xref" href="#GPIODIE">GPIODIE</A> bit 1 = 0</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">OPEN_DRAIN</TD>
+<TD class="cellEnumTableCol3">Open-drain: The pin is driven low when the corresponding <A class="xref" href="#GPIODOUT">GPIODOUT</A> bit is 0, and otherwise tri-stated or pulled depending on the corresponding <A class="mmap_legend_link" href="../legend.html#IOC">IOC</A> configuration.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">OPEN_SOURCE</TD>
+<TD class="cellEnumTableCol3">Open-source: The pin is driven high when the corresponding <A class="xref" href="#GPIODOUT">GPIODOUT</A> bit is 1, and otherwise tri-stated or pulled depending on the corresponding <A class="mmap_legend_link" href="../legend.html#IOC">IOC</A> configuration.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IOMODE_IO0">1:0</a>
+</TD>
+<TD class="cellBitfieldCol2">IO0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Selects mode for <A class="mmap_legend_link" href="../legend.html#AUXIO0">AUXIO0</A> (for <A class="mmap_legend_link" href="../legend.html#AIODIO0">AIODIO0</A>) or <A class="mmap_legend_link" href="../legend.html#AUXIO8">AUXIO8</A> (for <A class="mmap_legend_link" href="../legend.html#AIODIO1">AIODIO1</A>).<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">OUT</TD>
+<TD class="cellEnumTableCol3">Output</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">IN</TD>
+<TD class="cellEnumTableCol3">Digital input with <A class="xref" href="#GPIODIE">GPIODIE</A> bit 0 = 1<BR>
+Analog input/output with <A class="xref" href="#GPIODIE">GPIODIE</A> bit 0 = 0</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">OPEN_DRAIN</TD>
+<TD class="cellEnumTableCol3">Open-drain: The pin is driven low when the corresponding <A class="xref" href="#GPIODOUT">GPIODOUT</A> bit is 0, and otherwise tri-stated or pulled depending on the corresponding <A class="mmap_legend_link" href="../legend.html#IOC">IOC</A> configuration.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">OPEN_SOURCE</TD>
+<TD class="cellEnumTableCol3">Open-source: The pin is driven high when the corresponding <A class="xref" href="#GPIODOUT">GPIODOUT</A> bit is 1, and otherwise tri-stated or pulled depending on the corresponding <A class="mmap_legend_link" href="../legend.html#IOC">IOC</A> configuration.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="GPIODIN"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_AIODIO1</A>:GPIODIN</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0008</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C 2008</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C 2008</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">General Purpose Input Output Data In</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="GPIODIN_RESERVED8">31:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="GPIODIN_IO7_0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">IO7_0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Input values for <A class="mmap_legend_link" href="../legend.html#AUXIO0">AUXIO0</A> through <A class="mmap_legend_link" href="../legend.html#AUXIO7">AUXIO7</A> (for <A class="mmap_legend_link" href="../legend.html#AIODIO0">AIODIO0</A>) or <A class="mmap_legend_link" href="../legend.html#AUXIO8">AUXIO8</A> through <A class="mmap_legend_link" href="../legend.html#AUXIO15">AUXIO15</A> (for <A class="mmap_legend_link" href="../legend.html#AIODIO1">AIODIO1</A>).</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="GPIODOUTSET"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_AIODIO1</A>:GPIODOUTSET</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 000C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C 200C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C 200C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">General Purpose Input Output Data Out Set<BR>
+<BR>
+Strobes for setting output data register bits</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="GPIODOUTSET_RESERVED8">31:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="GPIODOUTSET_IO7_0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">IO7_0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Writing 1(s) to one or more bit positions sets the corresponding bit(s) in <A class="xref" href="#GPIODOUT">GPIODOUT</A>.<BR>
+<BR>
+Read value is 0x00.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="GPIODOUTCLR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_AIODIO1</A>:GPIODOUTCLR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C 2010</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C 2010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">General Purpose Input Output Data Out Clear<BR>
+<BR>
+Strobes for clearing output data register bits</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="GPIODOUTCLR_RESERVED8">31:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="GPIODOUTCLR_IO7_0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">IO7_0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Writing 1(s) to one or more bit positions clears the corresponding bit(s) in <A class="xref" href="#GPIODOUT">GPIODOUT</A>.<BR>
+<BR>
+Read value is 0x00.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="GPIODOUTTGL"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_AIODIO1</A>:GPIODOUTTGL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0014</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C 2014</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C 2014</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">General Purpose Input Output Data Out Toggle<BR>
+<BR>
+Strobes for toggling output data register bits</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="GPIODOUTTGL_RESERVED8">31:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="GPIODOUTTGL_IO7_0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">IO7_0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Writing 1(s) to one or more bit positions toggles the corresponding bit(s) in <A class="xref" href="#GPIODOUT">GPIODOUT</A>.<BR>
+<BR>
+Read value is 0x00.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="GPIODIE"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_AIODIO1</A>:GPIODIE</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C 2018</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C 2018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">General Purpose Input Output Input Enable</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="GPIODIE_RESERVED8">31:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="GPIODIE_IO7_0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">IO7_0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enables (1) or disables (0) digital input buffers for each <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> I/O pin.<BR>
+<BR>
+Input buffers must be enabled to allow reading pin values through <A class="xref" href="#GPIODIN">GPIODIN</A>. <BR>
+<BR>
+Input buffers must be disabled for analog input or floating pins to avoid current leakage.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<BR>
+<BR>
+<hr><table class="footer"><tr><td>&copy; 2015 - 2016. Texas Instruments | All Rights Reserved</td></tr></table>
+</BODY>
+</HTML>

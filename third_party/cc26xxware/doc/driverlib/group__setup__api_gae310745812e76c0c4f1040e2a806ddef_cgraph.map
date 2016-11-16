@@ -1,0 +1,21 @@
+<map id="SetupAfterColdResetWakeupFromShutDownCfg2" name="SetupAfterColdResetWakeupFromShutDownCfg2">
+<area shape="rect" id="node2" href="$group__setup__api.html#ga0425895c98068d0bec7a7e51e120e051" title="Returns the trim value to be used for the ANABYPASS_VALUE1 register in OSC_DIG. " alt="" coords="277,5,476,47"/>
+<area shape="rect" id="node3" href="$group__ddi__api.html#ga13a6c30b833a20556c48429303b64caf" title="Write a 32 bit value to a register in the DDI slave. " alt="" coords="319,71,434,98"/>
+<area shape="rect" id="node8" href="$group__setup__api.html#gab7e662b0636c52fb579f99a0975ca31e" title="Returns the trim value to be used for the RCOSCLF_RTUNE_TRIM and the RCOSCLF_CTUNE_TRIM bit fields in..." alt="" coords="269,123,485,164"/>
+<area shape="rect" id="node9" href="$group__ddi__api.html#ga492326c095c70621a247fe02a2cb09e4" title="Write a bitfield via the DDI using 16&#45;bit maskable write. " alt="" coords="309,189,444,215"/>
+<area shape="rect" id="node10" href="$group__setup__api.html#ga1c085c2022c7bd244610356eeb6d19fa" title="Returns the trim value to be used for the XOSC_HF_IBIASTHERM bit field in the ANABYPASS_VALUE2 regist..." alt="" coords="256,239,497,266"/>
+<area shape="rect" id="node11" href="$group__setup__api.html#ga64cb9a869265f45d2522f49fd85f9b35" title="Returns the trim value to be used for the AMPCOMP_TH2 register in OSC_DIG. " alt="" coords="267,290,486,317"/>
+<area shape="rect" id="node12" href="$group__setup__api.html#ga2240d5e01687ada6f0e6b9d79b43ada9" title="Returns the trim value to be used for the AMPCOMP_TH1 register in OSC_DIG. " alt="" coords="267,341,486,367"/>
+<area shape="rect" id="node13" href="$group__setup__api.html#gae65586d4e81aee129b4b8c7c7337daec" title="Returns the trim value to be used for the AMPCOMP_CTRL register in OSC_DIG. " alt="" coords="268,391,485,418"/>
+<area shape="rect" id="node14" href="$group__setup__api.html#ga62e29b18ad94157b1256817d2ec6775c" title="Returns the trim value from FCFG1 to be used as ADC_SH_MODE_EN setting. " alt="" coords="266,442,487,469"/>
+<area shape="rect" id="node15" href="$group__setup__api.html#ga1c3f66931d7685de12ecca7c00b1fb65" title="Returns the trim value from FCFG1 to be used as ADC_SH_VBUF_EN setting. " alt="" coords="269,493,484,519"/>
+<area shape="rect" id="node16" href="$group__setup__api.html#gac23b7884647939b72b8b66f85eed9516" title="Returns the trim value to be used for the XOSCHFCTL register in OSC_DIG. " alt="" coords="281,543,472,570"/>
+<area shape="rect" id="node17" href="$group__setup__api.html#gae37113a79a80f2ec89b01b3742fe5b6f" title="Returns the trim value from FCFG1 to be used as DBLR_LOOP_FILTER_RESET_VOLTAGE setting. " alt="" coords="269,595,485,636"/>
+<area shape="rect" id="node18" href="$group__setup__api.html#gae75f921f0e698719c86f4c4a5ef80339" title="Returns the FCFG1 OSC_CONF_ATESTLF_RCOSCLF_IBIAS_TRIM. " alt="" coords="259,661,494,687"/>
+<area shape="rect" id="node19" href="$group__setup__api.html#ga078626e0d8c7e97172ee007c077f74ff" title="Returns XOSCLF_REGULATOR_TRIM and XOSCLF_CMIRRWR_RATIO as one packet spanning bits [5:0] in the retur..." alt="" coords="261,712,492,753"/>
+<area shape="rect" id="node20" href="$group__setup__api.html#ga1844ae67ae38faf3915634afe62798b0" title="Returns the trim value to be used for the RADCEXTCFG register in OSC_DIG. " alt="" coords="276,778,477,805"/>
+<area shape="rect" id="node4" href="$group__ddi__api.html#ga06d6b1eee2c8757b8431eb6e1ab98f68" title="Safely write to AUX ADI/DDI interfaces using a semaphore. " alt="" coords="545,130,692,157"/>
+<area shape="rect" id="node5" href="$group__cpu__api.html#ga491d851c4f7fff1f9f66aa778b0671b0" title="Disable all external interrupts. " alt="" coords="740,105,823,131"/>
+<area shape="rect" id="node7" href="$group__cpu__api.html#ga6922d401cbc951632f495ffcf2e71dfc" title="Enable all external interrupts. " alt="" coords="740,155,823,182"/>
+<area shape="rect" id="node6" href="$cpu_8c.html#a9d29df169acb9be94306e8b58faed3ee" title="Provide a small delay. " alt="" coords="871,130,935,157"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="IOCIntUnregister" name="IOCIntUnregister">
+<area shape="rect" id="node2" href="$group__interrupt__api.html#ga9af6b00884dc44e92b3d05ff821b5334" title="Disables an interrupt. " alt="" coords="190,5,275,32"/>
+<area shape="rect" id="node3" href="$group__interrupt__api.html#ga5dffc81c27c005f83e9bfc30f775982a" title="Unregisters the function to be called when an interrupt occurs. " alt="" coords="180,56,285,83"/>
+<area shape="rect" id="node4" href="$interrupt_8c.html#ac62d95950fb9f007b01e80b27290ee43" title="The default interrupt handler. " alt="" coords="333,56,468,83"/>
+</map>

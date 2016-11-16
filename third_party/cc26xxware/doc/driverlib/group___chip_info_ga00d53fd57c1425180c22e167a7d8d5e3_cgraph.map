@@ -1,0 +1,8 @@
+<map id="ThisCodeIsBuiltForCC26xxHwRev22AndLater_HaltIfViolated" name="ThisCodeIsBuiltForCC26xxHwRev22AndLater_HaltIfViolated">
+<area shape="rect" id="node2" href="$group___chip_info.html#ga2473a2377465d4de542c6e4aef43c61f" title="Returns true if this chip is member of the CC26xx family. " alt="" coords="491,5,697,32"/>
+<area shape="rect" id="node5" href="$group___chip_info.html#gac75745679cc3eed1ab799a02ab94cafa" title="Returns true if HW revision for this chip is 2.2 or greater. " alt="" coords="283,55,443,97"/>
+<area shape="rect" id="node3" href="$group___chip_info.html#gaca76b9c316d9123a5b337fa715811ccc" title="Returns chip family member. " alt="" coords="749,7,920,33"/>
+<area shape="rect" id="node4" href="$group___chip_info.html#ga5becf5c53f75421ba924094c8e7e8411" title="Returns the internal chip HW revision code. " alt="" coords="972,32,1203,59"/>
+<area shape="rect" id="node6" href="$group___chip_info.html#ga46fd835d83079e920f2ed930e5db99c3" title="Returns chip HW revision. " alt="" coords="507,59,681,85"/>
+<area shape="rect" id="node7" href="$group___chip_info.html#gad3a55ad8c671d9e3c7e65cb6c542358a" title="Returns minor hardware revision number. " alt="" coords="745,108,924,135"/>
+</map>

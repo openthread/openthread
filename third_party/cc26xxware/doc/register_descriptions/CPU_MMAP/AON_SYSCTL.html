@@ -1,0 +1,533 @@
+<HTML>
+<HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<link href="..//elements/mmap.css" rel="stylesheet" type="text/css">
+<TITLE>AON_SYSCTL</TITLE>
+</HEAD>
+<BODY class=mmapBody>
+<h2 class="mmapCellTitle">
+  <a name="Top_Tag">AON_SYSCTL</a>
+</h2>
+<P>Instance: AON_SYSCTL<BR>
+Component: AON_SYSCTL<BR>
+Base address: 0x40090000</P>
+<BR>
+<P>This component controls AON_SYSCTL, which is the device&#39;s system controller.<BR>
+<BR>
+Note: This module is only supporting 32 bit ReadWrite access from <A class="mmap_legend_link" href="../legend.html#MCU">MCU</A></P>
+ <H3 class="mmapRegisterSummaryTitle"><A name="AON_SYSCTL"></A><A href="CPU_MMAP.html"> TOP</A>:<B>AON_SYSCTL</B> Register Summary</H3>
+<TABLE cellspacing="0" class="mmapRegisterSummaryTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">
+  <P>Register Name</P>
+</TD>
+<TD class="cellTopCol2">
+  <P>Type</P>
+</TD>
+<TD class="cellTopCol3">
+  <P>Register Width (Bits)</P>
+</TD>
+<TD class="cellTopCol4">
+  <P>Register Reset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Address Offset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Physical Address</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#PWRCTL">PWRCTL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 0000</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#RESETCTL">RESETCTL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 00E0</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0004</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 0004</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#SLEEPCTL">SLEEPCTL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0008</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 0008</P>
+</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterSummaryTitle"><A href="CPU_MMAP.html"> TOP</A>:AON_SYSCTL Register Descriptions</H3>
+<H3 class="mmapRegisterTitle"><A name="PWRCTL"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_SYSCTL</A>:PWRCTL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 0000</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 0000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Power Management<BR>
+<BR>
+This register controls bitfields for setting low level power management features such as selection of  regulator for <A class="mmap_legend_link" href="../legend.html#VDDR">VDDR</A> supply and control of <A class="mmap_legend_link" href="../legend.html#IO">IO</A> ring where certain segments can be enabled / disabled.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="PWRCTL_RESERVED3">31:3</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED3</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b0 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="PWRCTL_DCDC_ACTIVE">2</a>
+</TD>
+<TD class="cellBitfieldCol2">DCDC_ACTIVE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select to use <A class="mmap_legend_link" href="../legend.html#DCDC">DCDC</A> regulator for <A class="mmap_legend_link" href="../legend.html#VDDR">VDDR</A> in active mode <BR>
+<BR>
+0: Use <A class="mmap_legend_link" href="../legend.html#GLDO">GLDO</A> for regulation of <A class="mmap_legend_link" href="../legend.html#VDDR">VDDR</A>in active mode. <BR>
+1: Use <A class="mmap_legend_link" href="../legend.html#DCDC">DCDC</A> for regulation of <A class="mmap_legend_link" href="../legend.html#VDDR">VDDR</A>in active mode.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="PWRCTL_EXT_REG_MODE">1</a>
+</TD>
+<TD class="cellBitfieldCol2">EXT_REG_MODE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Status of source for <A class="mmap_legend_link" href="../legend.html#VDDR">VDDR</A>supply:<BR>
+<BR>
+0: <A class="mmap_legend_link" href="../legend.html#DCDC">DCDC</A>/<A class="mmap_legend_link" href="../legend.html#GLDO">GLDO</A> are generating <A class="mmap_legend_link" href="../legend.html#VDDR">VDDR</A><BR>
+1: <A class="mmap_legend_link" href="../legend.html#DCDC">DCDC</A>/<A class="mmap_legend_link" href="../legend.html#GLDO">GLDO</A> are bypassed, external regulator supplies <A class="mmap_legend_link" href="../legend.html#VDDR">VDDR</A></TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="PWRCTL_DCDC_EN">0</a>
+</TD>
+<TD class="cellBitfieldCol2">DCDC_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select to use <A class="mmap_legend_link" href="../legend.html#DCDC">DCDC</A> regulator during recharge of <A class="mmap_legend_link" href="../legend.html#VDDR">VDDR</A><BR>
+<BR>
+0: Use <A class="mmap_legend_link" href="../legend.html#GLDO">GLDO</A> for recharge of <A class="mmap_legend_link" href="../legend.html#VDDR">VDDR</A><BR>
+1: Use <A class="mmap_legend_link" href="../legend.html#DCDC">DCDC</A> for recharge of <A class="mmap_legend_link" href="../legend.html#VDDR">VDDR</A><BR>
+<BR>
+Note: This bitfield should be set to the same as <A class="xref" href="#PWRCTL_DCDC_ACTIVE">DCDC_ACTIVE</A></TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="RESETCTL"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_SYSCTL</A>:RESETCTL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 0004</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 0004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Reset Management<BR>
+<BR>
+This register contains bitfields releated to system reset such as reset source and reset request  and control of brown out resets.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RESETCTL_SYSRESET">31</a>
+</TD>
+<TD class="cellBitfieldCol2">SYSRESET</TD>
+<TD class="cellBitfieldCol3" colspan="3">Cold reset register. Writing 1 to this bitfield will reset the entire chip and cause boot code to run again.<BR>
+<BR>
+0: No effect<BR>
+1: Generate system reset. Appears as SYSRESET in <A class="xref" href="#RESETCTL_RESET_SRC">RESET_SRC</A>.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RESETCTL_RESERVED26">30:26</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED26</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b0 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RESETCTL_BOOT_DET_1_CLR">25</a>
+</TD>
+<TD class="cellBitfieldCol2">BOOT_DET_1_CLR</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RESETCTL_BOOT_DET_0_CLR">24</a>
+</TD>
+<TD class="cellBitfieldCol2">BOOT_DET_0_CLR</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RESETCTL_RESERVED18">23:18</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED18</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RESETCTL_BOOT_DET_1_SET">17</a>
+</TD>
+<TD class="cellBitfieldCol2">BOOT_DET_1_SET</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RESETCTL_BOOT_DET_0_SET">16</a>
+</TD>
+<TD class="cellBitfieldCol2">BOOT_DET_0_SET</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RESETCTL_WU_FROM_SD">15</a>
+</TD>
+<TD class="cellBitfieldCol2">WU_FROM_SD</TD>
+<TD class="cellBitfieldCol3" colspan="3">A Wakeup from <A class="mmap_legend_link" href="../legend.html#SHUTDOWN">SHUTDOWN</A> on an <A class="mmap_legend_link" href="../legend.html#IO">IO</A> event has occurred, or a wakeup from <A class="mmap_legend_link" href="../legend.html#SHUTDOWN">SHUTDOWN</A> has occurred as a result of the debugger being attached.. (<A class="mmap_legend_link" href="../legend.html#TCK">TCK</A> pin being forced low) <BR>
+<BR>
+Please refer to [IOC:IOCFGn,.WU_CFG] for configuring the IO&#39;s as wakeup sources.<BR>
+<BR>
+0: Wakeup occurred from cold reset or brown out as seen in <A class="xref" href="#RESETCTL_RESET_SRC">RESET_SRC</A><BR>
+1: A wakeup has occurred from <A class="mmap_legend_link" href="../legend.html#SHUTDOWN">SHUTDOWN</A><BR>
+<BR>
+Note: This flag can not be cleared and will therefor remain valid untill poweroff/reset</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RESETCTL_GPIO_WU_FROM_SD">14</a>
+</TD>
+<TD class="cellBitfieldCol2">GPIO_WU_FROM_SD</TD>
+<TD class="cellBitfieldCol3" colspan="3">A wakeup from <A class="mmap_legend_link" href="../legend.html#SHUTDOWN">SHUTDOWN</A> on an <A class="mmap_legend_link" href="../legend.html#IO">IO</A> event has occurred <BR>
+<BR>
+Please refer to [IOC:IOCFGn,.WU_CFG] for configuring the IO&#39;s as wakeup sources.<BR>
+<BR>
+0: The wakeup did not occur from <A class="mmap_legend_link" href="../legend.html#SHUTDOWN">SHUTDOWN</A> on an <A class="mmap_legend_link" href="../legend.html#IO">IO</A> event<BR>
+1: A wakeup from <A class="mmap_legend_link" href="../legend.html#SHUTDOWN">SHUTDOWN</A> occurred from an <A class="mmap_legend_link" href="../legend.html#IO">IO</A> event<BR>
+<BR>
+The case where <A class="xref" href="#RESETCTL_WU_FROM_SD">WU_FROM_SD</A> is asserted but this bitfield is not asserted will only occur in a debug session. The boot code will not proceed with wakeup from <A class="mmap_legend_link" href="../legend.html#SHUTDOWN">SHUTDOWN</A> procedure until this bitfield is asserted as well.<BR>
+<BR>
+Note: This flag can not be cleared and will therefor remain valid untill poweroff/reset</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RESETCTL_BOOT_DET_1">13</a>
+</TD>
+<TD class="cellBitfieldCol2">BOOT_DET_1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RESETCTL_BOOT_DET_0">12</a>
+</TD>
+<TD class="cellBitfieldCol2">BOOT_DET_0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RESETCTL_VDDS_LOSS_EN_OVR">11</a>
+</TD>
+<TD class="cellBitfieldCol2">VDDS_LOSS_EN_OVR</TD>
+<TD class="cellBitfieldCol3" colspan="3">Override of <A class="xref" href="#RESETCTL_VDDS_LOSS_EN">VDDS_LOSS_EN</A><BR>
+<BR>
+0: Brown out detect of <A class="mmap_legend_link" href="../legend.html#VDDS">VDDS</A> is ignored, unless <A class="xref" href="#RESETCTL_VDDS_LOSS_EN">VDDS_LOSS_EN</A>=1<BR>
+1: Brown out detect of <A class="mmap_legend_link" href="../legend.html#VDDS">VDDS</A> generates system reset (regardless of  <A class="xref" href="#RESETCTL_VDDS_LOSS_EN">VDDS_LOSS_EN</A>)<BR>
+<BR>
+This bit can be locked</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RESETCTL_VDDR_LOSS_EN_OVR">10</a>
+</TD>
+<TD class="cellBitfieldCol2">VDDR_LOSS_EN_OVR</TD>
+<TD class="cellBitfieldCol3" colspan="3">Override of <A class="xref" href="#RESETCTL_VDDR_LOSS_EN">VDDR_LOSS_EN</A><BR>
+<BR>
+0: Brown out detect of <A class="mmap_legend_link" href="../legend.html#VDDR">VDDR</A> is ignored, unless <A class="xref" href="#RESETCTL_VDDR_LOSS_EN">VDDR_LOSS_EN</A>=1<BR>
+1: Brown out detect of <A class="mmap_legend_link" href="../legend.html#VDDR">VDDR</A> generates system reset (regardless of  <A class="xref" href="#RESETCTL_VDDR_LOSS_EN">VDDR_LOSS_EN</A>)<BR>
+<BR>
+This bit can be locked</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RESETCTL_VDD_LOSS_EN_OVR">9</a>
+</TD>
+<TD class="cellBitfieldCol2">VDD_LOSS_EN_OVR</TD>
+<TD class="cellBitfieldCol3" colspan="3">Override of <A class="xref" href="#RESETCTL_VDD_LOSS_EN">VDD_LOSS_EN</A><BR>
+<BR>
+0: Brown out detect of <A class="mmap_legend_link" href="../legend.html#VDD">VDD</A> is ignored, unless <A class="xref" href="#RESETCTL_VDD_LOSS_EN">VDD_LOSS_EN</A>=1<BR>
+1: Brown out detect of <A class="mmap_legend_link" href="../legend.html#VDD">VDD</A> generates system reset (regardless of  <A class="xref" href="#RESETCTL_VDD_LOSS_EN">VDD_LOSS_EN</A>)<BR>
+<BR>
+This bit can be locked</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RESETCTL_RESERVED8">8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RESETCTL_VDDS_LOSS_EN">7</a>
+</TD>
+<TD class="cellBitfieldCol2">VDDS_LOSS_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Controls reset generation in case <A class="mmap_legend_link" href="../legend.html#VDDS">VDDS</A> is lost<BR>
+<BR>
+0: Brown out detect of <A class="mmap_legend_link" href="../legend.html#VDDS">VDDS</A> is ignored, unless <A class="xref" href="#RESETCTL_VDDS_LOSS_EN_OVR">VDDS_LOSS_EN_OVR</A>=1<BR>
+1: Brown out detect of <A class="mmap_legend_link" href="../legend.html#VDDS">VDDS</A> generates system reset</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RESETCTL_VDDR_LOSS_EN">6</a>
+</TD>
+<TD class="cellBitfieldCol2">VDDR_LOSS_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Controls reset generation in case <A class="mmap_legend_link" href="../legend.html#VDDR">VDDR</A> is lost <BR>
+<BR>
+0: Brown out detect of <A class="mmap_legend_link" href="../legend.html#VDDR">VDDR</A> is ignored, unless <A class="xref" href="#RESETCTL_VDDR_LOSS_EN_OVR">VDDR_LOSS_EN_OVR</A>=1<BR>
+1: Brown out detect of <A class="mmap_legend_link" href="../legend.html#VDDR">VDDR</A> generates system reset</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RESETCTL_VDD_LOSS_EN">5</a>
+</TD>
+<TD class="cellBitfieldCol2">VDD_LOSS_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Controls reset generation in case <A class="mmap_legend_link" href="../legend.html#VDD">VDD</A> is lost<BR>
+<BR>
+0: Brown out detect of <A class="mmap_legend_link" href="../legend.html#VDD">VDD</A> is ignored, unless <A class="xref" href="#RESETCTL_VDD_LOSS_EN_OVR">VDD_LOSS_EN_OVR</A>=1<BR>
+1: Brown out detect of <A class="mmap_legend_link" href="../legend.html#VDD">VDD</A> generates system reset</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RESETCTL_CLK_LOSS_EN">4</a>
+</TD>
+<TD class="cellBitfieldCol2">CLK_LOSS_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Controls reset generation in case <A class="mmap_legend_link" href="../legend.html#SCLK_LF">SCLK_LF</A> is lost.  (provided that clock loss detection is enabled by <A class="xref" href="../ANATOP_MMAP/DDI_0_OSC.html#CTL0_CLK_LOSS_EN">DDI_0_OSC:CTL0.CLK_LOSS_EN</A>)<BR>
+<BR>
+Note: Clock loss reset generation must be disabled before <A class="mmap_legend_link" href="../legend.html#SCLK_LF">SCLK_LF</A> clock source is changed in  <A class="xref" href="../ANATOP_MMAP/DDI_0_OSC.html#CTL0_SCLK_LF_SRC_SEL">DDI_0_OSC:CTL0.SCLK_LF_SRC_SEL</A> and remain disabled untill the change is confirmed in <A class="xref" href="../ANATOP_MMAP/DDI_0_OSC.html#STAT0_SCLK_LF_SRC">DDI_0_OSC:STAT0.SCLK_LF_SRC</A>. Failure to do so may result in a spurious system reset. Clock loss reset generation can be disabled through this bitfield or by clearing  <A class="xref" href="../ANATOP_MMAP/DDI_0_OSC.html#CTL0_CLK_LOSS_EN">DDI_0_OSC:CTL0.CLK_LOSS_EN</A><BR>
+ <BR>
+0: Clock loss is ignored<BR>
+1: Clock loss generates system reset</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RESETCTL_RESET_SRC">3:1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESET_SRC</TD>
+<TD class="cellBitfieldCol3" colspan="3">Shows the source of the last system reset:<BR>
+Occurrence of one of the reset sources may trigger several other reset sources as essential parts of the system are undergoing reset. This field will report the root cause of the reset (not the other resets that are consequence of the system reset). <BR>
+To support this feature the actual register is not captured before the reset source being released. If a new reset source is triggered, in a window of four  32 kHz periods after the previous has been released,  this register may indicate Power on reset as source.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">PWR_ON</TD>
+<TD class="cellEnumTableCol3">Power on reset</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">PIN_RESET</TD>
+<TD class="cellEnumTableCol3">Reset pin</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">VDDS_LOSS</TD>
+<TD class="cellEnumTableCol3">Brown out detect on <A class="mmap_legend_link" href="../legend.html#VDDS">VDDS</A></TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">VDD_LOSS</TD>
+<TD class="cellEnumTableCol3">Brown out detect on <A class="mmap_legend_link" href="../legend.html#VDD">VDD</A></TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x4</TD>
+<TD class="cellEnumTableCol2">VDDR_LOSS</TD>
+<TD class="cellEnumTableCol3">Brown out detect on <A class="mmap_legend_link" href="../legend.html#VDDR">VDDR</A></TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x5</TD>
+<TD class="cellEnumTableCol2">CLK_LOSS</TD>
+<TD class="cellEnumTableCol3">Clock loss detect</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x6</TD>
+<TD class="cellEnumTableCol2">SYSRESET</TD>
+<TD class="cellEnumTableCol3">Software reset via <A class="xref" href="#RESETCTL_SYSRESET">SYSRESET</A> register</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x7</TD>
+<TD class="cellEnumTableCol2">WARMRESET</TD>
+<TD class="cellEnumTableCol3">Software reset via <A class="mmap_legend_link" href="../legend.html#PRCM">PRCM</A> warm reset request</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RESETCTL_RESERVED0">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="SLEEPCTL"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_SYSCTL</A>:SLEEPCTL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0008</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 0008</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 0008</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Sleep Mode<BR>
+<BR>
+This register is used to unfreeze the <A class="mmap_legend_link" href="../legend.html#IO">IO</A> pad ring after waking up from <A class="mmap_legend_link" href="../legend.html#SHUTDOWN">SHUTDOWN</A></TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SLEEPCTL_RESERVED1">31:1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SLEEPCTL_IO_PAD_SLEEP_DIS">0</a>
+</TD>
+<TD class="cellBitfieldCol2">IO_PAD_SLEEP_DIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Controls the I/O pad sleep mode. The boot code will set this bitfield automatically unless waking up from a <A class="mmap_legend_link" href="../legend.html#SHUTDOWN">SHUTDOWN</A> ( <A class="xref" href="#RESETCTL_WU_FROM_SD">RESETCTL.WU_FROM_SD</A> is set ).  <BR>
+<BR>
+0: I/O pad sleep mode is enabled, ie all pads are latched and can not toggle.<BR>
+1: I/O pad sleep mode is disabled<BR>
+<BR>
+Application software may want to reconfigure the state for all IO&#39;s before setting this bitfield upon waking up from a <A class="mmap_legend_link" href="../legend.html#SHUTDOWN">SHUTDOWN</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<BR>
+<BR>
+<hr><table class="footer"><tr><td>&copy; 2015 - 2016. Texas Instruments | All Rights Reserved</td></tr></table>
+</BODY>
+</HTML>

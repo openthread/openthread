@@ -448,7 +448,7 @@ AC_ARG_ENABLE(builtin-mbedtls,
     ],
     [enable_builtin_mbedtls=yes])
 
-if test "$enable_builtin_mbedtls" = "yes"; then
+if test "$enable_builtin_mbedtls" = "yes" -a ! "${MBEDTLS_CPPFLAGS}"; then
     MBEDTLS_CPPFLAGS="-I\${abs_top_srcdir}/third_party/mbedtls"
     MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include"
     MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include/mbedtls"
@@ -781,11 +781,11 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_APPLICATION_COAP],[${OPENTHREAD_ENABLE_APP
 
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
-        [Specify the examples from one of: none, posix, cc2538 @<:@default=none@:>@.])],
+        [Specify the examples from one of: none, posix, cc2538, cc2650 @<:@default=none@:>@.])],
     [
         case "${with_examples}" in
 
-        none|posix|cc2538)
+        none|posix|cc2538|cc2650)
             ;;
         *)
             AC_MSG_ERROR([Invalid value ${with_examples} for --with-examples])
@@ -808,6 +808,10 @@ case ${with_examples} in
         AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_CC2538],[${OPENTHREAD_EXAMPLES_CC2538}],[Define to 1 if you want to use cc2538 examples])
         ;;
 
+    cc2650)
+        OPENTHREAD_EXAMPLES_CC2650=1
+        ;;
+
 esac
 
 AC_MSG_RESULT(${OPENTHREAD_EXAMPLES})
@@ -821,6 +825,10 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_POSIX], [test "${OPENTHREAD_EXAMPLES}" = "po
 
 AC_SUBST(OPENTHREAD_EXAMPLES_CC2538)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2538], [test "${OPENTHREAD_EXAMPLES}" = "cc2538"])
+
+AC_SUBST(OPENTHREAD_EXAMPLES_CC2650)
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2650], [test "${OPENTHREAD_EXAMPLES}" = "cc2650"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_CC2650],[${OPENTHREAD_EXAMPLES_CC2650}],[Define to 1 if you want to use cc2650 examples])
 
 #
 # Platform Information
@@ -957,6 +965,7 @@ examples/apps/cli/Makefile
 examples/apps/ncp/Makefile
 examples/platforms/Makefile
 examples/platforms/cc2538/Makefile
+examples/platforms/cc2650/Makefile
 examples/platforms/posix/Makefile
 tools/Makefile
 tools/harness-automation/Makefile

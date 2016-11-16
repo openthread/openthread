@@ -61,6 +61,16 @@ public:
     };
 
     /**
+     * @brief constructor for initializing mbedtls_sha256_context
+     */
+    Sha256();
+
+    /**
+     * @brief destructor for freeing mbedtls_sha256_context
+     */
+    ~Sha256();
+
+    /**
      * This method starts the SHA-256 computation.
      *
      */

@@ -1,0 +1,20 @@
+var searchData=
+[
+  ['data_5fentry_5factive',['DATA_ENTRY_ACTIVE',['../rf__mailbox_8h.html#a01e35e09a6b38ceb6847049606e42c4a',1,'rf_mailbox.h']]],
+  ['data_5fentry_5fbusy',['DATA_ENTRY_BUSY',['../rf__mailbox_8h.html#a5504b0e6c3929884ab0673b51dbe95ad',1,'rf_mailbox.h']]],
+  ['data_5fentry_5ffinished',['DATA_ENTRY_FINISHED',['../rf__mailbox_8h.html#a6ca5f46e961a0557904370adb64d5ae5',1,'rf_mailbox.h']]],
+  ['data_5fentry_5fpending',['DATA_ENTRY_PENDING',['../rf__mailbox_8h.html#a37dbd020a1ad1e4b9987b96f0114d7f1',1,'rf_mailbox.h']]],
+  ['data_5fentry_5ftype_5fgen',['DATA_ENTRY_TYPE_GEN',['../rf__mailbox_8h.html#a0d5907efb9eef12ad160f6131e548bff',1,'rf_mailbox.h']]],
+  ['data_5fentry_5ftype_5fmulti',['DATA_ENTRY_TYPE_MULTI',['../rf__mailbox_8h.html#ae85e93e4533929cf6401b3f619de5499',1,'rf_mailbox.h']]],
+  ['data_5fentry_5ftype_5fpartial',['DATA_ENTRY_TYPE_PARTIAL',['../rf__mailbox_8h.html#a678c5b7a9aaa9ae67708502086abce7a',1,'rf_mailbox.h']]],
+  ['data_5fentry_5ftype_5fptr',['DATA_ENTRY_TYPE_PTR',['../rf__mailbox_8h.html#ae78b28d2ebe3af0851927350123520bc',1,'rf_mailbox.h']]],
+  ['data_5fentry_5funfinished',['DATA_ENTRY_UNFINISHED',['../rf__mailbox_8h.html#a6cd1c26e081e155f53a785531d6892f9',1,'rf_mailbox.h']]],
+  ['delay_5f20_5fusec',['DELAY_20_USEC',['../setup_8c.html#a37436afb85c00b992e60e4430e7ccc63',1,'setup.c']]],
+  ['done_5fabort',['DONE_ABORT',['../rf__mailbox_8h.html#a21dba5137e3ede23554a03dd60b21c67',1,'rf_mailbox.h']]],
+  ['done_5fcountdown',['DONE_COUNTDOWN',['../rf__mailbox_8h.html#adea27a196c2e578f2a7589290530cd10',1,'rf_mailbox.h']]],
+  ['done_5ffailed',['DONE_FAILED',['../rf__mailbox_8h.html#aeaed408ed672c6123b6e778bedb9ec2c',1,'rf_mailbox.h']]],
+  ['done_5fok',['DONE_OK',['../rf__mailbox_8h.html#ae05e060fefec2f0d85733b433f475bc4',1,'rf_mailbox.h']]],
+  ['done_5frxerr',['DONE_RXERR',['../rf__mailbox_8h.html#a630ac0886f3dcfda24b3dc5bcf3fc41c',1,'rf_mailbox.h']]],
+  ['done_5fstopped',['DONE_STOPPED',['../rf__mailbox_8h.html#a57116fdc41416fdb08ac17328430dc01',1,'rf_mailbox.h']]],
+  ['done_5ftimeout',['DONE_TIMEOUT',['../rf__mailbox_8h.html#a76232a1898f607d49431ca2bb5655b97',1,'rf_mailbox.h']]]
+];

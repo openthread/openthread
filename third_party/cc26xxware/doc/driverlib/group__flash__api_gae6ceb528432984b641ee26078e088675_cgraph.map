@@ -1,0 +1,6 @@
+<map id="FlashProtectionSave" name="FlashProtectionSave">
+<area shape="rect" id="node2" href="$group__flash__api.html#ga47a87d4753facd8d55e0d0e542e5d518" title="Get the size of the flash. " alt="" coords="396,25,501,52"/>
+<area shape="rect" id="node3" href="$group__flash__api.html#gaa1d1b6c1345a8c66a505cd7321b8588c" title="Get size of a flash sector in number of bytes. " alt="" coords="549,76,696,103"/>
+<area shape="rect" id="node4" href="$group__flash__api.html#gaca0d39806f2d9bec6a341712d242647d" title="Get sector protection. " alt="" coords="205,76,348,103"/>
+<area shape="rect" id="node5" href="$group__flash__api.html#ga0d891d79df6dbba0288b15a8c30c1331" title="Programs unprotected main bank flash sectors. " alt="" coords="221,25,332,52"/>
+</map>

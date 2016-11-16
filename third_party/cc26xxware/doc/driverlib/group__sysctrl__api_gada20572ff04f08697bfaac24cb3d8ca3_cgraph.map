@@ -1,0 +1,4 @@
+<map id="SysCtrlSetRechargeBeforePowerDown" name="SysCtrlSetRechargeBeforePowerDown">
+<area shape="rect" id="node2" href="$group__aonbatmon__api.html#gadc33e3e057f96ec6fc9fff57bd64de57" title="Get the current temperature measurement as a signed value in Deg Celsius. " alt="" coords="244,5,483,32"/>
+<area shape="rect" id="node3" href="$group__setup__api.html#gaa4f8a96dcb08d5d0b49dce2bda349c66" title="Sign extend the VDDR_TRIM setting (special format ranging from &#45;10 to +21) " alt="" coords="252,56,475,83"/>
+</map>

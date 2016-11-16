@@ -1,0 +1,3330 @@
+<HTML>
+<HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<link href="..//elements/mmap.css" rel="stylesheet" type="text/css">
+<TITLE>AUX_ADI4</TITLE>
+</HEAD>
+<BODY class=mmapBody>
+<h2 class="mmapCellTitle">
+  <a name="Top_Tag">AUX_ADI4</a>
+</h2>
+<P>Instance: AUX_ADI4<BR>
+Component: ADI<BR>
+Base address: 0x400CB000</P>
+<BR>
+<P>Analog Digital Interface<BR>
+This is a generic module for handling register information between digital and analog domain.<BR>
+To see the actual contents connected on the analog side, please see:<BR>
+ADI2: <A class="xref" href="../ANATOP_MMAP/ADI_2_REFSYS.html#ADI_2_REFSYS">ADI_2_REFSYS:ADI_2_REFSYS</A><BR>
+ADI3: <A class="xref" href="../ANATOP_MMAP/ADI_3_REFSYS.html#ADI_3_REFSYS">ADI_3_REFSYS:ADI_3_REFSYS</A><BR>
+ADI4: <A class="xref" href="../ANATOP_MMAP/ADI_4_AUX.html#ADI4_AUX">ADI_4_AUX:ADI4_AUX</A></P>
+ <H3 class="mmapRegisterSummaryTitle"><A name="AUX_ADI4"></A><A href="CPU_MMAP.html"> TOP</A>:<B>AUX_ADI4</B> Register Summary</H3>
+<TABLE cellspacing="0" class="mmapRegisterSummaryTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">
+  <P>Register Name</P>
+</TD>
+<TD class="cellTopCol2">
+  <P>Type</P>
+</TD>
+<TD class="cellTopCol3">
+  <P>Register Width (Bits)</P>
+</TD>
+<TD class="cellTopCol4">
+  <P>Register Reset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Address Offset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Physical Address</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#DIR03">DIR03</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B000</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#DIR47">DIR47</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0004</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B004</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#DIR811">DIR811</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0008</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B008</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#DIR1215">DIR1215</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 000C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B00C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#SET03">SET03</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0010</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B010</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#SET47">SET47</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0014</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B014</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#SET811">SET811</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0018</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B018</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#SET1215">SET1215</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 001C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B01C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CLR03">CLR03</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0020</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B020</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CLR47">CLR47</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0024</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B024</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CLR811">CLR811</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0028</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B028</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CLR1215">CLR1215</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 002C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B02C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#SYNC">SYNC</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0030</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B030</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CFG">CFG</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0004</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0038</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B038</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MASK4B01">MASK4B01</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0040</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B040</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MASK4B23">MASK4B23</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0044</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B044</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MASK4B45">MASK4B45</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0048</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B048</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MASK4B67">MASK4B67</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 004C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B04C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MASK4B89">MASK4B89</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0050</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B050</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MASK4B1011">MASK4B1011</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0054</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B054</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MASK4B1213">MASK4B1213</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0058</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B058</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MASK4B1415">MASK4B1415</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 005C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B05C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MASK8B01">MASK8B01</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0060</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B060</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MASK8B23">MASK8B23</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0064</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B064</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MASK8B45">MASK8B45</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0068</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B068</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MASK8B67">MASK8B67</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 006C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B06C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MASK8B89">MASK8B89</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0070</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B070</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MASK8B1011">MASK8B1011</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0074</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B074</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MASK8B1213">MASK8B1213</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0078</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B078</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MASK8B1415">MASK8B1415</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 007C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B07C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MASK16B01">MASK16B01</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0080</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B080</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MASK16B23">MASK16B23</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0084</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B084</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MASK16B45">MASK16B45</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0088</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B088</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MASK16B67">MASK16B67</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 008C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B08C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MASK16B89">MASK16B89</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0090</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B090</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MASK16B1011">MASK16B1011</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0094</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B094</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MASK16B1213">MASK16B1213</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0098</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B098</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MASK16B1415">MASK16B1415</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 009C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C B09C</P>
+</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterSummaryTitle"><A href="CPU_MMAP.html"> TOP</A>:AUX_ADI4 Register Descriptions</H3>
+<H3 class="mmapRegisterTitle"><A name="DIR03"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:DIR03</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B000</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Direct Access for ADI Byte Offsets 0 to 3</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DIR03_B3">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">B3</TD>
+<TD class="cellBitfieldCol3" colspan="3">Direct access to ADI register 3</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DIR03_B2">23:16</a>
+</TD>
+<TD class="cellBitfieldCol2">B2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Direct access to ADI register 2</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DIR03_B1">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">B1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Direct access to ADI register 1</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DIR03_B0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">B0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Direct access to ADI register 0</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="DIR47"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:DIR47</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B004</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Direct Access for ADI Byte Offsets 4 to 7</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DIR47_B3">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">B3</TD>
+<TD class="cellBitfieldCol3" colspan="3">Direct access to ADI register 7</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DIR47_B2">23:16</a>
+</TD>
+<TD class="cellBitfieldCol2">B2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Direct access to ADI register 6</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DIR47_B1">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">B1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Direct access to ADI register 5</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DIR47_B0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">B0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Direct access to ADI register 4</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="DIR811"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:DIR811</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0008</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B008</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B008</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Direct Access for ADI Byte Offsets 8 to 11</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DIR811_B3">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">B3</TD>
+<TD class="cellBitfieldCol3" colspan="3">Direct access to ADI register 11</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DIR811_B2">23:16</a>
+</TD>
+<TD class="cellBitfieldCol2">B2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Direct access to ADI register 10</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DIR811_B1">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">B1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Direct access to ADI register 9</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DIR811_B0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">B0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Direct access to ADI register 8</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="DIR1215"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:DIR1215</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 000C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B00C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B00C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Direct Access for ADI Byte Offsets 12 to 15</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DIR1215_B3">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">B3</TD>
+<TD class="cellBitfieldCol3" colspan="3">Direct access to ADI register 15</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DIR1215_B2">23:16</a>
+</TD>
+<TD class="cellBitfieldCol2">B2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Direct access to ADI register 14</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DIR1215_B1">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">B1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Direct access to ADI register 13</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DIR1215_B0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">B0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Direct access to ADI register 12</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="SET03"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:SET03</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B010</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Set for ADI Byte Offsets 0 to 3</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SET03_S3">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">S3</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will set the corresponding bit in ADI register 3. Read returns 0.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SET03_S2">23:16</a>
+</TD>
+<TD class="cellBitfieldCol2">S2</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will set the corresponding bit in ADI register 2. Read returns 0.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SET03_S1">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">S1</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will set the corresponding bit in ADI register 1. Read returns 0.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SET03_S0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">S0</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will set the corresponding bit in ADI register 0. Read returns 0.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="SET47"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:SET47</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0014</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B014</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B014</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Set for ADI Byte Offsets 4 to 7</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SET47_S3">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">S3</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will set the corresponding bit in ADI register 7. Read returns 0.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SET47_S2">23:16</a>
+</TD>
+<TD class="cellBitfieldCol2">S2</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will set the corresponding bit in ADI register 6. Read returns 0.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SET47_S1">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">S1</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will set the corresponding bit in ADI register 5. Read returns 0.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SET47_S0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">S0</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will set the corresponding bit in ADI register 4. Read returns 0.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="SET811"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:SET811</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B018</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Set for ADI Byte Offsets 8 to 11</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SET811_S3">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">S3</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will set the corresponding bit in ADI register 11. Read returns 0.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SET811_S2">23:16</a>
+</TD>
+<TD class="cellBitfieldCol2">S2</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will set the corresponding bit in ADI register 10. Read returns 0.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SET811_S1">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">S1</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will set the corresponding bit in ADI register 9. Read returns 0.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SET811_S0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">S0</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will set the corresponding bit in ADI register 8. Read returns 0.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="SET1215"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:SET1215</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 001C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B01C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B01C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Set for ADI Byte Offsets 12 to 15</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SET1215_S3">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">S3</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will set the corresponding bit in ADI register 15. Read returns 0.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SET1215_S2">23:16</a>
+</TD>
+<TD class="cellBitfieldCol2">S2</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will set the corresponding bit in ADI register 14. Read returns 0.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SET1215_S1">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">S1</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will set the corresponding bit in ADI register 13. Read returns 0.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SET1215_S0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">S0</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will set the corresponding bit in ADI register 12. Read returns 0.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CLR03"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:CLR03</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0020</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B020</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B020</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Clear for ADI Byte Offsets 0 to 3</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CLR03_S3">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">S3</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will clear the corresponding bit in ADI register 3</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CLR03_S2">23:16</a>
+</TD>
+<TD class="cellBitfieldCol2">S2</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will clear the corresponding bit in ADI register 2</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CLR03_S1">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">S1</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will clear the corresponding bit in ADI register 1</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CLR03_S0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">S0</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will clear the corresponding bit in ADI register 0</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CLR47"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:CLR47</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0024</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B024</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B024</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Clear for ADI Byte Offsets 4 to 7</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CLR47_S3">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">S3</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will clear the corresponding bit in ADI register 7</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CLR47_S2">23:16</a>
+</TD>
+<TD class="cellBitfieldCol2">S2</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will clear the corresponding bit in ADI register 6</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CLR47_S1">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">S1</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will clear the corresponding bit in ADI register 5</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CLR47_S0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">S0</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will clear the corresponding bit in ADI register 4</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CLR811"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:CLR811</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0028</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B028</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B028</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Clear for ADI Byte Offsets 8 to 11</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CLR811_S3">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">S3</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will clear the corresponding bit in ADI register 11</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CLR811_S2">23:16</a>
+</TD>
+<TD class="cellBitfieldCol2">S2</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will clear the corresponding bit in ADI register 10</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CLR811_S1">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">S1</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will clear the corresponding bit in ADI register 9</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CLR811_S0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">S0</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will clear the corresponding bit in ADI register 8</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CLR1215"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:CLR1215</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 002C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B02C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B02C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Clear for ADI Byte Offsets 12 to 15</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CLR1215_S3">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">S3</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will clear the corresponding bit in ADI register 15</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CLR1215_S2">23:16</a>
+</TD>
+<TD class="cellBitfieldCol2">S2</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will clear the corresponding bit in ADI register 14</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CLR1215_S1">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">S1</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will clear the corresponding bit in ADI register 13</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CLR1215_S0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">S0</TD>
+<TD class="cellBitfieldCol3" colspan="3">A high bit value will clear the corresponding bit in ADI register 12</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="SYNC"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:SYNC</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0030</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B030</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B030</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SYNC_RESERVED2">31:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SYNC_REQ">1</a>
+</TD>
+<TD class="cellBitfieldCol2">REQ</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SYNC_ACK">0</a>
+</TD>
+<TD class="cellBitfieldCol2">ACK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CFG"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:CFG</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0038</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B038</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B038</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CFG_RESERVED8">31:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CFG_LOCK">7</a>
+</TD>
+<TD class="cellBitfieldCol2">LOCK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CFG_RESERVED3">6:3</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED3</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CFG_WAIT_FOR_ACK">2</a>
+</TD>
+<TD class="cellBitfieldCol2">WAIT_FOR_ACK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CFG_CLK_DIV">1:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CLK_DIV</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MASK4B01"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:MASK4B01</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0040</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B040</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B040</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Access (4m/4d), Byte Offsets 0 and 1</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B01_M1H">31:28</a>
+</TD>
+<TD class="cellBitfieldCol2">M1H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [7:4] in ADI register 1</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B01_D1H">27:24</a>
+</TD>
+<TD class="cellBitfieldCol2">D1H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [7:4] in ADI register 1, only bits selected by mask M1H will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B01_M1L">23:20</a>
+</TD>
+<TD class="cellBitfieldCol2">M1L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [3:0] in ADI register 1</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B01_D1L">19:16</a>
+</TD>
+<TD class="cellBitfieldCol2">D1L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [3:0] in ADI register 1, only bits selected by mask M1L will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B01_M0H">15:12</a>
+</TD>
+<TD class="cellBitfieldCol2">M0H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [7:4] in ADI register 0</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B01_D0H">11:8</a>
+</TD>
+<TD class="cellBitfieldCol2">D0H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [7:4] in ADI register 0, only bits selected by mask M0H will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B01_M0L">7:4</a>
+</TD>
+<TD class="cellBitfieldCol2">M0L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [3:0] in ADI register 0</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B01_D0L">3:0</a>
+</TD>
+<TD class="cellBitfieldCol2">D0L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [3:0] in ADI register 0, only bits selected by mask M0L will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MASK4B23"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:MASK4B23</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0044</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B044</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B044</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Access (4m/4d), Byte Offsets 2 and 3</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B23_M1H">31:28</a>
+</TD>
+<TD class="cellBitfieldCol2">M1H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [7:4] in ADI register 3</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B23_D1H">27:24</a>
+</TD>
+<TD class="cellBitfieldCol2">D1H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [7:4] in ADI register 3, only bits selected by mask M1H will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B23_M1L">23:20</a>
+</TD>
+<TD class="cellBitfieldCol2">M1L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [3:0] in ADI register 3</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B23_D1L">19:16</a>
+</TD>
+<TD class="cellBitfieldCol2">D1L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [3:0] in ADI register 3, only bits selected by mask M1L will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B23_M0H">15:12</a>
+</TD>
+<TD class="cellBitfieldCol2">M0H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [7:4] in ADI register 2</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B23_D0H">11:8</a>
+</TD>
+<TD class="cellBitfieldCol2">D0H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [7:4] in ADI register 2, only bits selected by mask M0H will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B23_M0L">7:4</a>
+</TD>
+<TD class="cellBitfieldCol2">M0L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [3:0] in ADI register 2</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B23_D0L">3:0</a>
+</TD>
+<TD class="cellBitfieldCol2">D0L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [3:0] in ADI register 2, only bits selected by mask M0L will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MASK4B45"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:MASK4B45</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0048</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B048</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B048</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Access (4m/4d), Byte Offsets 4 and 5</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B45_M1H">31:28</a>
+</TD>
+<TD class="cellBitfieldCol2">M1H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [7:4] in ADI register 5</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B45_D1H">27:24</a>
+</TD>
+<TD class="cellBitfieldCol2">D1H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [7:4] in ADI register 5, only bits selected by mask M1H will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B45_M1L">23:20</a>
+</TD>
+<TD class="cellBitfieldCol2">M1L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [3:0] in ADI register 5</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B45_D1L">19:16</a>
+</TD>
+<TD class="cellBitfieldCol2">D1L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [3:0] in ADI register 5, only bits selected by mask M1L will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B45_M0H">15:12</a>
+</TD>
+<TD class="cellBitfieldCol2">M0H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [7:4] in ADI register 4</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B45_D0H">11:8</a>
+</TD>
+<TD class="cellBitfieldCol2">D0H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [7:4] in ADI register 4, only bits selected by mask M0H will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B45_M0L">7:4</a>
+</TD>
+<TD class="cellBitfieldCol2">M0L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [3:0] in ADI register 4</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B45_D0L">3:0</a>
+</TD>
+<TD class="cellBitfieldCol2">D0L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [3:0] in ADI register 4, only bits selected by mask M0L will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MASK4B67"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:MASK4B67</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 004C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B04C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B04C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Access (4m/4d), Byte Offsets 6 and 7</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B67_M1H">31:28</a>
+</TD>
+<TD class="cellBitfieldCol2">M1H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [7:4] in ADI register 7</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B67_D1H">27:24</a>
+</TD>
+<TD class="cellBitfieldCol2">D1H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [7:4] in ADI register 7, only bits selected by mask M1H will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B67_M1L">23:20</a>
+</TD>
+<TD class="cellBitfieldCol2">M1L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [3:0] in ADI register 7</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B67_D1L">19:16</a>
+</TD>
+<TD class="cellBitfieldCol2">D1L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [3:0] in ADI register 7, only bits selected by mask M1L will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B67_M0H">15:12</a>
+</TD>
+<TD class="cellBitfieldCol2">M0H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [7:4] in ADI register 6</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B67_D0H">11:8</a>
+</TD>
+<TD class="cellBitfieldCol2">D0H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [7:4] in ADI register 6, only bits selected by mask M0H will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B67_M0L">7:4</a>
+</TD>
+<TD class="cellBitfieldCol2">M0L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [3:0] in ADI register 6</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B67_D0L">3:0</a>
+</TD>
+<TD class="cellBitfieldCol2">D0L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [3:0] in ADI register 6, only bits selected by mask M0L will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MASK4B89"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:MASK4B89</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0050</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B050</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B050</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Access (4m/4d), Byte Offsets 8 and 9</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B89_M1H">31:28</a>
+</TD>
+<TD class="cellBitfieldCol2">M1H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [7:4] in ADI register 9</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B89_D1H">27:24</a>
+</TD>
+<TD class="cellBitfieldCol2">D1H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [7:4] in ADI register 9, only bits selected by mask M1H will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B89_M1L">23:20</a>
+</TD>
+<TD class="cellBitfieldCol2">M1L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [3:0] in ADI register 9</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B89_D1L">19:16</a>
+</TD>
+<TD class="cellBitfieldCol2">D1L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [3:0] in ADI register 9, only bits selected by mask M1L will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B89_M0H">15:12</a>
+</TD>
+<TD class="cellBitfieldCol2">M0H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [7:4] in ADI register 8</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B89_D0H">11:8</a>
+</TD>
+<TD class="cellBitfieldCol2">D0H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [7:4] in ADI register 8, only bits selected by mask M0H will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B89_M0L">7:4</a>
+</TD>
+<TD class="cellBitfieldCol2">M0L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [3:0] in ADI register 8</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B89_D0L">3:0</a>
+</TD>
+<TD class="cellBitfieldCol2">D0L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [3:0] in ADI register 8, only bits selected by mask M0L will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MASK4B1011"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:MASK4B1011</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0054</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B054</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B054</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Access (4m/4d), Byte Offsets 10 and 11</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B1011_M1H">31:28</a>
+</TD>
+<TD class="cellBitfieldCol2">M1H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [7:4] in ADI register 11</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B1011_D1H">27:24</a>
+</TD>
+<TD class="cellBitfieldCol2">D1H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [7:4] in ADI register 11, only bits selected by mask M1H will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B1011_M1L">23:20</a>
+</TD>
+<TD class="cellBitfieldCol2">M1L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [3:0] in ADI register 11</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B1011_D1L">19:16</a>
+</TD>
+<TD class="cellBitfieldCol2">D1L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [3:0] in ADI register 11, only bits selected by mask M1L will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B1011_M0H">15:12</a>
+</TD>
+<TD class="cellBitfieldCol2">M0H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [7:4] in ADI register 10</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B1011_D0H">11:8</a>
+</TD>
+<TD class="cellBitfieldCol2">D0H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [7:4] in ADI register 10, only bits selected by mask M0H will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B1011_M0L">7:4</a>
+</TD>
+<TD class="cellBitfieldCol2">M0L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [3:0] in ADI register 10</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B1011_D0L">3:0</a>
+</TD>
+<TD class="cellBitfieldCol2">D0L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [3:0] in ADI register 10, only bits selected by mask M0L will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MASK4B1213"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:MASK4B1213</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0058</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B058</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B058</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Access (4m/4d), Byte Offsets 12 and 13</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B1213_M1H">31:28</a>
+</TD>
+<TD class="cellBitfieldCol2">M1H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [7:4] in ADI register 13</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B1213_D1H">27:24</a>
+</TD>
+<TD class="cellBitfieldCol2">D1H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [7:4] in ADI register 13, only bits selected by mask M1H will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B1213_M1L">23:20</a>
+</TD>
+<TD class="cellBitfieldCol2">M1L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [3:0] in ADI register 13</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B1213_D1L">19:16</a>
+</TD>
+<TD class="cellBitfieldCol2">D1L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [3:0] in ADI register 13, only bits selected by mask M1L will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B1213_M0H">15:12</a>
+</TD>
+<TD class="cellBitfieldCol2">M0H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [7:4] in ADI register 12</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B1213_D0H">11:8</a>
+</TD>
+<TD class="cellBitfieldCol2">D0H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [7:4] in ADI register 12, only bits selected by mask M0H will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B1213_M0L">7:4</a>
+</TD>
+<TD class="cellBitfieldCol2">M0L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [3:0] in ADI register 12</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B1213_D0L">3:0</a>
+</TD>
+<TD class="cellBitfieldCol2">D0L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [3:0] in ADI register 12, only bits selected by mask M0L will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MASK4B1415"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:MASK4B1415</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 005C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B05C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B05C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Access (4m/4d), Byte Offsets 14 and 15</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B1415_M1H">31:28</a>
+</TD>
+<TD class="cellBitfieldCol2">M1H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [7:4] in ADI register 15</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B1415_D1H">27:24</a>
+</TD>
+<TD class="cellBitfieldCol2">D1H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [7:4] in ADI register 15, only bits selected by mask M1H will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B1415_M1L">23:20</a>
+</TD>
+<TD class="cellBitfieldCol2">M1L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [3:0] in ADI register 15</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B1415_D1L">19:16</a>
+</TD>
+<TD class="cellBitfieldCol2">D1L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [3:0] in ADI register 15, only bits selected by mask M1L will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B1415_M0H">15:12</a>
+</TD>
+<TD class="cellBitfieldCol2">M0H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [7:4] in ADI register 14</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B1415_D0H">11:8</a>
+</TD>
+<TD class="cellBitfieldCol2">D0H</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [7:4] in ADI register 14, only bits selected by mask M0H will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B1415_M0L">7:4</a>
+</TD>
+<TD class="cellBitfieldCol2">M0L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for bits [3:0] in ADI register 14</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK4B1415_D0L">3:0</a>
+</TD>
+<TD class="cellBitfieldCol2">D0L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for bits [3:0] in ADI register 14, only bits selected by mask M0L will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MASK8B01"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:MASK8B01</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0060</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B060</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B060</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Access (8m/8d), Byte Offsets 0 and 1</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B01_M1">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">M1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for adi register 1</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B01_D1">23:16</a>
+</TD>
+<TD class="cellBitfieldCol2">D1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for ADI register 1, only bits selected by mask M1 will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B01_M0">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">M0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for adi register 0</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B01_D0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">D0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for ADI register 0, only bits selected by mask M0  will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MASK8B23"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:MASK8B23</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0064</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B064</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B064</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Access (8m/8d), Byte Offsets 2 and 3</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B23_M1">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">M1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for adi register 3</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B23_D1">23:16</a>
+</TD>
+<TD class="cellBitfieldCol2">D1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for ADI register 3, only bits selected by mask M1 will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B23_M0">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">M0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for adi register 2</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B23_D0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">D0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for ADI register 2, only bits selected by mask M0  will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MASK8B45"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:MASK8B45</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0068</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B068</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B068</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Access (8m/8d), Byte Offsets 4 and 5</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B45_M1">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">M1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for adi register 5</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B45_D1">23:16</a>
+</TD>
+<TD class="cellBitfieldCol2">D1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for ADI register 5, only bits selected by mask M1 will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B45_M0">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">M0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for adi register 4</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B45_D0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">D0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for ADI register 4, only bits selected by mask M0  will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MASK8B67"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:MASK8B67</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 006C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B06C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B06C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Access (8m/8d), Byte Offsets 6 and 7</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B67_M1">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">M1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for adi register 7</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B67_D1">23:16</a>
+</TD>
+<TD class="cellBitfieldCol2">D1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for ADI register 7, only bits selected by mask M1 will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B67_M0">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">M0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for adi register 6</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B67_D0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">D0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for ADI register 6, only bits selected by mask M0  will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MASK8B89"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:MASK8B89</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0070</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B070</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B070</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Access (8m/8d), Byte Offsets 8 and 9</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B89_M1">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">M1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for adi register 9</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B89_D1">23:16</a>
+</TD>
+<TD class="cellBitfieldCol2">D1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for ADI register 9, only bits selected by mask M1 will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B89_M0">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">M0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for adi register 8</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B89_D0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">D0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for ADI register 8, only bits selected by mask M0  will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MASK8B1011"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:MASK8B1011</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0074</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B074</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B074</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Access (8m/8d), Byte Offsets 10 and 11</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B1011_M1">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">M1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for adi register 11</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B1011_D1">23:16</a>
+</TD>
+<TD class="cellBitfieldCol2">D1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for ADI register 11, only bits selected by mask M1 will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B1011_M0">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">M0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for adi register 10</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B1011_D0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">D0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for ADI register 10, only bits selected by mask M0  will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MASK8B1213"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:MASK8B1213</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0078</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B078</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B078</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Access (8m/8d), Byte Offsets 12 and 13</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B1213_M1">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">M1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for adi register 13</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B1213_D1">23:16</a>
+</TD>
+<TD class="cellBitfieldCol2">D1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for ADI register 13, only bits selected by mask M1 will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B1213_M0">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">M0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for adi register 12</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B1213_D0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">D0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for ADI register 12, only bits selected by mask M0  will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MASK8B1415"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:MASK8B1415</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 007C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B07C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B07C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Access (8m/8d), Byte Offsets 14 and 15</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B1415_M1">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">M1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for adi register 15</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B1415_D1">23:16</a>
+</TD>
+<TD class="cellBitfieldCol2">D1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for ADI register 15, only bits selected by mask M1 will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B1415_M0">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">M0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for adi register 14</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK8B1415_D0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">D0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for ADI register 14, only bits selected by mask M0  will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MASK16B01"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:MASK16B01</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0080</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B080</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B080</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Access (16m/16d), Byte Offsets 0 and 1</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK16B01_M">31:16</a>
+</TD>
+<TD class="cellBitfieldCol2">M</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for ADI register 0 and 1</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK16B01_D">15:0</a>
+</TD>
+<TD class="cellBitfieldCol2">D</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for ADI register at offsets  0 and 1, only bits selected by mask M  will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MASK16B23"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:MASK16B23</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0084</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B084</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B084</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Access (16m/16d), Byte Offsets 2 and 3</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK16B23_M">31:16</a>
+</TD>
+<TD class="cellBitfieldCol2">M</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for ADI register 2 and 3</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK16B23_D">15:0</a>
+</TD>
+<TD class="cellBitfieldCol2">D</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for ADI register at offsets  2 and 3, only bits selected by mask M  will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MASK16B45"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:MASK16B45</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0088</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B088</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B088</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Access (16m/16d), Byte Offsets 4 and 5</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK16B45_M">31:16</a>
+</TD>
+<TD class="cellBitfieldCol2">M</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for ADI register 4 and 5</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK16B45_D">15:0</a>
+</TD>
+<TD class="cellBitfieldCol2">D</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for ADI register at offsets  4 and 5, only bits selected by mask M  will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MASK16B67"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:MASK16B67</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 008C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B08C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B08C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Access (16m/16d), Byte Offsets 6 and 7</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK16B67_M">31:16</a>
+</TD>
+<TD class="cellBitfieldCol2">M</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for ADI register 6 and 7</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK16B67_D">15:0</a>
+</TD>
+<TD class="cellBitfieldCol2">D</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for ADI register at offsets  6 and 7, only bits selected by mask M  will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MASK16B89"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:MASK16B89</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0090</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B090</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B090</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Access (16m/16d), Byte Offsets 8 and 9</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK16B89_M">31:16</a>
+</TD>
+<TD class="cellBitfieldCol2">M</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for ADI register 8 and 9</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK16B89_D">15:0</a>
+</TD>
+<TD class="cellBitfieldCol2">D</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for ADI register at offsets  8 and 9, only bits selected by mask M  will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MASK16B1011"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:MASK16B1011</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0094</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B094</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B094</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Access (16m/16d), Byte Offsets 10 and 11</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK16B1011_M">31:16</a>
+</TD>
+<TD class="cellBitfieldCol2">M</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for ADI register 10 and 11</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK16B1011_D">15:0</a>
+</TD>
+<TD class="cellBitfieldCol2">D</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for ADI register at offsets  10 and 11, only bits selected by mask M  will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MASK16B1213"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:MASK16B1213</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0098</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B098</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B098</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Access (16m/16d), Byte Offsets 12 and 13</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK16B1213_M">31:16</a>
+</TD>
+<TD class="cellBitfieldCol2">M</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for ADI register 12 and 13</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK16B1213_D">15:0</a>
+</TD>
+<TD class="cellBitfieldCol2">D</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for ADI register at offsets  12 and 13, only bits selected by mask M  will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MASK16B1415"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AUX_ADI4</A>:MASK16B1415</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 009C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C B09C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C B09C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Access (16m/16d), Byte Offsets 14 and 15</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK16B1415_M">31:16</a>
+</TD>
+<TD class="cellBitfieldCol2">M</TD>
+<TD class="cellBitfieldCol3" colspan="3">Mask for ADI register 14 and 15</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MASK16B1415_D">15:0</a>
+</TD>
+<TD class="cellBitfieldCol2">D</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data for ADI register at offsets  14 and 15, only bits selected by mask M  will be affected by access</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+</TABLE>
+<BR>
+<BR>
+<hr><table class="footer"><tr><td>&copy; 2015 - 2016. Texas Instruments | All Rights Reserved</td></tr></table>
+</BODY>
+</HTML>

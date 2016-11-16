@@ -1,0 +1,49 @@
+/* TI modifications of CSS for doxygen 1.8.3.1 */
+
+body, table, div, p, dl {
+    font: 400 13px/17px Roboto,sans-serif;
+}
+
+h1 {
+    font-size: 120%;
+    border-bottom: 2px solid #879ECB;
+    display: inline-block;
+}
+
+h2 {
+    font-size: 110%;
+}
+
+h3 {
+    font-size: 110%;
+    font-style: italic;
+}
+
+.title {
+    font-size: 150%;
+}
+
+table.memberdecls {
+    width:100%;
+}
+
+.memItemLeft {
+    width: 20%;
+}
+
+#projectlogo img {
+    border: 0px none;
+    height: 50px;
+}
+
+#projectname {
+    font: 210% Arial,sans-serif;
+    font-weight: bold;
+    margin: 0px;
+    padding-left: 4px;
+    color: #FFFFFF;
+}
+
+#titlearea {
+    background: #000000;
+}
