@@ -82,7 +82,6 @@ class otCli:
         print ("%s" % cmd)
 
         self.pexpect = pexpect.spawn(cmd, timeout=4)
-
         time.sleep(0.2)
         self.pexpect.expect('spinel-cli >')
         self.debug(int(os.getenv('DEBUG', '0')))
