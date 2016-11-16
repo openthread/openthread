@@ -26,8 +26,42 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef OPENTHREAD_MTD
-#include "address_resolver_mtd.hpp"
-#else
-#include "address_resolver_ftd.hpp"
-#endif
+/**
+ * @file
+ *   This file includes definitions for manipulating local Thread Network Data.
+ */
+
+#ifndef NETWORK_DATA_LOCAL_HPP_
+#define NETWORK_DATA_LOCAL_HPP_
+
+#include <thread/network_data.hpp>
+
+namespace Thread {
+
+class ThreadNetif;
+
+namespace NetworkData {
+
+class Local
+{
+public:
+    explicit Local(ThreadNetif &) { }
+
+    ThreadError AddOnMeshPrefix(const uint8_t *, uint8_t, int8_t, uint8_t, bool) { return kThreadError_NotImplemented; }
+    ThreadError RemoveOnMeshPrefix(const uint8_t *, uint8_t) { return kThreadError_NotImplemented; }
+
+    ThreadError AddHasRoutePrefix(const uint8_t *, uint8_t, int8_t, bool) { return kThreadError_NotImplemented; }
+    ThreadError RemoveHasRoutePrefix(const uint8_t *, uint8_t) { return kThreadError_NotImplemented; }
+
+    ThreadError SendServerDataNotification(void) { return kThreadError_NotImplemented; }
+
+    void GetNetworkData(bool, uint8_t *, uint8_t &aDataLength) { aDataLength = 0; }
+    ThreadError GetNextOnMeshPrefix(otNetworkDataIterator *, otBorderRouterConfig *) { return kThreadError_NotFound; }
+    void ClearResubmitDelayTimer(void) { }
+
+};
+
+}  // namespace NetworkData
+}  // namespace Thread
+
+#endif  // NETWORK_DATA_LOCAL_HPP_

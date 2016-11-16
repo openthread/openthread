@@ -26,8 +26,26 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef OPENTHREAD_MTD
-#include "address_resolver_mtd.hpp"
-#else
-#include "address_resolver_ftd.hpp"
-#endif
+/**
+ * @file
+ *  This file includes definitions for the Joiner Router role.
+ */
+
+#ifndef JOINER_ROUTER_HPP_
+#define JOINER_ROUTER_HPP_
+
+namespace Thread {
+namespace MeshCoP {
+
+class JoinerRouter
+{
+public:
+    JoinerRouter(ThreadNetif &) { }
+    uint16_t GetJoinerUdpPort(void) { return 0; }
+    ThreadError SetJoinerUdpPort(uint16_t) { return kThreadError_NotImplemented; }
+};
+
+}  // namespace MeshCoP
+}  // namespace Thread
+
+#endif  // JOINER_ROUTER_HPP_

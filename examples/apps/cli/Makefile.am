@@ -29,54 +29,88 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 bin_PROGRAMS                                                           = \
-    ot-cli                                                               \
+    ot-cli-ftd                                                           \
+    ot-cli-mtd                                                           \
     $(NULL)
 
-ot_cli_CPPFLAGS                                                        = \
+CPPFLAGS_COMMON                                                        = \
     -I$(top_srcdir)/include                                              \
     -I$(top_srcdir)/src/core                                             \
     -I$(top_srcdir)/examples/platforms                                   \
     $(NULL)
 
-ot_cli_LDADD                                                           = \
+LDADD_COMMON                                                           = \
     $(top_builddir)/src/cli/libopenthread-cli.a                          \
-    $(top_builddir)/src/core/libopenthread.a                             \
     $(NULL)
 
-ot_cli_LDFLAGS                                                         = \
+LDFLAGS_COMMON                                                         = \
+    $(NULL)
+
+SOURCES_COMMON                                                         = \
+    main.c                                                               \
     $(NULL)
 
 if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
-ot_cli_LDADD                                                          += \
+LDADD_COMMON                                                          += \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a                  \
     $(NULL)
 endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 
 if OPENTHREAD_ENABLE_DIAG
-ot_cli_LDADD                                                          += \
+LDADD_COMMON                                                          += \
     $(top_builddir)/src/diag/libopenthread-diag.a                        \
     $(NULL)
-endif
+endif # OPENTHREAD_ENABLE_DIAG
 
 if OPENTHREAD_EXAMPLES_POSIX
-ot_cli_LDADD                                                          += \
+LDADD_COMMON                                                          += \
     $(top_builddir)/examples/platforms/posix/libopenthread-posix.a       \
     -lstdc++                                                             \
     $(NULL)
-endif
+endif # OPENTHREAD_EXAMPLES_POSIX
 
 if OPENTHREAD_EXAMPLES_CC2538
-ot_cli_LDADD                                                          += \
+LDADD_COMMON                                                          += \
     $(top_builddir)/examples/platforms/cc2538/libopenthread-cc2538.a     \
     $(NULL)
 
-ot_cli_LDFLAGS                                                        += \
+LDFLAGS_COMMON                                                        += \
     -T $(top_srcdir)/examples/platforms/cc2538/cc2538.ld                 \
     $(NULL)
-endif
+endif # OPENTHREAD_EXAMPLES_CC2538
 
-ot_cli_SOURCES                                                         = \
-    main.c                                                               \
+ot_cli_ftd_CPPFLAGS                                                    = \
+    $(CPPFLAGS_COMMON)                                                   \
+    $(NULL)
+
+ot_cli_ftd_LDADD                                                       = \
+    $(top_builddir)/src/core/libopenthread-ftd.a                         \
+    $(LDADD_COMMON)                                                      \
+    $(NULL)
+
+ot_cli_ftd_LDFLAGS                                                     = \
+    $(LDFLAGS_COMMON)                                                    \
+    $(NULL)
+
+ot_cli_ftd_SOURCES                                                     = \
+    $(SOURCES_COMMON)                                                    \
+    $(NULL)
+
+ot_cli_mtd_CPPFLAGS                                                    = \
+    $(CPPFLAGS_COMMON)                                                   \
+    $(NULL)
+
+ot_cli_mtd_LDADD                                                       = \
+    $(top_builddir)/src/core/libopenthread-mtd.a                         \
+    $(LDADD_COMMON)                                                      \
+    $(NULL)
+
+ot_cli_mtd_LDFLAGS                                                     = \
+    $(LDFLAGS_COMMON)                                                    \
+    $(NULL)
+
+ot_cli_mtd_SOURCES                                                     = \
+    $(SOURCES_COMMON)                                                    \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE

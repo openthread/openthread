@@ -20,7 +20,7 @@ Spawn the process:
 
 ```bash
 $ cd <path-to-openthread>/output/<platform>/bin
-$ ./ot-cli 1
+$ ./ot-cli-ftd 1
 ```
 
 Set the PAN ID:
@@ -67,7 +67,7 @@ Spawn the process:
 
 ```bash
 $ cd <path-to-openthread>/output/<platform>/bin
-$ ./ot-cli 2
+$ ./ot-cli-ftd 2
 ```
 
 Set the PAN ID:

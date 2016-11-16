@@ -26,8 +26,27 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef OPENTHREAD_MTD
-#include "address_resolver_mtd.hpp"
-#else
-#include "address_resolver_ftd.hpp"
-#endif
+/**
+ * @file
+ *   This file includes definitions for a MeshCoP Leader.
+ */
+
+#ifndef MESHCOP_LEADER_HPP_
+#define MESHCOP_LEADER_HPP_
+
+#include <net/ip6_address.hpp>
+
+namespace Thread {
+namespace MeshCoP {
+
+class Leader
+{
+public:
+    Leader(ThreadNetif &) { }
+    ThreadError SendDatasetChanged(const Ip6::Address &) { return kThreadError_NotImplemented; }
+};
+
+}  // namespace MeshCoP
+}  // namespace Thread
+
+#endif  // MESHCOP_LEADER_HPP_

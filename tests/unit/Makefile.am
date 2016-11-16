@@ -56,7 +56,7 @@ AM_CPPFLAGS                                                         = \
     $(NULL)
 
 COMMON_LDADD                                                        = \
-    $(top_builddir)/src/core/libopenthread.a                          \
+    $(top_builddir)/src/core/libopenthread-ftd.a                      \
     -lpthread                                                         \
     $(NULL)
 
