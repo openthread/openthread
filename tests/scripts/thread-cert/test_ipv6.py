@@ -34,7 +34,6 @@ import struct
 import unittest
 
 from ipaddress import ip_address
-from mock import MagicMock, patch
 
 from ipv6 import ICMPv6Header, UDPHeader, IPv6Header, IPv6PacketFactory, UDPDatagram, \
     UDPDatagramFactory, ICMPv6Factory, HopByHopFactory, MPLOptionFactory, ICMPv6, HopByHopOptionHeader, HopByHopOption, \
@@ -154,12 +153,14 @@ def any_hop_by_hop_payload(next_header, hdr_ext_len, payload):
 
 def any_body():
     length = any_uint(8)
-    return bytearray("".join([random.choice(string.ascii_letters + string.digits + string.hexdigits) for _ in xrange(length)]))
+    body = "".join([random.choice(string.ascii_letters + string.digits + string.hexdigits) for _ in range(length)])
+    return bytearray(body.encode("utf-8"))
 
 
 def any_payload():
     length = any_uint(8)
-    return bytearray("".join([random.choice(string.printable) for _ in range(length)]))
+    payload = "".join([random.choice(string.printable) for _ in range(length)])
+    return bytearray(payload.encode("utf-8"))
 
 
 def any_ip_address():
@@ -196,7 +197,8 @@ def any_mpl_sequence():
 
 def any_mpl_seed_id(S):
     length = MPLOption._seed_id_length[S]
-    return bytearray("".join([random.choice(string.ascii_letters + string.digits + string.hexdigits) for _ in range(length)]))
+    seed_id = "".join([random.choice(string.ascii_letters + string.digits + string.hexdigits) for _ in range(length)])
+    return bytearray(seed_id.encode("utf-8"))
 
 
 def any_next_header():
@@ -228,7 +230,8 @@ def any_length():
 
 
 def any_str(length=8):
-    return "".join(random.choice(string.printable) for _ in range(length))
+    s = "".join(random.choice(string.printable) for _ in range(length))
+    return s.encode("utf-8")
 
 
 def any_bytes(length=4):

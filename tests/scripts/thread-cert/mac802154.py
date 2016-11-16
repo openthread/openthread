@@ -153,7 +153,7 @@ class MacFrame:
 
         # Check end of MAC frame
         if frame_type == MacHeader.FrameType.COMMAND:
-            command_type = data.read(1)
+            command_type = ord(data.read(1))
         else:
             command_type = None
 

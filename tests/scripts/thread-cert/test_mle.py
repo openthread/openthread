@@ -90,12 +90,12 @@ def any_timeout():
 
 def any_challenge():
     length = random.randint(4, 8)
-    return bytearray(random.getrandbits(8) for _ in xrange(length))
+    return bytearray(random.getrandbits(8) for _ in range(length))
 
 
 def any_response():
     length = random.randint(4, 8)
-    return bytearray(random.getrandbits(8) for _ in xrange(length))
+    return bytearray(random.getrandbits(8) for _ in range(length))
 
 
 def any_link_layer_frame_counter():
@@ -128,7 +128,7 @@ def any_router_id_mask():
 
 def any_link_quality_and_route_data(length=None):
     length = length if length is not None else random.randint(0, 63)
-    return [random.getrandbits(8) for _ in xrange(length)]
+    return [random.getrandbits(8) for _ in range(length)]
 
 
 def any_partition_id():
@@ -246,7 +246,7 @@ def any_tlvs(length=None):
     if length is None:
         length = random.randint(0, 16)
 
-    return [random.getrandbits(8) for _ in xrange(length)]
+    return [random.getrandbits(8) for _ in range(length)]
 
 
 def any_cid():
@@ -254,11 +254,11 @@ def any_cid():
 
 
 def any_iid():
-    return bytearray([random.getrandbits(8) for _ in xrange(8)])
+    return bytearray([random.getrandbits(8) for _ in range(8)])
 
 
 def any_ipv6_address():
-    return bytearray([random.getrandbits(8) for _ in xrange(16)])
+    return bytearray([random.getrandbits(8) for _ in range(16)])
 
 
 def any_addresses():
@@ -292,11 +292,11 @@ def any_key_id(key_id_mode):
     elif key_id_mode == 3:
         length = 9
 
-    return bytearray([random.getrandbits(8) for _ in xrange(length)])
+    return bytearray([random.getrandbits(8) for _ in range(length)])
 
 
 def any_eui64():
-    return bytearray([random.getrandbits(8) for _ in xrange(8)])
+    return bytearray([random.getrandbits(8) for _ in range(8)])
 
 
 class TestSourceAddress(unittest.TestCase):
@@ -698,7 +698,7 @@ class TestRoute64Factory(unittest.TestCase):
         router_id_mask = any_router_id_mask()
 
         router_count = 0
-        for i in xrange(64):
+        for i in range(64):
             router_count += (router_id_mask >> i) & 0x01
 
         link_quality_and_route_data = any_link_quality_and_route_data(router_count)
@@ -867,7 +867,7 @@ class TestNetworkDataFactory(unittest.TestCase):
         class DummyNetworkTlvsFactory:
 
             def parse(self, data, context):
-                return [ord(b) for b in data.read()]
+                return [b for b in bytearray(data.read())]
 
         tlvs = any_tlvs()
 

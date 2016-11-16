@@ -30,6 +30,7 @@
 import io
 import ipaddress
 import struct
+import sys
 
 import common
 import ipv6
@@ -193,7 +194,10 @@ class Message(object):
         assert sent_to_node == True
 
     def assertSentToDestinationAddress(self, ipv6_address):
-        assert self.ipv6_packet.ipv6_header.destination_address == ipaddress.ip_address(unicode(ipv6_address))
+        if sys.version_info[0] == 2:
+            ipv6_address = ipv6_address.decode("utf-8")
+
+        assert self.ipv6_packet.ipv6_header.destination_address == ipaddress.ip_address(ipv6_address)
 
     def assertSentWithHopLimit(self, hop_limit):
         assert self.ipv6_packet.ipv6_header.hop_limit == hop_limit
