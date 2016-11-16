@@ -98,7 +98,7 @@ class Node:
         self.interface.add_whitelist(addr, rssi)
 
     def remove_whitelist(self, addr):
-        self.interface.remove_whitelist()
+        self.interface.remove_whitelist(addr)
 
     def get_addr16(self):
         return self.interface.get_addr16()
@@ -113,7 +113,7 @@ class Node:
         return self.interface.get_channel()
 
     def set_channel(self, channel):
-        self.interface.remove_whitelist()
+        self.interface.set_channel(channel)
 
     def get_masterkey(self):
         return self.interface.get_masterkey()
