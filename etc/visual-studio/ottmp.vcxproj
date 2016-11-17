@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="openthread.configuration.props" /> 
+  <Import Project="openthread.configuration.props" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>{1EAFF7C8-8215-4EDA-83B2-EEB56CECE84D}</ProjectGuid>
     <TemplateGuid>{8b1800b9-d017-4029-9785-13ef5e5b328e}</TemplateGuid>
@@ -68,6 +68,9 @@
         ndis.lib;
       </AdditionalDependencies>
     </Link>
+    <Inf>
+      <EnableVerbose>true</EnableVerbose>
+    </Inf>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\examples\drivers\windows\ottmp\adapter.cpp" />
