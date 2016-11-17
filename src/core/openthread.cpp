@@ -1669,6 +1669,11 @@ ThreadError otSendMgmtCommissionerSet(otInstance *aInstance, const otCommissioni
 {
     return aInstance->mThreadNetif.GetCommissioner().SendMgmtCommissionerSetRequest(*aDataset, aTlvs, aLength);
 }
+
+uint16_t otCommissionerGetSessionId(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetCommissioner().GetSessionId();
+}
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
 #if OPENTHREAD_ENABLE_JOINER

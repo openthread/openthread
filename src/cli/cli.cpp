@@ -2375,6 +2375,10 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
 
         SuccessOrExit(error = otSendMgmtCommissionerSet(mInstance, &dataset, tlvs, static_cast<uint8_t>(length)));
     }
+    else if (strcmp(argv[0], "sessionid") == 0)
+    {
+        sServer->OutputFormat("%d\r\n", otCommissionerGetSessionId(mInstance));
+    }
 
 exit:
     AppendResult(error);

@@ -56,6 +56,7 @@ class ARM(IThci):
     isPowerDown = False              # indicate if Thread device experiences a power down event
     isWhiteListEnabled = False       # indicate if Thread device enables white list filter
     isBlackListEnabled = False       # indicate if Thread device enables black list filter
+    isActiveCommissioner = False     # indicate if Thread device is an active commissioner
     LOWEST_POSSIBLE_PARTATION_ID = 0x1
 
     #def __init__(self, SerialPort=COMPortName, EUI=MAC_Address):
@@ -652,6 +653,11 @@ class ARM(IThci):
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setKeySwitchGuardTime() Error; " + str(e))
 
+    def __getCommissionerSessionId(self):
+        """ get the commissioner session id allocated from Leader """
+        print '%s call getCommissionerSessionId' % self.port
+        return self.__sendCommand('commissioner sessionid')[0]
+
     def _connect(self):
         print 'My port is %s' % self.port
         if self.port.startswith('COM'):
@@ -1239,6 +1245,7 @@ class ARM(IThci):
             self.setNetworkKey(self.networkKey)
             self.isWhiteListEnabled = False
             self.isBlackListEnabled = False
+            self.isActiveCommissioner = False
             self.firmware = 'Nov 4 2016 07:24:59'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setDefaultValue() Error: " + str(e))
@@ -1893,6 +1900,7 @@ class ARM(IThci):
             cmd = 'commissioner start'
             print cmd
             if self.__sendCommand(cmd)[0] == 'Done':
+                self.isActiveCommissioner = True
                 time.sleep(20) # time for petition process
                 return True
         return False
@@ -1955,6 +1963,7 @@ class ARM(IThci):
             cmd = 'commissioner start'
             print cmd
             if self.__sendCommand(cmd)[0] == 'Done':
+                self.isActiveCommissioner = True
                 time.sleep(40) # time for petition process and at least one keep alive
                 return True
             else:
@@ -2381,8 +2390,16 @@ class ARM(IThci):
             cmd = 'commissioner mgmtset'
 
             if xCommissionerSessionID != None:
+                # use assigned session id
                 cmd += ' sessionid '
                 cmd += str(xCommissionerSessionID)
+            elif xCommissionerSessionID == None:
+                # use original session id
+                if self.isActiveCommissioner == True:
+                    cmd += ' sessionid '
+                    cmd += self.__getCommissionerSessionId()
+                else:
+                    pass
 
             if xSteeringData != None:
                 cmd += ' steeringdata '
@@ -2391,6 +2408,10 @@ class ARM(IThci):
             if xBorderRouterLocator != None:
                 cmd += ' locator '
                 cmd += str(xBorderRouterLocator)
+
+            if xChannelTlv != None:
+                cmd += ' binary '
+                cmd += '000300' + hex(xChannelTlv).lstrip('0x').zfill(4) 
 
             print cmd
 
