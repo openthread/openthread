@@ -27,18 +27,18 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-from binascii import hexlify
-
-import ipaddress
 import struct
 import sys
 
+from binascii import hexlify
+from enum import IntEnum
 
-def enum(*sequential, **named):
-    enums = dict(list(zip(sequential, list(range(len(sequential))))), **named)
-    names = dict((value, key) for key, value in list(enums.items()))
-    enums['name'] = names
-    return type('Enum', (), enums)
+import ipaddress
+
+
+def expect_the_same_class(self, other):
+    if not isinstance(other, self.__class__):
+        raise TypeError("Expected the same class. Got {} and {}".format(type(self), type(other)))
 
 
 class MessageInfo(object):
@@ -55,6 +55,9 @@ class MessageInfo(object):
 
         self._source_ipv6 = None
         self._destination_ipv6 = None
+
+        self._src_port = None
+        self._dst_port = None
 
         self.stable = None
         self.payload_length = 0
@@ -84,16 +87,34 @@ class MessageInfo(object):
     def destination_ipv6(self, value):
         self._destination_ipv6 = self._convert_value_to_ip_address(value)
 
+    @property
+    def src_port(self):
+        return self._src_port
 
-class MacAddress(object):
+    @src_port.setter
+    def src_port(self, value):
+        self._src_port = value
 
+    @property
+    def dst_port(self):
+        return self._dst_port
+
+    @dst_port.setter
+    def dst_port(self, value):
+        self._dst_port = value
+
+
+class MacAddressType(IntEnum):
     SHORT = 0
     LONG = 1
 
+
+class MacAddress(object):
+
     def __init__(self, mac_address, _type, big_endian=True):
-        if _type == self.SHORT:
+        if _type == MacAddressType.SHORT:
             length = 2
-        elif _type == self.LONG:
+        elif _type == MacAddressType.LONG:
             length = 8
 
         if not big_endian:
@@ -107,10 +128,6 @@ class MacAddress(object):
         return self._type
 
     @property
-    def type_str(self):
-        return "SHORT" if self.type == self.SHORT else "LONG"
-
-    @property
     def mac_address(self):
         return self._mac_address
 
@@ -119,9 +136,9 @@ class MacAddress(object):
         return struct.unpack(">H", self._mac_address)[0]
 
     def convert_to_iid(self):
-        if self._type == self.SHORT:
+        if self._type == MacAddressType.SHORT:
             return bytearray([0x00, 0x00, 0x00, 0xff, 0xfe, 0x00]) + self._mac_address[:2]
-        elif self._type == self.LONG:
+        elif self._type == MacAddressType.LONG:
             return bytearray([self._mac_address[0] ^ 0x02]) + self._mac_address[1:]
         else:
             raise RuntimeError("Could not convert to IID. Invalid MAC address type: {}".format(self._type))
@@ -131,7 +148,7 @@ class MacAddress(object):
         if not isinstance(eui64, bytearray):
             raise RuntimeError("Could not create MAC address from EUI64. Invalid data type: {}".format(type(eui64)))
 
-        return cls(eui64, MacAddress.LONG)
+        return cls(eui64, MacAddressType.LONG)
 
     @classmethod
     def from_rloc16(cls, rloc16, big_endian=True):
@@ -142,10 +159,10 @@ class MacAddress(object):
         else:
             raise RuntimeError("Could not create MAC address from RLOC16. Invalid data type: {}".format(type(rloc16)))
 
-        return cls(mac_address, MacAddress.SHORT)
+        return cls(mac_address, MacAddressType.SHORT)
 
     def __eq__(self, other):
         return (self.type == other.type) and (self.mac_address == other.mac_address)
 
     def __repr__(self):
-        return "MacAddress(mac_address=b'{}', type={})".format(hexlify(self.mac_address), self.type_str)
+        return "MacAddress(mac_address=b'{}', type={})".format(hexlify(self.mac_address), MacAddressType(self._type))

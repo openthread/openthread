@@ -35,7 +35,7 @@ import io
 import struct
 
 import config
-from common import MacAddress, MessageInfo
+from common import MacAddress, MacAddressType, MessageInfo
 from net_crypto import AuxiliarySecurityHeader, CryptoEngine, MacCryptoMaterialCreator
 
 
@@ -200,7 +200,7 @@ class MacFrame:
             message_info.aux_sec_hdr_bytes = aux_sec_hdr_bytes
             message_info.nonpayload_fields = non_payload_fields
             message_info.mhr_bytes = mhr_bytes
-            if src_address.type == MacAddress.SHORT:
+            if src_address.type == MacAddressType.SHORT:
                 message_info.source_mac_address = DeviceDescriptors.get_extended(src_address).mac_address
             else:
                 message_info.source_mac_address = src_address.mac_address
@@ -213,10 +213,10 @@ class MacFrame:
 
     def _parse_address(self, data, mode):
         if mode == MacHeader.AddressMode.SHORT:
-            return MacAddress(data.read(2), MacAddress.SHORT, big_endian=False)
+            return MacAddress(data.read(2), MacAddressType.SHORT, big_endian=False)
 
         if mode == MacHeader.AddressMode.EXTENDED:
-            return MacAddress(data.read(8), MacAddress.LONG, big_endian=False)
+            return MacAddress(data.read(8), MacAddressType.LONG, big_endian=False)
 
         else:
             return None

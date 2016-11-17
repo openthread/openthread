@@ -105,12 +105,30 @@ class Cert_5_1_11_REEDAttachLinkQuality(unittest.TestCase):
         self.assertEqual(self.nodes[REED].get_state(), 'router')
 
         leader_messages = self.sniffer.get_messages_sent_by(LEADER)
-        router1_messages = self.sniffer.get_messages_sent_by(ROUTER1)
         reed_messages = self.sniffer.get_messages_sent_by(REED)
+        router1_messages = self.sniffer.get_messages_sent_by(ROUTER1)
         router2_messages = self.sniffer.get_messages_sent_by(ROUTER2)
 
         # 1 - Leader. REED1, Router2
         leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+
+        reed_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
+        leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+
+        reed_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
+        leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+
+        router2_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
+        leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+
+        router2_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
+        leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+
+        msg = router2_messages.next_coap_message("0.02")
+        msg.assertCoapMessageRequestUriPath("/a/as")
+
+        msg = leader_messages.next_coap_message("2.04")
+
         reed_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
         router2_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
 

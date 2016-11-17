@@ -110,6 +110,29 @@ class Cert_5_1_10_RouterAttachLinkQuality(unittest.TestCase):
 
         # 1 - Leader, Router1, Router2
         leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+
+        router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
+        leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+
+        router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
+        leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+
+        msg = router1_messages.next_coap_message("0.02")
+        msg.assertCoapMessageRequestUriPath("/a/as")
+
+        msg = leader_messages.next_coap_message("2.04")
+
+        router2_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
+        leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+
+        router2_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
+        leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+
+        msg = router2_messages.next_coap_message("0.02")
+        msg.assertCoapMessageRequestUriPath("/a/as")
+
+        msg = leader_messages.next_coap_message("2.04")
+
         router1_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
         router2_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
 

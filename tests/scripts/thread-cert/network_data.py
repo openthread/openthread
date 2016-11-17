@@ -32,6 +32,19 @@ import math
 import struct
 
 from binascii import hexlify
+from enum import IntEnum
+
+import common
+
+
+class TlvType(IntEnum):
+    HAS_ROUTE = 0
+    PREFIX = 1
+    BORDER_ROUTER = 2
+    LOWPAN_ID = 3
+    COMMISSIONING = 4
+    SERVICE = 5
+    SERVER = 6
 
 
 class NetworkData(object):
@@ -92,8 +105,7 @@ class Route(object):
         return self._prf
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.border_router_16 == other.border_router_16 and self.prf == other.prf
 
@@ -139,8 +151,7 @@ class HasRoute(NetworkData):
         return self._routes
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.routes == other.routes
 
@@ -186,8 +197,7 @@ class Prefix(NetworkData):
         return self._sub_tlvs
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.domain_id == other.domain_id and \
             self.prefix_length == other.prefix_length and \
@@ -277,8 +287,7 @@ class BorderRouter(NetworkData):
         return self._n
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return  self.border_router_16 == other.border_router_16 and \
             self.prf == other.prf and \
@@ -336,8 +345,7 @@ class LowpanId(NetworkData):
         return self._context_length
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return  self.c == other.c and \
             self.cid == other.cid and \
@@ -411,8 +419,7 @@ class Service(NetworkData):
         return self._sub_tlvs
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return  self.t == other.t and \
             self.id == other.id and \
@@ -468,14 +475,13 @@ class Server(NetworkData):
         return self._server_data
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.server_16 == other.server_16 and \
             self.server_data == other.server_data
 
     def __repr__(self):
-        return "LowpanId(stable={}, server_16={}, server_data=\"{}\")".format(
+        return "LowpanId(stable={}, server_16={}, server_data=b'{}')".format(
             self.stable, self.server_16, hexlify(self.server_data))
 
 

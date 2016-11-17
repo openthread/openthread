@@ -49,7 +49,7 @@ class Sniffer:
 
     logger = logging.getLogger("sniffer.Sniffer")
 
-    POLL_TIMEOUT = 0.11
+    POLL_TIMEOUT = 0.10
 
     RECV_BUFFER_SIZE = 4096
 
