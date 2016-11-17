@@ -117,6 +117,12 @@ bool Address::IsRoutingLocator(void) const
             mFields.m16[6] == HostSwap16(0xfe00));
 }
 
+bool Address::IsAnycastRoutingLocator(void) const
+{
+    return (mFields.m16[4] == HostSwap16(0x0000) && mFields.m16[5] == HostSwap16(0x00ff) &&
+            mFields.m16[6] == HostSwap16(0xfe00) && mFields.m8[14] == 0xfc);
+}
+
 bool Address::IsSubnetRouterAnycast(void) const
 {
     return (mFields.m32[2] == 0 && mFields.m32[3] == 0);
@@ -130,7 +136,7 @@ bool Address::IsReservedSubnetAnycast(void) const
 
 bool Address::IsIidReserved(void) const
 {
-    return IsSubnetRouterAnycast() || IsReservedSubnetAnycast();
+    return IsSubnetRouterAnycast() || IsReservedSubnetAnycast() || IsAnycastRoutingLocator();
 }
 
 
