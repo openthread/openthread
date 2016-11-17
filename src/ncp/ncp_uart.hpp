@@ -33,6 +33,12 @@
 #ifndef NCP_UART_HPP_
 #define NCP_UART_HPP_
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <ncp/ncp_base.hpp>
 #include <ncp/flen.hpp>
 #include <ncp/hdlc.hpp>
@@ -118,9 +124,10 @@ private:
 
     enum
     {
-        kUartTxBufferSize = 128,  // Uart tx buffer size.
-        kTxBufferSize = 512,      // Tx Buffer size (used by mTxFrameBuffer).
-        kRxBufferSize = 1500,     // Rx buffer size (should be large enough to fit one whole (decoded) received frame).
+        kUartTxBufferSize = OPENTHREAD_CONFIG_NCP_UART_TX_CHUNK_SIZE,  // Uart tx buffer size.
+        kTxBufferSize = OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE,          // Tx Buffer size (used by mTxFrameBuffer).
+        kRxBufferSize = OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE,     // Rx buffer size (should be large enough to fit
+                                                                       // one whole (decoded) received frame).
     };
 
     enum UartTxState
