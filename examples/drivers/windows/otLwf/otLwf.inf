@@ -27,82 +27,80 @@
 ;
 
 [version]
-; Do not change these values
-Signature       = "$Windows NT$"
-Class           = NetService
-ClassGUID       = {4D36E974-E325-11CE-BFC1-08002BE10318}
-Provider        = %openthread%
-DriverVer       = 
-CatalogFile     = otLwf.cat
+Signature           = "$Windows NT$"
+Class               = NetService
+ClassGUID           = {4D36E974-E325-11CE-BFC1-08002BE10318}
+Provider            = %OpenThread%
+DriverVer           = 
+PnpLockDown         = 1
+CatalogFile         = otLwf.cat
 
 [Manufacturer]
-%openthread%=OpenThread,NT$ARCH$
+%OpenThread%        = OpenThread,NT$ARCH$
 
-; otLwf can be used with netcfg.exe to install/uninstall the driver.
 [OpenThread.NT$ARCH$]
-%otLwf_Desc%=Install, otLwf
+%otlwf.DeviceDesc%  = otlwf.ndi, otLwf
 
-;-------------------------------------------------------------------------
-; Installation Section
-;-------------------------------------------------------------------------
-[Install]
-AddReg=Inst_Ndi
-Characteristics=0x40000
-NetCfgInstanceId="{B3A3845A-164E-4727-B12E-32B8DCE1F6CD}"
+;-------------------------------------------------------------------------------
+; OpenThread NDIS Filter Driver
+;-------------------------------------------------------------------------------
+[otlwf.ndi]
+Characteristics     = 0x40000
+NetCfgInstanceId    = "{B3A3845A-164E-4727-B12E-32B8DCE1F6CD}"
+AddReg              = otlwf.Reg
+Copyfiles           = otLwf.CopyFiles
 
-Copyfiles = otLwf.copyfiles.sys
+[otlwf.ndi.Services]
+AddService          = otLwf, , otlwf.Service
+
+[otlwf.ndi.Remove.Services]
+; The SPSVCINST_STOPSERVICE flag instructs SCM to stop the NT service
+; before uninstalling the driver.
+DelService          =   otLwf,  0x200 ; SPSVCINST_STOPSERVICE
+
+;-------------------------------------------------------------------------------
+; OpenThread NDIS Filter Common
+;-------------------------------------------------------------------------------
+[otlwf.Reg]
+HKR, Ndi,               Service,            ,           "otLwf"
+HKR, Ndi,               CoServices,         0x00010000, "otLwf"
+HKR, Ndi,               FilterClass,        ,           ms_medium_converter_top
+HKR, Ndi,               FilterType,         0x00010001, 0x00000002
+HKR, Ndi,               FilterRunType,      0x00010001, 0x00000002   ;OPTIONAL filter 
+HKR, Ndi\Interfaces,    UpperRange,         ,           "noupper"
+HKR, Ndi\Interfaces,    LowerRange,         ,           "nolower"
+HKR, Ndi\Interfaces,    FilterMediaTypes,   ,           "802.15.4"
+
+;-------------------------------------------------------------------------------
+; Driver and Service Section
+;-------------------------------------------------------------------------------
+[otLwf.CopyFiles]
+otLwf.sys,,,2
+
+[otlwf.Service]
+DisplayName         = %otlwf.Service.DispName%
+ServiceType         = 1 ;SERVICE_KERNEL_DRIVER
+StartType           = 1 ;SERVICE_SYSTEM_START
+ErrorControl        = 1 ;SERVICE_ERROR_NORMAL
+ServiceBinary       = %12%\otLwf.sys
+LoadOrderGroup      = NDIS
+Description         = %otlwf.DeviceDesc%
 
 [SourceDisksNames]
-1=%otLwf_Desc%,"",,
+1 = %otlwf.DeviceDesc%,"",,
 
 [SourceDisksFiles]
 ; TODO: Include any related files that should be installed with your driver.
-otLwf.sys=1
+otLwf.sys = 1
 
 [DestinationDirs]
-DefaultDestDir=12
-otLwf.copyfiles.sys=12
+DefaultDestDir = 12
+otLwf.CopyFiles = 12
 
-[otLwf.copyfiles.sys]
-otLwf.sys,,,2
-
-;-------------------------------------------------------------------------
-; Ndi installation support
-;-------------------------------------------------------------------------
-[Inst_Ndi]
-HKR, Ndi,Service,,"otLwf"
-HKR, Ndi,CoServices,0x00010000,"otLwf"
-HKR, Ndi,HelpText,,%otLwf_HelpText%
-HKR, Ndi,FilterClass,, ms_medium_converter_top
-HKR, Ndi,FilterType,0x00010001,0x00000002
-HKR, Ndi,FilterRunType, 0x00010001, 0x00000002   ;OPTIONAL filter 
-HKR, Ndi\Interfaces,UpperRange,,"noupper"
-HKR, Ndi\Interfaces,LowerRange,,"nolower"
-HKR, Ndi\Interfaces, FilterMediaTypes,,"802.15.4"
-
-;-------------------------------------------------------------------------
-; Service installation support
-;-------------------------------------------------------------------------
-[Install.Services]
-AddService=otLwf,,otLwf_Service_Inst
-
-[otLwf_Service_Inst]
-DisplayName     = %otLwf_Desc%
-ServiceType     = 1 ;SERVICE_KERNEL_DRIVER
-; Typically you will want your filter driver to start with SERVICE_SYSTEM_START.
-; If it is an Optional filter, you may also use 3;SERVICE_DEMAND_START.
-StartType       = 1 ;SERVICE_SYSTEM_START
-ErrorControl    = 1 ;SERVICE_ERROR_NORMAL
-ServiceBinary   = %12%\otLwf.sys
-LoadOrderGroup  = NDIS
-Description     = %otLwf_Desc%
-
-[Install.Remove.Services]
-; The SPSVCINST_STOPSERVICE flag instructs SCM to stop the NT service
-; before uninstalling the driver.
-DelService=otLwf,0x200 ; SPSVCINST_STOPSERVICE
-
+;-------------------------------------------------------------------------------
+; Localizable Strings
+;-------------------------------------------------------------------------------
 [Strings]
-openthread = "OpenThread"
-otLwf_Desc = "OpenThread NDIS LightWeight Filter"
-otLwf_HelpText = "OpenThread NDIS LightWeight Filter"
+OpenThread              = "OpenThread"
+otlwf.DeviceDesc        = "OpenThread NDIS LightWeight Filter"
+otlwf.Service.DispName  = "OpenThread NDIS LightWeight Filter"
