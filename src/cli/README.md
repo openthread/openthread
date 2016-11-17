@@ -307,6 +307,16 @@ Done
 Conflict: dead, 00000800
 ```
 
+### commissioner sessionid
+
+Get current commissioner session id.
+
+```bash
+> commissioner sessionid
+0
+Done
+```
+
 ### contextreusedelay
 
 Get the CONTEXT_ID_REUSE_DELAY value.
