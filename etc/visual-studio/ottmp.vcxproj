@@ -23,10 +23,6 @@
     <TargetVersion>Windows10</TargetVersion>
     <UseDebugLibraries>false</UseDebugLibraries>
   </PropertyGroup>
-  <PropertyGroup Label="Configuration">
-    <KMDF_VERSION_MAJOR>1</KMDF_VERSION_MAJOR>
-    <KMDF_VERSION_MINOR>15</KMDF_VERSION_MINOR>
-  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings" />
   <ImportGroup Label="PropertySheets">
@@ -64,6 +60,13 @@
       <EnablePREfast>true</EnablePREfast>
     </ClCompile>
     <ResourceCompile>
+      <PreProcessorDefinitions>
+        %(PreProcessorDefinitions);
+        NDIS_MINIPORT_DRIVER=1;
+        NDIS_WDM=1;
+        NDIS650_MINIPORT=1;
+        OTTMP_LEGACY=1;
+      </PreProcessorDefinitions>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..;.;</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
