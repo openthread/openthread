@@ -31,6 +31,7 @@ import collections
 import io
 import ipaddress
 import struct
+import sys
 
 import common
 import config
@@ -313,7 +314,8 @@ class Context():
 
     def __init__(self, prefix, prefix_length=None):
         if isinstance(prefix, str):
-            prefix = unicode(prefix)
+            if sys.version_info[0] == 2:
+                prefix = prefix.decode("utf-8")
 
             prefix, prefix_length = prefix.split("/")
             prefix_length = int(prefix_length)
@@ -453,7 +455,7 @@ class LowpanIpv6HeaderFactory:
         return (data_byte >> 6)
 
     def _decompress_tf_4bytes(self, data):
-        data_bytes = [ord(b) for b in data.read(4)]
+        data_bytes = [b for b in bytearray(data.read(4))]
 
         dscp = self._unpack_dscp(data_bytes[0])
         ecn = self._unpack_ecn(data_bytes[0])
@@ -464,7 +466,7 @@ class LowpanIpv6HeaderFactory:
         return traffic_class, flow_label
 
     def _decompress_tf_3bytes(self, data):
-        data_bytes = [ord(b) for b in data.read(3)]
+        data_bytes = [b for b in bytearray(data.read(3))]
 
         ecn = self._unpack_ecn(data_bytes[0])
 

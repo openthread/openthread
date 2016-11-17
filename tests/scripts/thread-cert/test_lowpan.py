@@ -114,27 +114,27 @@ def any_hop_limit():
 
 
 def any_src_addr():
-    return bytearray([random.getrandbits(8) for _ in xrange(16)])
+    return bytearray([random.getrandbits(8) for _ in range(16)])
 
 
 def any_dst_addr():
-    return bytearray([random.getrandbits(8) for _ in xrange(16)])
+    return bytearray([random.getrandbits(8) for _ in range(16)])
 
 
 def any_eui64():
-    return bytearray([random.getrandbits(8) for _ in xrange(8)])
+    return bytearray([random.getrandbits(8) for _ in range(8)])
 
 
 def any_rloc16():
-    return bytearray([random.getrandbits(8) for _ in xrange(2)])
+    return bytearray([random.getrandbits(8) for _ in range(2)])
 
 
 def any_48bits_addr():
-    return bytearray([random.getrandbits(8) for _ in xrange(6)])
+    return bytearray([random.getrandbits(8) for _ in range(6)])
 
 
 def any_32bits_addr():
-    return bytearray([random.getrandbits(8) for _ in xrange(4)])
+    return bytearray([random.getrandbits(8) for _ in range(4)])
 
 
 def any_8bits_addr():
@@ -190,15 +190,15 @@ def any_dci():
 
 
 def any_src_mac_addr():
-    return bytearray([random.getrandbits(8) for _ in xrange(8)])
+    return bytearray([random.getrandbits(8) for _ in range(8)])
 
 
 def any_dst_mac_addr():
-    return bytearray([random.getrandbits(8) for _ in xrange(8)])
+    return bytearray([random.getrandbits(8) for _ in range(8)])
 
 
 def any_context():
-    prefix = bytearray([random.getrandbits(8) for _ in xrange(random.randint(2, 15))])
+    prefix = bytearray([random.getrandbits(8) for _ in range(random.randint(2, 15))])
     prefix_length = len(prefix)
     return lowpan.Context(prefix, prefix_length * 8)
 
@@ -206,9 +206,9 @@ def any_context():
 def any_mac_address():
     length = random.choice([2, 8])
     if length == 2:
-        return common.MacAddress.from_rloc16(bytearray([random.getrandbits(8) for _ in xrange(length)]))
+        return common.MacAddress.from_rloc16(bytearray([random.getrandbits(8) for _ in range(length)]))
     elif length == 8:
-        return common.MacAddress.from_eui64(bytearray([random.getrandbits(8) for _ in xrange(length)]))
+        return common.MacAddress.from_eui64(bytearray([random.getrandbits(8) for _ in range(length)]))
 
 
 def any_hops_left():
@@ -217,7 +217,7 @@ def any_hops_left():
 
 def any_data(length=None):
     length = length if length is not None else random.randint(1, 64)
-    return bytearray([random.getrandbits(8) for _ in xrange(length)])
+    return bytearray([random.getrandbits(8) for _ in range(length)])
 
 
 def any_datagram_size():
@@ -1171,7 +1171,7 @@ class TestLowpanUdpHeaderFactory(unittest.TestCase):
         src_port = any_src_port()
         dst_port = any_compressable_dst_port()
 
-        data_bytes = struct.pack(">H", src_port) + struct.pack(">H", dst_port)[1]
+        data_bytes = struct.pack(">H", src_port) + bytearray([struct.pack(">H", dst_port)[1]])
 
         # WHEN
         actual_src_port, actual_dst_port = factory._decompress_udp_ports(udphc, io.BytesIO(data_bytes))
@@ -1192,7 +1192,7 @@ class TestLowpanUdpHeaderFactory(unittest.TestCase):
         src_port = any_compressable_src_port()
         dst_port = any_dst_port()
 
-        data_bytes = struct.pack(">H", src_port)[1] + struct.pack(">H", dst_port)
+        data_bytes = bytearray([struct.pack(">H", src_port)[1]]) + struct.pack(">H", dst_port)
 
         # WHEN
         actual_src_port, actual_dst_port = factory._decompress_udp_ports(udphc, io.BytesIO(data_bytes))
@@ -1550,7 +1550,7 @@ class TestLowpanIpv6HeaderFactory(unittest.TestCase):
     def _merge_prefix_and_address(self, prefix, prefix_length, address):
         total_bytes = 16
 
-        prefix_length_in_bytes = prefix_length / 8
+        prefix_length_in_bytes = int(prefix_length / 8)
 
         if (prefix_length_in_bytes + len(address)) > total_bytes:
             total_bytes -= prefix_length_in_bytes

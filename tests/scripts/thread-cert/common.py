@@ -27,16 +27,16 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import struct
+from binascii import hexlify
 
 import ipaddress
-
-from binascii import hexlify
+import struct
+import sys
 
 
 def enum(*sequential, **named):
-    enums = dict(zip(sequential, range(len(sequential))), **named)
-    names = dict((value, key) for key, value in enums.iteritems())
+    enums = dict(list(zip(sequential, list(range(len(sequential))))), **named)
+    names = dict((value, key) for key, value in list(enums.items()))
     enums['name'] = names
     return type('Enum', (), enums)
 
@@ -60,11 +60,11 @@ class MessageInfo(object):
         self.payload_length = 0
 
     def _convert_value_to_ip_address(self, value):
-        if isinstance(value, str):
-            value = unicode(value)
-
-        elif isinstance(value, bytearray):
+        if isinstance(value, bytearray):
             value = bytes(value)
+
+        elif isinstance(value, str) and sys.version_info[0] == 2:
+            value = value.decode("utf-8")
 
         return ipaddress.ip_address(value)
 
@@ -135,7 +135,7 @@ class MacAddress(object):
 
     @classmethod
     def from_rloc16(cls, rloc16, big_endian=True):
-        if isinstance(rloc16, int) or isinstance(rloc16, long):
+        if isinstance(rloc16, int):
             mac_address = struct.pack(">H", rloc16)
         elif isinstance(rloc16, bytearray):
             mac_address = rloc16[:2]

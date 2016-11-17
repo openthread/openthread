@@ -26,7 +26,6 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
-
 import random
 import struct
 import unittest
@@ -36,7 +35,7 @@ import common
 
 
 def any_eui64():
-    return bytearray([random.getrandbits(8) for _ in xrange(8)])
+    return bytearray([random.getrandbits(8) for _ in range(8)])
 
 
 def any_rloc16_int():
@@ -44,11 +43,11 @@ def any_rloc16_int():
 
 
 def any_rloc16_bytearray():
-    return bytearray([random.getrandbits(8) for _ in xrange(2)])
+    return bytearray([random.getrandbits(8) for _ in range(2)])
 
 
 def any_ipv6_address():
-    return bytearray([random.getrandbits(8) for _ in xrange(16)])
+    return bytearray([random.getrandbits(8) for _ in range(16)])
 
 
 class TestMessageInfo(unittest.TestCase):
@@ -124,7 +123,7 @@ class TestMacAddress(unittest.TestCase):
         rloc16 = any_rloc16_int()
 
         # WHEN
-        mac_address = common.MacAddress.from_rloc16(rloc16)
+        mac_address = common.MacAddress.from_rloc16(int(rloc16))
 
         # THEN
         self.assertEqual(common.MacAddress.SHORT, mac_address.type)
