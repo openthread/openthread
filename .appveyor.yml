@@ -44,7 +44,7 @@ install:
     - ps: Start-Sleep -s 10
 build:
   project: etc/visual-studio/openthread.sln
-  verbosity: minimal
+  verbosity: detailed
 after_build:
     - ps: $env:Platform2 = $env:Platform
     - ps: If ($env:Platform2 -eq "x86") { $env:Platform2 = "Win32" }

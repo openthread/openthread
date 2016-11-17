@@ -23,6 +23,10 @@
     <TargetVersion>Windows10</TargetVersion>
     <UseDebugLibraries>false</UseDebugLibraries>
   </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <KMDF_VERSION_MAJOR>1</KMDF_VERSION_MAJOR>
+    <KMDF_VERSION_MINOR>15</KMDF_VERSION_MINOR>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings" />
   <ImportGroup Label="PropertySheets">
@@ -68,9 +72,6 @@
         ndis.lib;
       </AdditionalDependencies>
     </Link>
-    <Inf>
-      <EnableVerbose>true</EnableVerbose>
-    </Inf>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\examples\drivers\windows\ottmp\adapter.cpp" />
