@@ -454,7 +454,7 @@ public:
      * This method generates an MLE Announce message.
      *
      * @param[in]  aChannel        The channel to use when transmitting.
-     * @param[in]  aOrphanAnnounce To indiciate if MLE Announce is sent from an orphan end device.
+     * @param[in]  aOrphanAnnounce To indicate if MLE Announce is sent from an orphan end device.
      *
      * @retval kThreadError_None    Successfully generated an MLE Announce message.
      * @retval kThreadError_NoBufs  Insufficient buffers to generate the MLE Announce message.
@@ -977,7 +977,7 @@ protected:
      * This method appends a Active Timestamp TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
-     * @param[in]  aCouldUseLocal  Ture to use local Active Timestamp when network Active Timestamp is not available, False not.
+     * @param[in]  aCouldUseLocal  True to use local Active Timestamp when network Active Timestamp is not available, False not.
      *
      * @retval kThreadError_None    Successfully appended the Active Timestamp TLV.
      * @retval kThreadError_NoBufs  Insufficient buffers available to append the Active Timestamp TLV.
@@ -989,7 +989,7 @@ protected:
      * This method appends a Pending Timestamp TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
-     * @param[in]  aCouldUseLocal  Ture to use local Pending Timestamp when network Pending Timestamp is not available, False not.
+     * @param[in]  aCouldUseLocal  True to use local Pending Timestamp when network Pending Timestamp is not available, False not.
      *
      * @retval kThreadError_None    Successfully appended the Pending Timestamp TLV.
      * @retval kThreadError_NoBufs  Insufficient buffers available to append the Pending Timestamp TLV.
