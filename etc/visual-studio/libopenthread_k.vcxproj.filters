@@ -201,6 +201,9 @@
     <ClCompile Include="..\..\src\core\meshcop\dataset_manager.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\meshcop\dataset_manager_ftd.cpp">
+      <Filter>Source Files\thread</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\meshcop\dtls.cpp">
       <Filter>Source Files\meshcop</Filter>
     </ClCompile>
