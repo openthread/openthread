@@ -188,31 +188,45 @@ void Leader::HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, co
     uint8_t tlvs[NetworkData::kMaxSize];
     MeshCoP::StateTlv::State state = MeshCoP::StateTlv::kAccept;
     bool hasSessionId = false;
+    bool hasValidTlv = false;
     uint16_t sessionId = 0;
 
     VerifyOrExit(mMle.GetDeviceState() == Mle::kDeviceStateLeader, state = MeshCoP::StateTlv::kReject);
 
     aMessage.Read(offset, length, tlvs);
 
-    // Session Id and Border Router Locator MUST NOT be set, and only includes commissioning data tlvs
+    // Session Id and Border Router Locator MUST NOT be set, but accept including unexpected or
+    // unknown TLV as long as there is at least one valid TLV.
     for (MeshCoP::Tlv *cur = reinterpret_cast<MeshCoP::Tlv *>(tlvs);
          cur < reinterpret_cast<MeshCoP::Tlv *>(tlvs + length);
          cur = cur->GetNext())
     {
         MeshCoP::Tlv::Type type = cur->GetType();
 
-        VerifyOrExit(type == MeshCoP::Tlv::kCommissionerSessionId ||
-                     type == MeshCoP::Tlv::kJoinerUdpPort || type == MeshCoP::Tlv::kSteeringData,
-                     state = MeshCoP::StateTlv::kReject);
-
-        if (type == MeshCoP::Tlv::kCommissionerSessionId)
+        if (type == MeshCoP::Tlv::kJoinerUdpPort || type == MeshCoP::Tlv::kSteeringData)
+        {
+            hasValidTlv = true;
+        }
+        else if (type == MeshCoP::Tlv::kBorderAgentLocator)
+        {
+            ExitNow(state = MeshCoP::StateTlv::kReject);
+        }
+        else if (type == MeshCoP::Tlv::kCommissionerSessionId)
         {
             hasSessionId = true;
             sessionId = static_cast<MeshCoP::CommissionerSessionIdTlv *>(cur)->GetCommissionerSessionId();
         }
+        else
+        {
+            // do nothing for unexpected or unknown TLV
+        }
     }
 
+    // verify whether or not commissioner session id TLV is included
     VerifyOrExit(hasSessionId, state = MeshCoP::StateTlv::kReject);
+
+    // verify whether or not MGMT_COMM_SET.req includes at least one valid TLV
+    VerifyOrExit(hasValidTlv, state = MeshCoP::StateTlv::kReject);
 
     for (MeshCoP::Tlv *cur = reinterpret_cast<MeshCoP::Tlv *>(mTlvs + sizeof(CommissioningDataTlv));
          cur < reinterpret_cast<MeshCoP::Tlv *>(mTlvs + mLength);
