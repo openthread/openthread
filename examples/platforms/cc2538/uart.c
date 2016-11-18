@@ -54,13 +54,21 @@ static void processTransmit(void);
 static const uint8_t *sTransmitBuffer = NULL;
 static uint16_t sTransmitLength = 0;
 
+typedef struct RecvBuffer
+{
+    uint16_t Offset;
+    uint16_t Length;
+} RecvBuffer;
+
 static uint8_t sReceiveBuffer[kReceiveBufferSize];
-static uint16_t sReceiveHead = 0;
-static uint16_t sReceiveLength = 0;
+static RecvBuffer sReceive;
 
 ThreadError otPlatUartEnable(void)
 {
     uint32_t div;
+
+    sReceive.Offset = 0;
+    sReceive.Length = 0;
 
     // clock
     HWREG(SYS_CTRL_RCGCUART) = SYS_CTRL_RCGCUART_UART0;
@@ -121,23 +129,42 @@ void processReceive(void)
 {
     uint16_t remaining;
 
-    VerifyOrExit(sReceiveLength > 0, ;);
+    // Copy static state to local variable to prevent multiple reads
+    RecvBuffer recv = sReceive;
 
-    remaining = kReceiveBufferSize - sReceiveHead;
+    // Bail out if we have no data to process
+    VerifyOrExit(recv.Length > 0, ;);
 
-    if (sReceiveLength >= remaining)
+    // Calculate the remaining buffer before wrap around
+    remaining = kReceiveBufferSize - recv.Offset;
+
+    // If the data wraps around, process the first part
+    if (recv.Length >= remaining)
     {
-        otPlatUartReceived(sReceiveBuffer + sReceiveHead, remaining);
-        sReceiveHead = 0;
-        sReceiveLength -= remaining;
+        otPlatUartReceived(sReceiveBuffer + recv.Offset, remaining);
+
+        // Reset the buffer offset to start and set remaining
+        recv.Offset = 0;
+        remaining = recv.Length - remaining;
+    }
+    else
+    {
+        // Since there is no wrap around, the entire length is remaining
+        remaining = recv.Length;
     }
 
-    if (sReceiveLength > 0)
+    // For any data remaining, process it
+    if (remaining > 0)
     {
-        otPlatUartReceived(sReceiveBuffer + sReceiveHead, sReceiveLength);
-        sReceiveHead += sReceiveLength;
-        sReceiveLength = 0;
+        otPlatUartReceived(sReceiveBuffer + recv.Offset, remaining);
+        recv.Offset += remaining;
     }
+
+    // Update the static variables, account for them possibly changing 
+    // while this function was executing. Note, if they change between the
+    // following two lines, then we will lose data.
+    remaining = (sReceive.Length -= recv.Length);
+    sReceive.Offset = (recv.Offset + remaining) % kReceiveBufferSize;
 
 exit:
     return;
@@ -182,11 +209,11 @@ void UART0IntHandler(void)
         {
             byte = HWREG(UART0_BASE + UART_O_DR);
 
-            if (sReceiveLength < kReceiveBufferSize)
+            if (sReceive.Length < kReceiveBufferSize)
             {
-                tail = (sReceiveHead + sReceiveLength) % kReceiveBufferSize;
+                tail = (sReceive.Offset + sReceive.Length) % kReceiveBufferSize;
                 sReceiveBuffer[tail] = byte;
-                sReceiveLength++;
+                sReceive.Length++;
             }
         }
     }
