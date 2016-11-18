@@ -301,7 +301,7 @@ Return Value:
         
         if (!NT_SUCCESS(status)) {
             LogError(DRIVER_DEFAULT, "IOCTL_SERIAL_RESET_DEVICE failed %!STATUS!", status);
-            // Temporarily ignore reset failures, break;
+            break;
         }
 
         // 8 bits, no parity, 1 stop bit
@@ -342,12 +342,14 @@ Return Value:
                 break;
             }
         }
-
+        
         /*{
             // Only send if CTS is set, Set RTS before sending
-            const SERIAL_HANDFLOW shf = { SERIAL_CTS_HANDSHAKE, SERIAL_RTS_CONTROL, 
-                ARRAYSIZE( AdapterContext->reqRead ) / 2 * HW_IO_SIZE,
-                ARRAYSIZE( AdapterContext->reqRead ) * HW_IO_SIZE };
+            const SERIAL_HANDFLOW shf = 
+            {
+                SERIAL_CTS_HANDSHAKE, SERIAL_RTS_CONTROL,
+                MAX_SPINEL_COMMAND_LENGTH, MAX_SPINEL_COMMAND_LENGTH
+            };
             WDF_MEMORY_DESCRIPTOR_INIT_BUFFER(&inputDesc, (PVOID)&shf, sizeof(shf));
             
             status = SerialSendIoctl(AdapterContext, IOCTL_SERIAL_SET_HANDFLOW, &wrso, &inputDesc);
@@ -356,26 +358,26 @@ Return Value:
                 LogError(DRIVER_DEFAULT, "IOCTL_SERIAL_SET_HANDFLOW failed %!STATUS!", status);
                 // break; Ignore for now
             }
-        }*/
+        }
 
-        /*status = SerialSendIoctl(AdapterContext, IOCTL_SERIAL_SET_XON, &wrso);
-        
+        status = SerialSendIoctl(AdapterContext, IOCTL_SERIAL_SET_XON, &wrso);
+
         if (!NT_SUCCESS(status)) {
-            LogError(DRIVER_DEFAULT,  "IOCTL_SERIAL_SET_XON failed %!STATUS!", status);
+            LogError(DRIVER_DEFAULT, "IOCTL_SERIAL_SET_XON failed %!STATUS!", status);
             break;
-        }*/
+        }
 
-        /*status = SerialSendIoctl(AdapterContext, IOCTL_SERIAL_SET_RTS, &wrso);
+        status = SerialSendIoctl(AdapterContext, IOCTL_SERIAL_SET_RTS, &wrso);
         
         if (!NT_SUCCESS(status)) {
-            LogError(DRIVER_DEFAULT,  "IOCTL_SERIAL_SET_RTS failed %!STATUS!", status);
+            LogError(DRIVER_DEFAULT, "IOCTL_SERIAL_SET_RTS failed %!STATUS!", status);
             break;
         }
 
         status = SerialSendIoctl(AdapterContext, IOCTL_SERIAL_SET_DTR, &wrso);
-        
+
         if (!NT_SUCCESS(status)) {
-            LogError(DRIVER_DEFAULT,  "IOCTL_SERIAL_SET_DTR failed %!STATUS!", status);
+            LogError(DRIVER_DEFAULT, "IOCTL_SERIAL_SET_DTR failed %!STATUS!", status);
             break;
         }*/
 
@@ -528,7 +530,7 @@ Return Value:
 
         if (!NT_SUCCESS(status)) {
             LogError(DRIVER_DEFAULT, "IOCTL_SERIAL_CLEAR_STATS failed %!STATUS!", status);
-            // Temporarily ignore reset failures, break;
+            break;
         }
 
         status = SerialCheckStatus(AdapterContext, false);
@@ -784,6 +786,9 @@ Arguments:
 #else
         NetBufferListsCompleteSend(SendItem->NetBufferList);
 #endif
+
+        // Hack to sleep 1 ms per 5 bytes sent
+        NdisMSleep(1000 * (1 + SendItem->EncodedBufferLength / 5));
 
         // Cleanup
         WdfObjectDelete(SendItem->WdfMemory);
