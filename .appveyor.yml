@@ -40,6 +40,7 @@ install:
     - cmd: Bcdedit.exe -set TESTSIGNING ON
     # Configure logging
     - cmd: reg import .appveyor\ThreadEtw.reg
+    - cmd: set
     - ps: Restart-Computer -Force
     - ps: Start-Sleep -s 10
 build:
