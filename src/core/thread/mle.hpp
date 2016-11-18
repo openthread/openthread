@@ -1210,12 +1210,10 @@ private:
     ThreadError HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
                                      uint32_t aKeySequence);
     ThreadError HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    ThreadError HandleDiscoveryRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     ThreadError SendParentRequest(void);
     ThreadError SendChildIdRequest(void);
-    ThreadError SendDiscoveryResponse(const Ip6::Address &aDestination, uint16_t aPanId);
     void SendOrphanAnnounce(void);
 
     bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, ConnectivityTlv &aConnectivityTlv) const;
