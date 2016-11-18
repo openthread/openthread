@@ -832,6 +832,8 @@ typedef struct otLeaderData
 typedef struct otMacCounters
 {
     uint32_t mTxTotal;                ///< The total number of transmissions.
+    uint32_t mTxUnicast;              ///< The total number of unicast transmissions.
+    uint32_t mTxBroadcast;            ///< The total number of broadcast transmissions.
     uint32_t mTxAckRequested;         ///< The number of transmissions with ack request.
     uint32_t mTxAcked;                ///< The number of transmissions that were acked.
     uint32_t mTxNoAckRequested;       ///< The number of transmissions without ack request.

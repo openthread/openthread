@@ -517,6 +517,8 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
         {
             const otMacCounters *counters = otGetMacCounters(mInstance);
             sServer->OutputFormat("TxTotal: %d\r\n", counters->mTxTotal);
+            sServer->OutputFormat("    TxUnicast: %d\r\n", counters->mTxUnicast);
+            sServer->OutputFormat("    TxBroadcast: %d\r\n", counters->mTxBroadcast);
             sServer->OutputFormat("    TxAckRequested: %d\r\n", counters->mTxAckRequested);
             sServer->OutputFormat("    TxAcked: %d\r\n", counters->mTxAcked);
             sServer->OutputFormat("    TxNoAckRequested: %d\r\n", counters->mTxNoAckRequested);

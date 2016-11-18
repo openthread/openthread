@@ -208,6 +208,9 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_CNTR_RX_SPINEL_TOTAL, &NcpBase::GetPropertyHandler_NCP_CNTR },
     { SPINEL_PROP_CNTR_RX_SPINEL_ERR, &NcpBase::GetPropertyHandler_NCP_CNTR },
 
+    { SPINEL_PROP_CNTR_TX_UNICAST, &NcpBase::GetPropertyHandler_NCP_CNTR },
+    { SPINEL_PROP_CNTR_TX_BROADCAST, &NcpBase::GetPropertyHandler_NCP_CNTR },
+
     { SPINEL_PROP_MSG_BUFFER_COUNTERS, &NcpBase::GetPropertyHandler_MSG_BUFFER_COUNTERS },
 
 #if OPENTHREAD_ENABLE_LEGACY
@@ -2593,6 +2596,14 @@ ThreadError NcpBase::GetPropertyHandler_MAC_CNTR(uint8_t header, spinel_prop_key
 
     case SPINEL_PROP_CNTR_RX_ERR_OTHER:
         value = macCounters->mRxErrOther;
+        break;
+
+    case SPINEL_PROP_CNTR_TX_UNICAST:
+        value = macCounters->mTxUnicast;
+        break;
+
+    case SPINEL_PROP_CNTR_TX_BROADCAST:
+        value = macCounters->mTxBroadcast;
         break;
 
     default:

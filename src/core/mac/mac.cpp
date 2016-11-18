@@ -782,7 +782,7 @@ exit:
 
     if (error != kThreadError_None)
     {
-        TransmitDoneTask(false, kThreadError_Abort);
+        TransmitDoneTask(mTxFrame, false, kThreadError_Abort);
     }
 }
 
@@ -790,16 +790,31 @@ extern "C" void otPlatRadioTransmitDone(otInstance *aInstance, RadioPacket *aPac
                                         ThreadError aError)
 {
     otLogFuncEntryMsg("%!otError!, aRxPending=%u", aError, aRxPending ? 1 : 0);
-    (void)aPacket;
-    aInstance->mThreadNetif.GetMac().TransmitDoneTask(aRxPending, aError);
+
+    aInstance->mThreadNetif.GetMac().TransmitDoneTask(aPacket, aRxPending, aError);
     otLogFuncExit();
 }
 
-void Mac::TransmitDoneTask(bool aRxPending, ThreadError aError)
+void Mac::TransmitDoneTask(RadioPacket *aPacket, bool aRxPending, ThreadError aError)
 {
     mMacTimer.Stop();
 
     mCounters.mTxTotal++;
+
+    Frame* packet = (Frame*)aPacket;
+    Address addr;
+    packet->GetDstAddr(addr);
+    if ( addr.mShortAddress == kShortAddrBroadcast )
+    {
+      //Broadcast packet
+      mCounters.mTxBroadcast++;
+    }
+    else
+    {
+      //Unicast packet
+      mCounters.mTxUnicast++;
+    }
+
 
     if (!RadioSupportsRetriesAndCsmaBackoff() &&
         aError == kThreadError_ChannelAccessFailure &&
