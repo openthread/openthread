@@ -44,8 +44,9 @@ install:
     - ps: Start-Sleep -s 10
 before_build:
     - cmd: set
-    - cmd: dir "C:\Program Files (x86)\Windows Kits\10\Include\wdf\kmdf"
-    - cmd: dir "C:\Program Files (x86)\Windows Kits\10\Include\wdf\kmdf\1.15"
+    - cmd: dir "C:\Program Files (x86)\Windows Kits\10"
+    - cmd: dir "C:\Program Files (x86)\Windows Kits\10\Include"
+    - cmd: dir "C:\Program Files (x86)\Windows Kits\10\Include\wdf"
 build:
   project: etc/visual-studio/ottmp.vcxproj
   verbosity: detailed
