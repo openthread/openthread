@@ -40,11 +40,12 @@ install:
     - cmd: Bcdedit.exe -set TESTSIGNING ON
     # Configure logging
     - cmd: reg import .appveyor\ThreadEtw.reg
-    - cmd: set
     - ps: Restart-Computer -Force
     - ps: Start-Sleep -s 10
+before_build:
+    - cmd: set
 build:
-  project: etc/visual-studio/openthread.sln
+  project: etc/visual-studio/ottmp.vcxproj
   verbosity: detailed
 after_build:
     - ps: $env:Platform2 = $env:Platform
