@@ -838,6 +838,14 @@ typedef enum
     /** Format: `L` (Read-only) */
     SPINEL_PROP_CNTR_TX_BROADCAST      = SPINEL_PROP_CNTR__BEGIN + 304,
 
+    /// The number of unicast packets recived.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_UNICAST        = SPINEL_PROP_CNTR__BEGIN + 305,
+
+    /// The number of broadcast packets recived.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_BROADCAST      = SPINEL_PROP_CNTR__BEGIN + 306,
+
 
     /// The message buffer counter info
     /** Format: `T(SSSSSSSSSSSSSSSS)` (Read-only)

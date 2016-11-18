@@ -530,6 +530,8 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
             sServer->OutputFormat("    TxRetry: %d\r\n", counters->mTxRetry);
             sServer->OutputFormat("    TxErrCca: %d\r\n", counters->mTxErrCca);
             sServer->OutputFormat("RxTotal: %d\r\n", counters->mRxTotal);
+            sServer->OutputFormat("    RxUnicast: %d\r\n", counters->mRxUnicast);
+            sServer->OutputFormat("    RxBroadcast: %d\r\n", counters->mRxBroadcast);
             sServer->OutputFormat("    RxData: %d\r\n", counters->mRxData);
             sServer->OutputFormat("    RxDataPoll: %d\r\n", counters->mRxDataPoll);
             sServer->OutputFormat("    RxBeacon: %d\r\n", counters->mRxBeacon);

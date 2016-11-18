@@ -1253,6 +1253,17 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
         break;
     }
 
+    // Increment coutners
+    if ( dstaddr.mShortAddress == kShortAddrBroadcast ) {
+        //Broadcast packet
+        mCounters.mRxBroadcast++;
+    }
+    else
+    {
+        //Unicast packet
+        mCounters.mRxUnicast++;
+    }
+
     // Security Processing
     SuccessOrExit(error = ProcessReceiveSecurity(*aFrame, srcaddr, neighbor));
 
