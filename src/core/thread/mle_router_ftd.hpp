@@ -335,6 +335,16 @@ public:
     uint8_t GetRouteCost(uint16_t aRloc16) const;
 
     /**
+     * This method returns the link cost to the given Router.
+     *
+     * @param[in]  aRouterId  The Router ID.
+     *
+     * @returns The link cost to the Router.
+     *
+     */
+    uint8_t GetLinkCost(uint8_t aRouterId);
+
+    /**
      * This method returns the current Router ID Sequence value.
      *
      * @returns The current Router ID Sequence value.
@@ -654,7 +664,6 @@ private:
     ThreadError AppendRoute(Message &aMessage);
     ThreadError AppendActiveDataset(Message &aMessage);
     ThreadError AppendPendingDataset(Message &aMessage);
-    uint8_t GetLinkCost(uint8_t aRouterId);
     void GetChildInfo(Child &aChild, otChildInfo &aChildInfo);
     ThreadError HandleDetachStart(void);
     ThreadError HandleChildStart(otMleAttachFilter aFilter);
