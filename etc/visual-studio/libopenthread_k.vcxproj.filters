@@ -308,6 +308,12 @@
     <ClInclude Include="..\..\src\core\mac\mac_whitelist.hpp">
       <Filter>Header Files\mac</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\core\mac\mac_whitelist_impl.hpp">
+      <Filter>Header Files\mac</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\mac\mac_whitelist_stub.hpp">
+      <Filter>Header Files\mac</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\core\net\dhcp6.hpp">
       <Filter>Header Files\net</Filter>
     </ClInclude>
@@ -408,6 +414,12 @@
       <Filter>Header Files\thread</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\mac\mac_blacklist.hpp">
+      <Filter>Header Files\mac</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\mac\mac_blacklist_impl.hpp">
+      <Filter>Header Files\mac</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\mac\mac_blacklist_stub.hpp">
       <Filter>Header Files\mac</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\meshcop\commissioner.hpp">

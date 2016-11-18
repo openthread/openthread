@@ -58,8 +58,6 @@ SOURCES_COMMON                      = \
     crypto/sha256.cpp                 \
     mac/mac.cpp                       \
     mac/mac_frame.cpp                 \
-    mac/mac_whitelist.cpp             \
-    mac/mac_blacklist.cpp             \
     meshcop/dataset.cpp               \
     meshcop/dataset_manager.cpp       \
     meshcop/tlvs.cpp                  \
@@ -88,6 +86,13 @@ SOURCES_COMMON                      = \
     thread/thread_tlvs.cpp            \
     utils/slaac_address.cpp           \
     $(NULL)
+
+if OPENTHREAD_ENABLE_MAC_WHITELIST
+SOURCES_COMMON                     += \
+    mac/mac_blacklist.cpp             \
+    mac/mac_whitelist.cpp             \
+    $(NULL)
+endif  # OPENTHREAD_ENABLE_MAC_WHITELIST
 
 if OPENTHREAD_ENABLE_COMMISSIONER
 SOURCES_COMMON                     += \
@@ -180,9 +185,13 @@ noinst_HEADERS                      = \
     crypto/mbedtls.hpp                \
     crypto/sha256.hpp                 \
     mac/mac.hpp                       \
+    mac/mac_blacklist.hpp             \
+    mac/mac_blacklist_impl.hpp        \
+    mac/mac_blacklist_stub.hpp        \
     mac/mac_frame.hpp                 \
     mac/mac_whitelist.hpp             \
-    mac/mac_blacklist.hpp             \
+    mac/mac_whitelist_impl.hpp        \
+    mac/mac_whitelist_stub.hpp        \
     meshcop/announce_begin_client.hpp \
     meshcop/commissioner.hpp          \
     meshcop/dataset.hpp               \

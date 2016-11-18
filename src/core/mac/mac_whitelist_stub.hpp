@@ -26,14 +26,55 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+/**
+ * @file
+ *   This file includes definitions for IEEE 802.15.4 frame filtering based on MAC address.
+ */
 
-#if OPENTHREAD_ENABLE_MAC_WHITELIST
-#include "mac_whitelist_impl.hpp"
-#else
-#include "mac_whitelist_stub.hpp"
-#endif
+#ifndef MAC_WHITELIST_HPP_
+#define MAC_WHITELIST_HPP_
+
+#include <stdint.h>
+
+#include <openthread-types.h>
+#include <mac/mac_frame.hpp>
+
+namespace Thread {
+namespace Mac {
+
+class Whitelist
+{
+public:
+    typedef otMacWhitelistEntry Entry;
+
+    Whitelist(void) { }
+
+    void Enable(void) { }
+
+    void Disable(void) { }
+
+    bool IsEnabled(void) const { return false; }
+
+    int GetMaxEntries(void) const { return 0; }
+
+    ThreadError GetEntry(uint8_t, Entry &) const { return kThreadError_NotImplemented; }
+
+    Entry *Add(const ExtAddress &) { return NULL; }
+
+    void Remove(const ExtAddress &) { }
+
+    void Clear(void) { }
+
+    Entry *Find(const ExtAddress &) { return NULL; }
+
+    void ClearFixedRssi(Entry &) { }
+
+    ThreadError GetFixedRssi(Entry &, int8_t &) const { return kThreadError_NotImplemented; }
+
+    void SetFixedRssi(Entry &, int8_t) { }
+};
+
+}  // namespace Mac
+}  // namespace Thread
+
+#endif  // MAC_WHITELIST_HPP_
