@@ -832,19 +832,19 @@ typedef enum
 
     /// The number of unicast packets transmitted.
     /** Format: `L` (Read-only) */
-    SPINEL_PROP_CNTR_TX_UNICAST        = SPINEL_PROP_CNTR__BEGIN + 303,
+    SPINEL_PROP_CNTR_TX_PKT_UNICAST        = SPINEL_PROP_CNTR__BEGIN + 303,
 
     /// The number of broadcast packets transmitted.
     /** Format: `L` (Read-only) */
-    SPINEL_PROP_CNTR_TX_BROADCAST      = SPINEL_PROP_CNTR__BEGIN + 304,
+    SPINEL_PROP_CNTR_TX_PKT_BROADCAST      = SPINEL_PROP_CNTR__BEGIN + 304,
 
     /// The number of unicast packets recived.
     /** Format: `L` (Read-only) */
-    SPINEL_PROP_CNTR_RX_UNICAST        = SPINEL_PROP_CNTR__BEGIN + 305,
+    SPINEL_PROP_CNTR_RX_PKT_UNICAST        = SPINEL_PROP_CNTR__BEGIN + 305,
 
     /// The number of broadcast packets recived.
     /** Format: `L` (Read-only) */
-    SPINEL_PROP_CNTR_RX_BROADCAST      = SPINEL_PROP_CNTR__BEGIN + 306,
+    SPINEL_PROP_CNTR_RX_PKT_BROADCAST      = SPINEL_PROP_CNTR__BEGIN + 306,
 
 
     /// The message buffer counter info
