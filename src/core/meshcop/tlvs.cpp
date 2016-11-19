@@ -32,7 +32,7 @@
  */
 
 #include <common/code_utils.hpp>
-#include <thread/meshcop_tlvs.hpp>
+#include <meshcop/tlvs.hpp>
 
 namespace Thread {
 namespace MeshCoP {

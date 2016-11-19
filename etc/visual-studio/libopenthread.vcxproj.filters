@@ -189,20 +189,17 @@
     <ClCompile Include="..\..\src\core\openthread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\thread\meshcop_dataset.cpp">
-      <Filter>Source Files\thread</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\thread\meshcop_dataset_manager.cpp">
-      <Filter>Source Files\thread</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\thread\meshcop_tlvs.cpp">
-      <Filter>Source Files\thread</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\core\mac\mac_blacklist.cpp">
       <Filter>Source Files\mac</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\meshcop\commissioner.cpp">
       <Filter>Source Files\meshcop</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\meshcop\dataset.cpp">
+      <Filter>Source Files\thread</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\meshcop\dataset_manager.cpp">
+      <Filter>Source Files\thread</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\meshcop\dtls.cpp">
       <Filter>Source Files\meshcop</Filter>
@@ -215,6 +212,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\core\meshcop\joiner_router.cpp">
       <Filter>Source Files\meshcop</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\meshcop\tlvs.cpp">
+      <Filter>Source Files\thread</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\meshcop\leader.cpp">
       <Filter>Source Files\meshcop</Filter>
@@ -353,6 +353,9 @@
     <ClInclude Include="..\..\src\core\thread\address_resolver.hpp">
       <Filter>Header Files\thread</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\core\thread\announce_begin_server.hpp">
+      <Filter>Header Files\thread</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\core\thread\energy_scan_server.hpp">
       <Filter>Header Files\thread</Filter>
     </ClInclude>
@@ -413,20 +416,20 @@
     <ClInclude Include="..\..\src\core\thread\topology.hpp">
       <Filter>Header Files\thread</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\thread\meshcop_dataset.hpp">
-      <Filter>Header Files\thread</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\thread\meshcop_dataset_manager.hpp">
-      <Filter>Header Files\thread</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\thread\meshcop_tlvs.hpp">
-      <Filter>Header Files\thread</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\core\mac\mac_blacklist.hpp">
       <Filter>Header Files\mac</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\core\meshcop\announce_begin_client.hpp">
+      <Filter>Header Files\meshcop</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\core\meshcop\commissioner.hpp">
       <Filter>Header Files\meshcop</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\meshcop\dataset.hpp">
+      <Filter>Header Files\thread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\meshcop\dataset_manager.hpp">
+      <Filter>Header Files\thread</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\meshcop\dtls.hpp">
       <Filter>Header Files\meshcop</Filter>
@@ -446,6 +449,9 @@
     <ClInclude Include="..\..\src\core\meshcop\panid_query_client.hpp">
       <Filter>Header Files\meshcop</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\core\meshcop\tlvs.hpp">
+      <Filter>Header Files\thread</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\core\crypto\aes_ecb.hpp">
       <Filter>Header Files\crypto</Filter>
     </ClInclude>
@@ -463,12 +469,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\utils\jam_detector.hpp">
       <Filter>Header Files\utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\meshcop\announce_begin_client.hpp">
-      <Filter>Header Files\meshcop</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\meshcop\announce_begin_server.hpp">
-      <Filter>Header Files\thread</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\common\crc16.hpp">
       <Filter>Header Files\common</Filter>

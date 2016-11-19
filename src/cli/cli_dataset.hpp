@@ -37,7 +37,6 @@
 #include <stdarg.h>
 
 #include <cli/cli_server.hpp>
-#include <thread/meshcop_dataset.hpp>
 
 namespace Thread {
 namespace Cli {

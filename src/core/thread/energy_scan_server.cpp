@@ -37,8 +37,8 @@
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
+#include <meshcop/tlvs.hpp>
 #include <platform/random.h>
-#include <thread/meshcop_tlvs.hpp>
 #include <thread/energy_scan_server.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
