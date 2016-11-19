@@ -129,26 +129,25 @@ exit:
 
 void processReceive(void)
 {
-    // Copy static state to local variable to prevent multiple reads
-    RecvBuffer recv = sReceive;
+    // Copy Tail to prevent multiple reads
+    uint16_t Tail = sReceive.Tail;
 
     // If the data wraps around, process the first part
-    if (recv.Head > recv.Tail)
+    if (sReceive.Head > Tail)
     {
-        otPlatUartReceived(sReceiveBuffer + recv.Head, kReceiveBufferSize - recv.Head);
+        otPlatUartReceived(sReceiveBuffer + sReceive.Head, kReceiveBufferSize - sReceive.Head);
 
-        // Reset the buffer head back to zero. Update both local and static
-        // variable to allow interrupt to write new values over the data we
-        // have already processed.
-        recv.Head = 0;
+        // Reset the buffer Head back to zero.
         sReceive.Head = 0;
     }
 
     // For any data remaining, process it
-    if (recv.Head != recv.Tail)
+    if (sReceive.Head != Tail)
     {
-        otPlatUartReceived(sReceiveBuffer + recv.Head, recv.Tail - recv.Head);
-        sReceive.Head = recv.Tail;
+        otPlatUartReceived(sReceiveBuffer + sReceive.Head, Tail - sReceive.Head);
+
+        // Set Head to the local Tail we have cached
+        sReceive.Head = Tail;
     }
 }
 
@@ -190,7 +189,7 @@ void UART0IntHandler(void)
         {
             byte = HWREG(UART0_BASE + UART_O_DR);
 
-            // We can only write if incrementing Tail doesn't equal head
+            // We can only write if incrementing Tail doesn't equal Head
             if (sReceive.Head != (sReceive.Tail + 1) % kReceiveBufferSize)
             {
                 sReceiveBuffer[sReceive.Tail] = byte;
