@@ -451,35 +451,10 @@ exit:
     return error;
 }
 
-void MeshForwarder::MoveToResolving(const Ip6::Address &aDestination)
-{
-    Message *cur, *next;
-    Ip6::Address ip6Dst;
-
-    for (cur = mSendQueue.GetHead(); cur; cur = next)
-    {
-        next = cur->GetNext();
-
-        if (cur->GetType() != Message::kTypeIp6)
-        {
-            continue;
-        }
-
-        cur->Read(Ip6::Header::GetDestinationOffset(), sizeof(ip6Dst), &ip6Dst);
-
-        if (memcmp(&ip6Dst, &aDestination, sizeof(ip6Dst)) == 0)
-        {
-            mSendQueue.Dequeue(*cur);
-            mResolvingQueue.Enqueue(*cur);
-        }
-    }
-}
-
 Message *MeshForwarder::GetDirectTransmission()
 {
     Message *curMessage, *nextMessage;
     ThreadError error = kThreadError_None;
-    Ip6::Address ip6Dst;
 
     for (curMessage = mSendQueue.GetHead(); curMessage; curMessage = nextMessage)
     {
@@ -510,8 +485,8 @@ Message *MeshForwarder::GetDirectTransmission()
             ExitNow();
 
         case kThreadError_AddressQuery:
-            curMessage->Read(Ip6::Header::GetDestinationOffset(), sizeof(ip6Dst), &ip6Dst);
-            MoveToResolving(ip6Dst);
+            mSendQueue.Dequeue(*curMessage);
+            mResolvingQueue.Enqueue(*curMessage);
             continue;
 
         case kThreadError_Drop:
@@ -1256,8 +1231,6 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
     mSendBusy = false;
     VerifyOrExit(mSendMessage != NULL, ;);
 
-    mSendMessage->SetOffset(mMessageNextOffset);
-
     aFrame.GetDstAddr(macDest);
 
     if ((neighbor = mMle.GetNeighbor(macDest)) != NULL)
@@ -1353,6 +1326,7 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
         mSendQueue.Dequeue(*mSendMessage);
         mSendMessage->Free();
         mSendMessage = NULL;
+        mMessageNextOffset = 0;
     }
 
     mScheduleTransmissionTask.Post();

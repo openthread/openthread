@@ -937,6 +937,7 @@ void Mac::SentFrame(ThreadError aError)
     }
 
     mTransmitAttempts = 0;
+    mCsmaAttempts = 0;
 
     if (sendFrame.GetAckRequest())
     {
