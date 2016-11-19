@@ -801,18 +801,18 @@ void Mac::TransmitDoneTask(RadioPacket *aPacket, bool aRxPending, ThreadError aE
 
     mCounters.mTxTotal++;
 
-    Frame *packet = (Frame *)aPacket;
+    Frame *packet = static_cast<Frame *>(aPacket);
     Address addr;
     packet->GetDstAddr(addr);
 
     if (addr.mShortAddress == kShortAddrBroadcast)
     {
-        //Broadcast packet
+        // Broadcast packet
         mCounters.mTxBroadcast++;
     }
     else
     {
-        //Unicast packet
+        // Unicast packet
         mCounters.mTxUnicast++;
     }
 
@@ -1257,12 +1257,12 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
     // Increment coutners
     if (dstaddr.mShortAddress == kShortAddrBroadcast)
     {
-        //Broadcast packet
+        // Broadcast packet
         mCounters.mRxBroadcast++;
     }
     else
     {
-        //Unicast packet
+        // Unicast packet
         mCounters.mRxUnicast++;
     }
 
