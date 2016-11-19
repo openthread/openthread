@@ -92,9 +92,8 @@
     <ClCompile Include="..\..\src\core\meshcop\joiner_router.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\leader.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\panid_query_client.cpp" />
-    <ClInclude Include="..\..\src\core\net\dhcp6.cpp" />
-    <ClInclude Include="..\..\src\core\net\dhcp6_client.cpp" />
-    <ClInclude Include="..\..\src\core\net\dhcp6_server.cpp" />
+    <ClCompile Include="..\..\src\core\net\dhcp6_client.cpp" />
+    <ClCompile Include="..\..\src\core\net\dhcp6_server.cpp" />
     <ClCompile Include="..\..\src\core\net\icmp6.cpp" />
     <ClCompile Include="..\..\src\core\net\ip6.cpp" />
     <ClCompile Include="..\..\src\core\net\ip6_address.cpp" />
