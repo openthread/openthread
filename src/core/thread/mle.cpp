@@ -105,12 +105,16 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mLeaderAloc.mPrefixLength = 128;
     mLeaderAloc.mPreferredLifetime = 0xffffffff;
     mLeaderAloc.mValidLifetime = 0xffffffff;
+    mLeaderAloc.mScopeOverride = Ip6::Address::kRealmLocalScope;
+    mLeaderAloc.mScopeOverrideValid = true;
 
     // initialize Mesh Local Prefix
     mMeshLocal64.GetAddress().mFields.m8[0] = 0xfd;
     memcpy(mMeshLocal64.GetAddress().mFields.m8 + 1, mMac.GetExtendedPanId(), 5);
     mMeshLocal64.GetAddress().mFields.m8[6] = 0x00;
     mMeshLocal64.GetAddress().mFields.m8[7] = 0x00;
+    mMeshLocal64.mScopeOverride = Ip6::Address::kRealmLocalScope;
+    mMeshLocal64.mScopeOverrideValid = true;
 
     // mesh-local 64
     for (int i = 8; i < 16; i++)
@@ -130,6 +134,8 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mMeshLocal16.mPrefixLength = 64;
     mMeshLocal16.mPreferredLifetime = 0xffffffff;
     mMeshLocal16.mValidLifetime = 0xffffffff;
+    mMeshLocal16.mScopeOverride = Ip6::Address::kRealmLocalScope;
+    mMeshLocal16.mScopeOverrideValid = true;
 
     // Store RLOC address reference in MPL module.
     mNetif.GetIp6().mMpl.SetMatchingAddress(mMeshLocal16.GetAddress());
