@@ -334,6 +334,7 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
 
     ActiveTimestampTlv activeTimestamp;
     NetworkMasterKeyTlv masterKey;
+    ChannelTlv channel;
 
     activeTimestamp.SetLength(0);
     masterKey.SetLength(0);
@@ -363,6 +364,11 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
         case Tlv::kNetworkMasterKey:
             aMessage.Read(offset, sizeof(masterKey), &masterKey);
             break;
+
+        case Tlv::kChannel:
+            aMessage.Read(offset, sizeof(channel), &channel);
+            VerifyOrExit(channel.GetChannel() >= kPhyMinChannel && channel.GetChannel() <= kPhyMaxChannel,
+                         state = StateTlv::kReject);
 
         default:
             break;
@@ -544,10 +550,30 @@ ThreadError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset,
 
     if (isCommissioner)
     {
-        CommissionerSessionIdTlv sessionId;
-        sessionId.Init();
-        sessionId.SetCommissionerSessionId(mNetif.GetCommissioner().GetSessionId());
-        SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
+        const uint8_t *cur = aTlvs;
+        const uint8_t *end = aTlvs + aLength;
+        bool hasSessionId = false;
+
+        while (cur < end)
+        {
+            const Tlv *data = reinterpret_cast<const Tlv *>(cur);
+
+            if (data->GetType() == Tlv::kCommissionerSessionId)
+            {
+                hasSessionId = true;
+                break;
+            }
+
+            cur += sizeof(Tlv) + data->GetLength();
+        }
+
+        if (!hasSessionId)
+        {
+            CommissionerSessionIdTlv sessionId;
+            sessionId.Init();
+            sessionId.SetCommissionerSessionId(mNetif.GetCommissioner().GetSessionId());
+            SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
+        }
     }
 
 #endif
