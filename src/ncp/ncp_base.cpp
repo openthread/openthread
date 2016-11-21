@@ -181,6 +181,8 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_CNTR_TX_PKT_BEACON_REQ, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_TX_PKT_OTHER, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_TX_PKT_RETRY, &NcpBase::GetPropertyHandler_MAC_CNTR },
+    { SPINEL_PROP_CNTR_TX_PKT_UNICAST, &NcpBase::GetPropertyHandler_NCP_CNTR },
+    { SPINEL_PROP_CNTR_TX_PKT_BROADCAST, &NcpBase::GetPropertyHandler_NCP_CNTR },
     { SPINEL_PROP_CNTR_TX_ERR_CCA, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_RX_PKT_TOTAL, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_RX_PKT_DATA, &NcpBase::GetPropertyHandler_MAC_CNTR },
@@ -190,6 +192,8 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_CNTR_RX_PKT_OTHER, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_RX_PKT_FILT_WL, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_RX_PKT_FILT_DA, &NcpBase::GetPropertyHandler_MAC_CNTR },
+    { SPINEL_PROP_CNTR_RX_PKT_UNICAST, &NcpBase::GetPropertyHandler_NCP_CNTR },
+    { SPINEL_PROP_CNTR_RX_PKT_BROADCAST, &NcpBase::GetPropertyHandler_NCP_CNTR },
     { SPINEL_PROP_CNTR_RX_ERR_EMPTY, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_RX_ERR_UKWN_NBR, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_RX_ERR_NVLD_SADDR, &NcpBase::GetPropertyHandler_MAC_CNTR },
@@ -207,11 +211,6 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_CNTR_TX_SPINEL_TOTAL, &NcpBase::GetPropertyHandler_NCP_CNTR },
     { SPINEL_PROP_CNTR_RX_SPINEL_TOTAL, &NcpBase::GetPropertyHandler_NCP_CNTR },
     { SPINEL_PROP_CNTR_RX_SPINEL_ERR, &NcpBase::GetPropertyHandler_NCP_CNTR },
-
-    { SPINEL_PROP_CNTR_TX_PKT_UNICAST, &NcpBase::GetPropertyHandler_NCP_CNTR },
-    { SPINEL_PROP_CNTR_TX_PKT_BROADCAST, &NcpBase::GetPropertyHandler_NCP_CNTR },
-    { SPINEL_PROP_CNTR_RX_PKT_UNICAST, &NcpBase::GetPropertyHandler_NCP_CNTR },
-    { SPINEL_PROP_CNTR_RX_PKT_BROADCAST, &NcpBase::GetPropertyHandler_NCP_CNTR },
 
     { SPINEL_PROP_MSG_BUFFER_COUNTERS, &NcpBase::GetPropertyHandler_MSG_BUFFER_COUNTERS },
 
@@ -2540,6 +2539,14 @@ ThreadError NcpBase::GetPropertyHandler_MAC_CNTR(uint8_t header, spinel_prop_key
         value = macCounters->mTxErrCca;
         break;
 
+    case SPINEL_PROP_CNTR_TX_PKT_UNICAST:
+        value = macCounters->mTxUnicast;
+        break;
+
+    case SPINEL_PROP_CNTR_TX_PKT_BROADCAST:
+        value = macCounters->mTxBroadcast;
+        break;
+
     case SPINEL_PROP_CNTR_RX_PKT_TOTAL:
         value = macCounters->mRxTotal;
         break;
@@ -2576,6 +2583,14 @@ ThreadError NcpBase::GetPropertyHandler_MAC_CNTR(uint8_t header, spinel_prop_key
         value = macCounters->mRxDuplicated;
         break;
 
+    case SPINEL_PROP_CNTR_RX_PKT_UNICAST:
+        value = macCounters->mRxUnicast;
+        break;
+
+    case SPINEL_PROP_CNTR_RX_PKT_BROADCAST:
+        value = macCounters->mRxBroadcast;
+        break;
+
     case SPINEL_PROP_CNTR_RX_ERR_EMPTY:
         value = macCounters->mRxErrNoFrame;
         break;
@@ -2600,21 +2615,6 @@ ThreadError NcpBase::GetPropertyHandler_MAC_CNTR(uint8_t header, spinel_prop_key
         value = macCounters->mRxErrOther;
         break;
 
-    case SPINEL_PROP_CNTR_TX_PKT_UNICAST:
-        value = macCounters->mTxUnicast;
-        break;
-
-    case SPINEL_PROP_CNTR_TX_PKT_BROADCAST:
-        value = macCounters->mTxBroadcast;
-        break;
-
-    case SPINEL_PROP_CNTR_RX_PKT_UNICAST:
-        value = macCounters->mRxUnicast;
-        break;
-
-    case SPINEL_PROP_CNTR_RX_PKT_BROADCAST:
-        value = macCounters->mRxBroadcast;
-        break;
 
     default:
         errorCode = SendLastStatus(header, SPINEL_STATUS_INTERNAL_ERROR);
