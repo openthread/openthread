@@ -87,6 +87,7 @@
     <ClCompile Include="..\..\src\core\meshcop\commissioner.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\dataset.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\dataset_manager.cpp" />
+    <ClCompile Include="..\..\src\core\meshcop\dataset_manager_ftd.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\dtls.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\announce_begin_client.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\energy_scan_client.cpp" />

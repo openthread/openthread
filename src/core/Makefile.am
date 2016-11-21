@@ -141,6 +141,7 @@ libopenthread_ftd_a_CPPFLAGS        = \
 
 libopenthread_ftd_a_SOURCES         = \
     $(SOURCES_COMMON)                 \
+    meshcop/dataset_manager_ftd.cpp   \
     meshcop/joiner_router.cpp         \
     meshcop/leader.cpp                \
     thread/address_resolver.cpp       \
@@ -196,6 +197,8 @@ noinst_HEADERS                      = \
     meshcop/commissioner.hpp          \
     meshcop/dataset.hpp               \
     meshcop/dataset_manager.hpp       \
+    meshcop/dataset_manager_ftd.hpp   \
+    meshcop/dataset_manager_mtd.hpp   \
     meshcop/dtls.hpp                  \
     meshcop/energy_scan_client.hpp    \
     meshcop/joiner.hpp                \
