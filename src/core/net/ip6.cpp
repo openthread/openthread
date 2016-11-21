@@ -68,6 +68,11 @@ Message *Ip6::NewMessage(uint16_t reserved)
     return mMessagePool.New(Message::kTypeIp6, sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + reserved);
 }
 
+bool Ip6::IsForwardingEnabled(void)
+{
+    return mForwardingEnabled;
+}
+
 void Ip6::SetForwardingEnabled(bool aEnable)
 {
     mForwardingEnabled = aEnable;
