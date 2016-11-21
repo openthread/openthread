@@ -862,6 +862,8 @@ void Mac::HandleMacTimer(void *aContext)
 
 void Mac::HandleMacTimer(void)
 {
+    Address addr;
+
     switch (mState)
     {
     case kStateActiveScan:
@@ -892,6 +894,20 @@ void Mac::HandleMacTimer(void)
         otLogDebgMac("ack timer fired");
         otPlatRadioReceive(mNetif.GetInstance(), mChannel);
         mCounters.mTxTotal++;
+
+        mTxFrame->GetDstAddr(addr);
+
+        if (addr.mShortAddress == kShortAddrBroadcast)
+        {
+            // Broadcast packet
+            mCounters.mTxBroadcast++;
+        }
+        else
+        {
+            // Unicast Packet
+            mCounters.mTxUnicast++;
+        }
+
         SentFrame(kThreadError_NoAck);
         break;
 
