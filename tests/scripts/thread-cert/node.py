@@ -69,7 +69,7 @@ class Node:
         self.interface.thread_stop()
             
     def commissioner_start(self):
-        self.interface.thread_start()
+        self.interface.commissioner_start()
 
     def commissioner_add_joiner(self, addr, psk):
         self.interface.commissioner_add_joiner(addr, psk)
