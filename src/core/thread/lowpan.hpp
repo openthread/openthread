@@ -82,11 +82,6 @@ struct Context
 class Lowpan
 {
 public:
-    enum
-    {
-        kHopsLeft = 14,
-    };
-
     /**
      * This constructor initializes the object.
      *
@@ -226,6 +221,46 @@ OT_TOOL_PACKED_BEGIN
 class MeshHeader
 {
 public:
+    enum
+    {
+        kAdditionalHopsLeft = 1    ///< The additional value that is added to predicted value of the route cost.
+    };
+
+    /**
+     * Default constructor for the object.
+     *
+     */
+    MeshHeader() { memset(this, 0, sizeof(*this)); }
+
+    /**
+     * Mesh Header constructor that takes frame @p aFrame as a parameter.
+     *
+     * @param[in]  aFrame  The pointer to the frame.
+     *
+     */
+    MeshHeader(const uint8_t *aFrame) {
+        mDispatchHopsLeft = *aFrame++;
+        mDeepHopsLeft = IsDeepHopsLeftField() ? *aFrame++ : 0;
+        memcpy(&mAddress, aFrame, sizeof(mAddress));
+    }
+
+    /**
+     * Mesh Header constructor that takes message object @p aMessage as a parameter.
+     *
+     * @param[in]  aMessage  The message object.
+     *
+     */
+    MeshHeader(const Message &aMessage) {
+        aMessage.Read(0, sizeof(mDispatchHopsLeft), &mDispatchHopsLeft);
+
+        if (IsDeepHopsLeftField()) {
+            aMessage.Read(1, sizeof(mDeepHopsLeft) + sizeof(mAddress), &mDeepHopsLeft);
+        }
+        else {
+            aMessage.Read(1, sizeof(mAddress), &mAddress);
+        }
+    }
+
     /**
      * This method initializes the header.
      *
@@ -251,12 +286,21 @@ public:
     bool IsValid() { return (mDispatchHopsLeft & kSourceShort) && (mDispatchHopsLeft & kDestinationShort); }
 
     /**
+     * This method indicates whether or not the header contains Deep Hops Left field.
+     *
+     * @retval TRUE   If the header does contain Deep Hops Left field.
+     * @retval FALSE  If the header does not contain Deep Hops Left field.
+     *
+     */
+    bool IsDeepHopsLeftField() { return (mDispatchHopsLeft & kHopsLeftMask) == kDeepHopsLeft; }
+
+    /**
      * This static method returns the size of the Mesh Header in bytes.
      *
      * @returns The size of the Mesh Header in bytes.
      *
      */
-    static uint8_t GetHeaderLength() { return sizeof(MeshHeader); }
+    uint8_t GetHeaderLength() { return sizeof(*this) - (IsDeepHopsLeftField() ? 0 : sizeof(mDeepHopsLeft)) ; }
 
     /**
      * This method returns the Hops Left value.
@@ -264,7 +308,7 @@ public:
      * @returns The Hops Left value.
      *
      */
-    uint8_t GetHopsLeft() { return mDispatchHopsLeft & kHopsLeftMask; }
+    uint8_t GetHopsLeft() { return IsDeepHopsLeftField() ? mDeepHopsLeft : mDispatchHopsLeft & kHopsLeftMask; }
 
     /**
      * This method sets the Hops Left value.
@@ -272,7 +316,15 @@ public:
      * @param[in]  aHops  The Hops Left value.
      *
      */
-    void SetHopsLeft(uint8_t aHops) { mDispatchHopsLeft = (mDispatchHopsLeft & ~kHopsLeftMask) | aHops; }
+    void SetHopsLeft(uint8_t aHops) {
+        if (aHops < kDeepHopsLeft && !IsDeepHopsLeftField()) {
+            mDispatchHopsLeft = (mDispatchHopsLeft & ~kHopsLeftMask) | aHops;
+        }
+        else {
+            mDispatchHopsLeft = (mDispatchHopsLeft & ~kHopsLeftMask) | kDeepHopsLeft;
+            mDeepHopsLeft = aHops;
+        }
+    }
 
     /**
      * This method returns the Mesh Source address.
@@ -280,7 +332,7 @@ public:
      * @returns The Mesh Source address.
      *
      */
-    uint16_t GetSource() { return HostSwap16(mSource); }
+    uint16_t GetSource() { return HostSwap16(mAddress.mSource); }
 
     /**
      * This method sets the Mesh Source address.
@@ -288,7 +340,7 @@ public:
      * @param[in]  aSource  The Mesh Source address.
      *
      */
-    void SetSource(uint16_t aSource) { mSource = HostSwap16(aSource); }
+    void SetSource(uint16_t aSource) { mAddress.mSource = HostSwap16(aSource); }
 
     /**
      * This method returns the Mesh Destination address.
@@ -296,7 +348,7 @@ public:
      * @returns The Mesh Destination address.
      *
      */
-    uint16_t GetDestination() { return HostSwap16(mDestination); }
+    uint16_t GetDestination() { return HostSwap16(mAddress.mDestination); }
 
     /**
      * This method sets the Mesh Destination address.
@@ -304,21 +356,42 @@ public:
      * @param[in]  aDestination  The Mesh Destination address.
      *
      */
-    void SetDestination(uint16_t aDestination) { mDestination = HostSwap16(aDestination); }
+    void SetDestination(uint16_t aDestination) { mAddress.mDestination = HostSwap16(aDestination); }
+
+    /**
+     * This method appends Mesh Header to the @p aFrame frame.
+     *
+     * @param[in]  aFrame  The pointer to the frame.
+     *
+     */
+    void AppendTo(uint8_t *aFrame) {
+        *aFrame++ = mDispatchHopsLeft;
+
+        if (IsDeepHopsLeftField()) {
+            *aFrame++ = mDeepHopsLeft;
+        }
+
+        memcpy(aFrame, &mAddress, sizeof(mAddress));
+    }
 
 private:
     enum
     {
         kDispatch         = 2 << 6,
         kDispatchMask     = 3 << 6,
-        kHopsLeftMask     = 0xf << 0,
+        kHopsLeftMask     = 0x0f,
         kSourceShort      = 1 << 5,
         kDestinationShort = 1 << 4,
+        kDeepHopsLeft     = 0x0f
     };
 
-    uint8_t mDispatchHopsLeft;
-    uint16_t mSource;
-    uint16_t mDestination;
+    uint8_t  mDispatchHopsLeft;
+    uint8_t  mDeepHopsLeft;
+    struct
+    {
+        uint16_t mSource;
+        uint16_t mDestination;
+    } mAddress OT_TOOL_PACKED_FIELD;
 } OT_TOOL_PACKED_END;
 
 /**

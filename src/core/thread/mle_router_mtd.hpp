@@ -76,6 +76,7 @@ public:
     void SetNetworkIdTimeout(uint8_t) { }
 
     uint8_t GetRouteCost(uint16_t) const { return 0; }
+    uint8_t GetLinkCost(uint16_t) { return 0; }
 
     uint8_t GetRouterIdSequence(void) const { return 0; }
 
