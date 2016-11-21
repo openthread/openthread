@@ -57,9 +57,9 @@ static uint16_t sTransmitLength = 0;
 typedef struct RecvBuffer
 {
     // The offset of the first item written to the list.
-    uint16_t Head;
+    uint16_t mHead;
     // The offset of the next item to be written to the list.
-    uint16_t Tail;
+    uint16_t mTail;
 } RecvBuffer;
 
 static uint8_t sReceiveBuffer[kReceiveBufferSize];
@@ -69,8 +69,8 @@ ThreadError otPlatUartEnable(void)
 {
     uint32_t div;
 
-    sReceive.Head = 0;
-    sReceive.Tail = 0;
+    sReceive.mHead = 0;
+    sReceive.mTail = 0;
 
     // clock
     HWREG(SYS_CTRL_RCGCUART) = SYS_CTRL_RCGCUART_UART0;
@@ -129,25 +129,25 @@ exit:
 
 void processReceive(void)
 {
-    // Copy Tail to prevent multiple reads
-    uint16_t Tail = sReceive.Tail;
+    // Copy tail to prevent multiple reads
+    uint16_t tail = sReceive.mTail;
 
     // If the data wraps around, process the first part
-    if (sReceive.Head > Tail)
+    if (sReceive.mHead > tail)
     {
-        otPlatUartReceived(sReceiveBuffer + sReceive.Head, kReceiveBufferSize - sReceive.Head);
+        otPlatUartReceived(sReceiveBuffer + sReceive.mHead, kReceiveBufferSize - sReceive.mHead);
 
-        // Reset the buffer Head back to zero.
-        sReceive.Head = 0;
+        // Reset the buffer mHead back to zero.
+        sReceive.mHead = 0;
     }
 
     // For any data remaining, process it
-    if (sReceive.Head != Tail)
+    if (sReceive.mHead != tail)
     {
-        otPlatUartReceived(sReceiveBuffer + sReceive.Head, Tail - sReceive.Head);
+        otPlatUartReceived(sReceiveBuffer + sReceive.mHead, tail - sReceive.mHead);
 
-        // Set Head to the local Tail we have cached
-        sReceive.Head = Tail;
+        // Set mHead to the local tail we have cached
+        sReceive.mHead = tail;
     }
 }
 
@@ -189,11 +189,11 @@ void UART0IntHandler(void)
         {
             byte = HWREG(UART0_BASE + UART_O_DR);
 
-            // We can only write if incrementing Tail doesn't equal Head
-            if (sReceive.Head != (sReceive.Tail + 1) % kReceiveBufferSize)
+            // We can only write if incrementing mTail doesn't equal mHead
+            if (sReceive.mHead != (sReceive.mTail + 1) % kReceiveBufferSize)
             {
-                sReceiveBuffer[sReceive.Tail] = byte;
-                sReceive.Tail = (sReceive.Tail + 1) % kReceiveBufferSize;
+                sReceiveBuffer[sReceive.mTail] = byte;
+                sReceive.mTail = (sReceive.mTail + 1) % kReceiveBufferSize;
             }
         }
     }
