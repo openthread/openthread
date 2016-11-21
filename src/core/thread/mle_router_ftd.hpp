@@ -680,6 +680,7 @@ private:
     ThreadError HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleDataRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleNetworkDataUpdateRouter(void);
+    ThreadError HandleDiscoveryRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     ThreadError ProcessRouteTlv(const RouteTlv &aRoute);
     void ResetAdvertiseInterval(void);
@@ -697,6 +698,7 @@ private:
     ThreadError SendChildUpdateResponse(Child *aChild, const Ip6::MessageInfo &aMessageInfo,
                                         const uint8_t *aTlvs, uint8_t aTlvsLength,  const ChallengeTlv *challenge);
     ThreadError SendDataResponse(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength);
+    ThreadError SendDiscoveryResponse(const Ip6::Address &aDestination, uint16_t aPanId);
 
     ThreadError SetStateRouter(uint16_t aRloc16);
     ThreadError SetStateLeader(uint16_t aRloc16);
