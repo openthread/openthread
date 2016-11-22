@@ -101,6 +101,16 @@ public:
     Address &GetAddress(void) { return *static_cast<Address *>(&mAddress); }
 
     /**
+     * This method returns the IPv6 scope value.
+     *
+     * @returns The IPv6 scope value.
+     *
+     */
+    uint8_t GetScope(void) const {
+        return mScopeOverrideValid ? static_cast<uint8_t>(mScopeOverride) : GetAddress().GetScope();
+    }
+
+    /**
      * This method returns the next unicast address assigned to the interface.
      *
      * @returns A pointer to the next unicast address.
