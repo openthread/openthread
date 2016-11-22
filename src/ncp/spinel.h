@@ -734,6 +734,14 @@ typedef enum
     /** Format: `L` (Read-only) */
     SPINEL_PROP_CNTR_TX_ERR_CCA        = SPINEL_PROP_CNTR__BEGIN + 11,
 
+    /// The number of unicast packets transmitted.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_TX_PKT_UNICAST    = SPINEL_PROP_CNTR__BEGIN + 12,
+
+    /// The number of broadcast packets transmitted.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_TX_PKT_BROADCAST  = SPINEL_PROP_CNTR__BEGIN + 13,
+
     /// The total number of received packets.
     /** Format: `L` (Read-only) */
     SPINEL_PROP_CNTR_RX_PKT_TOTAL      = SPINEL_PROP_CNTR__BEGIN + 100,
@@ -794,6 +802,14 @@ typedef enum
     /** Format: `L` (Read-only) */
     SPINEL_PROP_CNTR_RX_PKT_DUP        = SPINEL_PROP_CNTR__BEGIN + 114,
 
+    /// The number of unicast packets recived.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_PKT_UNICAST    = SPINEL_PROP_CNTR__BEGIN + 115,
+
+    /// The number of broadcast packets recived.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_PKT_BROADCAST  = SPINEL_PROP_CNTR__BEGIN + 116,
+
     /// The total number of secure transmitted IP messages.
     /** Format: `L` (Read-only) */
     SPINEL_PROP_CNTR_TX_IP_SEC_TOTAL   = SPINEL_PROP_CNTR__BEGIN + 200,
@@ -829,6 +845,8 @@ typedef enum
     /// The number of received spinel frames with error.
     /** Format: `L` (Read-only) */
     SPINEL_PROP_CNTR_RX_SPINEL_ERR     = SPINEL_PROP_CNTR__BEGIN + 302,
+
+
 
     /// The message buffer counter info
     /** Format: `T(SSSSSSSSSSSSSSSS)` (Read-only)
