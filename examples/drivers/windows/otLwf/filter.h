@@ -176,6 +176,8 @@ typedef struct _MS_FILTER
     RadioPacket                     otReceiveFrame;
     RadioPacket                     otTransmitFrame;
     CHAR                            otLastEnergyScanMaxRssi;
+    otPlatRadioReceiveDone          otReceiveDoneCallback;
+    otPlatRadioTransmitDone         otTransmitDoneCallback;
 
     BOOLEAN                         otPromiscuous;
     uint16_t                        otPanID;

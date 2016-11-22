@@ -121,6 +121,32 @@ typedef enum PhyState
 } PhyState;
 
 /**
+* The radio driver calls this function pointer to notify OpenThread of a received packet.
+*
+* @param[in]  aInstance The OpenThread instance structure.
+* @param[in]  aPacket   A pointer to the received packet or NULL if the receive operation was aborted.
+* @param[in]  aError    ::kThreadError_None when successfully received a frame, ::kThreadError_Abort when reception
+*                       was aborted and a frame was not received.
+*
+*/
+typedef void(*otPlatRadioReceiveDone)(otInstance *aInstance, RadioPacket *aPacket, ThreadError aError);
+
+/**
+* The radio driver calls this function pointer to notify OpenThread that the transmission has completed.
+*
+* @param[in]  aInstance      The OpenThread instance structure.
+* @param[in]  aPacket        A pointer to the packet that was transmitted.
+* @param[in]  aFramePending  TRUE if an ACK frame was received and the Frame Pending bit was set.
+* @param[in]  aError  ::kThreadError_None when the frame was transmitted, ::kThreadError_NoAck when the frame was
+*                     transmitted but no ACK was received, ::kThreadError_ChannelAccessFailure when the transmission
+*                     could not take place due to activity on the channel, ::kThreadError_Abort when transmission was
+*                     aborted for other reasons.
+*
+*/
+typedef void(*otPlatRadioTransmitDone)(otInstance *aInstance, RadioPacket *aPacket, bool aFramePending,
+                                       ThreadError aError);
+
+/**
  * The following are valid radio state transitions:
  *
  *                                    (Radio ON)
@@ -158,6 +184,16 @@ typedef enum PhyState
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64);
 
 /**
+ * Get the PAN ID used for address filtering.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ *
+ * @retval  The IEEE 802.15.4 PAN ID.
+ *
+ */
+uint16_t otPlatRadioGetPanId(otInstance *aInstance);
+
+/**
  * Set the PAN ID for address filtering.
  *
  * @param[in] aInstance  The OpenThread instance structure.
@@ -167,6 +203,15 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64);
 void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId);
 
 /**
+ * Get the Extended Address used for address filtering.
+ *
+ * @param[in]  aInstance         The OpenThread instance structure.
+ * @param[out] aExtendedAddress  A pointer to the IEEE 802.15.4 Extended Address.
+ *
+ */
+void otPlatRadioGetExtendedAddress(otInstance *aInstance, uint8_t *aExtendedAddress);
+
+/**
  * Set the Extended Address for address filtering.
  *
  * @param[in] aInstance         The OpenThread instance structure.
@@ -174,6 +219,16 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId);
  *
  */
 void otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *aExtendedAddress);
+
+/**
+ * Get the Short Address used for address filtering.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ *
+ * @retval  The IEEE 802.15.4 Short Address.
+ *
+ */
+uint16_t otPlatRadioGetShortAddress(otInstance *aInstance);
 
 /**
  * Set the Short Address for address filtering.
@@ -207,7 +262,8 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddress);
  * @retval ::kThreadError_None     Successfully enabled.
  * @retval ::kThreadError_Failure  The radio could not be enabled.
  */
-ThreadError otPlatRadioEnable(otInstance *aInstance);
+ThreadError otPlatRadioEnable(otInstance *aInstance, otPlatRadioReceiveDone receiveCallback,
+                              otPlatRadioTransmitDone transmitCallback);
 
 /**
  * Disable the radio.
@@ -239,6 +295,16 @@ bool otPlatRadioIsEnabled(otInstance *aInstance);
  * @retval ::kThreadError_InvalidState The radio was disabled
  */
 ThreadError otPlatRadioSleep(otInstance *aInstance);
+
+/**
+ * Get the channel used for receiving.
+ *
+ * @param[in] aInstance    The OpenThread instance structure.
+ *
+ * @retval  The channel to use for receiving.
+ *
+ */
+uint8_t otPlatRadioGetChannel(otInstance *aInstance);
 
 /**
  * Transitioning the radio from Sleep to Receive.
@@ -321,17 +387,6 @@ void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance);
 void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance);
 
 /**
- * The radio driver calls this method to notify OpenThread of a received packet.
- *
- * @param[in]  aInstance The OpenThread instance structure.
- * @param[in]  aPacket   A pointer to the received packet or NULL if the receive operation was aborted.
- * @param[in]  aError    ::kThreadError_None when successfully received a frame, ::kThreadError_Abort when reception
- *                       was aborted and a frame was not received.
- *
- */
-extern void otPlatRadioReceiveDone(otInstance *aInstance, RadioPacket *aPacket, ThreadError aError);
-
-/**
  * The radio transitions from Transmit to Receive.
  * This method returns a pointer to the transmit buffer.
  *
@@ -361,21 +416,6 @@ RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *aInstance);
  * @retval ::kThreadError_InvalidState The radio was not in the Receive state.
  */
 ThreadError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket);
-
-/**
- * The radio driver calls this method to notify OpenThread that the transmission has completed.
- *
- * @param[in]  aInstance      The OpenThread instance structure.
- * @param[in]  aPacket        A pointer to the packet that was transmitted.
- * @param[in]  aFramePending  TRUE if an ACK frame was received and the Frame Pending bit was set.
- * @param[in]  aError  ::kThreadError_None when the frame was transmitted, ::kThreadError_NoAck when the frame was
- *                     transmitted but no ACK was received, ::kThreadError_ChannelAccessFailure when the transmission
- *                     could not take place due to activity on the channel, ::kThreadError_Abort when transmission was
- *                     aborted for other reasons.
- *
- */
-extern void otPlatRadioTransmitDone(otInstance *aInstance, RadioPacket *aPacket, bool aFramePending,
-                                    ThreadError aError);
 
 /**
  * Get the most recent RSSI measurement.

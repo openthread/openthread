@@ -496,6 +496,40 @@ NcpBase::NcpBase(otInstance *aInstance):
 }
 
 // ----------------------------------------------------------------------------
+// MARK: Inbound Radio Packet Handling
+// ----------------------------------------------------------------------------
+
+void NcpBase::HandleRadioReceive(otInstance *aInstance, RadioPacket *aPacket, ThreadError aError)
+{
+    (void)aInstance;
+    sNcpContext->HandleRadioReceive(aPacket, aError);
+}
+
+void NcpBase::HandleRadioReceive(RadioPacket *aPacket, ThreadError aError)
+{
+    (void)aPacket;
+    (void)aError;
+}
+
+// ----------------------------------------------------------------------------
+// MARK: Outbound Radio Packet Handling
+// ----------------------------------------------------------------------------
+
+void NcpBase::HandleRadioTransmit(otInstance *aInstance, RadioPacket *aPacket, bool aFramePending,
+                                  ThreadError aError)
+{
+    (void)aInstance;
+    sNcpContext->HandleRadioTransmit(aPacket, aFramePending, aError);
+}
+
+void NcpBase::HandleRadioTransmit(RadioPacket *aPacket, bool aFramePending, ThreadError aError)
+{
+    (void)aPacket;
+    (void)aFramePending;
+    (void)aError;
+}
+
+// ----------------------------------------------------------------------------
 // MARK: Outbound Datagram Handling
 // ----------------------------------------------------------------------------
 
@@ -2940,7 +2974,7 @@ ThreadError NcpBase::SetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_
         }
         else
         {
-            errorCode = otPlatRadioEnable(mInstance);
+            errorCode = otPlatRadioEnable(mInstance, HandleRadioReceive, HandleRadioTransmit);
         }
     }
     else

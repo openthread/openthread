@@ -162,11 +162,12 @@ extern "C" {
     {
     }
 
-    ThreadError otPlatRadioEnable(otInstance *aInstance)
+    ThreadError otPlatRadioEnable(otInstance *aInstance, otPlatRadioReceiveDone receiveCallback,
+                                  otPlatRadioTransmitDone transmitCallback)
     {
         if (g_testPlatRadioEnable)
         {
-            return g_testPlatRadioEnable(aInstance);
+            return g_testPlatRadioEnable(aInstance, receiveCallback, transmitCallback);
         }
         else
         {

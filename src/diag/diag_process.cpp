@@ -124,7 +124,7 @@ void Diag::ProcessStart(int argc, char *argv[], char *aOutput, size_t aOutputMax
     ThreadError error = kThreadError_None;
 
     // enable radio
-    otPlatRadioEnable(sContext);
+    otPlatRadioEnable(sContext, DiagReceiveDone, DiagTransmitDone);
 
     // enable promiscuous mode
     otPlatRadioSetPromiscuous(sContext, true);
@@ -331,9 +331,10 @@ exit:
     AppendErrorResult(error, aOutput, aOutputMaxLen);
 }
 
-void Diag::DiagTransmitDone(otInstance *aInstance, bool aRxPending, ThreadError aError)
+void Diag::DiagTransmitDone(otInstance *aInstance, RadioPacket *aPacket, bool aRxPending, ThreadError aError)
 {
     (void)aInstance;
+    (void)aPacket;
     if (!aRxPending && aError == kThreadError_None)
     {
         sStats.sent_packets++;
@@ -374,18 +375,6 @@ void Diag::AlarmFired(otInstance *aInstance)
 extern "C" void otPlatDiagAlarmFired(otInstance *aInstance)
 {
     Diag::AlarmFired(aInstance);
-}
-
-extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, RadioPacket *aPacket, bool aRxPending, ThreadError aError)
-{
-    (void)aPacket;
-
-    Diag::DiagTransmitDone(aInstance, aRxPending, aError);
-}
-
-extern "C" void otPlatDiagRadioReceiveDone(otInstance *aInstance, RadioPacket *aFrame, ThreadError aError)
-{
-    Diag::DiagReceiveDone(aInstance, aFrame, aError);
 }
 
 }  // namespace Diagnostics

@@ -139,6 +139,21 @@ private:
     ThreadError OutboundFrameSend(void);
 
     /**
+    * Trampoline for HandleRadioReceive().
+    */
+    static void HandleRadioReceive(otInstance *aInstance, RadioPacket *aPacket, ThreadError aError);
+
+    void HandleRadioReceive(RadioPacket *aPacket, ThreadError aError);
+
+    /**
+    * Trampoline for HandleRadioTransmit().
+    */
+    static void HandleRadioTransmit(otInstance *aInstance, RadioPacket *aPacket, bool aFramePending,
+        ThreadError aError);
+
+    void HandleRadioTransmit(RadioPacket *aPacket, bool aFramePending, ThreadError aError);
+
+    /**
      * Trampoline for HandleDatagramFromStack().
      */
     static void HandleDatagramFromStack(otMessage aMessage, void *aContext);
