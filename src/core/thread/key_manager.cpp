@@ -54,6 +54,7 @@ KeyManager::KeyManager(ThreadNetif &aThreadNetif):
     mMacFrameCounter = 0;
     mMleFrameCounter = 0;
     mStoredMleFrameCounter = 0;
+    mStoredMacFrameCounter = 0;
 
     mKeyRotationTime = kDefaultKeyRotationTime;
     mKeySwitchGuardTime = kDefaultKeySwitchGuardTime;

@@ -270,7 +270,6 @@
 #endif  // OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
 
 /**
-<<<<<<< 0bc2efe750b37d06f6f62baa99932de0f9760f2f
  * @def OPENTHREAD_CONFIG_MAC_BLACKLIST_SIZE
  *
  * THe number if MAC blacklist entries.

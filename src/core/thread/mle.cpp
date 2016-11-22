@@ -1544,13 +1544,72 @@ ThreadError Mle::SendChildUpdateRequest(void)
     destination.SetIid(mParent.mMacAddr);
     SuccessOrExit(error = SendMessage(*message, destination));
 
-    otLogInfoMle("Sent Child Update Request");
+    otLogInfoMle("Sent Child Update Request to parent");
 
     if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
     {
         mMesh.SetPollPeriod(kAttachDataPollPeriod);
         mMesh.SetRxOnWhenIdle(false);
     }
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        message->Free();
+    }
+
+    return error;
+}
+
+ThreadError Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, const ChallengeTlv &aChallenge)
+{
+    ThreadError error = kThreadError_None;
+    Ip6::Address destination;
+    Message *message;
+
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
+    message->SetLinkSecurityEnabled(false);
+    SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildUpdateResponse));
+    SuccessOrExit(error = AppendSourceAddress(*message));
+    SuccessOrExit(error = AppendLeaderData(*message));
+
+    for (int i = 0; i < aNumTlvs; i++)
+    {
+        switch (aTlvs[i])
+        {
+        case Tlv::kTimeout:
+            SuccessOrExit(error = AppendTimeout(*message, mTimeout));
+            break;
+
+        case Tlv::kAddressRegistration:
+            if ((mDeviceMode & ModeTlv::kModeFFD) == 0)
+            {
+                SuccessOrExit(error = AppendAddressRegistration(*message));
+            }
+
+            break;
+
+        case Tlv::kResponse:
+            SuccessOrExit(error = AppendResponse(*message, aChallenge.GetChallenge(), aChallenge.GetLength()));
+            break;
+
+        case Tlv::kLinkFrameCounter:
+            SuccessOrExit(error = AppendLinkFrameCounter(*message));
+            break;
+
+        case Tlv::kMleFrameCounter:
+            SuccessOrExit(error = AppendMleFrameCounter(*message));
+            break;
+        }
+    }
+
+    memset(&destination, 0, sizeof(destination));
+    destination.mFields.m16[0] = HostSwap16(0xfe80);
+    destination.SetIid(mParent.mMacAddr);
+    SuccessOrExit(error = SendMessage(*message, destination));
+
+    otLogInfoMle("Sent Child Update Response to parent");
 
 exit:
 
@@ -1884,6 +1943,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
               command == Header::kCommandParentResponse ||
               command == Header::kCommandChildIdRequest ||
               command == Header::kCommandChildUpdateRequest ||
+              command == Header::kCommandChildUpdateResponse ||
               command == Header::kCommandAnnounce))
         {
             otLogDebgMle("mle sequence unknown! %d", command);
@@ -1934,11 +1994,27 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         break;
 
     case Header::kCommandChildUpdateRequest:
-        mMleRouter.HandleChildUpdateRequest(aMessage, aMessageInfo);
+        if (mDeviceState == kDeviceStateLeader || mDeviceState == kDeviceStateRouter)
+        {
+            mMleRouter.HandleChildUpdateRequest(aMessage, aMessageInfo);
+        }
+        else
+        {
+            HandleChildUpdateRequest(aMessage, aMessageInfo);
+        }
+
         break;
 
     case Header::kCommandChildUpdateResponse:
-        HandleChildUpdateResponse(aMessage, aMessageInfo);
+        if (mDeviceState == kDeviceStateLeader || mDeviceState == kDeviceStateRouter)
+        {
+            mMleRouter.HandleChildUpdateResponse(aMessage, aMessageInfo, keySequence);
+        }
+        else
+        {
+            HandleChildUpdateResponse(aMessage, aMessageInfo);
+        }
+
         break;
 
     case Header::kCommandAnnounce:
@@ -2488,6 +2564,79 @@ exit:
     return error;
 }
 
+ThreadError Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    static const uint8_t kMaxResponseTlvs = 5;
+
+    ThreadError error = kThreadError_None;
+    SourceAddressTlv sourceAddress;
+    LeaderDataTlv leaderData;
+    NetworkDataTlv networkData;
+    ChallengeTlv challenge;
+    TlvRequestTlv tlvRequest;
+    uint8_t dataRequestTlvs[] = {Tlv::kNetworkData};
+    uint8_t tlvs[kMaxResponseTlvs];
+    uint8_t numTlvs = 0;
+
+    otLogInfoMle("Received Child Update Request from parent");
+
+    // Source Address
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kSourceAddress, sizeof(sourceAddress), sourceAddress));
+    VerifyOrExit(sourceAddress.IsValid(), error = kThreadError_Parse);
+    VerifyOrExit(mParent.mValid.mRloc16 == sourceAddress.GetRloc16(), error = kThreadError_Drop);
+
+    // Leader Data
+    if (Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData) == kThreadError_None)
+    {
+        VerifyOrExit(leaderData.IsValid(), error = kThreadError_Parse);
+        SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
+
+        if ((mDeviceMode & ModeTlv::kModeFullNetworkData && leaderData.GetDataVersion() != mNetworkData.GetVersion()) ||
+            ((mDeviceMode & ModeTlv::kModeFullNetworkData) == 0 &&
+             leaderData.GetStableDataVersion() != mNetworkData.GetStableVersion()))
+        {
+            mRetrieveNewNetworkData = true;
+        }
+    }
+
+    // Network Data
+    if (Tlv::GetTlv(aMessage, Tlv::kNetworkData, sizeof(networkData), networkData) == kThreadError_None)
+    {
+        VerifyOrExit(networkData.IsValid(), error = kThreadError_Parse);
+        mNetworkData.SetNetworkData(leaderData.GetDataVersion(), leaderData.GetStableDataVersion(),
+                                    (mDeviceMode & ModeTlv::kModeFullNetworkData) == 0,
+                                    networkData.GetNetworkData(), networkData.GetLength());
+    }
+
+    // TLV Request
+    if (Tlv::GetTlv(aMessage, Tlv::kTlvRequest, sizeof(tlvRequest), tlvRequest) == kThreadError_None)
+    {
+        VerifyOrExit(tlvRequest.IsValid() && tlvRequest.GetLength() <= sizeof(tlvs), error = kThreadError_Parse);
+        memcpy(tlvs, tlvRequest.GetTlvs(), tlvRequest.GetLength());
+        numTlvs += tlvRequest.GetLength();
+    }
+
+    // Challenge
+    if (Tlv::GetTlv(aMessage, Tlv::kChallenge, sizeof(challenge), challenge) == kThreadError_None)
+    {
+        VerifyOrExit(challenge.IsValid(), error = kThreadError_Parse);
+        VerifyOrExit(static_cast<size_t>(numTlvs + 3) <= sizeof(tlvs), error = kThreadError_NoBufs);
+        tlvs[numTlvs++] = Tlv::kResponse;
+        tlvs[numTlvs++] = Tlv::kMleFrameCounter;
+        tlvs[numTlvs++] = Tlv::kLinkFrameCounter;
+    }
+
+    if (mRetrieveNewNetworkData)
+    {
+        SendDataRequest(aMessageInfo.GetPeerAddr(), dataRequestTlvs, sizeof(tlvs));
+    }
+
+    SuccessOrExit(error = SendChildUpdateResponse(tlvs, numTlvs, challenge));
+
+exit:
+    return error;
+}
+
 ThreadError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadError error = kThreadError_None;
@@ -2500,7 +2649,7 @@ ThreadError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::M
     NetworkDataTlv networkData;
     uint8_t tlvs[] = {Tlv::kNetworkData};
 
-    otLogInfoMle("Received Child Update Response");
+    otLogInfoMle("Received Child Update Response from parent");
 
     // Status
     if (Tlv::GetTlv(aMessage, Tlv::kStatus, sizeof(status), status) == kThreadError_None)

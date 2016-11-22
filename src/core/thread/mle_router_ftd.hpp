@@ -717,6 +717,8 @@ private:
     ThreadError HandleChildIdRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
                                      uint32_t aKeySequence);
     ThreadError HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    ThreadError HandleChildUpdateResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
+                                          uint32_t aKeySequence);
     ThreadError HandleDataRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleNetworkDataUpdateRouter(void);
     ThreadError HandleDiscoveryRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -734,6 +736,7 @@ private:
                                const TlvRequestTlv &aTlvRequest, const ChallengeTlv &aChallenge);
     ThreadError SendParentResponse(Child *aChild, const ChallengeTlv &aChallenge, bool aRoutersOnlyRequest);
     ThreadError SendChildIdResponse(Child *aChild);
+    ThreadError SendChildUpdateRequest(Child *aChild);
     ThreadError SendChildUpdateResponse(Child *aChild, const Ip6::MessageInfo &aMessageInfo,
                                         const uint8_t *aTlvs, uint8_t aTlvsLength,  const ChallengeTlv *challenge);
     ThreadError SendDataResponse(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength);
@@ -776,6 +779,8 @@ private:
     void HandleStateUpdateTimer(void);
     static void HandleDelayedResponseTimer(void *aContext);
     void HandleDelayedResponseTimer(void);
+    static void HandleChildUpdateRequestTimer(void *aContext);
+    void HandleChildUpdateRequestTimer(void);
 
     ThreadError AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestination, uint16_t aDelay);
 
@@ -784,6 +789,7 @@ private:
     TrickleTimer mAdvertiseTimer;
     Timer mStateUpdateTimer;
     Timer mDelayedResponseTimer;
+    Timer mChildUpdateRequestTimer;
 
     Coap::Resource mAddressSolicit;
     Coap::Resource mAddressRelease;

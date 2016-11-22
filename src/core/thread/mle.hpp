@@ -1094,6 +1094,19 @@ protected:
     ThreadError SendChildUpdateRequest(void);
 
     /**
+     * This method generates an MLE Child Update Response message.
+     *
+     * @param[in]  aTlvs         A pointer to requested TLV types.
+     * @param[in]  aNumTlvs      The number of TLV types in @p aTlvs.
+     * @param[in]  aChallenge    The Challenge TLV for the response.
+     *
+     * @retval kThreadError_None    Successfully generated an MLE Child Update Response message.
+     * @retval kThreadError_NoBufs  Insufficient buffers to generate the MLE Child Update Response message.
+     *
+     */
+    ThreadError SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, const ChallengeTlv &aChallenge);
+
+    /**
      * This method submits an MLE message to the UDP socket.
      *
      * @param[in]  aMessage      A reference to the message.
@@ -1223,6 +1236,7 @@ private:
 
     ThreadError HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleChildIdResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    ThreadError HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleChildUpdateResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
