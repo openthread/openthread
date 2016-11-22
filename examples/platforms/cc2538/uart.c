@@ -56,13 +56,14 @@ static uint16_t sTransmitLength = 0;
 
 typedef struct RecvBuffer
 {
+    // The data buffer
+    uint8_t mBuffer[kReceiveBufferSize];
     // The offset of the first item written to the list.
     uint16_t mHead;
     // The offset of the next item to be written to the list.
     uint16_t mTail;
 } RecvBuffer;
 
-static uint8_t sReceiveBuffer[kReceiveBufferSize];
 static RecvBuffer sReceive;
 
 ThreadError otPlatUartEnable(void)
@@ -135,7 +136,7 @@ void processReceive(void)
     // If the data wraps around, process the first part
     if (sReceive.mHead > tail)
     {
-        otPlatUartReceived(sReceiveBuffer + sReceive.mHead, kReceiveBufferSize - sReceive.mHead);
+        otPlatUartReceived(sReceive.mBuffer + sReceive.mHead, kReceiveBufferSize - sReceive.mHead);
 
         // Reset the buffer mHead back to zero.
         sReceive.mHead = 0;
@@ -144,7 +145,7 @@ void processReceive(void)
     // For any data remaining, process it
     if (sReceive.mHead != tail)
     {
-        otPlatUartReceived(sReceiveBuffer + sReceive.mHead, tail - sReceive.mHead);
+        otPlatUartReceived(sReceive.mBuffer + sReceive.mHead, tail - sReceive.mHead);
 
         // Set mHead to the local tail we have cached
         sReceive.mHead = tail;
@@ -192,7 +193,7 @@ void UART0IntHandler(void)
             // We can only write if incrementing mTail doesn't equal mHead
             if (sReceive.mHead != (sReceive.mTail + 1) % kReceiveBufferSize)
             {
-                sReceiveBuffer[sReceive.mTail] = byte;
+                sReceive.mBuffer[sReceive.mTail] = byte;
                 sReceive.mTail = (sReceive.mTail + 1) % kReceiveBufferSize;
             }
         }
