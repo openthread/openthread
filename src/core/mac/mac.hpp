@@ -474,7 +474,7 @@ public:
      *                     was aborted for other reasons.
      *
      */
-    void TransmitDoneTask(bool aRxPending, ThreadError aError);
+    void TransmitDoneTask(RadioPacket *aPacket, bool aRxPending, ThreadError aError);
 
     /**
      * This method returns if an active scan is in progress.

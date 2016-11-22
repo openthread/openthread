@@ -832,6 +832,8 @@ typedef struct otLeaderData
 typedef struct otMacCounters
 {
     uint32_t mTxTotal;                ///< The total number of transmissions.
+    uint32_t mTxUnicast;              ///< The total number of unicast transmissions.
+    uint32_t mTxBroadcast;            ///< The total number of broadcast transmissions.
     uint32_t mTxAckRequested;         ///< The number of transmissions with ack request.
     uint32_t mTxAcked;                ///< The number of transmissions that were acked.
     uint32_t mTxNoAckRequested;       ///< The number of transmissions without ack request.
@@ -843,6 +845,8 @@ typedef struct otMacCounters
     uint32_t mTxRetry;                ///< The number of retransmission times.
     uint32_t mTxErrCca;               ///< The number of CCA failure times.
     uint32_t mRxTotal;                ///< The total number of received packets.
+    uint32_t mRxUnicast;              ///< The total number of unicast packets received.
+    uint32_t mRxBroadcast;            ///< The total number of broadcast packets received.
     uint32_t mRxData;                 ///< The number of received data.
     uint32_t mRxDataPoll;             ///< The number of received data poll.
     uint32_t mRxBeacon;               ///< The number of received beacon.
@@ -893,11 +897,13 @@ typedef struct otBufferInfo
  */
 typedef struct otNetifAddress
 {
-    otIp6Address           mAddress;            ///< The IPv6 unicast address.
-    uint32_t               mPreferredLifetime;  ///< The Preferred Lifetime.
-    uint32_t               mValidLifetime;      ///< The Valid lifetime.
-    uint8_t                mPrefixLength;       ///< The Prefix length.
-    struct otNetifAddress *mNext;               ///< A pointer to the next network interface address.
+    otIp6Address           mAddress;                 ///< The IPv6 unicast address.
+    uint32_t               mPreferredLifetime;       ///< The Preferred Lifetime.
+    uint32_t               mValidLifetime;           ///< The Valid lifetime.
+    uint8_t                mPrefixLength;            ///< The Prefix length.
+    unsigned int           mScopeOverride : 4;       ///< The IPv6 scope of this address.
+    bool                   mScopeOverrideValid : 1;  ///< TRUE if the mScopeOverride value is valid, FALSE othewrise.
+    struct otNetifAddress *mNext;                    ///< A pointer to the next network interface address.
 } otNetifAddress;
 
 /**
