@@ -96,6 +96,8 @@ uint32_t otPlatRandomGet(void)
     return random;
 }
 
+extern static PhyState sState;
+
 ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
 {
     ThreadError error = kThreadError_None;
@@ -107,7 +109,7 @@ ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint1
     {
         channel = 11 + (HWREG(RFCORE_XREG_FREQCTRL) - 11) / 5;
         otPlatRadioSleep(sInstance);
-        otPlatRadioDisable(sInstance);
+        sState = kStateDisabled;
     }
 
     generateRandom(aInputLength, aOutput, aOutputLength);
@@ -115,7 +117,7 @@ ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint1
     if (channel)
     {
         cc2538RadioInit();
-        otPlatRadioEnable(sInstance);
+        sState = kStateSleep;
         otPlatRadioReceive(sInstance, channel);
     }
 

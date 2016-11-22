@@ -453,6 +453,7 @@ void cc2538RadioProcess(otInstance *aInstance)
                  (sReceiveFrame.mPsdu[IEEE802154_DSN_OFFSET] == sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET]))
         {
             sState = kStateReceive;
+
             if (sTransmitDoneCallback)
             {
                 sTransmitDoneCallback(aInstance, &sTransmitFrame, (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0,
