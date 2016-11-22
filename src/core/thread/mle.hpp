@@ -394,6 +394,24 @@ public:
     ThreadError Stop(bool aClearNetworkDatasets);
 
     /**
+     * This method restores network information from non-volatile memory.
+     *
+     * @retval kThreadError_None      Successfully restore the network information.
+     * @retval kThreadError_NotFound  There is no valid network information stored in non-volatile memory.
+     *
+     */
+    ThreadError Restore(void);
+
+    /**
+     * This method stores network information into non-volatile memory.
+     *
+     * @retval kThreadError_None      Successfully store the network information.
+     * @retval kThreadError_NoBufs    Could not store the network information due to insufficient memory space.
+     *
+     */
+    ThreadError Store(void);
+
+    /**
      * This function pointer is called on receiving an MLE Discovery Response message.
      *
      * @param[in]  aResult   A valid pointer to the Discovery Response information or NULL when the Discovery completes.
@@ -1217,6 +1235,22 @@ private:
     void SendOrphanAnnounce(void);
 
     bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, ConnectivityTlv &aConnectivityTlv) const;
+
+    /**
+     * This struct represents the device's own network information for persistent storage.
+     *
+     */
+    typedef struct NetworkInfo
+    {
+        DeviceState          mDeviceState;                ///< Current Thread interface state.
+
+        uint8_t              mDeviceMode;                 ///< Device mode setting.
+        uint16_t             mRloc16;                     ///< RLOC16
+        uint32_t             mKeySequence;                ///< Key Sequence
+        uint32_t             mMleFrameCounter;            ///< MLE Frame Counter
+        uint32_t             mMacFrameCounter;            ///< MAC Frame Counter
+        Mac::ExtAddress      mExtAddress;                 ///< Extended Address
+    } NetworkInfo;
 
     struct
     {

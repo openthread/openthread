@@ -69,6 +69,7 @@ public:
     void SetLeaderPartitionId(uint32_t) { }
 
     ThreadError SetPreferredRouterId(uint8_t) { return kThreadError_NotImplemented; }
+    void SetRouterId(uint8_t) { }
 
     uint16_t GetNextHop(uint16_t aDestination) const { return Mle::GetNextHop(aDestination); }
 
@@ -106,6 +107,10 @@ public:
     }
 
     ThreadError SetMaxAllowedChildren(uint8_t) { return kThreadError_NotImplemented; }
+
+    ThreadError RestoreChildren(void) {return kThreadError_NotImplemented; }
+    ThreadError RemoveStoredChild(uint16_t) {return kThreadError_NotImplemented; }
+    ThreadError StoreChild(uint16_t) {return kThreadError_NotImplemented; }
 
     Neighbor *GetNeighbor(uint16_t aAddress) { return Mle::GetNeighbor(aAddress); }
     Neighbor *GetNeighbor(const Mac::ExtAddress &aAddress) { return Mle::GetNeighbor(aAddress); }

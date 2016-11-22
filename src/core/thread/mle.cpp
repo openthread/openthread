@@ -38,6 +38,7 @@
 #include <common/debug.hpp>
 #include <common/logging.hpp>
 #include <common/encoding.hpp>
+#include <common/settings.hpp>
 #include <crypto/aes_ccm.hpp>
 #include <mac/mac_frame.hpp>
 #include <meshcop/tlvs.hpp>
@@ -45,6 +46,7 @@
 #include <net/udp6.hpp>
 #include <platform/radio.h>
 #include <platform/random.h>
+#include <platform/settings.h>
 #include <thread/address_resolver.hpp>
 #include <thread/key_manager.hpp>
 #include <thread/mle_router.hpp>
@@ -251,6 +253,85 @@ ThreadError Mle::Stop(bool aClearNetworkDatasets)
     mDeviceState = kDeviceStateDisabled;
     otLogFuncExit();
     return kThreadError_None;
+}
+
+ThreadError Mle::Restore()
+{
+    ThreadError error = kThreadError_None;
+    NetworkInfo networkInfo;
+    uint16_t length;
+
+    mNetif.GetActiveDataset().Restore();
+    mNetif.GetPendingDataset().Restore();
+
+    SuccessOrExit(error = otPlatSettingsGet(mNetif.GetInstance(), kKeyNetworkInfo, 0,
+                                            reinterpret_cast<uint8_t *>(&networkInfo), &length));
+
+    VerifyOrExit(length == sizeof(networkInfo), error = kThreadError_NotFound);
+    VerifyOrExit(networkInfo.mDeviceState >= kDeviceStateChild, error = kThreadError_NotFound);
+
+    mDeviceMode = networkInfo.mDeviceMode;
+    SetRloc16(networkInfo.mRloc16);
+    mKeyManager.SetCurrentKeySequence(networkInfo.mKeySequence);
+    mKeyManager.SetMleFrameCounter(networkInfo.mMleFrameCounter);
+    mKeyManager.SetMacFrameCounter(networkInfo.mMacFrameCounter);
+    mMac.SetExtAddress(networkInfo.mExtAddress);
+    UpdateLinkLocalAddress();
+
+    if (networkInfo.mDeviceState == kDeviceStateChild)
+    {
+        SuccessOrExit(error = otPlatSettingsGet(mNetif.GetInstance(), kKeyParentInfo, 0,
+                                                reinterpret_cast<uint8_t *>(&mParent), &length));
+    }
+    else if (networkInfo.mDeviceState == kDeviceStateRouter || networkInfo.mDeviceState == kDeviceStateLeader)
+    {
+        mMleRouter.SetRouterId(GetRouterId(GetRloc16()));
+        mMleRouter.RestoreChildren();
+    }
+
+exit:
+    return error;
+}
+
+ThreadError Mle::Store()
+{
+    ThreadError error = kThreadError_None;
+    NetworkInfo networkInfo;
+
+    VerifyOrExit(IsAttached(), error = kThreadError_InvalidState);
+
+    if (mNetif.GetActiveDataset().GetLocal().GetTimestamp() == NULL)
+    {
+        mNetif.GetActiveDataset().GenerateLocal();
+        mNetif.GetActiveDataset().GetLocal().Store();
+    }
+
+    memset(&networkInfo, 0, sizeof(networkInfo));
+
+    networkInfo.mDeviceMode = mDeviceMode;
+    networkInfo.mDeviceState = mDeviceState;
+    networkInfo.mRloc16 = GetRloc16();
+    networkInfo.mKeySequence = mKeyManager.GetCurrentKeySequence();
+    networkInfo.mMleFrameCounter = mKeyManager.GetMleFrameCounter() + OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
+    networkInfo.mMacFrameCounter = mKeyManager.GetMacFrameCounter() + OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
+    memcpy(networkInfo.mExtAddress.m8, mMac.GetExtAddress(), sizeof(networkInfo.mExtAddress));
+
+    if (mDeviceState == kDeviceStateChild)
+    {
+        SuccessOrExit(error = otPlatSettingsSet(mNetif.GetInstance(), kKeyParentInfo,
+                                                reinterpret_cast<uint8_t *>(&mParent), sizeof(mParent)));
+    }
+
+    SuccessOrExit(error = otPlatSettingsSet(mNetif.GetInstance(), kKeyNetworkInfo,
+                                            reinterpret_cast<uint8_t *>(&networkInfo), sizeof(networkInfo)));
+
+    mKeyManager.SetStoredMleFrameCounter(networkInfo.mMleFrameCounter);
+    mKeyManager.SetStoredMacFrameCounter(networkInfo.mMacFrameCounter);
+
+    otLogDebgMle("Store Network Information");
+
+exit:
+    return error;
 }
 
 ThreadError Mle::Discover(uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanId,
@@ -1068,6 +1149,8 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags, void *aContext)
 
 void Mle::HandleNetifStateChanged(uint32_t aFlags)
 {
+    VerifyOrExit(mDeviceState != kDeviceStateDisabled, ;);
+
     if ((aFlags & (OT_IP6_ADDRESS_ADDED | OT_IP6_ADDRESS_REMOVED)) != 0)
     {
         if (!mNetif.IsUnicastAddress(mMeshLocal64.GetAddress()))
@@ -1101,6 +1184,14 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags)
 
         mNetif.GetNetworkDataLocal().SendServerDataNotification();
     }
+
+    if (aFlags & (OT_NET_ROLE | OT_NET_KEY_SEQUENCE_COUNTER))
+    {
+        Store();
+    }
+
+exit:
+    {}
 }
 
 void Mle::HandleParentRequestTimer(void *aContext)

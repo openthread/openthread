@@ -37,9 +37,11 @@
 #include <common/debug.hpp>
 #include <common/logging.hpp>
 #include <common/encoding.hpp>
+#include <common/settings.hpp>
 #include <mac/mac_frame.hpp>
 #include <net/icmp6.hpp>
 #include <platform/random.h>
+#include <platform/settings.h>
 #include <thread/mle_router.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
@@ -1708,6 +1710,7 @@ void MleRouter::HandleStateUpdateTimer(void)
             break;
 
         case Neighbor::kStateValid:
+        case Neighbor::kStateRestored:
             timeout = Timer::SecToMsec(mChildren[i].mTimeout);
             break;
 
@@ -2196,6 +2199,11 @@ ThreadError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const I
     child->mLastHeard = Timer::GetNow();
     child->mAddSrcMatchEntryShort = true;
 
+    if (child->mState == Neighbor::kStateRestored)
+    {
+        child->mState = Neighbor::kStateValid;
+    }
+
     SendChildUpdateResponse(child, aMessageInfo, tlvs, tlvslength, &challenge);
 
 exit:
@@ -2533,6 +2541,7 @@ ThreadError MleRouter::SendChildIdResponse(Child *aChild)
 
     aChild->mState = Neighbor::kStateValid;
     mNetif.SetStateChangedFlags(OT_THREAD_CHILD_ADDED);
+    StoreChild(aChild->mValid.mRloc16);
 
     memset(&destination, 0, sizeof(destination));
     destination.mFields.m16[0] = HostSwap16(0xfe80);
@@ -2771,6 +2780,7 @@ ThreadError MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
             mMesh.UpdateIndirectMessages();
             mNetif.SetStateChangedFlags(OT_THREAD_CHILD_REMOVED);
             mNetworkData.SendServerDataNotification(aNeighbor.mValid.mRloc16);
+            RemoveStoredChild(aNeighbor.mValid.mRloc16);
         }
 
         break;
@@ -3045,6 +3055,11 @@ exit:
     return error;
 }
 
+void MleRouter::SetRouterId(uint8_t aRouterId)
+{
+    mRouterId = aRouterId;
+}
+
 Router *MleRouter::GetRouters(uint8_t *aNumRouters)
 {
     if (aNumRouters != NULL)
@@ -3102,6 +3117,72 @@ ThreadError MleRouter::GetChildInfoByIndex(uint8_t aChildIndex, otChildInfo &aCh
 
     VerifyOrExit(aChildIndex < mMaxChildrenAllowed, error = kThreadError_InvalidArgs);
     GetChildInfo(mChildren[aChildIndex], aChildInfo);
+
+exit:
+    return error;
+}
+
+ThreadError MleRouter::RestoreChildren(void)
+{
+    ThreadError error = kThreadError_None;
+    Child *child;
+    otChildInfo childInfo;
+    uint16_t length;
+
+    for (uint8_t i = 0; i < kMaxChildren; i++)
+    {
+        SuccessOrExit(otPlatSettingsGet(mNetif.GetInstance(), kKeyChildInfo, i,
+                                        reinterpret_cast<uint8_t *>(&childInfo), &length));
+        VerifyOrExit((child = NewChild()) != NULL, error = kThreadError_NoBufs);
+
+        memset(child, 0, sizeof(*child));
+
+        memcpy(&child->mMacAddr, &childInfo.mExtAddress, sizeof(child->mMacAddr));
+        child->mValid.mRloc16 = childInfo.mRloc16;
+        child->mTimeout = childInfo.mTimeout;
+        child->mMode = (childInfo.mRxOnWhenIdle ? ModeTlv::kModeRxOnWhenIdle : 0) |
+                       (childInfo.mSecureDataRequest ? ModeTlv::kModeSecureDataRequest : 0) |
+                       (childInfo.mFullFunction ? ModeTlv::kModeFFD : 0) |
+                       (childInfo.mFullNetworkData ? ModeTlv::kModeFullNetworkData : 0);
+        child->mState = Neighbor::kStateRestored;
+        child->mLastHeard = Timer::GetNow();
+    }
+
+exit:
+    return error;
+}
+
+ThreadError MleRouter::RemoveStoredChild(uint16_t aChildRloc16)
+{
+    ThreadError error = kThreadError_NotFound;
+    otChildInfo childInfo;
+    uint16_t length;
+
+    for (uint8_t i = 0; i < kMaxChildren; i++)
+    {
+        SuccessOrExit(otPlatSettingsGet(mNetif.GetInstance(), kKeyChildInfo, i,
+                                        reinterpret_cast<uint8_t *>(&childInfo), &length));
+
+        if (childInfo.mRloc16 == aChildRloc16)
+        {
+            error = otPlatSettingsDelete(mNetif.GetInstance(), kKeyChildInfo, i);
+            ExitNow();
+        }
+    }
+
+exit:
+    return error;
+}
+
+ThreadError MleRouter::StoreChild(uint16_t aChildRloc16)
+{
+    ThreadError error = kThreadError_None;
+    otChildInfo childInfo;
+
+    SuccessOrExit(error = mMleRouter.GetChildInfoById(GetChildId(aChildRloc16), childInfo));
+
+    error = otPlatSettingsAdd(mNetif.GetInstance(), kKeyChildInfo, reinterpret_cast<uint8_t *>(&childInfo),
+                              sizeof(childInfo));
 
 exit:
     return error;
@@ -3438,6 +3519,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
             break;
 
         case Neighbor::kStateValid:
+        case Neighbor::kStateRestored:
             if (GetRouterId(mChildren[i].mValid.mRloc16) != mRouterId)
             {
                 RemoveNeighbor(mChildren[i]);

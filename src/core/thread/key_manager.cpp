@@ -53,6 +53,7 @@ KeyManager::KeyManager(ThreadNetif &aThreadNetif):
     mKeySequence = 0;
     mMacFrameCounter = 0;
     mMleFrameCounter = 0;
+    mStoredMleFrameCounter = 0;
 
     mKeyRotationTime = kDefaultKeyRotationTime;
     mKeySwitchGuardTime = kDefaultKeySwitchGuardTime;
@@ -203,9 +204,24 @@ uint32_t KeyManager::GetMacFrameCounter(void) const
     return mMacFrameCounter;
 }
 
+void KeyManager::SetMacFrameCounter(uint32_t aMacFrameCounter)
+{
+    mMacFrameCounter = aMacFrameCounter;
+}
+
+void KeyManager::SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter)
+{
+    mStoredMacFrameCounter = aStoredMacFrameCounter;
+}
+
 void KeyManager::IncrementMacFrameCounter(void)
 {
     mMacFrameCounter++;
+
+    if (mMacFrameCounter >= mStoredMacFrameCounter)
+    {
+        mNetif.GetMle().Store();
+    }
 }
 
 uint32_t KeyManager::GetMleFrameCounter(void) const
@@ -213,9 +229,24 @@ uint32_t KeyManager::GetMleFrameCounter(void) const
     return mMleFrameCounter;
 }
 
+void KeyManager::SetMleFrameCounter(uint32_t aMleFrameCounter)
+{
+    mMleFrameCounter = aMleFrameCounter;
+}
+
+void KeyManager::SetStoredMleFrameCounter(uint32_t aStoredMleFrameCounter)
+{
+    mStoredMleFrameCounter = aStoredMleFrameCounter;
+}
+
 void KeyManager::IncrementMleFrameCounter(void)
 {
     mMleFrameCounter++;
+
+    if (mMleFrameCounter >= mStoredMleFrameCounter)
+    {
+        mNetif.GetMle().Store();
+    }
 }
 
 const uint8_t *KeyManager::GetKek(void) const
