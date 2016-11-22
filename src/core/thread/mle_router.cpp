@@ -1695,6 +1695,8 @@ void MleRouter::HandleStateUpdateTimer(void)
             BecomeRouter(ThreadStatusTlv::kTooFewRouters);
         }
 
+    // fall through
+
     case kDeviceStateRouter:
         // verify path to leader
         otLogDebgMle("network id timeout = %d", GetLeaderAge());
