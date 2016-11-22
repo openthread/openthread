@@ -29,13 +29,20 @@
 Module providing a Spienl coder / decoder class.
 """
 
+from __future__ import print_function
+
 import os
+import sys
 import time
 import logging
 import threading
 import traceback
 
-import Queue
+is_py2 = sys.version[0] == '2'
+if is_py2:
+    import Queue as Queue
+else:
+    import queue as Queue
 
 from struct import pack
 from struct import unpack
@@ -43,10 +50,6 @@ from collections import namedtuple
 from collections import defaultdict
 
 import ipaddress
-
-logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
-from scapy.layers.inet6 import IPv6
-from scapy.layers.inet6 import ICMPv6EchoReply
 
 import spinel.util as util
 import spinel.config as CONFIG
@@ -161,8 +164,8 @@ class SpinelCodec(object):
         }
         try:
             return map_decode[spinel_format[0]](payload)
-        except KeyError, _ex:
-            print traceback.format_exc()
+        except KeyError:
+            print(traceback.format_exc())
             return None
 
     @classmethod
@@ -232,8 +235,8 @@ class SpinelCodec(object):
         }
         try:
             return map_encode[code](value)
-        except KeyError, _ex:
-            print traceback.format_exc()
+        except KeyError:
+            print(traceback.format_exc())
             return None
 
     def next_code(self, spinel_format):
@@ -400,7 +403,7 @@ class SpinelPropertyHandler(SpinelCodec):
         ipaddr_str = str(ipaddress.IPv6Address(prefix)) + \
             str(self.wpan_api.nodeid)
         if CONFIG.DEBUG_LOG_PROP:
-            print "\n>>>> new PREFIX add ipaddr: " + ipaddr_str
+            print("\n>>>> new PREFIX add ipaddr: " + ipaddr_str)
 
         valid = 1
         preferred = 1
@@ -443,10 +446,10 @@ class SpinelPropertyHandler(SpinelCodec):
             self.handle_ipaddr_insert(*prefix)
 
         if CONFIG.DEBUG_LOG_PROP:
-            print "\n========= PREFIX ============"
-            print "ipaddrs: " + str(self.autoAddresses)
-            print "slaac prefix set: " + str(slaacPrefixSet)
-            print "==============================\n"
+            print("\n========= PREFIX ============")
+            print("ipaddrs: " + str(self.autoAddresses))
+            print("slaac prefix set: " + str(slaacPrefixSet))
+            print("==============================\n")
 
         # ==> ipaddrs - query current addresses
         #
@@ -584,8 +587,6 @@ class SpinelCommandHandler(SpinelCodec):
                 if ((prop_id == SPINEL.PROP_STREAM_NET) or
                         (prop_id == SPINEL.PROP_STREAM_NET_INSECURE)):
                     logging.debug("PROP_VALUE_" + name + ": " + prop_name)
-                    pkt = IPv6(prop_value[2:])
-                    pkt.show()
 
                 elif prop_id == SPINEL.PROP_STREAM_DEBUG:
                     logging.debug("DEBUG: " + prop_value)
@@ -593,12 +594,12 @@ class SpinelCommandHandler(SpinelCodec):
             if wpan_api:
                 wpan_api.queue_add(prop_id, prop_value, tid)
             else:
-                print "no wpan_api"
+                print("no wpan_api")
 
         except Exception as _ex:
             prop_name = "Property Unknown"
             logging.info("\n%s (%i): ", prop_name, prop_id)
-            print traceback.format_exc()
+            print(traceback.format_exc())
 
     def PROP_VALUE_IS(self, wpan_api, payload, tid):
         self.handle_prop(wpan_api, "IS", payload, tid)
@@ -734,11 +735,12 @@ class WpanApi(SpinelCodec):
 
         # PARSER state
         self.rx_pkt = []
+        self.callback = defaultdict(list)  # Map prop_id to list of callbacks.
 
         # Fire up threads
         self._reader_alive = True
         self.tid_filter = set()
-        self.__queue_prop = defaultdict(Queue.Queue)
+        self.__queue_prop = defaultdict(Queue.Queue)  # Map tid to Queue.
         self.queue_register()
         self.__start_reader()
 
@@ -789,7 +791,7 @@ class WpanApi(SpinelCodec):
             handler(self, payload, tid)
 
         except Exception as _ex:
-            print traceback.format_exc()
+            print(traceback.format_exc())
             cmd_name = "CB_Unknown"
             logging.info("\n%s (%i): ", cmd_name, cmd_id)
 
@@ -821,6 +823,9 @@ class WpanApi(SpinelCodec):
             self.value = value
             self.tid = tid
 
+    def callback_register(self, prop, cb):
+        self.callback[prop].append(cb)
+
     def queue_register(self, tid=SPINEL.HEADER_DEFAULT):
         self.tid_filter.add(tid)
         return self.__queue_prop[tid]
@@ -829,15 +834,12 @@ class WpanApi(SpinelCodec):
         self.queue_clear(tid)
 
     def queue_add(self, prop, value, tid):
-        # Asynchronous handlers don't actually add to queue.
-        if prop == SPINEL.PROP_STREAM_NET:
-            pkt = IPv6(value[2:])
-            if ICMPv6EchoReply in pkt:
-                timenow = int(round(time.time() * 1000)) & 0xFFFFFFFF
-                timedelta = (timenow - unpack('>I', pkt.data)[0])
-                print "\n%d bytes from %s: icmp_seq=%d hlim=%d time=%dms" % (
-                    pkt.plen, pkt.src, pkt.seq, pkt.hlim, timedelta)
-            return
+        cb_list = self.callback[prop]
+
+        # Asynchronous handlers can consume message and not add to queue.
+        if len(cb_list) > 0:
+            consumed = cb_list[0](prop, value, tid)
+            if consumed: return
 
         if tid not in self.tid_filter:
             return
@@ -861,7 +863,7 @@ class WpanApi(SpinelCodec):
         if os.geteuid() == 0:
             self.tun_if = TunInterface(nodeid)
         else:
-            print "Warning: superuser required to start tun interface."
+            print("Warning: superuser required to start tun interface.")
 
     def if_down(self):
         if self.tun_if:
@@ -922,7 +924,7 @@ class WpanApi(SpinelCodec):
         if CONFIG.DEBUG_LOG_PROP:
             handler = SPINEL_PROP_DISPATCH[prop_id]
             prop_name = handler.__name__
-            print "PROP_VALUE_GET [tid=%d]: %s" % (tid & 0xF, prop_name)
+            print("PROP_VALUE_GET [tid=%d]: %s" % (tid & 0xF, prop_name))
         return self.__prop_change_value(SPINEL.CMD_PROP_VALUE_GET, prop_id,
                                         None, None, tid)
 
@@ -932,7 +934,7 @@ class WpanApi(SpinelCodec):
         if CONFIG.DEBUG_LOG_PROP:
             handler = SPINEL_PROP_DISPATCH[prop_id]
             prop_name = handler.__name__
-            print "PROP_VALUE_SET [tid=%d]: %s" % (tid & 0xF, prop_name)
+            print("PROP_VALUE_SET [tid=%d]: %s" % (tid & 0xF, prop_name))
         return self.__prop_change_value(SPINEL.CMD_PROP_VALUE_SET, prop_id,
                                         value, py_format, tid)
 
@@ -942,7 +944,7 @@ class WpanApi(SpinelCodec):
         if CONFIG.DEBUG_LOG_PROP:
             handler = SPINEL_PROP_DISPATCH[prop_id]
             prop_name = handler.__name__
-            print "PROP_VALUE_INSERT [tid=%d]: %s" % (tid & 0xF, prop_name)
+            print("PROP_VALUE_INSERT [tid=%d]: %s" % (tid & 0xF, prop_name))
         return self.__prop_change_value(SPINEL.CMD_PROP_VALUE_INSERT, prop_id,
                                         value, py_format, tid)
 
@@ -952,7 +954,7 @@ class WpanApi(SpinelCodec):
         if CONFIG.DEBUG_LOG_PROP:
             handler = SPINEL_PROP_DISPATCH[prop_id]
             prop_name = handler.__name__
-            print "PROP_VALUE_REMOVE [tid=%d]: %s" % (tid & 0xF, prop_name)
+            print("PROP_VALUE_REMOVE [tid=%d]: %s" % (tid & 0xF, prop_name))
         return self.__prop_change_value(SPINEL.CMD_PROP_VALUE_REMOVE, prop_id,
                                         value, py_format, tid)
 

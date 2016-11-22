@@ -38,10 +38,11 @@
 
 #include <coap/coap_header.hpp>
 #include <coap/coap_server.hpp>
+#include <coap/secure_coap_client.hpp>
 #include <common/message.hpp>
 #include <net/udp6.hpp>
 #include <meshcop/dtls.hpp>
-#include <thread/meshcop_tlvs.hpp>
+#include <meshcop/tlvs.hpp>
 
 namespace Thread {
 
@@ -88,42 +89,32 @@ private:
     static void HandleDiscoverResult(otActiveScanResult *aResult, void *aContext);
     void HandleDiscoverResult(otActiveScanResult *aResult);
 
-    static void HandleDtlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength);
-    void HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength);
-
-    static ThreadError HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t aLength);
-    ThreadError HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength);
-
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
-    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    static void HandleUdpTransmit(void *aContext);
-    void HandleUdpTransmit(void);
-
-    static void HandleJoinerEntrust(void *aContext, Coap::Header &aHeader,
-                                    Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    void SendJoinerEntrustResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestInfo);
-
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
 
     void Close(void);
-    void ReceiveJoinerFinalizeResponse(uint8_t *buf, uint16_t length);
+
+    static void HandleSecureCoapClientConnect(void *aContext);
+
     void SendJoinerFinalize(void);
+    static void HandleJoinerFinalizeResponse(void *aContext, otCoapHeader *aHeader,
+                                             otMessage aMessage, ThreadError result);
+    void HandleJoinerFinalizeResponse(Coap::Header *aHeader, Message *aMessage, ThreadError result);
+
+    static void HandleJoinerEntrust(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                    const otMessageInfo *aMessageInfo);
+    void HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void SendJoinerEntrustResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestInfo);
 
     uint8_t mJoinerRouterChannel;
     uint16_t mJoinerRouterPanId;
     uint16_t mJoinerUdpPort;
     Mac::ExtAddress mJoinerRouter;
-    Message *mTransmitMessage;
-    Ip6::UdpSocket mSocket;
 
-    Tasklet mTransmitTask;
     Timer mTimer;
     Coap::Resource mJoinerEntrust;
     Coap::Server &mCoapServer;
+    Coap::SecureClient &mSecureCoapClient;
     ThreadNetif &mNetif;
 };
 

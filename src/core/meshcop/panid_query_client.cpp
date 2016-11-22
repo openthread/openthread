@@ -39,7 +39,7 @@
 #include <common/logging.hpp>
 #include <platform/random.h>
 #include <meshcop/panid_query_client.hpp>
-#include <thread/meshcop_tlvs.hpp>
+#include <meshcop/tlvs.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
 
@@ -60,12 +60,7 @@ ThreadError PanIdQueryClient::SendQuery(uint16_t aPanId, uint32_t aChannelMask, 
     ThreadError error = kThreadError_None;
     Coap::Header header;
     MeshCoP::CommissionerSessionIdTlv sessionId;
-    MeshCoP::ChannelMaskTlv channelMask;
-    union
-    {
-        MeshCoP::ChannelMaskEntry channelMaskEntry;
-        uint8_t channelMaskBuf[sizeof(MeshCoP::ChannelMaskEntry) + sizeof(aChannelMask)];
-    };
+    MeshCoP::ChannelMask0Tlv channelMask;
     MeshCoP::PanIdTlv panId;
     Ip6::MessageInfo messageInfo;
     Message *message;
@@ -83,18 +78,8 @@ ThreadError PanIdQueryClient::SendQuery(uint16_t aPanId, uint32_t aChannelMask, 
     SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
 
     channelMask.Init();
-    channelMask.SetLength(sizeof(channelMaskBuf));
+    channelMask.SetMask(aChannelMask);
     SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
-
-    channelMaskEntry.SetChannelPage(0);
-    channelMaskEntry.SetMaskLength(sizeof(aChannelMask));
-
-    for (size_t i = 0; i < sizeof(aChannelMask); i++)
-    {
-        channelMaskBuf[sizeof(MeshCoP::ChannelMaskEntry) + i] = (aChannelMask >> (8 * i)) & 0xff;
-    }
-
-    SuccessOrExit(error = message->Append(channelMaskBuf, sizeof(channelMaskBuf)));
 
     panId.Init();
     panId.SetPanId(aPanId);
@@ -120,23 +105,18 @@ exit:
     return error;
 }
 
-void PanIdQueryClient::HandleConflict(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                                      const Ip6::MessageInfo &aMessageInfo)
+void PanIdQueryClient::HandleConflict(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                      const otMessageInfo *aMessageInfo)
 {
-    static_cast<PanIdQueryClient *>(aContext)->HandleConflict(aHeader, aMessage, aMessageInfo);
+    static_cast<PanIdQueryClient *>(aContext)->HandleConflict(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void PanIdQueryClient::HandleConflict(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     MeshCoP::PanIdTlv panId;
-    union
-    {
-        MeshCoP::ChannelMaskEntry channelMaskEntry;
-        uint8_t channelMaskBuf[sizeof(MeshCoP::ChannelMaskEntry) + sizeof(uint32_t)];
-    };
-    uint32_t channelMask;
-    uint16_t offset;
-    uint16_t length;
+    MeshCoP::ChannelMask0Tlv channelMask;
 
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
                  aHeader.GetCode() == kCoapRequestPost, ;);
@@ -146,20 +126,12 @@ void PanIdQueryClient::HandleConflict(Coap::Header &aHeader, Message &aMessage, 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kPanId, sizeof(panId), panId));
     VerifyOrExit(panId.IsValid(), ;);
 
-    SuccessOrExit(MeshCoP::Tlv::GetValueOffset(aMessage, MeshCoP::Tlv::kChannelMask, offset, length));
-    aMessage.Read(offset, sizeof(channelMaskBuf), channelMaskBuf);
-    VerifyOrExit(channelMaskEntry.GetChannelPage() == 0 &&
-                 channelMaskEntry.GetMaskLength() == sizeof(uint32_t), ;);
-
-    channelMask =
-        (static_cast<uint32_t>(channelMaskBuf[sizeof(MeshCoP::ChannelMaskEntry) + 0]) << 0) |
-        (static_cast<uint32_t>(channelMaskBuf[sizeof(MeshCoP::ChannelMaskEntry) + 1]) << 8) |
-        (static_cast<uint32_t>(channelMaskBuf[sizeof(MeshCoP::ChannelMaskEntry) + 2]) << 16) |
-        (static_cast<uint32_t>(channelMaskBuf[sizeof(MeshCoP::ChannelMaskEntry) + 3]) << 24);
+    SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask));
+    VerifyOrExit(channelMask.IsValid(),);
 
     if (mCallback != NULL)
     {
-        mCallback(panId.GetPanId(), channelMask, mContext);
+        mCallback(panId.GetPanId(), channelMask.GetMask(), mContext);
     }
 
     SendConflictResponse(aHeader, aMessageInfo);

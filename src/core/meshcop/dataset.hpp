@@ -36,7 +36,7 @@
 #define MESHCOP_DATASET_HPP_
 
 #include <common/message.hpp>
-#include <thread/meshcop_tlvs.hpp>
+#include <meshcop/tlvs.hpp>
 
 namespace Thread {
 namespace MeshCoP {
@@ -166,7 +166,22 @@ public:
 
     ThreadError Set(const otOperationalDataset &aDataset);
 
+    /**
+     * This method removes a TLV from the Dataset.
+     *
+     * @param[in] aType The type of a specific TLV.
+     *
+     */
     void Remove(Tlv::Type aType);
+
+    /**
+     * This method appends the MLE Dataset TLV but excluding MeshCoP Sub Timestamp TLV.
+     *
+     * @retval kThreadError_None    Successfully append MLE Dataset TLV without MeshCoP Sub Timestamp TLV.
+     * @retval kThreadError_NoBufs  Insufficient available buffers to append the message with MLE Dataset TLV.
+     *
+     */
+    ThreadError AppendMleDatasetTlv(Message &aMessage);
 
 private:
     void Remove(uint8_t *aStart, uint8_t aLength);

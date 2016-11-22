@@ -42,6 +42,7 @@
 #include <openthread-types.h>
 #include <common/message.hpp>
 #include <common/tasklet.hpp>
+#include <ncp/ncp.h>
 
 #include "spinel.h"
 
@@ -164,6 +165,13 @@ private:
     static void HandleEnergyScanResult_Jump(otEnergyScanResult *aResult, void *aContext);
 
     void HandleEnergyScanResult(otEnergyScanResult *result);
+
+    /**
+     * Trampoline for HandleJamStateChange().
+     */
+    static void HandleJamStateChange_Jump(bool aJamState, void *aContext);
+
+    void HandleJamStateChange(bool aJamState);
 
     /**
      * Trampoline for UpdateChangedProps().
@@ -330,6 +338,7 @@ private:
     ThreadError GetPropertyHandler_THREAD_ROUTER_ROLE_ENABLED(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_CNTR(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_NCP_CNTR(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_MSG_BUFFER_COUNTERS(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_WHITELIST_ENABLED(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_MODE(uint8_t header, spinel_prop_key_t key);
@@ -343,6 +352,18 @@ private:
     ThreadError GetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_NET_REQUIRE_JOIN_EXISTING(uint8_t header, spinel_prop_key_t key);
+
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    ThreadError GetPropertyHandler_JAM_DETECT_ENABLE(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_JAM_DETECTED(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_JAM_DETECT_RSSI_THRESHOLD(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_JAM_DETECT_WINDOW(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_JAM_DETECT_BUSY(uint8_t header, spinel_prop_key_t key);
+#endif
+
+#if OPENTHREAD_ENABLE_LEGACY
+    ThreadError GetPropertyHandler_NEST_LEGACY_ULA_PREFIX(uint8_t header, spinel_prop_key_t key);
+#endif
 
     ThreadError SetPropertyHandler_POWER_STATE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                uint16_t value_len);
@@ -383,7 +404,7 @@ private:
     ThreadError SetPropertyHandler_IPV6_ICMP_PING_OFFLOAD(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                   uint16_t value_len);
     ThreadError SetPropertyHandler_THREAD_RLOC16_DEBUG_PASSTHRU(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
-						       uint16_t value_len);
+                                                                uint16_t value_len);
     ThreadError SetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                uint16_t value_len);
     ThreadError SetPropertyHandler_MAC_PROMISCUOUS_MODE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -416,9 +437,21 @@ private:
     ThreadError SetPropertyHandler_CNTR_RESET(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                               uint16_t value_len);
 
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    ThreadError SetPropertyHandler_JAM_DETECT_ENABLE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError SetPropertyHandler_JAM_DETECT_RSSI_THRESHOLD(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError SetPropertyHandler_JAM_DETECT_WINDOW(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError SetPropertyHandler_JAM_DETECT_BUSY(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
+#endif
+
 #if OPENTHREAD_ENABLE_DIAG
     ThreadError SetPropertyHandler_NEST_STREAM_MFG(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                    uint16_t value_len);
+#endif
+
+#if OPENTHREAD_ENABLE_LEGACY
+    ThreadError SetPropertyHandler_NEST_LEGACY_ULA_PREFIX(uint8_t header, spinel_prop_key_t key,
+                                                   const uint8_t *value_ptr, uint16_t value_len);
 #endif
 
     ThreadError InsertPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -445,6 +478,13 @@ private:
     ThreadError RemovePropertyHandler_THREAD_ACTIVE_ROUTER_IDS(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                               uint16_t value_len);
 
+#if OPENTHREAD_ENABLE_LEGACY
+public:
+    void HandleLegacyNodeDidJoin(const otExtAddress *aExtAddr);
+    void HandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix);
+    void RegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers);
+#endif
+
 private:
 
     spinel_status_t mLastStatus;
@@ -460,6 +500,10 @@ private:
     uint32_t mChangedFlags;
 
     bool mShouldSignalEndOfScan;
+
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    bool mShouldSignalJamStateChange;
+#endif
 
     spinel_tid_t mDroppedReplyTid;
 
@@ -478,6 +522,13 @@ private:
     uint32_t mOutboundInsecureIpFrameCounter;  // Number of insecure outbound data/IP frames.
     uint32_t mDroppedOutboundIpFrameCounter;   // Number of dropped outbound data/IP frames.
     uint32_t mDroppedInboundIpFrameCounter;    // Number of dropped inbound data/IP frames.
+
+#if OPENTHREAD_ENABLE_LEGACY
+    const otNcpLegacyHandlers *mLegacyHandlers;
+    uint8_t mLegacyUlaPrefix[OT_NCP_LEGACY_ULA_PREFIX_LENGTH];
+    bool mLegacyNodeDidJoin;
+#endif
+
 };
 
 }  // namespace Thread

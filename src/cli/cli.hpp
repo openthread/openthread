@@ -42,6 +42,8 @@
 
 #include <stdarg.h>
 
+#include <openthread-ip6.h>
+#include <openthread-udp.h>
 #include <cli/cli_server.hpp>
 #include <net/icmp6.hpp>
 #include <common/timer.hpp>
@@ -139,6 +141,7 @@ private:
     void OutputBytes(const uint8_t *aBytes, uint8_t aLength);
 
     void ProcessHelp(int argc, char *argv[]);
+    void ProcessBufferInfo(int argc, char *argv[]);
     void ProcessBlacklist(int argc, char *argv[]);
     void ProcessChannel(int argc, char *argv[]);
     void ProcessChild(int argc, char *argv[]);
@@ -167,6 +170,10 @@ private:
     void ProcessIpAddr(int argc, char *argv[]);
     ThreadError ProcessIpAddrAdd(int argc, char *argv[]);
     ThreadError ProcessIpAddrDel(int argc, char *argv[]);
+    void ProcessIpMulticastAddr(int argc, char *argv[]);
+    ThreadError ProcessIpMulticastAddrAdd(int argc, char *argv[]);
+    ThreadError ProcessIpMulticastAddrDel(int argc, char *argv[]);
+    ThreadError ProcessMulticastPromiscuous(int argc, char *argv[]);
 #if OPENTHREAD_ENABLE_JOINER
     void ProcessJoiner(int argc, char *argv[]);
 #endif  // OPENTHREAD_ENABLE_JOINER

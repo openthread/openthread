@@ -28,15 +28,19 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-lib_LIBRARIES                       = libopenthread.a
+lib_LIBRARIES                       = \
+    libopenthread-ftd.a               \
+    libopenthread-mtd.a               \
+    $(NULL)
 
-libopenthread_a_CPPFLAGS            = \
+CPPFLAGS_COMMON                     = \
     -I$(top_srcdir)/include           \
     $(OPENTHREAD_TARGET_DEFINES)      \
     $(NULL)
 
-libopenthread_a_SOURCES             = \
+SOURCES_COMMON                      = \
     openthread.cpp                    \
+    coap/coap_base.cpp                \
     coap/coap_client.cpp              \
     coap/coap_header.cpp              \
     coap/coap_server.cpp              \
@@ -54,10 +58,9 @@ libopenthread_a_SOURCES             = \
     crypto/sha256.cpp                 \
     mac/mac.cpp                       \
     mac/mac_frame.cpp                 \
-    mac/mac_whitelist.cpp             \
-    mac/mac_blacklist.cpp             \
-    meshcop/joiner_router.cpp         \
-    meshcop/leader.cpp                \
+    meshcop/dataset.cpp               \
+    meshcop/dataset_manager.cpp       \
+    meshcop/tlvs.cpp                  \
     net/icmp6.cpp                     \
     net/ip6.cpp                       \
     net/ip6_address.cpp               \
@@ -66,21 +69,15 @@ libopenthread_a_SOURCES             = \
     net/ip6_routes.cpp                \
     net/netif.cpp                     \
     net/udp6.cpp                      \
-    thread/address_resolver.cpp       \
     thread/announce_begin_server.cpp  \
     thread/energy_scan_server.cpp     \
     thread/key_manager.cpp            \
     thread/link_quality.cpp           \
     thread/lowpan.cpp                 \
-    thread/meshcop_dataset.cpp        \
-    thread/meshcop_dataset_manager.cpp \
-    thread/meshcop_tlvs.cpp           \
     thread/mesh_forwarder.cpp         \
     thread/mle.cpp                    \
-    thread/mle_router.cpp             \
     thread/mle_tlvs.cpp               \
     thread/network_data.cpp           \
-    thread/network_data_local.cpp     \
     thread/network_data_leader.cpp    \
     thread/panid_query_server.cpp     \
     thread/network_diag.cpp           \
@@ -90,8 +87,16 @@ libopenthread_a_SOURCES             = \
     utils/slaac_address.cpp           \
     $(NULL)
 
+if OPENTHREAD_ENABLE_MAC_WHITELIST
+SOURCES_COMMON                     += \
+    mac/mac_blacklist.cpp             \
+    mac/mac_whitelist.cpp             \
+    $(NULL)
+endif  # OPENTHREAD_ENABLE_MAC_WHITELIST
+
 if OPENTHREAD_ENABLE_COMMISSIONER
-libopenthread_a_SOURCES            += \
+SOURCES_COMMON                     += \
+    coap/secure_coap_server.cpp       \
     meshcop/announce_begin_client.cpp \
     meshcop/commissioner.cpp          \
     meshcop/energy_scan_client.cpp    \
@@ -100,36 +105,70 @@ libopenthread_a_SOURCES            += \
 endif  # OPENTHREAD_ENABLE_COMMISSIONER
 
 if OPENTHREAD_ENABLE_JOINER
-libopenthread_a_SOURCES            += \
+SOURCES_COMMON                     += \
+    coap/secure_coap_client.cpp       \
     meshcop/joiner.cpp                \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_JOINER
 
 if OPENTHREAD_ENABLE_DTLS
-libopenthread_a_SOURCES            += \
+SOURCES_COMMON                     += \
     meshcop/dtls.cpp                  \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_DTLS
 
 if OPENTHREAD_ENABLE_DHCP6_CLIENT
-libopenthread_a_SOURCES            += \
+SOURCES_COMMON                     += \
     net/dhcp6_client.cpp              \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_DHCP6_CLIENT
 
 if OPENTHREAD_ENABLE_DHCP6_SERVER
-libopenthread_a_SOURCES            += \
+SOURCES_COMMON                     += \
     net/dhcp6_server.cpp              \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_DHCP6_SERVER
+
+if OPENTHREAD_ENABLE_JAM_DETECTION
+SOURCES_COMMON                     += \
+    utils/jam_detector.cpp            \
+    $(NULL)
+endif  # OPENTHREAD_ENABLE_DHCP6_SERVER
+
+libopenthread_ftd_a_CPPFLAGS        = \
+    $(CPPFLAGS_COMMON)                \
+    $(NULL)
+
+libopenthread_ftd_a_SOURCES         = \
+    $(SOURCES_COMMON)                 \
+    meshcop/dataset_manager_ftd.cpp   \
+    meshcop/joiner_router.cpp         \
+    meshcop/leader.cpp                \
+    thread/address_resolver.cpp       \
+    thread/mle_router.cpp             \
+    thread/network_data_leader_ftd.cpp \
+    thread/network_data_local.cpp     \
+    $(NULL)
+
+libopenthread_mtd_a_CPPFLAGS        = \
+    $(CPPFLAGS_COMMON)                \
+    -DOPENTHREAD_MTD                  \
+    $(NULL)
+
+libopenthread_mtd_a_SOURCES         = \
+    $(SOURCES_COMMON)                 \
+    $(NULL)
 
 noinst_HEADERS                      = \
     openthread-core-config.h          \
     openthread-core-default-config.h  \
     openthread-instance.h             \
+    coap/coap_base.hpp                \
     coap/coap_client.hpp              \
     coap/coap_header.hpp              \
     coap/coap_server.hpp              \
+    coap/secure_coap_client.hpp       \
+    coap/secure_coap_server.hpp       \
     common/code_utils.hpp             \
     common/crc16.hpp                  \
     common/debug.hpp                  \
@@ -147,17 +186,30 @@ noinst_HEADERS                      = \
     crypto/mbedtls.hpp                \
     crypto/sha256.hpp                 \
     mac/mac.hpp                       \
+    mac/mac_blacklist.hpp             \
+    mac/mac_blacklist_impl.hpp        \
+    mac/mac_blacklist_stub.hpp        \
     mac/mac_frame.hpp                 \
     mac/mac_whitelist.hpp             \
-    mac/mac_blacklist.hpp             \
+    mac/mac_whitelist_impl.hpp        \
+    mac/mac_whitelist_stub.hpp        \
     meshcop/announce_begin_client.hpp \
     meshcop/commissioner.hpp          \
+    meshcop/dataset.hpp               \
+    meshcop/dataset_manager.hpp       \
+    meshcop/dataset_manager_ftd.hpp   \
+    meshcop/dataset_manager_mtd.hpp   \
     meshcop/dtls.hpp                  \
     meshcop/energy_scan_client.hpp    \
     meshcop/joiner.hpp                \
     meshcop/joiner_router.hpp         \
+    meshcop/joiner_router_ftd.hpp     \
+    meshcop/joiner_router_mtd.hpp     \
     meshcop/leader.hpp                \
+    meshcop/leader_ftd.hpp            \
+    meshcop/leader_mtd.hpp            \
     meshcop/panid_query_client.hpp    \
+    meshcop/tlvs.hpp                  \
     net/icmp6.hpp                     \
     net/ip6.hpp                       \
     net/ip6_address.hpp               \
@@ -173,23 +225,27 @@ noinst_HEADERS                      = \
     net/dhcp6_client.hpp              \
     net/dhcp6_server.hpp              \
     thread/address_resolver.hpp       \
+    thread/address_resolver_ftd.hpp   \
+    thread/address_resolver_mtd.hpp   \
     thread/announce_begin_server.hpp  \
     thread/energy_scan_server.hpp     \
     thread/key_manager.hpp            \
     thread/link_quality.hpp           \
     thread/lowpan.hpp                 \
-    thread/meshcop_tlvs.hpp           \
     thread/mesh_forwarder.hpp         \
-    thread/meshcop_dataset.hpp        \
-    thread/meshcop_dataset_manager.hpp \
-    thread/meshcop_tlvs.hpp           \
     thread/mle.hpp                    \
     thread/mle_constants.hpp          \
     thread/mle_router.hpp             \
+    thread/mle_router_ftd.hpp         \
+    thread/mle_router_mtd.hpp         \
     thread/mle_tlvs.hpp               \
     thread/network_data.hpp           \
     thread/network_data_leader.hpp    \
+    thread/network_data_leader_ftd.hpp \
+    thread/network_data_leader_mtd.hpp \
     thread/network_data_local.hpp     \
+    thread/network_data_local_ftd.hpp \
+    thread/network_data_local_mtd.hpp \
     thread/network_data_tlvs.hpp      \
     thread/panid_query_server.hpp     \
     thread/network_diag.hpp           \
@@ -199,6 +255,7 @@ noinst_HEADERS                      = \
     thread/thread_uris.hpp            \
     thread/topology.hpp               \
     utils/slaac_address.hpp           \
+    utils/jam_detector.hpp            \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE

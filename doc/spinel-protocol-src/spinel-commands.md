@@ -170,4 +170,52 @@ The resulting order of items in the list is defined by the given
 property.
 
 
+## CMD 18: (Host->NCP) CMD_PEEK {#cmd-peek}
+
+Octets: |    1   |     1    |    4    | 2
+--------|--------|----------|---------|-------
+Fields: | HEADER | CMD_PEEK | ADDRESS | COUNT
+
+This command allows the NCP to fetch values from the RAM of the NCP
+for debugging purposes. Upon success, `CMD_PEEK_RET` is sent from the
+NCP to the host. Upon failure, `PROP_LAST_STATUS` is emitted with
+the appropriate error indication.
+
+Due to the low-level nature of this command, certain error conditions
+may induce the NCP to reset.
+
+The NCP MAY prevent certain regions of memory from being accessed.
+
+The implementation of this command has security implications.
+See (#security-considerations) for more information.
+
+This command requires the capability `CAP_PEEK_POKE` to be present.
+
+## CMD 19: (NCP->Host) CMD_PEEK_RET {#cmd-peek-ret}
+
+Octets: |    1   |     1        |    4    | 2     | *n*
+--------|--------|--------------|---------|-------|-------
+Fields: | HEADER | CMD_PEEK_RET | ADDRESS | COUNT | BYTES
+
+This command contains the contents of memory that was requested by
+a previous call to `CMD_PEEK`.
+
+This command requires the capability `CAP_PEEK_POKE` to be present.
+
+## CMD 20: (Host->NCP) CMD_POKE {#cmd-poke}
+
+Octets: |    1   |     1    |    4    | 2     | *n*
+--------|--------|----------|---------|-------|-------
+Fields: | HEADER | CMD_POKE | ADDRESS | COUNT | BYTES
+
+This command writes the bytes to the specified memory address
+for debugging purposes.
+
+Due to the low-level nature of this command, certain error conditions
+may induce the NCP to reset.
+
+The implementation of this command has security implications.
+See (#security-considerations) for more information.
+
+This command requires the capability `CAP_PEEK_POKE` to be present.
 

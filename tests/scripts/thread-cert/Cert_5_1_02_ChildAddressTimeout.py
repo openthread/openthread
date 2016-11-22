@@ -30,17 +30,22 @@
 import time
 import unittest
 
+import config
+import mle
 import node
 
 LEADER = 1
 ROUTER = 2
 ED = 3
 SED = 4
+SNIFFER = 5
+
 
 class Cert_5_1_02_ChildAddressTimeout(unittest.TestCase):
+
     def setUp(self):
         self.nodes = {}
-        for i in range(1,5):
+        for i in range(1, 5):
             self.nodes[i] = node.Node(i)
 
         self.nodes[LEADER].set_panid(0xface)
@@ -68,7 +73,13 @@ class Cert_5_1_02_ChildAddressTimeout(unittest.TestCase):
         self.nodes[SED].add_whitelist(self.nodes[ROUTER].get_addr64())
         self.nodes[SED].enable_whitelist()
 
+        self.sniffer = config.create_default_thread_sniffer(SNIFFER)
+        self.sniffer.start()
+
     def tearDown(self):
+        self.sniffer.stop()
+        del self.sniffer
+
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
@@ -104,6 +115,30 @@ class Cert_5_1_02_ChildAddressTimeout(unittest.TestCase):
         for addr in sed_addrs:
             if addr[0:4] != 'fe80':
                 self.assertFalse(self.nodes[LEADER].ping(addr))
+
+        leader_messages = self.sniffer.get_messages_sent_by(LEADER)
+        router1_messages = self.sniffer.get_messages_sent_by(ROUTER)
+        ed_messages = self.sniffer.get_messages_sent_by(ED)
+        sed_messages = self.sniffer.get_messages_sent_by(SED)
+
+        # 1 - All
+        leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+        router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
+        leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+        router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
+        leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+
+        router1_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+        ed_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
+        router1_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+        ed_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
+        router1_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+
+        sed_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
+        router1_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+        sed_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
+        router1_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+
 
 if __name__ == '__main__':
     unittest.main()

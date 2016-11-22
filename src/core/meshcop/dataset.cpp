@@ -36,9 +36,10 @@
 
 #include <common/code_utils.hpp>
 #include <common/settings.hpp>
+#include <meshcop/dataset.hpp>
+#include <meshcop/tlvs.hpp>
 #include <platform/settings.h>
-#include <thread/meshcop_tlvs.hpp>
-#include <thread/meshcop_dataset.hpp>
+#include <thread/mle_tlvs.hpp>
 
 namespace Thread {
 namespace MeshCoP {
@@ -293,26 +294,10 @@ ThreadError Dataset::Set(const otOperationalDataset &aDataset)
 
     if (aDataset.mIsChannelMaskPage0Set)
     {
-        OT_TOOL_PACKED_BEGIN
-        struct
-        {
-            MeshCoP::ChannelMaskTlv tlv;
-            MeshCoP::ChannelMaskEntry entry;
-            uint8_t mask[sizeof(aDataset.mChannelMaskPage0)];
-        } OT_TOOL_PACKED_END channelMask;
-
-        channelMask.tlv.Init();
-        channelMask.tlv.SetLength(sizeof(MeshCoP::ChannelMaskEntry) + sizeof(aDataset.mChannelMaskPage0));
-
-        channelMask.entry.SetChannelPage(0);
-        channelMask.entry.SetMaskLength(sizeof(aDataset.mChannelMaskPage0));
-
-        for (uint8_t index = 0; index < sizeof(aDataset.mChannelMaskPage0); index++)
-        {
-            channelMask.mask[index] = (aDataset.mChannelMaskPage0 >> (8 * index)) & 0xff;
-        }
-
-        Set(channelMask.tlv);
+        MeshCoP::ChannelMask0Tlv tlv;
+        tlv.Init();
+        tlv.SetMask(aDataset.mChannelMaskPage0);
+        Set(tlv);
     }
 
     if (aDataset.mIsExtendedPanIdSet)
@@ -399,18 +384,20 @@ exit:
 
 void Dataset::SetTimestamp(const Timestamp &aTimestamp)
 {
-    OT_TOOL_PACKED_BEGIN
-    struct
+    if (mType == Tlv::kActiveTimestamp)
     {
-        Tlv tlv;
-        Timestamp timestamp;
-    } OT_TOOL_PACKED_END timestampTlv;
-
-    timestampTlv.tlv.SetType(mType);
-    timestampTlv.tlv.SetLength(sizeof(Timestamp));
-    timestampTlv.timestamp = aTimestamp;
-
-    Set(timestampTlv.tlv);
+        ActiveTimestampTlv activeTimestamp;
+        activeTimestamp.Init();
+        *static_cast<Timestamp *>(&activeTimestamp) = aTimestamp;
+        Set(activeTimestamp);
+    }
+    else
+    {
+        PendingTimestampTlv pendingTimestamp;
+        pendingTimestamp.Init();
+        *static_cast<Timestamp *>(&pendingTimestamp) = aTimestamp;
+        Set(pendingTimestamp);
+    }
 }
 
 int Dataset::Compare(const Dataset &aCompare) const
@@ -494,6 +481,34 @@ void Dataset::Remove(Tlv::Type aType)
 
 exit:
     return;
+}
+
+ThreadError Dataset::AppendMleDatasetTlv(Message &aMessage)
+{
+    ThreadError error = kThreadError_None;
+    Mle::Tlv tlv;
+    Mle::Tlv::Type type;
+    Tlv *cur = reinterpret_cast<Tlv *>(mTlvs);
+    Tlv *end = reinterpret_cast<Tlv *>(mTlvs + mLength);
+
+    type = (mType == Tlv::kActiveTimestamp ? Mle::Tlv::kActiveDataset : Mle::Tlv::kPendingDataset);
+
+    tlv.SetType(type);
+    tlv.SetLength(static_cast<uint8_t>(mLength) - sizeof(Tlv) - sizeof(Timestamp));
+    SuccessOrExit(error = aMessage.Append(&tlv, sizeof(Tlv)));
+
+    while (cur < end)
+    {
+        if (cur->GetType() != mType)
+        {
+            SuccessOrExit(error = aMessage.Append(cur, sizeof(Tlv) + cur->GetLength()));
+        }
+
+        cur = cur->GetNext();
+    }
+
+exit:
+    return error;
 }
 
 void Dataset::Remove(uint8_t *aStart, uint8_t aLength)

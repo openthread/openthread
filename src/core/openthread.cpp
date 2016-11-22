@@ -40,6 +40,10 @@
 #endif
 
 #include <openthread.h>
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+#include <openthread-jam-detection.h>
+#endif
+
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
@@ -58,25 +62,25 @@
 #include <thread/thread_uris.hpp>
 #include <utils/slaac_address.hpp>
 #include <openthread-instance.h>
+#include <openthread-coap.h>
 #include <coap/coap_header.hpp>
 #include <coap/coap_client.hpp>
+#include <coap/coap_server.hpp>
 
 #ifndef OPENTHREAD_MULTIPLE_INSTANCE
 static otDEFINE_ALIGNED_VAR(sInstanceRaw, sizeof(otInstance), uint64_t);
 otInstance *sInstance = NULL;
 #endif
 
-void OT_CDECL operator delete(void *, size_t) throw() { }
-void OT_CDECL operator delete(void *) throw() { }
-
 otInstance::otInstance(void) :
     mReceiveIp6DatagramCallback(NULL),
     mReceiveIp6DatagramCallbackContext(NULL),
     mActiveScanCallback(NULL),
     mActiveScanCallbackContext(NULL),
-    mDiscoverCallback(NULL),
-    mDiscoverCallbackContext(NULL),
     mThreadNetif(mIp6)
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
+    , mApplicationCoapServer(mIp6.mUdp, OT_DEFAULT_COAP_PORT)
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 {
 }
 
@@ -88,7 +92,6 @@ extern "C" {
 
 static void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame);
 static void HandleEnergyScanResult(void *aContext, otEnergyScanResult *aResult);
-static void HandleMleDiscover(otActiveScanResult *aResult, void *aContext);
 
 void otProcessQueuedTasklets(otInstance *aInstance)
 {
@@ -897,6 +900,86 @@ const otMacCounters *otGetMacCounters(otInstance *aInstance)
     return &aInstance->mThreadNetif.GetMac().GetCounters();
 }
 
+void otGetMessageBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
+{
+    aBufferInfo->mTotalBuffers = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS;
+
+    aBufferInfo->mFreeBuffers = aInstance->mThreadNetif.GetIp6().mMessagePool.GetFreeBufferCount();
+
+    aInstance->mThreadNetif.GetMeshForwarder().GetSendQueue().GetInfo(aBufferInfo->m6loSendMessages,
+                                                                      aBufferInfo->m6loSendBuffers);
+
+    aInstance->mThreadNetif.GetMeshForwarder().GetReassemblyQueue().GetInfo(aBufferInfo->m6loReassemblyMessages,
+                                                                            aBufferInfo->m6loReassemblyBuffers);
+
+    aInstance->mThreadNetif.GetMeshForwarder().GetResolvingQueue().GetInfo(aBufferInfo->mArpMessages,
+                                                                           aBufferInfo->mArpBuffers);
+
+    aInstance->mThreadNetif.GetIp6().GetSendQueue().GetInfo(aBufferInfo->mIp6Messages,
+                                                            aBufferInfo->mIp6Buffers);
+
+    aInstance->mThreadNetif.GetIp6().mMpl.GetBufferedMessageSet().GetInfo(aBufferInfo->mMplMessages,
+                                                                          aBufferInfo->mMplBuffers);
+
+    aInstance->mThreadNetif.GetMle().GetMessageQueue().GetInfo(aBufferInfo->mMleMessages,
+                                                               aBufferInfo->mMleBuffers);
+
+    aInstance->mThreadNetif.GetCoapClient().GetRequestMessages().GetInfo(aBufferInfo->mCoapClientMessages,
+                                                                         aBufferInfo->mCoapClientBuffers);
+}
+
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+ThreadError otSetJamDetectionRssiThreshold(otInstance *aInstance, int8_t aRssiThreshold)
+{
+    return aInstance->mThreadNetif.GetJamDetector().SetRssiThreshold(aRssiThreshold);
+}
+
+int8_t otGetJamDetectionRssiThreshold(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetJamDetector().GetRssiThreshold();
+}
+
+ThreadError otSetJamDetectionWindow(otInstance *aInstance, uint8_t aWindow)
+{
+    return aInstance->mThreadNetif.GetJamDetector().SetWindow(aWindow);
+}
+
+uint8_t otGetJamDetectionWindow(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetJamDetector().GetWindow();
+}
+
+ThreadError otSetJamDetectionBusyPeriod(otInstance *aInstance, uint8_t aBusyPeriod)
+{
+    return aInstance->mThreadNetif.GetJamDetector().SetBusyPeriod(aBusyPeriod);
+}
+
+uint8_t otGetJamDetectionBusyPeriod(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetJamDetector().GetBusyPeriod();
+}
+
+ThreadError otStartJamDetection(otInstance *aInstance, otJamDetectionCallback aCallback, void *aContext)
+{
+    return aInstance->mThreadNetif.GetJamDetector().Start(aCallback, aContext);
+}
+
+ThreadError otStopJamDetection(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetJamDetector().Stop();
+}
+
+bool otIsJamDetectionEnabled(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetJamDetector().IsEnabled();
+}
+
+bool otGetJamDetectionState(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetJamDetector().GetState();
+}
+#endif // OPENTHREAD_ENABLE_JAM_DETECTION
+
 bool otIsIp6AddressEqual(const otIp6Address *a, const otIp6Address *b)
 {
     return *static_cast<const Ip6::Address *>(a) == *static_cast<const Ip6::Address *>(b);
@@ -928,6 +1011,36 @@ void otDhcp6ClientUpdate(otInstance *aInstance, otNetifAddress *aAddresses, uint
     aInstance->mThreadNetif.GetDhcp6Client().UpdateAddresses(aInstance, aAddresses, aNumAddresses, aContext);
 }
 #endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
+
+const otNetifMulticastAddress *otGetMulticastAddresses(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetMulticastAddresses();
+}
+
+ThreadError otSubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress)
+{
+    return aInstance->mThreadNetif.SubscribeExternalMulticast(*static_cast<const Ip6::Address *>(aAddress));
+}
+
+ThreadError otUnsubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress)
+{
+    return aInstance->mThreadNetif.UnsubscribeExternalMulticast(*static_cast<const Ip6::Address *>(aAddress));
+}
+
+bool otIsMulticastPromiscuousModeEnabled(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.IsMulticastPromiscuousModeEnabled();
+}
+
+void otEnableMulticastPromiscuousMode(otInstance *aInstance)
+{
+    aInstance->mThreadNetif.EnableMulticastPromiscuousMode();
+}
+
+void otDisableMulticastPromiscuousMode(otInstance *aInstance)
+{
+    aInstance->mThreadNetif.DisableMulticastPromiscuousMode();
+}
 
 void otSlaacUpdate(otInstance *aInstance, otNetifAddress *aAddresses, uint32_t aNumAddresses,
                    otSlaacIidCreate aIidCreate, void *aContext)
@@ -1101,9 +1214,6 @@ void otInstanceFinalize(otInstance *aInstance)
     (void)otThreadStop(aInstance);
     (void)otInterfaceDown(aInstance);
 
-    // Free the otInstance structure
-    delete aInstance;
-
 #ifndef OPENTHREAD_MULTIPLE_INSTANCE
     sInstance = NULL;
 #endif
@@ -1250,20 +1360,12 @@ bool otIsEnergyScanInProgress(otInstance *aInstance)
 ThreadError otDiscover(otInstance *aInstance, uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanId,
                        otHandleActiveScanResult aCallback, void *aCallbackContext)
 {
-    aInstance->mDiscoverCallback = aCallback;
-    aInstance->mDiscoverCallbackContext = aCallbackContext;
-    return aInstance->mThreadNetif.GetMle().Discover(aScanChannels, aScanDuration, aPanId, &HandleMleDiscover, aInstance);
+    return aInstance->mThreadNetif.GetMle().Discover(aScanChannels, aScanDuration, aPanId, aCallback, aCallbackContext);
 }
 
 bool otIsDiscoverInProgress(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMle().IsDiscoverInProgress();
-}
-
-void HandleMleDiscover(otActiveScanResult *aResult, void *aContext)
-{
-    otInstance *aInstance = static_cast<otInstance *>(aContext);
-    aInstance->mDiscoverCallback(aResult, aInstance->mDiscoverCallbackContext);
 }
 
 void otSetReceiveIp6DatagramCallback(otInstance *aInstance, otReceiveIp6DatagramCallback aCallback,
@@ -1482,9 +1584,10 @@ exit:
     return error;
 }
 
-ThreadError otSendActiveGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength)
+ThreadError otSendActiveGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength,
+                            const otIp6Address *aAddress)
 {
-    return aInstance->mThreadNetif.GetActiveDataset().SendGetRequest(aTlvTypes, aLength);
+    return aInstance->mThreadNetif.GetActiveDataset().SendGetRequest(aTlvTypes, aLength, aAddress);
 }
 
 ThreadError otSendActiveSet(otInstance *aInstance, const otOperationalDataset *aDataset, const uint8_t *aTlvs,
@@ -1493,9 +1596,10 @@ ThreadError otSendActiveSet(otInstance *aInstance, const otOperationalDataset *a
     return aInstance->mThreadNetif.GetActiveDataset().SendSetRequest(*aDataset, aTlvs, aLength);
 }
 
-ThreadError otSendPendingGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength)
+ThreadError otSendPendingGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength,
+                             const otIp6Address *aAddress)
 {
-    return aInstance->mThreadNetif.GetPendingDataset().SendGetRequest(aTlvTypes, aLength);
+    return aInstance->mThreadNetif.GetPendingDataset().SendGetRequest(aTlvTypes, aLength, aAddress);
 }
 
 ThreadError otSendPendingSet(otInstance *aInstance, const otOperationalDataset *aDataset, const uint8_t *aTlvs,
@@ -1565,6 +1669,11 @@ ThreadError otSendMgmtCommissionerSet(otInstance *aInstance, const otCommissioni
 {
     return aInstance->mThreadNetif.GetCommissioner().SendMgmtCommissionerSetRequest(*aDataset, aTlvs, aLength);
 }
+
+uint16_t otCommissionerGetSessionId(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetCommissioner().GetSessionId();
+}
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
 #if OPENTHREAD_ENABLE_JOINER
@@ -1579,6 +1688,7 @@ ThreadError otJoinerStop(otInstance *aInstance)
 }
 #endif  // OPENTHREAD_ENABLE_JOINER
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
 void otCoapHeaderInit(otCoapHeader *aHeader, otCoapType aType, otCoapCode aCode)
 {
     Coap::Header *header = static_cast<Coap::Header *>(aHeader);
@@ -1590,14 +1700,54 @@ void otCoapHeaderSetToken(otCoapHeader *aHeader, const uint8_t *aToken, uint8_t 
     static_cast<Coap::Header *>(aHeader)->SetToken(aToken, aTokenLength);
 }
 
+void otCoapHeaderGenerateToken(otCoapHeader *aHeader, uint8_t aTokenLength)
+{
+    static_cast<Coap::Header *>(aHeader)->SetToken(aTokenLength);
+}
+
 ThreadError otCoapHeaderAppendOption(otCoapHeader *aHeader, const otCoapOption *aOption)
 {
     return static_cast<Coap::Header *>(aHeader)->AppendOption(*static_cast<const Coap::Header::Option *>(aOption));
 }
 
+ThreadError otCoapHeaderAppendUriPathOptions(otCoapHeader *aHeader, const char *aUriPath)
+{
+    return static_cast<Coap::Header *>(aHeader)->AppendUriPathOptions(aUriPath);
+}
+
 void otCoapHeaderSetPayloadMarker(otCoapHeader *aHeader)
 {
     static_cast<Coap::Header *>(aHeader)->SetPayloadMarker();
+}
+
+void otCoapHeaderSetMessageId(otCoapHeader *aHeader, uint16_t aMessageId)
+{
+    return static_cast<Coap::Header *>(aHeader)->SetMessageId(aMessageId);
+}
+
+otCoapType otCoapHeaderGetType(const otCoapHeader *aHeader)
+{
+    return static_cast<const Coap::Header *>(aHeader)->GetType();
+}
+
+otCoapCode otCoapHeaderGetCode(const otCoapHeader *aHeader)
+{
+    return static_cast<const Coap::Header *>(aHeader)->GetCode();
+}
+
+uint16_t otCoapHeaderGetMessageId(const otCoapHeader *aHeader)
+{
+    return static_cast<const Coap::Header *>(aHeader)->GetMessageId();
+}
+
+uint8_t otCoapHeaderGetTokenLength(const otCoapHeader *aHeader)
+{
+    return static_cast<const Coap::Header *>(aHeader)->GetTokenLength();
+}
+
+const uint8_t *otCoapHeaderGetToken(const otCoapHeader *aHeader)
+{
+    return static_cast<const Coap::Header *>(aHeader)->GetToken();
 }
 
 const otCoapOption *otCoapGetCurrentOption(const otCoapHeader *aHeader)
@@ -1610,12 +1760,12 @@ const otCoapOption *otCoapGetNextOption(otCoapHeader *aHeader)
     return static_cast<const otCoapOption *>(static_cast<Coap::Header *>(aHeader)->GetNextOption());
 }
 
-otMessage otNewCoapMessage(otInstance *aInstance, const otCoapHeader *aHeader)
+otMessage otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader)
 {
     return aInstance->mThreadNetif.GetCoapClient().NewMessage(*(static_cast<const Coap::Header *>(aHeader)));
 }
 
-ThreadError otSendCoapMessage(otInstance *aInstance, otMessage aMessage, const otMessageInfo *aMessageInfo,
+ThreadError otCoapSendRequest(otInstance *aInstance, otMessage aMessage, const otMessageInfo *aMessageInfo,
                               otCoapResponseHandler aHandler, void *aContext)
 {
     return aInstance->mThreadNetif.GetCoapClient().SendMessage(
@@ -1623,6 +1773,38 @@ ThreadError otSendCoapMessage(otInstance *aInstance, otMessage aMessage, const o
                *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
                aHandler, aContext);
 }
+
+ThreadError otCoapServerStart(otInstance *aInstance)
+{
+    return aInstance->mApplicationCoapServer.Start();
+}
+
+ThreadError otCoapServerStop(otInstance *aInstance)
+{
+    return aInstance->mApplicationCoapServer.Stop();
+}
+
+ThreadError otCoapServerSetPort(otInstance *aInstance, uint16_t aPort)
+{
+    return aInstance->mApplicationCoapServer.SetPort(aPort);
+}
+
+ThreadError otCoapServerAddResource(otInstance *aInstance, otCoapResource *aResource)
+{
+    return aInstance->mApplicationCoapServer.AddResource(*static_cast<Coap::Resource *>(aResource));
+}
+
+void otCoapServerRemoveResource(otInstance *aInstance, otCoapResource *aResource)
+{
+    aInstance->mApplicationCoapServer.RemoveResource(*static_cast<Coap::Resource *>(aResource));
+}
+
+ThreadError otCoapSendResponse(otInstance *aInstance, otMessage aMessage, const otMessageInfo *aMessageInfo)
+{
+    return aInstance->mApplicationCoapServer.SendMessage(
+               *static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+}
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 
 #ifdef __cplusplus
 }  // extern "C"

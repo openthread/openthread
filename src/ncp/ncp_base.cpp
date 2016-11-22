@@ -30,6 +30,12 @@
  *   This file implements a Spinel interface to the OpenThread stack.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <assert.h>
 #include <stdlib.h>
 #include <common/code_utils.hpp>
@@ -38,6 +44,9 @@
 #include <net/ip6.hpp>
 #include <openthread.h>
 #include <openthread-diag.h>
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+#include <openthread-jam-detection.h>
+#endif
 #include <openthread-instance.h>
 #include <stdarg.h>
 #include <platform/radio.h>
@@ -154,6 +163,14 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
 
     { SPINEL_PROP_STREAM_NET, &NcpBase::GetPropertyHandler_STREAM_NET },
 
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    { SPINEL_PROP_JAM_DETECT_ENABLE, &NcpBase::GetPropertyHandler_JAM_DETECT_ENABLE },
+    { SPINEL_PROP_JAM_DETECTED, &NcpBase::GetPropertyHandler_JAM_DETECTED },
+    { SPINEL_PROP_JAM_DETECT_RSSI_THRESHOLD, &NcpBase::GetPropertyHandler_JAM_DETECT_RSSI_THRESHOLD },
+    { SPINEL_PROP_JAM_DETECT_WINDOW, &NcpBase::GetPropertyHandler_JAM_DETECT_WINDOW },
+    { SPINEL_PROP_JAM_DETECT_BUSY, &NcpBase::GetPropertyHandler_JAM_DETECT_BUSY },
+#endif
+
     { SPINEL_PROP_CNTR_TX_PKT_TOTAL, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_TX_PKT_ACK_REQ, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_TX_PKT_ACKED, &NcpBase::GetPropertyHandler_MAC_CNTR },
@@ -190,6 +207,12 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_CNTR_TX_SPINEL_TOTAL, &NcpBase::GetPropertyHandler_NCP_CNTR },
     { SPINEL_PROP_CNTR_RX_SPINEL_TOTAL, &NcpBase::GetPropertyHandler_NCP_CNTR },
     { SPINEL_PROP_CNTR_RX_SPINEL_ERR, &NcpBase::GetPropertyHandler_NCP_CNTR },
+
+    { SPINEL_PROP_MSG_BUFFER_COUNTERS, &NcpBase::GetPropertyHandler_MSG_BUFFER_COUNTERS },
+
+#if OPENTHREAD_ENABLE_LEGACY
+    { SPINEL_PROP_NEST_LEGACY_ULA_PREFIX, &NcpBase::GetPropertyHandler_NEST_LEGACY_ULA_PREFIX },
+#endif
 };
 
 const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
@@ -241,8 +264,19 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER, &NcpBase::SetPropertyHandler_THREAD_ROUTER_SELECTION_JITTER },
     { SPINEL_PROP_THREAD_PREFERRED_ROUTER_ID, &NcpBase::SetPropertyHandler_THREAD_PREFERRED_ROUTER_ID },
 
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    { SPINEL_PROP_JAM_DETECT_ENABLE, &NcpBase::SetPropertyHandler_JAM_DETECT_ENABLE },
+    { SPINEL_PROP_JAM_DETECT_RSSI_THRESHOLD, &NcpBase::SetPropertyHandler_JAM_DETECT_RSSI_THRESHOLD },
+    { SPINEL_PROP_JAM_DETECT_WINDOW, &NcpBase::SetPropertyHandler_JAM_DETECT_WINDOW },
+    { SPINEL_PROP_JAM_DETECT_BUSY, &NcpBase::SetPropertyHandler_JAM_DETECT_BUSY },
+#endif
+
 #if OPENTHREAD_ENABLE_DIAG
     { SPINEL_PROP_NEST_STREAM_MFG, &NcpBase::SetPropertyHandler_NEST_STREAM_MFG },
+#endif
+
+#if OPENTHREAD_ENABLE_LEGACY
+    { SPINEL_PROP_NEST_LEGACY_ULA_PREFIX, &NcpBase::SetPropertyHandler_NEST_LEGACY_ULA_PREFIX },
 #endif
 };
 
@@ -428,6 +462,9 @@ NcpBase::NcpBase(otInstance *aInstance):
     mChannelMask = mSupportedChannelMask;
     mScanPeriod = 200; // ms
     mShouldSignalEndOfScan = false;
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    mShouldSignalJamStateChange = false;
+#endif
     sNcpContext = this;
     mChangedFlags = NCP_PLAT_RESET_REASON;
     mAllowLocalNetworkDataChange = false;
@@ -450,9 +487,13 @@ NcpBase::NcpBase(otInstance *aInstance):
     otSetIcmpEchoEnabled(mInstance, false);
 
     mUpdateChangedPropsTask.Post();
+
+#if OPENTHREAD_ENABLE_LEGACY
+    mLegacyNodeDidJoin = false;
+    mLegacyHandlers = NULL;
+    memset(mLegacyUlaPrefix, 0, sizeof(mLegacyUlaPrefix));
+#endif
 }
-
-
 
 // ----------------------------------------------------------------------------
 // MARK: Outbound Datagram Handling
@@ -756,6 +797,9 @@ void NcpBase::UpdateChangedProps(void)
 
                 if ( (otGetDeviceRole(mInstance) == kDeviceRoleLeader)
                   && otIsSingleton(mInstance)
+#if OPENTHREAD_ENABLE_LEGACY
+                  && !mLegacyNodeDidJoin
+#endif
                 ) {
                     mChangedFlags &= ~static_cast<uint32_t>(OT_NET_PARTITION_ID);
                     otThreadStop(mInstance);
@@ -942,6 +986,22 @@ void NcpBase::HandleSpaceAvailableInTxBuffer(void)
 
         mShouldSignalEndOfScan = false;
     }
+
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    if (mShouldSignalJamStateChange)
+    {
+        SuccessOrExit(
+            SendPropertyUpdate(
+                SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                SPINEL_CMD_PROP_VALUE_IS,
+                SPINEL_PROP_JAM_DETECTED,
+                SPINEL_DATATYPE_BOOL_S,
+                otGetJamDetectionState(mInstance)
+        ));
+
+        mShouldSignalJamStateChange = false;
+    }
+#endif  // OPENTHREAD_ENABLE_JAM_DETECTION
 
     UpdateChangedProps();
 
@@ -1411,12 +1471,20 @@ ThreadError NcpBase::GetPropertyHandler_CAPS(uint8_t header, spinel_prop_key_t k
 
     SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_MAC_WHITELIST));
 
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_JAM_DETECT));
+#endif
+
     // TODO: Somehow get the following capability from the radio.
     SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S,
                                                       SPINEL_CAP_802_15_4_2450MHZ_OQPSK));
 
 #if OPENTHREAD_CONFIG_MAX_CHILDREN > 0
     SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_ROLE_ROUTER));
+#endif
+
+#if OPENTHREAD_ENABLE_LEGACY
+    SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_NEST_LEGACY_INTERFACE));
 #endif
 
     // End adding capabilities /////////////////////////////////////////////////
@@ -1703,6 +1771,7 @@ ThreadError NcpBase::GetPropertyHandler_NET_ROLE(uint8_t header, spinel_prop_key
 
     switch (otGetDeviceRole(mInstance))
     {
+    case kDeviceRoleOffline:
     case kDeviceRoleDisabled:
     case kDeviceRoleDetached:
         role = SPINEL_NET_ROLE_DETACHED;
@@ -2351,6 +2420,65 @@ ThreadError NcpBase::GetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_k
     return SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
 }
 
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+
+ThreadError NcpBase::GetPropertyHandler_JAM_DETECT_ENABLE(uint8_t header, spinel_prop_key_t key)
+{
+   return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_BOOL_S,
+               otIsJamDetectionEnabled(mInstance)
+           );
+}
+
+ThreadError NcpBase::GetPropertyHandler_JAM_DETECTED(uint8_t header, spinel_prop_key_t key)
+{
+   return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_BOOL_S,
+               otGetJamDetectionState(mInstance)
+           );
+}
+
+ThreadError NcpBase::GetPropertyHandler_JAM_DETECT_RSSI_THRESHOLD(uint8_t header, spinel_prop_key_t key)
+{
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_INT8_S,
+               otGetJamDetectionRssiThreshold(mInstance)
+           );
+}
+
+ThreadError NcpBase::GetPropertyHandler_JAM_DETECT_WINDOW(uint8_t header, spinel_prop_key_t key)
+{
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_UINT8_S,
+               otGetJamDetectionWindow(mInstance)
+           );
+}
+
+ThreadError NcpBase::GetPropertyHandler_JAM_DETECT_BUSY(uint8_t header, spinel_prop_key_t key)
+{
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_UINT8_S,
+               otGetJamDetectionBusyPeriod(mInstance)
+           );
+}
+
+#endif // OPENTHREAD_ENABLE_JAM_DETECTION
+
 ThreadError NcpBase::GetPropertyHandler_MAC_CNTR(uint8_t header, spinel_prop_key_t key)
 {
     uint32_t value;
@@ -2546,6 +2674,42 @@ bail:
     return errorCode;
 }
 
+ThreadError NcpBase::GetPropertyHandler_MSG_BUFFER_COUNTERS(uint8_t header, spinel_prop_key_t key)
+{
+    ThreadError errorCode = kThreadError_None;
+    otBufferInfo bufferInfo;
+
+    otGetMessageBufferInfo(mInstance, &bufferInfo);
+
+    SuccessOrExit(errorCode = OutboundFrameBegin());
+
+    SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
+
+    SuccessOrExit(errorCode = OutboundFrameFeedPacked("T(SSSSSSSSSSSSSSSS)",
+        bufferInfo.mTotalBuffers,
+        bufferInfo.mFreeBuffers,
+        bufferInfo.m6loSendMessages,
+        bufferInfo.m6loSendBuffers,
+        bufferInfo.m6loReassemblyMessages,
+        bufferInfo.m6loReassemblyBuffers,
+        bufferInfo.mIp6Messages,
+        bufferInfo.mIp6Buffers,
+        bufferInfo.mMplMessages,
+        bufferInfo.mMplBuffers,
+        bufferInfo.mMleMessages,
+        bufferInfo.mMleBuffers,
+        bufferInfo.mArpMessages,
+        bufferInfo.mArpBuffers,
+        bufferInfo.mCoapClientMessages,
+        bufferInfo.mCoapClientBuffers
+    ));
+
+    SuccessOrExit(errorCode = OutboundFrameSend());
+
+exit:
+    return errorCode;
+}
+
 ThreadError NcpBase::GetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop_key_t key)
 {
     otMacWhitelistEntry entry;
@@ -2725,6 +2889,19 @@ ThreadError NcpBase::GetPropertyHandler_NET_REQUIRE_JOIN_EXISTING(uint8_t header
            );
 }
 
+#if OPENTHREAD_ENABLE_LEGACY
+ThreadError NcpBase::GetPropertyHandler_NEST_LEGACY_ULA_PREFIX(uint8_t header, spinel_prop_key_t key)
+{
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_DATA_S,
+               mLegacyUlaPrefix,
+               sizeof(mLegacyUlaPrefix)
+           );
+}
+#endif // OPENTHREAD_ENABLE_LEGACY
 
 // ----------------------------------------------------------------------------
 // MARK: Individual Property Setters
@@ -3171,10 +3348,32 @@ ThreadError NcpBase::SetPropertyHandler_NET_STACK_UP(uint8_t header, spinel_prop
             if (value != false)
             {
                 errorCode = otThreadStart(mInstance);
+
+#if OPENTHREAD_ENABLE_LEGACY
+                mLegacyNodeDidJoin = false;
+                if (mLegacyHandlers != NULL)
+                {
+                    if (mLegacyHandlers->mStartLegacy)
+                    {
+                        mLegacyHandlers->mStartLegacy();
+                    }
+                }
+#endif // OPENTHREAD_ENABLE_LEGACY
             }
             else
             {
                 errorCode = otThreadStop(mInstance);
+
+#if OPENTHREAD_ENABLE_LEGACY
+                mLegacyNodeDidJoin = false;
+                if (mLegacyHandlers != NULL)
+                {
+                    if (mLegacyHandlers->mStopLegacy)
+                    {
+                        mLegacyHandlers->mStopLegacy();
+                    }
+                }
+#endif // OPENTHREAD_ENABLE_LEGACY
             }
         }
     }
@@ -4229,6 +4428,176 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header
     return errorCode;
 }
 
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+
+ThreadError NcpBase::SetPropertyHandler_JAM_DETECT_ENABLE(uint8_t header, spinel_prop_key_t key,
+                                                          const uint8_t *value_ptr, uint16_t value_len)
+{
+    bool isEnabled;
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_BOOL_S,
+                       &isEnabled
+                   );
+
+    if (parsedLength > 0)
+    {
+        if (isEnabled)
+        {
+            otStartJamDetection(mInstance, &NcpBase::HandleJamStateChange_Jump, this);
+        }
+        else
+        {
+            otStopJamDetection(mInstance);
+        }
+
+        errorCode = HandleCommandPropertyGet(header, key);
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
+ThreadError NcpBase::SetPropertyHandler_JAM_DETECT_RSSI_THRESHOLD(uint8_t header, spinel_prop_key_t key,
+                                                                  const uint8_t *value_ptr, uint16_t value_len)
+{
+    int8_t value = 0;
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_INT8_S,
+                       &value
+                   );
+
+    if (parsedLength > 0)
+    {
+        errorCode = otSetJamDetectionRssiThreshold(mInstance, value);
+
+        if (errorCode == kThreadError_None)
+        {
+            errorCode = HandleCommandPropertyGet(header, key);
+        }
+        else
+        {
+            errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+        }
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
+ThreadError NcpBase::SetPropertyHandler_JAM_DETECT_WINDOW(uint8_t header, spinel_prop_key_t key,
+                                                          const uint8_t *value_ptr, uint16_t value_len)
+{
+    uint8_t value = 0;
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_UINT8_S,
+                       &value
+                   );
+
+    if (parsedLength > 0)
+    {
+        errorCode = otSetJamDetectionWindow(mInstance, value);
+
+        if (errorCode == kThreadError_None)
+        {
+            errorCode = HandleCommandPropertyGet(header, key);
+        }
+        else
+        {
+            errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+        }
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
+ThreadError NcpBase::SetPropertyHandler_JAM_DETECT_BUSY(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                        uint16_t value_len)
+{
+    uint8_t value = 0;
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_UINT8_S,
+                       &value
+                   );
+
+    if (parsedLength > 0)
+    {
+        errorCode = otSetJamDetectionBusyPeriod(mInstance, value);
+
+        if (errorCode == kThreadError_None)
+        {
+            errorCode = HandleCommandPropertyGet(header, key);
+        }
+        else
+        {
+            errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+        }
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
+void NcpBase::HandleJamStateChange_Jump(bool aJamState, void *aContext)
+{
+    static_cast<NcpBase *>(aContext)->HandleJamStateChange(aJamState);
+}
+
+void NcpBase::HandleJamStateChange(bool aJamState)
+{
+    ThreadError errorCode;
+
+    errorCode = SendPropertyUpdate(
+        SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+        SPINEL_CMD_PROP_VALUE_IS,
+        SPINEL_PROP_JAM_DETECTED,
+        SPINEL_DATATYPE_BOOL_S,
+        aJamState
+    );
+
+    // If we could not send the jam state change indicator (no
+    // buffer space), we set `mShouldSignalJamStateChange` to true to send
+    // it out when buffer space becomes available.
+    if (errorCode != kThreadError_None)
+    {
+        mShouldSignalJamStateChange = true;
+    }
+}
+
+#endif // OPENTHREAD_ENABLE_JAM_DETECTION
+
 #if OPENTHREAD_ENABLE_DIAG
 ThreadError NcpBase::SetPropertyHandler_NEST_STREAM_MFG(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len)
 {
@@ -4265,6 +4634,47 @@ ThreadError NcpBase::SetPropertyHandler_NEST_STREAM_MFG(uint8_t header, spinel_p
     return errorCode;
 }
 #endif
+
+#if OPENTHREAD_ENABLE_LEGACY
+ThreadError NcpBase::SetPropertyHandler_NEST_LEGACY_ULA_PREFIX(uint8_t header, spinel_prop_key_t key,
+                                                                const uint8_t *value_ptr, uint16_t value_len)
+{
+    ThreadError errorCode = kThreadError_None;
+    const uint8_t *ptr = NULL;
+    spinel_size_t len;
+    spinel_ssize_t parsedLength;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_DATA_S,
+                       &ptr,
+                       &len
+                   );
+
+    if ((parsedLength > 0) && (len <= sizeof(mLegacyUlaPrefix)))
+    {
+        memset(mLegacyUlaPrefix, 0, sizeof(mLegacyUlaPrefix));
+        memcpy(mLegacyUlaPrefix, ptr, len);
+
+        if (mLegacyHandlers)
+        {
+            if (mLegacyHandlers->mSetLegacyUlaPrefix)
+            {
+                mLegacyHandlers->mSetLegacyUlaPrefix(mLegacyUlaPrefix);
+            }
+        }
+
+        errorCode = HandleCommandPropertyGet(header, key);
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+#endif  // OPENTHREAD_ENABLE_LEGACY
 
 // ----------------------------------------------------------------------------
 // MARK: Individual Property Inserters
@@ -4830,6 +5240,85 @@ ThreadError NcpBase::RemovePropertyHandler_MAC_WHITELIST(uint8_t header, spinel_
     return errorCode;
 }
 
+#if OPENTHREAD_ENABLE_LEGACY
+
+void NcpBase::RegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers)
+{
+    mLegacyHandlers = aHandlers;
+    bool isEnabled;
+
+    VerifyOrExit(mLegacyHandlers != NULL, ;);
+
+    isEnabled = (otGetDeviceRole(mInstance) != kDeviceRoleDisabled);
+
+    if (isEnabled)
+    {
+        if (mLegacyHandlers->mStartLegacy)
+        {
+            mLegacyHandlers->mStartLegacy();
+        }
+    }
+    else
+    {
+        if (mLegacyHandlers->mStopLegacy)
+        {
+            mLegacyHandlers->mStopLegacy();
+        }
+    }
+
+    if (mLegacyHandlers->mSetLegacyUlaPrefix)
+    {
+        mLegacyHandlers->mSetLegacyUlaPrefix(mLegacyUlaPrefix);
+    }
+
+exit:
+    return;
+}
+
+void NcpBase::HandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix)
+{
+    memcpy(mLegacyUlaPrefix, aUlaPrefix, OT_NCP_LEGACY_ULA_PREFIX_LENGTH);
+
+    SuccessOrExit(OutboundFrameBegin());
+
+    SuccessOrExit(
+        OutboundFrameFeedPacked(
+            "Cii" SPINEL_DATATYPE_DATA_S,
+            SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+            SPINEL_CMD_PROP_VALUE_IS,
+            SPINEL_PROP_NEST_LEGACY_ULA_PREFIX,
+            aUlaPrefix, OT_NCP_LEGACY_ULA_PREFIX_LENGTH
+    ));
+
+    OutboundFrameSend();
+
+exit:
+    return;
+}
+
+void NcpBase::HandleLegacyNodeDidJoin(const otExtAddress *aExtAddr)
+{
+    mLegacyNodeDidJoin = true;
+
+    SuccessOrExit(OutboundFrameBegin());
+
+    SuccessOrExit(
+        OutboundFrameFeedPacked(
+            "Cii" SPINEL_DATATYPE_EUI64_S,
+            SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+            SPINEL_CMD_PROP_VALUE_IS,
+            SPINEL_PROP_NEST_LEGACY_JOINED_NODE,
+            aExtAddr->m8
+    ));
+
+    OutboundFrameSend();
+
+exit:
+    return;
+}
+
+#endif // OPENTHREAD_ENABLE_LEGACY
+
 }  // namespace Thread
 
 
@@ -4851,4 +5340,35 @@ ThreadError otNcpStreamWrite(int aStreamId, const uint8_t* aDataPtr, int aDataLe
         aDataPtr,
         static_cast<uint16_t>(aDataLen)
     );
+}
+
+// ----------------------------------------------------------------------------
+// MARK: Legacy network APIs
+// ----------------------------------------------------------------------------
+
+void otNcpRegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers)
+{
+#if OPENTHREAD_ENABLE_LEGACY
+    Thread::sNcpContext->RegisterLegacyHandlers(aHandlers);
+#else
+    (void)aHandlers;
+#endif
+}
+
+void otNcpHandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix)
+{
+#if OPENTHREAD_ENABLE_LEGACY
+    Thread::sNcpContext->HandleDidReceiveNewLegacyUlaPrefix(aUlaPrefix);
+#else
+    (void)aUlaPrefix;
+#endif
+}
+
+void otNcpHandleLegacyNodeDidJoin(const otExtAddress *aExtAddr)
+{
+#if OPENTHREAD_ENABLE_LEGACY
+    Thread::sNcpContext->HandleLegacyNodeDidJoin(aExtAddr);
+#else
+    (void)aExtAddr;
+#endif
 }

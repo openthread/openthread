@@ -26,49 +26,53 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TEST_VECTOR_H
-#define TEST_VECTOR_H
+#include <common/code_utils.hpp>
+#include <coap/coap_base.hpp>
 
-#include <stdint.h>
+/**
+ * @file
+ *   This file contains common code base for CoAP client and server.
+ */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+namespace Thread {
+namespace Coap {
 
-typedef const struct
+Message *CoapBase::NewMessage(const Header &aHeader)
 {
-    const char *mResult;
+    Message *message = NULL;
 
-    uint16_t mFcf;
-    uint16_t mSeq;
-    uint16_t mPanid;       ///< default panid is destination panid
-    const char *mSrc;
-    const char *mDst;
-} test_mac_vector_t;
+    // Ensure that header has minimum required length.
+    VerifyOrExit(aHeader.GetLength() >= Header::kMinHeaderLength, ;);
 
-typedef const struct
-{
-    const char *mTest;
-    const char *mCompressed;
-    const char *mRaw;
+    VerifyOrExit((message = mSocket.NewMessage(aHeader.GetLength())) != NULL, ;);
+    message->Prepend(aHeader.GetBytes(), aHeader.GetLength());
+    message->SetOffset(0);
 
-    const char *mPrefix;
-
-    test_mac_vector_t mMac;
-
-    uint16_t mTraffic;
-    uint16_t mFlow;
-    uint16_t mHops;
-    const char *mSrc;
-    const char *mDst;
-} test_lowpan_vector_t;
-
-
-extern test_lowpan_vector_t sTestVectorLowpan[];
-extern const unsigned sTestVectorLowpanLen;
-
-#ifdef __cplusplus
+exit:
+    return message;
 }
-#endif
 
-#endif
+ThreadError CoapBase::Start(const Ip6::SockAddr &aSockAddr)
+{
+    ThreadError error;
+
+    SuccessOrExit(error = mSocket.Open(&CoapBase::HandleUdpReceive, this));
+    SuccessOrExit(error = mSocket.Bind(aSockAddr));
+
+exit:
+    return error;
+}
+
+ThreadError CoapBase::Stop(void)
+{
+    return mSocket.Close();
+}
+
+void CoapBase::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
+{
+    static_cast<CoapBase *>(aContext)->mReceiver(aContext, *static_cast<Message *>(aMessage),
+                                                 *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+}
+
+}  // namespace Coap
+}  // namespace Thread

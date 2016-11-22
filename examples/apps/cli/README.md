@@ -20,7 +20,7 @@ Spawn the process:
 
 ```bash
 $ cd <path-to-openthread>/output/<platform>/bin
-$ ./ot-cli 1
+$ ./ot-cli-ftd 1
 ```
 
 Set the PAN ID:
@@ -56,7 +56,6 @@ View IPv6 addresses assigned to Node 1's Thread interface:
 ```bash
 > ipaddr
 fdde:ad00:beef:0:0:ff:fe00:0
-fe80:0:0:0:0:ff:fe00:0
 fdde:ad00:beef:0:558:f56b:d688:799
 fe80:0:0:0:f3d9:2a82:c8d8:fe43
 Done
@@ -68,7 +67,7 @@ Spawn the process:
 
 ```bash
 $ cd <path-to-openthread>/output/<platform>/bin
-$ ./ot-cli 2
+$ ./ot-cli-ftd 2
 ```
 
 Set the PAN ID:

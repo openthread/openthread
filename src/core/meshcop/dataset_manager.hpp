@@ -39,8 +39,8 @@
 
 #include <coap/coap_server.hpp>
 #include <common/timer.hpp>
+#include <meshcop/dataset.hpp>
 #include <net/udp6.hpp>
-#include <thread/meshcop_dataset.hpp>
 #include <thread/mle.hpp>
 #include <thread/network_data_leader.hpp>
 
@@ -59,7 +59,7 @@ public:
     ThreadError ApplyConfiguration(void);
 
     ThreadError SendSetRequest(const otOperationalDataset &aDataset, const uint8_t *aTlvs, uint8_t aLength);
-    ThreadError SendGetRequest(const uint8_t *aTlvTypes, uint8_t aLength);
+    ThreadError SendGetRequest(const uint8_t *aTlvTypes, uint8_t aLength, const otIp6Address *aAddress);
 
 protected:
     enum
@@ -81,6 +81,8 @@ protected:
 
     void Get(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
+    void HandleNetworkUpdate(uint8_t &aFlags);
+
     ThreadError Set(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     Dataset mLocal;
@@ -98,8 +100,6 @@ private:
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
 
-    void HandleNetworkUpdate(uint8_t &aFlags);
-
     ThreadError Register(void);
     void SendSetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo, StateTlv::State aState);
     void SendGetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
@@ -112,16 +112,12 @@ private:
     const char *mUriGet;
 };
 
-class ActiveDataset: public DatasetManager
+class ActiveDatasetBase: public DatasetManager
 {
 public:
-    ActiveDataset(ThreadNetif &aThreadNetif);
+    ActiveDatasetBase(ThreadNetif &aThreadNetif);
 
     ThreadError Restore(void);
-
-    void StartLeader(void);
-
-    void StopLeader(void);
 
     ThreadError Clear(bool aOnlyClearNetwork);
 
@@ -130,30 +126,14 @@ public:
     ThreadError Set(const Dataset &aDataset);
 
     ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
-
-private:
-    static void HandleGet(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                          const Ip6::MessageInfo &aMessageInfo);
-    void HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    static void HandleSet(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                          const Ip6::MessageInfo &aMessageInfo);
-    void HandleSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    Coap::Resource mResourceGet;
-    Coap::Resource mResourceSet;
 };
 
-class PendingDataset: public DatasetManager
+class PendingDatasetBase: public DatasetManager
 {
 public:
-    PendingDataset(ThreadNetif &aThreadNetif);
+    PendingDatasetBase(ThreadNetif &aThreadNetif);
 
     ThreadError Restore(void);
-
-    void StartLeader(void);
-
-    void StopLeader(void);
 
     ThreadError Clear(bool aOnlyClearNetwork);
 
@@ -165,23 +145,16 @@ public:
 
     void UpdateDelayTimer(void);
 
-private:
-    static void HandleGet(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                          const Ip6::MessageInfo &aMessageInfo);
-    void HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void ApplyActiveDataset(const Timestamp &aTimestamp, Message &aMessage);
 
-    static void HandleSet(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                          const Ip6::MessageInfo &aMessageInfo);
-    void HandleSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
+protected:
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
 
     void ResetDelayTimer(uint8_t aFlags);
     void UpdateDelayTimer(Dataset &aDataset, uint32_t &aStartTime);
 
-    Coap::Resource mResourceGet;
-    Coap::Resource mResourceSet;
+    void HandleNetworkUpdate(uint8_t &aFlags);
 
     Timer mTimer;
     uint32_t mLocalTime;
@@ -190,5 +163,11 @@ private:
 
 }  // namespace MeshCoP
 }  // namespace Thread
+
+#ifdef OPENTHREAD_MTD
+#include "dataset_manager_mtd.hpp"
+#else
+#include "dataset_manager_ftd.hpp"
+#endif
 
 #endif  // MESHCOP_DATASET_MANAGER_HPP_

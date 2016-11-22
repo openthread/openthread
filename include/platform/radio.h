@@ -78,6 +78,7 @@ enum
     kPhyUsPerSymbol     = ((kPhyBitsPerOctet / kPhySymbolsPerOctet) * 1000000) / kPhyBitRate,
 
     kPhyNoLqi           = 0,       ///< LQI measurement not supported
+    kPhyInvalidRssi     = 127,     ///< Invalid or unknown RSSI value
 };
 
 /**
@@ -354,16 +355,18 @@ RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *aInstance);
  * 2. Transmits the psdu on the given channel and at the given transmit power.
  *
  * @param[in] aInstance  The OpenThread instance structure.
+ * @param[in] aPacket    A pointer to the packet that will be transmitted.
  *
  * @retval ::kThreadError_None         Successfully transitioned to Transmit.
  * @retval ::kThreadError_InvalidState The radio was not in the Receive state.
  */
-ThreadError otPlatRadioTransmit(otInstance *aInstance);
+ThreadError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket);
 
 /**
  * The radio driver calls this method to notify OpenThread that the transmission has completed.
  *
  * @param[in]  aInstance      The OpenThread instance structure.
+ * @param[in]  aPacket        A pointer to the packet that was transmitted.
  * @param[in]  aFramePending  TRUE if an ACK frame was received and the Frame Pending bit was set.
  * @param[in]  aError  ::kThreadError_None when the frame was transmitted, ::kThreadError_NoAck when the frame was
  *                     transmitted but no ACK was received, ::kThreadError_ChannelAccessFailure when the transmission
@@ -371,7 +374,8 @@ ThreadError otPlatRadioTransmit(otInstance *aInstance);
  *                     aborted for other reasons.
  *
  */
-extern void otPlatRadioTransmitDone(otInstance *aInstance, bool aFramePending, ThreadError aError);
+extern void otPlatRadioTransmitDone(otInstance *aInstance, RadioPacket *aPacket, bool aFramePending,
+                                    ThreadError aError);
 
 /**
  * Get the most recent RSSI measurement.
@@ -413,6 +417,7 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable);
  * The radio driver calls this method to notify OpenThread diagnostics module that the transmission has completed.
  *
  * @param[in]  aInstance      The OpenThread instance structure.
+ * @param[in]  aPacket        A pointer to the packet that was transmitted.
  * @param[in]  aFramePending  TRUE if an ACK frame was received and the Frame Pending bit was set.
  * @param[in]  aError  ::kThreadError_None when the frame was transmitted, ::kThreadError_NoAck when the frame was
  *                     transmitted but no ACK was received, ::kThreadError_ChannelAccessFailure when the transmission
@@ -420,7 +425,8 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable);
  *                     aborted for other reasons.
  *
  */
-extern void otPlatDiagRadioTransmitDone(otInstance *aInstance, bool aFramePending, ThreadError aError);
+extern void otPlatDiagRadioTransmitDone(otInstance *aInstance, RadioPacket *aPacket, bool aFramePending,
+                                        ThreadError aError);
 
 /**
  * The radio driver calls this method to notify OpenThread diagnostics module of a received packet.

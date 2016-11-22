@@ -76,8 +76,8 @@ public:
                           otCommissionerPanIdConflictCallback aCallback, void *aContext);
 
 private:
-    static void HandleConflict(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                               const Ip6::MessageInfo &aMessageInfo);
+    static void HandleConflict(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                               const otMessageInfo *aMessageInfo);
     void HandleConflict(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     ThreadError SendConflictResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestMessageInfo);

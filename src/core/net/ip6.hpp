@@ -36,7 +36,8 @@
 
 #include <stddef.h>
 
-#include <openthread-types.h>
+#include <openthread-ip6.h>
+#include <openthread-udp.h>
 #include <common/encoding.hpp>
 #include <common/message.hpp>
 #include <net/icmp6.hpp>
@@ -243,6 +244,14 @@ public:
     void SetReceiveIp6FilterEnabled(bool aEnabled);
 
     /**
+     * This method indicates whether or not IPv6 forwarding is enabled.
+     *
+     * @returns TRUE if IPv6 forwarding is enabled, FALSE otherwise.
+     *
+     */
+    bool IsForwardingEnabled(void);
+
+    /**
      * This method enables/disables IPv6 forwarding.
      *
      * @param[in]  aEnable  TRUE to enable IPv6 forwarding, FALSE otherwise.
@@ -328,6 +337,14 @@ public:
      *
      */
     otInstance *GetInstance();
+
+    /**
+     * This method returns a reference to the send queue.
+     *
+     * @returns A reference to the send queue.
+     *
+     */
+    const MessageQueue &GetSendQueue(void) const { return mSendQueue; }
 
     Routes mRoutes;
     Icmp mIcmp;

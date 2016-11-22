@@ -259,6 +259,12 @@ public:
     ThreadError SetLength(uint16_t aLength);
 
     /**
+     * This method returns the number of buffers in the message.
+     *
+     */
+    uint8_t GetBufferCount(void) const;
+
+    /**
      * This method returns the byte offset within the message.
      *
      * @returns A byte offset within the message.
@@ -683,6 +689,15 @@ public:
      */
     ThreadError Dequeue(Message &aMessage);
 
+    /**
+     * This method returns the number of messages and buffers enqueued.
+     *
+     * @param[out]  aMessageCount  Returns the number of messages enqueued.
+     * @param[out]  aBufferCount   Returns the number of buffers enqueued.
+     *
+     */
+    void GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) const;
+
 private:
     /**
      * This static method adds a message to a list.
@@ -744,6 +759,14 @@ public:
      *
      */
     ThreadError Free(Message *aMessage);
+
+    /**
+     * This method returns the number of free buffers.
+     *
+     * @returns The number of free buffers.
+     *
+     */
+    uint16_t GetFreeBufferCount(void) const { return static_cast<uint16_t>(mNumFreeBuffers); }
 
 private:
     Buffer *NewBuffer(void);

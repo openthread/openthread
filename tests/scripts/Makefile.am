@@ -121,7 +121,17 @@ EXTRA_DIST                                                         = \
     thread-cert/Cert_9_2_16_ActivePendingPartition.py                \
     thread-cert/Cert_9_2_17_Orphan.py                                \
     thread-cert/Cert_9_2_18_RollBackActiveTimestamp.py               \
+    thread-cert/common.py                                            \
+    thread-cert/config.py                                            \
+    thread-cert/ipv6.py                                              \
+    thread-cert/lowpan.py                                            \
+    thread-cert/mac802154.py                                         \
+    thread-cert/message.py                                           \
+    thread-cert/mle.py                                               \
+    thread-cert/net_crypto.py                                        \
+    thread-cert/network_data.py                                      \
     thread-cert/node.py                                              \
+    thread-cert/sniffer.py                                           \
     $(NULL)
 
 if OPENTHREAD_BUILD_TESTS

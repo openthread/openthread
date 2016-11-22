@@ -37,7 +37,6 @@
 #include <common/debug.hpp>
 #include <common/logging.hpp>
 #include <common/message.hpp>
-#include <common/logging.hpp>
 #include <net/ip6.hpp>
 
 namespace Thread {
@@ -219,6 +218,18 @@ ThreadError Message::SetLength(uint16_t aLength)
 
 exit:
     return error;
+}
+
+uint8_t Message::GetBufferCount(void) const
+{
+    uint8_t rval = 1;
+
+    for (const Buffer *curBuffer = GetNextBuffer(); curBuffer; curBuffer->GetNextBuffer())
+    {
+        rval++;
+    }
+
+    return rval;
 }
 
 uint16_t Message::GetOffset(void) const
@@ -817,6 +828,18 @@ ThreadError MessageQueue::Dequeue(Message &aMessage)
     aMessage.GetMessageList(MessageInfo::kListAll).mList = NULL;
     aMessage.GetMessageList(MessageInfo::kListInterface).mList = NULL;
     return kThreadError_None;
+}
+
+void MessageQueue::GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) const
+{
+    aMessageCount = 0;
+    aBufferCount = 0;
+
+    for (const Message *message = mInterface.mHead; message; message = message->GetNext())
+    {
+        aMessageCount++;
+        aBufferCount += message->GetBufferCount();
+    }
 }
 
 }  // namespace Thread

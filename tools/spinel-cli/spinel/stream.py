@@ -31,6 +31,8 @@ Module providing a generic stream interface.
 Also includes adapter implementations for serial, socket, and pipes.
 """
 
+from __future__ import print_function
+
 import sys
 import logging
 import traceback
@@ -67,7 +69,7 @@ class StreamSerial(IStream):
             self.serial = serial.Serial(dev, baudrate)
         except:
             logging.error("Couldn't open " + dev)
-            print traceback.format_exc()
+            traceback.print_exc()
 
     def write(self, data):
         self.serial.write(data)
@@ -113,7 +115,7 @@ class StreamPipe(IStream):
                                          stderr=sys.stdout.fileno())
         except:
             logging.error("Couldn't open " + filename)
-            print traceback.format_exc()
+            traceback.print_exc()
 
     def write(self, data):
         if CONFIG.DEBUG_STREAM_TX:
@@ -151,21 +153,21 @@ def StreamOpen(stream_type, descriptor, verbose=True):
 
     if stream_type == 'p':
         if verbose:
-            print "Opening pipe to " + str(descriptor)
+            print("Opening pipe to " + str(descriptor))
         return StreamPipe(descriptor)
 
     elif stream_type == 's':
         port = int(descriptor)
         hostname = "localhost"
         if verbose:
-            print "Opening socket to " + hostname + ":" + str(port)
+            print("Opening socket to " + hostname + ":" + str(port))
         return StreamSocket(hostname, port)
 
     elif stream_type == 'u':
         dev = str(descriptor)
         baudrate = 115200
         if verbose:
-            print "Opening serial to " + dev + " @ " + str(baudrate)
+            print("Opening serial to " + dev + " @ " + str(baudrate))
         return StreamSerial(dev, baudrate)
 
     else:

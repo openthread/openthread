@@ -67,6 +67,7 @@ const struct Command Interpreter::sCommands[] =
 {
     { "help", &Interpreter::ProcessHelp },
     { "blacklist", &Interpreter::ProcessBlacklist },
+    { "bufferinfo", &Interpreter::ProcessBufferInfo },
     { "channel", &Interpreter::ProcessChannel },
     { "child", &Interpreter::ProcessChild },
     { "childmax", &Interpreter::ProcessChildMax },
@@ -92,6 +93,7 @@ const struct Command Interpreter::sCommands[] =
     { "hashmacaddr", &Interpreter::ProcessHashMacAddress },
     { "ifconfig", &Interpreter::ProcessIfconfig },
     { "ipaddr", &Interpreter::ProcessIpAddr },
+    { "ipmaddr", &Interpreter::ProcessIpMulticastAddr },
 #if OPENTHREAD_ENABLE_JOINER
     { "joiner", &Interpreter::ProcessJoiner },
 #endif
@@ -300,6 +302,27 @@ void Interpreter::ProcessBlacklist(int argc, char *argv[])
 
 exit:
     AppendResult(error);
+}
+
+void Interpreter::ProcessBufferInfo(int argc, char *argv[])
+{
+    otBufferInfo bufferInfo;
+    (void)argc;
+    (void)argv;
+
+    otGetMessageBufferInfo(mInstance, &bufferInfo);
+
+    sServer->OutputFormat("total: %d\r\n", bufferInfo.mTotalBuffers);
+    sServer->OutputFormat("free: %d\r\n", bufferInfo.mFreeBuffers);
+    sServer->OutputFormat("6lo send: %d %d\r\n", bufferInfo.m6loSendMessages, bufferInfo.m6loSendBuffers);
+    sServer->OutputFormat("6lo reas: %d %d\r\n", bufferInfo.m6loReassemblyMessages, bufferInfo.m6loReassemblyBuffers);
+    sServer->OutputFormat("ip6: %d %d\r\n", bufferInfo.mIp6Messages, bufferInfo.mIp6Buffers);
+    sServer->OutputFormat("mpl: %d %d\r\n", bufferInfo.mMplMessages, bufferInfo.mMplBuffers);
+    sServer->OutputFormat("mle: %d %d\r\n", bufferInfo.mMleMessages, bufferInfo.mMleBuffers);
+    sServer->OutputFormat("arp: %d %d\r\n", bufferInfo.mArpMessages, bufferInfo.mArpBuffers);
+    sServer->OutputFormat("coap: %d %d\r\n", bufferInfo.mCoapClientMessages, bufferInfo.mCoapClientBuffers);
+
+    AppendResult(kThreadError_None);
 }
 
 void Interpreter::ProcessChannel(int argc, char *argv[])
@@ -763,6 +786,108 @@ void Interpreter::ProcessIpAddr(int argc, char *argv[])
         else if (strcmp(argv[0], "del") == 0)
         {
             SuccessOrExit(error = ProcessIpAddrDel(argc - 1, argv + 1));
+        }
+    }
+
+exit:
+    AppendResult(error);
+}
+
+ThreadError Interpreter::ProcessIpMulticastAddrAdd(int argc, char *argv[])
+{
+    ThreadError error;
+    struct otIp6Address address;
+
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+
+    SuccessOrExit(error = otIp6AddressFromString(argv[0], &address));
+    error = otSubscribeMulticastAddress(mInstance, &address);
+
+exit:
+    return error;
+}
+
+ThreadError Interpreter::ProcessIpMulticastAddrDel(int argc, char *argv[])
+{
+    ThreadError error;
+    struct otIp6Address address;
+
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+
+    SuccessOrExit(error = otIp6AddressFromString(argv[0], &address));
+    error = otUnsubscribeMulticastAddress(mInstance, &address);
+
+exit:
+    return error;
+}
+
+ThreadError Interpreter::ProcessMulticastPromiscuous(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+
+    if (argc == 0)
+    {
+        if (otIsMulticastPromiscuousModeEnabled(mInstance))
+        {
+            sServer->OutputFormat("Enabled\r\n");
+        }
+        else
+        {
+            sServer->OutputFormat("Disabled\r\n");
+        }
+    }
+    else
+    {
+        if (strcmp(argv[0], "enable") == 0)
+        {
+            otEnableMulticastPromiscuousMode(mInstance);
+        }
+        else if (strcmp(argv[0], "disable") == 0)
+        {
+            otDisableMulticastPromiscuousMode(mInstance);
+        }
+        else
+        {
+            ExitNow(error = kThreadError_Parse);
+        }
+    }
+
+exit:
+    return error;
+}
+
+void Interpreter::ProcessIpMulticastAddr(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+
+    if (argc == 0)
+    {
+        for (const otNetifMulticastAddress *addr = otGetMulticastAddresses(mInstance); addr; addr = addr->mNext)
+        {
+            sServer->OutputFormat("%x:%x:%x:%x:%x:%x:%x:%x\r\n",
+                                  HostSwap16(addr->mAddress.mFields.m16[0]),
+                                  HostSwap16(addr->mAddress.mFields.m16[1]),
+                                  HostSwap16(addr->mAddress.mFields.m16[2]),
+                                  HostSwap16(addr->mAddress.mFields.m16[3]),
+                                  HostSwap16(addr->mAddress.mFields.m16[4]),
+                                  HostSwap16(addr->mAddress.mFields.m16[5]),
+                                  HostSwap16(addr->mAddress.mFields.m16[6]),
+                                  HostSwap16(addr->mAddress.mFields.m16[7]));
+        }
+    }
+    else
+    {
+        if (strcmp(argv[0], "add") == 0)
+        {
+            SuccessOrExit(error = ProcessIpMulticastAddrAdd(argc - 1, argv + 1));
+        }
+        else if (strcmp(argv[0], "del") == 0)
+        {
+            SuccessOrExit(error = ProcessIpMulticastAddrDel(argc - 1, argv + 1));
+        }
+        else if (strcmp(argv[0], "promiscuous") == 0)
+        {
+            SuccessOrExit(error = ProcessMulticastPromiscuous(argc - 1, argv + 1));
         }
     }
 
@@ -1930,6 +2055,10 @@ void Interpreter::ProcessState(int argc, char *argv[])
     {
         switch (otGetDeviceRole(mInstance))
         {
+        case kDeviceRoleOffline:
+            sServer->OutputFormat("offline\r\n");
+            break;
+
         case kDeviceRoleDisabled:
             sServer->OutputFormat("disabled\r\n");
             break;
@@ -2245,6 +2374,10 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
         }
 
         SuccessOrExit(error = otSendMgmtCommissionerSet(mInstance, &dataset, tlvs, static_cast<uint8_t>(length)));
+    }
+    else if (strcmp(argv[0], "sessionid") == 0)
+    {
+        sServer->OutputFormat("%d\r\n", otCommissionerGetSessionId(mInstance));
     }
 
 exit:

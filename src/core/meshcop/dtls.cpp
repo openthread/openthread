@@ -57,14 +57,6 @@ Dtls::Dtls(ThreadNetif &aNetif):
     mProvisioningUrl.Init();
 }
 
-Dtls::~Dtls(void)
-{
-    if (mStarted)
-    {
-        Close();
-    }
-}
-
 ThreadError Dtls::Start(bool aClient, ReceiveHandler aReceiveHandler, SendHandler aSendHandler, void *aContext)
 {
     static const int ciphersuites[2] = {0xC0FF, 0}; // EC-JPAKE cipher suite
@@ -136,12 +128,15 @@ ThreadError Dtls::Stop(void)
 
 void Dtls::Close(void)
 {
-    mStarted = false;
-    mbedtls_ssl_free(&mSsl);
-    mbedtls_ssl_config_free(&mConf);
-    mbedtls_ctr_drbg_free(&mCtrDrbg);
-    mbedtls_entropy_free(&mEntropy);
-    mbedtls_ssl_cookie_free(&mCookieCtx);
+    if (mStarted)
+    {
+        mStarted = false;
+        mbedtls_ssl_free(&mSsl);
+        mbedtls_ssl_config_free(&mConf);
+        mbedtls_ctr_drbg_free(&mCtrDrbg);
+        mbedtls_entropy_free(&mEntropy);
+        mbedtls_ssl_cookie_free(&mCookieCtx);
+    }
 }
 
 bool Dtls::IsStarted(void)
@@ -173,10 +168,21 @@ bool Dtls::IsConnected(void)
     return mSsl.state == MBEDTLS_SSL_HANDSHAKE_OVER;
 }
 
-ThreadError Dtls::Send(const uint8_t *aBuf, uint16_t aLength)
+ThreadError Dtls::Send(Message &aMessage, uint16_t aLength)
 {
-    int rval = mbedtls_ssl_write(&mSsl, aBuf, aLength);
-    return MapError(rval);
+    ThreadError error = kThreadError_None;
+    uint8_t buffer[kApplicationDataMaxLength];
+
+    VerifyOrExit(aLength <= kApplicationDataMaxLength, error = kThreadError_NoBufs);
+
+    aMessage.Read(0, aLength, buffer);
+
+    SuccessOrExit(error = MapError(mbedtls_ssl_write(&mSsl, buffer, aLength)));
+
+    aMessage.Free();
+
+exit:
+    return error;
 }
 
 ThreadError Dtls::Receive(Message &aMessage, uint16_t aOffset, uint16_t aLength)

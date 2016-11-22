@@ -1166,31 +1166,47 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         break;
 
     case SPINEL_PROP_NEST_STREAM_MFG:
-        ret = "SPINEL_PROP_NEST_STREAM_MFG";
+        ret = "PROP_NEST_STREAM_MFG";
         break;
 
     case SPINEL_PROP_THREAD_NETWORK_ID_TIMEOUT:
-        ret = "SPINEL_PROP_THREAD_NETWORK_ID_TIMEOUT";
+        ret = "PROP_THREAD_NETWORK_ID_TIMEOUT";
         break;
 
     case SPINEL_PROP_THREAD_ACTIVE_ROUTER_IDS:
-        ret = "SPINEL_PROP_THREAD_ACTIVE_ROUTER_IDS";
+        ret = "PROP_THREAD_ACTIVE_ROUTER_IDS";
         break;
 
     case SPINEL_PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD:
-        ret = "SPINEL_PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD";
+        ret = "PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD";
         break;
 
     case SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER:
-        ret = "SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER";
+        ret = "PROP_THREAD_ROUTER_SELECTION_JITTER";
         break;
 
     case SPINEL_PROP_THREAD_PREFERRED_ROUTER_ID:
-        ret = "SPINEL_PROP_THREAD_PREFERRED_ROUTER_ID";
+        ret = "PROP_THREAD_PREFERRED_ROUTER_ID";
         break;
 
     case SPINEL_PROP_THREAD_NEIGHBOR_TABLE:
-        ret = "SPINEL_PROP_THREAD_NEIGHBOR_TABLE";
+        ret = "PROP_THREAD_NEIGHBOR_TABLE";
+        break;
+
+    case SPINEL_PROP_JAM_DETECT_ENABLE:
+        ret = "PROP_JAM_DETECT_ENABLE";
+        break;
+
+    case SPINEL_PROP_JAM_DETECTED:
+        ret = "PROP_JAM_DETECTED";
+        break;
+
+    case SPINEL_PROP_JAM_DETECT_RSSI_THRESHOLD:
+        ret = "PROP_JAM_DETECT_RSSI_THRESHOLD";
+        break;
+
+    case SPINEL_PROP_JAM_DETECT_WINDOW:
+        ret = "PROP_JAM_DETECT_WINDOW";
         break;
 
     default:

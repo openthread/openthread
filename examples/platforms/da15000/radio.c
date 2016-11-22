@@ -330,7 +330,7 @@ RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
     return &s_transmit_frame;
 }
 
-ThreadError otPlatRadioTransmit(otInstance *aInstance)
+ThreadError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
 {
     ThreadError error = kThreadError_None;
     (void)aInstance;
@@ -338,8 +338,7 @@ ThreadError otPlatRadioTransmit(otInstance *aInstance)
     FTDF_Boolean csmaSuppress = 0;
     VerifyOrExit(s_state == kStateReceive, error = kThreadError_Busy);
 
-    ad_ftdf_send_frame_simple(s_transmit_frame.mLength, s_transmit_frame.mPsdu, s_transmit_frame.mChannel, 0,
-                              csmaSuppress); //Prio 0 for all.
+    ad_ftdf_send_frame_simple(aPacket->mLength, aPacket->mPsdu, aPacket->mChannel, 0, csmaSuppress); //Prio 0 for all.
     s_state = kStateTransmit;
     s_data_pending = false;
 #if DEBUG_LOG_ENABLE
@@ -438,7 +437,7 @@ void da15000RadioProcess(otInstance *aInstance)
     {
         FTDF_SET_FIELD(ON_OFF_REGMAP_RXENABLE, 1);
         otPlatRadioHandleTransmitDone(&rxPending);
-        otPlatRadioTransmitDone(aInstance, false, kThreadError_None);
+        otPlatRadioTransmitDone(aInstance, &s_transmit_frame, false, kThreadError_None);
         SendFrameDone = false;
     }
 

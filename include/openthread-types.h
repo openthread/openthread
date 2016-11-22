@@ -37,6 +37,9 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#ifdef OTDLL
+#include <guiddef.h>
+#endif
 
 #include <platform/toolchain.h>
 
@@ -61,13 +64,31 @@ extern "C" {
 #define myoffsetof(s,m) (((size_t)&(((s*)BASE)->m))-BASE)
 #define CONTAINING_RECORD(address, type, field) \
     ((type *)((uint8_t*)(address) - myoffsetof(type, field)))
-#endif
-#endif
+#endif /* CONTAINING_RECORD */
+#endif /* _WIN32 */
 
 /**
  * This type represents the OpenThread instance structure.
  */
 typedef struct otInstance otInstance;
+
+#ifdef OTDLL
+
+/**
+ * This type represents the handle to the OpenThread API.
+ */
+typedef struct otApiInstance otApiInstance;
+
+/**
+ * This type represents a list of device GUIDs.
+ */
+typedef struct otDeviceList
+{
+    uint16_t aDevicesLength;
+    GUID     aDevices[1];
+} otDeviceList;
+
+#endif
 
 /**
  * This enumeration represents error codes used throughout OpenThread.
@@ -489,6 +510,7 @@ typedef enum otMeshcopTlvType
 /**
  * This structure represents an MLE Link Mode configuration.
  */
+OT_TOOL_ALIGN(4)
 typedef struct otLinkModeConfig
 {
     /**
@@ -709,6 +731,7 @@ typedef struct otMacBlacklistEntry
  */
 typedef enum
 {
+    kDeviceRoleOffline,   ///< The Thread device is offline and unavailable.
     kDeviceRoleDisabled,  ///< The Thread stack is disabled.
     kDeviceRoleDetached,  ///< Not currently participating in a Thread network/partition.
     kDeviceRoleChild,     ///< The Thread Child role.
@@ -764,6 +787,7 @@ typedef struct
  * This structure holds diagnostic information for a Thread Router
  *
  */
+OT_TOOL_ALIGN(4)
 typedef struct
 {
     otExtAddress   mExtAddress;            ///< IEEE 802.15.4 Extended Address
@@ -836,22 +860,55 @@ typedef struct otMacCounters
 } otMacCounters;
 
 /**
+ * This structure represents the message buffer information.
+ */
+typedef struct otBufferInfo
+{
+    uint16_t mTotalBuffers;           ///< The number of buffers in the pool.
+    uint16_t mFreeBuffers;            ///< The number of free message buffers.
+    uint16_t m6loSendMessages;        ///< The number of messages in the 6lo send queue.
+    uint16_t m6loSendBuffers;         ///< The number of buffers in the 6lo send queue.
+    uint16_t m6loReassemblyMessages;  ///< The number of messages in the 6LoWPAN reassembly queue.
+    uint16_t m6loReassemblyBuffers;   ///< The number of buffers in the 6LoWPAN reassembly queue.
+    uint16_t mIp6Messages;            ///< The number of messages in the IPv6 send queue.
+    uint16_t mIp6Buffers;             ///< The number of buffers in the IPv6 send queue.
+    uint16_t mMplMessages;            ///< The number of messages in the MPL send queue.
+    uint16_t mMplBuffers;             ///< The number of buffers in the MPL send queue.
+    uint16_t mMleMessages;            ///< The number of messages in the MLE send queue.
+    uint16_t mMleBuffers;             ///< The number of buffers in the MLE send queue.
+    uint16_t mArpMessages;            ///< The number of messages in the ARP send queue.
+    uint16_t mArpBuffers;             ///< The number of buffers in the ARP send queue.
+    uint16_t mCoapClientMessages;     ///< The number of messages in the CoAP client send queue.
+    uint16_t mCoapClientBuffers;      ///< The number of buffers in the CoAP client send queue.
+} otBufferInfo;
+
+/**
  * @}
  *
  */
 
 /**
- * This structure represents an IPv6 network interface address.
+ * This structure represents an IPv6 network interface unicast address.
  *
  */
 typedef struct otNetifAddress
 {
-    otIp6Address           mAddress;            ///< The IPv6 address.
+    otIp6Address           mAddress;            ///< The IPv6 unicast address.
     uint32_t               mPreferredLifetime;  ///< The Preferred Lifetime.
     uint32_t               mValidLifetime;      ///< The Valid lifetime.
     uint8_t                mPrefixLength;       ///< The Prefix length.
     struct otNetifAddress *mNext;               ///< A pointer to the next network interface address.
 } otNetifAddress;
+
+/**
+ * This structure represents an IPv6 network interface multicast address.
+ *
+ */
+typedef struct otNetifMulticastAddress
+{
+    otIp6Address                    mAddress;   ///< The IPv6 multicast address.
+    struct otNetifMulticastAddress *mNext;      ///< A pointer to the next network interface multicast address.
+} otNetifMulticastAddress;
 
 /**
  * This enumeration represents the list of allowable values for an InterfaceId.

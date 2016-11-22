@@ -396,7 +396,7 @@ public:
      * @returns The offset from the the transmission time to the end of trickle interval.
      *
      */
-    uint32_t GetIntervalOffset() const { return mIntervalOffset; }
+    uint8_t GetIntervalOffset() const { return mIntervalOffset; }
 
     /**
      * This method sets the offset from the transmission time to the end of trickle interval.
@@ -503,6 +503,14 @@ public:
      *
      */
     void SetMatchingAddress(const Address &aAddress) { mMatchingAddress = &aAddress; }
+
+    /**
+     * This method returns a reference to the buffered message set.
+     *
+     * @returns A reference to the buffered message set.
+     *
+     */
+    const MessageQueue &GetBufferedMessageSet(void) const { return mBufferedMessageSet; }
 
 private:
     enum

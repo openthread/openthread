@@ -40,12 +40,12 @@
 #include <common/encoding.hpp>
 #include <crypto/aes_ccm.hpp>
 #include <mac/mac_frame.hpp>
+#include <meshcop/tlvs.hpp>
 #include <net/netif.hpp>
 #include <net/udp6.hpp>
 #include <platform/radio.h>
 #include <platform/random.h>
 #include <thread/address_resolver.hpp>
-#include <thread/meshcop_tlvs.hpp>
 #include <thread/key_manager.hpp>
 #include <thread/mle_router.hpp>
 #include <thread/thread_netif.hpp>
@@ -86,7 +86,6 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     memset(&mParent, 0, sizeof(mParent));
     memset(&mChildIdRequest, 0, sizeof(mChildIdRequest));
     memset(&mLinkLocal64, 0, sizeof(mLinkLocal64));
-    memset(&mLinkLocal16, 0, sizeof(mLinkLocal16));
     memset(&mMeshLocal64, 0, sizeof(mMeshLocal64));
     memset(&mMeshLocal16, 0, sizeof(mMeshLocal16));
     memset(&mLinkLocalAllThreadNodes, 0, sizeof(mLinkLocalAllThreadNodes));
@@ -100,15 +99,6 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mLinkLocal64.mPreferredLifetime = 0xffffffff;
     mLinkLocal64.mValidLifetime = 0xffffffff;
     mNetif.AddUnicastAddress(mLinkLocal64);
-
-    // link-local 16
-    memset(&mLinkLocal16, 0, sizeof(mLinkLocal16));
-    mLinkLocal16.GetAddress().mFields.m16[0] = HostSwap16(0xfe80);
-    mLinkLocal16.GetAddress().mFields.m16[5] = HostSwap16(0x00ff);
-    mLinkLocal16.GetAddress().mFields.m16[6] = HostSwap16(0xfe00);
-    mLinkLocal16.mPrefixLength = 64;
-    mLinkLocal16.mPreferredLifetime = 0xffffffff;
-    mLinkLocal16.mValidLifetime = 0xffffffff;
 
     // Leader Aloc
     memset(&mLeaderAloc, 0, sizeof(mLeaderAloc));
@@ -244,13 +234,7 @@ ThreadError Mle::Stop(bool aClearNetworkDatasets)
     otLogFuncEntry();
     mKeyManager.Stop();
     SetStateDetached();
-    mNetif.RemoveUnicastAddress(mLinkLocal16);
     mNetif.RemoveUnicastAddress(mMeshLocal16);
-
-    if (mDeviceState == kDeviceStateLeader)
-    {
-        mNetif.RemoveUnicastAddress(mLeaderAloc);
-    }
 
     if (aClearNetworkDatasets)
     {
@@ -336,6 +320,12 @@ ThreadError Mle::BecomeDetached(void)
     otLogFuncEntry();
 
     VerifyOrExit(mDeviceState != kDeviceStateDisabled, error = kThreadError_InvalidState);
+
+    if (mReattachState == kReattachStop)
+    {
+        mNetif.GetPendingDataset().UpdateDelayTimer();
+        mNetif.GetPendingDataset().Set(mNetif.GetPendingDataset().GetLocal());
+    }
 
     SetStateDetached();
     SetRloc16(Mac::kShortAddrInvalid);
@@ -596,19 +586,10 @@ uint16_t Mle::GetRloc16(void) const
 
 ThreadError Mle::SetRloc16(uint16_t aRloc16)
 {
-    mNetif.RemoveUnicastAddress(mLinkLocal16);
     mNetif.RemoveUnicastAddress(mMeshLocal16);
 
     if (aRloc16 != Mac::kShortAddrInvalid)
     {
-        // link-local 16
-        // add link-local 16 only for sleepy end device
-        if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
-        {
-            mLinkLocal16.GetAddress().mFields.m16[7] = HostSwap16(aRloc16);
-            mNetif.AddUnicastAddress(mLinkLocal16);
-        }
-
         // mesh-local 16
         mMeshLocal16.GetAddress().mFields.m16[7] = HostSwap16(aRloc16);
         mNetif.AddUnicastAddress(mMeshLocal16);
@@ -1032,38 +1013,37 @@ exit:
     return error;
 }
 
-ThreadError Mle::AppendActiveTimestamp(Message &aMessage)
+ThreadError Mle::AppendActiveTimestamp(Message &aMessage, bool aCouldUseLocal)
 {
     ThreadError error;
     ActiveTimestampTlv timestampTlv;
-    const MeshCoP::Timestamp *timestamp(mNetif.GetActiveDataset().GetNetwork().GetTimestamp());
+    const MeshCoP::Timestamp *timestamp;
 
-    VerifyOrExit(timestamp || mDeviceState == kDeviceStateLeader, error = kThreadError_None);
+    if ((timestamp = mNetif.GetActiveDataset().GetNetwork().GetTimestamp()) == NULL && aCouldUseLocal)
+    {
+        timestamp = mNetif.GetActiveDataset().GetLocal().GetTimestamp();
+    }
+
+    VerifyOrExit(timestamp, error = kThreadError_None);
 
     timestampTlv.Init();
-
-    // only for Leader: set active timestamp to 0 if it is not initialized
-    if (timestamp == NULL)
-    {
-        timestampTlv.SetSeconds(0);
-        timestampTlv.SetTicks(0);
-    }
-    else
-    {
-        *static_cast<MeshCoP::Timestamp *>(&timestampTlv) = *timestamp;
-    }
-
+    *static_cast<MeshCoP::Timestamp *>(&timestampTlv) = *timestamp;
     error = aMessage.Append(&timestampTlv, sizeof(timestampTlv));
 
 exit:
     return error;
 }
 
-ThreadError Mle::AppendPendingTimestamp(Message &aMessage)
+ThreadError Mle::AppendPendingTimestamp(Message &aMessage, bool aCouldUseLocal)
 {
     ThreadError error;
     PendingTimestampTlv timestampTlv;
-    const MeshCoP::Timestamp *timestamp(mNetif.GetPendingDataset().GetNetwork().GetTimestamp());
+    const MeshCoP::Timestamp *timestamp;
+
+    if ((timestamp = mNetif.GetPendingDataset().GetNetwork().GetTimestamp()) == NULL && aCouldUseLocal)
+    {
+        timestamp = mNetif.GetPendingDataset().GetLocal().GetTimestamp();
+    }
 
     VerifyOrExit(timestamp && timestamp->GetSeconds() != 0, error = kThreadError_None);
 
@@ -1348,8 +1328,11 @@ ThreadError Mle::SendChildIdRequest(void)
     }
 
     SuccessOrExit(error = AppendTlvRequest(*message, tlvs, sizeof(tlvs)));
-    SuccessOrExit(error = AppendActiveTimestamp(*message));
-    SuccessOrExit(error = AppendPendingTimestamp(*message));
+    SuccessOrExit(error = AppendActiveTimestamp(*message, true));
+    // SuccessOrExit(error = AppendPendingTimestamp(*message, false));
+    // we should not include the Local Pending Timestamp TLV in Child ID Request, this is a workaround for
+    // Certification test 9.2.15 and 9.2.16 (https://github.com/openthread/openthread/issues/918)
+    SuccessOrExit(error = AppendPendingTimestamp(*message, true));
 
     memset(&destination, 0, sizeof(destination));
     destination.mFields.m16[0] = HostSwap16(0xfe80);
@@ -1382,8 +1365,8 @@ ThreadError Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t
     message->SetLinkSecurityEnabled(false);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandDataRequest));
     SuccessOrExit(error = AppendTlvRequest(*message, aTlvs, aTlvsLength));
-    SuccessOrExit(error = AppendActiveTimestamp(*message));
-    SuccessOrExit(error = AppendPendingTimestamp(*message));
+    SuccessOrExit(error = AppendActiveTimestamp(*message, false));
+    SuccessOrExit(error = AppendPendingTimestamp(*message, false));
 
     SuccessOrExit(error = SendMessage(*message, aDestination));
 
@@ -1512,7 +1495,7 @@ ThreadError Mle::SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce)
     }
     else
     {
-        SuccessOrExit(error = AppendActiveTimestamp(*message));
+        SuccessOrExit(error = AppendActiveTimestamp(*message, false));
     }
 
     panid.Init();
@@ -1676,7 +1659,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         switch (header.GetCommand())
         {
         case Header::kCommandDiscoveryRequest:
-            HandleDiscoveryRequest(aMessage, aMessageInfo);
+            mMleRouter.HandleDiscoveryRequest(aMessage, aMessageInfo);
             break;
 
         case Header::kCommandDiscoveryResponse:
@@ -1823,10 +1806,6 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     case Header::kCommandLinkAcceptAndRequest:
         mMleRouter.HandleLinkAcceptAndRequest(aMessage, aMessageInfo, keySequence);
-        break;
-
-    case Header::kCommandLinkReject:
-        mMleRouter.HandleLinkReject(aMessage, aMessageInfo);
         break;
 
     case Header::kCommandAdvertisement:
@@ -2324,6 +2303,11 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
             aMessage.Read(offset, sizeof(tlv), &tlv);
             mNetif.GetActiveDataset().Set(activeTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength());
         }
+        else if (mNetif.GetActiveDataset().GetNetwork().GetTimestamp() == NULL &&
+                 mNetif.GetActiveDataset().GetLocal().GetTimestamp() != NULL)
+        {
+            mNetif.GetActiveDataset().Set(mNetif.GetActiveDataset().GetLocal());
+        }
     }
 
     // Pending Timestamp
@@ -2337,6 +2321,16 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
             aMessage.Read(offset, sizeof(tlv), &tlv);
             mNetif.GetPendingDataset().Set(pendingTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength());
         }
+        // this is a workaround for Certification test 9.2.15 and 9.2.16 (https://github.com/openthread/openthread/issues/918)
+        else if (mNetif.GetPendingDataset().GetNetwork().GetTimestamp() == NULL &&
+                 mNetif.GetPendingDataset().GetLocal().GetTimestamp() != NULL)
+        {
+            mNetif.GetPendingDataset().Set(mNetif.GetPendingDataset().GetLocal());
+        }
+    }
+    else
+    {
+        mNetif.GetPendingDataset().Clear(true);
     }
 
     // Parent Attach Success
@@ -2554,160 +2548,6 @@ ThreadError Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo 
 
 exit:
     (void)aMessageInfo;
-    return error;
-}
-
-ThreadError Mle::HandleDiscoveryRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    ThreadError error = kThreadError_None;
-    Tlv tlv;
-    MeshCoP::Tlv meshcopTlv;
-    MeshCoP::DiscoveryRequestTlv discoveryRequest;
-    MeshCoP::ExtendedPanIdTlv extPanId;
-    uint16_t offset;
-    uint16_t end;
-
-    otLogInfoMle("Received discovery request");
-
-    // only Routers and REEDs respond
-    VerifyOrExit((mDeviceMode & ModeTlv::kModeFFD) != 0, ;);
-
-    offset = aMessage.GetOffset();
-    end = aMessage.GetLength();
-
-    // find MLE Discovery TLV
-    while (offset < end)
-    {
-        aMessage.Read(offset, sizeof(tlv), &tlv);
-
-        if (tlv.GetType() == Tlv::kDiscovery)
-        {
-            break;
-        }
-
-        offset += sizeof(tlv) + tlv.GetLength();
-    }
-
-    VerifyOrExit(offset < end, error = kThreadError_Parse);
-
-    offset += sizeof(tlv);
-    end = offset + sizeof(tlv) + tlv.GetLength();
-
-    while (offset < end)
-    {
-        aMessage.Read(offset, sizeof(meshcopTlv), &meshcopTlv);
-
-        switch (meshcopTlv.GetType())
-        {
-        case MeshCoP::Tlv::kDiscoveryRequest:
-            aMessage.Read(offset, sizeof(discoveryRequest), &discoveryRequest);
-            VerifyOrExit(discoveryRequest.IsValid(), error = kThreadError_Parse);
-            break;
-
-        case MeshCoP::Tlv::kExtendedPanId:
-            aMessage.Read(offset, sizeof(extPanId), &extPanId);
-            VerifyOrExit(extPanId.IsValid(), error = kThreadError_Parse);
-            VerifyOrExit(memcmp(mMac.GetExtendedPanId(), extPanId.GetExtendedPanId(), OT_EXT_PAN_ID_SIZE),
-                         error = kThreadError_Drop);
-            break;
-
-        default:
-            break;
-        }
-
-        offset += sizeof(meshcopTlv) + meshcopTlv.GetLength();
-    }
-
-    error = SendDiscoveryResponse(aMessageInfo.GetPeerAddr(), aMessage.GetPanId());
-
-exit:
-
-    if (error != kThreadError_None)
-    {
-        otLogWarnMleErr(error, "Failed to process Discovery Request");
-    }
-
-    return error;
-}
-
-ThreadError Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, uint16_t aPanId)
-{
-    ThreadError error = kThreadError_None;
-    Message *message;
-    uint16_t startOffset;
-    Tlv tlv;
-    MeshCoP::DiscoveryResponseTlv discoveryResponse;
-    MeshCoP::ExtendedPanIdTlv extPanId;
-    MeshCoP::NetworkNameTlv networkName;
-    MeshCoP::JoinerUdpPortTlv joinerUdpPort;
-    uint8_t *cur;
-    uint8_t length;
-
-    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
-    message->SetLinkSecurityEnabled(false);
-    message->SetSubType(Message::kSubTypeMleDiscoverResponse);
-    message->SetPanId(aPanId);
-    SuccessOrExit(error = AppendHeader(*message, Header::kCommandDiscoveryResponse));
-
-    // Discovery TLV
-    tlv.SetType(Tlv::kDiscovery);
-    SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-
-    startOffset = message->GetLength();
-
-    // Discovery Response TLV
-    discoveryResponse.Init();
-    discoveryResponse.SetVersion(kVersion);
-    SuccessOrExit(error = message->Append(&discoveryResponse, sizeof(discoveryResponse)));
-
-    // Extended PAN ID TLV
-    extPanId.Init();
-    extPanId.SetExtendedPanId(mMac.GetExtendedPanId());
-    SuccessOrExit(error = message->Append(&extPanId, sizeof(extPanId)));
-
-    // Network Name TLV
-    networkName.Init();
-    networkName.SetNetworkName(mMac.GetNetworkName());
-    SuccessOrExit(error = message->Append(&networkName, sizeof(tlv) + networkName.GetLength()));
-
-    // Steering Data TLV
-    if ((cur = mNetif.GetNetworkDataLeader().GetCommissioningData(length)) != NULL)
-    {
-        uint8_t *end = cur + length;
-
-        while (cur < end)
-        {
-            MeshCoP::Tlv *meshcop = reinterpret_cast<MeshCoP::Tlv *>(cur);
-
-            if (meshcop->GetType() == MeshCoP::Tlv::kSteeringData)
-            {
-                SuccessOrExit(message->Append(meshcop, sizeof(*meshcop) + meshcop->GetLength()));
-                break;
-            }
-
-            cur += sizeof(*meshcop) + meshcop->GetLength();
-        }
-    }
-
-    // Joiner UDP Port TLV
-    joinerUdpPort.Init();
-    joinerUdpPort.SetUdpPort(mJoinerRouter.GetJoinerUdpPort());
-    SuccessOrExit(error = message->Append(&joinerUdpPort, sizeof(tlv) + joinerUdpPort.GetLength()));
-
-    tlv.SetLength(static_cast<uint8_t>(message->GetLength() - startOffset));
-    message->Write(startOffset - sizeof(tlv), sizeof(tlv), &tlv);
-
-    SuccessOrExit(error = SendMessage(*message, aDestination));
-
-    otLogInfoMle("Sent discovery response");
-
-exit:
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        message->Free();
-    }
-
     return error;
 }
 

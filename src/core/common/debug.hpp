@@ -51,6 +51,10 @@
         (RtlAssert( #exp, __FILE__, __LINE__, NULL ),FALSE) : \
         TRUE)
 
+#elif defined(_WIN32)
+
+#include <assert.h>
+
 #else
 
 #define assert(cond)                            \

@@ -29,6 +29,7 @@
 #include <SDKDDKVer.h>
 #include "CppUnitTest.h"
 #include "test_util.h"
+#include "test_platform.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -80,22 +81,45 @@ void test_packed2();
 void test_packed_union();
 void test_packed_enum();
 
+// test_fuzz.cpp
+void TestFuzz(uint32_t aSeconds);
+
 #pragma endregion
 
 utAssertTrue s_AssertTrue;
+utLogMessage s_LogMessage;
 
 namespace Thread
-{		
-	TEST_CLASS(UnitTests)
-	{
-	public:
+{        
+    TEST_CLASS(UnitTests)
+    {
+    public:
 
-        UnitTests() { s_AssertTrue = AssertTrue; }
+        UnitTests() { s_AssertTrue = AssertTrue; s_LogMessage = LogMessage; }
 
         // Helper for openthread test code to call
         static void AssertTrue(bool condition, const wchar_t* message)
         {
             Assert::IsTrue(condition, message);
+        }
+
+        // Helper for logging a message
+        static void LogMessage(const char* format, ...)
+        {
+            char message[512];
+
+            va_list args;
+            va_start(args, format);
+            vsnprintf(message, sizeof(message), format, args);
+            va_end(args);
+            
+            Logger::WriteMessage(message);
+        }
+
+        // Make sure to reset the test platform functions before each test
+        TEST_METHOD_INITIALIZE(TestMethodInit)
+        {
+            testPlatResetToDefaults();
         }
 
         // test_aes.cpp
@@ -131,5 +155,8 @@ namespace Thread
         TEST_METHOD(test_packed2) { ::test_packed2(); }
         TEST_METHOD(test_packed_union) { ::test_packed_union(); }
         TEST_METHOD(test_packed_enum) { ::test_packed_enum(); }
-	};
+
+        // test_settings.cpp
+        TEST_METHOD(RunTestFuzz) { ::TestFuzz(30); }
+    };
 }

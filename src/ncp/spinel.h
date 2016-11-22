@@ -197,9 +197,9 @@ enum {
 
 enum
 {
-    SPINEL_PROTOCOL_TYPE_ZIGBEE    = 1,
-    SPINEL_PROTOCOL_TYPE_ZIGBEE_IP = 2,
-    SPINEL_PROTOCOL_TYPE_THREAD    = 3,
+    SPINEL_PROTOCOL_TYPE_BOOTLOADER = 0,
+    SPINEL_PROTOCOL_TYPE_ZIGBEE_IP  = 2,
+    SPINEL_PROTOCOL_TYPE_THREAD     = 3,
 };
 
 enum
@@ -265,6 +265,10 @@ enum
     SPINEL_CMD_HBO_RECLAIMED        = 16,
     SPINEL_CMD_HBO_DROPED           = 17,
 
+    SPINEL_CMD_PEEK                 = 18,
+    SPINEL_CMD_PEEK_RET             = 19,
+    SPINEL_CMD_POKE                 = 20,
+
     SPINEL_CMD_NEST__BEGIN          = 15296,
     SPINEL_CMD_NEST__END            = 15360,
 
@@ -283,6 +287,9 @@ enum
     SPINEL_CAP_POWER_SAVE            = 4,
 
     SPINEL_CAP_COUNTERS              = 5,
+    SPINEL_CAP_JAM_DETECT            = 6,
+
+    SPINEL_CAP_PEEK_POKE             = 7,
 
     SPINEL_CAP_802_15_4__BEGIN        = 16,
     SPINEL_CAP_802_15_4_2003          = (SPINEL_CAP_802_15_4__BEGIN + 0),
@@ -349,6 +356,61 @@ typedef enum
     SPINEL_PROP_PHY_RSSI                = SPINEL_PROP_PHY__BEGIN + 6, ///< dBm [c]
     SPINEL_PROP_PHY__END                = 0x30,
 
+    SPINEL_PROP_PHY_EXT__BEGIN          = 0x1200,
+
+    /// Signal Jamming Detection Enable
+    /** Format: `b`
+     *
+     * Indicates if jamming detection is enabled or disabled. Set to true
+     * to enable jamming detection.
+     */
+    SPINEL_PROP_JAM_DETECT_ENABLE       = SPINEL_PROP_PHY_EXT__BEGIN + 0,
+
+    /// Signal Jamming Detected Indicator
+    /** Format: `b` (Read-Only)
+     *
+     * Set to true if radio jamming is detected. Set to false otherwise.
+     *
+     * When jamming detection is enabled, changes to the value of this
+     * property are emitted asynchronously via `CMD_PROP_VALUE_IS`.
+     */
+    SPINEL_PROP_JAM_DETECTED            = SPINEL_PROP_PHY_EXT__BEGIN + 1,
+
+    /// Jamming detection RSSI threshold
+    /** Format: `c`
+     *  Units: dBm
+     *
+     * This parameter describes the threshold RSSI level (measured in
+     * dBm) above which the jamming detection will consider the
+     * channel blocked.
+     */
+    SPINEL_PROP_JAM_DETECT_RSSI_THRESHOLD
+                                        = SPINEL_PROP_PHY_EXT__BEGIN + 2,
+
+    /// Jamming detection window size
+    /** Format: `C`
+     *  Units: Seconds (1-63)
+     *
+     * This parameter describes the window period for signal jamming
+     * detection.
+     */
+    SPINEL_PROP_JAM_DETECT_WINDOW       = SPINEL_PROP_PHY_EXT__BEGIN + 3,
+
+    /// Jamming detection busy period
+    /** Format: `C`
+     *  Units: Seconds (1-63)
+     *
+     * This parameter describes the number of aggregate seconds within
+     * the detection window where the RSSI must be above
+     * `PROP_JAM_DETECT_RSSI_THRESHOLD` to trigger detection.
+     *
+     * The behavior of the jamming detection feature when `PROP_JAM_DETECT_BUSY`
+     * is larger than `PROP_JAM_DETECT_WINDOW` is undefined.
+     */
+    SPINEL_PROP_JAM_DETECT_BUSY         = SPINEL_PROP_PHY_EXT__BEGIN + 4,
+
+    SPINEL_PROP_PHY_EXT__END            = 0x1300,
+
     SPINEL_PROP_MAC__BEGIN             = 0x30,
     SPINEL_PROP_MAC_SCAN_STATE         = SPINEL_PROP_MAC__BEGIN + 0, ///< [C]
     SPINEL_PROP_MAC_SCAN_MASK          = SPINEL_PROP_MAC__BEGIN + 1, ///< [A(C)]
@@ -389,7 +451,7 @@ typedef enum
     SPINEL_PROP_NET__BEGIN           = 0x40,
     SPINEL_PROP_NET_SAVED            = SPINEL_PROP_NET__BEGIN + 0, ///< [b]
     SPINEL_PROP_NET_IF_UP            = SPINEL_PROP_NET__BEGIN + 1, ///< [b]
-    SPINEL_PROP_NET_STACK_UP         = SPINEL_PROP_NET__BEGIN + 2, ///< [C]
+    SPINEL_PROP_NET_STACK_UP         = SPINEL_PROP_NET__BEGIN + 2, ///< [b]
     SPINEL_PROP_NET_ROLE             = SPINEL_PROP_NET__BEGIN + 3, ///< [C]
     SPINEL_PROP_NET_NETWORK_NAME     = SPINEL_PROP_NET__BEGIN + 4, ///< [U]
     SPINEL_PROP_NET_XPANID           = SPINEL_PROP_NET__BEGIN + 5, ///< [D]
@@ -768,10 +830,44 @@ typedef enum
     /** Format: `L` (Read-only) */
     SPINEL_PROP_CNTR_RX_SPINEL_ERR     = SPINEL_PROP_CNTR__BEGIN + 302,
 
+    /// The message buffer counter info
+    /** Format: `T(SSSSSSSSSSSSSSSS)` (Read-only)
+     *  `T(`
+     *      `S`, (TotalBuffers)           The number of buffers in the pool.
+     *      `S`, (FreeBuffers)            The number of free message buffers.
+     *      `S`, (6loSendMessages)        The number of messages in the 6lo send queue.
+     *      `S`, (6loSendBuffers)         The number of buffers in the 6lo send queue.
+     *      `S`, (6loReassemblyMessages)  The number of messages in the 6LoWPAN reassembly queue.
+     *      `S`, (6loReassemblyBuffers)   The number of buffers in the 6LoWPAN reassembly queue.
+     *      `S`, (Ip6Messages)            The number of messages in the IPv6 send queue.
+     *      `S`, (Ip6Buffers)             The number of buffers in the IPv6 send queue.
+     *      `S`, (MplMessages)            The number of messages in the MPL send queue.
+     *      `S`, (MplBuffers)             The number of buffers in the MPL send queue.
+     *      `S`, (MleMessages)            The number of messages in the MLE send queue.
+     *      `S`, (MleBuffers)             The number of buffers in the MLE send queue.
+     *      `S`, (ArpMessages)            The number of messages in the ARP send queue.
+     *      `S`, (ArpBuffers)             The number of buffers in the ARP send queue.
+     *      `S`, (CoapClientMessages)     The number of messages in the CoAP client send queue.
+     *      `S`, (CoapClientBuffers)      The number of buffers in the CoAP client send queue.
+     *  `)`
+     */
+    SPINEL_PROP_MSG_BUFFER_COUNTERS    = SPINEL_PROP_CNTR__BEGIN + 400,
+
     SPINEL_PROP_CNTR__END       = 2048,
 
     SPINEL_PROP_NEST__BEGIN         = 15296,
     SPINEL_PROP_NEST_STREAM_MFG     = SPINEL_PROP_NEST__BEGIN + 0,
+
+    /// The legacy network ULA prefix (8 bytes)
+    /** Format: 'D' */
+    SPINEL_PROP_NEST_LEGACY_ULA_PREFIX
+                                    = SPINEL_PROP_NEST__BEGIN + 1,
+
+    /// A (newly) joined legacy node (this is signaled from NCP)
+    /** Format: 'E' */
+    SPINEL_PROP_NEST_LEGACY_JOINED_NODE
+                                    = SPINEL_PROP_NEST__BEGIN + 2,
+
     SPINEL_PROP_NEST__END           = 15360,
 
     SPINEL_PROP_VENDOR__BEGIN       = 15360,
