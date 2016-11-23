@@ -992,16 +992,12 @@ class ARM(IThci):
                 print 'join as leader'
                 mode = 'rsdn'
                 if self.AutoDUTEnable is False:
-                    # set ROUTER_UPGRADE_THRESHOLD
-                    self.__setRouterUpgradeThreshold(32)
                     # set ROUTER_DOWNGRADE_THRESHOLD
                     self.__setRouterDowngradeThreshold(33)
             elif eRoleId == Thread_Device_Role.Router:
                 print 'join as router'
                 mode = 'rsdn'
                 if self.AutoDUTEnable is False:
-                    # set ROUTER_UPGRADE_THRESHOLD
-                    self.__setRouterUpgradeThreshold(33)
                     # set ROUTER_DOWNGRADE_THRESHOLD
                     self.__setRouterDowngradeThreshold(33)
             elif eRoleId == Thread_Device_Role.SED:
@@ -2486,7 +2482,19 @@ class ARM(IThci):
         return True
 
     def updateRouterStatus(self):
+        """force update to router as if there is child id request"""
         print '%s call updateRouterStatus' % self.port
+        cmd = 'state'
+        while state = self.__sendCommand(cmd)[0]:
+            if state == 'detached':
+                continue
+            elif state == 'child':
+                break
+            else:
+                return False
+
+        cmd = 'state router'
+        return self.__sendCommand(cmd)[0] == 'Done'
 
     def setRouterThresholdValues(self, upgradeThreshold, downgradeThreshold):
         print '%s call setRouterThresholdValues' % self.port
