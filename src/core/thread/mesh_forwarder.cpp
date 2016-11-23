@@ -80,9 +80,7 @@ MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
     mMeshSource = Mac::kShortAddrInvalid;
     mMeshDest = Mac::kShortAddrInvalid;
     mAddMeshHeader = false;
-
-    mMac.EnableSrcMatch(true);
-    mSrcMatchEnabled = true;
+    mSrcMatchEnabled = false;
 
     mMac.RegisterReceiver(mMacReceiver);
 }
@@ -320,6 +318,12 @@ ThreadError MeshForwarder::AddSrcMatchEntry(Child &aChild)
     {
         // succeed in adding to source match table
         aChild.mAddSrcMatchEntryPending = false;
+
+        if (!mSrcMatchEnabled)
+        {
+            mMac.EnableSrcMatch(true);
+            mSrcMatchEnabled = true;
+        }
     }
     else
     {
