@@ -224,7 +224,7 @@ uint8_t Message::GetBufferCount(void) const
 {
     uint8_t rval = 1;
 
-    for (const Buffer *curBuffer = GetNextBuffer(); curBuffer; curBuffer->GetNextBuffer())
+    for (const Buffer *curBuffer = GetNextBuffer(); curBuffer; curBuffer = curBuffer->GetNextBuffer())
     {
         rval++;
     }
