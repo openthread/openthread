@@ -39,7 +39,6 @@ import serial
 import socket
 import logging
 from IThci import IThci
-from pexpect_serial import SerialSpawn
 from GRLLibs.UtilityModules.Test import Thread_Device_Role, Device_Data_Requirement, MacType
 from GRLLibs.UtilityModules.enums import PlatformDiagnosticPacket_Direction, PlatformDiagnosticPacket_Type, AddressType
 from GRLLibs.UtilityModules.ModuleHelper import ModuleHelper, ThreadRunner
@@ -448,6 +447,7 @@ class ARM(IThci):
         print 'call startOpenThread'
         try:
             if self.__sendCommand('ifconfig up')[0] == 'Done':
+                self.__setRouterSelectionJitter(1)
                 return self.__sendCommand('thread start')[0] == 'Done'
             else:
                 return False
@@ -991,7 +991,6 @@ class ARM(IThci):
             if eRoleId == Thread_Device_Role.Leader:
                 print 'join as leader'
                 mode = 'rsdn'
-                self.__setRouterSelectionJitter(1)
                 if self.AutoDUTEnable is False:
                     # set ROUTER_UPGRADE_THRESHOLD
                     self.__setRouterUpgradeThreshold(32)
@@ -1000,7 +999,6 @@ class ARM(IThci):
             elif eRoleId == Thread_Device_Role.Router:
                 print 'join as router'
                 mode = 'rsdn'
-                self.__setRouterSelectionJitter(1)
                 if self.AutoDUTEnable is False:
                     # set ROUTER_UPGRADE_THRESHOLD
                     self.__setRouterUpgradeThreshold(33)
@@ -1087,8 +1085,6 @@ class ARM(IThci):
         print '%s call powerDown' % self.port
         self.isPowerDown = True
         self._sendline('reset')
-        time.sleep(5)
-        self.setMAC(self.mac)
 
     def powerUp(self):
         """power up the Thread device"""
@@ -1110,11 +1106,10 @@ class ARM(IThci):
         """
         print '%s call reboot' % self.port
         try:
-            # stop OpenThread
-            self.__stopOpenThread()
-            # start OpenThread
-            self.__startOpenThread()
+            self._sendline('reset')
+            time.sleep(3)
 
+            self.__startOpenThread()
             time.sleep(3)
 
             if self.__sendCommand('state')[0] == 'disabled':
@@ -1356,13 +1351,10 @@ class ARM(IThci):
         print '%s call resetAndRejoin' % self.port
         print timeout
         try:
-            # start OpenThread
-            self.__stopOpenThread()
-            # wait timeout
+            self._sendline('reset')
             time.sleep(timeout)
-            # stop OpenThread
-            self.__startOpenThread()
 
+            self.__startOpenThread()
             time.sleep(3)
 
             if self.__sendCommand('state')[0] == 'disabled':

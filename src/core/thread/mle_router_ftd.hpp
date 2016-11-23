@@ -299,6 +299,14 @@ public:
     ThreadError SetPreferredRouterId(uint8_t aRouterId);
 
     /**
+     * This method sets the Router Id from the stored network information.
+     *
+     * @param[in]  aRouterId   The Router Id.
+     *
+     */
+    void SetRouterId(uint8_t aRouterId);
+
+    /**
      * This method returns the next hop towards an RLOC16 destination.
      *
      * @param[in]  aDestination  The RLOC16 of the destination.
@@ -477,6 +485,37 @@ public:
      *
      */
     ThreadError SetMaxAllowedChildren(uint8_t aMaxChildren);
+
+    /**
+     * This method restores children information from non-volatile memory.
+     *
+     * @retval  kThreadErrorNone      Successfully restores children information.
+     * @retval  kThreadError_NoBufs   Insufficient available buffers to restore all children information.
+     *
+     */
+    ThreadError RestoreChildren(void);
+
+    /**
+     * This method remove a stored child information from non-volatile memory.
+     *
+     * @param[in]  aChildRloc16   The child RLOC16 to remove.
+     *
+     * @retval  kThreadErrorNone        Successfully remove child.
+     * @retval  kThreadError_NotFound   There is no specified child stored in non-volatile memory.
+     *
+     */
+    ThreadError RemoveStoredChild(uint16_t aChildRloc16);
+
+    /**
+     * This method store a child infomation into non-volatile memory.
+     *
+     * @param[in]  aChildRloc16   The child RLOC16 to store.
+     *
+     * @retval  kThreadErrorNone      Successfully store child.
+     * @retval  kThreadError_NoBufs   Insufficient available buffers to store child.
+     *
+     */
+    ThreadError StoreChild(uint16_t aChildRloc16);
 
     /**
      * This method returns a pointer to a Neighbor object.
@@ -678,6 +717,8 @@ private:
     ThreadError HandleChildIdRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
                                      uint32_t aKeySequence);
     ThreadError HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    ThreadError HandleChildUpdateResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
+                                          uint32_t aKeySequence);
     ThreadError HandleDataRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleNetworkDataUpdateRouter(void);
     ThreadError HandleDiscoveryRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -695,6 +736,7 @@ private:
                                const TlvRequestTlv &aTlvRequest, const ChallengeTlv &aChallenge);
     ThreadError SendParentResponse(Child *aChild, const ChallengeTlv &aChallenge, bool aRoutersOnlyRequest);
     ThreadError SendChildIdResponse(Child *aChild);
+    ThreadError SendChildUpdateRequest(Child *aChild);
     ThreadError SendChildUpdateResponse(Child *aChild, const Ip6::MessageInfo &aMessageInfo,
                                         const uint8_t *aTlvs, uint8_t aTlvsLength,  const ChallengeTlv *challenge);
     ThreadError SendDataResponse(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength);
@@ -737,6 +779,8 @@ private:
     void HandleStateUpdateTimer(void);
     static void HandleDelayedResponseTimer(void *aContext);
     void HandleDelayedResponseTimer(void);
+    static void HandleChildUpdateRequestTimer(void *aContext);
+    void HandleChildUpdateRequestTimer(void);
 
     ThreadError AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestination, uint16_t aDelay);
 
@@ -745,6 +789,7 @@ private:
     TrickleTimer mAdvertiseTimer;
     Timer mStateUpdateTimer;
     Timer mDelayedResponseTimer;
+    Timer mChildUpdateRequestTimer;
 
     Coap::Resource mAddressSolicit;
     Coap::Resource mAddressRelease;

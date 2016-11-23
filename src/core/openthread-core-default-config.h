@@ -290,6 +290,16 @@
 #endif  // OPENTHREAD_CONFIG_MAC_WHITELIST_SIZE
 
 /**
+ * @def OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD
+ *
+ *  The value ahead of the current frame counter for persistent storage
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD
+#define OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD             1000
+#endif  // OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL
  *
  * The log level.
