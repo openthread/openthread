@@ -2193,7 +2193,10 @@ class ARM(IThci):
 
             if listChannelMask != None:
                 cmd += ' channelmask '
-                cmd += str(hex(1 << listChannelMask[1]))
+                if len(listChannelMask) > 2:
+                    cmd += '0x' + self.__convertLongToString(self.__convertChannelMask(listChannelMask))
+                elif len(listChannelMask) == 2:
+                    cmd += str(hex(1 << listChannelMask[1]))
 
             if sPSKc != None or listSecurityPolicy != None or \
                xCommissioningSessionId != None or xTmfPort != None or xSteeringData != None or xBorderRouterLocator != None or \
@@ -2250,6 +2253,14 @@ class ARM(IThci):
                     locator = locator.zfill(4)
 
                 cmd += locator
+
+            if xSteeringData != None:
+                steeringData = self.__convertLongToString(xSteeringData)
+                cmd += '08' + str(len(steeringData)/2).zfill(2)
+                cmd += steeringData
+
+            if BogusTLV != None:
+                cmd += "8202aa55"
 
             print cmd
 
