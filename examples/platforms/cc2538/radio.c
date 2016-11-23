@@ -71,7 +71,7 @@ static uint8_t sTransmitPsdu[IEEE802154_MAX_LENGTH];
 static uint8_t sReceivePsdu[IEEE802154_MAX_LENGTH];
 static uint8_t sChannel = 0;
 
-static PhyState sState = kStateDisabled;
+PhyState sState = kStateDisabled;
 static bool sIsReceiverEnabled = false;
 
 static otPlatRadioReceiveDone sReceiveDoneCallback = NULL;
