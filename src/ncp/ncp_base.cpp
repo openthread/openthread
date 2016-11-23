@@ -3365,7 +3365,7 @@ ThreadError NcpBase::SetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t header, s
 
 ThreadError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len)
 {
-    spinel_ssize_t parsedLength;
+    spinel_ssize_t parsedLength(0);
     ThreadError errorCode = kThreadError_None;
     RadioPacket packet;
     unsigned int frame_len(0);
@@ -3393,7 +3393,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t header, spinel_prop_k
         mCurTransmintTID = SPINEL_HEADER_GET_TID(header);
 
         // Update packet length and send to the radio layer
-        packet.mLength = frame_len;
+        packet.mLength = static_cast<uint8_t>(frame_len);
         errorCode = otPlatRadioTransmit(mInstance, &packet);
     }
     else
