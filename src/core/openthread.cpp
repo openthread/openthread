@@ -77,6 +77,8 @@ otInstance::otInstance(void) :
     mReceiveIp6DatagramCallbackContext(NULL),
     mActiveScanCallback(NULL),
     mActiveScanCallbackContext(NULL),
+    mEnergyScanCallback(NULL),
+    mEnergyScanCallbackContext(NULL),
     mThreadNetif(mIp6)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     , mApplicationCoapServer(mIp6.mUdp, OT_DEFAULT_COAP_PORT)

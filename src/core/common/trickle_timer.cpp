@@ -48,7 +48,13 @@ TrickleTimer::TrickleTimer(
     mTimer(aScheduler, HandleTimerFired, this),
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
     k(aRedundancyConstant),
+    c(0),
 #endif
+    Imin(0),
+    Imax(0),
+    mMode(kModeNormal),
+    I(0),
+    t(0),
     mPhase(kPhaseDormant),
     mTransmitHandler(aTransmitHandler),
     mIntervalExpiredHandler(aIntervalExpiredHandler),

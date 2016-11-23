@@ -66,25 +66,38 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mMleRouter(aThreadNetif.GetMle()),
     mNetworkData(aThreadNetif.GetNetworkDataLeader()),
     mJoinerRouter(aThreadNetif.GetJoinerRouter()),
-    mParentRequestTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mle::HandleParentRequestTimer, this),
-    mSocket(aThreadNetif.GetIp6().mUdp),
-    mSendChildUpdateRequest(aThreadNetif.GetIp6().mTaskletScheduler, &Mle::HandleSendChildUpdateRequest, this)
-{
-    mDeviceState = kDeviceStateDisabled;
-    mDeviceMode = ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeSecureDataRequest | ModeTlv::kModeFFD |
-                  ModeTlv::kModeFullNetworkData;
-    mParentRequestState = kParentIdle;
-    mParentRequestMode = kMleAttachAnyPartition;
-    mParentLinkQuality = 0;
-    mParentPriority = 0;
-    mParentLinkQuality3 = 0;
-    mParentLinkQuality2 = 0;
-    mParentLinkQuality1 = 0;
-    mRetrieveNewNetworkData = false;
-    mTimeout = kMleEndDeviceTimeout;
-    mReattachState = kReattachStop;
+    mRetrieveNewNetworkData(false),
+    mDeviceState(kDeviceStateDisabled),
+    mDeviceMode(ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeSecureDataRequest | ModeTlv::kModeFFD |
+                ModeTlv::kModeFullNetworkData),
+    isAssignLinkQuality(false),
+    mAssignLinkQuality(0),
+    mAssignLinkMargin(0),
 
+    mParentRequestState(kParentIdle),
+    mReattachState(kReattachStop),
+    mParentRequestTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mle::HandleParentRequestTimer, this),
+    mRouterSelectionJitter(kRouterSelectionJitter),
+    mRouterSelectionJitterTimeout(0),
+    mParentRequestMode(kMleAttachAnyPartition),
+    mParentLinkQuality(0),
+    mParentPriority(0),
+    mParentLinkQuality3(0),
+    mParentLinkQuality2(0),
+    mParentLinkQuality1(0),
+    mParentIsSingleton(false),
+    mSocket(aThreadNetif.GetIp6().mUdp),
+    mTimeout(kMleEndDeviceTimeout),
+    mSendChildUpdateRequest(aThreadNetif.GetIp6().mTaskletScheduler, &Mle::HandleSendChildUpdateRequest, this),
+    mDiscoverHandler(NULL),
+    mDiscoverContext(NULL),
+    mIsDiscoverInProgress(false),
+    mAnnounceChannel(kPhyMinChannel),
+    mPreviousChannel(0),
+    mPreviousPanId(Mac::kPanIdBroadcast)
+{
     memset(&mLeaderData, 0, sizeof(mLeaderData));
+    memset(&mParentLeaderData, 0, sizeof(mParentLeaderData));
     memset(&mParent, 0, sizeof(mParent));
     memset(&mChildIdRequest, 0, sizeof(mChildIdRequest));
     memset(&mLinkLocal64, 0, sizeof(mLinkLocal64));
@@ -92,9 +105,9 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     memset(&mMeshLocal16, 0, sizeof(mMeshLocal16));
     memset(&mLinkLocalAllThreadNodes, 0, sizeof(mLinkLocalAllThreadNodes));
     memset(&mRealmLocalAllThreadNodes, 0, sizeof(mRealmLocalAllThreadNodes));
+    memset(&mLeaderAloc, 0, sizeof(mLeaderAloc));
 
     // link-local 64
-    memset(&mLinkLocal64, 0, sizeof(mLinkLocal64));
     mLinkLocal64.GetAddress().mFields.m16[0] = HostSwap16(0xfe80);
     mLinkLocal64.GetAddress().SetIid(*mMac.GetExtAddress());
     mLinkLocal64.mPrefixLength = 64;
@@ -103,7 +116,6 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mNetif.AddUnicastAddress(mLinkLocal64);
 
     // Leader Aloc
-    memset(&mLeaderAloc, 0, sizeof(mLeaderAloc));
     mLeaderAloc.mPrefixLength = 128;
     mLeaderAloc.mPreferredLifetime = 0xffffffff;
     mLeaderAloc.mValidLifetime = 0xffffffff;
@@ -157,18 +169,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mNetifCallback.Set(&Mle::HandleNetifStateChanged, this);
     mNetif.RegisterCallback(mNetifCallback);
 
-    isAssignLinkQuality = false;
-    mAssignLinkQuality = 0;
-    mAssignLinkMargin = 0;
     memset(&mAddr64, 0, sizeof(mAddr64));
-
-    mIsDiscoverInProgress = false;
-
-    mRouterSelectionJitterTimeout = 0;
-    mRouterSelectionJitter = kRouterSelectionJitter;
-
-    mAnnounceChannel = kPhyMinChannel;
-    mPreviousPanId = Mac::kPanIdBroadcast;
 }
 
 ThreadError Mle::Enable(void)

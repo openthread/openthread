@@ -59,30 +59,33 @@ MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
     mDiscoverTimer(aThreadNetif.GetIp6().mTimerScheduler, &MeshForwarder::HandleDiscoverTimer, this),
     mPollTimer(aThreadNetif.GetIp6().mTimerScheduler, &MeshForwarder::HandlePollTimer, this),
     mReassemblyTimer(aThreadNetif.GetIp6().mTimerScheduler, &MeshForwarder::HandleReassemblyTimer, this),
+    mMessageNextOffset(0),
+    mPollPeriod(0),
+    mAssignPollPeriod(0),
+    mSendMessage(NULL),
+    mMeshSource(Mac::kShortAddrInvalid),
+    mMeshDest(Mac::kShortAddrInvalid),
+    mAddMeshHeader(false),
+    mSendBusy(false),
     mScheduleTransmissionTask(aThreadNetif.GetIp6().mTaskletScheduler, ScheduleTransmissionTask, this),
+    mEnabled(false),
+    mScanChannels(0),
+    mScanDuration(0),
+    mScanChannel(0),
+    mRestoreChannel(0),
+    mScanning(false),
     mNetif(aThreadNetif),
     mAddressResolver(aThreadNetif.GetAddressResolver()),
     mLowpan(aThreadNetif.GetLowpan()),
     mMac(aThreadNetif.GetMac()),
     mMle(aThreadNetif.GetMle()),
-    mNetworkData(aThreadNetif.GetNetworkDataLeader())
+    mNetworkData(aThreadNetif.GetNetworkDataLeader()),
+    mSrcMatchEnabled(false)
 {
     mFragTag = static_cast<uint16_t>(otPlatRandomGet());
-    mPollPeriod = 0;
-    mAssignPollPeriod = 0;
-    mSendMessage = NULL;
-    mSendBusy = false;
-    mEnabled = false;
-
-    mMessageNextOffset = 0;
+    mMac.RegisterReceiver(mMacReceiver);
     mMacSource.mLength = 0;
     mMacDest.mLength = 0;
-    mMeshSource = Mac::kShortAddrInvalid;
-    mMeshDest = Mac::kShortAddrInvalid;
-    mAddMeshHeader = false;
-    mSrcMatchEnabled = false;
-
-    mMac.RegisterReceiver(mMacReceiver);
 }
 
 ThreadError MeshForwarder::Start()
