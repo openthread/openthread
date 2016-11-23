@@ -233,6 +233,7 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_MAC_SCAN_PERIOD, &NcpBase::SetPropertyHandler_MAC_SCAN_PERIOD },
     { SPINEL_PROP_MAC_15_4_PANID, &NcpBase::SetPropertyHandler_MAC_15_4_PANID },
     { SPINEL_PROP_MAC_RAW_STREAM_ENABLED, &NcpBase::SetPropertyHandler_MAC_RAW_STREAM_ENABLED },
+    { SPINEL_PROP_STREAM_RAW, &NcpBase::SetPropertyHandler_STREAM_RAW },
 
     { SPINEL_PROP_NET_IF_UP, &NcpBase::SetPropertyHandler_NET_IF_UP },
     { SPINEL_PROP_NET_STACK_UP, &NcpBase::SetPropertyHandler_NET_STACK_UP },
@@ -475,6 +476,9 @@ NcpBase::NcpBase(otInstance *aInstance):
     mRequireJoinExistingNetwork = false;
     mIsRawStreamEnabled = false;
 
+    mIsBoundToRadio = false;
+    mCurTransmintTID = 0;
+
     mFramingErrorCounter = 0;
     mRxSpinelFrameCounter = 0;
     mTxSpinelFrameCounter = 0;
@@ -497,40 +501,6 @@ NcpBase::NcpBase(otInstance *aInstance):
     mLegacyHandlers = NULL;
     memset(mLegacyUlaPrefix, 0, sizeof(mLegacyUlaPrefix));
 #endif
-}
-
-// ----------------------------------------------------------------------------
-// MARK: Inbound Radio Packet Handling
-// ----------------------------------------------------------------------------
-
-void NcpBase::HandleRadioReceive(otInstance *aInstance, RadioPacket *aPacket, ThreadError aError)
-{
-    (void)aInstance;
-    sNcpContext->HandleRadioReceive(aPacket, aError);
-}
-
-void NcpBase::HandleRadioReceive(RadioPacket *aPacket, ThreadError aError)
-{
-    (void)aPacket;
-    (void)aError;
-}
-
-// ----------------------------------------------------------------------------
-// MARK: Outbound Radio Packet Handling
-// ----------------------------------------------------------------------------
-
-void NcpBase::HandleRadioTransmit(otInstance *aInstance, RadioPacket *aPacket, bool aFramePending,
-                                  ThreadError aError)
-{
-    (void)aInstance;
-    sNcpContext->HandleRadioTransmit(aPacket, aFramePending, aError);
-}
-
-void NcpBase::HandleRadioTransmit(RadioPacket *aPacket, bool aFramePending, ThreadError aError)
-{
-    (void)aPacket;
-    (void)aFramePending;
-    (void)aError;
 }
 
 // ----------------------------------------------------------------------------
@@ -598,28 +568,23 @@ exit:
 }
 
 // ----------------------------------------------------------------------------
-// MARK: Raw frame handling
+// MARK: Inbound Radio Packet Handling
 // ----------------------------------------------------------------------------
 
-void NcpBase::HandleRawFrame(const RadioPacket *aFrame, void *aContext)
+void NcpBase::HandleRadioReceive(otInstance *aInstance, RadioPacket *aPacket, ThreadError aError)
 {
-    static_cast<NcpBase *>(aContext)->HandleRawFrame(aFrame);
+    (void)aInstance;
+    sNcpContext->HandleRadioReceive(aPacket, aError);
 }
 
-void NcpBase::HandleRawFrame(const RadioPacket *aFrame)
+void NcpBase::HandleRadioReceive(const RadioPacket *aPacket, ThreadError aError)
 {
     ThreadError errorCode = kThreadError_None;
     uint16_t flags = 0;
 
-    if (!mIsRawStreamEnabled)
-    {
-        goto exit;
-    }
-
     SuccessOrExit(errorCode = OutboundFrameBegin());
 
-
-    if (aFrame->mDidTX)
+    if (aPacket->mDidTX)
     {
         flags |= SPINEL_MD_FLAG_TX;
     }
@@ -631,27 +596,33 @@ void NcpBase::HandleRawFrame(const RadioPacket *aFrame)
             SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
             SPINEL_CMD_PROP_VALUE_IS,
             SPINEL_PROP_STREAM_RAW,
-            aFrame->mLength
+            (aError == kThreadError_None) ? aPacket->mLength : 0
         )
     );
 
-    // Append the frame contents
-    SuccessOrExit(
-        errorCode = OutboundFrameFeedData(
-            aFrame->mPsdu,
-            aFrame->mLength
-        )
-    );
+    if (aError == kThreadError_None)
+    {
+        // Append the frame contents
+        SuccessOrExit(
+            errorCode = OutboundFrameFeedData(
+                aPacket->mPsdu,
+                aPacket->mLength
+            )
+        );
+    }
 
     // Append metadata (rssi, etc)
     SuccessOrExit(
         errorCode = OutboundFrameFeedPacked(
-            "ccS",
-            aFrame->mPower,   // TX Power
-            -128,             // Noise Floor (Currently unused)
-            flags             // Flags
+            "ccSiCC",
+            aPacket->mPower,    // TX Power
+            -128,               // Noise Floor (Currently unused)
+            flags,              // Flags
+            aError,             // Receive error
+            aPacket->mChannel,  // Channel
+            aPacket->mLqi       // Link quality indicator
 
-            // Skip PHY and Vendor data for now
+                                // Skip PHY and Vendor data for now
         )
     );
 
@@ -661,6 +632,53 @@ exit:
     return;
 }
 
+// ----------------------------------------------------------------------------
+// MARK: Outbound Radio Packet Handling
+// ----------------------------------------------------------------------------
+
+void NcpBase::HandleRadioTransmit(otInstance *aInstance, RadioPacket *aPacket, bool aFramePending,
+    ThreadError aError)
+{
+    (void)aInstance;
+    sNcpContext->HandleRadioTransmit(aPacket, aFramePending, aError);
+}
+
+void NcpBase::HandleRadioTransmit(const RadioPacket *aPacket, bool aFramePending, ThreadError aError)
+{
+    if (mCurTransmintTID)
+    {
+        SendPropertyUpdate(
+            SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0 | mCurTransmintTID,
+            SPINEL_CMD_PROP_VALUE_IS,
+            SPINEL_PROP_STREAM_RAW,
+            "ib",
+            aError,
+            aFramePending
+        );
+
+        // Clear cached transmit TID
+        mCurTransmintTID = 0;
+    }
+
+    (void)aPacket;
+}
+
+// ----------------------------------------------------------------------------
+// MARK: Raw frame handling
+// ----------------------------------------------------------------------------
+
+void NcpBase::HandleRawFrame(const RadioPacket *aFrame, void *aContext)
+{
+    static_cast<NcpBase *>(aContext)->HandleRawFrame(aFrame);
+}
+
+void NcpBase::HandleRawFrame(const RadioPacket *aFrame)
+{
+    if (mIsRawStreamEnabled)
+    {
+        HandleRadioReceive(aFrame, kThreadError_None);
+    }
+}
 
 // ----------------------------------------------------------------------------
 // MARK: Scan Results Glue
@@ -2991,11 +3009,17 @@ ThreadError NcpBase::SetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_
     {
         if (value == false)
         {
+            mIsBoundToRadio = false;
             errorCode = otPlatRadioDisable(mInstance);
         }
         else
         {
+            mIsBoundToRadio = true;
             errorCode = otPlatRadioEnable(mInstance, HandleRadioReceive, HandleRadioTransmit);
+            if (errorCode != kThreadError_None)
+            {
+                mIsBoundToRadio = false;
+            }
         }
     }
     else
@@ -3339,34 +3363,93 @@ ThreadError NcpBase::SetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t header, s
     return errorCode;
 }
 
+ThreadError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len)
+{
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+    RadioPacket packet;
+    unsigned int frame_len(0);
+
+    if (mIsBoundToRadio)
+    {
+        parsedLength = spinel_datatype_unpack(
+            value_ptr,
+            value_len,
+            "DCc",
+            &packet.mPsdu,
+            &frame_len,
+            &packet.mChannel,
+            &packet.mPower
+        );
+    }
+    else
+    {
+        errorCode = kThreadError_InvalidState;
+    }
+
+    if (parsedLength > 0 && frame_len <= kMaxPHYPacketSize)
+    {
+        // Cache the transaction ID for async response
+        mCurTransmintTID = SPINEL_HEADER_GET_TID(header);
+
+        // Update packet length and send to the radio layer
+        packet.mLength = frame_len;
+        errorCode = otPlatRadioTransmit(mInstance, &packet);
+    }
+    else
+    {
+        errorCode = kThreadError_Parse;
+    }
+
+    if (errorCode == kThreadError_None)
+    {
+        // Don't do anything here yet. We will complete the transaction when we get a transmit done callback
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+    }
+
+    (void)key;
+
+    return errorCode;
+}
+
 ThreadError NcpBase::SetPropertyHandler_NET_IF_UP(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
-                                                    uint16_t value_len)
+                                                  uint16_t value_len)
 {
     bool value = false;
     spinel_ssize_t parsedLength;
     ThreadError errorCode = kThreadError_None;
 
-    parsedLength = spinel_datatype_unpack(
-                       value_ptr,
-                       value_len,
-                       SPINEL_DATATYPE_BOOL_S,
-                       &value
-                   );
-
-    if (parsedLength > 0)
+    if (!mIsBoundToRadio)
     {
-        if (value == false)
+        parsedLength = spinel_datatype_unpack(
+            value_ptr,
+            value_len,
+            SPINEL_DATATYPE_BOOL_S,
+            &value
+        );
+
+        if (parsedLength > 0)
         {
-            errorCode = otInterfaceDown(mInstance);
+            if (value == false)
+            {
+                errorCode = otInterfaceDown(mInstance);
+            }
+            else
+            {
+                errorCode = otInterfaceUp(mInstance);
+            }
         }
         else
         {
-            errorCode = otInterfaceUp(mInstance);
+            errorCode = kThreadError_Parse;
         }
     }
     else
     {
-        errorCode = kThreadError_Parse;
+        errorCode = kThreadError_InvalidState;
     }
 
     if (errorCode == kThreadError_None)
@@ -3382,7 +3465,7 @@ ThreadError NcpBase::SetPropertyHandler_NET_IF_UP(uint8_t header, spinel_prop_ke
 }
 
 ThreadError NcpBase::SetPropertyHandler_NET_STACK_UP(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
-                                                  uint16_t value_len)
+                                                     uint16_t value_len)
 {
     bool value = false;
     spinel_ssize_t parsedLength;
