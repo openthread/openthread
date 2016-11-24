@@ -1961,7 +1961,7 @@ class ARM(IThci):
             else:
                 return False
         except Exception, e:
-            modulehelper.writeintodebuglogger("allowcommission() error: " + str(e))
+            Modulehelper.writeintodebuglogger("allowcommission() error: " + str(e))
 
     def joinCommissioned(self, strPSKd='threadjpaketest', waitTime=20):
         """start joiner
@@ -2061,7 +2061,7 @@ class ARM(IThci):
             print cmd
             return self.__sendCommand(cmd) == 'Done'
         except Exception, e:
-            modulehelper.writeintodebuglogger("MGMT_ED_SCAN() error: " + str(e))
+            Modulehelper.writeintodebuglogger("MGMT_ED_SCAN() error: " + str(e))
 
     def MGMT_PANID_QUERY(self, sAddr, xCommissionerSessionId, listChannelMask, xPanId):
         """send MGMT_PANID_QUERY message to a given destination
@@ -2086,7 +2086,7 @@ class ARM(IThci):
             print cmd
             return self.__sendCommand(cmd) == 'Done'
         except Exception, e:
-            modulehelper.writeintodebuglogger("MGMT_PANID_QUERY() error: " + str(e))
+            Modulehelper.writeintodebuglogger("MGMT_PANID_QUERY() error: " + str(e))
 
     def MGMT_ANNOUNCE_BEGIN(self, sAddr, xCommissionerSessionId, listChannelMask, xCount, xPeriod):
         """send MGMT_ANNOUNCE_BEGIN message to a given destination
@@ -2103,7 +2103,7 @@ class ARM(IThci):
             print cmd
             return self.__sendCommand(cmd) == 'Done'
         except Exception, e:
-            modulehelper.writeintodebuglogger("MGMT_ANNOUNCE_BEGIN() error: " + str(e))
+            Modulehelper.writeintodebuglogger("MGMT_ANNOUNCE_BEGIN() error: " + str(e))
 
     def MGMT_ACTIVE_GET(self, Addr='', TLVs=[]):
         """send MGMT_ACTIVE_GET command
