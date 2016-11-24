@@ -350,6 +350,11 @@ ThreadError MleRouter::HandleChildStart(otMleAttachFilter aFilter)
             Timer::SecToMsec(kReedAdvertiseInterval + kReedAdvertiseJitter),
             TrickleTimer::kModePlainTimer);
         mNetif.SubscribeAllRoutersMulticast();
+
+        if (GetActiveRouterCount() >= mRouterUpgradeThreshold)
+        {
+            SendAdvertisement();
+        }
     }
 
     return kThreadError_None;
