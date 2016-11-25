@@ -764,6 +764,7 @@ private:
     Child *FindChild(uint16_t aChildId);
     Child *FindChild(const Mac::ExtAddress &aMacAddr);
 
+    bool HasChildren(void);
     bool HasMinDowngradeNeighborRouters(void);
     bool HasOneNeighborwithComparableConnectivity(const RouteTlv &aRoute, uint8_t aRouterId);
     bool HasSmallNumberOfChildren(void);

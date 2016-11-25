@@ -335,10 +335,18 @@ ThreadError MleRouter::HandleChildStart(otMleAttachFilter aFilter)
         break;
 
     case kMleAttachSamePartition:
-        if (mDeviceMode & ModeTlv::kModeFFD && IsRouterIdValid(mRouterId) &&
-            mRouters[mRouterId].mAllocated && GetActiveRouterCount() > mRouterUpgradeThreshold)
+        if (mDeviceMode & ModeTlv::kModeFFD && IsRouterIdValid(mPreviousRouterId))
         {
-            SendAddressRelease();
+            // downgrade
+            if (GetActiveRouterCount() > mRouterDowngradeThreshold)
+            {
+                SendAddressRelease();
+            }
+            // try to keep old router status
+            else if (GetActiveRouterCount() >= mRouterUpgradeThreshold && HasChildren())
+            {
+                BecomeRouter(ThreadStatusTlv::kHaveChildIdRequest);
+            }
         }
 
         break;
@@ -356,7 +364,8 @@ ThreadError MleRouter::HandleChildStart(otMleAttachFilter aFilter)
             TrickleTimer::kModePlainTimer);
         mNetif.SubscribeAllRoutersMulticast();
 
-        if (GetActiveRouterCount() >= mRouterUpgradeThreshold)
+        if (GetActiveRouterCount() >= mRouterUpgradeThreshold &&
+            (!IsRouterIdValid(mPreviousRouterId) || !HasChildren()))
         {
             SendAdvertisement();
         }
@@ -4283,6 +4292,26 @@ bool MleRouter::HasOneNeighborwithComparableConnectivity(const RouteTlv &aRoute,
 
 exit:
     return rval;
+}
+
+bool MleRouter::HasChildren(void)
+{
+    Child *children;
+    uint8_t maxChildCount = 0;
+    bool hasChildren = false;
+
+    children = GetChildren(&maxChildCount);
+
+    for (uint8_t i = 0; i < maxChildCount; i++)
+    {
+        if (children[i].mState == Neighbor::kStateRestored || children[i].mState >= Neighbor::kStateChildIdRequest)
+        {
+            ExitNow(hasChildren = true);
+        }
+    }
+
+exit:
+    return hasChildren;
 }
 
 bool MleRouter::HasSmallNumberOfChildren(void)
