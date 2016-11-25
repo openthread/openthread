@@ -209,7 +209,7 @@ ThreadError MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
 
     VerifyOrExit(mDeviceState != kDeviceStateDisabled, error = kThreadError_InvalidState);
     VerifyOrExit(mDeviceState != kDeviceStateRouter, error = kThreadError_None);
-    VerifyOrExit(mRouterRoleEnabled && (mDeviceMode & ModeTlv::kModeFFD), error = kThreadError_NotCapable);
+    VerifyOrExit(IsRouterRoleEnabled(), error = kThreadError_NotCapable);
 
     for (int i = 0; i <= kMaxRouterId; i++)
     {
@@ -250,7 +250,7 @@ ThreadError MleRouter::BecomeLeader(void)
 
     VerifyOrExit(mDeviceState != kDeviceStateDisabled, error = kThreadError_InvalidState);
     VerifyOrExit(mDeviceState != kDeviceStateLeader, error = kThreadError_None);
-    VerifyOrExit(mRouterRoleEnabled && (mDeviceMode & ModeTlv::kModeFFD), error = kThreadError_NotCapable);
+    VerifyOrExit(IsRouterRoleEnabled(), error = kThreadError_NotCapable);
 
     for (int i = 0; i <= kMaxRouterId; i++)
     {
@@ -1308,7 +1308,12 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
             break;
 
         case kDeviceStateChild:
-            processRouteTlv = (sourceAddress.GetRloc16() == mParent.mValid.mRloc16);
+            if ((sourceAddress.GetRloc16() == mParent.mValid.mRloc16) ||
+                (router->mState == Neighbor::kStateValid))
+            {
+                processRouteTlv = true;
+            }
+
             break;
 
         case kDeviceStateRouter:
@@ -1330,8 +1335,9 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
         ExitNow();
 
     case kDeviceStateChild:
-        if (mRouterSelectionJitterTimeout == 0 &&
+        if ((sourceAddress.GetRloc16() == mParent.mValid.mRloc16 || router->mState == Neighbor::kStateValid) &&
             (mDeviceMode & ModeTlv::kModeFFD) &&
+            (mRouterSelectionJitterTimeout == 0) &&
             (GetActiveRouterCount() < mRouterUpgradeThreshold))
         {
             mRouterSelectionJitterTimeout = (otPlatRandomGet() % mRouterSelectionJitter) + 1;
@@ -1376,7 +1382,7 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
                 }
             }
         }
-        else if (router->mState != Neighbor::kStateValid)
+        else if ((mDeviceMode & ModeTlv::kModeFFD) && (router->mState != Neighbor::kStateValid))
         {
             memcpy(&router->mMacAddr, &macAddr, sizeof(router->mMacAddr));
             router->mLinkInfo.Clear();

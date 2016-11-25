@@ -614,7 +614,7 @@ ThreadError otBecomeChild(otInstance *aInstance, otMleAttachFilter aFilter)
 
 ThreadError otBecomeRouter(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetMle().BecomeRouter(ThreadStatusTlv::kTooFewRouters);
+    return aInstance->mThreadNetif.GetMle().BecomeRouter(ThreadStatusTlv::kHaveChildIdRequest);
 }
 
 ThreadError otBecomeLeader(otInstance *aInstance)
