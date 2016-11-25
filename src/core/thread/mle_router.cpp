@@ -75,8 +75,9 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     mLeaderWeight = kLeaderWeight;
     mFixedLeaderPartitionId = 0;
     mMaxChildrenAllowed = kMaxChildren;
-    mRouterId = kInvalidRouterId;
-    mPreviousRouterId = kInvalidRouterId;
+
+    SetRouterId(kInvalidRouterId);
+    mPreviousPartitionId = 0;
     mRouterIdSequenceLastUpdated = 0;
     mRouterRoleEnabled = true;
 }
@@ -221,6 +222,7 @@ ThreadError MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
 
     mAdvertiseTimer.Stop();
     mAddressResolver.Clear();
+    mRouterSelectionJitterTimeout = 0;
 
     switch (mDeviceState)
     {
@@ -268,8 +270,7 @@ ThreadError MleRouter::BecomeLeader(void)
     router = GetRouter(routerId);
     VerifyOrExit(router != NULL, error = kThreadError_NoBufs);
 
-    mRouterId = routerId;
-    mPreviousRouterId = mRouterId;
+    SetRouterId(routerId);
 
     memcpy(&router->mMacAddr, mMac.GetExtAddress(), sizeof(router->mMacAddr));
 
@@ -329,46 +330,57 @@ ThreadError MleRouter::HandleChildStart(otMleAttachFilter aFilter)
     StopLeader();
     mStateUpdateTimer.Start(kStateUpdatePeriod);
 
+    mAdvertiseTimer.Start(
+        Timer::SecToMsec(kReedAdvertiseInterval),
+        Timer::SecToMsec(kReedAdvertiseInterval + kReedAdvertiseJitter),
+        TrickleTimer::kModePlainTimer);
+    mNetif.SubscribeAllRoutersMulticast();
+
+    VerifyOrExit(IsRouterIdValid(mPreviousRouterId), ;);
+
     switch (aFilter)
     {
-    case kMleAttachAnyPartition:
-        break;
-
     case kMleAttachSamePartition:
-        if (mDeviceMode & ModeTlv::kModeFFD && IsRouterIdValid(mPreviousRouterId))
+
+        // downgrade
+        if (GetActiveRouterCount() > mRouterDowngradeThreshold)
         {
-            // downgrade
-            if (GetActiveRouterCount() > mRouterDowngradeThreshold)
+            SendAddressRelease();
+
+            // reset children info if any
+            if (HasChildren())
             {
-                SendAddressRelease();
+                RemoveChildren();
             }
-            // try to keep old router status
-            else if (GetActiveRouterCount() >= mRouterUpgradeThreshold && HasChildren())
-            {
-                BecomeRouter(ThreadStatusTlv::kHaveChildIdRequest);
-            }
+
+            // reset routerId info
+            SetRouterId(kInvalidRouterId);
+        }
+        else if (HasChildren())
+        {
+            BecomeRouter(ThreadStatusTlv::kHaveChildIdRequest);
         }
 
         break;
 
+    case kMleAttachAnyPartition:
     case kMleAttachBetterPartition:
-        // BecomeRouter();
+        if (HasChildren() &&
+            mPreviousPartitionId != mLeaderData.GetPartitionId())
+        {
+            BecomeRouter(ThreadStatusTlv::kParentPartitionChange);
+        }
+
         break;
     }
 
-    if (mDeviceMode & ModeTlv::kModeFFD)
-    {
-        mAdvertiseTimer.Start(
-            Timer::SecToMsec(kReedAdvertiseInterval),
-            Timer::SecToMsec(kReedAdvertiseInterval + kReedAdvertiseJitter),
-            TrickleTimer::kModePlainTimer);
-        mNetif.SubscribeAllRoutersMulticast();
+exit:
 
-        if (GetActiveRouterCount() >= mRouterUpgradeThreshold &&
-            (!IsRouterIdValid(mPreviousRouterId) || !HasChildren()))
-        {
-            SendAdvertisement();
-        }
+    if (GetActiveRouterCount() >= mRouterUpgradeThreshold &&
+        (!IsRouterIdValid(mPreviousRouterId) || !HasChildren()))
+    {
+        SetRouterId(kInvalidRouterId);
+        SendAdvertisement();
     }
 
     return kThreadError_None;
@@ -388,6 +400,7 @@ ThreadError MleRouter::SetStateRouter(uint16_t aRloc16)
 
     mNetif.SubscribeAllRoutersMulticast();
     mRouters[mRouterId].mNextHop = mRouterId;
+    mPreviousPartitionId = mLeaderData.GetPartitionId();
     mNetworkData.Stop();
     mStateUpdateTimer.Start(kStateUpdatePeriod);
     mNetif.GetIp6().SetForwardingEnabled(true);
@@ -420,6 +433,7 @@ ThreadError MleRouter::SetStateLeader(uint16_t aRloc16)
 
     mNetif.SubscribeAllRoutersMulticast();
     mRouters[mRouterId].mNextHop = mRouterId;
+    mPreviousPartitionId = mLeaderData.GetPartitionId();
     mRouters[mRouterId].mLastHeard = Timer::GetNow();
 
     mNetworkData.Start();
@@ -1271,7 +1285,7 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
                      mLeaderData.GetWeighting(), mLeaderData.GetPartitionId());
 
         if (GetDeviceState() == kDeviceStateChild &&
-            memcmp(&mParent.mMacAddr, &macAddr, sizeof(mParent.mMacAddr)) == 0)
+            (memcmp(&mParent.mMacAddr, &macAddr, sizeof(mParent.mMacAddr)) == 0 || !(mDeviceMode & ModeTlv::kModeFFD)))
         {
             ExitNow();
         }
@@ -1707,6 +1721,7 @@ void MleRouter::HandleStateUpdateTimer(void)
         {
             // upgrade to Router
             BecomeRouter(ThreadStatusTlv::kTooFewRouters);
+            ExitNow();
         }
 
     case kDeviceStateRouter:
@@ -3254,9 +3269,15 @@ exit:
     return error;
 }
 
+void MleRouter::SetPreviousPartitionId(uint32_t aPartitionId)
+{
+    mPreviousPartitionId = aPartitionId;
+}
+
 void MleRouter::SetRouterId(uint8_t aRouterId)
 {
     mRouterId = aRouterId;
+    mPreviousRouterId = mRouterId;
 }
 
 Router *MleRouter::GetRouters(uint8_t *aNumRouters)
@@ -3666,7 +3687,22 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
     otLogInfoMle("Received address reply");
 
     SuccessOrExit(ThreadTlv::GetTlv(*aMessage, ThreadTlv::kStatus, sizeof(statusTlv), statusTlv));
-    VerifyOrExit(statusTlv.IsValid() && statusTlv.GetStatus() == statusTlv.kSuccess, ;);
+    VerifyOrExit(statusTlv.IsValid(), ;);
+
+    if (statusTlv.GetStatus() != statusTlv.kSuccess)
+    {
+        if (IsRouterIdValid(mPreviousRouterId))
+        {
+            if (HasChildren())
+            {
+                RemoveChildren();
+            }
+
+            SetRouterId(kInvalidRouterId);
+        }
+
+        ExitNow();
+    }
 
     SuccessOrExit(ThreadTlv::GetTlv(*aMessage, ThreadTlv::kRloc16, sizeof(rlocTlv), rlocTlv));
     VerifyOrExit(rlocTlv.IsValid(), ;);
@@ -3675,10 +3711,21 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
     SuccessOrExit(ThreadTlv::GetTlv(*aMessage, ThreadTlv::kRouterMask, sizeof(routerMaskTlv), routerMaskTlv));
     VerifyOrExit(routerMaskTlv.IsValid(), ;);
 
+    // if allocated routerId is different from previous routerId
+    if (IsRouterIdValid(mPreviousRouterId) && routerId != mPreviousRouterId)
+    {
+        // reset children info if any
+        if (HasChildren())
+        {
+            RemoveChildren();
+        }
+    }
+
     // assign short address
-    mRouterId = routerId;
-    mPreviousRouterId = mRouterId;
+    SetRouterId(routerId);
+
     SuccessOrExit(SetStateRouter(GetRloc16(mRouterId)));
+
     mRouters[mRouterId].mCost = 0;
 
     // copy router id information
@@ -3705,10 +3752,6 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
     {
         switch (mChildren[i].mState)
         {
-        case Neighbor::kStateInvalid:
-        case Neighbor::kStateParentRequest:
-            break;
-
         case Neighbor::kStateChildIdRequest:
             SendChildIdResponse(&mChildren[i]);
             break;
@@ -3717,14 +3760,11 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
             assert(false);
             break;
 
+        case Neighbor::kStateInvalid:
+        case Neighbor::kStateParentRequest:
         case Neighbor::kStateValid:
         case Neighbor::kStateRestored:
         case Neighbor::kStateChildUpdateRequest:
-            if (GetRouterId(mChildren[i].mValid.mRloc16) != mRouterId)
-            {
-                RemoveNeighbor(mChildren[i]);
-            }
-
             break;
         }
     }
@@ -3779,6 +3819,7 @@ void MleRouter::HandleAddressSolicit(Coap::Header &aHeader, Message &aMessage, c
         break;
 
     case ThreadStatusTlv::kHaveChildIdRequest:
+    case ThreadStatusTlv::kParentPartitionChange:
         break;
 
     default:
@@ -4296,15 +4337,11 @@ exit:
 
 bool MleRouter::HasChildren(void)
 {
-    Child *children;
-    uint8_t maxChildCount = 0;
     bool hasChildren = false;
 
-    children = GetChildren(&maxChildCount);
-
-    for (uint8_t i = 0; i < maxChildCount; i++)
+    for (uint8_t i = 0; i < mMaxChildrenAllowed; i++)
     {
-        if (children[i].mState == Neighbor::kStateRestored || children[i].mState >= Neighbor::kStateChildIdRequest)
+        if (mChildren[i].mState == Neighbor::kStateRestored || mChildren[i].mState >= Neighbor::kStateChildIdRequest)
         {
             ExitNow(hasChildren = true);
         }
@@ -4314,20 +4351,31 @@ exit:
     return hasChildren;
 }
 
+void MleRouter::RemoveChildren(void)
+{
+    for (uint8_t i = 0; i < mMaxChildrenAllowed; i++)
+    {
+        if (mChildren[i].mState == Neighbor::kStateRestored ||
+            mChildren[i].mState == Neighbor::kStateChildUpdateRequest ||
+            mChildren[i].mState == Neighbor::kStateValid)
+        {
+            RemoveStoredChild(mChildren[i].mValid.mRloc16);
+        }
+
+        mChildren[i].mState = Neighbor::kStateInvalid;
+    }
+}
+
 bool MleRouter::HasSmallNumberOfChildren(void)
 {
-    Child *children;
-    uint8_t maxChildCount = 0;
     uint8_t numChildren = 0;
     uint8_t routerCount = GetActiveRouterCount();
 
     VerifyOrExit(routerCount > mRouterDowngradeThreshold, ;);
 
-    children = GetChildren(&maxChildCount);
-
-    for (uint8_t i = 0; i < maxChildCount; i++)
+    for (uint8_t i = 0; i < mMaxChildrenAllowed; i++)
     {
-        if (children[i].mState == Neighbor::kStateValid)
+        if (mChildren[i].mState == Neighbor::kStateValid)
         {
             numChildren++;
         }

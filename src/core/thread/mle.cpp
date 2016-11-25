@@ -287,6 +287,7 @@ ThreadError Mle::Restore()
     else if (networkInfo.mDeviceState == kDeviceStateRouter || networkInfo.mDeviceState == kDeviceStateLeader)
     {
         mMleRouter.SetRouterId(GetRouterId(GetRloc16()));
+        mMleRouter.SetPreviousPartitionId(networkInfo.mPreviousPartitionId);
         mMleRouter.RestoreChildren();
     }
 
@@ -315,6 +316,7 @@ ThreadError Mle::Store()
     networkInfo.mKeySequence = mKeyManager.GetCurrentKeySequence();
     networkInfo.mMleFrameCounter = mKeyManager.GetMleFrameCounter() + OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
     networkInfo.mMacFrameCounter = mKeyManager.GetMacFrameCounter() + OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
+    networkInfo.mPreviousPartitionId = mLeaderData.GetPartitionId();
     memcpy(networkInfo.mExtAddress.m8, mMac.GetExtAddress(), sizeof(networkInfo.mExtAddress));
 
     if (mDeviceState == kDeviceStateChild)
