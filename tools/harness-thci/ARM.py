@@ -2485,7 +2485,8 @@ class ARM(IThci):
         """force update to router as if there is child id request"""
         print '%s call updateRouterStatus' % self.port
         cmd = 'state'
-        while state = self.__sendCommand(cmd)[0]:
+        while True:
+            state = self.__sendCommand(cmd)[0]
             if state == 'detached':
                 continue
             elif state == 'child':

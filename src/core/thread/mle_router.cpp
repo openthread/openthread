@@ -335,7 +335,12 @@ ThreadError MleRouter::HandleChildStart(otMleAttachFilter aFilter)
         break;
 
     case kMleAttachSamePartition:
-        SendAddressRelease();
+        if (mDeviceMode & ModeTlv::kModeFFD && IsRouterIdValid(mRouterId) &&
+            mRouters[mRouterId].mAllocated && GetActiveRouterCount() > mRouterUpgradeThreshold)
+        {
+            SendAddressRelease();
+        }
+
         break;
 
     case kMleAttachBetterPartition:
