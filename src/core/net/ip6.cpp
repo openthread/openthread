@@ -211,7 +211,7 @@ ThreadError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageI
             aMessage.Write(0, sizeof(hbh), &hbh);
 
             // make space for MPL Option + padding by shifting hop-by-hop option header
-            aMessage.Prepend(NULL, 8);
+            SuccessOrExit(error = aMessage.Prepend(NULL, 8));
             aMessage.CopyTo(8, 0, hbhLength, aMessage);
 
             // insert MPL Option
