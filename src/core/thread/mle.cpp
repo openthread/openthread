@@ -2575,7 +2575,7 @@ ThreadError Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::Me
     ChallengeTlv challenge;
     TlvRequestTlv tlvRequest;
     uint8_t dataRequestTlvs[] = {Tlv::kNetworkData};
-    uint8_t tlvs[kMaxResponseTlvs];
+    uint8_t tlvs[kMaxResponseTlvs] = {};
     uint8_t numTlvs = 0;
 
     otLogInfoMle("Received Child Update Request from parent");
@@ -2597,15 +2597,15 @@ ThreadError Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::Me
         {
             mRetrieveNewNetworkData = true;
         }
-    }
 
-    // Network Data
-    if (Tlv::GetTlv(aMessage, Tlv::kNetworkData, sizeof(networkData), networkData) == kThreadError_None)
-    {
-        VerifyOrExit(networkData.IsValid(), error = kThreadError_Parse);
-        mNetworkData.SetNetworkData(leaderData.GetDataVersion(), leaderData.GetStableDataVersion(),
-                                    (mDeviceMode & ModeTlv::kModeFullNetworkData) == 0,
-                                    networkData.GetNetworkData(), networkData.GetLength());
+        // Network Data
+        if (Tlv::GetTlv(aMessage, Tlv::kNetworkData, sizeof(networkData), networkData) == kThreadError_None)
+        {
+            VerifyOrExit(networkData.IsValid(), error = kThreadError_Parse);
+            mNetworkData.SetNetworkData(leaderData.GetDataVersion(), leaderData.GetStableDataVersion(),
+                                        (mDeviceMode & ModeTlv::kModeFullNetworkData) == 0,
+                                        networkData.GetNetworkData(), networkData.GetLength());
+        }
     }
 
     // TLV Request
