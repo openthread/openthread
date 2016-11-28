@@ -291,6 +291,8 @@ enum
 
     SPINEL_CAP_PEEK_POKE             = 7,
 
+    SPINEL_CAP_WRITABLE_RAW_STREAM   = 8,
+
     SPINEL_CAP_802_15_4__BEGIN        = 16,
     SPINEL_CAP_802_15_4_2003          = (SPINEL_CAP_802_15_4__BEGIN + 0),
     SPINEL_CAP_802_15_4_2006          = (SPINEL_CAP_802_15_4__BEGIN + 1),
@@ -345,6 +347,58 @@ typedef enum
     SPINEL_PROP_LOCK                    = 9,        ///< PropLock [b]
     SPINEL_PROP_HBO_MEM_MAX             = 10,       ///< Max offload mem [S]
     SPINEL_PROP_HBO_BLOCK_MAX           = 11,       ///< Max offload block [S]
+
+    SPINEL_PROP_BASE_EXT__BEGIN         = 0x1000,
+
+    /// Available GPIO Bitmask
+    /** Format: `D`
+     *  Type: Read-Only
+     *
+     * Contains a bit field identifying which GPIOs are supported. Cleared bits
+     * are not supported. Set bits are supported.
+     */
+    SPINEL_PROP_GPIO_AVAILABLE          = SPINEL_PROP_BASE_EXT__BEGIN + 0,
+
+    /// GPIO Direction Bitmask
+    /** Format: `D`
+     *  Type: Read-only (Optionally read/write)
+     *
+     * Contains a bit field identifying which GPIOs are configured as outputs.
+     * Cleared bits are inputs. Set bits are outputs.
+     */
+    SPINEL_PROP_GPIO_DIRECTION          = SPINEL_PROP_BASE_EXT__BEGIN + 1,
+
+    /// GPIO State Bitmask
+    /** Format: `D`
+     *  Type: Read-Write
+     *
+     * Contains a bit field identifying the state of the GPIOs. For GPIOs
+     * configured as inputs, this is the read logic level. For GPIOs configured
+     * as outputs, this is the logic level of the output.
+     */
+    SPINEL_PROP_GPIO_STATE              = SPINEL_PROP_BASE_EXT__BEGIN + 2,
+
+    /// GPIO State Set-Only Bitmask
+    /** Format: `D`
+     *  Type: Write-Only
+     *
+     * Allows for the state of various output GPIOs to be set without affecting
+     * other GPIO states. Contains a bit field identifying the output GPIOs that
+     * should have their state set to 1.
+     */
+    SPINEL_PROP_GPIO_STATE_SET          = SPINEL_PROP_BASE_EXT__BEGIN + 3,
+
+    /// GPIO State Clear-Only Bitmask
+    /** Format: `D`
+     *  Type: Write-Only
+     *
+     * Allows for the state of various output GPIOs to be cleared without affecting
+     * other GPIO states. Contains a bit field identifying the output GPIOs that
+     * should have their state cleared to 0.
+     */
+    SPINEL_PROP_GPIO_STATE_CLEAR        = SPINEL_PROP_BASE_EXT__BEGIN + 4,
+
+    SPINEL_PROP_BASE_EXT__END           = 0x1100,
 
     SPINEL_PROP_PHY__BEGIN              = 0x20,
     SPINEL_PROP_PHY_ENABLED             = SPINEL_PROP_PHY__BEGIN + 0, ///< [b]
