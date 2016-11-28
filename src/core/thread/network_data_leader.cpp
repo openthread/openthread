@@ -444,6 +444,7 @@ ThreadError LeaderBase::SetCommissioningData(const uint8_t *aValue, uint8_t aVal
         commissioningDataTlv->Init();
         commissioningDataTlv->SetLength(aValueLength);
         memcpy(commissioningDataTlv->GetValue(), aValue, aValueLength);
+        mLength += aValueLength;
     }
 
     mVersion++;
@@ -483,6 +484,7 @@ ThreadError LeaderBase::RemoveCommissioningData(void)
         if (cur->GetType() == NetworkDataTlv::kTypeCommissioningData)
         {
             Remove(reinterpret_cast<uint8_t *>(cur), sizeof(NetworkDataTlv) + cur->GetLength());
+            mLength -= (sizeof(NetworkDataTlv) + cur->GetLength());
             ExitNow(error = kThreadError_None);
         }
     }
