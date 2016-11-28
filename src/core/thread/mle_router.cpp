@@ -3680,6 +3680,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
     ThreadRloc16Tlv rlocTlv;
     ThreadRouterMaskTlv routerMaskTlv;
     uint8_t routerId;
+    Router *router;
     bool old;
 
     VerifyOrExit(result == kThreadError_None && aHeader != NULL && aMessage != NULL, ;);
@@ -3708,7 +3709,9 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
 
     SuccessOrExit(ThreadTlv::GetTlv(*aMessage, ThreadTlv::kRloc16, sizeof(rlocTlv), rlocTlv));
     VerifyOrExit(rlocTlv.IsValid(), ;);
-    VerifyOrExit(IsRouterIdValid(routerId = GetRouterId(rlocTlv.GetRloc16())), ;);
+    routerId = GetRouterId(rlocTlv.GetRloc16());
+    router = GetRouter(routerId);
+    VerifyOrExit(router != NULL,);
 
     SuccessOrExit(ThreadTlv::GetTlv(*aMessage, ThreadTlv::kRouterMask, sizeof(routerMaskTlv), routerMaskTlv));
     VerifyOrExit(routerMaskTlv.IsValid(), ;);
@@ -3728,7 +3731,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
 
     SuccessOrExit(SetStateRouter(GetRloc16(mRouterId)));
 
-    mRouters[mRouterId].mCost = 0;
+    router->mCost = 0;
 
     // copy router id information
     mRouterIdSequence = routerMaskTlv.GetIdSequence();
