@@ -193,7 +193,7 @@ public:
 
 #if OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
     /**
-     * This method gets the Rloc of Dhcp Agent of speficified contextId.
+     * This method gets the Rloc of Dhcp Agent of specified contextId.
      *
      * @param[in]  aContextId      A pointer to the Commissioning Data value.
      * @param[out] aRloc16         The reference of which for output the Rloc16.

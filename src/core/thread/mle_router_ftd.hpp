@@ -507,7 +507,7 @@ public:
     ThreadError RemoveStoredChild(uint16_t aChildRloc16);
 
     /**
-     * This method store a child infomation into non-volatile memory.
+     * This method store a child information into non-volatile memory.
      *
      * @param[in]  aChildRloc16   The child RLOC16 to store.
      *
