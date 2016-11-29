@@ -133,12 +133,14 @@ const struct Command Interpreter::sCommands[] =
 };
 
 Interpreter::Interpreter(otInstance *aInstance):
+    sServer(NULL),
     sLength(8),
     sCount(1),
     sInterval(1000),
     sPingTimer(aInstance->mIp6.mTimerScheduler, &Interpreter::s_HandlePingTimer, this),
     mInstance(aInstance)
 {
+    memset(mSlaacAddresses, 0, sizeof(mSlaacAddresses));
     mInstance->mIp6.mIcmp.SetEchoReplyHandler(&s_HandleEchoResponse, this);
     otSetStateChangedCallback(mInstance, &Interpreter::s_HandleNetifStateChanged, this);
 }

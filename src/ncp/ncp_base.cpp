@@ -459,31 +459,35 @@ static uint8_t BorderRouterConfigToFlagByte(const otBorderRouterConfig &config)
 
 NcpBase::NcpBase(otInstance *aInstance):
     mInstance(aInstance),
-    mUpdateChangedPropsTask(aInstance->mIp6.mTaskletScheduler, &NcpBase::UpdateChangedProps, this)
+    mLastStatus(SPINEL_STATUS_OK),
+    mSupportedChannelMask(kPhySupportedChannelMask),
+    mChannelMask(mSupportedChannelMask),
+    mScanPeriod(200), // ms
+    mUpdateChangedPropsTask(aInstance->mIp6.mTaskletScheduler, &NcpBase::UpdateChangedProps, this),
+    mChangedFlags(NCP_PLAT_RESET_REASON),
+    mShouldSignalEndOfScan(false),
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    mShouldSignalJamStateChange(false),
+#endif
+    mDroppedReplyTid(0),
+    mDroppedReplyTidBitSet(0),
+    mAllowLocalNetworkDataChange(false),
+    mRequireJoinExistingNetwork(false),
+    mIsRawStreamEnabled(false),
+
+    mFramingErrorCounter(0),
+    mRxSpinelFrameCounter(0),
+    mTxSpinelFrameCounter(0),
+    mInboundSecureIpFrameCounter(0),
+    mInboundInsecureIpFrameCounter(0),
+    mOutboundSecureIpFrameCounter(0),
+    mOutboundInsecureIpFrameCounter(0),
+    mDroppedOutboundIpFrameCounter(0),
+    mDroppedInboundIpFrameCounter(0)
 {
     assert(mInstance != NULL);
-    mSupportedChannelMask = kPhySupportedChannelMask;
-    mChannelMask = mSupportedChannelMask;
-    mScanPeriod = 200; // ms
-    mShouldSignalEndOfScan = false;
-#if OPENTHREAD_ENABLE_JAM_DETECTION
-    mShouldSignalJamStateChange = false;
-#endif
-    sNcpContext = this;
-    mChangedFlags = NCP_PLAT_RESET_REASON;
-    mAllowLocalNetworkDataChange = false;
-    mRequireJoinExistingNetwork = false;
-    mIsRawStreamEnabled = false;
 
-    mFramingErrorCounter = 0;
-    mRxSpinelFrameCounter = 0;
-    mTxSpinelFrameCounter = 0;
-    mInboundSecureIpFrameCounter = 0;
-    mInboundInsecureIpFrameCounter = 0;
-    mOutboundSecureIpFrameCounter = 0;
-    mOutboundInsecureIpFrameCounter = 0;
-    mDroppedOutboundIpFrameCounter = 0;
-    mDroppedInboundIpFrameCounter = 0;
+    sNcpContext = NULL;
 
     otSetStateChangedCallback(mInstance, &NcpBase::HandleNetifStateChanged, this);
     otSetReceiveIp6DatagramCallback(mInstance, &NcpBase::HandleDatagramFromStack, this);

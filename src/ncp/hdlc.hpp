@@ -93,6 +93,12 @@ public:
     };
 
     /**
+     * This constructor initializes the object.
+     *
+     */
+    Encoder(void);
+
+    /**
      * This method begins an HDLC frame and puts the initial bytes into a buffer at the given @p aIterator.
      *
      * @param[inout] aIterator      A reference to a buffer write iterator. On successful exit, the iterator is updated.
