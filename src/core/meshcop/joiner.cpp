@@ -73,7 +73,6 @@ Joiner::Joiner(ThreadNetif &aNetif):
 
 ThreadError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl)
 {
-    otLogFuncEntry();
     ThreadError error;
     Mac::ExtAddress extAddress;
 

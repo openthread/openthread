@@ -31,11 +31,7 @@
  *   This file implements MPL.
  */
 
-#define WPP_NAME "ip6_mpl.tmh"
-
 #include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <common/logging.hpp>
 #include <common/message.hpp>
 #include <net/ip6.hpp>
 #include <net/ip6_mpl.hpp>
@@ -170,8 +166,6 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
     uint32_t nextTransmissionTime;
     uint8_t hopLimit = 0;
 
-    otLogFuncEntry();
-
     VerifyOrExit(GetTimerExpirations() > 0,);
     VerifyOrExit((messageCopy = aMessage.Clone()) != NULL, error = kThreadError_NoBufs);
 
@@ -214,15 +208,13 @@ exit:
         messageCopy->Free();
     }
 
-    otLogFuncExitErr(error);
+    return;
 }
 
 ThreadError Mpl::ProcessOption(Message &aMessage, const Address &aAddress, bool aIsOutbound)
 {
     ThreadError error;
     OptionMpl option;
-
-    otLogFuncEntry();
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(option), &option) >= OptionMpl::kMinLength &&
                  (option.GetSeedIdLength() == OptionMpl::kSeedIdLength0 ||
@@ -253,8 +245,6 @@ ThreadError Mpl::ProcessOption(Message &aMessage, const Address &aAddress, bool 
     }
 
 exit:
-
-    otLogFuncExitErr(error);
     return error;
 }
 

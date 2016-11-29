@@ -660,7 +660,7 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
     uint8_t nextHeader;
     uint8_t hopLimit;
 
-    otLogFuncEntryMsg("FromLocal=%u", (fromLocalHost ? 1 : 0));
+    otLogFuncEntry();
 
 #if 0
     uint8_t buf[1024];
