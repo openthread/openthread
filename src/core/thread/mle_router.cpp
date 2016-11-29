@@ -1724,6 +1724,8 @@ void MleRouter::HandleStateUpdateTimer(void)
             ExitNow();
         }
 
+    // fall through
+
     case kDeviceStateRouter:
         // verify path to leader
         otLogDebgMle("network id timeout = %d", GetLeaderAge());
