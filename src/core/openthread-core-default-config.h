@@ -269,6 +269,35 @@
 #define OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT           0
 #endif  // OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
 
+/**
+ * @def OPENTHREAD_CONFIG_MAC_BLACKLIST_SIZE
+ *
+ * The number if MAC blacklist entries.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_BLACKLIST_SIZE
+#define OPENTHREAD_CONFIG_MAC_BLACKLIST_SIZE                    32
+#endif  // OPENTHREAD_CONFIG_MAC_BLACKLIST_SIZE
+
+/**
+ * @def OPENTHREAD_CONFIG_MAC_WHITELIST_SIZE
+ *
+ * The number if MAC whitelist entries.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_WHITELIST_SIZE
+#define OPENTHREAD_CONFIG_MAC_WHITELIST_SIZE                    32
+#endif  // OPENTHREAD_CONFIG_MAC_WHITELIST_SIZE
+
+/**
+ * @def OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD
+ *
+ *  The value ahead of the current frame counter for persistent storage
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD
+#define OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD             1000
+#endif  // OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL
@@ -351,6 +380,16 @@
  *
  */
 #define OPENTHREAD_CONFIG_LOG_NETDIAG
+
+/**
+ * @def OPENTHREAD_CONFIG_LOG_SUFFIX
+ *
+ * Define suffix to append at the end of logs.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_SUFFIX
+#define OPENTHREAD_CONFIG_LOG_SUFFIX                           ""
+#endif  // OPENTHREAD_CONFIG_LOG_SUFFIX
 
 /**
  * @def OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES

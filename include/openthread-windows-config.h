@@ -50,6 +50,9 @@
 /* Define to 1 to enable DHCPv6 SERVER. */
 #define OPENTHREAD_ENABLE_DHCP6_SERVER 0
 
+/* Define to 1 to enable MAC whitelist/blacklist feature. */
+#define OPENTHREAD_ENABLE_MAC_WHITELIST 1
+
 /* Name of package */
 #define PACKAGE "openthread"
 

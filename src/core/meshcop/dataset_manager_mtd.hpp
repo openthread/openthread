@@ -26,14 +26,46 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+/**
+ * @file
+ *   This file includes definitions for managing MeshCoP Datasets.
+ *
+ */
 
-#if OPENTHREAD_ENABLE_MAC_WHITELIST
-#include "mac_whitelist_impl.hpp"
-#else
-#include "mac_whitelist_stub.hpp"
-#endif
+#ifndef MESHCOP_DATASET_MANAGER_MTD_HPP_
+#define MESHCOP_DATASET_MANAGER_MTD_HPP_
+
+#include <openthread-types.h>
+
+namespace Thread {
+
+class ThreadNetif;
+
+namespace MeshCoP {
+
+class ActiveDataset: public ActiveDatasetBase
+{
+public:
+    ActiveDataset(ThreadNetif &aThreadNetif) : ActiveDatasetBase(aThreadNetif) { }
+
+    ThreadError GenerateLocal(void) { return kThreadError_NotImplemented; }
+
+    void StartLeader(void) { }
+
+    void StopLeader(void) { }
+};
+
+class PendingDataset: public PendingDatasetBase
+{
+public:
+    PendingDataset(ThreadNetif &aThreadNetif) : PendingDatasetBase(aThreadNetif) { }
+
+    void StartLeader(void) { }
+
+    void StopLeader(void) { }
+};
+
+}  // namespace MeshCoP
+}  // namespace Thread
+
+#endif  // MESHCOP_DATASET_MANAGER_HPP_

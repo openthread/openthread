@@ -198,6 +198,15 @@ public:
     bool IsRoutingLocator(void) const;
 
     /**
+     * This method indicates whether or not the IPv6 address is an Anycast RLOC address.
+     *
+     * @retval TRUE   If the IPv6 address is an Anycast RLOC address.
+     * @retval FALSE  If the IPv6 address is not an Anycast RLOC address.
+     *
+     */
+    bool IsAnycastRoutingLocator(void) const;
+
+    /**
      * This method indicates whether or not the IPv6 address is Subnet-Router Anycast (RFC 4291),
      *
      * @retval TRUE   If the IPv6 address is a Subnet-Router Anycast address.

@@ -63,13 +63,10 @@ namespace Dhcp6 {
  * DHCPv6 default constant
  *
  */
-enum
-{
-    kDefaultIaNaT1 = 0xffffffff,
-    kDefaultIaNaT2 = 0xffffffff,
-    kDefaultIaAddressPreferredLifetime = 0xffffffff,
-    kDefaultIaAddressValidLifetime = 0xffffffff,
-};
+#define OT_DHCP6_DEFAULT_IA_NA_T1            0xffffffffU
+#define OT_DHCP6_DEFAULT_IA_NA_T2            0xffffffffU
+#define OT_DHCP6_DEFAULT_PREFERRED_LIFETIME  0xffffffffU
+#define OT_DHCP6_DEFAULT_VALID_LIFETIME      0xffffffffU
 
 /**
  * This class implements prefix agent.

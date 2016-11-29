@@ -36,10 +36,10 @@
 
 #include <common/code_utils.hpp>
 #include <common/settings.hpp>
+#include <meshcop/dataset.hpp>
+#include <meshcop/tlvs.hpp>
 #include <platform/settings.h>
-#include <thread/meshcop_tlvs.hpp>
 #include <thread/mle_tlvs.hpp>
-#include <thread/meshcop_dataset.hpp>
 
 namespace Thread {
 namespace MeshCoP {

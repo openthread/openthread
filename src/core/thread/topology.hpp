@@ -78,9 +78,11 @@ public:
 #endif
     {
         kStateInvalid,                   ///< Neighbor link is invalid
+        kStateRestored,                  ///< Neighbor is restored from non-volatile memory
         kStateParentRequest,             ///< Received an MLE Parent Request message
         kStateChildIdRequest,            ///< Received an MLE Child ID Request message
-        kStateLinkRequest,               ///< Sent a MLE Link Request message
+        kStateLinkRequest,               ///< Sent an MLE Link Request message
+        kStateChildUpdateRequest,        ///< Sent an MLE Child Update Request message
         kStateValid,                     ///< Link is valid
     };
 

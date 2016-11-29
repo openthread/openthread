@@ -37,8 +37,8 @@
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
+#include <meshcop/tlvs.hpp>
 #include <platform/random.h>
-#include <thread/meshcop_tlvs.hpp>
 #include <thread/panid_query_server.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
@@ -46,6 +46,8 @@
 namespace Thread {
 
 PanIdQueryServer::PanIdQueryServer(ThreadNetif &aThreadNetif) :
+    mChannelMask(0),
+    mPanId(Mac::kPanIdBroadcast),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, &PanIdQueryServer::HandleTimer, this),
     mPanIdQuery(OPENTHREAD_URI_PANID_QUERY, &PanIdQueryServer::HandleQuery, this),
     mCoapServer(aThreadNetif.GetCoapServer()),

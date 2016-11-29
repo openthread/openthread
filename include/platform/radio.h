@@ -90,8 +90,8 @@ typedef enum otRadioCaps
 {
     kRadioCapsNone              = 0,  ///< None
     kRadioCapsAckTimeout        = 1,  ///< Radio supports AckTime event
-    kRadioCapsEnergyScan        = 2,  ///< Radio supports Enegery Scans
-    kRadioCapsTransmitRetries   = 4,  ///< Radio supports transmission retry logic with collission avoidance
+    kRadioCapsEnergyScan        = 2,  ///< Radio supports Energy Scans
+    kRadioCapsTransmitRetries   = 4,  ///< Radio supports transmission retry logic with collision avoidance
 } otRadioCaps;
 
 /**
