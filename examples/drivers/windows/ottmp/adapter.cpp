@@ -210,10 +210,6 @@ Return Value:
             break;
         }
 
-        // Start the read loop
-        LogVerbose(DRIVER_DEFAULT, "Starting recv worker");
-        WdfWorkItemEnqueue(AdapterContext->RecvWorkItem);
-
     } while (FALSE);
 
     LogFuncExitNDIS(DRIVER_DEFAULT, Status);

@@ -174,6 +174,10 @@ Return Value:
             break;
         }
 
+        // Start the read loop
+        LogVerbose(DRIVER_DEFAULT, "Starting recv worker");
+        WdfWorkItemEnqueue(deviceContext->AdapterContext->RecvWorkItem);
+
     } while (FALSE);
 
     if (Status != NDIS_STATUS_SUCCESS)
