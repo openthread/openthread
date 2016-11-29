@@ -329,6 +329,7 @@ public:
         kNoAddressAvailable = 1,  ///< No address available.
         kTooFewRouters      = 2,  ///< Address Solicit due to too few routers.
         kHaveChildIdRequest = 3,  ///< Address Solicit due to child ID request.
+        kParentPartitionChange = 4,  ///< Address Solicit due to parent partition change
     };
 
     /**

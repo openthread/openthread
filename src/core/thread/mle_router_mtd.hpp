@@ -69,6 +69,7 @@ public:
     void SetLeaderPartitionId(uint32_t) { }
 
     ThreadError SetPreferredRouterId(uint8_t) { return kThreadError_NotImplemented; }
+    void SetPreviousPartitionId(uint32_t) { }
     void SetRouterId(uint8_t) { }
 
     uint16_t GetNextHop(uint16_t aDestination) const { return Mle::GetNextHop(aDestination); }
