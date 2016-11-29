@@ -29,7 +29,7 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 EXTRA_DIST              = \
-    ARM.py                \
+    OpenThread.py         \
     README.md             \
     $(NULL)
 
