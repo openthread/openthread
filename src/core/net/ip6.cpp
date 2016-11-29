@@ -68,6 +68,11 @@ Message *Ip6::NewMessage(uint16_t reserved)
     return mMessagePool.New(Message::kTypeIp6, sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + reserved);
 }
 
+bool Ip6::IsForwardingEnabled(void)
+{
+    return mForwardingEnabled;
+}
+
 void Ip6::SetForwardingEnabled(bool aEnable)
 {
     mForwardingEnabled = aEnable;
@@ -988,18 +993,18 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
                 rvalIface = candidateId;
                 goto exit;
             }
-            else if (candidateAddr->GetScope() < rvalAddr->GetAddress().GetScope())
+            else if (addr->GetScope() < rvalAddr->GetScope())
             {
                 // Rule 2: Prefer appropriate scope
-                if (candidateAddr->GetScope() >= destination->GetScope())
+                if (addr->GetScope() >= destination->GetScope())
                 {
                     rvalAddr = addr;
                     rvalIface = candidateId;
                 }
             }
-            else if (candidateAddr->GetScope() > rvalAddr->GetAddress().GetScope())
+            else if (addr->GetScope() > rvalAddr->GetScope())
             {
-                if (rvalAddr->GetAddress().GetScope() < destination->GetScope())
+                if (rvalAddr->GetScope() < destination->GetScope())
                 {
                     rvalAddr = addr;
                     rvalIface = candidateId;

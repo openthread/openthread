@@ -27,12 +27,18 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+try:
+    from itertools import izip_longest as zip_longest
+except ImportError:
+    from itertools import zip_longest
+
+from ipaddress import ip_address
+
 import abc
 import io
 import struct
+import sys
 
-from itertools import izip_longest
-from ipaddress import ip_address
 
 # Next headers for IPv6 protocols
 IPV6_NEXT_HEADER_HOP_BY_HOP = 0
@@ -67,7 +73,7 @@ def calculate_checksum(data):
         int: calculated checksum
     """
     # Create halfwords from data bytes. Example: data[0] = 0x01, data[1] = 0xb2 => 0x01b2
-    halfwords = [((byte0 << 8) | byte1) for byte0, byte1 in izip_longest(data[::2], data[1::2], fillvalue=0x00)]
+    halfwords = [((byte0 << 8) | byte1) for byte0, byte1 in zip_longest(data[::2], data[1::2], fillvalue=0x00)]
 
     checksum = 0
     for halfword in halfwords:
@@ -82,7 +88,7 @@ def calculate_checksum(data):
         return checksum
 
 
-class PacketFactory:
+class PacketFactory(object):
 
     """ Interface for classes that produce objects from data. """
 
@@ -96,7 +102,7 @@ class PacketFactory:
         raise NotImplementedError
 
 
-class BuildableFromBytes:
+class BuildableFromBytes(object):
 
     """ Interface for classes which can be built from bytes. """
 
@@ -111,7 +117,7 @@ class BuildableFromBytes:
         raise NotImplementedError
 
 
-class ConvertibleToBytes:
+class ConvertibleToBytes(object):
 
     """ Interface for classes which can be converted to bytes. """
 
@@ -204,8 +210,8 @@ class IPv6PseudoHeader(ConvertibleToBytes):
         if isinstance(value, bytearray):
             value = bytes(value)
 
-        elif isinstance(value, unicode):
-            value = str(value)
+        elif isinstance(value, str) and sys.version_info[0] == 2:
+            value = value.decode("utf-8")
 
         return ip_address(value)
 
@@ -235,7 +241,7 @@ class IPv6PseudoHeader(ConvertibleToBytes):
         return data
 
 
-class IPv6Header(object, ConvertibleToBytes, BuildableFromBytes):
+class IPv6Header(ConvertibleToBytes, BuildableFromBytes):
 
     """ Class representing IPv6 packet header. """
 
@@ -258,8 +264,8 @@ class IPv6Header(object, ConvertibleToBytes, BuildableFromBytes):
         if isinstance(value, bytearray):
             value = bytes(value)
 
-        elif isinstance(value, str):
-            value = unicode(value)
+        elif isinstance(value, str) and sys.version_info[0] == 2:
+            value = value.decode("utf-8")
 
         return ip_address(value)
 
@@ -439,7 +445,7 @@ class IPv6Packet(ConvertibleToBytes):
         return "IPv6Packet(\n\theader={})".format(self.ipv6_header)
 
 
-class UDPHeader(object, ConvertibleToBytes, BuildableFromBytes):
+class UDPHeader(ConvertibleToBytes, BuildableFromBytes):
 
     """ Class representing UDP datagram header.
 
@@ -860,7 +866,7 @@ class IPv6PacketFactory(PacketFactory):
         return IPv6Packet(ipv6_header, upper_layer_protocol, extension_headers)
 
 
-class HopByHopOptionsFactory:
+class HopByHopOptionsFactory(object):
 
     """ Factory that produces HopByHop options. """
 

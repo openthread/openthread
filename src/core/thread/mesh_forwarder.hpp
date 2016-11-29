@@ -221,7 +221,6 @@ private:
                         const Mac::Address &aMacSource, const Mac::Address &aMacDest,
                         const ThreadMessageInfo &aMessageInfo);
     void HandleDataRequest(const Mac::Address &aMacSource, const ThreadMessageInfo &aMessageInfo);
-    void MoveToResolving(const Ip6::Address &aDestination);
     ThreadError SendPoll(Message &aMessage, Mac::Frame &aFrame);
     ThreadError SendMesh(Message &aMessage, Mac::Frame &aFrame);
     ThreadError SendFragment(Message &aMessage, Mac::Frame &aFrame);

@@ -172,6 +172,7 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
 
     otLogFuncEntry();
 
+    VerifyOrExit(GetTimerExpirations() > 0,);
     VerifyOrExit((messageCopy = aMessage.Clone()) != NULL, error = kThreadError_NoBufs);
 
     if (!aIsOutbound)

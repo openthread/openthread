@@ -307,6 +307,16 @@ Done
 Conflict: dead, 00000800
 ```
 
+### commissioner sessionid
+
+Get current commissioner session id.
+
+```bash
+> commissioner sessionid
+0
+Done
+```
+
 ### contextreusedelay
 
 Get the CONTEXT_ID_REUSE_DELAY value.
@@ -343,9 +353,11 @@ Get the counter value.
 ```bash
 >counter mac
 TxTotal: 10
-    TxAckRequested: 4
-    TxAcked: 4
-    TxNoAckRequested: 6
+    TxUnicast: 3
+    TxBroadcast: 7
+    TxAckRequested: 3
+    TxAcked: 3
+    TxNoAckRequested: 7
     TxData: 10
     TxDataPoll: 0
     TxBeacon: 0
@@ -353,8 +365,10 @@ TxTotal: 10
     TxOther: 0
     TxRetry: 0
     TxErrCca: 0
-RxTotal: 11
-    RxData: 11
+RxTotal: 2
+    RxUnicast: 1
+    RxBroadcast: 1
+    RxData: 2
     RxDataPoll: 0
     RxBeacon: 0
     RxBeaconRequest: 0

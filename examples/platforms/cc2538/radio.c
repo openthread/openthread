@@ -364,6 +364,12 @@ void readFrame(void)
         sReceiveFrame.mLength = length;
         sReceiveFrame.mLqi = crcCorr & CC2538_LQI_BIT_MASK;
     }
+    else
+    {
+        // resets rxfifo
+        HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
+        HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
+    }
 
     // check for rxfifo overflow
     if ((HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_FIFOP) != 0 &&
@@ -382,8 +388,7 @@ void cc2538RadioProcess(otInstance *aInstance)
     readFrame();
 
     if ((sState == kStateReceive && sReceiveFrame.mLength > 0) ||
-        (sState == kStateTransmit && sReceiveFrame.mLength > 0 &&
-         (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_TYPE_MASK) != IEEE802154_FRAME_TYPE_ACK))
+        (sState == kStateTransmit && sReceiveFrame.mLength > IEEE802154_ACK_LENGTH))
     {
 #if OPENTHREAD_ENABLE_DIAG
 
@@ -394,7 +399,14 @@ void cc2538RadioProcess(otInstance *aInstance)
         else
 #endif
         {
-            otPlatRadioReceiveDone(aInstance, &sReceiveFrame, sReceiveError);
+            // signal MAC layer for each received frame if promiscous is enabled
+            // otherwise only signal MAC layer for non-ACK frame
+            if (((HWREG(RFCORE_XREG_FRMFILT0) & RFCORE_XREG_FRMFILT0_FRAME_FILTER_EN) == 0) ||
+                (sReceiveFrame.mLength > IEEE802154_ACK_LENGTH))
+            {
+
+                otPlatRadioReceiveDone(aInstance, &sReceiveFrame, sReceiveError);
+            }
         }
     }
 

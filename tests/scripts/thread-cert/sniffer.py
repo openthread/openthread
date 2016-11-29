@@ -31,10 +31,14 @@ import collections
 import io
 import logging
 import os
-import Queue
 import select
 import socket
 import threading
+
+try:
+    import Queue
+except ImportError:
+    import queue as Queue
 
 import message
 
@@ -78,6 +82,13 @@ class Sniffer:
 
         self._buckets = collections.defaultdict(Queue.Queue)
 
+    def __del__(self):
+        if self._socket is None:
+            return
+
+        self._socket.close()
+        del self._socket
+
     def _nodeid_to_address(self, nodeid, ip_address="localhost"):
         return "", self.BASE_PORT + (self.PORT_OFFSET * self.WELLKNOWN_NODE_ID) + nodeid
 
@@ -88,7 +99,7 @@ class Sniffer:
     def _recv(self, fd):
         """ Receive data from socket with passed file descriptor. """
 
-        data, address = socket.fromfd(fd, socket.AF_INET, socket.SOCK_DGRAM).recvfrom(self.RECV_BUFFER_SIZE)
+        data, address = self._socket.recvfrom(self.RECV_BUFFER_SIZE)
 
         msg = self._message_factory.create(io.BytesIO(data))
 

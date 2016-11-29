@@ -1,4 +1,5 @@
 import io
+import math
 import random
 import struct
 import unittest
@@ -110,7 +111,7 @@ def any_routes(count=None):
     if count is None:
         count = random.randint(0, 16)
 
-    return [any_route() for _ in xrange(6)]
+    return [any_route() for _ in range(6)]
 
 
 def any_has_route():
@@ -129,7 +130,7 @@ def any_prefix(prefix_length=None):
     if prefix_length is None:
         prefix_length = any_prefix_length()
 
-    return bytearray([random.getrandbits(8) for _ in xrange(prefix_length / 8)])
+    return bytearray([random.getrandbits(8) for _ in range(int(math.ceil(prefix_length / 8)))])
 
 
 def any_p():
@@ -185,7 +186,7 @@ def any_prefix_sub_tlvs():
 
     sub_tlvs = []
 
-    for _id in xrange(random.randint(0, 16)):
+    for _id in range(random.randint(1, 1)):
         c = random.choice(creator)
         sub_tlvs.append(c())
 
@@ -212,7 +213,7 @@ def any_service_data(data_length=None):
     if data_length is None:
         data_length = random.randint(0, 16)
 
-    return bytearray([random.getrandbits(8) for _ in xrange(data_length)])
+    return bytearray([random.getrandbits(8) for _ in range(data_length)])
 
 
 def any_server_16():
@@ -223,7 +224,7 @@ def any_server_data(data_length=None):
     if data_length is None:
         data_length = random.randint(0, 32)
 
-    return bytearray([random.getrandbits(8) for _ in xrange(data_length)])
+    return bytearray([random.getrandbits(8) for _ in range(data_length)])
 
 
 def any_server():
@@ -237,7 +238,7 @@ def any_service_sub_tlvs():
 
     sub_tlvs = []
 
-    for _id in xrange(random.randint(0, 16)):
+    for _id in range(random.randint(0, 16)):
         c = random.choice(creator)
         sub_tlvs.append(c())
 

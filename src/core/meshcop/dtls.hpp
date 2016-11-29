@@ -38,7 +38,7 @@
 #include <common/message.hpp>
 #include <common/timer.hpp>
 #include <crypto/sha256.hpp>
-#include <thread/meshcop_tlvs.hpp>
+#include <meshcop/tlvs.hpp>
 
 #include <mbedtls/ssl.h>
 #include <mbedtls/entropy.h>
@@ -235,7 +235,7 @@ private:
     ThreadNetif &mNetif;
 };
 
-}  // namspace MeshCoP
+}  // namespace MeshCoP
 }  // namespace Thread
 
 #endif  // DTLS_HPP_
