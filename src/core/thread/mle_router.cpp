@@ -2410,7 +2410,7 @@ exit:
 
 ThreadError MleRouter::HandleNetworkDataUpdateRouter(void)
 {
-    static const uint8_t tlvs[] = {Tlv::kLeaderData, Tlv::kNetworkData};
+    static const uint8_t tlvs[] = {Tlv::kNetworkData};
     Ip6::Address destination;
 
     VerifyOrExit(mDeviceState == kDeviceStateRouter || mDeviceState == kDeviceStateLeader, ;);
@@ -2445,7 +2445,9 @@ ThreadError MleRouter::HandleNetworkDataUpdateRouter(void)
         {
             if (child->mNetworkDataVersion != mNetworkData.GetStableVersion())
             {
-                SendDataResponse(destination, tlvs, sizeof(tlvs));
+                static const uint8_t responseTlvs[] = {Tlv::kNetworkData, Tlv::kActiveDataset, Tlv::kPendingDataset};
+
+                SendDataResponse(destination, responseTlvs, sizeof(responseTlvs));
             }
         }
     }
