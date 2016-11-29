@@ -442,7 +442,7 @@ otLwfTunAddressesUpdated(
 
         {
             PIN6_ADDR pAddr = NULL;
-            otNetifAddress addr = { { 0 }, 0xFFFFFFFF, 0xFFFFFFFF, 0, NULL };
+            otNetifAddress addr = { { 0 }, 0xFFFFFFFF, 0xFFFFFFFF, 0, 0, 0, NULL };
 
             spinel_datatype_unpack(
                 entry_ptr, 
