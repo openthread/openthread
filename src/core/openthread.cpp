@@ -978,6 +978,11 @@ bool otGetJamDetectionState(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetJamDetector().GetState();
 }
+
+uint64_t otGetJamDetectionHistoryBitmap(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetJamDetector().GetHistoryBitmap();
+}
 #endif // OPENTHREAD_ENABLE_JAM_DETECTION
 
 bool otIsIp6AddressEqual(const otIp6Address *a, const otIp6Address *b)
