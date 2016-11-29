@@ -31,8 +31,8 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 # Always package (e.g. for 'make dist') these subdirectories.
 
 DIST_SUBDIRS                            = \
-    da15000                               \
     cc2538                                \
+    da15000                               \
     posix                                 \
     $(NULL)
 

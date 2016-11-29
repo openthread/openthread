@@ -73,8 +73,6 @@ void da15000AlarmInit(void)
     hw_timer0_set_t0_reload(0x07D0, 0x07D0);
     hw_timer0_register_int(timer0_interrupt_cb);
     hw_timer0_set_on_clock_div(false);
-
-    return;
 }
 
 uint32_t otPlatAlarmGetNow(void)

@@ -31,16 +31,6 @@
 * Platform abstraction for the logging
 *
 */
-
-#include <ctype.h>
-#include <inttypes.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
-#include <sys/time.h>
-#include <time.h>
-
 #include <platform/logging.h>
 
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)

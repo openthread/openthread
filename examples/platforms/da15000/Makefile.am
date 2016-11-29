@@ -72,8 +72,8 @@ libopenthread_da15000_a_SOURCES          = \
     cstartup.c                             \
     uart.c                                 \
     cortex-m_cstartup.c                    \
-    cxx-symbols.c                          \
-    libopenthread_da15000_settings.cpp      \
+    startup-gcc.c                          \
+    libopenthread_da15000_settings.cpp     \
     clock.c                                \
     misc.c                                 \
 ./../../../third_party/dialog/DialogSDK/bsp/memory/src/qspi_automode.c \

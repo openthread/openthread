@@ -228,8 +228,6 @@ void da15000RadioInit(void)
     FTDF_pib.CCAMode = 2;
     ad_ftdf_init_phy_api_V2();
     ad_ftdf_init_lmac();
-
-
 }
 
 
@@ -399,29 +397,13 @@ exit:
 void FTDF_sendFrameTransparentConfirm(void         *handle,
                                       FTDF_Bitmap32 status)
 {
-    //   ThreadError transmit_error_ = kThreadError_None;
-
     (void)handle;
     (void)status;
     volatile uint32_t *txStatus = FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_TX_RETURN_STATUS_1, FTDF_TX_DATA_BUFFER);
 
-    if (*txStatus & MSK_F_FTDF_RETENTION_RAM_ACKFAIL)
-    {
-        //   transmit_error_ = kThreadError_None;
-    }
-    else if (*txStatus & MSK_F_FTDF_RETENTION_RAM_CSMACAFAIL)
-    {
-        //   transmit_error_ = kThreadError_Abort;
-    }
-    else
-    {
-        //   transmit_error_ = kThreadError_None;
-    }
-
     SendFrameDone = true;
 
 #if DEBUG_LOG_ENABLE
-    //otPlatRadioHandleTransmitDone(&test);
     hw_uart_write_buffer(HW_UART1, "\nTD", 3);
 #endif
 }

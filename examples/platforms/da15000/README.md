@@ -26,9 +26,9 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-# Dialog OpenThread DA1500 Example
+# Dialog OpenThread DA15000 Example
 
-This directory contains example platform drivers for the [Dialog Semiconductor DA1500][da15000]
+This directory contains example platform drivers for the [Dialog Semiconductor DA15000][da15000]
 
 [da15000]: https://support.dialog-semiconductor.com/connectivity/product/openthread-sandbox
 
@@ -56,8 +56,8 @@ $ ./cli_programmer -b uartboot.bin gdbserver write_qspi 0x0 ../../../output/bin/
 ## Interact:
 
 ******************************************************************************
-*  NOTE:    Open Thread used in this example is updated to:                  *
-*  a853ffc spinel-cli: Add ipaddr removal to prefix change handler. (#669)   *
+*  NOTE:    OpenThread used in this example is updated to:                   *
+*  0bc2efe Add MTD configuration for operational dataset management. (#999)  *
 ******************************************************************************
 
 

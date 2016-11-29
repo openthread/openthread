@@ -33,8 +33,7 @@
  */
 
 #include "tool.h"
-#include "cpu.h"
-
+#include "global_io.h"
 #include "hw_cpm.h"
 #include "hw_watchdog.h"
 

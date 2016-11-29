@@ -37,9 +37,6 @@
 #include "hw_gpio.h"
 #include "platform-da15000.h"
 
-//static uint8_t s_receive_buffer[128];
-//static const uint8_t *s_write_buffer;
-//static uint16_t s_write_length;
 static int s_in_fd;
 static int s_out_fd;
 void UartBuffClear(void);

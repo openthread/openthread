@@ -141,33 +141,6 @@ SECTIONS
 
 
     /*
-     * Newlib and Eglibc (at least) need these for C++ support.
-     *
-     * (Copied from Sourcery CodeBench Lite: arm-none-eabi-gcc -V)
-     */
-    .preinit_array :
-    {
-        PROVIDE_HIDDEN(__preinit_array_start = .);
-        KEEP(*(.preinit_array*))
-        PROVIDE_HIDDEN(__preinit_array_end = .);
-    } >flash
-    .init_array :
-    {
-        PROVIDE_HIDDEN(__init_array_start = .);
-        KEEP(*(SORT(.init_array.*)))
-        KEEP(*(.init_array*))
-        PROVIDE_HIDDEN(__init_array_end = .);
-    } >flash
-    .fini_array :
-    {
-        PROVIDE_HIDDEN(__fini_array_start = .);
-        KEEP(*(SORT(.fini_array.*)))
-        KEEP(*(.fini_array*))
-        PROVIDE_HIDDEN(__fini_array_end = .);
-    } >flash
-
-
-    /*
      * Initialized data section. This section is programmed into FLASH (LMA
      * address) and copied to RAM (VMA address) in startup code.
      */ 
@@ -177,6 +150,8 @@ SECTIONS
     {
         . = ALIGN(4);
         _sdata = .; /* data section VMA address */
+        *(text_retained)
+        . = ALIGN(4);
         *(.data*)
         . = ALIGN(4);
         _edata = .;

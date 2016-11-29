@@ -1,12 +1,3 @@
-/**
-\addtogroup BSP
-\{
-\addtogroup Configuration
-\{
-\addtogroup FreeRTOS
-\{
-*/
-
 /*
  *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
@@ -104,6 +95,7 @@
  */
 #define OS_BAREMETAL
 #define CPU_DA15000                             (1)
+
 /*************************************************************************************************\
  * Peripheral specific config
  */

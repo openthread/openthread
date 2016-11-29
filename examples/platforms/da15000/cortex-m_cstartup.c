@@ -83,24 +83,6 @@ void cstartup(void)
 {
     cstartup_rwdata();
     cstartup_bss();
-
-    // Initialize the C library
-    //__libc_init_array();
-
-#define SUPPORT_CPP_RUNTIME
-#ifdef SUPPORT_CPP_RUNTIME
-    // copy static C++ initializations
-    // Loop through all the __static_initializers and call them.
-    irq_handler_t *fp = (irq_handler_t *) &__init_array_start;
-    irq_handler_t *fp_end = (irq_handler_t *) &__init_array_end;
-
-    while (fp < fp_end)
-    {
-        (*fp)();
-        fp++;
-    }
-
-#endif
 }
 
 /********************************************************************/

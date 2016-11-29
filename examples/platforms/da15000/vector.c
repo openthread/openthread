@@ -32,7 +32,6 @@
 *
 */
 
-#include "cpu.h"
 #include "tool.h"
 
 #pragma GCC diagnostic ignored "-Wpedantic"
