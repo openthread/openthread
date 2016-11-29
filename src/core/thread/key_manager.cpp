@@ -47,20 +47,19 @@ static const uint8_t kThreadString[] =
 
 KeyManager::KeyManager(ThreadNetif &aThreadNetif):
     mNetif(aThreadNetif),
-    mKeyRotationTimer(aThreadNetif.GetIp6().mTimerScheduler, &KeyManager::HandleKeyRotationTimer, this)
+    mMasterKeyLength(0),
+    mKeySequence(0),
+    mMacFrameCounter(0),
+    mMleFrameCounter(0),
+    mStoredMacFrameCounter(0),
+    mStoredMleFrameCounter(0),
+    mKeyRotationTime(kDefaultKeyRotationTime),
+    mKeySwitchGuardTime(kDefaultKeySwitchGuardTime),
+    mKeySwitchGuardEnabled(false),
+    mKeyRotationTimer(aThreadNetif.GetIp6().mTimerScheduler, &KeyManager::HandleKeyRotationTimer, this),
+    mKekFrameCounter(0),
+    mSecurityPolicyFlags(0xff)
 {
-    mMasterKeyLength = 0;
-    mKeySequence = 0;
-    mMacFrameCounter = 0;
-    mMleFrameCounter = 0;
-    mStoredMleFrameCounter = 0;
-    mStoredMacFrameCounter = 0;
-
-    mKeyRotationTime = kDefaultKeyRotationTime;
-    mKeySwitchGuardTime = kDefaultKeySwitchGuardTime;
-    mKeySwitchGuardEnabled = false;
-
-    mSecurityPolicyFlags = 0xff;
 }
 
 void KeyManager::Start(void)

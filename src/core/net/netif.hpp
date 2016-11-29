@@ -179,6 +179,16 @@ class NetifCallback
 
 public:
     /**
+     * This constructor initializes the object.
+     *
+     */
+    NetifCallback(void):
+        mCallback(NULL),
+        mContext(NULL),
+        mNext(NULL) {
+    }
+
+    /**
      * This method sets the callback information.
      *
      * @param[in]  aCallback  A pointer to a function that is called when configuration or state changes.

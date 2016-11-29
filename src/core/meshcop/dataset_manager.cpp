@@ -893,7 +893,9 @@ exit:
 
 PendingDatasetBase::PendingDatasetBase(ThreadNetif &aThreadNetif):
     DatasetManager(aThreadNetif, Tlv::kPendingTimestamp, OPENTHREAD_URI_PENDING_SET, OPENTHREAD_URI_PENDING_GET),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &PendingDatasetBase::HandleTimer, this)
+    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &PendingDatasetBase::HandleTimer, this),
+    mLocalTime(0),
+    mNetworkTime(0)
 {
 }
 
