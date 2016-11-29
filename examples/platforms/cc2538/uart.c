@@ -54,13 +54,24 @@ static void processTransmit(void);
 static const uint8_t *sTransmitBuffer = NULL;
 static uint16_t sTransmitLength = 0;
 
-static uint8_t sReceiveBuffer[kReceiveBufferSize];
-static uint16_t sReceiveHead = 0;
-static uint16_t sReceiveLength = 0;
+typedef struct RecvBuffer
+{
+    // The data buffer
+    uint8_t mBuffer[kReceiveBufferSize];
+    // The offset of the first item written to the list.
+    uint16_t mHead;
+    // The offset of the next item to be written to the list.
+    uint16_t mTail;
+} RecvBuffer;
+
+static RecvBuffer sReceive;
 
 ThreadError otPlatUartEnable(void)
 {
     uint32_t div;
+
+    sReceive.mHead = 0;
+    sReceive.mTail = 0;
 
     // clock
     HWREG(SYS_CTRL_RCGCUART) = SYS_CTRL_RCGCUART_UART0;
@@ -119,28 +130,26 @@ exit:
 
 void processReceive(void)
 {
-    uint16_t remaining;
+    // Copy tail to prevent multiple reads
+    uint16_t tail = sReceive.mTail;
 
-    VerifyOrExit(sReceiveLength > 0, ;);
-
-    remaining = kReceiveBufferSize - sReceiveHead;
-
-    if (sReceiveLength >= remaining)
+    // If the data wraps around, process the first part
+    if (sReceive.mHead > tail)
     {
-        otPlatUartReceived(sReceiveBuffer + sReceiveHead, remaining);
-        sReceiveHead = 0;
-        sReceiveLength -= remaining;
+        otPlatUartReceived(sReceive.mBuffer + sReceive.mHead, kReceiveBufferSize - sReceive.mHead);
+
+        // Reset the buffer mHead back to zero.
+        sReceive.mHead = 0;
     }
 
-    if (sReceiveLength > 0)
+    // For any data remaining, process it
+    if (sReceive.mHead != tail)
     {
-        otPlatUartReceived(sReceiveBuffer + sReceiveHead, sReceiveLength);
-        sReceiveHead += sReceiveLength;
-        sReceiveLength = 0;
-    }
+        otPlatUartReceived(sReceive.mBuffer + sReceive.mHead, tail - sReceive.mHead);
 
-exit:
-    return;
+        // Set mHead to the local tail we have cached
+        sReceive.mHead = tail;
+    }
 }
 
 void processTransmit(void)
@@ -170,7 +179,6 @@ void cc2538UartProcess(void)
 void UART0IntHandler(void)
 {
     uint32_t mis;
-    uint16_t tail;
     uint8_t byte;
 
     mis = HWREG(UART0_BASE + UART_O_MIS);
@@ -182,11 +190,11 @@ void UART0IntHandler(void)
         {
             byte = HWREG(UART0_BASE + UART_O_DR);
 
-            if (sReceiveLength < kReceiveBufferSize)
+            // We can only write if incrementing mTail doesn't equal mHead
+            if (sReceive.mHead != (sReceive.mTail + 1) % kReceiveBufferSize)
             {
-                tail = (sReceiveHead + sReceiveLength) % kReceiveBufferSize;
-                sReceiveBuffer[tail] = byte;
-                sReceiveLength++;
+                sReceive.mBuffer[sReceive.mTail] = byte;
+                sReceive.mTail = (sReceive.mTail + 1) % kReceiveBufferSize;
             }
         }
     }

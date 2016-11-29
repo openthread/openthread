@@ -614,7 +614,7 @@ ThreadError otBecomeChild(otInstance *aInstance, otMleAttachFilter aFilter)
 
 ThreadError otBecomeRouter(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetMle().BecomeRouter(ThreadStatusTlv::kTooFewRouters);
+    return aInstance->mThreadNetif.GetMle().BecomeRouter(ThreadStatusTlv::kHaveChildIdRequest);
 }
 
 ThreadError otBecomeLeader(otInstance *aInstance)
@@ -1147,12 +1147,9 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
     // Construct the context
     aInstance = new(aInstanceBuffer)otInstance();
 
-    // restore datasets
+    // restore datasets and network information
     otPlatSettingsInit(aInstance);
-
-    aInstance->mThreadNetif.GetActiveDataset().Restore();
-
-    aInstance->mThreadNetif.GetPendingDataset().Restore();
+    aInstance->mThreadNetif.GetMle().Restore();
 
 exit:
 
@@ -1173,12 +1170,9 @@ otInstance *otInstanceInit()
     // Construct the context
     sInstance = new(&sInstanceRaw)otInstance();
 
-    // restore datasets
+    // restore datasets and network information
     otPlatSettingsInit(sInstance);
-
-    sInstance->mThreadNetif.GetActiveDataset().Restore();
-
-    sInstance->mThreadNetif.GetPendingDataset().Restore();
+    sInstance->mThreadNetif.GetMle().Restore();
 
 exit:
 
@@ -1668,6 +1662,11 @@ ThreadError otSendMgmtCommissionerSet(otInstance *aInstance, const otCommissioni
                                       const uint8_t *aTlvs, uint8_t aLength)
 {
     return aInstance->mThreadNetif.GetCommissioner().SendMgmtCommissionerSetRequest(*aDataset, aTlvs, aLength);
+}
+
+uint16_t otCommissionerGetSessionId(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetCommissioner().GetSessionId();
 }
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 

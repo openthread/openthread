@@ -30,6 +30,9 @@
  * @file
  *   This file implements DHCPv6 Server.
  */
+
+#define WPP_NAME "dhcp6_server.tmh"
+
 #include <openthread-types.h>
 #include <common/code_utils.hpp>
 #include <common/encoding.hpp>
@@ -116,6 +119,8 @@ ThreadError Dhcp6Server::UpdateService()
 
     while (mNetworkDataLeader.GetNextOnMeshPrefix(&iterator, rloc16, &config) == kThreadError_None)
     {
+        found = false;
+
         if (!config.mDhcp)
         {
             continue;
@@ -125,7 +130,6 @@ ThreadError Dhcp6Server::UpdateService()
 
         for (i = 0; i < OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES; i++)
         {
-            found = false;
             address = &(mAgentsAloc[i].GetAddress());
 
             if ((mAgentsAloc[i].mValidLifetime != 0) && (address->mFields.m8[15] == lowpanContext.mContextId))
@@ -485,8 +489,8 @@ ThreadError Dhcp6Server::AppendIaNa(Message &aMessage, IaNa &aIaNa)
     length += sizeof(IaNa) + sizeof(StatusCode) - sizeof(Dhcp6Option);
 
     aIaNa.SetLength(length);
-    aIaNa.SetT1(kDefaultIaNaT1);
-    aIaNa.SetT2(kDefaultIaNaT2);
+    aIaNa.SetT1(OT_DHCP6_DEFAULT_IA_NA_T1);
+    aIaNa.SetT2(OT_DHCP6_DEFAULT_IA_NA_T2);
     SuccessOrExit(error = aMessage.Append(&aIaNa, sizeof(IaNa)));
 
 exit:
@@ -546,8 +550,8 @@ ThreadError Dhcp6Server::AddIaAddress(Message &aMessage, otIp6Prefix &aIp6Prefix
     option.Init();
     memcpy((option.GetAddress()->mFields.m8), &(aIp6Prefix.mPrefix), 8);
     memcpy(&(option.GetAddress()->mFields.m8[8]), aClient.GetDuidLinkLayerAddress(), sizeof(Mac::ExtAddress));
-    option.SetPreferredLifetime(kDefaultIaAddressPreferredLifetime);
-    option.SetValidLifetime(kDefaultIaAddressValidLifetime);
+    option.SetPreferredLifetime(OT_DHCP6_DEFAULT_PREFERRED_LIFETIME);
+    option.SetValidLifetime(OT_DHCP6_DEFAULT_VALID_LIFETIME);
     SuccessOrExit(error = aMessage.Append(&option, sizeof(option)));
 exit:
     return error;

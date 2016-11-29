@@ -39,7 +39,6 @@ import serial
 import socket
 import logging
 from IThci import IThci
-from pexpect_serial import SerialSpawn
 from GRLLibs.UtilityModules.Test import Thread_Device_Role, Device_Data_Requirement, MacType
 from GRLLibs.UtilityModules.enums import PlatformDiagnosticPacket_Direction, PlatformDiagnosticPacket_Type, AddressType
 from GRLLibs.UtilityModules.ModuleHelper import ModuleHelper, ThreadRunner
@@ -56,6 +55,7 @@ class ARM(IThci):
     isPowerDown = False              # indicate if Thread device experiences a power down event
     isWhiteListEnabled = False       # indicate if Thread device enables white list filter
     isBlackListEnabled = False       # indicate if Thread device enables black list filter
+    isActiveCommissioner = False     # indicate if Thread device is an active commissioner
     LOWEST_POSSIBLE_PARTATION_ID = 0x1
 
     #def __init__(self, SerialPort=COMPortName, EUI=MAC_Address):
@@ -447,6 +447,7 @@ class ARM(IThci):
         print 'call startOpenThread'
         try:
             if self.__sendCommand('ifconfig up')[0] == 'Done':
+                self.__setRouterSelectionJitter(1)
                 return self.__sendCommand('thread start')[0] == 'Done'
             else:
                 return False
@@ -651,6 +652,11 @@ class ARM(IThci):
                 return False
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setKeySwitchGuardTime() Error; " + str(e))
+
+    def __getCommissionerSessionId(self):
+        """ get the commissioner session id allocated from Leader """
+        print '%s call getCommissionerSessionId' % self.port
+        return self.__sendCommand('commissioner sessionid')[0]
 
     def _connect(self):
         print 'My port is %s' % self.port
@@ -985,19 +991,13 @@ class ARM(IThci):
             if eRoleId == Thread_Device_Role.Leader:
                 print 'join as leader'
                 mode = 'rsdn'
-                self.__setRouterSelectionJitter(1)
                 if self.AutoDUTEnable is False:
-                    # set ROUTER_UPGRADE_THRESHOLD
-                    self.__setRouterUpgradeThreshold(32)
                     # set ROUTER_DOWNGRADE_THRESHOLD
                     self.__setRouterDowngradeThreshold(33)
             elif eRoleId == Thread_Device_Role.Router:
                 print 'join as router'
                 mode = 'rsdn'
-                self.__setRouterSelectionJitter(1)
                 if self.AutoDUTEnable is False:
-                    # set ROUTER_UPGRADE_THRESHOLD
-                    self.__setRouterUpgradeThreshold(33)
                     # set ROUTER_DOWNGRADE_THRESHOLD
                     self.__setRouterDowngradeThreshold(33)
             elif eRoleId == Thread_Device_Role.SED:
@@ -1081,8 +1081,6 @@ class ARM(IThci):
         print '%s call powerDown' % self.port
         self.isPowerDown = True
         self._sendline('reset')
-        time.sleep(5)
-        self.setMAC(self.mac)
 
     def powerUp(self):
         """power up the Thread device"""
@@ -1104,11 +1102,10 @@ class ARM(IThci):
         """
         print '%s call reboot' % self.port
         try:
-            # stop OpenThread
-            self.__stopOpenThread()
-            # start OpenThread
-            self.__startOpenThread()
+            self._sendline('reset')
+            time.sleep(3)
 
+            self.__startOpenThread()
             time.sleep(3)
 
             if self.__sendCommand('state')[0] == 'disabled':
@@ -1239,6 +1236,7 @@ class ARM(IThci):
             self.setNetworkKey(self.networkKey)
             self.isWhiteListEnabled = False
             self.isBlackListEnabled = False
+            self.isActiveCommissioner = False
             self.firmware = 'Nov 4 2016 07:24:59'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setDefaultValue() Error: " + str(e))
@@ -1349,13 +1347,10 @@ class ARM(IThci):
         print '%s call resetAndRejoin' % self.port
         print timeout
         try:
-            # start OpenThread
-            self.__stopOpenThread()
-            # wait timeout
+            self._sendline('reset')
             time.sleep(timeout)
-            # stop OpenThread
-            self.__startOpenThread()
 
+            self.__startOpenThread()
             time.sleep(3)
 
             if self.__sendCommand('state')[0] == 'disabled':
@@ -1893,6 +1888,7 @@ class ARM(IThci):
             cmd = 'commissioner start'
             print cmd
             if self.__sendCommand(cmd)[0] == 'Done':
+                self.isActiveCommissioner = True
                 time.sleep(20) # time for petition process
                 return True
         return False
@@ -1955,6 +1951,7 @@ class ARM(IThci):
             cmd = 'commissioner start'
             print cmd
             if self.__sendCommand(cmd)[0] == 'Done':
+                self.isActiveCommissioner = True
                 time.sleep(40) # time for petition process and at least one keep alive
                 return True
             else:
@@ -2184,7 +2181,10 @@ class ARM(IThci):
 
             if listChannelMask != None:
                 cmd += ' channelmask '
-                cmd += str(hex(1 << listChannelMask[1]))
+                if len(listChannelMask) > 2:
+                    cmd += '0x' + self.__convertLongToString(self.__convertChannelMask(listChannelMask))
+                elif len(listChannelMask) == 2:
+                    cmd += str(hex(1 << listChannelMask[1]))
 
             if sPSKc != None or listSecurityPolicy != None or \
                xCommissioningSessionId != None or xTmfPort != None or xSteeringData != None or xBorderRouterLocator != None or \
@@ -2241,6 +2241,14 @@ class ARM(IThci):
                     locator = locator.zfill(4)
 
                 cmd += locator
+
+            if xSteeringData != None:
+                steeringData = self.__convertLongToString(xSteeringData)
+                cmd += '08' + str(len(steeringData)/2).zfill(2)
+                cmd += steeringData
+
+            if BogusTLV != None:
+                cmd += "8202aa55"
 
             print cmd
 
@@ -2381,8 +2389,16 @@ class ARM(IThci):
             cmd = 'commissioner mgmtset'
 
             if xCommissionerSessionID != None:
+                # use assigned session id
                 cmd += ' sessionid '
                 cmd += str(xCommissionerSessionID)
+            elif xCommissionerSessionID == None:
+                # use original session id
+                if self.isActiveCommissioner == True:
+                    cmd += ' sessionid '
+                    cmd += self.__getCommissionerSessionId()
+                else:
+                    pass
 
             if xSteeringData != None:
                 cmd += ' steeringdata '
@@ -2391,6 +2407,10 @@ class ARM(IThci):
             if xBorderRouterLocator != None:
                 cmd += ' locator '
                 cmd += str(xBorderRouterLocator)
+
+            if xChannelTlv != None:
+                cmd += ' binary '
+                cmd += '000300' + hex(xChannelTlv).lstrip('0x').zfill(4) 
 
             print cmd
 
@@ -2462,7 +2482,19 @@ class ARM(IThci):
         return True
 
     def updateRouterStatus(self):
+        """force update to router as if there is child id request"""
         print '%s call updateRouterStatus' % self.port
+        cmd = 'state'
+        while state = self.__sendCommand(cmd)[0]:
+            if state == 'detached':
+                continue
+            elif state == 'child':
+                break
+            else:
+                return False
+
+        cmd = 'state router'
+        return self.__sendCommand(cmd)[0] == 'Done'
 
     def setRouterThresholdValues(self, upgradeThreshold, downgradeThreshold):
         print '%s call setRouterThresholdValues' % self.port

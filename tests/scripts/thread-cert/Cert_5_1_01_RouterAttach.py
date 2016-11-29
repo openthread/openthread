@@ -61,11 +61,12 @@ class Cert_5_1_01_RouterAttach(unittest.TestCase):
         self.sniffer.start()
 
     def tearDown(self):
+        self.sniffer.stop()
+        del self.sniffer
+
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
-
-        self.sniffer.stop()
 
     def test(self):
         self.nodes[LEADER].start()
@@ -168,7 +169,6 @@ class Cert_5_1_01_RouterAttach(unittest.TestCase):
         # 11 - Leader, Router1
         for addr in self.nodes[LEADER].get_addrs():
             self.assertTrue(self.nodes[ROUTER].ping(addr))
-
 
 
 if __name__ == '__main__':

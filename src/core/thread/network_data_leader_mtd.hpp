@@ -26,14 +26,42 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+/**
+ * @file
+ *   This file includes definitions for manipulating Thread Network Data managed by the Thread Leader.
+ */
 
-#if OPENTHREAD_ENABLE_MAC_WHITELIST
-#include "mac_whitelist_impl.hpp"
-#else
-#include "mac_whitelist_stub.hpp"
-#endif
+#ifndef NETWORK_DATA_LEADER_MTD_HPP_
+#define NETWORK_DATA_LEADER_MTD_HPP_
+
+#include <stdint.h>
+
+namespace Thread {
+
+class ThreadNetif;
+
+namespace NetworkData {
+
+class Leader: public LeaderBase
+{
+public:
+    explicit Leader(ThreadNetif &aThreadNetif) : LeaderBase(aThreadNetif) { }
+
+    void Start(void) { }
+    void Stop(void) { }
+
+    void IncrementVersion(void) { }
+    void IncrementStableVersion(void) { }
+
+    uint32_t GetContextIdReuseDelay(void) const { return 0; }
+    ThreadError SetContextIdReuseDelay(uint32_t) { return kThreadError_NotImplemented; }
+
+    void RemoveBorderRouter(uint16_t) { }
+
+    ThreadError SendServerDataNotification(uint16_t) { return kThreadError_NotImplemented; }
+};
+
+}  // namespace NetworkData
+}  // namespace Thread
+
+#endif  // NETWORK_DATA_LEADER_MTD_HPP_

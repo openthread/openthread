@@ -39,8 +39,8 @@
 
 #include <coap/coap_server.hpp>
 #include <common/timer.hpp>
+#include <meshcop/dataset.hpp>
 #include <net/udp6.hpp>
-#include <thread/meshcop_dataset.hpp>
 #include <thread/mle.hpp>
 #include <thread/network_data_leader.hpp>
 
@@ -112,16 +112,12 @@ private:
     const char *mUriGet;
 };
 
-class ActiveDataset: public DatasetManager
+class ActiveDatasetBase: public DatasetManager
 {
 public:
-    ActiveDataset(ThreadNetif &aThreadNetif);
+    ActiveDatasetBase(ThreadNetif &aThreadNetif);
 
     ThreadError Restore(void);
-
-    void StartLeader(void);
-
-    void StopLeader(void);
 
     ThreadError Clear(bool aOnlyClearNetwork);
 
@@ -130,30 +126,14 @@ public:
     ThreadError Set(const Dataset &aDataset);
 
     ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
-
-private:
-    static void HandleGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                          const otMessageInfo *aMessageInfo);
-    void HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    static void HandleSet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                          const otMessageInfo *aMessageInfo);
-    void HandleSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    Coap::Resource mResourceGet;
-    Coap::Resource mResourceSet;
 };
 
-class PendingDataset: public DatasetManager
+class PendingDatasetBase: public DatasetManager
 {
 public:
-    PendingDataset(ThreadNetif &aThreadNetif);
+    PendingDatasetBase(ThreadNetif &aThreadNetif);
 
     ThreadError Restore(void);
-
-    void StartLeader(void);
-
-    void StopLeader(void);
 
     ThreadError Clear(bool aOnlyClearNetwork);
 
@@ -167,15 +147,7 @@ public:
 
     void ApplyActiveDataset(const Timestamp &aTimestamp, Message &aMessage);
 
-private:
-    static void HandleGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                          const otMessageInfo *aMessageInfo);
-    void HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    static void HandleSet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                          const otMessageInfo *aMessageInfo);
-    void HandleSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
+protected:
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
 
@@ -184,9 +156,6 @@ private:
 
     void HandleNetworkUpdate(uint8_t &aFlags);
 
-    Coap::Resource mResourceGet;
-    Coap::Resource mResourceSet;
-
     Timer mTimer;
     uint32_t mLocalTime;
     uint32_t mNetworkTime;
@@ -194,5 +163,11 @@ private:
 
 }  // namespace MeshCoP
 }  // namespace Thread
+
+#ifdef OPENTHREAD_MTD
+#include "dataset_manager_mtd.hpp"
+#else
+#include "dataset_manager_ftd.hpp"
+#endif
 
 #endif  // MESHCOP_DATASET_MANAGER_HPP_

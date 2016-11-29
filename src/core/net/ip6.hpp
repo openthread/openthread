@@ -244,6 +244,14 @@ public:
     void SetReceiveIp6FilterEnabled(bool aEnabled);
 
     /**
+     * This method indicates whether or not IPv6 forwarding is enabled.
+     *
+     * @returns TRUE if IPv6 forwarding is enabled, FALSE otherwise.
+     *
+     */
+    bool IsForwardingEnabled(void);
+
+    /**
      * This method enables/disables IPv6 forwarding.
      *
      * @param[in]  aEnable  TRUE to enable IPv6 forwarding, FALSE otherwise.

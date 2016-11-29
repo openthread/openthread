@@ -564,6 +564,37 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_JAM_DETECTION], [test "${enable_jam_detection}
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_JAM_DETECTION],[${OPENTHREAD_ENABLE_JAM_DETECTION}],[Define to 1 if you want to use jam detection feature])
 
 #
+# MAC Whitelist and Blacklist
+#
+
+AC_ARG_ENABLE(mac_whitelist,
+    [AS_HELP_STRING([--enable-mac-whitelist],[Enable MAC whitelist/blacklist support @<:@default=yes@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_mac_whitelist=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_mac_whitelist} for --enable-mac-whitelist])
+            ;;
+        esac
+    ],
+    [enable_mac_whitelist=yes])
+
+if test "$enable_mac_whitelist" = "yes"; then
+    OPENTHREAD_ENABLE_MAC_WHITELIST=1
+else
+    OPENTHREAD_ENABLE_MAC_WHITELIST=0
+fi
+
+AC_MSG_RESULT(${enable_mac_whitelist})
+AC_SUBST(OPENTHREAD_ENABLE_MAC_WHITELIST)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_MAC_WHITELIST], [test "${enable_mac_whitelist}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_MAC_WHITELIST],[${OPENTHREAD_ENABLE_MAC_WHITELIST}],[Define to 1 if you want to use MAC whitelist/blacklist feature])
+
+#
 # Diagnostics Library
 #
 
@@ -1040,6 +1071,7 @@ AC_MSG_NOTICE([
   OpenThread Joiner support                 : ${enable_joiner}
   OpenThread DTLS support                   : ${enable_dtls}
   OpenThread Jam Detection support          : ${enable_jam_detection}
+  OpenThread MAC Whitelist support          : ${enable_mac_whitelist}
   OpenThread Diagnostics support            : ${enable_diag}
   OpenThread Legacy network support         : ${enable_legacy}
   OpenThread Cli logging support            : ${enable_cli_logging}

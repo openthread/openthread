@@ -49,7 +49,7 @@ def convert_aux_sec_hdr_to_bytearray(aux_sec_hdr):
 
 
 def any_eui64():
-    return bytearray([random.getrandbits(8) for _ in xrange(8)])
+    return bytearray([random.getrandbits(8) for _ in range(8)])
 
 
 def any_security_level():
@@ -67,7 +67,7 @@ def any_key_id(key_id_mode):
     if key_id_mode == 2:
         length = 5
 
-    return bytearray([random.getrandbits(8) for _ in xrange(length)])
+    return bytearray([random.getrandbits(8) for _ in range(length)])
 
 
 def any_auxiliary_security_header():
@@ -82,17 +82,17 @@ def any_frame_counter():
 
 
 def any_ip_address():
-    ip_address_bytes = bytearray([random.getrandbits(8) for _ in xrange(16)])
+    ip_address_bytes = bytearray([random.getrandbits(8) for _ in range(16)])
     return ipaddress.ip_address(bytes(ip_address_bytes))
 
 
 def any_data(length=None):
     length = length if length is not None else random.randint(0, 128)
-    return bytearray([random.getrandbits(8) for _ in xrange(length)])
+    return bytearray([random.getrandbits(8) for _ in range(length)])
 
 
 def any_master_key():
-    return bytearray([random.getrandbits(8) for _ in xrange(16)])
+    return bytearray([random.getrandbits(8) for _ in range(16)])
 
 
 class TestCryptoEngine(unittest.TestCase):

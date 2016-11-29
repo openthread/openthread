@@ -60,8 +60,9 @@ SOURCES_COMMON                      = \
     crypto/sha256.cpp                 \
     mac/mac.cpp                       \
     mac/mac_frame.cpp                 \
-    mac/mac_whitelist.cpp             \
-    mac/mac_blacklist.cpp             \
+    meshcop/dataset.cpp               \
+    meshcop/dataset_manager.cpp       \
+    meshcop/tlvs.cpp                  \
     net/icmp6.cpp                     \
     net/ip6.cpp                       \
     net/ip6_address.cpp               \
@@ -75,9 +76,6 @@ SOURCES_COMMON                      = \
     thread/key_manager.cpp            \
     thread/link_quality.cpp           \
     thread/lowpan.cpp                 \
-    thread/meshcop_dataset.cpp        \
-    thread/meshcop_dataset_manager.cpp \
-    thread/meshcop_tlvs.cpp           \
     thread/mesh_forwarder.cpp         \
     thread/mle.cpp                    \
     thread/mle_tlvs.cpp               \
@@ -90,6 +88,13 @@ SOURCES_COMMON                      = \
     thread/thread_tlvs.cpp            \
     utils/slaac_address.cpp           \
     $(NULL)
+
+if OPENTHREAD_ENABLE_MAC_WHITELIST
+SOURCES_COMMON                     += \
+    mac/mac_blacklist.cpp             \
+    mac/mac_whitelist.cpp             \
+    $(NULL)
+endif  # OPENTHREAD_ENABLE_MAC_WHITELIST
 
 if OPENTHREAD_ENABLE_COMMISSIONER
 SOURCES_COMMON                     += \
@@ -130,7 +135,7 @@ if OPENTHREAD_ENABLE_JAM_DETECTION
 SOURCES_COMMON                     += \
     utils/jam_detector.cpp            \
     $(NULL)
-endif  # OPENTHREAD_ENABLE_DHCP6_SERVER
+endif  # OPENTHREAD_ENABLE_JAM_DETECTION
 
 libopenthread_ftd_a_CPPFLAGS        = \
     $(CPPFLAGS_COMMON)                \
@@ -138,10 +143,12 @@ libopenthread_ftd_a_CPPFLAGS        = \
 
 libopenthread_ftd_a_SOURCES         = \
     $(SOURCES_COMMON)                 \
+    meshcop/dataset_manager_ftd.cpp   \
     meshcop/joiner_router.cpp         \
     meshcop/leader.cpp                \
     thread/address_resolver.cpp       \
     thread/mle_router.cpp             \
+    thread/network_data_leader_ftd.cpp \
     thread/network_data_local.cpp     \
     $(NULL)
 
@@ -181,11 +188,19 @@ noinst_HEADERS                      = \
     crypto/mbedtls.hpp                \
     crypto/sha256.hpp                 \
     mac/mac.hpp                       \
+    mac/mac_blacklist.hpp             \
+    mac/mac_blacklist_impl.hpp        \
+    mac/mac_blacklist_stub.hpp        \
     mac/mac_frame.hpp                 \
     mac/mac_whitelist.hpp             \
-    mac/mac_blacklist.hpp             \
+    mac/mac_whitelist_impl.hpp        \
+    mac/mac_whitelist_stub.hpp        \
     meshcop/announce_begin_client.hpp \
     meshcop/commissioner.hpp          \
+    meshcop/dataset.hpp               \
+    meshcop/dataset_manager.hpp       \
+    meshcop/dataset_manager_ftd.hpp   \
+    meshcop/dataset_manager_mtd.hpp   \
     meshcop/dtls.hpp                  \
     meshcop/energy_scan_client.hpp    \
     meshcop/joiner.hpp                \
@@ -196,6 +211,7 @@ noinst_HEADERS                      = \
     meshcop/leader_ftd.hpp            \
     meshcop/leader_mtd.hpp            \
     meshcop/panid_query_client.hpp    \
+    meshcop/tlvs.hpp                  \
     net/icmp6.hpp                     \
     net/ip6.hpp                       \
     net/ip6_address.hpp               \
@@ -218,11 +234,7 @@ noinst_HEADERS                      = \
     thread/key_manager.hpp            \
     thread/link_quality.hpp           \
     thread/lowpan.hpp                 \
-    thread/meshcop_tlvs.hpp           \
     thread/mesh_forwarder.hpp         \
-    thread/meshcop_dataset.hpp        \
-    thread/meshcop_dataset_manager.hpp \
-    thread/meshcop_tlvs.hpp           \
     thread/mle.hpp                    \
     thread/mle_constants.hpp          \
     thread/mle_router.hpp             \
@@ -231,6 +243,8 @@ noinst_HEADERS                      = \
     thread/mle_tlvs.hpp               \
     thread/network_data.hpp           \
     thread/network_data_leader.hpp    \
+    thread/network_data_leader_ftd.hpp \
+    thread/network_data_leader_mtd.hpp \
     thread/network_data_local.hpp     \
     thread/network_data_local_ftd.hpp \
     thread/network_data_local_mtd.hpp \

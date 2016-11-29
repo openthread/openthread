@@ -26,14 +26,49 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+/**
+ * @file
+ *   This file includes definitions for IEEE 802.15.4 frame filtering based on MAC address.
+ */
 
-#if OPENTHREAD_ENABLE_MAC_WHITELIST
-#include "mac_whitelist_impl.hpp"
-#else
-#include "mac_whitelist_stub.hpp"
-#endif
+#ifndef MAC_BLACKLIST_HPP_
+#define MAC_BLACKLIST_HPP_
+
+#include <stdint.h>
+
+#include <openthread-types.h>
+#include <mac/mac_frame.hpp>
+
+namespace Thread {
+namespace Mac {
+
+class Blacklist
+{
+public:
+    typedef otMacBlacklistEntry Entry;
+
+    Blacklist(void) { }
+
+    void Enable(void) { }
+
+    void Disable(void) { }
+
+    bool IsEnabled(void) const { return false; }
+
+    int GetMaxEntries(void) const { return 0; }
+
+    ThreadError GetEntry(uint8_t, Entry &) const { return kThreadError_NotImplemented; }
+
+    Entry *Add(const ExtAddress &) { return NULL; }
+
+    void Remove(const ExtAddress &) { }
+
+    void Clear(void) { }
+
+    Entry *Find(const ExtAddress &) { return NULL; }
+};
+
+}  // namespace Mac
+}  // namespace Thread
+
+#endif  // MAC_BLACKLIST_HPP_
