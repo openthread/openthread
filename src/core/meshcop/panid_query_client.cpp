@@ -39,7 +39,7 @@
 #include <common/logging.hpp>
 #include <platform/random.h>
 #include <meshcop/panid_query_client.hpp>
-#include <thread/meshcop_tlvs.hpp>
+#include <meshcop/tlvs.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
 

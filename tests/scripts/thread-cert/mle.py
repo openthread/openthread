@@ -511,7 +511,7 @@ class TlvRequest(object):
 class TlvRequestFactory:
 
     def parse(self, data, message_info):
-        tlvs = [ord(b) for b in data.read()]
+        tlvs = [b for b in bytearray(data.read())]
         return TlvRequest(tlvs)
 
 

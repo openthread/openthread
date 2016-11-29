@@ -37,8 +37,8 @@
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
+#include <meshcop/tlvs.hpp>
 #include <platform/random.h>
-#include <thread/meshcop_tlvs.hpp>
 #include <thread/energy_scan_server.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
@@ -46,7 +46,13 @@
 namespace Thread {
 
 EnergyScanServer::EnergyScanServer(ThreadNetif &aThreadNetif) :
+    mChannelMask(0),
+    mChannelMaskCurrent(0),
+    mPeriod(0),
+    mScanDuration(0),
+    mCount(0),
     mActive(false),
+    mScanResultsLength(0),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, &EnergyScanServer::HandleTimer, this),
     mEnergyScan(OPENTHREAD_URI_ENERGY_SCAN, &EnergyScanServer::HandleRequest, this),
     mCoapServer(aThreadNetif.GetCoapServer()),

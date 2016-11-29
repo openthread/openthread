@@ -31,6 +31,8 @@
  *   This file implements DHCPv6 Client.
  */
 
+#define WPP_NAME "dhcp6_client.tmh"
+
 #include <openthread-types.h>
 #include <common/code_utils.hpp>
 #include <common/encoding.hpp>

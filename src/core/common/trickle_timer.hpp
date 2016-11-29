@@ -154,6 +154,9 @@ private:
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
     // Redundancy constant
     const uint32_t k;
+
+    // A counter, keeping track of the number of "consistent" transmissions received
+    uint32_t c;
 #endif
 
     // Minimum interval size
@@ -167,10 +170,7 @@ private:
     uint32_t I;
     // The time (in milliseconds) into the interval at which we should transmit
     uint32_t t;
-#ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
-    // A counter, keeping track of the number of "consistent" transmissions received
-    uint32_t c;
-#endif
+
     // The current trickle phase for the timer
     Phase mPhase;
 

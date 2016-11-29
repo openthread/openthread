@@ -305,7 +305,6 @@ void AddressResolver::SendAddressNotificationResponse(const Coap::Header &aReque
 
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
 
-    memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
     SuccessOrExit(error = mCoapServer.SendMessage(*message, responseInfo));
 
     otLogInfoArp("Sent address notification acknowledgment");
@@ -378,7 +377,6 @@ void AddressResolver::SendAddressErrorResponse(const Coap::Header &aRequestHeade
 
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
 
-    memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
     SuccessOrExit(error = mCoapServer.SendMessage(*message, responseInfo));
 
     otLogInfoArp("Sent address error notification acknowledgment");

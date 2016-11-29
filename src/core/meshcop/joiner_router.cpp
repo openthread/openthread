@@ -45,8 +45,8 @@
 #include <common/encoding.hpp>
 #include <common/logging.hpp>
 #include <meshcop/joiner_router.hpp>
+#include <meshcop/tlvs.hpp>
 #include <thread/mle.hpp>
-#include <thread/meshcop_tlvs.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
 
@@ -61,6 +61,7 @@ JoinerRouter::JoinerRouter(ThreadNetif &aNetif):
     mRelayTransmit(OPENTHREAD_URI_RELAY_TX, &JoinerRouter::HandleRelayTransmit, this),
     mCoapClient(aNetif.GetCoapClient()),
     mNetif(aNetif),
+    mJoinerUdpPort(0),
     mIsJoinerPortConfigured(false)
 {
     mSocket.GetSockName().mPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;

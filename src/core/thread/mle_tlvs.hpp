@@ -39,8 +39,8 @@
 #include <openthread-types.h>
 #include <common/encoding.hpp>
 #include <common/message.hpp>
+#include <meshcop/tlvs.hpp>
 #include <net/ip6_address.hpp>
-#include <thread/meshcop_tlvs.hpp>
 #include <thread/mle_constants.hpp>
 
 using Thread::Encoding::BigEndian::HostSwap16;

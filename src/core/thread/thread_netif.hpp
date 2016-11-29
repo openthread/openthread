@@ -47,6 +47,7 @@
 #include <coap/secure_coap_client.hpp>
 #include <coap/secure_coap_server.hpp>
 #include <mac/mac.hpp>
+#include <meshcop/dataset_manager.hpp>
 #include <meshcop/joiner_router.hpp>
 #include <meshcop/leader.hpp>
 #include <net/dhcp6.hpp>
@@ -59,7 +60,6 @@
 #include <thread/energy_scan_server.hpp>
 #include <thread/network_diag.hpp>
 #include <thread/key_manager.hpp>
-#include <thread/meshcop_dataset_manager.hpp>
 #include <thread/mesh_forwarder.hpp>
 #include <thread/mle.hpp>
 #include <thread/mle_router.hpp>

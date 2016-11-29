@@ -101,7 +101,7 @@ class Route(object):
         return "Route(border_router_16={}, prf={})".format(self.border_router_16, self.prf)
 
 
-class RouteFactory:
+class RouteFactory(object):
 
     def parse(self, data, message_info):
         border_router_16 = struct.unpack(">H", data.read(2))[0]
@@ -112,7 +112,7 @@ class RouteFactory:
         return Route(border_router_16, prf)
 
 
-class RoutesFactory:
+class RoutesFactory(object):
 
     def __init__(self, route_factory):
         self._route_factory = route_factory
@@ -149,7 +149,7 @@ class HasRoute(NetworkData):
         return "HasRoute(stable={}, routes=[{}])".format(self.stable, routes_str)
 
 
-class HasRouteFactory:
+class HasRouteFactory(object):
 
     def __init__(self, routes_factory):
         self._routes_factory = routes_factory
@@ -206,7 +206,7 @@ class PrefixSubTlvsFactory(SubTlvsFactory):
         super(PrefixSubTlvsFactory, self).__init__(sub_tlvs_factories)
 
 
-class PrefixFactory:
+class PrefixFactory(object):
 
     def __init__(self, sub_tlvs_factory):
         self._sub_tlvs_factory = sub_tlvs_factory
@@ -295,7 +295,7 @@ class BorderRouter(NetworkData):
             self.stable, self.border_router_16, self.prf, self.p, self.s, self.d, self.c, self.r, self.o, self.n)
 
 
-class BorderRouterFactory:
+class BorderRouterFactory(object):
 
     def parse(self, data, message_info):
         border_router_16 = struct.unpack(">H", data.read(2))[0]
@@ -348,7 +348,7 @@ class LowpanId(NetworkData):
             self.stable, self.c, self.cid, self.context_length)
 
 
-class LowpanIdFactory:
+class LowpanIdFactory(object):
 
     def parse(self, data, message_info):
         data_byte = ord(data.read(1))
@@ -361,14 +361,14 @@ class LowpanIdFactory:
         return LowpanId(c, cid, context_length, message_info.stable)
 
 
-class CommissioningData:
+class CommissioningData(object):
 
     def __init__(self):
         # TODO: Not implemented yet
         raise NotImplementedError
 
 
-class CommissioningDataFactory:
+class CommissioningDataFactory(object):
 
     def __init__(self):
         # TODO: Not implemented yet
@@ -433,7 +433,7 @@ class ServiceSubTlvsFactory(SubTlvsFactory):
         super(ServiceSubTlvsFactory, self).__init__(sub_tlvs_factories)
 
 
-class ServiceFactory:
+class ServiceFactory(object):
 
     def __init__(self, sub_tlvs_factory):
         self._sub_tlvs_factory = sub_tlvs_factory
@@ -479,7 +479,7 @@ class Server(NetworkData):
             self.stable, self.server_16, hexlify(self.server_data))
 
 
-class ServerFactory:
+class ServerFactory(object):
 
     def parse(self, data, message_info):
         server_16 = struct.unpack(">H", data.read(2))[0]

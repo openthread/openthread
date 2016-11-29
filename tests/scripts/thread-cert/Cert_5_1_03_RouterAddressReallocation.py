@@ -120,7 +120,7 @@ class Cert_5_1_03_RouterAddressReallocation(unittest.TestCase):
 
         # 5 - Router1
         # Router1 make two attempts to reconnect to its current Partition.
-        for _ in xrange(2):
+        for _ in range(2):
             msg = router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
             msg.assertSentWithHopLimit(255)
             msg.assertSentToDestinationAddress("ff02::2")
