@@ -39,7 +39,6 @@
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>
         %(PreprocessorDefinitions);
-        WIN32;_WINDOWS;_USRDLL;
         OTAPI_EXPORTS;
       </PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
@@ -53,17 +52,8 @@
       <WppScanConfigurationData>..\..\include\platform\logging-windows.h</WppScanConfigurationData>
       <WppModuleName>otApi</WppModuleName>
       <EnablePREfast>true</EnablePREfast>
-      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">Sync</ExceptionHandling>
-      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">Sync</ExceptionHandling>
+      <ExceptionHandling Condition="'$(Platform)'=='ARM'">Sync</ExceptionHandling>
     </ClCompile>
-    <Link>
-      <AdditionalDependencies>
-        onecore.lib;
-        onecoreuap.lib;
-        mincore.lib;
-        ntdll.lib;
-      </AdditionalDependencies>
-    </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\examples\drivers\windows\otApi\precomp.h" />
