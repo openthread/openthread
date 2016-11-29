@@ -43,6 +43,22 @@ SerialUninitialize(
     );
 
 PAGED
+_No_competing_thread_
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+SerialInitializeTarget(
+    _In_ POTTMP_ADAPTER_CONTEXT     AdapterContext,
+    _In_ PCWSTR                     TargetName
+);
+
+PAGED
+_IRQL_requires_max_(PASSIVE_LEVEL)
+VOID
+SerialUninitializeTarget(
+    _In_ POTTMP_ADAPTER_CONTEXT     AdapterContext
+);
+
+PAGED
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 SerialConfigure(

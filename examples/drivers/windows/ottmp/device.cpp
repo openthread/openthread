@@ -165,14 +165,6 @@ Return Value:
             Status = NDIS_STATUS_FAILURE;
             break;
         }
-        
-        // Configure the communication parameters
-        ntStatus = SerialConfigure(deviceContext->AdapterContext);
-        if (!NT_SUCCESS(ntStatus))
-        {
-            Status = NDIS_STATUS_FAILURE;
-            break;
-        }
 
         // Start the read loop
         LogVerbose(DRIVER_DEFAULT, "Starting recv worker");

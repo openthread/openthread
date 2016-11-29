@@ -60,67 +60,8 @@ Return Value:
     
     do
     {
-        WDFIOTARGET tempTarget = WDF_NO_HANDLE;
-        DECLARE_UNICODE_STRING_SIZE(PortName, 64); // Maximum name length of the device path to a serial port
-        WDF_IO_TARGET_OPEN_PARAMS openParams = { 0 };
         WDF_OBJECT_ATTRIBUTES attr = { 0 };
         WDF_WORKITEM_CONFIG config = { 0 };
-
-        // Query the system for device with SERIAL interface
-        status =
-            IoGetDeviceInterfaces(
-                &GUID_DEVINTERFACE_COMPORT,
-                NULL,
-                0,
-                &SymbolicLinkList   // List of symbolic names; separate by NULL, EOL with NULL+NULL.
-                );
-
-        if (!NT_SUCCESS(status)) {
-            LogError(DRIVER_DEFAULT, "IoGetDeviceInterfaces failed %!STATUS!", status);
-            break;
-        }
-
-        // Make sure there is a COM port found
-        NT_ASSERT(SymbolicLinkList);
-        if (*SymbolicLinkList == NULL) {
-            status = STATUS_DEVICE_NOT_CONNECTED;
-            LogError(DRIVER_DEFAULT, "No COM ports found!");
-            break;
-        }
-
-#if DBG
-        for (PWSTR sym = SymbolicLinkList; *sym != NULL; sym += wcslen(sym) + 1)
-        {
-            LogVerbose(DRIVER_DEFAULT, "Symbolic Name found: %ws", sym);
-        }
-#endif
-
-        // Create the Wdf IoTarget
-        status = WdfIoTargetCreate(AdapterContext->Device, WDF_NO_OBJECT_ATTRIBUTES, &tempTarget);
-
-        if (!NT_SUCCESS(status)) {
-            LogError(DRIVER_DEFAULT, "WdfIoTargetCreate failed %!STATUS!", status);
-            break;
-        }
-        
-        // Use the first COM port found
-        LogInfo(DRIVER_DEFAULT, "Opening device: %ws", SymbolicLinkList);
-        RtlInitUnicodeString(&PortName, SymbolicLinkList);
-        WDF_IO_TARGET_OPEN_PARAMS_INIT_OPEN_BY_NAME(
-            &openParams, 
-            &PortName, 
-            GENERIC_READ | GENERIC_WRITE);
-
-        // Open the port on the target
-        status = WdfIoTargetOpen(tempTarget, &openParams);
-
-        if (!NT_SUCCESS(status)) {
-            LogError(DRIVER_DEFAULT, "WdfIoTargetOpen(%wZ) failed %!STATUS!", &PortName, status);
-            break;
-        }
-
-        AdapterContext->WdfIoTarget = tempTarget;
-        tempTarget = WDF_NO_HANDLE;
 
         //
         // Send Queue Variables
@@ -167,17 +108,53 @@ Return Value:
 
         GetWdfDeviceInfo(AdapterContext->RecvWorkItem)->AdapterContext = AdapterContext;
 
-        WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&attr, WDF_DEVICE_INFO);
-        attr.ParentObject = AdapterContext->Device;
+        // Query the system for device with SERIAL interface
+        status =
+            IoGetDeviceInterfaces(
+                &GUID_DEVINTERFACE_COMPORT,
+                NULL,
+                0,
+                &SymbolicLinkList   // List of symbolic names; separate by NULL, EOL with NULL+NULL.
+            );
 
-        status = WdfRequestCreate(&attr, AdapterContext->WdfIoTarget, &AdapterContext->RecvReadRequest);
-        
         if (!NT_SUCCESS(status)) {
-            LogError(DRIVER_DEFAULT, "WdfRequestCreate failed %!STATUS!", status);
+            LogError(DRIVER_DEFAULT, "IoGetDeviceInterfaces failed %!STATUS!", status);
             break;
         }
 
+        // Make sure there is a COM port found
+        NT_ASSERT(SymbolicLinkList);
+        if (*SymbolicLinkList == NULL) {
+            status = STATUS_DEVICE_NOT_CONNECTED;
+            LogError(DRIVER_DEFAULT, "No COM ports found!");
+            break;
+        }
+
+#if DBG
+        for (PCWSTR sym = SymbolicLinkList; *sym != NULL; sym += wcslen(sym) + 1)
+        {
+            LogVerbose(DRIVER_DEFAULT, "Symbolic Name found: %ws", sym);
+        }
+#endif
+
+        // Try to open each serial port until we get that one works or we exhaust them all
+        for (PCWSTR sym = SymbolicLinkList; *sym != NULL; sym += wcslen(sym) + 1)
+        {
+            // Initialize the target
+            status = SerialInitializeTarget(AdapterContext, sym);
+
+            // Break on success
+            if (NT_SUCCESS(status)) {
+                break;
+            }
+        }
+
     } while (false);
+
+    // Clean up on failure
+    if (!NT_SUCCESS(status)) {
+        SerialUninitialize(AdapterContext);
+    }
 
     if (SymbolicLinkList) {
         ExFreePool(SymbolicLinkList);
@@ -213,6 +190,118 @@ Arguments:
 
     // TODO - Clean up send queue
 
+    SerialUninitializeTarget(AdapterContext);
+
+    if (AdapterContext->RecvWorkItem) {
+        WdfWorkItemFlush(AdapterContext->RecvWorkItem);
+    }
+
+    LogFuncExit(DRIVER_DEFAULT);
+}
+
+PAGED
+_No_competing_thread_
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+SerialInitializeTarget(
+    _In_ POTTMP_ADAPTER_CONTEXT     AdapterContext,
+    _In_ PCWSTR                     TargetName
+)
+{
+    NTSTATUS status = STATUS_UNSUCCESSFUL;
+    WDFIOTARGET tempTarget = WDF_NO_HANDLE;
+
+    LogFuncEntry(DRIVER_DEFAULT);
+
+    PAGED_CODE();
+
+    do
+    {
+        DECLARE_UNICODE_STRING_SIZE(PortName, 64); // Maximum name length of the device path to a serial port
+        WDF_IO_TARGET_OPEN_PARAMS openParams = { 0 };
+        WDF_OBJECT_ATTRIBUTES attr = { 0 };
+
+        // Create the Wdf IoTarget
+        status = WdfIoTargetCreate(AdapterContext->Device, WDF_NO_OBJECT_ATTRIBUTES, &tempTarget);
+
+        if (!NT_SUCCESS(status)) {
+            LogError(DRIVER_DEFAULT, "WdfIoTargetCreate failed %!STATUS!", status);
+            break;
+        }
+
+        // Try the COM port
+        LogInfo(DRIVER_DEFAULT, "Opening device: %ws", TargetName);
+        RtlInitUnicodeString(&PortName, TargetName);
+        WDF_IO_TARGET_OPEN_PARAMS_INIT_OPEN_BY_NAME(
+            &openParams,
+            &PortName,
+            GENERIC_READ | GENERIC_WRITE);
+
+        // Open the port on the target
+        status = WdfIoTargetOpen(tempTarget, &openParams);
+
+        if (!NT_SUCCESS(status)) {
+            LogError(DRIVER_DEFAULT, "WdfIoTargetOpen(%wZ) failed %!STATUS!", &PortName, status);
+            break;
+        }
+
+        AdapterContext->WdfIoTarget = tempTarget;
+        tempTarget = WDF_NO_HANDLE;
+
+        WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&attr, WDF_DEVICE_INFO);
+        attr.ParentObject = AdapterContext->Device;
+
+        status = WdfRequestCreate(&attr, AdapterContext->WdfIoTarget, &AdapterContext->RecvReadRequest);
+
+        if (!NT_SUCCESS(status)) {
+            LogError(DRIVER_DEFAULT, "WdfRequestCreate failed %!STATUS!", status);
+            break;
+        }
+
+        // Try to configure the target
+        status = SerialConfigure(AdapterContext);
+
+        if (!NT_SUCCESS(status)) {
+            LogError(DRIVER_DEFAULT, "SerialConfigure failed %!STATUS!", status);
+            break;
+        }
+
+    } while (false);
+
+    // Clean up on failure
+    if (!NT_SUCCESS(status)) {
+        SerialUninitializeTarget(AdapterContext);
+    }
+
+    if (tempTarget) {
+        WdfIoTargetClose(tempTarget);
+    }
+
+    LogFuncExitNT(DRIVER_DEFAULT, status);
+
+    return status;
+}
+
+PAGED
+_IRQL_requires_max_(PASSIVE_LEVEL)
+VOID
+SerialUninitializeTarget(
+    _In_ POTTMP_ADAPTER_CONTEXT     AdapterContext
+)
+/*++
+Routine Description:
+
+    SerialUninitializeTarget cleans up any cached Wdf IoTarget created from SerialInitializeTarget.
+
+Arguments:
+
+    AdapterContext - handle to a OTTMP Adapter
+--*/
+{
+    LogFuncEntry(DRIVER_DEFAULT);
+
+    PAGED_CODE();
+
     if (AdapterContext->WdfIoTarget) {
         //
         // WdfIoTargetStop will cancel all the outstanding I/O and wait
@@ -222,10 +311,6 @@ Arguments:
         WdfIoTargetStop(AdapterContext->WdfIoTarget, WdfIoTargetCancelSentIo);
         WdfIoTargetClose(AdapterContext->WdfIoTarget);
         AdapterContext->WdfIoTarget = NULL;
-    }
-
-    if (AdapterContext->RecvWorkItem) {
-        WdfWorkItemFlush(AdapterContext->RecvWorkItem);
     }
 
     LogFuncExit(DRIVER_DEFAULT);

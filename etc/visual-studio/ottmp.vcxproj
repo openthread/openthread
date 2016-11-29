@@ -72,6 +72,9 @@
         ndis.lib;
       </AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command Condition="'$(Platform)'=='ARM'">inf2cat /driver:$(TargetDir) /os:8_ARM</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\examples\drivers\windows\ottmp\adapter.cpp" />
