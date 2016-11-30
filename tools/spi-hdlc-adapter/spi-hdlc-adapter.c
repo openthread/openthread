@@ -27,6 +27,10 @@
 
 #define _GNU_SOURCE 1
 
+#if HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -46,7 +50,10 @@
 #include <sys/file.h>
 
 #include <linux/spi/spidev.h>
+
+#if HAVE_EXECINFO_H
 #include <execinfo.h>
+#endif
 
 #if HAVE_PTY_H
 #include <pty.h>
@@ -70,10 +77,6 @@
 
 #define EXIT_QUIT                       65535
 
-#ifndef FAULT_BACKTRACE_STACK_DEPTH
-#define FAULT_BACKTRACE_STACK_DEPTH     20
-#endif
-
 #ifndef MSEC_PER_SEC
 #define MSEC_PER_SEC                    1000
 #endif
@@ -94,6 +97,12 @@
 #define SPI_RX_ALIGN_ALLOWANCE_MAX      3
 
 #define SOCKET_DEBUG_BYTES_PER_LINE     16
+
+#ifndef AUTO_PRINT_BACKTRACE
+#define AUTO_PRINT_BACKTRACE            (HAVE_EXECINFO_H || __APPLE__)
+#endif
+
+#define AUTO_PRINT_BACKTRACE_STACK_DEPTH     20
 
 static const uint8_t kHdlcResetSignal[] = { 0x7E, 0x13, 0x11, 0x7E };
 static const uint16_t kHdlcCrcCheckValue = 0xf0b8;
@@ -209,12 +218,13 @@ static void signal_SIGHUP(int sig)
     (void) sig;
 }
 
+#if AUTO_PRINT_BACKTRACE
 static void signal_critical(int sig, siginfo_t * info, void * ucontext)
 {
     // This is the last hurah for this process.
     // We dump the stack, because that's all we can do.
 
-    void *stack_mem[FAULT_BACKTRACE_STACK_DEPTH];
+    void *stack_mem[AUTO_PRINT_BACKTRACE_STACK_DEPTH];
     void **stack = stack_mem;
     char **stack_symbols;
     int stack_depth, i;
@@ -236,7 +246,7 @@ static void signal_critical(int sig, siginfo_t * info, void * ucontext)
 
     fprintf(stderr, " *** FATAL ERROR: Caught signal %d (%s):\n", sig, strsignal(sig));
 
-    stack_depth = backtrace(stack, FAULT_BACKTRACE_STACK_DEPTH);
+    stack_depth = backtrace(stack, AUTO_PRINT_BACKTRACE_STACK_DEPTH);
 
     // Here are are trying to update the pointer in the backtrace
     // to be the actual location of the fault.
@@ -267,6 +277,7 @@ static void signal_critical(int sig, siginfo_t * info, void * ucontext)
 
     exit(EXIT_FAILURE);
 }
+#endif // if AUTO_PRINT_BACKTRACE
 
 static void log_debug_buffer(const char* desc, const uint8_t* buffer_ptr, int buffer_len)
 {
@@ -1220,6 +1231,8 @@ int main(int argc, char *argv[])
     static fd_set error_set;
     struct timeval timeout;
     int max_fd = -1;
+    bool did_print_rate_limit_log = false;
+
     enum {
         ARG_SPI_MODE = 1001,
         ARG_SPI_SPEED = 1002,
@@ -1257,6 +1270,7 @@ int main(int argc, char *argv[])
     sPreviousHandlerForSIGTERM = signal(SIGTERM, &signal_SIGTERM);
     signal(SIGHUP, &signal_SIGHUP);
 
+#if AUTO_PRINT_BACKTRACE
     sigact.sa_sigaction = &signal_critical;
     sigact.sa_flags = SA_RESTART | SA_SIGINFO | SA_NOCLDWAIT;
 
@@ -1264,7 +1278,7 @@ int main(int argc, char *argv[])
     sigaction(SIGBUS, &sigact, (struct sigaction *)NULL);
     sigaction(SIGILL, &sigact, (struct sigaction *)NULL);
     sigaction(SIGABRT, &sigact, (struct sigaction *)NULL);
-
+#endif // if AUTO_PRINT_BACKTRACE
 
     // ========================================================================
     // ARGUMENT PARSING
@@ -1481,13 +1495,19 @@ int main(int argc, char *argv[])
         {
             // We are being rate-limited by the NCP.
             timeout_ms = SPI_POLL_PERIOD_MSEC;
-            syslog(LOG_INFO, "Rate limiting transactions");
+
+            if (!did_print_rate_limit_log) {
+                // Avoid printing out this message over and over.
+                syslog(LOG_INFO, "NCP is rate limiting transactions");
+                did_print_rate_limit_log = true;
+            }
         }
         else
         {
             // We have data to send to the slave. Unless we
             // are being rate-limited, proceed immediately.
             timeout_ms = 0;
+            did_print_rate_limit_log = false;
         }
 
         if (sSpiRxPayloadSize != 0)
