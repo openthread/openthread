@@ -31,11 +31,19 @@
 * CpuIrq_da15x -- IRQ driver for ARM Cortex-M series cores.
 *
 */
-
-#include "tool.h"
-
 #pragma GCC diagnostic ignored "-Wpedantic"
 #pragma location=".isr_vector"
+
+#define __WEAK                     __attribute__((weak))
+#define __USED                     __attribute__((used))
+#define __BOOT_VECTOR              __attribute__ ((section(".isr_vector")))
+#define __BOOT_STACK               &__stack_start__
+#define __BOOT_STARTUP             __gcc_program_start
+
+typedef void (*irq_handler_t)(void);
+extern unsigned int __stack_start__[];
+extern void         __gcc_program_start(void);
+
 /// Declaration of default interrupt service routine
 static void halt_isr(void)
 {

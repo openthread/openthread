@@ -34,11 +34,14 @@
 */
 
 #include <stdint.h>
-#include <tool.h>
-
+//#include <tool.h>
+#define __NAKED                    __attribute__((naked))
+#define __USED                     __attribute__((used))
+#define __NO_RETURN                __attribute__((noreturn))
 // forward declaration
 extern void main(void);
 extern void __cpu_startup(void);
+extern void __gcc_program_start(void);
 
 extern uint32_t __rwdata_start__;  // End of .text region in FLASH
 extern uint32_t _sdata;            // Start of .data region in RAM
