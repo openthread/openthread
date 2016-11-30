@@ -1225,13 +1225,16 @@ int main(int argc, char *argv[])
 {
     int i = 0;
     const char* prog = argv[0];
-    struct sigaction sigact;
     static fd_set read_set;
     static fd_set write_set;
     static fd_set error_set;
     struct timeval timeout;
     int max_fd = -1;
     bool did_print_rate_limit_log = false;
+
+#if AUTO_PRINT_BACKTRACE
+    struct sigaction sigact;
+#endif // if AUTO_PRINT_BACKTRACE
 
     enum {
         ARG_SPI_MODE = 1001,
