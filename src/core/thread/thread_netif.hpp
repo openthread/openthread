@@ -58,7 +58,7 @@
 #include <thread/address_resolver.hpp>
 #include <thread/announce_begin_server.hpp>
 #include <thread/energy_scan_server.hpp>
-#include <thread/network_diag.hpp>
+#include <thread/network_diagnostic.hpp>
 #include <thread/key_manager.hpp>
 #include <thread/mesh_forwarder.hpp>
 #include <thread/mle.hpp>
