@@ -1209,6 +1209,22 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_JAM_DETECT_WINDOW";
         break;
 
+    case SPINEL_PROP_GPIO_CONFIG:
+        ret = "PROP_GPIO_CONFIG";
+        break;
+
+    case SPINEL_PROP_GPIO_STATE:
+        ret = "PROP_GPIO_STATE";
+        break;
+
+    case SPINEL_PROP_GPIO_STATE_SET:
+        ret = "PROP_GPIO_STATE_SET";
+        break;
+
+    case SPINEL_PROP_GPIO_STATE_CLEAR:
+        ret = "PROP_GPIO_STATE_CLEAR";
+        break;
+
     default:
         break;
     }
