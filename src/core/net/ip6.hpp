@@ -100,7 +100,7 @@ public:
     enum
     {
         kDefaultHopLimit = 64,
-        kMaxDatagramLength = 1500,
+        kMaxDatagramLength = 1280,
     };
 
     /**
