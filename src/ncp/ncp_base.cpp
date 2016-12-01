@@ -3381,24 +3381,24 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t header, spinel_prop_k
             &packet.mChannel,
             &packet.mPower
         );
+
+        if (parsedLength > 0 && frame_len <= kMaxPHYPacketSize)
+        {
+            // Cache the transaction ID for async response
+            mCurTransmintTID = SPINEL_HEADER_GET_TID(header);
+
+            // Update packet length and send to the radio layer
+            packet.mLength = static_cast<uint8_t>(frame_len);
+            errorCode = otPlatRadioTransmit(mInstance, &packet);
+        }
+        else
+        {
+            errorCode = kThreadError_Parse;
+        }
     }
     else
     {
         errorCode = kThreadError_InvalidState;
-    }
-
-    if (parsedLength > 0 && frame_len <= kMaxPHYPacketSize)
-    {
-        // Cache the transaction ID for async response
-        mCurTransmintTID = SPINEL_HEADER_GET_TID(header);
-
-        // Update packet length and send to the radio layer
-        packet.mLength = static_cast<uint8_t>(frame_len);
-        errorCode = otPlatRadioTransmit(mInstance, &packet);
-    }
-    else
-    {
-        errorCode = kThreadError_Parse;
     }
 
     if (errorCode == kThreadError_None)
