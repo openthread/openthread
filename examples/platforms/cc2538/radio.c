@@ -71,7 +71,7 @@ static uint8_t sTransmitPsdu[IEEE802154_MAX_LENGTH];
 static uint8_t sReceivePsdu[IEEE802154_MAX_LENGTH];
 static uint8_t sChannel = 0;
 
-PhyState sState = kStateDisabled;
+static PhyState sState = kStateDisabled;
 static bool sIsReceiverEnabled = false;
 
 static otPlatRadioReceiveDone sReceiveDoneCallback = NULL;
@@ -233,14 +233,19 @@ bool otPlatRadioIsEnabled(otInstance *aInstance)
     return (sState != kStateDisabled) ? true : false;
 }
 
+void otPlatRadioSetCallbacks(otInstance *aInstance, otPlatRadioReceiveDone receiveCallback,
+                             otPlatRadioTransmitDone transmitCallback)
+{
+    sReceiveDoneCallback = receiveCallback;
+    sTransmitDoneCallback = transmitCallback;
+}
+
 ThreadError otPlatRadioEnable(otInstance *aInstance, otPlatRadioReceiveDone receiveCallback,
                               otPlatRadioTransmitDone transmitCallback)
 {
     if (!otPlatRadioIsEnabled(aInstance))
     {
         sState = kStateSleep;
-        sReceiveDoneCallback = receiveCallback;
-        sTransmitDoneCallback = transmitCallback;
     }
 
     return kThreadError_None;
@@ -251,8 +256,6 @@ ThreadError otPlatRadioDisable(otInstance *aInstance)
     if (otPlatRadioIsEnabled(aInstance))
     {
         sState = kStateDisabled;
-        sReceiveDoneCallback = NULL;
-        sTransmitDoneCallback = NULL;
     }
 
     return kThreadError_None;

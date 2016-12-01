@@ -200,6 +200,12 @@ public:
     typedef void (*ActiveScanHandler)(void *aContext, Frame *aBeaconFrame);
 
     /**
+    * This method ensures the radio is in the proper state for use.
+    *
+    */
+    void PrepareRadio();
+
+    /**
      * This method starts an IEEE 802.15.4 Active Scan.
      *
      * @param[in]  aScanChannels  A bit vector indicating which channels to scan.

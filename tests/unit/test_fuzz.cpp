@@ -39,15 +39,19 @@ bool g_fTransmit = false;
 otPlatRadioReceiveDone g_ReceiveDoneCallback = NULL;
 otPlatRadioTransmitDone g_TransmitDoneCallback = NULL;
 
-ThreadError testFuzzRadioEnable(otInstance *, otPlatRadioReceiveDone receiveCallback,
-                                otPlatRadioTransmitDone transmitCallback)
+void testFuzzRadioSetCallbacks(otInstance *, otPlatRadioReceiveDone receiveCallback,
+                               otPlatRadioTransmitDone transmitCallback)
+{
+    g_ReceiveDoneCallback = receiveCallback;
+    g_TransmitDoneCallback = transmitCallback;
+}
+
+ThreadError testFuzzRadioEnable(otInstance *)
 {
 #ifdef DBG_FUZZ
     Log("Radio enabled");
 #endif
     g_fRadioEnabled = true;
-    g_ReceiveDoneCallback = receiveCallback;
-    g_TransmitDoneCallback = transmitCallback;
     return kThreadError_None;
 }
 
@@ -57,8 +61,6 @@ ThreadError testFuzzRadioDisable(otInstance *)
     Log("Radio disabled");
 #endif
     g_fRadioEnabled = false;
-    g_ReceiveDoneCallback = NULL;
-    g_TransmitDoneCallback = NULL;
     return kThreadError_None;
 }
 
@@ -92,6 +94,7 @@ void TestFuzz(uint32_t aSeconds)
 
     // Set the platform function pointers
     g_TransmitRadioPacket.mPsdu = g_TransmitPsdu;
+    g_testPlatRadioSetCallbacks = testFuzzRadioSetCallbacks;
     g_testPlatRadioEnable = testFuzzRadioEnable;
     g_testPlatRadioDisable = testFuzzRadioDisable;
     g_testPlatRadioReceive = testFuzzRadioReceive;

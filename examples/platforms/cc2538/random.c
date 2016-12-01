@@ -96,8 +96,6 @@ uint32_t otPlatRandomGet(void)
     return random;
 }
 
-extern PhyState sState;
-
 ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
 {
     ThreadError error = kThreadError_None;
@@ -108,8 +106,8 @@ ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint1
     if (otPlatRadioIsEnabled(sInstance))
     {
         channel = 11 + (HWREG(RFCORE_XREG_FREQCTRL) - 11) / 5;
-        otPlatRadioSleep(sInstance);
-        sState = kStateDisabled;
+        otPlatRadioSleep(sInstance); // BUGBUG - This can fail if currently transmitting. What then?
+        otPlatRadioDisable(sInstance);
     }
 
     generateRandom(aInputLength, aOutput, aOutputLength);
@@ -117,7 +115,7 @@ ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint1
     if (channel)
     {
         cc2538RadioInit();
-        sState = kStateSleep;
+        otPlatRadioEnable(sInstance);
         otPlatRadioReceive(sInstance, channel);
     }
 

@@ -123,8 +123,9 @@ void Diag::ProcessStart(int argc, char *argv[], char *aOutput, size_t aOutputMax
 {
     ThreadError error = kThreadError_None;
 
-    // enable radio
-    otPlatRadioEnable(sContext, DiagReceiveDone, DiagTransmitDone);
+    // configure callbacks and enable radio
+    otPlatRadioSetCallbacks(sContext, DiagReceiveDone, DiagTransmitDone);
+    otPlatRadioEnable(sContext);
 
     // enable promiscuous mode
     otPlatRadioSetPromiscuous(sContext, true);

@@ -161,8 +161,13 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mPcapCallback = NULL;
     mPcapCallbackContext = NULL;
 
-    otPlatRadioEnable(mNetif.GetInstance(), ReceiveDoneTask, TransmitDoneTask);
+    otPlatRadioEnable(mNetif.GetInstance());
     mTxFrame = static_cast<Frame *>(otPlatRadioGetTransmitBuffer(mNetif.GetInstance()));
+}
+
+void Mac::PrepareRadio()
+{
+    otPlatRadioSetCallbacks(mNetif.GetInstance(), ReceiveDoneTask, TransmitDoneTask);
 }
 
 ThreadError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)

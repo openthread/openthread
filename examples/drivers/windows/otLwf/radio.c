@@ -271,8 +271,17 @@ void otPlatRadioSetPromiscuous(_In_ otInstance *otCtx, int aEnable)
     }
 }
 
-ThreadError otPlatRadioEnable(_In_ otInstance *otCtx, _In_ otPlatRadioReceiveDone receiveCallback,
-                              _In_ otPlatRadioTransmitDone transmitCallback)
+void otPlatRadioSetCallbacks(_In_ otInstance *otCtx, _In_ otPlatRadioReceiveDone receiveCallback,
+                             _In_ otPlatRadioTransmitDone transmitCallback)
+{
+    NT_ASSERT(otCtx);
+    PMS_FILTER pFilter = otCtxToFilter(otCtx);
+
+    pFilter->otReceiveDoneCallback = receiveCallback;
+    pFilter->otTransmitDoneCallback = transmitCallback;
+}
+
+ThreadError otPlatRadioEnable(_In_ otInstance *otCtx)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
@@ -281,8 +290,6 @@ ThreadError otPlatRadioEnable(_In_ otInstance *otCtx, _In_ otPlatRadioReceiveDon
     if (pFilter->otPhyState > kStateSleep) return kThreadError_Busy;
 
     pFilter->otPhyState = kStateSleep;
-    pFilter->otReceiveDoneCallback = receiveCallback;
-    pFilter->otTransmitDoneCallback = transmitCallback;
     
     LogInfo(DRIVER_DEFAULT, "Filter %p PhyState = kStateSleep.", pFilter);
 
@@ -298,8 +305,6 @@ ThreadError otPlatRadioDisable(_In_ otInstance *otCtx)
     if (pFilter->otPhyState > kStateSleep) return kThreadError_Busy;
 
     pFilter->otPhyState = kStateDisabled;
-    pFilter->otReceiveDoneCallback = NULL;
-    pFilter->otTransmitDoneCallback = NULL;
     
     LogInfo(DRIVER_DEFAULT, "Filter %p PhyState = kStateDisabled.", pFilter);
 

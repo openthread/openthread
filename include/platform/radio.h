@@ -255,6 +255,19 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddress);
  */
 
 /**
+ * Set the radio completion callbacks.
+ *
+ * @param[in] aInstance         The OpenThread instance structure.
+ * @param[in] receiveCallback   The callback for receive completions.
+ * @param[in] transmitCallback  The callback for transmit completions.
+ *
+ * @retval ::kThreadError_None     Successfully enabled.
+ * @retval ::kThreadError_Failure  The radio could not be enabled.
+ */
+void otPlatRadioSetCallbacks(otInstance *aInstance, otPlatRadioReceiveDone receiveCallback,
+                             otPlatRadioTransmitDone transmitCallback);
+
+/**
  * Enable the radio.
  *
  * @param[in] aInstance  The OpenThread instance structure.
@@ -262,8 +275,7 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddress);
  * @retval ::kThreadError_None     Successfully enabled.
  * @retval ::kThreadError_Failure  The radio could not be enabled.
  */
-ThreadError otPlatRadioEnable(otInstance *aInstance, otPlatRadioReceiveDone receiveCallback,
-                              otPlatRadioTransmitDone transmitCallback);
+ThreadError otPlatRadioEnable(otInstance *aInstance);
 
 /**
  * Disable the radio.
@@ -452,32 +464,6 @@ bool otPlatRadioGetPromiscuous(otInstance *aInstance);
  * @param[in]  aEnable   A value to enable or disable promiscuous mode.
  */
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable);
-
-/**
- * The radio driver calls this method to notify OpenThread diagnostics module that the transmission has completed.
- *
- * @param[in]  aInstance      The OpenThread instance structure.
- * @param[in]  aPacket        A pointer to the packet that was transmitted.
- * @param[in]  aFramePending  TRUE if an ACK frame was received and the Frame Pending bit was set.
- * @param[in]  aError  ::kThreadError_None when the frame was transmitted, ::kThreadError_NoAck when the frame was
- *                     transmitted but no ACK was received, ::kThreadError_ChannelAccessFailure when the transmission
- *                     could not take place due to activity on the channel, ::kThreadError_Abort when transmission was
- *                     aborted for other reasons.
- *
- */
-extern void otPlatDiagRadioTransmitDone(otInstance *aInstance, RadioPacket *aPacket, bool aFramePending,
-                                        ThreadError aError);
-
-/**
- * The radio driver calls this method to notify OpenThread diagnostics module of a received packet.
- *
- * @param[in]  aInstance The OpenThread instance structure.
- * @param[in]  aPacket   A pointer to the received packet or NULL if the receive operation was aborted.
- * @param[in]  aError    ::kThreadError_None when successfully received a frame, ::kThreadError_Abort when reception
- *                       was aborted and a frame was not received.
- *
- */
-extern void otPlatDiagRadioReceiveDone(otInstance *aInstance, RadioPacket *aPacket, ThreadError aError);
 
 /**
  * This method begins the energy scan sequence on the radio.

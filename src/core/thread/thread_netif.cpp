@@ -102,6 +102,7 @@ ThreadError ThreadNetif::Up(void)
 {
     if (!mIsUp)
     {
+        mMac.PrepareRadio();
         mIp6.AddNetif(*this);
         mMeshForwarder.Start();
         mCoapServer.Start();

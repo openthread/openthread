@@ -402,14 +402,18 @@ bool otPlatRadioIsEnabled(otInstance *aInstance)
     return (sState != kStateDisabled) ? true : false;
 }
 
-ThreadError otPlatRadioEnable(otInstance *aInstance, otPlatRadioReceiveDone receiveCallback,
-                              otPlatRadioTransmitDone transmitCallback)
+void otPlatRadioSetCallbacks(otInstance *aInstance, otPlatRadioReceiveDone receiveCallback,
+                             otPlatRadioTransmitDone transmitCallback)
+{
+    sReceiveDoneCallback = receiveCallback;
+    sTransmitDoneCallback = transmitCallback;
+}
+
+ThreadError otPlatRadioEnable(otInstance *aInstance)
 {
     if (!otPlatRadioIsEnabled(aInstance))
     {
         sState = kStateSleep;
-        sReceiveDoneCallback = receiveCallback;
-        sTransmitDoneCallback = transmitCallback;
     }
 
     return kThreadError_None;
@@ -420,8 +424,6 @@ ThreadError otPlatRadioDisable(otInstance *aInstance)
     if (otPlatRadioIsEnabled(aInstance))
     {
         sState = kStateDisabled;
-        sReceiveDoneCallback = NULL;
-        sTransmitDoneCallback = NULL;
     }
 
     return kThreadError_None;

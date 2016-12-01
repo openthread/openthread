@@ -97,6 +97,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_POWER_STATE, &NcpBase::GetPropertyHandler_POWER_STATE },
     { SPINEL_PROP_HWADDR, &NcpBase::GetPropertyHandler_HWADDR },
     { SPINEL_PROP_LOCK, &NcpBase::GetPropertyHandler_LOCK },
+    { SPINEL_PROP_BINDING_STATE, &NcpBase::GetPropertyHandler_BINDING_STATE },
 
     { SPINEL_PROP_PHY_ENABLED, &NcpBase::GetPropertyHandler_PHY_ENABLED },
     { SPINEL_PROP_PHY_FREQ, &NcpBase::GetPropertyHandler_PHY_FREQ },
@@ -222,6 +223,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
 const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
 {
     { SPINEL_PROP_POWER_STATE, &NcpBase::SetPropertyHandler_POWER_STATE },
+    { SPINEL_PROP_BINDING_STATE, &NcpBase::SetPropertyHandler_BINDING_STATE },
 
     { SPINEL_PROP_PHY_ENABLED, &NcpBase::SetPropertyHandler_PHY_ENABLED },
     { SPINEL_PROP_PHY_TX_POWER, &NcpBase::SetPropertyHandler_PHY_TX_POWER },
@@ -475,7 +477,7 @@ NcpBase::NcpBase(otInstance *aInstance):
     mAllowLocalNetworkDataChange(false),
     mRequireJoinExistingNetwork(false),
     mIsRawStreamEnabled(false),
-    mIsBoundToRadio(false),
+    mBindingState(kNcpBoundToThread),
     mCurTransmintTID(0),
 
     mFramingErrorCounter(0),
@@ -1607,12 +1609,26 @@ ThreadError NcpBase::GetPropertyHandler_LOCK(uint8_t header, spinel_prop_key_t k
     return SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
 }
 
+ThreadError NcpBase::GetPropertyHandler_BINDING_STATE(uint8_t header, spinel_prop_key_t key)
+{
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_UINT8_S,
+               mBindingState
+           );
+}
+
 ThreadError NcpBase::GetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_key_t key)
 {
-    // TODO: Implement PHY_ENBLED (Needs API!)
-    (void)key;
-
-    return SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+    return SendPropertyUpdate(
+                header,
+                SPINEL_CMD_PROP_VALUE_IS,
+                key,
+                SPINEL_DATATYPE_BOOL_S,
+                otPlatRadioIsEnabled(mInstance)
+            );
 }
 
 ThreadError NcpBase::GetPropertyHandler_PHY_FREQ(uint8_t header, spinel_prop_key_t key)
@@ -2994,6 +3010,65 @@ ThreadError NcpBase::SetPropertyHandler_POWER_STATE(uint8_t header, spinel_prop_
     return SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
 }
 
+ThreadError NcpBase::SetPropertyHandler_BINDING_STATE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                      uint16_t value_len)
+{
+    uint8_t value = false;
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_UINT8_S,
+                       &value
+                   );
+
+    if (parsedLength > 0)
+    {
+        if (mBindingState != value)
+        {
+            switch (value)
+            {
+            case SPINEL_BINDING_STATE_THREAD:
+                mBindingState = kNcpBoundToThread;
+                break;
+
+            case SPINEL_BINDING_STATE_RADIO:
+                if (otIsInterfaceUp(mInstance))
+                {
+                    errorCode = kThreadError_InvalidState;
+                }
+                else
+                {
+                    mBindingState = kNcpBoundToRadio;
+                    otPlatRadioSetCallbacks(mInstance, HandleRadioReceive, HandleRadioTransmit);
+                }
+                break;
+
+            default:
+                errorCode = kThreadError_InvalidArgs;
+                break;
+            }
+        }
+    }
+    else
+    {
+        errorCode = kThreadError_Parse;
+    }
+
+    if (errorCode == kThreadError_None)
+    {
+        errorCode = HandleCommandPropertyGet(header, key);
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+    }
+
+    return errorCode;
+}
+
 ThreadError NcpBase::SetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                     uint16_t value_len)
 {
@@ -3012,17 +3087,11 @@ ThreadError NcpBase::SetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_
     {
         if (value == false)
         {
-            mIsBoundToRadio = false;
             errorCode = otPlatRadioDisable(mInstance);
         }
         else
         {
-            mIsBoundToRadio = true;
-            errorCode = otPlatRadioEnable(mInstance, HandleRadioReceive, HandleRadioTransmit);
-            if (errorCode != kThreadError_None)
-            {
-                mIsBoundToRadio = false;
-            }
+            errorCode = otPlatRadioEnable(mInstance);
         }
     }
     else
@@ -3373,7 +3442,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t header, spinel_prop_k
     RadioPacket packet;
     unsigned int frame_len(0);
 
-    if (mIsBoundToRadio)
+    if (mBindingState == kNcpBoundToRadio)
     {
         parsedLength = spinel_datatype_unpack(
             value_ptr,
@@ -3425,7 +3494,7 @@ ThreadError NcpBase::SetPropertyHandler_NET_IF_UP(uint8_t header, spinel_prop_ke
     spinel_ssize_t parsedLength;
     ThreadError errorCode = kThreadError_None;
 
-    if (!mIsBoundToRadio)
+    if (mBindingState == kNcpBoundToThread)
     {
         parsedLength = spinel_datatype_unpack(
             value_ptr,
