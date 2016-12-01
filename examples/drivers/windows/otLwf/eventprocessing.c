@@ -681,11 +681,11 @@ otLwfEventWorkerThread(
     KWAIT_BLOCK WaitBlocks[ARRAYSIZE(WaitEvents)] = { 0 };
 
     // Space to processing buffers
-    const ULONG MessageBufferSize = 1500;
+    const ULONG MessageBufferSize = 1280;
     PUCHAR MessageBuffer = FILTER_ALLOC_MEM(pFilter->FilterHandle, MessageBufferSize);
     if (MessageBuffer == NULL)
     {
-        LogError(DRIVER_DATA_PATH, "Failed to allocate 1500 bytes for MessageBuffer!");
+        LogError(DRIVER_DATA_PATH, "Failed to allocate 1280 bytes for MessageBuffer!");
         return;
     }
 
