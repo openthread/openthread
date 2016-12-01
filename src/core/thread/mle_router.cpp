@@ -1658,7 +1658,15 @@ ThreadError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::M
         break;
     }
 
-    VerifyOrExit((child = FindChild(macAddr)) != NULL || (child = NewChild()) != NULL, ;);
+    if ((child = FindChild(macAddr)) != NULL)
+    {
+        RemoveNeighbor(*child);
+    }
+    else
+    {
+        VerifyOrExit((child = NewChild()) != NULL, ;);
+    }
+
     memset(child, 0, sizeof(*child));
 
     // Challenge
@@ -2993,6 +3001,7 @@ ThreadError MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
     case kDeviceStateLeader:
         if (aNeighbor.mState == Neighbor::kStateValid && !IsActiveRouter(aNeighbor.mValid.mRloc16))
         {
+            aNeighbor.mState = Neighbor::kStateInvalid;
             mMesh.UpdateIndirectMessages();
             mNetif.SetStateChangedFlags(OT_THREAD_CHILD_REMOVED);
             mNetworkData.SendServerDataNotification(aNeighbor.mValid.mRloc16);
