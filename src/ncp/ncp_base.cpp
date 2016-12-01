@@ -3013,7 +3013,7 @@ ThreadError NcpBase::SetPropertyHandler_POWER_STATE(uint8_t header, spinel_prop_
 ThreadError NcpBase::SetPropertyHandler_BINDING_STATE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                       uint16_t value_len)
 {
-    uint8_t value = false;
+    uint8_t value = SPINEL_BINDING_STATE_THREAD;
     spinel_ssize_t parsedLength;
     ThreadError errorCode = kThreadError_None;
 

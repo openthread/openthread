@@ -405,6 +405,7 @@ bool otPlatRadioIsEnabled(otInstance *aInstance)
 void otPlatRadioSetCallbacks(otInstance *aInstance, otPlatRadioReceiveDone receiveCallback,
                              otPlatRadioTransmitDone transmitCallback)
 {
+    (void)aInstance;
     sReceiveDoneCallback = receiveCallback;
     sTransmitDoneCallback = transmitCallback;
 }
