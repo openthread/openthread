@@ -240,8 +240,7 @@ void otPlatRadioSetCallbacks(otInstance *aInstance, otPlatRadioReceiveDone recei
     sTransmitDoneCallback = transmitCallback;
 }
 
-ThreadError otPlatRadioEnable(otInstance *aInstance, otPlatRadioReceiveDone receiveCallback,
-                              otPlatRadioTransmitDone transmitCallback)
+ThreadError otPlatRadioEnable(otInstance *aInstance)
 {
     if (!otPlatRadioIsEnabled(aInstance))
     {
