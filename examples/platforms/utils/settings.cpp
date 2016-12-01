@@ -42,7 +42,8 @@
 
 #include <common/code_utils.hpp>
 #include <platform/settings.h>
-#include <utils/flash.h>
+
+#include "flash.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -150,8 +151,8 @@ static uint32_t swapSettingsBlock(otInstance *aInstance)
     VerifyOrExit(pageNum > 1, ;);
 
     sSettingsBaseAddress = (swapAddress == SETTINGS_CONFIG_BASE_ADDRESS) ?
-                                      (swapAddress + settingsSize) :
-                                      SETTINGS_CONFIG_BASE_ADDRESS;
+                           (swapAddress + settingsSize) :
+                           SETTINGS_CONFIG_BASE_ADDRESS;
 
     initSettings(sSettingsBaseAddress, static_cast<uint32_t>(kSettingsInSwap));
     sSettingsUsedSize = kSettingsFlagSize;
