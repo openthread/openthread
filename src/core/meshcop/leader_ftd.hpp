@@ -104,6 +104,8 @@ private:
 
     static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
 
+    void ResignCommissioner(void);
+
     Coap::Resource mPetition;
     Coap::Resource mKeepAlive;
     Coap::Server &mCoapServer;

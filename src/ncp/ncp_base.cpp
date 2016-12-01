@@ -181,8 +181,8 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_CNTR_TX_PKT_BEACON_REQ, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_TX_PKT_OTHER, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_TX_PKT_RETRY, &NcpBase::GetPropertyHandler_MAC_CNTR },
-    { SPINEL_PROP_CNTR_TX_PKT_UNICAST, &NcpBase::GetPropertyHandler_NCP_CNTR },
-    { SPINEL_PROP_CNTR_TX_PKT_BROADCAST, &NcpBase::GetPropertyHandler_NCP_CNTR },
+    { SPINEL_PROP_CNTR_TX_PKT_UNICAST, &NcpBase::GetPropertyHandler_MAC_CNTR },
+    { SPINEL_PROP_CNTR_TX_PKT_BROADCAST, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_TX_ERR_CCA, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_RX_PKT_TOTAL, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_RX_PKT_DATA, &NcpBase::GetPropertyHandler_MAC_CNTR },
@@ -192,8 +192,8 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_CNTR_RX_PKT_OTHER, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_RX_PKT_FILT_WL, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_RX_PKT_FILT_DA, &NcpBase::GetPropertyHandler_MAC_CNTR },
-    { SPINEL_PROP_CNTR_RX_PKT_UNICAST, &NcpBase::GetPropertyHandler_NCP_CNTR },
-    { SPINEL_PROP_CNTR_RX_PKT_BROADCAST, &NcpBase::GetPropertyHandler_NCP_CNTR },
+    { SPINEL_PROP_CNTR_RX_PKT_UNICAST, &NcpBase::GetPropertyHandler_MAC_CNTR },
+    { SPINEL_PROP_CNTR_RX_PKT_BROADCAST, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_RX_ERR_EMPTY, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_RX_ERR_UKWN_NBR, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_RX_ERR_NVLD_SADDR, &NcpBase::GetPropertyHandler_MAC_CNTR },
@@ -460,34 +460,37 @@ static uint8_t BorderRouterConfigToFlagByte(const otBorderRouterConfig &config)
 
 NcpBase::NcpBase(otInstance *aInstance):
     mInstance(aInstance),
-    mUpdateChangedPropsTask(aInstance->mIp6.mTaskletScheduler, &NcpBase::UpdateChangedProps, this)
+    mLastStatus(SPINEL_STATUS_OK),
+    mSupportedChannelMask(kPhySupportedChannelMask),
+    mChannelMask(mSupportedChannelMask),
+    mScanPeriod(200), // ms
+    mUpdateChangedPropsTask(aInstance->mIp6.mTaskletScheduler, &NcpBase::UpdateChangedProps, this),
+    mChangedFlags(NCP_PLAT_RESET_REASON),
+    mShouldSignalEndOfScan(false),
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    mShouldSignalJamStateChange(false),
+#endif
+    mDroppedReplyTid(0),
+    mDroppedReplyTidBitSet(0),
+    mAllowLocalNetworkDataChange(false),
+    mRequireJoinExistingNetwork(false),
+    mIsRawStreamEnabled(false),
+    mIsBoundToRadio(false),
+    mCurTransmintTID(0),
+
+    mFramingErrorCounter(0),
+    mRxSpinelFrameCounter(0),
+    mTxSpinelFrameCounter(0),
+    mInboundSecureIpFrameCounter(0),
+    mInboundInsecureIpFrameCounter(0),
+    mOutboundSecureIpFrameCounter(0),
+    mOutboundInsecureIpFrameCounter(0),
+    mDroppedOutboundIpFrameCounter(0),
+    mDroppedInboundIpFrameCounter(0)
 {
     assert(mInstance != NULL);
-    mSupportedChannelMask = kPhySupportedChannelMask;
-    mChannelMask = mSupportedChannelMask;
-    mScanPeriod = 200; // ms
-    mShouldSignalEndOfScan = false;
-#if OPENTHREAD_ENABLE_JAM_DETECTION
-    mShouldSignalJamStateChange = false;
-#endif
-    sNcpContext = this;
-    mChangedFlags = NCP_PLAT_RESET_REASON;
-    mAllowLocalNetworkDataChange = false;
-    mRequireJoinExistingNetwork = false;
-    mIsRawStreamEnabled = false;
 
-    mIsBoundToRadio = false;
-    mCurTransmintTID = 0;
-
-    mFramingErrorCounter = 0;
-    mRxSpinelFrameCounter = 0;
-    mTxSpinelFrameCounter = 0;
-    mInboundSecureIpFrameCounter = 0;
-    mInboundInsecureIpFrameCounter = 0;
-    mOutboundSecureIpFrameCounter = 0;
-    mOutboundInsecureIpFrameCounter = 0;
-    mDroppedOutboundIpFrameCounter = 0;
-    mDroppedInboundIpFrameCounter = 0;
+    sNcpContext = NULL;
 
     otSetStateChangedCallback(mInstance, &NcpBase::HandleNetifStateChanged, this);
     otSetReceiveIp6DatagramCallback(mInstance, &NcpBase::HandleDatagramFromStack, this);

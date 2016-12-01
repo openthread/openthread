@@ -46,6 +46,8 @@
 namespace Thread {
 
 PanIdQueryServer::PanIdQueryServer(ThreadNetif &aThreadNetif) :
+    mChannelMask(0),
+    mPanId(Mac::kPanIdBroadcast),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, &PanIdQueryServer::HandleTimer, this),
     mPanIdQuery(OPENTHREAD_URI_PANID_QUERY, &PanIdQueryServer::HandleQuery, this),
     mCoapServer(aThreadNetif.GetCoapServer()),

@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="openthread.configuration.props" /> 
+  <Import Project="openthread.configuration.props" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>{3F1F7F6C-2A33-4635-9880-08FC5BC4E435}</ProjectGuid>
     <TemplateGuid>{8b1800b9-d017-4029-9785-13ef5e5b328e}</TemplateGuid>
@@ -76,8 +76,6 @@
         netio.lib;
         uuid.lib;
         cng.lib;
-        ..\..\build\bin\$(Platform)\$(Configuration)\lib\libopenthread_k.lib;
-        ..\..\build\bin\$(Platform)\$(Configuration)\lib\mbedtls_k.lib
       </AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -88,6 +86,7 @@
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\driver.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\eventprocessing.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\iocontrol.c" />
+    <ClCompile Include="..\..\examples\drivers\windows\otLwf\settings.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\oid.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\precomp.c">
       <AdditionalIncludeDirectories>..;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -98,9 +97,6 @@
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\filter.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\device.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\radio.c" />
-    <ClCompile Include="..\..\examples\drivers\windows\otLwf\settings.c" />
-    <ResourceCompile Include="..\..\examples\drivers\windows\otLwf\filter.rc" />
-    <Inf Include="..\..\examples\drivers\windows\otLwf\otLwf.inf" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\device.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\driver.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\iocontrol.h" />
@@ -109,6 +105,8 @@
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\radio.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\precomp.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\filter.h" />
+    <ResourceCompile Include="..\..\examples\drivers\windows\otLwf\filter.rc" />
+    <Inf Include="..\..\examples\drivers\windows\otLwf\otLwf.inf" />
   </ItemGroup>
   <ItemGroup>
     <FilesToPackage Include="$(TargetPath)" />

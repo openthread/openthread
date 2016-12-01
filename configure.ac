@@ -989,6 +989,7 @@ examples/apps/ncp/Makefile
 examples/platforms/Makefile
 examples/platforms/cc2538/Makefile
 examples/platforms/posix/Makefile
+examples/platforms/utils/Makefile
 tools/Makefile
 tools/harness-automation/Makefile
 tools/harness-thci/Makefile

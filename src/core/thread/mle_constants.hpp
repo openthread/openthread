@@ -63,6 +63,8 @@ enum
     kParentResponseMaxDelayAll     = 1000,  ///< Maximum delay for response for Parent Request sent to all devices
     kMaxResponseDelay              = 1000,  ///< Maximum delay before responding to a multicast request
     kMaxChildIdRequestTimeout      = 5000,  ///< Maximum delay for receiving a Child ID Request
+    kChildUpdateRequestPeriod      = 100,   ///< The period for sending Child Update Request
+    kMaxChildUpdateResponseTimeout = 2000,  ///< Maximum delay for receiving a Child Update Response
 };
 
 enum

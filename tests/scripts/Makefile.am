@@ -131,6 +131,7 @@ EXTRA_DIST                                                         = \
     thread-cert/net_crypto.py                                        \
     thread-cert/network_data.py                                      \
     thread-cert/node.py                                              \
+    thread-cert/node_cli.py                                          \
     thread-cert/sniffer.py                                           \
     $(NULL)
 

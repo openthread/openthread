@@ -235,7 +235,7 @@ private:
     ThreadNetif &mNetif;
 };
 
-}  // namspace MeshCoP
+}  // namespace MeshCoP
 }  // namespace Thread
 
 #endif  // DTLS_HPP_

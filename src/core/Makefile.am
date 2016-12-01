@@ -133,7 +133,7 @@ if OPENTHREAD_ENABLE_JAM_DETECTION
 SOURCES_COMMON                     += \
     utils/jam_detector.cpp            \
     $(NULL)
-endif  # OPENTHREAD_ENABLE_DHCP6_SERVER
+endif  # OPENTHREAD_ENABLE_JAM_DETECTION
 
 libopenthread_ftd_a_CPPFLAGS        = \
     $(CPPFLAGS_COMMON)                \

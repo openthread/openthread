@@ -159,6 +159,22 @@ public:
     uint32_t GetMacFrameCounter(void) const;
 
     /**
+     * This method sets the current MAC Frame Counter value.
+     *
+     * @param[in]  aMacFrameCounter  The MAC Frame Counter value.
+     *
+     */
+    void SetMacFrameCounter(uint32_t aMacFrameCounter);
+
+    /**
+     * This method sets the MAC Frame Counter value which is stored in non-volatile memory.
+     *
+     * @param[in]  aStoredMacFrameCounter  The stored MAC Frame Counter value.
+     *
+     */
+    void SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter);
+
+    /**
      * This method increments the current MAC Frame Counter value.
      *
      */
@@ -171,6 +187,22 @@ public:
      *
      */
     uint32_t GetMleFrameCounter(void) const;
+
+    /**
+     * This method sets the current MLE Frame Counter value.
+     *
+     * @param[in]  aMleFrameCounter  The MLE Frame Counter value.
+     *
+     */
+    void SetMleFrameCounter(uint32_t aMleFrameCounter);
+
+    /**
+     * This method sets the MLE Frame Counter value which is stored in non-volatile memory.
+     *
+     * @param[in]  aStoredMleFrameCounter  The stored MLE Frame Counter value.
+     *
+     */
+    void SetStoredMleFrameCounter(uint32_t aStoredMleFrameCounter);
 
     /**
      * This method increments the current MLE Frame Counter value.
@@ -300,6 +332,8 @@ private:
 
     uint32_t mMacFrameCounter;
     uint32_t mMleFrameCounter;
+    uint32_t mStoredMacFrameCounter;
+    uint32_t mStoredMleFrameCounter;
 
     uint32_t mKeyRotationTime;
     uint32_t mKeySwitchGuardTime;

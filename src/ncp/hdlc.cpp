@@ -128,6 +128,11 @@ bool Encoder::BufferWriteIterator::CanWrite(uint16_t aWriteLength) const
    return (mRemainingLength >= aWriteLength);
 }
 
+Encoder::Encoder(void):
+    mFcs(0)
+{
+}
+
 ThreadError Encoder::Init(BufferWriteIterator &aIterator)
 {
     mFcs = kInitFcs;
@@ -202,15 +207,16 @@ exit:
     return error;
 }
 
-Decoder::Decoder(uint8_t *aOutBuf, uint16_t aOutLength, FrameHandler aFrameHandler, ErrorHandler aErrorHandler, void *aContext)
+Decoder::Decoder(uint8_t *aOutBuf, uint16_t aOutLength, FrameHandler aFrameHandler, ErrorHandler aErrorHandler, void *aContext):
+    mState(kStateNoSync),
+    mFrameHandler(aFrameHandler),
+    mErrorHandler(aErrorHandler),
+    mContext(aContext),
+    mOutBuf(aOutBuf),
+    mOutOffset(0),
+    mOutLength(aOutLength),
+    mFcs(0)
 {
-    mState = kStateNoSync;
-    mFrameHandler = aFrameHandler;
-    mErrorHandler = aErrorHandler;
-    mContext = aContext;
-    mOutBuf = aOutBuf;
-    mOutOffset = 0;
-    mOutLength = aOutLength;
 }
 
 void Decoder::Decode(const uint8_t *aInBuf, uint16_t aInLength)

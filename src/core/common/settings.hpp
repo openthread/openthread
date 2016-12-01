@@ -46,6 +46,9 @@ enum
 {
     kKeyActiveDataset  = 0x0001,
     kKeyPendingDataset = 0x0002,
+    kKeyNetworkInfo    = 0x0003,
+    kKeyParentInfo     = 0x0004,
+    kKeyChildInfo      = 0x0005,
 };
 
 #ifdef __cplusplus

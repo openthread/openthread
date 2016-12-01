@@ -2837,6 +2837,17 @@ otPlatformReset(
     if (aInstance) (void)SetIOCTL(aInstance, IOCTL_OTLWF_OT_PLATFORM_RESET);
 }
 
+OTAPI 
+void 
+OTCALL
+otFactoryReset(
+    _In_ otInstance *aInstance
+    )
+{
+    UNREFERENCED_PARAMETER(aInstance);
+    // TODO ...
+}
+
 OTAPI
 ThreadError
 OTCALL

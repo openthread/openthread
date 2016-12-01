@@ -65,61 +65,72 @@ ActiveDataset::ActiveDataset(ThreadNetif &aThreadNetif):
     mCoapServer.AddResource(mResourceGet);
 }
 
+ThreadError ActiveDataset::GenerateLocal(void)
+{
+    ThreadError error = kThreadError_None;
+    otOperationalDataset dataset;
+
+    VerifyOrExit(mNetif.GetMle().IsAttached() && mLocal.GetTimestamp() == NULL, error = kThreadError_InvalidState);
+
+    memset(&dataset, 0, sizeof(dataset));
+
+    // Active Timestamp
+    dataset.mActiveTimestamp = 0;
+    dataset.mIsActiveTimestampSet = true;
+
+    // Channel
+    dataset.mChannel = mNetif.GetMac().GetChannel();
+    dataset.mIsChannelSet = true;
+
+    // channelMask
+    dataset.mChannelMaskPage0 = kPhySupportedChannelMask;
+    dataset.mIsChannelMaskPage0Set = true;
+
+    // Extended PAN ID
+    memcpy(dataset.mExtendedPanId.m8, mNetif.GetMac().GetExtendedPanId(), sizeof(dataset.mExtendedPanId));
+    dataset.mIsExtendedPanIdSet = true;
+
+    // Mesh-Local Prefix
+    memcpy(dataset.mMeshLocalPrefix.m8, mNetif.GetMle().GetMeshLocalPrefix(), sizeof(dataset.mMeshLocalPrefix));
+    dataset.mIsMeshLocalPrefixSet = true;
+
+    // Master Key
+    const uint8_t *key;
+    uint8_t keyLength;
+    key = mNetif.GetKeyManager().GetMasterKey(&keyLength);
+    memcpy(dataset.mMasterKey.m8, key, keyLength);
+    dataset.mIsMasterKeySet = true;
+
+    // Network Name
+    const char *name;
+    name = mNetif.GetMac().GetNetworkName();
+    memcpy(dataset.mNetworkName.m8, name, strlen(name));
+    dataset.mIsNetworkNameSet = true;
+
+    // Pan ID
+    dataset.mPanId = mNetif.GetMac().GetPanId();
+    dataset.mIsPanIdSet = true;
+
+    // PSKc
+    memset(dataset.mPSKc.m8, 0, OT_PSKC_MAX_SIZE);
+    dataset.mIsPSKcSet = true;
+
+    // Security Policy
+    dataset.mSecurityPolicy.mRotationTime = static_cast<uint16_t>(mNetif.GetKeyManager().GetKeyRotation());
+    dataset.mSecurityPolicy.mFlags = mNetif.GetKeyManager().GetSecurityPolicyFlags();
+    dataset.mIsSecurityPolicySet = true;
+
+    mLocal.Set(dataset);
+
+exit:
+    return error;
+}
+
 void ActiveDataset::StartLeader(void)
 {
     if (mLocal.GetTimestamp() == NULL)
     {
-        otOperationalDataset dataset;
-
-        memset(&dataset, 0, sizeof(dataset));
-
-        // Active Timestamp
-        dataset.mActiveTimestamp = 0;
-        dataset.mIsActiveTimestampSet = true;
-
-        // Channel
-        dataset.mChannel = mNetif.GetMac().GetChannel();
-        dataset.mIsChannelSet = true;
-
-        // channelMask
-        dataset.mChannelMaskPage0 = kPhySupportedChannelMask;
-        dataset.mIsChannelMaskPage0Set = true;
-
-        // Extended PAN ID
-        memcpy(dataset.mExtendedPanId.m8, mNetif.GetMac().GetExtendedPanId(), sizeof(dataset.mExtendedPanId));
-        dataset.mIsExtendedPanIdSet = true;
-
-        // Mesh-Local Prefix
-        memcpy(dataset.mMeshLocalPrefix.m8, mNetif.GetMle().GetMeshLocalPrefix(), sizeof(dataset.mMeshLocalPrefix));
-        dataset.mIsMeshLocalPrefixSet = true;
-
-        // Master Key
-        const uint8_t *key;
-        uint8_t keyLength;
-        key = mNetif.GetKeyManager().GetMasterKey(&keyLength);
-        memcpy(dataset.mMasterKey.m8, key, keyLength);
-        dataset.mIsMasterKeySet = true;
-
-        // Network Name
-        const char *name;
-        name = mNetif.GetMac().GetNetworkName();
-        memcpy(dataset.mNetworkName.m8, name, strlen(name));
-        dataset.mIsNetworkNameSet = true;
-
-        // Pan ID
-        dataset.mPanId = mNetif.GetMac().GetPanId();
-        dataset.mIsPanIdSet = true;
-
-        // PSKc
-        memset(dataset.mPSKc.m8, 0, OT_PSKC_MAX_SIZE);
-        dataset.mIsPSKcSet = true;
-
-        // Security Policy
-        dataset.mSecurityPolicy.mRotationTime = static_cast<uint16_t>(mNetif.GetKeyManager().GetKeyRotation());
-        dataset.mSecurityPolicy.mFlags = mNetif.GetKeyManager().GetSecurityPolicyFlags();
-        dataset.mIsSecurityPolicySet = true;
-
-        mLocal.Set(dataset);
+        GenerateLocal();
     }
 
     mLocal.Store();

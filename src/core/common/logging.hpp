@@ -74,7 +74,7 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OPENTHREAD_LOG_LEVEL_CRIT
-#define otLogCrit(aRegion, aFormat, ...)  otPlatLog(kLogLevelCrit, aRegion, aFormat, ## __VA_ARGS__)
+#define otLogCrit(aRegion, aFormat, ...)  otPlatLog(kLogLevelCrit, aRegion, aFormat OPENTHREAD_CONFIG_LOG_SUFFIX, ## __VA_ARGS__)
 #else
 #define otLogCrit(aRegion, aFormat, ...)
 #endif
@@ -90,7 +90,7 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OPENTHREAD_LOG_LEVEL_WARN
-#define otLogWarn(aRegion, aFormat, ...)  otPlatLog(kLogLevelWarn, aRegion, aFormat, ## __VA_ARGS__)
+#define otLogWarn(aRegion, aFormat, ...)  otPlatLog(kLogLevelWarn, aRegion, aFormat OPENTHREAD_CONFIG_LOG_SUFFIX, ## __VA_ARGS__)
 #else
 #define otLogWarn(aRegion, aFormat, ...)
 #endif
@@ -106,7 +106,7 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OPENTHREAD_LOG_LEVEL_INFO
-#define otLogInfo(aRegion, aFormat, ...)  otPlatLog(kLogLevelInfo, aRegion, aFormat, ## __VA_ARGS__)
+#define otLogInfo(aRegion, aFormat, ...)  otPlatLog(kLogLevelInfo, aRegion, aFormat OPENTHREAD_CONFIG_LOG_SUFFIX, ## __VA_ARGS__)
 #else
 #define otLogInfo(aRegion, aFormat, ...)
 #endif
@@ -122,7 +122,7 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OPENTHREAD_LOG_LEVEL_DEBG
-#define otLogDebg(aRegion, aFormat, ...)  otPlatLog(kLogLevelDebg, aRegion, aFormat, ## __VA_ARGS__)
+#define otLogDebg(aRegion, aFormat, ...)  otPlatLog(kLogLevelDebg, aRegion, aFormat OPENTHREAD_CONFIG_LOG_SUFFIX, ## __VA_ARGS__)
 #else
 #define otLogDebg(aRegion, aFormat, ...)
 #endif
@@ -658,7 +658,7 @@ extern "C" {
  *
  */
 #if OPENTHREAD_ENABLE_CERT_LOG
-#define otLogCertMeshCoP(aFormat, ...) otPlatLog(kLogLevelNone, kLogRegionMeshCoP, aFormat, ## __VA_ARGS__)
+#define otLogCertMeshCoP(aFormat, ...) otPlatLog(kLogLevelNone, kLogRegionMeshCoP, aFormat OPENTHREAD_CONFIG_LOG_SUFFIX, ## __VA_ARGS__)
 #else
 #define otLogCertMeshCoP(aFormat, ...)
 #endif
