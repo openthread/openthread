@@ -90,10 +90,10 @@ NcpUart::NcpUart(otInstance *aInstance):
     mFrameDecoder(mRxBuffer, sizeof(mRxBuffer), &NcpUart::HandleFrame, &NcpUart::HandleError, this),
     mUartBuffer(),
     mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer)),
+    mState(kStartingFrame),
+    mByte(0),
     mUartSendTask(aInstance->mIp6.mTaskletScheduler, EncodeAndSendToUart, this)
 {
-    mState = kStartingFrame;
-
     mTxFrameBuffer.SetCallbacks(NULL, TxFrameBufferHasData, this);
 }
 
@@ -174,6 +174,8 @@ void NcpUart::EncodeAndSendToUart(void)
             super_t::HandleSpaceAvailableInTxBuffer();
 
             mState = kFinalizingFrame;
+
+            // fall through
 
         case kFinalizingFrame:
 

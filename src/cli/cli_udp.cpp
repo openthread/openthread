@@ -46,6 +46,8 @@ Udp::Udp(otInstance *aInstance, Interpreter *aInterpreter):
     mInstance(aInstance),
     mInterpreter(aInterpreter)
 {
+    memset(&mSocket, 0, sizeof(mSocket));
+    memset(&mPeer, 0, sizeof(mPeer));
 }
 
 ThreadError Udp::Start(void)
