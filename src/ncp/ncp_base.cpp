@@ -462,7 +462,7 @@ NcpBase::NcpBase(otInstance *aInstance):
     mInstance(aInstance),
     mLastStatus(SPINEL_STATUS_OK),
     mSupportedChannelMask(kPhySupportedChannelMask),
-    mChannelMask(mSupportedChannelMask),
+    mChannelMask(kPhySupportedChannelMask),
     mScanPeriod(200), // ms
     mUpdateChangedPropsTask(aInstance->mIp6.mTaskletScheduler, &NcpBase::UpdateChangedProps, this),
     mChangedFlags(NCP_PLAT_RESET_REASON),
@@ -488,7 +488,7 @@ NcpBase::NcpBase(otInstance *aInstance):
 {
     assert(mInstance != NULL);
 
-    sNcpContext = NULL;
+    sNcpContext = this;
 
     otSetStateChangedCallback(mInstance, &NcpBase::HandleNetifStateChanged, this);
     otSetReceiveIp6DatagramCallback(mInstance, &NcpBase::HandleDatagramFromStack, this);
