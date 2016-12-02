@@ -1470,6 +1470,25 @@ Blacklist &Mac::GetBlacklist(void)
     return mBlacklist;
 }
 
+void Mac::FillMacCountersTlv(NetworkDiagnostic::MacCountersTlv &aMacCounters) const
+{
+    aMacCounters.SetIfInUnknownProtos(mCounters.mRxOther);
+    aMacCounters.SetIfInErrors(mCounters.mRxErrNoFrame + mCounters.mRxErrUnknownNeighbor + mCounters.mRxErrInvalidSrcAddr +
+                               mCounters.mRxErrSec + mCounters.mRxErrFcs + mCounters.mRxErrOther);
+    aMacCounters.SetIfOutErrors(mCounters.mTxErrCca);
+    aMacCounters.SetIfInUcastPkts(mCounters.mRxUnicast);
+    aMacCounters.SetIfInBroadcastPkts(mCounters.mRxBroadcast);
+    aMacCounters.SetIfInDiscards(mCounters.mRxWhitelistFiltered + mCounters.mRxDestAddrFiltered + mCounters.mRxDuplicated);
+    aMacCounters.SetIfOutUcastPkts(mCounters.mTxUnicast);
+    aMacCounters.SetIfOutBroadcastPkts(mCounters.mTxBroadcast);
+    aMacCounters.SetIfOutDiscards(0);
+}
+
+void Mac::ResetCounters(void)
+{
+    memset(&mCounters, 0, sizeof(mCounters));
+}
+
 otMacCounters &Mac::GetCounters(void)
 {
     return mCounters;

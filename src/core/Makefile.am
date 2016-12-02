@@ -80,8 +80,8 @@ SOURCES_COMMON                      = \
     thread/network_data.cpp           \
     thread/network_data_leader.cpp    \
     thread/panid_query_server.cpp     \
-    thread/network_diag.cpp           \
-    thread/network_diag_tlvs.cpp      \
+    thread/network_diagnostic.cpp     \
+    thread/network_diagnostic_tlvs.cpp  \
     thread/thread_netif.cpp           \
     thread/thread_tlvs.cpp            \
     utils/slaac_address.cpp           \
@@ -248,8 +248,8 @@ noinst_HEADERS                      = \
     thread/network_data_local_mtd.hpp \
     thread/network_data_tlvs.hpp      \
     thread/panid_query_server.hpp     \
-    thread/network_diag.hpp           \
-    thread/network_diag_tlvs.hpp      \
+    thread/network_diagnostic.hpp     \
+    thread/network_diagnostic_tlvs.hpp \
     thread/thread_netif.hpp           \
     thread/thread_tlvs.hpp            \
     thread/thread_uris.hpp            \

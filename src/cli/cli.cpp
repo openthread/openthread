@@ -2628,29 +2628,34 @@ void Interpreter::ProcessNetworkDiagnostic(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
     struct otIp6Address address;
-    uint8_t index = 2;
-    uint8_t tlvTypes[OT_NUM_NETDIAG_TLV_TYPES];
-    uint8_t count = 0;
+    uint8_t payload[2 + OT_NETWORK_DIAGNOSTIC_TYPELIST_MAX_ENTRIES];  // TypeList Type(1B), len(1B), type list
+    uint8_t payloadIndex = 0;
+    uint8_t paramIndex = 0;
 
     VerifyOrExit(argc > 1 + 1, error = kThreadError_Parse);
 
     SuccessOrExit(error = otIp6AddressFromString(argv[1], &address));
 
-    while (index < argc && count < sizeof(tlvTypes))
+    payloadIndex = 2;
+    paramIndex = 2;
+
+    while (paramIndex < argc && payloadIndex < sizeof(payload))
     {
         long value;
-        SuccessOrExit(error = ParseLong(argv[index], value));
-        tlvTypes[count++] = static_cast<uint8_t>(value);
-        index++;
+        SuccessOrExit(error = ParseLong(argv[paramIndex++], value));
+        payload[payloadIndex++] = static_cast<uint8_t>(value);
     }
+
+    payload[0] = OT_NETWORK_DIAGNOSTIC_TYPELIST_TYPE;  // TypeList TLV Type
+    payload[1] = payloadIndex - 2;  // length
 
     if (strcmp(argv[0], "get") == 0)
     {
-        otSendDiagnosticGet(mInstance, &address, tlvTypes, count);
+        otSendDiagnosticGet(mInstance, &address, payload, payloadIndex);
     }
     else if (strcmp(argv[0], "reset") == 0)
     {
-        otSendDiagnosticReset(mInstance, &address, tlvTypes, count);
+        otSendDiagnosticReset(mInstance, &address, payload, payloadIndex);
     }
 
 exit:
