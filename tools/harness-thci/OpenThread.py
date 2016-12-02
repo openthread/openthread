@@ -57,6 +57,7 @@ class OpenThread(IThci):
     isBlackListEnabled = False       # indicate if Thread device enables black list filter
     isActiveCommissioner = False     # indicate if Thread device is an active commissioner
     LOWEST_POSSIBLE_PARTATION_ID = 0x1
+    LINK_QUALITY_CHANGE_TIME = 100
 
     #def __init__(self, SerialPort=COMPortName, EUI=MAC_Address):
     def __init__(self, **kwargs):
