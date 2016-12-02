@@ -1470,7 +1470,7 @@ Blacklist &Mac::GetBlacklist(void)
     return mBlacklist;
 }
 
-void Mac::FillMacCountersTlv(NetworkDiagnostic::MacCountersTlv &aMacCounters)
+void Mac::FillMacCountersTlv(NetworkDiagnostic::MacCountersTlv &aMacCounters) const
 {
     aMacCounters.SetIfInUnknownProtos(mCounters.mRxOther);
     aMacCounters.SetIfInErrors(mCounters.mRxErrNoFrame + mCounters.mRxErrUnknownNeighbor + mCounters.mRxErrInvalidSrcAddr +

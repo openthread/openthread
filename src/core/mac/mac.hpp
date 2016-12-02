@@ -496,15 +496,13 @@ public:
     /**
      * This function fills network diagnostic MacCounterTlv.
      *
-     *
      * @param[in]  aMacCountersTlv The reference to the network diagnostic MacCounterTlv.
      *
      */
-    void FillMacCountersTlv(NetworkDiagnostic::MacCountersTlv &aMacCounters);
+    void FillMacCountersTlv(NetworkDiagnostic::MacCountersTlv &aMacCounters) const;
 
     /**
      * This function resets mac counters
-     *
      *
      */
     void ResetCounters(void);

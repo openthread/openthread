@@ -2628,19 +2628,19 @@ void Interpreter::ProcessNetworkDiagnostic(int argc, char *argv[])
     struct otIp6Address address;
     uint8_t payload[2 + OT_NETWORK_DIAGNOSTIC_TYPELIST_MAX_ENTRIES];  // TypeList Type(1B), len(1B), type list
     uint8_t payloadIndex = 0;
-    uint8_t paraIndex = 0;
+    uint8_t paramIndex = 0;
 
     VerifyOrExit(argc > 1 + 1, error = kThreadError_Parse);
 
     SuccessOrExit(error = otIp6AddressFromString(argv[1], &address));
 
     payloadIndex = 2;
-    paraIndex = 2;
+    paramIndex = 2;
 
-    while (paraIndex < argc && payloadIndex < sizeof(payload))
+    while (paramIndex < argc && payloadIndex < sizeof(payload))
     {
         long value;
-        SuccessOrExit(error = ParseLong(argv[paraIndex++], value));
+        SuccessOrExit(error = ParseLong(argv[paramIndex++], value));
         payload[payloadIndex++] = static_cast<uint8_t>(value);
     }
 
