@@ -517,6 +517,7 @@
 <link href="#rfc.section.10.1.3" rel="Chapter" title="10.1.3 PROP 4610: PROP_JAM_DETECT_RSSI_THRESHOLD"/>
 <link href="#rfc.section.10.1.4" rel="Chapter" title="10.1.4 PROP 4611: PROP_JAM_DETECT_WINDOW"/>
 <link href="#rfc.section.10.1.5" rel="Chapter" title="10.1.5 PROP 4612: PROP_JAM_DETECT_BUSY"/>
+<link href="#rfc.section.10.1.6" rel="Chapter" title="10.1.6 PROP 4613: SPINEL_PROP_JAM_DETECT_HISTORY_BITMAP"/>
 <link href="#rfc.section.11" rel="Chapter" title="11 Feature: GPIO Access"/>
 <link href="#rfc.section.11.1" rel="Chapter" title="11.1 Properties"/>
 <link href="#rfc.section.11.1.1" rel="Chapter" title="11.1.1 PROP 4096: PROP_GPIO_CONFIG"/>
@@ -566,8 +567,8 @@
   <link rel="schema.dct" href="http://purl.org/dc/terms/" />
 
   <meta name="dct.creator" content="Quattlebaum, R." />
-  <meta name="dct.identifier" content="urn:ietf:id:draft-spinel-protocol-29f5b2c82" />
-  <meta name="dct.issued" scheme="ISO8601" content="2016-11-30" />
+  <meta name="dct.identifier" content="urn:ietf:id:draft-spinel-protocol-3df876d" />
+  <meta name="dct.issued" scheme="ISO8601" content="2016-12-2" />
   <meta name="dct.abstract" content="This document describes a general management protocol for enabling a host device to communicate with and manage a Network Control Processor (NCP).  " />
   <meta name="description" content="This document describes a general management protocol for enabling a host device to communicate with and manage a Network Control Processor (NCP).  " />
 
@@ -588,7 +589,7 @@
 </tr>
 <tr>
   <td class="left"></td>
-  <td class="right">November 30, 2016</td>
+  <td class="right">December 2, 2016</td>
 </tr>
 
     	
@@ -596,7 +597,7 @@
   </table>
 
   <p class="title">Spinel Host-Controller Protocol<br />
-  <span class="filename">draft-spinel-protocol-29f5b2c82</span></p>
+  <span class="filename">draft-spinel-protocol-3df876d</span></p>
   
   <h1 id="rfc.abstract">
   <a href="#rfc.abstract">Abstract</a>
@@ -774,6 +775,7 @@
 <li>10.1.3.   <a href="#rfc.section.10.1.3">PROP 4610: PROP_JAM_DETECT_RSSI_THRESHOLD</a></li>
 <li>10.1.4.   <a href="#rfc.section.10.1.4">PROP 4611: PROP_JAM_DETECT_WINDOW</a></li>
 <li>10.1.5.   <a href="#rfc.section.10.1.5">PROP 4612: PROP_JAM_DETECT_BUSY</a></li>
+<li>10.1.6.   <a href="#rfc.section.10.1.6">PROP 4613: SPINEL_PROP_JAM_DETECT_HISTORY_BITMAP</a></li>
 </ul></ul><li>11.   <a href="#rfc.section.11">Feature: GPIO Access</a></li>
 <ul><li>11.1.   <a href="#rfc.section.11.1">Properties</a></li>
 <ul><li>11.1.1.   <a href="#rfc.section.11.1.1">PROP 4096: PROP_GPIO_CONFIG</a></li>
@@ -3301,6 +3303,18 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 <p> </p>
 <p id="rfc.section.10.1.5.p.2">This parameter describes the number of aggregate seconds within the detection window where the RSSI must be above <samp>PROP_JAM_DETECT_RSSI_THRESHOLD</samp> to trigger detection.  </p>
 <p id="rfc.section.10.1.5.p.3">The behavior of the jamming detection feature when <samp>PROP_JAM_DETECT_BUSY</samp> is larger than <samp>PROP_JAM_DETECT_WINDOW</samp> is undefined.  </p>
+<h1 id="rfc.section.10.1.6"><a href="#rfc.section.10.1.6">10.1.6.</a> <a href="#prop-4613-spinelpropjamdetecthistorybitmap" id="prop-4613-spinelpropjamdetecthistorybitmap">PROP 4613: SPINEL_PROP_JAM_DETECT_HISTORY_BITMAP</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Only</li>
+  <li>Packed-Encoding: <samp>LL</samp></li>
+  <li>Default Value: Implementation-specific</li>
+  <li>RECOMMENDED for <samp>CAP_JAM_DETECT</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.10.1.6.p.2">This value provides information about current state of jamming detection module for monitoring/debugging purpose. It returns a 64-bit value where each bit corresponds to one second interval starting with bit 0 for the most recent interval and bit 63 for the oldest intervals (63 sec earlier).  The bit is set to 1 if the jamming detection module observed/detected high signal level during the corresponding one second interval.  The value is read-only and is encoded as two <samp>L</samp> (uint32) values in little-endian format (first <samp>L</samp> (uint32) value gives the lower bits corresponding to more recent history).  </p>
 <h1 id="rfc.section.11"><a href="#rfc.section.11">11.</a> <a href="#feature-gpio-access" id="feature-gpio-access">Feature: GPIO Access</a></h1>
 <p id="rfc.section.11.p.1">This feature allows the host to have control over some or all of the GPIO pins on the NCP. The host can determine which GPIOs are available by examining <samp>PROP_GPIO_CONFIG</samp>, described below. This API supports a maximum of 256 individual GPIO pins.  </p>
 <p id="rfc.section.11.p.2">Support for this feature can be determined by the presence of <samp>CAP_GPIO</samp>.  </p>
