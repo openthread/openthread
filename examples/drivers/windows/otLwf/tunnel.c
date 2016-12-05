@@ -853,6 +853,7 @@ otLwfGetNextTunnelTransactionId(
         {
             TID = pFilter->tunNextTID;
             pFilter->tunNextTID = SPINEL_GET_NEXT_TID(pFilter->tunNextTID);
+            pFilter->tunTIDsInUse |= (1 << TID);
         }
 
         NdisReleaseSpinLock(&pFilter->tunCommandLock);
@@ -1697,21 +1698,6 @@ otLwfProcessSpinelIPv6Packet(
         LogVerbose(DRIVER_DATA_PATH, "Filter: %p dropping internal address message.", pFilter);
         goto exit;
     }
-    
-    // Filter internal Thread messages
-    /*if (v6Header->NextHeader == IPPROTO_UDP &&
-        BufferLength >= sizeof(IPV6_HEADER) + sizeof(UDPHeader) &&
-        memcmp(&pFilter->otLinkLocalAddr, &v6Header->DestinationAddress, sizeof(IN6_ADDR)) == 0)
-    {
-        // Check for MLE message
-        UDPHeader* UdpHeader = (UDPHeader*)(v6Header + 1);
-        if (UdpHeader->DestinationPort == UdpHeader->SourcePort &&
-            UdpHeader->DestinationPort == RtlUshortByteSwap(19788)) // MLE Port
-        {
-            LogVerbose(DRIVER_DATA_PATH, "Filter: %p dropping MLE message.", pFilter);
-            goto exit;
-        }
-    }*/
     
     LogVerbose(DRIVER_DATA_PATH, "Filter: %p, IP6_RECV: %p : %!IPV6ADDR! => %!IPV6ADDR! (%u bytes)", 
                pFilter, NetBufferList, &v6Header->SourceAddress, &v6Header->DestinationAddress,

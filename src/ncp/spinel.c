@@ -531,7 +531,7 @@ spinel_datatype_unpack(const uint8_t *data_ptr, spinel_size_t data_len, const ch
     return ret;
 }
 
-#
+
 spinel_ssize_t
 spinel_datatype_vunpack(const uint8_t *data_ptr, spinel_size_t data_len, const char *pack_format, va_list args)
 {
