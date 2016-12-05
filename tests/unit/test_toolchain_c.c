@@ -33,7 +33,7 @@
 
 void test_addr_size_c()
 {
-#ifdef X64
+#ifdef _WIN64
     CompileTimeAssert(offsetof(otNetifAddress, mNext) == 40, "mNext should offset by 40 bytes from front");
     CompileTimeAssert(sizeof(otNetifAddress) == 48, "otNetifAddress should be 48 (unpacked) bytes");
 #else
