@@ -895,19 +895,16 @@ typedef struct otBufferInfo
  * This structure represents an IPv6 network interface unicast address.
  *
  */
-OT_TOOL_PACKED_BEGIN
-struct otNetifAddress
+typedef struct otNetifAddress
 {
     otIp6Address           mAddress;                 ///< The IPv6 unicast address.
     uint32_t               mPreferredLifetime;       ///< The Preferred Lifetime.
     uint32_t               mValidLifetime;           ///< The Valid lifetime.
     uint8_t                mPrefixLength;            ///< The Prefix length.
-    uint32_t               mScopeOverride : 4;       ///< The IPv6 scope of this address.
-    uint32_t               mScopeOverrideValid : 1;  ///< TRUE if the mScopeOverride value is valid, FALSE othewrise.
+    unsigned int           mScopeOverride : 4;       ///< The IPv6 scope of this address.
+    bool                   mScopeOverrideValid : 1;  ///< TRUE if the mScopeOverride value is valid, FALSE othewrise.
     struct otNetifAddress *mNext;                    ///< A pointer to the next network interface address.
-} OT_TOOL_PACKED_END;
-
-typedef struct otNetifAddress otNetifAddress;
+} otNetifAddress;
 
 /**
  * This structure represents an IPv6 network interface multicast address.
