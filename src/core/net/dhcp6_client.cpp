@@ -257,7 +257,7 @@ exit:
     {}
 }
 
-ThreadError Dhcp6Client::Start()
+ThreadError Dhcp6Client::Start(void)
 {
     Ip6::SockAddr sockaddr;
 
@@ -270,7 +270,7 @@ ThreadError Dhcp6Client::Start()
     return kThreadError_None;
 }
 
-ThreadError Dhcp6Client::Stop()
+ThreadError Dhcp6Client::Stop(void)
 {
     mSocket.Close();
     return kThreadError_None;

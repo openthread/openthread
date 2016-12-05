@@ -87,7 +87,7 @@ public:
      * This method initializes the ICMPv6 header to all zeros.
      *
      */
-    void Init() { mType = 0; mCode = 0; mChecksum = 0; mData.m32[0] = 0; }
+    void Init(void) { mType = 0; mCode = 0; mChecksum = 0; mData.m32[0] = 0; }
 
     /**
      * ICMPv6 Message Types
@@ -106,7 +106,7 @@ public:
      * @returns The ICMPv6 message type.
      *
      */
-    Type GetType() const { return static_cast<Type>(mType); }
+    Type GetType(void) const { return static_cast<Type>(mType); }
 
     /**
      * This method sets the ICMPv6 message type.
@@ -131,7 +131,7 @@ public:
      * @returns The ICMPv6 message code.
      *
      */
-    Code GetCode() const { return static_cast<Code>(mCode); }
+    Code GetCode(void) const { return static_cast<Code>(mCode); }
 
     /**
      * This method sets the ICMPv6 message code.
@@ -146,7 +146,7 @@ public:
      * @returns The ICMPv6 message checksum.
      *
      */
-    uint16_t GetChecksum() const { return HostSwap16(mChecksum); }
+    uint16_t GetChecksum(void) const { return HostSwap16(mChecksum); }
 
     /**
      * This method sets the ICMPv6 message checksum.
@@ -162,7 +162,7 @@ public:
      * @returns The ICMPv6 message ID.
      *
      */
-    uint16_t GetId() const { return HostSwap16(mData.m16[0]); }
+    uint16_t GetId(void) const { return HostSwap16(mData.m16[0]); }
 
     /**
      * This method sets the ICMPv6 message ID for Echo Requests and Replies.
@@ -178,7 +178,7 @@ public:
      * @returns The ICMPv6 message sequence.
      *
      */
-    uint16_t GetSequence() const { return HostSwap16(mData.m16[1]); }
+    uint16_t GetSequence(void) const { return HostSwap16(mData.m16[1]); }
 
     /**
      * This method sets the ICMPv6 message sequence for Echo Requests and Replies.
@@ -194,7 +194,7 @@ public:
      * @returns The byte offset of the Checksum field.
      *
      */
-    static uint8_t GetChecksumOffset() { return offsetof(IcmpHeaderPoD, mChecksum); }
+    static uint8_t GetChecksumOffset(void) { return offsetof(IcmpHeaderPoD, mChecksum); }
 
     /**
      * This static method returns the byte offset of the ICMPv6 payload.
@@ -202,7 +202,7 @@ public:
      * @returns The Byte offset of the ICMPv6 payload.
      *
      */
-    static uint8_t GetDataOffset() { return offsetof(IcmpHeaderPoD, mData); }
+    static uint8_t GetDataOffset(void) { return offsetof(IcmpHeaderPoD, mData); }
 
 } OT_TOOL_PACKED_END;
 

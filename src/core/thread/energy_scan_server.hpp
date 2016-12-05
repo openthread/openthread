@@ -83,7 +83,7 @@ private:
     static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);
     void HandleNetifStateChanged(uint32_t aFlags);
 
-    ThreadError SendReport();
+    ThreadError SendReport(void);
     ThreadError SendResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestMessageInfo);
 
     Ip6::Address mCommissioner;

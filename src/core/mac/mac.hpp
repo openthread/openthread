@@ -557,7 +557,7 @@ public:
      * This function emptys the source match table.
      *
      */
-    void ClearSrcMatchEntries();
+    void ClearSrcMatchEntries(void);
 
     /**
      * This function indicates whether or not transmit retries and CSMA backoff logic is supported by the radio layer.

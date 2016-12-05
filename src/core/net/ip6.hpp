@@ -336,7 +336,7 @@ public:
      * @returns The pointer to the parent otInstance structure.
      *
      */
-    otInstance *GetInstance();
+    otInstance *GetInstance(void);
 
     /**
      * This method returns a reference to the send queue.
