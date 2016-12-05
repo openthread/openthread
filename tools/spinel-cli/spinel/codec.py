@@ -57,7 +57,7 @@ from spinel.const import kThread
 from spinel.const import SPINEL
 from spinel.const import SPINEL_LAST_STATUS_MAP
 from spinel.hdlc import Hdlc
-from spinel.tun import TunInterface
+
 
 
 FEATURE_USE_HDLC = 1
@@ -724,8 +724,6 @@ class WpanApi(SpinelCodec):
     """ Helper class to format wpan command packets """
 
     def __init__(self, stream, nodeid, use_hdlc=FEATURE_USE_HDLC):
-
-        self.tun_if = None
         self.stream = stream
         self.nodeid = nodeid
 
@@ -858,17 +856,6 @@ class WpanApi(SpinelCodec):
             item = None
 
         return item
-
-    def if_up(self, nodeid='1'):
-        if os.geteuid() == 0:
-            self.tun_if = TunInterface(nodeid)
-        else:
-            print("Warning: superuser required to start tun interface.")
-
-    def if_down(self):
-        if self.tun_if:
-            self.tun_if.close()
-        self.tun_if = None
 
     def ip_send(self, pkt):
         pay = self.encode_i(SPINEL.PROP_STREAM_NET)
