@@ -1540,12 +1540,15 @@ ThreadError NcpBase::GetPropertyHandler_POWER_STATE(uint8_t header, spinel_prop_
 
 ThreadError NcpBase::GetPropertyHandler_HWADDR(uint8_t header, spinel_prop_key_t key)
 {
+    otExtAddress hwAddr;
+    otGetFactoryAssignedIeeeEui64(mInstance, &hwAddr);
+
     return SendPropertyUpdate(
                 header,
                 SPINEL_CMD_PROP_VALUE_IS,
                 key,
                 SPINEL_DATATYPE_EUI64_S,
-                otGetExtendedAddress(mInstance)
+                hwAddr.m8
             );
 }
 
