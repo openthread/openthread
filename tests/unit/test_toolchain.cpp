@@ -33,7 +33,8 @@
 #include "test_util.h"
 
 extern "C" {
-void test_addr_size_c();
+    void test_addr_size_c();
+    otNetifAddress CreateNetif_c();
 }
 
 void test_packed1()
@@ -108,6 +109,11 @@ void test_addr_size_cpp()
 #endif
 }
 
+void test_addr_bitfield()
+{
+    VerifyOrQuit(CreateNetif_c().mScopeOverrideValid == true, "Toolchain::test_addr_size_cpp\n");
+}
+
 void TestToolchain(void)
 {
     test_packed1();
@@ -116,6 +122,7 @@ void TestToolchain(void)
     test_packed_enum();
     test_addr_size_c();
     test_addr_size_cpp();
+    test_addr_bitfield();
 }
 
 #ifdef ENABLE_TEST_MAIN

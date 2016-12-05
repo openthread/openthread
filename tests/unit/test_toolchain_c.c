@@ -41,3 +41,11 @@ void test_addr_size_c()
     CompileTimeAssert(sizeof(otNetifAddress) == 40, "otNetifAddress should be 40 (unpacked) bytes");
 #endif
 }
+
+otNetifAddress CreateNetif_c()
+{
+    otNetifAddress addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.mScopeOverrideValid = true;
+    return addr;
+}
