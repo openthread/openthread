@@ -31,15 +31,14 @@
 #include <platform/toolchain.h>
 #include "test_util.h"
 
-void test_addr_size_c()
+uint32_t otNetifAddress_Size_c()
 {
-#ifdef _WIN64
-    CompileTimeAssert(offsetof(otNetifAddress, mNext) == 40, "mNext should offset by 40 bytes from front");
-    CompileTimeAssert(sizeof(otNetifAddress) == 48, "otNetifAddress should be 48 (unpacked) bytes");
-#else
-    CompileTimeAssert(offsetof(otNetifAddress, mNext) == 36, "mNext should offset by 36 bytes from front");
-    CompileTimeAssert(sizeof(otNetifAddress) == 40, "otNetifAddress should be 40 (unpacked) bytes");
-#endif
+    return sizeof(otNetifAddress);
+}
+
+uint32_t otNetifAddress_offset_mNext_c()
+{
+    return offsetof(otNetifAddress, mNext);
 }
 
 otNetifAddress CreateNetif_c()

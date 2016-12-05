@@ -33,7 +33,8 @@
 #include "test_util.h"
 
 extern "C" {
-    void test_addr_size_c();
+    uint32_t otNetifAddress_Size_c();
+    uint32_t otNetifAddress_offset_mNext_c();
     otNetifAddress CreateNetif_c();
 }
 
@@ -98,15 +99,11 @@ void test_packed_enum()
     VerifyOrQuit(neighbor.mState == Thread::Neighbor::kStateValid, "Toolchain::OT_TOOL_PACKED failed 4\n");
 }
 
-void test_addr_size_cpp()
+void test_addr_sizes()
 {
-#ifdef _WIN64
-    CompileTimeAssert(offsetof(otNetifAddress, mNext) == 40, "mNext should offset by 40 bytes from front");
-    CompileTimeAssert(sizeof(otNetifAddress) == 48, "otNetifAddress should be 48 (unpacked) bytes");
-#else
-    CompileTimeAssert(offsetof(otNetifAddress, mNext) == 36, "mNext should offset by 36 bytes from front");
-    CompileTimeAssert(sizeof(otNetifAddress) == 40, "otNetifAddress should be 40 (unpacked) bytes");
-#endif
+    VerifyOrQuit(offsetof(otNetifAddress, mNext) == otNetifAddress_offset_mNext_c(),
+                 "mNext should offset the same in C & C++");
+    VerifyOrQuit(sizeof(otNetifAddress) == otNetifAddress_Size_c(), "otNetifAddress should the same in C & C++");
 }
 
 void test_addr_bitfield()
@@ -120,8 +117,7 @@ void TestToolchain(void)
     test_packed2();
     test_packed_union();
     test_packed_enum();
-    test_addr_size_c();
-    test_addr_size_cpp();
+    test_addr_sizes();
     test_addr_bitfield();
 }
 
