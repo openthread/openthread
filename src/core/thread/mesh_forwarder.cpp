@@ -88,7 +88,7 @@ MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
     mMacDest.mLength = 0;
 }
 
-ThreadError MeshForwarder::Start()
+ThreadError MeshForwarder::Start(void)
 {
     ThreadError error = kThreadError_None;
 
@@ -101,7 +101,7 @@ ThreadError MeshForwarder::Start()
     return error;
 }
 
-ThreadError MeshForwarder::Stop()
+ThreadError MeshForwarder::Stop(void)
 {
     ThreadError error = kThreadError_None;
     Message *message;
@@ -256,7 +256,7 @@ exit:
     (void) error;
 }
 
-ThreadError MeshForwarder::AddPendingSrcMatchEntries()
+ThreadError MeshForwarder::AddPendingSrcMatchEntries(void)
 {
     uint8_t numChildren;
     Child *children = NULL;

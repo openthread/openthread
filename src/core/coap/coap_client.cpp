@@ -50,7 +50,7 @@ Client::Client(Ip6::Netif &aNetif, SenderFunction aSender, ReceiverFunction aRec
     mMessageId = static_cast<uint16_t>(otPlatRandomGet());
 }
 
-ThreadError Client::Start()
+ThreadError Client::Start(void)
 {
     Ip6::SockAddr addr;
     addr.mPort = static_cast<Ip6::Udp *>(mSocket.mTransport)->GetEphemeralPort();
@@ -58,7 +58,7 @@ ThreadError Client::Start()
     return CoapBase::Start(addr);
 }
 
-ThreadError Client::Stop()
+ThreadError Client::Stop(void)
 {
     Message *message = mPendingRequests.GetHead();
     Message *messageToRemove;

@@ -1262,7 +1262,7 @@ public:
      */
     bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
 
-    uint8_t GetNumEntries() const { return GetLength() / sizeof(ChildTableEntry); }
+    uint8_t GetNumEntries(void) const { return GetLength() / sizeof(ChildTableEntry); }
 
     ChildTableEntry &GetEntry(uint8_t i) {
         return mChildTableEntry[i];
@@ -1296,7 +1296,7 @@ public:
      */
     bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
 
-    uint8_t *GetChannelPages() { return mChannelPages; }
+    uint8_t *GetChannelPages(void) { return mChannelPages; }
 
 private:
     uint8_t mChannelPages[1];

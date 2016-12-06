@@ -256,7 +256,7 @@ ThreadError Mle::Stop(bool aClearNetworkDatasets)
     return kThreadError_None;
 }
 
-ThreadError Mle::Restore()
+ThreadError Mle::Restore(void)
 {
     ThreadError error = kThreadError_None;
     NetworkInfo networkInfo;
@@ -295,7 +295,7 @@ exit:
     return error;
 }
 
-ThreadError Mle::Store()
+ThreadError Mle::Store(void)
 {
     ThreadError error = kThreadError_None;
     NetworkInfo networkInfo;

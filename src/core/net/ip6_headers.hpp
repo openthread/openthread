@@ -137,7 +137,7 @@ public:
      * This method initializes the IPv6 header.
      *
      */
-    void Init() { mVersionClassFlow.m32[0] = 0; mVersionClassFlow.m8[0] = kVersion6; }
+    void Init(void) { mVersionClassFlow.m32[0] = 0; mVersionClassFlow.m8[0] = kVersion6; }
 
     /**
      * This method initializes the IPv6 header and sets Version, Traffic Control and Flow Label fields.
@@ -152,7 +152,7 @@ public:
      * @retval FALSE  If the IPv6 Version is not set to 6.
      *
      */
-    bool IsVersion6() const { return (mVersionClassFlow.m8[0] & kVersionMask) == kVersion6; }
+    bool IsVersion6(void) const { return (mVersionClassFlow.m8[0] & kVersionMask) == kVersion6; }
 
     /**
      * This method returns the IPv6 Payload Length value.
@@ -160,7 +160,7 @@ public:
      * @returns The IPv6 Payload Length value.
      *
      */
-    uint16_t GetPayloadLength() { return HostSwap16(mPayloadLength); }
+    uint16_t GetPayloadLength(void) { return HostSwap16(mPayloadLength); }
 
     /**
      * This method sets the IPv6 Payload Length value.
@@ -176,7 +176,7 @@ public:
      * @returns The IPv6 Next Header value.
      *
      */
-    IpProto GetNextHeader() const { return static_cast<IpProto>(mNextHeader); }
+    IpProto GetNextHeader(void) const { return static_cast<IpProto>(mNextHeader); }
 
     /**
      * This method sets the IPv6 Next Header value.
@@ -192,7 +192,7 @@ public:
      * @returns The IPv6 Hop Limit value.
      *
      */
-    uint8_t GetHopLimit() const { return mHopLimit; }
+    uint8_t GetHopLimit(void) const { return mHopLimit; }
 
     /**
      * This method sets the IPv6 Hop Limit value.
@@ -208,7 +208,7 @@ public:
      * @returns A reference to the IPv6 Source address.
      *
      */
-    Address &GetSource() { return static_cast<Address &>(mSource); }
+    Address &GetSource(void) { return static_cast<Address &>(mSource); }
 
     /**
      * This method sets the IPv6 Source address.
@@ -224,7 +224,7 @@ public:
      * @returns A reference to the IPv6 Destination address.
      *
      */
-    Address &GetDestination() { return static_cast<Address &>(mDestination); }
+    Address &GetDestination(void) { return static_cast<Address &>(mDestination); }
 
     /**
      * This method sets the IPv6 Destination address.
@@ -240,7 +240,7 @@ public:
      * @returns The byte offset of the IPv6 Payload Length field.
      *
      */
-    static uint8_t GetPayloadLengthOffset() { return offsetof(HeaderPoD, mPayloadLength); }
+    static uint8_t GetPayloadLengthOffset(void) { return offsetof(HeaderPoD, mPayloadLength); }
 
     /**
      * This static method returns the byte offset of the IPv6 Hop Limit field.
@@ -248,7 +248,7 @@ public:
      * @returns The byte offset of the IPv6 Hop Limit field.
      *
      */
-    static uint8_t GetHopLimitOffset() { return offsetof(HeaderPoD, mHopLimit); }
+    static uint8_t GetHopLimitOffset(void) { return offsetof(HeaderPoD, mHopLimit); }
 
     /**
      * This static method returns the size of the IPv6 Hop Limit field.
@@ -256,7 +256,7 @@ public:
      * @returns The size of the IPv6 Hop Limit field.
      *
      */
-    static uint8_t GetHopLimitSize() { return sizeof(uint8_t); }
+    static uint8_t GetHopLimitSize(void) { return sizeof(uint8_t); }
 
     /**
      * This static method returns the byte offset of the IPv6 Destination field.
@@ -264,7 +264,7 @@ public:
      * @returns The byte offset of the IPv6 Destination field.
      *
      */
-    static uint8_t GetDestinationOffset() { return offsetof(HeaderPoD, mDestination); }
+    static uint8_t GetDestinationOffset(void) { return offsetof(HeaderPoD, mDestination); }
 
 private:
     enum
@@ -288,7 +288,7 @@ public:
      * @returns The IPv6 Next Header value.
      *
      */
-    IpProto GetNextHeader() const { return static_cast<IpProto>(mNextHeader); }
+    IpProto GetNextHeader(void) const { return static_cast<IpProto>(mNextHeader); }
 
     /**
      * This method sets the IPv6 Next Header value.
@@ -304,7 +304,7 @@ public:
      * @returns The IPv6 Header Extension Length value.
      *
      */
-    uint8_t GetLength() const { return mLength; }
+    uint8_t GetLength(void) const { return mLength; }
 
     /**
      * This method sets the IPv6 Header Extension Length value.
@@ -342,7 +342,7 @@ public:
      * @returns The IPv6 Option Type value.
      *
      */
-    uint8_t GetType() const { return mType; }
+    uint8_t GetType(void) const { return mType; }
 
     /**
      * This method sets the IPv6 Option Type value.
@@ -371,7 +371,7 @@ public:
      * @returns The IPv6 Option action for unrecognized IPv6 Options.
      *
      */
-    Action GetAction() const { return static_cast<Action>(mType & kActionMask); }
+    Action GetAction(void) const { return static_cast<Action>(mType & kActionMask); }
 
     /**
      * This method returns the IPv6 Option Length value.
@@ -379,7 +379,7 @@ public:
      * @returns The IPv6 Option Length value.
      *
      */
-    uint8_t GetLength() const { return mLength; }
+    uint8_t GetLength(void) const { return mLength; }
 
     /**
      * This method sets the IPv6 Option Length value.
@@ -429,7 +429,7 @@ public:
      * @returns The total IPv6 Option Length.
      *
      */
-    uint8_t GetTotalLength() const { return OptionHeader::GetLength() + sizeof(OptionHeader); }
+    uint8_t GetTotalLength(void) const { return OptionHeader::GetLength() + sizeof(OptionHeader); }
 
 private:
     uint8_t mPad[kMaxLength];
@@ -453,7 +453,7 @@ public:
      * This method initializes the Pad1 header.
      *
      */
-    void Init() { mType = kType; }
+    void Init(void) { mType = kType; }
 
 private:
     uint8_t mType;
@@ -472,7 +472,7 @@ public:
      * This method initializes the IPv6 Fragment header.
      *
      */
-    void Init() { mReserved = 0; mIdentification = 0; }
+    void Init(void) { mReserved = 0; mIdentification = 0; }
 
     /**
      * This method returns the IPv6 Next Header value.
@@ -480,7 +480,7 @@ public:
      * @returns The IPv6 Next Header value.
      *
      */
-    IpProto GetNextHeader() const { return static_cast<IpProto>(mNextHeader); }
+    IpProto GetNextHeader(void) const { return static_cast<IpProto>(mNextHeader); }
 
     /**
      * This method sets the IPv6 Next Header value.
@@ -496,7 +496,7 @@ public:
      * @returns The Fragment Offset value.
      *
      */
-    uint16_t GetOffset() { return (HostSwap16(mOffsetMore) & kOffsetMask) >> kOffsetOffset; }
+    uint16_t GetOffset(void) { return (HostSwap16(mOffsetMore) & kOffsetMask) >> kOffsetOffset; }
 
     /**
      * This method sets the Fragment Offset value.
@@ -515,19 +515,19 @@ public:
      * @returns The M flag value.
      *
      */
-    bool IsMoreFlagSet() { return HostSwap16(mOffsetMore) & kMoreFlag; }
+    bool IsMoreFlagSet(void) { return HostSwap16(mOffsetMore) & kMoreFlag; }
 
     /**
      * This method clears the M flag value.
      *
      */
-    void ClearMoreFlag() { mOffsetMore = HostSwap16(HostSwap16(mOffsetMore) & ~kMoreFlag); }
+    void ClearMoreFlag(void) { mOffsetMore = HostSwap16(HostSwap16(mOffsetMore) & ~kMoreFlag); }
 
     /**
      * This method sets the M flag value.
      *
      */
-    void SetMoreFlag() { mOffsetMore = HostSwap16(HostSwap16(mOffsetMore) | kMoreFlag); }
+    void SetMoreFlag(void) { mOffsetMore = HostSwap16(HostSwap16(mOffsetMore) | kMoreFlag); }
 
 private:
     uint8_t mNextHeader;
