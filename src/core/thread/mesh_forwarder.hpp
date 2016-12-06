@@ -248,7 +248,7 @@ private:
     static void ScheduleTransmissionTask(void *aContext);
     void ScheduleTransmissionTask(void);
 
-    ThreadError AddPendingSrcMatchEntries();
+    ThreadError AddPendingSrcMatchEntries(void);
     ThreadError AddSrcMatchEntry(Child &aChild);
     void ClearSrcMatchEntry(Child &aChild);
 

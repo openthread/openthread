@@ -30,568 +30,217 @@
 import os
 import sys
 import time
-import pexpect
+if sys.platform != 'win32':
+    import node_cli
+else:
+    import node_api
 import unittest
 
 class Node:
     def __init__(self, nodeid):
-        self.nodeid = nodeid
-        self.verbose = int(float(os.getenv('VERBOSE', 0)))
-        self.node_type = os.getenv('NODE_TYPE', 'sim')
-
-        if self.node_type == 'soc':
-            self.__init_soc(nodeid)
-        elif self.node_type == 'ncp-sim':
-            self.__init_ncp_sim(nodeid)
+        if sys.platform != 'win32':
+            self.interface = node_cli.otCli(nodeid)
         else:
-            self.__init_sim(nodeid)
+            self.interface = node_api.otApi(nodeid)
 
-        if self.verbose:
-            self.pexpect.logfile_read = sys.stdout
-
-        self.clear_whitelist()
-        self.disable_whitelist()
-        self.set_timeout(100)
-
-    def __init_sim(self, nodeid):
-        """ Initialize a simulation node. """
-        if "OT_CLI_PATH" in os.environ.keys():
-            cmd = os.environ['OT_CLI_PATH']
-        elif "top_builddir" in os.environ.keys():
-            srcdir = os.environ['top_builddir']
-            cmd = '%s/examples/apps/cli/ot-cli-ftd' % srcdir
-        else:
-            cmd = './ot-cli-ftd'
-        cmd += ' %d' % nodeid
-        print ("%s" % cmd)
-
-        self.pexpect = pexpect.spawn(cmd, timeout=4)
-
-        # Add delay to ensure that the process is ready to receive commands.
-        time.sleep(0.2)
-
-
-    def __init_ncp_sim(self, nodeid):
-        """ Initialize an NCP simulation node. """
-        if "top_builddir" in os.environ.keys():
-            builddir = os.environ['top_builddir']
-            if "top_srcdir" in os.environ.keys():
-                srcdir = os.environ['top_srcdir']
-            else:
-                srcdir = os.path.dirname(os.path.realpath(__file__))
-                srcdir += "/../../.."
-            cmd = 'python %s/tools/spinel-cli/spinel-cli.py -p %s/examples/apps/ncp/ot-ncp -n' % (srcdir, builddir)
-        else:
-            cmd = './ot-ncp'
-        cmd += ' %d' % nodeid
-        print ("%s" % cmd)
-
-        self.pexpect = pexpect.spawn(cmd, timeout=4)
-        time.sleep(0.2)
-        self.pexpect.expect('spinel-cli >')
-        self.debug(int(os.getenv('DEBUG', '0')))
- 
-    def __init_soc(self, nodeid):
-        """ Initialize a System-on-a-chip node connected via UART. """
-        import fdpexpect
-        serialPort = '/dev/ttyUSB%d' % ((nodeid-1)*2)
-        self.pexpect = fdpexpect.fdspawn(os.open(serialPort, os.O_RDWR|os.O_NONBLOCK|os.O_NOCTTY))
+        self.interface.clear_whitelist()
+        self.interface.disable_whitelist()
+        self.interface.set_timeout(100)
 
     def __del__(self):
-        if self.pexpect.isalive():
-            self.send_command('exit')
-            self.pexpect.expect(pexpect.EOF)
-            self.pexpect.terminate()
-            self.pexpect.close(force=True)
+        del self.interface
 
-    def send_command(self, cmd):
-        print ("%d: %s" % (self.nodeid, cmd))
-        self.pexpect.sendline(cmd)
-
-    def get_commands(self):
-        self.send_command('?')
-        self.pexpect.expect('Commands:')
-        commands = []
-        while True:
-            i = self.pexpect.expect(['Done', '(\S+)'])
-            if i != 0:
-                commands.append(self.pexpect.match.groups()[0])
-            else:
-                break
-        return commands
-
-    def set_mode(self, mode):        
-        cmd = 'mode ' + mode
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+    def set_mode(self, mode):
+        self.interface.set_mode(mode)
 
     def debug(self, level):
-        self.send_command('debug '+str(level))
+        self.interface.debug(level)
 
     def interface_up(self):
-        self.send_command('ifconfig up')
-        self.pexpect.expect('Done')
+        self.interface.interface_up()
 
     def interface_down(self):
-        self.send_command('ifconfig down')
-        self.pexpect.expect('Done')
+        self.interface.interface_down()
 
     def thread_start(self):
-        self.send_command('thread start')
-        self.pexpect.expect('Done')
+        self.interface.thread_start()
 
     def thread_stop(self):
-        self.send_command('thread stop')
-        self.pexpect.expect('Done')
-
+        self.interface.thread_stop()
+            
     def commissioner_start(self):
-        cmd = 'commissioner start'
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.commissioner_start()
 
     def commissioner_add_joiner(self, addr, psk):
-        cmd = 'commissioner joiner add ' + addr + ' ' + psk
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.commissioner_add_joiner(addr, psk)
 
     def joiner_start(self, pskd='', provisioning_url=''):
-        cmd = 'joiner start ' + pskd + ' ' + provisioning_url
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.joiner_start(pskd, provisioning_url)
 
     def start(self):
-        self.interface_up()
-        self.thread_start()
+        self.interface.interface_up()
+        self.interface.thread_start()
 
     def stop(self):
-        self.thread_stop()
-        self.interface_down()
+        self.interface.thread_stop()
+        self.interface.interface_down()
 
     def clear_whitelist(self):
-        self.send_command('whitelist clear')
-        self.pexpect.expect('Done')
+        self.interface.clear_whitelist()
 
     def enable_whitelist(self):
-        self.send_command('whitelist enable')
-        self.pexpect.expect('Done')
+        self.interface.enable_whitelist()
 
     def disable_whitelist(self):
-        self.send_command('whitelist disable')
-        self.pexpect.expect('Done')
+        self.interface.disable_whitelist()
 
     def add_whitelist(self, addr, rssi=None):
-        cmd = 'whitelist add ' + addr
-        if rssi != None:
-            cmd += ' ' + str(rssi)
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.add_whitelist(addr, rssi)
 
     def remove_whitelist(self, addr):
-        cmd = 'whitelist remove ' + addr
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.remove_whitelist(addr)
 
     def get_addr16(self):
-        self.send_command('rloc16')
-        i = self.pexpect.expect('([0-9a-fA-F]{4})')
-        if i == 0:
-            addr16 = int(self.pexpect.match.groups()[0], 16)
-        self.pexpect.expect('Done')
-        return addr16
+        return self.interface.get_addr16()
 
     def get_addr64(self):
-        self.send_command('extaddr')
-        i = self.pexpect.expect('([0-9a-fA-F]{16})')
-        if i == 0:
-            addr64 = self.pexpect.match.groups()[0].decode("utf-8")
-        self.pexpect.expect('Done')
-        return addr64
+        return self.interface.get_addr64()
 
     def get_hashmacaddr(self):
-        self.send_command('hashmacaddr')
-        i = self.pexpect.expect('([0-9a-fA-F]{16})')
-        if i == 0:
-            addr = self.pexpect.match.groups()[0].decode("utf-8")
-        self.pexpect.expect('Done')
-        return addr
+        return self.interface.get_hashmacaddr()
 
     def get_channel(self):
-        self.send_command('channel')
-        i = self.pexpect.expect('(\d+)\r\n')
-        if i == 0:
-            channel = int(self.pexpect.match.groups()[0])
-        self.pexpect.expect('Done')
-        return channel
+        return self.interface.get_channel()
 
     def set_channel(self, channel):
-        cmd = 'channel %d' % channel
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.set_channel(channel)
 
     def get_masterkey(self):
-        self.send_command('masterkey')
-        i = self.pexpect.expect('([0-9a-fA-F]{32})')
-        if i == 0:
-            masterkey = self.pexpect.match.groups()[0].decode("utf-8")
-        self.pexpect.expect('Done')
-        return masterkey
+        return self.interface.get_masterkey()
 
     def set_masterkey(self, masterkey):
-        cmd = 'masterkey ' + masterkey
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.set_masterkey(masterkey)
 
     def get_key_sequence_counter(self):
-        self.send_command('keysequence counter')
-        i = self.pexpect.expect('(\d+)\r\n')
-        if i == 0:
-            key_sequence_counter = int(self.pexpect.match.groups()[0])
-        self.pexpect.expect('Done')
-        return key_sequence_counter
+        return self.interface.get_key_sequence_counter()
 
     def set_key_sequence_counter(self, key_sequence_counter):
-        cmd = 'keysequence counter %d' % key_sequence_counter
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.set_key_sequence_counter(key_sequence_counter)
 
     def set_key_switch_guardtime(self, key_switch_guardtime):
-        cmd = 'keysequence guardtime %d' % key_switch_guardtime
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.set_key_switch_guardtime(key_switch_guardtime)
 
     def set_network_id_timeout(self, network_id_timeout):
-        cmd = 'networkidtimeout %d' % network_id_timeout
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.set_network_id_timeout(network_id_timeout)
 
     def get_network_name(self):
-        self.send_command('networkname')
-        while True:
-            i = self.pexpect.expect(['Done', '(\S+)'])
-            if i != 0:
-                network_name = self.pexpect.match.groups()[0].decode('utf-8')
-            else:
-                break
-        return network_name
+        return self.interface.get_network_name()
 
     def set_network_name(self, network_name):
-        cmd = 'networkname ' + network_name
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.set_network_name(network_name)
 
     def get_panid(self):
-        self.send_command('panid')
-        i = self.pexpect.expect('([0-9a-fA-F]{4})')
-        if i == 0:
-            panid = int(self.pexpect.match.groups()[0], 16)
-        self.pexpect.expect('Done')
-        return panid
+        return self.interface.get_panid()
 
     def set_panid(self, panid):
-        cmd = 'panid %d' % panid
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.set_panid(panid)
 
     def get_partition_id(self):
-        self.send_command('leaderpartitionid')
-        i = self.pexpect.expect('(\d+)\r\n')
-        if i == 0:
-            weight = self.pexpect.match.groups()[0]
-        self.pexpect.expect('Done')
-        return weight
+        return self.interface.get_partition_id()
 
     def set_partition_id(self, partition_id):
-        cmd = 'leaderpartitionid %d' % partition_id
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.set_partition_id(partition_id)
 
     def set_router_upgrade_threshold(self, threshold):
-        cmd = 'routerupgradethreshold %d' % threshold
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.set_router_upgrade_threshold(threshold)
 
     def set_router_downgrade_threshold(self, threshold):
-        cmd = 'routerdowngradethreshold %d' % threshold
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.set_router_downgrade_threshold(threshold)
 
     def release_router_id(self, router_id):
-        cmd = 'releaserouterid %d' % router_id
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.release_router_id(router_id)
 
     def get_state(self):
-        states = ['detached', 'child', 'router', 'leader']
-        self.send_command('state')
-        match = self.pexpect.expect(states)
-        self.pexpect.expect('Done')
-        return states[match]
+        return self.interface.get_state()
 
     def set_state(self, state):
-        cmd = 'state ' + state
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.set_state(state)
 
     def get_timeout(self):
-        self.send_command('childtimeout')
-        i = self.pexpect.expect('(\d+)\r\n')
-        if i == 0:
-            timeout = self.pexpect.match.groups()[0]
-        self.pexpect.expect('Done')
-        return timeout
+        return self.interface.get_timeout()
 
     def set_timeout(self, timeout):
-        cmd = 'childtimeout %d' % timeout
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.set_timeout(timeout)
 
     def set_max_children(self, number):
-        cmd = 'childmax %d' % number
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.set_max_children(number)
 
     def get_weight(self):
-        self.send_command('leaderweight')
-        i = self.pexpect.expect('(\d+)\r\n')
-        if i == 0:
-            weight = self.pexpect.match.groups()[0]
-        self.pexpect.expect('Done')
-        return weight
+        return self.interface.get_weight()
 
     def set_weight(self, weight):
-        cmd = 'leaderweight %d' % weight
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.set_weight(weight)
 
     def add_ipaddr(self, ipaddr):
-        cmd = 'ipaddr add ' + ipaddr
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.add_ipaddr(ipaddr)
 
     def get_addrs(self):
-        addrs = []
-        self.send_command('ipaddr')
-
-        while True:
-            i = self.pexpect.expect(['(\S+:\S+)\r\n', 'Done'])
-            if i == 0:
-                addrs.append(self.pexpect.match.groups()[0].decode("utf-8"))
-            elif i == 1:
-                break
-
-        return addrs
+        return self.interface.get_addrs()
 
     def get_context_reuse_delay(self):
-        self.send_command('contextreusedelay')
-        i = self.pexpect.expect('(\d+)\r\n')
-        if i == 0:
-            timeout = self.pexpect.match.groups()[0]
-        self.pexpect.expect('Done')
-        return timeout
+        return self.interface.get_context_reuse_delay()
 
     def set_context_reuse_delay(self, delay):
-        cmd = 'contextreusedelay %d' % delay
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.set_context_reuse_delay(delay)
 
     def add_prefix(self, prefix, flags, prf = 'med'):
-        cmd = 'prefix add ' + prefix + ' ' + flags + ' ' + prf
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.add_prefix(prefix, flags, prf)
 
     def remove_prefix(self, prefix):
-        cmd = ' prefix remove ' + prefix
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.remove_prefix(prefix)
 
     def add_route(self, prefix, prf = 'med'):
-        cmd = 'route add ' + prefix + ' ' + prf
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.add_route(prefix, prf)
 
     def remove_route(self, prefix):
-        cmd = 'route remove ' + prefix
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.remove_route(prefix)
 
     def register_netdata(self):
-        self.send_command('netdataregister')
-        self.pexpect.expect('Done')
+        self.interface.register_netdata()
 
     def energy_scan(self, mask, count, period, scan_duration, ipaddr):
-        cmd = 'commissioner energy ' + str(mask) + ' ' + str(count) + ' ' + str(period) + ' ' + str(scan_duration) + ' ' + ipaddr
-        self.send_command(cmd)
-        self.pexpect.expect('Energy:', timeout=8)
+        self.interface.energy_scan(mask, count, period, scan_duration, ipaddr)
 
     def panid_query(self, panid, mask, ipaddr):
-        cmd = 'commissioner panid ' + str(panid) + ' ' + str(mask) + ' ' + ipaddr
-        self.send_command(cmd)
-        self.pexpect.expect('Conflict:', timeout=8)
+        self.interface.panid_query(panid, mask, ipaddr)
 
     def scan(self):
-        self.send_command('scan')
-
-        results = []
-        while True:
-            i = self.pexpect.expect(['\|\s(\S+)\s+\|\s(\S+)\s+\|\s([0-9a-fA-F]{4})\s\|\s([0-9a-fA-F]{16})\s\|\s(\d+)\r\n',
-                                     'Done'])
-            if i == 0:
-                results.append(self.pexpect.match.groups())
-            else:
-                break
-
-        return results
+        return self.interface.scan()
 
     def ping(self, ipaddr, num_responses=1, size=None):
-        cmd = 'ping ' + ipaddr
-        if size != None:
-            cmd += ' ' + str(size)
-
-        self.send_command(cmd)
-        
-        result = True
-        try:
-            responders = {}
-            while len(responders) < num_responses:
-                i = self.pexpect.expect(['from (\S+):'])
-                if i == 0:
-                    responders[self.pexpect.match.groups()[0]] = 1
-            self.pexpect.expect('\n')
-        except pexpect.TIMEOUT:
-            result = False
-
-        return result
+        return self.interface.ping(ipaddr, num_responses, size)
 
     def set_router_selection_jitter(self, jitter):
-        cmd = 'routerselectionjitter %d' % jitter
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.set_router_selection_jitter(jitter)
 
     def set_active_dataset(self, timestamp, panid=None, channel=None, channel_mask=None, master_key=None):
-        self.send_command('dataset clear')
-        self.pexpect.expect('Done')
-
-        cmd = 'dataset activetimestamp %d' % timestamp
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
-
-        if panid != None:
-            cmd = 'dataset panid %d' % panid
-            self.send_command(cmd)
-            self.pexpect.expect('Done')
-
-        if channel != None:
-            cmd = 'dataset channel %d' % channel
-            self.send_command(cmd)
-            self.pexpect.expect('Done')
-
-        if channel_mask != None:
-            cmd = 'dataset channelmask %d' % channel_mask
-            self.send_command(cmd)
-            self.pexpect.expect('Done')
-
-        if master_key != None:
-            cmd = 'dataset masterkey ' + master_key
-            self.send_command(cmd)
-            self.pexpect.expect('Done')
-
-        self.send_command('dataset commit active')
-        self.pexpect.expect('Done')
+        self.interface.set_active_dataset(timestamp, panid, channel, channel_mask, master_key)
 
     def set_pending_dataset(self, pendingtimestamp, activetimestamp, panid=None, channel=None):
-        self.send_command('dataset clear')
-        self.pexpect.expect('Done')
-
-        cmd = 'dataset pendingtimestamp %d' % pendingtimestamp
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
-
-        cmd = 'dataset activetimestamp %d' % activetimestamp
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
-
-        if panid != None:
-            cmd = 'dataset panid %d' % panid
-            self.send_command(cmd)
-            self.pexpect.expect('Done')
-
-        if channel != None:
-            cmd = 'dataset channel %d' % channel
-            self.send_command(cmd)
-            self.pexpect.expect('Done')
-
-        self.send_command('dataset commit pending')
-        self.pexpect.expect('Done')
+        self.interface.set_pending_dataset(pendingtimestamp, activetimestamp, panid, channel)
 
     def announce_begin(self, mask, count, period, ipaddr):
-        cmd = 'commissioner announce ' + str(mask) + ' ' + str(count) + ' ' + str(period) + ' ' + ipaddr
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.announce_begin(mask, count, period, ipaddr)
 
     def send_mgmt_active_set(self, active_timestamp=None, channel=None, channel_mask=None, extended_panid=None,
                              panid=None, master_key=None, mesh_local=None, network_name=None, binary=None):
-        cmd = 'dataset mgmtsetcommand active '
-
-        if active_timestamp != None:
-            cmd += 'activetimestamp %d ' % active_timestamp
-
-        if channel != None:
-            cmd += 'channel %d ' % channel
-
-        if channel_mask != None:
-            cmd += 'channelmask %d ' % channel_mask
-
-        if extended_panid != None:
-            cmd += 'extpanid ' + extended_panid + ' '
-
-        if panid != None:
-            cmd += 'panid %d ' % panid
-
-        if master_key != None:
-            cmd += 'masterkey ' + master_key + ' '
-
-        if mesh_local != None:
-            cmd += 'localprefix ' + mesh_local + ' '
-
-        if network_name != None:
-            cmd += 'networkname ' + network_name + ' '
-
-        if binary != None:
-            cmd += 'binary ' + binary + ' '
-
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.send_mgmt_active_set(active_timestamp, channel, channel_mask, extended_panid, panid,
+                                            master_key, mesh_local, network_name, binary)
 
     def send_mgmt_pending_set(self, pending_timestamp=None, active_timestamp=None, delay_timer=None, channel=None,
                               panid=None, master_key=None, mesh_local=None, network_name=None):
-        cmd = 'dataset mgmtsetcommand pending '
-
-        if pending_timestamp != None:
-            cmd += 'pendingtimestamp %d ' % pending_timestamp
-
-        if active_timestamp != None:
-            cmd += 'activetimestamp %d ' % active_timestamp
-
-        if delay_timer != None:
-            cmd += 'delaytimer %d ' % delay_timer
-
-        if channel != None:
-            cmd += 'channel %d ' % channel
-
-        if panid != None:
-            cmd += 'panid %d ' % panid
-
-        if master_key != None:
-            cmd += 'masterkey ' + master_key + ' '
-
-        if mesh_local != None:
-            cmd += 'localprefix ' + mesh_local + ' '
-
-        if network_name != None:
-            cmd += 'networkname ' + network_name + ' '
-
-        self.send_command(cmd)
-        self.pexpect.expect('Done')
+        self.interface.send_mgmt_pending_set(pending_timestamp, active_timestamp, delay_timer, channel, panid,
+                                             master_key, mesh_local, network_name)
 
 if __name__ == '__main__':
     unittest.main()

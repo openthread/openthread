@@ -47,7 +47,7 @@ char *diagProcessCmd(int argc, char *argv[]);
 
 char *diagProcessCmdLine(char *string);
 
-bool isDiagEnabled();
+bool isDiagEnabled(void);
 
 #ifdef __cplusplus
 }  // extern "C"

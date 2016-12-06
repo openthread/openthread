@@ -245,7 +245,7 @@ void otPlatRadioSetShortAddress(_In_ otInstance *otCtx, uint16_t address)
     }
 }
 
-void otPlatRadioSetPromiscuous(_In_ otInstance *otCtx, int aEnable)
+void otPlatRadioSetPromiscuous(_In_ otInstance *otCtx, bool aEnable)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
@@ -444,7 +444,7 @@ otRadioCaps otPlatRadioGetCaps(_In_ otInstance *otCtx)
     return otCtxToFilter(otCtx)->otRadioCapabilities;
 }
 
-int otPlatRadioGetPromiscuous(_In_ otInstance *otCtx)
+bool otPlatRadioGetPromiscuous(_In_ otInstance *otCtx)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);

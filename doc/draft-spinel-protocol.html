@@ -517,13 +517,13 @@
 <link href="#rfc.section.10.1.3" rel="Chapter" title="10.1.3 PROP 4610: PROP_JAM_DETECT_RSSI_THRESHOLD"/>
 <link href="#rfc.section.10.1.4" rel="Chapter" title="10.1.4 PROP 4611: PROP_JAM_DETECT_WINDOW"/>
 <link href="#rfc.section.10.1.5" rel="Chapter" title="10.1.5 PROP 4612: PROP_JAM_DETECT_BUSY"/>
-<link href="#rfc.section.11" rel="Chapter" title="11 Feature: Basic GPIO Access"/>
+<link href="#rfc.section.10.1.6" rel="Chapter" title="10.1.6 PROP 4613: SPINEL_PROP_JAM_DETECT_HISTORY_BITMAP"/>
+<link href="#rfc.section.11" rel="Chapter" title="11 Feature: GPIO Access"/>
 <link href="#rfc.section.11.1" rel="Chapter" title="11.1 Properties"/>
-<link href="#rfc.section.11.1.1" rel="Chapter" title="11.1.1 PROP 4096: PROP_GPIO_AVAILABLE"/>
-<link href="#rfc.section.11.1.2" rel="Chapter" title="11.1.2 PROP 4097: PROP_GPIO_DIRECTION"/>
-<link href="#rfc.section.11.1.3" rel="Chapter" title="11.1.3 PROP 4098: PROP_GPIO_STATE"/>
-<link href="#rfc.section.11.1.4" rel="Chapter" title="11.1.4 PROP 4099: PROP_GPIO_STATE_SET"/>
-<link href="#rfc.section.11.1.5" rel="Chapter" title="11.1.5 PROP 4100: PROP_GPIO_STATE_CLEAR"/>
+<link href="#rfc.section.11.1.1" rel="Chapter" title="11.1.1 PROP 4096: PROP_GPIO_CONFIG"/>
+<link href="#rfc.section.11.1.2" rel="Chapter" title="11.1.2 PROP 4098: PROP_GPIO_STATE"/>
+<link href="#rfc.section.11.1.3" rel="Chapter" title="11.1.3 PROP 4099: PROP_GPIO_STATE_SET"/>
+<link href="#rfc.section.11.1.4" rel="Chapter" title="11.1.4 PROP 4100: PROP_GPIO_STATE_CLEAR"/>
 <link href="#rfc.section.12" rel="Chapter" title="12 Security Considerations"/>
 <link href="#rfc.section.12.1" rel="Chapter" title="12.1 Raw Application Access"/>
 <link href="#rfc.appendix.A" rel="Chapter" title="A Framing Protocol"/>
@@ -567,8 +567,8 @@
   <link rel="schema.dct" href="http://purl.org/dc/terms/" />
 
   <meta name="dct.creator" content="Quattlebaum, R." />
-  <meta name="dct.identifier" content="urn:ietf:id:draft-spinel-protocol-05367497d" />
-  <meta name="dct.issued" scheme="ISO8601" content="2016-11-28" />
+  <meta name="dct.identifier" content="urn:ietf:id:draft-spinel-protocol-3df876d" />
+  <meta name="dct.issued" scheme="ISO8601" content="2016-12-2" />
   <meta name="dct.abstract" content="This document describes a general management protocol for enabling a host device to communicate with and manage a Network Control Processor (NCP).  " />
   <meta name="description" content="This document describes a general management protocol for enabling a host device to communicate with and manage a Network Control Processor (NCP).  " />
 
@@ -589,7 +589,7 @@
 </tr>
 <tr>
   <td class="left"></td>
-  <td class="right">November 28, 2016</td>
+  <td class="right">December 2, 2016</td>
 </tr>
 
     	
@@ -597,7 +597,7 @@
   </table>
 
   <p class="title">Spinel Host-Controller Protocol<br />
-  <span class="filename">draft-spinel-protocol-05367497d</span></p>
+  <span class="filename">draft-spinel-protocol-3df876d</span></p>
   
   <h1 id="rfc.abstract">
   <a href="#rfc.abstract">Abstract</a>
@@ -775,13 +775,13 @@
 <li>10.1.3.   <a href="#rfc.section.10.1.3">PROP 4610: PROP_JAM_DETECT_RSSI_THRESHOLD</a></li>
 <li>10.1.4.   <a href="#rfc.section.10.1.4">PROP 4611: PROP_JAM_DETECT_WINDOW</a></li>
 <li>10.1.5.   <a href="#rfc.section.10.1.5">PROP 4612: PROP_JAM_DETECT_BUSY</a></li>
-</ul></ul><li>11.   <a href="#rfc.section.11">Feature: Basic GPIO Access</a></li>
+<li>10.1.6.   <a href="#rfc.section.10.1.6">PROP 4613: SPINEL_PROP_JAM_DETECT_HISTORY_BITMAP</a></li>
+</ul></ul><li>11.   <a href="#rfc.section.11">Feature: GPIO Access</a></li>
 <ul><li>11.1.   <a href="#rfc.section.11.1">Properties</a></li>
-<ul><li>11.1.1.   <a href="#rfc.section.11.1.1">PROP 4096: PROP_GPIO_AVAILABLE</a></li>
-<li>11.1.2.   <a href="#rfc.section.11.1.2">PROP 4097: PROP_GPIO_DIRECTION</a></li>
-<li>11.1.3.   <a href="#rfc.section.11.1.3">PROP 4098: PROP_GPIO_STATE</a></li>
-<li>11.1.4.   <a href="#rfc.section.11.1.4">PROP 4099: PROP_GPIO_STATE_SET</a></li>
-<li>11.1.5.   <a href="#rfc.section.11.1.5">PROP 4100: PROP_GPIO_STATE_CLEAR</a></li>
+<ul><li>11.1.1.   <a href="#rfc.section.11.1.1">PROP 4096: PROP_GPIO_CONFIG</a></li>
+<li>11.1.2.   <a href="#rfc.section.11.1.2">PROP 4098: PROP_GPIO_STATE</a></li>
+<li>11.1.3.   <a href="#rfc.section.11.1.3">PROP 4099: PROP_GPIO_STATE_SET</a></li>
+<li>11.1.4.   <a href="#rfc.section.11.1.4">PROP 4100: PROP_GPIO_STATE_CLEAR</a></li>
 </ul></ul><li>12.   <a href="#rfc.section.12">Security Considerations</a></li>
 <ul><li>12.1.   <a href="#rfc.section.12.1">Raw Application Access</a></li>
 </ul><li>Appendix A.   <a href="#rfc.appendix.A">Framing Protocol</a></li>
@@ -1826,6 +1826,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
   <li>6: <samp>CAP_JAM_DETECT</samp>: Jamming detection. See <a href="#feature-jam-detect">Section 10</a></li>
   <li>7: <samp>CAP_PEEK_POKE</samp>: PEEK/POKE debugging commands.</li>
   <li>8: <samp>CAP_WRITABLE_RAW_STREAM</samp>: <samp>PROP_STREAM_RAW</samp> is writable.</li>
+  <li>9: <samp>CAP_GPIO</samp>: Support for GPIO access. See <a href="#feature-gpio-access">Section 11</a>.</li>
   <li>16: <samp>CAP_802_15_4_2003</samp></li>
   <li>17: <samp>CAP_802_15_4_2006</samp></li>
   <li>18: <samp>CAP_802_15_4_2011</samp></li>
@@ -3302,28 +3303,64 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 <p> </p>
 <p id="rfc.section.10.1.5.p.2">This parameter describes the number of aggregate seconds within the detection window where the RSSI must be above <samp>PROP_JAM_DETECT_RSSI_THRESHOLD</samp> to trigger detection.  </p>
 <p id="rfc.section.10.1.5.p.3">The behavior of the jamming detection feature when <samp>PROP_JAM_DETECT_BUSY</samp> is larger than <samp>PROP_JAM_DETECT_WINDOW</samp> is undefined.  </p>
-<h1 id="rfc.section.11"><a href="#rfc.section.11">11.</a> <a href="#feature-basic-gpio-access" id="feature-basic-gpio-access">Feature: Basic GPIO Access</a></h1>
-<p id="rfc.section.11.p.1">The length of the data associated with these properties depends on the number of GPIOs. If you have 10 GPIOs, you'd have two bytes. You determine the number of GPIOs available by examining PROP_GPIO_AVAILABLE, described below. This API isn't intended to support every possible GPIO state, it is intended for basic reading and writing.  </p>
+<h1 id="rfc.section.10.1.6"><a href="#rfc.section.10.1.6">10.1.6.</a> <a href="#prop-4613-spinelpropjamdetecthistorybitmap" id="prop-4613-spinelpropjamdetecthistorybitmap">PROP 4613: SPINEL_PROP_JAM_DETECT_HISTORY_BITMAP</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Only</li>
+  <li>Packed-Encoding: <samp>LL</samp></li>
+  <li>Default Value: Implementation-specific</li>
+  <li>RECOMMENDED for <samp>CAP_JAM_DETECT</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.10.1.6.p.2">This value provides information about current state of jamming detection module for monitoring/debugging purpose. It returns a 64-bit value where each bit corresponds to one second interval starting with bit 0 for the most recent interval and bit 63 for the oldest intervals (63 sec earlier).  The bit is set to 1 if the jamming detection module observed/detected high signal level during the corresponding one second interval.  The value is read-only and is encoded as two <samp>L</samp> (uint32) values in little-endian format (first <samp>L</samp> (uint32) value gives the lower bits corresponding to more recent history).  </p>
+<h1 id="rfc.section.11"><a href="#rfc.section.11">11.</a> <a href="#feature-gpio-access" id="feature-gpio-access">Feature: GPIO Access</a></h1>
+<p id="rfc.section.11.p.1">This feature allows the host to have control over some or all of the GPIO pins on the NCP. The host can determine which GPIOs are available by examining <samp>PROP_GPIO_CONFIG</samp>, described below. This API supports a maximum of 256 individual GPIO pins.  </p>
+<p id="rfc.section.11.p.2">Support for this feature can be determined by the presence of <samp>CAP_GPIO</samp>.  </p>
 <h1 id="rfc.section.11.1"><a href="#rfc.section.11.1">11.1.</a> <a href="#properties-3" id="properties-3">Properties</a></h1>
-<h1 id="rfc.section.11.1.1"><a href="#rfc.section.11.1.1">11.1.1.</a> <a href="#prop-4096-propgpioavailable" id="prop-4096-propgpioavailable">PROP 4096: PROP_GPIO_AVAILABLE</a></h1>
+<h1 id="rfc.section.11.1.1"><a href="#rfc.section.11.1.1">11.1.1.</a> <a href="#prop-4096-propgpioconfig" id="prop-4096-propgpioconfig">PROP 4096: PROP_GPIO_CONFIG</a></h1>
 <p/>
 
 <ul>
-  <li>Type: Read-only</li>
+  <li>Argument-Encoding: <samp>A(CCU)</samp></li>
+  <li>Type: Read-write (Writable only using <samp>CMD_PROP_VALUE_INSERT</samp>, <a href="#prop-value-insert">Section 4.5</a>)</li>
 </ul>
 
 <p> </p>
-<p id="rfc.section.11.1.1.p.2">Contains a bit field identifying which GPIOs are supported. Cleared bits are not supported. Set bits are supported.  </p>
-<h1 id="rfc.section.11.1.2"><a href="#rfc.section.11.1.2">11.1.2.</a> <a href="#prop-4097-propgpiodirection" id="prop-4097-propgpiodirection">PROP 4097: PROP_GPIO_DIRECTION</a></h1>
+<p id="rfc.section.11.1.1.p.2">An array of structures which contain the following fields: </p>
 <p/>
 
 <ul>
-  <li>Type: Read-only (Optionally read/write)</li>
+  <li><samp>C</samp>: GPIO Number</li>
+  <li><samp>C</samp>: GPIO Configuration Flags</li>
+  <li><samp>U</samp>: Human-readable GPIO name</li>
 </ul>
 
 <p> </p>
-<p id="rfc.section.11.1.2.p.2">Contains a bit field identifying which GPIOs are configured as outputs.  Cleared bits are inputs. Set bits are outputs.  </p>
-<h1 id="rfc.section.11.1.3"><a href="#rfc.section.11.1.3">11.1.3.</a> <a href="#prop-4098-propgpiostate" id="prop-4098-propgpiostate">PROP 4098: PROP_GPIO_STATE</a></h1>
+<p id="rfc.section.11.1.1.p.4">GPIOs which do not have a corresponding entry are not supported.  </p>
+<p id="rfc.section.11.1.1.p.5">The configuration parameter contains the configuration flags for the GPIO: </p>
+<pre>
+  0   1   2   3   4   5   6   7
++---+---+---+---+---+---+---+---+
+|DIR|PUP|PDN|TRIGGER|  RESERVED |
++---+---+---+---+---+---+---+---+
+        |O/D|
+        +---+
+</pre>
+<p/>
+
+<ul>
+  <li><samp>DIR</samp>: Pin direction. Clear (0) for input, set (1) for output.</li>
+  <li><samp>PUP</samp>: Pull-up enabled flag.</li>
+  <li><samp>PDN</samp>/<samp>O/D</samp>: Flag meaning depends on pin direction: <ul><li>Input: Pull-down enabled.</li><li>Output: Output is an open-drain.</li></ul></li>
+  <li><samp>TRIGGER</samp>: Enumeration describing how pin changes generate asynchronous notification commands (TBD) from the NCP to the host.  <ul><li>0: Feature disabled for this pin</li><li>1: Trigger on falling edge</li><li>2: Trigger on rising edge</li><li>3: Trigger on level change</li></ul></li>
+  <li><samp>RESERVED</samp>: Bits reserved for future use. Always cleared to zero and ignored when read.</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.11.1.1.p.7">As an optional feature, the configuration of individual pins may be modified using the <samp>CMD_PROP_VALUE_INSERT</samp> command. Only the GPIO number and flags fields MUST be present, the GPIO name (if present) would be ignored. This command can only be used to modify the configuration of GPIOs which are already exposed---it cannot be used by the host to add addional GPIOs.  </p>
+<h1 id="rfc.section.11.1.2"><a href="#rfc.section.11.1.2">11.1.2.</a> <a href="#prop-4098-propgpiostate" id="prop-4098-propgpiostate">PROP 4098: PROP_GPIO_STATE</a></h1>
 <p/>
 
 <ul>
@@ -3331,8 +3368,36 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.11.1.3.p.2">Contains a bit field identifying the state of the GPIOs. For GPIOs configured as inputs, this is the read logic level. For GPIOs configured as outputs, this is the logic level of the output.  </p>
-<h1 id="rfc.section.11.1.4"><a href="#rfc.section.11.1.4">11.1.4.</a> <a href="#prop-4099-propgpiostateset" id="prop-4099-propgpiostateset">PROP 4099: PROP_GPIO_STATE_SET</a></h1>
+<p id="rfc.section.11.1.2.p.2">Contains a bit field identifying the state of the GPIOs. The length of the data associated with these properties depends on the number of GPIOs. If you have 10 GPIOs, you'd have two bytes. GPIOs are numbered from most significant bit to least significant bit, so 0x80 is GPIO 0, 0x40 is GPIO 1, etc.  </p>
+<p id="rfc.section.11.1.2.p.3">For GPIOs configured as inputs: </p>
+<p/>
+
+<ul>
+  <li><samp>CMD_PROP_VAUE_GET</samp>: The value of the associated bit describes the logic level read from the pin.</li>
+  <li><samp>CMD_PROP_VALUE_SET</samp>: The value of the associated bit is ignored for these pins.</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.11.1.2.p.5">For GPIOs configured as outputs: </p>
+<p/>
+
+<ul>
+  <li><samp>CMD_PROP_VAUE_GET</samp>: The value of the associated bit is implementation specific.</li>
+  <li><samp>CMD_PROP_VALUE_SET</samp>: The value of the associated bit determines the new logic level of the output. If this pin is configured as an open-drain, setting the associated bit to 1 will cause the pin to enter a Hi-Z state.</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.11.1.2.p.7">For GPIOs which are not specified in <samp>PROP_GPIO_CONFIG</samp>: </p>
+<p/>
+
+<ul>
+  <li><samp>CMD_PROP_VAUE_GET</samp>: The value of the associated bit is implementation specific.</li>
+  <li><samp>CMD_PROP_VALUE_SET</samp>: The value of the associated bit MUST be ignored by the NCP.</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.11.1.2.p.9">When writing, unspecified bits are assumed to be zero.  </p>
+<h1 id="rfc.section.11.1.3"><a href="#rfc.section.11.1.3">11.1.3.</a> <a href="#prop-4099-propgpiostateset" id="prop-4099-propgpiostateset">PROP 4099: PROP_GPIO_STATE_SET</a></h1>
 <p/>
 
 <ul>
@@ -3340,8 +3405,9 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.11.1.4.p.2">Allows for the state of various output GPIOs to be set without affecting other GPIO states. Contains a bit field identifying the output GPIOs that should have their state set to 1.  </p>
-<h1 id="rfc.section.11.1.5"><a href="#rfc.section.11.1.5">11.1.5.</a> <a href="#prop-4100-propgpiostateclear" id="prop-4100-propgpiostateclear">PROP 4100: PROP_GPIO_STATE_CLEAR</a></h1>
+<p id="rfc.section.11.1.3.p.2">Allows for the state of various output GPIOs to be set without affecting other GPIO states. Contains a bit field identifying the output GPIOs that should have their state set to 1.  </p>
+<p id="rfc.section.11.1.3.p.3">When writing, unspecified bits are assumed to be zero. The value of any bits for GPIOs which are not specified in <samp>PROP_GPIO_CONFIG</samp> MUST be ignored.  </p>
+<h1 id="rfc.section.11.1.4"><a href="#rfc.section.11.1.4">11.1.4.</a> <a href="#prop-4100-propgpiostateclear" id="prop-4100-propgpiostateclear">PROP 4100: PROP_GPIO_STATE_CLEAR</a></h1>
 <p/>
 
 <ul>
@@ -3349,7 +3415,8 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.11.1.5.p.2">Allows for the state of various output GPIOs to be cleared without affecting other GPIO states. Contains a bit field identifying the output GPIOs that should have their state cleared to 0.  </p>
+<p id="rfc.section.11.1.4.p.2">Allows for the state of various output GPIOs to be cleared without affecting other GPIO states. Contains a bit field identifying the output GPIOs that should have their state cleared to 0.  </p>
+<p id="rfc.section.11.1.4.p.3">When writing, unspecified bits are assumed to be zero. The value of any bits for GPIOs which are not specified in <samp>PROP_GPIO_CONFIG</samp> MUST be ignored.  </p>
 <h1 id="rfc.section.12"><a href="#rfc.section.12">12.</a> <a href="#security-considerations" id="security-considerations">Security Considerations</a></h1>
 <h1 id="rfc.section.12.1"><a href="#rfc.section.12.1">12.1.</a> <a href="#raw-application-access" id="raw-application-access">Raw Application Access</a></h1>
 <p id="rfc.section.12.1.p.1">Spinel MAY be used as an API boundary for allowing processes to configure the NCP. However, such a system MUST NOT give unprivileged processess the ability to send or receive arbitrary command frames to the NCP. Only the specific commands and properties that are required should be allowed to be passed, and then only after being checked for proper format.  </p>

@@ -32,6 +32,12 @@
 #include <thread/topology.hpp>
 #include "test_util.h"
 
+extern "C" {
+    uint32_t otNetifAddress_Size_c();
+    uint32_t otNetifAddress_offset_mNext_c();
+    otNetifAddress CreateNetif_c();
+}
+
 void test_packed1()
 {
     OT_TOOL_PACKED_BEGIN
@@ -93,12 +99,26 @@ void test_packed_enum()
     VerifyOrQuit(neighbor.mState == Thread::Neighbor::kStateValid, "Toolchain::OT_TOOL_PACKED failed 4\n");
 }
 
+void test_addr_sizes()
+{
+    VerifyOrQuit(offsetof(otNetifAddress, mNext) == otNetifAddress_offset_mNext_c(),
+                 "mNext should offset the same in C & C++");
+    VerifyOrQuit(sizeof(otNetifAddress) == otNetifAddress_Size_c(), "otNetifAddress should the same in C & C++");
+}
+
+void test_addr_bitfield()
+{
+    VerifyOrQuit(CreateNetif_c().mScopeOverrideValid == true, "Toolchain::test_addr_size_cpp\n");
+}
+
 void TestToolchain(void)
 {
     test_packed1();
     test_packed2();
     test_packed_union();
     test_packed_enum();
+    test_addr_sizes();
+    test_addr_bitfield();
 }
 
 #ifdef ENABLE_TEST_MAIN

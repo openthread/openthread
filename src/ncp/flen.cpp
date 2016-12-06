@@ -102,14 +102,15 @@ exit:
 }
 
 
-Decoder::Decoder(uint8_t *aOutBuf, uint16_t aOutLength, FrameHandler aFrameHandler, void *aContext)
+Decoder::Decoder(uint8_t *aOutBuf, uint16_t aOutLength, FrameHandler aFrameHandler, void *aContext):
+    mState(kStateNeedFlag),
+    mFrameHandler(aFrameHandler),
+    mContext(aContext),
+    mOutBuf(aOutBuf),
+    mOutOffset(0),
+    mOutLength(aOutLength),
+    mReadLength(0)
 {
-    mState = kStateNeedFlag;
-    mFrameHandler = aFrameHandler;
-    mContext = aContext;
-    mOutBuf = aOutBuf;
-    mOutOffset = 0;
-    mOutLength = aOutLength;
 }
 
 void Decoder::Decode(const uint8_t *aInBuf, uint16_t aInLength)

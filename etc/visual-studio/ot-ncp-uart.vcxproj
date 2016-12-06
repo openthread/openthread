@@ -52,12 +52,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <AdditionalDependencies>
-        %(AdditionalDependencies);
-        ws2_32.lib;
-        ..\..\build\bin\$(Platform)\$(Configuration)\lib\libopenthread.lib;
-        ..\..\build\bin\$(Platform)\$(Configuration)\lib\libopenthread-ncp-uart.lib;
-        ..\..\build\bin\$(Platform)\$(Configuration)\lib\libopenthread-windows.lib;
-        ..\..\build\bin\$(Platform)\$(Configuration)\lib\mbedtls.lib;
+        mincore.lib;
       </AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

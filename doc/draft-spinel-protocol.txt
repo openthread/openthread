@@ -4,11 +4,11 @@
 
                                                           R. Quattlebaum
                                                                Nest Labs
-                                                       November 28, 2016
+                                                        December 2, 2016
 
 
                     Spinel Host-Controller Protocol
-                    draft-spinel-protocol-05367497d
+                     draft-spinel-protocol-3df876d
 
 Abstract
 
@@ -53,9 +53,9 @@ Copyright Notice
 
 
 
-Quattlebaum               Expires June 1, 2017                  [Page 1]
+Quattlebaum               Expires June 5, 2017                  [Page 1]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
    BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
@@ -109,9 +109,9 @@ Table of Contents
 
 
 
-Quattlebaum               Expires June 1, 2017                  [Page 2]
+Quattlebaum               Expires June 5, 2017                  [Page 2]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
        5.2.3.  PROP 2: PROP_NCP_VERSION  . . . . . . . . . . . . . .  23
@@ -165,9 +165,9 @@ Quattlebaum               Expires June 1, 2017                  [Page 2]
 
 
 
-Quattlebaum               Expires June 1, 2017                  [Page 3]
+Quattlebaum               Expires June 5, 2017                  [Page 3]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
        5.7.4.  PROP 99: PROP_IPV6_ADDRESS_TABLE  . . . . . . . . . .  37
@@ -221,9 +221,9 @@ Quattlebaum               Expires June 1, 2017                  [Page 3]
 
 
 
-Quattlebaum               Expires June 1, 2017                  [Page 4]
+Quattlebaum               Expires June 5, 2017                  [Page 4]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
        9.2.2.  PROP 11: PROP_HBO_BLOCK_MAX . . . . . . . . . . . . .  48
@@ -234,59 +234,59 @@ Quattlebaum               Expires June 1, 2017                  [Page 4]
        10.1.3.  PROP 4610: PROP_JAM_DETECT_RSSI_THRESHOLD  . . . . .  49
        10.1.4.  PROP 4611: PROP_JAM_DETECT_WINDOW  . . . . . . . . .  49
        10.1.5.  PROP 4612: PROP_JAM_DETECT_BUSY  . . . . . . . . . .  50
-   11. Feature: Basic GPIO Access  . . . . . . . . . . . . . . . . .  50
-     11.1.  Properties . . . . . . . . . . . . . . . . . . . . . . .  50
-       11.1.1.  PROP 4096: PROP_GPIO_AVAILABLE . . . . . . . . . . .  50
-       11.1.2.  PROP 4097: PROP_GPIO_DIRECTION . . . . . . . . . . .  50
-       11.1.3.  PROP 4098: PROP_GPIO_STATE . . . . . . . . . . . . .  51
-       11.1.4.  PROP 4099: PROP_GPIO_STATE_SET . . . . . . . . . . .  51
-       11.1.5.  PROP 4100: PROP_GPIO_STATE_CLEAR . . . . . . . . . .  51
-   12. Security Considerations . . . . . . . . . . . . . . . . . . .  51
-     12.1.  Raw Application Access . . . . . . . . . . . . . . . . .  51
-     13.1.  URIs . . . . . . . . . . . . . . . . . . . . . . . . . .  51
-   Appendix A.  Framing Protocol . . . . . . . . . . . . . . . . . .  52
-     A.1.  UART Recommendations  . . . . . . . . . . . . . . . . . .  52
-       A.1.1.  UART Bit Rate Detection . . . . . . . . . . . . . . .  52
-       A.1.2.  HDLC-Lite . . . . . . . . . . . . . . . . . . . . . .  53
-     A.2.  SPI Recommendations . . . . . . . . . . . . . . . . . . .  54
-       A.2.1.  SPI Framing Protocol  . . . . . . . . . . . . . . . .  54
-     A.3.  I^2C Recommendations  . . . . . . . . . . . . . . . . . .  56
-     A.4.  Native USB Recommendations  . . . . . . . . . . . . . . .  56
-   Appendix B.  Test Vectors . . . . . . . . . . . . . . . . . . . .  56
-     B.1.  Test Vector: Packed Unsigned Integer  . . . . . . . . . .  56
-     B.2.  Test Vector: Reset Command  . . . . . . . . . . . . . . .  57
-     B.3.  Test Vector: Reset Notification . . . . . . . . . . . . .  57
-     B.4.  Test Vector: Scan Beacon  . . . . . . . . . . . . . . . .  57
-     B.5.  Test Vector: Inbound IPv6 Packet  . . . . . . . . . . . .  58
-     B.6.  Test Vector: Outbound IPv6 Packet . . . . . . . . . . . .  58
-     B.7.  Test Vector: Fetch list of on-mesh networks . . . . . . .  58
-     B.8.  Test Vector: Returned list of on-mesh networks  . . . . .  59
-     B.9.  Test Vector: Adding an on-mesh network  . . . . . . . . .  59
-     B.10. Test Vector: Insertion notification of an on-mesh network  59
-     B.11. Test Vector: Removing a local on-mesh network . . . . . .  60
-     B.12. Test Vector: Removal notification of an on-mesh network .  60
-   Appendix C.  Example Sessions . . . . . . . . . . . . . . . . . .  60
-     C.1.  NCP Initialization  . . . . . . . . . . . . . . . . . . .  60
-     C.2.  Attaching to a network  . . . . . . . . . . . . . . . . .  61
-     C.3.  Successfully joining a pre-existing network . . . . . . .  62
-     C.4.  Unsuccessfully joining a pre-existing network . . . . . .  63
-     C.5.  Detaching from a network  . . . . . . . . . . . . . . . .  63
-     C.6.  Attaching to a saved network  . . . . . . . . . . . . . .  63
-     C.7.  NCP Software Reset  . . . . . . . . . . . . . . . . . . .  64
-     C.8.  Adding an on-mesh prefix  . . . . . . . . . . . . . . . .  64
+       10.1.6.  PROP 4613: SPINEL_PROP_JAM_DETECT_HISTORY_BITMAP . .  50
+   11. Feature: GPIO Access  . . . . . . . . . . . . . . . . . . . .  50
+     11.1.  Properties . . . . . . . . . . . . . . . . . . . . . . .  51
+       11.1.1.  PROP 4096: PROP_GPIO_CONFIG  . . . . . . . . . . . .  51
+       11.1.2.  PROP 4098: PROP_GPIO_STATE . . . . . . . . . . . . .  52
+       11.1.3.  PROP 4099: PROP_GPIO_STATE_SET . . . . . . . . . . .  52
+       11.1.4.  PROP 4100: PROP_GPIO_STATE_CLEAR . . . . . . . . . .  53
+   12. Security Considerations . . . . . . . . . . . . . . . . . . .  53
+     12.1.  Raw Application Access . . . . . . . . . . . . . . . . .  53
+     13.1.  URIs . . . . . . . . . . . . . . . . . . . . . . . . . .  53
+   Appendix A.  Framing Protocol . . . . . . . . . . . . . . . . . .  53
+     A.1.  UART Recommendations  . . . . . . . . . . . . . . . . . .  54
+       A.1.1.  UART Bit Rate Detection . . . . . . . . . . . . . . .  54
+       A.1.2.  HDLC-Lite . . . . . . . . . . . . . . . . . . . . . .  55
+     A.2.  SPI Recommendations . . . . . . . . . . . . . . . . . . .  56
+       A.2.1.  SPI Framing Protocol  . . . . . . . . . . . . . . . .  56
+     A.3.  I^2C Recommendations  . . . . . . . . . . . . . . . . . .  58
+     A.4.  Native USB Recommendations  . . . . . . . . . . . . . . .  58
+   Appendix B.  Test Vectors . . . . . . . . . . . . . . . . . . . .  58
+     B.1.  Test Vector: Packed Unsigned Integer  . . . . . . . . . .  58
+     B.2.  Test Vector: Reset Command  . . . . . . . . . . . . . . .  59
+     B.3.  Test Vector: Reset Notification . . . . . . . . . . . . .  59
+     B.4.  Test Vector: Scan Beacon  . . . . . . . . . . . . . . . .  59
+     B.5.  Test Vector: Inbound IPv6 Packet  . . . . . . . . . . . .  60
+     B.6.  Test Vector: Outbound IPv6 Packet . . . . . . . . . . . .  60
+     B.7.  Test Vector: Fetch list of on-mesh networks . . . . . . .  60
+     B.8.  Test Vector: Returned list of on-mesh networks  . . . . .  60
+     B.9.  Test Vector: Adding an on-mesh network  . . . . . . . . .  61
+     B.10. Test Vector: Insertion notification of an on-mesh network  61
+     B.11. Test Vector: Removing a local on-mesh network . . . . . .  62
+     B.12. Test Vector: Removal notification of an on-mesh network .  62
+   Appendix C.  Example Sessions . . . . . . . . . . . . . . . . . .  62
+     C.1.  NCP Initialization  . . . . . . . . . . . . . . . . . . .  62
+     C.2.  Attaching to a network  . . . . . . . . . . . . . . . . .  63
+     C.3.  Successfully joining a pre-existing network . . . . . . .  64
+     C.4.  Unsuccessfully joining a pre-existing network . . . . . .  64
+     C.5.  Detaching from a network  . . . . . . . . . . . . . . . .  65
+     C.6.  Attaching to a saved network  . . . . . . . . . . . . . .  65
+     C.7.  NCP Software Reset  . . . . . . . . . . . . . . . . . . .  65
+     C.8.  Adding an on-mesh prefix  . . . . . . . . . . . . . . . .  65
 
 
 
-Quattlebaum               Expires June 1, 2017                  [Page 5]
+Quattlebaum               Expires June 5, 2017                  [Page 5]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
-     C.9.  Entering low-power modes  . . . . . . . . . . . . . . . .  64
-     C.10. Sniffing raw packets  . . . . . . . . . . . . . . . . . .  64
-   Appendix D.  Acknowledgments  . . . . . . . . . . . . . . . . . .  65
-   Appendix E.  Glossary . . . . . . . . . . . . . . . . . . . . . .  65
-   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  66
+     C.9.  Entering low-power modes  . . . . . . . . . . . . . . . .  66
+     C.10. Sniffing raw packets  . . . . . . . . . . . . . . . . . .  66
+   Appendix D.  Acknowledgments  . . . . . . . . . . . . . . . . . .  67
+   Appendix E.  Glossary . . . . . . . . . . . . . . . . . . . . . .  67
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  68
 
 1.  Introduction
 
@@ -333,9 +333,9 @@ Quattlebaum               Expires June 1, 2017                  [Page 5]
 
 
 
-Quattlebaum               Expires June 1, 2017                  [Page 6]
+Quattlebaum               Expires June 5, 2017                  [Page 6]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
    o  Command IDs zero through eight.  (Reset, No-op, and Property-Value
@@ -389,9 +389,9 @@ Quattlebaum               Expires June 1, 2017                  [Page 6]
 
 
 
-Quattlebaum               Expires June 1, 2017                  [Page 7]
+Quattlebaum               Expires June 5, 2017                  [Page 7]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
    ensure exclusive access to the NCP by an application.  Only one
@@ -445,9 +445,9 @@ Quattlebaum               Expires June 1, 2017                  [Page 7]
 
 
 
-Quattlebaum               Expires June 1, 2017                  [Page 8]
+Quattlebaum               Expires June 5, 2017                  [Page 8]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
    In Spinel, properties are keyed by an unsigned integer between 0 and
@@ -501,9 +501,9 @@ Quattlebaum               Expires June 1, 2017                  [Page 8]
 
 
 
-Quattlebaum               Expires June 1, 2017                  [Page 9]
+Quattlebaum               Expires June 5, 2017                  [Page 9]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
    The valid operations on these sorts of properties are "VALUE_GET",
@@ -557,9 +557,9 @@ Quattlebaum               Expires June 1, 2017                  [Page 9]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 10]
+Quattlebaum               Expires June 5, 2017                 [Page 10]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
                  +---------+--------+-----+-------------+
@@ -613,9 +613,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 10]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 11]
+Quattlebaum               Expires June 5, 2017                 [Page 11]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
    The TID value of zero (0) is used for commands to which a correlated
@@ -669,9 +669,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 11]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 12]
+Quattlebaum               Expires June 5, 2017                 [Page 12]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
    o  "C6U": A single unsigned byte, followed by a 128-bit IPv6 address,
@@ -725,9 +725,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 12]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 13]
+Quattlebaum               Expires June 5, 2017                 [Page 13]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
    The packed unsigned integer format is based on the unsigned integer
@@ -781,9 +781,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 13]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 14]
+Quattlebaum               Expires June 5, 2017                 [Page 14]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
    However, things are a little different with "CLDL".  Since our data
@@ -837,9 +837,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 14]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 15]
+Quattlebaum               Expires June 5, 2017                 [Page 15]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
 3.5.  Arrays
@@ -893,9 +893,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 15]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 16]
+Quattlebaum               Expires June 5, 2017                 [Page 16]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
    If an error occurs, the value of "PROP_LAST_STATUS" will be emitted
@@ -949,9 +949,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 16]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 17]
+Quattlebaum               Expires June 5, 2017                 [Page 17]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
    Insert value into property command.  Instructs the NCP to insert the
@@ -1005,9 +1005,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 17]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 18]
+Quattlebaum               Expires June 5, 2017                 [Page 18]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
    The payload for this command is the property identifier encoded in
@@ -1061,9 +1061,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 18]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 19]
+Quattlebaum               Expires June 5, 2017                 [Page 19]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
 4.10.  CMD 18: (Host->NCP) CMD_PEEK
@@ -1117,9 +1117,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 19]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 20]
+Quattlebaum               Expires June 5, 2017                 [Page 20]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
    Due to the low-level nature of this command, certain error conditions
@@ -1173,9 +1173,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 20]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 21]
+Quattlebaum               Expires June 5, 2017                 [Page 21]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
    Note that each property section has two reserved ranges: a primary
@@ -1229,9 +1229,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 21]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 22]
+Quattlebaum               Expires June 5, 2017                 [Page 22]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
 5.2.2.1.  Major Version Number
@@ -1285,9 +1285,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 22]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 23]
+Quattlebaum               Expires June 5, 2017                 [Page 23]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
                        +---------+----------------+
@@ -1341,9 +1341,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 23]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 24]
+Quattlebaum               Expires June 5, 2017                 [Page 24]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
    o  1: "CAP_LOCK"
@@ -1354,6 +1354,7 @@ Quattlebaum               Expires June 1, 2017                 [Page 24]
    o  6: "CAP_JAM_DETECT": Jamming detection.  See Section 10
    o  7: "CAP_PEEK_POKE": PEEK/POKE debugging commands.
    o  8: "CAP_WRITABLE_RAW_STREAM": "PROP_STREAM_RAW" is writable.
+   o  9: "CAP_GPIO": Support for GPIO access.  See Section 11.
    o  16: "CAP_802_15_4_2003"
    o  17: "CAP_802_15_4_2006"
    o  18: "CAP_802_15_4_2011"
@@ -1396,10 +1397,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 24]
 
 
 
-
-Quattlebaum               Expires June 1, 2017                 [Page 25]
+Quattlebaum               Expires June 5, 2017                 [Page 25]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
    Describes the number of concurrent interfaces supported by this NCP.
@@ -1453,9 +1453,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 25]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 26]
+Quattlebaum               Expires June 5, 2017                 [Page 26]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
    The static EUI64 address of the device, used as a serial number.
@@ -1509,9 +1509,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 26]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 27]
+Quattlebaum               Expires June 5, 2017                 [Page 27]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
    To receive the debugging stream, you wait for "CMD_PROP_VALUE_IS"
@@ -1565,9 +1565,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 27]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 28]
+Quattlebaum               Expires June 5, 2017                 [Page 28]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
      +----------+-----------------------+------------+-----+---------+
@@ -1621,9 +1621,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 28]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 29]
+Quattlebaum               Expires June 5, 2017                 [Page 29]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
         +---------+----------------+------------+----------------+
@@ -1677,9 +1677,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 29]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 30]
+Quattlebaum               Expires June 5, 2017                 [Page 30]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
    Any data past the end of "FRAME_DATA_LEN" is considered metadata, the
@@ -1733,9 +1733,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 30]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 31]
+Quattlebaum               Expires June 5, 2017                 [Page 31]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
    When setting, the value will be rounded down to a value that is
@@ -1789,9 +1789,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 31]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 32]
+Quattlebaum               Expires June 5, 2017                 [Page 32]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
 5.5.2.  PROP 49: PROP_MAC_SCAN_MASK
@@ -1845,9 +1845,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 32]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 33]
+Quattlebaum               Expires June 5, 2017                 [Page 33]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
 5.5.5.  PROP 52: PROP_MAC_15_4_LADDR
@@ -1901,9 +1901,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 33]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 34]
+Quattlebaum               Expires June 5, 2017                 [Page 34]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
    +----+--------------------------------+-----------------------------+
@@ -1957,9 +1957,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 34]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 35]
+Quattlebaum               Expires June 5, 2017                 [Page 35]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
    Network interface up/down status.  Non-zero (set to 1) indicates up,
@@ -2013,9 +2013,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 35]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 36]
+Quattlebaum               Expires June 5, 2017                 [Page 36]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
 5.6.9.  PROP 72: PROP_NET_PARTITION_ID
@@ -2069,9 +2069,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 36]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 37]
+Quattlebaum               Expires June 5, 2017                 [Page 37]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
 5.7.5.  PROP 101: PROP_IPv6_ICMP_PING_OFFLOAD
@@ -2125,9 +2125,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 37]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 38]
+Quattlebaum               Expires June 5, 2017                 [Page 38]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
    o  11: "STATUS_NOMEM": The operation has been prevented due to memory
@@ -2181,9 +2181,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 38]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 39]
+Quattlebaum               Expires June 5, 2017                 [Page 39]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
 7.1.  Thread Capabilities
@@ -2237,9 +2237,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 39]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 40]
+Quattlebaum               Expires June 5, 2017                 [Page 40]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
 7.2.5.  PROP 84: PROP_THREAD_LEADER_WEIGHT
@@ -2293,9 +2293,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 40]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 41]
+Quattlebaum               Expires June 5, 2017                 [Page 41]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
 7.2.12.  PROP 91: PROP_THREAD_LOCAL_ROUTES
@@ -2349,9 +2349,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 41]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 42]
+Quattlebaum               Expires June 5, 2017                 [Page 42]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
 7.2.18.  PROP 5378: PROP_THREAD_ROUTER_UPGRADE_THRESHOLD
@@ -2405,9 +2405,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 42]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 43]
+Quattlebaum               Expires June 5, 2017                 [Page 43]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
 7.2.24.  PROP 5384: PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD
@@ -2461,9 +2461,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 43]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 44]
+Quattlebaum               Expires June 5, 2017                 [Page 44]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
    The presence of this feature can be detected by checking for the
@@ -2517,9 +2517,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 44]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 45]
+Quattlebaum               Expires June 5, 2017                 [Page 45]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
 8.1.3.  CMD 11: (Host->NCP) CMD_NET_RECALL
@@ -2573,9 +2573,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 45]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 46]
+Quattlebaum               Expires June 5, 2017                 [Page 46]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
 9.1.2.  CMD 13: (NCP->Host) CMD_HBO_RECLAIM
@@ -2629,9 +2629,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 46]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 47]
+Quattlebaum               Expires June 5, 2017                 [Page 47]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
    Describes the number of bytes that may be offloaded from the NCP to
@@ -2685,9 +2685,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 47]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 48]
+Quattlebaum               Expires June 5, 2017                 [Page 48]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
                   +---------+--------------------------+
@@ -2741,9 +2741,9 @@ Quattlebaum               Expires June 1, 2017                 [Page 48]
 
 
 
-Quattlebaum               Expires June 1, 2017                 [Page 49]
+Quattlebaum               Expires June 5, 2017                 [Page 49]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
    o  Default Value: Implementation-specific
@@ -2768,49 +2768,136 @@ Quattlebaum               Expires June 1, 2017                 [Page 49]
    "PROP_JAM_DETECT_BUSY" is larger than "PROP_JAM_DETECT_WINDOW" is
    undefined.
 
-11.  Feature: Basic GPIO Access
+10.1.6.  PROP 4613: SPINEL_PROP_JAM_DETECT_HISTORY_BITMAP
 
-   The length of the data associated with these properties depends on
-   the number of GPIOs.  If you have 10 GPIOs, you'd have two bytes.
-   You determine the number of GPIOs available by examining
-   PROP_GPIO_AVAILABLE, described below.  This API isn't intended to
-   support every possible GPIO state, it is intended for basic reading
-   and writing.
+   o  Type: Read-Only
+   o  Packed-Encoding: "LL"
+   o  Default Value: Implementation-specific
+   o  RECOMMENDED for "CAP_JAM_DETECT"
+
+   This value provides information about current state of jamming
+   detection module for monitoring/debugging purpose.  It returns a
+   64-bit value where each bit corresponds to one second interval
+   starting with bit 0 for the most recent interval and bit 63 for the
+   oldest intervals (63 sec earlier).  The bit is set to 1 if the
+   jamming detection module observed/detected high signal level during
+   the corresponding one second interval.  The value is read-only and is
+   encoded as two "L" (uint32) values in little-endian format (first "L"
+   (uint32) value gives the lower bits corresponding to more recent
+   history).
+
+11.  Feature: GPIO Access
+
+   This feature allows the host to have control over some or all of the
+   GPIO pins on the NCP.  The host can determine which GPIOs are
+   available by examining "PROP_GPIO_CONFIG", described below.  This API
+   supports a maximum of 256 individual GPIO pins.
+
+
+
+
+
+Quattlebaum               Expires June 5, 2017                 [Page 50]
+
+                        Spinel Protocol (3df876d)          December 2016
+
+
+   Support for this feature can be determined by the presence of
+   "CAP_GPIO".
 
 11.1.  Properties
 
-11.1.1.  PROP 4096: PROP_GPIO_AVAILABLE
+11.1.1.  PROP 4096: PROP_GPIO_CONFIG
 
-   o  Type: Read-only
+   o  Argument-Encoding: "A(CCU)"
+   o  Type: Read-write (Writable only using "CMD_PROP_VALUE_INSERT",
+      Section 4.5)
 
-   Contains a bit field identifying which GPIOs are supported.  Cleared
-   bits are not supported.  Set bits are supported.
+   An array of structures which contain the following fields:
 
-11.1.2.  PROP 4097: PROP_GPIO_DIRECTION
+   o  "C": GPIO Number
+   o  "C": GPIO Configuration Flags
+   o  "U": Human-readable GPIO name
 
-   o  Type: Read-only (Optionally read/write)
+   GPIOs which do not have a corresponding entry are not supported.
 
-   Contains a bit field identifying which GPIOs are configured as
-   outputs.  Cleared bits are inputs.  Set bits are outputs.
+   The configuration parameter contains the configuration flags for the
+   GPIO:
+
+                       0   1   2   3   4   5   6   7
+                     +---+---+---+---+---+---+---+---+
+                     |DIR|PUP|PDN|TRIGGER|  RESERVED |
+                     +---+---+---+---+---+---+---+---+
+                             |O/D|
+                             +---+
+
+   o  "DIR": Pin direction.  Clear (0) for input, set (1) for output.
+   o  "PUP": Pull-up enabled flag.
+   o  "PDN"/"O/D": Flag meaning depends on pin direction:
+
+      *  Input: Pull-down enabled.
+      *  Output: Output is an open-drain.
+   o  "TRIGGER": Enumeration describing how pin changes generate
+      asynchronous notification commands (TBD) from the NCP to the host.
+
+      *  0: Feature disabled for this pin
+      *  1: Trigger on falling edge
+      *  2: Trigger on rising edge
+      *  3: Trigger on level change
+   o  "RESERVED": Bits reserved for future use.  Always cleared to zero
+      and ignored when read.
+
+   As an optional feature, the configuration of individual pins may be
+   modified using the "CMD_PROP_VALUE_INSERT" command.  Only the GPIO
+   number and flags fields MUST be present, the GPIO name (if present)
 
 
 
-
-
-Quattlebaum               Expires June 1, 2017                 [Page 50]
+Quattlebaum               Expires June 5, 2017                 [Page 51]
 
-                       Spinel Protocol (05367497d)         November 2016
+                        Spinel Protocol (3df876d)          December 2016
 
 
-11.1.3.  PROP 4098: PROP_GPIO_STATE
+   would be ignored.  This command can only be used to modify the
+   configuration of GPIOs which are already exposed---it cannot be used
+   by the host to add addional GPIOs.
+
+11.1.2.  PROP 4098: PROP_GPIO_STATE
 
    o  Type: Read-Write
 
-   Contains a bit field identifying the state of the GPIOs.  For GPIOs
-   configured as inputs, this is the read logic level.  For GPIOs
-   configured as outputs, this is the logic level of the output.
+   Contains a bit field identifying the state of the GPIOs.  The length
+   of the data associated with these properties depends on the number of
+   GPIOs.  If you have 10 GPIOs, you'd have two bytes.  GPIOs are
+   numbered from most significant bit to least significant bit, so 0x80
+   is GPIO 0, 0x40 is GPIO 1, etc.
 
-11.1.4.  PROP 4099: PROP_GPIO_STATE_SET
+   For GPIOs configured as inputs:
+
+   o  "CMD_PROP_VAUE_GET": The value of the associated bit describes the
+      logic level read from the pin.
+   o  "CMD_PROP_VALUE_SET": The value of the associated bit is ignored
+      for these pins.
+
+   For GPIOs configured as outputs:
+
+   o  "CMD_PROP_VAUE_GET": The value of the associated bit is
+      implementation specific.
+   o  "CMD_PROP_VALUE_SET": The value of the associated bit determines
+      the new logic level of the output.  If this pin is configured as
+      an open-drain, setting the associated bit to 1 will cause the pin
+      to enter a Hi-Z state.
+
+   For GPIOs which are not specified in "PROP_GPIO_CONFIG":
+
+   o  "CMD_PROP_VAUE_GET": The value of the associated bit is
+      implementation specific.
+   o  "CMD_PROP_VALUE_SET": The value of the associated bit MUST be
+      ignored by the NCP.
+
+   When writing, unspecified bits are assumed to be zero.
+
+11.1.3.  PROP 4099: PROP_GPIO_STATE_SET
 
    o  Type: Write-only
 
@@ -2818,13 +2905,30 @@ Quattlebaum               Expires June 1, 2017                 [Page 50]
    affecting other GPIO states.  Contains a bit field identifying the
    output GPIOs that should have their state set to 1.
 
-11.1.5.  PROP 4100: PROP_GPIO_STATE_CLEAR
+
+
+
+
+Quattlebaum               Expires June 5, 2017                 [Page 52]
+
+                        Spinel Protocol (3df876d)          December 2016
+
+
+   When writing, unspecified bits are assumed to be zero.  The value of
+   any bits for GPIOs which are not specified in "PROP_GPIO_CONFIG" MUST
+   be ignored.
+
+11.1.4.  PROP 4100: PROP_GPIO_STATE_CLEAR
 
    o  Type: Write-only
 
    Allows for the state of various output GPIOs to be cleared without
    affecting other GPIO states.  Contains a bit field identifying the
    output GPIOs that should have their state cleared to 0.
+
+   When writing, unspecified bits are assumed to be zero.  The value of
+   any bits for GPIOs which are not specified in "PROP_GPIO_CONFIG" MUST
+   be ignored.
 
 12.  Security Considerations
 
@@ -2851,19 +2955,21 @@ Quattlebaum               Expires June 1, 2017                 [Page 50]
 
    [5] https://github.com/miekg/mmark
 
-
-
-Quattlebaum               Expires June 1, 2017                 [Page 51]
-
-                       Spinel Protocol (05367497d)         November 2016
-
-
    [6] http://xml2rfc.ietf.org/
 
 Appendix A.  Framing Protocol
 
    Since this NCP protocol is defined independently of the physical
    transport or framing, any number of transports and framing protocols
+
+
+
+
+Quattlebaum               Expires June 5, 2017                 [Page 53]
+
+                        Spinel Protocol (3df876d)          December 2016
+
+
    could be used successfully.  However, in the interests of
    compatibility, this document provides some recommendations.
 
@@ -2905,21 +3011,20 @@ A.1.1.  UART Bit Rate Detection
    bitrate detection scheme that can be employed by the host to detect
    when the attached NCP is initially running at a higher bitrate.
 
-
-
-
-
-Quattlebaum               Expires June 1, 2017                 [Page 52]
-
-                       Spinel Protocol (05367497d)         November 2016
-
-
    The algorithm is to send successive NOOP commands to the NCP at
    increasing bitrates.  When a valid "CMD_LAST_STATUS" response has
    been received, we have identified the correct bitrate.
 
    In order to limit the time spent hunting for the appropriate bitrate,
    we RECOMMEND that only the following bitrates be checked:
+
+
+
+
+Quattlebaum               Expires June 5, 2017                 [Page 54]
+
+                        Spinel Protocol (3df876d)          December 2016
+
 
    o  115200
    o  230400
@@ -2962,14 +3067,6 @@ A.1.2.  HDLC-Lite
 
    When receiving a frame, the CRC must be verified after the frame is
    unescaped.  If the CRC value does not match what is calculated for
-
-
-
-Quattlebaum               Expires June 1, 2017                 [Page 53]
-
-                       Spinel Protocol (05367497d)         November 2016
-
-
    the frame data, the frame MUST be discarded.  The implementation MAY
    indicate the failure to higher levels to handle as they see fit, but
    MUST NOT attempt to process the deceived frame.
@@ -2977,6 +3074,13 @@ Quattlebaum               Expires June 1, 2017                 [Page 53]
    Consecutive flag octets are entirely legal and MUST NOT be treated as
    a framing error.  Consecutive flag octets MAY be used as a way to
    wake up a sleeping NCP.
+
+
+
+Quattlebaum               Expires June 5, 2017                 [Page 55]
+
+                        Spinel Protocol (3df876d)          December 2016
+
 
    When first establishing a connection to the NCP, it is customary to
    send one or more flag octets to ensure that any previously received
@@ -3014,18 +3118,6 @@ A.2.1.  SPI Framing Protocol
 
    Each SPI frame starts with a 5-byte frame header:
 
-
-
-
-
-
-
-
-Quattlebaum               Expires June 1, 2017                 [Page 54]
-
-                       Spinel Protocol (05367497d)         November 2016
-
-
                   +---------+-----+----------+----------+
                   | Octets: |  1  |    2     |    2     |
                   +---------+-----+----------+----------+
@@ -3038,6 +3130,14 @@ Quattlebaum               Expires June 1, 2017                 [Page 54]
       other device must not send any data.  (Little endian)
    o  "DATA_LEN": The fourth and fifth bytes indicate the size of the
       pending data frame to be sent to the other device.  If this value
+
+
+
+Quattlebaum               Expires June 5, 2017                 [Page 56]
+
+                        Spinel Protocol (3df876d)          December 2016
+
+
       is equal-to or less-than the number of bytes that the other device
       is willing to receive, then the data of the frame is immediately
       after the header.  (Little Endian)
@@ -3074,14 +3174,6 @@ Quattlebaum               Expires June 1, 2017                 [Page 54]
    Alternatively, if the master has a frame to send it can just go ahead
    and send a frame of that length and determine if the frame was
    accepted by checking that the "RECV_LEN" from the slave frame is
-
-
-
-Quattlebaum               Expires June 1, 2017                 [Page 55]
-
-                       Spinel Protocol (05367497d)         November 2016
-
-
    larger than the frame the master just tried to send.  If the
    "RECV_LEN" is smaller then the frame wasn't accepted and will need to
    be transmitted again.
@@ -3093,6 +3185,15 @@ Quattlebaum               Expires June 1, 2017                 [Page 55]
    should consider the transaction to have failed and try again after 10
    milliseconds, retrying up to 200 times.  After unsuccessfully trying
    200 times in a row, the master MAY take appropriate remedial action
+
+
+
+
+Quattlebaum               Expires June 5, 2017                 [Page 57]
+
+                        Spinel Protocol (3df876d)          December 2016
+
+
    (like a NCP hardware reset, or indicating a communication failure to
    a user interface).
 
@@ -3126,18 +3227,6 @@ Appendix B.  Test Vectors
 
 B.1.  Test Vector: Packed Unsigned Integer
 
-
-
-
-
-
-
-
-Quattlebaum               Expires June 1, 2017                 [Page 56]
-
-                       Spinel Protocol (05367497d)         November 2016
-
-
                  +---------------+-----------------------+
                  | Decimal Value | Packet Octet Encoding |
                  +---------------+-----------------------+
@@ -3152,6 +3241,14 @@ Quattlebaum               Expires June 1, 2017                 [Page 56]
                  |        16,385 | "81 80 01"            |
                  |     2,097,151 | "FF FF 7F"            |
                  +---------------+-----------------------+
+
+
+
+
+Quattlebaum               Expires June 5, 2017                 [Page 58]
+
+                        Spinel Protocol (3df876d)          December 2016
+
 
    [CREF4]
 
@@ -3186,14 +3283,6 @@ B.4.  Test Vector: Scan Beacon
    o  VALUE: Structure, encoded as "CcT(ESSc.)T(iCUD.)."
 
       *  CHAN: 15
-
-
-
-Quattlebaum               Expires June 1, 2017                 [Page 57]
-
-                       Spinel Protocol (05367497d)         November 2016
-
-
       *  RSSI: -60dBm
       *  MAC_DATA: (0D 00 B6 40 D4 8C E9 38 F9 52 FF FF D2 04 00)
 
@@ -3208,6 +3297,14 @@ Quattlebaum               Expires June 1, 2017                 [Page 57]
          +  Flags: 0x20
          +  Network Name: "spinel"
          +  XPANID: "DE AD 00 BE EF 00 CA FE"
+
+
+
+
+Quattlebaum               Expires June 5, 2017                 [Page 59]
+
+                        Spinel Protocol (3df876d)          December 2016
+
 
    Frame:
 
@@ -3238,18 +3335,6 @@ B.7.  Test Vector: Fetch list of on-mesh networks
 
                                  84 02 5A
 
-
-
-
-
-
-
-
-Quattlebaum               Expires June 1, 2017                 [Page 58]
-
-                       Spinel Protocol (05367497d)         November 2016
-
-
 B.8.  Test Vector: Returned list of on-mesh networks
 
    o  IID: 0
@@ -3266,6 +3351,16 @@ B.8.  Test Vector: Returned list of on-mesh networks
        +--------------+---------------+-------------+-------------+
 
    Frame:
+
+
+
+
+
+
+Quattlebaum               Expires June 5, 2017                 [Page 60]
+
+                        Spinel Protocol (3df876d)          December 2016
+
 
         84 06 5A 13 00 20 01 0D B8 00 01 00 00 00 00 00 00 00 00 00
         00 40 01 ?? 13 00 20 01 0D B8 00 02 00 00 00 00 00 00 00 00
@@ -3298,14 +3393,6 @@ B.10.  Test Vector: Insertion notification of an on-mesh network
    o  TID: 5
    o  CMD: 7 ("CMD_VALUE_INSERTED")
    o  PROP: 90 ("PROP_THREAD_ON_MESH_NETS")
-
-
-
-Quattlebaum               Expires June 1, 2017                 [Page 59]
-
-                       Spinel Protocol (05367497d)         November 2016
-
-
    o  VALUE: Structure, encoded as "6CbCb"
 
        +--------------+---------------+-------------+-------------+
@@ -3320,6 +3407,16 @@ Quattlebaum               Expires June 1, 2017                 [Page 59]
         01 ?? 01
 
    [CREF8]
+
+
+
+
+
+
+Quattlebaum               Expires June 5, 2017                 [Page 61]
+
+                        Spinel Protocol (3df876d)          December 2016
+
 
 B.11.  Test Vector: Removing a local on-mesh network
 
@@ -3354,14 +3451,6 @@ C.1.  NCP Initialization
    Check the protocol version to see if it is supported:
 
    o  CMD_VALUE_GET:PROP_PROTOCOL_VERSION
-
-
-
-Quattlebaum               Expires June 1, 2017                 [Page 60]
-
-                       Spinel Protocol (05367497d)         November 2016
-
-
    o  CMD_VALUE_IS:PROP_PROTOCOL_VERSION
 
    Check the NCP version to see if a firmware update may be necessary:
@@ -3376,6 +3465,14 @@ Quattlebaum               Expires June 1, 2017                 [Page 60]
 
    If the host supports using vendor-specific commands, the vendor
    should be verified before using them:
+
+
+
+
+Quattlebaum               Expires June 5, 2017                 [Page 62]
+
+                        Spinel Protocol (3df876d)          December 2016
+
 
    o  CMD_VALUE_GET:PROP_VENDOR_ID
    o  CMD_VALUE_IS:PROP_VENDOR_ID
@@ -3410,14 +3507,6 @@ C.2.  Attaching to a network
    o  CMD_VALUE_IS:PROP_NET_NETWORK_NAME
    o  CMD_VALUE_SET:PROP_NET_MASTER_KEY
    o  CMD_VALUE_IS:PROP_NET_MASTER_KEY
-
-
-
-Quattlebaum               Expires June 1, 2017                 [Page 61]
-
-                       Spinel Protocol (05367497d)         November 2016
-
-
    o  CMD_VALUE_SET:PROP_NET_KEY_SEQUENCE_COUNTER
    o  CMD_VALUE_IS:PROP_NET_KEY_SEQUENCE_COUNTER
    o  CMD_VALUE_SET:PROP_NET_KEY_SWITCH_GUARDTIME
@@ -3432,6 +3521,14 @@ Quattlebaum               Expires June 1, 2017                 [Page 61]
 
    o  CMD_VALUE_SET:PROP_NET_STACK_UP:TRUE
    o  CMD_VALUE_IS:PROP_NET_STACK_UP:TRUE
+
+
+
+
+Quattlebaum               Expires June 5, 2017                 [Page 63]
+
+                        Spinel Protocol (3df876d)          December 2016
+
 
    Some asynchronous events from the NCP:
 
@@ -3465,15 +3562,6 @@ C.3.  Successfully joining a pre-existing network
 
    o  CMD_NET_SAVE
 
-
-
-
-
-Quattlebaum               Expires June 1, 2017                 [Page 62]
-
-                       Spinel Protocol (05367497d)         November 2016
-
-
 C.4.  Unsuccessfully joining a pre-existing network
 
    This example session is identical to the above session up to the
@@ -3489,6 +3577,14 @@ C.4.  Unsuccessfully joining a pre-existing network
    o  CMD_VALUE_IS:PROP_NET_STACK_UP:TRUE
 
    Some asynchronous events from the NCP:
+
+
+
+
+Quattlebaum               Expires June 5, 2017                 [Page 64]
+
+                        Spinel Protocol (3df876d)          December 2016
+
 
    o  CMD_VALUE_IS:PROP_LAST_STATUS:STATUS_JOIN_NO_PEERS
    o  CMD_VALUE_IS:PROP_NET_STACK_UP:FALSE
@@ -3521,15 +3617,6 @@ C.6.  Attaching to a saved network
    o  CMD_VALUE_IS:PROP_NET_PARTITION_ID
    o  CMD_VALUE_IS:PROP_THREAD_ON_MESH_NETS
 
-
-
-
-
-Quattlebaum               Expires June 1, 2017                 [Page 63]
-
-                       Spinel Protocol (05367497d)         November 2016
-
-
 C.7.  NCP Software Reset
 
    [CREF13]
@@ -3542,6 +3629,18 @@ C.7.  NCP Software Reset
 C.8.  Adding an on-mesh prefix
 
    TBD
+
+
+
+
+
+
+
+
+Quattlebaum               Expires June 5, 2017                 [Page 65]
+
+                        Spinel Protocol (3df876d)          December 2016
+
 
 C.9.  Entering low-power modes
 
@@ -3578,14 +3677,6 @@ C.10.  Sniffing raw packets
    Now we will get raw 802.15.4 packets asynchronously on
    PROP_STREAM_RAW:
 
-
-
-
-Quattlebaum               Expires June 1, 2017                 [Page 64]
-
-                       Spinel Protocol (05367497d)         November 2016
-
-
    o  CMD_VALUE_IS:PROP_STREAM_RAW:...
    o  CMD_VALUE_IS:PROP_STREAM_RAW:...
    o  CMD_VALUE_IS:PROP_STREAM_RAW:...
@@ -3595,6 +3686,17 @@ Quattlebaum               Expires June 1, 2017                 [Page 64]
    "MAC_PROMISCUOUS_MODE_PROMISCUOUS" or "MAC_PROMISCUOUS_MODE_NORMAL",
    so that you can avoid receiving packets from other networks or that
    are destined for other nodes.
+
+
+
+
+
+
+
+Quattlebaum               Expires June 5, 2017                 [Page 66]
+
+                        Spinel Protocol (3df876d)          December 2016
+
 
 Appendix D.  Acknowledgments
 
@@ -3633,15 +3735,6 @@ Appendix E.  Glossary
       to the physical implementation and operation of a networking
       medium.
 
-
-
-
-
-Quattlebaum               Expires June 1, 2017                 [Page 65]
-
-                       Spinel Protocol (05367497d)         November 2016
-
-
 Editorial Comments
 
 [CREF1] RQ: We may want to consider a license more appropriate for
@@ -3651,6 +3744,15 @@ Editorial Comments
         addressed, the above table should be swapped out with this: |
         0 | 1 | 2 | 3 | 4 | 5 | 6 |
         7 | |---|---|---|---|---|---|---|---| | FLG || IID || TID ||||
+
+
+
+
+
+Quattlebaum               Expires June 5, 2017                 [Page 67]
+
+                        Spinel Protocol (3df876d)          December 2016
+
 
 [CREF2] RQ: It may make sense to have a look at what Bluetooth HCI is
         doing for native I^2C framing and go with that.
@@ -3687,17 +3789,6 @@ Editorial Comments
 
 Author's Address
 
-
-
-
-
-
-
-Quattlebaum               Expires June 1, 2017                 [Page 66]
-
-                       Spinel Protocol (05367497d)         November 2016
-
-
    Robert S. Quattlebaum
    Nest Labs
    3400 Hillview Ave.
@@ -3714,39 +3805,4 @@ Quattlebaum               Expires June 1, 2017                 [Page 66]
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Quattlebaum               Expires June 1, 2017                 [Page 67]
+Quattlebaum               Expires June 5, 2017                 [Page 68]

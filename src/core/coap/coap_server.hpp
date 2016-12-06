@@ -117,7 +117,7 @@ public:
      * @retval kThreadError_None  Successfully started the CoAP server.
      *
      */
-    ThreadError Start();
+    ThreadError Start(void);
 
     /**
      * This method stops the CoAP server.
@@ -125,7 +125,7 @@ public:
      * @retval kThreadError_None  Successfully stopped the CoAP server.
      *
      */
-    ThreadError Stop();
+    ThreadError Stop(void);
 
     /**
      * This method adds a resource to the CoAP server.

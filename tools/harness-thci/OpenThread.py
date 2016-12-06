@@ -28,8 +28,8 @@
 
 '''
 >> Thread Host Controller Interface
->> Device : ARM THCI
->> Class : ARM
+>> Device : OpenThread THCI
+>> Class : OpenThread
 '''
 
 import re
@@ -48,8 +48,8 @@ from Queue import Queue
 linesepx = re.compile(r'\r\n|\n')
 """regex: used to split lines"""
 
-class ARM(IThci):
-    firmware = 'Nov 4 2016 07:24:59' # keep the consistency with ARM firmware style
+class OpenThread(IThci):
+    firmware = 'g7d33184; CC2538; Dec  1 2016 15:43:40'
     UIStatusMsg = ''
     networkDataRequirement = ''      # indicate Thread device requests full or stable network data
     isPowerDown = False              # indicate if Thread device experiences a power down event
@@ -57,6 +57,7 @@ class ARM(IThci):
     isBlackListEnabled = False       # indicate if Thread device enables black list filter
     isActiveCommissioner = False     # indicate if Thread device is an active commissioner
     LOWEST_POSSIBLE_PARTATION_ID = 0x1
+    LINK_QUALITY_CHANGE_TIME = 100
 
     #def __init__(self, SerialPort=COMPortName, EUI=MAC_Address):
     def __init__(self, **kwargs):
@@ -1237,7 +1238,6 @@ class ARM(IThci):
             self.isWhiteListEnabled = False
             self.isBlackListEnabled = False
             self.isActiveCommissioner = False
-            self.firmware = 'Nov 4 2016 07:24:59'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setDefaultValue() Error: " + str(e))
 
@@ -2410,7 +2410,7 @@ class ARM(IThci):
 
             if xChannelTlv != None:
                 cmd += ' binary '
-                cmd += '000300' + hex(xChannelTlv).lstrip('0x').zfill(4) 
+                cmd += '000300' + hex(xChannelTlv).lstrip('0x').zfill(4)
 
             print cmd
 
@@ -2485,7 +2485,8 @@ class ARM(IThci):
         """force update to router as if there is child id request"""
         print '%s call updateRouterStatus' % self.port
         cmd = 'state'
-        while state = self.__sendCommand(cmd)[0]:
+        while True:
+            state = self.__sendCommand(cmd)[0]
             if state == 'detached':
                 continue
             elif state == 'child':
@@ -2500,3 +2501,6 @@ class ARM(IThci):
         print '%s call setRouterThresholdValues' % self.port
         self.__setRouterUpgradeThreshold(upgradeThreshold)
         self.__setRouterDowngradeThreshold(downgradeThreshold)
+
+    def setMinDelayTimer(self, iSeconds):
+        print '%s call setMinDelayTimer' % self.port

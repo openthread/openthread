@@ -138,7 +138,7 @@ public:
      * @returns A pointer to the value.
      *
      */
-    uint8_t *GetValue() { return reinterpret_cast<uint8_t *>(this) + sizeof(Tlv); }
+    uint8_t *GetValue(void) { return reinterpret_cast<uint8_t *>(this) + sizeof(Tlv); }
 
     /**
      * This method returns a pointer to the Value.
@@ -146,7 +146,7 @@ public:
      * @returns A pointer to the value.
      *
      */
-    const uint8_t *GetValue() const { return reinterpret_cast<const uint8_t *>(this) + sizeof(Tlv); }
+    const uint8_t *GetValue(void) const { return reinterpret_cast<const uint8_t *>(this) + sizeof(Tlv); }
 
     /**
      * This method returns a pointer to the next TLV.
@@ -154,11 +154,11 @@ public:
      * @returns A pointer to the next TLV.
      *
      */
-    Tlv *GetNext() {
+    Tlv *GetNext(void) {
         return reinterpret_cast<Tlv *>(reinterpret_cast<uint8_t *>(this) + sizeof(*this) + mLength);
     }
 
-    const Tlv *GetNext() const {
+    const Tlv *GetNext(void) const {
         return reinterpret_cast<const Tlv *>(reinterpret_cast<const uint8_t *>(this) + sizeof(*this) + mLength);
     }
 
@@ -203,7 +203,7 @@ public:
      * This method returns the Length value.
      *
      */
-    uint16_t GetLength() const { return HostSwap16(mLength); }
+    uint16_t GetLength(void) const { return HostSwap16(mLength); }
 
     /**
      * This method sets the Length value.
@@ -1063,7 +1063,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init() { SetType(kJoinerIid); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void) { SetType(kJoinerIid); SetLength(sizeof(*this) - sizeof(Tlv)); }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -1072,7 +1072,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid() const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns a pointer to the Joiner IID.
@@ -1080,7 +1080,7 @@ public:
      * @returns A pointer to the Joiner IID.
      *
      */
-    const uint8_t *GetIid() const { return mIid; }
+    const uint8_t *GetIid(void) const { return mIid; }
 
     /**
      * This method sets the Joiner IID.
@@ -1149,7 +1149,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init() { SetType(kJoinerRouterKek); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void) { SetType(kJoinerRouterKek); SetLength(sizeof(*this) - sizeof(Tlv)); }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -1158,7 +1158,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid() const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns a pointer to the Joiner Router KEK.
@@ -1166,7 +1166,7 @@ public:
      * @returns A pointer to the Joiner Router KEK.
      *
      */
-    const uint8_t *GetKek() const { return mKek; }
+    const uint8_t *GetKek(void) const { return mKek; }
 
     /**
      * This method sets the Joiner Router KEK.

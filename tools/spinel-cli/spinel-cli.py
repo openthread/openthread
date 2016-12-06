@@ -72,6 +72,7 @@ from spinel.const import kThread
 from spinel.codec import WpanApi
 from spinel.codec import SpinelCodec
 from spinel.stream import StreamOpen
+from spinel.tun import TunInterface
 import spinel.config as CONFIG
 import spinel.util as util
 
@@ -98,6 +99,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
     def __init__(self, stream_desc, nodeid, *_a, **kw):
 
         self.nodeid = kw.get('nodeid', '1')
+        self.tun_if = None
 
         self.wpan_api = WpanApi(stream_desc, nodeid)
         self.wpan_api.queue_register(SPINEL.HEADER_DEFAULT)
@@ -879,8 +881,8 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             self.prop_insert_value(SPINEL.PROP_IPV6_ADDRESS_TABLE,
                                    arr, str(len(arr)) + 's')
 
-            if self.wpan_api.tun_if:
-                self.wpan_api.tun_if.addr_add(ipaddr)
+            if self.tun_if:
+                self.tun_if.addr_add(ipaddr)
 
         elif params[0] == "remove":
             arr += self.wpan_api.encode_fields('CLLC',
@@ -891,8 +893,8 @@ class SpinelCliCmd(Cmd, SpinelCodec):
 
             self.prop_remove_value(SPINEL.PROP_IPV6_ADDRESS_TABLE,
                                    arr, str(len(arr)) + 's')
-            if self.wpan_api.tun_if:
-                self.wpan_api.tun_if.addr_del(ipaddr)
+            if self.tun_if:
+                self.tun_if.addr_del(ipaddr)
 
         print("Done")
 
@@ -1741,18 +1743,23 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             pass
 
         elif params[0] == "add":
-            if self.wpan_api.tun_if:
-                self.wpan_api.tun_if.addr_add(ipaddr)
+            if self.tun_if:
+                self.tun_if.addr_add(ipaddr)
 
         elif params[0] == "remove":
-            if self.wpan_api.tun_if:
-                self.wpan_api.tun_if.addr_del(ipaddr)
+            if self.tun_if:
+                self.tun_if.addr_del(ipaddr)
 
-        elif params[0] == "up":
-            self.wpan_api.if_up(self.nodeid)
+        elif params[0] == "up":    
+            if os.geteuid() == 0:
+                self.tun_if = TunInterface(nodeid)
+            else:
+                print("Warning: superuser required to start tun interface.")
 
         elif params[0] == "down":
-            self.wpan_api.if_down()
+            if self.tun_if:
+                self.tun_if.close()            
+            self.tun_if = None
 
         elif params[0] == "ping":
             # Use tunnel to send ping
@@ -1766,8 +1773,8 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             if len(params) > 3:
                 _interval = params[3]
 
-            if self.wpan_api.tun_if:
-                self.wpan_api.tun_if.ping6(
+            if self.tun_if:
+                self.tun_if.ping6(
                     " -c " + count + " -s " + size + " " + ipaddr)
 
         print("Done")

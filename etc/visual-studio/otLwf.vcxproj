@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="openthread.configuration.props" /> 
+  <Import Project="openthread.configuration.props" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>{3F1F7F6C-2A33-4635-9880-08FC5BC4E435}</ProjectGuid>
     <TemplateGuid>{8b1800b9-d017-4029-9785-13ef5e5b328e}</TemplateGuid>
@@ -49,6 +49,7 @@
         ..\..\include;
         ..\..\examples\drivers\windows\include;
         ..\..\examples\drivers\windows\otLwf;
+        ..\..\src;
         ..\..\src\core;
         ..\..\src\missing\stdint;
         ..\..\src\missing\stdbool;
@@ -76,10 +77,11 @@
         netio.lib;
         uuid.lib;
         cng.lib;
-        ..\..\build\bin\$(Platform)\$(Configuration)\lib\libopenthread_k.lib;
-        ..\..\build\bin\$(Platform)\$(Configuration)\lib\mbedtls_k.lib
       </AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command Condition="'$(Platform)'=='ARM'">inf2cat /driver:$(TargetDir) /os:8_ARM</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\address.c" />
@@ -88,6 +90,9 @@
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\driver.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\eventprocessing.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\iocontrol.c" />
+    <ClCompile Include="..\..\examples\drivers\windows\otLwf\settings.c" />
+    <ClCompile Include="..\..\examples\drivers\windows\otLwf\thread.c" />
+    <ClCompile Include="..\..\examples\drivers\windows\otLwf\tunnel.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\oid.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\precomp.c">
       <AdditionalIncludeDirectories>..;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -98,17 +103,18 @@
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\filter.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\device.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\radio.c" />
-    <ClCompile Include="..\..\examples\drivers\windows\otLwf\settings.c" />
-    <ResourceCompile Include="..\..\examples\drivers\windows\otLwf\filter.rc" />
-    <Inf Include="..\..\examples\drivers\windows\otLwf\otLwf.inf" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\device.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\driver.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\iocontrol.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\nsihelper.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\oid.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\radio.h" />
+    <ClInclude Include="..\..\examples\drivers\windows\otLwf\thread.h" />
+    <ClInclude Include="..\..\examples\drivers\windows\otLwf\tunnel.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\precomp.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\filter.h" />
+    <ResourceCompile Include="..\..\examples\drivers\windows\otLwf\filter.rc" />
+    <Inf Include="..\..\examples\drivers\windows\otLwf\otLwf.inf" />
   </ItemGroup>
   <ItemGroup>
     <FilesToPackage Include="$(TargetPath)" />
@@ -119,6 +125,9 @@
     </ProjectReference>
     <ProjectReference Include="mbedtls_k.vcxproj">
       <Project>{69be8e8c-cf1e-46d6-932b-db435f47059b}</Project>
+    </ProjectReference>
+    <ProjectReference Include="spinel_k.vcxproj">
+      <Project>{a55766b5-58b6-4519-835e-5a4b7c164b5a}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
