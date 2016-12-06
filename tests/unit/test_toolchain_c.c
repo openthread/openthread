@@ -26,15 +26,27 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDBOOL_H_
-#define _STDBOOL_H_
+#include <stdio.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
+#include <platform/toolchain.h>
+#include "test_util.h"
 
-#ifndef __cplusplus
+uint32_t otNetifAddress_Size_c()
+{
+    return sizeof(otNetifAddress);
+}
 
-typedef _Bool bool;
-#define false 0
-#define true 1
+uint32_t otNetifAddress_offset_mNext_c()
+{
+    return offsetof(otNetifAddress, mNext);
+}
 
-#endif // __cplusplus
-
-#endif  // _STDBOOL_H_
+otNetifAddress CreateNetif_c()
+{
+    otNetifAddress addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.mScopeOverrideValid = true;
+    return addr;
+}
