@@ -142,6 +142,8 @@ otLwfEventProcessingStop(
     _In_ PMS_FILTER             pFilter
     )
 {
+    PLIST_ENTRY Link = NULL;
+
     LogFuncEntryMsg(DRIVER_DEFAULT, "Filter: %p", pFilter);
 
     // By this point, we have disabled the Data Path, so no more 
@@ -172,57 +174,66 @@ otLwfEventProcessingStop(
     }
 
     // Clean up any left over events
-    PLIST_ENTRY Link = pFilter->AddressChangesHead.Flink;
-    while (Link != &pFilter->AddressChangesHead)
+    if (pFilter->AddressChangesHead.Flink)
     {
-        POTLWF_ADDR_EVENT Event = CONTAINING_RECORD(Link, OTLWF_ADDR_EVENT, Link);
-        Link = Link->Flink;
+        Link = pFilter->AddressChangesHead.Flink;
+        while (Link != &pFilter->AddressChangesHead)
+        {
+            POTLWF_ADDR_EVENT Event = CONTAINING_RECORD(Link, OTLWF_ADDR_EVENT, Link);
+            Link = Link->Flink;
 
-        // Delete the event
-        NdisFreeMemory(Event, 0, 0);
+            // Delete the event
+            NdisFreeMemory(Event, 0, 0);
+        }
     }
 
     // Clean up any left over events
-    Link = pFilter->NBLsHead.Flink;
-    while (Link != &pFilter->NBLsHead)
+    if (pFilter->NBLsHead.Flink)
     {
-        POTLWF_NBL_EVENT Event = CONTAINING_RECORD(Link, OTLWF_NBL_EVENT, Link);
-        Link = Link->Flink;
+        Link = pFilter->NBLsHead.Flink;
+        while (Link != &pFilter->NBLsHead)
+        {
+            POTLWF_NBL_EVENT Event = CONTAINING_RECORD(Link, OTLWF_NBL_EVENT, Link);
+            Link = Link->Flink;
 
-        otLwfCompleteNBLs(pFilter, FALSE, Event->Received, Event->NetBufferLists, STATUS_CANCELLED);
+            otLwfCompleteNBLs(pFilter, FALSE, Event->Received, Event->NetBufferLists, STATUS_CANCELLED);
 
-        // Delete the event
-        NdisFreeMemory(Event, 0, 0);
+            // Delete the event
+            NdisFreeMemory(Event, 0, 0);
+        }
     }
 
     // Reinitialize the list head
     InitializeListHead(&pFilter->AddressChangesHead);
     InitializeListHead(&pFilter->NBLsHead);
     
-    FILTER_ACQUIRE_LOCK(&pFilter->EventsLock, FALSE);
-
-    // Clean up any left over IRPs
-    Link = pFilter->EventIrpListHead.Flink;
-    while (Link != &pFilter->EventIrpListHead)
+    if (pFilter->EventIrpListHead.Flink)
     {
-        PIRP Irp = CONTAINING_RECORD(Link, IRP, Tail.Overlay.ListEntry);
-        Link = Link->Flink;
-        
-        // Before we are allowed to complete the pending IRP, we must remove the cancel routine
-        KIRQL irql;
-        IoAcquireCancelSpinLock(&irql);
-        IoSetCancelRoutine(Irp, NULL);
-        IoReleaseCancelSpinLock(irql);
+        FILTER_ACQUIRE_LOCK(&pFilter->EventsLock, FALSE);
 
-        Irp->IoStatus.Status = STATUS_CANCELLED;
-        Irp->IoStatus.Information = 0;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        // Clean up any left over IRPs
+        Link = pFilter->EventIrpListHead.Flink;
+        while (Link != &pFilter->EventIrpListHead)
+        {
+            PIRP Irp = CONTAINING_RECORD(Link, IRP, Tail.Overlay.ListEntry);
+            Link = Link->Flink;
+        
+            // Before we are allowed to complete the pending IRP, we must remove the cancel routine
+            KIRQL irql;
+            IoAcquireCancelSpinLock(&irql);
+            IoSetCancelRoutine(Irp, NULL);
+            IoReleaseCancelSpinLock(irql);
+
+            Irp->IoStatus.Status = STATUS_CANCELLED;
+            Irp->IoStatus.Information = 0;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        }
+    
+        // Reinitialize the list head
+        InitializeListHead(&pFilter->EventIrpListHead);
+    
+        FILTER_RELEASE_LOCK(&pFilter->EventsLock, FALSE);
     }
-    
-    // Reinitialize the list head
-    InitializeListHead(&pFilter->EventIrpListHead);
-    
-    FILTER_RELEASE_LOCK(&pFilter->EventsLock, FALSE);
 
     LogFuncExit(DRIVER_DEFAULT);
 }
@@ -307,23 +318,31 @@ otLwfEventProcessingIndicateAddressChange(
     _In_ PIN6_ADDR              pAddr
     )
 {
-    POTLWF_ADDR_EVENT Event = FILTER_ALLOC_MEM(pFilter->FilterHandle, sizeof(OTLWF_ADDR_EVENT));
-    if (Event == NULL)
+    if (pFilter->InternalStateInitialized == FALSE)
     {
-        LogWarning(DRIVER_DATA_PATH, "Failed to alloc new OTLWF_ADDR_EVENT");
         return;
     }
-    
-    Event->NotificationType = NotificationType;
-    Event->Address = *pAddr;
 
-    // Add the event to the queue
-    NdisAcquireSpinLock(&pFilter->EventsLock);
-    InsertTailList(&pFilter->AddressChangesHead, &Event->Link);
-    NdisReleaseSpinLock(&pFilter->EventsLock);
+    if (pFilter->MiniportCapabilities.MiniportMode == OT_MP_MODE_RADIO)
+    {
+        POTLWF_ADDR_EVENT Event = FILTER_ALLOC_MEM(pFilter->FilterHandle, sizeof(OTLWF_ADDR_EVENT));
+        if (Event == NULL)
+        {
+            LogWarning(DRIVER_DATA_PATH, "Failed to alloc new OTLWF_ADDR_EVENT");
+            return;
+        }
     
-    // Set the event to indicate we have a new address to process
-    KeSetEvent(&pFilter->EventWorkerThreadProcessAddressChanges, 0, FALSE);
+        Event->NotificationType = NotificationType;
+        Event->Address = *pAddr;
+
+        // Add the event to the queue
+        NdisAcquireSpinLock(&pFilter->EventsLock);
+        InsertTailList(&pFilter->AddressChangesHead, &Event->Link);
+        NdisReleaseSpinLock(&pFilter->EventsLock);
+    
+        // Set the event to indicate we have a new address to process
+        KeSetEvent(&pFilter->EventWorkerThreadProcessAddressChanges, 0, FALSE);
+    }
 }
 
 // Called to indicate that we have a NetBufferLists to process
@@ -681,15 +700,15 @@ otLwfEventWorkerThread(
     KWAIT_BLOCK WaitBlocks[ARRAYSIZE(WaitEvents)] = { 0 };
 
     // Space to processing buffers
-    const ULONG MessageBufferSize = 1500;
+    const ULONG MessageBufferSize = 1280;
     PUCHAR MessageBuffer = FILTER_ALLOC_MEM(pFilter->FilterHandle, MessageBufferSize);
     if (MessageBuffer == NULL)
     {
-        LogError(DRIVER_DATA_PATH, "Failed to allocate 1500 bytes for MessageBuffer!");
+        LogError(DRIVER_DATA_PATH, "Failed to allocate 1280 bytes for MessageBuffer!");
         return;
     }
 
-#if DBG
+#if DEBUG_ALLOC
     // Initialize the list head for allocations
     InitializeListHead(&pFilter->otOutStandingAllocations);
 
@@ -1017,7 +1036,7 @@ exit:
         otInstanceFinalize(pFilter->otCtx);
         pFilter->otCtx = NULL;
         
-#if DBG
+#if DEBUG_ALLOC
         {
             NT_ASSERT(pFilter->otOutstandingAllocationCount == 0);
             NT_ASSERT(pFilter->otOutstandingMemoryAllocated == 0);

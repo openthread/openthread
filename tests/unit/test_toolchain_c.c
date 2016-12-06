@@ -26,31 +26,27 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- * @brief
- *  This file defines the top-level functions for the OpenThread diagnostics library.
- */
+#include <stdio.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
+#include <platform/toolchain.h>
+#include "test_util.h"
 
-#ifndef OPENTHREAD_DIAG_H_
-#define OPENTHREAD_DIAG_H_
+uint32_t otNetifAddress_Size_c()
+{
+    return sizeof(otNetifAddress);
+}
 
-#include <openthread-types.h>
+uint32_t otNetifAddress_offset_mNext_c()
+{
+    return offsetof(otNetifAddress, mNext);
+}
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void diagInit(otInstance *aInstance);
-
-char *diagProcessCmd(int argc, char *argv[]);
-
-char *diagProcessCmdLine(char *string);
-
-bool isDiagEnabled(void);
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif
-
-#endif  // OPENTHREAD_DIAG_H_
+otNetifAddress CreateNetif_c()
+{
+    otNetifAddress addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.mScopeOverrideValid = true;
+    return addr;
+}

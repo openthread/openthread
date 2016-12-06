@@ -128,7 +128,7 @@ OTAPI const char *OTCALL otGetVersionString(void);
  * @sa otApiFinalize
  *
  */
-OTAPI otApiInstance *OTCALL otApiInit();
+OTAPI otApiInstance *OTCALL otApiInit(void);
 
 /**
  * This function uninitializes the OpenThread library.

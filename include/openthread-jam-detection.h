@@ -169,6 +169,22 @@ bool otIsJamDetectionEnabled(otInstance *aInstance);
 bool otGetJamDetectionState(otInstance *aInstance);
 
 /**
+ * Get the current history bitmap.
+ *
+ * This value provides information about current state of jamming detection
+ * module for monitoring/debugging purpose. It returns a 64-bit value where
+ * each bit corresponds to one second interval starting with bit 0 for the
+ * most recent interval and bit 63 for the oldest intervals (63 sec earlier).
+ * The bit is set to 1 if the jamming detection module observed/detected
+ * high signal level during the corresponding one second interval.
+ *
+ * @param[in]  aInstance            A pointer to an OpenThread instance.
+ *
+ * @returns The current history bitmap.
+ */
+uint64_t otGetJamDetectionHistoryBitmap(otInstance *aInstance);
+
+/**
  * @}
  *
  */

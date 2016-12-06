@@ -44,7 +44,7 @@ Server::Server(Ip6::Udp &aUdp, uint16_t aPort, SenderFunction aSender, ReceiverF
     mResources = NULL;
 }
 
-ThreadError Server::Start()
+ThreadError Server::Start(void)
 {
     Ip6::SockAddr sockaddr;
     sockaddr.mPort = mPort;
@@ -52,7 +52,7 @@ ThreadError Server::Start()
     return CoapBase::Start(sockaddr);
 }
 
-ThreadError Server::Stop()
+ThreadError Server::Stop(void)
 {
     return CoapBase::Stop();
 }

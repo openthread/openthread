@@ -129,6 +129,7 @@ private:
     Coap::Client &mCoapClient;
 
     Mle::MleRouter &mMle;
+    Mac::Mac &mMac;
     ThreadNetif &mNetif;
 };
 

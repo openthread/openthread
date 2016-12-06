@@ -256,7 +256,7 @@ ThreadError Mle::Stop(bool aClearNetworkDatasets)
     return kThreadError_None;
 }
 
-ThreadError Mle::Restore()
+ThreadError Mle::Restore(void)
 {
     ThreadError error = kThreadError_None;
     NetworkInfo networkInfo;
@@ -295,7 +295,7 @@ exit:
     return error;
 }
 
-ThreadError Mle::Store()
+ThreadError Mle::Store(void)
 {
     ThreadError error = kThreadError_None;
     NetworkInfo networkInfo;
@@ -2037,6 +2037,7 @@ ThreadError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::Message
     Neighbor *neighbor;
     SourceAddressTlv sourceAddress;
     LeaderDataTlv leaderData;
+    RouteTlv route;
     uint8_t tlvs[] = {Tlv::kNetworkData};
 
     // Source Address
@@ -2075,6 +2076,15 @@ ThreadError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::Message
              leaderData.GetLeaderRouterId() != GetLeaderId()))
         {
             SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
+
+            if ((mDeviceMode & ModeTlv::kModeFFD) &&
+                (Tlv::GetTlv(aMessage, Tlv::kRoute, sizeof(route), route) == kThreadError_None) &&
+                route.IsValid())
+            {
+                // Overwrite Route Data
+                mMleRouter.ProcessRouteTlv(route);
+            }
+
             mRetrieveNewNetworkData = true;
         }
 

@@ -49,6 +49,7 @@
         ..\..\include;
         ..\..\examples\drivers\windows\include;
         ..\..\examples\drivers\windows\otLwf;
+        ..\..\src;
         ..\..\src\core;
         ..\..\src\missing\stdint;
         ..\..\src\missing\stdbool;
@@ -78,6 +79,9 @@
         cng.lib;
       </AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command Condition="'$(Platform)'=='ARM'">inf2cat /driver:$(TargetDir) /os:8_ARM</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\address.c" />
@@ -87,6 +91,8 @@
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\eventprocessing.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\iocontrol.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\settings.c" />
+    <ClCompile Include="..\..\examples\drivers\windows\otLwf\thread.c" />
+    <ClCompile Include="..\..\examples\drivers\windows\otLwf\tunnel.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\oid.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\precomp.c">
       <AdditionalIncludeDirectories>..;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -103,6 +109,8 @@
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\nsihelper.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\oid.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\radio.h" />
+    <ClInclude Include="..\..\examples\drivers\windows\otLwf\thread.h" />
+    <ClInclude Include="..\..\examples\drivers\windows\otLwf\tunnel.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\precomp.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\filter.h" />
     <ResourceCompile Include="..\..\examples\drivers\windows\otLwf\filter.rc" />
@@ -117,6 +125,9 @@
     </ProjectReference>
     <ProjectReference Include="mbedtls_k.vcxproj">
       <Project>{69be8e8c-cf1e-46d6-932b-db435f47059b}</Project>
+    </ProjectReference>
+    <ProjectReference Include="spinel_k.vcxproj">
+      <Project>{a55766b5-58b6-4519-835e-5a4b7c164b5a}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

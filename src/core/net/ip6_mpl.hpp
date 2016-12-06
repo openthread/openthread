@@ -70,7 +70,7 @@ public:
      * This method initializes the MPL header.
      *
      */
-    void Init() {
+    void Init(void) {
         OptionHeader::SetType(kType);
         OptionHeader::SetLength(sizeof(*this) - sizeof(OptionHeader));
         mControl = 0;
@@ -83,7 +83,7 @@ public:
      * @returns The total IPv6 Option Length.
      *
      */
-    uint8_t GetTotalLength() const { return OptionHeader::GetLength() + sizeof(OptionHeader); }
+    uint8_t GetTotalLength(void) const { return OptionHeader::GetLength() + sizeof(OptionHeader); }
 
     /**
      * MPL Seed Id lengths.
@@ -102,7 +102,7 @@ public:
      * @returns The MPL Seed Id Length value.
      *
      */
-    SeedIdLength GetSeedIdLength() { return static_cast<SeedIdLength>(mControl & kSeedIdLengthMask); }
+    SeedIdLength GetSeedIdLength(void) { return static_cast<SeedIdLength>(mControl & kSeedIdLengthMask); }
 
     /**
      * This method sets the MPL Seed Id Length value.
@@ -119,19 +119,19 @@ public:
      * @retval FALSE  If the MPL M flag is not set.
      *
      */
-    bool IsMaxFlagSet() { return (mControl & kMaxFlag) != 0; }
+    bool IsMaxFlagSet(void) { return (mControl & kMaxFlag) != 0; }
 
     /**
      * This method clears the MPL M flag.
      *
      */
-    void ClearMaxFlag() { mControl &= ~kMaxFlag; }
+    void ClearMaxFlag(void) { mControl &= ~kMaxFlag; }
 
     /**
      * This method sets the MPL M flag.
      *
      */
-    void SetMaxFlag() { mControl |= kMaxFlag; }
+    void SetMaxFlag(void) { mControl |= kMaxFlag; }
 
     /**
      * This method returns the MPL Sequence value.
@@ -139,7 +139,7 @@ public:
      * @returns The MPL Sequence value.
      *
      */
-    uint8_t GetSequence() const { return mSequence; }
+    uint8_t GetSequence(void) const { return mSequence; }
 
     /**
      * This method sets the MPL Sequence value.
@@ -155,7 +155,7 @@ public:
      * @returns The MPL Seed Id value.
      *
      */
-    uint16_t GetSeedId() const { return HostSwap16(mSeedId); }
+    uint16_t GetSeedId(void) const { return HostSwap16(mSeedId); }
 
     /**
      * This method sets the MPL Seed Id value.
@@ -189,7 +189,7 @@ public:
      * @returns The MPL Seed Id value.
      *
      */
-    uint16_t GetSeedId() const { return mSeedId; }
+    uint16_t GetSeedId(void) const { return mSeedId; }
 
     /**
      * This method sets the MPL Seed Id value.
@@ -205,7 +205,7 @@ public:
      * @returns The MPL Sequence value.
      *
      */
-    uint8_t GetSequence() const { return mSequence; }
+    uint8_t GetSequence(void) const { return mSequence; }
 
     /**
      * This method sets the MPL Sequence value.
@@ -221,7 +221,7 @@ public:
      * @returns The MPL Seed Set entry's remaining lifetime.
      *
      */
-    uint8_t GetLifetime() const { return mLifetime; }
+    uint8_t GetLifetime(void) const { return mLifetime; }
 
     /**
      * This method sets the remaining lifetime of the Seed Set entry.
@@ -332,7 +332,7 @@ public:
      * @returns The MPL Seed Id value.
      *
      */
-    uint16_t GetSeedId() const { return mSeedId; }
+    uint16_t GetSeedId(void) const { return mSeedId; }
 
     /**
      * This method sets the MPL Seed Id value.
@@ -348,7 +348,7 @@ public:
      * @returns The MPL Sequence value.
      *
      */
-    uint8_t GetSequence() const { return mSequence; }
+    uint8_t GetSequence(void) const { return mSequence; }
 
     /**
      * This method sets the MPL Sequence value.
@@ -364,7 +364,7 @@ public:
      * @returns The number of already preformed transmissions.
      *
      */
-    uint8_t GetTransmissionCount() const { return mTransmissionCount; }
+    uint8_t GetTransmissionCount(void) const { return mTransmissionCount; }
 
     /**
      * This method sets the number of already performed transmissions.
@@ -380,7 +380,7 @@ public:
      * @returns The transmission timestamp of the message.
      *
      */
-    uint32_t GetTransmissionTime() const { return mTransmissionTime; }
+    uint32_t GetTransmissionTime(void) const { return mTransmissionTime; }
 
     /**
      * This method sets the transmission timestamp of the message.
@@ -396,7 +396,7 @@ public:
      * @returns The offset from the the transmission time to the end of trickle interval.
      *
      */
-    uint8_t GetIntervalOffset() const { return mIntervalOffset; }
+    uint8_t GetIntervalOffset(void) const { return mIntervalOffset; }
 
     /**
      * This method sets the offset from the transmission time to the end of trickle interval.
@@ -468,7 +468,7 @@ public:
      * @returns The MPL Seed Id value.
      *
      */
-    uint16_t GetSeedId() const { return mSeedId; }
+    uint16_t GetSeedId(void) const { return mSeedId; }
 
     /**
      * This method sets the MPL Seed Id value.
@@ -485,7 +485,7 @@ public:
      * @returns The MPL number of Trickle timer expirations.
      *
      */
-    uint8_t GetTimerExpirations() const { return mTimerExpirations; }
+    uint8_t GetTimerExpirations(void) const { return mTimerExpirations; }
 
     /**
      * This method sets the MPL number of Trickle timer expirations that occur before
@@ -526,10 +526,10 @@ private:
     void AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound);
 
     static void HandleSeedSetTimer(void *aContext);
-    void HandleSeedSetTimer();
+    void HandleSeedSetTimer(void);
 
     static void HandleRetransmissionTimer(void *aContext);
-    void HandleRetransmissionTimer();
+    void HandleRetransmissionTimer(void);
 
     Ip6 &mIp6;
 

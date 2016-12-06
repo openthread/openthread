@@ -384,6 +384,7 @@ private:
     ThreadError GetPropertyHandler_JAM_DETECT_RSSI_THRESHOLD(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_JAM_DETECT_WINDOW(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_JAM_DETECT_BUSY(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_JAM_DETECT_HISTORY_BITMAP(uint8_t header, spinel_prop_key_t key);
 #endif
 
 #if OPENTHREAD_ENABLE_LEGACY

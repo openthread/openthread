@@ -163,6 +163,20 @@ public:
      */
     uint8_t GetBusyPeriod(void) const { return mBusyPeriod; }
 
+    /**
+     * Get the current history bitmap.
+     *
+     * This value provides information about current state of jamming detection
+     * module for monitoring/debugging purpose. It provides a 64-bit value where
+     * each bit corresponds to one second interval starting with bit 0 for the
+     * most recent interval and bit 63 for the oldest intervals (63 earlier).
+     * The bit is set to 1 if the jamming detection module observed/detected
+     * high signal level during the corresponding one second interval.
+     *
+     * @returns The current history bitmap.
+     */
+    uint64_t GetHistoryBitmap(void) const { return mHistoryBitmap; }
+
 private:
     static void HandleTimer(void *aContext);
     void HandleTimer(void);

@@ -49,8 +49,11 @@ static uint16_t UpdateFcs(uint16_t aFcs, uint8_t aByte);
 
 enum
 {
+    kFlagXOn        = 0x11,
+    kFlagXOff       = 0x13,
     kFlagSequence   = 0x7e,  ///< HDLC Flag value
     kEscapeSequence = 0x7d,  ///< HDLC Escape value
+    kFlagSpecial    = 0xf8,
 };
 
 /**
@@ -103,6 +106,21 @@ uint16_t UpdateFcs(uint16_t aFcs, uint8_t aByte)
     return (aFcs >> 8) ^ sFcsTable[(aFcs ^ aByte) & 0xff];
 }
 
+bool HdlcByteNeedsEscape(uint8_t aByte)
+{
+    switch (aByte)
+    {
+    case kFlagXOn:
+    case kFlagXOff:
+    case kEscapeSequence:
+    case kFlagSequence:
+    case kFlagSpecial:
+        return true;
+
+    default:
+        return false;
+    }
+}
 
 Encoder::BufferWriteIterator::BufferWriteIterator(void)
 {
@@ -144,7 +162,7 @@ ThreadError Encoder::Encode(uint8_t aInByte, BufferWriteIterator &aIterator)
 {
     ThreadError error = kThreadError_None;
 
-    if (aInByte == kFlagSequence || aInByte == kEscapeSequence)
+    if (HdlcByteNeedsEscape(aInByte))
     {
         VerifyOrExit(aIterator.CanWrite(2) , error = kThreadError_NoBufs);
 

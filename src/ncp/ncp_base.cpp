@@ -170,6 +170,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_JAM_DETECT_RSSI_THRESHOLD, &NcpBase::GetPropertyHandler_JAM_DETECT_RSSI_THRESHOLD },
     { SPINEL_PROP_JAM_DETECT_WINDOW, &NcpBase::GetPropertyHandler_JAM_DETECT_WINDOW },
     { SPINEL_PROP_JAM_DETECT_BUSY, &NcpBase::GetPropertyHandler_JAM_DETECT_BUSY },
+    { SPINEL_PROP_JAM_DETECT_HISTORY_BITMAP, &NcpBase::GetPropertyHandler_JAM_DETECT_HISTORY_BITMAP },
 #endif
 
     { SPINEL_PROP_CNTR_TX_PKT_TOTAL, &NcpBase::GetPropertyHandler_MAC_CNTR },
@@ -464,7 +465,7 @@ NcpBase::NcpBase(otInstance *aInstance):
     mInstance(aInstance),
     mLastStatus(SPINEL_STATUS_OK),
     mSupportedChannelMask(kPhySupportedChannelMask),
-    mChannelMask(mSupportedChannelMask),
+    mChannelMask(kPhySupportedChannelMask),
     mScanPeriod(200), // ms
     mUpdateChangedPropsTask(aInstance->mIp6.mTaskletScheduler, &NcpBase::UpdateChangedProps, this),
     mChangedFlags(NCP_PLAT_RESET_REASON),
@@ -492,7 +493,7 @@ NcpBase::NcpBase(otInstance *aInstance):
 {
     assert(mInstance != NULL);
 
-    sNcpContext = NULL;
+    sNcpContext = this;
 
     otSetStateChangedCallback(mInstance, &NcpBase::HandleNetifStateChanged, this);
     otSetReceiveIp6DatagramCallback(mInstance, &NcpBase::HandleDatagramFromStack, this);
@@ -1592,12 +1593,15 @@ ThreadError NcpBase::GetPropertyHandler_POWER_STATE(uint8_t header, spinel_prop_
 
 ThreadError NcpBase::GetPropertyHandler_HWADDR(uint8_t header, spinel_prop_key_t key)
 {
+    otExtAddress hwAddr;
+    otGetFactoryAssignedIeeeEui64(mInstance, &hwAddr);
+
     return SendPropertyUpdate(
                 header,
                 SPINEL_CMD_PROP_VALUE_IS,
                 key,
                 SPINEL_DATATYPE_EUI64_S,
-                otGetExtendedAddress(mInstance)
+                hwAddr.m8
             );
 }
 
@@ -2549,6 +2553,20 @@ ThreadError NcpBase::GetPropertyHandler_JAM_DETECT_BUSY(uint8_t header, spinel_p
                key,
                SPINEL_DATATYPE_UINT8_S,
                otGetJamDetectionBusyPeriod(mInstance)
+           );
+}
+
+ThreadError NcpBase::GetPropertyHandler_JAM_DETECT_HISTORY_BITMAP(uint8_t header, spinel_prop_key_t key)
+{
+    uint64_t historyBitmap = otGetJamDetectionHistoryBitmap(mInstance);
+
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_UINT32_S SPINEL_DATATYPE_UINT32_S,
+               static_cast<uint32_t>(historyBitmap & 0xffffffff),
+               static_cast<uint32_t>(historyBitmap >> 32)
            );
 }
 

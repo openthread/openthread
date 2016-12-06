@@ -33,7 +33,7 @@
 
 #include <common/code_utils.hpp>
 #include <common/message.hpp>
-#include <thread/network_diag_tlvs.hpp>
+#include <thread/network_diagnostic_tlvs.hpp>
 
 namespace Thread {
 namespace NetworkDiagnostic {
