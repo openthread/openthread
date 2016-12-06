@@ -330,14 +330,20 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
     Tlv::Type type;
     bool isUpdateFromCommissioner = false;
     bool isUpdateAffectConnectivity = false;
+    bool isUpdateIdenticalValue = true;
     StateTlv::State state = StateTlv::kAccept;
 
     ActiveTimestampTlv activeTimestamp;
     NetworkMasterKeyTlv masterKey;
     ChannelTlv channel;
+    MeshLocalPrefixTlv meshLocalPrefix;
+    PanIdTlv panId;
 
     activeTimestamp.SetLength(0);
     masterKey.SetLength(0);
+    channel.SetLength(0);
+    meshLocalPrefix.SetLength(0);
+    panId.SetLength(0);
 
     VerifyOrExit(mMle.GetDeviceState() == Mle::kDeviceStateLeader, state = StateTlv::kReject);
 
@@ -352,7 +358,7 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
 
         if (tlvType == type)
         {
-            aMessage.Read(offset + sizeof(Tlv), sizeof(timestamp), &timestamp);
+            aMessage.Read(offset + sizeof(tlv), sizeof(timestamp), &timestamp);
         }
 
         switch (tlvType)
@@ -369,6 +375,15 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
             aMessage.Read(offset, sizeof(channel), &channel);
             VerifyOrExit(channel.GetChannel() >= kPhyMinChannel && channel.GetChannel() <= kPhyMaxChannel,
                          state = StateTlv::kReject);
+            break;
+
+        case Tlv::kMeshLocalPrefix:
+            aMessage.Read(offset, sizeof(meshLocalPrefix), &meshLocalPrefix);
+            break;
+
+        case Tlv::kPanId:
+            aMessage.Read(offset, sizeof(panId), &panId);
+            break;
 
         default:
             break;
@@ -418,8 +433,22 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
         offset += sizeof(tlv) + tlv.GetLength();
     }
 
+    // verify whether or not tlv value is identical with current one
+    if (isUpdateAffectConnectivity &&
+        (channel.GetChannel() != mNetif.GetMac().GetChannel() ||
+         panId.GetPanId() != mNetif.GetMac().GetPanId() ||
+         memcmp(meshLocalPrefix.GetMeshLocalPrefix(), mNetif.GetMle().GetMeshLocalPrefix(),
+                meshLocalPrefix.GetLength()) != 0 ||
+         memcmp(masterKey.GetNetworkMasterKey(), mNetif.GetKeyManager().GetMasterKey(NULL),
+                masterKey.GetLength()) != 0))
+    {
+        isUpdateIdenticalValue = false;
+        otLogInfoMeshCoP("Request includes tlv that affects connectivity.");
+    }
+
     // verify the update from commissioner should not contain tlv would affect connectivity
-    VerifyOrExit(!isUpdateFromCommissioner || !isUpdateAffectConnectivity, state = StateTlv::kReject);
+    VerifyOrExit(!isUpdateFromCommissioner || !(isUpdateAffectConnectivity && !isUpdateIdenticalValue),
+                 state = StateTlv::kReject);
 
     // verify the request includes a timestamp that is ahead of the locally stored value
     VerifyOrExit(offset == aMessage.GetLength() && (mLocal.GetTimestamp() == NULL ||
@@ -446,7 +475,7 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
         mLocal.Set(mNetif.GetActiveDataset().GetNetwork());
     }
 
-    if (!isUpdateAffectConnectivity)
+    if (!isUpdateAffectConnectivity || isUpdateIdenticalValue)
     {
         offset = aMessage.GetOffset();
 
