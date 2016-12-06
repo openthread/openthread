@@ -31,28 +31,28 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 lib_LIBRARIES                             = libopenthread-da15000.a
 
-libopenthread_da15000_a_CPPFLAGS          = \
-    -I$(top_srcdir)/include                 \
-    -I$(top_srcdir)/examples/platforms      \
-    -I$(top_srcdir)/src/core                \
-    -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/include\
-    -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/peripherals/include\
-    -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/adapters/include\
-    -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/memory/include\
-    -I$(top_srcdir)/third_party/dialog/DialogSDK/interfaces/ftdf/include\
-    -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/config\
-    -I$(top_srcdir)/third_party/dialog/DialogSDK\
-    -I$(top_srcdir)/third_party/dialog/DialogSDK/interfaces/ftdf/src\
-    -include$(top_srcdir)/examples/platforms/da15000/custom_config_qspi.h\
-    -Wno-unknown-pragmas\
-    -Wno-sign-compare\
-    -Wno-unused-function\
-    -Wno-unused-parameter\
-    -Wno-shadow\
-    -Wno-type-limits\
-    -Wno-unused-variable\
-    -Wno-missing-field-initializers\
-    -fno-strict-aliasing\
+libopenthread_da15000_a_CPPFLAGS          =                                    \
+    -I$(top_srcdir)/include                                                    \
+    -I$(top_srcdir)/examples/platforms                                         \
+    -I$(top_srcdir)/src/core                                                   \
+    -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/include                   \
+    -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/peripherals/include       \
+    -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/adapters/include          \
+    -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/memory/include            \
+    -I$(top_srcdir)/third_party/dialog/DialogSDK/interfaces/ftdf/include       \
+    -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/config                    \
+    -I$(top_srcdir)/third_party/dialog/DialogSDK                               \
+    -I$(top_srcdir)/third_party/dialog/DialogSDK/interfaces/ftdf/src           \
+    -include$(top_srcdir)/examples/platforms/da15000/custom_config_qspi.h      \
+    -Wno-unknown-pragmas                                                       \
+    -Wno-sign-compare                                                          \
+    -Wno-unused-function                                                       \
+    -Wno-unused-parameter                                                      \
+    -Wno-shadow                                                                \
+    -Wno-type-limits                                                           \
+    -Wno-unused-variable                                                       \
+    -Wno-missing-field-initializers                                            \
+    -fno-strict-aliasing                                                       \
     $(NULL)
 
 
@@ -61,42 +61,42 @@ libopenthread_da15000_settings.cpp: $(srcdir)/../utils/settings.cpp
 
 CLEANFILES = libopenthread_da15000_settings.cpp
 
-libopenthread_da15000_a_SOURCES          = \
-    alarm.c                                \
-    flash.c                                \
-    logging.c                              \
-    platform.c                             \
-    radio.c                                \
-    random.c                               \
-    vector.c                               \
-    cstartup.c                             \
-    uart.c                                 \
-    cortex-m_cstartup.c                    \
-    startup-gcc.c                          \
-    libopenthread_da15000_settings.cpp     \
-    clock.c                                \
-    misc.c                                 \
-./../../../third_party/dialog/DialogSDK/bsp/memory/src/qspi_automode.c \
-./../../../third_party/dialog/DialogSDK/bsp/peripherals/src/hw_qspi.c \
-./../../../third_party/dialog/DialogSDK/bsp/peripherals/src/hw_timer0.c \
-./../../../third_party/dialog/DialogSDK/bsp/peripherals/src/hw_gpio.c \
-./../../../third_party/dialog/DialogSDK/bsp/peripherals/src/hw_cpm.c \
-./../../../third_party/dialog/DialogSDK/bsp/peripherals/src/hw_trng.c \
-./../../../third_party/dialog/DialogSDK/bsp/peripherals/src/hw_rf.c \
-./../../../third_party/dialog/DialogSDK/bsp/peripherals/src/hw_hard_fault.c \
-./../../../third_party/dialog/DialogSDK/bsp/peripherals/src/hw_watchdog.c \
-./../../../third_party/dialog/DialogSDK/bsp/peripherals/src/sys_tcs.c \
-./../../../third_party/dialog/DialogSDK/bsp/peripherals/src/hw_uart.c \
-./../../../third_party/dialog/DialogSDK/bsp/peripherals/src/hw_otpc.c \
-./../../../third_party/dialog/DialogSDK/bsp/peripherals/src/hw_fem_sky66112-11.c \
-./../../../third_party/dialog/DialogSDK/bsp/peripherals/src/hw_dma.c \
-./../../../third_party/dialog/DialogSDK/interfaces/ftdf/src/common.c \
-./../../../third_party/dialog/DialogSDK/interfaces/ftdf/src/power.c \
-./../../../third_party/dialog/DialogSDK/interfaces/ftdf/src/data.c \
-./../../../third_party/dialog/DialogSDK/interfaces/ftdf/src/ad_ftdf_phy_api.c \
-./../../../third_party/dialog/DialogSDK/interfaces/ftdf/src/ad_ftdf.c \
-./../../../third_party/dialog/DialogSDK/interfaces/ftdf/src/main.c\
-$(NULL)
+libopenthread_da15000_a_SOURCES          =                                               \
+    alarm.c                                                                              \
+    flash.c                                                                              \
+    logging.c                                                                            \
+    platform.c                                                                           \
+    radio.c                                                                              \
+    random.c                                                                             \
+    vector.c                                                                             \
+    cstartup.c                                                                           \
+    uart.c                                                                               \
+    cortex-m_cstartup.c                                                                  \
+    startup-gcc.c                                                                        \
+    libopenthread_da15000_settings.cpp                                                   \
+    clock.c                                                                              \
+    misc.c                                                                               \
+    @top_builddir@/third_party/dialog/DialogSDK/bsp/memory/src/qspi_automode.c \
+    @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_qspi.c             \
+    @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_timer0.c           \
+    @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_gpio.c             \
+    @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_cpm.c              \
+    @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_trng.c             \
+    @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_rf.c               \
+    @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_hard_fault.c       \
+    @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_watchdog.c         \
+    @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/sys_tcs.c             \
+    @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_uart.c             \
+    @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_otpc.c             \
+    @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_fem_sky66112-11.c  \
+    @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_dma.c              \
+    @top_builddir@/third_party/dialog/DialogSDK/interfaces/ftdf/src/common.c              \
+    @top_builddir@/third_party/dialog/DialogSDK/interfaces/ftdf/src/power.c               \
+    @top_builddir@/third_party/dialog/DialogSDK/interfaces/ftdf/src/data.c                \
+    @top_builddir@/third_party/dialog/DialogSDK/interfaces/ftdf/src/ad_ftdf_phy_api.c     \
+    @top_builddir@/third_party/dialog/DialogSDK/interfaces/ftdf/src/ad_ftdf.c             \
+    @top_builddir@/third_party/dialog/DialogSDK/interfaces/ftdf/src/main.c                \
+    $(NULL)
 
  
 

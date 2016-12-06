@@ -45,11 +45,14 @@
 #include "hw_gpio.h"
 #include "platform/uart.h"
 
-uint32_t NODE_ID = 1;
-
 static bool blink = false;
 static int  mscounter_init;
 static int  mscounter;
+
+#define LEADER_BLINK_TIME     (200)
+#define ROUTER_BLINK_TIME     (500)
+#define CHILD_BLINK_TIME      (2000)
+
 
 otInstance *sInstance;
 
@@ -87,11 +90,12 @@ void ClkInit(void)
 
 void ExampleProcess(otInstance *aInstance)
 {
-    otDeviceRole DevRole;
+    otDeviceRole  devRole;
+    static int    thrValue;
 
-    DevRole = otGetDeviceRole(aInstance);
+    devRole = otGetDeviceRole(aInstance);
 
-    if (blink == false && otPlatAlarmGetNow() > 0)
+    if (blink == false && otPlatAlarmGetNow() != 0)
     {
         mscounter_init = otPlatAlarmGetNow();
         blink = true;
@@ -99,38 +103,33 @@ void ExampleProcess(otInstance *aInstance)
 
     mscounter = otPlatAlarmGetNow() - mscounter_init;
 
-    switch (DevRole)
+    switch (devRole)
     {
     case kDeviceRoleLeader:
-        if (mscounter >= 200)
-        {
-            hw_gpio_toggle(HW_GPIO_PORT_1, HW_GPIO_PIN_5);
-            mscounter_init = otPlatAlarmGetNow();
-        }
-
+        thrValue = LEADER_BLINK_TIME;
         break;
 
     case kDeviceRoleRouter:
-        if (mscounter >= 500)
-        {
-            hw_gpio_toggle(HW_GPIO_PORT_1, HW_GPIO_PIN_5);
-            mscounter_init = otPlatAlarmGetNow();
-        }
-
+        thrValue = ROUTER_BLINK_TIME;
         break;
 
     case kDeviceRoleChild:
-        if (mscounter >= 2000)
-        {
-            hw_gpio_toggle(HW_GPIO_PORT_1, HW_GPIO_PIN_5);
-            mscounter_init = otPlatAlarmGetNow();
-        }
-
+        thrValue = CHILD_BLINK_TIME;
         break;
 
     default:
+        thrValue = 0x00;
+    }
+
+    if ((thrValue != 0x00) && (mscounter >= thrValue))
+    {
+        hw_gpio_toggle(HW_GPIO_PORT_1, HW_GPIO_PIN_5);
+        mscounter_init = otPlatAlarmGetNow();
+    }
+
+    if (thrValue == 0)
+    {
         hw_gpio_set_inactive(HW_GPIO_PORT_1, HW_GPIO_PIN_5);
-        break;
     }
 }
 

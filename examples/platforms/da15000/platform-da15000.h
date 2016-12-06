@@ -32,12 +32,6 @@
 #include <openthread-types.h>
 
 /**
- * Unique node ID.
- *
- */
-extern uint32_t NODE_ID;
-
-/**
  * This function initializes the radio service used by OpenThread.
  *
  */

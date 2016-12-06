@@ -84,7 +84,11 @@ static uint32_t sleep_const_delay;
 
 static otInstance *First_Instace;
 
-#define RF_MODE_BLE             0
+uint32_t NODE_ID = 1;
+
+#define RF_MODE_BLE                (0)
+#define DEFAULT_CHANNEL           (11)
+#define FTDF_OFFSET_CHANNEL       (11)
 
 void disable_interrupt()
 {
@@ -236,7 +240,7 @@ ThreadError otPlatRadioEnable(otInstance *aInstance)
     First_Instace = aInstance;
     (void)aInstance;
     ThreadError error = kThreadError_None;
-    uint16_t DefaultChannel = 11;
+    uint16_t DefaultChannel = DEFAULT_CHANNEL;
     uint8_t value = 1;
 
     FTDF_setValue(FTDF_PIB_RX_ON_WHEN_IDLE, &value); //Wake();
@@ -311,8 +315,8 @@ ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     s_receive_frame.mChannel = aChannel;
 
     uint32_t phyAckAttr;
-    phyAckAttr = 0x08 | ((aChannel - 11) & 0xf) << 4 | (0 & 0x3) << 8;
-    FTDF_SET_FIELD(ON_OFF_REGMAP_PHYRXATTR, (((aChannel - 11) & 0xf) << 4));
+    phyAckAttr = 0x08 | ((aChannel - FTDF_OFFSET_CHANNEL) & 0xf) << 4 | (0 & 0x3) << 8;
+    FTDF_SET_FIELD(ON_OFF_REGMAP_PHYRXATTR, (((aChannel - FTDF_OFFSET_CHANNEL) & 0xf) << 4));
     FTDF_SET_FIELD(ON_OFF_REGMAP_PHYACKATTR, phyAckAttr);
 
     FTDF_SET_FIELD(ON_OFF_REGMAP_RXALWAYSON, 1);
@@ -394,8 +398,7 @@ exit:
 
 
 
-void FTDF_sendFrameTransparentConfirm(void         *handle,
-                                      FTDF_Bitmap32 status)
+void FTDF_sendFrameTransparentConfirm(void *handle, FTDF_Bitmap32 status)
 {
     (void)handle;
     (void)status;
@@ -413,7 +416,7 @@ void FTDF_sendFrameTransparentConfirm(void         *handle,
 void da15000RadioProcess(otInstance *aInstance)
 {
     bool rxPending;
-    uint8_t value = 0;
+    uint8_t bufferFor_FTDF_configValue = 0;
 
     if (SendFrameDone)
     {
@@ -427,7 +430,7 @@ void da15000RadioProcess(otInstance *aInstance)
     {
         if ((otPlatAlarmGetNow() - sleep_const_delay) > 100)
         {
-            FTDF_setValue(FTDF_PIB_RX_ON_WHEN_IDLE, &value);
+            FTDF_setValue(FTDF_PIB_RX_ON_WHEN_IDLE, &bufferFor_FTDF_configValue);
             s_state = kStateSleep;
             SED = false;
         }
@@ -451,7 +454,7 @@ void FTDF_rcvFrameTransparent(FTDF_DataLength frameLength,
 
     if (s_receive_frame.mChannel == 0)
     {
-        s_receive_frame.mChannel = 11;    //FIX this - dirty fix for channel handling.
+        s_receive_frame.mChannel = DEFAULT_CHANNEL;
     }
 
 
@@ -483,24 +486,27 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 
 ThreadError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
+    ThreadError error = kThreadError_NotImplemented;
     (void)aInstance;
     (void)aScanChannel;
     (void)aScanDuration;
-    return kThreadError_NotImplemented;
+    return error;
 }
 
 void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 {
 
     (void)aInstance;
+    (void)aEnable;
 
 }
 
 ThreadError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
 
-    ThreadError error = kThreadError_None;
+    ThreadError error = kThreadError_NotImplemented;
     (void)aInstance;
+    (void)aShortAddress;
 
     return error;
 
@@ -509,8 +515,9 @@ ThreadError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16
 ThreadError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
 {
 
-    ThreadError error = kThreadError_None;
+    ThreadError error = kThreadError_NotImplemented;
     (void)aInstance;
+    (void)aExtAddress;
 
     return error;
 }
@@ -518,16 +525,17 @@ ThreadError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t 
 ThreadError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
 
-    ThreadError error = kThreadError_None;
+    ThreadError error = kThreadError_NotImplemented;
     (void)aInstance;
-
+    (void)aShortAddress;
     return error;
 }
 
 ThreadError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
 {
 
-    ThreadError error = kThreadError_None;
+    ThreadError error = kThreadError_NotImplemented;
+    (void)aExtAddress;
     (void)aInstance;
 
     return error;
