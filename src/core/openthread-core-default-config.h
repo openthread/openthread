@@ -382,6 +382,14 @@
 #define OPENTHREAD_CONFIG_LOG_NETDIAG
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_PREPREND_REGION
+ *
+ * Define to prepend the log region to all log messages
+ *
+ */
+#define OPENTHREAD_CONFIG_LOG_PREPEND_REGION
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_SUFFIX
  *
  * Define suffix to append at the end of logs.
