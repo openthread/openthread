@@ -351,12 +351,6 @@ enum
     SPINEL_CAP_EXPERIMENTAL__END     = 2097152,
 };
 
-enum
-{
-    SPINEL_BINDING_STATE_THREAD     = 0,
-    SPINEL_BINDING_STATE_RADIO      = 1,
-};
-
 typedef enum
 {
     SPINEL_PROP_LAST_STATUS             = 0,        ///< status [i]
@@ -371,7 +365,6 @@ typedef enum
     SPINEL_PROP_LOCK                    = 9,        ///< PropLock [b]
     SPINEL_PROP_HBO_MEM_MAX             = 10,       ///< Max offload mem [S]
     SPINEL_PROP_HBO_BLOCK_MAX           = 11,       ///< Max offload block [S]
-    SPINEL_PROP_BINDING_STATE           = 12,       ///< Current interface bound [C]
 
     SPINEL_PROP_BASE_EXT__BEGIN         = 0x1000,
 

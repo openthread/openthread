@@ -97,7 +97,6 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_POWER_STATE, &NcpBase::GetPropertyHandler_POWER_STATE },
     { SPINEL_PROP_HWADDR, &NcpBase::GetPropertyHandler_HWADDR },
     { SPINEL_PROP_LOCK, &NcpBase::GetPropertyHandler_LOCK },
-    { SPINEL_PROP_BINDING_STATE, &NcpBase::GetPropertyHandler_BINDING_STATE },
 
     { SPINEL_PROP_PHY_ENABLED, &NcpBase::GetPropertyHandler_PHY_ENABLED },
     { SPINEL_PROP_PHY_FREQ, &NcpBase::GetPropertyHandler_PHY_FREQ },
@@ -224,7 +223,6 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
 const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
 {
     { SPINEL_PROP_POWER_STATE, &NcpBase::SetPropertyHandler_POWER_STATE },
-    { SPINEL_PROP_BINDING_STATE, &NcpBase::SetPropertyHandler_BINDING_STATE },
 
     { SPINEL_PROP_PHY_ENABLED, &NcpBase::SetPropertyHandler_PHY_ENABLED },
     { SPINEL_PROP_PHY_TX_POWER, &NcpBase::SetPropertyHandler_PHY_TX_POWER },
@@ -477,7 +475,6 @@ NcpBase::NcpBase(otInstance *aInstance):
     mDroppedReplyTidBitSet(0),
     mAllowLocalNetworkDataChange(false),
     mRequireJoinExistingNetwork(false),
-    mIsRawStreamEnabled(false),
     mBindingState(kNcpBoundToThread),
     mCurTransmintTID(0),
 
@@ -497,7 +494,6 @@ NcpBase::NcpBase(otInstance *aInstance):
 
     otSetStateChangedCallback(mInstance, &NcpBase::HandleNetifStateChanged, this);
     otSetReceiveIp6DatagramCallback(mInstance, &NcpBase::HandleDatagramFromStack, this);
-    otSetLinkPcapCallback(mInstance, &NcpBase::HandleRawFrame, static_cast<void*>(this));
     otSetIcmpEchoEnabled(mInstance, false);
 
     mUpdateChangedPropsTask.Post();
@@ -680,10 +676,7 @@ void NcpBase::HandleRawFrame(const RadioPacket *aFrame, void *aContext)
 
 void NcpBase::HandleRawFrame(const RadioPacket *aFrame)
 {
-    if (mIsRawStreamEnabled)
-    {
-        HandleRadioReceive(aFrame, kThreadError_None);
-    }
+    HandleRadioReceive(aFrame, kThreadError_None);
 }
 
 // ----------------------------------------------------------------------------
@@ -1613,17 +1606,6 @@ ThreadError NcpBase::GetPropertyHandler_LOCK(uint8_t header, spinel_prop_key_t k
     return SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
 }
 
-ThreadError NcpBase::GetPropertyHandler_BINDING_STATE(uint8_t header, spinel_prop_key_t key)
-{
-    return SendPropertyUpdate(
-               header,
-               SPINEL_CMD_PROP_VALUE_IS,
-               key,
-               SPINEL_DATATYPE_UINT8_S,
-               mBindingState
-           );
-}
-
 ThreadError NcpBase::GetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_key_t key)
 {
     return SendPropertyUpdate(
@@ -1818,7 +1800,7 @@ ThreadError NcpBase::GetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t header, s
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_BOOL_S,
-               mIsRawStreamEnabled
+               mBindingState == kNcpBoundToRadio
            );
 }
 
@@ -3028,65 +3010,6 @@ ThreadError NcpBase::SetPropertyHandler_POWER_STATE(uint8_t header, spinel_prop_
     return SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
 }
 
-ThreadError NcpBase::SetPropertyHandler_BINDING_STATE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
-                                                      uint16_t value_len)
-{
-    uint8_t value = SPINEL_BINDING_STATE_THREAD;
-    spinel_ssize_t parsedLength;
-    ThreadError errorCode = kThreadError_None;
-
-    parsedLength = spinel_datatype_unpack(
-                       value_ptr,
-                       value_len,
-                       SPINEL_DATATYPE_UINT8_S,
-                       &value
-                   );
-
-    if (parsedLength > 0)
-    {
-        if (mBindingState != value)
-        {
-            switch (value)
-            {
-            case SPINEL_BINDING_STATE_THREAD:
-                mBindingState = kNcpBoundToThread;
-                break;
-
-            case SPINEL_BINDING_STATE_RADIO:
-                if (otIsInterfaceUp(mInstance))
-                {
-                    errorCode = kThreadError_InvalidState;
-                }
-                else
-                {
-                    mBindingState = kNcpBoundToRadio;
-                    otPlatRadioSetCallbacks(mInstance, HandleRadioReceive, HandleRadioTransmit);
-                }
-                break;
-
-            default:
-                errorCode = kThreadError_InvalidArgs;
-                break;
-            }
-        }
-    }
-    else
-    {
-        errorCode = kThreadError_Parse;
-    }
-
-    if (errorCode == kThreadError_None)
-    {
-        errorCode = HandleCommandPropertyGet(header, key);
-    }
-    else
-    {
-        errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
-    }
-
-    return errorCode;
-}
-
 ThreadError NcpBase::SetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                     uint16_t value_len)
 {
@@ -3105,11 +3028,20 @@ ThreadError NcpBase::SetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_
     {
         if (value == false)
         {
+            // Make sure to stop listening before disabling
+            otPlatRadioSleep(mInstance);
+
             errorCode = otPlatRadioDisable(mInstance);
         }
         else
         {
             errorCode = otPlatRadioEnable(mInstance);
+
+            // If we were already bound to the radio layer, start listening for MAC frames
+            if (errorCode == kThreadError_None && mBindingState == kNcpBoundToRadio)
+            {
+                errorCode = otPlatRadioReceive(mInstance, otPlatRadioGetChannel(mInstance));
+            }
         }
     }
     else
@@ -3158,6 +3090,14 @@ ThreadError NcpBase::SetPropertyHandler_PHY_CHAN(uint8_t header, spinel_prop_key
     {
         errorCode = otSetChannel(mInstance, static_cast<uint8_t>(i));
 
+        // Make sure we are receiving if we are bound directly to the radio
+        if (errorCode == kThreadError_None && 
+            mBindingState == kNcpBoundToRadio && 
+            otPlatRadioIsEnabled(mInstance))
+        {
+            errorCode = otPlatRadioReceive(mInstance, static_cast<uint8_t>(i));
+        }
+
         if (errorCode == kThreadError_None)
         {
             errorCode = HandleCommandPropertyGet(header, key);
@@ -3195,12 +3135,14 @@ ThreadError NcpBase::SetPropertyHandler_MAC_PROMISCUOUS_MODE(uint8_t header, spi
         {
         case SPINEL_MAC_PROMISCUOUS_MODE_OFF:
             otPlatRadioSetPromiscuous(mInstance, false);
+            otSetLinkPcapCallback(mInstance, NULL, NULL);
             errorCode = kThreadError_None;
             break;
 
         case SPINEL_MAC_PROMISCUOUS_MODE_NETWORK:
         case SPINEL_MAC_PROMISCUOUS_MODE_FULL:
             otPlatRadioSetPromiscuous(mInstance, true);
+            otSetLinkPcapCallback(mInstance, &NcpBase::HandleRawFrame, static_cast<void*>(this));
             errorCode = kThreadError_None;
             break;
         }
@@ -3434,7 +3376,46 @@ ThreadError NcpBase::SetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t header, s
 
     if (parsedLength > 0)
     {
-        mIsRawStreamEnabled = value;
+        if (value)
+        {
+            if (mBindingState == kNcpBoundToThread)
+            {
+                if (otIsInterfaceUp(mInstance))
+                {
+                    // Can't bind to the radio layer if OpenThread already is
+                    errorCode = kThreadError_InvalidState;
+                }
+                else
+                {
+                    // Set the data path completion callbacks
+                    otPlatRadioSetCallbacks(mInstance, HandleRadioReceive, HandleRadioTransmit);
+
+                    // If the PHY is enabled, then start listening for incoming MAC frames
+                    if (otPlatRadioIsEnabled(mInstance))
+                    {
+                        errorCode = otPlatRadioReceive(mInstance, otPlatRadioGetChannel(mInstance));
+                    }
+
+                    // Only on success, update cached state
+                    if (errorCode == kThreadError_None)
+                    {
+                        // Cache state indicating we are directly bound to the radio
+                        mBindingState = kNcpBoundToRadio;
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (mBindingState == kNcpBoundToRadio)
+            {
+                // Cache state indicating we are no longer directly bound to the radio
+                mBindingState = kNcpBoundToThread;
+
+                // Stop listening for MAC frames
+                (void)otPlatRadioSleep(mInstance);
+            }
+        }
     }
     else
     {

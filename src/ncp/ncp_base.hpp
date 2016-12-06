@@ -53,8 +53,8 @@ namespace Thread {
  */
 typedef enum otNcpBindingState
 {
-    kNcpBoundToThread = SPINEL_BINDING_STATE_THREAD,  ///< NCP is bound to the Thread layer (default)
-    kNcpBoundToRadio  = SPINEL_BINDING_STATE_RADIO,   ///< NCP is bound to the 802.15.4 Radio/Phy layer
+    kNcpBoundToThread,  ///< NCP is bound to the Thread layer (default)
+    kNcpBoundToRadio,   ///< NCP is bound to the 802.15.4 Radio/Phy layer
 } otNcpBindingState;
 
 class NcpBase
@@ -314,7 +314,6 @@ private:
     ThreadError GetPropertyHandler_POWER_STATE(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_HWADDR(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_LOCK(uint8_t header, spinel_prop_key_t key);
-    ThreadError GetPropertyHandler_BINDING_STATE(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_PHY_FREQ(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_PHY_CHAN_SUPPORTED(uint8_t header, spinel_prop_key_t key);
@@ -393,8 +392,6 @@ private:
 
     ThreadError SetPropertyHandler_POWER_STATE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                uint16_t value_len);
-    ThreadError SetPropertyHandler_BINDING_STATE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
-                                                 uint16_t value_len);
     ThreadError SetPropertyHandler_PHY_TX_POWER(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                 uint16_t value_len);
     ThreadError SetPropertyHandler_PHY_CHAN(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -541,7 +538,6 @@ private:
 
     bool mAllowLocalNetworkDataChange;
     bool mRequireJoinExistingNetwork;
-    bool mIsRawStreamEnabled;
 
     otNcpBindingState mBindingState;
     uint8_t mCurTransmintTID;
