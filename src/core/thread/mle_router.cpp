@@ -172,9 +172,11 @@ exit:
 
 ThreadError MleRouter::ReleaseRouterId(uint8_t aRouterId)
 {
+    ThreadError error = kThreadError_None;
     Router *router = GetRouter(aRouterId);
 
-    assert(router != NULL);
+    VerifyOrExit(router != NULL, error = kThreadError_InvalidArgs);
+    VerifyOrExit(mDeviceState == kDeviceStateLeader, error = kThreadError_InvalidState);
 
     otLogInfoMle("delete router id %d", aRouterId);
     router->mAllocated = false;
@@ -196,7 +198,9 @@ ThreadError MleRouter::ReleaseRouterId(uint8_t aRouterId)
     mAddressResolver.Remove(aRouterId);
     mNetworkData.RemoveBorderRouter(GetRloc16(aRouterId));
     ResetAdvertiseInterval();
-    return kThreadError_None;
+
+exit:
+    return error;
 }
 
 uint32_t MleRouter::GetLeaderAge(void) const
