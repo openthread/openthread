@@ -170,13 +170,6 @@ private:
     void HandleRadioTransmit(const RadioPacket *aPacket, bool aFramePending, ThreadError aError);
 
     /**
-     * Trampoline for HandleRawFrame().
-     */
-    static void HandleRawFrame(const RadioPacket *aFrame, void *aContext);
-
-    void HandleRawFrame(const RadioPacket *aFrame);
-
-    /**
      * Trampoline for HandleActiveScanResult().
      */
     static void HandleActiveScanResult_Jump(otActiveScanResult *result, void *aContext);

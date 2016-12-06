@@ -652,7 +652,7 @@ void NcpBase::HandleRadioTransmit(const RadioPacket *aPacket, bool aFramePending
         SendPropertyUpdate(
             SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0 | mCurTransmintTID,
             SPINEL_CMD_PROP_VALUE_IS,
-            SPINEL_PROP_STREAM_RAW,
+            SPINEL_PROP_LAST_STATUS,
             "ib",
             aError,
             aFramePending
@@ -663,20 +663,6 @@ void NcpBase::HandleRadioTransmit(const RadioPacket *aPacket, bool aFramePending
     }
 
     (void)aPacket;
-}
-
-// ----------------------------------------------------------------------------
-// MARK: Raw frame handling
-// ----------------------------------------------------------------------------
-
-void NcpBase::HandleRawFrame(const RadioPacket *aFrame, void *aContext)
-{
-    static_cast<NcpBase *>(aContext)->HandleRawFrame(aFrame);
-}
-
-void NcpBase::HandleRawFrame(const RadioPacket *aFrame)
-{
-    HandleRadioReceive(aFrame, kThreadError_None);
 }
 
 // ----------------------------------------------------------------------------
@@ -3135,14 +3121,12 @@ ThreadError NcpBase::SetPropertyHandler_MAC_PROMISCUOUS_MODE(uint8_t header, spi
         {
         case SPINEL_MAC_PROMISCUOUS_MODE_OFF:
             otPlatRadioSetPromiscuous(mInstance, false);
-            otSetLinkPcapCallback(mInstance, NULL, NULL);
             errorCode = kThreadError_None;
             break;
 
         case SPINEL_MAC_PROMISCUOUS_MODE_NETWORK:
         case SPINEL_MAC_PROMISCUOUS_MODE_FULL:
             otPlatRadioSetPromiscuous(mInstance, true);
-            otSetLinkPcapCallback(mInstance, &NcpBase::HandleRawFrame, static_cast<void*>(this));
             errorCode = kThreadError_None;
             break;
         }

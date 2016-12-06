@@ -64,8 +64,8 @@ enum
 
 static RadioPacket sTransmitFrame;
 static RadioPacket sReceiveFrame;
-static ThreadError sTransmitError;
-static ThreadError sReceiveError;
+static ThreadError sTransmitError = kThreadError_None;
+static ThreadError sReceiveError = kThreadError_None;
 
 static uint8_t sTransmitPsdu[IEEE802154_MAX_LENGTH];
 static uint8_t sReceivePsdu[IEEE802154_MAX_LENGTH];
