@@ -74,7 +74,7 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OPENTHREAD_LOG_LEVEL_CRIT
-#define otLogCrit(aRegion, aFormat, ...)  otPlatLog(kLogLevelCrit, aRegion, aFormat OPENTHREAD_CONFIG_LOG_SUFFIX, ## __VA_ARGS__)
+#define otLogCrit(aRegion, aFormat, ...)  _otLogFormatter(kLogLevelCrit, aRegion, aFormat, ## __VA_ARGS__)
 #else
 #define otLogCrit(aRegion, aFormat, ...)
 #endif
@@ -90,7 +90,7 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OPENTHREAD_LOG_LEVEL_WARN
-#define otLogWarn(aRegion, aFormat, ...)  otPlatLog(kLogLevelWarn, aRegion, aFormat OPENTHREAD_CONFIG_LOG_SUFFIX, ## __VA_ARGS__)
+#define otLogWarn(aRegion, aFormat, ...)  _otLogFormatter(kLogLevelWarn, aRegion, aFormat, ## __VA_ARGS__)
 #else
 #define otLogWarn(aRegion, aFormat, ...)
 #endif
@@ -106,7 +106,7 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OPENTHREAD_LOG_LEVEL_INFO
-#define otLogInfo(aRegion, aFormat, ...)  otPlatLog(kLogLevelInfo, aRegion, aFormat OPENTHREAD_CONFIG_LOG_SUFFIX, ## __VA_ARGS__)
+#define otLogInfo(aRegion, aFormat, ...)  _otLogFormatter(kLogLevelInfo, aRegion, aFormat, ## __VA_ARGS__)
 #else
 #define otLogInfo(aRegion, aFormat, ...)
 #endif
@@ -122,7 +122,7 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OPENTHREAD_LOG_LEVEL_DEBG
-#define otLogDebg(aRegion, aFormat, ...)  otPlatLog(kLogLevelDebg, aRegion, aFormat OPENTHREAD_CONFIG_LOG_SUFFIX, ## __VA_ARGS__)
+#define otLogDebg(aRegion, aFormat, ...)  _otLogFormatter(kLogLevelDebg, aRegion, aFormat, ## __VA_ARGS__)
 #else
 #define otLogDebg(aRegion, aFormat, ...)
 #endif
@@ -658,7 +658,7 @@ extern "C" {
  *
  */
 #if OPENTHREAD_ENABLE_CERT_LOG
-#define otLogCertMeshCoP(aFormat, ...) otPlatLog(kLogLevelNone, kLogRegionMeshCoP, aFormat OPENTHREAD_CONFIG_LOG_SUFFIX, ## __VA_ARGS__)
+#define otLogCertMeshCoP(aFormat, ...) _otLogFormatter(kLogLevelNone, kLogRegionMeshCoP, aFormat, ## __VA_ARGS__)
 #else
 #define otLogCertMeshCoP(aFormat, ...)
 #endif
@@ -1145,6 +1145,44 @@ extern "C" {
  *
  */
 void otDump(otLogLevel aLevel, otLogRegion aRegion, const char *aId, const void *aBuf, const size_t aLength);
+
+#ifdef OPENTHREAD_CONFIG_LOG_PREPEND_REGION
+/**
+ * This method converts the log region value into a string
+ *
+ * @param[in]  aRegion  The log region.
+ *
+ * @returns A const char pointer to the C string corresponding to the log region.
+ *
+ */
+const char *otLogRegionToString(otLogRegion aRegion);
+
+/**
+ * Local/private macro to format the log message
+ */
+#define _otLogFormatter(aLogLevel, aRegion, aFormat, ...)                   \
+    otPlatLog(                                                              \
+        aLogLevel,                                                          \
+        aRegion,                                                            \
+        "%s: " aFormat OPENTHREAD_CONFIG_LOG_SUFFIX,                        \
+        otLogRegionToString(aRegion),                                       \
+        ## __VA_ARGS__                                                      \
+    )
+
+#else  // OPENTHREAD_CONFIG_LOG_PREPEND_REGION
+
+/**
+ * Local/private macro to format the log message
+ */
+#define _otLogFormatter(aLogLevel, aRegion, aFormat, ...)                   \
+    otPlatLog(                                                              \
+        aLogLevel,                                                          \
+        aRegion,                                                            \
+        aFormat OPENTHREAD_CONFIG_LOG_SUFFIX,                               \
+        ## __VA_ARGS__                                                      \
+    )
+
+#endif // OPENTHREAD_CONFIG_LOG_PREPEND_REGION
 
 #ifdef __cplusplus
 };

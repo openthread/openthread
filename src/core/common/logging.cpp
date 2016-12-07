@@ -148,6 +148,66 @@ void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const
     otLogDump("%s", buf);
 }
 
+#ifdef OPENTHREAD_CONFIG_LOG_PREPEND_REGION
+const char *otLogRegionToString(otLogRegion aRegion)
+{
+    const char *retval;
+
+    switch (aRegion)
+    {
+    case kLogRegionApi:
+        retval = "-API-----";
+        break;
+
+    case kLogRegionMle:
+        retval = "-MLE-----";
+        break;
+
+    case kLogRegionArp:
+        retval = "-ARP-----";
+        break;
+
+    case kLogRegionNetData:
+        retval = "-N-DATA--";
+        break;
+
+    case kLogRegionIcmp:
+        retval = "-ICMP----";
+        break;
+
+    case kLogRegionIp6:
+        retval = "-IP6-----";
+        break;
+
+    case kLogRegionMac:
+        retval = "-MAC-----";
+        break;
+
+    case kLogRegionMem:
+        retval = "-MEM-----";
+        break;
+
+    case kLogRegionNcp:
+        retval = "-NCP-----";
+        break;
+
+    case kLogRegionMeshCoP:
+        retval = "-MESH-CP-";
+        break;
+
+    case kLogRegionNetDiag:
+        retval = "-DIAG----";
+        break;
+
+    default:
+        retval = "---------";
+        break;
+    }
+
+    return retval;
+}
+#endif // OPENTHREAD_CONFIG_LOG_PREPEND_REGION
+
 #ifdef __cplusplus
 };
 #endif
