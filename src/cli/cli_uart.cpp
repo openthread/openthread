@@ -228,19 +228,22 @@ void Uart::SendDoneTask(void)
     Send();
 }
 
-#if OPENTHREAD_ENABLE_CLI_LOGGING
+#if OPENTHREAD_ENABLE_DEFAULT_LOGGING
 #ifdef __cplusplus
 extern "C" {
 #endif
-void otCliLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aAp)
+void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
     if (NULL == Uart::sUartServer)
     {
         return;
     }
 
-    Uart::sUartServer->OutputFormatV(aFormat, aAp);
+    va_list args;
+    va_start(args, aFormat);
+    Uart::sUartServer->OutputFormatV(aFormat, args);
     Uart::sUartServer->OutputFormat("\r\n");
+    va_end(args);
 
     (void)aLogLevel;
     (void)aLogRegion;
@@ -248,7 +251,7 @@ void otCliLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat,
 #ifdef __cplusplus
 }  // extern "C"
 #endif
-#endif // OPENTHREAD_ENABLE_CLI_LOGGING
+#endif // OPENTHREAD_ENABLE_DEFAULT_LOGGING
 
 }  // namespace Cli
 }  // namespace Thread

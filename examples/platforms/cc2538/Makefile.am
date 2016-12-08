@@ -39,7 +39,6 @@ libopenthread_cc2538_a_CPPFLAGS           = \
 libopenthread_cc2538_a_SOURCES            = \
     alarm.c                                 \
     flash.c                                 \
-    logging.c                               \
     misc.c                                  \
     platform.c                              \
     radio.c                                 \
