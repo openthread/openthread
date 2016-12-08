@@ -34,7 +34,7 @@ from autothreadharness.harness_case import HarnessCase
 
 class Commissioner_8_2_1(HarnessCase):
     role = HarnessCase.ROLE_COMMISSIONER
-    case = '! 8 2 1'
+    case = '8 2 1'
     golden_devices_required = 2
     def on_dialog(self, dialog, title):
         pass
