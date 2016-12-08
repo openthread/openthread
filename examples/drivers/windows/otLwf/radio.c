@@ -281,6 +281,13 @@ void otPlatRadioSetCallbacks(_In_ otInstance *otCtx, _In_ otPlatRadioReceiveDone
     pFilter->otTransmitDoneCallback = transmitCallback;
 }
 
+bool otPlatRadioIsEnabled(_In_ otInstance *otCtx)
+{
+    NT_ASSERT(otCtx);
+    PMS_FILTER pFilter = otCtxToFilter(otCtx);
+    return pFilter->otPhyState != kStateDisabled;
+}
+
 ThreadError otPlatRadioEnable(_In_ otInstance *otCtx)
 {
     NT_ASSERT(otCtx);

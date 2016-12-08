@@ -50,6 +50,7 @@ otRadioCaps                     g_testPlatRadioCaps = kRadioCapsNone;
 testPlatRadioSetPanId           g_testPlatRadioSetPanId = NULL;
 testPlatRadioSetExtendedAddress g_testPlatRadioSetExtendedAddress = NULL;
 testPlatRadioSetCallbacks       g_testPlatRadioSetCallbacks = NULL;
+testPlatRadioIsEnabled          g_testPlatRadioIsEnabled = NULL;
 testPlatRadioEnable             g_testPlatRadioEnable = NULL;
 testPlatRadioDisable            g_testPlatRadioDisable = NULL;
 testPlatRadioSetShortAddress    g_testPlatRadioSetShortAddress = NULL;
@@ -170,6 +171,18 @@ extern "C" {
         if (g_testPlatRadioSetCallbacks)
         {
             return g_testPlatRadioSetCallbacks(aInstance, receiveCallback, transmitCallback);
+        }
+    }
+
+    bool otPlatRadioIsEnabled(otInstance *aInstance)
+    {
+        if (g_testPlatRadioIsEnabled)
+        {
+            return g_testPlatRadioIsEnabled(aInstance);
+        }
+        else
+        {
+            return true;
         }
     }
 

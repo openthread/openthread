@@ -732,6 +732,8 @@ void Mac::HandleBeginTransmit(void)
     Frame &sendFrame(*mTxFrame);
     ThreadError error = kThreadError_None;
 
+    VerifyOrExit(otPlatRadioIsEnabled(mNetif.GetInstance()), error = kThreadError_Abort);
+
     if (mCsmaAttempts == 0 && mTransmitAttempts == 0)
     {
         sendFrame.SetPower(mMaxTransmitPower);
