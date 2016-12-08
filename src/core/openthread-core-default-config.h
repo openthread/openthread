@@ -387,7 +387,7 @@
 * Define to enable platform region logging.
 *
 */
-#define OPENTHREAD_CONFIG_LOG_PLATFORM
+//#define OPENTHREAD_CONFIG_LOG_PLATFORM
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_PREPREND_REGION
