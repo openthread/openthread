@@ -477,6 +477,7 @@ NcpBase::NcpBase(otInstance *aInstance):
     mRequireJoinExistingNetwork(false),
     mBindingState(kNcpBoundToThread),
     mCurTransmintTID(0),
+    mCurReceiveChannel(otPlatRadioGetChannel(aInstance)),
 
     mFramingErrorCounter(0),
     mRxSpinelFrameCounter(0),
@@ -661,6 +662,10 @@ void NcpBase::HandleRadioTransmit(const RadioPacket *aPacket, bool aFramePending
         // Clear cached transmit TID
         mCurTransmintTID = 0;
     }
+
+    // Make sure we are back listening on the original receive channel,
+    // since the transmit could have been on a different channel.
+    otPlatRadioReceive(mInstance, mCurReceiveChannel);
 
     (void)aPacket;
 }
@@ -3026,7 +3031,7 @@ ThreadError NcpBase::SetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_
             // If we were already bound to the radio layer, start listening for MAC frames
             if (errorCode == kThreadError_None && mBindingState == kNcpBoundToRadio)
             {
-                errorCode = otPlatRadioReceive(mInstance, otPlatRadioGetChannel(mInstance));
+                errorCode = otPlatRadioReceive(mInstance, mCurReceiveChannel);
             }
         }
     }
@@ -3076,12 +3081,18 @@ ThreadError NcpBase::SetPropertyHandler_PHY_CHAN(uint8_t header, spinel_prop_key
     {
         errorCode = otSetChannel(mInstance, static_cast<uint8_t>(i));
 
-        // Make sure we are receiving if we are bound directly to the radio
-        if (errorCode == kThreadError_None && 
-            mBindingState == kNcpBoundToRadio && 
-            otPlatRadioIsEnabled(mInstance))
+        if (errorCode == kThreadError_None)
         {
-            errorCode = otPlatRadioReceive(mInstance, static_cast<uint8_t>(i));
+            // Cache the channel. If the radio radio isn't enabled yet, the otSetChannel call
+            // doesn't call into otPlatRadioReceive to set the channel. We will have to do it
+            // manually whenever the radios are enabled and/or raw stream is enabled.
+            mCurReceiveChannel = static_cast<uint8_t>(i);
+
+            // Make sure we are receiving if we are bound directly to the radio
+            if (mBindingState == kNcpBoundToRadio && otPlatRadioIsEnabled(mInstance))
+            {
+                errorCode = otPlatRadioReceive(mInstance, mCurReceiveChannel);
+            }
         }
 
         if (errorCode == kThreadError_None)
@@ -3377,7 +3388,7 @@ ThreadError NcpBase::SetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t header, s
                     // If the PHY is enabled, then start listening for incoming MAC frames
                     if (otPlatRadioIsEnabled(mInstance))
                     {
-                        errorCode = otPlatRadioReceive(mInstance, otPlatRadioGetChannel(mInstance));
+                        errorCode = otPlatRadioReceive(mInstance, mCurReceiveChannel);
                     }
 
                     // Only on success, update cached state
@@ -3396,8 +3407,11 @@ ThreadError NcpBase::SetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t header, s
                 // Cache state indicating we are no longer directly bound to the radio
                 mBindingState = kNcpBoundToThread;
 
-                // Stop listening for MAC frames
-                (void)otPlatRadioSleep(mInstance);
+                // If the PHY is enabled, then stop listening for MAC frames
+                if (otPlatRadioIsEnabled(mInstance))
+                {
+                    (void)otPlatRadioSleep(mInstance);
+                }
             }
         }
     }
@@ -3422,8 +3436,9 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t header, spinel_prop_k
 {
     spinel_ssize_t parsedLength(0);
     ThreadError errorCode = kThreadError_None;
-    RadioPacket packet;
+    uint8_t *frame_buffer(NULL);
     unsigned int frame_len(0);
+    RadioPacket *packet = otPlatRadioGetTransmitBuffer(mInstance);
 
     if (mBindingState == kNcpBoundToRadio)
     {
@@ -3431,10 +3446,10 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t header, spinel_prop_k
             value_ptr,
             value_len,
             "DCc",
-            &packet.mPsdu,
+            &frame_buffer,
             &frame_len,
-            &packet.mChannel,
-            &packet.mPower
+            &packet->mChannel,
+            &packet->mPower
         );
 
         if (parsedLength > 0 && frame_len <= kMaxPHYPacketSize)
@@ -3442,9 +3457,13 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t header, spinel_prop_k
             // Cache the transaction ID for async response
             mCurTransmintTID = SPINEL_HEADER_GET_TID(header);
 
-            // Update packet length and send to the radio layer
-            packet.mLength = static_cast<uint8_t>(frame_len);
-            errorCode = otPlatRadioTransmit(mInstance, &packet);
+            // Update packet buffer and length
+            packet->mLength = static_cast<uint8_t>(frame_len);
+            memcpy(packet->mPsdu, frame_buffer, packet->mLength);
+
+            // Pass packet to the radio layer. Note, this fails if we
+            // haven't enabled raw stream or are already transmitting.
+            errorCode = otPlatRadioTransmit(mInstance, packet);
         }
         else
         {

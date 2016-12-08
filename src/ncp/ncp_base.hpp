@@ -534,6 +534,7 @@ private:
 
     otNcpBindingState mBindingState;
     uint8_t mCurTransmintTID;
+    uint8_t mCurReceiveChannel;
 
     uint32_t mFramingErrorCounter;             // Number of improperly formed received spinel frames.
     uint32_t mRxSpinelFrameCounter;            // Number of received (inbound) spinel frames.
