@@ -5376,13 +5376,20 @@ ThreadError otNcpStreamWrite(int aStreamId, const uint8_t* aDataPtr, int aDataLe
         aStreamId = SPINEL_PROP_STREAM_DEBUG;
     }
 
-    return Thread::sNcpContext->SendPropertyUpdate(
-        SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-        SPINEL_CMD_PROP_VALUE_IS,
-        static_cast<spinel_prop_key_t>(aStreamId),
-        aDataPtr,
-        static_cast<uint16_t>(aDataLen)
-    );
+    if (Thread::sNcpContext)
+    {
+        return Thread::sNcpContext->SendPropertyUpdate(
+            SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+            SPINEL_CMD_PROP_VALUE_IS,
+            static_cast<spinel_prop_key_t>(aStreamId),
+            aDataPtr,
+            static_cast<uint16_t>(aDataLen)
+        );
+    }
+    else
+    {
+        return kThreadError_InvalidState;
+    }
 }
 
 // ----------------------------------------------------------------------------

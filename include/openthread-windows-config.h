@@ -26,6 +26,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* Define to 1 if you want to enable cli logging */
+#define OPENTHREAD_ENABLE_CLI_LOGGING 1
+
 /* Define to 1 to enable the commissioner role. */
 #define OPENTHREAD_ENABLE_COMMISSIONER 1
 
