@@ -70,5 +70,8 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
 
 exit:
     fprintf(stderr, "%s\r\n", logString);
+
+    (void)aLogLevel;
+    (void)aLogRegion;
 }
 
