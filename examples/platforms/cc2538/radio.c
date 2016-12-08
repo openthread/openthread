@@ -78,7 +78,7 @@ void enableReceiver(void)
 {
     if (!sIsReceiverEnabled)
     {
-        otLogInfoPlat("Enabling receiver");
+        otLogInfoPlat("Enabling receiver", NULL);
 
         // flush rxfifo
         HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
@@ -94,7 +94,7 @@ void disableReceiver(void)
 {
     if (sIsReceiverEnabled)
     {
-        otLogInfoPlat("Disabling receiver");
+        otLogInfoPlat("Disabling receiver", NULL);
 
         while (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE);
 
@@ -205,7 +205,7 @@ void cc2538RadioInit(void)
     // default: SRCMATCH.SRC_MATCH_EN(1), SRCMATCH.AUTOPEND(1),
     // SRCMATCH.PEND_DATAREQ_ONLY(1), RFCORE_XREG_FRMCTRL1_PENDING_OR(0)
 
-    otLogInfoPlat("Initialized");
+    otLogInfoPlat("Initialized", NULL);
 }
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)
@@ -218,7 +218,7 @@ ThreadError otPlatRadioEnable(otInstance *aInstance)
 {
     if (!otPlatRadioIsEnabled(aInstance))
     {
-        otLogDebgPlat("State=kStateSleep");
+        otLogDebgPlat("State=kStateSleep", NULL);
         sState = kStateSleep;
     }
 
@@ -229,7 +229,7 @@ ThreadError otPlatRadioDisable(otInstance *aInstance)
 {
     if (otPlatRadioIsEnabled(aInstance))
     {
-        otLogDebgPlat("State=kStateDisabled");
+        otLogDebgPlat("State=kStateDisabled", NULL);
         sState = kStateDisabled;
     }
 
@@ -243,7 +243,7 @@ ThreadError otPlatRadioSleep(otInstance *aInstance)
 
     if (sState == kStateSleep || sState == kStateReceive)
     {
-        otLogDebgPlat("State=kStateSleep");
+        otLogDebgPlat("State=kStateSleep", NULL);
         error = kThreadError_None;
         sState = kStateSleep;
         disableReceiver();
@@ -259,7 +259,7 @@ ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
     if (sState != kStateDisabled)
     {
-        otLogDebgPlat("State=kStateReceive");
+        otLogDebgPlat("State=kStateReceive", NULL);
 
         error = kThreadError_None;
         sState = kStateReceive;
@@ -604,8 +604,8 @@ int8_t findSrcMatchAvailEntry(bool aShort)
     uint32_t shortEnableStatus = getSrcMatchEntriesEnableStatus(true);
     uint32_t extEnableStatus = getSrcMatchEntriesEnableStatus(false);
 
-    otLogDebgMac("Short enable status: 0x%x\n", shortEnableStatus);
-    otLogDebgMac("Ext enable status: 0x%x\n", extEnableStatus);
+    otLogDebgPlat("Short enable status: 0x%x", shortEnableStatus);
+    otLogDebgPlat("Ext enable status: 0x%x", extEnableStatus);
 
     if (aShort)
     {
@@ -754,7 +754,7 @@ void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
     uint32_t *addrAutoPendEn = (uint32_t *)RFCORE_FFSM_SRCSHORTPENDEN0;
     (void)aInstance;
 
-    otLogDebgPlat("Clear ShortAddr entries");
+    otLogDebgPlat("Clear ShortAddr entries", NULL);
 
     for (uint8_t i = 0; i < RFCORE_XREG_SRCMATCH_ENABLE_STATUS_SIZE; i++)
     {
@@ -769,7 +769,7 @@ void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
     uint32_t *addrAutoPendEn = (uint32_t *)RFCORE_FFSM_SRCEXTPENDEN0;
     (void)aInstance;
 
-    otLogDebgPlat("Clear ExtAddr entries");
+    otLogDebgPlat("Clear ExtAddr entries", NULL);
 
     for (uint8_t i = 0; i < RFCORE_XREG_SRCMATCH_ENABLE_STATUS_SIZE; i++)
     {
