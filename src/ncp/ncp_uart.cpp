@@ -270,100 +270,13 @@ void NcpUart::HandleError(ThreadError aError, uint8_t *aBuf, uint16_t aBufLength
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#define LOG_APPEND(CONST_STR) \
-    strcpy(logString + offset, CONST_STR); \
-    offset += sizeof(CONST_STR) - 1; \
-
 void otCliLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list args)
 {
     char logString[128];
-    unsigned int offset = 0;
-
-    switch (aLogLevel)
-    {
-    case kLogLevelNone:
-        LOG_APPEND("NONE ");
-        break;
-
-    case kLogLevelCrit:
-        LOG_APPEND("CRIT ");
-        break;
-
-    case kLogLevelWarn:
-        LOG_APPEND("WARN ");
-        break;
-
-    case kLogLevelInfo:
-        LOG_APPEND("INFO ");
-        break;
-
-    case kLogLevelDebg:
-        LOG_APPEND("DEBG ");
-        break;
-
-    default:
-        LOG_APPEND("???? ");
-        break;
-    }
-
-    switch (aLogRegion)
-    {
-    case kLogRegionApi:
-        LOG_APPEND("API  ");
-        break;
-
-    case kLogRegionMle:
-        LOG_APPEND("MLE  ");
-        break;
-
-    case kLogRegionArp:
-        LOG_APPEND("ARP  ");
-        break;
-
-    case kLogRegionNetData:
-        LOG_APPEND("NETD ");
-        break;
-
-    case kLogRegionIp6:
-        LOG_APPEND("IPV6 ");
-        break;
-
-    case kLogRegionIcmp:
-        LOG_APPEND("ICMP ");
-        break;
-
-    case kLogRegionMac:
-        LOG_APPEND("MAC  ");
-        break;
-
-    case kLogRegionMem:
-        LOG_APPEND("MEM  ");
-        break;
-
-    case kLogRegionNcp:
-        LOG_APPEND("NCP  ");
-        break;
-
-    case kLogRegionMeshCoP:
-        LOG_APPEND("MCOP ");
-        break;
-
-    case kLogRegionNetDiag:
-        LOG_APPEND("NDG  ");
-
-    default:
-        LOG_APPEND("???? ");
-        break;
-    }
-
     int charsWritten;
-    if ((charsWritten = vsnprintf(logString + offset, sizeof(logString) - offset, aFormat, args)) > 0)
+    if ((charsWritten = vsnprintf(logString, sizeof(logString), aFormat, args)) > 0)
     {
-        // Update offset to account for charsWritten
-        offset += static_cast<uint32_t>(charsWritten);
-
-        otNcpStreamWrite(0, reinterpret_cast<uint8_t*>(logString), offset);
+        otNcpStreamWrite(0, reinterpret_cast<uint8_t*>(logString), charsWritten);
     }
 }
 #ifdef __cplusplus
