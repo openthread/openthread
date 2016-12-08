@@ -204,7 +204,13 @@ public:
     * This method ensures the radio is in the proper state for use.
     *
     */
-    void PrepareRadio();
+    void EnableRadio();
+
+    /**
+    * This method disables the radio, indicating it's no longer needed.
+    *
+    */
+    void DisableRadio();
 
     /**
      * This method starts an IEEE 802.15.4 Active Scan.

@@ -102,7 +102,7 @@ ThreadError ThreadNetif::Up(void)
 {
     if (!mIsUp)
     {
-        mMac.PrepareRadio();
+        mMac.EnableRadio();
         mIp6.AddNetif(*this);
         mMeshForwarder.Start();
         mCoapServer.Start();
@@ -132,6 +132,8 @@ ThreadError ThreadNetif::Down(void)
 #if OPENTHREAD_ENABLE_DTLS
     mDtls.Stop();
 #endif
+
+    mMac.DisableRadio();
 
     return kThreadError_None;
 }
