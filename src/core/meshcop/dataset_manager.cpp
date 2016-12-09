@@ -400,31 +400,17 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
         // verify session id is the same
         if (tlvType == Tlv::kCommissionerSessionId)
         {
-            uint8_t *cur;
-            uint8_t *end;
-            uint8_t length;
+            CommissionerSessionIdTlv *sessionId;
+            uint16_t rxSessionId;
 
             isUpdateFromCommissioner = true;
-            cur = mNetworkDataLeader.GetCommissioningData(length);
-            end = cur + length;
 
-            while (cur < end)
-            {
-                Tlv *data = reinterpret_cast<Tlv *>(cur);
+            sessionId = static_cast<CommissionerSessionIdTlv *>(mNetworkDataLeader.GetCommissioningDataSubTlv(
+                                                                    Tlv::kCommissionerSessionId));
+            aMessage.Read(offset + sizeof(tlv), sizeof(rxSessionId), &rxSessionId);
 
-                if (data->GetType() == Tlv::kCommissionerSessionId)
-                {
-                    uint16_t sessionId;
-                    uint16_t rxSessionId;
-
-                    sessionId = static_cast<CommissionerSessionIdTlv *>(data)->GetCommissionerSessionId();
-                    aMessage.Read(offset + sizeof(tlv), sizeof(rxSessionId), &rxSessionId);
-                    VerifyOrExit(sessionId == rxSessionId, state = StateTlv::kReject);
-                    break;
-                }
-
-                cur += sizeof(Tlv) + data->GetLength();
-            }
+            VerifyOrExit(sessionId != NULL && sessionId->GetCommissionerSessionId() == rxSessionId,
+                         state = StateTlv::kReject);
         }
 
         // verify that TLV data size is less than maximum TLV value size
@@ -512,38 +498,19 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
     // notify commissioner if update is from thread device
     if (!isUpdateFromCommissioner)
     {
-        uint8_t *cur;
-        uint8_t *end;
-        uint8_t length;
-        uint16_t locator = 0xffff;
+        BorderAgentLocatorTlv *borderAgentLocator;
         Ip6::Address destination;
 
-        cur = mNetworkDataLeader.GetCommissioningData(length);
-        VerifyOrExit(cur != NULL && length != 0, ;);
-        end = cur + length;
-
-        while (cur < end)
-        {
-            Tlv *data = reinterpret_cast<Tlv *>(cur);
-
-            if (data->GetType() == Tlv::kBorderAgentLocator)
-            {
-                locator = static_cast<BorderAgentLocatorTlv *>(data)->GetBorderAgentLocator();
-                break;
-            }
-
-            cur += sizeof(Tlv) + data->GetLength();
-        }
-
-        // verify that Border Agent Locator should be available
-        VerifyOrExit(locator != 0xffff, ;);
+        borderAgentLocator = static_cast<BorderAgentLocatorTlv *>(mNetworkDataLeader.GetCommissioningDataSubTlv(
+                                                                      Tlv::kBorderAgentLocator));
+        VerifyOrExit(borderAgentLocator != NULL,);
 
         memset(&destination, 0, sizeof(destination));
         destination = mNetif.GetMle().GetMeshLocal16();
         destination.mFields.m16[4] = HostSwap16(0x0000);
         destination.mFields.m16[5] = HostSwap16(0x00ff);
         destination.mFields.m16[6] = HostSwap16(0xfe00);
-        destination.mFields.m16[7] = HostSwap16(locator);
+        destination.mFields.m16[7] = HostSwap16(borderAgentLocator->GetBorderAgentLocator());
 
         mNetif.GetLeader().SendDatasetChanged(destination);
     }

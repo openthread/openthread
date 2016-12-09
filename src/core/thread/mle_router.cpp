@@ -2582,8 +2582,7 @@ ThreadError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, u
     MeshCoP::ExtendedPanIdTlv extPanId;
     MeshCoP::NetworkNameTlv networkName;
     MeshCoP::JoinerUdpPortTlv joinerUdpPort;
-    uint8_t *cur;
-    uint8_t length;
+    MeshCoP::Tlv *steeringData;
 
     VerifyOrExit((message = NewMessage()) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
@@ -2623,22 +2622,11 @@ ThreadError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, u
     SuccessOrExit(error = message->Append(&networkName, sizeof(tlv) + networkName.GetLength()));
 
     // Steering Data TLV
-    if ((cur = mNetif.GetNetworkDataLeader().GetCommissioningData(length)) != NULL)
+    steeringData = mNetif.GetNetworkDataLeader().GetCommissioningDataSubTlv(MeshCoP::Tlv::kSteeringData);
+
+    if (steeringData != NULL)
     {
-        uint8_t *end = cur + length;
-
-        while (cur < end)
-        {
-            MeshCoP::Tlv *meshcop = reinterpret_cast<MeshCoP::Tlv *>(cur);
-
-            if (meshcop->GetType() == MeshCoP::Tlv::kSteeringData)
-            {
-                SuccessOrExit(message->Append(meshcop, sizeof(*meshcop) + meshcop->GetLength()));
-                break;
-            }
-
-            cur += sizeof(*meshcop) + meshcop->GetLength();
-        }
+        SuccessOrExit(message->Append(steeringData, sizeof(*steeringData) + steeringData->GetLength()));
     }
 
     // Joiner UDP Port TLV
