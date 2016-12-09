@@ -235,6 +235,10 @@ const char *otLogRegionToString(otLogRegion aRegion)
         retval = "-DIAG----";
         break;
 
+    case kLogRegionPlatform:
+        retval = "-PLAT----";
+        break;
+
     default:
         retval = "---------";
         break;

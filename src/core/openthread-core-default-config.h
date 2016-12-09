@@ -382,6 +382,14 @@
 #define OPENTHREAD_CONFIG_LOG_NETDIAG
 
 /**
+* @def OPENTHREAD_CONFIG_LOG_PLATFORM
+*
+* Define to enable platform region logging.
+*
+*/
+//#define OPENTHREAD_CONFIG_LOG_PLATFORM
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_PREPREND_LEVEL
  *
  * Define to prepend the log level to all log messages

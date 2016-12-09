@@ -37,24 +37,28 @@
 
 namespace Thread {
 
-ThreadError ThreadTlv::GetTlv(const Message &message, Type type, uint16_t maxLength, ThreadTlv &tlv)
+ThreadError ThreadTlv::GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, ThreadTlv &aTlv)
 {
     ThreadError error = kThreadError_Parse;
-    uint16_t offset = message.GetOffset();
-    uint16_t end = message.GetLength();
+    uint16_t offset = aMessage.GetOffset();
+    uint16_t end = aMessage.GetLength();
 
     while (offset < end)
     {
-        message.Read(offset, sizeof(ThreadTlv), &tlv);
+        ThreadTlv tlv;
+        uint16_t totalLength;
 
-        if (tlv.GetType() == type && (offset + sizeof(tlv) + tlv.GetLength()) <= end)
+        aMessage.Read(offset, sizeof(tlv), &tlv);
+        totalLength = sizeof(tlv) + tlv.GetLength();
+
+        if (tlv.GetType() == aType && (offset + totalLength) <= end)
         {
-            if (maxLength > sizeof(tlv) + tlv.GetLength())
+            if (aMaxLength > totalLength)
             {
-                maxLength = sizeof(tlv) + tlv.GetLength();
+                aMaxLength = totalLength;
             }
 
-            message.Read(offset, maxLength, &tlv);
+            aMessage.Read(offset, aMaxLength, &aTlv);
 
             ExitNow(error = kThreadError_None);
         }

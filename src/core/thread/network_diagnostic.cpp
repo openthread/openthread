@@ -110,17 +110,21 @@ exit:
 }
 
 void NetworkDiagnostic::HandleDiagnosticGetResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                                    ThreadError result)
+                                                    const otMessageInfo *aMessageInfo, ThreadError aResult)
 {
     static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetResponse(static_cast<Coap::Header *>(aHeader),
-                                                                            static_cast<Message *>(aMessage), result);
+                                                                            static_cast<Message *>(aMessage),
+                                                                            static_cast<const Ip6::MessageInfo *>(aMessageInfo),
+                                                                            aResult);
 }
 
-void NetworkDiagnostic::HandleDiagnosticGetResponse(Coap::Header *aHeader, Message *aMessage, ThreadError result)
+void NetworkDiagnostic::HandleDiagnosticGetResponse(Coap::Header *aHeader, Message *aMessage,
+                                                    const Ip6::MessageInfo *aMessageInfo, ThreadError aResult)
 {
     (void)aMessage;
+    (void)aMessageInfo;
 
-    VerifyOrExit(result == kThreadError_None, ;);
+    VerifyOrExit(aResult == kThreadError_None, ;);
     VerifyOrExit(aHeader->GetCode() == kCoapResponseChanged, ;);
 
     otLogInfoNetDiag("Network Diagnostic get response received");

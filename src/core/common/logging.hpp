@@ -278,7 +278,7 @@ extern "C" {
 #ifdef OPENTHREAD_CONFIG_LOG_MLE
 #define otLogCritMle(aFormat, ...) otLogCrit(kLogRegionMle, aFormat, ## __VA_ARGS__)
 #define otLogWarnMle(aFormat, ...) otLogWarn(kLogRegionMle, aFormat, ## __VA_ARGS__)
-#define otLogWarnMleErr(aError, aFormat, ...) otLogWarn(kLogRegionMle, aFormat ", 0x%x\n", ## __VA_ARGS__)
+#define otLogWarnMleErr(aError, aFormat, ...) otLogWarn(kLogRegionMle, aFormat ", 0x%x", ## __VA_ARGS__)
 #define otLogInfoMle(aFormat, ...) otLogInfo(kLogRegionMle, aFormat, ## __VA_ARGS__)
 #define otLogDebgMle(aFormat, ...) otLogDebg(kLogRegionMle, aFormat, ## __VA_ARGS__)
 #else
@@ -537,7 +537,7 @@ extern "C" {
 #define otLogWarnMac(aFormat, ...) otLogWarn(kLogRegionMac, aFormat, ## __VA_ARGS__)
 #define otLogInfoMac(aFormat, ...) otLogInfo(kLogRegionMac, aFormat, ## __VA_ARGS__)
 #define otLogDebgMac(aFormat, ...) otLogDebg(kLogRegionMac, aFormat, ## __VA_ARGS__)
-#define otLogDebgMacErr(aError, aFormat, ...) otLogWarn(kLogRegionMac, aFormat ", 0x%x\n", ## __VA_ARGS__)
+#define otLogDebgMacErr(aError, aFormat, ...) otLogWarn(kLogRegionMac, aFormat ", 0x%x", ## __VA_ARGS__)
 #else
 #define otLogCritMac(aFormat, ...)
 #define otLogWarnMac(aFormat, ...)
@@ -661,6 +661,57 @@ extern "C" {
 #define otLogCertMeshCoP(aFormat, ...) _otLogFormatter(kLogLevelNone, kLogRegionMeshCoP, aFormat, ## __VA_ARGS__)
 #else
 #define otLogCertMeshCoP(aFormat, ...)
+#endif
+
+/**
+* @def otLogCritPlat
+*
+* This method generates a log with level critical for the Platform region.
+*
+* @param[in]  aFormat  A pointer to the format string.
+* @param[in]  ...      Arguments for the format specification.
+*
+*/
+
+/**
+* @def otLogWarnPlat
+*
+* This method generates a log with level warning for the Platform region.
+*
+* @param[in]  aFormat  A pointer to the format string.
+* @param[in]  ...      Arguments for the format specification.
+*
+*/
+
+/**
+* @def otLogInfoPlat
+*
+* This method generates a log with level info for the Platform region.
+*
+* @param[in]  aFormat  A pointer to the format string.
+* @param[in]  ...      Arguments for the format specification.
+*
+*/
+
+/**
+* @def otLogDebgPlat
+*
+* This method generates a log with level debug for the Platform region.
+*
+* @param[in]  aFormat  A pointer to the format string.
+* @param[in]  ...      Arguments for the format specification.
+*
+*/
+#ifdef OPENTHREAD_CONFIG_LOG_PLATFORM
+#define otLogCritPlat(aFormat, ...) otLogCrit(kLogRegionPlatform, aFormat, ## __VA_ARGS__)
+#define otLogWarnPlat(aFormat, ...) otLogWarn(kLogRegionPlatform, aFormat, ## __VA_ARGS__)
+#define otLogInfoPlat(aFormat, ...) otLogInfo(kLogRegionPlatform, aFormat, ## __VA_ARGS__)
+#define otLogDebgPlat(aFormat, ...) otLogDebg(kLogRegionPlatform, aFormat, ## __VA_ARGS__)
+#else
+#define otLogCritPlat(aFormat, ...)
+#define otLogWarnPlat(aFormat, ...)
+#define otLogInfoPlat(aFormat, ...)
+#define otLogDebgPlat(aFormat, ...)
 #endif
 
 #endif // WINDOWS_LOGGING

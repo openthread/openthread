@@ -98,7 +98,7 @@ class OpenThread(IThci):
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("delete() Error: " + str(e))
 
-    def _expect(self, expected, times=100):
+    def _expect(self, expected, times=50):
         """Find the `expected` line within `times` trials.
 
         Args:
@@ -107,7 +107,11 @@ class OpenThread(IThci):
         """
         print '[%s] Expecting [%s]' % (self.port, expected)
 
+        retry_times = 10
         for i in range(0, times):
+            if not retry_times:
+                break
+
             line = self._readline()
             print '[%s] Got line [%s]' % (self.port, line)
 
@@ -116,7 +120,8 @@ class OpenThread(IThci):
                 return
 
             if not line:
-                time.sleep(1)
+                retry_times -= 1
+                time.sleep(0.1)
 
         raise Exception('failed to find expected string[%s]' % expected)
 
@@ -696,7 +701,6 @@ class OpenThread(IThci):
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("intialize() Error: " + str(e))
             self.deviceConnected = False
-            sys.exit()
 
     def setNetworkName(self, networkName='GRL'):
         """set Thread Network name

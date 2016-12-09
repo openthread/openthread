@@ -71,7 +71,7 @@ ThreadError Client::Stop(void)
         message = message->GetNext();
 
         requestMetadata.ReadFrom(*messageToRemove);
-        FinalizeCoapTransaction(*messageToRemove, requestMetadata, NULL, NULL, kThreadError_Abort);
+        FinalizeCoapTransaction(*messageToRemove, requestMetadata, NULL, NULL, NULL, kThreadError_Abort);
     }
 
     return CoapBase::Stop();
@@ -286,7 +286,7 @@ void Client::HandleRetransmissionTimer(void)
         else
         {
             // No expected response or acknowledgment.
-            FinalizeCoapTransaction(*message, requestMetadata, NULL, NULL, kThreadError_ResponseTimeout);
+            FinalizeCoapTransaction(*message, requestMetadata, NULL, NULL, NULL, kThreadError_ResponseTimeout);
         }
 
         message = nextMessage;
@@ -343,14 +343,15 @@ exit:
 }
 
 void Client::FinalizeCoapTransaction(Message &aRequest, const RequestMetadata &aRequestMetadata,
-                                     Header *aResponseHeader, Message *aResponse, ThreadError aResult)
+                                     Header *aResponseHeader, Message *aResponse,
+                                     const Ip6::MessageInfo *aMessageInfo, ThreadError aResult)
 {
     DequeueMessage(aRequest);
 
     if (aRequestMetadata.mResponseHandler != NULL)
     {
         aRequestMetadata.mResponseHandler(aRequestMetadata.mResponseContext, aResponseHeader,
-                                          aResponse, aResult);
+                                          aResponse, aMessageInfo, aResult);
     }
 }
 
@@ -377,7 +378,7 @@ void Client::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &a
     case kCoapTypeReset:
         if (responseHeader.IsEmpty())
         {
-            FinalizeCoapTransaction(*message, requestMetadata, NULL, NULL, kThreadError_Abort);
+            FinalizeCoapTransaction(*message, requestMetadata, NULL, NULL, NULL, kThreadError_Abort);
         }
 
         // Silently ignore non-empty reset messages (RFC 7252, p. 4.2).
@@ -402,7 +403,7 @@ void Client::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &a
         else if (responseHeader.IsResponse() && responseHeader.IsTokenEqual(requestHeader))
         {
             // Piggybacked response.
-            FinalizeCoapTransaction(*message, requestMetadata, &responseHeader, &aMessage, kThreadError_None);
+            FinalizeCoapTransaction(*message, requestMetadata, &responseHeader, &aMessage, &aMessageInfo, kThreadError_None);
         }
 
         // Silently ignore acknowledgments carrying requests (RFC 7252, p. 4.2)
@@ -417,7 +418,7 @@ void Client::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &a
             SendEmptyAck(aMessageInfo.GetPeerAddr(), aMessageInfo.GetPeerPort(), responseHeader.GetMessageId());
         }
 
-        FinalizeCoapTransaction(*message, requestMetadata, &responseHeader, &aMessage, kThreadError_None);
+        FinalizeCoapTransaction(*message, requestMetadata, &responseHeader, &aMessage, &aMessageInfo, kThreadError_None);
 
         break;
     }

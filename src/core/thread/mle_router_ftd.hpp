@@ -757,8 +757,9 @@ private:
     void UpdateRoutes(const RouteTlv &aTlv, uint8_t aRouterId);
 
     static void HandleAddressSolicitResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                             ThreadError result);
-    void HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMessage, ThreadError result);
+                                             const otMessageInfo *aMessageInfo, ThreadError result);
+    void HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMessage,
+                                      const Ip6::MessageInfo *aMessageInfo, ThreadError result);
     static void HandleAddressRelease(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
                                      const otMessageInfo *aMessageInfo);
     void HandleAddressRelease(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);

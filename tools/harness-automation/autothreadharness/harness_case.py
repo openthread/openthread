@@ -54,6 +54,9 @@ THREAD_CHANNEL_MAX = 26
 THREAD_CHANNEL_MIN = 11
 """Minimum channel number of thread protocol"""
 
+DEFAULT_TIMEOUT = 2700
+"""Timeout for each test case in seconds"""
+
 class HarnessCase(unittest.TestCase):
     """This is the case class of all automation test cases.
 
@@ -117,6 +120,8 @@ class HarnessCase(unittest.TestCase):
 
     auto_dut = settings.AUTO_DUT
     """bool: whether use harness auto dut feature"""
+
+    timeout = hasattr(settings, 'TIMEOUT') and settings.TIMEOUT or DEFAULT_TIMEOUT
 
     def wait_until(self, what, times=-1):
         """Wait until `what` return True
@@ -412,8 +417,6 @@ class HarnessCase(unittest.TestCase):
             raise Exception('Golden devices is not enough')
 
         device_type_id = settings.GOLDEN_DEVICE_TYPE
-        if device_type_id == 'OpenThread':
-            device_type_id = 'ARM'
 
         while golden_devices_required:
             device = browser.find_element_by_id(device_type_id)
@@ -445,7 +448,7 @@ class HarnessCase(unittest.TestCase):
                 self._connect_devices()
                 button_next = browser.find_element_by_id('nextBtn')
                 if not self.wait_until(lambda: 'disabled' not in button_next.get_attribute('class'),
-                                       times=(30 + 3 * golden_devices_required)):
+                                       times=(30 + 4 * self.golden_devices_required)):
                     bad_ones = []
                     for selected_hw in selected_hw_set:
                         form_inputs = selected_hw.find_elements_by_tag_name('input')
@@ -523,12 +526,14 @@ class HarnessCase(unittest.TestCase):
         checkbox = None
         self.wait_until(lambda: self._browser.find_elements_by_css_selector('.tree-node .tree-title') and True)
         elems = self._browser.find_elements_by_css_selector('.tree-node .tree-title')
+        finder = re.compile(r'.*\b' + case + r'\b')
+        finder_dotted = re.compile(r'.*\b' + case.replace(' ', r'\.') + r'\b')
         for elem in elems:
             action_chains = ActionChains(self._browser)
             action_chains.move_to_element(elem)
             action_chains.perform()
             logger.debug(elem.text)
-            if elem.text.startswith(case):
+            if finder.match(elem.text) or finder_dotted.match(elem.text):
                 parent = elem.find_element_by_xpath('..')
                 checkbox = parent.find_element_by_class_name('tree-checkbox')
                 break
@@ -590,12 +595,12 @@ class HarnessCase(unittest.TestCase):
         self._browser.switch_to.window(main_window)
 
         timestamp = time.strftime('%Y%m%d%H%M%S')
-        os.system('move "%%HOMEPATH%%\\Downloads\\NewPdf_*.pdf" %s\\%s-%s.pdf'
-                  % (self.result_dir, self.__class__.__name__, timestamp))
-        os.system('move "%%HOMEPATH%%\\Downloads\\ExcelReport*.xlsx" %s\\%s-%s.xlsx'
-                  % (self.result_dir, self.__class__.__name__, timestamp))
-        os.system('move "%s\\Captures\\*.pcapng" %s\\%s-%s.pcapng'
-                  % (settings.HARNESS_HOME, self.result_dir, self.__class__.__name__, timestamp))
+        os.system('copy "%%HOMEPATH%%\\Downloads\\NewPdf_*.pdf" %s\\'
+                  % self.result_dir)
+        os.system('copy "%%HOMEPATH%%\\Downloads\\ExcelReport_*.xlsx" %s\\'
+                  % self.result_dir)
+        os.system('copy "%s\\Captures\\*.pcapng" %s\\'
+                  % (settings.HARNESS_HOME, self.result_dir))
         os.system('copy "%s\\Thread_Harness\\temp\\*.*" "%s"'
                   % (settings.HARNESS_HOME, self.result_dir))
 
@@ -605,7 +610,8 @@ class HarnessCase(unittest.TestCase):
         logger.debug('waiting for dialog')
         done = False
         error = False
-        while not done:
+
+        while not done and self.timeout:
             try:
                 dialog = self._browser.find_element_by_id('RemoteConfirm')
             except:
@@ -639,6 +645,8 @@ class HarnessCase(unittest.TestCase):
                 logger.exception('Test stopped')
                 time.sleep(5)
                 done = True
+
+            self.timeout -= 1
 
         # Wait until case really stopped
         self.wait_until(lambda: self._browser.find_element_by_id('runTest') and True, 30)

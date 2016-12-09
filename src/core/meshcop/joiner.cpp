@@ -231,20 +231,23 @@ exit:
     otLogFuncExit();
 }
 
-void Joiner::HandleJoinerFinalizeResponse(void *aContext, otCoapHeader *aHeader,
-                                          otMessage aMessage, ThreadError result)
+void Joiner::HandleJoinerFinalizeResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                          const otMessageInfo *aMessageInfo, ThreadError aResult)
 {
     static_cast<Joiner *>(aContext)->HandleJoinerFinalizeResponse(
-        static_cast<Coap::Header *>(aHeader), static_cast<Message *>(aMessage), result);
+        static_cast<Coap::Header *>(aHeader), static_cast<Message *>(aMessage),
+        static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
 }
 
-void Joiner::HandleJoinerFinalizeResponse(Coap::Header *aHeader, Message *aMessage, ThreadError result)
+void Joiner::HandleJoinerFinalizeResponse(Coap::Header *aHeader, Message *aMessage,
+                                          const Ip6::MessageInfo *aMessageInfo, ThreadError aResult)
 {
+    (void) aMessageInfo;
     StateTlv state;
 
     otLogFuncEntry();
 
-    VerifyOrExit(result == kThreadError_None &&
+    VerifyOrExit(aResult == kThreadError_None &&
                  aHeader->GetType() == kCoapTypeAcknowledgment &&
                  aHeader->GetCode() == kCoapResponseChanged, ;);
 

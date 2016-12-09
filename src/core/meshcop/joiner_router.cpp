@@ -77,14 +77,12 @@ void JoinerRouter::HandleNetifStateChanged(uint32_t aFlags, void *aContext)
 
 void JoinerRouter::HandleNetifStateChanged(uint32_t aFlags)
 {
-    uint8_t length;
-
     VerifyOrExit(mNetif.GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD, ;);
     VerifyOrExit(aFlags & OT_THREAD_NETDATA_UPDATED, ;);
 
     mNetif.GetIp6Filter().RemoveUnsecurePort(mSocket.GetSockName().mPort);
 
-    if (mNetif.GetNetworkDataLeader().GetCommissioningData(length) != NULL)
+    if (mNetif.GetNetworkDataLeader().GetCommissioningData() != NULL)
     {
         Ip6::SockAddr sockaddr;
 
@@ -106,27 +104,14 @@ exit:
 
 ThreadError JoinerRouter::GetBorderAgentRloc(uint16_t &aRloc)
 {
-    ThreadError error = kThreadError_NotFound;
-    uint8_t *cur;
-    uint8_t *end;
-    uint8_t length;
+    ThreadError error = kThreadError_None;
+    BorderAgentLocatorTlv *borderAgentLocator;
 
-    VerifyOrExit((cur = mNetif.GetNetworkDataLeader().GetCommissioningData(length)) != NULL, ;);
+    borderAgentLocator = static_cast<BorderAgentLocatorTlv *>(mNetif.GetNetworkDataLeader().GetCommissioningDataSubTlv(
+                                                                  Tlv::kBorderAgentLocator));
+    VerifyOrExit(borderAgentLocator != NULL, error = kThreadError_NotFound);
 
-    end = cur + length;
-
-    while (cur < end)
-    {
-        Tlv *tlv = reinterpret_cast<Tlv *>(cur);
-
-        if (tlv->GetType() == Tlv::kBorderAgentLocator)
-        {
-            aRloc = reinterpret_cast<BorderAgentLocatorTlv *>(tlv)->GetBorderAgentLocator();
-            ExitNow(error = kThreadError_None);
-        }
-
-        cur += sizeof(Tlv) + tlv->GetLength();
-    }
+    aRloc = borderAgentLocator->GetBorderAgentLocator();
 
 exit:
     return error;
@@ -134,30 +119,19 @@ exit:
 
 uint16_t JoinerRouter::GetJoinerUdpPort(void)
 {
-    uint16_t joinerUdpPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
-    uint8_t *cur;
-    uint8_t *end;
-    uint8_t length;
+    uint16_t rval = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
+    JoinerUdpPortTlv *joinerUdpPort;
 
-    VerifyOrExit(!mIsJoinerPortConfigured, joinerUdpPort = mJoinerUdpPort);
-    VerifyOrExit((cur = mNetif.GetNetworkDataLeader().GetCommissioningData(length)) != NULL, ;);
+    VerifyOrExit(!mIsJoinerPortConfigured, rval = mJoinerUdpPort);
 
-    end = cur + length;
+    joinerUdpPort = static_cast<JoinerUdpPortTlv *>(mNetif.GetNetworkDataLeader().GetCommissioningDataSubTlv(
+                                                        Tlv::kJoinerUdpPort));
+    VerifyOrExit(joinerUdpPort != NULL,);
 
-    while (cur < end)
-    {
-        Tlv *tlv = reinterpret_cast<Tlv *>(cur);
-
-        if (tlv->GetType() == Tlv::kJoinerUdpPort)
-        {
-            ExitNow(joinerUdpPort = reinterpret_cast<JoinerUdpPortTlv *>(tlv)->GetUdpPort());
-        }
-
-        cur += sizeof(Tlv) + tlv->GetLength();
-    }
+    rval = joinerUdpPort->GetUdpPort();
 
 exit:
-    return joinerUdpPort;
+    return rval;
 }
 
 ThreadError JoinerRouter::SetJoinerUdpPort(uint16_t aJoinerUdpPort)
