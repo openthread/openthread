@@ -129,6 +129,10 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
 
     case kLogRegionNetDiag:
         LOG_PRINTF("NDG ");
+        break;
+
+    case kLogRegionPlatform:
+        LOG_PRINTF("PLAT ");
     }
 
     va_start(args, aFormat);
