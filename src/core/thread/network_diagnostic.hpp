@@ -110,8 +110,9 @@ public:
 
 private:
     static void HandleDiagnosticGetResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                            ThreadError result);
-    void HandleDiagnosticGetResponse(Coap::Header *aHeader, Message *aMessage, ThreadError result);
+                                            const otMessageInfo *aMessageInfo, ThreadError aResult);
+    void HandleDiagnosticGetResponse(Coap::Header *aHeader, Message *aMessage,
+                                     const Ip6::MessageInfo *aMessageInfo, ThreadError aResult);
 
     static void HandleDiagnosticGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
                                     const otMessageInfo *aMessageInfo);

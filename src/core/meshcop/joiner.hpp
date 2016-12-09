@@ -97,9 +97,10 @@ private:
     static void HandleSecureCoapClientConnect(void *aContext);
 
     void SendJoinerFinalize(void);
-    static void HandleJoinerFinalizeResponse(void *aContext, otCoapHeader *aHeader,
-                                             otMessage aMessage, ThreadError result);
-    void HandleJoinerFinalizeResponse(Coap::Header *aHeader, Message *aMessage, ThreadError result);
+    static void HandleJoinerFinalizeResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                             const otMessageInfo *aMessageInfo, ThreadError aResult);
+    void HandleJoinerFinalizeResponse(Coap::Header *aHeader, Message *aMessage,
+                                      const Ip6::MessageInfo *aMessageInfo, ThreadError aResult);
 
     static void HandleJoinerEntrust(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
                                     const otMessageInfo *aMessageInfo);
