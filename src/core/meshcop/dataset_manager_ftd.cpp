@@ -67,22 +67,7 @@ ActiveDataset::ActiveDataset(ThreadNetif &aThreadNetif):
 
 bool ActiveDataset::IsTlvInitialized(Tlv::Type aType)
 {
-    bool rval = false;
-    const Tlv *cur = reinterpret_cast<const Tlv *>(mLocal.GetBytes());
-    const Tlv *end = reinterpret_cast<const Tlv *>(mLocal.GetBytes() + mLocal.GetSize());
-
-    while (cur < end)
-    {
-        if (aType == cur->GetType())
-        {
-            ExitNow(rval = true);
-        }
-
-        cur = cur->GetNext();
-    }
-
-exit:
-    return rval;
+    return mLocal.Get(aType) != NULL;
 }
 
 ThreadError ActiveDataset::GenerateLocal(void)
