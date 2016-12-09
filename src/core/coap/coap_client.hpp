@@ -250,8 +250,8 @@ private:
     void DequeueMessage(Message &aMessage);
     Message *FindRelatedRequest(const Header &aResponseHeader, const Ip6::MessageInfo &aMessageInfo,
                                 Header &aRequestHeader, RequestMetadata &aRequestMetadata);
-    void FinalizeCoapTransaction(Message &aRequest, const RequestMetadata &aRequestMetadata,
-                                 Header *aResponseHeader, Message *aResponse, ThreadError aResult);
+    void FinalizeCoapTransaction(Message &aRequest, const RequestMetadata &aRequestMetadata, Header *aResponseHeader,
+                                 Message *aResponse, const Ip6::MessageInfo *aMessageInfo, ThreadError aResult);
 
     ThreadError SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void SendEmptyMessage(const Ip6::Address &aAddress, uint16_t aPort, uint16_t aMessageId, Header::Type aType);

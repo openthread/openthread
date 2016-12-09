@@ -3667,15 +3667,19 @@ exit:
 }
 
 void MleRouter::HandleAddressSolicitResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                             ThreadError result)
+                                             const otMessageInfo *aMessageInfo, ThreadError aResult)
 {
     static_cast<MleRouter *>(aContext)->HandleAddressSolicitResponse(static_cast<Coap::Header *>(aHeader),
-                                                                     static_cast<Message *>(aMessage), result);
+                                                                     static_cast<Message *>(aMessage),
+                                                                     static_cast<const Ip6::MessageInfo *>(aMessageInfo),
+                                                                     aResult);
 }
 
-void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMessage, ThreadError result)
+void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMessage,
+                                             const Ip6::MessageInfo *aMessageInfo, ThreadError aResult)
 {
-    (void) result;
+    (void)aResult;
+    (void)aMessageInfo;
 
     ThreadStatusTlv statusTlv;
     ThreadRloc16Tlv rlocTlv;
@@ -3684,7 +3688,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
     Router *router;
     bool old;
 
-    VerifyOrExit(result == kThreadError_None && aHeader != NULL && aMessage != NULL, ;);
+    VerifyOrExit(aResult == kThreadError_None && aHeader != NULL && aMessage != NULL, ;);
 
     VerifyOrExit(aHeader->GetCode() == kCoapResponseChanged, ;);
 
