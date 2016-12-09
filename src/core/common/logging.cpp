@@ -156,27 +156,27 @@ const char *otLogLevelToString(otLogLevel aLevel)
     switch (aLevel)
     {
     case kLogLevelNone:
-        retval = "-NONE-";
+        retval = "NONE";
         break;
 
     case kLogLevelCrit:
-        retval = "-CRIT-";
+        retval = "CRIT";
         break;
 
     case kLogLevelWarn:
-        retval = "-WARN-";
+        retval = "WARN";
         break;
 
     case kLogLevelInfo:
-        retval = "-INFO-";
+        retval = "INFO";
         break;
 
     case kLogLevelDebg:
-        retval = "-DEBG-";
+        retval = "DEBG";
         break;
 
     default:
-        retval = "------";
+        retval = "----";
         break;
     }
 
