@@ -279,6 +279,11 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     va_start(args, aFormat);
     if ((charsWritten = vsnprintf(logString, sizeof(logString), aFormat, args)) > 0)
     {
+        if (charsWritten > static_cast<int>(sizeof(logString) - 1))
+        {
+            charsWritten = static_cast<int>(sizeof(logString) - 1);
+        }
+
         otNcpStreamWrite(0, reinterpret_cast<uint8_t*>(logString), charsWritten);
     }
     va_end(args);
