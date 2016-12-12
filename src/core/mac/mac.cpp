@@ -1342,9 +1342,10 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
 
         if (receive)
         {
+            otDumpDebgMac("RX", aFrame->GetHeader(), aFrame->GetLength());
+
             for (Receiver *receiver = mReceiveHead; receiver; receiver = receiver->mNext)
             {
-                otDumpDebgMac("RX", aFrame->GetHeader(), aFrame->GetLength());
                 receiver->HandleReceivedFrame(*aFrame);
             }
         }
