@@ -1232,7 +1232,7 @@ const char *otLogRegionToString(otLogRegion aRegion);
     otPlatLog(                                                              \
         aLogLevel,                                                          \
         aRegion,                                                            \
-        "[%s]%s: " aFormat OPENTHREAD_CONFIG_LOG_SUFFIX,                      \
+        "[%s]%s: " aFormat OPENTHREAD_CONFIG_LOG_SUFFIX,                    \
         otLogLevelToString(aLogLevel),                                      \
         otLogRegionToString(aRegion),                                       \
         ## __VA_ARGS__                                                      \
@@ -1247,7 +1247,7 @@ const char *otLogRegionToString(otLogRegion aRegion);
     otPlatLog(                                                              \
         aLogLevel,                                                          \
         aRegion,                                                            \
-        "[%s]: " aFormat OPENTHREAD_CONFIG_LOG_SUFFIX,                        \
+        "[%s]: " aFormat OPENTHREAD_CONFIG_LOG_SUFFIX,                      \
         otLogLevelToString(aLogLevel),                                      \
         ## __VA_ARGS__                                                      \
     )
