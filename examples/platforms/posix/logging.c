@@ -62,79 +62,6 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
 
     LOG_PRINTF("%s.%06d ", timeString, (uint32_t)tv.tv_usec);
 
-    switch (aLogLevel)
-    {
-    case kLogLevelNone:
-        LOG_PRINTF("NONE ");
-        break;
-
-    case kLogLevelCrit:
-        LOG_PRINTF("CRIT ");
-        break;
-
-    case kLogLevelWarn:
-        LOG_PRINTF("WARN ");
-        break;
-
-    case kLogLevelInfo:
-        LOG_PRINTF("INFO ");
-        break;
-
-    case kLogLevelDebg:
-        LOG_PRINTF("DEBG ");
-        break;
-    }
-
-    switch (aLogRegion)
-    {
-    case kLogRegionApi:
-        LOG_PRINTF("API  ");
-        break;
-
-    case kLogRegionMle:
-        LOG_PRINTF("MLE  ");
-        break;
-
-    case kLogRegionArp:
-        LOG_PRINTF("ARP  ");
-        break;
-
-    case kLogRegionNetData:
-        LOG_PRINTF("NETD ");
-        break;
-
-    case kLogRegionIp6:
-        LOG_PRINTF("IPV6 ");
-        break;
-
-    case kLogRegionIcmp:
-        LOG_PRINTF("ICMP ");
-        break;
-
-    case kLogRegionMac:
-        LOG_PRINTF("MAC  ");
-        break;
-
-    case kLogRegionMem:
-        LOG_PRINTF("MEM  ");
-        break;
-
-    case kLogRegionNcp:
-        LOG_PRINTF("NCP  ");
-        break;
-
-    case kLogRegionMeshCoP:
-        LOG_PRINTF("MCOP ");
-        break;
-
-    case kLogRegionNetDiag:
-        LOG_PRINTF("NDG ");
-        break;
-
-    case kLogRegionPlatform:
-        LOG_PRINTF("PLAT ");
-    }
-
     va_start(args, aFormat);
     charsWritten = vsnprintf(&logString[offset], sizeof(logString) - offset, aFormat, args);
     va_end(args);
@@ -143,5 +70,8 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
 
 exit:
     fprintf(stderr, "%s\r\n", logString);
+
+    (void)aLogLevel;
+    (void)aLogRegion;
 }
 
