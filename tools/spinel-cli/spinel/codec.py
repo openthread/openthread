@@ -848,13 +848,28 @@ class WpanApi(SpinelCodec):
         with self.__queue_prop[tid].mutex:
             self.__queue_prop[tid].queue.clear()
 
-    def queue_wait_for_prop(self, _prop, tid=SPINEL.HEADER_DEFAULT, timeout=TIMEOUT_PROP):
+    def queue_get(self, tid, timeout = None):
         try:
-            item = self.__queue_prop[tid].get(True, timeout)
-            # self.__queue_prop[tid].task_done()
+            if (timeout):
+                item = self.__queue_prop[tid].get(True, timeout)
+            else:
+                item = self.__queue_prop[tid].get_nowait()
         except Queue.Empty:
             item = None
+        return item
 
+    def queue_wait_for_prop(self, _prop, tid=SPINEL.HEADER_DEFAULT, timeout=TIMEOUT_PROP):
+        start = time.time()
+        item = self.queue_get(tid, timeout)
+        if (_prop is not None):
+            while (item and (item.prop != _prop)):
+                self.__queue_prop[tid].put_nowait(item)
+                reminder = timeout - (time.time() - start)
+                if (reminder <= 0.0):
+                    item = None
+                    break
+                item = self.queue_get(tid, reminder)
+                # self.__queue_prop[tid].task_done()
         return item
 
     def ip_send(self, pkt):
