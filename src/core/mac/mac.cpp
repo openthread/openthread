@@ -1018,6 +1018,7 @@ void Mac::SentFrame(ThreadError aError)
         sender->mNext = NULL;
 
         mDataSequence++;
+        otDumpDebgMac("TX", sendFrame.GetHeader(), sendFrame.GetLength());
         sender->HandleSentFrame(sendFrame, aError);
 
         ScheduleNextTransmission();
@@ -1343,6 +1344,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
         {
             for (Receiver *receiver = mReceiveHead; receiver; receiver = receiver->mNext)
             {
+                otDumpDebgMac("RX", aFrame->GetHeader(), aFrame->GetLength());
                 receiver->HandleReceivedFrame(*aFrame);
             }
         }
