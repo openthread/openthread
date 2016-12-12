@@ -941,10 +941,6 @@ ThreadError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
         aFrame.SetFramePending(true);
     }
 
-#if 0
-    dump("sent frame", aFrame.GetHeader(), aFrame.GetLength());
-#endif
-
 exit:
     return error;
 }
@@ -1420,10 +1416,6 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
     uint8_t commandId;
     Child *child = NULL;
     ThreadError error = kThreadError_None;
-
-#if 0
-    dump("received frame", aFrame.GetHeader(), aFrame.GetLength());
-#endif
 
     if (!mEnabled)
     {
