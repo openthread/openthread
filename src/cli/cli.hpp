@@ -224,6 +224,7 @@ private:
     static void s_HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyList, uint8_t aEnergyListLength,
                                      void *aContext);
     static void s_HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, void *aContext);
+    static void s_HandleDiagnosticGetResponse(otMessage aMessage, const otMessageInfo *aMessageInfo, void *aContext);
 
     void HandleEchoResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void HandlePingTimer();
@@ -232,6 +233,7 @@ private:
     void HandleLinkPcapReceive(const RadioPacket *aFrame);
     void HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyList, uint8_t aEnergyListLength);
     void HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask);
+    void HandleDiagnosticGetResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static const struct Command sCommands[];
 
