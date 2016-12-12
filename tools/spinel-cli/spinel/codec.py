@@ -883,6 +883,12 @@ class WpanApi(SpinelCodec):
 
         self.transact(SPINEL.CMD_PROP_VALUE_SET, pay)
 
+    def cmd_reset(self):
+        self.queue_wait_prepare(None, SPINEL.HEADER_ASYNC)
+        self.transact(SPINEL.CMD_RESET, "", SPINEL.HEADER_DEFAULT)
+        result = self.queue_wait_for_prop(SPINEL.PROP_LAST_STATUS, SPINEL.HEADER_ASYNC, 5)
+        return (result is not None and result.value == 114)
+
     def cmd_send(self, command_id, payload="", tid=SPINEL.HEADER_DEFAULT):
         self.queue_wait_prepare(None, tid)
         self.transact(command_id, payload, tid)
