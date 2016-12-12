@@ -36,52 +36,56 @@ from binascii import hexlify
 import common
 import network_data
 
-CommandType = common.enum(LINK_REQUEST=0,
-                          LINK_ACCEPT=1,
-                          LINK_ACCEPT_AND_REQUEST=2,
-                          LINK_REJECT=3,
-                          ADVERTISEMENT=4,
-                          UPDATE=5,
-                          UPDATE_REQUEST=6,
-                          DATA_REQUEST=7,
-                          DATA_RESPONSE=8,
-                          PARENT_REQUEST=9,
-                          PARENT_RESPONSE=10,
-                          CHILD_ID_REQUEST=11,
-                          CHILD_ID_RESPONSE=12,
-                          CHILD_UPDATE_REQUEST=13,
-                          CHILD_UPDATE_RESPONSE=14,
-                          ANNOUNCE=15,
-                          DISCOVERY_REQUEST=16,
-                          DISCOVERY_RESPONSE=17
-                          )
+from enum import IntEnum
 
-TlvType = common.enum(SOURCE_ADDRESS=0,
-                      MODE=1,
-                      TIMEOUT=2,
-                      CHALLENGE=3,
-                      RESPONSE=4,
-                      LINK_LAYER_FRAME_COUNTER=5,
-                      MLE_FRAME_COUNTER=8,
-                      ROUTE64=9,
-                      ADDRESS16=10,
-                      LEADER_DATA=11,
-                      NETWORK_DATA=12,
-                      TLV_REQUEST=13,
-                      SCAN_MASK=14,
-                      CONNECTIVITY=15,
-                      LINK_MARGIN=16,
-                      STATUS=17,
-                      VERSION=18,
-                      ADDRESS_REGISTRATION=19,
-                      CHANNEL=20,
-                      PANID=21,
-                      ACTIVE_TIMESTAMP=22,
-                      PENDING_TIMESTAMP=23,
-                      ACTIVE_OPERATIONAL_DATASET=24,
-                      PENDING_OPERATIONAL_DATASET=25,
-                      THREAD_DISCOVERY=26
-                      )
+
+class CommandType(IntEnum):
+    LINK_REQUEST = 0
+    LINK_ACCEPT = 1
+    LINK_ACCEPT_AND_REQUEST = 2
+    LINK_REJECT = 3
+    ADVERTISEMENT = 4
+    UPDATE = 5
+    UPDATE_REQUEST = 6
+    DATA_REQUEST = 7
+    DATA_RESPONSE = 8
+    PARENT_REQUEST = 9
+    PARENT_RESPONSE = 10
+    CHILD_ID_REQUEST = 11
+    CHILD_ID_RESPONSE = 12
+    CHILD_UPDATE_REQUEST = 13
+    CHILD_UPDATE_RESPONSE = 14
+    ANNOUNCE = 15
+    DISCOVERY_REQUEST = 16
+    DISCOVERY_RESPONSE = 17
+
+
+class TlvType(IntEnum):
+    SOURCE_ADDRESS = 0
+    MODE = 1
+    TIMEOUT = 2
+    CHALLENGE = 3
+    RESPONSE = 4
+    LINK_LAYER_FRAME_COUNTER = 5
+    MLE_FRAME_COUNTER = 8
+    ROUTE64 = 9
+    ADDRESS16 = 10
+    LEADER_DATA = 11
+    NETWORK_DATA = 12
+    TLV_REQUEST = 13
+    SCAN_MASK = 14
+    CONNECTIVITY = 15
+    LINK_MARGIN = 16
+    STATUS = 17
+    VERSION = 18
+    ADDRESS_REGISTRATION = 19
+    CHANNEL = 20
+    PANID = 21
+    ACTIVE_TIMESTAMP = 22
+    PENDING_TIMESTAMP = 23
+    ACTIVE_OPERATIONAL_DATASET = 24
+    PENDING_OPERATIONAL_DATASET = 25
+    THREAD_DISCOVERY = 26
 
 
 class SourceAddress(object):
@@ -94,8 +98,7 @@ class SourceAddress(object):
         return self._address
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.address == other.address
 
@@ -135,11 +138,12 @@ class Mode(object):
         return self._network_data
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
-        return self.receiver == other.receiver and self.secure == other.secure and \
-            self.device_type == other.device_type and self.network_data == other.network_data
+        return self.receiver == other.receiver and \
+            self.secure == other.secure and \
+            self.device_type == other.device_type and \
+            self.network_data == other.network_data
 
     def __repr__(self):
         return "Mode(receiver={}, secure={}, device_type={}, network_data={})".format(self.receiver,
@@ -169,8 +173,7 @@ class Timeout(object):
         return self._timeout
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.timeout == other.timeout
 
@@ -195,13 +198,12 @@ class Challenge(object):
         return self._challenge
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.challenge == other.challenge
 
     def __repr__(self):
-        return "Challenge(challenge=b'{}')".format(hexlify(self.challenge))
+        return "Challenge(challenge={})".format(hexlify(self.challenge))
 
 
 class ChallengeFactory:
@@ -221,13 +223,12 @@ class Response(object):
         return self._response
 
     def __eq__(self, other):
-        if not isinstance(other, Response):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.response == other.response
 
     def __repr__(self):
-        return "Response(response=b'{}')".format(hexlify(self.response))
+        return "Response(response={})".format(hexlify(self.response))
 
 
 class ResponseFactory:
@@ -247,8 +248,7 @@ class LinkLayerFrameCounter(object):
         return self._frame_counter
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.frame_counter == other.frame_counter
 
@@ -273,8 +273,7 @@ class MleFrameCounter(object):
         return self._frame_counter
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.frame_counter == other.frame_counter
 
@@ -309,8 +308,7 @@ class LinkQualityAndRouteData(object):
         return self._route
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.output == other.output and self.input == other.input and self.route == other.route
 
@@ -348,10 +346,10 @@ class Route64(object):
         return self._link_quality_and_route_data
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
-        return self.id_sequence == other.id_sequence and self.router_id_mask == other.router_id_mask and \
+        return self.id_sequence == other.id_sequence and \
+            self.router_id_mask == other.router_id_mask and \
             self.link_quality_and_route_data == other.link_quality_and_route_data
 
     def __repr__(self):
@@ -387,8 +385,7 @@ class Address16(object):
         return self._address
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.address == other.address
 
@@ -433,8 +430,7 @@ class LeaderData(object):
         return self._leader_router_id
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.partition_id == other.partition_id and \
             self.weighting == other.weighting and \
@@ -468,8 +464,7 @@ class NetworkData(object):
         return self._tlvs
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.tlvs == other.tlvs
 
@@ -498,8 +493,7 @@ class TlvRequest(object):
         return self._tlvs
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.tlvs == other.tlvs
 
@@ -530,8 +524,7 @@ class ScanMask(object):
         return self._end_device
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.router == other.router and self.end_device == other.end_device
 
@@ -607,8 +600,7 @@ class Connectivity(object):
         return self._sed_datagram_count
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.pp == other.pp and \
             self.link_quality_3 == other.link_quality_3 and \
@@ -621,7 +613,7 @@ class Connectivity(object):
             self.sed_datagram_count == other.sed_datagram_count
 
     def __repr__(self):
-        return "Connectivity(pp={}, \
+        return r"Connectivity(pp={}, \
                  link_quality_3={}, \
                  link_quality_2={}, \
                  link_quality_1={}, \
@@ -683,8 +675,7 @@ class LinkMargin(object):
         return self._link_margin
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.link_margin == other.link_margin
 
@@ -709,8 +700,7 @@ class Status(object):
         return self._status
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.status == other.status
 
@@ -735,8 +725,7 @@ class Version(object):
         return self._version
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.version == other.version
 
@@ -761,13 +750,12 @@ class AddressFull(object):
         return self._ipv6_address
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.ipv6_address == other.ipv6_address
 
     def __repr__(self):
-        return "AddressFull(ipv6_address=b'{}'')".format(hexlify(self.ipv6_address))
+        return "AddressFull(ipv6_address={}')".format(hexlify(self.ipv6_address))
 
 
 class AddressFullFactory:
@@ -793,13 +781,12 @@ class AddressCompressed(object):
         return self._iid
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.cid == other.cid and self.iid == other.iid
 
     def __repr__(self):
-        return "AddressCompressed(cid={}, iid=b'{}'')".format(self.cid, hexlify(self.iid))
+        return "AddressCompressed(cid={}, iid={}')".format(self.cid, hexlify(self.iid))
 
 
 class AddressCompressedFactory:
@@ -820,8 +807,7 @@ class AddressRegistration(object):
         return self._addresses
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.addresses == other.addresses
 
@@ -866,8 +852,7 @@ class Channel(object):
         return self._channel
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.channel_page == other.channel_page and \
             self.channel == other.channel
@@ -894,8 +879,7 @@ class PanId:
         return self._pan_id
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.pan_id == other.pan_id
 
@@ -930,8 +914,7 @@ class ActiveTimestamp(object):
         return self._u
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.timestamp_seconds == other.timestamp_seconds and \
             self.timestamp_ticks == other.timestamp_ticks and \
@@ -974,8 +957,7 @@ class PendingTimestamp(object):
         return self._u
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("Could not compare {} and {}".format(type(self), type(other)))
+        common.expect_the_same_class(self, other)
 
         return self.timestamp_seconds == other.timestamp_seconds and \
             self.timestamp_ticks == other.timestamp_ticks and \
@@ -1053,7 +1035,7 @@ class MleCommand(object):
 
     def __repr__(self):
         tlvs_str = ", ".join(["{}".format(tlv) for tlv in self.tlvs])
-        return "MleCommand(type={}, tlvs=[{}])".format(self.type, tlvs_str)
+        return "MleCommand(type={}, tlvs=[{}])".format(self.type.name, tlvs_str)
 
 
 class MleCommandFactory:
@@ -1078,7 +1060,7 @@ class MleCommandFactory:
             raise KeyError("Could not find TLV factory. Unsupported TLV type: {}".format(_type))
 
     def _parse_tlv(self, data, message_info):
-        _type = ord(data.read(1))
+        _type = TlvType(ord(data.read(1)))
         length = self._get_length(data)
         value = data.read(length)
 
@@ -1087,7 +1069,7 @@ class MleCommandFactory:
         return factory.parse(io.BytesIO(value), message_info)
 
     def parse(self, data, message_info):
-        cmd_type = ord(data.read(1))
+        cmd_type = CommandType(ord(data.read(1)))
         tlvs = []
 
         while data.tell() < len(data.getvalue()):
