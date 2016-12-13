@@ -246,12 +246,28 @@ void DatasetManager::HandleTimer(void *aContext)
 
 void DatasetManager::HandleTimer(void)
 {
+    const Timestamp *pendingActiveTimestamp = NULL;
+    const Timestamp *localActiveTimestamp = mNetif.GetActiveDataset().GetLocal().GetTimestamp();
+    const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>
+                                    (mNetif.GetPendingDataset().GetNetwork().Get(Tlv::kActiveTimestamp));
+    pendingActiveTimestamp = static_cast<const Timestamp *>(tlv);
+
     VerifyOrExit(mMle.IsAttached(),);
 
     VerifyOrExit(mLocal.Compare(mNetwork) < 0,);
 
     Register();
-    mTimer.Start(1000);
+
+    if (pendingActiveTimestamp != NULL &&
+        localActiveTimestamp->Compare(*pendingActiveTimestamp) >= 0)
+    {
+        // stop registration attempts during dataset transition
+        ExitNow();
+    }
+    else
+    {
+        mTimer.Start(1000);
+    }
 
 exit:
     return;
