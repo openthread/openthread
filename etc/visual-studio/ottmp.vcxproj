@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="openthread.configuration.props" />
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{1EAFF7C8-8215-4EDA-83B2-EEB56CECE84D}</ProjectGuid>
+    <TemplateGuid>{497e31cb-056b-4f31-abb8-447fd55ee5a5}</TemplateGuid>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
+    <RootNamespace>Thread</RootNamespace>
+    <TargetVersion>Windows10</TargetVersion>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
+    <ConfigurationType>Driver</ConfigurationType>
+    <DriverType>KMDF</DriverType>
+    <DriverTargetPlatform>Universal</DriverTargetPlatform>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup>
+    <OutDir>..\..\build\bin\$(Platform)\$(Configuration)\sys\</OutDir>
+    <IntDir>..\..\build\obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreProcessorDefinitions>
+        %(PreProcessorDefinitions);
+        NDIS_MINIPORT_DRIVER=1;
+        NDIS_WDM=1;
+        NDIS650_MINIPORT=1;
+        OTTMP_LEGACY=1;
+      </PreProcessorDefinitions>
+      <AdditionalIncludeDirectories>
+        %(AdditionalIncludeDirectories);
+        ..\..\include;
+        ..\..\examples\drivers\windows\include;
+        ..\..\examples\drivers\windows\ottmp;
+      </AdditionalIncludeDirectories>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>%(DisableSpecificWarnings);4200;4201;4214</DisableSpecificWarnings>
+      <WppEnabled>true</WppEnabled>
+      <WppScanConfigurationData>..\..\include\platform\logging-windows.h</WppScanConfigurationData>
+      <WppAdditionalOptions>-km %(WppAdditionalOptions)</WppAdditionalOptions>
+      <WppModuleName>ottmp</WppModuleName>
+      <WppSearchString>WPP_INIT_TRACING</WppSearchString>
+      <EnablePREfast>true</EnablePREfast>
+    </ClCompile>
+    <ResourceCompile>
+      <PreProcessorDefinitions>
+        %(PreProcessorDefinitions);
+        NDIS_MINIPORT_DRIVER=1;
+        NDIS_WDM=1;
+        NDIS650_MINIPORT=1;
+        OTTMP_LEGACY=1;
+      </PreProcessorDefinitions>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..;.;</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>
+        %(AdditionalDependencies);
+        ndis.lib;
+      </AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command Condition="'$(Platform)'=='ARM'">inf2cat /driver:$(TargetDir) /os:8_ARM</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\examples\drivers\windows\ottmp\adapter.cpp" />
+    <ClCompile Include="..\..\examples\drivers\windows\ottmp\device.cpp" />
+    <ClCompile Include="..\..\examples\drivers\windows\ottmp\driver.cpp" />
+    <ClCompile Include="..\..\examples\drivers\windows\ottmp\hdlc.cpp" />
+    <ClCompile Include="..\..\examples\drivers\windows\ottmp\oid.cpp" />
+    <ClCompile Include="..\..\examples\drivers\windows\ottmp\serial.cpp" />
+    <ResourceCompile Include="..\..\examples\drivers\windows\ottmp\ottmp.rc" />
+    <Inf Include="..\..\examples\drivers\windows\ottmp\ottmp.inf" />
+    <ClInclude Include="..\..\examples\drivers\windows\ottmp\adapter.hpp" />
+    <ClInclude Include="..\..\examples\drivers\windows\ottmp\device.hpp" />
+    <ClInclude Include="..\..\examples\drivers\windows\ottmp\driver.hpp" />
+    <ClInclude Include="..\..\examples\drivers\windows\ottmp\hardware.hpp" />
+    <ClInclude Include="..\..\examples\drivers\windows\ottmp\hdlc.hpp" />
+    <ClInclude Include="..\..\examples\drivers\windows\ottmp\oid.hpp" />
+    <ClInclude Include="..\..\examples\drivers\windows\ottmp\pch.hpp" />
+    <ClInclude Include="..\..\examples\drivers\windows\ottmp\serial.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <FilesToPackage Include="$(TargetPath)" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>

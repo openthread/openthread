@@ -25,43 +25,43 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+ 
+#include <windows.h>
+#include <ntverp.h>
 
-/**
- * @file
- *   This file implements the OpenThread platform abstraction for logging.
- *
+/*-----------------------------------------------*/
+/* the following lines are specific to this file */
+/*-----------------------------------------------*/
+
+/* VER_FILETYPE, VER_FILESUBTYPE, VER_FILEDESCRIPTION_STR
+ * and VER_INTERNALNAME_STR must be defined before including COMMON.VER
+ * The strings don't need a '\0', since common.ver has them.
  */
+#define    VER_FILETYPE    VFT_DRV
+/* possible values:        VFT_UNKNOWN
+                VFT_APP
+                VFT_DLL
+                VFT_DRV
+                VFT_FONT
+                VFT_VXD
+                VFT_STATIC_LIB
+*/
+#define    VER_FILESUBTYPE    VFT2_DRV_NETWORK
+/* possible values        VFT2_UNKNOWN
+                VFT2_DRV_PRINTER
+                VFT2_DRV_KEYBOARD
+                VFT2_DRV_LANGUAGE
+                VFT2_DRV_DISPLAY
+                VFT2_DRV_MOUSE
+                VFT2_DRV_NETWORK
+                VFT2_DRV_SYSTEM
+                VFT2_DRV_INSTALLABLE
+                VFT2_DRV_SOUND
+                VFT2_DRV_COMM
+*/
+#define VER_FILEDESCRIPTION_STR     "OpenThread Tunnel Miniport"
+#define VER_INTERNALNAME_STR        "OTTMP.SYS"
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
 
+#include "common.ver"   // NT5.0 version file.
 
-#include <platform/logging.h>
-#if OPENTHREAD_ENABLE_CLI_LOGGING
-#include <ctype.h>
-#include <inttypes.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
-
-#include <common/code_utils.hpp>
-#include <cli/cli-uart.h>
-#endif
-
-void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
-{
-#if OPENTHREAD_ENABLE_CLI_LOGGING
-    va_list args;
-    va_start(args, aFormat);
-    otCliLog(aLogLevel, aLogRegion, aFormat, args);
-    va_end(args);
-#else
-    (void)aLogLevel;
-    (void)aLogRegion;
-    (void)aFormat;
-#endif // OPENTHREAD_ENABLE_CLI_LOGGING
-}

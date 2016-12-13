@@ -172,9 +172,11 @@ exit:
 
 ThreadError MleRouter::ReleaseRouterId(uint8_t aRouterId)
 {
+    ThreadError error = kThreadError_None;
     Router *router = GetRouter(aRouterId);
 
-    assert(router != NULL);
+    VerifyOrExit(router != NULL, error = kThreadError_InvalidArgs);
+    VerifyOrExit(mDeviceState == kDeviceStateLeader, error = kThreadError_InvalidState);
 
     otLogInfoMle("delete router id %d", aRouterId);
     router->mAllocated = false;
@@ -196,7 +198,9 @@ ThreadError MleRouter::ReleaseRouterId(uint8_t aRouterId)
     mAddressResolver.Remove(aRouterId);
     mNetworkData.RemoveBorderRouter(GetRloc16(aRouterId));
     ResetAdvertiseInterval();
-    return kThreadError_None;
+
+exit:
+    return error;
 }
 
 uint32_t MleRouter::GetLeaderAge(void) const
@@ -2578,8 +2582,7 @@ ThreadError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, u
     MeshCoP::ExtendedPanIdTlv extPanId;
     MeshCoP::NetworkNameTlv networkName;
     MeshCoP::JoinerUdpPortTlv joinerUdpPort;
-    uint8_t *cur;
-    uint8_t length;
+    MeshCoP::Tlv *steeringData;
 
     VerifyOrExit((message = NewMessage()) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
@@ -2619,22 +2622,11 @@ ThreadError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, u
     SuccessOrExit(error = message->Append(&networkName, sizeof(tlv) + networkName.GetLength()));
 
     // Steering Data TLV
-    if ((cur = mNetif.GetNetworkDataLeader().GetCommissioningData(length)) != NULL)
+    steeringData = mNetif.GetNetworkDataLeader().GetCommissioningDataSubTlv(MeshCoP::Tlv::kSteeringData);
+
+    if (steeringData != NULL)
     {
-        uint8_t *end = cur + length;
-
-        while (cur < end)
-        {
-            MeshCoP::Tlv *meshcop = reinterpret_cast<MeshCoP::Tlv *>(cur);
-
-            if (meshcop->GetType() == MeshCoP::Tlv::kSteeringData)
-            {
-                SuccessOrExit(message->Append(meshcop, sizeof(*meshcop) + meshcop->GetLength()));
-                break;
-            }
-
-            cur += sizeof(*meshcop) + meshcop->GetLength();
-        }
+        SuccessOrExit(message->Append(steeringData, sizeof(*steeringData) + steeringData->GetLength()));
     }
 
     // Joiner UDP Port TLV
@@ -3675,15 +3667,19 @@ exit:
 }
 
 void MleRouter::HandleAddressSolicitResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                             ThreadError result)
+                                             const otMessageInfo *aMessageInfo, ThreadError aResult)
 {
     static_cast<MleRouter *>(aContext)->HandleAddressSolicitResponse(static_cast<Coap::Header *>(aHeader),
-                                                                     static_cast<Message *>(aMessage), result);
+                                                                     static_cast<Message *>(aMessage),
+                                                                     static_cast<const Ip6::MessageInfo *>(aMessageInfo),
+                                                                     aResult);
 }
 
-void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMessage, ThreadError result)
+void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMessage,
+                                             const Ip6::MessageInfo *aMessageInfo, ThreadError aResult)
 {
-    (void) result;
+    (void)aResult;
+    (void)aMessageInfo;
 
     ThreadStatusTlv statusTlv;
     ThreadRloc16Tlv rlocTlv;
@@ -3692,7 +3688,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
     Router *router;
     bool old;
 
-    VerifyOrExit(result == kThreadError_None && aHeader != NULL && aMessage != NULL, ;);
+    VerifyOrExit(aResult == kThreadError_None && aHeader != NULL && aMessage != NULL, ;);
 
     VerifyOrExit(aHeader->GetCode() == kCoapResponseChanged, ;);
 

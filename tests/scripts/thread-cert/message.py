@@ -32,19 +32,22 @@ import ipaddress
 import struct
 import sys
 
+import coap
 import common
 import ipv6
 import lowpan
 import mac802154
 import mle
 
+from enum import IntEnum
 
-MessageType = common.enum("MLE",
-                          "COAP",
-                          "ICMP",
-                          "ACK",
-                          "BEACON",
-                          "DATA")
+class MessageType(IntEnum):
+    MLE = 0
+    COAP = 1
+    ICMP = 2
+    ACK = 3 
+    BEACON = 4
+    DATA = 5
 
 
 class Message(object):
@@ -54,6 +57,7 @@ class Message(object):
         self._channel = None
         self._mac_header = None
         self._ipv6_packet = None
+        self._coap = None
         self._mle = None
         self._icmp = None
 
@@ -62,8 +66,7 @@ class Message(object):
             self._type = MessageType.MLE
             self._mle = udp_datagram.payload
 
-        # TODO: Initial version doesn't support CoAP
-        elif isinstance(udp_datagram.payload, ipv6.UDPBytesPayload):
+        elif isinstance(udp_datagram.payload, (coap.CoapMessage, coap.CoapMessageProxy)):
             self._type = MessageType.COAP
             self._coap = udp_datagram.payload
 
@@ -118,12 +121,12 @@ class Message(object):
         self._extract_upper_layer_protocol(value.upper_layer_protocol)
 
     @property
+    def coap(self):
+        return self._coap
+
+    @property
     def mle(self):
         return self._mle
-
-    @mle.setter
-    def mle(self, value):
-        self._mle = value
 
     @property
     def icmp(self):
@@ -183,6 +186,50 @@ class Message(object):
 
         print("MleMessage doesn't contain optional TLV: {}".format(tlv_class_type))
 
+    def get_coap_message_tlv(self, tlv_class_type):
+        if self.type != MessageType.COAP:
+            raise ValueError("Invalid message type. Expected CoAP message.")
+
+        for tlv in self.coap.payload:
+            if isinstance(tlv, tlv_class_type):
+                return tlv
+
+    def assertCoapMessageContainsTlv(self, tlv_class_type):
+        if self.type != MessageType.COAP:
+            raise ValueError("Invalid message type. Expected CoAP message.")
+
+        contains_tlv = False
+        for tlv in self.coap.payload:
+            if isinstance(tlv, tlv_class_type):
+                contains_tlv = True
+                break
+
+        assert(contains_tlv == True)
+
+    def assertCoapMessageContainsOptionalTlv(self, tlv_class_type):
+        if self.type != MessageType.COAP:
+            raise ValueError("Invalid message type. Expected CoAP message.")
+
+        contains_tlv = False
+        for tlv in self.coap.payload:
+            if isinstance(tlv, tlv_class_type):
+                contains_tlv = True
+                break
+
+        print("CoapMessage doesn't contain optional TLV: {}".format(tlv_class_type))
+
+    def assertCoapMessageRequestUriPath(self, uri_path):
+        if self.type != MessageType.COAP:
+            raise ValueError("Invalid message type. Expected CoAP message.")
+
+        assert(uri_path == self.coap.uri_path)
+
+    def assertCoapMessageCode(self, code):
+        if self.type != MessageType.COAP:
+            raise ValueError("Invalid message type. Expected CoAP message.")
+
+        assert(code == self.coap.code)
+
     def assertSentToNode(self, node):
         sent_to_node = False
         dst_addr = self.ipv6_packet.ipv6_header.destination_address
@@ -214,6 +261,30 @@ class MessagesSet(object):
     @property
     def messages(self):
         return self._messages
+
+    def next_coap_message(self, code, uri_path=None, assert_enabled=True):
+        message = None
+
+        while self.messages:
+            m = self.messages.pop(0)
+
+            if m.type != MessageType.COAP:
+                continue
+
+            if uri_path is not None and m.coap.uri_path != uri_path:
+                continue
+
+            else:
+                if not m.coap.code.is_equal_dotted(code):
+                    continue
+
+            message = m
+            break
+
+        if assert_enabled:
+            assert message is not None, "Could not find CoapMessage with code: {}".format(code)
+
+        return message
 
     def next_mle_message(self, command_type, assert_enabled=True):
         message = self.next_mle_message_of_one_of_command_types(command_type,)
@@ -254,6 +325,15 @@ class MessagesSet(object):
                 return True
 
         return False
+
+    def does_not_contain_coap_message(self):
+        for m in self.messages:
+            if m.type != MessageType.COAP:
+                continue
+
+            return False
+
+        return True
 
 
 class MessageFactory:

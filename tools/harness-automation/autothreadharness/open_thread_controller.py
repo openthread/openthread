@@ -118,7 +118,7 @@ class OpenThreadController(threading.Thread):
         else:
             self.handle.write(data)
 
-    def _expect(self, expected, times=10):
+    def _expect(self, expected, times=50):
         """Find the `expected` line within `times` trials.
 
         Args:
@@ -126,17 +126,19 @@ class OpenThreadController(threading.Thread):
             times       int: number of trials
         """
         logger.debug('[%s] Expecting [%s]' % (self.port, expected))
-
+        retry_times = 10
         for i in range(0, times):
+            if not retry_times:
+                break
+
             line = self._readline()
-            logger.debug('[%s] Got line [%s]' % (self.port, line))
 
             if line == expected:
-                logger.debug('[%s] Expected [%s]' % (self.port, expected))
                 return
 
             if not line:
-                time.sleep(1)
+                retry_times -= 1
+                time.sleep(0.1)
 
         raise Exception('failed to find expected string[%s]' % expected)
 
@@ -179,7 +181,7 @@ class OpenThreadController(threading.Thread):
         self._write(line + '\r\n')
 
         # wait for write to complete
-        time.sleep(0.1)
+        time.sleep(0.5)
 
     def _req(self, req):
         """Send command and wait for response.
@@ -208,7 +210,7 @@ class OpenThreadController(threading.Thread):
 
                 while True:
                     line = self._readline()
-                    logger.debug(line)
+                    logger.debug('Got line %s', line)
 
                     if line == 'Done':
                         break

@@ -32,6 +32,7 @@ import unittest
 
 import config
 import mle
+import network_layer
 import node
 
 LEADER = 1
@@ -135,6 +136,20 @@ class Cert_5_1_01_RouterAttach(unittest.TestCase):
         msg.assertMleMessageContainsOptionalTlv(mle.NetworkData)
         msg.assertMleMessageContainsOptionalTlv(mle.Route64)
         msg.assertMleMessageContainsOptionalTlv(mle.AddressRegistration)
+
+        # 6 - Router
+        msg = router_messages.next_coap_message("0.02")
+        msg.assertCoapMessageRequestUriPath("/a/as")
+        msg.assertCoapMessageContainsTlv(network_layer.MacExtendedAddress)
+        msg.assertCoapMessageContainsTlv(network_layer.Status)
+
+        # 7 - Leader
+        msg = leader_messages.next_coap_message("2.04")
+        msg.assertCoapMessageContainsTlv(network_layer.Status)
+        msg.assertCoapMessageContainsOptionalTlv(network_layer.RouterMask)
+
+        status_tlv = msg.get_coap_message_tlv(network_layer.Status)
+        self.assertEqual(network_layer.StatusValues.SUCCESS, status_tlv.status)
 
         # 8 - Router
         msg = router_messages.next_mle_message(mle.CommandType.LINK_REQUEST)

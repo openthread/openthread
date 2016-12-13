@@ -32,6 +32,7 @@ import unittest
 
 import config
 import mle
+import network_layer
 import node
 
 LEADER = 1
@@ -112,18 +113,39 @@ class Cert_5_1_05_RouterAddressTimeout(unittest.TestCase):
         router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
         router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
 
+        msg = router1_messages.next_coap_message("0.02")
+        msg.assertCoapMessageRequestUriPath("/a/as")
+
         # 4 - Leader
         leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
         leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+
+        msg = leader_messages.next_coap_message("2.04")
+        msg.assertCoapMessageContainsTlv(network_layer.Status)
+        msg.assertCoapMessageContainsOptionalTlv(network_layer.RouterMask)
+
+        status_tlv = msg.get_coap_message_tlv(network_layer.Status)
+        self.assertEqual(network_layer.StatusValues.SUCCESS, status_tlv.status)
 
         # 6 - Router1
         router1_messages.next_mle_message(mle.CommandType.LINK_REQUEST)
         router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
         router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
 
+        msg = router1_messages.next_coap_message("0.02")
+        msg.assertCoapMessageRequestUriPath("/a/as")
+
         # 7 - Leader
         leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
         leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+
+        msg = leader_messages.next_coap_message("2.04")
+        msg.assertCoapMessageContainsTlv(network_layer.Status)
+        msg.assertCoapMessageContainsOptionalTlv(network_layer.RouterMask)
+
+        status_tlv = msg.get_coap_message_tlv(network_layer.Status)
+        self.assertEqual(network_layer.StatusValues.SUCCESS, status_tlv.status)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -148,6 +148,106 @@ void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const
     otLogDump("%s", buf);
 }
 
+#ifdef OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
+const char *otLogLevelToString(otLogLevel aLevel)
+{
+    const char *retval;
+
+    switch (aLevel)
+    {
+    case kLogLevelNone:
+        retval = "NONE";
+        break;
+
+    case kLogLevelCrit:
+        retval = "CRIT";
+        break;
+
+    case kLogLevelWarn:
+        retval = "WARN";
+        break;
+
+    case kLogLevelInfo:
+        retval = "INFO";
+        break;
+
+    case kLogLevelDebg:
+        retval = "DEBG";
+        break;
+
+    default:
+        retval = "----";
+        break;
+    }
+
+    return retval;
+}
+#endif // OPENTHREAD_CONFIG_LOG_PREPEND_REGION
+
+#ifdef OPENTHREAD_CONFIG_LOG_PREPEND_REGION
+const char *otLogRegionToString(otLogRegion aRegion)
+{
+    const char *retval;
+
+    switch (aRegion)
+    {
+    case kLogRegionApi:
+        retval = "-API-----";
+        break;
+
+    case kLogRegionMle:
+        retval = "-MLE-----";
+        break;
+
+    case kLogRegionArp:
+        retval = "-ARP-----";
+        break;
+
+    case kLogRegionNetData:
+        retval = "-N-DATA--";
+        break;
+
+    case kLogRegionIcmp:
+        retval = "-ICMP----";
+        break;
+
+    case kLogRegionIp6:
+        retval = "-IP6-----";
+        break;
+
+    case kLogRegionMac:
+        retval = "-MAC-----";
+        break;
+
+    case kLogRegionMem:
+        retval = "-MEM-----";
+        break;
+
+    case kLogRegionNcp:
+        retval = "-NCP-----";
+        break;
+
+    case kLogRegionMeshCoP:
+        retval = "-MESH-CP-";
+        break;
+
+    case kLogRegionNetDiag:
+        retval = "-DIAG----";
+        break;
+
+    case kLogRegionPlatform:
+        retval = "-PLAT----";
+        break;
+
+    default:
+        retval = "---------";
+        break;
+    }
+
+    return retval;
+}
+#endif // OPENTHREAD_CONFIG_LOG_PREPEND_REGION
+
 #ifdef __cplusplus
 };
 #endif

@@ -187,8 +187,6 @@ void MeshForwarder::UpdateIndirectMessages(void)
     Child *children;
     uint8_t numChildren;
 
-    VerifyOrExit(mSendBusy == false,);
-
     children = mMle.GetChildren(&numChildren);
 
     for (uint8_t i = 0; i < numChildren; i++)
@@ -209,6 +207,11 @@ void MeshForwarder::UpdateIndirectMessages(void)
 
             if (!message->IsChildPending())
             {
+                if (mSendMessage == message)
+                {
+                    mSendMessage = NULL;
+                }
+
                 mSendQueue.Dequeue(*message);
                 message->Free();
             }
@@ -217,9 +220,6 @@ void MeshForwarder::UpdateIndirectMessages(void)
         child->mQueuedIndirectMessageCnt = 0;
         ClearSrcMatchEntry(*child);
     }
-
-exit:
-    return;
 }
 
 void MeshForwarder::ScheduleTransmissionTask()
@@ -941,10 +941,6 @@ ThreadError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
         aFrame.SetFramePending(true);
     }
 
-#if 0
-    dump("sent frame", aFrame.GetHeader(), aFrame.GetLength());
-#endif
-
 exit:
     return error;
 }
@@ -1255,7 +1251,12 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
     Neighbor *neighbor;
 
     mSendBusy = false;
-    VerifyOrExit(mSendMessage != NULL, ;);
+
+    if (mSendMessage == NULL)
+    {
+        mScheduleTransmissionTask.Post();
+        ExitNow();
+    }
 
     aFrame.GetDstAddr(macDest);
 
@@ -1415,10 +1416,6 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
     uint8_t commandId;
     Child *child = NULL;
     ThreadError error = kThreadError_None;
-
-#if 0
-    dump("received frame", aFrame.GetHeader(), aFrame.GetLength());
-#endif
 
     if (!mEnabled)
     {

@@ -2522,7 +2522,7 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
     }
     else
     {
-        mNetif.GetPendingDataset().Clear(false);
+        mNetif.GetPendingDataset().Clear(true);
     }
 
     // Parent Attach Success

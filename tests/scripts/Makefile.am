@@ -121,6 +121,7 @@ EXTRA_DIST                                                         = \
     thread-cert/Cert_9_2_16_ActivePendingPartition.py                \
     thread-cert/Cert_9_2_17_Orphan.py                                \
     thread-cert/Cert_9_2_18_RollBackActiveTimestamp.py               \
+    thread-cert/coap.py                                              \
     thread-cert/common.py                                            \
     thread-cert/config.py                                            \
     thread-cert/ipv6.py                                              \
@@ -130,9 +131,19 @@ EXTRA_DIST                                                         = \
     thread-cert/mle.py                                               \
     thread-cert/net_crypto.py                                        \
     thread-cert/network_data.py                                      \
+    thread-cert/network_layer.py                                     \
     thread-cert/node.py                                              \
     thread-cert/node_cli.py                                          \
     thread-cert/sniffer.py                                           \
+    thread-cert/test_coap.py                                         \
+    thread-cert/test_common.py                                       \
+    thread-cert/test_crypto.py                                       \
+    thread-cert/test_ipv6.py                                         \
+    thread-cert/test_lowpan.py                                       \
+    thread-cert/test_mac802154.py                                    \
+    thread-cert/test_mle.py                                          \
+    thread-cert/test_network_data.py                                 \
+    thread-cert/test_network_layer.py                                \
     $(NULL)
 
 if OPENTHREAD_BUILD_TESTS
@@ -142,6 +153,15 @@ if OPENTHREAD_BUILD_TESTS
 check_PROGRAMS =
 
 check_SCRIPTS                                                      = \
+    thread-cert/test_coap.py                                         \
+    thread-cert/test_common.py                                       \
+    thread-cert/test_crypto.py                                       \
+    thread-cert/test_ipv6.py                                         \
+    thread-cert/test_lowpan.py                                       \
+    thread-cert/test_mac802154.py                                    \
+    thread-cert/test_mle.py                                          \
+    thread-cert/test_network_data.py                                 \
+    thread-cert/test_network_layer.py                                \
     $(NULL)
 
 if OPENTHREAD_TESTS_SUBSET1

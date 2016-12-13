@@ -39,10 +39,6 @@ import lowpan
 
 
 def create_default_lowpan_parser(context_manager):
-    dst_port_factories = {
-        5684: ipv6.UDPBytesPayloadFactory()
-    }
-
     return lowpan.LowpanParser(
         lowpan_mesh_header_factory=lowpan.LowpanMeshHeaderFactory(),
         lowpan_decompressor=config.create_default_lowpan_decompressor(context_manager),
@@ -52,7 +48,7 @@ def create_default_lowpan_parser(context_manager):
             ulpf={
                 17: ipv6.UDPDatagramFactory(
                     udp_header_factory=ipv6.UDPHeaderFactory(),
-                    dst_port_factories=dst_port_factories),
+                    udp_payload_factory=ipv6.UDPBytesPayloadFactory()),
                 58: ipv6.ICMPv6Factory(
                     body_factories=config.create_default_ipv6_icmp_body_factories()
                 )
@@ -2242,8 +2238,8 @@ class TestLowpanMeshHeaderFactory(unittest.TestCase):
         originator_address = any_mac_address()
         final_destination_address = any_mac_address()
 
-        v = int(originator_address.type == common.MacAddress.SHORT)
-        f = int(final_destination_address.type == common.MacAddress.SHORT)
+        v = int(originator_address.type == common.MacAddressType.SHORT)
+        f = int(final_destination_address.type == common.MacAddressType.SHORT)
 
         mesh_header_data = bytearray([(2 << 6) | (v << 5) | (f << 4) | hops_left]) + \
             originator_address.mac_address + final_destination_address.mac_address

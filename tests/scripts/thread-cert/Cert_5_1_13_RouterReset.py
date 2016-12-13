@@ -99,6 +99,11 @@ class Cert_5_1_13_RouterReset(unittest.TestCase):
         router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
         leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
 
+        msg = router1_messages.next_coap_message("0.02")
+        msg.assertCoapMessageRequestUriPath("/a/as")
+
+        msg = leader_messages.next_coap_message("2.04")
+
         router1_messages.next_mle_message(mle.CommandType.LINK_REQUEST)
         msg = leader_messages.next_mle_message_of_one_of_command_types(mle.CommandType.LINK_ACCEPT_AND_REQUEST,
                                                                        mle.CommandType.LINK_ACCEPT)

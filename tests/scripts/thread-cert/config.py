@@ -27,14 +27,15 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+import coap
 import ipv6
 import lowpan
 import message
 import mle
 import net_crypto
 import network_data
+import network_layer
 import sniffer
-
 
 DEFAULT_MASTER_KEY = bytearray([0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
                                 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])
@@ -42,12 +43,12 @@ DEFAULT_MASTER_KEY = bytearray([0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
 
 def create_default_network_data_prefix_sub_tlvs_factories():
     return {
-        0: network_data.HasRouteFactory(
+        network_data.TlvType.HAS_ROUTE: network_data.HasRouteFactory(
             routes_factory=network_data.RoutesFactory(
                 route_factory=network_data.RouteFactory())
         ),
-        2: network_data.BorderRouterFactory(),
-        3: network_data.LowpanIdFactory()
+        network_data.TlvType.BORDER_ROUTER: network_data.BorderRouterFactory(),
+        network_data.TlvType.LOWPAN_ID: network_data.LowpanIdFactory()
     }
 
 
@@ -58,7 +59,7 @@ def create_default_network_data_prefix_sub_tlvs_factory():
 
 def create_default_network_data_service_sub_tlvs_factories():
     return {
-        6: network_data.ServerFactory()
+        network_data.TlvType.SERVER: network_data.ServerFactory()
     }
 
 
@@ -69,10 +70,10 @@ def create_default_network_data_service_sub_tlvs_factory():
 
 def create_default_network_data_tlvs_factories():
     return {
-        1: network_data.PrefixFactory(
+        network_data.TlvType.PREFIX: network_data.PrefixFactory(
             sub_tlvs_factory=create_default_network_data_prefix_sub_tlvs_factory()
         ),
-        5: network_data.ServiceFactory(
+        network_data.TlvType.SERVICE: network_data.ServiceFactory(
             sub_tlvs_factory=create_default_network_data_service_sub_tlvs_factory()
         )
     }
@@ -141,6 +142,46 @@ def create_default_mle_message_factory(master_key):
         crypto_engine=create_default_mle_crypto_engine(master_key))
 
 
+def create_deafult_network_tlvs_factories():
+    return {
+        network_layer.TlvType.TARGET_EID: network_layer.TargetEidFactory(),
+        network_layer.TlvType.MAC_EXTENDED_ADDRESS: network_layer.MacExtendedAddressFactory(),
+        network_layer.TlvType.RLOC16: network_layer.Rloc16Factory(),
+        network_layer.TlvType.ML_EID: network_layer.MlEidFactory(),
+        network_layer.TlvType.STATUS: network_layer.StatusFactory(),
+        network_layer.TlvType.TIME_SINCE_LAST_TRANSACTION: network_layer.TimeSinceLastTransactionFactory(),
+        network_layer.TlvType.ROUTER_MASK: network_layer.RouterMaskFactory(),
+        network_layer.TlvType.ND_OPTION: network_layer.NdOptionFactory(),
+        network_layer.TlvType.ND_DATA: network_layer.NdDataFactory(),
+        network_layer.TlvType.THREAD_NETWORK_DATA: network_layer.ThreadNetworkDataFactory(create_default_network_data_tlvs_factory),
+
+        # Routing information are distributed in a Thread network by MLE Routing TLV
+        # which is in fact MLE Route64 TLV. Thread specificaton v1.1. - Chapter 5.20
+        network_layer.TlvType.MLE_ROUTING: create_default_mle_tlv_route64_factory()
+    }
+
+
+def create_default_network_tlvs_factory():
+    return network_layer.NetworkLayerTlvsFactory(
+        tlvs_factories=create_deafult_network_tlvs_factories())
+
+
+def create_default_uri_path_based_payload_factories():
+    network_layer_tlvs_factory = create_default_network_tlvs_factory()
+
+    return {
+        "/a/as": network_layer_tlvs_factory,
+        "/a/aq": network_layer_tlvs_factory,
+        "/a/an": network_layer_tlvs_factory
+    }
+
+
+def create_default_coap_message_factory():
+    return coap.CoapMessageFactory(options_factory=coap.CoapOptionsFactory(),
+                                   uri_path_based_payload_factories=create_default_uri_path_based_payload_factories(),
+                                   message_id_to_uri_path_binder=coap.CoapMessageIdToUriPathBinder())
+
+
 def create_default_ipv6_hop_by_hop_options_factories():
     return {
         109: ipv6.MPLOptionFactory()
@@ -152,35 +193,33 @@ def create_default_ipv6_hop_by_hop_options_factory():
         options_factories=create_default_ipv6_hop_by_hop_options_factories())
 
 
-def create_default_ipv6_udp_dst_port_factories(master_key):
+def create_default_based_on_src_dst_ports_udp_payload_factory(master_key):
     mle_message_factory = create_default_mle_message_factory(master_key)
+    coap_message_factory = create_default_coap_message_factory()
 
-    return {
-        19788: mle_message_factory,
-
-        # TODO: Improve CoAP support
-        61631: ipv6.UDPBytesPayloadFactory(),
-        49152: ipv6.UDPBytesPayloadFactory(),
-        49153: ipv6.UDPBytesPayloadFactory(),
-        49154: ipv6.UDPBytesPayloadFactory()
-    }
+    return ipv6.UdpBasedOnSrcDstPortsPayloadFactory(
+        src_dst_port_based_payload_factories={
+            19788: mle_message_factory,
+            61631: coap_message_factory
+        }
+    )
 
 
 def create_default_ipv6_icmp_body_factories():
     return {
-        0: ipv6.ICMPv6DestinationUnreachableFactory(),
-        128: ipv6.ICMPv6EchoBodyFactory(),
-        129: ipv6.ICMPv6EchoBodyFactory()
+        ipv6.ICMP_DESTINATION_UNREACHABLE: ipv6.ICMPv6DestinationUnreachableFactory(),
+        ipv6.ICMP_ECHO_REQUEST: ipv6.ICMPv6EchoBodyFactory(),
+        ipv6.ICMP_ECHO_RESPONSE: ipv6.ICMPv6EchoBodyFactory()
     }
 
 
 def create_default_ipv6_upper_layer_factories(master_key):
     return {
-        17: ipv6.UDPDatagramFactory(
+        ipv6.IPV6_NEXT_HEADER_UDP: ipv6.UDPDatagramFactory(
             udp_header_factory=ipv6.UDPHeaderFactory(),
-            dst_port_factories=create_default_ipv6_udp_dst_port_factories(master_key)
+            udp_payload_factory=create_default_based_on_src_dst_ports_udp_payload_factory(master_key)
         ),
-        58: ipv6.ICMPv6Factory(
+        ipv6.IPV6_NEXT_HEADER_ICMP: ipv6.ICMPv6Factory(
             body_factories=create_default_ipv6_icmp_body_factories()
         )
     }
@@ -188,7 +227,7 @@ def create_default_ipv6_upper_layer_factories(master_key):
 
 def create_default_lowpan_extension_headers_factories():
     return {
-        0: lowpan.LowpanHopByHopFactory(
+        ipv6.IPV6_NEXT_HEADER_HOP_BY_HOP: lowpan.LowpanHopByHopFactory(
             hop_by_hop_options_factory=create_default_ipv6_hop_by_hop_options_factory()
         )
     }
@@ -196,7 +235,7 @@ def create_default_lowpan_extension_headers_factories():
 
 def create_default_ipv6_extension_headers_factories():
     return {
-        0:  ipv6.HopByHopFactory(
+        ipv6.IPV6_NEXT_HEADER_HOP_BY_HOP:  ipv6.HopByHopFactory(
             hop_by_hop_options_factory=create_default_ipv6_hop_by_hop_options_factory())
     }
 

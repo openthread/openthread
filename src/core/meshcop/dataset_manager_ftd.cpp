@@ -65,62 +65,113 @@ ActiveDataset::ActiveDataset(ThreadNetif &aThreadNetif):
     mCoapServer.AddResource(mResourceGet);
 }
 
+bool ActiveDataset::IsTlvInitialized(Tlv::Type aType)
+{
+    return mLocal.Get(aType) != NULL;
+}
+
 ThreadError ActiveDataset::GenerateLocal(void)
 {
     ThreadError error = kThreadError_None;
     otOperationalDataset dataset;
 
-    VerifyOrExit(mNetif.GetMle().IsAttached() && mLocal.GetTimestamp() == NULL, error = kThreadError_InvalidState);
+    VerifyOrExit(mNetif.GetMle().IsAttached(), error = kThreadError_InvalidState);
 
     memset(&dataset, 0, sizeof(dataset));
 
     // Active Timestamp
-    dataset.mActiveTimestamp = 0;
-    dataset.mIsActiveTimestampSet = true;
+    if (!IsTlvInitialized(Tlv::kActiveTimestamp))
+    {
+        ActiveTimestampTlv activeTimestampTlv;
+        activeTimestampTlv.Init();
+        activeTimestampTlv.SetSeconds(0);
+        activeTimestampTlv.SetTicks(0);
+        mLocal.Set(activeTimestampTlv);
+    }
 
     // Channel
-    dataset.mChannel = mNetif.GetMac().GetChannel();
-    dataset.mIsChannelSet = true;
+    if (!IsTlvInitialized(Tlv::kChannel))
+    {
+        ChannelTlv tlv;
+        tlv.Init();
+        tlv.SetChannelPage(0);
+        tlv.SetChannel(mNetif.GetMac().GetChannel());
+        mLocal.Set(tlv);
+    }
 
     // channelMask
-    dataset.mChannelMaskPage0 = kPhySupportedChannelMask;
-    dataset.mIsChannelMaskPage0Set = true;
+    if (!IsTlvInitialized(Tlv::kChannelMask))
+    {
+        ChannelMask0Tlv tlv;
+        tlv.Init();
+        tlv.SetMask(kPhySupportedChannelMask);
+        mLocal.Set(tlv);
+    }
 
     // Extended PAN ID
-    memcpy(dataset.mExtendedPanId.m8, mNetif.GetMac().GetExtendedPanId(), sizeof(dataset.mExtendedPanId));
-    dataset.mIsExtendedPanIdSet = true;
+    if (!IsTlvInitialized(Tlv::kExtendedPanId))
+    {
+        ExtendedPanIdTlv tlv;
+        tlv.Init();
+        tlv.SetExtendedPanId(mNetif.GetMac().GetExtendedPanId());
+        mLocal.Set(tlv);
+    }
 
     // Mesh-Local Prefix
-    memcpy(dataset.mMeshLocalPrefix.m8, mNetif.GetMle().GetMeshLocalPrefix(), sizeof(dataset.mMeshLocalPrefix));
-    dataset.mIsMeshLocalPrefixSet = true;
+    if (!IsTlvInitialized(Tlv::kMeshLocalPrefix))
+    {
+        MeshLocalPrefixTlv tlv;
+        tlv.Init();
+        tlv.SetMeshLocalPrefix(mNetif.GetMle().GetMeshLocalPrefix());
+        mLocal.Set(tlv);
+    }
 
     // Master Key
-    const uint8_t *key;
-    uint8_t keyLength;
-    key = mNetif.GetKeyManager().GetMasterKey(&keyLength);
-    memcpy(dataset.mMasterKey.m8, key, keyLength);
-    dataset.mIsMasterKeySet = true;
+    if (!IsTlvInitialized(Tlv::kNetworkMasterKey))
+    {
+        NetworkMasterKeyTlv tlv;
+        tlv.Init();
+        tlv.SetNetworkMasterKey(mNetif.GetKeyManager().GetMasterKey(NULL));
+        mLocal.Set(tlv);
+    }
 
     // Network Name
-    const char *name;
-    name = mNetif.GetMac().GetNetworkName();
-    memcpy(dataset.mNetworkName.m8, name, strlen(name));
-    dataset.mIsNetworkNameSet = true;
+    if (!IsTlvInitialized(Tlv::kNetworkMasterKey))
+    {
+        NetworkNameTlv tlv;
+        tlv.Init();
+        tlv.SetNetworkName(mNetif.GetMac().GetNetworkName());
+        mLocal.Set(tlv);
+    }
 
     // Pan ID
-    dataset.mPanId = mNetif.GetMac().GetPanId();
-    dataset.mIsPanIdSet = true;
+    if (!IsTlvInitialized(Tlv::kPanId))
+    {
+        PanIdTlv tlv;
+        tlv.Init();
+        tlv.SetPanId(mNetif.GetMac().GetPanId());
+        mLocal.Set(tlv);
+    }
 
     // PSKc
-    memset(dataset.mPSKc.m8, 0, OT_PSKC_MAX_SIZE);
-    dataset.mIsPSKcSet = true;
+    if (!IsTlvInitialized(Tlv::kPSKc))
+    {
+        const uint8_t PSKc[16] = {0};
+        PSKcTlv tlv;
+        tlv.Init();
+        tlv.SetPSKc(PSKc);
+        mLocal.Set(tlv);
+    }
 
     // Security Policy
-    dataset.mSecurityPolicy.mRotationTime = static_cast<uint16_t>(mNetif.GetKeyManager().GetKeyRotation());
-    dataset.mSecurityPolicy.mFlags = mNetif.GetKeyManager().GetSecurityPolicyFlags();
-    dataset.mIsSecurityPolicySet = true;
-
-    mLocal.Set(dataset);
+    if (!IsTlvInitialized(Tlv::kSecurityPolicy))
+    {
+        SecurityPolicyTlv tlv;
+        tlv.Init();
+        tlv.SetRotationTime(static_cast<uint16_t>(mNetif.GetKeyManager().GetKeyRotation()));
+        tlv.SetFlags(mNetif.GetKeyManager().GetSecurityPolicyFlags());
+        mLocal.Set(tlv);
+    }
 
 exit:
     return error;
@@ -128,10 +179,7 @@ exit:
 
 void ActiveDataset::StartLeader(void)
 {
-    if (mLocal.GetTimestamp() == NULL)
-    {
-        GenerateLocal();
-    }
+    GenerateLocal();
 
     mLocal.Store();
     mNetwork = mLocal;

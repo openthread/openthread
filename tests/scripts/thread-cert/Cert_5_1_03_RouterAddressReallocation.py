@@ -32,6 +32,7 @@ import unittest
 
 import config
 import mle
+import network_layer
 import node
 
 LEADER = 1
@@ -110,13 +111,44 @@ class Cert_5_1_03_RouterAddressReallocation(unittest.TestCase):
 
         router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
         leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+
         router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
         leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+
+        msg = router1_messages.next_coap_message("0.02")
+        msg.assertCoapMessageRequestUriPath("/a/as")
+
+        msg = leader_messages.next_coap_message("2.04")
+
+        router1_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
 
         router2_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
         leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
         router1_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+
         router2_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
+
+        # Leader or Router1 can be parent of Router2
+        if leader_messages.contains_mle_message(mle.CommandType.CHILD_ID_RESPONSE):
+            leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+
+            msg = router2_messages.next_coap_message("0.02")
+            msg.assertCoapMessageRequestUriPath("/a/as")
+
+            msg = leader_messages.next_coap_message("2.04")
+
+        elif router1_messages.contains_mle_message(mle.CommandType.CHILD_ID_RESPONSE):
+            router1_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+
+            msg = router2_messages.next_coap_message("0.02")
+            msg.assertCoapMessageRequestUriPath("/a/as")
+
+            msg = router1_messages.next_coap_message("0.02")
+            msg.assertCoapMessageRequestUriPath("/a/as")
+
+            msg = leader_messages.next_coap_message("2.04")
+
+            msg = router1_messages.next_coap_message("2.04")
 
         # 5 - Router1
         # Router1 make two attempts to reconnect to its current Partition.
@@ -157,6 +189,16 @@ class Cert_5_1_03_RouterAddressReallocation(unittest.TestCase):
         msg.assertMleMessageContainsTlv(mle.Version)
         msg.assertMleMessageContainsTlv(mle.TlvRequest)
         msg.assertMleMessageDoesNotContainTlv(mle.AddressRegistration)
+
+        # 8 - Router1
+        msg = router1_messages.next_coap_message("0.02")
+        msg.assertCoapMessageRequestUriPath("/a/as")
+        msg.assertCoapMessageContainsTlv(network_layer.MacExtendedAddress)
+        msg.assertCoapMessageContainsOptionalTlv(network_layer.Rloc16)
+        msg.assertCoapMessageContainsTlv(network_layer.Status)
+
+        # 8 - Router2
+        msg = router2_messages.next_coap_message("2.04")
 
 
 if __name__ == '__main__':
