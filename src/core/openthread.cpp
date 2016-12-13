@@ -1189,6 +1189,13 @@ exit:
 
 #endif
 
+
+void otSetReceiveDiagnosticGetCallback(otInstance *aInstance, otReceiveDiagnosticGetCallback aCallback,
+                                       void *aCallbackContext)
+{
+    aInstance->mThreadNetif.GetNetworkDiagnostic().SetReceiveDiagnosticGetCallback(aCallback, aCallbackContext);
+}
+
 ThreadError otSendDiagnosticGet(otInstance *aInstance, const otIp6Address *aDestination, const uint8_t aTlvTypes[],
                                 uint8_t aCount)
 {

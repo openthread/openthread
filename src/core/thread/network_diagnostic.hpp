@@ -73,6 +73,16 @@ public:
     explicit NetworkDiagnostic(ThreadNetif &aThreadNetif);
 
     /**
+     * This method registers a callback to provide received raw DIAG_GET.rsp payload.
+     *
+     * @param[in]  aCallback         A pointer to a function that is called when an DIAG_GET.rsp is received or
+     *                               NULL to disable the callback.
+     * @param[in]  aCallbackContext  A pointer to application-specific context.
+     *
+     */
+    void SetReceiveDiagnosticGetCallback(otReceiveDiagnosticGetCallback aCallback, void *aCallbackContext);
+
+    /**
      * This method sends Diagnostic Get request.
      *
      * @param[in] aDestination  A reference to the destination address.
@@ -132,6 +142,9 @@ private:
     Mle::MleRouter &mMle;
     Mac::Mac &mMac;
     ThreadNetif &mNetif;
+
+    otReceiveDiagnosticGetCallback mReceiveDiagnosticGetCallback;
+    void *mReceiveDiagnosticGetCallbackContext;
 };
 
 /**

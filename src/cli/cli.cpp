@@ -143,6 +143,7 @@ Interpreter::Interpreter(otInstance *aInstance):
     memset(mSlaacAddresses, 0, sizeof(mSlaacAddresses));
     mInstance->mIp6.mIcmp.SetEchoReplyHandler(&s_HandleEchoResponse, this);
     otSetStateChangedCallback(mInstance, &Interpreter::s_HandleNetifStateChanged, this);
+    otSetReceiveDiagnosticGetCallback(mInstance, &Interpreter::s_HandleDiagnosticGetResponse, this);
 }
 
 int Interpreter::Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength)
@@ -2652,6 +2653,7 @@ void Interpreter::ProcessNetworkDiagnostic(int argc, char *argv[])
     if (strcmp(argv[0], "get") == 0)
     {
         otSendDiagnosticGet(mInstance, &address, payload, payloadIndex);
+        return;
     }
     else if (strcmp(argv[0], "reset") == 0)
     {
@@ -2660,6 +2662,36 @@ void Interpreter::ProcessNetworkDiagnostic(int argc, char *argv[])
 
 exit:
     AppendResult(error);
+}
+
+void Interpreter::s_HandleDiagnosticGetResponse(otMessage aMessage, const otMessageInfo *aMessageInfo,
+                                                void *aContext)
+{
+    static_cast<Interpreter *>(aContext)->HandleDiagnosticGetResponse(*static_cast<Message *>(aMessage),
+                                                                      *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+}
+
+void Interpreter::HandleDiagnosticGetResponse(Message &aMessage, const Ip6::MessageInfo &)
+{
+    uint8_t buf[16];
+    uint16_t bytesToPrint;
+    uint16_t bytesPrinted = 0;
+    uint16_t length = aMessage.GetLength() - aMessage.GetOffset();
+
+    sServer->OutputFormat("DIAG_GET.rsp: ");
+
+    while (length > 0)
+    {
+        bytesToPrint = (length < sizeof(buf)) ? length : sizeof(buf);
+        aMessage.Read(aMessage.GetOffset() + bytesPrinted, bytesToPrint, buf);
+
+        OutputBytes(buf, static_cast<uint8_t>(bytesToPrint));
+
+        length       -= bytesToPrint;
+        bytesPrinted += bytesToPrint;
+    }
+
+    sServer->OutputFormat("\r\n");
 }
 
 }  // namespace Cli

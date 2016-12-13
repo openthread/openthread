@@ -62,10 +62,19 @@ NetworkDiagnostic::NetworkDiagnostic(ThreadNetif &aThreadNetif) :
     mCoapClient(aThreadNetif.GetCoapClient()),
     mMle(aThreadNetif.GetMle()),
     mMac(aThreadNetif.GetMac()),
-    mNetif(aThreadNetif)
+    mNetif(aThreadNetif),
+    mReceiveDiagnosticGetCallback(NULL),
+    mReceiveDiagnosticGetCallbackContext(NULL)
 {
     mCoapServer.AddResource(mDiagnosticGet);
     mCoapServer.AddResource(mDiagnosticReset);
+}
+
+void NetworkDiagnostic::SetReceiveDiagnosticGetCallback(otReceiveDiagnosticGetCallback aCallback,
+                                                        void *aCallbackContext)
+{
+    mReceiveDiagnosticGetCallback = aCallback;
+    mReceiveDiagnosticGetCallbackContext = aCallbackContext;
 }
 
 ThreadError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestination, const uint8_t aTlvTypes[],
@@ -78,7 +87,6 @@ ThreadError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestinatio
     Ip6::MessageInfo messageInfo;
 
     sockaddr.mPort = kCoapUdpPort;
-
 
     header.Init(kCoapTypeConfirmable, kCoapRequestGet);
     header.SetToken(Coap::Header::kDefaultTokenLength);
@@ -121,13 +129,15 @@ void NetworkDiagnostic::HandleDiagnosticGetResponse(void *aContext, otCoapHeader
 void NetworkDiagnostic::HandleDiagnosticGetResponse(Coap::Header *aHeader, Message *aMessage,
                                                     const Ip6::MessageInfo *aMessageInfo, ThreadError aResult)
 {
-    (void)aMessage;
-    (void)aMessageInfo;
-
     VerifyOrExit(aResult == kThreadError_None, ;);
     VerifyOrExit(aHeader->GetCode() == kCoapResponseChanged, ;);
 
     otLogInfoNetDiag("Network Diagnostic get response received");
+
+    VerifyOrExit(mReceiveDiagnosticGetCallback != NULL, ;);
+
+    // Call application defined callback.
+    mReceiveDiagnosticGetCallback(aMessage, aMessageInfo, mReceiveDiagnosticGetCallbackContext);
 
 exit:
     return;
