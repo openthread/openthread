@@ -434,6 +434,19 @@ OTAPI ThreadError OTCALL otDiscover(otInstance *aInstance, uint32_t aScanChannel
 OTAPI bool OTCALL otIsDiscoverInProgress(otInstance *aInstance);
 
 /**
+ * This function enqueues an IEEE 802.15.4 Data Request message for transmission.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ *
+ * @retval kThreadError_None          Successfully enqueued an IEEE 802.15.4 Data Request message.
+ * @retval kThreadError_Already       An IEEE 802.15.4 Data Request message is already enqueued.
+ * @retval kThreadError_InvalidState  Device is not in rx-off-when-idle mode.
+ * @retval kThreadError_NoBufs        Insufficient message buffers available.
+ *
+ */
+OTAPI ThreadError OTCALL otSendMacDataRequest(otInstance *aInstance);
+
+/**
  * @}
  *
  */
