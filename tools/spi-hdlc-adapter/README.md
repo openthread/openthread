@@ -6,7 +6,7 @@ it were an HDLC-lite encoded bidirectional asynchronous serial stream.
 It uses the SPI protocol outlined in [Appendix A.2][1] of the Spinel
 protocol document.
 
-[1]: https://goo.gl/bwHt5r
+[1]: https://goo.gl/gt18O4
 
 ## Syntax ##
 
