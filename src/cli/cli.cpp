@@ -2673,12 +2673,12 @@ void Interpreter::s_HandleDiagnosticGetResponse(otMessage aMessage, const otMess
 
 void Interpreter::HandleDiagnosticGetResponse(Message &aMessage, const Ip6::MessageInfo &)
 {
-    sServer->OutputFormat("DIAG_GET.rsp: ");
-
     uint8_t buf[16];
     uint16_t bytesToPrint;
     uint16_t bytesPrinted = 0;
     uint16_t length = aMessage.GetLength() - aMessage.GetOffset();
+
+    sServer->OutputFormat("DIAG_GET.rsp: ");
 
     while (length > 0)
     {
