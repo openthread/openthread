@@ -136,7 +136,7 @@ ThreadError ActiveDataset::GenerateLocal(void)
     }
 
     // Network Name
-    if (!IsTlvInitialized(Tlv::kNetworkMasterKey))
+    if (!IsTlvInitialized(Tlv::kNetworkName))
     {
         NetworkNameTlv tlv;
         tlv.Init();
