@@ -144,6 +144,10 @@ Interpreter::Interpreter(otInstance *aInstance):
     mInstance->mIp6.mIcmp.SetEchoReplyHandler(&s_HandleEchoResponse, this);
     otSetStateChangedCallback(mInstance, &Interpreter::s_HandleNetifStateChanged, this);
     otSetReceiveDiagnosticGetCallback(mInstance, &Interpreter::s_HandleDiagnosticGetResponse, this);
+
+#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+    memset(mDhcpAddresses, 0, sizeof(mDhcpAddresses));
+#endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
 }
 
 int Interpreter::Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength)
