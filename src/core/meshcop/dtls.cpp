@@ -48,12 +48,26 @@ namespace Thread {
 namespace MeshCoP {
 
 Dtls::Dtls(ThreadNetif &aNetif):
+    mPskLength(0),
     mStarted(false),
     mTimer(aNetif.GetIp6().mTimerScheduler, &Dtls::HandleTimer, this),
     mTimerIntermediate(0),
     mTimerSet(false),
+    mReceiveMessage(NULL),
+    mReceiveOffset(0),
+    mReceiveLength(0),
+    mReceiveHandler(NULL),
+    mSendHandler(NULL),
+    mContext(NULL),
+    mClient(false),
     mNetif(aNetif)
 {
+    memset(mPsk, 0, sizeof(mPsk));
+    memset(&mEntropy, 0, sizeof(mEntropy));
+    memset(&mCtrDrbg, 0, sizeof(mCtrDrbg));
+    memset(&mSsl, 0, sizeof(mSsl));
+    memset(&mConf, 0, sizeof(mConf));
+    memset(&mCookieCtx, 0, sizeof(mCookieCtx));
     mProvisioningUrl.Init();
 }
 

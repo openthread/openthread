@@ -55,12 +55,12 @@ Dhcp6Client::Dhcp6Client(ThreadNetif &aThreadNetif) :
     mSocket(aThreadNetif.GetIp6().mUdp),
     mMle(aThreadNetif.GetMle()),
     mMac(aThreadNetif.GetMac()),
-    mNetif(aThreadNetif)
+    mNetif(aThreadNetif),
+    mStartTime(0),
+    mAddresses(NULL),
+    mNumAddresses(0)
 {
-    for (uint8_t i = 0; i < OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES; i++)
-    {
-        memset(&(mIdentityAssociations[i]), 0, sizeof(IdentityAssociation));
-    }
+    memset(mIdentityAssociations, 0, sizeof(IdentityAssociation));
 
     for (uint8_t i = 0; i < (OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES - 1); i++)
     {
