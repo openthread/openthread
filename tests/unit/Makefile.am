@@ -33,9 +33,10 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 # since they are not part of the package.
 #
 noinst_HEADERS                                                      = \
+    test_platform.h                                                   \
+    test_lowpan.hpp                                                   \
     test_util.h                                                       \
     test_util.hpp                                                     \
-    test_vector.h                                                     \
     $(NULL)
 
 #
@@ -52,25 +53,33 @@ AM_CPPFLAGS                                                         = \
     -I$(top_srcdir)/include                                           \
     -I$(top_srcdir)/src                                               \
     -I$(top_srcdir)/src/core                                          \
-    -I$(top_srcdir)/third_party/mbedtls/repo/include                  \
     $(NULL)
 
 COMMON_LDADD                                                        = \
-    $(top_builddir)/src/core/libopenthread.a                          \
-    $(top_builddir)/third_party/mbedtls/libmbedcrypto.a               \
+    $(top_builddir)/src/core/libopenthread-ftd.a                      \
     -lpthread                                                         \
     $(NULL)
+
+if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
+AM_CPPFLAGS                                                        += \
+    -I$(top_srcdir)/third_party/mbedtls/repo/include                  \
+    $(NULL)
+
+COMMON_LDADD                                                       += \
+    $(top_builddir)/third_party/mbedtls/libmbedcrypto.a               \
+    $(NULL)
+endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 
 # Test applications that should be run when the 'check' target is run.
 
 check_PROGRAMS                                                      = \
     test-aes                                                          \
+    test-fuzz                                                         \
     test-hmac-sha256                                                  \
     test-lowpan                                                       \
     test-link-quality                                                 \
     test-mac-frame                                                    \
     test-message                                                      \
-    test-settings                                                     \
     test-timer                                                        \
     test-toolchain                                                    \
     $(NULL)
@@ -111,6 +120,9 @@ TESTS_ENVIRONMENT                                                   = \
 test_aes_LDADD               = $(COMMON_LDADD)
 test_aes_SOURCES             = test_platform.cpp test_aes.cpp
 
+test_fuzz_LDADD              = $(COMMON_LDADD)
+test_fuzz_SOURCES            = test_platform.cpp test_fuzz.cpp
+
 test_hmac_sha256_LDADD       = $(COMMON_LDADD)
 test_hmac_sha256_SOURCES     = test_platform.cpp test_hmac_sha256.cpp
 
@@ -118,7 +130,7 @@ test_link_quality_LDADD      = $(COMMON_LDADD)
 test_link_quality_SOURCES    = test_platform.cpp test_link_quality.cpp
 
 test_lowpan_LDADD            = $(COMMON_LDADD)
-test_lowpan_SOURCES          = test_platform.cpp test_lowpan.cpp test_util.cpp test_vector.c
+test_lowpan_SOURCES          = test_platform.cpp test_lowpan.cpp test_util.cpp
 
 test_mac_frame_LDADD         = $(COMMON_LDADD)
 test_mac_frame_SOURCES       = test_platform.cpp test_mac_frame.cpp
@@ -128,9 +140,6 @@ test_message_SOURCES         = test_platform.cpp test_message.cpp
 
 test_ncp_buffer_LDADD        = $(COMMON_LDADD)
 test_ncp_buffer_SOURCES      = test_platform.cpp test_ncp_buffer.cpp
-
-test_settings_LDADD          = $(COMMON_LDADD)
-test_settings_SOURCES        = test_platform.cpp test_settings.cpp
 
 test_timer_LDADD             = $(COMMON_LDADD)
 test_timer_SOURCES           = test_platform.cpp test_timer.cpp

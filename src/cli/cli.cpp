@@ -46,6 +46,7 @@
 #include <openthread-diag.h>
 #include <commissioning/commissioner.h>
 #include <commissioning/joiner.h>
+#include <dhcp6/dhcp6_client.h>
 
 #include "cli.hpp"
 #include "cli_dataset.hpp"
@@ -66,6 +67,7 @@ const struct Command Interpreter::sCommands[] =
 {
     { "help", &Interpreter::ProcessHelp },
     { "blacklist", &Interpreter::ProcessBlacklist },
+    { "bufferinfo", &Interpreter::ProcessBufferInfo },
     { "channel", &Interpreter::ProcessChannel },
     { "child", &Interpreter::ProcessChild },
     { "childmax", &Interpreter::ProcessChildMax },
@@ -91,6 +93,7 @@ const struct Command Interpreter::sCommands[] =
     { "hashmacaddr", &Interpreter::ProcessHashMacAddress },
     { "ifconfig", &Interpreter::ProcessIfconfig },
     { "ipaddr", &Interpreter::ProcessIpAddr },
+    { "ipmaddr", &Interpreter::ProcessIpMulticastAddr },
 #if OPENTHREAD_ENABLE_JOINER
     { "joiner", &Interpreter::ProcessJoiner },
 #endif
@@ -301,6 +304,27 @@ exit:
     AppendResult(error);
 }
 
+void Interpreter::ProcessBufferInfo(int argc, char *argv[])
+{
+    otBufferInfo bufferInfo;
+    (void)argc;
+    (void)argv;
+
+    otGetMessageBufferInfo(mInstance, &bufferInfo);
+
+    sServer->OutputFormat("total: %d\r\n", bufferInfo.mTotalBuffers);
+    sServer->OutputFormat("free: %d\r\n", bufferInfo.mFreeBuffers);
+    sServer->OutputFormat("6lo send: %d %d\r\n", bufferInfo.m6loSendMessages, bufferInfo.m6loSendBuffers);
+    sServer->OutputFormat("6lo reas: %d %d\r\n", bufferInfo.m6loReassemblyMessages, bufferInfo.m6loReassemblyBuffers);
+    sServer->OutputFormat("ip6: %d %d\r\n", bufferInfo.mIp6Messages, bufferInfo.mIp6Buffers);
+    sServer->OutputFormat("mpl: %d %d\r\n", bufferInfo.mMplMessages, bufferInfo.mMplBuffers);
+    sServer->OutputFormat("mle: %d %d\r\n", bufferInfo.mMleMessages, bufferInfo.mMleBuffers);
+    sServer->OutputFormat("arp: %d %d\r\n", bufferInfo.mArpMessages, bufferInfo.mArpBuffers);
+    sServer->OutputFormat("coap: %d %d\r\n", bufferInfo.mCoapClientMessages, bufferInfo.mCoapClientBuffers);
+
+    AppendResult(kThreadError_None);
+}
+
 void Interpreter::ProcessChannel(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
@@ -493,6 +517,8 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
         {
             const otMacCounters *counters = otGetMacCounters(mInstance);
             sServer->OutputFormat("TxTotal: %d\r\n", counters->mTxTotal);
+            sServer->OutputFormat("    TxUnicast: %d\r\n", counters->mTxUnicast);
+            sServer->OutputFormat("    TxBroadcast: %d\r\n", counters->mTxBroadcast);
             sServer->OutputFormat("    TxAckRequested: %d\r\n", counters->mTxAckRequested);
             sServer->OutputFormat("    TxAcked: %d\r\n", counters->mTxAcked);
             sServer->OutputFormat("    TxNoAckRequested: %d\r\n", counters->mTxNoAckRequested);
@@ -504,6 +530,8 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
             sServer->OutputFormat("    TxRetry: %d\r\n", counters->mTxRetry);
             sServer->OutputFormat("    TxErrCca: %d\r\n", counters->mTxErrCca);
             sServer->OutputFormat("RxTotal: %d\r\n", counters->mRxTotal);
+            sServer->OutputFormat("    RxUnicast: %d\r\n", counters->mRxUnicast);
+            sServer->OutputFormat("    RxBroadcast: %d\r\n", counters->mRxBroadcast);
             sServer->OutputFormat("    RxData: %d\r\n", counters->mRxData);
             sServer->OutputFormat("    RxDataPoll: %d\r\n", counters->mRxDataPoll);
             sServer->OutputFormat("    RxBeacon: %d\r\n", counters->mRxBeacon);
@@ -511,6 +539,7 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
             sServer->OutputFormat("    RxOther: %d\r\n", counters->mRxOther);
             sServer->OutputFormat("    RxWhitelistFiltered: %d\r\n", counters->mRxWhitelistFiltered);
             sServer->OutputFormat("    RxDestAddrFiltered: %d\r\n", counters->mRxDestAddrFiltered);
+            sServer->OutputFormat("    RxDuplicated: %d\r\n", counters->mRxDuplicated);
             sServer->OutputFormat("    RxErrNoFrame: %d\r\n", counters->mRxErrNoFrame);
             sServer->OutputFormat("    RxErrNoUnknownNeighbor: %d\r\n", counters->mRxErrUnknownNeighbor);
             sServer->OutputFormat("    RxErrInvalidSrcAddr: %d\r\n", counters->mRxErrInvalidSrcAddr);
@@ -761,6 +790,108 @@ void Interpreter::ProcessIpAddr(int argc, char *argv[])
         else if (strcmp(argv[0], "del") == 0)
         {
             SuccessOrExit(error = ProcessIpAddrDel(argc - 1, argv + 1));
+        }
+    }
+
+exit:
+    AppendResult(error);
+}
+
+ThreadError Interpreter::ProcessIpMulticastAddrAdd(int argc, char *argv[])
+{
+    ThreadError error;
+    struct otIp6Address address;
+
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+
+    SuccessOrExit(error = otIp6AddressFromString(argv[0], &address));
+    error = otSubscribeMulticastAddress(mInstance, &address);
+
+exit:
+    return error;
+}
+
+ThreadError Interpreter::ProcessIpMulticastAddrDel(int argc, char *argv[])
+{
+    ThreadError error;
+    struct otIp6Address address;
+
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+
+    SuccessOrExit(error = otIp6AddressFromString(argv[0], &address));
+    error = otUnsubscribeMulticastAddress(mInstance, &address);
+
+exit:
+    return error;
+}
+
+ThreadError Interpreter::ProcessMulticastPromiscuous(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+
+    if (argc == 0)
+    {
+        if (otIsMulticastPromiscuousModeEnabled(mInstance))
+        {
+            sServer->OutputFormat("Enabled\r\n");
+        }
+        else
+        {
+            sServer->OutputFormat("Disabled\r\n");
+        }
+    }
+    else
+    {
+        if (strcmp(argv[0], "enable") == 0)
+        {
+            otEnableMulticastPromiscuousMode(mInstance);
+        }
+        else if (strcmp(argv[0], "disable") == 0)
+        {
+            otDisableMulticastPromiscuousMode(mInstance);
+        }
+        else
+        {
+            ExitNow(error = kThreadError_Parse);
+        }
+    }
+
+exit:
+    return error;
+}
+
+void Interpreter::ProcessIpMulticastAddr(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+
+    if (argc == 0)
+    {
+        for (const otNetifMulticastAddress *addr = otGetMulticastAddresses(mInstance); addr; addr = addr->mNext)
+        {
+            sServer->OutputFormat("%x:%x:%x:%x:%x:%x:%x:%x\r\n",
+                                  HostSwap16(addr->mAddress.mFields.m16[0]),
+                                  HostSwap16(addr->mAddress.mFields.m16[1]),
+                                  HostSwap16(addr->mAddress.mFields.m16[2]),
+                                  HostSwap16(addr->mAddress.mFields.m16[3]),
+                                  HostSwap16(addr->mAddress.mFields.m16[4]),
+                                  HostSwap16(addr->mAddress.mFields.m16[5]),
+                                  HostSwap16(addr->mAddress.mFields.m16[6]),
+                                  HostSwap16(addr->mAddress.mFields.m16[7]));
+        }
+    }
+    else
+    {
+        if (strcmp(argv[0], "add") == 0)
+        {
+            SuccessOrExit(error = ProcessIpMulticastAddrAdd(argc - 1, argv + 1));
+        }
+        else if (strcmp(argv[0], "del") == 0)
+        {
+            SuccessOrExit(error = ProcessIpMulticastAddrDel(argc - 1, argv + 1));
+        }
+        else if (strcmp(argv[0], "promiscuous") == 0)
+        {
+            SuccessOrExit(error = ProcessMulticastPromiscuous(argc - 1, argv + 1));
         }
     }
 
@@ -1928,6 +2059,10 @@ void Interpreter::ProcessState(int argc, char *argv[])
     {
         switch (otGetDeviceRole(mInstance))
         {
+        case kDeviceRoleOffline:
+            sServer->OutputFormat("offline\r\n");
+            break;
+
         case kDeviceRoleDisabled:
             sServer->OutputFormat("disabled\r\n");
             break;
@@ -2244,6 +2379,10 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
 
         SuccessOrExit(error = otSendMgmtCommissionerSet(mInstance, &dataset, tlvs, static_cast<uint8_t>(length)));
     }
+    else if (strcmp(argv[0], "sessionid") == 0)
+    {
+        sServer->OutputFormat("%d\r\n", otCommissionerGetSessionId(mInstance));
+    }
 
 exit:
     AppendResult(error);
@@ -2469,8 +2608,15 @@ void Interpreter::HandleNetifStateChanged(uint32_t aFlags)
 {
     VerifyOrExit((aFlags & OT_THREAD_NETDATA_UPDATED) != 0, ;);
 
-    otSlaacUpdate(mInstance, mAutoAddresses, sizeof(mAutoAddresses) / sizeof(mAutoAddresses[0]), otCreateRandomIid,
+    otSlaacUpdate(mInstance, mSlaacAddresses, sizeof(mSlaacAddresses) / sizeof(mSlaacAddresses[0]), otCreateRandomIid,
                   NULL);
+#if OPENTHREAD_ENABLE_DHCP6_SERVER
+    mInstance->mThreadNetif.GetDhcp6Server().UpdateService();
+#endif  // OPENTHREAD_ENABLE_DHCP6_SERVER
+
+#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+    otDhcp6ClientUpdate(mInstance, mDhcpAddresses, sizeof(mDhcpAddresses) / sizeof(mDhcpAddresses[0]), NULL);
+#endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
 
 exit:
     return;

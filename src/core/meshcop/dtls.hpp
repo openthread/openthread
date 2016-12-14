@@ -38,7 +38,7 @@
 #include <common/message.hpp>
 #include <common/timer.hpp>
 #include <crypto/sha256.hpp>
-#include <thread/meshcop_tlvs.hpp>
+#include <meshcop/tlvs.hpp>
 
 #include <mbedtls/ssl.h>
 #include <mbedtls/entropy.h>
@@ -59,6 +59,7 @@ public:
     enum
     {
         kPskMaxLength = 32,
+        kApplicationDataMaxLength = 128,
     };
 
     /**
@@ -68,12 +69,6 @@ public:
      *
      */
     Dtls(ThreadNetif &aNetif);
-
-    /**
-     * This destructor cleans up the DTLS object.
-     *
-     */
-    ~Dtls(void);
 
     /**
      * This function pointer is called when data is received from the DTLS session.
@@ -158,13 +153,14 @@ public:
     /**
      * This method sends data within the DTLS session.
      *
-     * @param[in]  aBuf     A pointer to the data buffer.
-     * @param[in]  aLength  Number of bytes in the data buffer.
+     * @param[in]  aMessage  A message to send via DTLS.
+     * @param[in]  aLength   Number of bytes in the data buffer.
      *
-     * @retval kThreadError_None  Successfully sent the data via the DTLS session.
+     * @retval kThreadError_None    Successfully sent the data via the DTLS session.
+     * @retval kThreadError_NoBufs  A message is too long.
      *
      */
-    ThreadError Send(const uint8_t *aBuf, uint16_t aLength);
+    ThreadError Send(Message &aMessage, uint16_t aLength);
 
     /**
      * This method provides a received DTLS message to the DTLS object.
@@ -239,7 +235,7 @@ private:
     ThreadNetif &mNetif;
 };
 
-}  // namspace MeshCoP
+}  // namespace MeshCoP
 }  // namespace Thread
 
 #endif  // DTLS_HPP_

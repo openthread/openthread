@@ -43,8 +43,8 @@
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
+#include <meshcop/tlvs.hpp>
 #include <platform/radio.h>
-#include <thread/meshcop_tlvs.hpp>
 #include <thread/announce_begin_server.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
@@ -88,31 +88,23 @@ exit:
     return error;
 }
 
-void AnnounceBeginServer::HandleRequest(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                                        const Ip6::MessageInfo &aMessageInfo)
+void AnnounceBeginServer::HandleRequest(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                        const otMessageInfo *aMessageInfo)
 {
-    static_cast<AnnounceBeginServer *>(aContext)->HandleRequest(aHeader, aMessage, aMessageInfo);
+    static_cast<AnnounceBeginServer *>(aContext)->HandleRequest(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
-
 void AnnounceBeginServer::HandleRequest(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    OT_TOOL_PACKED_BEGIN
-    struct
-    {
-        MeshCoP::ChannelMaskTlv tlv;
-        MeshCoP::ChannelMaskEntry entry;
-        uint32_t mask;
-    } OT_TOOL_PACKED_END channelMask;
-
+    MeshCoP::ChannelMask0Tlv channelMask;
     MeshCoP::CountTlv count;
     MeshCoP::PeriodTlv period;
 
     VerifyOrExit(aHeader.GetCode() == kCoapRequestPost, ;);
 
-    SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask.tlv));
-    VerifyOrExit(channelMask.tlv.IsValid() &&
-                 channelMask.entry.GetChannelPage() == 0 &&
-                 channelMask.entry.GetMaskLength() == sizeof(uint32_t), ;);
+    SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask));
+    VerifyOrExit(channelMask.IsValid(),);
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kCount, sizeof(count), count));
     VerifyOrExit(count.IsValid(), ;);
@@ -120,7 +112,7 @@ void AnnounceBeginServer::HandleRequest(Coap::Header &aHeader, Message &aMessage
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kPeriod, sizeof(period), period));
     VerifyOrExit(period.IsValid(), ;);
 
-    SendAnnounce(HostSwap32(channelMask.mask), count.GetCount(), period.GetPeriod());
+    SendAnnounce(channelMask.GetMask(), count.GetCount(), period.GetPeriod());
 
     SendResponse(aHeader, aMessageInfo);
 

@@ -37,7 +37,6 @@
 #include <common/debug.hpp>
 #include <common/logging.hpp>
 #include <common/message.hpp>
-#include <common/new.hpp>
 #include <net/icmp6.hpp>
 #include <net/ip6.hpp>
 #include <net/ip6_address.hpp>
@@ -67,6 +66,11 @@ Ip6::Ip6(void):
 Message *Ip6::NewMessage(uint16_t reserved)
 {
     return mMessagePool.New(Message::kTypeIp6, sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + reserved);
+}
+
+bool Ip6::IsForwardingEnabled(void)
+{
+    return mForwardingEnabled;
 }
 
 void Ip6::SetForwardingEnabled(bool aEnable)
@@ -453,14 +457,20 @@ ThreadError Ip6::HandleOptions(Message &message, Header &header, bool &forward)
     OptionHeader optionHeader;
     uint16_t endOffset;
 
-    message.Read(message.GetOffset(), sizeof(hbhHeader), &hbhHeader);
+    VerifyOrExit(message.Read(message.GetOffset(), sizeof(hbhHeader), &hbhHeader) == sizeof(hbhHeader),
+                 error = kThreadError_Drop);
     endOffset = message.GetOffset() + (hbhHeader.GetLength() + 1) * 8;
+
+    VerifyOrExit(endOffset <= message.GetLength(), error = kThreadError_Drop);
 
     message.MoveOffset(sizeof(optionHeader));
 
     while (message.GetOffset() < endOffset)
     {
-        message.Read(message.GetOffset(), sizeof(optionHeader), &optionHeader);
+        VerifyOrExit(message.Read(message.GetOffset(), sizeof(optionHeader), &optionHeader) == sizeof(optionHeader),
+                     error = kThreadError_Drop);
+        VerifyOrExit(message.GetOffset() + sizeof(optionHeader) + optionHeader.GetLength() <= endOffset,
+                     error = kThreadError_Drop);
 
         switch (optionHeader.GetType())
         {
@@ -510,7 +520,8 @@ ThreadError Ip6::HandleFragment(Message &message)
     ThreadError error = kThreadError_None;
     FragmentHeader fragmentHeader;
 
-    message.Read(message.GetOffset(), sizeof(fragmentHeader), &fragmentHeader);
+    VerifyOrExit(message.Read(message.GetOffset(), sizeof(fragmentHeader), &fragmentHeader) == sizeof(fragmentHeader),
+                 error = kThreadError_Drop);
 
     VerifyOrExit(fragmentHeader.GetOffset() == 0 && fragmentHeader.IsMoreFlagSet() == false,
                  error = kThreadError_Drop);
@@ -525,13 +536,12 @@ ThreadError Ip6::HandleExtensionHeaders(Message &message, Header &header, uint8_
                                         bool receive)
 {
     ThreadError error = kThreadError_None;
-    ExtensionHeader extensionHeader;
+    ExtensionHeader extHeader;
 
     while (receive == true || nextHeader == kProtoHopOpts)
     {
-        VerifyOrExit(message.GetOffset() <= message.GetLength(), error = kThreadError_Drop);
-
-        message.Read(message.GetOffset(), sizeof(extensionHeader), &extensionHeader);
+        VerifyOrExit(message.Read(message.GetOffset(), sizeof(extHeader), &extHeader) == sizeof(extHeader),
+                     error = kThreadError_Drop);
 
         switch (nextHeader)
         {
@@ -558,7 +568,7 @@ ThreadError Ip6::HandleExtensionHeaders(Message &message, Header &header, uint8_
             ExitNow();
         }
 
-        nextHeader = static_cast<uint8_t>(extensionHeader.GetNextHeader());
+        nextHeader = static_cast<uint8_t>(extHeader.GetNextHeader());
     }
 
 exit:
@@ -646,6 +656,7 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
     bool receive = false;
     bool forward = false;
     bool tunnel = false;
+    bool multicastPromiscuous = false;
     uint8_t nextHeader;
     uint8_t hopLimit;
 
@@ -658,8 +669,7 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
 #endif
 
     // check message length
-    VerifyOrExit(message.GetLength() >= sizeof(header), error = kThreadError_Drop);
-    message.Read(0, sizeof(header), &header);
+    VerifyOrExit(message.Read(0, sizeof(header), &header) == sizeof(header), error = kThreadError_Drop);
     payloadLength = header.GetPayloadLength();
 
     // check Version
@@ -678,9 +688,16 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
     // determine destination of packet
     if (header.GetDestination().IsMulticast())
     {
-        if (netif != NULL && netif->IsMulticastSubscribed(header.GetDestination()))
+        if (netif != NULL)
         {
-            receive = true;
+            if (netif->IsMulticastSubscribed(header.GetDestination()))
+            {
+                receive = true;
+            }
+            else if (netif->IsMulticastPromiscuousModeEnabled())
+            {
+                multicastPromiscuous = true;
+            }
         }
 
         if (netif == NULL)
@@ -739,6 +756,10 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
         }
 
         SuccessOrExit(error = HandlePayload(message, messageInfo, nextHeader));
+    }
+    else if (multicastPromiscuous)
+    {
+        ProcessReceiveCallback(message, messageInfo, nextHeader);
     }
 
     if (forward)
@@ -972,18 +993,18 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
                 rvalIface = candidateId;
                 goto exit;
             }
-            else if (candidateAddr->GetScope() < rvalAddr->GetAddress().GetScope())
+            else if (addr->GetScope() < rvalAddr->GetScope())
             {
                 // Rule 2: Prefer appropriate scope
-                if (candidateAddr->GetScope() >= destination->GetScope())
+                if (addr->GetScope() >= destination->GetScope())
                 {
                     rvalAddr = addr;
                     rvalIface = candidateId;
                 }
             }
-            else if (candidateAddr->GetScope() > rvalAddr->GetAddress().GetScope())
+            else if (addr->GetScope() > rvalAddr->GetScope())
             {
-                if (rvalAddr->GetAddress().GetScope() < destination->GetScope())
+                if (rvalAddr->GetScope() < destination->GetScope())
                 {
                     rvalAddr = addr;
                     rvalIface = candidateId;

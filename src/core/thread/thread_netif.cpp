@@ -58,6 +58,12 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
     mCoapServer(aIp6.mUdp, kCoapUdpPort),
     mCoapClient(*this),
     mAddressResolver(*this),
+#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+    mDhcp6Client(*this),
+#endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
+#if OPENTHREAD_ENABLE_DHCP6_SERVER
+    mDhcp6Server(*this),
+#endif  // OPENTHREAD_ENABLE_DHCP6_SERVER
     mActiveDataset(*this),
     mPendingDataset(*this),
     mKeyManager(*this),
@@ -69,19 +75,25 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
     mNetworkDataLeader(*this),
     mNetworkDiagnostic(*this),
 #if OPENTHREAD_ENABLE_COMMISSIONER
+    mSecureCoapServer(*this, OPENTHREAD_CONFIG_JOINER_UDP_PORT),
     mCommissioner(*this),
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 #if OPENTHREAD_ENABLE_DTLS
     mDtls(*this),
 #endif
 #if OPENTHREAD_ENABLE_JOINER
+    mSecureCoapClient(*this),
     mJoiner(*this),
 #endif  // OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    mJamDetector(*this),
+#endif // OPENTHREAD_ENABLE_JAM_DETECTTION
     mJoinerRouter(*this),
     mLeader(*this),
     mAnnounceBegin(*this),
     mPanIdQuery(*this),
     mEnergyScan(*this)
+
 {
     mKeyManager.SetMasterKey(kThreadMasterKey, sizeof(kThreadMasterKey));
 }
@@ -93,11 +105,14 @@ ThreadError ThreadNetif::Up(void)
         mIp6.AddNetif(*this);
         mMeshForwarder.Start();
         mCoapServer.Start();
+        mCoapClient.Start();
+#if OPENTHREAD_ENABLE_JOINER
+        mSecureCoapClient.Start();
+#endif
         mMleRouter.Enable();
         mIsUp = true;
     }
 
-    mCoapClient.Start();
     return kThreadError_None;
 }
 
@@ -105,10 +120,18 @@ ThreadError ThreadNetif::Down(void)
 {
     mCoapServer.Stop();
     mCoapClient.Stop();
+#if OPENTHREAD_ENABLE_JOINER
+    mSecureCoapClient.Stop();
+#endif
     mMleRouter.Disable();
     mMeshForwarder.Stop();
     mIp6.RemoveNetif(*this);
     mIsUp = false;
+
+#if OPENTHREAD_ENABLE_DTLS
+    mDtls.Stop();
+#endif
+
     return kThreadError_None;
 }
 

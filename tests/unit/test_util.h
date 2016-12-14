@@ -72,6 +72,8 @@ extern "C" {
 //
 #define CompileTimeAssert(COND, MSG)
 
+#define Log(aFormat, ...) printf(aFormat "\n", ## __VA_ARGS__)
+
 #ifdef __cplusplus
 }
 #endif
@@ -81,11 +83,16 @@ extern "C" {
 typedef void (*utAssertTrue)(bool condition, const wchar_t *message);
 extern utAssertTrue s_AssertTrue;
 
+typedef void (*utLogMessage)(const char *format, ...);
+extern utLogMessage s_LogMessage;
+
 #define SuccessOrQuit(ERR, MSG) s_AssertTrue((ERR) == kThreadError_None, L##MSG)
 
 #define VerifyOrQuit(ERR, MSG) s_AssertTrue(ERR, L##MSG)
 
 #define CompileTimeAssert(COND, MSG) static_assert(COND, MSG)
+
+#define Log(aFormat, ...) s_LogMessage(aFormat, ## __VA_ARGS__)
 
 #endif
 

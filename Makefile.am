@@ -37,6 +37,8 @@ AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --with-examples=posix             \
     --enable-commissioner             \
     --enable-joiner                   \
+    --enable-dhcp6-client             \
+    --enable-dhcp6-server             \
     $(NULL)
 
 SUBDIRS                             = \

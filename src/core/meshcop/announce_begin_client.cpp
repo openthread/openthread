@@ -45,7 +45,7 @@
 #include <common/logging.hpp>
 #include <platform/random.h>
 #include <meshcop/announce_begin_client.hpp>
-#include <thread/meshcop_tlvs.hpp>
+#include <meshcop/tlvs.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
 
@@ -63,15 +63,7 @@ ThreadError AnnounceBeginClient::SendRequest(uint32_t aChannelMask, uint8_t aCou
     ThreadError error = kThreadError_None;
     Coap::Header header;
     MeshCoP::CommissionerSessionIdTlv sessionId;
-
-    OT_TOOL_PACKED_BEGIN
-    struct
-    {
-        MeshCoP::ChannelMaskTlv tlv;
-        MeshCoP::ChannelMaskEntry header;
-        uint32_t mask;
-    } OT_TOOL_PACKED_END channelMask;
-
+    MeshCoP::ChannelMask0Tlv channelMask;
     MeshCoP::CountTlv count;
     MeshCoP::PeriodTlv period;
 
@@ -90,11 +82,8 @@ ThreadError AnnounceBeginClient::SendRequest(uint32_t aChannelMask, uint8_t aCou
     sessionId.SetCommissionerSessionId(mNetif.GetCommissioner().GetSessionId());
     SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
 
-    channelMask.tlv.Init();
-    channelMask.tlv.SetLength(sizeof(channelMask.header) + sizeof(channelMask.mask));
-    channelMask.header.SetChannelPage(0);
-    channelMask.header.SetMaskLength(sizeof(channelMask.mask));
-    channelMask.mask = HostSwap32(aChannelMask);
+    channelMask.Init();
+    channelMask.SetMask(aChannelMask);
     SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
 
     count.Init();

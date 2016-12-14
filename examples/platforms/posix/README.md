@@ -21,7 +21,7 @@ After a successful build, the `elf` files are found in
 
 ```bash
 $ cd <path-to-openthread>/output/<platform>/bin
-$ ./ot-cli 1
+$ ./ot-cli-ftd 1
 ```
 
 2. Type `help` for list of commands.

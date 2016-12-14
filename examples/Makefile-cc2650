@@ -67,10 +67,6 @@ ifeq ($(CERT_LOG),1)
 configure_OPTIONS              += --enable-cert-log
 endif
 
-ifeq ($(COMMISSIONER),1)
-configure_OPTIONS              += --enable-commissioner
-endif
-
 ifeq ($(JOINER),1)
 configure_OPTIONS              += --enable-joiner
 endif

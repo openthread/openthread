@@ -986,7 +986,7 @@ RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 /**
  * Function documented in platform/radio.h
  */
-ThreadError otPlatRadioTransmit(otInstance *aInstance)
+ThreadError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
 {
     ThreadError error = kThreadError_Busy;
 
@@ -996,15 +996,15 @@ ThreadError otPlatRadioTransmit(otInstance *aInstance)
          * This is the easiest way to setup the frequency synthesizer.
          * And we are supposed to fall into the receive state afterwards.
          */
-        error = otPlatRadioReceive(aInstance, sTransmitFrame.mChannel);
+        error = otPlatRadioReceive(aInstance, aPacket->mChannel);
         if(error == kThreadError_None)
         {
             sState = kStateTransmit;
 
             /* removing 2 bytes of CRC placeholder because we generate that in hardware */
             transmitting = true;
-            VerifyOrExit(rf_core_cmd_ieee_tx(sTransmitFrame.mPsdu,
-                        sTransmitFrame.mLength - 2) == CMDSTA_Done, error =
+            VerifyOrExit(rf_core_cmd_ieee_tx(aPacket->mPsdu,
+                        aPacket->mLength - 2) == CMDSTA_Done, error =
                     kThreadError_Failed);
             error = kThreadError_None;
         }
@@ -1471,12 +1471,12 @@ int cc2650RadioProcess(otInstance *aInstance)
 #if OPENTHREAD_ENABLE_DIAG
         if (otPlatDiagModeGet())
         {
-            otPlatDiagRadioTransmitDone(aInstance, false, sTransmitError);
+            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, false, sTransmitError);
         }
         else
 #endif /* OPENTHREAD_ENABLE_DIAG */
         {
-            otPlatRadioTransmitDone(aInstance, false, sTransmitError);
+            otPlatRadioTransmitDone(aInstance, &sTransmitFrame, false, sTransmitError);
         }
     }
     else if(sState == kStateReceive || sState == kStateTransmit)
@@ -1493,12 +1493,12 @@ int cc2650RadioProcess(otInstance *aInstance)
 
             if (otPlatDiagModeGet())
             {
-                otPlatDiagRadioTransmitDone(aInstance, (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
+                otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
             }
             else
 #endif /* OPENTHREAD_ENABLE_DIAG */
             {
-                otPlatRadioTransmitDone(aInstance, (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
+                otPlatRadioTransmitDone(aInstance, &sTransmitFrame, (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
             }
         }
         else if (sState == kStateReceive && sReceiveFrame.mLength > 0)

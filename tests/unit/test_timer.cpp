@@ -26,12 +26,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "test_util.h"
-#include <openthread.h>
+#include "test_platform.h"
 #include <common/debug.hpp>
 #include <common/timer.hpp>
-#include <platform/alarm.h>
-#include <string.h>
 #include <openthread-instance.h>
 
 enum
@@ -43,11 +40,37 @@ enum
     kCallCountIndexMax
 };
 
-extern uint32_t sNow;
-extern uint32_t sPlatT0;
-extern uint32_t sPlatDt;
-extern bool     sTimerOn;
-extern uint32_t sCallCount[kCallCountIndexMax];
+uint32_t sNow;
+uint32_t sPlatT0;
+uint32_t sPlatDt;
+bool     sTimerOn;
+uint32_t sCallCount[kCallCountIndexMax];
+
+void testTimerAlarmStop(otInstance *)
+{
+    sTimerOn = false;
+    sCallCount[kCallCountIndexAlarmStop]++;
+}
+
+void testTimerAlarmStartAt(otInstance *, uint32_t aT0, uint32_t aDt)
+{
+    sTimerOn = true;
+    sCallCount[kCallCountIndexAlarmStart]++;
+    sPlatT0 = aT0;
+    sPlatDt = aDt;
+}
+
+uint32_t testTimerAlarmGetNow(void)
+{
+    return sNow;
+}
+
+void InitTestTimer(void)
+{
+    g_testPlatAlarmStop = testTimerAlarmStop;
+    g_testPlatAlarmStartAt = testTimerAlarmStartAt;
+    g_testPlatAlarmGetNow = testTimerAlarmGetNow;
+}
 
 void InitCounters(void)
 {
@@ -76,6 +99,7 @@ int TestOneTimer(void)
 
     // Test one Timer basic operation.
 
+    InitTestTimer();
     InitCounters();
 
     sNow = kTimeT0;
@@ -321,6 +345,7 @@ int TestTenTimers(void)
 
     // Start the Ten timers.
 
+    InitTestTimer();
     InitCounters();
 
     for (i = 0; i < kNumTimers ; i++)

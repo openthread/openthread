@@ -39,13 +39,18 @@ ot_ncp_CPPFLAGS                                                        = \
     $(NULL)
 
 ot_ncp_LDADD                                                           = \
-    $(top_builddir)/src/core/libopenthread.a                             \
+    $(top_builddir)/src/core/libopenthread-ftd.a                         \
     $(top_builddir)/src/ncp/libopenthread-ncp.a                          \
-    $(top_builddir)/third_party/mbedtls/libmbedcrypto.a                  \
     $(NULL)
 
 ot_ncp_LDFLAGS                                                         = \
     $(NULL)
+
+if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
+ot_ncp_LDADD                                                          += \
+    $(top_builddir)/third_party/mbedtls/libmbedcrypto.a                  \
+    $(NULL)
+endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 
 ot_ncp_SOURCES                                                         = \
     main.c                                                               \

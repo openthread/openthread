@@ -57,6 +57,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\core\coap\coap_base.cpp">
+      <Filter>Source Files\coap</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\coap\coap_client.cpp">
       <Filter>Source Files\coap</Filter>
     </ClCompile>
@@ -66,13 +69,16 @@
     <ClCompile Include="..\..\src\core\coap\coap_server.cpp">
       <Filter>Source Files\coap</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\coap\secure_coap_client.cpp">
+      <Filter>Source Files\coap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\coap\secure_coap_server.cpp">
+      <Filter>Source Files\coap</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\common\logging.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\common\message.cpp">
-      <Filter>Source Files\common</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\common\settings.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\common\tasklet.cpp">
@@ -95,6 +101,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\core\mac\mac_whitelist.cpp">
       <Filter>Source Files\mac</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\net\dhcp6_client.cpp">
+      <Filter>Source Files\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\net\dhcp6_server.cpp">
+      <Filter>Source Files\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\net\icmp6.cpp">
       <Filter>Source Files\net</Filter>
@@ -150,6 +162,9 @@
     <ClCompile Include="..\..\src\core\thread\network_data_leader.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\thread\network_data_leader_ftd.cpp">
+      <Filter>Source Files\thread</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\thread\network_data_local.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>
@@ -174,20 +189,20 @@
     <ClCompile Include="..\..\src\core\openthread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\thread\meshcop_dataset.cpp">
-      <Filter>Source Files\thread</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\thread\meshcop_dataset_manager.cpp">
-      <Filter>Source Files\thread</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\thread\meshcop_tlvs.cpp">
-      <Filter>Source Files\thread</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\core\mac\mac_blacklist.cpp">
       <Filter>Source Files\mac</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\meshcop\commissioner.cpp">
       <Filter>Source Files\meshcop</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\meshcop\dataset.cpp">
+      <Filter>Source Files\thread</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\meshcop\dataset_manager.cpp">
+      <Filter>Source Files\thread</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\meshcop\dataset_manager_ftd.cpp">
+      <Filter>Source Files\thread</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\meshcop\dtls.cpp">
       <Filter>Source Files\meshcop</Filter>
@@ -200,6 +215,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\core\meshcop\joiner_router.cpp">
       <Filter>Source Files\meshcop</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\meshcop\tlvs.cpp">
+      <Filter>Source Files\thread</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\meshcop\leader.cpp">
       <Filter>Source Files\meshcop</Filter>
@@ -219,7 +237,10 @@
     <ClCompile Include="..\..\src\core\crypto\sha256.cpp">
       <Filter>Source Files\crypto</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\utils\global_address.cpp">
+    <ClCompile Include="..\..\src\core\utils\slaac_address.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\utils\jam_detector.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\meshcop\announce_begin_client.cpp">
@@ -239,6 +260,9 @@
     <ClInclude Include="..\..\src\core\openthread-core-config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\core\coap\coap_base.hpp">
+      <Filter>Header Files\coap</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\core\coap\coap_client.hpp">
       <Filter>Header Files\coap</Filter>
     </ClInclude>
@@ -246,6 +270,12 @@
       <Filter>Header Files\coap</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\coap\coap_server.hpp">
+      <Filter>Header Files\coap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\coap\secure_coap_client.hpp">
+      <Filter>Header Files\coap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\coap\secure_coap_server.hpp">
       <Filter>Header Files\coap</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\common\code_utils.hpp">
@@ -287,6 +317,21 @@
     <ClInclude Include="..\..\src\core\mac\mac_whitelist.hpp">
       <Filter>Header Files\mac</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\core\mac\mac_whitelist_impl.hpp">
+      <Filter>Header Files\mac</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\mac\mac_whitelist_stub.hpp">
+      <Filter>Header Files\mac</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\net\dhcp6.hpp">
+      <Filter>Header Files\net</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\net\dhcp6_client.hpp">
+      <Filter>Header Files\net</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\net\dhcp6_server.hpp">
+      <Filter>Header Files\net</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\core\net\icmp6.hpp">
       <Filter>Header Files\net</Filter>
     </ClInclude>
@@ -315,6 +360,9 @@
       <Filter>Header Files\net</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\thread\address_resolver.hpp">
+      <Filter>Header Files\thread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\thread\announce_begin_server.hpp">
       <Filter>Header Files\thread</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\thread\energy_scan_server.hpp">
@@ -377,20 +425,26 @@
     <ClInclude Include="..\..\src\core\thread\topology.hpp">
       <Filter>Header Files\thread</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\thread\meshcop_dataset.hpp">
-      <Filter>Header Files\thread</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\thread\meshcop_dataset_manager.hpp">
-      <Filter>Header Files\thread</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\thread\meshcop_tlvs.hpp">
-      <Filter>Header Files\thread</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\core\mac\mac_blacklist.hpp">
       <Filter>Header Files\mac</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\core\mac\mac_blacklist_impl.hpp">
+      <Filter>Header Files\mac</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\mac\mac_blacklist_stub.hpp">
+      <Filter>Header Files\mac</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\meshcop\announce_begin_client.hpp">
+      <Filter>Header Files\meshcop</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\core\meshcop\commissioner.hpp">
       <Filter>Header Files\meshcop</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\meshcop\dataset.hpp">
+      <Filter>Header Files\thread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\meshcop\dataset_manager.hpp">
+      <Filter>Header Files\thread</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\meshcop\dtls.hpp">
       <Filter>Header Files\meshcop</Filter>
@@ -410,6 +464,9 @@
     <ClInclude Include="..\..\src\core\meshcop\panid_query_client.hpp">
       <Filter>Header Files\meshcop</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\core\meshcop\tlvs.hpp">
+      <Filter>Header Files\thread</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\core\crypto\aes_ecb.hpp">
       <Filter>Header Files\crypto</Filter>
     </ClInclude>
@@ -422,14 +479,11 @@
     <ClInclude Include="..\..\src\core\crypto\sha256.hpp">
       <Filter>Header Files\crypto</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\utils\global_address.hpp">
+    <ClInclude Include="..\..\src\core\utils\slaac_address.hpp">
       <Filter>Header Files\utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\meshcop\announce_begin_client.hpp">
-      <Filter>Header Files\meshcop</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\meshcop\announce_begin_server.hpp">
-      <Filter>Header Files\thread</Filter>
+    <ClInclude Include="..\..\src\core\utils\jam_detector.hpp">
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\common\crc16.hpp">
       <Filter>Header Files\common</Filter>

@@ -111,8 +111,9 @@ enum AlocAllocation
 {
     kAloc16Mask                         = 0xfc,
     kAloc16Leader                       = 0xfc00,
-    kAloc16DHCPv6AgentStart             = 0xfc01,
-    kAloc16DHCPv6AgentEnd               = 0xfc0f,
+    kAloc16DhcpAgentStart               = 0xfc01,
+    kAloc16DhcpAgentEnd                 = 0xfc0f,
+    kAloc16DhcpAgentMask                = 0x03ff,
     kAloc16ServiceStart                 = 0xfc10,
     kAloc16ServiceEnd                   = 0xfc2f,
     kAloc16CommissionerStart            = 0xfc30,
@@ -374,19 +375,41 @@ public:
     /**
      * This method starts the MLE protocol operation.
      *
+     * @param[in]  aEnableReattach  True to enable reattach process using stored dataset, False not.
+     *
      * @retval kThreadError_None     Successfully started the protocol operation.
      * @retval kThreadError_Already  The protocol operation was already started.
      *
      */
-    ThreadError Start(void);
+    ThreadError Start(bool aEnableReattach);
 
     /**
      * This method stops the MLE protocol operation.
      *
+     * @param[in]  aClearNetworkDatasets  True to clear network datasets, False not.
+     *
      * @retval kThreadError_None  Successfully stopped the protocol operation.
      *
      */
-    ThreadError Stop(void);
+    ThreadError Stop(bool aClearNetworkDatasets);
+
+    /**
+     * This method restores network information from non-volatile memory.
+     *
+     * @retval kThreadError_None      Successfully restore the network information.
+     * @retval kThreadError_NotFound  There is no valid network information stored in non-volatile memory.
+     *
+     */
+    ThreadError Restore(void);
+
+    /**
+     * This method stores network information into non-volatile memory.
+     *
+     * @retval kThreadError_None      Successfully store the network information.
+     * @retval kThreadError_NoBufs    Could not store the network information due to insufficient memory space.
+     *
+     */
+    ThreadError Store(void);
 
     /**
      * This function pointer is called on receiving an MLE Discovery Response message.
@@ -431,7 +454,7 @@ public:
      * This method generates an MLE Announce message.
      *
      * @param[in]  aChannel        The channel to use when transmitting.
-     * @param[in]  aOrphanAnnounce To indiciate if MLE Announce is sent from an orphan end device.
+     * @param[in]  aOrphanAnnounce To indicate if MLE Announce is sent from an orphan end device.
      *
      * @retval kThreadError_None    Successfully generated an MLE Announce message.
      * @retval kThreadError_NoBufs  Insufficient buffers to generate the MLE Announce message.
@@ -954,23 +977,25 @@ protected:
      * This method appends a Active Timestamp TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
+     * @param[in]  aCouldUseLocal  True to use local Active Timestamp when network Active Timestamp is not available, False not.
      *
      * @retval kThreadError_None    Successfully appended the Active Timestamp TLV.
      * @retval kThreadError_NoBufs  Insufficient buffers available to append the Active Timestamp TLV.
      *
      */
-    ThreadError AppendActiveTimestamp(Message &aMessage);
+    ThreadError AppendActiveTimestamp(Message &aMessage, bool aCouldUseLocal);
 
     /**
      * This method appends a Pending Timestamp TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
+     * @param[in]  aCouldUseLocal  True to use local Pending Timestamp when network Pending Timestamp is not available, False not.
      *
      * @retval kThreadError_None    Successfully appended the Pending Timestamp TLV.
      * @retval kThreadError_NoBufs  Insufficient buffers available to append the Pending Timestamp TLV.
      *
      */
-    ThreadError AppendPendingTimestamp(Message &aMessage);
+    ThreadError AppendPendingTimestamp(Message &aMessage, bool aCouldUseLocal);
 
     /**
      * This method appends a Thread Discovery TLV to a message.
@@ -1069,6 +1094,19 @@ protected:
     ThreadError SendChildUpdateRequest(void);
 
     /**
+     * This method generates an MLE Child Update Response message.
+     *
+     * @param[in]  aTlvs         A pointer to requested TLV types.
+     * @param[in]  aNumTlvs      The number of TLV types in @p aTlvs.
+     * @param[in]  aChallenge    The Challenge TLV for the response.
+     *
+     * @retval kThreadError_None    Successfully generated an MLE Child Update Response message.
+     * @retval kThreadError_NoBufs  Insufficient buffers to generate the MLE Child Update Response message.
+     *
+     */
+    ThreadError SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, const ChallengeTlv &aChallenge);
+
+    /**
      * This method submits an MLE message to the UDP socket.
      *
      * @param[in]  aMessage      A reference to the message.
@@ -1160,6 +1198,19 @@ protected:
     };
     ParentRequestState mParentRequestState;  ///< The parent request state.
 
+    /**
+     * States when reattaching network using stored dataset
+     *
+     */
+    enum ReattachState
+    {
+        kReattachStop       = 0,   ///< Reattach process is disabled or finished
+        kReattachStart      = 1,   ///< Start reattach process
+        kReattachActive     = 2,   ///< Reattach using stored Active Dataset
+        kReattachPending    = 3,   ///< Reattach using stored Pending Dataset
+    };
+    ReattachState mReattachState;
+
     Timer mParentRequestTimer;  ///< The timer for driving the Parent Request process.
 
     uint8_t mRouterSelectionJitter;         ///< The variable to save the assigned jitter value.
@@ -1185,20 +1236,35 @@ private:
 
     ThreadError HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleChildIdResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    ThreadError HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleChildUpdateResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
                                      uint32_t aKeySequence);
     ThreadError HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    ThreadError HandleDiscoveryRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     ThreadError SendParentRequest(void);
     ThreadError SendChildIdRequest(void);
-    ThreadError SendDiscoveryResponse(const Ip6::Address &aDestination, uint16_t aPanId);
     void SendOrphanAnnounce(void);
 
     bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, ConnectivityTlv &aConnectivityTlv) const;
+
+    /**
+     * This struct represents the device's own network information for persistent storage.
+     *
+     */
+    typedef struct NetworkInfo
+    {
+        DeviceState          mDeviceState;                ///< Current Thread interface state.
+
+        uint8_t              mDeviceMode;                 ///< Device mode setting.
+        uint16_t             mRloc16;                     ///< RLOC16
+        uint32_t             mKeySequence;                ///< Key Sequence
+        uint32_t             mMleFrameCounter;            ///< MLE Frame Counter
+        uint32_t             mMacFrameCounter;            ///< MAC Frame Counter
+        Mac::ExtAddress      mExtAddress;                 ///< Extended Address
+    } NetworkInfo;
 
     struct
     {
@@ -1235,7 +1301,6 @@ private:
 
     Ip6::NetifUnicastAddress mLeaderAloc;
 
-    Ip6::NetifUnicastAddress mLinkLocal16;
     Ip6::NetifUnicastAddress mLinkLocal64;
     Ip6::NetifUnicastAddress mMeshLocal64;
     Ip6::NetifUnicastAddress mMeshLocal16;

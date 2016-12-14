@@ -33,6 +33,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 DIST_SUBDIRS                            = \
     cli                                   \
     commissioning                         \
+    dhcp6                                 \
     ncp                                   \
     platform                              \
     $(NULL)
@@ -42,6 +43,7 @@ DIST_SUBDIRS                            = \
 SUBDIRS                                 = \
     cli                                   \
     commissioning                         \
+    dhcp6                                 \
     ncp                                   \
     platform                              \
     $(NULL)
@@ -51,16 +53,22 @@ SUBDIRS                                 = \
 PRETTY_SUBDIRS                          = \
     cli                                   \
     commissioning                         \
+    dhcp6                                 \
     ncp                                   \
     platform                              \
     $(NULL)
 
 include_HEADERS                         = \
     openthread.h                          \
-    openthread-diag.h                     \
-    openthread-crypto.h                   \
-    openthread-types.h                    \
     openthread-coap.h                     \
+    openthread-crypto.h                   \
+    openthread-diag.h                     \
+    openthread-ip6.h                      \
+    openthread-jam-detection.h            \
+    openthread-message.h                  \
+    openthread-tasklet.h                  \
+    openthread-types.h                    \
+    openthread-udp.h                      \
     $(NULL)
 
 install-headers: install-includeHEADERS

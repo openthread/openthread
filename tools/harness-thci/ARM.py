@@ -39,7 +39,6 @@ import serial
 import socket
 import logging
 from IThci import IThci
-from pexpect_serial import SerialSpawn
 from GRLLibs.UtilityModules.Test import Thread_Device_Role, Device_Data_Requirement, MacType
 from GRLLibs.UtilityModules.enums import PlatformDiagnosticPacket_Direction, PlatformDiagnosticPacket_Type, AddressType
 from GRLLibs.UtilityModules.ModuleHelper import ModuleHelper, ThreadRunner
@@ -50,12 +49,14 @@ linesepx = re.compile(r'\r\n|\n')
 """regex: used to split lines"""
 
 class ARM(IThci):
-    firmware = 'Sep 9 2016 14:57:36'# keep the consistency with ARM firmware style
+    firmware = 'Nov 4 2016 07:24:59' # keep the consistency with ARM firmware style
     UIStatusMsg = ''
-    networkDataRequirement = ''     # indicate Thread device requests full or stable network data
-    isPowerDown = False             # indicate if Thread device experiences a power down event
-    isWhiteListEnabled = False      # indicate if Thread device enables white list filter
-    isBlackListEnabled = False      # indicate if Thread device enables black list filter
+    networkDataRequirement = ''      # indicate Thread device requests full or stable network data
+    isPowerDown = False              # indicate if Thread device experiences a power down event
+    isWhiteListEnabled = False       # indicate if Thread device enables white list filter
+    isBlackListEnabled = False       # indicate if Thread device enables black list filter
+    isActiveCommissioner = False     # indicate if Thread device is an active commissioner
+    LOWEST_POSSIBLE_PARTATION_ID = 0x1
 
     #def __init__(self, SerialPort=COMPortName, EUI=MAC_Address):
     def __init__(self, **kwargs):
@@ -72,6 +73,7 @@ class ARM(IThci):
             self.networkName = ModuleHelper.Default_NwkName
             self.networkKey = ModuleHelper.Default_NwkKey
             self.channel = ModuleHelper.Default_Channel
+            self.channelMask = hex(1 << ModuleHelper.Default_Second_Channel)
             self.panId = ModuleHelper.Default_PanId
             self.xpanId = ModuleHelper.Default_XpanId
             self.AutoDUTEnable = False
@@ -79,6 +81,7 @@ class ARM(IThci):
             self.pskc = ModuleHelper.Default_PSKc
             self.securityPolicySecs = ModuleHelper.Default_SecurityPolicy
             self.activetimestamp = ModuleHelper.Default_ActiveTimestamp
+            self.SED_Polling_Rate = ModuleHelper.Default_Harness_SED_Polling_Rate
             self.provisioningUrl = ''
             self.logThread = Queue()
             self.logStatus = {'stop':'stop', 'running':'running', "pauseReq":'pauseReq', 'paused':'paused'}
@@ -101,21 +104,20 @@ class ARM(IThci):
             expected    str: the expected string
             times       int: number of trials
         """
-        print('[%s] Expecting [%s]' % (self.port, expected))
+        print '[%s] Expecting [%s]' % (self.port, expected)
 
         for i in range(0, times):
             line = self._readline()
-            print('[%s] Got line [%s]' % (self.port, line))
+            print '[%s] Got line [%s]' % (self.port, line)
 
             if line == expected:
-                print('[%s] Expected [%s]' % (self.port, expected))
+                print '[%s] Expected [%s]' % (self.port, expected)
                 return
 
             if not line:
                 time.sleep(1)
 
         raise Exception('failed to find expected string[%s]' % expected)
-
 
     def _read(self, size=512):
         logging.info('%s: reading', self.port)
@@ -169,12 +171,11 @@ class ARM(IThci):
         except socket.error:
             logging.debug('%s: Nothing cleared', self.port)
 
-        print('sending [%s]' % line)
+        print 'sending [%s]' % line
         self._write(line + '\r\n')
 
         # wait for write to complete
         time.sleep(0.1)
-
 
     def __sendCommand(self, cmd):
         """send specific command to reference unit over serial port
@@ -210,9 +211,8 @@ class ARM(IThci):
 
             line = None
             response = []
-            max_lines = 50
-            while max_lines:
-                max_lines -= 1
+            retry_times = 10
+            while retry_times:
                 line = self._readline()
                 logging.info('%s: the read line is[%s]', self.port, line)
                 if line:
@@ -220,6 +220,7 @@ class ARM(IThci):
                     if line == 'Done':
                         break
                 else:
+                    retry_times -= 1
                     time.sleep(0.1)
             if line != 'Done':
                 raise Exception('%s: failed to find end of response' % self.port)
@@ -289,27 +290,27 @@ class ARM(IThci):
         else:
             pass
 
-    def __setDeviceRole(self, role):
-        """set thread device role:
+    def __setDeviceMode(self, mode):
+        """set thread device mode:
 
         Args:
-           role: thread device mode
+           mode: thread device mode
            r: rx-on-when-idle
            s: secure IEEE 802.15.4 data request
            d: full function device
            n: full network data
 
         Returns:
-           True: successful to set the device role
-           False: fail to set the device role
+           True: successful to set the device mode
+           False: fail to set the device mode
         """
-        print 'call __setDeviceRole'
-        print role
+        print 'call __setDeviceMode'
+        print mode
         try:
-            cmd = 'mode %s' % role
+            cmd = 'mode %s' % mode
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception, e:
-            ModuleHelper.WriteIntoDebugLogger("setDeviceRole() Error: " + str(e))
+            ModuleHelper.WriteIntoDebugLogger("setDeviceMode() Error: " + str(e))
 
     def __setRouterUpgradeThreshold(self, iThreshold):
         """set router upgrade threshold
@@ -446,6 +447,7 @@ class ARM(IThci):
         print 'call startOpenThread'
         try:
             if self.__sendCommand('ifconfig up')[0] == 'Done':
+                self.__setRouterSelectionJitter(1)
                 return self.__sendCommand('thread start')[0] == 'Done'
             else:
                 return False
@@ -469,7 +471,7 @@ class ARM(IThci):
             ModuleHelper.WriteIntoDebugLogger("stopOpenThread() Error: " + str(e))
 
     def __isOpenThreadRunning(self):
-        """check if OpenThread is running or not
+        """check whether or not OpenThread is running
 
         Returns:
             True: OpenThread is running
@@ -651,6 +653,26 @@ class ARM(IThci):
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setKeySwitchGuardTime() Error; " + str(e))
 
+    def __getCommissionerSessionId(self):
+        """ get the commissioner session id allocated from Leader """
+        print '%s call getCommissionerSessionId' % self.port
+        return self.__sendCommand('commissioner sessionid')[0]
+
+    def _connect(self):
+        print 'My port is %s' % self.port
+        if self.port.startswith('COM'):
+            self.handle = serial.Serial(self.port, 115200, timeout=0, xonxoff=True)
+            self._is_net = False
+        elif ':' in self.port:
+            host, port = self.port.split(':')
+            self.handle = socket.create_connection((host, port))
+            self.handle.setblocking(0)
+            self._is_net = True
+            # check connectivity, this make sure bad device fail on initializing
+            self.__sendCommand('state')
+        else:
+            raise Exception('Unknown port schema')
+
     def closeConnection(self):
         """close current serial port connection"""
         print '%s call closeConnection' % self.port
@@ -660,19 +682,6 @@ class ARM(IThci):
                 self.handle = None
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("closeConnection() Error: " + str(e))
-
-    def _connect(self):
-        print('My port is %s' % self.port)
-        if self.port.startswith('COM'):
-            self.handle = serial.Serial(self.port, 115200, timeout=0, xonxoff=True)
-            self._is_net = False
-        elif ':' in self.port:
-            host, port = self.port.split(':')
-            self.handle = socket.create_connection((host, port))
-            self.handle.setblocking(0)
-            self._is_net = True
-        else:
-            raise Exception('Unknown port schema')
 
     def intialize(self):
         """initialize the serial port with baudrate, timeout parameters"""
@@ -702,14 +711,6 @@ class ARM(IThci):
         print networkName
         try:
             cmd = 'networkname %s' % networkName
-            if self.__sendCommand(cmd)[0] != 'Done':
-                return False
-
-            cmd = 'dataset networkname %s' % networkName
-            if self.__sendCommand(cmd)[0] != 'Done':
-                return False
-
-            cmd = 'dataset commit active'
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setNetworkName() Error: " + str(e))
@@ -737,14 +738,6 @@ class ARM(IThci):
         try:
             cmd = 'channel %s' % channel
             print cmd
-            if self.__sendCommand(cmd)[0] != 'Done':
-                return False
-
-            cmd = 'dataset channel %s' % channel
-            if self.__sendCommand(cmd)[0] != 'Done':
-                return False
-
-            cmd = 'dataset commit active'
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setChannel() Error: " + str(e))
@@ -873,15 +866,6 @@ class ARM(IThci):
                 cmd = 'masterkey %s' % masterKey
 
             self.networkKey = masterKey
-
-            if self.__sendCommand(cmd)[0] != 'Done':
-                return False
-
-            cmd = 'dataset masterkey %s' % masterKey
-            if self.__sendCommand(cmd)[0] != 'Done':
-                return False
-
-            cmd = 'dataset commit active'
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setNetworkkey() Error: " + str(e))
@@ -997,7 +981,7 @@ class ARM(IThci):
         """
         print '%s call joinNetwork' % self.port
         print eRoleId
-        role = ''
+        mode = ''
         try:
             if ModuleHelper.LeaderDutChannelFound:
                 self.channel = ModuleHelper.Default_Channel
@@ -1006,50 +990,43 @@ class ARM(IThci):
             # only sleep end device requires stable netowrkdata now
             if eRoleId == Thread_Device_Role.Leader:
                 print 'join as leader'
-                role = 'rsdn'
-                self.__setRouterSelectionJitter(1)
+                mode = 'rsdn'
                 if self.AutoDUTEnable is False:
-                    # set ROUTER_UPGRADE_THRESHOLD
-                    self.__setRouterUpgradeThreshold(32)
                     # set ROUTER_DOWNGRADE_THRESHOLD
                     self.__setRouterDowngradeThreshold(33)
             elif eRoleId == Thread_Device_Role.Router:
                 print 'join as router'
-                role = 'rsdn'
-                self.__setRouterSelectionJitter(1)
+                mode = 'rsdn'
                 if self.AutoDUTEnable is False:
-                    # set ROUTER_UPGRADE_THRESHOLD
-                    self.__setRouterUpgradeThreshold(33)
                     # set ROUTER_DOWNGRADE_THRESHOLD
                     self.__setRouterDowngradeThreshold(33)
             elif eRoleId == Thread_Device_Role.SED:
                 print 'join as sleepy end device'
-                role = 's'
-                if self.AutoDUTEnable is False:
-                    # set data polling rate to 15s for SED
-                    self.setPollingRate(15)
+                mode = 's'
+                # set data polling rate to 15s for SED
+                self.setPollingRate(15)
             elif eRoleId == Thread_Device_Role.EndDevice:
                 print 'join as end device'
-                role = 'rsn'
+                mode = 'rsn'
             elif eRoleId == Thread_Device_Role.REED:
                 print 'join as REED'
-                role = 'rsdn'
+                mode = 'rsdn'
                 # set ROUTER_UPGRADE_THRESHOLD
                 self.__setRouterUpgradeThreshold(0)
             elif eRoleId == Thread_Device_Role.EndDevice_FED:
                 # always remain an ED, never request to be a router
                 print 'join as FED'
-                role = 'rsdn'
+                mode = 'rsdn'
                 # set ROUTER_UPGRADE_THRESHOLD
                 self.__setRouterUpgradeThreshold(0)
             elif eRoleId == Thread_Device_Role.EndDevice_MED:
                 print 'join as MED'
-                role = 'rsn'
+                mode = 'rsn'
             else:
                 pass
 
-            # set Thread device with a given role
-            self.__setDeviceRole(role)
+            # set Thread device mode with a given role
+            self.__setDeviceMode(mode)
             self.__setKeySwitchGuardTime(0)
 
             # start OpenThread
@@ -1104,8 +1081,6 @@ class ARM(IThci):
         print '%s call powerDown' % self.port
         self.isPowerDown = True
         self._sendline('reset')
-        time.sleep(3)
-        self.setMAC(self.mac)
 
     def powerUp(self):
         """power up the Thread device"""
@@ -1127,11 +1102,10 @@ class ARM(IThci):
         """
         print '%s call reboot' % self.port
         try:
-            # stop OpenThread
-            self.__stopOpenThread()
-            # start OpenThread
-            self.__startOpenThread()
+            self._sendline('reset')
+            time.sleep(3)
 
+            self.__startOpenThread()
             time.sleep(3)
 
             if self.__sendCommand('state')[0] == 'disabled':
@@ -1206,14 +1180,6 @@ class ARM(IThci):
                 print panid
 
             cmd = 'panid %s' % panid
-            if self.__sendCommand(cmd)[0] != 'Done':
-                return False
-
-            cmd = 'dataset panid %s' % panid
-            if self.__sendCommand(cmd) != 'Done':
-                return False
-
-            cmd = 'dataset commit active'
             return self.__sendCommand(cmd) == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setPANID() Error: " + str(e))
@@ -1262,20 +1228,16 @@ class ARM(IThci):
         """set default mandatory Thread Network parameter value"""
         print '%s call setDefaultValues' % self.port
         try:
-            self.setActiveTimestamp(self.activetimestamp)
             self.setChannel(self.channel)
             self.setMAC(self.mac)
             self.setPANID(self.panId)
             self.setXpanId(self.xpanId)
             self.setNetworkName(self.networkName)
             self.setNetworkKey(self.networkKey)
-            self.setMLPrefix(self.localprefix)
-            self.setPSKc(self.pskc)
-            self.__setSecurityPolicy(self.securityPolicySecs)
-            self.__setChannelMask("0xffff")
             self.isWhiteListEnabled = False
             self.isBlackListEnabled = False
-            self.firmware = 'Sep 9 2016 14:57:36'
+            self.isActiveCommissioner = False
+            self.firmware = 'Nov 4 2016 07:24:59'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setDefaultValue() Error: " + str(e))
 
@@ -1385,13 +1347,10 @@ class ARM(IThci):
         print '%s call resetAndRejoin' % self.port
         print timeout
         try:
-            # start OpenThread
-            self.__stopOpenThread()
-            # wait timeout
+            self._sendline('reset')
             time.sleep(timeout)
-            # stop OpenThread
-            self.__startOpenThread()
 
+            self.__startOpenThread()
             time.sleep(3)
 
             if self.__sendCommand('state')[0] == 'disabled':
@@ -1733,15 +1692,6 @@ class ARM(IThci):
                 cmd = 'extpanid %s' % xpanid
 
             self.xpanId = xpanid
-
-            if self.__sendCommand(cmd)[0] != 'Done':
-                return False
-
-            cmd = 'dataset extpanid %s' % xpanid
-            if self.__sendCommand(cmd)[0] != 'Done':
-                return False
-
-            cmd = 'dataset commit active'
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setXpanId() Error: " + str(e))
@@ -1886,7 +1836,8 @@ class ARM(IThci):
     def getChildTimeoutValue(self):
         """get child timeout"""
         print '%s call getChildTimeoutValue' % self.port
-        return self.__sendCommand('childtimeout')[0]
+        childTimeout = self.__sendCommand('childtimeout')[0]
+        return int(childTimeout)
 
     def diagnosticGet(self, strDestinationAddr, listTLV_ids=[]):
         if not listTLV_ids:
@@ -1913,7 +1864,16 @@ class ARM(IThci):
         return self.__sendCommand(cmd)
 
     def startNativeCommissioner(self, strPSKc='GRLpassWord'):
-        pass
+        #TODO: Support the whole Native Commissioner functionality
+        #      Currently it only aims to trigger a Discovery Request message to pass Certification test 5.8.4
+        print '%s call startNativeCommissioner' % self.port
+        self.__sendCommand('ifconfig up')
+        cmd = 'joiner start %s' %(strPSKc)
+        print cmd
+        if self.__sendCommand(cmd)[0] == "Done":
+            return True
+        else:
+            return False
 
     def startCollapsedCommissioner(self):
         """start Collapsed Commissioner
@@ -1928,6 +1888,7 @@ class ARM(IThci):
             cmd = 'commissioner start'
             print cmd
             if self.__sendCommand(cmd)[0] == 'Done':
+                self.isActiveCommissioner = True
                 time.sleep(20) # time for petition process
                 return True
         return False
@@ -1990,6 +1951,7 @@ class ARM(IThci):
             cmd = 'commissioner start'
             print cmd
             if self.__sendCommand(cmd)[0] == 'Done':
+                self.isActiveCommissioner = True
                 time.sleep(40) # time for petition process and at least one keep alive
                 return True
             else:
@@ -2150,6 +2112,10 @@ class ARM(IThci):
         try:
             cmd = 'dataset mgmtgetcommand active'
 
+            if Addr != '':
+                cmd += ' address '
+                cmd += Addr
+
             if len(TLVs) != 0:
                 tlvs = "".join(hex(tlv).lstrip("0x").zfill(2) for tlv in TLVs)
                 cmd += ' binary '
@@ -2215,7 +2181,10 @@ class ARM(IThci):
 
             if listChannelMask != None:
                 cmd += ' channelmask '
-                cmd += str(hex(1 << listChannelMask[1]))
+                if len(listChannelMask) > 2:
+                    cmd += '0x' + self.__convertLongToString(self.__convertChannelMask(listChannelMask))
+                elif len(listChannelMask) == 2:
+                    cmd += str(hex(1 << listChannelMask[1]))
 
             if sPSKc != None or listSecurityPolicy != None or \
                xCommissioningSessionId != None or xTmfPort != None or xSteeringData != None or xBorderRouterLocator != None or \
@@ -2273,6 +2242,14 @@ class ARM(IThci):
 
                 cmd += locator
 
+            if xSteeringData != None:
+                steeringData = self.__convertLongToString(xSteeringData)
+                cmd += '08' + str(len(steeringData)/2).zfill(2)
+                cmd += steeringData
+
+            if BogusTLV != None:
+                cmd += "8202aa55"
+
             print cmd
 
             return self.__sendCommand(cmd)[0] == 'Done'
@@ -2290,6 +2267,10 @@ class ARM(IThci):
         print '%s call MGMT_PENDING_GET' % self.port
         try:
             cmd = 'dataset mgmtgetcommand pending'
+
+            if Addr != '':
+                cmd += ' address '
+                cmd += Addr
 
             if len(TLVs) != 0:
                 tlvs = "".join(hex(tlv).lstrip("0x").zfill(2) for tlv in TLVs)
@@ -2408,8 +2389,16 @@ class ARM(IThci):
             cmd = 'commissioner mgmtset'
 
             if xCommissionerSessionID != None:
+                # use assigned session id
                 cmd += ' sessionid '
                 cmd += str(xCommissionerSessionID)
+            elif xCommissionerSessionID == None:
+                # use original session id
+                if self.isActiveCommissioner == True:
+                    cmd += ' sessionid '
+                    cmd += self.__getCommissionerSessionId()
+                else:
+                    pass
 
             if xSteeringData != None:
                 cmd += ' steeringdata '
@@ -2418,6 +2407,10 @@ class ARM(IThci):
             if xBorderRouterLocator != None:
                 cmd += ' locator '
                 cmd += str(xBorderRouterLocator)
+
+            if xChannelTlv != None:
+                cmd += ' binary '
+                cmd += '000300' + hex(xChannelTlv).lstrip('0x').zfill(4) 
 
             print cmd
 
@@ -2434,9 +2427,8 @@ class ARM(IThci):
 
     def setPSKc(self, strPSKc):
         print '%s call setPSKc' % self.port
-        return
         try:
-            cmd = 'dataset pskc %s' % strPSKc
+            cmd = 'dataset pskc %s' % str(strPSKc[::-1].encode('hex'))
             print cmd
             if self.__sendCommand(cmd)[0] == 'Done':
                 return self.__sendCommand('dataset commit active')[0] == 'Done'
@@ -2486,6 +2478,25 @@ class ARM(IThci):
 
     def sendBeacons(self, sAddr, xCommissionerSessionId, listChannelMask, xPanId):
         print '%s call sendBeacons' % self.port
+        self._sendline('scan')
+        return True
 
     def updateRouterStatus(self):
+        """force update to router as if there is child id request"""
         print '%s call updateRouterStatus' % self.port
+        cmd = 'state'
+        while state = self.__sendCommand(cmd)[0]:
+            if state == 'detached':
+                continue
+            elif state == 'child':
+                break
+            else:
+                return False
+
+        cmd = 'state router'
+        return self.__sendCommand(cmd)[0] == 'Done'
+
+    def setRouterThresholdValues(self, upgradeThreshold, downgradeThreshold):
+        print '%s call setRouterThresholdValues' % self.port
+        self.__setRouterUpgradeThreshold(upgradeThreshold)
+        self.__setRouterDowngradeThreshold(downgradeThreshold)

@@ -26,48 +26,56 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "test_platform.h"
+
 #if _WIN32
-#define _CRT_SECURE_NO_WARNINGS
-#include <windows.h>
+__forceinline int gettimeofday(struct timeval *tv, struct timezone *)
+{
+    DWORD tick = GetTickCount();
+    tv->tv_sec = (long)(tick / 1000);
+    tv->tv_usec = (long)(tick * 1000);
+    return 0;
+}
+#else
+#include <sys/time.h>
 #endif
 
-#include <openthread.h>
+bool                            g_testPlatAlarmSet = false;
+uint32_t                        g_testPlatAlarmNext = 0;
+testPlatAlarmStop               g_testPlatAlarmStop = NULL;
+testPlatAlarmStartAt            g_testPlatAlarmStartAt = NULL;
+testPlatAlarmGetNow             g_testPlatAlarmGetNow = NULL;
 
-#include <common/code_utils.hpp>
-#include <platform/alarm.h>
-#include <platform/logging.h>
-#include <platform/misc.h>
-#include <platform/radio.h>
-#include <platform/random.h>
+otRadioCaps                     g_testPlatRadioCaps = kRadioCapsNone;
+testPlatRadioSetPanId           g_testPlatRadioSetPanId = NULL;
+testPlatRadioSetExtendedAddress g_testPlatRadioSetExtendedAddress = NULL;
+testPlatRadioEnable             g_testPlatRadioEnable = NULL;
+testPlatRadioDisable            g_testPlatRadioDisable = NULL;
+testPlatRadioSetShortAddress    g_testPlatRadioSetShortAddress = NULL;
+testPlatRadioReceive            g_testPlatRadioReceive = NULL;
+testPlatRadioTransmit           g_testPlatRadioTransmit = NULL;
+testPlatRadioGetTransmitBuffer  g_testPlatRadioGetTransmitBuffer = NULL;
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-enum
+void testPlatResetToDefaults(void)
 {
-    kCallCountIndexAlarmStop = 0,
-    kCallCountIndexAlarmStart,
-    kCallCountIndexTimerHandler,
+    g_testPlatAlarmSet = false;
+    g_testPlatAlarmNext = 0;
+    g_testPlatAlarmStop = NULL;
+    g_testPlatAlarmStartAt = NULL;
+    g_testPlatAlarmGetNow = NULL;
 
-    kCallCountIndexMax
-};
-
-uint32_t sNow;
-uint32_t sPlatT0;
-uint32_t sPlatDt;
-bool     sTimerOn;
-uint32_t sCallCount[kCallCountIndexMax];
+    g_testPlatRadioCaps = kRadioCapsNone;
+    g_testPlatRadioSetPanId = NULL;
+    g_testPlatRadioSetExtendedAddress = NULL;
+    g_testPlatRadioSetShortAddress = NULL;
+    g_testPlatRadioEnable = NULL;
+    g_testPlatRadioDisable = NULL;
+    g_testPlatRadioReceive = NULL;
+    g_testPlatRadioTransmit = NULL;
+    g_testPlatRadioGetTransmitBuffer = NULL;
+}
 
 bool sDiagMode = false;
-
-enum
-{
-    kFlashSize = 0x40000,
-    kFlashPageSize = 0x800,
-};
-
-uint8_t sFlashBuffer[kFlashSize];
 
 extern "C" {
 
@@ -79,23 +87,43 @@ extern "C" {
     // Alarm
     //
 
-    void otPlatAlarmStop(otInstance *)
+    void otPlatAlarmStop(otInstance *aInstance)
     {
-        sTimerOn = false;
-        sCallCount[kCallCountIndexAlarmStop]++;
+        if (g_testPlatAlarmStop)
+        {
+            g_testPlatAlarmStop(aInstance);
+        }
+        else
+        {
+            g_testPlatAlarmSet = false;
+        }
     }
 
-    void otPlatAlarmStartAt(otInstance *, uint32_t aT0, uint32_t aDt)
+    void otPlatAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
     {
-        sTimerOn = true;
-        sCallCount[kCallCountIndexAlarmStart]++;
-        sPlatT0 = aT0;
-        sPlatDt = aDt;
+        if (g_testPlatAlarmStartAt)
+        {
+            g_testPlatAlarmStartAt(aInstance, aT0, aDt);
+        }
+        else
+        {
+            g_testPlatAlarmSet = true;
+            g_testPlatAlarmNext = aT0 + aDt;
+        }
     }
 
     uint32_t otPlatAlarmGetNow(void)
     {
-        return sNow;
+        if (g_testPlatAlarmGetNow)
+        {
+            return g_testPlatAlarmGetNow();
+        }
+        else
+        {
+            struct timeval tv;
+            gettimeofday(&tv, NULL);
+            return (uint32_t)((tv.tv_sec * 1000) + (tv.tv_usec / 1000) + 123456);
+        }
     }
 
     //
@@ -106,30 +134,56 @@ extern "C" {
     {
     }
 
-    void otPlatRadioSetPanId(otInstance *, uint16_t)
+    void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
     {
+        if (g_testPlatRadioSetPanId)
+        {
+            g_testPlatRadioSetPanId(aInstance, aPanId);
+        }
     }
 
-    void otPlatRadioSetExtendedAddress(otInstance *, uint8_t *)
+    void otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *aExtAddr)
     {
+        if (g_testPlatRadioSetExtendedAddress)
+        {
+            g_testPlatRadioSetExtendedAddress(aInstance, aExtAddr);
+        }
     }
 
-    void otPlatRadioSetShortAddress(otInstance *, uint16_t)
+    void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddr)
     {
+        if (g_testPlatRadioSetShortAddress)
+        {
+            g_testPlatRadioSetShortAddress(aInstance, aShortAddr);
+        }
     }
 
     void otPlatRadioSetPromiscuous(otInstance *, bool)
     {
     }
 
-    ThreadError otPlatRadioEnable(otInstance *)
+    ThreadError otPlatRadioEnable(otInstance *aInstance)
     {
-        return kThreadError_None;
+        if (g_testPlatRadioEnable)
+        {
+            return g_testPlatRadioEnable(aInstance);
+        }
+        else
+        {
+            return kThreadError_None;
+        }
     }
 
-    ThreadError otPlatRadioDisable(otInstance *)
+    ThreadError otPlatRadioDisable(otInstance *aInstance)
     {
-        return kThreadError_None;
+        if (g_testPlatRadioEnable)
+        {
+            return g_testPlatRadioDisable(aInstance);
+        }
+        else
+        {
+            return kThreadError_None;
+        }
     }
 
     ThreadError otPlatRadioSleep(otInstance *)
@@ -137,19 +191,42 @@ extern "C" {
         return kThreadError_None;
     }
 
-    ThreadError otPlatRadioReceive(otInstance *, uint8_t)
+    ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     {
-        return kThreadError_None;
+        if (g_testPlatRadioReceive)
+        {
+            return g_testPlatRadioReceive(aInstance, aChannel);
+        }
+        else
+        {
+            return kThreadError_None;
+        }
     }
 
-    ThreadError otPlatRadioTransmit(otInstance *)
+    ThreadError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
     {
-        return kThreadError_None;
+        (void)aPacket;
+
+        if (g_testPlatRadioTransmit)
+        {
+            return g_testPlatRadioTransmit(aInstance);
+        }
+        else
+        {
+            return kThreadError_None;
+        }
     }
 
-    RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *)
+    RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
     {
-        return (RadioPacket *)0;
+        if (g_testPlatRadioGetTransmitBuffer)
+        {
+            return g_testPlatRadioGetTransmitBuffer(aInstance);
+        }
+        else
+        {
+            return (RadioPacket *)0;
+        }
     }
 
     int8_t otPlatRadioGetRssi(otInstance *)
@@ -159,7 +236,7 @@ extern "C" {
 
     otRadioCaps otPlatRadioGetCaps(otInstance *)
     {
-        return kRadioCapsNone;
+        return g_testPlatRadioCaps;
     }
 
     bool otPlatRadioGetPromiscuous(otInstance *)
@@ -271,7 +348,7 @@ exit:
     {
     }
 
-    void otPlatDiagRadioTransmitDone(otInstance *, bool, ThreadError)
+    void otPlatDiagRadioTransmitDone(otInstance *, RadioPacket *, bool, ThreadError)
     {
     }
 
@@ -311,71 +388,79 @@ exit:
     }
 
     //
-    // Flash
+    // Settings
     //
-    ThreadError otPlatFlashInit(void)
+
+    void otPlatSettingsInit(otInstance *aInstance)
     {
-        memset(sFlashBuffer, 0xff, kFlashSize);
+        (void)aInstance;
+    }
+
+    ThreadError otPlatSettingsBeginChange(otInstance *aInstance)
+    {
+        (void)aInstance;
+
         return kThreadError_None;
     }
 
-    uint32_t otPlatFlashGetSize(void)
+    ThreadError otPlatSettingsCommitChange(otInstance *aInstance)
     {
-        return kFlashSize;
-    }
+        (void)aInstance;
 
-    ThreadError otPlatFlashErasePage(uint32_t aAddress)
-    {
-        ThreadError error = kThreadError_None;
-        uint32_t address;
-
-        VerifyOrExit(aAddress < kFlashSize, error = kThreadError_InvalidArgs);
-
-        // Get start address of the flash page that includes aAddress
-        address = aAddress & (~(uint32_t)(kFlashPageSize - 1));
-        memset(sFlashBuffer + address, 0xff, kFlashPageSize);
-
-exit:
-        return error;
-    }
-
-    ThreadError otPlatFlashStatusWait(uint32_t aTimeout)
-    {
-        (void)aTimeout;
         return kThreadError_None;
     }
 
-    uint32_t otPlatFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+    ThreadError otPlatSettingsAbandonChange(otInstance *aInstance)
     {
-        uint32_t ret = 0;
-        uint8_t byte;
+        (void)aInstance;
 
-        VerifyOrExit(aAddress < kFlashSize, ;);
-
-        for (uint32_t index = 0; index < aSize; index++)
-        {
-            byte = sFlashBuffer[aAddress + index];
-            byte &= aData[index];
-            sFlashBuffer[aAddress + index] = byte;
-        }
-
-        ret = aSize;
-
-exit:
-        return ret;
+        return kThreadError_None;
     }
 
-    uint32_t otPlatFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+    ThreadError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue,
+                                  uint16_t *aValueLength)
     {
-        uint32_t ret = 0;
+        (void)aInstance;
+        (void)aKey;
+        (void)aIndex;
+        (void)aValue;
+        (void)aValueLength;
 
-        VerifyOrExit(aAddress < kFlashSize, ;);
+        return kThreadError_None;
+    }
 
-        memcpy(aData, sFlashBuffer + aAddress, aSize);
-        ret = aSize;
+    ThreadError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+    {
+        (void)aInstance;
+        (void)aKey;
+        (void)aValue;
+        (void)aValueLength;
 
-exit:
-        return ret;
+        return kThreadError_None;
+    }
+
+    ThreadError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+    {
+        (void)aInstance;
+        (void)aKey;
+        (void)aValue;
+        (void)aValueLength;
+
+        return kThreadError_None;
+    }
+
+    ThreadError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
+    {
+        (void)aInstance;
+        (void)aKey;
+        (void)aIndex;
+
+        return kThreadError_None;
+    }
+
+    void otPlatSettingsWipe(otInstance *aInstance)
+    {
+        (void)aInstance;
     }
 
 } // extern "C"

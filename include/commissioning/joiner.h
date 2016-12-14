@@ -35,6 +35,8 @@
 #ifndef OPENTHREAD_JOINER_H_
 #define OPENTHREAD_JOINER_H_
 
+#include <platform/toolchain.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -57,7 +59,7 @@ extern "C" {
  * @retval kThreadError_InvalidArgs  @p aPSKd or @p aProvisioningUrl is invalid.
  *
  */
-ThreadError otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl);
+OTAPI ThreadError OTCALL otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl);
 
 /**
  * This function disables the Thread Joiner role.
@@ -65,7 +67,7 @@ ThreadError otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
  */
-ThreadError otJoinerStop(otInstance *aInstance);
+OTAPI ThreadError OTCALL otJoinerStop(otInstance *aInstance);
 
 /**
  * @}

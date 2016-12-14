@@ -65,6 +65,14 @@ ifeq ($(JOINER),1)
 configure_OPTIONS              += --enable-joiner
 endif
 
+ifeq ($(DHCP6_SERVER),1)
+configure_OPTIONS              += --enable-dhcp6-server
+endif
+
+ifeq ($(DHCP6_CLIENT),1)
+configure_OPTIONS              += --enable-dhcp6-client
+endif
+
 COMMONCFLAGS                   := \
     -fdata-sections               \
     -ffunction-sections           \

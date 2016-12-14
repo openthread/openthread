@@ -207,10 +207,12 @@ exit:
     return error;
 }
 
-void AddressResolver::HandleAddressNotification(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                                                const Ip6::MessageInfo &aMessageInfo)
+void AddressResolver::HandleAddressNotification(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                                const otMessageInfo *aMessageInfo)
 {
-    static_cast<AddressResolver *>(aContext)->HandleAddressNotification(aHeader, aMessage, aMessageInfo);
+    static_cast<AddressResolver *>(aContext)->HandleAddressNotification(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void AddressResolver::HandleAddressNotification(Coap::Header &aHeader, Message &aMessage,
@@ -303,7 +305,6 @@ void AddressResolver::SendAddressNotificationResponse(const Coap::Header &aReque
 
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
 
-    memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
     SuccessOrExit(error = mCoapServer.SendMessage(*message, responseInfo));
 
     otLogInfoArp("Sent address notification acknowledgment");
@@ -376,7 +377,6 @@ void AddressResolver::SendAddressErrorResponse(const Coap::Header &aRequestHeade
 
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
 
-    memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
     SuccessOrExit(error = mCoapServer.SendMessage(*message, responseInfo));
 
     otLogInfoArp("Sent address error notification acknowledgment");
@@ -389,10 +389,12 @@ exit:
     }
 }
 
-void AddressResolver::HandleAddressError(void *aContext, Coap::Header &aHeader,
-                                         Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void AddressResolver::HandleAddressError(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                         const otMessageInfo *aMessageInfo)
 {
-    static_cast<AddressResolver *>(aContext)->HandleAddressError(aHeader, aMessage, aMessageInfo);
+    static_cast<AddressResolver *>(aContext)->HandleAddressError(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessage,
@@ -467,10 +469,12 @@ exit:
     {}
 }
 
-void AddressResolver::HandleAddressQuery(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                                         const Ip6::MessageInfo &aMessageInfo)
+void AddressResolver::HandleAddressQuery(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                         const otMessageInfo *aMessageInfo)
 {
-    static_cast<AddressResolver *>(aContext)->HandleAddressQuery(aHeader, aMessage, aMessageInfo);
+    static_cast<AddressResolver *>(aContext)->HandleAddressQuery(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void AddressResolver::HandleAddressQuery(Coap::Header &aHeader, Message &aMessage,

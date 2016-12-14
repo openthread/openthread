@@ -4,11 +4,11 @@
 
                                                           R. Quattlebaum
                                                                Nest Labs
-                                                        October 11, 2016
+                                                        November 4, 2016
 
 
                     Spinel Host-Controller Protocol
-                     draft-spinel-protocol-469cd3a
+                    draft-spinel-protocol-f9bf43254
 
 Abstract
 
@@ -53,9 +53,9 @@ Copyright Notice
 
 
 
-Quattlebaum              Expires April 14, 2017                 [Page 1]
+Quattlebaum                Expires May 8, 2017                  [Page 1]
 
-                        Spinel Protocol (469cd3a)           October 2016
+                       Spinel Protocol (f9bf43254)         November 2016
 
 
    BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
@@ -67,27 +67,27 @@ Quattlebaum              Expires April 14, 2017                 [Page 1]
 
 Table of Contents
 
-   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   5
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   6
      1.1.  About this Draft  . . . . . . . . . . . . . . . . . . . .   6
        1.1.1.  Renumbering . . . . . . . . . . . . . . . . . . . . .   6
        1.1.2.  Spinel as Application API . . . . . . . . . . . . . .   7
-       1.1.3.  Privileged Commands and Properties  . . . . . . . . .   7
+       1.1.3.  Privileged Commands and Properties  . . . . . . . . .   8
      1.2.  Property Overview . . . . . . . . . . . . . . . . . . . .   8
        1.2.1.  Property Methods  . . . . . . . . . . . . . . . . . .   8
        1.2.2.  Property Types  . . . . . . . . . . . . . . . . . . .   9
    2.  Frame Format  . . . . . . . . . . . . . . . . . . . . . . . .  10
-     2.1.  Header Format . . . . . . . . . . . . . . . . . . . . . .  10
+     2.1.  Header Format . . . . . . . . . . . . . . . . . . . . . .  11
        2.1.1.  FLG: Flag . . . . . . . . . . . . . . . . . . . . . .  11
        2.1.2.  IID: Interface Identifier . . . . . . . . . . . . . .  11
        2.1.3.  TID: Transaction Identifier . . . . . . . . . . . . .  11
-       2.1.4.  Command Identifier (CMD)  . . . . . . . . . . . . . .  11
+       2.1.4.  Command Identifier (CMD)  . . . . . . . . . . . . . .  12
        2.1.5.  Command Payload (Optional)  . . . . . . . . . . . . .  12
    3.  Data Packing  . . . . . . . . . . . . . . . . . . . . . . . .  12
-     3.1.  Primitive Types . . . . . . . . . . . . . . . . . . . . .  12
+     3.1.  Primitive Types . . . . . . . . . . . . . . . . . . . . .  13
      3.2.  Packed Unsigned Integer . . . . . . . . . . . . . . . . .  13
      3.3.  Data Blobs  . . . . . . . . . . . . . . . . . . . . . . .  14
      3.4.  Structured Data . . . . . . . . . . . . . . . . . . . . .  15
-     3.5.  Arrays  . . . . . . . . . . . . . . . . . . . . . . . . .  15
+     3.5.  Arrays  . . . . . . . . . . . . . . . . . . . . . . . . .  16
    4.  Commands  . . . . . . . . . . . . . . . . . . . . . . . . . .  16
      4.1.  CMD 0: (Host->NCP) CMD_NOOP . . . . . . . . . . . . . . .  16
      4.2.  CMD 1: (Host->NCP) CMD_RESET  . . . . . . . . . . . . . .  16
@@ -98,168 +98,189 @@ Table of Contents
      4.7.  CMD 6: (NCP->Host) CMD_PROP_VALUE_IS  . . . . . . . . . .  18
      4.8.  CMD 7: (NCP->Host) CMD_PROP_VALUE_INSERTED  . . . . . . .  19
      4.9.  CMD 8: (NCP->Host) CMD_PROP_VALUE_REMOVED . . . . . . . .  19
-   5.  Properties  . . . . . . . . . . . . . . . . . . . . . . . . .  20
-     5.1.  Property Sections . . . . . . . . . . . . . . . . . . . .  20
-     5.2.  Core Properties . . . . . . . . . . . . . . . . . . . . .  21
-       5.2.1.  PROP 0: PROP_LAST_STATUS  . . . . . . . . . . . . . .  21
-       5.2.2.  PROP 1: PROP_PROTOCOL_VERSION . . . . . . . . . . . .  21
-       5.2.3.  PROP 2: PROP_NCP_VERSION  . . . . . . . . . . . . . .  22
-       5.2.4.  PROP 3: PROP_INTERFACE_TYPE . . . . . . . . . . . . .  22
-       5.2.5.  PROP 4: PROP_INTERFACE_VENDOR_ID  . . . . . . . . . .  23
+     4.10. CMD 18: (Host->NCP) CMD_PEEK  . . . . . . . . . . . . . .  20
+     4.11. CMD 19: (NCP->Host) CMD_PEEK_RET  . . . . . . . . . . . .  20
+     4.12. CMD 20: (Host->NCP) CMD_POKE  . . . . . . . . . . . . . .  20
+   5.  Properties  . . . . . . . . . . . . . . . . . . . . . . . . .  21
+     5.1.  Property Sections . . . . . . . . . . . . . . . . . . . .  21
+     5.2.  Core Properties . . . . . . . . . . . . . . . . . . . . .  22
+       5.2.1.  PROP 0: PROP_LAST_STATUS  . . . . . . . . . . . . . .  22
+       5.2.2.  PROP 1: PROP_PROTOCOL_VERSION . . . . . . . . . . . .  22
 
 
 
-Quattlebaum              Expires April 14, 2017                 [Page 2]
+Quattlebaum                Expires May 8, 2017                  [Page 2]
 
-                        Spinel Protocol (469cd3a)           October 2016
+                       Spinel Protocol (f9bf43254)         November 2016
 
 
-       5.2.6.  PROP 5: PROP_CAPS . . . . . . . . . . . . . . . . . .  23
-       5.2.7.  PROP 6: PROP_INTERFACE_COUNT  . . . . . . . . . . . .  24
-       5.2.8.  PROP 7: PROP_POWER_STATE  . . . . . . . . . . . . . .  25
-       5.2.9.  PROP 8: PROP_HWADDR . . . . . . . . . . . . . . . . .  25
-       5.2.10. PROP 9: PROP_LOCK . . . . . . . . . . . . . . . . . .  26
-     5.3.  Stream Properties . . . . . . . . . . . . . . . . . . . .  26
-       5.3.1.  PROP 112: PROP_STREAM_DEBUG . . . . . . . . . . . . .  26
-       5.3.2.  PROP 113: PROP_STREAM_RAW . . . . . . . . . . . . . .  27
-       5.3.3.  PROP 114: PROP_STREAM_NET . . . . . . . . . . . . . .  28
-       5.3.4.  PROP 114: PROP_STREAM_NET_INSECURE  . . . . . . . . .  29
-     5.4.  PHY Properties  . . . . . . . . . . . . . . . . . . . . .  29
-       5.4.1.  PROP 32: PROP_PHY_ENABLED . . . . . . . . . . . . . .  29
-       5.4.2.  PROP 33: PROP_PHY_CHAN  . . . . . . . . . . . . . . .  30
-       5.4.3.  PROP 34: PROP_PHY_CHAN_SUPPORTED  . . . . . . . . . .  30
-       5.4.4.  PROP 35: PROP_PHY_FREQ  . . . . . . . . . . . . . . .  30
-       5.4.5.  PROP 36: PROP_PHY_CCA_THRESHOLD . . . . . . . . . . .  30
-       5.4.6.  PROP 37: PROP_PHY_TX_POWER  . . . . . . . . . . . . .  30
-       5.4.7.  PROP 38: PROP_PHY_RSSI  . . . . . . . . . . . . . . .  31
-     5.5.  MAC Properties  . . . . . . . . . . . . . . . . . . . . .  31
-       5.5.1.  PROP 48: PROP_MAC_SCAN_STATE  . . . . . . . . . . . .  31
-       5.5.2.  PROP 49: PROP_MAC_SCAN_MASK . . . . . . . . . . . . .  31
-       5.5.3.  PROP 50: PROP_MAC_SCAN_PERIOD . . . . . . . . . . . .  31
-       5.5.4.  PROP 51: PROP_MAC_SCAN_BEACON . . . . . . . . . . . .  32
-       5.5.5.  PROP 52: PROP_MAC_15_4_LADDR  . . . . . . . . . . . .  32
-       5.5.6.  PROP 53: PROP_MAC_15_4_SADDR  . . . . . . . . . . . .  33
-       5.5.7.  PROP 54: PROP_MAC_15_4_PANID  . . . . . . . . . . . .  33
-       5.5.8.  PROP 55: PROP_MAC_RAW_STREAM_ENABLED  . . . . . . . .  33
-       5.5.9.  PROP 56: PROP_MAC_PROMISCUOUS_MODE  . . . . . . . . .  33
-       5.5.10. PROP 4864: PROP_MAC_WHITELIST . . . . . . . . . . . .  34
-       5.5.11. PROP 4865: PROP_MAC_WHITELIST_ENABLED . . . . . . . .  34
-     5.6.  NET Properties  . . . . . . . . . . . . . . . . . . . . .  34
-       5.6.1.  PROP 64: PROP_NET_SAVED . . . . . . . . . . . . . . .  34
-       5.6.2.  PROP 65: PROP_NET_IF_UP . . . . . . . . . . . . . . .  34
-       5.6.3.  PROP 66: PROP_NET_STACK_UP  . . . . . . . . . . . . .  34
-       5.6.4.  PROP 67: PROP_NET_ROLE  . . . . . . . . . . . . . . .  35
-       5.6.5.  PROP 68: PROP_NET_NETWORK_NAME  . . . . . . . . . . .  35
-       5.6.6.  PROP 69: PROP_NET_XPANID  . . . . . . . . . . . . . .  35
-       5.6.7.  PROP 70: PROP_NET_MASTER_KEY  . . . . . . . . . . . .  35
-       5.6.8.  PROP 71: PROP_NET_KEY_SEQUENCE_COUNTER. . . . . . . .  35
-       5.6.9.  PROP 72: PROP_NET_PARTITION_ID  . . . . . . . . . . .  35
-       5.6.10.  PROP 73: PROP_NET_KEY_SWITCH_GUARDTIME . . . . . . .  35
-     5.7.  IPv6 Properties . . . . . . . . . . . . . . . . . . . . .  35
-       5.7.1.  PROP 96: PROP_IPV6_LL_ADDR  . . . . . . . . . . . . .  35
-       5.7.2.  PROP 97: PROP_IPV6_ML_ADDR  . . . . . . . . . . . . .  36
-       5.7.3.  PROP 98: PROP_IPV6_ML_PREFIX  . . . . . . . . . . . .  36
-       5.7.4.  PROP 99: PROP_IPV6_ADDRESS_TABLE  . . . . . . . . . .  36
-       5.7.5.  PROP 101: PROP_IPv6_ICMP_PING_OFFLOAD . . . . . . . .  36
-   6.  Status Codes  . . . . . . . . . . . . . . . . . . . . . . . .  36
-   7.  Security Considerations . . . . . . . . . . . . . . . . . . .  38
+       5.2.3.  PROP 2: PROP_NCP_VERSION  . . . . . . . . . . . . . .  23
+       5.2.4.  PROP 3: PROP_INTERFACE_TYPE . . . . . . . . . . . . .  23
+       5.2.5.  PROP 4: PROP_INTERFACE_VENDOR_ID  . . . . . . . . . .  24
+       5.2.6.  PROP 5: PROP_CAPS . . . . . . . . . . . . . . . . . .  24
+       5.2.7.  PROP 6: PROP_INTERFACE_COUNT  . . . . . . . . . . . .  25
+       5.2.8.  PROP 7: PROP_POWER_STATE  . . . . . . . . . . . . . .  26
+       5.2.9.  PROP 8: PROP_HWADDR . . . . . . . . . . . . . . . . .  26
+       5.2.10. PROP 9: PROP_LOCK . . . . . . . . . . . . . . . . . .  27
+     5.3.  Stream Properties . . . . . . . . . . . . . . . . . . . .  27
+       5.3.1.  PROP 112: PROP_STREAM_DEBUG . . . . . . . . . . . . .  27
+       5.3.2.  PROP 113: PROP_STREAM_RAW . . . . . . . . . . . . . .  28
+       5.3.3.  PROP 114: PROP_STREAM_NET . . . . . . . . . . . . . .  29
+       5.3.4.  PROP 114: PROP_STREAM_NET_INSECURE  . . . . . . . . .  30
+     5.4.  PHY Properties  . . . . . . . . . . . . . . . . . . . . .  31
+       5.4.1.  PROP 32: PROP_PHY_ENABLED . . . . . . . . . . . . . .  31
+       5.4.2.  PROP 33: PROP_PHY_CHAN  . . . . . . . . . . . . . . .  31
+       5.4.3.  PROP 34: PROP_PHY_CHAN_SUPPORTED  . . . . . . . . . .  31
+       5.4.4.  PROP 35: PROP_PHY_FREQ  . . . . . . . . . . . . . . .  31
+       5.4.5.  PROP 36: PROP_PHY_CCA_THRESHOLD . . . . . . . . . . .  31
+       5.4.6.  PROP 37: PROP_PHY_TX_POWER  . . . . . . . . . . . . .  32
+       5.4.7.  PROP 38: PROP_PHY_RSSI  . . . . . . . . . . . . . . .  32
+     5.5.  MAC Properties  . . . . . . . . . . . . . . . . . . . . .  32
+       5.5.1.  PROP 48: PROP_MAC_SCAN_STATE  . . . . . . . . . . . .  32
+       5.5.2.  PROP 49: PROP_MAC_SCAN_MASK . . . . . . . . . . . . .  33
+       5.5.3.  PROP 50: PROP_MAC_SCAN_PERIOD . . . . . . . . . . . .  33
+       5.5.4.  PROP 51: PROP_MAC_SCAN_BEACON . . . . . . . . . . . .  33
+       5.5.5.  PROP 52: PROP_MAC_15_4_LADDR  . . . . . . . . . . . .  34
+       5.5.6.  PROP 53: PROP_MAC_15_4_SADDR  . . . . . . . . . . . .  34
+       5.5.7.  PROP 54: PROP_MAC_15_4_PANID  . . . . . . . . . . . .  34
+       5.5.8.  PROP 55: PROP_MAC_RAW_STREAM_ENABLED  . . . . . . . .  34
+       5.5.9.  PROP 56: PROP_MAC_PROMISCUOUS_MODE  . . . . . . . . .  34
+       5.5.10. PROP 4864: PROP_MAC_WHITELIST . . . . . . . . . . . .  35
+       5.5.11. PROP 4865: PROP_MAC_WHITELIST_ENABLED . . . . . . . .  35
+     5.6.  NET Properties  . . . . . . . . . . . . . . . . . . . . .  35
+       5.6.1.  PROP 64: PROP_NET_SAVED . . . . . . . . . . . . . . .  35
+       5.6.2.  PROP 65: PROP_NET_IF_UP . . . . . . . . . . . . . . .  35
+       5.6.3.  PROP 66: PROP_NET_STACK_UP  . . . . . . . . . . . . .  36
+       5.6.4.  PROP 67: PROP_NET_ROLE  . . . . . . . . . . . . . . .  36
+       5.6.5.  PROP 68: PROP_NET_NETWORK_NAME  . . . . . . . . . . .  36
+       5.6.6.  PROP 69: PROP_NET_XPANID  . . . . . . . . . . . . . .  36
+       5.6.7.  PROP 70: PROP_NET_MASTER_KEY  . . . . . . . . . . . .  36
+       5.6.8.  PROP 71: PROP_NET_KEY_SEQUENCE_COUNTER  . . . . . . .  36
+       5.6.9.  PROP 72: PROP_NET_PARTITION_ID  . . . . . . . . . . .  37
+       5.6.10. PROP 73: PROP_NET_KEY_SWITCH_GUARDTIME  . . . . . . .  37
+     5.7.  IPv6 Properties . . . . . . . . . . . . . . . . . . . . .  37
+       5.7.1.  PROP 96: PROP_IPV6_LL_ADDR  . . . . . . . . . . . . .  37
+       5.7.2.  PROP 97: PROP_IPV6_ML_ADDR  . . . . . . . . . . . . .  37
+       5.7.3.  PROP 98: PROP_IPV6_ML_PREFIX  . . . . . . . . . . . .  37
 
 
 
-Quattlebaum              Expires April 14, 2017                 [Page 3]
+Quattlebaum                Expires May 8, 2017                  [Page 3]
 
-                        Spinel Protocol (469cd3a)           October 2016
+                       Spinel Protocol (f9bf43254)         November 2016
 
 
-   8.  Acknowledgments . . . . . . . . . . . . . . . . . . . . . . .  38
-     9.1.  URIs  . . . . . . . . . . . . . . . . . . . . . . . . . .  38
-   Appendix A.  Framing Protocol . . . . . . . . . . . . . . . . . .  39
-     A.1.  UART Recommendations  . . . . . . . . . . . . . . . . . .  39
-       A.1.1.  HDLC-Lite . . . . . . . . . . . . . . . . . . . . . .  39
-     A.2.  SPI Recommendations . . . . . . . . . . . . . . . . . . .  40
-       A.2.1.  SPI Framing Protocol  . . . . . . . . . . . . . . . .  41
-     A.3.  I^2C Recommendations  . . . . . . . . . . . . . . . . . .  42
-     A.4.  Native USB Recommendations  . . . . . . . . . . . . . . .  42
-   Appendix B.  Feature: Network Save  . . . . . . . . . . . . . . .  42
-     B.1.  Commands  . . . . . . . . . . . . . . . . . . . . . . . .  42
-       B.1.1.  CMD 9: (Host->NCP) CMD_NET_SAVE . . . . . . . . . . .  42
-       B.1.2.  CMD 10: (Host->NCP) CMD_NET_CLEAR . . . . . . . . . .  43
-       B.1.3.  CMD 11: (Host->NCP) CMD_NET_RECALL  . . . . . . . . .  43
-   Appendix C.  Feature: Host Buffer Offload . . . . . . . . . . . .  44
-     C.1.  Commands  . . . . . . . . . . . . . . . . . . . . . . . .  44
-       C.1.1.  CMD 12: (NCP->Host) CMD_HBO_OFFLOAD . . . . . . . . .  44
-       C.1.2.  CMD 13: (NCP->Host) CMD_HBO_RECLAIM . . . . . . . . .  44
-       C.1.3.  CMD 14: (NCP->Host) CMD_HBO_DROP  . . . . . . . . . .  44
-       C.1.4.  CMD 15: (Host->NCP) CMD_HBO_OFFLOADED . . . . . . . .  44
-       C.1.5.  CMD 16: (Host->NCP) CMD_HBO_RECLAIMED . . . . . . . .  45
-       C.1.6.  CMD 17: (Host->NCP) CMD_HBO_DROPPED . . . . . . . . .  45
-     C.2.  Properties  . . . . . . . . . . . . . . . . . . . . . . .  45
-       C.2.1.  PROP 10: PROP_HBO_MEM_MAX . . . . . . . . . . . . . .  45
-       C.2.2.  PROP 11: PROP_HBO_BLOCK_MAX . . . . . . . . . . . . .  45
-   Appendix D.  Technology: Thread . . . . . . . . . . . . . . . . .  46
-     D.1.  Thread Capabilities . . . . . . . . . . . . . . . . . . .  46
-     D.2.  Thread Properties . . . . . . . . . . . . . . . . . . . .  46
-       D.2.1.  PROP 80: PROP_THREAD_LEADER_ADDR  . . . . . . . . . .  46
-       D.2.2.  PROP 81: PROP_THREAD_PARENT . . . . . . . . . . . . .  47
-       D.2.3.  PROP 82: PROP_THREAD_CHILD_TABLE  . . . . . . . . . .  47
-       D.2.4.  PROP 83: PROP_THREAD_LEADER_RID . . . . . . . . . . .  47
-       D.2.5.  PROP 84: PROP_THREAD_LEADER_WEIGHT  . . . . . . . . .  47
-       D.2.6.  PROP 85: PROP_THREAD_LOCAL_LEADER_WEIGHT  . . . . . .  47
-       D.2.7.  PROP 86: PROP_THREAD_NETWORK_DATA . . . . . . . . . .  47
-       D.2.8.  PROP 87: PROP_THREAD_NETWORK_DATA_VERSION . . . . . .  47
-       D.2.9.  PROP 88: PROP_THREAD_STABLE_NETWORK_DATA  . . . . . .  48
-       D.2.10. PROP 89: PROP_THREAD_STABLE_NETWORK_DATA_VERSION  . .  48
-       D.2.11. PROP 90: PROP_THREAD_ON_MESH_NETS . . . . . . . . . .  48
-       D.2.12. PROP 91: PROP_THREAD_LOCAL_ROUTES . . . . . . . . . .  48
-       D.2.13. PROP 92: PROP_THREAD_ASSISTING_PORTS  . . . . . . . .  48
-       D.2.14. PROP 93: PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE  . .  48
-       D.2.15. PROP 94: PROP_THREAD_MODE . . . . . . . . . . . . . .  49
-       D.2.16. PROP 5376: PROP_THREAD_CHILD_TIMEOUT  . . . . . . . .  49
-       D.2.17. PROP 5377: PROP_THREAD_RLOC16 . . . . . . . . . . . .  49
-       D.2.18. PROP 5378: PROP_THREAD_ROUTER_UPGRADE_THRESHOLD . . .  49
-       D.2.19. PROP 5379: PROP_THREAD_CONTEXT_REUSE_DELAY  . . . . .  49
-       D.2.20. PROP 5380: PROP_THREAD_NETWORK_ID_TIMEOUT . . . . . .  49
+       5.7.4.  PROP 99: PROP_IPV6_ADDRESS_TABLE  . . . . . . . . . .  37
+       5.7.5.  PROP 101: PROP_IPv6_ICMP_PING_OFFLOAD . . . . . . . .  38
+   6.  Status Codes  . . . . . . . . . . . . . . . . . . . . . . . .  38
+   7.  Security Considerations . . . . . . . . . . . . . . . . . . .  39
+     7.1.  Raw Application Access  . . . . . . . . . . . . . . . . .  39
+   8.  Acknowledgments . . . . . . . . . . . . . . . . . . . . . . .  40
+     9.1.  URIs  . . . . . . . . . . . . . . . . . . . . . . . . . .  40
+   Appendix A.  Framing Protocol . . . . . . . . . . . . . . . . . .  40
+     A.1.  UART Recommendations  . . . . . . . . . . . . . . . . . .  40
+       A.1.1.  UART Bit Rate Detection . . . . . . . . . . . . . . .  41
+       A.1.2.  HDLC-Lite . . . . . . . . . . . . . . . . . . . . . .  41
+     A.2.  SPI Recommendations . . . . . . . . . . . . . . . . . . .  42
+       A.2.1.  SPI Framing Protocol  . . . . . . . . . . . . . . . .  43
+     A.3.  I^2C Recommendations  . . . . . . . . . . . . . . . . . .  45
+     A.4.  Native USB Recommendations  . . . . . . . . . . . . . . .  45
+   Appendix B.  Feature: Network Save  . . . . . . . . . . . . . . .  45
+     B.1.  Commands  . . . . . . . . . . . . . . . . . . . . . . . .  45
+       B.1.1.  CMD 9: (Host->NCP) CMD_NET_SAVE . . . . . . . . . . .  45
+       B.1.2.  CMD 10: (Host->NCP) CMD_NET_CLEAR . . . . . . . . . .  46
+       B.1.3.  CMD 11: (Host->NCP) CMD_NET_RECALL  . . . . . . . . .  46
+   Appendix C.  Feature: Host Buffer Offload . . . . . . . . . . . .  46
+     C.1.  Commands  . . . . . . . . . . . . . . . . . . . . . . . .  47
+       C.1.1.  CMD 12: (NCP->Host) CMD_HBO_OFFLOAD . . . . . . . . .  47
+       C.1.2.  CMD 13: (NCP->Host) CMD_HBO_RECLAIM . . . . . . . . .  47
+       C.1.3.  CMD 14: (NCP->Host) CMD_HBO_DROP  . . . . . . . . . .  47
+       C.1.4.  CMD 15: (Host->NCP) CMD_HBO_OFFLOADED . . . . . . . .  47
+       C.1.5.  CMD 16: (Host->NCP) CMD_HBO_RECLAIMED . . . . . . . .  47
+       C.1.6.  CMD 17: (Host->NCP) CMD_HBO_DROPPED . . . . . . . . .  48
+     C.2.  Properties  . . . . . . . . . . . . . . . . . . . . . . .  48
+       C.2.1.  PROP 10: PROP_HBO_MEM_MAX . . . . . . . . . . . . . .  48
+       C.2.2.  PROP 11: PROP_HBO_BLOCK_MAX . . . . . . . . . . . . .  48
+   Appendix D.  Feature: Jam Detection . . . . . . . . . . . . . . .  49
+     D.1.  Properties  . . . . . . . . . . . . . . . . . . . . . . .  49
+       D.1.1.  PROP 4608: PROP_JAM_DETECT_ENABLE . . . . . . . . . .  49
+       D.1.2.  PROP 4609: PROP_JAM_DETECTED  . . . . . . . . . . . .  49
+       D.1.3.  PROP 4610: PROP_JAM_DETECT_RSSI_THRESHOLD . . . . . .  50
+       D.1.4.  PROP 4611: PROP_JAM_DETECT_WINDOW . . . . . . . . . .  50
+       D.1.5.  PROP 4612: PROP_JAM_DETECT_BUSY . . . . . . . . . . .  50
+   Appendix E.  Technology: Thread . . . . . . . . . . . . . . . . .  50
+     E.1.  Thread Capabilities . . . . . . . . . . . . . . . . . . .  51
+     E.2.  Thread Properties . . . . . . . . . . . . . . . . . . . .  51
+       E.2.1.  PROP 80: PROP_THREAD_LEADER_ADDR  . . . . . . . . . .  51
+       E.2.2.  PROP 81: PROP_THREAD_PARENT . . . . . . . . . . . . .  51
+       E.2.3.  PROP 82: PROP_THREAD_CHILD_TABLE  . . . . . . . . . .  51
+       E.2.4.  PROP 83: PROP_THREAD_LEADER_RID . . . . . . . . . . .  52
+       E.2.5.  PROP 84: PROP_THREAD_LEADER_WEIGHT  . . . . . . . . .  52
+       E.2.6.  PROP 85: PROP_THREAD_LOCAL_LEADER_WEIGHT  . . . . . .  52
+       E.2.7.  PROP 86: PROP_THREAD_NETWORK_DATA . . . . . . . . . .  52
 
 
 
-Quattlebaum              Expires April 14, 2017                 [Page 4]
+Quattlebaum                Expires May 8, 2017                  [Page 4]
 
-                        Spinel Protocol (469cd3a)           October 2016
+                       Spinel Protocol (f9bf43254)         November 2016
 
 
-       D.2.21. PROP 5381: PROP_THREAD_ACTIVE_ROUTER_IDS  . . . . . .  49
-       D.2.22. PROP 5382: PROP_THREAD_RLOC16_DEBUG_PASSTHRU  . . . .  50
-       D.2.23. PROP 5383: SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED . .  50
-       D.2.24. PROP 5384: PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD . .  50
-       D.2.25. PROP 5385: PROP_THREAD_ROUTER_SELECTION_JITTER  . . .  50
-       D.2.26. PROP 5386: PROP_THREAD_PREFERRED_ROUTER_ID  . . . . .  50
-       D.2.27. PROP 5387: SPINEL_PROP_THREAD_NEIGHBOR_TABLE  . . . .  51
-   Appendix E.  Test Vectors . . . . . . . . . . . . . . . . . . . .  51
-     E.1.  Test Vector: Packed Unsigned Integer  . . . . . . . . . .  51
-     E.2.  Test Vector: Reset Command  . . . . . . . . . . . . . . .  51
-     E.3.  Test Vector: Reset Notification . . . . . . . . . . . . .  52
-     E.4.  Test Vector: Scan Beacon  . . . . . . . . . . . . . . . .  52
-     E.5.  Test Vector: Inbound IPv6 Packet  . . . . . . . . . . . .  52
-     E.6.  Test Vector: Outbound IPv6 Packet . . . . . . . . . . . .  53
-     E.7.  Test Vector: Fetch list of on-mesh networks . . . . . . .  53
-     E.8.  Test Vector: Returned list of on-mesh networks  . . . . .  53
-     E.9.  Test Vector: Adding an on-mesh network  . . . . . . . . .  53
-     E.10. Test Vector: Insertion notification of an on-mesh network  54
-     E.11. Test Vector: Removing a local on-mesh network . . . . . .  54
-     E.12. Test Vector: Removal notification of an on-mesh network .  55
-   Appendix F.  Example Sessions . . . . . . . . . . . . . . . . . .  55
-     F.1.  NCP Initialization  . . . . . . . . . . . . . . . . . . .  55
-     F.2.  Attaching to a network  . . . . . . . . . . . . . . . . .  56
-     F.3.  Successfully joining a pre-existing network . . . . . . .  56
-     F.4.  Unsuccessfully joining a pre-existing network . . . . . .  57
-     F.5.  Detaching from a network  . . . . . . . . . . . . . . . .  57
-     F.6.  Attaching to a saved network  . . . . . . . . . . . . . .  57
-     F.7.  NCP Software Reset  . . . . . . . . . . . . . . . . . . .  58
-     F.8.  Adding an on-mesh prefix  . . . . . . . . . . . . . . . .  58
-     F.9.  Entering low-power modes  . . . . . . . . . . . . . . . .  58
-     F.10. Sniffing raw packets  . . . . . . . . . . . . . . . . . .  58
-   Appendix G.  Glossary . . . . . . . . . . . . . . . . . . . . . .  59
-   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  60
+       E.2.8.  PROP 87: PROP_THREAD_NETWORK_DATA_VERSION . . . . . .  52
+       E.2.9.  PROP 88: PROP_THREAD_STABLE_NETWORK_DATA  . . . . . .  52
+       E.2.10. PROP 89: PROP_THREAD_STABLE_NETWORK_DATA_VERSION  . .  52
+       E.2.11. PROP 90: PROP_THREAD_ON_MESH_NETS . . . . . . . . . .  52
+       E.2.12. PROP 91: PROP_THREAD_LOCAL_ROUTES . . . . . . . . . .  53
+       E.2.13. PROP 92: PROP_THREAD_ASSISTING_PORTS  . . . . . . . .  53
+       E.2.14. PROP 93: PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE  . .  53
+       E.2.15. PROP 94: PROP_THREAD_MODE . . . . . . . . . . . . . .  53
+       E.2.16. PROP 5376: PROP_THREAD_CHILD_TIMEOUT  . . . . . . . .  53
+       E.2.17. PROP 5377: PROP_THREAD_RLOC16 . . . . . . . . . . . .  54
+       E.2.18. PROP 5378: PROP_THREAD_ROUTER_UPGRADE_THRESHOLD . . .  54
+       E.2.19. PROP 5379: PROP_THREAD_CONTEXT_REUSE_DELAY  . . . . .  54
+       E.2.20. PROP 5380: PROP_THREAD_NETWORK_ID_TIMEOUT . . . . . .  54
+       E.2.21. PROP 5381: PROP_THREAD_ACTIVE_ROUTER_IDS  . . . . . .  54
+       E.2.22. PROP 5382: PROP_THREAD_RLOC16_DEBUG_PASSTHRU  . . . .  54
+       E.2.23. PROP 5383: SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED . .  54
+       E.2.24. PROP 5384: PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD . .  55
+       E.2.25. PROP 5385: PROP_THREAD_ROUTER_SELECTION_JITTER  . . .  55
+       E.2.26. PROP 5386: PROP_THREAD_PREFERRED_ROUTER_ID  . . . . .  55
+       E.2.27. PROP 5387: SPINEL_PROP_THREAD_NEIGHBOR_TABLE  . . . .  55
+   Appendix F.  Test Vectors . . . . . . . . . . . . . . . . . . . .  56
+     F.1.  Test Vector: Packed Unsigned Integer  . . . . . . . . . .  56
+     F.2.  Test Vector: Reset Command  . . . . . . . . . . . . . . .  56
+     F.3.  Test Vector: Reset Notification . . . . . . . . . . . . .  56
+     F.4.  Test Vector: Scan Beacon  . . . . . . . . . . . . . . . .  56
+     F.5.  Test Vector: Inbound IPv6 Packet  . . . . . . . . . . . .  57
+     F.6.  Test Vector: Outbound IPv6 Packet . . . . . . . . . . . .  57
+     F.7.  Test Vector: Fetch list of on-mesh networks . . . . . . .  57
+     F.8.  Test Vector: Returned list of on-mesh networks  . . . . .  58
+     F.9.  Test Vector: Adding an on-mesh network  . . . . . . . . .  58
+     F.10. Test Vector: Insertion notification of an on-mesh network  58
+     F.11. Test Vector: Removing a local on-mesh network . . . . . .  59
+     F.12. Test Vector: Removal notification of an on-mesh network .  59
+   Appendix G.  Example Sessions . . . . . . . . . . . . . . . . . .  59
+     G.1.  NCP Initialization  . . . . . . . . . . . . . . . . . . .  59
+     G.2.  Attaching to a network  . . . . . . . . . . . . . . . . .  60
+     G.3.  Successfully joining a pre-existing network . . . . . . .  61
+     G.4.  Unsuccessfully joining a pre-existing network . . . . . .  62
+     G.5.  Detaching from a network  . . . . . . . . . . . . . . . .  62
+     G.6.  Attaching to a saved network  . . . . . . . . . . . . . .  62
+     G.7.  NCP Software Reset  . . . . . . . . . . . . . . . . . . .  63
+     G.8.  Adding an on-mesh prefix  . . . . . . . . . . . . . . . .  63
+     G.9.  Entering low-power modes  . . . . . . . . . . . . . . . .  63
+     G.10. Sniffing raw packets  . . . . . . . . . . . . . . . . . .  63
+   Appendix H.  Glossary . . . . . . . . . . . . . . . . . . . . . .  64
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  65
+
+
+
+
+
+Quattlebaum                Expires May 8, 2017                  [Page 5]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
 
 1.  Introduction
 
@@ -275,14 +296,6 @@ Quattlebaum              Expires April 14, 2017                 [Page 4]
       at a time.
    o  Gracefully handle the addition of new features and capabilities
       without necessarily breaking backward compatibility.
-
-
-
-Quattlebaum              Expires April 14, 2017                 [Page 5]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
-
    o  Be as minimal and light-weight as possible without unnecessarily
       sacrificing flexibility.
 
@@ -317,6 +330,14 @@ Quattlebaum              Expires April 14, 2017                 [Page 5]
 
    Renumbering would be undertaken in order to better organize the
    allocation of property IDs and capability IDs.  One of the initial
+
+
+
+Quattlebaum                Expires May 8, 2017                  [Page 6]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
    goals of this protocol was for it to be possible for a host or NCP to
    only implement properties with values less than 127 and for the NCP
    to still be usable---relegating all larger property values for extra
@@ -328,16 +349,6 @@ Quattlebaum              Expires April 14, 2017                 [Page 5]
    has become clear that some of the initial allocations were inadequate
    and should be revisited if we want to try to achieve the original
    goal.
-
-
-
-
-
-
-Quattlebaum              Expires April 14, 2017                 [Page 6]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
 1.1.2.  Spinel as Application API
 
@@ -351,7 +362,7 @@ Quattlebaum              Expires April 14, 2017                 [Page 6]
    communicate directly with the NCP.  Using Unix Domain Sockets,
    applications could connect to the daemon by opening a special socket
    file.  The protocol for that socket might be (for example) HDLC-Lite-
-   encoded (Appendix A.1.1) spinel frames, as if the application were
+   encoded (Appendix A.1.2) spinel frames, as if the application were
    talking directly to the NCP.
 
    Applications aren't necessarily interested in everything that an NCP
@@ -376,6 +387,13 @@ Quattlebaum              Expires April 14, 2017                 [Page 6]
    extended to support them.  It is also simple and has no external
    dependencies other than unix domain sockets.
 
+
+
+Quattlebaum                Expires May 8, 2017                  [Page 7]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
    Security is obviously paramount in a system like this, so a great
    deal of care should be taken to make sure that certain commands and
    properties cannot be executed or changed without the appropriate
@@ -387,13 +405,6 @@ Quattlebaum              Expires April 14, 2017                 [Page 6]
    "privileged", and actively prevented from letting normal applications
    access them.  This is important if the IPC protocol between the
    application and the NCP is Spinel.
-
-
-
-Quattlebaum              Expires April 14, 2017                 [Page 7]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
    Examples of such privileged commands would be debugging commands like
    "peek" or "poke", properties which control bootloader behavior, or
@@ -431,6 +442,14 @@ Quattlebaum              Expires April 14, 2017                 [Page 7]
    Properties may support one or more of the following methods:
 
    o  "VALUE_GET"
+
+
+
+Quattlebaum                Expires May 8, 2017                  [Page 8]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
    o  "VALUE_SET"
    o  "VALUE_INSERT"
    o  "VALUE_REMOVE"
@@ -442,14 +461,6 @@ Quattlebaum              Expires April 14, 2017                 [Page 7]
    o  "VALUE_IS"
    o  "VALUE_INSERTED"
    o  "VALUE_REMOVED"
-
-
-
-
-Quattlebaum              Expires April 14, 2017                 [Page 8]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
 1.2.2.  Property Types
 
@@ -487,6 +498,14 @@ Quattlebaum              Expires April 14, 2017                 [Page 8]
    the concatenation of all of the individual values in the list.  If
    the length of the value for an individual item in the list is not
    defined by the type then each item returned in the list is prepended
+
+
+
+Quattlebaum                Expires May 8, 2017                  [Page 9]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
    with a length (See Section 3.5).  The order of the returned items,
    unless explicitly defined for that specific property, is undefined.
 
@@ -497,15 +516,6 @@ Quattlebaum              Expires April 14, 2017                 [Page 8]
    "VALUE_INSERT" and "VALUE_REMOVE" provide mechanisms for the
    insertion or removal of individual items _by value_. The payload for
    these commands is a plain single value.
-
-
-
-
-
-Quattlebaum              Expires April 14, 2017                 [Page 9]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
 1.2.2.3.  Stream Properties
 
@@ -543,6 +553,15 @@ Quattlebaum              Expires April 14, 2017                 [Page 9]
                  | Fields: | HEADER | CMD | CMD_PAYLOAD |
                  +---------+--------+-----+-------------+
 
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 10]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
 2.1.  Header Format
 
    The header byte is broken down as follows:
@@ -553,15 +572,6 @@ Quattlebaum              Expires April 14, 2017                 [Page 9]
                      +---+---+---+---+---+---+---+---+
 
    [CREF1]
-
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 10]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
 2.1.1.  FLG: Flag
 
@@ -597,6 +607,17 @@ Quattlebaum              Expires April 14, 2017                [Page 10]
    response is not expected or needed, such as for unsolicited update
    commands sent to the host from the NCP.
 
+
+
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 11]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
 2.1.4.  Command Identifier (CMD)
 
    The command identifier is a 21-bit unsigned integer encoded in up to
@@ -604,20 +625,6 @@ Quattlebaum              Expires April 14, 2017                [Page 10]
    Section 3.2.  This encoding allows for up to 2,097,152 individual
    commands, with the first 127 commands represented as a single byte.
    Command identifiers larger than 2,097,151 are explicitly forbidden.
-
-
-
-
-
-
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 11]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
           +-----------------------+----------------------------+
           |       CID Range       |        Description         |
@@ -658,22 +665,19 @@ Quattlebaum              Expires April 14, 2017                [Page 11]
       followed by a zero-terminated UTF8 string.
    o  "A(6)": An array of IPv6 addresses
 
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 12]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
    In each case, the data is represented exactly as described.  For
    example, an array of 10 IPv6 address is stored as 160 bytes.
 
 3.1.  Primitive Types
-
-
-
-
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 12]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
    +------+----------------------+-------------------------------------+
    | Char | Name                 | Description                         |
@@ -717,19 +721,18 @@ Quattlebaum              Expires April 14, 2017                [Page 12]
    format in EXI [3], except that we limit the maximum value to the
    largest value that can be encoded into three bytes(2,097,151).
 
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 13]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
    For all values less than 127, the packed form of the number is simply
    a single byte which directly represents the number.  For values
    larger than 127, the following process is used to encode the value:
-
-
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 13]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
    1.  The unsigned integer is broken up into _n_ 7-bit chunks and
        placed into _n_ octets, leaving the most significant bit of each
@@ -774,18 +777,20 @@ Quattlebaum              Expires April 14, 2017                [Page 13]
    blob is no longer the last item in the signature, the length must be
    prepended.
 
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 14]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
    If you are a little confused, keep reading.  This theme comes up in a
    a few different ways in the following sections.
 
    When a length is prepended, the length is encoded as a little-endian
    unsigned 16-bit integer.
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 14]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
       Originally the length was a Section 3.2, but it was changed to an
       unsigned 16-bit integer in order to help reduce protocol
@@ -826,6 +831,17 @@ Quattlebaum              Expires April 14, 2017                [Page 14]
    When a length is prepended, the length is encoded as a little-endian
    unsigned 16-bit integer.
 
+
+
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 15]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
 3.5.  Arrays
 
    An array is simply a concatenated set of _n_ data encodings.  For
@@ -834,15 +850,6 @@ Quattlebaum              Expires April 14, 2017                [Page 14]
 
    Just like the data blob type and the structured data type, the length
    of the entire array must be prepended _unless_ the array is the last
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 15]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
-
    type in a given signature.  Thus, "A(C)" (An array of unsigned bytes)
    encodes identically to "D".
 
@@ -884,20 +891,16 @@ Quattlebaum              Expires April 14, 2017                [Page 15]
    The command payload for this command SHOULD be empty.  The receiver
    MUST ignore any non-empty command payload.
 
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 16]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
    If an error occurs, the value of "PROP_LAST_STATUS" will be emitted
    instead with the value set to the generated status code for the
    error.
-
-
-
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 16]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
 4.3.  CMD 2: (Host->NCP) CMD_PROP_VALUE_GET
 
@@ -944,17 +947,15 @@ Quattlebaum              Expires April 14, 2017                [Page 16]
       | Fields: | HEADER | CMD_PROP_VALUE_INSERT | PROP_ID | VALUE |
       +---------+--------+-----------------------+---------+-------+
 
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 17]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
    Insert value into property command.  Instructs the NCP to insert the
    given value into a list-oriented property, without removing other
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 17]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
-
    items in the list.  The resulting order of items in the list is
    defined by the individual property being operated on.
 
@@ -1004,11 +1005,9 @@ Quattlebaum              Expires April 14, 2017                [Page 17]
 
 
 
-
-
-Quattlebaum              Expires April 14, 2017                [Page 18]
+Quattlebaum                Expires May 8, 2017                 [Page 18]
 
-                        Spinel Protocol (469cd3a)           October 2016
+                       Spinel Protocol (f9bf43254)         November 2016
 
 
    The payload for this command is the property identifier encoded in
@@ -1062,10 +1061,74 @@ Quattlebaum              Expires April 14, 2017                [Page 18]
 
 
 
-Quattlebaum              Expires April 14, 2017                [Page 19]
+Quattlebaum                Expires May 8, 2017                 [Page 19]
 
-                        Spinel Protocol (469cd3a)           October 2016
+                       Spinel Protocol (f9bf43254)         November 2016
 
+
+4.10.  CMD 18: (Host->NCP) CMD_PEEK
+
+             +---------+--------+----------+---------+-------+
+             | Octets: |   1    |    1     |    4    |   2   |
+             +---------+--------+----------+---------+-------+
+             | Fields: | HEADER | CMD_PEEK | ADDRESS | COUNT |
+             +---------+--------+----------+---------+-------+
+
+   This command allows the NCP to fetch values from the RAM of the NCP
+   for debugging purposes.  Upon success, "CMD_PEEK_RET" is sent from
+   the NCP to the host.  Upon failure, "PROP_LAST_STATUS" is emitted
+   with the appropriate error indication.
+
+   Due to the low-level nature of this command, certain error conditions
+   may induce the NCP to reset.
+
+   The NCP MAY prevent certain regions of memory from being accessed.
+
+   The implementation of this command has security implications.  See
+   Section 7 for more information.
+
+   This command requires the capability "CAP_PEEK_POKE" to be present.
+
+4.11.  CMD 19: (NCP->Host) CMD_PEEK_RET
+
+       +---------+--------+--------------+---------+-------+-------+
+       | Octets: |   1    |      1       |    4    |   2   |   n   |
+       +---------+--------+--------------+---------+-------+-------+
+       | Fields: | HEADER | CMD_PEEK_RET | ADDRESS | COUNT | BYTES |
+       +---------+--------+--------------+---------+-------+-------+
+
+   This command contains the contents of memory that was requested by a
+   previous call to "CMD_PEEK".
+
+   This command requires the capability "CAP_PEEK_POKE" to be present.
+
+4.12.  CMD 20: (Host->NCP) CMD_POKE
+
+         +---------+--------+----------+---------+-------+-------+
+         | Octets: |   1    |    1     |    4    |   2   |   n   |
+         +---------+--------+----------+---------+-------+-------+
+         | Fields: | HEADER | CMD_POKE | ADDRESS | COUNT | BYTES |
+         +---------+--------+----------+---------+-------+-------+
+
+   This command writes the bytes to the specified memory address for
+   debugging purposes.
+
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 20]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
+   Due to the low-level nature of this command, certain error conditions
+   may induce the NCP to reset.
+
+   The implementation of this command has security implications.  See
+   Section 7 for more information.
+
+   This command requires the capability "CAP_PEEK_POKE" to be present.
 
 5.  Properties
 
@@ -1107,21 +1170,18 @@ Quattlebaum              Expires April 14, 2017                [Page 19]
       | Stream | 0x70 - 0x7F, 0x1700 - 0x17FF |     Section 5.2     |
       +--------+------------------------------+---------------------+
 
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 21]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
    Note that each property section has two reserved ranges: a primary
    range (which is encoded as a single byte) and an extended range
    (which is encoded as two bytes). properties which are used more
    frequently are generally allocated from the former range.
-
-
-
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 20]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
 5.2.  Core Properties
 
@@ -1169,14 +1229,9 @@ Quattlebaum              Expires April 14, 2017                [Page 20]
 
 
 
-
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 21]
+Quattlebaum                Expires May 8, 2017                 [Page 22]
 
-                        Spinel Protocol (469cd3a)           October 2016
+                       Spinel Protocol (f9bf43254)         November 2016
 
 
 5.2.2.1.  Major Version Number
@@ -1230,9 +1285,9 @@ Quattlebaum              Expires April 14, 2017                [Page 21]
 
 
 
-Quattlebaum              Expires April 14, 2017                [Page 22]
+Quattlebaum                Expires May 8, 2017                 [Page 23]
 
-                        Spinel Protocol (469cd3a)           October 2016
+                       Spinel Protocol (f9bf43254)         November 2016
 
 
                        +---------+----------------+
@@ -1244,7 +1299,7 @@ Quattlebaum              Expires April 14, 2017                [Page 22]
    This integer identifies what the network protocol for this NCP.
    Currently defined values are:
 
-   o  1: ZigBee
+   o  0: Bootloader
    o  2: ZigBeeIP
    o  3: Thread
 
@@ -1286,15 +1341,18 @@ Quattlebaum              Expires April 14, 2017                [Page 22]
 
 
 
-Quattlebaum              Expires April 14, 2017                [Page 23]
+Quattlebaum                Expires May 8, 2017                 [Page 24]
 
-                        Spinel Protocol (469cd3a)           October 2016
+                       Spinel Protocol (f9bf43254)         November 2016
 
 
    o  1: "CAP_LOCK"
    o  2: "CAP_NET_SAVE"
    o  3: "CAP_HBO": Host Buffer Offload.  See Appendix C.
    o  4: "CAP_POWER_SAVE"
+   o  5: "CAP_COUNTERS"
+   o  6: "CAP_JAM_DETECT": Jamming detection.  See Appendix D
+   o  7: "CAP_PEEK_POKE": PEEK/POKE debugging commands.
    o  16: "CAP_802_15_4_2003"
    o  17: "CAP_802_15_4_2006"
    o  18: "CAP_802_15_4_2011"
@@ -1335,17 +1393,18 @@ Quattlebaum              Expires April 14, 2017                [Page 23]
                       | Fields: | "INTERFACE_COUNT" |
                       +---------+-------------------+
 
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 25]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
    Describes the number of concurrent interfaces supported by this NCP.
    Since the concurrent interface mechanism is still TBD, this value
    MUST always be one.
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 24]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
    This value is encoded as an unsigned 8-bit integer.
 
@@ -1389,19 +1448,19 @@ Quattlebaum              Expires April 14, 2017                [Page 24]
                            | Fields: | HWADDR |
                            +---------+--------+
 
-   The static EUI64 address of the device.  This value is read-only, but
-   may be writable under certain vendor-defined circumstances.
 
 
 
 
 
-
-
-Quattlebaum              Expires April 14, 2017                [Page 25]
+Quattlebaum                Expires May 8, 2017                 [Page 26]
 
-                        Spinel Protocol (469cd3a)           October 2016
+                       Spinel Protocol (f9bf43254)         November 2016
 
+
+   The static EUI64 address of the device, used as a serial number.
+   This value is read-only, but may be writable under certain vendor-
+   defined circumstances.
 
 5.2.10.  PROP 9: PROP_LOCK
 
@@ -1448,16 +1507,15 @@ Quattlebaum              Expires April 14, 2017                [Page 25]
    the NCP's responsibility to insert newline characters where needed,
    just like with any other text stream.
 
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 27]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
    To receive the debugging stream, you wait for "CMD_PROP_VALUE_IS"
    commands for this property from the NCP.
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 26]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
 5.3.2.  PROP 113: PROP_STREAM_RAW
 
@@ -1498,6 +1556,20 @@ Quattlebaum              Expires April 14, 2017                [Page 26]
 
    The frame metadata field consists of the following fields:
 
+
+
+
+
+
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 28]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
      +----------+-----------------------+------------+-----+---------+
      | Field    | Description           | Type       | Len | Default |
      +----------+-----------------------+------------+-----+---------+
@@ -1507,13 +1579,6 @@ Quattlebaum              Expires April 14, 2017                [Page 26]
      | MD_PHY   | PHY-specific data     | "D" data   | >=2 |         |
      | MD_VEND  | Vendor-specific data  | "D" data   | >=2 |         |
      +----------+-----------------------+------------+-----+---------+
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 27]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
    The following fields are ignored by the NCP for packets sent to it
    from the host:
@@ -1529,18 +1594,18 @@ Quattlebaum              Expires April 14, 2017                [Page 27]
 
    The bit values in "MD_FLAG" are defined as follows:
 
-   +------+--------+------------------+--------------------------------+
-   | Bit  |  Mask  | Name             | Description if set             |
-   +------+--------+------------------+--------------------------------+
-   |  15  | 0x0001 | MD_FLAG_TX       | Packet was transmitted, not    |
-   |      |        |                  | received.                      |
-   |  14  | 0x0002 | MD_FLAG_HAS_FCS  | Packet includes received PHY   |
-   |      |        |                  | FCS                            |
-   |  13  | 0x0004 | MD_FLAG_BAD_FCS  | Packet was received with bad   |
-   |      |        |                  | FCS                            |
-   |  12  | 0x0008 | MD_FLAG_DUPE     | Packet seems to be a duplicate |
-   | 0-11 | 0xFFF0 | MD_FLAG_RESERVED | Flags reserved for future use. |
-   +------+--------+------------------+--------------------------------+
+   +---------+--------+------------------+-----------------------------+
+   |   Bit   |  Mask  | Name             | Description if set          |
+   +---------+--------+------------------+-----------------------------+
+   |    15   | 0x0001 | MD_FLAG_TX       | Packet was transmitted, not |
+   |         |        |                  | received.                   |
+   |    13   | 0x0004 | MD_FLAG_BAD_FCS  | Packet was received with    |
+   |         |        |                  | bad FCS                     |
+   |    12   | 0x0008 | MD_FLAG_DUPE     | Packet seems to be a        |
+   |         |        |                  | duplicate                   |
+   |  0-11,  | 0xFFF2 | MD_FLAG_RESERVED | Flags reserved for future   |
+   |    14   |        |                  | use.                        |
+   +---------+--------+------------------+-----------------------------+
 
    The format of "MD_PHY" is specified by the PHY layer currently in
    use, and may contain information such as the channel, LQI, antenna,
@@ -1550,6 +1615,16 @@ Quattlebaum              Expires April 14, 2017                [Page 27]
 
    o  Type: Read-Write-Stream
    o  Packed-Encoding: "DD"
+
+
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 29]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
 
         +---------+----------------+------------+----------------+
         | Octets: |       2        |     n      |       n        |
@@ -1561,15 +1636,6 @@ Quattlebaum              Expires April 14, 2017                [Page 27]
    packets to and from the currently attached network.  The exact format
    of the frame metadata and data is dependent on the network protocol
    being used.
-
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 28]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
    This property is a streaming property, meaning that you cannot
    explicitly fetch the value of this property.  To receive traffic, you
@@ -1607,6 +1673,15 @@ Quattlebaum              Expires April 14, 2017                [Page 28]
    To send network packets, you call "CMD_PROP_VALUE_SET" on this
    property with the value of the packet.
 
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 30]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
    Any data past the end of "FRAME_DATA_LEN" is considered metadata, the
    format of which is described in Section 5.3.2.1.
 
@@ -1616,16 +1691,6 @@ Quattlebaum              Expires April 14, 2017                [Page 28]
 
    o  Type: Read-Write
    o  Packed-Encoding: "b" (bool8)
-
-
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 29]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
    Set to 1 if the PHY is enabled, set to 0 otherwise.  May be directly
    enabled to bypass higher-level packet processing in order to
@@ -1664,6 +1729,15 @@ Quattlebaum              Expires April 14, 2017                [Page 29]
    Value is the CCA (clear-channel assessment) threshold.  Set to -128
    to disable.
 
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 31]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
    When setting, the value will be rounded down to a value that is
    supported by the underlying radio hardware.
 
@@ -1674,14 +1748,6 @@ Quattlebaum              Expires April 14, 2017                [Page 29]
    o  Unit: dBm
 
    Value is the transmit power of the radio.
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 30]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
    When setting, the value will be rounded down to a value that is
    supported by the underlying radio hardware.
@@ -1719,6 +1785,15 @@ Quattlebaum              Expires April 14, 2017                [Page 30]
 
    Values switches to "SCAN_STATE_IDLE" when scan is complete.
 
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 32]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
 5.5.2.  PROP 49: PROP_MAC_SCAN_MASK
 
    o  Type: Read-Write
@@ -1730,14 +1805,6 @@ Quattlebaum              Expires April 14, 2017                [Page 30]
    o  Type: Read-Write
    o  Packed-Encoding: "S" (uint16)
    o  Unit: milliseconds per channel
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 31]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
 5.5.4.  PROP 51: PROP_MAC_SCAN_BEACON
 
@@ -1774,6 +1841,15 @@ Quattlebaum              Expires April 14, 2017                [Page 31]
    future, so care should be taken to read the length that prepends each
    structure.
 
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 33]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
 5.5.5.  PROP 52: PROP_MAC_15_4_LADDR
 
    o  Type: Read-Write
@@ -1782,18 +1858,6 @@ Quattlebaum              Expires April 14, 2017                [Page 31]
    The 802.15.4 long address of this node.
 
    This property is only present on NCPs which implement 802.15.4
-
-
-
-
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 32]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
 5.5.6.  PROP 53: PROP_MAC_15_4_SADDR
 
@@ -1828,6 +1892,20 @@ Quattlebaum              Expires April 14, 2017                [Page 32]
 
    Possible Values:
 
+
+
+
+
+
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 34]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
    +----+--------------------------------+-----------------------------+
    | Id |              Name              |         Description         |
    +----+--------------------------------+-----------------------------+
@@ -1841,15 +1919,6 @@ Quattlebaum              Expires April 14, 2017                [Page 32]
    +----+--------------------------------+-----------------------------+
 
    See Section 5.3.2.
-
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 33]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
 5.5.10.  PROP 4864: PROP_MAC_WHITELIST
 
@@ -1885,6 +1954,14 @@ Quattlebaum              Expires April 14, 2017                [Page 33]
    o  Type: Read-Write
    o  Packed-Encoding: "b"
 
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 35]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
    Network interface up/down status.  Non-zero (set to 1) indicates up,
    zero indicates down.
 
@@ -1896,16 +1973,6 @@ Quattlebaum              Expires April 14, 2017                [Page 33]
 
    Thread stack operational status.  Non-zero (set to 1) indicates up,
    zero indicates down.
-
-
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 34]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
 5.6.4.  PROP 67: PROP_NET_ROLE
 
@@ -1940,6 +2007,17 @@ Quattlebaum              Expires April 14, 2017                [Page 34]
    o  Type: Read-Write
    o  Packed-Encoding: "L"
 
+
+
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 36]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
 5.6.9.  PROP 72: PROP_NET_PARTITION_ID
 
    o  Type: Read-Write
@@ -1960,13 +2038,6 @@ Quattlebaum              Expires April 14, 2017                [Page 34]
    o  Packed-Encoding: "6"
 
    IPv6 Address
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 35]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
 5.7.2.  PROP 97: PROP_IPV6_ML_ADDR
 
@@ -1995,6 +2066,14 @@ Quattlebaum              Expires April 14, 2017                [Page 35]
    o  "L": Preferred Lifetime
    o  "C": Flags
 
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 37]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
 5.7.5.  PROP 101: PROP_IPv6_ICMP_PING_OFFLOAD
 
    o  Type: Read-Write
@@ -2016,14 +2095,6 @@ Quattlebaum              Expires April 14, 2017                [Page 35]
    status of "STATUS_OK".  The usual way the NCP indicates a successful
    command is to mirror the property change back to the host.  For
    example, if you do a "CMD_VALUE_SET" on "PROP_PHY_ENABLED", the NCP
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 36]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
-
    would indicate success by responding with a "CMD_VALUE_IS" for
    "PROP_PHY_ENABLED".  If the command failed, "PROP_LAST_STATUS" would
    be emitted instead.
@@ -2050,6 +2121,15 @@ Quattlebaum              Expires April 14, 2017                [Page 36]
       command.
    o  10: "STATUS_IN_PROGRESS": The operation is in progress and will be
       completed asynchronously.
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 38]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
    o  11: "STATUS_NOMEM": The operation has been prevented due to memory
       pressure.
    o  12: "STATUS_BUSY": The device is currently performing a mutually
@@ -2072,14 +2152,6 @@ Quattlebaum              Expires April 14, 2017                [Page 36]
       *  112: "STATUS_RESET_POWER_ON"
       *  113: "STATUS_RESET_EXTERNAL"
       *  114: "STATUS_RESET_SOFTWARE"
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 37]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
-
       *  115: "STATUS_RESET_FAULT"
       *  116: "STATUS_RESET_CRASH"
       *  117: "STATUS_RESET_ASSERT"
@@ -2095,7 +2167,24 @@ Quattlebaum              Expires April 14, 2017                [Page 37]
 
 7.  Security Considerations
 
-   TBD
+7.1.  Raw Application Access
+
+   Spinel MAY be used as an API boundary for allowing processes to
+   configure the NCP.  However, such a system MUST NOT give unprivileged
+   processess the ability to send or receive arbitrary command frames to
+   the NCP.  Only the specific commands and properties that are required
+   should be allowed to be passed, and then only after being checked for
+   proper format.
+
+
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 39]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
 
 8.  Acknowledgments
 
@@ -2124,18 +2213,6 @@ Quattlebaum              Expires April 14, 2017                [Page 37]
 
    [6] http://reveng.sourceforge.net/crc-catalogue/16.htm#crc.cat.kermit
 
-
-
-
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 38]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
-
 Appendix A.  Framing Protocol
 
    Since this NCP protocol is defined independently of the physical
@@ -2157,6 +2234,14 @@ A.1.  UART Recommendations
    These values may be adjusted depending on the individual needs of the
    application or product, but some sort of flow control MUST be used.
    Hardware flow control is preferred over software flow control.  In
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 40]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
    the absence of hardware flow control, software flow control (XON/
    XOFF) MUST be used instead.
 
@@ -2168,7 +2253,34 @@ A.1.  UART Recommendations
    "R&#773;E&#773;S&#773;" pin on the NCP, so that you can easily
    perform a hardware reset if necessary.
 
-A.1.1.  HDLC-Lite
+A.1.1.  UART Bit Rate Detection
+
+   When using a UART, the issue of an appropriate bit rate must be
+   considered.  A bitrate of 115200 bits per second has become a defacto
+   standard baud rate for many serial peripherals.  This rate, however,
+   is slower than the theoretical maximum bitrate of the 802.15.4 2.4GHz
+   PHY (250kbit).  In most circumstances this mismatch is not
+   significant because the overall bitrate will be much lower than
+   either of these rates, but there are circumstances where a faster
+   UART bitrate is desirable.  Thus, this document proposes a simple
+   bitrate detection scheme that can be employed by the host to detect
+   when the attached NCP is initially running at a higher bitrate.
+
+   The algorithm is to send successive NOOP commands to the NCP at
+   increasing bitrates.  When a valid "CMD_LAST_STATUS" response has
+   been received, we have identified the correct bitrate.
+
+   In order to limit the time spent hunting for the appropriate bitrate,
+   we RECOMMEND that only the following bitrates be checked:
+
+   o  115200
+   o  230400
+   o  1000000 (1Mbit)
+
+   The bitrate MAY also be changed programmatically by adjusting
+   "PROP_UART_BITRATE", if implemented.
+
+A.1.2.  HDLC-Lite
 
    _HDLC-Lite_ is the recommended framing protocol for transmitting
    Spinel frames over a UART.  HDLC-Lite consists of only the framing,
@@ -2176,21 +2288,22 @@ A.1.1.  HDLC-Lite
    of HDLC are omitted.  This protocol was chosen because it works well
    with software flow control and is widely implemented.
 
+
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 41]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
    To transmit a frame with HDLC-lite, the 16-bit CRC must first be
    appended to the frame.  The CRC function is defined to be CRC-16/
    CCITT, otherwise known as the KERMIT CRC [6].
 
    Individual frames are terminated with a frame delimiter octet called
    the 'flag' octet ("0x7E").
-
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 39]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
    The following octets values are considered _special_ and should be
    escaped when present in data frames:
@@ -2234,19 +2347,19 @@ A.2.  SPI Recommendations
    o  "I&#773;N&#773;T&#773;": (NCP-to-Host) Host Interrupt
    o  "R&#773;E&#773;S&#773;": (Host-to-NCP) NCP Hardware Reset
 
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 42]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
    The "I&#773;N&#773;T&#773;" signal is used by the NCP to indicate to
    the host that the NCP has frames pending to send to it.  When
    asserted, the host SHOULD initiate a SPI transaction in a timely
    manner.
 
    We RECOMMEND the following SPI properties:
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 40]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
    o  "C&#773;S&#773;" is active low.
    o  "CLK" is active high.
@@ -2282,13 +2395,27 @@ A.2.1.  SPI Framing Protocol
 
                        0   1   2   3   4   5   6   7
                      +---+---+---+---+---+---+---+---+
-                     |RST|CRC|    RESERVED   |PATTERN|
+                     |RST|CRC|CCF|  RESERVED |PATTERN|
                      +---+---+---+---+---+---+---+---+
 
    o  "RST": This bit is set when that device has been reset since the
       last time "C&#773;S&#773;" was asserted.
+
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 43]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
    o  "CRC": This bit is set when that device supports writing a 16-bit
-      CRC at the end of the data.  This CRC is NOT included in DATA_LEN.
+      CRC at the end of the data.  The CRC length is NOT included in
+      DATA_LEN.
+   o  "CCF": "CRC Check Failure".  Set if the CRC check on the last
+      received frame failed, cleared to zero otherwise.  This bit is
+      only used if both sides support CRC.
    o  "RESERVED": These bits are all reserved for future used.  They
       MUST be cleared to zero and MUST be ignored if set.
    o  "PATTERN": These bits are set to a fixed value to help distinguish
@@ -2297,19 +2424,18 @@ A.2.1.  SPI Framing Protocol
       MUST be cleared (0).  A frame received that has any other values
       for these bits MUST be dropped.
 
-
-
-Quattlebaum              Expires April 14, 2017                [Page 41]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
-
-   Prior to a sending or receiving a frame, the master SHOULD send a
+   Prior to a sending or receiving a frame, the master MAY send a
    5-octet frame with zeros for both the max receive frame size and the
    the contained frame length.  This will induce the slave device to
    indicate the length of the frame it wants to send (if any) and
    indicate the largest frame it is capable of receiving at the moment.
    This allows the master to calculate the size of the next transaction.
+   Alternatively, if the master has a frame to send it can just go ahead
+   and send a frame of that length and determine if the frame was
+   accepted by checking that the "RECV_LEN" from the slave frame is
+   larger than the frame the master just tried to send.  If the
+   "RECV_LEN" is smaller then the frame wasn't accepted and will need to
+   be transmitted again.
 
    This protocol can be used either unidirectionally or bidirectionally,
    determined by the behavior of the master and the slave.
@@ -2321,13 +2447,39 @@ Quattlebaum              Expires April 14, 2017                [Page 41]
    (like a NCP hardware reset, or indicating a communication failure to
    a user interface).
 
+   At the end of the data of a frame is an optional 16-bit CRC, support
+   for which is indicated by the "CRC" bit of the "HDR" byte being set.
+   If these bits are set for both the master and slave frames, then CRC
+   checking is enabled on both sides, effectively requiring that frame
+   sizes be two bytes longer than would be otherwise required.  The CRC
+   is calculated using the same mechanism used for the CRC calculation
+   in HDLC-Lite (See Appendix A.1.2).  When both of the "CRC" bits are
+   set, both sides must verify that the "CRC" is valid before accepting
+   the frame.  If not enough bytes were clocked out for the CRC to be
+   read, then the frame must be ignored.  If enough bytes were clocked
+   out to perform a CRC check, but the CRC check fails, then the frame
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 44]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
+   must be rejected and the "CRC_FAIL" bit on the next frame (and ONLY
+   the next frame) MUST be set.
+
 A.3.  I^2C Recommendations
 
    TBD
 
+   [CREF3]
+
 A.4.  Native USB Recommendations
 
    TBD
+
+   [CREF4]
 
 Appendix B.  Feature: Network Save
 
@@ -2352,14 +2504,6 @@ B.1.1.  CMD 9: (Host->NCP) CMD_NET_SAVE
    and state necessary to reconnect to the current network to non-
    volatile memory.
 
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 42]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
-
    This operation affects non-volatile memory only.  The current network
    information stored in volatile memory is unaffected.
 
@@ -2368,6 +2512,15 @@ Quattlebaum              Expires April 14, 2017                [Page 42]
 
    This command is only available if the "CAP_NET_SAVE" capability is
    set.
+
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 45]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
 
 B.1.2.  CMD 10: (Host->NCP) CMD_NET_CLEAR
 
@@ -2408,14 +2561,6 @@ B.1.3.  CMD 11: (Host->NCP) CMD_NET_RECALL
    "CMD_PROP_VALUE_IS" for "PROP_LAST_STATUS", indicating the result of
    the operation.
 
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 43]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
-
    This command is only available if the "CAP_NET_SAVE" capability is
    set.
 
@@ -2425,6 +2570,13 @@ Appendix C.  Feature: Host Buffer Offload
    host processor.  In such situations, it is sometimes useful for the
    NCP to offload buffers to the host processor temporarily so that it
    can perform other operations.
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 46]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
 
    Host buffer offload is an optional NCP capability that, when present,
    allows the NCP to store data buffers on the host processor that can
@@ -2465,13 +2617,6 @@ C.1.4.  CMD 15: (Host->NCP) CMD_HBO_OFFLOADED
       *  "OffloadId": 32-bit unique block identifier
       *  "Status": Status code for the result of the operation.
 
-
-
-Quattlebaum              Expires April 14, 2017                [Page 44]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
-
 C.1.5.  CMD 16: (Host->NCP) CMD_HBO_RECLAIMED
 
    o  Argument-Encoding: "LiD"
@@ -2479,6 +2624,15 @@ C.1.5.  CMD 16: (Host->NCP) CMD_HBO_RECLAIMED
       *  "OffloadId": 32-bit unique block identifier
       *  "Status": Status code for the result of the operation.
       *  "Data": Data that was previously offloaded (if any)
+
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 47]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
 
 C.1.6.  CMD 17: (Host->NCP) CMD_HBO_DROPPED
 
@@ -2520,14 +2674,6 @@ C.2.2.  PROP 11: PROP_HBO_BLOCK_MAX
                     | Fields: | "PROP_HBO_BLOCK_MAX" |
                     +---------+----------------------+
 
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 45]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
-
    Describes the number of blocks that may be offloaded from the NCP to
    the host.  Default value is 32.  Setting this value to zero will
    cause host block offload to be effectively disabled.
@@ -2537,12 +2683,124 @@ Quattlebaum              Expires April 14, 2017                [Page 45]
    This property is only available if the "CAP_HBO" capability is
    present in "PROP_CAPS".
 
-Appendix D.  Technology: Thread
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 48]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
+Appendix D.  Feature: Jam Detection
+
+   Jamming detection is a feature that allows the NCP to report when it
+   detects high levels of interference that are characteristic of
+   intentional signal jamming.
+
+   The presence of this feature can be detected by checking for the
+   presence of the "CAP_JAM_DETECT" (value 6) capability in "PROP_CAPS".
+
+D.1.  Properties
+
+D.1.1.  PROP 4608: PROP_JAM_DETECT_ENABLE
+
+   o  Type: Read-Write
+   o  Packed-Encoding: "b"
+   o  Default Value: false
+   o  REQUIRED for "CAP_JAM_DETECT"
+
+                  +---------+--------------------------+
+                  | Octets: |            1             |
+                  +---------+--------------------------+
+                  | Fields: | "PROP_JAM_DETECT_ENABLE" |
+                  +---------+--------------------------+
+
+   Indicates if jamming detection is enabled or disabled.  Set to true
+   to enable jamming detection.
+
+   This property is only available if the "CAP_JAM_DETECT" capability is
+   present in "PROP_CAPS".
+
+D.1.2.  PROP 4609: PROP_JAM_DETECTED
+
+   o  Type: Read-Only
+   o  Packed-Encoding: "b"
+   o  REQUIRED for "CAP_JAM_DETECT"
+
+                     +---------+---------------------+
+                     | Octets: |          1          |
+                     +---------+---------------------+
+                     | Fields: | "PROP_JAM_DETECTED" |
+                     +---------+---------------------+
+
+   Set to true if radio jamming is detected.  Set to false otherwise.
+
+   When jamming detection is enabled, changes to the value of this
+   property are emitted asynchronously via "CMD_PROP_VALUE_IS".
+
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 49]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
+   This property is only available if the "CAP_JAM_DETECT" capability is
+   present in "PROP_CAPS".
+
+D.1.3.  PROP 4610: PROP_JAM_DETECT_RSSI_THRESHOLD
+
+   o  Type: Read-Write
+   o  Packed-Encoding: "c"
+   o  Units: dBm
+   o  Default Value: Implementation-specific
+   o  RECOMMENDED for "CAP_JAM_DETECT"
+
+   This parameter describes the threshold RSSI level (measured in dBm)
+   above which the jamming detection will consider the channel blocked.
+
+D.1.4.  PROP 4611: PROP_JAM_DETECT_WINDOW
+
+   o  Type: Read-Write
+   o  Packed-Encoding: "c"
+   o  Units: Seconds (1-64)
+   o  Default Value: Implementation-specific
+   o  RECOMMENDED for "CAP_JAM_DETECT"
+
+   This parameter describes the window period for signal jamming
+   detection.
+
+D.1.5.  PROP 4612: PROP_JAM_DETECT_BUSY
+
+   o  Type: Read-Write
+   o  Packed-Encoding: "i"
+   o  Units: Seconds (1-64)
+   o  Default Value: Implementation-specific
+   o  RECOMMENDED for "CAP_JAM_DETECT"
+
+   This parameter describes the number of aggregate seconds within the
+   detection window where the RSSI must be above
+   "PROP_JAM_DETECT_RSSI_THRESHOLD" to trigger detection.
+
+   The behavior of the jamming detection feature when
+   "PROP_JAM_DETECT_BUSY" is larger than "PROP_JAM_DETECT_WINDOW" is
+   undefined.
+
+Appendix E.  Technology: Thread
 
    This section describes all of the properties and semantics required
    for managing a Thread NCP.
 
    Thread NCPs have the following requirements:
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 50]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
 
    o  The property "PROP_INTERFACE_TYPE" must be 3.
    o  The non-optional properties in the following sections MUST be
@@ -2551,7 +2809,7 @@ Appendix D.  Technology: Thread
    All serious implementations of an NCP SHOULD also support the network
    save feature (See Appendix B).
 
-D.1.  Thread Capabilities
+E.1.  Thread Capabilities
 
    The Thread technology defines the following capabilities:
 
@@ -2560,12 +2818,12 @@ D.1.  Thread Capabilities
    o  "CAP_NET_THREAD_1_1" - Indicates that the NCP implements v1.1 of
       the Thread standard.
 
-D.2.  Thread Properties
+E.2.  Thread Properties
 
    Properties for Thread are allocated out of the "Tech" property
    section (see Section 5.1).
 
-D.2.1.  PROP 80: PROP_THREAD_LEADER_ADDR
+E.2.1.  PROP 80: PROP_THREAD_LEADER_ADDR
 
    o  Type: Read-Only
    o  Packed-Encoding: "6"
@@ -2573,18 +2831,7 @@ D.2.1.  PROP 80: PROP_THREAD_LEADER_ADDR
    The IPv6 address of the leader.  (Note: May change to long and short
    address of leader)
 
-
-
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 46]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
-
-D.2.2.  PROP 81: PROP_THREAD_PARENT
+E.2.2.  PROP 81: PROP_THREAD_PARENT
 
    o  Type: Read-Only
    o  Packed-Encoding: "ES"
@@ -2592,7 +2839,7 @@ D.2.2.  PROP 81: PROP_THREAD_PARENT
 
    The long address and short address of the parent of this node.
 
-D.2.3.  PROP 82: PROP_THREAD_CHILD_TABLE
+E.2.3.  PROP 82: PROP_THREAD_CHILD_TABLE
 
    o  Type: Read-Only
    o  Packed-Encoding: "A(T(ES))"
@@ -2600,62 +2847,72 @@ D.2.3.  PROP 82: PROP_THREAD_CHILD_TABLE
    Table containing the long and short addresses of all the children of
    this node.
 
-D.2.4.  PROP 83: PROP_THREAD_LEADER_RID
+
+
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 51]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
+E.2.4.  PROP 83: PROP_THREAD_LEADER_RID
 
    o  Type: Read-Only
    o  Packed-Encoding: "C"
 
    The router-id of the current leader.
 
-D.2.5.  PROP 84: PROP_THREAD_LEADER_WEIGHT
+E.2.5.  PROP 84: PROP_THREAD_LEADER_WEIGHT
 
    o  Type: Read-Only
    o  Packed-Encoding: "C"
 
    The leader weight of the current leader.
 
-D.2.6.  PROP 85: PROP_THREAD_LOCAL_LEADER_WEIGHT
+E.2.6.  PROP 85: PROP_THREAD_LOCAL_LEADER_WEIGHT
 
    o  Type: Read-Write
    o  Packed-Encoding: "C"
 
    The leader weight for this node.
 
-D.2.7.  PROP 86: PROP_THREAD_NETWORK_DATA
+E.2.7.  PROP 86: PROP_THREAD_NETWORK_DATA
 
    o  Type: Read-Only
    o  Packed-Encoding: "D"
 
-D.2.8.  PROP 87: PROP_THREAD_NETWORK_DATA_VERSION
+E.2.8.  PROP 87: PROP_THREAD_NETWORK_DATA_VERSION
 
    o  Type: Read-Only
    o  Packed-Encoding: "S"
 
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 47]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
-
-D.2.9.  PROP 88: PROP_THREAD_STABLE_NETWORK_DATA
+E.2.9.  PROP 88: PROP_THREAD_STABLE_NETWORK_DATA
 
    o  Type: Read-Only
    o  Packed-Encoding: "D"
 
-D.2.10.  PROP 89: PROP_THREAD_STABLE_NETWORK_DATA_VERSION
+E.2.10.  PROP 89: PROP_THREAD_STABLE_NETWORK_DATA_VERSION
 
    o  Type: Read-Only
    o  Packed-Encoding: "S"
 
-D.2.11.  PROP 90: PROP_THREAD_ON_MESH_NETS
+E.2.11.  PROP 90: PROP_THREAD_ON_MESH_NETS
 
    o  Type: Read-Write
    o  Packed-Encoding: "A(T(6CbCb))"
 
    Data per item is:
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 52]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
 
    o  "6": IPv6 Prefix
    o  "C": Prefix length, in bits
@@ -2665,7 +2922,7 @@ D.2.11.  PROP 90: PROP_THREAD_ON_MESH_NETS
       defined.  Assumed to be true for set, insert and replace.  Clear
       if the on mesh network was defined by another node.
 
-D.2.12.  PROP 91: PROP_THREAD_LOCAL_ROUTES
+E.2.12.  PROP 91: PROP_THREAD_LOCAL_ROUTES
 
    o  Type: Read-Write
    o  Packed-Encoding: "A(T(6CbC))"
@@ -2677,29 +2934,20 @@ D.2.12.  PROP 91: PROP_THREAD_LOCAL_ROUTES
    o  "b": Stable flag
    o  "C": Other flags
 
-D.2.13.  PROP 92: PROP_THREAD_ASSISTING_PORTS
+E.2.13.  PROP 92: PROP_THREAD_ASSISTING_PORTS
 
    o  Type: Read-Write
    o  Packed-Encoding: "A(S)"
 
-D.2.14.  PROP 93: PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE
+E.2.14.  PROP 93: PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE
 
    o  Type: Read-Write
    o  Packed-Encoding: "b"
 
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 48]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
-
    Set to true before changing local net data.  Set to false when
    finished.  This allows changes to be aggregated into single events.
 
-D.2.15.  PROP 94: PROP_THREAD_MODE
+E.2.15.  PROP 94: PROP_THREAD_MODE
 
    o  Type: Read-Write
    o  Packed-Encoding: "C"
@@ -2708,29 +2956,36 @@ D.2.15.  PROP 94: PROP_THREAD_MODE
    meaning of the bits in this bitfield are defined by section 4.5.2 of
    the Thread specification.
 
-D.2.16.  PROP 5376: PROP_THREAD_CHILD_TIMEOUT
+E.2.16.  PROP 5376: PROP_THREAD_CHILD_TIMEOUT
 
    o  Type: Read-Write
    o  Packed-Encoding: "L"
 
    Used when operating in the Child role.
 
-D.2.17.  PROP 5377: PROP_THREAD_RLOC16
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 53]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
+E.2.17.  PROP 5377: PROP_THREAD_RLOC16
 
    o  Type: Read-Write
    o  Packed-Encoding: "S"
 
-D.2.18.  PROP 5378: PROP_THREAD_ROUTER_UPGRADE_THRESHOLD
+E.2.18.  PROP 5378: PROP_THREAD_ROUTER_UPGRADE_THRESHOLD
 
    o  Type: Read-Write
    o  Packed-Encoding: "C"
 
-D.2.19.  PROP 5379: PROP_THREAD_CONTEXT_REUSE_DELAY
+E.2.19.  PROP 5379: PROP_THREAD_CONTEXT_REUSE_DELAY
 
    o  Type: Read-Write
    o  Packed-Encoding: "L"
 
-D.2.20.  PROP 5380: PROP_THREAD_NETWORK_ID_TIMEOUT
+E.2.20.  PROP 5380: PROP_THREAD_NETWORK_ID_TIMEOUT
 
    o  Type: Read-Write
    o  Packed-Encoding: "C"
@@ -2738,24 +2993,15 @@ D.2.20.  PROP 5380: PROP_THREAD_NETWORK_ID_TIMEOUT
    Allows you to get or set the Thread "NETWORK_ID_TIMEOUT" constant, as
    defined by the Thread specification.
 
-D.2.21.  PROP 5381: PROP_THREAD_ACTIVE_ROUTER_IDS
+E.2.21.  PROP 5381: PROP_THREAD_ACTIVE_ROUTER_IDS
 
    o  Type: Read-Write/Write-Only
    o  Packed-Encoding: "A(C)" (List of active thread router ids)
 
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 49]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
-
    Note that some implementations may not support "CMD_GET_VALUE" router
    ids, but may support "CMD_REMOVE_VALUE" when the node is a leader.
 
-D.2.22.  PROP 5382: PROP_THREAD_RLOC16_DEBUG_PASSTHRU
+E.2.22.  PROP 5382: PROP_THREAD_RLOC16_DEBUG_PASSTHRU
 
    o  Type: Read-Write
    o  Packed-Encoding: "b"
@@ -2765,21 +3011,31 @@ D.2.22.  PROP 5382: PROP_THREAD_RLOC16_DEBUG_PASSTHRU
 
    Default value is "false".
 
-D.2.23.  PROP 5383: SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED
+E.2.23.  PROP 5383: SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED
 
    o  Type: Read-Write
    o  Packed-Encoding: "b"
+
+
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 54]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
 
    Allow the HOST to indicate whether or not the router role is enabled.
    If current role is a router, setting this property to "false" starts
    a re-attach process as an end-device.
 
-D.2.24.  PROP 5384: PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD
+E.2.24.  PROP 5384: PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD
 
    o  Type: Read-Write
    o  Packed-Encoding: "C"
 
-D.2.25.  PROP 5385: PROP_THREAD_ROUTER_SELECTION_JITTER
+E.2.25.  PROP 5385: PROP_THREAD_ROUTER_SELECTION_JITTER
 
    o  Type: Read-Write
    o  Packed-Encoding: "C"
@@ -2787,7 +3043,7 @@ D.2.25.  PROP 5385: PROP_THREAD_ROUTER_SELECTION_JITTER
    Specifies the self imposed random delay in seconds a REED waits
    before registering to become an Active Router.
 
-D.2.26.  PROP 5386: PROP_THREAD_PREFERRED_ROUTER_ID
+E.2.26.  PROP 5386: PROP_THREAD_PREFERRED_ROUTER_ID
 
    o  Type: Write-Only
    o  Packed-Encoding: "C"
@@ -2798,17 +3054,7 @@ D.2.26.  PROP 5386: PROP_THREAD_PREFERRED_ROUTER_ID
    picked.  This property can be set only when the device role is either
    detached or disabled.
 
-
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 50]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
-
-D.2.27.  PROP 5387: SPINEL_PROP_THREAD_NEIGHBOR_TABLE
+E.2.27.  PROP 5387: SPINEL_PROP_THREAD_NEIGHBOR_TABLE
 
    o  Type: Read-Only
    o  Packed-Encoding: "A(T(ESLCcCbLL))"
@@ -2825,9 +3071,20 @@ D.2.27.  PROP 5387: SPINEL_PROP_THREAD_NEIGHBOR_TABLE
    o  "L": Link Frame Counter
    o  "L": MLE Frame Counter
 
-Appendix E.  Test Vectors
 
-E.1.  Test Vector: Packed Unsigned Integer
+
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 55]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
+Appendix F.  Test Vectors
+
+F.1.  Test Vector: Packed Unsigned Integer
 
                  +---------------+-----------------------+
                  | Decimal Value | Packet Octet Encoding |
@@ -2844,9 +3101,9 @@ E.1.  Test Vector: Packed Unsigned Integer
                  |     2,097,151 | "FF FF 7F"            |
                  +---------------+-----------------------+
 
-   [CREF3]
+   [CREF5]
 
-E.2.  Test Vector: Reset Command
+F.2.  Test Vector: Reset Command
 
    o  IID: 0
    o  TID: 0
@@ -2856,15 +3113,7 @@ E.2.  Test Vector: Reset Command
 
                                    80 01
 
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 51]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
-
-E.3.  Test Vector: Reset Notification
+F.3.  Test Vector: Reset Notification
 
    o  IID: 0
    o  TID: 0
@@ -2876,11 +3125,19 @@ E.3.  Test Vector: Reset Notification
 
                                 80 06 00 72
 
-E.4.  Test Vector: Scan Beacon
+F.4.  Test Vector: Scan Beacon
 
    o  IID: 0
    o  TID: 0
    o  CMD: 7 ("CMD_VALUE_INSERTED")
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 56]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
    o  PROP: 51 ("PROP_MAC_SCAN_BEACON")
    o  VALUE: Structure, encoded as "CcT(ESSc.)T(iCUD.)."
 
@@ -2906,27 +3163,19 @@ E.4.  Test Vector: Scan Beacon
         13 00 03 20 73 70 69 6E 65 6C 00 08 00 DE AD 00 BE EF 00 CA
         FE
 
-E.5.  Test Vector: Inbound IPv6 Packet
+F.5.  Test Vector: Inbound IPv6 Packet
 
    CMD_VALUE_IS(PROP_STREAM_NET)
 
-   [CREF4]
+   [CREF6]
 
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 52]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
-
-E.6.  Test Vector: Outbound IPv6 Packet
+F.6.  Test Vector: Outbound IPv6 Packet
 
    CMD_VALUE_SET(PROP_STREAM_NET)
 
-   [CREF5]
+   [CREF7]
 
-E.7.  Test Vector: Fetch list of on-mesh networks
+F.7.  Test Vector: Fetch list of on-mesh networks
 
    o  IID: 0
    o  TID: 4
@@ -2937,7 +3186,15 @@ E.7.  Test Vector: Fetch list of on-mesh networks
 
                                  84 02 5A
 
-E.8.  Test Vector: Returned list of on-mesh networks
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 57]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
+F.8.  Test Vector: Returned list of on-mesh networks
 
    o  IID: 0
    o  TID: 4
@@ -2958,23 +3215,13 @@ E.8.  Test Vector: Returned list of on-mesh networks
         00 40 01 ?? 13 00 20 01 0D B8 00 02 00 00 00 00 00 00 00 00
         00 00 40 00 ??
 
-E.9.  Test Vector: Adding an on-mesh network
+F.9.  Test Vector: Adding an on-mesh network
 
    o  IID: 0
    o  TID: 5
    o  CMD: 4 ("CMD_VALUE_INSERT")
    o  PROP: 90 ("PROP_THREAD_ON_MESH_NETS")
    o  VALUE: Structure, encoded as "6CbCb"
-
-
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 53]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
        +--------------+---------------+-------------+-------------+
        | IPv6 Prefix  | Prefix Length | Stable Flag | Other Flags |
@@ -2987,14 +3234,22 @@ Quattlebaum              Expires April 14, 2017                [Page 53]
         85 03 5A 20 01 0D B8 00 03 00 00 00 00 00 00 00 00 00 00 40
         01 ?? 01
 
-   [CREF6]
+   [CREF8]
 
-E.10.  Test Vector: Insertion notification of an on-mesh network
+F.10.  Test Vector: Insertion notification of an on-mesh network
 
    o  IID: 0
    o  TID: 5
    o  CMD: 7 ("CMD_VALUE_INSERTED")
    o  PROP: 90 ("PROP_THREAD_ON_MESH_NETS")
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 58]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
    o  VALUE: Structure, encoded as "6CbCb"
 
        +--------------+---------------+-------------+-------------+
@@ -3008,9 +3263,9 @@ E.10.  Test Vector: Insertion notification of an on-mesh network
         85 07 5A 20 01 0D B8 00 03 00 00 00 00 00 00 00 00 00 00 40
         01 ?? 01
 
-   [CREF7]
+   [CREF9]
 
-E.11.  Test Vector: Removing a local on-mesh network
+F.11.  Test Vector: Removing a local on-mesh network
 
    o  IID: 0
    o  TID: 6
@@ -3022,17 +3277,7 @@ E.11.  Test Vector: Removing a local on-mesh network
 
          86 05 5A 20 01 0D B8 00 03 00 00 00 00 00 00 00 00 00 00
 
-
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 54]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
-
-E.12.  Test Vector: Removal notification of an on-mesh network
+F.12.  Test Vector: Removal notification of an on-mesh network
 
    o  IID: 0
    o  TID: 6
@@ -3044,15 +3289,23 @@ E.12.  Test Vector: Removal notification of an on-mesh network
 
          86 08 5A 20 01 0D B8 00 03 00 00 00 00 00 00 00 00 00 00
 
-Appendix F.  Example Sessions
+Appendix G.  Example Sessions
 
-F.1.  NCP Initialization
+G.1.  NCP Initialization
 
-   [CREF8]
+   [CREF10]
 
    Check the protocol version to see if it is supported:
 
    o  CMD_VALUE_GET:PROP_PROTOCOL_VERSION
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 59]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
    o  CMD_VALUE_IS:PROP_PROTOCOL_VERSION
 
    Check the NCP version to see if a firmware update may be necessary:
@@ -3080,19 +3333,11 @@ F.1.  NCP Initialization
    If the NCP supports CAP_NET_SAVE, then we go ahead and recall the
    network:
 
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 55]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
-
    o  CMD_NET_RECALL
 
-F.2.  Attaching to a network
+G.2.  Attaching to a network
 
-   [CREF9]
+   [CREF11]
 
    We make the assumption that the NCP is not currently associated with
    a network.
@@ -3109,6 +3354,14 @@ F.2.  Attaching to a network
    o  CMD_VALUE_IS:PROP_NET_NETWORK_NAME
    o  CMD_VALUE_SET:PROP_NET_MASTER_KEY
    o  CMD_VALUE_IS:PROP_NET_MASTER_KEY
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 60]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
    o  CMD_VALUE_SET:PROP_NET_KEY_SEQUENCE_COUNTER
    o  CMD_VALUE_IS:PROP_NET_KEY_SEQUENCE_COUNTER
    o  CMD_VALUE_SET:PROP_NET_KEY_SWITCH_GUARDTIME
@@ -3130,21 +3383,13 @@ F.2.  Attaching to a network
    o  CMD_VALUE_IS:PROP_NET_PARTITION_ID
    o  CMD_VALUE_IS:PROP_THREAD_ON_MESH_NETS
 
-F.3.  Successfully joining a pre-existing network
+G.3.  Successfully joining a pre-existing network
 
-   [CREF10]
+   [CREF12]
 
    This example session is identical to the above session up to the
    point where we set PROP_NET_IF_UP to true.  From there, the behavior
    changes.
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 56]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
    o  CMD_VALUE_SET:PROP_NET_REQUIRE_JOIN_EXISTING:TRUE
    o  CMD_VALUE_IS:PROP_NET_REQUIRE_JOIN_EXISTING:TRUE
@@ -3164,7 +3409,16 @@ Quattlebaum              Expires April 14, 2017                [Page 56]
 
    o  CMD_NET_SAVE
 
-F.4.  Unsuccessfully joining a pre-existing network
+
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 61]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
+G.4.  Unsuccessfully joining a pre-existing network
 
    This example session is identical to the above session up to the
    point where we set PROP_NET_IF_UP to true.  From there, the behavior
@@ -3183,24 +3437,17 @@ F.4.  Unsuccessfully joining a pre-existing network
    o  CMD_VALUE_IS:PROP_LAST_STATUS:STATUS_JOIN_NO_PEERS
    o  CMD_VALUE_IS:PROP_NET_STACK_UP:FALSE
 
-F.5.  Detaching from a network
+G.5.  Detaching from a network
 
    TBD
 
-F.6.  Attaching to a saved network
+G.6.  Attaching to a saved network
 
-   [CREF11]
+   [CREF13]
 
    Recall the saved network if you haven't already done so:
 
    o  CMD_NET_RECALL
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 57]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
    Bring the network interface up:
 
@@ -3218,26 +3465,35 @@ Quattlebaum              Expires April 14, 2017                [Page 57]
    o  CMD_VALUE_IS:PROP_NET_PARTITION_ID
    o  CMD_VALUE_IS:PROP_THREAD_ON_MESH_NETS
 
-F.7.  NCP Software Reset
 
-   [CREF12]
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 62]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
+G.7.  NCP Software Reset
+
+   [CREF14]
 
    o  CMD_RESET
    o  CMD_VALUE_IS:PROP_LAST_STATUS:STATUS_RESET_SOFTWARE
 
-   Then jump to Appendix F.1.
+   Then jump to Appendix G.1.
 
-F.8.  Adding an on-mesh prefix
-
-   TBD
-
-F.9.  Entering low-power modes
+G.8.  Adding an on-mesh prefix
 
    TBD
 
-F.10.  Sniffing raw packets
+G.9.  Entering low-power modes
 
-   [CREF13]
+   TBD
+
+G.10.  Sniffing raw packets
+
+   [CREF15]
 
    This assumes that the NCP has been initialized.
 
@@ -3250,14 +3506,6 @@ F.10.  Sniffing raw packets
 
    o  CMD_VALUE_SET:PROP_MAC_PROMISCUOUS_MODE:MAC_PROMISCUOUS_MODE_MONIT
       OR
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 58]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
-
    o  CMD_VALUE_IS:PROP_MAC_PROMISCUOUS_MODE:MAC_PROMISCUOUS_MODE_MONITO
       R
 
@@ -3274,6 +3522,14 @@ Quattlebaum              Expires April 14, 2017                [Page 58]
    Now we will get raw 802.15.4 packets asynchronously on
    PROP_STREAM_RAW:
 
+
+
+
+Quattlebaum                Expires May 8, 2017                 [Page 63]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
    o  CMD_VALUE_IS:PROP_STREAM_RAW:...
    o  CMD_VALUE_IS:PROP_STREAM_RAW:...
    o  CMD_VALUE_IS:PROP_STREAM_RAW:...
@@ -3284,9 +3540,9 @@ Quattlebaum              Expires April 14, 2017                [Page 58]
    so that you can avoid receiving packets from other networks or that
    are destined for other nodes.
 
-Appendix G.  Glossary
+Appendix H.  Glossary
 
-   [CREF14]
+   [CREF16]
 
    NCP
       Acronym for Network Control Processor.
@@ -3306,14 +3562,6 @@ Appendix G.  Glossary
       Final Checksum.  Bytes added to the end of a packet to help
       determine if the packet was received without corruption.
    PHY
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 59]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
-
       Physical layer.  Refers to characteristics and parameters related
       to the physical implementation and operation of a networking
       medium.
@@ -3331,19 +3579,28 @@ Editorial Comments
 [CREF2] RQ: If I have missed anyone who has contributed to this
         document, please let me know ASAP.
 
-[CREF3] RQ: The PUI test-vector encodings need to be verified.
 
-[CREF4] RQ: FIXME: This test vector is incomplete.
 
-[CREF5] RQ: FIXME: This test vector is incomplete.
+Quattlebaum                Expires May 8, 2017                 [Page 64]
+
+                       Spinel Protocol (f9bf43254)         November 2016
+
+
+[CREF3] RQ: It may make sense to have a look at what Bluetooth HCI is
+        doing for native I^2C framing and go with that.
+
+[CREF4] RQ: It may make sense to have a look at what Bluetooth HCI is
+        doing for native USB framing and go with that.
+
+[CREF5] RQ: The PUI test-vector encodings need to be verified.
 
 [CREF6] RQ: FIXME: This test vector is incomplete.
 
 [CREF7] RQ: FIXME: This test vector is incomplete.
 
-[CREF8] RQ: FIXME: This example session is incomplete.
+[CREF8] RQ: FIXME: This test vector is incomplete.
 
-[CREF9] RQ: FIXME: This example session is incomplete.
+[CREF9] RQ: FIXME: This test vector is incomplete.
 
 [CREF10] RQ: FIXME: This example session is incomplete.
 
@@ -3353,22 +3610,13 @@ Editorial Comments
 
 [CREF13] RQ: FIXME: This example session is incomplete.
 
-[CREF14] RQ: Alphabetize before finalization.
+[CREF14] RQ: FIXME: This example session is incomplete.
+
+[CREF15] RQ: FIXME: This example session is incomplete.
+
+[CREF16] RQ: Alphabetize before finalization.
 
 Author's Address
-
-
-
-
-
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 60]
-
-                        Spinel Protocol (469cd3a)           October 2016
-
 
    Robert S. Quattlebaum
    Nest Labs
@@ -3389,36 +3637,4 @@ Quattlebaum              Expires April 14, 2017                [Page 60]
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Quattlebaum              Expires April 14, 2017                [Page 61]
+Quattlebaum                Expires May 8, 2017                 [Page 65]

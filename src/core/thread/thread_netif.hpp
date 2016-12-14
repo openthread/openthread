@@ -44,9 +44,15 @@
 
 #include <coap/coap_server.hpp>
 #include <coap/coap_client.hpp>
+#include <coap/secure_coap_client.hpp>
+#include <coap/secure_coap_server.hpp>
 #include <mac/mac.hpp>
+#include <meshcop/dataset_manager.hpp>
 #include <meshcop/joiner_router.hpp>
 #include <meshcop/leader.hpp>
+#include <net/dhcp6.hpp>
+#include <net/dhcp6_client.hpp>
+#include <net/dhcp6_server.hpp>
 #include <net/ip6_filter.hpp>
 #include <net/netif.hpp>
 #include <thread/address_resolver.hpp>
@@ -54,12 +60,15 @@
 #include <thread/energy_scan_server.hpp>
 #include <thread/network_diag.hpp>
 #include <thread/key_manager.hpp>
-#include <thread/meshcop_dataset_manager.hpp>
 #include <thread/mesh_forwarder.hpp>
 #include <thread/mle.hpp>
 #include <thread/mle_router.hpp>
 #include <thread/network_data_local.hpp>
 #include <thread/panid_query_server.hpp>
+
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+#include <utils/jam_detector.hpp>
+#endif // OPENTHREAD_ENABLE_JAM_DETECTION
 
 #if OPENTHREAD_ENABLE_COMMISSIONER
 #include <meshcop/commissioner.hpp>
@@ -163,6 +172,26 @@ public:
      */
     NetworkDiagnostic::NetworkDiagnostic &GetNetworkDiagnostic(void) { return mNetworkDiagnostic; }
 
+#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+    /**
+     * This method returns a pointer to the dhcp client object.
+     *
+     * @returns A reference to the dhcp client object.
+     *
+     */
+    Dhcp6::Dhcp6Client &GetDhcp6Client(void) { return mDhcp6Client; }
+#endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
+
+#if OPENTHREAD_ENABLE_DHCP6_SERVER
+    /**
+     * This method returns a pointer to the dhcp server object.
+     *
+     * @returns A reference to the the dhcp server object.
+     *
+     */
+    Dhcp6::Dhcp6Server &GetDhcp6Server(void) { return mDhcp6Server; }
+#endif  // OPENTHREAD_ENABLE_DHCP6_SERVER
+
     /**
      * This method returns a reference to the CoAP server object.
      *
@@ -255,6 +284,8 @@ public:
 
 #if OPENTHREAD_ENABLE_COMMISSIONER
     MeshCoP::Commissioner &GetCommissioner(void) { return mCommissioner; }
+
+    Coap::SecureServer &GetSecureCoapServer(void) { return mSecureCoapServer; }
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
 #if OPENTHREAD_ENABLE_DTLS
@@ -263,7 +294,19 @@ public:
 
 #if OPENTHREAD_ENABLE_JOINER
     MeshCoP::Joiner &GetJoiner(void) { return mJoiner; }
+
+    Coap::SecureClient &GetSecureCoapClient(void) { return mSecureCoapClient; }
 #endif  // OPENTHREAD_ENABLE_JOINER
+
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    /**
+     * This method returns the jam detector instance.
+     *
+     * @returns Reference to the JamDetector instance.
+     *
+     */
+    Utils::JamDetector &GetJamDetector(void) { return mJamDetector; }
+#endif // OPENTHREAD_ENABLE_JAM_DETECTION
 
     /**
      * This method returns the pointer to the parent otInstance structure.
@@ -277,6 +320,12 @@ private:
     Coap::Server mCoapServer;
     Coap::Client mCoapClient;
     AddressResolver mAddressResolver;
+#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+    Dhcp6::Dhcp6Client mDhcp6Client;
+#endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
+#if OPENTHREAD_ENABLE_DHCP6_SERVER
+    Dhcp6::Dhcp6Server mDhcp6Server;
+#endif  // OPENTHREAD_ENABLE_DHCP6_SERVER
     MeshCoP::ActiveDataset mActiveDataset;
     MeshCoP::PendingDataset mPendingDataset;
     Ip6::Filter mIp6Filter;
@@ -291,6 +340,7 @@ private:
     bool mIsUp;
 
 #if OPENTHREAD_ENABLE_COMMISSIONER
+    Coap::SecureServer mSecureCoapServer;
     MeshCoP::Commissioner mCommissioner;
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
@@ -299,14 +349,20 @@ private:
 #endif// OPENTHREAD_ENABLE_DTLS
 
 #if OPENTHREAD_ENABLE_JOINER
+    Coap::SecureClient mSecureCoapClient;
     MeshCoP::Joiner mJoiner;
 #endif  // OPENTHREAD_ENABLE_JOINER
+
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    Utils::JamDetector mJamDetector;
+#endif // OPENTHREAD_ENABLE_JAM_DETECTION
 
     MeshCoP::JoinerRouter mJoinerRouter;
     MeshCoP::Leader mLeader;
     AnnounceBeginServer mAnnounceBegin;
     PanIdQueryServer mPanIdQuery;
     EnergyScanServer mEnergyScan;
+
 };
 
 /**

@@ -44,6 +44,11 @@ libopenthread_cc2650_a_CPPFLAGS                       = \
     $(MBEDTLS_CPPFLAGS)                                 \
     $(NULL)
 
+libopenthread_cc2650_settings.cpp: $(srcdir)/../utils/settings.cpp
+	cp $? $@
+
+CLEANFILES = libopenthread_cc2650_settings.cpp
+
 libopenthread_cc2650_a_SOURCES                        = \
     alarm.c                               \
     logging.c                             \
@@ -53,6 +58,7 @@ libopenthread_cc2650_a_SOURCES                        = \
     uart.c                                \
     misc.c                                \
     flash.c                               \
+    libopenthread_cc2650_settings.cpp     \
     crypto/sha256_alt.c                   \
     crypto/aes_alt.c                      \
     $(NULL)
@@ -72,7 +78,7 @@ noinst_HEADERS                            = \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE
-CLEANFILES                          = $(wildcard *.gcda *.gcno)
+CLEANFILES                               += $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

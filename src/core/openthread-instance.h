@@ -43,6 +43,7 @@
 #include <crypto/mbedtls.hpp>
 #include <net/ip6.hpp>
 #include <thread/thread_netif.hpp>
+#include <coap/coap_server.hpp>
 
 /**
  * This type represents all the static / global variables used by OpenThread allocated in one place.
@@ -64,9 +65,6 @@ typedef struct otInstance
     otHandleEnergyScanResult mEnergyScanCallback;
     void *mEnergyScanCallbackContext;
 
-    otHandleActiveScanResult mDiscoverCallback;
-    void *mDiscoverCallbackContext;
-
     //
     // State
     //
@@ -77,12 +75,9 @@ typedef struct otInstance
     Thread::Ip6::Ip6 mIp6;
     Thread::ThreadNetif mThreadNetif;
 
-    //
-    // Platform specific variables
-    //
-
-    uint32_t mSettingsBaseAddress;
-    uint32_t mSettingsUsedSize;
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
+    Thread::Coap::Server mApplicationCoapServer;
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 
     // Constructor
     otInstance(void);

@@ -224,7 +224,7 @@ AC_PROG_LN_S
 #
 
 PROSPECTIVE_CFLAGS="-Wall -Wextra -Wshadow -Werror -std=c99 -pedantic-errors"
-PROSPECTIVE_CXXFLAGS="-Wall -Wextra -Wshadow -Werror -Wno-c++14-compat"
+PROSPECTIVE_CXXFLAGS="-Wall -Wextra -Wshadow -Werror -std=gnu++98 -Wno-c++14-compat"
 
 AC_CACHE_CHECK([whether $CC is Clang],
     [nl_cv_clang],
@@ -383,7 +383,7 @@ fi
 #
 
 AC_ARG_ENABLE(cli,
-    [AS_HELP_STRING([--enable-cli],[Enable CLI suport @<:@default=no@:>@.])],
+    [AS_HELP_STRING([--enable-cli],[Enable CLI support @<:@default=no@:>@.])],
     [
         case "${enableval}" in
 
@@ -405,7 +405,7 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI], [test "${enable_cli}" = "yes"])
 #
 
 AC_ARG_ENABLE(ncp,
-    [AS_HELP_STRING([--enable-ncp[[=spi|uart]]],[Enable NCP suport @<:@default=no@:>@.])],
+    [AS_HELP_STRING([--enable-ncp[[=spi|uart]]],[Enable NCP support @<:@default=no@:>@.])],
     [
         case "${enableval}" in
 
@@ -429,11 +429,40 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_SPI],  [test "${enable_ncp}"  = "spi"])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_UART], [test "${enable_ncp}"  = "uart"])
 
 #
+# Builtin mbedtls
+#
+
+AC_ARG_ENABLE(builtin-mbedtls,
+    [AS_HELP_STRING([--enable-builtin-mbedtls],[Enable builtin mbedtls @<:@default=yes@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_builtin_mbedtls=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_builtin_mbedtls} for --enable-builtin-mbedtls])
+            ;;
+        esac
+    ],
+    [enable_builtin_mbedtls=yes])
+
+if test "$enable_builtin_mbedtls" = "yes" -a ! "${MBEDTLS_CPPFLAGS}"; then
+    MBEDTLS_CPPFLAGS="-I\${abs_top_srcdir}/third_party/mbedtls"
+    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include"
+    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include/mbedtls"
+    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -DMBEDTLS_CONFIG_FILE=\\\"mbedtls-config.h\\\""
+fi
+AC_MSG_RESULT(${enable_builtin_mbedtls})
+AM_CONDITIONAL([OPENTHREAD_ENABLE_BUILTIN_MBEDTLS], [test "${enable_builtin_mbedtls}" = "yes"])
+
+#
 # Thread Commissioner
 #
 
 AC_ARG_ENABLE(commissioner,
-    [AS_HELP_STRING([--enable-commissioner],[Enable commissioner suport @<:@default=no@:>@.])],
+    [AS_HELP_STRING([--enable-commissioner],[Enable commissioner support @<:@default=no@:>@.])],
     [
         case "${enableval}" in
 
@@ -464,7 +493,7 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_COMMISSIONER],[${OPENTHREAD_ENABLE_COMMISS
 #
 
 AC_ARG_ENABLE(joiner,
-    [AS_HELP_STRING([--enable-joiner],[Enable joiner suport @<:@default=no@:>@.])],
+    [AS_HELP_STRING([--enable-joiner],[Enable joiner support @<:@default=no@:>@.])],
     [
         case "${enableval}" in
 
@@ -498,33 +527,79 @@ else
     OPENTHREAD_ENABLE_DTLS=0
 fi
 
-# 
-# define the mbed cppflags if they were not defined going into this script
-#
-if test ! "${MBEDTLS_CPPFLAGS}"; then
-    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -DMBEDTLS_CONFIG_FILE=\\\"mbedtls-config.h\\\""
-    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls"
-    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include"
-fi
-
-#
-# Add any code mbedtls CPPFLAGS
-#
-CPPFLAGS="${CPPFLAGS} ${MBEDTLS_CPPFLAGS}"
-
-AC_SUBST([MBEDTLS_CPPFLAGS],[${MBEDTLS_CPPFLAGS}],[Defined to the mbedtls config file and include paths])
-
 AC_MSG_RESULT(${enable_dtls})
 AC_SUBST(OPENTHREAD_ENABLE_DTLS)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_DTLS], [test "${enable_dtls}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DTLS],[${OPENTHREAD_ENABLE_DTLS}],[Define to 1 to enable dtls support.])
 
 #
+# Jam Detection
+#
+
+AC_ARG_ENABLE(jam_detection,
+    [AS_HELP_STRING([--enable-jam-detection],[Enable Jam Detection support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_jam_detection=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_jam_detection} for --enable-jam-detection])
+            ;;
+        esac
+    ],
+    [enable_jam_detection=no])
+
+if test "$enable_jam_detection" = "yes"; then
+    OPENTHREAD_ENABLE_JAM_DETECTION=1
+else
+    OPENTHREAD_ENABLE_JAM_DETECTION=0
+fi
+
+AC_MSG_RESULT(${enable_jam_detection})
+AC_SUBST(OPENTHREAD_ENABLE_JAM_DETECTION)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_JAM_DETECTION], [test "${enable_jam_detection}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_JAM_DETECTION],[${OPENTHREAD_ENABLE_JAM_DETECTION}],[Define to 1 if you want to use jam detection feature])
+
+#
+# MAC Whitelist and Blacklist
+#
+
+AC_ARG_ENABLE(mac_whitelist,
+    [AS_HELP_STRING([--enable-mac-whitelist],[Enable MAC whitelist/blacklist support @<:@default=yes@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_mac_whitelist=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_mac_whitelist} for --enable-mac-whitelist])
+            ;;
+        esac
+    ],
+    [enable_mac_whitelist=yes])
+
+if test "$enable_mac_whitelist" = "yes"; then
+    OPENTHREAD_ENABLE_MAC_WHITELIST=1
+else
+    OPENTHREAD_ENABLE_MAC_WHITELIST=0
+fi
+
+AC_MSG_RESULT(${enable_mac_whitelist})
+AC_SUBST(OPENTHREAD_ENABLE_MAC_WHITELIST)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_MAC_WHITELIST], [test "${enable_mac_whitelist}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_MAC_WHITELIST],[${OPENTHREAD_ENABLE_MAC_WHITELIST}],[Define to 1 if you want to use MAC whitelist/blacklist feature])
+
+#
 # Diagnostics Library
 #
 
 AC_ARG_ENABLE(diag,
-    [AS_HELP_STRING([--enable-diag],[Enable diagnostics suport @<:@default=no@:>@.])],
+    [AS_HELP_STRING([--enable-diag],[Enable diagnostics support @<:@default=no@:>@.])],
     [
         case "${enableval}" in
 
@@ -551,11 +626,42 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_DIAG], [test "${enable_diag}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DIAG],[${OPENTHREAD_ENABLE_DIAG}],[Define to 1 if you want to use diagnostics module])
 
 #
+# Legacy Network
+#
+
+AC_ARG_ENABLE(legacy,
+    [AS_HELP_STRING([--enable-legacy],[Enable legacy network support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_legacy=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_legacy} for --enable-legacy])
+            ;;
+        esac
+    ],
+    [enable_legacy=no])
+
+if test "$enable_legacy" = "yes"; then
+    OPENTHREAD_ENABLE_LEGACY=1
+else
+    OPENTHREAD_ENABLE_LEGACY=0
+fi
+
+AC_MSG_RESULT(${enable_legacy})
+AC_SUBST(OPENTHREAD_ENABLE_LEGACY)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_LEGACY], [test "${enable_legacy}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_LEGACY],[${OPENTHREAD_ENABLE_LEGACY}],[Define to 1 if you want to use legacy network support])
+
+#
 # Cli Logging
 #
 
 AC_ARG_ENABLE(cli_logging,
-    [AS_HELP_STRING([--enable-cli-logging],[Enable cli logging suport @<:@default=no@:>@.])],
+    [AS_HELP_STRING([--enable-cli-logging],[Enable cli logging support @<:@default=no@:>@.])],
     [
         case "${enableval}" in
 
@@ -609,6 +715,96 @@ fi
 AC_SUBST(OPENTHREAD_ENABLE_CERT_LOG)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_CERT_LOG], [test "${enable_cert_log}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_CERT_LOG],[${OPENTHREAD_ENABLE_CERT_LOG}],[Define to 1 if you want to enable log for certification test])
+
+#
+# DHCPv6 Client
+#
+
+AC_ARG_ENABLE(dhcp6_client,
+    [AS_HELP_STRING([--enable-dhcp6-client],[Enable DHCPv6 client support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_dhcp6_client=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_dhcp6_client} for --enable-dhcp6-client])
+            ;;
+        esac
+    ],
+    [enable_dhcp6_client=no])
+
+if test "$enable_dhcp6_client" = "yes"; then
+    OPENTHREAD_ENABLE_DHCP6_CLIENT=1
+else
+    OPENTHREAD_ENABLE_DHCP6_CLIENT=0
+fi
+
+AC_SUBST(OPENTHREAD_ENABLE_DHCP6_CLIENT)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_DHCP6_CLIENT], [test "${enable_dhcp6_client}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DHCP6_CLIENT],[${OPENTHREAD_ENABLE_DHCP6_CLIENT}],[Define to 1 if you want to enable DHCPv6 Client])
+
+#
+# DHCPv6 Server
+#
+
+AC_ARG_ENABLE(dhcp6_server,
+    [AS_HELP_STRING([--enable-dhcp6-server],[Enable DHCPv6 server support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_dhcp6_server=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_dhcp6_server} for --enable-dhcp6-server])
+            ;;
+        esac
+    ],
+    [enable_dhcp6_server=no])
+
+if test "$enable_dhcp6_server" = "yes"; then
+    OPENTHREAD_ENABLE_DHCP6_SERVER=1
+else
+    OPENTHREAD_ENABLE_DHCP6_SERVER=0
+fi
+
+AC_SUBST(OPENTHREAD_ENABLE_DHCP6_SERVER)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_DHCP6_SERVER], [test "${enable_dhcp6_server}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DHCP6_SERVER],[${OPENTHREAD_ENABLE_DHCP6_SERVER}],[Define to 1 if you want to enable DHCPv6 Server])
+
+#
+# Application CoAP
+#
+
+AC_ARG_ENABLE(application_coap,
+    [AS_HELP_STRING([--enable-application-coap],[Enable CoAP to an application.@<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_application_coap=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_application_coap} for --enable-application-coap])
+            ;;
+        esac
+    ],
+    [enable_application_coap=no])
+
+if test "$enable_application_coap" = "yes"; then
+    OPENTHREAD_ENABLE_APPLICATION_COAP=1
+else
+    OPENTHREAD_ENABLE_APPLICATION_COAP=0
+fi
+
+AC_SUBST(OPENTHREAD_ENABLE_APPLICATION_COAP)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_APPLICATION_COAP], [test "${enable_application_coap}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_APPLICATION_COAP],[${OPENTHREAD_ENABLE_APPLICATION_COAP}],[Define to 1 if you want to enable CoAP to an application.])
 
 #
 # Examples
@@ -761,6 +957,10 @@ if test "${ac_no_link}" != "yes"; then
     AC_CHECK_FUNCS([memcpy])
 fi
 
+# Add any mbedtls CPPFLAGS
+
+CPPFLAGS="${CPPFLAGS} ${MBEDTLS_CPPFLAGS}"
+
 # Add any code coverage CPPFLAGS and LDFLAGS
 
 CPPFLAGS="${CPPFLAGS} ${NL_COVERAGE_CPPFLAGS}"
@@ -780,6 +980,7 @@ Makefile
 include/Makefile
 include/cli/Makefile
 include/commissioning/Makefile
+include/dhcp6/Makefile
 include/ncp/Makefile
 include/platform/Makefile
 src/Makefile
@@ -865,12 +1066,19 @@ AC_MSG_NOTICE([
   Pretty check args                         : ${PRETTY_CHECK_ARGS:--}
   OpenThread CLI support                    : ${enable_cli}
   OpenThread NCP support                    : ${enable_ncp}
+  OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}
   OpenThread Commissioner support           : ${enable_commissioner}
   OpenThread Joiner support                 : ${enable_joiner}
   OpenThread DTLS support                   : ${enable_dtls}
+  OpenThread Jam Detection support          : ${enable_jam_detection}
+  OpenThread MAC Whitelist support          : ${enable_mac_whitelist}
   OpenThread Diagnostics support            : ${enable_diag}
+  OpenThread Legacy network support         : ${enable_legacy}
   OpenThread Cli logging support            : ${enable_cli_logging}
   OpenThread Certification log support      : ${enable_cert_log}
+  OpenThread DHCPv6 Server support          : ${enable_dhcp6_server}
+  OpenThread DHCPv6 Client support          : ${enable_dhcp6_client}
+  Openthread Application CoAP support       : ${enable_application_coap}
   OpenThread examples                       : ${OPENTHREAD_EXAMPLES}
   OpenThread platform information           : ${PLATFORM_INFO}
 

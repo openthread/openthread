@@ -37,6 +37,9 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#ifdef OTDLL
+#include <guiddef.h>
+#endif
 
 #include <platform/toolchain.h>
 
@@ -61,13 +64,31 @@ extern "C" {
 #define myoffsetof(s,m) (((size_t)&(((s*)BASE)->m))-BASE)
 #define CONTAINING_RECORD(address, type, field) \
     ((type *)((uint8_t*)(address) - myoffsetof(type, field)))
-#endif
-#endif
+#endif /* CONTAINING_RECORD */
+#endif /* _WIN32 */
 
 /**
  * This type represents the OpenThread instance structure.
  */
 typedef struct otInstance otInstance;
+
+#ifdef OTDLL
+
+/**
+ * This type represents the handle to the OpenThread API.
+ */
+typedef struct otApiInstance otApiInstance;
+
+/**
+ * This type represents a list of device GUIDs.
+ */
+typedef struct otDeviceList
+{
+    uint16_t aDevicesLength;
+    GUID     aDevices[1];
+} otDeviceList;
+
+#endif
 
 /**
  * This enumeration represents error codes used throughout OpenThread.
@@ -167,6 +188,10 @@ typedef enum ThreadError
      */
     kThreadError_ResponseTimeout = 30,
 
+    /**
+     * Received a duplicated frame.
+     */
+    kThreadError_Duplicated = 31,
     kThreadError_Error = 255,
 } ThreadError;
 
@@ -485,6 +510,7 @@ typedef enum otMeshcopTlvType
 /**
  * This structure represents an MLE Link Mode configuration.
  */
+OT_TOOL_ALIGN(4)
 typedef struct otLinkModeConfig
 {
     /**
@@ -605,6 +631,11 @@ typedef struct otBorderRouterConfig
      * TRUE, if this configuration is considered Stable Network Data.  FALSE, otherwise.
      */
     bool mStable : 1;
+
+    /**
+     * The Border Agent Rloc.
+     */
+    uint16_t mRloc16;
 } otBorderRouterConfig;
 
 /**
@@ -700,6 +731,7 @@ typedef struct otMacBlacklistEntry
  */
 typedef enum
 {
+    kDeviceRoleOffline,   ///< The Thread device is offline and unavailable.
     kDeviceRoleDisabled,  ///< The Thread stack is disabled.
     kDeviceRoleDetached,  ///< Not currently participating in a Thread network/partition.
     kDeviceRoleChild,     ///< The Thread Child role.
@@ -755,6 +787,7 @@ typedef struct
  * This structure holds diagnostic information for a Thread Router
  *
  */
+OT_TOOL_ALIGN(4)
 typedef struct
 {
     otExtAddress   mExtAddress;            ///< IEEE 802.15.4 Extended Address
@@ -799,6 +832,8 @@ typedef struct otLeaderData
 typedef struct otMacCounters
 {
     uint32_t mTxTotal;                ///< The total number of transmissions.
+    uint32_t mTxUnicast;              ///< The total number of unicast transmissions.
+    uint32_t mTxBroadcast;            ///< The total number of broadcast transmissions.
     uint32_t mTxAckRequested;         ///< The number of transmissions with ack request.
     uint32_t mTxAcked;                ///< The number of transmissions that were acked.
     uint32_t mTxNoAckRequested;       ///< The number of transmissions without ack request.
@@ -810,6 +845,8 @@ typedef struct otMacCounters
     uint32_t mTxRetry;                ///< The number of retransmission times.
     uint32_t mTxErrCca;               ///< The number of CCA failure times.
     uint32_t mRxTotal;                ///< The total number of received packets.
+    uint32_t mRxUnicast;              ///< The total number of unicast packets received.
+    uint32_t mRxBroadcast;            ///< The total number of broadcast packets received.
     uint32_t mRxData;                 ///< The number of received data.
     uint32_t mRxDataPoll;             ///< The number of received data poll.
     uint32_t mRxBeacon;               ///< The number of received beacon.
@@ -817,6 +854,7 @@ typedef struct otMacCounters
     uint32_t mRxOther;                ///< The number of received other types of frames.
     uint32_t mRxWhitelistFiltered;    ///< The number of received packets filtered by whitelist.
     uint32_t mRxDestAddrFiltered;     ///< The number of received packets filtered by destination check.
+    uint32_t mRxDuplicated;           ///< The number of received duplicated packets.
     uint32_t mRxErrNoFrame;           ///< The number of received packets that do not contain contents.
     uint32_t mRxErrUnknownNeighbor;   ///< The number of received packets from unknown neighbor.
     uint32_t mRxErrInvalidSrcAddr;    ///< The number of received packets whose source address is invalid.
@@ -826,22 +864,57 @@ typedef struct otMacCounters
 } otMacCounters;
 
 /**
+ * This structure represents the message buffer information.
+ */
+typedef struct otBufferInfo
+{
+    uint16_t mTotalBuffers;           ///< The number of buffers in the pool.
+    uint16_t mFreeBuffers;            ///< The number of free message buffers.
+    uint16_t m6loSendMessages;        ///< The number of messages in the 6lo send queue.
+    uint16_t m6loSendBuffers;         ///< The number of buffers in the 6lo send queue.
+    uint16_t m6loReassemblyMessages;  ///< The number of messages in the 6LoWPAN reassembly queue.
+    uint16_t m6loReassemblyBuffers;   ///< The number of buffers in the 6LoWPAN reassembly queue.
+    uint16_t mIp6Messages;            ///< The number of messages in the IPv6 send queue.
+    uint16_t mIp6Buffers;             ///< The number of buffers in the IPv6 send queue.
+    uint16_t mMplMessages;            ///< The number of messages in the MPL send queue.
+    uint16_t mMplBuffers;             ///< The number of buffers in the MPL send queue.
+    uint16_t mMleMessages;            ///< The number of messages in the MLE send queue.
+    uint16_t mMleBuffers;             ///< The number of buffers in the MLE send queue.
+    uint16_t mArpMessages;            ///< The number of messages in the ARP send queue.
+    uint16_t mArpBuffers;             ///< The number of buffers in the ARP send queue.
+    uint16_t mCoapClientMessages;     ///< The number of messages in the CoAP client send queue.
+    uint16_t mCoapClientBuffers;      ///< The number of buffers in the CoAP client send queue.
+} otBufferInfo;
+
+/**
  * @}
  *
  */
 
 /**
- * This structure represents an IPv6 network interface address.
+ * This structure represents an IPv6 network interface unicast address.
  *
  */
 typedef struct otNetifAddress
 {
-    otIp6Address           mAddress;            ///< The IPv6 address.
-    uint32_t               mPreferredLifetime;  ///< The Preferred Lifetime.
-    uint32_t               mValidLifetime;      ///< The Valid lifetime.
-    uint8_t                mPrefixLength;       ///< The Prefix length.
-    struct otNetifAddress *mNext;               ///< A pointer to the next network interface address.
+    otIp6Address           mAddress;                 ///< The IPv6 unicast address.
+    uint32_t               mPreferredLifetime;       ///< The Preferred Lifetime.
+    uint32_t               mValidLifetime;           ///< The Valid lifetime.
+    uint8_t                mPrefixLength;            ///< The Prefix length.
+    unsigned int           mScopeOverride : 4;       ///< The IPv6 scope of this address.
+    bool                   mScopeOverrideValid : 1;  ///< TRUE if the mScopeOverride value is valid, FALSE othewrise.
+    struct otNetifAddress *mNext;                    ///< A pointer to the next network interface address.
 } otNetifAddress;
+
+/**
+ * This structure represents an IPv6 network interface multicast address.
+ *
+ */
+typedef struct otNetifMulticastAddress
+{
+    otIp6Address                    mAddress;   ///< The IPv6 multicast address.
+    struct otNetifMulticastAddress *mNext;      ///< A pointer to the next network interface multicast address.
+} otNetifMulticastAddress;
 
 /**
  * This enumeration represents the list of allowable values for an InterfaceId.

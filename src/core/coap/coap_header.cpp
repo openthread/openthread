@@ -32,6 +32,7 @@
  */
 
 #include <coap/coap_header.hpp>
+#include <coap/coap_client.hpp>
 #include <common/debug.hpp>
 #include <common/code_utils.hpp>
 #include <common/encoding.hpp>
@@ -57,7 +58,7 @@ void Header::Init(Type aType, Code aCode)
     SetCode(aCode);
 }
 
-ThreadError Header::FromMessage(const Message &aMessage)
+ThreadError Header::FromMessage(const Message &aMessage, bool aCopiedMessage)
 {
     ThreadError error = kThreadError_Parse;
     uint16_t offset = aMessage.GetOffset();
@@ -66,6 +67,11 @@ ThreadError Header::FromMessage(const Message &aMessage)
     bool firstOption = true;
     uint16_t optionDelta;
     uint16_t optionLength;
+
+    if (aCopiedMessage)
+    {
+        length -= sizeof(RequestMetadata);
+    }
 
     VerifyOrExit(length >= kTokenOffset, error = kThreadError_Parse);
     aMessage.Read(offset, kTokenOffset, mHeader.mBytes);

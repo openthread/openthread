@@ -166,6 +166,7 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
     uint32_t nextTransmissionTime;
     uint8_t hopLimit;
 
+    VerifyOrExit(GetTimerExpirations() > 0,);
     VerifyOrExit((messageCopy = aMessage.Clone()) != NULL, error = kThreadError_NoBufs);
 
     if (!aIsOutbound)

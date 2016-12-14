@@ -30,15 +30,20 @@
 import time
 import unittest
 
+import config
+import mle
 import node
 
 LEADER = 1
 ROUTER = 2
+SNIFFER = 3
+
 
 class Cert_5_1_13_RouterReset(unittest.TestCase):
+
     def setUp(self):
         self.nodes = {}
-        for i in range(1,3):
+        for i in range(1, 3):
             self.nodes[i] = node.Node(i)
 
         self.nodes[LEADER].set_panid(0xface)
@@ -52,7 +57,13 @@ class Cert_5_1_13_RouterReset(unittest.TestCase):
         self.nodes[ROUTER].enable_whitelist()
         self.nodes[ROUTER].set_router_selection_jitter(1)
 
+        self.sniffer = config.create_default_thread_sniffer(SNIFFER)
+        self.sniffer.start()
+
     def tearDown(self):
+        self.sniffer.stop()
+        del self.sniffer
+
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
@@ -68,13 +79,70 @@ class Cert_5_1_13_RouterReset(unittest.TestCase):
 
         rloc16 = self.nodes[ROUTER].get_addr16()
 
-        self.nodes[ROUTER].stop();
+        self.nodes[ROUTER].stop()
         time.sleep(5)
 
         self.nodes[ROUTER].start()
         time.sleep(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
         self.assertEqual(self.nodes[ROUTER].get_addr16(), rloc16)
+
+        leader_messages = self.sniffer.get_messages_sent_by(LEADER)
+        router1_messages = self.sniffer.get_messages_sent_by(ROUTER)
+
+        # 1 - All
+        leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+
+        router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
+        leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+
+        router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
+        leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+
+        router1_messages.next_mle_message(mle.CommandType.LINK_REQUEST)
+        msg = leader_messages.next_mle_message_of_one_of_command_types(mle.CommandType.LINK_ACCEPT_AND_REQUEST,
+                                                                       mle.CommandType.LINK_ACCEPT)
+        self.assertIsNotNone(msg)
+
+        # 2 - Router1 / Leader
+        msg = router1_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+        msg.assertSentWithHopLimit(255)
+        msg.assertSentToDestinationAddress("ff02::1")
+        msg.assertMleMessageContainsTlv(mle.SourceAddress)
+        msg.assertMleMessageContainsTlv(mle.LeaderData)
+        msg.assertMleMessageContainsTlv(mle.Route64)
+
+        msg = leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+        msg.assertSentWithHopLimit(255)
+        msg.assertSentToDestinationAddress("ff02::1")
+        msg.assertMleMessageContainsTlv(mle.SourceAddress)
+        msg.assertMleMessageContainsTlv(mle.LeaderData)
+        msg.assertMleMessageContainsTlv(mle.Route64)
+
+        # 4 - Router1
+        msg = router1_messages.next_mle_message(mle.CommandType.LINK_REQUEST)
+        msg.assertSentToDestinationAddress("ff02::2")
+        msg.assertMleMessageContainsTlv(mle.Challenge)
+        msg.assertMleMessageContainsTlv(mle.Version)
+        msg.assertMleMessageContainsTlv(mle.TlvRequest)
+
+        tlv_request = msg.get_mle_message_tlv(mle.TlvRequest)
+        self.assertIn(mle.TlvType.ROUTE64, tlv_request.tlvs)
+        self.assertIn(mle.TlvType.ADDRESS16, tlv_request.tlvs)
+
+        # 5 - Leader
+        msg = leader_messages.next_mle_message(mle.CommandType.LINK_ACCEPT)
+        msg.assertSentToNode(self.nodes[ROUTER])
+        msg.assertMleMessageContainsTlv(mle.SourceAddress)
+        msg.assertMleMessageContainsTlv(mle.LeaderData)
+        msg.assertMleMessageContainsTlv(mle.Response)
+        msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)
+        msg.assertMleMessageContainsOptionalTlv(mle.MleFrameCounter)
+        msg.assertMleMessageContainsTlv(mle.Address16)
+        msg.assertMleMessageContainsTlv(mle.Version)
+        msg.assertMleMessageContainsTlv(mle.Route64)
+        msg.assertMleMessageContainsOptionalTlv(mle.Challenge)
+
 
 if __name__ == '__main__':
     unittest.main()

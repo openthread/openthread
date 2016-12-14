@@ -175,6 +175,7 @@ otLwfDeviceClientCleanup(
     }
 
     // Free all pending notifications
+    NT_ASSERT(DeviceClient->NotificationSize <= OTLWF_MAX_PENDING_NOTIFICATIONS_PER_CLIENT);
     for (UCHAR i = 0; i < DeviceClient->NotificationSize; i++)
     {
         UCHAR index = (DeviceClient->NotificationOffset + i) % OTLWF_MAX_PENDING_NOTIFICATIONS_PER_CLIENT;
@@ -515,6 +516,7 @@ otLwfIndicateNotification(
 
         // If there are other pending notifications or we don't have a pending IRP saved
         // then just go ahead and add the notification to the list
+        NT_ASSERT(DeviceClient->NotificationSize <= OTLWF_MAX_PENDING_NOTIFICATIONS_PER_CLIENT);
         if (DeviceClient->NotificationSize != 0 ||
             DeviceClient->PendingNotificationIRP == NULL
             )
@@ -530,11 +532,15 @@ otLwfIndicateNotification(
             {
                 LogWarning(DRIVER_IOCTL, "Dropping old notification!");
                 otLwfReleaseNotification(DeviceClient->PendingNotifications[DeviceClient->NotificationOffset]);
+                DeviceClient->NotificationOffset++;
+            }
+            else
+            {
+                DeviceClient->NotificationSize++;
             }
 
             // Copy the notification to the next space
             DeviceClient->PendingNotifications[Index] = NotifEntry;
-            DeviceClient->NotificationSize++;
         }
         else
         {

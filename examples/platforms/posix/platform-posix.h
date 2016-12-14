@@ -48,17 +48,19 @@
 #include <windows.h>
 #define POLL WSAPoll
 #define ssize_t int
+#include <time.h>
+#define localtime _localtime32
 // In user mode, define some Linux functions
 __forceinline int gettimeofday(struct timeval *tv, struct timezone *tz)
 {
     (void)tz;
-    tv->tv_sec = (long)GetTickCount(); // Generally 0 at the start of the application
+    tv->tv_sec = _time32(NULL);
     tv->tv_usec = 0;
     return 0;
 }
 __forceinline void timersub(struct timeval *a, struct timeval *b, struct timeval *res)
 {
-    res->tv_sec = a->tv_sec - b->tv_sec;
+    res->tv_sec = (long)_difftime32(a->tv_sec, b->tv_sec);
     res->tv_usec = 0;
 }
 #else

@@ -35,6 +35,8 @@
 #ifndef OPENTHREAD_COMMISSIONER_H_
 #define OPENTHREAD_COMMISSIONER_H_
 
+#include <platform/toolchain.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -54,7 +56,7 @@ extern "C" {
  * @retval kThreadError_None     Successfully started the Commissioner role.
  *
  */
-ThreadError otCommissionerStart(otInstance *aInstance);
+OTAPI ThreadError OTCALL otCommissionerStart(otInstance *aInstance);
 
 /**
  * This function disables the Thread Commissioner role.
@@ -64,7 +66,7 @@ ThreadError otCommissionerStart(otInstance *aInstance);
  * @retval kThreadError_None     Successfully started the Commissioner role.
  *
  */
-ThreadError otCommissionerStop(otInstance *aInstance);
+OTAPI ThreadError OTCALL otCommissionerStop(otInstance *aInstance);
 
 /**
  * This function adds a Joiner entry.
@@ -78,7 +80,8 @@ ThreadError otCommissionerStop(otInstance *aInstance);
  * @retval kThreadError_InvalidArgs  @p aExtAddress or @p aPSKd is invalid.
  *
  */
-ThreadError otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aExtAddress, const char *aPSKd);
+OTAPI ThreadError OTCALL otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aExtAddress,
+                                                 const char *aPSKd);
 
 /**
  * This function removes a Joiner entry.
@@ -91,7 +94,7 @@ ThreadError otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *a
  * @retval kThreadError_InvalidArgs  @p aExtAddress is invalid.
  *
  */
-ThreadError otCommissionerRemoveJoiner(otInstance *aIntsance, const otExtAddress *aExtAddress);
+OTAPI ThreadError OTCALL otCommissionerRemoveJoiner(otInstance *aIntsance, const otExtAddress *aExtAddress);
 
 /**
  * This function sets the Provisioning URL.
@@ -102,7 +105,7 @@ ThreadError otCommissionerRemoveJoiner(otInstance *aIntsance, const otExtAddress
  * @retval kThreadError_InvalidArgs  @p aProvisioningUrl is invalid.
  *
  */
-ThreadError otCommissionerSetProvisioningUrl(otInstance *aInstance, const char *aProvisioningUrl);
+OTAPI ThreadError OTCALL otCommissionerSetProvisioningUrl(otInstance *aInstance, const char *aProvisioningUrl);
 
 /**
  * This function sends an Announce Begin message.
@@ -117,8 +120,9 @@ ThreadError otCommissionerSetProvisioningUrl(otInstance *aInstance, const char *
  * @retval kThreadError_NoBufs  Insufficient buffers to generate an Announce Begin message.
  *
  */
-ThreadError otCommissionerAnnounceBegin(otInstance *aInstance, uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod,
-                                        const otIp6Address *aAddress);
+OTAPI ThreadError OTCALL otCommissionerAnnounceBegin(otInstance *aInstance, uint32_t aChannelMask, uint8_t aCount,
+                                                     uint16_t aPeriod,
+                                                     const otIp6Address *aAddress);
 
 /**
  * This function pointer is called when the Commissioner receives an Energy Report.
@@ -129,8 +133,8 @@ ThreadError otCommissionerAnnounceBegin(otInstance *aInstance, uint32_t aChannel
  * @param[in]  aContext           A pointer to application-specific context.
  *
  */
-typedef void (*otCommissionerEnergyReportCallback)(uint32_t aChannelMask, const uint8_t *aEnergyList,
-                                                   uint8_t aEnergyListLength, void *aContext);
+typedef void (OTCALL *otCommissionerEnergyReportCallback)(uint32_t aChannelMask, const uint8_t *aEnergyList,
+                                                          uint8_t aEnergyListLength, void *aContext);
 
 /**
  * This function sends an Energy Scan Query message.
@@ -148,9 +152,9 @@ typedef void (*otCommissionerEnergyReportCallback)(uint32_t aChannelMask, const 
  * @retval kThreadError_NoBufs  Insufficient buffers to generate an Energy Scan Query message.
  *
  */
-ThreadError otCommissionerEnergyScan(otInstance *aInstance, uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod,
-                                     uint16_t aScanDuration, const otIp6Address *aAddress,
-                                     otCommissionerEnergyReportCallback aCallback, void *aContext);
+OTAPI ThreadError OTCALL otCommissionerEnergyScan(otInstance *aInstance, uint32_t aChannelMask, uint8_t aCount,
+                                                  uint16_t aPeriod, uint16_t aScanDuration, const otIp6Address *aAddress,
+                                                  otCommissionerEnergyReportCallback aCallback, void *aContext);
 
 /**
  * This function pointer is called when the Commissioner receives a PAN ID Conflict message.
@@ -160,7 +164,7 @@ ThreadError otCommissionerEnergyScan(otInstance *aInstance, uint32_t aChannelMas
  * @param[in]  aContext           A pointer to application-specific context.
  *
  */
-typedef void (*otCommissionerPanIdConflictCallback)(uint16_t aPanId, uint32_t aChannelMask, void *aContext);
+typedef void (OTCALL *otCommissionerPanIdConflictCallback)(uint16_t aPanId, uint32_t aChannelMask, void *aContext);
 
 /**
  * This function sends a PAN ID Query message.
@@ -176,9 +180,9 @@ typedef void (*otCommissionerPanIdConflictCallback)(uint16_t aPanId, uint32_t aC
  * @retval kThreadError_NoBufs  Insufficient buffers to generate a PAN ID Query message.
  *
  */
-ThreadError otCommissionerPanIdQuery(otInstance *aInstance, uint16_t aPanId, uint32_t aChannelMask,
-                                     const otIp6Address *aAddress,
-                                     otCommissionerPanIdConflictCallback aCallback, void *aContext);
+OTAPI ThreadError OTCALL otCommissionerPanIdQuery(otInstance *aInstance, uint16_t aPanId, uint32_t aChannelMask,
+                                                  const otIp6Address *aAddress,
+                                                  otCommissionerPanIdConflictCallback aCallback, void *aContext);
 
 /**
  * This function sends MGMT_COMMISSIONER_GET.
@@ -191,7 +195,7 @@ ThreadError otCommissionerPanIdQuery(otInstance *aInstance, uint16_t aPanId, uin
  * @retval kThreadError_NoBufs       Insufficient buffer space to send.
  *
  */
-ThreadError otSendMgmtCommissionerGet(otInstance *, const uint8_t *aTlvs, uint8_t aLength);
+OTAPI ThreadError OTCALL otSendMgmtCommissionerGet(otInstance *, const uint8_t *aTlvs, uint8_t aLength);
 
 /**
  * This function sends MGMT_COMMISSIONER_SET.
@@ -205,8 +209,18 @@ ThreadError otSendMgmtCommissionerGet(otInstance *, const uint8_t *aTlvs, uint8_
  * @retval kThreadError_NoBufs       Insufficient buffer space to send.
  *
  */
-ThreadError otSendMgmtCommissionerSet(otInstance *, const otCommissioningDataset *aDataset,
-                                      const uint8_t *aTlvs, uint8_t aLength);
+OTAPI ThreadError OTCALL otSendMgmtCommissionerSet(otInstance *, const otCommissioningDataset *aDataset,
+                                                   const uint8_t *aTlvs, uint8_t aLength);
+
+/**
+ * This function returns the origian Commissioner Session ID.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns The current commissioner session id.
+ *
+ */
+OTAPI uint16_t OTCALL otCommissionerGetSessionId(otInstance *);
 
 /**
  * @}

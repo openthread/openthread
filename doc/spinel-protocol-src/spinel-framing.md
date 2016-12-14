@@ -30,6 +30,33 @@ opened. At the very least we **RECOMMEND** dedicating one of your host
 pins to controlling the `R̅E̅S̅` pin on the NCP, so that you can
 easily perform a hardware reset if necessary.
 
+### UART Bit Rate Detection ###
+
+When using a UART, the issue of an appropriate bit rate must be
+considered. A bitrate of 115200 bits per second has become a defacto
+standard baud rate for many serial peripherals. This rate, however,
+is slower than the theoretical maximum bitrate of the 802.15.4 2.4GHz
+PHY (250kbit). In most circumstances this mismatch is not significant
+because the overall bitrate will be much lower than either of these
+rates, but there are circumstances where a faster UART bitrate is
+desirable. Thus, this document proposes a simple bitrate detection
+scheme that can be employed by the host to detect when the attached
+NCP is initially running at a higher bitrate.
+
+The algorithm is to send successive NOOP commands to the NCP at increasing
+bitrates. When a valid `CMD_LAST_STATUS` response has been received, we
+have identified the correct bitrate.
+
+In order to limit the time spent hunting for the appropriate bitrate,
+we RECOMMEND that only the following bitrates be checked:
+
+* 115200
+* 230400
+* 1000000 (1Mbit)
+
+The bitrate MAY also be changed programmatically by adjusting
+`PROP_UART_BITRATE`, if implemented.
+
 ### HDLC-Lite {#hdlc-lite}
 
 *HDLC-Lite* is the recommended framing protocol for transmitting
@@ -124,13 +151,16 @@ The `HDR` byte is defined as:
 
       0   1   2   3   4   5   6   7
     +---+---+---+---+---+---+---+---+
-    |RST|CRC|    RESERVED   |PATTERN|
+    |RST|CRC|CCF|  RESERVED |PATTERN|
     +---+---+---+---+---+---+---+---+
 
 *   `RST`: This bit is set when that device has been reset since the
     last time `C̅S̅` was asserted.
 *   `CRC`: This bit is set when that device supports writing a 16-bit
-    CRC at the end of the data. This CRC is NOT included in DATA_LEN.
+    CRC at the end of the data. The CRC length is NOT included in DATA_LEN.
+*   `CCF`: "CRC Check Failure". Set if the CRC check on the last received
+    frame failed, cleared to zero otherwise. This bit is only used if both
+    sides support CRC.
 *   `RESERVED`: These bits are all reserved for future used. They
     MUST be cleared to zero and MUST be ignored if set.
 *   `PATTERN`: These bits are set to a fixed value to help distinguish
@@ -139,12 +169,17 @@ The `HDR` byte is defined as:
     cleared (0). A frame received that has any other values for these bits
     MUST be dropped.
 
-Prior to a sending or receiving a frame, the master SHOULD send a
+Prior to a sending or receiving a frame, the master MAY send a
 5-octet frame with zeros for both the max receive frame size and the
 the contained frame length. This will induce the slave device to
 indicate the length of the frame it wants to send (if any) and
 indicate the largest frame it is capable of receiving at the moment.
 This allows the master to calculate the size of the next transaction.
+Alternatively, if the master has a frame to send it can just go ahead
+and send a frame of that length and determine if the frame was accepted
+by checking that the `RECV_LEN` from the slave frame is larger than
+the frame the master just tried to send. If the `RECV_LEN` is smaller
+then the frame wasn't accepted and will need to be transmitted again.
 
 This protocol can be used either unidirectionally or bidirectionally,
 determined by the behavior of the master and the slave.
@@ -156,11 +191,33 @@ milliseconds, retrying up to 200 times. After unsuccessfully trying
 (like a NCP hardware reset, or indicating a communication failure to a
 user interface).
 
+At the end of the data of a frame is an optional 16-bit CRC, support for
+which is indicated by the `CRC` bit of the `HDR` byte being set. If these
+bits are set for both the master and slave frames, then CRC checking is
+enabled on both sides, effectively requiring that frame sizes be two bytes
+longer than would be otherwise required. The CRC is calculated using the
+same mechanism used for the CRC calculation in HDLC-Lite (See (#hdlc-lite)).
+When both of the `CRC` bits are set, both sides must verify that the `CRC`
+is valid before accepting the frame. If not enough bytes were clocked out
+for the CRC to be read, then the frame must be ignored. If enough bytes
+were clocked out to perform a CRC check, but the CRC check fails, then
+the frame must be rejected and the `CRC_FAIL` bit on the next frame (and
+ONLY the next frame) MUST be set.
+
 ## I²C Recommendations {#i2c-recommendations}
 
 TBD
+
+<!-- RQ
+  -- It may make sense to have a look at what Bluetooth HCI is doing
+     for native I²C framing and go with that.
+  -->
 
 ## Native USB Recommendations ###
 
 TBD
 
+<!-- RQ
+  -- It may make sense to have a look at what Bluetooth HCI is doing
+     for native USB framing and go with that.
+  -->
