@@ -360,6 +360,8 @@ ThreadError Dhcp6Server::ProcessIaNa(Message &aMessage, uint16_t aOffset, IaNa &
     aOffset += sizeof(aIaNa);
     length = aIaNa.GetLength() + sizeof(Dhcp6Option) - sizeof(IaNa);
 
+    VerifyOrExit(length <= aMessage.GetLength() - aOffset, error = kThreadError_Parse);
+
     mPrefixAgentsMask = 0;
 
     while (length > 0)
