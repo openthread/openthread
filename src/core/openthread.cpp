@@ -1376,6 +1376,11 @@ bool otIsDiscoverInProgress(otInstance *aInstance)
     return aInstance->mThreadNetif.GetMle().IsDiscoverInProgress();
 }
 
+ThreadError otSendMacDataRequest(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetMeshForwarder().SendMacDataRequest();
+}
+
 void otSetReceiveIp6DatagramCallback(otInstance *aInstance, otReceiveIp6DatagramCallback aCallback,
                                      void *aCallbackContext)
 {

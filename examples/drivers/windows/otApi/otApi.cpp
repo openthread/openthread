@@ -1317,6 +1317,18 @@ otIsDiscoverInProgress(
 }
 
 OTAPI 
+ThreadError
+OTCALL
+otSendMacDataRequest(
+    _In_ otInstance *aInstance
+    )
+{
+    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    UNREFERENCED_PARAMETER(aInstance);
+    return kThreadError_NotImplemented; // TODO
+}
+
+OTAPI 
 uint8_t 
 OTCALL
 otGetChannel(

@@ -825,15 +825,42 @@ void MeshForwarder::HandlePollTimer(void *aContext)
 
 void MeshForwarder::HandlePollTimer()
 {
+    ThreadError error;
+
+    error = SendMacDataRequest();
+
+    if (error == kThreadError_NoBufs)
+    {
+        mPollTimer.Start(kDataRequstRetryDelay);
+    }
+}
+
+ThreadError MeshForwarder::SendMacDataRequest(void)
+{
+    ThreadError error;
     Message *message;
 
-    if ((message = mNetif.GetIp6().mMessagePool.New(Message::kTypeMacDataPoll, 0)) != NULL)
+    // only send MAC Data Requests in rx-off-when-idle mode
+    VerifyOrExit(!mMac.GetRxOnWhenIdle(), error = kThreadError_InvalidState);
+
+    // only enqueue one MAC Data Request at a time
+    for (message = mSendQueue.GetHead(); message; message = message->GetNext())
     {
-        SendMessage(*message);
-        otLogInfoMac("Sent poll");
+        VerifyOrExit(message->GetType() != Message::kTypeMacDataPoll, error = kThreadError_Already);
     }
 
+    // enqueue a MAC Data Request message
+    message = mNetif.GetIp6().mMessagePool.New(Message::kTypeMacDataPoll, 0);
+    VerifyOrExit(message != NULL, error = kThreadError_NoBufs);
+
+    SuccessOrExit(error = SendMessage(*message));
+    otLogInfoMac("Sent poll");
+
+    // restart the polling timer
     mPollTimer.Start(mPollPeriod);
+
+exit:
+    return error;
 }
 
 ThreadError MeshForwarder::GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr)
@@ -947,9 +974,13 @@ exit:
 
 ThreadError MeshForwarder::SendPoll(Message &aMessage, Mac::Frame &aFrame)
 {
+    ThreadError error = kThreadError_None;
     Mac::Address macSource;
     uint16_t fcf;
     Neighbor *neighbor;
+
+    // only send MAC Data Requests in rx-off-when-idle mode
+    VerifyOrExit(!mMac.GetRxOnWhenIdle(), error = kThreadError_InvalidState);
 
     macSource.mShortAddress = mMac.GetShortAddress();
 
@@ -998,7 +1029,8 @@ ThreadError MeshForwarder::SendPoll(Message &aMessage, Mac::Frame &aFrame)
 
     mMessageNextOffset = aMessage.GetLength();
 
-    return kThreadError_None;
+exit:
+    return error;
 }
 
 ThreadError MeshForwarder::SendMesh(Message &aMessage, Mac::Frame &aFrame)

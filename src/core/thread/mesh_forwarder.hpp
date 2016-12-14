@@ -155,6 +155,17 @@ public:
     void SetPollPeriod(uint32_t aPeriod);
 
     /**
+     * This method enqueues an IEEE 802.15.4 Data Request message.
+     *
+     * @retval kThreadError_None          Successfully enqueued an IEEE 802.15.4 Data Request message.
+     * @retval kThreadError_Already       An IEEE 802.15.4 Data Request message is already enqueued.
+     * @retval kThreadError_InvalidState  Device is not in rx-off-when-idle mode.
+     * @retval kThreadError_NoBufs        Insufficient message buffers available.
+     *
+     */
+    ThreadError SendMacDataRequest(void);
+
+    /**
      * This method gets the Data Poll period.
      *
      * @returns  The Data Poll period in milliseconds.
@@ -204,7 +215,8 @@ public:
 private:
     enum
     {
-        kStateUpdatePeriod = 1000,  ///< State update period in milliseconds.
+        kStateUpdatePeriod    = 1000,  ///< State update period in milliseconds.
+        kDataRequstRetryDelay = 1000,  ///< Retry delay in milliseconds.
     };
 
     ThreadError CheckReachability(uint8_t *aFrame, uint8_t aFrameLength,
