@@ -385,7 +385,12 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
         ExitNow(state = StateTlv::kReject);
     }
 
-    Tlv::GetTlv(aMessage, Tlv::kPendingTimestamp, sizeof(pendingTimestamp), pendingTimestamp);
+    VerifyOrExit(activeTimestamp.IsValid(), state = StateTlv::kReject);
+
+    if (Tlv::GetTlv(aMessage, Tlv::kPendingTimestamp, sizeof(pendingTimestamp), pendingTimestamp) == kThreadError_None)
+    {
+        VerifyOrExit(pendingTimestamp.IsValid(), state = StateTlv::kReject);
+    }
 
     // verify the request includes a timestamp that is ahead of the locally stored value
     timestamp = (type == Tlv::kActiveTimestamp) ?
@@ -398,7 +403,9 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
     // check channel
     if (Tlv::GetTlv(aMessage, Tlv::kChannel, sizeof(channel), channel) == kThreadError_None)
     {
-        VerifyOrExit(channel.GetChannel() >= kPhyMinChannel && channel.GetChannel() <= kPhyMaxChannel,
+        VerifyOrExit(channel.IsValid() &&
+                     channel.GetChannel() >= kPhyMinChannel &&
+                     channel.GetChannel() <= kPhyMaxChannel,
                      state = StateTlv::kReject);
 
         if (type == Tlv::kActiveTimestamp && channel.GetChannel() != mNetif.GetMac().GetChannel())
@@ -410,6 +417,7 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
     // check PAN ID
     if (Tlv::GetTlv(aMessage, Tlv::kPanId, sizeof(panId), panId) == kThreadError_None &&
         type == Tlv::kActiveTimestamp &&
+        panId.IsValid() &&
         panId.GetPanId() != mNetif.GetMac().GetPanId())
     {
         doesAffectConnectivity = true;
@@ -456,7 +464,9 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
         localId = static_cast<CommissionerSessionIdTlv *>(mNetworkDataLeader.GetCommissioningDataSubTlv(
                                                               Tlv::kCommissionerSessionId));
 
-        VerifyOrExit(localId != NULL && localId->GetCommissionerSessionId() == sessionId.GetCommissionerSessionId(),
+        VerifyOrExit(sessionId.IsValid() &&
+                     localId != NULL &&
+                     localId->GetCommissionerSessionId() == sessionId.GetCommissionerSessionId(),
                      state = StateTlv::kReject);
     }
 
