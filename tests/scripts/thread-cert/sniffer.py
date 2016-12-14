@@ -30,9 +30,6 @@
 import collections
 import io
 import logging
-import os
-import select
-import socket
 import threading
 
 try:
@@ -41,6 +38,7 @@ except ImportError:
     import queue as Queue
 
 import message
+import sniffer_transport
 
 
 class Sniffer:
@@ -49,15 +47,7 @@ class Sniffer:
 
     logger = logging.getLogger("sniffer.Sniffer")
 
-    POLL_TIMEOUT = 0.10
-
     RECV_BUFFER_SIZE = 4096
-
-    BASE_PORT = 9000
-
-    WELLKNOWN_NODE_ID = 34
-
-    PORT_OFFSET = int(os.getenv('PORT_OFFSET', "0"))
 
     def __init__(self, nodeid, message_factory):
         """
@@ -69,101 +59,65 @@ class Sniffer:
         self.nodeid = nodeid
         self._message_factory = message_factory
 
-        self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        if self._socket is None:
-            raise RuntimeError("Could not create socket.")
-
-        self._socket.bind(self.address)
+        # Create transport
+        transport_factory = sniffer_transport.SnifferTransportFactory()
+        self._transport = transport_factory.create_transport(nodeid)
 
         self._thread = None
-        self._thread_alive_event = threading.Event()
-
-        self._poll = select.poll()
+        self._thread_alive = threading.Event()
+        self._thread_alive.clear()
 
         self._buckets = collections.defaultdict(Queue.Queue)
 
     def __del__(self):
-        if self._socket is None:
-            return
+        del self._transport
 
-        self._socket.close()
-        del self._socket
+    def _sniffer_main_loop(self):
+        """ Sniffer main loop. """
 
-    def _nodeid_to_address(self, nodeid, ip_address="localhost"):
-        return "", self.BASE_PORT + (self.PORT_OFFSET * self.WELLKNOWN_NODE_ID) + nodeid
+        self.logger.debug("Sniffer started.")
 
-    def _address_to_nodeid(self, address):
-        ip_address, port = address
-        return (port - self.BASE_PORT - (self.PORT_OFFSET * self.WELLKNOWN_NODE_ID))
+        while self._thread_alive.is_set():
+            data, nodeid = self._transport.recv(self.RECV_BUFFER_SIZE)
 
-    def _recv(self, fd):
-        """ Receive data from socket with passed file descriptor. """
+            msg = self._message_factory.create(io.BytesIO(data))
 
-        data, address = self._socket.recvfrom(self.RECV_BUFFER_SIZE)
+            if msg is not None:
+                self.logger.debug("Received message: {}".format(msg))
+                self._buckets[nodeid].put(msg)
 
-        msg = self._message_factory.create(io.BytesIO(data))
-
-        if msg is None:
-            self.logger.debug("Received 6LowPAN fragment.")
-            return
-
-        nodeid = self._address_to_nodeid(address)
-
-        self._buckets[nodeid].put(msg)
-
-    @property
-    def address(self):
-        """ Sniffer address. """
-
-        return self._nodeid_to_address(self.nodeid)
-
-    def _run(self):
-        """ Receive thread main loop. """
-
-        while self._thread_alive_event.is_set():
-            reported_events = self._poll.poll(self.POLL_TIMEOUT)
-
-            for fd_event_pair in reported_events:
-                fd, event = fd_event_pair
-
-                if event & select.POLLIN or event & select.POLLPRI:
-                    self._recv(fd)
-
-                elif event & select.POLLERR:
-                    self.logger.error("Error condition of some sort")
-                    self._thread_alive_event.clear()
-                    break
-
-                elif event & select.POLLNVAL:
-                    self.logger.error("Invalid request: descriptor not open")
-                    self._thread_alive_event.clear()
-                    break
+        self.logger.debug("Sniffer stopped.")
 
     def start(self):
         """ Start sniffing. """
 
-        self._poll.register(self._socket, select.POLLIN | select.POLLPRI | select.POLLERR | select.POLLNVAL)
-
-        self._thread = threading.Thread(target=self._run)
+        self._thread = threading.Thread(target=self._sniffer_main_loop)
         self._thread.daemon = True
 
-        self._thread_alive_event.set()
+        self._transport.open()
+
+        self._thread_alive.set()
         self._thread.start()
 
     def stop(self):
         """ Stop sniffing. """
 
-        self._poll.unregister(self._socket)
-
-        self._thread_alive_event.clear()
+        self._thread_alive.clear()
         self._thread.join()
         self._thread = None
+
+        self._transport.close()
 
     def get_messages_sent_by(self, nodeid):
         """ Get sniffed messages.
 
         Note! This method flushes the message queue so calling this method again will return only the newly logged messages.
 
+        Args:
+            nodeid (int): node id
+
+        Returns:
+            MessagesSet: a set with received messages.
         """
         bucket = self._buckets[nodeid]
         messages = []

@@ -135,6 +135,7 @@ EXTRA_DIST                                                         = \
     thread-cert/node.py                                              \
     thread-cert/node_cli.py                                          \
     thread-cert/sniffer.py                                           \
+    thread-cert/sniffer_transport.py                                 \
     thread-cert/test_coap.py                                         \
     thread-cert/test_common.py                                       \
     thread-cert/test_crypto.py                                       \

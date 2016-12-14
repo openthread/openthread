@@ -250,7 +250,7 @@ class Message(object):
         assert self.ipv6_packet.ipv6_header.hop_limit == hop_limit
 
     def __repr__(self):
-        return "Message(type={})".format(MessageType.name[self.type])
+        return "Message(type={})".format(self.type)
 
 
 class MessagesSet(object):
