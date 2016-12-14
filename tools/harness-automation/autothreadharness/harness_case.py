@@ -36,6 +36,7 @@ from selenium.common.exceptions import UnexpectedAlertPresentException
 import json
 import logging
 import os
+import subprocess
 import re
 import time
 import unittest
@@ -647,6 +648,15 @@ class HarnessCase(unittest.TestCase):
                 done = True
 
             self.timeout -= 1
+
+            # check if already ended capture
+            if self.timeout % 10 == 0:
+                lines = self._hc.tail()
+                if 'SUCCESS: The process "dumpcap.exe" with PID ' in lines:
+                    logger.info('Tshark should be ended now, lets wait at most 30 seconds.')
+                    if not self.wait_until(lambda: 'tshark.exe' not in subprocess.check_output('tasklist'), 30):
+                        res = subprocess.check_output('taskkill /t /f /im tshark.exe', stderr=subprocess.STDOUT, shell=True)
+                        logger.info(res)
 
         # Wait until case really stopped
         self.wait_until(lambda: self._browser.find_element_by_id('runTest') and True, 30)
