@@ -49,7 +49,6 @@ linesepx = re.compile(r'\r\n|\n')
 """regex: used to split lines"""
 
 class OpenThread(IThci):
-    firmware = 'g7d33184; CC2538; Dec  1 2016 15:43:40'
     UIStatusMsg = ''
     networkDataRequirement = ''      # indicate Thread device requests full or stable network data
     isPowerDown = False              # indicate if Thread device experiences a power down event
@@ -70,7 +69,6 @@ class OpenThread(IThci):
             self.mac = kwargs.get('EUI')
             self.port = kwargs.get('SerialPort')
             self.handle = None
-            self.UIStatusMsg = self.firmware
             self.networkName = ModuleHelper.Default_NwkName
             self.networkKey = ModuleHelper.Default_NwkKey
             self.channel = ModuleHelper.Default_Channel
@@ -674,10 +672,9 @@ class OpenThread(IThci):
             self.handle = socket.create_connection((host, port))
             self.handle.setblocking(0)
             self._is_net = True
-            # check connectivity, this make sure bad device fail on initializing
-            self.__sendCommand('state')
         else:
             raise Exception('Unknown port schema')
+        self.UIStatusMsg = self.getVersionNumber()
 
     def closeConnection(self):
         """close current serial port connection"""
@@ -1164,7 +1161,7 @@ class OpenThread(IThci):
     def getVersionNumber(self):
         """get OpenThread stack firmware version number"""
         print '%s call getVersionNumber' % self.port
-        return self.firmware
+        return self.__sendCommand('version')[0]
 
     def setPANID(self, xPAN):
         """set Thread Network PAN ID
