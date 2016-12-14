@@ -259,7 +259,13 @@ def any_mpl_option():
 
 
 def any_hop_by_hop_bytes_option_header(length=4):
-    return HopByHopOptionHeader(any_type(), length)
+    _type = any_type()
+
+    # 0 or 1 means padding, so type have to be higher than 1
+    while _type <= 1:
+        _type = any_type()
+
+    return HopByHopOptionHeader(_type, length)
 
 
 def any_hop_by_hop_bytes_value(length=2):
@@ -925,7 +931,7 @@ class TestHopByHopFactory(unittest.TestCase):
                 return bytearray([0x00])
             elif padding_length > 1:
                 padding_length -= 2
-                return bytearray([0x01, padding_length]) + bytes([0x00 for _ in range(padding_length)])
+                return bytearray([0x01, padding_length]) + bytearray([0x00 for _ in range(padding_length)])
 
         return bytearray()
 

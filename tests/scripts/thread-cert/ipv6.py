@@ -27,17 +27,18 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-try:
-    from itertools import izip_longest as zip_longest
-except ImportError:
-    from itertools import zip_longest
-
-from ipaddress import ip_address
-
 import abc
 import io
 import struct
 import sys
+
+from binascii import hexlify
+from ipaddress import ip_address
+
+try:
+    from itertools import izip_longest as zip_longest
+except ImportError:
+    from itertools import zip_longest
 
 
 # Next headers for IPv6 protocols
@@ -696,6 +697,9 @@ class HopByHopOptionHeader(ConvertibleToBytes, BuildableFromBytes):
     def __len__(self):
         return self._header_length
 
+    def __repr__(self):
+        return "HopByHopOptionHeader(type={}, length={})".format(self.type, self.length)
+
 
 class HopByHopOption(ConvertibleToBytes):
 
@@ -723,6 +727,9 @@ class HopByHopOption(ConvertibleToBytes):
 
     def __len__(self):
         return len(self.header) + len(self.value)
+
+    def __repr__(self):
+        return "HopByHopOption(header={}, value={})".format(self.header, self.value)
 
 
 class MPLOption(ConvertibleToBytes):
@@ -765,6 +772,9 @@ class MPLOption(ConvertibleToBytes):
 
     def __len__(self):
         return self._header_length + self._seed_id_length[self.S]
+
+    def __repr__(self):
+        return "MPLOption(S={}, M={}, V={}, sequence={}, seed_id={})".format(self.S, self.M, self.V, self.sequence, hexlify(self.seed_id))
 
 
 class IPv6PacketFactory(PacketFactory):
