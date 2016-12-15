@@ -42,7 +42,7 @@
 #include <common/logging.hpp>
 
 #ifndef WINDOWS_LOGGING
-#define otLogDump(aFormat, ...) otPlatLog(aLogLevel, aLogRegion, aFormat, ## __VA_ARGS__)
+#define otLogDump(aFormat, ...) otPlatLog(aLogLevel, aLogRegion, aFormat OPENTHREAD_CONFIG_LOG_SUFFIX, ## __VA_ARGS__)
 #endif
 
 #ifdef __cplusplus
