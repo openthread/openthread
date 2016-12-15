@@ -132,6 +132,7 @@ Currently defined values are:
  * 7: `CAP_PEEK_POKE`: PEEK/POKE debugging commands.
  * 8: `CAP_WRITABLE_RAW_STREAM`: `PROP_STREAM_RAW` is writable.
  * 9: `CAP_GPIO`: Support for GPIO access. See (#feature-gpio-access).
+ * 10: `CAP_TRNG`: Support for true random number generation. See (#feature-trng).
  * 16: `CAP_802_15_4_2003`
  * 17: `CAP_802_15_4_2006`
  * 18: `CAP_802_15_4_2011`

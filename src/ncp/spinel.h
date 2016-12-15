@@ -310,6 +310,7 @@ enum
 
     SPINEL_CAP_WRITABLE_RAW_STREAM   = 8,
     SPINEL_CAP_GPIO                  = 9,
+    SPINEL_CAP_TRNG                  = 10,
 
     SPINEL_CAP_802_15_4__BEGIN        = 16,
     SPINEL_CAP_802_15_4_2003          = (SPINEL_CAP_802_15_4__BEGIN + 0),
@@ -477,6 +478,15 @@ typedef enum
      * be ignored.
      */
     SPINEL_PROP_GPIO_STATE_CLEAR        = SPINEL_PROP_BASE_EXT__BEGIN + 4,
+
+    /// 32-bit random number from TRNG, ready-to-use.
+    SPINEL_PROP_TRNG_32                 = SPINEL_PROP_BASE_EXT__BEGIN + 5,
+
+    /// 16 random bytes from TRNG, ready-to-use.
+    SPINEL_PROP_TRNG_128                = SPINEL_PROP_BASE_EXT__BEGIN + 6,
+
+    /// Raw samples from TRNG entropy source representing 32 bits of entropy.
+    SPINEL_PROP_TRNG_RAW_32             = SPINEL_PROP_BASE_EXT__BEGIN + 7,
 
     SPINEL_PROP_BASE_EXT__END           = 0x1100,
 
