@@ -344,7 +344,7 @@ protected:
 private:
     enum
     {
-        kDataResubmitDelay = 300,  ///< DATA_RESUBMIT_DELAY (seconds)
+        kDataResubmitDelay = 300000,  ///< DATA_RESUBMIT_DELAY (miliseconds)
     };
 
     const bool      mLocal;
