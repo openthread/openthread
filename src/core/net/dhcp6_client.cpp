@@ -618,8 +618,9 @@ ThreadError Dhcp6Client::ProcessIaNa(Message &aMessage, uint16_t aOffset)
     VerifyOrExit(aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option), error = kThreadError_Parse);
 
     aOffset += sizeof(option);
+    length = option.GetLength() - (sizeof(option) - sizeof(Dhcp6Option));
 
-    length = option.GetLength();
+    VerifyOrExit(length <= aMessage.GetLength() - aOffset, error = kThreadError_Parse);
 
     if ((optionOffset = FindOption(aMessage, aOffset, length, kOptionStatusCode)) > 0)
     {

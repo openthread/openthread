@@ -688,6 +688,7 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
     VerifyOrExit(joinerRloc.IsValid(), error = kThreadError_Parse);
 
     SuccessOrExit(error = Tlv::GetValueOffset(aMessage, Tlv::kJoinerDtlsEncapsulation, offset, length));
+    VerifyOrExit(length <= aMessage.GetLength() - offset, error = kThreadError_Parse);
 
     if (!mSecureCoapServer.IsConnectionActive())
     {
