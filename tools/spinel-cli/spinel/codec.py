@@ -848,13 +848,28 @@ class WpanApi(SpinelCodec):
         with self.__queue_prop[tid].mutex:
             self.__queue_prop[tid].queue.clear()
 
-    def queue_wait_for_prop(self, _prop, tid=SPINEL.HEADER_DEFAULT, timeout=TIMEOUT_PROP):
+    def queue_get(self, tid, timeout = None):
         try:
-            item = self.__queue_prop[tid].get(True, timeout)
-            # self.__queue_prop[tid].task_done()
+            if (timeout):
+                item = self.__queue_prop[tid].get(True, timeout)
+            else:
+                item = self.__queue_prop[tid].get_nowait()
         except Queue.Empty:
             item = None
+        return item
 
+    def queue_wait_for_prop(self, _prop, tid=SPINEL.HEADER_DEFAULT, timeout=TIMEOUT_PROP):
+        start = time.time()
+        item = self.queue_get(tid, timeout)
+        if (_prop is not None):
+            while (item and (item.prop != _prop)):
+                self.__queue_prop[tid].put_nowait(item)
+                reminder = timeout - (time.time() - start)
+                if (reminder <= 0.0):
+                    item = None
+                    break
+                item = self.queue_get(tid, reminder)
+                # self.__queue_prop[tid].task_done()
         return item
 
     def ip_send(self, pkt):
@@ -867,6 +882,12 @@ class WpanApi(SpinelCodec):
         pay += pack("%ds" % pkt_len, pkt)  # Append packet after length
 
         self.transact(SPINEL.CMD_PROP_VALUE_SET, pay)
+
+    def cmd_reset(self):
+        self.queue_wait_prepare(None, SPINEL.HEADER_ASYNC)
+        self.transact(SPINEL.CMD_RESET, "", SPINEL.HEADER_DEFAULT)
+        result = self.queue_wait_for_prop(SPINEL.PROP_LAST_STATUS, SPINEL.HEADER_ASYNC, 5)
+        return (result is not None and result.value == 114)
 
     def cmd_send(self, command_id, payload="", tid=SPINEL.HEADER_DEFAULT):
         self.queue_wait_prepare(None, tid)
