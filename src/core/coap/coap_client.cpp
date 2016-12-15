@@ -279,6 +279,7 @@ void Client::HandleRetransmissionTimer(void)
             {
                 messageInfo.SetPeerAddr(requestMetadata.mDestinationAddress);
                 messageInfo.SetPeerPort(requestMetadata.mDestinationPort);
+                messageInfo.SetSockAddr(requestMetadata.mSourceAddress);
 
                 SendCopy(*message, messageInfo);
             }
@@ -438,6 +439,7 @@ exit:
 RequestMetadata::RequestMetadata(bool aConfirmable, const Ip6::MessageInfo &aMessageInfo,
                                  otCoapResponseHandler aHandler, void *aContext)
 {
+    mSourceAddress = aMessageInfo.GetSockAddr();
     mDestinationPort = aMessageInfo.GetPeerPort();
     mDestinationAddress = aMessageInfo.GetPeerAddr();
     mResponseHandler = aHandler;
