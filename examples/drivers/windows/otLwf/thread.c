@@ -378,6 +378,14 @@ void otLwfStateChangedCallback(uint32_t aFlags, _In_ void *aContext)
     {
         LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_THREAD_NETDATA_UPDATED", pFilter);
         otSlaacUpdate(pFilter->otCtx, pFilter->otAutoAddresses, ARRAYSIZE(pFilter->otAutoAddresses), otCreateRandomIid, NULL);
+
+#if OPENTHREAD_ENABLE_DHCP6_SERVER
+        otDhcp6ServerUpdate(pFilter->otCtx);
+#endif  // OPENTHREAD_ENABLE_DHCP6_SERVER
+
+#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+        otDhcp6ClientUpdate(pFilter->otCtx, pFilter->otDhcpAddresses, ARRAYSIZE(pFilter->otDhcpAddresses), NULL);
+#endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
     }
 
     if ((aFlags & OT_IP6_ML_ADDR_CHANGED) != 0)
