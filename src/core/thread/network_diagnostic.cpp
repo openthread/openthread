@@ -246,8 +246,9 @@ ThreadError NetworkDiagnostic::AppendChildTable(Message &aMessage)
 
             while (static_cast<uint32_t>(1 << timeout) < children[i].mTimeout) { timeout++; }
 
+            entry.SetReserved(0);
             entry.SetTimeout(timeout + 4);
-            entry.SetChildId(children[i].mValid.mRloc16);
+            entry.SetChildId(mMle.GetChildId(children[i].mValid.mRloc16));
             entry.SetMode(children[i].mMode);
 
             SuccessOrExit(error = aMessage.Append(&entry, sizeof(ChildTableEntry)));
