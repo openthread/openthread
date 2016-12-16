@@ -2015,7 +2015,7 @@ OTAPI uint8_t OTCALL otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Add
  * @returns  A string representation of a ThreadError.
  *
  */
-OTAPI const char * OTCALL otThreadErrorToString(ThreadError aError);
+OTAPI const char *OTCALL otThreadErrorToString(ThreadError aError);
 
 #ifdef __cplusplus
 }  // extern "C"
