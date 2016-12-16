@@ -278,7 +278,7 @@ extern "C" {
 #ifdef OPENTHREAD_CONFIG_LOG_MLE
 #define otLogCritMle(aFormat, ...) otLogCrit(kLogRegionMle, aFormat, ## __VA_ARGS__)
 #define otLogWarnMle(aFormat, ...) otLogWarn(kLogRegionMle, aFormat, ## __VA_ARGS__)
-#define otLogWarnMleErr(aError, aFormat, ...) otLogWarn(kLogRegionMle, aFormat ", 0x%x", ## __VA_ARGS__)
+#define otLogWarnMleErr(aError, aFormat, ...) otLogWarn(kLogRegionMac, "Error %s: " aFormat, otThreadErrorToString(aError), ## __VA_ARGS__)
 #define otLogInfoMle(aFormat, ...) otLogInfo(kLogRegionMle, aFormat, ## __VA_ARGS__)
 #define otLogDebgMle(aFormat, ...) otLogDebg(kLogRegionMle, aFormat, ## __VA_ARGS__)
 #else
@@ -537,7 +537,7 @@ extern "C" {
 #define otLogWarnMac(aFormat, ...) otLogWarn(kLogRegionMac, aFormat, ## __VA_ARGS__)
 #define otLogInfoMac(aFormat, ...) otLogInfo(kLogRegionMac, aFormat, ## __VA_ARGS__)
 #define otLogDebgMac(aFormat, ...) otLogDebg(kLogRegionMac, aFormat, ## __VA_ARGS__)
-#define otLogDebgMacErr(aError, aFormat, ...) otLogWarn(kLogRegionMac, aFormat ", 0x%x", ## __VA_ARGS__)
+#define otLogDebgMacErr(aError, aFormat, ...) otLogWarn(kLogRegionMac, "Error %s: " aFormat, otThreadErrorToString(aError), ## __VA_ARGS__)
 #else
 #define otLogCritMac(aFormat, ...)
 #define otLogWarnMac(aFormat, ...)
