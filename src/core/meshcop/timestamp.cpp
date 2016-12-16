@@ -28,59 +28,48 @@
 
 /**
  * @file
- *   This file implements common methods for manipulating Network Diagnostic TLVs.
+ *   This file implements common MeshCoP timestamp processing.
  */
 
-#include <common/code_utils.hpp>
-#include <common/message.hpp>
-#include <thread/network_diagnostic_tlvs.hpp>
+#include <string.h>
+
+#include <openthread-types.h>
+#include <meshcop/timestamp.hpp>
 
 namespace Thread {
-namespace NetworkDiagnostic {
+namespace MeshCoP {
 
-ThreadError NetworkDiagnosticTlv::GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength,
-                                         NetworkDiagnosticTlv &aTlv)
+int Timestamp::Compare(const Timestamp &aCompare) const
 {
-    ThreadError error = kThreadError_Parse;
-    uint16_t offset;
+    uint64_t thisSeconds = GetSeconds();
+    uint64_t compareSeconds = aCompare.GetSeconds();
+    uint16_t thisTicks = GetTicks();
+    uint16_t compareTicks = aCompare.GetTicks();
+    int rval;
 
-    SuccessOrExit(error = GetOffset(aMessage, aType, offset));
-    aMessage.Read(offset, sizeof(NetworkDiagnosticTlv), &aTlv);
-
-    if (aMaxLength > sizeof(aTlv) + aTlv.GetLength())
+    if (compareSeconds > thisSeconds)
     {
-        aMaxLength = sizeof(aTlv) + aTlv.GetLength();
+        rval = 1;
+    }
+    else if (compareSeconds < thisSeconds)
+    {
+        rval = -1;
+    }
+    else if (compareTicks > thisTicks)
+    {
+        rval = 1;
+    }
+    else if (compareTicks < thisTicks)
+    {
+        rval = -1;
+    }
+    else
+    {
+        rval = 0;
     }
 
-    aMessage.Read(offset, aMaxLength, &aTlv);
-
-exit:
-    return error;
+    return rval;
 }
 
-ThreadError NetworkDiagnosticTlv::GetOffset(const Message &aMessage, Type aType, uint16_t &aOffset)
-{
-    ThreadError error = kThreadError_Parse;
-    uint16_t offset = aMessage.GetOffset();
-    uint16_t end = aMessage.GetLength();
-    NetworkDiagnosticTlv tlv;
-
-    while (offset < end)
-    {
-        aMessage.Read(offset, sizeof(NetworkDiagnosticTlv), &tlv);
-
-        if (tlv.GetType() == aType && (offset + sizeof(tlv) + tlv.GetLength()) <= end)
-        {
-            aOffset = offset;
-            ExitNow(error = kThreadError_None);
-        }
-
-        offset += sizeof(tlv) + tlv.GetLength();
-    }
-
-exit:
-    return error;
-}
-
-}  // namespace NetworkDiagnostic
+}  // namespace MeshCoP
 }  // namespace Thread
