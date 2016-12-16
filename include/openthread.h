@@ -2007,6 +2007,16 @@ OTAPI ThreadError OTCALL otIp6AddressFromString(const char *aString, otIp6Addres
  */
 OTAPI uint8_t OTCALL otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond);
 
+/**
+ * This function converts a ThreadError enum into a string.
+ *
+ * @param[in]  aError     A ThreadError enum.
+ *
+ * @returns  A string representation of a ThreadError.
+ *
+ */
+OTAPI const char * OTCALL otThreadErrorToString(ThreadError aError);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif
