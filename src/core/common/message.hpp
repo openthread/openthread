@@ -69,29 +69,7 @@ enum
 
 class Message;
 class MessagePool;
-
-/**
- * This structure contains pointers to the head and tail of a Message list.
- *
- */
-struct MessageList
-{
-    Message *mHead;  ///< A pointer to the first Message in the list.
-    Message *mTail;  ///< A pointer to the last Message in the list.
-};
-
-/**
- * This structure contains pointers to the MessageList structure, the next Message, and previous Message.
- *
- */
-struct MessageListEntry
-{
-    struct MessageList *mList;  ///< A pointer to the MessageList structure for the list.
-    Message            *mNext;  ///< A pointer to the next Message in the list.
-    Message            *mPrev;  ///< A pointer to the previous Message in the list.
-};
-
-
+class MessageQueue;
 
 /**
  * This structure contains metdata about a Message.
@@ -99,13 +77,18 @@ struct MessageListEntry
  */
 struct MessageInfo
 {
-    MessagePool     *mMessagePool;       ///< Identifies the message pool for this message.
     enum
     {
-        kListAll = 0,                    ///< Identifies the all messages list.
-        kListInterface = 1,              ///< Identifies the per-interface message list.
+        kListAll        = 0,             ///< Identifies the all messages list (maintained by the MessagePool).
+        kListInterface  = 1,             ///< Identifies the list for per-interface message queue.
+        kNumLists       = 2,             ///< Number of lists.
     };
-    MessageListEntry mList[2];           ///< Message lists.
+
+    Message         *mNext[kNumLists];   ///< A pointer to the next Message in a doubly linked list.
+    Message         *mPrev[kNumLists];   ///< A pointer to the previous Message in a doubly linked list.
+    MessagePool     *mMessagePool;       ///< Identifies the message pool for this message.
+    MessageQueue    *mMessageQueue;      ///< Identifies the message queue (if any) where this message is queued.
+
     uint16_t         mReserved;          ///< Number of header bytes reserved for the message.
     uint16_t         mLength;            ///< Number of bytes within the message.
     uint16_t         mOffset;            ///< A byte offset within the message.
@@ -586,29 +569,67 @@ public:
     uint16_t UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t aLength) const;
 
 private:
+
+    /**
+     * This method returns a pointer to the message pool to which this message belongs
+     *
+     * @returns A pointer to the message pool.
+     *
+     */
     MessagePool *GetMessagePool(void) const { return mInfo.mMessagePool; }
 
+    /**
+     * This method sets the message pool this message to which this message belongs.
+     *
+     * @param[in] aMessagePool  A pointer to the message pool
+     *
+     */
     void SetMessagePool(MessagePool *aMessagePool) { mInfo.mMessagePool = aMessagePool; }
 
     /**
-     * This method returns a reference to a message list.
+     * This method returns a pointer to the message queue (if any) where this message is queued.
      *
-     * @param[in]  aList  The message list.
-     *
-     * @returns A reference to a message list.
      *
      */
-    MessageListEntry &GetMessageList(uint8_t aList) { return mInfo.mList[aList]; }
+    MessageQueue *GetMessageQueue(void) const { return mInfo.mMessageQueue; }
 
     /**
-     * This method returns a reference to a message list.
+     * This method sets the message queue information for the message.
      *
-     * @param[in]  aList  The message list.
-     *
-     * @returns A reference to a message list.
+     * @param[in]  aMessageQueue  A pointer to the message queue where this message is queued.
      *
      */
-    const MessageListEntry &GetMessageList(uint8_t aList) const { return mInfo.mList[aList]; }
+    void SetMessageQueue(MessageQueue *aMessageQueue) { mInfo.mMessageQueue = aMessageQueue; }
+
+    /**
+     * This method returns a reference to the `mNext` pointer for a given list.
+     *
+     * @param[in]  aList  The index to the message list.
+     *
+     * @returns A reference to the mNext pointer for the specified list.
+     *
+     */
+    Message *&Next(uint8_t aList) { return mInfo.mNext[aList]; }
+
+    /**
+     * This method returns a const reference to the `mNext` pointer for a given list.
+     *
+     * @param[in]  aList  The index to the message list.
+     *
+     * @returns A const reference to the mNext pointer for the specified list.
+     *
+     */
+    Message *const &Next(uint8_t aList) const { return mInfo.mNext[aList]; }
+
+    /**
+     * This method returns a reference to the `mPrev` pointer for a given list.
+     *
+     * @param[in]  aList  The index to the message list.
+     *
+     * @returns A reference to the mPrev pointer for the specified list.
+     *
+     */
+    Message *&Prev(uint8_t aList) { return mInfo.mPrev[aList]; }
 
     /**
      * This method returns the number of reserved header bytes.
@@ -652,6 +673,8 @@ private:
  */
 class MessageQueue
 {
+    friend class Message;
+
 public:
     /**
      * This constructor initializes the message queue.
@@ -699,31 +722,28 @@ public:
     void GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) const;
 
 private:
+
     /**
      * This static method adds a message to a list.
      *
+     * @param[in]  aListTail A reference to the list tail pointer.
      * @param[in]  aListId   The list to add @p aMessage to.
      * @param[in]  aMessage  The message to add to @p aListId.
      *
-     * @retval kThreadError_None     Successfully added the message to the list.
-     * @retval kThreadError_Already  The message is already enqueued in a list.
-     *
      */
-    static ThreadError AddToList(uint8_t aListId, Message &aMessage);
+    static void AddToList(Message *&aListTail, uint8_t aListId, Message &aMessage);
 
     /**
      * This static method removes a message from a list.
      *
+     * @param[in]  aListTail A reference to the list tale pointer.
      * @param[in]  aListId   The list to add @p aMessage to.
      * @param[in]  aMessage  The message to add to @p aListId.
      *
-     * @retval kThreadError_None      Successfully added the message to the list.
-     * @retval kThreadError_NotFound  The message is not enqueued in the list.
-     *
      */
-    static ThreadError RemoveFromList(uint8_t aListId, Message &aMessage);
+    static void RemoveFromList(Message *&aListTail, uint8_t aListId, Message &aMessage);
 
-    MessageList mInterface;   ///< The instance-specific message list.
+    Message *mTail;   ///< A pointer to the last Message in the list.
 };
 
 class MessagePool
@@ -761,6 +781,14 @@ public:
     ThreadError Free(Message *aMessage);
 
     /**
+     * This method returns a pointer to the first message in the all-messages list.
+     *
+     * @returns A pointer to the first message.
+     *
+     */
+    Message *GetAllMessagesListHead(void) const;
+
+    /**
      * This method returns the number of free buffers.
      *
      * @returns The number of free buffers.
@@ -776,7 +804,7 @@ private:
     int mNumFreeBuffers;
     Buffer mBuffers[kNumBuffers];
     Buffer *mFreeBuffers;
-    MessageList mAll;
+    Message *mAllListTail;
 };
 
 /**

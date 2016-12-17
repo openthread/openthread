@@ -1059,7 +1059,7 @@ exit:
     return rval;
 }
 
-otInstance *Ip6::GetInstance()
+otInstance *Ip6::GetInstance(void)
 {
     return otInstanceFromIp6(this);
 }
