@@ -1690,9 +1690,10 @@ uint16_t otCommissionerGetSessionId(otInstance *aInstance)
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
 #if OPENTHREAD_ENABLE_JOINER
-ThreadError otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl)
+ThreadError otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl,
+                          otJoinerCallback aCallback, void *aContext)
 {
-    return aInstance->mThreadNetif.GetJoiner().Start(aPSKd, aProvisioningUrl);
+    return aInstance->mThreadNetif.GetJoiner().Start(aPSKd, aProvisioningUrl, aCallback, aContext);
 }
 
 ThreadError otJoinerStop(otInstance *aInstance)

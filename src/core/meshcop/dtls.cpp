@@ -56,6 +56,7 @@ Dtls::Dtls(ThreadNetif &aNetif):
     mReceiveMessage(NULL),
     mReceiveOffset(0),
     mReceiveLength(0),
+    mConnectedHandler(NULL),
     mReceiveHandler(NULL),
     mSendHandler(NULL),
     mContext(NULL),
@@ -71,11 +72,13 @@ Dtls::Dtls(ThreadNetif &aNetif):
     mProvisioningUrl.Init();
 }
 
-ThreadError Dtls::Start(bool aClient, ReceiveHandler aReceiveHandler, SendHandler aSendHandler, void *aContext)
+ThreadError Dtls::Start(bool aClient, ConnectedHandler aConnectedHandler, ReceiveHandler aReceiveHandler,
+                        SendHandler aSendHandler, void *aContext)
 {
     static const int ciphersuites[2] = {0xC0FF, 0}; // EC-JPAKE cipher suite
     int rval;
 
+    mConnectedHandler = aConnectedHandler;
     mReceiveHandler = aReceiveHandler;
     mSendHandler = aSendHandler;
     mContext = aContext;
@@ -142,15 +145,22 @@ ThreadError Dtls::Stop(void)
 
 void Dtls::Close(void)
 {
-    if (mStarted)
+    VerifyOrExit(mStarted,);
+
+    mStarted = false;
+    mbedtls_ssl_free(&mSsl);
+    mbedtls_ssl_config_free(&mConf);
+    mbedtls_ctr_drbg_free(&mCtrDrbg);
+    mbedtls_entropy_free(&mEntropy);
+    mbedtls_ssl_cookie_free(&mCookieCtx);
+
+    if (mConnectedHandler != NULL)
     {
-        mStarted = false;
-        mbedtls_ssl_free(&mSsl);
-        mbedtls_ssl_config_free(&mConf);
-        mbedtls_ctr_drbg_free(&mCtrDrbg);
-        mbedtls_entropy_free(&mEntropy);
-        mbedtls_ssl_cookie_free(&mCookieCtx);
+        mConnectedHandler(mContext, false);
     }
+
+exit:
+    return;
 }
 
 bool Dtls::IsStarted(void)
@@ -367,6 +377,11 @@ void Dtls::Process(void)
         if (mSsl.state != MBEDTLS_SSL_HANDSHAKE_OVER)
         {
             rval = mbedtls_ssl_handshake(&mSsl);
+
+            if ((mSsl.state == MBEDTLS_SSL_HANDSHAKE_OVER) && (mConnectedHandler != NULL))
+            {
+                mConnectedHandler(mContext, true);
+            }
         }
         else
         {

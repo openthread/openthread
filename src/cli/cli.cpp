@@ -2438,7 +2438,7 @@ void Interpreter::ProcessJoiner(int argc, char *argv[])
         const char *provisioningUrl;
         VerifyOrExit(argc > 1, error = kThreadError_Parse);
         provisioningUrl = (argc > 2) ? argv[2] : NULL;
-        otJoinerStart(mInstance, argv[1], provisioningUrl);
+        otJoinerStart(mInstance, argv[1], provisioningUrl, &Interpreter::s_HandleJoinerCallback, this);
     }
     else if (strcmp(argv[0], "stop") == 0)
     {
@@ -2450,6 +2450,25 @@ exit:
 }
 
 #endif // OPENTHREAD_ENABLE_JOINER
+
+void Interpreter::s_HandleJoinerCallback(ThreadError aError, void *aContext)
+{
+    static_cast<Interpreter *>(aContext)->HandleJoinerCallback(aError);
+}
+
+void Interpreter::HandleJoinerCallback(ThreadError aError)
+{
+    switch (aError)
+    {
+    case kThreadError_None:
+        sServer->OutputFormat("Join success\r\n");
+        break;
+
+    default:
+        sServer->OutputFormat("Join failed [%s]\r\n", otThreadErrorToString(aError));
+        break;
+    }
+}
 
 void Interpreter::ProcessJoinerPort(int argc, char *argv[])
 {
