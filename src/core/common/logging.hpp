@@ -168,7 +168,7 @@ extern "C" {
  * @param[in]  ...      Arguments for the format specification.
  *
  */
-#ifdef OPENTHREAD_CONFIG_LOG_API
+#if OPENTHREAD_CONFIG_LOG_API == 1
 #define otLogCritApi(aFormat, ...) otLogCrit(kLogRegionApi, aFormat, ## __VA_ARGS__)
 #define otLogWarnApi(aFormat, ...) otLogWarn(kLogRegionApi, aFormat, ## __VA_ARGS__)
 #define otLogInfoApi(aFormat, ...) otLogInfo(kLogRegionApi, aFormat, ## __VA_ARGS__)
@@ -219,7 +219,7 @@ extern "C" {
  * @param[in]  ...      Arguments for the format specification.
  *
  */
-#ifdef OPENTHREAD_CONFIG_LOG_MLE
+#if OPENTHREAD_CONFIG_LOG_MLE == 1
 #define otLogCritMeshCoP(aFormat, ...) otLogCrit(kLogRegionMeshCoP, aFormat, ## __VA_ARGS__)
 #define otLogWarnMeshCoP(aFormat, ...) otLogWarn(kLogRegionMeshCoP, aFormat, ## __VA_ARGS__)
 #define otLogInfoMeshCoP(aFormat, ...) otLogInfo(kLogRegionMeshCoP, aFormat, ## __VA_ARGS__)
@@ -275,7 +275,7 @@ extern "C" {
  * @param[in]  ...      Arguments for the format specification.
  *
  */
-#ifdef OPENTHREAD_CONFIG_LOG_MLE
+#if OPENTHREAD_CONFIG_LOG_MLE == 1
 #define otLogCritMle(aFormat, ...) otLogCrit(kLogRegionMle, aFormat, ## __VA_ARGS__)
 #define otLogWarnMle(aFormat, ...) otLogWarn(kLogRegionMle, aFormat, ## __VA_ARGS__)
 #define otLogWarnMleErr(aError, aFormat, ...) otLogWarn(kLogRegionMac, "Error %s: " aFormat, otThreadErrorToString(aError), ## __VA_ARGS__)
@@ -328,7 +328,7 @@ extern "C" {
  * @param[in]  ...      Arguments for the format specification.
  *
  */
-#ifdef OPENTHREAD_CONFIG_LOG_ARP
+#if OPENTHREAD_CONFIG_LOG_ARP == 1
 #define otLogCritArp(aFormat, ...) otLogCrit(kLogRegionArp, aFormat, ## __VA_ARGS__)
 #define otLogWarnArp(aFormat, ...) otLogWarn(kLogRegionArp, aFormat, ## __VA_ARGS__)
 #define otLogInfoArp(aFormat, ...) otLogInfo(kLogRegionArp, aFormat, ## __VA_ARGS__)
@@ -379,7 +379,7 @@ extern "C" {
  * @param[in]  ...      Arguments for the format specification.
  *
  */
-#ifdef OPENTHREAD_CONFIG_LOG_NETDATA
+#if OPENTHREAD_CONFIG_LOG_NETDATA == 1
 #define otLogCritNetData(aFormat, ...) otLogCrit(kLogRegionNetData, aFormat, ## __VA_ARGS__)
 #define otLogWarnNetData(aFormat, ...) otLogWarn(kLogRegionNetData, aFormat, ## __VA_ARGS__)
 #define otLogInfoNetData(aFormat, ...) otLogInfo(kLogRegionNetData, aFormat, ## __VA_ARGS__)
@@ -430,7 +430,7 @@ extern "C" {
  * @param[in]  ...      Arguments for the format specification.
  *
  */
-#ifdef OPENTHREAD_CONFIG_LOG_ICMP
+#if OPENTHREAD_CONFIG_LOG_ICMP == 1
 #define otLogCritIcmp(aFormat, ...) otLogCrit(kLogRegionIcmp, aFormat, ## __VA_ARGS__)
 #define otLogWarnIcmp(aFormat, ...) otLogWarn(kLogRegionIcmp, aFormat, ## __VA_ARGS__)
 #define otLogInfoIcmp(aFormat, ...) otLogInfo(kLogRegionIcmp, aFormat, ## __VA_ARGS__)
@@ -481,7 +481,7 @@ extern "C" {
  * @param[in]  ...      Arguments for the format specification.
  *
  */
-#ifdef OPENTHREAD_CONFIG_LOG_IP6
+#if OPENTHREAD_CONFIG_LOG_IP6 == 1
 #define otLogCritIp6(aFormat, ...) otLogCrit(kLogRegionIp6, aFormat, ## __VA_ARGS__)
 #define otLogWarnIp6(aFormat, ...) otLogWarn(kLogRegionIp6, aFormat, ## __VA_ARGS__)
 #define otLogInfoIp6(aFormat, ...) otLogInfo(kLogRegionIp6, aFormat, ## __VA_ARGS__)
@@ -532,7 +532,7 @@ extern "C" {
  * @param[in]  ...      Arguments for the format specification.
  *
  */
-#ifdef OPENTHREAD_CONFIG_LOG_MAC
+#if OPENTHREAD_CONFIG_LOG_MAC == 1
 #define otLogCritMac(aFormat, ...) otLogCrit(kLogRegionMac, aFormat, ## __VA_ARGS__)
 #define otLogWarnMac(aFormat, ...) otLogWarn(kLogRegionMac, aFormat, ## __VA_ARGS__)
 #define otLogInfoMac(aFormat, ...) otLogInfo(kLogRegionMac, aFormat, ## __VA_ARGS__)
@@ -585,7 +585,7 @@ extern "C" {
  * @param[in]  ...      Arguments for the format specification.
  *
  */
-#ifdef OPENTHREAD_CONFIG_LOG_MEM
+#if OPENTHREAD_CONFIG_LOG_MEM == 1
 #define otLogCritMem(aFormat, ...) otLogCrit(kLogRegionMem, aFormat, ## __VA_ARGS__)
 #define otLogWarnMem(aFormat, ...) otLogWarn(kLogRegionMem, aFormat, ## __VA_ARGS__)
 #define otLogInfoMem(aFormat, ...) otLogInfo(kLogRegionMem, aFormat, ## __VA_ARGS__)
@@ -636,7 +636,7 @@ extern "C" {
  * @param[in]  ...      Arguments for the format specification.
  *
  */
-#ifdef OPENTHREAD_CONFIG_LOG_NETDIAG
+#if OPENTHREAD_CONFIG_LOG_NETDIAG == 1
 #define otLogCritNetDiag(aFormat, ...) otLogCrit(kLogRegionNetDiag, aFormat, ## __VA_ARGS__)
 #define otLogWarnNetDiag(aFormat, ...) otLogWarn(kLogRegionNetDiag, aFormat, ## __VA_ARGS__)
 #define otLogInfoNetDiag(aFormat, ...) otLogInfo(kLogRegionNetDiag, aFormat, ## __VA_ARGS__)
@@ -702,7 +702,7 @@ extern "C" {
 * @param[in]  ...      Arguments for the format specification.
 *
 */
-#ifdef OPENTHREAD_CONFIG_LOG_PLATFORM
+#if OPENTHREAD_CONFIG_LOG_PLATFORM == 1
 #define otLogCritPlat(aFormat, ...) otLogCrit(kLogRegionPlatform, aFormat, ## __VA_ARGS__)
 #define otLogWarnPlat(aFormat, ...) otLogWarn(kLogRegionPlatform, aFormat, ## __VA_ARGS__)
 #define otLogInfoPlat(aFormat, ...) otLogInfo(kLogRegionPlatform, aFormat, ## __VA_ARGS__)
@@ -827,7 +827,7 @@ extern "C" {
  * @param[in]  aLength  Number of bytes to print.
  *
  */
-#ifdef OPENTHREAD_CONFIG_LOG_NETDATA
+#if OPENTHREAD_CONFIG_LOG_NETDATA == 1
 #define otDumpCritNetData(aId, aBuf, aLength) otDumpCrit(kLogRegionNetData, aId, aBuf, aLength)
 #define otDumpWarnNetData(aId, aBuf, aLength) otDumpWarn(kLogRegionNetData, aId, aBuf, aLength)
 #define otDumpInfoNetData(aId, aBuf, aLength) otDumpInfo(kLogRegionNetData, aId, aBuf, aLength)
@@ -882,7 +882,7 @@ extern "C" {
  * @param[in]  aLength  Number of bytes to print.
  *
  */
-#ifdef OPENTHREAD_CONFIG_LOG_MLE
+#if OPENTHREAD_CONFIG_LOG_MLE == 1
 #define otDumpCritMle(aId, aBuf, aLength) otDumpCrit(kLogRegionMle, aId, aBuf, aLength)
 #define otDumpWarnMle(aId, aBuf, aLength) otDumpWarn(kLogRegionMle, aId, aBuf, aLength)
 #define otDumpInfoMle(aId, aBuf, aLength) otDumpInfo(kLogRegionMle, aId, aBuf, aLength)
@@ -937,7 +937,7 @@ extern "C" {
  * @param[in]  aLength  Number of bytes to print.
  *
  */
-#ifdef OPENTHREAD_CONFIG_LOG_ARP
+#if OPENTHREAD_CONFIG_LOG_ARP == 1
 #define otDumpCritArp(aId, aBuf, aLength) otDumpCrit(kLogRegionArp, aId, aBuf, aLength)
 #define otDumpWarnArp(aId, aBuf, aLength) otDumpWarn(kLogRegionArp, aId, aBuf, aLength)
 #define otDumpInfoArp(aId, aBuf, aLength) otDumpInfo(kLogRegionArp, aId, aBuf, aLength)
@@ -992,7 +992,7 @@ extern "C" {
  * @param[in]  aLength  Number of bytes to print.
  *
  */
-#ifdef OPENTHREAD_CONFIG_LOG_ICMP
+#if OPENTHREAD_CONFIG_LOG_ICMP == 1
 #define otDumpCritIcmp(aId, aBuf, aLength) otDumpCrit(kLogRegionIcmp, aId, aBuf, aLength)
 #define otDumpWarnIcmp(aId, aBuf, aLength) otDumpWarn(kLogRegionIcmp, aId, aBuf, aLength)
 #define otDumpInfoIcmp(aId, aBuf, aLength) otDumpInfo(kLogRegionIcmp, aId, aBuf, aLength)
@@ -1047,7 +1047,7 @@ extern "C" {
  * @param[in]  aLength  Number of bytes to print.
  *
  */
-#ifdef OPENTHREAD_CONFIG_LOG_IP6
+#if OPENTHREAD_CONFIG_LOG_IP6 == 1
 #define otDumpCritIp6(aId, aBuf, aLength) otDumpCrit(kLogRegionIp6, aId, aBuf, aLength)
 #define otDumpWarnIp6(aId, aBuf, aLength) otDumpWarn(kLogRegionIp6, aId, aBuf, aLength)
 #define otDumpInfoIp6(aId, aBuf, aLength) otDumpInfo(kLogRegionIp6, aId, aBuf, aLength)
@@ -1102,7 +1102,7 @@ extern "C" {
  * @param[in]  aLength  Number of bytes to print.
  *
  */
-#ifdef OPENTHREAD_CONFIG_LOG_MAC
+#if OPENTHREAD_CONFIG_LOG_MAC == 1
 #define otDumpCritMac(aId, aBuf, aLength) otDumpCrit(kLogRegionMac, aId, aBuf, aLength)
 #define otDumpWarnMac(aId, aBuf, aLength) otDumpWarn(kLogRegionMac, aId, aBuf, aLength)
 #define otDumpInfoMac(aId, aBuf, aLength) otDumpInfo(kLogRegionMac, aId, aBuf, aLength)
@@ -1157,7 +1157,7 @@ extern "C" {
  * @param[in]  aLength  Number of bytes to print.
  *
  */
-#ifdef OPENTHREAD_CONFIG_LOG_MEM
+#if OPENTHREAD_CONFIG_LOG_MEM == 1
 #define otDumpCritMem(aId, aBuf, aLength) otDumpCrit(kLogRegionMem, aId, aBuf, aLength)
 #define otDumpWarnMem(aId, aBuf, aLength) otDumpWarn(kLogRegionMem, aId, aBuf, aLength)
 #define otDumpInfoMem(aId, aBuf, aLength) otDumpInfo(kLogRegionMem, aId, aBuf, aLength)
@@ -1197,7 +1197,7 @@ extern "C" {
  */
 void otDump(otLogLevel aLevel, otLogRegion aRegion, const char *aId, const void *aBuf, const size_t aLength);
 
-#ifdef OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
+#if OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL == 1
 /**
 * This method converts the log level value into a string
 *
@@ -1209,7 +1209,7 @@ void otDump(otLogLevel aLevel, otLogRegion aRegion, const char *aId, const void 
 const char *otLogLevelToString(otLogLevel aLevel);
 #endif
 
-#ifdef OPENTHREAD_CONFIG_LOG_PREPEND_REGION
+#if OPENTHREAD_CONFIG_LOG_PREPEND_REGION == 1
 /**
  * This method converts the log region value into a string
  *
@@ -1221,9 +1221,9 @@ const char *otLogLevelToString(otLogLevel aLevel);
 const char *otLogRegionToString(otLogRegion aRegion);
 #endif
 
-#ifdef OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
+#if OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL == 1
 
-#ifdef OPENTHREAD_CONFIG_LOG_PREPEND_REGION
+#if OPENTHREAD_CONFIG_LOG_PREPEND_REGION == 1
 
 /**
  * Local/private macro to format the log message
@@ -1256,7 +1256,7 @@ const char *otLogRegionToString(otLogRegion aRegion);
 
 #else  // OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
 
-#ifdef OPENTHREAD_CONFIG_LOG_PREPEND_REGION
+#if OPENTHREAD_CONFIG_LOG_PREPEND_REGION == 1
 
 /**
 * Local/private macro to format the log message
