@@ -91,7 +91,7 @@ public:
      * @param[in]  aLength  The size of the write buffer.
      *
      */
-    BufferWriter(uint8_t *aBuf, uint8_t aLength)
+    BufferWriter(uint8_t *aBuf, uint16_t aLength)
     {
         mWritePointer    = aBuf;
         mRemainingLength = aLength;
@@ -215,7 +215,7 @@ public:
 
 private:
     uint8_t *mWritePointer;
-    uint8_t  mRemainingLength;
+    uint16_t mRemainingLength;
 };
 
 /**
@@ -420,7 +420,7 @@ public:
      * @retval OT_ERROR_PARSE    Mesh Header could not be parsed from @p aFrame.
      *
      */
-    otError Init(const uint8_t *aFrame, uint8_t aFrameLength);
+    otError Init(const uint8_t *aFrame, uint16_t aFrameLength);
 
     /**
      * This method initializes the mesh header from a message object @p aMessage.
@@ -609,7 +609,7 @@ public:
      * @retval OT_ERROR_PARSE    Fragment header could not be parsed from @p aFrame.
      *
      */
-    otError Init(const uint8_t *aFrame, uint8_t aFrameLength);
+    otError Init(const uint8_t *aFrame, uint16_t aFrameLength);
 
     /**
      * This method initializes the fragment header from a message @p aMessage.

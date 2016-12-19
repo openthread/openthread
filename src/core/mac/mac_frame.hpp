@@ -869,7 +869,7 @@ public:
      * @returns The MAC Frame Length.
      *
      */
-    uint8_t GetLength(void) const { return GetPsduLength(); }
+    uint16_t GetLength(void) const { return GetPsduLength(); }
 
     /**
      * This method sets the MAC Frame Length.
@@ -877,7 +877,7 @@ public:
      * @param[in]  aLength  The MAC Frame Length.
      *
      */
-    void SetLength(uint8_t aLength) { SetPsduLength(aLength); }
+    void SetLength(uint16_t aLength) { SetPsduLength(aLength); }
 
     /**
      * This method returns the MAC header size.
@@ -901,7 +901,7 @@ public:
      * @returns The current MAC Payload length.
      *
      */
-    uint8_t GetPayloadLength(void) const;
+    uint16_t GetPayloadLength(void) const;
 
     /**
      * This method returns the maximum MAC Payload length for the given MAC header and footer.
@@ -909,13 +909,13 @@ public:
      * @returns The maximum MAC Payload length for the given MAC header and footer.
      *
      */
-    uint8_t GetMaxPayloadLength(void) const;
+    uint16_t GetMaxPayloadLength(void) const;
 
     /**
      * This method sets the MAC Payload length.
      *
      */
-    void SetPayloadLength(uint8_t aLength);
+    void SetPayloadLength(uint16_t aLength);
 
     /**
      * This method returns the IEEE 802.15.4 channel used for transmission or reception.
@@ -1074,7 +1074,7 @@ public:
      * @returns The IEEE 802.15.4 PSDU length.
      *
      */
-    uint8_t GetPsduLength(void) const { return mLength; }
+    uint16_t GetPsduLength(void) const { return mLength; }
 
     /**
      * This method sets the IEEE 802.15.4 PSDU length.
@@ -1082,7 +1082,7 @@ public:
      * @param[in]  aLength  The IEEE 802.15.4 PSDU length.
      *
      */
-    void SetPsduLength(uint8_t aLength) { mLength = aLength; }
+    void SetPsduLength(uint16_t aLength) { mLength = aLength; }
 
     /**
      * This method returns a pointer to the PSDU.
@@ -1261,6 +1261,22 @@ public:
      *
      */
     void CopyFrom(const Frame &aFromFrame);
+
+    /**
+     * This method returns the maximum transmission unit size (MTU).
+     *
+     * @returns The maximum transmission unit (MTU).
+     *
+     */
+    uint16_t GetMtu(void) const;
+
+    /**
+     * This method returns the FCS size.
+     *
+     * @returns This method returns the FCS size.
+     *
+     */
+    uint16_t GetFcsSize(void) const;
 
     /**
      * This method returns information about the frame object as an `InfoString` object.

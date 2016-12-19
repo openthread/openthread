@@ -1206,7 +1206,7 @@ exit:
     return (error == OT_ERROR_NONE) ? static_cast<int>(compressedLength) : -1;
 }
 
-otError MeshHeader::Init(const uint8_t *aFrame, uint8_t aFrameLength)
+otError MeshHeader::Init(const uint8_t *aFrame, uint16_t aFrameLength)
 {
     otError error = OT_ERROR_NONE;
 
@@ -1260,7 +1260,7 @@ exit:
     return error;
 }
 
-otError FragmentHeader::Init(const uint8_t *aFrame, uint8_t aFrameLength)
+otError FragmentHeader::Init(const uint8_t *aFrame, uint16_t aFrameLength)
 {
     otError error = OT_ERROR_PARSE;
 

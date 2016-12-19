@@ -410,7 +410,7 @@ void MeshForwarder::GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::
     }
 }
 
-otError MeshForwarder::GetMeshHeader(const uint8_t *&aFrame, uint8_t &aFrameLength, Lowpan::MeshHeader &aMeshHeader)
+otError MeshForwarder::GetMeshHeader(const uint8_t *&aFrame, uint16_t &aFrameLength, Lowpan::MeshHeader &aMeshHeader)
 {
     otError error;
 
@@ -422,7 +422,7 @@ exit:
     return error;
 }
 
-otError MeshForwarder::SkipMeshHeader(const uint8_t *&aFrame, uint8_t &aFrameLength)
+otError MeshForwarder::SkipMeshHeader(const uint8_t *&aFrame, uint16_t &aFrameLength)
 {
     otError            error = OT_ERROR_NONE;
     Lowpan::MeshHeader meshHeader;
@@ -438,7 +438,7 @@ exit:
 }
 
 otError MeshForwarder::GetFragmentHeader(const uint8_t *         aFrame,
-                                         uint8_t                 aFrameLength,
+                                         uint16_t                aFrameLength,
                                          Lowpan::FragmentHeader &aFragmentHeader)
 {
     otError error = OT_ERROR_NONE;
@@ -453,7 +453,7 @@ exit:
 }
 
 otError MeshForwarder::DecompressIp6Header(const uint8_t *     aFrame,
-                                           uint8_t             aFrameLength,
+                                           uint16_t            aFrameLength,
                                            const Mac::Address &aMacSource,
                                            const Mac::Address &aMacDest,
                                            Ip6::Header &       aIp6Header,
@@ -1147,7 +1147,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
     Mac::Address     macDest;
     Mac::Address     macSource;
     uint8_t *        payload;
-    uint8_t          payloadLength;
+    uint16_t         payloadLength;
     otError          error = OT_ERROR_NONE;
 
     if (!mEnabled)
@@ -1240,7 +1240,7 @@ exit:
 }
 
 void MeshForwarder::HandleFragment(uint8_t *               aFrame,
-                                   uint8_t                 aFrameLength,
+                                   uint16_t                aFrameLength,
                                    const Mac::Address &    aMacSource,
                                    const Mac::Address &    aMacDest,
                                    const otThreadLinkInfo &aLinkInfo)
@@ -1274,7 +1274,7 @@ void MeshForwarder::HandleFragment(uint8_t *               aFrame,
         VerifyOrExit(headerLength > 0, error = OT_ERROR_PARSE);
 
         aFrame += headerLength;
-        aFrameLength -= static_cast<uint8_t>(headerLength);
+        aFrameLength -= static_cast<uint16_t>(headerLength);
 
         VerifyOrExit(fragmentHeader.GetDatagramSize() >= message->GetOffset() + aFrameLength, error = OT_ERROR_PARSE);
 
@@ -1435,7 +1435,7 @@ bool MeshForwarder::UpdateReassemblyList(void)
 }
 
 void MeshForwarder::HandleLowpanHC(uint8_t *               aFrame,
-                                   uint8_t                 aFrameLength,
+                                   uint16_t                aFrameLength,
                                    const Mac::Address &    aMacSource,
                                    const Mac::Address &    aMacDest,
                                    const otThreadLinkInfo &aLinkInfo)
@@ -1463,7 +1463,7 @@ void MeshForwarder::HandleLowpanHC(uint8_t *               aFrame,
     VerifyOrExit(headerLength > 0, error = OT_ERROR_PARSE);
 
     aFrame += headerLength;
-    aFrameLength -= static_cast<uint8_t>(headerLength);
+    aFrameLength -= static_cast<uint16_t>(headerLength);
 
     SuccessOrExit(error = message->SetLength(message->GetLength() + aFrameLength));
     message->Write(message->GetOffset(), aFrameLength, aFrame);
@@ -1505,7 +1505,7 @@ otError MeshForwarder::HandleDatagram(Message &               aMessage,
 }
 
 otError MeshForwarder::GetFramePriority(const uint8_t *     aFrame,
-                                        uint8_t             aFrameLength,
+                                        uint16_t            aFrameLength,
                                         const Mac::Address &aMacSource,
                                         const Mac::Address &aMacDest,
                                         uint8_t &           aPriority)
@@ -1773,7 +1773,7 @@ void MeshForwarder::LogFrame(const char *aActionText, const Mac::Frame &aFrame, 
 }
 
 void MeshForwarder::LogFragmentFrameDrop(otError                       aError,
-                                         uint8_t                       aFrameLength,
+                                         uint16_t                      aFrameLength,
                                          const Mac::Address &          aMacSource,
                                          const Mac::Address &          aMacDest,
                                          const Lowpan::FragmentHeader &aFragmentHeader,
@@ -1786,7 +1786,7 @@ void MeshForwarder::LogFragmentFrameDrop(otError                       aError,
 }
 
 void MeshForwarder::LogLowpanHcFrameDrop(otError             aError,
-                                         uint8_t             aFrameLength,
+                                         uint16_t            aFrameLength,
                                          const Mac::Address &aMacSource,
                                          const Mac::Address &aMacDest,
                                          bool                aIsSecure)
@@ -1807,7 +1807,7 @@ void MeshForwarder::LogFrame(const char *, const Mac::Frame &, otError)
 }
 
 void MeshForwarder::LogFragmentFrameDrop(otError,
-                                         uint8_t,
+                                         uint16_t,
                                          const Mac::Address &,
                                          const Mac::Address &,
                                          const Lowpan::FragmentHeader &,
@@ -1815,7 +1815,7 @@ void MeshForwarder::LogFragmentFrameDrop(otError,
 {
 }
 
-void MeshForwarder::LogLowpanHcFrameDrop(otError, uint8_t, const Mac::Address &, const Mac::Address &, bool)
+void MeshForwarder::LogLowpanHcFrameDrop(otError, uint16_t, const Mac::Address &, const Mac::Address &, bool)
 {
 }
 

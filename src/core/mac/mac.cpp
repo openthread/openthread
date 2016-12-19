@@ -204,7 +204,7 @@ otError Mac::ConvertBeaconToActiveScanResult(Frame *aBeaconFrame, otActiveScanRe
     Address        address;
     Beacon *       beacon        = NULL;
     BeaconPayload *beaconPayload = NULL;
-    uint8_t        payloadLength;
+    uint16_t       payloadLength;
 
     memset(&aResult, 0, sizeof(otActiveScanResult));
 
