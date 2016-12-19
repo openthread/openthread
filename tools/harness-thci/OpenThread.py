@@ -80,7 +80,8 @@ class OpenThread(IThci):
             self.pskc = ModuleHelper.Default_PSKc
             self.securityPolicySecs = ModuleHelper.Default_SecurityPolicy
             self.activetimestamp = ModuleHelper.Default_ActiveTimestamp
-            self.SED_Polling_Rate = ModuleHelper.Default_Harness_SED_Polling_Rate
+            self.sedPollingRate = ModuleHelper.Default_Harness_SED_Polling_Rate
+            self.deviceRole = None
             self.provisioningUrl = ''
             self.logThread = Queue()
             self.logStatus = {'stop':'stop', 'running':'running', "pauseReq":'pauseReq', 'paused':'paused'}
@@ -983,6 +984,8 @@ class OpenThread(IThci):
         """
         print '%s call joinNetwork' % self.port
         print eRoleId
+
+        self.deviceRole = eRoleId
         mode = ''
         try:
             if ModuleHelper.LeaderDutChannelFound:
@@ -1005,8 +1008,7 @@ class OpenThread(IThci):
             elif eRoleId == Thread_Device_Role.SED:
                 print 'join as sleepy end device'
                 mode = 's'
-                # set data polling rate to 15s for SED
-                self.setPollingRate(15)
+                self.setPollingRate(self.sedPollingRate)
             elif eRoleId == Thread_Device_Role.EndDevice:
                 print 'join as end device'
                 mode = 'rsn'
@@ -1350,6 +1352,9 @@ class OpenThread(IThci):
         try:
             self._sendline('reset')
             time.sleep(timeout)
+
+            if self.deviceRole == Thread_Device_Role.SED:
+                self.setPollingRate(self.sedPollingRate)
 
             self.__startOpenThread()
             time.sleep(3)
