@@ -666,6 +666,15 @@ public:
     ThreadError CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6::Header &aIp6Header);
 
     /**
+     * This method resolves 2-hop routing loops.
+     *
+     * @param[in]  aSourceMac   The RLOC16 of the previous hop.
+     * @param[in]  aDestRloc16  The RLOC16 of the final destination.
+     *
+     */
+    void ResolveRoutingLoops(uint16_t aSourceMac, uint16_t aDestRloc16);
+
+    /**
      * This method checks if a given Router ID has correct value.
      *
      * @param[in]  aRouterId  The Router ID value.
