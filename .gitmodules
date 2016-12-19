@@ -1,0 +1,4 @@
+[submodule "third_party/mynewt-nimble/repo"]
+	path = third_party/mynewt-nimble/repo
+	url = https://github.com/turon/mynewt-nimble.git
+	branch = pr/fix-188

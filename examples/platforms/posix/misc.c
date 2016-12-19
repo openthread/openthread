@@ -35,7 +35,7 @@
 
 #include "openthread-system.h"
 
-extern jmp_buf gResetJump;
+jmp_buf gResetJump;
 
 static otPlatResetReason   sPlatResetReason = OT_PLAT_RESET_REASON_POWER_ON;
 bool                       gPlatformPseudoResetWasRequested;

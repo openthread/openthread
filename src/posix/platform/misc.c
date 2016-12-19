@@ -38,7 +38,7 @@
 #include "openthread-system.h"
 #include "common/logging.hpp"
 
-extern jmp_buf gResetJump;
+jmp_buf gResetJump;
 
 static otPlatResetReason   sPlatResetReason   = OT_PLAT_RESET_REASON_POWER_ON;
 static otPlatMcuPowerState gPlatMcuPowerState = OT_PLAT_MCU_POWER_STATE_ON;

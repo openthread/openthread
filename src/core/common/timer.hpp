@@ -115,6 +115,13 @@ public:
      */
     bool IsRunning(void) const { return (mNext != this); }
 
+    /**
+     * This method sets the handler for the timer outside of the constructor.
+     *
+     * @param[in]  aHandler   The handler to be called when timer fires.
+     */
+    void SetHandler(Handler aHandler) { mHandler = aHandler; }
+
 protected:
     /**
      * This method indicates if the fire time of this timer is strictly before the fire time of a second given timer.

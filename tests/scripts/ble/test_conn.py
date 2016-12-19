@@ -1,5 +1,6 @@
+#!/usr/bin/env python
 #
-#  Copyright (c) 2017, The OpenThread Authors.
+#  Copyright (c) 2018, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,23 +27,55 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-#
-# posix platform-specific Makefile
-#
+import os
+import sys
+import time
+import pexpect
+import unittest
+import subprocess
 
-LDADD_COMMON                                                          += \
-    $(top_builddir)/examples/platforms/posix/libopenthread-posix.a       \
-    $(NULL)
+from node_cli import Node
 
-if OPENTHREAD_BLE_HOST_NIMBLE
-LDADD_COMMON                                                          += \
-    -lrt -lpthread -lstdc++                                              \
-    $(top_builddir)/third_party/mynewt-nimble/libnimble.a                \
-    $(NULL)
-endif # OPENTHREAD_BLE_HOST_NIMBLE
+CENTRAL = 1
+PERIPHERAL = 2
+NODE_COUNT = 2
 
-if OPENTHREAD_TARGET_LINUX
-LDADD_COMMON                                                          += \
-    -lrt                                                                 \
-    $(NULL)
-endif
+class test_conn(unittest.TestCase):
+    def setUp(self):
+        self.nodes = Node.setUp(NODE_COUNT)
+
+    def tearDown(self):
+        del self.nodes
+        Node.tearDown()
+
+    def test_connection(self):
+
+        self.nodes[CENTRAL].ble_start()
+
+        self.nodes[PERIPHERAL].ble_start()
+        self.nodes[PERIPHERAL].ble_adv_data("0201060302affe")
+        self.nodes[PERIPHERAL].ble_adv_start(500)
+        (dst_addr, dst_type) = self.nodes[PERIPHERAL].ble_get_bdaddr()
+
+        self.nodes[CENTRAL].ble_conn_start(dst_addr, dst_type)
+
+        self.nodes[CENTRAL].pexpect.expect("connected: @id=")
+        self.nodes[PERIPHERAL].pexpect.expect("connected: @id=")
+
+        self.nodes[CENTRAL].ble_conn_stop()
+        self.nodes[PERIPHERAL].pexpect.expect("disconnected: @id=")
+        self.nodes[CENTRAL].pexpect.expect("disconnected: @id=")
+
+        # Connect second time for robust testing
+
+        self.nodes[PERIPHERAL].ble_adv_start(500)
+        self.nodes[CENTRAL].ble_scan_start()
+        self.nodes[CENTRAL].ble_scan_stop()
+        self.nodes[CENTRAL].ble_conn_start(dst_addr, dst_type)
+
+        self.nodes[PERIPHERAL].pexpect.expect("connected: @id=")
+        self.nodes[CENTRAL].pexpect.expect("connected: @id=")
+
+
+if __name__ == '__main__':
+    unittest.main()

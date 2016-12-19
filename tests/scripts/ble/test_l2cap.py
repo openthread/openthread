@@ -1,5 +1,6 @@
+#!/usr/bin/env python
 #
-#  Copyright (c) 2017, The OpenThread Authors.
+#  Copyright (c) 2018, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,23 +27,51 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-#
-# posix platform-specific Makefile
-#
+import os
+import sys
+import time
+import pexpect
+import unittest
+import subprocess
 
-LDADD_COMMON                                                          += \
-    $(top_builddir)/examples/platforms/posix/libopenthread-posix.a       \
-    $(NULL)
+from node_cli import Node
 
-if OPENTHREAD_BLE_HOST_NIMBLE
-LDADD_COMMON                                                          += \
-    -lrt -lpthread -lstdc++                                              \
-    $(top_builddir)/third_party/mynewt-nimble/libnimble.a                \
-    $(NULL)
-endif # OPENTHREAD_BLE_HOST_NIMBLE
+CENTRAL = 1
+PERIPHERAL = 2
+NODE_COUNT = 2
 
-if OPENTHREAD_TARGET_LINUX
-LDADD_COMMON                                                          += \
-    -lrt                                                                 \
-    $(NULL)
-endif
+class test_conn(unittest.TestCase):
+    def setUp(self):
+        self.nodes = Node.setUp(NODE_COUNT)
+
+    def tearDown(self):
+        del self.nodes
+        Node.tearDown()
+
+    def test_connection(self):
+        self.nodes[CENTRAL].ble_start()
+
+        self.nodes[PERIPHERAL].ble_start()
+        self.nodes[PERIPHERAL].ble_adv_data("0201060302affe")
+        self.nodes[PERIPHERAL].ble_adv_start(500)
+        (dst_addr, dst_type) = self.nodes[PERIPHERAL].ble_get_bdaddr()
+
+        self.nodes[CENTRAL].ble_conn_start(dst_addr, dst_type)
+
+        self.nodes[CENTRAL].pexpect.expect("connected: @id=")
+        self.nodes[PERIPHERAL].pexpect.expect("connected: @id=")
+
+        psm = 0x55
+        self.nodes[CENTRAL].ble_ch_start(psm)
+        self.nodes[CENTRAL].pexpect.expect("L2CAP connect request: @psm=%d" % (psm))
+
+        self.nodes[CENTRAL].ble_ch_tx("bdbdbdbd")
+        self.nodes[PERIPHERAL].pexpect.expect("L2CAP sdu rx:")
+        self.nodes[PERIPHERAL].pexpect.expect("data=bdbdbdbd")
+
+        self.nodes[PERIPHERAL].ble_ch_tx("acacacac")
+        self.nodes[CENTRAL].pexpect.expect("L2CAP sdu rx:")
+        self.nodes[CENTRAL].pexpect.expect("data=acacacac")
+
+if __name__ == '__main__':
+    unittest.main()

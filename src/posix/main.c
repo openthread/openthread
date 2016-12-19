@@ -59,7 +59,7 @@
 
 #include "openthread-system.h"
 
-jmp_buf gResetJump;
+extern jmp_buf gResetJump;
 
 void __gcov_flush();
 

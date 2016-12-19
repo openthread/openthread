@@ -41,3 +41,33 @@
 #ifndef OPENTHREAD_POSIX_UART_BAUDRATE
 #define OPENTHREAD_POSIX_UART_BAUDRATE B115200
 #endif
+
+/**
+ * @def OT_BLE_MAX_NUM_SERVICES
+ *
+ * This setting configures the maximum number of Bluetooth GATT services.
+ *
+ */
+#ifndef OT_BLE_MAX_NUM_SERVICES
+#define OT_BLE_MAX_NUM_SERVICES 2
+#endif
+
+/**
+ * @def OT_BLE_MAX_NUM_CHARACTERISTICS
+ *
+ * This setting configures the maximum number of Bluetooth GATT characteristics.
+ *
+ */
+#ifndef OT_BLE_MAX_NUM_CHARACTERISTICS
+#define OT_BLE_MAX_NUM_CHARACTERISTICS 5
+#endif
+
+/**
+ * @def OT_BLE_MAX_NUM_UUIDS
+ *
+ * This setting configures the maximum number of Bluetooth GATT UUIDs.
+ *
+ */
+#ifndef OT_BLE_MAX_NUM_UUIDS
+#define OT_BLE_MAX_NUM_UUIDS (OT_BLE_MAX_NUM_SERVICES + OT_BLE_MAX_NUM_CHARACTERISTICS)
+#endif

@@ -135,6 +135,28 @@ cd /tmp || die
         sudo apt-get install llvm-runtime || die
     }
 
+    [ $BUILD_TARGET != posix-ble ] || {
+        sudo apt-get install libdbus-1-dev || die
+        sudo apt-get install libudev-dev || die
+        sudo apt-get install libglib2.0-dev || die
+        sudo apt-get install libical-dev || die
+        sudo apt-get install libreadline-dev || die
+        sudo apt-get install libbluetooth-dev || die
+
+        # Add kernel modules for bluetooth simulation
+        sudo apt-get install bluez bluetooth || die
+
+        sudo pip install pexpect || die
+
+        # Install btvirt for simulation testing
+        wget http://www.kernel.org/pub/linux/bluetooth/bluez-5.44.tar.gz
+        tar xfz bluez-5.44.tar.gz
+        cd bluez-5.44/
+        ./configure  --prefix=/usr/local --enable-testing --enable-deprecated --enable-experimental --disable-systemd
+        make -j4
+        sudo cp ./emulator/btvirt /usr/local/bin
+    }
+
     [ $BUILD_TARGET != toranj-test-framework ] || {
         # packages for wpantund
         sudo apt-get install dbus || die

@@ -47,6 +47,11 @@
 #include "cli/cli_joiner.hpp"
 #include "cli/cli_udp.hpp"
 
+#if OPENTHREAD_ENABLE_BLE
+#include <openthread/platform/ble.h>
+#include "cli/cli_ble.hpp"
+#endif
+
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 #include <coap/coap_message.hpp>
 #include "cli/cli_coap.hpp"
@@ -95,6 +100,9 @@ struct Command
  */
 class Interpreter
 {
+#if OPENTHREAD_ENABLE_BLE
+    friend class Ble;
+#endif
     friend class Coap;
     friend class CoapSecure;
     friend class Commissioner;
@@ -185,17 +193,36 @@ public:
      */
     void SetUserCommands(const otCliCommand *aCommands, uint8_t aLength);
 
+#if OPENTHREAD_ENABLE_BLE
+    /**
+     * This method parses ASCII string representing a Bluetooth Device Aaddress into
+     * a variable of otPlatBleDeviceAddr.
+     *
+     * @param[in]  aAddr      A pointer to the BDA string.
+     * @param[in]  aType      A pointer to a string which contains BDA type.
+     * @param[out] aDestAddr  Maximum length of the binary representation.
+     *
+     * @retval OT_ERROR_NONE   Successfully parsed the ASCII string.
+     * @retval OT_ERROR_PARSE  Could not parse the ASCII string.
+     */
+    static otError ParseBda(const char *aAddr, char *aType, otPlatBleDeviceAddr *aDestAddr);
+#endif
+
 private:
     enum
     {
-        kMaxArgs          = 32,
-        kMaxAutoAddresses = 8,
+        kMaxArgs              = 32,
+        kMaxAutoAddresses     = 8,
+        kDefaultJoinerTimeout = 120, ///< Default timeout for Joiners, in seconds.
     };
 
     otError ParsePingInterval(const char *aString, uint32_t &aInterval);
     void    ProcessHelp(int argc, char *argv[]);
     void    ProcessBufferInfo(int argc, char *argv[]);
-    void    ProcessChannel(int argc, char *argv[]);
+#if OPENTHREAD_ENABLE_BLE
+    void ProcessBle(int argc, char *argv[]);
+#endif
+    void ProcessChannel(int argc, char *argv[]);
 #if OPENTHREAD_FTD
     void ProcessChild(int argc, char *argv[]);
     void ProcessChildIp(int argc, char *argv[]);
@@ -248,7 +275,7 @@ private:
     otError ProcessMulticastPromiscuous(int argc, char *argv[]);
 #if OPENTHREAD_ENABLE_JOINER
     void ProcessJoiner(int argc, char *argv[]);
-#endif
+#endif // OPENTHREAD_ENABLE_JOINER
 #if OPENTHREAD_FTD
     void ProcessJoinerPort(int argc, char *argv[]);
 #endif
@@ -391,11 +418,15 @@ private:
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     Coap mCoap;
-#endif
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
     CoapSecure mCoapSecure;
 #endif
+
+#if OPENTHREAD_ENABLE_BLE
+    Ble mBle;
+#endif // OPENTHREAD_ENABLE_BLE
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     Commissioner mCommissioner;

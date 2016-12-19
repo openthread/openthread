@@ -40,7 +40,7 @@
 #include <setjmp.h>
 #include <unistd.h>
 
-jmp_buf gResetJump;
+extern jmp_buf gResetJump;
 
 void __gcov_flush();
 #endif

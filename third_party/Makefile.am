@@ -47,6 +47,7 @@ endif
 DIST_SUBDIRS                            = \
     jlink                                 \
     mbedtls                               \
+    mynewt-nimble                         \
     $(NULL)
 
 SUBDIRS =
@@ -76,5 +77,11 @@ SUBDIRS                                += \
     mbedtls                               \
     $(NULL)
 endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
+
+if OPENTHREAD_BLE_HOST_NIMBLE
+SUBDIRS                                += \
+    mynewt-nimble                         \
+    $(NULL)
+endif # OPENTHREAD_BLE_HOST_NIMBLE
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

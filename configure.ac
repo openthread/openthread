@@ -1033,6 +1033,81 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_DTLS], [test "${enable_dtls}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DTLS],[${OPENTHREAD_ENABLE_DTLS}],[Define to 1 to enable dtls support.])
 
 #
+# BLE platform support
+#
+
+AC_MSG_CHECKING([whether to build with BLE support])
+AC_ARG_ENABLE(ble,
+    [AS_HELP_STRING([--enable-ble],[Enable BLE support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_ble=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_ble} for --enable-ble])
+            ;;
+        esac
+    ],
+    [enable_ble=no])
+
+if test "$enable_ble" = "yes"; then
+    OPENTHREAD_ENABLE_BLE=1
+else
+    OPENTHREAD_ENABLE_BLE=0
+fi
+
+AC_MSG_RESULT(${enable_ble})
+AC_SUBST(OPENTHREAD_ENABLE_BLE)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_BLE], [test "${enable_ble}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_BLE],[${OPENTHREAD_ENABLE_BLE}],[Define to 1 to enable BLE support.])
+
+#
+# BLE Host Implementations
+#
+
+AC_MSG_CHECKING([which Bluetooth host stack to use])
+AC_ARG_WITH(ble_host,
+    [AS_HELP_STRING([--with-ble-host=TARGET],
+        [Specify the ble host stack from one of: none, nimble @<:@default=none@:>@.])],
+    [
+        case "${with_ble_host}" in
+
+        none|nimble)
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${with_ble_host} for --with-ble-host])
+            ;;
+        esac
+    ],
+    [with_ble_host=none])
+
+OPENTHREAD_BLE_HOST=${with_ble_host}
+
+case ${with_ble_host} in
+
+    nimble)
+        OPENTHREAD_BLE_HOST_NIMBLE=1
+	AC_DEFINE_UNQUOTED([OPENTHREAD_BLE_HOST_NIMBLE],[${OPENTHREAD_BLE_HOST_NIMBLE}],[Define to 1 if you want to use NimBLE host examples])
+        ;;
+
+esac
+
+
+AC_MSG_RESULT(${OPENTHREAD_BLE_HOST})
+
+AC_SUBST(OPENTHREAD_BLE_HOST)
+AM_CONDITIONAL([OPENTHREAD_BLE_HOST], [test "${with_ble_host}" != "none"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_BLE_HOST],[${OPENTHREAD_BLE_HOST}],[OpenThread ble_host])
+
+AC_SUBST(OPENTHREAD_BLE_HOST_NIMBLE)
+AM_CONDITIONAL([OPENTHREAD_BLE_HOST_NIMBLE], [test "${OPENTHREAD_BLE_HOST}" = "nimble"])
+
+
+#
 # Jam Detection
 #
 
@@ -1964,6 +2039,7 @@ src/posix/platform/Makefile
 third_party/Makefile
 third_party/jlink/Makefile
 third_party/mbedtls/Makefile
+third_party/mynewt-nimble/Makefile
 third_party/NordicSemiconductor/Makefile
 examples/Makefile
 examples/apps/Makefile
@@ -1994,6 +2070,7 @@ tools/spi-hdlc-adapter/Makefile
 tests/Makefile
 tests/fuzz/Makefile
 tests/scripts/Makefile
+tests/scripts/ble/Makefile
 tests/scripts/thread-cert/Makefile
 tests/unit/Makefile
 doc/Makefile
@@ -2066,6 +2143,8 @@ AC_MSG_NOTICE([
   OpenThread NCP Vendor Hook Source         : ${with_ncp_vendor_hook_source}
   OpenThread NCP Spinel Encrypter           : ${with_ncp_spinel_encrypter_libs}
   OpenThread Vendor Extension Source        : ${with_vendor_extension}
+  OpenThread BLE Host Configuration         : ${with_ble_host}
+  Openthread BLE support                    : ${enable_ble}
   OpenThread Multiple Instances support     : ${enable_multiple_instances}
   OpenThread MTD Network Diagnostic support : ${enable_mtd_network_diagnostic}
   OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}

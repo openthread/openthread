@@ -32,7 +32,11 @@ python: "3.6"
 sudo: required
 dist: xenial
 
+git:
+  submodules: false
+
 before_install:
+  - git submodule update --init --remote
   - travis_retry .travis/before_install.sh
 
 before_script:
@@ -56,6 +60,10 @@ matrix:
       compiler: clang
     - env: BUILD_TARGET="posix-app-pty" DAEMON=1 VERBOSE=1 COVERAGE=1
       os: linux
+      compiler: gcc
+    - env: BUILD_TARGET="posix-ble" VERBOSE=1
+      os: linux
+      dist: trusty
       compiler: gcc
     - env: BUILD_TARGET="android-build" VERBOSE=1
       os: linux
