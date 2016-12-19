@@ -49,6 +49,7 @@ SOURCES_COMMON                      = \
     common/message.cpp                \
     common/tasklet.cpp                \
     common/timer.cpp                  \
+    common/tlvs.cpp                   \
     common/trickle_timer.cpp          \
     crypto/aes_ccm.cpp                \
     crypto/aes_ecb.cpp                \
@@ -60,7 +61,7 @@ SOURCES_COMMON                      = \
     mac/mac_frame.cpp                 \
     meshcop/dataset.cpp               \
     meshcop/dataset_manager.cpp       \
-    meshcop/tlvs.cpp                  \
+    meshcop/timestamp.cpp             \
     net/icmp6.cpp                     \
     net/ip6.cpp                       \
     net/ip6_address.cpp               \
@@ -76,14 +77,11 @@ SOURCES_COMMON                      = \
     thread/lowpan.cpp                 \
     thread/mesh_forwarder.cpp         \
     thread/mle.cpp                    \
-    thread/mle_tlvs.cpp               \
     thread/network_data.cpp           \
     thread/network_data_leader.cpp    \
     thread/panid_query_server.cpp     \
     thread/network_diagnostic.cpp     \
-    thread/network_diagnostic_tlvs.cpp  \
     thread/thread_netif.cpp           \
-    thread/thread_tlvs.cpp            \
     utils/slaac_address.cpp           \
     $(NULL)
 
@@ -179,6 +177,7 @@ noinst_HEADERS                      = \
     common/new.hpp                    \
     common/tasklet.hpp                \
     common/timer.hpp                  \
+    common/tlvs.hpp                   \
     common/trickle_timer.hpp          \
     crypto/aes_ccm.hpp                \
     crypto/aes_ecb.hpp                \
@@ -209,6 +208,7 @@ noinst_HEADERS                      = \
     meshcop/leader_ftd.hpp            \
     meshcop/leader_mtd.hpp            \
     meshcop/panid_query_client.hpp    \
+    meshcop/timestamp.hpp             \
     meshcop/tlvs.hpp                  \
     net/icmp6.hpp                     \
     net/ip6.hpp                       \

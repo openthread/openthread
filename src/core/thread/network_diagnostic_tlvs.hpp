@@ -39,6 +39,7 @@
 #include <openthread-types.h>
 #include <common/encoding.hpp>
 #include <common/message.hpp>
+#include <common/tlvs.hpp>
 #include <meshcop/tlvs.hpp>
 #include <net/ip6_address.hpp>
 #include <thread/mle_constants.hpp>
@@ -71,7 +72,7 @@ enum
  *
  */
 OT_TOOL_PACKED_BEGIN
-class NetworkDiagnosticTlv
+class NetworkDiagnosticTlv : public Thread::Tlv
 {
 public:
     /**
@@ -104,7 +105,7 @@ public:
      * @returns The Type value.
      *
      */
-    Type GetType(void) const { return static_cast<Type>(mType); }
+    Type GetType(void) const { return static_cast<Type>(Thread::Tlv::GetType()); }
 
     /**
      * This method sets the Type value.
@@ -112,26 +113,7 @@ public:
      * @param[in]  aType  The Type value.
      *
      */
-    void SetType(Type aType) { mType = static_cast<uint8_t>(aType); }
-
-    /**
-     * This method returns the Length value.
-     *
-     */
-    uint8_t GetLength(void) const { return mLength; }
-
-    /**
-     * This method returns the length to be sent
-     */
-    uint8_t GetSize(void) const { return mLength + sizeof(NetworkDiagnosticTlv); }
-
-    /**
-     * This method sets the Length value.
-     *
-     * @param[in]  aLength  The Length value.
-     *
-     */
-    void SetLength(uint8_t aLength) { mLength = aLength; }
+    void SetType(Type aType) { Thread::Tlv::SetType(static_cast<uint8_t>(aType)); }
 
     /**
      * This static method reads the requested TLV out of @p aMessage.
@@ -145,7 +127,9 @@ public:
      * @retval kThreadError_NotFound  Could not find the TLV with Type @p aType.
      *
      */
-    static ThreadError GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, NetworkDiagnosticTlv &aTlv);
+    static ThreadError GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv) {
+        return Thread::Tlv::Get(aMessage, static_cast<uint8_t>(aType), aMaxLength, aTlv);
+    }
 
     /**
      * This static method obtains the offset of a TLV within @p aMessage.
@@ -158,11 +142,10 @@ public:
      * @retval kThreadError_NotFound  Could not find the TLV with Type @p aType.
      *
      */
-    static ThreadError GetOffset(const Message &aMessage, Type aType, uint16_t &aOffset);
+    static ThreadError GetOffset(const Message &aMessage, Type aType, uint16_t &aOffset) {
+        return Thread::Tlv::GetOffset(aMessage, static_cast<uint8_t>(aType), aOffset);
+    }
 
-private:
-    uint8_t mType;
-    uint8_t mLength;
 } OT_TOOL_PACKED_END;
 
 /**

@@ -36,9 +36,8 @@
 #include <thread/mle_tlvs.hpp>
 
 namespace Thread {
-namespace Mle {
 
-ThreadError Tlv::GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv)
+ThreadError Tlv::Get(const Message &aMessage, uint8_t aType, uint16_t aMaxLength, Tlv &aTlv)
 {
     ThreadError error = kThreadError_Parse;
     uint16_t offset;
@@ -57,7 +56,7 @@ exit:
     return error;
 }
 
-ThreadError Tlv::GetOffset(const Message &aMessage, Type aType, uint16_t &aOffset)
+ThreadError Tlv::GetOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset)
 {
     ThreadError error = kThreadError_Parse;
     uint16_t offset = aMessage.GetOffset();
@@ -81,5 +80,41 @@ exit:
     return error;
 }
 
-}  // namespace Mle
+ThreadError Tlv::GetValueOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset, uint16_t &aLength)
+{
+    ThreadError error = kThreadError_Parse;
+    uint16_t offset = aMessage.GetOffset();
+    uint16_t end = aMessage.GetLength();
+
+    while (offset < end)
+    {
+        Tlv tlv;
+        uint16_t length;
+
+        aMessage.Read(offset, sizeof(tlv), &tlv);
+        offset += sizeof(tlv);
+
+        length = tlv.GetLength();
+
+        if (length == kExtendedLength)
+        {
+            aMessage.Read(offset, sizeof(length), &length);
+            offset += sizeof(length);
+            length = HostSwap16(length);
+        }
+
+        if (tlv.GetType() == aType)
+        {
+            aOffset = offset;
+            aLength = length;
+            ExitNow(error = kThreadError_None);
+        }
+
+        offset += length;
+    }
+
+exit:
+    return error;
+}
+
 }  // namespace Thread
