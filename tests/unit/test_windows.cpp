@@ -65,6 +65,9 @@ namespace Thread
 // test_message.cpp
 void TestMessage();
 
+// test_message_queue.cpp
+void TestMessageQueue();
+
 // test_ncp_buffer.cpp
 namespace Thread
 {
@@ -92,7 +95,7 @@ utAssertTrue s_AssertTrue;
 utLogMessage s_LogMessage;
 
 namespace Thread
-{        
+{
     TEST_CLASS(UnitTests)
     {
     public:
@@ -114,7 +117,7 @@ namespace Thread
             va_start(args, format);
             vsnprintf(message, sizeof(message), format, args);
             va_end(args);
-            
+
             Logger::WriteMessage(message);
         }
 
@@ -145,7 +148,10 @@ namespace Thread
         // test_message.cpp
         TEST_METHOD(TestMessage) { ::TestMessage(); }
 
-        // test_message.cpp
+        // test_message_queue.cpp
+        TEST_METHOD(TestMessageQueue) { ::TestMessageQueue(); }
+
+        // test_timer.cpp
         TEST_METHOD(TestOneTimer) { ::TestOneTimer(); }
         TEST_METHOD(TestTenTimers) { ::TestTenTimers(); }
 

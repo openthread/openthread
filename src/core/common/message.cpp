@@ -44,7 +44,7 @@ namespace Thread {
 MessagePool::MessagePool(void)
 {
     memset(mBuffers, 0, sizeof(mBuffers));
-    memset(&mAll, 0, sizeof(mAll));
+    mAllListTail = NULL;
 
     mFreeBuffers = mBuffers;
 
@@ -87,10 +87,20 @@ exit:
 
 ThreadError MessagePool::Free(Message *aMessage)
 {
-    assert(aMessage->GetMessageList(MessageInfo::kListAll).mList == NULL &&
-           aMessage->GetMessageList(MessageInfo::kListInterface).mList == NULL);
+    assert(aMessage->Next(MessageInfo::kListAll) == NULL &&
+           aMessage->Prev(MessageInfo::kListAll) == NULL);
+
+    assert(aMessage->Next(MessageInfo::kListInterface) == NULL &&
+           aMessage->Prev(MessageInfo::kListInterface) == NULL);
+
     return FreeBuffers(static_cast<Buffer *>(aMessage));
 }
+
+Message *MessagePool::GetAllMessagesListHead(void) const
+{
+    return (mAllListTail == NULL) ? NULL : mAllListTail->Next(MessageInfo::kListAll);
+}
+
 
 Buffer *MessagePool::NewBuffer(void)
 {
@@ -186,7 +196,9 @@ ThreadError Message::Free(void)
 
 Message *Message::GetNext(void) const
 {
-    return GetMessageList(MessageInfo::kListInterface).mNext;
+    assert(GetMessageQueue() != NULL);
+
+    return (this == GetMessageQueue()->mTail) ? NULL : Next(MessageInfo::kListInterface);
 }
 
 uint16_t Message::GetLength(void) const
@@ -740,94 +752,90 @@ void Message::SetReserved(uint16_t aReserved)
     mInfo.mReserved = aReserved;
 }
 
-MessageQueue::MessageQueue(void)
+MessageQueue::MessageQueue(void) :
+    mTail(NULL)
 {
-    mInterface.mHead = NULL;
-    mInterface.mTail = NULL;
 }
 
-ThreadError MessageQueue::AddToList(uint8_t aList, Message &aMessage)
+void MessageQueue::AddToList(Message *&aListTail, uint8_t aList, Message &aMessage)
 {
-    MessageList *list;
+    Message *head;
 
-    assert(aMessage.GetMessageList(aList).mNext == NULL &&
-           aMessage.GetMessageList(aList).mPrev == NULL &&
-           aMessage.GetMessageList(aList).mList != NULL);
+    assert((aMessage.Next(aList) == NULL) && (aMessage.Prev(aList) == NULL));
 
-    list = aMessage.GetMessageList(aList).mList;
-
-    if (list->mHead == NULL)
+    if (aListTail == NULL)
     {
-        list->mHead = &aMessage;
-        list->mTail = &aMessage;
+        aMessage.Next(aList) = &aMessage;
+        aMessage.Prev(aList) = &aMessage;
     }
     else
     {
-        list->mTail->GetMessageList(aList).mNext = &aMessage;
-        aMessage.GetMessageList(aList).mPrev = list->mTail;
-        list->mTail = &aMessage;
+        head = aListTail->Next(aList);
+
+        aMessage.Next(aList) = head;
+        aMessage.Prev(aList) = aListTail;
+
+        head->Prev(aList) = &aMessage;
+        aListTail->Next(aList) = &aMessage;
     }
 
-    return kThreadError_None;
+    aListTail = &aMessage;
 }
 
-ThreadError MessageQueue::RemoveFromList(uint8_t aList, Message &aMessage)
+void MessageQueue::RemoveFromList(Message *&aListTail, uint8_t aList, Message &aMessage)
 {
-    MessageList *list;
+    assert((aMessage.Next(aList) != NULL) && (aMessage.Prev(aList) != NULL));
 
-    assert(aMessage.GetMessageList(aList).mList != NULL);
-
-    list = aMessage.GetMessageList(aList).mList;
-
-    assert(list->mHead == &aMessage ||
-           aMessage.GetMessageList(aList).mNext != NULL ||
-           aMessage.GetMessageList(aList).mPrev != NULL);
-
-    if (aMessage.GetMessageList(aList).mPrev)
+    if (&aMessage == aListTail)
     {
-        aMessage.GetMessageList(aList).mPrev->GetMessageList(aList).mNext = aMessage.GetMessageList(aList).mNext;
-    }
-    else
-    {
-        list->mHead = aMessage.GetMessageList(aList).mNext;
+        aListTail = aListTail->Prev(aList);
+
+        if (&aMessage == aListTail)
+        {
+            aListTail = NULL;
+        }
     }
 
-    if (aMessage.GetMessageList(aList).mNext)
-    {
-        aMessage.GetMessageList(aList).mNext->GetMessageList(aList).mPrev = aMessage.GetMessageList(aList).mPrev;
-    }
-    else
-    {
-        list->mTail = aMessage.GetMessageList(aList).mPrev;
-    }
+    aMessage.Prev(aList)->Next(aList) = aMessage.Next(aList);
+    aMessage.Next(aList)->Prev(aList) = aMessage.Prev(aList);
 
-    aMessage.GetMessageList(aList).mPrev = NULL;
-    aMessage.GetMessageList(aList).mNext = NULL;
-
-    return kThreadError_None;
+    aMessage.Prev(aList) = NULL;
+    aMessage.Next(aList) = NULL;
 }
 
 Message *MessageQueue::GetHead(void) const
 {
-    return mInterface.mHead;
+    return (mTail == NULL) ? NULL : mTail->Next(MessageInfo::kListInterface);
 }
 
 ThreadError MessageQueue::Enqueue(Message &aMessage)
 {
-    aMessage.GetMessageList(MessageInfo::kListAll).mList = &aMessage.GetMessagePool()->mAll;
-    aMessage.GetMessageList(MessageInfo::kListInterface).mList = &mInterface;
-    AddToList(MessageInfo::kListAll, aMessage);
-    AddToList(MessageInfo::kListInterface, aMessage);
-    return kThreadError_None;
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aMessage.GetMessageQueue() == NULL, error = kThreadError_Already);
+
+    aMessage.SetMessageQueue(this);
+
+    AddToList(aMessage.GetMessagePool()->mAllListTail, MessageInfo::kListAll, aMessage);
+    AddToList(mTail, MessageInfo::kListInterface, aMessage);
+
+exit:
+    return error;
 }
 
 ThreadError MessageQueue::Dequeue(Message &aMessage)
 {
-    RemoveFromList(MessageInfo::kListAll, aMessage);
-    RemoveFromList(MessageInfo::kListInterface, aMessage);
-    aMessage.GetMessageList(MessageInfo::kListAll).mList = NULL;
-    aMessage.GetMessageList(MessageInfo::kListInterface).mList = NULL;
-    return kThreadError_None;
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aMessage.GetMessageQueue() == this, error = kThreadError_NotFound);
+
+    RemoveFromList(aMessage.GetMessagePool()->mAllListTail, MessageInfo::kListAll, aMessage);
+    RemoveFromList(mTail, MessageInfo::kListInterface, aMessage);
+
+    aMessage.SetMessageQueue(NULL);
+
+exit:
+    return error;
 }
 
 void MessageQueue::GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) const
@@ -835,7 +843,7 @@ void MessageQueue::GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) cons
     aMessageCount = 0;
     aBufferCount = 0;
 
-    for (const Message *message = mInterface.mHead; message; message = message->GetNext())
+    for (const Message *message = GetHead(); message != NULL; message = message->GetNext())
     {
         aMessageCount++;
         aBufferCount += message->GetBufferCount();
