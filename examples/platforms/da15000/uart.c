@@ -100,7 +100,7 @@ void UartBuffClear(void)
 
     volatile uint8_t aBuf;
 
-    while (hw_uart_read_buf_empty(HW_UART1) != 1)
+    while (hw_uart_read_buf_empty(HW_UART1) == 0)
     {
         aBuf += UBA(HW_UART1)->UART2_RBR_THR_DLL_REG;
     }

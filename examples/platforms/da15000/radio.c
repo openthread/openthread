@@ -83,10 +83,8 @@ static bool SED = false;
 static uint32_t sleep_const_delay;
 
 static otInstance *First_Instace;
-
 uint32_t NODE_ID = 1;
 
-#define RF_MODE_BLE                (0)
 #define DEFAULT_CHANNEL           (11)
 #define FTDF_OFFSET_CHANNEL       (11)
 
@@ -225,7 +223,7 @@ void da15000RadioInit(void)
     hw_rf_set_recommended_settings();
     hw_rf_iff_calibration();
 
-    hw_rf_modulation_gain_calibration(RF_MODE_BLE);
+    hw_rf_modulation_gain_calibration(0);  //RF MODE 0
     hw_rf_dc_offset_calibration();
 
     // ad_ftdf_init_phy_api();
@@ -416,7 +414,7 @@ void FTDF_sendFrameTransparentConfirm(void *handle, FTDF_Bitmap32 status)
 void da15000RadioProcess(otInstance *aInstance)
 {
     bool rxPending;
-    uint8_t bufferFor_FTDF_configValue = 0;
+    uint8_t bufferForFTDFconfigValue = 0;
 
     if (SendFrameDone)
     {
@@ -430,7 +428,7 @@ void da15000RadioProcess(otInstance *aInstance)
     {
         if ((otPlatAlarmGetNow() - sleep_const_delay) > 100)
         {
-            FTDF_setValue(FTDF_PIB_RX_ON_WHEN_IDLE, &bufferFor_FTDF_configValue);
+            FTDF_setValue(FTDF_PIB_RX_ON_WHEN_IDLE, &bufferForFTDFconfigValue);
             s_state = kStateSleep;
             SED = false;
         }
@@ -442,21 +440,25 @@ void da15000RadioProcess(otInstance *aInstance)
 
 void FTDF_rcvFrameTransparent(FTDF_DataLength frameLength,
                               FTDF_Octet     *frame,
-                              FTDF_Bitmap32   status)
+                              FTDF_Bitmap32   status,
+                              FTDF_LinkQuality lqi)
 {
     (void)status;
     RadioPacket otRadioPacket;
-    //  int8_t        value;
-    //  value  = -20;
 
-    otRadioPacket.mPower = -20;           //FIX THIS -actual measurements shall be placed here
-    otRadioPacket.mLqi = kPhyNoLqi;
+#if DEBUG_LOG_ENABLE
+    char buff[10];
+    sprintf(buff, "\nlq:%d", lqi);
+    hw_uart_write_buffer(HW_UART1, buff, 5);
+#endif
+
+    otRadioPacket.mPower = kPhyInvalidRssi;
+    otRadioPacket.mLqi   = lqi;
 
     if (s_receive_frame.mChannel == 0)
     {
         s_receive_frame.mChannel = DEFAULT_CHANNEL;
     }
-
 
     otRadioPacket.mChannel =  s_receive_frame.mChannel;
     otRadioPacket.mLength = frameLength;
@@ -474,9 +476,9 @@ void FTDF_rcvFrameTransparent(FTDF_DataLength frameLength,
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
     (void)aInstance;
-    aIeeeEui64[0] = 0x18;
-    aIeeeEui64[1] = 0xb4;
-    aIeeeEui64[2] = 0x30;
+    aIeeeEui64[0] = 0x80;   //80-EA-CA is for Dialog Semiconductor
+    aIeeeEui64[1] = 0xEA;
+    aIeeeEui64[2] = 0xCA;
     aIeeeEui64[3] = 0x00;
     aIeeeEui64[4] = (NODE_ID >> 24) & 0xff;
     aIeeeEui64[5] = (NODE_ID >> 16) & 0xff;
@@ -528,6 +530,7 @@ ThreadError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint
     ThreadError error = kThreadError_NotImplemented;
     (void)aInstance;
     (void)aShortAddress;
+
     return error;
 }
 

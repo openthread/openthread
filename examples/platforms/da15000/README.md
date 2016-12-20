@@ -6,7 +6,7 @@ This directory contains example platform drivers for the [Dialog Semiconductor D
 
 ## Build Examples (How to build and flash):
 
-```
+```bash
 $ cd <path-to-openthread>
 $ ./bootstrap
 $ make -f examples/Makefile-da15000 clean
@@ -15,7 +15,7 @@ $ make -f examples/Makefile-da15000
 
 Execute script to prepare image for flashing:
 
-```
+```bash
 $ cd ./third_party/dialog/DialogTools
 $ ./imgprep.sh
 ```
@@ -23,21 +23,22 @@ $ ./imgprep.sh
 Flash Binaries:
 
 1. Open another terminal window in order to start gdb server. Write the command (Linux):
-```
+```bash
 $ JLinkGDBServer -ir -if swd -speed auto -device Cortex-M0 -logtofile on -localhostonly
 ```
-
 2. Return to previous terminal window and execute a command in order to flash the board:
-```
-$ ./cli_programmer -b uartboot.bin gdbserver write_qspi 0x0 ../../../output/bin/arm-none-eabi-ot-cli.img
+```bash
+$ ./cli_programmer -b uartboot.bin gdbserver write_qspi 0x0 ../../../output/bin/arm-none-eabi-ot-cli-ftd.img
 ```
 
 ## Interact:
 
 Board will indicate state of device according to LED blink speed.
-* 5Hz    - Leader
-* 2Hz    - Router
-* 0.5Hz  - End Device
+Frequency | Role |
+--- | --- |
+5Hz | Leader |
+2Hz | Router |
+0.5Hz | End Device |
 
 
 1. Open terminal to /dev/ttyACM0 (serial port settings: 9600 8-N-1).
@@ -65,7 +66,6 @@ Check node state:
 > state
 Leader
 ```
-
 2.  Attach Router and ping Leader Mesh Local address.
 
 Open terminal for second device /dev/ttyACM1 and issue commands:

@@ -1576,9 +1576,9 @@ static void processRxFrame(int readBuf)
             FTDF_pib.performanceMetrics.RXSuccessCount++;
         }
 
-        uint32_t      rxMeta1 = *FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_RX_META_1, (intptr_t)readBuf);
-
-        FTDF_Bitmap32 status  = FTDF_TRANSPARENT_RCV_SUCCESSFUL;
+        uint32_t           rxMeta1 = *FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_RX_META_1, (intptr_t)readBuf);
+        FTDF_LinkQuality   lqi     = FTDF_GET_FIELD_INDEXED(RETENTION_RAM_QUALITY_INDICATOR, readBuf);
+        FTDF_Bitmap32      status  = FTDF_TRANSPARENT_RCV_SUCCESSFUL;
 
         status |= rxMeta1 & MSK_F_FTDF_RETENTION_RAM_CRC16_ERROR ? FTDF_TRANSPARENT_RCV_CRC_ERROR : 0;
         status |= rxMeta1 & MSK_F_FTDF_RETENTION_RAM_RES_FRM_TYPE_ERROR ? FTDF_TRANSPARENT_RCV_RES_FRAMETYPE : 0;
@@ -1645,7 +1645,7 @@ static void processRxFrame(int readBuf)
         }
 
 #endif /* FTDF_TRANSPARENT_USE_WAIT_FOR_ACK */
-        FTDF_RCV_FRAME_TRANSPARENT(frameLen, rxPtr, status);
+        FTDF_RCV_FRAME_TRANSPARENT(frameLen, rxPtr, status, lqi);
 
         return;
     }

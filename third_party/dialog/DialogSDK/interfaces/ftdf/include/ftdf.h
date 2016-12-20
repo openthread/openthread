@@ -2978,7 +2978,8 @@ void FTDF_sendFrameTransparentConfirm( void*         handle,
  */
 void FTDF_RCV_FRAME_TRANSPARENT( FTDF_DataLength frameLength,
                                  FTDF_Octet*     frame,
-                                 FTDF_Bitmap32   status );
+                                 FTDF_Bitmap32   status,
+                                 FTDF_LinkQuality lqi);
 
 /**
  * \brief       FTDF_rcvFrameTransparent - Converts the FTDF_RCV_FRAME_TRANSPARENT to a msg buffer
@@ -2992,7 +2993,8 @@ void FTDF_RCV_FRAME_TRANSPARENT( FTDF_DataLength frameLength,
  */
 void FTDF_rcvFrameTransparent( FTDF_DataLength frameLength,
                                FTDF_Octet*     frame,
-                               FTDF_Bitmap32   status );
+                               FTDF_Bitmap32   status,
+                               FTDF_LinkQuality lqi);
 
 /**
  * \brief       FTDF_setSleepAttributes - Set sleep atributes
