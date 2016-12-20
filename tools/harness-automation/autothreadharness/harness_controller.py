@@ -70,14 +70,17 @@ class HarnessController(object):
                                                 env=env)
             time.sleep(2)
 
+        if settings.HARNESS_VERSION > 33:
+            return
+
         if self.miniweb:
             logger.warning('Miniweb already started')
         else:
             with open('%s\\miniweb-%s.log' % (self.result_dir, time.strftime('%Y%m%d%H%M%S')), 'w') as miniwebOut:
-                self.miniweb = subprocess.Popen([settings.HARNESS_HOME + '\\miniweb\\miniweb.exe'],
+                self.miniweb = subprocess.Popen([settings.HARNESS_HOME + '\\MiniWeb\\miniweb.exe'],
                                                 stdout=miniwebOut,
                                                 stderr=miniwebOut,
-                                                cwd=settings.HARNESS_HOME + '\\miniweb')
+                                                cwd=settings.HARNESS_HOME + '\\MiniWeb')
 
     def stop(self):
         logger.info('Stopping harness service')
@@ -87,6 +90,9 @@ class HarnessController(object):
             self.harness = None
         else:
             logger.warning('Harness not started yet')
+
+        if settings.HARNESS_VERSION > 33:
+            return
 
         if self.miniweb:
             self._try_kill(self.miniweb)

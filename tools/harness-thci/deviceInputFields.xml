@@ -13,7 +13,7 @@
               hint="eg: 115200">115200
         </ITEM>
     </DEVICE>
-    <DEVICE name="Freescale" thumbnail="USB-KW24.jpg" description = " NXP(Freescale): USB-KW24D512 Dongles">
+    <DEVICE name="NXP" thumbnail="USB-KW24.jpg" description = " NXP(Freescale): USB-KW24D512 Dongles">
         <ITEM label="Serial Line"
               type="text"
               forParam="SerialPort"
