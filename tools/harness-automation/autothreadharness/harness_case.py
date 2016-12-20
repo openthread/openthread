@@ -172,6 +172,9 @@ class HarnessCase(unittest.TestCase):
                 logger.warning('All golden devices may not be resetted')
                 return
 
+            if settings.AUTO_DUT:
+                return
+
             for device in settings.GOLDEN_DEVICES:
                 try:
                     with OpenThreadController(device) as otc:
@@ -213,6 +216,7 @@ class HarnessCase(unittest.TestCase):
         time.sleep(1)
         self._hc.start()
         time.sleep(2)
+        os.system('taskkill /t /f /im chrome.exe')
 
     def _destroy_harness(self):
         """Stop harness backend service
@@ -231,7 +235,7 @@ class HarnessCase(unittest.TestCase):
             self.dut = None
             return
 
-        dut_port = settings.DUT_DEVICE
+        dut_port = settings.DUT_DEVICE[0]
         dut = OpenThreadController(dut_port)
         self.dut = dut
 
@@ -262,7 +266,8 @@ class HarnessCase(unittest.TestCase):
         browser.maximize_window()
         browser.get(settings.HARNESS_URL)
         self._browser = browser
-        self.assertIn('Thread', browser.title)
+        if not self.wait_until(lambda: 'Thread' in browser.title, 30):
+            self.assertIn('Thread', browser.title)
 
     def _destroy_browser(self):
         """Close the browser.
@@ -346,6 +351,14 @@ class HarnessCase(unittest.TestCase):
         time.sleep(1)
 
         try:
+            skip_button = self._browser.find_element_by_id('SkipPrepareDevice')
+            if skip_button.is_enabled():
+                skip_button.click()
+                time.sleep(1)
+        except:
+            logger.info('Still detecting sniffers')
+
+        try:
             next_button = self._browser.find_element_by_id('nextButton')
         except:
             logger.exception('Failed to finish setup')
@@ -389,6 +402,29 @@ class HarnessCase(unittest.TestCase):
         connect_all = self._browser.find_element_by_link_text('Connect All')
         connect_all.click()
 
+    def _add_device(self, port, device_type_id):
+        browser = self._browser
+        test_bed = browser.find_element_by_id('test-bed')
+        device = browser.find_element_by_id(device_type_id)
+        # drag
+        action_chains = ActionChains(browser)
+        action_chains.click_and_hold(device)
+        action_chains.move_to_element(test_bed).perform()
+        time.sleep(1)
+
+        # drop
+        drop_hw = browser.find_element_by_class_name('drop-hw')
+        action_chains = ActionChains(browser)
+        action_chains.move_to_element(drop_hw)
+        action_chains.release(drop_hw).perform()
+
+        time.sleep(0.5)
+        selected_hw = browser.find_element_by_class_name('selected-hw')
+        form_inputs = selected_hw.find_elements_by_tag_name('input')
+        form_port = form_inputs[0]
+        form_port.clear()
+        form_port.send_keys(port)
+
     def _test_bed(self):
         """Set up the test bed.
 
@@ -406,43 +442,29 @@ class HarnessCase(unittest.TestCase):
             remove_button.click()
             selected_hw_num = selected_hw_num - 1
 
-        devices = filter(lambda port: not (self.history.is_bad_golden_device(port) or (not self.auto_dut and port == settings.DUT_DEVICE )),
-                         settings.GOLDEN_DEVICES)
+        devices = list(settings.GOLDEN_DEVICES)
+        for index, device in enumerate(devices):
+            port = device[0]
+            if (self.history.is_bad_golden_device(port) or (settings.DUT_DEVICE and port == settings.DUT_DEVICE[0])):
+                devices.remove(device)
+
         logger.info('Available golden devices: %s', json.dumps(devices, indent=2))
         golden_devices_required = self.golden_devices_required
 
-        if self.auto_dut:
-            golden_devices_required = golden_devices_required + 1
+        if self.auto_dut and not settings.DUT_DEVICE:
+            golden_devices_required += 1
 
         if len(devices) < golden_devices_required:
             raise Exception('Golden devices is not enough')
 
-        device_type_id = settings.GOLDEN_DEVICE_TYPE
-
+        # add golden devices
         while golden_devices_required:
-            device = browser.find_element_by_id(device_type_id)
-            # drag
-            action_chains = ActionChains(browser)
-            action_chains.click_and_hold(device)
-            action_chains.move_to_element(test_bed).perform()
-            time.sleep(1)
-
-            # drop
-            drop_hw = browser.find_element_by_class_name('drop-hw')
-            action_chains = ActionChains(browser)
-            action_chains.move_to_element(drop_hw)
-            action_chains.release(drop_hw).perform()
-
-            time.sleep(0.5)
+            self._add_device(*devices.pop())
             golden_devices_required = golden_devices_required - 1
 
-        selected_hw_set = test_bed.find_elements_by_class_name('selected-hw')
-        for selected_hw in selected_hw_set:
-            form_inputs = selected_hw.find_elements_by_tag_name('input')
-            form_port = form_inputs[0]
-            form_port.clear()
-            device = devices.pop()
-            form_port.send_keys(device)
+        # add DUT
+        if settings.DUT_DEVICE:
+            self._add_device(*settings.DUT_DEVICE)
 
         while True:
             try:
@@ -459,6 +481,9 @@ class HarnessCase(unittest.TestCase):
 
                     for selected_hw in bad_ones:
                         port = form_port.get_attribute('value').encode('utf8')
+                        if settings.DUT_DEVICE and port == settings.DUT_DEVICE[0]:
+                            raise Exception('DUT device failed')
+
                         if not settings.APC_HOST:
                             # port cannot recover without power off
                             self.history.mark_bad_golden_device(port)
@@ -467,28 +492,8 @@ class HarnessCase(unittest.TestCase):
                         selected_hw.find_element_by_class_name('removeSelectedDevice').click()
                         time.sleep(0.1)
 
-                        device = browser.find_element_by_id(device_type_id)
-                        # drag
-                        action_chains = ActionChains(browser)
-                        action_chains.click_and_hold(device)
-                        action_chains.move_to_element(test_bed).perform()
-                        time.sleep(1)
-
-                        # drop
-                        drop_hw = browser.find_element_by_class_name('drop-hw')
-                        action_chains = ActionChains(browser)
-                        action_chains.move_to_element(drop_hw)
-                        action_chains.release(drop_hw).perform()
-
-                        time.sleep(0.5)
-
-                        selected_hw = browser.find_element_by_class_name('selected-hw')
-                        form_inputs = selected_hw.find_elements_by_tag_name('input')
-                        form_port = form_inputs[0]
-                        if devices:
-                            device = devices.pop()
-                            form_port.clear()
-                            form_port.send_keys(device)
+                        if len(devices):
+                            self._add_device(*devices.pop())
                         else:
                             devices = None
 
