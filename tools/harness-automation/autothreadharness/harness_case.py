@@ -509,9 +509,12 @@ class HarnessCase(unittest.TestCase):
                     if not checkbox_auto_dut.is_selected():
                         checkbox_auto_dut.click()
 
+                    time.sleep(1)
                     radio_auto_dut = browser.find_element_by_class_name('AutoDUT_RadBtns')
                     if not radio_auto_dut.is_selected():
                         radio_auto_dut.click()
+
+                    time.sleep(5)
 
                 button_next.click()
             except SystemExit:
@@ -548,6 +551,7 @@ class HarnessCase(unittest.TestCase):
             time.sleep(5)
             raise Exception('Failed to find the case')
 
+        self._browser.execute_script("$('.overview').css('left', '0')");
         checkbox.click()
         time.sleep(1)
 
