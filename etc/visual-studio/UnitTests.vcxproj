@@ -72,6 +72,7 @@
     <ClCompile Include="..\..\tests\unit\test_message_queue.cpp" />
     <ClCompile Include="..\..\tests\unit\test_ncp_buffer.cpp" />
     <ClCompile Include="..\..\tests\unit\test_platform.cpp" />
+    <ClCompile Include="..\..\tests\unit\test_priority_queue.cpp" />
     <ClCompile Include="..\..\tests\unit\test_timer.cpp" />
     <ClCompile Include="..\..\tests\unit\test_toolchain_c.c" />
     <ClCompile Include="..\..\tests\unit\test_toolchain.cpp" />

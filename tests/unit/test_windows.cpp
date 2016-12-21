@@ -68,6 +68,9 @@ void TestMessage();
 // test_message_queue.cpp
 void TestMessageQueue();
 
+// test_priority_queue.cpp
+void TestPriorityQueue();
+
 // test_ncp_buffer.cpp
 namespace Thread
 {
@@ -150,6 +153,9 @@ namespace Thread
 
         // test_message_queue.cpp
         TEST_METHOD(TestMessageQueue) { ::TestMessageQueue(); }
+
+        // test_message_queue.cpp
+        TEST_METHOD(TestPriorityQueue) { ::TestPriorityQueue(); }
 
         // test_timer.cpp
         TEST_METHOD(TestOneTimer) { ::TestOneTimer(); }

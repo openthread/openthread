@@ -33,9 +33,9 @@
 #include <string.h>
 #include <stdarg.h>
 
-#define kNumMessages      5
+#define kNumTestMessages      5
 
-// This function verifies the content of the message to matches the passed in messages
+// This function verifies the content of the message queue to match the passed in messages
 void VerifyMessageQueueContent(Thread::MessageQueue &aMessageQueue, int aExpectedLength, ...)
 {
     va_list args;
@@ -47,21 +47,21 @@ void VerifyMessageQueueContent(Thread::MessageQueue &aMessageQueue, int aExpecte
     if (aExpectedLength == 0)
     {
         message = aMessageQueue.GetHead();
-        VerifyOrQuit(message == NULL, "MessageQueue is not empty when expected len is zero.");
+        VerifyOrQuit(message == NULL, "MessageQueue is not empty when expected len is zero.\n");
     }
     else
     {
         for (message = aMessageQueue.GetHead(); message != NULL; message = message->GetNext())
         {
-            VerifyOrQuit(aExpectedLength != 0, "MessageQueue contains more entries than expected");
+            VerifyOrQuit(aExpectedLength != 0, "MessageQueue contains more entries than expected\n");
 
             msgArg = va_arg(args, Thread::Message *);
-            VerifyOrQuit(msgArg == message, "MessageQueue content does not match what is expected.");
+            VerifyOrQuit(msgArg == message, "MessageQueue content does not match what is expected.\n");
 
             aExpectedLength--;
         }
 
-        VerifyOrQuit(aExpectedLength == 0, "MessageQueue contains less entries than expected");
+        VerifyOrQuit(aExpectedLength == 0, "MessageQueue contains less entries than expected\n");
     }
 
     va_end(args);
@@ -71,9 +71,10 @@ void TestMessageQueue(void)
 {
     Thread::MessagePool messagePool;
     Thread::MessageQueue messageQueue;
-    Thread::Message *msg[kNumMessages];
+    Thread::Message *msg[kNumTestMessages];
+    uint16_t msgCount, bufferCount;
 
-    for (int i = 0; i < kNumMessages; i++)
+    for (int i = 0; i < kNumTestMessages; i++)
     {
         msg[i] = messagePool.New(Thread::Message::kTypeIp6, 0);
         VerifyOrQuit(msg[i] != NULL, "Message::New failed\n");
@@ -81,53 +82,54 @@ void TestMessageQueue(void)
 
     VerifyMessageQueueContent(messageQueue, 0);
 
-    //printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
-    //printf("\nEnqueue/Dequeue one message");
-
     // Enqueue 1 message and remove it
-    SuccessOrQuit(messageQueue.Enqueue(*msg[0]), "MessageQueue::Enqueue() failed.");
+    SuccessOrQuit(messageQueue.Enqueue(*msg[0]), "MessageQueue::Enqueue() failed.\n");
     VerifyMessageQueueContent(messageQueue, 1, msg[0]);
-    SuccessOrQuit(messageQueue.Dequeue(*msg[0]), "MessageQueue::Dequeue() failed.");
+    SuccessOrQuit(messageQueue.Dequeue(*msg[0]), "MessageQueue::Dequeue() failed.\n");
     VerifyMessageQueueContent(messageQueue, 0);
 
     // Enqueue 5 messages
-    SuccessOrQuit(messageQueue.Enqueue(*msg[0]), "MessageQueue::Enqueue() failed.");
+    SuccessOrQuit(messageQueue.Enqueue(*msg[0]), "MessageQueue::Enqueue() failed.\n");
     VerifyMessageQueueContent(messageQueue, 1, msg[0]);
-    SuccessOrQuit(messageQueue.Enqueue(*msg[1]), "MessageQueue::Enqueue() failed.");
+    SuccessOrQuit(messageQueue.Enqueue(*msg[1]), "MessageQueue::Enqueue() failed.\n");
     VerifyMessageQueueContent(messageQueue, 2, msg[0], msg[1]);
-    SuccessOrQuit(messageQueue.Enqueue(*msg[2]), "MessageQueue::Enqueue() failed.");
+    SuccessOrQuit(messageQueue.Enqueue(*msg[2]), "MessageQueue::Enqueue() failed.\n");
     VerifyMessageQueueContent(messageQueue, 3, msg[0], msg[1], msg[2]);
-    SuccessOrQuit(messageQueue.Enqueue(*msg[3]), "MessageQueue::Enqueue() failed.");
+    SuccessOrQuit(messageQueue.Enqueue(*msg[3]), "MessageQueue::Enqueue() failed.\n");
     VerifyMessageQueueContent(messageQueue, 4, msg[0], msg[1], msg[2], msg[3]);
-    SuccessOrQuit(messageQueue.Enqueue(*msg[4]), "MessageQueue::Enqueue() failed.");
+    SuccessOrQuit(messageQueue.Enqueue(*msg[4]), "MessageQueue::Enqueue() failed.\n");
     VerifyMessageQueueContent(messageQueue, 5, msg[0], msg[1], msg[2], msg[3], msg[4]);
 
+    // Check the GetInfo()
+    messageQueue.GetInfo(msgCount, bufferCount);
+    VerifyOrQuit(msgCount == 5, "MessageQueue::GetInfo() failed.\n");
+
     // Remove from head
-    SuccessOrQuit(messageQueue.Dequeue(*msg[0]), "MessageQueue::Dequeue() failed.");
+    SuccessOrQuit(messageQueue.Dequeue(*msg[0]), "MessageQueue::Dequeue() failed.\n");
     VerifyMessageQueueContent(messageQueue, 4, msg[1], msg[2], msg[3], msg[4]);
 
     // Remove a message in middle
-    SuccessOrQuit(messageQueue.Dequeue(*msg[3]), "MessageQueue::Dequeue() failed.");
+    SuccessOrQuit(messageQueue.Dequeue(*msg[3]), "MessageQueue::Dequeue() failed.\n");
     VerifyMessageQueueContent(messageQueue, 3, msg[1], msg[2], msg[4]);
 
     // Remove from tail
-    SuccessOrQuit(messageQueue.Dequeue(*msg[4]), "MessageQueue::Dequeue() failed.");
+    SuccessOrQuit(messageQueue.Dequeue(*msg[4]), "MessageQueue::Dequeue() failed.\n");
     VerifyMessageQueueContent(messageQueue, 2, msg[1], msg[2]);
 
     // Add after removes
-    SuccessOrQuit(messageQueue.Enqueue(*msg[0]), "MessageQueue::Enqueue() failed.");
+    SuccessOrQuit(messageQueue.Enqueue(*msg[0]), "MessageQueue::Enqueue() failed.\n");
     VerifyMessageQueueContent(messageQueue, 3, msg[1], msg[2], msg[0]);
-    SuccessOrQuit(messageQueue.Enqueue(*msg[3]), "MessageQueue::Enqueue() failed.");
+    SuccessOrQuit(messageQueue.Enqueue(*msg[3]), "MessageQueue::Enqueue() failed.\n");
     VerifyMessageQueueContent(messageQueue, 4, msg[1], msg[2], msg[0], msg[3]);
 
     // Remove all messages
-    SuccessOrQuit(messageQueue.Dequeue(*msg[2]), "MessageQueue::Dequeue() failed.");
+    SuccessOrQuit(messageQueue.Dequeue(*msg[2]), "MessageQueue::Dequeue() failed.\n");
     VerifyMessageQueueContent(messageQueue, 3, msg[1], msg[0], msg[3]);
-    SuccessOrQuit(messageQueue.Dequeue(*msg[1]), "MessageQueue::Dequeue() failed.");
+    SuccessOrQuit(messageQueue.Dequeue(*msg[1]), "MessageQueue::Dequeue() failed.\n");
     VerifyMessageQueueContent(messageQueue, 2, msg[0], msg[3]);
-    SuccessOrQuit(messageQueue.Dequeue(*msg[3]), "MessageQueue::Dequeue() failed.");
+    SuccessOrQuit(messageQueue.Dequeue(*msg[3]), "MessageQueue::Dequeue() failed.\n");
     VerifyMessageQueueContent(messageQueue, 1, msg[0]);
-    SuccessOrQuit(messageQueue.Dequeue(*msg[0]), "MessageQueue::Dequeue() failed.");
+    SuccessOrQuit(messageQueue.Dequeue(*msg[0]), "MessageQueue::Dequeue() failed.\n");
     VerifyMessageQueueContent(messageQueue, 0);
 }
 
