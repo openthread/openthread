@@ -322,6 +322,8 @@ is meaningless.
 
 {{spinel-feature-gpio.md}}
 
+{{spinel-feature-trng.md}}
+
 {{spinel-security-considerations.md}}
 
 {backmatter}
