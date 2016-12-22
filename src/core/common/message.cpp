@@ -662,6 +662,7 @@ Message *Message::Clone(uint16_t aLength) const
     messageCopy->SetOffset(GetOffset());
     messageCopy->SetInterfaceId(GetInterfaceId());
     messageCopy->SetSubType(GetSubType());
+    messageCopy->SetPriority(GetPriority());
     messageCopy->SetLinkSecurityEnabled(IsLinkSecurityEnabled());
 
 exit:
