@@ -271,7 +271,7 @@ ThreadError otPlatRadioDisable(otInstance *aInstance)
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
     (void)aInstance;
-    return (s_state != kStateDisabled) ? true : false;
+    return (s_state != kStateDisabled);
 }
 
 ThreadError otPlatRadioSleep(otInstance *aInstance)
@@ -313,7 +313,7 @@ ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     s_receive_frame.mChannel = aChannel;
 
     uint32_t phyAckAttr;
-    phyAckAttr = 0x08 | ((aChannel - FTDF_OFFSET_CHANNEL) & 0xf) << 4 | (0 & 0x3) << 8;
+    phyAckAttr = 0x08 | ((aChannel - FTDF_OFFSET_CHANNEL) & 0xf) << 4;
     FTDF_SET_FIELD(ON_OFF_REGMAP_PHYRXATTR, (((aChannel - FTDF_OFFSET_CHANNEL) & 0xf) << 4));
     FTDF_SET_FIELD(ON_OFF_REGMAP_PHYACKATTR, phyAckAttr);
 
@@ -424,15 +424,11 @@ void da15000RadioProcess(otInstance *aInstance)
         SendFrameDone = false;
     }
 
-    if (SED)
+    if ((SED) && ((otPlatAlarmGetNow() - sleep_const_delay) > 100))
     {
-        if ((otPlatAlarmGetNow() - sleep_const_delay) > 100)
-        {
-            FTDF_setValue(FTDF_PIB_RX_ON_WHEN_IDLE, &bufferForFTDFconfigValue);
-            s_state = kStateSleep;
-            SED = false;
-        }
-
+        FTDF_setValue(FTDF_PIB_RX_ON_WHEN_IDLE, &bufferForFTDFconfigValue);
+        s_state = kStateSleep;
+        SED = false;
     }
 }
 

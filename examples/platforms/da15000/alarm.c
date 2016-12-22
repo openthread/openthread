@@ -50,13 +50,10 @@ static void timer0_interrupt_cb(void)
 
 void da15000AlarmProcess(otInstance *aInstance)
 {
-    if (s_is_running)
+    if ((s_is_running) && (s_alarm <= s_counter))
     {
-        if (s_alarm <= s_counter)
-        {
-            s_is_running = false;
-            otPlatAlarmFired(aInstance);
-        }
+        s_is_running = false;
+        otPlatAlarmFired(aInstance);
     }
 }
 

@@ -39,77 +39,77 @@
 #undef CONFIG_USE_BLE
 #define CONFIG_USE_FTDF
 
-#define __HEAP_SIZE  0x0600
-#define __STACK_SIZE 0x0100
+#define __HEAP_SIZE                                    0x0600
+#define __STACK_SIZE                                   0x0100
 
 #define CONFIG_RETARGET
-#define CONFIG_RETARGET_UART                    HW_UART1
+#define CONFIG_RETARGET_UART                           HW_UART1
 
-#define dg_configPOWER_CONFIG                   (POWER_CONFIGURATION_2)
+#define dg_configPOWER_CONFIG                          (POWER_CONFIGURATION_2)
 
-#define dg_configUSE_LP_CLK                     LP_CLK_32768
-#define dg_configEXEC_MODE                      MODE_IS_CACHED
-#define dg_configCODE_LOCATION                  NON_VOLATILE_IS_FLASH
-#define dg_configEXT_CRYSTAL_FREQ               EXT_CRYSTAL_IS_16M
+#define dg_configUSE_LP_CLK                            LP_CLK_32768
+#define dg_configEXEC_MODE                             MODE_IS_CACHED
+#define dg_configCODE_LOCATION                         NON_VOLATILE_IS_FLASH
+#define dg_configEXT_CRYSTAL_FREQ                      EXT_CRYSTAL_IS_16M
 
-#define dg_configIMAGE_SETUP                    DEVELOPMENT_MODE
-#define dg_configEMULATE_OTP_COPY               (0)
+#define dg_configIMAGE_SETUP                           DEVELOPMENT_MODE
+#define dg_configEMULATE_OTP_COPY                      (0)
 
-#define dg_configUSER_CAN_USE_TIMER1            (0)
+#define dg_configUSER_CAN_USE_TIMER1                   (0)
 
-#define dg_configMEM_RETENTION_MODE             (0x1F)
-#define dg_configMEM_RETENTION_MODE_PRESERVE_IMAGE       (0x1F)
-#define dg_configSHUFFLING_MODE                 (0x3)
+#define dg_configMEM_RETENTION_MODE                    (0x1F)
+#define dg_configMEM_RETENTION_MODE_PRESERVE_IMAGE     (0x1F)
+#define dg_configSHUFFLING_MODE                        (0x3)
 
-#define dg_configUSE_WDOG                       (0)
+#define dg_configUSE_WDOG                              (0)
 
-#define dg_configUSE_DCDC                       (1)
+#define dg_configUSE_DCDC                              (1)
 
-#define dg_configPOWER_FLASH                    (1)
-#define dg_configFLASH_POWER_DOWN               (0)
-#define dg_configFLASH_POWER_OFF                (0)
+#define dg_configPOWER_FLASH                           (1)
+#define dg_configFLASH_POWER_DOWN                      (0)
+#define dg_configFLASH_POWER_OFF                       (0)
 
-#define dg_configBATTERY_TYPE                   (BATTERY_TYPE_LIMN2O4)
-#define dg_configBATTERY_CHARGE_CURRENT         2       // 30mA
-#define dg_configBATTERY_PRECHARGE_CURRENT      20      // 2.1mA
-#define dg_configBATTERY_CHARGE_NTC             1       // disabled
+#define dg_configBATTERY_TYPE                          (BATTERY_TYPE_LIMN2O4)
+#define dg_configBATTERY_CHARGE_CURRENT                2       // 30mA
+#define dg_configBATTERY_PRECHARGE_CURRENT             20      // 2.1mA
+#define dg_configBATTERY_CHARGE_NTC                    1       // disabled
 
-#define dg_configUSE_USB                        0
-#define dg_configUSE_USB_CHARGER                0
-#define dg_configALLOW_CHARGING_NOT_ENUM        1
+#define dg_configUSE_USB                               0
+#define dg_configUSE_USB_CHARGER                       0
+#define dg_configALLOW_CHARGING_NOT_ENUM               1
 
-#define dg_configUSE_ProDK                      (1)
+#define dg_configUSE_ProDK                             (1)
 
-#define dg_configUSE_SW_CURSOR                  (1)
+#define dg_configUSE_SW_CURSOR                         (1)
 
-#define dg_configCACHEABLE_QSPI_AREA_LEN        NVMS_PARAM_PART_start
+#define dg_configCACHEABLE_QSPI_AREA_LEN               NVMS_PARAM_PART_start
 
-#define dg_configFEM_DLG_REF_BOARD              (1)
-#define dg_configUSE_HW_TRNG                    (1)
+#define dg_configFEM_DLG_REF_BOARD                     (1)
+#define dg_configUSE_HW_TRNG                           (1)
 
-#define dg_configUSE_HW_TIMER0                  (1)
+#define dg_configUSE_HW_TIMER0                         (1)
 
 
 /*************************************************************************************************\
  * OS specific config
  */
 #define OS_BAREMETAL
-#define CPU_DA15000                             (1)
+#define CPU_DA15000                                    (1)
 
 /*************************************************************************************************\
  * Peripheral specific config
  */
 #define FTDF_PHY_API
-#define dg_configUSE_HW_RF                      (1)
-#define dg_configRF_ENABLE_RECALIBRATION        (0)
+#define dg_configUSE_HW_RF                             (1)
+#define dg_configRF_ENABLE_RECALIBRATION               (0)
 #define FTDF_NO_CSL
 #define FTDF_NO_TSCH
 #define FTDF_LITE
 
-#define dg_configFLASH_ADAPTER                  (0)
-#define dg_configNVMS_ADAPTER                   (0)
-#define dg_configNVMS_VES                       (0)
-#define dg_configUSE_WDOG                       (0)
+#define dg_configFLASH_ADAPTER                         (0)
+#define dg_configNVMS_ADAPTER                          (0)
+#define dg_configNVMS_VES                              (0)
+#define dg_configUSE_WDOG                              (0)
 /* Include bsp default values */
 #include "bsp_defaults.h"
 

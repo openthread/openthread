@@ -15,6 +15,8 @@ $ make -f examples/Makefile-da15000
 
 Execute script to prepare image for flashing:
 
+NOTE: Script is based on Dialog Tools binaries compiled for x86 Linux.
+
 ```bash
 $ cd ./third_party/dialog/DialogTools
 $ ./imgprep.sh
@@ -22,11 +24,15 @@ $ ./imgprep.sh
 
 Flash Binaries:
 
+NOTE: Flashing process requires JLinkGDBServer. Please visit https://www.segger.com/jlink-gdb-server.html for details.
+
 1. Open another terminal window in order to start gdb server. Write the command (Linux):
+
    ```bash
    $ JLinkGDBServer -ir -if swd -speed auto -device Cortex-M0 -logtofile on -localhostonly
    ```
 2. Return to previous terminal window and execute a command in order to flash the board:
+
    ```bash
    $ ./cli_programmer -b uartboot.bin gdbserver write_qspi 0x0 ../../../output/bin/arm-none-eabi-ot-cli-ftd.img
    ```
@@ -34,6 +40,7 @@ Flash Binaries:
 ## Interact:
 
 Board will indicate state of device according to LED blink speed.
+
 | Frequency | Role |
 | --- | --- |
 | 5Hz | Leader |
