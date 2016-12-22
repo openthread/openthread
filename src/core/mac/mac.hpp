@@ -666,6 +666,34 @@ private:
     Frame *mTxFrame;
 
     otMacCounters mCounters;
+
+#if OPENTHREAD_CONFIG_ADD_RADIO_TX_DONE_TIMEOUT_CHECK
+
+    /**
+     * OpenThread expects an `otPlatRadioTransmitDone()` callback after every successful call to
+     * `otPlatRadioTransmit()`. If for some reason the underlying platform radio APIs misbehave
+     * OpenThread can remain stuck waiting for the callback.
+     *
+     * Config option `OPENTHREAD_CONFIG_ADD_RADIO_TX_DONE_TIMEOUT_CHECK` can be used to enable
+     * additional check where a timeout is used to limit the maximum wait time to get the callback.
+     *
+     * This mechanism helps detect issues with platform radio implementation (by logging the issue)
+     * and it also tries to recover (by switching back to receive state and issuing the callback).
+     *
+     */
+
+    enum
+    {
+        kTxDoneCallbackTimeout = 2000,   // in ms.
+    };
+
+    static void HandleTxDoneTimeoutTimer(void *aContext);
+    void HandleTxDoneTimeoutTimer(void);
+
+    Timer mTxDoneTimeoutTimer;
+
+#endif // OPENTHREAD_CONFIG_ADD_RADIO_TX_DONE_TIMEOUT_CHECK
+
 };
 
 /**
