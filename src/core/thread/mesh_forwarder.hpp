@@ -225,7 +225,8 @@ private:
     ThreadError GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     Message *GetDirectTransmission(void);
     Message *GetIndirectTransmission(const Child &aChild);
-    void HandleMesh(uint8_t *aFrame, uint8_t aPayloadLength, const ThreadMessageInfo &aMessageInfo);
+    void HandleMesh(uint8_t *aFrame, uint8_t aPayloadLength, const Mac::Address &aMacSource,
+                    const ThreadMessageInfo &aMessageInfo);
     void HandleFragment(uint8_t *aFrame, uint8_t aPayloadLength,
                         const Mac::Address &aMacSource, const Mac::Address &aMacDest,
                         const ThreadMessageInfo &aMessageInfo);

@@ -3530,6 +3530,20 @@ exit:
     return error;
 }
 
+void MleRouter::ResolveRoutingLoops(uint16_t aSourceMac, uint16_t aDestRloc16)
+{
+    if (aSourceMac == GetNextHop(aDestRloc16))
+    {
+        // loop detected
+        Router *router = GetRouter(GetRouterId(aDestRloc16));
+        assert(router != NULL);
+
+        // invalidate next hop
+        router->mNextHop = kInvalidRouterId;
+        ResetAdvertiseInterval();
+    }
+}
+
 ThreadError MleRouter::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6::Header &aIp6Header)
 {
     Ip6::Address destination;

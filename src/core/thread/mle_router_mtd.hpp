@@ -135,6 +135,8 @@ public:
 
     static int ComparePartitions(bool, const LeaderDataTlv &, bool, const LeaderDataTlv &) { return 0; }
 
+    void ResolveRoutingLoops(uint16_t, uint16_t) { }
+
     ThreadError CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6::Header &aIp6Header) {
         return Mle::CheckReachability(aMeshSource, aMeshDest, aIp6Header);
     }
