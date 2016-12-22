@@ -112,7 +112,7 @@ struct MessageInfo
     uint8_t          mSubType : 3;       ///< Identifies the message sub type.
     bool             mDirectTx : 1;      ///< Used to indicate whether a direct transmission is required.
     bool             mLinkSecurity : 1;  ///< Indicates whether or not link security is enabled.
-    uint8_t          mPriority: 2;       ///< Identifies the message priority level (lower value is higher priority).
+    uint8_t          mPriority : 2;      ///< Identifies the message priority level (lower value is higher priority).
     bool             mInPriorityQ : 1;   ///< Indicates whether the message is queued in normal or priority queue.
 };
 
@@ -418,6 +418,9 @@ public:
     /**
      * This method creates a copy of the current Message. It allocates the new one
      * from the same Message Poll as the original Message and copies @p aLength octets of a payload.
+     *
+     * The `Type`, `SubType`, `LinkSecurity` and `Priority` fields on the cloned message are also
+     * copied from the original one.
      *
      * @param[in] aLength  Number of payload bytes to copy.
      *
@@ -986,7 +989,7 @@ public:
          *
          * @returns `true` if the iterator has ended , `false` otherwise.
          */
-        bool HasEnded(void) const { return IsEmpty();}
+        bool HasEnded(void) const { return IsEmpty(); }
 
         /**
          * This method returns a new iterator corresponding to next message on the list.
