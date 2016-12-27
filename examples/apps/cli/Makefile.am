@@ -40,7 +40,6 @@ CPPFLAGS_COMMON                                                        = \
     $(NULL)
 
 LDADD_COMMON                                                           = \
-    $(top_builddir)/src/cli/libopenthread-cli.a                          \
     $(NULL)
 
 LDFLAGS_COMMON                                                         = \
@@ -84,6 +83,7 @@ ot_cli_ftd_CPPFLAGS                                                    = \
     $(NULL)
 
 ot_cli_ftd_LDADD                                                       = \
+    $(top_builddir)/src/cli/libopenthread-cli.a                          \
     $(top_builddir)/src/core/libopenthread-ftd.a                         \
     $(LDADD_COMMON)                                                      \
     $(NULL)
@@ -101,6 +101,7 @@ ot_cli_mtd_CPPFLAGS                                                    = \
     $(NULL)
 
 ot_cli_mtd_LDADD                                                       = \
+    $(top_builddir)/src/cli/libopenthread-cli.a                          \
     $(top_builddir)/src/core/libopenthread-mtd.a                         \
     $(LDADD_COMMON)                                                      \
     $(NULL)

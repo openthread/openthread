@@ -3490,7 +3490,9 @@ OTCALL
 otJoinerStart(
      _In_ otInstance *aInstance,
     const char *aPSKd, 
-    const char *aProvisioningUrl
+    const char *aProvisioningUrl,
+    _In_ otJoinerCallback aCallback,
+    _In_ void *aCallbackContext
     )
 {
     if (aInstance == nullptr || aPSKd == nullptr) return kThreadError_InvalidArgs;

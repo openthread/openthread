@@ -5270,8 +5270,14 @@ otLwfIoCtl_otJoinerStart(
     if (InBufferLength >= sizeof(otCommissionConfig))
     {
         otCommissionConfig *aConfig = (otCommissionConfig*)InBuffer;
-        status = ThreadErrorToNtstatus(otJoinerStart(
-            pFilter->otCtx, (const char*)aConfig->PSKd, (const char*)aConfig->ProvisioningUrl));
+        status = ThreadErrorToNtstatus(
+            otJoinerStart(
+                pFilter->otCtx,
+                (const char*)aConfig->PSKd,
+                (const char*)aConfig->ProvisioningUrl,
+                NULL,  // TODO: handle the joiner completion callback
+                NULL)
+            );
     }
 
     return status;

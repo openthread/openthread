@@ -248,8 +248,8 @@ private:
     uint16_t mJoinerPort;
     uint16_t mJoinerRloc;
 
-    uint16_t mSessionId;
     Timer mTimer;
+    uint16_t mSessionId;
     uint8_t mTransmitAttempts;
     bool mSendKek;
 

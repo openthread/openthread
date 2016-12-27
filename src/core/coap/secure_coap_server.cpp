@@ -118,7 +118,7 @@ void SecureServer::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         mPeerAddress.SetPeerAddr(aMessageInfo.GetPeerAddr());
         mPeerAddress.SetPeerPort(aMessageInfo.GetPeerPort());
 
-        mNetif.GetDtls().Start(false, HandleDtlsReceive, HandleDtlsSend, this);
+        mNetif.GetDtls().Start(false, HandleDtlsConnected, HandleDtlsReceive, HandleDtlsSend, this);
     }
     else
     {
@@ -138,6 +138,16 @@ exit:
 ThreadError SecureServer::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
 {
     return mNetif.GetDtls().SetPsk(aPsk, aPskLength);
+}
+
+void SecureServer::HandleDtlsConnected(void *aContext, bool aConnected)
+{
+    return static_cast<SecureServer *>(aContext)->HandleDtlsConnected(aConnected);
+}
+
+void SecureServer::HandleDtlsConnected(bool aConnected)
+{
+    (void)aConnected;
 }
 
 void SecureServer::HandleDtlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength)

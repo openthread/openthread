@@ -949,7 +949,8 @@ OTNODEAPI int32_t OTCALL otNodeJoinerStart(otNode* aNode, const char *aPSKd, con
     otLogFuncEntryMsg("[%d] %s %s", aNode->mId, aPSKd, aProvisioningUrl);
     printf("%d: joiner start %s %s\r\n", aNode->mId, aPSKd, aProvisioningUrl);
 
-    auto error = otJoinerStart(aNode->mInstance, aPSKd, aProvisioningUrl);
+    // TODO: handle the joiner completion callback
+    auto error = otJoinerStart(aNode->mInstance, aPSKd, aProvisioningUrl, NULL, NULL);
     
     otLogFuncExit();
     return error;

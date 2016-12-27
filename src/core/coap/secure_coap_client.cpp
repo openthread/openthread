@@ -73,7 +73,8 @@ ThreadError SecureClient::Connect(const Ip6::MessageInfo &aMessageInfo, Connecte
     mConnectedCallback = aCallback;
     mContext = aContext;
 
-    return mNetif.GetDtls().Start(true, &SecureClient::HandleDtlsReceive, &SecureClient::HandleDtlsSend, this);
+    return mNetif.GetDtls().Start(true, &SecureClient::HandleDtlsConnected, &SecureClient::HandleDtlsReceive,
+                                  &SecureClient::HandleDtlsSend, this);
 }
 
 bool SecureClient::IsConnectionActive(void)
@@ -136,15 +137,21 @@ void SecureClient::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     mNetif.GetDtls().Receive(aMessage, aMessage.GetOffset(), aMessage.GetLength() - aMessage.GetOffset());
 
-    if ((IsConnected()) && (mConnectedCallback != NULL))
-    {
-        mConnectedCallback(mContext);
-        mConnectedCallback = NULL;
-        mContext = NULL;
-    }
-
 exit:
     otLogFuncExit();
+}
+
+void SecureClient::HandleDtlsConnected(void *aContext, bool aConnected)
+{
+    return static_cast<SecureClient *>(aContext)->HandleDtlsConnected(aConnected);
+}
+
+void SecureClient::HandleDtlsConnected(bool aConnected)
+{
+    if (mConnectedCallback != NULL)
+    {
+        mConnectedCallback(aConnected, mContext);
+    }
 }
 
 void SecureClient::HandleDtlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength)
