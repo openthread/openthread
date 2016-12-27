@@ -1356,7 +1356,7 @@ ThreadError Mle::SendParentRequest(void)
     case kParentRequestRouter:
         scanMask = ScanMaskTlv::kRouterFlag;
 
-        if (mParentRequestMode == kMleAttachSamePartition)
+        if (mParentRequestMode != kMleAttachAnyPartition)
         {
             scanMask |= ScanMaskTlv::kEndDeviceFlag;
         }

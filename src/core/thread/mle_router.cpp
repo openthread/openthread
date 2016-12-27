@@ -1477,7 +1477,11 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
         break;
     }
 
-    UpdateRoutes(route, routerId);
+    if ((mDeviceMode & ModeTlv::kModeFFD) &&
+        static_cast<int8_t>(route.GetRouterIdSequence() - mRouterIdSequence) > 0)
+    {
+        UpdateRoutes(route, routerId);
+    }
 
     mNetif.GetNetworkDataLocal().SendServerDataNotification();
 
