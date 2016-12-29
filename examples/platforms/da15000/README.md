@@ -6,6 +6,8 @@ This directory contains example platform drivers for the [Dialog Semiconductor D
 
 ## Build Examples (How to build and flash):
 
+NOTE: Current implementation sets EUI-64 as a static value.
+
 ```bash
 $ cd <path-to-openthread>
 $ ./bootstrap
