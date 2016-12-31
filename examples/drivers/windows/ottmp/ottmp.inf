@@ -1,0 +1,121 @@
+;
+;  Copyright (c) 2016, The OpenThread Authors.
+;  All rights reserved.
+;
+;  Redistribution and use in source and binary forms, with or without
+;  modification, are permitted provided that the following conditions are met:
+;  1. Redistributions of source code must retain the above copyright
+;     notice, this list of conditions and the following disclaimer.
+;  2. Redistributions in binary form must reproduce the above copyright
+;     notice, this list of conditions and the following disclaimer in the
+;     documentation and/or other materials provided with the distribution.
+;  3. Neither the name of the copyright holder nor the
+;     names of its contributors may be used to endorse or promote products
+;     derived from this software without specific prior written permission.
+;
+;  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+;  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+;  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+;  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+;  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+;  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+;  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+;  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+;  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+;  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+;  POSSIBILITY OF SUCH DAMAGE.
+;
+
+[Version]
+Signature           = "$Windows NT$"
+Class               = Net
+ClassGUID           = {4d36e972-e325-11ce-bfc1-08002be10318}
+Provider            = %OpenThread%
+DriverVer           = 
+PnpLockDown         = 1
+CatalogFile         = ottmp.cat
+
+[Manufacturer]
+%OpenThread%        = OpenThread,NT$ARCH$
+
+[OpenThread.NT$ARCH$]
+%ottmp.DeviceDesc%  = ottmp.ndi, root\ottmp ; Root enumerated
+
+;-------------------------------------------------------------------------------
+; OpenThread Tunnel Thread Adapter
+;-------------------------------------------------------------------------------
+[ottmp.ndi]
+Characteristics     = 0x4 ; NCF_PHYSICAL
+*IfType             = 259 ; IF_TYPE_IEEE802154
+*MediaType          = 19  ; NdisMediumIP
+*PhysicalMediaType  = 20  ; NdisPhysicalMediumNative802_15_4
+*IfConnectorPresent = 0
+*AccessType         = 2   ; NET_IF_ACCESS_BROADCAST
+*ConnectionType     = 1   ; NET_IF_CONNECTION_PASSIVE
+*DirectionType      = 0   ; NET_IF_DIRECTION_SENDRECEIVE
+AddReg              = ottmp.Reg
+CopyFiles           = ottmp.CopyFiles
+
+[ottmp.ndi.Services]
+AddService          = ottmp, 2, ottmp.Service, ottmp.EventLog
+
+;-------------------------------------------------------------------------------
+; OpenThread Tunnel Miniport Common
+;-------------------------------------------------------------------------------
+[ottmp.Reg]
+HKR,    ,                         BusNumber,           0, "0" 
+HKR, Ndi,                         Service,             0, "ottmp"
+HKR, Ndi\Interfaces,              UpperRange,          0, "flpp6"
+HKR, Ndi\Interfaces,              LowerRange,          0, "802.15.4"
+
+;-------------------------------------------------------------------------------
+; WDF Section
+;-------------------------------------------------------------------------------
+[ottmp.ndi.Wdf]
+KmdfService         = ottmp, ottmp.wdfsect
+
+[ottmp.wdfsect]
+KmdfLibraryVersion  = $KMDFVERSION$
+
+;-------------------------------------------------------------------------------
+; Driver and Service Section
+;-------------------------------------------------------------------------------
+[ottmp.CopyFiles]
+ottmp.sys,,,2
+
+[ottmp.Service]
+DisplayName        = %ottmp.Service.DispName%
+ServiceType        = 1 ;%SERVICE_KERNEL_DRIVER%
+StartType          = 3 ;%SERVICE_DEMAND_START%
+ErrorControl       = 1 ;%SERVICE_ERROR_NORMAL%
+ServiceBinary      = %12%\ottmp.sys
+LoadOrderGroup     = NDIS
+AddReg             = TextModeFlags.Reg
+Description        = %ottmp.DeviceDesc%
+
+[ottmp.EventLog]
+AddReg             = ottmp.AddEventLog.Reg
+
+[ottmp.AddEventLog.Reg]
+HKR, , EventMessageFile, 0x00020000, "%%SystemRoot%%\System32\netevent.dll"
+HKR, , TypesSupported,   0x00010001, 7
+
+[TextModeFlags.Reg]
+HKR, , TextModeFlags,    0x00010001, 0x0001
+
+[SourceDisksNames]
+1 = %ottmp.DeviceDesc%,,,""
+
+[SourceDisksFiles]
+ottmp.sys = 1,,
+
+[DestinationDirs]
+ottmp.CopyFiles = 12
+
+;-------------------------------------------------------------------------------
+; Localizable Strings
+;-------------------------------------------------------------------------------
+[Strings]
+OpenThread              = "OpenThread"                      
+ottmp.DeviceDesc        = "OpenThread Tunnel Thread Adapter"
+ottmp.Service.DispName  = "OpenThread Tunnel Miniport"

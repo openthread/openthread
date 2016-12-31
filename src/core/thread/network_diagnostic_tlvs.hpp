@@ -39,6 +39,7 @@
 #include <openthread-types.h>
 #include <common/encoding.hpp>
 #include <common/message.hpp>
+#include <common/tlvs.hpp>
 #include <meshcop/tlvs.hpp>
 #include <net/ip6_address.hpp>
 #include <thread/mle_constants.hpp>
@@ -71,7 +72,7 @@ enum
  *
  */
 OT_TOOL_PACKED_BEGIN
-class NetworkDiagnosticTlv
+class NetworkDiagnosticTlv : public Thread::Tlv
 {
 public:
     /**
@@ -94,6 +95,7 @@ public:
         kSupplyVoltage       = 15,   ///< Supply Voltage TLV
         kChildTable          = 16,   ///< Child Table TLV
         kChannelPages        = 17,   ///< Channel Pages TLV
+        kTypeList            = 18,   ///< Type List TLV
         kInvalid             = 255,
     };
 
@@ -103,7 +105,7 @@ public:
      * @returns The Type value.
      *
      */
-    Type GetType(void) const { return static_cast<Type>(mType); }
+    Type GetType(void) const { return static_cast<Type>(Thread::Tlv::GetType()); }
 
     /**
      * This method sets the Type value.
@@ -111,26 +113,7 @@ public:
      * @param[in]  aType  The Type value.
      *
      */
-    void SetType(Type aType) { mType = static_cast<uint8_t>(aType); }
-
-    /**
-     * This method returns the Length value.
-     *
-     */
-    uint8_t GetLength(void) const { return mLength; }
-
-    /**
-     * This method returns the length to be sent
-     */
-    uint8_t GetSize(void) const { return mLength + sizeof(NetworkDiagnosticTlv); }
-
-    /**
-     * This method sets the Length value.
-     *
-     * @param[in]  aLength  The Length value.
-     *
-     */
-    void SetLength(uint8_t aLength) { mLength = aLength; }
+    void SetType(Type aType) { Thread::Tlv::SetType(static_cast<uint8_t>(aType)); }
 
     /**
      * This static method reads the requested TLV out of @p aMessage.
@@ -144,7 +127,9 @@ public:
      * @retval kThreadError_NotFound  Could not find the TLV with Type @p aType.
      *
      */
-    static ThreadError GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, NetworkDiagnosticTlv &aTlv);
+    static ThreadError GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv) {
+        return Thread::Tlv::Get(aMessage, static_cast<uint8_t>(aType), aMaxLength, aTlv);
+    }
 
     /**
      * This static method obtains the offset of a TLV within @p aMessage.
@@ -157,11 +142,10 @@ public:
      * @retval kThreadError_NotFound  Could not find the TLV with Type @p aType.
      *
      */
-    static ThreadError GetOffset(const Message &aMessage, Type aType, uint16_t &aOffset);
+    static ThreadError GetOffset(const Message &aMessage, Type aType, uint16_t &aOffset) {
+        return Thread::Tlv::GetOffset(aMessage, static_cast<uint8_t>(aType), aOffset);
+    }
 
-private:
-    uint8_t mType;
-    uint8_t mLength;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -917,148 +901,147 @@ public:
     bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
 
     /**
-     * This method returns a pointer to the Response value.
+     * This method returns the IfInUnknownProtos counter.
      *
-     * @returns A pointer to the Response value.
+     * @returns The IfInUnknownProtos counter
      *
      */
-    uint32_t GetIfInUnknownProtos(void) const { return mIfInUnknownProtos; }
+    uint32_t GetIfInUnknownProtos(void) const { return HostSwap32(mIfInUnknownProtos); }
 
     /**
-     * This method sets the Response value.
+     * This method sets the IfInUnknownProtos counter.
      *
-     * @param[in]  aResponse  A pointer to the Response value.
+     * @param[in]  aIfInUnknownProtos The IfInUnknownProtos counter
      *
      */
-    void SetIfInUnknownProtos(const uint32_t aIfInUnknownProtos) { mIfInUnknownProtos = aIfInUnknownProtos; }
+    void SetIfInUnknownProtos(const uint32_t aIfInUnknownProtos) { mIfInUnknownProtos = HostSwap32(aIfInUnknownProtos); }
 
     /**
-     * This method returns a pointer to the Response value.
+     * This method returns the IfInErrors counter.
      *
-     * @returns A pointer to the Response value.
+     * @returns The IfInErrors counter
      *
      */
-    uint32_t GetIfInErrors(void) const { return mIfInErrors; }
+    uint32_t GetIfInErrors(void) const { return HostSwap32(mIfInErrors); }
 
     /**
-     * This method sets the Response value.
+     * This method sets the IfInErrors counter.
      *
-     * @param[in]  aResponse  A pointer to the Response value.
+     * @param[in]  aIfInErrors The IfInErrors counter
      *
      */
-    void SetIfInErrors(const uint32_t aIfInErrors) { mIfInErrors = aIfInErrors; }
+    void SetIfInErrors(const uint32_t aIfInErrors) { mIfInErrors = HostSwap32(aIfInErrors); }
 
     /**
-     * This method returns a pointer to the Response value.
+     * This method returns the IfOutErrors counter.
      *
-     * @returns A pointer to the Response value.
+     * @returns The IfOutErrors counter
      *
      */
-    uint32_t GetIfOutErrors(void) const { return mIfOutErrors; }
+    uint32_t GetIfOutErrors(void) const { return HostSwap32(mIfOutErrors); }
 
     /**
-     * This method sets the Response value.
+     * This method sets the IfOutErrors counter.
      *
-     * @param[in]  aResponse  A pointer to the Response value.
+     * @param[in]  aIfOutErrors The IfOutErrors counter.
      *
      */
-    void SetIfOutErrors(const uint32_t aIfOutErrors) { mIfOutErrors = aIfOutErrors; }
+    void SetIfOutErrors(const uint32_t aIfOutErrors) { mIfOutErrors = HostSwap32(aIfOutErrors); }
 
     /**
-     * This method returns a pointer to the Response value.
+     * This method returns the IfInUcastPkts counter.
      *
-     * @returns A pointer to the Response value.
+     * @returns The IfInUcastPkts counter
      *
      */
-    uint32_t GetIfInUcastPkts(void) const { return mIfInUcastPkts; }
+    uint32_t GetIfInUcastPkts(void) const { return HostSwap32(mIfInUcastPkts); }
 
     /**
-     * This method sets the Response value.
+     * This method sets the IfInUcastPkts counter.
      *
-     * @param[in]  aResponse  A pointer to the Response value.
+     * @param[in]  aIfInUcastPkts The IfInUcastPkts counter.
      *
      */
-    void SetIfInUcastPkts(const uint32_t aIfInUcastPkts) { mIfInUcastPkts = aIfInUcastPkts; }
+    void SetIfInUcastPkts(const uint32_t aIfInUcastPkts) { mIfInUcastPkts = HostSwap32(aIfInUcastPkts); }
+    /**
+     * This method returns the IfInBroadcastPkts counter.
+     *
+     * @returns The IfInBroadcastPkts counter
+     *
+     */
+    uint32_t GetIfInBroadcastPkts(void) const { return HostSwap32(mIfInBroadcastPkts); }
 
     /**
-     * This method returns a pointer to the Response value.
+     * This method sets the IfInBroadcastPkts counter.
      *
-     * @returns A pointer to the Response value.
+     * @param[in]  aIfInBroadcastPkts The IfInBroadcastPkts counter.
      *
      */
-    uint32_t GetIfInBroadcastPkts(void) const { return mIfInBroadcastPkts; }
+    void SetIfInBroadcastPkts(const uint32_t aIfInBroadcastPkts) { mIfInBroadcastPkts = HostSwap32(aIfInBroadcastPkts); }
 
     /**
-     * This method sets the Response value.
+     * This method returns the IfInDiscards counter.
      *
-     * @param[in]  aResponse  A pointer to the Response value.
+     * @returns The IfInDiscards counter
      *
      */
-    void SetIfInBroadcastPkts(const uint32_t aIfInBroadcastPkts) { mIfInBroadcastPkts = aIfInBroadcastPkts; }
+    uint32_t GetIfInDiscards(void) const { return HostSwap32(mIfInDiscards); }
 
     /**
-     * This method returns a pointer to the Response value.
+     * This method sets the IfInDiscards counter.
      *
-     * @returns A pointer to the Response value.
+     * @param[in]  aIfInDiscards The IfInDiscards counter.
      *
      */
-    uint32_t GetIfInDiscards(void) const { return mIfInDiscards; }
+    void SetIfInDiscards(const uint32_t aIfInDiscards) { mIfInDiscards = HostSwap32(aIfInDiscards); }
 
     /**
-     * This method sets the Response value.
+     * This method returns the IfOutUcastPkts counter.
      *
-     * @param[in]  aResponse  A pointer to the Response value.
+     * @returns The IfOutUcastPkts counter
      *
      */
-    void SetIfInDiscards(const uint32_t aIfInDiscards) { mIfInDiscards = aIfInDiscards; }
+    uint32_t GetIfOutUcastPkts(void) const { return HostSwap32(mIfOutUcastPkts); }
 
     /**
-     * This method returns a pointer to the Response value.
+     * This method sets the IfOutUcastPkts counter.
      *
-     * @returns A pointer to the Response value.
+     * @param[in]  aIfOutUcastPkts The IfOutUcastPkts counter.
      *
      */
-    uint32_t GetIfOutUcastPkts(void) const { return mIfOutUcastPkts; }
+    void SetIfOutUcastPkts(const uint32_t aIfOutUcastPkts) { mIfOutUcastPkts = HostSwap32(aIfOutUcastPkts); }
 
     /**
-     * This method sets the Response value.
+     * This method returns the IfOutBroadcastPkts counter.
      *
-     * @param[in]  aResponse  A pointer to the Response value.
+     * @returns The IfOutBroadcastPkts counter
      *
      */
-    void SetIfOutUcastPkts(const uint32_t aIfOutUcastPkts) { mIfOutUcastPkts = aIfOutUcastPkts; }
+    uint32_t GetIfOutBroadcastPkts(void) const { return HostSwap32(mIfOutBroadcastPkts); }
 
     /**
-     * This method returns a pointer to the Response value.
+     * This method sets the IfOutBroadcastPkts counter.
      *
-     * @returns A pointer to the Response value.
+     * @param[in]  aIfOutBroadcastPkts The IfOutBroadcastPkts counter.
      *
      */
-    uint32_t GetIfOutBroadcastPkts(void) const { return mIfOutBroadcastPkts; }
+    void SetIfOutBroadcastPkts(const uint32_t aIfOutBroadcastPkts) { mIfOutBroadcastPkts = HostSwap32(aIfOutBroadcastPkts); }
 
     /**
-     * This method sets the Response value.
+     * This method returns the IfOutDiscards counter.
      *
-     * @param[in]  aResponse  A pointer to the Response value.
+     * @returns The IfOutDiscards counter
      *
      */
-    void SetIfOutBroadcastPkts(const uint32_t aIfOutBroadcastPkts) { mIfOutBroadcastPkts = aIfOutBroadcastPkts; }
+    uint32_t GetIfOutDiscards(void) const { return HostSwap32(mIfOutDiscards); }
 
     /**
-     * This method returns a pointer to the Response value.
+     * This method sets the IfOutDiscards counter.
      *
-     * @returns A pointer to the Response value.
-     *
-     */
-    uint32_t GetIfOutDiscards(void) const { return mIfOutDiscards; }
-
-    /**
-     * This method sets the Response value.
-     *
-     * @param[in]  aResponse  A pointer to the Response value.
+     * @param[in]  aIfOutDiscards The IfOutDiscards counter.
      *
      */
-    void SetIfOutDiscards(const uint32_t aIfOutDiscards) { mIfOutDiscards = aIfOutDiscards; }
+    void SetIfOutDiscards(const uint32_t aIfOutDiscards) { mIfOutDiscards = HostSwap32(aIfOutDiscards); }
 
 private:
     uint32_t mIfInUnknownProtos;
@@ -1168,49 +1151,55 @@ class ChildTableEntry
 {
 public:
     /**
-     * This method returns the Version value.
+     * This method returns the Timeout value.
      *
-     * @returns The Version value.
-     *
-     */
-    uint8_t GetTimeout(void) const { return mTimeout; }
-
-    /**
-     * This method sets the Version value.
-     *
-     * @param[in]  aVersion  The Version value.
+     * @returns The Timeout value.
      *
      */
-    void SetTimeout(uint8_t aTimeout) { mTimeout = aTimeout; }
+    uint8_t GetTimeout(void) const { return (HostSwap16(mTimeoutRsvChildId) & kTimeoutMask) >> kTimeoutOffset; }
 
     /**
-     * This method returns the Version value.
+     * This method sets the Timeout value.
      *
-     * @returns The Version value.
+     * @param[in]  aTimeout  The Timeout value.
      *
      */
-    uint16_t GetChildId(void) const { return mChildId; }
+    void SetTimeout(uint8_t aTimeout) {
+        mTimeoutRsvChildId = HostSwap16((HostSwap16(mTimeoutRsvChildId) & ~kTimeoutMask) |
+                                        ((aTimeout << kTimeoutOffset) & kTimeoutMask));
+    }
 
     /**
-     * This method sets the Version value.
+     * This method returns the Child ID value.
      *
-     * @param[in]  aVersion  The Version value.
+     * @returns The Child ID value.
      *
      */
-    void SetChildId(uint16_t aChildId) { mChildId = aChildId; }
+    uint16_t GetChildId(void) const { return HostSwap16(mTimeoutRsvChildId) & kChildIdMask; }
 
     /**
-     * This method returns the Version value.
+     * This method sets the Child ID value.
      *
-     * @returns The Version value.
+     * @param[in]  aChildId  The Child ID value.
+     *
+     */
+    void SetChildId(uint16_t aChildId) {
+        mTimeoutRsvChildId = HostSwap16((HostSwap16(mTimeoutRsvChildId) & ~kChildIdMask) |
+                                        (aChildId & kChildIdMask));
+    }
+
+    /**
+     * This method returns the Mode value.
+     *
+     * @returns The Mode value.
      *
      */
     uint8_t GetMode(void) const { return mMode; }
 
     /**
-     * This method sets the Version value.
+     * This method sets the Mode value.
      *
-     * @param[in]  aVersion  The Version value.
+     * @param[in]  aMode  The Mode value.
      *
      */
     void SetMode(uint8_t aMode) { mMode = aMode; }
@@ -1221,7 +1210,7 @@ public:
      * @returns The Reserved value.
      *
      */
-    uint8_t GetReserved(void) const { return mReserved; }
+    uint8_t GetReserved(void) const { return (HostSwap16(mTimeoutRsvChildId) & kReservedMask) >> kReservedOffset; }
 
     /**
      * This method sets the Reserved value.
@@ -1229,16 +1218,24 @@ public:
      * @param[in]  aReserved  The Reserved value.
      *
      */
-    void SetReserved(uint8_t aReserved) { mReserved = aReserved; }
-
+    void SetReserved(uint8_t aReserved) {
+        mTimeoutRsvChildId = HostSwap16((HostSwap16(mTimeoutRsvChildId) & ~kReservedMask) |
+                                        ((aReserved << kReservedOffset) & kReservedMask));
+    }
 
 private:
-    uint8_t mTimeout: 5;
-    uint8_t mReserved: 2;
-    uint16_t mChildId: 9;
-    uint8_t mMode: 8;
-} OT_TOOL_PACKED_END;
+    enum
+    {
+        kTimeoutMask = 0xF800,
+        kTimeoutOffset = 11,
+        kReservedMask = 0x0600,
+        kReservedOffset = 9,
+        kChildIdMask = 0x1ff
+    };
 
+    uint16_t mTimeoutRsvChildId;
+    uint8_t mMode;
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Child Table TLV generation and parsing.
@@ -1263,7 +1260,7 @@ public:
      */
     bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
 
-    uint8_t GetNumEntries() const { return GetLength() / sizeof(ChildTableEntry); }
+    uint8_t GetNumEntries(void) const { return GetLength() / sizeof(ChildTableEntry); }
 
     ChildTableEntry &GetEntry(uint8_t i) {
         return mChildTableEntry[i];
@@ -1297,11 +1294,43 @@ public:
      */
     bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
 
-    uint8_t *GetChannelPages() { return mChannelPages; }
+    uint8_t *GetChannelPages(void) { return mChannelPages; }
 
 private:
     uint8_t mChannelPages[1];
 } OT_TOOL_PACKED_END;
+
+/**
+ * This class implements IPv6 Address List TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class TypeListTlv: public NetworkDiagnosticTlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void) { SetType(kTypeList); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv)); }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() <= OT_NETWORK_DIAGNOSTIC_TYPELIST_MAX_ENTRIES; }
+
+    /**
+     * This method returns a pointer to the Challenge value.
+     *
+     * @returns A pointer to the Challenge value.
+     *
+     */
+} OT_TOOL_PACKED_END;
+
 /**
  * @}
  *

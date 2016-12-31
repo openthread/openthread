@@ -36,7 +36,7 @@ certutil -addstore TrustedPublisher otLwf.cer
 
 cd otLwf
 
-REM Install the NDSI LWF driver, otLwf.sys
+REM Install the NDIS LWF driver, otLwf.sys
 
 netcfg.exe -v -l otlwf.inf -c s -i otLwf
 

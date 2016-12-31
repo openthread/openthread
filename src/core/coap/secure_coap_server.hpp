@@ -120,6 +120,9 @@ private:
 
     static void Receive(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
+    static void HandleDtlsConnected(void *aContext, bool aConnected);
+    void HandleDtlsConnected(bool aConnected);
+
     static void HandleDtlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength);
     void HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength);
 

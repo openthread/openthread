@@ -55,12 +55,12 @@ Dhcp6Client::Dhcp6Client(ThreadNetif &aThreadNetif) :
     mSocket(aThreadNetif.GetIp6().mUdp),
     mMle(aThreadNetif.GetMle()),
     mMac(aThreadNetif.GetMac()),
-    mNetif(aThreadNetif)
+    mNetif(aThreadNetif),
+    mStartTime(0),
+    mAddresses(NULL),
+    mNumAddresses(0)
 {
-    for (uint8_t i = 0; i < OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES; i++)
-    {
-        memset(&(mIdentityAssociations[i]), 0, sizeof(IdentityAssociation));
-    }
+    memset(mIdentityAssociations, 0, sizeof(IdentityAssociation));
 
     for (uint8_t i = 0; i < (OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES - 1); i++)
     {
@@ -257,7 +257,7 @@ exit:
     {}
 }
 
-ThreadError Dhcp6Client::Start()
+ThreadError Dhcp6Client::Start(void)
 {
     Ip6::SockAddr sockaddr;
 
@@ -270,7 +270,7 @@ ThreadError Dhcp6Client::Start()
     return kThreadError_None;
 }
 
-ThreadError Dhcp6Client::Stop()
+ThreadError Dhcp6Client::Stop(void)
 {
     mSocket.Close();
     return kThreadError_None;
@@ -618,8 +618,9 @@ ThreadError Dhcp6Client::ProcessIaNa(Message &aMessage, uint16_t aOffset)
     VerifyOrExit(aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option), error = kThreadError_Parse);
 
     aOffset += sizeof(option);
+    length = option.GetLength() - (sizeof(option) - sizeof(Dhcp6Option));
 
-    length = option.GetLength();
+    VerifyOrExit(length <= aMessage.GetLength() - aOffset, error = kThreadError_Parse);
 
     if ((optionOffset = FindOption(aMessage, aOffset, length, kOptionStatusCode)) > 0)
     {

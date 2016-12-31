@@ -54,6 +54,10 @@ using Thread::Encoding::BigEndian::HostSwap32;
 namespace Thread {
 
 AnnounceBeginServer::AnnounceBeginServer(ThreadNetif &aThreadNetif) :
+    mChannelMask(0),
+    mPeriod(0),
+    mCount(0),
+    mChannel(0),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, &AnnounceBeginServer::HandleTimer, this),
     mAnnounceBegin(OPENTHREAD_URI_ANNOUNCE_BEGIN, &AnnounceBeginServer::HandleRequest, this),
     mCoapServer(aThreadNetif.GetCoapServer()),

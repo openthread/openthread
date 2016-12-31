@@ -299,7 +299,15 @@ public:
     ThreadError SetPreferredRouterId(uint8_t aRouterId);
 
     /**
-     * This method sets the Router Id from the stored network information.
+     * This method sets the Partition Id which the device joins successfully.
+     *
+     * @param[in]  aPartitionId   The Partition Id.
+     *
+     */
+    void SetPreviousPartitionId(uint32_t aPartitionId);
+
+    /**
+     * This method sets the Router Id.
      *
      * @param[in]  aRouterId   The Router Id.
      *
@@ -658,6 +666,15 @@ public:
     ThreadError CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6::Header &aIp6Header);
 
     /**
+     * This method resolves 2-hop routing loops.
+     *
+     * @param[in]  aSourceMac   The RLOC16 of the previous hop.
+     * @param[in]  aDestRloc16  The RLOC16 of the final destination.
+     *
+     */
+    void ResolveRoutingLoops(uint16_t aSourceMac, uint16_t aDestRloc16);
+
+    /**
      * This method checks if a given Router ID has correct value.
      *
      * @param[in]  aRouterId  The Router ID value.
@@ -749,8 +766,9 @@ private:
     void UpdateRoutes(const RouteTlv &aTlv, uint8_t aRouterId);
 
     static void HandleAddressSolicitResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                             ThreadError result);
-    void HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMessage, ThreadError result);
+                                             const otMessageInfo *aMessageInfo, ThreadError result);
+    void HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMessage,
+                                      const Ip6::MessageInfo *aMessageInfo, ThreadError result);
     static void HandleAddressRelease(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
                                      const otMessageInfo *aMessageInfo);
     void HandleAddressRelease(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -764,6 +782,8 @@ private:
     Child *FindChild(uint16_t aChildId);
     Child *FindChild(const Mac::ExtAddress &aMacAddr);
 
+    bool HasChildren(void);
+    void RemoveChildren(void);
     bool HasMinDowngradeNeighborRouters(void);
     bool HasOneNeighborwithComparableConnectivity(const RouteTlv &aRoute, uint8_t aRouterId);
     bool HasSmallNumberOfChildren(void);
@@ -812,6 +832,7 @@ private:
 
     uint8_t mRouterId;
     uint8_t mPreviousRouterId;
+    uint32_t mPreviousPartitionId;
 
     Coap::Server &mCoapServer;
     Coap::Client &mCoapClient;

@@ -43,6 +43,7 @@
 #include <platform/radio.h>
 #include <thread/key_manager.hpp>
 #include <thread/topology.hpp>
+#include <thread/network_diagnostic_tlvs.hpp>
 
 namespace Thread {
 
@@ -493,6 +494,20 @@ public:
     void SetPromiscuous(bool aPromiscuous);
 
     /**
+     * This function fills network diagnostic MacCounterTlv.
+     *
+     * @param[in]  aMacCountersTlv The reference to the network diagnostic MacCounterTlv.
+     *
+     */
+    void FillMacCountersTlv(NetworkDiagnostic::MacCountersTlv &aMacCounters) const;
+
+    /**
+     * This function resets mac counters
+     *
+     */
+    void ResetCounters(void);
+
+    /**
      * This method returns the MAC counter.
      *
      * @returns A reference to the MAC counter.
@@ -542,7 +557,7 @@ public:
      * This function emptys the source match table.
      *
      */
-    void ClearSrcMatchEntries();
+    void ClearSrcMatchEntries(void);
 
     /**
      * This function indicates whether or not transmit retries and CSMA backoff logic is supported by the radio layer.

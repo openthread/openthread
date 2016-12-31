@@ -172,12 +172,20 @@ public:
     /**
      * This method returns a pointer to the Commissioning Data.
      *
-     * @param[out]  aLength  The length of the Commissioning Data in bytes.
-     *
      * @returns A pointer to the Commissioning Data or NULL if no Commissioning Data exists.
      *
      */
-    uint8_t *GetCommissioningData(uint8_t &aLength);
+    NetworkDataTlv *GetCommissioningData(void);
+
+    /**
+     * This method returns a pointer to the Commissioning Data Sub-TLV.
+     *
+     * @param[in]  aType  The TLV type value.
+     *
+     * @returns A pointer to the Commissioning Data Sub-TLV or NULL if no Sub-TLV exists.
+     *
+     */
+    MeshCoP::Tlv *GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aType);
 
     /**
      * This method adds Commissioning Data to the Thread Network Data.

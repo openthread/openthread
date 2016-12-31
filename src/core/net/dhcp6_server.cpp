@@ -64,7 +64,7 @@ Dhcp6Server::Dhcp6Server(ThreadNetif &aThreadNetif):
     mPrefixAgentsMask = 0;
 }
 
-ThreadError Dhcp6Server::UpdateService()
+ThreadError Dhcp6Server::UpdateService(void)
 {
     ThreadError error = kThreadError_None;
     bool found;
@@ -185,7 +185,7 @@ exit:
     return error;
 }
 
-ThreadError Dhcp6Server::Start()
+ThreadError Dhcp6Server::Start(void)
 {
     Ip6::SockAddr sockaddr;
     sockaddr.mPort = kDhcpServerPort;
@@ -195,7 +195,7 @@ ThreadError Dhcp6Server::Start()
     return kThreadError_None;
 }
 
-ThreadError Dhcp6Server::Stop()
+ThreadError Dhcp6Server::Stop(void)
 {
     mSocket.Close();
     return kThreadError_None;
@@ -359,6 +359,8 @@ ThreadError Dhcp6Server::ProcessIaNa(Message &aMessage, uint16_t aOffset, IaNa &
 
     aOffset += sizeof(aIaNa);
     length = aIaNa.GetLength() + sizeof(Dhcp6Option) - sizeof(IaNa);
+
+    VerifyOrExit(length <= aMessage.GetLength() - aOffset, error = kThreadError_Parse);
 
     mPrefixAgentsMask = 0;
 

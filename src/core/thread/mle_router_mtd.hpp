@@ -69,6 +69,7 @@ public:
     void SetLeaderPartitionId(uint32_t) { }
 
     ThreadError SetPreferredRouterId(uint8_t) { return kThreadError_NotImplemented; }
+    void SetPreviousPartitionId(uint32_t) { }
     void SetRouterId(uint8_t) { }
 
     uint16_t GetNextHop(uint16_t aDestination) const { return Mle::GetNextHop(aDestination); }
@@ -133,6 +134,8 @@ public:
     ThreadError GetRouterInfo(uint16_t, otRouterInfo &) { return kThreadError_NotImplemented; }
 
     static int ComparePartitions(bool, const LeaderDataTlv &, bool, const LeaderDataTlv &) { return 0; }
+
+    void ResolveRoutingLoops(uint16_t, uint16_t) { }
 
     ThreadError CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6::Header &aIp6Header) {
         return Mle::CheckReachability(aMeshSource, aMeshDest, aIp6Header);

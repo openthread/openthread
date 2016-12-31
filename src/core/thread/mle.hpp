@@ -1263,6 +1263,7 @@ private:
         uint32_t             mKeySequence;                ///< Key Sequence
         uint32_t             mMleFrameCounter;            ///< MLE Frame Counter
         uint32_t             mMacFrameCounter;            ///< MAC Frame Counter
+        uint32_t             mPreviousPartitionId;        ///< PartitionId
         Mac::ExtAddress      mExtAddress;                 ///< Extended Address
     } NetworkInfo;
 

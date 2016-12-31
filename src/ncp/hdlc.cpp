@@ -49,8 +49,11 @@ static uint16_t UpdateFcs(uint16_t aFcs, uint8_t aByte);
 
 enum
 {
+    kFlagXOn        = 0x11,
+    kFlagXOff       = 0x13,
     kFlagSequence   = 0x7e,  ///< HDLC Flag value
     kEscapeSequence = 0x7d,  ///< HDLC Escape value
+    kFlagSpecial    = 0xf8,
 };
 
 /**
@@ -103,6 +106,21 @@ uint16_t UpdateFcs(uint16_t aFcs, uint8_t aByte)
     return (aFcs >> 8) ^ sFcsTable[(aFcs ^ aByte) & 0xff];
 }
 
+bool HdlcByteNeedsEscape(uint8_t aByte)
+{
+    switch (aByte)
+    {
+    case kFlagXOn:
+    case kFlagXOff:
+    case kEscapeSequence:
+    case kFlagSequence:
+    case kFlagSpecial:
+        return true;
+
+    default:
+        return false;
+    }
+}
 
 Encoder::BufferWriteIterator::BufferWriteIterator(void)
 {
@@ -128,6 +146,11 @@ bool Encoder::BufferWriteIterator::CanWrite(uint16_t aWriteLength) const
    return (mRemainingLength >= aWriteLength);
 }
 
+Encoder::Encoder(void):
+    mFcs(0)
+{
+}
+
 ThreadError Encoder::Init(BufferWriteIterator &aIterator)
 {
     mFcs = kInitFcs;
@@ -139,7 +162,7 @@ ThreadError Encoder::Encode(uint8_t aInByte, BufferWriteIterator &aIterator)
 {
     ThreadError error = kThreadError_None;
 
-    if (aInByte == kFlagSequence || aInByte == kEscapeSequence)
+    if (HdlcByteNeedsEscape(aInByte))
     {
         VerifyOrExit(aIterator.CanWrite(2) , error = kThreadError_NoBufs);
 
@@ -202,15 +225,16 @@ exit:
     return error;
 }
 
-Decoder::Decoder(uint8_t *aOutBuf, uint16_t aOutLength, FrameHandler aFrameHandler, ErrorHandler aErrorHandler, void *aContext)
+Decoder::Decoder(uint8_t *aOutBuf, uint16_t aOutLength, FrameHandler aFrameHandler, ErrorHandler aErrorHandler, void *aContext):
+    mState(kStateNoSync),
+    mFrameHandler(aFrameHandler),
+    mErrorHandler(aErrorHandler),
+    mContext(aContext),
+    mOutBuf(aOutBuf),
+    mOutOffset(0),
+    mOutLength(aOutLength),
+    mFcs(0)
 {
-    mState = kStateNoSync;
-    mFrameHandler = aFrameHandler;
-    mErrorHandler = aErrorHandler;
-    mContext = aContext;
-    mOutBuf = aOutBuf;
-    mOutOffset = 0;
-    mOutLength = aOutLength;
 }
 
 void Decoder::Decode(const uint8_t *aInBuf, uint16_t aInLength)

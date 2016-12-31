@@ -59,12 +59,6 @@
         %(AdditionalLibraryDirectories);
         $(VCInstallDir)UnitTest\lib;
         </AdditionalLibraryDirectories>
-      <AdditionalDependencies>
-        %(AdditionalDependencies);
-        ..\..\build\bin\$(Platform)\$(Configuration)\lib\libopenthread.lib;
-        ..\..\build\bin\$(Platform)\$(Configuration)\lib\libopenthread-ncp-uart.lib;
-        ..\..\build\bin\$(Platform)\$(Configuration)\lib\mbedtls.lib;
-      </AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -75,9 +69,12 @@
     <ClCompile Include="..\..\tests\unit\test_lowpan.cpp" />
     <ClCompile Include="..\..\tests\unit\test_mac_frame.cpp" />
     <ClCompile Include="..\..\tests\unit\test_message.cpp" />
+    <ClCompile Include="..\..\tests\unit\test_message_queue.cpp" />
     <ClCompile Include="..\..\tests\unit\test_ncp_buffer.cpp" />
     <ClCompile Include="..\..\tests\unit\test_platform.cpp" />
+    <ClCompile Include="..\..\tests\unit\test_priority_queue.cpp" />
     <ClCompile Include="..\..\tests\unit\test_timer.cpp" />
+    <ClCompile Include="..\..\tests\unit\test_toolchain_c.c" />
     <ClCompile Include="..\..\tests\unit\test_toolchain.cpp" />
     <ClCompile Include="..\..\tests\unit\test_util.cpp" />
     <ClCompile Include="..\..\tests\unit\test_windows.cpp" />

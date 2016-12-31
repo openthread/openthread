@@ -42,6 +42,8 @@ install:
     - cmd: reg import .appveyor\ThreadEtw.reg
     - ps: Restart-Computer -Force
     - ps: Start-Sleep -s 10
+before_build:
+    - cmd: ren "C:\Program Files (x86)\Windows Kits\10\include\00wdf" "wdf"
 build:
   project: etc/visual-studio/openthread.sln
   verbosity: minimal

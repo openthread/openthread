@@ -50,7 +50,7 @@ Client::Client(Ip6::Netif &aNetif, SenderFunction aSender, ReceiverFunction aRec
     mMessageId = static_cast<uint16_t>(otPlatRandomGet());
 }
 
-ThreadError Client::Start()
+ThreadError Client::Start(void)
 {
     Ip6::SockAddr addr;
     addr.mPort = static_cast<Ip6::Udp *>(mSocket.mTransport)->GetEphemeralPort();
@@ -58,7 +58,7 @@ ThreadError Client::Start()
     return CoapBase::Start(addr);
 }
 
-ThreadError Client::Stop()
+ThreadError Client::Stop(void)
 {
     Message *message = mPendingRequests.GetHead();
     Message *messageToRemove;
@@ -71,7 +71,7 @@ ThreadError Client::Stop()
         message = message->GetNext();
 
         requestMetadata.ReadFrom(*messageToRemove);
-        FinalizeCoapTransaction(*messageToRemove, requestMetadata, NULL, NULL, kThreadError_Abort);
+        FinalizeCoapTransaction(*messageToRemove, requestMetadata, NULL, NULL, NULL, kThreadError_Abort);
     }
 
     return CoapBase::Stop();
@@ -279,6 +279,7 @@ void Client::HandleRetransmissionTimer(void)
             {
                 messageInfo.SetPeerAddr(requestMetadata.mDestinationAddress);
                 messageInfo.SetPeerPort(requestMetadata.mDestinationPort);
+                messageInfo.SetSockAddr(requestMetadata.mSourceAddress);
 
                 SendCopy(*message, messageInfo);
             }
@@ -286,7 +287,7 @@ void Client::HandleRetransmissionTimer(void)
         else
         {
             // No expected response or acknowledgment.
-            FinalizeCoapTransaction(*message, requestMetadata, NULL, NULL, kThreadError_ResponseTimeout);
+            FinalizeCoapTransaction(*message, requestMetadata, NULL, NULL, NULL, kThreadError_ResponseTimeout);
         }
 
         message = nextMessage;
@@ -343,14 +344,15 @@ exit:
 }
 
 void Client::FinalizeCoapTransaction(Message &aRequest, const RequestMetadata &aRequestMetadata,
-                                     Header *aResponseHeader, Message *aResponse, ThreadError aResult)
+                                     Header *aResponseHeader, Message *aResponse,
+                                     const Ip6::MessageInfo *aMessageInfo, ThreadError aResult)
 {
     DequeueMessage(aRequest);
 
     if (aRequestMetadata.mResponseHandler != NULL)
     {
         aRequestMetadata.mResponseHandler(aRequestMetadata.mResponseContext, aResponseHeader,
-                                          aResponse, aResult);
+                                          aResponse, aMessageInfo, aResult);
     }
 }
 
@@ -377,7 +379,7 @@ void Client::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &a
     case kCoapTypeReset:
         if (responseHeader.IsEmpty())
         {
-            FinalizeCoapTransaction(*message, requestMetadata, NULL, NULL, kThreadError_Abort);
+            FinalizeCoapTransaction(*message, requestMetadata, NULL, NULL, NULL, kThreadError_Abort);
         }
 
         // Silently ignore non-empty reset messages (RFC 7252, p. 4.2).
@@ -402,7 +404,7 @@ void Client::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &a
         else if (responseHeader.IsResponse() && responseHeader.IsTokenEqual(requestHeader))
         {
             // Piggybacked response.
-            FinalizeCoapTransaction(*message, requestMetadata, &responseHeader, &aMessage, kThreadError_None);
+            FinalizeCoapTransaction(*message, requestMetadata, &responseHeader, &aMessage, &aMessageInfo, kThreadError_None);
         }
 
         // Silently ignore acknowledgments carrying requests (RFC 7252, p. 4.2)
@@ -417,7 +419,7 @@ void Client::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &a
             SendEmptyAck(aMessageInfo.GetPeerAddr(), aMessageInfo.GetPeerPort(), responseHeader.GetMessageId());
         }
 
-        FinalizeCoapTransaction(*message, requestMetadata, &responseHeader, &aMessage, kThreadError_None);
+        FinalizeCoapTransaction(*message, requestMetadata, &responseHeader, &aMessage, &aMessageInfo, kThreadError_None);
 
         break;
     }
@@ -437,6 +439,7 @@ exit:
 RequestMetadata::RequestMetadata(bool aConfirmable, const Ip6::MessageInfo &aMessageInfo,
                                  otCoapResponseHandler aHandler, void *aContext)
 {
+    mSourceAddress = aMessageInfo.GetSockAddr();
     mDestinationPort = aMessageInfo.GetPeerPort();
     mDestinationAddress = aMessageInfo.GetPeerAddr();
     mResponseHandler = aHandler;

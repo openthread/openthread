@@ -128,7 +128,7 @@ OTAPI const char *OTCALL otGetVersionString(void);
  * @sa otApiFinalize
  *
  */
-OTAPI otApiInstance *OTCALL otApiInit();
+OTAPI otApiInstance *OTCALL otApiInit(void);
 
 /**
  * This function uninitializes the OpenThread library.
@@ -432,6 +432,19 @@ OTAPI ThreadError OTCALL otDiscover(otInstance *aInstance, uint32_t aScanChannel
  *
  */
 OTAPI bool OTCALL otIsDiscoverInProgress(otInstance *aInstance);
+
+/**
+ * This function enqueues an IEEE 802.15.4 Data Request message for transmission.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ *
+ * @retval kThreadError_None          Successfully enqueued an IEEE 802.15.4 Data Request message.
+ * @retval kThreadError_Already       An IEEE 802.15.4 Data Request message is already enqueued.
+ * @retval kThreadError_InvalidState  Device is not in rx-off-when-idle mode.
+ * @retval kThreadError_NoBufs        Insufficient message buffers available.
+ *
+ */
+OTAPI ThreadError OTCALL otSendMacDataRequest(otInstance *aInstance);
 
 /**
  * @}
@@ -857,135 +870,6 @@ OTAPI ThreadError OTCALL otAddUnicastAddress(otInstance *aInstance, const otNeti
  * @retval kThreadError_NotFound     The IP Address indicated by @p aAddress was not found.
  */
 OTAPI ThreadError OTCALL otRemoveUnicastAddress(otInstance *aInstance, const otIp6Address *aAddress);
-
-/**
- * Get the list of IPv6 multicast addresses subscribed to the Thread interface.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- *
- * @returns A pointer to the first Network Interface Multicast Address.
- */
-const otNetifMulticastAddress *otGetMulticastAddresses(otInstance *aInstance);
-
-/**
- * Subscribe the Thread interface to a Network Interface Multicast Address.
- *
- * The passed in instance @p aAddress will be copied by the Thread interface. The Thread interface only
- * supports a fixed number of externally added multicast addresses. See OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aAddress  A pointer to an IP Address.
- *
- * @retval kThreadErrorNone          Successfully subscribed to the Network Interface Multicast Address.
- * @retval kThreadError_InvalidArgs  The IP Address indicated by @p aAddress is invalid address.
- * @retval kThreadError_NoBufs       The Network Interface is already storing the maximum allowed external multicast addresses.
- */
-ThreadError otSubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress);
-
-/**
- * Unsubscribe the Thread interface to a Network Interface Multicast Address.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aAddress  A pointer to an IP Address.
- *
- * @retval kThreadErrorNone          Successfully unsubscribed to the Network Interface Multicast Address.
- * @retval kThreadError_InvalidArgs  The IP Address indicated by @p aAddress is an internal address.
- * @retval kThreadError_NotFound     The IP Address indicated by @p aAddress was not found.
- */
-ThreadError otUnsubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress);
-
-/**
- * Check if multicast promiscuous mode is enabled on the Thread interface.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- *
- * @sa otEnableMulticastPromiscuousMode
- * @sa otDisableMulticastPromiscuousMode
- */
-bool otIsMulticastPromiscuousModeEnabled(otInstance *aInstance);
-
-/**
- * Enable multicast promiscuous mode on the Thread interface.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- *
- * @sa otIsMulticastPromiscuousModeEnabled
- * @sa otDisableMulticastPromiscuousMode
- */
-void otEnableMulticastPromiscuousMode(otInstance *aInstance);
-
-/**
- * Disable multicast promiscuous mode on the Thread interface.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- *
- * @sa otIsMulticastPromiscuousModeEnabled
- * @sa otEnableMulticastPromiscuousMode
- */
-void otDisableMulticastPromiscuousMode(otInstance *aInstance);
-
-/**
- * This function pointer is called to create IPv6 IID during SLAAC procedure.
- *
- * @param[in]     aInstance  A pointer to an OpenThread instance.
- * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
- * @param[inout]  aContext   A pointer to creator-specific context.
- *
- * @retval kThreadError_None                        Created valid IID for given IPv6 address.
- * @retval kThreadError_Ipv6AddressCreationFailure  Creation of valid IID for given IPv6 address failed.
- *
- */
-typedef ThreadError(*otSlaacIidCreate)(otInstance *aInstance, otNetifAddress *aAddress, void *aContext);
-
-/**
- * Update all automatically created IPv6 addresses for prefixes from current Network Data with SLAAC procedure.
- *
- * @param[in]     aInstance      A pointer to an OpenThread instance.
- * @param[inout]  aAddresses     A pointer to an array of automatically created IPv6 addresses.
- * @param[in]     aNumAddresses  The number of slots in aAddresses array.
- * @param[in]     aIidCreate     A pointer to a function that is called to create IPv6 IIDs.
- * @param[in]     aContext       A pointer to data passed to aIidCreate function.
- *
- */
-void otSlaacUpdate(otInstance *aInstance, otNetifAddress *aAddresses, uint32_t aNumAddresses,
-                   otSlaacIidCreate aIidCreate, void *aContext);
-
-/**
- * Create random IID for given IPv6 address.
- *
- * @param[in]     aInstance  A pointer to an OpenThread instance.
- * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
- * @param[in]     aContext   A pointer to unused data.
- *
- * @retval kThreadError_None  Created valid IID for given IPv6 address.
- *
- */
-ThreadError otCreateRandomIid(otInstance *aInstance, otNetifAddress *aAddresses, void *aContext);
-
-/**
- * Create IID for given IPv6 address using extended MAC address.
- *
- * @param[in]     aInstance  A pointer to an OpenThread instance.
- * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
- * @param[in]     aContext   A pointer to unused data.
- *
- * @retval kThreadError_None  Created valid IID for given IPv6 address.
- *
- */
-ThreadError otCreateMacIid(otInstance *aInstance, otNetifAddress *aAddresses, void *aContext);
-
-/**
- * Create semantically opaque IID for given IPv6 address.
- *
- * @param[in]     aInstance  A pointer to an OpenThread instance.
- * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
- * @param[inout]  aContext   A pointer to a otSemanticallyOpaqueIidGeneratorData structure.
- *
- * @retval kThreadError_None                        Created valid IID for given IPv6 address.
- * @retval kThreadError_Ipv6AddressCreationFailure  Could not create valid IID for given IPv6 address.
- *
- */
-ThreadError otCreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddress *aAddresses, void *aContext);
 
 /**
  * This function pointer is called to notify certain configuration or state changes within OpenThread.
@@ -1802,7 +1686,7 @@ OTAPI void OTCALL otPlatformReset(otInstance *aInstance);
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  */
-void otFactoryReset(otInstance *aInstance);
+OTAPI void OTCALL otFactoryReset(otInstance *aInstance);
 
 /**
  * Get the ROUTER_DOWNGRADE_THRESHOLD parameter used in the Router role.
@@ -2024,6 +1908,29 @@ OTAPI ThreadError OTCALL otGetParentInfo(otInstance *aInstance, otRouterInfo *aP
 OTAPI uint8_t OTCALL otGetStableNetworkDataVersion(otInstance *aInstance);
 
 /**
+ * This function pointer is called when an DIAG_GET.rsp is received.
+ *
+ * @param[in]  aMessage      A pointer to the message buffer containing the received DIAG_GET.rsp payload.
+ * @param[in]  aMessageInfo  A pointer to the message info for @p aMessage.
+ * @param[in]  aContext      A pointer to application-specific context.
+ *
+ */
+typedef void (*otReceiveDiagnosticGetCallback)(otMessage aMessage, const otMessageInfo *aMessageInfo,
+                                               void *aContext);
+
+/**
+ * This function registers a callback to provide received raw DIAG_GET.rsp payload.
+ *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[in]  aCallback         A pointer to a function that is called when an DIAG_GET.rsp is received or
+ *                               NULL to disable the callback.
+ * @param[in]  aCallbackContext  A pointer to application-specific context.
+ *
+ */
+void otSetReceiveDiagnosticGetCallback(otInstance *aInstance, otReceiveDiagnosticGetCallback aCallback,
+                                       void *aCallbackContext);
+
+/**
  * Send a Network Diagnostic Get request
  *
  * @param[in]  aDestination   A pointer to destination address.
@@ -2099,6 +2006,16 @@ OTAPI ThreadError OTCALL otIp6AddressFromString(const char *aString, otIp6Addres
  *
  */
 OTAPI uint8_t OTCALL otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond);
+
+/**
+ * This function converts a ThreadError enum into a string.
+ *
+ * @param[in]  aError     A ThreadError enum.
+ *
+ * @returns  A string representation of a ThreadError.
+ *
+ */
+OTAPI const char *OTCALL otThreadErrorToString(ThreadError aError);
 
 #ifdef __cplusplus
 }  // extern "C"

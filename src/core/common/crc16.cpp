@@ -43,7 +43,7 @@ Crc16::Crc16(Polynomial aPolynomial)
 
 void Crc16::Init(void)
 {
-    mCrc = 0xffff;
+    mCrc = 0;
 }
 
 void Crc16::Update(uint8_t aByte)

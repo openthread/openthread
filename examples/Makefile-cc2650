@@ -59,10 +59,6 @@ configure_OPTIONS               = \
     MBEDTLS_CPPFLAGS="$(CC2650_MBEDTLS_CPPFLAGS)" \
     $(NULL)
 
-ifeq ($(CLI_LOGGING),1)
-configure_OPTIONS              += --enable-cli-logging
-endif
-
 ifeq ($(CERT_LOG),1)
 configure_OPTIONS              += --enable-cert-log
 endif
@@ -76,9 +72,6 @@ COMMONCFLAGS                   := \
     -ffunction-sections           \
     -Os                           \
     -g                            \
-    -Wall                         \
-    -Wextra                       \
-    -Werror                       \
     $(NULL)
 
 CPPFLAGS                       += \

@@ -35,7 +35,7 @@ using namespace std;
 
 // The maximum time we will wait for an overlapped result. Essentially, the maximum
 // amount of time each synchronous IOCTL should take.
-const DWORD c_MaxOverlappedWaitTimeMS = 10 * 1000;
+const DWORD c_MaxOverlappedWaitTimeMS = 5 * 1000;
 
 // Version string returned by the API
 const char c_Version[] = "Windows"; // TODO - What should we really put here?
@@ -1317,6 +1317,18 @@ otIsDiscoverInProgress(
 }
 
 OTAPI 
+ThreadError
+OTCALL
+otSendMacDataRequest(
+    _In_ otInstance *aInstance
+    )
+{
+    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    UNREFERENCED_PARAMETER(aInstance);
+    return kThreadError_NotImplemented; // TODO
+}
+
+OTAPI 
 uint8_t 
 OTCALL
 otGetChannel(
@@ -2144,6 +2156,7 @@ otSendActiveGet(
     if (aTlvTypes == nullptr && aLength != 0) return kThreadError_InvalidArgs;
     
     DWORD BufferSize = sizeof(GUID) + sizeof(uint8_t) + aLength;
+    if (aAddress) BufferSize += sizeof(otIp6Address);
     PBYTE Buffer = (PBYTE)malloc(BufferSize);
     if (Buffer == nullptr) return kThreadError_NoBufs;
 
@@ -2151,9 +2164,8 @@ otSendActiveGet(
     memcpy_s(Buffer + sizeof(GUID), BufferSize - sizeof(GUID), &aLength, sizeof(aLength));
     if (aLength > 0)
         memcpy_s(Buffer + sizeof(GUID) + sizeof(uint8_t), BufferSize - sizeof(GUID) - sizeof(uint8_t), aTlvTypes, aLength);
-
-    // TODO - include aAddress
-    UNREFERENCED_PARAMETER(aAddress);
+    if (aAddress)
+        memcpy_s(Buffer + sizeof(GUID) + sizeof(uint8_t) + aLength, BufferSize - sizeof(GUID) - sizeof(uint8_t) - aLength, aAddress, sizeof(otIp6Address));
     
     ThreadError result = 
         DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_SEND_ACTIVE_GET, Buffer, BufferSize, nullptr, 0));
@@ -2206,6 +2218,7 @@ otSendPendingGet(
     if (aTlvTypes == nullptr && aLength != 0) return kThreadError_InvalidArgs;
     
     DWORD BufferSize = sizeof(GUID) + sizeof(uint8_t) + aLength;
+    if (aAddress) BufferSize += sizeof(otIp6Address);
     PBYTE Buffer = (PBYTE)malloc(BufferSize);
     if (Buffer == nullptr) return kThreadError_NoBufs;
 
@@ -2213,9 +2226,8 @@ otSendPendingGet(
     memcpy_s(Buffer + sizeof(GUID), BufferSize - sizeof(GUID), &aLength, sizeof(aLength));
     if (aLength > 0)
         memcpy_s(Buffer + sizeof(GUID) + sizeof(uint8_t), BufferSize - sizeof(GUID) - sizeof(uint8_t), aTlvTypes, aLength);
-
-    // TODO - include aAddress
-    UNREFERENCED_PARAMETER(aAddress);
+    if (aAddress)
+        memcpy_s(Buffer + sizeof(GUID) + sizeof(uint8_t) + aLength, BufferSize - sizeof(GUID) - sizeof(uint8_t) - aLength, aAddress, sizeof(otIp6Address));
     
     ThreadError result = 
         DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_SEND_PENDING_GET, Buffer, BufferSize, nullptr, 0));
@@ -2837,6 +2849,16 @@ otPlatformReset(
     if (aInstance) (void)SetIOCTL(aInstance, IOCTL_OTLWF_OT_PLATFORM_RESET);
 }
 
+OTAPI 
+void 
+OTCALL
+otFactoryReset(
+    _In_ otInstance *aInstance
+    )
+{
+    if (aInstance) (void)SetIOCTL(aInstance, IOCTL_OTLWF_OT_FACTORY_RESET);
+}
+
 OTAPI
 ThreadError
 OTCALL
@@ -3029,6 +3051,18 @@ otGetMacCounters(
         }
     }
     return aCounters;
+}
+
+OTAPI
+void
+OTCALL
+otGetMessageBufferInfo(
+    _In_ otInstance *,
+    _Out_ otBufferInfo *aBufferInfo
+    )
+{
+    // Not supported on Windows
+    ZeroMemory(aBufferInfo, sizeof(otBufferInfo));
 }
 
 OTAPI
@@ -3456,7 +3490,9 @@ OTCALL
 otJoinerStart(
      _In_ otInstance *aInstance,
     const char *aPSKd, 
-    const char *aProvisioningUrl
+    const char *aProvisioningUrl,
+    _In_ otJoinerCallback aCallback,
+    _In_ void *aCallbackContext
     )
 {
     if (aInstance == nullptr || aPSKd == nullptr) return kThreadError_InvalidArgs;

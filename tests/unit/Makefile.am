@@ -80,6 +80,8 @@ check_PROGRAMS                                                      = \
     test-link-quality                                                 \
     test-mac-frame                                                    \
     test-message                                                      \
+    test-message-queue                                                \
+    test-priority-queue                                               \
     test-timer                                                        \
     test-toolchain                                                    \
     $(NULL)
@@ -138,14 +140,20 @@ test_mac_frame_SOURCES       = test_platform.cpp test_mac_frame.cpp
 test_message_LDADD           = $(COMMON_LDADD)
 test_message_SOURCES         = test_platform.cpp test_message.cpp
 
+test_message_queue_LDADD     = $(COMMON_LDADD)
+test_message_queue_SOURCES   = test_platform.cpp test_message_queue.cpp
+
 test_ncp_buffer_LDADD        = $(COMMON_LDADD)
 test_ncp_buffer_SOURCES      = test_platform.cpp test_ncp_buffer.cpp
+
+test_priority_queue_LDADD    = $(COMMON_LDADD)
+test_priority_queue_SOURCES  = test_platform.cpp test_priority_queue.cpp
 
 test_timer_LDADD             = $(COMMON_LDADD)
 test_timer_SOURCES           = test_platform.cpp test_timer.cpp
 
 test_toolchain_LDADD         = $(COMMON_LDADD)
-test_toolchain_SOURCES       = test_platform.cpp test_toolchain.cpp
+test_toolchain_SOURCES       = test_platform.cpp test_toolchain.cpp test_toolchain_c.c
 
 if OPENTHREAD_ENABLE_DIAG
 test_diag_LDADD              = $(top_builddir)/src/diag/libopenthread-diag.a                  \

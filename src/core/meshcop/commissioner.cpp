@@ -64,7 +64,11 @@ Commissioner::Commissioner(ThreadNetif &aThreadNetif):
     mEnergyScan(aThreadNetif),
     mPanIdQuery(aThreadNetif),
     mState(kStateDisabled),
+    mJoinerPort(0),
+    mJoinerRloc(0),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this),
+    mSessionId(0),
+    mTransmitAttempts(0),
     mSendKek(false),
     mRelayReceive(OPENTHREAD_URI_RELAY_RX, &Commissioner::HandleRelayReceive, this),
     mDatasetChanged(OPENTHREAD_URI_DATASET_CHANGED, &Commissioner::HandleDatasetChanged, this),
@@ -357,15 +361,18 @@ exit:
 }
 
 void Commissioner::HandleMgmtCommissionerGetResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                                     ThreadError aResult)
+                                                     const otMessageInfo *aMessageInfo, ThreadError aResult)
 {
     static_cast<Commissioner *>(aContext)->HandleMgmtCommissisonerGetResponse(
-        static_cast<Coap::Header *>(aHeader), static_cast<Message *>(aMessage), aResult);
+        static_cast<Coap::Header *>(aHeader), static_cast<Message *>(aMessage),
+        static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
 }
 
-void Commissioner::HandleMgmtCommissisonerGetResponse(Coap::Header *aHeader, Message *aMessage, ThreadError aResult)
+void Commissioner::HandleMgmtCommissisonerGetResponse(Coap::Header *aHeader, Message *aMessage,
+                                                      const Ip6::MessageInfo *aMessageInfo, ThreadError aResult)
 {
     (void) aMessage;
+    (void) aMessageInfo;
 
     otLogFuncEntry();
 
@@ -450,15 +457,18 @@ exit:
 }
 
 void Commissioner::HandleMgmtCommissionerSetResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                                     ThreadError aResult)
+                                                     const otMessageInfo *aMessageInfo, ThreadError aResult)
 {
     static_cast<Commissioner *>(aContext)->HandleMgmtCommissisonerSetResponse(
-        static_cast<Coap::Header *>(aHeader), static_cast<Message *>(aMessage), aResult);
+        static_cast<Coap::Header *>(aHeader), static_cast<Message *>(aMessage),
+        static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
 }
 
-void Commissioner::HandleMgmtCommissisonerSetResponse(Coap::Header *aHeader, Message *aMessage, ThreadError aResult)
+void Commissioner::HandleMgmtCommissisonerSetResponse(Coap::Header *aHeader, Message *aMessage,
+                                                      const Ip6::MessageInfo *aMessageInfo, ThreadError aResult)
 {
     (void) aMessage;
+    (void) aMessageInfo;
 
     otLogFuncEntry();
 
@@ -511,15 +521,19 @@ exit:
 }
 
 void Commissioner::HandleLeaderPetitionResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                                ThreadError aResult)
+                                                const otMessageInfo *aMessageInfo, ThreadError aResult)
 {
     static_cast<Commissioner *>(aContext)->HandleLeaderPetitionResponse(
-        static_cast<Coap::Header *>(aHeader), static_cast<Message *>(aMessage), aResult);
+        static_cast<Coap::Header *>(aHeader), static_cast<Message *>(aMessage),
+        static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
 
 }
 
-void Commissioner::HandleLeaderPetitionResponse(Coap::Header *aHeader, Message *aMessage, ThreadError aResult)
+void Commissioner::HandleLeaderPetitionResponse(Coap::Header *aHeader, Message *aMessage,
+                                                const Ip6::MessageInfo *aMessageInfo, ThreadError aResult)
 {
+    (void) aMessageInfo;
+
     StateTlv state;
     CommissionerSessionIdTlv sessionId;
     bool retransmit = false;
@@ -607,14 +621,18 @@ exit:
 }
 
 void Commissioner::HandleLeaderKeepAliveResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                                 ThreadError aResult)
+                                                 const otMessageInfo *aMessageInfo, ThreadError aResult)
 {
     static_cast<Commissioner *>(aContext)->HandleLeaderKeepAliveResponse(
-        static_cast<Coap::Header *>(aHeader), static_cast<Message *>(aMessage), aResult);
+        static_cast<Coap::Header *>(aHeader), static_cast<Message *>(aMessage),
+        static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
 }
 
-void Commissioner::HandleLeaderKeepAliveResponse(Coap::Header *aHeader, Message *aMessage, ThreadError aResult)
+void Commissioner::HandleLeaderKeepAliveResponse(Coap::Header *aHeader, Message *aMessage,
+                                                 const Ip6::MessageInfo *aMessageInfo, ThreadError aResult)
 {
+    (void) aMessageInfo;
+
     StateTlv state;
 
     otLogFuncEntry();
@@ -670,6 +688,7 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
     VerifyOrExit(joinerRloc.IsValid(), error = kThreadError_Parse);
 
     SuccessOrExit(error = Tlv::GetValueOffset(aMessage, Tlv::kJoinerDtlsEncapsulation, offset, length));
+    VerifyOrExit(length <= aMessage.GetLength() - offset, error = kThreadError_Parse);
 
     if (!mSecureCoapServer.IsConnectionActive())
     {

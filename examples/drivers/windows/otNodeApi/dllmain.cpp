@@ -26,42 +26,34 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file implements the OpenThread platform abstraction for logging.
- *
- */
+#include "precomp.h"
+#include "dllmain.tmh"
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
-
-
-#include <platform/logging.h>
-#if OPENTHREAD_ENABLE_CLI_LOGGING
-#include <ctype.h>
-#include <inttypes.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
-
-#include <common/code_utils.hpp>
-#include <cli/cli-uart.h>
-#endif
-
-void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+BOOL 
+__stdcall 
+DllMain(
+    HINSTANCE hinstDll, 
+    DWORD dwReason, 
+    LPVOID /* lpvReserved */
+    )
 {
-#if OPENTHREAD_ENABLE_CLI_LOGGING
-    va_list args;
-    va_start(args, aFormat);
-    otCliLog(aLogLevel, aLogRegion, aFormat, args);
-    va_end(args);
-#else
-    (void)aLogLevel;
-    (void)aLogRegion;
-    (void)aFormat;
-#endif // OPENTHREAD_ENABLE_CLI_LOGGING
+    switch (dwReason)
+    {
+    case DLL_PROCESS_ATTACH:
+        DisableThreadLibraryCalls(hinstDll);
+        WPP_INIT_TRACING(L"otNodeApi");
+        break;
+
+    case DLL_PROCESS_DETACH:
+        Unload();
+        WPP_CLEANUP();
+        break;
+
+    case DLL_THREAD_ATTACH:
+    case DLL_THREAD_DETACH:
+        break;
+    }
+
+    return TRUE;
 }
+

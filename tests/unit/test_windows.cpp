@@ -65,6 +65,12 @@ namespace Thread
 // test_message.cpp
 void TestMessage();
 
+// test_message_queue.cpp
+void TestMessageQueue();
+
+// test_priority_queue.cpp
+void TestPriorityQueue();
+
 // test_ncp_buffer.cpp
 namespace Thread
 {
@@ -80,6 +86,8 @@ void test_packed1();
 void test_packed2();
 void test_packed_union();
 void test_packed_enum();
+void test_addr_sizes();
+void test_addr_bitfield();
 
 // test_fuzz.cpp
 void TestFuzz(uint32_t aSeconds);
@@ -90,7 +98,7 @@ utAssertTrue s_AssertTrue;
 utLogMessage s_LogMessage;
 
 namespace Thread
-{        
+{
     TEST_CLASS(UnitTests)
     {
     public:
@@ -112,7 +120,7 @@ namespace Thread
             va_start(args, format);
             vsnprintf(message, sizeof(message), format, args);
             va_end(args);
-            
+
             Logger::WriteMessage(message);
         }
 
@@ -143,7 +151,13 @@ namespace Thread
         // test_message.cpp
         TEST_METHOD(TestMessage) { ::TestMessage(); }
 
-        // test_message.cpp
+        // test_message_queue.cpp
+        TEST_METHOD(TestMessageQueue) { ::TestMessageQueue(); }
+
+        // test_message_queue.cpp
+        TEST_METHOD(TestPriorityQueue) { ::TestPriorityQueue(); }
+
+        // test_timer.cpp
         TEST_METHOD(TestOneTimer) { ::TestOneTimer(); }
         TEST_METHOD(TestTenTimers) { ::TestTenTimers(); }
 
@@ -155,6 +169,8 @@ namespace Thread
         TEST_METHOD(test_packed2) { ::test_packed2(); }
         TEST_METHOD(test_packed_union) { ::test_packed_union(); }
         TEST_METHOD(test_packed_enum) { ::test_packed_enum(); }
+        TEST_METHOD(test_addr_sizes) { ::test_addr_sizes(); }
+        TEST_METHOD(test_addr_bitfield) { ::test_addr_bitfield(); }
 
         // test_settings.cpp
         TEST_METHOD(RunTestFuzz) { ::TestFuzz(30); }

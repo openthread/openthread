@@ -169,6 +169,7 @@ public:
     bool IsLater(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mNextTimerShot) < 0); };
 
 private:
+    Ip6::Address          mSourceAddress;         ///< IPv6 address of the message source.
     Ip6::Address          mDestinationAddress;    ///< IPv6 address of the message destination.
     uint16_t              mDestinationPort;       ///< UDP port of the message destination.
     otCoapResponseHandler mResponseHandler;       ///< A function pointer that is called on response reception.
@@ -250,8 +251,8 @@ private:
     void DequeueMessage(Message &aMessage);
     Message *FindRelatedRequest(const Header &aResponseHeader, const Ip6::MessageInfo &aMessageInfo,
                                 Header &aRequestHeader, RequestMetadata &aRequestMetadata);
-    void FinalizeCoapTransaction(Message &aRequest, const RequestMetadata &aRequestMetadata,
-                                 Header *aResponseHeader, Message *aResponse, ThreadError aResult);
+    void FinalizeCoapTransaction(Message &aRequest, const RequestMetadata &aRequestMetadata, Header *aResponseHeader,
+                                 Message *aResponse, const Ip6::MessageInfo *aMessageInfo, ThreadError aResult);
 
     ThreadError SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void SendEmptyMessage(const Ip6::Address &aAddress, uint16_t aPort, uint16_t aMessageId, Header::Type aType);

@@ -36,6 +36,12 @@
     <ClCompile Include="..\..\tests\unit\test_message.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\tests\unit\test_message_queue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\tests\unit\test_priority_queue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\tests\unit\test_timer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -25,45 +25,50 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
-/**
- * @file
- *   This file implements common Thread Network Layer TLV processing.
- */
-
-#include <common/code_utils.hpp>
-#include <common/message.hpp>
-#include <thread/thread_tlvs.hpp>
-
-namespace Thread {
-
-ThreadError ThreadTlv::GetTlv(const Message &message, Type type, uint16_t maxLength, ThreadTlv &tlv)
-{
-    ThreadError error = kThreadError_Parse;
-    uint16_t offset = message.GetOffset();
-    uint16_t end = message.GetLength();
-
-    while (offset < end)
-    {
-        message.Read(offset, sizeof(ThreadTlv), &tlv);
-
-        if (tlv.GetType() == type && (offset + sizeof(tlv) + tlv.GetLength()) <= end)
-        {
-            if (maxLength > sizeof(tlv) + tlv.GetLength())
-            {
-                maxLength = sizeof(tlv) + tlv.GetLength();
-            }
-
-            message.Read(offset, maxLength, &tlv);
-
-            ExitNow(error = kThreadError_None);
-        }
-
-        offset += sizeof(tlv) + tlv.GetLength();
-    }
-
-exit:
-    return error;
+ 
+//
+// system headers
+//
+extern "C" {
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
+#include <ntverp.h>
+#include <ntddk.h>
+#include <ntstrsafe.h>
+#include <ntintsafe.h>
+#include <ndis.h>
+#include <WppRecorder.h>
+#include <wdf.h>
+#ifndef OTTMP_LEGACY
+#include <netadaptercx.h>
+#endif
+#include <WdfMiniport.h>
+#include <wdm.h>
+#include <ntddser.h>
 }
 
-}
+// Intellisense definition for DbgRaiseAssertionFailure because for some reason Visual Studio can't
+// find it.
+#ifdef __INTELLISENSE__
+#define DbgRaiseAssertionFailure() ((void) 0)
+#endif
+
+#include "otOID.h"
+ 
+#define CODE_SEG(seg) __declspec(code_seg(seg))
+#define INITCODE CODE_SEG("INIT")  
+#define PAGED  CODE_SEG("PAGE")
+
+typedef struct _OTTMP_ADAPTER_CONTEXT *POTTMP_ADAPTER_CONTEXT;
+typedef struct _OTTMP_DEVICE_CONTEXT *POTTMP_DEVICE_CONTEXT;
+
+#include "hardware.hpp"
+#include "hdlc.hpp"
+#include "driver.hpp"
+#include "adapter.hpp"
+#include "device.hpp"
+#include "serial.hpp"
+#include "oid.hpp"
+#include "platform/logging-windows.h"

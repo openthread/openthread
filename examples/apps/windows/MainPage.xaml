@@ -36,6 +36,11 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid>
+            <Grid.Background>
+                <ImageBrush ImageSource="ms-appx:///Assets/Wide310x150Logo.png" Opacity="0.25" Stretch="Uniform"/>
+            </Grid.Background>
+        </Grid>
         <!-- Interface List -->
         <TextBlock
             Text="Thread UX" 

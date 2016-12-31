@@ -71,6 +71,15 @@ public:
     Dtls(ThreadNetif &aNetif);
 
     /**
+     * This function pointer is called when a connection is established or torn down.
+     *
+     * @param[in]  aContext    A pointer to application-specific context.
+     * @param[in]  aConnected  TRUE if a connection was established, FALSE otherwise.
+     *
+     */
+    typedef void (*ConnectedHandler)(void *aContext, bool aConnected);
+
+    /**
      * This function pointer is called when data is received from the DTLS session.
      *
      * @param[in]  aContext  A pointer to application-specific context.
@@ -93,15 +102,17 @@ public:
     /**
      * This method starts the DTLS service.
      *
-     * @param[in]  aClient          TRUE if operating as a client, FALSE if operating as a server.
-     * @param[in]  aReceiveHandler  A pointer to the receive handler.
-     * @param[in]  aSendHandler     A pointer to the send handler.
-     * @param[in]  aContext         A pointer to application-specific context.
+     * @param[in]  aClient            TRUE if operating as a client, FALSE if operating as a server.
+     * @param[in]  aConnectedHandler  A pointer to the connected handler.
+     * @param[in]  aReceiveHandler    A pointer to the receive handler.
+     * @param[in]  aSendHandler       A pointer to the send handler.
+     * @param[in]  aContext           A pointer to application-specific context.
      *
-     * @retval kThreadError_None  Successfully started the DTLS service.
+     * @retval kThreadError_None      Successfully started the DTLS service.
      *
      */
-    ThreadError Start(bool aClient, ReceiveHandler aReceiveHandler, SendHandler aSendHandler, void *aContext);
+    ThreadError Start(bool aClient, ConnectedHandler aConnectedHandler, ReceiveHandler aReceiveHandler,
+                      SendHandler aSendHandler, void *aContext);
 
     /**
      * This method stops the DTLS service.
@@ -227,6 +238,7 @@ private:
     uint16_t mReceiveOffset;
     uint16_t mReceiveLength;
 
+    ConnectedHandler mConnectedHandler;
     ReceiveHandler mReceiveHandler;
     SendHandler mSendHandler;
     void *mContext;

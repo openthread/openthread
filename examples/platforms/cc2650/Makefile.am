@@ -44,41 +44,34 @@ libopenthread_cc2650_a_CPPFLAGS                       = \
     $(MBEDTLS_CPPFLAGS)                                 \
     $(NULL)
 
-libopenthread_cc2650_settings.cpp: $(srcdir)/../utils/settings.cpp
-	cp $? $@
-
-CLEANFILES = libopenthread_cc2650_settings.cpp
-
 libopenthread_cc2650_a_SOURCES                        = \
-    alarm.c                               \
-    logging.c                             \
-    platform.c                            \
-    radio.c                               \
-    random.c                              \
-    uart.c                                \
-    misc.c                                \
-    flash.c                               \
-    libopenthread_cc2650_settings.cpp     \
-    crypto/sha256_alt.c                   \
-    crypto/aes_alt.c                      \
+    alarm.c                                             \
+    flash.c                                             \
+    misc.c                                              \
+    platform.c                                          \
+    radio.c                                             \
+    random.c                                            \
+    uart.c                                              \
+    crypto/sha256_alt.c                                 \
+    crypto/aes_alt.c                                    \
     $(NULL)
 
-libopenthread_cc2650_a_DEPENDENCIES = \
+libopenthread_cc2650_a_DEPENDENCIES =                                  \
     $(top_srcdir)/third_party/cc26xxware/driverlib/bin/gcc/driverlib.a \
     $(NULL)
 
 if OPENTHREAD_ENABLE_DIAG
-libopenthread_cc2650_a_SOURCES           += \
-    diag.c                                  \
+libopenthread_cc2650_a_SOURCES                       += \
+    diag.c                                              \
     $(NULL)
 endif
 
-noinst_HEADERS                            = \
-    platform-cc2650.h                       \
+noinst_HEADERS                                        = \
+    platform-cc2650.h                                   \
     $(NULL)
 
-if OPENTHREAD_BUILD_COVERAGE
-CLEANFILES                               += $(wildcard *.gcda *.gcno)
-endif # OPENTHREAD_BUILD_COVERAGE
+Dash                                                  = -
+libopenthread_cc2650_a_LIBADD                         = \
+    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

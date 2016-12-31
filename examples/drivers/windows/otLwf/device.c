@@ -532,7 +532,7 @@ otLwfIndicateNotification(
             {
                 LogWarning(DRIVER_IOCTL, "Dropping old notification!");
                 otLwfReleaseNotification(DeviceClient->PendingNotifications[DeviceClient->NotificationOffset]);
-                DeviceClient->NotificationOffset++;
+                DeviceClient->NotificationOffset = (DeviceClient->NotificationOffset + 1) % OTLWF_MAX_PENDING_NOTIFICATIONS_PER_CLIENT;
             }
             else
             {

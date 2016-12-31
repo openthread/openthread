@@ -38,8 +38,8 @@ from ipaddress import ip_address
 from ipv6 import ICMPv6Header, UDPHeader, IPv6Header, IPv6PacketFactory, UDPDatagram, \
     UDPDatagramFactory, ICMPv6Factory, HopByHopFactory, MPLOptionFactory, ICMPv6, HopByHopOptionHeader, HopByHopOption, \
     HopByHop, MPLOption, HopByHopFactory, IPv6Packet, ICMPv6EchoBody, UDPBytesPayload, ICMPv6EchoBodyFactory, \
-    UpperLayerProtocol, UDPHeaderFactory, HopByHopOptionsFactory, \
-    UDPBytesPayloadFactory, ICMPv6DestinationUnreachable
+    UpperLayerProtocol, UDPHeaderFactory, HopByHopOptionsFactory, ICMPv6DestinationUnreachableFactory, \
+    UDPBytesPayloadFactory, ICMPv6DestinationUnreachable, UdpBasedOnSrcDstPortsPayloadFactory
 
 import common
 
@@ -259,7 +259,13 @@ def any_mpl_option():
 
 
 def any_hop_by_hop_bytes_option_header(length=4):
-    return HopByHopOptionHeader(any_type(), length)
+    _type = any_type()
+
+    # 0 or 1 means padding, so type have to be higher than 1
+    while _type <= 1:
+        _type = any_type()
+
+    return HopByHopOptionHeader(_type, length)
 
 
 def any_hop_by_hop_bytes_value(length=2):
@@ -419,6 +425,13 @@ class TestUDPHeader(unittest.TestCase):
 
         # THEN
         self.assertEqual(8, udp_header_length)
+
+    def test_should_return_17_when_type_property_is_called(self):
+        # GIVEN
+        udp_header = UDPHeader(any_port(), any_port(), any_payload_length(), any_checksum())
+
+        # THEN
+        self.assertEqual(17, udp_header.type)
 
 
 class TestICMPv6Header(unittest.TestCase):
@@ -609,6 +622,7 @@ class TestIPv6PacketFactory(unittest.TestCase):
 
         # WHEN
         ipv6_packet = ipv6_factory.parse(io.BytesIO(ipv6_packet_bytes), any_message_info())
+        ipv6_packet._validate_checksum()
 
         # THEN
         self.assertEqual('fd00:1234:4555::ff:fe00:1800', ipv6_packet.ipv6_header.source_address.compressed)
@@ -917,7 +931,7 @@ class TestHopByHopFactory(unittest.TestCase):
                 return bytearray([0x00])
             elif padding_length > 1:
                 padding_length -= 2
-                return bytearray([0x01, padding_length]) + bytes([0x00 for _ in range(padding_length)])
+                return bytearray([0x01, padding_length]) + bytearray([0x00 for _ in range(padding_length)])
 
         return bytearray()
 
@@ -993,6 +1007,60 @@ class TestMPLOptionFactory(unittest.TestCase):
         self.assertEqual(mpl_opt.seed_id, seed_id)
 
 
+class TestUdpBasedOnSrcDstPortsPayloadFactory(unittest.TestCase):
+
+    def test_should_create_payload_from_data_when_src_port_factory_is_defined_and_parse_method_is_called(self):
+        # GIVEN
+        data = any_data()
+
+        message_info = common.MessageInfo()
+        message_info.src_port = any_port()
+        message_info.dst_port = any_port()
+
+        factory = UdpBasedOnSrcDstPortsPayloadFactory(
+            src_dst_port_based_payload_factories={
+                message_info.src_port: UDPBytesPayloadFactory()
+            })
+
+        # WHEN
+        actual_data = factory.parse(io.BytesIO(data), message_info)
+
+        # THEN
+        self.assertEqual(data, actual_data.data)
+
+    def test_should_create_payload_from_data_when_dst_port_factory_is_defined_and_parse_method_is_called(self):
+        # GIVEN
+        data = any_data()
+
+        message_info = common.MessageInfo()
+        message_info.src_port = any_port()
+        message_info.dst_port = any_port()
+
+        factory = UdpBasedOnSrcDstPortsPayloadFactory(
+            src_dst_port_based_payload_factories={
+                message_info.dst_port: UDPBytesPayloadFactory()
+            })
+
+        # WHEN
+        actual_data = factory.parse(io.BytesIO(data), message_info)
+
+        # THEN
+        self.assertEqual(data, actual_data.data)
+
+    def test_should_raise_RuntimeError_when_parse_method_is_called_but_required_factory_is_not_defined(self):
+        # GIVEN
+        data = any_data()
+
+        message_info = common.MessageInfo()
+        message_info.src_port = any_port()
+        message_info.dst_port = any_port()
+
+        factory = UdpBasedOnSrcDstPortsPayloadFactory(src_dst_port_based_payload_factories={})
+
+        # THEN
+        self.assertRaises(RuntimeError, factory.parse, io.BytesIO(data), message_info)
+
+
 class TestUDPDatagramFactory(unittest.TestCase):
 
     def test_should_produce_UDPDatagram_from_bytes_when_to_bytes_method_is_called_with_data(self):
@@ -1009,7 +1077,7 @@ class TestUDPDatagramFactory(unittest.TestCase):
                           (payload_length >> 8), (payload_length & 0xFF),
                           (checksum >> 8), (checksum & 0xFF)]) + payload
 
-        factory = UDPDatagramFactory(UDPHeaderFactory(), {dst_port: UDPBytesPayloadFactory()})
+        factory = UDPDatagramFactory(UDPHeaderFactory(), UDPBytesPayloadFactory())
 
         # WHEN
         udp_dgram = factory.parse(io.BytesIO(data), any_message_info())
@@ -1020,6 +1088,31 @@ class TestUDPDatagramFactory(unittest.TestCase):
         self.assertEqual(udp_dgram.header.payload_length, payload_length)
         self.assertEqual(udp_dgram.header.checksum, checksum)
         self.assertEqual(udp_dgram.payload.data, payload)
+
+    def test_should_set_src_and_dst_port_in_message_info_when_parse_method_is_called(self):
+        # GIVEN
+        message_info = any_message_info()
+
+        src_port = any_port()
+        dst_port = any_port()
+        checksum = any_checksum()
+
+        payload = any_payload()
+        payload_length = len(payload) + len(UDPHeader(0, 0))
+
+        data = bytearray([(src_port >> 8), (src_port & 0xFF),
+                          (dst_port >> 8), (dst_port & 0xFF),
+                          (payload_length >> 8), (payload_length & 0xFF),
+                          (checksum >> 8), (checksum & 0xFF)]) + payload
+
+        factory = UDPDatagramFactory(UDPHeaderFactory(), UDPBytesPayloadFactory())
+
+        # WHEN
+        udp_dgram = factory.parse(io.BytesIO(data), message_info)
+
+        # THEN
+        self.assertEqual(src_port, message_info.src_port)
+        self.assertEqual(dst_port, message_info.dst_port)
 
 
 class TestICMPv6Factory(unittest.TestCase):
@@ -1208,22 +1301,39 @@ class TestICMPv6DestinationUnreachable(unittest.TestCase):
                           io.BytesIO(bytearray(struct.pack(">I", unused)) + data))
 
 
+class TestICMPv6DestinationUnreachableFactory(unittest.TestCase):
+
+    def test_should_create_ICMPv6DestinationUnreachable_when_parse_method_is_called(self):
+        # GIVEN
+        icmp_data = any_data()
+
+        factory = ICMPv6DestinationUnreachableFactory()
+
+        data = bytearray([0x00, 0x00, 0x00, 0x00]) + icmp_data
+
+        # WHEN
+        icmpv6_dest_unreachable=factory.parse(io.BytesIO(data), any_message_info())
+
+        # THEN
+        self.assertEqual(icmp_data, icmpv6_dest_unreachable.data)
+
+
 class TestUDPHeaderFactory(unittest.TestCase):
 
     def test_should_create_UDPHeader_when_to_bytes_method_is_called(self):
         # GIVEN
-        factory = UDPHeaderFactory()
+        factory=UDPHeaderFactory()
 
-        src_port = any_port()
-        dst_port = any_port()
-        payload_length = any_payload_length()
-        checksum = any_checksum()
+        src_port=any_port()
+        dst_port=any_port()
+        payload_length=any_payload_length()
+        checksum=any_checksum()
 
-        data = struct.pack("!H", src_port) + struct.pack("!H", dst_port) + \
+        data=struct.pack("!H", src_port) + struct.pack("!H", dst_port) + \
             struct.pack("!H", payload_length) + struct.pack("!H", checksum)
 
         # WHEN
-        udp_header = factory.parse(io.BytesIO(data), any_message_info())
+        udp_header=factory.parse(io.BytesIO(data), any_message_info())
 
         # THEN
         self.assertEqual(src_port, udp_header.src_port)
@@ -1242,12 +1352,12 @@ class TestHopByHopOptionsFactory(unittest.TestCase):
             def parse(self, data, message_info):
                 return data.read()
 
-        factory = HopByHopOptionsFactory(options_factories={2: DummyOptionFactory()})
+        factory=HopByHopOptionsFactory(options_factories = {2: DummyOptionFactory()})
 
-        data = bytearray([0x02, 0x03, 0x11, 0x22, 0x33, 0x01, 0x00])
+        data=bytearray([0x02, 0x03, 0x11, 0x22, 0x33, 0x01, 0x00])
 
         # WHEN
-        actual_options = factory.parse(io.BytesIO(data), any_message_info())
+        actual_options=factory.parse(io.BytesIO(data), any_message_info())
 
         # THEN
         self.assertEqual(1, len(actual_options))

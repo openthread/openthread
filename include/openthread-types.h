@@ -48,6 +48,7 @@ extern "C" {
 #endif
 
 #ifdef _WIN32
+#pragma warning(disable:4214)  // nonstandard extension used: bit field types other than int
 #ifdef _KERNEL_MODE
 #include <ntdef.h>
 #else
@@ -199,7 +200,8 @@ typedef enum ThreadError
 
 #define OT_MASTER_KEY_SIZE         16  ///< Size of the Thread Master Key (bytes)
 
-#define OT_NUM_NETDIAG_TLV_TYPES   18  ///< Number of Network Diagnostic TLV types
+#define OT_NETWORK_DIAGNOSTIC_TYPELIST_TYPE   18  ///< Concatenated List of Type Identifiers of Other Diagnostics TLVs Used to Request or Reset Multiple Diagnostic Values
+#define OT_NETWORK_DIAGNOSTIC_TYPELIST_MAX_ENTRIES   18  ///< Maximum Number of Other Network Diagnostic TLV Types
 
 /**
  * This structure represents a Thread Master Key.

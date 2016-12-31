@@ -36,23 +36,15 @@ libopenthread_cc2538_a_CPPFLAGS           = \
     -I$(top_srcdir)/src/core                \
     $(NULL)
 
-
-libopenthread_cc2538_settings.cpp: $(srcdir)/../utils/settings.cpp
-	cp $? $@
-
-CLEANFILES = libopenthread_cc2538_settings.cpp
-
 libopenthread_cc2538_a_SOURCES            = \
     alarm.c                                 \
     flash.c                                 \
-    logging.c                               \
     misc.c                                  \
     platform.c                              \
     radio.c                                 \
     random.c                                \
     startup-gcc.c                           \
     uart.c                                  \
-    libopenthread_cc2538_settings.cpp       \
     $(NULL)
 
 if OPENTHREAD_ENABLE_DIAG
@@ -67,8 +59,8 @@ noinst_HEADERS                            = \
     rom-utility.h                           \
     $(NULL)
 
-if OPENTHREAD_BUILD_COVERAGE
-CLEANFILES                               += $(wildcard *.gcda *.gcno)
-endif # OPENTHREAD_BUILD_COVERAGE
+Dash                                      = -
+libopenthread_cc2538_a_LIBADD             = \
+    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

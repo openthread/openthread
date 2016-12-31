@@ -29,7 +29,9 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 EXTRA_DIST              = \
-    ARM.py                \
+    OpenThread.py         \
+    OpenThread.png        \
+    deviceInputFields.xml \
     README.md             \
     $(NULL)
 

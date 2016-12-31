@@ -65,6 +65,8 @@ private:
                           const otMessageInfo *aMessageInfo);
     void HandleSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
+    bool IsTlvInitialized(Tlv::Type aType);
+
     Coap::Resource mResourceGet;
     Coap::Resource mResourceSet;
 };

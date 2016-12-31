@@ -1018,6 +1018,7 @@ void Mac::SentFrame(ThreadError aError)
         sender->mNext = NULL;
 
         mDataSequence++;
+        otDumpDebgMac("TX", sendFrame.GetHeader(), sendFrame.GetLength());
         sender->HandleSentFrame(sendFrame, aError);
 
         ScheduleNextTransmission();
@@ -1341,6 +1342,8 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
 
         if (receive)
         {
+            otDumpDebgMac("RX", aFrame->GetHeader(), aFrame->GetLength());
+
             for (Receiver *receiver = mReceiveHead; receiver; receiver = receiver->mNext)
             {
                 receiver->HandleReceivedFrame(*aFrame);
@@ -1468,6 +1471,25 @@ Whitelist &Mac::GetWhitelist(void)
 Blacklist &Mac::GetBlacklist(void)
 {
     return mBlacklist;
+}
+
+void Mac::FillMacCountersTlv(NetworkDiagnostic::MacCountersTlv &aMacCounters) const
+{
+    aMacCounters.SetIfInUnknownProtos(mCounters.mRxOther);
+    aMacCounters.SetIfInErrors(mCounters.mRxErrNoFrame + mCounters.mRxErrUnknownNeighbor + mCounters.mRxErrInvalidSrcAddr +
+                               mCounters.mRxErrSec + mCounters.mRxErrFcs + mCounters.mRxErrOther);
+    aMacCounters.SetIfOutErrors(mCounters.mTxErrCca);
+    aMacCounters.SetIfInUcastPkts(mCounters.mRxUnicast);
+    aMacCounters.SetIfInBroadcastPkts(mCounters.mRxBroadcast);
+    aMacCounters.SetIfInDiscards(mCounters.mRxWhitelistFiltered + mCounters.mRxDestAddrFiltered + mCounters.mRxDuplicated);
+    aMacCounters.SetIfOutUcastPkts(mCounters.mTxUnicast);
+    aMacCounters.SetIfOutBroadcastPkts(mCounters.mTxBroadcast);
+    aMacCounters.SetIfOutDiscards(0);
+}
+
+void Mac::ResetCounters(void)
+{
+    memset(&mCounters, 0, sizeof(mCounters));
 }
 
 otMacCounters &Mac::GetCounters(void)

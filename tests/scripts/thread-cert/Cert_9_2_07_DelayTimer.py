@@ -41,7 +41,7 @@ ROUTER = 3
 LEADER_ACTIVE_TIMESTAMP = 10
 ROUTER_ACTIVE_TIMESTAMP = 20
 ROUTER_PENDING_TIMESTAMP = 30
-ROUTER_PENDING_ACTIVE_TIMESTAMP = 21
+ROUTER_PENDING_ACTIVE_TIMESTAMP = 25
 
 COMMISSIONER_PENDING_CHANNEL = 20
 COMMISSIONER_PENDING_PANID = 0xafce
@@ -59,7 +59,6 @@ class Cert_9_2_7_DelayTimer(unittest.TestCase):
         self.nodes[COMMISSIONER].enable_whitelist()
         self.nodes[COMMISSIONER].set_router_selection_jitter(1)
 
-        self.nodes[LEADER].set_active_dataset(LEADER_ACTIVE_TIMESTAMP)
         self.nodes[LEADER].set_mode('rsdn')
         self.nodes[LEADER].set_panid(PANID_INIT)
         self.nodes[LEADER].set_partition_id(0xffffffff)

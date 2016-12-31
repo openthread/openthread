@@ -26,60 +26,27 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file implements common methods for manipulating MLE TLVs.
- */
+#include <stdio.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
+#include <platform/toolchain.h>
+#include "test_util.h"
 
-#include <common/code_utils.hpp>
-#include <common/message.hpp>
-#include <thread/mle_tlvs.hpp>
-
-namespace Thread {
-namespace Mle {
-
-ThreadError Tlv::GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv)
+uint32_t otNetifAddress_Size_c()
 {
-    ThreadError error = kThreadError_Parse;
-    uint16_t offset;
-
-    SuccessOrExit(error = GetOffset(aMessage, aType, offset));
-    aMessage.Read(offset, sizeof(Tlv), &aTlv);
-
-    if (aMaxLength > sizeof(aTlv) + aTlv.GetLength())
-    {
-        aMaxLength = sizeof(aTlv) + aTlv.GetLength();
-    }
-
-    aMessage.Read(offset, aMaxLength, &aTlv);
-
-exit:
-    return error;
+    return sizeof(otNetifAddress);
 }
 
-ThreadError Tlv::GetOffset(const Message &aMessage, Type aType, uint16_t &aOffset)
+uint32_t otNetifAddress_offset_mNext_c()
 {
-    ThreadError error = kThreadError_Parse;
-    uint16_t offset = aMessage.GetOffset();
-    uint16_t end = aMessage.GetLength();
-    Tlv tlv;
-
-    while (offset < end)
-    {
-        aMessage.Read(offset, sizeof(Tlv), &tlv);
-
-        if (tlv.GetType() == aType && (offset + sizeof(tlv) + tlv.GetLength()) <= end)
-        {
-            aOffset = offset;
-            ExitNow(error = kThreadError_None);
-        }
-
-        offset += sizeof(tlv) + tlv.GetLength();
-    }
-
-exit:
-    return error;
+    return offsetof(otNetifAddress, mNext);
 }
 
-}  // namespace Mle
-}  // namespace Thread
+otNetifAddress CreateNetif_c()
+{
+    otNetifAddress addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.mScopeOverrideValid = true;
+    return addr;
+}

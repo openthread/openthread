@@ -95,8 +95,7 @@ NcpSpi::NcpSpi(otInstance *aInstance):
     memset(mEmptySendFrame, 0, kSpiHeaderLength);
     memset(mSendFrame, 0, kSpiHeaderLength);
 
-    mSending = false;
-    mHandlingSendDone = false;
+    mTxState = kTxStateIdle;
     mHandlingRxFrame = false;
 
     mTxFrameBuffer.SetCallbacks(NULL, TxFrameBufferHasData, this);
@@ -181,14 +180,13 @@ NcpSpi::SpiTransactionComplete(
             mHandleRxFrameTask.Post();
         }
 
-        if ( mSending
-          && !mHandlingSendDone
+        if ( (mTxState == kTxStateSending)
           && (tx_data_len > 0)
           && (tx_data_len <= (aTransactionLength - kSpiHeaderLength))
           && (tx_data_len <= tx_accept_len)
         ) {
             // Our transmission was successful.
-            mHandlingSendDone = true;
+            mTxState = kTxStateHandlingSendDone;
             mPrepareTxFrameTask.Post();
         }
     }
@@ -201,7 +199,7 @@ NcpSpi::SpiTransactionComplete(
         spi_header_set_flag_byte(mEmptySendFrame, SPI_PATTERN_VALUE);
     }
 
-    if (mSending && !mHandlingSendDone)
+    if (mTxState == kTxStateSending)
     {
         aMISOBuf = mSendFrame;
         aMISOBufLen = mSendFrameLen;
@@ -230,7 +228,7 @@ NcpSpi::SpiTransactionComplete(
         aMISOBufLen,
         aMOSIBuf,
         aMOSIBufLen,
-        mSending && !mHandlingSendDone
+        (mTxState == kTxStateSending)
     );
 }
 
@@ -290,7 +288,7 @@ ThreadError NcpSpi::PrepareNextSpiSendFrame(void)
 
     mSendFrameLen = frameLength + kSpiHeaderLength;
 
-    mSending = true;
+    mTxState = kTxStateSending;
 
     errorCode = otPlatSpiSlavePrepareTransaction(
         mSendFrame,
@@ -310,7 +308,7 @@ ThreadError NcpSpi::PrepareNextSpiSendFrame(void)
 
     if (errorCode != kThreadError_None)
     {
-        mSending = false;
+        mTxState = kTxStateIdle;
     }
 
     // Remove the frame from tx buffer and inform the base
@@ -329,15 +327,22 @@ void NcpSpi::PrepareTxFrame(void *aContext)
 
 void NcpSpi::PrepareTxFrame(void)
 {
-    if (mHandlingSendDone)
+    switch (mTxState)
     {
-        mSending = false;
+    case kTxStateHandlingSendDone:
+        mTxState = kTxStateIdle;
+
+        // Fall-through to next case to prepare the next frame (if any).
+
+    case kTxStateIdle:
         PrepareNextSpiSendFrame();
-        mHandlingSendDone = false;
-    }
-    else if (!mSending)
-    {
-        PrepareNextSpiSendFrame();
+        break;
+
+    case kTxStateSending:
+        // The next frame in queue (if any) will be prepared when the
+        // current frame is successfully sent and this task is posted
+        // again from the `SpiTransactionComplete()` callback.
+        break;
     }
 }
 

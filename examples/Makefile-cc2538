@@ -45,13 +45,10 @@ configure_OPTIONS               = \
     --enable-cli                  \
     --enable-ncp                  \
     --enable-diag                 \
+    --enable-default-logging      \
     --with-examples=cc2538        \
     --with-platform-info=CC2538   \
     $(NULL)
-
-ifeq ($(CLI_LOGGING),1)
-configure_OPTIONS              += --enable-cli-logging
-endif
 
 ifeq ($(CERT_LOG),1)
 configure_OPTIONS              += --enable-cert-log

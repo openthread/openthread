@@ -464,9 +464,68 @@
 <link href="#rfc.section.5.7.4" rel="Chapter" title="5.7.4 PROP 99: PROP_IPV6_ADDRESS_TABLE"/>
 <link href="#rfc.section.5.7.5" rel="Chapter" title="5.7.5 PROP 101: PROP_IPv6_ICMP_PING_OFFLOAD"/>
 <link href="#rfc.section.6" rel="Chapter" title="6 Status Codes"/>
-<link href="#rfc.section.7" rel="Chapter" title="7 Security Considerations"/>
-<link href="#rfc.section.7.1" rel="Chapter" title="7.1 Raw Application Access"/>
-<link href="#rfc.section.8" rel="Chapter" title="8 Acknowledgments"/>
+<link href="#rfc.section.7" rel="Chapter" title="7 Technology: Thread"/>
+<link href="#rfc.section.7.1" rel="Chapter" title="7.1 Thread Capabilities"/>
+<link href="#rfc.section.7.2" rel="Chapter" title="7.2 Thread Properties"/>
+<link href="#rfc.section.7.2.1" rel="Chapter" title="7.2.1 PROP 80: PROP_THREAD_LEADER_ADDR"/>
+<link href="#rfc.section.7.2.2" rel="Chapter" title="7.2.2 PROP 81: PROP_THREAD_PARENT"/>
+<link href="#rfc.section.7.2.3" rel="Chapter" title="7.2.3 PROP 82: PROP_THREAD_CHILD_TABLE"/>
+<link href="#rfc.section.7.2.4" rel="Chapter" title="7.2.4 PROP 83: PROP_THREAD_LEADER_RID"/>
+<link href="#rfc.section.7.2.5" rel="Chapter" title="7.2.5 PROP 84: PROP_THREAD_LEADER_WEIGHT"/>
+<link href="#rfc.section.7.2.6" rel="Chapter" title="7.2.6 PROP 85: PROP_THREAD_LOCAL_LEADER_WEIGHT"/>
+<link href="#rfc.section.7.2.7" rel="Chapter" title="7.2.7 PROP 86: PROP_THREAD_NETWORK_DATA"/>
+<link href="#rfc.section.7.2.8" rel="Chapter" title="7.2.8 PROP 87: PROP_THREAD_NETWORK_DATA_VERSION"/>
+<link href="#rfc.section.7.2.9" rel="Chapter" title="7.2.9 PROP 88: PROP_THREAD_STABLE_NETWORK_DATA"/>
+<link href="#rfc.section.7.2.10" rel="Chapter" title="7.2.10 PROP 89: PROP_THREAD_STABLE_NETWORK_DATA_VERSION"/>
+<link href="#rfc.section.7.2.11" rel="Chapter" title="7.2.11 PROP 90: PROP_THREAD_ON_MESH_NETS"/>
+<link href="#rfc.section.7.2.12" rel="Chapter" title="7.2.12 PROP 91: PROP_THREAD_LOCAL_ROUTES"/>
+<link href="#rfc.section.7.2.13" rel="Chapter" title="7.2.13 PROP 92: PROP_THREAD_ASSISTING_PORTS"/>
+<link href="#rfc.section.7.2.14" rel="Chapter" title="7.2.14 PROP 93: PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE"/>
+<link href="#rfc.section.7.2.15" rel="Chapter" title="7.2.15 PROP 94: PROP_THREAD_MODE"/>
+<link href="#rfc.section.7.2.16" rel="Chapter" title="7.2.16 PROP 5376: PROP_THREAD_CHILD_TIMEOUT"/>
+<link href="#rfc.section.7.2.17" rel="Chapter" title="7.2.17 PROP 5377: PROP_THREAD_RLOC16"/>
+<link href="#rfc.section.7.2.18" rel="Chapter" title="7.2.18 PROP 5378: PROP_THREAD_ROUTER_UPGRADE_THRESHOLD"/>
+<link href="#rfc.section.7.2.19" rel="Chapter" title="7.2.19 PROP 5379: PROP_THREAD_CONTEXT_REUSE_DELAY"/>
+<link href="#rfc.section.7.2.20" rel="Chapter" title="7.2.20 PROP 5380: PROP_THREAD_NETWORK_ID_TIMEOUT"/>
+<link href="#rfc.section.7.2.21" rel="Chapter" title="7.2.21 PROP 5381: PROP_THREAD_ACTIVE_ROUTER_IDS"/>
+<link href="#rfc.section.7.2.22" rel="Chapter" title="7.2.22 PROP 5382: PROP_THREAD_RLOC16_DEBUG_PASSTHRU"/>
+<link href="#rfc.section.7.2.23" rel="Chapter" title="7.2.23 PROP 5383: SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED"/>
+<link href="#rfc.section.7.2.24" rel="Chapter" title="7.2.24 PROP 5384: PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD"/>
+<link href="#rfc.section.7.2.25" rel="Chapter" title="7.2.25 PROP 5385: PROP_THREAD_ROUTER_SELECTION_JITTER"/>
+<link href="#rfc.section.7.2.26" rel="Chapter" title="7.2.26 PROP 5386: PROP_THREAD_PREFERRED_ROUTER_ID"/>
+<link href="#rfc.section.7.2.27" rel="Chapter" title="7.2.27 PROP 5387: SPINEL_PROP_THREAD_NEIGHBOR_TABLE"/>
+<link href="#rfc.section.8" rel="Chapter" title="8 Feature: Network Save"/>
+<link href="#rfc.section.8.1" rel="Chapter" title="8.1 Commands"/>
+<link href="#rfc.section.8.1.1" rel="Chapter" title="8.1.1 CMD 9: (Host-&gt;NCP) CMD_NET_SAVE"/>
+<link href="#rfc.section.8.1.2" rel="Chapter" title="8.1.2 CMD 10: (Host-&gt;NCP) CMD_NET_CLEAR"/>
+<link href="#rfc.section.8.1.3" rel="Chapter" title="8.1.3 CMD 11: (Host-&gt;NCP) CMD_NET_RECALL"/>
+<link href="#rfc.section.9" rel="Chapter" title="9 Feature: Host Buffer Offload"/>
+<link href="#rfc.section.9.1" rel="Chapter" title="9.1 Commands"/>
+<link href="#rfc.section.9.1.1" rel="Chapter" title="9.1.1 CMD 12: (NCP-&gt;Host) CMD_HBO_OFFLOAD"/>
+<link href="#rfc.section.9.1.2" rel="Chapter" title="9.1.2 CMD 13: (NCP-&gt;Host) CMD_HBO_RECLAIM"/>
+<link href="#rfc.section.9.1.3" rel="Chapter" title="9.1.3 CMD 14: (NCP-&gt;Host) CMD_HBO_DROP"/>
+<link href="#rfc.section.9.1.4" rel="Chapter" title="9.1.4 CMD 15: (Host-&gt;NCP) CMD_HBO_OFFLOADED"/>
+<link href="#rfc.section.9.1.5" rel="Chapter" title="9.1.5 CMD 16: (Host-&gt;NCP) CMD_HBO_RECLAIMED"/>
+<link href="#rfc.section.9.1.6" rel="Chapter" title="9.1.6 CMD 17: (Host-&gt;NCP) CMD_HBO_DROPPED"/>
+<link href="#rfc.section.9.2" rel="Chapter" title="9.2 Properties"/>
+<link href="#rfc.section.9.2.1" rel="Chapter" title="9.2.1 PROP 10: PROP_HBO_MEM_MAX"/>
+<link href="#rfc.section.9.2.2" rel="Chapter" title="9.2.2 PROP 11: PROP_HBO_BLOCK_MAX"/>
+<link href="#rfc.section.10" rel="Chapter" title="10 Feature: Jam Detection"/>
+<link href="#rfc.section.10.1" rel="Chapter" title="10.1 Properties"/>
+<link href="#rfc.section.10.1.1" rel="Chapter" title="10.1.1 PROP 4608: PROP_JAM_DETECT_ENABLE"/>
+<link href="#rfc.section.10.1.2" rel="Chapter" title="10.1.2 PROP 4609: PROP_JAM_DETECTED"/>
+<link href="#rfc.section.10.1.3" rel="Chapter" title="10.1.3 PROP 4610: PROP_JAM_DETECT_RSSI_THRESHOLD"/>
+<link href="#rfc.section.10.1.4" rel="Chapter" title="10.1.4 PROP 4611: PROP_JAM_DETECT_WINDOW"/>
+<link href="#rfc.section.10.1.5" rel="Chapter" title="10.1.5 PROP 4612: PROP_JAM_DETECT_BUSY"/>
+<link href="#rfc.section.10.1.6" rel="Chapter" title="10.1.6 PROP 4613: SPINEL_PROP_JAM_DETECT_HISTORY_BITMAP"/>
+<link href="#rfc.section.11" rel="Chapter" title="11 Feature: GPIO Access"/>
+<link href="#rfc.section.11.1" rel="Chapter" title="11.1 Properties"/>
+<link href="#rfc.section.11.1.1" rel="Chapter" title="11.1.1 PROP 4096: PROP_GPIO_CONFIG"/>
+<link href="#rfc.section.11.1.2" rel="Chapter" title="11.1.2 PROP 4098: PROP_GPIO_STATE"/>
+<link href="#rfc.section.11.1.3" rel="Chapter" title="11.1.3 PROP 4099: PROP_GPIO_STATE_SET"/>
+<link href="#rfc.section.11.1.4" rel="Chapter" title="11.1.4 PROP 4100: PROP_GPIO_STATE_CLEAR"/>
+<link href="#rfc.section.12" rel="Chapter" title="12 Security Considerations"/>
+<link href="#rfc.section.12.1" rel="Chapter" title="12.1 Raw Application Access"/>
 <link href="#rfc.appendix.A" rel="Chapter" title="A Framing Protocol"/>
 <link href="#rfc.appendix.A.1" rel="Chapter" title="A.1 UART Recommendations"/>
 <link href="#rfc.appendix.A.1.1" rel="Chapter" title="A.1.1 UART Bit Rate Detection"/>
@@ -475,84 +534,32 @@
 <link href="#rfc.appendix.A.2.1" rel="Chapter" title="A.2.1 SPI Framing Protocol"/>
 <link href="#rfc.appendix.A.3" rel="Chapter" title="A.3 I&#xB2;C Recommendations"/>
 <link href="#rfc.appendix.A.4" rel="Chapter" title="A.4 Native USB Recommendations"/>
-<link href="#rfc.appendix.B" rel="Chapter" title="B Feature: Network Save"/>
-<link href="#rfc.appendix.B.1" rel="Chapter" title="B.1 Commands"/>
-<link href="#rfc.appendix.B.1.1" rel="Chapter" title="B.1.1 CMD 9: (Host-&gt;NCP) CMD_NET_SAVE"/>
-<link href="#rfc.appendix.B.1.2" rel="Chapter" title="B.1.2 CMD 10: (Host-&gt;NCP) CMD_NET_CLEAR"/>
-<link href="#rfc.appendix.B.1.3" rel="Chapter" title="B.1.3 CMD 11: (Host-&gt;NCP) CMD_NET_RECALL"/>
-<link href="#rfc.appendix.C" rel="Chapter" title="C Feature: Host Buffer Offload"/>
-<link href="#rfc.appendix.C.1" rel="Chapter" title="C.1 Commands"/>
-<link href="#rfc.appendix.C.1.1" rel="Chapter" title="C.1.1 CMD 12: (NCP-&gt;Host) CMD_HBO_OFFLOAD"/>
-<link href="#rfc.appendix.C.1.2" rel="Chapter" title="C.1.2 CMD 13: (NCP-&gt;Host) CMD_HBO_RECLAIM"/>
-<link href="#rfc.appendix.C.1.3" rel="Chapter" title="C.1.3 CMD 14: (NCP-&gt;Host) CMD_HBO_DROP"/>
-<link href="#rfc.appendix.C.1.4" rel="Chapter" title="C.1.4 CMD 15: (Host-&gt;NCP) CMD_HBO_OFFLOADED"/>
-<link href="#rfc.appendix.C.1.5" rel="Chapter" title="C.1.5 CMD 16: (Host-&gt;NCP) CMD_HBO_RECLAIMED"/>
-<link href="#rfc.appendix.C.1.6" rel="Chapter" title="C.1.6 CMD 17: (Host-&gt;NCP) CMD_HBO_DROPPED"/>
-<link href="#rfc.appendix.C.2" rel="Chapter" title="C.2 Properties"/>
-<link href="#rfc.appendix.C.2.1" rel="Chapter" title="C.2.1 PROP 10: PROP_HBO_MEM_MAX"/>
-<link href="#rfc.appendix.C.2.2" rel="Chapter" title="C.2.2 PROP 11: PROP_HBO_BLOCK_MAX"/>
-<link href="#rfc.appendix.D" rel="Chapter" title="D Feature: Jam Detection"/>
-<link href="#rfc.appendix.D.1" rel="Chapter" title="D.1 Properties"/>
-<link href="#rfc.appendix.D.1.1" rel="Chapter" title="D.1.1 PROP 4608: PROP_JAM_DETECT_ENABLE"/>
-<link href="#rfc.appendix.D.1.2" rel="Chapter" title="D.1.2 PROP 4609: PROP_JAM_DETECTED"/>
-<link href="#rfc.appendix.D.1.3" rel="Chapter" title="D.1.3 PROP 4610: PROP_JAM_DETECT_RSSI_THRESHOLD"/>
-<link href="#rfc.appendix.D.1.4" rel="Chapter" title="D.1.4 PROP 4611: PROP_JAM_DETECT_WINDOW"/>
-<link href="#rfc.appendix.D.1.5" rel="Chapter" title="D.1.5 PROP 4612: PROP_JAM_DETECT_BUSY"/>
-<link href="#rfc.appendix.E" rel="Chapter" title="E Technology: Thread"/>
-<link href="#rfc.appendix.E.1" rel="Chapter" title="E.1 Thread Capabilities"/>
-<link href="#rfc.appendix.E.2" rel="Chapter" title="E.2 Thread Properties"/>
-<link href="#rfc.appendix.E.2.1" rel="Chapter" title="E.2.1 PROP 80: PROP_THREAD_LEADER_ADDR"/>
-<link href="#rfc.appendix.E.2.2" rel="Chapter" title="E.2.2 PROP 81: PROP_THREAD_PARENT"/>
-<link href="#rfc.appendix.E.2.3" rel="Chapter" title="E.2.3 PROP 82: PROP_THREAD_CHILD_TABLE"/>
-<link href="#rfc.appendix.E.2.4" rel="Chapter" title="E.2.4 PROP 83: PROP_THREAD_LEADER_RID"/>
-<link href="#rfc.appendix.E.2.5" rel="Chapter" title="E.2.5 PROP 84: PROP_THREAD_LEADER_WEIGHT"/>
-<link href="#rfc.appendix.E.2.6" rel="Chapter" title="E.2.6 PROP 85: PROP_THREAD_LOCAL_LEADER_WEIGHT"/>
-<link href="#rfc.appendix.E.2.7" rel="Chapter" title="E.2.7 PROP 86: PROP_THREAD_NETWORK_DATA"/>
-<link href="#rfc.appendix.E.2.8" rel="Chapter" title="E.2.8 PROP 87: PROP_THREAD_NETWORK_DATA_VERSION"/>
-<link href="#rfc.appendix.E.2.9" rel="Chapter" title="E.2.9 PROP 88: PROP_THREAD_STABLE_NETWORK_DATA"/>
-<link href="#rfc.appendix.E.2.10" rel="Chapter" title="E.2.10 PROP 89: PROP_THREAD_STABLE_NETWORK_DATA_VERSION"/>
-<link href="#rfc.appendix.E.2.11" rel="Chapter" title="E.2.11 PROP 90: PROP_THREAD_ON_MESH_NETS"/>
-<link href="#rfc.appendix.E.2.12" rel="Chapter" title="E.2.12 PROP 91: PROP_THREAD_LOCAL_ROUTES"/>
-<link href="#rfc.appendix.E.2.13" rel="Chapter" title="E.2.13 PROP 92: PROP_THREAD_ASSISTING_PORTS"/>
-<link href="#rfc.appendix.E.2.14" rel="Chapter" title="E.2.14 PROP 93: PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE"/>
-<link href="#rfc.appendix.E.2.15" rel="Chapter" title="E.2.15 PROP 94: PROP_THREAD_MODE"/>
-<link href="#rfc.appendix.E.2.16" rel="Chapter" title="E.2.16 PROP 5376: PROP_THREAD_CHILD_TIMEOUT"/>
-<link href="#rfc.appendix.E.2.17" rel="Chapter" title="E.2.17 PROP 5377: PROP_THREAD_RLOC16"/>
-<link href="#rfc.appendix.E.2.18" rel="Chapter" title="E.2.18 PROP 5378: PROP_THREAD_ROUTER_UPGRADE_THRESHOLD"/>
-<link href="#rfc.appendix.E.2.19" rel="Chapter" title="E.2.19 PROP 5379: PROP_THREAD_CONTEXT_REUSE_DELAY"/>
-<link href="#rfc.appendix.E.2.20" rel="Chapter" title="E.2.20 PROP 5380: PROP_THREAD_NETWORK_ID_TIMEOUT"/>
-<link href="#rfc.appendix.E.2.21" rel="Chapter" title="E.2.21 PROP 5381: PROP_THREAD_ACTIVE_ROUTER_IDS"/>
-<link href="#rfc.appendix.E.2.22" rel="Chapter" title="E.2.22 PROP 5382: PROP_THREAD_RLOC16_DEBUG_PASSTHRU"/>
-<link href="#rfc.appendix.E.2.23" rel="Chapter" title="E.2.23 PROP 5383: SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED"/>
-<link href="#rfc.appendix.E.2.24" rel="Chapter" title="E.2.24 PROP 5384: PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD"/>
-<link href="#rfc.appendix.E.2.25" rel="Chapter" title="E.2.25 PROP 5385: PROP_THREAD_ROUTER_SELECTION_JITTER"/>
-<link href="#rfc.appendix.E.2.26" rel="Chapter" title="E.2.26 PROP 5386: PROP_THREAD_PREFERRED_ROUTER_ID"/>
-<link href="#rfc.appendix.E.2.27" rel="Chapter" title="E.2.27 PROP 5387: SPINEL_PROP_THREAD_NEIGHBOR_TABLE"/>
-<link href="#rfc.appendix.F" rel="Chapter" title="F Test Vectors"/>
-<link href="#rfc.appendix.F.1" rel="Chapter" title="F.1 Test Vector: Packed Unsigned Integer"/>
-<link href="#rfc.appendix.F.2" rel="Chapter" title="F.2 Test Vector: Reset Command"/>
-<link href="#rfc.appendix.F.3" rel="Chapter" title="F.3 Test Vector: Reset Notification"/>
-<link href="#rfc.appendix.F.4" rel="Chapter" title="F.4 Test Vector: Scan Beacon"/>
-<link href="#rfc.appendix.F.5" rel="Chapter" title="F.5 Test Vector: Inbound IPv6 Packet"/>
-<link href="#rfc.appendix.F.6" rel="Chapter" title="F.6 Test Vector: Outbound IPv6 Packet"/>
-<link href="#rfc.appendix.F.7" rel="Chapter" title="F.7 Test Vector: Fetch list of on-mesh networks"/>
-<link href="#rfc.appendix.F.8" rel="Chapter" title="F.8 Test Vector: Returned list of on-mesh networks"/>
-<link href="#rfc.appendix.F.9" rel="Chapter" title="F.9 Test Vector: Adding an on-mesh network"/>
-<link href="#rfc.appendix.F.10" rel="Chapter" title="F.10 Test Vector: Insertion notification of an on-mesh network"/>
-<link href="#rfc.appendix.F.11" rel="Chapter" title="F.11 Test Vector: Removing a local on-mesh network"/>
-<link href="#rfc.appendix.F.12" rel="Chapter" title="F.12 Test Vector: Removal notification of an on-mesh network"/>
-<link href="#rfc.appendix.G" rel="Chapter" title="G Example Sessions"/>
-<link href="#rfc.appendix.G.1" rel="Chapter" title="G.1 NCP Initialization"/>
-<link href="#rfc.appendix.G.2" rel="Chapter" title="G.2 Attaching to a network"/>
-<link href="#rfc.appendix.G.3" rel="Chapter" title="G.3 Successfully joining a pre-existing network"/>
-<link href="#rfc.appendix.G.4" rel="Chapter" title="G.4 Unsuccessfully joining a pre-existing network"/>
-<link href="#rfc.appendix.G.5" rel="Chapter" title="G.5 Detaching from a network"/>
-<link href="#rfc.appendix.G.6" rel="Chapter" title="G.6 Attaching to a saved network"/>
-<link href="#rfc.appendix.G.7" rel="Chapter" title="G.7 NCP Software Reset"/>
-<link href="#rfc.appendix.G.8" rel="Chapter" title="G.8 Adding an on-mesh prefix"/>
-<link href="#rfc.appendix.G.9" rel="Chapter" title="G.9 Entering low-power modes"/>
-<link href="#rfc.appendix.G.10" rel="Chapter" title="G.10 Sniffing raw packets"/>
-<link href="#rfc.appendix.H" rel="Chapter" title="H Glossary"/>
+<link href="#rfc.appendix.B" rel="Chapter" title="B Test Vectors"/>
+<link href="#rfc.appendix.B.1" rel="Chapter" title="B.1 Test Vector: Packed Unsigned Integer"/>
+<link href="#rfc.appendix.B.2" rel="Chapter" title="B.2 Test Vector: Reset Command"/>
+<link href="#rfc.appendix.B.3" rel="Chapter" title="B.3 Test Vector: Reset Notification"/>
+<link href="#rfc.appendix.B.4" rel="Chapter" title="B.4 Test Vector: Scan Beacon"/>
+<link href="#rfc.appendix.B.5" rel="Chapter" title="B.5 Test Vector: Inbound IPv6 Packet"/>
+<link href="#rfc.appendix.B.6" rel="Chapter" title="B.6 Test Vector: Outbound IPv6 Packet"/>
+<link href="#rfc.appendix.B.7" rel="Chapter" title="B.7 Test Vector: Fetch list of on-mesh networks"/>
+<link href="#rfc.appendix.B.8" rel="Chapter" title="B.8 Test Vector: Returned list of on-mesh networks"/>
+<link href="#rfc.appendix.B.9" rel="Chapter" title="B.9 Test Vector: Adding an on-mesh network"/>
+<link href="#rfc.appendix.B.10" rel="Chapter" title="B.10 Test Vector: Insertion notification of an on-mesh network"/>
+<link href="#rfc.appendix.B.11" rel="Chapter" title="B.11 Test Vector: Removing a local on-mesh network"/>
+<link href="#rfc.appendix.B.12" rel="Chapter" title="B.12 Test Vector: Removal notification of an on-mesh network"/>
+<link href="#rfc.appendix.C" rel="Chapter" title="C Example Sessions"/>
+<link href="#rfc.appendix.C.1" rel="Chapter" title="C.1 NCP Initialization"/>
+<link href="#rfc.appendix.C.2" rel="Chapter" title="C.2 Attaching to a network"/>
+<link href="#rfc.appendix.C.3" rel="Chapter" title="C.3 Successfully joining a pre-existing network"/>
+<link href="#rfc.appendix.C.4" rel="Chapter" title="C.4 Unsuccessfully joining a pre-existing network"/>
+<link href="#rfc.appendix.C.5" rel="Chapter" title="C.5 Detaching from a network"/>
+<link href="#rfc.appendix.C.6" rel="Chapter" title="C.6 Attaching to a saved network"/>
+<link href="#rfc.appendix.C.7" rel="Chapter" title="C.7 NCP Software Reset"/>
+<link href="#rfc.appendix.C.8" rel="Chapter" title="C.8 Adding an on-mesh prefix"/>
+<link href="#rfc.appendix.C.9" rel="Chapter" title="C.9 Entering low-power modes"/>
+<link href="#rfc.appendix.C.10" rel="Chapter" title="C.10 Sniffing raw packets"/>
+<link href="#rfc.appendix.D" rel="Chapter" title="D Acknowledgments"/>
+<link href="#rfc.appendix.E" rel="Chapter" title="E Glossary"/>
 <link href="#rfc.authors" rel="Chapter"/>
 
 
@@ -560,8 +567,8 @@
   <link rel="schema.dct" href="http://purl.org/dc/terms/" />
 
   <meta name="dct.creator" content="Quattlebaum, R." />
-  <meta name="dct.identifier" content="urn:ietf:id:draft-spinel-protocol-f9bf43254" />
-  <meta name="dct.issued" scheme="ISO8601" content="2016-11-4" />
+  <meta name="dct.identifier" content="urn:ietf:id:draft-spinel-protocol-3df876d" />
+  <meta name="dct.issued" scheme="ISO8601" content="2016-12-2" />
   <meta name="dct.abstract" content="This document describes a general management protocol for enabling a host device to communicate with and manage a Network Control Processor (NCP).  " />
   <meta name="description" content="This document describes a general management protocol for enabling a host device to communicate with and manage a Network Control Processor (NCP).  " />
 
@@ -582,7 +589,7 @@
 </tr>
 <tr>
   <td class="left"></td>
-  <td class="right">November 4, 2016</td>
+  <td class="right">December 2, 2016</td>
 </tr>
 
     	
@@ -590,7 +597,7 @@
   </table>
 
   <p class="title">Spinel Host-Controller Protocol<br />
-  <span class="filename">draft-spinel-protocol-f9bf43254</span></p>
+  <span class="filename">draft-spinel-protocol-3df876d</span></p>
   
   <h1 id="rfc.abstract">
   <a href="#rfc.abstract">Abstract</a>
@@ -715,10 +722,69 @@
 <li>5.7.4.   <a href="#rfc.section.5.7.4">PROP 99: PROP_IPV6_ADDRESS_TABLE</a></li>
 <li>5.7.5.   <a href="#rfc.section.5.7.5">PROP 101: PROP_IPv6_ICMP_PING_OFFLOAD</a></li>
 </ul></ul><li>6.   <a href="#rfc.section.6">Status Codes</a></li>
-<li>7.   <a href="#rfc.section.7">Security Considerations</a></li>
-<ul><li>7.1.   <a href="#rfc.section.7.1">Raw Application Access</a></li>
-</ul><li>8.   <a href="#rfc.section.8">Acknowledgments</a></li>
-<li>Appendix A.   <a href="#rfc.appendix.A">Framing Protocol</a></li>
+<li>7.   <a href="#rfc.section.7">Technology: Thread</a></li>
+<ul><li>7.1.   <a href="#rfc.section.7.1">Thread Capabilities</a></li>
+<li>7.2.   <a href="#rfc.section.7.2">Thread Properties</a></li>
+<ul><li>7.2.1.   <a href="#rfc.section.7.2.1">PROP 80: PROP_THREAD_LEADER_ADDR</a></li>
+<li>7.2.2.   <a href="#rfc.section.7.2.2">PROP 81: PROP_THREAD_PARENT</a></li>
+<li>7.2.3.   <a href="#rfc.section.7.2.3">PROP 82: PROP_THREAD_CHILD_TABLE</a></li>
+<li>7.2.4.   <a href="#rfc.section.7.2.4">PROP 83: PROP_THREAD_LEADER_RID</a></li>
+<li>7.2.5.   <a href="#rfc.section.7.2.5">PROP 84: PROP_THREAD_LEADER_WEIGHT</a></li>
+<li>7.2.6.   <a href="#rfc.section.7.2.6">PROP 85: PROP_THREAD_LOCAL_LEADER_WEIGHT</a></li>
+<li>7.2.7.   <a href="#rfc.section.7.2.7">PROP 86: PROP_THREAD_NETWORK_DATA</a></li>
+<li>7.2.8.   <a href="#rfc.section.7.2.8">PROP 87: PROP_THREAD_NETWORK_DATA_VERSION</a></li>
+<li>7.2.9.   <a href="#rfc.section.7.2.9">PROP 88: PROP_THREAD_STABLE_NETWORK_DATA</a></li>
+<li>7.2.10.   <a href="#rfc.section.7.2.10">PROP 89: PROP_THREAD_STABLE_NETWORK_DATA_VERSION</a></li>
+<li>7.2.11.   <a href="#rfc.section.7.2.11">PROP 90: PROP_THREAD_ON_MESH_NETS</a></li>
+<li>7.2.12.   <a href="#rfc.section.7.2.12">PROP 91: PROP_THREAD_LOCAL_ROUTES</a></li>
+<li>7.2.13.   <a href="#rfc.section.7.2.13">PROP 92: PROP_THREAD_ASSISTING_PORTS</a></li>
+<li>7.2.14.   <a href="#rfc.section.7.2.14">PROP 93: PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE</a></li>
+<li>7.2.15.   <a href="#rfc.section.7.2.15">PROP 94: PROP_THREAD_MODE</a></li>
+<li>7.2.16.   <a href="#rfc.section.7.2.16">PROP 5376: PROP_THREAD_CHILD_TIMEOUT</a></li>
+<li>7.2.17.   <a href="#rfc.section.7.2.17">PROP 5377: PROP_THREAD_RLOC16</a></li>
+<li>7.2.18.   <a href="#rfc.section.7.2.18">PROP 5378: PROP_THREAD_ROUTER_UPGRADE_THRESHOLD</a></li>
+<li>7.2.19.   <a href="#rfc.section.7.2.19">PROP 5379: PROP_THREAD_CONTEXT_REUSE_DELAY</a></li>
+<li>7.2.20.   <a href="#rfc.section.7.2.20">PROP 5380: PROP_THREAD_NETWORK_ID_TIMEOUT</a></li>
+<li>7.2.21.   <a href="#rfc.section.7.2.21">PROP 5381: PROP_THREAD_ACTIVE_ROUTER_IDS</a></li>
+<li>7.2.22.   <a href="#rfc.section.7.2.22">PROP 5382: PROP_THREAD_RLOC16_DEBUG_PASSTHRU</a></li>
+<li>7.2.23.   <a href="#rfc.section.7.2.23">PROP 5383: SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED</a></li>
+<li>7.2.24.   <a href="#rfc.section.7.2.24">PROP 5384: PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD</a></li>
+<li>7.2.25.   <a href="#rfc.section.7.2.25">PROP 5385: PROP_THREAD_ROUTER_SELECTION_JITTER</a></li>
+<li>7.2.26.   <a href="#rfc.section.7.2.26">PROP 5386: PROP_THREAD_PREFERRED_ROUTER_ID</a></li>
+<li>7.2.27.   <a href="#rfc.section.7.2.27">PROP 5387: SPINEL_PROP_THREAD_NEIGHBOR_TABLE</a></li>
+</ul></ul><li>8.   <a href="#rfc.section.8">Feature: Network Save</a></li>
+<ul><li>8.1.   <a href="#rfc.section.8.1">Commands</a></li>
+<ul><li>8.1.1.   <a href="#rfc.section.8.1.1">CMD 9: (Host-&gt;NCP) CMD_NET_SAVE</a></li>
+<li>8.1.2.   <a href="#rfc.section.8.1.2">CMD 10: (Host-&gt;NCP) CMD_NET_CLEAR</a></li>
+<li>8.1.3.   <a href="#rfc.section.8.1.3">CMD 11: (Host-&gt;NCP) CMD_NET_RECALL</a></li>
+</ul></ul><li>9.   <a href="#rfc.section.9">Feature: Host Buffer Offload</a></li>
+<ul><li>9.1.   <a href="#rfc.section.9.1">Commands</a></li>
+<ul><li>9.1.1.   <a href="#rfc.section.9.1.1">CMD 12: (NCP-&gt;Host) CMD_HBO_OFFLOAD</a></li>
+<li>9.1.2.   <a href="#rfc.section.9.1.2">CMD 13: (NCP-&gt;Host) CMD_HBO_RECLAIM</a></li>
+<li>9.1.3.   <a href="#rfc.section.9.1.3">CMD 14: (NCP-&gt;Host) CMD_HBO_DROP</a></li>
+<li>9.1.4.   <a href="#rfc.section.9.1.4">CMD 15: (Host-&gt;NCP) CMD_HBO_OFFLOADED</a></li>
+<li>9.1.5.   <a href="#rfc.section.9.1.5">CMD 16: (Host-&gt;NCP) CMD_HBO_RECLAIMED</a></li>
+<li>9.1.6.   <a href="#rfc.section.9.1.6">CMD 17: (Host-&gt;NCP) CMD_HBO_DROPPED</a></li>
+</ul><li>9.2.   <a href="#rfc.section.9.2">Properties</a></li>
+<ul><li>9.2.1.   <a href="#rfc.section.9.2.1">PROP 10: PROP_HBO_MEM_MAX</a></li>
+<li>9.2.2.   <a href="#rfc.section.9.2.2">PROP 11: PROP_HBO_BLOCK_MAX</a></li>
+</ul></ul><li>10.   <a href="#rfc.section.10">Feature: Jam Detection</a></li>
+<ul><li>10.1.   <a href="#rfc.section.10.1">Properties</a></li>
+<ul><li>10.1.1.   <a href="#rfc.section.10.1.1">PROP 4608: PROP_JAM_DETECT_ENABLE</a></li>
+<li>10.1.2.   <a href="#rfc.section.10.1.2">PROP 4609: PROP_JAM_DETECTED</a></li>
+<li>10.1.3.   <a href="#rfc.section.10.1.3">PROP 4610: PROP_JAM_DETECT_RSSI_THRESHOLD</a></li>
+<li>10.1.4.   <a href="#rfc.section.10.1.4">PROP 4611: PROP_JAM_DETECT_WINDOW</a></li>
+<li>10.1.5.   <a href="#rfc.section.10.1.5">PROP 4612: PROP_JAM_DETECT_BUSY</a></li>
+<li>10.1.6.   <a href="#rfc.section.10.1.6">PROP 4613: SPINEL_PROP_JAM_DETECT_HISTORY_BITMAP</a></li>
+</ul></ul><li>11.   <a href="#rfc.section.11">Feature: GPIO Access</a></li>
+<ul><li>11.1.   <a href="#rfc.section.11.1">Properties</a></li>
+<ul><li>11.1.1.   <a href="#rfc.section.11.1.1">PROP 4096: PROP_GPIO_CONFIG</a></li>
+<li>11.1.2.   <a href="#rfc.section.11.1.2">PROP 4098: PROP_GPIO_STATE</a></li>
+<li>11.1.3.   <a href="#rfc.section.11.1.3">PROP 4099: PROP_GPIO_STATE_SET</a></li>
+<li>11.1.4.   <a href="#rfc.section.11.1.4">PROP 4100: PROP_GPIO_STATE_CLEAR</a></li>
+</ul></ul><li>12.   <a href="#rfc.section.12">Security Considerations</a></li>
+<ul><li>12.1.   <a href="#rfc.section.12.1">Raw Application Access</a></li>
+</ul><li>Appendix A.   <a href="#rfc.appendix.A">Framing Protocol</a></li>
 <ul><li>A.1.   <a href="#rfc.appendix.A.1">UART Recommendations</a></li>
 <ul><li>A.1.1.   <a href="#rfc.appendix.A.1.1">UART Bit Rate Detection</a></li>
 <li>A.1.2.   <a href="#rfc.appendix.A.1.2">HDLC-Lite</a></li>
@@ -726,84 +792,32 @@
 <ul><li>A.2.1.   <a href="#rfc.appendix.A.2.1">SPI Framing Protocol</a></li>
 </ul><li>A.3.   <a href="#rfc.appendix.A.3">I&#178;C Recommendations</a></li>
 <li>A.4.   <a href="#rfc.appendix.A.4">Native USB Recommendations</a></li>
-</ul><li>Appendix B.   <a href="#rfc.appendix.B">Feature: Network Save</a></li>
-<ul><li>B.1.   <a href="#rfc.appendix.B.1">Commands</a></li>
-<ul><li>B.1.1.   <a href="#rfc.appendix.B.1.1">CMD 9: (Host-&gt;NCP) CMD_NET_SAVE</a></li>
-<li>B.1.2.   <a href="#rfc.appendix.B.1.2">CMD 10: (Host-&gt;NCP) CMD_NET_CLEAR</a></li>
-<li>B.1.3.   <a href="#rfc.appendix.B.1.3">CMD 11: (Host-&gt;NCP) CMD_NET_RECALL</a></li>
-</ul></ul><li>Appendix C.   <a href="#rfc.appendix.C">Feature: Host Buffer Offload</a></li>
-<ul><li>C.1.   <a href="#rfc.appendix.C.1">Commands</a></li>
-<ul><li>C.1.1.   <a href="#rfc.appendix.C.1.1">CMD 12: (NCP-&gt;Host) CMD_HBO_OFFLOAD</a></li>
-<li>C.1.2.   <a href="#rfc.appendix.C.1.2">CMD 13: (NCP-&gt;Host) CMD_HBO_RECLAIM</a></li>
-<li>C.1.3.   <a href="#rfc.appendix.C.1.3">CMD 14: (NCP-&gt;Host) CMD_HBO_DROP</a></li>
-<li>C.1.4.   <a href="#rfc.appendix.C.1.4">CMD 15: (Host-&gt;NCP) CMD_HBO_OFFLOADED</a></li>
-<li>C.1.5.   <a href="#rfc.appendix.C.1.5">CMD 16: (Host-&gt;NCP) CMD_HBO_RECLAIMED</a></li>
-<li>C.1.6.   <a href="#rfc.appendix.C.1.6">CMD 17: (Host-&gt;NCP) CMD_HBO_DROPPED</a></li>
-</ul><li>C.2.   <a href="#rfc.appendix.C.2">Properties</a></li>
-<ul><li>C.2.1.   <a href="#rfc.appendix.C.2.1">PROP 10: PROP_HBO_MEM_MAX</a></li>
-<li>C.2.2.   <a href="#rfc.appendix.C.2.2">PROP 11: PROP_HBO_BLOCK_MAX</a></li>
-</ul></ul><li>Appendix D.   <a href="#rfc.appendix.D">Feature: Jam Detection</a></li>
-<ul><li>D.1.   <a href="#rfc.appendix.D.1">Properties</a></li>
-<ul><li>D.1.1.   <a href="#rfc.appendix.D.1.1">PROP 4608: PROP_JAM_DETECT_ENABLE</a></li>
-<li>D.1.2.   <a href="#rfc.appendix.D.1.2">PROP 4609: PROP_JAM_DETECTED</a></li>
-<li>D.1.3.   <a href="#rfc.appendix.D.1.3">PROP 4610: PROP_JAM_DETECT_RSSI_THRESHOLD</a></li>
-<li>D.1.4.   <a href="#rfc.appendix.D.1.4">PROP 4611: PROP_JAM_DETECT_WINDOW</a></li>
-<li>D.1.5.   <a href="#rfc.appendix.D.1.5">PROP 4612: PROP_JAM_DETECT_BUSY</a></li>
-</ul></ul><li>Appendix E.   <a href="#rfc.appendix.E">Technology: Thread</a></li>
-<ul><li>E.1.   <a href="#rfc.appendix.E.1">Thread Capabilities</a></li>
-<li>E.2.   <a href="#rfc.appendix.E.2">Thread Properties</a></li>
-<ul><li>E.2.1.   <a href="#rfc.appendix.E.2.1">PROP 80: PROP_THREAD_LEADER_ADDR</a></li>
-<li>E.2.2.   <a href="#rfc.appendix.E.2.2">PROP 81: PROP_THREAD_PARENT</a></li>
-<li>E.2.3.   <a href="#rfc.appendix.E.2.3">PROP 82: PROP_THREAD_CHILD_TABLE</a></li>
-<li>E.2.4.   <a href="#rfc.appendix.E.2.4">PROP 83: PROP_THREAD_LEADER_RID</a></li>
-<li>E.2.5.   <a href="#rfc.appendix.E.2.5">PROP 84: PROP_THREAD_LEADER_WEIGHT</a></li>
-<li>E.2.6.   <a href="#rfc.appendix.E.2.6">PROP 85: PROP_THREAD_LOCAL_LEADER_WEIGHT</a></li>
-<li>E.2.7.   <a href="#rfc.appendix.E.2.7">PROP 86: PROP_THREAD_NETWORK_DATA</a></li>
-<li>E.2.8.   <a href="#rfc.appendix.E.2.8">PROP 87: PROP_THREAD_NETWORK_DATA_VERSION</a></li>
-<li>E.2.9.   <a href="#rfc.appendix.E.2.9">PROP 88: PROP_THREAD_STABLE_NETWORK_DATA</a></li>
-<li>E.2.10.   <a href="#rfc.appendix.E.2.10">PROP 89: PROP_THREAD_STABLE_NETWORK_DATA_VERSION</a></li>
-<li>E.2.11.   <a href="#rfc.appendix.E.2.11">PROP 90: PROP_THREAD_ON_MESH_NETS</a></li>
-<li>E.2.12.   <a href="#rfc.appendix.E.2.12">PROP 91: PROP_THREAD_LOCAL_ROUTES</a></li>
-<li>E.2.13.   <a href="#rfc.appendix.E.2.13">PROP 92: PROP_THREAD_ASSISTING_PORTS</a></li>
-<li>E.2.14.   <a href="#rfc.appendix.E.2.14">PROP 93: PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE</a></li>
-<li>E.2.15.   <a href="#rfc.appendix.E.2.15">PROP 94: PROP_THREAD_MODE</a></li>
-<li>E.2.16.   <a href="#rfc.appendix.E.2.16">PROP 5376: PROP_THREAD_CHILD_TIMEOUT</a></li>
-<li>E.2.17.   <a href="#rfc.appendix.E.2.17">PROP 5377: PROP_THREAD_RLOC16</a></li>
-<li>E.2.18.   <a href="#rfc.appendix.E.2.18">PROP 5378: PROP_THREAD_ROUTER_UPGRADE_THRESHOLD</a></li>
-<li>E.2.19.   <a href="#rfc.appendix.E.2.19">PROP 5379: PROP_THREAD_CONTEXT_REUSE_DELAY</a></li>
-<li>E.2.20.   <a href="#rfc.appendix.E.2.20">PROP 5380: PROP_THREAD_NETWORK_ID_TIMEOUT</a></li>
-<li>E.2.21.   <a href="#rfc.appendix.E.2.21">PROP 5381: PROP_THREAD_ACTIVE_ROUTER_IDS</a></li>
-<li>E.2.22.   <a href="#rfc.appendix.E.2.22">PROP 5382: PROP_THREAD_RLOC16_DEBUG_PASSTHRU</a></li>
-<li>E.2.23.   <a href="#rfc.appendix.E.2.23">PROP 5383: SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED</a></li>
-<li>E.2.24.   <a href="#rfc.appendix.E.2.24">PROP 5384: PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD</a></li>
-<li>E.2.25.   <a href="#rfc.appendix.E.2.25">PROP 5385: PROP_THREAD_ROUTER_SELECTION_JITTER</a></li>
-<li>E.2.26.   <a href="#rfc.appendix.E.2.26">PROP 5386: PROP_THREAD_PREFERRED_ROUTER_ID</a></li>
-<li>E.2.27.   <a href="#rfc.appendix.E.2.27">PROP 5387: SPINEL_PROP_THREAD_NEIGHBOR_TABLE</a></li>
-</ul></ul><li>Appendix F.   <a href="#rfc.appendix.F">Test Vectors</a></li>
-<ul><li>F.1.   <a href="#rfc.appendix.F.1">Test Vector: Packed Unsigned Integer</a></li>
-<li>F.2.   <a href="#rfc.appendix.F.2">Test Vector: Reset Command</a></li>
-<li>F.3.   <a href="#rfc.appendix.F.3">Test Vector: Reset Notification</a></li>
-<li>F.4.   <a href="#rfc.appendix.F.4">Test Vector: Scan Beacon</a></li>
-<li>F.5.   <a href="#rfc.appendix.F.5">Test Vector: Inbound IPv6 Packet</a></li>
-<li>F.6.   <a href="#rfc.appendix.F.6">Test Vector: Outbound IPv6 Packet</a></li>
-<li>F.7.   <a href="#rfc.appendix.F.7">Test Vector: Fetch list of on-mesh networks</a></li>
-<li>F.8.   <a href="#rfc.appendix.F.8">Test Vector: Returned list of on-mesh networks</a></li>
-<li>F.9.   <a href="#rfc.appendix.F.9">Test Vector: Adding an on-mesh network</a></li>
-<li>F.10.   <a href="#rfc.appendix.F.10">Test Vector: Insertion notification of an on-mesh network</a></li>
-<li>F.11.   <a href="#rfc.appendix.F.11">Test Vector: Removing a local on-mesh network</a></li>
-<li>F.12.   <a href="#rfc.appendix.F.12">Test Vector: Removal notification of an on-mesh network</a></li>
-</ul><li>Appendix G.   <a href="#rfc.appendix.G">Example Sessions</a></li>
-<ul><li>G.1.   <a href="#rfc.appendix.G.1">NCP Initialization</a></li>
-<li>G.2.   <a href="#rfc.appendix.G.2">Attaching to a network</a></li>
-<li>G.3.   <a href="#rfc.appendix.G.3">Successfully joining a pre-existing network</a></li>
-<li>G.4.   <a href="#rfc.appendix.G.4">Unsuccessfully joining a pre-existing network</a></li>
-<li>G.5.   <a href="#rfc.appendix.G.5">Detaching from a network</a></li>
-<li>G.6.   <a href="#rfc.appendix.G.6">Attaching to a saved network</a></li>
-<li>G.7.   <a href="#rfc.appendix.G.7">NCP Software Reset</a></li>
-<li>G.8.   <a href="#rfc.appendix.G.8">Adding an on-mesh prefix</a></li>
-<li>G.9.   <a href="#rfc.appendix.G.9">Entering low-power modes</a></li>
-<li>G.10.   <a href="#rfc.appendix.G.10">Sniffing raw packets</a></li>
-</ul><li>Appendix H.   <a href="#rfc.appendix.H">Glossary</a></li>
+</ul><li>Appendix B.   <a href="#rfc.appendix.B">Test Vectors</a></li>
+<ul><li>B.1.   <a href="#rfc.appendix.B.1">Test Vector: Packed Unsigned Integer</a></li>
+<li>B.2.   <a href="#rfc.appendix.B.2">Test Vector: Reset Command</a></li>
+<li>B.3.   <a href="#rfc.appendix.B.3">Test Vector: Reset Notification</a></li>
+<li>B.4.   <a href="#rfc.appendix.B.4">Test Vector: Scan Beacon</a></li>
+<li>B.5.   <a href="#rfc.appendix.B.5">Test Vector: Inbound IPv6 Packet</a></li>
+<li>B.6.   <a href="#rfc.appendix.B.6">Test Vector: Outbound IPv6 Packet</a></li>
+<li>B.7.   <a href="#rfc.appendix.B.7">Test Vector: Fetch list of on-mesh networks</a></li>
+<li>B.8.   <a href="#rfc.appendix.B.8">Test Vector: Returned list of on-mesh networks</a></li>
+<li>B.9.   <a href="#rfc.appendix.B.9">Test Vector: Adding an on-mesh network</a></li>
+<li>B.10.   <a href="#rfc.appendix.B.10">Test Vector: Insertion notification of an on-mesh network</a></li>
+<li>B.11.   <a href="#rfc.appendix.B.11">Test Vector: Removing a local on-mesh network</a></li>
+<li>B.12.   <a href="#rfc.appendix.B.12">Test Vector: Removal notification of an on-mesh network</a></li>
+</ul><li>Appendix C.   <a href="#rfc.appendix.C">Example Sessions</a></li>
+<ul><li>C.1.   <a href="#rfc.appendix.C.1">NCP Initialization</a></li>
+<li>C.2.   <a href="#rfc.appendix.C.2">Attaching to a network</a></li>
+<li>C.3.   <a href="#rfc.appendix.C.3">Successfully joining a pre-existing network</a></li>
+<li>C.4.   <a href="#rfc.appendix.C.4">Unsuccessfully joining a pre-existing network</a></li>
+<li>C.5.   <a href="#rfc.appendix.C.5">Detaching from a network</a></li>
+<li>C.6.   <a href="#rfc.appendix.C.6">Attaching to a saved network</a></li>
+<li>C.7.   <a href="#rfc.appendix.C.7">NCP Software Reset</a></li>
+<li>C.8.   <a href="#rfc.appendix.C.8">Adding an on-mesh prefix</a></li>
+<li>C.9.   <a href="#rfc.appendix.C.9">Entering low-power modes</a></li>
+<li>C.10.   <a href="#rfc.appendix.C.10">Sniffing raw packets</a></li>
+</ul><li>Appendix D.   <a href="#rfc.appendix.D">Acknowledgments</a></li>
+<li>Appendix E.   <a href="#rfc.appendix.E">Glossary</a></li>
 <li><a href="#rfc.authors">Author's Address</a></li>
 
 
@@ -852,7 +866,7 @@
 <p id="rfc.section.1.1.3.p.3">This would likely be implemented as a part of the renumbering effort (<a href="#renumbering">Section 1.1.1</a>).  </p>
 <h1 id="rfc.section.1.2"><a href="#rfc.section.1.2">1.2.</a> <a href="#property-overview" id="property-overview">Property Overview</a></h1>
 <p id="rfc.section.1.2.p.1">Spinel is largely a property-based protocol, with a property defined for every attribute that needs to be set, changed, or known by the host. The inspiration of this approach was memory-mapped hardware registers for peripherals. The goal is to avoid, as much as possible, the use of large complicated structures and/or method argument lists.  The reason for avoiding these is because they have a tendency to change, especially early in development. Adding or removing a property from a structure can render the entire protocol incompatible. By using properties, you simply change an additional property.  </p>
-<p id="rfc.section.1.2.p.2">Almost all features and capabilities are implemented using properties.  Most new features that are initially proposed as commands can be adapted to be property-based instead. Notable exceptions include "Host Buffer Offload" (<a href="#feature-host-buffer-offload">Appendix C</a>) and "Network Save" (<a href="#feature-network-save">Appendix B</a>).  </p>
+<p id="rfc.section.1.2.p.2">Almost all features and capabilities are implemented using properties.  Most new features that are initially proposed as commands can be adapted to be property-based instead. Notable exceptions include "Host Buffer Offload" (<a href="#feature-host-buffer-offload">Section 9</a>) and "Network Save" (<a href="#feature-network-save">Section 8</a>).  </p>
 <p id="rfc.section.1.2.p.3">In Spinel, properties are keyed by an unsigned integer between 0 and 2,097,151 (See <a href="#packed-unsigned-integer">Section 3.2</a>).  </p>
 <h1 id="rfc.section.1.2.1"><a href="#rfc.section.1.2.1">1.2.1.</a> <a href="#property-methods" id="property-methods">Property Methods</a></h1>
 <p id="rfc.section.1.2.1.p.1">Properties may support one or more of the following methods: </p>
@@ -1455,7 +1469,7 @@
 <p id="rfc.section.4.10.p.1">This command allows the NCP to fetch values from the RAM of the NCP for debugging purposes. Upon success, <samp>CMD_PEEK_RET</samp> is sent from the NCP to the host. Upon failure, <samp>PROP_LAST_STATUS</samp> is emitted with the appropriate error indication.  </p>
 <p id="rfc.section.4.10.p.2">Due to the low-level nature of this command, certain error conditions may induce the NCP to reset.  </p>
 <p id="rfc.section.4.10.p.3">The NCP MAY prevent certain regions of memory from being accessed.  </p>
-<p id="rfc.section.4.10.p.4">The implementation of this command has security implications.  See <a href="#security-considerations">Section 7</a> for more information.  </p>
+<p id="rfc.section.4.10.p.4">The implementation of this command has security implications.  See <a href="#security-considerations">Section 12</a> for more information.  </p>
 <p id="rfc.section.4.10.p.5">This command requires the capability <samp>CAP_PEEK_POKE</samp> to be present.  </p>
 <h1 id="rfc.section.4.11"><a href="#rfc.section.4.11">4.11.</a> <a href="#cmd-peek-ret" id="cmd-peek-ret">CMD 19: (NCP-&gt;Host) CMD_PEEK_RET</a></h1>
 <table cellpadding="3" cellspacing="0" class="tt full center">
@@ -1507,7 +1521,7 @@
 </table>
 <p id="rfc.section.4.12.p.1">This command writes the bytes to the specified memory address for debugging purposes.  </p>
 <p id="rfc.section.4.12.p.2">Due to the low-level nature of this command, certain error conditions may induce the NCP to reset.  </p>
-<p id="rfc.section.4.12.p.3">The implementation of this command has security implications.  See <a href="#security-considerations">Section 7</a> for more information.  </p>
+<p id="rfc.section.4.12.p.3">The implementation of this command has security implications.  See <a href="#security-considerations">Section 12</a> for more information.  </p>
 <p id="rfc.section.4.12.p.4">This command requires the capability <samp>CAP_PEEK_POKE</samp> to be present.  </p>
 <h1 id="rfc.section.5"><a href="#rfc.section.5">5.</a> <a href="#properties" id="properties">Properties</a></h1>
 <p id="rfc.section.5.p.1">While the majority of the properties that allow the configuration of network connectivity are network protocol specific, there are several properties that are required in all implementations.  </p>
@@ -1806,11 +1820,13 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 <ul>
   <li>1: <samp>CAP_LOCK</samp></li>
   <li>2: <samp>CAP_NET_SAVE</samp></li>
-  <li>3: <samp>CAP_HBO</samp>: Host Buffer Offload. See <a href="#feature-host-buffer-offload">Appendix C</a>.</li>
+  <li>3: <samp>CAP_HBO</samp>: Host Buffer Offload. See <a href="#feature-host-buffer-offload">Section 9</a>.</li>
   <li>4: <samp>CAP_POWER_SAVE</samp></li>
   <li>5: <samp>CAP_COUNTERS</samp></li>
-  <li>6: <samp>CAP_JAM_DETECT</samp>: Jamming detection. See <a href="#feature-jam-detect">Appendix D</a></li>
+  <li>6: <samp>CAP_JAM_DETECT</samp>: Jamming detection. See <a href="#feature-jam-detect">Section 10</a></li>
   <li>7: <samp>CAP_PEEK_POKE</samp>: PEEK/POKE debugging commands.</li>
+  <li>8: <samp>CAP_WRITABLE_RAW_STREAM</samp>: <samp>PROP_STREAM_RAW</samp> is writable.</li>
+  <li>9: <samp>CAP_GPIO</samp>: Support for GPIO access. See <a href="#feature-gpio-access">Section 11</a>.</li>
   <li>16: <samp>CAP_802_15_4_2003</samp></li>
   <li>17: <samp>CAP_802_15_4_2006</samp></li>
   <li>18: <samp>CAP_802_15_4_2011</samp></li>
@@ -2033,7 +2049,8 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </table>
 <p id="rfc.section.5.3.2.p.2">This stream provides the capability of sending and receiving raw packets to and from the radio. The exact format of the frame metadata and data is dependent on the MAC and PHY being used.  </p>
 <p id="rfc.section.5.3.2.p.3">This property is a streaming property, meaning that you cannot explicitly fetch the value of this property. To receive traffic, you wait for <samp>CMD_PROP_VALUE_IS</samp> commands with this property id from the NCP.  </p>
-<p id="rfc.section.5.3.2.p.4">Implementations may OPTIONALLY support the ability to transmit arbitrary raw packets. If this capability is supported, you may call <samp>CMD_PROP_VALUE_SET</samp> on this property with the value of the raw packet.  </p>
+<p id="rfc.section.5.3.2.p.4">Implementations may OPTIONALLY support the ability to transmit arbitrary raw packets. Support for this feature is indicated by the presence of the <samp>CAP_WRITABLE_RAW_STREAM</samp> capability.  </p>
+<p id="rfc.section.5.3.2.p.5">If the capability <samp>CAP_WRITABLE_RAW_STREAM</samp> is set, then packets written to this stream with <samp>CMD_PROP_VALUE_SET</samp> will be sent out over the radio.  This allows the caller to use the radio directly, with the stack being implemented on the host instead of the NCP.  </p>
 <h1 id="rfc.section.5.3.2.1"><a href="#rfc.section.5.3.2.1">5.3.2.1.</a> <a href="#frame-metadata-format" id="frame-metadata-format">Frame Metadata Format</a></h1>
 <p id="rfc.section.5.3.2.1.p.1">Any data past the end of <samp>FRAME_DATA_LEN</samp> is considered metadata and is OPTIONAL. Frame metadata MAY be empty or partially specified. Partially specified metadata MUST be accepted. Default values are used for all unspecified fields.  </p>
 <p id="rfc.section.5.3.2.1.p.2">The same general format is used for <samp>PROP_STREAM_RAW</samp>, <samp>PROP_STREAM_NET</samp>, and <samp>PROP_STREAM_NET_INSECURE</samp>. It can be used for frames sent from the NCP to the host as well as frames sent from the host to the NCP.  </p>
@@ -2685,15 +2702,724 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<h1 id="rfc.section.7"><a href="#rfc.section.7">7.</a> <a href="#security-considerations" id="security-considerations">Security Considerations</a></h1>
-<h1 id="rfc.section.7.1"><a href="#rfc.section.7.1">7.1.</a> <a href="#raw-application-access" id="raw-application-access">Raw Application Access</a></h1>
-<p id="rfc.section.7.1.p.1">Spinel MAY be used as an API boundary for allowing processes to configure the NCP. However, such a system MUST NOT give unprivileged processess the ability to send or receive arbitrary command frames to the NCP. Only the specific commands and properties that are required should be allowed to be passed, and then only after being checked for proper format.  </p>
-<h1 id="rfc.section.8"><a href="#rfc.section.8">8.</a> <a href="#acknowledgments" id="acknowledgments">Acknowledgments</a></h1>
-<p id="rfc.section.8.p.1">Special thanks to Abtin Keshavarzian, Martin Turon, Arjuna Sivasithambaresan and Jonathan Hui for their substantial contributions and feedback related to this document.  </p>
-<p>
-  <a id="CREF3" class="info">[CREF3]<span class="info">RQ: If I have missed anyone who has contributed to this document, please let me know ASAP.</span></a>
-</p>
-<p id="rfc.section.8.p.3">This document was prepared using <a href="https://github.com/miekg/mmark">mmark</a> by (Miek Gieben) and <a href="http://xml2rfc.ietf.org/">xml2rfc (version 2)</a>.  </p>
+<h1 id="rfc.section.7"><a href="#rfc.section.7">7.</a> <a href="#technology-thread" id="technology-thread">Technology: Thread</a></h1>
+<p id="rfc.section.7.p.1">This section describes all of the properties and semantics required for managing a Thread NCP.  </p>
+<p id="rfc.section.7.p.2">Thread NCPs have the following requirements: </p>
+<p/>
+
+<ul>
+  <li>The property <samp>PROP_INTERFACE_TYPE</samp> must be 3.</li>
+  <li>The non-optional properties in the following sections MUST be implemented: CORE, PHY, MAC, NET, and IPV6.</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.p.4">All serious implementations of an NCP SHOULD also support the network save feature (See <a href="#feature-network-save">Section 8</a>).  </p>
+<h1 id="rfc.section.7.1"><a href="#rfc.section.7.1">7.1.</a> <a href="#thread-capabilities" id="thread-capabilities">Thread Capabilities</a></h1>
+<p id="rfc.section.7.1.p.1">The Thread technology defines the following capabilities: </p>
+<p/>
+
+<ul>
+  <li><samp>CAP_NET_THREAD_1_0</samp> - Indicates that the NCP implements v1.0 of the Thread standard.</li>
+  <li><samp>CAP_NET_THREAD_1_1</samp> - Indicates that the NCP implements v1.1 of the Thread standard.</li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.section.7.2"><a href="#rfc.section.7.2">7.2.</a> <a href="#thread-properties" id="thread-properties">Thread Properties</a></h1>
+<p id="rfc.section.7.2.p.1">Properties for Thread are allocated out of the <samp>Tech</samp> property section (see <a href="#property-sections">Section 5.1</a>).  </p>
+<h1 id="rfc.section.7.2.1"><a href="#rfc.section.7.2.1">7.2.1.</a> <a href="#prop-80-propthreadleaderaddr" id="prop-80-propthreadleaderaddr">PROP 80: PROP_THREAD_LEADER_ADDR</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Only</li>
+  <li>Packed-Encoding: <samp>6</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.2.1.p.2">The IPv6 address of the leader. (Note: May change to long and short address of leader) </p>
+<h1 id="rfc.section.7.2.2"><a href="#rfc.section.7.2.2">7.2.2.</a> <a href="#prop-81-propthreadparent" id="prop-81-propthreadparent">PROP 81: PROP_THREAD_PARENT</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Only</li>
+  <li>Packed-Encoding: <samp>ES</samp></li>
+  <li>LADDR, SADDR</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.2.2.p.2">The long address and short address of the parent of this node.  </p>
+<h1 id="rfc.section.7.2.3"><a href="#rfc.section.7.2.3">7.2.3.</a> <a href="#prop-82-propthreadchildtable" id="prop-82-propthreadchildtable">PROP 82: PROP_THREAD_CHILD_TABLE</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Only</li>
+  <li>Packed-Encoding: <samp>A(T(ES))</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.2.3.p.2">Table containing the long and short addresses of all the children of this node.  </p>
+<h1 id="rfc.section.7.2.4"><a href="#rfc.section.7.2.4">7.2.4.</a> <a href="#prop-83-propthreadleaderrid" id="prop-83-propthreadleaderrid">PROP 83: PROP_THREAD_LEADER_RID</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Only</li>
+  <li>Packed-Encoding: <samp>C</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.2.4.p.2">The router-id of the current leader.  </p>
+<h1 id="rfc.section.7.2.5"><a href="#rfc.section.7.2.5">7.2.5.</a> <a href="#prop-84-propthreadleaderweight" id="prop-84-propthreadleaderweight">PROP 84: PROP_THREAD_LEADER_WEIGHT</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Only</li>
+  <li>Packed-Encoding: <samp>C</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.2.5.p.2">The leader weight of the current leader.  </p>
+<h1 id="rfc.section.7.2.6"><a href="#rfc.section.7.2.6">7.2.6.</a> <a href="#prop-85-propthreadlocalleaderweight" id="prop-85-propthreadlocalleaderweight">PROP 85: PROP_THREAD_LOCAL_LEADER_WEIGHT</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>C</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.2.6.p.2">The leader weight for this node.  </p>
+<h1 id="rfc.section.7.2.7"><a href="#rfc.section.7.2.7">7.2.7.</a> <a href="#prop-86-propthreadnetworkdata" id="prop-86-propthreadnetworkdata">PROP 86: PROP_THREAD_NETWORK_DATA</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Only</li>
+  <li>Packed-Encoding: <samp>D</samp></li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.section.7.2.8"><a href="#rfc.section.7.2.8">7.2.8.</a> <a href="#prop-87-propthreadnetworkdataversion" id="prop-87-propthreadnetworkdataversion">PROP 87: PROP_THREAD_NETWORK_DATA_VERSION</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Only</li>
+  <li>Packed-Encoding: <samp>S</samp></li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.section.7.2.9"><a href="#rfc.section.7.2.9">7.2.9.</a> <a href="#prop-88-propthreadstablenetworkdata" id="prop-88-propthreadstablenetworkdata">PROP 88: PROP_THREAD_STABLE_NETWORK_DATA</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Only</li>
+  <li>Packed-Encoding: <samp>D</samp></li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.section.7.2.10"><a href="#rfc.section.7.2.10">7.2.10.</a> <a href="#prop-89-propthreadstablenetworkdataversion" id="prop-89-propthreadstablenetworkdataversion">PROP 89: PROP_THREAD_STABLE_NETWORK_DATA_VERSION</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Only</li>
+  <li>Packed-Encoding: <samp>S</samp></li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.section.7.2.11"><a href="#rfc.section.7.2.11">7.2.11.</a> <a href="#prop-90-propthreadonmeshnets" id="prop-90-propthreadonmeshnets">PROP 90: PROP_THREAD_ON_MESH_NETS</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>A(T(6CbCb))</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.2.11.p.2">Data per item is: </p>
+<p/>
+
+<ul>
+  <li><samp>6</samp>: IPv6 Prefix</li>
+  <li><samp>C</samp>: Prefix length, in bits</li>
+  <li><samp>b</samp>: Stable flag</li>
+  <li><samp>C</samp>: Thread flags</li>
+  <li><samp>b</samp>: "Is defined locally" flag. Set if this network was locally defined. Assumed to be true for set, insert and replace. Clear if the on mesh network was defined by another node.</li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.section.7.2.12"><a href="#rfc.section.7.2.12">7.2.12.</a> <a href="#prop-91-propthreadlocalroutes" id="prop-91-propthreadlocalroutes">PROP 91: PROP_THREAD_LOCAL_ROUTES</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>A(T(6CbC))</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.2.12.p.2">Data per item is: </p>
+<p/>
+
+<ul>
+  <li><samp>6</samp>: IPv6 Prefix</li>
+  <li><samp>C</samp>: Prefix length, in bits</li>
+  <li><samp>b</samp>: Stable flag</li>
+  <li><samp>C</samp>: Other flags</li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.section.7.2.13"><a href="#rfc.section.7.2.13">7.2.13.</a> <a href="#prop-92-propthreadassistingports" id="prop-92-propthreadassistingports">PROP 92: PROP_THREAD_ASSISTING_PORTS</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>A(S)</samp></li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.section.7.2.14"><a href="#rfc.section.7.2.14">7.2.14.</a> <a href="#prop-93-propthreadallowlocalnetdatachange" id="prop-93-propthreadallowlocalnetdatachange">PROP 93: PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>b</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.2.14.p.2">Set to true before changing local net data. Set to false when finished.  This allows changes to be aggregated into single events.  </p>
+<h1 id="rfc.section.7.2.15"><a href="#rfc.section.7.2.15">7.2.15.</a> <a href="#prop-94-propthreadmode" id="prop-94-propthreadmode">PROP 94: PROP_THREAD_MODE</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>C</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.2.15.p.2">This property contains the value of the mode TLV for this node. The meaning of the bits in this bitfield are defined by section 4.5.2 of the Thread specification.  </p>
+<h1 id="rfc.section.7.2.16"><a href="#rfc.section.7.2.16">7.2.16.</a> <a href="#prop-5376-propthreadchildtimeout" id="prop-5376-propthreadchildtimeout">PROP 5376: PROP_THREAD_CHILD_TIMEOUT</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>L</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.2.16.p.2">Used when operating in the Child role.  </p>
+<h1 id="rfc.section.7.2.17"><a href="#rfc.section.7.2.17">7.2.17.</a> <a href="#prop-5377-propthreadrloc16" id="prop-5377-propthreadrloc16">PROP 5377: PROP_THREAD_RLOC16</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>S</samp></li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.section.7.2.18"><a href="#rfc.section.7.2.18">7.2.18.</a> <a href="#prop-5378-propthreadrouterupgradethreshold" id="prop-5378-propthreadrouterupgradethreshold">PROP 5378: PROP_THREAD_ROUTER_UPGRADE_THRESHOLD</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>C</samp></li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.section.7.2.19"><a href="#rfc.section.7.2.19">7.2.19.</a> <a href="#prop-5379-propthreadcontextreusedelay" id="prop-5379-propthreadcontextreusedelay">PROP 5379: PROP_THREAD_CONTEXT_REUSE_DELAY</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>L</samp></li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.section.7.2.20"><a href="#rfc.section.7.2.20">7.2.20.</a> <a href="#prop-5380-propthreadnetworkidtimeout" id="prop-5380-propthreadnetworkidtimeout">PROP 5380: PROP_THREAD_NETWORK_ID_TIMEOUT</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>C</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.2.20.p.2">Allows you to get or set the Thread <samp>NETWORK_ID_TIMEOUT</samp> constant, as defined by the Thread specification.  </p>
+<h1 id="rfc.section.7.2.21"><a href="#rfc.section.7.2.21">7.2.21.</a> <a href="#prop-5381-propthreadactiverouterids" id="prop-5381-propthreadactiverouterids">PROP 5381: PROP_THREAD_ACTIVE_ROUTER_IDS</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write/Write-Only</li>
+  <li>Packed-Encoding: <samp>A(C)</samp> (List of active thread router ids)</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.2.21.p.2">Note that some implementations may not support <samp>CMD_GET_VALUE</samp> router ids, but may support <samp>CMD_REMOVE_VALUE</samp> when the node is a leader.  </p>
+<h1 id="rfc.section.7.2.22"><a href="#rfc.section.7.2.22">7.2.22.</a> <a href="#prop-5382-propthreadrloc16debugpassthru" id="prop-5382-propthreadrloc16debugpassthru">PROP 5382: PROP_THREAD_RLOC16_DEBUG_PASSTHRU</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>b</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.2.22.p.2">Allow the HOST to directly observe all IPv6 packets received by the NCP, including ones sent to the RLOC16 address.  </p>
+<p id="rfc.section.7.2.22.p.3">Default value is <samp>false</samp>.  </p>
+<h1 id="rfc.section.7.2.23"><a href="#rfc.section.7.2.23">7.2.23.</a> <a href="#prop-5383-spinelpropthreadrouterroleenabled" id="prop-5383-spinelpropthreadrouterroleenabled">PROP 5383: SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>b</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.2.23.p.2">Allow the HOST to indicate whether or not the router role is enabled.  If current role is a router, setting this property to <samp>false</samp> starts a re-attach process as an end-device.  </p>
+<h1 id="rfc.section.7.2.24"><a href="#rfc.section.7.2.24">7.2.24.</a> <a href="#prop-5384-propthreadrouterdowngradethreshold" id="prop-5384-propthreadrouterdowngradethreshold">PROP 5384: PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>C</samp></li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.section.7.2.25"><a href="#rfc.section.7.2.25">7.2.25.</a> <a href="#prop-5385-propthreadrouterselectionjitter" id="prop-5385-propthreadrouterselectionjitter">PROP 5385: PROP_THREAD_ROUTER_SELECTION_JITTER</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>C</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.2.25.p.2">Specifies the self imposed random delay in seconds a REED waits before registering to become an Active Router.  </p>
+<h1 id="rfc.section.7.2.26"><a href="#rfc.section.7.2.26">7.2.26.</a> <a href="#prop-5386-propthreadpreferredrouterid" id="prop-5386-propthreadpreferredrouterid">PROP 5386: PROP_THREAD_PREFERRED_ROUTER_ID</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Write-Only</li>
+  <li>Packed-Encoding: <samp>C</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.2.26.p.2">Specifies the preferred Router Id. Upon becoming a router/leader the node attempts to use this Router Id. If the preferred Router Id is not set or if it can not be used, a randomly generated router id is picked. This property can be set only when the device role is either detached or disabled.  </p>
+<h1 id="rfc.section.7.2.27"><a href="#rfc.section.7.2.27">7.2.27.</a> <a href="#prop-5387-spinelpropthreadneighbortable" id="prop-5387-spinelpropthreadneighbortable">PROP 5387: SPINEL_PROP_THREAD_NEIGHBOR_TABLE</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Only</li>
+  <li>Packed-Encoding: <samp>A(T(ESLCcCbLL))</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.2.27.p.2">Data per item is: </p>
+<p/>
+
+<ul>
+  <li><samp>E</samp>: Extended/long address</li>
+  <li><samp>S</samp>: RLOC16</li>
+  <li><samp>L</samp>: Age</li>
+  <li><samp>C</samp>: Link Quality In</li>
+  <li><samp>c</samp>: Average RSS</li>
+  <li><samp>C</samp>: Mode (bit-flags)</li>
+  <li><samp>b</samp>: <samp>true</samp> if neighbor is a child, <samp>false</samp> otherwise.</li>
+  <li><samp>L</samp>: Link Frame Counter</li>
+  <li><samp>L</samp>: MLE Frame Counter</li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.section.8"><a href="#rfc.section.8">8.</a> <a href="#feature-network-save" id="feature-network-save">Feature: Network Save</a></h1>
+<p id="rfc.section.8.p.1">The network save feature is an optional NCP capability that, when present, allows the host to save and recall network credentials and state to and from nonvolatile storage.  </p>
+<p id="rfc.section.8.p.2">The presence of this feature can be detected by checking for the presence of the <samp>CAP_NET_SAVE</samp> capability in <samp>PROP_CAPS</samp>.  </p>
+<h1 id="rfc.section.8.1"><a href="#rfc.section.8.1">8.1.</a> <a href="#commands-1" id="commands-1">Commands</a></h1>
+<h1 id="rfc.section.8.1.1"><a href="#rfc.section.8.1.1">8.1.1.</a> <a href="#cmd-9-hostncp-cmdnetsave" id="cmd-9-hostncp-cmdnetsave">CMD 9: (Host-&gt;NCP) CMD_NET_SAVE</a></h1>
+<table cellpadding="3" cellspacing="0" class="tt full center">
+  <thead>
+    <tr>
+      <th class="center">Octets:</th>
+      <th class="center">1</th>
+      <th class="center">1</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="center">Fields:</td>
+      <td class="center">HEADER</td>
+      <td class="center">CMD_NET_SAVE</td>
+    </tr>
+  </tbody>
+</table>
+<p id="rfc.section.8.1.1.p.1">Save network state command. Saves any current network credentials and state necessary to reconnect to the current network to non-volatile memory.  </p>
+<p id="rfc.section.8.1.1.p.2">This operation affects non-volatile memory only. The current network information stored in volatile memory is unaffected.  </p>
+<p id="rfc.section.8.1.1.p.3">The response to this command is always a <samp>CMD_PROP_VALUE_IS</samp> for <samp>PROP_LAST_STATUS</samp>, indicating the result of the operation.  </p>
+<p id="rfc.section.8.1.1.p.4">This command is only available if the <samp>CAP_NET_SAVE</samp> capability is set.  </p>
+<h1 id="rfc.section.8.1.2"><a href="#rfc.section.8.1.2">8.1.2.</a> <a href="#cmd-10-hostncp-cmdnetclear" id="cmd-10-hostncp-cmdnetclear">CMD 10: (Host-&gt;NCP) CMD_NET_CLEAR</a></h1>
+<table cellpadding="3" cellspacing="0" class="tt full center">
+  <thead>
+    <tr>
+      <th class="center">Octets:</th>
+      <th class="center">1</th>
+      <th class="center">1</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="center">Fields:</td>
+      <td class="center">HEADER</td>
+      <td class="center">CMD_NET_CLEAR</td>
+    </tr>
+  </tbody>
+</table>
+<p id="rfc.section.8.1.2.p.1">Clear saved network state command. Clears any previously saved network credentials and state previously stored by <samp>CMD_NET_SAVE</samp> from non-volatile memory.  </p>
+<p id="rfc.section.8.1.2.p.2">This operation affects non-volatile memory only. The current network information stored in volatile memory is unaffected.  </p>
+<p id="rfc.section.8.1.2.p.3">The response to this command is always a <samp>CMD_PROP_VALUE_IS</samp> for <samp>PROP_LAST_STATUS</samp>, indicating the result of the operation.  </p>
+<p id="rfc.section.8.1.2.p.4">This command is only available if the <samp>CAP_NET_SAVE</samp> capability is set.  </p>
+<h1 id="rfc.section.8.1.3"><a href="#rfc.section.8.1.3">8.1.3.</a> <a href="#cmd-11-hostncp-cmdnetrecall" id="cmd-11-hostncp-cmdnetrecall">CMD 11: (Host-&gt;NCP) CMD_NET_RECALL</a></h1>
+<table cellpadding="3" cellspacing="0" class="tt full center">
+  <thead>
+    <tr>
+      <th class="center">Octets:</th>
+      <th class="center">1</th>
+      <th class="center">1</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="center">Fields:</td>
+      <td class="center">HEADER</td>
+      <td class="center">CMD_NET_RECALL</td>
+    </tr>
+  </tbody>
+</table>
+<p id="rfc.section.8.1.3.p.1">Recall saved network state command. Recalls any previously saved network credentials and state previously stored by <samp>CMD_NET_SAVE</samp> from non-volatile memory.  </p>
+<p id="rfc.section.8.1.3.p.2">This command will typically generated several unsolicited property updates as the network state is loaded. At the conclusion of loading, the authoritative response to this command is always a <samp>CMD_PROP_VALUE_IS</samp> for <samp>PROP_LAST_STATUS</samp>, indicating the result of the operation.  </p>
+<p id="rfc.section.8.1.3.p.3">This command is only available if the <samp>CAP_NET_SAVE</samp> capability is set.  </p>
+<h1 id="rfc.section.9"><a href="#rfc.section.9">9.</a> <a href="#feature-host-buffer-offload" id="feature-host-buffer-offload">Feature: Host Buffer Offload</a></h1>
+<p id="rfc.section.9.p.1">The memory on an NCP may be much more limited than the memory on the host processor. In such situations, it is sometimes useful for the NCP to offload buffers to the host processor temporarily so that it can perform other operations.  </p>
+<p id="rfc.section.9.p.2">Host buffer offload is an optional NCP capability that, when present, allows the NCP to store data buffers on the host processor that can be recalled at a later time.  </p>
+<p id="rfc.section.9.p.3">The presence of this feature can be detected by the host by checking for the presence of the <samp>CAP_HBO</samp> capability in <samp>PROP_CAPS</samp>.  </p>
+<h1 id="rfc.section.9.1"><a href="#rfc.section.9.1">9.1.</a> <a href="#commands-2" id="commands-2">Commands</a></h1>
+<h1 id="rfc.section.9.1.1"><a href="#rfc.section.9.1.1">9.1.1.</a> <a href="#cmd-12-ncphost-cmdhbooffload" id="cmd-12-ncphost-cmdhbooffload">CMD 12: (NCP-&gt;Host) CMD_HBO_OFFLOAD</a></h1>
+<p/>
+
+<ul>
+  <li>Argument-Encoding: <samp>LscD</samp> <ul><li><samp>OffloadId</samp>: 32-bit unique block identifier</li><li><samp>Expiration</samp>: In seconds-from-now</li><li><samp>Priority</samp>: Critical, High, Medium, Low</li><li><samp>Data</samp>: Data to offload</li></ul></li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.section.9.1.2"><a href="#rfc.section.9.1.2">9.1.2.</a> <a href="#cmd-13-ncphost-cmdhboreclaim" id="cmd-13-ncphost-cmdhboreclaim">CMD 13: (NCP-&gt;Host) CMD_HBO_RECLAIM</a></h1>
+<p/>
+
+<ul>
+  <li>Argument-Encoding: <samp>Lb</samp> <ul><li><samp>OffloadId</samp>: 32-bit unique block identifier</li><li><samp>KeepAfterReclaim</samp>: If not set to true, the block will be dropped by the host after it is sent to the NCP.</li></ul></li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.section.9.1.3"><a href="#rfc.section.9.1.3">9.1.3.</a> <a href="#cmd-14-ncphost-cmdhbodrop" id="cmd-14-ncphost-cmdhbodrop">CMD 14: (NCP-&gt;Host) CMD_HBO_DROP</a></h1>
+<p/>
+
+<ul>
+  <li>Argument-Encoding: <samp>L</samp> <ul><li><samp>OffloadId</samp>: 32-bit unique block identifier</li></ul></li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.section.9.1.4"><a href="#rfc.section.9.1.4">9.1.4.</a> <a href="#cmd-15-hostncp-cmdhbooffloaded" id="cmd-15-hostncp-cmdhbooffloaded">CMD 15: (Host-&gt;NCP) CMD_HBO_OFFLOADED</a></h1>
+<p/>
+
+<ul>
+  <li>Argument-Encoding: <samp>Li</samp> <ul><li><samp>OffloadId</samp>: 32-bit unique block identifier</li><li><samp>Status</samp>: Status code for the result of the operation.</li></ul></li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.section.9.1.5"><a href="#rfc.section.9.1.5">9.1.5.</a> <a href="#cmd-16-hostncp-cmdhboreclaimed" id="cmd-16-hostncp-cmdhboreclaimed">CMD 16: (Host-&gt;NCP) CMD_HBO_RECLAIMED</a></h1>
+<p/>
+
+<ul>
+  <li>Argument-Encoding: <samp>LiD</samp> <ul><li><samp>OffloadId</samp>: 32-bit unique block identifier</li><li><samp>Status</samp>: Status code for the result of the operation.</li><li><samp>Data</samp>: Data that was previously offloaded (if any)</li></ul></li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.section.9.1.6"><a href="#rfc.section.9.1.6">9.1.6.</a> <a href="#cmd-17-hostncp-cmdhbodropped" id="cmd-17-hostncp-cmdhbodropped">CMD 17: (Host-&gt;NCP) CMD_HBO_DROPPED</a></h1>
+<p/>
+
+<ul>
+  <li>Argument-Encoding: <samp>Li</samp> <ul><li><samp>OffloadId</samp>: 32-bit unique block identifier</li><li><samp>Status</samp>: Status code for the result of the operation.</li></ul></li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.section.9.2"><a href="#rfc.section.9.2">9.2.</a> <a href="#properties-1" id="properties-1">Properties</a></h1>
+<h1 id="rfc.section.9.2.1"><a href="#rfc.section.9.2.1">9.2.1.</a> <a href="#prop-hbo-mem-max" id="prop-hbo-mem-max">PROP 10: PROP_HBO_MEM_MAX</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>L</samp></li>
+</ul>
+
+<p> </p>
+<table cellpadding="3" cellspacing="0" class="tt full center">
+  <thead>
+    <tr>
+      <th class="center">Octets:</th>
+      <th class="center">4</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="center">Fields:</td>
+      <td class="center">
+        <samp>PROP_HBO_MEM_MAX</samp>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p id="rfc.section.9.2.1.p.2">Describes the number of bytes that may be offloaded from the NCP to the host. Default value is zero, so this property must be set by the host to a non-zero value before the NCP will begin offloading blocks.  </p>
+<p id="rfc.section.9.2.1.p.3">This value is encoded as an unsigned 32-bit integer.  </p>
+<p id="rfc.section.9.2.1.p.4">This property is only available if the <samp>CAP_HBO</samp> capability is present in <samp>PROP_CAPS</samp>.  </p>
+<h1 id="rfc.section.9.2.2"><a href="#rfc.section.9.2.2">9.2.2.</a> <a href="#prop-hbo-block-max" id="prop-hbo-block-max">PROP 11: PROP_HBO_BLOCK_MAX</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>S</samp></li>
+</ul>
+
+<p> </p>
+<table cellpadding="3" cellspacing="0" class="tt full center">
+  <thead>
+    <tr>
+      <th class="center">Octets:</th>
+      <th class="center">2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="center">Fields:</td>
+      <td class="center">
+        <samp>PROP_HBO_BLOCK_MAX</samp>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p id="rfc.section.9.2.2.p.2">Describes the number of blocks that may be offloaded from the NCP to the host. Default value is 32. Setting this value to zero will cause host block offload to be effectively disabled.  </p>
+<p id="rfc.section.9.2.2.p.3">This value is encoded as an unsigned 16-bit integer.  </p>
+<p id="rfc.section.9.2.2.p.4">This property is only available if the <samp>CAP_HBO</samp> capability is present in <samp>PROP_CAPS</samp>.  </p>
+<h1 id="rfc.section.10"><a href="#rfc.section.10">10.</a> <a href="#feature-jam-detect" id="feature-jam-detect">Feature: Jam Detection</a></h1>
+<p id="rfc.section.10.p.1">Jamming detection is a feature that allows the NCP to report when it detects high levels of interference that are characteristic of intentional signal jamming.  </p>
+<p id="rfc.section.10.p.2">The presence of this feature can be detected by checking for the presence of the <samp>CAP_JAM_DETECT</samp> (value 6) capability in <samp>PROP_CAPS</samp>.  </p>
+<h1 id="rfc.section.10.1"><a href="#rfc.section.10.1">10.1.</a> <a href="#properties-2" id="properties-2">Properties</a></h1>
+<h1 id="rfc.section.10.1.1"><a href="#rfc.section.10.1.1">10.1.1.</a> <a href="#prop-jam-detect-enable" id="prop-jam-detect-enable">PROP 4608: PROP_JAM_DETECT_ENABLE</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>b</samp></li>
+  <li>Default Value: false</li>
+  <li>REQUIRED for <samp>CAP_JAM_DETECT</samp></li>
+</ul>
+
+<p> </p>
+<table cellpadding="3" cellspacing="0" class="tt full center">
+  <thead>
+    <tr>
+      <th class="center">Octets:</th>
+      <th class="center">1</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="center">Fields:</td>
+      <td class="center">
+        <samp>PROP_JAM_DETECT_ENABLE</samp>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p id="rfc.section.10.1.1.p.2">Indicates if jamming detection is enabled or disabled. Set to true to enable jamming detection.  </p>
+<p id="rfc.section.10.1.1.p.3">This property is only available if the <samp>CAP_JAM_DETECT</samp> capability is present in <samp>PROP_CAPS</samp>.  </p>
+<h1 id="rfc.section.10.1.2"><a href="#rfc.section.10.1.2">10.1.2.</a> <a href="#prop-jam-detected" id="prop-jam-detected">PROP 4609: PROP_JAM_DETECTED</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Only</li>
+  <li>Packed-Encoding: <samp>b</samp></li>
+  <li>REQUIRED for <samp>CAP_JAM_DETECT</samp></li>
+</ul>
+
+<p> </p>
+<table cellpadding="3" cellspacing="0" class="tt full center">
+  <thead>
+    <tr>
+      <th class="center">Octets:</th>
+      <th class="center">1</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="center">Fields:</td>
+      <td class="center">
+        <samp>PROP_JAM_DETECTED</samp>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p id="rfc.section.10.1.2.p.2">Set to true if radio jamming is detected. Set to false otherwise.  </p>
+<p id="rfc.section.10.1.2.p.3">When jamming detection is enabled, changes to the value of this property are emitted asynchronously via <samp>CMD_PROP_VALUE_IS</samp>.  </p>
+<p id="rfc.section.10.1.2.p.4">This property is only available if the <samp>CAP_JAM_DETECT</samp> capability is present in <samp>PROP_CAPS</samp>.  </p>
+<h1 id="rfc.section.10.1.3"><a href="#rfc.section.10.1.3">10.1.3.</a> <a href="#prop-4610-propjamdetectrssithreshold" id="prop-4610-propjamdetectrssithreshold">PROP 4610: PROP_JAM_DETECT_RSSI_THRESHOLD</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>c</samp></li>
+  <li>Units: dBm</li>
+  <li>Default Value: Implementation-specific</li>
+  <li>RECOMMENDED for <samp>CAP_JAM_DETECT</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.10.1.3.p.2">This parameter describes the threshold RSSI level (measured in dBm) above which the jamming detection will consider the channel blocked.  </p>
+<h1 id="rfc.section.10.1.4"><a href="#rfc.section.10.1.4">10.1.4.</a> <a href="#prop-4611-propjamdetectwindow" id="prop-4611-propjamdetectwindow">PROP 4611: PROP_JAM_DETECT_WINDOW</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>c</samp></li>
+  <li>Units: Seconds (1-64)</li>
+  <li>Default Value: Implementation-specific</li>
+  <li>RECOMMENDED for <samp>CAP_JAM_DETECT</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.10.1.4.p.2">This parameter describes the window period for signal jamming detection.  </p>
+<h1 id="rfc.section.10.1.5"><a href="#rfc.section.10.1.5">10.1.5.</a> <a href="#prop-4612-propjamdetectbusy" id="prop-4612-propjamdetectbusy">PROP 4612: PROP_JAM_DETECT_BUSY</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>i</samp></li>
+  <li>Units: Seconds (1-64)</li>
+  <li>Default Value: Implementation-specific</li>
+  <li>RECOMMENDED for <samp>CAP_JAM_DETECT</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.10.1.5.p.2">This parameter describes the number of aggregate seconds within the detection window where the RSSI must be above <samp>PROP_JAM_DETECT_RSSI_THRESHOLD</samp> to trigger detection.  </p>
+<p id="rfc.section.10.1.5.p.3">The behavior of the jamming detection feature when <samp>PROP_JAM_DETECT_BUSY</samp> is larger than <samp>PROP_JAM_DETECT_WINDOW</samp> is undefined.  </p>
+<h1 id="rfc.section.10.1.6"><a href="#rfc.section.10.1.6">10.1.6.</a> <a href="#prop-4613-spinelpropjamdetecthistorybitmap" id="prop-4613-spinelpropjamdetecthistorybitmap">PROP 4613: SPINEL_PROP_JAM_DETECT_HISTORY_BITMAP</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Only</li>
+  <li>Packed-Encoding: <samp>LL</samp></li>
+  <li>Default Value: Implementation-specific</li>
+  <li>RECOMMENDED for <samp>CAP_JAM_DETECT</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.10.1.6.p.2">This value provides information about current state of jamming detection module for monitoring/debugging purpose. It returns a 64-bit value where each bit corresponds to one second interval starting with bit 0 for the most recent interval and bit 63 for the oldest intervals (63 sec earlier).  The bit is set to 1 if the jamming detection module observed/detected high signal level during the corresponding one second interval.  The value is read-only and is encoded as two <samp>L</samp> (uint32) values in little-endian format (first <samp>L</samp> (uint32) value gives the lower bits corresponding to more recent history).  </p>
+<h1 id="rfc.section.11"><a href="#rfc.section.11">11.</a> <a href="#feature-gpio-access" id="feature-gpio-access">Feature: GPIO Access</a></h1>
+<p id="rfc.section.11.p.1">This feature allows the host to have control over some or all of the GPIO pins on the NCP. The host can determine which GPIOs are available by examining <samp>PROP_GPIO_CONFIG</samp>, described below. This API supports a maximum of 256 individual GPIO pins.  </p>
+<p id="rfc.section.11.p.2">Support for this feature can be determined by the presence of <samp>CAP_GPIO</samp>.  </p>
+<h1 id="rfc.section.11.1"><a href="#rfc.section.11.1">11.1.</a> <a href="#properties-3" id="properties-3">Properties</a></h1>
+<h1 id="rfc.section.11.1.1"><a href="#rfc.section.11.1.1">11.1.1.</a> <a href="#prop-4096-propgpioconfig" id="prop-4096-propgpioconfig">PROP 4096: PROP_GPIO_CONFIG</a></h1>
+<p/>
+
+<ul>
+  <li>Argument-Encoding: <samp>A(CCU)</samp></li>
+  <li>Type: Read-write (Writable only using <samp>CMD_PROP_VALUE_INSERT</samp>, <a href="#prop-value-insert">Section 4.5</a>)</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.11.1.1.p.2">An array of structures which contain the following fields: </p>
+<p/>
+
+<ul>
+  <li><samp>C</samp>: GPIO Number</li>
+  <li><samp>C</samp>: GPIO Configuration Flags</li>
+  <li><samp>U</samp>: Human-readable GPIO name</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.11.1.1.p.4">GPIOs which do not have a corresponding entry are not supported.  </p>
+<p id="rfc.section.11.1.1.p.5">The configuration parameter contains the configuration flags for the GPIO: </p>
+<pre>
+  0   1   2   3   4   5   6   7
++---+---+---+---+---+---+---+---+
+|DIR|PUP|PDN|TRIGGER|  RESERVED |
++---+---+---+---+---+---+---+---+
+        |O/D|
+        +---+
+</pre>
+<p/>
+
+<ul>
+  <li><samp>DIR</samp>: Pin direction. Clear (0) for input, set (1) for output.</li>
+  <li><samp>PUP</samp>: Pull-up enabled flag.</li>
+  <li><samp>PDN</samp>/<samp>O/D</samp>: Flag meaning depends on pin direction: <ul><li>Input: Pull-down enabled.</li><li>Output: Output is an open-drain.</li></ul></li>
+  <li><samp>TRIGGER</samp>: Enumeration describing how pin changes generate asynchronous notification commands (TBD) from the NCP to the host.  <ul><li>0: Feature disabled for this pin</li><li>1: Trigger on falling edge</li><li>2: Trigger on rising edge</li><li>3: Trigger on level change</li></ul></li>
+  <li><samp>RESERVED</samp>: Bits reserved for future use. Always cleared to zero and ignored when read.</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.11.1.1.p.7">As an optional feature, the configuration of individual pins may be modified using the <samp>CMD_PROP_VALUE_INSERT</samp> command. Only the GPIO number and flags fields MUST be present, the GPIO name (if present) would be ignored. This command can only be used to modify the configuration of GPIOs which are already exposed---it cannot be used by the host to add addional GPIOs.  </p>
+<h1 id="rfc.section.11.1.2"><a href="#rfc.section.11.1.2">11.1.2.</a> <a href="#prop-4098-propgpiostate" id="prop-4098-propgpiostate">PROP 4098: PROP_GPIO_STATE</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.11.1.2.p.2">Contains a bit field identifying the state of the GPIOs. The length of the data associated with these properties depends on the number of GPIOs. If you have 10 GPIOs, you'd have two bytes. GPIOs are numbered from most significant bit to least significant bit, so 0x80 is GPIO 0, 0x40 is GPIO 1, etc.  </p>
+<p id="rfc.section.11.1.2.p.3">For GPIOs configured as inputs: </p>
+<p/>
+
+<ul>
+  <li><samp>CMD_PROP_VAUE_GET</samp>: The value of the associated bit describes the logic level read from the pin.</li>
+  <li><samp>CMD_PROP_VALUE_SET</samp>: The value of the associated bit is ignored for these pins.</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.11.1.2.p.5">For GPIOs configured as outputs: </p>
+<p/>
+
+<ul>
+  <li><samp>CMD_PROP_VAUE_GET</samp>: The value of the associated bit is implementation specific.</li>
+  <li><samp>CMD_PROP_VALUE_SET</samp>: The value of the associated bit determines the new logic level of the output. If this pin is configured as an open-drain, setting the associated bit to 1 will cause the pin to enter a Hi-Z state.</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.11.1.2.p.7">For GPIOs which are not specified in <samp>PROP_GPIO_CONFIG</samp>: </p>
+<p/>
+
+<ul>
+  <li><samp>CMD_PROP_VAUE_GET</samp>: The value of the associated bit is implementation specific.</li>
+  <li><samp>CMD_PROP_VALUE_SET</samp>: The value of the associated bit MUST be ignored by the NCP.</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.11.1.2.p.9">When writing, unspecified bits are assumed to be zero.  </p>
+<h1 id="rfc.section.11.1.3"><a href="#rfc.section.11.1.3">11.1.3.</a> <a href="#prop-4099-propgpiostateset" id="prop-4099-propgpiostateset">PROP 4099: PROP_GPIO_STATE_SET</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Write-only</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.11.1.3.p.2">Allows for the state of various output GPIOs to be set without affecting other GPIO states. Contains a bit field identifying the output GPIOs that should have their state set to 1.  </p>
+<p id="rfc.section.11.1.3.p.3">When writing, unspecified bits are assumed to be zero. The value of any bits for GPIOs which are not specified in <samp>PROP_GPIO_CONFIG</samp> MUST be ignored.  </p>
+<h1 id="rfc.section.11.1.4"><a href="#rfc.section.11.1.4">11.1.4.</a> <a href="#prop-4100-propgpiostateclear" id="prop-4100-propgpiostateclear">PROP 4100: PROP_GPIO_STATE_CLEAR</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Write-only</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.11.1.4.p.2">Allows for the state of various output GPIOs to be cleared without affecting other GPIO states. Contains a bit field identifying the output GPIOs that should have their state cleared to 0.  </p>
+<p id="rfc.section.11.1.4.p.3">When writing, unspecified bits are assumed to be zero. The value of any bits for GPIOs which are not specified in <samp>PROP_GPIO_CONFIG</samp> MUST be ignored.  </p>
+<h1 id="rfc.section.12"><a href="#rfc.section.12">12.</a> <a href="#security-considerations" id="security-considerations">Security Considerations</a></h1>
+<h1 id="rfc.section.12.1"><a href="#rfc.section.12.1">12.1.</a> <a href="#raw-application-access" id="raw-application-access">Raw Application Access</a></h1>
+<p id="rfc.section.12.1.p.1">Spinel MAY be used as an API boundary for allowing processes to configure the NCP. However, such a system MUST NOT give unprivileged processess the ability to send or receive arbitrary command frames to the NCP. Only the specific commands and properties that are required should be allowed to be passed, and then only after being checked for proper format.  </p>
 <h1 id="rfc.appendix.A"><a href="#rfc.appendix.A">Appendix A.</a> <a href="#framing-protocol" id="framing-protocol">Framing Protocol</a></h1>
 <p id="rfc.section.A.p.1">Since this NCP protocol is defined independently of the physical transport or framing, any number of transports and framing protocols could be used successfully. However, in the interests of compatibility, this document provides some recommendations.  </p>
 <h1 id="rfc.appendix.A.1"><a href="#rfc.appendix.A.1">A.1.</a> <a href="#uart-recommendations" id="uart-recommendations">UART Recommendations</a></h1>
@@ -2848,616 +3574,15 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 <h1 id="rfc.appendix.A.3"><a href="#rfc.appendix.A.3">A.3.</a> <a href="#i2c-recommendations" id="i2c-recommendations">I&#178;C Recommendations</a></h1>
 <p id="rfc.section.A.3.p.1">TBD </p>
 <p>
-  <a id="CREF4" class="info">[CREF4]<span class="info">RQ: It may make sense to have a look at what Bluetooth HCI is doing for native I&#178;C framing and go with that.</span></a>
+  <a id="CREF3" class="info">[CREF3]<span class="info">RQ: It may make sense to have a look at what Bluetooth HCI is doing for native I&#178;C framing and go with that.</span></a>
 </p>
 <h1 id="rfc.appendix.A.4"><a href="#rfc.appendix.A.4">A.4.</a> <a href="#native-usb-recommendations" id="native-usb-recommendations">Native USB Recommendations</a></h1>
 <p id="rfc.section.A.4.p.1">TBD </p>
 <p>
-  <a id="CREF5" class="info">[CREF5]<span class="info">RQ: It may make sense to have a look at what Bluetooth HCI is doing for native USB framing and go with that.</span></a>
+  <a id="CREF4" class="info">[CREF4]<span class="info">RQ: It may make sense to have a look at what Bluetooth HCI is doing for native USB framing and go with that.</span></a>
 </p>
-<h1 id="rfc.appendix.B"><a href="#rfc.appendix.B">Appendix B.</a> <a href="#feature-network-save" id="feature-network-save">Feature: Network Save</a></h1>
-<p id="rfc.section.B.p.1">The network save feature is an optional NCP capability that, when present, allows the host to save and recall network credentials and state to and from nonvolatile storage.  </p>
-<p id="rfc.section.B.p.2">The presence of this feature can be detected by checking for the presence of the <samp>CAP_NET_SAVE</samp> capability in <samp>PROP_CAPS</samp>.  </p>
-<h1 id="rfc.appendix.B.1"><a href="#rfc.appendix.B.1">B.1.</a> <a href="#commands-1" id="commands-1">Commands</a></h1>
-<h1 id="rfc.appendix.B.1.1"><a href="#rfc.appendix.B.1.1">B.1.1.</a> <a href="#cmd-9-hostncp-cmdnetsave" id="cmd-9-hostncp-cmdnetsave">CMD 9: (Host-&gt;NCP) CMD_NET_SAVE</a></h1>
-<table cellpadding="3" cellspacing="0" class="tt full center">
-  <thead>
-    <tr>
-      <th class="center">Octets:</th>
-      <th class="center">1</th>
-      <th class="center">1</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td class="center">Fields:</td>
-      <td class="center">HEADER</td>
-      <td class="center">CMD_NET_SAVE</td>
-    </tr>
-  </tbody>
-</table>
-<p id="rfc.section.B.1.1.p.1">Save network state command. Saves any current network credentials and state necessary to reconnect to the current network to non-volatile memory.  </p>
-<p id="rfc.section.B.1.1.p.2">This operation affects non-volatile memory only. The current network information stored in volatile memory is unaffected.  </p>
-<p id="rfc.section.B.1.1.p.3">The response to this command is always a <samp>CMD_PROP_VALUE_IS</samp> for <samp>PROP_LAST_STATUS</samp>, indicating the result of the operation.  </p>
-<p id="rfc.section.B.1.1.p.4">This command is only available if the <samp>CAP_NET_SAVE</samp> capability is set.  </p>
-<h1 id="rfc.appendix.B.1.2"><a href="#rfc.appendix.B.1.2">B.1.2.</a> <a href="#cmd-10-hostncp-cmdnetclear" id="cmd-10-hostncp-cmdnetclear">CMD 10: (Host-&gt;NCP) CMD_NET_CLEAR</a></h1>
-<table cellpadding="3" cellspacing="0" class="tt full center">
-  <thead>
-    <tr>
-      <th class="center">Octets:</th>
-      <th class="center">1</th>
-      <th class="center">1</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td class="center">Fields:</td>
-      <td class="center">HEADER</td>
-      <td class="center">CMD_NET_CLEAR</td>
-    </tr>
-  </tbody>
-</table>
-<p id="rfc.section.B.1.2.p.1">Clear saved network state command. Clears any previously saved network credentials and state previously stored by <samp>CMD_NET_SAVE</samp> from non-volatile memory.  </p>
-<p id="rfc.section.B.1.2.p.2">This operation affects non-volatile memory only. The current network information stored in volatile memory is unaffected.  </p>
-<p id="rfc.section.B.1.2.p.3">The response to this command is always a <samp>CMD_PROP_VALUE_IS</samp> for <samp>PROP_LAST_STATUS</samp>, indicating the result of the operation.  </p>
-<p id="rfc.section.B.1.2.p.4">This command is only available if the <samp>CAP_NET_SAVE</samp> capability is set.  </p>
-<h1 id="rfc.appendix.B.1.3"><a href="#rfc.appendix.B.1.3">B.1.3.</a> <a href="#cmd-11-hostncp-cmdnetrecall" id="cmd-11-hostncp-cmdnetrecall">CMD 11: (Host-&gt;NCP) CMD_NET_RECALL</a></h1>
-<table cellpadding="3" cellspacing="0" class="tt full center">
-  <thead>
-    <tr>
-      <th class="center">Octets:</th>
-      <th class="center">1</th>
-      <th class="center">1</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td class="center">Fields:</td>
-      <td class="center">HEADER</td>
-      <td class="center">CMD_NET_RECALL</td>
-    </tr>
-  </tbody>
-</table>
-<p id="rfc.section.B.1.3.p.1">Recall saved network state command. Recalls any previously saved network credentials and state previously stored by <samp>CMD_NET_SAVE</samp> from non-volatile memory.  </p>
-<p id="rfc.section.B.1.3.p.2">This command will typically generated several unsolicited property updates as the network state is loaded. At the conclusion of loading, the authoritative response to this command is always a <samp>CMD_PROP_VALUE_IS</samp> for <samp>PROP_LAST_STATUS</samp>, indicating the result of the operation.  </p>
-<p id="rfc.section.B.1.3.p.3">This command is only available if the <samp>CAP_NET_SAVE</samp> capability is set.  </p>
-<h1 id="rfc.appendix.C"><a href="#rfc.appendix.C">Appendix C.</a> <a href="#feature-host-buffer-offload" id="feature-host-buffer-offload">Feature: Host Buffer Offload</a></h1>
-<p id="rfc.section.C.p.1">The memory on an NCP may be much more limited than the memory on the host processor. In such situations, it is sometimes useful for the NCP to offload buffers to the host processor temporarily so that it can perform other operations.  </p>
-<p id="rfc.section.C.p.2">Host buffer offload is an optional NCP capability that, when present, allows the NCP to store data buffers on the host processor that can be recalled at a later time.  </p>
-<p id="rfc.section.C.p.3">The presence of this feature can be detected by the host by checking for the presence of the <samp>CAP_HBO</samp> capability in <samp>PROP_CAPS</samp>.  </p>
-<h1 id="rfc.appendix.C.1"><a href="#rfc.appendix.C.1">C.1.</a> <a href="#commands-2" id="commands-2">Commands</a></h1>
-<h1 id="rfc.appendix.C.1.1"><a href="#rfc.appendix.C.1.1">C.1.1.</a> <a href="#cmd-12-ncphost-cmdhbooffload" id="cmd-12-ncphost-cmdhbooffload">CMD 12: (NCP-&gt;Host) CMD_HBO_OFFLOAD</a></h1>
-<p/>
-
-<ul>
-  <li>Argument-Encoding: <samp>LscD</samp> <ul><li><samp>OffloadId</samp>: 32-bit unique block identifier</li><li><samp>Expiration</samp>: In seconds-from-now</li><li><samp>Priority</samp>: Critical, High, Medium, Low</li><li><samp>Data</samp>: Data to offload</li></ul></li>
-</ul>
-
-<p> </p>
-<h1 id="rfc.appendix.C.1.2"><a href="#rfc.appendix.C.1.2">C.1.2.</a> <a href="#cmd-13-ncphost-cmdhboreclaim" id="cmd-13-ncphost-cmdhboreclaim">CMD 13: (NCP-&gt;Host) CMD_HBO_RECLAIM</a></h1>
-<p/>
-
-<ul>
-  <li>Argument-Encoding: <samp>Lb</samp> <ul><li><samp>OffloadId</samp>: 32-bit unique block identifier</li><li><samp>KeepAfterReclaim</samp>: If not set to true, the block will be dropped by the host after it is sent to the NCP.</li></ul></li>
-</ul>
-
-<p> </p>
-<h1 id="rfc.appendix.C.1.3"><a href="#rfc.appendix.C.1.3">C.1.3.</a> <a href="#cmd-14-ncphost-cmdhbodrop" id="cmd-14-ncphost-cmdhbodrop">CMD 14: (NCP-&gt;Host) CMD_HBO_DROP</a></h1>
-<p/>
-
-<ul>
-  <li>Argument-Encoding: <samp>L</samp> <ul><li><samp>OffloadId</samp>: 32-bit unique block identifier</li></ul></li>
-</ul>
-
-<p> </p>
-<h1 id="rfc.appendix.C.1.4"><a href="#rfc.appendix.C.1.4">C.1.4.</a> <a href="#cmd-15-hostncp-cmdhbooffloaded" id="cmd-15-hostncp-cmdhbooffloaded">CMD 15: (Host-&gt;NCP) CMD_HBO_OFFLOADED</a></h1>
-<p/>
-
-<ul>
-  <li>Argument-Encoding: <samp>Li</samp> <ul><li><samp>OffloadId</samp>: 32-bit unique block identifier</li><li><samp>Status</samp>: Status code for the result of the operation.</li></ul></li>
-</ul>
-
-<p> </p>
-<h1 id="rfc.appendix.C.1.5"><a href="#rfc.appendix.C.1.5">C.1.5.</a> <a href="#cmd-16-hostncp-cmdhboreclaimed" id="cmd-16-hostncp-cmdhboreclaimed">CMD 16: (Host-&gt;NCP) CMD_HBO_RECLAIMED</a></h1>
-<p/>
-
-<ul>
-  <li>Argument-Encoding: <samp>LiD</samp> <ul><li><samp>OffloadId</samp>: 32-bit unique block identifier</li><li><samp>Status</samp>: Status code for the result of the operation.</li><li><samp>Data</samp>: Data that was previously offloaded (if any)</li></ul></li>
-</ul>
-
-<p> </p>
-<h1 id="rfc.appendix.C.1.6"><a href="#rfc.appendix.C.1.6">C.1.6.</a> <a href="#cmd-17-hostncp-cmdhbodropped" id="cmd-17-hostncp-cmdhbodropped">CMD 17: (Host-&gt;NCP) CMD_HBO_DROPPED</a></h1>
-<p/>
-
-<ul>
-  <li>Argument-Encoding: <samp>Li</samp> <ul><li><samp>OffloadId</samp>: 32-bit unique block identifier</li><li><samp>Status</samp>: Status code for the result of the operation.</li></ul></li>
-</ul>
-
-<p> </p>
-<h1 id="rfc.appendix.C.2"><a href="#rfc.appendix.C.2">C.2.</a> <a href="#properties-1" id="properties-1">Properties</a></h1>
-<h1 id="rfc.appendix.C.2.1"><a href="#rfc.appendix.C.2.1">C.2.1.</a> <a href="#prop-hbo-mem-max" id="prop-hbo-mem-max">PROP 10: PROP_HBO_MEM_MAX</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Write</li>
-  <li>Packed-Encoding: <samp>L</samp></li>
-</ul>
-
-<p> </p>
-<table cellpadding="3" cellspacing="0" class="tt full center">
-  <thead>
-    <tr>
-      <th class="center">Octets:</th>
-      <th class="center">4</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td class="center">Fields:</td>
-      <td class="center">
-        <samp>PROP_HBO_MEM_MAX</samp>
-      </td>
-    </tr>
-  </tbody>
-</table>
-<p id="rfc.section.C.2.1.p.2">Describes the number of bytes that may be offloaded from the NCP to the host. Default value is zero, so this property must be set by the host to a non-zero value before the NCP will begin offloading blocks.  </p>
-<p id="rfc.section.C.2.1.p.3">This value is encoded as an unsigned 32-bit integer.  </p>
-<p id="rfc.section.C.2.1.p.4">This property is only available if the <samp>CAP_HBO</samp> capability is present in <samp>PROP_CAPS</samp>.  </p>
-<h1 id="rfc.appendix.C.2.2"><a href="#rfc.appendix.C.2.2">C.2.2.</a> <a href="#prop-hbo-block-max" id="prop-hbo-block-max">PROP 11: PROP_HBO_BLOCK_MAX</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Write</li>
-  <li>Packed-Encoding: <samp>S</samp></li>
-</ul>
-
-<p> </p>
-<table cellpadding="3" cellspacing="0" class="tt full center">
-  <thead>
-    <tr>
-      <th class="center">Octets:</th>
-      <th class="center">2</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td class="center">Fields:</td>
-      <td class="center">
-        <samp>PROP_HBO_BLOCK_MAX</samp>
-      </td>
-    </tr>
-  </tbody>
-</table>
-<p id="rfc.section.C.2.2.p.2">Describes the number of blocks that may be offloaded from the NCP to the host. Default value is 32. Setting this value to zero will cause host block offload to be effectively disabled.  </p>
-<p id="rfc.section.C.2.2.p.3">This value is encoded as an unsigned 16-bit integer.  </p>
-<p id="rfc.section.C.2.2.p.4">This property is only available if the <samp>CAP_HBO</samp> capability is present in <samp>PROP_CAPS</samp>.  </p>
-<h1 id="rfc.appendix.D"><a href="#rfc.appendix.D">Appendix D.</a> <a href="#feature-jam-detect" id="feature-jam-detect">Feature: Jam Detection</a></h1>
-<p id="rfc.section.D.p.1">Jamming detection is a feature that allows the NCP to report when it detects high levels of interference that are characteristic of intentional signal jamming.  </p>
-<p id="rfc.section.D.p.2">The presence of this feature can be detected by checking for the presence of the <samp>CAP_JAM_DETECT</samp> (value 6) capability in <samp>PROP_CAPS</samp>.  </p>
-<h1 id="rfc.appendix.D.1"><a href="#rfc.appendix.D.1">D.1.</a> <a href="#properties-2" id="properties-2">Properties</a></h1>
-<h1 id="rfc.appendix.D.1.1"><a href="#rfc.appendix.D.1.1">D.1.1.</a> <a href="#prop-jam-detect-enable" id="prop-jam-detect-enable">PROP 4608: PROP_JAM_DETECT_ENABLE</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Write</li>
-  <li>Packed-Encoding: <samp>b</samp></li>
-  <li>Default Value: false</li>
-  <li>REQUIRED for <samp>CAP_JAM_DETECT</samp></li>
-</ul>
-
-<p> </p>
-<table cellpadding="3" cellspacing="0" class="tt full center">
-  <thead>
-    <tr>
-      <th class="center">Octets:</th>
-      <th class="center">1</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td class="center">Fields:</td>
-      <td class="center">
-        <samp>PROP_JAM_DETECT_ENABLE</samp>
-      </td>
-    </tr>
-  </tbody>
-</table>
-<p id="rfc.section.D.1.1.p.2">Indicates if jamming detection is enabled or disabled. Set to true to enable jamming detection.  </p>
-<p id="rfc.section.D.1.1.p.3">This property is only available if the <samp>CAP_JAM_DETECT</samp> capability is present in <samp>PROP_CAPS</samp>.  </p>
-<h1 id="rfc.appendix.D.1.2"><a href="#rfc.appendix.D.1.2">D.1.2.</a> <a href="#prop-jam-detected" id="prop-jam-detected">PROP 4609: PROP_JAM_DETECTED</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Only</li>
-  <li>Packed-Encoding: <samp>b</samp></li>
-  <li>REQUIRED for <samp>CAP_JAM_DETECT</samp></li>
-</ul>
-
-<p> </p>
-<table cellpadding="3" cellspacing="0" class="tt full center">
-  <thead>
-    <tr>
-      <th class="center">Octets:</th>
-      <th class="center">1</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td class="center">Fields:</td>
-      <td class="center">
-        <samp>PROP_JAM_DETECTED</samp>
-      </td>
-    </tr>
-  </tbody>
-</table>
-<p id="rfc.section.D.1.2.p.2">Set to true if radio jamming is detected. Set to false otherwise.  </p>
-<p id="rfc.section.D.1.2.p.3">When jamming detection is enabled, changes to the value of this property are emitted asynchronously via <samp>CMD_PROP_VALUE_IS</samp>.  </p>
-<p id="rfc.section.D.1.2.p.4">This property is only available if the <samp>CAP_JAM_DETECT</samp> capability is present in <samp>PROP_CAPS</samp>.  </p>
-<h1 id="rfc.appendix.D.1.3"><a href="#rfc.appendix.D.1.3">D.1.3.</a> <a href="#prop-4610-propjamdetectrssithreshold" id="prop-4610-propjamdetectrssithreshold">PROP 4610: PROP_JAM_DETECT_RSSI_THRESHOLD</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Write</li>
-  <li>Packed-Encoding: <samp>c</samp></li>
-  <li>Units: dBm</li>
-  <li>Default Value: Implementation-specific</li>
-  <li>RECOMMENDED for <samp>CAP_JAM_DETECT</samp></li>
-</ul>
-
-<p> </p>
-<p id="rfc.section.D.1.3.p.2">This parameter describes the threshold RSSI level (measured in dBm) above which the jamming detection will consider the channel blocked.  </p>
-<h1 id="rfc.appendix.D.1.4"><a href="#rfc.appendix.D.1.4">D.1.4.</a> <a href="#prop-4611-propjamdetectwindow" id="prop-4611-propjamdetectwindow">PROP 4611: PROP_JAM_DETECT_WINDOW</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Write</li>
-  <li>Packed-Encoding: <samp>c</samp></li>
-  <li>Units: Seconds (1-64)</li>
-  <li>Default Value: Implementation-specific</li>
-  <li>RECOMMENDED for <samp>CAP_JAM_DETECT</samp></li>
-</ul>
-
-<p> </p>
-<p id="rfc.section.D.1.4.p.2">This parameter describes the window period for signal jamming detection.  </p>
-<h1 id="rfc.appendix.D.1.5"><a href="#rfc.appendix.D.1.5">D.1.5.</a> <a href="#prop-4612-propjamdetectbusy" id="prop-4612-propjamdetectbusy">PROP 4612: PROP_JAM_DETECT_BUSY</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Write</li>
-  <li>Packed-Encoding: <samp>i</samp></li>
-  <li>Units: Seconds (1-64)</li>
-  <li>Default Value: Implementation-specific</li>
-  <li>RECOMMENDED for <samp>CAP_JAM_DETECT</samp></li>
-</ul>
-
-<p> </p>
-<p id="rfc.section.D.1.5.p.2">This parameter describes the number of aggregate seconds within the detection window where the RSSI must be above <samp>PROP_JAM_DETECT_RSSI_THRESHOLD</samp> to trigger detection.  </p>
-<p id="rfc.section.D.1.5.p.3">The behavior of the jamming detection feature when <samp>PROP_JAM_DETECT_BUSY</samp> is larger than <samp>PROP_JAM_DETECT_WINDOW</samp> is undefined.  </p>
-<h1 id="rfc.appendix.E"><a href="#rfc.appendix.E">Appendix E.</a> <a href="#technology-thread" id="technology-thread">Technology: Thread</a></h1>
-<p id="rfc.section.E.p.1">This section describes all of the properties and semantics required for managing a Thread NCP.  </p>
-<p id="rfc.section.E.p.2">Thread NCPs have the following requirements: </p>
-<p/>
-
-<ul>
-  <li>The property <samp>PROP_INTERFACE_TYPE</samp> must be 3.</li>
-  <li>The non-optional properties in the following sections MUST be implemented: CORE, PHY, MAC, NET, and IPV6.</li>
-</ul>
-
-<p> </p>
-<p id="rfc.section.E.p.4">All serious implementations of an NCP SHOULD also support the network save feature (See <a href="#feature-network-save">Appendix B</a>).  </p>
-<h1 id="rfc.appendix.E.1"><a href="#rfc.appendix.E.1">E.1.</a> <a href="#thread-capabilities" id="thread-capabilities">Thread Capabilities</a></h1>
-<p id="rfc.section.E.1.p.1">The Thread technology defines the following capabilities: </p>
-<p/>
-
-<ul>
-  <li><samp>CAP_NET_THREAD_1_0</samp> - Indicates that the NCP implements v1.0 of the Thread standard.</li>
-  <li><samp>CAP_NET_THREAD_1_1</samp> - Indicates that the NCP implements v1.1 of the Thread standard.</li>
-</ul>
-
-<p> </p>
-<h1 id="rfc.appendix.E.2"><a href="#rfc.appendix.E.2">E.2.</a> <a href="#thread-properties" id="thread-properties">Thread Properties</a></h1>
-<p id="rfc.section.E.2.p.1">Properties for Thread are allocated out of the <samp>Tech</samp> property section (see <a href="#property-sections">Section 5.1</a>).  </p>
-<h1 id="rfc.appendix.E.2.1"><a href="#rfc.appendix.E.2.1">E.2.1.</a> <a href="#prop-80-propthreadleaderaddr" id="prop-80-propthreadleaderaddr">PROP 80: PROP_THREAD_LEADER_ADDR</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Only</li>
-  <li>Packed-Encoding: <samp>6</samp></li>
-</ul>
-
-<p> </p>
-<p id="rfc.section.E.2.1.p.2">The IPv6 address of the leader. (Note: May change to long and short address of leader) </p>
-<h1 id="rfc.appendix.E.2.2"><a href="#rfc.appendix.E.2.2">E.2.2.</a> <a href="#prop-81-propthreadparent" id="prop-81-propthreadparent">PROP 81: PROP_THREAD_PARENT</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Only</li>
-  <li>Packed-Encoding: <samp>ES</samp></li>
-  <li>LADDR, SADDR</li>
-</ul>
-
-<p> </p>
-<p id="rfc.section.E.2.2.p.2">The long address and short address of the parent of this node.  </p>
-<h1 id="rfc.appendix.E.2.3"><a href="#rfc.appendix.E.2.3">E.2.3.</a> <a href="#prop-82-propthreadchildtable" id="prop-82-propthreadchildtable">PROP 82: PROP_THREAD_CHILD_TABLE</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Only</li>
-  <li>Packed-Encoding: <samp>A(T(ES))</samp></li>
-</ul>
-
-<p> </p>
-<p id="rfc.section.E.2.3.p.2">Table containing the long and short addresses of all the children of this node.  </p>
-<h1 id="rfc.appendix.E.2.4"><a href="#rfc.appendix.E.2.4">E.2.4.</a> <a href="#prop-83-propthreadleaderrid" id="prop-83-propthreadleaderrid">PROP 83: PROP_THREAD_LEADER_RID</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Only</li>
-  <li>Packed-Encoding: <samp>C</samp></li>
-</ul>
-
-<p> </p>
-<p id="rfc.section.E.2.4.p.2">The router-id of the current leader.  </p>
-<h1 id="rfc.appendix.E.2.5"><a href="#rfc.appendix.E.2.5">E.2.5.</a> <a href="#prop-84-propthreadleaderweight" id="prop-84-propthreadleaderweight">PROP 84: PROP_THREAD_LEADER_WEIGHT</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Only</li>
-  <li>Packed-Encoding: <samp>C</samp></li>
-</ul>
-
-<p> </p>
-<p id="rfc.section.E.2.5.p.2">The leader weight of the current leader.  </p>
-<h1 id="rfc.appendix.E.2.6"><a href="#rfc.appendix.E.2.6">E.2.6.</a> <a href="#prop-85-propthreadlocalleaderweight" id="prop-85-propthreadlocalleaderweight">PROP 85: PROP_THREAD_LOCAL_LEADER_WEIGHT</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Write</li>
-  <li>Packed-Encoding: <samp>C</samp></li>
-</ul>
-
-<p> </p>
-<p id="rfc.section.E.2.6.p.2">The leader weight for this node.  </p>
-<h1 id="rfc.appendix.E.2.7"><a href="#rfc.appendix.E.2.7">E.2.7.</a> <a href="#prop-86-propthreadnetworkdata" id="prop-86-propthreadnetworkdata">PROP 86: PROP_THREAD_NETWORK_DATA</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Only</li>
-  <li>Packed-Encoding: <samp>D</samp></li>
-</ul>
-
-<p> </p>
-<h1 id="rfc.appendix.E.2.8"><a href="#rfc.appendix.E.2.8">E.2.8.</a> <a href="#prop-87-propthreadnetworkdataversion" id="prop-87-propthreadnetworkdataversion">PROP 87: PROP_THREAD_NETWORK_DATA_VERSION</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Only</li>
-  <li>Packed-Encoding: <samp>S</samp></li>
-</ul>
-
-<p> </p>
-<h1 id="rfc.appendix.E.2.9"><a href="#rfc.appendix.E.2.9">E.2.9.</a> <a href="#prop-88-propthreadstablenetworkdata" id="prop-88-propthreadstablenetworkdata">PROP 88: PROP_THREAD_STABLE_NETWORK_DATA</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Only</li>
-  <li>Packed-Encoding: <samp>D</samp></li>
-</ul>
-
-<p> </p>
-<h1 id="rfc.appendix.E.2.10"><a href="#rfc.appendix.E.2.10">E.2.10.</a> <a href="#prop-89-propthreadstablenetworkdataversion" id="prop-89-propthreadstablenetworkdataversion">PROP 89: PROP_THREAD_STABLE_NETWORK_DATA_VERSION</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Only</li>
-  <li>Packed-Encoding: <samp>S</samp></li>
-</ul>
-
-<p> </p>
-<h1 id="rfc.appendix.E.2.11"><a href="#rfc.appendix.E.2.11">E.2.11.</a> <a href="#prop-90-propthreadonmeshnets" id="prop-90-propthreadonmeshnets">PROP 90: PROP_THREAD_ON_MESH_NETS</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Write</li>
-  <li>Packed-Encoding: <samp>A(T(6CbCb))</samp></li>
-</ul>
-
-<p> </p>
-<p id="rfc.section.E.2.11.p.2">Data per item is: </p>
-<p/>
-
-<ul>
-  <li><samp>6</samp>: IPv6 Prefix</li>
-  <li><samp>C</samp>: Prefix length, in bits</li>
-  <li><samp>b</samp>: Stable flag</li>
-  <li><samp>C</samp>: Thread flags</li>
-  <li><samp>b</samp>: "Is defined locally" flag. Set if this network was locally defined. Assumed to be true for set, insert and replace. Clear if the on mesh network was defined by another node.</li>
-</ul>
-
-<p> </p>
-<h1 id="rfc.appendix.E.2.12"><a href="#rfc.appendix.E.2.12">E.2.12.</a> <a href="#prop-91-propthreadlocalroutes" id="prop-91-propthreadlocalroutes">PROP 91: PROP_THREAD_LOCAL_ROUTES</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Write</li>
-  <li>Packed-Encoding: <samp>A(T(6CbC))</samp></li>
-</ul>
-
-<p> </p>
-<p id="rfc.section.E.2.12.p.2">Data per item is: </p>
-<p/>
-
-<ul>
-  <li><samp>6</samp>: IPv6 Prefix</li>
-  <li><samp>C</samp>: Prefix length, in bits</li>
-  <li><samp>b</samp>: Stable flag</li>
-  <li><samp>C</samp>: Other flags</li>
-</ul>
-
-<p> </p>
-<h1 id="rfc.appendix.E.2.13"><a href="#rfc.appendix.E.2.13">E.2.13.</a> <a href="#prop-92-propthreadassistingports" id="prop-92-propthreadassistingports">PROP 92: PROP_THREAD_ASSISTING_PORTS</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Write</li>
-  <li>Packed-Encoding: <samp>A(S)</samp></li>
-</ul>
-
-<p> </p>
-<h1 id="rfc.appendix.E.2.14"><a href="#rfc.appendix.E.2.14">E.2.14.</a> <a href="#prop-93-propthreadallowlocalnetdatachange" id="prop-93-propthreadallowlocalnetdatachange">PROP 93: PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Write</li>
-  <li>Packed-Encoding: <samp>b</samp></li>
-</ul>
-
-<p> </p>
-<p id="rfc.section.E.2.14.p.2">Set to true before changing local net data. Set to false when finished.  This allows changes to be aggregated into single events.  </p>
-<h1 id="rfc.appendix.E.2.15"><a href="#rfc.appendix.E.2.15">E.2.15.</a> <a href="#prop-94-propthreadmode" id="prop-94-propthreadmode">PROP 94: PROP_THREAD_MODE</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Write</li>
-  <li>Packed-Encoding: <samp>C</samp></li>
-</ul>
-
-<p> </p>
-<p id="rfc.section.E.2.15.p.2">This property contains the value of the mode TLV for this node. The meaning of the bits in this bitfield are defined by section 4.5.2 of the Thread specification.  </p>
-<h1 id="rfc.appendix.E.2.16"><a href="#rfc.appendix.E.2.16">E.2.16.</a> <a href="#prop-5376-propthreadchildtimeout" id="prop-5376-propthreadchildtimeout">PROP 5376: PROP_THREAD_CHILD_TIMEOUT</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Write</li>
-  <li>Packed-Encoding: <samp>L</samp></li>
-</ul>
-
-<p> </p>
-<p id="rfc.section.E.2.16.p.2">Used when operating in the Child role.  </p>
-<h1 id="rfc.appendix.E.2.17"><a href="#rfc.appendix.E.2.17">E.2.17.</a> <a href="#prop-5377-propthreadrloc16" id="prop-5377-propthreadrloc16">PROP 5377: PROP_THREAD_RLOC16</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Write</li>
-  <li>Packed-Encoding: <samp>S</samp></li>
-</ul>
-
-<p> </p>
-<h1 id="rfc.appendix.E.2.18"><a href="#rfc.appendix.E.2.18">E.2.18.</a> <a href="#prop-5378-propthreadrouterupgradethreshold" id="prop-5378-propthreadrouterupgradethreshold">PROP 5378: PROP_THREAD_ROUTER_UPGRADE_THRESHOLD</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Write</li>
-  <li>Packed-Encoding: <samp>C</samp></li>
-</ul>
-
-<p> </p>
-<h1 id="rfc.appendix.E.2.19"><a href="#rfc.appendix.E.2.19">E.2.19.</a> <a href="#prop-5379-propthreadcontextreusedelay" id="prop-5379-propthreadcontextreusedelay">PROP 5379: PROP_THREAD_CONTEXT_REUSE_DELAY</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Write</li>
-  <li>Packed-Encoding: <samp>L</samp></li>
-</ul>
-
-<p> </p>
-<h1 id="rfc.appendix.E.2.20"><a href="#rfc.appendix.E.2.20">E.2.20.</a> <a href="#prop-5380-propthreadnetworkidtimeout" id="prop-5380-propthreadnetworkidtimeout">PROP 5380: PROP_THREAD_NETWORK_ID_TIMEOUT</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Write</li>
-  <li>Packed-Encoding: <samp>C</samp></li>
-</ul>
-
-<p> </p>
-<p id="rfc.section.E.2.20.p.2">Allows you to get or set the Thread <samp>NETWORK_ID_TIMEOUT</samp> constant, as defined by the Thread specification.  </p>
-<h1 id="rfc.appendix.E.2.21"><a href="#rfc.appendix.E.2.21">E.2.21.</a> <a href="#prop-5381-propthreadactiverouterids" id="prop-5381-propthreadactiverouterids">PROP 5381: PROP_THREAD_ACTIVE_ROUTER_IDS</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Write/Write-Only</li>
-  <li>Packed-Encoding: <samp>A(C)</samp> (List of active thread router ids)</li>
-</ul>
-
-<p> </p>
-<p id="rfc.section.E.2.21.p.2">Note that some implementations may not support <samp>CMD_GET_VALUE</samp> router ids, but may support <samp>CMD_REMOVE_VALUE</samp> when the node is a leader.  </p>
-<h1 id="rfc.appendix.E.2.22"><a href="#rfc.appendix.E.2.22">E.2.22.</a> <a href="#prop-5382-propthreadrloc16debugpassthru" id="prop-5382-propthreadrloc16debugpassthru">PROP 5382: PROP_THREAD_RLOC16_DEBUG_PASSTHRU</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Write</li>
-  <li>Packed-Encoding: <samp>b</samp></li>
-</ul>
-
-<p> </p>
-<p id="rfc.section.E.2.22.p.2">Allow the HOST to directly observe all IPv6 packets received by the NCP, including ones sent to the RLOC16 address.  </p>
-<p id="rfc.section.E.2.22.p.3">Default value is <samp>false</samp>.  </p>
-<h1 id="rfc.appendix.E.2.23"><a href="#rfc.appendix.E.2.23">E.2.23.</a> <a href="#prop-5383-spinelpropthreadrouterroleenabled" id="prop-5383-spinelpropthreadrouterroleenabled">PROP 5383: SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Write</li>
-  <li>Packed-Encoding: <samp>b</samp></li>
-</ul>
-
-<p> </p>
-<p id="rfc.section.E.2.23.p.2">Allow the HOST to indicate whether or not the router role is enabled.  If current role is a router, setting this property to <samp>false</samp> starts a re-attach process as an end-device.  </p>
-<h1 id="rfc.appendix.E.2.24"><a href="#rfc.appendix.E.2.24">E.2.24.</a> <a href="#prop-5384-propthreadrouterdowngradethreshold" id="prop-5384-propthreadrouterdowngradethreshold">PROP 5384: PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Write</li>
-  <li>Packed-Encoding: <samp>C</samp></li>
-</ul>
-
-<p> </p>
-<h1 id="rfc.appendix.E.2.25"><a href="#rfc.appendix.E.2.25">E.2.25.</a> <a href="#prop-5385-propthreadrouterselectionjitter" id="prop-5385-propthreadrouterselectionjitter">PROP 5385: PROP_THREAD_ROUTER_SELECTION_JITTER</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Write</li>
-  <li>Packed-Encoding: <samp>C</samp></li>
-</ul>
-
-<p> </p>
-<p id="rfc.section.E.2.25.p.2">Specifies the self imposed random delay in seconds a REED waits before registering to become an Active Router.  </p>
-<h1 id="rfc.appendix.E.2.26"><a href="#rfc.appendix.E.2.26">E.2.26.</a> <a href="#prop-5386-propthreadpreferredrouterid" id="prop-5386-propthreadpreferredrouterid">PROP 5386: PROP_THREAD_PREFERRED_ROUTER_ID</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Write-Only</li>
-  <li>Packed-Encoding: <samp>C</samp></li>
-</ul>
-
-<p> </p>
-<p id="rfc.section.E.2.26.p.2">Specifies the preferred Router Id. Upon becoming a router/leader the node attempts to use this Router Id. If the preferred Router Id is not set or if it can not be used, a randomly generated router id is picked. This property can be set only when the device role is either detached or disabled.  </p>
-<h1 id="rfc.appendix.E.2.27"><a href="#rfc.appendix.E.2.27">E.2.27.</a> <a href="#prop-5387-spinelpropthreadneighbortable" id="prop-5387-spinelpropthreadneighbortable">PROP 5387: SPINEL_PROP_THREAD_NEIGHBOR_TABLE</a></h1>
-<p/>
-
-<ul>
-  <li>Type: Read-Only</li>
-  <li>Packed-Encoding: <samp>A(T(ESLCcCbLL))</samp></li>
-</ul>
-
-<p> </p>
-<p id="rfc.section.E.2.27.p.2">Data per item is: </p>
-<p/>
-
-<ul>
-  <li><samp>E</samp>: Extended/long address</li>
-  <li><samp>S</samp>: RLOC16</li>
-  <li><samp>L</samp>: Age</li>
-  <li><samp>C</samp>: Link Quality In</li>
-  <li><samp>c</samp>: Average RSS</li>
-  <li><samp>C</samp>: Mode (bit-flags)</li>
-  <li><samp>b</samp>: <samp>true</samp> if neighbor is a child, <samp>false</samp> otherwise.</li>
-  <li><samp>L</samp>: Link Frame Counter</li>
-  <li><samp>L</samp>: MLE Frame Counter</li>
-</ul>
-
-<p> </p>
-<h1 id="rfc.appendix.F"><a href="#rfc.appendix.F">Appendix F.</a> <a href="#test-vectors" id="test-vectors">Test Vectors</a></h1>
-<h1 id="rfc.appendix.F.1"><a href="#rfc.appendix.F.1">F.1.</a> <a href="#test-vector-packed-unsigned-integer" id="test-vector-packed-unsigned-integer">Test Vector: Packed Unsigned Integer</a></h1>
+<h1 id="rfc.appendix.B"><a href="#rfc.appendix.B">Appendix B.</a> <a href="#test-vectors" id="test-vectors">Test Vectors</a></h1>
+<h1 id="rfc.appendix.B.1"><a href="#rfc.appendix.B.1">B.1.</a> <a href="#test-vector-packed-unsigned-integer" id="test-vector-packed-unsigned-integer">Test Vector: Packed Unsigned Integer</a></h1>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
     <tr>
@@ -3529,9 +3654,9 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
   </tbody>
 </table>
 <p>
-  <a id="CREF6" class="info">[CREF6]<span class="info">RQ: The PUI test-vector encodings need to be verified.</span></a>
+  <a id="CREF5" class="info">[CREF5]<span class="info">RQ: The PUI test-vector encodings need to be verified.</span></a>
 </p>
-<h1 id="rfc.appendix.F.2"><a href="#rfc.appendix.F.2">F.2.</a> <a href="#test-vector-reset-command" id="test-vector-reset-command">Test Vector: Reset Command</a></h1>
+<h1 id="rfc.appendix.B.2"><a href="#rfc.appendix.B.2">B.2.</a> <a href="#test-vector-reset-command" id="test-vector-reset-command">Test Vector: Reset Command</a></h1>
 <p/>
 
 <ul>
@@ -3541,11 +3666,11 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.F.2.p.2">Frame: </p>
+<p id="rfc.section.B.2.p.2">Frame: </p>
 <pre>
 80 01
 </pre>
-<h1 id="rfc.appendix.F.3"><a href="#rfc.appendix.F.3">F.3.</a> <a href="#test-vector-reset-notification" id="test-vector-reset-notification">Test Vector: Reset Notification</a></h1>
+<h1 id="rfc.appendix.B.3"><a href="#rfc.appendix.B.3">B.3.</a> <a href="#test-vector-reset-notification" id="test-vector-reset-notification">Test Vector: Reset Notification</a></h1>
 <p/>
 
 <ul>
@@ -3557,11 +3682,11 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.F.3.p.2">Frame: </p>
+<p id="rfc.section.B.3.p.2">Frame: </p>
 <pre>
 80 06 00 72
 </pre>
-<h1 id="rfc.appendix.F.4"><a href="#rfc.appendix.F.4">F.4.</a> <a href="#test-vector-scan-beacon" id="test-vector-scan-beacon">Test Vector: Scan Beacon</a></h1>
+<h1 id="rfc.appendix.B.4"><a href="#rfc.appendix.B.4">B.4.</a> <a href="#test-vector-scan-beacon" id="test-vector-scan-beacon">Test Vector: Scan Beacon</a></h1>
 <p/>
 
 <ul>
@@ -3573,23 +3698,23 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.F.4.p.2">Frame: </p>
+<p id="rfc.section.B.4.p.2">Frame: </p>
 <pre>
 80 07 33 0F C4 0D 00 B6 40 D4 8C E9 38 F9 52 FF FF D2 04 00
 13 00 03 20 73 70 69 6E 65 6C 00 08 00 DE AD 00 BE EF 00 CA
 FE
 </pre>
-<h1 id="rfc.appendix.F.5"><a href="#rfc.appendix.F.5">F.5.</a> <a href="#test-vector-inbound-ipv6-packet" id="test-vector-inbound-ipv6-packet">Test Vector: Inbound IPv6 Packet</a></h1>
-<p id="rfc.section.F.5.p.1">CMD_VALUE_IS(PROP_STREAM_NET) </p>
+<h1 id="rfc.appendix.B.5"><a href="#rfc.appendix.B.5">B.5.</a> <a href="#test-vector-inbound-ipv6-packet" id="test-vector-inbound-ipv6-packet">Test Vector: Inbound IPv6 Packet</a></h1>
+<p id="rfc.section.B.5.p.1">CMD_VALUE_IS(PROP_STREAM_NET) </p>
+<p>
+  <a id="CREF6" class="info">[CREF6]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
+</p>
+<h1 id="rfc.appendix.B.6"><a href="#rfc.appendix.B.6">B.6.</a> <a href="#test-vector-outbound-ipv6-packet" id="test-vector-outbound-ipv6-packet">Test Vector: Outbound IPv6 Packet</a></h1>
+<p id="rfc.section.B.6.p.1">CMD_VALUE_SET(PROP_STREAM_NET) </p>
 <p>
   <a id="CREF7" class="info">[CREF7]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
 </p>
-<h1 id="rfc.appendix.F.6"><a href="#rfc.appendix.F.6">F.6.</a> <a href="#test-vector-outbound-ipv6-packet" id="test-vector-outbound-ipv6-packet">Test Vector: Outbound IPv6 Packet</a></h1>
-<p id="rfc.section.F.6.p.1">CMD_VALUE_SET(PROP_STREAM_NET) </p>
-<p>
-  <a id="CREF8" class="info">[CREF8]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
-</p>
-<h1 id="rfc.appendix.F.7"><a href="#rfc.appendix.F.7">F.7.</a> <a href="#test-vector-fetch-list-of-onmesh-networks" id="test-vector-fetch-list-of-onmesh-networks">Test Vector: Fetch list of on-mesh networks</a></h1>
+<h1 id="rfc.appendix.B.7"><a href="#rfc.appendix.B.7">B.7.</a> <a href="#test-vector-fetch-list-of-onmesh-networks" id="test-vector-fetch-list-of-onmesh-networks">Test Vector: Fetch list of on-mesh networks</a></h1>
 <p/>
 
 <ul>
@@ -3600,11 +3725,11 @@ FE
 </ul>
 
 <p> </p>
-<p id="rfc.section.F.7.p.2">Frame: </p>
+<p id="rfc.section.B.7.p.2">Frame: </p>
 <pre>
 84 02 5A
 </pre>
-<h1 id="rfc.appendix.F.8"><a href="#rfc.appendix.F.8">F.8.</a> <a href="#test-vector-returned-list-of-onmesh-networks" id="test-vector-returned-list-of-onmesh-networks">Test Vector: Returned list of on-mesh networks</a></h1>
+<h1 id="rfc.appendix.B.8"><a href="#rfc.appendix.B.8">B.8.</a> <a href="#test-vector-returned-list-of-onmesh-networks" id="test-vector-returned-list-of-onmesh-networks">Test Vector: Returned list of on-mesh networks</a></h1>
 <p/>
 
 <ul>
@@ -3640,13 +3765,13 @@ FE
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.F.8.p.2">Frame: </p>
+<p id="rfc.section.B.8.p.2">Frame: </p>
 <pre>
 84 06 5A 13 00 20 01 0D B8 00 01 00 00 00 00 00 00 00 00 00
 00 40 01 ?? 13 00 20 01 0D B8 00 02 00 00 00 00 00 00 00 00
 00 00 40 00 ??
 </pre>
-<h1 id="rfc.appendix.F.9"><a href="#rfc.appendix.F.9">F.9.</a> <a href="#test-vector-adding-an-onmesh-network" id="test-vector-adding-an-onmesh-network">Test Vector: Adding an on-mesh network</a></h1>
+<h1 id="rfc.appendix.B.9"><a href="#rfc.appendix.B.9">B.9.</a> <a href="#test-vector-adding-an-onmesh-network" id="test-vector-adding-an-onmesh-network">Test Vector: Adding an on-mesh network</a></h1>
 <p/>
 
 <ul>
@@ -3676,15 +3801,15 @@ FE
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.F.9.p.2">Frame: </p>
+<p id="rfc.section.B.9.p.2">Frame: </p>
 <pre>
 85 03 5A 20 01 0D B8 00 03 00 00 00 00 00 00 00 00 00 00 40
 01 ?? 01
 </pre>
 <p>
-  <a id="CREF9" class="info">[CREF9]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
+  <a id="CREF8" class="info">[CREF8]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
 </p>
-<h1 id="rfc.appendix.F.10"><a href="#rfc.appendix.F.10">F.10.</a> <a href="#test-vector-insertion-notification-of-an-onmesh-network" id="test-vector-insertion-notification-of-an-onmesh-network">Test Vector: Insertion notification of an on-mesh network</a></h1>
+<h1 id="rfc.appendix.B.10"><a href="#rfc.appendix.B.10">B.10.</a> <a href="#test-vector-insertion-notification-of-an-onmesh-network" id="test-vector-insertion-notification-of-an-onmesh-network">Test Vector: Insertion notification of an on-mesh network</a></h1>
 <p/>
 
 <ul>
@@ -3714,15 +3839,15 @@ FE
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.F.10.p.2">Frame: </p>
+<p id="rfc.section.B.10.p.2">Frame: </p>
 <pre>
 85 07 5A 20 01 0D B8 00 03 00 00 00 00 00 00 00 00 00 00 40
 01 ?? 01
 </pre>
 <p>
-  <a id="CREF10" class="info">[CREF10]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
+  <a id="CREF9" class="info">[CREF9]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
 </p>
-<h1 id="rfc.appendix.F.11"><a href="#rfc.appendix.F.11">F.11.</a> <a href="#test-vector-removing-a-local-onmesh-network" id="test-vector-removing-a-local-onmesh-network">Test Vector: Removing a local on-mesh network</a></h1>
+<h1 id="rfc.appendix.B.11"><a href="#rfc.appendix.B.11">B.11.</a> <a href="#test-vector-removing-a-local-onmesh-network" id="test-vector-removing-a-local-onmesh-network">Test Vector: Removing a local on-mesh network</a></h1>
 <p/>
 
 <ul>
@@ -3734,11 +3859,11 @@ FE
 </ul>
 
 <p> </p>
-<p id="rfc.section.F.11.p.2">Frame: </p>
+<p id="rfc.section.B.11.p.2">Frame: </p>
 <pre>
 86 05 5A 20 01 0D B8 00 03 00 00 00 00 00 00 00 00 00 00
 </pre>
-<h1 id="rfc.appendix.F.12"><a href="#rfc.appendix.F.12">F.12.</a> <a href="#test-vector-removal-notification-of-an-onmesh-network" id="test-vector-removal-notification-of-an-onmesh-network">Test Vector: Removal notification of an on-mesh network</a></h1>
+<h1 id="rfc.appendix.B.12"><a href="#rfc.appendix.B.12">B.12.</a> <a href="#test-vector-removal-notification-of-an-onmesh-network" id="test-vector-removal-notification-of-an-onmesh-network">Test Vector: Removal notification of an on-mesh network</a></h1>
 <p/>
 
 <ul>
@@ -3750,16 +3875,16 @@ FE
 </ul>
 
 <p> </p>
-<p id="rfc.section.F.12.p.2">Frame: </p>
+<p id="rfc.section.B.12.p.2">Frame: </p>
 <pre>
 86 08 5A 20 01 0D B8 00 03 00 00 00 00 00 00 00 00 00 00
 </pre>
-<h1 id="rfc.appendix.G"><a href="#rfc.appendix.G">Appendix G.</a> <a href="#example-sessions" id="example-sessions">Example Sessions</a></h1>
-<h1 id="rfc.appendix.G.1"><a href="#rfc.appendix.G.1">G.1.</a> <a href="#ncp-initialization" id="ncp-initialization">NCP Initialization</a></h1>
+<h1 id="rfc.appendix.C"><a href="#rfc.appendix.C">Appendix C.</a> <a href="#example-sessions" id="example-sessions">Example Sessions</a></h1>
+<h1 id="rfc.appendix.C.1"><a href="#rfc.appendix.C.1">C.1.</a> <a href="#ncp-initialization" id="ncp-initialization">NCP Initialization</a></h1>
 <p>
-  <a id="CREF11" class="info">[CREF11]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
+  <a id="CREF10" class="info">[CREF10]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
 </p>
-<p id="rfc.section.G.1.p.2">Check the protocol version to see if it is supported: </p>
+<p id="rfc.section.C.1.p.2">Check the protocol version to see if it is supported: </p>
 <p/>
 
 <ul>
@@ -3768,7 +3893,7 @@ FE
 </ul>
 
 <p> </p>
-<p id="rfc.section.G.1.p.4">Check the NCP version to see if a firmware update may be necessary: </p>
+<p id="rfc.section.C.1.p.4">Check the NCP version to see if a firmware update may be necessary: </p>
 <p/>
 
 <ul>
@@ -3777,7 +3902,7 @@ FE
 </ul>
 
 <p> </p>
-<p id="rfc.section.G.1.p.6">Check interface type to make sure that it is what we expect: </p>
+<p id="rfc.section.C.1.p.6">Check interface type to make sure that it is what we expect: </p>
 <p/>
 
 <ul>
@@ -3786,7 +3911,7 @@ FE
 </ul>
 
 <p> </p>
-<p id="rfc.section.G.1.p.8">If the host supports using vendor-specific commands, the vendor should be verified before using them: </p>
+<p id="rfc.section.C.1.p.8">If the host supports using vendor-specific commands, the vendor should be verified before using them: </p>
 <p/>
 
 <ul>
@@ -3795,7 +3920,7 @@ FE
 </ul>
 
 <p> </p>
-<p id="rfc.section.G.1.p.10">Fetch the capability list so that we know what features this NCP supports: </p>
+<p id="rfc.section.C.1.p.10">Fetch the capability list so that we know what features this NCP supports: </p>
 <p/>
 
 <ul>
@@ -3804,7 +3929,7 @@ FE
 </ul>
 
 <p> </p>
-<p id="rfc.section.G.1.p.12">If the NCP supports CAP_NET_SAVE, then we go ahead and recall the network: </p>
+<p id="rfc.section.C.1.p.12">If the NCP supports CAP_NET_SAVE, then we go ahead and recall the network: </p>
 <p/>
 
 <ul>
@@ -3812,12 +3937,12 @@ FE
 </ul>
 
 <p> </p>
-<h1 id="rfc.appendix.G.2"><a href="#rfc.appendix.G.2">G.2.</a> <a href="#attaching-to-a-network" id="attaching-to-a-network">Attaching to a network</a></h1>
+<h1 id="rfc.appendix.C.2"><a href="#rfc.appendix.C.2">C.2.</a> <a href="#attaching-to-a-network" id="attaching-to-a-network">Attaching to a network</a></h1>
 <p>
-  <a id="CREF12" class="info">[CREF12]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
+  <a id="CREF11" class="info">[CREF11]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
 </p>
-<p id="rfc.section.G.2.p.2">We make the assumption that the NCP is not currently associated with a network.  </p>
-<p id="rfc.section.G.2.p.3">Set the network properties, if they were not already set: </p>
+<p id="rfc.section.C.2.p.2">We make the assumption that the NCP is not currently associated with a network.  </p>
+<p id="rfc.section.C.2.p.3">Set the network properties, if they were not already set: </p>
 <p/>
 
 <ul>
@@ -3838,7 +3963,7 @@ FE
 </ul>
 
 <p> </p>
-<p id="rfc.section.G.2.p.5">Bring the network interface up: </p>
+<p id="rfc.section.C.2.p.5">Bring the network interface up: </p>
 <p/>
 
 <ul>
@@ -3847,7 +3972,7 @@ FE
 </ul>
 
 <p> </p>
-<p id="rfc.section.G.2.p.7">Bring the routing stack up: </p>
+<p id="rfc.section.C.2.p.7">Bring the routing stack up: </p>
 <p/>
 
 <ul>
@@ -3856,7 +3981,7 @@ FE
 </ul>
 
 <p> </p>
-<p id="rfc.section.G.2.p.9">Some asynchronous events from the NCP: </p>
+<p id="rfc.section.C.2.p.9">Some asynchronous events from the NCP: </p>
 <p/>
 
 <ul>
@@ -3866,11 +3991,11 @@ FE
 </ul>
 
 <p> </p>
-<h1 id="rfc.appendix.G.3"><a href="#rfc.appendix.G.3">G.3.</a> <a href="#successfully-joining-a-preexisting-network" id="successfully-joining-a-preexisting-network">Successfully joining a pre-existing network</a></h1>
+<h1 id="rfc.appendix.C.3"><a href="#rfc.appendix.C.3">C.3.</a> <a href="#successfully-joining-a-preexisting-network" id="successfully-joining-a-preexisting-network">Successfully joining a pre-existing network</a></h1>
 <p>
-  <a id="CREF13" class="info">[CREF13]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
+  <a id="CREF12" class="info">[CREF12]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
 </p>
-<p id="rfc.section.G.3.p.2">This example session is identical to the above session up to the point where we set PROP_NET_IF_UP to true. From there, the behavior changes.  </p>
+<p id="rfc.section.C.3.p.2">This example session is identical to the above session up to the point where we set PROP_NET_IF_UP to true. From there, the behavior changes.  </p>
 <p/>
 
 <ul>
@@ -3879,7 +4004,7 @@ FE
 </ul>
 
 <p> </p>
-<p id="rfc.section.G.3.p.4">Bring the routing stack up: </p>
+<p id="rfc.section.C.3.p.4">Bring the routing stack up: </p>
 <p/>
 
 <ul>
@@ -3888,7 +4013,7 @@ FE
 </ul>
 
 <p> </p>
-<p id="rfc.section.G.3.p.6">Some asynchronous events from the NCP: </p>
+<p id="rfc.section.C.3.p.6">Some asynchronous events from the NCP: </p>
 <p/>
 
 <ul>
@@ -3898,7 +4023,7 @@ FE
 </ul>
 
 <p> </p>
-<p id="rfc.section.G.3.p.8">Now let's save the network settings to NVRAM: </p>
+<p id="rfc.section.C.3.p.8">Now let's save the network settings to NVRAM: </p>
 <p/>
 
 <ul>
@@ -3906,8 +4031,8 @@ FE
 </ul>
 
 <p> </p>
-<h1 id="rfc.appendix.G.4"><a href="#rfc.appendix.G.4">G.4.</a> <a href="#unsuccessfully-joining-a-preexisting-network" id="unsuccessfully-joining-a-preexisting-network">Unsuccessfully joining a pre-existing network</a></h1>
-<p id="rfc.section.G.4.p.1">This example session is identical to the above session up to the point where we set PROP_NET_IF_UP to true. From there, the behavior changes.  </p>
+<h1 id="rfc.appendix.C.4"><a href="#rfc.appendix.C.4">C.4.</a> <a href="#unsuccessfully-joining-a-preexisting-network" id="unsuccessfully-joining-a-preexisting-network">Unsuccessfully joining a pre-existing network</a></h1>
+<p id="rfc.section.C.4.p.1">This example session is identical to the above session up to the point where we set PROP_NET_IF_UP to true. From there, the behavior changes.  </p>
 <p/>
 
 <ul>
@@ -3916,7 +4041,7 @@ FE
 </ul>
 
 <p> </p>
-<p id="rfc.section.G.4.p.3">Bring the routing stack up: </p>
+<p id="rfc.section.C.4.p.3">Bring the routing stack up: </p>
 <p/>
 
 <ul>
@@ -3925,7 +4050,7 @@ FE
 </ul>
 
 <p> </p>
-<p id="rfc.section.G.4.p.5">Some asynchronous events from the NCP: </p>
+<p id="rfc.section.C.4.p.5">Some asynchronous events from the NCP: </p>
 <p/>
 
 <ul>
@@ -3934,13 +4059,13 @@ FE
 </ul>
 
 <p> </p>
-<h1 id="rfc.appendix.G.5"><a href="#rfc.appendix.G.5">G.5.</a> <a href="#detaching-from-a-network" id="detaching-from-a-network">Detaching from a network</a></h1>
-<p id="rfc.section.G.5.p.1">TBD </p>
-<h1 id="rfc.appendix.G.6"><a href="#rfc.appendix.G.6">G.6.</a> <a href="#attaching-to-a-saved-network" id="attaching-to-a-saved-network">Attaching to a saved network</a></h1>
+<h1 id="rfc.appendix.C.5"><a href="#rfc.appendix.C.5">C.5.</a> <a href="#detaching-from-a-network" id="detaching-from-a-network">Detaching from a network</a></h1>
+<p id="rfc.section.C.5.p.1">TBD </p>
+<h1 id="rfc.appendix.C.6"><a href="#rfc.appendix.C.6">C.6.</a> <a href="#attaching-to-a-saved-network" id="attaching-to-a-saved-network">Attaching to a saved network</a></h1>
 <p>
-  <a id="CREF14" class="info">[CREF14]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
+  <a id="CREF13" class="info">[CREF13]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
 </p>
-<p id="rfc.section.G.6.p.2">Recall the saved network if you haven't already done so: </p>
+<p id="rfc.section.C.6.p.2">Recall the saved network if you haven't already done so: </p>
 <p/>
 
 <ul>
@@ -3948,7 +4073,7 @@ FE
 </ul>
 
 <p> </p>
-<p id="rfc.section.G.6.p.4">Bring the network interface up: </p>
+<p id="rfc.section.C.6.p.4">Bring the network interface up: </p>
 <p/>
 
 <ul>
@@ -3957,7 +4082,7 @@ FE
 </ul>
 
 <p> </p>
-<p id="rfc.section.G.6.p.6">Bring the routing stack up: </p>
+<p id="rfc.section.C.6.p.6">Bring the routing stack up: </p>
 <p/>
 
 <ul>
@@ -3966,7 +4091,7 @@ FE
 </ul>
 
 <p> </p>
-<p id="rfc.section.G.6.p.8">Some asynchronous events from the NCP: </p>
+<p id="rfc.section.C.6.p.8">Some asynchronous events from the NCP: </p>
 <p/>
 
 <ul>
@@ -3976,9 +4101,9 @@ FE
 </ul>
 
 <p> </p>
-<h1 id="rfc.appendix.G.7"><a href="#rfc.appendix.G.7">G.7.</a> <a href="#ncp-software-reset" id="ncp-software-reset">NCP Software Reset</a></h1>
+<h1 id="rfc.appendix.C.7"><a href="#rfc.appendix.C.7">C.7.</a> <a href="#ncp-software-reset" id="ncp-software-reset">NCP Software Reset</a></h1>
 <p>
-  <a id="CREF15" class="info">[CREF15]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
+  <a id="CREF14" class="info">[CREF14]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
 </p>
 <p/>
 
@@ -3988,17 +4113,17 @@ FE
 </ul>
 
 <p> </p>
-<p id="rfc.section.G.7.p.3">Then jump to <a href="#ncp-initialization">Appendix G.1</a>.  </p>
-<h1 id="rfc.appendix.G.8"><a href="#rfc.appendix.G.8">G.8.</a> <a href="#adding-an-onmesh-prefix" id="adding-an-onmesh-prefix">Adding an on-mesh prefix</a></h1>
-<p id="rfc.section.G.8.p.1">TBD </p>
-<h1 id="rfc.appendix.G.9"><a href="#rfc.appendix.G.9">G.9.</a> <a href="#entering-lowpower-modes" id="entering-lowpower-modes">Entering low-power modes</a></h1>
-<p id="rfc.section.G.9.p.1">TBD </p>
-<h1 id="rfc.appendix.G.10"><a href="#rfc.appendix.G.10">G.10.</a> <a href="#sniffing-raw-packets" id="sniffing-raw-packets">Sniffing raw packets</a></h1>
+<p id="rfc.section.C.7.p.3">Then jump to <a href="#ncp-initialization">Appendix C.1</a>.  </p>
+<h1 id="rfc.appendix.C.8"><a href="#rfc.appendix.C.8">C.8.</a> <a href="#adding-an-onmesh-prefix" id="adding-an-onmesh-prefix">Adding an on-mesh prefix</a></h1>
+<p id="rfc.section.C.8.p.1">TBD </p>
+<h1 id="rfc.appendix.C.9"><a href="#rfc.appendix.C.9">C.9.</a> <a href="#entering-lowpower-modes" id="entering-lowpower-modes">Entering low-power modes</a></h1>
+<p id="rfc.section.C.9.p.1">TBD </p>
+<h1 id="rfc.appendix.C.10"><a href="#rfc.appendix.C.10">C.10.</a> <a href="#sniffing-raw-packets" id="sniffing-raw-packets">Sniffing raw packets</a></h1>
 <p>
-  <a id="CREF16" class="info">[CREF16]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
+  <a id="CREF15" class="info">[CREF15]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
 </p>
-<p id="rfc.section.G.10.p.2">This assumes that the NCP has been initialized.  </p>
-<p id="rfc.section.G.10.p.3">Optionally set the channel: </p>
+<p id="rfc.section.C.10.p.2">This assumes that the NCP has been initialized.  </p>
+<p id="rfc.section.C.10.p.3">Optionally set the channel: </p>
 <p/>
 
 <ul>
@@ -4007,7 +4132,7 @@ FE
 </ul>
 
 <p> </p>
-<p id="rfc.section.G.10.p.5">Set the filter mode: </p>
+<p id="rfc.section.C.10.p.5">Set the filter mode: </p>
 <p/>
 
 <ul>
@@ -4016,7 +4141,7 @@ FE
 </ul>
 
 <p> </p>
-<p id="rfc.section.G.10.p.7">Enable the raw stream: </p>
+<p id="rfc.section.C.10.p.7">Enable the raw stream: </p>
 <p/>
 
 <ul>
@@ -4025,7 +4150,7 @@ FE
 </ul>
 
 <p> </p>
-<p id="rfc.section.G.10.p.9">Enable the PHY directly: </p>
+<p id="rfc.section.C.10.p.9">Enable the PHY directly: </p>
 <p/>
 
 <ul>
@@ -4034,7 +4159,7 @@ FE
 </ul>
 
 <p> </p>
-<p id="rfc.section.G.10.p.11">Now we will get raw 802.15.4 packets asynchronously on PROP_STREAM_RAW: </p>
+<p id="rfc.section.C.10.p.11">Now we will get raw 802.15.4 packets asynchronously on PROP_STREAM_RAW: </p>
 <p/>
 
 <ul>
@@ -4044,8 +4169,14 @@ FE
 </ul>
 
 <p> </p>
-<p id="rfc.section.G.10.p.13">This mode may be entered even when associated with a network.  In that case, you should set <samp>PROP_MAC_PROMISCUOUS_MODE</samp> to <samp>MAC_PROMISCUOUS_MODE_PROMISCUOUS</samp> or <samp>MAC_PROMISCUOUS_MODE_NORMAL</samp>, so that you can avoid receiving packets from other networks or that are destined for other nodes.  </p>
-<h1 id="rfc.appendix.H"><a href="#rfc.appendix.H">Appendix H.</a> <a href="#glossary" id="glossary">Glossary</a></h1>
+<p id="rfc.section.C.10.p.13">This mode may be entered even when associated with a network.  In that case, you should set <samp>PROP_MAC_PROMISCUOUS_MODE</samp> to <samp>MAC_PROMISCUOUS_MODE_PROMISCUOUS</samp> or <samp>MAC_PROMISCUOUS_MODE_NORMAL</samp>, so that you can avoid receiving packets from other networks or that are destined for other nodes.  </p>
+<h1 id="rfc.appendix.D"><a href="#rfc.appendix.D">Appendix D.</a> <a href="#acknowledgments" id="acknowledgments">Acknowledgments</a></h1>
+<p id="rfc.section.D.p.1">Special thanks to Abtin Keshavarzian, Martin Turon, Arjuna Sivasithambaresan and Jonathan Hui for their substantial contributions and feedback related to this document.  </p>
+<p>
+  <a id="CREF16" class="info">[CREF16]<span class="info">RQ: If I have missed anyone who has contributed to this document, please let me know ASAP.</span></a>
+</p>
+<p id="rfc.section.D.p.3">This document was prepared using <a href="https://github.com/miekg/mmark">mmark</a> by (Miek Gieben) and <a href="http://xml2rfc.ietf.org/">xml2rfc (version 2)</a>.  </p>
+<h1 id="rfc.appendix.E"><a href="#rfc.appendix.E">Appendix E.</a> <a href="#glossary" id="glossary">Glossary</a></h1>
 <p>
   <a id="CREF17" class="info">[CREF17]<span class="info">RQ: Alphabetize before finalization.</span></a>
 </p>

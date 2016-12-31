@@ -32,6 +32,7 @@ import unittest
 
 import config
 import mle
+import network_layer
 import node
 
 LEADER = 1
@@ -100,6 +101,11 @@ class Cert_5_1_06_RemoveRouterId(unittest.TestCase):
         router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
         leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
 
+        msg = router1_messages.next_coap_message("0.02")
+        msg.assertCoapMessageRequestUriPath("/a/as")
+
+        msg = leader_messages.next_coap_message("2.04")
+
         # 3 - Router1
         router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
         leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
@@ -107,6 +113,17 @@ class Cert_5_1_06_RemoveRouterId(unittest.TestCase):
         router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
         msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
         msg.assertSentToNode(self.nodes[ROUTER1])
+            
+        msg = router1_messages.next_coap_message(code="0.02", uri_path="/a/as")
+        msg.assertCoapMessageContainsTlv(network_layer.MacExtendedAddress)
+        msg.assertCoapMessageContainsTlv(network_layer.Status)
+
+        msg = leader_messages.next_coap_message("2.04")
+        msg.assertCoapMessageContainsTlv(network_layer.Status)
+        msg.assertCoapMessageContainsOptionalTlv(network_layer.RouterMask)
+
+        status_tlv = msg.get_coap_message_tlv(network_layer.Status)
+        self.assertEqual(network_layer.StatusValues.SUCCESS, status_tlv.status)
 
 
 if __name__ == '__main__':

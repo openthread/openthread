@@ -27,17 +27,18 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-try:
-    from itertools import izip_longest as zip_longest
-except ImportError:
-    from itertools import zip_longest
-
-from ipaddress import ip_address
-
 import abc
 import io
 import struct
 import sys
+
+from binascii import hexlify
+from ipaddress import ip_address
+
+try:
+    from itertools import izip_longest as zip_longest
+except ImportError:
+    from itertools import zip_longest
 
 
 # Next headers for IPv6 protocols
@@ -53,6 +54,7 @@ UPPER_LAYER_PROTOCOLS = [
 ]
 
 # ICMP Protocol codes
+ICMP_DESTINATION_UNREACHABLE = 0
 ICMP_ECHO_REQUEST = 128
 ICMP_ECHO_RESPONSE = 129
 
@@ -92,11 +94,12 @@ class PacketFactory(object):
 
     """ Interface for classes that produce objects from data. """
 
-    def parse(self, data):
+    def parse(self, data, message_info):
         """ Convert data to object.
 
         Args:
-            data (bytes)
+            data (BytesIO)
+            message_info (MessageInfo)
 
         """
         raise NotImplementedError
@@ -442,7 +445,7 @@ class IPv6Packet(ConvertibleToBytes):
         return ipv6_packet
 
     def __repr__(self):
-        return "IPv6Packet(\n\theader={})".format(self.ipv6_header)
+        return "IPv6Packet(header={}, upper_layer_protocol={})".format(self.ipv6_header, self.upper_layer_protocol)
 
 
 class UDPHeader(ConvertibleToBytes, BuildableFromBytes):
@@ -694,6 +697,9 @@ class HopByHopOptionHeader(ConvertibleToBytes, BuildableFromBytes):
     def __len__(self):
         return self._header_length
 
+    def __repr__(self):
+        return "HopByHopOptionHeader(type={}, length={})".format(self.type, self.length)
+
 
 class HopByHopOption(ConvertibleToBytes):
 
@@ -721,6 +727,9 @@ class HopByHopOption(ConvertibleToBytes):
 
     def __len__(self):
         return len(self.header) + len(self.value)
+
+    def __repr__(self):
+        return "HopByHopOption(header={}, value={})".format(self.header, self.value)
 
 
 class MPLOption(ConvertibleToBytes):
@@ -763,6 +772,9 @@ class MPLOption(ConvertibleToBytes):
 
     def __len__(self):
         return self._header_length + self._seed_id_length[self.S]
+
+    def __repr__(self):
+        return "MPLOption(S={}, M={}, V={}, sequence={}, seed_id={})".format(self.S, self.M, self.V, self.sequence, hexlify(self.seed_id))
 
 
 class IPv6PacketFactory(PacketFactory):
@@ -953,34 +965,56 @@ class UDPHeaderFactory:
         return UDPHeader.from_bytes(data)
 
 
+class UdpBasedOnSrcDstPortsPayloadFactory:
+
+    # TODO: Unittests
+
+    """ Factory that produces UDP payload. """
+
+    def __init__(self, src_dst_port_based_payload_factories):
+        """
+        Args:
+            src_dst_port_based_payload_factories (PacketFactory): Factories parse UDP payload based on source or destination port.
+        """
+        self._factories = src_dst_port_based_payload_factories
+
+    def parse(self, data, message_info):
+        factory = None
+
+        if message_info.dst_port in self._factories:
+            factory = self._factories[message_info.dst_port]
+
+        if message_info.src_port in self._factories:
+            factory = self._factories[message_info.src_port]
+
+        if factory is None:
+            raise RuntimeError("Could not find factory to build UDP payload.")
+
+        return factory.parse(data, message_info)
+
+
 class UDPDatagramFactory(PacketFactory):
+
+    # TODO: Unittests
 
     """ Factory that produces UDP datagrams. """
 
-    def __init__(self, udp_header_factory, dst_port_factories=None):
-        """
-        Args:
-            dst_port_factories (PacketFactory): Factories parse UDP payload based on destination port.
-        """
+    def __init__(self, udp_header_factory, udp_payload_factory):
         self._udp_header_factory = udp_header_factory
-        self._dst_port_factories = dst_port_factories if dst_port_factories is not None else {}
-
-    def _get_payload_factory(self, dst_port):
-        try:
-            return self._dst_port_factories[dst_port]
-
-        except KeyError:
-            raise RuntimeError(
-                "Could not find factory to parse UDP datagram payload based on destination port: {}".format(dst_port))
+        self._udp_payload_factory = udp_payload_factory
 
     def parse(self, data, message_info):
-        udp_header = self._udp_header_factory.parse(data, message_info)
+        header = self._udp_header_factory.parse(data, message_info)
 
-        factory = self._get_payload_factory(udp_header.dst_port)
+        # Update message payload length: UDP header (8B) + payload length
+        message_info.payload_length += len(header) + (len(data.getvalue()) - data.tell())
 
-        message_info.payload_length += len(udp_header) + (len(data.getvalue()) - data.tell())
+        message_info.src_port = header.src_port
+        message_info.dst_port = header.dst_port
 
-        return UDPDatagram(udp_header, factory.parse(data, message_info))
+        payload = self._udp_payload_factory.parse(data, message_info)
+
+        return UDPDatagram(header, payload)
 
 
 class ICMPv6Factory(PacketFactory):

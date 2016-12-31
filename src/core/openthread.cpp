@@ -77,6 +77,8 @@ otInstance::otInstance(void) :
     mReceiveIp6DatagramCallbackContext(NULL),
     mActiveScanCallback(NULL),
     mActiveScanCallbackContext(NULL),
+    mEnergyScanCallback(NULL),
+    mEnergyScanCallbackContext(NULL),
     mThreadNetif(mIp6)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     , mApplicationCoapServer(mIp6.mUdp, OT_DEFAULT_COAP_PORT)
@@ -978,6 +980,11 @@ bool otGetJamDetectionState(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetJamDetector().GetState();
 }
+
+uint64_t otGetJamDetectionHistoryBitmap(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetJamDetector().GetHistoryBitmap();
+}
 #endif // OPENTHREAD_ENABLE_JAM_DETECTION
 
 bool otIsIp6AddressEqual(const otIp6Address *a, const otIp6Address *b)
@@ -1182,6 +1189,13 @@ exit:
 
 #endif
 
+
+void otSetReceiveDiagnosticGetCallback(otInstance *aInstance, otReceiveDiagnosticGetCallback aCallback,
+                                       void *aCallbackContext)
+{
+    aInstance->mThreadNetif.GetNetworkDiagnostic().SetReceiveDiagnosticGetCallback(aCallback, aCallbackContext);
+}
+
 ThreadError otSendDiagnosticGet(otInstance *aInstance, const otIp6Address *aDestination, const uint8_t aTlvTypes[],
                                 uint8_t aCount)
 {
@@ -1360,6 +1374,11 @@ ThreadError otDiscover(otInstance *aInstance, uint32_t aScanChannels, uint16_t a
 bool otIsDiscoverInProgress(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMle().IsDiscoverInProgress();
+}
+
+ThreadError otSendMacDataRequest(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetMeshForwarder().SendMacDataRequest();
 }
 
 void otSetReceiveIp6DatagramCallback(otInstance *aInstance, otReceiveIp6DatagramCallback aCallback,
@@ -1671,9 +1690,10 @@ uint16_t otCommissionerGetSessionId(otInstance *aInstance)
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
 #if OPENTHREAD_ENABLE_JOINER
-ThreadError otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl)
+ThreadError otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl,
+                          otJoinerCallback aCallback, void *aContext)
 {
-    return aInstance->mThreadNetif.GetJoiner().Start(aPSKd, aProvisioningUrl);
+    return aInstance->mThreadNetif.GetJoiner().Start(aPSKd, aProvisioningUrl, aCallback, aContext);
 }
 
 ThreadError otJoinerStop(otInstance *aInstance)
