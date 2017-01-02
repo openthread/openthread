@@ -4,10 +4,10 @@ This directory contains example platform drivers for the [Dialog Semiconductor D
 
 [da15000]: https://support.dialog-semiconductor.com/connectivity/product/openthread-sandbox
 
+**NOTE:** Each Thread node requires a unique EUI-64.  
+Please make sure all Thread nodes in your network have a unique EUI-64 by setting NODE_ID in radio.c to a unique value.
+
 ## Build Examples (How to build and flash):
-
-NOTE: Current implementation sets EUI-64 as a static value.
-
 ```bash
 $ cd <path-to-openthread>
 $ ./bootstrap
@@ -17,7 +17,7 @@ $ make -f examples/Makefile-da15000
 
 Execute script to prepare image for flashing:
 
-NOTE: Script is based on Dialog Tools binaries compiled for x86 Linux.
+**NOTE:** Script is based on Dialog Tools binaries compiled for x86 Linux.
 
 ```bash
 $ cd ./third_party/dialog/DialogTools
@@ -26,7 +26,7 @@ $ ./imgprep.sh
 
 Flash Binaries:
 
-NOTE: Flashing process requires JLinkGDBServer. Please visit https://www.segger.com/jlink-gdb-server.html for details.
+**NOTE:** Flashing process requires JLinkGDBServer. Please visit https://www.segger.com/jlink-gdb-server.html for details.
 
 1. Open another terminal window in order to start gdb server. Write the command (Linux):
 
