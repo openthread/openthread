@@ -353,8 +353,7 @@ ThreadError Mle::Discover(uint32_t aScanChannels, uint16_t aScanDuration, uint16
     mDiscoverContext = aContext;
     mMesh.SetDiscoverParameters(aScanChannels, aScanDuration);
 
-    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
-    message->SetLinkSecurityEnabled(false);
+    VerifyOrExit((message = NewMleMessage()) != NULL, ;);
     message->SetSubType(Message::kSubTypeMleDiscoverRequest);
     message->SetPanId(aPanId);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandDiscoveryRequest));
@@ -860,6 +859,20 @@ void Mle::GenerateNonce(const Mac::ExtAddress &aMacAddr, uint32_t aFrameCounter,
     aNonce[0] = aSecurityLevel;
 }
 
+Message *Mle::NewMleMessage(void)
+{
+    Message *message;
+
+    message = mSocket.NewMessage(0);
+    VerifyOrExit(message != NULL, ;);
+
+    message->SetLinkSecurityEnabled(false);
+    message->SetPriority(kMleMessagePriority);
+
+exit:
+    return message;
+}
+
 ThreadError Mle::AppendHeader(Message &aMessage, Header::Command aCommand)
 {
     ThreadError error = kThreadError_None;
@@ -1345,8 +1358,7 @@ ThreadError Mle::SendParentRequest(void)
         mParentRequest.mChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
     }
 
-    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
-    message->SetLinkSecurityEnabled(false);
+    VerifyOrExit((message = NewMleMessage()) != NULL, ;);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandParentRequest));
     SuccessOrExit(error = AppendMode(*message, mDeviceMode));
     SuccessOrExit(error = AppendChallenge(*message, mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge)));
@@ -1412,8 +1424,7 @@ ThreadError Mle::SendChildIdRequest(void)
     Message *message;
     Ip6::Address destination;
 
-    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
-    message->SetLinkSecurityEnabled(false);
+    VerifyOrExit((message = NewMleMessage()) != NULL, ;);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildIdRequest));
     SuccessOrExit(error = AppendResponse(*message, mChildIdRequest.mChallenge, mChildIdRequest.mChallengeLength));
     SuccessOrExit(error = AppendLinkFrameCounter(*message));
@@ -1461,8 +1472,7 @@ ThreadError Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t
     ThreadError error = kThreadError_None;
     Message *message;
 
-    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
-    message->SetLinkSecurityEnabled(false);
+    VerifyOrExit((message = NewMleMessage()) != NULL, ;);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandDataRequest));
     SuccessOrExit(error = AppendTlvRequest(*message, aTlvs, aTlvsLength));
     SuccessOrExit(error = AppendActiveTimestamp(*message, false));
@@ -1507,8 +1517,7 @@ ThreadError Mle::SendChildUpdateRequest(void)
     Ip6::Address destination;
     Message *message;
 
-    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
-    message->SetLinkSecurityEnabled(false);
+    VerifyOrExit((message = NewMleMessage()) != NULL, ;);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildUpdateRequest));
     SuccessOrExit(error = AppendMode(*message, mDeviceMode));
 
@@ -1571,8 +1580,7 @@ ThreadError Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs,
     Ip6::Address destination;
     Message *message;
 
-    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
-    message->SetLinkSecurityEnabled(false);
+    VerifyOrExit((message = NewMleMessage()) != NULL, ;);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildUpdateResponse));
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
@@ -1633,7 +1641,8 @@ ThreadError Mle::SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce)
     Ip6::Address destination;
     Message *message;
 
-    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
+    VerifyOrExit((message = NewMleMessage()) != NULL, ;);
+    message->SetLinkSecurityEnabled(true);
     message->SetSubType(Message::kSubTypeMleAnnounce);
     message->SetChannel(aChannel);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandAnnounce));
@@ -1703,7 +1712,7 @@ void Mle::SendOrphanAnnounce(void)
         VerifyOrExit(channel != mAnnounceChannel,);
     }
 
-    // Send Annuonce message
+    // Send Announce message
     SendAnnounce(channel, true);
 
     // Move to next channel

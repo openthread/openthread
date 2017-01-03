@@ -194,7 +194,7 @@ public:
      * @returns  A reference to the send queue.
      *
      */
-    const MessageQueue &GetSendQueue(void) const { return mSendQueue; }
+    const PriorityQueue &GetSendQueue(void) const { return mSendQueue; }
 
     /**
      * This method returns a reference to the reassembly queue.
@@ -271,7 +271,7 @@ private:
     Timer mPollTimer;
     Timer mReassemblyTimer;
 
-    MessageQueue mSendQueue;
+    PriorityQueue mSendQueue;
     MessageQueue mReassemblyList;
     MessageQueue mResolvingQueue;
     uint16_t mFragTag;
