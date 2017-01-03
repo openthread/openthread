@@ -965,7 +965,7 @@ public:
 
     public:
         /**
-         * This construct initializes an empty iterator.
+         * This constructor initializes an empty iterator.
          */
         Iterator(void) : mMessage(NULL) { }
 
