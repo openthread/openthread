@@ -949,7 +949,7 @@ OTAPI ThreadError OTCALL otGetPendingDataset(otInstance *aInstance, otOperationa
  * @param[in]  aDataset  A pointer to the Pending Operational Dataset.
  *
  * @retval kThreadError_None         Successfully set the Pending Operational Dataset.
- * @retval kThreadError_NoBufs       Insufficient buffer space to set the Pending Operational Datset.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to set the Pending Operational Dataset.
  * @retval kThreadError_InvalidArgs  @p aDataset was NULL.
  *
  */
