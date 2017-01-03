@@ -224,7 +224,10 @@ ThreadError Mle::Start(bool aEnableReattach)
     }
     else if (IsActiveRouter(GetRloc16()))
     {
-        mMleRouter.BecomeRouter(ThreadStatusTlv::kTooFewRouters);
+        if (mMleRouter.BecomeRouter(ThreadStatusTlv::kTooFewRouters) != kThreadError_None)
+        {
+            BecomeChild(kMleAttachAnyPartition);
+        }
     }
     else
     {
