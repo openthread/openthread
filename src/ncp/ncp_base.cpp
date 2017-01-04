@@ -2374,8 +2374,8 @@ ThreadError NcpBase::GetPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spine
                                       "T(6CLL).",
                                       &address->mAddress,
                                       address->mPrefixLength,
-                                      address->mPreferredLifetime,
-                                      address->mValidLifetime
+                                      address->mPreferred ? 0xffffffff : 0,
+                                      address->mValid ? 0xffffffff : 0
                                   ));
     }
 
@@ -4750,8 +4750,8 @@ ThreadError NcpBase::InsertPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, sp
 
     netif_addr.mAddress = *addr_ptr;
     netif_addr.mPrefixLength = prefix_len;
-    netif_addr.mPreferredLifetime = preferred_lifetime;
-    netif_addr.mValidLifetime = valid_lifetime;
+    netif_addr.mPreferred = preferred_lifetime != 0;
+    netif_addr.mValid = valid_lifetime != 0;
 
     errorCode = otAddUnicastAddress(mInstance, &netif_addr);
 

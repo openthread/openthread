@@ -78,8 +78,8 @@ otLwfOnAddressAdded(
 
         memcpy(&newRow.Address.Ipv6.sin6_addr, &Addr->mAddress, sizeof(IN6_ADDR));
         newRow.OnLinkPrefixLength = Addr->mPrefixLength;
-        newRow.PreferredLifetime = Addr->mPreferredLifetime;
-        newRow.ValidLifetime = Addr->mValidLifetime;
+        newRow.PreferredLifetime = Addr->mPreferred ? 0xffffffff : 0;
+        newRow.ValidLifetime = Addr->mValid ? 0xffffffff : 0;
         newRow.PrefixOrigin = IpPrefixOriginOther;  // Derived from network XPANID
         newRow.SkipAsSource = FALSE;                // Allow automatic binding to this address (default)
 
@@ -297,9 +297,9 @@ otLwfEventProcessingAddressChanged(
         {
             otNetifAddress otAddr = {0};
             memcpy(&otAddr.mAddress, pAddr, sizeof(IN6_ADDR));
-            otAddr.mPreferredLifetime = Row.PreferredLifetime;
+            otAddr.mPreferred = Row.PreferredLifetime != 0;
             otAddr.mPrefixLength = Row.OnLinkPrefixLength;
-            otAddr.mValidLifetime = Row.ValidLifetime;
+            otAddr.mValid = Row.ValidLifetime != 0;
 
             BOOLEAN ShouldDelete = FALSE;
             BOOLEAN AddedToCache = FALSE;
@@ -442,7 +442,9 @@ otLwfTunAddressesUpdated(
 
         {
             PIN6_ADDR pAddr = NULL;
-            otNetifAddress addr = { { 0 }, 0xFFFFFFFF, 0xFFFFFFFF, 0, 0, 0, NULL };
+            otNetifAddress addr = { { 0 }, 0, 1, 1, 0, 0, NULL };
+            uint32_t preferredLifetime = 0xFFFFFFFF;
+            uint32_t validLifetime = 0xFFFFFFFF;
 
             spinel_datatype_unpack(
                 entry_ptr, 
@@ -450,8 +452,11 @@ otLwfTunAddressesUpdated(
                 "6CLL", 
                 &pAddr, 
                 &addr.mPrefixLength, 
-                &addr.mValidLifetime, 
-                &addr.mPreferredLifetime);
+                &validLifetime,
+                &preferredLifetime);
+
+            addr.mPreferred = preferredLifetime != 0;
+            addr.mValid = validLifetime != 0;
 
             if (pAddr)
             {

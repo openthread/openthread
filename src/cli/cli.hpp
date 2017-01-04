@@ -248,7 +248,7 @@ private:
 
     otNetifAddress  mSlaacAddresses[OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES];
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
-    otNetifAddress  mDhcpAddresses[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
+    otDhcpAddress  mDhcpAddresses[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
 #endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
 
     otInstance *mInstance;

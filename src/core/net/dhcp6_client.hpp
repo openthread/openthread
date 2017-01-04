@@ -34,6 +34,8 @@
 #ifndef DHCP6_CLIENT_HPP_
 #define DHCP6_CLIENT_HPP_
 
+#include <dhcp6/dhcp6_client.h>
+
 #include <common/message.hpp>
 #include <common/timer.hpp>
 #include <common/trickle_timer.hpp>
@@ -185,7 +187,7 @@ public:
      * @param[in]     aContext      A pointer to IID creator-specific context data.
      *
      */
-    void UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddresses, uint32_t aNumAddresses, void *aContext);
+    void UpdateAddresses(otInstance *aInstance, otDhcpAddress *aAddresses, uint32_t aNumAddresses, void *aContext);
 
 private:
     ThreadError Start(void);
@@ -228,7 +230,7 @@ private:
 
     uint8_t mTransactionId[kTransactionIdSize];
     uint32_t mStartTime;
-    otNetifAddress *mAddresses;
+    otDhcpAddress *mAddresses;
     uint32_t mNumAddresses;
 
     IdentityAssociation mIdentityAssociations[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];

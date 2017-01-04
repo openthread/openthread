@@ -1010,7 +1010,7 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
                     rvalIface = candidateId;
                 }
             }
-            else if (addr->mPreferredLifetime != 0 && rvalAddr->mPreferredLifetime == 0)
+            else if (addr->mPreferred && !rvalAddr->mPreferred)
             {
                 // Rule 3: Avoid deprecated addresses
                 rvalAddr = addr;

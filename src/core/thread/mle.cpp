@@ -111,14 +111,14 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mLinkLocal64.GetAddress().mFields.m16[0] = HostSwap16(0xfe80);
     mLinkLocal64.GetAddress().SetIid(*mMac.GetExtAddress());
     mLinkLocal64.mPrefixLength = 64;
-    mLinkLocal64.mPreferredLifetime = 0xffffffff;
-    mLinkLocal64.mValidLifetime = 0xffffffff;
+    mLinkLocal64.mPreferred = true;
+    mLinkLocal64.mValid = true;
     mNetif.AddUnicastAddress(mLinkLocal64);
 
     // Leader Aloc
     mLeaderAloc.mPrefixLength = 128;
-    mLeaderAloc.mPreferredLifetime = 0xffffffff;
-    mLeaderAloc.mValidLifetime = 0xffffffff;
+    mLeaderAloc.mPreferred = true;
+    mLeaderAloc.mValid = true;
     mLeaderAloc.mScopeOverride = Ip6::Address::kRealmLocalScope;
     mLeaderAloc.mScopeOverrideValid = true;
 
@@ -137,8 +137,8 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     }
 
     mMeshLocal64.mPrefixLength = 64;
-    mMeshLocal64.mPreferredLifetime = 0xffffffff;
-    mMeshLocal64.mValidLifetime = 0xffffffff;
+    mMeshLocal64.mPreferred = true;
+    mMeshLocal64.mValid = true;
     SetMeshLocalPrefix(mMeshLocal64.GetAddress().mFields.m8); // Also calls AddUnicastAddress
 
     // mesh-local 16
@@ -146,8 +146,8 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mMeshLocal16.GetAddress().mFields.m16[5] = HostSwap16(0x00ff);
     mMeshLocal16.GetAddress().mFields.m16[6] = HostSwap16(0xfe00);
     mMeshLocal16.mPrefixLength = 64;
-    mMeshLocal16.mPreferredLifetime = 0xffffffff;
-    mMeshLocal16.mValidLifetime = 0xffffffff;
+    mMeshLocal16.mPreferred = true;
+    mMeshLocal16.mValid = true;
     mMeshLocal16.mScopeOverride = Ip6::Address::kRealmLocalScope;
     mMeshLocal16.mScopeOverrideValid = true;
 

@@ -372,9 +372,9 @@ ThreadError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress
         {
             VerifyOrExit(GetExtUnicastAddressIndex(cur) != -1, error = kThreadError_InvalidArgs);
 
-            cur->mPreferredLifetime = aAddress.mPreferredLifetime;
-            cur->mValidLifetime = aAddress.mValidLifetime;
             cur->mPrefixLength = aAddress.mPrefixLength;
+            cur->mPreferred = aAddress.mPreferred;
+            cur->mValid = aAddress.mValid;
             ExitNow();
         }
     }
