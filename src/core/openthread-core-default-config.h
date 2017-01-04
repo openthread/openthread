@@ -390,6 +390,16 @@
 #endif  // OPENTHREAD_CONFIG_LOG_MEM
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_PKT_DUMP
+ *
+ * Define to enable log content of packets.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_PKT_DUMP
+#define OPENTHREAD_CONFIG_LOG_PKT_DUMP                          1
+#endif  // OPENTHREAD_CONFIG_LOG_PKT_DUMP
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_NETDIAG
  *
  * Define to enable network diagnostic logging.
