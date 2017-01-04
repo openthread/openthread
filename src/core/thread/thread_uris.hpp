@@ -40,7 +40,7 @@ namespace Thread {
  * The URI Path for Address Query.
  *
  */
-#define OPENTHREAD_URI_ADDRESS_QUERY    "a/aq"
+#define OPENTHREAD_URI_ADDRESS_QUERY          "a/aq"
 
 /**
  * @def OPENTHREAD_URI_ADDRESS_NOTIFY
@@ -48,7 +48,7 @@ namespace Thread {
  * The URI Path for Address Notify.
  *
  */
-#define OPENTHREAD_URI_ADDRESS_NOTIFY   "a/an"
+#define OPENTHREAD_URI_ADDRESS_NOTIFY         "a/an"
 
 /**
  * @def OPENTHREAD_URI_ADDRESS_ERROR
@@ -56,7 +56,7 @@ namespace Thread {
  * The URI Path for Address Error.
  *
  */
-#define OPENTHREAD_URI_ADDRESS_ERROR    "a/ae"
+#define OPENTHREAD_URI_ADDRESS_ERROR          "a/ae"
 
 /**
  * @def OPENTHREAD_URI_ADDRESS_RELEASE
@@ -64,7 +64,7 @@ namespace Thread {
  * The URI Path for Address Release.
  *
  */
-#define OPENTHREAD_URI_ADDRESS_RELEASE  "a/ar"
+#define OPENTHREAD_URI_ADDRESS_RELEASE        "a/ar"
 
 /**
  * @def OPENTHREAD_URI_ADDRESS_SOLICIT
@@ -72,7 +72,7 @@ namespace Thread {
  * The URI Path for Address Solicit.
  *
  */
-#define OPENTHREAD_URI_ADDRESS_SOLICIT  "a/as"
+#define OPENTHREAD_URI_ADDRESS_SOLICIT        "a/as"
 
 /**
  * @def OPENTHREAD_URI_ACTIVE_GET
@@ -80,7 +80,7 @@ namespace Thread {
  * The URI Path for MGMT_ACTIVE_GET
  *
  */
-#define OPENTHREAD_URI_ACTIVE_GET       "c/ag"
+#define OPENTHREAD_URI_ACTIVE_GET             "c/ag"
 
 /**
  * @def OPENTHREAD_URI_ACTIVE_SET
@@ -88,7 +88,7 @@ namespace Thread {
  * The URI Path for MGMT_ACTIVE_SET
  *
  */
-#define OPENTHREAD_URI_ACTIVE_SET       "c/as"
+#define OPENTHREAD_URI_ACTIVE_SET             "c/as"
 
 /**
  * @def OPENTHREAD_URI_DATASET_CHANGED
@@ -96,7 +96,7 @@ namespace Thread {
  * The URI Path for MGMT_DATASET_CHANGED
  *
  */
-#define OPENTHREAD_URI_DATASET_CHANGED  "c/dc"
+#define OPENTHREAD_URI_DATASET_CHANGED        "c/dc"
 
 /**
  * @def OPENTHREAD_URI_ENERGY_SCAN
@@ -104,7 +104,7 @@ namespace Thread {
  * The URI Path for Energy Scan
  *
  */
-#define OPENTHREAD_URI_ENERGY_SCAN      "c/es"
+#define OPENTHREAD_URI_ENERGY_SCAN            "c/es"
 
 /**
  * @def OPENTHREAD_URI_ENERGY_REPORT
@@ -112,7 +112,7 @@ namespace Thread {
  * The URI Path for Energy Report
  *
  */
-#define OPENTHREAD_URI_ENERGY_REPORT    "c/er"
+#define OPENTHREAD_URI_ENERGY_REPORT          "c/er"
 
 /**
  * @def OPENTHREAD_URI_PENDING_GET
@@ -120,7 +120,7 @@ namespace Thread {
  * The URI Path for MGMT_PENDING_GET
  *
  */
-#define OPENTHREAD_URI_PENDING_GET      "c/pg"
+#define OPENTHREAD_URI_PENDING_GET            "c/pg"
 
 /**
  * @def OPENTHREAD_URI_PENDING_SET
@@ -128,7 +128,7 @@ namespace Thread {
  * The URI Path for MGMT_PENDING_SET
  *
  */
-#define OPENTHREAD_URI_PENDING_SET      "c/ps"
+#define OPENTHREAD_URI_PENDING_SET            "c/ps"
 
 /**
  * @def OPENTHREAD_URI_SERVER_DATA
@@ -136,7 +136,7 @@ namespace Thread {
  * The URI Path for Server Data Registration.
  *
  */
-#define OPENTHREAD_URI_SERVER_DATA      "a/sd"
+#define OPENTHREAD_URI_SERVER_DATA            "a/sd"
 
 /**
  * @def OPENTHREAD_URI_ANNOUNCE_BEGIN
@@ -144,7 +144,7 @@ namespace Thread {
  * The URI Path for Announce Begin.
  *
  */
-#define OPENTHREAD_URI_ANNOUNCE_BEGIN   "c/ab"
+#define OPENTHREAD_URI_ANNOUNCE_BEGIN         "c/ab"
 
 /**
  * @def OPENTHREAD_URI_RELAY_RX
@@ -152,7 +152,7 @@ namespace Thread {
  * The URI Path for Relay RX.
  *
  */
-#define OPENTHREAD_URI_RELAY_RX         "c/rx"
+#define OPENTHREAD_URI_RELAY_RX               "c/rx"
 
 /**
  * @def OPENTHREAD_URI_RELAY_TX
@@ -160,7 +160,7 @@ namespace Thread {
  * The URI Path for Relay TX.
  *
  */
-#define OPENTHREAD_URI_RELAY_TX         "c/tx"
+#define OPENTHREAD_URI_RELAY_TX               "c/tx"
 
 /**
  * @def OPENTHREAD_URI_JOINER_FINALIZE
@@ -168,7 +168,7 @@ namespace Thread {
  * The URI Path for Joiner Finalize
  *
  */
-#define OPENTHREAD_URI_JOINER_FINALIZE  "c/jf"
+#define OPENTHREAD_URI_JOINER_FINALIZE        "c/jf"
 
 /**
  * @def OPENTHREAD_URI_JOINER_ENTRUST
@@ -176,7 +176,7 @@ namespace Thread {
  * The URI Path for Joiner Entrust
  *
  */
-#define OPENTHREAD_URI_JOINER_ENTRUST   "c/je"
+#define OPENTHREAD_URI_JOINER_ENTRUST         "c/je"
 
 /**
  * @def OPENTHREAD_URI_LEADER_PETITION
@@ -184,7 +184,7 @@ namespace Thread {
  * The URI Path for Leader Petition
  *
  */
-#define OPENTHREAD_URI_LEADER_PETITION  "c/lp"
+#define OPENTHREAD_URI_LEADER_PETITION        "c/lp"
 
 /**
  * @def OPENTHREAD_URI_LEADER_KEEP_ALIVE
@@ -192,7 +192,7 @@ namespace Thread {
  * The URI Path for Leader Keep Alive
  *
  */
-#define OPENTHREAD_URI_LEADER_KEEP_ALIVE "c/la"
+#define OPENTHREAD_URI_LEADER_KEEP_ALIVE      "c/la"
 
 /**
  * @def OPENTHREAD_URI_PANID_CONFLICT
@@ -200,7 +200,7 @@ namespace Thread {
  * The URI Path for PAN ID Conflict
  *
  */
-#define OPENTHREAD_URI_PANID_CONFLICT   "c/pc"
+#define OPENTHREAD_URI_PANID_CONFLICT         "c/pc"
 
 /**
  * @def OPENTHREAD_URI_PANID_QUERY
@@ -208,7 +208,7 @@ namespace Thread {
  * The URI Path for PAN ID Query
  *
  */
-#define OPENTHREAD_URI_PANID_QUERY      "c/pq"
+#define OPENTHREAD_URI_PANID_QUERY            "c/pq"
 
 /**
  * @def OPENTHREAD_URI_COMMISSIONER_GET
@@ -216,7 +216,7 @@ namespace Thread {
  * The URI Path for MGMT_COMMISSIONER_GET
  *
  */
-#define OPENTHREAD_URI_COMMISSIONER_GET "c/cg"
+#define OPENTHREAD_URI_COMMISSIONER_GET       "c/cg"
 
 /**
  * @def OPENTHREAD_URI_COMMISSIONER_SET
@@ -224,15 +224,31 @@ namespace Thread {
  * The URI Path for MGMT_COMMISSIONER_SET
  *
  */
-#define OPENTHREAD_URI_COMMISSIONER_SET "c/cs"
+#define OPENTHREAD_URI_COMMISSIONER_SET       "c/cs"
 
 /**
- * @def OPENTHREAD_URI_DIAGNOSTIC_GET
+ * @def OPENTHREAD_URI_DIAGNOSTIC_GET_REQUEST
  *
- * The URI Path for Network Diagnostic Get.
+ * The URI Path for Network Diagnostic Get Request.
  *
  */
-#define OPENTHREAD_URI_DIAGNOSTIC_GET   "d/dg"
+#define OPENTHREAD_URI_DIAGNOSTIC_GET_REQUEST "d/dg"
+
+/**
+ * @def OPENTHREAD_URI_DIAGNOSTIC_GET_QUERY
+ *
+ * The URI Path for Network Diagnostic Get Query.
+ *
+ */
+#define OPENTHREAD_URI_DIAGNOSTIC_GET_QUERY   "d/dq"
+
+/**
+ * @def OPENTHREAD_URI_DIAGNOSTIC_GET_ANSWER
+ *
+ * The URI Path for Network Diagnostic Get Answer.
+ *
+ */
+#define OPENTHREAD_URI_DIAGNOSTIC_GET_ANSWER  "d/da"
 
 /**
  * @def OPENTHREAD_URI_DIAG_RST
@@ -240,7 +256,7 @@ namespace Thread {
  * The URI Path for Network Diagnostic Reset.
  *
  */
-#define OPENTHREAD_URI_DIAGNOSTIC_RESET "d/dr"
+#define OPENTHREAD_URI_DIAGNOSTIC_RESET       "d/dr"
 
 }  // namespace Thread
 

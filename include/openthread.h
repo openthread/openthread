@@ -1908,9 +1908,10 @@ OTAPI ThreadError OTCALL otGetParentInfo(otInstance *aInstance, otRouterInfo *aP
 OTAPI uint8_t OTCALL otGetStableNetworkDataVersion(otInstance *aInstance);
 
 /**
- * This function pointer is called when an DIAG_GET.rsp is received.
+ * This function pointer is called when Network Diagnostic Get response is received.
  *
- * @param[in]  aMessage      A pointer to the message buffer containing the received DIAG_GET.rsp payload.
+ * @param[in]  aMessage      A pointer to the message buffer containing the received Network Diagnostic
+ *                           Get response payload.
  * @param[in]  aMessageInfo  A pointer to the message info for @p aMessage.
  * @param[in]  aContext      A pointer to application-specific context.
  *
@@ -1919,11 +1920,11 @@ typedef void (*otReceiveDiagnosticGetCallback)(otMessage aMessage, const otMessa
                                                void *aContext);
 
 /**
- * This function registers a callback to provide received raw DIAG_GET.rsp payload.
+ * This function registers a callback to provide received raw Network Diagnostic Get response payload.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aCallback         A pointer to a function that is called when an DIAG_GET.rsp is received or
- *                               NULL to disable the callback.
+ * @param[in]  aCallback         A pointer to a function that is called when Network Diagnostic Get response
+ *                               is received or NULL to disable the callback.
  * @param[in]  aCallbackContext  A pointer to application-specific context.
  *
  */
@@ -1931,7 +1932,7 @@ void otSetReceiveDiagnosticGetCallback(otInstance *aInstance, otReceiveDiagnosti
                                        void *aCallbackContext);
 
 /**
- * Send a Network Diagnostic Get request
+ * Send a Network Diagnostic Get request.
  *
  * @param[in]  aDestination   A pointer to destination address.
  * @param[in]  aTlvTypes      An array of Network Diagnostic TLV types.
@@ -1941,7 +1942,7 @@ OTAPI ThreadError OTCALL otSendDiagnosticGet(otInstance *aInstance, const otIp6A
                                              const uint8_t aTlvTypes[], uint8_t aCount);
 
 /**
- * Send a Network Diagnostic Reset request
+ * Send a Network Diagnostic Reset request.
  *
  * @param[in]  aInstance      A pointer to an OpenThread instance.
  * @param[in]  aDestination   A pointer to destination address.
