@@ -58,11 +58,28 @@
 #define IEEE802154_ACK_REQUEST (1 << 5)
 #define IEEE802154_DSN_OFFSET 2
 
+#define IEEE802154_A_UINT_BACKOFF_PERIOD    20      // (IEEE 802.15.4-2006 7.4.1) MAC constants
+#define IEEE802154_A_TURNAROUND_TIME        12      // (IEEE 802.15.4-2006 6.4.1) PHY constants
+#define IEEE802154_PHY_SHR_DURATION         10      // (IEEE 802.15.4-2006 6.4.2) PHY PIB attribute
+                                                    // Specifically the O-QPSK PHY
+#define IEEE802154_PHY_SYMBOLS_PER_OCTET    2       // (IEEE 802.15.4-2006 6.4.2) PHY PIB attribute
+                                                    // Specifically the O-QPSK PHY
+#define IEEE802154_MAC_ACK_WAIT_DURATION    \
+    (IEEE802154_A_UINT_BACKOFF_PERIOD +     \
+     IEEE802154_A_TURNAROUND_TIME +         \
+     IEEE802154_PHY_SHR_DURATION +          \
+     ( 6 * IEEE802154_PHY_SYMBOLS_PER_OCTET))       // (IEEE 802.15.4-2006 7.4.2) 
+                                                    // macAckWaitDuration PIB attribute
+#define IEEE802154_SYMBOLS_PER_SEC          62500   // (IEEE 802.15.4-2006 6.5.3.2)
+                                                    // O-QPSK symbol rate
+#define CC2650_RAT_TICKS_PER_SEC            4000000 // 4MHz clock
+
 /* phy state as defined by openthread */
 static volatile PhyState sState;
 /* phy states not defined by openthread */
 static volatile bool enabaling = false;
 static volatile bool transmitting = false;
+static volatile bool pending = false;
 
 /* TX Power dBm lookup table - values from SmartRF Studio */
 typedef struct output_config {
@@ -129,6 +146,7 @@ static volatile rfc_CMD_FS_POWERDOWN_t cmd_fs_powerdown;
 static volatile rfc_CMD_CLEAR_RX_t cmd_clear_rx;
 static volatile rfc_CMD_IEEE_RX_t cmd_ieee_rx;
 static volatile rfc_CMD_IEEE_TX_t cmd_ieee_tx;
+static volatile rfc_CMD_IEEE_RX_ACK_t cmd_ieee_rx_ack;
 static volatile rfc_CMD_IEEE_MOD_FILT_t cmd_ieee_mod_filt;
 static volatile rfc_CMD_IEEE_MOD_SRC_MATCH_t cmd_ieee_mod_src_match;
 
@@ -262,7 +280,7 @@ static void rf_core_init_rx_params(void)
     /* Receive all frame types */
     cmd_ieee_rx.frameTypes.bAcceptFt0Beacon = 1;
     cmd_ieee_rx.frameTypes.bAcceptFt1Data = 1;
-    cmd_ieee_rx.frameTypes.bAcceptFt2Ack = 1;
+    cmd_ieee_rx.frameTypes.bAcceptFt2Ack = 0;
     cmd_ieee_rx.frameTypes.bAcceptFt3MacCmd = 1;
     cmd_ieee_rx.frameTypes.bAcceptFt4Reserved = 1;
     cmd_ieee_rx.frameTypes.bAcceptFt5Reserved = 1;
@@ -447,10 +465,35 @@ static uint_fast8_t rf_core_cmd_ieee_tx(uint8_t *psdu, uint8_t len)
 {
     memset((void *)&cmd_ieee_tx, 0, sizeof(cmd_ieee_tx));
     cmd_ieee_tx.commandNo = CMD_IEEE_TX;
-    cmd_ieee_tx.condition.rule = COND_NEVER;
+    /* no need to look for an ack if the tx operation was stopped */
     cmd_ieee_tx.payloadLen = len;
     cmd_ieee_tx.pPayload = psdu;
     cmd_ieee_tx.startTrigger.triggerType = TRIG_NOW;
+
+    /* always clear the rx_ack command just incase the status is not IDLE */
+    memset((void *)&cmd_ieee_rx_ack, 0, sizeof(cmd_ieee_rx_ack));
+    if(psdu[0] & IEEE802154_ACK_REQUEST)
+    {
+        /* setup the receive ack command to follow the tx command */
+        cmd_ieee_tx.condition.rule = COND_STOP_ON_FALSE;
+        cmd_ieee_tx.pNextOp = (rfc_radioOp_t *)&(cmd_ieee_rx_ack);
+
+        cmd_ieee_rx_ack.commandNo = CMD_IEEE_RX_ACK;
+        cmd_ieee_rx_ack.condition.rule = COND_NEVER;
+        cmd_ieee_rx_ack.startTrigger.triggerType = TRIG_NOW;
+        cmd_ieee_rx_ack.seqNo = psdu[IEEE802154_DSN_OFFSET];
+        cmd_ieee_rx_ack.endTrigger.triggerType = TRIG_REL_START;
+        cmd_ieee_rx_ack.endTrigger.pastTrig = 1;
+        /* number of RAT ticks to wait before claiming we haven't received an ack */
+        cmd_ieee_rx_ack.endTime = ((IEEE802154_MAC_ACK_WAIT_DURATION *
+                    CC2650_RAT_TICKS_PER_SEC) / IEEE802154_SYMBOLS_PER_SEC);
+    }
+    else
+    {
+        /* we are not looking for an ack */
+        cmd_ieee_tx.condition.rule = COND_NEVER;
+        cmd_ieee_tx.pNextOp = NULL;
+    }
 
     return (RFCDoorbellSendTo((uint32_t)&cmd_ieee_tx) & 0xFF);
 }
@@ -764,14 +807,14 @@ void RFCCPE1IntHandler(void)
  */
 void RFCCPE0IntHandler(void)
 {
-    if(sState == kStateSleep)
+    if(HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) & IRQ_LAST_COMMAND_DONE)
     {
-        if(HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) & IRQ_LAST_COMMAND_DONE)
+        HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = ~IRQ_LAST_COMMAND_DONE;
+        if(sState == kStateSleep)
         {
             if(cmd_radio_setup.status == DONE_OK)
             {
                 enabaling = false;
-                HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = ~IRQ_LAST_COMMAND_DONE;
             }
             else
             {
@@ -779,45 +822,67 @@ void RFCCPE0IntHandler(void)
                 sState = kStateDisabled;
             }
         }
-    }
-    else if(sState == kStateReceive && (cmd_ieee_rx.status != ACTIVE && cmd_ieee_rx.status != IEEE_SUSPENDED))
-    {
-        /* the rx command was probably aborted to change the channel */
-        sState = kStateSleep;
-        HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = ~IRQ_LAST_COMMAND_DONE;
-    }
-    else if(sState == kStateTransmit)
-    {
-        switch(cmd_ieee_tx.status)
+        else if(sState == kStateReceive &&
+                (cmd_ieee_rx.status != ACTIVE &&
+                 cmd_ieee_rx.status != IEEE_SUSPENDED))
         {
-            case IDLE:
-            case PENDING:
-            case ACTIVE:
-                break;
-            case IEEE_DONE_OK:
-                transmitting = false;
-                sTransmitError = kThreadError_None;
-                break;
-            case IEEE_DONE_TIMEOUT:
-                transmitting = false;
-                sTransmitError = kThreadError_ChannelAccessFailure;
-                break;
-            case IEEE_ERROR_NO_SETUP:
-            case IEEE_ERROR_NO_FS:
-            case IEEE_ERROR_SYNTH_PROG:
-                transmitting = false;
-                sTransmitError = kThreadError_InvalidState;
-                break;
-            case IEEE_ERROR_TXUNF:
-                transmitting = false;
-                sTransmitError = kThreadError_NoBufs;
-                break;
-            default:
-                transmitting = false;
-                sTransmitError = kThreadError_Error;
+            /* the rx command was probably aborted to change the channel */
+            sState = kStateSleep;
         }
-        /* we let the process function move us back to receive */
+    }
+    if(HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) & IRQ_LAST_FG_COMMAND_DONE)
+    {
         HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = ~IRQ_LAST_FG_COMMAND_DONE;
+        if(sState == kStateTransmit)
+        {
+            transmitting = false;
+            if(cmd_ieee_rx_ack.status == IDLE || 
+                    cmd_ieee_rx_ack.status == PENDING)
+            {
+                /* The TX command string stopped before reaching the rx ack
+                 * command. Either we were stopped or we are not looking for an
+                 * ack */
+                switch(cmd_ieee_tx.status)
+                {
+                case IEEE_DONE_OK:
+                    /* we are not looking for an ack */
+                    pending = false;
+                    sTransmitError = kThreadError_None;
+                    break;
+                case IEEE_DONE_TIMEOUT:
+                    sTransmitError = kThreadError_ChannelAccessFailure;
+                    break;
+                case IEEE_ERROR_NO_SETUP:
+                case IEEE_ERROR_NO_FS:
+                case IEEE_ERROR_SYNTH_PROG:
+                    sTransmitError = kThreadError_InvalidState;
+                    break;
+                case IEEE_ERROR_TXUNF:
+                    sTransmitError = kThreadError_NoBufs;
+                    break;
+                default:
+                    sTransmitError = kThreadError_Error;
+                }
+            }
+            else if(cmd_ieee_rx_ack.status == IEEE_DONE_ACK)
+            {
+                pending = false;
+                sTransmitError = kThreadError_None;
+            }
+            else if(cmd_ieee_rx_ack.status == IEEE_DONE_ACKPEND)
+            {
+                pending = true;
+                sTransmitError = kThreadError_None;
+            }
+            else if(cmd_ieee_rx_ack.status == IEEE_DONE_TIMEOUT)
+            {
+                sTransmitError = kThreadError_NoAck;
+            }
+            else
+            {
+                sTransmitError = kThreadError_Failed;
+            }
+        }
     }
 }
 
@@ -914,7 +979,7 @@ ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
         VerifyOrExit(rf_core_cmd_ieee_rx() == CMDSTA_Done, error = kThreadError_Failed);
         error = kThreadError_None;
     }
-    else if(sState == kStateReceive || sState == kStateTransmit)
+    else if(sState == kStateReceive)
     {
         if(cmd_ieee_rx.status == ACTIVE && cmd_ieee_rx.channel == aChannel)
         {
@@ -951,7 +1016,7 @@ exit:
  */
 ThreadError otPlatRadioSleep(otInstance *aInstance)
 {
-    ThreadError error = kThreadError_None;
+    ThreadError error = kThreadError_Busy;
     (void)aInstance;
 
     if(sState == kStateSleep)
@@ -1031,7 +1096,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     (void)aInstance;
-    return kRadioCapsNone;
+    return kRadioCapsAckTimeout;
 }
 
 /**
@@ -1463,45 +1528,25 @@ static void readFrame(void)
 int cc2650RadioProcess(otInstance *aInstance)
 {
     if((sState == kStateTransmit && !transmitting)
-            && (((sTransmitPsdu[0] & IEEE802154_ACK_REQUEST) == 0)
-                || (sTransmitError != kThreadError_None)))
+                || (sTransmitError != kThreadError_None))
     {
         /* we are not looking for an ACK packet, or failed */
         sState = kStateReceive;
 #if OPENTHREAD_ENABLE_DIAG
         if (otPlatDiagModeGet())
         {
-            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, false, sTransmitError);
+            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, pending, sTransmitError);
         }
         else
 #endif /* OPENTHREAD_ENABLE_DIAG */
         {
-            otPlatRadioTransmitDone(aInstance, &sTransmitFrame, false, sTransmitError);
+            otPlatRadioTransmitDone(aInstance, &sTransmitFrame, pending, sTransmitError);
         }
     }
-    else if(sState == kStateReceive || sState == kStateTransmit)
+    else if(sState == kStateReceive)
     {
         readFrame();
-
-        if (sState == kStateTransmit
-                && (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK
-                && (sReceiveFrame.mPsdu[IEEE802154_DSN_OFFSET] == sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET]))
-        {
-            /* XXX: our RX command only accepts ack packets that are 5 bytes */
-            sState = kStateReceive;
-#if OPENTHREAD_ENABLE_DIAG
-
-            if (otPlatDiagModeGet())
-            {
-                otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
-            }
-            else
-#endif /* OPENTHREAD_ENABLE_DIAG */
-            {
-                otPlatRadioTransmitDone(aInstance, &sTransmitFrame, (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
-            }
-        }
-        else if (sState == kStateReceive && sReceiveFrame.mLength > 0)
+        if (sReceiveFrame.mLength > 0)
         {
 #if OPENTHREAD_ENABLE_DIAG
 
