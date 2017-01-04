@@ -746,7 +746,6 @@ private:
     ThreadError SendAddressRelease(void);
     void SendAddressSolicitResponse(const Coap::Header &aRequest, uint8_t aRouterId,
                                     const Ip6::MessageInfo &aMessageInfo);
-    void SendAddressReleaseResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo);
     ThreadError SendAdvertisement(void);
     ThreadError SendLinkRequest(Neighbor *aNeighbor);
     ThreadError SendLinkAccept(const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor,

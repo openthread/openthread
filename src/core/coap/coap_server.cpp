@@ -105,6 +105,30 @@ ThreadError Server::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMess
     return mSender(this, aMessage, aMessageInfo);
 }
 
+ThreadError Server::SendEmptyAck(const Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo)
+{
+    ThreadError error = kThreadError_None;
+    Coap::Header responseHeader;
+    Message *message = NULL;
+
+    VerifyOrExit(aRequestHeader.GetType() == kCoapTypeConfirmable, error = kThreadError_InvalidArgs);
+
+    responseHeader.SetDefaultResponseHeader(aRequestHeader);
+
+    VerifyOrExit((message = NewMessage(responseHeader)) != NULL, error = kThreadError_NoBufs);
+
+    SuccessOrExit(error = SendMessage(*message, aMessageInfo));
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        message->Free();
+    }
+
+    return error;
+}
+
 void Server::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Header header;

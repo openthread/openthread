@@ -81,31 +81,6 @@ void NetworkDiagnostic::SetReceiveDiagnosticGetCallback(otReceiveDiagnosticGetCa
     mReceiveDiagnosticGetCallbackContext = aCallbackContext;
 }
 
-ThreadError NetworkDiagnostic::SendEmptyAck(Coap::Header &aHeader, const Ip6::MessageInfo &aMessageInfo)
-{
-    ThreadError error = kThreadError_None;
-    Message *message = NULL;
-    Coap::Header header;
-    Ip6::MessageInfo messageInfo(aMessageInfo);
-
-    VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
-
-    header.SetDefaultResponseHeader(aHeader);
-
-    SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
-
-    SuccessOrExit(error = mCoapServer.SendMessage(*message, messageInfo));
-
-exit:
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        message->Free();
-    }
-
-    return error;
-}
-
 ThreadError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestination, const uint8_t aTlvTypes[],
                                                  uint8_t aCount)
 {
@@ -192,8 +167,6 @@ void NetworkDiagnostic::HandleDiagnosticGetAnswer(void *aContext, otCoapHeader *
 void NetworkDiagnostic::HandleDiagnosticGetAnswer(Coap::Header &aHeader, Message &aMessage,
                                                   const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadError error = kThreadError_None;
-
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
                  aHeader.GetCode() == kCoapRequestPost, ;);
 
@@ -204,7 +177,7 @@ void NetworkDiagnostic::HandleDiagnosticGetAnswer(Coap::Header &aHeader, Message
         mReceiveDiagnosticGetCallback(&aMessage, &aMessageInfo, mReceiveDiagnosticGetCallbackContext);
     }
 
-    SuccessOrExit(error = SendEmptyAck(aHeader, aMessageInfo));
+    SuccessOrExit(mCoapServer.SendEmptyAck(aHeader, aMessageInfo));
 
     otLogInfoNetDiag("Sent diagnostic answer acknowledgment");
 
@@ -471,9 +444,10 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Header &aHeader, Message 
     // DIAG_GET.qry may be sent as a confirmable message.
     if (aHeader.GetType() == kCoapTypeConfirmable)
     {
-        SuccessOrExit(error = SendEmptyAck(aHeader, aMessageInfo));
-
-        otLogInfoNetDiag("Sent diagnostic get query acknowledgment");
+        if (mCoapServer.SendEmptyAck(aHeader, aMessageInfo) == kThreadError_None)
+        {
+            otLogInfoNetDiag("Sent diagnostic get query acknowledgment");
+        }
     }
 
     header.Init(kCoapTypeConfirmable, kCoapRequestPost);
@@ -607,8 +581,6 @@ void NetworkDiagnostic::HandleDiagnosticReset(void *aContext, otCoapHeader *aHea
 void NetworkDiagnostic::HandleDiagnosticReset(Coap::Header &aHeader, Message &aMessage,
                                               const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadError error = kThreadError_None;
-    Message *message = NULL;
     uint16_t offset = 0;
     uint8_t type;
     NetworkDiagnosticTlv networkDiagnosticTlv;
@@ -616,20 +588,20 @@ void NetworkDiagnostic::HandleDiagnosticReset(Coap::Header &aHeader, Message &aM
     otLogInfoNetDiag("Received diagnostic reset request");
 
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost, error = kThreadError_Drop);
+                 aHeader.GetCode() == kCoapRequestPost, ;);
 
     VerifyOrExit((aMessage.Read(aMessage.GetOffset(), sizeof(NetworkDiagnosticTlv),
-                                &networkDiagnosticTlv) == sizeof(NetworkDiagnosticTlv)), error = kThreadError_Drop);
+                                &networkDiagnosticTlv) == sizeof(NetworkDiagnosticTlv)), ;);
 
-    VerifyOrExit(networkDiagnosticTlv.GetType() == NetworkDiagnosticTlv::kTypeList, error = kThreadError_Drop);
+    VerifyOrExit(networkDiagnosticTlv.GetType() == NetworkDiagnosticTlv::kTypeList, ;);
 
-    VerifyOrExit((static_cast<TypeListTlv *>(&networkDiagnosticTlv)->IsValid()), error = kThreadError_Drop);
+    VerifyOrExit((static_cast<TypeListTlv *>(&networkDiagnosticTlv)->IsValid()), ;);
 
     offset = aMessage.GetOffset() + sizeof(NetworkDiagnosticTlv);
 
     for (uint8_t i = 0; i < networkDiagnosticTlv.GetLength(); i++)
     {
-        VerifyOrExit(aMessage.Read(offset, sizeof(type), &type) == sizeof(type), error = kThreadError_Drop);
+        VerifyOrExit(aMessage.Read(offset, sizeof(type), &type) == sizeof(type), ;);
 
         switch (type)
         {
@@ -644,16 +616,12 @@ void NetworkDiagnostic::HandleDiagnosticReset(Coap::Header &aHeader, Message &aM
         }
     }
 
-    SuccessOrExit(error = SendEmptyAck(aHeader, aMessageInfo));
+    SuccessOrExit(mCoapServer.SendEmptyAck(aHeader, aMessageInfo));
 
     otLogInfoNetDiag("Sent diagnostic reset acknowledgment");
 
 exit:
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        message->Free();
-    }
+    return;
 }
 
 }  // namespace NetworkDiagnostic

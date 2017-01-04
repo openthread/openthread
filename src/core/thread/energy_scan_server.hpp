@@ -84,7 +84,6 @@ private:
     void HandleNetifStateChanged(uint32_t aFlags);
 
     ThreadError SendReport(void);
-    ThreadError SendResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestMessageInfo);
 
     Ip6::Address mCommissioner;
     uint32_t mChannelMask;

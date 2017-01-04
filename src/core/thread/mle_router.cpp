@@ -3994,34 +3994,13 @@ void MleRouter::HandleAddressRelease(Coap::Header &aHeader, Message &aMessage,
                  memcmp(&router->mMacAddr, macAddr64Tlv.GetMacAddr(), sizeof(router->mMacAddr)) == 0,);
 
     ReleaseRouterId(routerId);
-    SendAddressReleaseResponse(aHeader, aMessageInfo);
 
-exit:
-    {}
-}
-
-void MleRouter::SendAddressReleaseResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo)
-{
-    ThreadError error = kThreadError_None;
-    Coap::Header responseHeader;
-    Message *message;
-
-    VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
-
-    responseHeader.SetDefaultResponseHeader(aRequestHeader);
-
-    SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
-
-    SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
+    SuccessOrExit(mCoapServer.SendEmptyAck(aHeader, aMessageInfo));
 
     otLogInfoMle("Sent address release response");
 
 exit:
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        message->Free();
-    }
+    {}
 }
 
 void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
