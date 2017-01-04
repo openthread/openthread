@@ -50,6 +50,7 @@
 extern "C" {
 #endif
 
+#if OPENTHREAD_CONFIG_LOG_PKT_DUMP == 1
 /**
  * This static method outputs a line of the memory dump.
  *
@@ -148,6 +149,9 @@ void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const
 
     otLogDump("%s", buf);
 }
+#else
+void otDump(otLogLevel, otLogRegion, const char *, const void *, const size_t) {}
+#endif
 
 #ifdef OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
 const char *otLogLevelToString(otLogLevel aLevel)
