@@ -748,8 +748,8 @@ ThreadError Interpreter::ProcessIpAddrAdd(int argc, char *argv[])
 
     SuccessOrExit(error = otIp6AddressFromString(argv[0], &aAddress.mAddress));
     aAddress.mPrefixLength = 64;
-    aAddress.mPreferredLifetime = 0xffffffff;
-    aAddress.mValidLifetime = 0xffffffff;
+    aAddress.mPreferred = true;
+    aAddress.mValid = true;
     error = otAddUnicastAddress(mInstance, &aAddress);
 
 exit:

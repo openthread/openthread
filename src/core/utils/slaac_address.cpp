@@ -63,7 +63,7 @@ void Slaac::UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddresses, u
         otNetifAddress *address = &aAddresses[i];
         bool found = false;
 
-        if (address->mValidLifetime == 0)
+        if (!address->mValid)
         {
             continue;
         }
@@ -88,7 +88,7 @@ void Slaac::UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddresses, u
         if (!found)
         {
             otRemoveUnicastAddress(aInstance, &address->mAddress);
-            address->mValidLifetime = 0;
+            address->mValid = false;
         }
     }
 
@@ -108,7 +108,7 @@ void Slaac::UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddresses, u
         {
             otNetifAddress *address = &aAddresses[i];
 
-            if (address->mValidLifetime == 0)
+            if (!address->mValid)
             {
                 continue;
             }
@@ -127,7 +127,7 @@ void Slaac::UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddresses, u
             {
                 otNetifAddress *address = &aAddresses[i];
 
-                if (address->mValidLifetime != 0)
+                if (address->mValid)
                 {
                     continue;
                 }
@@ -136,8 +136,8 @@ void Slaac::UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddresses, u
                 memcpy(&address->mAddress, &config.mPrefix.mPrefix, 8);
 
                 address->mPrefixLength = config.mPrefix.mLength;
-                address->mPreferredLifetime = config.mPreferred ? 0xffffffff : 0;
-                address->mValidLifetime = 0xffffffff;
+                address->mPreferred = config.mPreferred;
+                address->mValid = true;
 
                 if (aIidCreator(aInstance, address, aContext) != kThreadError_None)
                 {
