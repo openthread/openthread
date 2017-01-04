@@ -46,6 +46,7 @@
 #include <openthread-diag.h>
 #include <commissioning/commissioner.h>
 #include <commissioning/joiner.h>
+#include <dhcp6/dhcp6_server.h>
 #include <dhcp6/dhcp6_client.h>
 
 #include "cli.hpp"
@@ -2637,7 +2638,7 @@ void Interpreter::HandleNetifStateChanged(uint32_t aFlags)
     otSlaacUpdate(mInstance, mSlaacAddresses, sizeof(mSlaacAddresses) / sizeof(mSlaacAddresses[0]), otCreateRandomIid,
                   NULL);
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
-    mInstance->mThreadNetif.GetDhcp6Server().UpdateService();
+    otDhcp6ServerUpdate(mInstance);
 #endif  // OPENTHREAD_ENABLE_DHCP6_SERVER
 
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT

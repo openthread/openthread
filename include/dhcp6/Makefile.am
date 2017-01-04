@@ -30,6 +30,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 ot_dhcp6_headers                = \
     dhcp6_client.h                \
+    dhcp6_server.h                \
     $(NULL)
 
 ot_dhcp6dir = $(includedir)/dhcp6
