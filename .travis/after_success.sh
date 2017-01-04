@@ -1,3 +1,4 @@
+#!/bin/sh
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -25,69 +26,9 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
-
-language: generic
-
-sudo: required
-dist: trusty
-
-before_install:
-  - .travis/before_install.sh
-
-script:
-  - .travis/script.sh
-
-after_success:
-  - .travis/after_success.sh
-
-matrix:
-  include:
-    - env: BUILD_TARGET="pretty-check"
-      os: linux
-    - env: BUILD_TARGET="scan-build" CC="clang" CXX="clang++"
-      os: linux
-      compiler: clang
-    - env: BUILD_TARGET="arm-gcc49"
-      os: linux
-      compiler: gcc
-    - env: BUILD_TARGET="arm-gcc54"
-      os: linux
-      compiler: gcc
-    - env: BUILD_TARGET="posix" CC="clang" CXX="clang++"
-      os: linux
-      compiler: clang
-    - env: BUILD_TARGET="posix" CC="gcc" CXX="g++"
-      os: linux
-      compiler: gcc
-    - env: BUILD_TARGET="posix" CC="gcc-5" CXX="g++-5"
-      os: linux
-      compiler: gcc
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - gcc-5
-            - g++-5
-    - env: BUILD_TARGET="posix" CC="gcc-6" CXX="g++-6"
-      os: linux
-      compiler: gcc
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - gcc-6
-            - g++-6
-    - env: BUILD_TARGET="posix-distcheck" VERBOSE=1
-      os: linux
-      compiler: gcc
-    - env: BUILD_TARGET="posix-32-bit" VERBOSE=1
-      os: linux
-      compiler: gcc
-    - env: BUILD_TARGET="posix-ncp-spi" VERBOSE=1
-      os: linux
-      compiler: gcc
-    - env: BUILD_TARGET="posix-ncp" VERBOSE=1
-      os: linux
-      compiler: gcc
+if [ x"$DISABLE_CODECOV_IO" == x"yes" ]
+then
+    echo "CodeCov.IO is disabled"
+else
+    curl -s https://codecov.io/bash | bash
+fi
