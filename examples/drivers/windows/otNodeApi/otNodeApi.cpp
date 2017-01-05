@@ -39,12 +39,19 @@ typedef VOID  (*fp_otvmpCloseHandle)(_In_ HANDLE handle);
 typedef DWORD (*fp_otvmpAddVirtualBus)(_In_ HANDLE handle, _Inout_ ULONG* pBusNumber, _Out_ ULONG* pIfIndex);
 typedef DWORD (*fp_otvmpRemoveVirtualBus)(_In_ HANDLE handle, ULONG BusNumber);
 typedef DWORD (*fp_otvmpSetAdapterTopologyGuid)(_In_ HANDLE handle, DWORD BusNumber, _In_ const GUID* pTopologyGuid);
+typedef void (*fp_otvmpListenerCallback)(_In_opt_ PVOID aContext, _In_reads_bytes_(FrameLength) PUCHAR FrameBuffer, _In_ UCHAR FrameLength, _In_ UCHAR Channel);
+typedef HANDLE (*fp_otvmpListenerCreate)(_In_ const GUID* pAdapterTopologyGuid);
+typedef void (*fp_otvmpListenerDestroy)(_In_opt_ HANDLE pHandle);
+typedef void(*fp_otvmpListenerRegister)(_In_ HANDLE pHandle, _In_opt_ fp_otvmpListenerCallback Callback, _In_opt_ PVOID Context);
 
 fp_otvmpOpenHandle              otvmpOpenHandle = nullptr;
 fp_otvmpCloseHandle             otvmpCloseHandle = nullptr;
 fp_otvmpAddVirtualBus           otvmpAddVirtualBus = nullptr;
 fp_otvmpRemoveVirtualBus        otvmpRemoveVirtualBus = nullptr;
 fp_otvmpSetAdapterTopologyGuid  otvmpSetAdapterTopologyGuid = nullptr;
+fp_otvmpListenerCreate          otvmpListenerCreate = nullptr;
+fp_otvmpListenerDestroy         otvmpListenerDestroy = nullptr;
+fp_otvmpListenerRegister        otvmpListenerRegister = nullptr;
 
 HMODULE gVmpModule = nullptr;
 HANDLE  gVmpHandle = nullptr;
@@ -119,18 +126,27 @@ otApiInstance* GetApiInstance()
         otvmpAddVirtualBus          = (fp_otvmpAddVirtualBus)GetProcAddress(gVmpModule, "otvmpAddVirtualBus");
         otvmpRemoveVirtualBus       = (fp_otvmpRemoveVirtualBus)GetProcAddress(gVmpModule, "otvmpRemoveVirtualBus");
         otvmpSetAdapterTopologyGuid = (fp_otvmpSetAdapterTopologyGuid)GetProcAddress(gVmpModule, "otvmpSetAdapterTopologyGuid");
+        otvmpListenerCreate         = (fp_otvmpListenerCreate)GetProcAddress(gVmpModule, "otvmpListenerCreate");
+        otvmpListenerDestroy        = (fp_otvmpListenerDestroy)GetProcAddress(gVmpModule, "otvmpListenerDestroy");
+        otvmpListenerRegister       = (fp_otvmpListenerRegister)GetProcAddress(gVmpModule, "otvmpListenerRegister");
 
         assert(otvmpOpenHandle);
         assert(otvmpCloseHandle);
         assert(otvmpAddVirtualBus);
         assert(otvmpRemoveVirtualBus);
         assert(otvmpSetAdapterTopologyGuid);
+        assert(otvmpListenerCreate);
+        assert(otvmpListenerDestroy);
+        assert(otvmpListenerRegister);
 
         if (otvmpOpenHandle == nullptr) printf("otvmpOpenHandle is null!\r\n");
         if (otvmpCloseHandle == nullptr) printf("otvmpCloseHandle is null!\r\n");
         if (otvmpAddVirtualBus == nullptr) printf("otvmpAddVirtualBus is null!\r\n");
         if (otvmpRemoveVirtualBus == nullptr) printf("otvmpRemoveVirtualBus is null!\r\n");
         if (otvmpSetAdapterTopologyGuid == nullptr) printf("otvmpSetAdapterTopologyGuid is null!\r\n");
+        if (otvmpListenerCreate == nullptr) printf("otvmpListenerCreate is null!\r\n");
+        if (otvmpListenerDestroy == nullptr) printf("otvmpListenerDestroy is null!\r\n");
+        if (otvmpListenerRegister == nullptr) printf("otvmpListenerRegister is null!\r\n");
 
         (VOID)otvmpOpenHandle(&gVmpHandle);
         if (gVmpHandle == nullptr)
