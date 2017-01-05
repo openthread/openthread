@@ -812,11 +812,11 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_APPLICATION_COAP],[${OPENTHREAD_ENABLE_APP
 
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
-        [Specify the examples from one of: none, posix, cc2538 @<:@default=none@:>@.])],
+        [Specify the examples from one of: none, posix, cc2538, da15000 @<:@default=none@:>@.])],
     [
         case "${with_examples}" in
 
-        none|posix|cc2538)
+        none|posix|cc2538|da15000)
             ;;
         *)
             AC_MSG_ERROR([Invalid value ${with_examples} for --with-examples])
@@ -837,6 +837,10 @@ case ${with_examples} in
     cc2538)
         OPENTHREAD_EXAMPLES_CC2538=1
         AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_CC2538],[${OPENTHREAD_EXAMPLES_CC2538}],[Define to 1 if you want to use cc2538 examples])
+        ;;
+
+    da15000)
+        OPENTHREAD_EXAMPLES_DA15000=1
         ;;
 
 esac
@@ -871,6 +875,10 @@ if test "$PLATFORM_INFO" != "none"; then
     AC_SUBST(PLATFORM_INFO)
     AC_DEFINE_UNQUOTED([PLATFORM_INFO],["${PLATFORM_INFO}"],[OpenThread platform information])
 fi
+
+AC_SUBST(OPENTHREAD_EXAMPLES_DA15000)
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_DA15000], [test "${OPENTHREAD_EXAMPLES}" = "da15000"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_DA15000],[${OPENTHREAD_EXAMPLES_DA15000}],[Define to 1 if you want to use da15000 examples])
 
 #
 # Tools
@@ -988,6 +996,7 @@ examples/apps/cli/Makefile
 examples/apps/ncp/Makefile
 examples/platforms/Makefile
 examples/platforms/cc2538/Makefile
+examples/platforms/da15000/Makefile
 examples/platforms/posix/Makefile
 examples/platforms/utils/Makefile
 tools/Makefile
