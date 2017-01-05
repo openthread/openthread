@@ -52,7 +52,7 @@ SUBDIRS                                += cc2538
 endif
 
 if OPENTHREAD_EXAMPLES_DA15000
-SUBDIRS                                 = da15000
+SUBDIRS                                += da15000
 endif
 
 # Always pretty (e.g. for 'make pretty') these subdirectories.

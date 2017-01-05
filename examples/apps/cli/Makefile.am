@@ -87,7 +87,7 @@ LDADD_COMMON                                                          += \
 LDFLAGS_COMMON                                                        += \
     -T $(top_srcdir)/examples/platforms/da15000/da15000.ld               \
     $(NULL)
-endif
+endif # OPENTHREAD_EXAMPLES_DA15000
 
 ot_cli_ftd_CPPFLAGS                                                    = \
     $(CPPFLAGS_COMMON)                                                   \
