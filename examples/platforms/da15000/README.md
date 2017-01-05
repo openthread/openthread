@@ -109,10 +109,10 @@ Board will indicate state of device according to LED blink speed.
    > ping fdde:ad00:beef:0:92f5:9844:67ad:a0c9
    16 bytes from fdde:ad00:beef:0:92f5:9844:67ad:a0c9: icmp_seq=2 hlim=64 time=359ms
    ```
-## Troubleshooting 
 
-1. Why can’t I see the VCOM port?
+## Troubleshooting 
+* Why can’t I see the VCOM port?
    
-The Segger Virtual COM port can be disabled by software configuration. If you can see the Segger
-driver properly installed but the VCOM not showing up in the device manager, it’s probably disabled
-by software. To re-enable it you have to run JLinkExe and issue the command vcom enable.
+   The Segger Virtual COM port can be disabled by software configuration. If you can see the Segger 
+   driver properly installed but the VCOM not showing up in the device manager, it’s probably disabled
+   by software. To re-enable it you have to run JLinkExe and issue the command vcom enable.
