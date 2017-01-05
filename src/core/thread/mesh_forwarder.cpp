@@ -452,6 +452,7 @@ ThreadError MeshForwarder::SendMessage(Message &aMessage)
     }
 
     aMessage.SetOffset(0);
+    aMessage.SetDatagramTag(0);
     SuccessOrExit(error = mSendQueue.Enqueue(aMessage));
     mScheduleTransmissionTask.Post();
 
@@ -1211,7 +1212,17 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
         if (payloadLength > fragmentLength)
         {
             // write Fragment header
-            aMessage.SetDatagramTag(mFragTag++);
+            if (aMessage.GetDatagramTag() == 0)
+            {
+                // avoid using datagram tag value 0, which indicates the tag has not been set
+                if (mFragTag == 0)
+                {
+                    mFragTag++;
+                }
+
+                aMessage.SetDatagramTag(mFragTag++);
+            }
+
             memmove(payload + 4, payload, headerLength);
 
             payloadLength = (aFrame.GetMaxPayloadLength() - headerLength - 4) & ~0x7;
