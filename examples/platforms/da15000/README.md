@@ -115,4 +115,5 @@ Board will indicate state of device according to LED blink speed.
    
    The Segger Virtual COM port can be disabled by software configuration. If you can see the Segger 
    driver properly installed but the VCOM not showing up in the device manager, it’s probably disabled
-   by software. To re-enable it you have to run JLinkExe and issue the command vcom enable.
+   by software. To re-enable it you have to run JLinkExe and issue the command ` vcom enable`.It is
+   required to power cycle the device to apply the change. 
