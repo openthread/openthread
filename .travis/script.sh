@@ -70,6 +70,8 @@ set -x
 }
 
 [ $BUILD_TARGET != posix-distcheck ] || {
+    export ASAN_SYMBOLIZER_PATH=`which llvm-symbolizer-3.4` || die
+    export ASAN_OPTIONS=symbolize=1 || die
     BuildJobs=10 make -f examples/Makefile-posix distcheck || die
 }
 
