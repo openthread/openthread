@@ -960,6 +960,14 @@ typedef struct
 typedef void *otMessage;
 
 /**
+ * This structure represents an OpenThread message queue.
+ */
+typedef struct
+{
+    void *mData;            ///< Opaque data used by the implementation.
+} otMessageQueue;
+
+/**
  * @}
  *
  */

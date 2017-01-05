@@ -874,9 +874,9 @@ void Message::SetPriorityQueue(PriorityQueue *aPriorityQueue)
     mInfo.mInPriorityQ = true;
 }
 
-MessageQueue::MessageQueue(void) :
-    mTail(NULL)
+MessageQueue::MessageQueue(void)
 {
+    SetTail(NULL);
 }
 
 void MessageQueue::AddToList(uint8_t aList, Message &aMessage)
@@ -885,36 +885,36 @@ void MessageQueue::AddToList(uint8_t aList, Message &aMessage)
 
     assert((aMessage.Next(aList) == NULL) && (aMessage.Prev(aList) == NULL));
 
-    if (mTail == NULL)
+    if (GetTail() == NULL)
     {
         aMessage.Next(aList) = &aMessage;
         aMessage.Prev(aList) = &aMessage;
     }
     else
     {
-        head = mTail->Next(aList);
+        head = GetTail()->Next(aList);
 
         aMessage.Next(aList) = head;
-        aMessage.Prev(aList) = mTail;
+        aMessage.Prev(aList) = GetTail();
 
         head->Prev(aList) = &aMessage;
-        mTail->Next(aList) = &aMessage;
+        GetTail()->Next(aList) = &aMessage;
     }
 
-    mTail = &aMessage;
+    SetTail(&aMessage);
 }
 
 void MessageQueue::RemoveFromList(uint8_t aList, Message &aMessage)
 {
     assert((aMessage.Next(aList) != NULL) && (aMessage.Prev(aList) != NULL));
 
-    if (&aMessage == mTail)
+    if (&aMessage == GetTail())
     {
-        mTail = mTail->Prev(aList);
+        SetTail(GetTail()->Prev(aList));
 
-        if (&aMessage == mTail)
+        if (&aMessage == GetTail())
         {
-            mTail = NULL;
+            SetTail(NULL);
         }
     }
 
@@ -927,7 +927,7 @@ void MessageQueue::RemoveFromList(uint8_t aList, Message &aMessage)
 
 Message *MessageQueue::GetHead(void) const
 {
-    return (mTail == NULL) ? NULL : mTail->Next(MessageInfo::kListInterface);
+    return (GetTail() == NULL) ? NULL : GetTail()->Next(MessageInfo::kListInterface);
 }
 
 ThreadError MessageQueue::Enqueue(Message &aMessage)
