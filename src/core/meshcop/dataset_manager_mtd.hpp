@@ -48,8 +48,6 @@ class ActiveDataset: public ActiveDatasetBase
 public:
     ActiveDataset(ThreadNetif &aThreadNetif) : ActiveDatasetBase(aThreadNetif) { }
 
-    ThreadError GenerateLocal(void) { return kThreadError_NotImplemented; }
-
     void StartLeader(void) { }
 
     void StopLeader(void) { }
