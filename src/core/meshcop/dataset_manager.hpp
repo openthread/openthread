@@ -117,6 +117,8 @@ class ActiveDatasetBase: public DatasetManager
 public:
     ActiveDatasetBase(ThreadNetif &aThreadNetif);
 
+    ThreadError GenerateLocal(void);
+
     ThreadError Restore(void);
 
     ThreadError Clear(bool aOnlyClearNetwork);
@@ -126,6 +128,9 @@ public:
     ThreadError Set(const Dataset &aDataset);
 
     ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
+
+private:
+    bool IsTlvInitialized(Tlv::Type aType);
 };
 
 class PendingDatasetBase: public DatasetManager

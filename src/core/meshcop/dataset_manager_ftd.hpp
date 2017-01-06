@@ -50,8 +50,6 @@ class ActiveDataset: public ActiveDatasetBase
 public:
     ActiveDataset(ThreadNetif &aThreadNetif);
 
-    ThreadError GenerateLocal(void);
-
     void StartLeader(void);
 
     void StopLeader(void);
@@ -64,8 +62,6 @@ private:
     static void HandleSet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
                           const otMessageInfo *aMessageInfo);
     void HandleSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    bool IsTlvInitialized(Tlv::Type aType);
 
     Coap::Resource mResourceGet;
     Coap::Resource mResourceSet;
