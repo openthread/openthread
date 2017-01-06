@@ -341,6 +341,7 @@ ThreadError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, 
 {
     ThreadError error = kThreadError_NotFound;
     uint32_t address = sSettingsBaseAddress + kSettingsFlagSize;
+    uint16_t valueLength = 0;
     int index = 0;
 
     (void)aInstance;
@@ -362,18 +363,22 @@ ThreadError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, 
             {
                 if (index == aIndex)
                 {
+                    uint16_t readLength = block.length;
+
+                    // only perform read if an input buffer was passed in
+                    if (aValue != NULL && aValueLength != NULL)
+                    {
+                        // adjust read length if input buffer length is smaller
+                        if (readLength > *aValueLength)
+                        {
+                            readLength = *aValueLength;
+                        }
+
+                        utilsFlashRead(address + sizeof(struct settingsBlock), aValue, readLength);
+                    }
+
+                    valueLength = readLength;
                     error = kThreadError_None;
-
-                    if (aValueLength)
-                    {
-                        *aValueLength = block.length;
-                    }
-
-                    if (aValue)
-                    {
-                        VerifyOrExit(aValueLength, error = kThreadError_InvalidArgs);
-                        utilsFlashRead(address + sizeof(struct settingsBlock), aValue, block.length);
-                    }
                 }
 
                 index++;
@@ -383,7 +388,11 @@ ThreadError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, 
         address += (getAlignLength(block.length) + sizeof(struct settingsBlock));
     }
 
-exit:
+    if (aValueLength != NULL)
+    {
+        *aValueLength = valueLength;
+    }
+
     return error;
 }
 

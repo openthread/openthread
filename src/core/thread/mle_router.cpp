@@ -3339,16 +3339,19 @@ exit:
 ThreadError MleRouter::RestoreChildren(void)
 {
     ThreadError error = kThreadError_None;
-    Child *child;
-    otChildInfo childInfo;
-    uint16_t length;
 
     for (uint8_t i = 0; i < kMaxChildren; i++)
     {
+        Child *child;
+        otChildInfo childInfo;
+        uint16_t length;
+
+        length = sizeof(childInfo);
         SuccessOrExit(otPlatSettingsGet(mNetif.GetInstance(), kKeyChildInfo, i,
                                         reinterpret_cast<uint8_t *>(&childInfo), &length));
-        VerifyOrExit((child = NewChild()) != NULL, error = kThreadError_NoBufs);
+        VerifyOrExit(length == sizeof(childInfo), ;);
 
+        VerifyOrExit((child = NewChild()) != NULL, error = kThreadError_NoBufs);
         memset(child, 0, sizeof(*child));
 
         memcpy(&child->mMacAddr, &childInfo.mExtAddress, sizeof(child->mMacAddr));
@@ -3369,13 +3372,15 @@ exit:
 ThreadError MleRouter::RemoveStoredChild(uint16_t aChildRloc16)
 {
     ThreadError error = kThreadError_NotFound;
-    otChildInfo childInfo;
-    uint16_t length;
 
     for (uint8_t i = 0; i < kMaxChildren; i++)
     {
+        otChildInfo childInfo;
+        uint16_t length = sizeof(childInfo);
+
         SuccessOrExit(otPlatSettingsGet(mNetif.GetInstance(), kKeyChildInfo, i,
                                         reinterpret_cast<uint8_t *>(&childInfo), &length));
+        VerifyOrExit(length == sizeof(childInfo), ;);
 
         if (childInfo.mRloc16 == aChildRloc16)
         {
