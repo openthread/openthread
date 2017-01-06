@@ -225,7 +225,7 @@ ThreadError Commissioner::AddJoiner(const Mac::ExtAddress *aExtAddress, const ch
             mJoiners[i].mAny = true;
         }
 
-        strncpy(mJoiners[i].mPsk, aPSKd, sizeof(mJoiners[i].mPsk));
+        strncpy(mJoiners[i].mPsk, aPSKd, sizeof(mJoiners[i].mPsk) - 1);
         mJoiners[i].mValid = true;
 
         SendCommissionerSet();
