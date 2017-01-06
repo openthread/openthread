@@ -608,7 +608,6 @@ void NetworkDiagnostic::HandleDiagnosticReset(Coap::Header &aHeader, Message &aM
                                               const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadError error = kThreadError_None;
-    Message *message = NULL;
     uint16_t offset = 0;
     uint8_t type;
     NetworkDiagnosticTlv networkDiagnosticTlv;
@@ -649,11 +648,7 @@ void NetworkDiagnostic::HandleDiagnosticReset(Coap::Header &aHeader, Message &aM
     otLogInfoNetDiag("Sent diagnostic reset acknowledgment");
 
 exit:
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        message->Free();
-    }
+    return;
 }
 
 }  // namespace NetworkDiagnostic
