@@ -28,55 +28,47 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
+lib_LIBRARIES                                                                           = libopenthread-da15000.a
 
-lib_LIBRARIES                             = libopenthread-da15000.a
-
-libopenthread_da15000_a_CPPFLAGS          =                                    \
-    -I$(top_srcdir)/include                                                    \
-    -I$(top_srcdir)/examples/platforms                                         \
-    -I$(top_srcdir)/src/core                                                   \
-    -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/include                   \
-    -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/peripherals/include       \
-    -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/adapters/include          \
-    -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/memory/include            \
-    -I$(top_srcdir)/third_party/dialog/DialogSDK/interfaces/ftdf/include       \
-    -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/config                    \
-    -I$(top_srcdir)/third_party/dialog/DialogSDK                               \
-    -I$(top_srcdir)/third_party/dialog/DialogSDK/interfaces/ftdf/src           \
-    -include$(top_srcdir)/examples/platforms/da15000/custom_config_qspi.h      \
-    -Wno-unknown-pragmas                                                       \
-    -Wno-sign-compare                                                          \
-    -Wno-unused-function                                                       \
-    -Wno-unused-parameter                                                      \
-    -Wno-shadow                                                                \
-    -Wno-type-limits                                                           \
-    -Wno-unused-variable                                                       \
-    -Wno-missing-field-initializers                                            \
-    -fno-strict-aliasing                                                       \
+libopenthread_da15000_a_CPPFLAGS                                                        = \
+    -I$(top_srcdir)/include                                                               \
+    -I$(top_srcdir)/examples/platforms                                                    \
+    -I$(top_srcdir)/src/core                                                              \
+    -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/include                              \
+    -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/peripherals/include                  \
+    -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/adapters/include                     \
+    -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/memory/include                       \
+    -I$(top_srcdir)/third_party/dialog/DialogSDK/interfaces/ftdf/include                  \
+    -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/config                               \
+    -I$(top_srcdir)/third_party/dialog/DialogSDK                                          \
+    -I$(top_srcdir)/third_party/dialog/DialogSDK/interfaces/ftdf/src                      \
+    -include$(top_srcdir)/examples/platforms/da15000/custom_config_qspi.h                 \
+    -Wno-unknown-pragmas                                                                  \
+    -Wno-sign-compare                                                                     \
+    -Wno-unused-function                                                                  \
+    -Wno-unused-parameter                                                                 \
+    -Wno-shadow                                                                           \
+    -Wno-type-limits                                                                      \
+    -Wno-unused-variable                                                                  \
+    -Wno-missing-field-initializers                                                       \
+    -fno-strict-aliasing                                                                  \
     $(NULL)
 
-
-libopenthread_da15000_settings.cpp: $(srcdir)/../utils/settings.cpp
-	cp $? $@
-
-CLEANFILES = libopenthread_da15000_settings.cpp
-
-libopenthread_da15000_a_SOURCES          =                                               \
-    alarm.c                                                                              \
-    flash.c                                                                              \
-    logging.c                                                                            \
-    platform.c                                                                           \
-    radio.c                                                                              \
-    random.c                                                                             \
-    vector.c                                                                             \
-    cstartup.c                                                                           \
-    uart.c                                                                               \
-    cortex-m_cstartup.c                                                                  \
-    startup-gcc.c                                                                        \
-    libopenthread_da15000_settings.cpp                                                   \
-    clock.c                                                                              \
-    misc.c                                                                               \
-    @top_builddir@/third_party/dialog/DialogSDK/bsp/memory/src/qspi_automode.c \
+libopenthread_da15000_a_SOURCES                                                         = \
+    alarm.c                                                                               \
+    flash.c                                                                               \
+    logging.c                                                                             \
+    platform.c                                                                            \
+    radio.c                                                                               \
+    random.c                                                                              \
+    vector.c                                                                              \
+    cstartup.c                                                                            \
+    uart.c                                                                                \
+    cortex-m_cstartup.c                                                                   \
+    startup-gcc.c                                                                         \
+    clock.c                                                                               \
+    misc.c                                                                                \
+    @top_builddir@/third_party/dialog/DialogSDK/bsp/memory/src/qspi_automode.c            \
     @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_qspi.c             \
     @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_timer0.c           \
     @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_gpio.c             \
@@ -98,14 +90,13 @@ libopenthread_da15000_a_SOURCES          =                                      
     @top_builddir@/third_party/dialog/DialogSDK/interfaces/ftdf/src/main.c                \
     $(NULL)
 
- 
-
-noinst_HEADERS                            = \
-    platform-da15000.h                      \
+noinst_HEADERS                                                                          = \
+    custom_config_qspi.h                                                                  \
+    platform-da15000.h                                                                    \
     $(NULL)
 
-if OPENTHREAD_BUILD_COVERAGE
-CLEANFILES                                += $(wildcard *.gcda *.gcno)
-endif # OPENTHREAD_BUILD_COVERAGE
+Dash                                                                                    = -
+libopenthread_da15000_a_LIBADD                                                          = \
+    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

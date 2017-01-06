@@ -63,7 +63,7 @@ ot_ncp_LDADD                                                          += \
     $(top_builddir)/examples/platforms/posix/libopenthread-posix.a       \
     -lstdc++                                                             \
     $(NULL)
-endif
+endif # OPENTHREAD_EXAMPLES_POSIX
 
 if OPENTHREAD_EXAMPLES_CC2538
 ot_ncp_LDADD                                                          += \
@@ -73,7 +73,7 @@ ot_ncp_LDADD                                                          += \
 ot_ncp_LDFLAGS                                                        += \
     -T $(top_srcdir)/examples/platforms/cc2538/cc2538.ld                 \
     $(NULL)
-endif
+endif # OPENTHREAD_EXAMPLES_CC2538
 
 if OPENTHREAD_EXAMPLES_DA15000
 ot_ncp_LDADD                                                          += \
@@ -83,7 +83,7 @@ ot_ncp_LDADD                                                          += \
 ot_ncp_LDFLAGS                                                        += \
     -T $(top_srcdir)/examples/platforms/da15000/da15000.ld               \
     $(NULL)
-endif
+endif # OPENTHREAD_EXAMPLES_DA15000
 
 ot_ncp_SOURCES                                                         = \
     main.c                                                               \
