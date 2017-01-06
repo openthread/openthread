@@ -237,10 +237,28 @@ void MeshForwarder::ScheduleTransmissionTask()
     for (int i = 0; i < numChildren; i++)
     {
         if (children[i].mState == Child::kStateValid &&
-            children[i].mDataRequest &&
-            (mSendMessage = GetIndirectTransmission(children[i])) != NULL)
+            children[i].mDataRequest)
         {
-            mSendMessage->SetOffset(children[i].mFragmentOffset);
+            mSendMessage = GetIndirectTransmission(children[i]);
+
+            if (mSendMessage != NULL)
+            {
+                mSendMessage->SetOffset(children[i].mFragmentOffset);
+            }
+            else
+            {
+                if (children[i].mAddSrcMatchEntryShort)
+                {
+                    mMacDest.mLength = sizeof(mMacDest.mShortAddress);
+                    mMacDest.mShortAddress = children[i].mValid.mRloc16;
+                }
+                else
+                {
+                    mMacDest.mLength = sizeof(mMacDest.mExtAddress);
+                    memcpy(mMacDest.mExtAddress.m8, children[i].mMacAddr.m8, sizeof(mMacDest.mExtAddress));
+                }
+            }
+
             mMac.SendFrameRequest(mMacSender);
             ExitNow();
         }
@@ -921,8 +939,15 @@ ThreadError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
     Mac::Address macDest;
     Child *child = NULL;
 
-    VerifyOrExit(mSendMessage != NULL, error = kThreadError_Abort);
+    VerifyOrExit(mEnabled, error = kThreadError_Abort);
+
     mSendBusy = true;
+
+    if (mSendMessage == NULL)
+    {
+        SendEmptyFrame(aFrame);
+        ExitNow();
+    }
 
     switch (mSendMessage->GetType())
     {
@@ -1282,6 +1307,65 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
     return kThreadError_None;
 }
 
+ThreadError MeshForwarder::SendEmptyFrame(Mac::Frame &aFrame)
+{
+    uint16_t fcf;
+    uint8_t secCtl;
+    Mac::Address macSource;
+
+    macSource.mShortAddress = mMac.GetShortAddress();
+
+    if (macSource.mShortAddress != Mac::kShortAddrInvalid)
+    {
+        macSource.mLength = sizeof(macSource.mShortAddress);
+    }
+    else
+    {
+        macSource.mLength = sizeof(macSource.mExtAddress);
+        memcpy(&macSource.mExtAddress, mMac.GetExtAddress(), sizeof(macSource.mExtAddress));
+    }
+
+    fcf = Mac::Frame::kFcfFrameData | Mac::Frame::kFcfFrameVersion2006;
+    fcf |= (mMacDest.mLength == 2) ? Mac::Frame::kFcfDstAddrShort : Mac::Frame::kFcfDstAddrExt;
+    fcf |= (macSource.mLength == 2) ? Mac::Frame::kFcfSrcAddrShort : Mac::Frame::kFcfSrcAddrExt;
+
+    // Not requesting acknowledgment for null/empty frame.
+
+    fcf |= Mac::Frame::kFcfSecurityEnabled;
+    secCtl = Mac::Frame::kKeyIdMode1;
+    secCtl |= Mac::Frame::kSecEncMic32;
+
+    fcf |= Mac::Frame::kFcfPanidCompression;
+
+    aFrame.InitMacHeader(fcf, secCtl);
+
+    aFrame.SetDstPanId(mMac.GetPanId());
+    aFrame.SetSrcPanId(mMac.GetPanId());
+
+    if (mMacDest.mLength == 2)
+    {
+        aFrame.SetDstAddr(mMacDest.mShortAddress);
+    }
+    else
+    {
+        aFrame.SetDstAddr(mMacDest.mExtAddress);
+    }
+
+    if (macSource.mLength == 2)
+    {
+        aFrame.SetSrcAddr(macSource.mShortAddress);
+    }
+    else
+    {
+        aFrame.SetSrcAddr(macSource.mExtAddress);
+    }
+
+    aFrame.SetPayloadLength(0);
+    aFrame.SetFramePending(false);
+
+    return kThreadError_None;
+}
+
 void MeshForwarder::HandleSentFrame(void *aContext, Mac::Frame &aFrame, ThreadError aError)
 {
     static_cast<MeshForwarder *>(aContext)->HandleSentFrame(aFrame, aError);
@@ -1295,10 +1379,11 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
 
     mSendBusy = false;
 
-    if (mSendMessage == NULL)
+    VerifyOrExit(mEnabled, ;);
+
+    if (mSendMessage != NULL)
     {
-        mScheduleTransmissionTask.Post();
-        ExitNow();
+        mSendMessage->SetOffset(mMessageNextOffset);
     }
 
     aFrame.GetDstAddr(macDest);
@@ -1308,7 +1393,11 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
         switch (aError)
         {
         case kThreadError_None:
-            neighbor->mLinkFailures = 0;
+            if (aFrame.GetAckRequest())
+            {
+                neighbor->mLinkFailures = 0;
+            }
+
             break;
 
         case kThreadError_ChannelAccessFailure:
@@ -1337,6 +1426,8 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
     {
         child->mDataRequest = false;
 
+        VerifyOrExit(mSendMessage != NULL, ;);
+
         if (mMessageNextOffset < mSendMessage->GetLength())
         {
             child->mFragmentOffset = mMessageNextOffset;
@@ -1359,6 +1450,8 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
             }
         }
     }
+
+    VerifyOrExit(mSendMessage != NULL, ;);
 
     if (mSendMessage->GetDirectTransmission())
     {
@@ -1399,10 +1492,12 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
         mMessageNextOffset = 0;
     }
 
-    mScheduleTransmissionTask.Post();
-
 exit:
-    {}
+
+    if (mEnabled)
+    {
+        mScheduleTransmissionTask.Post();
+    }
 }
 
 void MeshForwarder::SetDiscoverParameters(uint32_t aScanChannels, uint16_t aScanDuration)
@@ -1825,10 +1920,7 @@ void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const Thre
     child->mLastHeard = Timer::GetNow();
     child->mLinkFailures = 0;
 
-    if (child->mQueuedIndirectMessageCnt > 0)
-    {
-        child->mDataRequest = true;
-    }
+    child->mDataRequest = true;
 
     mScheduleTransmissionTask.Post();
 

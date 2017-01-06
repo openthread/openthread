@@ -237,6 +237,7 @@ private:
     ThreadError SendPoll(Message &aMessage, Mac::Frame &aFrame);
     ThreadError SendMesh(Message &aMessage, Mac::Frame &aFrame);
     ThreadError SendFragment(Message &aMessage, Mac::Frame &aFrame);
+    ThreadError SendEmptyFrame(Mac::Frame &aFrame);
     void UpdateFramePending(void);
     ThreadError UpdateIp6Route(Message &aMessage);
     ThreadError UpdateMeshRoute(Message &aMessage);
