@@ -268,9 +268,9 @@ ThreadError Mle::Restore(void)
     mNetif.GetActiveDataset().Restore();
     mNetif.GetPendingDataset().Restore();
 
+    length = sizeof(networkInfo);
     SuccessOrExit(error = otPlatSettingsGet(mNetif.GetInstance(), kKeyNetworkInfo, 0,
                                             reinterpret_cast<uint8_t *>(&networkInfo), &length));
-
     VerifyOrExit(length == sizeof(networkInfo), error = kThreadError_NotFound);
     VerifyOrExit(networkInfo.mDeviceState >= kDeviceStateChild, error = kThreadError_NotFound);
 
@@ -284,8 +284,10 @@ ThreadError Mle::Restore(void)
 
     if (networkInfo.mDeviceState == kDeviceStateChild)
     {
+        length = sizeof(mParent);
         SuccessOrExit(error = otPlatSettingsGet(mNetif.GetInstance(), kKeyParentInfo, 0,
                                                 reinterpret_cast<uint8_t *>(&mParent), &length));
+        VerifyOrExit(length == sizeof(mParent), error = kThreadError_NotFound);
     }
     else if (networkInfo.mDeviceState == kDeviceStateRouter || networkInfo.mDeviceState == kDeviceStateLeader)
     {
