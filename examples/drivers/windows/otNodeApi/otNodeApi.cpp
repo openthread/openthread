@@ -39,7 +39,7 @@ typedef VOID  (*fp_otvmpCloseHandle)(_In_ HANDLE handle);
 typedef DWORD (*fp_otvmpAddVirtualBus)(_In_ HANDLE handle, _Inout_ ULONG* pBusNumber, _Out_ ULONG* pIfIndex);
 typedef DWORD (*fp_otvmpRemoveVirtualBus)(_In_ HANDLE handle, ULONG BusNumber);
 typedef DWORD (*fp_otvmpSetAdapterTopologyGuid)(_In_ HANDLE handle, DWORD BusNumber, _In_ const GUID* pTopologyGuid);
-typedef void (*fp_otvmpListenerCallback)(_In_opt_ PVOID aContext, _In_ const GUID* pSourceInterfaceGuid, _In_reads_bytes_(FrameLength) PUCHAR FrameBuffer, _In_ UCHAR FrameLength, _In_ UCHAR Channel);
+typedef void (*fp_otvmpListenerCallback)(_In_opt_ PVOID aContext, _In_ ULONG SourceInterfaceIndex, _In_reads_bytes_(FrameLength) PUCHAR FrameBuffer, _In_ UCHAR FrameLength, _In_ UCHAR Channel);
 typedef HANDLE (*fp_otvmpListenerCreate)(_In_ const GUID* pAdapterTopologyGuid);
 typedef void (*fp_otvmpListenerDestroy)(_In_opt_ HANDLE pHandle);
 typedef void(*fp_otvmpListenerRegister)(_In_ HANDLE pHandle, _In_opt_ fp_otvmpListenerCallback Callback, _In_opt_ PVOID Context);
@@ -285,7 +285,7 @@ typedef struct otNode
 {
     uint32_t                mId;
     DWORD                   mBusIndex;
-    GUID                    mInterfaceGuid;
+    DWORD                   mInterfaceIndex;
     otInstance*             mInstance;
     HANDLE                  mEnergyScanEvent;
     HANDLE                  mPanIdConflictEvent;
@@ -784,7 +784,7 @@ OTNODEAPI otNode* OTCALL otNodeInit(uint32_t id)
     printf("%d: New Device " GUID_FORMAT " in compartment %d\r\n", id, GUID_ARG(DeviceGuid), Compartment);
 
     node->mId = id;
-    node->mInterfaceGuid = ifGuid;
+    node->mInterfaceIndex = ifIndex;
     node->mBusIndex = newBusIndex;
     node->mInstance = instance;
 
@@ -2113,7 +2113,7 @@ typedef struct otListener
 void
 otListenerCallback(
     _In_opt_ PVOID aContext,
-    _In_ const GUID* pSourceInterfaceGuid,
+    _In_ ULONG SourceInterfaceIndex,
     _In_reads_bytes_(FrameLength) PUCHAR FrameBuffer,
     _In_ UCHAR FrameLength,
     _In_ UCHAR /* Channel */
@@ -2133,7 +2133,7 @@ otListenerCallback(
         EnterCriticalSection(&gCS);
         for (uint32_t i = 0; i < gNodes.size(); i++)
         {
-            if (gNodes[i]->mInterfaceGuid == *pSourceInterfaceGuid)
+            if (gNodes[i]->mInterfaceIndex == SourceInterfaceIndex)
             {
                 entry->Frame.nodeid = gNodes[i]->mId;
                 break;
