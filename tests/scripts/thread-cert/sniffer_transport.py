@@ -148,10 +148,10 @@ class SnifferSocketTransport(SnifferTransport):
         return bytearray(data), nodeid
 
 
-class MacFrame(Structure):
-    _fields_ = [("buffer", c_ubyte * 128),
-                ("length", c_ubyte),
-                ("nodeid", c_uint)]
+class MacFrame(ctypes.Structure):
+    _fields_ = [("buffer", ctypes.c_ubyte * 128),
+                ("length", ctypes.c_ubyte),
+                ("nodeid", ctypes.c_uint)]
 
 class SnifferVirtualTransport(SnifferTransport):
     """ Virtual interface based implementation of sniffer transport. """
@@ -212,4 +212,4 @@ class SnifferTransportFactory(object):
             return SnifferSocketTransport(nodeid)
 
         else:
-            raise NotImplementedError
+            return SnifferVirtualTransport(nodeid)

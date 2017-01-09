@@ -374,7 +374,7 @@ typedef struct otListener otListener;
 /**
 * Creates and starts a new listener
 */
-OTNODEAPI otListener* otListenerInit(uint32_t nodeid);
+OTNODEAPI otListener* OTCALL otListenerInit(uint32_t nodeid);
 
 /**
 * Frees a listener

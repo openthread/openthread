@@ -792,9 +792,7 @@ OTNODEAPI otNode* OTCALL otNodeInit(uint32_t id)
     node->mPanIdConflictEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
 
     EnterCriticalSection(&gCS);
-
     gNodes.push_back(node);
-
     LeaveCriticalSection(&gCS);
 
     InitializeCriticalSection(&node->mCS);
@@ -2097,13 +2095,19 @@ OTNODEAPI int32_t OTCALL otNodeSetMaxChildren(otNode* aNode, uint8_t aMaxChildre
     return result;
 }
 
+typedef struct otMacFrameEntry
+{
+    otMacFrame  Frame;
+    LIST_ENTRY  Link;
+} otMacFrameEntry;
+
 typedef struct otListener
 {
     HANDLE              mListener;
     CRITICAL_SECTION    mCS;
     HANDLE              mStopEvent;
     HANDLE              mFramesUpdatedEvent;
-    vector<otMacFrame>  mFrames;
+    LIST_ENTRY          mFrames; // List of otMacFrameEntry
 } otListener;
 
 void
@@ -2120,10 +2124,10 @@ otListenerCallback(
 
     if (FrameLength)
     {
-        otMacFrame frame;
-        memcpy_s(frame.buffer, sizeof(frame.buffer), FrameBuffer, FrameLength);
-        frame.length = FrameLength;
-        frame.nodeid = (uint32_t)-1;
+        otMacFrameEntry* entry = new otMacFrameEntry;
+        memcpy_s(entry->Frame.buffer, sizeof(entry->Frame.buffer), FrameBuffer, FrameLength);
+        entry->Frame.length = FrameLength;
+        entry->Frame.nodeid = (uint32_t)-1;
 
         // Look up the Node ID from by interface guid
         EnterCriticalSection(&gCS);
@@ -2131,7 +2135,7 @@ otListenerCallback(
         {
             if (gNodes[i]->mInterfaceGuid == *pSourceInterfaceGuid)
             {
-                frame.nodeid = gNodes[i]->mId;
+                entry->Frame.nodeid = gNodes[i]->mId;
                 break;
             }
         }
@@ -2139,7 +2143,7 @@ otListenerCallback(
 
         // Push the frame on the list to process
         EnterCriticalSection(&aListener->mCS);
-        aListener->mFrames.push_back(frame);
+        InsertTailList(&aListener->mFrames, &entry->Link);
         LeaveCriticalSection(&aListener->mCS);
 
         // Set event indicating we have a new frame to process
@@ -2147,7 +2151,7 @@ otListenerCallback(
     }
 }
 
-OTNODEAPI otListener* otListenerInit(uint32_t /* nodeid */)
+OTNODEAPI otListener* OTCALL otListenerInit(uint32_t /* nodeid */)
 {
     otLogFuncEntry();
 
@@ -2167,6 +2171,7 @@ OTNODEAPI otListener* otListenerInit(uint32_t /* nodeid */)
     InitializeCriticalSection(&listener->mCS);
     listener->mStopEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
     listener->mFramesUpdatedEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+    InitializeListHead(&listener->mFrames);
 
     // Create the listener
     listener->mListener = otvmpListenerCreate(&gTopologyGuid);
@@ -2192,8 +2197,16 @@ OTNODEAPI int32_t OTCALL otListenerFinalize(otListener* aListener)
         otvmpListenerDestroy(aListener->mListener);
         aListener->mListener = nullptr;
 
+        // Clean up left over frames
+        PLIST_ENTRY Link = aListener->mFrames.Flink;
+        while (Link != &aListener->mFrames)
+        {
+            otMacFrameEntry *entry = CONTAINING_RECORD(Link, otMacFrameEntry, Link);
+            Link = Link->Flink;
+            delete entry;
+        }
+
         // Clean up everything else
-        aListener->mFrames.clear();
         CloseHandle(aListener->mFramesUpdatedEvent);
         aListener->mFramesUpdatedEvent = nullptr;
         CloseHandle(aListener->mStopEvent);
@@ -2219,10 +2232,13 @@ OTNODEAPI int32_t OTCALL otListenerRead(otListener* aListener, otMacFrame *aFram
         
         EnterCriticalSection(&aListener->mCS);
 
-        if (aListener->mFrames.size() > 0)
+        // If we have a pending frame, return it now
+        if (!IsListEmpty(&aListener->mFrames))
         {
-            *aFrame = aListener->mFrames[0];
-            aListener->mFrames.erase(aListener->mFrames.begin());
+            PLIST_ENTRY Link = RemoveHeadList(&aListener->mFrames);
+            otMacFrameEntry *entry = CONTAINING_RECORD(Link, otMacFrameEntry, Link);
+            *aFrame = entry->Frame;
+            delete entry;
             exit = true;
         }
 
@@ -2230,6 +2246,7 @@ OTNODEAPI int32_t OTCALL otListenerRead(otListener* aListener, otMacFrame *aFram
         
         if (exit) break;
         
+        // Wait for the shutdown or frames updated event
         auto waitResult = WaitForMultipleObjects(2, &aListener->mStopEvent, FALSE, INFINITE);
 
         if (waitResult == WAIT_OBJECT_0 + 1) // mFramesUpdatedEvent
