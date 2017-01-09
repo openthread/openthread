@@ -1689,6 +1689,17 @@ OTAPI void OTCALL otPlatformReset(otInstance *aInstance);
 OTAPI void OTCALL otFactoryReset(otInstance *aInstance);
 
 /**
+ * This method erases all the settings stored on non-volatile memory.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @retval kThreadError_None  All data was wiped successfully.
+ * @retval kThreadError_InvalidState  Device is not in `disabled` state/role.
+ *
+ */
+ThreadError otNetworkSettingsErase(otInstance *aInstance);
+
+/**
  * Get the ROUTER_DOWNGRADE_THRESHOLD parameter used in the Router role.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
