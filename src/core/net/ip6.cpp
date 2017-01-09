@@ -442,9 +442,10 @@ void Ip6::HandleSendQueue(void *aContext)
 
 void Ip6::HandleSendQueue(void)
 {
-    while (mSendQueue.GetHead())
+    Message *message;
+
+    while ((message = mSendQueue.GetHead()) != NULL)
     {
-        Message *message = mSendQueue.GetHead();
         mSendQueue.Dequeue(*message);
         HandleDatagram(*message, NULL, message->GetInterfaceId(), NULL, false);
     }
