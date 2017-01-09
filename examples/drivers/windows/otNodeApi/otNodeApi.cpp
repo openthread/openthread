@@ -39,7 +39,7 @@ typedef VOID  (*fp_otvmpCloseHandle)(_In_ HANDLE handle);
 typedef DWORD (*fp_otvmpAddVirtualBus)(_In_ HANDLE handle, _Inout_ ULONG* pBusNumber, _Out_ ULONG* pIfIndex);
 typedef DWORD (*fp_otvmpRemoveVirtualBus)(_In_ HANDLE handle, ULONG BusNumber);
 typedef DWORD (*fp_otvmpSetAdapterTopologyGuid)(_In_ HANDLE handle, DWORD BusNumber, _In_ const GUID* pTopologyGuid);
-typedef void (*fp_otvmpListenerCallback)(_In_opt_ PVOID aContext, _In_reads_bytes_(FrameLength) PUCHAR FrameBuffer, _In_ UCHAR FrameLength, _In_ UCHAR Channel);
+typedef void (*fp_otvmpListenerCallback)(_In_opt_ PVOID aContext, _In_ const GUID* pSourceInterfaceGuid, _In_reads_bytes_(FrameLength) PUCHAR FrameBuffer, _In_ UCHAR FrameLength, _In_ UCHAR Channel);
 typedef HANDLE (*fp_otvmpListenerCreate)(_In_ const GUID* pAdapterTopologyGuid);
 typedef void (*fp_otvmpListenerDestroy)(_In_opt_ HANDLE pHandle);
 typedef void(*fp_otvmpListenerRegister)(_In_ HANDLE pHandle, _In_opt_ fp_otvmpListenerCallback Callback, _In_opt_ PVOID Context);
@@ -60,6 +60,8 @@ ULONG gNextBusNumber = 1;
 GUID gTopologyGuid = {0};
 
 volatile LONG gNumberOfInterfaces = 0;
+CRITICAL_SECTION gCS;
+vector<otNode*> gNodes;
 
 otApiInstance *gApiInstance = nullptr;
 
@@ -162,6 +164,8 @@ otApiInstance* GetApiInstance()
             return nullptr;
         }
 
+        InitializeCriticalSection(&gCS);
+
         auto offset = getenv("INSTANCE");
         if (offset)
         {
@@ -202,6 +206,8 @@ void Unload()
 
         otApiFinalize(gApiInstance);
         gApiInstance = nullptr;
+
+        DeleteCriticalSection(&gCS);
 
         WSACleanup();
 
@@ -279,6 +285,7 @@ typedef struct otNode
 {
     uint32_t                mId;
     DWORD                   mBusIndex;
+    GUID                    mInterfaceGuid;
     otInstance*             mInstance;
     HANDLE                  mEnergyScanEvent;
     HANDLE                  mPanIdConflictEvent;
@@ -777,11 +784,18 @@ OTNODEAPI otNode* OTCALL otNodeInit(uint32_t id)
     printf("%d: New Device " GUID_FORMAT " in compartment %d\r\n", id, GUID_ARG(DeviceGuid), Compartment);
 
     node->mId = id;
+    node->mInterfaceGuid = ifGuid;
     node->mBusIndex = newBusIndex;
     node->mInstance = instance;
 
     node->mEnergyScanEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
     node->mPanIdConflictEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+
+    EnterCriticalSection(&gCS);
+
+    gNodes.push_back(node);
+
+    LeaveCriticalSection(&gCS);
 
     InitializeCriticalSection(&node->mCS);
 
@@ -809,6 +823,17 @@ OTNODEAPI int32_t OTCALL otNodeFinalize(otNode* aNode)
         CloseHandle(aNode->mPanIdConflictEvent);
         CloseHandle(aNode->mEnergyScanEvent);
         otSetStateChangedCallback(aNode->mInstance, nullptr, nullptr);
+
+        EnterCriticalSection(&gCS);
+        for (uint32_t i = 0; i < gNodes.size(); i++)
+        {
+            if (gNodes[i] == aNode)
+            {
+                gNodes.erase(gNodes.begin() + i);
+                break;
+            }
+        }
+        LeaveCriticalSection(&gCS);
 
         // Free the instance
         otFreeMemory(aNode->mInstance);
@@ -2070,4 +2095,153 @@ OTNODEAPI int32_t OTCALL otNodeSetMaxChildren(otNode* aNode, uint8_t aMaxChildre
     auto result = otSetMaxAllowedChildren(aNode->mInstance, aMaxChildren);
     otLogFuncExit();
     return result;
+}
+
+typedef struct otListener
+{
+    HANDLE              mListener;
+    CRITICAL_SECTION    mCS;
+    HANDLE              mStopEvent;
+    HANDLE              mFramesUpdatedEvent;
+    vector<otMacFrame>  mFrames;
+} otListener;
+
+void
+otListenerCallback(
+    _In_opt_ PVOID aContext,
+    _In_ const GUID* pSourceInterfaceGuid,
+    _In_reads_bytes_(FrameLength) PUCHAR FrameBuffer,
+    _In_ UCHAR FrameLength,
+    _In_ UCHAR /* Channel */
+)
+{
+    otListener* aListener = (otListener*)aContext;
+    assert(aListener);
+
+    if (FrameLength)
+    {
+        otMacFrame frame;
+        memcpy_s(frame.buffer, sizeof(frame.buffer), FrameBuffer, FrameLength);
+        frame.length = FrameLength;
+        frame.nodeid = (uint32_t)-1;
+
+        // Look up the Node ID from by interface guid
+        EnterCriticalSection(&gCS);
+        for (uint32_t i = 0; i < gNodes.size(); i++)
+        {
+            if (gNodes[i]->mInterfaceGuid == *pSourceInterfaceGuid)
+            {
+                frame.nodeid = gNodes[i]->mId;
+                break;
+            }
+        }
+        LeaveCriticalSection(&gCS);
+
+        // Push the frame on the list to process
+        EnterCriticalSection(&aListener->mCS);
+        aListener->mFrames.push_back(frame);
+        LeaveCriticalSection(&aListener->mCS);
+
+        // Set event indicating we have a new frame to process
+        SetEvent(aListener->mFramesUpdatedEvent);
+    }
+}
+
+OTNODEAPI otListener* otListenerInit(uint32_t /* nodeid */)
+{
+    otLogFuncEntry();
+
+    auto ApiInstance = GetApiInstance();
+    if (ApiInstance == nullptr)
+    {
+        printf("GetApiInstance failed!\r\n");
+        otLogFuncExitMsg("GetApiInstance failed");
+        return nullptr;
+    }
+
+    InterlockedIncrement(&gNumberOfInterfaces);
+
+    otListener *listener = new otListener();
+    assert(listener);
+
+    InitializeCriticalSection(&listener->mCS);
+    listener->mStopEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+    listener->mFramesUpdatedEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+
+    // Create the listener
+    listener->mListener = otvmpListenerCreate(&gTopologyGuid);
+    assert(listener->mListener);
+
+    // Register for callbacks
+    otvmpListenerRegister(listener->mListener, otListenerCallback, listener);
+
+    otLogFuncExit();
+
+    return listener;
+}
+
+OTNODEAPI int32_t OTCALL otListenerFinalize(otListener* aListener)
+{
+    otLogFuncEntry();
+    if (aListener != nullptr)
+    {
+        // Set stop event to prevent cancel any pending otListenerRead calls
+        SetEvent(aListener->mStopEvent);
+
+        // Unregisters (and waits for callbacks to complete) and cleans up the handle
+        otvmpListenerDestroy(aListener->mListener);
+        aListener->mListener = nullptr;
+
+        // Clean up everything else
+        aListener->mFrames.clear();
+        CloseHandle(aListener->mFramesUpdatedEvent);
+        aListener->mFramesUpdatedEvent = nullptr;
+        CloseHandle(aListener->mStopEvent);
+        aListener->mStopEvent = nullptr;
+        DeleteCriticalSection(&aListener->mCS);
+        delete aListener;
+
+        if (0 == InterlockedDecrement(&gNumberOfInterfaces))
+        {
+            // Uninitialize everything else if this is the last ref
+            Unload();
+        }
+    }
+    otLogFuncExit();
+    return 0;
+}
+
+OTNODEAPI int32_t OTCALL otListenerRead(otListener* aListener, otMacFrame *aFrame)
+{
+    do
+    {
+        bool exit = false;
+        
+        EnterCriticalSection(&aListener->mCS);
+
+        if (aListener->mFrames.size() > 0)
+        {
+            *aFrame = aListener->mFrames[0];
+            aListener->mFrames.erase(aListener->mFrames.begin());
+            exit = true;
+        }
+
+        LeaveCriticalSection(&aListener->mCS);
+        
+        if (exit) break;
+        
+        auto waitResult = WaitForMultipleObjects(2, &aListener->mStopEvent, FALSE, INFINITE);
+
+        if (waitResult == WAIT_OBJECT_0 + 1) // mFramesUpdatedEvent
+        {
+            continue;
+        }
+        else // mStopEvent
+        {
+            return 1;
+        }
+        
+    } while (true);
+    
+    return 0;
 }

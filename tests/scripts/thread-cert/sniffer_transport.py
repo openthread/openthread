@@ -27,10 +27,10 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+import ctypes
 import os
 import socket
 import sys
-
 
 class SnifferTransport(object):
     """ Interface for transport that allows eavesdrop other nodes. """
@@ -146,6 +146,63 @@ class SnifferSocketTransport(SnifferTransport):
         nodeid = self._address_to_nodeid(address)
 
         return bytearray(data), nodeid
+
+
+class MacFrame(Structure):
+    _fields_ = [("buffer", c_ubyte * 128),
+                ("length", c_ubyte),
+                ("nodeid", c_uint)]
+
+class SnifferVirtualTransport(SnifferTransport):
+    """ Virtual interface based implementation of sniffer transport. """
+
+    def __init__(self, nodeid):
+        # Load the DLL
+        self.Api = ctypes.WinDLL("otnodeapi.dll")
+        if self.Api == None:
+            raise OSError("Failed to load otnodeapi.dll!")
+
+        # Define the functions
+        self.Api.otListenerInit.argtypes = [ctypes.c_uint]
+        self.Api.otListenerInit.restype = ctypes.c_void_p
+
+        self.Api.otListenerFinalize.argtypes = [ctypes.c_void_p]
+
+        self.Api.otListenerRead.argtypes = [ctypes.POINTER(MacFrame)]
+
+    def __del__(self):
+        if not self.is_opened:
+            return
+
+        self.close()
+
+    def open(self):
+        if self.is_opened:
+            raise RuntimeError("Transport is already opened.")
+
+        # Initialize a listener
+        self.Handle = self.Api.otListenerInit(0)
+
+        if not self.is_opened:
+            raise RuntimeError("Transport opening failed.")
+
+    def close(self):
+        if not self.is_opened:
+            raise RuntimeError("Transport is closed.")
+
+        self.Api.otListenerFinalize(self.Handle);
+        self.Handle = None
+
+    @property
+    def is_opened(self):
+        return bool(self.Handle is not None)
+
+    def recv(self, bufsize):
+        frame = MacFrame()
+
+        self.Api.otListenerRead(self.Handle, ctypes.byref(frame))
+
+        return bytearray(frame.buffer)[:frame.length], frame.nodeid
 
 
 class SnifferTransportFactory(object):
