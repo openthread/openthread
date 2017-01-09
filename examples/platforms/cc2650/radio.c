@@ -35,6 +35,7 @@
 #include <assert.h>
 #include <common/code_utils.hpp>
 #include <platform/radio.h>
+#include <platform/random.h> /* to seed the CSMA-CA funciton */
 
 #include <driverlib/prcm.h>
 #include <inc/hw_prcm.h>
@@ -50,36 +51,39 @@
 #include <driverlib/rf_ieee_cmd.h>
 #include <driverlib/chipinfo.h>
 
-#define IEEE802154_MIN_LENGTH 5
-#define IEEE802154_MAX_LENGTH 127
-#define IEEE802154_FRAME_TYPE_MASK 0x7
-#define IEEE802154_FRAME_TYPE_ACK 0x2
-#define IEEE802154_FRAME_PENDING (1 << 4)
-#define IEEE802154_ACK_REQUEST (1 << 5)
-#define IEEE802154_DSN_OFFSET 2
+#define IEEE802154_FRAME_TYPE_MASK          0x7     /* (IEEE 802.15.4-2006) PSDU.FCF.frameType */
+#define IEEE802154_FRAME_TYPE_ACK           0x2     /* (IEEE 802.15.4-2006) frame type: ACK */
+#define IEEE802154_FRAME_PENDING            (1<<4)  /* (IEEE 802.15.4-2006) PSDU.FCF.bFramePending */
+#define IEEE802154_ACK_REQUEST              (1<<5)  /* (IEEE 802.15.4-2006) PSDU.FCF.bAR */
+#define IEEE802154_DSN_OFFSET               2       /* (IEEE 802.15.4-2006) PSDU.sequenceNumber */
 
-#define IEEE802154_A_UINT_BACKOFF_PERIOD    20      // (IEEE 802.15.4-2006 7.4.1) MAC constants
-#define IEEE802154_A_TURNAROUND_TIME        12      // (IEEE 802.15.4-2006 6.4.1) PHY constants
-#define IEEE802154_PHY_SHR_DURATION         10      // (IEEE 802.15.4-2006 6.4.2) PHY PIB attribute
-                                                    // Specifically the O-QPSK PHY
-#define IEEE802154_PHY_SYMBOLS_PER_OCTET    2       // (IEEE 802.15.4-2006 6.4.2) PHY PIB attribute
-                                                    // Specifically the O-QPSK PHY
+#define IEEE802154_MAC_MIN_BE               1       /* (IEEE 802.15.4-2006) macMinBE */
+#define IEEE802154_MAC_MAX_BE               5       /* (IEEE 802.15.4-2006) macMaxBE */
+#define IEEE802154_MAC_MAX_CSMA_BACKOFFS    4       /* (IEEE 802.15.4-2006) macMaxCSMABackoffs */
+#define IEEE802154_MAC_MAX_FRAMES_RETRIES   3       /* (IEEE 802.15.4-2006) macMaxFrameRetries */
+
+#define IEEE802154_A_UINT_BACKOFF_PERIOD    20      /* (IEEE 802.15.4-2006 7.4.1) MAC constants */
+#define IEEE802154_A_TURNAROUND_TIME        12      /* (IEEE 802.15.4-2006 6.4.1) PHY constants */
+#define IEEE802154_PHY_SHR_DURATION         10      /* (IEEE 802.15.4-2006 6.4.2) PHY PIB attribute */
+                                                    /* Specifically the O-QPSK PHY */
+#define IEEE802154_PHY_SYMBOLS_PER_OCTET    2       /* (IEEE 802.15.4-2006 6.4.2) PHY PIB attribute */
+                                                    /* Specifically the O-QPSK PHY */
 #define IEEE802154_MAC_ACK_WAIT_DURATION    \
     (IEEE802154_A_UINT_BACKOFF_PERIOD +     \
      IEEE802154_A_TURNAROUND_TIME +         \
      IEEE802154_PHY_SHR_DURATION +          \
-     ( 6 * IEEE802154_PHY_SYMBOLS_PER_OCTET))       // (IEEE 802.15.4-2006 7.4.2) 
-                                                    // macAckWaitDuration PIB attribute
-#define IEEE802154_SYMBOLS_PER_SEC          62500   // (IEEE 802.15.4-2006 6.5.3.2)
-                                                    // O-QPSK symbol rate
-#define CC2650_RAT_TICKS_PER_SEC            4000000 // 4MHz clock
+     ( 6 * IEEE802154_PHY_SYMBOLS_PER_OCTET))       /* (IEEE 802.15.4-2006 7.4.2) */
+                                                    /* macAckWaitDuration PIB attribute */
+#define IEEE802154_SYMBOLS_PER_SEC          62500   /* (IEEE 802.15.4-2006 6.5.3.2) */
+                                                    /* O-QPSK symbol rate */
+#define CC2650_RAT_TICKS_PER_SEC            4000000 /* 4MHz clock */
 
 /* phy state as defined by openthread */
 static volatile PhyState sState;
 /* phy states not defined by openthread */
-static volatile bool enabaling = false;
-static volatile bool transmitting = false;
-static volatile bool pending = false;
+static volatile bool cc2650_state_rfc_enabling = false;
+static volatile bool cc2650_state_rfc_transmitting = false;
+static volatile bool rx_ack_pending_bit = false;
 
 /* TX Power dBm lookup table - values from SmartRF Studio */
 typedef struct output_config {
@@ -117,8 +121,6 @@ static uint32_t ieee_overrides[] = {
     0x00354038, /* Synth: Set RTRIM (POTAILRESTRIM) to 5 */
     0x4001402D, /* Synth: Correct CKVD latency setting (address) */
     0x00608402, /* Synth: Correct CKVD latency setting (value) */
-    //  0x4001405D, /* Synth: Set ANADIV DIV_BIAS_MODE to PG1 (address) */
-    //  0x1801F800, /* Synth: Set ANADIV DIV_BIAS_MODE to PG1 (value) */
     0x000784A3, /* Synth: Set FREF = 3.43 MHz (24 MHz / 7) */
     0xA47E0583, /* Synth: Set loop bandwidth after lock to 80 kHz (K2) */
     0xEAE00603, /* Synth: Set loop bandwidth after lock to 80 kHz (K3, LSB) */
@@ -140,23 +142,32 @@ uint32_t rat_offset = 0;
  * radio commands that run on the CM0
  */
 static volatile rfc_CMD_SYNC_START_RAT_t cmd_start_rat;
-static volatile rfc_CMD_SYNC_STOP_RAT_t cmd_stop_rat;
 static volatile rfc_CMD_RADIO_SETUP_t cmd_radio_setup;
+
+static volatile rfc_CMD_SYNC_STOP_RAT_t cmd_stop_rat;
 static volatile rfc_CMD_FS_POWERDOWN_t cmd_fs_powerdown;
+
 static volatile rfc_CMD_CLEAR_RX_t cmd_clear_rx;
-static volatile rfc_CMD_IEEE_RX_t cmd_ieee_rx;
-static volatile rfc_CMD_IEEE_TX_t cmd_ieee_tx;
-static volatile rfc_CMD_IEEE_RX_ACK_t cmd_ieee_rx_ack;
 static volatile rfc_CMD_IEEE_MOD_FILT_t cmd_ieee_mod_filt;
 static volatile rfc_CMD_IEEE_MOD_SRC_MATCH_t cmd_ieee_mod_src_match;
 
+static volatile rfc_CMD_IEEE_RX_t cmd_ieee_rx;
+
+static volatile rfc_CMD_IEEE_CSMA_t cmd_ieee_csma;
+static volatile rfc_CMD_IEEE_TX_t cmd_ieee_tx;
+static volatile rfc_CMD_IEEE_RX_ACK_t cmd_ieee_rx_ack;
+
+static volatile unsigned int tx_retry_count = 0;
+
 #define CC2650_SRC_MATCH_NONE 0xFF
+
 /*
  * number of extended addresses used for source matching
  */
 #define CC2650_EXTADD_SRC_MATCH_NUM 10
+
 /*
- * structure for source matching data
+ * structure for source matching extended addresses
  */
 static volatile struct {
     uint32_t srcMatchEn[CC2650_EXTADD_SRC_MATCH_NUM];
@@ -168,8 +179,9 @@ static volatile struct {
  * number of short addresses used for source matching
  */
 #define CC2650_SHORTADD_SRC_MATCH_NUM 10
+
 /*
- * structure for source matching data
+ * structure for source matching short addresses
  */
 static volatile struct {
     uint32_t srcMatchEn[CC2650_SHORTADD_SRC_MATCH_NUM];
@@ -261,7 +273,7 @@ static void rf_core_init_rx_params(void)
     cmd_ieee_rx.pOutput = &rf_stats;
 
     cmd_ieee_rx.frameFiltOpt.frameFiltEn = 1;
-    cmd_ieee_rx.frameFiltOpt.frameFiltStop = 0;
+    cmd_ieee_rx.frameFiltOpt.frameFiltStop = 1;
     cmd_ieee_rx.frameFiltOpt.autoAckEn = 1;
     cmd_ieee_rx.frameFiltOpt.slottedAckEn = 0;
     cmd_ieee_rx.frameFiltOpt.autoPendEn = 0;
@@ -299,6 +311,17 @@ static void rf_core_init_rx_params(void)
 
     cmd_ieee_rx.endTrigger.triggerType = TRIG_NEVER;
     cmd_ieee_rx.endTime = 0x00000000;
+}
+
+static void rf_core_init_tx_params(void)
+{
+    uint16_t dummy;
+    memset((void *)&cmd_ieee_csma, 0x00, sizeof(cmd_ieee_csma));
+
+    /* initialize the random state with a true random seed for the radio core's
+     * psudo rng */
+    otPlatRandomSecureGet(sizeof(uint16_t)/sizeof(uint8_t),(uint8_t*)&(cmd_ieee_csma.randomState), &dummy);
+    cmd_ieee_csma.commandNo = CMD_IEEE_CSMA;
 }
 
 /**
@@ -463,15 +486,34 @@ static uint_fast8_t rf_core_cmd_mod_src_match(uint8_t entryNo, cc2650_address_ty
  */
 static uint_fast8_t rf_core_cmd_ieee_tx(uint8_t *psdu, uint8_t len)
 {
+    /* no memset for CSMA-CA to preserve the random state */
     memset((void *)&cmd_ieee_tx, 0, sizeof(cmd_ieee_tx));
+    /* reset retry count */
+    tx_retry_count = 0;
+
+    cmd_ieee_csma.status = IDLE;
+    cmd_ieee_csma.macMaxBE = IEEE802154_MAC_MAX_BE;
+    cmd_ieee_csma.macMaxCSMABackoffs = IEEE802154_MAC_MAX_CSMA_BACKOFFS;
+    cmd_ieee_csma.csmaConfig.initCW = 1;
+    cmd_ieee_csma.csmaConfig.bSlotted = 0;
+    cmd_ieee_csma.csmaConfig.rxOffMode = 0;
+    cmd_ieee_csma.NB = 0;
+    cmd_ieee_csma.BE = IEEE802154_MAC_MIN_BE;
+    cmd_ieee_csma.remainingPeriods = 0;
+    cmd_ieee_csma.endTrigger.triggerType = TRIG_NEVER;
+    cmd_ieee_csma.endTime = 0x00000000;
+    cmd_ieee_csma.pNextOp =(rfc_radioOp_t *)&(cmd_ieee_tx);
+    
     cmd_ieee_tx.commandNo = CMD_IEEE_TX;
     /* no need to look for an ack if the tx operation was stopped */
     cmd_ieee_tx.payloadLen = len;
     cmd_ieee_tx.pPayload = psdu;
     cmd_ieee_tx.startTrigger.triggerType = TRIG_NOW;
 
-    /* always clear the rx_ack command just incase the status is not IDLE */
+    /* always clear the rx_ack and retries commands just incase the status is
+     * not IDLE for the interrupt handler */
     memset((void *)&cmd_ieee_rx_ack, 0, sizeof(cmd_ieee_rx_ack));
+
     if(psdu[0] & IEEE802154_ACK_REQUEST)
     {
         /* setup the receive ack command to follow the tx command */
@@ -479,23 +521,24 @@ static uint_fast8_t rf_core_cmd_ieee_tx(uint8_t *psdu, uint8_t len)
         cmd_ieee_tx.pNextOp = (rfc_radioOp_t *)&(cmd_ieee_rx_ack);
 
         cmd_ieee_rx_ack.commandNo = CMD_IEEE_RX_ACK;
-        cmd_ieee_rx_ack.condition.rule = COND_NEVER;
         cmd_ieee_rx_ack.startTrigger.triggerType = TRIG_NOW;
         cmd_ieee_rx_ack.seqNo = psdu[IEEE802154_DSN_OFFSET];
         cmd_ieee_rx_ack.endTrigger.triggerType = TRIG_REL_START;
         cmd_ieee_rx_ack.endTrigger.pastTrig = 1;
+        cmd_ieee_rx_ack.condition.rule = COND_NEVER;
+        cmd_ieee_rx_ack.pNextOp = NULL;
         /* number of RAT ticks to wait before claiming we haven't received an ack */
         cmd_ieee_rx_ack.endTime = ((IEEE802154_MAC_ACK_WAIT_DURATION *
                     CC2650_RAT_TICKS_PER_SEC) / IEEE802154_SYMBOLS_PER_SEC);
     }
     else
     {
-        /* we are not looking for an ack */
+        /* we are not looking for an ack, no retries because we won't know if we need to */
         cmd_ieee_tx.condition.rule = COND_NEVER;
         cmd_ieee_tx.pNextOp = NULL;
     }
 
-    return (RFCDoorbellSendTo((uint32_t)&cmd_ieee_tx) & 0xFF);
+    return (RFCDoorbellSendTo((uint32_t)&cmd_ieee_csma) & 0xFF);
 }
 
 /**
@@ -814,7 +857,7 @@ void RFCCPE0IntHandler(void)
         {
             if(cmd_radio_setup.status == DONE_OK)
             {
-                enabaling = false;
+                cc2650_state_rfc_enabling = false;
             }
             else
             {
@@ -829,58 +872,88 @@ void RFCCPE0IntHandler(void)
             /* the rx command was probably aborted to change the channel */
             sState = kStateSleep;
         }
+        else if(sState == kStateTransmit)
+        {
+            __asm("nop");
+        }
     }
     if(HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) & IRQ_LAST_FG_COMMAND_DONE)
     {
         HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = ~IRQ_LAST_FG_COMMAND_DONE;
         if(sState == kStateTransmit)
         {
-            transmitting = false;
-            if(cmd_ieee_rx_ack.status == IDLE || 
-                    cmd_ieee_rx_ack.status == PENDING)
+            if(cmd_ieee_rx_ack.status == IEEE_DONE_TIMEOUT)
             {
-                /* The TX command string stopped before reaching the rx ack
-                 * command. Either we were stopped or we are not looking for an
-                 * ack */
+                if(tx_retry_count < IEEE802154_MAC_MAX_FRAMES_RETRIES)
+                {
+                    /* re-submit the tx command chain */
+                    tx_retry_count++;
+                    RFCDoorbellSendTo((uint32_t)&cmd_ieee_csma);
+                }
+                else
+                {
+                    /* signal polling function we are done transmitting, we failed to send the packet */
+                    cc2650_state_rfc_transmitting = false;
+                    sTransmitError = kThreadError_NoAck;
+                }
+            }
+            else if(cmd_ieee_rx_ack.status != IDLE)
+            {
+                /* signal polling function we are done transmitting */
+                cc2650_state_rfc_transmitting = false;
+                /* we were looking for an ack, and the TX command didn't fail */
+                switch(cmd_ieee_rx_ack.status)
+                {
+                    case IEEE_DONE_ACK:
+                        rx_ack_pending_bit = false;
+                        sTransmitError = kThreadError_None;
+                        break;
+
+                    case IEEE_DONE_ACKPEND:
+                        rx_ack_pending_bit = true;
+                        sTransmitError = kThreadError_None;
+                        break;
+
+                    case IEEE_DONE_TIMEOUT:
+                        sTransmitError = kThreadError_NoAck;
+                        break;
+
+                    default:
+                        sTransmitError = kThreadError_Failed;
+                        break;
+                }
+            }
+            else
+            {
+                /* signal polling function we are done transmitting */
+                cc2650_state_rfc_transmitting = false;
+                /* The TX command was either stopped or we are not looking for
+                 * an ack */
                 switch(cmd_ieee_tx.status)
                 {
                 case IEEE_DONE_OK:
-                    /* we are not looking for an ack */
-                    pending = false;
+                    rx_ack_pending_bit = false;
                     sTransmitError = kThreadError_None;
                     break;
+
                 case IEEE_DONE_TIMEOUT:
                     sTransmitError = kThreadError_ChannelAccessFailure;
                     break;
+
                 case IEEE_ERROR_NO_SETUP:
                 case IEEE_ERROR_NO_FS:
                 case IEEE_ERROR_SYNTH_PROG:
                     sTransmitError = kThreadError_InvalidState;
                     break;
+
                 case IEEE_ERROR_TXUNF:
                     sTransmitError = kThreadError_NoBufs;
                     break;
+
                 default:
                     sTransmitError = kThreadError_Error;
+                    break;
                 }
-            }
-            else if(cmd_ieee_rx_ack.status == IEEE_DONE_ACK)
-            {
-                pending = false;
-                sTransmitError = kThreadError_None;
-            }
-            else if(cmd_ieee_rx_ack.status == IEEE_DONE_ACKPEND)
-            {
-                pending = true;
-                sTransmitError = kThreadError_None;
-            }
-            else if(cmd_ieee_rx_ack.status == IEEE_DONE_TIMEOUT)
-            {
-                sTransmitError = kThreadError_NoAck;
-            }
-            else
-            {
-                sTransmitError = kThreadError_Failed;
             }
         }
     }
@@ -893,6 +966,8 @@ void cc2650RadioInit(void)
 {
     /* Populate the RX parameters data structure with default values */
     rf_core_init_rx_params();
+    /* Populate the CSMA parameters */
+    rf_core_init_tx_params();
 
     sState = kStateDisabled;
 }
@@ -910,10 +985,10 @@ ThreadError otPlatRadioEnable(otInstance *aInstance)
         error = kThreadError_None;
     }
 
-    if(sState == kStateDisabled && !enabaling)
+    if(sState == kStateDisabled && !cc2650_state_rfc_enabling)
     {
         VerifyOrExit(rf_core_power_on() == CMDSTA_Done, error = kThreadError_Failed);
-        enabaling = true;
+        cc2650_state_rfc_enabling = true;
         sState = kStateSleep;
         VerifyOrExit(rf_core_cmds_enable() == CMDSTA_Done, error = kThreadError_Failed);
     }
@@ -967,7 +1042,7 @@ ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     ThreadError error = kThreadError_Busy;
     (void)aInstance;
 
-    if(sState == kStateSleep && !enabaling)
+    if(sState == kStateSleep && !cc2650_state_rfc_enabling)
     {
         sState = kStateReceive;
 
@@ -1067,7 +1142,7 @@ ThreadError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
             sState = kStateTransmit;
 
             /* removing 2 bytes of CRC placeholder because we generate that in hardware */
-            transmitting = true;
+            cc2650_state_rfc_transmitting = true;
             VerifyOrExit(rf_core_cmd_ieee_tx(aPacket->mPsdu,
                         aPacket->mLength - 2) == CMDSTA_Done, error =
                     kThreadError_Failed);
@@ -1096,7 +1171,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     (void)aInstance;
-    return kRadioCapsAckTimeout;
+    return kRadioCapsAckTimeout | kRadioCapsTransmitRetries;
 }
 
 /**
@@ -1527,23 +1602,7 @@ static void readFrame(void)
  */
 int cc2650RadioProcess(otInstance *aInstance)
 {
-    if((sState == kStateTransmit && !transmitting)
-                || (sTransmitError != kThreadError_None))
-    {
-        /* we are not looking for an ACK packet, or failed */
-        sState = kStateReceive;
-#if OPENTHREAD_ENABLE_DIAG
-        if (otPlatDiagModeGet())
-        {
-            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, pending, sTransmitError);
-        }
-        else
-#endif /* OPENTHREAD_ENABLE_DIAG */
-        {
-            otPlatRadioTransmitDone(aInstance, &sTransmitFrame, pending, sTransmitError);
-        }
-    }
-    else if(sState == kStateReceive)
+    if(sState == kStateReceive || sState == kStateTransmit)
     {
         readFrame();
         if (sReceiveFrame.mLength > 0)
@@ -1561,6 +1620,23 @@ int cc2650RadioProcess(otInstance *aInstance)
             }
         }
         sReceiveFrame.mLength = 0;
+    }
+
+    if(sState == kStateTransmit && 
+            ( !cc2650_state_rfc_transmitting || sTransmitError != kThreadError_None))
+    {
+        /* we are not looking for an ACK packet, or failed */
+        sState = kStateReceive;
+#if OPENTHREAD_ENABLE_DIAG
+        if (otPlatDiagModeGet())
+        {
+            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, rx_ack_pending_bit, sTransmitError);
+        }
+        else
+#endif /* OPENTHREAD_ENABLE_DIAG */
+        {
+            otPlatRadioTransmitDone(aInstance, &sTransmitFrame, rx_ack_pending_bit, sTransmitError);
+        }
     }
     return 0;
 }

@@ -120,7 +120,7 @@ static int TRNGPoll( unsigned char *output, size_t len, size_t *olen )
 /**
  * Function documented in platform/random.h
  */
-ThreadError otPlatSecureRandomGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
+ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
 {
     ThreadError error = kThreadError_None;
     size_t temp_size;
