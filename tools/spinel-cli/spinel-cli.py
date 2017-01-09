@@ -151,6 +151,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
 
         # OpenThread CLI commands
         'help',
+        'bufferinfo',
         'channel',
         'child',
         'childmax',
@@ -458,6 +459,43 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         print(heap_stats.heap())
         print()
         print(heap_stats.heap().byrcs)
+
+    def do_bufferinfo(self, line):
+        """
+        \033[1mbufferinfo\033[0m
+
+            Get the mesh forwarder buffer info.
+        \033[2m
+            > bufferinfo
+            total: 128
+            free: 128
+            6lo send: 0 0
+            6lo reas: 0 0
+            ip6: 0 0
+            mpl: 0 0
+            mle: 0 0
+            arp: 0 0
+            coap: 0 0
+            Done
+        \033[0m
+        """
+
+        result = self.prop_get_value(SPINEL.PROP_MSG_BUFFER_COUNTERS)
+        if result != None:
+            result = result[0]
+
+            print("total: %d" % result[0])
+            print("free: %d" % result[1])
+            print("6lo send: %d %d" % result[2:4])
+            print("6lo reas: %d %d" % result[4:6])
+            print("ip6: %d %d" % result[6:8])
+            print("mpl: %d %d" % result[8:10])
+            print("mle: %d %d" % result[10:12])
+            print("arp: %d %d" % result[12:14])
+            print("coap: %d %d" % result[14:16])
+            print("Done")
+        else:
+            print("Error")
 
     def do_channel(self, line):
         """
