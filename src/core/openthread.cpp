@@ -703,7 +703,7 @@ void otFactoryReset(otInstance *aInstance)
     otPlatReset(aInstance);
 }
 
-ThreadError otNetworkSettingsErase(otInstance *aInstance)
+ThreadError otPersistentInfoErase(otInstance *aInstance)
 {
     ThreadError error = kThreadError_None;
 
