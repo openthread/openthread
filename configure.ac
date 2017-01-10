@@ -1083,6 +1083,7 @@ include/cli/Makefile
 include/commissioning/Makefile
 include/dhcp6/Makefile
 include/ncp/Makefile
+include/openthread/Makefile
 include/platform/Makefile
 src/Makefile
 src/cli/Makefile

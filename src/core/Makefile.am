@@ -85,6 +85,12 @@ SOURCES_COMMON                      = \
     utils/slaac_address.cpp           \
     $(NULL)
 
+if OPENTHREAD_ENABLE_APPLICATION_COAP
+SOURCES_COMMON                     += \
+    api/coap_api.cpp                  \
+    $(NULL)
+endif  # OPENTHREAD_ENABLE_APPLICATION_COAP
+
 if OPENTHREAD_ENABLE_MAC_WHITELIST
 SOURCES_COMMON                     += \
     mac/mac_blacklist.cpp             \

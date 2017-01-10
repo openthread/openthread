@@ -35,9 +35,15 @@
 #ifndef OPENTHREAD_COAP_H_
 #define OPENTHREAD_COAP_H_
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <stdint.h>
 
-#include <openthread-types.h>
+#include "openthread-types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -121,23 +127,23 @@ typedef struct otCoapHeader
     {
         struct
         {
-            uint8_t mVersionTypeToken;
-            uint8_t mCode;
-            uint16_t mMessageId;
-        } mFields;
-        uint8_t mBytes[OT_COAP_HEADER_MAX_LENGTH];
-    } mHeader;
-    uint8_t mHeaderLength;
-    uint16_t mOptionLast;
-    uint16_t mNextOptionOffset;
-    otCoapOption mOption;
+            uint8_t mVersionTypeToken;              ///< The CoAP Version, Type, and Token Length
+            uint8_t mCode;                          ///< The CoAP Code
+            uint16_t mMessageId;                    ///< The CoAP Message ID
+        } mFields;                                  ///< Structure representing a CoAP base header
+        uint8_t mBytes[OT_COAP_HEADER_MAX_LENGTH];  ///< The raw byte encoding for the CoAP header
+    } mHeader;                                      ///< The CoAP header encoding
+    uint8_t mHeaderLength;                          ///< The CoAP header length (bytes)
+    uint16_t mOptionLast;                           ///< The last CoAP Option Number value
+    uint16_t mNextOptionOffset;                     ///< The byte offset for the next CoAP Option
+    otCoapOption mOption;                           ///< A structure representing the current CoAP Option.
 } otCoapHeader;
 
 /**
  * This function pointer is called when a CoAP response is received or on the request timeout.
  *
  * @param[in]  aContext      A pointer to application-specific context.
- * @param[in[  aHeader       A pointer to the received CoAP header. NULL if no response was received.
+ * @param[in]  aHeader       A pointer to the received CoAP header. NULL if no response was received.
  * @param[in]  aMessage      A pointer to the message buffer containing the response. NULL if no response was received.
  * @param[in]  aMessageInfo  A pointer to the message info for @p aMessage. NULL if no response was received.
  * @param[in]  aResult       A result of the CoAP transaction.
@@ -168,10 +174,10 @@ typedef void (*otCoapRequestHandler)(void *aContext, otCoapHeader *aHeader, otMe
  */
 typedef struct otCoapResource
 {
-    const char *mUriPath;
-    otCoapRequestHandler mHandler;
-    void *mContext;
-    struct otCoapResource *mNext;
+    const char *mUriPath;           ///< The URI Path string
+    otCoapRequestHandler mHandler;  ///< The callback for handling a received request
+    void *mContext;                 ///< Application-specific context
+    struct otCoapResource *mNext;   ///< The next CoAP resource in the list
 } otCoapResource;
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
