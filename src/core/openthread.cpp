@@ -703,6 +703,17 @@ void otFactoryReset(otInstance *aInstance)
     otPlatReset(aInstance);
 }
 
+ThreadError otNetworkSettingsErase(otInstance *aInstance)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(otGetDeviceRole(aInstance) == kDeviceRoleDisabled, error = kThreadError_InvalidState);
+    otPlatSettingsWipe(aInstance);
+
+exit:
+    return error;
+}
+
 uint8_t otGetRouterDowngradeThreshold(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMle().GetRouterDowngradeThreshold();
