@@ -169,6 +169,47 @@ class SpinelCodec(object):
             return None
 
     @classmethod
+    def parse_fields(cls, payload, spinel_format):
+        map_lengths = {
+            'b': 1,
+            'c': 1,
+            'C': 1,
+            's': 2,
+            'S': 2,
+            'l': 4,
+            'L': 4,
+            '6': 16,
+            'E': 8,
+            'e': 6,
+        }
+        result = []
+
+        idx = 0
+        while idx < len(spinel_format):
+            format = spinel_format[idx]
+
+            if format == 'T':
+                if spinel_format[idx+1] != '(':
+                    raise ValueError('Invalid structure format')
+                # TODO: count parentheses. There is a problem with nested structs.
+                struct_end = idx + spinel_format[idx:].index(')')
+
+                struct_format = spinel_format[idx+2:struct_end]
+                struct_len = sum([map_lengths[c] for c in struct_format])
+
+                result.append(cls.parse_fields(payload, struct_format))
+                payload = payload[struct_len:]
+
+                idx = struct_end + 1
+            else:
+                result.append(cls.parse_field(payload, spinel_format))
+                payload = payload[map_lengths[spinel_format[idx]]:]
+
+                idx += 1
+
+        return tuple(result)
+
+    @classmethod
     def encode_i(cls, data):
         """ Encode EXI integer format. """
         result = ""
@@ -553,6 +594,8 @@ class SpinelPropertyHandler(SpinelCodec):
 
     def PIB_MAC_SECURITY_ENABLED(self, _wpan_api, payload): pass
 
+    def MSG_BUFFER_COUNTERS(self, _wpan_api, payload): return self.parse_fields(payload, "T(SSSSSSSSSSSSSSSS)")
+
 #=========================================
 
 
@@ -717,6 +760,8 @@ SPINEL_PROP_DISPATCH = {
     SPINEL.PROP_PIB_15_4_PHY_CHANNELS_SUPPORTED: WPAN_PROP_HANDLER.PIB_PHY_CHANNELS_SUPPORTED,
     SPINEL.PROP_PIB_15_4_MAC_PROMISCUOUS_MODE: WPAN_PROP_HANDLER.PIB_MAC_PROMISCUOUS_MODE,
     SPINEL.PROP_PIB_15_4_MAC_SECURITY_ENABLED: WPAN_PROP_HANDLER.PIB_MAC_SECURITY_ENABLED,
+    
+    SPINEL.PROP_MSG_BUFFER_COUNTERS: WPAN_PROP_HANDLER.MSG_BUFFER_COUNTERS
 }
 
 
