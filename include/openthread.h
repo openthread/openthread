@@ -37,6 +37,7 @@
 
 #include <openthread-types.h>
 
+#include "openthread/crypto.h"
 #include "openthread/message.h"
 #include "openthread/tasklet.h"
 
