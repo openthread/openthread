@@ -177,7 +177,7 @@ static void signal_SIGINT(int sig)
     IGNORE_RETURN_VALUE(write(STDERR_FILENO, message, sizeof(message)-1));
 
     // Restore the previous handler so that if we end up getting
-    // this signal again we peform the system default action.
+    // this signal again we perform the system default action.
     signal(SIGINT, sPreviousHandlerForSIGINT);
     sPreviousHandlerForSIGINT = NULL;
 
@@ -1313,7 +1313,7 @@ static void print_help(void)
 int main(int argc, char *argv[])
 {
     int i = 0;
-    const char* prog = argv[0];
+    char prog[32];
     static fd_set read_set;
     static fd_set write_set;
     static fd_set error_set;
@@ -1347,6 +1347,9 @@ int main(int argc, char *argv[])
         { "spi-align-allowance", required_argument, NULL, ARG_SPI_ALIGN_ALLOWANCE },
         { NULL,         0,                 NULL,   0             },
     };
+
+    strncpy(prog, argv[0], sizeof(prog) - 1);
+    prog[sizeof(prog) - 1] = 0;
 
     if (argc < 2)
     {
@@ -1542,10 +1545,10 @@ int main(int argc, char *argv[])
     {
         i = 0;
     }
-    fcntl(sHdlcInputFd, F_SETFL, i | O_NONBLOCK);
+    IGNORE_RETURN_VALUE(fcntl(sHdlcInputFd, F_SETFL, i | O_NONBLOCK));
 
     // Since there are so few file descriptors in
-    // this program, we calcualte `max_fd` once
+    // this program, we calculate `max_fd` once
     // instead of trying to optimize its value
     // at every iteration.
     max_fd = sHdlcInputFd;
@@ -1646,7 +1649,7 @@ int main(int argc, char *argv[])
         timeout.tv_usec = (timeout_ms % MSEC_PER_SEC) * USEC_PER_MSEC;
 
         // Wait for something to happen.
-        select(max_fd + 1, &read_set, &write_set, &error_set, &timeout);
+        IGNORE_RETURN_VALUE(select(max_fd + 1, &read_set, &write_set, &error_set, &timeout));
 
         // Handle serial input.
         if (FD_ISSET(sHdlcInputFd, &read_set))
