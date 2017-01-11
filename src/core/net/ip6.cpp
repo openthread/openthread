@@ -442,9 +442,10 @@ void Ip6::HandleSendQueue(void *aContext)
 
 void Ip6::HandleSendQueue(void)
 {
-    while (mSendQueue.GetHead())
+    Message *message;
+
+    while ((message = mSendQueue.GetHead()) != NULL)
     {
-        Message *message = mSendQueue.GetHead();
         mSendQueue.Dequeue(*message);
         HandleDatagram(*message, NULL, message->GetInterfaceId(), NULL, false);
     }
@@ -1010,7 +1011,7 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
                     rvalIface = candidateId;
                 }
             }
-            else if (addr->mPreferredLifetime != 0 && rvalAddr->mPreferredLifetime == 0)
+            else if (addr->mPreferred && !rvalAddr->mPreferred)
             {
                 // Rule 3: Avoid deprecated addresses
                 rvalAddr = addr;

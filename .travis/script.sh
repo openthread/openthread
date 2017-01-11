@@ -50,28 +50,6 @@ echo "-------------"
 set
 echo "-------------"
 
-distclean() {
-    if [ -f ./configure ]
-    then
-        echo "Top level configure exists... cleaning..."
-        make distclean
-    fi
-    # Check for various build configurations
-    BUILDDIR=`pwd`/build
-    for x in `ls -d ${BUILDDIR}/*`
-    do
-        if [ -d $x ]
-        then
-            echo "Removing: $x ..."
-            rm -rf $x
-        else
-            echo "Not a directory: $x"
-        fi
-    done
-}
-
-
-
 if [ -z "$BUILD_TARGET" ]
 then
     die "BUILD_TARGET" is not set
@@ -83,41 +61,60 @@ then
     exit 0
 fi
 
-./bootstrap || die
-
 [ $BUILD_TARGET != pretty-check ] || {
-    distclean
+    git clean -dxf || die
+    ./bootstrap || die
     export PATH=$ASTYLE_path:$PATH || die
     ./configure --enable-cli --enable-diag --enable-dhcp6-client --enable-dhcp6-server --enable-commissioner --enable-joiner --with-examples=posix || die
     make pretty-check || die
 }
 
 [ $BUILD_TARGET != scan-build ] || {
-    distclean
+    git clean -dxf || die
+    ./bootstrap || die
     scan-build ./configure --with-examples=posix --enable-cli --enable-ncp || die
     scan-build --status-bugs -analyze-headers -v make || die
 }
 
 [ $BUILD_TARGET != arm-gcc49 ] || {
-    distclean
     export PATH=$ARM_GCC_49_path:$PATH || die
+
+    git clean -dxf || die
+    ./bootstrap || die
     COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-cc2538 || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp || die
+
+    git clean -xfd || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-da15000 || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp || die
 }
 
 [ $BUILD_TARGET != arm-gcc54 ] || {
-    distclean
     export PATH=$ARM_GCC_54_path:$PATH || die
+
+    git clean -xfd || die
+    ./bootstrap || die
     COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-cc2538 || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp || die
+
+    git clean -xfd || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-da15000 || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp || die
 }
 
 [ $BUILD_TARGET != posix ] || {
-    distclean
+    git clean -xfd || die
+    ./bootstrap || die
     if [ -z "$CC" ]
     then
         export CC=gcc
@@ -128,26 +125,33 @@ fi
     fi
     sh -c '$CC --version' || die
     sh -c '$CXX --version' || die
+    ./bootstrap || die
     make -f examples/Makefile-posix || die
 }
 
 [ $BUILD_TARGET != posix-distcheck ] || {
-    distclean
+    export ASAN_SYMBOLIZER_PATH=`which llvm-symbolizer-3.4` || die
+    export ASAN_OPTIONS=symbolize=1 || die
+    git clean -xfd || die
+    ./bootstrap || die
     BuildJobs=10 make -f examples/Makefile-posix distcheck || die
 }
 
 [ $BUILD_TARGET != posix-32-bit ] || {
-    distclean
+    git clean -xfd || die
+    ./bootstrap || die
     COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 BuildJobs=10 make -f examples/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != posix-ncp-spi ] || {
-    distclean
+    git clean -xfd || die
+    ./bootstrap || die
     BuildJobs=10 make -f examples/Makefile-posix check configure_OPTIONS="--enable-ncp=spi --with-examples=posix --with-platform-info=POSIX" || die
 }
 
 [ $BUILD_TARGET != posix-ncp ] || {
-    distclean
+    git clean -xfd || die
+    ./bootstrap || die
     COVERAGE=1 NODE_TYPE=ncp-sim BuildJobs=10 make -f examples/Makefile-posix check || die
 }
 

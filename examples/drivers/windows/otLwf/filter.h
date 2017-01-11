@@ -36,8 +36,13 @@
 #define _FILT_H
 
 // The maximum allowed addresses an OpenThread interface
-#define OT_MAX_ADDRESSES 10
-#define OT_MAX_AUTO_ADDRESSES (OT_MAX_ADDRESSES - 4)
+#if (OPENTHREAD_ENABLE_DHCP6_CLIENT && OPENTHREAD_ENABLE_DHCP6_SERVER)
+#define OT_MAX_ADDRESSES (4 + OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES + 2 * OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES)
+#elif (OPENTHREAD_ENABLE_DHCP6_CLIENT || OPENTHREAD_ENABLE_DHCP6_SERVER)
+#define OT_MAX_ADDRESSES (4 + OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES + OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES)
+#else
+#define OT_MAX_ADDRESSES (4 + OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES)
+#endif
 
 #define OTLWF_ALLOC_TAG 'mFto' // otFm
 
@@ -137,7 +142,10 @@ typedef struct _MS_FILTER
     IN6_ADDR                    otCachedAddr[OT_MAX_ADDRESSES];
     ULONG                       otCachedAddrCount;
     IN6_ADDR                    otLinkLocalAddr;
-    otNetifAddress              otAutoAddresses[OT_MAX_AUTO_ADDRESSES];
+    otNetifAddress              otAutoAddresses[OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES];
+#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+    otDhcpAddress               otDhcpAddresses[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
+#endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
 
     union
     {

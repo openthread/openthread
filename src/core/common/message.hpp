@@ -610,6 +610,14 @@ public:
      */
     uint16_t UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t aLength) const;
 
+    /**
+     * This method returns a pointer to the message queue (if any) where this message is queued.
+     *
+     * @returns A pointer to the message queue or NULL if not in any message queue.
+     *
+     */
+    MessageQueue *GetMessageQueue(void) const { return (!mInfo.mInPriorityQ) ? mInfo.mMessageQueue : NULL; }
+
 private:
 
     /**
@@ -635,14 +643,6 @@ private:
      *
      */
     bool IsInAQueue(void) const { return (mInfo.mMessageQueue != NULL); }
-
-    /**
-     * This method returns a pointer to the message queue (if any) where this message is queued.
-     *
-     * @returns A pointer to the message queue or NULL if not in any message queue.
-     *
-     */
-    MessageQueue *GetMessageQueue(void) const { return (!mInfo.mInPriorityQ) ? mInfo.mMessageQueue : NULL; }
 
     /**
      * This method sets the message queue information for the message.
@@ -738,7 +738,7 @@ private:
  * This class implements a message queue.
  *
  */
-class MessageQueue
+class MessageQueue : public otMessageQueue
 {
     friend class Message;
     friend class PriorityQueue;
@@ -797,7 +797,15 @@ private:
      * @returns A pointer to the tail of the list.
      *
      */
-    Message *GetTail(void) const { return mTail; }
+    Message *GetTail(void) const { return static_cast<Message *>(mData); }
+
+    /**
+     * This method set the tail of the list.
+     *
+     * @param[in]  aMessage  A pointer to the message to set as new tail.
+     *
+     */
+    void SetTail(Message *aMessage) { mData = aMessage; }
 
     /**
      * This method adds a message to a list.
@@ -816,8 +824,6 @@ private:
      *
      */
     void RemoveFromList(uint8_t aListId, Message &aMessage);
-
-    Message *mTail;   ///< A pointer to the last Message in the list.
 };
 
 /**
@@ -965,7 +971,7 @@ public:
 
     public:
         /**
-         * This construct initializes an empty iterator.
+         * This constructor initializes an empty iterator.
          */
         Iterator(void) : mMessage(NULL) { }
 

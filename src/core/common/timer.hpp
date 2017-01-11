@@ -150,7 +150,7 @@ public:
     /**
      * This constructor creates a timer instance.
      *
-     * @param[in]  aScheduler  A refrence to the timer scheduler.
+     * @param[in]  aScheduler  A reference to the timer scheduler.
      * @param[in]  aHandler    A pointer to a function that is called when the timer expires.
      * @param[in]  aContext    A pointer to arbitrary context information.
      *

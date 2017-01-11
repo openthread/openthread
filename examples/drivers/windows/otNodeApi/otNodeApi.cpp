@@ -1338,8 +1338,8 @@ OTNODEAPI int32_t OTCALL otNodeAddIpAddr(otNode* aNode, const char *aAddr)
     if (error != kThreadError_None) return error;
 
     aAddress.mPrefixLength = 64;
-    aAddress.mPreferredLifetime = 0xffffffff;
-    aAddress.mValidLifetime = 0xffffffff;
+    aAddress.mPreferred = true;
+    aAddress.mValid = true;
     auto result = otAddUnicastAddress(aNode->mInstance, &aAddress);
     otLogFuncExit();
     return result;

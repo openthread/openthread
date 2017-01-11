@@ -80,7 +80,7 @@ ThreadError Dhcp6Server::UpdateService(void)
     {
         found = false;
 
-        if (mAgentsAloc[i].mValidLifetime == 0)
+        if (!mAgentsAloc[i].mValid)
         {
             continue;
         }
@@ -109,7 +109,7 @@ ThreadError Dhcp6Server::UpdateService(void)
         {
             mNetworkDataLeader.GetContext(address->mFields.m8[15], lowpanContext);
             mNetif.RemoveUnicastAddress(mAgentsAloc[i]);
-            mAgentsAloc[i].mValidLifetime = 0;
+            mAgentsAloc[i].mValid = false;
             RemovePrefixAgent(lowpanContext.mPrefix);
         }
     }
@@ -132,7 +132,7 @@ ThreadError Dhcp6Server::UpdateService(void)
         {
             address = &(mAgentsAloc[i].GetAddress());
 
-            if ((mAgentsAloc[i].mValidLifetime != 0) && (address->mFields.m8[15] == lowpanContext.mContextId))
+            if ((mAgentsAloc[i].mValid) && (address->mFields.m8[15] == lowpanContext.mContextId))
             {
                 found = true;
                 break;
@@ -147,7 +147,7 @@ ThreadError Dhcp6Server::UpdateService(void)
 
         for (i = 0; i < OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES; i++)
         {
-            if (mAgentsAloc[i].mValidLifetime == 0)
+            if (!mAgentsAloc[i].mValid)
             {
                 address = &(mAgentsAloc[i].GetAddress());
                 memcpy(address, mMle.GetMeshLocalPrefix(), 8);
@@ -157,8 +157,8 @@ ThreadError Dhcp6Server::UpdateService(void)
                 address->mFields.m8[14] = Mle::kAloc16Mask;
                 address->mFields.m8[15] = lowpanContext.mContextId;
                 mAgentsAloc[i].mPrefixLength = 128;
-                mAgentsAloc[i].mPreferredLifetime = 0xffffffff;
-                mAgentsAloc[i].mValidLifetime = 0xffffffff;
+                mAgentsAloc[i].mPreferred = true;
+                mAgentsAloc[i].mValid = true;
                 mNetif.AddUnicastAddress(mAgentsAloc[i]);
                 AddPrefixAgent(config.mPrefix);
                 break;

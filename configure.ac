@@ -283,6 +283,39 @@ NL_ENABLE_OPTIMIZATION([yes])
 
 AM_CONDITIONAL([OPENTHREAD_BUILD_OPTIMIZED], [test "${nl_cv_build_optimized}" = "yes"])
 
+# Address Sanitizer
+
+AC_MSG_CHECKING([whether to build with Address Sanitizer support])
+AC_ARG_ENABLE(address-sanitizer,
+    [AS_HELP_STRING([--enable-address-sanitizer],[Enable Address Sanitizer support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_address_sanitizer=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enableval} for --enable-address-sanitizer])
+            ;;
+
+        esac
+    ],
+    [enable_address_sanitizer=no])
+AC_MSG_RESULT(${enable_address_sanitizer})
+
+AM_CONDITIONAL([OPENTHREAD_WITH_ADDRESS_SANITIZER], [test "${enable_address_sanitizer}" = "yes"])
+
+if test "${enable_address_sanitizer}" = "yes" ; then
+
+    PROSPECTIVE_CFLAGS="-fsanitize=address"
+
+    # Check if the compilers support address sanitizer
+    AX_CHECK_COMPILER_OPTIONS([C],   ${PROSPECTIVE_CFLAGS})
+    AX_CHECK_COMPILER_OPTIONS([C++], ${PROSPECTIVE_CFLAGS})
+
+fi
+
 #
 # Code style
 #
@@ -812,11 +845,11 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_APPLICATION_COAP],[${OPENTHREAD_ENABLE_APP
 
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
-        [Specify the examples from one of: none, posix, cc2538, cc2650 @<:@default=none@:>@.])],
+        [Specify the examples from one of: none, posix, cc2538, cc2650, da15000 @<:@default=none@:>@.])],
     [
         case "${with_examples}" in
 
-        none|posix|cc2538|cc2650)
+        none|posix|cc2538|cc2650|da15000)
             ;;
         *)
             AC_MSG_ERROR([Invalid value ${with_examples} for --with-examples])
@@ -841,6 +874,12 @@ case ${with_examples} in
 
     cc2650)
         OPENTHREAD_EXAMPLES_CC2650=1
+        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_CC2650],[${OPENTHREAD_EXAMPLES_CC2650}],[Define to 1 if you want to use cc2650 examples])
+        ;;
+
+    da15000)
+        OPENTHREAD_EXAMPLES_DA15000=1
+        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_DA15000],[${OPENTHREAD_EXAMPLES_DA15000}],[Define to 1 if you want to use da15000 examples])
         ;;
 
 esac
@@ -859,7 +898,9 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2538], [test "${OPENTHREAD_EXAMPLES}" = "c
 
 AC_SUBST(OPENTHREAD_EXAMPLES_CC2650)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2650], [test "${OPENTHREAD_EXAMPLES}" = "cc2650"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_CC2650],[${OPENTHREAD_EXAMPLES_CC2650}],[Define to 1 if you want to use cc2650 examples])
+
+AC_SUBST(OPENTHREAD_EXAMPLES_DA15000)
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_DA15000], [test "${OPENTHREAD_EXAMPLES}" = "da15000"])
 
 #
 # Platform Information
@@ -997,6 +1038,7 @@ examples/apps/ncp/Makefile
 examples/platforms/Makefile
 examples/platforms/cc2538/Makefile
 examples/platforms/cc2650/Makefile
+examples/platforms/da15000/Makefile
 examples/platforms/posix/Makefile
 examples/platforms/utils/Makefile
 tools/Makefile
@@ -1039,6 +1081,7 @@ AC_MSG_NOTICE([
   Build optimized libraries                 : ${nl_cv_build_optimized}
   Build coverage libraries                  : ${nl_cv_build_coverage}
   Build coverage reports                    : ${nl_cv_build_coverage_reports}
+  Address sanitizer support                 : ${enable_address_sanitizer}
   Lcov                                      : ${LCOV:--}
   Genhtml                                   : ${GENHTML:--}
   Build tests                               : ${nl_cv_build_tests}

@@ -703,6 +703,17 @@ void otFactoryReset(otInstance *aInstance)
     otPlatReset(aInstance);
 }
 
+ThreadError otPersistentInfoErase(otInstance *aInstance)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(otGetDeviceRole(aInstance) == kDeviceRoleDisabled, error = kThreadError_InvalidState);
+    otPlatSettingsWipe(aInstance);
+
+exit:
+    return error;
+}
+
 uint8_t otGetRouterDowngradeThreshold(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMle().GetRouterDowngradeThreshold();
@@ -1012,8 +1023,15 @@ ThreadError otRemoveUnicastAddress(otInstance *aInstance, const otIp6Address *ad
     return aInstance->mThreadNetif.RemoveExternalUnicastAddress(*static_cast<const Ip6::Address *>(address));
 }
 
+#if OPENTHREAD_ENABLE_DHCP6_SERVER
+void otDhcp6ServerUpdate(otInstance *aInstance)
+{
+    aInstance->mThreadNetif.GetDhcp6Server().UpdateService();
+}
+#endif  // OPENTHREAD_ENABLE_DHCP6_SERVER
+
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
-void otDhcp6ClientUpdate(otInstance *aInstance, otNetifAddress *aAddresses, uint32_t aNumAddresses, void *aContext)
+void otDhcp6ClientUpdate(otInstance *aInstance, otDhcpAddress *aAddresses, uint32_t aNumAddresses, void *aContext)
 {
     aInstance->mThreadNetif.GetDhcp6Client().UpdateAddresses(aInstance, aAddresses, aNumAddresses, aContext);
 }
@@ -1480,6 +1498,45 @@ int otWriteMessage(otMessage aMessage, uint16_t aOffset, const void *aBuf, uint1
 {
     Message *message = static_cast<Message *>(aMessage);
     return message->Write(aOffset, aLength, aBuf);
+}
+
+void otMessageQueueInit(otMessageQueue *aQueue)
+{
+    aQueue->mData = NULL;
+}
+
+ThreadError otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage aMessage)
+{
+    Message *message = static_cast<Message *>(aMessage);
+    MessageQueue *queue = static_cast<MessageQueue *>(aQueue);
+    return queue->Enqueue(*message);
+}
+
+ThreadError otMessageQueueDequeue(otMessageQueue *aQueue, otMessage aMessage)
+{
+    Message *message = static_cast<Message *>(aMessage);
+    MessageQueue *queue = static_cast<MessageQueue *>(aQueue);
+    return queue->Dequeue(*message);
+}
+
+otMessage otMessageQueueGetHead(otMessageQueue *aQueue)
+{
+    MessageQueue *queue = static_cast<MessageQueue *>(aQueue);
+    return queue->GetHead();
+}
+
+otMessage otMessageQueueGetNext(otMessageQueue *aQueue, otMessage aMessage)
+{
+    Message *next;
+    Message *message = static_cast<Message *>(aMessage);
+    MessageQueue *queue = static_cast<MessageQueue *>(aQueue);
+
+    VerifyOrExit(message != NULL, next = NULL);
+    VerifyOrExit(message->GetMessageQueue() == queue, next = NULL);
+    next = message->GetNext();
+
+exit:
+    return next;
 }
 
 ThreadError otOpenUdpSocket(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aCallbackContext)

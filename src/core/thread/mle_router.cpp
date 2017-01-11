@@ -531,8 +531,7 @@ ThreadError MleRouter::SendAdvertisement(void)
     Ip6::Address destination;
     Message *message;
 
-    VerifyOrExit((message = NewMessage()) != NULL, ;);
-    message->SetLinkSecurityEnabled(false);
+    VerifyOrExit((message = NewMleMessage()) != NULL, ;);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandAdvertisement));
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
@@ -580,8 +579,7 @@ ThreadError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
 
     memset(&destination, 0, sizeof(destination));
 
-    VerifyOrExit((message = NewMessage()) != NULL, ;);
-    message->SetLinkSecurityEnabled(false);
+    VerifyOrExit((message = NewMleMessage()) != NULL, ;);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandLinkRequest));
     SuccessOrExit(error = AppendVersion(*message));
 
@@ -757,8 +755,7 @@ ThreadError MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo, Neig
     command = (aNeighbor == NULL || aNeighbor->mState == Neighbor::kStateValid) ?
               Header::kCommandLinkAccept : Header::kCommandLinkAcceptAndRequest;
 
-    VerifyOrExit((message = NewMessage()) != NULL, ;);
-    message->SetLinkSecurityEnabled(false);
+    VerifyOrExit((message = NewMleMessage()) != NULL, ;);
     SuccessOrExit(error = AppendHeader(*message, command));
     SuccessOrExit(error = AppendVersion(*message));
     SuccessOrExit(error = AppendSourceAddress(*message));
@@ -1959,8 +1956,7 @@ ThreadError MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &cha
     Message *message;
     uint16_t delay;
 
-    VerifyOrExit((message = NewMessage()) != NULL, ;);
-    message->SetLinkSecurityEnabled(false);
+    VerifyOrExit((message = NewMleMessage()) != NULL, ;);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandParentResponse));
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
@@ -2584,8 +2580,7 @@ ThreadError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, u
     MeshCoP::JoinerUdpPortTlv joinerUdpPort;
     MeshCoP::Tlv *steeringData;
 
-    VerifyOrExit((message = NewMessage()) != NULL, ;);
-    message->SetLinkSecurityEnabled(false);
+    VerifyOrExit((message = NewMleMessage()) != NULL, ;);
     message->SetSubType(Message::kSubTypeMleDiscoverResponse);
     message->SetPanId(aPanId);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandDiscoveryResponse));
@@ -2657,8 +2652,7 @@ ThreadError MleRouter::SendChildIdResponse(Child *aChild)
     Ip6::Address destination;
     Message *message;
 
-    VerifyOrExit((message = NewMessage()) != NULL, ;);
-    message->SetLinkSecurityEnabled(false);
+    VerifyOrExit((message = NewMleMessage()) != NULL, ;);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildIdResponse));
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
@@ -2743,8 +2737,7 @@ ThreadError MleRouter::SendChildUpdateRequest(Child *aChild)
     Ip6::Address destination;
     Message *message;
 
-    VerifyOrExit((message = NewMessage()) != NULL, ;);
-    message->SetLinkSecurityEnabled(false);
+    VerifyOrExit((message = NewMleMessage()) != NULL, ;);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildUpdateRequest));
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
@@ -2783,8 +2776,7 @@ ThreadError MleRouter::SendChildUpdateResponse(Child *aChild, const Ip6::Message
     ThreadError error = kThreadError_None;
     Message *message;
 
-    VerifyOrExit((message = NewMessage()) != NULL, ;);
-    message->SetLinkSecurityEnabled(false);
+    VerifyOrExit((message = NewMleMessage()) != NULL, ;);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildUpdateResponse));
 
     for (int i = 0; i < aTlvslength; i++)
@@ -2846,8 +2838,7 @@ ThreadError MleRouter::SendDataResponse(const Ip6::Address &aDestination, const 
     Neighbor *neighbor;
     bool stableOnly;
 
-    VerifyOrExit((message = NewMessage()) != NULL, ;);
-    message->SetLinkSecurityEnabled(false);
+    VerifyOrExit((message = NewMleMessage()) != NULL, ;);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandDataResponse));
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
@@ -3348,16 +3339,19 @@ exit:
 ThreadError MleRouter::RestoreChildren(void)
 {
     ThreadError error = kThreadError_None;
-    Child *child;
-    otChildInfo childInfo;
-    uint16_t length;
 
     for (uint8_t i = 0; i < kMaxChildren; i++)
     {
+        Child *child;
+        otChildInfo childInfo;
+        uint16_t length;
+
+        length = sizeof(childInfo);
         SuccessOrExit(otPlatSettingsGet(mNetif.GetInstance(), kKeyChildInfo, i,
                                         reinterpret_cast<uint8_t *>(&childInfo), &length));
-        VerifyOrExit((child = NewChild()) != NULL, error = kThreadError_NoBufs);
+        VerifyOrExit(length == sizeof(childInfo), ;);
 
+        VerifyOrExit((child = NewChild()) != NULL, error = kThreadError_NoBufs);
         memset(child, 0, sizeof(*child));
 
         memcpy(&child->mMacAddr, &childInfo.mExtAddress, sizeof(child->mMacAddr));
@@ -3378,13 +3372,15 @@ exit:
 ThreadError MleRouter::RemoveStoredChild(uint16_t aChildRloc16)
 {
     ThreadError error = kThreadError_NotFound;
-    otChildInfo childInfo;
-    uint16_t length;
 
     for (uint8_t i = 0; i < kMaxChildren; i++)
     {
+        otChildInfo childInfo;
+        uint16_t length = sizeof(childInfo);
+
         SuccessOrExit(otPlatSettingsGet(mNetif.GetInstance(), kKeyChildInfo, i,
                                         reinterpret_cast<uint8_t *>(&childInfo), &length));
+        VerifyOrExit(length == sizeof(childInfo), ;);
 
         if (childInfo.mRloc16 == aChildRloc16)
         {
@@ -3994,34 +3990,13 @@ void MleRouter::HandleAddressRelease(Coap::Header &aHeader, Message &aMessage,
                  memcmp(&router->mMacAddr, macAddr64Tlv.GetMacAddr(), sizeof(router->mMacAddr)) == 0,);
 
     ReleaseRouterId(routerId);
-    SendAddressReleaseResponse(aHeader, aMessageInfo);
 
-exit:
-    {}
-}
-
-void MleRouter::SendAddressReleaseResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo)
-{
-    ThreadError error = kThreadError_None;
-    Coap::Header responseHeader;
-    Message *message;
-
-    VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
-
-    responseHeader.SetDefaultResponseHeader(aRequestHeader);
-
-    SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
-
-    SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
+    SuccessOrExit(mCoapServer.SendEmptyAck(aHeader, aMessageInfo));
 
     otLogInfoMle("Sent address release response");
 
 exit:
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        message->Free();
-    }
+    {}
 }
 
 void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)

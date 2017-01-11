@@ -71,13 +71,13 @@ Dhcp6Client::Dhcp6Client(ThreadNetif &aThreadNetif) :
     mIdentityAssociationAvail = &mIdentityAssociations[0];
 }
 
-void Dhcp6Client::UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddresses, uint32_t aNumAddresses,
+void Dhcp6Client::UpdateAddresses(otInstance *aInstance, otDhcpAddress *aAddresses, uint32_t aNumAddresses,
                                   void *aContext)
 {
     (void)aContext;
     bool found = false;;
     bool newAgent = false;
-    otNetifAddress *address = NULL;
+    otDhcpAddress *address = NULL;
     otNetworkDataIterator iterator;
     otBorderRouterConfig config;
 
@@ -104,8 +104,9 @@ void Dhcp6Client::UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddres
                 continue;
             }
 
-            if ((otIp6PrefixMatch(&(address->mAddress), &(config.mPrefix.mPrefix)) >= address->mPrefixLength) &&
-                (config.mPrefix.mLength == address->mPrefixLength))
+            if ((otIp6PrefixMatch(&(address->mAddress.mAddress), &(config.mPrefix.mPrefix)) >=
+                 address->mAddress.mPrefixLength) &&
+                (config.mPrefix.mLength == address->mAddress.mPrefixLength))
             {
                 found = true;
                 break;
@@ -114,7 +115,7 @@ void Dhcp6Client::UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddres
 
         if (!found)
         {
-            otRemoveUnicastAddress(aInstance, &(address->mAddress));
+            otRemoveUnicastAddress(aInstance, &(address->mAddress.mAddress));
             RemoveIdentityAssociation(config.mRloc16, config.mPrefix);
             memset(address, 0, sizeof(*address));
         }
@@ -136,13 +137,14 @@ void Dhcp6Client::UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddres
         {
             address = &mAddresses[i];
 
-            if (address->mPrefixLength == 0)
+            if (address->mAddress.mPrefixLength == 0)
             {
                 continue;
             }
 
-            if ((otIp6PrefixMatch(&(config.mPrefix.mPrefix), &(address->mAddress)) >= config.mPrefix.mLength) &&
-                (config.mPrefix.mLength == address->mPrefixLength))
+            if ((otIp6PrefixMatch(&(config.mPrefix.mPrefix), &(address->mAddress.mAddress)) >=
+                 config.mPrefix.mLength) &&
+                (config.mPrefix.mLength == address->mAddress.mPrefixLength))
             {
                 found = true;
                 break;
@@ -155,7 +157,7 @@ void Dhcp6Client::UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddres
             {
                 address = &mAddresses[i];
 
-                if (address->mPrefixLength != 0)
+                if (address->mAddress.mPrefixLength != 0)
                 {
                     continue;
                 }
@@ -163,8 +165,8 @@ void Dhcp6Client::UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddres
                 memset(address, 0, sizeof(*address));
 
                 // suppose all configured prefix are ::/64
-                memcpy(address->mAddress.mFields.m8, config.mPrefix.mPrefix.mFields.m8, 8);
-                address->mPrefixLength = config.mPrefix.mLength;
+                memcpy(address->mAddress.mAddress.mFields.m8, config.mPrefix.mPrefix.mFields.m8, 8);
+                address->mAddress.mPrefixLength = config.mPrefix.mLength;
 
                 AddIdentityAssociation(config.mRloc16, config.mPrefix);
                 newAgent = true;
@@ -662,7 +664,7 @@ ThreadError Dhcp6Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
 {
     ThreadError error = kThreadError_None;
     IdentityAssociation *identityAssociation = NULL;
-    otNetifAddress *address = NULL;
+    otDhcpAddress *address = NULL;
     otIp6Prefix *prefix  = NULL;
 
     IaAddress option;
@@ -680,12 +682,14 @@ ThreadError Dhcp6Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
             continue;
         }
 
-        if (otIp6PrefixMatch(&(address->mAddress), option.GetAddress()) >= address->mPrefixLength)
+        if (otIp6PrefixMatch(&(address->mAddress.mAddress), option.GetAddress()) >= address->mAddress.mPrefixLength)
         {
-            memcpy(address->mAddress.mFields.m8, option.GetAddress()->mFields.m8, sizeof(otIp6Address));
+            memcpy(address->mAddress.mAddress.mFields.m8, option.GetAddress()->mFields.m8, sizeof(otIp6Address));
             address->mPreferredLifetime = option.GetPreferredLifetime();
             address->mValidLifetime = option.GetValidLifetime();
-            otAddUnicastAddress(mNetif.GetInstance(), address);
+            address->mAddress.mPreferred = address->mPreferredLifetime != 0;
+            address->mAddress.mValid = address->mValidLifetime != 0;
+            otAddUnicastAddress(mNetif.GetInstance(), &address->mAddress);
             break;
         }
     }

@@ -67,7 +67,7 @@ ot_ncp_LDADD                                                          += \
     $(top_builddir)/examples/platforms/posix/libopenthread-posix.a       \
     -lstdc++                                                             \
     $(NULL)
-endif
+endif # OPENTHREAD_EXAMPLES_POSIX
 
 if OPENTHREAD_EXAMPLES_CC2538
 ot_ncp_LDADD                                                          += \
@@ -77,7 +77,7 @@ ot_ncp_LDADD                                                          += \
 ot_ncp_LDFLAGS                                                        += \
     -T $(top_srcdir)/examples/platforms/cc2538/cc2538.ld                 \
     $(NULL)
-endif
+endif # OPENTHREAD_EXAMPLES_CC2538
 
 if OPENTHREAD_EXAMPLES_CC2650
 ot_ncp_CPPFLAGS                                                       += \
@@ -104,6 +104,16 @@ ot_ncp_SOURCES                                                        += \
 PRETTY_FILES := $(filter-out ccfg.c startup_gcc.c ,$(PRETTY_FILES))
 
 endif
+
+if OPENTHREAD_EXAMPLES_DA15000
+ot_ncp_LDADD                                                          += \
+    $(top_builddir)/examples/platforms/da15000/libopenthread-da15000.a   \
+    $(NULL)
+
+ot_ncp_LDFLAGS                                                        += \
+    -T $(top_srcdir)/examples/platforms/da15000/da15000.ld               \
+    $(NULL)
+endif # OPENTHREAD_EXAMPLES_DA15000
 
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                                                             = $(wildcard *.gcda *.gcno)

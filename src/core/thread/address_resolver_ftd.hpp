@@ -154,8 +154,6 @@ private:
     void SendAddressQueryResponse(const ThreadTargetTlv &aTargetTlv, const ThreadMeshLocalEidTlv &aMlEidTlv,
                                   const ThreadLastTransactionTimeTlv *aLastTransactionTimeTlv,
                                   const Ip6::Address &aDestination);
-    void SendAddressErrorResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestInfo);
-    void SendAddressNotificationResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestInfo);
 
     static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
 

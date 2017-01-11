@@ -86,23 +86,33 @@ check_PROGRAMS                                                      = \
     test-toolchain                                                    \
     $(NULL)
 
+XFAIL_TESTS                                                         = \
+    $(NULL)
+
 if OPENTHREAD_ENABLE_DIAG
-check_PROGRAMS                                                    += \
-    test-diag                                                        \
+check_PROGRAMS                                                     += \
+    test-diag                                                         \
     $(NULL)
 endif
 
 if OPENTHREAD_ENABLE_NCP
 
-COMMON_LDADD                                                      += \
-    $(top_builddir)/src/ncp/libopenthread-ncp.a                      \
+COMMON_LDADD                                                       += \
+    $(top_builddir)/src/ncp/libopenthread-ncp.a                       \
     $(NULL)
 
-check_PROGRAMS                                                    += \
-    test-ncp-buffer                                                  \
+check_PROGRAMS                                                     += \
+    test-ncp-buffer                                                   \
     $(NULL)
+
 
 endif # OPENTHREAD_ENABLE_NCP
+if OPENTHREAD_WITH_ADDRESS_SANITIZER
+check_PROGRAMS                 += test-address-sanitizer
+XFAIL_TESTS                    += test-address-sanitizer
+test_address_sanitizer_SOURCES  = test_address_sanitizer.cpp
+endif # OPENTHREAD_WITH_ADDRESS_SANITIZER
+
 
 # Test applications and scripts that should be built and run when the
 # 'check' target is run.

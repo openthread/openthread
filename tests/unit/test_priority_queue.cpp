@@ -35,7 +35,7 @@
 
 #define kNumTestMessages      3
 
-// This function verifies the content of the priority queue to matches the passed in messages
+// This function verifies the content of the priority queue to match the passed in messages
 void VerifyPriorityQueueContent(Thread::PriorityQueue &aPriorityQueue, int aExpectedLength, ...)
 {
     va_list args;
@@ -138,7 +138,7 @@ void VerifyAllMessagesContent(Thread::MessagePool &aMessagePool, int aExpectedLe
     va_end(args);
 }
 
-// This function verifies the content of the all message queue to match the passed in messages , but it goes
+// This function verifies the content of the all message queue to match the passed in messages. It goes
 // through the AllMessages list in reverse.
 void VerifyAllMessagesContentInReverse(Thread::MessagePool &aMessagePool, int aExpectedLength, ...)
 {

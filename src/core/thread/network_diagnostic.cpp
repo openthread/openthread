@@ -56,7 +56,9 @@ namespace Thread {
 namespace NetworkDiagnostic {
 
 NetworkDiagnostic::NetworkDiagnostic(ThreadNetif &aThreadNetif) :
-    mDiagnosticGet(OPENTHREAD_URI_DIAGNOSTIC_GET, &NetworkDiagnostic::HandleDiagnosticGet, this),
+    mDiagnosticGetRequest(OPENTHREAD_URI_DIAGNOSTIC_GET_REQUEST, &NetworkDiagnostic::HandleDiagnosticGetRequest, this),
+    mDiagnosticGetQuery(OPENTHREAD_URI_DIAGNOSTIC_GET_QUERY, &NetworkDiagnostic::HandleDiagnosticGetQuery, this),
+    mDiagnosticGetAnswer(OPENTHREAD_URI_DIAGNOSTIC_GET_ANSWER, &NetworkDiagnostic::HandleDiagnosticGetAnswer, this),
     mDiagnosticReset(OPENTHREAD_URI_DIAGNOSTIC_RESET, &NetworkDiagnostic::HandleDiagnosticReset, this),
     mCoapServer(aThreadNetif.GetCoapServer()),
     mCoapClient(aThreadNetif.GetCoapClient()),
@@ -66,7 +68,9 @@ NetworkDiagnostic::NetworkDiagnostic(ThreadNetif &aThreadNetif) :
     mReceiveDiagnosticGetCallback(NULL),
     mReceiveDiagnosticGetCallbackContext(NULL)
 {
-    mCoapServer.AddResource(mDiagnosticGet);
+    mCoapServer.AddResource(mDiagnosticGetRequest);
+    mCoapServer.AddResource(mDiagnosticGetQuery);
+    mCoapServer.AddResource(mDiagnosticGetAnswer);
     mCoapServer.AddResource(mDiagnosticReset);
 }
 
@@ -81,16 +85,25 @@ ThreadError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestinatio
                                                  uint8_t aCount)
 {
     ThreadError error;
-    Ip6::SockAddr sockaddr;
     Message *message;
     Coap::Header header;
     Ip6::MessageInfo messageInfo;
+    otCoapResponseHandler handler = NULL;
 
-    sockaddr.mPort = kCoapUdpPort;
+    if (aDestination.IsMulticast())
+    {
+        header.Init(kCoapTypeNonConfirmable, kCoapRequestGet);
+        header.SetToken(Coap::Header::kDefaultTokenLength);
+        header.AppendUriPathOptions(OPENTHREAD_URI_DIAGNOSTIC_GET_QUERY);
+    }
+    else
+    {
+        handler = &NetworkDiagnostic::HandleDiagnosticGetResponse;
+        header.Init(kCoapTypeConfirmable, kCoapRequestGet);
+        header.SetToken(Coap::Header::kDefaultTokenLength);
+        header.AppendUriPathOptions(OPENTHREAD_URI_DIAGNOSTIC_GET_REQUEST);
+    }
 
-    header.Init(kCoapTypeConfirmable, kCoapRequestGet);
-    header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_DIAGNOSTIC_GET);
     header.SetPayloadMarker();
 
     VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
@@ -102,8 +115,7 @@ ThreadError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestinatio
     messageInfo.SetPeerPort(kCoapUdpPort);
     messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
 
-    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo,
-                                                  &NetworkDiagnostic::HandleDiagnosticGetResponse, this));
+    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo, handler, this));
 
     otLogInfoNetDiag("Sent diagnostic get");
 
@@ -120,72 +132,57 @@ exit:
 void NetworkDiagnostic::HandleDiagnosticGetResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
                                                     const otMessageInfo *aMessageInfo, ThreadError aResult)
 {
-    static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetResponse(static_cast<Coap::Header *>(aHeader),
-                                                                            static_cast<Message *>(aMessage),
-                                                                            static_cast<const Ip6::MessageInfo *>(aMessageInfo),
+    static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetResponse(*static_cast<Coap::Header *>(aHeader),
+                                                                            *static_cast<Message *>(aMessage),
+                                                                            *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
                                                                             aResult);
 }
 
-void NetworkDiagnostic::HandleDiagnosticGetResponse(Coap::Header *aHeader, Message *aMessage,
-                                                    const Ip6::MessageInfo *aMessageInfo, ThreadError aResult)
+void NetworkDiagnostic::HandleDiagnosticGetResponse(Coap::Header &aHeader, Message &aMessage,
+                                                    const Ip6::MessageInfo &aMessageInfo,
+                                                    ThreadError aResult)
 {
     VerifyOrExit(aResult == kThreadError_None, ;);
-    VerifyOrExit(aHeader->GetCode() == kCoapResponseChanged, ;);
+    VerifyOrExit(aHeader.GetCode() == kCoapResponseChanged, ;);
 
-    otLogInfoNetDiag("Network Diagnostic get response received");
+    otLogInfoNetDiag("Received diagnostic get response");
 
-    VerifyOrExit(mReceiveDiagnosticGetCallback != NULL, ;);
-
-    // Call application defined callback.
-    mReceiveDiagnosticGetCallback(aMessage, aMessageInfo, mReceiveDiagnosticGetCallbackContext);
+    if (mReceiveDiagnosticGetCallback)
+    {
+        mReceiveDiagnosticGetCallback(&aMessage, &aMessageInfo, mReceiveDiagnosticGetCallbackContext);
+    }
 
 exit:
     return;
 }
 
-ThreadError NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination, const uint8_t aTlvTypes[],
-                                                   uint8_t aCount)
+void NetworkDiagnostic::HandleDiagnosticGetAnswer(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                                  const otMessageInfo *aMessageInfo)
 {
-    ThreadError error;
-    Ip6::SockAddr sockaddr;
-    Message *message;
-    Coap::Header header;
-    Ip6::MessageInfo messageInfo;
-
-    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
-    header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_DIAGNOSTIC_RESET);
-    header.SetPayloadMarker();
-
-    VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
-
-    SuccessOrExit(error = message->Append(aTlvTypes, aCount));
-
-    messageInfo.SetPeerAddr(aDestination);
-    messageInfo.SetSockAddr(mMle.GetMeshLocal16());
-    messageInfo.SetPeerPort(kCoapUdpPort);
-    messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
-
-    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
-
-    otLogInfoNetDiag("Sent network diagnostic reset");
-
-exit:
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        message->Free();
-    }
-
-    return error;
+    static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetAnswer(*static_cast<Coap::Header *>(aHeader),
+                                                                          *static_cast<Message *>(aMessage),
+                                                                          *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-void NetworkDiagnostic::HandleDiagnosticGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                            const otMessageInfo *aMessageInfo)
+void NetworkDiagnostic::HandleDiagnosticGetAnswer(Coap::Header &aHeader, Message &aMessage,
+                                                  const Ip6::MessageInfo &aMessageInfo)
 {
-    static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGet(
-        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
-        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
+                 aHeader.GetCode() == kCoapRequestPost, ;);
+
+    otLogInfoNetDiag("Diagnostic get answer received");
+
+    if (mReceiveDiagnosticGetCallback)
+    {
+        mReceiveDiagnosticGetCallback(&aMessage, &aMessageInfo, mReceiveDiagnosticGetCallbackContext);
+    }
+
+    SuccessOrExit(mCoapServer.SendEmptyAck(aHeader, aMessageInfo));
+
+    otLogInfoNetDiag("Sent diagnostic answer acknowledgment");
+
+exit:
+    return;
 }
 
 ThreadError NetworkDiagnostic::AppendIPv6AddressList(Message &aMessage)
@@ -260,13 +257,242 @@ exit:
     return error;
 }
 
-void NetworkDiagnostic::HandleDiagnosticGet(Coap::Header &aHeader, Message &aMessage,
-                                            const Ip6::MessageInfo &aMessageInfo)
+ThreadError NetworkDiagnostic::FillRequestedTlvs(Message &aRequest, Message &aResponse,
+                                                 NetworkDiagnosticTlv &aNetworkDiagnosticTlv)
+{
+    ThreadError error = kThreadError_None;
+    uint16_t offset = 0;
+    uint8_t type;
+
+    offset = aRequest.GetOffset() + sizeof(NetworkDiagnosticTlv);
+
+    for (uint32_t i = 0; i < aNetworkDiagnosticTlv.GetLength(); i++)
+    {
+        VerifyOrExit(aRequest.Read(offset, sizeof(type), &type) == sizeof(type), error = kThreadError_Drop);
+
+        otLogInfoNetDiag("Received diagnostic get type %d", type);
+
+        switch (type)
+        {
+        case NetworkDiagnosticTlv::kExtMacAddress:
+        {
+            ExtMacAddressTlv tlv;
+            tlv.Init();
+            tlv.SetMacAddr(*mNetif.GetMac().GetExtAddress());
+            SuccessOrExit(error = aResponse.Append(&tlv, sizeof(tlv)));
+            break;
+        }
+
+        case NetworkDiagnosticTlv::kAddress16:
+        {
+            Address16Tlv tlv;
+            tlv.Init();
+            tlv.SetRloc16(mMle.GetRloc16());
+            SuccessOrExit(error = aResponse.Append(&tlv, sizeof(tlv)));
+            break;
+        }
+
+        case NetworkDiagnosticTlv::kMode:
+        {
+            ModeTlv tlv;
+            tlv.Init();
+            tlv.SetMode(mMle.GetDeviceMode());
+            SuccessOrExit(error = aResponse.Append(&tlv, sizeof(tlv)));
+            break;
+        }
+
+        case NetworkDiagnosticTlv::kTimeout:
+        {
+            if ((mMle.GetDeviceMode() & ModeTlv::kModeRxOnWhenIdle) == 0)
+            {
+                TimeoutTlv tlv;
+                tlv.Init();
+                tlv.SetTimeout(mMle.GetTimeout());
+                SuccessOrExit(error = aResponse.Append(&tlv, sizeof(tlv)));
+            }
+
+            break;
+        }
+
+        case NetworkDiagnosticTlv::kConnectivity:
+        {
+            ConnectivityTlv tlv;
+            tlv.Init();
+            mMle.FillConnectivityTlv(*reinterpret_cast<Mle::ConnectivityTlv *>(&tlv));
+            SuccessOrExit(error = aResponse.Append(&tlv, sizeof(tlv)));
+            break;
+        }
+
+        case NetworkDiagnosticTlv::kRoute:
+        {
+            RouteTlv tlv;
+            tlv.Init();
+            mMle.FillRouteTlv(*reinterpret_cast<Mle::RouteTlv *>(&tlv));
+            SuccessOrExit(error = aResponse.Append(&tlv, tlv.GetSize()));
+            break;
+        }
+
+        case NetworkDiagnosticTlv::kLeaderData:
+        {
+            LeaderDataTlv tlv;
+            memcpy(&tlv, &mMle.GetLeaderDataTlv(), sizeof(tlv));
+            tlv.Init();
+            SuccessOrExit(error = aResponse.Append(&tlv, tlv.GetSize()));
+            break;
+        }
+
+        case NetworkDiagnosticTlv::kNetworkData:
+        {
+            NetworkDataTlv tlv;
+            tlv.Init();
+            mMle.FillNetworkDataTlv((*reinterpret_cast<Mle::NetworkDataTlv *>(&tlv)), true);
+            SuccessOrExit(error = aResponse.Append(&tlv, tlv.GetSize()));
+            break;
+        }
+
+        case NetworkDiagnosticTlv::kIPv6AddressList:
+        {
+            SuccessOrExit(error = AppendIPv6AddressList(aResponse));
+            break;
+        }
+
+        case NetworkDiagnosticTlv::kMacCounters:
+        {
+            MacCountersTlv tlv;
+            memset(&tlv, 0, sizeof(tlv));
+            tlv.Init();
+            mMac.FillMacCountersTlv(tlv);
+            SuccessOrExit(error = aResponse.Append(&tlv, tlv.GetSize()));
+            break;
+        }
+
+        case NetworkDiagnosticTlv::kBatteryLevel:
+        {
+            // TODO Need more api from driver
+            BatteryLevelTlv tlv;
+            tlv.Init();
+            tlv.SetBatteryLevel(100);
+            SuccessOrExit(error = aResponse.Append(&tlv, tlv.GetSize()));
+            break;
+        }
+
+        case NetworkDiagnosticTlv::kSupplyVoltage:
+        {
+            // TODO Need more api from driver
+            SupplyVoltageTlv tlv;
+            tlv.Init();
+            tlv.SetSupplyVoltage(0);
+            SuccessOrExit(error = aResponse.Append(&tlv, tlv.GetSize()));
+            break;
+        }
+
+        case NetworkDiagnosticTlv::kChildTable:
+        {
+            SuccessOrExit(error = AppendChildTable(aResponse));
+            break;
+        }
+
+        case NetworkDiagnosticTlv::kChannelPages:
+        {
+            ChannelPagesTlv tlv;
+            tlv.Init();
+            tlv.GetChannelPages()[0] = 0;
+            tlv.SetLength(1);
+            SuccessOrExit(error = aResponse.Append(&tlv, tlv.GetSize()));
+            break;
+        }
+
+        default:
+            ExitNow(error = kThreadError_Drop);
+        }
+
+        offset += sizeof(type);
+    }
+
+exit:
+    return error;
+}
+
+void NetworkDiagnostic::HandleDiagnosticGetQuery(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                                 const otMessageInfo *aMessageInfo)
+{
+    static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetQuery(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+}
+
+void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Header &aHeader, Message &aMessage,
+                                                 const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadError error = kThreadError_None;
     Message *message = NULL;
-    uint16_t offset = 0;
-    uint8_t type;
+    NetworkDiagnosticTlv networkDiagnosticTlv;
+    Coap::Header header;
+    Ip6::MessageInfo messageInfo;
+
+    VerifyOrExit(aHeader.GetCode() == kCoapRequestGet, error = kThreadError_Drop);
+
+    otLogInfoNetDiag("Received diagnostic get query");
+
+    VerifyOrExit((aMessage.Read(aMessage.GetOffset(), sizeof(NetworkDiagnosticTlv),
+                                &networkDiagnosticTlv) == sizeof(NetworkDiagnosticTlv)), error = kThreadError_Drop);
+
+    VerifyOrExit(networkDiagnosticTlv.GetType() == NetworkDiagnosticTlv::kTypeList, error = kThreadError_Drop);
+
+    VerifyOrExit((static_cast<TypeListTlv *>(&networkDiagnosticTlv)->IsValid()), error = kThreadError_Drop);
+
+    // DIAG_GET.qry may be sent as a confirmable message.
+    if (aHeader.GetType() == kCoapTypeConfirmable)
+    {
+        if (mCoapServer.SendEmptyAck(aHeader, aMessageInfo) == kThreadError_None)
+        {
+            otLogInfoNetDiag("Sent diagnostic get query acknowledgment");
+        }
+    }
+
+    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
+    header.SetToken(Coap::Header::kDefaultTokenLength);
+    header.AppendUriPathOptions(OPENTHREAD_URI_DIAGNOSTIC_GET_ANSWER);
+
+    if (networkDiagnosticTlv.GetLength() > 0)
+    {
+        header.SetPayloadMarker();
+    }
+
+    VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
+
+    messageInfo.SetPeerAddr(aMessageInfo.GetPeerAddr());
+    messageInfo.SetSockAddr(mMle.GetMeshLocal16());
+    messageInfo.SetPeerPort(kCoapUdpPort);
+    messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
+
+    SuccessOrExit(error = FillRequestedTlvs(aMessage, *message, networkDiagnosticTlv));
+
+    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo, NULL, this));
+
+    otLogInfoNetDiag("Sent diagnostic get answer");
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        message->Free();
+    }
+}
+
+void NetworkDiagnostic::HandleDiagnosticGetRequest(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                                   const otMessageInfo *aMessageInfo)
+{
+    static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetRequest(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+}
+
+void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Header &aHeader, Message &aMessage,
+                                                   const Ip6::MessageInfo &aMessageInfo)
+{
+    ThreadError error = kThreadError_None;
+    Message *message = NULL;
     NetworkDiagnosticTlv networkDiagnosticTlv;
     Coap::Header header;
     Ip6::MessageInfo messageInfo(aMessageInfo);
@@ -294,155 +520,11 @@ void NetworkDiagnostic::HandleDiagnosticGet(Coap::Header &aHeader, Message &aMes
 
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
 
-    offset = aMessage.GetOffset() + sizeof(NetworkDiagnosticTlv);
-
-    for (uint8_t i = 0; i < networkDiagnosticTlv.GetLength(); i++)
-    {
-
-        VerifyOrExit(aMessage.Read(offset, sizeof(type), &type) == sizeof(type), error = kThreadError_Drop);
-
-        otLogInfoNetDiag("Received diagnostic get type %d", type);
-
-        switch (type)
-        {
-        case NetworkDiagnosticTlv::kExtMacAddress:
-        {
-            ExtMacAddressTlv tlv;
-            tlv.Init();
-            tlv.SetMacAddr(*mNetif.GetMac().GetExtAddress());
-            SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-            break;
-        }
-
-        case NetworkDiagnosticTlv::kAddress16:
-        {
-            Address16Tlv tlv;
-            tlv.Init();
-            tlv.SetRloc16(mMle.GetRloc16());
-            SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-            break;
-        }
-
-        case NetworkDiagnosticTlv::kMode:
-        {
-            ModeTlv tlv;
-            tlv.Init();
-            tlv.SetMode(mMle.GetDeviceMode());
-            SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-            break;
-        }
-
-        case NetworkDiagnosticTlv::kTimeout:
-        {
-            if ((mMle.GetDeviceMode() & ModeTlv::kModeRxOnWhenIdle) == 0)
-            {
-                TimeoutTlv tlv;
-                tlv.Init();
-                tlv.SetTimeout(mMle.GetTimeout());
-                SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-            }
-
-            break;
-        }
-
-        case NetworkDiagnosticTlv::kConnectivity:
-        {
-            ConnectivityTlv tlv;
-            tlv.Init();
-            mMle.FillConnectivityTlv(*reinterpret_cast<Mle::ConnectivityTlv *>(&tlv));
-            SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-            break;
-        }
-
-        case NetworkDiagnosticTlv::kRoute:
-        {
-            RouteTlv tlv;
-            tlv.Init();
-            mMle.FillRouteTlv(*reinterpret_cast<Mle::RouteTlv *>(&tlv));
-            SuccessOrExit(error = message->Append(&tlv, tlv.GetSize()));
-            break;
-        }
-
-        case NetworkDiagnosticTlv::kLeaderData:
-        {
-            LeaderDataTlv tlv;
-            memcpy(&tlv, &mMle.GetLeaderDataTlv(), sizeof(tlv));
-            tlv.Init();
-            SuccessOrExit(error = message->Append(&tlv, tlv.GetSize()));
-            break;
-        }
-
-        case NetworkDiagnosticTlv::kNetworkData:
-        {
-            NetworkDataTlv tlv;
-            tlv.Init();
-            mMle.FillNetworkDataTlv((*reinterpret_cast<Mle::NetworkDataTlv *>(&tlv)), true);
-            SuccessOrExit(error = message->Append(&tlv, tlv.GetSize()));
-            break;
-        }
-
-        case NetworkDiagnosticTlv::kIPv6AddressList:
-        {
-            SuccessOrExit(error = AppendIPv6AddressList(*message));
-            break;
-        }
-
-        case NetworkDiagnosticTlv::kMacCounters:
-        {
-            MacCountersTlv tlv;
-            memset(&tlv, 0, sizeof(tlv));
-            tlv.Init();
-            mMac.FillMacCountersTlv(tlv);
-            SuccessOrExit(error = message->Append(&tlv, tlv.GetSize()));
-            break;
-        }
-
-        case NetworkDiagnosticTlv::kBatteryLevel:
-        {
-            // TODO Need more api from driver
-            BatteryLevelTlv tlv;
-            tlv.Init();
-            tlv.SetBatteryLevel(100);
-            SuccessOrExit(error = message->Append(&tlv, tlv.GetSize()));
-            break;
-        }
-
-        case NetworkDiagnosticTlv::kSupplyVoltage:
-        {
-            // TODO Need more api from driver
-            SupplyVoltageTlv tlv;
-            tlv.Init();
-            tlv.SetSupplyVoltage(0);
-            SuccessOrExit(error = message->Append(&tlv, tlv.GetSize()));
-            break;
-        }
-
-        case NetworkDiagnosticTlv::kChildTable:
-        {
-            SuccessOrExit(error = AppendChildTable(*message));
-            break;
-        }
-
-        case NetworkDiagnosticTlv::kChannelPages:
-        {
-            ChannelPagesTlv tlv;
-            tlv.Init();
-            tlv.GetChannelPages()[0] = 0;
-            tlv.SetLength(1);
-            SuccessOrExit(error = message->Append(&tlv, tlv.GetSize()));
-            break;
-        }
-
-        default:
-            ExitNow();
-        }
-
-        offset += sizeof(type);
-    }
+    SuccessOrExit(error = FillRequestedTlvs(aMessage, *message, networkDiagnosticTlv));
 
     SuccessOrExit(error = mCoapServer.SendMessage(*message, messageInfo));
 
-    otLogInfoNetDiag("Sent diagnostic get acknowledgment");
+    otLogInfoNetDiag("Sent diagnostic get response");
 
 exit:
 
@@ -450,6 +532,42 @@ exit:
     {
         message->Free();
     }
+}
+
+ThreadError NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination, const uint8_t aTlvTypes[],
+                                                   uint8_t aCount)
+{
+    ThreadError error;
+    Message *message;
+    Coap::Header header;
+    Ip6::MessageInfo messageInfo;
+
+    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
+    header.SetToken(Coap::Header::kDefaultTokenLength);
+    header.AppendUriPathOptions(OPENTHREAD_URI_DIAGNOSTIC_RESET);
+    header.SetPayloadMarker();
+
+    VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
+
+    SuccessOrExit(error = message->Append(aTlvTypes, aCount));
+
+    messageInfo.SetPeerAddr(aDestination);
+    messageInfo.SetSockAddr(mMle.GetMeshLocal16());
+    messageInfo.SetPeerPort(kCoapUdpPort);
+    messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
+
+    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
+
+    otLogInfoNetDiag("Sent network diagnostic reset");
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        message->Free();
+    }
+
+    return error;
 }
 
 void NetworkDiagnostic::HandleDiagnosticReset(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
@@ -463,37 +581,27 @@ void NetworkDiagnostic::HandleDiagnosticReset(void *aContext, otCoapHeader *aHea
 void NetworkDiagnostic::HandleDiagnosticReset(Coap::Header &aHeader, Message &aMessage,
                                               const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadError error = kThreadError_None;
-    Message *message = NULL;
     uint16_t offset = 0;
     uint8_t type;
     NetworkDiagnosticTlv networkDiagnosticTlv;
-    Coap::Header header;
-    Ip6::MessageInfo messageInfo(aMessageInfo);
 
     otLogInfoNetDiag("Received diagnostic reset request");
 
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost, error = kThreadError_Drop);
+                 aHeader.GetCode() == kCoapRequestPost, ;);
 
     VerifyOrExit((aMessage.Read(aMessage.GetOffset(), sizeof(NetworkDiagnosticTlv),
-                                &networkDiagnosticTlv) == sizeof(NetworkDiagnosticTlv)), error = kThreadError_Drop);
+                                &networkDiagnosticTlv) == sizeof(NetworkDiagnosticTlv)), ;);
 
-    VerifyOrExit(networkDiagnosticTlv.GetType() == NetworkDiagnosticTlv::kTypeList, error = kThreadError_Drop);
+    VerifyOrExit(networkDiagnosticTlv.GetType() == NetworkDiagnosticTlv::kTypeList, ;);
 
-    VerifyOrExit((static_cast<TypeListTlv *>(&networkDiagnosticTlv)->IsValid()), error = kThreadError_Drop);
-
-    VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
-
-    header.SetDefaultResponseHeader(aHeader);
-
-    SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
+    VerifyOrExit((static_cast<TypeListTlv *>(&networkDiagnosticTlv)->IsValid()), ;);
 
     offset = aMessage.GetOffset() + sizeof(NetworkDiagnosticTlv);
 
     for (uint8_t i = 0; i < networkDiagnosticTlv.GetLength(); i++)
     {
-        VerifyOrExit(aMessage.Read(offset, sizeof(type), &type) == sizeof(type), error = kThreadError_Drop);
+        VerifyOrExit(aMessage.Read(offset, sizeof(type), &type) == sizeof(type), ;);
 
         switch (type)
         {
@@ -508,16 +616,12 @@ void NetworkDiagnostic::HandleDiagnosticReset(Coap::Header &aHeader, Message &aM
         }
     }
 
-    SuccessOrExit(error = mCoapServer.SendMessage(*message, messageInfo));
+    SuccessOrExit(mCoapServer.SendEmptyAck(aHeader, aMessageInfo));
 
     otLogInfoNetDiag("Sent diagnostic reset acknowledgment");
 
 exit:
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        message->Free();
-    }
+    return;
 }
 
 }  // namespace NetworkDiagnostic

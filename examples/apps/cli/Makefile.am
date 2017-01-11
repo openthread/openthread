@@ -119,6 +119,16 @@ PRETTY_FILES := $(filter-out ccfg.c startup_gcc.c ,$(PRETTY_FILES))
 
 endif
 
+if OPENTHREAD_EXAMPLES_DA15000
+LDADD_COMMON                                                          += \
+    $(top_builddir)/examples/platforms/da15000/libopenthread-da15000.a   \
+    $(NULL)
+
+LDFLAGS_COMMON                                                        += \
+    -T $(top_srcdir)/examples/platforms/da15000/da15000.ld               \
+    $(NULL)
+endif # OPENTHREAD_EXAMPLES_DA15000
+
 ot_cli_ftd_CPPFLAGS                                                    = \
     $(CPPFLAGS_COMMON)                                                   \
     $(NULL)

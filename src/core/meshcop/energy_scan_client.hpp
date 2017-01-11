@@ -82,8 +82,6 @@ private:
                              const otMessageInfo *aMessageInfo);
     void HandleReport(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    ThreadError SendResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestMessageInfo);
-
     otCommissionerEnergyReportCallback mCallback;
     void *mContext;
 

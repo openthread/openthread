@@ -81,7 +81,7 @@ matrix:
             - g++-6
     - env: BUILD_TARGET="posix-distcheck" VERBOSE=1
       os: linux
-      compiler: gcc
+      compiler: clang
     - env: BUILD_TARGET="posix-32-bit" VERBOSE=1
       os: linux
       compiler: gcc

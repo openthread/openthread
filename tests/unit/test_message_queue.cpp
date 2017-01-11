@@ -27,9 +27,14 @@
  */
 
 #include "test_util.h"
+
 #include <openthread.h>
+#include <openthread-message.h>
+#include <openthread-ip6.h>
+
 #include <common/debug.hpp>
 #include <common/message.hpp>
+
 #include <string.h>
 #include <stdarg.h>
 
@@ -72,6 +77,7 @@ void TestMessageQueue(void)
     Thread::MessagePool messagePool;
     Thread::MessageQueue messageQueue;
     Thread::Message *msg[kNumTestMessages];
+    ThreadError error;
     uint16_t msgCount, bufferCount;
 
     for (int i = 0; i < kNumTestMessages; i++)
@@ -131,12 +137,127 @@ void TestMessageQueue(void)
     VerifyMessageQueueContent(messageQueue, 1, msg[0]);
     SuccessOrQuit(messageQueue.Dequeue(*msg[0]), "MessageQueue::Dequeue() failed.\n");
     VerifyMessageQueueContent(messageQueue, 0);
+
+    // Check the failure cases: Enqueue an already queued message or dequeue a message not in the queue.
+    SuccessOrQuit(messageQueue.Enqueue(*msg[0]), "MessageQueue::Enqueue() failed.\n");
+    VerifyMessageQueueContent(messageQueue, 1, msg[0]);
+    error = messageQueue.Enqueue(*msg[0]);
+    VerifyOrQuit(error == kThreadError_Already, "Enqueuing an already queued message did not fail as expected.\n");
+    error = messageQueue.Dequeue(*msg[1]);
+    VerifyOrQuit(error == kThreadError_NotFound, "Dequeuing a message not in the queue did not fail as expected.\n");
+}
+
+// This function verifies the content of the message queue to match the passed in messages
+void VerifyMessageQueueContentUsingOtApi(otMessageQueue *aQueue, int aExpectedLength, ...)
+{
+    va_list args;
+    otMessage message;
+    otMessage msgArg;
+
+    va_start(args, aExpectedLength);
+
+    if (aExpectedLength == 0)
+    {
+        message = otMessageQueueGetHead(aQueue);
+        VerifyOrQuit(message == NULL, "MessageQueue is not empty when expected len is zero.\n");
+    }
+    else
+    {
+        for (message = otMessageQueueGetHead(aQueue);
+             message != NULL;
+             message = otMessageQueueGetNext(aQueue, message)
+            )
+        {
+            VerifyOrQuit(aExpectedLength != 0, "MessageQueue contains more entries than expected\n");
+
+            msgArg = va_arg(args, otMessage);
+            VerifyOrQuit(msgArg == message, "MessageQueue content does not match what is expected.\n");
+
+            aExpectedLength--;
+        }
+
+        VerifyOrQuit(aExpectedLength == 0, "MessageQueue contains less entries than expected\n");
+    }
+
+    va_end(args);
+}
+
+// This test checks all the OpenThread C APIs for `otMessageQueue`
+void TestMessageQueueOtApis(void)
+{
+    otInstance *instance;
+    otMessageQueue queue, queue2;
+
+    otMessage msg[kNumTestMessages];
+    ThreadError error;
+    otMessage message;
+
+    instance = otInstanceInit();
+    VerifyOrQuit(instance != NULL, "Failed to get and init an otInstance.\n");
+
+    for (int i = 0; i < kNumTestMessages; i++)
+    {
+        msg[i] = otNewIp6Message(instance, true);
+        VerifyOrQuit(msg[i] != NULL, "otNewIp6Message() failed.\n");
+    }
+
+    otMessageQueueInit(&queue);
+    otMessageQueueInit(&queue2);
+
+    // Check an empty queue.
+    VerifyMessageQueueContentUsingOtApi(&queue, 0);
+
+    // Add message to the queue and check the content
+    SuccessOrQuit(otMessageQueueEnqueue(&queue, msg[0]), "Failed to enqueue a message to otMessageQueue.\n");
+    VerifyMessageQueueContentUsingOtApi(&queue, 1, msg[0]);
+    SuccessOrQuit(otMessageQueueEnqueue(&queue, msg[1]), "Failed to enqueue a message to otMessageQueue.\n");
+    VerifyMessageQueueContentUsingOtApi(&queue, 2, msg[0], msg[1]);
+    SuccessOrQuit(otMessageQueueEnqueue(&queue, msg[2]), "Failed to enqueue a message to otMessageQueue.\n");
+    VerifyMessageQueueContentUsingOtApi(&queue, 3, msg[0], msg[1], msg[2]);
+    SuccessOrQuit(otMessageQueueEnqueue(&queue, msg[3]), "Failed to enqueue a message to otMessageQueue.\n");
+    VerifyMessageQueueContentUsingOtApi(&queue, 4, msg[0], msg[1], msg[2], msg[3]);
+
+    // Remove elements and check the content
+    SuccessOrQuit(otMessageQueueDequeue(&queue, msg[1]), "Failed to dequeue a message from otMessageQueue.\n");
+    VerifyMessageQueueContentUsingOtApi(&queue, 3, msg[0], msg[2], msg[3]);
+    SuccessOrQuit(otMessageQueueDequeue(&queue, msg[0]), "Failed to dequeue a message from otMessageQueue.\n");
+    VerifyMessageQueueContentUsingOtApi(&queue, 2, msg[2], msg[3]);
+    SuccessOrQuit(otMessageQueueDequeue(&queue, msg[3]), "Failed to dequeue a message from otMessageQueue.\n");
+    VerifyMessageQueueContentUsingOtApi(&queue, 1, msg[2]);
+
+    // Check the expected failure cases for the enqueue and dequeue:
+    error = otMessageQueueEnqueue(&queue, msg[2]);
+    VerifyOrQuit(error == kThreadError_Already, "Enqueuing an already queued message did not fail as expected.\n");
+    error = otMessageQueueDequeue(&queue, msg[0]);
+    VerifyOrQuit(error == kThreadError_NotFound, "Dequeuing a message not in the queue did not fail as expected.\n");
+
+    // Check the failure cases for otMessageQueueGetNext()
+    message = otMessageQueueGetNext(&queue, NULL);
+    VerifyOrQuit(message == NULL, "otMessageQueueGetNext(queue, NULL) did not return NULL.\n");
+    message = otMessageQueueGetNext(&queue, msg[1]);
+    VerifyOrQuit(message == NULL, "otMessageQueueGetNext() did not return NULL for a message not in the queue.\n");
+
+    // Check the failure case when attempting to do otMessageQueueGetNext() but passing in a wrong queue pointer.
+    SuccessOrQuit(otMessageQueueEnqueue(&queue2, msg[0]), "Failed to enqueue a message to otMessageQueue.\n");
+    VerifyMessageQueueContentUsingOtApi(&queue2, 1, msg[0]);
+    SuccessOrQuit(otMessageQueueEnqueue(&queue2, msg[1]), "Failed to enqueue a message to otMessageQueue.\n");
+    VerifyMessageQueueContentUsingOtApi(&queue2, 2, msg[0], msg[1]);
+
+    message = otMessageQueueGetNext(&queue2, msg[0]);
+    VerifyOrQuit(message == msg[1], "otMessageQueueGetNext() failed\n");
+    message = otMessageQueueGetNext(&queue, msg[0]);
+    VerifyOrQuit(message == NULL, "otMessageQueueGetNext() did not return NULL for message not in  the queue.\n");
+
+    // Remove all element and make sure queue is empty
+    SuccessOrQuit(otMessageQueueDequeue(&queue, msg[2]), "Failed to dequeue a message from otMessageQueue.\n");
+    VerifyMessageQueueContentUsingOtApi(&queue, 0);
 }
 
 #ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     TestMessageQueue();
+    TestMessageQueueOtApis();
     printf("All tests passed\n");
     return 0;
 }
