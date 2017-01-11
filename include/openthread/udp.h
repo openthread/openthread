@@ -29,37 +29,18 @@
 /**
  * @file
  * @brief
- *  This file defines the top-level ip6 functions for the OpenThread library.
+ *  This file defines the OpenThread UDP API.
  */
 
 #ifndef OPENTHREAD_UDP_H_
 #define OPENTHREAD_UDP_H_
 
-#include <openthread-message.h>
+#include "openthread-types.h"
+#include "openthread-message.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/**
- * @defgroup api  API
- * @brief
- *   This module includes the application programming interface to the OpenThread stack.
- *
- * @{
- *
- * @defgroup execution Execution
- * @defgroup commands Commands
- * @defgroup config Configuration
- * @defgroup diags Diagnostics
- * @defgroup messages Message Buffers
- * @defgroup ip6 IPv6
- * @defgroup udp UDP
- * @defgroup coap CoAP
- *
- * @}
- *
- */
 
 /**
  * @addtogroup udp  UDP
@@ -72,6 +53,26 @@ extern "C" {
  */
 
 /**
+ * This callback allows OpenThread to inform the application of a received UDP message.
+ *
+ */
+typedef void (*otUdpReceive)(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
+
+/**
+ * This structure represents a UDP socket.
+ *
+ */
+typedef struct otUdpSocket
+{
+    otSockAddr           mSockName;  ///< The local IPv6 socket address.
+    otSockAddr           mPeerName;  ///< The peer IPv6 socket address.
+    otUdpReceive         mHandler;   ///< A function pointer to the application callback.
+    void                *mContext;   ///< A pointer to application-specific context.
+    void                *mTransport; ///< A pointer to the transport object (internal use only).
+    struct otUdpSocket  *mNext;      ///< A pointer to the next UDP socket (internal use only).
+} otUdpSocket;
+
+/**
  * Allocate a new message buffer for sending a UDP message.
  *
  * @param[in]  aInstance             A pointer to an OpenThread instance.
@@ -80,8 +81,9 @@ extern "C" {
  * @returns A pointer to the message buffer or NULL if no message buffers are available.
  *
  * @sa otFreeMessage
+ *
  */
-otMessage otNewUdpMessage(otInstance *aInstance, bool aLinkSecurityEnabled);
+otMessage otUdpNewMessage(otInstance *aInstance, bool aLinkSecurityEnabled);
 
 /**
  * Open a UDP/IPv6 socket.
@@ -94,12 +96,13 @@ otMessage otNewUdpMessage(otInstance *aInstance, bool aLinkSecurityEnabled);
  * @retval kThreadErrorNone         Successfully opened the socket.
  * @retval kThreadErrorInvalidArgs  Given socket structure was already opened.
  *
- * @sa otNewUdpMessage
- * @sa otCloseUdpSocket
- * @sa otBindUdpSocket
- * @sa otSendUdp
+ * @sa otUdpNewMessage
+ * @sa otUdpClose
+ * @sa otUdpBind
+ * @sa otUdpSend
+ *
  */
-ThreadError otOpenUdpSocket(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aContext);
+ThreadError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aContext);
 
 /**
  * Close a UDP/IPv6 socket.
@@ -108,12 +111,13 @@ ThreadError otOpenUdpSocket(otInstance *aInstance, otUdpSocket *aSocket, otUdpRe
  *
  * @retval kThreadErrorNone  Successfully closed the socket.
  *
- * @sa otNewUdpMessage
- * @sa otOpenUdpSocket
- * @sa otBindUdpSocket
- * @sa otSendUdp
+ * @sa otUdpNewMessage
+ * @sa otUdpOpen
+ * @sa otUdpBind
+ * @sa otUdpSend
+ *
  */
-ThreadError otCloseUdpSocket(otUdpSocket *aSocket);
+ThreadError otUdpClose(otUdpSocket *aSocket);
 
 /**
  * Bind a UDP/IPv6 socket.
@@ -123,12 +127,13 @@ ThreadError otCloseUdpSocket(otUdpSocket *aSocket);
  *
  * @retval kThreadErrorNone  Bind operation was successful.
  *
- * @sa otNewUdpMessage
- * @sa otOpenUdpSocket
- * @sa otCloseUdpSocket
- * @sa otSendUdp
+ * @sa otUdpNewMessage
+ * @sa otUdpOpen
+ * @sa otUdpClose
+ * @sa otUdpSend
+ *
  */
-ThreadError otBindUdpSocket(otUdpSocket *aSocket, otSockAddr *aSockName);
+ThreadError otUdpBind(otUdpSocket *aSocket, otSockAddr *aSockName);
 
 /**
  * Send a UDP/IPv6 message.
@@ -137,13 +142,14 @@ ThreadError otBindUdpSocket(otUdpSocket *aSocket, otSockAddr *aSockName);
  * @param[in]  aMessage      A pointer to a message buffer.
  * @param[in]  aMessageInfo  A pointer to a message info structure.
  *
- * @sa otNewUdpMessage
- * @sa otOpenUdpSocket
- * @sa otCloseUdpSocket
- * @sa otBindUdpSocket
- * @sa otSendUdp
+ * @sa otUdpNewMessage
+ * @sa otUdpOpen
+ * @sa otUdpClose
+ * @sa otUdpBind
+ * @sa otUdpSend
+ *
  */
-ThreadError otSendUdp(otUdpSocket *aSocket, otMessage aMessage, const otMessageInfo *aMessageInfo);
+ThreadError otUdpSend(otUdpSocket *aSocket, otMessage aMessage, const otMessageInfo *aMessageInfo);
 
 /**
  * @}
