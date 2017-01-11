@@ -32,11 +32,11 @@
 #include <platform/platform.h>
 #include <platform/radio.h>
 
-extern "C" void otSignalTaskletPending(otInstance *)
+extern "C" void otTaskletsSignalPending(otInstance *)
 {
 }
 
-extern "C" bool otAreTaskletsPending(otInstance *)
+extern "C" bool otTaskletsArePending(otInstance *)
 {
     return false;
 }

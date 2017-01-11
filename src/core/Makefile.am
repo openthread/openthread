@@ -40,6 +40,7 @@ CPPFLAGS_COMMON                     = \
 
 SOURCES_COMMON                      = \
     openthread.cpp                    \
+    api/tasklet_api.cpp               \
     api/udp_api.cpp                   \
     coap/coap_base.cpp                \
     coap/coap_client.cpp              \

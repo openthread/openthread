@@ -138,7 +138,7 @@ void TestFuzz(uint32_t aSeconds)
 
     while (otPlatAlarmGetNow() < tEnd)
     {
-        otProcessQueuedTasklets(aInstance);
+        otTaskletsProcess(aInstance);
 
         if (g_testPlatAlarmSet && otPlatAlarmGetNow() >= g_testPlatAlarmNext)
         {

@@ -36,7 +36,7 @@
 #endif
 
 #include <openthread.h>
-#include <openthread-tasklet.h>
+#include "openthread/tasklet.h"
 
 #include <common/code_utils.hpp>
 #include <platform/alarm.h>
