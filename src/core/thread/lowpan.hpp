@@ -251,14 +251,17 @@ public:
      *
      */
     MeshHeader(const Message &aMessage) {
-        aMessage.Read(0, sizeof(mDispatchHopsLeft), &mDispatchHopsLeft);
+        uint16_t curIndex = 0;
+        curIndex += aMessage.Read(curIndex, sizeof(mDispatchHopsLeft), &mDispatchHopsLeft);
 
         if (IsDeepHopsLeftField()) {
-            aMessage.Read(1, sizeof(mDeepHopsLeft) + sizeof(mAddress), &mDeepHopsLeft);
+            curIndex += aMessage.Read(curIndex, sizeof(mDeepHopsLeft), &mDeepHopsLeft);
         }
         else {
-            aMessage.Read(1, sizeof(mAddress), &mAddress);
+            mDeepHopsLeft = 0;
         }
+
+        aMessage.Read(curIndex, sizeof(mAddress), &mAddress);
     }
 
     /**
