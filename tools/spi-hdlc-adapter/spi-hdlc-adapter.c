@@ -1537,6 +1537,12 @@ int main(int argc, char *argv[])
         goto bail;
     }
 
+    if ((sHdlcInputFd < 0) || (sHdlcOutputFd < 0))
+    {
+        sRet = EXIT_FAILURE;
+        goto bail;
+    }
+
     // Set up sHdlcInputFd for non-blocking I/O
     if (-1 == (i = fcntl(sHdlcInputFd, F_GETFL, 0)))
     {
