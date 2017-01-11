@@ -68,7 +68,7 @@ ThreadError TaskletScheduler::Post(Tasklet &aTasklet)
     {
         mHead = &aTasklet;
         mTail = &aTasklet;
-        otSignalTaskletPending(aTasklet.mScheduler.GetIp6()->GetInstance());
+        otTaskletsSignalPending(aTasklet.mScheduler.GetIp6()->GetInstance());
     }
     else
     {
@@ -118,7 +118,7 @@ void TaskletScheduler::ProcessQueuedTasklets(void)
         {
             if (mHead != NULL)
             {
-                otSignalTaskletPending(cur->mScheduler.GetIp6()->GetInstance());
+                otTaskletsSignalPending(cur->mScheduler.GetIp6()->GetInstance());
             }
 
             break;

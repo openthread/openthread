@@ -26,79 +26,36 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
+/**
+ * @file
+ *   This file implements the OpenThread Tasklet API.
+ */
+
+#define WPP_NAME "tasklet_api.tmh"
+
+#include "openthread/tasklet.h"
+
+#include "openthread-instance.h"
+#include "common/logging.hpp"
+
+using namespace Thread;
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#include <openthread-core-config.h>
-#include <openthread.h>
-#include <openthread-diag.h>
-#include <openthread/tasklet.h>
-#include <common/debug.hpp>
-#include <ncp/ncp.h>
-#include <platform/platform.h>
-
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
-void *otPlatCAlloc(size_t aNum, size_t aSize)
+void otTaskletsProcess(otInstance *aInstance)
 {
-    return calloc(aNum, aSize);
+    otLogFuncEntry();
+    aInstance->mIp6.mTaskletScheduler.ProcessQueuedTasklets();
+    otLogFuncExit();
 }
 
-void otPlatFree(void *aPtr)
+bool otTaskletsArePending(otInstance *aInstance)
 {
-    free(aPtr);
-}
-#endif
-
-void otTaskletsSignalPending(otInstance *aInstance)
-{
-    (void)aInstance;
+    return aInstance->mIp6.mTaskletScheduler.AreTaskletsPending();
 }
 
-int main(int argc, char *argv[])
-{
-    otInstance *sInstance;
-
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
-    uint64_t otInstanceBufferLength = 0;
-    uint8_t *otInstanceBuffer = NULL;
+#ifdef __cplusplus
+}  // extern "C"
 #endif
-
-    PlatformInit(argc, argv);
-
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
-    // Call to query the buffer size
-    (void)otInstanceInit(NULL, &otInstanceBufferLength);
-
-    // Call to allocate the buffer
-    otInstanceBuffer = (uint8_t *)malloc(otInstanceBufferLength);
-    assert(otInstanceBuffer);
-
-    // Initialize Openthread with the buffer
-    sInstance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
-#else
-    sInstance = otInstanceInit();
-#endif
-    assert(sInstance);
-
-    otNcpInit(sInstance);
-
-#if OPENTHREAD_ENABLE_DIAG
-    diagInit(sInstance);
-#endif
-
-    while (1)
-    {
-        otTaskletsProcess(sInstance);
-        PlatformProcessDrivers(sInstance);
-    }
-
-    // otInstanceFinalize(sInstance);
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
-    // free(otInstanceBuffer);
-#endif
-
-    return 0;
-}

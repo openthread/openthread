@@ -284,9 +284,9 @@ ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint1
     return kThreadError_None;
 }
 
-void otSignalTaskletPending(_In_ otInstance *otCtx)
+void otTaskletsSignalPending(_In_ otInstance *otCtx)
 {
-    LogVerbose(DRIVER_DEFAULT, "otSignalTaskletPending");
+    LogVerbose(DRIVER_DEFAULT, "otTaskletsSignalPending");
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
     otLwfEventProcessingIndicateNewTasklet(pFilter);
 }

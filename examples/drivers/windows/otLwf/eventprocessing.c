@@ -1032,7 +1032,7 @@ otLwfEventWorkerThread(
         else if (status == STATUS_WAIT_0 + 4) // EventWorkerThreadProcessTasklets fired
         {
             // Process all tasklets that were indicated to us from OpenThread
-            otProcessQueuedTasklets(pFilter->otCtx);
+            otTaskletsProcess(pFilter->otCtx);
         }
         else if (status == STATUS_WAIT_0 + 5) // SendNetBufferListComplete fired
         {

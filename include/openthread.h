@@ -37,6 +37,8 @@
 
 #include <openthread-types.h>
 
+#include "openthread/tasklet.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

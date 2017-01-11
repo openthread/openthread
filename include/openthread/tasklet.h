@@ -29,13 +29,13 @@
 /**
  * @file
  * @brief
- *   This file includes the platform abstraction for the tasklet service.
+ *   This file defines the OpenThread API for Tasklets.
  */
 
 #ifndef OPENTHREAD_TASKLET_H_
 #define OPENTHREAD_TASKLET_H_
 
-#include <openthread-types.h>
+#include "openthread-types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,7 +56,7 @@ extern "C" {
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
  */
-void otProcessQueuedTasklets(otInstance *aInstance);
+void otTaskletsProcess(otInstance *aInstance);
 
 /**
  * Indicates whether or not OpenThread has tasklets pending.
@@ -66,7 +66,7 @@ void otProcessQueuedTasklets(otInstance *aInstance);
  * @retval TRUE   If there are tasklets pending.
  * @retval FALSE  If there are no tasklets pending.
  */
-bool otAreTaskletsPending(otInstance *aInstance);
+bool otTaskletsArePending(otInstance *aInstance);
 
 /**
  * OpenThread calls this function when the tasklet queue transitions from empty to non-empty.
@@ -74,7 +74,7 @@ bool otAreTaskletsPending(otInstance *aInstance);
  * @param[in] aInstance A pointer to an OpenThread instance.
  *
  */
-extern void otSignalTaskletPending(otInstance *aInstance);
+extern void otTaskletsSignalPending(otInstance *aInstance);
 
 /**
  * @}

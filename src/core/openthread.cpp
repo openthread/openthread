@@ -51,7 +51,6 @@
 #include <common/message.hpp>
 #include <common/new.hpp>
 #include <common/settings.hpp>
-#include <common/tasklet.hpp>
 #include <common/timer.hpp>
 #include <crypto/mbedtls.hpp>
 #include <net/icmp6.hpp>
@@ -96,18 +95,6 @@ extern "C" {
 
 static void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame);
 static void HandleEnergyScanResult(void *aContext, otEnergyScanResult *aResult);
-
-void otProcessQueuedTasklets(otInstance *aInstance)
-{
-    otLogFuncEntry();
-    aInstance->mIp6.mTaskletScheduler.ProcessQueuedTasklets();
-    otLogFuncExit();
-}
-
-bool otAreTaskletsPending(otInstance *aInstance)
-{
-    return aInstance->mIp6.mTaskletScheduler.AreTaskletsPending();
-}
 
 uint8_t otGetChannel(otInstance *aInstance)
 {
