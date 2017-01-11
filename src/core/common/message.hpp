@@ -43,6 +43,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "openthread/message.h"
+
 #include <openthread-core-config.h>
 #include <openthread-types.h>
 #include <common/code_utils.hpp>

@@ -908,11 +908,11 @@ otLwfEventWorkerThread(
                                 if (message)
                                 {
                                     // Write to the message
-                                    error = otAppendMessage(message, MessageBuffer, (uint16_t)NET_BUFFER_DATA_LENGTH(CurrNb));
+                                    error = otMessageAppend(message, MessageBuffer, (uint16_t)NET_BUFFER_DATA_LENGTH(CurrNb));
                                     if (error != kThreadError_None)
                                     {
                                         LogError(DRIVER_DATA_PATH, "otAppendMessage failed with %!otError!", error);
-                                        otFreeMessage(message);
+                                        otMessageFree(message);
                                     }
                                     else
                                     {

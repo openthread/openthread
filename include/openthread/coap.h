@@ -44,6 +44,7 @@
 #include <stdint.h>
 
 #include "openthread-types.h"
+#include "openthread/message.h"
 
 #ifdef __cplusplus
 extern "C" {

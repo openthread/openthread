@@ -30,6 +30,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 openthread_headers                      = \
     coap.h                                \
+    message.h                             \
     tasklet.h                             \
     udp.h                                 \
     $(NULL)

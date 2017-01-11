@@ -425,7 +425,7 @@ otLwfReceiveIp6DatagramCallback(
     )
 {
     PMS_FILTER pFilter = (PMS_FILTER)aContext;
-    uint16_t messageLength = otGetMessageLength(aMessage);
+    uint16_t messageLength = otMessageGetLength(aMessage);
     PNET_BUFFER_LIST NetBufferList = NULL;
     PNET_BUFFER NetBuffer = NULL;
     NDIS_STATUS Status = NDIS_STATUS_SUCCESS;
@@ -487,7 +487,7 @@ otLwfReceiveIp6DatagramCallback(
     }
 
     // Read the bytes to the buffer
-    BytesRead = otReadMessage(aMessage, 0, DataBuffer, messageLength);
+    BytesRead = otMessageRead(aMessage, 0, DataBuffer, messageLength);
     NT_ASSERT(BytesRead == (int)messageLength);
     if (BytesRead != (int)messageLength)
     {
@@ -563,7 +563,7 @@ otLwfReceiveIp6DatagramCallback(
 
 error:
 
-    otFreeMessage(aMessage);
+    otMessageFree(aMessage);
 }
 
 // Called in response to receiving a Spinel Ip6 packet command

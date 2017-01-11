@@ -37,6 +37,7 @@
 
 #include <openthread-types.h>
 
+#include "openthread/message.h"
 #include "openthread/tasklet.h"
 
 #ifdef __cplusplus
@@ -2003,15 +2004,6 @@ OTAPI ThreadError OTCALL otSendDiagnosticReset(otInstance *aInstance, const otIp
  * @returns A pointer to the MAC layer counters.
  */
 OTAPI const otMacCounters *OTCALL otGetMacCounters(otInstance *aInstance);
-
-/**
- * Get the Message Buffer information.
- *
- * @param[in]   aInstance    A pointer to the OpenThread instance.
- * @param[out]  aBufferInfo  A pointer where the message buffer information is written.
- *
- */
-OTAPI void OTCALL otGetMessageBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo);
 
 /**
  * @}
