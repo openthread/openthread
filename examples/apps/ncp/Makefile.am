@@ -98,6 +98,11 @@ ot_ncp_SOURCES                                                        += \
     ../../../third_party/cc26xxware/startup_files/startup_gcc.c          \
     $(NULL)
 
+#
+# Ignore configuration files for pretty check
+#
+PRETTY_FILES := $(filter-out ccfg.c startup_gcc.c ,$(PRETTY_FILES))
+
 endif
 
 if OPENTHREAD_BUILD_COVERAGE

@@ -64,20 +64,26 @@ void UART0_intHandler(void);
 ThreadError otPlatUartEnable(void)
 {
     PRCMPowerDomainOn(PRCM_DOMAIN_SERIAL);
-    while (PRCMPowerDomainStatus(PRCM_DOMAIN_SERIAL) != PRCM_DOMAIN_POWER_ON) {
+
+    while (PRCMPowerDomainStatus(PRCM_DOMAIN_SERIAL) != PRCM_DOMAIN_POWER_ON)
+    {
         ;
     }
+
     PRCMPeripheralRunEnable(PRCM_PERIPH_UART0);
     PRCMPeripheralSleepEnable(PRCM_PERIPH_UART0);
     PRCMPeripheralDeepSleepEnable(PRCM_PERIPH_UART0);
     PRCMLoadSet();
-    while (!PRCMLoadGet()) {
+
+    while (!PRCMLoadGet())
+    {
         ;
     }
+
     IOCPinTypeUart(UART0_BASE, IOID_2, IOID_3, IOID_UNUSED, IOID_UNUSED);
 
-    UARTConfigSetExpClk(UART0_BASE, SysCtrlClockGet(),
-                    115200, UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE | UART_CONFIG_PAR_NONE);
+    UARTConfigSetExpClk(UART0_BASE, SysCtrlClockGet(), 115200,
+                        UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE | UART_CONFIG_PAR_NONE);
     UARTIntEnable(UART0_BASE, UART_INT_RX | UART_INT_RT);
     UARTIntRegister(UART0_BASE, UART0_intHandler);
     UARTEnable(UART0_BASE);
@@ -127,10 +133,11 @@ exit:
  */
 static void processReceive(void)
 {
-    while(recvHeadIdx != recvTailIdx)
+    while (recvHeadIdx != recvTailIdx)
     {
         uint16_t tailIdx;
-        if(recvHeadIdx < recvTailIdx)
+
+        if (recvHeadIdx < recvTailIdx)
         {
             tailIdx = recvTailIdx;
             otPlatUartReceived(&(recvCircBuffer[recvHeadIdx]), tailIdx - recvHeadIdx);
@@ -152,11 +159,12 @@ static void processTransmit(void)
 {
     VerifyOrExit(sendBuffer != NULL, ;);
 
-    for(; sendLen > 0; sendLen--)
+    for (; sendLen > 0; sendLen--)
     {
-        UARTCharPut(UART0_BASE,*sendBuffer);
+        UARTCharPut(UART0_BASE, *sendBuffer);
         sendBuffer++;
     }
+
     sendBuffer = NULL;
     sendLen = 0;
     otPlatUartSendDone();
@@ -177,14 +185,16 @@ void cc2650UartProcess(void)
 /**
  * @brief the interrupt handler for the uart interrupt vector
  */
-void UART0_intHandler(void){
-    while(UARTCharsAvail(UART0_BASE))
+void UART0_intHandler(void)
+{
+    while (UARTCharsAvail(UART0_BASE))
     {
         uint32_t c = UARTCharGet(UART0_BASE);
         /* TODO process error flags for this character ?? */
         recvCircBuffer[recvTailIdx] = (uint8_t)c;
         recvTailIdx++;
-        if(recvTailIdx >= RECV_CIRC_BUFF_SIZE)
+
+        if (recvTailIdx >= RECV_CIRC_BUFF_SIZE)
         {
             recvTailIdx = 0;
         }

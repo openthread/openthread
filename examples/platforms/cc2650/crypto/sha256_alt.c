@@ -39,7 +39,7 @@
 /**
  * documented in sha256_alt.h
  */
-void mbedtls_sha256_init( mbedtls_sha256_context *ctx )
+void mbedtls_sha256_init(mbedtls_sha256_context *ctx)
 {
     memset((void *)ctx, 0x00, sizeof(ctx));
 }
@@ -47,7 +47,7 @@ void mbedtls_sha256_init( mbedtls_sha256_context *ctx )
 /**
  * documented in sha256_alt.h
  */
-void mbedtls_sha256_free( mbedtls_sha256_context *ctx )
+void mbedtls_sha256_free(mbedtls_sha256_context *ctx)
 {
     memset((void *)ctx, 0x00, sizeof(ctx));
 }
@@ -55,8 +55,7 @@ void mbedtls_sha256_free( mbedtls_sha256_context *ctx )
 /**
  * documented in sha256_alt.h
  */
-void mbedtls_sha256_clone( mbedtls_sha256_context *dst,
-                           const mbedtls_sha256_context *src )
+void mbedtls_sha256_clone(mbedtls_sha256_context *dst, const mbedtls_sha256_context *src)
 {
     *dst = *src;
 }
@@ -64,11 +63,11 @@ void mbedtls_sha256_clone( mbedtls_sha256_context *dst,
 /**
  * documented in sha256_alt.h
  */
-void mbedtls_sha256_starts( mbedtls_sha256_context *ctx, int is224 )
+void mbedtls_sha256_starts(mbedtls_sha256_context *ctx, int is224)
 {
     SHA256_initialize(ctx);
 
-    if(is224 != 0)
+    if (is224 != 0)
     {
         /* SHA-224 */
         ctx->state[0] = 0xC1059ED8;
@@ -85,8 +84,7 @@ void mbedtls_sha256_starts( mbedtls_sha256_context *ctx, int is224 )
 /**
  * documented in sha256_alt.h
  */
-void mbedtls_sha256_update( mbedtls_sha256_context *ctx, const unsigned char
-        *input, size_t ilen )
+void mbedtls_sha256_update(mbedtls_sha256_context *ctx, const unsigned char *input, size_t ilen)
 {
     SHA256_execute(ctx, (uint8_t *)input, (uint32_t)ilen);
 }
@@ -110,7 +108,7 @@ void mbedtls_sha256_finish(mbedtls_sha256_context *ctx, unsigned char output[32]
 /**
  * documented in sha256_alt.h
  */
-void mbedtls_sha256_process( mbedtls_sha256_context *ctx, const unsigned char data[64] )
+void mbedtls_sha256_process(mbedtls_sha256_context *ctx, const unsigned char data[64])
 {
     SHA256_execute(ctx, (uint8_t *)data, sizeof(unsigned char) * 64);
 }

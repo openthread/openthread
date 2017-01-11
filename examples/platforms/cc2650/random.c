@@ -40,6 +40,10 @@
 
 #include <mbedtls/entropy_poll.h>
 
+#define CC2650_TRNG_MIN_SAMPLES_PER_CYCLE (1 << 6)
+#define CC2650_TRNG_MAX_SAMPLES_PER_CYCLE (1 << 24)
+#define CC2650_TRNG_CLOCKS_PER_SAMPLE 0
+
 /**
  * \note if more than 32 bits of entropy are needed, the TRNG core produces
  * 64 bytes of random data, we just ignore the upper 32 bytes
@@ -51,14 +55,17 @@
 void cc2650RandomInit(void)
 {
     PRCMPowerDomainOn(PRCM_DOMAIN_PERIPH);
-    while (PRCMPowerDomainStatus(PRCM_DOMAIN_PERIPH) != PRCM_DOMAIN_POWER_ON) {
+
+    while (PRCMPowerDomainStatus(PRCM_DOMAIN_PERIPH) != PRCM_DOMAIN_POWER_ON)
+    {
         ;
     }
+
     PRCMPeripheralRunEnable(PRCM_PERIPH_TRNG);
     PRCMPeripheralSleepEnable(PRCM_DOMAIN_PERIPH);
     PRCMPeripheralDeepSleepEnable(PRCM_DOMAIN_PERIPH);
     PRCMLoadSet();
-    TRNGConfigure((1<<6),(1<<24),0);
+    TRNGConfigure(CC2650_TRNG_MIN_SAMPLES_PER_CYCLE, CC2650_TRNG_MAX_SAMPLES_PER_CYCLE, CC2650_TRNG_CLOCKS_PER_SAMPLE);
     TRNGEnable();
 }
 
@@ -67,9 +74,11 @@ void cc2650RandomInit(void)
  */
 uint32_t otPlatRandomGet(void)
 {
-    while(!(TRNGStatusGet() & TRNG_NUMBER_READY)){
+    while (!(TRNGStatusGet() & TRNG_NUMBER_READY))
+    {
         ;
     }
+
     return TRNGNumberGet(TRNG_LOW_WORD);
 }
 
@@ -83,23 +92,26 @@ uint32_t otPlatRandomGet(void)
  * @return indication of error
  * @retval 0 no error occured
  */
-static int TRNGPoll( unsigned char *output, size_t len, size_t *olen )
+static int TRNGPoll(unsigned char *output, size_t len, size_t *olen)
 {
     size_t length = 0;
-    union {
+    union
+    {
         uint32_t u32[2];
         uint8_t u8[8];
     } buffer;
 
-    while(length < len)
+    while (length < len)
     {
-        if(length % 8 == 0)
+        if (length % 8 == 0)
         {
             /* we've run to the end of the buffer */
-            while(!(TRNGStatusGet() & TRNG_NUMBER_READY)){
+            while (!(TRNGStatusGet() & TRNG_NUMBER_READY))
+            {
                 ;
             }
-            /* 
+
+            /*
              * don't use TRNGNumberGet here because it will tell the TRNG to
              * refil the entropy pool, instad we do it ourself.
              */
@@ -107,6 +119,7 @@ static int TRNGPoll( unsigned char *output, size_t len, size_t *olen )
             buffer.u32[1] = HWREG(TRNG_BASE + TRNG_O_OUT1);
             HWREG(TRNG_BASE + TRNG_O_IRQFLAGCLR) = 0x1;
         }
+
         output[length] = buffer.u8[length % 8];
 
         length++;
@@ -128,8 +141,7 @@ ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint1
 
     VerifyOrExit(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
 
-    VerifyOrExit(TRNGPoll((unsigned char *)aOutput, length, &temp_size) != 0,
-            error = kThreadError_Failed);
+    VerifyOrExit(TRNGPoll((unsigned char *)aOutput, length, &temp_size) != 0, error = kThreadError_Failed);
 
 exit:
     *aOutputLength = temp_size;
@@ -138,11 +150,10 @@ exit:
 
 /**
  * Entropy function for the entropy pool in mbedtls.
- * 
+ *
  * Function defined in mbedtls/entropy_poll.h .
  */
-int mbedtls_hardware_poll( void *data, unsigned char *output, size_t len,
-        size_t *olen )
+int mbedtls_hardware_poll(void *data, unsigned char *output, size_t len, size_t *olen)
 {
     (void)data;
     return TRNGPoll(output, len, olen);

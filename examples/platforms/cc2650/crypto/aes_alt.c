@@ -53,9 +53,9 @@ static uint8_t used_keys = 0;
  */
 static unsigned int ref_num = 0;
 
-void mbedtls_aes_init( mbedtls_aes_context *ctx )
+void mbedtls_aes_init(mbedtls_aes_context *ctx)
 {
-    if(ref_num++ == 0)
+    if (ref_num++ == 0)
     {
         /* enable the crypto core */
         /* The TRNG should already be running before we ever ask the AES core
@@ -71,25 +71,30 @@ void mbedtls_aes_init( mbedtls_aes_context *ctx )
         PRCMPeripheralSleepEnable(PRCM_PERIPH_CRYPTO);
         PRCMPeripheralDeepSleepEnable(PRCM_PERIPH_CRYPTO);
         PRCMLoadSet();
-        while (!PRCMLoadGet()) {
+
+        while (!PRCMLoadGet())
+        {
             ;
         }
     }
+
     ctx->magic = CC2650_AES_CTX_MAGIC;
     ctx->key_idx = CC2650_AES_KEY_UNUSED;
 }
 
-void mbedtls_aes_free( mbedtls_aes_context *ctx )
+void mbedtls_aes_free(mbedtls_aes_context *ctx)
 {
-    if(ctx->magic != CC2650_AES_CTX_MAGIC)
+    if (ctx->magic != CC2650_AES_CTX_MAGIC)
     {
         return;
     }
-    if(ctx->key_idx != CC2650_AES_KEY_UNUSED)
+
+    if (ctx->key_idx != CC2650_AES_KEY_UNUSED)
     {
         used_keys &= ~(1 << ctx->key_idx);
     }
-    if(--ref_num == 0)
+
+    if (--ref_num == 0)
     {
         /* disable the crypto core */
         /* The TRNG core needs the peripheral power domain powered on to
@@ -105,25 +110,27 @@ void mbedtls_aes_free( mbedtls_aes_context *ctx )
         PRCMPeripheralSleepDisable(PRCM_PERIPH_CRYPTO);
         PRCMPeripheralDeepSleepDisable(PRCM_PERIPH_CRYPTO);
         PRCMLoadSet();
-        while (!PRCMLoadGet()) {
+
+        while (!PRCMLoadGet())
+        {
             ;
         }
     }
+
     memset((void *)ctx, 0x00, sizeof(ctx));
 }
 
-int mbedtls_aes_setkey_enc( mbedtls_aes_context *ctx, const unsigned char *key,
-        unsigned int keybits )
+int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key, unsigned int keybits)
 {
     unsigned char key_idx;
     int retval = 0;
 
-    if(ctx->magic != CC2650_AES_CTX_MAGIC)
+    if (ctx->magic != CC2650_AES_CTX_MAGIC)
     {
         return -1;
     }
 
-    if(ctx->key_idx != CC2650_AES_KEY_UNUSED)
+    if (ctx->key_idx != CC2650_AES_KEY_UNUSED)
     {
         used_keys &= ~(1 << ctx->key_idx);
     }
@@ -131,7 +138,7 @@ int mbedtls_aes_setkey_enc( mbedtls_aes_context *ctx, const unsigned char *key,
     /* our hardware only supports 128 bit keys */
     VerifyOrExit(keybits == 128u, retval = MBEDTLS_ERR_AES_INVALID_KEY_LENGTH);
 
-    for(key_idx=0; ((used_keys >> key_idx) & 0x01) != 0 && key_idx < 8; key_idx++)
+    for (key_idx = 0; ((used_keys >> key_idx) & 0x01) != 0 && key_idx < 8; key_idx++)
     {
         ;
     }
@@ -139,8 +146,7 @@ int mbedtls_aes_setkey_enc( mbedtls_aes_context *ctx, const unsigned char *key,
     /* we have no more room for this key */
     VerifyOrExit(key_idx < 8, retval = -2);
 
-    VerifyOrExit(CRYPTOAesLoadKey((uint32_t *)key, key_idx) == AES_SUCCESS,
-            retval = MBEDTLS_ERR_AES_INVALID_KEY_LENGTH);
+    VerifyOrExit(CRYPTOAesLoadKey((uint32_t *)key, key_idx) == AES_SUCCESS, retval = MBEDTLS_ERR_AES_INVALID_KEY_LENGTH);
 
     used_keys |= (1 << key_idx);
     ctx->key_idx = key_idx;
@@ -148,18 +154,17 @@ exit:
     return retval;
 }
 
-int mbedtls_aes_setkey_dec( mbedtls_aes_context *ctx, const unsigned char *key,
-        unsigned int keybits )
+int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key, unsigned int keybits)
 {
     unsigned char key_idx;
     int retval = 0;
 
-    if(ctx->magic != CC2650_AES_CTX_MAGIC)
+    if (ctx->magic != CC2650_AES_CTX_MAGIC)
     {
         return -1;
     }
 
-    if(ctx->key_idx != CC2650_AES_KEY_UNUSED)
+    if (ctx->key_idx != CC2650_AES_KEY_UNUSED)
     {
         used_keys &= ~(1 << ctx->key_idx);
     }
@@ -167,7 +172,7 @@ int mbedtls_aes_setkey_dec( mbedtls_aes_context *ctx, const unsigned char *key,
     /* our hardware only supports 128 bit keys */
     VerifyOrExit(keybits == 128u, retval = MBEDTLS_ERR_AES_INVALID_KEY_LENGTH);
 
-    for(key_idx=0; ((used_keys >> key_idx) & 0x01) != 0 && key_idx < 8; key_idx++)
+    for (key_idx = 0; ((used_keys >> key_idx) & 0x01) != 0 && key_idx < 8; key_idx++)
     {
         ;
     }
@@ -175,8 +180,7 @@ int mbedtls_aes_setkey_dec( mbedtls_aes_context *ctx, const unsigned char *key,
     /* we have no more room for this key */
     VerifyOrExit(key_idx < 8, retval = -2);
 
-    VerifyOrExit(CRYPTOAesLoadKey((uint32_t *)key, key_idx) == AES_SUCCESS,
-            retval = MBEDTLS_ERR_AES_INVALID_KEY_LENGTH);
+    VerifyOrExit(CRYPTOAesLoadKey((uint32_t *)key, key_idx) == AES_SUCCESS, retval = MBEDTLS_ERR_AES_INVALID_KEY_LENGTH);
 
     used_keys |= (1 << key_idx);
     ctx->key_idx = key_idx;
@@ -194,16 +198,14 @@ exit:
  *
  * \return         0 if successful
  */
-int mbedtls_aes_crypt_ecb( mbedtls_aes_context *ctx, int mode, const unsigned
-        char input[16], unsigned char output[16] )
+int mbedtls_aes_crypt_ecb(mbedtls_aes_context *ctx, int mode, const unsigned char input[16], unsigned char output[16])
 {
     int retval = -1;
 
-    retval = CRYPTOAesEcb((uint32_t *)input, (uint32_t *)output,
-            ctx->key_idx, mode == MBEDTLS_AES_ENCRYPT, false);
-    VerifyOrExit(retval == AES_SUCCESS, ; );
+    retval = CRYPTOAesEcb((uint32_t *)input, (uint32_t *)output, ctx->key_idx, mode == MBEDTLS_AES_ENCRYPT, false);
+    VerifyOrExit(retval == AES_SUCCESS, ;);
 
-    while((retval = CRYPTOAesEcbStatus()) ==  AES_DMA_BSY)
+    while ((retval = CRYPTOAesEcbStatus()) ==  AES_DMA_BSY)
     {
         ;
     }

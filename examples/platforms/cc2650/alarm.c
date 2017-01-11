@@ -100,12 +100,12 @@ void cc2650AlarmProcess(otInstance *aInstance)
 {
     uint32_t offsetTime;
 
-    if(isRunning)
+    if (isRunning)
     {
         /* unsinged subtraction will result in the absolute offset */
         offsetTime = otPlatAlarmGetNow() - time0;
 
-        if(alarmTime <= offsetTime)
+        if (alarmTime <= offsetTime)
         {
             isRunning = false;
 #if OPENTHREAD_ENABLE_DIAG
