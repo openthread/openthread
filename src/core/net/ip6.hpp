@@ -37,7 +37,8 @@
 #include <stddef.h>
 
 #include <openthread-ip6.h>
-#include <openthread-udp.h>
+#include "openthread/udp.h"
+
 #include <common/encoding.hpp>
 #include <common/message.hpp>
 #include <net/icmp6.hpp>

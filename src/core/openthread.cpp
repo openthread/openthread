@@ -1575,18 +1575,6 @@ ThreadError otSendIp6Datagram(otInstance *aInstance, otMessage aMessage)
     return error;
 }
 
-otMessage otNewUdpMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
-{
-    Message *message = aInstance->mIp6.mUdp.NewMessage(0);
-
-    if (message)
-    {
-        message->SetLinkSecurityEnabled(aLinkSecurityEnabled);
-    }
-
-    return message;
-}
-
 otMessage otNewIp6Message(otInstance *aInstance, bool aLinkSecurityEnabled)
 {
     Message *message = aInstance->mIp6.mMessagePool.New(Message::kTypeIp6, 0);
@@ -1703,51 +1691,6 @@ otMessage otMessageQueueGetNext(otMessageQueue *aQueue, otMessage aMessage)
 
 exit:
     return next;
-}
-
-ThreadError otOpenUdpSocket(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aCallbackContext)
-{
-    ThreadError error = kThreadError_InvalidArgs;
-    Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
-
-    if (socket->mTransport == NULL)
-    {
-        socket->mTransport = &aInstance->mIp6.mUdp;
-        error = socket->Open(aCallback, aCallbackContext);
-    }
-
-    return error;
-}
-
-ThreadError otCloseUdpSocket(otUdpSocket *aSocket)
-{
-    ThreadError error = kThreadError_InvalidState;
-    Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
-
-    if (socket->mTransport != NULL)
-    {
-        error = socket->Close();
-
-        if (error == kThreadError_None)
-        {
-            socket->mTransport = NULL;
-        }
-    }
-
-    return error;
-}
-
-ThreadError otBindUdpSocket(otUdpSocket *aSocket, otSockAddr *aSockName)
-{
-    Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
-    return socket->Bind(*static_cast<const Ip6::SockAddr *>(aSockName));
-}
-
-ThreadError otSendUdp(otUdpSocket *aSocket, otMessage aMessage, const otMessageInfo *aMessageInfo)
-{
-    Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
-    return socket->SendTo(*static_cast<Message *>(aMessage),
-                          *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 bool otIcmp6IsEchoEnabled(otInstance *aInstance)

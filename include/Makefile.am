@@ -72,7 +72,6 @@ include_HEADERS                         = \
     openthread-message.h                  \
     openthread-tasklet.h                  \
     openthread-types.h                    \
-    openthread-udp.h                      \
     $(NULL)
 
 install-headers: install-includeHEADERS

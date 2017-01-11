@@ -1102,24 +1102,6 @@ typedef struct otSockAddr
     int8_t       mScopeId;  ///< An IPv6 scope identifier.
 } otSockAddr;
 
-/**
- * This callback allows OpenThread to inform the application of a received UDP message.
- */
-typedef void (*otUdpReceive)(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
-
-/**
- * This structure represents a UDP socket.
- */
-typedef struct otUdpSocket
-{
-    otSockAddr           mSockName;  ///< The local IPv6 socket address.
-    otSockAddr           mPeerName;  ///< The peer IPv6 socket address.
-    otUdpReceive         mHandler;   ///< A function pointer to the application callback.
-    void                *mContext;   ///< A pointer to application-specific context.
-    void                *mTransport; ///< A pointer to the transport object (internal use only).
-    struct otUdpSocket  *mNext;      ///< A pointer to the next UDP socket (internal use only).
-} otUdpSocket;
-
 #ifdef OTDLL
 
 /**

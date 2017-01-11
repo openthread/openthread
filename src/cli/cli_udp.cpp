@@ -58,8 +58,8 @@ ThreadError Udp::Start(void)
     memset(&sockaddr, 0, sizeof(otSockAddr));
     sockaddr.mPort = 7335;
 
-    SuccessOrExit(error = otOpenUdpSocket(mInstance, &mSocket, &Udp::HandleUdpReceive, this));
-    SuccessOrExit(error = otBindUdpSocket(&mSocket, &sockaddr));
+    SuccessOrExit(error = otUdpOpen(mInstance, &mSocket, &Udp::HandleUdpReceive, this));
+    SuccessOrExit(error = otUdpBind(&mSocket, &sockaddr));
 
 exit:
     return error;
@@ -101,10 +101,10 @@ int Udp::Output(const char *aBuf, uint16_t aBufLength)
     ThreadError error = kThreadError_None;
     otMessage message;
 
-    VerifyOrExit((message = otNewUdpMessage(mInstance, true)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = otUdpNewMessage(mInstance, true)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = otSetMessageLength(message, aBufLength));
     otWriteMessage(message, 0, aBuf, aBufLength);
-    SuccessOrExit(error = otSendUdp(&mSocket, message, &mPeer));
+    SuccessOrExit(error = otUdpSend(&mSocket, message, &mPeer));
 
 exit:
 
