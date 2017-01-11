@@ -49,17 +49,32 @@ extern "C" {
  */
 
 /**
+ * This function pointer is called to notify the completion of a join operation.
+ *
+ * @param[in]  aError    kThreadError_None if the join process succeeded.
+ *                       kThreadError_Security if the join process failed due to security credentials.
+ *                       kThreadError_NotFound if no joinable network was discovered.
+ *                       kThreadError_ResponseTimeout if a response timed out.
+ * @param[in]  aContext  A pointer to application-specific context.
+ *
+ */
+typedef void (OTCALL *otJoinerCallback)(ThreadError aError, void *aContext);
+
+/**
  * This function enables the Thread Joiner role.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aPSKd             A pointer to the PSKd.
  * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
+ * @param[in]  aCallback         A pointer to a function that is called when the join operation completes.
+ * @param[in]  aContext          A pointer to application-specific context.
  *
  * @retval kThreadError_None         Successfully started the Commissioner role.
  * @retval kThreadError_InvalidArgs  @p aPSKd or @p aProvisioningUrl is invalid.
  *
  */
-OTAPI ThreadError OTCALL otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl);
+OTAPI ThreadError OTCALL otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl,
+                                       otJoinerCallback aCallback, void *aContext);
 
 /**
  * This function disables the Thread Joiner role.

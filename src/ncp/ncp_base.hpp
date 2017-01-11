@@ -277,6 +277,9 @@ private:
                                                  uint16_t arg_len);
     ThreadError CommandHandler_PROP_VALUE_REMOVE(uint8_t header, unsigned int command, const uint8_t *arg_ptr,
                                                  uint16_t arg_len);
+    ThreadError CommandHandler_NET_SAVE(uint8_t header, unsigned int command, const uint8_t *arg_ptr, uint16_t arg_len);
+    ThreadError CommandHandler_NET_CLEAR(uint8_t header, unsigned int command, const uint8_t *arg_ptr, uint16_t arg_len);
+    ThreadError CommandHandler_NET_RECALL(uint8_t header, unsigned int command, const uint8_t *arg_ptr, uint16_t arg_len);
 
     ThreadError GetPropertyHandler_ChannelMaskHelper(uint8_t header, spinel_prop_key_t key, uint32_t channel_mask);
 
@@ -359,6 +362,7 @@ private:
     ThreadError GetPropertyHandler_JAM_DETECT_RSSI_THRESHOLD(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_JAM_DETECT_WINDOW(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_JAM_DETECT_BUSY(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_JAM_DETECT_HISTORY_BITMAP(uint8_t header, spinel_prop_key_t key);
 #endif
 
 #if OPENTHREAD_ENABLE_LEGACY

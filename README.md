@@ -62,8 +62,9 @@ In the repo you'll find the following directories and files:
 
 File/Folder   | Provides
 --------------|----------------------------------------------------------------
-`doc`         | Doxygen docs
-`examples`    | Sample applications demonstrating OpenThread
+`doc`         | Code and protocol docs
+`etc`         | Configuration files for other build systems (e.g. Visual Studio)
+`examples`    | Sample applications and platforms demonstrating OpenThread
 `include`     | Public API header files
 `src`         | Core implementation of the Thread standard and related add-ons
 `tests`       | Unit and Thread conformance tests

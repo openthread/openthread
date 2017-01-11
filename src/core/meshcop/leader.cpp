@@ -181,8 +181,7 @@ void Leader::HandleKeepAlive(Coap::Header &aHeader, Message &aMessage, const Ip6
     {
         responseState = StateTlv::kReject;
         mTimer.Stop();
-        mNetworkData.SetCommissioningData(NULL, 0);
-        otLogInfoMeshCoP("commissioner inactive");
+        ResignCommissioner();
     }
     else
     {
@@ -267,11 +266,23 @@ void Leader::HandleTimer(void)
 {
     VerifyOrExit(mNetif.GetMle().GetDeviceState() == Mle::kDeviceStateLeader, ;);
 
-    otLogInfoMeshCoP("commissioner inactive");
-    mNetworkData.SetCommissioningData(NULL, 0);
+    ResignCommissioner();
 
 exit:
     return;
+}
+
+void Leader::ResignCommissioner(void)
+{
+    CommissionerSessionIdTlv mCommissionerSessionId;
+
+    mCommissionerSessionId.Init();
+    mCommissionerSessionId.SetCommissionerSessionId(++mSessionId);
+
+    mNetworkData.SetCommissioningData(reinterpret_cast<uint8_t *>(&mCommissionerSessionId),
+                                      sizeof(Tlv) + mCommissionerSessionId.GetLength());
+
+    otLogInfoMeshCoP("commissioner inactive");
 }
 
 }  // namespace MeshCoP

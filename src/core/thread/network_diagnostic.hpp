@@ -49,6 +49,7 @@ namespace NetworkDiagnostic {
 
 class IPv6AddressListTlv;
 class ChildTableTlv;
+class NetworkDiagnosticTlv;
 
 /**
  * @addtogroup core-netdiag
@@ -73,7 +74,18 @@ public:
     explicit NetworkDiagnostic(ThreadNetif &aThreadNetif);
 
     /**
-     * This method sends Diagnostic Get request.
+     * This method registers a callback to provide received raw DIAG_GET.rsp or an DIAG_GET.ans payload.
+     *
+     * @param[in]  aCallback         A pointer to a function that is called when an DIAG_GET.rsp or an DIAG_GET.ans
+     *                               is received or NULL to disable the callback.
+     * @param[in]  aCallbackContext  A pointer to application-specific context.
+     *
+     */
+    void SetReceiveDiagnosticGetCallback(otReceiveDiagnosticGetCallback aCallback, void *aCallbackContext);
+
+    /**
+     * This method sends Diagnostic Get request. If the @p aDestination is of multicast type, the DIAG_GET.qry
+     * message is sent or the DIAG_GET.req otherwise.
      *
      * @param[in] aDestination  A reference to the destination address.
      * @param[in] aTlvTypes     An array of Network Diagnostic TLV types.
@@ -92,44 +104,46 @@ public:
      */
     ThreadError SendDiagnosticReset(const Ip6::Address &aDestination, const uint8_t aTlvTypes[], uint8_t aCount);
 
-    /**
-     * This method fills IPv6AddressListTlv.
-     *
-     * @param[out] aTlv         A reference to the tlv.
-     *
-     */
-    ThreadError AppendIPv6AddressList(Message &aMessage);
-
-    /**
-     * This method fills ChildTableTlv.
-     *
-     * @param[out] aTlv         A reference to the tlv.
-     *
-     */
-    ThreadError AppendChildTable(Message &aMessage);
-
 private:
-    static void HandleDiagnosticGetResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                            ThreadError result);
-    void HandleDiagnosticGetResponse(Coap::Header *aHeader, Message *aMessage, ThreadError result);
 
-    static void HandleDiagnosticGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                    const otMessageInfo *aMessageInfo);
-    void HandleDiagnosticGet(Thread::Coap::Header &aHeader, Thread::Message &aMessage,
-                             const Thread::Ip6::MessageInfo &aMessageInfo);
+    ThreadError AppendIPv6AddressList(Message &aMessage);
+    ThreadError AppendChildTable(Message &aMessage);
+    ThreadError FillRequestedTlvs(Message &aRequest, Message &aResponse, NetworkDiagnosticTlv &aNetworkDiagnosticTlv);
+
+    static void HandleDiagnosticGetRequest(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                           const otMessageInfo *aMessageInfo);
+    void HandleDiagnosticGetRequest(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    static void HandleDiagnosticGetQuery(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                         const otMessageInfo *aMessageInfo);
+    void HandleDiagnosticGetQuery(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    static void HandleDiagnosticGetResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                            const otMessageInfo *aMessageInfo, ThreadError aResult);
+    void HandleDiagnosticGetResponse(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
+                                     ThreadError aResult);
+
+    static void HandleDiagnosticGetAnswer(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                          const otMessageInfo *aMessageInfo);
+    void HandleDiagnosticGetAnswer(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleDiagnosticReset(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
                                       const otMessageInfo *aMessageInfo);
-    void HandleDiagnosticReset(Coap::Header &aHeader, Message &aMessage,
-                               const Ip6::MessageInfo &aMessageInfo);
+    void HandleDiagnosticReset(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    Coap::Resource mDiagnosticGet;
+    Coap::Resource mDiagnosticGetRequest;
+    Coap::Resource mDiagnosticGetQuery;
+    Coap::Resource mDiagnosticGetAnswer;
     Coap::Resource mDiagnosticReset;
     Coap::Server &mCoapServer;
     Coap::Client &mCoapClient;
 
     Mle::MleRouter &mMle;
+    Mac::Mac &mMac;
     ThreadNetif &mNetif;
+
+    otReceiveDiagnosticGetCallback mReceiveDiagnosticGetCallback;
+    void *mReceiveDiagnosticGetCallbackContext;
 };
 
 /**

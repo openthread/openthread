@@ -28,8 +28,8 @@
 
 '''
 >> Thread Host Controller Interface
->> Device : ARM THCI
->> Class : ARM
+>> Device : OpenThread THCI
+>> Class : OpenThread
 '''
 
 import re
@@ -39,7 +39,6 @@ import serial
 import socket
 import logging
 from IThci import IThci
-from pexpect_serial import SerialSpawn
 from GRLLibs.UtilityModules.Test import Thread_Device_Role, Device_Data_Requirement, MacType
 from GRLLibs.UtilityModules.enums import PlatformDiagnosticPacket_Direction, PlatformDiagnosticPacket_Type, AddressType
 from GRLLibs.UtilityModules.ModuleHelper import ModuleHelper, ThreadRunner
@@ -49,8 +48,7 @@ from Queue import Queue
 linesepx = re.compile(r'\r\n|\n')
 """regex: used to split lines"""
 
-class ARM(IThci):
-    firmware = 'Nov 4 2016 07:24:59' # keep the consistency with ARM firmware style
+class OpenThread(IThci):
     UIStatusMsg = ''
     networkDataRequirement = ''      # indicate Thread device requests full or stable network data
     isPowerDown = False              # indicate if Thread device experiences a power down event
@@ -58,6 +56,7 @@ class ARM(IThci):
     isBlackListEnabled = False       # indicate if Thread device enables black list filter
     isActiveCommissioner = False     # indicate if Thread device is an active commissioner
     LOWEST_POSSIBLE_PARTATION_ID = 0x1
+    LINK_QUALITY_CHANGE_TIME = 100
 
     #def __init__(self, SerialPort=COMPortName, EUI=MAC_Address):
     def __init__(self, **kwargs):
@@ -70,7 +69,6 @@ class ARM(IThci):
             self.mac = kwargs.get('EUI')
             self.port = kwargs.get('SerialPort')
             self.handle = None
-            self.UIStatusMsg = self.firmware
             self.networkName = ModuleHelper.Default_NwkName
             self.networkKey = ModuleHelper.Default_NwkKey
             self.channel = ModuleHelper.Default_Channel
@@ -82,7 +80,8 @@ class ARM(IThci):
             self.pskc = ModuleHelper.Default_PSKc
             self.securityPolicySecs = ModuleHelper.Default_SecurityPolicy
             self.activetimestamp = ModuleHelper.Default_ActiveTimestamp
-            self.SED_Polling_Rate = ModuleHelper.Default_Harness_SED_Polling_Rate
+            self.sedPollingRate = ModuleHelper.Default_Harness_SED_Polling_Rate
+            self.deviceRole = None
             self.provisioningUrl = ''
             self.logThread = Queue()
             self.logStatus = {'stop':'stop', 'running':'running', "pauseReq":'pauseReq', 'paused':'paused'}
@@ -98,7 +97,7 @@ class ARM(IThci):
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("delete() Error: " + str(e))
 
-    def _expect(self, expected, times=100):
+    def _expect(self, expected, times=50):
         """Find the `expected` line within `times` trials.
 
         Args:
@@ -107,7 +106,11 @@ class ARM(IThci):
         """
         print '[%s] Expecting [%s]' % (self.port, expected)
 
+        retry_times = 10
         for i in range(0, times):
+            if not retry_times:
+                break
+
             line = self._readline()
             print '[%s] Got line [%s]' % (self.port, line)
 
@@ -116,7 +119,8 @@ class ARM(IThci):
                 return
 
             if not line:
-                time.sleep(1)
+                retry_times -= 1
+                time.sleep(0.1)
 
         raise Exception('failed to find expected string[%s]' % expected)
 
@@ -448,6 +452,7 @@ class ARM(IThci):
         print 'call startOpenThread'
         try:
             if self.__sendCommand('ifconfig up')[0] == 'Done':
+                self.__setRouterSelectionJitter(1)
                 return self.__sendCommand('thread start')[0] == 'Done'
             else:
                 return False
@@ -668,10 +673,9 @@ class ARM(IThci):
             self.handle = socket.create_connection((host, port))
             self.handle.setblocking(0)
             self._is_net = True
-            # check connectivity, this make sure bad device fail on initializing
-            self.__sendCommand('state')
         else:
             raise Exception('Unknown port schema')
+        self.UIStatusMsg = self.getVersionNumber()
 
     def closeConnection(self):
         """close current serial port connection"""
@@ -695,7 +699,6 @@ class ARM(IThci):
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("intialize() Error: " + str(e))
             self.deviceConnected = False
-            sys.exit()
 
     def setNetworkName(self, networkName='GRL'):
         """set Thread Network name
@@ -981,6 +984,8 @@ class ARM(IThci):
         """
         print '%s call joinNetwork' % self.port
         print eRoleId
+
+        self.deviceRole = eRoleId
         mode = ''
         try:
             if ModuleHelper.LeaderDutChannelFound:
@@ -991,26 +996,19 @@ class ARM(IThci):
             if eRoleId == Thread_Device_Role.Leader:
                 print 'join as leader'
                 mode = 'rsdn'
-                self.__setRouterSelectionJitter(1)
                 if self.AutoDUTEnable is False:
-                    # set ROUTER_UPGRADE_THRESHOLD
-                    self.__setRouterUpgradeThreshold(32)
                     # set ROUTER_DOWNGRADE_THRESHOLD
                     self.__setRouterDowngradeThreshold(33)
             elif eRoleId == Thread_Device_Role.Router:
                 print 'join as router'
                 mode = 'rsdn'
-                self.__setRouterSelectionJitter(1)
                 if self.AutoDUTEnable is False:
-                    # set ROUTER_UPGRADE_THRESHOLD
-                    self.__setRouterUpgradeThreshold(33)
                     # set ROUTER_DOWNGRADE_THRESHOLD
                     self.__setRouterDowngradeThreshold(33)
             elif eRoleId == Thread_Device_Role.SED:
                 print 'join as sleepy end device'
                 mode = 's'
-                # set data polling rate to 15s for SED
-                self.setPollingRate(15)
+                self.setPollingRate(self.sedPollingRate)
             elif eRoleId == Thread_Device_Role.EndDevice:
                 print 'join as end device'
                 mode = 'rsn'
@@ -1087,8 +1085,6 @@ class ARM(IThci):
         print '%s call powerDown' % self.port
         self.isPowerDown = True
         self._sendline('reset')
-        time.sleep(5)
-        self.setMAC(self.mac)
 
     def powerUp(self):
         """power up the Thread device"""
@@ -1110,11 +1106,10 @@ class ARM(IThci):
         """
         print '%s call reboot' % self.port
         try:
-            # stop OpenThread
-            self.__stopOpenThread()
-            # start OpenThread
-            self.__startOpenThread()
+            self._sendline('reset')
+            time.sleep(3)
 
+            self.__startOpenThread()
             time.sleep(3)
 
             if self.__sendCommand('state')[0] == 'disabled':
@@ -1168,7 +1163,7 @@ class ARM(IThci):
     def getVersionNumber(self):
         """get OpenThread stack firmware version number"""
         print '%s call getVersionNumber' % self.port
-        return self.firmware
+        return self.__sendCommand('version')[0]
 
     def setPANID(self, xPAN):
         """set Thread Network PAN ID
@@ -1246,7 +1241,6 @@ class ARM(IThci):
             self.isWhiteListEnabled = False
             self.isBlackListEnabled = False
             self.isActiveCommissioner = False
-            self.firmware = 'Nov 4 2016 07:24:59'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setDefaultValue() Error: " + str(e))
 
@@ -1356,13 +1350,13 @@ class ARM(IThci):
         print '%s call resetAndRejoin' % self.port
         print timeout
         try:
-            # start OpenThread
-            self.__stopOpenThread()
-            # wait timeout
+            self._sendline('reset')
             time.sleep(timeout)
-            # stop OpenThread
-            self.__startOpenThread()
 
+            if self.deviceRole == Thread_Device_Role.SED:
+                self.setPollingRate(self.sedPollingRate)
+
+            self.__startOpenThread()
             time.sleep(3)
 
             if self.__sendCommand('state')[0] == 'disabled':
@@ -1969,7 +1963,7 @@ class ARM(IThci):
             else:
                 return False
         except Exception, e:
-            modulehelper.writeintodebuglogger("allowcommission() error: " + str(e))
+            Modulehelper.writeintodebuglogger("allowcommission() error: " + str(e))
 
     def joinCommissioned(self, strPSKd='threadjpaketest', waitTime=20):
         """start joiner
@@ -2069,7 +2063,7 @@ class ARM(IThci):
             print cmd
             return self.__sendCommand(cmd) == 'Done'
         except Exception, e:
-            modulehelper.writeintodebuglogger("MGMT_ED_SCAN() error: " + str(e))
+            Modulehelper.writeintodebuglogger("MGMT_ED_SCAN() error: " + str(e))
 
     def MGMT_PANID_QUERY(self, sAddr, xCommissionerSessionId, listChannelMask, xPanId):
         """send MGMT_PANID_QUERY message to a given destination
@@ -2094,7 +2088,7 @@ class ARM(IThci):
             print cmd
             return self.__sendCommand(cmd) == 'Done'
         except Exception, e:
-            modulehelper.writeintodebuglogger("MGMT_PANID_QUERY() error: " + str(e))
+            Modulehelper.writeintodebuglogger("MGMT_PANID_QUERY() error: " + str(e))
 
     def MGMT_ANNOUNCE_BEGIN(self, sAddr, xCommissionerSessionId, listChannelMask, xCount, xPeriod):
         """send MGMT_ANNOUNCE_BEGIN message to a given destination
@@ -2111,7 +2105,7 @@ class ARM(IThci):
             print cmd
             return self.__sendCommand(cmd) == 'Done'
         except Exception, e:
-            modulehelper.writeintodebuglogger("MGMT_ANNOUNCE_BEGIN() error: " + str(e))
+            Modulehelper.writeintodebuglogger("MGMT_ANNOUNCE_BEGIN() error: " + str(e))
 
     def MGMT_ACTIVE_GET(self, Addr='', TLVs=[]):
         """send MGMT_ACTIVE_GET command
@@ -2193,7 +2187,10 @@ class ARM(IThci):
 
             if listChannelMask != None:
                 cmd += ' channelmask '
-                cmd += str(hex(1 << listChannelMask[1]))
+                if len(listChannelMask) > 2:
+                    cmd += '0x' + self.__convertLongToString(self.__convertChannelMask(listChannelMask))
+                elif len(listChannelMask) == 2:
+                    cmd += str(hex(1 << listChannelMask[1]))
 
             if sPSKc != None or listSecurityPolicy != None or \
                xCommissioningSessionId != None or xTmfPort != None or xSteeringData != None or xBorderRouterLocator != None or \
@@ -2250,6 +2247,14 @@ class ARM(IThci):
                     locator = locator.zfill(4)
 
                 cmd += locator
+
+            if xSteeringData != None:
+                steeringData = self.__convertLongToString(xSteeringData)
+                cmd += '08' + str(len(steeringData)/2).zfill(2)
+                cmd += steeringData
+
+            if BogusTLV != None:
+                cmd += "8202aa55"
 
             print cmd
 
@@ -2411,7 +2416,7 @@ class ARM(IThci):
 
             if xChannelTlv != None:
                 cmd += ' binary '
-                cmd += '000300' + hex(xChannelTlv).lstrip('0x').zfill(4) 
+                cmd += '000300' + hex(xChannelTlv).lstrip('0x').zfill(4)
 
             print cmd
 
@@ -2483,9 +2488,25 @@ class ARM(IThci):
         return True
 
     def updateRouterStatus(self):
+        """force update to router as if there is child id request"""
         print '%s call updateRouterStatus' % self.port
+        cmd = 'state'
+        while True:
+            state = self.__sendCommand(cmd)[0]
+            if state == 'detached':
+                continue
+            elif state == 'child':
+                break
+            else:
+                return False
+
+        cmd = 'state router'
+        return self.__sendCommand(cmd)[0] == 'Done'
 
     def setRouterThresholdValues(self, upgradeThreshold, downgradeThreshold):
         print '%s call setRouterThresholdValues' % self.port
         self.__setRouterUpgradeThreshold(upgradeThreshold)
         self.__setRouterDowngradeThreshold(downgradeThreshold)
+
+    def setMinDelayTimer(self, iSeconds):
+        print '%s call setMinDelayTimer' % self.port

@@ -312,7 +312,27 @@ is meaningless.
 
 {{spinel-status-codes.md}}
 
+{{spinel-tech-thread.md}}
+
+{{spinel-feature-network-save.md}}
+
+{{spinel-feature-host-buffer-offload.md}}
+
+{{spinel-feature-jam-detect.md}}
+
+{{spinel-feature-gpio.md}}
+
+{{spinel-feature-trng.md}}
+
 {{spinel-security-considerations.md}}
+
+{backmatter}
+
+{{spinel-framing.md}}
+
+{{spinel-test-vectors.md}}
+
+{{spinel-example-sessions.md}}
 
 # Acknowledgments #
 
@@ -327,22 +347,6 @@ to this document.
 
 This document was prepared using [mmark](https://github.com/miekg/mmark)
 by (Miek Gieben) and [xml2rfc (version 2)](http://xml2rfc.ietf.org/).
-
-{backmatter}
-
-{{spinel-framing.md}}
-
-{{spinel-feature-network-save.md}}
-
-{{spinel-feature-host-buffer-offload.md}}
-
-{{spinel-feature-jam-detect.md}}
-
-{{spinel-tech-thread.md}}
-
-{{spinel-test-vectors.md}}
-
-{{spinel-example-sessions.md}}
 
 # Glossary #
 

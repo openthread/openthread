@@ -59,12 +59,15 @@ RtlCopyBufferToMdl(
 #include <stdio.h>
 #include <stdarg.h>
 
+#include <openthread-windows-config.h>
 #include <openthread-core-config.h>
 #include <openthread.h>
 #include <openthread-ip6.h>
 #include <openthread-tasklet.h>
 #include <commissioning/commissioner.h>
 #include <commissioning/joiner.h>
+#include <dhcp6/dhcp6_server.h>
+#include <dhcp6/dhcp6_client.h>
 #include <common/code_utils.hpp>
 #include <platform/logging.h>
 #include <platform/logging-windows.h>
@@ -72,6 +75,7 @@ RtlCopyBufferToMdl(
 #include <platform/misc.h>
 #include <platform/alarm.h>
 #include <platform/settings.h>
+#include <ncp/spinel.h>
 
 #include <otLwfIoctl.h>
 #include <otOID.h>
@@ -89,7 +93,22 @@ RtlCopyBufferToMdl(
 
 typedef struct _MS_FILTER MS_FILTER, *PMS_FILTER;
 
+#pragma pack(push)
+#pragma pack(1)
+
+typedef struct UDPHeader
+{
+    USHORT SourcePort;
+    USHORT DestinationPort;
+    USHORT TotalLength;
+    USHORT Checksum;
+
+} UDPHeader;
+
+#pragma pack(pop)
+
 //#define DEBUG_TIMING
+//#define DEBUG_ALLOC
 //#define LOG_BUFFERS
 //#define FORCE_SYNCHRONOUS_RECEIVE
 
@@ -99,3 +118,5 @@ typedef struct _MS_FILTER MS_FILTER, *PMS_FILTER;
 #include "oid.h"
 #include "radio.h"
 #include "filter.h"
+#include "thread.h"
+#include "tunnel.h"

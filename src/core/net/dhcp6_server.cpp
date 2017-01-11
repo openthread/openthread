@@ -64,7 +64,7 @@ Dhcp6Server::Dhcp6Server(ThreadNetif &aThreadNetif):
     mPrefixAgentsMask = 0;
 }
 
-ThreadError Dhcp6Server::UpdateService()
+ThreadError Dhcp6Server::UpdateService(void)
 {
     ThreadError error = kThreadError_None;
     bool found;
@@ -80,7 +80,7 @@ ThreadError Dhcp6Server::UpdateService()
     {
         found = false;
 
-        if (mAgentsAloc[i].mValidLifetime == 0)
+        if (!mAgentsAloc[i].mValid)
         {
             continue;
         }
@@ -109,7 +109,7 @@ ThreadError Dhcp6Server::UpdateService()
         {
             mNetworkDataLeader.GetContext(address->mFields.m8[15], lowpanContext);
             mNetif.RemoveUnicastAddress(mAgentsAloc[i]);
-            mAgentsAloc[i].mValidLifetime = 0;
+            mAgentsAloc[i].mValid = false;
             RemovePrefixAgent(lowpanContext.mPrefix);
         }
     }
@@ -132,7 +132,7 @@ ThreadError Dhcp6Server::UpdateService()
         {
             address = &(mAgentsAloc[i].GetAddress());
 
-            if ((mAgentsAloc[i].mValidLifetime != 0) && (address->mFields.m8[15] == lowpanContext.mContextId))
+            if ((mAgentsAloc[i].mValid) && (address->mFields.m8[15] == lowpanContext.mContextId))
             {
                 found = true;
                 break;
@@ -147,7 +147,7 @@ ThreadError Dhcp6Server::UpdateService()
 
         for (i = 0; i < OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES; i++)
         {
-            if (mAgentsAloc[i].mValidLifetime == 0)
+            if (!mAgentsAloc[i].mValid)
             {
                 address = &(mAgentsAloc[i].GetAddress());
                 memcpy(address, mMle.GetMeshLocalPrefix(), 8);
@@ -157,8 +157,8 @@ ThreadError Dhcp6Server::UpdateService()
                 address->mFields.m8[14] = Mle::kAloc16Mask;
                 address->mFields.m8[15] = lowpanContext.mContextId;
                 mAgentsAloc[i].mPrefixLength = 128;
-                mAgentsAloc[i].mPreferredLifetime = 0xffffffff;
-                mAgentsAloc[i].mValidLifetime = 0xffffffff;
+                mAgentsAloc[i].mPreferred = true;
+                mAgentsAloc[i].mValid = true;
                 mNetif.AddUnicastAddress(mAgentsAloc[i]);
                 AddPrefixAgent(config.mPrefix);
                 break;
@@ -185,7 +185,7 @@ exit:
     return error;
 }
 
-ThreadError Dhcp6Server::Start()
+ThreadError Dhcp6Server::Start(void)
 {
     Ip6::SockAddr sockaddr;
     sockaddr.mPort = kDhcpServerPort;
@@ -195,7 +195,7 @@ ThreadError Dhcp6Server::Start()
     return kThreadError_None;
 }
 
-ThreadError Dhcp6Server::Stop()
+ThreadError Dhcp6Server::Stop(void)
 {
     mSocket.Close();
     return kThreadError_None;
@@ -359,6 +359,8 @@ ThreadError Dhcp6Server::ProcessIaNa(Message &aMessage, uint16_t aOffset, IaNa &
 
     aOffset += sizeof(aIaNa);
     length = aIaNa.GetLength() + sizeof(Dhcp6Option) - sizeof(IaNa);
+
+    VerifyOrExit(length <= aMessage.GetLength() - aOffset, error = kThreadError_Parse);
 
     mPrefixAgentsMask = 0;
 

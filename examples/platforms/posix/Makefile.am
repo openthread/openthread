@@ -37,11 +37,6 @@ libopenthread_posix_a_CPPFLAGS            = \
     -D_GNU_SOURCE                           \
     $(NULL)
 
-libopenthread_posix_settings.cpp: $(srcdir)/../utils/settings.cpp
-	cp $? $@
-
-CLEANFILES = libopenthread_posix_settings.cpp
-
 libopenthread_posix_a_SOURCES             = \
     alarm.c                                 \
     misc.c                                  \
@@ -51,7 +46,6 @@ libopenthread_posix_a_SOURCES             = \
     random.c                                \
     uart-posix.c                            \
     flash.c                                 \
-    libopenthread_posix_settings.cpp        \
     $(NULL)
 
 if OPENTHREAD_ENABLE_DIAG
@@ -61,8 +55,8 @@ libopenthread_posix_a_SOURCES            += \
 endif
 
 if OPENTHREAD_ENABLE_NCP_SPI
-libopenthread_posix_a_SOURCES           += \
-    spi-stubs.c                            \
+libopenthread_posix_a_SOURCES            += \
+    spi-stubs.c                             \
     $(NULL)
 endif
 
@@ -70,8 +64,12 @@ noinst_HEADERS                            = \
     platform-posix.h                        \
     $(NULL)
 
+Dash                                      = -
+libopenthread_posix_a_LIBADD              = \
+    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
+
 if OPENTHREAD_BUILD_COVERAGE
-CLEANFILES                               += $(wildcard *.gcda *.gcno)
+CLEANFILES                                = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

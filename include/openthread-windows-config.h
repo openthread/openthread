@@ -26,6 +26,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* Define to 1 if you want to enable default logging */
+#define OPENTHREAD_ENABLE_DEFAULT_LOGGING 1
+
 /* Define to 1 to enable the commissioner role. */
 #define OPENTHREAD_ENABLE_COMMISSIONER 1
 
@@ -45,10 +48,10 @@
 #define OPENTHREAD_ENABLE_JAM_DETECTION 0
 
 /* Define to 1 to enable DHCPv6 Client. */
-#define OPENTHREAD_ENABLE_DHCP6_CLIENT 0
+#define OPENTHREAD_ENABLE_DHCP6_CLIENT 1
 
 /* Define to 1 to enable DHCPv6 SERVER. */
-#define OPENTHREAD_ENABLE_DHCP6_SERVER 0
+#define OPENTHREAD_ENABLE_DHCP6_SERVER 1
 
 /* Define to 1 to enable MAC whitelist/blacklist feature. */
 #define OPENTHREAD_ENABLE_MAC_WHITELIST 1

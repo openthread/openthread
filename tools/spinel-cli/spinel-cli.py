@@ -72,6 +72,7 @@ from spinel.const import kThread
 from spinel.codec import WpanApi
 from spinel.codec import SpinelCodec
 from spinel.stream import StreamOpen
+from spinel.tun import TunInterface
 import spinel.config as CONFIG
 import spinel.util as util
 
@@ -98,6 +99,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
     def __init__(self, stream_desc, nodeid, *_a, **kw):
 
         self.nodeid = kw.get('nodeid', '1')
+        self.tun_if = None
 
         self.wpan_api = WpanApi(stream_desc, nodeid)
         self.wpan_api.queue_register(SPINEL.HEADER_DEFAULT)
@@ -149,6 +151,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
 
         # OpenThread CLI commands
         'help',
+        'bufferinfo',
         'channel',
         'child',
         'childmax',
@@ -456,6 +459,43 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         print(heap_stats.heap())
         print()
         print(heap_stats.heap().byrcs)
+
+    def do_bufferinfo(self, line):
+        """
+        \033[1mbufferinfo\033[0m
+
+            Get the mesh forwarder buffer info.
+        \033[2m
+            > bufferinfo
+            total: 128
+            free: 128
+            6lo send: 0 0
+            6lo reas: 0 0
+            ip6: 0 0
+            mpl: 0 0
+            mle: 0 0
+            arp: 0 0
+            coap: 0 0
+            Done
+        \033[0m
+        """
+
+        result = self.prop_get_value(SPINEL.PROP_MSG_BUFFER_COUNTERS)
+        if result != None:
+            result = result[0]
+
+            print("total: %d" % result[0])
+            print("free: %d" % result[1])
+            print("6lo send: %d %d" % result[2:4])
+            print("6lo reas: %d %d" % result[4:6])
+            print("ip6: %d %d" % result[6:8])
+            print("mpl: %d %d" % result[8:10])
+            print("mle: %d %d" % result[10:12])
+            print("arp: %d %d" % result[12:14])
+            print("coap: %d %d" % result[14:16])
+            print("Done")
+        else:
+            print("Error")
 
     def do_channel(self, line):
         """
@@ -879,8 +919,8 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             self.prop_insert_value(SPINEL.PROP_IPV6_ADDRESS_TABLE,
                                    arr, str(len(arr)) + 's')
 
-            if self.wpan_api.tun_if:
-                self.wpan_api.tun_if.addr_add(ipaddr)
+            if self.tun_if:
+                self.tun_if.addr_add(ipaddr)
 
         elif params[0] == "remove":
             arr += self.wpan_api.encode_fields('CLLC',
@@ -891,8 +931,8 @@ class SpinelCliCmd(Cmd, SpinelCodec):
 
             self.prop_remove_value(SPINEL.PROP_IPV6_ADDRESS_TABLE,
                                    arr, str(len(arr)) + 's')
-            if self.wpan_api.tun_if:
-                self.wpan_api.tun_if.addr_del(ipaddr)
+            if self.tun_if:
+                self.tun_if.addr_del(ipaddr)
 
         print("Done")
 
@@ -1741,18 +1781,23 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             pass
 
         elif params[0] == "add":
-            if self.wpan_api.tun_if:
-                self.wpan_api.tun_if.addr_add(ipaddr)
+            if self.tun_if:
+                self.tun_if.addr_add(ipaddr)
 
         elif params[0] == "remove":
-            if self.wpan_api.tun_if:
-                self.wpan_api.tun_if.addr_del(ipaddr)
+            if self.tun_if:
+                self.tun_if.addr_del(ipaddr)
 
-        elif params[0] == "up":
-            self.wpan_api.if_up(self.nodeid)
+        elif params[0] == "up":    
+            if os.geteuid() == 0:
+                self.tun_if = TunInterface(nodeid)
+            else:
+                print("Warning: superuser required to start tun interface.")
 
         elif params[0] == "down":
-            self.wpan_api.if_down()
+            if self.tun_if:
+                self.tun_if.close()            
+            self.tun_if = None
 
         elif params[0] == "ping":
             # Use tunnel to send ping
@@ -1766,8 +1811,8 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             if len(params) > 3:
                 _interval = params[3]
 
-            if self.wpan_api.tun_if:
-                self.wpan_api.tun_if.ping6(
+            if self.tun_if:
+                self.tun_if.ping6(
                     " -c " + count + " -s " + size + " " + ipaddr)
 
         print("Done")

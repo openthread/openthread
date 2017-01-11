@@ -190,18 +190,22 @@ private:
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
 
-    static void HandleMgmtCommissionerSetResponse(void *aContext, otCoapHeader *aHeader,
-                                                  otMessage aMessage, ThreadError aResult);
-    void HandleMgmtCommissisonerSetResponse(Coap::Header *aHeader, Message *aMessage, ThreadError aResult);
-    static void HandleMgmtCommissionerGetResponse(void *aContext, otCoapHeader *aHeader,
-                                                  otMessage aMessage, ThreadError aResult);
-    void HandleMgmtCommissisonerGetResponse(Coap::Header *aHeader, Message *aMessage, ThreadError aResult);
-    static void HandleLeaderPetitionResponse(void *aContext, otCoapHeader *aHeader,
-                                             otMessage aMessage, ThreadError aResult);
-    void HandleLeaderPetitionResponse(Coap::Header *aHeader, Message *aMessage, ThreadError aResult);
-    static void HandleLeaderKeepAliveResponse(void *aContext, otCoapHeader *aHeader,
-                                              otMessage aMessage, ThreadError aResult);
-    void HandleLeaderKeepAliveResponse(Coap::Header *aHeader, Message *aMessage, ThreadError aResult);
+    static void HandleMgmtCommissionerSetResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                                  const otMessageInfo *aMessageInfo, ThreadError aResult);
+    void HandleMgmtCommissisonerSetResponse(Coap::Header *aHeader, Message *aMessage,
+                                            const Ip6::MessageInfo *aMessageInfo, ThreadError aResult);
+    static void HandleMgmtCommissionerGetResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                                  const otMessageInfo *aMessageInfo, ThreadError aResult);
+    void HandleMgmtCommissisonerGetResponse(Coap::Header *aHeader, Message *aMessage,
+                                            const Ip6::MessageInfo *aMessageInfo, ThreadError aResult);
+    static void HandleLeaderPetitionResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                             const otMessageInfo *aMessageInfo, ThreadError aResult);
+    void HandleLeaderPetitionResponse(Coap::Header *aHeader, Message *aMessage,
+                                      const Ip6::MessageInfo *aMessageInfo, ThreadError aResult);
+    static void HandleLeaderKeepAliveResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                              const otMessageInfo *aMessageInfo, ThreadError aResult);
+    void HandleLeaderKeepAliveResponse(Coap::Header *aHeader, Message *aMessage,
+                                       const Ip6::MessageInfo *aMessageInfo, ThreadError aResult);
 
     static void HandleRelayReceive(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
                                    const otMessageInfo *aMessageInfo);
@@ -220,7 +224,6 @@ private:
     static ThreadError SendRelayTransmit(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    void SendDatasetChangedResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo);
     ThreadError SendCommissionerSet(void);
     ThreadError SendPetition(void);
     ThreadError SendKeepAlive(void);
@@ -244,8 +247,8 @@ private:
     uint16_t mJoinerPort;
     uint16_t mJoinerRloc;
 
-    uint16_t mSessionId;
     Timer mTimer;
+    uint16_t mSessionId;
     uint8_t mTransmitAttempts;
     bool mSendKek;
 

@@ -73,6 +73,13 @@ private:
         kSpiHeaderLength = 5,                                     // Size of spi header.
     };
 
+    enum TxState
+    {
+        kTxStateIdle,                      // No frame to send
+        kTxStateSending,                   // A frame is ready to be sent
+        kTxStateHandlingSendDone           // The frame was sent successfully, waiting to prepare the next one (if any)
+    };
+
     uint16_t OutboundFrameSize(void);
 
     static void SpiTransactionComplete(
@@ -102,9 +109,8 @@ private:
 
     ThreadError PrepareNextSpiSendFrame(void);
 
-    bool mSending;
+    TxState mTxState;
     bool mHandlingRxFrame;
-    bool mHandlingSendDone;
 
     Tasklet mHandleRxFrameTask;
     Tasklet mPrepareTxFrameTask;

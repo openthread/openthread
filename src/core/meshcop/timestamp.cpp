@@ -28,11 +28,13 @@
 
 /**
  * @file
- *   This file implements common MeshCoP TLV processing.
+ *   This file implements common MeshCoP timestamp processing.
  */
 
-#include <common/code_utils.hpp>
-#include <meshcop/tlvs.hpp>
+#include <string.h>
+
+#include <openthread-types.h>
+#include <meshcop/timestamp.hpp>
 
 namespace Thread {
 namespace MeshCoP {
@@ -67,72 +69,6 @@ int Timestamp::Compare(const Timestamp &aCompare) const
     }
 
     return rval;
-}
-
-ThreadError Tlv::GetTlv(const Message &message, Type type, uint16_t maxLength, Tlv &tlv)
-{
-    ThreadError error = kThreadError_Parse;
-    uint16_t offset = message.GetOffset();
-    uint16_t end = message.GetLength();
-
-    while (offset < end)
-    {
-        message.Read(offset, sizeof(Tlv), &tlv);
-
-        if (tlv.GetType() == type && (offset + sizeof(tlv) + tlv.GetLength()) <= end)
-        {
-            if (maxLength > sizeof(tlv) + tlv.GetLength())
-            {
-                maxLength = sizeof(tlv) + tlv.GetLength();
-            }
-
-            message.Read(offset, maxLength, &tlv);
-
-            ExitNow(error = kThreadError_None);
-        }
-
-        offset += sizeof(tlv) + tlv.GetLength();
-    }
-
-exit:
-    return error;
-}
-
-ThreadError Tlv::GetValueOffset(const Message &aMessage, Type aType, uint16_t &aOffset, uint16_t &aLength)
-{
-    ThreadError error = kThreadError_Parse;
-    uint16_t offset = aMessage.GetOffset();
-    uint16_t end = aMessage.GetLength();
-
-    while (offset < end)
-    {
-        Tlv tlv;
-        uint16_t length;
-
-        aMessage.Read(offset, sizeof(tlv), &tlv);
-        offset += sizeof(tlv);
-
-        length = tlv.GetLength();
-
-        if (length == kExtendedLength)
-        {
-            aMessage.Read(offset, sizeof(length), &length);
-            offset += sizeof(length);
-            length = HostSwap16(length);
-        }
-
-        if (tlv.GetType() == aType)
-        {
-            aOffset = offset;
-            aLength = length;
-            ExitNow(error = kThreadError_None);
-        }
-
-        offset += length;
-    }
-
-exit:
-    return error;
 }
 
 }  // namespace MeshCoP

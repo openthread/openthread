@@ -31,8 +31,9 @@
 AUTO_DUT = False
 """bool: Whether use the auto DUT feature of thread harness."""
 
-DUT_DEVICE = 'COM16'
-"""str: Serial port of the DUT, must be set if AUTO_DUT=False."""
+DUT_DEVICE = ('COM16', 'OpenThread')
+"""(str,str): The first element is serial port of the DUT, and the second is
+the device type. This must be set if AUTO_DUT=False."""
 
 DUT_VERSION = 'g12345'
 """str: Version of DUT, must be set if AUTO_DUT=False."""
@@ -79,19 +80,10 @@ TESTER_NAME = 'Thread Open'
 TESTER_REMARKS = 'OpenThread is great'
 """str: Any comments in the final PDF"""
 
-SER2NET_HOSTNAME = '192.168.1.1'
-"""str: ser2net hostname, used by items in `GOLDEN_DEVICES` with prefix `NET`."""
-
-SER2NET_PORTBASE = 9000
-"""str: ser2net port base, `NET1` will be mapped to `SER2NET_PORTBASE + 1`."""
-
-GOLDEN_DEVICE_TYPE = 'OpenThread'
-"""str: Golden device type. Possible values are: `OpenThread`, `ARM`, `SiLabs` and `Freescale`."""
-
 GOLDEN_DEVICES = []
-"""[str]: Golden devices list.
+"""[(str, str)]: devices list.
 
-It should be something like ['COM1', 'COM2'] on Windows and can be found on Windows Device Manager."""
+It should be something like [('COM1', 'OpenThread'), ('COM2', 'ARM')] on Windows and can be found on Windows Device Manager."""
 
 OUTPUT_PATH = '.\\output'
 """str: Path to store results and logs, MUST be writable."""

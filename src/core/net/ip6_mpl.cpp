@@ -164,7 +164,7 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
     Message *messageCopy = NULL;
     MplBufferedMessageMetadata messageMetadata;
     uint32_t nextTransmissionTime;
-    uint8_t hopLimit;
+    uint8_t hopLimit = 0;
 
     VerifyOrExit(GetTimerExpirations() > 0,);
     VerifyOrExit((messageCopy = aMessage.Clone()) != NULL, error = kThreadError_NoBufs);
@@ -172,7 +172,7 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
     if (!aIsOutbound)
     {
         aMessage.Read(Header::GetHopLimitOffset(), Header::GetHopLimitSize(), &hopLimit);
-        VerifyOrExit(--hopLimit > 0, error = kThreadError_Drop);
+        VerifyOrExit(hopLimit-- > 1, error = kThreadError_Drop);
         messageCopy->Write(Header::GetHopLimitOffset(), Header::GetHopLimitSize(), &hopLimit);
     }
 

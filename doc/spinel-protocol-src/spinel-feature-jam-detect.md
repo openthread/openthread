@@ -81,3 +81,20 @@ the detection window where the RSSI must be above
 
 The behavior of the jamming detection feature when `PROP_JAM_DETECT_BUSY`
 is larger than `PROP_JAM_DETECT_WINDOW` is undefined.
+
+### PROP 4613: SPINEL_PROP_JAM_DETECT_HISTORY_BITMAP
+
+* Type: Read-Only
+* Packed-Encoding: `LL`
+* Default Value: Implementation-specific
+* RECOMMENDED for `CAP_JAM_DETECT`
+
+This value provides information about current state of jamming detection
+module for monitoring/debugging purpose. It returns a 64-bit value where
+each bit corresponds to one second interval starting with bit 0 for the
+most recent interval and bit 63 for the oldest intervals (63 sec earlier).
+The bit is set to 1 if the jamming detection module observed/detected
+high signal level during the corresponding one second interval.
+The value is read-only and is encoded as two `L` (uint32) values in
+little-endian format (first `L` (uint32) value gives the lower bits
+corresponding to more recent history).

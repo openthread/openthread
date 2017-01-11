@@ -80,27 +80,39 @@ check_PROGRAMS                                                      = \
     test-link-quality                                                 \
     test-mac-frame                                                    \
     test-message                                                      \
+    test-message-queue                                                \
+    test-priority-queue                                               \
     test-timer                                                        \
     test-toolchain                                                    \
     $(NULL)
 
+XFAIL_TESTS                                                         = \
+    $(NULL)
+
 if OPENTHREAD_ENABLE_DIAG
-check_PROGRAMS                                                    += \
-    test-diag                                                        \
+check_PROGRAMS                                                     += \
+    test-diag                                                         \
     $(NULL)
 endif
 
 if OPENTHREAD_ENABLE_NCP
 
-COMMON_LDADD                                                      += \
-    $(top_builddir)/src/ncp/libopenthread-ncp.a                      \
+COMMON_LDADD                                                       += \
+    $(top_builddir)/src/ncp/libopenthread-ncp.a                       \
     $(NULL)
 
-check_PROGRAMS                                                    += \
-    test-ncp-buffer                                                  \
+check_PROGRAMS                                                     += \
+    test-ncp-buffer                                                   \
     $(NULL)
+
 
 endif # OPENTHREAD_ENABLE_NCP
+if OPENTHREAD_WITH_ADDRESS_SANITIZER
+check_PROGRAMS                 += test-address-sanitizer
+XFAIL_TESTS                    += test-address-sanitizer
+test_address_sanitizer_SOURCES  = test_address_sanitizer.cpp
+endif # OPENTHREAD_WITH_ADDRESS_SANITIZER
+
 
 # Test applications and scripts that should be built and run when the
 # 'check' target is run.
@@ -138,14 +150,20 @@ test_mac_frame_SOURCES       = test_platform.cpp test_mac_frame.cpp
 test_message_LDADD           = $(COMMON_LDADD)
 test_message_SOURCES         = test_platform.cpp test_message.cpp
 
+test_message_queue_LDADD     = $(COMMON_LDADD)
+test_message_queue_SOURCES   = test_platform.cpp test_message_queue.cpp
+
 test_ncp_buffer_LDADD        = $(COMMON_LDADD)
 test_ncp_buffer_SOURCES      = test_platform.cpp test_ncp_buffer.cpp
+
+test_priority_queue_LDADD    = $(COMMON_LDADD)
+test_priority_queue_SOURCES  = test_platform.cpp test_priority_queue.cpp
 
 test_timer_LDADD             = $(COMMON_LDADD)
 test_timer_SOURCES           = test_platform.cpp test_timer.cpp
 
 test_toolchain_LDADD         = $(COMMON_LDADD)
-test_toolchain_SOURCES       = test_platform.cpp test_toolchain.cpp
+test_toolchain_SOURCES       = test_platform.cpp test_toolchain.cpp test_toolchain_c.c
 
 if OPENTHREAD_ENABLE_DIAG
 test_diag_LDADD              = $(top_builddir)/src/diag/libopenthread-diag.a                  \

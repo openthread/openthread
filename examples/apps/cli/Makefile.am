@@ -40,7 +40,6 @@ CPPFLAGS_COMMON                                                        = \
     $(NULL)
 
 LDADD_COMMON                                                           = \
-    $(top_builddir)/src/cli/libopenthread-cli.a                          \
     $(NULL)
 
 LDFLAGS_COMMON                                                         = \
@@ -88,13 +87,14 @@ LDADD_COMMON                                                          += \
 LDFLAGS_COMMON                                                        += \
     -T $(top_srcdir)/examples/platforms/da15000/da15000.ld               \
     $(NULL)
-endif
+endif # OPENTHREAD_EXAMPLES_DA15000
 
 ot_cli_ftd_CPPFLAGS                                                    = \
     $(CPPFLAGS_COMMON)                                                   \
     $(NULL)
 
 ot_cli_ftd_LDADD                                                       = \
+    $(top_builddir)/src/cli/libopenthread-cli.a                          \
     $(top_builddir)/src/core/libopenthread-ftd.a                         \
     $(LDADD_COMMON)                                                      \
     $(NULL)
@@ -112,6 +112,7 @@ ot_cli_mtd_CPPFLAGS                                                    = \
     $(NULL)
 
 ot_cli_mtd_LDADD                                                       = \
+    $(top_builddir)/src/cli/libopenthread-cli.a                          \
     $(top_builddir)/src/core/libopenthread-mtd.a                         \
     $(LDADD_COMMON)                                                      \
     $(NULL)

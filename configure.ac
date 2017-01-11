@@ -283,6 +283,39 @@ NL_ENABLE_OPTIMIZATION([yes])
 
 AM_CONDITIONAL([OPENTHREAD_BUILD_OPTIMIZED], [test "${nl_cv_build_optimized}" = "yes"])
 
+# Address Sanitizer
+
+AC_MSG_CHECKING([whether to build with Address Sanitizer support])
+AC_ARG_ENABLE(address-sanitizer,
+    [AS_HELP_STRING([--enable-address-sanitizer],[Enable Address Sanitizer support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_address_sanitizer=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enableval} for --enable-address-sanitizer])
+            ;;
+
+        esac
+    ],
+    [enable_address_sanitizer=no])
+AC_MSG_RESULT(${enable_address_sanitizer})
+
+AM_CONDITIONAL([OPENTHREAD_WITH_ADDRESS_SANITIZER], [test "${enable_address_sanitizer}" = "yes"])
+
+if test "${enable_address_sanitizer}" = "yes" ; then
+
+    PROSPECTIVE_CFLAGS="-fsanitize=address"
+
+    # Check if the compilers support address sanitizer
+    AX_CHECK_COMPILER_OPTIONS([C],   ${PROSPECTIVE_CFLAGS})
+    AX_CHECK_COMPILER_OPTIONS([C++], ${PROSPECTIVE_CFLAGS})
+
+fi
+
 #
 # Code style
 #
@@ -657,34 +690,34 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_LEGACY], [test "${enable_legacy}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_LEGACY],[${OPENTHREAD_ENABLE_LEGACY}],[Define to 1 if you want to use legacy network support])
 
 #
-# Cli Logging
+# Default Logging
 #
 
-AC_ARG_ENABLE(cli_logging,
-    [AS_HELP_STRING([--enable-cli-logging],[Enable cli logging support @<:@default=no@:>@.])],
+AC_ARG_ENABLE(default_logging,
+    [AS_HELP_STRING([--enable-default-logging],[Enable default logging support @<:@default=no@:>@.])],
     [
         case "${enableval}" in
 
         no|yes)
-            enable_cli_logging=${enableval}
+            enable_default_logging=${enableval}
             ;;
 
         *)
-            AC_MSG_ERROR([Invalid value ${enable_cli_logging} for --enable-cli-logging])
+            AC_MSG_ERROR([Invalid value ${enable_default_logging} for --enable-default-logging])
             ;;
         esac
     ],
-    [enable_cli_logging=no])
+    [enable_default_logging=no])
 
-if test "$enable_cli_logging" = "yes"; then
-    OPENTHREAD_ENABLE_CLI_LOGGING=1
+if test "$enable_default_logging" = "yes"; then
+    OPENTHREAD_ENABLE_DEFAULT_LOGGING=1
 else
-    OPENTHREAD_ENABLE_CLI_LOGGING=0
+    OPENTHREAD_ENABLE_DEFAULT_LOGGING=0
 fi
 
-AC_SUBST(OPENTHREAD_ENABLE_CLI_LOGGING)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI_LOGGING], [test "${enable_cli_logging}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_CLI_LOGGING],[${OPENTHREAD_ENABLE_CLI_LOGGING}],[Define to 1 if you want to enable cli logging])
+AC_SUBST(OPENTHREAD_ENABLE_DEFAULT_LOGGING)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_DEFAULT_LOGGING], [test "${enable_default_logging}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DEFAULT_LOGGING],[${OPENTHREAD_ENABLE_DEFAULT_LOGGING}],[Define to 1 if you want to enable default logging])
 
 #
 # Log for certification test
@@ -841,6 +874,7 @@ case ${with_examples} in
 
     da15000)
         OPENTHREAD_EXAMPLES_DA15000=1
+        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_DA15000],[${OPENTHREAD_EXAMPLES_DA15000}],[Define to 1 if you want to use da15000 examples])
         ;;
 
 esac
@@ -856,6 +890,9 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_POSIX], [test "${OPENTHREAD_EXAMPLES}" = "po
 
 AC_SUBST(OPENTHREAD_EXAMPLES_CC2538)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2538], [test "${OPENTHREAD_EXAMPLES}" = "cc2538"])
+
+AC_SUBST(OPENTHREAD_EXAMPLES_DA15000)
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_DA15000], [test "${OPENTHREAD_EXAMPLES}" = "da15000"])
 
 #
 # Platform Information
@@ -998,6 +1035,7 @@ examples/platforms/Makefile
 examples/platforms/cc2538/Makefile
 examples/platforms/da15000/Makefile
 examples/platforms/posix/Makefile
+examples/platforms/utils/Makefile
 tools/Makefile
 tools/harness-automation/Makefile
 tools/harness-thci/Makefile
@@ -1038,6 +1076,7 @@ AC_MSG_NOTICE([
   Build optimized libraries                 : ${nl_cv_build_optimized}
   Build coverage libraries                  : ${nl_cv_build_coverage}
   Build coverage reports                    : ${nl_cv_build_coverage_reports}
+  Address sanitizer support                 : ${enable_address_sanitizer}
   Lcov                                      : ${LCOV:--}
   Genhtml                                   : ${GENHTML:--}
   Build tests                               : ${nl_cv_build_tests}
@@ -1074,7 +1113,7 @@ AC_MSG_NOTICE([
   OpenThread MAC Whitelist support          : ${enable_mac_whitelist}
   OpenThread Diagnostics support            : ${enable_diag}
   OpenThread Legacy network support         : ${enable_legacy}
-  OpenThread Cli logging support            : ${enable_cli_logging}
+  OpenThread Default logging support        : ${enable_default_logging}
   OpenThread Certification log support      : ${enable_cert_log}
   OpenThread DHCPv6 Server support          : ${enable_dhcp6_server}
   OpenThread DHCPv6 Client support          : ${enable_dhcp6_client}

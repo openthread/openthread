@@ -25,43 +25,50 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
-/**
- * @file
- *   This file implements the OpenThread platform abstraction for logging.
- *
- */
-
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
-
-
-#include <platform/logging.h>
-#if OPENTHREAD_ENABLE_CLI_LOGGING
-#include <ctype.h>
-#include <inttypes.h>
+ 
+//
+// system headers
+//
+extern "C" {
 #include <stdarg.h>
+#include <stddef.h>
 #include <stdio.h>
-#include <stdint.h>
 #include <string.h>
+#include <ntverp.h>
+#include <ntddk.h>
+#include <ntstrsafe.h>
+#include <ntintsafe.h>
+#include <ndis.h>
+#include <WppRecorder.h>
+#include <wdf.h>
+#ifndef OTTMP_LEGACY
+#include <netadaptercx.h>
+#endif
+#include <WdfMiniport.h>
+#include <wdm.h>
+#include <ntddser.h>
+}
 
-#include <common/code_utils.hpp>
-#include <cli/cli-uart.h>
+// Intellisense definition for DbgRaiseAssertionFailure because for some reason Visual Studio can't
+// find it.
+#ifdef __INTELLISENSE__
+#define DbgRaiseAssertionFailure() ((void) 0)
 #endif
 
-void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
-{
-#if OPENTHREAD_ENABLE_CLI_LOGGING
-    va_list args;
-    va_start(args, aFormat);
-    otCliLog(aLogLevel, aLogRegion, aFormat, args);
-    va_end(args);
-#else
-    (void)aLogLevel;
-    (void)aLogRegion;
-    (void)aFormat;
-#endif // OPENTHREAD_ENABLE_CLI_LOGGING
-}
+#include "otOID.h"
+ 
+#define CODE_SEG(seg) __declspec(code_seg(seg))
+#define INITCODE CODE_SEG("INIT")  
+#define PAGED  CODE_SEG("PAGE")
+
+typedef struct _OTTMP_ADAPTER_CONTEXT *POTTMP_ADAPTER_CONTEXT;
+typedef struct _OTTMP_DEVICE_CONTEXT *POTTMP_DEVICE_CONTEXT;
+
+#include "hardware.hpp"
+#include "hdlc.hpp"
+#include "driver.hpp"
+#include "adapter.hpp"
+#include "device.hpp"
+#include "serial.hpp"
+#include "oid.hpp"
+#include "platform/logging-windows.h"

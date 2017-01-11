@@ -90,10 +90,10 @@ NcpUart::NcpUart(otInstance *aInstance):
     mFrameDecoder(mRxBuffer, sizeof(mRxBuffer), &NcpUart::HandleFrame, &NcpUart::HandleError, this),
     mUartBuffer(),
     mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer)),
+    mState(kStartingFrame),
+    mByte(0),
     mUartSendTask(aInstance->mIp6.mTaskletScheduler, EncodeAndSendToUart, this)
 {
-    mState = kStartingFrame;
-
     mTxFrameBuffer.SetCallbacks(NULL, TxFrameBufferHasData, this);
 }
 
@@ -174,6 +174,8 @@ void NcpUart::EncodeAndSendToUart(void)
             super_t::HandleSpaceAvailableInTxBuffer();
 
             mState = kFinalizingFrame;
+
+            // fall through
 
         case kFinalizingFrame:
 
@@ -264,16 +266,30 @@ void NcpUart::HandleError(ThreadError aError, uint8_t *aBuf, uint16_t aBufLength
     otNcpStreamWrite(0, reinterpret_cast<uint8_t*>(hexbuf + 1), static_cast<int>(strlen(hexbuf) - 1));
 }
 
-#if OPENTHREAD_ENABLE_CLI_LOGGING
+#if OPENTHREAD_ENABLE_DEFAULT_LOGGING
 #ifdef __cplusplus
 extern "C" {
 #endif
-void otCliLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aAp)
+void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
+    char logString[128];
+    int charsWritten;
+    va_list args;
+
+    va_start(args, aFormat);
+    if ((charsWritten = vsnprintf(logString, sizeof(logString), aFormat, args)) > 0)
+    {
+        if (charsWritten > static_cast<int>(sizeof(logString) - 1))
+        {
+            charsWritten = static_cast<int>(sizeof(logString) - 1);
+        }
+
+        otNcpStreamWrite(0, reinterpret_cast<uint8_t*>(logString), charsWritten);
+    }
+    va_end(args);
+
     (void)aLogLevel;
     (void)aLogRegion;
-    (void)aFormat;
-    (void)aAp;
 }
 #ifdef __cplusplus
 }  // extern "C"

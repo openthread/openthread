@@ -460,8 +460,7 @@ ThreadError Mac::SetNetworkName(const char *aNetworkName)
 
     VerifyOrExit(strlen(aNetworkName) <= OT_NETWORK_NAME_MAX_SIZE, error = kThreadError_InvalidArgs);
 
-    memset(&mNetworkName, 0, sizeof(mNetworkName));
-    strncpy(mNetworkName.m8, aNetworkName, sizeof(mNetworkName));
+    strncpy(mNetworkName.m8, aNetworkName, sizeof(mNetworkName) - 1);
 
 exit:
     otLogFuncExitErr(error);
@@ -782,7 +781,7 @@ exit:
 
     if (error != kThreadError_None)
     {
-        TransmitDoneTask(false, kThreadError_Abort);
+        TransmitDoneTask(mTxFrame, false, kThreadError_Abort);
     }
 }
 
@@ -790,16 +789,32 @@ extern "C" void otPlatRadioTransmitDone(otInstance *aInstance, RadioPacket *aPac
                                         ThreadError aError)
 {
     otLogFuncEntryMsg("%!otError!, aRxPending=%u", aError, aRxPending ? 1 : 0);
-    (void)aPacket;
-    aInstance->mThreadNetif.GetMac().TransmitDoneTask(aRxPending, aError);
+
+    aInstance->mThreadNetif.GetMac().TransmitDoneTask(aPacket, aRxPending, aError);
     otLogFuncExit();
 }
 
-void Mac::TransmitDoneTask(bool aRxPending, ThreadError aError)
+void Mac::TransmitDoneTask(RadioPacket *aPacket, bool aRxPending, ThreadError aError)
 {
     mMacTimer.Stop();
 
     mCounters.mTxTotal++;
+
+    Frame *packet = static_cast<Frame *>(aPacket);
+    Address addr;
+    packet->GetDstAddr(addr);
+
+    if (addr.mShortAddress == kShortAddrBroadcast)
+    {
+        // Broadcast packet
+        mCounters.mTxBroadcast++;
+    }
+    else
+    {
+        // Unicast packet
+        mCounters.mTxUnicast++;
+    }
+
 
     if (!RadioSupportsRetriesAndCsmaBackoff() &&
         aError == kThreadError_ChannelAccessFailure &&
@@ -846,6 +861,8 @@ void Mac::HandleMacTimer(void *aContext)
 
 void Mac::HandleMacTimer(void)
 {
+    Address addr;
+
     switch (mState)
     {
     case kStateActiveScan:
@@ -876,6 +893,20 @@ void Mac::HandleMacTimer(void)
         otLogDebgMac("ack timer fired");
         otPlatRadioReceive(mNetif.GetInstance(), mChannel);
         mCounters.mTxTotal++;
+
+        mTxFrame->GetDstAddr(addr);
+
+        if (addr.mShortAddress == kShortAddrBroadcast)
+        {
+            // Broadcast packet
+            mCounters.mTxBroadcast++;
+        }
+        else
+        {
+            // Unicast Packet
+            mCounters.mTxUnicast++;
+        }
+
         SentFrame(kThreadError_NoAck);
         break;
 
@@ -986,6 +1017,7 @@ void Mac::SentFrame(ThreadError aError)
         sender->mNext = NULL;
 
         mDataSequence++;
+        otDumpDebgMac("TX", sendFrame.GetHeader(), sendFrame.GetLength());
         sender->HandleSentFrame(sendFrame, aError);
 
         ScheduleNextTransmission();
@@ -1239,6 +1271,18 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
         break;
     }
 
+    // Increment coutners
+    if (dstaddr.mShortAddress == kShortAddrBroadcast)
+    {
+        // Broadcast packet
+        mCounters.mRxBroadcast++;
+    }
+    else
+    {
+        // Unicast packet
+        mCounters.mRxUnicast++;
+    }
+
     // Security Processing
     SuccessOrExit(error = ProcessReceiveSecurity(*aFrame, srcaddr, neighbor));
 
@@ -1297,6 +1341,8 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
 
         if (receive)
         {
+            otDumpDebgMac("RX", aFrame->GetHeader(), aFrame->GetLength());
+
             for (Receiver *receiver = mReceiveHead; receiver; receiver = receiver->mNext)
             {
                 receiver->HandleReceivedFrame(*aFrame);
@@ -1424,6 +1470,25 @@ Whitelist &Mac::GetWhitelist(void)
 Blacklist &Mac::GetBlacklist(void)
 {
     return mBlacklist;
+}
+
+void Mac::FillMacCountersTlv(NetworkDiagnostic::MacCountersTlv &aMacCounters) const
+{
+    aMacCounters.SetIfInUnknownProtos(mCounters.mRxOther);
+    aMacCounters.SetIfInErrors(mCounters.mRxErrNoFrame + mCounters.mRxErrUnknownNeighbor + mCounters.mRxErrInvalidSrcAddr +
+                               mCounters.mRxErrSec + mCounters.mRxErrFcs + mCounters.mRxErrOther);
+    aMacCounters.SetIfOutErrors(mCounters.mTxErrCca);
+    aMacCounters.SetIfInUcastPkts(mCounters.mRxUnicast);
+    aMacCounters.SetIfInBroadcastPkts(mCounters.mRxBroadcast);
+    aMacCounters.SetIfInDiscards(mCounters.mRxWhitelistFiltered + mCounters.mRxDestAddrFiltered + mCounters.mRxDuplicated);
+    aMacCounters.SetIfOutUcastPkts(mCounters.mTxUnicast);
+    aMacCounters.SetIfOutBroadcastPkts(mCounters.mTxBroadcast);
+    aMacCounters.SetIfOutDiscards(0);
+}
+
+void Mac::ResetCounters(void)
+{
+    memset(&mCounters, 0, sizeof(mCounters));
 }
 
 otMacCounters &Mac::GetCounters(void)

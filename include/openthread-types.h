@@ -48,6 +48,7 @@ extern "C" {
 #endif
 
 #ifdef _WIN32
+#pragma warning(disable:4214)  // nonstandard extension used: bit field types other than int
 #ifdef _KERNEL_MODE
 #include <ntdef.h>
 #else
@@ -199,7 +200,8 @@ typedef enum ThreadError
 
 #define OT_MASTER_KEY_SIZE         16  ///< Size of the Thread Master Key (bytes)
 
-#define OT_NUM_NETDIAG_TLV_TYPES   18  ///< Number of Network Diagnostic TLV types
+#define OT_NETWORK_DIAGNOSTIC_TYPELIST_TYPE   18  ///< Concatenated List of Type Identifiers of Other Diagnostics TLVs Used to Request or Reset Multiple Diagnostic Values
+#define OT_NETWORK_DIAGNOSTIC_TYPELIST_MAX_ENTRIES   18  ///< Maximum Number of Other Network Diagnostic TLV Types
 
 /**
  * This structure represents a Thread Master Key.
@@ -832,6 +834,8 @@ typedef struct otLeaderData
 typedef struct otMacCounters
 {
     uint32_t mTxTotal;                ///< The total number of transmissions.
+    uint32_t mTxUnicast;              ///< The total number of unicast transmissions.
+    uint32_t mTxBroadcast;            ///< The total number of broadcast transmissions.
     uint32_t mTxAckRequested;         ///< The number of transmissions with ack request.
     uint32_t mTxAcked;                ///< The number of transmissions that were acked.
     uint32_t mTxNoAckRequested;       ///< The number of transmissions without ack request.
@@ -843,6 +847,8 @@ typedef struct otMacCounters
     uint32_t mTxRetry;                ///< The number of retransmission times.
     uint32_t mTxErrCca;               ///< The number of CCA failure times.
     uint32_t mRxTotal;                ///< The total number of received packets.
+    uint32_t mRxUnicast;              ///< The total number of unicast packets received.
+    uint32_t mRxBroadcast;            ///< The total number of broadcast packets received.
     uint32_t mRxData;                 ///< The number of received data.
     uint32_t mRxDataPoll;             ///< The number of received data poll.
     uint32_t mRxBeacon;               ///< The number of received beacon.
@@ -893,11 +899,13 @@ typedef struct otBufferInfo
  */
 typedef struct otNetifAddress
 {
-    otIp6Address           mAddress;            ///< The IPv6 unicast address.
-    uint32_t               mPreferredLifetime;  ///< The Preferred Lifetime.
-    uint32_t               mValidLifetime;      ///< The Valid lifetime.
-    uint8_t                mPrefixLength;       ///< The Prefix length.
-    struct otNetifAddress *mNext;               ///< A pointer to the next network interface address.
+    otIp6Address           mAddress;                 ///< The IPv6 unicast address.
+    uint8_t                mPrefixLength;            ///< The Prefix length.
+    bool                   mPreferred : 1;           ///< TRUE if the address is preferred, FALSE otherwise.
+    bool                   mValid : 1;               ///< TRUE if the address is valid, FALSE otherwise.
+    bool                   mScopeOverrideValid : 1;  ///< TRUE if the mScopeOverride value is valid, FALSE othewrise.
+    unsigned int           mScopeOverride : 4;       ///< The IPv6 scope of this address.
+    struct otNetifAddress *mNext;                    ///< A pointer to the next network interface address.
 } otNetifAddress;
 
 /**
@@ -950,6 +958,14 @@ typedef struct
  * This type points to an OpenThread message buffer.
  */
 typedef void *otMessage;
+
+/**
+ * This structure represents an OpenThread message queue.
+ */
+typedef struct
+{
+    void *mData;            ///< Opaque data used by the implementation.
+} otMessageQueue;
 
 /**
  * @}

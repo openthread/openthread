@@ -453,18 +453,43 @@ exit:
     return error;
 }
 
-uint8_t *LeaderBase::GetCommissioningData(uint8_t &aLength)
+NetworkDataTlv *LeaderBase::GetCommissioningData(void)
 {
-    uint8_t *rval = NULL;
+    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
+    NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
 
-    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
-         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
-         cur = cur->GetNext())
+    for (; cur < end; cur = cur->GetNext())
     {
         if (cur->GetType() == NetworkDataTlv::kTypeCommissioningData)
         {
-            aLength = cur->GetLength();
-            ExitNow(rval = cur->GetValue());
+            ExitNow();
+        }
+    }
+
+    cur = NULL;
+
+exit:
+    return cur;
+}
+
+MeshCoP::Tlv *LeaderBase::GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aType)
+{
+    MeshCoP::Tlv *rval = NULL;
+    NetworkDataTlv *commissioningDataTlv;
+    MeshCoP::Tlv *cur;
+    MeshCoP::Tlv *end;
+
+    commissioningDataTlv = GetCommissioningData();
+    VerifyOrExit(commissioningDataTlv != NULL,);
+
+    cur = reinterpret_cast<MeshCoP::Tlv *>(commissioningDataTlv->GetValue());
+    end = reinterpret_cast<MeshCoP::Tlv *>(commissioningDataTlv->GetValue() + commissioningDataTlv->GetLength());
+
+    for (; cur < end; cur = cur->GetNext())
+    {
+        if (cur->GetType() == aType)
+        {
+            ExitNow(rval = cur);
         }
     }
 

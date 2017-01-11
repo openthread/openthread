@@ -46,6 +46,8 @@
 namespace Thread {
 
 PanIdQueryServer::PanIdQueryServer(ThreadNetif &aThreadNetif) :
+    mChannelMask(0),
+    mPanId(Mac::kPanIdBroadcast),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, &PanIdQueryServer::HandleTimer, this),
     mPanIdQuery(OPENTHREAD_URI_PANID_QUERY, &PanIdQueryServer::HandleQuery, this),
     mCoapServer(aThreadNetif.GetCoapServer()),
@@ -67,6 +69,7 @@ void PanIdQueryServer::HandleQuery(Coap::Header &aHeader, Message &aMessage, con
 {
     MeshCoP::PanIdTlv panId;
     MeshCoP::ChannelMask0Tlv channelMask;
+    Ip6::MessageInfo responseInfo(aMessageInfo);
 
     VerifyOrExit(aHeader.GetCode() == kCoapRequestPost, ;);
 
@@ -81,42 +84,13 @@ void PanIdQueryServer::HandleQuery(Coap::Header &aHeader, Message &aMessage, con
     mPanId = panId.GetPanId();
     mTimer.Start(kScanDelay);
 
-    SendQueryResponse(aHeader, aMessageInfo);
-
-exit:
-    return;
-}
-
-ThreadError PanIdQueryServer::SendQueryResponse(const Coap::Header &aRequestHeader,
-                                                const Ip6::MessageInfo &aRequestInfo)
-{
-    ThreadError error = kThreadError_None;
-    Message *message = NULL;
-    Coap::Header responseHeader;
-    Ip6::MessageInfo responseInfo;
-
-    VerifyOrExit(aRequestHeader.GetType() == kCoapTypeConfirmable, ;);
-
-    VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
-
-    responseHeader.SetDefaultResponseHeader(aRequestHeader);
-
-    SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
-
-    memcpy(&responseInfo, &aRequestInfo, sizeof(responseInfo));
     memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
-    SuccessOrExit(error = mCoapServer.SendMessage(*message, responseInfo));
+    SuccessOrExit(mCoapServer.SendEmptyAck(aHeader, responseInfo));
 
     otLogInfoMeshCoP("sent panid query response");
 
 exit:
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        message->Free();
-    }
-
-    return error;
+    return;
 }
 
 void PanIdQueryServer::HandleScanResult(void *aContext, Mac::Frame *aFrame)

@@ -49,10 +49,11 @@ public:
     /**
       * This function pointer is called once DTLS connection is established.
       *
-      * @param[in]  aContext  A pointer to arbitrary context information.
+      * @param[in]  aConnected  TRUE if a connection was established, FALSE otherwise.
+      * @param[in]  aContext    A pointer to arbitrary context information.
       *
       */
-    typedef void (*ConnectedCallback)(void *aContext);
+    typedef void (*ConnectedCallback)(bool aConnected, void *aContext);
 
     /**
      * This constructor initializes the object.
@@ -139,6 +140,9 @@ private:
 
     static void Receive(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    static void HandleDtlsConnected(void *aContext, bool aConnected);
+    void HandleDtlsConnected(bool aConnected);
 
     static void HandleDtlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength);
     void HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength);

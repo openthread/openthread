@@ -75,6 +75,7 @@
     <ClCompile Include="..\..\src\core\common\message.cpp" />
     <ClCompile Include="..\..\src\core\common\tasklet.cpp" />
     <ClCompile Include="..\..\src\core\common\timer.cpp" />
+    <ClCompile Include="..\..\src\core\common\tlvs.cpp" />
     <ClCompile Include="..\..\src\core\common\trickle_timer.cpp" />
     <ClCompile Include="..\..\src\core\crypto\aes_ccm.cpp" />
     <ClCompile Include="..\..\src\core\crypto\aes_ecb.cpp" />
@@ -95,7 +96,7 @@
     <ClCompile Include="..\..\src\core\meshcop\joiner_router.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\leader.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\panid_query_client.cpp" />
-    <ClCompile Include="..\..\src\core\meshcop\tlvs.cpp" />
+    <ClCompile Include="..\..\src\core\meshcop\timestamp.cpp" />
     <ClCompile Include="..\..\src\core\net\dhcp6_client.cpp" />
     <ClCompile Include="..\..\src\core\net\dhcp6_server.cpp" />
     <ClCompile Include="..\..\src\core\net\icmp6.cpp" />
@@ -116,16 +117,13 @@
     <ClCompile Include="..\..\src\core\thread\mesh_forwarder.cpp" />
     <ClCompile Include="..\..\src\core\thread\mle.cpp" />
     <ClCompile Include="..\..\src\core\thread\mle_router.cpp" />
-    <ClCompile Include="..\..\src\core\thread\mle_tlvs.cpp" />
     <ClCompile Include="..\..\src\core\thread\network_data.cpp" />
     <ClCompile Include="..\..\src\core\thread\network_data_leader.cpp" />
     <ClCompile Include="..\..\src\core\thread\network_data_leader_ftd.cpp" />
     <ClCompile Include="..\..\src\core\thread\network_data_local.cpp" />
-    <ClCompile Include="..\..\src\core\thread\network_diag.cpp" />
-    <ClCompile Include="..\..\src\core\thread\network_diag_tlvs.cpp" />
+    <ClCompile Include="..\..\src\core\thread\network_diagnostic.cpp" />
     <ClCompile Include="..\..\src\core\thread\panid_query_server.cpp" />
     <ClCompile Include="..\..\src\core\thread\thread_netif.cpp" />
-    <ClCompile Include="..\..\src\core\thread\thread_tlvs.cpp" />
     <ClCompile Include="..\..\src\core\utils\slaac_address.cpp" />
     <ClCompile Include="..\..\src\core\utils\jam_detector.cpp" />
   </ItemGroup>
@@ -148,6 +146,7 @@
     <ClInclude Include="..\..\src\core\common\new.hpp" />
     <ClInclude Include="..\..\src\core\common\tasklet.hpp" />
     <ClInclude Include="..\..\src\core\common\timer.hpp" />
+    <ClInclude Include="..\..\src\core\common\tlvs.hpp" />
     <ClInclude Include="..\..\src\core\common\trickle_timer.hpp" />
     <ClInclude Include="..\..\src\core\crypto\aes_ccm.hpp" />
     <ClInclude Include="..\..\src\core\crypto\aes_ecb.hpp" />
@@ -172,6 +171,7 @@
     <ClInclude Include="..\..\src\core\meshcop\joiner_router.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\leader.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\panid_query_client.hpp" />
+    <ClInclude Include="..\..\src\core\meshcop\timestamp.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\tlvs.hpp" />
     <ClInclude Include="..\..\src\core\net\dhcp6.hpp" />
     <ClInclude Include="..\..\src\core\net\dhcp6_client.hpp" />
@@ -204,8 +204,8 @@
     <ClInclude Include="..\..\src\core\thread\network_data_leader.hpp" />
     <ClInclude Include="..\..\src\core\thread\network_data_local.hpp" />
     <ClInclude Include="..\..\src\core\thread\network_data_tlvs.hpp" />
-    <ClInclude Include="..\..\src\core\thread\network_diag.hpp" />
-    <ClInclude Include="..\..\src\core\thread\network_diag_tlvs.hpp" />
+    <ClInclude Include="..\..\src\core\thread\network_diagnostic.hpp" />
+    <ClInclude Include="..\..\src\core\thread\network_diagnostic_tlvs.hpp" />
     <ClInclude Include="..\..\src\core\thread\panid_query_server.hpp" />
     <ClInclude Include="..\..\src\core\thread\thread_netif.hpp" />
     <ClInclude Include="..\..\src\core\thread\thread_tlvs.hpp" />

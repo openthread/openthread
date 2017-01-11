@@ -57,7 +57,7 @@ from spinel.const import kThread
 from spinel.const import SPINEL
 from spinel.const import SPINEL_LAST_STATUS_MAP
 from spinel.hdlc import Hdlc
-from spinel.tun import TunInterface
+
 
 
 FEATURE_USE_HDLC = 1
@@ -167,6 +167,47 @@ class SpinelCodec(object):
         except KeyError:
             print(traceback.format_exc())
             return None
+
+    @classmethod
+    def parse_fields(cls, payload, spinel_format):
+        map_lengths = {
+            'b': 1,
+            'c': 1,
+            'C': 1,
+            's': 2,
+            'S': 2,
+            'l': 4,
+            'L': 4,
+            '6': 16,
+            'E': 8,
+            'e': 6,
+        }
+        result = []
+
+        idx = 0
+        while idx < len(spinel_format):
+            format = spinel_format[idx]
+
+            if format == 'T':
+                if spinel_format[idx+1] != '(':
+                    raise ValueError('Invalid structure format')
+                # TODO: count parentheses. There is a problem with nested structs.
+                struct_end = idx + spinel_format[idx:].index(')')
+
+                struct_format = spinel_format[idx+2:struct_end]
+                struct_len = sum([map_lengths[c] for c in struct_format])
+
+                result.append(cls.parse_fields(payload, struct_format))
+                payload = payload[struct_len:]
+
+                idx = struct_end + 1
+            else:
+                result.append(cls.parse_field(payload, spinel_format))
+                payload = payload[map_lengths[spinel_format[idx]]:]
+
+                idx += 1
+
+        return tuple(result)
 
     @classmethod
     def encode_i(cls, data):
@@ -553,6 +594,8 @@ class SpinelPropertyHandler(SpinelCodec):
 
     def PIB_MAC_SECURITY_ENABLED(self, _wpan_api, payload): pass
 
+    def MSG_BUFFER_COUNTERS(self, _wpan_api, payload): return self.parse_fields(payload, "T(SSSSSSSSSSSSSSSS)")
+
 #=========================================
 
 
@@ -717,6 +760,8 @@ SPINEL_PROP_DISPATCH = {
     SPINEL.PROP_PIB_15_4_PHY_CHANNELS_SUPPORTED: WPAN_PROP_HANDLER.PIB_PHY_CHANNELS_SUPPORTED,
     SPINEL.PROP_PIB_15_4_MAC_PROMISCUOUS_MODE: WPAN_PROP_HANDLER.PIB_MAC_PROMISCUOUS_MODE,
     SPINEL.PROP_PIB_15_4_MAC_SECURITY_ENABLED: WPAN_PROP_HANDLER.PIB_MAC_SECURITY_ENABLED,
+    
+    SPINEL.PROP_MSG_BUFFER_COUNTERS: WPAN_PROP_HANDLER.MSG_BUFFER_COUNTERS
 }
 
 
@@ -724,8 +769,6 @@ class WpanApi(SpinelCodec):
     """ Helper class to format wpan command packets """
 
     def __init__(self, stream, nodeid, use_hdlc=FEATURE_USE_HDLC):
-
-        self.tun_if = None
         self.stream = stream
         self.nodeid = nodeid
 
@@ -850,25 +893,29 @@ class WpanApi(SpinelCodec):
         with self.__queue_prop[tid].mutex:
             self.__queue_prop[tid].queue.clear()
 
-    def queue_wait_for_prop(self, _prop, tid=SPINEL.HEADER_DEFAULT, timeout=TIMEOUT_PROP):
+    def queue_get(self, tid, timeout = None):
         try:
-            item = self.__queue_prop[tid].get(True, timeout)
-            # self.__queue_prop[tid].task_done()
+            if (timeout):
+                item = self.__queue_prop[tid].get(True, timeout)
+            else:
+                item = self.__queue_prop[tid].get_nowait()
         except Queue.Empty:
             item = None
-
         return item
 
-    def if_up(self, nodeid='1'):
-        if os.geteuid() == 0:
-            self.tun_if = TunInterface(nodeid)
-        else:
-            print("Warning: superuser required to start tun interface.")
-
-    def if_down(self):
-        if self.tun_if:
-            self.tun_if.close()
-        self.tun_if = None
+    def queue_wait_for_prop(self, _prop, tid=SPINEL.HEADER_DEFAULT, timeout=TIMEOUT_PROP):
+        start = time.time()
+        item = self.queue_get(tid, timeout)
+        if (_prop is not None):
+            while (item and (item.prop != _prop)):
+                self.__queue_prop[tid].put_nowait(item)
+                reminder = timeout - (time.time() - start)
+                if (reminder <= 0.0):
+                    item = None
+                    break
+                item = self.queue_get(tid, reminder)
+                # self.__queue_prop[tid].task_done()
+        return item
 
     def ip_send(self, pkt):
         pay = self.encode_i(SPINEL.PROP_STREAM_NET)
@@ -880,6 +927,12 @@ class WpanApi(SpinelCodec):
         pay += pack("%ds" % pkt_len, pkt)  # Append packet after length
 
         self.transact(SPINEL.CMD_PROP_VALUE_SET, pay)
+
+    def cmd_reset(self):
+        self.queue_wait_prepare(None, SPINEL.HEADER_ASYNC)
+        self.transact(SPINEL.CMD_RESET, "", SPINEL.HEADER_DEFAULT)
+        result = self.queue_wait_for_prop(SPINEL.PROP_LAST_STATUS, SPINEL.HEADER_ASYNC, 5)
+        return (result is not None and result.value == 114)
 
     def cmd_send(self, command_id, payload="", tid=SPINEL.HEADER_DEFAULT):
         self.queue_wait_prepare(None, tid)

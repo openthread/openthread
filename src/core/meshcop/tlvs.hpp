@@ -40,6 +40,8 @@
 #include <openthread-types.h>
 #include <common/encoding.hpp>
 #include <common/message.hpp>
+#include <common/tlvs.hpp>
+#include <meshcop/timestamp.hpp>
 
 using Thread::Encoding::BigEndian::HostSwap16;
 using Thread::Encoding::BigEndian::HostSwap32;
@@ -52,7 +54,7 @@ namespace MeshCoP {
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Tlv
+class Tlv : public Thread::Tlv
 {
 public:
     /**
@@ -94,21 +96,12 @@ public:
     };
 
     /**
-     * Length values.
-     *
-     */
-    enum
-    {
-        kExtendedLength          = 255, ///< Extended Length value
-    };
-
-    /**
      * This method returns the Type value.
      *
      * @returns The Type value.
      *
      */
-    Type GetType(void) const { return static_cast<Type>(mType); }
+    Type GetType(void) const { return static_cast<Type>(Thread::Tlv::GetType()); }
 
     /**
      * This method sets the Type value.
@@ -116,37 +109,7 @@ public:
      * @param[in]  aType  The Type value.
      *
      */
-    void SetType(Type aType) { mType = static_cast<uint8_t>(aType); }
-
-    /**
-     * This method returns the Length value.
-     *
-     */
-    uint8_t GetLength(void) const { return mLength; }
-
-    /**
-     * This method sets the Length value.
-     *
-     * @param[in]  aLength  The Length value.
-     *
-     */
-    void SetLength(uint8_t aLength) { mLength = aLength; }
-
-    /**
-     * This method returns a pointer to the Value.
-     *
-     * @returns A pointer to the value.
-     *
-     */
-    uint8_t *GetValue() { return reinterpret_cast<uint8_t *>(this) + sizeof(Tlv); }
-
-    /**
-     * This method returns a pointer to the Value.
-     *
-     * @returns A pointer to the value.
-     *
-     */
-    const uint8_t *GetValue() const { return reinterpret_cast<const uint8_t *>(this) + sizeof(Tlv); }
+    void SetType(Type aType) { Thread::Tlv::SetType(static_cast<uint8_t>(aType)); }
 
     /**
      * This method returns a pointer to the next TLV.
@@ -154,12 +117,12 @@ public:
      * @returns A pointer to the next TLV.
      *
      */
-    Tlv *GetNext() {
-        return reinterpret_cast<Tlv *>(reinterpret_cast<uint8_t *>(this) + sizeof(*this) + mLength);
+    Tlv *GetNext(void) {
+        return static_cast<Tlv *>(Thread::Tlv::GetNext());
     }
 
-    const Tlv *GetNext() const {
-        return reinterpret_cast<const Tlv *>(reinterpret_cast<const uint8_t *>(this) + sizeof(*this) + mLength);
+    const Tlv *GetNext(void) const {
+        return static_cast<const Tlv *>(Thread::Tlv::GetNext());
     }
 
     /**
@@ -174,7 +137,9 @@ public:
      * @retval kThreadError_NotFound  Could not find the TLV with Type @p aType.
      *
      */
-    static ThreadError GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv);
+    static ThreadError GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv) {
+        return Thread::Tlv::Get(aMessage, static_cast<uint8_t>(aType), aMaxLength, aTlv);
+    }
 
     /**
      * This static method finds the offset and length of a given TLV type.
@@ -188,33 +153,10 @@ public:
      * @retval kThreadError_NotFound  Could not find the TLV with Type @p aType.
      *
      */
-    static ThreadError GetValueOffset(const Message &aMesasge, Type aType, uint16_t &aOffset, uint16_t &aLength);
+    static ThreadError GetValueOffset(const Message &aMessage, Type aType, uint16_t &aOffset, uint16_t &aLength) {
+        return Thread::Tlv::GetValueOffset(aMessage, static_cast<uint8_t>(aType), aOffset, aLength);
+    }
 
-private:
-    uint8_t mType;
-    uint8_t mLength;
-} OT_TOOL_PACKED_END;
-
-OT_TOOL_PACKED_BEGIN
-class ExtendedTlv: public Tlv
-{
-public:
-    /**
-     * This method returns the Length value.
-     *
-     */
-    uint16_t GetLength() const { return HostSwap16(mLength); }
-
-    /**
-     * This method sets the Length value.
-     *
-     * @param[in]  aLength  The Length value.
-     *
-     */
-    void SetLength(uint16_t aLength) { Tlv::SetLength(kExtendedLength); mLength = HostSwap16(aLength); }
-
-private:
-    uint16_t mLength;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -828,109 +770,6 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Timestamp generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class Timestamp
-{
-public:
-    /**
-     * This method initializes the Timestamp
-     *
-     */
-    void Init(void) { memset(mSeconds, 0, sizeof(mSeconds)); mTicks = 0; }
-
-    /**
-     * This method compares this timestamp to another.
-     *
-     * @param[in]  aCompare  A reference to the timestamp to compare.
-     *
-     * @retval -1  if @p aCompare is less than this timestamp.
-     * @retval  0  if @p aCompare is equal to this timestamp.
-     * @retval  1  if @p aCompare is greater than this timestamp.
-     *
-     */
-    int Compare(const Timestamp &aCompare) const;
-
-    /**
-     * This method returns the Seconds value.
-     *
-     * @returns The Seconds value.
-     *
-     */
-    uint64_t GetSeconds(void) const {
-        uint64_t seconds = 0;
-
-        for (size_t i = 0; i < sizeof(mSeconds); i++) {
-            seconds = (seconds << 8) | mSeconds[i];
-        }
-
-        return seconds;
-    }
-
-    /**
-     * This method sets the Seconds value.
-     *
-     * @param[in]  aSeconds  The Seconds value.
-     *
-     */
-    void SetSeconds(uint64_t aSeconds) {
-        for (size_t i = 0; i < sizeof(mSeconds); i++, aSeconds >>= 8) {
-            mSeconds[sizeof(mSeconds) - 1 - i] = aSeconds & 0xff;
-        }
-    }
-
-    /**
-     * This method returns the Ticks value.
-     *
-     * @returns The Ticks value.
-     *
-     */
-    uint16_t GetTicks(void) const { return mTicks >> kTicksOffset; }
-
-    /**
-     * This method sets the Ticks value.
-     *
-     * @param[in]  aTicks  The Ticks value.
-     *
-     */
-    void SetTicks(uint16_t aTicks) {
-        mTicks = (mTicks & ~kTicksMask) | ((aTicks << kTicksOffset) & kTicksMask);
-    }
-
-    /**
-     * This method returns the Authoritative value.
-     *
-     * @returns The Authoritative value.
-     *
-     */
-    bool GetAuthoritative(void) const { return (mTicks & kAuthoritativeMask) != 0; }
-
-    /**
-     * This method sets the Authoritative value.
-     *
-     * @param[in]  aAuthoritative  The Authoritative value.
-     *
-     */
-    void SetAuthoritative(bool aAuthoritative) {
-        mTicks = (mTicks & kTicksMask) | ((aAuthoritative << kAuthoritativeOffset) & kAuthoritativeMask);
-    }
-
-private:
-    uint8_t mSeconds[6];
-
-    enum
-    {
-        kTicksOffset         = 1,
-        kTicksMask           = 0x7fff << kTicksOffset,
-        kAuthoritativeOffset = 0,
-        kAuthoritativeMask   = 1 << kAuthoritativeOffset,
-    };
-    uint16_t mTicks;
-} OT_TOOL_PACKED_END;
-
-/**
  * This class implements Active Timestamp TLV generation and parsing.
  *
  */
@@ -1063,7 +902,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init() { SetType(kJoinerIid); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void) { SetType(kJoinerIid); SetLength(sizeof(*this) - sizeof(Tlv)); }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -1072,7 +911,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid() const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns a pointer to the Joiner IID.
@@ -1080,7 +919,7 @@ public:
      * @returns A pointer to the Joiner IID.
      *
      */
-    const uint8_t *GetIid() const { return mIid; }
+    const uint8_t *GetIid(void) const { return mIid; }
 
     /**
      * This method sets the Joiner IID.
@@ -1149,7 +988,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init() { SetType(kJoinerRouterKek); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void) { SetType(kJoinerRouterKek); SetLength(sizeof(*this) - sizeof(Tlv)); }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -1158,7 +997,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid() const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns a pointer to the Joiner Router KEK.
@@ -1166,7 +1005,7 @@ public:
      * @returns A pointer to the Joiner Router KEK.
      *
      */
-    const uint8_t *GetKek() const { return mKek; }
+    const uint8_t *GetKek(void) const { return mKek; }
 
     /**
      * This method sets the Joiner Router KEK.

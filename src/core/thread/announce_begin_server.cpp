@@ -54,6 +54,10 @@ using Thread::Encoding::BigEndian::HostSwap32;
 namespace Thread {
 
 AnnounceBeginServer::AnnounceBeginServer(ThreadNetif &aThreadNetif) :
+    mChannelMask(0),
+    mPeriod(0),
+    mCount(0),
+    mChannel(0),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, &AnnounceBeginServer::HandleTimer, this),
     mAnnounceBegin(OPENTHREAD_URI_ANNOUNCE_BEGIN, &AnnounceBeginServer::HandleRequest, this),
     mCoapServer(aThreadNetif.GetCoapServer()),
@@ -100,6 +104,7 @@ void AnnounceBeginServer::HandleRequest(Coap::Header &aHeader, Message &aMessage
     MeshCoP::ChannelMask0Tlv channelMask;
     MeshCoP::CountTlv count;
     MeshCoP::PeriodTlv period;
+    Ip6::MessageInfo responseInfo(aMessageInfo);
 
     VerifyOrExit(aHeader.GetCode() == kCoapRequestPost, ;);
 
@@ -114,40 +119,13 @@ void AnnounceBeginServer::HandleRequest(Coap::Header &aHeader, Message &aMessage
 
     SendAnnounce(channelMask.GetMask(), count.GetCount(), period.GetPeriod());
 
-    SendResponse(aHeader, aMessageInfo);
-
-exit:
-    return;
-}
-
-ThreadError AnnounceBeginServer::SendResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestInfo)
-{
-    ThreadError error = kThreadError_None;
-    Message *message = NULL;
-    Coap::Header responseHeader;
-    Ip6::MessageInfo responseInfo(aRequestInfo);
-
-    VerifyOrExit(aRequestHeader.GetType() == kCoapTypeConfirmable, ;);
-
-    VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
-
-    responseHeader.SetDefaultResponseHeader(aRequestHeader);
-
-    SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
-
     memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
-    SuccessOrExit(error = mCoapServer.SendMessage(*message, responseInfo));
+    SuccessOrExit(mCoapServer.SendEmptyAck(aHeader, responseInfo));
 
     otLogInfoMeshCoP("sent announce begin response");
 
 exit:
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        message->Free();
-    }
-
-    return error;
+    return;
 }
 
 void AnnounceBeginServer::HandleTimer(void *aContext)

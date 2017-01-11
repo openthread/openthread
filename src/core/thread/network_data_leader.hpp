@@ -172,12 +172,20 @@ public:
     /**
      * This method returns a pointer to the Commissioning Data.
      *
-     * @param[out]  aLength  The length of the Commissioning Data in bytes.
-     *
      * @returns A pointer to the Commissioning Data or NULL if no Commissioning Data exists.
      *
      */
-    uint8_t *GetCommissioningData(uint8_t &aLength);
+    NetworkDataTlv *GetCommissioningData(void);
+
+    /**
+     * This method returns a pointer to the Commissioning Data Sub-TLV.
+     *
+     * @param[in]  aType  The TLV type value.
+     *
+     * @returns A pointer to the Commissioning Data Sub-TLV or NULL if no Sub-TLV exists.
+     *
+     */
+    MeshCoP::Tlv *GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aType);
 
     /**
      * This method adds Commissioning Data to the Thread Network Data.
@@ -193,7 +201,7 @@ public:
 
 #if OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
     /**
-     * This method gets the Rloc of Dhcp Agent of speficified contextId.
+     * This method gets the Rloc of Dhcp Agent of specified contextId.
      *
      * @param[in]  aContextId      A pointer to the Commissioning Data value.
      * @param[out] aRloc16         The reference of which for output the Rloc16.

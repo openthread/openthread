@@ -27,6 +27,10 @@
 
 #define _GNU_SOURCE 1
 
+#if HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -46,7 +50,10 @@
 #include <sys/file.h>
 
 #include <linux/spi/spidev.h>
+
+#if HAVE_EXECINFO_H
 #include <execinfo.h>
+#endif
 
 #if HAVE_PTY_H
 #include <pty.h>
@@ -70,10 +77,6 @@
 
 #define EXIT_QUIT                       65535
 
-#ifndef FAULT_BACKTRACE_STACK_DEPTH
-#define FAULT_BACKTRACE_STACK_DEPTH     20
-#endif
-
 #ifndef MSEC_PER_SEC
 #define MSEC_PER_SEC                    1000
 #endif
@@ -94,6 +97,12 @@
 #define SPI_RX_ALIGN_ALLOWANCE_MAX      3
 
 #define SOCKET_DEBUG_BYTES_PER_LINE     16
+
+#ifndef AUTO_PRINT_BACKTRACE
+#define AUTO_PRINT_BACKTRACE            (HAVE_EXECINFO_H || __APPLE__)
+#endif
+
+#define AUTO_PRINT_BACKTRACE_STACK_DEPTH     20
 
 static const uint8_t kHdlcResetSignal[] = { 0x7E, 0x13, 0x11, 0x7E };
 static const uint16_t kHdlcCrcCheckValue = 0xf0b8;
@@ -131,8 +140,8 @@ static int sHdlcOutputFd        = -1;
 
 static int sSpiSpeed            = 1000000; // in Hz (default: 1MHz)
 static uint8_t sSpiMode         = 0;
-static int sSpiCsDelay          = 20;
-static int sSpiTransactionDelay = 200;
+static int sSpiCsDelay          = 20;      // in microseconds
+static int sSpiTransactionDelay = 200;     // in microseconds
 
 static uint16_t sSpiRxPayloadSize;
 static uint8_t sSpiRxFrameBuffer[MAX_FRAME_SIZE + SPI_RX_ALIGN_ALLOWANCE_MAX];
@@ -209,12 +218,13 @@ static void signal_SIGHUP(int sig)
     (void) sig;
 }
 
+#if AUTO_PRINT_BACKTRACE
 static void signal_critical(int sig, siginfo_t * info, void * ucontext)
 {
     // This is the last hurah for this process.
     // We dump the stack, because that's all we can do.
 
-    void *stack_mem[FAULT_BACKTRACE_STACK_DEPTH];
+    void *stack_mem[AUTO_PRINT_BACKTRACE_STACK_DEPTH];
     void **stack = stack_mem;
     char **stack_symbols;
     int stack_depth, i;
@@ -236,7 +246,7 @@ static void signal_critical(int sig, siginfo_t * info, void * ucontext)
 
     fprintf(stderr, " *** FATAL ERROR: Caught signal %d (%s):\n", sig, strsignal(sig));
 
-    stack_depth = backtrace(stack, FAULT_BACKTRACE_STACK_DEPTH);
+    stack_depth = backtrace(stack, AUTO_PRINT_BACKTRACE_STACK_DEPTH);
 
     // Here are are trying to update the pointer in the backtrace
     // to be the actual location of the fault.
@@ -267,6 +277,7 @@ static void signal_critical(int sig, siginfo_t * info, void * ucontext)
 
     exit(EXIT_FAILURE);
 }
+#endif // if AUTO_PRINT_BACKTRACE
 
 static void log_debug_buffer(const char* desc, const uint8_t* buffer_ptr, int buffer_len)
 {
@@ -428,18 +439,20 @@ static void debug_spi_header(const char* hint)
 static int push_pull_spi(void)
 {
     int ret;
+    uint8_t slave_header;
     uint16_t slave_max_rx;
     uint16_t slave_data_len;
-    int spi_xfer_bytes = 0;
+    uint16_t spi_xfer_bytes = 5;
     const uint8_t* spiRxFrameBuffer = NULL;
 
     sSpiTxFlowControl = false;
 
-    // Fetch the slave's buffer sizes.
-    // Zero out our max rx and data len
-    // so that the slave doesn't think
-    // we are actually trying to transfer
-    // data.
+    /// -- FIRST TRANSACTION --------------------------------------------------
+
+    // The purpose of the first transaction is to attempt to
+    // send any transactions we have queued and fetch the slave's
+    // buffer sizes.
+
     if (sSpiValidFrameCount == 0)
     {
         spi_header_set_flag_byte(sSpiTxFrameBuffer, SPI_HEADER_RESET_FLAG|SPI_HEADER_PATTERN_VALUE);
@@ -448,20 +461,57 @@ static int push_pull_spi(void)
     {
         spi_header_set_flag_byte(sSpiTxFrameBuffer, SPI_HEADER_PATTERN_VALUE);
     }
+
+    // Zero out our max rx and data len
+    // so that the slave doesn't think
+    // we are actually trying to transfer
+    // data.
     spi_header_set_accept_len(sSpiTxFrameBuffer, 0);
     spi_header_set_data_len(sSpiTxFrameBuffer, 0);
-    ret = do_spi_xfer(0);
+
+    if (sSpiTxIsReady)
+    {
+        // Go ahead and try to immediately send a frame if we have it queued up.
+        spi_header_set_data_len(sSpiTxFrameBuffer, sSpiTxPayloadSize);
+
+        if (sSpiTxPayloadSize > spi_xfer_bytes)
+        {
+            spi_xfer_bytes = sSpiTxPayloadSize;
+        }
+    }
+
+    // If we aren't already processing a received frame, we
+    // can also handle receiving the next frame if its length
+    // is equal to or less than the size of what we are
+    // trying to transmit above.
+    if (sSpiRxPayloadSize == 0) {
+        spi_header_set_accept_len(sSpiTxFrameBuffer, spi_xfer_bytes);
+    }
+
+    // Perform the first SPI transaction.
+    ret = do_spi_xfer(spi_xfer_bytes);
     if (ret < 0)
     {
         perror("do_spi_xfer");
+
+        // Print out a helpful error message for
+        // a common error.
+        if ( (sSpiCsDelay != 0)
+          && (errno == EINVAL)
+        ) {
+            syslog(LOG_ERR, "SPI ioctl failed with EINVAL. Try adding `--spi-cs-delay=0` to command line arguments.");
+        }
         goto bail;
     }
 
+    // Account for misalignment (0xFF bytes at the start)
     spiRxFrameBuffer = get_real_rx_frame_start();
 
     debug_spi_header("push_pull_1");
 
-    if (spi_header_get_flag_byte(spiRxFrameBuffer) == 0xFF)
+    slave_header = spi_header_get_flag_byte(spiRxFrameBuffer);
+
+    if ((slave_header == 0xFF) || (slave_header == 0x00))
     {
         // Device is off or in a bad state.
         sSpiTxFlowControl = true;
@@ -473,14 +523,16 @@ static int push_pull_spi(void)
     slave_max_rx = spi_header_get_accept_len(spiRxFrameBuffer);
     slave_data_len = spi_header_get_data_len(spiRxFrameBuffer);
 
-    if ( (slave_max_rx > MAX_FRAME_SIZE)
+    if ( ((slave_header & SPI_HEADER_PATTERN_MASK) != SPI_HEADER_PATTERN_VALUE)
+      || (slave_max_rx > MAX_FRAME_SIZE)
       || (slave_data_len > MAX_FRAME_SIZE)
     )
     {
         sSpiTxFlowControl = true;
         syslog(
             LOG_INFO,
-            "Gibberish in header (max_rx:%d, data_len:%d)",
+            "Gibberish in header (h:0x%02X, max_rx:0x%04X, data_len:0x%04X)",
+            slave_header,
             slave_max_rx,
             slave_data_len
         );
@@ -489,26 +541,60 @@ static int push_pull_spi(void)
 
     sSpiValidFrameCount++;
 
-    if (!sSpiTxIsReady && (slave_data_len == 0))
+    // Handle received packet, if any.
+    if ( (sSpiRxPayloadSize == 0)
+      && (slave_data_len != 0)
+      && (slave_data_len <= spi_header_get_accept_len(sSpiTxFrameBuffer))
+    ) {
+        // We have received a packet. Set sSpiRxPayloadSize so that
+        // the packet will eventually get queued up by push_hdlc().
+        sSpiRxPayloadSize = slave_data_len;
+
+        slave_data_len = 0;
+    }
+
+    if (sSpiTxIsReady)
     {
-        // Nothing to do.
+        // Handle transmitted packet.
+        if (spi_header_get_data_len(sSpiTxFrameBuffer) <= slave_max_rx)
+        {
+            // Outbound packet has been successfully transmitted. Clear
+            // sSpiTxPayloadSize and sSpiTxIsReady so that pull_hdlc() can
+            // pull another packet for us to send.
+            sSpiTxIsReady = false;
+            sSpiTxPayloadSize = 0;
+            spi_header_set_data_len(sSpiTxFrameBuffer, 0);
+        } else {
+            // The slave Wasn't ready for what we had to
+            // send them. Turn on rate limiting so that we
+            // don't waste a ton of CPU bombarding them
+            // with useless SPI transfers.
+            sSpiTxFlowControl = true;
+        }
+    }
+
+    if (slave_data_len == 0)
+    {
+        // Nothing else to do.
         goto bail;
     }
 
-    if ( sSpiTxIsReady
-      && (sSpiTxPayloadSize <= slave_max_rx)
-    )
+    /// -- SECOND TRANSACTION ------------------------------------------------
+
+    // The purpose of the second transaction is to attempt to
+    // fetch any packets that the slave has for us that didn't
+    // fit in the first transaction.
+
+    spi_header_set_flag_byte(sSpiTxFrameBuffer, SPI_HEADER_PATTERN_VALUE);
+    spi_header_set_accept_len(sSpiTxFrameBuffer, 0);
+
+    if (sSpiTxIsReady)
     {
         spi_xfer_bytes = sSpiTxPayloadSize;
         spi_header_set_data_len(sSpiTxFrameBuffer, sSpiTxPayloadSize);
-    }
-    else if (sSpiTxIsReady && (sSpiTxPayloadSize > slave_max_rx))
-    {
-        // The slave isn't ready for what we have to
-        // send them. Turn on rate limiting so that we
-        // don't waste a ton of CPU bombarding them
-        // with useless SPI transfers.
-        sSpiTxFlowControl = true;
+
+    } else {
+        spi_xfer_bytes = 0;
     }
 
     if ( (slave_data_len != 0)
@@ -522,23 +608,34 @@ static int push_pull_spi(void)
         }
     }
 
+    // Optionally delay a short period to give
+    // the slave time to get its affairs in order.
     usleep((unsigned int)sSpiTransactionDelay);
 
-    spi_header_set_flag_byte(sSpiTxFrameBuffer, SPI_HEADER_PATTERN_VALUE);
-
-    // This is the real transfer.
+    // Perform the second SPI transaction.
     ret = do_spi_xfer(spi_xfer_bytes);
     if (ret < 0)
     {
         perror("do_spi_xfer");
+
+        // Print out a helpful error message for
+        // a common error.
+        if ( (sSpiCsDelay != 0)
+          && (errno == EINVAL)
+        ) {
+            syslog(LOG_ERR, "SPI ioctl failed with EINVAL. Try adding `--spi-cs-delay=0` to command line arguments.");
+        }
         goto bail;
     }
 
+    // Account for misalignment (0xFF bytes at the start)
     spiRxFrameBuffer = get_real_rx_frame_start();
 
     debug_spi_header("push_pull_2");
 
-    if (spi_header_get_flag_byte(spiRxFrameBuffer) == 0xFF)
+    slave_header = spi_header_get_flag_byte(spiRxFrameBuffer);
+
+    if ((slave_header == 0xFF) || (slave_header == 0x00))
     {
         // Device is off or in a bad state.
         sSpiTxFlowControl = true;
@@ -550,14 +647,16 @@ static int push_pull_spi(void)
     slave_max_rx = spi_header_get_accept_len(spiRxFrameBuffer);
     slave_data_len = spi_header_get_data_len(spiRxFrameBuffer);
 
-    if ( (slave_max_rx > MAX_FRAME_SIZE)
+    if ( (slave_header != SPI_HEADER_PATTERN_VALUE)
+      || (slave_max_rx > MAX_FRAME_SIZE)
       || (slave_data_len > MAX_FRAME_SIZE)
     )
     {
         sSpiTxFlowControl = true;
         syslog(
             LOG_INFO,
-            "Gibberish in header (max_rx:%d, data_len:%d)",
+            "Gibberish in header (h:0x%02X, max_rx:0x%04X, data_len:0x%04X) (2)",
+            slave_header,
             slave_max_rx,
             slave_data_len
         );
@@ -582,6 +681,7 @@ static int push_pull_spi(void)
         // pull another packet for us to send.
         sSpiTxIsReady = false;
         sSpiTxPayloadSize = 0;
+        sSpiTxFlowControl = false;
     }
 
 bail:
@@ -1214,12 +1314,17 @@ int main(int argc, char *argv[])
 {
     int i = 0;
     const char* prog = argv[0];
-    struct sigaction sigact;
     static fd_set read_set;
     static fd_set write_set;
     static fd_set error_set;
     struct timeval timeout;
     int max_fd = -1;
+    bool did_print_rate_limit_log = false;
+
+#if AUTO_PRINT_BACKTRACE
+    struct sigaction sigact;
+#endif // if AUTO_PRINT_BACKTRACE
+
     enum {
         ARG_SPI_MODE = 1001,
         ARG_SPI_SPEED = 1002,
@@ -1257,6 +1362,7 @@ int main(int argc, char *argv[])
     sPreviousHandlerForSIGTERM = signal(SIGTERM, &signal_SIGTERM);
     signal(SIGHUP, &signal_SIGHUP);
 
+#if AUTO_PRINT_BACKTRACE
     sigact.sa_sigaction = &signal_critical;
     sigact.sa_flags = SA_RESTART | SA_SIGINFO | SA_NOCLDWAIT;
 
@@ -1264,7 +1370,7 @@ int main(int argc, char *argv[])
     sigaction(SIGBUS, &sigact, (struct sigaction *)NULL);
     sigaction(SIGILL, &sigact, (struct sigaction *)NULL);
     sigaction(SIGABRT, &sigact, (struct sigaction *)NULL);
-
+#endif // if AUTO_PRINT_BACKTRACE
 
     // ========================================================================
     // ARGUMENT PARSING
@@ -1479,19 +1585,32 @@ int main(int argc, char *argv[])
         }
         else if (sSpiTxFlowControl)
         {
-            // We are being rate-limited by the NCP.
+            // We are being rate-limited by the NCP. This is
+            // fairly normal behavior. We poll because we
+            // won't get an interrupt unless the NCP happens
+            // to be trying to send us something.
             timeout_ms = SPI_POLL_PERIOD_MSEC;
-            syslog(LOG_INFO, "Rate limiting transactions");
+
+            if (!did_print_rate_limit_log) {
+                // Avoid printing out this message over and over.
+                syslog(LOG_INFO, "NCP is rate limiting transactions");
+                did_print_rate_limit_log = true;
+            }
         }
         else
         {
-            // We have data to send to the slave. Unless we
-            // are being rate-limited, proceed immediately.
+            // We have data to send to the slave. Since we
+            // are not being rate-limited, proceed immediately.
             timeout_ms = 0;
+            did_print_rate_limit_log = false;
         }
 
         if (sSpiRxPayloadSize != 0)
         {
+            // We have data that we are waiting to send out
+            // of the HDLC descriptor, so we need to wait
+            // for that to clear out before we can do anything
+            // else.
             FD_SET(sHdlcOutputFd, &write_set);
 
         }
@@ -1507,12 +1626,18 @@ int main(int argc, char *argv[])
             }
             else
             {
+                // The interrupt pin was not asserted,
+                // so we wait for the interrupt pin to
+                // be asserted by adding it to the error
+                // set.
                 FD_SET(sIntGpioValueFd, &error_set);
             }
 
         }
         else if (timeout_ms > SPI_POLL_PERIOD_MSEC)
         {
+            // In this case we don't have an interrupt, so
+            // we revert to SPI polling.
             timeout_ms = SPI_POLL_PERIOD_MSEC;
         }
 

@@ -25,61 +25,43 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+ 
+#include <windows.h>
+#include <ntverp.h>
 
-/**
- * @file
- *   This file implements common methods for manipulating MLE TLVs.
+/*-----------------------------------------------*/
+/* the following lines are specific to this file */
+/*-----------------------------------------------*/
+
+/* VER_FILETYPE, VER_FILESUBTYPE, VER_FILEDESCRIPTION_STR
+ * and VER_INTERNALNAME_STR must be defined before including COMMON.VER
+ * The strings don't need a '\0', since common.ver has them.
  */
+#define    VER_FILETYPE    VFT_DRV
+/* possible values:        VFT_UNKNOWN
+                VFT_APP
+                VFT_DLL
+                VFT_DRV
+                VFT_FONT
+                VFT_VXD
+                VFT_STATIC_LIB
+*/
+#define    VER_FILESUBTYPE    VFT2_DRV_NETWORK
+/* possible values        VFT2_UNKNOWN
+                VFT2_DRV_PRINTER
+                VFT2_DRV_KEYBOARD
+                VFT2_DRV_LANGUAGE
+                VFT2_DRV_DISPLAY
+                VFT2_DRV_MOUSE
+                VFT2_DRV_NETWORK
+                VFT2_DRV_SYSTEM
+                VFT2_DRV_INSTALLABLE
+                VFT2_DRV_SOUND
+                VFT2_DRV_COMM
+*/
+#define VER_FILEDESCRIPTION_STR     "OpenThread Tunnel Miniport"
+#define VER_INTERNALNAME_STR        "OTTMP.SYS"
 
-#include <common/code_utils.hpp>
-#include <common/message.hpp>
-#include <thread/mle_tlvs.hpp>
 
-namespace Thread {
-namespace Mle {
+#include "common.ver"   // NT5.0 version file.
 
-ThreadError Tlv::GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv)
-{
-    ThreadError error = kThreadError_Parse;
-    uint16_t offset;
-
-    SuccessOrExit(error = GetOffset(aMessage, aType, offset));
-    aMessage.Read(offset, sizeof(Tlv), &aTlv);
-
-    if (aMaxLength > sizeof(aTlv) + aTlv.GetLength())
-    {
-        aMaxLength = sizeof(aTlv) + aTlv.GetLength();
-    }
-
-    aMessage.Read(offset, aMaxLength, &aTlv);
-
-exit:
-    return error;
-}
-
-ThreadError Tlv::GetOffset(const Message &aMessage, Type aType, uint16_t &aOffset)
-{
-    ThreadError error = kThreadError_Parse;
-    uint16_t offset = aMessage.GetOffset();
-    uint16_t end = aMessage.GetLength();
-    Tlv tlv;
-
-    while (offset < end)
-    {
-        aMessage.Read(offset, sizeof(Tlv), &tlv);
-
-        if (tlv.GetType() == aType && (offset + sizeof(tlv) + tlv.GetLength()) <= end)
-        {
-            aOffset = offset;
-            ExitNow(error = kThreadError_None);
-        }
-
-        offset += sizeof(tlv) + tlv.GetLength();
-    }
-
-exit:
-    return error;
-}
-
-}  // namespace Mle
-}  // namespace Thread

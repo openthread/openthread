@@ -46,6 +46,7 @@
 #include <openthread-diag.h>
 #include <commissioning/commissioner.h>
 #include <commissioning/joiner.h>
+#include <dhcp6/dhcp6_server.h>
 #include <dhcp6/dhcp6_client.h>
 
 #include "cli.hpp"
@@ -133,14 +134,21 @@ const struct Command Interpreter::sCommands[] =
 };
 
 Interpreter::Interpreter(otInstance *aInstance):
+    sServer(NULL),
     sLength(8),
     sCount(1),
     sInterval(1000),
     sPingTimer(aInstance->mIp6.mTimerScheduler, &Interpreter::s_HandlePingTimer, this),
     mInstance(aInstance)
 {
+    memset(mSlaacAddresses, 0, sizeof(mSlaacAddresses));
     mInstance->mIp6.mIcmp.SetEchoReplyHandler(&s_HandleEchoResponse, this);
     otSetStateChangedCallback(mInstance, &Interpreter::s_HandleNetifStateChanged, this);
+    otSetReceiveDiagnosticGetCallback(mInstance, &Interpreter::s_HandleDiagnosticGetResponse, this);
+
+#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+    memset(mDhcpAddresses, 0, sizeof(mDhcpAddresses));
+#endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
 }
 
 int Interpreter::Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength)
@@ -517,6 +525,8 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
         {
             const otMacCounters *counters = otGetMacCounters(mInstance);
             sServer->OutputFormat("TxTotal: %d\r\n", counters->mTxTotal);
+            sServer->OutputFormat("    TxUnicast: %d\r\n", counters->mTxUnicast);
+            sServer->OutputFormat("    TxBroadcast: %d\r\n", counters->mTxBroadcast);
             sServer->OutputFormat("    TxAckRequested: %d\r\n", counters->mTxAckRequested);
             sServer->OutputFormat("    TxAcked: %d\r\n", counters->mTxAcked);
             sServer->OutputFormat("    TxNoAckRequested: %d\r\n", counters->mTxNoAckRequested);
@@ -528,6 +538,8 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
             sServer->OutputFormat("    TxRetry: %d\r\n", counters->mTxRetry);
             sServer->OutputFormat("    TxErrCca: %d\r\n", counters->mTxErrCca);
             sServer->OutputFormat("RxTotal: %d\r\n", counters->mRxTotal);
+            sServer->OutputFormat("    RxUnicast: %d\r\n", counters->mRxUnicast);
+            sServer->OutputFormat("    RxBroadcast: %d\r\n", counters->mRxBroadcast);
             sServer->OutputFormat("    RxData: %d\r\n", counters->mRxData);
             sServer->OutputFormat("    RxDataPoll: %d\r\n", counters->mRxDataPoll);
             sServer->OutputFormat("    RxBeacon: %d\r\n", counters->mRxBeacon);
@@ -736,8 +748,8 @@ ThreadError Interpreter::ProcessIpAddrAdd(int argc, char *argv[])
 
     SuccessOrExit(error = otIp6AddressFromString(argv[0], &aAddress.mAddress));
     aAddress.mPrefixLength = 64;
-    aAddress.mPreferredLifetime = 0xffffffff;
-    aAddress.mValidLifetime = 0xffffffff;
+    aAddress.mPreferred = true;
+    aAddress.mValid = true;
     error = otAddUnicastAddress(mInstance, &aAddress);
 
 exit:
@@ -2427,7 +2439,7 @@ void Interpreter::ProcessJoiner(int argc, char *argv[])
         const char *provisioningUrl;
         VerifyOrExit(argc > 1, error = kThreadError_Parse);
         provisioningUrl = (argc > 2) ? argv[2] : NULL;
-        otJoinerStart(mInstance, argv[1], provisioningUrl);
+        otJoinerStart(mInstance, argv[1], provisioningUrl, &Interpreter::s_HandleJoinerCallback, this);
     }
     else if (strcmp(argv[0], "stop") == 0)
     {
@@ -2439,6 +2451,25 @@ exit:
 }
 
 #endif // OPENTHREAD_ENABLE_JOINER
+
+void Interpreter::s_HandleJoinerCallback(ThreadError aError, void *aContext)
+{
+    static_cast<Interpreter *>(aContext)->HandleJoinerCallback(aError);
+}
+
+void Interpreter::HandleJoinerCallback(ThreadError aError)
+{
+    switch (aError)
+    {
+    case kThreadError_None:
+        sServer->OutputFormat("Join success\r\n");
+        break;
+
+    default:
+        sServer->OutputFormat("Join failed [%s]\r\n", otThreadErrorToString(aError));
+        break;
+    }
+}
 
 void Interpreter::ProcessJoinerPort(int argc, char *argv[])
 {
@@ -2607,7 +2638,7 @@ void Interpreter::HandleNetifStateChanged(uint32_t aFlags)
     otSlaacUpdate(mInstance, mSlaacAddresses, sizeof(mSlaacAddresses) / sizeof(mSlaacAddresses[0]), otCreateRandomIid,
                   NULL);
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
-    mInstance->mThreadNetif.GetDhcp6Server().UpdateService();
+    otDhcp6ServerUpdate(mInstance);
 #endif  // OPENTHREAD_ENABLE_DHCP6_SERVER
 
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
@@ -2622,33 +2653,69 @@ void Interpreter::ProcessNetworkDiagnostic(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
     struct otIp6Address address;
-    uint8_t index = 2;
-    uint8_t tlvTypes[OT_NUM_NETDIAG_TLV_TYPES];
-    uint8_t count = 0;
+    uint8_t payload[2 + OT_NETWORK_DIAGNOSTIC_TYPELIST_MAX_ENTRIES];  // TypeList Type(1B), len(1B), type list
+    uint8_t payloadIndex = 0;
+    uint8_t paramIndex = 0;
 
     VerifyOrExit(argc > 1 + 1, error = kThreadError_Parse);
 
     SuccessOrExit(error = otIp6AddressFromString(argv[1], &address));
 
-    while (index < argc && count < sizeof(tlvTypes))
+    payloadIndex = 2;
+    paramIndex = 2;
+
+    while (paramIndex < argc && payloadIndex < sizeof(payload))
     {
         long value;
-        SuccessOrExit(error = ParseLong(argv[index], value));
-        tlvTypes[count++] = static_cast<uint8_t>(value);
-        index++;
+        SuccessOrExit(error = ParseLong(argv[paramIndex++], value));
+        payload[payloadIndex++] = static_cast<uint8_t>(value);
     }
+
+    payload[0] = OT_NETWORK_DIAGNOSTIC_TYPELIST_TYPE;  // TypeList TLV Type
+    payload[1] = payloadIndex - 2;  // length
 
     if (strcmp(argv[0], "get") == 0)
     {
-        otSendDiagnosticGet(mInstance, &address, tlvTypes, count);
+        otSendDiagnosticGet(mInstance, &address, payload, payloadIndex);
+        return;
     }
     else if (strcmp(argv[0], "reset") == 0)
     {
-        otSendDiagnosticReset(mInstance, &address, tlvTypes, count);
+        otSendDiagnosticReset(mInstance, &address, payload, payloadIndex);
     }
 
 exit:
     AppendResult(error);
+}
+
+void Interpreter::s_HandleDiagnosticGetResponse(otMessage aMessage, const otMessageInfo *aMessageInfo,
+                                                void *aContext)
+{
+    static_cast<Interpreter *>(aContext)->HandleDiagnosticGetResponse(*static_cast<Message *>(aMessage),
+                                                                      *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+}
+
+void Interpreter::HandleDiagnosticGetResponse(Message &aMessage, const Ip6::MessageInfo &)
+{
+    uint8_t buf[16];
+    uint16_t bytesToPrint;
+    uint16_t bytesPrinted = 0;
+    uint16_t length = aMessage.GetLength() - aMessage.GetOffset();
+
+    sServer->OutputFormat("DIAG_GET.rsp: ");
+
+    while (length > 0)
+    {
+        bytesToPrint = (length < sizeof(buf)) ? length : sizeof(buf);
+        aMessage.Read(aMessage.GetOffset() + bytesPrinted, bytesToPrint, buf);
+
+        OutputBytes(buf, static_cast<uint8_t>(bytesToPrint));
+
+        length       -= bytesToPrint;
+        bytesPrinted += bytesToPrint;
+    }
+
+    sServer->OutputFormat("\r\n");
 }
 
 }  // namespace Cli

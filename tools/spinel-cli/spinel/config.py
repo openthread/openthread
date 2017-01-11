@@ -71,7 +71,7 @@ logging.config.dictConfig({
         #},
     },
     'loggers': {
-        '': {
+        'spinel': {
             'handlers': ['console'],  # ,'syslog'],
             'level': 'DEBUG',
             'propagate': True

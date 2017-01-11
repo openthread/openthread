@@ -144,8 +144,6 @@ private:
     static void HandleServerData(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
                                  const otMessageInfo *aMessageInfo);
     void HandleServerData(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void SendServerDataResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
-                                const uint8_t *aTlvs, uint8_t aTlvsLength);
 
     static void HandleTimer(void *aContext);
     void HandleTimer(void);

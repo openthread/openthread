@@ -35,6 +35,8 @@
 #ifndef OPENTHREAD_DHCP6_CLIENT_H_
 #define OPENTHREAD_DHCP6_CLIENT_H_
 
+#include <openthread-types.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -47,6 +49,17 @@ extern "C" {
  */
 
 /**
+ * This structure represents a DHCPv6 address.
+ *
+ */
+typedef struct otDhcpAddress
+{
+    otNetifAddress mAddress;            ///< The network interface address.
+    uint32_t       mPreferredLifetime;  ///< The preferred lifetime.
+    uint32_t       mValidLifetime;      ///< The valid lifetime.
+} otDhcpAddress;
+
+/**
  * Update all automatically created IPv6 addresses for prefixes from current Network Data with DHCP procedure.
  *
  * @param[in]     aInstance      A pointer to an OpenThread instance.
@@ -55,7 +68,7 @@ extern "C" {
  * @param[in]     aContext       A pointer to data passed to aIidCreate function.
  *
  */
-void otDhcp6ClientUpdate(otInstance *aInstance, otNetifAddress *aAddresses, uint32_t aNumAddresses, void *aContext);
+void otDhcp6ClientUpdate(otInstance *aInstance, otDhcpAddress *aAddresses, uint32_t aNumAddresses, void *aContext);
 
 /**
  * @}

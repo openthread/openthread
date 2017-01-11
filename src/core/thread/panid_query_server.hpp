@@ -80,8 +80,7 @@ private:
 
     static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
 
-    ThreadError SendConflict();
-    ThreadError SendQueryResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestMessageInfo);
+    ThreadError SendConflict(void);
 
     Ip6::Address mCommissioner;
     uint32_t mChannelMask;

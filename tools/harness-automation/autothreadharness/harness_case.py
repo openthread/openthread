@@ -36,6 +36,7 @@ from selenium.common.exceptions import UnexpectedAlertPresentException
 import json
 import logging
 import os
+import subprocess
 import re
 import time
 import unittest
@@ -53,6 +54,9 @@ THREAD_CHANNEL_MAX = 26
 
 THREAD_CHANNEL_MIN = 11
 """Minimum channel number of thread protocol"""
+
+DEFAULT_TIMEOUT = 2700
+"""Timeout for each test case in seconds"""
 
 class HarnessCase(unittest.TestCase):
     """This is the case class of all automation test cases.
@@ -118,6 +122,8 @@ class HarnessCase(unittest.TestCase):
     auto_dut = settings.AUTO_DUT
     """bool: whether use harness auto dut feature"""
 
+    timeout = hasattr(settings, 'TIMEOUT') and settings.TIMEOUT or DEFAULT_TIMEOUT
+
     def wait_until(self, what, times=-1):
         """Wait until `what` return True
 
@@ -166,6 +172,9 @@ class HarnessCase(unittest.TestCase):
                 logger.warning('All golden devices may not be resetted')
                 return
 
+            if settings.AUTO_DUT:
+                return
+
             for device in settings.GOLDEN_DEVICES:
                 try:
                     with OpenThreadController(device) as otc:
@@ -207,6 +216,7 @@ class HarnessCase(unittest.TestCase):
         time.sleep(1)
         self._hc.start()
         time.sleep(2)
+        os.system('taskkill /t /f /im chrome.exe')
 
     def _destroy_harness(self):
         """Stop harness backend service
@@ -225,7 +235,7 @@ class HarnessCase(unittest.TestCase):
             self.dut = None
             return
 
-        dut_port = settings.DUT_DEVICE
+        dut_port = settings.DUT_DEVICE[0]
         dut = OpenThreadController(dut_port)
         self.dut = dut
 
@@ -256,7 +266,8 @@ class HarnessCase(unittest.TestCase):
         browser.maximize_window()
         browser.get(settings.HARNESS_URL)
         self._browser = browser
-        self.assertIn('Thread', browser.title)
+        if not self.wait_until(lambda: 'Thread' in browser.title, 30):
+            self.assertIn('Thread', browser.title)
 
     def _destroy_browser(self):
         """Close the browser.
@@ -340,6 +351,14 @@ class HarnessCase(unittest.TestCase):
         time.sleep(1)
 
         try:
+            skip_button = self._browser.find_element_by_id('SkipPrepareDevice')
+            if skip_button.is_enabled():
+                skip_button.click()
+                time.sleep(1)
+        except:
+            logger.info('Still detecting sniffers')
+
+        try:
             next_button = self._browser.find_element_by_id('nextButton')
         except:
             logger.exception('Failed to finish setup')
@@ -383,6 +402,29 @@ class HarnessCase(unittest.TestCase):
         connect_all = self._browser.find_element_by_link_text('Connect All')
         connect_all.click()
 
+    def _add_device(self, port, device_type_id):
+        browser = self._browser
+        test_bed = browser.find_element_by_id('test-bed')
+        device = browser.find_element_by_id(device_type_id)
+        # drag
+        action_chains = ActionChains(browser)
+        action_chains.click_and_hold(device)
+        action_chains.move_to_element(test_bed).perform()
+        time.sleep(1)
+
+        # drop
+        drop_hw = browser.find_element_by_class_name('drop-hw')
+        action_chains = ActionChains(browser)
+        action_chains.move_to_element(drop_hw)
+        action_chains.release(drop_hw).perform()
+
+        time.sleep(0.5)
+        selected_hw = browser.find_element_by_class_name('selected-hw')
+        form_inputs = selected_hw.find_elements_by_tag_name('input')
+        form_port = form_inputs[0]
+        form_port.clear()
+        form_port.send_keys(port)
+
     def _test_bed(self):
         """Set up the test bed.
 
@@ -400,52 +442,36 @@ class HarnessCase(unittest.TestCase):
             remove_button.click()
             selected_hw_num = selected_hw_num - 1
 
-        devices = filter(lambda port: not (self.history.is_bad_golden_device(port) or (not self.auto_dut and port == settings.DUT_DEVICE )),
-                         settings.GOLDEN_DEVICES)
+        devices = list(settings.GOLDEN_DEVICES)
+        for index, device in enumerate(devices):
+            port = device[0]
+            if (self.history.is_bad_golden_device(port) or (settings.DUT_DEVICE and port == settings.DUT_DEVICE[0])):
+                devices.remove(device)
+
         logger.info('Available golden devices: %s', json.dumps(devices, indent=2))
         golden_devices_required = self.golden_devices_required
 
-        if self.auto_dut:
-            golden_devices_required = golden_devices_required + 1
+        if self.auto_dut and not settings.DUT_DEVICE:
+            golden_devices_required += 1
 
         if len(devices) < golden_devices_required:
             raise Exception('Golden devices is not enough')
 
-        device_type_id = settings.GOLDEN_DEVICE_TYPE
-        if device_type_id == 'OpenThread':
-            device_type_id = 'ARM'
-
+        # add golden devices
         while golden_devices_required:
-            device = browser.find_element_by_id(device_type_id)
-            # drag
-            action_chains = ActionChains(browser)
-            action_chains.click_and_hold(device)
-            action_chains.move_to_element(test_bed).perform()
-            time.sleep(1)
-
-            # drop
-            drop_hw = browser.find_element_by_class_name('drop-hw')
-            action_chains = ActionChains(browser)
-            action_chains.move_to_element(drop_hw)
-            action_chains.release(drop_hw).perform()
-
-            time.sleep(0.5)
+            self._add_device(*devices.pop())
             golden_devices_required = golden_devices_required - 1
 
-        selected_hw_set = test_bed.find_elements_by_class_name('selected-hw')
-        for selected_hw in selected_hw_set:
-            form_inputs = selected_hw.find_elements_by_tag_name('input')
-            form_port = form_inputs[0]
-            form_port.clear()
-            device = devices.pop()
-            form_port.send_keys(device)
+        # add DUT
+        if settings.DUT_DEVICE:
+            self._add_device(*settings.DUT_DEVICE)
 
         while True:
             try:
                 self._connect_devices()
                 button_next = browser.find_element_by_id('nextBtn')
                 if not self.wait_until(lambda: 'disabled' not in button_next.get_attribute('class'),
-                                       times=(30 + 3 * golden_devices_required)):
+                                       times=(30 + 4 * self.golden_devices_required)):
                     bad_ones = []
                     for selected_hw in selected_hw_set:
                         form_inputs = selected_hw.find_elements_by_tag_name('input')
@@ -455,6 +481,9 @@ class HarnessCase(unittest.TestCase):
 
                     for selected_hw in bad_ones:
                         port = form_port.get_attribute('value').encode('utf8')
+                        if settings.DUT_DEVICE and port == settings.DUT_DEVICE[0]:
+                            raise Exception('DUT device failed')
+
                         if not settings.APC_HOST:
                             # port cannot recover without power off
                             self.history.mark_bad_golden_device(port)
@@ -463,28 +492,8 @@ class HarnessCase(unittest.TestCase):
                         selected_hw.find_element_by_class_name('removeSelectedDevice').click()
                         time.sleep(0.1)
 
-                        device = browser.find_element_by_id(device_type_id)
-                        # drag
-                        action_chains = ActionChains(browser)
-                        action_chains.click_and_hold(device)
-                        action_chains.move_to_element(test_bed).perform()
-                        time.sleep(1)
-
-                        # drop
-                        drop_hw = browser.find_element_by_class_name('drop-hw')
-                        action_chains = ActionChains(browser)
-                        action_chains.move_to_element(drop_hw)
-                        action_chains.release(drop_hw).perform()
-
-                        time.sleep(0.5)
-
-                        selected_hw = browser.find_element_by_class_name('selected-hw')
-                        form_inputs = selected_hw.find_elements_by_tag_name('input')
-                        form_port = form_inputs[0]
-                        if devices:
-                            device = devices.pop()
-                            form_port.clear()
-                            form_port.send_keys(device)
+                        if len(devices):
+                            self._add_device(*devices.pop())
                         else:
                             devices = None
 
@@ -500,9 +509,12 @@ class HarnessCase(unittest.TestCase):
                     if not checkbox_auto_dut.is_selected():
                         checkbox_auto_dut.click()
 
+                    time.sleep(1)
                     radio_auto_dut = browser.find_element_by_class_name('AutoDUT_RadBtns')
                     if not radio_auto_dut.is_selected():
                         radio_auto_dut.click()
+
+                    time.sleep(5)
 
                 button_next.click()
             except SystemExit:
@@ -523,12 +535,14 @@ class HarnessCase(unittest.TestCase):
         checkbox = None
         self.wait_until(lambda: self._browser.find_elements_by_css_selector('.tree-node .tree-title') and True)
         elems = self._browser.find_elements_by_css_selector('.tree-node .tree-title')
+        finder = re.compile(r'.*\b' + case + r'\b')
+        finder_dotted = re.compile(r'.*\b' + case.replace(' ', r'\.') + r'\b')
         for elem in elems:
             action_chains = ActionChains(self._browser)
             action_chains.move_to_element(elem)
             action_chains.perform()
             logger.debug(elem.text)
-            if elem.text.startswith(case):
+            if finder.match(elem.text) or finder_dotted.match(elem.text):
                 parent = elem.find_element_by_xpath('..')
                 checkbox = parent.find_element_by_class_name('tree-checkbox')
                 break
@@ -537,6 +551,7 @@ class HarnessCase(unittest.TestCase):
             time.sleep(5)
             raise Exception('Failed to find the case')
 
+        self._browser.execute_script("$('.overview').css('left', '0')");
         checkbox.click()
         time.sleep(1)
 
@@ -590,12 +605,12 @@ class HarnessCase(unittest.TestCase):
         self._browser.switch_to.window(main_window)
 
         timestamp = time.strftime('%Y%m%d%H%M%S')
-        os.system('move "%%HOMEPATH%%\\Downloads\\NewPdf_*.pdf" %s\\%s-%s.pdf'
-                  % (self.result_dir, self.__class__.__name__, timestamp))
-        os.system('move "%%HOMEPATH%%\\Downloads\\ExcelReport*.xlsx" %s\\%s-%s.xlsx'
-                  % (self.result_dir, self.__class__.__name__, timestamp))
-        os.system('move "%s\\Captures\\*.pcapng" %s\\%s-%s.pcapng'
-                  % (settings.HARNESS_HOME, self.result_dir, self.__class__.__name__, timestamp))
+        os.system('copy "%%HOMEPATH%%\\Downloads\\NewPdf_*.pdf" %s\\'
+                  % self.result_dir)
+        os.system('copy "%%HOMEPATH%%\\Downloads\\ExcelReport_*.xlsx" %s\\'
+                  % self.result_dir)
+        os.system('copy "%s\\Captures\\*.pcapng" %s\\'
+                  % (settings.HARNESS_HOME, self.result_dir))
         os.system('copy "%s\\Thread_Harness\\temp\\*.*" "%s"'
                   % (settings.HARNESS_HOME, self.result_dir))
 
@@ -605,7 +620,8 @@ class HarnessCase(unittest.TestCase):
         logger.debug('waiting for dialog')
         done = False
         error = False
-        while not done:
+
+        while not done and self.timeout:
             try:
                 dialog = self._browser.find_element_by_id('RemoteConfirm')
             except:
@@ -639,6 +655,17 @@ class HarnessCase(unittest.TestCase):
                 logger.exception('Test stopped')
                 time.sleep(5)
                 done = True
+
+            self.timeout -= 1
+
+            # check if already ended capture
+            if self.timeout % 10 == 0:
+                lines = self._hc.tail()
+                if 'SUCCESS: The process "dumpcap.exe" with PID ' in lines:
+                    logger.info('Tshark should be ended now, lets wait at most 30 seconds.')
+                    if not self.wait_until(lambda: 'tshark.exe' not in subprocess.check_output('tasklist'), 30):
+                        res = subprocess.check_output('taskkill /t /f /im tshark.exe', stderr=subprocess.STDOUT, shell=True)
+                        logger.info(res)
 
         # Wait until case really stopped
         self.wait_until(lambda: self._browser.find_element_by_id('runTest') and True, 30)

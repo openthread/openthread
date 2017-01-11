@@ -26,44 +26,27 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file implements common Thread Network Layer TLV processing.
- */
+#include <stdio.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
+#include <platform/toolchain.h>
+#include "test_util.h"
 
-#include <common/code_utils.hpp>
-#include <common/message.hpp>
-#include <thread/thread_tlvs.hpp>
-
-namespace Thread {
-
-ThreadError ThreadTlv::GetTlv(const Message &message, Type type, uint16_t maxLength, ThreadTlv &tlv)
+uint32_t otNetifAddress_Size_c()
 {
-    ThreadError error = kThreadError_Parse;
-    uint16_t offset = message.GetOffset();
-    uint16_t end = message.GetLength();
-
-    while (offset < end)
-    {
-        message.Read(offset, sizeof(ThreadTlv), &tlv);
-
-        if (tlv.GetType() == type && (offset + sizeof(tlv) + tlv.GetLength()) <= end)
-        {
-            if (maxLength > sizeof(tlv) + tlv.GetLength())
-            {
-                maxLength = sizeof(tlv) + tlv.GetLength();
-            }
-
-            message.Read(offset, maxLength, &tlv);
-
-            ExitNow(error = kThreadError_None);
-        }
-
-        offset += sizeof(tlv) + tlv.GetLength();
-    }
-
-exit:
-    return error;
+    return sizeof(otNetifAddress);
 }
 
+uint32_t otNetifAddress_offset_mNext_c()
+{
+    return offsetof(otNetifAddress, mNext);
+}
+
+otNetifAddress CreateNetif_c()
+{
+    otNetifAddress addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.mScopeOverrideValid = true;
+    return addr;
 }

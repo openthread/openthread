@@ -26,61 +26,24 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file implements common methods for manipulating Network Diagnostic TLVs.
- */
+#include <stdio.h>
 
-#include <common/code_utils.hpp>
-#include <common/message.hpp>
-#include <thread/network_diag_tlvs.hpp>
+#include "test_util.h"
 
-namespace Thread {
-namespace NetworkDiagnostic {
-
-ThreadError NetworkDiagnosticTlv::GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength,
-                                         NetworkDiagnosticTlv &aTlv)
+#ifdef ENABLE_TEST_MAIN
+int main(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_Parse;
-    uint16_t offset;
+    (void)argv;
+    int stack_array[100];
+    int array_index = argc + 100;
 
-    SuccessOrExit(error = GetOffset(aMessage, aType, offset));
-    aMessage.Read(offset, sizeof(NetworkDiagnosticTlv), &aTlv);
-
-    if (aMaxLength > sizeof(aTlv) + aTlv.GetLength())
+    for (int i = 0; i < 100; i++)
     {
-        aMaxLength = sizeof(aTlv) + aTlv.GetLength();
+	stack_array[i] = i;
     }
 
-    aMessage.Read(offset, aMaxLength, &aTlv);
+    printf("stack_array[%d] = %d\n", array_index, stack_array[array_index]);
 
-exit:
-    return error;
+    return 0;
 }
-
-ThreadError NetworkDiagnosticTlv::GetOffset(const Message &aMessage, Type aType, uint16_t &aOffset)
-{
-    ThreadError error = kThreadError_Parse;
-    uint16_t offset = aMessage.GetOffset();
-    uint16_t end = aMessage.GetLength();
-    NetworkDiagnosticTlv tlv;
-
-    while (offset < end)
-    {
-        aMessage.Read(offset, sizeof(NetworkDiagnosticTlv), &tlv);
-
-        if (tlv.GetType() == aType && (offset + sizeof(tlv) + tlv.GetLength()) <= end)
-        {
-            aOffset = offset;
-            ExitNow(error = kThreadError_None);
-        }
-
-        offset += sizeof(tlv) + tlv.GetLength();
-    }
-
-exit:
-    return error;
-}
-
-}  // namespace NetworkDiagnostic
-}  // namespace Thread
+#endif

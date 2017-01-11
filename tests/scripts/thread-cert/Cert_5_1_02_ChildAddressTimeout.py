@@ -123,12 +123,20 @@ class Cert_5_1_02_ChildAddressTimeout(unittest.TestCase):
 
         # 1 - All
         leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+
         router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
         leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+
         router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
         leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
 
+        msg = router1_messages.next_coap_message("0.02")
+        msg.assertCoapMessageRequestUriPath("/a/as")
+
+        msg = leader_messages.next_coap_message("2.04")
+
         router1_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+
         ed_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
         router1_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
         ed_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
@@ -138,6 +146,26 @@ class Cert_5_1_02_ChildAddressTimeout(unittest.TestCase):
         router1_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
         sed_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
         router1_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+
+        # 3 - Leader
+        msg = leader_messages.next_coap_message("0.02")
+        msg.assertCoapMessageRequestUriPath("/a/aq")
+
+        msg = leader_messages.next_coap_message("0.02")
+        msg.assertCoapMessageRequestUriPath("/a/aq")
+
+        # 4 - Router1
+        msg = router1_messages.does_not_contain_coap_message()
+
+        # 6 - Leader
+        msg = leader_messages.next_coap_message("0.02")
+        msg.assertCoapMessageRequestUriPath("/a/aq")
+
+        msg = leader_messages.next_coap_message("0.02")
+        msg.assertCoapMessageRequestUriPath("/a/aq")
+
+        # 7 - Router1
+        msg = router1_messages.does_not_contain_coap_message()
 
 
 if __name__ == '__main__':

@@ -34,20 +34,25 @@ DIST_SUBDIRS                            = \
     cc2538                                \
     da15000                               \
     posix                                 \
-    $(NULL)
-
-EXTRA_DIST                              = \
     utils                                 \
     $(NULL)
 
 # Always build (e.g. for 'make all') these subdirectories.
 
+SUBDIRS                                 = \
+    utils                                 \
+    $(NULL)
+
 if OPENTHREAD_EXAMPLES_POSIX
-SUBDIRS                                 = posix
+SUBDIRS                                += posix
 endif
 
 if OPENTHREAD_EXAMPLES_CC2538
-SUBDIRS                                 = cc2538
+SUBDIRS                                += cc2538
+endif
+
+if OPENTHREAD_EXAMPLES_DA15000
+SUBDIRS                                += da15000
 endif
 
 if OPENTHREAD_EXAMPLES_DA15000
@@ -60,6 +65,7 @@ PRETTY_SUBDIRS                          = \
     cc2538                                \
     da15000                               \
     posix                                 \
+    utils                                 \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

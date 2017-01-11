@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="openthread.configuration.props" /> 
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{B7C6F344-7287-4930-AF38-223622BD8CBB}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>Thread</RootNamespace>
+    <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
+    <DriverTargetPlatform>Universal</DriverTargetPlatform>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>WindowsApplicationForDrivers10.0</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>WindowsApplicationForDrivers10.0</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <IntDir>..\..\build\obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir>..\..\build\bin\$(Platform)\$(Configuration)\dll\</OutDir>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <ApiValidator_Enable>false</ApiValidator_Enable>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>
+        %(PreprocessorDefinitions);
+        OTAPI_EXPORTS;
+      </PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>
+        %(AdditionalIncludeDirectories);
+        ..\..\examples\drivers\windows\include;
+        ..\..\examples\drivers\windows\otApi;
+        ..\..\include;
+      </AdditionalIncludeDirectories>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <WppEnabled>true</WppEnabled>
+      <WppScanConfigurationData>..\..\include\platform\logging-windows.h</WppScanConfigurationData>
+      <WppModuleName>otNodeApi</WppModuleName>
+      <EnablePREfast>true</EnablePREfast>
+      <ExceptionHandling Condition="'$(Platform)'=='ARM'">Sync</ExceptionHandling>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>
+        ntdll.lib;
+      </AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\examples\drivers\windows\otNodeApi\precomp.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\examples\drivers\windows\otNodeApi\dllmain.cpp" />
+    <ClCompile Include="..\..\examples\drivers\windows\otNodeApi\otNodeApi.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="otApi.vcxproj">
+      <Project>{ed0ea262-c222-42c7-98d3-e70c72978ed2}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -89,6 +89,7 @@ cd /tmp || die
 
     [ $BUILD_TARGET != posix-distcheck ] || {
         sudo apt-get install clang || die
+        sudo apt-get install llvm-3.4-runtime || die
     }
 
     [ $BUILD_TARGET != posix -o $CC != clang ] || {
@@ -97,8 +98,9 @@ cd /tmp || die
 
     # Packages used by sniffer
     sudo -H pip install pycryptodome==3.4.3 || die
+    sudo -H pip install enum34 || die
     pip install pycryptodome==3.4.3 || die
-
+    pip install enum34 || die
 }
 
 [ $TRAVIS_OS_NAME != osx ] || {

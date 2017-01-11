@@ -29,7 +29,7 @@
 /**
  * @file
  * @brief
- *  This file defines the top-level ip6 functions for the OpenThread library.
+ *  This file defines the top-level OpenThread APIs related to message buffer and queues.
  */
 
 #ifndef OPENTHREAD_MESSAGE_H_
@@ -228,6 +228,65 @@ int otReadMessage(otMessage aMessage, uint16_t aOffset, void *aBuf, uint16_t aLe
  * @sa otReadMessage
  */
 int otWriteMessage(otMessage aMessage, uint16_t aOffset, const void *aBuf, uint16_t aLength);
+
+/**
+ *
+ * Initialize the message queue.
+ *
+ * This function MUST be called once and only once for a `otMessageQueue` instance before any other `otMessageQueue`
+ * functions. The behavior is undefined if other queue APIs are used with an `otMessageQueue` before it being
+ * initialized or if it is initialized more than once.
+ *
+ * @param[in]  aQueue     A pointer to a message queue.
+ *
+ */
+void otMessageQueueInit(otMessageQueue *aQueue);
+
+/**
+ * This function adds a message to the end of the given message queue.
+ *
+ * @param[in]  aQueue    A pointer to the message queue.
+ * @param[in]  aMessage  The message to add.
+ *
+ * @retval kThreadError_None     Successfully added the message to the queue.
+ * @retval kThreadError_Already  The message is already enqueued in a queue.
+ *
+ */
+ThreadError otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage aMessage);
+
+/**
+ * This function removes a message from the given message queue.
+ *
+ * @param[in]  aQueue    A pointer to the message queue.
+ * @param[in]  aMessage  The message to remove.
+ *
+ * @retval kThreadError_None      Successfully removed the message from the queue.
+ * @retval kThreadError_NotFound  The message is not enqueued in this queue.
+ *
+ */
+ThreadError otMessageQueueDequeue(otMessageQueue *aQueue, otMessage aMessage);
+
+/**
+ * This function returns a pointer to the message at the head of the queue.
+ *
+ * @param[in]  aQueue    A pointer to a message queue.
+ *
+ * @returns  A pointer to the message at the head of queue or NULL if queue is empty.
+ *
+ */
+otMessage otMessageQueueGetHead(otMessageQueue *aQueue);
+
+/**
+ * This function returns a pointer to the next message in the queue by iterating forward (from head to tail).
+ *
+ * @param[in]  aQueue    A pointer to a message queue.
+ * @param[in]  aMessage  A pointer to current message buffer.
+ *
+ * @returns  A pointer to the next message in the queue after `aMessage` or NULL if `aMessage is the tail of queue.
+ *           NULL is returned if `aMessage` is not in the queue `aQueue`.
+ *
+ */
+otMessage otMessageQueueGetNext(otMessageQueue *aQueue, const otMessage aMessage);
 
 /**
  * @}

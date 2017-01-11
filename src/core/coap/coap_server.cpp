@@ -44,7 +44,7 @@ Server::Server(Ip6::Udp &aUdp, uint16_t aPort, SenderFunction aSender, ReceiverF
     mResources = NULL;
 }
 
-ThreadError Server::Start()
+ThreadError Server::Start(void)
 {
     Ip6::SockAddr sockaddr;
     sockaddr.mPort = mPort;
@@ -52,7 +52,7 @@ ThreadError Server::Start()
     return CoapBase::Start(sockaddr);
 }
 
-ThreadError Server::Stop()
+ThreadError Server::Stop(void)
 {
     return CoapBase::Stop();
 }
@@ -103,6 +103,30 @@ Message *Server::NewMessage(uint16_t aReserved)
 ThreadError Server::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     return mSender(this, aMessage, aMessageInfo);
+}
+
+ThreadError Server::SendEmptyAck(const Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo)
+{
+    ThreadError error = kThreadError_None;
+    Coap::Header responseHeader;
+    Message *message = NULL;
+
+    VerifyOrExit(aRequestHeader.GetType() == kCoapTypeConfirmable, error = kThreadError_InvalidArgs);
+
+    responseHeader.SetDefaultResponseHeader(aRequestHeader);
+
+    VerifyOrExit((message = NewMessage(responseHeader)) != NULL, error = kThreadError_NoBufs);
+
+    SuccessOrExit(error = SendMessage(*message, aMessageInfo));
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        message->Free();
+    }
+
+    return error;
 }
 
 void Server::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

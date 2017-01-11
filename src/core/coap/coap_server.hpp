@@ -117,7 +117,7 @@ public:
      * @retval kThreadError_None  Successfully started the CoAP server.
      *
      */
-    ThreadError Start();
+    ThreadError Start(void);
 
     /**
      * This method stops the CoAP server.
@@ -125,7 +125,7 @@ public:
      * @retval kThreadError_None  Successfully stopped the CoAP server.
      *
      */
-    ThreadError Stop();
+    ThreadError Stop(void);
 
     /**
      * This method adds a resource to the CoAP server.
@@ -177,6 +177,19 @@ public:
      *
      */
     ThreadError SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    /**
+     * This method sends a CoAP ACK message on which a dummy CoAP response is piggybacked.
+     *
+     * @param[in]  aRequestHeader  A reference to the CoAP Header that was used in CoAP request.
+     * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
+     *
+     * @retval kThreadError_None         Successfully enqueued the CoAP response message.
+     * @retval kThreadError_NoBufs       Insufficient buffers available to send the CoAP response.
+     * @retval kThreadError_InvalidArgs  The @p aRequestHeader header is not of confirmable type.
+     *
+     */
+    ThreadError SendEmptyAck(const Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * This method sets CoAP server's port number.

@@ -115,7 +115,7 @@ class TestMacAddress(unittest.TestCase):
         mac_address = common.MacAddress.from_eui64(eui64)
 
         # THEN
-        self.assertEqual(common.MacAddress.LONG, mac_address.type)
+        self.assertEqual(common.MacAddressType.LONG, mac_address.type)
         self.assertEqual(eui64, mac_address.mac_address)
 
     def test_should_create_MacAddress_from_rloc16_int_when_from_rloc16_classmethod_is_called(self):
@@ -126,7 +126,7 @@ class TestMacAddress(unittest.TestCase):
         mac_address = common.MacAddress.from_rloc16(int(rloc16))
 
         # THEN
-        self.assertEqual(common.MacAddress.SHORT, mac_address.type)
+        self.assertEqual(common.MacAddressType.SHORT, mac_address.type)
         self.assertEqual(struct.pack(">H", rloc16), mac_address.mac_address)
 
     def test_should_create_MacAddress_from_rloc16_bytearray_when_from_rloc16_classmethod_is_called(self):
@@ -137,7 +137,7 @@ class TestMacAddress(unittest.TestCase):
         mac_address = common.MacAddress.from_rloc16(rloc16)
 
         # THEN
-        self.assertEqual(common.MacAddress.SHORT, mac_address.type)
+        self.assertEqual(common.MacAddressType.SHORT, mac_address.type)
         self.assertEqual(rloc16, mac_address.mac_address)
 
     def test_should_convert_short_MacAddress_to_iid_when_convert_method_is_called(self):

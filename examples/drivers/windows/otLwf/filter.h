@@ -36,8 +36,13 @@
 #define _FILT_H
 
 // The maximum allowed addresses an OpenThread interface
-#define OT_MAX_ADDRESSES 10
-#define OT_MAX_AUTO_ADDRESSES (OT_MAX_ADDRESSES - 4)
+#if (OPENTHREAD_ENABLE_DHCP6_CLIENT && OPENTHREAD_ENABLE_DHCP6_SERVER)
+#define OT_MAX_ADDRESSES (4 + OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES + 2 * OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES)
+#elif (OPENTHREAD_ENABLE_DHCP6_CLIENT || OPENTHREAD_ENABLE_DHCP6_SERVER)
+#define OT_MAX_ADDRESSES (4 + OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES + OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES)
+#else
+#define OT_MAX_ADDRESSES (4 + OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES)
+#endif
 
 #define OTLWF_ALLOC_TAG 'mFto' // otFm
 
@@ -124,102 +129,116 @@ typedef struct _MS_FILTER
     NDIS_EVENT                      IoControlShutdownComplete;
 
     //
-    // Event processing
-    //
-    PVOID                           EventWorkerThread;
-    KEVENT                          EventWorkerThreadStopEvent;
-    KEVENT                          EventWorkerThreadProcessAddressChanges;
-    KEVENT                          EventWorkerThreadProcessNBLs;
-    NDIS_SPIN_LOCK                  EventsLock;
-    LIST_ENTRY                      AddressChangesHead;
-    LIST_ENTRY                      NBLsHead;
-    ULONG                           CountPendingRecvNBLs;
-    LARGE_INTEGER                   NextAlarmTickCount;
-    KEVENT                          EventWorkerThreadWaitTimeUpdated;
-    KEVENT                          EventWorkerThreadProcessTasklets;
-    PEX_TIMER                       EventHighPrecisionTimer;
-    UCHAR                           EventTimerState;
-    LIST_ENTRY                      EventIrpListHead;
-    KEVENT                          EventWorkerThreadProcessIrp;
-    KEVENT                          EventWorkerThreadEnergyScanComplete;
-
-    //
-    // Data Path Synchronization
+    // Data Path
     //
     EX_RUNDOWN_REF                  DataPathRundown;
     NDIS_HANDLE                     NetBufferListPool;
-    BOOLEAN                         SendPending;
-    PNET_BUFFER_LIST                SendNetBufferList;
-    KEVENT                          SendNetBufferListComplete;
 
-    //
-    // OpenThread state management
-    //
-    otDeviceRole                    otCachedRole;
+    BOOLEAN                         InternalStateInitialized;
 
     //
     // OpenThread addresses
     //
-    IN6_ADDR                        otCachedAddr[OT_MAX_ADDRESSES];
-    ULONG                           otCachedAddrCount;
-    IN6_ADDR                        otLinkLocalAddr;
-    otNetifAddress                  otAutoAddresses[OT_MAX_AUTO_ADDRESSES];
+    IN6_ADDR                    otCachedAddr[OT_MAX_ADDRESSES];
+    ULONG                       otCachedAddrCount;
+    IN6_ADDR                    otLinkLocalAddr;
+    otNetifAddress              otAutoAddresses[OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES];
+#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+    otDhcpAddress               otDhcpAddresses[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
+#endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
+
+    union
+    {
+    struct // Thread Mode Variables
+    {
+        //
+        // OpenThread Event processing
+        //
+        PVOID                       EventWorkerThread;
+        KEVENT                      EventWorkerThreadStopEvent;
+        KEVENT                      EventWorkerThreadProcessAddressChanges;
+        KEVENT                      EventWorkerThreadProcessNBLs;
+        NDIS_SPIN_LOCK              EventsLock;
+        LIST_ENTRY                  AddressChangesHead;
+        LIST_ENTRY                  NBLsHead;
+        ULONG                       CountPendingRecvNBLs;
+        LARGE_INTEGER               NextAlarmTickCount;
+        KEVENT                      EventWorkerThreadWaitTimeUpdated;
+        KEVENT                      EventWorkerThreadProcessTasklets;
+        PEX_TIMER                   EventHighPrecisionTimer;
+        UCHAR                       EventTimerState;
+        LIST_ENTRY                  EventIrpListHead;
+        KEVENT                      EventWorkerThreadProcessIrp;
+        KEVENT                      EventWorkerThreadEnergyScanComplete;
+
+        //
+        // OpenThread state management
+        //
+        otDeviceRole                otCachedRole;
+
+        //
+        // OpenThread data path state
+        //
+        BOOLEAN                     SendPending;
+        PNET_BUFFER_LIST            SendNetBufferList;
+        KEVENT                      SendNetBufferListComplete;
     
-    //
-    // OpenThread radio variables
-    //
-    otRadioCaps                     otRadioCapabilities;
-    PhyState                        otPhyState;
-    uint8_t                         otCurrentListenChannel;
-    uint8_t                         otReceiveMessage[kMaxPHYPacketSize];
-    uint8_t                         otTransmitMessage[kMaxPHYPacketSize];
-    RadioPacket                     otReceiveFrame;
-    RadioPacket                     otTransmitFrame;
-    CHAR                            otLastEnergyScanMaxRssi;
+        //
+        // OpenThread radio variables
+        //
+        otRadioCaps                 otRadioCapabilities;
+        PhyState                    otPhyState;
+        uint8_t                     otCurrentListenChannel;
+        uint8_t                     otReceiveMessage[kMaxPHYPacketSize];
+        uint8_t                     otTransmitMessage[kMaxPHYPacketSize];
+        RadioPacket                 otReceiveFrame;
+        RadioPacket                 otTransmitFrame;
+        CHAR                        otLastEnergyScanMaxRssi;
 
-    BOOLEAN                         otPromiscuous;
-    uint16_t                        otPanID;
-    uint64_t                        otFactoryAddress;
-    uint64_t                        otExtendedAddress;
-    uint16_t                        otShortAddress;
+        BOOLEAN                     otPromiscuous;
+        uint16_t                    otPanID;
+        uint64_t                    otFactoryAddress;
+        uint64_t                    otExtendedAddress;
+        uint16_t                    otShortAddress;
 
-    BOOLEAN                         otPendingMacOffloadEnabled;
-    uint8_t                         otPendingShortAddressCount;
-    uint16_t                        otPendingShortAddresses[MAX_PENDING_MAC_SIZE];
-    uint8_t                         otPendingExtendedAddressCount;
-    uint64_t                        otPendingExtendedAddresses[MAX_PENDING_MAC_SIZE];
+        BOOLEAN                     otPendingMacOffloadEnabled;
+        uint8_t                     otPendingShortAddressCount;
+        uint16_t                    otPendingShortAddresses[MAX_PENDING_MAC_SIZE];
+        uint8_t                     otPendingExtendedAddressCount;
+        uint64_t                    otPendingExtendedAddresses[MAX_PENDING_MAC_SIZE];
 
-#if DBG
-    // Used for tracking memory allocations
-    HANDLE                          otThreadId;
-    volatile LONG                   otOutstandingAllocationCount;
-    volatile LONG                   otOutstandingMemoryAllocated;
-    LIST_ENTRY                      otOutStandingAllocations;
-    ULONG                           otAllocationID;
+#if DEBUG_ALLOC
+        // Used for tracking memory allocations
+        HANDLE                      otThreadId;
+        volatile LONG               otOutstandingAllocationCount;
+        volatile LONG               otOutstandingMemoryAllocated;
+        LIST_ENTRY                  otOutStandingAllocations;
+        ULONG                       otAllocationID;
 #endif
 
-    //
-    // OpenThread context buffer
-    //
-    otInstance*                     otCtx;
-    PUCHAR                          otInstanceBuffer;
+        //
+        // OpenThread context buffer
+        //
+        otInstance*                 otCtx;
+        PUCHAR                      otInstanceBuffer;
+    };
+    struct // Tunnel Mode Variables
+    {
+        NDIS_SPIN_LOCK              tunCommandLock;
+        LIST_ENTRY                  tunCommandHandlers;
+        USHORT                      tunTIDsInUse;
+        spinel_tid_t                tunNextTID;
+        
+        PVOID                       TunWorkerThread;
+        KEVENT                      TunWorkerThreadStopEvent;
+        KEVENT                      TunWorkerThreadAddressChangedEvent;
+    };
+    };
 
 } MS_FILTER, * PMS_FILTER;
 
-// Helper function that converts an otInstance pointer to a MS_FILTER pointer
-__inline PMS_FILTER otCtxToFilter(_In_ otInstance* otCtx)
-{
-    return *(PMS_FILTER*)((PUCHAR)otCtx - sizeof(PMS_FILTER));
-}
-
-// Helper function to indicate if a role means it is attached or not
-_inline BOOLEAN IsAttached(_In_ otDeviceRole role)
-{
-    return role > kDeviceRoleDetached;
-}
-
 //
-// function prototypes
+// NDIS Filter Functions
 //
 
 FILTER_ATTACH FilterAttach;
@@ -234,6 +253,10 @@ FILTER_RETURN_NET_BUFFER_LISTS FilterReturnNetBufferLists;
 FILTER_SEND_NET_BUFFER_LISTS_COMPLETE FilterSendNetBufferListsComplete;
 FILTER_RECEIVE_NET_BUFFER_LISTS FilterReceiveNetBufferLists;
 FILTER_CANCEL_SEND_NET_BUFFER_LISTS FilterCancelSendNetBufferLists;
+
+//
+// Link State Functions
+//
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
@@ -260,76 +283,6 @@ otLwfRevertCompartment(
     );
 
 //
-// Event Processing Functions
-//
-
-EXT_CALLBACK otLwfEventProcessingTimer;
-
-_IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
-otLwfEventProcessingStart(
-    _In_ PMS_FILTER             pFilter
-    );
-
-_IRQL_requires_max_(PASSIVE_LEVEL)
-VOID
-otLwfEventProcessingStop(
-    _In_ PMS_FILTER             pFilter
-    );
-
-_IRQL_requires_max_(PASSIVE_LEVEL)
-VOID
-otLwfEventProcessingIndicateNewWaitTime(
-    _In_ PMS_FILTER             pFilter,
-    _In_ ULONG                  waitTime
-    );
-
-_IRQL_requires_max_(PASSIVE_LEVEL)
-VOID
-otLwfEventProcessingIndicateNewTasklet(
-    _In_ PMS_FILTER             pFilter
-    );
-
-_IRQL_requires_max_(PASSIVE_LEVEL)
-VOID
-otLwfEventProcessingIndicateAddressChange(
-    _In_ PMS_FILTER             pFilter,
-    _In_ MIB_NOTIFICATION_TYPE  NotificationType,
-    _In_ PIN6_ADDR              pAddr
-    );
-
-_IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
-otLwfEventProcessingIndicateNewNetBufferLists(
-    _In_ PMS_FILTER             pFilter,
-    _In_ BOOLEAN                DispatchLevel,
-    _In_ BOOLEAN                Received,
-    _In_ NDIS_PORT_NUMBER       PortNumber,
-    _In_ PNET_BUFFER_LIST       NetBufferLists
-    );
-
-_IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
-otLwfEventProcessingIndicateNetBufferListsCancelled(
-    _In_ PMS_FILTER             pFilter,
-    _In_ PVOID                  CancelId
-    );
-
-_IRQL_requires_max_(PASSIVE_LEVEL)
-VOID
-otLwfEventProcessingIndicateIrp(
-    _In_ PMS_FILTER pFilter,
-    _In_ PIRP       Irp
-    );
-
-_IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
-otLwfEventProcessingIndicateEnergyScanResult(
-    _In_ PMS_FILTER pFilter,
-    _In_ CHAR       MaxRssi
-    );
-
-//
 // Data Path functions
 //
 
@@ -344,18 +297,6 @@ VOID
 otLwfDisableDataPath(
     _In_ PMS_FILTER             pFilter
     );
-
-//
-// OpenThread callbacks
-//
-
-void otLwfStateChangedCallback(uint32_t aFlags, _In_ void *aContext);
-void otLwfReceiveIp6DatagramCallback(_In_ otMessage aMessage, _In_ void *aContext);
-void otLwfActiveScanCallback(_In_ otActiveScanResult *aResult, _In_ void *aContext);
-void otLwfEnergyScanCallback(_In_ otEnergyScanResult *aResult, _In_ void *aContext);
-void otLwfDiscoverCallback(_In_ otActiveScanResult *aResult, _In_ void *aContext);
-void otLwfCommissionerEnergyReportCallback(uint32_t aChannelMask, const uint8_t *aEnergyList, uint8_t aEnergyListLength, void *aContext);
-void otLwfCommissionerPanIdConflictCallback(uint16_t aPanId, uint32_t aChannelMask, _In_ void *aContext);
 
 //
 // Address Functions
@@ -386,14 +327,39 @@ otLwfInitializeAddresses(
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID 
-otLwfAddressesUpdated(
+otLwfRadioAddressesUpdated(
     _In_ PMS_FILTER pFilter
+    );
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+VOID 
+otLwfTunAddressesUpdated(
+    _In_ PMS_FILTER pFilter,
+    _In_reads_bytes_(value_data_len) const uint8_t* value_data_ptr,
+    _In_ spinel_size_t value_data_len,
+    _Out_ uint32_t *aNotifFlags
     );
 
 int 
 otLwfFindCachedAddrIndex(
     _In_ PMS_FILTER pFilter, 
     _In_ PIN6_ADDR addr
+    );
+
+//
+// Tunnel Logic Functions
+//
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NDIS_STATUS 
+otLwfInitializeTunnelMode(
+    _In_ PMS_FILTER pFilter
+    );
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+void 
+otLwfUninitializeTunnelMode(
+    _In_ PMS_FILTER pFilter
     );
 
 //
@@ -412,7 +378,7 @@ otLogBuffer(
 // Debug Helpers
 //
 
-#if DBG
+#if DEBUG_ALLOC
 
 typedef struct _OT_ALLOC
 {

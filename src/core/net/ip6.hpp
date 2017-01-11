@@ -100,7 +100,7 @@ public:
     enum
     {
         kDefaultHopLimit = 64,
-        kMaxDatagramLength = 1500,
+        kMaxDatagramLength = 1280,
     };
 
     /**
@@ -336,7 +336,7 @@ public:
      * @returns The pointer to the parent otInstance structure.
      *
      */
-    otInstance *GetInstance();
+    otInstance *GetInstance(void);
 
     /**
      * This method returns a reference to the send queue.
@@ -344,7 +344,7 @@ public:
      * @returns A reference to the send queue.
      *
      */
-    const MessageQueue &GetSendQueue(void) const { return mSendQueue; }
+    const PriorityQueue &GetSendQueue(void) const { return mSendQueue; }
 
     Routes mRoutes;
     Icmp mIcmp;
@@ -373,7 +373,7 @@ private:
 
     bool mForwardingEnabled;
 
-    MessageQueue mSendQueue;
+    PriorityQueue mSendQueue;
     Tasklet mSendQueueTask;
 
     otReceiveIp6DatagramCallback mReceiveIp6DatagramCallback;

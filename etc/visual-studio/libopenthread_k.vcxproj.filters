@@ -87,6 +87,9 @@
     <ClCompile Include="..\..\src\core\common\timer.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\common\tlvs.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\common\trickle_timer.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
@@ -153,9 +156,6 @@
     <ClCompile Include="..\..\src\core\thread\mle_router.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\thread\mle_tlvs.cpp">
-      <Filter>Source Files\thread</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\core\thread\network_data.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>
@@ -168,19 +168,13 @@
     <ClCompile Include="..\..\src\core\thread\network_data_local.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\thread\network_diag.cpp">
-      <Filter>Source Files\thread</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\thread\network_diag_tlvs.cpp">
+    <ClCompile Include="..\..\src\core\thread\network_diagnostic.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\thread\panid_query_server.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\thread\thread_netif.cpp">
-      <Filter>Source Files\thread</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\thread\thread_tlvs.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\net\udp6.cpp">
@@ -222,8 +216,8 @@
     <ClCompile Include="..\..\src\core\meshcop\panid_query_client.cpp">
       <Filter>Source Files\meshcop</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\meshcop\tlvs.cpp">
-      <Filter>Source Files\thread</Filter>
+    <ClCompile Include="..\..\src\core\meshcop\timestamp.cpp">
+      <Filter>Source Files\meshcop</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\crypto\aes_ecb.cpp">
       <Filter>Source Files\crypto</Filter>
@@ -294,6 +288,9 @@
       <Filter>Header Files\common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\common\timer.hpp">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\common\tlvs.hpp">
       <Filter>Header Files\common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\common\trickle_timer.hpp">
@@ -395,10 +392,10 @@
     <ClInclude Include="..\..\src\core\thread\network_data_tlvs.hpp">
       <Filter>Header Files\thread</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\thread\network_diag.hpp">
+    <ClInclude Include="..\..\src\core\thread\network_diagnostic.hpp">
       <Filter>Header Files\thread</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\thread\network_diag_tlvs.hpp">
+    <ClInclude Include="..\..\src\core\thread\network_diagnostic_tlvs.hpp">
       <Filter>Header Files\thread</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\thread\panid_query_server.hpp">
@@ -451,6 +448,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\meshcop\panid_query_client.hpp">
       <Filter>Header Files\meshcop</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\meshcop\timestamp.hpp">
+      <Filter>Header Files\thread</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\meshcop\tlvs.hpp">
       <Filter>Header Files\thread</Filter>

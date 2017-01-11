@@ -59,9 +59,10 @@ extern "C" void otCliConsoleInputLine(char *aBuf, uint16_t aBufLength)
     sServer->ReceiveTask(aBuf, aBufLength);
 }
 
-Console::Console(otInstance *aInstance)
-    : mCallback(NULL),
-      mInterpreter(aInstance)
+Console::Console(otInstance *aInstance):
+    mCallback(NULL),
+    mContext(NULL),
+    mInterpreter(aInstance)
 {
 
 }

@@ -77,6 +77,8 @@ otInstance::otInstance(void) :
     mReceiveIp6DatagramCallbackContext(NULL),
     mActiveScanCallback(NULL),
     mActiveScanCallbackContext(NULL),
+    mEnergyScanCallback(NULL),
+    mEnergyScanCallbackContext(NULL),
     mThreadNetif(mIp6)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     , mApplicationCoapServer(mIp6.mUdp, OT_DEFAULT_COAP_PORT)
@@ -614,7 +616,7 @@ ThreadError otBecomeChild(otInstance *aInstance, otMleAttachFilter aFilter)
 
 ThreadError otBecomeRouter(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetMle().BecomeRouter(ThreadStatusTlv::kTooFewRouters);
+    return aInstance->mThreadNetif.GetMle().BecomeRouter(ThreadStatusTlv::kHaveChildIdRequest);
 }
 
 ThreadError otBecomeLeader(otInstance *aInstance)
@@ -699,6 +701,17 @@ void otFactoryReset(otInstance *aInstance)
 {
     otPlatSettingsWipe(aInstance);
     otPlatReset(aInstance);
+}
+
+ThreadError otPersistentInfoErase(otInstance *aInstance)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(otGetDeviceRole(aInstance) == kDeviceRoleDisabled, error = kThreadError_InvalidState);
+    otPlatSettingsWipe(aInstance);
+
+exit:
+    return error;
 }
 
 uint8_t otGetRouterDowngradeThreshold(otInstance *aInstance)
@@ -978,6 +991,11 @@ bool otGetJamDetectionState(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetJamDetector().GetState();
 }
+
+uint64_t otGetJamDetectionHistoryBitmap(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetJamDetector().GetHistoryBitmap();
+}
 #endif // OPENTHREAD_ENABLE_JAM_DETECTION
 
 bool otIsIp6AddressEqual(const otIp6Address *a, const otIp6Address *b)
@@ -1005,8 +1023,15 @@ ThreadError otRemoveUnicastAddress(otInstance *aInstance, const otIp6Address *ad
     return aInstance->mThreadNetif.RemoveExternalUnicastAddress(*static_cast<const Ip6::Address *>(address));
 }
 
+#if OPENTHREAD_ENABLE_DHCP6_SERVER
+void otDhcp6ServerUpdate(otInstance *aInstance)
+{
+    aInstance->mThreadNetif.GetDhcp6Server().UpdateService();
+}
+#endif  // OPENTHREAD_ENABLE_DHCP6_SERVER
+
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
-void otDhcp6ClientUpdate(otInstance *aInstance, otNetifAddress *aAddresses, uint32_t aNumAddresses, void *aContext)
+void otDhcp6ClientUpdate(otInstance *aInstance, otDhcpAddress *aAddresses, uint32_t aNumAddresses, void *aContext)
 {
     aInstance->mThreadNetif.GetDhcp6Client().UpdateAddresses(aInstance, aAddresses, aNumAddresses, aContext);
 }
@@ -1147,12 +1172,9 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
     // Construct the context
     aInstance = new(aInstanceBuffer)otInstance();
 
-    // restore datasets
+    // restore datasets and network information
     otPlatSettingsInit(aInstance);
-
-    aInstance->mThreadNetif.GetActiveDataset().Restore();
-
-    aInstance->mThreadNetif.GetPendingDataset().Restore();
+    aInstance->mThreadNetif.GetMle().Restore();
 
 exit:
 
@@ -1173,12 +1195,9 @@ otInstance *otInstanceInit()
     // Construct the context
     sInstance = new(&sInstanceRaw)otInstance();
 
-    // restore datasets
+    // restore datasets and network information
     otPlatSettingsInit(sInstance);
-
-    sInstance->mThreadNetif.GetActiveDataset().Restore();
-
-    sInstance->mThreadNetif.GetPendingDataset().Restore();
+    sInstance->mThreadNetif.GetMle().Restore();
 
 exit:
 
@@ -1187,6 +1206,13 @@ exit:
 }
 
 #endif
+
+
+void otSetReceiveDiagnosticGetCallback(otInstance *aInstance, otReceiveDiagnosticGetCallback aCallback,
+                                       void *aCallbackContext)
+{
+    aInstance->mThreadNetif.GetNetworkDiagnostic().SetReceiveDiagnosticGetCallback(aCallback, aCallbackContext);
+}
 
 ThreadError otSendDiagnosticGet(otInstance *aInstance, const otIp6Address *aDestination, const uint8_t aTlvTypes[],
                                 uint8_t aCount)
@@ -1368,6 +1394,11 @@ bool otIsDiscoverInProgress(otInstance *aInstance)
     return aInstance->mThreadNetif.GetMle().IsDiscoverInProgress();
 }
 
+ThreadError otSendMacDataRequest(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetMeshForwarder().SendMacDataRequest();
+}
+
 void otSetReceiveIp6DatagramCallback(otInstance *aInstance, otReceiveIp6DatagramCallback aCallback,
                                      void *aCallbackContext)
 {
@@ -1467,6 +1498,45 @@ int otWriteMessage(otMessage aMessage, uint16_t aOffset, const void *aBuf, uint1
 {
     Message *message = static_cast<Message *>(aMessage);
     return message->Write(aOffset, aLength, aBuf);
+}
+
+void otMessageQueueInit(otMessageQueue *aQueue)
+{
+    aQueue->mData = NULL;
+}
+
+ThreadError otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage aMessage)
+{
+    Message *message = static_cast<Message *>(aMessage);
+    MessageQueue *queue = static_cast<MessageQueue *>(aQueue);
+    return queue->Enqueue(*message);
+}
+
+ThreadError otMessageQueueDequeue(otMessageQueue *aQueue, otMessage aMessage)
+{
+    Message *message = static_cast<Message *>(aMessage);
+    MessageQueue *queue = static_cast<MessageQueue *>(aQueue);
+    return queue->Dequeue(*message);
+}
+
+otMessage otMessageQueueGetHead(otMessageQueue *aQueue)
+{
+    MessageQueue *queue = static_cast<MessageQueue *>(aQueue);
+    return queue->GetHead();
+}
+
+otMessage otMessageQueueGetNext(otMessageQueue *aQueue, otMessage aMessage)
+{
+    Message *next;
+    Message *message = static_cast<Message *>(aMessage);
+    MessageQueue *queue = static_cast<MessageQueue *>(aQueue);
+
+    VerifyOrExit(message != NULL, next = NULL);
+    VerifyOrExit(message->GetMessageQueue() == queue, next = NULL);
+    next = message->GetNext();
+
+exit:
+    return next;
 }
 
 ThreadError otOpenUdpSocket(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aCallbackContext)
@@ -1677,9 +1747,10 @@ uint16_t otCommissionerGetSessionId(otInstance *aInstance)
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
 #if OPENTHREAD_ENABLE_JOINER
-ThreadError otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl)
+ThreadError otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl,
+                          otJoinerCallback aCallback, void *aContext)
 {
-    return aInstance->mThreadNetif.GetJoiner().Start(aPSKd, aProvisioningUrl);
+    return aInstance->mThreadNetif.GetJoiner().Start(aPSKd, aProvisioningUrl, aCallback, aContext);
 }
 
 ThreadError otJoinerStop(otInstance *aInstance)

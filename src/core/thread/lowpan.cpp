@@ -411,6 +411,8 @@ int Lowpan::Compress(Message &aMessage, const Mac::Address &aMacSource, const Ma
 
             cur += Compress(aMessage, aMacSource, aMacDest, cur);
 
+        // fall through
+
         default:
             ExitNow();
         }

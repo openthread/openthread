@@ -69,6 +69,8 @@ public:
     void SetLeaderPartitionId(uint32_t) { }
 
     ThreadError SetPreferredRouterId(uint8_t) { return kThreadError_NotImplemented; }
+    void SetPreviousPartitionId(uint32_t) { }
+    void SetRouterId(uint8_t) { }
 
     uint16_t GetNextHop(uint16_t aDestination) const { return Mle::GetNextHop(aDestination); }
 
@@ -107,6 +109,10 @@ public:
 
     ThreadError SetMaxAllowedChildren(uint8_t) { return kThreadError_NotImplemented; }
 
+    ThreadError RestoreChildren(void) {return kThreadError_NotImplemented; }
+    ThreadError RemoveStoredChild(uint16_t) {return kThreadError_NotImplemented; }
+    ThreadError StoreChild(uint16_t) {return kThreadError_NotImplemented; }
+
     Neighbor *GetNeighbor(uint16_t aAddress) { return Mle::GetNeighbor(aAddress); }
     Neighbor *GetNeighbor(const Mac::ExtAddress &aAddress) { return Mle::GetNeighbor(aAddress); }
     Neighbor *GetNeighbor(const Mac::Address &aAddress) { return Mle::GetNeighbor(aAddress); }
@@ -129,6 +135,8 @@ public:
 
     static int ComparePartitions(bool, const LeaderDataTlv &, bool, const LeaderDataTlv &) { return 0; }
 
+    void ResolveRoutingLoops(uint16_t, uint16_t) { }
+
     ThreadError CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6::Header &aIp6Header) {
         return Mle::CheckReachability(aMeshSource, aMeshDest, aIp6Header);
     }
@@ -150,6 +158,7 @@ private:
     ThreadError HandleParentRequest(const Message &, const Ip6::MessageInfo &) { return kThreadError_Drop; }
     ThreadError HandleChildIdRequest(const Message &, const Ip6::MessageInfo &, uint32_t) { return kThreadError_Drop; }
     ThreadError HandleChildUpdateRequest(const Message &, const Ip6::MessageInfo &) { return kThreadError_Drop; }
+    ThreadError HandleChildUpdateResponse(const Message &, const Ip6::MessageInfo &, uint32_t) { return kThreadError_Drop; }
     ThreadError HandleDataRequest(const Message &, const Ip6::MessageInfo &) { return kThreadError_Drop; }
     ThreadError HandleNetworkDataUpdateRouter(void) { return kThreadError_None; }
     ThreadError HandleDiscoveryRequest(const Message &, const Ip6::MessageInfo &) { return kThreadError_Drop; }

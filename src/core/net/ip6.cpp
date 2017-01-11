@@ -211,7 +211,7 @@ ThreadError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageI
             aMessage.Write(0, sizeof(hbh), &hbh);
 
             // make space for MPL Option + padding by shifting hop-by-hop option header
-            aMessage.Prepend(NULL, 8);
+            SuccessOrExit(error = aMessage.Prepend(NULL, 8));
             aMessage.CopyTo(8, 0, hbhLength, aMessage);
 
             // insert MPL Option
@@ -442,9 +442,10 @@ void Ip6::HandleSendQueue(void *aContext)
 
 void Ip6::HandleSendQueue(void)
 {
-    while (mSendQueue.GetHead())
+    Message *message;
+
+    while ((message = mSendQueue.GetHead()) != NULL)
     {
-        Message *message = mSendQueue.GetHead();
         mSendQueue.Dequeue(*message);
         HandleDatagram(*message, NULL, message->GetInterfaceId(), NULL, false);
     }
@@ -993,24 +994,24 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
                 rvalIface = candidateId;
                 goto exit;
             }
-            else if (candidateAddr->GetScope() < rvalAddr->GetAddress().GetScope())
+            else if (addr->GetScope() < rvalAddr->GetScope())
             {
                 // Rule 2: Prefer appropriate scope
-                if (candidateAddr->GetScope() >= destination->GetScope())
+                if (addr->GetScope() >= destination->GetScope())
                 {
                     rvalAddr = addr;
                     rvalIface = candidateId;
                 }
             }
-            else if (candidateAddr->GetScope() > rvalAddr->GetAddress().GetScope())
+            else if (addr->GetScope() > rvalAddr->GetScope())
             {
-                if (rvalAddr->GetAddress().GetScope() < destination->GetScope())
+                if (rvalAddr->GetScope() < destination->GetScope())
                 {
                     rvalAddr = addr;
                     rvalIface = candidateId;
                 }
             }
-            else if (addr->mPreferredLifetime != 0 && rvalAddr->mPreferredLifetime == 0)
+            else if (addr->mPreferred && !rvalAddr->mPreferred)
             {
                 // Rule 3: Avoid deprecated addresses
                 rvalAddr = addr;
@@ -1059,7 +1060,7 @@ exit:
     return rval;
 }
 
-otInstance *Ip6::GetInstance()
+otInstance *Ip6::GetInstance(void)
 {
     return otInstanceFromIp6(this);
 }

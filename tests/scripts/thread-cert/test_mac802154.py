@@ -30,7 +30,7 @@
 import io
 import unittest
 
-from common import MacAddress
+from common import MacAddress, MacAddressType
 import mac802154
 
 longaddrs = bytearray([0x61, 0xcc, 0x00, 0xce, 0xfa])
@@ -170,7 +170,7 @@ class TestMacParser(unittest.TestCase):
     def test_should_decrypt_data_frame(self):
 
         mac802154.DeviceDescriptors.add(0x2001, MacAddress(bytearray([0x16, 0x6e, 0x0a, 0x00, 0x00, 0x00, 0x00, 0x07]),
-                                                           MacAddress.LONG))
+                                                           MacAddressType.LONG))
 
         frame = mac802154.MacFrame()
         frame.parse(io.BytesIO(bytearray([0x69, 0x98, 0x68,  # FC, seq

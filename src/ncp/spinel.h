@@ -73,6 +73,10 @@
 
 #define SPINEL_FRAME_MAX_SIZE                   1300
 
+/// Macro for generating bit masks using bit index from the spec
+#define SPINEL_BIT_MASK(bit_index,field_bit_count) \
+    ( (1 << ((field_bit_count) - 1)) >> (bit_index))
+
 // ----------------------------------------------------------------------------
 
 __BEGIN_DECLS
@@ -195,6 +199,19 @@ enum {
     SPINEL_NET_FLAG_PREFERENCE_MASK   = (3 << SPINEL_NET_FLAG_PREFERENCE_OFFSET),
 };
 
+enum {
+    SPINEL_GPIO_FLAG_DIR_INPUT        = 0,
+    SPINEL_GPIO_FLAG_DIR_OUTPUT       = SPINEL_BIT_MASK(0, 8),
+    SPINEL_GPIO_FLAG_PULL_UP          = SPINEL_BIT_MASK(1, 8),
+    SPINEL_GPIO_FLAG_PULL_DOWN        = SPINEL_BIT_MASK(2, 8),
+    SPINEL_GPIO_FLAG_OPEN_DRAIN       = SPINEL_BIT_MASK(2, 8),
+    SPINEL_GPIO_FLAG_TRIGGER_NONE     = 0,
+    SPINEL_GPIO_FLAG_TRIGGER_RISING   = SPINEL_BIT_MASK(3, 8),
+    SPINEL_GPIO_FLAG_TRIGGER_FALLING  = SPINEL_BIT_MASK(4, 8),
+    SPINEL_GPIO_FLAG_TRIGGER_ANY      = SPINEL_GPIO_FLAG_TRIGGER_RISING
+                                      | SPINEL_GPIO_FLAG_TRIGGER_FALLING,
+};
+
 enum
 {
     SPINEL_PROTOCOL_TYPE_BOOTLOADER = 0,
@@ -291,6 +308,10 @@ enum
 
     SPINEL_CAP_PEEK_POKE             = 7,
 
+    SPINEL_CAP_WRITABLE_RAW_STREAM   = 8,
+    SPINEL_CAP_GPIO                  = 9,
+    SPINEL_CAP_TRNG                  = 10,
+
     SPINEL_CAP_802_15_4__BEGIN        = 16,
     SPINEL_CAP_802_15_4_2003          = (SPINEL_CAP_802_15_4__BEGIN + 0),
     SPINEL_CAP_802_15_4_2006          = (SPINEL_CAP_802_15_4__BEGIN + 1),
@@ -345,6 +366,129 @@ typedef enum
     SPINEL_PROP_LOCK                    = 9,        ///< PropLock [b]
     SPINEL_PROP_HBO_MEM_MAX             = 10,       ///< Max offload mem [S]
     SPINEL_PROP_HBO_BLOCK_MAX           = 11,       ///< Max offload block [S]
+
+    SPINEL_PROP_BASE_EXT__BEGIN         = 0x1000,
+
+    /// GPIO Configuration
+    /** Format: `A(CCU)`
+     *  Type: Read-Only (Optionally Read-write using `CMD_PROP_VALUE_INSERT`)
+     *
+     * An array of structures which contain the following fields:
+     *
+     * *   `C`: GPIO Number
+     * *   `C`: GPIO Configuration Flags
+     * *   `U`: Human-readable GPIO name
+     *
+     * GPIOs which do not have a corresponding entry are not supported.
+     *
+     * The configuration parameter contains the configuration flags for the
+     * GPIO:
+     *
+     *       0   1   2   3   4   5   6   7
+     *     +---+---+---+---+---+---+---+---+
+     *     |DIR|PUP|PDN|TRIGGER|  RESERVED |
+     *     +---+---+---+---+---+---+---+---+
+     *             |O/D|
+     *             +---+
+     *
+     * *   `DIR`: Pin direction. Clear (0) for input, set (1) for output.
+     * *   `PUP`: Pull-up enabled flag.
+     * *   `PDN`/`O/D`: Flag meaning depends on pin direction:
+     *     *   Input: Pull-down enabled.
+     *     *   Output: Output is an open-drain.
+     * *   `TRIGGER`: Enumeration describing how pin changes generate
+     *     asynchronous notification commands (TBD) from the NCP to the host.
+     *     *   0: Feature disabled for this pin
+     *     *   1: Trigger on falling edge
+     *     *   2: Trigger on rising edge
+     *     *   3: Trigger on level change
+     * *   `RESERVED`: Bits reserved for future use. Always cleared to zero
+     *     and ignored when read.
+     *
+     * As an optional feature, the configuration of individual pins may be
+     * modified using the `CMD_PROP_VALUE_INSERT` command. Only the GPIO
+     * number and flags fields MUST be present, the GPIO name (if present)
+     * would be ignored. This command can only be used to modify the
+     * configuration of GPIOs which are already exposed---it cannot be used
+     * by the host to add addional GPIOs.
+     */
+    SPINEL_PROP_GPIO_CONFIG             = SPINEL_PROP_BASE_EXT__BEGIN + 0,
+
+    /// GPIO State Bitmask
+    /** Format: `D`
+     *  Type: Read-Write
+     *
+     * Contains a bit field identifying the state of the GPIOs. The length of
+     * the data associated with these properties depends on the number of
+     * GPIOs. If you have 10 GPIOs, you'd have two bytes. GPIOs are numbered
+     * from most significant bit to least significant bit, so 0x80 is GPIO 0,
+     * 0x40 is GPIO 1, etc.
+     *
+     * For GPIOs configured as inputs:
+     *
+     * *   `CMD_PROP_VAUE_GET`: The value of the associated bit describes the
+     *     logic level read from the pin.
+     * *   `CMD_PROP_VALUE_SET`: The value of the associated bit is ignored
+     *     for these pins.
+     *
+     * For GPIOs configured as outputs:
+     *
+     * *   `CMD_PROP_VAUE_GET`: The value of the associated bit is
+     *     implementation specific.
+     * *   `CMD_PROP_VALUE_SET`: The value of the associated bit determines
+     *     the new logic level of the output. If this pin is configured as an
+     *     open-drain, setting the associated bit to 1 will cause the pin to
+     *     enter a Hi-Z state.
+     *
+     * For GPIOs which are not specified in `PROP_GPIO_CONFIG`:
+     *
+     * *   `CMD_PROP_VAUE_GET`: The value of the associated bit is
+     *     implementation specific.
+     * *   `CMD_PROP_VALUE_SET`: The value of the associated bit MUST be
+     *     ignored by the NCP.
+     *
+     * When writing, unspecified bits are assumed to be zero.
+     */
+    SPINEL_PROP_GPIO_STATE              = SPINEL_PROP_BASE_EXT__BEGIN + 2,
+
+    /// GPIO State Set-Only Bitmask
+    /** Format: `D`
+     *  Type: Write-Only
+     *
+     * Allows for the state of various output GPIOs to be set without affecting
+     * other GPIO states. Contains a bit field identifying the output GPIOs that
+     * should have their state set to 1.
+     *
+     * When writing, unspecified bits are assumed to be zero. The value of
+     * any bits for GPIOs which are not specified in `PROP_GPIO_CONFIG` MUST
+     * be ignored.
+     */
+    SPINEL_PROP_GPIO_STATE_SET          = SPINEL_PROP_BASE_EXT__BEGIN + 3,
+
+    /// GPIO State Clear-Only Bitmask
+    /** Format: `D`
+     *  Type: Write-Only
+     *
+     * Allows for the state of various output GPIOs to be cleared without affecting
+     * other GPIO states. Contains a bit field identifying the output GPIOs that
+     * should have their state cleared to 0.
+     *
+     * When writing, unspecified bits are assumed to be zero. The value of
+     * any bits for GPIOs which are not specified in `PROP_GPIO_CONFIG` MUST
+     * be ignored.
+     */
+    SPINEL_PROP_GPIO_STATE_CLEAR        = SPINEL_PROP_BASE_EXT__BEGIN + 4,
+
+    /// 32-bit random number from TRNG, ready-to-use.
+    SPINEL_PROP_TRNG_32                 = SPINEL_PROP_BASE_EXT__BEGIN + 5,
+
+    /// 16 random bytes from TRNG, ready-to-use.
+    SPINEL_PROP_TRNG_128                = SPINEL_PROP_BASE_EXT__BEGIN + 6,
+
+    /// Raw samples from TRNG entropy source representing 32 bits of entropy.
+    SPINEL_PROP_TRNG_RAW_32             = SPINEL_PROP_BASE_EXT__BEGIN + 7,
+
+    SPINEL_PROP_BASE_EXT__END           = 0x1100,
 
     SPINEL_PROP_PHY__BEGIN              = 0x20,
     SPINEL_PROP_PHY_ENABLED             = SPINEL_PROP_PHY__BEGIN + 0, ///< [b]
@@ -408,6 +552,23 @@ typedef enum
      * is larger than `PROP_JAM_DETECT_WINDOW` is undefined.
      */
     SPINEL_PROP_JAM_DETECT_BUSY         = SPINEL_PROP_PHY_EXT__BEGIN + 4,
+
+    /// Jamming detection history bitmap (for debugging)
+    /** Format: `LL` (read-only)
+     *
+     * This value provides information about current state of jamming detection
+     * module for monitoring/debugging purpose. It returns a 64-bit value where
+     * each bit corresponds to one second interval starting with bit 0 for the
+     * most recent interval and bit 63 for the oldest intervals (63 sec earlier).
+     * The bit is set to 1 if the jamming detection module observed/detected
+     * high signal level during the corresponding one second interval.
+     *
+     * The value is read-only and is encoded as two uint32 values in
+     * little-endian format (first uint32 gives the lower bits corresponding to
+     * more recent history).
+     */
+    SPINEL_PROP_JAM_DETECT_HISTORY_BITMAP
+                                        = SPINEL_PROP_PHY_EXT__BEGIN + 5,
 
     SPINEL_PROP_PHY_EXT__END            = 0x1300,
 
@@ -734,6 +895,14 @@ typedef enum
     /** Format: `L` (Read-only) */
     SPINEL_PROP_CNTR_TX_ERR_CCA        = SPINEL_PROP_CNTR__BEGIN + 11,
 
+    /// The number of unicast packets transmitted.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_TX_PKT_UNICAST    = SPINEL_PROP_CNTR__BEGIN + 12,
+
+    /// The number of broadcast packets transmitted.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_TX_PKT_BROADCAST  = SPINEL_PROP_CNTR__BEGIN + 13,
+
     /// The total number of received packets.
     /** Format: `L` (Read-only) */
     SPINEL_PROP_CNTR_RX_PKT_TOTAL      = SPINEL_PROP_CNTR__BEGIN + 100,
@@ -794,6 +963,14 @@ typedef enum
     /** Format: `L` (Read-only) */
     SPINEL_PROP_CNTR_RX_PKT_DUP        = SPINEL_PROP_CNTR__BEGIN + 114,
 
+    /// The number of unicast packets recived.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_PKT_UNICAST    = SPINEL_PROP_CNTR__BEGIN + 115,
+
+    /// The number of broadcast packets recived.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_PKT_BROADCAST  = SPINEL_PROP_CNTR__BEGIN + 116,
+
     /// The total number of secure transmitted IP messages.
     /** Format: `L` (Read-only) */
     SPINEL_PROP_CNTR_TX_IP_SEC_TOTAL   = SPINEL_PROP_CNTR__BEGIN + 200,
@@ -829,6 +1006,8 @@ typedef enum
     /// The number of received spinel frames with error.
     /** Format: `L` (Read-only) */
     SPINEL_PROP_CNTR_RX_SPINEL_ERR     = SPINEL_PROP_CNTR__BEGIN + 302,
+
+
 
     /// The message buffer counter info
     /** Format: `T(SSSSSSSSSSSSSSSS)` (Read-only)

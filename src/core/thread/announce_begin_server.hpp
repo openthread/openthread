@@ -91,8 +91,6 @@ private:
                               const otMessageInfo *aMessageInfo);
     void HandleRequest(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    ThreadError SendResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestMessageInfo);
-
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
 
