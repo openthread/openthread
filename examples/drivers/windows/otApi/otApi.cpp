@@ -3164,7 +3164,7 @@ otGetMacCounters(
 OTAPI
 void
 OTCALL
-otGetMessageBufferInfo(
+otMessageGetBufferInfo(
     _In_ otInstance *,
     _Out_ otBufferInfo *aBufferInfo
     )

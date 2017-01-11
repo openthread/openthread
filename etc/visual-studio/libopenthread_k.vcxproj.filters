@@ -63,6 +63,9 @@
     <ClCompile Include="..\..\src\core\api\link_raw_api.cpp">
       <Filter>Source Files\api</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\api\message_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\api\tasklet_api.cpp">
       <Filter>Source Files\api</Filter>
     </ClCompile>

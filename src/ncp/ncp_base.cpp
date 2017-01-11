@@ -37,6 +37,9 @@
 #endif
 
 #include <stdlib.h>
+
+#include "openthread/message.h"
+
 #include <common/code_utils.hpp>
  #include <common/debug.hpp>
 #include <ncp/ncp.h>
@@ -581,8 +584,8 @@ void NcpBase::HandleDatagramFromStack(otMessage aMessage, void *aContext)
 void NcpBase::HandleDatagramFromStack(otMessage aMessage)
 {
     ThreadError errorCode = kThreadError_None;
-    bool isSecure = otIsMessageLinkSecurityEnabled(aMessage);
-    uint16_t length = otGetMessageLength(aMessage);
+    bool isSecure = otMessageIsLinkSecurityEnabled(aMessage);
+    uint16_t length = otMessageGetLength(aMessage);
 
     SuccessOrExit(errorCode = OutboundFrameBegin());
 
@@ -612,7 +615,7 @@ exit:
 
     if (aMessage != NULL)
     {
-        otFreeMessage(aMessage);
+        otMessageFree(aMessage);
     }
 
     if (errorCode != kThreadError_None)
@@ -1454,7 +1457,7 @@ exit:
 
     if (aMessage != NULL)
     {
-        otFreeMessage(aMessage);
+        otMessageFree(aMessage);
     }
 
     return errorCode;
@@ -3082,7 +3085,7 @@ ThreadError NcpBase::GetPropertyHandler_MSG_BUFFER_COUNTERS(uint8_t header, spin
     ThreadError errorCode = kThreadError_None;
     otBufferInfo bufferInfo;
 
-    otGetMessageBufferInfo(mInstance, &bufferInfo);
+    otMessageGetBufferInfo(mInstance, &bufferInfo);
 
     SuccessOrExit(errorCode = OutboundFrameBegin());
     SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
@@ -4357,7 +4360,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spin
         (void)meta_len;
         (void)parsedLength;
 
-        errorCode = otAppendMessage(message, frame_ptr, static_cast<uint16_t>(frame_len));
+        errorCode = otMessageAppend(message, frame_ptr, static_cast<uint16_t>(frame_len));
     }
 
     if (errorCode == kThreadError_None)
@@ -4369,7 +4372,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spin
     }
     else if (message)
     {
-        otFreeMessage(message);
+        otMessageFree(message);
     }
 
     if (errorCode == kThreadError_None)
@@ -4430,7 +4433,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_k
         (void)meta_len;
         (void)parsedLength;
 
-        errorCode = otAppendMessage(message, frame_ptr, static_cast<uint16_t>(frame_len));
+        errorCode = otMessageAppend(message, frame_ptr, static_cast<uint16_t>(frame_len));
     }
 
     if (errorCode == kThreadError_None)
@@ -4439,7 +4442,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_k
     }
     else if (message)
     {
-        otFreeMessage(message);
+        otMessageFree(message);
     }
 
     if (errorCode == kThreadError_None)

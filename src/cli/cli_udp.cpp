@@ -72,11 +72,11 @@ void Udp::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageIn
 
 void Udp::HandleUdpReceive(otMessage aMessage, const otMessageInfo *aMessageInfo)
 {
-    uint16_t payloadLength = otGetMessageLength(aMessage) - otGetMessageOffset(aMessage);
+    uint16_t payloadLength = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
     char buf[512];
 
     VerifyOrExit(payloadLength <= sizeof(buf), ;);
-    otReadMessage(aMessage, otGetMessageOffset(aMessage), buf, payloadLength);
+    otMessageRead(aMessage, otMessageGetOffset(aMessage), buf, payloadLength);
 
     if (buf[payloadLength - 1] == '\n')
     {
@@ -102,15 +102,15 @@ int Udp::Output(const char *aBuf, uint16_t aBufLength)
     otMessage message;
 
     VerifyOrExit((message = otUdpNewMessage(mInstance, true)) != NULL, error = kThreadError_NoBufs);
-    SuccessOrExit(error = otSetMessageLength(message, aBufLength));
-    otWriteMessage(message, 0, aBuf, aBufLength);
+    SuccessOrExit(error = otMessageSetLength(message, aBufLength));
+    otMessageWrite(message, 0, aBuf, aBufLength);
     SuccessOrExit(error = otUdpSend(&mSocket, message, &mPeer));
 
 exit:
 
     if (error != kThreadError_None && message != NULL)
     {
-        otFreeMessage(message);
+        otMessageFree(message);
         aBufLength = 0;
     }
 

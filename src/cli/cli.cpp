@@ -412,7 +412,7 @@ void Interpreter::ProcessBufferInfo(int argc, char *argv[])
     (void)argc;
     (void)argv;
 
-    otGetMessageBufferInfo(mInstance, &bufferInfo);
+    otMessageGetBufferInfo(mInstance, &bufferInfo);
 
     sServer->OutputFormat("total: %d\r\n", bufferInfo.mTotalBuffers);
     sServer->OutputFormat("free: %d\r\n", bufferInfo.mFreeBuffers);
@@ -1443,8 +1443,8 @@ void Interpreter::HandlePingTimer()
     const otMessageInfo *messageInfo = static_cast<const otMessageInfo *>(&sMessageInfo);
 
     VerifyOrExit((message = otNewIp6Message(mInstance, true)) != NULL, error = kThreadError_NoBufs);
-    SuccessOrExit(error = otAppendMessage(message, &timestamp, sizeof(timestamp)));
-    SuccessOrExit(error = otSetMessageLength(message, sLength));
+    SuccessOrExit(error = otMessageAppend(message, &timestamp, sizeof(timestamp)));
+    SuccessOrExit(error = otMessageSetLength(message, sLength));
     SuccessOrExit(error = otIcmp6SendEchoRequest(mInstance, message, messageInfo, 1));
 
     sCount--;
@@ -1453,7 +1453,7 @@ exit:
 
     if (error != kThreadError_None && message != NULL)
     {
-        otFreeMessage(message);
+        otMessageFree(message);
     }
 
     if (sCount)

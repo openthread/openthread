@@ -345,6 +345,11 @@ typedef struct otMessageInfo
 } otMessageInfo;
 
 /**
+ * This type points to an OpenThread message buffer.
+ */
+typedef void *otMessage;
+
+/**
  * @addtogroup commands  Commands
  *
  * @{
@@ -973,34 +978,6 @@ typedef struct
     uint8_t        *mSecretKey;          ///< Secret key used to create IID. Cannot be null.
     uint16_t        mSecretKeyLength;    ///< Secret key length in bytes. Should be at least 16 bytes == 128 bits.
 } otSemanticallyOpaqueIidGeneratorData;
-
-/**
- * @addtogroup messages  Message Buffers
- *
- * @brief
- *   This module includes functions that manipulate OpenThread message buffers
- *
- * @{
- *
- */
-
-/**
- * This type points to an OpenThread message buffer.
- */
-typedef void *otMessage;
-
-/**
- * This structure represents an OpenThread message queue.
- */
-typedef struct
-{
-    void *mData;            ///< Opaque data used by the implementation.
-} otMessageQueue;
-
-/**
- * @}
- *
- */
 
 /**
  * @addtogroup icmp6  ICMPv6

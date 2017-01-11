@@ -35,31 +35,11 @@
 #ifndef OPENTHREAD_MESSAGE_H_
 #define OPENTHREAD_MESSAGE_H_
 
-#include <openthread-types.h>
+#include "openthread-types.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/**
- * @defgroup api  API
- * @brief
- *   This module includes the application programming interface to the OpenThread stack.
- *
- * @{
- *
- * @defgroup execution Execution
- * @defgroup commands Commands
- * @defgroup config Configuration
- * @defgroup diags Diagnostics
- * @defgroup messages Message Buffers
- * @defgroup ip6 IPv6
- * @defgroup udp UDP
- * @defgroup coap CoAP
- *
- * @}
- *
- */
 
 /**
  * @addtogroup messages  Message Buffers
@@ -78,16 +58,15 @@ extern "C" {
  *
  * @retval kThreadErrorNone  Successfully freed the message buffer.
  *
- * @sa otNewUdpMessage
- * @sa otAppendMessage
- * @sa otGetMessageLength
- * @sa otSetMessageLength
- * @sa otGetMessageOffset
- * @sa otSetMessageOffset
- * @sa otReadMessage
- * @sa otWriteMessage
+ * @sa otMessageAppend
+ * @sa otMessageGetLength
+ * @sa otMessageSetLength
+ * @sa otMessageGetOffset
+ * @sa otMessageSetOffset
+ * @sa otMessageRead
+ * @sa otMessageWrite
  */
-ThreadError otFreeMessage(otMessage aMessage);
+ThreadError otMessageFree(otMessage aMessage);
 
 /**
  * Get the message length in bytes.
@@ -96,17 +75,16 @@ ThreadError otFreeMessage(otMessage aMessage);
  *
  * @returns The message length in bytes.
  *
- * @sa otNewUdpMessage
- * @sa otFreeMessage
- * @sa otAppendMessage
- * @sa otSetMessageLength
- * @sa otGetMessageOffset
- * @sa otSetMessageOffset
- * @sa otReadMessage
- * @sa otWriteMessage
- * @sa otSetMessageLength
+ * @sa otMessageFree
+ * @sa otMessageAppend
+ * @sa otMessageSetLength
+ * @sa otMessageGetOffset
+ * @sa otMessageSetOffset
+ * @sa otMessageRead
+ * @sa otMessageWrite
+ * @sa otMessageSetLength
  */
-uint16_t otGetMessageLength(otMessage aMessage);
+uint16_t otMessageGetLength(otMessage aMessage);
 
 /**
  * Set the message length in bytes.
@@ -117,16 +95,15 @@ uint16_t otGetMessageLength(otMessage aMessage);
  * @retval kThreadErrorNone    Successfully set the message length.
  * @retval kThreadErrorNoBufs  No available buffers to grow the message.
  *
- * @sa otNewUdpMessage
- * @sa otFreeMessage
- * @sa otAppendMessage
- * @sa otGetMessageLength
- * @sa otGetMessageOffset
- * @sa otSetMessageOffset
- * @sa otReadMessage
- * @sa otWriteMessage
+ * @sa otMessageFree
+ * @sa otMessageAppend
+ * @sa otMessageGetLength
+ * @sa otMessageGetOffset
+ * @sa otMessageSetOffset
+ * @sa otMessageRead
+ * @sa otMessageWrite
  */
-ThreadError otSetMessageLength(otMessage aMessage, uint16_t aLength);
+ThreadError otMessageSetLength(otMessage aMessage, uint16_t aLength);
 
 /**
  * Get the message offset in bytes.
@@ -135,16 +112,15 @@ ThreadError otSetMessageLength(otMessage aMessage, uint16_t aLength);
  *
  * @returns The message offset value.
  *
- * @sa otNewUdpMessage
- * @sa otFreeMessage
- * @sa otAppendMessage
- * @sa otGetMessageLength
- * @sa otSetMessageLength
- * @sa otSetMessageOffset
- * @sa otReadMessage
- * @sa otWriteMessage
+ * @sa otMessageFree
+ * @sa otMessageAppend
+ * @sa otMessageGetLength
+ * @sa otMessageSetLength
+ * @sa otMessageSetOffset
+ * @sa otMessageRead
+ * @sa otMessageWrite
  */
-uint16_t otGetMessageOffset(otMessage aMessage);
+uint16_t otMessageGetOffset(otMessage aMessage);
 
 /**
  * Set the message offset in bytes.
@@ -155,16 +131,15 @@ uint16_t otGetMessageOffset(otMessage aMessage);
  * @retval kThreadErrorNone        Successfully set the message offset.
  * @retval kThreadErrorInvalidArg  The offset is beyond the message length.
  *
- * @sa otNewUdpMessage
- * @sa otFreeMessage
- * @sa otAppendMessage
- * @sa otGetMessageLength
- * @sa otSetMessageLength
- * @sa otGetMessageOffset
- * @sa otReadMessage
- * @sa otWriteMessage
+ * @sa otMessageFree
+ * @sa otMessageAppend
+ * @sa otMessageGetLength
+ * @sa otMessageSetLength
+ * @sa otMessageGetOffset
+ * @sa otMessageRead
+ * @sa otMessageWrite
  */
-ThreadError otSetMessageOffset(otMessage aMessage, uint16_t aOffset);
+ThreadError otMessageSetOffset(otMessage aMessage, uint16_t aOffset);
 
 /**
  * This function indicates whether or not link security is enabled for the message.
@@ -175,7 +150,7 @@ ThreadError otSetMessageOffset(otMessage aMessage, uint16_t aOffset);
  * @retval FALSE  If link security is not enabled.
  *
  */
-bool otIsMessageLinkSecurityEnabled(otMessage aMessage);
+bool otMessageIsLinkSecurityEnabled(otMessage aMessage);
 
 /**
  * This function sets/forces the message to be forwarded using direct transmission.
@@ -198,16 +173,15 @@ void otMessageSetDirectTransmission(otMessage aMessage, bool aEnabled);
  * @retval kThreadErrorNone    Successfully appended to the message
  * @retval kThreadErrorNoBufs  No available buffers to grow the message.
  *
- * @sa otNewUdpMessage
- * @sa otFreeMessage
- * @sa otGetMessageLength
- * @sa otSetMessageLength
- * @sa otGetMessageOffset
- * @sa otSetMessageOffset
- * @sa otReadMessage
- * @sa otWriteMessage
+ * @sa otMessageFree
+ * @sa otMessageGetLength
+ * @sa otMessageSetLength
+ * @sa otMessageGetOffset
+ * @sa otMessageSetOffset
+ * @sa otMessageRead
+ * @sa otMessageWrite
  */
-ThreadError otAppendMessage(otMessage aMessage, const void *aBuf, uint16_t aLength);
+ThreadError otMessageAppend(otMessage aMessage, const void *aBuf, uint16_t aLength);
 
 /**
  * Read bytes from a message.
@@ -219,16 +193,15 @@ ThreadError otAppendMessage(otMessage aMessage, const void *aBuf, uint16_t aLeng
  *
  * @returns The number of bytes read.
  *
- * @sa otNewUdpMessage
- * @sa otFreeMessage
- * @sa otAppendMessage
- * @sa otGetMessageLength
- * @sa otSetMessageLength
- * @sa otGetMessageOffset
- * @sa otSetMessageOffset
- * @sa otWriteMessage
+ * @sa otMessageFree
+ * @sa otMessageAppend
+ * @sa otMessageGetLength
+ * @sa otMessageSetLength
+ * @sa otMessageGetOffset
+ * @sa otMessageSetOffset
+ * @sa otMessageWrite
  */
-int otReadMessage(otMessage aMessage, uint16_t aOffset, void *aBuf, uint16_t aLength);
+int otMessageRead(otMessage aMessage, uint16_t aOffset, void *aBuf, uint16_t aLength);
 
 /**
  * Write bytes to a message.
@@ -240,16 +213,23 @@ int otReadMessage(otMessage aMessage, uint16_t aOffset, void *aBuf, uint16_t aLe
  *
  * @returns The number of bytes written.
  *
- * @sa otNewUdpMessage
- * @sa otFreeMessage
- * @sa otAppendMessage
- * @sa otGetMessageLength
- * @sa otSetMessageLength
- * @sa otGetMessageOffset
- * @sa otSetMessageOffset
- * @sa otReadMessage
+ * @sa otMessageFree
+ * @sa otMessageAppend
+ * @sa otMessageGetLength
+ * @sa otMessageSetLength
+ * @sa otMessageGetOffset
+ * @sa otMessageSetOffset
+ * @sa otMessageRead
  */
-int otWriteMessage(otMessage aMessage, uint16_t aOffset, const void *aBuf, uint16_t aLength);
+int otMessageWrite(otMessage aMessage, uint16_t aOffset, const void *aBuf, uint16_t aLength);
+
+/**
+ * This structure represents an OpenThread message queue.
+ */
+typedef struct
+{
+    void *mData;            ///< Opaque data used by the implementation.
+} otMessageQueue;
 
 /**
  *
@@ -309,6 +289,15 @@ otMessage otMessageQueueGetHead(otMessageQueue *aQueue);
  *
  */
 otMessage otMessageQueueGetNext(otMessageQueue *aQueue, const otMessage aMessage);
+
+/**
+ * Get the Message Buffer information.
+ *
+ * @param[in]   aInstance    A pointer to the OpenThread instance.
+ * @param[out]  aBufferInfo  A pointer where the message buffer information is written.
+ *
+ */
+OTAPI void OTCALL otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo);
 
 /**
  * @}
