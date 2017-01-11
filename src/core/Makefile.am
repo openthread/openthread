@@ -40,6 +40,7 @@ CPPFLAGS_COMMON                     = \
 
 SOURCES_COMMON                      = \
     openthread.cpp                    \
+    api/crypto_api.cpp                \
     api/message_api.cpp               \
     api/tasklet_api.cpp               \
     api/udp_api.cpp                   \
@@ -57,7 +58,6 @@ SOURCES_COMMON                      = \
     crypto/aes_ccm.cpp                \
     crypto/aes_ecb.cpp                \
     crypto/hmac_sha256.cpp            \
-    crypto/openthread-crypto.cpp      \
     crypto/mbedtls.cpp                \
     crypto/sha256.cpp                 \
     mac/mac.cpp                       \

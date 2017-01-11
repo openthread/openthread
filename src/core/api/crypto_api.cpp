@@ -28,15 +28,15 @@
 
 /**
  * @file
- *   This file implements the C APIs for openthread crypto library.
+ *   This file implements the OpenThread Crypto API.
  */
 
-#include <openthread.h>
-#include <common/debug.hpp>
-#include <common/code_utils.hpp>
-#include <openthread-crypto.h>
-#include <crypto/hmac_sha256.hpp>
-#include <crypto/aes_ccm.hpp>
+#include "openthread/crypto.h"
+
+#include "common/debug.hpp"
+#include "common/code_utils.hpp"
+#include "crypto/hmac_sha256.hpp"
+#include "crypto/aes_ccm.hpp"
 
 using namespace Thread::Crypto;
 

@@ -64,7 +64,6 @@ PRETTY_SUBDIRS                          = \
 include_HEADERS                         = \
     openthread/link_raw.h                 \
     openthread.h                          \
-    openthread-crypto.h                   \
     openthread-diag.h                     \
     openthread-icmp6.h                    \
     openthread-ip6.h                      \
