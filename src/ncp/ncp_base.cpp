@@ -3109,6 +3109,10 @@ ThreadError NcpBase::SetPropertyHandler_MAC_PROMISCUOUS_MODE(uint8_t header, spi
             otPlatRadioSetPromiscuous(mInstance, true);
             errorCode = kThreadError_None;
             break;
+
+        default:
+            errorCode = kThreadError_InvalidArgs;
+            break;
         }
 
         if (errorCode == kThreadError_None)
