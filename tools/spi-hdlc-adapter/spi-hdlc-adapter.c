@@ -1478,7 +1478,11 @@ int main(int argc, char *argv[])
     {
         if (!setup_spi_dev(argv[0]))
         {
-            syslog(LOG_ERR, "%s: Unable to open SPI device \"%s\", %s", prog, argv[0], strerror(errno));
+            char spi_path[64];
+
+            strncpy(spi_path, argv[0], sizeof(spi_path) - 1);
+            spi_path[sizeof(spi_path) - 1] = 0;
+            syslog(LOG_ERR, "%s: Unable to open SPI device \"%s\", %s", prog, spi_path, strerror(errno));
             exit(EXIT_FAILURE);
         }
         argc--;
