@@ -35,11 +35,19 @@
 #ifndef OPENTHREAD_JAM_DETECTION_H_
 #define OPENTHREAD_JAM_DETECTION_H_
 
-#include <openthread-types.h>
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
+#include "openthread-types.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#if OPENTHREAD_ENABLE_JAM_DETECTION
 
 /**
  * @addtogroup jam-det  Jamming Detection
@@ -69,7 +77,7 @@ typedef void (*otJamDetectionCallback)(bool aJamState, void *aContext);
  * @retval kThreadErrorNone    Successfully set the threshold.
  *
  */
-ThreadError otSetJamDetectionRssiThreshold(otInstance *aInstance, int8_t aRssiThreshold);
+ThreadError otJamDetectionSetRssiThreshold(otInstance *aInstance, int8_t aRssiThreshold);
 
 /**
  * Get the Jam Detection RSSI Threshold (in dBm).
@@ -78,7 +86,7 @@ ThreadError otSetJamDetectionRssiThreshold(otInstance *aInstance, int8_t aRssiTh
  *
  * @returns The Jam Detection RSSI Threshold.
  */
-int8_t otGetJamDetectionRssiThreshold(otInstance *aInstance);
+int8_t otJamDetectionGetRssiThreshold(otInstance *aInstance);
 
 /**
  * Set the Jam Detection Detection Window (in seconds).
@@ -90,7 +98,7 @@ int8_t otGetJamDetectionRssiThreshold(otInstance *aInstance);
  * @retval kThreadErrorInvalidArgs  The given input parameter not within valid range (1-63)
  *
  */
-ThreadError otSetJamDetectionWindow(otInstance *aInstance, uint8_t aWindow);
+ThreadError otJamDetectionSetWindow(otInstance *aInstance, uint8_t aWindow);
 
 /**
  * Get the Jam Detection Detection Window (in seconds).
@@ -99,7 +107,7 @@ ThreadError otSetJamDetectionWindow(otInstance *aInstance, uint8_t aWindow);
  *
  * @returns The Jam Detection Window.
  */
-uint8_t otGetJamDetectionWindow(otInstance *aInstance);
+uint8_t otJamDetectionGetWindow(otInstance *aInstance);
 
 /**
  * Set the Jam Detection Busy Period (in seconds).
@@ -115,7 +123,7 @@ uint8_t otGetJamDetectionWindow(otInstance *aInstance);
  * @retval kThreadErrorInvalidArgs  The given input is not within the valid range.
  *
  */
-ThreadError otSetJamDetectionBusyPeriod(otInstance *aInstance, uint8_t aBusyPeriod);
+ThreadError otJamDetectionSetBusyPeriod(otInstance *aInstance, uint8_t aBusyPeriod);
 
 /**
  * Get the Jam Detection Busy Period (in seconds)
@@ -124,7 +132,7 @@ ThreadError otSetJamDetectionBusyPeriod(otInstance *aInstance, uint8_t aBusyPeri
  *
  * @returns The Jam Detection Busy Period
  */
-uint8_t otGetJamDetectionBusyPeriod(otInstance *aInstance);
+uint8_t otJamDetectionGetBusyPeriod(otInstance *aInstance);
 
 /**
  * Start the jamming detection.
@@ -137,7 +145,7 @@ uint8_t otGetJamDetectionBusyPeriod(otInstance *aInstance);
  * @retval kThreadErrorAlready      Jam detection has been started before.
  *
  */
-ThreadError otStartJamDetection(otInstance *aInstance, otJamDetectionCallback aCallback, void *aContext);
+ThreadError otJamDetectionStart(otInstance *aInstance, otJamDetectionCallback aCallback, void *aContext);
 
 /**
  * Stop the jamming detection.
@@ -148,7 +156,7 @@ ThreadError otStartJamDetection(otInstance *aInstance, otJamDetectionCallback aC
  * @retval kThreadErrorAlready      Jam detection is already stopped.
  *
  */
-ThreadError otStopJamDetection(otInstance *aInstance);
+ThreadError otJamDetectionStop(otInstance *aInstance);
 
 /**
  * Get the Jam Detection Status (enabled/disabled)
@@ -157,7 +165,7 @@ ThreadError otStopJamDetection(otInstance *aInstance);
  *
  * @returns The Jam Detection status (true if enabled, false otherwise).
  */
-bool otIsJamDetectionEnabled(otInstance *aInstance);
+bool otJamDetectionIsEnabled(otInstance *aInstance);
 
 /**
  * Get the Jam Detection State
@@ -166,7 +174,7 @@ bool otIsJamDetectionEnabled(otInstance *aInstance);
  *
  * @returns The Jam Detection state (`true` jam is detected, `false' otherwise).
  */
-bool otGetJamDetectionState(otInstance *aInstance);
+bool otJamDetectionGetState(otInstance *aInstance);
 
 /**
  * Get the current history bitmap.
@@ -182,12 +190,14 @@ bool otGetJamDetectionState(otInstance *aInstance);
  *
  * @returns The current history bitmap.
  */
-uint64_t otGetJamDetectionHistoryBitmap(otInstance *aInstance);
+uint64_t otJamDetectionGetHistoryBitmap(otInstance *aInstance);
 
 /**
  * @}
  *
  */
+
+#endif  // OPENTHREAD_ENABLE_JAM_DETECTION
 
 #ifdef __cplusplus
 }  // extern "C"

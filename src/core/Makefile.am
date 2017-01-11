@@ -139,6 +139,7 @@ endif  # OPENTHREAD_ENABLE_DHCP6_SERVER
 
 if OPENTHREAD_ENABLE_JAM_DETECTION
 SOURCES_COMMON                     += \
+    api/jam_detection_api.cpp         \
     utils/jam_detector.cpp            \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_JAM_DETECTION

@@ -41,10 +41,6 @@
 
 #include <openthread.h>
 
-#if OPENTHREAD_ENABLE_JAM_DETECTION
-#include <openthread-jam-detection.h>
-#endif
-
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
@@ -954,63 +950,6 @@ const otMacCounters *otGetMacCounters(otInstance *aInstance)
 {
     return &aInstance->mThreadNetif.GetMac().GetCounters();
 }
-
-#if OPENTHREAD_ENABLE_JAM_DETECTION
-ThreadError otSetJamDetectionRssiThreshold(otInstance *aInstance, int8_t aRssiThreshold)
-{
-    return aInstance->mThreadNetif.GetJamDetector().SetRssiThreshold(aRssiThreshold);
-}
-
-int8_t otGetJamDetectionRssiThreshold(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetJamDetector().GetRssiThreshold();
-}
-
-ThreadError otSetJamDetectionWindow(otInstance *aInstance, uint8_t aWindow)
-{
-    return aInstance->mThreadNetif.GetJamDetector().SetWindow(aWindow);
-}
-
-uint8_t otGetJamDetectionWindow(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetJamDetector().GetWindow();
-}
-
-ThreadError otSetJamDetectionBusyPeriod(otInstance *aInstance, uint8_t aBusyPeriod)
-{
-    return aInstance->mThreadNetif.GetJamDetector().SetBusyPeriod(aBusyPeriod);
-}
-
-uint8_t otGetJamDetectionBusyPeriod(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetJamDetector().GetBusyPeriod();
-}
-
-ThreadError otStartJamDetection(otInstance *aInstance, otJamDetectionCallback aCallback, void *aContext)
-{
-    return aInstance->mThreadNetif.GetJamDetector().Start(aCallback, aContext);
-}
-
-ThreadError otStopJamDetection(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetJamDetector().Stop();
-}
-
-bool otIsJamDetectionEnabled(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetJamDetector().IsEnabled();
-}
-
-bool otGetJamDetectionState(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetJamDetector().GetState();
-}
-
-uint64_t otGetJamDetectionHistoryBitmap(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetJamDetector().GetHistoryBitmap();
-}
-#endif // OPENTHREAD_ENABLE_JAM_DETECTION
 
 bool otIsIp6AddressEqual(const otIp6Address *a, const otIp6Address *b)
 {

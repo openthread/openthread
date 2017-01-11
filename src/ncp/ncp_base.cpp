@@ -40,6 +40,10 @@
 
 #include "openthread/message.h"
 
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+#include "openthread/jam_detection.h"
+#endif
+
 #include <common/code_utils.hpp>
  #include <common/debug.hpp>
 #include <ncp/ncp.h>
@@ -48,9 +52,6 @@
 #include <openthread.h>
 #include <openthread-diag.h>
 #include <openthread-icmp6.h>
-#if OPENTHREAD_ENABLE_JAM_DETECTION
-#include <openthread-jam-detection.h>
-#endif
 #include <openthread-instance.h>
 #include <stdarg.h>
 #include <platform/radio.h>
@@ -1225,7 +1226,7 @@ void NcpBase::HandleSpaceAvailableInTxBuffer(void)
                 SPINEL_CMD_PROP_VALUE_IS,
                 SPINEL_PROP_JAM_DETECTED,
                 SPINEL_DATATYPE_BOOL_S,
-                otGetJamDetectionState(mInstance)
+                otJamDetectionGetState(mInstance)
         ));
 
         mShouldSignalJamStateChange = false;
@@ -2797,7 +2798,7 @@ ThreadError NcpBase::GetPropertyHandler_JAM_DETECT_ENABLE(uint8_t header, spinel
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_BOOL_S,
-               otIsJamDetectionEnabled(mInstance)
+               otJamDetectionIsEnabled(mInstance)
            );
 }
 
@@ -2808,7 +2809,7 @@ ThreadError NcpBase::GetPropertyHandler_JAM_DETECTED(uint8_t header, spinel_prop
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_BOOL_S,
-               otGetJamDetectionState(mInstance)
+               otJamDetectionGetState(mInstance)
            );
 }
 
@@ -2819,7 +2820,7 @@ ThreadError NcpBase::GetPropertyHandler_JAM_DETECT_RSSI_THRESHOLD(uint8_t header
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_INT8_S,
-               otGetJamDetectionRssiThreshold(mInstance)
+               otJamDetectionGetRssiThreshold(mInstance)
            );
 }
 
@@ -2830,7 +2831,7 @@ ThreadError NcpBase::GetPropertyHandler_JAM_DETECT_WINDOW(uint8_t header, spinel
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UINT8_S,
-               otGetJamDetectionWindow(mInstance)
+               otJamDetectionGetWindow(mInstance)
            );
 }
 
@@ -2841,13 +2842,13 @@ ThreadError NcpBase::GetPropertyHandler_JAM_DETECT_BUSY(uint8_t header, spinel_p
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UINT8_S,
-               otGetJamDetectionBusyPeriod(mInstance)
+               otJamDetectionGetBusyPeriod(mInstance)
            );
 }
 
 ThreadError NcpBase::GetPropertyHandler_JAM_DETECT_HISTORY_BITMAP(uint8_t header, spinel_prop_key_t key)
 {
-    uint64_t historyBitmap = otGetJamDetectionHistoryBitmap(mInstance);
+    uint64_t historyBitmap = otJamDetectionGetHistoryBitmap(mInstance);
 
     return SendPropertyUpdate(
                header,
@@ -5300,11 +5301,11 @@ ThreadError NcpBase::SetPropertyHandler_JAM_DETECT_ENABLE(uint8_t header, spinel
     {
         if (isEnabled)
         {
-            otStartJamDetection(mInstance, &NcpBase::HandleJamStateChange_Jump, this);
+            otJamDetectionStart(mInstance, &NcpBase::HandleJamStateChange_Jump, this);
         }
         else
         {
-            otStopJamDetection(mInstance);
+            otJamDetectionStop(mInstance);
         }
 
         errorCode = HandleCommandPropertyGet(header, key);
@@ -5333,7 +5334,7 @@ ThreadError NcpBase::SetPropertyHandler_JAM_DETECT_RSSI_THRESHOLD(uint8_t header
 
     if (parsedLength > 0)
     {
-        errorCode = otSetJamDetectionRssiThreshold(mInstance, value);
+        errorCode = otJamDetectionSetRssiThreshold(mInstance, value);
 
         if (errorCode == kThreadError_None)
         {
@@ -5368,7 +5369,7 @@ ThreadError NcpBase::SetPropertyHandler_JAM_DETECT_WINDOW(uint8_t header, spinel
 
     if (parsedLength > 0)
     {
-        errorCode = otSetJamDetectionWindow(mInstance, value);
+        errorCode = otJamDetectionSetWindow(mInstance, value);
 
         if (errorCode == kThreadError_None)
         {
@@ -5403,7 +5404,7 @@ ThreadError NcpBase::SetPropertyHandler_JAM_DETECT_BUSY(uint8_t header, spinel_p
 
     if (parsedLength > 0)
     {
-        errorCode = otSetJamDetectionBusyPeriod(mInstance, value);
+        errorCode = otJamDetectionSetBusyPeriod(mInstance, value);
 
         if (errorCode == kThreadError_None)
         {

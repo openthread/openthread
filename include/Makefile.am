@@ -67,7 +67,6 @@ include_HEADERS                         = \
     openthread-diag.h                     \
     openthread-icmp6.h                    \
     openthread-ip6.h                      \
-    openthread-jam-detection.h            \
     openthread-types.h                    \
     $(NULL)
 
