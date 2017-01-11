@@ -322,7 +322,7 @@ ThreadError Netif::AddUnicastAddress(NetifUnicastAddress &aAddress)
     aAddress.mNext = mUnicastAddresses;
     mUnicastAddresses = &aAddress;
 
-    SetStateChangedFlags(OT_IP6_ADDRESS_ADDED);
+    SetStateChangedFlags(aAddress.mRloc ? OT_IP6_RLOC_ADDED : OT_IP6_ADDRESS_ADDED);
 
 exit:
     return error;
@@ -355,7 +355,7 @@ exit:
 
     if (error != kThreadError_NotFound)
     {
-        SetStateChangedFlags(OT_IP6_ADDRESS_REMOVED);
+        SetStateChangedFlags(aAddress.mRloc ? OT_IP6_RLOC_REMOVED : OT_IP6_ADDRESS_REMOVED);
     }
 
     return error;

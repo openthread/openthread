@@ -96,6 +96,8 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mPreviousChannel(0),
     mPreviousPanId(Mac::kPanIdBroadcast)
 {
+    uint8_t meshLocalPrefix[8];
+
     memset(&mLeaderData, 0, sizeof(mLeaderData));
     memset(&mParentLeaderData, 0, sizeof(mParentLeaderData));
     memset(&mParent, 0, sizeof(mParent));
@@ -123,12 +125,10 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mLeaderAloc.mScopeOverrideValid = true;
 
     // initialize Mesh Local Prefix
-    mMeshLocal64.GetAddress().mFields.m8[0] = 0xfd;
-    memcpy(mMeshLocal64.GetAddress().mFields.m8 + 1, mMac.GetExtendedPanId(), 5);
-    mMeshLocal64.GetAddress().mFields.m8[6] = 0x00;
-    mMeshLocal64.GetAddress().mFields.m8[7] = 0x00;
-    mMeshLocal64.mScopeOverride = Ip6::Address::kRealmLocalScope;
-    mMeshLocal64.mScopeOverrideValid = true;
+    meshLocalPrefix[0] = 0xfd;
+    memcpy(meshLocalPrefix + 1, mMac.GetExtendedPanId(), 5);
+    meshLocalPrefix[6] = 0x00;
+    meshLocalPrefix[7] = 0x00;
 
     // mesh-local 64
     for (int i = 8; i < 16; i++)
@@ -139,7 +139,9 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mMeshLocal64.mPrefixLength = 64;
     mMeshLocal64.mPreferred = true;
     mMeshLocal64.mValid = true;
-    SetMeshLocalPrefix(mMeshLocal64.GetAddress().mFields.m8); // Also calls AddUnicastAddress
+    mMeshLocal64.mScopeOverride = Ip6::Address::kRealmLocalScope;
+    mMeshLocal64.mScopeOverrideValid = true;
+    SetMeshLocalPrefix(meshLocalPrefix); // Also calls AddUnicastAddress
 
     // mesh-local 16
     mMeshLocal16.GetAddress().mFields.m16[4] = HostSwap16(0x0000);
@@ -150,6 +152,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mMeshLocal16.mValid = true;
     mMeshLocal16.mScopeOverride = Ip6::Address::kRealmLocalScope;
     mMeshLocal16.mScopeOverrideValid = true;
+    mMeshLocal16.mRloc = true;
 
     // Store RLOC address reference in MPL module.
     mNetif.GetIp6().mMpl.SetMatchingAddress(mMeshLocal16.GetAddress());
@@ -629,6 +632,11 @@ const uint8_t *Mle::GetMeshLocalPrefix(void) const
 
 ThreadError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
 {
+    if (memcmp(mMeshLocal64.GetAddress().mFields.m8, aMeshLocalPrefix, 8) == 0)
+    {
+        ExitNow();
+    }
+
     // We must remove the old address before adding the new one.
     mNetif.RemoveUnicastAddress(mMeshLocal64);
     mNetif.RemoveUnicastAddress(mMeshLocal16);
@@ -660,6 +668,7 @@ ThreadError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
     // Changing the prefix also causes the mesh local address to be different.
     mNetif.SetStateChangedFlags(OT_IP6_ML_ADDR_CHANGED);
 
+exit:
     return kThreadError_None;
 }
 
@@ -1198,7 +1207,7 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags)
         {
             mMleRouter.HandleNetworkDataUpdateRouter();
         }
-        else
+        else if ((aFlags & OT_NET_ROLE) == 0)
         {
             mSendChildUpdateRequest.Post();
         }
