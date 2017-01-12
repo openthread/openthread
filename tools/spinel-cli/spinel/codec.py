@@ -202,8 +202,8 @@ class SpinelCodec(object):
 
                 idx = struct_end + 1
             else:
-                result.append(cls.parse_field(payload, spinel_format))
-                payload = payload[map_lengths[spinel_format[idx]]:]
+                result.append(cls.parse_field(payload, format))
+                payload = payload[map_lengths[format]:]
 
                 idx += 1
 
@@ -391,7 +391,7 @@ class SpinelPropertyHandler(SpinelCodec):
 
     def THREAD_LEADER_ADDR(self, _, payload): return self.parse_6(payload)
 
-    def THREAD_PARENT(self, _wpan_api, payload): pass
+    def THREAD_PARENT(self, _wpan_api, payload): return self.parse_fields(payload, "ES")
 
     def THREAD_CHILD_TABLE(self, _, payload): return self.parse_D(payload)
 

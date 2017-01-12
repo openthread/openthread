@@ -57,6 +57,7 @@ import traceback
 
 import optparse
 
+import binascii
 import struct
 import string
 import textwrap
@@ -175,6 +176,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         'networkidtimeout',
         'networkname',
         'panid',
+        'parent',
         'ping',
         'prefix',
         'releaserouterid',
@@ -1201,6 +1203,26 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             Done
         """
         self.handle_property(line, SPINEL.PROP_MAC_15_4_PANID, 'H')
+
+    def do_parent(self, line):
+        """
+        parent
+
+            Get the addresses of the parent node.
+
+            > parent
+            Ext Addr: 3ad35f9846ceb9c7
+            Rloc: bc00
+            Done
+        """
+        ext_addr, rloc = self.prop_get_value(SPINEL.PROP_THREAD_PARENT)
+
+        if ext_addr is None or\
+           rloc     is None:
+            print("Error")
+        else:
+            print("Ext Addr: {}".format(binascii.hexlify(ext_addr)))
+            print("Rloc: {:04x}".format(rloc))
 
     def do_ping(self, line):
         """
