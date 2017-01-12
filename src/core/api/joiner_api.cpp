@@ -28,58 +28,38 @@
 
 /**
  * @file
- *   This file includes definitions for responding to Announce Requests.
+ *   This file implements the OpenThread UDP API.
  */
 
-#ifndef ANNOUNCE_BEGIN_CLIENT_HPP_
-#define ANNOUNCE_BEGIN_CLIENT_HPP_
+#include "openthread/joiner.h"
 
-#include <openthread-core-config.h>
-#include <openthread-types.h>
-#include "openthread/commissioner.h"
+#include "openthread-instance.h"
 
-#include <coap/coap_client.hpp>
-#include <net/ip6_address.hpp>
-#include <net/udp6.hpp>
+using namespace Thread;
 
-namespace Thread {
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-class ThreadNetif;
+#if OPENTHREAD_ENABLE_JOINER
 
-/**
- * This class implements handling Announce Begin Requests.
- *
- */
-class AnnounceBeginClient
+ThreadError otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl,
+                          const char *aVendorName, const char *aVendorModel,
+                          const char *aVendorSwVersion, const char *aVendorData,
+                          otJoinerCallback aCallback, void *aContext)
 {
-public:
-    /**
-     * This constructor initializes the object.
-     *
-     */
-    AnnounceBeginClient(ThreadNetif &aThreadNetif);
+    return aInstance->mThreadNetif.GetJoiner().Start(aPSKd, aProvisioningUrl,
+                                                     aVendorName, aVendorModel, aVendorSwVersion, aVendorData,
+                                                     aCallback, aContext);
+}
 
-    /**
-     * This method sends a Announce Begin message.
-     *
-     * @param[in]  aChannelMask   The channel mask value.
-     * @param[in]  aCount         The number of energy measurements per channel.
-     * @param[in]  aPeriod        The time between energy measurements (milliseconds).
-     *
-     * @retval kThreadError_None    Successfully enqueued the Announce Begin message.
-     * @retval kThreadError_NoBufs  Insufficient buffers to generate a Announce Begin message.
-     *
-     */
-    ThreadError SendRequest(uint32_t aChannelMask, uint8_t aCount, uint16_t mPeriod, const Ip6::Address &aAddress);
+ThreadError otJoinerStop(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetJoiner().Stop();
+}
 
-private:
-    ThreadNetif &mNetif;
-};
+#endif  // OPENTHREAD_ENABLE_JOINER
 
-/**
- * @}
- */
-
-}  // namespace Thread
-
-#endif  // ANNOUNCE_BEGIN_CLIENT_HPP_
+#ifdef __cplusplus
+}  // extern "C"
+#endif

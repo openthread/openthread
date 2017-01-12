@@ -46,8 +46,8 @@
 #endif
 
 #include <openthread.h>
-#include <commissioning/commissioner.h>
-#include <commissioning/joiner.h>
+#include "openthread/commissioner.h"
+#include "openthread/joiner.h"
 
 #ifndef OTDLL
 #include <openthread-instance.h>
@@ -2464,7 +2464,7 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
             }
         }
 
-        SuccessOrExit(error = otSendMgmtCommissionerGet(mInstance, tlvs, static_cast<uint8_t>(length)));
+        SuccessOrExit(error = otCommissionerSendMgmtGet(mInstance, tlvs, static_cast<uint8_t>(length)));
     }
     else if (strcmp(argv[0], "mgmtset") == 0)
     {
@@ -2527,7 +2527,7 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
             }
         }
 
-        SuccessOrExit(error = otSendMgmtCommissionerSet(mInstance, &dataset, tlvs, static_cast<uint8_t>(length)));
+        SuccessOrExit(error = otCommissionerSendMgmtSet(mInstance, &dataset, tlvs, static_cast<uint8_t>(length)));
     }
     else if (strcmp(argv[0], "sessionid") == 0)
     {

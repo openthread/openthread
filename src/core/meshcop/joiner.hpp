@@ -35,7 +35,7 @@
 #define JOINER_HPP_
 
 #include <openthread-types.h>
-#include <commissioning/joiner.h>
+#include "openthread/joiner.h"
 
 #include <coap/coap_header.hpp>
 #include <coap/coap_server.hpp>

@@ -35,6 +35,7 @@
 #ifndef OPENTHREAD_JOINER_H_
 #define OPENTHREAD_JOINER_H_
 
+#include "openthread-types.h"
 #include <platform/toolchain.h>
 
 #ifdef __cplusplus

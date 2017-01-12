@@ -64,6 +64,8 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\core\api\commissioner_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\joiner_api.cpp" />
     <ClCompile Include="..\..\src\core\api\message_api.cpp" />
     <ClCompile Include="..\..\src\core\api\tasklet_api.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_base.cpp" />

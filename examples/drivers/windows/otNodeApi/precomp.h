@@ -50,8 +50,8 @@ using namespace std;
 #define OTNODEAPI EXTERN_C __declspec(dllexport)
 
 #include <openthread.h>
-#include <commissioning/commissioner.h>
-#include <commissioning/joiner.h>
+#include <openthread/commissioner.h>
+#include <openthread/joiner.h>
 #include <platform/logging-windows.h>
 #include <otNode.h>
 
