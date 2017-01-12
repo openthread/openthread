@@ -57,7 +57,6 @@
 #include <platform/misc.h>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
-#include <utils/slaac_address.hpp>
 #include <openthread-instance.h>
 #include <coap/coap_server.hpp>
 
@@ -466,21 +465,6 @@ ThreadError otRemoveExternalRoute(otInstance *aInstance, const otIp6Prefix *aPre
 ThreadError otSendServerData(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetNetworkDataLocal().SendServerDataNotification();
-}
-
-ThreadError otAddUnsecurePort(otInstance *aInstance, uint16_t aPort)
-{
-    return aInstance->mThreadNetif.GetIp6Filter().AddUnsecurePort(aPort);
-}
-
-ThreadError otRemoveUnsecurePort(otInstance *aInstance, uint16_t aPort)
-{
-    return aInstance->mThreadNetif.GetIp6Filter().RemoveUnsecurePort(aPort);
-}
-
-const uint16_t *otGetUnsecurePorts(otInstance *aInstance, uint8_t *aNumEntries)
-{
-    return aInstance->mThreadNetif.GetIp6Filter().GetUnsecurePorts(*aNumEntries);
 }
 
 uint32_t otGetContextIdReuseDelay(otInstance *aInstance)
@@ -951,86 +935,6 @@ const otMacCounters *otGetMacCounters(otInstance *aInstance)
     return &aInstance->mThreadNetif.GetMac().GetCounters();
 }
 
-bool otIsIp6AddressEqual(const otIp6Address *a, const otIp6Address *b)
-{
-    return *static_cast<const Ip6::Address *>(a) == *static_cast<const Ip6::Address *>(b);
-}
-
-ThreadError otIp6AddressFromString(const char *str, otIp6Address *address)
-{
-    return static_cast<Ip6::Address *>(address)->FromString(str);
-}
-
-const otNetifAddress *otGetUnicastAddresses(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetUnicastAddresses();
-}
-
-ThreadError otAddUnicastAddress(otInstance *aInstance, const otNetifAddress *address)
-{
-    return aInstance->mThreadNetif.AddExternalUnicastAddress(*static_cast<const Ip6::NetifUnicastAddress *>(address));
-}
-
-ThreadError otRemoveUnicastAddress(otInstance *aInstance, const otIp6Address *address)
-{
-    return aInstance->mThreadNetif.RemoveExternalUnicastAddress(*static_cast<const Ip6::Address *>(address));
-}
-
-const otNetifMulticastAddress *otGetMulticastAddresses(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetMulticastAddresses();
-}
-
-ThreadError otSubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress)
-{
-    return aInstance->mThreadNetif.SubscribeExternalMulticast(*static_cast<const Ip6::Address *>(aAddress));
-}
-
-ThreadError otUnsubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress)
-{
-    return aInstance->mThreadNetif.UnsubscribeExternalMulticast(*static_cast<const Ip6::Address *>(aAddress));
-}
-
-bool otIsMulticastPromiscuousModeEnabled(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.IsMulticastPromiscuousModeEnabled();
-}
-
-void otEnableMulticastPromiscuousMode(otInstance *aInstance)
-{
-    aInstance->mThreadNetif.EnableMulticastPromiscuousMode();
-}
-
-void otDisableMulticastPromiscuousMode(otInstance *aInstance)
-{
-    aInstance->mThreadNetif.DisableMulticastPromiscuousMode();
-}
-
-void otSlaacUpdate(otInstance *aInstance, otNetifAddress *aAddresses, uint32_t aNumAddresses,
-                   otSlaacIidCreate aIidCreate, void *aContext)
-{
-    Utils::Slaac::UpdateAddresses(aInstance, aAddresses, aNumAddresses, aIidCreate, aContext);
-}
-
-ThreadError otCreateRandomIid(otInstance *aInstance, otNetifAddress *aAddress, void *aContext)
-{
-    return Utils::Slaac::CreateRandomIid(aInstance, aAddress, aContext);
-}
-
-ThreadError otCreateMacIid(otInstance *aInstance, otNetifAddress *aAddress, void *)
-{
-    memcpy(&aAddress->mAddress.mFields.m8[OT_IP6_ADDRESS_SIZE - OT_IP6_IID_SIZE],
-           aInstance->mThreadNetif.GetMac().GetExtAddress(), OT_IP6_IID_SIZE);
-    aAddress->mAddress.mFields.m8[OT_IP6_ADDRESS_SIZE - OT_IP6_IID_SIZE] ^= 0x02;
-
-    return kThreadError_None;
-}
-
-ThreadError otCreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddress *aAddress, void *aContext)
-{
-    return static_cast<Utils::SemanticallyOpaqueIidGenerator *>(aContext)->CreateIid(aInstance, aAddress);
-}
-
 ThreadError otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aCallbackContext)
 {
     ThreadError error = kThreadError_NoBufs;
@@ -1126,13 +1030,13 @@ void otInstancePostConstructor(otInstance *aInstance)
     // If auto start is configured, do that now
     if (otThreadGetAutoStart(aInstance))
     {
-        if (otInterfaceUp(aInstance) == kThreadError_None)
+        if (otIp6SetEnabled(aInstance, true) == kThreadError_None)
         {
             // Only try to start Thread if we could bring up the interface
             if (otThreadStart(aInstance) != kThreadError_None)
             {
                 // Bring the interface down if Thread failed to start
-                otInterfaceDown(aInstance);
+                otIp6SetEnabled(aInstance, false);
             }
         }
     }
@@ -1223,55 +1127,12 @@ void otInstanceFinalize(otInstance *aInstance)
 
     // Ensure we are disabled
     (void)otThreadStop(aInstance);
-    (void)otInterfaceDown(aInstance);
+    (void)otIp6SetEnabled(aInstance, false);
 
 #ifndef OPENTHREAD_MULTIPLE_INSTANCE
     sInstance = NULL;
 #endif
     otLogFuncExit();
-}
-
-ThreadError otInterfaceUp(otInstance *aInstance)
-{
-    ThreadError error = kThreadError_None;
-
-    otLogFuncEntry();
-
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    VerifyOrExit(!aInstance->mLinkRaw.IsEnabled(), error = kThreadError_InvalidState);
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
-
-    error = aInstance->mThreadNetif.Up();
-
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-exit:
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
-    otLogFuncExitErr(error);
-    return error;
-}
-
-ThreadError otInterfaceDown(otInstance *aInstance)
-{
-    ThreadError error = kThreadError_None;
-
-    otLogFuncEntry();
-
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    VerifyOrExit(!aInstance->mLinkRaw.IsEnabled(), error = kThreadError_InvalidState);
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
-
-    error = aInstance->mThreadNetif.Down();
-
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-exit:
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
-    otLogFuncExitErr(error);
-    return error;
-}
-
-bool otIsInterfaceUp(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.IsUp();
 }
 
 ThreadError otThreadStart(otInstance *aInstance)
@@ -1429,48 +1290,6 @@ ThreadError otSendMacDataRequest(otInstance *aInstance)
     return aInstance->mThreadNetif.GetMeshForwarder().SendMacDataRequest();
 }
 
-void otSetReceiveIp6DatagramCallback(otInstance *aInstance, otReceiveIp6DatagramCallback aCallback,
-                                     void *aCallbackContext)
-{
-    aInstance->mIp6.SetReceiveDatagramCallback(aCallback, aCallbackContext);
-}
-
-bool otIsReceiveIp6DatagramFilterEnabled(otInstance *aInstance)
-{
-    return aInstance->mIp6.IsReceiveIp6FilterEnabled();
-}
-
-void otSetReceiveIp6DatagramFilterEnabled(otInstance *aInstance, bool aEnabled)
-{
-    aInstance->mIp6.SetReceiveIp6FilterEnabled(aEnabled);
-}
-
-ThreadError otSendIp6Datagram(otInstance *aInstance, otMessage aMessage)
-{
-    ThreadError error;
-
-    otLogFuncEntry();
-
-    error = aInstance->mIp6.HandleDatagram(*static_cast<Message *>(aMessage), NULL,
-                                           aInstance->mThreadNetif.GetInterfaceId(), NULL, true);
-
-    otLogFuncExitErr(error);
-
-    return error;
-}
-
-otMessage otNewIp6Message(otInstance *aInstance, bool aLinkSecurityEnabled)
-{
-    Message *message = aInstance->mIp6.mMessagePool.New(Message::kTypeIp6, 0);
-
-    if (message)
-    {
-        message->SetLinkSecurityEnabled(aLinkSecurityEnabled);
-    }
-
-    return message;
-}
-
 bool otIcmp6IsEchoEnabled(otInstance *aInstance)
 {
     return aInstance->mIp6.mIcmp.IsEchoEnabled();
@@ -1492,18 +1311,6 @@ ThreadError otIcmp6SendEchoRequest(otInstance *aInstance, otMessage aMessage,
     return aInstance->mIp6.mIcmp.SendEchoRequest(*static_cast<Message *>(aMessage),
                                                  *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
                                                  aIdentifier);
-}
-
-uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond)
-{
-    uint8_t rval;
-
-    VerifyOrExit(aFirst != NULL && aSecond != NULL, rval = 0);
-
-    rval = static_cast<const Ip6::Address *>(aFirst)->PrefixMatch(*static_cast<const Ip6::Address *>(aSecond));
-
-exit:
-    return rval;
 }
 
 ThreadError otGetActiveDataset(otInstance *aInstance, otOperationalDataset *aDataset)

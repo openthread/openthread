@@ -113,7 +113,7 @@ void Dhcp6Client::UpdateAddresses(otInstance *aInstance, otDhcpAddress *aAddress
 
         if (!found)
         {
-            otRemoveUnicastAddress(aInstance, &(address->mAddress.mAddress));
+            otIp6RemoveUnicastAddress(aInstance, &(address->mAddress.mAddress));
             RemoveIdentityAssociation(config.mRloc16, config.mPrefix);
             memset(address, 0, sizeof(*address));
         }
@@ -688,7 +688,7 @@ ThreadError Dhcp6Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
             address->mValidLifetime = option.GetValidLifetime();
             address->mAddress.mPreferred = address->mPreferredLifetime != 0;
             address->mAddress.mValid = address->mValidLifetime != 0;
-            otAddUnicastAddress(mNetif.GetInstance(), &address->mAddress);
+            otIp6AddUnicastAddress(mNetif.GetInstance(), &address->mAddress);
             break;
         }
     }

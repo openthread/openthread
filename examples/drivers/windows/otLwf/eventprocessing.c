@@ -790,7 +790,7 @@ otLwfEventWorkerThread(
 
     // Register callbacks with OpenThread
     otSetStateChangedCallback(pFilter->otCtx, otLwfStateChangedCallback, pFilter);
-    otSetReceiveIp6DatagramCallback(pFilter->otCtx, otLwfReceiveIp6DatagramCallback, pFilter);
+    otIp6SetReceiveCallback(pFilter->otCtx, otLwfReceiveIp6DatagramCallback, pFilter);
 
     // Query the current addresses from TCPIP and cache them
     (void)otLwfInitializeAddresses(pFilter);
@@ -904,7 +904,7 @@ otLwfEventWorkerThread(
                                 ThreadError error = kThreadError_None;
 
                                 // Create a new message
-                                otMessage message = otNewIp6Message(pFilter->otCtx, TRUE);
+                                otMessage *message = otIp6NewMessage(pFilter->otCtx, TRUE);
                                 if (message)
                                 {
                                     // Write to the message
@@ -927,7 +927,7 @@ otLwfEventWorkerThread(
 #endif
 
                                         // Send message (it will free 'message')
-                                        error = otSendIp6Datagram(pFilter->otCtx, message);
+                                        error = otIp6Send(pFilter->otCtx, message);
                                         if (error != kThreadError_None)
                                         {
                                             LogError(DRIVER_DATA_PATH, "otSendIp6Datagram failed with %!otError!", error);

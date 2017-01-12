@@ -59,7 +59,7 @@ typedef struct otInstance
 
     Thread::Ip6::NetifCallback mNetifCallback[OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS];
 
-    otReceiveIp6DatagramCallback mReceiveIp6DatagramCallback;
+    otIp6ReceiveCallback mReceiveIp6DatagramCallback;
     void *mReceiveIp6DatagramCallbackContext;
 
     otHandleActiveScanResult mActiveScanCallback;

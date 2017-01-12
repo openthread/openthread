@@ -642,7 +642,7 @@ exit:
 void HandleAddressChanges(otNode *aNode)
 {
     otLogFuncEntry();
-    auto addrs = otGetUnicastAddresses(aNode->mInstance);
+    auto addrs = otIp6GetUnicastAddresses(aNode->mInstance);
 
     EnterCriticalSection(&aNode->mCS);
         
@@ -955,7 +955,7 @@ OTNODEAPI int32_t OTCALL otNodeInterfaceUp(otNode* aNode)
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: ifconfig up\r\n", aNode->mId);
 
-    auto error = otInterfaceUp(aNode->mInstance);
+    auto error = otIp6SetEnabled(aNode->mInstance, true);
     
     otLogFuncExit();
     return error;
@@ -966,7 +966,7 @@ OTNODEAPI int32_t OTCALL otNodeInterfaceDown(otNode* aNode)
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: ifconfig down\r\n", aNode->mId);
 
-    (void)otInterfaceDown(aNode->mInstance);
+    (void)otIp6SetEnabled(aNode->mInstance, false);
     
     otLogFuncExit();
     return 0;
@@ -1436,7 +1436,7 @@ OTNODEAPI int32_t OTCALL otNodeAddIpAddr(otNode* aNode, const char *aAddr)
     aAddress.mPrefixLength = 64;
     aAddress.mPreferred = true;
     aAddress.mValid = true;
-    auto result = otAddUnicastAddress(aNode->mInstance, &aAddress);
+    auto result = otIp6AddUnicastAddress(aNode->mInstance, &aAddress);
     otLogFuncExit();
     return result;
 }
@@ -1453,7 +1453,7 @@ OTNODEAPI const char* OTCALL otNodeGetAddrs(otNode* aNode)
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: ipaddr\r\n", aNode->mId);
 
-    auto addrs = otGetUnicastAddresses(aNode->mInstance);
+    auto addrs = otIp6GetUnicastAddresses(aNode->mInstance);
     if (addrs == nullptr) return nullptr;
 
     char* str = (char*)malloc(512);

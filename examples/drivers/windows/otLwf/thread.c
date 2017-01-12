@@ -376,7 +376,7 @@ void otLwfStateChangedCallback(uint32_t aFlags, _In_ void *aContext)
     if ((aFlags & OT_THREAD_NETDATA_UPDATED) != 0)
     {
         LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_THREAD_NETDATA_UPDATED", pFilter);
-        otSlaacUpdate(pFilter->otCtx, pFilter->otAutoAddresses, ARRAYSIZE(pFilter->otAutoAddresses), otCreateRandomIid, NULL);
+        otIp6SlaacUpdate(pFilter->otCtx, pFilter->otAutoAddresses, ARRAYSIZE(pFilter->otAutoAddresses), otIp6CreateRandomIid, NULL);
 
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
         otDhcp6ServerUpdate(pFilter->otCtx);

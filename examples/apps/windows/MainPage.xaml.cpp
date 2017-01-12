@@ -379,7 +379,7 @@ void MainPage::ConnectNetwork(Platform::Guid InterfaceGuid)
     // Bring up the interface and start the Thread logic
     //
 
-    otInterfaceUp(device);
+    otIp6SetEnabled(device, true);
 
     otThreadStart(device);
 
@@ -400,7 +400,7 @@ void MainPage::DisconnectNetwork(Platform::Guid InterfaceGuid)
 
     otThreadStop(device);
 
-    otInterfaceDown(device);
+    otIp6SetEnabled(device, false);
 
     // Cleanup
     otFreeMemory(device);

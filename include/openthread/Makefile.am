@@ -34,6 +34,7 @@ openthread_headers                      = \
     crypto.h                              \
     dhcp6_client.h                        \
     dhcp6_server.h                        \
+    ip6.h                                 \
     jam_detection.h                       \
     joiner.h                              \
     message.h                             \

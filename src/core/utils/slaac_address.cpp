@@ -87,7 +87,7 @@ void Slaac::UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddresses, u
 
         if (!found)
         {
-            otRemoveUnicastAddress(aInstance, &address->mAddress);
+            otIp6RemoveUnicastAddress(aInstance, &address->mAddress);
             address->mValid = false;
         }
     }
@@ -144,7 +144,7 @@ void Slaac::UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddresses, u
                     CreateRandomIid(aInstance, address, aContext);
                 }
 
-                otAddUnicastAddress(aInstance, address);
+                otIp6AddUnicastAddress(aInstance, address);
                 break;
             }
         }
@@ -217,7 +217,7 @@ exit:
 bool SemanticallyOpaqueIidGenerator::IsAddressRegistered(otInstance *aInstance, otNetifAddress *aCreatedAddress)
 {
     bool result = false;
-    const otNetifAddress *address = otGetUnicastAddresses(aInstance);
+    const otNetifAddress *address = otIp6GetUnicastAddresses(aInstance);
 
     while (address != NULL)
     {
