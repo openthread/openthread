@@ -63,36 +63,41 @@ public:
      */
     enum Type
     {
-        kChannel                 = OT_MESHCOP_TLV_CHANNEL,           ///< Channel TLV
-        kPanId                   = OT_MESHCOP_TLV_PANID,             ///< PAN ID TLV
-        kExtendedPanId           = OT_MESHCOP_TLV_EXTPANID,          ///< Extended PAN ID TLV
-        kNetworkName             = OT_MESHCOP_TLV_NETWORKNAME,       ///< Newtork Name TLV
-        kPSKc                    = OT_MESHCOP_TLV_PSKC,              ///< PSKc TLV
-        kNetworkMasterKey        = OT_MESHCOP_TLV_MASTERKEY,         ///< Network Master Key TLV
-        kMeshLocalPrefix         = OT_MESHCOP_TLV_MESHLOCALPREFIX,   ///< Mesh Local Prefix TLV
-        kSteeringData            = OT_MESHCOP_TLV_STEERING_DATA,     ///< Steering Data TLV
-        kBorderAgentLocator      = OT_MESHCOP_TLV_BORDER_AGENT_RLOC, ///< Border Agent Locator TLV
-        kCommissionerId          = OT_MESHCOP_TLV_COMMISSIONER_ID,   ///< Commissioner ID TLV
-        kCommissionerSessionId   = OT_MESHCOP_TLV_COMM_SESSION_ID,   ///< Commissioner Session ID TLV
-        kSecurityPolicy          = OT_MESHCOP_TLV_SECURITYPOLICY,    ///< Security Policy TLV
-        kGet                     = OT_MESHCOP_TLV_GET,               ///< Get TLV
-        kActiveTimestamp         = OT_MESHCOP_TLV_ACTIVETIMESTAMP,   ///< Active Timestamp TLV
-        kState                   = OT_MESHCOP_TLV_STATE,             ///< State TLV
-        kJoinerDtlsEncapsulation = OT_MESHCOP_TLV_JOINER_DTLS,       ///< Joiner DTLS Encapsulation TLV
-        kJoinerUdpPort           = OT_MESHCOP_TLV_JOINER_UDP_PORT,   ///< Joiner UDP Port TLV
-        kJoinerIid               = OT_MESHCOP_TLV_JOINER_IID,        ///< Joiner IID TLV
-        kJoinerRouterLocator     = OT_MESHCOP_TLV_JOINER_RLOC,       ///< Joiner Router Locator TLV
-        kJoinerRouterKek         = OT_MESHCOP_TLV_JOINER_ROUTER_KEK, ///< Joiner Router KEK TLV
-        kProvisioningUrl         = OT_MESHCOP_TLV_PROVISIONING_URL,  ///< Provisioning URL TLV
-        kPendingTimestamp        = OT_MESHCOP_TLV_PENDINGTIMESTAMP,  ///< Pending Timestamp TLV
-        kDelayTimer              = OT_MESHCOP_TLV_DELAYTIMER,        ///< Delay Timer TLV
-        kChannelMask             = OT_MESHCOP_TLV_CHANNELMASK,       ///< Channel Mask TLV
-        kCount                   = OT_MESHCOP_TLV_COUNT,             ///< Count TLV
-        kPeriod                  = OT_MESHCOP_TLV_PERIOD,            ///< Period TLV
-        kScanDuration            = OT_MESHCOP_TLV_SCAN_DURATION,     ///< Scan Duration TLV
-        kEnergyList              = OT_MESHCOP_TLV_ENERGY_LIST,       ///< Energy List TLV
-        kDiscoveryRequest        = OT_MESHCOP_TLV_DISCOVERYREQUEST,  ///< Discovery Request TLV
-        kDiscoveryResponse       = OT_MESHCOP_TLV_DISCOVERYRESPONSE, ///< Discovery Response TLV
+        kChannel                 = OT_MESHCOP_TLV_CHANNEL,                   ///< Channel TLV
+        kPanId                   = OT_MESHCOP_TLV_PANID,                     ///< PAN ID TLV
+        kExtendedPanId           = OT_MESHCOP_TLV_EXTPANID,                  ///< Extended PAN ID TLV
+        kNetworkName             = OT_MESHCOP_TLV_NETWORKNAME,               ///< Newtork Name TLV
+        kPSKc                    = OT_MESHCOP_TLV_PSKC,                      ///< PSKc TLV
+        kNetworkMasterKey        = OT_MESHCOP_TLV_MASTERKEY,                 ///< Network Master Key TLV
+        kMeshLocalPrefix         = OT_MESHCOP_TLV_MESHLOCALPREFIX,           ///< Mesh Local Prefix TLV
+        kSteeringData            = OT_MESHCOP_TLV_STEERING_DATA,             ///< Steering Data TLV
+        kBorderAgentLocator      = OT_MESHCOP_TLV_BORDER_AGENT_RLOC,         ///< Border Agent Locator TLV
+        kCommissionerId          = OT_MESHCOP_TLV_COMMISSIONER_ID,           ///< Commissioner ID TLV
+        kCommissionerSessionId   = OT_MESHCOP_TLV_COMM_SESSION_ID,           ///< Commissioner Session ID TLV
+        kSecurityPolicy          = OT_MESHCOP_TLV_SECURITYPOLICY,            ///< Security Policy TLV
+        kGet                     = OT_MESHCOP_TLV_GET,                       ///< Get TLV
+        kActiveTimestamp         = OT_MESHCOP_TLV_ACTIVETIMESTAMP,           ///< Active Timestamp TLV
+        kState                   = OT_MESHCOP_TLV_STATE,                     ///< State TLV
+        kJoinerDtlsEncapsulation = OT_MESHCOP_TLV_JOINER_DTLS,               ///< Joiner DTLS Encapsulation TLV
+        kJoinerUdpPort           = OT_MESHCOP_TLV_JOINER_UDP_PORT,           ///< Joiner UDP Port TLV
+        kJoinerIid               = OT_MESHCOP_TLV_JOINER_IID,                ///< Joiner IID TLV
+        kJoinerRouterLocator     = OT_MESHCOP_TLV_JOINER_RLOC,               ///< Joiner Router Locator TLV
+        kJoinerRouterKek         = OT_MESHCOP_TLV_JOINER_ROUTER_KEK,         ///< Joiner Router KEK TLV
+        kProvisioningUrl         = OT_MESHCOP_TLV_PROVISIONING_URL,          ///< Provisioning URL TLV
+        kVendorName              = OT_MESHCOP_TLV_VENDOR_NAME_TLV,           ///< meshcop Vendor Name TLV
+        kVendorModel             = OT_MESHCOP_TLV_VENDOR_MODEL_TLV,          ///< meshcop Vendor Model TLV
+        kVendorSwVersion         = OT_MESHCOP_TLV_VENDOR_SW_VERSION_TLV,     ///< meshcop Vendor SW Version TLV
+        kVendorData              = OT_MESHCOP_TLV_VENDOR_DATA_TLV,           ///< meshcop Vendor Data TLV
+        kVendorStackVersion      = OT_MESHCOP_TLV_VENDOR_STACK_VERSION_TLV,  ///< meshcop Vendor Stack Version TLV
+        kPendingTimestamp        = OT_MESHCOP_TLV_PENDINGTIMESTAMP,          ///< Pending Timestamp TLV
+        kDelayTimer              = OT_MESHCOP_TLV_DELAYTIMER,                ///< Delay Timer TLV
+        kChannelMask             = OT_MESHCOP_TLV_CHANNELMASK,               ///< Channel Mask TLV
+        kCount                   = OT_MESHCOP_TLV_COUNT,                     ///< Count TLV
+        kPeriod                  = OT_MESHCOP_TLV_PERIOD,                    ///< Period TLV
+        kScanDuration            = OT_MESHCOP_TLV_SCAN_DURATION,             ///< Scan Duration TLV
+        kEnergyList              = OT_MESHCOP_TLV_ENERGY_LIST,               ///< Energy List TLV
+        kDiscoveryRequest        = OT_MESHCOP_TLV_DISCOVERYREQUEST,          ///< Discovery Request TLV
+        kDiscoveryResponse       = OT_MESHCOP_TLV_DISCOVERYRESPONSE,         ///< Discovery Response TLV
     };
 
     /**
@@ -1459,6 +1464,390 @@ private:
     };
 
     char mProvisioningUrl[kMaxLength];
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Vendor Name TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class VendorNameTlv: public Tlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void) { SetType(kVendorName); SetLength(0); }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method returns the Vendor Name value.
+     *
+     * @returns The Vendor Name value.
+     *
+     */
+    const char *GetVendorName(void) const { return mVendorName; }
+
+    /**
+     * This method sets the Vendor Name value.
+     *
+     * @param[in]  aVendorName  A pointer to the Vendor Name value.
+     *
+     */
+    ThreadError SetVendorName(const char *aVendorName) {
+        ThreadError error = kThreadError_None;
+        size_t len = (aVendorName == NULL) ? 0 : strnlen(aVendorName, sizeof(mVendorName) + 1);
+
+        VerifyOrExit(len <= sizeof(mVendorName), error = kThreadError_InvalidArgs);
+        SetLength(static_cast<uint8_t>(len));
+
+        if (len > 0) {
+            memcpy(mVendorName, aVendorName, len);
+        }
+
+exit:
+        return error;
+    }
+
+private:
+    enum
+    {
+        kMaxLength = 32,
+    };
+
+    char mVendorName[kMaxLength];
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Vendor Model TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class VendorModelTlv: public Tlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void) { SetType(kVendorModel); SetLength(0); }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method returns the Vendor Model value.
+     *
+     * @returns The Vendor Model value.
+     *
+     */
+    const char *GetVendorModel(void) const { return mVendorModel; }
+
+    /**
+     * This method sets the Vendor Model value.
+     *
+     * @param[in]  aVendorModel  A pointer to the Vendor Model value.
+     *
+     */
+    ThreadError SetVendorModel(const char *aVendorModel) {
+        ThreadError error = kThreadError_None;
+        size_t len = (aVendorModel == NULL) ? 0 : strnlen(aVendorModel, sizeof(mVendorModel) + 1);
+
+        VerifyOrExit(len <= sizeof(mVendorModel), error = kThreadError_InvalidArgs);
+        SetLength(static_cast<uint8_t>(len));
+
+        if (len > 0) {
+            memcpy(mVendorModel, aVendorModel, len);
+        }
+
+exit:
+        return error;
+    }
+
+private:
+    enum
+    {
+        kMaxLength = 32,
+    };
+
+    char mVendorModel[kMaxLength];
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Vendor SW Version TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class VendorSwVersionTlv: public Tlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void) { SetType(kVendorSwVersion); SetLength(0); }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method returns the Vendor SW Version value.
+     *
+     * @returns The Vendor SW Version value.
+     *
+     */
+    const char *GetVendorSwVersion(void) const { return mVendorSwVersion; }
+
+    /**
+     * This method sets the Vendor SW Version value.
+     *
+     * @param[in]  aVendorSwVersion  A pointer to the Vendor SW Version value.
+     *
+     */
+    ThreadError SetVendorSwVersion(const char *aVendorSwVersion) {
+        ThreadError error = kThreadError_None;
+        size_t len = (aVendorSwVersion == NULL) ? 0 : strnlen(aVendorSwVersion, sizeof(mVendorSwVersion) + 1);
+
+        VerifyOrExit(len <= sizeof(mVendorSwVersion), error = kThreadError_InvalidArgs);
+        SetLength(static_cast<uint8_t>(len));
+
+        if (len > 0) {
+            memcpy(mVendorSwVersion, aVendorSwVersion, len);
+        }
+
+exit:
+        return error;
+    }
+
+private:
+    enum
+    {
+        kMaxLength = 16,
+    };
+
+    char mVendorSwVersion[kMaxLength];
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Vendor Data TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class VendorDataTlv: public Tlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void) { SetType(kVendorData); SetLength(0); }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method returns the Vendor Data value.
+     *
+     * @returns The Vendor Data value.
+     *
+     */
+    const char *GetVendorData(void) const { return mVendorData; }
+
+    /**
+     * This method sets the Vendor Data value.
+     *
+     * @param[in]  aVendorData  A pointer to the Vendor Data value.
+     *
+     */
+    ThreadError SetVendorData(const char *aVendorData) {
+        ThreadError error = kThreadError_None;
+        size_t len = (aVendorData == NULL) ? 0 : strnlen(aVendorData, sizeof(mVendorData) + 1);
+
+        VerifyOrExit(len <= sizeof(mVendorData), error = kThreadError_InvalidArgs);
+        SetLength(static_cast<uint8_t>(len));
+
+        if (len > 0) {
+            memcpy(mVendorData, aVendorData, len);
+        }
+
+exit:
+        return error;
+    }
+
+private:
+    enum
+    {
+        kMaxLength = 64,
+    };
+
+    char mVendorData[kMaxLength];
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Vendor Stack Version TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class VendorStackVersionTlv: public Tlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void) { SetType(kVendorStackVersion); SetLength(sizeof(*this) - sizeof(Tlv)); }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method returns the Stack Vendor OUI value.
+     *
+     * @returns The Vendor Stack Vendor OUI value.
+     *
+     */
+    uint32_t GetOui(void) const {
+        return (static_cast<uint32_t>(mOui[0]) << 16) | (static_cast<uint32_t>(mOui[1]) << 8) | static_cast<uint32_t>(mOui[2]);
+    }
+
+    /**
+     * This method returns the Stack Vendor OUI value.
+     *
+     * @param[in]  aOui  The Vendor Stack Vendor OUI value.
+     *
+     */
+    void SetOui(uint32_t aOui) {
+        mOui[0] = (aOui >> 16) & 0xff;
+        mOui[1] = (aOui >> 8) & 0xff;
+        mOui[2] = aOui & 0xff;
+    }
+
+    /**
+     * This method returns the Build value.
+     *
+     * @returns The Build value.
+     *
+     */
+    uint16_t GetBuild(void) const { return (HostSwap16(mBuildRevision) & kBuildMask) >> kBuildOffset; }
+
+    /**
+     * This method sets the Build value.
+     *
+     * @param[in]  aBuild  The Build value.
+     *
+     */
+    void SetBuild(uint16_t aBuild) {
+        mBuildRevision = HostSwap16((HostSwap16(mBuildRevision) & ~kBuildMask) |
+                                    ((aBuild << kBuildOffset) & kBuildMask));
+    }
+
+    /**
+     * This method returns the Revision value.
+     *
+     * @returns The Revision value.
+     *
+     */
+    uint8_t GetRevision(void) const { return (HostSwap16(mBuildRevision) & kRevMask) >> kRevOffset; }
+
+    /**
+     * This method sets the Revision value.
+     *
+     * @param[in]  aRevision  The Revision value.
+     *
+     */
+    void SetRevision(uint8_t aRevision) {
+        mBuildRevision = HostSwap16((HostSwap16(mBuildRevision) & ~kRevMask) | ((aRevision << kRevOffset) & kRevMask));
+    }
+
+    /**
+     * This method returns the Minor value.
+     *
+     * @returns The Minor value.
+     *
+     */
+    uint8_t GetMinor(void) const { return (mMinorMajor & kMinorMask) >> kMinorOffset; }
+
+    /**
+     * This method sets the Minor value.
+     *
+     * @param[in]  aMinor  The Minor value.
+     *
+     */
+    void SetMinor(uint8_t aMinor) {
+        mMinorMajor = (mMinorMajor & ~kMinorMask) | ((aMinor << kMinorOffset) & kMinorMask);
+    }
+
+    /**
+     * This method returns the Major value.
+     *
+     * @returns The Major value.
+     *
+     */
+    uint8_t GetMajor(void) const { return (mMinorMajor & kMajorMask) >> kMajorOffset; }
+
+    /**
+     * This method sets the Major value.
+     *
+     * @param[in] aMajor  The Major value.
+     *
+     */
+    void SetMajor(uint8_t aMajor) {
+        mMinorMajor = (mMinorMajor & ~kMajorMask) | ((aMajor << kMajorOffset) & kMajorMask);
+    }
+
+private:
+    uint8_t mOui[3];
+
+    enum
+    {
+        kBuildOffset = 4,
+        kBuildMask = 0xfff << kBuildOffset,
+        kRevOffset = 0,
+        kRevMask = 0xf << kBuildOffset,
+    };
+    uint16_t mBuildRevision;
+
+    enum
+    {
+        kMinorOffset = 4,
+        kMinorMask = 0xf << kMinorOffset,
+        kMajorOffset = 0,
+        kMajorMask = 0xf << kMajorOffset,
+    };
+    uint8_t mMinorMajor;
 } OT_TOOL_PACKED_END;
 
 /**

@@ -2439,7 +2439,9 @@ void Interpreter::ProcessJoiner(int argc, char *argv[])
         const char *provisioningUrl;
         VerifyOrExit(argc > 1, error = kThreadError_Parse);
         provisioningUrl = (argc > 2) ? argv[2] : NULL;
-        otJoinerStart(mInstance, argv[1], provisioningUrl, &Interpreter::s_HandleJoinerCallback, this);
+        otJoinerStart(mInstance, argv[1], provisioningUrl,
+                      PACKAGE_NAME, PLATFORM_INFO, PACKAGE_VERSION, NULL,
+                      &Interpreter::s_HandleJoinerCallback, this);
     }
     else if (strcmp(argv[0], "stop") == 0)
     {

@@ -5275,6 +5275,10 @@ otLwfIoCtl_otJoinerStart(
                 pFilter->otCtx,
                 (const char*)aConfig->PSKd,
                 (const char*)aConfig->ProvisioningUrl,
+                (const char*)aConfig->VendorName,
+                (const char*)aConfig->VendorModel,
+                (const char*)aConfig->VendorSwVersion,
+                (const char*)aConfig->VendorData,
                 NULL,  // TODO: handle the joiner completion callback
                 NULL)
             );

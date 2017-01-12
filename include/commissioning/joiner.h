@@ -66,6 +66,10 @@ typedef void (OTCALL *otJoinerCallback)(ThreadError aError, void *aContext);
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aPSKd             A pointer to the PSKd.
  * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
+ * @param[in]  aVendorName       A pointer to the Vendor Name (must be static).
+ * @param[in]  aVendorModel      A pointer to the Vendor Model (must be static).
+ * @param[in]  aVendorSwVersion  A pointer to the Vendor SW Version (must be static).
+ * @param[in]  aVendorData       A pointer to the Vendor Data (must be static).
  * @param[in]  aCallback         A pointer to a function that is called when the join operation completes.
  * @param[in]  aContext          A pointer to application-specific context.
  *
@@ -74,6 +78,8 @@ typedef void (OTCALL *otJoinerCallback)(ThreadError aError, void *aContext);
  *
  */
 OTAPI ThreadError OTCALL otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl,
+                                       const char *aVendorName, const char *aVendorModel,
+                                       const char *aVendorSwVersion, const char *aVendordata,
                                        otJoinerCallback aCallback, void *aContext);
 
 /**

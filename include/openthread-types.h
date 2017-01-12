@@ -477,36 +477,41 @@ typedef struct otCommissioningDataset
  */
 typedef enum otMeshcopTlvType
 {
-    OT_MESHCOP_TLV_CHANNEL            = 0,    ///< meshcop Channel TLV
-    OT_MESHCOP_TLV_PANID              = 1,    ///< meshcop Pan Id TLV
-    OT_MESHCOP_TLV_EXTPANID           = 2,    ///< meshcop Extended Pan Id TLV
-    OT_MESHCOP_TLV_NETWORKNAME        = 3,    ///< meshcop Network Name TLV
-    OT_MESHCOP_TLV_PSKC               = 4,    ///< meshcop PSKc TLV
-    OT_MESHCOP_TLV_MASTERKEY          = 5,    ///< meshcop Network Master Key TLV
-    OT_MESHCOP_TLV_MESHLOCALPREFIX    = 7,    ///< meshcop Mesh Local Prefix TLV
-    OT_MESHCOP_TLV_STEERING_DATA      = 8,    ///< meshcop Steering Data TLV
-    OT_MESHCOP_TLV_BORDER_AGENT_RLOC  = 9,    ///< meshcop Border Agent Locator TLV
-    OT_MESHCOP_TLV_COMMISSIONER_ID    = 10,   ///< meshcop Commissioner ID TLV
-    OT_MESHCOP_TLV_COMM_SESSION_ID    = 11,   ///< meshcop Commissioner Session ID TLV
-    OT_MESHCOP_TLV_SECURITYPOLICY     = 12,   ///< meshcop Security Policy TLV
-    OT_MESHCOP_TLV_GET                = 13,   ///< meshcop Get TLV
-    OT_MESHCOP_TLV_ACTIVETIMESTAMP    = 14,   ///< meshcop Active Timestamp TLV
-    OT_MESHCOP_TLV_STATE              = 16,   ///< meshcop State TLV
-    OT_MESHCOP_TLV_JOINER_DTLS        = 17,   ///< meshcop Joiner DTLS Encapsulation TLV
-    OT_MESHCOP_TLV_JOINER_UDP_PORT    = 18,   ///< meshcop Joiner UDP Port TLV
-    OT_MESHCOP_TLV_JOINER_IID         = 19,   ///< meshcop Joiner IID TLV
-    OT_MESHCOP_TLV_JOINER_RLOC        = 20,   ///< meshcop Joiner Router Locator TLV
-    OT_MESHCOP_TLV_JOINER_ROUTER_KEK  = 21,   ///< meshcop Joiner Router KEK TLV
-    OT_MESHCOP_TLV_PROVISIONING_URL   = 32,   ///< meshcop Provisioning URL TLV
-    OT_MESHCOP_TLV_PENDINGTIMESTAMP   = 51,   ///< meshcop Pending Timestamp TLV
-    OT_MESHCOP_TLV_DELAYTIMER         = 52,   ///< meshcop Delay Timer TLV
-    OT_MESHCOP_TLV_CHANNELMASK        = 53,   ///< meshcop Channel Mask TLV
-    OT_MESHCOP_TLV_COUNT              = 54,   ///< meshcop Count TLV
-    OT_MESHCOP_TLV_PERIOD             = 55,   ///< meshcop Period TLV
-    OT_MESHCOP_TLV_SCAN_DURATION      = 56,   ///< meshcop Scan Duration TLV
-    OT_MESHCOP_TLV_ENERGY_LIST        = 57,   ///< meshcop Energy List TLV
-    OT_MESHCOP_TLV_DISCOVERYREQUEST   = 128,  ///< meshcop Discovery Request TLV
-    OT_MESHCOP_TLV_DISCOVERYRESPONSE  = 129,  ///< meshcop Discovery Response TLV
+    OT_MESHCOP_TLV_CHANNEL                   = 0,    ///< meshcop Channel TLV
+    OT_MESHCOP_TLV_PANID                     = 1,    ///< meshcop Pan Id TLV
+    OT_MESHCOP_TLV_EXTPANID                  = 2,    ///< meshcop Extended Pan Id TLV
+    OT_MESHCOP_TLV_NETWORKNAME               = 3,    ///< meshcop Network Name TLV
+    OT_MESHCOP_TLV_PSKC                      = 4,    ///< meshcop PSKc TLV
+    OT_MESHCOP_TLV_MASTERKEY                 = 5,    ///< meshcop Network Master Key TLV
+    OT_MESHCOP_TLV_MESHLOCALPREFIX           = 7,    ///< meshcop Mesh Local Prefix TLV
+    OT_MESHCOP_TLV_STEERING_DATA             = 8,    ///< meshcop Steering Data TLV
+    OT_MESHCOP_TLV_BORDER_AGENT_RLOC         = 9,    ///< meshcop Border Agent Locator TLV
+    OT_MESHCOP_TLV_COMMISSIONER_ID           = 10,   ///< meshcop Commissioner ID TLV
+    OT_MESHCOP_TLV_COMM_SESSION_ID           = 11,   ///< meshcop Commissioner Session ID TLV
+    OT_MESHCOP_TLV_SECURITYPOLICY            = 12,   ///< meshcop Security Policy TLV
+    OT_MESHCOP_TLV_GET                       = 13,   ///< meshcop Get TLV
+    OT_MESHCOP_TLV_ACTIVETIMESTAMP           = 14,   ///< meshcop Active Timestamp TLV
+    OT_MESHCOP_TLV_STATE                     = 16,   ///< meshcop State TLV
+    OT_MESHCOP_TLV_JOINER_DTLS               = 17,   ///< meshcop Joiner DTLS Encapsulation TLV
+    OT_MESHCOP_TLV_JOINER_UDP_PORT           = 18,   ///< meshcop Joiner UDP Port TLV
+    OT_MESHCOP_TLV_JOINER_IID                = 19,   ///< meshcop Joiner IID TLV
+    OT_MESHCOP_TLV_JOINER_RLOC               = 20,   ///< meshcop Joiner Router Locator TLV
+    OT_MESHCOP_TLV_JOINER_ROUTER_KEK         = 21,   ///< meshcop Joiner Router KEK TLV
+    OT_MESHCOP_TLV_PROVISIONING_URL          = 32,   ///< meshcop Provisioning URL TLV
+    OT_MESHCOP_TLV_VENDOR_NAME_TLV           = 33,   ///< meshcop Vendor Name TLV
+    OT_MESHCOP_TLV_VENDOR_MODEL_TLV          = 34,   ///< meshcop Vendor Model TLV
+    OT_MESHCOP_TLV_VENDOR_SW_VERSION_TLV     = 35,   ///< meshcop Vendor SW Version TLV
+    OT_MESHCOP_TLV_VENDOR_DATA_TLV           = 36,   ///< meshcop Vendor Data TLV
+    OT_MESHCOP_TLV_VENDOR_STACK_VERSION_TLV  = 37,   ///< meshcop Vendor Stack Version TLV
+    OT_MESHCOP_TLV_PENDINGTIMESTAMP          = 51,   ///< meshcop Pending Timestamp TLV
+    OT_MESHCOP_TLV_DELAYTIMER                = 52,   ///< meshcop Delay Timer TLV
+    OT_MESHCOP_TLV_CHANNELMASK               = 53,   ///< meshcop Channel Mask TLV
+    OT_MESHCOP_TLV_COUNT                     = 54,   ///< meshcop Count TLV
+    OT_MESHCOP_TLV_PERIOD                    = 55,   ///< meshcop Period TLV
+    OT_MESHCOP_TLV_SCAN_DURATION             = 56,   ///< meshcop Scan Duration TLV
+    OT_MESHCOP_TLV_ENERGY_LIST               = 57,   ///< meshcop Energy List TLV
+    OT_MESHCOP_TLV_DISCOVERYREQUEST          = 128,  ///< meshcop Discovery Request TLV
+    OT_MESHCOP_TLV_DISCOVERYRESPONSE         = 129,  ///< meshcop Discovery Response TLV
 } otMeshcopTlvType;
 
 /**
