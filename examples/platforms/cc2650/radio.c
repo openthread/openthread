@@ -195,8 +195,8 @@ static volatile rfc_CMD_IEEE_RX_ACK_t cmd_ieee_rx_ack;
  */
 static volatile struct
 {
-    uint32_t srcMatchEn[CC2650_EXTADD_SRC_MATCH_NUM];
-    uint32_t srcPendEn[CC2650_EXTADD_SRC_MATCH_NUM];
+    uint32_t srcMatchEn[((CC2650_EXTADD_SRC_MATCH_NUM + 31) / 32)];
+    uint32_t srcPendEn[((CC2650_EXTADD_SRC_MATCH_NUM + 31) / 32)];
     uint64_t extAddrEnt[CC2650_EXTADD_SRC_MATCH_NUM];
 } src_match_ext_data __attribute__((aligned(4)));
 
@@ -210,13 +210,9 @@ static volatile struct
  */
 static volatile struct
 {
-    uint32_t srcMatchEn[CC2650_SHORTADD_SRC_MATCH_NUM];
-    uint32_t srcPendEn[CC2650_SHORTADD_SRC_MATCH_NUM];
-    struct
-    {
-        uint16_t shortAddr;
-        uint16_t panID;
-    } extAddrEnt[CC2650_SHORTADD_SRC_MATCH_NUM];
+    uint32_t srcMatchEn[((CC2650_SHORTADD_SRC_MATCH_NUM + 31) / 32)];
+    uint32_t srcPendEn[((CC2650_SHORTADD_SRC_MATCH_NUM + 31) / 32)];
+    rfc_shortAddrEntry_t extAddrEnt[CC2650_SHORTADD_SRC_MATCH_NUM];
 } src_match_short_data __attribute__((aligned(4)));
 
 /* struct containing radio stats */
@@ -1263,8 +1259,7 @@ exit:
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
     (void)aInstance;
-    /* XXX: is this meant to be the largest or last observed RSSI? */
-    return 0;
+    return rf_stats.maxRssi;
 }
 
 /**
@@ -1333,7 +1328,7 @@ static uint8_t rfcore_src_match_short_find_empty(void)
 
     for (i = 0; i < CC2650_SHORTADD_SRC_MATCH_NUM; i++)
     {
-        if (src_match_short_data.srcMatchEn[i] == 0u)
+        if ((src_match_short_data.srcMatchEn[i / 32] & (1 << (i % 32))) == 0u)
         {
             return i;
         }
@@ -1356,7 +1351,7 @@ ThreadError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16
         /* the entry does not exist already, add it */
         VerifyOrExit((idx = rfcore_src_match_short_find_empty()) != CC2650_SRC_MATCH_NONE, error = kThreadError_NoBufs);
         src_match_short_data.extAddrEnt[idx].shortAddr = aShortAddress;
-        src_match_short_data.extAddrEnt[idx].panID = cmd_ieee_rx.localPanID;
+        src_match_short_data.extAddrEnt[idx].panId = cmd_ieee_rx.localPanID;
     }
 
     if (cmd_ieee_rx.status == ACTIVE || cmd_ieee_rx.status == IEEE_SUSPENDED)
@@ -1367,8 +1362,8 @@ ThreadError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16
     else
     {
         /* we are not running, so we must update the values ourselves */
-        src_match_short_data.srcPendEn[idx] = 1u;
-        src_match_short_data.srcMatchEn[idx] = 1u;
+        src_match_short_data.srcPendEn[idx / 32] |= (1 << (idx % 32));
+        src_match_short_data.srcMatchEn[idx / 32] |= (1 << (idx % 32));
     }
 
 exit:
@@ -1394,8 +1389,8 @@ ThreadError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint
     else
     {
         /* we are not running, so we must update the values ourselves */
-        src_match_short_data.srcPendEn[idx] = 0u;
-        src_match_short_data.srcMatchEn[idx] = 0u;
+        src_match_short_data.srcPendEn[idx / 32] &= ~(1 << (idx % 32));
+        src_match_short_data.srcMatchEn[idx / 32] &= ~(1 << (idx % 32));
     }
 
 exit:
@@ -1437,7 +1432,7 @@ static uint8_t rfcore_src_match_ext_find_empty(void)
 
     for (i = 0; i < CC2650_EXTADD_SRC_MATCH_NUM; i++)
     {
-        if (src_match_ext_data.srcMatchEn[i] != 0u)
+        if ((src_match_ext_data.srcMatchEn[i / 32] & (1 << (i % 32))) != 0u)
         {
             return i;
         }
@@ -1470,8 +1465,8 @@ ThreadError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t 
     else
     {
         /* we are not running, so we must update the values ourselves */
-        src_match_ext_data.srcPendEn[idx] = 1u;
-        src_match_ext_data.srcMatchEn[idx] = 1u;
+        src_match_ext_data.srcPendEn[idx / 32] |= (1 << (idx % 32));
+        src_match_ext_data.srcMatchEn[idx / 32] |= (1 << (idx % 32));
     }
 
 exit:
@@ -1499,6 +1494,8 @@ ThreadError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_
         /* we are not running, so we must update the values ourselves */
         src_match_ext_data.srcPendEn[idx] = 0u;
         src_match_ext_data.srcMatchEn[idx] = 0u;
+        src_match_ext_data.srcPendEn[idx / 32] &= ~(1 << (idx % 32));
+        src_match_ext_data.srcMatchEn[idx / 32] &= ~(1 << (idx % 32));
     }
 
 exit:
