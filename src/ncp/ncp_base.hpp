@@ -40,8 +40,8 @@
 #endif
 
 #include <openthread-types.h>
+#include "openthread/ip6.h"
 #include "openthread/message.h"
-#include <openthread-ip6.h>
 #include <common/tasklet.hpp>
 #include <ncp/ncp.h>
 #include <ncp/ncp_buffer.hpp>

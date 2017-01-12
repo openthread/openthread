@@ -134,8 +134,8 @@ OTLWF_IOCTL_HANDLER IoCtls[] =
     { "IOCTL_OTLWF_OT_SEND_ACTIVE_SET",             REF_IOCTL_FUNC(otSendActiveSet) },
     { "IOCTL_OTLWF_OT_SEND_PENDING_GET",            REF_IOCTL_FUNC(otSendPendingGet) },
     { "IOCTL_OTLWF_OT_SEND_PENDING_SET",            REF_IOCTL_FUNC(otSendPendingSet) },
-    { "IOCTL_OTLWF_OT_SEND_MGMT_COMMISSIONER_GET",  REF_IOCTL_FUNC(otSendMgmtCommissionerGet) },
-    { "IOCTL_OTLWF_OT_SEND_MGMT_COMMISSIONER_SET",  REF_IOCTL_FUNC(otSendMgmtCommissionerSet) },
+    { "IOCTL_OTLWF_OT_SEND_MGMT_COMMISSIONER_GET",  REF_IOCTL_FUNC(otCommissionerSendMgmtGet) },
+    { "IOCTL_OTLWF_OT_SEND_MGMT_COMMISSIONER_SET",  REF_IOCTL_FUNC(otCommissionerSendMgmtSet) },
     { "IOCTL_OTLWF_OT_KEY_SWITCH_GUARDTIME",        REF_IOCTL_FUNC_WITH_TUN(otKeySwitchGuardtime) },
     { "IOCTL_OTLWF_OT_FACTORY_RESET",               REF_IOCTL_FUNC(otFactoryReset) },
     { "IOCTL_OTLWF_OT_THREAD_AUTO_START",           REF_IOCTL_FUNC(otThreadAutoStart) }
@@ -456,19 +456,14 @@ otLwfIoCtl_otInterface(
             // Make sure our addresses are in sync
             (void)otLwfInitializeAddresses(pFilter);
             otLwfRadioAddressesUpdated(pFilter);
+	}
 
-            status = ThreadErrorToNtstatus(otInterfaceUp(pFilter->otCtx));
-        }
-        else
-        {
-            status = ThreadErrorToNtstatus(otInterfaceDown(pFilter->otCtx));
-        }
-        
+        status = ThreadErrorToNtstatus(otIp6SetEnabled(pFilter->otCtx, IsEnabled));
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(BOOLEAN))
     {
-        *(BOOLEAN*)OutBuffer = otIsInterfaceUp(pFilter->otCtx) ? TRUE : FALSE;
+        *(BOOLEAN*)OutBuffer = otIp6IsEnabled(pFilter->otCtx) ? TRUE : FALSE;
         *OutBufferLength = sizeof(BOOLEAN);
         status = STATUS_SUCCESS;
     }
@@ -5903,7 +5898,7 @@ otLwfIoCtl_otSendPendingSet(
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
-otLwfIoCtl_otSendMgmtCommissionerGet(
+otLwfIoCtl_otCommissionerSendMgmtGet(
     _In_ PMS_FILTER         pFilter,
     _In_reads_bytes_(InBufferLength)
             PUCHAR          InBuffer,
@@ -5926,7 +5921,7 @@ otLwfIoCtl_otSendMgmtCommissionerGet(
         if (InBufferLength >= sizeof(uint8_t) + aLength)
         {
             status = ThreadErrorToNtstatus(
-                otSendMgmtCommissionerGet(
+                otCommissionerSendMgmtGet(
                     pFilter->otCtx,
                     aTlvs,
                     aLength)
@@ -5939,7 +5934,7 @@ otLwfIoCtl_otSendMgmtCommissionerGet(
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
-otLwfIoCtl_otSendMgmtCommissionerSet(
+otLwfIoCtl_otCommissionerSendMgmtSet(
     _In_ PMS_FILTER         pFilter,
     _In_reads_bytes_(InBufferLength)
             PUCHAR          InBuffer,
@@ -5963,7 +5958,7 @@ otLwfIoCtl_otSendMgmtCommissionerSet(
         if (InBufferLength >= sizeof(otCommissioningDataset) + sizeof(uint8_t) + aLength)
         {
             status = ThreadErrorToNtstatus(
-                otSendMgmtCommissionerSet(
+                otCommissionerSendMgmtSet(
                     pFilter->otCtx,
                     aDataset,
                     aTlvs,

@@ -1191,29 +1191,19 @@ otGetVersionString()
 OTAPI 
 ThreadError 
 OTCALL
-otInterfaceUp(
-    _In_ otInstance *aInstance
+otIp6SetEnabled(
+    _In_ otInstance *aInstance,
+    bool aEnabled
     )
 {
     if (aInstance == nullptr) return kThreadError_InvalidArgs;
-    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_INTERFACE, (BOOLEAN)TRUE));
-}
-
-OTAPI 
-ThreadError 
-OTCALL
-otInterfaceDown(
-    _In_ otInstance *aInstance
-    )
-{
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
-    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_INTERFACE, (BOOLEAN)FALSE));
+    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_INTERFACE, (BOOLEAN)aEnabled));
 }
 
 OTAPI 
 bool 
 OTCALL
-otIsInterfaceUp(
+otIp6IsEnabled(
     _In_ otInstance *aInstance
     )
 {
@@ -1924,7 +1914,7 @@ GetAdapterAddresses(
 OTAPI
 const otNetifAddress *
 OTCALL
-otGetUnicastAddresses(
+otIp6GetUnicastAddresses(
     _In_ otInstance *aInstance
     )
 {
@@ -2039,7 +2029,7 @@ otGetUnicastAddresses(
 OTAPI
 ThreadError
 OTCALL
-otAddUnicastAddress(
+otIp6AddUnicastAddress(
     _In_ otInstance *aInstance, 
     const otNetifAddress *aAddress
     )
@@ -2106,7 +2096,7 @@ otAddUnicastAddress(
 OTAPI
 ThreadError
 OTCALL
-otRemoveUnicastAddress(
+otIp6RemoveUnicastAddress(
     _In_ otInstance *aInstance, 
     const otIp6Address *aAddress
     )
@@ -3688,7 +3678,7 @@ otCommissionerPanIdQuery(
 OTAPI 
 ThreadError 
 OTCALL 
-otSendMgmtCommissionerGet(
+otCommissionerSendMgmtGet(
     _In_ otInstance *aInstance, 
     const uint8_t *aTlvs, 
     uint8_t aLength
@@ -3716,7 +3706,7 @@ otSendMgmtCommissionerGet(
 OTAPI 
 ThreadError 
 OTCALL 
-otSendMgmtCommissionerSet(
+otCommissionerSendMgmtSet(
     _In_ otInstance *aInstance,
     const otCommissioningDataset *aDataset,
     const uint8_t *aTlvs,

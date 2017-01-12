@@ -29,8 +29,8 @@
 #include "test_util.h"
 
 #include <openthread.h>
+#include "openthread/ip6.h"
 #include "openthread/message.h"
-#include <openthread-ip6.h>
 
 #include <common/debug.hpp>
 #include <common/message.hpp>
@@ -213,8 +213,8 @@ void TestMessageQueueOtApis(void)
 
     for (int i = 0; i < kNumTestMessages; i++)
     {
-        msg[i] = otNewIp6Message(instance, true);
-        VerifyOrQuit(msg[i] != NULL, "otNewIp6Message() failed.\n");
+        msg[i] = otIp6NewMessage(instance, true);
+        VerifyOrQuit(msg[i] != NULL, "otIp6NewMessage() failed.\n");
     }
 
     otMessageQueueInit(&queue);

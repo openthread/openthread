@@ -87,7 +87,7 @@ otPlatReset(
 
     // Register callbacks with OpenThread
     otSetStateChangedCallback(pFilter->otCtx, otLwfStateChangedCallback, pFilter);
-    otSetReceiveIp6DatagramCallback(pFilter->otCtx, otLwfReceiveIp6DatagramCallback, pFilter);
+    otIp6SetReceiveCallback(pFilter->otCtx, otLwfReceiveIp6DatagramCallback, pFilter);
 
     // Query the current addresses from TCPIP and cache them
     (void)otLwfInitializeAddresses(pFilter);

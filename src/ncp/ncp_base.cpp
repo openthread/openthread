@@ -535,10 +535,10 @@ NcpBase::NcpBase(otInstance *aInstance):
     sNcpContext = this;
 
     otSetStateChangedCallback(mInstance, &NcpBase::HandleNetifStateChanged, this);
-    otSetReceiveIp6DatagramCallback(mInstance, &NcpBase::HandleDatagramFromStack, this);
+    otIp6SetReceiveCallback(mInstance, &NcpBase::HandleDatagramFromStack, this);
     otSetLinkPcapCallback(mInstance, &NcpBase::HandleRawFrame, static_cast<void*>(this));
     otIcmp6SetEchoEnabled(mInstance, false);
-    otSetReceiveIp6DatagramFilterEnabled(mInstance, true);
+    otIp6SetReceiveFilterEnabled(mInstance, true);
 
     mUpdateChangedPropsTask.Post();
 
@@ -1525,7 +1525,7 @@ ThreadError NcpBase::CommandHandler_RESET(uint8_t header, unsigned int command, 
     // In such a case we fake it.
 
     otThreadStop(mInstance);
-    otInterfaceDown(mInstance);
+    otIp6SetEnabled(mInstance, false);
 
     errorCode = SendLastStatus(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_STATUS_RESET_SOFTWARE);
 
@@ -2066,7 +2066,7 @@ ThreadError NcpBase::GetPropertyHandler_NET_IF_UP(uint8_t header, spinel_prop_ke
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_BOOL_S,
-               otIsInterfaceUp(mInstance)
+               otIp6IsEnabled(mInstance)
            );
 }
 
@@ -2529,7 +2529,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, s
 {
     ThreadError errorCode = kThreadError_None;
     uint8_t num_entries = 0;
-    const uint16_t *ports = otGetUnsecurePorts(mInstance, &num_entries);
+    const uint16_t *ports = otIp6GetUnsecurePorts(mInstance, &num_entries);
 
     SuccessOrExit(errorCode = OutboundFrameBegin());
     SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
@@ -2723,7 +2723,7 @@ ThreadError NcpBase::GetPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spine
     SuccessOrExit(errorCode = OutboundFrameBegin());
     SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
 
-    for (const otNetifAddress *address = otGetUnicastAddresses(mInstance); address; address = address->mNext)
+    for (const otNetifAddress *address = otIp6GetUnicastAddresses(mInstance); address; address = address->mNext)
     {
 
         SuccessOrExit(errorCode = OutboundFrameFeedPacked(
@@ -2769,7 +2769,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_RLOC16_DEBUG_PASSTHRU(uint8_t hea
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_BOOL_S,
-	       !otIsReceiveIp6DatagramFilterEnabled(mInstance)
+	       !otIp6IsReceiveFilterEnabled(mInstance)
            );
 }
 
@@ -3985,14 +3985,7 @@ ThreadError NcpBase::SetPropertyHandler_NET_IF_UP(uint8_t header, spinel_prop_ke
 
     if (parsedLength > 0)
     {
-        if (value == false)
-        {
-            errorCode = otInterfaceDown(mInstance);
-        }
-        else
-        {
-            errorCode = otInterfaceUp(mInstance);
-        }
+	errorCode = otIp6SetEnabled(mInstance, value);
     }
     else
     {
@@ -4337,7 +4330,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spin
     unsigned int meta_len(0);
 
     // STREAM_NET_INSECURE packets are not secured at layer 2.
-    otMessage message = otNewIp6Message(mInstance, false);
+    otMessage message = otIp6NewMessage(mInstance, false);
 
     if (message == NULL)
     {
@@ -4369,7 +4362,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spin
         // Ensure the insecure message is forwarded using direct transmission.
         otMessageSetDirectTransmission(message, true);
 
-        errorCode = otSendIp6Datagram(mInstance, message);
+        errorCode = otIp6Send(mInstance, message);
     }
     else if (message)
     {
@@ -4410,7 +4403,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_k
     unsigned int meta_len(0);
 
     // STREAM_NET requires layer 2 security.
-    otMessage message = otNewIp6Message(mInstance, true);
+    otMessage message = otIp6NewMessage(mInstance, true);
 
     if (message == NULL)
     {
@@ -4439,7 +4432,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_k
 
     if (errorCode == kThreadError_None)
     {
-        errorCode = otSendIp6Datagram(mInstance, message);
+        errorCode = otIp6Send(mInstance, message);
     }
     else if (message)
     {
@@ -4542,7 +4535,7 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_RLOC16_DEBUG_PASSTHRU(uint8_t hea
     if (parsedLength > 0)
     {
         // Note reverse logic: passthru enabled = filter disabled
-        otSetReceiveIp6DatagramFilterEnabled(mInstance, !isEnabled);
+        otIp6SetReceiveFilterEnabled(mInstance, !isEnabled);
 
         errorCode = HandleCommandPropertyGet(header, key);
     }
@@ -4559,14 +4552,14 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, s
 {
     ThreadError errorCode = kThreadError_None;
     uint8_t num_entries = 0;
-    const uint16_t *ports = otGetUnsecurePorts(mInstance, &num_entries);
+    const uint16_t *ports = otIp6GetUnsecurePorts(mInstance, &num_entries);
     spinel_ssize_t parsedLength = 1;
     int ports_changed = 0;
 
     // First, we need to remove all of the current assisting ports.
     for (; num_entries != 0; ports++, num_entries--)
     {
-        errorCode = otRemoveUnsecurePort(mInstance, *ports);
+        errorCode = otIp6RemoveUnsecurePort(mInstance, *ports);
 
         if (errorCode != kThreadError_None)
         {
@@ -4592,7 +4585,7 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, s
 
         if (parsedLength > 0)
         {
-            errorCode = otAddUnsecurePort(mInstance, port);
+            errorCode = otIp6AddUnsecurePort(mInstance, port);
         }
         else
         {
@@ -5649,7 +5642,7 @@ ThreadError NcpBase::InsertPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, sp
     netif_addr.mPreferred = preferred_lifetime != 0;
     netif_addr.mValid = valid_lifetime != 0;
 
-    errorCode = otAddUnicastAddress(mInstance, &netif_addr);
+    errorCode = otIp6AddUnicastAddress(mInstance, &netif_addr);
 
     VerifyOrExit(errorCode == kThreadError_None,
                  errorStatus = ThreadErrorToSpinelStatus(errorCode));
@@ -5827,7 +5820,7 @@ ThreadError NcpBase::InsertPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header
 
     if (parsedLength > 0)
     {
-        errorCode = otAddUnsecurePort(mInstance, port);
+        errorCode = otIp6AddUnsecurePort(mInstance, port);
 
         if (errorCode == kThreadError_None)
         {
@@ -6021,7 +6014,7 @@ ThreadError NcpBase::RemovePropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, sp
 
     if (parsedLength > 0)
     {
-        errorCode = otRemoveUnicastAddress(mInstance, addr_ptr);
+        errorCode = otIp6RemoveUnicastAddress(mInstance, addr_ptr);
 
         if (errorCode == kThreadError_None)
         {
@@ -6166,7 +6159,7 @@ ThreadError NcpBase::RemovePropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header
 
     if (parsedLength > 0)
     {
-        errorCode = otRemoveUnsecurePort(mInstance, port);
+        errorCode = otIp6RemoveUnsecurePort(mInstance, port);
 
         if (errorCode == kThreadError_None)
         {

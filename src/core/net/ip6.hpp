@@ -36,7 +36,7 @@
 
 #include <stddef.h>
 
-#include <openthread-ip6.h>
+#include "openthread/ip6.h"
 #include "openthread/udp.h"
 
 #include <common/encoding.hpp>
@@ -218,7 +218,7 @@ public:
      * @sa SetReceiveIp6FilterEnabled
      *
      */
-    void SetReceiveDatagramCallback(otReceiveIp6DatagramCallback aCallback, void *aCallbackContext);
+    void SetReceiveDatagramCallback(otIp6ReceiveCallback aCallback, void *aCallbackContext);
 
     /**
      * This method indicates whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
@@ -377,7 +377,7 @@ private:
     PriorityQueue mSendQueue;
     Tasklet mSendQueueTask;
 
-    otReceiveIp6DatagramCallback mReceiveIp6DatagramCallback;
+    otIp6ReceiveCallback mReceiveIp6DatagramCallback;
     void *mReceiveIp6DatagramCallbackContext;
     bool mIsReceiveIp6FilterEnabled;
 

@@ -66,6 +66,9 @@
     <ClCompile Include="..\..\src\core\api\dhcp6_api.cpp">
       <Filter>Source Files\api</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\api\ip6_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\api\joiner_api.cpp">
       <Filter>Source Files\api</Filter>
     </ClCompile>

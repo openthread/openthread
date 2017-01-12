@@ -38,6 +38,7 @@
 #include <openthread-types.h>
 
 #include "openthread/crypto.h"
+#include "openthread/ip6.h"
 #include "openthread/message.h"
 #include "openthread/tasklet.h"
 
@@ -258,43 +259,6 @@ otInstance *otInstanceInit(void);
 void otInstanceFinalize(otInstance *aInstance);
 
 #endif
-
-/**
- * This function brings up the IPv6 interface.
- *
- * Call this function to bring up the IPv6 interface and enables IPv6 communication.
- *
- * @param[in] aInstance A pointer to an OpenThread instance.
- *
- * @retval kThreadError_None          Successfully enabled the IPv6 interface,
- *                                    or the interface was already enabled.
- *
- */
-OTAPI ThreadError OTCALL otInterfaceUp(otInstance *aInstance);
-
-/**
- * This function brings down the IPv6 interface.
- *
- * Call this function to bring down the IPv6 interface and disable all IPv6 communication.
- *
- * @param[in] aInstance A pointer to an OpenThread instance.
- *
- * @retval kThreadError_None          Successfully brought the interface down,
- *                                    or the interface was already down.
- *
- */
-OTAPI ThreadError OTCALL otInterfaceDown(otInstance *aInstance);
-
-/**
- * This function indicates whether or not the IPv6 interface is up.
- *
- * @param[in] aInstance A pointer to an OpenThread instance.
- *
- * @retval TRUE   The IPv6 interface is up.
- * @retval FALSE  The IPv6 interface is down.
- *
- */
-OTAPI bool OTCALL otIsInterfaceUp(otInstance *aInstance);
 
 /**
  * This function starts Thread protocol operation.
@@ -853,42 +817,6 @@ OTAPI void OTCALL otSetRouterRoleEnabled(otInstance *aInstance, bool aEnabled);
 OTAPI otShortAddress OTCALL otGetShortAddress(otInstance *aInstance);
 
 /**
- * Get the list of IPv6 addresses assigned to the Thread interface.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- *
- * @returns A pointer to the first Network Interface Address.
- */
-OTAPI const otNetifAddress *OTCALL otGetUnicastAddresses(otInstance *aInstance);
-
-/**
- * Add a Network Interface Address to the Thread interface.
- *
- * The passed in instance @p aAddress will be copied by the Thread interface. The Thread interface only
- * supports a fixed number of externally added unicast addresses. See OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aAddress  A pointer to a Network Interface Address.
- *
- * @retval kThreadErrorNone          Successfully added (or updated) the Network Interface Address.
- * @retval kThreadError_InvalidArgs  The IP Address indicated by @p aAddress is an internal address.
- * @retval kThreadError_NoBufs       The Network Interface is already storing the maximum allowed external addresses.
- */
-OTAPI ThreadError OTCALL otAddUnicastAddress(otInstance *aInstance, const otNetifAddress *aAddress);
-
-/**
- * Remove a Network Interface Address from the Thread interface.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aAddress  A pointer to an IP Address.
- *
- * @retval kThreadErrorNone          Successfully removed the Network Interface Address.
- * @retval kThreadError_InvalidArgs  The IP Address indicated by @p aAddress is an internal address.
- * @retval kThreadError_NotFound     The IP Address indicated by @p aAddress was not found.
- */
-OTAPI ThreadError OTCALL otRemoveUnicastAddress(otInstance *aInstance, const otIp6Address *aAddress);
-
-/**
  * This function registers a callback to indicate when certain configuration or state changes within OpenThread.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
@@ -1234,43 +1162,6 @@ OTAPI ThreadError OTCALL otRemoveExternalRoute(otInstance *aInstance, const otIp
  * @sa otRemoveExternalRoute
  */
 OTAPI ThreadError OTCALL otSendServerData(otInstance *aInstance);
-
-/**
- * This function adds a port to the allowed unsecured port list.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aPort     The port value.
- *
- * @retval kThreadError_None    The port was successfully added to the allowed unsecure port list.
- * @retval kThreadError_NoBufs  The unsecure port list is full.
- *
- */
-ThreadError otAddUnsecurePort(otInstance *aInstance, uint16_t aPort);
-
-/**
- * This function removes a port from the allowed unsecure port list.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aPort     The port value.
- *
- * @retval kThreadError_None      The port was successfully removed from the allowed unsecure port list.
- * @retval kThreadError_NotFound  The port was not found in the unsecure port list.
- *
- */
-ThreadError otRemoveUnsecurePort(otInstance *aInstance, uint16_t aPort);
-
-/**
- * This function returns a pointer to the unsecure port list.
- *
- * @note Port value 0 is used to indicate an invalid entry.
- *
- * @param[in]   aInstance    A pointer to an OpenThread instance.
- * @param[out]  aNumEntries  The number of entries in the list.
- *
- * @returns A pointer to the unsecure port list.
- *
- */
-const uint16_t *otGetUnsecurePorts(otInstance *aInstance, uint8_t *aNumEntries);
 
 /**
  * @}
@@ -2010,39 +1901,6 @@ OTAPI const otMacCounters *OTCALL otGetMacCounters(otInstance *aInstance);
  * @}
  *
  */
-
-/**
- * Test if two IPv6 addresses are the same.
- *
- * @param[in]  a  A pointer to the first IPv6 address to compare.
- * @param[in]  b  A pointer to the second IPv6 address to compare.
- *
- * @retval TRUE   The two IPv6 addresses are the same.
- * @retval FALSE  The two IPv6 addresses are not the same.
- */
-OTAPI bool OTCALL otIsIp6AddressEqual(const otIp6Address *a, const otIp6Address *b);
-
-/**
- * Convert a human-readable IPv6 address string into a binary representation.
- *
- * @param[in]   aString   A pointer to a NULL-terminated string.
- * @param[out]  aAddress  A pointer to an IPv6 address.
- *
- * @retval kThreadErrorNone        Successfully parsed the string.
- * @retval kThreadErrorInvalidArg  Failed to parse the string.
- */
-OTAPI ThreadError OTCALL otIp6AddressFromString(const char *aString, otIp6Address *aAddress);
-
-/**
- * This function returns the prefix match length (bits) for two IPv6 addresses.
- *
- * @param[in]  aFirst   A pointer to the first IPv6 address.
- * @param[in]  aSecond  A pointer to the second IPv6 address.
- *
- * @returns  The prefix match length in bits.
- *
- */
-OTAPI uint8_t OTCALL otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond);
 
 /**
  * This function converts a ThreadError enum into a string.

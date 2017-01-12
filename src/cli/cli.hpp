@@ -42,7 +42,7 @@
 #include <openthread.h>
 
 #include <stdarg.h>
-#include <openthread-ip6.h>
+#include "openthread/ip6.h"
 #include "openthread/udp.h"
 
 #include <cli/cli_server.hpp>

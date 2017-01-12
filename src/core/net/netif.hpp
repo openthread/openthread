@@ -447,19 +447,15 @@ public:
      * @retval TRUE   If the multicast promiscuous mode is enabled.
      * @retval FALSE  If the multicast promiscuous mode is disabled.
      */
-    bool IsMulticastPromiscuousModeEnabled(void);
+    bool IsMulticastPromiscuousEnabled(void);
 
     /**
      * This method enables multicast promiscuous mode on the network interface.
      *
-     */
-    void EnableMulticastPromiscuousMode(void);
-
-    /**
-     * This method disables multicast promiscuous mode on the network interface.
+     * @param[in]  aEnabled  TRUE if Multicast Promiscuous mode is enabled, FALSE otherwise.
      *
      */
-    void DisableMulticastPromiscuousMode(void);
+    void SetMulticastPromiscuous(bool aEnabled);
 
     /**
      * This method registers a network interface callback.
@@ -545,7 +541,7 @@ private:
     NetifMulticastAddress *mMulticastAddresses;
     int8_t mInterfaceId;
     bool mAllRoutersSubscribed;
-    bool mMulticastPromiscuousMode;
+    bool mMulticastPromiscuous;
     Tasklet mStateChangedTask;
     Netif *mNext;
 
