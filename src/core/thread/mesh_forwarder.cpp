@@ -410,16 +410,19 @@ ThreadError MeshForwarder::SendMessage(Message &aMessage)
             // schedule direct transmission
             aMessage.SetDirectTransmission();
 
-            // destined for all sleepy children
-            children = mMle.GetChildren(&numChildren);
-
-            for (uint8_t i = 0; i < numChildren; i++)
+            if (aMessage.GetSubType() != Message::kSubTypeMplRetransmission)
             {
-                if (children[i].mState == Neighbor::kStateValid && (children[i].mMode & Mle::ModeTlv::kModeRxOnWhenIdle) == 0)
+                // destined for all sleepy children
+                children = mMle.GetChildren(&numChildren);
+
+                for (uint8_t i = 0; i < numChildren; i++)
                 {
-                    children[i].mQueuedIndirectMessageCnt++;
-                    AddSrcMatchEntry(children[i]);
-                    aMessage.SetChildMask(i);
+                    if (children[i].mState == Neighbor::kStateValid && (children[i].mMode & Mle::ModeTlv::kModeRxOnWhenIdle) == 0)
+                    {
+                        children[i].mQueuedIndirectMessageCnt++;
+                        AddSrcMatchEntry(children[i]);
+                        aMessage.SetChildMask(i);
+                    }
                 }
             }
         }

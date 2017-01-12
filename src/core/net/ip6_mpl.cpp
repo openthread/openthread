@@ -286,6 +286,11 @@ void Mpl::HandleRetransmissionTimer()
 
                 if (messageCopy != NULL)
                 {
+                    if (messageMetadata.GetTransmissionCount() > 1)
+                    {
+                        messageCopy->SetSubType(Message::kSubTypeMplRetransmission);
+                    }
+
                     mIp6.EnqueueDatagram(*messageCopy);
                 }
 
@@ -304,6 +309,11 @@ void Mpl::HandleRetransmissionTimer()
 
                 if (messageMetadata.GetTransmissionCount() == GetTimerExpirations())
                 {
+                    if (messageMetadata.GetTransmissionCount() > 1)
+                    {
+                        message->SetSubType(Message::kSubTypeMplRetransmission);
+                    }
+
                     // Remove the extra metadata from the MPL Data Message.
                     messageMetadata.RemoveFrom(*message);
                     mIp6.EnqueueDatagram(*message);

@@ -214,6 +214,7 @@ public:
         kSubTypeMleDiscoverRequest  = 2,  ///< MLE Discover Request
         kSubTypeMleDiscoverResponse = 3,  ///< MLE Discover Response
         kSubTypeJoinerEntrust       = 4,  ///< Joiner Entrust
+        kSubTypeMplRetransmission   = 5,  ///< MPL next retranmission message
     };
 
     enum
