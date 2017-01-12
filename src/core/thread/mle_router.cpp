@@ -3542,7 +3542,7 @@ void MleRouter::ResolveRoutingLoops(uint16_t aSourceMac, uint16_t aDestRloc16)
 
 ThreadError MleRouter::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6::Header &aIp6Header)
 {
-    Ip6::Address destination;
+    Ip6::MessageInfo messageInfo;
 
     if (mDeviceState == kDeviceStateChild)
     {
@@ -3577,10 +3577,13 @@ ThreadError MleRouter::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDes
         return kThreadError_None;
     }
 
-    destination = GetMeshLocal16();
-    destination.mFields.m16[7] = HostSwap16(aMeshSource);
-    mNetif.GetIp6().mIcmp.SendError(destination, Ip6::IcmpHeader::kTypeDstUnreach,
-                                    Ip6::IcmpHeader::kCodeDstUnreachNoRoute, aIp6Header);
+    messageInfo.GetPeerAddr() = GetMeshLocal16();
+    messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(aMeshSource);
+    messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
+
+    mNetif.GetIp6().mIcmp.SendError(Ip6::IcmpHeader::kTypeDstUnreach,
+                                    Ip6::IcmpHeader::kCodeDstUnreachNoRoute,
+                                    messageInfo, aIp6Header);
 
     return kThreadError_Drop;
 }

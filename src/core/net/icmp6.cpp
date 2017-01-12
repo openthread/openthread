@@ -110,13 +110,15 @@ exit:
     return error;
 }
 
-ThreadError Icmp::SendError(const Address &aDestination, IcmpHeader::Type aType, IcmpHeader::Code aCode,
+ThreadError Icmp::SendError(IcmpHeader::Type aType, IcmpHeader::Code aCode, const MessageInfo &aMessageInfo,
                             const Header &aHeader)
 {
     ThreadError error = kThreadError_None;
-    MessageInfo messageInfo;
+    MessageInfo messageInfoLocal;
     Message *message = NULL;
     IcmpHeader icmp6Header;
+
+    messageInfoLocal = aMessageInfo;
 
     VerifyOrExit((message = mIp6.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->SetLength(sizeof(icmp6Header) + sizeof(aHeader)));
@@ -128,9 +130,7 @@ ThreadError Icmp::SendError(const Address &aDestination, IcmpHeader::Type aType,
     icmp6Header.SetCode(aCode);
     message->Write(0, sizeof(icmp6Header), &icmp6Header);
 
-    messageInfo.SetPeerAddr(aDestination);
-
-    SuccessOrExit(error = mIp6.SendDatagram(*message, messageInfo, kProtoIcmp6));
+    SuccessOrExit(error = mIp6.SendDatagram(*message, messageInfoLocal, kProtoIcmp6));
 
     otLogInfoIcmp("Sent ICMPv6 Error");
 

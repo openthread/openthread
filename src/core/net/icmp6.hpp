@@ -95,7 +95,7 @@ public:
      */
     enum Type
     {
-        kTypeDstUnreach  = 0,     ///< Destination Unreachable
+        kTypeDstUnreach  = 1,     ///< Destination Unreachable
         kTypeEchoRequest = 128,   ///< Echo Request
         kTypeEchoReply   = 129,   ///< Echo Reply
     };
@@ -321,16 +321,16 @@ public:
     /**
      * This method sends an ICMPv6 error message.
      *
-     * @param[in]  aDestination  The IPv6 destination address.
      * @param[in]  aType         The ICMPv6 message type.
      * @param[in]  aCode         The ICMPv6 message code.
+     * @param[in]  aMessageInfo  A reference to the message info.
      * @param[in]  aHeader       The IPv6 header of the error-causing message.
      *
      * @retval kThreadError_None    Successfully enqueued the ICMPv6 error message.
      * @retval kThreadError_NoBufs  Insufficient buffers available.
      *
      */
-    ThreadError SendError(const Address &aDestination, IcmpHeader::Type aType, IcmpHeader::Code aCode,
+    ThreadError SendError(IcmpHeader::Type aType, IcmpHeader::Code aCode, const MessageInfo &aMessageInfo,
                           const Header &aHeader);
 
     /**
