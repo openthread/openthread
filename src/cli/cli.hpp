@@ -51,7 +51,7 @@
 #ifndef OTDLL
 #include <net/icmp6.hpp>
 #include <common/timer.hpp>
-#include <dhcp6/dhcp6_client.h>
+#include "openthread/dhcp6_client.h"
 #endif
 
 #ifdef OTDLL

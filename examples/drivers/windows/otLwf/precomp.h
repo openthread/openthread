@@ -67,8 +67,8 @@ RtlCopyBufferToMdl(
 #include <openthread/tasklet.h>
 #include <openthread/commissioner.h>
 #include <openthread/joiner.h>
-#include <dhcp6/dhcp6_server.h>
-#include <dhcp6/dhcp6_client.h>
+#include <openthread/dhcp6_server.h>
+#include <openthread/dhcp6_client.h>
 #include <common/code_utils.hpp>
 #include <platform/logging.h>
 #include <platform/logging-windows.h>
