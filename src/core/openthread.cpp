@@ -976,20 +976,6 @@ ThreadError otRemoveUnicastAddress(otInstance *aInstance, const otIp6Address *ad
     return aInstance->mThreadNetif.RemoveExternalUnicastAddress(*static_cast<const Ip6::Address *>(address));
 }
 
-#if OPENTHREAD_ENABLE_DHCP6_SERVER
-void otDhcp6ServerUpdate(otInstance *aInstance)
-{
-    aInstance->mThreadNetif.GetDhcp6Server().UpdateService();
-}
-#endif  // OPENTHREAD_ENABLE_DHCP6_SERVER
-
-#if OPENTHREAD_ENABLE_DHCP6_CLIENT
-void otDhcp6ClientUpdate(otInstance *aInstance, otDhcpAddress *aAddresses, uint32_t aNumAddresses, void *aContext)
-{
-    aInstance->mThreadNetif.GetDhcp6Client().UpdateAddresses(aInstance, aAddresses, aNumAddresses, aContext);
-}
-#endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
-
 const otNetifMulticastAddress *otGetMulticastAddresses(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMulticastAddresses();

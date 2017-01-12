@@ -32,7 +32,6 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 DIST_SUBDIRS                            = \
     cli                                   \
-    dhcp6                                 \
     ncp                                   \
     openthread                            \
     platform                              \
@@ -42,7 +41,6 @@ DIST_SUBDIRS                            = \
 
 SUBDIRS                                 = \
     cli                                   \
-    dhcp6                                 \
     ncp                                   \
     openthread                            \
     platform                              \
@@ -52,7 +50,6 @@ SUBDIRS                                 = \
 
 PRETTY_SUBDIRS                          = \
     cli                                   \
-    dhcp6                                 \
     ncp                                   \
     openthread                            \
     platform                              \

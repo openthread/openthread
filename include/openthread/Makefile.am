@@ -32,6 +32,8 @@ openthread_headers                      = \
     coap.h                                \
     commissioner.h                        \
     crypto.h                              \
+    dhcp6_client.h                        \
+    dhcp6_server.h                        \
     jam_detection.h                       \
     joiner.h                              \
     message.h                             \

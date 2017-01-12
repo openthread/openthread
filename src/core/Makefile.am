@@ -129,12 +129,14 @@ endif  # OPENTHREAD_ENABLE_DTLS
 
 if OPENTHREAD_ENABLE_DHCP6_CLIENT
 SOURCES_COMMON                     += \
+    api/dhcp6_api.cpp                 \
     net/dhcp6_client.cpp              \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_DHCP6_CLIENT
 
 if OPENTHREAD_ENABLE_DHCP6_SERVER
 SOURCES_COMMON                     += \
+    api/dhcp6_api.cpp                 \
     net/dhcp6_server.cpp              \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_DHCP6_SERVER
