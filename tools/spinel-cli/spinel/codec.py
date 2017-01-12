@@ -406,11 +406,13 @@ class SpinelPropertyHandler(SpinelCodec):
     def THREAD_NETWORK_DATA(self, _, payload):
         return self.parse_D(payload)
 
-    def THREAD_NETWORK_DATA_VERSION(self, _wpan_api, payload): pass
+    def THREAD_NETWORK_DATA_VERSION(self, _wpan_api, payload):
+        return self.parse_C(payload)
 
     def THREAD_STABLE_NETWORK_DATA(self, _wpan_api, payload): pass
 
-    def THREAD_STABLE_NETWORK_DATA_VERSION(self, _wpan_api, payload): pass
+    def THREAD_STABLE_NETWORK_DATA_VERSION(self, _wpan_api, payload):
+        return self.parse_C(payload)
 
     def __init__(self):
         self.autoAddresses = set()

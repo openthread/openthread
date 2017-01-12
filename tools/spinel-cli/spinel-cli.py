@@ -982,8 +982,36 @@ class SpinelCliCmd(Cmd, SpinelCodec):
     def do_leaderdata(self, line):
         """
         leaderdata
+
+            Get the Thread network Leader Data.
+
+            > leaderdata
+            Partition ID: 1987912443
+            Weighting: 64
+            Data Version: 4
+            Stable Data Version: 129
+            Leader Router ID: 47
+            Done
         """
-        pass
+        partition_id   = self.prop_get_value(SPINEL.PROP_NET_PARTITION_ID)
+        weighting      = self.prop_get_value(SPINEL.PROP_THREAD_LEADER_WEIGHT)
+        data_version   = self.prop_get_value(SPINEL.PROP_THREAD_NETWORK_DATA_VERSION)
+        stable_version = self.prop_get_value(SPINEL.PROP_THREAD_STABLE_NETWORK_DATA_VERSION)
+        leader_id      = self.prop_get_value(SPINEL.PROP_THREAD_LEADER_RID)
+
+        if partition_id   is None or \
+           weighting      is None or \
+           data_version   is None or \
+           stable_version is None or \
+           leader_id      is None:
+            print("Error")
+        else:
+            print("Partition ID: %d" % partition_id)
+            print("Weighting: %d" % weighting)
+            print("Data Version: %d" % data_version)
+            print("Stable Data Version: %d" % stable_version)
+            print("Leader Router ID: %d" % leader_id)
+            print("Done")
 
     def do_leaderweight(self, line):
         """
