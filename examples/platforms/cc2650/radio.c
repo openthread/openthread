@@ -77,6 +77,7 @@
 #define IEEE802154_SYMBOLS_PER_SEC          62500   /* (IEEE 802.15.4-2006 6.5.3.2)
                                                      * O-QPSK symbol rate */
 #define CC2650_RAT_TICKS_PER_SEC            4000000 /* 4MHz clock */
+#define CC2650_INVALID_RSSI                 127
 #define CC2650_UNKNOWN_EUI64                      \
                                  0xFFFFFFFFFFFFFFFF /* If the EUI64 read from the ccfg is all ones,
                                                      * then the customer did not set the address */
@@ -86,6 +87,7 @@ static volatile PhyState sState;
 /* phy states not defined by openthread */
 static volatile bool cc2650_state_rfc_enabling = false;
 static volatile bool cc2650_state_rfc_transmitting = false;
+static volatile bool cc2650_state_rfc_edscan = false;
 
 /* TX Power dBm lookup table - values from SmartRF Studio */
 typedef struct output_config
@@ -172,6 +174,8 @@ static volatile rfc_CMD_FS_POWERDOWN_t cmd_fs_powerdown;
 static volatile rfc_CMD_CLEAR_RX_t cmd_clear_rx;
 static volatile rfc_CMD_IEEE_MOD_FILT_t cmd_ieee_mod_filt;
 static volatile rfc_CMD_IEEE_MOD_SRC_MATCH_t cmd_ieee_mod_src_match;
+
+static volatile rfc_CMD_IEEE_ED_SCAN_t cmd_ieee_ed_scan;
 
 static volatile rfc_CMD_IEEE_RX_t cmd_ieee_rx;
 
@@ -587,6 +591,32 @@ static uint_fast8_t rf_core_cmd_ieee_rx(void)
     return (RFCDoorbellSendTo((uint32_t)&cmd_ieee_rx) & 0xFF);
 }
 
+static uint_fast8_t rf_core_cmd_ieee_edscan(uint8_t channel, uint16_t durration)
+{
+    memset((void *)&cmd_ieee_ed_scan, 0, sizeof(cmd_ieee_ed_scan));
+
+    cmd_ieee_ed_scan.commandNo = CMD_IEEE_ED_SCAN;
+    cmd_ieee_ed_scan.startTrigger.triggerType = TRIG_NOW;
+    cmd_ieee_ed_scan.condition.rule = COND_NEVER;
+    cmd_ieee_ed_scan.channel = channel;
+
+    cmd_ieee_ed_scan.ccaOpt.ccaEnEnergy = 1;
+    cmd_ieee_ed_scan.ccaOpt.ccaEnCorr = 1;
+    cmd_ieee_ed_scan.ccaOpt.ccaEnSync = 1;
+    cmd_ieee_ed_scan.ccaOpt.ccaCorrOp = 1;
+    cmd_ieee_ed_scan.ccaOpt.ccaSyncOp = 0;
+    cmd_ieee_ed_scan.ccaOpt.ccaCorrThr = 3;
+
+    cmd_ieee_ed_scan.ccaRssiThr = -90;
+
+    cmd_ieee_ed_scan.endTrigger.triggerType = TRIG_REL_START;
+    cmd_ieee_ed_scan.endTrigger.pastTrig = 1;
+    /* durration is in ms */
+    cmd_ieee_ed_scan.endTime = durration * (CC2650_RAT_TICKS_PER_SEC / 1000);
+
+    return (RFCDoorbellSendTo((uint32_t)&cmd_ieee_ed_scan) & 0xFF);
+}
+
 /**
  * @brief enables the cpe0 and cpe1 radio interrupts
  *
@@ -911,12 +941,17 @@ void RFCCPE0IntHandler(void)
                 sState = kStateDisabled;
             }
         }
-        else if (sState == kStateReceive &&
-                 (cmd_ieee_rx.status != ACTIVE &&
-                  cmd_ieee_rx.status != IEEE_SUSPENDED))
+        else if (sState == kStateReceive)
         {
-            /* the rx command was probably aborted to change the channel */
-            sState = kStateSleep;
+            if (cc2650_state_rfc_edscan)
+            {
+                sState = kStateSleep;
+            }
+            else if (cmd_ieee_rx.status != ACTIVE && cmd_ieee_rx.status != IEEE_SUSPENDED)
+            {
+                /* the rx command was probably aborted to change the channel */
+                sState = kStateSleep;
+            }
         }
     }
 
@@ -1086,6 +1121,26 @@ ThreadError otPlatRadioDisable(otInstance *aInstance)
 /**
  * Function documented in platform/radio.h
  */
+ThreadError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
+{
+    ThreadError error = kThreadError_Busy;
+    (void)aInstance;
+
+    if (sState == kStateSleep && !cc2650_state_rfc_enabling)
+    {
+        sState = kStateReceive;
+        cc2650_state_rfc_edscan = true;
+        VerifyOrExit(rf_core_cmd_ieee_edscan(aScanChannel, aScanDuration) == CMDSTA_Done, error = kThreadError_Failed);
+        error = kThreadError_None;
+    }
+
+exit:
+    return error;
+}
+
+/**
+ * Function documented in platform/radio.h
+ */
 ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
     ThreadError error = kThreadError_Busy;
@@ -1103,7 +1158,7 @@ ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
         VerifyOrExit(rf_core_cmd_ieee_rx() == CMDSTA_Done, error = kThreadError_Failed);
         error = kThreadError_None;
     }
-    else if (sState == kStateReceive)
+    else if (sState == kStateReceive && !cc2650_state_rfc_edscan)
     {
         if (cmd_ieee_rx.status == ACTIVE && cmd_ieee_rx.channel == aChannel)
         {
@@ -1218,7 +1273,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     (void)aInstance;
-    return kRadioCapsAckTimeout | kRadioCapsTransmitRetries;
+    return kRadioCapsAckTimeout | kRadioCapsEnergyScan | kRadioCapsTransmitRetries;
 }
 
 /**
@@ -1672,6 +1727,18 @@ static void readFrame(void)
  */
 int cc2650RadioProcess(otInstance *aInstance)
 {
+    if (sState == kStateSleep && cc2650_state_rfc_edscan)
+    {
+        if (cmd_ieee_ed_scan.status == IEEE_DONE_OK)
+        {
+            otPlatRadioEnergyScanDone(aInstance, cmd_ieee_ed_scan.maxRssi);
+        }
+        else
+        {
+            otPlatRadioEnergyScanDone(aInstance, CC2650_INVALID_RSSI);
+        }
+    }
+
     if (sState == kStateReceive || sState == kStateTransmit)
     {
         readFrame();
@@ -1712,12 +1779,4 @@ int cc2650RadioProcess(otInstance *aInstance)
     }
 
     return 0;
-}
-
-ThreadError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
-{
-    (void)aInstance;
-    (void)aScanChannel;
-    (void)aScanDuration;
-    return kThreadError_NotImplemented;
 }
