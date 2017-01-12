@@ -225,7 +225,7 @@ ThreadError Commissioner::AddJoiner(const Mac::ExtAddress *aExtAddress, const ch
             mJoiners[i].mAny = true;
         }
 
-        strncpy(mJoiners[i].mPsk, aPSKd, sizeof(mJoiners[i].mPsk));
+        strncpy(mJoiners[i].mPsk, aPSKd, sizeof(mJoiners[i].mPsk) - 1);
         mJoiners[i].mValid = true;
 
         SendCommissionerSet();
@@ -758,34 +758,11 @@ void Commissioner::HandleDatasetChanged(Coap::Header &aHeader, Message &aMessage
     otLogInfoMeshCoP("received dataset changed");
     (void)aMessage;
 
-    SendDatasetChangedResponse(aHeader, aMessageInfo);
+    SuccessOrExit(mCoapServer.SendEmptyAck(aHeader, aMessageInfo));
+
+    otLogInfoMeshCoP("sent dataset changed acknowledgment");
 
 exit:
-    otLogFuncExit();
-}
-
-void Commissioner::SendDatasetChangedResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo)
-{
-    ThreadError error = kThreadError_None;
-    Coap::Header responseHeader;
-    Message *message;
-
-    otLogFuncEntry();
-    VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
-
-    responseHeader.SetDefaultResponseHeader(aRequestHeader);
-    SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
-    SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
-
-    otLogInfoMeshCoP("Sent dataset changed acknowledgment");
-
-exit:
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        message->Free();
-    }
-
     otLogFuncExit();
 }
 

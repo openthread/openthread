@@ -57,6 +57,7 @@ import traceback
 
 import optparse
 
+import binascii
 import struct
 import string
 import textwrap
@@ -151,6 +152,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
 
         # OpenThread CLI commands
         'help',
+        'bufferinfo',
         'channel',
         'child',
         'childmax',
@@ -174,6 +176,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         'networkidtimeout',
         'networkname',
         'panid',
+        'parent',
         'ping',
         'prefix',
         'releaserouterid',
@@ -459,6 +462,43 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         print()
         print(heap_stats.heap().byrcs)
 
+    def do_bufferinfo(self, line):
+        """
+        \033[1mbufferinfo\033[0m
+
+            Get the mesh forwarder buffer info.
+        \033[2m
+            > bufferinfo
+            total: 128
+            free: 128
+            6lo send: 0 0
+            6lo reas: 0 0
+            ip6: 0 0
+            mpl: 0 0
+            mle: 0 0
+            arp: 0 0
+            coap: 0 0
+            Done
+        \033[0m
+        """
+
+        result = self.prop_get_value(SPINEL.PROP_MSG_BUFFER_COUNTERS)
+        if result != None:
+            result = result[0]
+
+            print("total: %d" % result[0])
+            print("free: %d" % result[1])
+            print("6lo send: %d %d" % result[2:4])
+            print("6lo reas: %d %d" % result[4:6])
+            print("ip6: %d %d" % result[6:8])
+            print("mpl: %d %d" % result[8:10])
+            print("mle: %d %d" % result[10:12])
+            print("arp: %d %d" % result[12:14])
+            print("coap: %d %d" % result[14:16])
+            print("Done")
+        else:
+            print("Error")
+
     def do_channel(self, line):
         """
         \033[1mchannel\033[0m
@@ -507,7 +547,53 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             Done
         \033[0m
         """
-        pass
+        child_table = self.prop_get_value(SPINEL.PROP_THREAD_CHILD_TABLE)[0]
+
+        if line == 'list':
+            result = ''
+            for child_data in child_table:
+                child_data = child_data[0]
+                child_id = child_data[1] & 0x1FF
+                result += '{} '.format(child_id)
+            print(result)
+            print("Done")
+
+        else:
+            try:
+                child_id = int(line)
+                printed = False
+                for child_data in child_table:
+                    child_data = child_data[0]
+                    id = child_data[1] & 0x1FF
+
+                    if id == child_id:
+                        mode = ''
+                        if child_data[7] & 0x08:
+                            mode += 'r'
+                        if child_data[7] & 0x04:
+                            mode += 's'
+                        if child_data[7] & 0x02:
+                            mode += 'd'
+                        if child_data[7] & 0x01:
+                            mode += 'n'
+
+                        print("Child ID: {}".format(id))
+                        print("Rloc: {:04x}".format(child_data[1]))
+                        print("Ext Addr: {}".format(binascii.hexlify(child_data[0])))
+                        print("Mode: {}".format(mode))
+                        print("Net Data: {}".format(child_data[4]))
+                        print("Timeout: {}".format(child_data[2]))
+                        print("Age: {}".format(child_data[3]))
+                        print("LQI: {}".format(child_data[5]))
+                        print("RSSI: {}".format(child_data[6]))
+                        print("Done")
+
+                        printed = True
+
+                if not printed:
+                    print("Error")
+            except ValueError:
+                print("Error")
 
     def do_childmax(self, line):
         """\033[1m
@@ -944,8 +1030,36 @@ class SpinelCliCmd(Cmd, SpinelCodec):
     def do_leaderdata(self, line):
         """
         leaderdata
+
+            Get the Thread network Leader Data.
+
+            > leaderdata
+            Partition ID: 1987912443
+            Weighting: 64
+            Data Version: 4
+            Stable Data Version: 129
+            Leader Router ID: 47
+            Done
         """
-        pass
+        partition_id   = self.prop_get_value(SPINEL.PROP_NET_PARTITION_ID)
+        weighting      = self.prop_get_value(SPINEL.PROP_THREAD_LEADER_WEIGHT)
+        data_version   = self.prop_get_value(SPINEL.PROP_THREAD_NETWORK_DATA_VERSION)
+        stable_version = self.prop_get_value(SPINEL.PROP_THREAD_STABLE_NETWORK_DATA_VERSION)
+        leader_id      = self.prop_get_value(SPINEL.PROP_THREAD_LEADER_RID)
+
+        if partition_id   is None or \
+           weighting      is None or \
+           data_version   is None or \
+           stable_version is None or \
+           leader_id      is None:
+            print("Error")
+        else:
+            print("Partition ID: %d" % partition_id)
+            print("Weighting: %d" % weighting)
+            print("Data Version: %d" % data_version)
+            print("Stable Data Version: %d" % stable_version)
+            print("Leader Router ID: %d" % leader_id)
+            print("Done")
 
     def do_leaderweight(self, line):
         """
@@ -1135,6 +1249,26 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             Done
         """
         self.handle_property(line, SPINEL.PROP_MAC_15_4_PANID, 'H')
+
+    def do_parent(self, line):
+        """
+        parent
+
+            Get the addresses of the parent node.
+
+            > parent
+            Ext Addr: 3ad35f9846ceb9c7
+            Rloc: bc00
+            Done
+        """
+        ext_addr, rloc = self.prop_get_value(SPINEL.PROP_THREAD_PARENT)
+
+        if ext_addr is None or\
+           rloc     is None:
+            print("Error")
+        else:
+            print("Ext Addr: {}".format(binascii.hexlify(ext_addr)))
+            print("Rloc: {:04x}".format(rloc))
 
     def do_ping(self, line):
         """

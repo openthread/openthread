@@ -703,6 +703,17 @@ void otFactoryReset(otInstance *aInstance)
     otPlatReset(aInstance);
 }
 
+ThreadError otPersistentInfoErase(otInstance *aInstance)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(otGetDeviceRole(aInstance) == kDeviceRoleDisabled, error = kThreadError_InvalidState);
+    otPlatSettingsWipe(aInstance);
+
+exit:
+    return error;
+}
+
 uint8_t otGetRouterDowngradeThreshold(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMle().GetRouterDowngradeThreshold();
@@ -1487,6 +1498,45 @@ int otWriteMessage(otMessage aMessage, uint16_t aOffset, const void *aBuf, uint1
 {
     Message *message = static_cast<Message *>(aMessage);
     return message->Write(aOffset, aLength, aBuf);
+}
+
+void otMessageQueueInit(otMessageQueue *aQueue)
+{
+    aQueue->mData = NULL;
+}
+
+ThreadError otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage aMessage)
+{
+    Message *message = static_cast<Message *>(aMessage);
+    MessageQueue *queue = static_cast<MessageQueue *>(aQueue);
+    return queue->Enqueue(*message);
+}
+
+ThreadError otMessageQueueDequeue(otMessageQueue *aQueue, otMessage aMessage)
+{
+    Message *message = static_cast<Message *>(aMessage);
+    MessageQueue *queue = static_cast<MessageQueue *>(aQueue);
+    return queue->Dequeue(*message);
+}
+
+otMessage otMessageQueueGetHead(otMessageQueue *aQueue)
+{
+    MessageQueue *queue = static_cast<MessageQueue *>(aQueue);
+    return queue->GetHead();
+}
+
+otMessage otMessageQueueGetNext(otMessageQueue *aQueue, otMessage aMessage)
+{
+    Message *next;
+    Message *message = static_cast<Message *>(aMessage);
+    MessageQueue *queue = static_cast<MessageQueue *>(aQueue);
+
+    VerifyOrExit(message != NULL, next = NULL);
+    VerifyOrExit(message->GetMessageQueue() == queue, next = NULL);
+    next = message->GetNext();
+
+exit:
+    return next;
 }
 
 ThreadError otOpenUdpSocket(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aCallbackContext)

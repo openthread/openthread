@@ -34,22 +34,32 @@ die() {
 
 set -x
 
-./bootstrap || die
-
 [ $BUILD_TARGET != pretty-check ] || {
     export PATH=/tmp/astyle/build/gcc/bin:$PATH || die
+    ./bootstrap || die
     ./configure --enable-cli --enable-diag --enable-dhcp6-client --enable-dhcp6-server --enable-commissioner --enable-joiner --with-examples=posix || die
     make pretty-check || die
 }
 
 [ $BUILD_TARGET != scan-build ] || {
+    ./bootstrap || die
     scan-build ./configure --with-examples=posix --enable-cli --enable-ncp || die
     scan-build --status-bugs -analyze-headers -v make || die
 }
 
 [ $BUILD_TARGET != arm-gcc49 ] || {
     export PATH=/tmp/gcc-arm-none-eabi-4_9-2015q3/bin:$PATH || die
+
+    git clean -xfd || die
+    ./bootstrap || die
     COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-cc2538 || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp || die
+
+    git clean -xfd || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-da15000 || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp || die
@@ -57,7 +67,17 @@ set -x
 
 [ $BUILD_TARGET != arm-gcc54 ] || {
     export PATH=/tmp/gcc-arm-none-eabi-5_4-2016q3/bin:$PATH || die
+
+    git clean -xfd || die
+    ./bootstrap || die
     COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-cc2538 || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp || die
+
+    git clean -xfd || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-da15000 || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp || die
@@ -66,21 +86,28 @@ set -x
 [ $BUILD_TARGET != posix ] || {
     sh -c '$CC --version' || die
     sh -c '$CXX --version' || die
+    ./bootstrap || die
     make -f examples/Makefile-posix || die
 }
 
 [ $BUILD_TARGET != posix-distcheck ] || {
+    export ASAN_SYMBOLIZER_PATH=`which llvm-symbolizer-3.4` || die
+    export ASAN_OPTIONS=symbolize=1 || die
+    ./bootstrap || die
     BuildJobs=10 make -f examples/Makefile-posix distcheck || die
 }
 
 [ $BUILD_TARGET != posix-32-bit ] || {
+    ./bootstrap || die
     COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 BuildJobs=10 make -f examples/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != posix-ncp-spi ] || {
+    ./bootstrap || die
     BuildJobs=10 make -f examples/Makefile-posix check configure_OPTIONS="--enable-ncp=spi --with-examples=posix --with-platform-info=POSIX" || die
 }
 
 [ $BUILD_TARGET != posix-ncp ] || {
+    ./bootstrap || die
     COVERAGE=1 NODE_TYPE=ncp-sim BuildJobs=10 make -f examples/Makefile-posix check || die
 }

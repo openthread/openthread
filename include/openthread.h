@@ -1675,7 +1675,10 @@ OTAPI ThreadError OTCALL otGetAssignLinkQuality(otInstance *aInstance, const uin
 OTAPI void OTCALL otSetAssignLinkQuality(otInstance *aInstance, const uint8_t *aExtAddr, uint8_t aLinkQuality);
 
 /**
- * This method triggers platform reset.
+ * This method triggers a platform reset.
+ *
+ * The reset process ensures that all the OpenThread state/info (stored in volatile memory) is erased. Note that the
+ * `otPlatformReset` does not erase any persistent state/info saved in non-volatile memory.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  */
@@ -1687,6 +1690,18 @@ OTAPI void OTCALL otPlatformReset(otInstance *aInstance);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  */
 OTAPI void OTCALL otFactoryReset(otInstance *aInstance);
+
+/**
+ * This function erases all the OpenThread persistent info (network settings) stored on non-volatile memory.
+ * Erase is successful only if the device is in `disabled` state/role.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @retval kThreadError_None  All persistent info/state was erased successfully.
+ * @retval kThreadError_InvalidState  Device is not in `disabled` state/role.
+ *
+ */
+ThreadError otPersistentInfoErase(otInstance *aInstance);
 
 /**
  * Get the ROUTER_DOWNGRADE_THRESHOLD parameter used in the Router role.

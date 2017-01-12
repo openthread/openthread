@@ -169,6 +169,88 @@ class SpinelCodec(object):
             return None
 
     @classmethod
+    def get_payload_size(cls, spinel_format):
+        map_lengths = {
+            'b': 1,
+            'c': 1,
+            'C': 1,
+            's': 2,
+            'S': 2,
+            'l': 4,
+            'L': 4,
+            '6': 16,
+            'E': 8,
+            'e': 6,
+        }
+
+        result = 0
+
+        idx = 0
+        while idx < len(spinel_format):
+            format = spinel_format[idx]
+
+            if format == 'T':
+                if spinel_format[idx+1] != '(':
+                    raise ValueError('Invalid structure format')
+                # TODO: count parentheses. There is a problem with nested structs.
+                struct_end = idx + spinel_format[idx:].index(')')
+
+                struct_format = spinel_format[idx+2:struct_end]
+                result += cls.get_payload_size(struct_format)
+
+                idx = struct_end + 1
+            else:
+                result += map_lengths[format]
+                idx += 1
+
+        return result
+
+    @classmethod
+    def parse_fields(cls, payload, spinel_format):
+        result = []
+
+        idx = 0
+        while idx < len(spinel_format):
+            format = spinel_format[idx]
+
+            if format == 'A':
+                if spinel_format[idx+1] != '(':
+                    raise ValueError('Invalid structure format')
+                # TODO: count parentheses. There is a problem with arrays placed one by one.
+                array_end = idx + spinel_format[idx:].rindex(')')
+
+                array_format = spinel_format[idx+2:array_end]
+
+                array = []
+                while len(payload):
+                    array.append(cls.parse_fields(payload, array_format))
+                    payload = payload[cls.get_payload_size(array_format):]
+
+                result.append(tuple(array))
+                idx = array_end + 1
+
+            elif format == 'T':
+                if spinel_format[idx+1] != '(':
+                    raise ValueError('Invalid structure format')
+                # TODO: count parentheses. There is a problem with nested structs.
+                struct_end = idx + spinel_format[idx:].index(')')
+
+                struct_format = spinel_format[idx+2:struct_end]
+                struct_len = cls.get_payload_size(struct_format)
+
+                result.append(cls.parse_fields(payload, struct_format))
+                payload = payload[struct_len:]
+
+                idx = struct_end + 1
+            else:
+                result.append(cls.parse_field(payload, format))
+                payload = payload[cls.get_payload_size(format):]
+
+                idx += 1
+
+        return tuple(result)
+
+    @classmethod
     def encode_i(cls, data):
         """ Encode EXI integer format. """
         result = ""
@@ -350,9 +432,9 @@ class SpinelPropertyHandler(SpinelCodec):
 
     def THREAD_LEADER_ADDR(self, _, payload): return self.parse_6(payload)
 
-    def THREAD_PARENT(self, _wpan_api, payload): pass
+    def THREAD_PARENT(self, _wpan_api, payload): return self.parse_fields(payload, "ES")
 
-    def THREAD_CHILD_TABLE(self, _, payload): return self.parse_D(payload)
+    def THREAD_CHILD_TABLE(self, _, payload): return self.parse_fields(payload, "A(T(ESLLCCcC))")
 
     def THREAD_LEADER_RID(self, _, payload): return self.parse_C(payload)
 
@@ -365,11 +447,13 @@ class SpinelPropertyHandler(SpinelCodec):
     def THREAD_NETWORK_DATA(self, _, payload):
         return self.parse_D(payload)
 
-    def THREAD_NETWORK_DATA_VERSION(self, _wpan_api, payload): pass
+    def THREAD_NETWORK_DATA_VERSION(self, _wpan_api, payload):
+        return self.parse_C(payload)
 
     def THREAD_STABLE_NETWORK_DATA(self, _wpan_api, payload): pass
 
-    def THREAD_STABLE_NETWORK_DATA_VERSION(self, _wpan_api, payload): pass
+    def THREAD_STABLE_NETWORK_DATA_VERSION(self, _wpan_api, payload):
+        return self.parse_C(payload)
 
     def __init__(self):
         self.autoAddresses = set()
@@ -502,6 +586,9 @@ class SpinelPropertyHandler(SpinelCodec):
     def THREAD_ROUTER_SELECTION_JITTER(self, _, payload):
         return self.parse_C(payload)
 
+    def THREAD_NEIGHBOR_TABLE(self, _, payload):
+        return self.parse_fields(payload, 'A(T(ESLCcCbLL))')
+
     def THREAD_CONTEXT_REUSE_DELAY(self, _, payload):
         return self.parse_L(payload)
 
@@ -552,6 +639,8 @@ class SpinelPropertyHandler(SpinelCodec):
     def PIB_MAC_PROMISCUOUS_MODE(self, _wpan_api, payload): pass
 
     def PIB_MAC_SECURITY_ENABLED(self, _wpan_api, payload): pass
+
+    def MSG_BUFFER_COUNTERS(self, _wpan_api, payload): return self.parse_fields(payload, "T(SSSSSSSSSSSSSSSS)")
 
 #=========================================
 
@@ -695,6 +784,7 @@ SPINEL_PROP_DISPATCH = {
     SPINEL.PROP_THREAD_NETWORK_ID_TIMEOUT: WPAN_PROP_HANDLER.THREAD_NETWORK_ID_TIMEOUT,
     SPINEL.PROP_THREAD_ACTIVE_ROUTER_IDS: WPAN_PROP_HANDLER.THREAD_ACTIVE_ROUTER_IDS,
     SPINEL.PROP_THREAD_RLOC16_DEBUG_PASSTHRU: WPAN_PROP_HANDLER.THREAD_RLOC16_DEBUG_PASSTHRU,
+    SPINEL.PROP_THREAD_NEIGHBOR_TABLE: WPAN_PROP_HANDLER.THREAD_NEIGHBOR_TABLE,
 
     SPINEL.PROP_MESHCOP_JOINER_ENABLE: WPAN_PROP_HANDLER.MESHCOP_JOINER_ENABLE,
     SPINEL.PROP_MESHCOP_JOINER_CREDENTIAL: WPAN_PROP_HANDLER.MESHCOP_JOINER_CREDENTIAL,
@@ -717,6 +807,8 @@ SPINEL_PROP_DISPATCH = {
     SPINEL.PROP_PIB_15_4_PHY_CHANNELS_SUPPORTED: WPAN_PROP_HANDLER.PIB_PHY_CHANNELS_SUPPORTED,
     SPINEL.PROP_PIB_15_4_MAC_PROMISCUOUS_MODE: WPAN_PROP_HANDLER.PIB_MAC_PROMISCUOUS_MODE,
     SPINEL.PROP_PIB_15_4_MAC_SECURITY_ENABLED: WPAN_PROP_HANDLER.PIB_MAC_SECURITY_ENABLED,
+    
+    SPINEL.PROP_MSG_BUFFER_COUNTERS: WPAN_PROP_HANDLER.MSG_BUFFER_COUNTERS
 }
 
 

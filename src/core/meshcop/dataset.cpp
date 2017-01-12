@@ -428,8 +428,17 @@ int Dataset::Compare(const Dataset &aCompare) const
 
 ThreadError Dataset::Restore(void)
 {
-    return otPlatSettingsGet(mInstance, static_cast<uint16_t>(mType == Tlv::kActiveTimestamp ? kKeyActiveDataset :
-                                                              kKeyPendingDataset), 0, mTlvs, &mLength);
+    ThreadError error;
+    uint16_t length = sizeof(mTlvs);
+
+    error = otPlatSettingsGet(mInstance, static_cast<uint16_t>(mType == Tlv::kActiveTimestamp ? kKeyActiveDataset :
+                                                               kKeyPendingDataset), 0, mTlvs, &length);
+    SuccessOrExit(error);
+
+    mLength = length;
+
+exit:
+    return error;
 }
 
 ThreadError Dataset::Store(void)

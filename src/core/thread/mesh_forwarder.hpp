@@ -194,7 +194,7 @@ public:
      * @returns  A reference to the send queue.
      *
      */
-    const MessageQueue &GetSendQueue(void) const { return mSendQueue; }
+    const PriorityQueue &GetSendQueue(void) const { return mSendQueue; }
 
     /**
      * This method returns a reference to the reassembly queue.
@@ -237,6 +237,7 @@ private:
     ThreadError SendPoll(Message &aMessage, Mac::Frame &aFrame);
     ThreadError SendMesh(Message &aMessage, Mac::Frame &aFrame);
     ThreadError SendFragment(Message &aMessage, Mac::Frame &aFrame);
+    ThreadError SendEmptyFrame(Mac::Frame &aFrame);
     void UpdateFramePending(void);
     ThreadError UpdateIp6Route(Message &aMessage);
     ThreadError UpdateMeshRoute(Message &aMessage);
@@ -271,7 +272,7 @@ private:
     Timer mPollTimer;
     Timer mReassemblyTimer;
 
-    MessageQueue mSendQueue;
+    PriorityQueue mSendQueue;
     MessageQueue mReassemblyList;
     MessageQueue mResolvingQueue;
     uint16_t mFragTag;
