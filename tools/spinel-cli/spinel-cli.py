@@ -547,7 +547,53 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             Done
         \033[0m
         """
-        pass
+        child_table = self.prop_get_value(SPINEL.PROP_THREAD_CHILD_TABLE)[0]
+
+        if line == 'list':
+            result = ''
+            for child_data in child_table:
+                child_data = child_data[0]
+                child_id = child_data[1] & 0x1FF
+                result += '{} '.format(child_id)
+            print(result)
+            print("Done")
+
+        else:
+            try:
+                child_id = int(line)
+                printed = False
+                for child_data in child_table:
+                    child_data = child_data[0]
+                    id = child_data[1] & 0x1FF
+
+                    if id == child_id:
+                        mode = ''
+                        if child_data[7] & 0x08:
+                            mode += 'r'
+                        if child_data[7] & 0x04:
+                            mode += 's'
+                        if child_data[7] & 0x02:
+                            mode += 'd'
+                        if child_data[7] & 0x01:
+                            mode += 'n'
+
+                        print("Child ID: {}".format(id))
+                        print("Rloc: {:04x}".format(child_data[1]))
+                        print("Ext Addr: {}".format(binascii.hexlify(child_data[0])))
+                        print("Mode: {}".format(mode))
+                        print("Net Data: {}".format(child_data[4]))
+                        print("Timeout: {}".format(child_data[2]))
+                        print("Age: {}".format(child_data[3]))
+                        print("LQI: {}".format(child_data[5]))
+                        print("RSSI: {}".format(child_data[6]))
+                        print("Done")
+
+                        printed = True
+
+                if not printed:
+                    print("Error")
+            except ValueError:
+                print("Error")
 
     def do_childmax(self, line):
         """\033[1m

@@ -169,7 +169,7 @@ class SpinelCodec(object):
             return None
 
     @classmethod
-    def parse_fields(cls, payload, spinel_format):
+    def get_payload_size(cls, spinel_format):
         map_lengths = {
             'b': 1,
             'c': 1,
@@ -182,7 +182,8 @@ class SpinelCodec(object):
             'E': 8,
             'e': 6,
         }
-        result = []
+
+        result = 0
 
         idx = 0
         while idx < len(spinel_format):
@@ -195,7 +196,47 @@ class SpinelCodec(object):
                 struct_end = idx + spinel_format[idx:].index(')')
 
                 struct_format = spinel_format[idx+2:struct_end]
-                struct_len = sum([map_lengths[c] for c in struct_format])
+                result += cls.get_payload_size(struct_format)
+
+                idx = struct_end + 1
+            else:
+                result += map_lengths[format]
+                idx += 1
+
+        return result
+
+    @classmethod
+    def parse_fields(cls, payload, spinel_format):
+        result = []
+
+        idx = 0
+        while idx < len(spinel_format):
+            format = spinel_format[idx]
+
+            if format == 'A':
+                if spinel_format[idx+1] != '(':
+                    raise ValueError('Invalid structure format')
+                # TODO: count parentheses. There is a problem with arrays placed one by one.
+                array_end = idx + spinel_format[idx:].rindex(')')
+
+                array_format = spinel_format[idx+2:array_end]
+
+                array = []
+                while len(payload):
+                    array.append(cls.parse_fields(payload, array_format))
+                    payload = payload[cls.get_payload_size(array_format):]
+
+                result.append(tuple(array))
+                idx = array_end + 1
+
+            elif format == 'T':
+                if spinel_format[idx+1] != '(':
+                    raise ValueError('Invalid structure format')
+                # TODO: count parentheses. There is a problem with nested structs.
+                struct_end = idx + spinel_format[idx:].index(')')
+
+                struct_format = spinel_format[idx+2:struct_end]
+                struct_len = cls.get_payload_size(struct_format)
 
                 result.append(cls.parse_fields(payload, struct_format))
                 payload = payload[struct_len:]
@@ -203,7 +244,7 @@ class SpinelCodec(object):
                 idx = struct_end + 1
             else:
                 result.append(cls.parse_field(payload, format))
-                payload = payload[map_lengths[format]:]
+                payload = payload[cls.get_payload_size(format):]
 
                 idx += 1
 
@@ -393,7 +434,7 @@ class SpinelPropertyHandler(SpinelCodec):
 
     def THREAD_PARENT(self, _wpan_api, payload): return self.parse_fields(payload, "ES")
 
-    def THREAD_CHILD_TABLE(self, _, payload): return self.parse_D(payload)
+    def THREAD_CHILD_TABLE(self, _, payload): return self.parse_fields(payload, "A(T(ESLLCCcC))")
 
     def THREAD_LEADER_RID(self, _, payload): return self.parse_C(payload)
 
