@@ -30,8 +30,10 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 openthread_headers                      = \
     coap.h                                \
+    commissioner.h                        \
     crypto.h                              \
     jam_detection.h                       \
+    joiner.h                              \
     message.h                             \
     tasklet.h                             \
     udp.h                                 \

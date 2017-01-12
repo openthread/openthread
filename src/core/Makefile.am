@@ -103,6 +103,7 @@ endif  # OPENTHREAD_ENABLE_MAC_WHITELIST
 
 if OPENTHREAD_ENABLE_COMMISSIONER
 SOURCES_COMMON                     += \
+    api/commissioner_api.cpp          \
     coap/secure_coap_server.cpp       \
     crypto/pbkdf2_cmac.cpp            \
     meshcop/announce_begin_client.cpp \
@@ -114,6 +115,7 @@ endif  # OPENTHREAD_ENABLE_COMMISSIONER
 
 if OPENTHREAD_ENABLE_JOINER
 SOURCES_COMMON                     += \
+    api/joiner_api.cpp                \
     coap/secure_coap_client.cpp       \
     meshcop/joiner.cpp                \
     $(NULL)

@@ -35,6 +35,7 @@
 #ifndef OPENTHREAD_COMMISSIONER_H_
 #define OPENTHREAD_COMMISSIONER_H_
 
+#include "openthread-types.h"
 #include <platform/toolchain.h>
 
 #ifdef __cplusplus
@@ -195,7 +196,7 @@ OTAPI ThreadError OTCALL otCommissionerPanIdQuery(otInstance *aInstance, uint16_
  * @retval kThreadError_NoBufs       Insufficient buffer space to send.
  *
  */
-OTAPI ThreadError OTCALL otSendMgmtCommissionerGet(otInstance *, const uint8_t *aTlvs, uint8_t aLength);
+OTAPI ThreadError OTCALL otCommissionerSendMgmtGet(otInstance *, const uint8_t *aTlvs, uint8_t aLength);
 
 /**
  * This function sends MGMT_COMMISSIONER_SET.
@@ -209,7 +210,7 @@ OTAPI ThreadError OTCALL otSendMgmtCommissionerGet(otInstance *, const uint8_t *
  * @retval kThreadError_NoBufs       Insufficient buffer space to send.
  *
  */
-OTAPI ThreadError OTCALL otSendMgmtCommissionerSet(otInstance *, const otCommissioningDataset *aDataset,
+OTAPI ThreadError OTCALL otCommissionerSendMgmtSet(otInstance *, const otCommissioningDataset *aDataset,
                                                    const uint8_t *aTlvs, uint8_t aLength);
 
 /**
