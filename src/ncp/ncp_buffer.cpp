@@ -30,6 +30,7 @@
  *   This file implements NCP frame buffer class.
  */
 
+#include <string.h>
 #include <common/code_utils.hpp>
 #include <ncp/ncp_buffer.hpp>
 
@@ -40,6 +41,8 @@ NcpFrameBuffer::NcpFrameBuffer(uint8_t *aBuffer, uint16_t aBufferLen) :
     mBufferEnd(aBuffer + aBufferLen),
     mBufferLength(aBufferLen)
 {
+    otMessageQueueInit(&mMessageQueue);
+    otMessageQueueInit(&mWriteFrameMessageQueue);
     SetCallbacks(NULL, NULL, NULL);
     Clear();
 }
@@ -52,7 +55,7 @@ NcpFrameBuffer::~NcpFrameBuffer()
 
 void NcpFrameBuffer::Clear(void)
 {
-    Message *message;
+    otMessage message;
     bool wasEmpty = IsEmpty();
 
     // Write (InFrame) related variables
@@ -75,16 +78,16 @@ void NcpFrameBuffer::Clear(void)
 
     // Free all messages in the queues.
 
-    while ((message = mWriteFrameMessageQueue.GetHead()) != NULL)
+    while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != NULL)
     {
-        mWriteFrameMessageQueue.Dequeue(*message);
-        message->Free();
+        otMessageQueueDequeue(&mWriteFrameMessageQueue, message);
+        otFreeMessage(message);
     }
 
-    while ((message = mMessageQueue.GetHead()) != NULL)
+    while ((message = otMessageQueueGetHead(&mMessageQueue)) != NULL)
     {
-        mMessageQueue.Dequeue(*message);
-        message->Free();
+        otMessageQueueDequeue(&mMessageQueue, message);
+        otFreeMessage(message);
     }
 
     if (!wasEmpty)
@@ -240,16 +243,16 @@ void NcpFrameBuffer::InFrameEndSegment(uint16_t aHeaderFlags)
 // This method discards the current frame.
 void NcpFrameBuffer::InFrameDiscard(void)
 {
-    Message *message;
+    otMessage message;
 
     // Move the write segment head and tail pointers back to frame start.
     mWriteSegmentHead = mWriteSegmentTail = mWriteFrameStart;
 
     // Free any messages associated with current frame.
-    while ((message = mWriteFrameMessageQueue.GetHead()) != NULL)
+    while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != NULL)
     {
-        mWriteFrameMessageQueue.Dequeue(*message);
-        message->Free();
+        otMessageQueueDequeue(&mWriteFrameMessageQueue, message);
+        otFreeMessage(message);
     }
 }
 
@@ -278,7 +281,7 @@ exit:
     return error;
 }
 
-ThreadError NcpFrameBuffer::InFrameFeedMessage(Message &aMessage)
+ThreadError NcpFrameBuffer::InFrameFeedMessage(otMessage aMessage)
 {
     ThreadError error = kThreadError_None;
 
@@ -286,7 +289,7 @@ ThreadError NcpFrameBuffer::InFrameFeedMessage(Message &aMessage)
     SuccessOrExit(error = InFrameBeginSegment());
 
     // Enqueue the message in the current write frame queue.
-    SuccessOrExit(error = mWriteFrameMessageQueue.Enqueue(aMessage));
+    SuccessOrExit(error = otMessageQueueEnqueue(&mWriteFrameMessageQueue, aMessage));
 
     // End/Close the current segment marking the flag that it contains an associated message.
     InFrameEndSegment(kSegmentHeaderMessageIndicatorFlag);
@@ -297,7 +300,7 @@ exit:
 
 ThreadError NcpFrameBuffer::InFrameEnd(void)
 {
-    Message *message;
+    otMessage message;
     bool wasEmpty = IsEmpty();
 
     // End/Close the current segment (if any).
@@ -307,10 +310,10 @@ ThreadError NcpFrameBuffer::InFrameEnd(void)
     mWriteFrameStart = mWriteSegmentHead;
 
     // Move all the messages from the frame queue to the main queue.
-    while ((message = mWriteFrameMessageQueue.GetHead()) != NULL)
+    while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != NULL)
     {
-        mWriteFrameMessageQueue.Dequeue(*message);
-        mMessageQueue.Enqueue(*message);
+        otMessageQueueDequeue(&mWriteFrameMessageQueue, message);
+        otMessageQueueEnqueue(&mMessageQueue, message);
     }
 
     // If buffer was empty before, invoke the callback to signal that buffer is now non-empty.
@@ -402,7 +405,9 @@ ThreadError NcpFrameBuffer::OutFramePrepareMessage(void)
     VerifyOrExit((header & kSegmentHeaderMessageIndicatorFlag) != 0, error = kThreadError_NotFound);
 
     // Update the current message from the queue.
-    mReadMessage = (mReadMessage == NULL) ? mMessageQueue.GetHead() : mReadMessage->GetNext();
+    mReadMessage = (mReadMessage == NULL) ?
+        otMessageQueueGetHead(&mMessageQueue) :
+        otMessageQueueGetNext(&mMessageQueue, mReadMessage);
 
     VerifyOrExit(mReadMessage != NULL, error = kThreadError_NotFound);
 
@@ -428,10 +433,10 @@ ThreadError NcpFrameBuffer::OutFrameFillMessageBuffer(void)
 
     VerifyOrExit(mReadMessage != NULL, error = kThreadError_NotFound);
 
-    VerifyOrExit(mReadMessageOffset < mReadMessage->GetLength(), error = kThreadError_NotFound);
+    VerifyOrExit(mReadMessageOffset < otGetMessageLength(mReadMessage), error = kThreadError_NotFound);
 
     // Read portion of current message from the offset into message buffer.
-    readLength = mReadMessage->Read(mReadMessageOffset, sizeof(mMessageBuffer), mMessageBuffer);
+    readLength = otReadMessage(mReadMessage, mReadMessageOffset, mMessageBuffer, sizeof(mMessageBuffer));
 
     VerifyOrExit(readLength > 0, error = kThreadError_NotFound);
 
@@ -542,7 +547,7 @@ ThreadError NcpFrameBuffer::OutFrameRemove(void)
 {
     ThreadError error = kThreadError_None;
     uint8_t *bufPtr;
-    Message *message;
+    otMessage message;
     uint16_t header;
 
     VerifyOrExit(!IsEmpty(), error = kThreadError_NotFound);
@@ -569,10 +574,10 @@ ThreadError NcpFrameBuffer::OutFrameRemove(void)
         // If current segment has an appended message, remove it from message queue and free it.
         if (header & kSegmentHeaderMessageIndicatorFlag)
         {
-            if ((message = mMessageQueue.GetHead()) != NULL)
+            if ((message = otMessageQueueGetHead(&mMessageQueue)) != NULL)
             {
-                mMessageQueue.Dequeue(*message);
-                message->Free();
+                otMessageQueueDequeue(&mMessageQueue, message);
+                otFreeMessage(message);
             }
         }
 
@@ -604,7 +609,7 @@ uint16_t NcpFrameBuffer::OutFrameGetLength(void)
     uint16_t frameLength = 0;
     uint16_t header;
     uint8_t *bufPtr;
-    Message *message = NULL;
+    otMessage message = NULL;
 
     // If the frame length was calculated before, return the previously calculated length.
     VerifyOrExit(mReadFrameLength == kUnknownFrameLength, frameLength = mReadFrameLength);
@@ -633,11 +638,13 @@ uint16_t NcpFrameBuffer::OutFrameGetLength(void)
         // If current segment has an associated message, add its length to frame length.
         if (header & kSegmentHeaderMessageIndicatorFlag)
         {
-            message = (message == NULL) ? mMessageQueue.GetHead() : message->GetNext();
+            message = (message == NULL) ?
+                otMessageQueueGetHead(&mMessageQueue) :
+                otMessageQueueGetNext(&mMessageQueue, message);
 
             if (message != NULL)
             {
-                frameLength += message->GetLength();
+                frameLength += otGetMessageLength(message);
             }
         }
 
