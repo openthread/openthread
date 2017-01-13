@@ -203,9 +203,13 @@ class SnifferVirtualTransport(SnifferTransport):
         frame = MacFrame()
         pFrame = ctypes.pointer(frame);
 
-        self.Api.otListenerRead(self.Handle, pFrame)
+        cancelled = self.Api.otListenerRead(self.Handle, pFrame)
 
-        return bytearray(frame.buffer)[:frame.length], frame.nodeid
+        if cancelled:
+            return None, 0
+
+        else:
+            return bytearray(frame.buffer)[:frame.length], frame.nodeid
 
 
 class SnifferTransportFactory(object):
