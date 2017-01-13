@@ -157,6 +157,8 @@ class SnifferVirtualTransport(SnifferTransport):
     """ Virtual interface based implementation of sniffer transport. """
 
     def __init__(self, nodeid):
+        self.Handle = None
+
         # Load the DLL
         self.Api = ctypes.WinDLL("otnodeapi.dll")
         if self.Api == None:
