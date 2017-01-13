@@ -885,6 +885,10 @@ void NcpBase::UpdateChangedProps(void)
 
             mChangedFlags &= ~static_cast<uint32_t>(OT_THREAD_NETDATA_UPDATED);
         }
+        else if ((mChangedFlags & (OT_IP6_RLOC_ADDED | OT_IP6_RLOC_REMOVED)) != 0)
+        {
+            mChangedFlags &= ~static_cast<uint32_t>(OT_IP6_RLOC_ADDED | OT_IP6_RLOC_REMOVED);
+        }
     }
 
 exit:

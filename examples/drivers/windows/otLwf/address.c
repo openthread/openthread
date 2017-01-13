@@ -442,7 +442,7 @@ otLwfTunAddressesUpdated(
 
         {
             PIN6_ADDR pAddr = NULL;
-            otNetifAddress addr = { { 0 }, 0, 1, 1, 0, 0, NULL };
+            otNetifAddress addr = { { 0 }, 0, 1, 1, 0, 0, 0, NULL };
             uint32_t preferredLifetime = 0xFFFFFFFF;
             uint32_t validLifetime = 0xFFFFFFFF;
 

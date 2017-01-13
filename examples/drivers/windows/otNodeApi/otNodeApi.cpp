@@ -657,7 +657,8 @@ void OTCALL otNodeStateChangedCallback(uint32_t aFlags, void *aContext)
         printf("%d: new role: %s\r\n", aNode->mId, otDeviceRoleToString(Role));
     }
 
-    if ((aFlags & OT_IP6_ADDRESS_ADDED) != 0 || (aFlags & OT_IP6_ADDRESS_REMOVED) != 0)
+    if ((aFlags & OT_IP6_ADDRESS_ADDED) != 0 || (aFlags & OT_IP6_ADDRESS_REMOVED) != 0 ||
+        (aFlags & OT_IP6_RLOC_ADDED) != 0 || (aFlags & OT_IP6_RLOC_REMOVED) != 0)
     {
         HandleAddressChanges(aNode);
     }
