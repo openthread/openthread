@@ -345,7 +345,7 @@ int Dtls::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret, const unsi
     Crypto::Sha256 sha256;
 
     sha256.Start();
-    sha256.Update(aKeyBlock, static_cast<uint16_t>(aMacLength + aKeyLength + aIvLength));
+    sha256.Update(aKeyBlock, 2 * static_cast<uint16_t>(aMacLength + aKeyLength + aIvLength));
     sha256.Finish(kek);
 
     mNetif.GetKeyManager().SetKek(kek);
