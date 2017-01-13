@@ -92,14 +92,14 @@ ThreadError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestinatio
 
     if (aDestination.IsMulticast())
     {
-        header.Init(kCoapTypeNonConfirmable, kCoapRequestGet);
+        header.Init(kCoapTypeNonConfirmable, kCoapRequestPost);
         header.SetToken(Coap::Header::kDefaultTokenLength);
         header.AppendUriPathOptions(OPENTHREAD_URI_DIAGNOSTIC_GET_QUERY);
     }
     else
     {
         handler = &NetworkDiagnostic::HandleDiagnosticGetResponse;
-        header.Init(kCoapTypeConfirmable, kCoapRequestGet);
+        header.Init(kCoapTypeConfirmable, kCoapRequestPost);
         header.SetToken(Coap::Header::kDefaultTokenLength);
         header.AppendUriPathOptions(OPENTHREAD_URI_DIAGNOSTIC_GET_REQUEST);
     }
@@ -430,7 +430,7 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Header &aHeader, Message 
     Coap::Header header;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit(aHeader.GetCode() == kCoapRequestGet, error = kThreadError_Drop);
+    VerifyOrExit(aHeader.GetCode() == kCoapRequestPost, error = kThreadError_Drop);
 
     otLogInfoNetDiag("Received diagnostic get query");
 
@@ -498,7 +498,7 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Header &aHeader, Messag
     Ip6::MessageInfo messageInfo(aMessageInfo);
 
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
-                 aHeader.GetCode() == kCoapRequestGet, error = kThreadError_Drop);
+                 aHeader.GetCode() == kCoapRequestPost, error = kThreadError_Drop);
 
     otLogInfoNetDiag("Received diagnostic get request");
 
