@@ -606,7 +606,7 @@ private:
     ThreadError Scan(ScanType aType, uint32_t aScanChannels, uint16_t aScanDuration, void *aContext);
 
     Timer mMacTimer;
-    Timer mBackoffTimer;
+    TimerUs mBackoffTimer;
     Timer mReceiveTimer;
 
     ThreadNetif &mNetif;

@@ -75,7 +75,7 @@ ThreadError JamDetector::Start(Handler aHandler, void *aContext)
 
     mEnabled = true;
 
-    mCurSecondStartTime = Timer::GetNow();
+    mCurSecondStartTime = Time::GetNow();
     mAlwaysAboveThreshold = true;
     mHistoryBitmap = 0;
     mJamState = false;
@@ -183,7 +183,7 @@ exit:
 
 void JamDetector::UpdateHistory(bool aDidExceedThreshold)
 {
-    uint32_t now = Timer::GetNow();
+    uint32_t now = Time::GetNow();
 
     // If the RSSI is ever below the threshold, update mAlwaysAboveThreshold
     // for current second interval.

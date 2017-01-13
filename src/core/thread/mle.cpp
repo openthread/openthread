@@ -1927,7 +1927,7 @@ ThreadError Mle::AddDelayedResponse(Message &aMessage, const Ip6::Address &aDest
     if (mDelayedResponseTimer.IsRunning())
     {
         // If timer is already running, check if it should be restarted with earlier fire time.
-        alarmFireTime = mDelayedResponseTimer.Gett0() + mDelayedResponseTimer.Getdt();
+        alarmFireTime = mDelayedResponseTimer.GetT0() + mDelayedResponseTimer.GetDt();
 
         if (delayedResponse.IsEarlier(alarmFireTime))
         {
@@ -2253,7 +2253,7 @@ ThreadError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::Message
         }
 
         isNeighbor = true;
-        mParent.mLastHeard = mParentRequestTimer.GetNow();
+        mParent.mLastHeard = Time::GetNow();
         break;
 
     case kDeviceStateRouter:

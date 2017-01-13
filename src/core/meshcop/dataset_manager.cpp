@@ -1014,12 +1014,12 @@ void PendingDatasetBase::ResetDelayTimer(uint8_t aFlags)
 
     if (aFlags & kFlagLocalUpdated)
     {
-        mLocalTime = Timer::GetNow();
+        mLocalTime = Time::GetNow();
     }
 
     if (aFlags & kFlagNetworkUpdated)
     {
-        mNetworkTime = Timer::GetNow();
+        mNetworkTime = Time::GetNow();
         mTimer.Stop();
 
         if ((delayTimer = static_cast<DelayTimerTlv *>(mNetwork.Get(Tlv::kDelayTimer))) != NULL)
@@ -1046,7 +1046,7 @@ void PendingDatasetBase::UpdateDelayTimer(void)
 void PendingDatasetBase::UpdateDelayTimer(Dataset &aDataset, uint32_t &aStartTime)
 {
     DelayTimerTlv *delayTimer;
-    uint32_t now = Timer::GetNow();
+    uint32_t now = Time::GetNow();
     uint32_t elapsed;
     uint32_t delay;
 

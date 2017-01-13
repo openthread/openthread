@@ -159,7 +159,7 @@ exit:
 
 void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound)
 {
-    uint32_t now = Timer::GetNow();
+    uint32_t now = Time::GetNow();
     ThreadError error = kThreadError_None;
     Message *messageCopy = NULL;
     MplBufferedMessageMetadata messageMetadata;
@@ -188,7 +188,7 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
     if (mRetransmissionTimer.IsRunning())
     {
         // If timer is already running, check if it should be restarted with earlier fire time.
-        nextTransmissionTime = mRetransmissionTimer.Gett0() + mRetransmissionTimer.Getdt();
+        nextTransmissionTime = mRetransmissionTimer.GetT0() + mRetransmissionTimer.GetDt();
 
         if (messageMetadata.IsEarlier(nextTransmissionTime))
         {
@@ -255,7 +255,7 @@ void Mpl::HandleRetransmissionTimer(void *aContext)
 
 void Mpl::HandleRetransmissionTimer()
 {
-    uint32_t now = Timer::GetNow();
+    uint32_t now = Time::GetNow();
     uint32_t nextDelta = 0xffffffff;
     MplBufferedMessageMetadata messageMetadata;
 

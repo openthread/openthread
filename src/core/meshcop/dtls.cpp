@@ -297,7 +297,7 @@ int Dtls::HandleMbedtlsGetTimer(void)
     {
         rval = 2;
     }
-    else if (static_cast<int32_t>(mTimerIntermediate - Timer::GetNow()) <= 0)
+    else if (static_cast<int32_t>(mTimerIntermediate - Time::GetNow()) <= 0)
     {
         rval = 1;
     }
@@ -327,7 +327,7 @@ void Dtls::HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFinish)
     {
         mTimerSet = true;
         mTimer.Start(aFinish);
-        mTimerIntermediate = Timer::GetNow() + aIntermediate;
+        mTimerIntermediate = Time::GetNow() + aIntermediate;
     }
 }
 

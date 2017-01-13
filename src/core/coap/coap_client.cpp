@@ -142,7 +142,7 @@ Message *Client::CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLe
     if (mRetransmissionTimer.IsRunning())
     {
         // If timer is already running, check if it should be restarted with earlier fire time.
-        alarmFireTime = mRetransmissionTimer.Gett0() + mRetransmissionTimer.Getdt();
+        alarmFireTime = mRetransmissionTimer.GetT0() + mRetransmissionTimer.GetDt();
 
         if (aRequestMetadata.IsEarlier(alarmFireTime))
         {
@@ -239,7 +239,7 @@ void Client::HandleRetransmissionTimer(void *aContext)
 
 void Client::HandleRetransmissionTimer(void)
 {
-    uint32_t now = otPlatAlarmGetNow();
+    uint32_t now = Time::GetNow();
     uint32_t nextDelta = 0xffffffff;
     RequestMetadata requestMetadata;
     Message *message = mPendingRequests.GetHead();
@@ -454,12 +454,12 @@ RequestMetadata::RequestMetadata(bool aConfirmable, const Ip6::MessageInfo &aMes
     if (aConfirmable)
     {
         // Set next retransmission timeout.
-        mNextTimerShot = Timer::GetNow() + mRetransmissionTimeout;
+        mNextTimerShot = Time::GetNow() + mRetransmissionTimeout;
     }
     else
     {
         // Set overall response timeout.
-        mNextTimerShot = Timer::GetNow() + kMaxTransmitWait;
+        mNextTimerShot = Time::GetNow() + kMaxTransmitWait;
     }
 
     mAcknowledged = false;

@@ -157,8 +157,10 @@ static void processTransmit(otInstance *aInstance, int argc, char *argv[], char 
         otPlatAlarmStop(aInstance);
         sTransmitActive = true;
         sTxCount = sTxRequestedCount;
-        uint32_t now = otPlatAlarmGetNow();
-        otPlatAlarmStartAt(aInstance, now, sTxPeriod);
+        otPlatAlarmTime now;
+        otPlatAlarmGetPreciseNow(&now);
+        otPlatAlarmTime txPeriod = {.mMs = sTxPeriod };
+        otPlatAlarmStartAt(aInstance, &now, &txPeriod);
         snprintf(aOutput, aOutputMaxLen, "sending %" PRId32 " diagnostic messages with %" PRIu32
                  " ms interval\r\nstatus 0x%02x\r\n",
                  sTxRequestedCount, sTxPeriod, error);
@@ -296,8 +298,10 @@ void otPlatDiagAlarmCallback(otInstance *aInstance)
                 sTxCount--;
             }
 
-            uint32_t now = otPlatAlarmGetNow();
-            otPlatAlarmStartAt(aInstance, now, sTxPeriod);
+            otPlatAlarmTime now;
+            otPlatAlarmGetPreciseNow(&now);
+            otPlatAlarmTime txPeriod = {.mMs = sTxPeriod};
+            otPlatAlarmStartAt(aInstance, &now, &txPeriod);
         }
         else
         {

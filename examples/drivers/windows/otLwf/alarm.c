@@ -45,6 +45,12 @@ otPlatAlarmGetNow()
     return (uint32_t)(PerformanceCounter.QuadPart * 1000 / FilterPerformanceFrequency.QuadPart);
 }
 
+void otPlatAlarmGetPreciseNow(otPlatAlarmTime *aNow)
+{
+    aNow->mMs = otPlatAlarmGetNow();
+    aNow->mUs = 0;
+}
+
 void 
 otPlatAlarmStop(
     _In_ otInstance *otCtx
@@ -57,11 +63,19 @@ otPlatAlarmStop(
 void 
 otPlatAlarmStartAt(
     _In_ otInstance *otCtx, 
-    uint32_t now, 
-    uint32_t waitTime
+    const otPlatAlarmTime *now,
+    const otPlatAlarmTime *waitTime
     )
 {
     UNREFERENCED_PARAMETER(now);
-    LogVerbose(DRIVER_DEFAULT, "otPlatAlarmStartAt %u ms", waitTime);
-    otLwfEventProcessingIndicateNewWaitTime(otCtxToFilter(otCtx), waitTime);
+
+    uint32_t waitMs = waitTime->mMs;
+
+    if (waitTime->mUs)
+    {
+        waitMs++;
+    }
+
+    LogVerbose(DRIVER_DEFAULT, "otPlatAlarmStartAt %u ms", waitMs);
+    otLwfEventProcessingIndicateNewWaitTime(otCtxToFilter(otCtx), waitMs);
 }

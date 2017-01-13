@@ -72,11 +72,26 @@ uint32_t otPlatAlarmGetNow(void)
 /**
  * Function documented in platform/alarm.h
  */
-void otPlatAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
+void otPlatAlarmGetPreciseNow(otPlatAlarmTime *aNow)
+{
+    aNow->mMs = otPlatAlarmGetNow();
+    aNow->mUs = 0;
+}
+
+/**
+ * Function documented in platform/alarm.h
+ */
+void otPlatAlarmStartAt(otInstance *aInstance, const otPlatAlarmTime *aT0, const otPlatAlarmTime *aDt)
 {
     (void)aInstance;
-    sTime0 = aT0;
-    sAlarmTime = aDt;
+    sTime0 = aT0->mMs;
+    sAlarmTime = aDt->mMs;
+
+    if (aDt->mUs)
+    {
+        sAlarmTime++;
+    }
+
     sIsRunning = true;
 }
 

@@ -36,8 +36,14 @@
 #include <platform/diag.h>
 
 static bool s_is_running = false;
-static uint32_t s_alarm = 0;
+static struct timeval s_alarm;
 static struct timeval s_start;
+
+static void getNow(struct timeval *tv)
+{
+    gettimeofday(tv, NULL);
+    timersub(tv, &s_start, tv);
+}
 
 void platformAlarmInit(void)
 {
@@ -48,16 +54,33 @@ uint32_t otPlatAlarmGetNow(void)
 {
     struct timeval tv;
 
-    gettimeofday(&tv, NULL);
-    timersub(&tv, &s_start, &tv);
+    getNow(&tv);
 
     return (uint32_t)((tv.tv_sec * 1000) + (tv.tv_usec / 1000));
 }
 
-void otPlatAlarmStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
+void otPlatAlarmGetPreciseNow(otPlatAlarmTime *aNow)
+{
+    struct timeval tv;
+
+    getNow(&tv);
+
+    aNow->mMs = (uint32_t)((tv.tv_sec * 1000) + (tv.tv_usec / 1000));
+    aNow->mUs = tv.tv_usec % 1000;
+}
+
+void otPlatAlarmStartAt(otInstance *aInstance, const otPlatAlarmTime *t0, const otPlatAlarmTime *dt)
 {
     (void)aInstance;
-    s_alarm = t0 + dt;
+    s_alarm.tv_sec = (t0->mMs + dt->mMs) / 1000;
+    s_alarm.tv_usec = (((t0->mMs + dt->mMs) % 1000) * 1000) + (t0->mUs + dt->mUs);
+
+    if (s_alarm.tv_usec >= 1000000)
+    {
+        s_alarm.tv_sec++;
+        s_alarm.tv_usec -= 1000000;
+    }
+
     s_is_running = true;
 }
 
@@ -69,7 +92,7 @@ void otPlatAlarmStop(otInstance *aInstance)
 
 void platformAlarmUpdateTimeout(struct timeval *aTimeout)
 {
-    int32_t remaining;
+    struct timeval remaining;
 
     if (aTimeout == NULL)
     {
@@ -78,12 +101,14 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
 
     if (s_is_running)
     {
-        remaining = (int32_t)(s_alarm - otPlatAlarmGetNow());
+        struct timeval now;
+        getNow(&now);
 
-        if (remaining > 0)
+        timersub(&s_alarm, &now, &remaining);
+
+        if (remaining.tv_sec > 0 || (remaining.tv_sec == 0 && remaining.tv_usec > 0))
         {
-            aTimeout->tv_sec = remaining / 1000;
-            aTimeout->tv_usec = (remaining % 1000) * 1000;
+            memcpy(aTimeout, &remaining, sizeof(*aTimeout));
         }
         else
         {
@@ -100,13 +125,16 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
 
 void platformAlarmProcess(otInstance *aInstance)
 {
-    int32_t remaining;
+    struct timeval remaining;
 
     if (s_is_running)
     {
-        remaining = (int32_t)(s_alarm - otPlatAlarmGetNow());
+        struct timeval now;
+        getNow(&now);
 
-        if (remaining <= 0)
+        timersub(&s_alarm, &now, &remaining);
+
+        if (remaining.tv_sec < 0 || (remaining.tv_sec == 0 && remaining.tv_usec <= 0))
         {
             s_is_running = false;
 
