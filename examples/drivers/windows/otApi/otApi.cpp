@@ -3491,6 +3491,10 @@ otJoinerStart(
      _In_ otInstance *aInstance,
     const char *aPSKd, 
     const char *aProvisioningUrl,
+    const char *aVendorName,
+    const char *aVendorModel,
+    const char *aVendorSwVersion,
+    const char *aVendorData,
     _In_ otJoinerCallback aCallback,
     _In_ void *aCallbackContext
     )
@@ -3501,15 +3505,27 @@ otJoinerStart(
 
     size_t aPSKdLength = strlen(aPSKd);
     size_t aProvisioningUrlLength = aProvisioningUrl == nullptr ? 0 : strlen(aProvisioningUrl);
+    size_t aVendorNameLength = aVendorName == nullptr ? 0 : strlen(aVendorName);
+    size_t aVendorModelLength = aVendorModel == nullptr ? 0 : strlen(aVendorModel);
+    size_t aVendorSwVersionLength = aVendorSwVersion == nullptr ? 0 : strlen(aVendorSwVersion);
+    size_t aVendorDataLength = aVendorData == nullptr ? 0 : strlen(aVendorData);
 
     if (aPSKdLength > OPENTHREAD_PSK_MAX_LENGTH ||
-        aProvisioningUrlLength > OPENTHREAD_PROV_URL_MAX_LENGTH)
+        aProvisioningUrlLength > OPENTHREAD_PROV_URL_MAX_LENGTH ||
+        aVendorNameLength > OPENTHREAD_VENDOR_NAME_MAX_LENGTH ||
+        aVendorModelLength > OPENTHREAD_VENDOR_MODEL_MAX_LENGTH ||
+        aVendorSwVersionLength > OPENTHREAD_VENDOR_SW_VERSION_MAX_LENGTH ||
+        aVendorDataLength > OPENTHREAD_VENDOR_DATA_MAX_LENGTH)
     {
         return kThreadError_InvalidArgs;
     }
 
     memcpy_s(config.PSKd, sizeof(config.PSKd), aPSKd, aPSKdLength);
     memcpy_s(config.ProvisioningUrl, sizeof(config.ProvisioningUrl), aProvisioningUrl, aProvisioningUrlLength);
+    memcpy_s(config.VendorName, sizeof(config.VendorName), aVendorName, aVendorNameLength);
+    memcpy_s(config.VendorModel, sizeof(config.VendorModel), aVendorModel, aVendorModelLength);
+    memcpy_s(config.VendorSwVersion, sizeof(config.VendorSwVersion), aVendorSwVersion, aVendorSwVersionLength);
+    memcpy_s(config.VendorData, sizeof(config.VendorData), aVendorData, aVendorDataLength);
 
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_JOINER_START, (const otCommissionConfig*)&config));
 }

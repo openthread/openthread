@@ -66,6 +66,10 @@ Joiner::Joiner(ThreadNetif &aNetif):
     mJoinerRouterChannel(0),
     mJoinerRouterPanId(0),
     mJoinerUdpPort(0),
+    mVendorName(NULL),
+    mVendorModel(NULL),
+    mVendorSwVersion(NULL),
+    mVendorData(NULL),
     mTimer(aNetif.GetIp6().mTimerScheduler, &Joiner::HandleTimer, this),
     mJoinerEntrust(OPENTHREAD_URI_JOINER_ENTRUST, &Joiner::HandleJoinerEntrust, this),
     mCoapServer(aNetif.GetCoapServer()),
@@ -75,7 +79,9 @@ Joiner::Joiner(ThreadNetif &aNetif):
     mCoapServer.AddResource(mJoinerEntrust);
 }
 
-ThreadError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl, otJoinerCallback aCallback, void *aContext)
+ThreadError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl,
+                          const char *aVendorName, const char *aVendorModel, const char *aVendorSwVersion,
+                          const char *aVendorData, otJoinerCallback aCallback, void *aContext)
 {
     ThreadError error;
     Mac::ExtAddress extAddress;
@@ -96,6 +102,10 @@ ThreadError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl, otJoi
     mJoinerRouterPanId = Mac::kPanIdBroadcast;
     SuccessOrExit(error = mNetif.GetMle().Discover(0, 0, mNetif.GetMac().GetPanId(), HandleDiscoverResult, this));
 
+    mVendorName = aVendorName;
+    mVendorModel = aVendorModel;
+    mVendorSwVersion = aVendorSwVersion;
+    mVendorData = aVendorData;
     mCallback = aCallback;
     mContext = aContext;
     mState = kStateDiscover;
@@ -240,7 +250,10 @@ void Joiner::SendJoinerFinalize(void)
     ThreadError error = kThreadError_None;
     Message *message = NULL;
     StateTlv stateTlv;
-    uint8_t length;
+    VendorNameTlv vendorNameTlv;
+    VendorModelTlv vendorModelTlv;
+    VendorSwVersionTlv vendorSwVersionTlv;
+    VendorStackVersionTlv vendorStackVersionTlv;
 
     otLogFuncEntry();
 
@@ -254,11 +267,37 @@ void Joiner::SendJoinerFinalize(void)
     stateTlv.SetState(MeshCoP::StateTlv::kAccept);
     SuccessOrExit(error = message->Append(&stateTlv, sizeof(stateTlv)));
 
-    length = mSecureCoapClient.GetDtls().mProvisioningUrl.GetLength();
+    vendorNameTlv.Init();
+    vendorNameTlv.SetVendorName(mVendorName);
+    SuccessOrExit(error = message->Append(&vendorNameTlv, vendorNameTlv.GetSize()));
 
-    if (length > 0)
+    vendorModelTlv.Init();
+    vendorModelTlv.SetVendorModel(mVendorModel);
+    SuccessOrExit(error = message->Append(&vendorModelTlv, vendorModelTlv.GetSize()));
+
+    vendorSwVersionTlv.Init();
+    vendorSwVersionTlv.SetVendorSwVersion(mVendorSwVersion);
+    SuccessOrExit(error = message->Append(&vendorSwVersionTlv, vendorSwVersionTlv.GetSize()));
+
+    vendorStackVersionTlv.Init();
+    vendorStackVersionTlv.SetOui(OPENTHREAD_CONFIG_STACK_VENDOR_OUI);
+    vendorStackVersionTlv.SetMajor(OPENTHREAD_CONFIG_STACK_VERSION_MAJOR);
+    vendorStackVersionTlv.SetMinor(OPENTHREAD_CONFIG_STACK_VERSION_MINOR);
+    vendorStackVersionTlv.SetRevision(OPENTHREAD_CONFIG_STACK_VERSION_REV);
+    SuccessOrExit(error = message->Append(&vendorStackVersionTlv, vendorStackVersionTlv.GetSize()));
+
+    if (mVendorData != NULL)
     {
-        SuccessOrExit(error = message->Append(&mSecureCoapClient.GetDtls().mProvisioningUrl, length + sizeof(Tlv)));
+        VendorDataTlv vendorDataTlv;
+        vendorDataTlv.Init();
+        vendorDataTlv.SetVendorData(mVendorData);
+        SuccessOrExit(error = message->Append(&vendorDataTlv, vendorDataTlv.GetSize()));
+    }
+
+    if (mSecureCoapClient.GetDtls().mProvisioningUrl.GetLength() > 0)
+    {
+        SuccessOrExit(error = message->Append(&mSecureCoapClient.GetDtls().mProvisioningUrl,
+                                              mSecureCoapClient.GetDtls().mProvisioningUrl.GetSize()));
     }
 
 #if OPENTHREAD_ENABLE_CERT_LOG
