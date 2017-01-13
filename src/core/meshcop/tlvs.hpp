@@ -69,6 +69,7 @@ public:
         kNetworkName             = OT_MESHCOP_TLV_NETWORKNAME,               ///< Newtork Name TLV
         kPSKc                    = OT_MESHCOP_TLV_PSKC,                      ///< PSKc TLV
         kNetworkMasterKey        = OT_MESHCOP_TLV_MASTERKEY,                 ///< Network Master Key TLV
+        kNetworkKeySequence      = OT_MESHCOP_TLV_NETWORK_KEY_SEQUENCE,      ///< Network Key Sequence TLV
         kMeshLocalPrefix         = OT_MESHCOP_TLV_MESHLOCALPREFIX,           ///< Mesh Local Prefix TLV
         kSteeringData            = OT_MESHCOP_TLV_STEERING_DATA,             ///< Steering Data TLV
         kBorderAgentLocator      = OT_MESHCOP_TLV_BORDER_AGENT_RLOC,         ///< Border Agent Locator TLV
@@ -447,6 +448,49 @@ public:
 
 private:
     uint8_t mNetworkMasterKey[16];
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Network Key Sequence TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class NetworkKeySequenceTlv: public Tlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void) { SetType(kNetworkKeySequence); SetLength(sizeof(*this) - sizeof(Tlv)); }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method returns the Network Key Sequence value.
+     *
+     * @returns The Network Key Sequence value.
+     *
+     */
+    uint32_t GetNetworkKeySequence(void) const { return HostSwap32(mNetworkKeySequence); }
+
+    /**
+     * This method sets the Network Key Sequence value.
+     *
+     * @param[in]  aNetworkKeySequence  The Network Key Sequence value.
+     *
+     */
+    void SetNetworkKeySequence(uint32_t aNetworkKeySequence) { mNetworkKeySequence = HostSwap32(aNetworkKeySequence); }
+
+private:
+    uint32_t mNetworkKeySequence;
 } OT_TOOL_PACKED_END;
 
 /**

@@ -483,6 +483,7 @@ typedef enum otMeshcopTlvType
     OT_MESHCOP_TLV_NETWORKNAME               = 3,    ///< meshcop Network Name TLV
     OT_MESHCOP_TLV_PSKC                      = 4,    ///< meshcop PSKc TLV
     OT_MESHCOP_TLV_MASTERKEY                 = 5,    ///< meshcop Network Master Key TLV
+    OT_MESHCOP_TLV_NETWORK_KEY_SEQUENCE      = 6,    ///< meshcop Network Key Sequence TLV
     OT_MESHCOP_TLV_MESHLOCALPREFIX           = 7,    ///< meshcop Mesh Local Prefix TLV
     OT_MESHCOP_TLV_STEERING_DATA             = 8,    ///< meshcop Steering Data TLV
     OT_MESHCOP_TLV_BORDER_AGENT_RLOC         = 9,    ///< meshcop Border Agent Locator TLV

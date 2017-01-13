@@ -373,6 +373,7 @@ void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const
     ExtendedPanIdTlv extendedPanId;
     NetworkNameTlv networkName;
     ActiveTimestampTlv activeTimestamp;
+    NetworkKeySequenceTlv networkKeySeq;
 
     otLogFuncEntry();
 
@@ -398,7 +399,11 @@ void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp));
     VerifyOrExit(activeTimestamp.IsValid(), error = kThreadError_Parse);
 
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kNetworkKeySequence, sizeof(networkKeySeq), networkKeySeq));
+    VerifyOrExit(networkKeySeq.IsValid(), error = kThreadError_Parse);
+
     mNetif.GetKeyManager().SetMasterKey(masterKey.GetNetworkMasterKey(), masterKey.GetLength());
+    mNetif.GetKeyManager().SetCurrentKeySequence(networkKeySeq.GetNetworkKeySequence());
     mNetif.GetMle().SetMeshLocalPrefix(meshLocalPrefix.GetMeshLocalPrefix());
     mNetif.GetMac().SetExtendedPanId(extendedPanId.GetExtendedPanId());
     mNetif.GetMac().SetNetworkName(networkName.GetNetworkName());
