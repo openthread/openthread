@@ -233,39 +233,33 @@ public:
     MeshHeader(void) { memset(this, 0, sizeof(*this)); }
 
     /**
-     * Mesh Header constructor that takes frame @p aFrame as a parameter.
-     *
-     * @param[in]  aFrame  The pointer to the frame.
-     *
-     */
-    MeshHeader(const uint8_t *aFrame) {
-        mDispatchHopsLeft = *aFrame++;
-        mDeepHopsLeft = IsDeepHopsLeftField() ? *aFrame++ : 0;
-        memcpy(&mAddress, aFrame, sizeof(mAddress));
-    }
-
-    /**
-     * Mesh Header constructor that takes message object @p aMessage as a parameter.
-     *
-     * @param[in]  aMessage  The message object.
-     *
-     */
-    MeshHeader(const Message &aMessage) {
-        aMessage.Read(0, sizeof(mDispatchHopsLeft), &mDispatchHopsLeft);
-
-        if (IsDeepHopsLeftField()) {
-            aMessage.Read(1, sizeof(mDeepHopsLeft) + sizeof(mAddress), &mDeepHopsLeft);
-        }
-        else {
-            aMessage.Read(1, sizeof(mAddress), &mAddress);
-        }
-    }
-
-    /**
      * This method initializes the header.
      *
      */
     void Init(void) { mDispatchHopsLeft = kDispatch | kSourceShort | kDestinationShort; }
+
+    /**
+     * This method initializes the mesh header from a frame @p aFrame.
+     *
+     * @param[in]  aFrame        The pointer to the frame.
+     * @param[in]  aFrameLength  The length of the frame.
+     *
+     * @retval kThreadError_None     Mesh Header initialized successfully.
+     * @retval kThreadError_Failed   Mesh header could not be initialized from @p aFrame (e.g., frame not long enough).
+     *
+     */
+    ThreadError Init(const uint8_t *aFrame, uint8_t aFrameLength);
+
+    /**
+     * This method initializes the mesh header from a message object @p aMessage.
+     *
+     * @param[in]  aMessage  The message object.
+     *
+     * @retval kThreadError_None     Mesh Header initialized successfully.
+     * @retval kThreadError_Failed   Mesh header could not be initialized from @ aMessage(e.g., not long enough).
+     *
+     */
+    ThreadError Init(const Message &aMessage);
 
     /**
      * This method indicates whether or not the header is a Mesh Header.

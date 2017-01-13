@@ -1115,5 +1115,59 @@ exit:
     return (error == kThreadError_None) ? static_cast<int>(compressedLength) : -1;
 }
 
+ThreadError MeshHeader::Init(const uint8_t *aFrame, uint8_t aFrameLength)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aFrameLength >= 1, error = kThreadError_Failed);
+    mDispatchHopsLeft = *aFrame++;
+    aFrameLength--;
+
+    if (IsDeepHopsLeftField())
+    {
+        VerifyOrExit(aFrameLength >= 1, error = kThreadError_Failed);
+        mDeepHopsLeft = *aFrame++;
+        aFrameLength--;
+    }
+    else
+    {
+        mDeepHopsLeft = 0;
+    }
+
+    VerifyOrExit(aFrameLength >= sizeof(mAddress), error = kThreadError_Failed);
+    memcpy(&mAddress, aFrame, sizeof(mAddress));
+
+exit:
+    return error;
+}
+
+ThreadError MeshHeader::Init(const Message &aMessage)
+{
+    ThreadError error = kThreadError_None;
+    uint16_t offset = 0;
+    uint16_t bytesRead;
+
+    bytesRead = aMessage.Read(offset, sizeof(mDispatchHopsLeft), &mDispatchHopsLeft);
+    VerifyOrExit(bytesRead == sizeof(mDispatchHopsLeft), error = kThreadError_Failed);
+    offset += bytesRead;
+
+    if (IsDeepHopsLeftField())
+    {
+        bytesRead = aMessage.Read(offset, sizeof(mDeepHopsLeft), &mDeepHopsLeft);
+        VerifyOrExit(bytesRead == sizeof(mDeepHopsLeft), error = kThreadError_Failed);
+        offset += bytesRead;
+    }
+    else
+    {
+        mDeepHopsLeft = 0;
+    }
+
+    bytesRead = aMessage.Read(offset, sizeof(mAddress), &mAddress);
+    VerifyOrExit(bytesRead == sizeof(mAddress), error = kThreadError_Failed);
+
+exit:
+    return error;
+}
+
 }  // namespace Lowpan
 }  // namespace Thread
