@@ -433,11 +433,8 @@ ThreadError Dataset::Restore(void)
 
     error = otPlatSettingsGet(mInstance, static_cast<uint16_t>(mType == Tlv::kActiveTimestamp ? kKeyActiveDataset :
                                                                kKeyPendingDataset), 0, mTlvs, &length);
-    SuccessOrExit(error);
+    mLength = (error == kThreadError_None) ? length : 0;
 
-    mLength = length;
-
-exit:
     return error;
 }
 
