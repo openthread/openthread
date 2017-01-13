@@ -170,7 +170,7 @@ class SnifferVirtualTransport(SnifferTransport):
 
         self.Api.otListenerFinalize.argtypes = [ctypes.c_void_p]
 
-        self.Api.otListenerRead.argtypes = [ctypes.POINTER(MacFrame)]
+        self.Api.otListenerRead.argtypes = [ctypes.c_void_p, ctypes.POINTER(MacFrame)]
 
     def __del__(self):
         if not self.is_opened:
@@ -201,8 +201,9 @@ class SnifferVirtualTransport(SnifferTransport):
 
     def recv(self, bufsize):
         frame = MacFrame()
+        pFrame = ctypes.pointer(frame);
 
-        self.Api.otListenerRead(self.Handle, ctypes.byref(frame))
+        self.Api.otListenerRead(self.Handle, pFrame)
 
         return bytearray(frame.buffer)[:frame.length], frame.nodeid
 

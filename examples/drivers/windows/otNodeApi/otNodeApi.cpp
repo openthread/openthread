@@ -2116,7 +2116,7 @@ otListenerCallback(
     _In_ ULONG SourceInterfaceIndex,
     _In_reads_bytes_(FrameLength) PUCHAR FrameBuffer,
     _In_ UCHAR FrameLength,
-    _In_ UCHAR /* Channel */
+    _In_ UCHAR Channel
 )
 {
     otListener* aListener = (otListener*)aContext;
@@ -2125,8 +2125,9 @@ otListenerCallback(
     if (FrameLength)
     {
         otMacFrameEntry* entry = new otMacFrameEntry;
-        memcpy_s(entry->Frame.buffer, sizeof(entry->Frame.buffer), FrameBuffer, FrameLength);
-        entry->Frame.length = FrameLength;
+        entry->Frame.buffer[0] = Channel;
+        memcpy_s(entry->Frame.buffer + 1, sizeof(entry->Frame.buffer) - 1, FrameBuffer, FrameLength);
+        entry->Frame.length = FrameLength + 1;
         entry->Frame.nodeid = (uint32_t)-1;
 
         // Look up the Node ID from by interface guid
@@ -2180,6 +2181,8 @@ OTNODEAPI otListener* OTCALL otListenerInit(uint32_t /* nodeid */)
     // Register for callbacks
     otvmpListenerRegister(listener->mListener, otListenerCallback, listener);
 
+    printf("S: Sniffer started\r\n");
+
     otLogFuncExit();
 
     return listener;
@@ -2214,6 +2217,8 @@ OTNODEAPI int32_t OTCALL otListenerFinalize(otListener* aListener)
         DeleteCriticalSection(&aListener->mCS);
         delete aListener;
 
+        printf("S: Sniffer stopped\r\n");
+
         if (0 == InterlockedDecrement(&gNumberOfInterfaces))
         {
             // Uninitialize everything else if this is the last ref
@@ -2226,6 +2231,8 @@ OTNODEAPI int32_t OTCALL otListenerFinalize(otListener* aListener)
 
 OTNODEAPI int32_t OTCALL otListenerRead(otListener* aListener, otMacFrame *aFrame)
 {
+    printf("S: Sniffer reading...\r\n");
+
     do
     {
         bool exit = false;
@@ -2255,10 +2262,13 @@ OTNODEAPI int32_t OTCALL otListenerRead(otListener* aListener, otMacFrame *aFram
         }
         else // mStopEvent
         {
+            printf("Packet sniffer returning cancelled\r\n");
             return 1;
         }
         
     } while (true);
-    
+
+    printf("S: Sniffer read %d bytes from node %d\r\n", aFrame->length, aFrame->nodeid);
+
     return 0;
 }
