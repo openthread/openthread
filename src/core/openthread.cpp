@@ -88,19 +88,6 @@ otInstance::otInstance(void) :
 extern "C" {
 #endif
 
-static void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame);
-static void HandleEnergyScanResult(void *aContext, otEnergyScanResult *aResult);
-
-uint8_t otGetChannel(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetMac().GetChannel();
-}
-
-ThreadError otSetChannel(otInstance *aInstance, uint8_t aChannel)
-{
-    return aInstance->mThreadNetif.GetMac().SetChannel(aChannel);
-}
-
 ThreadError otSetDelayTimerMinimal(otInstance *aInstance, uint32_t aDelayTimerMinimal)
 {
     return aInstance->mThreadNetif.GetLeader().SetDelayTimerMinimal(aDelayTimerMinimal);
@@ -135,25 +122,6 @@ void otSetChildTimeout(otInstance *aInstance, uint32_t aTimeout)
     aInstance->mThreadNetif.GetMle().SetTimeout(aTimeout);
 }
 
-const uint8_t *otGetExtendedAddress(otInstance *aInstance)
-{
-    return reinterpret_cast<const uint8_t *>(aInstance->mThreadNetif.GetMac().GetExtAddress());
-}
-
-ThreadError otSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
-{
-    ThreadError error = kThreadError_None;
-
-    VerifyOrExit(aExtAddress != NULL, error = kThreadError_InvalidArgs);
-
-    aInstance->mThreadNetif.GetMac().SetExtAddress(*static_cast<const Mac::ExtAddress *>(aExtAddress));
-
-    SuccessOrExit(error = aInstance->mThreadNetif.GetMle().UpdateLinkLocalAddress());
-
-exit:
-    return error;
-}
-
 const uint8_t *otGetExtendedPanId(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMac().GetExtendedPanId();
@@ -170,16 +138,6 @@ void otSetExtendedPanId(otInstance *aInstance, const uint8_t *aExtendedPanId)
     mlPrefix[6] = 0x00;
     mlPrefix[7] = 0x00;
     aInstance->mThreadNetif.GetMle().SetMeshLocalPrefix(mlPrefix);
-}
-
-void otGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui64)
-{
-    otPlatRadioGetIeeeEui64(aInstance, aEui64->m8);
-}
-
-void otGetHashMacAddress(otInstance *aInstance, otExtAddress *aHashMacAddress)
-{
-    aInstance->mThreadNetif.GetMac().GetHashMacAddress(static_cast<Mac::ExtAddress *>(aHashMacAddress));
 }
 
 ThreadError otGetLeaderRloc(otInstance *aInstance, otIp6Address *aAddress)
@@ -261,16 +219,6 @@ ThreadError otSetMasterKey(otInstance *aInstance, const uint8_t *aKey, uint8_t a
     return aInstance->mThreadNetif.GetKeyManager().SetMasterKey(aKey, aKeyLength);
 }
 
-int8_t otGetMaxTransmitPower(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetMac().GetMaxTransmitPower();
-}
-
-void otSetMaxTransmitPower(otInstance *aInstance, int8_t aPower)
-{
-    aInstance->mThreadNetif.GetMac().SetMaxTransmitPower(aPower);
-}
-
 const otIp6Address *otGetMeshLocalEid(otInstance *aInstance)
 {
     return &aInstance->mThreadNetif.GetMle().GetMeshLocal64();
@@ -320,26 +268,6 @@ ThreadError otSetNetworkName(otInstance *aInstance, const char *aNetworkName)
     return aInstance->mThreadNetif.GetMac().SetNetworkName(aNetworkName);
 }
 
-otPanId otGetPanId(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetMac().GetPanId();
-}
-
-ThreadError otSetPanId(otInstance *aInstance, otPanId aPanId)
-{
-    ThreadError error = kThreadError_None;
-
-    // do not allow setting PAN ID to broadcast if Thread is running
-    VerifyOrExit(aPanId != Mac::kPanIdBroadcast ||
-                 aInstance->mThreadNetif.GetMle().GetDeviceState() != Mle::kDeviceStateDisabled,
-                 error = kThreadError_InvalidState);
-
-    error = aInstance->mThreadNetif.GetMac().SetPanId(aPanId);
-
-exit:
-    return error;
-}
-
 bool otIsRouterRoleEnabled(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMle().IsRouterRoleEnabled();
@@ -348,11 +276,6 @@ bool otIsRouterRoleEnabled(otInstance *aInstance)
 void otSetRouterRoleEnabled(otInstance *aInstance, bool aEnabled)
 {
     aInstance->mThreadNetif.GetMle().SetRouterRoleEnabled(aEnabled);
-}
-
-otShortAddress otGetShortAddress(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetMac().GetShortAddress();
 }
 
 uint8_t otGetLocalLeaderWeight(otInstance *aInstance)
@@ -522,67 +445,6 @@ ThreadError otReleaseRouterId(otInstance *aInstance, uint8_t aRouterId)
     return aInstance->mThreadNetif.GetMle().ReleaseRouterId(aRouterId);
 }
 
-ThreadError otAddMacWhitelist(otInstance *aInstance, const uint8_t *aExtAddr)
-{
-    ThreadError error = kThreadError_None;
-
-    if (aInstance->mThreadNetif.GetMac().GetWhitelist().Add(*reinterpret_cast<const Mac::ExtAddress *>(aExtAddr)) == NULL)
-    {
-        error = kThreadError_NoBufs;
-    }
-
-    return error;
-}
-
-ThreadError otAddMacWhitelistRssi(otInstance *aInstance, const uint8_t *aExtAddr, int8_t aRssi)
-{
-    ThreadError error = kThreadError_None;
-    otMacWhitelistEntry *entry;
-
-    entry = aInstance->mThreadNetif.GetMac().GetWhitelist().Add(*reinterpret_cast<const Mac::ExtAddress *>(aExtAddr));
-    VerifyOrExit(entry != NULL, error = kThreadError_NoBufs);
-    aInstance->mThreadNetif.GetMac().GetWhitelist().SetFixedRssi(*entry, aRssi);
-
-exit:
-    return error;
-}
-
-void otRemoveMacWhitelist(otInstance *aInstance, const uint8_t *aExtAddr)
-{
-    aInstance->mThreadNetif.GetMac().GetWhitelist().Remove(*reinterpret_cast<const Mac::ExtAddress *>(aExtAddr));
-}
-
-void otClearMacWhitelist(otInstance *aInstance)
-{
-    aInstance->mThreadNetif.GetMac().GetWhitelist().Clear();
-}
-
-ThreadError otGetMacWhitelistEntry(otInstance *aInstance, uint8_t aIndex, otMacWhitelistEntry *aEntry)
-{
-    ThreadError error = kThreadError_None;
-
-    VerifyOrExit(aEntry != NULL, error = kThreadError_InvalidArgs);
-    error = aInstance->mThreadNetif.GetMac().GetWhitelist().GetEntry(aIndex, *aEntry);
-
-exit:
-    return error;
-}
-
-void otDisableMacWhitelist(otInstance *aInstance)
-{
-    aInstance->mThreadNetif.GetMac().GetWhitelist().Disable();
-}
-
-void otEnableMacWhitelist(otInstance *aInstance)
-{
-    aInstance->mThreadNetif.GetMac().GetWhitelist().Enable();
-}
-
-bool otIsMacWhitelistEnabled(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetMac().GetWhitelist().IsEnabled();
-}
-
 ThreadError otBecomeDetached(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMle().BecomeDetached();
@@ -619,74 +481,6 @@ ThreadError otBecomeRouter(otInstance *aInstance)
 ThreadError otBecomeLeader(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMle().BecomeLeader();
-}
-
-ThreadError otAddMacBlacklist(otInstance *aInstance, const uint8_t *aExtAddr)
-{
-    ThreadError error = kThreadError_None;
-
-    if (aInstance->mThreadNetif.GetMac().GetBlacklist().Add(*reinterpret_cast<const Mac::ExtAddress *>(aExtAddr)) == NULL)
-    {
-        error = kThreadError_NoBufs;
-    }
-
-    return error;
-}
-
-void otRemoveMacBlacklist(otInstance *aInstance, const uint8_t *aExtAddr)
-{
-    aInstance->mThreadNetif.GetMac().GetBlacklist().Remove(*reinterpret_cast<const Mac::ExtAddress *>(aExtAddr));
-}
-
-void otClearMacBlacklist(otInstance *aInstance)
-{
-    aInstance->mThreadNetif.GetMac().GetBlacklist().Clear();
-}
-
-ThreadError otGetMacBlacklistEntry(otInstance *aInstance, uint8_t aIndex, otMacBlacklistEntry *aEntry)
-{
-    ThreadError error = kThreadError_None;
-
-    VerifyOrExit(aEntry != NULL, error = kThreadError_InvalidArgs);
-    error = aInstance->mThreadNetif.GetMac().GetBlacklist().GetEntry(aIndex, *aEntry);
-
-exit:
-    return error;
-}
-
-void otDisableMacBlacklist(otInstance *aInstance)
-{
-    aInstance->mThreadNetif.GetMac().GetBlacklist().Disable();
-}
-
-void otEnableMacBlacklist(otInstance *aInstance)
-{
-    aInstance->mThreadNetif.GetMac().GetBlacklist().Enable();
-}
-
-bool otIsMacBlacklistEnabled(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetMac().GetBlacklist().IsEnabled();
-}
-
-ThreadError otGetAssignLinkQuality(otInstance *aInstance, const uint8_t *aExtAddr, uint8_t *aLinkQuality)
-{
-    Mac::ExtAddress extAddress;
-
-    memset(&extAddress, 0, sizeof(extAddress));
-    memcpy(extAddress.m8, aExtAddr, OT_EXT_ADDRESS_SIZE);
-
-    return aInstance->mThreadNetif.GetMle().GetAssignLinkQuality(extAddress, *aLinkQuality);
-}
-
-void otSetAssignLinkQuality(otInstance *aInstance, const uint8_t *aExtAddr, uint8_t aLinkQuality)
-{
-    Mac::ExtAddress extAddress;
-
-    memset(&extAddress, 0, sizeof(extAddress));
-    memcpy(extAddress.m8, aExtAddr, OT_EXT_ADDRESS_SIZE);
-
-    aInstance->mThreadNetif.GetMle().SetAssignLinkQuality(extAddress, aLinkQuality);
 }
 
 void otPlatformReset(otInstance *aInstance)
@@ -907,34 +701,6 @@ uint8_t otGetStableNetworkDataVersion(otInstance *aInstance)
     return aInstance->mThreadNetif.GetMle().GetLeaderDataTlv().GetStableDataVersion();
 }
 
-void otSetLinkPcapCallback(otInstance *aInstance, otLinkPcapCallback aPcapCallback, void *aCallbackContext)
-{
-    aInstance->mThreadNetif.GetMac().SetPcapCallback(aPcapCallback, aCallbackContext);
-}
-
-bool otIsLinkPromiscuous(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetMac().IsPromiscuous();
-}
-
-ThreadError otSetLinkPromiscuous(otInstance *aInstance, bool aPromiscuous)
-{
-    ThreadError error = kThreadError_None;
-
-    // cannot enable IEEE 802.15.4 promiscuous mode if the Thread interface is enabled
-    VerifyOrExit(aInstance->mThreadNetif.IsUp() == false, error = kThreadError_InvalidState);
-
-    aInstance->mThreadNetif.GetMac().SetPromiscuous(aPromiscuous);
-
-exit:
-    return error;
-}
-
-const otMacCounters *otGetMacCounters(otInstance *aInstance)
-{
-    return &aInstance->mThreadNetif.GetMac().GetCounters();
-}
-
 ThreadError otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aCallbackContext)
 {
     ThreadError error = kThreadError_NoBufs;
@@ -1002,16 +768,6 @@ const char *otGetVersionString(void)
         ; // Trailing semicolon to end statement.
 
     return sVersion;
-}
-
-uint32_t otGetPollPeriod(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetMeshForwarder().GetAssignPollPeriod();
-}
-
-void otSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod)
-{
-    aInstance->mThreadNetif.GetMeshForwarder().SetAssignPollPeriod(aPollPeriod);
 }
 
 ThreadError otSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId)
@@ -1195,82 +951,6 @@ bool otThreadGetAutoStart(otInstance *aInstance)
 bool otIsSingleton(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMle().IsSingleton();
-}
-
-ThreadError otActiveScan(otInstance *aInstance, uint32_t aScanChannels, uint16_t aScanDuration,
-                         otHandleActiveScanResult aCallback, void *aCallbackContext)
-{
-    aInstance->mActiveScanCallback = aCallback;
-    aInstance->mActiveScanCallbackContext = aCallbackContext;
-    return aInstance->mThreadNetif.GetMac().ActiveScan(aScanChannels, aScanDuration, &HandleActiveScanResult, aInstance);
-}
-
-bool otIsActiveScanInProgress(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetMac().IsActiveScanInProgress();
-}
-
-void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame)
-{
-    otInstance *aInstance = static_cast<otInstance *>(aContext);
-    otActiveScanResult result;
-    Mac::Address address;
-    Mac::Beacon *beacon;
-    uint8_t payloadLength;
-
-    memset(&result, 0, sizeof(otActiveScanResult));
-
-    if (aFrame == NULL)
-    {
-        aInstance->mActiveScanCallback(NULL, aInstance->mActiveScanCallbackContext);
-        ExitNow();
-    }
-
-    SuccessOrExit(aFrame->GetSrcAddr(address));
-    VerifyOrExit(address.mLength == sizeof(address.mExtAddress), ;);
-    memcpy(&result.mExtAddress, &address.mExtAddress, sizeof(result.mExtAddress));
-
-    aFrame->GetSrcPanId(result.mPanId);
-    result.mChannel = aFrame->GetChannel();
-    result.mRssi = aFrame->GetPower();
-    result.mLqi = aFrame->GetLqi();
-
-    payloadLength = aFrame->GetPayloadLength();
-    beacon = reinterpret_cast<Mac::Beacon *>(aFrame->GetPayload());
-
-    if (payloadLength >= sizeof(*beacon) && beacon->IsValid())
-    {
-        result.mVersion = beacon->GetProtocolVersion();
-        result.mIsJoinable = beacon->IsJoiningPermitted();
-        result.mIsNative = beacon->IsNative();
-        memcpy(&result.mNetworkName, beacon->GetNetworkName(), sizeof(result.mNetworkName));
-        memcpy(&result.mExtendedPanId, beacon->GetExtendedPanId(), sizeof(result.mExtendedPanId));
-    }
-
-    aInstance->mActiveScanCallback(&result, aInstance->mActiveScanCallbackContext);
-
-exit:
-    return;
-}
-
-ThreadError otEnergyScan(otInstance *aInstance, uint32_t aScanChannels, uint16_t aScanDuration,
-                         otHandleEnergyScanResult aCallback, void *aCallbackContext)
-{
-    aInstance->mEnergyScanCallback = aCallback;
-    aInstance->mEnergyScanCallbackContext = aCallbackContext;
-    return aInstance->mThreadNetif.GetMac().EnergyScan(aScanChannels, aScanDuration, &HandleEnergyScanResult, aInstance);
-}
-
-void HandleEnergyScanResult(void *aContext, otEnergyScanResult *aResult)
-{
-    otInstance *aInstance = static_cast<otInstance *>(aContext);
-
-    aInstance->mEnergyScanCallback(aResult, aInstance->mEnergyScanCallbackContext);
-}
-
-bool otIsEnergyScanInProgress(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetMac().IsEnergyScanInProgress();
 }
 
 ThreadError otDiscover(otInstance *aInstance, uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanId,

@@ -49,19 +49,14 @@ Blacklist::Blacklist(void)
     }
 }
 
-void Blacklist::Enable(void)
-{
-    mEnabled = true;
-}
-
-void Blacklist::Disable(void)
-{
-    mEnabled = false;
-}
-
 bool Blacklist::IsEnabled(void) const
 {
     return mEnabled;
+}
+
+void Blacklist::SetEnabled(bool aEnabled)
+{
+    mEnabled = aEnabled;
 }
 
 int Blacklist::GetMaxEntries(void) const

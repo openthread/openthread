@@ -190,7 +190,7 @@ void MainPage::ShowInterfaceDetails(Platform::Guid InterfaceGuid)
     GUID deviceGuid = InterfaceGuid;
     auto device = otInstanceInit(ApiInstance, &deviceGuid);
 
-    auto extendedAddress = otGetExtendedAddress(device);
+    auto extendedAddress = otLinkGetExtendedAddress(device);
     if (extendedAddress)
     {
         WCHAR szMac[256] = { 0 };
@@ -370,10 +370,10 @@ void MainPage::ConnectNetwork(Platform::Guid InterfaceGuid)
     wcstombs((char*)masterKey.m8, InterfaceConfigKey->Text->Data(), sizeof(masterKey.m8));
     otSetMasterKey(device, masterKey.m8, sizeof(masterKey.m8));
 
-    otSetChannel(device, (uint8_t)InterfaceConfigChannel->Value);
+    otLinkSetChannel(device, (uint8_t)InterfaceConfigChannel->Value);
     otSetMaxAllowedChildren(device, (uint8_t)InterfaceConfigMaxChildren->Value);
 
-    otSetPanId(device, 0x4567);
+    otLinkSetPanId(device, 0x4567);
 
     //
     // Bring up the interface and start the Thread logic

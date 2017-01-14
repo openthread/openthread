@@ -1068,7 +1068,7 @@ OTNODEAPI int32_t OTCALL otNodeClearWhitelist(otNode* aNode)
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: whitelist clear\r\n", aNode->mId);
 
-    otClearMacWhitelist(aNode->mInstance);
+    otLinkClearWhitelist(aNode->mInstance);
     otLogFuncExit();
     return 0;
 }
@@ -1078,7 +1078,7 @@ OTNODEAPI int32_t OTCALL otNodeEnableWhitelist(otNode* aNode)
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: whitelist enable\r\n", aNode->mId);
 
-    otEnableMacWhitelist(aNode->mInstance);
+    otLinkSetWhitelistEnabled(aNode->mInstance, true);
     otLogFuncExit();
     return 0;
 }
@@ -1088,7 +1088,7 @@ OTNODEAPI int32_t OTCALL otNodeDisableWhitelist(otNode* aNode)
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: whitelist disable\r\n", aNode->mId);
 
-    otDisableMacWhitelist(aNode->mInstance);
+    otLinkSetWhitelistEnabled(aNode->mInstance, false);
     otLogFuncExit();
     return 0;
 }
@@ -1107,11 +1107,11 @@ OTNODEAPI int32_t OTCALL otNodeAddWhitelist(otNode* aNode, const char *aExtAddr,
     ThreadError error;
     if (aRssi == 0)
     {
-        error = otAddMacWhitelist(aNode->mInstance, extAddr);
+        error = otLinkAddWhitelist(aNode->mInstance, extAddr);
     }
     else
     {
-        error = otAddMacWhitelistRssi(aNode->mInstance, extAddr, aRssi);
+        error = otLinkAddWhitelistRssi(aNode->mInstance, extAddr, aRssi);
     }
     otLogFuncExit();
     return error;
@@ -1126,7 +1126,7 @@ OTNODEAPI int32_t OTCALL otNodeRemoveWhitelist(otNode* aNode, const char *aExtAd
     if (Hex2Bin(aExtAddr, extAddr, sizeof(extAddr)) != sizeof(extAddr))
         return kThreadError_InvalidArgs;
 
-    otRemoveMacWhitelist(aNode->mInstance, extAddr);
+    otLinkRemoveWhitelist(aNode->mInstance, extAddr);
     otLogFuncExit();
     return 0;
 }
@@ -1144,7 +1144,7 @@ OTNODEAPI const char* OTCALL otNodeGetHashMacAddress(otNode* aNode)
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
     otExtAddress aHashMacAddress = {};
-    otGetHashMacAddress(aNode->mInstance, &aHashMacAddress);
+    otLinkGetJoinerId(aNode->mInstance, &aHashMacAddress);
     char* str = (char*)malloc(18);
     if (str != nullptr)
     {
@@ -1160,7 +1160,7 @@ OTNODEAPI const char* OTCALL otNodeGetHashMacAddress(otNode* aNode)
 OTNODEAPI const char* OTCALL otNodeGetAddr64(otNode* aNode)
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
-    auto extAddr = otGetExtendedAddress(aNode->mInstance);
+    auto extAddr = otLinkGetExtendedAddress(aNode->mInstance);
     char* str = (char*)malloc(18);
     if (str != nullptr)
     {
@@ -1178,7 +1178,7 @@ OTNODEAPI int32_t OTCALL otNodeSetChannel(otNode* aNode, uint8_t aChannel)
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: channel %d\r\n", aNode->mId, aChannel);
-    auto result = otSetChannel(aNode->mInstance, aChannel);
+    auto result = otLinkSetChannel(aNode->mInstance, aChannel);
     otLogFuncExit();
     return result;
 }
@@ -1186,7 +1186,7 @@ OTNODEAPI int32_t OTCALL otNodeSetChannel(otNode* aNode, uint8_t aChannel)
 OTNODEAPI uint8_t OTCALL otNodeGetChannel(otNode* aNode)
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
-    auto result = otGetChannel(aNode->mInstance);
+    auto result = otLinkGetChannel(aNode->mInstance);
     printf("%d: channel\r\n%d\r\n", aNode->mId, result);
     otLogFuncExit();
     return result;
@@ -1287,7 +1287,7 @@ OTNODEAPI const char* OTCALL otNodeGetNetworkName(otNode* aNode)
 OTNODEAPI uint16_t OTCALL otNodeGetPanId(otNode* aNode)
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
-    auto result = otGetPanId(aNode->mInstance);
+    auto result = otLinkGetPanId(aNode->mInstance);
     printf("%d: panid\r\n0x%04x\r\n", aNode->mId, result);
     otLogFuncExit();
     return result;
@@ -1297,7 +1297,7 @@ OTNODEAPI int32_t OTCALL otNodeSetPanId(otNode* aNode, uint16_t aPanId)
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: panid 0x%04x\r\n", aNode->mId, aPanId);
-    auto result = otSetPanId(aNode->mInstance, aPanId);
+    auto result = otLinkSetPanId(aNode->mInstance, aPanId);
     otLogFuncExit();
     return result;
 }

@@ -130,7 +130,7 @@ void TestFuzz(uint32_t aSeconds)
     VerifyOrQuit(aInstance != NULL, "Failed to initialize otInstance");
 
     // Start the Thread network
-    otSetPanId(aInstance, (otPanId)0xFACE);
+    otLinkSetPanId(aInstance, (otPanId)0xFACE);
     otIp6SetEnabled(aInstance, true);
     otThreadStart(aInstance);
 
@@ -186,7 +186,7 @@ void TestFuzz(uint32_t aSeconds)
 #endif
 
                 // Hack to get a receive poll immediately
-                otSetChannel(aInstance, 11);
+                otLinkSetChannel(aInstance, 11);
             }
         }
     }

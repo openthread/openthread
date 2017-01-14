@@ -72,6 +72,9 @@
     <ClCompile Include="..\..\src\core\api\joiner_api.cpp">
       <Filter>Source Files\api</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\api\link_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\api\link_raw_api.cpp">
       <Filter>Source Files\api</Filter>
     </ClCompile>

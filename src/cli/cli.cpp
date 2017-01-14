@@ -349,7 +349,7 @@ void Interpreter::ProcessBlacklist(int argc, char *argv[])
 
     if (argcur >= argc)
     {
-        if (otIsMacBlacklistEnabled(mInstance))
+        if (otLinkIsBlacklistEnabled(mInstance))
         {
             sServer->OutputFormat("Enabled\r\n");
         }
@@ -360,7 +360,7 @@ void Interpreter::ProcessBlacklist(int argc, char *argv[])
 
         for (uint8_t i = 0; ; i++)
         {
-            if (otGetMacBlacklistEntry(mInstance, i, &entry) != kThreadError_None)
+            if (otLinkGetBlacklistEntry(mInstance, i, &entry) != kThreadError_None)
             {
                 break;
             }
@@ -380,26 +380,26 @@ void Interpreter::ProcessBlacklist(int argc, char *argv[])
         VerifyOrExit(++argcur < argc, error = kThreadError_Parse);
         VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), error = kThreadError_Parse);
 
-        otAddMacBlacklist(mInstance, extAddr);
-        VerifyOrExit(otAddMacBlacklist(mInstance, extAddr) == kThreadError_None, error = kThreadError_Parse);
+        otLinkAddBlacklist(mInstance, extAddr);
+        VerifyOrExit(otLinkAddBlacklist(mInstance, extAddr) == kThreadError_None, error = kThreadError_Parse);
     }
     else if (strcmp(argv[argcur], "clear") == 0)
     {
-        otClearMacBlacklist(mInstance);
+        otLinkClearBlacklist(mInstance);
     }
     else if (strcmp(argv[argcur], "disable") == 0)
     {
-        otDisableMacBlacklist(mInstance);
+        otLinkSetBlacklistEnabled(mInstance, false);
     }
     else if (strcmp(argv[argcur], "enable") == 0)
     {
-        otEnableMacBlacklist(mInstance);
+        otLinkSetBlacklistEnabled(mInstance, true);
     }
     else if (strcmp(argv[argcur], "remove") == 0)
     {
         VerifyOrExit(++argcur < argc, error = kThreadError_Parse);
         VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), error = kThreadError_Parse);
-        otRemoveMacBlacklist(mInstance, extAddr);
+        otLinkRemoveBlacklist(mInstance, extAddr);
     }
 
 exit:
@@ -434,12 +434,12 @@ void Interpreter::ProcessChannel(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sServer->OutputFormat("%d\r\n", otGetChannel(mInstance));
+        sServer->OutputFormat("%d\r\n", otLinkGetChannel(mInstance));
     }
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        otSetChannel(mInstance, static_cast<uint8_t>(value));
+        otLinkSetChannel(mInstance, static_cast<uint8_t>(value));
     }
 
 exit:
@@ -620,7 +620,7 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
     {
         if (strcmp(argv[0], "mac") == 0)
         {
-            otMacCountersPtr counters(otGetMacCounters(mInstance));
+            otMacCountersPtr counters(otLinkGetCounters(mInstance));
             sServer->OutputFormat("TxTotal: %d\r\n", counters->mTxTotal);
             sServer->OutputFormat("    TxUnicast: %d\r\n", counters->mTxUnicast);
             sServer->OutputFormat("    TxBroadcast: %d\r\n", counters->mTxBroadcast);
@@ -746,7 +746,7 @@ void Interpreter::ProcessEui64(int argc, char *argv[])
 
     VerifyOrExit(argc == 0, error = kThreadError_Parse);
 
-    otGetFactoryAssignedIeeeEui64(mInstance, &extAddress);
+    otLinkGetFactoryAssignedIeeeEui64(mInstance, &extAddress);
     OutputBytes(extAddress.m8, OT_EXT_ADDRESS_SIZE);
     sServer->OutputFormat("\r\n");
 
@@ -761,7 +761,7 @@ void Interpreter::ProcessExtAddress(int argc, char *argv[])
 
     if (argc == 0)
     {
-        otBufferPtr extAddress(otGetExtendedAddress(mInstance));
+        otBufferPtr extAddress(otLinkGetExtendedAddress(mInstance));
         OutputBytes(extAddress, OT_EXT_ADDRESS_SIZE);
         sServer->OutputFormat("\r\n");
     }
@@ -771,7 +771,7 @@ void Interpreter::ProcessExtAddress(int argc, char *argv[])
 
         VerifyOrExit(Hex2Bin(argv[0], extAddress.m8, sizeof(otExtAddress)) >= 0, error = kThreadError_Parse);
 
-        otSetExtendedAddress(mInstance, &extAddress);
+        otLinkSetExtendedAddress(mInstance, &extAddress);
     }
 
 exit:
@@ -824,7 +824,7 @@ void Interpreter::ProcessHashMacAddress(int argc, char *argv[])
 
     VerifyOrExit(argc == 0, error = kThreadError_Parse);
 
-    otGetHashMacAddress(mInstance, &hashMacAddress);
+    otLinkGetJoinerId(mInstance, &hashMacAddress);
     OutputBytes(hashMacAddress.m8, OT_EXT_ADDRESS_SIZE);
     sServer->OutputFormat("\r\n");
 
@@ -1138,14 +1138,14 @@ void Interpreter::ProcessLinkQuality(int argc, char *argv[])
 
     if (argc == 1)
     {
-        VerifyOrExit(otGetAssignLinkQuality(mInstance, extAddress, &linkQuality) == kThreadError_None,
+        VerifyOrExit(otLinkGetAssignLinkQuality(mInstance, extAddress, &linkQuality) == kThreadError_None,
                      error = kThreadError_InvalidArgs);
         sServer->OutputFormat("%d\r\n", linkQuality);
     }
     else
     {
         SuccessOrExit(error = ParseLong(argv[1], value));
-        otSetAssignLinkQuality(mInstance, extAddress, static_cast<uint8_t>(value));
+        otLinkSetAssignLinkQuality(mInstance, extAddress, static_cast<uint8_t>(value));
     }
 
 exit:
@@ -1303,12 +1303,12 @@ void Interpreter::ProcessPanId(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sServer->OutputFormat("%04x\r\n", otGetPanId(mInstance));
+        sServer->OutputFormat("%04x\r\n", otLinkGetPanId(mInstance));
     }
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        otSetPanId(mInstance, static_cast<otPanId>(value));
+        otLinkSetPanId(mInstance, static_cast<otPanId>(value));
     }
 
 exit:
@@ -1470,12 +1470,12 @@ void Interpreter::ProcessPollPeriod(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sServer->OutputFormat("%d\r\n", (otGetPollPeriod(mInstance) / 1000));  // ms->s
+        sServer->OutputFormat("%d\r\n", (otLinkGetPollPeriod(mInstance) / 1000));  // ms->s
     }
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        otSetPollPeriod(mInstance, static_cast<uint32_t>(value * 1000));  // s->ms
+        otLinkSetPollPeriod(mInstance, static_cast<uint32_t>(value * 1000));  // s->ms
     }
 
 exit:
@@ -1489,7 +1489,7 @@ void Interpreter::ProcessPromiscuous(int argc, char *argv[])
 
     if (argc == 0)
     {
-        if (otIsLinkPromiscuous(mInstance) && otPlatRadioGetPromiscuous(mInstance))
+        if (otLinkIsPromiscuous(mInstance) && otPlatRadioGetPromiscuous(mInstance))
         {
             sServer->OutputFormat("Enabled\r\n");
         }
@@ -1502,13 +1502,13 @@ void Interpreter::ProcessPromiscuous(int argc, char *argv[])
     {
         if (strcmp(argv[0], "enable") == 0)
         {
-            otSetLinkPcapCallback(mInstance, &s_HandleLinkPcapReceive, this);
-            SuccessOrExit(error = otSetLinkPromiscuous(mInstance, true));
+            otLinkSetPcapCallback(mInstance, &s_HandleLinkPcapReceive, this);
+            SuccessOrExit(error = otLinkSetPromiscuous(mInstance, true));
         }
         else if (strcmp(argv[0], "disable") == 0)
         {
-            otSetLinkPcapCallback(mInstance, NULL, NULL);
-            SuccessOrExit(error = otSetLinkPromiscuous(mInstance, false));
+            otLinkSetPcapCallback(mInstance, NULL, NULL);
+            SuccessOrExit(error = otLinkSetPromiscuous(mInstance, false));
         }
     }
 
@@ -2142,7 +2142,7 @@ void Interpreter::ProcessScan(int argc, char *argv[])
 
     sServer->OutputFormat("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |\r\n");
     sServer->OutputFormat("+---+------------------+------------------+------+------------------+----+-----+-----+\r\n");
-    SuccessOrExit(error = otActiveScan(mInstance, scanChannels, 0, &Interpreter::s_HandleActiveScanResult, this));
+    SuccessOrExit(error = otLinkActiveScan(mInstance, scanChannels, 0, &Interpreter::s_HandleActiveScanResult, this));
 
     return;
 
@@ -2645,7 +2645,7 @@ void Interpreter::ProcessWhitelist(int argc, char *argv[])
 
     if (argcur >= argc)
     {
-        if (otIsMacWhitelistEnabled(mInstance))
+        if (otLinkIsWhitelistEnabled(mInstance))
         {
             sServer->OutputFormat("Enabled\r\n");
         }
@@ -2656,7 +2656,7 @@ void Interpreter::ProcessWhitelist(int argc, char *argv[])
 
         for (uint8_t i = 0; ; i++)
         {
-            if (otGetMacWhitelistEntry(mInstance, i, &entry) != kThreadError_None)
+            if (otLinkGetWhitelistEntry(mInstance, i, &entry) != kThreadError_None)
             {
                 break;
             }
@@ -2684,31 +2684,31 @@ void Interpreter::ProcessWhitelist(int argc, char *argv[])
         if (++argcur < argc)
         {
             rssi = static_cast<int8_t>(strtol(argv[argcur], NULL, 0));
-            VerifyOrExit(otAddMacWhitelistRssi(mInstance, extAddr, rssi) == kThreadError_None, error = kThreadError_Parse);
+            VerifyOrExit(otLinkAddWhitelistRssi(mInstance, extAddr, rssi) == kThreadError_None, error = kThreadError_Parse);
         }
         else
         {
-            otAddMacWhitelist(mInstance, extAddr);
-            VerifyOrExit(otAddMacWhitelist(mInstance, extAddr) == kThreadError_None, error = kThreadError_Parse);
+            otLinkAddWhitelist(mInstance, extAddr);
+            VerifyOrExit(otLinkAddWhitelist(mInstance, extAddr) == kThreadError_None, error = kThreadError_Parse);
         }
     }
     else if (strcmp(argv[argcur], "clear") == 0)
     {
-        otClearMacWhitelist(mInstance);
+        otLinkClearWhitelist(mInstance);
     }
     else if (strcmp(argv[argcur], "disable") == 0)
     {
-        otDisableMacWhitelist(mInstance);
+        otLinkSetWhitelistEnabled(mInstance, false);
     }
     else if (strcmp(argv[argcur], "enable") == 0)
     {
-        otEnableMacWhitelist(mInstance);
+        otLinkSetWhitelistEnabled(mInstance, true);
     }
     else if (strcmp(argv[argcur], "remove") == 0)
     {
         VerifyOrExit(++argcur < argc, error = kThreadError_Parse);
         VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), error = kThreadError_Parse);
-        otRemoveMacWhitelist(mInstance, extAddr);
+        otLinkRemoveWhitelist(mInstance, extAddr);
     }
 
 exit:
