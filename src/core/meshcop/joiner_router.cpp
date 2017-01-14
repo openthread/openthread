@@ -318,6 +318,7 @@ ThreadError JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo
     MeshLocalPrefixTlv meshLocalPrefix;
     ExtendedPanIdTlv extendedPanId;
     NetworkNameTlv networkName;
+    NetworkKeySequenceTlv networkKeySequence;
     Tlv *tlv;
 
     otLogFuncEntry();
@@ -388,6 +389,10 @@ ThreadError JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo
         securityPolicy.Init();
         SuccessOrExit(error = message->Append(&securityPolicy, sizeof(securityPolicy)));
     }
+
+    networkKeySequence.Init();
+    networkKeySequence.SetNetworkKeySequence(mNetif.GetKeyManager().GetCurrentKeySequence());
+    SuccessOrExit(error = message->Append(&networkKeySequence, networkKeySequence.GetSize()));
 
     messageInfo = aMessageInfo;
     messageInfo.SetPeerPort(kCoapUdpPort);
