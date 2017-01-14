@@ -536,9 +536,9 @@ NcpBase::NcpBase(otInstance *aInstance):
 
     otSetStateChangedCallback(mInstance, &NcpBase::HandleNetifStateChanged, this);
     otIp6SetReceiveCallback(mInstance, &NcpBase::HandleDatagramFromStack, this);
-    otSetLinkPcapCallback(mInstance, &NcpBase::HandleRawFrame, static_cast<void*>(this));
-    otIcmp6SetEchoEnabled(mInstance, false);
     otIp6SetReceiveFilterEnabled(mInstance, true);
+    otLinkSetPcapCallback(mInstance, &NcpBase::HandleRawFrame, static_cast<void*>(this));
+    otIcmp6SetEchoEnabled(mInstance, false);
 
     mUpdateChangedPropsTask.Post();
 
@@ -1791,7 +1791,7 @@ ThreadError NcpBase::GetPropertyHandler_POWER_STATE(uint8_t header, spinel_prop_
 ThreadError NcpBase::GetPropertyHandler_HWADDR(uint8_t header, spinel_prop_key_t key)
 {
     otExtAddress hwAddr;
-    otGetFactoryAssignedIeeeEui64(mInstance, &hwAddr);
+    otLinkGetFactoryAssignedIeeeEui64(mInstance, &hwAddr);
 
     return SendPropertyUpdate(
                 header,
@@ -1828,7 +1828,7 @@ ThreadError NcpBase::GetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_
 ThreadError NcpBase::GetPropertyHandler_PHY_FREQ(uint8_t header, spinel_prop_key_t key)
 {
     uint32_t freq_khz(0);
-    const uint8_t chan(otGetChannel(mInstance));
+    const uint8_t chan(otLinkGetChannel(mInstance));
 
     if (chan == 0)
     {
@@ -1864,7 +1864,7 @@ ThreadError NcpBase::GetPropertyHandler_PHY_CHAN(uint8_t header, spinel_prop_key
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UINT8_S,
-               otGetChannel(mInstance)
+               otLinkGetChannel(mInstance)
            );
 }
 
@@ -1886,7 +1886,7 @@ ThreadError NcpBase::GetPropertyHandler_PHY_TX_POWER(uint8_t header, spinel_prop
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_INT8_S,
-               otGetMaxTransmitPower(mInstance)
+               otLinkGetMaxTransmitPower(mInstance)
            );
 }
 
@@ -1909,7 +1909,7 @@ ThreadError NcpBase::GetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_pr
     }
     else
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
-    if (otIsActiveScanInProgress(mInstance))
+    if (otLinkIsActiveScanInProgress(mInstance))
     {
         errorCode = SendPropertyUpdate(
                         header,
@@ -1919,7 +1919,7 @@ ThreadError NcpBase::GetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_pr
                         SPINEL_SCAN_STATE_BEACON
                     );
     }
-    else if (otIsEnergyScanInProgress(mInstance))
+    else if (otLinkIsEnergyScanInProgress(mInstance))
     {
         errorCode = SendPropertyUpdate(
                         header,
@@ -1987,7 +1987,7 @@ ThreadError NcpBase::GetPropertyHandler_MAC_15_4_PANID(uint8_t header, spinel_pr
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UINT16_S,
-               otGetPanId(mInstance)
+               otLinkGetPanId(mInstance)
            );
 }
 
@@ -2011,7 +2011,7 @@ ThreadError NcpBase::GetPropertyHandler_MAC_15_4_LADDR(uint8_t header, spinel_pr
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_EUI64_S,
-               otGetExtendedAddress(mInstance)
+               otLinkGetExtendedAddress(mInstance)
            );
 }
 
@@ -2022,7 +2022,7 @@ ThreadError NcpBase::GetPropertyHandler_MAC_15_4_SADDR(uint8_t header, spinel_pr
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UINT16_S,
-               otGetShortAddress(mInstance)
+               otLinkGetShortAddress(mInstance)
            );
 }
 
@@ -2033,7 +2033,7 @@ ThreadError NcpBase::GetPropertyHandler_MAC_EXTENDED_ADDR(uint8_t header, spinel
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_EUI64_S,
-               otGetExtendedAddress(mInstance)
+               otLinkGetExtendedAddress(mInstance)
            );
 }
 
@@ -2868,7 +2868,7 @@ ThreadError NcpBase::GetPropertyHandler_MAC_CNTR(uint8_t header, spinel_prop_key
     const otMacCounters *macCounters;
     ThreadError errorCode = kThreadError_None;
 
-    macCounters = otGetMacCounters(mInstance);
+    macCounters = otLinkGetCounters(mInstance);
 
     assert(macCounters != NULL);
 
@@ -3144,7 +3144,7 @@ ThreadError NcpBase::GetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_pro
 
     for (uint8_t i = 0; (i != 255) && (errorCode == kThreadError_None); i++)
     {
-        errorCode = otGetMacWhitelistEntry(mInstance, i, &entry);
+        errorCode = otLinkGetWhitelistEntry(mInstance, i, &entry);
 
         if (errorCode != kThreadError_None)
         {
@@ -3176,7 +3176,7 @@ ThreadError NcpBase::GetPropertyHandler_MAC_WHITELIST_ENABLED(uint8_t header, sp
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_BOOL_S,
-               otIsMacWhitelistEnabled(mInstance)
+               otLinkIsWhitelistEnabled(mInstance)
            );
 }
 
@@ -3416,7 +3416,7 @@ ThreadError NcpBase::SetPropertyHandler_PHY_TX_POWER(uint8_t header, spinel_prop
 
     if (parsedLength > 0)
     {
-        otSetMaxTransmitPower(mInstance, value);
+        otLinkSetMaxTransmitPower(mInstance, value);
 
         errorCode = HandleCommandPropertyGet(header, key);
     }
@@ -3444,7 +3444,7 @@ ThreadError NcpBase::SetPropertyHandler_PHY_CHAN(uint8_t header, spinel_prop_key
 
     if (parsedLength > 0)
     {
-        errorCode = otSetChannel(mInstance, static_cast<uint8_t>(i));
+        errorCode = otLinkSetChannel(mInstance, static_cast<uint8_t>(i));
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
@@ -3665,7 +3665,7 @@ ThreadError NcpBase::SetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_pr
             else
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
             {
-                errorCode = otActiveScan(
+                errorCode = otLinkActiveScan(
                                 mInstance,
                                 mChannelMask,
                                 mScanPeriod,
@@ -3714,7 +3714,7 @@ ThreadError NcpBase::SetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_pr
             else
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
             {
-                errorCode = otEnergyScan(
+                errorCode = otLinkEnergyScan(
                                 mInstance,
                                 mChannelMask,
                                 mScanPeriod,
@@ -3768,7 +3768,7 @@ ThreadError NcpBase::SetPropertyHandler_MAC_15_4_PANID(uint8_t header, spinel_pr
 
     if (parsedLength > 0)
     {
-        errorCode = otSetPanId(mInstance, tmp);
+        errorCode = otLinkSetPanId(mInstance, tmp);
 
         if (errorCode == kThreadError_None)
         {
@@ -3803,7 +3803,7 @@ ThreadError NcpBase::SetPropertyHandler_MAC_15_4_LADDR(uint8_t header, spinel_pr
 
     if (parsedLength > 0)
     {
-        errorCode = otSetExtendedAddress(mInstance, tmp);
+        errorCode = otLinkSetExtendedAddress(mInstance, tmp);
 
         if (errorCode == kThreadError_None)
         {
@@ -4742,7 +4742,7 @@ ThreadError NcpBase::SetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_pro
     spinel_ssize_t parsedLength = 1;
 
     // First, clear the whitelist.
-    otClearMacWhitelist(mInstance);
+    otLinkClearWhitelist(mInstance);
 
     while ((errorCode == kThreadError_None)
            && (parsedLength > 0)
@@ -4779,11 +4779,11 @@ ThreadError NcpBase::SetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_pro
 
         if (rssi == RSSI_OVERRIDE_DISABLED)
         {
-            errorCode = otAddMacWhitelist(mInstance, ext_addr->m8);
+            errorCode = otLinkAddWhitelist(mInstance, ext_addr->m8);
         }
         else
         {
-            errorCode = otAddMacWhitelistRssi(mInstance, ext_addr->m8, rssi);
+            errorCode = otLinkAddWhitelistRssi(mInstance, ext_addr->m8, rssi);
         }
 
         value_ptr += parsedLength;
@@ -4824,15 +4824,7 @@ ThreadError NcpBase::SetPropertyHandler_MAC_WHITELIST_ENABLED(uint8_t header, sp
 
     if (parsedLength > 0)
     {
-        if (isEnabled)
-        {
-            otEnableMacWhitelist(mInstance);
-        }
-        else
-        {
-            otDisableMacWhitelist(mInstance);
-        }
-
+	otLinkSetWhitelistEnabled(mInstance, isEnabled);
         errorCode = HandleCommandPropertyGet(header, key);
     }
     else
@@ -5878,11 +5870,11 @@ ThreadError NcpBase::InsertPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_
     {
         if (rssi == RSSI_OVERRIDE_DISABLED)
         {
-            errorCode = otAddMacWhitelist(mInstance, ext_addr->m8);
+            errorCode = otLinkAddWhitelist(mInstance, ext_addr->m8);
         }
         else
         {
-            errorCode = otAddMacWhitelistRssi(mInstance, ext_addr->m8, rssi);
+            errorCode = otLinkAddWhitelistRssi(mInstance, ext_addr->m8, rssi);
         }
 
         if (errorCode == kThreadError_None)
@@ -6241,7 +6233,7 @@ ThreadError NcpBase::RemovePropertyHandler_MAC_WHITELIST(uint8_t header, spinel_
 
     if (parsedLength > 0)
     {
-        otRemoveMacWhitelist(mInstance, ext_addr.m8);
+        otLinkRemoveWhitelist(mInstance, ext_addr.m8);
 
         errorCode = SendPropertyUpdate(
                         header,

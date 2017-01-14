@@ -1273,7 +1273,7 @@ otIsSingleton(
 OTAPI 
 ThreadError 
 OTCALL
-otActiveScan(
+otLinkActiveScan(
     _In_ otInstance *aInstance, 
     uint32_t aScanChannels, 
     uint16_t aScanDuration,
@@ -1295,7 +1295,7 @@ otActiveScan(
 OTAPI 
 bool 
 OTCALL
-otIsActiveScanInProgress(
+otLinkIsActiveScanInProgress(
     _In_ otInstance *aInstance
     )
 {
@@ -1307,7 +1307,7 @@ otIsActiveScanInProgress(
 OTAPI 
 ThreadError 
 OTCALL 
-otEnergyScan(
+otLinkEnergyScan(
     _In_ otInstance *aInstance, 
     uint32_t aScanChannels, 
     uint16_t aScanDuration,
@@ -1329,7 +1329,7 @@ otEnergyScan(
 OTAPI 
 bool 
 OTCALL 
-otIsEnergyScanInProgress(
+otLinkIsEnergyScanInProgress(
     _In_ otInstance *aInstance
     )
 {
@@ -1388,7 +1388,7 @@ otSendMacDataRequest(
 OTAPI 
 uint8_t 
 OTCALL
-otGetChannel(
+otLinkGetChannel(
     _In_ otInstance *aInstance
     )
 {
@@ -1400,7 +1400,7 @@ otGetChannel(
 OTAPI 
 ThreadError 
 OTCALL
-otSetChannel(
+otLinkSetChannel(
     _In_ otInstance *aInstance, 
     uint8_t aChannel
     )
@@ -1487,7 +1487,7 @@ OTAPI
 const 
 uint8_t *
 OTCALL
-otGetExtendedAddress(
+otLinkGetExtendedAddress(
     _In_ otInstance *aInstance
     )
 {
@@ -1505,7 +1505,7 @@ otGetExtendedAddress(
 OTAPI 
 ThreadError 
 OTCALL
-otSetExtendedAddress(
+otLinkSetExtendedAddress(
     _In_ otInstance *aInstance, 
     const otExtAddress *aExtendedAddress
     )
@@ -1546,7 +1546,7 @@ otSetExtendedPanId(
 OTAPI 
 void 
 OTCALL
-otGetFactoryAssignedIeeeEui64(
+otLinkGetFactoryAssignedIeeeEui64(
     _In_ otInstance *aInstance, 
     _Out_ otExtAddress *aEui64
 )
@@ -1558,7 +1558,7 @@ otGetFactoryAssignedIeeeEui64(
 OTAPI 
 void 
 OTCALL
-otGetHashMacAddress(
+otLinkGetJoinerId(
     _In_ otInstance *aInstance, 
     _Out_ otExtAddress *aHashMacAddress
     )
@@ -1658,7 +1658,7 @@ otSetMasterKey(
 OTAPI 
 int8_t 
 OTCALL
-otGetMaxTransmitPower(
+otLinkGetMaxTransmitPower(
     _In_ otInstance *aInstance
     )
 {
@@ -1670,7 +1670,7 @@ otGetMaxTransmitPower(
 OTAPI 
 void 
 OTCALL
-otSetMaxTransmitPower(
+otLinkSetMaxTransmitPower(
     _In_ otInstance *aInstance, 
     int8_t aPower
     )
@@ -1833,7 +1833,7 @@ otGetNextOnMeshPrefix(
 OTAPI
 otPanId 
 OTCALL
-otGetPanId(
+otLinkGetPanId(
     _In_ otInstance *aInstance
     )
 {
@@ -1845,7 +1845,7 @@ otGetPanId(
 OTAPI
 ThreadError
 OTCALL
-otSetPanId(
+otLinkSetPanId(
     _In_ otInstance *aInstance, 
     otPanId aPanId
     )
@@ -1880,7 +1880,7 @@ otSetRouterRoleEnabled(
 OTAPI
 otShortAddress 
 OTCALL
-otGetShortAddress(
+otLinkGetShortAddress(
     _In_ otInstance *aInstance
     )
 {
@@ -2352,7 +2352,7 @@ otSendPendingSet(
 OTAPI 
 uint32_t 
 OTCALL
-otGetPollPeriod(
+otLinkGetPollPeriod(
     _In_ otInstance *aInstance
     )
 {
@@ -2364,7 +2364,7 @@ otGetPollPeriod(
 OTAPI 
 void 
 OTCALL
-otSetPollPeriod(
+otLinkSetPollPeriod(
     _In_ otInstance *aInstance, 
     uint32_t aPollPeriod
     )
@@ -2677,7 +2677,7 @@ otReleaseRouterId(
 OTAPI
 ThreadError
 OTCALL
-otAddMacWhitelist(
+otLinkAddWhitelist(
     _In_ otInstance *aInstance, 
     const uint8_t *aExtAddr
     )
@@ -2689,7 +2689,7 @@ otAddMacWhitelist(
 OTAPI
 ThreadError
 OTCALL
-otAddMacWhitelistRssi(
+otLinkAddWhitelistRssi(
     _In_ otInstance *aInstance, 
     const uint8_t *aExtAddr, 
     int8_t aRssi
@@ -2704,7 +2704,7 @@ otAddMacWhitelistRssi(
 OTAPI
 void 
 OTCALL
-otRemoveMacWhitelist(
+otLinkRemoveWhitelist(
     _In_ otInstance *aInstance, 
     const uint8_t *aExtAddr
     )
@@ -2715,7 +2715,7 @@ otRemoveMacWhitelist(
 OTAPI
 ThreadError
 OTCALL
-otGetMacWhitelistEntry(
+otLinkGetWhitelistEntry(
     _In_ otInstance *aInstance, 
     uint8_t aIndex, 
     _Out_ otMacWhitelistEntry *aEntry
@@ -2728,7 +2728,7 @@ otGetMacWhitelistEntry(
 OTAPI
 void 
 OTCALL
-otClearMacWhitelist(
+otLinkClearWhitelist(
     _In_ otInstance *aInstance
     )
 {
@@ -2738,27 +2738,18 @@ otClearMacWhitelist(
 OTAPI
 void 
 OTCALL
-otDisableMacWhitelist(
-    _In_ otInstance *aInstance
+otLinkSetWhitelistEnabled(
+    _In_ otInstance *aInstance,
+    bool aEnabled
     )
 {
-    if (aInstance) (void)SetIOCTL(aInstance, IOCTL_OTLWF_OT_MAC_WHITELIST_ENABLED, (BOOLEAN)FALSE);
-}
-
-OTAPI
-void 
-OTCALL
-otEnableMacWhitelist(
-    _In_ otInstance *aInstance
-    )
-{
-    if (aInstance) (void)SetIOCTL(aInstance, IOCTL_OTLWF_OT_MAC_WHITELIST_ENABLED, (BOOLEAN)TRUE);
+    if (aInstance) (void)SetIOCTL(aInstance, IOCTL_OTLWF_OT_MAC_WHITELIST_ENABLED, (BOOLEAN)aEnabled);
 }
 
 OTAPI
 bool 
 OTCALL
-otIsMacWhitelistEnabled(
+otLinkIsWhitelistEnabled(
     _In_ otInstance *aInstance
     )
 {
@@ -2820,7 +2811,7 @@ otBecomeLeader(
 OTAPI
 ThreadError
 OTCALL
-otAddMacBlacklist(
+otLinkAddBlacklist(
     _In_ otInstance *aInstance, 
     const uint8_t *aExtAddr
     )
@@ -2832,7 +2823,7 @@ otAddMacBlacklist(
 OTAPI
 void 
 OTCALL
-otRemoveMacBlacklist(
+otLinkRemoveBlacklist(
     _In_ otInstance *aInstance, 
     const uint8_t *aExtAddr
     )
@@ -2843,7 +2834,7 @@ otRemoveMacBlacklist(
 OTAPI
 ThreadError
 OTCALL
-otGetMacBlacklistEntry(
+otLinkGetBlacklistEntry(
     _In_ otInstance *aInstance, 
     uint8_t aIndex, 
     _Out_ otMacBlacklistEntry *aEntry
@@ -2856,7 +2847,7 @@ otGetMacBlacklistEntry(
 OTAPI
 void 
 OTCALL
-otClearMacBlacklist(
+otLinkClearBlacklist(
     _In_ otInstance *aInstance
     )
 {
@@ -2866,27 +2857,18 @@ otClearMacBlacklist(
 OTAPI
 void 
 OTCALL
-otDisableMacBlacklist(
-    _In_ otInstance *aInstance
+otLinkSetBlacklistEnabled(
+    _In_ otInstance *aInstance,
+    bool aEnabled
     )
 {
-    if (aInstance) (void)SetIOCTL(aInstance, IOCTL_OTLWF_OT_MAC_BLACKLIST_ENABLED, (BOOLEAN)FALSE);
-}
-
-OTAPI
-void 
-OTCALL
-otEnableMacBlacklist(
-    _In_ otInstance *aInstance
-    )
-{
-    if (aInstance) (void)SetIOCTL(aInstance, IOCTL_OTLWF_OT_MAC_BLACKLIST_ENABLED, (BOOLEAN)TRUE);
+    if (aInstance) (void)SetIOCTL(aInstance, IOCTL_OTLWF_OT_MAC_BLACKLIST_ENABLED, (BOOLEAN)aEnabled);
 }
 
 OTAPI
 bool 
 OTCALL
-otIsMacBlacklistEnabled(
+otLinkIsBlacklistEnabled(
     _In_ otInstance *aInstance
     )
 {
@@ -2898,7 +2880,7 @@ otIsMacBlacklistEnabled(
 OTAPI 
 ThreadError 
 OTCALL
-otGetAssignLinkQuality(
+otLinkGetAssignLinkQuality(
     _In_ otInstance *aInstance, 
     const uint8_t *aExtAddr, 
     _Out_ uint8_t *aLinkQuality
@@ -2911,7 +2893,7 @@ otGetAssignLinkQuality(
 OTAPI 
 void 
 OTCALL
-otSetAssignLinkQuality(
+otLinkSetAssignLinkQuality(
     _In_ otInstance *aInstance,
     const uint8_t *aExtAddr, 
     uint8_t aLinkQuality
@@ -3133,7 +3115,7 @@ otGetStableNetworkDataVersion(
 OTAPI
 const otMacCounters*
 OTCALL
-otGetMacCounters(
+otLinkGetCounters(
     _In_ otInstance *aInstance
     )
 {

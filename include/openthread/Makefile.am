@@ -37,6 +37,7 @@ openthread_headers                      = \
     ip6.h                                 \
     jam_detection.h                       \
     joiner.h                              \
+    link.h                                \
     message.h                             \
     tasklet.h                             \
     udp.h                                 \

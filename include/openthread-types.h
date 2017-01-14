@@ -1094,26 +1094,6 @@ typedef void (OTCALL *otDeviceAvailabilityChangedCallback)(bool aAdded, const GU
 #endif // OTDLL
 
 /**
- * This function pointer is called during an IEEE 802.15.4 Active Scan when an IEEE 802.15.4 Beacon is received or
- * the scan completes.
- *
- * @param[in]  aResult   A valid pointer to the beacon information or NULL when the active scan completes.
- * @param[in]  aContext  A pointer to application-specific context.
- *
- */
-typedef void (OTCALL *otHandleActiveScanResult)(otActiveScanResult *aResult, void *aContext);
-
-/**
- * This function pointer is called during an IEEE 802.15.4 Energy Scan when the result for a channel is ready or the
- * scan completes.
- *
- * @param[in]  aResult   A valid pointer to the energy scan result information or NULL when the energy scan completes.
- * @param[in]  aContext  A pointer to application-specific context.
- *
- */
-typedef void (OTCALL *otHandleEnergyScanResult)(otEnergyScanResult *aResult, void *aContext);
-
-/**
  * This function pointer is called to notify certain configuration or state changes within OpenThread.
  *
  * @param[in]  aFlags    A bit-field indicating specific state that has changed.
