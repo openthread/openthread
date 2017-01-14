@@ -671,6 +671,7 @@ void Mac::ProcessTransmitSecurity(Frame &aFrame)
     case Frame::kKeyIdMode0:
         key = mKeyManager.GetKek();
         frameCounter = mKeyManager.GetKekFrameCounter();
+        mKeyManager.IncrementKekFrameCounter();
         extAddress = &mExtAddress;
         break;
 
