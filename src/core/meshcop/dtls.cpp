@@ -409,6 +409,7 @@ void Dtls::Process(void)
                 break;
 
             case MBEDTLS_ERR_SSL_FATAL_ALERT_MESSAGE:
+                mbedtls_ssl_close_notify(&mSsl);
                 ExitNow(shouldClose = true);
                 break;
 
