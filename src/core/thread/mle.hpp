@@ -1217,6 +1217,8 @@ protected:
     uint8_t mRouterSelectionJitter;         ///< The variable to save the assigned jitter value.
     uint8_t mRouterSelectionJitterTimeout;  ///< The Timeout prior to request/release Router ID.
 
+    uint8_t mLastPartitionRouterIdSequence;
+    uint32_t mLastPartitionId;
 private:
     enum
     {

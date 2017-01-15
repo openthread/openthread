@@ -69,6 +69,7 @@ public:
     void SetLeaderPartitionId(uint32_t) { }
 
     ThreadError SetPreferredRouterId(uint8_t) { return kThreadError_NotImplemented; }
+    uint32_t GetPreviousPartitionId(void) const { return 0; }
     void SetPreviousPartitionId(uint32_t) { }
     void SetRouterId(uint8_t) { }
 

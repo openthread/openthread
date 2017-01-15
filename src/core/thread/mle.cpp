@@ -461,6 +461,8 @@ ThreadError Mle::BecomeChild(otMleAttachFilter aFilter)
     if (aFilter == kMleAttachAnyPartition)
     {
         mParent.mState = Neighbor::kStateInvalid;
+        mLastPartitionId = mMleRouter.GetPreviousPartitionId();
+        mLastPartitionRouterIdSequence = mMleRouter.GetRouterIdSequence();
     }
 
     mParentRequestTimer.Start(kParentRequestRouterTimeout);

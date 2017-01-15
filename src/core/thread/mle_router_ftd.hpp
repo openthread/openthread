@@ -299,6 +299,12 @@ public:
     ThreadError SetPreferredRouterId(uint8_t aRouterId);
 
     /**
+     * This method gets the Partition Id which the device joined successfully once.
+     *
+     */
+    uint32_t GetPreviousPartitionId(void) const;
+
+    /**
      * This method sets the Partition Id which the device joins successfully.
      *
      * @param[in]  aPartitionId   The Partition Id.
