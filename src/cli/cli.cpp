@@ -2583,8 +2583,8 @@ void Interpreter::ProcessDiag(int argc, char *argv[])
 void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
 {
     char *argv[kMaxArgs];
-    int argc = 0;
     char *cmd;
+    uint8_t argc = 0, i = 0;
 
     sServer = &aServer;
 
@@ -2615,13 +2615,19 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
                  sServer->OutputFormat("under diagnostics mode, execute 'diag stop' before running any other commands.\r\n"));
 #endif
 
-    for (unsigned int i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
+    for (i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
     {
         if (strcmp(cmd, sCommands[i].mName) == 0)
         {
             (this->*sCommands[i].mCommand)(argc, argv);
             break;
         }
+    }
+
+    // Error prompt for unsupported commands
+    if (i == sizeof(sCommands) / sizeof(sCommands[0]))
+    {
+        AppendResult(kThreadError_Parse);
     }
 
 exit:
