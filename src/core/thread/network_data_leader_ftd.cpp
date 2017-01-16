@@ -301,7 +301,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Header &aRequestHeader, co
     uint8_t *data = NULL;
     uint8_t length = 0;
 
-    VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mCoapServer.NewMeshCoPMessage(0)) != NULL, error = kThreadError_NoBufs);
 
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
@@ -363,7 +363,7 @@ void Leader::SendCommissioningSetResponse(const Coap::Header &aRequestHeader, co
     Message *message;
     MeshCoP::StateTlv state;
 
-    VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mCoapServer.NewMeshCoPMessage(0)) != NULL, error = kThreadError_NoBufs);
 
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
