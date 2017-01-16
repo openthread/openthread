@@ -1029,7 +1029,16 @@ class ICMPv6Factory(PacketFactory):
             return self._body_factories[_type]
 
         except KeyError:
-            raise RuntimeError("Could not find factory to parse ICMP body. Unsupported ICMP type: {}".format(_type))
+            if "default" not in self._body_factories:
+                raise RuntimeError("Could not find specialized factory to parse ICMP body. "
+                                   "Unsupported ICMP type: {}".format(_type))
+
+            default_factory = self._body_factories["default"]
+
+            print("Could not find specialized factory to parse ICMP body. "
+                  "Take the default one: {}".format(type(default_factory)))
+
+            return default_factory
 
     def parse(self, data, message_info):
         header = ICMPv6Header.from_bytes(data)
@@ -1049,9 +1058,9 @@ class ICMPv6EchoBodyFactory(PacketFactory):
         return ICMPv6EchoBody.from_bytes(data)
 
 
-class UDPBytesPayload(ConvertibleToBytes, BuildableFromBytes):
+class BytesPayload(ConvertibleToBytes, BuildableFromBytes):
 
-    """ Class representing payload of UDP datagram. """
+    """ Class representing bytes payload. """
 
     def __init__(self, data):
         self.data = data
@@ -1067,12 +1076,12 @@ class UDPBytesPayload(ConvertibleToBytes, BuildableFromBytes):
         return len(self.data)
 
 
-class UDPBytesPayloadFactory(PacketFactory):
+class BytesPayloadFactory(PacketFactory):
 
-    """ Factory that produces payload of UDP datagram. """
+    """ Factory that produces bytes payload. """
 
     def parse(self, data, message_info):
-        return UDPBytesPayload(data.read())
+        return BytesPayload(data.read())
 
 
 class ICMPv6EchoBody(ConvertibleToBytes, BuildableFromBytes):

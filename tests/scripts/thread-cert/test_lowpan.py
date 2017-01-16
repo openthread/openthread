@@ -48,7 +48,7 @@ def create_default_lowpan_parser(context_manager):
             ulpf={
                 17: ipv6.UDPDatagramFactory(
                     udp_header_factory=ipv6.UDPHeaderFactory(),
-                    udp_payload_factory=ipv6.UDPBytesPayloadFactory()),
+                    udp_payload_factory=ipv6.BytesPayloadFactory()),
                 58: ipv6.ICMPv6Factory(
                     body_factories=config.create_default_ipv6_icmp_body_factories()
                 )
