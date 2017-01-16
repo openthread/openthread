@@ -1285,6 +1285,12 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
                      leaderData.GetWeighting(), partitionId,
                      mLeaderData.GetWeighting(), mLeaderData.GetPartitionId());
 
+        if (partitionId == mLastPartitionId && (mDeviceMode & ModeTlv::kModeFFD))
+        {
+            VerifyOrExit((static_cast<int8_t>(route.GetRouterIdSequence() - mLastPartitionRouterIdSequence) > 0),
+                         error = kThreadError_Drop);
+        }
+
         if (GetDeviceState() == kDeviceStateChild &&
             (memcmp(&mParent.mMacAddr, &macAddr, sizeof(mParent.mMacAddr)) == 0 || !(mDeviceMode & ModeTlv::kModeFFD)))
         {
@@ -3266,6 +3272,11 @@ exit:
 void MleRouter::SetPreviousPartitionId(uint32_t aPartitionId)
 {
     mPreviousPartitionId = aPartitionId;
+}
+
+uint32_t MleRouter::GetPreviousPartitionId(void) const
+{
+    return mPreviousPartitionId;
 }
 
 void MleRouter::SetRouterId(uint8_t aRouterId)
