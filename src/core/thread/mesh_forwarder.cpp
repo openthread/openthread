@@ -1923,7 +1923,10 @@ void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const Thre
     child->mLastHeard = Timer::GetNow();
     child->mLinkFailures = 0;
 
-    child->mDataRequest = true;
+    if (!mSrcMatchEnabled || child->mQueuedIndirectMessageCnt > 0)
+    {
+        child->mDataRequest = true;
+    }
 
     mScheduleTransmissionTask.Post();
 
