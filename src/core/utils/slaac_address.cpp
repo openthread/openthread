@@ -70,7 +70,7 @@ void Slaac::UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddresses, u
 
         iterator = OT_NETWORK_DATA_ITERATOR_INIT;
 
-        while (otGetNextOnMeshPrefix(aInstance, false, &iterator, &config) == kThreadError_None)
+        while (otNetDataGetNextPrefixInfo(aInstance, false, &iterator, &config) == kThreadError_None)
         {
             if (config.mSlaac == false)
             {
@@ -95,7 +95,7 @@ void Slaac::UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddresses, u
     // add addresses
     iterator = OT_NETWORK_DATA_ITERATOR_INIT;
 
-    while (otGetNextOnMeshPrefix(aInstance, false, &iterator, &config) == kThreadError_None)
+    while (otNetDataGetNextPrefixInfo(aInstance, false, &iterator, &config) == kThreadError_None)
     {
         bool found = false;
 

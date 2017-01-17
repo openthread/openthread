@@ -234,30 +234,6 @@ ThreadError otSetMeshLocalPrefix(otInstance *aInstance, const uint8_t *aMeshLoca
     return aInstance->mThreadNetif.GetMle().SetMeshLocalPrefix(aMeshLocalPrefix);
 }
 
-ThreadError otGetNetworkDataLeader(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength)
-{
-    ThreadError error = kThreadError_None;
-
-    VerifyOrExit(aData != NULL && aDataLength != NULL, error = kThreadError_InvalidArgs);
-
-    aInstance->mThreadNetif.GetNetworkDataLeader().GetNetworkData(aStable, aData, *aDataLength);
-
-exit:
-    return error;
-}
-
-ThreadError otGetNetworkDataLocal(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength)
-{
-    ThreadError error = kThreadError_None;
-
-    VerifyOrExit(aData != NULL && aDataLength != NULL, error = kThreadError_InvalidArgs);
-
-    aInstance->mThreadNetif.GetNetworkDataLocal().GetNetworkData(aStable, aData, *aDataLength);
-
-exit:
-    return error;
-}
-
 const char *otGetNetworkName(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMac().GetNetworkName();
@@ -306,88 +282,6 @@ uint16_t otGetJoinerUdpPort(otInstance *aInstance)
 ThreadError otSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort)
 {
     return aInstance->mThreadNetif.GetJoinerRouter().SetJoinerUdpPort(aJoinerUdpPort);
-}
-
-ThreadError otAddBorderRouter(otInstance *aInstance, const otBorderRouterConfig *aConfig)
-{
-    uint8_t flags = 0;
-
-    if (aConfig->mPreferred)
-    {
-        flags |= NetworkData::BorderRouterEntry::kPreferredFlag;
-    }
-
-    if (aConfig->mSlaac)
-    {
-        flags |= NetworkData::BorderRouterEntry::kSlaacFlag;
-    }
-
-    if (aConfig->mDhcp)
-    {
-        flags |= NetworkData::BorderRouterEntry::kDhcpFlag;
-    }
-
-    if (aConfig->mConfigure)
-    {
-        flags |= NetworkData::BorderRouterEntry::kConfigureFlag;
-    }
-
-    if (aConfig->mDefaultRoute)
-    {
-        flags |= NetworkData::BorderRouterEntry::kDefaultRouteFlag;
-    }
-
-    if (aConfig->mOnMesh)
-    {
-        flags |= NetworkData::BorderRouterEntry::kOnMeshFlag;
-    }
-
-    return aInstance->mThreadNetif.GetNetworkDataLocal().AddOnMeshPrefix(aConfig->mPrefix.mPrefix.mFields.m8,
-                                                                         aConfig->mPrefix.mLength,
-                                                                         aConfig->mPreference, flags, aConfig->mStable);
-}
-
-ThreadError otRemoveBorderRouter(otInstance *aInstance, const otIp6Prefix *aPrefix)
-{
-    return aInstance->mThreadNetif.GetNetworkDataLocal().RemoveOnMeshPrefix(aPrefix->mPrefix.mFields.m8, aPrefix->mLength);
-}
-
-ThreadError otGetNextOnMeshPrefix(otInstance *aInstance, bool aLocal, otNetworkDataIterator *aIterator,
-                                  otBorderRouterConfig *aConfig)
-{
-    ThreadError error = kThreadError_None;
-
-    VerifyOrExit(aIterator && aConfig, error = kThreadError_InvalidArgs);
-
-    if (aLocal)
-    {
-        error = aInstance->mThreadNetif.GetNetworkDataLocal().GetNextOnMeshPrefix(aIterator, aConfig);
-    }
-    else
-    {
-        error = aInstance->mThreadNetif.GetNetworkDataLeader().GetNextOnMeshPrefix(aIterator, aConfig);
-    }
-
-exit:
-    return error;
-}
-
-ThreadError otAddExternalRoute(otInstance *aInstance, const otExternalRouteConfig *aConfig)
-{
-    return aInstance->mThreadNetif.GetNetworkDataLocal().AddHasRoutePrefix(aConfig->mPrefix.mPrefix.mFields.m8,
-                                                                           aConfig->mPrefix.mLength,
-                                                                           aConfig->mPreference, aConfig->mStable);
-}
-
-ThreadError otRemoveExternalRoute(otInstance *aInstance, const otIp6Prefix *aPrefix)
-{
-    return aInstance->mThreadNetif.GetNetworkDataLocal().RemoveHasRoutePrefix(aPrefix->mPrefix.mFields.m8,
-                                                                              aPrefix->mLength);
-}
-
-ThreadError otSendServerData(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetNetworkDataLocal().SendServerDataNotification();
 }
 
 uint32_t otGetContextIdReuseDelay(otInstance *aInstance)
@@ -624,11 +518,6 @@ uint8_t otGetLeaderWeight(otInstance *aInstance)
     return aInstance->mThreadNetif.GetMle().GetLeaderDataTlv().GetWeighting();
 }
 
-uint8_t otGetNetworkDataVersion(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetMle().GetLeaderDataTlv().GetDataVersion();
-}
-
 uint32_t otGetPartitionId(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMle().GetLeaderDataTlv().GetPartitionId();
@@ -694,11 +583,6 @@ ThreadError otGetParentAverageRssi(otInstance *aInstance, int8_t *aParentRssi)
 
 exit:
     return error;
-}
-
-uint8_t otGetStableNetworkDataVersion(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetMle().GetLeaderDataTlv().GetStableDataVersion();
 }
 
 ThreadError otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aCallbackContext)

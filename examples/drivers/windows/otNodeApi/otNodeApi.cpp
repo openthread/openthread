@@ -1575,7 +1575,7 @@ OTNODEAPI int32_t OTCALL otNodeAddPrefix(otNode* aNode, const char *aPrefix, con
         return kThreadError_InvalidArgs;
     }
 
-    auto result = otAddBorderRouter(aNode->mInstance, &config);
+    auto result = otNetDataAddPrefixInfo(aNode->mInstance, &config);
     otLogFuncExit();
     return result;
 }
@@ -1588,7 +1588,7 @@ OTNODEAPI int32_t OTCALL otNodeRemovePrefix(otNode* aNode, const char *aPrefix)
     auto error = otNodeParsePrefix(aPrefix, &prefix);
     if (error != kThreadError_None) return error;
 
-    auto result = otRemoveBorderRouter(aNode->mInstance, &prefix);
+    auto result = otNetDataRemovePrefixInfo(aNode->mInstance, &prefix);
     otLogFuncExit();
     return result;
 }
@@ -1618,7 +1618,7 @@ OTNODEAPI int32_t OTCALL otNodeAddRoute(otNode* aNode, const char *aPrefix, cons
         return kThreadError_InvalidArgs;
     }
 
-    auto result = otAddExternalRoute(aNode->mInstance, &config);
+    auto result = otNetDataAddRoute(aNode->mInstance, &config);
     otLogFuncExit();
     return result;
 }
@@ -1631,7 +1631,7 @@ OTNODEAPI int32_t OTCALL otNodeRemoveRoute(otNode* aNode, const char *aPrefix)
     auto error = otNodeParsePrefix(aPrefix, &prefix);
     if (error != kThreadError_None) return error;
 
-    auto result = otRemoveExternalRoute(aNode->mInstance, &prefix);
+    auto result = otNetDataRemoveRoute(aNode->mInstance, &prefix);
     otLogFuncExit();
     return result;
 }
@@ -1640,7 +1640,7 @@ OTNODEAPI int32_t OTCALL otNodeRegisterNetdata(otNode* aNode)
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: registernetdata\r\n", aNode->mId);
-    auto result = otSendServerData(aNode->mInstance);
+    auto result = otNetDataRegister(aNode->mInstance);
     otLogFuncExit();
     return result;
 }

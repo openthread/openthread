@@ -39,6 +39,7 @@ openthread_headers                      = \
     joiner.h                              \
     link.h                                \
     message.h                             \
+    netdata.h                             \
     tasklet.h                             \
     udp.h                                 \
     $(NULL)
