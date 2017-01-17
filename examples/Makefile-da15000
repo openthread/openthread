@@ -72,8 +72,8 @@ endif
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
-CONFIG_FILE      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-da15000-config.h\"'
-CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/da15000/
+CONFIG_FILE                      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-da15000-config.h\"'
+CONFIG_FILE_PATH                 = $(AbsTopSourceDir)/examples/platforms/da15000/
 
 COMMONCFLAGS                   := \
     -fdata-sections               \
