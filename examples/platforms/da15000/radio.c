@@ -65,8 +65,11 @@ void da15000RadioInit(void)
 {
     /* Wake up power domains */
     REG_CLR_BIT(CRG_TOP, PMU_CTRL_REG, FTDF_SLEEP);
+
     while (REG_GETF(CRG_TOP, SYS_STAT_REG, FTDF_IS_UP) == 0x0);
+
     REG_CLR_BIT(CRG_TOP, PMU_CTRL_REG, RADIO_SLEEP);
+
     while (REG_GETF(CRG_TOP, SYS_STAT_REG, RAD_IS_UP) == 0x0);
 
     REG_SETF(CRG_TOP, CLK_RADIO_REG, FTDF_MAC_ENABLE, 1);
