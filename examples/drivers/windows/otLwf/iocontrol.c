@@ -2493,7 +2493,7 @@ otLwfIoCtl_otAddBorderRouter(
     
     if (InBufferLength >= sizeof(otBorderRouterConfig))
     {
-        status = ThreadErrorToNtstatus(otAddBorderRouter(pFilter->otCtx, (otBorderRouterConfig*)InBuffer));
+        status = ThreadErrorToNtstatus(otNetDataAddPrefixInfo(pFilter->otCtx, (otBorderRouterConfig*)InBuffer));
     }
 
     return status;
@@ -2574,7 +2574,7 @@ otLwfIoCtl_otRemoveBorderRouter(
     
     if (InBufferLength >= sizeof(otIp6Prefix))
     {
-        status = ThreadErrorToNtstatus(otRemoveBorderRouter(pFilter->otCtx, (otIp6Prefix*)InBuffer));
+        status = ThreadErrorToNtstatus(otNetDataRemovePrefixInfo(pFilter->otCtx, (otIp6Prefix*)InBuffer));
     }
 
     return status;
@@ -2637,7 +2637,7 @@ otLwfIoCtl_otAddExternalRoute(
     
     if (InBufferLength >= sizeof(otExternalRouteConfig))
     {
-        status = ThreadErrorToNtstatus(otAddExternalRoute(pFilter->otCtx, (otExternalRouteConfig*)InBuffer));
+        status = ThreadErrorToNtstatus(otNetDataAddRoute(pFilter->otCtx, (otExternalRouteConfig*)InBuffer));
     }
 
     return status;
@@ -2709,7 +2709,7 @@ otLwfIoCtl_otRemoveExternalRoute(
     
     if (InBufferLength >= sizeof(otIp6Prefix))
     {
-        status = ThreadErrorToNtstatus(otRemoveExternalRoute(pFilter->otCtx, (otIp6Prefix*)InBuffer));
+        status = ThreadErrorToNtstatus(otNetDataRemoveRoute(pFilter->otCtx, (otIp6Prefix*)InBuffer));
     }
 
     return status;
@@ -2772,7 +2772,7 @@ otLwfIoCtl_otSendServerData(
     UNREFERENCED_PARAMETER(OutBuffer);
     *OutBufferLength = 0;
     
-    status = ThreadErrorToNtstatus(otSendServerData(pFilter->otCtx));
+    status = ThreadErrorToNtstatus(otNetDataRegister(pFilter->otCtx));
 
     return status;
 }
@@ -4128,7 +4128,7 @@ otLwfIoCtl_otNetworkDataVersion(
 
     if (*OutBufferLength >= sizeof(uint8_t))
     {
-        *(uint8_t*)OutBuffer = otGetNetworkDataVersion(pFilter->otCtx);
+        *(uint8_t*)OutBuffer = otNetDataGetVersion(pFilter->otCtx);
         *OutBufferLength = sizeof(uint8_t);
         status = STATUS_SUCCESS;
     }
@@ -4450,7 +4450,7 @@ otLwfIoCtl_otStableNetworkDataVersion(
 
     if (*OutBufferLength >= sizeof(uint8_t))
     {
-        *(uint8_t*)OutBuffer = otGetStableNetworkDataVersion(pFilter->otCtx);
+        *(uint8_t*)OutBuffer = otNetDataGetStableVersion(pFilter->otCtx);
         *OutBufferLength = sizeof(uint8_t);
         status = STATUS_SUCCESS;
     }
@@ -4715,7 +4715,7 @@ otLwfIoCtl_otNextOnMeshPrefix(
         uint8_t aIterator = *(uint8_t*)(InBuffer + sizeof(BOOLEAN));
         otBorderRouterConfig* aConfig = (otBorderRouterConfig*)((PUCHAR)OutBuffer + sizeof(uint8_t));
         status = ThreadErrorToNtstatus(
-            otGetNextOnMeshPrefix(
+            otNetDataGetNextPrefixInfo(
                 pFilter->otCtx, 
                 aLocal, 
                 &aIterator,

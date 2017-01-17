@@ -44,6 +44,7 @@ SOURCES_COMMON                      = \
     api/ip6_api.cpp                   \
     api/link_api.cpp                  \
     api/message_api.cpp               \
+    api/netdata_api.cpp               \
     api/tasklet_api.cpp               \
     api/udp_api.cpp                   \
     coap/coap_base.cpp                \

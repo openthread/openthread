@@ -62,6 +62,7 @@
     <ClCompile Include="..\..\src\core\api\link_api.cpp" />
     <ClCompile Include="..\..\src\core\api\link_raw_api.cpp" />
     <ClCompile Include="..\..\src\core\api\message_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\netdata_api.cpp" />
     <ClCompile Include="..\..\src\core\api\tasklet_api.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_base.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_client.cpp" />

@@ -2195,7 +2195,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_NETWORK_DATA_VERSION(uint8_t head
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UINT8_S,
-               otGetNetworkDataVersion(mInstance)
+               otNetDataGetVersion(mInstance)
            );
 }
 
@@ -2206,7 +2206,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA_VERSION(uint8
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UINT8_S,
-               otGetStableNetworkDataVersion(mInstance)
+               otNetDataGetStableVersion(mInstance)
            );
 }
 
@@ -2216,7 +2216,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_NETWORK_DATA(uint8_t header, spin
     uint8_t network_data[255];
     uint8_t network_data_len = 255;
 
-    otGetNetworkDataLocal(
+    otNetDataGetLocal(
         mInstance,
         false, // Stable?
         network_data,
@@ -2238,7 +2238,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA(uint8_t heade
     uint8_t network_data[255];
     uint8_t network_data_len = 255;
 
-    otGetNetworkDataLocal(
+    otNetDataGetLocal(
         mInstance,
         true, // Stable?
         network_data,
@@ -2260,7 +2260,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_LEADER_NETWORK_DATA(uint8_t heade
     uint8_t network_data[255];
     uint8_t network_data_len = 255;
 
-    otGetNetworkDataLeader(
+    otNetDataGetLeader(
         mInstance,
         false, // Stable?
         network_data,
@@ -2282,7 +2282,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_STABLE_LEADER_NETWORK_DATA(uint8_
     uint8_t network_data[255];
     uint8_t network_data_len = 255;
 
-    otGetNetworkDataLeader(
+    otNetDataGetLeader(
         mInstance,
         true, // Stable?
         network_data,
@@ -2581,7 +2581,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spin
     // Fill from non-local network data first
     for (otNetworkDataIterator iter = OT_NETWORK_DATA_ITERATOR_INIT ;;)
     {
-        errorCode = otGetNextOnMeshPrefix(mInstance, false, &iter, &border_router_config);
+        errorCode = otNetDataGetNextPrefixInfo(mInstance, false, &iter, &border_router_config);
 
         if (errorCode != kThreadError_None)
         {
@@ -2609,7 +2609,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spin
     // Fill from local network data last
     for (otNetworkDataIterator iter = OT_NETWORK_DATA_ITERATOR_INIT ;;)
     {
-        errorCode = otGetNextOnMeshPrefix(mInstance, true, &iter, &border_router_config);
+        errorCode = otNetDataGetNextPrefixInfo(mInstance, true, &iter, &border_router_config);
 
         if (errorCode != kThreadError_None)
         {
@@ -4662,7 +4662,7 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE(uint8
 
     if (should_register_with_leader)
     {
-        otSendServerData(mInstance);
+        otNetDataRegister(mInstance);
     }
 
     return errorCode;
@@ -5695,7 +5695,7 @@ ThreadError NcpBase::InsertPropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, s
         ext_route_config.mPrefix.mPrefix = *addr_ptr;
         ext_route_config.mStable = stable;
         ext_route_config.mPreference = ((flags & kPreferenceMask) >> kPreferenceOffset);
-        errorCode = otAddExternalRoute(mInstance, &ext_route_config);
+        errorCode = otNetDataAddRoute(mInstance, &ext_route_config);
 
         if (errorCode == kThreadError_None)
         {
@@ -5770,7 +5770,7 @@ ThreadError NcpBase::InsertPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, s
         border_router_config.mDefaultRoute = ((flags & kDefaultRouteFlag) == kDefaultRouteFlag);
         border_router_config.mOnMesh = ((flags & kOnMeshFlag) == kOnMeshFlag);
 
-        errorCode = otAddBorderRouter(mInstance, &border_router_config);
+        errorCode = otNetDataAddPrefixInfo(mInstance, &border_router_config);
 
         if (errorCode == kThreadError_None)
         {
@@ -6057,7 +6057,7 @@ ThreadError NcpBase::RemovePropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, s
     if (parsedLength > 0)
     {
         ip6_prefix.mPrefix = *addr_ptr;
-        errorCode = otRemoveExternalRoute(mInstance, &ip6_prefix);
+        errorCode = otNetDataRemoveRoute(mInstance, &ip6_prefix);
 
         if (errorCode == kThreadError_None)
         {
@@ -6109,7 +6109,7 @@ ThreadError NcpBase::RemovePropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, s
     if (parsedLength > 0)
     {
         ip6_prefix.mPrefix = *addr_ptr;
-        errorCode = otRemoveBorderRouter(mInstance, &ip6_prefix);
+        errorCode = otNetDataRemovePrefixInfo(mInstance, &ip6_prefix);
 
         if (errorCode == kThreadError_None)
         {

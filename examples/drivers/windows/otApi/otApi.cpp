@@ -1796,7 +1796,7 @@ otSetNetworkName(
 OTAPI 
 ThreadError 
 OTCALL
-otGetNextOnMeshPrefix(
+otNetDataGetNextPrefixInfo(
     _In_ otInstance *aInstance, 
     bool _aLocal, 
     _Inout_ otNetworkDataIterator *aIterator,
@@ -2445,7 +2445,7 @@ otSetJoinerUdpPort(
 OTAPI
 ThreadError
 OTCALL
-otAddBorderRouter(
+otNetDataAddPrefixInfo(
     _In_ otInstance *aInstance, 
     const otBorderRouterConfig *aConfig
     )
@@ -2457,7 +2457,7 @@ otAddBorderRouter(
 OTAPI
 ThreadError
 OTCALL
-otRemoveBorderRouter(
+otNetDataRemovePrefixInfo(
     _In_ otInstance *aInstance, 
     const otIp6Prefix *aPrefix
     )
@@ -2469,7 +2469,7 @@ otRemoveBorderRouter(
 OTAPI
 ThreadError
 OTCALL
-otAddExternalRoute(
+otNetDataAddRoute(
     _In_ otInstance *aInstance, 
     const otExternalRouteConfig *aConfig
     )
@@ -2481,7 +2481,7 @@ otAddExternalRoute(
 OTAPI
 ThreadError
 OTCALL
-otRemoveExternalRoute(
+otNetDataRemoveRoute(
     _In_ otInstance *aInstance, 
     const otIp6Prefix *aPrefix
     )
@@ -2493,7 +2493,7 @@ otRemoveExternalRoute(
 OTAPI
 ThreadError
 OTCALL
-otSendServerData(
+otNetDataRegister(
     _In_ otInstance *aInstance
     )
 {
@@ -3029,7 +3029,7 @@ otGetLeaderWeight(
 OTAPI
 uint8_t 
 OTCALL
-otGetNetworkDataVersion(
+otNetDataGetVersion(
     _In_ otInstance *aInstance
     )
 {
@@ -3103,7 +3103,7 @@ otGetParentInfo(
 OTAPI
 uint8_t 
 OTCALL
-otGetStableNetworkDataVersion(
+otNetDataGetStableVersion(
     _In_ otInstance *aInstance
     )
 {

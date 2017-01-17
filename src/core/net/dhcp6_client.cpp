@@ -95,7 +95,7 @@ void Dhcp6Client::UpdateAddresses(otInstance *aInstance, otDhcpAddress *aAddress
         found = false;
         iterator = OT_NETWORK_DATA_ITERATOR_INIT;
 
-        while ((otGetNextOnMeshPrefix(aInstance, false, &iterator, &config)) == kThreadError_None)
+        while ((otNetDataGetNextPrefixInfo(aInstance, false, &iterator, &config)) == kThreadError_None)
         {
             if (!config.mDhcp)
             {
@@ -122,7 +122,7 @@ void Dhcp6Client::UpdateAddresses(otInstance *aInstance, otDhcpAddress *aAddress
     // add IdentityAssociation for new configured prefix
     iterator = OT_NETWORK_DATA_ITERATOR_INIT;
 
-    while (otGetNextOnMeshPrefix(aInstance, false, &iterator, &config) == kThreadError_None)
+    while (otNetDataGetNextPrefixInfo(aInstance, false, &iterator, &config) == kThreadError_None)
     {
         if (!config.mDhcp)
         {
