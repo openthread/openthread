@@ -145,6 +145,7 @@ libopenthread_ftd_a_CPPFLAGS        = \
 
 libopenthread_ftd_a_SOURCES         = \
     $(SOURCES_COMMON)                 \
+    crypto/pbkdf2_cmac.cpp            \
     meshcop/dataset_manager_ftd.cpp   \
     meshcop/joiner_router.cpp         \
     meshcop/leader.cpp                \
@@ -190,6 +191,7 @@ noinst_HEADERS                      = \
     crypto/aes_ecb.hpp                \
     crypto/hmac_sha256.hpp            \
     crypto/mbedtls.hpp                \
+    crypto/pbkdf2_cmac.h              \
     crypto/sha256.hpp                 \
     mac/mac.hpp                       \
     mac/mac_blacklist.hpp             \

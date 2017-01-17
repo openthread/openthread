@@ -43,6 +43,10 @@ libmbedcrypto_a_CPPFLAGS                      = \
 libmbedcrypto_a_SOURCES                       = \
     hardware_entropy.c                          \
     repo/library/aes.c                          \
+    repo/library/ccm.c                          \
+    repo/library/cipher.c                       \
+    repo/library/cipher_wrap.c                  \
+    repo/library/cmac.c                         \
     repo/library/md.c                           \
     repo/library/md_wrap.c                      \
     repo/library/memory_buffer_alloc.c          \
@@ -53,9 +57,6 @@ libmbedcrypto_a_SOURCES                       = \
 if OPENTHREAD_ENABLE_DTLS
 libmbedcrypto_a_SOURCES                      += \
     repo/library/bignum.c                       \
-    repo/library/ccm.c                          \
-    repo/library/cipher.c                       \
-    repo/library/cipher_wrap.c                  \
     repo/library/ctr_drbg.c                     \
     repo/library/debug.c                        \
     repo/library/ecjpake.c                      \

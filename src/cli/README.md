@@ -406,6 +406,7 @@ networkname
 panid
 pending
 pendingtimestamp
+pskc
 userdata
 Done
 ```
@@ -642,6 +643,24 @@ Set pending timestamp.
 
 ```bash
 > dataset pendingtimestamp 123456789
+Done
+```
+
+### dataset pskc \[pskc\]
+
+Set pskc with hex format.
+
+```bash
+> dataset pskc 67c0c203aa0b042bfb5381c47aef4d9e
+Done
+```
+
+### dataset pskc \[passphrase\] \[networkname\] \[extpanid\]
+
+Generate pskc from passphrase, network name and extended panid.
+
+```bash
+> dataset pskc OpenThreadPassphrase OpenThread dead00beef00cafe
 Done
 ```
 

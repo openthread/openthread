@@ -28,42 +28,42 @@
 
 /**
  * @file
- *   This file includes definitions for manipulating Thread Network Data managed by the Thread Leader.
+ * @brief
+ *  This file defines the PBKDF2 using CMAC C APIs.
  */
 
-#ifndef NETWORK_DATA_LEADER_MTD_HPP_
-#define NETWORK_DATA_LEADER_MTD_HPP_
+#ifndef PBKDF2_CMAC_H_
+#define PBKDF2_CMAC_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
-namespace Thread {
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-class ThreadNetif;
+#define OT_PBKDF2_SALT_MAX_LEN 30  // salt prefix (6) + extended panid (8) + network name (16)
 
-namespace NetworkData {
+/**
+ * This method perform PKCS#5 PBKDF2 using CMAC (AES-CMAC-PRF-128).
+ *
+ * @param[in]     aPassword          Password to use when generating key.
+ * @param[in]     aPasswordLen       Length of password.
+ * @param[in]     aSalt              Salt to use when generating key.
+ * @param[in]     aSaltLen           Length of salt.
+ * @param[in]     aIterationCounter  Iteration count.
+ * @param[in]     aKeyLen            Length of generated key in bytes.
+ * @param[out]    aKey               A pointer to the generated key.
+ *
+ */
+void otPbkdf2Cmac(
+    const uint8_t *aPassword, uint16_t aPasswordLen,
+    const uint8_t *aSalt, uint16_t aSaltLen,
+    uint32_t aIterationCounter , uint16_t aKeyLen,
+    uint8_t *aKey);
 
-class Leader: public LeaderBase
-{
-public:
-    explicit Leader(ThreadNetif &aThreadNetif) : LeaderBase(aThreadNetif) { }
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
-    void Start(void) { }
-    void Stop(void) { }
-
-    void IncrementVersion(void) { }
-    void IncrementStableVersion(void) { }
-
-    uint32_t GetContextIdReuseDelay(void) const { return 0; }
-    ThreadError SetContextIdReuseDelay(uint32_t) { return kThreadError_NotImplemented; }
-
-    void RemoveBorderRouter(uint16_t) { }
-
-    ThreadError SendServerDataNotification(uint16_t) { return kThreadError_NotImplemented; }
-
-    ThreadError GeneratePSKc(const char *, const char *, const uint8_t *, uint8_t *) { return kThreadError_NotImplemented; }
-};
-
-}  // namespace NetworkData
-}  // namespace Thread
-
-#endif  // NETWORK_DATA_LEADER_MTD_HPP_
+#endif  // PBKDF2_CMAC_H_
