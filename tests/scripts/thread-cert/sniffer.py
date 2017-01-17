@@ -103,10 +103,11 @@ class Sniffer:
         """ Stop sniffing. """
 
         self._thread_alive.clear()
-        self._thread.join()
-        self._thread = None
 
         self._transport.close()
+        
+        self._thread.join()
+        self._thread = None
 
     def get_messages_sent_by(self, nodeid):
         """ Get sniffed messages.
