@@ -209,7 +209,8 @@ def create_default_ipv6_icmp_body_factories():
     return {
         ipv6.ICMP_DESTINATION_UNREACHABLE: ipv6.ICMPv6DestinationUnreachableFactory(),
         ipv6.ICMP_ECHO_REQUEST: ipv6.ICMPv6EchoBodyFactory(),
-        ipv6.ICMP_ECHO_RESPONSE: ipv6.ICMPv6EchoBodyFactory()
+        ipv6.ICMP_ECHO_RESPONSE: ipv6.ICMPv6EchoBodyFactory(),
+        "default": ipv6.BytesPayloadFactory()
     }
 
 
