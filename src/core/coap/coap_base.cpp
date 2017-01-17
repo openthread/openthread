@@ -52,6 +52,18 @@ exit:
     return message;
 }
 
+Message *CoapBase::NewMeshCoPMessage(const Header &aHeader)
+{
+    Message *message = NULL;
+
+    VerifyOrExit((message = NewMessage(aHeader)) != NULL, ;);
+
+    message->SetPriority(kMeshCoPMessagePriority);
+
+exit:
+    return message;
+}
+
 ThreadError CoapBase::Start(const Ip6::SockAddr &aSockAddr)
 {
     ThreadError error;

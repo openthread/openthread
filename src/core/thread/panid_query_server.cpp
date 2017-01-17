@@ -131,7 +131,7 @@ ThreadError PanIdQueryServer::SendConflict(void)
     header.AppendUriPathOptions(OPENTHREAD_URI_PANID_CONFLICT);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mCoapClient.NewMeshCoPMessage(header)) != NULL, error = kThreadError_NoBufs);
 
     channelMask.Init();
     channelMask.SetMask(mChannelMask);
