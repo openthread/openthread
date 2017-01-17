@@ -44,6 +44,7 @@
 #define otDEFINE_ALIGNED_VAR(name, size, align_type)            \
     align_type name[(((size) + (sizeof (align_type) - 1)) / sizeof (align_type))]
 
+/* Check the input `ERR` against zero and go to `exit` label if it is non-zero. */
 #define SuccessOrExit(ERR)                      \
   do {                                          \
     if ((ERR) != 0) {                           \
@@ -51,18 +52,33 @@
     }                                           \
   } while (false)
 
-#define VerifyOrExit(COND, ACTION) \
-  do {                             \
-    if (!(COND)) {                 \
-      ACTION;                      \
-      goto exit;                   \
-    }                              \
+/* Verify that the `COND` is true, otherwise go to `exit` label. */
+#define VerifyOrExit(COND, ACTION)              \
+  do {                                          \
+    if (!(COND)) {                              \
+      ACTION;                                   \
+      goto exit;                                \
+    }                                           \
   } while (false)
 
+/* Run the passed in statement(s) and go to `exit` label. */
 #define ExitNow(...)                            \
   do {                                          \
     __VA_ARGS__;                                \
     goto exit;                                  \
   } while (false)
+
+/*
+ * Run the `statement` and ignore the return value.
+ *
+ * This is primarily used to indicate the intention of developer that the return value of function/method can be
+ * safely ignored.
+ *
+ */
+#define IgnoreReturnValue(statement)           \
+  do {                                         \
+    if (statement) {}                          \
+  } while (false)
+
 
 #endif  // CODE_UTILS_HPP_

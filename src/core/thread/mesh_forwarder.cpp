@@ -394,13 +394,16 @@ ThreadError MeshForwarder::SendMessage(Message &aMessage)
 {
     ThreadError error = kThreadError_None;
     Neighbor *neighbor;
-    Ip6::Header ip6Header;
+
     uint8_t numChildren;
     Child *children;
 
     switch (aMessage.GetType())
     {
     case Message::kTypeIp6:
+    {
+        Ip6::Header ip6Header;
+
         aMessage.Read(0, sizeof(ip6Header), &ip6Header);
 
         if (!memcmp(&ip6Header.GetDestination(), mMle.GetLinkLocalAllThreadNodesAddress(),
@@ -443,10 +446,13 @@ ThreadError MeshForwarder::SendMessage(Message &aMessage)
         }
 
         break;
+    }
 
     case Message::kType6lowpan:
     {
-        Lowpan::MeshHeader meshHeader(aMessage);
+        Lowpan::MeshHeader meshHeader;
+
+        IgnoreReturnValue(meshHeader.Init(aMessage));
 
         if ((neighbor = mMle.GetNeighbor(meshHeader.GetDestination())) != NULL &&
             (neighbor->mMode & Mle::ModeTlv::kModeRxOnWhenIdle) == 0)
@@ -573,8 +579,9 @@ Message *MeshForwarder::GetIndirectTransmission(const Child &aChild)
 
     case Message::kType6lowpan:
     {
-        Lowpan::MeshHeader meshHeader(*message);
+        Lowpan::MeshHeader meshHeader;
 
+        IgnoreReturnValue(meshHeader.Init(*message));
         mAddMeshHeader = true;
         mMeshDest = meshHeader.GetDestination();
         mMeshSource = meshHeader.GetSource();
@@ -594,12 +601,15 @@ exit:
     return message;
 }
 
+
 ThreadError MeshForwarder::UpdateMeshRoute(Message &aMessage)
 {
     ThreadError error = kThreadError_None;
-    Lowpan::MeshHeader meshHeader(aMessage);
+    Lowpan::MeshHeader meshHeader;
     Neighbor *neighbor;
     uint16_t nextHop;
+
+    IgnoreReturnValue(meshHeader.Init(aMessage));
 
     nextHop = mMle.GetNextHop(meshHeader.GetDestination());
 
@@ -1637,10 +1647,10 @@ void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Mac:
     Message *message = NULL;
     Mac::Address meshDest;
     Mac::Address meshSource;
-    Lowpan::MeshHeader meshHeader(aFrame);
+    Lowpan::MeshHeader meshHeader;
 
-    // Length Check
-    VerifyOrExit(meshHeader.GetHeaderLength() <= aFrameLength, error = kThreadError_Drop);
+    // Check the mesh header
+    VerifyOrExit(meshHeader.Init(aFrame, aFrameLength) == kThreadError_None, error = kThreadError_Drop);
 
     // Security Check: only process Mesh Header frames that had security enabled.
     VerifyOrExit(aMessageInfo.mLinkSecurity && meshHeader.IsValid(), error = kThreadError_Security);
@@ -1705,10 +1715,11 @@ ThreadError MeshForwarder::CheckReachability(uint8_t *aFrame, uint8_t aFrameLeng
 {
     ThreadError error = kThreadError_None;
     Ip6::Header ip6Header;
-    Lowpan::MeshHeader meshHeader(aFrame);
+    Lowpan::MeshHeader meshHeader;
+
+    VerifyOrExit(meshHeader.Init(aFrame, aFrameLength) == kThreadError_None, error = kThreadError_Drop);
 
     // skip mesh header
-    VerifyOrExit(meshHeader.GetHeaderLength() <= aFrameLength, error = kThreadError_Drop);
     aFrame += meshHeader.GetHeaderLength();
     aFrameLength -= meshHeader.GetHeaderLength();
 
