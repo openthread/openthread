@@ -32,15 +32,48 @@
  *  This file defines the top-level functions for the OpenThread CLI server.
  */
 
-#ifndef CLI_UART_H_
-#define CLI_UART_H_
+#ifndef CLI_H_
+#define CLI_H_
 
-#include <stdarg.h>
+#include <stdint.h>
+
 #include <openthread-types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * This function pointer is called to notify about Console output.
+ *
+ * @param[in]  aBuf        A pointer to a buffer with an output.
+ * @param[in]  aBufLength  A length of the output data stored in the buffer.
+ * @param[out] aContext    A user context pointer.
+ *
+ * @returns                Number of bytes processed by the callback.
+ *
+ */
+typedef int (*otCliConsoleOutputCallback)(const char *aBuf,
+                                          uint16_t aBufLength, void *aContext);
+
+/**
+ * Initialize the CLI CONSOLE module.
+ *
+ * @param[in]  aInstance   The OpenThread instance structure.
+ * @param[in]  aCallback   A callback method called to process console output.
+ * @param[in]  aContext    A user context pointer.
+ *
+ */
+void otCliConsoleInit(otInstance *aInstance, otCliConsoleOutputCallback aCallback, void *aContext);
+
+/**
+ * This method is called to feed in a console input line.
+ *
+ * @param[in]  aBuf        A pointer to a buffer with an input.
+ * @param[in]  aBufLength  A length of the input data stored in the buffer.
+ *
+ */
+void otCliConsoleInputLine(char *aBuf, uint16_t aBufLength);
 
 /**
  * Initialize the CLI UART module.

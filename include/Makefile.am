@@ -31,7 +31,6 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 # Always package (e.g. for 'make dist') these subdirectories.
 
 DIST_SUBDIRS                            = \
-    cli                                   \
     openthread                            \
     platform                              \
     $(NULL)
@@ -39,7 +38,6 @@ DIST_SUBDIRS                            = \
 # Always build (e.g. for 'make all') these subdirectories.
 
 SUBDIRS                                 = \
-    cli                                   \
     openthread                            \
     platform                              \
     $(NULL)
@@ -47,7 +45,6 @@ SUBDIRS                                 = \
 # Always pretty (e.g. for 'make pretty') these subdirectories.
 
 PRETTY_SUBDIRS                          = \
-    cli                                   \
     openthread                            \
     platform                              \
     $(NULL)
