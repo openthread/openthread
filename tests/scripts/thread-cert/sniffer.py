@@ -80,15 +80,11 @@ class Sniffer:
         while self._thread_alive.is_set():
             data, nodeid = self._transport.recv(self.RECV_BUFFER_SIZE)
 
-            try:
-                msg = self._message_factory.create(io.BytesIO(data))
+            msg = self._message_factory.create(io.BytesIO(data))
 
-                if msg is not None:
-                    self.logger.debug("Received message: {}".format(msg))
-                    self._buckets[nodeid].put(msg)
-
-            except Exception:
-                pass
+            if msg is not None:
+                self.logger.debug("Received message: {}".format(msg))
+                self._buckets[nodeid].put(msg)
 
         self.logger.debug("Sniffer stopped.")
 
