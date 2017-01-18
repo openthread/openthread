@@ -34,7 +34,8 @@
 #ifndef MLE_HPP_
 #define MLE_HPP_
 
-#include <openthread.h>
+#include "openthread/openthread.h"
+
 #include <common/encoding.hpp>
 #include <common/timer.hpp>
 #include <mac/mac.hpp>

@@ -34,7 +34,7 @@
 #ifndef IP6_FILTER_HPP_
 #define IP6_FILTER_HPP_
 
-#include <openthread.h>
+#include "openthread/openthread.h"
 
 namespace Thread {
 namespace Ip6 {

@@ -32,10 +32,10 @@
 #include <openthread-config.h>
 #endif
 
-#include <openthread-core-config.h>
-#include <openthread.h>
+#include "openthread/openthread.h"
 #include "openthread/ncp.h"
 
+#include <openthread-core-config.h>
 #include <openthread-diag.h>
 #include <openthread/tasklet.h>
 #include <common/debug.hpp>

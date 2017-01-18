@@ -61,7 +61,7 @@ RtlCopyBufferToMdl(
 
 #include <openthread-windows-config.h>
 #include <openthread-core-config.h>
-#include <openthread.h>
+#include <openthread/openthread.h>
 #include <openthread-icmp6.h>
 #include <openthread/ip6.h>
 #include <openthread/tasklet.h>

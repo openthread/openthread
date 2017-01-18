@@ -38,7 +38,7 @@
 
 #include <stdlib.h>
 
-#include "openthread/message.h"
+#include "openthread/openthread.h"
 #include "openthread/ncp.h"
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
@@ -49,7 +49,6 @@
 #include <common/debug.hpp>
 #include <ncp/ncp_base.hpp>
 #include <net/ip6.hpp>
-#include <openthread.h>
 #include <openthread-diag.h>
 #include <openthread-icmp6.h>
 #include <openthread-instance.h>

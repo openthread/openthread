@@ -29,7 +29,7 @@
 #include <windows.h>
 #include <stdio.h>
 
-#include <openthread.h>
+#include <openthread/openthread.h>
 #include <openthread/cli.h>
 #include <platform/uart.h>
 

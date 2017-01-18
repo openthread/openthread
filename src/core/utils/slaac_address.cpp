@@ -37,7 +37,7 @@
 #include <openthread-config.h>
 #endif
 
-#include <openthread.h>
+#include "openthread/openthread.h"
 
 #include <common/debug.hpp>
 #include <common/code_utils.hpp>
