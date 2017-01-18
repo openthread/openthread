@@ -46,6 +46,7 @@ openthread_headers                      = \
     netdata.h                             \
     tasklet.h                             \
     thread.h                              \
+    types.h                               \
     udp.h                                 \
     $(NULL)
 

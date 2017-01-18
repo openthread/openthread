@@ -26,7 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread-types.h>
+#include <openthread/types.h>
 #include <platform/misc.h>
 #include <driverlib/sys_ctrl.h>
 

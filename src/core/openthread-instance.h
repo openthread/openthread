@@ -39,7 +39,9 @@
 #include <stdbool.h>
 
 #include <openthread-core-config.h>
-#include <openthread-types.h>
+
+#include "openthread/types.h"
+
 #include <crypto/mbedtls.hpp>
 #include <net/ip6.hpp>
 #include <thread/thread_netif.hpp>

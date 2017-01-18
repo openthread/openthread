@@ -28,7 +28,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <openthread-types.h>
+#include <openthread/types.h>
 #include <driverlib/aon_rtc.h>
 
 #include <platform/alarm.h>

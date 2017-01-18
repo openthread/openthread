@@ -36,7 +36,8 @@
 
 #include <stdint.h>
 
-#include <openthread-types.h>
+#include "openthread/types.h"
+
 #include <mac/mac_frame.hpp>
 
 namespace Thread {

@@ -32,7 +32,6 @@
  *
  */
 
-#include <openthread-types.h>
 #include <openthread.h>
 #include <openthread-config.h>
 

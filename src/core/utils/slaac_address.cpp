@@ -38,7 +38,7 @@
 #endif
 
 #include <openthread.h>
-#include <openthread-types.h>
+
 #include <common/debug.hpp>
 #include <common/code_utils.hpp>
 #include <crypto/sha256.hpp>

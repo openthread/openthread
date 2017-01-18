@@ -35,7 +35,7 @@
 #ifndef __OTLWFIOCTL_H__
 #define __OTLWFIOCTL_H__
 
-#include <openthread-types.h>
+#include <openthread/types.h>
 
 __inline LONG ThreadErrorToNtstatus(ThreadError error) { return (LONG)-((int)error); }
 

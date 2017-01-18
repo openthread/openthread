@@ -33,7 +33,7 @@
 #ifndef HDLC_HPP_
 #define HDLC_HPP_
 
-#include <openthread-types.h>
+#include "openthread/types.h"
 
 namespace Thread {
 

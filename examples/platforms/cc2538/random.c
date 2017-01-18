@@ -32,7 +32,7 @@
  *
  */
 
-#include <openthread-types.h>
+#include "openthread/types.h"
 
 #include <common/code_utils.hpp>
 #include <platform/radio.h>

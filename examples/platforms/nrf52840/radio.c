@@ -49,7 +49,7 @@
 
 #include <openthread-core-config.h>
 #include <openthread-config.h>
-#include <openthread-types.h>
+#include <openthread/types.h>
 
 #define SHORT_ADDRESS_SIZE    2
 #define EXTENDED_ADDRESS_SIZE 8

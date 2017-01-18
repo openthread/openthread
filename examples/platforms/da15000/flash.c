@@ -27,7 +27,8 @@
  */
 
 
-#include <openthread-types.h>
+#include "openthread/types.h"
+
 #include "hw_qspi.h"
 #include "qspi_automode.h"
 #include "platform/alarm.h"

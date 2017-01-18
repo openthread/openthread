@@ -47,7 +47,7 @@
 #include "hal/nrf_rtc.h"
 
 #include <openthread-config.h>
-#include <openthread-types.h>
+#include <openthread/types.h>
 
 #define RTC_FREQUENCY       32768ULL
 

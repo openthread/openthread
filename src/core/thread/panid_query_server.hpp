@@ -35,7 +35,9 @@
 #define PANID_QUERY_SERVER_HPP_
 
 #include <openthread-core-config.h>
-#include <openthread-types.h>
+
+#include "openthread/types.h"
+
 #include <coap/coap_client.hpp>
 #include <coap/coap_server.hpp>
 #include <common/timer.hpp>

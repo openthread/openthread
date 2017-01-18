@@ -41,7 +41,7 @@
 
 #include <platform/radio.h>
 
-#include <openthread-types.h>
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {

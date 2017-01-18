@@ -43,7 +43,7 @@
 
 #include <openthread-core-config.h>
 #include <openthread-config.h>
-#include <openthread-types.h>
+#include <openthread/types.h>
 
 #if (OPENTHREAD_ENABLE_DEFAULT_LOGGING == 0)
 #include <segger_rtt/SEGGER_RTT.h>

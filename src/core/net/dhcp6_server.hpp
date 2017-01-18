@@ -34,7 +34,8 @@
 #ifndef DHCP6_SERVER_HPP_
 #define DHCP6_SERVER_HPP_
 
-#include <openthread-types.h>
+#include "openthread/types.h"
+
 #include <mac/mac_frame.hpp>
 #include <mac/mac.hpp>
 #include <net/dhcp6.hpp>

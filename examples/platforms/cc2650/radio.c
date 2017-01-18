@@ -26,7 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread-types.h>
+#include <openthread/types.h>
 
 #include <assert.h>
 #include <common/code_utils.hpp>

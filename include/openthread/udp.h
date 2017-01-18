@@ -35,7 +35,7 @@
 #ifndef OPENTHREAD_UDP_H_
 #define OPENTHREAD_UDP_H_
 
-#include "openthread-types.h"
+#include "openthread/types.h"
 #include "openthread/message.h"
 
 #ifdef __cplusplus

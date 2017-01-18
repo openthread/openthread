@@ -530,7 +530,7 @@
     <ClInclude Include="..\..\include\openthread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\openthread-types.h">
+    <ClInclude Include="..\..\include\openthread\types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\openthread-windows-config.h">

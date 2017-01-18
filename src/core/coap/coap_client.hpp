@@ -29,7 +29,6 @@
 #ifndef COAP_CLIENT_HPP_
 #define COAP_CLIENT_HPP_
 
-#include <openthread-types.h>
 #include "openthread/coap.h"
 
 #include <coap/coap_base.hpp>
