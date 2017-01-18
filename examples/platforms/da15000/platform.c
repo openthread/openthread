@@ -92,7 +92,7 @@ void ExampleProcess(otInstance *aInstance)
     otDeviceRole  devRole;
     static int    thrValue;
 
-    devRole = otGetDeviceRole(aInstance);
+    devRole = otThreadGetDeviceRole(aInstance);
 
     if (sBlink == false && otPlatAlarmGetNow() != 0)
     {

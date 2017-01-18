@@ -391,7 +391,7 @@ PingHandlerRecvCallback(
         if (memcmp(RecvDest, &LinkLocalAllRoutersAddress, sizeof(IN6_ADDR)) == 0 ||
             memcmp(RecvDest, &RealmLocalAllRoutersAddress, sizeof(IN6_ADDR)) == 0)
         {
-            auto Role = otGetDeviceRole(aPingHandler->mParentNode->mInstance);
+            auto Role = otThreadGetDeviceRole(aPingHandler->mParentNode->mInstance);
             if (Role != kDeviceRoleLeader && Role != kDeviceRoleRouter)
                 shouldReply = false;
         }
@@ -448,7 +448,7 @@ PingHandlerRecvCallback(
 
 bool IsMeshLocalEID(otNode *aNode, const otIp6Address *aAddress)
 {
-    auto ML_EID = otGetMeshLocalEid(aNode->mInstance);
+    auto ML_EID = otThreadGetMeshLocalEid(aNode->mInstance);
     if (ML_EID == nullptr) return false;
     bool result = memcmp(ML_EID->mFields.m8, aAddress->mFields.m8, sizeof(otIp6Address)) == 0;
     otFreeMemory(ML_EID);
@@ -710,7 +710,7 @@ void OTCALL otNodeStateChangedCallback(uint32_t aFlags, void *aContext)
 
     if ((aFlags & OT_NET_ROLE) != 0)
     {
-        auto Role = otGetDeviceRole(aNode->mInstance);
+        auto Role = otThreadGetDeviceRole(aNode->mInstance);
         printf("%d: new role: %s\r\n", aNode->mId, otDeviceRoleToString(Role));
     }
 
@@ -944,7 +944,7 @@ OTNODEAPI int32_t OTCALL otNodeSetMode(otNode* aNode, const char *aMode)
         index++;
     }
 
-    auto result = otSetLinkMode(aNode->mInstance, linkMode);
+    auto result = otThreadSetLinkMode(aNode->mInstance, linkMode);
     
     otLogFuncExit();
     return result;
@@ -977,7 +977,7 @@ OTNODEAPI int32_t OTCALL otNodeThreadStart(otNode* aNode)
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: thread start\r\n", aNode->mId);
 
-    auto error = otThreadStart(aNode->mInstance);
+    auto error = otThreadSetEnabled(aNode->mInstance, true);
     
     otLogFuncExit();
     return error;
@@ -988,7 +988,7 @@ OTNODEAPI int32_t OTCALL otNodeThreadStop(otNode* aNode)
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: thread stop\r\n", aNode->mId);
 
-    (void)otThreadStop(aNode->mInstance);
+    (void)otThreadSetEnabled(aNode->mInstance, false);
     
     otLogFuncExit();
     return 0;
@@ -1134,7 +1134,7 @@ OTNODEAPI int32_t OTCALL otNodeRemoveWhitelist(otNode* aNode, const char *aExtAd
 OTNODEAPI uint16_t OTCALL otNodeGetAddr16(otNode* aNode)
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
-    auto result = otGetRloc16(aNode->mInstance);
+    auto result = otThreadGetRloc16(aNode->mInstance);
     printf("%d: rloc16\r\n%04x\r\n", aNode->mId, result);
     otLogFuncExit();
     return result;
@@ -1205,7 +1205,7 @@ OTNODEAPI int32_t OTCALL otNodeSetMasterkey(otNode* aNode, const char *aMasterke
         return kThreadError_Parse;
     }
 
-    auto error = otSetMasterKey(aNode->mInstance, key, (uint8_t)keyLength);
+    auto error = otThreadSetMasterKey(aNode->mInstance, key, (uint8_t)keyLength);
     otLogFuncExit();
     return error;
 }
@@ -1214,7 +1214,7 @@ OTNODEAPI const char* OTCALL otNodeGetMasterkey(otNode* aNode)
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
     uint8_t aKeyLength = 0;
-    auto aMasterKey = otGetMasterKey(aNode->mInstance, &aKeyLength);
+    auto aMasterKey = otThreadGetMasterKey(aNode->mInstance, &aKeyLength);
     uint8_t strLength = 2*aKeyLength + 1;
     char* str = (char*)malloc(strLength);
     if (str != nullptr)
@@ -1232,7 +1232,7 @@ OTNODEAPI const char* OTCALL otNodeGetMasterkey(otNode* aNode)
 OTNODEAPI uint32_t OTCALL otNodeGetKeySequenceCounter(otNode* aNode)
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
-    auto result = otGetKeySequenceCounter(aNode->mInstance);
+    auto result = otThreadGetKeySequenceCounter(aNode->mInstance);
     printf("%d: keysequence\r\n%d\r\n", aNode->mId, result);
     otLogFuncExit();
     return result;
@@ -1242,7 +1242,7 @@ OTNODEAPI int32_t OTCALL otNodeSetKeySequenceCounter(otNode* aNode, uint32_t aSe
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: keysequence counter %d\r\n", aNode->mId, aSequence);
-    otSetKeySequenceCounter(aNode->mInstance, aSequence);
+    otThreadSetKeySequenceCounter(aNode->mInstance, aSequence);
     otLogFuncExit();
     return 0;
 }
@@ -1251,7 +1251,7 @@ OTNODEAPI int32_t OTCALL otNodeSetKeySwitchGuardTime(otNode* aNode, uint32_t aKe
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: keysequence guardtime %d\r\n", aNode->mId, aKeySwitchGuardTime);
-    otSetKeySwitchGuardTime(aNode->mInstance, aKeySwitchGuardTime);
+    otThreadSetKeySwitchGuardTime(aNode->mInstance, aKeySwitchGuardTime);
     otLogFuncExit();
     return 0;
 }
@@ -1260,7 +1260,7 @@ OTNODEAPI int32_t OTCALL otNodeSetNetworkIdTimeout(otNode* aNode, uint8_t aTimeo
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: networkidtimeout %d\r\n", aNode->mId, aTimeout);
-    otSetNetworkIdTimeout(aNode->mInstance, aTimeout);
+    otThreadSetNetworkIdTimeout(aNode->mInstance, aTimeout);
     otLogFuncExit();
     return 0;
 }
@@ -1269,7 +1269,7 @@ OTNODEAPI int32_t OTCALL otNodeSetNetworkName(otNode* aNode, const char *aName)
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: networkname %s\r\n", aNode->mId, aName);
-    auto result = otSetNetworkName(aNode->mInstance, aName);
+    auto result = otThreadSetNetworkName(aNode->mInstance, aName);
     otLogFuncExit();
     return result;
 }
@@ -1277,7 +1277,7 @@ OTNODEAPI int32_t OTCALL otNodeSetNetworkName(otNode* aNode, const char *aName)
 OTNODEAPI const char* OTCALL otNodeGetNetworkName(otNode* aNode)
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
-    auto result = otGetNetworkName(aNode->mInstance);
+    auto result = otThreadGetNetworkName(aNode->mInstance);
     aNode->mMemoryToFree.push_back((char*)result);
     printf("%d: networkname\r\n%s\r\n", aNode->mId, result);
     otLogFuncExit();
@@ -1305,7 +1305,7 @@ OTNODEAPI int32_t OTCALL otNodeSetPanId(otNode* aNode, uint16_t aPanId)
 OTNODEAPI uint32_t OTCALL otNodeGetPartitionId(otNode* aNode)
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
-    auto result = otGetLocalLeaderPartitionId(aNode->mInstance);
+    auto result = otThreadGetLocalLeaderPartitionId(aNode->mInstance);
     printf("%d: leaderpartitionid\r\n0x%04x\r\n", aNode->mId, result);
     otLogFuncExit();
     return result;
@@ -1315,7 +1315,7 @@ OTNODEAPI int32_t OTCALL otNodeSetPartitionId(otNode* aNode, uint32_t aPartition
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: leaderpartitionid 0x%04x\r\n", aNode->mId, aPartitionId);
-    otSetLocalLeaderPartitionId(aNode->mInstance, aPartitionId);
+    otThreadSetLocalLeaderPartitionId(aNode->mInstance, aPartitionId);
     otLogFuncExit();
     return 0;
 }
@@ -1324,7 +1324,7 @@ OTNODEAPI int32_t OTCALL otNodeSetRouterUpgradeThreshold(otNode* aNode, uint8_t 
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: routerupgradethreshold %d\r\n", aNode->mId, aThreshold);
-    otSetRouterUpgradeThreshold(aNode->mInstance, aThreshold);
+    otThreadSetRouterUpgradeThreshold(aNode->mInstance, aThreshold);
     otLogFuncExit();
     return 0;
 }
@@ -1333,7 +1333,7 @@ OTNODEAPI int32_t OTCALL otNodeSetRouterDowngradeThreshold(otNode* aNode, uint8_
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: routerdowngradethreshold %d\r\n", aNode->mId, aThreshold);
-    otSetRouterDowngradeThreshold(aNode->mInstance, aThreshold);
+    otThreadSetRouterDowngradeThreshold(aNode->mInstance, aThreshold);
     otLogFuncExit();
     return 0;
 }
@@ -1342,7 +1342,7 @@ OTNODEAPI int32_t OTCALL otNodeReleaseRouterId(otNode* aNode, uint8_t aRouterId)
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: releaserouterid %d\r\n", aNode->mId, aRouterId);
-    auto result = otReleaseRouterId(aNode->mInstance, aRouterId);
+    auto result = otThreadReleaseRouterId(aNode->mInstance, aRouterId);
     otLogFuncExit();
     return result;
 }
@@ -1350,7 +1350,7 @@ OTNODEAPI int32_t OTCALL otNodeReleaseRouterId(otNode* aNode, uint8_t aRouterId)
 OTNODEAPI const char* OTCALL otNodeGetState(otNode* aNode)
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
-    auto role = otGetDeviceRole(aNode->mInstance);
+    auto role = otThreadGetDeviceRole(aNode->mInstance);
     auto result = _strdup(otDeviceRoleToString(role));
     aNode->mMemoryToFree.push_back(result);
     printf("%d: state\r\n%s\r\n", aNode->mId, result);
@@ -1366,19 +1366,19 @@ OTNODEAPI int32_t OTCALL otNodeSetState(otNode* aNode, const char *aState)
     ThreadError error;
     if (strcmp(aState, "detached") == 0)
     {
-        error = otBecomeDetached(aNode->mInstance);
+        error = otThreadBecomeDetached(aNode->mInstance);
     }
     else if (strcmp(aState, "child") == 0)
     {
-        error = otBecomeChild(aNode->mInstance, kMleAttachAnyPartition);
+        error = otThreadBecomeChild(aNode->mInstance, kMleAttachAnyPartition);
     }
     else if (strcmp(aState, "router") == 0)
     {
-        error = otBecomeRouter(aNode->mInstance);
+        error = otThreadBecomeRouter(aNode->mInstance);
     }
     else if (strcmp(aState, "leader") == 0)
     {
-        error = otBecomeLeader(aNode->mInstance);
+        error = otThreadBecomeLeader(aNode->mInstance);
     }
     else
     {
@@ -1391,7 +1391,7 @@ OTNODEAPI int32_t OTCALL otNodeSetState(otNode* aNode, const char *aState)
 OTNODEAPI uint32_t OTCALL otNodeGetTimeout(otNode* aNode)
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
-    auto result = otGetChildTimeout(aNode->mInstance);
+    auto result = otThreadGetChildTimeout(aNode->mInstance);
     printf("%d: childtimeout\r\n%d\r\n", aNode->mId, result);
     otLogFuncExit();
     return result;
@@ -1401,7 +1401,7 @@ OTNODEAPI int32_t OTCALL otNodeSetTimeout(otNode* aNode, uint32_t aTimeout)
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: childtimeout %d\r\n", aNode->mId, aTimeout);
-    otSetChildTimeout(aNode->mInstance, aTimeout);
+    otThreadSetChildTimeout(aNode->mInstance, aTimeout);
     otLogFuncExit();
     return 0;
 }
@@ -1409,7 +1409,7 @@ OTNODEAPI int32_t OTCALL otNodeSetTimeout(otNode* aNode, uint32_t aTimeout)
 OTNODEAPI uint8_t OTCALL otNodeGetWeight(otNode* aNode)
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
-    auto result = otGetLeaderWeight(aNode->mInstance);
+    auto result = otThreadGetLeaderWeight(aNode->mInstance);
     printf("%d: leaderweight\r\n%d\r\n", aNode->mId, result);
     otLogFuncExit();
     return result;
@@ -1419,7 +1419,7 @@ OTNODEAPI int32_t OTCALL otNodeSetWeight(otNode* aNode, uint8_t aWeight)
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: leaderweight %d\r\n", aNode->mId, aWeight);
-    otSetLocalLeaderWeight(aNode->mInstance, aWeight);
+    otThreadSetLocalLeaderWeight(aNode->mInstance, aWeight);
     otLogFuncExit();
     return 0;
 }
@@ -1500,7 +1500,7 @@ OTNODEAPI const char* OTCALL otNodeGetAddrs(otNode* aNode)
 OTNODEAPI uint32_t OTCALL otNodeGetContextReuseDelay(otNode* aNode)
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
-    auto result = otGetContextIdReuseDelay(aNode->mInstance);
+    auto result = otThreadGetContextIdReuseDelay(aNode->mInstance);
     printf("%d: contextreusedelay\r\n%d\r\n", aNode->mId, result);
     otLogFuncExit();
     return result;
@@ -1510,7 +1510,7 @@ OTNODEAPI int32_t OTCALL otNodeSetContextReuseDelay(otNode* aNode, uint32_t aDel
 {
     otLogFuncEntryMsg("[%d] %d", aNode->mId, aDelay);
     printf("%d: contextreusedelay %d\r\n", aNode->mId, aDelay);
-    otSetContextIdReuseDelay(aNode->mInstance, aDelay);
+    otThreadSetContextIdReuseDelay(aNode->mInstance, aDelay);
     otLogFuncExit();
     return 0;
 }
@@ -1741,7 +1741,7 @@ OTNODEAPI uint32_t OTCALL otNodePing(otNode* aNode, const char *aAddr, uint16_t 
     }
     
     // Get ML-EID as source address for ping
-    auto otSourceAddress = otGetMeshLocalEid(aNode->mInstance);
+    auto otSourceAddress = otThreadGetMeshLocalEid(aNode->mInstance);
 
     sockaddr_in6 SourceAddress = { AF_INET6, (USHORT)(CertificationPingPort + 1) };
     sockaddr_in6 DestinationAddress = { AF_INET6, CertificationPingPort };
@@ -1891,7 +1891,7 @@ OTNODEAPI int32_t OTCALL otNodeSetRouterSelectionJitter(otNode* aNode, uint8_t a
 {
     otLogFuncEntryMsg("[%d] %d", aNode->mId, aRouterJitter);
     printf("%d: routerselectionjitter %d\r\n", aNode->mId, aRouterJitter);
-    otSetRouterSelectionJitter(aNode->mInstance, aRouterJitter);
+    otThreadSetRouterSelectionJitter(aNode->mInstance, aRouterJitter);
     otLogFuncExit();
     return 0;
 }
@@ -2147,7 +2147,7 @@ OTNODEAPI int32_t OTCALL otNodeSetMaxChildren(otNode* aNode, uint8_t aMaxChildre
 {
     otLogFuncEntryMsg("[%d] %d", aNode->mId, aMaxChildren);
     printf("%d: childmax %d\r\n", aNode->mId, aMaxChildren);
-    auto result = otSetMaxAllowedChildren(aNode->mInstance, aMaxChildren);
+    auto result = otThreadSetMaxAllowedChildren(aNode->mInstance, aMaxChildren);
     otLogFuncExit();
     return result;
 }

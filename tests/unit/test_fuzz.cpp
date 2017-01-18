@@ -132,7 +132,7 @@ void TestFuzz(uint32_t aSeconds)
     // Start the Thread network
     otLinkSetPanId(aInstance, (otPanId)0xFACE);
     otIp6SetEnabled(aInstance, true);
-    otThreadStart(aInstance);
+    otThreadSetEnabled(aInstance, true);
 
     uint32_t countRecv = 0;
 

@@ -93,6 +93,9 @@
     <ClCompile Include="..\..\src\core\api\tasklet_api.cpp">
       <Filter>Source Files\api</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\api\thread_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\coap\coap_base.cpp">
       <Filter>Source Files\coap</Filter>
     </ClCompile>
