@@ -39,6 +39,7 @@
 
 #include "openthread/crypto.h"
 #include "openthread/dataset.h"
+#include "openthread/instance.h"
 #include "openthread/ip6.h"
 #include "openthread/link.h"
 #include "openthread/message.h"
@@ -125,143 +126,6 @@ extern "C" {
  *
  */
 OTAPI const char *OTCALL otGetVersionString(void);
-
-#ifdef OTDLL
-
-/**
- * This function initializes a new instance of the OpenThread library.
- *
- * @retval otApiInstance*  The new OpenThread context structure.
- *
- * @sa otApiFinalize
- *
- */
-OTAPI otApiInstance *OTCALL otApiInit(void);
-
-/**
- * This function uninitializes the OpenThread library.
- *
- * Call this function when OpenThread is no longer in use.
- *
- * @param[in]  aApiInstance  The OpenThread api instance.
- *
- */
-OTAPI void OTCALL otApiFinalize(otApiInstance *aApiInstance);
-
-/**
- * This function frees any memory returned/allocated by the library.
- *
- * @param[in] aMem  The memory to free.
- *
- */
-OTAPI void OTCALL otFreeMemory(const void *aMem);
-
-/**
- * This function registers a callback to indicate OpenThread devices come and go.
- *
- * @param[in]  aApiInstance     The OpenThread api instance.
- * @param[in]  aCallback        A pointer to a function that is called with the state changes.
- * @param[in]  aContextContext  A pointer to application-specific context.
- *
- */
-OTAPI void OTCALL otSetDeviceAvailabilityChangedCallback(otApiInstance *aApiInstance,
-                                                         otDeviceAvailabilityChangedCallback aCallback, void *aCallbackContext);
-
-/**
- * This function querys the list of OpenThread device contexts on the system.
- *
- * @param[in]  aApiInstance     The OpenThread api instance.
- *
- * @sa otFreeMemory
- */
-OTAPI otDeviceList *OTCALL otEnumerateDevices(otApiInstance *aApiInstance);
-
-/**
- * This function initializes an OpenThread context for a device.
- *
- * @param[in]  aApiInstance  The OpenThread api instance.
- * @param[in]  aDeviceGuid   The device guid to create an OpenThread context for.
- *
- * @retval otInstance*  The new OpenThread device instance structure for the device.
- *
- * @sa otFreeMemory
- *
- */
-OTAPI otInstance *OTCALL otInstanceInit(otApiInstance *aApiInstance, const GUID *aDeviceGuid);
-
-/**
- * This queries the Windows device/interface GUID for the otContext.
- *
- * @param[in] aContext  The OpenThread context structure.
- *
- * @retval GUID  The device GUID.
- *
- */
-OTAPI GUID OTCALL otGetDeviceGuid(otInstance *aInstance);
-
-/**
- * This queries the Windows device/interface IfIndex for the otContext.
- *
- * @param[in] aContext  The OpenThread context structure.
- *
- * @retval uint32_t  The device IfIndex.
- *
- */
-OTAPI uint32_t OTCALL otGetDeviceIfIndex(otInstance *aInstance);
-
-/**
- * This queries the Windows Compartment ID for the otContext.
- *
- * @param[in] aContext  The OpenThread context structure.
- *
- * @retval uint32_t  The compartment ID.
- *
- */
-OTAPI uint32_t OTCALL otGetCompartmentId(otInstance *aInstance);
-
-#else
-
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
-/**
- * This function initializes the OpenThread library.
- *
- * This function initializes OpenThread and prepares it for subsequent OpenThread API calls.  This function must be
- * called before any other calls to OpenThread. By default, OpenThread is initialized in the 'enabled' state.
- *
- * @param[in]    aInstanceBuffer      The buffer for OpenThread to use for allocating the otInstance structure.
- * @param[inout] aInstanceBufferSize  On input, the size of aInstanceBuffer. On output, if not enough space for otInstance,
-                                      the number of bytes required for otInstance.
- *
- * @retval otInstance*  The new OpenThread instance structure.
- *
- * @sa otContextFinalize
- *
- */
-otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize);
-#else
-/**
- * This function initializes the static instance of the OpenThread library.
- *
- * This function initializes OpenThread and prepares it for subsequent OpenThread API calls.  This function must be
- * called before any other calls to OpenThread. By default, OpenThread is initialized in the 'enabled' state.
- *
- * @retval otInstance*  The new OpenThread instance structure.
- *
- */
-otInstance *otInstanceInit(void);
-#endif
-
-/**
- * This function disables the OpenThread library.
- *
- * Call this function when OpenThread is no longer in use.
- *
- * @param[in] aInstance A pointer to an OpenThread instance.
- *
- */
-void otInstanceFinalize(otInstance *aInstance);
-
-#endif
 
 /**
  * This function starts Thread protocol operation.
@@ -576,31 +440,6 @@ OTAPI bool OTCALL otIsRouterRoleEnabled(otInstance *aInstance);
 OTAPI void OTCALL otSetRouterRoleEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
- * This function registers a callback to indicate when certain configuration or state changes within OpenThread.
- *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aCallback  A pointer to a function that is called with certain configuration or state changes.
- * @param[in]  aContext   A pointer to application-specific context.
- *
- * @retval kThreadError_None    Added the callback to the list of callbacks.
- * @retval kThreadError_NoBufs  Could not add the callback due to resource constraints.
- *
- */
-OTAPI ThreadError OTCALL otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback,
-                                                   void *aContext);
-
-/**
- * This function removes a callback to indicate when certain configuration or state changes within OpenThread.
- *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aCallback  A pointer to a function that is called with certain configuration or state changes.
- * @param[in]  aContext   A pointer to application-specific context.
- *
- */
-OTAPI void OTCALL otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback aCallback,
-                                              void *aCallbackContext);
-
-/**
  * Set the preferred Router Id.
  *
  * Upon becoming a router/leader the node attempts to use this Router Id. If the
@@ -864,35 +703,6 @@ OTAPI ThreadError OTCALL otBecomeRouter(otInstance *aInstance);
  * @retval kThreadErrorInvalidState  Thread is disabled.
  */
 OTAPI ThreadError OTCALL otBecomeLeader(otInstance *aInstance);
-
-/**
- * This method triggers a platform reset.
- *
- * The reset process ensures that all the OpenThread state/info (stored in volatile memory) is erased. Note that the
- * `otPlatformReset` does not erase any persistent state/info saved in non-volatile memory.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- */
-OTAPI void OTCALL otPlatformReset(otInstance *aInstance);
-
-/**
- * This method deletes all the settings stored on non-volatile memory, and then triggers platform reset.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- */
-OTAPI void OTCALL otFactoryReset(otInstance *aInstance);
-
-/**
- * This function erases all the OpenThread persistent info (network settings) stored on non-volatile memory.
- * Erase is successful only if the device is in `disabled` state/role.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- *
- * @retval kThreadError_None  All persistent info/state was erased successfully.
- * @retval kThreadError_InvalidState  Device is not in `disabled` state/role.
- *
- */
-ThreadError otPersistentInfoErase(otInstance *aInstance);
 
 /**
  * Get the ROUTER_DOWNGRADE_THRESHOLD parameter used in the Router role.

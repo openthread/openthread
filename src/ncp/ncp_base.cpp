@@ -1518,7 +1518,7 @@ ThreadError NcpBase::CommandHandler_RESET(uint8_t header, unsigned int command, 
 
     // Signal a platform reset. If implemented, this function
     // shouldn't return.
-    otPlatformReset(mInstance);
+    otInstanceReset(mInstance);
 
     // We only get to this point if the
     // platform doesn't support resetting.
@@ -1656,7 +1656,7 @@ ThreadError NcpBase::CommandHandler_NET_CLEAR(uint8_t header, unsigned int comma
     (void)arg_ptr;
     (void)arg_len;
 
-    return SendLastStatus(header, ThreadErrorToSpinelStatus(otPersistentInfoErase(mInstance)));
+    return SendLastStatus(header, ThreadErrorToSpinelStatus(otInstanceErasePersistentInfo(mInstance)));
 }
 
 ThreadError NcpBase::CommandHandler_NET_RECALL(uint8_t header, unsigned int command, const uint8_t *arg_ptr,

@@ -1094,15 +1094,6 @@ typedef void (OTCALL *otDeviceAvailabilityChangedCallback)(bool aAdded, const GU
 #endif // OTDLL
 
 /**
- * This function pointer is called to notify certain configuration or state changes within OpenThread.
- *
- * @param[in]  aFlags    A bit-field indicating specific state that has changed.
- * @param[in]  aContext  A pointer to application-specific context.
- *
- */
-typedef void (OTCALL *otStateChangedCallback)(uint32_t aFlags, void *aContext);
-
-/**
  * This function pointer is called when Network Diagnostic Get response is received.
  *
  * @param[in]  aMessage      A pointer to the message buffer containing the received Network Diagnostic

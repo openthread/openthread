@@ -844,7 +844,7 @@ OTNODEAPI otNode* OTCALL otNodeInit(uint32_t id)
     InitializeCriticalSection(&node->mCS);
 
     // Reset any previously saved settings
-    otFactoryReset(instance);
+    otInstanceFactoryReset(instance);
 
     otSetStateChangedCallback(instance, otNodeStateChangedCallback, node);
 
