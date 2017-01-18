@@ -41,6 +41,7 @@ openthread_headers                      = \
     joiner.h                              \
     link.h                                \
     message.h                             \
+    ncp.h                                 \
     netdata.h                             \
     tasklet.h                             \
     thread.h                              \

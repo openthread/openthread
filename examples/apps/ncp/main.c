@@ -34,10 +34,11 @@
 
 #include <openthread-core-config.h>
 #include <openthread.h>
+#include "openthread/ncp.h"
+
 #include <openthread-diag.h>
 #include <openthread/tasklet.h>
 #include <common/debug.hpp>
-#include <ncp/ncp.h>
 #include <platform/platform.h>
 
 #ifdef OPENTHREAD_MULTIPLE_INSTANCE
