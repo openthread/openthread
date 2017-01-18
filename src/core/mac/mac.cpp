@@ -117,6 +117,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mState = kStateIdle;
 
     mRadioOn = false;
+    mDisableRadioOnIdle = false;
     mRxOnWhenIdle = false;
     mCsmaAttempts = 0;
     mTransmitAttempts = 0;
@@ -218,6 +219,13 @@ ThreadError Mac::Scan(ScanType aScanType, uint32_t aScanChannels, uint16_t aScan
     {
         mScanChannels >>= 1;
         mScanChannel++;
+    }
+
+    // If the radio isn't enabled, enable it now
+    if (!mRadioOn)
+    {
+        mDisableRadioOnIdle = true;
+        EnableRadio();
     }
 
     if (mState == kStateIdle)
@@ -588,6 +596,12 @@ void Mac::ScheduleNextTransmission(void)
     else
     {
         mState = kStateIdle;
+
+        if (mDisableRadioOnIdle)
+        {
+            mDisableRadioOnIdle = false;
+            DisableRadio();
+        }
     }
 
     NextOperation();

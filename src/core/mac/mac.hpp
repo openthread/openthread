@@ -650,6 +650,7 @@ private:
     uint8_t mBeaconSequence;
     uint8_t mDataSequence;
     bool mRadioOn;
+    bool mDisableRadioOnIdle;
     bool mRxOnWhenIdle;
     uint8_t mCsmaAttempts;
     uint8_t mTransmitAttempts;
