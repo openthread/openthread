@@ -68,6 +68,7 @@
     <ClCompile Include="..\..\src\core\api\dataset_api.cpp" />
     <ClCompile Include="..\..\src\core\api\dhcp6_api.cpp" />
     <ClCompile Include="..\..\src\core\api\ip6_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\instance_api.cpp" />
     <ClCompile Include="..\..\src\core\api\joiner_api.cpp" />
     <ClCompile Include="..\..\src\core\api\link_api.cpp" />
     <ClCompile Include="..\..\src\core\api\message_api.cpp" />

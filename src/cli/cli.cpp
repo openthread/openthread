@@ -812,7 +812,7 @@ exit:
 
 void Interpreter::ProcessFactoryReset(int argc, char *argv[])
 {
-    otFactoryReset(mInstance);
+    otInstanceFactoryReset(mInstance);
     (void)argc;
     (void)argv;
 }
@@ -1821,7 +1821,7 @@ exit:
 
 void Interpreter::ProcessReset(int argc, char *argv[])
 {
-    otPlatformReset(mInstance);
+    otInstanceReset(mInstance);
     (void)argc;
     (void)argv;
 }

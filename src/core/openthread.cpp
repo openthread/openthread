@@ -62,28 +62,6 @@
 
 using namespace Thread;
 
-#ifndef OPENTHREAD_MULTIPLE_INSTANCE
-static otDEFINE_ALIGNED_VAR(sInstanceRaw, sizeof(otInstance), uint64_t);
-otInstance *sInstance = NULL;
-#endif
-
-otInstance::otInstance(void) :
-    mReceiveIp6DatagramCallback(NULL),
-    mReceiveIp6DatagramCallbackContext(NULL),
-    mActiveScanCallback(NULL),
-    mActiveScanCallbackContext(NULL),
-    mEnergyScanCallback(NULL),
-    mEnergyScanCallbackContext(NULL),
-    mThreadNetif(mIp6)
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    , mLinkRaw(*this)
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
-    , mApplicationCoapServer(mIp6.mUdp, OT_DEFAULT_COAP_PORT)
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
-{
-}
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -367,28 +345,6 @@ ThreadError otBecomeLeader(otInstance *aInstance)
     return aInstance->mThreadNetif.GetMle().BecomeLeader();
 }
 
-void otPlatformReset(otInstance *aInstance)
-{
-    otPlatReset(aInstance);
-}
-
-void otFactoryReset(otInstance *aInstance)
-{
-    otPlatSettingsWipe(aInstance);
-    otPlatReset(aInstance);
-}
-
-ThreadError otPersistentInfoErase(otInstance *aInstance)
-{
-    ThreadError error = kThreadError_None;
-
-    VerifyOrExit(otGetDeviceRole(aInstance) == kDeviceRoleDisabled, error = kThreadError_InvalidState);
-    otPlatSettingsWipe(aInstance);
-
-exit:
-    return error;
-}
-
 uint8_t otGetRouterDowngradeThreshold(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMle().GetRouterDowngradeThreshold();
@@ -575,36 +531,6 @@ exit:
     return error;
 }
 
-ThreadError otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aCallbackContext)
-{
-    ThreadError error = kThreadError_NoBufs;
-
-    for (size_t i = 0; i < OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS; i++)
-    {
-        if (aInstance->mNetifCallback[i].IsFree())
-        {
-            aInstance->mNetifCallback[i].Set(aCallback, aCallbackContext);
-            error = aInstance->mThreadNetif.RegisterCallback(aInstance->mNetifCallback[i]);
-            break;
-        }
-    }
-
-    return error;
-}
-
-void otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aCallbackContext)
-{
-    for (size_t i = 0; i < OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS; i++)
-    {
-        if (aInstance->mNetifCallback[i].IsServing(aCallback, aCallbackContext))
-        {
-            aInstance->mThreadNetif.RemoveCallback(aInstance->mNetifCallback[i]);
-            aInstance->mNetifCallback[i].Free();
-            break;
-        }
-    }
-}
-
 const char *otGetVersionString(void)
 {
     /**
@@ -649,84 +575,6 @@ ThreadError otSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId)
     return aInstance->mThreadNetif.GetMle().SetPreferredRouterId(aRouterId);
 }
 
-void otInstancePostConstructor(otInstance *aInstance)
-{
-    // restore datasets and network information
-    otPlatSettingsInit(aInstance);
-    aInstance->mThreadNetif.GetMle().Restore();
-
-#if OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
-
-    // If auto start is configured, do that now
-    if (otThreadGetAutoStart(aInstance))
-    {
-        if (otIp6SetEnabled(aInstance, true) == kThreadError_None)
-        {
-            // Only try to start Thread if we could bring up the interface
-            if (otThreadStart(aInstance) != kThreadError_None)
-            {
-                // Bring the interface down if Thread failed to start
-                otIp6SetEnabled(aInstance, false);
-            }
-        }
-    }
-
-#endif
-}
-
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
-
-otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
-{
-    otInstance *aInstance = NULL;
-
-    otLogFuncEntry();
-    otLogInfoApi("otInstanceInit");
-
-    VerifyOrExit(aInstanceBufferSize != NULL, ;);
-
-    // Make sure the input buffer is big enough
-    VerifyOrExit(sizeof(otInstance) <= *aInstanceBufferSize, *aInstanceBufferSize = sizeof(otInstance));
-
-    VerifyOrExit(aInstanceBuffer != NULL, ;);
-
-    // Construct the context
-    aInstance = new(aInstanceBuffer)otInstance();
-
-    // Execute post constructor operations
-    otInstancePostConstructor(aInstance);
-
-exit:
-
-    otLogFuncExit();
-    return aInstance;
-}
-
-#else
-
-otInstance *otInstanceInit()
-{
-    otLogFuncEntry();
-
-    otLogInfoApi("otInstanceInit");
-
-    VerifyOrExit(sInstance == NULL, ;);
-
-    // Construct the context
-    sInstance = new(&sInstanceRaw)otInstance();
-
-    // Execute post constructor operations
-    otInstancePostConstructor(sInstance);
-
-exit:
-
-    otLogFuncExit();
-    return sInstance;
-}
-
-#endif
-
-
 void otSetReceiveDiagnosticGetCallback(otInstance *aInstance, otReceiveDiagnosticGetCallback aCallback,
                                        void *aCallbackContext)
 {
@@ -749,20 +597,6 @@ ThreadError otSendDiagnosticReset(otInstance *aInstance, const otIp6Address *aDe
                                                                               (aDestination),
                                                                               aTlvTypes,
                                                                               aCount);
-}
-
-void otInstanceFinalize(otInstance *aInstance)
-{
-    otLogFuncEntry();
-
-    // Ensure we are disabled
-    (void)otThreadStop(aInstance);
-    (void)otIp6SetEnabled(aInstance, false);
-
-#ifndef OPENTHREAD_MULTIPLE_INSTANCE
-    sInstance = NULL;
-#endif
-    otLogFuncExit();
 }
 
 ThreadError otThreadStart(otInstance *aInstance)

@@ -35,6 +35,7 @@ openthread_headers                      = \
     dataset.h                             \
     dhcp6_client.h                        \
     dhcp6_server.h                        \
+    instance.h                            \
     ip6.h                                 \
     jam_detection.h                       \
     joiner.h                              \

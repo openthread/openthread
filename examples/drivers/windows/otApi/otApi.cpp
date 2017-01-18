@@ -2907,7 +2907,7 @@ otLinkSetAssignLinkQuality(
 OTAPI 
 void 
 OTCALL
-otPlatformReset(
+otInstanceReset(
     _In_ otInstance *aInstance
     )
 {
@@ -2917,7 +2917,7 @@ otPlatformReset(
 OTAPI 
 void 
 OTCALL
-otFactoryReset(
+otInstanceFactoryReset(
     _In_ otInstance *aInstance
     )
 {

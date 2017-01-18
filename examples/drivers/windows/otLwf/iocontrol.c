@@ -4864,7 +4864,7 @@ otLwfIoCtl_otPlatformReset(
     UNREFERENCED_PARAMETER(OutBuffer);
     *OutBufferLength = 0;
     
-    otPlatformReset(pFilter->otCtx);
+    otInstanceReset(pFilter->otCtx);
 
     return status;
 }
@@ -4888,7 +4888,7 @@ otLwfIoCtl_otFactoryReset(
     UNREFERENCED_PARAMETER(OutBuffer);
     *OutBufferLength = 0;
     
-    otFactoryReset(pFilter->otCtx);
+    otInstanceFactoryReset(pFilter->otCtx);
 
     return status;
 }
