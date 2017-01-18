@@ -668,13 +668,13 @@ void Interpreter::ProcessDelayTimerMin(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sServer->OutputFormat("%d\r\n", (otGetDelayTimerMinimal(mInstance) / 1000));
+        sServer->OutputFormat("%d\r\n", (otDatasetGetDelayTimerMinimal(mInstance) / 1000));
     }
     else if (argc == 1)
     {
         unsigned long value;
         SuccessOrExit(error = ParseUnsignedLong(argv[0], value));
-        SuccessOrExit(error = otSetDelayTimerMinimal(mInstance, static_cast<uint32_t>(value * 1000)));
+        SuccessOrExit(error = otDatasetSetDelayTimerMinimal(mInstance, static_cast<uint32_t>(value * 1000)));
     }
     else
     {

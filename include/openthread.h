@@ -38,6 +38,7 @@
 #include <openthread-types.h>
 
 #include "openthread/crypto.h"
+#include "openthread/dataset.h"
 #include "openthread/ip6.h"
 #include "openthread/link.h"
 #include "openthread/message.h"
@@ -369,28 +370,6 @@ OTAPI bool OTCALL otIsDiscoverInProgress(otInstance *aInstance);
  */
 
 /**
- * Set minimal delay timer.
- *
- * @param[in]  aInstance           A pointer to an OpenThread instance.
- * @param[in]  aDelayTimerMinimal  The value of minimal delay timer (in ms).
- *
- * @retval  kThreadError_None         Successfully set minimal delay timer.
- * @retval  kThreadError_InvalidArgs  If @p aDelayTimerMinimal is not valid.
- *
- */
-OTAPI ThreadError OTCALL otSetDelayTimerMinimal(otInstance *aInstance, uint32_t aDelayTimerMinimal);
-
-/**
- * Get minimal delay timer.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- *
- * @retval the value of minimal delay timer (in ms).
- *
- */
-OTAPI uint32_t OTCALL otGetDelayTimerMinimal(otInstance *aInstance);
-
-/**
  * Get the maximum number of children currently allowed.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
@@ -620,126 +599,6 @@ OTAPI ThreadError OTCALL otSetStateChangedCallback(otInstance *aInstance, otStat
  */
 OTAPI void OTCALL otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback aCallback,
                                               void *aCallbackContext);
-
-/**
- * This function gets the Active Operational Dataset.
- *
- * @param[in]   aInstance A pointer to an OpenThread instance.
- * @param[out]  aDataset  A pointer to where the Active Operational Dataset will be placed.
- *
- * @retval kThreadError_None         Successfully retrieved the Active Operational Dataset.
- * @retval kThreadError_InvalidArgs  @p aDataset was NULL.
- *
- */
-OTAPI ThreadError OTCALL otGetActiveDataset(otInstance *aInstance, otOperationalDataset *aDataset);
-
-/**
- * This function sets the Active Operational Dataset.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aDataset  A pointer to the Active Operational Dataset.
- *
- * @retval kThreadError_None         Successfully set the Active Operational Dataset.
- * @retval kThreadError_NoBufs       Insufficient buffer space to set the Active Operational Datset.
- * @retval kThreadError_InvalidArgs  @p aDataset was NULL.
- *
- */
-OTAPI ThreadError OTCALL otSetActiveDataset(otInstance *aInstance, const otOperationalDataset *aDataset);
-
-/**
- * This function indicates whether a valid network is present in the Active Operational Dataset or not.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- *
- * @returns TRUE if a valid network is present in the Active Operational Dataset, FALSE otherwise.
- *
- */
-OTAPI bool OTCALL otIsNodeCommissioned(otInstance *aInstance);
-
-/**
- * This function gets the Pending Operational Dataset.
- *
- * @param[in]   aInstance A pointer to an OpenThread instance.
- * @param[out]  aDataset  A pointer to where the Pending Operational Dataset will be placed.
- *
- * @retval kThreadError_None         Successfully retrieved the Pending Operational Dataset.
- * @retval kThreadError_InvalidArgs  @p aDataset was NULL.
- *
- */
-OTAPI ThreadError OTCALL otGetPendingDataset(otInstance *aInstance, otOperationalDataset *aDataset);
-
-/**
- * This function sets the Pending Operational Dataset.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aDataset  A pointer to the Pending Operational Dataset.
- *
- * @retval kThreadError_None         Successfully set the Pending Operational Dataset.
- * @retval kThreadError_NoBufs       Insufficient buffer space to set the Pending Operational Dataset.
- * @retval kThreadError_InvalidArgs  @p aDataset was NULL.
- *
- */
-OTAPI ThreadError OTCALL otSetPendingDataset(otInstance *aInstance, const otOperationalDataset *aDataset);
-
-/**
- * This function sends MGMT_ACTIVE_GET.
- *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aTlvTypes  A pointer to the TLV Types.
- * @param[in]  aLength    The length of TLV Types.
- * @param[in]  aAddress   A pointer to the IPv6 destination, if it is NULL, will use Leader ALOC as default.
- *
- * @retval kThreadError_None         Successfully send the meshcop dataset command.
- * @retval kThreadError_NoBufs       Insufficient buffer space to send.
- *
- */
-OTAPI ThreadError OTCALL otSendActiveGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength,
-                                         const otIp6Address *aAddress);
-
-/**
- * This function sends MGMT_ACTIVE_SET.
- *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aDataset   A pointer to operational dataset.
- * @param[in]  aTlvs      A pointer to TLVs.
- * @param[in]  aLength    The length of TLVs.
- *
- * @retval kThreadError_None         Successfully send the meshcop dataset command.
- * @retval kThreadError_NoBufs       Insufficient buffer space to send.
- *
- */
-OTAPI ThreadError OTCALL otSendActiveSet(otInstance *aInstance, const otOperationalDataset *aDataset,
-                                         const uint8_t *aTlvs, uint8_t aLength);
-
-/**
- * This function sends MGMT_PENDING_GET.
- *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aTlvTypes  A pointer to the TLV Types.
- * @param[in]  aLength    The length of TLV Types.
- * @param[in]  aAddress   A pointer to the IPv6 destination, if it is NULL, will use Leader ALOC as default.
- *
- * @retval kThreadError_None         Successfully send the meshcop dataset command.
- * @retval kThreadError_NoBufs       Insufficient buffer space to send.
- *
- */
-OTAPI ThreadError OTCALL otSendPendingGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength,
-                                          const otIp6Address *aAddress);
-
-/**
- * This function sends MGMT_PENDING_SET.
- *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aDataset   A pointer to operational dataset.
- * @param[in]  aTlvs      A pointer to TLVs.
- * @param[in]  aLength    The length of TLVs.
- *
- * @retval kThreadError_None         Successfully send the meshcop dataset command.
- * @retval kThreadError_NoBufs       Insufficient buffer space to send.
- *
- */
-OTAPI ThreadError OTCALL otSendPendingSet(otInstance *aInstance, const otOperationalDataset *aDataset,
-                                          const uint8_t *aTlvs, uint8_t aLength);
 
 /**
  * Set the preferred Router Id.

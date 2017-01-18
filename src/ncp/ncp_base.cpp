@@ -2055,7 +2055,7 @@ ThreadError NcpBase::GetPropertyHandler_NET_SAVED(uint8_t header, spinel_prop_ke
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_BOOL_S,
-               otIsNodeCommissioned(mInstance)
+               otDatasetIsCommissioned(mInstance)
            );
 }
 

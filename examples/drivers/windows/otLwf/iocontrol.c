@@ -2327,12 +2327,12 @@ otLwfIoCtl_otActiveDataset(
 
     if (InBufferLength >= sizeof(otOperationalDataset))
     {
-        status = ThreadErrorToNtstatus(otSetActiveDataset(pFilter->otCtx, (otOperationalDataset*)InBuffer));
+        status = ThreadErrorToNtstatus(otDatasetSetActive(pFilter->otCtx, (otOperationalDataset*)InBuffer));
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(otOperationalDataset))
     {
-        status = ThreadErrorToNtstatus(otGetActiveDataset(pFilter->otCtx, (otOperationalDataset*)OutBuffer));
+        status = ThreadErrorToNtstatus(otDatasetGetActive(pFilter->otCtx, (otOperationalDataset*)OutBuffer));
         *OutBufferLength = sizeof(otOperationalDataset);
     }
     else
@@ -2359,12 +2359,12 @@ otLwfIoCtl_otPendingDataset(
 
     if (InBufferLength >= sizeof(otOperationalDataset))
     {
-        status = ThreadErrorToNtstatus(otSetPendingDataset(pFilter->otCtx, (otOperationalDataset*)InBuffer));
+        status = ThreadErrorToNtstatus(otDatasetSetPending(pFilter->otCtx, (otOperationalDataset*)InBuffer));
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(otOperationalDataset))
     {
-        status = ThreadErrorToNtstatus(otGetPendingDataset(pFilter->otCtx, (otOperationalDataset*)OutBuffer));
+        status = ThreadErrorToNtstatus(otDatasetGetPending(pFilter->otCtx, (otOperationalDataset*)OutBuffer));
         *OutBufferLength = sizeof(otOperationalDataset);
     }
     else
@@ -5753,7 +5753,7 @@ otLwfIoCtl_otSendActiveGet(
                 aAddress = (otIp6Address*)(InBuffer + sizeof(uint8_t) + aLength);
 
             status = ThreadErrorToNtstatus(
-                otSendActiveGet(
+                otDatasetSendMgmtActiveGet(
                     pFilter->otCtx,
                     aTlvTypes,
                     aLength,
@@ -5791,7 +5791,7 @@ otLwfIoCtl_otSendActiveSet(
         if (InBufferLength >= sizeof(otOperationalDataset) + sizeof(uint8_t) + aLength)
         {
             status = ThreadErrorToNtstatus(
-                otSendActiveSet(
+                otDatasetSendMgmtActiveSet(
                     pFilter->otCtx,
                     aDataset,
                     aTlvTypes,
@@ -5832,7 +5832,7 @@ otLwfIoCtl_otSendPendingGet(
                 aAddress = (otIp6Address*)(InBuffer + sizeof(uint8_t) + aLength);
 
             status = ThreadErrorToNtstatus(
-                otSendPendingGet(
+                otDatasetSendMgmtPendingGet(
                     pFilter->otCtx,
                     aTlvTypes,
                     aLength,
@@ -5870,7 +5870,7 @@ otLwfIoCtl_otSendPendingSet(
         if (InBufferLength >= sizeof(otOperationalDataset) + sizeof(uint8_t) + aLength)
         {
             status = ThreadErrorToNtstatus(
-                otSendPendingSet(
+                otDatasetSendMgmtPendingSet(
                     pFilter->otCtx,
                     aDataset,
                     aTlvTypes,

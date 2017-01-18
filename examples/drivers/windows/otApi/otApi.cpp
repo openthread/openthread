@@ -1412,7 +1412,7 @@ otLinkSetChannel(
 OTAPI
 ThreadError
 OTCALL
-otSetDelayTimerMinimal(
+otDatasetSetDelayTimerMinimal(
     _In_ otInstance *aInstance,
     uint32_t aDelayTimerMinimal
     )
@@ -1426,7 +1426,7 @@ otSetDelayTimerMinimal(
 OTAPI
 uint32_t
 OTCALL
-otGetDelayTimerMinimal(
+otDatasetGetDelayTimerMinimal(
     _In_ otInstance *aInstance
     )
 {
@@ -2180,7 +2180,7 @@ otRemoveStateChangeCallback(
 OTAPI
 ThreadError
 OTCALL
-otGetActiveDataset(
+otDatasetGetActive(
     _In_ otInstance *aInstance, 
     _Out_ otOperationalDataset *aDataset
     )
@@ -2192,7 +2192,7 @@ otGetActiveDataset(
 OTAPI
 ThreadError
 OTCALL
-otSetActiveDataset(
+otDatasetSetActive(
     _In_ otInstance *aInstance, 
     const otOperationalDataset *aDataset
     )
@@ -2204,7 +2204,7 @@ otSetActiveDataset(
 OTAPI
 ThreadError
 OTCALL
-otGetPendingDataset(
+otDatasetGetPending(
     _In_ otInstance *aInstance, 
     _Out_ otOperationalDataset *aDataset
     )
@@ -2216,7 +2216,7 @@ otGetPendingDataset(
 OTAPI
 ThreadError
 OTCALL
-otSetPendingDataset(
+otDatasetSetPending(
     _In_ otInstance *aInstance, 
     const otOperationalDataset *aDataset
     )
@@ -2228,7 +2228,7 @@ otSetPendingDataset(
 OTAPI 
 ThreadError 
 OTCALL
-otSendActiveGet(
+otDatasetSendMgmtActiveGet(
     _In_ otInstance *aInstance, 
     const uint8_t *aTlvTypes, 
     uint8_t aLength,
@@ -2260,7 +2260,7 @@ otSendActiveGet(
 OTAPI 
 ThreadError 
 OTCALL
-otSendActiveSet(
+otDatasetSendMgmtActiveSet(
     _In_ otInstance *aInstance, 
     const otOperationalDataset *aDataset, 
     const uint8_t *aTlvs,
@@ -2290,7 +2290,7 @@ otSendActiveSet(
 OTAPI 
 ThreadError 
 OTCALL
-otSendPendingGet(
+otDatasetSendMgmtPendingGet(
     _In_ otInstance *aInstance, 
     const uint8_t *aTlvTypes, 
     uint8_t aLength,
@@ -2322,7 +2322,7 @@ otSendPendingGet(
 OTAPI 
 ThreadError 
 OTCALL
-otSendPendingSet(
+otDatasetSendMgmtPendingSet(
     _In_ otInstance *aInstance, 
     const otOperationalDataset *aDataset, 
     const uint8_t *aTlvs,
