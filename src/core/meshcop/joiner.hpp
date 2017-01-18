@@ -34,7 +34,6 @@
 #ifndef JOINER_HPP_
 #define JOINER_HPP_
 
-#include <openthread-types.h>
 #include "openthread/joiner.h"
 
 #include <coap/coap_header.hpp>

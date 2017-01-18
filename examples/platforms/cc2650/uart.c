@@ -33,7 +33,7 @@
 #include <driverlib/ioc.h>
 #include <driverlib/sys_ctrl.h>
 
-#include <openthread-types.h>
+#include <openthread/types.h>
 #include <common/code_utils.hpp>
 #include <platform/uart.h>
 

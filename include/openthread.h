@@ -35,7 +35,7 @@
 #ifndef OPENTHREAD_H_
 #define OPENTHREAD_H_
 
-#include <openthread-types.h>
+#include "openthread/types.h"
 
 #include "openthread/crypto.h"
 #include "openthread/dataset.h"

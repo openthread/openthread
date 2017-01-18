@@ -35,7 +35,9 @@
 #define DIAG_PROCESS_HPP_
 
 #include <stdarg.h>
-#include <openthread-types.h>
+
+#include "openthread/types.h"
+
 #include <platform/radio.h>
 #include <platform/alarm.h>
 #include <platform/diag.h>

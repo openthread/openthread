@@ -37,8 +37,9 @@
 #include <string.h>
 #include <assert.h>
 
-#include <openthread-types.h>
 #include <openthread-core-config.h>
+
+#include "openthread/types.h"
 
 #include <common/code_utils.hpp>
 #include <platform/settings.h>

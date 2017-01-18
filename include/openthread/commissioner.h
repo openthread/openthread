@@ -35,7 +35,7 @@
 #ifndef OPENTHREAD_COMMISSIONER_H_
 #define OPENTHREAD_COMMISSIONER_H_
 
-#include "openthread-types.h"
+#include "openthread/types.h"
 #include <platform/toolchain.h>
 
 #ifdef __cplusplus

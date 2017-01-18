@@ -36,7 +36,6 @@
 
 #include <stdio.h>
 
-#include <openthread-types.h>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <coap/coap_header.hpp>

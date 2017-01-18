@@ -35,7 +35,9 @@
 #define MESH_FORWARDER_HPP_
 
 #include <openthread-core-config.h>
-#include <openthread-types.h>
+
+#include "openthread/types.h"
+
 #include <common/tasklet.hpp>
 #include <mac/mac.hpp>
 #include <net/ip6.hpp>

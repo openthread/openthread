@@ -34,7 +34,8 @@
 
 #include <stddef.h>
 
-#include <openthread-types.h>
+#include "openthread/types.h"
+
 #include <common/code_utils.hpp>
 #include <platform/uart.h>
 #include "platform-cc2538.h"

@@ -34,7 +34,7 @@
 #ifndef CLI_SERVER_HPP_
 #define CLI_SERVER_HPP_
 
-#include <openthread-types.h>
+#include "openthread/types.h"
 
 namespace Thread {
 namespace Cli {

@@ -141,7 +141,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\openthread.h" />
-    <ClInclude Include="..\..\include\openthread-types.h" />
+    <ClInclude Include="..\..\include\openthread\types.h" />
     <ClInclude Include="..\..\include\openthread-windows-config.h" />
     <ClInclude Include="..\..\include\openthread\link_raw.h" />
     <ClInclude Include="..\..\src\core\coap\coap_base.hpp" />

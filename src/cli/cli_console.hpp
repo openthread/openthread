@@ -34,7 +34,6 @@
 #ifndef CLI_CONSOLE_HPP_
 #define CLI_CONSOLE_HPP_
 
-#include <openthread-types.h>
 #include "openthread/cli.h"
 
 #include <cli/cli_server.hpp>

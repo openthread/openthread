@@ -38,7 +38,7 @@
 #endif
 
 #include <openthread.h>
-#include <openthread-types.h>
+
 #include <thread/thread_netif.hpp>
 #include <common/code_utils.hpp>
 #include <platform/random.h>

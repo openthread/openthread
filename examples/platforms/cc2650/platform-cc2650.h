@@ -30,7 +30,7 @@
 #define PLATFORM_H_
 
 #include <stdint.h>
-#include "openthread-types.h"
+#include "openthread/types.h"
 
 #ifdef __cplusplus
 extern "C" {

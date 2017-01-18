@@ -34,7 +34,8 @@
 #ifndef NETWORK_DATA_HPP_
 #define NETWORK_DATA_HPP_
 
-#include <openthread-types.h>
+#include "openthread/types.h"
+
 #include <coap/coap_client.hpp>
 #include <net/udp6.hpp>
 #include <thread/lowpan.hpp>

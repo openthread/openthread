@@ -36,7 +36,6 @@
 
 #include <openthread.h>
 #include "platform/alarm.h"
-#include <openthread-types.h>
 #include "platform-da15000.h"
 #include "sdk_defs.h"
 #include "hw_cpm.h"

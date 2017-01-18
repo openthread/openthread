@@ -26,7 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread-types.h>
+#include <openthread/types.h>
 #include "platform-cc2650.h"
 
 otInstance *sInstance;
