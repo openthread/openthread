@@ -2209,7 +2209,7 @@ exit:
 
 ThreadError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    static const uint8_t kMaxResponseTlvs = 8;
+    static const uint8_t kMaxResponseTlvs = 10;
 
     ThreadError error = kThreadError_None;
     Mac::ExtAddress macAddr;
@@ -2250,6 +2250,8 @@ ThreadError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const I
     {
         VerifyOrExit(challenge.IsValid(), error = kThreadError_Parse);
         tlvs[tlvslength++] = Tlv::kResponse;
+        tlvs[tlvslength++] = Tlv::kMleFrameCounter;
+        tlvs[tlvslength++] = Tlv::kLinkFrameCounter;
     }
 
     // Ip6 Address TLV
@@ -2819,6 +2821,14 @@ ThreadError MleRouter::SendChildUpdateResponse(Child *aChild, const Ip6::Message
 
         case Tlv::kTimeout:
             SuccessOrExit(error = AppendTimeout(*message, aChild->mTimeout));
+            break;
+
+        case Tlv::kMleFrameCounter:
+            SuccessOrExit(error = AppendMleFrameCounter(*message));
+            break;
+
+        case Tlv::kLinkFrameCounter:
+            SuccessOrExit(error = AppendLinkFrameCounter(*message));
             break;
         }
     }
