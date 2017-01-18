@@ -39,14 +39,14 @@
 #include <stdlib.h>
 
 #include "openthread/message.h"
+#include "openthread/ncp.h"
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
 #include "openthread/jam_detection.h"
 #endif
 
 #include <common/code_utils.hpp>
- #include <common/debug.hpp>
-#include <ncp/ncp.h>
+#include <common/debug.hpp>
 #include <ncp/ncp_base.hpp>
 #include <net/ip6.hpp>
 #include <openthread.h>

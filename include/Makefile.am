@@ -32,7 +32,6 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 DIST_SUBDIRS                            = \
     cli                                   \
-    ncp                                   \
     openthread                            \
     platform                              \
     $(NULL)
@@ -41,7 +40,6 @@ DIST_SUBDIRS                            = \
 
 SUBDIRS                                 = \
     cli                                   \
-    ncp                                   \
     openthread                            \
     platform                              \
     $(NULL)
@@ -50,7 +48,6 @@ SUBDIRS                                 = \
 
 PRETTY_SUBDIRS                          = \
     cli                                   \
-    ncp                                   \
     openthread                            \
     platform                              \
     $(NULL)

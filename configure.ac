@@ -1080,7 +1080,6 @@ AC_CONFIG_FILES([
 Makefile
 include/Makefile
 include/cli/Makefile
-include/ncp/Makefile
 include/openthread/Makefile
 include/platform/Makefile
 src/Makefile
