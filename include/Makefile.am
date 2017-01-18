@@ -50,8 +50,6 @@ PRETTY_SUBDIRS                          = \
     $(NULL)
 
 include_HEADERS                         = \
-    openthread/link_raw.h                 \
-    openthread.h                          \
     openthread-diag.h                     \
     openthread-icmp6.h                    \
     $(NULL)

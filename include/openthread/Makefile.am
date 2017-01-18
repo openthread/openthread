@@ -41,9 +41,11 @@ openthread_headers                      = \
     jam_detection.h                       \
     joiner.h                              \
     link.h                                \
+    link_raw.h                            \
     message.h                             \
     ncp.h                                 \
     netdata.h                             \
+    openthread.h                          \
     tasklet.h                             \
     thread.h                              \
     types.h                               \

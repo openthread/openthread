@@ -39,7 +39,8 @@
 #include <openthread-config.h>
 #endif
 
-#include <openthread.h>
+#include "openthread/openthread.h"
+
 #include <common/logging.hpp>
 
 #ifndef WINDOWS_LOGGING

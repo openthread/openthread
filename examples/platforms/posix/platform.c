@@ -46,8 +46,8 @@
 #include <syslog.h>
 #endif
 
-#include <openthread.h>
-#include <openthread/tasklet.h>
+#include "openthread/openthread.h"
+#include "openthread/tasklet.h"
 #include <platform/alarm.h>
 
 uint32_t NODE_ID = 1;

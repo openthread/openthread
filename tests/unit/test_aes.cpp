@@ -27,7 +27,7 @@
  */
 
 #include "test_util.h"
-#include <openthread.h>
+#include "openthread/openthread.h"
 #include <common/debug.hpp>
 #include <crypto/aes_ccm.hpp>
 #include <crypto/mbedtls.hpp>

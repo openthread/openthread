@@ -34,7 +34,7 @@
 #include <assert.h>
 #include <stdint.h>
 
-#include <openthread.h>
+#include "openthread/openthread.h"
 #include "platform/alarm.h"
 #include "platform-da15000.h"
 #include "sdk_defs.h"

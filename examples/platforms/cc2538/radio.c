@@ -32,7 +32,7 @@
  *
  */
 
-#include <openthread.h>
+#include "openthread/openthread.h"
 #include <openthread-config.h>
 
 #include <common/code_utils.hpp>

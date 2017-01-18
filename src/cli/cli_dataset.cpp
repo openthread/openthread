@@ -41,7 +41,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <openthread.h>
+#include "openthread/openthread.h"
 
 #include "cli.hpp"
 #include "cli_dataset.hpp"

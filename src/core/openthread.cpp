@@ -39,7 +39,7 @@
 #include <openthread-config.h>
 #endif
 
-#include <openthread.h>
+#include "openthread/openthread.h"
 
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>

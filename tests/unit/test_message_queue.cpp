@@ -28,9 +28,7 @@
 
 #include "test_util.h"
 
-#include <openthread.h>
-#include "openthread/ip6.h"
-#include "openthread/message.h"
+#include "openthread/openthread.h"
 
 #include <common/debug.hpp>
 #include <common/message.hpp>

@@ -39,9 +39,10 @@
 #else
 #include <openthread-config.h>
 #endif
-#include <openthread.h>
 
 #include <stdarg.h>
+
+#include "openthread/openthread.h"
 #include "openthread/ip6.h"
 #include "openthread/udp.h"
 

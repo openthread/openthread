@@ -36,7 +36,7 @@
 #include <stdint.h>
 
 #include <openthread-config.h>
-#include <openthread.h>
+#include "openthread/openthread.h"
 
 #include <platform/platform.h>
 #include <platform/alarm.h>

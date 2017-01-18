@@ -49,7 +49,7 @@ using namespace std;
 #define OTDLL
 #define OTNODEAPI EXTERN_C __declspec(dllexport)
 
-#include <openthread.h>
+#include <openthread/openthread.h>
 #include <openthread/commissioner.h>
 #include <openthread/joiner.h>
 #include <platform/logging-windows.h>
