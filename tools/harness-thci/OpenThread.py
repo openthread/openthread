@@ -2413,7 +2413,7 @@ class OpenThread(IThci):
 
             if xBorderRouterLocator != None:
                 cmd += ' locator '
-                cmd += str(xBorderRouterLocator)
+                cmd += str(hex(xBorderRouterLocator))
 
             if xChannelTlv != None:
                 cmd += ' binary '

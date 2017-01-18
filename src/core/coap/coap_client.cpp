@@ -309,7 +309,8 @@ Message *Client::FindRelatedRequest(const Header &aResponseHeader, const Ip6::Me
         aRequestMetadata.ReadFrom(*message);
 
         if (((aRequestMetadata.mDestinationAddress == aMessageInfo.GetPeerAddr()) ||
-             aRequestMetadata.mDestinationAddress.IsMulticast()) &&
+             aRequestMetadata.mDestinationAddress.IsMulticast() ||
+             aRequestMetadata.mDestinationAddress.IsAnycastRoutingLocator()) &&
             (aRequestMetadata.mDestinationPort == aMessageInfo.GetPeerPort()))
         {
             assert(aRequestHeader.FromMessage(*message, true) == kThreadError_None);

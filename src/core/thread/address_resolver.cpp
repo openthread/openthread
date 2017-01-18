@@ -223,6 +223,7 @@ void AddressResolver::HandleAddressNotification(Coap::Header &aHeader, Message &
     ThreadRloc16Tlv rloc16Tlv;
     ThreadLastTransactionTimeTlv lastTransactionTimeTlv;
     uint32_t lastTransactionTime;
+    Ip6::MessageInfo responseInfo(aMessageInfo);
 
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
                  aHeader.GetCode() == kCoapRequestPost, ;);
@@ -281,6 +282,8 @@ void AddressResolver::HandleAddressNotification(Coap::Header &aHeader, Message &
             mCache[i].mTimeout = 0;
             mCache[i].mFailures = 0;
             mCache[i].mState = Cache::kStateCached;
+
+            memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
 
             if (mCoapServer.SendEmptyAck(aHeader, aMessageInfo) == kThreadError_None)
             {
@@ -360,6 +363,7 @@ void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessag
     uint8_t numChildren;
     Mac::ExtAddress macAddr;
     Ip6::Address destination;
+    Ip6::MessageInfo responseInfo(aMessageInfo);
 
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
                  aHeader.GetCode() == kCoapRequestPost, error = kThreadError_Drop);
@@ -368,7 +372,9 @@ void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessag
 
     if (!aMessageInfo.GetSockAddr().IsMulticast())
     {
-        if (mCoapServer.SendEmptyAck(aHeader, aMessageInfo) == kThreadError_None)
+        memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
+
+        if (mCoapServer.SendEmptyAck(aHeader, responseInfo) == kThreadError_None)
         {
             otLogInfoArp("Sent address error notification acknowledgment");
         }
