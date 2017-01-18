@@ -2231,8 +2231,6 @@ OTNODEAPI int32_t OTCALL otListenerFinalize(otListener* aListener)
 
 OTNODEAPI int32_t OTCALL otListenerRead(otListener* aListener, otMacFrame *aFrame)
 {
-    printf("S: Sniffer reading...\r\n");
-
     do
     {
         bool exit = false;
@@ -2262,13 +2260,12 @@ OTNODEAPI int32_t OTCALL otListenerRead(otListener* aListener, otMacFrame *aFram
         }
         else // mStopEvent
         {
-            printf("Packet sniffer returning cancelled\r\n");
             return 1;
         }
         
     } while (true);
 
-    printf("S: Sniffer read %d bytes from node %d\r\n", aFrame->length, aFrame->nodeid);
+    //printf("S: Sniffer read %d bytes from node %d\r\n", aFrame->length, aFrame->nodeid);
 
     return 0;
 }

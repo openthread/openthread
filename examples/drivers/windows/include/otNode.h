@@ -372,18 +372,18 @@ OTNODEAPI int32_t OTCALL otNodeSetMaxChildren(otNode* aNode, uint8_t aMaxChildre
 typedef struct otListener otListener;
 
 /**
-* Creates and starts a new listener
-*/
+ * Creates and starts a new listener
+ */
 OTNODEAPI otListener* OTCALL otListenerInit(uint32_t nodeid);
 
 /**
-* Frees a listener
-*/
+ * Frees a listener
+ */
 OTNODEAPI int32_t OTCALL otListenerFinalize(otListener* aListener);
 
 /**
-* Structure that represents a received MAC frame from the listener
-*/
+ * Structure that represents a received MAC frame from the listener
+ */
 typedef struct otMacFrame
 {
     uint8_t buffer[128];
@@ -392,8 +392,8 @@ typedef struct otMacFrame
 } otMacFrame;
 
 /**
-* Reads the next MAC frame from the listener
-*/
+ * Reads the next MAC frame from the listener
+ */
 OTNODEAPI int32_t OTCALL otListenerRead(otListener* aListener, otMacFrame *aFrame);
 
 #ifdef __cplusplus
