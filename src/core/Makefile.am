@@ -41,6 +41,7 @@ CPPFLAGS_COMMON                     = \
 SOURCES_COMMON                      = \
     openthread.cpp                    \
     api/crypto_api.cpp                \
+    api/dataset_api.cpp               \
     api/ip6_api.cpp                   \
     api/link_api.cpp                  \
     api/message_api.cpp               \

@@ -1949,7 +1949,7 @@ OTNODEAPI int32_t OTCALL otNodeSetActiveDataset(otNode* aNode, uint64_t aTimesta
         aDataset.mIsMasterKeySet = true;
     }
 
-    auto result = otSetActiveDataset(aNode->mInstance, &aDataset);
+    auto result = otDatasetSetActive(aNode->mInstance, &aDataset);
     otLogFuncExit();
     return result;
 }
@@ -1985,7 +1985,7 @@ OTNODEAPI int32_t OTCALL otNodeSetPendingDataset(otNode* aNode, uint64_t aActive
         aDataset.mIsChannelSet = true;
     }
 
-    auto result = otSetPendingDataset(aNode->mInstance, &aDataset);
+    auto result = otDatasetSetPending(aNode->mInstance, &aDataset);
     otLogFuncExit();
     return result;
 }
@@ -2053,7 +2053,7 @@ OTNODEAPI int32_t OTCALL otNodeSendPendingSet(otNode* aNode, uint64_t aActiveTim
         aDataset.mIsNetworkNameSet = true;
     }
 
-    auto result = otSendPendingSet(aNode->mInstance, &aDataset, nullptr, 0);
+    auto result = otDatasetSendMgmtPendingSet(aNode->mInstance, &aDataset, nullptr, 0);
     otLogFuncExit();
     return result;
 }
@@ -2138,7 +2138,7 @@ OTNODEAPI int32_t OTCALL otNodeSendActiveSet(otNode* aNode, uint64_t aActiveTime
         tlvsLength = (uint8_t)length;
     }
 
-    auto result = otSendActiveSet(aNode->mInstance, &aDataset, tlvsLength == 0 ? nullptr : tlvs, tlvsLength);
+    auto result = otDatasetSendMgmtActiveSet(aNode->mInstance, &aDataset, tlvsLength == 0 ? nullptr : tlvs, tlvsLength);
     otLogFuncExit();
     return result;
 }

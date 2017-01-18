@@ -88,16 +88,6 @@ otInstance::otInstance(void) :
 extern "C" {
 #endif
 
-ThreadError otSetDelayTimerMinimal(otInstance *aInstance, uint32_t aDelayTimerMinimal)
-{
-    return aInstance->mThreadNetif.GetLeader().SetDelayTimerMinimal(aDelayTimerMinimal);
-}
-
-uint32_t otGetDelayTimerMinimal(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetLeader().GetDelayTimerMinimal();
-}
-
 uint8_t otGetMaxAllowedChildren(otInstance *aInstance)
 {
     uint8_t aNumChildren;
@@ -875,93 +865,6 @@ ThreadError otIcmp6SendEchoRequest(otInstance *aInstance, otMessage aMessage,
     return aInstance->mIp6.mIcmp.SendEchoRequest(*static_cast<Message *>(aMessage),
                                                  *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
                                                  aIdentifier);
-}
-
-ThreadError otGetActiveDataset(otInstance *aInstance, otOperationalDataset *aDataset)
-{
-    ThreadError error = kThreadError_None;
-
-    VerifyOrExit(aDataset != NULL, error = kThreadError_InvalidArgs);
-
-    aInstance->mThreadNetif.GetActiveDataset().GetLocal().Get(*aDataset);
-
-exit:
-    return error;
-}
-
-ThreadError otSetActiveDataset(otInstance *aInstance, const otOperationalDataset *aDataset)
-{
-    ThreadError error;
-
-    VerifyOrExit(aDataset != NULL, error = kThreadError_InvalidArgs);
-
-    error = aInstance->mThreadNetif.GetActiveDataset().Set(*aDataset);
-
-exit:
-    return error;
-}
-
-bool otIsNodeCommissioned(otInstance *aInstance)
-{
-    otOperationalDataset dataset;
-
-    otGetActiveDataset(aInstance, &dataset);
-
-    if ((dataset.mIsMasterKeySet) && (dataset.mIsNetworkNameSet) &&
-        (dataset.mIsExtendedPanIdSet) && (dataset.mIsPanIdSet) && (dataset.mIsChannelSet))
-    {
-        return true;
-    }
-
-    return false;
-}
-
-ThreadError otGetPendingDataset(otInstance *aInstance, otOperationalDataset *aDataset)
-{
-    ThreadError error = kThreadError_None;
-
-    VerifyOrExit(aDataset != NULL, error = kThreadError_InvalidArgs);
-
-    aInstance->mThreadNetif.GetPendingDataset().GetLocal().Get(*aDataset);
-
-exit:
-    return error;
-}
-
-ThreadError otSetPendingDataset(otInstance *aInstance, const otOperationalDataset *aDataset)
-{
-    ThreadError error;
-
-    VerifyOrExit(aDataset != NULL, error = kThreadError_InvalidArgs);
-
-    error = aInstance->mThreadNetif.GetPendingDataset().Set(*aDataset);
-
-exit:
-    return error;
-}
-
-ThreadError otSendActiveGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength,
-                            const otIp6Address *aAddress)
-{
-    return aInstance->mThreadNetif.GetActiveDataset().SendGetRequest(aTlvTypes, aLength, aAddress);
-}
-
-ThreadError otSendActiveSet(otInstance *aInstance, const otOperationalDataset *aDataset, const uint8_t *aTlvs,
-                            uint8_t aLength)
-{
-    return aInstance->mThreadNetif.GetActiveDataset().SendSetRequest(*aDataset, aTlvs, aLength);
-}
-
-ThreadError otSendPendingGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength,
-                             const otIp6Address *aAddress)
-{
-    return aInstance->mThreadNetif.GetPendingDataset().SendGetRequest(aTlvTypes, aLength, aAddress);
-}
-
-ThreadError otSendPendingSet(otInstance *aInstance, const otOperationalDataset *aDataset, const uint8_t *aTlvs,
-                             uint8_t aLength)
-{
-    return aInstance->mThreadNetif.GetPendingDataset().SendSetRequest(*aDataset, aTlvs, aLength);
 }
 
 #ifdef __cplusplus
