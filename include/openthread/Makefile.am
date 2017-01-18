@@ -29,6 +29,7 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 openthread_headers                      = \
+    cli.h                                 \
     coap.h                                \
     commissioner.h                        \
     crypto.h                              \

@@ -32,11 +32,12 @@
 #include <openthread-config.h>
 #endif
 
+#include "openthread/cli.h"
+
 #include <openthread-core-config.h>
 #include <openthread.h>
 #include <openthread-diag.h>
 #include <openthread/tasklet.h>
-#include <cli/cli-uart.h>
 #include <platform/platform.h>
 #include <assert.h>
 

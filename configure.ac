@@ -1079,7 +1079,6 @@ NL_RESTORE_WERROR
 AC_CONFIG_FILES([
 Makefile
 include/Makefile
-include/cli/Makefile
 include/openthread/Makefile
 include/platform/Makefile
 src/Makefile

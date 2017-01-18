@@ -36,8 +36,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "openthread/cli.h"
+
 #include <cli/cli.hpp>
-#include <cli/cli-uart.h>
 #include <cli/cli_uart.hpp>
 #include <common/code_utils.hpp>
 #include <common/encoding.hpp>
