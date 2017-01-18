@@ -166,6 +166,8 @@ public:
 
     ThreadError Set(const otOperationalDataset &aDataset);
 
+    ThreadError Set(const uint8_t *aBytes, uint16_t aLength);
+
     /**
      * This method removes a TLV from the Dataset.
      *

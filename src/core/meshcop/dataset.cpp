@@ -361,6 +361,19 @@ exit:
     return error;
 }
 
+ThreadError Dataset::Set(const uint8_t *aBytes, uint16_t aLength)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aBytes != NULL, error = kThreadError_InvalidArgs);
+    VerifyOrExit(aLength <= sizeof(mTlvs), error = kThreadError_NoBufs);
+    memcpy(mTlvs, aBytes, aLength);
+    mLength = aLength;
+
+exit:
+    return error;
+}
+
 const Timestamp *Dataset::GetTimestamp(void) const
 {
     const Timestamp *timestamp = NULL;
