@@ -84,7 +84,7 @@ void otInstancePostConstructor(otInstance *aInstance)
         if (otIp6SetEnabled(aInstance, true) == kThreadError_None)
         {
             // Only try to start Thread if we could bring up the interface
-            if (otThreadStart(aInstance) != kThreadError_None)
+            if (otThreadSetEnabled(aInstance, true) != kThreadError_None)
             {
                 // Bring the interface down if Thread failed to start
                 otIp6SetEnabled(aInstance, false);
@@ -152,7 +152,7 @@ void otInstanceFinalize(otInstance *aInstance)
     otLogFuncEntry();
 
     // Ensure we are disabled
-    (void)otThreadStop(aInstance);
+    (void)otThreadSetEnabled(aInstance, false);
     (void)otIp6SetEnabled(aInstance, false);
 
 #ifndef OPENTHREAD_MULTIPLE_INSTANCE
@@ -206,7 +206,7 @@ ThreadError otInstanceErasePersistentInfo(otInstance *aInstance)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(otGetDeviceRole(aInstance) == kDeviceRoleDisabled, error = kThreadError_InvalidState);
+    VerifyOrExit(otThreadGetDeviceRole(aInstance) == kDeviceRoleDisabled, error = kThreadError_InvalidState);
     otPlatSettingsWipe(aInstance);
 
 exit:

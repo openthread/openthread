@@ -567,20 +567,12 @@ otLwfIoCtl_otThread(
     if (InBufferLength >= sizeof(BOOLEAN))
     {
         BOOLEAN IsEnabled = *(BOOLEAN*)InBuffer;
-        if (IsEnabled)
-        {
-            status = ThreadErrorToNtstatus(otThreadStart(pFilter->otCtx));
-        }
-        else
-        {
-            status = ThreadErrorToNtstatus(otThreadStop(pFilter->otCtx));
-        }
-        
+        status = ThreadErrorToNtstatus(otThreadSetEnabled(pFilter->otCtx, IsEnabled));
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(BOOLEAN))
     {
-        *(BOOLEAN*)OutBuffer = (otGetDeviceRole(pFilter->otCtx) > kDeviceRoleDisabled) ? TRUE : FALSE;
+        *(BOOLEAN*)OutBuffer = (otThreadGetDeviceRole(pFilter->otCtx) > kDeviceRoleDisabled) ? TRUE : FALSE;
         *OutBufferLength = sizeof(BOOLEAN);
         status = STATUS_SUCCESS;
     }
@@ -917,7 +909,7 @@ otLwfIoCtl_otDiscover(
         uint16_t aScanDuration = *(uint16_t*)(InBuffer + sizeof(uint32_t));
         uint16_t aPanid = *(uint16_t*)(InBuffer + sizeof(uint32_t) + sizeof(uint16_t));
         status = ThreadErrorToNtstatus(
-            otDiscover(
+            otThreadDiscover(
                 pFilter->otCtx, 
                 aScanChannels, 
                 aScanDuration, 
@@ -928,7 +920,7 @@ otLwfIoCtl_otDiscover(
     }
     else if (*OutBufferLength >= sizeof(BOOLEAN))
     {
-        *(BOOLEAN*)OutBuffer = otIsDiscoverInProgress(pFilter->otCtx) ? TRUE : FALSE;
+        *(BOOLEAN*)OutBuffer = otThreadIsDiscoverInProgress(pFilter->otCtx) ? TRUE : FALSE;
         *OutBufferLength = sizeof(BOOLEAN);
         status = STATUS_SUCCESS;
     }
@@ -1054,13 +1046,13 @@ otLwfIoCtl_otChildTimeout(
 
     if (InBufferLength >= sizeof(uint32_t))
     {
-        otSetChildTimeout(pFilter->otCtx, *(uint32_t*)InBuffer);
+        otThreadSetChildTimeout(pFilter->otCtx, *(uint32_t*)InBuffer);
         status = STATUS_SUCCESS;
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(uint32_t))
     {
-        *(uint32_t*)OutBuffer = otGetChildTimeout(pFilter->otCtx);
+        *(uint32_t*)OutBuffer = otThreadGetChildTimeout(pFilter->otCtx);
         *OutBufferLength = sizeof(uint32_t);
         status = STATUS_SUCCESS;
     }
@@ -1253,13 +1245,13 @@ otLwfIoCtl_otExtendedPanId(
 
     if (InBufferLength >= sizeof(otExtendedPanId))
     {
-        otSetExtendedPanId(pFilter->otCtx, (uint8_t*)InBuffer);
+        otThreadSetExtendedPanId(pFilter->otCtx, (uint8_t*)InBuffer);
         status = STATUS_SUCCESS;
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(otExtendedPanId))
     {
-        memcpy(OutBuffer, otGetExtendedPanId(pFilter->otCtx), sizeof(otExtendedPanId));
+        memcpy(OutBuffer, otThreadGetExtendedPanId(pFilter->otCtx), sizeof(otExtendedPanId));
         *OutBufferLength = sizeof(otExtendedPanId);
         status = STATUS_SUCCESS;
     }
@@ -1422,7 +1414,7 @@ otLwfIoCtl_otLeaderRloc(
 
     if (*OutBufferLength >= sizeof(otIp6Address))
     {
-        status = ThreadErrorToNtstatus(otGetLeaderRloc(pFilter->otCtx, (otIp6Address*)OutBuffer));
+        status = ThreadErrorToNtstatus(otThreadGetLeaderRloc(pFilter->otCtx, (otIp6Address*)OutBuffer));
         *OutBufferLength = sizeof(otIp6Address);
     }
     else
@@ -1517,12 +1509,12 @@ otLwfIoCtl_otLinkMode(
     static_assert(sizeof(otLinkModeConfig) == 4, "The size of otLinkModeConfig should be 4 bytes");
     if (InBufferLength >= sizeof(otLinkModeConfig))
     {
-        status = ThreadErrorToNtstatus(otSetLinkMode(pFilter->otCtx, *(otLinkModeConfig*)InBuffer));
+        status = ThreadErrorToNtstatus(otThreadSetLinkMode(pFilter->otCtx, *(otLinkModeConfig*)InBuffer));
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(otLinkModeConfig))
     {
-        *(otLinkModeConfig*)OutBuffer = otGetLinkMode(pFilter->otCtx);
+        *(otLinkModeConfig*)OutBuffer = otThreadGetLinkMode(pFilter->otCtx);
         *OutBufferLength = sizeof(otLinkModeConfig);
         status = STATUS_SUCCESS;
     }
@@ -1640,13 +1632,13 @@ otLwfIoCtl_otMasterKey(
     if (InBufferLength >= sizeof(otMasterKey) + sizeof(uint8_t))
     {
         uint8_t aKeyLength = *(uint8_t*)(InBuffer + sizeof(otMasterKey));
-        status = ThreadErrorToNtstatus(otSetMasterKey(pFilter->otCtx, InBuffer, aKeyLength));
+        status = ThreadErrorToNtstatus(otThreadSetMasterKey(pFilter->otCtx, InBuffer, aKeyLength));
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(otMasterKey) + sizeof(uint8_t))
     {
         uint8_t aKeyLength = 0;
-        const uint8_t* aMasterKey = otGetMasterKey(pFilter->otCtx, &aKeyLength);
+        const uint8_t* aMasterKey = otThreadGetMasterKey(pFilter->otCtx, &aKeyLength);
         memcpy(OutBuffer, aMasterKey, aKeyLength);
         memcpy((PUCHAR)OutBuffer + sizeof(otMasterKey), &aKeyLength, sizeof(uint8_t));
         *OutBufferLength = sizeof(otMasterKey) + sizeof(uint8_t);
@@ -1752,7 +1744,7 @@ otLwfIoCtl_otMeshLocalEid(
 
     if (*OutBufferLength >= sizeof(otIp6Address))
     {
-        memcpy(OutBuffer,  otGetMeshLocalEid(pFilter->otCtx), sizeof(otIp6Address));
+        memcpy(OutBuffer,  otThreadGetMeshLocalEid(pFilter->otCtx), sizeof(otIp6Address));
         status = STATUS_SUCCESS;
     }
     else
@@ -1836,12 +1828,12 @@ otLwfIoCtl_otMeshLocalPrefix(
 
     if (InBufferLength >= sizeof(otMeshLocalPrefix))
     {
-        status = ThreadErrorToNtstatus(otSetMeshLocalPrefix(pFilter->otCtx, InBuffer));
+        status = ThreadErrorToNtstatus(otThreadSetMeshLocalPrefix(pFilter->otCtx, InBuffer));
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(otMeshLocalPrefix))
     {
-        memcpy(OutBuffer, otGetMeshLocalPrefix(pFilter->otCtx), sizeof(otMeshLocalPrefix));
+        memcpy(OutBuffer, otThreadGetMeshLocalPrefix(pFilter->otCtx), sizeof(otMeshLocalPrefix));
         *OutBufferLength = sizeof(otMeshLocalPrefix);
         status = STATUS_SUCCESS;
     }
@@ -1942,12 +1934,12 @@ otLwfIoCtl_otNetworkName(
 
     if (InBufferLength >= sizeof(otNetworkName))
     {
-        status = ThreadErrorToNtstatus(otSetNetworkName(pFilter->otCtx, (char*)InBuffer));
+        status = ThreadErrorToNtstatus(otThreadSetNetworkName(pFilter->otCtx, (char*)InBuffer));
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(otNetworkName))
     {
-        strcpy_s((char*)OutBuffer, sizeof(otNetworkName), otGetNetworkName(pFilter->otCtx));
+        strcpy_s((char*)OutBuffer, sizeof(otNetworkName), otThreadGetNetworkName(pFilter->otCtx));
         *OutBufferLength = sizeof(otNetworkName);
         status = STATUS_SUCCESS;
     }
@@ -2140,13 +2132,13 @@ otLwfIoCtl_otRouterRollEnabled(
 
     if (InBufferLength >= sizeof(BOOLEAN))
     {
-        otSetRouterRoleEnabled(pFilter->otCtx, *(BOOLEAN*)InBuffer);
+        otThreadSetRouterRoleEnabled(pFilter->otCtx, *(BOOLEAN*)InBuffer);
         status = STATUS_SUCCESS;
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(BOOLEAN))
     {
-        *(BOOLEAN*)OutBuffer = otIsRouterRoleEnabled(pFilter->otCtx) ? TRUE : FALSE;
+        *(BOOLEAN*)OutBuffer = otThreadIsRouterRoleEnabled(pFilter->otCtx) ? TRUE : FALSE;
         *OutBufferLength = sizeof(BOOLEAN);
         status = STATUS_SUCCESS;
     }
@@ -2391,13 +2383,13 @@ otLwfIoCtl_otLocalLeaderWeight(
 
     if (InBufferLength >= sizeof(uint8_t))
     {
-        otSetLocalLeaderWeight(pFilter->otCtx, *(uint8_t*)InBuffer);
+        otThreadSetLocalLeaderWeight(pFilter->otCtx, *(uint8_t*)InBuffer);
         status = STATUS_SUCCESS;
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(uint8_t))
     {
-        *(uint8_t*)OutBuffer = otGetLeaderWeight(pFilter->otCtx);
+        *(uint8_t*)OutBuffer = otThreadGetLeaderWeight(pFilter->otCtx);
         *OutBufferLength = sizeof(uint8_t);
         status = STATUS_SUCCESS;
     }
@@ -2793,13 +2785,13 @@ otLwfIoCtl_otContextIdReuseDelay(
 
     if (InBufferLength >= sizeof(uint32_t))
     {
-        otSetContextIdReuseDelay(pFilter->otCtx, *(uint32_t*)InBuffer);
+        otThreadSetContextIdReuseDelay(pFilter->otCtx, *(uint32_t*)InBuffer);
         status = STATUS_SUCCESS;
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(uint32_t))
     {
-        *(uint32_t*)OutBuffer = otGetContextIdReuseDelay(pFilter->otCtx);
+        *(uint32_t*)OutBuffer = otThreadGetContextIdReuseDelay(pFilter->otCtx);
         status = STATUS_SUCCESS;
         *OutBufferLength = sizeof(uint32_t);
     }
@@ -2892,13 +2884,13 @@ otLwfIoCtl_otKeySequenceCounter(
 
     if (InBufferLength >= sizeof(uint32_t))
     {
-        otSetKeySequenceCounter(pFilter->otCtx, *(uint32_t*)InBuffer);
+        otThreadSetKeySequenceCounter(pFilter->otCtx, *(uint32_t*)InBuffer);
         status = STATUS_SUCCESS;
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(uint32_t))
     {
-        *(uint32_t*)OutBuffer = otGetKeySequenceCounter(pFilter->otCtx);
+        *(uint32_t*)OutBuffer = otThreadGetKeySequenceCounter(pFilter->otCtx);
         status = STATUS_SUCCESS;
         *OutBufferLength = sizeof(uint32_t);
     }
@@ -2991,13 +2983,13 @@ otLwfIoCtl_otNetworkIdTimeout(
 
     if (InBufferLength >= sizeof(uint8_t))
     {
-        otSetNetworkIdTimeout(pFilter->otCtx, *(uint8_t*)InBuffer);
+        otThreadSetNetworkIdTimeout(pFilter->otCtx, *(uint8_t*)InBuffer);
         status = STATUS_SUCCESS;
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(uint8_t))
     {
-        *(uint8_t*)OutBuffer = otGetNetworkIdTimeout(pFilter->otCtx);
+        *(uint8_t*)OutBuffer = otThreadGetNetworkIdTimeout(pFilter->otCtx);
         status = STATUS_SUCCESS;
         *OutBufferLength = sizeof(uint8_t);
     }
@@ -3090,13 +3082,13 @@ otLwfIoCtl_otRouterUpgradeThreshold(
 
     if (InBufferLength >= sizeof(uint8_t))
     {
-        otSetRouterUpgradeThreshold(pFilter->otCtx, *(uint8_t*)InBuffer);
+        otThreadSetRouterUpgradeThreshold(pFilter->otCtx, *(uint8_t*)InBuffer);
         status = STATUS_SUCCESS;
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(uint8_t))
     {
-        *(uint8_t*)OutBuffer = otGetRouterUpgradeThreshold(pFilter->otCtx);
+        *(uint8_t*)OutBuffer = otThreadGetRouterUpgradeThreshold(pFilter->otCtx);
         status = STATUS_SUCCESS;
         *OutBufferLength = sizeof(uint8_t);
     }
@@ -3189,13 +3181,13 @@ otLwfIoCtl_otRouterDowngradeThreshold(
 
     if (InBufferLength >= sizeof(uint8_t))
     {
-        otSetRouterDowngradeThreshold(pFilter->otCtx, *(uint8_t*)InBuffer);
+        otThreadSetRouterDowngradeThreshold(pFilter->otCtx, *(uint8_t*)InBuffer);
         status = STATUS_SUCCESS;
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(uint8_t))
     {
-        *(uint8_t*)OutBuffer = otGetRouterDowngradeThreshold(pFilter->otCtx);
+        *(uint8_t*)OutBuffer = otThreadGetRouterDowngradeThreshold(pFilter->otCtx);
         status = STATUS_SUCCESS;
         *OutBufferLength = sizeof(uint8_t);
     }
@@ -3291,7 +3283,7 @@ otLwfIoCtl_otReleaseRouterId(
     
     if (InBufferLength >= sizeof(uint8_t))
     {
-        status = ThreadErrorToNtstatus(otReleaseRouterId(pFilter->otCtx, *(uint8_t*)InBuffer));
+        status = ThreadErrorToNtstatus(otThreadReleaseRouterId(pFilter->otCtx, *(uint8_t*)InBuffer));
     }
 
     return status;
@@ -3669,13 +3661,13 @@ otLwfIoCtl_otDeviceRole(
         if (role == kDeviceRoleLeader)
         {
             status = ThreadErrorToNtstatus(
-                        otBecomeLeader(pFilter->otCtx)
+                        otThreadBecomeLeader(pFilter->otCtx)
                         );
         }
         else if (role == kDeviceRoleRouter)
         {
             status = ThreadErrorToNtstatus(
-                        otBecomeRouter(pFilter->otCtx)
+                        otThreadBecomeRouter(pFilter->otCtx)
                         );
         }
         else if (role == kDeviceRoleChild)
@@ -3683,21 +3675,21 @@ otLwfIoCtl_otDeviceRole(
             if (InBufferLength >= sizeof(uint8_t))
             {
                 status = ThreadErrorToNtstatus(
-                            otBecomeChild(pFilter->otCtx, *(uint8_t*)InBuffer)
+                            otThreadBecomeChild(pFilter->otCtx, *(uint8_t*)InBuffer)
                             );
             }
         }
         else if (role == kDeviceRoleDetached)
         {
             status = ThreadErrorToNtstatus(
-                        otBecomeDetached(pFilter->otCtx)
+                        otThreadBecomeDetached(pFilter->otCtx)
                         );
         }
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(uint8_t))
     {
-        *(uint8_t*)OutBuffer = (uint8_t)otGetDeviceRole(pFilter->otCtx);
+        *(uint8_t*)OutBuffer = (uint8_t)otThreadGetDeviceRole(pFilter->otCtx);
         *OutBufferLength = sizeof(uint8_t);
         status = STATUS_SUCCESS;
     }
@@ -3826,7 +3818,7 @@ otLwfIoCtl_otChildInfoById(
         *OutBufferLength >= sizeof(otChildInfo))
     {
         status = ThreadErrorToNtstatus(
-            otGetChildInfoById(
+            otThreadGetChildInfoById(
                 pFilter->otCtx, 
                 *(uint16_t*)InBuffer, 
                 (otChildInfo*)OutBuffer)
@@ -3859,7 +3851,7 @@ otLwfIoCtl_otChildInfoByIndex(
         *OutBufferLength >= sizeof(otChildInfo))
     {
         status = ThreadErrorToNtstatus(
-            otGetChildInfoByIndex(
+            otThreadGetChildInfoByIndex(
                 pFilter->otCtx, 
                 *(uint8_t*)InBuffer, 
                 (otChildInfo*)OutBuffer)
@@ -3892,7 +3884,7 @@ otLwfIoCtl_otEidCacheEntry(
         *OutBufferLength >= sizeof(otEidCacheEntry))
     {
         status = ThreadErrorToNtstatus(
-            otGetEidCacheEntry(
+            otThreadGetEidCacheEntry(
                 pFilter->otCtx, 
                 *(uint8_t*)InBuffer, 
                 (otEidCacheEntry*)OutBuffer)
@@ -3926,7 +3918,7 @@ otLwfIoCtl_otLeaderData(
 
     if (*OutBufferLength >= sizeof(otLeaderData))
     {
-        status = ThreadErrorToNtstatus(otGetLeaderData(pFilter->otCtx, (otLeaderData*)OutBuffer));
+        status = ThreadErrorToNtstatus(otThreadGetLeaderData(pFilter->otCtx, (otLeaderData*)OutBuffer));
         *OutBufferLength = sizeof(otLeaderData);
     }
     else
@@ -3956,7 +3948,7 @@ otLwfIoCtl_otLeaderRouterId(
 
     if (*OutBufferLength >= sizeof(uint8_t))
     {
-        *(uint8_t*)OutBuffer = otGetLeaderRouterId(pFilter->otCtx);
+        *(uint8_t*)OutBuffer = otThreadGetLeaderRouterId(pFilter->otCtx);
         *OutBufferLength = sizeof(uint8_t);
         status = STATUS_SUCCESS;
     }
@@ -4042,7 +4034,7 @@ otLwfIoCtl_otLeaderWeight(
 
     if (*OutBufferLength >= sizeof(uint8_t))
     {
-        *(uint8_t*)OutBuffer = otGetLeaderWeight(pFilter->otCtx);
+        *(uint8_t*)OutBuffer = otThreadGetLeaderWeight(pFilter->otCtx);
         *OutBufferLength = sizeof(uint8_t);
         status = STATUS_SUCCESS;
     }
@@ -4214,7 +4206,7 @@ otLwfIoCtl_otPartitionId(
 
     if (*OutBufferLength >= sizeof(uint32_t))
     {
-        *(uint32_t*)OutBuffer = otGetPartitionId(pFilter->otCtx);
+        *(uint32_t*)OutBuffer = otThreadGetPartitionId(pFilter->otCtx);
         *OutBufferLength = sizeof(uint32_t);
         status = STATUS_SUCCESS;
     }
@@ -4300,7 +4292,7 @@ otLwfIoCtl_otRloc16(
 
     if (*OutBufferLength >= sizeof(uint16_t))
     {
-        *(uint16_t*)OutBuffer = otGetRloc16(pFilter->otCtx);
+        *(uint16_t*)OutBuffer = otThreadGetRloc16(pFilter->otCtx);
         *OutBufferLength = sizeof(uint16_t);
         status = STATUS_SUCCESS;
     }
@@ -4386,7 +4378,7 @@ otLwfIoCtl_otRouterIdSequence(
 
     if (*OutBufferLength >= sizeof(uint8_t))
     {
-        *(uint8_t*)OutBuffer = otGetRouterIdSequence(pFilter->otCtx);
+        *(uint8_t*)OutBuffer = otThreadGetRouterIdSequence(pFilter->otCtx);
         *OutBufferLength = sizeof(uint8_t);
         status = STATUS_SUCCESS;
     }
@@ -4416,7 +4408,7 @@ otLwfIoCtl_otRouterInfo(
         *OutBufferLength >= sizeof(otRouterInfo))
     {
         status = ThreadErrorToNtstatus(
-            otGetRouterInfo(
+            otThreadGetRouterInfo(
                 pFilter->otCtx, 
                 *(uint16_t*)InBuffer, 
                 (otRouterInfo*)OutBuffer)
@@ -4785,13 +4777,13 @@ otLwfIoCtl_otLocalLeaderPartitionId(
 
     if (InBufferLength >= sizeof(uint32_t))
     {
-        otSetLocalLeaderPartitionId(pFilter->otCtx, *(uint32_t*)InBuffer);
+        otThreadSetLocalLeaderPartitionId(pFilter->otCtx, *(uint32_t*)InBuffer);
         status = STATUS_SUCCESS;
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(uint32_t))
     {
-        *(uint32_t*)OutBuffer = otGetLocalLeaderPartitionId(pFilter->otCtx);
+        *(uint32_t*)OutBuffer = otThreadGetLocalLeaderPartitionId(pFilter->otCtx);
         *OutBufferLength = sizeof(uint32_t);
         status = STATUS_SUCCESS;
     }
@@ -4943,7 +4935,7 @@ otLwfIoCtl_otParentInfo(
     static_assert(sizeof(otRouterInfo) == 20, "The size of otRouterInfo should be 20 bytes");
     if (*OutBufferLength >= sizeof(otRouterInfo))
     {
-        status = ThreadErrorToNtstatus(otGetParentInfo(pFilter->otCtx, (otRouterInfo*)OutBuffer));
+        status = ThreadErrorToNtstatus(otThreadGetParentInfo(pFilter->otCtx, (otRouterInfo*)OutBuffer));
         *OutBufferLength = sizeof(otRouterInfo);
     }
     else
@@ -5030,7 +5022,7 @@ otLwfIoCtl_otSingleton(
 
     if (*OutBufferLength >= sizeof(BOOLEAN))
     {
-        *(BOOLEAN*)OutBuffer = otIsSingleton(pFilter->otCtx) ? TRUE : FALSE;
+        *(BOOLEAN*)OutBuffer = otThreadIsSingleton(pFilter->otCtx) ? TRUE : FALSE;
         *OutBufferLength = sizeof(BOOLEAN);
         status = STATUS_SUCCESS;
     }
@@ -5089,13 +5081,13 @@ otLwfIoCtl_otMaxChildren(
 
     if (InBufferLength >= sizeof(uint8_t))
     {
-        otSetMaxAllowedChildren(pFilter->otCtx, *(uint8_t*)InBuffer);
+        otThreadSetMaxAllowedChildren(pFilter->otCtx, *(uint8_t*)InBuffer);
         status = STATUS_SUCCESS;
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(uint8_t))
     {
-        *(uint8_t*)OutBuffer = otGetMaxAllowedChildren(pFilter->otCtx);
+        *(uint8_t*)OutBuffer = otThreadGetMaxAllowedChildren(pFilter->otCtx);
         *OutBufferLength = sizeof(uint8_t);
         status = STATUS_SUCCESS;
     }
@@ -5391,13 +5383,13 @@ otLwfIoCtl_otRouterSelectionJitter(
 
     if (InBufferLength >= sizeof(uint8_t))
     {
-        otSetRouterSelectionJitter(pFilter->otCtx, *(uint8_t*)InBuffer);
+        otThreadSetRouterSelectionJitter(pFilter->otCtx, *(uint8_t*)InBuffer);
         status = STATUS_SUCCESS;
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(uint8_t))
     {
-        *(uint8_t*)OutBuffer = otGetRouterSelectionJitter(pFilter->otCtx);
+        *(uint8_t*)OutBuffer = otThreadGetRouterSelectionJitter(pFilter->otCtx);
         status = STATUS_SUCCESS;
         *OutBufferLength = sizeof(uint8_t);
     }
@@ -5490,13 +5482,13 @@ otLwfIoCtl_otJoinerUdpPort(
 
     if (InBufferLength >= sizeof(uint16_t))
     {
-        otSetJoinerUdpPort(pFilter->otCtx, *(uint16_t*)InBuffer);
+        otThreadSetJoinerUdpPort(pFilter->otCtx, *(uint16_t*)InBuffer);
         status = STATUS_SUCCESS;
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(uint16_t))
     {
-        *(uint16_t*)OutBuffer = otGetJoinerUdpPort(pFilter->otCtx);
+        *(uint16_t*)OutBuffer = otThreadGetJoinerUdpPort(pFilter->otCtx);
         status = STATUS_SUCCESS;
         *OutBufferLength = sizeof(uint16_t);
     }
@@ -5534,7 +5526,7 @@ otLwfIoCtl_otSendDiagnosticGet(
         if (InBufferLength >= sizeof(otIp6Address) + sizeof(uint8_t) + aCount)
         {
             status = ThreadErrorToNtstatus(
-                otSendDiagnosticGet(
+                otThreadSendDiagnosticGet(
                     pFilter->otCtx,
                     aAddress,
                     aTlvTypes,
@@ -5572,7 +5564,7 @@ otLwfIoCtl_otSendDiagnosticReset(
         if (InBufferLength >= sizeof(otIp6Address) + sizeof(uint8_t) + aCount)
         {
             status = ThreadErrorToNtstatus(
-                otSendDiagnosticReset(
+                otThreadSendDiagnosticReset(
                     pFilter->otCtx,
                     aAddress,
                     aTlvTypes,
@@ -5972,13 +5964,13 @@ otLwfIoCtl_otKeySwitchGuardtime(
 
     if (InBufferLength >= sizeof(uint32_t))
     {
-        otSetKeySwitchGuardTime(pFilter->otCtx, *(uint32_t*)InBuffer);
+        otThreadSetKeySwitchGuardTime(pFilter->otCtx, *(uint32_t*)InBuffer);
         status = STATUS_SUCCESS;
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(uint32_t))
     {
-        *(uint32_t*)OutBuffer = otGetKeySwitchGuardTime(pFilter->otCtx);
+        *(uint32_t*)OutBuffer = otThreadGetKeySwitchGuardTime(pFilter->otCtx);
         status = STATUS_SUCCESS;
         *OutBufferLength = sizeof(uint32_t);
     }

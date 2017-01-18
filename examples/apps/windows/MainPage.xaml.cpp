@@ -204,7 +204,7 @@ void MainPage::ShowInterfaceDetails(Platform::Guid InterfaceGuid)
         InterfaceMacAddress->Text = L"ERROR";
     }
 
-    auto ml_eid = otGetMeshLocalEid(device);
+    auto ml_eid = otThreadGetMeshLocalEid(device);
     if (ml_eid)
     {
         WCHAR szAddress[46] = { 0 };
@@ -218,16 +218,16 @@ void MainPage::ShowInterfaceDetails(Platform::Guid InterfaceGuid)
         InterfaceML_EID->Text = L"ERROR";
     }
     
-    auto rloc16 = otGetRloc16(device);
+    auto rloc16 = otThreadGetRloc16(device);
     WCHAR szRloc[16] = { 0 };
     swprintf_s(szRloc, 16, L"%4x", rloc16);
     InterfaceRLOC->Text = ref new String(szRloc);
 
-    if (otGetDeviceRole(device) > kDeviceRoleChild)
+    if (otThreadGetDeviceRole(device) > kDeviceRoleChild)
     {
         uint8_t index = 0;
         otChildInfo childInfo;
-        while (kThreadError_None == otGetChildInfoByIndex(device, index, &childInfo))
+        while (kThreadError_None == otThreadGetChildInfoByIndex(device, index, &childInfo))
         {
             index++;
         }
@@ -255,7 +255,7 @@ UIElement^ MainPage::CreateNewInterface(Platform::Guid InterfaceGuid)
     GUID deviceGuid = InterfaceGuid;
 
     auto device = otInstanceInit(ApiInstance, &deviceGuid);
-    auto deviceRole = otGetDeviceRole(device);
+    auto deviceRole = otThreadGetDeviceRole(device);
 
     WCHAR szText[256] = { 0 };
     swprintf_s(szText, 256, L"%s\r\n\t" GUID_FORMAT L"\r\n\t%s",
@@ -364,14 +364,14 @@ void MainPage::ConnectNetwork(Platform::Guid InterfaceGuid)
 
     otNetworkName networkName = {};
     wcstombs(networkName.m8, InterfaceConfigName->Text->Data(), sizeof(networkName.m8));
-    otSetNetworkName(device, networkName.m8);
+    otThreadSetNetworkName(device, networkName.m8);
 
     otMasterKey masterKey = {};
     wcstombs((char*)masterKey.m8, InterfaceConfigKey->Text->Data(), sizeof(masterKey.m8));
-    otSetMasterKey(device, masterKey.m8, sizeof(masterKey.m8));
+    otThreadSetMasterKey(device, masterKey.m8, sizeof(masterKey.m8));
 
     otLinkSetChannel(device, (uint8_t)InterfaceConfigChannel->Value);
-    otSetMaxAllowedChildren(device, (uint8_t)InterfaceConfigMaxChildren->Value);
+    otThreadSetMaxAllowedChildren(device, (uint8_t)InterfaceConfigMaxChildren->Value);
 
     otLinkSetPanId(device, 0x4567);
 
@@ -381,7 +381,7 @@ void MainPage::ConnectNetwork(Platform::Guid InterfaceGuid)
 
     otIp6SetEnabled(device, true);
 
-    otThreadStart(device);
+    otThreadSetEnabled(device, true);
 
     // Cleanup
     otFreeMemory(device);
@@ -398,7 +398,7 @@ void MainPage::DisconnectNetwork(Platform::Guid InterfaceGuid)
     // Start the Thread logic and the interface
     //
 
-    otThreadStop(device);
+    otThreadSetEnabled(device, false);
 
     otIp6SetEnabled(device, false);
 

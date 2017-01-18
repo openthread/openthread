@@ -299,7 +299,7 @@ otLwfProcessRoleStateChange(
     )
 {
     otDeviceRole prevRole = pFilter->otCachedRole;
-    pFilter->otCachedRole = otGetDeviceRole(pFilter->otCtx);
+    pFilter->otCachedRole = otThreadGetDeviceRole(pFilter->otCtx);
     if (prevRole == pFilter->otCachedRole) return;
 
     LogInfo(DRIVER_DEFAULT, "Interface %!GUID! new role: %!otDeviceRole!", &pFilter->InterfaceGuid, pFilter->otCachedRole);

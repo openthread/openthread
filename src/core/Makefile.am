@@ -48,6 +48,7 @@ SOURCES_COMMON                      = \
     api/message_api.cpp               \
     api/netdata_api.cpp               \
     api/tasklet_api.cpp               \
+    api/thread_api.cpp                \
     api/udp_api.cpp                   \
     coap/coap_base.cpp                \
     coap/coap_client.cpp              \

@@ -1094,18 +1094,6 @@ typedef void (OTCALL *otDeviceAvailabilityChangedCallback)(bool aAdded, const GU
 #endif // OTDLL
 
 /**
- * This function pointer is called when Network Diagnostic Get response is received.
- *
- * @param[in]  aMessage      A pointer to the message buffer containing the received Network Diagnostic
- *                           Get response payload.
- * @param[in]  aMessageInfo  A pointer to the message info for @p aMessage.
- * @param[in]  aContext      A pointer to application-specific context.
- *
- */
-typedef void (*otReceiveDiagnosticGetCallback)(otMessage aMessage, const otMessageInfo *aMessageInfo,
-                                               void *aContext);
-
-/**
  * @}
  *
  */

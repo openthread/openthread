@@ -202,7 +202,7 @@ Interpreter::Interpreter(otInstance *aInstance):
 #else
     memset(mSlaacAddresses, 0, sizeof(mSlaacAddresses));
     otSetStateChangedCallback(mInstance, &Interpreter::s_HandleNetifStateChanged, this);
-    otSetReceiveDiagnosticGetCallback(mInstance, &Interpreter::s_HandleDiagnosticGetResponse, this);
+    otThreadSetReceiveDiagnosticGetCallback(mInstance, &Interpreter::s_HandleDiagnosticGetResponse, this);
 
     mIcmpHandler.mReceiveCallback = Interpreter::s_HandleIcmpReceive;
     mIcmpHandler.mContext         = this;
@@ -464,11 +464,11 @@ void Interpreter::ProcessChild(int argc, char *argv[])
             sServer->OutputFormat("+-----+--------+------------+------------+--------+------+-+-+-+-+------------------+\r\n");
         }
 
-        maxChildren = otGetMaxAllowedChildren(mInstance);
+        maxChildren = otThreadGetMaxAllowedChildren(mInstance);
 
         for (uint8_t i = 0; i < maxChildren ; i++)
         {
-            if (otGetChildInfoByIndex(mInstance, i, &childInfo) != kThreadError_None)
+            if (otThreadGetChildInfoByIndex(mInstance, i, &childInfo) != kThreadError_None)
             {
                 sServer->OutputFormat("\r\n");
                 ExitNow();
@@ -506,7 +506,7 @@ void Interpreter::ProcessChild(int argc, char *argv[])
     }
 
     SuccessOrExit(error = ParseLong(argv[0], value));
-    SuccessOrExit(error = otGetChildInfoById(mInstance, static_cast<uint16_t>(value), &childInfo));
+    SuccessOrExit(error = otThreadGetChildInfoById(mInstance, static_cast<uint16_t>(value), &childInfo));
 
     sServer->OutputFormat("Child ID: %d\r\n", childInfo.mChildId);
     sServer->OutputFormat("Rloc: %04x\r\n", childInfo.mRloc16);
@@ -559,12 +559,12 @@ void Interpreter::ProcessChildMax(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sServer->OutputFormat("%d\r\n", otGetMaxAllowedChildren(mInstance));
+        sServer->OutputFormat("%d\r\n", otThreadGetMaxAllowedChildren(mInstance));
     }
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        SuccessOrExit(error = otSetMaxAllowedChildren(mInstance, static_cast<uint8_t>(value)));
+        SuccessOrExit(error = otThreadSetMaxAllowedChildren(mInstance, static_cast<uint8_t>(value)));
     }
 
 exit:
@@ -578,12 +578,12 @@ void Interpreter::ProcessChildTimeout(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sServer->OutputFormat("%d\r\n", otGetChildTimeout(mInstance));
+        sServer->OutputFormat("%d\r\n", otThreadGetChildTimeout(mInstance));
     }
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        otSetChildTimeout(mInstance, static_cast<uint32_t>(value));
+        otThreadSetChildTimeout(mInstance, static_cast<uint32_t>(value));
     }
 
 exit:
@@ -597,12 +597,12 @@ void Interpreter::ProcessContextIdReuseDelay(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sServer->OutputFormat("%d\r\n", otGetContextIdReuseDelay(mInstance));
+        sServer->OutputFormat("%d\r\n", otThreadGetContextIdReuseDelay(mInstance));
     }
     else
     {
         SuccessOrExit(ParseLong(argv[0], value));
-        otSetContextIdReuseDelay(mInstance, static_cast<uint32_t>(value));
+        otThreadSetContextIdReuseDelay(mInstance, static_cast<uint32_t>(value));
     }
 
 exit:
@@ -697,8 +697,8 @@ void Interpreter::ProcessDiscover(int argc, char *argv[])
         scanChannels = 1 << value;
     }
 
-    SuccessOrExit(error = otDiscover(mInstance, scanChannels, 0, OT_PANID_BROADCAST,
-                                     &Interpreter::s_HandleActiveScanResult, this));
+    SuccessOrExit(error = otThreadDiscover(mInstance, scanChannels, 0, OT_PANID_BROADCAST,
+                                           &Interpreter::s_HandleActiveScanResult, this));
     sServer->OutputFormat("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |\r\n");
     sServer->OutputFormat("+---+------------------+------------------+------+------------------+----+-----+-----+\r\n");
 
@@ -714,7 +714,7 @@ void Interpreter::ProcessEidCache(int argc, char *argv[])
 
     for (uint8_t i = 0; ; i++)
     {
-        SuccessOrExit(otGetEidCacheEntry(mInstance, i, &entry));
+        SuccessOrExit(otThreadGetEidCacheEntry(mInstance, i, &entry));
 
         if (entry.mValid == false)
         {
@@ -793,7 +793,7 @@ void Interpreter::ProcessExtPanId(int argc, char *argv[])
 
     if (argc == 0)
     {
-        otBufferPtr extPanId(otGetExtendedPanId(mInstance));
+        otBufferPtr extPanId(otThreadGetExtendedPanId(mInstance));
         OutputBytes(extPanId, OT_EXT_PAN_ID_SIZE);
         sServer->OutputFormat("\r\n");
     }
@@ -803,7 +803,7 @@ void Interpreter::ProcessExtPanId(int argc, char *argv[])
 
         VerifyOrExit(Hex2Bin(argv[0], extPanId, sizeof(extPanId)) >= 0, error = kThreadError_Parse);
 
-        otSetExtendedPanId(mInstance, extPanId);
+        otThreadSetExtendedPanId(mInstance, extPanId);
     }
 
 exit:
@@ -1044,24 +1044,24 @@ void Interpreter::ProcessKeySequence(int argc, char *argv[])
     {
         if (argc == 1)
         {
-            sServer->OutputFormat("%d\r\n", otGetKeySequenceCounter(mInstance));
+            sServer->OutputFormat("%d\r\n", otThreadGetKeySequenceCounter(mInstance));
         }
         else
         {
             SuccessOrExit(error = ParseLong(argv[1], value));
-            otSetKeySequenceCounter(mInstance, static_cast<uint32_t>(value));
+            otThreadSetKeySequenceCounter(mInstance, static_cast<uint32_t>(value));
         }
     }
     else if (strcmp(argv[0], "guardtime") == 0)
     {
         if (argc == 1)
         {
-            sServer->OutputFormat("%d\r\n", otGetKeySwitchGuardTime(mInstance));
+            sServer->OutputFormat("%d\r\n", otThreadGetKeySwitchGuardTime(mInstance));
         }
         else
         {
             SuccessOrExit(error = ParseLong(argv[1], value));
-            otSetKeySwitchGuardTime(mInstance, static_cast<uint32_t>(value));
+            otThreadSetKeySwitchGuardTime(mInstance, static_cast<uint32_t>(value));
         }
     }
 
@@ -1074,7 +1074,7 @@ void Interpreter::ProcessLeaderData(int argc, char *argv[])
     ThreadError error;
     otLeaderData leaderData;
 
-    SuccessOrExit(error = otGetLeaderData(mInstance, &leaderData));
+    SuccessOrExit(error = otThreadGetLeaderData(mInstance, &leaderData));
 
     sServer->OutputFormat("Partition ID: %u\r\n", leaderData.mPartitionId);
     sServer->OutputFormat("Weighting: %d\r\n", leaderData.mWeighting);
@@ -1095,12 +1095,12 @@ void Interpreter::ProcessLeaderPartitionId(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sServer->OutputFormat("%u\r\n", otGetLocalLeaderPartitionId(mInstance));
+        sServer->OutputFormat("%u\r\n", otThreadGetLocalLeaderPartitionId(mInstance));
     }
     else
     {
         SuccessOrExit(error = ParseUnsignedLong(argv[0], value));
-        otSetLocalLeaderPartitionId(mInstance, static_cast<uint32_t>(value));
+        otThreadSetLocalLeaderPartitionId(mInstance, static_cast<uint32_t>(value));
     }
 
 exit:
@@ -1114,12 +1114,12 @@ void Interpreter::ProcessLeaderWeight(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sServer->OutputFormat("%d\r\n", otGetLocalLeaderWeight(mInstance));
+        sServer->OutputFormat("%d\r\n", otThreadGetLocalLeaderWeight(mInstance));
     }
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        otSetLocalLeaderWeight(mInstance, static_cast<uint8_t>(value));
+        otThreadSetLocalLeaderWeight(mInstance, static_cast<uint8_t>(value));
     }
 
 exit:
@@ -1159,7 +1159,7 @@ void Interpreter::ProcessMasterKey(int argc, char *argv[])
     if (argc == 0)
     {
         uint8_t keyLength;
-        otBufferPtr key(otGetMasterKey(mInstance, &keyLength));
+        otBufferPtr key(otThreadGetMasterKey(mInstance, &keyLength));
 
         for (int i = 0; i < keyLength; i++)
         {
@@ -1174,7 +1174,7 @@ void Interpreter::ProcessMasterKey(int argc, char *argv[])
         uint8_t key[OT_MASTER_KEY_SIZE];
 
         VerifyOrExit((keyLength = Hex2Bin(argv[0], key, sizeof(key))) == OT_MASTER_KEY_SIZE, error = kThreadError_Parse);
-        SuccessOrExit(error = otSetMasterKey(mInstance, key, static_cast<uint8_t>(keyLength)));
+        SuccessOrExit(error = otThreadSetMasterKey(mInstance, key, static_cast<uint8_t>(keyLength)));
     }
 
 exit:
@@ -1190,7 +1190,7 @@ void Interpreter::ProcessMode(int argc, char *argv[])
 
     if (argc == 0)
     {
-        linkMode = otGetLinkMode(mInstance);
+        linkMode = otThreadGetLinkMode(mInstance);
 
         if (linkMode.mRxOnWhenIdle)
         {
@@ -1241,7 +1241,7 @@ void Interpreter::ProcessMode(int argc, char *argv[])
             }
         }
 
-        SuccessOrExit(error = otSetLinkMode(mInstance, linkMode));
+        SuccessOrExit(error = otThreadSetLinkMode(mInstance, linkMode));
     }
 
 exit:
@@ -1266,12 +1266,12 @@ void Interpreter::ProcessNetworkIdTimeout(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sServer->OutputFormat("%d\r\n", otGetNetworkIdTimeout(mInstance));
+        sServer->OutputFormat("%d\r\n", otThreadGetNetworkIdTimeout(mInstance));
     }
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        otSetNetworkIdTimeout(mInstance, static_cast<uint8_t>(value));
+        otThreadSetNetworkIdTimeout(mInstance, static_cast<uint8_t>(value));
     }
 
 exit:
@@ -1284,12 +1284,12 @@ void Interpreter::ProcessNetworkName(int argc, char *argv[])
 
     if (argc == 0)
     {
-        otStringPtr networkName(otGetNetworkName(mInstance));
+        otStringPtr networkName(otThreadGetNetworkName(mInstance));
         sServer->OutputFormat("%.*s\r\n", OT_NETWORK_NAME_MAX_SIZE, (const char *)networkName);
     }
     else
     {
-        SuccessOrExit(error = otSetNetworkName(mInstance, argv[0]));
+        SuccessOrExit(error = otThreadSetNetworkName(mInstance, argv[0]));
     }
 
 exit:
@@ -1320,7 +1320,7 @@ void Interpreter::ProcessParent(int argc, char *argv[])
     ThreadError error = kThreadError_None;
     otRouterInfo parentInfo;
 
-    SuccessOrExit(error = otGetParentInfo(mInstance, &parentInfo));
+    SuccessOrExit(error = otThreadGetParentInfo(mInstance, &parentInfo));
     sServer->OutputFormat("Ext Addr: ");
 
     for (size_t i = 0; i < sizeof(parentInfo.mExtAddress); i++)
@@ -1813,7 +1813,7 @@ void Interpreter::ProcessReleaseRouterId(int argc, char *argv[])
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
 
     SuccessOrExit(error = ParseLong(argv[0], value));
-    SuccessOrExit(error = otReleaseRouterId(mInstance, static_cast<uint8_t>(value)));
+    SuccessOrExit(error = otThreadReleaseRouterId(mInstance, static_cast<uint8_t>(value)));
 
 exit:
     AppendResult(error);
@@ -1828,7 +1828,7 @@ void Interpreter::ProcessReset(int argc, char *argv[])
 
 void Interpreter::ProcessRloc16(int argc, char *argv[])
 {
-    sServer->OutputFormat("%04x\r\n", otGetRloc16(mInstance));
+    sServer->OutputFormat("%04x\r\n", otThreadGetRloc16(mInstance));
     sServer->OutputFormat("Done\r\n");
     (void)argc;
     (void)argv;
@@ -1971,7 +1971,7 @@ void Interpreter::ProcessRouter(int argc, char *argv[])
 
         for (uint8_t i = 0; ; i++)
         {
-            if (otGetRouterInfo(mInstance, i, &routerInfo) != kThreadError_None)
+            if (otThreadGetRouterInfo(mInstance, i, &routerInfo) != kThreadError_None)
             {
                 sServer->OutputFormat("\r\n");
                 ExitNow();
@@ -2006,7 +2006,7 @@ void Interpreter::ProcessRouter(int argc, char *argv[])
     }
 
     SuccessOrExit(error = ParseLong(argv[0], value));
-    SuccessOrExit(error = otGetRouterInfo(mInstance, static_cast<uint16_t>(value), &routerInfo));
+    SuccessOrExit(error = otThreadGetRouterInfo(mInstance, static_cast<uint16_t>(value), &routerInfo));
 
     sServer->OutputFormat("Alloc: %d\r\n", routerInfo.mAllocated);
 
@@ -2045,12 +2045,12 @@ void Interpreter::ProcessRouterDowngradeThreshold(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sServer->OutputFormat("%d\r\n", otGetRouterDowngradeThreshold(mInstance));
+        sServer->OutputFormat("%d\r\n", otThreadGetRouterDowngradeThreshold(mInstance));
     }
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        otSetRouterDowngradeThreshold(mInstance, static_cast<uint8_t>(value));
+        otThreadSetRouterDowngradeThreshold(mInstance, static_cast<uint8_t>(value));
     }
 
 exit:
@@ -2063,7 +2063,7 @@ void Interpreter::ProcessRouterRole(int argc, char *argv[])
 
     if (argc == 0)
     {
-        if (otIsRouterRoleEnabled(mInstance))
+        if (otThreadIsRouterRoleEnabled(mInstance))
         {
             sServer->OutputFormat("Enabled\r\n");
         }
@@ -2074,11 +2074,11 @@ void Interpreter::ProcessRouterRole(int argc, char *argv[])
     }
     else if (strcmp(argv[0], "enable") == 0)
     {
-        otSetRouterRoleEnabled(mInstance, true);
+        otThreadSetRouterRoleEnabled(mInstance, true);
     }
     else if (strcmp(argv[0], "disable") == 0)
     {
-        otSetRouterRoleEnabled(mInstance, false);
+        otThreadSetRouterRoleEnabled(mInstance, false);
     }
     else
     {
@@ -2096,13 +2096,13 @@ void Interpreter::ProcessRouterSelectionJitter(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sServer->OutputFormat("%d\r\n", otGetRouterSelectionJitter(mInstance));
+        sServer->OutputFormat("%d\r\n", otThreadGetRouterSelectionJitter(mInstance));
     }
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
         VerifyOrExit(0 < value && value < 256, error = kThreadError_InvalidArgs);
-        otSetRouterSelectionJitter(mInstance, static_cast<uint8_t>(value));
+        otThreadSetRouterSelectionJitter(mInstance, static_cast<uint8_t>(value));
     }
 
 exit:
@@ -2116,12 +2116,12 @@ void Interpreter::ProcessRouterUpgradeThreshold(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sServer->OutputFormat("%d\r\n", otGetRouterUpgradeThreshold(mInstance));
+        sServer->OutputFormat("%d\r\n", otThreadGetRouterUpgradeThreshold(mInstance));
     }
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        otSetRouterUpgradeThreshold(mInstance, static_cast<uint8_t>(value));
+        otThreadSetRouterUpgradeThreshold(mInstance, static_cast<uint8_t>(value));
     }
 
 exit:
@@ -2185,7 +2185,7 @@ void Interpreter::ProcessSingleton(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
 
-    if (otIsSingleton(mInstance))
+    if (otThreadIsSingleton(mInstance))
     {
         sServer->OutputFormat("true\r\n");
     }
@@ -2206,7 +2206,7 @@ void Interpreter::ProcessState(int argc, char *argv[])
 
     if (argc == 0)
     {
-        switch (otGetDeviceRole(mInstance))
+        switch (otThreadGetDeviceRole(mInstance))
         {
         case kDeviceRoleOffline:
             sServer->OutputFormat("offline\r\n");
@@ -2237,19 +2237,19 @@ void Interpreter::ProcessState(int argc, char *argv[])
     {
         if (strcmp(argv[0], "detached") == 0)
         {
-            SuccessOrExit(error = otBecomeDetached(mInstance));
+            SuccessOrExit(error = otThreadBecomeDetached(mInstance));
         }
         else if (strcmp(argv[0], "child") == 0)
         {
-            SuccessOrExit(error = otBecomeChild(mInstance, kMleAttachSamePartition1));
+            SuccessOrExit(error = otThreadBecomeChild(mInstance, kMleAttachSamePartition1));
         }
         else if (strcmp(argv[0], "router") == 0)
         {
-            SuccessOrExit(error = otBecomeRouter(mInstance));
+            SuccessOrExit(error = otThreadBecomeRouter(mInstance));
         }
         else if (strcmp(argv[0], "leader") == 0)
         {
-            SuccessOrExit(error = otBecomeLeader(mInstance));
+            SuccessOrExit(error = otThreadBecomeLeader(mInstance));
         }
         else
         {
@@ -2269,11 +2269,11 @@ void Interpreter::ProcessThread(int argc, char *argv[])
 
     if (strcmp(argv[0], "start") == 0)
     {
-        SuccessOrExit(error = otThreadStart(mInstance));
+        SuccessOrExit(error = otThreadSetEnabled(mInstance, true));
     }
     else if (strcmp(argv[0], "stop") == 0)
     {
-        SuccessOrExit(error = otThreadStop(mInstance));
+        SuccessOrExit(error = otThreadSetEnabled(mInstance, false));
     }
 
 exit:
@@ -2623,12 +2623,12 @@ void Interpreter::ProcessJoinerPort(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sServer->OutputFormat("%d\r\n", otGetJoinerUdpPort(mInstance));
+        sServer->OutputFormat("%d\r\n", otThreadGetJoinerUdpPort(mInstance));
     }
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        error = otSetJoinerUdpPort(mInstance, static_cast<uint16_t>(value));
+        error = otThreadSetJoinerUdpPort(mInstance, static_cast<uint16_t>(value));
     }
 
 exit:
@@ -2838,12 +2838,12 @@ void Interpreter::ProcessNetworkDiagnostic(int argc, char *argv[])
 
     if (strcmp(argv[0], "get") == 0)
     {
-        otSendDiagnosticGet(mInstance, &address, payload, payloadIndex);
+        otThreadSendDiagnosticGet(mInstance, &address, payload, payloadIndex);
         return;
     }
     else if (strcmp(argv[0], "reset") == 0)
     {
-        otSendDiagnosticReset(mInstance, &address, payload, payloadIndex);
+        otThreadSendDiagnosticReset(mInstance, &address, payload, payloadIndex);
     }
 
 exit:

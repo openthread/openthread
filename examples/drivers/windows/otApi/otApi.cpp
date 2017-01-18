@@ -1215,23 +1215,13 @@ otIp6IsEnabled(
 OTAPI 
 ThreadError 
 OTCALL
-otThreadStart(
-    _In_ otInstance *aInstance
+otThreadSetEnabled(
+    _In_ otInstance *aInstance,
+    bool aEnabled
     )
 {
     if (aInstance == nullptr) return kThreadError_InvalidArgs;
-    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_THREAD, (BOOLEAN)TRUE));
-}
-
-OTAPI 
-ThreadError 
-OTCALL
-otThreadStop(
-    _In_ otInstance *aInstance
-    )
-{
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
-    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_THREAD, (BOOLEAN)FALSE));
+    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_THREAD, (BOOLEAN)aEnabled));
 }
 
 OTAPI
@@ -1261,7 +1251,7 @@ otThreadGetAutoStart(
 OTAPI 
 bool 
 OTCALL
-otIsSingleton(
+otThreadIsSingleton(
     _In_ otInstance *aInstance
     )
 {
@@ -1341,7 +1331,7 @@ otLinkIsEnergyScanInProgress(
 OTAPI 
 ThreadError 
 OTCALL
-otDiscover(
+otThreadDiscover(
     _In_ otInstance *aInstance, 
     uint32_t aScanChannels, 
     uint16_t aScanDuration, 
@@ -1438,7 +1428,7 @@ otDatasetGetDelayTimerMinimal(
 OTAPI 
 uint8_t 
 OTCALL
-otGetMaxAllowedChildren(
+otThreadGetMaxAllowedChildren(
     _In_ otInstance *aInstance
     )
 {
@@ -1450,7 +1440,7 @@ otGetMaxAllowedChildren(
 OTAPI 
 ThreadError 
 OTCALL
-otSetMaxAllowedChildren(
+otThreadSetMaxAllowedChildren(
     _In_ otInstance *aInstance, 
     uint8_t aMaxChildren
     )
@@ -1462,7 +1452,7 @@ otSetMaxAllowedChildren(
 OTAPI 
 uint32_t 
 OTCALL
-otGetChildTimeout(
+otThreadGetChildTimeout(
     _In_ otInstance *aInstance
     )
 {
@@ -1474,7 +1464,7 @@ otGetChildTimeout(
 OTAPI 
 void 
 OTCALL
-otSetChildTimeout(
+otThreadSetChildTimeout(
     _In_ otInstance *aInstance, 
     uint32_t aTimeout
     )
@@ -1517,7 +1507,7 @@ otLinkSetExtendedAddress(
 OTAPI 
 const uint8_t *
 OTCALL
-otGetExtendedPanId(
+otThreadGetExtendedPanId(
     _In_ otInstance *aInstance
     )
 {
@@ -1535,7 +1525,7 @@ otGetExtendedPanId(
 OTAPI 
 void 
 OTCALL
-otSetExtendedPanId(
+otThreadSetExtendedPanId(
     _In_ otInstance *aInstance, 
     const uint8_t *aExtendedPanId
     )
@@ -1570,7 +1560,7 @@ otLinkGetJoinerId(
 OTAPI 
 ThreadError 
 OTCALL
-otGetLeaderRloc(
+otThreadGetLeaderRloc(
     _In_ otInstance *aInstance, 
     _Out_ otIp6Address *aLeaderRloc
     )
@@ -1582,7 +1572,7 @@ otGetLeaderRloc(
 OTAPI 
 otLinkModeConfig 
 OTCALL
-otGetLinkMode(
+otThreadGetLinkMode(
     _In_ otInstance *aInstance
     )
 {
@@ -1595,7 +1585,7 @@ otGetLinkMode(
 OTAPI 
 ThreadError 
 OTCALL
-otSetLinkMode(
+otThreadSetLinkMode(
     _In_ otInstance *aInstance, 
     otLinkModeConfig aConfig
     )
@@ -1608,7 +1598,7 @@ otSetLinkMode(
 OTAPI 
 const uint8_t *
 OTCALL
-otGetMasterKey(
+otThreadGetMasterKey(
     _In_ otInstance *aInstance, 
     _Out_ uint8_t *aKeyLength
     )
@@ -1639,7 +1629,7 @@ otGetMasterKey(
 OTAPI
 ThreadError
 OTCALL
-otSetMasterKey(
+otThreadSetMasterKey(
     _In_ otInstance *aInstance, 
     const uint8_t *aKey, 
     uint8_t aKeyLength
@@ -1681,7 +1671,7 @@ otLinkSetMaxTransmitPower(
 OTAPI
 const otIp6Address *
 OTCALL
-otGetMeshLocalEid(
+otThreadGetMeshLocalEid(
     _In_ otInstance *aInstance
     )
 {
@@ -1697,7 +1687,7 @@ otGetMeshLocalEid(
 OTAPI
 const uint8_t *
 OTCALL
-otGetMeshLocalPrefix(
+otThreadGetMeshLocalPrefix(
     _In_ otInstance *aInstance
     )
 {
@@ -1715,7 +1705,7 @@ otGetMeshLocalPrefix(
 OTAPI
 ThreadError
 OTCALL
-otSetMeshLocalPrefix(
+otThreadSetMeshLocalPrefix(
     _In_ otInstance *aInstance, 
     const uint8_t *aMeshLocalPrefix
     )
@@ -1727,7 +1717,7 @@ otSetMeshLocalPrefix(
 OTAPI
 ThreadError
 OTCALL
-otGetNetworkDataLeader(
+otThreadGetNetworkDataLeader(
     _In_ otInstance *aInstance, 
     bool aStable, 
     _Out_ uint8_t *aData, 
@@ -1745,7 +1735,7 @@ otGetNetworkDataLeader(
 OTAPI
 ThreadError
 OTCALL
-otGetNetworkDataLocal(
+otThreadGetNetworkDataLocal(
     _In_ otInstance *aInstance, 
     bool aStable, 
     _Out_ uint8_t *aData, 
@@ -1763,7 +1753,7 @@ otGetNetworkDataLocal(
 OTAPI
 const char *
 OTCALL
-otGetNetworkName(
+otThreadGetNetworkName(
     _In_ otInstance *aInstance
     )
 {
@@ -1781,7 +1771,7 @@ otGetNetworkName(
 OTAPI
 ThreadError
 OTCALL
-otSetNetworkName(
+otThreadSetNetworkName(
     _In_ otInstance *aInstance, 
     _In_ const char *aNetworkName
     )
@@ -1857,7 +1847,7 @@ otLinkSetPanId(
 OTAPI
 bool 
 OTCALL
-otIsRouterRoleEnabled(
+otThreadIsRouterRoleEnabled(
     _In_ otInstance *aInstance
     )
 {
@@ -1869,7 +1859,7 @@ otIsRouterRoleEnabled(
 OTAPI
 void 
 OTCALL
-otSetRouterRoleEnabled(
+otThreadSetRouterRoleEnabled(
     _In_ otInstance *aInstance, 
     bool aEnabled
     )
@@ -2375,7 +2365,7 @@ otLinkSetPollPeriod(
 OTAPI
 uint8_t 
 OTCALL
-otGetLocalLeaderWeight(
+otThreadGetLocalLeaderWeight(
     _In_ otInstance *aInstance
     )
 {
@@ -2387,7 +2377,7 @@ otGetLocalLeaderWeight(
 OTAPI
 void 
 OTCALL
-otSetLocalLeaderWeight(
+otThreadSetLocalLeaderWeight(
     _In_ otInstance *aInstance, 
     uint8_t aWeight
     )
@@ -2398,7 +2388,7 @@ otSetLocalLeaderWeight(
 OTAPI 
 uint32_t 
 OTCALL
-otGetLocalLeaderPartitionId(
+otThreadGetLocalLeaderPartitionId(
     _In_ otInstance *aInstance
     )
 {
@@ -2410,7 +2400,7 @@ otGetLocalLeaderPartitionId(
 OTAPI 
 void 
 OTCALL
-otSetLocalLeaderPartitionId(
+otThreadSetLocalLeaderPartitionId(
     _In_ otInstance *aInstance, 
     uint32_t aPartitionId
     )
@@ -2421,7 +2411,7 @@ otSetLocalLeaderPartitionId(
 OTAPI 
 uint16_t 
 OTCALL 
-otGetJoinerUdpPort(
+otThreadGetJoinerUdpPort(
     _In_ otInstance *aInstance
 )
 {
@@ -2433,7 +2423,7 @@ otGetJoinerUdpPort(
 OTAPI 
 ThreadError 
 OTCALL 
-otSetJoinerUdpPort(
+otThreadSetJoinerUdpPort(
     _In_ otInstance *aInstance, 
     uint16_t aJoinerUdpPort
     )
@@ -2504,7 +2494,7 @@ otNetDataRegister(
 OTAPI
 uint32_t 
 OTCALL
-otGetContextIdReuseDelay(
+otThreadGetContextIdReuseDelay(
     _In_ otInstance *aInstance
     )
 {
@@ -2516,7 +2506,7 @@ otGetContextIdReuseDelay(
 OTAPI
 void 
 OTCALL
-otSetContextIdReuseDelay(
+otThreadSetContextIdReuseDelay(
     _In_ otInstance *aInstance, 
     uint32_t aDelay
     )
@@ -2527,7 +2517,7 @@ otSetContextIdReuseDelay(
 OTAPI
 uint32_t 
 OTCALL
-otGetKeySequenceCounter(
+otThreadGetKeySequenceCounter(
     _In_ otInstance *aInstance
     )
 {
@@ -2539,7 +2529,7 @@ otGetKeySequenceCounter(
 OTAPI
 void 
 OTCALL
-otSetKeySequenceCounter(
+otThreadSetKeySequenceCounter(
     _In_ otInstance *aInstance, 
     uint32_t aKeySequenceCounter
     )
@@ -2550,7 +2540,7 @@ otSetKeySequenceCounter(
 OTAPI
 uint32_t 
 OTCALL
-otGetKeySwitchGuardTime(
+otThreadGetKeySwitchGuardTime(
     _In_ otInstance *aInstance
     )
 {
@@ -2562,7 +2552,7 @@ otGetKeySwitchGuardTime(
 OTAPI
 void 
 OTCALL
-otSetKeySwitchGuardTime(
+otThreadSetKeySwitchGuardTime(
     _In_ otInstance *aInstance, 
     uint32_t aKeySwitchGuardTime
     )
@@ -2573,7 +2563,7 @@ otSetKeySwitchGuardTime(
 OTAPI
 uint8_t
 OTCALL
-otGetNetworkIdTimeout(
+otThreadGetNetworkIdTimeout(
     _In_ otInstance *aInstance
     )
 {
@@ -2585,7 +2575,7 @@ otGetNetworkIdTimeout(
 OTAPI
 void 
 OTCALL
-otSetNetworkIdTimeout(
+otThreadSetNetworkIdTimeout(
     _In_ otInstance *aInstance, 
     uint8_t aTimeout
     )
@@ -2596,7 +2586,7 @@ otSetNetworkIdTimeout(
 OTAPI
 uint8_t 
 OTCALL
-otGetRouterUpgradeThreshold(
+otThreadGetRouterUpgradeThreshold(
     _In_ otInstance *aInstance
     )
 {
@@ -2608,7 +2598,7 @@ otGetRouterUpgradeThreshold(
 OTAPI
 void 
 OTCALL
-otSetRouterUpgradeThreshold(
+otThreadSetRouterUpgradeThreshold(
     _In_ otInstance *aInstance, 
     uint8_t aThreshold
     )
@@ -2619,7 +2609,7 @@ otSetRouterUpgradeThreshold(
 OTAPI 
 uint8_t 
 OTCALL
-otGetRouterDowngradeThreshold(
+otThreadGetRouterDowngradeThreshold(
     _In_ otInstance *aInstance
     )
 {
@@ -2631,7 +2621,7 @@ otGetRouterDowngradeThreshold(
 OTAPI 
 void 
 OTCALL
-otSetRouterDowngradeThreshold(
+otThreadSetRouterDowngradeThreshold(
     _In_ otInstance *aInstance, 
     uint8_t aThreshold
     )
@@ -2642,7 +2632,7 @@ otSetRouterDowngradeThreshold(
 OTAPI 
 uint8_t 
 OTCALL
-otGetRouterSelectionJitter(
+otThreadGetRouterSelectionJitter(
     _In_ otInstance *aInstance
     )
 {
@@ -2654,7 +2644,7 @@ otGetRouterSelectionJitter(
 OTAPI 
 void 
 OTCALL
-otSetRouterSelectionJitter(
+otThreadSetRouterSelectionJitter(
     _In_ otInstance *aInstance, 
     uint8_t aRouterJitter
     )
@@ -2665,7 +2655,7 @@ otSetRouterSelectionJitter(
 OTAPI
 ThreadError
 OTCALL
-otReleaseRouterId(
+otThreadReleaseRouterId(
     _In_ otInstance *aInstance, 
     uint8_t aRouterId
     )
@@ -2761,7 +2751,7 @@ otLinkIsWhitelistEnabled(
 OTAPI
 ThreadError
 OTCALL
-otBecomeDetached(
+otThreadBecomeDetached(
     _In_ otInstance *aInstance
     )
 {
@@ -2772,7 +2762,7 @@ otBecomeDetached(
 OTAPI
 ThreadError
 OTCALL
-otBecomeChild(
+otThreadBecomeChild(
     _In_ otInstance *aInstance, 
     otMleAttachFilter aFilter
     )
@@ -2789,7 +2779,7 @@ otBecomeChild(
 OTAPI
 ThreadError
 OTCALL
-otBecomeRouter(
+otThreadBecomeRouter(
     _In_ otInstance *aInstance
     )
 {
@@ -2800,7 +2790,7 @@ otBecomeRouter(
 OTAPI
 ThreadError
 OTCALL
-otBecomeLeader(
+otThreadBecomeLeader(
     _In_ otInstance *aInstance
     )
 {
@@ -2927,7 +2917,7 @@ otInstanceFactoryReset(
 OTAPI
 ThreadError
 OTCALL
-otGetChildInfoById(
+otThreadGetChildInfoById(
     _In_ otInstance *aInstance, 
     uint16_t aChildId, 
     _Out_ otChildInfo *aChildInfo
@@ -2940,7 +2930,7 @@ otGetChildInfoById(
 OTAPI
 ThreadError
 OTCALL
-otGetChildInfoByIndex(
+otThreadGetChildInfoByIndex(
     _In_ otInstance *aInstance, 
     uint8_t aChildIndex, 
     _Out_ otChildInfo *aChildInfo
@@ -2953,7 +2943,7 @@ otGetChildInfoByIndex(
 OTAPI
 ThreadError
 OTCALL
-otGetNextNeighborInfo(
+otThreadGetNextNeighborInfo(
     _In_ otInstance *aInstance,
     _Inout_ otNeighborInfoIterator *aIterator,
     _Out_ otNeighborInfo *aInfo
@@ -2968,7 +2958,7 @@ otGetNextNeighborInfo(
 OTAPI
 otDeviceRole 
 OTCALL
-otGetDeviceRole(
+otThreadGetDeviceRole(
     _In_ otInstance *aInstance
     )
 {
@@ -2980,7 +2970,7 @@ otGetDeviceRole(
 OTAPI
 ThreadError
 OTCALL
-otGetEidCacheEntry(
+otThreadGetEidCacheEntry(
     _In_ otInstance *aInstance, 
     uint8_t aIndex, 
     _Out_ otEidCacheEntry *aEntry
@@ -2993,7 +2983,7 @@ otGetEidCacheEntry(
 OTAPI
 ThreadError
 OTCALL
-otGetLeaderData(
+otThreadGetLeaderData(
     _In_ otInstance *aInstance, 
     _Out_ otLeaderData *aLeaderData
     )
@@ -3005,7 +2995,7 @@ otGetLeaderData(
 OTAPI
 uint8_t 
 OTCALL
-otGetLeaderRouterId(
+otThreadGetLeaderRouterId(
     _In_ otInstance *aInstance
     )
 {
@@ -3017,7 +3007,7 @@ otGetLeaderRouterId(
 OTAPI
 uint8_t 
 OTCALL
-otGetLeaderWeight(
+otThreadGetLeaderWeight(
     _In_ otInstance *aInstance
     )
 {
@@ -3041,7 +3031,7 @@ otNetDataGetVersion(
 OTAPI
 uint32_t 
 OTCALL
-otGetPartitionId(
+otThreadGetPartitionId(
     _In_ otInstance *aInstance
     )
 {
@@ -3053,7 +3043,7 @@ otGetPartitionId(
 OTAPI
 uint16_t 
 OTCALL
-otGetRloc16(
+otThreadGetRloc16(
     _In_ otInstance *aInstance
     )
 {
@@ -3065,7 +3055,7 @@ otGetRloc16(
 OTAPI
 uint8_t 
 OTCALL
-otGetRouterIdSequence(
+otThreadGetRouterIdSequence(
     _In_ otInstance *aInstance
     )
 {
@@ -3077,7 +3067,7 @@ otGetRouterIdSequence(
 OTAPI
 ThreadError
 OTCALL
-otGetRouterInfo(
+otThreadGetRouterInfo(
     _In_ otInstance *aInstance, 
     uint16_t aRouterId, 
     _Out_ otRouterInfo *aRouterInfo
@@ -3090,7 +3080,7 @@ otGetRouterInfo(
 OTAPI 
 ThreadError 
 OTCALL
-otGetParentInfo(
+otThreadGetParentInfo(
     _In_ otInstance *aInstance, 
     _Out_ otRouterInfo *aParentInfo
     )
@@ -3439,7 +3429,7 @@ otThreadErrorToString(
 OTAPI 
 ThreadError 
 OTCALL 
-otSendDiagnosticGet(
+otThreadSendDiagnosticGet(
     _In_ otInstance *aInstance, 
     const otIp6Address *aDestination, 
     const uint8_t aTlvTypes[],
@@ -3468,7 +3458,7 @@ otSendDiagnosticGet(
 OTAPI 
 ThreadError 
 OTCALL 
-otSendDiagnosticReset(
+otThreadSendDiagnosticReset(
     _In_ otInstance *aInstance, 
     const otIp6Address *aDestination, 
     const uint8_t aTlvTypes[],
