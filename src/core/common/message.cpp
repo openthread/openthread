@@ -44,6 +44,10 @@ namespace Thread {
 MessagePool::MessagePool(void) :
     mAllQueue()
 {
+#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+    // Initialize Platform buffer pool management.
+    otPlatMessagePoolInit(kNumBuffers, sizeof(Buffer));
+#else
     memset(mBuffers, 0, sizeof(mBuffers));
 
     mFreeBuffers = mBuffers;
@@ -55,11 +59,6 @@ MessagePool::MessagePool(void) :
 
     mBuffers[kNumBuffers - 1].SetNextBuffer(NULL);
     mNumFreeBuffers = kNumBuffers;
-
-#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
-    // Pass the list of free buffers and a pointer to the count of free buffers
-    // to the platform for management.
-    otPlatMessagePoolInit(static_cast<BufferHeader *>(mFreeBuffers), &mNumFreeBuffers, sizeof(Buffer));
 #endif
 }
 
@@ -108,9 +107,7 @@ Buffer *MessagePool::NewBuffer(void)
     {
         otLogInfoMac("No available message buffer\n");
     }
-
-#else // OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
-
+#else
     if (mFreeBuffers == NULL)
     {
         otLogInfoMac("No available message buffer");
@@ -121,7 +118,7 @@ Buffer *MessagePool::NewBuffer(void)
     mFreeBuffers = mFreeBuffers->GetNextBuffer();
     buffer->SetNextBuffer(NULL);
     mNumFreeBuffers--;
-#endif // OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+#endif
 
 exit:
     return buffer;
@@ -149,7 +146,15 @@ ThreadError MessagePool::FreeBuffers(Buffer *aBuffer)
 
 ThreadError MessagePool::ReclaimBuffers(int aNumBuffers)
 {
-    return (aNumBuffers <= mNumFreeBuffers) ? kThreadError_None : kThreadError_NoBufs;
+    int numFreeBuffers;
+
+#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+    numFreeBuffers = otPlatMessagePoolNumFreeBuffers();
+#else
+    numFreeBuffers = mNumFreeBuffers;
+#endif
+
+    return (aNumBuffers <= numFreeBuffers) ? kThreadError_None : kThreadError_NoBufs;
 }
 
 Message *MessagePool::Iterator::Next(void) const
