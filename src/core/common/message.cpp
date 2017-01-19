@@ -107,7 +107,9 @@ Buffer *MessagePool::NewBuffer(void)
     {
         otLogInfoMac("No available message buffer\n");
     }
+
 #else
+
     if (mFreeBuffers == NULL)
     {
         otLogInfoMac("No available message buffer");
