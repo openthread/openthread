@@ -52,7 +52,9 @@ logger.setLevel(logging.INFO)
 RESUME_SCRIPT_PATH = '%appdata%\\Microsoft\\Windows\\Start Menu\\Programs\\' \
                      'Startup\\continue_harness.bat'
 
+
 class SimpleTestResult(unittest.TestResult):
+
     def __init__(self, path, auto_reboot_args=None, manual_reset=False):
         '''Record test results in json file
 
@@ -118,7 +120,6 @@ class SimpleTestResult(unittest.TestResult):
         # close explorers
         os.system('taskkill /f /im explorer.exe && start explorer.exe')
 
-
     def addSuccess(self, test):
         logger.info('case[%s] pass', test.__class__.__name__)
         super(SimpleTestResult, self).addSuccess(test)
@@ -143,20 +144,36 @@ class SimpleTestResult(unittest.TestResult):
         super(SimpleTestResult, self).addError(test, err)
         self.add_result(test, None, str(err[1]))
 
+
+def __print_fw_version_of_device_connected_to_port(port):
+    '''Print firmware version of a device connected to the COM port'''
+    try:
+        with OpenThreadController(port) as otc:
+            print('%s: %s' % (port, otc.version))
+    except:
+        logger.exception('failed to get version of %s' % port)
+
+
 def list_devices(names=None, continue_from=None, **kwargs):
-    """List devices in settings file and print versions"""
+    '''List devices in settings file and print versions'''
 
-    if continue_from:
-        continue_from = settings.GOLDEN_DEVICES.index(continue_from)
+    ports = []
+
+    if names:
+        ports = list(names)
+
     else:
-        continue_from = 0
+        ports = [port for port, _type in settings.GOLDEN_DEVICES if _type == 'OpenThread']
 
-    for port in names or settings.GOLDEN_DEVICES[continue_from:]:
-        try:
-            with OpenThreadController(port) as otc:
-                print('%s: %s' % (port, otc.version))
-        except:
-            logger.exception('failed to get version of %s' % port)
+        if continue_from:
+            continue_from = ports.index(continue_from)
+        else:
+            continue_from = 0
+
+        ports = list(ports[continue_from:])
+
+    map(__print_fw_version_of_device_connected_to_port, ports)
+
 
 def discover(names=None, pattern=['*.py'], skip='efp', dry_run=False, blacklist=None, name_greps=None,
              manual_reset=False, delete_history=False, max_devices=0,
@@ -168,6 +185,8 @@ def discover(names=None, pattern=['*.py'], skip='efp', dry_run=False, blacklist=
                        documentation for more details
         skip (str): types cases to skip
     '''
+    if not os.path.exists(settings.OUTPUT_PATH):
+        os.mkdir(settings.OUTPUT_PATH)
 
     if delete_history:
         os.system('del history.json')
@@ -188,6 +207,7 @@ def discover(names=None, pattern=['*.py'], skip='efp', dry_run=False, blacklist=
         try:
             log = json.load(open(result_file, 'r'))
         except:
+            logger.exception('Failed to open result file')
             pass
 
     if not log:
@@ -273,6 +293,7 @@ def discover(names=None, pattern=['*.py'], skip='efp', dry_run=False, blacklist=
         return
 
     suite.run(result)
+
 
 def main():
     parser = argparse.ArgumentParser(description='Thread harness test case runner')

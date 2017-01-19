@@ -176,12 +176,13 @@ class HarnessCase(unittest.TestCase):
                 return
 
             for device in settings.GOLDEN_DEVICES:
+                port, _ = device
                 try:
-                    with OpenThreadController(device) as otc:
-                        logger.info('Resetting %s' % device)
+                    with OpenThreadController(port) as otc:
+                        logger.info('Resetting %s' % port)
                         otc.reset()
                 except:
-                    logger.exception('Failed to reset device %s' % device)
+                    logger.exception('Failed to reset device %s' % port)
                     self.history.mark_bad_golden_device(device)
 
             return

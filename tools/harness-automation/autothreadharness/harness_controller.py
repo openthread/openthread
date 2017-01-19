@@ -107,16 +107,22 @@ class HarnessController(object):
 
     def _try_kill(self, proc):
         logger.info('Try kill process')
-        times = 3
-        proc.kill()
+        times = 1
+
         while proc.poll() is None:
-            logger.info('Trial %d failed', times)
-            if times == 0:
+            proc.kill()
+
+            time.sleep(5)
+
+            if proc.poll() is not None:
+                logger.info('Process has been killed')
+                break
+
+            logger.info('Trial {} failed'.format(times))
+            times += 1
+
+            if times > 3:
                 raise SystemExit()
-            else:
-                times = times - 1
-                time.sleep(5)
-                proc.kill()
 
     def __del__(self):
         self.stop()
