@@ -36,6 +36,9 @@
 
 #include <stdio.h>
 
+#include "openthread/platform/random.h"
+#include "openthread/platform/radio.h"
+
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <coap/coap_header.hpp>
@@ -46,8 +49,6 @@
 #include <meshcop/dataset.hpp>
 #include <meshcop/dataset_manager.hpp>
 #include <meshcop/tlvs.hpp>
-#include <platform/random.h>
-#include <platform/radio.h>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>

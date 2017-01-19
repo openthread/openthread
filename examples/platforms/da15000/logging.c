@@ -31,7 +31,7 @@
 * Platform abstraction for the logging
 *
 */
-#include <platform/logging.h>
+#include "openthread/platform/logging.h"
 
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {

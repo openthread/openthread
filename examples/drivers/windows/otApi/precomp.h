@@ -24,7 +24,7 @@
 #include <openthread/openthread.h>
 #include <openthread/commissioner.h>
 #include <openthread/joiner.h>
-#include <platform/logging-windows.h>
+#include <openthread/platform/logging-windows.h>
 
 #include <winioctl.h>
 #include <otLwfIoctl.h>

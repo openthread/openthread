@@ -29,8 +29,7 @@
 #include "platform-posix.h"
 
 #include "openthread/types.h"
-
-#include <platform/misc.h>
+#include "openthread/platform/misc.h"
 
 void otPlatReset(otInstance *aInstance)
 {

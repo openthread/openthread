@@ -34,8 +34,8 @@
 #define WPP_NAME "instance_api.tmh"
 
 #include "openthread/instance.h"
-#include "platform/misc.h"
-#include "platform/settings.h"
+#include "openthread/platform/misc.h"
+#include "openthread/platform/settings.h"
 
 #include "openthread-instance.h"
 

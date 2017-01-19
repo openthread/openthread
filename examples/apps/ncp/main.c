@@ -34,12 +34,11 @@
 
 #include "openthread/openthread.h"
 #include "openthread/ncp.h"
+#include "openthread/platform/platform.h"
 
 #include <openthread-core-config.h>
 #include <openthread-diag.h>
-#include <openthread/tasklet.h>
 #include <common/debug.hpp>
-#include <platform/platform.h>
 
 #ifdef OPENTHREAD_MULTIPLE_INSTANCE
 void *otPlatCAlloc(size_t aNum, size_t aSize)

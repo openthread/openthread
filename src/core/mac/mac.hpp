@@ -34,13 +34,15 @@
 #ifndef MAC_HPP_
 #define MAC_HPP_
 
+#include "openthread/platform/radio.h"
+
 #include <openthread-core-config.h>
+
 #include <common/tasklet.hpp>
 #include <common/timer.hpp>
 #include <mac/mac_frame.hpp>
 #include <mac/mac_whitelist.hpp>
 #include <mac/mac_blacklist.hpp>
-#include <platform/radio.h>
 #include <thread/key_manager.hpp>
 #include <thread/topology.hpp>
 #include <thread/network_diagnostic_tlvs.hpp>

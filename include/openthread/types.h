@@ -41,7 +41,7 @@
 #include <guiddef.h>
 #endif
 
-#include <platform/toolchain.h>
+#include "openthread/platform/toolchain.h"
 
 #ifdef __cplusplus
 extern "C" {

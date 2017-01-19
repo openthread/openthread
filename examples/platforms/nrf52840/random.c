@@ -36,7 +36,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <platform/random.h>
+#include <openthread/platform/random.h>
 #include <common/code_utils.hpp>
 
 #include "hal/nrf_rng.h"

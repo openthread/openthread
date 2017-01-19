@@ -32,7 +32,7 @@
  *
  */
 
-#include <platform/logging.h>
+#include <openthread/platform/logging.h>
 
 #include "drivers/nrf_drv_clock.h"
 #include "platform-nrf5.h"

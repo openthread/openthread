@@ -31,12 +31,12 @@
  */
 
 #include "openthread/ncp.h"
+#include "openthread/platform/spi-slave.h"
 
 #include <common/code_utils.hpp>
 #include <common/new.hpp>
 #include <net/ip6.hpp>
 #include <ncp/ncp_spi.hpp>
-#include <platform/spi-slave.h>
 #include <core/openthread-core-config.h>
 #include <openthread-instance.h>
 

@@ -45,7 +45,7 @@ ot_platform_headers                      =\
     usec-alarm.h                          \
     $(NULL)
 
-ot_platformdir = $(includedir)/platform
+ot_platformdir = $(includedir)/openthread/platform
 dist_ot_platform_HEADERS = $(ot_platform_headers)
 
 install-headers: install-includeHEADERS

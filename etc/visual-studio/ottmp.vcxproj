@@ -50,7 +50,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>%(DisableSpecificWarnings);4200;4201;4214</DisableSpecificWarnings>
       <WppEnabled>true</WppEnabled>
-      <WppScanConfigurationData>..\..\include\platform\logging-windows.h</WppScanConfigurationData>
+      <WppScanConfigurationData>..\..\include\openthread\platform\logging-windows.h</WppScanConfigurationData>
       <WppAdditionalOptions>-km %(WppAdditionalOptions)</WppAdditionalOptions>
       <WppModuleName>ottmp</WppModuleName>
       <WppSearchString>WPP_INIT_TRACING</WppSearchString>

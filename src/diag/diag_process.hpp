@@ -37,10 +37,9 @@
 #include <stdarg.h>
 
 #include "openthread/types.h"
-
-#include <platform/radio.h>
-#include <platform/alarm.h>
-#include <platform/diag.h>
+#include "openthread/platform/radio.h"
+#include "openthread/platform/alarm.h"
+#include "openthread/platform/diag.h"
 
 namespace Thread {
 

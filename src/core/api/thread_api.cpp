@@ -38,7 +38,7 @@
 #include "openthread-instance.h"
 #include "common/logging.hpp"
 #include "common/settings.hpp"
-#include "platform/settings.h"
+#include "openthread/platform/settings.h"
 
 using namespace Thread;
 

@@ -32,6 +32,9 @@
 
 #define WPP_NAME "mle_router.tmh"
 
+#include "openthread/platform/random.h"
+#include "openthread/platform/settings.h"
+
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
@@ -39,8 +42,6 @@
 #include <common/settings.hpp>
 #include <mac/mac_frame.hpp>
 #include <net/icmp6.hpp>
-#include <platform/random.h>
-#include <platform/settings.h>
 #include <thread/mle_router.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>

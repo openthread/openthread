@@ -29,75 +29,84 @@
 /**
  * @file
  * @brief
- *   This file includes the platform abstraction for the microsecond alarm service.
+ *   This file defines the platform diag interface.
+ *
  */
 
-#ifndef USEC_ALARM_H_
-#define USEC_ALARM_H_
+#ifndef DIAG_H_
+#define DIAG_H_
 
 #include <stdint.h>
+#include <stddef.h>
 
-#include <openthread-types.h>
+#include <openthread/platform/radio.h>
+
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @defgroup usec-alarm Microsecond alarm
- * @ingroup alarm
+ * @defgroup diag Diag
+ * @ingroup platform
  *
  * @brief
- *   This module includes the platform abstraction for the microsecond alarm service.
+ *   This module includes the platform abstraction for diagnostics features.
  *
  * @{
  *
  */
 
-typedef struct
-{
-    uint32_t mMs;  ///< Time in milliseconds.
-    uint16_t mUs;  ///< Time fraction in microseconds.
-} otPlatUsecAlarmTime;
-
-typedef void (*otPlatUsecAlarmHandler)(void *aContext);
+/**
+ * Process the platform specific diagnostics features.
+ *
+ * @param[in]   aInstance       The OpenThread instance for current request.
+ * @param[in]   argc            The argument counter of diagnostics command line.
+ * @param[in]   argv            The argument vector of diagnostics command line.
+ * @param[out]  aOutput         The diagnostics execution result.
+ * @param[in]   aOutputMaxLen   The output buffer size.
+ */
+void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
 
 /**
- * Set the alarm to fire at @p aDt milliseconds and microseconds after @p aT0.
- *
- * @param[in]  aInstance  The OpenThread instance structure.
- * @param[in]  aT0        The reference time.
- * @param[in]  aDt        The time delay in milliseconds and microseconds from @p aT0.
- * @param[in]  aHandler   A pointer to a function that is called when the timer expires.
- * @param[in]  aContext   A pointer to arbitrary context information.
+ * Set diagnostics mode.
  */
-void otPlatUsecAlarmStartAt(otInstance *aInstance,
-                            const otPlatUsecAlarmTime *aT0,
-                            const otPlatUsecAlarmTime *aDt,
-                            otPlatUsecAlarmHandler aHandler,
-                            void *aContext);
+void otPlatDiagModeSet(bool aMode);
 
 /**
- * Stop the alarm.
- *
- * @param[in] aInstance  The OpenThread instance structure.
+ * Get diagnostics mode.
  */
-void otPlatUsecAlarmStop(otInstance *aInstance);
+bool otPlatDiagModeGet(void);
 
 /**
- * Get the current time.
- *
- * @param[out]  aNow  The current time in milliseconds and microseconds.
+ * Set diagnostics channel.
  */
-void otPlatUsecAlarmGetNow(otPlatUsecAlarmTime *aNow);
+void otPlatDiagChannelSet(uint8_t aChannel);
 
 /**
- * @}
- *
+ * Set diagnostics tx power.
  */
+void otPlatDiagTxPowerSet(int8_t aTxPower);
+
+/**
+ * Process the platform specific received frame parsing.
+ *
+ * @param[in]   aInstance   The OpenThread instance for current request.
+ * @param[in]   aFrame      The received radio frame.
+ * @param[in]   aError      The received radio frame status.
+ */
+void otPlatDiagRadioReceived(otInstance *aInstance, RadioPacket *aFrame, ThreadError aError);
+
+/**
+ * Process the platform specific alarm callback.
+ *
+ * @param[in]   aInstance   The OpenThread instance for current request.
+ */
+void otPlatDiagAlarmCallback(otInstance *aInstance);
 
 #ifdef __cplusplus
-}  // extern "C"
+}  // end of extern "C"
 #endif
 
-#endif  // USEC_ALARM_H_
+#endif

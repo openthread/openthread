@@ -35,17 +35,16 @@
 #include <time.h>
 #endif
 
-#include <openthread.h>
-#include "openthread/tasklet.h"
+#include <string.h>
+
+#include "openthread/openthread.h"
+#include "openthread/platform/alarm.h"
+#include "openthread/platform/logging.h"
+#include "openthread/platform/misc.h"
+#include "openthread/platform/radio.h"
+#include "openthread/platform/random.h"
 
 #include <common/code_utils.hpp>
-#include <platform/alarm.h>
-#include <platform/logging.h>
-#include <platform/misc.h>
-#include <platform/radio.h>
-#include <platform/random.h>
-
-#include <string.h>
 
 #include "test_util.h"
 

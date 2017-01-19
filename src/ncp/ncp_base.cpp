@@ -45,6 +45,9 @@
 #include "openthread/jam_detection.h"
 #endif
 
+#include "openthread/platform/radio.h"
+#include "openthread/platform/misc.h"
+
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <ncp/ncp_base.hpp>
@@ -53,8 +56,6 @@
 #include <openthread-icmp6.h>
 #include <openthread-instance.h>
 #include <stdarg.h>
-#include <platform/radio.h>
-#include <platform/misc.h>
 
 namespace Thread
 {

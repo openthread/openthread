@@ -28,6 +28,24 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
+# Always package (e.g. for 'make dist') these subdirectories.
+
+DIST_SUBDIRS                            = \
+    platform                              \
+    $(NULL)
+
+# Always build (e.g. for 'make all') these subdirectories.
+
+SUBDIRS                                 = \
+    platform                              \
+    $(NULL)
+
+# Always pretty (e.g. for 'make pretty') these subdirectories.
+
+PRETTY_SUBDIRS                          = \
+    platform                              \
+    $(NULL)
+
 openthread_headers                      = \
     cli.h                                 \
     coap.h                                \

@@ -30,8 +30,8 @@
 
 #include <stdlib.h>
 
-#include <platform/logging.h>
-#include <platform/memory.h>
+#include "openthread/platform/logging.h"
+#include "openthread/platform/memory.h"
 
 #if defined(_WIN32)
 #include <stdarg.h>

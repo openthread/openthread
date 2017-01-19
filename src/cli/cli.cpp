@@ -58,7 +58,7 @@
 #include <net/ip6.hpp>
 #include "openthread/dhcp6_client.h"
 #include "openthread/dhcp6_server.h"
-#include <platform/uart.h>
+#include "openthread/platform/uart.h"
 #endif
 
 #include <common/encoding.hpp>

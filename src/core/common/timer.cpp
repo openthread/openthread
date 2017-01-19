@@ -33,12 +33,13 @@
 
 #define WPP_NAME "timer.tmh"
 
+#include "openthread/platform/alarm.h"
+
 #include <common/code_utils.hpp>
 #include <common/timer.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
 #include <net/ip6.hpp>
-#include <platform/alarm.h>
 #include <openthread-instance.h>
 
 namespace Thread {

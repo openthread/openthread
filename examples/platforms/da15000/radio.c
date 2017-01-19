@@ -32,8 +32,9 @@
 */
 
 #include <common/code_utils.hpp>
-#include <platform/alarm.h>
-#include <platform/radio.h>
+#include "openthread/openthread.h"
+#include "openthread/platform/alarm.h"
+#include "openthread/platform/radio.h"
 #include "platform-da15000.h"
 
 #include <ad_ftdf.h>

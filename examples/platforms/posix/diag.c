@@ -36,8 +36,8 @@
 #include <openthread-config.h>
 #include "openthread/openthread.h"
 
-#include <platform/alarm.h>
-#include <platform/radio.h>
+#include "openthread/platform/alarm.h"
+#include "openthread/platform/radio.h"
 
 /**
  * Diagnostics mode variables.

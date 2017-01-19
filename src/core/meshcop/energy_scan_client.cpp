@@ -33,12 +33,13 @@
 
 #define WPP_NAME "energy_scan_client.tmh"
 
+#include "openthread/platform/random.h"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/encoding.hpp>
 #include <common/logging.hpp>
-#include <platform/random.h>
 #include <meshcop/energy_scan_client.hpp>
 #include <meshcop/tlvs.hpp>
 #include <thread/thread_netif.hpp>

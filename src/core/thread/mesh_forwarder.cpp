@@ -33,6 +33,8 @@
 
 #define WPP_NAME "mesh_forwarder.tmh"
 
+#include "openthread/platform/random.h"
+
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
@@ -43,7 +45,6 @@
 #include <net/udp6.hpp>
 #include <net/netif.hpp>
 #include <net/udp6.hpp>
-#include <platform/random.h>
 #include <thread/mesh_forwarder.hpp>
 #include <thread/mle_router.hpp>
 #include <thread/mle.hpp>

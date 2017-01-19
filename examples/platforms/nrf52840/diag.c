@@ -32,9 +32,9 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include <platform/diag.h>
-#include <platform/alarm.h>
-#include <platform/radio.h>
+#include <openthread/platform/diag.h>
+#include <openthread/platform/alarm.h>
+#include <openthread/platform/radio.h>
 
 #include <common/code_utils.hpp>
 #include <common/logging.hpp>
