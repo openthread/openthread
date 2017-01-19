@@ -34,10 +34,10 @@
 
 #include "openthread/openthread.h"
 #include "openthread/cli.h"
+#include "openthread/diag.h"
 #include "openthread/platform/platform.h"
 
 #include <openthread-core-config.h>
-#include <openthread-diag.h>
 #include <assert.h>
 
 #ifdef OPENTHREAD_MULTIPLE_INSTANCE
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
     otCliUartInit(sInstance);
 
 #if OPENTHREAD_ENABLE_DIAG
-    diagInit(sInstance);
+    otDiagInit(sInstance);
 #endif
 
     while (1)

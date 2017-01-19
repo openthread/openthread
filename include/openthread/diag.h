@@ -41,13 +41,13 @@
 extern "C" {
 #endif
 
-void diagInit(otInstance *aInstance);
+void otDiagInit(otInstance *aInstance);
 
-char *diagProcessCmd(int argc, char *argv[]);
+char *otDiagProcessCmd(int argc, char *argv[]);
 
-char *diagProcessCmdLine(char *string);
+char *otDiagProcessCmdLine(char *string);
 
-bool isDiagEnabled(void);
+bool otDiagIsEnabled(void);
 
 #ifdef __cplusplus
 }  // extern "C"

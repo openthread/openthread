@@ -40,6 +40,7 @@
 
 #include "openthread/openthread.h"
 #include "openthread/ncp.h"
+#include "openthread/diag.h"
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
 #include "openthread/jam_detection.h"
@@ -52,7 +53,6 @@
 #include <common/debug.hpp>
 #include <ncp/ncp_base.hpp>
 #include <net/ip6.hpp>
-#include <openthread-diag.h>
 #include <openthread-icmp6.h>
 #include <openthread-instance.h>
 #include <stdarg.h>
@@ -5455,7 +5455,7 @@ ThreadError NcpBase::SetPropertyHandler_NEST_STREAM_MFG(uint8_t header, spinel_p
     if ((parsedLength > 0) && (string != NULL))
     {
         // all diagnostics related features are processed within diagnostics module
-        output = diagProcessCmdLine(string);
+        output = otDiagProcessCmdLine(string);
 
         errorCode = SendPropertyUpdate(
                         header,

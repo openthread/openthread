@@ -47,7 +47,6 @@ PRETTY_SUBDIRS                          = \
     $(NULL)
 
 include_HEADERS                         = \
-    openthread-diag.h                     \
     openthread-icmp6.h                    \
     $(NULL)
 

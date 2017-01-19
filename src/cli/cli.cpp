@@ -51,7 +51,7 @@
 
 #ifndef OTDLL
 #include <openthread-instance.h>
-#include <openthread-diag.h>
+#include "openthread/diag.h"
 #include <openthread-icmp6.h>
 
 #include <common/new.hpp>
@@ -2719,7 +2719,7 @@ exit:
 void Interpreter::ProcessDiag(int argc, char *argv[])
 {
     // all diagnostics related features are processed within diagnostics module
-    sServer->OutputFormat("%s\r\n", diagProcessCmd(argc, argv));
+    sServer->OutputFormat("%s\r\n", otDiagProcessCmd(argc, argv));
 }
 #endif
 
@@ -2754,7 +2754,7 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
     cmd = aBuf;
 
 #if OPENTHREAD_ENABLE_DIAG
-    VerifyOrExit((!isDiagEnabled() || (strcmp(cmd, "diag") == 0)),
+    VerifyOrExit((!otDiagIsEnabled() || (strcmp(cmd, "diag") == 0)),
                  sServer->OutputFormat("under diagnostics mode, execute 'diag stop' before running any other commands.\r\n"));
 #endif
 
