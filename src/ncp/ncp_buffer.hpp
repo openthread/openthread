@@ -34,7 +34,7 @@
 #define NCP_FRAME_BUFFER_HPP_
 
 #include <openthread-types.h>
-#include <common/message.hpp>
+#include <openthread-message.h>
 
 namespace Thread {
 
@@ -119,13 +119,13 @@ public:
      * In case of success, the passed-in message @p aMessage will be owned by the frame buffer instance and will be
      * freed when either the the frame is removed or discarded.
      *
-     * @param[in]  aMessage         A reference to the message to be added to current frame.
+     * @param[in]  aMessage         A  message to be added to current frame.
      *
      * @retval kThreadError_None    Successfully added the message to the frame.
      * @retval kThreadError_NoBufs  Insufficient buffer space available to add message.
      *
      */
-    ThreadError InFrameFeedMessage(Message &aMessage);
+    ThreadError InFrameFeedMessage(otMessage aMessage);
 
     /**
      * This method finalizes/ends the current input frame being written to the buffer.
@@ -332,9 +332,9 @@ private:
     BufferCallback  mNonEmptyBufferCallback;    // Callback to signal when buffer becomes non-empty.
     void *          mCallbackContext;           // Context passed to callbacks.
 
-    MessageQueue    mMessageQueue;              // Main message queue.
+    otMessageQueue  mMessageQueue;              // Main message queue.
 
-    MessageQueue    mWriteFrameMessageQueue;    // Message queue for the current frame being written.
+    otMessageQueue  mWriteFrameMessageQueue;    // Message queue for the current frame being written.
     uint8_t *       mWriteFrameStart;           // Pointer to start of current frame being written.
     uint8_t *       mWriteSegmentHead;          // Pointer to start of current segment in the frame being written.
     uint8_t *       mWriteSegmentTail;          // Pointer to end of current segment in the frame being written.
@@ -347,7 +347,7 @@ private:
     uint8_t *       mReadSegmentTail;           // Pointer to end of current segment in the frame being read.
     uint8_t *       mReadPointer;               // Pointer to next byte to read (either in segment or in msg buffer).
 
-    Message *       mReadMessage;               // Current Message in the frame being read.
+    otMessage       mReadMessage;               // Current Message in the frame being read.
     uint16_t        mReadMessageOffset;         // Offset within current message being read.
 
     uint8_t         mMessageBuffer[kMessageReadBufferSize];   // Buffer to hold part of current message being read.

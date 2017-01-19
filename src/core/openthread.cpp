@@ -1482,6 +1482,12 @@ ThreadError otSetMessageOffset(otMessage aMessage, uint16_t aOffset)
     return message->SetOffset(aOffset);
 }
 
+bool otIsMessageLinkSecurityEnabled(otMessage aMessage)
+{
+    Message *message = static_cast<Message *>(aMessage);
+    return message->IsLinkSecurityEnabled();
+}
+
 ThreadError otAppendMessage(otMessage aMessage, const void *aBuf, uint16_t aLength)
 {
     Message *message = static_cast<Message *>(aMessage);

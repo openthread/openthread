@@ -30,6 +30,7 @@
 #include "test_util.h"
 #include <openthread.h>
 #include <common/code_utils.hpp>
+#include <common/message.hpp>
 #include <ncp/ncp_buffer.hpp>
 
 namespace Thread {
@@ -142,7 +143,7 @@ void WriteTestFrame1(NcpFrameBuffer &aNcpBuffer)
     SuccessOrQuit(aNcpBuffer.InFrameBegin(), "InFrameBegin() failed.");
     SuccessOrQuit(aNcpBuffer.InFrameFeedData(sMottoText, sizeof(sMottoText)), "InFrameFeedData() failed.");
     SuccessOrQuit(aNcpBuffer.InFrameFeedData(sMysteryText, sizeof(sMysteryText)), "InFrameFeedData() failed.");
-    SuccessOrQuit(aNcpBuffer.InFrameFeedMessage(*message), "InFrameFeedMessage() failed.");
+    SuccessOrQuit(aNcpBuffer.InFrameFeedMessage(message), "InFrameFeedMessage() failed.");
     SuccessOrQuit(aNcpBuffer.InFrameFeedData(sHelloText, sizeof(sHelloText)), "InFrameFeedData() failed.");
     SuccessOrQuit(aNcpBuffer.InFrameEnd(), "InFrameEnd() failed.");
 }
@@ -180,9 +181,9 @@ void WriteTestFrame2(NcpFrameBuffer &aNcpBuffer)
     message2->Write(0, sizeof(sHelloText), sHelloText);
 
     SuccessOrQuit(aNcpBuffer.InFrameBegin(), "InFrameFeedBegin() failed.");
-    SuccessOrQuit(aNcpBuffer.InFrameFeedMessage(*message1), "InFrameFeedMessage() failed.");
+    SuccessOrQuit(aNcpBuffer.InFrameFeedMessage(message1), "InFrameFeedMessage() failed.");
     SuccessOrQuit(aNcpBuffer.InFrameFeedData(sOpenThreadText, sizeof(sOpenThreadText)), "InFrameFeedData() failed.");
-    SuccessOrQuit(aNcpBuffer.InFrameFeedMessage(*message2), "InFrameFeedMessage() failed.");
+    SuccessOrQuit(aNcpBuffer.InFrameFeedMessage(message2), "InFrameFeedMessage() failed.");
     SuccessOrQuit(aNcpBuffer.InFrameEnd(), "InFrameEnd() failed.");
 }
 
@@ -213,7 +214,7 @@ void WriteTestFrame3(NcpFrameBuffer &aNcpBuffer)
     SuccessOrQuit(message1->SetLength(0), "Could not set the length of message.");
 
     SuccessOrQuit(aNcpBuffer.InFrameBegin(), "InFrameFeedBegin() failed.");
-    SuccessOrQuit(aNcpBuffer.InFrameFeedMessage(*message1), "InFrameFeedMessage() failed.");
+    SuccessOrQuit(aNcpBuffer.InFrameFeedMessage(message1), "InFrameFeedMessage() failed.");
     SuccessOrQuit(aNcpBuffer.InFrameFeedData(sMysteryText, sizeof(sMysteryText)), "InFrameFeedData() failed.");
     SuccessOrQuit(aNcpBuffer.InFrameEnd(), "InFrameEnd() failed.");
 }
@@ -336,7 +337,7 @@ void TestNcpFrameBuffer(void)
         SuccessOrQuit(message->SetLength(sizeof(sMysteryText)), "Could not set the length of message.");
         message->Write(0, sizeof(sMysteryText), sMysteryText);
 
-        ncpBuffer.InFrameFeedMessage(*message);
+        ncpBuffer.InFrameFeedMessage(message);
 
         // Now cause a restart the current frame and test if it's discarded ok.
         WriteTestFrame2(ncpBuffer);

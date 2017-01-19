@@ -242,7 +242,7 @@ ThreadError NcpSpi::OutboundFrameFeedData(const uint8_t *aDataBuffer, uint16_t a
     return mTxFrameBuffer.InFrameFeedData(aDataBuffer, aDataBufferLength);
 }
 
-ThreadError NcpSpi::OutboundFrameFeedMessage(Message &aMessage)
+ThreadError NcpSpi::OutboundFrameFeedMessage(otMessage aMessage)
 {
     return mTxFrameBuffer.InFrameFeedMessage(aMessage);
 }
