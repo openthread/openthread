@@ -28,8 +28,8 @@
 
 #include "test_util.h"
 #include <string.h>
-#include <openthread-diag.h>
 
+#include "openthread/diag.h"
 #include "openthread/platform/platform.h"
 #include "openthread/platform/radio.h"
 
@@ -149,10 +149,10 @@ void TestDiag()
     PlatformInit(argc, argv);
 
     // initialize diagnostics module
-    diagInit(NULL);
+    otDiagInit(NULL);
 
     // test diagnostics commands
-    VerifyOrQuit(!isDiagEnabled(), "diagnostics mode shoud be disabled as default\n");
+    VerifyOrQuit(!otDiagIsEnabled(), "diagnostics mode shoud be disabled as default\n");
 
     for (unsigned int i = 0; i < sizeof(tests) / sizeof(tests[0]);  i++)
     {
@@ -161,7 +161,7 @@ void TestDiag()
 
         memcpy(string, tests[i].command, strlen(tests[i].command) + 1);
 
-        output = diagProcessCmdLine(string);
+        output = otDiagProcessCmdLine(string);
         VerifyOrQuit(memcmp(output, tests[i].output, strlen(tests[i].output)) == 0,
                      "Test Diagnostics module failed\r\n");
     }

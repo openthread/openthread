@@ -33,11 +33,11 @@
 #endif
 
 #include "openthread/openthread.h"
+#include "openthread/diag.h"
 #include "openthread/ncp.h"
 #include "openthread/platform/platform.h"
 
 #include <openthread-core-config.h>
-#include <openthread-diag.h>
 #include <common/debug.hpp>
 
 #ifdef OPENTHREAD_MULTIPLE_INSTANCE
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
     otNcpInit(sInstance);
 
 #if OPENTHREAD_ENABLE_DIAG
-    diagInit(sInstance);
+    otDiagInit(sInstance);
 #endif
 
     while (1)

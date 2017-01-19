@@ -52,6 +52,7 @@ openthread_headers                      = \
     commissioner.h                        \
     crypto.h                              \
     dataset.h                             \
+    diag.h                                \
     dhcp6_client.h                        \
     dhcp6_server.h                        \
     instance.h                            \
