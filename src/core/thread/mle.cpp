@@ -219,7 +219,6 @@ ThreadError Mle::Start(bool aEnableReattach)
     {
         BecomeChild(kMleAttachAnyPartition);
     }
-
     else if (IsActiveRouter(GetRloc16()))
     {
         if (mNetif.GetMle().BecomeRouter(ThreadStatusTlv::kTooFewRouters) != kThreadError_None)

@@ -177,6 +177,37 @@ void MeshForwarder::ScheduleTransmissionTask(void *aContext)
     static_cast<MeshForwarder *>(aContext)->ScheduleTransmissionTask();
 }
 
+void MeshForwarder::ClearChildIndirectMessages(Child &aChild)
+{
+    Message *nextMessage;
+
+    VerifyOrExit(aChild.mQueuedIndirectMessageCnt > 0,);
+
+    for (Message *message = mSendQueue.GetHead(); message; message = nextMessage)
+    {
+        nextMessage = message->GetNext();
+
+        message->ClearChildMask(mNetif.GetMle().GetChildIndex(aChild));
+
+        if (!message->IsChildPending())
+        {
+            if (mSendMessage == message)
+            {
+                mSendMessage = NULL;
+            }
+
+            mSendQueue.Dequeue(*message);
+            message->Free();
+        }
+    }
+
+    aChild.mQueuedIndirectMessageCnt = 0;
+    ClearSrcMatchEntry(aChild);
+
+exit:
+    return;
+}
+
 void MeshForwarder::UpdateIndirectMessages(void)
 {
     Child *children;
@@ -187,33 +218,13 @@ void MeshForwarder::UpdateIndirectMessages(void)
     for (uint8_t i = 0; i < numChildren; i++)
     {
         Child *child = &children[i];
-        Message *nextMessage;
 
         if (child->mState == Child::kStateValid || child->mQueuedIndirectMessageCnt == 0)
         {
             continue;
         }
 
-        for (Message *message = mSendQueue.GetHead(); message; message = nextMessage)
-        {
-            nextMessage = message->GetNext();
-
-            message->ClearChildMask(i);
-
-            if (!message->IsChildPending())
-            {
-                if (mSendMessage == message)
-                {
-                    mSendMessage = NULL;
-                }
-
-                mSendQueue.Dequeue(*message);
-                message->Free();
-            }
-        }
-
-        child->mQueuedIndirectMessageCnt = 0;
-        ClearSrcMatchEntry(*child);
+        ClearChildIndirectMessages(*child);
     }
 }
 
