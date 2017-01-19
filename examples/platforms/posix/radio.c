@@ -28,8 +28,8 @@
 
 #include "platform-posix.h"
 
-#include <platform/radio.h>
-#include <platform/diag.h>
+#include "openthread/platform/diag.h"
+#include "openthread/platform/radio.h"
 
 enum
 {

@@ -39,12 +39,13 @@
 #include <openthread-config.h>
 #endif
 
+#include "openthread/platform/radio.h"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
 #include <meshcop/tlvs.hpp>
-#include <platform/radio.h>
 #include <thread/announce_begin_server.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>

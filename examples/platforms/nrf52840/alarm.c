@@ -37,9 +37,9 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <platform/alarm.h>
-#include <platform/diag.h>
-#include <platform/usec-alarm.h>
+#include <openthread/platform/alarm.h>
+#include <openthread/platform/diag.h>
+#include <openthread/platform/usec-alarm.h>
 
 #include "platform-config.h"
 #include "cmsis/cmsis_gcc.h"

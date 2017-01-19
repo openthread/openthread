@@ -32,8 +32,9 @@
 #include <unistd.h>
 #include <hw_uart.h>
 
+#include "openthread/platform/uart.h"
+
 #include <common/code_utils.hpp>
-#include <platform/uart.h>
 #include "hw_gpio.h"
 #include "platform-da15000.h"
 

@@ -32,7 +32,7 @@
 #include <driverlib/prcm.h>
 #include <driverlib/trng.h>
 
-#include <platform/random.h>
+#include <openthread/platform/random.h>
 
 #include <mbedtls/entropy_poll.h>
 

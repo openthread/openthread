@@ -31,7 +31,7 @@
 
 #include <openthread/openthread.h>
 #include <openthread/cli.h>
-#include <platform/uart.h>
+#include <openthread/platform/uart.h>
 
 bool skipNextLine = false;
 

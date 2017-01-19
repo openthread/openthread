@@ -41,9 +41,9 @@
 #include <string.h>
 
 #include "openthread/types.h"
+#include "openthread/platform/radio.h"
 
 #include <common/encoding.hpp>
-#include <platform/radio.h>
 
 namespace Thread {
 

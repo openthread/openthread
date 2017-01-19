@@ -35,8 +35,8 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include <platform/logging.h>
-#include <platform/alarm.h>
+#include <openthread/platform/logging.h>
+#include <openthread/platform/alarm.h>
 #include <common/code_utils.hpp>
 
 #include "platform-nrf5.h"

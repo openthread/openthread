@@ -39,7 +39,7 @@
 #include <syslog.h>
 #endif
 
-#include <platform/logging.h>
+#include "openthread/platform/logging.h"
 
 // Macro to append content to end of the log string.
 

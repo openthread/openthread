@@ -39,13 +39,13 @@
 #include <string.h>
 
 #include <openthread-core-config.h>
-#include <platform/logging.h>
+#include "openthread/platform/logging.h"
 
 #ifdef WINDOWS_LOGGING
 #ifdef _KERNEL_MODE
 #include <wdm.h>
 #endif
-#include <platform/logging-windows.h>
+#include "openthread/platform/logging-windows.h"
 #ifdef WPP_NAME
 #include WPP_NAME
 #endif

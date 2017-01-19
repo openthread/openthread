@@ -34,6 +34,7 @@
 #define WPP_NAME "dhcp6_client.tmh"
 
 #include "openthread/types.h"
+#include "openthread/platform/random.h"
 
 #include <common/code_utils.hpp>
 #include <common/encoding.hpp>
@@ -41,7 +42,6 @@
 #include <mac/mac.hpp>
 #include <net/dhcp6.hpp>
 #include <net/dhcp6_client.hpp>
-#include <platform/random.h>
 #include <thread/thread_netif.hpp>
 
 using Thread::Encoding::BigEndian::HostSwap16;

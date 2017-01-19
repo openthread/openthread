@@ -36,7 +36,7 @@
 #include <stdint.h>
 
 #include <openthread/types.h>
-#include <platform/uart.h>
+#include <openthread/platform/uart.h>
 #include <common/code_utils.hpp>
 
 #include "drivers/nrf_drv_clock.h"

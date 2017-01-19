@@ -40,9 +40,9 @@
 
 #include <common/code_utils.hpp>
 #include <platform-config.h>
-#include <platform/logging.h>
-#include <platform/radio.h>
-#include <platform/diag.h>
+#include <openthread/platform/logging.h>
+#include <openthread/platform/radio.h>
+#include <openthread/platform/diag.h>
 
 #include "device/nrf.h"
 #include "drivers/nrf_drv_radio802154.h"

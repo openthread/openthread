@@ -33,10 +33,10 @@
  */
 
 #include "openthread/types.h"
+#include "openthread/platform/radio.h"
+#include "openthread/platform/random.h"
 
 #include <common/code_utils.hpp>
-#include <platform/radio.h>
-#include <platform/random.h>
 #include "platform-cc2538.h"
 
 static void generateRandom(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)

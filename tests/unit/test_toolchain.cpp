@@ -28,7 +28,9 @@
 
 #include <stdio.h>
 #include <stdint.h>
-#include <platform/toolchain.h>
+
+#include "openthread/platform/toolchain.h"
+
 #include <thread/topology.hpp>
 #include "test_util.h"
 

@@ -29,8 +29,9 @@
 #include "test_util.h"
 #include <string.h>
 #include <openthread-diag.h>
-#include <platform/platform.h>
-#include <platform/radio.h>
+
+#include "openthread/platform/platform.h"
+#include "openthread/platform/radio.h"
 
 extern "C" void otTaskletsSignalPending(otInstance *)
 {

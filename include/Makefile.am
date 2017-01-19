@@ -32,21 +32,18 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 DIST_SUBDIRS                            = \
     openthread                            \
-    platform                              \
     $(NULL)
 
 # Always build (e.g. for 'make all') these subdirectories.
 
 SUBDIRS                                 = \
     openthread                            \
-    platform                              \
     $(NULL)
 
 # Always pretty (e.g. for 'make pretty') these subdirectories.
 
 PRETTY_SUBDIRS                          = \
     openthread                            \
-    platform                              \
     $(NULL)
 
 include_HEADERS                         = \

@@ -40,6 +40,10 @@
 #endif
 
 #include "openthread/openthread.h"
+#include "openthread/platform/settings.h"
+#include "openthread/platform/radio.h"
+#include "openthread/platform/random.h"
+#include "openthread/platform/misc.h"
 
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
@@ -51,10 +55,6 @@
 #include <crypto/mbedtls.hpp>
 #include <net/icmp6.hpp>
 #include <net/ip6.hpp>
-#include <platform/settings.h>
-#include <platform/radio.h>
-#include <platform/random.h>
-#include <platform/misc.h>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
 #include <openthread-instance.h>

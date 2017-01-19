@@ -36,7 +36,7 @@
 #define OPENTHREAD_COMMISSIONER_H_
 
 #include "openthread/types.h"
-#include <platform/toolchain.h>
+#include "openthread/platform/toolchain.h"
 
 #ifdef __cplusplus
 extern "C" {

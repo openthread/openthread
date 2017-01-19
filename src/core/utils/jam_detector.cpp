@@ -38,10 +38,10 @@
 #endif
 
 #include "openthread/openthread.h"
+#include "openthread/platform/random.h"
 
 #include <thread/thread_netif.hpp>
 #include <common/code_utils.hpp>
-#include <platform/random.h>
 #include <utils/jam_detector.hpp>
 
 namespace Thread {

@@ -37,6 +37,8 @@
 #include <string.h>
 
 #include "openthread/cli.h"
+#include "openthread/platform/logging.h"
+#include "openthread/platform/uart.h"
 
 #include <cli/cli.hpp>
 #include <cli/cli_uart.hpp>
@@ -44,8 +46,6 @@
 #include <common/encoding.hpp>
 #include <common/new.hpp>
 #include <common/tasklet.hpp>
-#include <platform/logging.h>
-#include <platform/uart.h>
 
 namespace Thread {
 namespace Cli {

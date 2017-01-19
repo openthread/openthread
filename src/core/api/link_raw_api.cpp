@@ -33,8 +33,8 @@
 
 #include <common/debug.hpp>
 #include <common/logging.hpp>
-#include <platform/random.h>
-#include <platform/usec-alarm.h>
+#include "openthread/platform/random.h"
+#include "openthread/platform/usec-alarm.h"
 #include "openthread-instance.h"
 
 #ifdef __cplusplus

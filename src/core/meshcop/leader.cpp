@@ -35,12 +35,13 @@
 
 #include <stdio.h>
 
+#include "openthread/platform/random.h"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/logging.hpp>
 #include <meshcop/leader.hpp>
 #include <meshcop/tlvs.hpp>
-#include <platform/random.h>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>

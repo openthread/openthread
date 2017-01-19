@@ -41,6 +41,9 @@
 
 #include <string.h>
 
+#include "openthread/platform/random.h"
+#include "openthread/platform/usec-alarm.h"
+
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/encoding.hpp>
@@ -49,8 +52,6 @@
 #include <crypto/sha256.hpp>
 #include <mac/mac.hpp>
 #include <mac/mac_frame.hpp>
-#include <platform/random.h>
-#include <platform/usec-alarm.h>
 #include <thread/mle_router.hpp>
 #include <thread/thread_netif.hpp>
 #include <openthread-instance.h>
