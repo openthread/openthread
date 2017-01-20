@@ -4,14 +4,8 @@
     <Filter Include="Source Files">
       <UniqueIdentifier>{c09c2d1c-85fb-4081-8235-925b45ed3c4b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\net">
-      <UniqueIdentifier>{9a61353a-8613-4496-9ee8-c3d2800c5ac6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\mac">
-      <UniqueIdentifier>{a49a9cc3-6a37-48a6-8049-b10c9cecd193}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\crypto">
-      <UniqueIdentifier>{444ab8c6-6b83-4a5b-9059-67f469da1331}</UniqueIdentifier>
+    <Filter Include="Source Files\api">
+      <UniqueIdentifier>{CE77AA98-FC98-4FC6-BB52-8A886378AB5E}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\common">
       <UniqueIdentifier>{a59636b8-d046-46b7-992b-76572ca72bd1}</UniqueIdentifier>
@@ -19,8 +13,23 @@
     <Filter Include="Source Files\coap">
       <UniqueIdentifier>{7c989f53-480b-42d4-a2dc-454adafda818}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\crypto">
+      <UniqueIdentifier>{444ab8c6-6b83-4a5b-9059-67f469da1331}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\mac">
+      <UniqueIdentifier>{a49a9cc3-6a37-48a6-8049-b10c9cecd193}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\meshcop">
+      <UniqueIdentifier>{0e7f4f58-a115-4ce8-8e3b-1094fb79af52}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\net">
+      <UniqueIdentifier>{9a61353a-8613-4496-9ee8-c3d2800c5ac6}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source Files\thread">
       <UniqueIdentifier>{c14a7a3f-089f-47ee-80db-1caf1b47ab6b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\utils">
+      <UniqueIdentifier>{A0D2E990-DC5E-4B56-A552-888F97214A17}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files">
       <UniqueIdentifier>{b4905c15-9702-4ff0-8d57-e7926337d50f}</UniqueIdentifier>
@@ -43,20 +52,17 @@
     <Filter Include="Header Files\thread">
       <UniqueIdentifier>{702145f9-0e66-4e45-b3d4-d43f2cf17e10}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\meshcop">
-      <UniqueIdentifier>{0e7f4f58-a115-4ce8-8e3b-1094fb79af52}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\meshcop">
       <UniqueIdentifier>{635aaabf-80f0-40e2-9218-22ff75bc0e32}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\utils">
-      <UniqueIdentifier>{A0D2E990-DC5E-4B56-A552-888F97214A17}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\utils">
       <UniqueIdentifier>{5ac96cb9-6257-4387-9238-27649915463a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\core\api\link_raw_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\coap\coap_base.cpp">
       <Filter>Source Files\coap</Filter>
     </ClCompile>

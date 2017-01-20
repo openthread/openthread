@@ -271,6 +271,13 @@ void otPlatRadioSetPromiscuous(_In_ otInstance *otCtx, bool aEnable)
     }
 }
 
+bool otPlatRadioIsEnabled(_In_ otInstance *otCtx)
+{
+    NT_ASSERT(otCtx);
+    PMS_FILTER pFilter = otCtxToFilter(otCtx);
+    return pFilter->otPhyState != kStateSleep;
+}
+
 ThreadError otPlatRadioEnable(_In_ otInstance *otCtx)
 {
     NT_ASSERT(otCtx);

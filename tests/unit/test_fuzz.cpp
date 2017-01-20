@@ -37,6 +37,11 @@ uint8_t g_TransmitPsdu[128];
 RadioPacket g_TransmitRadioPacket;
 bool g_fTransmit = false;
 
+bool testFuzzRadioIsEnabled(otInstance *)
+{
+    return g_fRadioEnabled;
+}
+
 ThreadError testFuzzRadioEnable(otInstance *)
 {
 #ifdef DBG_FUZZ
@@ -85,6 +90,7 @@ void TestFuzz(uint32_t aSeconds)
 
     // Set the platform function pointers
     g_TransmitRadioPacket.mPsdu = g_TransmitPsdu;
+    g_testPlatRadioIsEnabled = testFuzzRadioIsEnabled;
     g_testPlatRadioEnable = testFuzzRadioEnable;
     g_testPlatRadioDisable = testFuzzRadioDisable;
     g_testPlatRadioReceive = testFuzzRadioReceive;

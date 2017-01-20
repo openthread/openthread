@@ -40,6 +40,7 @@ CPPFLAGS_COMMON                     = \
 
 SOURCES_COMMON                      = \
     openthread.cpp                    \
+    api/link_raw_api.cpp              \
     coap/coap_base.cpp                \
     coap/coap_client.cpp              \
     coap/coap_header.cpp              \
