@@ -3093,6 +3093,11 @@ Neighbor *MleRouter::GetNeighbor(const Mac::ExtAddress &aAddress)
             }
         }
 
+        if (mParentRequestState != kParentIdle)
+        {
+            rval = Mle::GetNeighbor(aAddress);
+        }
+
         break;
     }
 
