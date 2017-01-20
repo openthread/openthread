@@ -113,6 +113,10 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mEnergyScanSampleRssiTask(aThreadNetif.GetIp6().mTaskletScheduler, &Mac::HandleEnergyScanSampleRssi, this),
     mWhitelist(),
     mBlacklist()
+#if OPENTHREAD_CONFIG_ADD_RADIO_TX_DONE_TIMEOUT_CHECK
+    ,
+    mTxDoneTimeoutTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleTxDoneTimeoutTimer, this)
+#endif
 {
     mState = kStateIdle;
 
@@ -784,6 +788,14 @@ exit:
     {
         TransmitDoneTask(mTxFrame, false, kThreadError_Abort);
     }
+
+#if OPENTHREAD_CONFIG_ADD_RADIO_TX_DONE_TIMEOUT_CHECK
+    else
+    {
+        mTxDoneTimeoutTimer.Start(kTxDoneCallbackTimeout);
+    }
+
+#endif
 }
 
 extern "C" void otPlatRadioTransmitDone(otInstance *aInstance, RadioPacket *aPacket, bool aRxPending,
@@ -798,6 +810,10 @@ extern "C" void otPlatRadioTransmitDone(otInstance *aInstance, RadioPacket *aPac
 void Mac::TransmitDoneTask(RadioPacket *aPacket, bool aRxPending, ThreadError aError)
 {
     mMacTimer.Stop();
+
+#if OPENTHREAD_CONFIG_ADD_RADIO_TX_DONE_TIMEOUT_CHECK
+    mTxDoneTimeoutTimer.Stop();
+#endif
 
     mCounters.mTxTotal++;
 
@@ -847,6 +863,7 @@ void Mac::TransmitDoneTask(RadioPacket *aPacket, bool aRxPending, ThreadError aE
         break;
 
     default:
+        otLogCritMac("otRadioPlatform error: TransmitDone() received while in state %d", mState);
         assert(false);
         break;
     }
@@ -1561,6 +1578,21 @@ void Mac::ClearSrcMatchEntries()
     otPlatRadioClearSrcMatchExtEntries(mNetif.GetInstance());
     otLogDebgMac("Clearing source match table");
 }
+
+#if OPENTHREAD_CONFIG_ADD_RADIO_TX_DONE_TIMEOUT_CHECK
+void Mac::HandleTxDoneTimeoutTimer(void *aContext)
+{
+    static_cast<Mac *>(aContext)->HandleTxDoneTimeoutTimer();
+}
+
+void Mac::HandleTxDoneTimeoutTimer(void)
+{
+    otLogCritMac("otRadioPlatform error: TransmitDone() was not received within the timeout interval");
+
+    otPlatRadioReceive(mNetif.GetInstance(), mTxFrame->mChannel);
+    TransmitDoneTask(mTxFrame, false, kThreadError_Abort);
+}
+#endif // OPENTHREAD_CONFIG_ADD_RADIO_TX_DONE_TIMEOUT_CHECK
 
 }  // namespace Mac
 }  // namespace Thread

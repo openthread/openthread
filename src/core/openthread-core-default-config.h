@@ -340,6 +340,17 @@
 #endif  // OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD
 
 /**
+ * @def OPENTHREAD_CONFIG_ADD_RADIO_TX_DONE_TIMEOUT_CHECK
+ *
+ * Set to 1 to add timeout for radio tx done callback to detect
+ * radio platform code failures.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ADD_RADIO_TX_DONE_TIMEOUT_CHECK
+#define OPENTHREAD_CONFIG_ADD_RADIO_TX_DONE_TIMEOUT_CHECK    1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL
  *
  * The log level.
