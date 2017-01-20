@@ -148,9 +148,6 @@ private:
 
     Ip6::UdpSocket mSocket;
 
-    Mac::Mac &mMac;
-    Mle::MleRouter &mMle;
-    NetworkData::Leader &mNetworkDataLeader;
     ThreadNetif &mNetif;
 
     Ip6::NetifUnicastAddress mAgentsAloc[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];

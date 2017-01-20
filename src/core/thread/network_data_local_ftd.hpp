@@ -139,8 +139,6 @@ private:
     bool IsExternalRouteConsistent(void);
 
     uint16_t mOldRloc;
-
-    Leader &mLeader;
 };
 
 }  // namespace NetworkData

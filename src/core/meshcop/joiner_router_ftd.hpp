@@ -98,7 +98,6 @@ private:
 
     Ip6::UdpSocket mSocket;
     Coap::Resource mRelayTransmit;
-    Coap::Client &mCoapClient;
     ThreadNetif &mNetif;
 
     uint16_t mJoinerUdpPort;

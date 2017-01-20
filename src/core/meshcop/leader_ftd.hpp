@@ -108,10 +108,6 @@ private:
 
     Coap::Resource mPetition;
     Coap::Resource mKeepAlive;
-    Coap::Server &mCoapServer;
-    Coap::Client &mCoapClient;
-    NetworkData::Leader &mNetworkData;
-
     Timer mTimer;
 
     CommissionerIdTlv mCommissionerId;

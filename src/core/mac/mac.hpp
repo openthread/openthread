@@ -609,8 +609,6 @@ private:
     Timer mBackoffTimer;
     Timer mReceiveTimer;
 
-    KeyManager &mKeyManager;
-    Mle::MleRouter &mMle;
     ThreadNetif &mNetif;
 
     ExtAddress mExtAddress;

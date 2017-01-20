@@ -75,15 +75,10 @@ MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
     mRestoreChannel(0),
     mScanning(false),
     mNetif(aThreadNetif),
-    mAddressResolver(aThreadNetif.GetAddressResolver()),
-    mLowpan(aThreadNetif.GetLowpan()),
-    mMac(aThreadNetif.GetMac()),
-    mMle(aThreadNetif.GetMle()),
-    mNetworkData(aThreadNetif.GetNetworkDataLeader()),
     mSrcMatchEnabled(false)
 {
     mFragTag = static_cast<uint16_t>(otPlatRandomGet());
-    mMac.RegisterReceiver(mMacReceiver);
+    mNetif.GetMac().RegisterReceiver(mMacReceiver);
     mMacSource.mLength = 0;
     mMacDest.mLength = 0;
 }
@@ -94,7 +89,7 @@ ThreadError MeshForwarder::Start(void)
 
     if (mEnabled == false)
     {
-        mMac.SetRxOnWhenIdle(true);
+        mNetif.GetMac().SetRxOnWhenIdle(true);
         mEnabled = true;
     }
 
@@ -113,9 +108,9 @@ ThreadError MeshForwarder::Stop(void)
 
     if (mScanning)
     {
-        mMac.SetChannel(mRestoreChannel);
+        mNetif.GetMac().SetChannel(mRestoreChannel);
         mScanning = false;
-        mMle.HandleDiscoverComplete();
+        mNetif.GetMle().HandleDiscoverComplete();
     }
 
     while ((message = mSendQueue.GetHead()) != NULL)
@@ -132,7 +127,7 @@ ThreadError MeshForwarder::Stop(void)
 
     mEnabled = false;
     mSendMessage = NULL;
-    mMac.SetRxOnWhenIdle(false);
+    mNetif.GetMac().SetRxOnWhenIdle(false);
 
 exit:
     return error;
@@ -187,7 +182,7 @@ void MeshForwarder::UpdateIndirectMessages(void)
     Child *children;
     uint8_t numChildren;
 
-    children = mMle.GetChildren(&numChildren);
+    children = mNetif.GetMle().GetChildren(&numChildren);
 
     for (uint8_t i = 0; i < numChildren; i++)
     {
@@ -232,7 +227,7 @@ void MeshForwarder::ScheduleTransmissionTask()
 
     UpdateIndirectMessages();
 
-    children = mMle.GetChildren(&numChildren);
+    children = mNetif.GetMle().GetChildren(&numChildren);
 
     for (int i = 0; i < numChildren; i++)
     {
@@ -259,14 +254,14 @@ void MeshForwarder::ScheduleTransmissionTask()
                 }
             }
 
-            mMac.SendFrameRequest(mMacSender);
+            mNetif.GetMac().SendFrameRequest(mMacSender);
             ExitNow();
         }
     }
 
     if ((mSendMessage = GetDirectTransmission()) != NULL)
     {
-        mMac.SendFrameRequest(mMacSender);
+        mNetif.GetMac().SendFrameRequest(mMacSender);
         ExitNow();
     }
 
@@ -280,7 +275,7 @@ ThreadError MeshForwarder::AddPendingSrcMatchEntries(void)
     Child *children = NULL;
     ThreadError error = kThreadError_NoBufs;
 
-    children = mMle.GetChildren(&numChildren);
+    children = mNetif.GetMle().GetChildren(&numChildren);
 
     // Add pending short address first
     for (uint8_t i = 0; i < numChildren; i++)
@@ -335,14 +330,14 @@ ThreadError MeshForwarder::AddSrcMatchEntry(Child &aChild)
         memcpy(macAddr.mExtAddress.m8, aChild.mMacAddr.m8, sizeof(macAddr.mExtAddress));
     }
 
-    if ((error = mMac.AddSrcMatchEntry(macAddr)) == kThreadError_None)
+    if ((error = mNetif.GetMac().AddSrcMatchEntry(macAddr)) == kThreadError_None)
     {
         // succeed in adding to source match table
         aChild.mAddSrcMatchEntryPending = false;
 
         if (!mSrcMatchEnabled)
         {
-            mMac.EnableSrcMatch(true);
+            mNetif.GetMac().EnableSrcMatch(true);
             mSrcMatchEnabled = true;
         }
     }
@@ -350,7 +345,7 @@ ThreadError MeshForwarder::AddSrcMatchEntry(Child &aChild)
     {
         if (mSrcMatchEnabled)
         {
-            mMac.EnableSrcMatch(false);
+            mNetif.GetMac().EnableSrcMatch(false);
             mSrcMatchEnabled = false;
         }
     }
@@ -375,11 +370,11 @@ void MeshForwarder::ClearSrcMatchEntry(Child &aChild)
         memcpy(macAddr.mExtAddress.m8, aChild.mMacAddr.m8, sizeof(macAddr.mExtAddress));
     }
 
-    if (mMac.ClearSrcMatchEntry(macAddr) == kThreadError_None)
+    if (mNetif.GetMac().ClearSrcMatchEntry(macAddr) == kThreadError_None)
     {
         if (!mSrcMatchEnabled && (AddPendingSrcMatchEntries() == kThreadError_None))
         {
-            mMac.EnableSrcMatch(true);
+            mNetif.GetMac().EnableSrcMatch(true);
             mSrcMatchEnabled = true;
         }
     }
@@ -406,9 +401,10 @@ ThreadError MeshForwarder::SendMessage(Message &aMessage)
 
         aMessage.Read(0, sizeof(ip6Header), &ip6Header);
 
-        if (!memcmp(&ip6Header.GetDestination(), mMle.GetLinkLocalAllThreadNodesAddress(),
+        if (!memcmp(&ip6Header.GetDestination(), mNetif.GetMle().GetLinkLocalAllThreadNodesAddress(),
                     sizeof(ip6Header.GetDestination())) ||
-            !memcmp(&ip6Header.GetDestination(), mMle.GetRealmLocalAllThreadNodesAddress(), sizeof(ip6Header.GetDestination())))
+            !memcmp(&ip6Header.GetDestination(), mNetif.GetMle().GetRealmLocalAllThreadNodesAddress(),
+                    sizeof(ip6Header.GetDestination())))
         {
             // schedule direct transmission
             aMessage.SetDirectTransmission();
@@ -416,7 +412,7 @@ ThreadError MeshForwarder::SendMessage(Message &aMessage)
             if (aMessage.GetSubType() != Message::kSubTypeMplRetransmission)
             {
                 // destined for all sleepy children
-                children = mMle.GetChildren(&numChildren);
+                children = mNetif.GetMle().GetChildren(&numChildren);
 
                 for (uint8_t i = 0; i < numChildren; i++)
                 {
@@ -429,7 +425,7 @@ ThreadError MeshForwarder::SendMessage(Message &aMessage)
                 }
             }
         }
-        else if ((neighbor = mMle.GetNeighbor(ip6Header.GetDestination())) != NULL &&
+        else if ((neighbor = mNetif.GetMle().GetNeighbor(ip6Header.GetDestination())) != NULL &&
                  (neighbor->mMode & Mle::ModeTlv::kModeRxOnWhenIdle) == 0)
         {
             // destined for a sleepy child
@@ -437,7 +433,7 @@ ThreadError MeshForwarder::SendMessage(Message &aMessage)
             children->mQueuedIndirectMessageCnt++;
 
             AddSrcMatchEntry(*children);
-            aMessage.SetChildMask(mMle.GetChildIndex(*children));
+            aMessage.SetChildMask(mNetif.GetMle().GetChildIndex(*children));
         }
         else
         {
@@ -454,7 +450,7 @@ ThreadError MeshForwarder::SendMessage(Message &aMessage)
 
         IgnoreReturnValue(meshHeader.Init(aMessage));
 
-        if ((neighbor = mMle.GetNeighbor(meshHeader.GetDestination())) != NULL &&
+        if ((neighbor = mNetif.GetMle().GetNeighbor(meshHeader.GetDestination())) != NULL &&
             (neighbor->mMode & Mle::ModeTlv::kModeRxOnWhenIdle) == 0)
         {
             // destined for a sleepy child
@@ -462,7 +458,7 @@ ThreadError MeshForwarder::SendMessage(Message &aMessage)
             children->mQueuedIndirectMessageCnt++;
 
             AddSrcMatchEntry(*children);
-            aMessage.SetChildMask(mMle.GetChildIndex(*children));
+            aMessage.SetChildMask(mNetif.GetMle().GetChildIndex(*children));
         }
         else
         {
@@ -544,7 +540,7 @@ exit:
 Message *MeshForwarder::GetIndirectTransmission(const Child &aChild)
 {
     Message *message = NULL;
-    uint8_t childIndex = mMle.GetChildIndex(aChild);
+    uint8_t childIndex = mNetif.GetMle().GetChildIndex(aChild);
     Ip6::Header ip6Header;
 
     for (message = mSendQueue.GetHead(); message; message = message->GetNext())
@@ -586,7 +582,7 @@ Message *MeshForwarder::GetIndirectTransmission(const Child &aChild)
         mMeshDest = meshHeader.GetDestination();
         mMeshSource = meshHeader.GetSource();
         mMacSource.mLength = sizeof(mMacSource.mShortAddress);
-        mMacSource.mShortAddress = mMac.GetShortAddress();
+        mMacSource.mShortAddress = mNetif.GetMac().GetShortAddress();
         mMacDest.mLength = sizeof(mMacDest.mShortAddress);
         mMacDest.mShortAddress = meshHeader.GetDestination();
         break;
@@ -611,15 +607,15 @@ ThreadError MeshForwarder::UpdateMeshRoute(Message &aMessage)
 
     IgnoreReturnValue(meshHeader.Init(aMessage));
 
-    nextHop = mMle.GetNextHop(meshHeader.GetDestination());
+    nextHop = mNetif.GetMle().GetNextHop(meshHeader.GetDestination());
 
     if (nextHop != Mac::kShortAddrInvalid)
     {
-        neighbor = mMle.GetNeighbor(nextHop);
+        neighbor = mNetif.GetMle().GetNeighbor(nextHop);
     }
     else
     {
-        neighbor = mMle.GetNeighbor(meshHeader.GetDestination());
+        neighbor = mNetif.GetMle().GetNeighbor(meshHeader.GetDestination());
     }
 
     if (neighbor == NULL)
@@ -630,7 +626,7 @@ ThreadError MeshForwarder::UpdateMeshRoute(Message &aMessage)
     mMacDest.mLength = sizeof(mMacDest.mShortAddress);
     mMacDest.mShortAddress = neighbor->mValid.mRloc16;
     mMacSource.mLength = sizeof(mMacSource.mShortAddress);
-    mMacSource.mShortAddress = mMac.GetShortAddress();
+    mMacSource.mShortAddress = mNetif.GetMac().GetShortAddress();
 
     mAddMeshHeader = true;
     mMeshDest = meshHeader.GetDestination();
@@ -652,7 +648,7 @@ ThreadError MeshForwarder::UpdateIp6Route(Message &aMessage)
 
     aMessage.Read(0, sizeof(ip6Header), &ip6Header);
 
-    switch (mMle.GetDeviceState())
+    switch (mNetif.GetMle().GetDeviceState())
     {
     case Mle::kDeviceStateDisabled:
     case Mle::kDeviceStateDetached:
@@ -679,7 +675,7 @@ ThreadError MeshForwarder::UpdateIp6Route(Message &aMessage)
             }
             else
             {
-                mMacDest.mShortAddress = mMle.GetNextHop(Mac::kShortAddrBroadcast);
+                mMacDest.mShortAddress = mNetif.GetMle().GetNextHop(Mac::kShortAddrBroadcast);
             }
 
             GetMacSourceAddress(ip6Header.GetSource(), mMacSource);
@@ -705,20 +701,21 @@ ThreadError MeshForwarder::UpdateIp6Route(Message &aMessage)
         }
         else
         {
-            if (mMle.IsRoutingLocator(ip6Header.GetDestination()))
+            if (mNetif.GetMle().IsRoutingLocator(ip6Header.GetDestination()))
             {
                 rloc16 = HostSwap16(ip6Header.GetDestination().mFields.m16[7]);
-                VerifyOrExit(mMle.IsRouterIdValid(mMle.GetRouterId(rloc16)), error = kThreadError_Drop);
+                VerifyOrExit(mNetif.GetMle().IsRouterIdValid(mNetif.GetMle().GetRouterId(rloc16)),
+                             error = kThreadError_Drop);
                 mMeshDest = rloc16;
             }
-            else if (mMle.IsAnycastLocator(ip6Header.GetDestination()))
+            else if (mNetif.GetMle().IsAnycastLocator(ip6Header.GetDestination()))
             {
                 // only support Leader ALOC for now
                 aloc16 = HostSwap16(ip6Header.GetDestination().mFields.m16[7]);
 
                 if (aloc16 == Mle::kAloc16Leader)
                 {
-                    mMeshDest = mMle.GetRloc16(mMle.GetLeaderId());
+                    mMeshDest = mNetif.GetMle().GetRloc16(mNetif.GetMle().GetLeaderId());
                 }
 
 #if OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
@@ -726,20 +723,23 @@ ThreadError MeshForwarder::UpdateIp6Route(Message &aMessage)
                 {
                     uint16_t agentRloc16;
                     uint8_t routerId;
-                    VerifyOrExit((mNetworkData.GetRlocByContextId(static_cast<uint8_t>(aloc16 & Mle::kAloc16DhcpAgentMask),
-                                                                  agentRloc16) == kThreadError_None), error = kThreadError_Drop);
+                    VerifyOrExit((mNetif.GetNetworkDataLeader().GetRlocByContextId(
+                                      static_cast<uint8_t>(aloc16 & Mle::kAloc16DhcpAgentMask),
+                                      agentRloc16) == kThreadError_None),
+                                 error = kThreadError_Drop);
 
-                    routerId = mMle.GetRouterId(agentRloc16);
+                    routerId = mNetif.GetMle().GetRouterId(agentRloc16);
 
                     // if agent is active router or the child of the device
-                    if ((mMle.IsActiveRouter(agentRloc16)) || (mMle.GetRloc16(routerId) == mMle.GetRloc16()))
+                    if ((mNetif.GetMle().IsActiveRouter(agentRloc16)) ||
+                        (mNetif.GetMle().GetRloc16(routerId) == mNetif.GetMle().GetRloc16()))
                     {
                         mMeshDest = agentRloc16;
                     }
                     else
                     {
                         // use the parent of the ED Agent as Dest
-                        mMeshDest = mMle.GetRloc16(routerId);
+                        mMeshDest = mNetif.GetMle().GetRloc16(routerId);
                     }
                 }
 
@@ -750,22 +750,27 @@ ThreadError MeshForwarder::UpdateIp6Route(Message &aMessage)
                     ExitNow(error = kThreadError_Drop);
                 }
             }
-            else if ((neighbor = mMle.GetNeighbor(ip6Header.GetDestination())) != NULL)
+            else if ((neighbor = mNetif.GetMle().GetNeighbor(ip6Header.GetDestination())) != NULL)
             {
                 mMeshDest = neighbor->mValid.mRloc16;
             }
-            else if (mNetworkData.IsOnMesh(ip6Header.GetDestination()))
+            else if (mNetif.GetNetworkDataLeader().IsOnMesh(ip6Header.GetDestination()))
             {
-                SuccessOrExit(error = mAddressResolver.Resolve(ip6Header.GetDestination(), mMeshDest));
+                SuccessOrExit(error = mNetif.GetAddressResolver().Resolve(ip6Header.GetDestination(), mMeshDest));
             }
             else
             {
-                mNetworkData.RouteLookup(ip6Header.GetSource(), ip6Header.GetDestination(), NULL, &mMeshDest);
+                mNetif.GetNetworkDataLeader().RouteLookup(
+                    ip6Header.GetSource(),
+                    ip6Header.GetDestination(),
+                    NULL,
+                    &mMeshDest
+                );
             }
 
             VerifyOrExit(mMeshDest != Mac::kShortAddrInvalid, error = kThreadError_Drop);
 
-            if (mMle.GetNeighbor(mMeshDest) != NULL)
+            if (mNetif.GetMle().GetNeighbor(mMeshDest) != NULL)
             {
                 // destination is neighbor
                 mMacDest.mLength = sizeof(mMacDest.mShortAddress);
@@ -775,12 +780,12 @@ ThreadError MeshForwarder::UpdateIp6Route(Message &aMessage)
             else
             {
                 // destination is not neighbor
-                mMeshSource = mMac.GetShortAddress();
+                mMeshSource = mNetif.GetMac().GetShortAddress();
 
-                SuccessOrExit(error = mMle.CheckReachability(mMeshSource, mMeshDest, ip6Header));
+                SuccessOrExit(error = mNetif.GetMle().CheckReachability(mMeshSource, mMeshDest, ip6Header));
 
                 mMacDest.mLength = sizeof(mMacDest.mShortAddress);
-                mMacDest.mShortAddress = mMle.GetNextHop(mMeshDest);
+                mMacDest.mShortAddress = mNetif.GetMle().GetNextHop(mMeshDest);
                 mMacSource.mLength = sizeof(mMacSource.mShortAddress);
                 mMacSource.mShortAddress = mMeshSource;
                 mAddMeshHeader = true;
@@ -796,12 +801,12 @@ exit:
 
 bool MeshForwarder::GetRxOnWhenIdle()
 {
-    return mMac.GetRxOnWhenIdle();
+    return mNetif.GetMac().GetRxOnWhenIdle();
 }
 
 void MeshForwarder::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 {
-    mMac.SetRxOnWhenIdle(aRxOnWhenIdle);
+    mNetif.GetMac().SetRxOnWhenIdle(aRxOnWhenIdle);
 
     if (aRxOnWhenIdle)
     {
@@ -817,7 +822,7 @@ void MeshForwarder::SetAssignPollPeriod(uint32_t aPeriod)
 {
     mAssignPollPeriod = aPeriod;
 
-    if (mPollTimer.IsRunning() && ((mMle.GetDeviceMode() & Mle::ModeTlv::kModeFFD) == 0))
+    if (mPollTimer.IsRunning() && ((mNetif.GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD) == 0))
     {
         SetPollPeriod(mAssignPollPeriod);
     }
@@ -873,7 +878,7 @@ ThreadError MeshForwarder::SendMacDataRequest(void)
     Message *message;
 
     // only send MAC Data Requests in rx-off-when-idle mode
-    VerifyOrExit(!mMac.GetRxOnWhenIdle(), error = kThreadError_InvalidState);
+    VerifyOrExit(!mNetif.GetMac().GetRxOnWhenIdle(), error = kThreadError_InvalidState);
 
     // only enqueue one MAC Data Request at a time
     for (message = mSendQueue.GetHead(); message; message = message->GetNext())
@@ -900,10 +905,10 @@ ThreadError MeshForwarder::GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac
     aMacAddr.mLength = sizeof(aMacAddr.mExtAddress);
     aMacAddr.mExtAddress.Set(aIp6Addr);
 
-    if (memcmp(&aMacAddr.mExtAddress, mMac.GetExtAddress(), sizeof(aMacAddr.mExtAddress)) != 0)
+    if (memcmp(&aMacAddr.mExtAddress, mNetif.GetMac().GetExtAddress(), sizeof(aMacAddr.mExtAddress)) != 0)
     {
         aMacAddr.mLength = sizeof(aMacAddr.mShortAddress);
-        aMacAddr.mShortAddress = mMac.GetShortAddress();
+        aMacAddr.mShortAddress = mNetif.GetMac().GetShortAddress();
     }
 
     return kThreadError_None;
@@ -927,7 +932,7 @@ ThreadError MeshForwarder::GetMacDestinationAddress(const Ip6::Address &aIp6Addr
         aMacAddr.mLength = sizeof(aMacAddr.mShortAddress);
         aMacAddr.mShortAddress = HostSwap16(aIp6Addr.mFields.m16[7]);
     }
-    else if (mMle.IsRoutingLocator(aIp6Addr))
+    else if (mNetif.GetMle().IsRoutingLocator(aIp6Addr))
     {
         aMacAddr.mLength = sizeof(aMacAddr.mShortAddress);
         aMacAddr.mShortAddress = HostSwap16(aIp6Addr.mFields.m16[7]);
@@ -970,7 +975,7 @@ ThreadError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
             if (!mScanning)
             {
                 mScanChannel = kPhyMinChannel;
-                mRestoreChannel = mMac.GetChannel();
+                mRestoreChannel = mNetif.GetMac().GetChannel();
                 mScanning = true;
             }
 
@@ -980,7 +985,7 @@ ThreadError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
                 mScanChannel++;
             }
 
-            mMac.SetChannel(mScanChannel);
+            mNetif.GetMac().SetChannel(mScanChannel);
             aFrame.SetChannel(mScanChannel);
         }
 
@@ -1000,7 +1005,7 @@ ThreadError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
     // set FramePending if there are more queued messages for the child
     aFrame.GetDstAddr(macDest);
 
-    if (((child = mMle.GetChild(macDest)) != NULL)
+    if (((child = mNetif.GetMle().GetChild(macDest)) != NULL)
         && ((child->mMode & Mle::ModeTlv::kModeRxOnWhenIdle) == 0)
         && (child->mQueuedIndirectMessageCnt > 1))
     {
@@ -1019,9 +1024,9 @@ ThreadError MeshForwarder::SendPoll(Message &aMessage, Mac::Frame &aFrame)
     Neighbor *neighbor;
 
     // only send MAC Data Requests in rx-off-when-idle mode
-    VerifyOrExit(!mMac.GetRxOnWhenIdle(), error = kThreadError_InvalidState);
+    VerifyOrExit(!mNetif.GetMac().GetRxOnWhenIdle(), error = kThreadError_InvalidState);
 
-    macSource.mShortAddress = mMac.GetShortAddress();
+    macSource.mShortAddress = mNetif.GetMac().GetShortAddress();
 
     if (macSource.mShortAddress != Mac::kShortAddrInvalid)
     {
@@ -1030,7 +1035,7 @@ ThreadError MeshForwarder::SendPoll(Message &aMessage, Mac::Frame &aFrame)
     else
     {
         macSource.mLength = sizeof(macSource.mExtAddress);
-        memcpy(&macSource.mExtAddress, mMac.GetExtAddress(), sizeof(macSource.mExtAddress));
+        memcpy(&macSource.mExtAddress, mNetif.GetMac().GetExtAddress(), sizeof(macSource.mExtAddress));
     }
 
     // initialize MAC header
@@ -1048,9 +1053,9 @@ ThreadError MeshForwarder::SendPoll(Message &aMessage, Mac::Frame &aFrame)
     fcf |= Mac::Frame::kFcfAckRequest | Mac::Frame::kFcfSecurityEnabled;
 
     aFrame.InitMacHeader(fcf, Mac::Frame::kKeyIdMode1 | Mac::Frame::kSecEncMic32);
-    aFrame.SetDstPanId(mMac.GetPanId());
+    aFrame.SetDstPanId(mNetif.GetMac().GetPanId());
 
-    neighbor = mMle.GetParent();
+    neighbor = mNetif.GetMle().GetParent();
     assert(neighbor != NULL);
 
     if (macSource.mLength == 2)
@@ -1082,7 +1087,7 @@ ThreadError MeshForwarder::SendMesh(Message &aMessage, Mac::Frame &aFrame)
           Mac::Frame::kFcfAckRequest | Mac::Frame::kFcfSecurityEnabled;
 
     aFrame.InitMacHeader(fcf, Mac::Frame::kKeyIdMode1 | Mac::Frame::kSecEncMic32);
-    aFrame.SetDstPanId(mMac.GetPanId());
+    aFrame.SetDstPanId(mNetif.GetMac().GetPanId());
     aFrame.SetDstAddr(mMacDest.mShortAddress);
     aFrame.SetSrcAddr(mMacSource.mShortAddress);
 
@@ -1157,7 +1162,7 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
         secCtl |= Mac::Frame::kSecEncMic32;
     }
 
-    dstpan = mMac.GetPanId();
+    dstpan = mNetif.GetMac().GetPanId();
 
     switch (aMessage.GetSubType())
     {
@@ -1175,14 +1180,14 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
         break;
     }
 
-    if (dstpan == mMac.GetPanId())
+    if (dstpan == mNetif.GetMac().GetPanId())
     {
         fcf |= Mac::Frame::kFcfPanidCompression;
     }
 
     aFrame.InitMacHeader(fcf, secCtl);
     aFrame.SetDstPanId(dstpan);
-    aFrame.SetSrcPanId(mMac.GetPanId());
+    aFrame.SetSrcPanId(mNetif.GetMac().GetPanId());
 
     if (mMacDest.mLength == 2)
     {
@@ -1210,19 +1215,19 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
     if (mAddMeshHeader)
     {
         // Calculate the number of predicted hops.
-        hopsLeft = mMle.GetRouteCost(mMeshDest);
-        hopsLeft += mMle.GetLinkCost(mMle.GetRouterId(mMle.GetNextHop(mMeshDest)));
+        hopsLeft = mNetif.GetMle().GetRouteCost(mMeshDest);
+        hopsLeft += mNetif.GetMle().GetLinkCost(mNetif.GetMle().GetRouterId(mNetif.GetMle().GetNextHop(mMeshDest)));
 
         // The hopsLft field MUST be incremented by one if the device is not
         // an active Router.
-        if (!mMle.IsActiveRouter(mMeshSource))
+        if (!mNetif.GetMle().IsActiveRouter(mMeshSource))
         {
             hopsLeft += 1;
         }
 
         // The hopsLft field MUST be incremented by one if the destination RLOC16
         // is not that of an active Router.
-        if (!mMle.IsActiveRouter(mMeshDest))
+        if (!mNetif.GetMle().IsActiveRouter(mMeshDest))
         {
             hopsLeft += 1;
         }
@@ -1239,7 +1244,7 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
     // copy IPv6 Header
     if (aMessage.GetOffset() == 0)
     {
-        hcLength = mLowpan.Compress(aMessage, meshSource, meshDest, payload);
+        hcLength = mNetif.GetLowpan().Compress(aMessage, meshSource, meshDest, payload);
         assert(hcLength > 0);
         headerLength += static_cast<uint8_t>(hcLength);
 
@@ -1326,7 +1331,7 @@ ThreadError MeshForwarder::SendEmptyFrame(Mac::Frame &aFrame)
     uint8_t secCtl;
     Mac::Address macSource;
 
-    macSource.mShortAddress = mMac.GetShortAddress();
+    macSource.mShortAddress = mNetif.GetMac().GetShortAddress();
 
     if (macSource.mShortAddress != Mac::kShortAddrInvalid)
     {
@@ -1335,7 +1340,7 @@ ThreadError MeshForwarder::SendEmptyFrame(Mac::Frame &aFrame)
     else
     {
         macSource.mLength = sizeof(macSource.mExtAddress);
-        memcpy(&macSource.mExtAddress, mMac.GetExtAddress(), sizeof(macSource.mExtAddress));
+        memcpy(&macSource.mExtAddress, mNetif.GetMac().GetExtAddress(), sizeof(macSource.mExtAddress));
     }
 
     fcf = Mac::Frame::kFcfFrameData | Mac::Frame::kFcfFrameVersion2006;
@@ -1352,8 +1357,8 @@ ThreadError MeshForwarder::SendEmptyFrame(Mac::Frame &aFrame)
 
     aFrame.InitMacHeader(fcf, secCtl);
 
-    aFrame.SetDstPanId(mMac.GetPanId());
-    aFrame.SetSrcPanId(mMac.GetPanId());
+    aFrame.SetDstPanId(mNetif.GetMac().GetPanId());
+    aFrame.SetSrcPanId(mNetif.GetMac().GetPanId());
 
     if (mMacDest.mLength == 2)
     {
@@ -1401,7 +1406,7 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
 
     aFrame.GetDstAddr(macDest);
 
-    if ((neighbor = mMle.GetNeighbor(macDest)) != NULL)
+    if ((neighbor = mNetif.GetMle().GetNeighbor(macDest)) != NULL)
     {
         switch (aError)
         {
@@ -1419,11 +1424,11 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
         case kThreadError_NoAck:
             neighbor->mLinkFailures++;
 
-            if (mMle.IsActiveRouter(neighbor->mValid.mRloc16))
+            if (mNetif.GetMle().IsActiveRouter(neighbor->mValid.mRloc16))
             {
                 if (neighbor->mLinkFailures >= Mle::kFailedRouterTransmissions)
                 {
-                    mMle.RemoveNeighbor(*neighbor);
+                    mNetif.GetMle().RemoveNeighbor(*neighbor);
                 }
             }
 
@@ -1435,7 +1440,7 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
         }
     }
 
-    if ((child = mMle.GetChild(macDest)) != NULL)
+    if ((child = mNetif.GetMle().GetChild(macDest)) != NULL)
     {
         child->mDataRequest = false;
 
@@ -1448,7 +1453,7 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
         else
         {
             child->mFragmentOffset = 0;
-            mSendMessage->ClearChildMask(mMle.GetChildIndex(*child));
+            mSendMessage->ClearChildMask(mNetif.GetMle().GetChildIndex(*child));
 
             if ((child->mMode & Mle::ModeTlv::kModeRxOnWhenIdle) == 0)
             {
@@ -1488,12 +1493,12 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
 
     if (mSendMessage->GetType() == Message::kTypeMacDataPoll)
     {
-        neighbor = mMle.GetParent();
+        neighbor = mNetif.GetMle().GetParent();
 
         if (neighbor->mState == Neighbor::kStateInvalid)
         {
             mPollTimer.Stop();
-            mMle.BecomeDetached();
+            mNetif.GetMle().BecomeDetached();
         }
     }
 
@@ -1537,9 +1542,9 @@ void MeshForwarder::HandleDiscoverTimer(void)
             mSendQueue.Dequeue(*mSendMessage);
             mSendMessage->Free();
             mSendMessage = NULL;
-            mMac.SetChannel(mRestoreChannel);
+            mNetif.GetMac().SetChannel(mRestoreChannel);
             mScanning = false;
-            mMle.HandleDiscoverComplete();
+            mNetif.GetMle().HandleDiscoverComplete();
             ExitNow();
         }
     }
@@ -1576,7 +1581,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
     SuccessOrExit(error = aFrame.GetSrcAddr(macSource));
     SuccessOrExit(aFrame.GetDstAddr(macDest));
 
-    if ((child = mMle.GetChild(macSource)) != NULL)
+    if ((child = mNetif.GetMle().GetChild(macSource)) != NULL)
     {
         if (((child->mMode & Mle::ModeTlv::kModeRxOnWhenIdle) == 0) &&
             macSource.mLength == sizeof(otShortAddress))
@@ -1660,7 +1665,7 @@ void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Mac:
     meshDest.mLength = sizeof(meshDest.mShortAddress);
     meshDest.mShortAddress = meshHeader.GetDestination();
 
-    if (meshDest.mShortAddress == mMac.GetShortAddress())
+    if (meshDest.mShortAddress == mNetif.GetMac().GetShortAddress())
     {
         aFrame += meshHeader.GetHeaderLength();
         aFrameLength -= meshHeader.GetHeaderLength();
@@ -1680,7 +1685,7 @@ void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Mac:
     }
     else if (meshHeader.GetHopsLeft() > 0)
     {
-        mMle.ResolveRoutingLoops(aMacSource.mShortAddress, meshDest.mShortAddress);
+        mNetif.GetMle().ResolveRoutingLoops(aMacSource.mShortAddress, meshDest.mShortAddress);
 
         SuccessOrExit(error = CheckReachability(aFrame, aFrameLength, meshSource, meshDest));
 
@@ -1737,10 +1742,10 @@ ThreadError MeshForwarder::CheckReachability(uint8_t *aFrame, uint8_t aFrameLeng
     // only process IPv6 packets
     VerifyOrExit(aFrameLength >= 1 && Lowpan::Lowpan::IsLowpanHc(aFrame),);
 
-    VerifyOrExit(mLowpan.DecompressBaseHeader(ip6Header, aMeshSource, aMeshDest, aFrame, aFrameLength) > 0,
+    VerifyOrExit(mNetif.GetLowpan().DecompressBaseHeader(ip6Header, aMeshSource, aMeshDest, aFrame, aFrameLength) > 0,
                  error = kThreadError_Drop);
 
-    error = mMle.CheckReachability(aMeshSource.mShortAddress, aMeshDest.mShortAddress, ip6Header);
+    error = mNetif.GetMle().CheckReachability(aMeshSource.mShortAddress, aMeshDest.mShortAddress, ip6Header);
 
 exit:
     return error;
@@ -1766,7 +1771,8 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
                      error = kThreadError_NoBufs);
         message->SetLinkSecurityEnabled(aMessageInfo.mLinkSecurity);
         message->SetPanId(aMessageInfo.mPanId);
-        headerLength = mLowpan.Decompress(*message, aMacSource, aMacDest, aFrame, aFrameLength, datagramLength);
+        headerLength = mNetif.GetLowpan().Decompress(*message, aMacSource, aMacDest, aFrame, aFrameLength,
+                                                     datagramLength);
         VerifyOrExit(headerLength > 0, error = kThreadError_Parse);
 
         aFrame += headerLength;
@@ -1883,7 +1889,7 @@ void MeshForwarder::HandleLowpanHC(uint8_t *aFrame, uint8_t aFrameLength,
     message->SetLinkSecurityEnabled(aMessageInfo.mLinkSecurity);
     message->SetPanId(aMessageInfo.mPanId);
 
-    headerLength = mLowpan.Decompress(*message, aMacSource, aMacDest, aFrame, aFrameLength, 0);
+    headerLength = mNetif.GetLowpan().Decompress(*message, aMacSource, aMacDest, aFrame, aFrameLength, 0);
     VerifyOrExit(headerLength > 0, error = kThreadError_Parse);
 
     aFrame += headerLength;
@@ -1928,9 +1934,9 @@ void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const Thre
     // Security Check: only process secure Data Poll frames.
     VerifyOrExit(aMessageInfo.mLinkSecurity, ;);
 
-    VerifyOrExit(mMle.GetDeviceState() != Mle::kDeviceStateDetached, ;);
+    VerifyOrExit(mNetif.GetMle().GetDeviceState() != Mle::kDeviceStateDetached, ;);
 
-    VerifyOrExit((child = mMle.GetChild(aMacSource)) != NULL, ;);
+    VerifyOrExit((child = mNetif.GetMle().GetChild(aMacSource)) != NULL, ;);
     child->mLastHeard = Timer::GetNow();
     child->mLinkFailures = 0;
 

@@ -107,8 +107,6 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mMacTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleMacTimer, this),
     mBackoffTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleBeginTransmit, this),
     mReceiveTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleReceiveTimer, this),
-    mKeyManager(aThreadNetif.GetKeyManager()),
-    mMle(aThreadNetif.GetMle()),
     mNetif(aThreadNetif),
     mEnergyScanSampleRssiTask(aThreadNetif.GetIp6().mTaskletScheduler, &Mac::HandleEnergyScanSampleRssi, this),
     mWhitelist(),
@@ -669,17 +667,17 @@ void Mac::ProcessTransmitSecurity(Frame &aFrame)
     switch (keyIdMode)
     {
     case Frame::kKeyIdMode0:
-        key = mKeyManager.GetKek();
-        frameCounter = mKeyManager.GetKekFrameCounter();
-        mKeyManager.IncrementKekFrameCounter();
+        key = mNetif.GetKeyManager().GetKek();
+        frameCounter = mNetif.GetKeyManager().GetKekFrameCounter();
+        mNetif.GetKeyManager().IncrementKekFrameCounter();
         extAddress = &mExtAddress;
         break;
 
     case Frame::kKeyIdMode1:
-        key = mKeyManager.GetCurrentMacKey();
-        frameCounter = mKeyManager.GetMacFrameCounter();
-        mKeyManager.IncrementMacFrameCounter();
-        aFrame.SetKeyId((mKeyManager.GetCurrentKeySequence() & 0x7f) + 1);
+        key = mNetif.GetKeyManager().GetCurrentMacKey();
+        frameCounter = mNetif.GetKeyManager().GetMacFrameCounter();
+        mNetif.GetKeyManager().IncrementMacFrameCounter();
+        aFrame.SetKeyId((mNetif.GetKeyManager().GetCurrentKeySequence() & 0x7f) + 1);
         extAddress = &mExtAddress;
         break;
 
@@ -1064,7 +1062,7 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
     switch (keyIdMode)
     {
     case Frame::kKeyIdMode0:
-        VerifyOrExit((macKey = mKeyManager.GetKek()) != NULL, error = kThreadError_Security);
+        VerifyOrExit((macKey = mNetif.GetKeyManager().GetKek()) != NULL, error = kThreadError_Security);
         extAddress = &aSrcAddr.mExtAddress;
         break;
 
@@ -1074,23 +1072,23 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
         aFrame.GetKeyId(keyid);
         keyid--;
 
-        if (keyid == (mKeyManager.GetCurrentKeySequence() & 0x7f))
+        if (keyid == (mNetif.GetKeyManager().GetCurrentKeySequence() & 0x7f))
         {
             // same key index
-            keySequence = mKeyManager.GetCurrentKeySequence();
-            macKey = mKeyManager.GetCurrentMacKey();
+            keySequence = mNetif.GetKeyManager().GetCurrentKeySequence();
+            macKey = mNetif.GetKeyManager().GetCurrentMacKey();
         }
-        else if (keyid == ((mKeyManager.GetCurrentKeySequence() - 1) & 0x7f))
+        else if (keyid == ((mNetif.GetKeyManager().GetCurrentKeySequence() - 1) & 0x7f))
         {
             // previous key index
-            keySequence = mKeyManager.GetCurrentKeySequence() - 1;
-            macKey = mKeyManager.GetTemporaryMacKey(keySequence);
+            keySequence = mNetif.GetKeyManager().GetCurrentKeySequence() - 1;
+            macKey = mNetif.GetKeyManager().GetTemporaryMacKey(keySequence);
         }
-        else if (keyid == ((mKeyManager.GetCurrentKeySequence() + 1) & 0x7f))
+        else if (keyid == ((mNetif.GetKeyManager().GetCurrentKeySequence() + 1) & 0x7f))
         {
             // next key index
-            keySequence = mKeyManager.GetCurrentKeySequence() + 1;
-            macKey = mKeyManager.GetTemporaryMacKey(keySequence);
+            keySequence = mNetif.GetKeyManager().GetCurrentKeySequence() + 1;
+            macKey = mNetif.GetKeyManager().GetTemporaryMacKey(keySequence);
         }
         else
         {
@@ -1149,9 +1147,9 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
 
         aNeighbor->mValid.mLinkFrameCounter = frameCounter + 1;
 
-        if (keySequence > mKeyManager.GetCurrentKeySequence())
+        if (keySequence > mNetif.GetKeyManager().GetCurrentKeySequence())
         {
-            mKeyManager.SetCurrentKeySequence(keySequence);
+            mNetif.GetKeyManager().SetCurrentKeySequence(keySequence);
         }
     }
 
@@ -1198,7 +1196,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
     SuccessOrExit(error = aFrame->ValidatePsdu());
 
     aFrame->GetSrcAddr(srcaddr);
-    neighbor = mMle.GetNeighbor(srcaddr);
+    neighbor = mNetif.GetMle().GetNeighbor(srcaddr);
 
     switch (srcaddr.mLength)
     {

@@ -53,8 +53,6 @@ namespace Dhcp6 {
 Dhcp6Client::Dhcp6Client(ThreadNetif &aThreadNetif) :
     mTrickleTimer(aThreadNetif.GetIp6().mTimerScheduler, &Dhcp6Client::HandleTrickleTimer, NULL, this),
     mSocket(aThreadNetif.GetIp6().mUdp),
-    mMle(aThreadNetif.GetMle()),
-    mMac(aThreadNetif.GetMac()),
     mNetif(aThreadNetif),
     mStartTime(0),
     mAddresses(NULL),
@@ -385,12 +383,12 @@ ThreadError Dhcp6Client::Solicit(uint16_t aRloc16)
     SuccessOrExit(error = AppendRapidCommit(*message));
 
     memset(&messageInfo, 0, sizeof(messageInfo));
-    memcpy(messageInfo.GetPeerAddr().mFields.m8, mMle.GetMeshLocalPrefix(), 8);
+    memcpy(messageInfo.GetPeerAddr().mFields.m8, mNetif.GetMle().GetMeshLocalPrefix(), 8);
     messageInfo.GetPeerAddr().mFields.m16[4] = HostSwap16(0x0000);
     messageInfo.GetPeerAddr().mFields.m16[5] = HostSwap16(0x00ff);
     messageInfo.GetPeerAddr().mFields.m16[6] = HostSwap16(0xfe00);
     messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(aRloc16);
-    messageInfo.SetSockAddr(mMle.GetMeshLocal16());
+    messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
     messageInfo.mPeerPort = kDhcpServerPort;
     messageInfo.mInterfaceId = mNetif.GetInterfaceId();
 
@@ -433,7 +431,7 @@ ThreadError Dhcp6Client::AppendClientIdentifier(Message &aMessage)
     option.Init();
     option.SetDuidType(kDuidLL);
     option.SetDuidHardwareType(kHardwareTypeEui64);
-    option.SetDuidLinkLayerAddress(mMac.GetExtAddress());
+    option.SetDuidLinkLayerAddress(mNetif.GetMac().GetExtAddress());
     return aMessage.Append(&option, sizeof(option));
 }
 
@@ -604,7 +602,8 @@ ThreadError Dhcp6Client::ProcessClientIdentifier(Message &aMessage, uint16_t aOf
                    (option.GetLength() == (sizeof(option) - sizeof(Dhcp6Option))) &&
                    (option.GetDuidType() == kDuidLL) &&
                    (option.GetDuidHardwareType() == kHardwareTypeEui64)) &&
-                  (!memcmp(option.GetDuidLinkLayerAddress(), mMac.GetExtAddress(), sizeof(Mac::ExtAddress)))),
+                  (!memcmp(option.GetDuidLinkLayerAddress(), mNetif.GetMac().GetExtAddress(),
+                           sizeof(Mac::ExtAddress)))),
                  error = kThreadError_Parse);
 exit:
     return error;
