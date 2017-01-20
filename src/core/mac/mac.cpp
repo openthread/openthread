@@ -78,10 +78,6 @@ const uint32_t kMaxBackoffSum = kMinBackoff + (kUnitBackoffPeriod *kPhyUsPerSymb
 static_assert(kMinBackoffSum > 0, "The min backoff value should be greater than zero!");
 #endif
 
-void otLinkReceiveDone(otInstance *aInstance, RadioPacket *aFrame, ThreadError aError);
-void otLinkTransmitDone(otInstance *aInstance, RadioPacket *aPacket, bool aRxPending, ThreadError aError);
-void otLinkEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi);
-
 void Mac::StartCsmaBackoff(void)
 {
     if (RadioSupportsRetriesAndCsmaBackoff())
@@ -255,8 +251,7 @@ void Mac::StartEnergyScan(void)
     }
     else
     {
-        ThreadError error = otLinkRawEnergyScan(mNetif.GetInstance(), mScanChannel, mScanDuration,
-                                                otLinkEnergyScanDone);
+        ThreadError error = otPlatRadioEnergyScan(mNetif.GetInstance(), mScanChannel, mScanDuration);
 
         if (error != kThreadError_None)
         {
@@ -267,9 +262,19 @@ void Mac::StartEnergyScan(void)
     }
 }
 
-void otLinkEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi)
+extern "C" void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi)
 {
-    aInstance->mThreadNetif.GetMac().EnergyScanDone(aEnergyScanMaxRssi);
+    if (aInstance->mLinkRawEnabled)
+    {
+        if (aInstance->mLinkRawEnergyScanDoneCallback)
+        {
+            aInstance->mLinkRawEnergyScanDoneCallback(aInstance, aEnergyScanMaxRssi);
+        }
+    }
+    else
+    {
+        aInstance->mThreadNetif.GetMac().EnergyScanDone(aEnergyScanMaxRssi);
+    }
 }
 
 void Mac::EnergyScanDone(int8_t aEnergyScanMaxRssi)
@@ -294,7 +299,7 @@ void Mac::EnergyScanDone(int8_t aEnergyScanMaxRssi)
         // and start the next transmission task
         if (mScanChannels == 0 || mScanChannel > kPhyMaxChannel)
         {
-            otLinkRawReceive(mNetif.GetInstance(), mChannel, otLinkReceiveDone);
+            otPlatRadioReceive(mNetif.GetInstance(), mChannel);
             mEnergyScanHandler(mScanContext, NULL);
             ScheduleNextTransmission();
             ExitNow();
@@ -530,17 +535,17 @@ void Mac::NextOperation(void)
     {
     case kStateActiveScan:
     case kStateEnergyScan:
-        otLinkRawReceive(mNetif.GetInstance(), mScanChannel, otLinkReceiveDone);
+        otPlatRadioReceive(mNetif.GetInstance(), mScanChannel);
         break;
 
     default:
         if (mRxOnWhenIdle || mReceiveTimer.IsRunning() || otPlatRadioGetPromiscuous(mNetif.GetInstance()))
         {
-            otLinkRawReceive(mNetif.GetInstance(), mChannel, otLinkReceiveDone);
+            otPlatRadioReceive(mNetif.GetInstance(), mChannel);
         }
         else
         {
-            otLinkRawSleep(mNetif.GetInstance());
+            otPlatRadioSleep(mNetif.GetInstance());
         }
 
         break;
@@ -766,9 +771,9 @@ void Mac::HandleBeginTransmit(void)
         }
     }
 
-    error = otLinkRawReceive(mNetif.GetInstance(), sendFrame.GetChannel(), otLinkReceiveDone);
+    error = otPlatRadioReceive(mNetif.GetInstance(), sendFrame.GetChannel());
     assert(error == kThreadError_None);
-    error = otLinkRawTransmit(mNetif.GetInstance(), static_cast<RadioPacket *>(&sendFrame), otLinkTransmitDone);
+    error = otPlatRadioTransmit(mNetif.GetInstance(), static_cast<RadioPacket *>(&sendFrame));
     assert(error == kThreadError_None);
 
     if (sendFrame.GetAckRequest() && !(otPlatRadioGetCaps(mNetif.GetInstance()) & kRadioCapsAckTimeout))
@@ -791,10 +796,21 @@ exit:
     }
 }
 
-void otLinkTransmitDone(otInstance *aInstance, RadioPacket *aPacket, bool aRxPending, ThreadError aError)
+extern "C" void otPlatRadioTransmitDone(otInstance *aInstance, RadioPacket *aPacket, bool aRxPending,
+                                        ThreadError aError)
 {
     otLogFuncEntryMsg("%!otError!, aRxPending=%u", aError, aRxPending ? 1 : 0);
-    aInstance->mThreadNetif.GetMac().TransmitDoneTask(aPacket, aRxPending, aError);
+    if (aInstance->mLinkRawEnabled)
+    {
+        if (aInstance->mLinkRawTransmitDoneCallback)
+        {
+            aInstance->mLinkRawTransmitDoneCallback(aInstance, aPacket, aRxPending, aError);
+        }
+    }
+    else
+    {
+        aInstance->mThreadNetif.GetMac().TransmitDoneTask(aPacket, aRxPending, aError);
+    }
     otLogFuncExit();
 }
 
@@ -877,7 +893,7 @@ void Mac::HandleMacTimer(void)
 
             if (mScanChannels == 0 || mScanChannel > kPhyMaxChannel)
             {
-                otLinkRawReceive(mNetif.GetInstance(), mChannel, otLinkReceiveDone);
+                otPlatRadioReceive(mNetif.GetInstance(), mChannel);
                 otPlatRadioSetPanId(mNetif.GetInstance(), mPanId);
                 mActiveScanHandler(mScanContext, NULL);
                 ScheduleNextTransmission();
@@ -895,7 +911,7 @@ void Mac::HandleMacTimer(void)
 
     case kStateTransmitData:
         otLogDebgMac("ack timer fired");
-        otLinkRawReceive(mNetif.GetInstance(), mChannel, otLinkReceiveDone);
+        otPlatRadioReceive(mNetif.GetInstance(), mChannel);
         mCounters.mTxTotal++;
 
         mTxFrame->GetDstAddr(addr);
@@ -1164,10 +1180,20 @@ exit:
     return error;
 }
 
-void otLinkReceiveDone(otInstance *aInstance, RadioPacket *aFrame, ThreadError aError)
+extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, RadioPacket *aFrame, ThreadError aError)
 {
     otLogFuncEntryMsg("%!otError!", aError);
-    aInstance->mThreadNetif.GetMac().ReceiveDoneTask(static_cast<Frame *>(aFrame), aError);
+    if (aInstance->mLinkRawEnabled)
+    {
+        if (aInstance->mLinkRawReceiveDoneCallback)
+        {
+            aInstance->mLinkRawReceiveDoneCallback(aInstance, aFrame, aError);
+        }
+    }
+    else
+    {
+        aInstance->mThreadNetif.GetMac().ReceiveDoneTask(static_cast<Frame *>(aFrame), aError);
+    }
     otLogFuncExit();
 }
 
@@ -1314,7 +1340,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
         if (!mRxOnWhenIdle && dstaddr.mLength != 0)
         {
             mReceiveTimer.Stop();
-            otLinkRawSleep(mNetif.GetInstance());
+            otPlatRadioSleep(mNetif.GetInstance());
         }
 
         switch (aFrame->GetType())

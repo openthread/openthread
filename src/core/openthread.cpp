@@ -79,6 +79,7 @@ otInstance::otInstance(void) :
     mActiveScanCallbackContext(NULL),
     mEnergyScanCallback(NULL),
     mEnergyScanCallbackContext(NULL),
+    mLinkRawEnabled(false),
     mLinkRawReceiveDoneCallback(NULL),
     mLinkRawTransmitDoneCallback(NULL),
     mLinkRawEnergyScanDoneCallback(NULL),
@@ -1255,8 +1256,11 @@ ThreadError otInterfaceUp(otInstance *aInstance)
 
     otLogFuncEntry();
 
+    VerifyOrExit(!aInstance->mLinkRawEnabled, error = kThreadError_InvalidState);
+
     error = aInstance->mThreadNetif.Up();
 
+exit:
     otLogFuncExitErr(error);
     return error;
 }
@@ -1267,8 +1271,11 @@ ThreadError otInterfaceDown(otInstance *aInstance)
 
     otLogFuncEntry();
 
+    VerifyOrExit(!aInstance->mLinkRawEnabled, error = kThreadError_InvalidState);
+
     error = aInstance->mThreadNetif.Down();
 
+exit:
     otLogFuncExitErr(error);
     return error;
 }

@@ -48,13 +48,18 @@ ThreadError otLinkRawSetEnable(otInstance *aInstance, bool aEnabled)
         error = otPlatRadioDisable(aInstance);
     }
 
+    if (error == kThreadError_None)
+    {
+        aInstance->mLinkRawEnabled = aEnabled;
+    }
+
 exit:
     return error;
 }
 
 bool otLinkRawIsEnabled(otInstance *aInstance)
 {
-    return !aInstance->mThreadNetif.IsUp() && otPlatRadioIsEnabled(aInstance);
+    return aInstance->mLinkRawEnabled;
 }
 
 void otLinkRawSetPanId(otInstance *aInstance, uint16_t aPanId)
@@ -101,14 +106,6 @@ ThreadError otLinkRawReceive(otInstance *aInstance, uint8_t aChannel, otLinkRawR
     return otPlatRadioReceive(aInstance, aChannel);
 }
 
-extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, RadioPacket *aPacket, ThreadError aError)
-{
-    if (aInstance->mLinkRawReceiveDoneCallback)
-    {
-        aInstance->mLinkRawReceiveDoneCallback(aInstance, aPacket, aError);
-    }
-}
-
 RadioPacket *otLinkRawGetTransmitBuffer(otInstance *aInstance)
 {
     return otPlatRadioGetTransmitBuffer(aInstance);
@@ -119,15 +116,6 @@ ThreadError otLinkRawTransmit(otInstance *aInstance, RadioPacket *aPacket, otLin
     aInstance->mLinkRawTransmitDoneCallback = aCallback;
 
     return otPlatRadioTransmit(aInstance, aPacket);
-}
-
-extern "C" void otPlatRadioTransmitDone(otInstance *aInstance, RadioPacket *aPacket, bool aFramePending,
-                                        ThreadError aError)
-{
-    if (aInstance->mLinkRawTransmitDoneCallback)
-    {
-        aInstance->mLinkRawTransmitDoneCallback(aInstance, aPacket, aFramePending, aError);
-    }
 }
 
 int8_t otLinkRawGetRssi(otInstance *aInstance)
@@ -146,14 +134,6 @@ ThreadError otLinkRawEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uin
     aInstance->mLinkRawEnergyScanDoneCallback = aCallback;
 
     return otPlatRadioEnergyScan(aInstance, aScanChannel, aScanDuration);
-}
-
-extern "C" void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi)
-{
-    if (aInstance->mLinkRawEnergyScanDoneCallback)
-    {
-        aInstance->mLinkRawEnergyScanDoneCallback(aInstance, aEnergyScanMaxRssi);
-    }
 }
 
 void otLinkRawSrcMatchEnable(otInstance *aInstance, bool aEnable)

@@ -66,6 +66,7 @@ typedef struct otInstance
     otHandleEnergyScanResult mEnergyScanCallback;
     void *mEnergyScanCallbackContext;
 
+    bool                    mLinkRawEnabled;
     otLinkRawReceiveDone    mLinkRawReceiveDoneCallback;
     otLinkRawTransmitDone   mLinkRawTransmitDoneCallback;
     otLinkRawEnergyScanDone mLinkRawEnergyScanDoneCallback;
