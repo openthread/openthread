@@ -72,18 +72,19 @@ class OpenThread(IThci):
             self.networkName = ModuleHelper.Default_NwkName
             self.networkKey = ModuleHelper.Default_NwkKey
             self.channel = ModuleHelper.Default_Channel
-            self.channelMask = hex(1 << ModuleHelper.Default_Second_Channel)
+            self.channelMask = "0x7fff800" #(0xffff << 11)
             self.panId = ModuleHelper.Default_PanId
             self.xpanId = ModuleHelper.Default_XpanId
             self.AutoDUTEnable = False
             self.localprefix = ModuleHelper.Default_MLPrefix
-            self.pskc = ModuleHelper.Default_PSKc
+            self.pskc = "00000000000000000000000000000000"  # OT only accept hex format PSKc for now
             self.securityPolicySecs = ModuleHelper.Default_SecurityPolicy
             self.activetimestamp = ModuleHelper.Default_ActiveTimestamp
             #self.sedPollingRate = ModuleHelper.Default_Harness_SED_Polling_Rate
             self.sedPollingRate = 3
             self.deviceRole = None
             self.provisioningUrl = ''
+            self.hasActiveDatasetToCommit = False
             self.logThread = Queue()
             self.logStatus = {'stop':'stop', 'running':'running', "pauseReq":'pauseReq', 'paused':'paused'}
             self.logThreadStatus = self.logStatus['stop']
@@ -452,6 +453,12 @@ class OpenThread(IThci):
         """
         print 'call startOpenThread'
         try:
+            if self.hasActiveDatasetToCommit:
+                if self.__sendCommand('dataset commit active')[0] != 'Done':
+                    raise Exception('failed to commit active dataset')
+                else:
+                    self.hasActiveDatasetToCommit = False
+
             if self.__sendCommand('ifconfig up')[0] == 'Done':
                 self.__setRouterSelectionJitter(1)
                 return self.__sendCommand('thread start')[0] == 'Done'
@@ -613,12 +620,7 @@ class OpenThread(IThci):
         print 'call _setChannelMask'
         try:
             cmd = 'dataset channelmask %s' % channelMask
-            print cmd
-
-            if self.__sendCommand(cmd) != 'Done':
-                return False
-
-            cmd = 'dataset commit active'
+            self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd) == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setChannelMask() Error: " + str(e))
@@ -627,12 +629,7 @@ class OpenThread(IThci):
         print 'call _setSecurityPolicy'
         try:
             cmd = 'dataset securitypolicy %s' % str(securityPolicySecs)
-            print cmd
-
-            if self.__sendCommand(cmd) != 'Done':
-                return False
-
-            cmd = 'dataset commit active'
+            self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd) == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setSecurityPolicy() Error: " + str(e))
@@ -715,7 +712,9 @@ class OpenThread(IThci):
         print networkName
         try:
             cmd = 'networkname %s' % networkName
-            return self.__sendCommand(cmd)[0] == 'Done'
+            datasetCmd = 'dataset networkname %s' % networkName
+            self.hasActiveDatasetToCommit = True
+            return self.__sendCommand(cmd)[0] == 'Done' and self.__sendCommand(datasetCmd)[0] == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setNetworkName() Error: " + str(e))
 
@@ -741,8 +740,9 @@ class OpenThread(IThci):
         print channel
         try:
             cmd = 'channel %s' % channel
-            print cmd
-            return self.__sendCommand(cmd)[0] == 'Done'
+            datasetCmd = 'dataset channel %s' % channel
+            self.hasActiveDatasetToCommit = True
+            return self.__sendCommand(cmd)[0] == 'Done' and self.__sendCommand(datasetCmd)[0] == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setChannel() Error: " + str(e))
 
@@ -865,12 +865,15 @@ class OpenThread(IThci):
                     print masterKey
 
                 cmd = 'masterkey %s' %masterKey
+                datasetCmd = 'dataset masterkey %s' % masterKey
             else:
                 masterKey = key
                 cmd = 'masterkey %s' % masterKey
+                datasetCmd = 'dataset masterkey %s' % masterKey
 
             self.networkKey = masterKey
-            return self.__sendCommand(cmd)[0] == 'Done'
+            self.hasActiveDatasetToCommit = True
+            return self.__sendCommand(cmd)[0] == 'Done' and self.__sendCommand(datasetCmd)[0] == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setNetworkkey() Error: " + str(e))
 
@@ -1185,7 +1188,9 @@ class OpenThread(IThci):
                 print panid
 
             cmd = 'panid %s' % panid
-            return self.__sendCommand(cmd) == 'Done'
+            datasetCmd = 'dataset panid %s' % panid
+            self.hasActiveDatasetToCommit = True
+            return self.__sendCommand(cmd)[0] == 'Done' and self.__sendCommand(datasetCmd)[0] == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setPANID() Error: " + str(e))
 
@@ -1233,12 +1238,19 @@ class OpenThread(IThci):
         """set default mandatory Thread Network parameter value"""
         print '%s call setDefaultValues' % self.port
         try:
-            self.setChannel(self.channel)
             self.setMAC(self.mac)
+
+            self.__setChannelMask(self.channelMask)
+            self.__setSecurityPolicy(self.securityPolicySecs)
+            self.setChannel(self.channel)
             self.setPANID(self.panId)
             self.setXpanId(self.xpanId)
             self.setNetworkName(self.networkName)
             self.setNetworkKey(self.networkKey)
+            self.setMLPrefix(self.localprefix)
+            self.setPSKc(self.pskc)
+            self.setActiveTimestamp(self.activetimestamp)
+
             self.isWhiteListEnabled = False
             self.isBlackListEnabled = False
             self.isActiveCommissioner = False
@@ -1694,12 +1706,15 @@ class OpenThread(IThci):
                     xpanid = xpanid.zfill(16)
                     print xpanid
                     cmd = 'extpanid %s' % xpanid
+                    datasetCmd = 'dataset extpanid %s' % xpanid
             else:
                 xpanid = xPanId
                 cmd = 'extpanid %s' % xpanid
+                datasetCmd = 'dataset extpanid %s' % xpanid
 
             self.xpanId = xpanid
-            return self.__sendCommand(cmd)[0] == 'Done'
+            self.hasActiveDatasetToCommit = True
+            return self.__sendCommand(cmd)[0] == 'Done' and self.__sendCommand(datasetCmd)[0] == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setXpanId() Error: " + str(e))
 
@@ -1794,10 +1809,7 @@ class OpenThread(IThci):
         print '%s call setMLPrefix' % self.port
         try:
             cmd = 'dataset meshlocalprefix %s' % sMeshLocalPrefix
-            if self.__sendCommand(cmd)[0] != 'Done':
-                return False
-
-            cmd = 'dataset commit active'
+            self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setMLPrefix() Error: " + str(e))
@@ -2435,12 +2447,9 @@ class OpenThread(IThci):
     def setPSKc(self, strPSKc):
         print '%s call setPSKc' % self.port
         try:
-            cmd = 'dataset pskc %s' % str(strPSKc[::-1].encode('hex'))
-            print cmd
-            if self.__sendCommand(cmd)[0] == 'Done':
-                return self.__sendCommand('dataset commit active')[0] == 'Done'
-            else:
-                return False
+            cmd = 'dataset pskc %s' % strPSKc
+            self.hasActiveDatasetToCommit = True
+            return self.__sendCommand(cmd)[0] == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setPSKc() Error: " + str(e))
 
@@ -2448,11 +2457,8 @@ class OpenThread(IThci):
         print '%s call setActiveTimestamp' % self.port
         try:
             cmd = 'dataset activetimestamp %s' % str(xActiveTimestamp)
-            print cmd
-            if self.__sendCommand(cmd)[0] == 'Done':
-                return self.__sendCommand('dataset commit active')[0] == 'Done'
-            else:
-                return False
+            self.hasActiveDatasetToCommit = True
+            return self.__sendCommand(cmd)[0] == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setActiveTimestamp() Error: " + str(e))
 
