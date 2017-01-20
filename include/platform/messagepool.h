@@ -63,14 +63,13 @@ extern "C" {
 #endif
 
 /**
- * Initialize the platform implemented message pool with the provided buffer list.
+ * Initialize the platform implemented message pool.
  *
- * @param[in] aFreeBufferList   A linked list of free buffers.
- * @param[in] aNumFreeBuffers   A pointer to an int containing the number of free buffers in aFreeBufferList.
- * @param[in] aBufferSize       The size in bytes of a Buffer object.
+ * @param[in] aMinNumFreeBuffers   An int containing the minimum number of free buffers desired by OpenThread.
+ * @param[in] aBufferSize          The size in bytes of a Buffer object.
  *
  */
-void otPlatMessagePoolInit(struct BufferHeader *aFreeBufferList, int *aNumFreeBuffers, size_t aBufferSize);
+void otPlatMessagePoolInit(int aMinNumFreeBuffers, size_t aBufferSize);
 
 /**
  * Allocate a buffer from the platform managed buffer pool.
@@ -87,6 +86,14 @@ struct BufferHeader *otPlatMessagePoolNew(void);
  *
  */
 void otPlatMessagePoolFree(struct BufferHeader *aBuffer);
+
+/**
+ * Get the number of free buffers.
+ *
+ * @returns The number of buffers currently free and available to OpenThread.
+ *
+ */
+int otPlatMessagePoolNumFreeBuffers(void);
 
 #ifdef __cplusplus
 }  // extern "C"

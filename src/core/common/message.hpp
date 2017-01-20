@@ -1091,7 +1091,11 @@ public:
      * @returns The number of free buffers.
      *
      */
+#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+    uint16_t GetFreeBufferCount(void) const { return static_cast<uint16_t>(otPlatMessagePoolNumFreeBuffers()); }
+#else
     uint16_t GetFreeBufferCount(void) const { return static_cast<uint16_t>(mNumFreeBuffers); }
+#endif
 
 private:
     enum
@@ -1104,9 +1108,11 @@ private:
     ThreadError ReclaimBuffers(int aNumBuffers);
     PriorityQueue *GetAllMessagesQueue(void) { return &mAllQueue; }
 
+#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT == 0
     int mNumFreeBuffers;
     Buffer mBuffers[kNumBuffers];
     Buffer *mFreeBuffers;
+#endif
     PriorityQueue mAllQueue;
 };
 
