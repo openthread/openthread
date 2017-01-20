@@ -1856,7 +1856,7 @@ class OpenThread(IThci):
         cmd = 'networkdiagnostic get %s %s' % (strDestinationAddr, ' '.join([str(tlv) for tlv in listTLV_ids]))
         print cmd
 
-        return self.__sendCommand(cmd)
+        return self._sendline(cmd)
 
     def diagnosticReset(self, strDestinationAddr, listTLV_ids=[]):
         if not listTLV_ids:
