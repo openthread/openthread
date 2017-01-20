@@ -420,7 +420,7 @@ N.B.: It is important to check the ReceiveFlags in NDIS_TEST_RECEIVE_CANNOT_PEND
 // delivery to TCPIP.
 void 
 otLwfReceiveIp6DatagramCallback(
-    _In_ otMessage aMessage, 
+    _In_ otMessage *aMessage,
     _In_ void *aContext
     )
 {

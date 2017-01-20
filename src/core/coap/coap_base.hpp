@@ -134,7 +134,7 @@ protected:
     ReceiverFunction mReceiver;
 
 private:
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
+    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 };
 
 }  // namespace Coap

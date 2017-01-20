@@ -563,7 +563,7 @@ ThreadError NcpBase::OutboundFrameFeedData(const uint8_t *aDataBuffer, uint16_t 
     return mTxFrameBuffer.InFrameFeedData(aDataBuffer, aDataBufferLength);
 }
 
-ThreadError NcpBase::OutboundFrameFeedMessage(otMessage aMessage)
+ThreadError NcpBase::OutboundFrameFeedMessage(otMessage *aMessage)
 {
     return mTxFrameBuffer.InFrameFeedMessage(aMessage);
 }
@@ -577,12 +577,12 @@ ThreadError NcpBase::OutboundFrameEnd(void)
 // MARK: Outbound Datagram Handling
 // ----------------------------------------------------------------------------
 
-void NcpBase::HandleDatagramFromStack(otMessage aMessage, void *aContext)
+void NcpBase::HandleDatagramFromStack(otMessage *aMessage, void *aContext)
 {
     static_cast<NcpBase *>(aContext)->HandleDatagramFromStack(aMessage);
 }
 
-void NcpBase::HandleDatagramFromStack(otMessage aMessage)
+void NcpBase::HandleDatagramFromStack(otMessage *aMessage)
 {
     ThreadError errorCode = kThreadError_None;
     bool isSecure = otMessageIsLinkSecurityEnabled(aMessage);
@@ -1439,7 +1439,7 @@ exit:
     return errorCode;
 }
 
-ThreadError NcpBase::SendPropertyUpdate(uint8_t header, uint8_t command, spinel_prop_key_t key, otMessage aMessage)
+ThreadError NcpBase::SendPropertyUpdate(uint8_t header, uint8_t command, spinel_prop_key_t key, otMessage *aMessage)
 {
     ThreadError errorCode = kThreadError_None;
 
@@ -4330,7 +4330,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spin
     unsigned int meta_len(0);
 
     // STREAM_NET_INSECURE packets are not secured at layer 2.
-    otMessage message = otIp6NewMessage(mInstance, false);
+    otMessage *message = otIp6NewMessage(mInstance, false);
 
     if (message == NULL)
     {
@@ -4403,7 +4403,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_k
     unsigned int meta_len(0);
 
     // STREAM_NET requires layer 2 security.
-    otMessage message = otIp6NewMessage(mInstance, true);
+    otMessage *message = otIp6NewMessage(mInstance, true);
 
     if (message == NULL)
     {

@@ -509,7 +509,7 @@ ThreadError Dhcp6Client::AppendRapidCommit(Message &aMessage)
     return aMessage.Append(&option, sizeof(option));
 }
 
-void Dhcp6Client::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
+void Dhcp6Client::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     Dhcp6Client *obj = static_cast<Dhcp6Client *>(aContext);
     obj->HandleUdpReceive(*static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));

@@ -56,7 +56,7 @@ extern "C" {
  * This callback allows OpenThread to inform the application of a received UDP message.
  *
  */
-typedef void (*otUdpReceive)(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
+typedef void (*otUdpReceive)(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
 /**
  * This structure represents a UDP socket.
@@ -83,7 +83,7 @@ typedef struct otUdpSocket
  * @sa otFreeMessage
  *
  */
-otMessage otUdpNewMessage(otInstance *aInstance, bool aLinkSecurityEnabled);
+otMessage *otUdpNewMessage(otInstance *aInstance, bool aLinkSecurityEnabled);
 
 /**
  * Open a UDP/IPv6 socket.
@@ -149,7 +149,7 @@ ThreadError otUdpBind(otUdpSocket *aSocket, otSockAddr *aSockName);
  * @sa otUdpSend
  *
  */
-ThreadError otUdpSend(otUdpSocket *aSocket, otMessage aMessage, const otMessageInfo *aMessageInfo);
+ThreadError otUdpSend(otUdpSocket *aSocket, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
 /**
  * @}

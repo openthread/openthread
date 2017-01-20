@@ -158,7 +158,7 @@ void otIp6SetReceiveFilterEnabled(otInstance *aInstance, bool aEnabled)
     aInstance->mIp6.SetReceiveIp6FilterEnabled(aEnabled);
 }
 
-ThreadError otIp6Send(otInstance *aInstance, otMessage aMessage)
+ThreadError otIp6Send(otInstance *aInstance, otMessage *aMessage)
 {
     ThreadError error;
 
@@ -172,7 +172,7 @@ ThreadError otIp6Send(otInstance *aInstance, otMessage aMessage)
     return error;
 }
 
-otMessage otIp6NewMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
+otMessage *otIp6NewMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
 {
     Message *message = aInstance->mIp6.mMessagePool.New(Message::kTypeIp6, 0);
 

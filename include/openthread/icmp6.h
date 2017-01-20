@@ -96,7 +96,7 @@ ThreadError otIcmp6RegisterHandler(otInstance *aInstance, otIcmp6Handler *aHandl
  *                           May be zero.
  *
  */
-ThreadError otIcmp6SendEchoRequest(otInstance *aInstance, otMessage aMessage,
+ThreadError otIcmp6SendEchoRequest(otInstance *aInstance, otMessage *aMessage,
                                    const otMessageInfo *aMessageInfo, uint16_t aIdentifier);
 
 /**

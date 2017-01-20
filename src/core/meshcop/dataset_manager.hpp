@@ -91,7 +91,7 @@ protected:
     ThreadNetif &mNetif;
 
 private:
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
+    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleTimer(void *aContext);
@@ -124,7 +124,7 @@ public:
     ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
 private:
-    static void HandleGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleGet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                           const otMessageInfo *aMessageInfo);
     void HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -164,7 +164,7 @@ protected:
     uint32_t mNetworkTime;
 
 private:
-    static void HandleGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleGet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                           const otMessageInfo *aMessageInfo);
     void HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 

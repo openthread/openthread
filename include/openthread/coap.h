@@ -154,7 +154,7 @@ typedef struct otCoapHeader
  * @retval  kThreadError_ResponseTimeout  No response or acknowledgment received during timeout period.
  *
  */
-typedef void (*otCoapResponseHandler)(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+typedef void (*otCoapResponseHandler)(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                       const otMessageInfo *aMessageInfo, ThreadError aResult);
 
 /**
@@ -166,7 +166,7 @@ typedef void (*otCoapResponseHandler)(void *aContext, otCoapHeader *aHeader, otM
  * @param[in]  aMessageInfo  A pointer to the message info for @p aMessage.
  *
  */
-typedef void (*otCoapRequestHandler)(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+typedef void (*otCoapRequestHandler)(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                      const otMessageInfo *aMessageInfo);
 
 /**
@@ -372,7 +372,7 @@ const otCoapOption *otCoapHeaderGetNextOption(otCoapHeader *aHeader);
  * @returns A pointer to the message or NULL if failed to allocate message.
  *
  */
-otMessage otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader);
+otMessage *otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader);
 
 /**
  * This function sends a CoAP request.
@@ -390,7 +390,7 @@ otMessage otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader);
  * @retval kThreadError_NoBufs Failed to allocate retransmission data.
  *
  */
-ThreadError otCoapSendRequest(otInstance *aInstance, otMessage aMessage, const otMessageInfo *aMessageInfo,
+ThreadError otCoapSendRequest(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo,
                               otCoapResponseHandler aHandler, void *aContext);
 
 /**
@@ -456,7 +456,7 @@ void otCoapServerRemoveResource(otInstance *aInstance, otCoapResource *aResource
  * @retval kThreadError_NoBufs  Insufficient buffers available to send the CoAP response.
  *
  */
-ThreadError otCoapSendResponse(otInstance *aInstance, otMessage aMessage, const otMessageInfo *aMessageInfo);
+ThreadError otCoapSendResponse(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 
 /**

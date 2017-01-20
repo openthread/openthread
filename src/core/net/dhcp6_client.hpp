@@ -207,7 +207,7 @@ private:
     ThreadError AppendElapsedTime(Message &aMessage);
     ThreadError AppendRapidCommit(Message &aMessage);
 
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
+    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     void ProcessReply(Message &aMessage);

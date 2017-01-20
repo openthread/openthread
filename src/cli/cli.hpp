@@ -238,7 +238,7 @@ private:
 #endif
 
 #ifndef OTDLL
-    static void s_HandleIcmpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo,
+    static void s_HandleIcmpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo,
                                     const otIcmp6Header *aIcmpHeader);
     static void s_HandlePingTimer(void *aContext);
 #endif
@@ -251,7 +251,7 @@ private:
                                             void *aContext);
     static void OTCALL s_HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, void *aContext);
 #ifndef OTDLL
-    static void OTCALL s_HandleDiagnosticGetResponse(otMessage aMessage, const otMessageInfo *aMessageInfo,
+    static void OTCALL s_HandleDiagnosticGetResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo,
                                                      void *aContext);
 #endif
     static void OTCALL s_HandleJoinerCallback(ThreadError aError, void *aContext);

@@ -56,7 +56,7 @@ ThreadError otIcmp6RegisterHandler(otInstance *aInstance, otIcmp6Handler *aHandl
     return aInstance->mIp6.mIcmp.RegisterHandler(*static_cast<Ip6::IcmpHandler *>(aHandler));
 }
 
-ThreadError otIcmp6SendEchoRequest(otInstance *aInstance, otMessage aMessage,
+ThreadError otIcmp6SendEchoRequest(otInstance *aInstance, otMessage *aMessage,
                                    const otMessageInfo *aMessageInfo, uint16_t aIdentifier)
 {
     return aInstance->mIp6.mIcmp.SendEchoRequest(*static_cast<Message *>(aMessage),

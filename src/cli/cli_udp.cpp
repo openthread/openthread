@@ -65,12 +65,12 @@ exit:
     return error;
 }
 
-void Udp::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
+void Udp::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     static_cast<Udp *>(aContext)->HandleUdpReceive(aMessage, aMessageInfo);
 }
 
-void Udp::HandleUdpReceive(otMessage aMessage, const otMessageInfo *aMessageInfo)
+void Udp::HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     uint16_t payloadLength = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
     char buf[512];
@@ -99,7 +99,7 @@ exit:
 int Udp::Output(const char *aBuf, uint16_t aBufLength)
 {
     ThreadError error = kThreadError_None;
-    otMessage message;
+    otMessage *message;
 
     VerifyOrExit((message = otUdpNewMessage(mInstance, true)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = otMessageSetLength(message, aBufLength));
