@@ -800,6 +800,7 @@ extern "C" void otPlatRadioTransmitDone(otInstance *aInstance, RadioPacket *aPac
                                         ThreadError aError)
 {
     otLogFuncEntryMsg("%!otError!, aRxPending=%u", aError, aRxPending ? 1 : 0);
+
     if (aInstance->mLinkRawEnabled)
     {
         if (aInstance->mLinkRawTransmitDoneCallback)
@@ -811,6 +812,7 @@ extern "C" void otPlatRadioTransmitDone(otInstance *aInstance, RadioPacket *aPac
     {
         aInstance->mThreadNetif.GetMac().TransmitDoneTask(aPacket, aRxPending, aError);
     }
+
     otLogFuncExit();
 }
 
@@ -1183,6 +1185,7 @@ exit:
 extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, RadioPacket *aFrame, ThreadError aError)
 {
     otLogFuncEntryMsg("%!otError!", aError);
+
     if (aInstance->mLinkRawEnabled)
     {
         if (aInstance->mLinkRawReceiveDoneCallback)
@@ -1194,6 +1197,7 @@ extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, RadioPacket *aFram
     {
         aInstance->mThreadNetif.GetMac().ReceiveDoneTask(static_cast<Frame *>(aFrame), aError);
     }
+
     otLogFuncExit();
 }
 
