@@ -39,19 +39,7 @@ ThreadError otLinkRawSetEnable(otInstance *aInstance, bool aEnabled)
 
     VerifyOrExit(!aInstance->mThreadNetif.IsUp(), error = kThreadError_InvalidState);
 
-    if (aEnabled)
-    {
-        error = otPlatRadioEnable(aInstance);
-    }
-    else
-    {
-        error = otPlatRadioDisable(aInstance);
-    }
-
-    if (error == kThreadError_None)
-    {
-        aInstance->mLinkRawEnabled = aEnabled;
-    }
+    aInstance->mLinkRawEnabled = aEnabled;
 
 exit:
     return error;
