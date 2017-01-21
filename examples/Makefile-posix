@@ -87,6 +87,8 @@ configure_OPTIONS               = \
     --enable-diag                 \
     --with-examples=posix         \
     --with-platform-info=POSIX    \
+    --enable-commissioner         \
+    --enable-joiner
     $(NULL)
 
 ifeq ($(COVERAGE),1)
