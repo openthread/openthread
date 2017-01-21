@@ -38,8 +38,7 @@
 #include <crypto/hmac_sha256.hpp>
 #include <crypto/aes_ccm.hpp>
 
-namespace Thread {
-namespace Crypto {
+using namespace Thread::Crypto;
 
 #ifdef __cplusplus
 extern "C" {
@@ -93,6 +92,3 @@ exit:
 #ifdef __cplusplus
 }  // extern "C"
 #endif
-
-}  // namespace Crypto
-}  // namespace Thread
