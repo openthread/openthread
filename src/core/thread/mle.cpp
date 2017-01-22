@@ -2588,13 +2588,13 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
     }
 
     mParent.mValid.mRloc16 = sourceAddress.GetRloc16();
-    SuccessOrExit(error = SetStateChild(shortAddress.GetRloc16()));
 
     mNetworkData.SetNetworkData(leaderData.GetDataVersion(), leaderData.GetStableDataVersion(),
                                 (mDeviceMode & ModeTlv::kModeFullNetworkData) == 0,
                                 networkData.GetNetworkData(), networkData.GetLength());
 
     mNetif.GetActiveDataset().ApplyConfiguration();
+    SuccessOrExit(error = SetStateChild(shortAddress.GetRloc16()));
 
 exit:
 
