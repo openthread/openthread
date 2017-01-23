@@ -299,11 +299,6 @@ private:
     bool mScanning;
 
     ThreadNetif &mNetif;
-    AddressResolver &mAddressResolver;
-    Lowpan::Lowpan &mLowpan;
-    Mac::Mac &mMac;
-    Mle::MleRouter &mMle;
-    NetworkData::Leader &mNetworkData;
 
     bool mSrcMatchEnabled;
 };

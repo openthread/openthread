@@ -146,8 +146,6 @@ private:
 
     Timer mTimer;
     Coap::Resource mJoinerEntrust;
-    Coap::Server &mCoapServer;
-    Coap::SecureClient &mSecureCoapClient;
     ThreadNetif &mNetif;
 };
 

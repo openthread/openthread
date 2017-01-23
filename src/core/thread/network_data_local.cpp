@@ -43,8 +43,7 @@ namespace NetworkData {
 
 Local::Local(ThreadNetif &aThreadNetif):
     NetworkData(aThreadNetif, true),
-    mOldRloc(Mac::kShortAddrInvalid),
-    mLeader(aThreadNetif.GetNetworkDataLeader())
+    mOldRloc(Mac::kShortAddrInvalid)
 {
 }
 
@@ -191,38 +190,38 @@ ThreadError Local::UpdateRloc(PrefixTlv &aPrefix)
 ThreadError Local::UpdateRloc(HasRouteTlv &aHasRoute)
 {
     HasRouteEntry *entry = aHasRoute.GetEntry(0);
-    entry->SetRloc(mMle.GetRloc16());
+    entry->SetRloc(mNetif.GetMle().GetRloc16());
     return kThreadError_None;
 }
 
 ThreadError Local::UpdateRloc(BorderRouterTlv &aBorderRouter)
 {
     BorderRouterEntry *entry = aBorderRouter.GetEntry(0);
-    entry->SetRloc(mMle.GetRloc16());
+    entry->SetRloc(mNetif.GetMle().GetRloc16());
     return kThreadError_None;
 }
 
 bool Local::IsOnMeshPrefixConsistent(void)
 {
-    return (mLeader.ContainsOnMeshPrefixes(*this, mMle.GetRloc16()) &&
-            ContainsOnMeshPrefixes(mLeader, mMle.GetRloc16()));
+    return (mNetif.GetNetworkDataLeader().ContainsOnMeshPrefixes(*this, mNetif.GetMle().GetRloc16()) &&
+            ContainsOnMeshPrefixes(mNetif.GetNetworkDataLeader(), mNetif.GetMle().GetRloc16()));
 }
 
 bool Local::IsExternalRouteConsistent(void)
 {
-    return (mLeader.ContainsExternalRoutes(*this, mMle.GetRloc16()) &&
-            ContainsExternalRoutes(mLeader, mMle.GetRloc16()));
+    return (mNetif.GetNetworkDataLeader().ContainsExternalRoutes(*this, mNetif.GetMle().GetRloc16()) &&
+            ContainsExternalRoutes(mNetif.GetNetworkDataLeader(), mNetif.GetMle().GetRloc16()));
 }
 
 ThreadError Local::SendServerDataNotification(void)
 {
     ThreadError error = kThreadError_None;
-    uint16_t rloc = mMle.GetRloc16();
+    uint16_t rloc = mNetif.GetMle().GetRloc16();
 
-    if ((mMle.GetDeviceMode() & Mle::ModeTlv::kModeFFD) != 0 &&
-        (mMle.IsRouterRoleEnabled()) &&
-        (mMle.GetDeviceState() < Mle::kDeviceStateRouter) &&
-        (mMle.GetActiveRouterCount() < mMle.GetRouterUpgradeThreshold()))
+    if ((mNetif.GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD) != 0 &&
+        (mNetif.GetMle().IsRouterRoleEnabled()) &&
+        (mNetif.GetMle().GetDeviceState() < Mle::kDeviceStateRouter) &&
+        (mNetif.GetMle().GetActiveRouterCount() < mNetif.GetMle().GetRouterUpgradeThreshold()))
     {
         ExitNow(error = kThreadError_InvalidState);
     }

@@ -88,10 +88,7 @@ protected:
     Dataset mLocal;
     Dataset mNetwork;
 
-    Coap::Server &mCoapServer;
-    Mle::Mle &mMle;
     ThreadNetif &mNetif;
-    NetworkData::Leader &mNetworkDataLeader;
 
 private:
     static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
@@ -106,7 +103,6 @@ private:
                          uint8_t *aTlvs, uint8_t aLength);
 
     Timer mTimer;
-    Coap::Client &mCoapClient;
 
     const char *mUriSet;
     const char *mUriGet;

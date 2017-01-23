@@ -183,11 +183,7 @@ private:
     Ip6::IcmpHandler mIcmpHandler;
     Timer mTimer;
 
-    MeshForwarder &mMeshForwarder;
-    Coap::Server &mCoapServer;
-    Coap::Client &mCoapClient;
-    Mle::MleRouter &mMle;
-    Ip6::Netif &mNetif;
+    ThreadNetif &mNetif;
 };
 
 /**

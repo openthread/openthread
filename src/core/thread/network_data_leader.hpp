@@ -216,7 +216,6 @@ public:
 protected:
     uint8_t         mStableVersion;
     uint8_t         mVersion;
-    ThreadNetif    &mNetif;
 
 private:
     ThreadError RemoveCommissioningData(void);

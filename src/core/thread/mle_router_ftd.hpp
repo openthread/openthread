@@ -838,9 +838,6 @@ private:
     uint8_t mRouterId;
     uint8_t mPreviousRouterId;
     uint32_t mPreviousPartitionId;
-
-    Coap::Server &mCoapServer;
-    Coap::Client &mCoapClient;
 };
 
 }  // namespace Mle

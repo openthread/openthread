@@ -60,10 +60,9 @@ AnnounceBeginServer::AnnounceBeginServer(ThreadNetif &aThreadNetif) :
     mChannel(0),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, &AnnounceBeginServer::HandleTimer, this),
     mAnnounceBegin(OPENTHREAD_URI_ANNOUNCE_BEGIN, &AnnounceBeginServer::HandleRequest, this),
-    mCoapServer(aThreadNetif.GetCoapServer()),
     mNetif(aThreadNetif)
 {
-    mCoapServer.AddResource(mAnnounceBegin);
+    mNetif.GetCoapServer().AddResource(mAnnounceBegin);
 }
 
 ThreadError AnnounceBeginServer::SendAnnounce(uint32_t aChannelMask)
@@ -120,7 +119,7 @@ void AnnounceBeginServer::HandleRequest(Coap::Header &aHeader, Message &aMessage
     SendAnnounce(channelMask.GetMask(), count.GetCount(), period.GetPeriod());
 
     memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
-    SuccessOrExit(mCoapServer.SendEmptyAck(aHeader, responseInfo));
+    SuccessOrExit(mNetif.GetCoapServer().SendEmptyAck(aHeader, responseInfo));
 
     otLogInfoMeshCoP("sent announce begin response");
 

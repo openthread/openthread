@@ -52,8 +52,7 @@
 namespace Thread {
 
 AnnounceBeginClient::AnnounceBeginClient(ThreadNetif &aThreadNetif) :
-    mNetif(aThreadNetif),
-    mCoapClient(aThreadNetif.GetCoapClient())
+    mNetif(aThreadNetif)
 {
 }
 
@@ -76,7 +75,7 @@ ThreadError AnnounceBeginClient::SendRequest(uint32_t aChannelMask, uint8_t aCou
     header.AppendUriPathOptions(OPENTHREAD_URI_ANNOUNCE_BEGIN);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mCoapClient.NewMeshCoPMessage(header)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mNetif.GetCoapClient().NewMeshCoPMessage(header)) != NULL, error = kThreadError_NoBufs);
 
     sessionId.Init();
     sessionId.SetCommissionerSessionId(mNetif.GetCommissioner().GetSessionId());
@@ -98,7 +97,7 @@ ThreadError AnnounceBeginClient::SendRequest(uint32_t aChannelMask, uint8_t aCou
     messageInfo.SetPeerPort(kCoapUdpPort);
     messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
 
-    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
+    SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent announce begin query");
 

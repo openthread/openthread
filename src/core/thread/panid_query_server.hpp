@@ -89,8 +89,6 @@ private:
     Timer mTimer;
 
     Coap::Resource mPanIdQuery;
-    Coap::Server &mCoapServer;
-    Coap::Client &mCoapClient;
 
     ThreadNetif &mNetif;
 };

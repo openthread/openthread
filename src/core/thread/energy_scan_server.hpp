@@ -101,8 +101,6 @@ private:
     Ip6::NetifCallback mNetifCallback;
 
     Coap::Resource mEnergyScan;
-    Coap::Server &mCoapServer;
-    Coap::Client &mCoapClient;
 
     ThreadNetif &mNetif;
 };

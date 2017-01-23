@@ -255,9 +255,6 @@ private:
     Coap::Resource mRelayReceive;
     Coap::Resource mDatasetChanged;
     Coap::Resource mJoinerFinalize;
-    Coap::Server &mCoapServer;
-    Coap::Client &mCoapClient;
-    Coap::SecureServer &mSecureCoapServer;
 
     ThreadNetif &mNetif;
 };
