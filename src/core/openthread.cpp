@@ -1636,6 +1636,21 @@ exit:
     return error;
 }
 
+bool otIsNodeCommissioned(otInstance *aInstance)
+{
+    otOperationalDataset dataset;
+
+    otGetActiveDataset(aInstance, &dataset);
+
+    if ((dataset.mIsMasterKeySet) && (dataset.mIsNetworkNameSet) &&
+        (dataset.mIsExtendedPanIdSet) && (dataset.mIsPanIdSet) && (dataset.mIsChannelSet))
+    {
+        return true;
+    }
+
+    return false;
+}
+
 ThreadError otGetPendingDataset(otInstance *aInstance, otOperationalDataset *aDataset)
 {
     ThreadError error = kThreadError_None;
