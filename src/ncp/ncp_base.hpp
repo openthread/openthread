@@ -188,6 +188,21 @@ private:
 
     void SendDoneTask(void);
 
+    /**
+     * Trampoline for LinkRawReceiveDone().
+     */
+    static void LinkRawReceiveDone(otInstance *aInstance, RadioPacket *aPacket, ThreadError aError);
+
+    void LinkRawReceiveDone(RadioPacket *aPacket, ThreadError aError);
+
+    /**
+     * Trampoline for LinkRawTransmitDone().
+     */
+    static void LinkRawTransmitDone(otInstance *aInstance, RadioPacket *aPacket, bool aFramePending,
+                                    ThreadError aError);
+
+    void LinkRawTransmitDone(RadioPacket *aPacket, bool aFramePending, ThreadError aError);
+
     static void HandleNetifStateChanged(uint32_t flags, void *context);
 
 private:
@@ -384,6 +399,8 @@ private:
                                                   uint16_t value_len);
     ThreadError SetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                           uint16_t value_len);
+    ThreadError SetPropertyHandler_STREAM_RAW(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                              uint16_t value_len);
     ThreadError SetPropertyHandler_NET_IF_UP(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                uint16_t value_len);
     ThreadError SetPropertyHandler_NET_STACK_UP(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -517,6 +534,9 @@ private:
     bool mAllowLocalNetworkDataChange;
     bool mRequireJoinExistingNetwork;
     bool mIsRawStreamEnabled;
+
+    uint8_t mCurTransmintTID;
+    uint8_t mCurReceiveChannel;
 
     uint32_t mFramingErrorCounter;             // Number of improperly formed received spinel frames.
     uint32_t mRxSpinelFrameCounter;            // Number of received (inbound) spinel frames.

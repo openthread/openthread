@@ -237,6 +237,7 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_MAC_SCAN_PERIOD, &NcpBase::SetPropertyHandler_MAC_SCAN_PERIOD },
     { SPINEL_PROP_MAC_15_4_PANID, &NcpBase::SetPropertyHandler_MAC_15_4_PANID },
     { SPINEL_PROP_MAC_RAW_STREAM_ENABLED, &NcpBase::SetPropertyHandler_MAC_RAW_STREAM_ENABLED },
+    { SPINEL_PROP_STREAM_RAW, &NcpBase::SetPropertyHandler_STREAM_RAW },
 
     { SPINEL_PROP_NET_IF_UP, &NcpBase::SetPropertyHandler_NET_IF_UP },
     { SPINEL_PROP_NET_STACK_UP, &NcpBase::SetPropertyHandler_NET_STACK_UP },
@@ -478,6 +479,8 @@ NcpBase::NcpBase(otInstance *aInstance):
     mAllowLocalNetworkDataChange(false),
     mRequireJoinExistingNetwork(false),
     mIsRawStreamEnabled(false),
+    mCurTransmintTID(0),
+    mCurReceiveChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL),
 
     mFramingErrorCounter(0),
     mRxSpinelFrameCounter(0),
@@ -742,6 +745,91 @@ void NcpBase::HandleEnergyScanResult(otEnergyScanResult *aResult)
             mShouldSignalEndOfScan = true;
         }
     }
+}
+
+void NcpBase::LinkRawReceiveDone(otInstance *, RadioPacket *aPacket, ThreadError aError)
+{
+    sNcpContext->LinkRawReceiveDone(aPacket, aError);
+}
+
+void NcpBase::LinkRawReceiveDone(RadioPacket *aPacket, ThreadError aError)
+{
+    ThreadError errorCode = kThreadError_None;
+    uint16_t flags = 0;
+
+    SuccessOrExit(errorCode = OutboundFrameBegin());
+
+    if (aPacket->mDidTX)
+    {
+        flags |= SPINEL_MD_FLAG_TX;
+    }
+
+    // Append frame header and frame length
+    SuccessOrExit(
+        errorCode = OutboundFrameFeedPacked(
+            "CiiS",
+            SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+            SPINEL_CMD_PROP_VALUE_IS,
+            SPINEL_PROP_STREAM_RAW,
+            (aError == kThreadError_None) ? aPacket->mLength : 0
+        )
+    );
+
+    if (aError == kThreadError_None)
+    {
+        // Append the frame contents
+        SuccessOrExit(
+            errorCode = OutboundFrameFeedData(
+                aPacket->mPsdu,
+                aPacket->mLength
+            )
+        );
+    }
+
+    // Append metadata (rssi, etc)
+    SuccessOrExit(
+        errorCode = OutboundFrameFeedPacked(
+            "ccSiCC",
+            aPacket->mPower,    // TX Power
+            -128,               // Noise Floor (Currently unused)
+            flags,              // Flags
+            aError,             // Receive error
+            aPacket->mChannel,  // Receive channel
+            aPacket->mLqi       // Link quality indicator
+        )
+    );
+
+    SuccessOrExit(errorCode = OutboundFrameSend());
+
+exit:
+    return;
+}
+
+void NcpBase::LinkRawTransmitDone(otInstance *, RadioPacket *aPacket, bool aFramePending, ThreadError aError)
+{
+    sNcpContext->LinkRawTransmitDone(aPacket, aFramePending, aError);
+}
+
+void NcpBase::LinkRawTransmitDone(RadioPacket *, bool aFramePending, ThreadError aError)
+{
+    if (mCurTransmintTID)
+    {
+        SendPropertyUpdate(
+            SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0 | mCurTransmintTID,
+            SPINEL_CMD_PROP_VALUE_IS,
+            SPINEL_PROP_LAST_STATUS,
+            "ib",
+            aError,
+            aFramePending
+        );
+
+        // Clear cached transmit TID
+        mCurTransmintTID = 0;
+    }
+
+    // Make sure we are back listening on the original receive channel,
+    // since the transmit could have been on a different channel.
+    otLinkRawReceive(mInstance, mCurReceiveChannel, &NcpBase::LinkRawReceiveDone);
 }
 
 // ----------------------------------------------------------------------------
@@ -1514,6 +1602,8 @@ ThreadError NcpBase::GetPropertyHandler_CAPS(uint8_t header, spinel_prop_key_t k
 
     SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_MAC_WHITELIST));
 
+    SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_MAC_RAW));
+
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_JAM_DETECT));
 #endif
@@ -1596,10 +1686,13 @@ ThreadError NcpBase::GetPropertyHandler_LOCK(uint8_t header, spinel_prop_key_t k
 
 ThreadError NcpBase::GetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_key_t key)
 {
-    // TODO: Implement PHY_ENBLED (Needs API!)
-    (void)key;
-
-    return SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+    return SendPropertyUpdate(
+                header,
+                SPINEL_CMD_PROP_VALUE_IS,
+                key,
+                SPINEL_DATATYPE_BOOL_S,
+                otLinkRawIsEnabled(mInstance)
+            );
 }
 
 ThreadError NcpBase::GetPropertyHandler_PHY_FREQ(uint8_t header, spinel_prop_key_t key)
@@ -3013,11 +3106,23 @@ ThreadError NcpBase::SetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_
     {
         if (value == false)
         {
-            errorCode = otPlatRadioDisable(mInstance);
+            errorCode = otLinkRawSetEnable(mInstance, true);
+
+            // If we have raw stream enabled already, start receiving
+            if (errorCode == kThreadError_None && mIsRawStreamEnabled)
+            {
+                errorCode = otLinkRawReceive(mInstance, mCurReceiveChannel, &NcpBase::LinkRawReceiveDone);
+            }
         }
         else
         {
-            errorCode = otPlatRadioEnable(mInstance);
+            // If we have raw stream enabled stop receiving
+            if (mIsRawStreamEnabled)
+            {
+                otLinkRawSleep(mInstance);
+            }
+
+            errorCode = otLinkRawSetEnable(mInstance, false);
         }
     }
     else
@@ -3065,6 +3170,21 @@ ThreadError NcpBase::SetPropertyHandler_PHY_CHAN(uint8_t header, spinel_prop_key
     if (parsedLength > 0)
     {
         errorCode = otSetChannel(mInstance, static_cast<uint8_t>(i));
+
+         if (errorCode == kThreadError_None)
+         {
+             // Cache the channel. If the raw link layer isn't enabled yet, the otSetChannel call
+             // doesn't call into otLinkRawReceive to set the channel. We will have to do it
+             // manually whenever the radios are enabled and/or raw stream is enabled.
+             mCurReceiveChannel = static_cast<uint8_t>(i);
+             
+             // Make sure we are update the receiving channel if raw link is enabled and we have raw
+             // stream enabled already
+             if (otLinkRawIsEnabled(mInstance) && mIsRawStreamEnabled)
+             {
+                 errorCode = otLinkRawReceive(mInstance, mCurReceiveChannel, &NcpBase::LinkRawReceiveDone);
+             }
+         }
 
         if (errorCode == kThreadError_None)
         {
@@ -3346,7 +3466,17 @@ ThreadError NcpBase::SetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t header, s
 
     if (parsedLength > 0)
     {
-        mIsRawStreamEnabled = value;
+        if (otLinkRawIsEnabled(mInstance))
+        {
+            if (value)
+            {
+                errorCode = otLinkRawReceive(mInstance, mCurReceiveChannel, &NcpBase::LinkRawReceiveDone);
+            }
+            else
+            {
+                errorCode = otLinkRawSleep(mInstance);
+            }
+        }
     }
     else
     {
@@ -3355,12 +3485,70 @@ ThreadError NcpBase::SetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t header, s
 
     if (errorCode == kThreadError_None)
     {
+        mIsRawStreamEnabled = value;
         errorCode = HandleCommandPropertyGet(header, key);
     }
     else
     {
         errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
     }
+
+    return errorCode;
+}
+
+ThreadError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,uint16_t value_len)
+{
+    spinel_ssize_t parsedLength(0);
+    ThreadError errorCode = kThreadError_None;
+    uint8_t *frame_buffer(NULL);
+    unsigned int frame_len(0);
+    RadioPacket *packet = otPlatRadioGetTransmitBuffer(mInstance);
+
+    if (otLinkRawIsEnabled(mInstance))
+    {
+        parsedLength = spinel_datatype_unpack(
+            value_ptr,
+            value_len,
+            "DCc",
+            &frame_buffer,
+            &frame_len,
+            &packet->mChannel,
+            &packet->mPower
+        );
+
+        if (parsedLength > 0 && frame_len <= kMaxPHYPacketSize)
+        {
+            // Cache the transaction ID for async response
+            mCurTransmintTID = SPINEL_HEADER_GET_TID(header);
+
+            // Update packet buffer and length
+            packet->mLength = static_cast<uint8_t>(frame_len);
+            memcpy(packet->mPsdu, frame_buffer, packet->mLength);
+
+            // Pass packet to the radio layer. Note, this fails if we
+            // haven't enabled raw stream or are already transmitting.
+            errorCode = otLinkRawTransmit(mInstance, packet, &NcpBase::LinkRawTransmitDone);
+        }
+        else
+        {
+            errorCode = kThreadError_Parse;
+        }
+    }
+    else
+    {
+        errorCode = kThreadError_InvalidState;
+    }
+
+    if (errorCode == kThreadError_None)
+    {
+        // Don't do anything here yet. We will complete the transaction when we get a transmit done callback
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+    }
+
+    (void)key;
 
     return errorCode;
 }
