@@ -67,13 +67,24 @@ ThreadError Tlv::GetOffset(const Message &aMessage, uint8_t aType, uint16_t &aOf
     {
         aMessage.Read(offset, sizeof(Tlv), &tlv);
 
-        if (tlv.GetType() == aType && (offset + sizeof(tlv) + tlv.GetLength()) <= end)
+        // skip extended TLV
+        if (tlv.GetLength() == kExtendedLength)
+        {
+            uint16_t length = 0;
+
+            offset += sizeof(tlv);
+            aMessage.Read(offset, sizeof(length), &length);
+            offset += sizeof(length) + HostSwap16(length);
+        }
+        else if (tlv.GetType() == aType && (offset + sizeof(tlv) + tlv.GetLength()) <= end)
         {
             aOffset = offset;
             ExitNow(error = kThreadError_None);
         }
-
-        offset += sizeof(tlv) + tlv.GetLength();
+        else
+        {
+            offset += sizeof(tlv) + tlv.GetLength();
+        }
     }
 
 exit:

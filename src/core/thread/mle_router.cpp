@@ -1,6 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
- *  All rights reserved.
+ *  Copyright (c) 2016, The OpenThread Authors.  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -59,9 +58,7 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     mDelayedResponseTimer(aThreadNetif.GetIp6().mTimerScheduler, &MleRouter::HandleDelayedResponseTimer, this),
     mChildUpdateRequestTimer(aThreadNetif.GetIp6().mTimerScheduler, &MleRouter::HandleChildUpdateRequestTimer, this),
     mAddressSolicit(OPENTHREAD_URI_ADDRESS_SOLICIT, &MleRouter::HandleAddressSolicit, this),
-    mAddressRelease(OPENTHREAD_URI_ADDRESS_RELEASE, &MleRouter::HandleAddressRelease, this),
-    mCoapServer(aThreadNetif.GetCoapServer()),
-    mCoapClient(aThreadNetif.GetCoapClient())
+    mAddressRelease(OPENTHREAD_URI_ADDRESS_RELEASE, &MleRouter::HandleAddressRelease, this)
 {
     mChallengeTimeout = 0;
     mNextChildId = kMaxChildId;
@@ -195,8 +192,8 @@ ThreadError MleRouter::ReleaseRouterId(uint8_t aRouterId)
 
     mRouterIdSequence++;
     mRouterIdSequenceLastUpdated = Timer::GetNow();
-    mAddressResolver.Remove(aRouterId);
-    mNetworkData.RemoveBorderRouter(GetRloc16(aRouterId));
+    mNetif.GetAddressResolver().Remove(aRouterId);
+    mNetif.GetNetworkDataLeader().RemoveBorderRouter(GetRloc16(aRouterId));
     ResetAdvertiseInterval();
 
 exit:
@@ -225,7 +222,7 @@ ThreadError MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
     }
 
     mAdvertiseTimer.Stop();
-    mAddressResolver.Clear();
+    mNetif.GetAddressResolver().Clear();
     mRouterSelectionJitterTimeout = 0;
 
     switch (mDeviceState)
@@ -268,7 +265,7 @@ ThreadError MleRouter::BecomeLeader(void)
 
     mAdvertiseTimer.Stop();
     mStateUpdateTimer.Start(kStateUpdatePeriod);
-    mAddressResolver.Clear();
+    mNetif.GetAddressResolver().Clear();
 
     routerId = IsRouterIdValid(mPreviousRouterId) ? AllocateRouterId(mPreviousRouterId) : AllocateRouterId();
     router = GetRouter(routerId);
@@ -276,7 +273,7 @@ ThreadError MleRouter::BecomeLeader(void)
 
     SetRouterId(routerId);
 
-    memcpy(&router->mMacAddr, mMac.GetExtAddress(), sizeof(router->mMacAddr));
+    memcpy(&router->mMacAddr, mNetif.GetMac().GetExtAddress(), sizeof(router->mMacAddr));
 
     if (mFixedLeaderPartitionId != 0)
     {
@@ -289,7 +286,7 @@ ThreadError MleRouter::BecomeLeader(void)
 
     mRouterIdSequence = static_cast<uint8_t>(otPlatRandomGet());
 
-    mNetworkData.Reset();
+    mNetif.GetNetworkDataLeader().Reset();
 
     SuccessOrExit(error = SetStateLeader(GetRloc16(mRouterId)));
 
@@ -303,12 +300,12 @@ exit:
 
 void MleRouter::StopLeader(void)
 {
-    mCoapServer.RemoveResource(mAddressSolicit);
-    mCoapServer.RemoveResource(mAddressRelease);
+    mNetif.GetCoapServer().RemoveResource(mAddressSolicit);
+    mNetif.GetCoapServer().RemoveResource(mAddressRelease);
     mNetif.GetActiveDataset().StopLeader();
     mNetif.GetPendingDataset().StopLeader();
     mAdvertiseTimer.Stop();
-    mNetworkData.Stop();
+    mNetif.GetNetworkDataLeader().Stop();
     mNetif.UnsubscribeAllRoutersMulticast();
 }
 
@@ -405,7 +402,7 @@ ThreadError MleRouter::SetStateRouter(uint16_t aRloc16)
     mNetif.SubscribeAllRoutersMulticast();
     mRouters[mRouterId].mNextHop = mRouterId;
     mPreviousPartitionId = mLeaderData.GetPartitionId();
-    mNetworkData.Stop();
+    mNetif.GetNetworkDataLeader().Stop();
     mStateUpdateTimer.Start(kStateUpdatePeriod);
     mNetif.GetIp6().SetForwardingEnabled(true);
     mNetif.GetIp6().mMpl.SetTimerExpirations(kMplRouterDataMessageTimerExpirations);
@@ -440,11 +437,11 @@ ThreadError MleRouter::SetStateLeader(uint16_t aRloc16)
     mPreviousPartitionId = mLeaderData.GetPartitionId();
     mRouters[mRouterId].mLastHeard = Timer::GetNow();
 
-    mNetworkData.Start();
+    mNetif.GetNetworkDataLeader().Start();
     mNetif.GetActiveDataset().StartLeader();
     mNetif.GetPendingDataset().StartLeader();
-    mCoapServer.AddResource(mAddressSolicit);
-    mCoapServer.AddResource(mAddressRelease);
+    mNetif.GetCoapServer().AddResource(mAddressSolicit);
+    mNetif.GetCoapServer().AddResource(mAddressRelease);
     mNetif.GetIp6().SetForwardingEnabled(true);
     mNetif.GetIp6().mMpl.SetTimerExpirations(kMplRouterDataMessageTimerExpirations);
 
@@ -710,7 +707,7 @@ ThreadError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Mes
 
                 memcpy(&neighbor->mMacAddr, &macAddr, sizeof(neighbor->mMacAddr));
                 neighbor->mLinkInfo.Clear();
-                neighbor->mLinkInfo.AddRss(mMac.GetNoiseFloor(), threadMessageInfo->mRss);
+                neighbor->mLinkInfo.AddRss(mNetif.GetMac().GetNoiseFloor(), threadMessageInfo->mRss);
                 neighbor->mLinkFailures = 0;
                 neighbor->mState = Neighbor::kStateLinkRequest;
             }
@@ -764,7 +761,7 @@ ThreadError MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo, Neig
     SuccessOrExit(error = AppendMleFrameCounter(*message));
 
     // always append a link margin, regardless of whether or not it was requested
-    linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(mMac.GetNoiseFloor(), threadMessageInfo->mRss);
+    linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(mNetif.GetMac().GetNoiseFloor(), threadMessageInfo->mRss);
 
     // add for certification testing
     if (isAssignLinkQuality &&
@@ -1006,7 +1003,7 @@ ThreadError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::Mess
     router->mLastHeard = Timer::GetNow();
     router->mMode = ModeTlv::kModeFFD | ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeFullNetworkData;
     router->mLinkInfo.Clear();
-    router->mLinkInfo.AddRss(mMac.GetNoiseFloor(), threadMessageInfo->mRss);
+    router->mLinkInfo.AddRss(mNetif.GetMac().GetNoiseFloor(), threadMessageInfo->mRss);
     router->mLinkFailures = 0;
     router->mState = Neighbor::kStateValid;
     router->mKeySequence = aKeySequence;
@@ -1109,7 +1106,7 @@ uint8_t MleRouter::GetLinkCost(uint8_t aRouterId)
     // NULL aRouterId indicates non-existing next hop, hence return kMaxRouteCost for it.
     VerifyOrExit(aRouterId != mRouterId && router != NULL && router->mState == Neighbor::kStateValid,);
 
-    rval = router->mLinkInfo.GetLinkQuality(mMac.GetNoiseFloor());
+    rval = router->mLinkInfo.GetLinkQuality(mNetif.GetMac().GetNoiseFloor());
 
     if (rval > router->mLinkQualityOut)
     {
@@ -1143,7 +1140,7 @@ ThreadError MleRouter::ProcessRouteTlv(const RouteTlv &aRoute)
         if (old && !mRouters[i].mAllocated)
         {
             mRouters[i].mNextHop = kInvalidRouterId;
-            mAddressResolver.Remove(i);
+            mNetif.GetAddressResolver().Remove(i);
         }
     }
 
@@ -1285,6 +1282,12 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
                      leaderData.GetWeighting(), partitionId,
                      mLeaderData.GetWeighting(), mLeaderData.GetPartitionId());
 
+        if (partitionId == mLastPartitionId && (mDeviceMode & ModeTlv::kModeFFD))
+        {
+            VerifyOrExit((static_cast<int8_t>(route.GetRouterIdSequence() - mLastPartitionRouterIdSequence) > 0),
+                         error = kThreadError_Drop);
+        }
+
         if (GetDeviceState() == kDeviceStateChild &&
             (memcmp(&mParent.mMacAddr, &macAddr, sizeof(mParent.mMacAddr)) == 0 || !(mDeviceMode & ModeTlv::kModeFFD)))
         {
@@ -1415,7 +1418,7 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
         {
             memcpy(&router->mMacAddr, &macAddr, sizeof(router->mMacAddr));
             router->mLinkInfo.Clear();
-            router->mLinkInfo.AddRss(mMac.GetNoiseFloor(), threadMessageInfo->mRss);
+            router->mLinkInfo.AddRss(mNetif.GetMac().GetNoiseFloor(), threadMessageInfo->mRss);
             router->mLinkFailures = 0;
             router->mState = Neighbor::kStateLinkRequest;
             SendLinkRequest(router);
@@ -1462,7 +1465,7 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
         {
             memcpy(&router->mMacAddr, &macAddr, sizeof(router->mMacAddr));
             router->mLinkInfo.Clear();
-            router->mLinkInfo.AddRss(mMac.GetNoiseFloor(), threadMessageInfo->mRss);
+            router->mLinkInfo.AddRss(mNetif.GetMac().GetNoiseFloor(), threadMessageInfo->mRss);
             router->mLinkFailures = 0;
             router->mState = Neighbor::kStateLinkRequest;
             router->mDataRequest = false;
@@ -1599,8 +1602,11 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
             continue;
         }
 
-        otLogDebgMle("%x: %x %d %d %d %d", GetRloc16(i), GetRloc16(mRouters[i].mNextHop),
-                     mRouters[i].mCost, GetLinkCost(i), mRouters[i].mLinkInfo.GetLinkQuality(mMac.GetNoiseFloor()),
+        otLogDebgMle("%x: %x %d %d %d %d",
+                     GetRloc16(i),
+                     GetRloc16(mRouters[i].mNextHop),
+                     mRouters[i].mCost,
+                     GetLinkCost(i), mRouters[i].mLinkInfo.GetLinkQuality(mNetif.GetMac().GetNoiseFloor()),
                      mRouters[i].mLinkQualityOut);
     }
 
@@ -1677,7 +1683,7 @@ ThreadError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::M
     // MAC Address
     memcpy(&child->mMacAddr, &macAddr, sizeof(child->mMacAddr));
     child->mLinkInfo.Clear();
-    child->mLinkInfo.AddRss(mMac.GetNoiseFloor(), threadMessageInfo->mRss);
+    child->mLinkInfo.AddRss(mNetif.GetMac().GetNoiseFloor(), threadMessageInfo->mRss);
     child->mLinkFailures = 0;
     child->mState = Neighbor::kStateParentRequest;
     child->mDataRequest = false;
@@ -1979,7 +1985,8 @@ ThreadError MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &cha
     }
     else
     {
-        SuccessOrExit(error = AppendLinkMargin(*message, aChild->mLinkInfo.GetLinkMargin(mMac.GetNoiseFloor())));
+        error = AppendLinkMargin(*message, aChild->mLinkInfo.GetLinkMargin(mNetif.GetMac().GetNoiseFloor()));
+        SuccessOrExit(error);
     }
 
     SuccessOrExit(error = AppendConnectivity(*message));
@@ -2029,7 +2036,7 @@ ThreadError MleRouter::UpdateChildAddresses(const AddressRegistrationTlv &aTlv, 
         if (entry->IsCompressed())
         {
             // xxx check if context id exists
-            mNetworkData.GetContext(entry->GetContextId(), context);
+            mNetif.GetNetworkDataLeader().GetContext(entry->GetContextId(), context);
             memcpy(&aChild.mIp6Address[count], context.mPrefix, BitVectorBytes(context.mPrefixLength));
             aChild.mIp6Address[count].SetIid(entry->GetIid());
         }
@@ -2147,7 +2154,7 @@ ThreadError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::
     child->mValid.mMleFrameCounter = mleFrameCounter.GetFrameCounter();
     child->mKeySequence = aKeySequence;
     child->mMode = mode.GetMode();
-    child->mLinkInfo.AddRss(mMac.GetNoiseFloor(), threadMessageInfo->mRss);
+    child->mLinkInfo.AddRss(mNetif.GetMac().GetNoiseFloor(), threadMessageInfo->mRss);
     child->mTimeout = timeout.GetTimeout();
 
     if (mode.GetMode() & ModeTlv::kModeFullNetworkData)
@@ -2203,7 +2210,7 @@ exit:
 
 ThreadError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    static const uint8_t kMaxResponseTlvs = 8;
+    static const uint8_t kMaxResponseTlvs = 10;
 
     ThreadError error = kThreadError_None;
     Mac::ExtAddress macAddr;
@@ -2244,6 +2251,8 @@ ThreadError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const I
     {
         VerifyOrExit(challenge.IsValid(), error = kThreadError_Parse);
         tlvs[tlvslength++] = Tlv::kResponse;
+        tlvs[tlvslength++] = Tlv::kMleFrameCounter;
+        tlvs[tlvslength++] = Tlv::kLinkFrameCounter;
     }
 
     // Ip6 Address TLV
@@ -2264,7 +2273,7 @@ ThreadError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const I
             // full network data
             child->mNetworkDataVersion = leaderData.GetDataVersion();
 
-            if (leaderData.GetDataVersion() != mNetworkData.GetVersion())
+            if (leaderData.GetDataVersion() != mNetif.GetNetworkDataLeader().GetVersion())
             {
                 tlvs[tlvslength++] = Tlv::kNetworkData;
             }
@@ -2274,7 +2283,7 @@ ThreadError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const I
             // stable network data
             child->mNetworkDataVersion = leaderData.GetStableDataVersion();
 
-            if (leaderData.GetStableDataVersion() != mNetworkData.GetStableVersion())
+            if (leaderData.GetStableDataVersion() != mNetif.GetNetworkDataLeader().GetStableVersion())
             {
                 tlvs[tlvslength++] = Tlv::kNetworkData;
             }
@@ -2384,7 +2393,7 @@ ThreadError MleRouter::HandleChildUpdateResponse(const Message &aMessage, const 
 
     child->mLastHeard = Timer::GetNow();
     child->mKeySequence = aKeySequence;
-    child->mLinkInfo.AddRss(mMac.GetNoiseFloor(), threadMessageInfo->mRss);
+    child->mLinkInfo.AddRss(mNetif.GetMac().GetNoiseFloor(), threadMessageInfo->mRss);
     child->mAddSrcMatchEntryShort = true;
     child->mState = Neighbor::kStateValid;
 
@@ -2475,14 +2484,14 @@ ThreadError MleRouter::HandleNetworkDataUpdateRouter(void)
 
         if (child->mMode & ModeTlv::kModeFullNetworkData)
         {
-            if (child->mNetworkDataVersion != mNetworkData.GetVersion())
+            if (child->mNetworkDataVersion != mNetif.GetNetworkDataLeader().GetVersion())
             {
                 SendDataResponse(destination, tlvs, sizeof(tlvs));
             }
         }
         else
         {
-            if (child->mNetworkDataVersion != mNetworkData.GetStableVersion())
+            if (child->mNetworkDataVersion != mNetif.GetNetworkDataLeader().GetStableVersion())
             {
                 static const uint8_t responseTlvs[] = {Tlv::kNetworkData, Tlv::kActiveDataset, Tlv::kPendingDataset};
 
@@ -2545,7 +2554,7 @@ ThreadError MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6
         case MeshCoP::Tlv::kExtendedPanId:
             aMessage.Read(offset, sizeof(extPanId), &extPanId);
             VerifyOrExit(extPanId.IsValid(), error = kThreadError_Parse);
-            VerifyOrExit(memcmp(mMac.GetExtendedPanId(), extPanId.GetExtendedPanId(), OT_EXT_PAN_ID_SIZE),
+            VerifyOrExit(memcmp(mNetif.GetMac().GetExtendedPanId(), extPanId.GetExtendedPanId(), OT_EXT_PAN_ID_SIZE),
                          error = kThreadError_Drop);
             break;
 
@@ -2608,12 +2617,12 @@ ThreadError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, u
 
     // Extended PAN ID TLV
     extPanId.Init();
-    extPanId.SetExtendedPanId(mMac.GetExtendedPanId());
+    extPanId.SetExtendedPanId(mNetif.GetMac().GetExtendedPanId());
     SuccessOrExit(error = message->Append(&extPanId, sizeof(extPanId)));
 
     // Network Name TLV
     networkName.Init();
-    networkName.SetNetworkName(mMac.GetNetworkName());
+    networkName.SetNetworkName(mNetif.GetMac().GetNetworkName());
     SuccessOrExit(error = message->Append(&networkName, sizeof(tlv) + networkName.GetLength()));
 
     // Steering Data TLV
@@ -2626,7 +2635,7 @@ ThreadError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, u
 
     // Joiner UDP Port TLV
     joinerUdpPort.Init();
-    joinerUdpPort.SetUdpPort(mJoinerRouter.GetJoinerUdpPort());
+    joinerUdpPort.SetUdpPort(mNetif.GetJoinerRouter().GetJoinerUdpPort());
     SuccessOrExit(error = message->Append(&joinerUdpPort, sizeof(tlv) + joinerUdpPort.GetLength()));
 
     tlv.SetLength(static_cast<uint8_t>(message->GetLength() - startOffset));
@@ -2674,7 +2683,7 @@ ThreadError MleRouter::SendChildIdResponse(Child *aChild)
         while (FindChild(mNextChildId) != NULL);
 
         // allocate Child ID
-        aChild->mValid.mRloc16 = mMac.GetShortAddress() | mNextChildId;
+        aChild->mValid.mRloc16 = mNetif.GetMac().GetShortAddress() | mNextChildId;
     }
 
     SuccessOrExit(error = AppendAddress16(*message, aChild->mValid.mRloc16));
@@ -2814,6 +2823,14 @@ ThreadError MleRouter::SendChildUpdateResponse(Child *aChild, const Ip6::Message
         case Tlv::kTimeout:
             SuccessOrExit(error = AppendTimeout(*message, aChild->mTimeout));
             break;
+
+        case Tlv::kMleFrameCounter:
+            SuccessOrExit(error = AppendMleFrameCounter(*message));
+            break;
+
+        case Tlv::kLinkFrameCounter:
+            SuccessOrExit(error = AppendLinkFrameCounter(*message));
+            break;
         }
     }
 
@@ -2850,7 +2867,7 @@ ThreadError MleRouter::SendDataResponse(const Ip6::Address &aDestination, const 
         switch (aTlvs[i])
         {
         case Tlv::kNetworkData:
-            neighbor = mMleRouter.GetNeighbor(aDestination);
+            neighbor = GetNeighbor(aDestination);
             stableOnly = neighbor != NULL ? (neighbor->mMode & ModeTlv::kModeFullNetworkData) == 0 : false;
             SuccessOrExit(error = AppendNetworkData(*message, stableOnly));
             break;
@@ -2985,9 +3002,9 @@ ThreadError MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
         if (aNeighbor.mState == Neighbor::kStateValid && !IsActiveRouter(aNeighbor.mValid.mRloc16))
         {
             aNeighbor.mState = Neighbor::kStateInvalid;
-            mMesh.UpdateIndirectMessages();
+            mNetif.GetMeshForwarder().UpdateIndirectMessages();
             mNetif.SetStateChangedFlags(OT_THREAD_CHILD_REMOVED);
-            mNetworkData.SendServerDataNotification(aNeighbor.mValid.mRloc16);
+            mNetif.GetNetworkDataLeader().SendServerDataNotification(aNeighbor.mValid.mRloc16);
             RemoveStoredChild(aNeighbor.mValid.mRloc16);
         }
 
@@ -3077,6 +3094,11 @@ Neighbor *MleRouter::GetNeighbor(const Mac::ExtAddress &aAddress)
             }
         }
 
+        if (mParentRequestState != kParentIdle)
+        {
+            rval = Mle::GetNeighbor(aAddress);
+        }
+
         break;
     }
 
@@ -3131,7 +3153,7 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
         ExitNow(rval = GetNeighbor(macaddr));
     }
 
-    if (mNetworkData.GetContext(aAddress, context) != kThreadError_None)
+    if (mNetif.GetNetworkDataLeader().GetContext(aAddress, context) != kThreadError_None)
     {
         context.mContextId = 0xff;
     }
@@ -3268,6 +3290,11 @@ void MleRouter::SetPreviousPartitionId(uint32_t aPartitionId)
     mPreviousPartitionId = aPartitionId;
 }
 
+uint32_t MleRouter::GetPreviousPartitionId(void) const
+{
+    return mPreviousPartitionId;
+}
+
 void MleRouter::SetRouterId(uint8_t aRouterId)
 {
     mRouterId = aRouterId;
@@ -3398,7 +3425,7 @@ ThreadError MleRouter::StoreChild(uint16_t aChildRloc16)
     ThreadError error = kThreadError_None;
     otChildInfo childInfo;
 
-    SuccessOrExit(error = mMleRouter.GetChildInfoById(GetChildId(aChildRloc16), childInfo));
+    SuccessOrExit(error = GetChildInfoById(GetChildId(aChildRloc16), childInfo));
 
     error = otPlatSettingsAdd(mNetif.GetInstance(), kKeyChildInfo, reinterpret_cast<uint8_t *>(&childInfo),
                               sizeof(childInfo));
@@ -3419,7 +3446,7 @@ void MleRouter::GetChildInfo(Child &aChild, otChildInfo &aChildInfo)
         aChildInfo.mChildId = GetChildId(aChild.mValid.mRloc16);
         aChildInfo.mNetworkDataVersion = aChild.mNetworkDataVersion;
         aChildInfo.mAge = Timer::MsecToSec(Timer::GetNow() - aChild.mLastHeard);
-        aChildInfo.mLinkQualityIn = aChild.mLinkInfo.GetLinkQuality(mMac.GetNoiseFloor());
+        aChildInfo.mLinkQualityIn = aChild.mLinkInfo.GetLinkQuality(mNetif.GetMac().GetNoiseFloor());
         aChildInfo.mAverageRssi = aChild.mLinkInfo.GetAverageRss();
 
         aChildInfo.mRxOnWhenIdle = (aChild.mMode & ModeTlv::kModeRxOnWhenIdle) != 0;
@@ -3454,7 +3481,7 @@ ThreadError MleRouter::GetRouterInfo(uint16_t aRouterId, otRouterInfo &aRouterIn
     aRouterInfo.mNextHop = router->mNextHop;
     aRouterInfo.mLinkEstablished = router->mState == Neighbor::kStateValid;
     aRouterInfo.mPathCost = router->mCost;
-    aRouterInfo.mLinkQualityIn = router->mLinkInfo.GetLinkQuality(mMac.GetNoiseFloor());
+    aRouterInfo.mLinkQualityIn = router->mLinkInfo.GetLinkQuality(mNetif.GetMac().GetNoiseFloor());
     aRouterInfo.mLinkQualityOut = router->mLinkQualityOut;
     aRouterInfo.mAge = static_cast<uint8_t>(Timer::MsecToSec(Timer::GetNow() - router->mLastHeard));
 
@@ -3515,7 +3542,7 @@ exit:
         aNeighInfo.mRloc16 = neighbor->mValid.mRloc16;
         aNeighInfo.mLinkFrameCounter = neighbor->mValid.mLinkFrameCounter;
         aNeighInfo.mMleFrameCounter = neighbor->mValid.mMleFrameCounter;
-        aNeighInfo.mLinkQualityIn = neighbor->mLinkInfo.GetLinkQuality(mMac.GetNoiseFloor());
+        aNeighInfo.mLinkQualityIn = neighbor->mLinkInfo.GetLinkQuality(mNetif.GetMac().GetNoiseFloor());
         aNeighInfo.mAverageRssi = neighbor->mLinkInfo.GetAverageRss();
         aNeighInfo.mRxOnWhenIdle = (neighbor->mMode & ModeTlv::kModeRxOnWhenIdle) != 0;
         aNeighInfo.mSecureDataRequest = (neighbor->mMode & ModeTlv::kModeSecureDataRequest) != 0;
@@ -3542,14 +3569,14 @@ void MleRouter::ResolveRoutingLoops(uint16_t aSourceMac, uint16_t aDestRloc16)
 
 ThreadError MleRouter::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6::Header &aIp6Header)
 {
-    Ip6::Address destination;
+    Ip6::MessageInfo messageInfo;
 
     if (mDeviceState == kDeviceStateChild)
     {
         return Mle::CheckReachability(aMeshSource, aMeshDest, aIp6Header);
     }
 
-    if (aMeshDest == mMac.GetShortAddress())
+    if (aMeshDest == mNetif.GetMac().GetShortAddress())
     {
         // mesh destination is this device
         if (mNetif.IsUnicastAddress(aIp6Header.GetDestination()))
@@ -3577,10 +3604,13 @@ ThreadError MleRouter::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDes
         return kThreadError_None;
     }
 
-    destination = GetMeshLocal16();
-    destination.mFields.m16[7] = HostSwap16(aMeshSource);
-    mNetif.GetIp6().mIcmp.SendError(destination, Ip6::IcmpHeader::kTypeDstUnreach,
-                                    Ip6::IcmpHeader::kCodeDstUnreachNoRoute, aIp6Header);
+    messageInfo.GetPeerAddr() = GetMeshLocal16();
+    messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(aMeshSource);
+    messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
+
+    mNetif.GetIp6().mIcmp.SendError(Ip6::IcmpHeader::kTypeDstUnreach,
+                                    Ip6::IcmpHeader::kCodeDstUnreachNoRoute,
+                                    messageInfo, aIp6Header);
 
     return kThreadError_Drop;
 }
@@ -3600,10 +3630,10 @@ ThreadError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
     header.AppendUriPathOptions(OPENTHREAD_URI_ADDRESS_SOLICIT);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mNetif.GetCoapClient().NewMessage(header)) != NULL, error = kThreadError_NoBufs);
 
     macAddr64Tlv.Init();
-    macAddr64Tlv.SetMacAddr(*mMac.GetExtAddress());
+    macAddr64Tlv.SetMacAddr(*mNetif.GetMac().GetExtAddress());
     SuccessOrExit(error = message->Append(&macAddr64Tlv, sizeof(macAddr64Tlv)));
 
     if (IsRouterIdValid(mPreviousRouterId))
@@ -3621,8 +3651,8 @@ ThreadError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
     messageInfo.SetSockAddr(GetMeshLocal16());
     messageInfo.SetPeerPort(kCoapUdpPort);
 
-    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo,
-                                                  &MleRouter::HandleAddressSolicitResponse, this));
+    SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo,
+                                                             &MleRouter::HandleAddressSolicitResponse, this));
 
     otLogInfoMle("Sent address solicit to %04x", HostSwap16(messageInfo.GetPeerAddr().mFields.m16[7]));
 
@@ -3650,19 +3680,19 @@ ThreadError MleRouter::SendAddressRelease(void)
     header.AppendUriPathOptions(OPENTHREAD_URI_ADDRESS_RELEASE);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mNetif.GetCoapClient().NewMessage(header)) != NULL, error = kThreadError_NoBufs);
 
     rlocTlv.Init();
     rlocTlv.SetRloc16(GetRloc16(mRouterId));
     SuccessOrExit(error = message->Append(&rlocTlv, sizeof(rlocTlv)));
 
     macAddr64Tlv.Init();
-    macAddr64Tlv.SetMacAddr(*mMac.GetExtAddress());
+    macAddr64Tlv.SetMacAddr(*mNetif.GetMac().GetExtAddress());
     SuccessOrExit(error = message->Append(&macAddr64Tlv, sizeof(macAddr64Tlv)));
 
     SuccessOrExit(error = GetLeaderAddress(messageInfo.GetPeerAddr()));
     messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
+    SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
 
     otLogInfoMle("Sent address release");
 
@@ -3759,7 +3789,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
 
         if (old && !mRouters[i].mAllocated)
         {
-            mAddressResolver.Remove(i);
+            mNetif.GetAddressResolver().Remove(i);
         }
     }
 
@@ -3912,7 +3942,7 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Header &aRequestHeader, u
     ThreadRloc16Tlv rlocTlv;
     Message *message;
 
-    VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mNetif.GetCoapServer().NewMessage(0)) != NULL, error = kThreadError_NoBufs);
 
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
@@ -3944,7 +3974,7 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Header &aRequestHeader, u
         SuccessOrExit(error = message->Append(&routerMaskTlv, sizeof(routerMaskTlv)));
     }
 
-    SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = mNetif.GetCoapServer().SendMessage(*message, aMessageInfo));
 
     otLogInfoMle("Sent address reply");
 
@@ -3991,7 +4021,7 @@ void MleRouter::HandleAddressRelease(Coap::Header &aHeader, Message &aMessage,
 
     ReleaseRouterId(routerId);
 
-    SuccessOrExit(mCoapServer.SendEmptyAck(aHeader, aMessageInfo));
+    SuccessOrExit(mNetif.GetCoapServer().SendEmptyAck(aHeader, aMessageInfo));
 
     otLogInfoMle("Sent address release response");
 
@@ -4038,7 +4068,7 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
         break;
 
     case kDeviceStateChild:
-        switch (mParent.mLinkInfo.GetLinkQuality(mMac.GetNoiseFloor()))
+        switch (mParent.mLinkInfo.GetLinkQuality(mNetif.GetMac().GetNoiseFloor()))
         {
         case 1:
             tlv.SetLinkQuality1(tlv.GetLinkQuality1() + 1);
@@ -4053,7 +4083,7 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
             break;
         }
 
-        cost += LqiToCost(mParent.mLinkInfo.GetLinkQuality(mMac.GetNoiseFloor()));
+        cost += LqiToCost(mParent.mLinkInfo.GetLinkQuality(mNetif.GetMac().GetNoiseFloor()));
         break;
 
     case kDeviceStateRouter:
@@ -4079,7 +4109,7 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
             continue;
         }
 
-        lqi = mRouters[i].mLinkInfo.GetLinkQuality(mMac.GetNoiseFloor());
+        lqi = mRouters[i].mLinkInfo.GetLinkQuality(mNetif.GetMac().GetNoiseFloor());
 
         if (lqi > mRouters[i].mLinkQualityOut)
         {
@@ -4141,7 +4171,7 @@ ThreadError MleRouter::AppendChildAddresses(Message &aMessage, Child &aChild)
             break;
         }
 
-        if (mNetworkData.GetContext(aChild.mIp6Address[i], context) == kThreadError_None)
+        if (mNetif.GetNetworkDataLeader().GetContext(aChild.mIp6Address[i], context) == kThreadError_None)
         {
             // compressed entry
             entry.SetContextId(context.mContextId);
@@ -4214,7 +4244,8 @@ void MleRouter::FillRouteTlv(RouteTlv &tlv)
             }
             else
             {
-                tlv.SetLinkQualityIn(routeCount, mRouters[i].mLinkInfo.GetLinkQuality(mMac.GetNoiseFloor()));
+                tlv.SetLinkQualityIn(routeCount,
+                                     mRouters[i].mLinkInfo.GetLinkQuality(mNetif.GetMac().GetNoiseFloor()));
             }
         }
 
@@ -4291,7 +4322,7 @@ bool MleRouter::HasOneNeighborwithComparableConnectivity(const RouteTlv &aRoute,
                 continue;
             }
 
-            localLqi = mRouters[i].mLinkInfo.GetLinkQuality(mMac.GetNoiseFloor());
+            localLqi = mRouters[i].mLinkInfo.GetLinkQuality(mNetif.GetMac().GetNoiseFloor());
 
             if (localLqi > mRouters[i].mLinkQualityOut)
             {
@@ -4398,7 +4429,7 @@ uint8_t MleRouter::GetMinDowngradeNeighborRouters(void)
             continue;
         }
 
-        lqi = mRouters[i].mLinkInfo.GetLinkQuality(mMac.GetNoiseFloor());
+        lqi = mRouters[i].mLinkInfo.GetLinkQuality(mNetif.GetMac().GetNoiseFloor());
 
         if (lqi > mRouters[i].mLinkQualityOut)
         {

@@ -107,7 +107,7 @@ ThreadError NcpUart::OutboundFrameFeedData(const uint8_t *aDataBuffer, uint16_t 
     return mTxFrameBuffer.InFrameFeedData(aDataBuffer, aDataBufferLength);
 }
 
-ThreadError NcpUart::OutboundFrameFeedMessage(Message &aMessage)
+ThreadError NcpUart::OutboundFrameFeedMessage(otMessage aMessage)
 {
     return mTxFrameBuffer.InFrameFeedMessage(aMessage);
 }

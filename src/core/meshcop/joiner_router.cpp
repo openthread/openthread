@@ -59,7 +59,6 @@ namespace MeshCoP {
 JoinerRouter::JoinerRouter(ThreadNetif &aNetif):
     mSocket(aNetif.GetIp6().mUdp),
     mRelayTransmit(OPENTHREAD_URI_RELAY_TX, &JoinerRouter::HandleRelayTransmit, this),
-    mCoapClient(aNetif.GetCoapClient()),
     mNetif(aNetif),
     mJoinerUdpPort(0),
     mIsJoinerPortConfigured(false)
@@ -169,6 +168,7 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
     SuccessOrExit(error = GetBorderAgentRloc(borderAgentRloc));
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    message->SetPriority(kMeshCoPMessagePriority);
 
     header.Init(kCoapTypeNonConfirmable, kCoapRequestPost);
     header.SetMessageId(0);
@@ -261,6 +261,7 @@ void JoinerRouter::HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage,
     SuccessOrExit(error = Tlv::GetValueOffset(aMessage, Tlv::kJoinerDtlsEncapsulation, offset, length));
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    message->SetPriority(kMeshCoPMessagePriority);
     message->SetLinkSecurityEnabled(false);
 
     while (length)
@@ -318,6 +319,7 @@ ThreadError JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo
     MeshLocalPrefixTlv meshLocalPrefix;
     ExtendedPanIdTlv extendedPanId;
     NetworkNameTlv networkName;
+    NetworkKeySequenceTlv networkKeySequence;
     Tlv *tlv;
 
     otLogFuncEntry();
@@ -326,7 +328,7 @@ ThreadError JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo
     header.AppendUriPathOptions(OPENTHREAD_URI_JOINER_ENTRUST);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mNetif.GetCoapClient().NewMeshCoPMessage(header)) != NULL, error = kThreadError_NoBufs);
     message->SetSubType(Message::kSubTypeJoinerEntrust);
 
     masterKey.Init();
@@ -389,9 +391,13 @@ ThreadError JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo
         SuccessOrExit(error = message->Append(&securityPolicy, sizeof(securityPolicy)));
     }
 
+    networkKeySequence.Init();
+    networkKeySequence.SetNetworkKeySequence(mNetif.GetKeyManager().GetCurrentKeySequence());
+    SuccessOrExit(error = message->Append(&networkKeySequence, networkKeySequence.GetSize()));
+
     messageInfo = aMessageInfo;
     messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
+    SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("Sent joiner entrust length = %d", message->GetLength());
     otLogCertMeshCoP("[THCI] direction=send | type=JOIN_ENT.ntf");

@@ -135,11 +135,7 @@ private:
     Coap::Resource mDiagnosticGetQuery;
     Coap::Resource mDiagnosticGetAnswer;
     Coap::Resource mDiagnosticReset;
-    Coap::Server &mCoapServer;
-    Coap::Client &mCoapClient;
 
-    Mle::MleRouter &mMle;
-    Mac::Mac &mMac;
     ThreadNetif &mNetif;
 
     otReceiveDiagnosticGetCallback mReceiveDiagnosticGetCallback;

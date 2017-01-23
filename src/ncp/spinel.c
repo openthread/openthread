@@ -1216,6 +1216,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_JAM_DETECT_WINDOW";
         break;
 
+    case SPINEL_PROP_JAM_DETECT_HISTORY_BITMAP:
+        ret = "SPINEL_PROP_JAM_DETECT_HISTORY_BITMAP";
+        break;
+
     case SPINEL_PROP_GPIO_CONFIG:
         ret = "PROP_GPIO_CONFIG";
         break;
@@ -1230,6 +1234,35 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
 
     case SPINEL_PROP_GPIO_STATE_CLEAR:
         ret = "PROP_GPIO_STATE_CLEAR";
+        break;
+
+    default:
+        break;
+    }
+
+    return ret;
+}
+
+const char *spinel_net_role_to_cstr(uint8_t net_role)
+{
+    const char *ret = "NET_ROLE_UNKNONW";
+
+    switch (net_role)
+    {
+    case SPINEL_NET_ROLE_DETACHED:
+        ret = "NET_ROLE_DETACHED";
+        break;
+
+    case SPINEL_NET_ROLE_CHILD:
+        ret = "NET_ROLE_CHILD";
+        break;
+
+    case SPINEL_NET_ROLE_ROUTER:
+        ret = "NET_ROLE_ROUTER";
+        break;
+
+    case SPINEL_NET_ROLE_LEADER:
+        ret = "NET_ROLE_LEADER";
         break;
 
     default:

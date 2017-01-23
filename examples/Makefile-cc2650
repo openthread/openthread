@@ -45,12 +45,6 @@ OBJCOPY                         = arm-none-eabi-objcopy
 
 BuildJobs                      ?= 99
 
-CC2650_MBEDTLS_CPPFLAGS = -DMBEDTLS_CONFIG_FILE=\\\"cc2650-mbedtls-config.h\\\" 
-CC2650_MBEDTLS_CPPFLAGS += -I$(PWD)/examples/platforms/cc2650/crypto
-CC2650_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/cc26xxware
-CC2650_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/mbedtls
-CC2650_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/mbedtls/repo/include
-
 configure_OPTIONS               = \
     --enable-cli                  \
     --enable-ncp                  \
@@ -60,19 +54,25 @@ configure_OPTIONS               = \
     MBEDTLS_CPPFLAGS="$(CC2650_MBEDTLS_CPPFLAGS)" \
     $(NULL)
 
-ifeq ($(CERT_LOG),1)
-configure_OPTIONS              += --enable-cert-log
+ifeq ($(DISABLE_DOC),1)
+configure_OPTIONS              += --disable-docs
 endif
 
-ifeq ($(JOINER),1)
-configure_OPTIONS              += --enable-joiner
-endif
+CC2650_MBEDTLS_CPPFLAGS  = -DMBEDTLS_CONFIG_FILE='\"cc2650-mbedtls-config.h\"'
+CC2650_MBEDTLS_CPPFLAGS += -I$(PWD)/examples/platforms/cc2650/crypto
+CC2650_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/cc26xxware
+CC2650_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/mbedtls
+CC2650_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/mbedtls/repo/include
+
+CC2650_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-cc2650-config.h\"'
+CC2650_CONFIG_FILE_CPPFLAGS += -I$(PWD)/examples/platforms/cc2650/
 
 COMMONCFLAGS                   := \
     -fdata-sections               \
     -ffunction-sections           \
     -Os                           \
     -g                            \
+    $(CC2650_CONFIG_FILE_CPPFLAGS)\
     $(NULL)
 
 CPPFLAGS                       += \
@@ -227,7 +227,7 @@ all: stage
 #
 
 cortex-m3_target_ABI                  = cortex-m3
-cortex-m3_target_CPPFLAGS             = -mcpu=cortex-m3 -mfloat-abi=soft -mthumb -DOPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS=32
+cortex-m3_target_CPPFLAGS             = -mcpu=cortex-m3 -mfloat-abi=soft -mthumb
 cortex-m3_target_CFLAGS               = -mcpu=cortex-m3 -mfloat-abi=soft -mthumb
 cortex-m3_target_CXXFLAGS             = -mcpu=cortex-m3 -mfloat-abi=soft -mthumb
 cortex-m3_target_LDFLAGS              = -mcpu=cortex-m3 -mfloat-abi=soft -mthumb

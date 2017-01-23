@@ -110,6 +110,15 @@ Board will indicate state of device according to LED blink speed.
    16 bytes from fdde:ad00:beef:0:92f5:9844:67ad:a0c9: icmp_seq=2 hlim=64 time=359ms
    ```
 
+## Remarks
+* Validation
+
+   The DA15000 example has been validated by Dialog Semiconductor with commit 0bc2efe included.
+  
+* Build environment
+
+   The DA15000 example code and all required dependencies have been complied with gcc version 5.4.0 (20160609).
+   
 ## Troubleshooting 
 * Why can’t I see the VCOM port?
    
@@ -117,3 +126,4 @@ Board will indicate state of device according to LED blink speed.
    driver properly installed but the VCOM not showing up in the device manager, it’s probably disabled
    by software. To re-enable it you have to run JLinkExe and issue the command ` vcom enable`.It is
    required to power cycle the device to apply the change. 
+ 

@@ -167,6 +167,17 @@ uint16_t otGetMessageOffset(otMessage aMessage);
 ThreadError otSetMessageOffset(otMessage aMessage, uint16_t aOffset);
 
 /**
+ * This function indicates whether or not link security is enabled for the message.
+ *
+ * @param[in]  aMessage  A pointer to a message buffer.
+ *
+ * @retval TRUE   If link security is enabled.
+ * @retval FALSE  If link security is not enabled.
+ *
+ */
+bool otIsMessageLinkSecurityEnabled(otMessage aMessage);
+
+/**
  * Append bytes to a message.
  *
  * @param[in]  aMessage  A pointer to a message buffer.

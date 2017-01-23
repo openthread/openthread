@@ -59,8 +59,7 @@ Leader::Leader(ThreadNetif &aThreadNetif):
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, &Leader::HandleTimer, this),
     mServerData(OPENTHREAD_URI_SERVER_DATA, &Leader::HandleServerData, this),
     mCommissioningDataGet(OPENTHREAD_URI_COMMISSIONER_GET, &Leader::HandleCommissioningGet, this),
-    mCommissioningDataSet(OPENTHREAD_URI_COMMISSIONER_SET, &Leader::HandleCommissioningSet, this),
-    mCoapServer(aThreadNetif.GetCoapServer())
+    mCommissioningDataSet(OPENTHREAD_URI_COMMISSIONER_SET, &Leader::HandleCommissioningSet, this)
 {
     Reset();
 }
@@ -76,21 +75,21 @@ void Leader::Reset(void)
 
 void Leader::Start(void)
 {
-    mCoapServer.AddResource(mServerData);
-    mCoapServer.AddResource(mCommissioningDataGet);
-    mCoapServer.AddResource(mCommissioningDataSet);
+    mNetif.GetCoapServer().AddResource(mServerData);
+    mNetif.GetCoapServer().AddResource(mCommissioningDataGet);
+    mNetif.GetCoapServer().AddResource(mCommissioningDataSet);
 }
 
 void Leader::Stop(void)
 {
-    mCoapServer.RemoveResource(mServerData);
-    mCoapServer.RemoveResource(mCommissioningDataGet);
-    mCoapServer.RemoveResource(mCommissioningDataSet);
+    mNetif.GetCoapServer().RemoveResource(mServerData);
+    mNetif.GetCoapServer().RemoveResource(mCommissioningDataGet);
+    mNetif.GetCoapServer().RemoveResource(mCommissioningDataSet);
 }
 
 void Leader::IncrementVersion(void)
 {
-    if (mMle.GetDeviceState() == Mle::kDeviceStateLeader)
+    if (mNetif.GetMle().GetDeviceState() == Mle::kDeviceStateLeader)
     {
         mVersion++;
         mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
@@ -99,7 +98,7 @@ void Leader::IncrementVersion(void)
 
 void Leader::IncrementStableVersion(void)
 {
-    if (mMle.GetDeviceState() == Mle::kDeviceStateLeader)
+    if (mNetif.GetMle().GetDeviceState() == Mle::kDeviceStateLeader)
     {
         mStableVersion++;
     }
@@ -167,7 +166,7 @@ void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
                             networkData.GetTlvs(), networkData.GetLength());
     }
 
-    SuccessOrExit(mCoapServer.SendEmptyAck(aHeader, aMessageInfo));
+    SuccessOrExit(mNetif.GetCoapServer().SendEmptyAck(aHeader, aMessageInfo));
 
     otLogInfoNetData("Sent network data registration acknowledgment");
 
@@ -193,7 +192,7 @@ void Leader::HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, co
     bool hasValidTlv = false;
     uint16_t sessionId = 0;
 
-    VerifyOrExit(mMle.GetDeviceState() == Mle::kDeviceStateLeader, state = MeshCoP::StateTlv::kReject);
+    VerifyOrExit(mNetif.GetMle().GetDeviceState() == Mle::kDeviceStateLeader, state = MeshCoP::StateTlv::kReject);
 
     aMessage.Read(offset, length, tlvs);
 
@@ -251,7 +250,7 @@ void Leader::HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, co
 
 exit:
 
-    if (mMle.GetDeviceState() == Mle::kDeviceStateLeader)
+    if (mNetif.GetMle().GetDeviceState() == Mle::kDeviceStateLeader)
     {
         SendCommissioningSetResponse(aHeader, aMessageInfo, state);
     }
@@ -301,7 +300,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Header &aRequestHeader, co
     uint8_t *data = NULL;
     uint8_t length = 0;
 
-    VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mNetif.GetCoapServer().NewMeshCoPMessage(0)) != NULL, error = kThreadError_NoBufs);
 
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
@@ -343,7 +342,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Header &aRequestHeader, co
         }
     }
 
-    SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = mNetif.GetCoapServer().SendMessage(*message, aMessageInfo));
 
     otLogInfoMeshCoP("sent commissioning dataset get response");
 
@@ -362,8 +361,9 @@ void Leader::SendCommissioningSetResponse(const Coap::Header &aRequestHeader, co
     Coap::Header responseHeader;
     Message *message;
     MeshCoP::StateTlv state;
+    Ip6::MessageInfo responseInfo(aMessageInfo);
 
-    VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mNetif.GetCoapServer().NewMeshCoPMessage(0)) != NULL, error = kThreadError_NoBufs);
 
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
@@ -374,7 +374,8 @@ void Leader::SendCommissioningSetResponse(const Coap::Header &aRequestHeader, co
     state.SetState(aState);
     SuccessOrExit(error = message->Append(&state, sizeof(state)));
 
-    SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
+    memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
+    SuccessOrExit(error = mNetif.GetCoapServer().SendMessage(*message, responseInfo));
 
     otLogInfoMeshCoP("sent commissioning dataset set response");
 

@@ -48,11 +48,10 @@ namespace Thread {
 namespace NetworkData {
 
 NetworkData::NetworkData(ThreadNetif &aThreadNetif, bool aLocal):
-    mMle(aThreadNetif.GetMle()),
+    mNetif(aThreadNetif),
     mLocal(aLocal),
     mLastAttemptWait(false),
-    mLastAttempt(0),
-    mCoapClient(aThreadNetif.GetCoapClient())
+    mLastAttempt(0)
 {
     mLength = 0;
 }
@@ -605,7 +604,7 @@ ThreadError NetworkData::SendServerDataNotification(uint16_t aRloc16)
     header.AppendUriPathOptions(OPENTHREAD_URI_SERVER_DATA);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mNetif.GetCoapClient().NewMessage(header)) != NULL, error = kThreadError_NoBufs);
 
     if (mLocal)
     {
@@ -624,10 +623,10 @@ ThreadError NetworkData::SendServerDataNotification(uint16_t aRloc16)
         SuccessOrExit(error = message->Append(&rloc16Tlv, sizeof(rloc16Tlv)));
     }
 
-    mMle.GetLeaderAloc(messageInfo.GetPeerAddr());
-    messageInfo.SetSockAddr(mMle.GetMeshLocal16());
+    mNetif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr());
+    messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
     messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
+    SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
 
     if (mLocal)
     {

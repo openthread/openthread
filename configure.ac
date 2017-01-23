@@ -916,10 +916,8 @@ PLATFORM_INFO=${with_platform_info}
 
 AC_MSG_RESULT(${PLATFORM_INFO})
 
-if test "$PLATFORM_INFO" != "none"; then
-    AC_SUBST(PLATFORM_INFO)
-    AC_DEFINE_UNQUOTED([PLATFORM_INFO],["${PLATFORM_INFO}"],[OpenThread platform information])
-fi
+AC_SUBST(PLATFORM_INFO)
+AC_DEFINE_UNQUOTED([PLATFORM_INFO],["${PLATFORM_INFO}"],[OpenThread platform information])
 
 #
 # Tools

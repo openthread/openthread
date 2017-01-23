@@ -89,13 +89,13 @@ public:
      * In case of success, the passed-in message @aMessage will be owned by outbound buffer and will be freed
      * when either the the frame is successfully sent and removed or if the frame is discarded.
      *
-     * @param[in]  aMessage         A reference to the message to be added to current frame.
+     * @param[in]  aMessage         A message instance to be added to current frame.
      *
      * @retval kThreadError_None    Successfully added the message to the frame.
      * @retval kThreadError_NoBufs  Insufficient buffer space available to add message.
      *
      */
-    virtual ThreadError OutboundFrameFeedMessage(Message &aMessage);
+    virtual ThreadError OutboundFrameFeedMessage(otMessage aMessage);
 
     /**
      * This method finalizes and sends the current outbound frame.

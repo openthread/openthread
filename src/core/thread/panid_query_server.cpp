@@ -50,11 +50,9 @@ PanIdQueryServer::PanIdQueryServer(ThreadNetif &aThreadNetif) :
     mPanId(Mac::kPanIdBroadcast),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, &PanIdQueryServer::HandleTimer, this),
     mPanIdQuery(OPENTHREAD_URI_PANID_QUERY, &PanIdQueryServer::HandleQuery, this),
-    mCoapServer(aThreadNetif.GetCoapServer()),
-    mCoapClient(aThreadNetif.GetCoapClient()),
     mNetif(aThreadNetif)
 {
-    mCoapServer.AddResource(mPanIdQuery);
+    mNetif.GetCoapServer().AddResource(mPanIdQuery);
 }
 
 void PanIdQueryServer::HandleQuery(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
@@ -85,7 +83,7 @@ void PanIdQueryServer::HandleQuery(Coap::Header &aHeader, Message &aMessage, con
     mTimer.Start(kScanDelay);
 
     memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
-    SuccessOrExit(mCoapServer.SendEmptyAck(aHeader, responseInfo));
+    SuccessOrExit(mNetif.GetCoapServer().SendEmptyAck(aHeader, responseInfo));
 
     otLogInfoMeshCoP("sent panid query response");
 
@@ -131,7 +129,7 @@ ThreadError PanIdQueryServer::SendConflict(void)
     header.AppendUriPathOptions(OPENTHREAD_URI_PANID_CONFLICT);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mNetif.GetCoapClient().NewMeshCoPMessage(header)) != NULL, error = kThreadError_NoBufs);
 
     channelMask.Init();
     channelMask.SetMask(mChannelMask);
@@ -143,7 +141,7 @@ ThreadError PanIdQueryServer::SendConflict(void)
 
     messageInfo.SetPeerAddr(mCommissioner);
     messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
+    SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent panid conflict");
 

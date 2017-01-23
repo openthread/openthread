@@ -205,8 +205,6 @@ private:
 
     Coap::Resource mCommissioningDataGet;
     Coap::Resource mCommissioningDataSet;
-
-    Coap::Server   &mCoapServer;
 };
 
 /**

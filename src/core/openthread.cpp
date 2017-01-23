@@ -67,6 +67,8 @@
 #include <coap/coap_client.hpp>
 #include <coap/coap_server.hpp>
 
+using namespace Thread;
+
 #ifndef OPENTHREAD_MULTIPLE_INSTANCE
 static otDEFINE_ALIGNED_VAR(sInstanceRaw, sizeof(otInstance), uint64_t);
 otInstance *sInstance = NULL;
@@ -85,8 +87,6 @@ otInstance::otInstance(void) :
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 {
 }
-
-namespace Thread {
 
 #ifdef __cplusplus
 extern "C" {
@@ -1482,6 +1482,12 @@ ThreadError otSetMessageOffset(otMessage aMessage, uint16_t aOffset)
     return message->SetOffset(aOffset);
 }
 
+bool otIsMessageLinkSecurityEnabled(otMessage aMessage)
+{
+    Message *message = static_cast<Message *>(aMessage);
+    return message->IsLinkSecurityEnabled();
+}
+
 ThreadError otAppendMessage(otMessage aMessage, const void *aBuf, uint16_t aLength)
 {
     Message *message = static_cast<Message *>(aMessage);
@@ -1748,9 +1754,13 @@ uint16_t otCommissionerGetSessionId(otInstance *aInstance)
 
 #if OPENTHREAD_ENABLE_JOINER
 ThreadError otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl,
+                          const char *aVendorName, const char *aVendorModel,
+                          const char *aVendorSwVersion, const char *aVendorData,
                           otJoinerCallback aCallback, void *aContext)
 {
-    return aInstance->mThreadNetif.GetJoiner().Start(aPSKd, aProvisioningUrl, aCallback, aContext);
+    return aInstance->mThreadNetif.GetJoiner().Start(aPSKd, aProvisioningUrl,
+                                                     aVendorName, aVendorModel, aVendorSwVersion, aVendorData,
+                                                     aCallback, aContext);
 }
 
 ThreadError otJoinerStop(otInstance *aInstance)
@@ -1880,5 +1890,3 @@ ThreadError otCoapSendResponse(otInstance *aInstance, otMessage aMessage, const 
 #ifdef __cplusplus
 }  // extern "C"
 #endif
-
-}  // namespace Thread

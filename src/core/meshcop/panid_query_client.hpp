@@ -84,8 +84,6 @@ private:
     void *mContext;
 
     Coap::Resource mPanIdQuery;
-    Coap::Server &mCoapServer;
-    Coap::Client &mCoapClient;
 
     ThreadNetif &mNetif;
 };

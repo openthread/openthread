@@ -102,7 +102,6 @@ private:
     Timer mTimer;
 
     Coap::Resource mAnnounceBegin;
-    Coap::Server &mCoapServer;
     ThreadNetif &mNetif;
 };
 

@@ -348,6 +348,18 @@ void otLwfStateChangedCallback(uint32_t aFlags, _In_ void *aContext)
         otLwfRadioAddressesUpdated(pFilter);
     }
 
+    if ((aFlags & OT_IP6_RLOC_ADDED) != 0)
+    {
+        LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_IP6_RLOC_ADDED", pFilter);
+        otLwfRadioAddressesUpdated(pFilter);
+    }
+
+    if ((aFlags & OT_IP6_RLOC_REMOVED) != 0)
+    {
+        LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_IP6_RLOC_REMOVED", pFilter);
+        otLwfRadioAddressesUpdated(pFilter);
+    }
+
     if ((aFlags & OT_NET_ROLE) != 0)
     {
         LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_NET_ROLE", pFilter);

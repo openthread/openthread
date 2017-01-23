@@ -224,8 +224,6 @@ private:
     TrickleTimer mTrickleTimer;
 
     Ip6::UdpSocket mSocket;
-    Mle::MleRouter &mMle;
-    Mac::Mac &mMac;
     ThreadNetif &mNetif;
 
     uint8_t mTransactionId[kTransactionIdSize];

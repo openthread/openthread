@@ -39,6 +39,7 @@
 #include <coap/coap_header.hpp>
 #include <coap/coap_client.hpp>
 #include <coap/coap_server.hpp>
+#include <coap/coap_base.hpp>
 #include <common/message.hpp>
 #include <mac/mac_frame.hpp>
 #include <net/udp6.hpp>
@@ -97,7 +98,6 @@ private:
 
     Ip6::UdpSocket mSocket;
     Coap::Resource mRelayTransmit;
-    Coap::Client &mCoapClient;
     ThreadNetif &mNetif;
 
     uint16_t mJoinerUdpPort;

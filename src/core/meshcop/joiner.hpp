@@ -67,13 +67,20 @@ public:
      *
      * @param[in]  aPSKd             A pointer to the PSKd.
      * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
+     * @param[in]  aVendorName       A pointer to the Vendor Name (must be static).
+     * @param[in]  aVendorModel      A pointer to the Vendor Model (must be static).
+     * @param[in]  aVendorSwVersion  A pointer to the Vendor SW Version (must be static).
+     * @param[in]  aVendorData       A pointer to the Vendor Data (must be static).
      * @param[in]  aCallback         A pointer to a function that is called when the join operation completes.
      * @param[in]  aContext          A pointer to application-specific context.
      *
      * @retval kThreadError_None  Successfully started the Joiner service.
      *
      */
-    ThreadError Start(const char *aPSKd, const char *aProvisioningUrl, otJoinerCallback aCallback, void *aContext);
+    ThreadError Start(const char *aPSKd, const char *aProvisioningUrl,
+                      const char *aVendorName, const char *aVendorModel,
+                      const char *aVendorSwVersion, const char *aVendorData,
+                      otJoinerCallback aCallback, void *aContext);
 
     /**
      * This method stops the Joiner service.
@@ -132,10 +139,13 @@ private:
     uint16_t mJoinerUdpPort;
     Mac::ExtAddress mJoinerRouter;
 
+    const char *mVendorName;
+    const char *mVendorModel;
+    const char *mVendorSwVersion;
+    const char *mVendorData;
+
     Timer mTimer;
     Coap::Resource mJoinerEntrust;
-    Coap::Server &mCoapServer;
-    Coap::SecureClient &mSecureCoapClient;
     ThreadNetif &mNetif;
 };
 

@@ -55,14 +55,12 @@ EnergyScanServer::EnergyScanServer(ThreadNetif &aThreadNetif) :
     mScanResultsLength(0),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, &EnergyScanServer::HandleTimer, this),
     mEnergyScan(OPENTHREAD_URI_ENERGY_SCAN, &EnergyScanServer::HandleRequest, this),
-    mCoapServer(aThreadNetif.GetCoapServer()),
-    mCoapClient(aThreadNetif.GetCoapClient()),
     mNetif(aThreadNetif)
 {
     mNetifCallback.Set(&EnergyScanServer::HandleNetifStateChanged, this);
     mNetif.RegisterCallback(mNetifCallback);
 
-    mCoapServer.AddResource(mEnergyScan);
+    mNetif.GetCoapServer().AddResource(mEnergyScan);
 }
 
 void EnergyScanServer::HandleRequest(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
@@ -107,7 +105,7 @@ void EnergyScanServer::HandleRequest(Coap::Header &aHeader, Message &aMessage, c
     mCommissioner = aMessageInfo.GetPeerAddr();
 
     memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
-    SuccessOrExit(mCoapServer.SendEmptyAck(aHeader, responseInfo));
+    SuccessOrExit(mNetif.GetCoapServer().SendEmptyAck(aHeader, responseInfo));
 
     otLogInfoMeshCoP("sent energy scan query response");
 
@@ -191,7 +189,7 @@ ThreadError EnergyScanServer::SendReport(void)
     header.AppendUriPathOptions(OPENTHREAD_URI_ENERGY_REPORT);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mNetif.GetCoapClient().NewMeshCoPMessage(header)) != NULL, error = kThreadError_NoBufs);
 
     channelMask.Init();
     channelMask.SetMask(mChannelMask);
@@ -204,7 +202,7 @@ ThreadError EnergyScanServer::SendReport(void)
 
     messageInfo.SetPeerAddr(mCommissioner);
     messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
+    SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent scan results");
 

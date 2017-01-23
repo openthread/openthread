@@ -50,6 +50,11 @@ namespace Coap {
  *
  */
 
+enum
+{
+    kMeshCoPMessagePriority = Message::kPriorityHigh, // The priority for MeshCoP message
+};
+
 /**
  * This class implements a common code base for CoAP client/server.
  *
@@ -100,6 +105,16 @@ public:
      *
      */
     Message *NewMessage(const Header &aHeader);
+
+    /**
+     * This method creates a new MeshCoP message with a CoAP header.
+     *
+     * @param[in]  aHeader  A reference to a CoAP header that is used to create the message.
+     *
+     * @returns A pointer to the MeshCoP message or NULL if failed to allocate message.
+     *
+     */
+    Message *NewMeshCoPMessage(const Header &aHeader);
 
     /**
      * This method returns a port number used by CoAP client.

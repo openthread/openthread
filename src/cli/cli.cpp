@@ -2439,7 +2439,9 @@ void Interpreter::ProcessJoiner(int argc, char *argv[])
         const char *provisioningUrl;
         VerifyOrExit(argc > 1, error = kThreadError_Parse);
         provisioningUrl = (argc > 2) ? argv[2] : NULL;
-        otJoinerStart(mInstance, argv[1], provisioningUrl, &Interpreter::s_HandleJoinerCallback, this);
+        otJoinerStart(mInstance, argv[1], provisioningUrl,
+                      PACKAGE_NAME, PLATFORM_INFO, PACKAGE_VERSION, NULL,
+                      &Interpreter::s_HandleJoinerCallback, this);
     }
     else if (strcmp(argv[0], "stop") == 0)
     {
@@ -2581,8 +2583,8 @@ void Interpreter::ProcessDiag(int argc, char *argv[])
 void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
 {
     char *argv[kMaxArgs];
-    int argc = 0;
     char *cmd;
+    uint8_t argc = 0, i = 0;
 
     sServer = &aServer;
 
@@ -2613,13 +2615,19 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
                  sServer->OutputFormat("under diagnostics mode, execute 'diag stop' before running any other commands.\r\n"));
 #endif
 
-    for (unsigned int i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
+    for (i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
     {
         if (strcmp(cmd, sCommands[i].mName) == 0)
         {
             (this->*sCommands[i].mCommand)(argc, argv);
             break;
         }
+    }
+
+    // Error prompt for unsupported commands
+    if (i == sizeof(sCommands) / sizeof(sCommands[0]))
+    {
+        AppendResult(kThreadError_Parse);
     }
 
 exit:

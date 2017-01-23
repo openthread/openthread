@@ -31,7 +31,6 @@
 #include <stdio.h>
 #define mbedtls_printf     printf
 #define mbedtls_fprintf    fprintf
-#define mbedtls_time_t     time_t
 #endif
 
 #if !defined(MBEDTLS_SSL_CLI_C) || !defined(MBEDTLS_SSL_PROTO_DTLS) ||    \
@@ -52,7 +51,7 @@ int main( void )
 
 #include <string.h>
 
-#include "mbedtls/net.h"
+#include "mbedtls/net_sockets.h"
 #include "mbedtls/debug.h"
 #include "mbedtls/ssl.h"
 #include "mbedtls/entropy.h"

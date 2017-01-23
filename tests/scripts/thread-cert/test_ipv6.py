@@ -37,9 +37,9 @@ from ipaddress import ip_address
 
 from ipv6 import ICMPv6Header, UDPHeader, IPv6Header, IPv6PacketFactory, UDPDatagram, \
     UDPDatagramFactory, ICMPv6Factory, HopByHopFactory, MPLOptionFactory, ICMPv6, HopByHopOptionHeader, HopByHopOption, \
-    HopByHop, MPLOption, HopByHopFactory, IPv6Packet, ICMPv6EchoBody, UDPBytesPayload, ICMPv6EchoBodyFactory, \
+    HopByHop, MPLOption, HopByHopFactory, IPv6Packet, ICMPv6EchoBody, BytesPayload, ICMPv6EchoBodyFactory, \
     UpperLayerProtocol, UDPHeaderFactory, HopByHopOptionsFactory, ICMPv6DestinationUnreachableFactory, \
-    UDPBytesPayloadFactory, ICMPv6DestinationUnreachable, UdpBasedOnSrcDstPortsPayloadFactory
+    BytesPayloadFactory, ICMPv6DestinationUnreachable, UdpBasedOnSrcDstPortsPayloadFactory
 
 import common
 
@@ -519,7 +519,7 @@ class TestIPv6Packet(unittest.TestCase):
                                  hop_limit=255)
 
         udp_dgram = UDPDatagram(UDPHeader(src_port=19788, dst_port=19788),
-                                UDPBytesPayload(bytearray([0x00, 0x15, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                BytesPayload(bytearray([0x00, 0x15, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                                                            0x00, 0x00, 0x01, 0x09, 0x01, 0x01, 0x0b, 0x03,
                                                            0x04, 0xc6, 0x69, 0x73, 0x51, 0x0e, 0x01, 0x80,
                                                            0x12, 0x02, 0x00, 0x01, 0xde, 0xad, 0xbe, 0xef])))
@@ -684,7 +684,7 @@ class TestUDPDatagram(unittest.TestCase):
         payload_length = len(payload) + 8  # UDP length consists of UDP header length and payload length
 
         udp_header = UDPHeader(src_port, dst_port, payload_length, checksum)
-        udp_payload = UDPBytesPayload(payload)
+        udp_payload = BytesPayload(payload)
         udp_dgram = UDPDatagram(udp_header, udp_payload)
 
         # WHEN
@@ -1019,7 +1019,7 @@ class TestUdpBasedOnSrcDstPortsPayloadFactory(unittest.TestCase):
 
         factory = UdpBasedOnSrcDstPortsPayloadFactory(
             src_dst_port_based_payload_factories={
-                message_info.src_port: UDPBytesPayloadFactory()
+                message_info.src_port: BytesPayloadFactory()
             })
 
         # WHEN
@@ -1038,7 +1038,7 @@ class TestUdpBasedOnSrcDstPortsPayloadFactory(unittest.TestCase):
 
         factory = UdpBasedOnSrcDstPortsPayloadFactory(
             src_dst_port_based_payload_factories={
-                message_info.dst_port: UDPBytesPayloadFactory()
+                message_info.dst_port: BytesPayloadFactory()
             })
 
         # WHEN
@@ -1077,7 +1077,7 @@ class TestUDPDatagramFactory(unittest.TestCase):
                           (payload_length >> 8), (payload_length & 0xFF),
                           (checksum >> 8), (checksum & 0xFF)]) + payload
 
-        factory = UDPDatagramFactory(UDPHeaderFactory(), UDPBytesPayloadFactory())
+        factory = UDPDatagramFactory(UDPHeaderFactory(), BytesPayloadFactory())
 
         # WHEN
         udp_dgram = factory.parse(io.BytesIO(data), any_message_info())
@@ -1105,7 +1105,7 @@ class TestUDPDatagramFactory(unittest.TestCase):
                           (payload_length >> 8), (payload_length & 0xFF),
                           (checksum >> 8), (checksum & 0xFF)]) + payload
 
-        factory = UDPDatagramFactory(UDPHeaderFactory(), UDPBytesPayloadFactory())
+        factory = UDPDatagramFactory(UDPHeaderFactory(), BytesPayloadFactory())
 
         # WHEN
         udp_dgram = factory.parse(io.BytesIO(data), message_info)
@@ -1152,14 +1152,14 @@ class TestICMPv6Factory(unittest.TestCase):
         self.assertRaises(RuntimeError, factory.parse, io.BytesIO(data), any_message_info())
 
 
-class TestUDPBytesPayload(unittest.TestCase):
+class TestBytesPayload(unittest.TestCase):
 
-    def test_should_create_UDPBytesPayload_when_from_bytes_class_method_is_called(self):
+    def test_should_create_BytesPayload_when_from_bytes_class_method_is_called(self):
         # GIVEN
         data = any_data()
 
         # WHEN
-        actual = UDPBytesPayload.from_bytes(data)
+        actual = BytesPayload.from_bytes(data)
 
         # THEN
         self.assertEqual(data, actual.data)
@@ -1167,7 +1167,7 @@ class TestUDPBytesPayload(unittest.TestCase):
     def test_should_return_exactly_the_same_data_as_passed_to_constructor_when_to_bytes_method_is_called(self):
         # GIVEN
         data = any_data()
-        payload = UDPBytesPayload(data)
+        payload = BytesPayload(data)
 
         # WHEN
         actual = payload.to_bytes()
@@ -1175,10 +1175,10 @@ class TestUDPBytesPayload(unittest.TestCase):
         # THEN
         self.assertEqual(data, actual)
 
-    def test_should_return_the_same_length_as_data_passed_to_constructor_when_len_is_called_on_UDPBytesPayload_object(self):
+    def test_should_return_the_same_length_as_data_passed_to_constructor_when_len_is_called_on_BytesPayload_object(self):
         # GIVEN
         data = any_data()
-        payload = UDPBytesPayload(data)
+        payload = BytesPayload(data)
 
         # WHEN
         actual = len(payload)

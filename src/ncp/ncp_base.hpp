@@ -40,7 +40,8 @@
 #endif
 
 #include <openthread-types.h>
-#include <common/message.hpp>
+#include <openthread-message.h>
+#include <openthread-ip6.h>
 #include <common/tasklet.hpp>
 #include <ncp/ncp.h>
 
@@ -103,7 +104,7 @@ protected:
      * @retval kThreadError_NoBufs  Insufficient buffer space available to add message.
      *
      */
-    virtual ThreadError OutboundFrameFeedMessage(Message &aMessage) = 0;
+    virtual ThreadError OutboundFrameFeedMessage(otMessage aMessage) = 0;
 
     /**
      * This method finalizes and sends the current outbound frame
@@ -143,7 +144,7 @@ private:
      */
     static void HandleDatagramFromStack(otMessage aMessage, void *aContext);
 
-    void HandleDatagramFromStack(Message &aMessage);
+    void HandleDatagramFromStack(otMessage aMessage);
 
     /**
      * Trampoline for HandleRawFrame().
@@ -217,7 +218,7 @@ public:
     ThreadError SendPropertyUpdate(uint8_t header, uint8_t command, spinel_prop_key_t key, const uint8_t *value_ptr,
                             uint16_t value_len);
 
-    ThreadError SendPropertyUpdate(uint8_t header, uint8_t command, spinel_prop_key_t key, Message &message);
+    ThreadError SendPropertyUpdate(uint8_t header, uint8_t command, spinel_prop_key_t key, otMessage message);
 
     ThreadError SendPropertyUpdate(uint8_t header, uint8_t command, spinel_prop_key_t key, const char *format, ...);
 
