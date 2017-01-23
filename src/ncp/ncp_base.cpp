@@ -137,6 +137,8 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_THREAD_NETWORK_DATA_VERSION, &NcpBase::GetPropertyHandler_THREAD_NETWORK_DATA_VERSION },
     { SPINEL_PROP_THREAD_STABLE_NETWORK_DATA, &NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA },
     { SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION, &NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA_VERSION },
+    { SPINEL_PROP_THREAD_LEADER_NETWORK_DATA, &NcpBase::GetPropertyHandler_THREAD_LEADER_NETWORK_DATA },
+    { SPINEL_PROP_THREAD_STABLE_LEADER_NETWORK_DATA, &NcpBase::GetPropertyHandler_THREAD_STABLE_LEADER_NETWORK_DATA },
     { SPINEL_PROP_THREAD_LOCAL_ROUTES, &NcpBase::NcpBase::GetPropertyHandler_THREAD_LOCAL_ROUTES },
     { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::NcpBase::GetPropertyHandler_THREAD_ASSISTING_PORTS },
     { SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE, &NcpBase::GetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE },
@@ -881,6 +883,11 @@ void NcpBase::UpdateChangedProps(void)
                               SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
                               SPINEL_PROP_THREAD_ON_MESH_NETS
                           ));
+
+            SuccessOrExit(HandleCommandPropertyGet(
+                SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                SPINEL_PROP_THREAD_LEADER_NETWORK_DATA
+            ));
 
             mChangedFlags &= ~static_cast<uint32_t>(OT_THREAD_NETDATA_UPDATED);
         }
@@ -1972,6 +1979,51 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA(uint8_t heade
 
     SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
     otGetNetworkDataLocal(
+        mInstance,
+        true, // Stable?
+        network_data,
+        &network_data_len
+    );
+
+    SuccessOrExit(errorCode = OutboundFrameFeedData(network_data, network_data_len));
+    SuccessOrExit(errorCode = OutboundFrameSend());
+
+exit:
+    return errorCode;
+}
+
+ThreadError NcpBase::GetPropertyHandler_THREAD_LEADER_NETWORK_DATA(uint8_t header, spinel_prop_key_t key)
+{
+    ThreadError errorCode = kThreadError_None;
+    uint8_t network_data[255];
+    uint8_t network_data_len = 255;
+
+    SuccessOrExit(errorCode = OutboundFrameBegin());
+    SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
+    otGetNetworkDataLeader(
+        mInstance,
+        false, // Stable?
+        network_data,
+        &network_data_len
+    );
+    SuccessOrExit(errorCode = OutboundFrameFeedData(network_data, network_data_len));
+    SuccessOrExit(errorCode = OutboundFrameSend());
+
+exit:
+    return errorCode;
+}
+
+ThreadError NcpBase::GetPropertyHandler_THREAD_STABLE_LEADER_NETWORK_DATA(uint8_t header, spinel_prop_key_t key)
+{
+    ThreadError errorCode = kThreadError_None;
+    uint8_t network_data[255];
+    uint8_t network_data_len = 255;
+
+
+    SuccessOrExit(errorCode = OutboundFrameBegin());
+
+    SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
+    otGetNetworkDataLeader(
         mInstance,
         true, // Stable?
         network_data,

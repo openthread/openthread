@@ -336,6 +336,8 @@ private:
     ThreadError GetPropertyHandler_THREAD_NETWORK_DATA_VERSION(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_STABLE_NETWORK_DATA(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_STABLE_NETWORK_DATA_VERSION(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_THREAD_LEADER_NETWORK_DATA(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_THREAD_STABLE_LEADER_NETWORK_DATA(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_PROMISCUOUS_MODE(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE(uint8_t header, spinel_prop_key_t key);
