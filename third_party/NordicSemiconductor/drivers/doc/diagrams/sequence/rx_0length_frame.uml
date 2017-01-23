@@ -1,0 +1,23 @@
+@startuml
+
+participant RADIO
+participant Driver
+
+      -> State: WaitingRxFrame
+      
+activate RADIO
+RADIO  -> Driver: EV: END
+deactivate RADIO
+Driver -> Mutex: lock
+activate Mutex
+
+Driver  -> Driver: stopSendingAck(WaitingRxFrame)
+
+RADIO   -> Driver: EV: DISABLED
+Driver  -> RADIO:  TASK: RXEN
+Driver  -> Mutex:  unlock
+deactivate Mutex
+Driver  -> RADIO:  clear_event(DISABLED)
+     
+
+@enduml

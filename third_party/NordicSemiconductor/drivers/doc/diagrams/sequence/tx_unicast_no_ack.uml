@@ -1,0 +1,62 @@
+@startuml
+
+participant RADIO
+participant Driver
+participant State
+participant Mutex
+
+      -> State: WaitingRxFrame
+      
+Higher_Layer -> Driver: transmit()
+
+Driver  -> Mutex: lock
+activate Mutex
+Driver  -> RADIO:  TASK: STOP
+Driver  -> RADIO:  set_channel(tx_channel)
+Driver  -> Driver: stopSendingAck(Cca)
+Driver  -> RADIO:  set_tx_power(tx_power)
+Driver  -> RADIO:  clear_event(END)
+Driver  -> RADIO:  clear_event(READY)
+
+RADIO   -> Driver: EV: DISABLED
+Driver  -> RADIO:  TASK: RXEN
+
+RADIO   -> Driver: EV: READY
+Driver  -> State:  TxFrame
+Driver  -> RADIO:  enable_txframe_shorts()
+Driver  -> RADIO:  TASK: CCASTART
+
+RADIO   -> RADIO:  EV: CCAIDLE / TASK: TXEN
+RADIO   -> RADIO:  EV: READY / TASK: START
+activate RADIO
+
+RADIO   -> Driver: EV: FRAMESTART
+
+RADIO   -> RADIO:  EV: END / TASK: DISABLE
+deactivate RADIO
+RADIO   -> Driver: EV: END
+Driver  -> RADIO:  disable_txframe_shorts()
+Driver  -> Driver: Ack requested? true
+Driver  -> State:  RxAck
+
+RADIO   -> Driver: EV: DISABLED
+Driver  -> RADIO:  TASK: RXEN
+
+RADIO   -> Driver: EV: READY
+Driver  -> RADIO:  TASK: START
+
+== Timeout ==
+
+Higher_Layer -> Driver: receive()
+Driver  -> RADIO:  TASK: STOP
+Driver  -> State:  WaitingRxFrame
+Driver  -> RADIO:  TASK: DISABLE
+Driver  -> RADIO:  clear_event(END)
+
+RADIO   -> Driver: EV: DISABLED
+Driver  -> RADIO:  TASK: RXEN
+Driver  -> Mutex:  unlock
+deactivate Mutex
+Driver  -> RADIO:  clear_event(DISABLED)
+
+@enduml

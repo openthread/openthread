@@ -1,0 +1,80 @@
+@startuml
+
+participant RADIO
+participant Driver
+
+      -> State: WaitingRxFrame
+      
+RADIO  -> Driver: EV: FRAMESTART
+activate Driver
+activate RADIO
+Driver -> Mutex: lock
+activate Mutex
+Driver -> State: RxHeader
+deactivate Driver
+
+RADIO   -> Driver: EV: BCMATCH
+activate Driver
+Driver -->> RADIO: get_bcc()
+RADIO  --> Driver: BCC_INIT
+Driver  -> Driver: Check frame type: Data
+Driver  -> Driver: Check dest address: short
+Driver  -> RADIO:  set_bcc(BCC_SHORT_ADDR)
+deactivate Driver
+
+RADIO   -> Driver: EV: BCMATCH
+activate Driver
+Driver -->> RADIO: get_bcc()
+RADIO  --> Driver: BCC_SHORT_ADDR
+Driver  -> Driver: Check dest addr: Matched unicast
+Driver  -> Flags:  ReceivingBroadcastFrame = false
+Driver  -> State:  RxFrame
+deactivate Driver
+
+RADIO   -> RADIO:  EV: END / TASK: DISABLE
+deactivate RADIO
+RADIO   -> Driver: EV: END
+activate Driver
+Driver  -> Driver: Check CRC: OK
+RADIO   -> RADIO:  EV: DISABLED / TASK: TXEN
+Driver  -> Driver: Prepare ACK
+Driver -->> Flags: receivigBroadcastFrame?
+Flags  --> Driver: false
+Driver  -> Driver: Check if ACK requested: true
+
+Driver  -> State:  TxAck
+Driver  -> Driver: set pending bit in ACK()
+deactivate Driver
+
+RADIO   -> Driver: EV: DISABLED
+
+RADIO   -> RADIO:  EV: READY / TASK: START
+activate RADIO
+
+RADIO   -> Driver: EV: READY
+activate Driver
+Driver  -> RADIO:  disable_tifs_shorts_ack()
+deactivate Driver
+
+RADIO   -> Driver: EV: FRAMESTART
+RADIO   -> RADIO:  EV: END / TASK: DISABLE
+deactivate RADIO
+
+RADIO   -> Driver: EV: END
+activate Driver
+Driver  -> RADIO:  disable_tifs_shorts_all()
+Driver  -> State:  WaitingRxFrame
+deactivate Driver
+
+
+RADIO   -> Driver: EV: DISABLED
+activate Driver
+Driver  -> RADIO:  TASK: RXEN
+Driver  -> Mutex:  unlock
+deactivate Mutex
+Driver  -> RADIO:  clear_event(DISABLED)
+deactivate Driver
+     
+Driver  -> Higher_Layer: received()
+
+@enduml

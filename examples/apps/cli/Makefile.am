@@ -78,7 +78,6 @@ LDFLAGS_COMMON                                                        += \
     $(NULL)
 endif # OPENTHREAD_EXAMPLES_CC2538
 
-
 if OPENTHREAD_EXAMPLES_DA15000
 LDADD_COMMON                                                          += \
     $(top_builddir)/examples/platforms/da15000/libopenthread-da15000.a   \
@@ -88,6 +87,16 @@ LDFLAGS_COMMON                                                        += \
     -T $(top_srcdir)/examples/platforms/da15000/da15000.ld               \
     $(NULL)
 endif # OPENTHREAD_EXAMPLES_DA15000
+
+if OPENTHREAD_EXAMPLES_NRF52840
+LDADD_COMMON                                                          += \
+    $(top_builddir)/examples/platforms/nrf52840/libopenthread-nrf52840.a \
+    $(NULL)
+
+LDFLAGS_COMMON                                                        += \
+    -T $(top_srcdir)/examples/platforms/nrf52840/nrf52840.ld             \
+    $(NULL)
+endif
 
 ot_cli_ftd_CPPFLAGS                                                    = \
     $(CPPFLAGS_COMMON)                                                   \
