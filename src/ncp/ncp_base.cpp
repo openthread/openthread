@@ -155,6 +155,8 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_THREAD_ON_MESH_NETS, &NcpBase::NcpBase::GetPropertyHandler_THREAD_ON_MESH_NETS },
     { SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING, &NcpBase::GetPropertyHandler_NET_REQUIRE_JOIN_EXISTING },
     { SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER, &NcpBase::GetPropertyHandler_THREAD_ROUTER_SELECTION_JITTER },
+    { SPINEL_PROP_THREAD_ACTIVE_DATASET, &NcpBase::GetPropertyHandler_THREAD_ACTIVE_DATASET },
+    { SPINEL_PROP_THREAD_PENDING_DATASET, &NcpBase::GetPropertyHandler_THREAD_PENDING_DATASET },
 
     { SPINEL_PROP_IPV6_ML_PREFIX, &NcpBase::GetPropertyHandler_IPV6_ML_PREFIX },
     { SPINEL_PROP_IPV6_ML_ADDR, &NcpBase::GetPropertyHandler_IPV6_ML_ADDR },
@@ -271,6 +273,8 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING, &NcpBase::SetPropertyHandler_NET_REQUIRE_JOIN_EXISTING },
     { SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER, &NcpBase::SetPropertyHandler_THREAD_ROUTER_SELECTION_JITTER },
     { SPINEL_PROP_THREAD_PREFERRED_ROUTER_ID, &NcpBase::SetPropertyHandler_THREAD_PREFERRED_ROUTER_ID },
+    { SPINEL_PROP_THREAD_ACTIVE_DATASET, &NcpBase::SetPropertyHandler_THREAD_ACTIVE_DATASET },
+    { SPINEL_PROP_THREAD_PENDING_DATASET, &NcpBase::SetPropertyHandler_THREAD_PENDING_DATASET },
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     { SPINEL_PROP_JAM_DETECT_ENABLE, &NcpBase::SetPropertyHandler_JAM_DETECT_ENABLE },
@@ -2955,6 +2959,40 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header
            );
 }
 
+ThreadError NcpBase::GetPropertyHandler_THREAD_ACTIVE_DATASET(uint8_t header, spinel_prop_key_t key)
+{
+    uint16_t length = 0;
+    const uint8_t *dataset_bytes;
+
+    dataset_bytes = otGetActiveDatasetBytes(mInstance, &length);
+
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_DATA_S,
+               dataset_bytes,
+               length
+           );
+}
+
+ThreadError NcpBase::GetPropertyHandler_THREAD_PENDING_DATASET(uint8_t header, spinel_prop_key_t key)
+{
+    uint16_t length = 0;
+    const uint8_t *dataset_bytes;
+
+    dataset_bytes = otGetPendingDatasetBytes(mInstance, &length);
+
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_DATA_S,
+               dataset_bytes,
+               length
+           );
+}
+
 ThreadError NcpBase::GetPropertyHandler_NET_REQUIRE_JOIN_EXISTING(uint8_t header, spinel_prop_key_t key)
 {
     return SendPropertyUpdate(
@@ -4500,6 +4538,78 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header
         otSetNetworkIdTimeout(mInstance, i);
 
         errorCode = HandleCommandPropertyGet(header, key);
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
+ThreadError NcpBase::SetPropertyHandler_THREAD_ACTIVE_DATASET(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len)
+{
+    const uint8_t *dataset_ptr = NULL;
+    unsigned int dataset_len = 0;
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_UINT8_S,
+                       &dataset_ptr,
+                       &dataset_len
+                   );
+
+    if (parsedLength > 0)
+    {
+        errorCode = otSetActiveDatasetBytes(mInstance, dataset_ptr, static_cast<uint16_t>(dataset_len));
+
+        if (errorCode == kThreadError_None)
+        {
+            errorCode = HandleCommandPropertyGet(header, key);
+        }
+        else
+        {
+            errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+        }
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
+ThreadError NcpBase::SetPropertyHandler_THREAD_PENDING_DATASET(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len)
+{
+    const uint8_t *dataset_ptr = NULL;
+    unsigned int dataset_len = 0;
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_UINT8_S,
+                       &dataset_ptr,
+                       &dataset_len
+                   );
+
+    if (parsedLength > 0)
+    {
+        errorCode = otSetPendingDatasetBytes(mInstance, dataset_ptr, static_cast<uint16_t>(dataset_len));
+
+        if (errorCode == kThreadError_None)
+        {
+            errorCode = HandleCommandPropertyGet(header, key);
+        }
+        else
+        {
+            errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+        }
     }
     else
     {

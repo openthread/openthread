@@ -762,6 +762,16 @@ typedef enum
      */
     SPINEL_PROP_THREAD_CHILD_COUNT_MAX = SPINEL_PROP_THREAD_EXT__BEGIN + 12,
 
+    /// Active Dataset
+    /** Format: 'D'
+    */
+    SPINEL_PROP_THREAD_ACTIVE_DATASET  = SPINEL_PROP_THREAD_EXT__BEGIN + 13,
+
+    /// Pending Dataset
+    /** Format: 'D'
+    */
+    SPINEL_PROP_THREAD_PENDING_DATASET = SPINEL_PROP_THREAD_EXT__BEGIN + 14,
+
     SPINEL_PROP_THREAD_EXT__END        = 0x1600,
 
     SPINEL_PROP_IPV6__BEGIN          = 0x60,

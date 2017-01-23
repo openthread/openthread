@@ -209,3 +209,23 @@ Data per item is:
 * `b`: `true` if neighbor is a child, `false` otherwise.
 * `L`: Link Frame Counter
 * `L`: MLE Frame Counter
+
+### PROP 5388: SPINEL_PROP_THREAD_CHILD_COUNT_MAX
+* Type: Read-Write
+* Packed-encoding `C`
+
+### PROP 5389: SPINEL_PROP_THREAD_ACTIVE_DATASET
+* Type: Read-Write
+* Packed-encoding `D`
+
+Provides access to active operational dataset as a byte sequence.
+The byte sequence is encoded using TLV format defined by the Thread
+specification.
+
+### PROP 5390: SPINEL_PROP_THREAD_PENDING_DATASET
+* Type: Read-Write
+* Packed-encoding `D`
+
+Provides access to pending operational dataset as a byte sequence.
+The byte sequence is encoded using TLV format defined by the Thread
+specification.

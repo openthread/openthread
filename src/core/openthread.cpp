@@ -1675,6 +1675,36 @@ exit:
     return error;
 }
 
+const uint8_t *otGetActiveDatasetBytes(otInstance *aInstance, uint16_t *aLength)
+{
+    if (aLength != NULL)
+    {
+        *aLength = aInstance->mThreadNetif.GetActiveDataset().GetLocal().GetSize();
+    }
+
+    return aInstance->mThreadNetif.GetActiveDataset().GetLocal().GetBytes();
+}
+
+ThreadError otSetActiveDatasetBytes(otInstance *aInstance, const uint8_t *aDatasetBytes, uint16_t aLength)
+{
+    return aInstance->mThreadNetif.GetActiveDataset().GetLocal().Set(aDatasetBytes, aLength);
+}
+
+const uint8_t *otGetPendingDatasetBytes(otInstance *aInstance, uint16_t *aLength)
+{
+    if (aLength != NULL)
+    {
+        *aLength = aInstance->mThreadNetif.GetPendingDataset().GetLocal().GetSize();
+    }
+
+    return aInstance->mThreadNetif.GetPendingDataset().GetLocal().GetBytes();
+}
+
+ThreadError otSetPendingDatasetBytes(otInstance *aInstance, const uint8_t *aDatasetBytes, uint16_t aLength)
+{
+    return aInstance->mThreadNetif.GetPendingDataset().GetLocal().Set(aDatasetBytes, aLength);
+}
+
 ThreadError otSendActiveGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength,
                             const otIp6Address *aAddress)
 {

@@ -966,6 +966,56 @@ OTAPI ThreadError OTCALL otGetPendingDataset(otInstance *aInstance, otOperationa
 OTAPI ThreadError OTCALL otSetPendingDataset(otInstance *aInstance, const otOperationalDataset *aDataset);
 
 /**
+ * This function gets the Active Operational Dataset bytes (TLVs).
+ *
+ * @param[in]   aInstance A pointer to an OpenThread instance.
+ * @param[out]  aLength   A pointer to return the dataset length (number of bytes).
+ *
+ * @returns  Pointer to the first byte of active data set
+ *
+ */
+const uint8_t *otGetActiveDatasetBytes(otInstance *aInstance, uint16_t *aLength);
+
+/**
+ * This function sets the Active Operational Dataset.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ * @param[in]  aDatasetBytes  A pointer to buffer with the dataset bytes.
+ * @param[in]  aLength        Length of dataset (number of bytes).
+ *
+ * @retval kThreadError_None         Successfully set the Active Operational Dataset.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to set the Active Operational Datset.
+ * @retval kThreadError_InvalidArgs  @p aDatasetBytes was NULL.
+ *
+ */
+ThreadError otSetActiveDatasetBytes(otInstance *aInstance, const uint8_t *aDatasetBytes, uint16_t aLength);
+
+/**
+ * This function gets the Pending Operational Dataset bytes (TLVs).
+ *
+ * @param[in]   aInstance A pointer to an OpenThread instance.
+ * @param[out]  aLength   A pointer to return the dataset length (number of bytes).
+ *
+ * @returns  Pointer to the first byte of pending data set.
+ *
+ */
+const uint8_t *otGetPendingDatasetBytes(otInstance *aInstance, uint16_t *aLength);
+
+/**
+ * This function sets the Pending Operational Dataset.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ * @param[in]  aDatasetBytes  A pointer to buffer with the dataset bytes.
+ * @param[in]  aLength        Length of dataset (number of bytes).
+ *
+ * @retval kThreadError_None         Successfully set the Pending Operational Dataset.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to set the Active Operational Datset.
+ * @retval kThreadError_InvalidArgs  @p aDatasetBytes was NULL.
+ *
+ */
+ThreadError otSetPendingDatasetBytes(otInstance *aInstance, const uint8_t *aDatasetBytes, uint16_t aLength);
+
+/**
  * This function sends MGMT_ACTIVE_GET.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
