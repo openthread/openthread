@@ -227,7 +227,9 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
 {
     { SPINEL_PROP_POWER_STATE, &NcpBase::SetPropertyHandler_POWER_STATE },
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
     { SPINEL_PROP_PHY_ENABLED, &NcpBase::SetPropertyHandler_PHY_ENABLED },
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
     { SPINEL_PROP_PHY_TX_POWER, &NcpBase::SetPropertyHandler_PHY_TX_POWER },
     { SPINEL_PROP_PHY_CHAN, &NcpBase::SetPropertyHandler_PHY_CHAN },
     { SPINEL_PROP_MAC_PROMISCUOUS_MODE, &NcpBase::SetPropertyHandler_MAC_PROMISCUOUS_MODE },
@@ -237,7 +239,9 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_MAC_SCAN_PERIOD, &NcpBase::SetPropertyHandler_MAC_SCAN_PERIOD },
     { SPINEL_PROP_MAC_15_4_PANID, &NcpBase::SetPropertyHandler_MAC_15_4_PANID },
     { SPINEL_PROP_MAC_RAW_STREAM_ENABLED, &NcpBase::SetPropertyHandler_MAC_RAW_STREAM_ENABLED },
+#if OPENTHREAD_ENABLE_RAW_LINK_API
     { SPINEL_PROP_STREAM_RAW, &NcpBase::SetPropertyHandler_STREAM_RAW },
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
     { SPINEL_PROP_NET_IF_UP, &NcpBase::SetPropertyHandler_NET_IF_UP },
     { SPINEL_PROP_NET_STACK_UP, &NcpBase::SetPropertyHandler_NET_STACK_UP },
@@ -479,8 +483,10 @@ NcpBase::NcpBase(otInstance *aInstance):
     mAllowLocalNetworkDataChange(false),
     mRequireJoinExistingNetwork(false),
     mIsRawStreamEnabled(false),
+#if OPENTHREAD_ENABLE_RAW_LINK_API
     mCurTransmintTID(0),
     mCurReceiveChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL),
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
     mFramingErrorCounter(0),
     mRxSpinelFrameCounter(0),
@@ -747,6 +753,12 @@ void NcpBase::HandleEnergyScanResult(otEnergyScanResult *aResult)
     }
 }
 
+// ----------------------------------------------------------------------------
+// MARK: Raw Link-Layer Datapath Glue
+// ----------------------------------------------------------------------------
+
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+
 void NcpBase::LinkRawReceiveDone(otInstance *, RadioPacket *aPacket, ThreadError aError)
 {
     sNcpContext->LinkRawReceiveDone(aPacket, aError);
@@ -831,6 +843,8 @@ void NcpBase::LinkRawTransmitDone(RadioPacket *, bool aFramePending, ThreadError
     // since the transmit could have been on a different channel.
     otLinkRawReceive(mInstance, mCurReceiveChannel, &NcpBase::LinkRawReceiveDone);
 }
+
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
 // ----------------------------------------------------------------------------
 // MARK: Address Table Changed Glue
@@ -1691,7 +1705,11 @@ ThreadError NcpBase::GetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_
                 SPINEL_CMD_PROP_VALUE_IS,
                 key,
                 SPINEL_DATATYPE_BOOL_S,
+#if OPENTHREAD_ENABLE_RAW_LINK_API
                 otLinkRawIsEnabled(mInstance)
+#else
+                false
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
             );
 }
 
@@ -3088,6 +3106,8 @@ ThreadError NcpBase::SetPropertyHandler_POWER_STATE(uint8_t header, spinel_prop_
     return SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
 }
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+
 ThreadError NcpBase::SetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                     uint16_t value_len)
 {
@@ -3142,6 +3162,8 @@ ThreadError NcpBase::SetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_
     return errorCode;
 }
 
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+
 ThreadError NcpBase::SetPropertyHandler_PHY_TX_POWER(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                      uint16_t value_len)
 {
@@ -3171,6 +3193,8 @@ ThreadError NcpBase::SetPropertyHandler_PHY_CHAN(uint8_t header, spinel_prop_key
     {
         errorCode = otSetChannel(mInstance, static_cast<uint8_t>(i));
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+
          if (errorCode == kThreadError_None)
          {
              // Cache the channel. If the raw link layer isn't enabled yet, the otSetChannel call
@@ -3185,6 +3209,8 @@ ThreadError NcpBase::SetPropertyHandler_PHY_CHAN(uint8_t header, spinel_prop_key
                  errorCode = otLinkRawReceive(mInstance, mCurReceiveChannel, &NcpBase::LinkRawReceiveDone);
              }
          }
+
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
         if (errorCode == kThreadError_None)
         {
@@ -3466,6 +3492,7 @@ ThreadError NcpBase::SetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t header, s
 
     if (parsedLength > 0)
     {
+#if OPENTHREAD_ENABLE_RAW_LINK_API
         if (otLinkRawIsEnabled(mInstance))
         {
             if (value)
@@ -3477,6 +3504,7 @@ ThreadError NcpBase::SetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t header, s
                 errorCode = otLinkRawSleep(mInstance);
             }
         }
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
     }
     else
     {
@@ -3495,6 +3523,8 @@ ThreadError NcpBase::SetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t header, s
 
     return errorCode;
 }
+
+#if OPENTHREAD_ENABLE_RAW_LINK_API
 
 ThreadError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,uint16_t value_len)
 {
@@ -3552,6 +3582,8 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t header, spinel_prop_k
 
     return errorCode;
 }
+
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
 ThreadError NcpBase::SetPropertyHandler_NET_IF_UP(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                     uint16_t value_len)

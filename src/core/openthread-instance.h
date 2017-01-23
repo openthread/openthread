@@ -44,7 +44,9 @@
 #include <net/ip6.hpp>
 #include <thread/thread_netif.hpp>
 #include <coap/coap_server.hpp>
+#if OPENTHREAD_ENABLE_RAW_LINK_API
 #include "openthread/link_raw.h"
+#endif
 
 /**
  * This type represents all the static / global variables used by OpenThread allocated in one place.

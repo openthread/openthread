@@ -188,6 +188,8 @@ private:
 
     void SendDoneTask(void);
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+
     /**
      * Trampoline for LinkRawReceiveDone().
      */
@@ -202,6 +204,8 @@ private:
                                     ThreadError aError);
 
     void LinkRawTransmitDone(RadioPacket *aPacket, bool aFramePending, ThreadError aError);
+
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
     static void HandleNetifStateChanged(uint32_t flags, void *context);
 
@@ -399,8 +403,10 @@ private:
                                                   uint16_t value_len);
     ThreadError SetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                           uint16_t value_len);
+#if OPENTHREAD_ENABLE_RAW_LINK_API
     ThreadError SetPropertyHandler_STREAM_RAW(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                               uint16_t value_len);
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
     ThreadError SetPropertyHandler_NET_IF_UP(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                uint16_t value_len);
     ThreadError SetPropertyHandler_NET_STACK_UP(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -427,8 +433,10 @@ private:
                                                   uint16_t value_len);
     ThreadError SetPropertyHandler_THREAD_RLOC16_DEBUG_PASSTHRU(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                                 uint16_t value_len);
+#if OPENTHREAD_ENABLE_RAW_LINK_API
     ThreadError SetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                uint16_t value_len);
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
     ThreadError SetPropertyHandler_MAC_PROMISCUOUS_MODE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                    uint16_t value_len);
     ThreadError SetPropertyHandler_MAC_SCAN_PERIOD(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -535,8 +543,10 @@ private:
     bool mRequireJoinExistingNetwork;
     bool mIsRawStreamEnabled;
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
     uint8_t mCurTransmintTID;
     uint8_t mCurReceiveChannel;
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
     uint32_t mFramingErrorCounter;             // Number of improperly formed received spinel frames.
     uint32_t mRxSpinelFrameCounter;            // Number of received (inbound) spinel frames.
