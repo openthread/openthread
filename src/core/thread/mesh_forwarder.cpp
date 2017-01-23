@@ -927,7 +927,8 @@ ThreadError MeshForwarder::SendMacDataRequest(void)
     }
     else
     {
-        mNetif.GetIp6().mMessagePool.Free(message);
+        message->Free();
+        message = NULL;
     }
 
 exit:
