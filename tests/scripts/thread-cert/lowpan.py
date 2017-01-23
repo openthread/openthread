@@ -849,7 +849,11 @@ class LowpanMeshHeaderFactory:
         is_short_originator_address = bool(data_byte & 0x20)
         is_short_final_destination_address = bool(data_byte & 0x10)
 
-        hops_left = (data_byte & 0x0f)
+        if (data_byte & 0x0f) != 0x0f:
+            hops_left = (data_byte & 0x0f)
+        else:
+            hops_left = ord(data.read(1))
+
         originator_address = self._parse_address(data, is_short_originator_address)
         final_destination_address = self._parse_address(data, is_short_final_destination_address)
 
@@ -1091,3 +1095,7 @@ class LowpanParser(object):
 
             elif self._is_iphc(first_byte):
                 return self._handle_iphc_header(data, message_info)
+
+            else:
+                raise RuntimeError("Unsupported header type: 0x{:02x}".format(first_byte))
+                
