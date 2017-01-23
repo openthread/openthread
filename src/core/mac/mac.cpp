@@ -159,8 +159,18 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mPcapCallback = NULL;
     mPcapCallbackContext = NULL;
 
-    otPlatRadioEnable(mNetif.GetInstance());
     mTxFrame = static_cast<Frame *>(otPlatRadioGetTransmitBuffer(mNetif.GetInstance()));
+}
+
+void Mac::EnableRadio()
+{
+    otPlatRadioSetCallbacks(mNetif.GetInstance(), ReceiveDoneTask, TransmitDoneTask);
+    otPlatRadioEnable(mNetif.GetInstance());
+}
+
+void Mac::DisableRadio()
+{
+    otPlatRadioDisable(mNetif.GetInstance());
 }
 
 ThreadError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
@@ -720,6 +730,8 @@ void Mac::HandleBeginTransmit(void)
     Frame &sendFrame(*mTxFrame);
     ThreadError error = kThreadError_None;
 
+    VerifyOrExit(otPlatRadioIsEnabled(mNetif.GetInstance()), error = kThreadError_Abort);
+
     if (mCsmaAttempts == 0 && mTransmitAttempts == 0)
     {
         sendFrame.SetPower(mMaxTransmitPower);
@@ -784,8 +796,7 @@ exit:
     }
 }
 
-extern "C" void otPlatRadioTransmitDone(otInstance *aInstance, RadioPacket *aPacket, bool aRxPending,
-                                        ThreadError aError)
+void Mac::TransmitDoneTask(otInstance *aInstance, RadioPacket *aPacket, bool aRxPending, ThreadError aError)
 {
     otLogFuncEntryMsg("%!otError!, aRxPending=%u", aError, aRxPending ? 1 : 0);
 
@@ -1159,7 +1170,7 @@ exit:
     return error;
 }
 
-extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, RadioPacket *aFrame, ThreadError aError)
+void Mac::ReceiveDoneTask(otInstance *aInstance, RadioPacket *aFrame, ThreadError aError)
 {
     otLogFuncEntryMsg("%!otError!", aError);
     aInstance->mThreadNetif.GetMac().ReceiveDoneTask(static_cast<Frame *>(aFrame), aError);

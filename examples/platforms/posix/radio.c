@@ -93,6 +93,9 @@ static RadioPacket sReceiveFrame;
 static RadioPacket sTransmitFrame;
 static RadioPacket sAckFrame;
 
+static otPlatRadioReceiveDone sReceiveDoneCallback = NULL;
+static otPlatRadioTransmitDone sTransmitDoneCallback = NULL;
+
 static uint8_t sExtendedAddress[OT_EXT_ADDRESS_SIZE];
 static uint16_t sShortAddress;
 static uint16_t sPanid;
@@ -300,10 +303,26 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
     aIeeeEui64[7] = NODE_ID & 0xff;
 }
 
+uint16_t otPlatRadioGetPanId(otInstance *aInstance)
+{
+    (void)aInstance;
+    return sPanid;
+}
+
 void otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
 {
     (void)aInstance;
     sPanid = panid;
+}
+
+void otPlatRadioGetExtendedAddress(otInstance *aInstance, uint8_t *address)
+{
+    (void)aInstance;
+
+    for (size_t i = 0; i < sizeof(sExtendedAddress); i++)
+    {
+        address[i] = sExtendedAddress[sizeof(sExtendedAddress) - 1 - i];
+    }
 }
 
 void otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *address)
@@ -314,6 +333,12 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *address)
     {
         sExtendedAddress[i] = address[sizeof(sExtendedAddress) - 1 - i];
     }
+}
+
+uint16_t otPlatRadioGetShortAddress(otInstance *aInstance)
+{
+    (void)aInstance;
+    return sShortAddress;
 }
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t address)
@@ -377,6 +402,14 @@ bool otPlatRadioIsEnabled(otInstance *aInstance)
     return (sState != kStateDisabled) ? true : false;
 }
 
+void otPlatRadioSetCallbacks(otInstance *aInstance, otPlatRadioReceiveDone receiveCallback,
+                             otPlatRadioTransmitDone transmitCallback)
+{
+    (void)aInstance;
+    sReceiveDoneCallback = receiveCallback;
+    sTransmitDoneCallback = transmitCallback;
+}
+
 ThreadError otPlatRadioEnable(otInstance *aInstance)
 {
     if (!otPlatRadioIsEnabled(aInstance))
@@ -409,6 +442,12 @@ ThreadError otPlatRadioSleep(otInstance *aInstance)
     }
 
     return error;
+}
+
+uint8_t otPlatRadioGetChannel(otInstance *aInstance)
+{
+    (void)aInstance;
+    return sReceiveFrame.mChannel;
 }
 
 ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
@@ -486,16 +525,9 @@ void radioReceive(otInstance *aInstance)
         sState = kStateReceive;
         sAckWait = false;
 
-#if OPENTHREAD_ENABLE_DIAG
-
-        if (otPlatDiagModeGet())
+        if (sTransmitDoneCallback)
         {
-            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
-        }
-        else
-#endif
-        {
-            otPlatRadioTransmitDone(aInstance, &sTransmitFrame, isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
+            sTransmitDoneCallback(aInstance, &sTransmitFrame, isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
         }
     }
     else if ((sState == kStateReceive || sState == kStateTransmit) &&
@@ -517,16 +549,9 @@ void radioSendMessage(otInstance *aInstance)
     {
         sState = kStateReceive;
 
-#if OPENTHREAD_ENABLE_DIAG
-
-        if (otPlatDiagModeGet())
+        if (sTransmitDoneCallback)
         {
-            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, false, kThreadError_None);
-        }
-        else
-#endif
-        {
-            otPlatRadioTransmitDone(aInstance, &sTransmitFrame, false, kThreadError_None);
+            sTransmitDoneCallback(aInstance, &sTransmitFrame, false, kThreadError_None);
         }
     }
 }
@@ -674,16 +699,9 @@ void radioProcessFrame(otInstance *aInstance)
 
 exit:
 
-#if OPENTHREAD_ENABLE_DIAG
-
-    if (otPlatDiagModeGet())
+    if (sReceiveDoneCallback)
     {
-        otPlatDiagRadioReceiveDone(aInstance, error == kThreadError_None ? &sReceiveFrame : NULL, error);
-    }
-    else
-#endif
-    {
-        otPlatRadioReceiveDone(aInstance, error == kThreadError_None ? &sReceiveFrame : NULL, error);
+        sReceiveDoneCallback(aInstance, error == kThreadError_None ? &sReceiveFrame : NULL, error);
     }
 }
 

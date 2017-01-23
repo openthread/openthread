@@ -106,7 +106,7 @@ ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint1
     if (otPlatRadioIsEnabled(sInstance))
     {
         channel = 11 + (HWREG(RFCORE_XREG_FREQCTRL) - 11) / 5;
-        otPlatRadioSleep(sInstance);
+        otPlatRadioSleep(sInstance); // BUGBUG - This can fail if currently transmitting. What then?
         otPlatRadioDisable(sInstance);
     }
 

@@ -55,19 +55,6 @@ extern "C" void otPlatAlarmFired(otInstance *)
 {
 }
 
-extern "C" void otPlatRadioTransmitDone(otInstance *, RadioPacket *aFrame, bool aRxPending, ThreadError aError)
-{
-    (void)aFrame;
-    (void)aRxPending;
-    (void)aError;
-}
-
-extern "C" void otPlatRadioReceiveDone(otInstance *, RadioPacket *aFrame, ThreadError aError)
-{
-    (void)aFrame;
-    (void)aError;
-}
-
 
 /**
  *  diagnostics module tests

@@ -64,8 +64,8 @@ enum
 
 static RadioPacket sTransmitFrame;
 static RadioPacket sReceiveFrame;
-static ThreadError sTransmitError;
-static ThreadError sReceiveError;
+static ThreadError sTransmitError = kThreadError_None;
+static ThreadError sReceiveError = kThreadError_None;
 
 static uint8_t sTransmitPsdu[IEEE802154_MAX_LENGTH];
 static uint8_t sReceivePsdu[IEEE802154_MAX_LENGTH];
@@ -73,6 +73,9 @@ static uint8_t sChannel = 0;
 
 static PhyState sState = kStateDisabled;
 static bool sIsReceiverEnabled = false;
+
+static otPlatRadioReceiveDone sReceiveDoneCallback = NULL;
+static otPlatRadioTransmitDone sTransmitDoneCallback = NULL;
 
 void enableReceiver(void)
 {
@@ -136,6 +139,13 @@ void setChannel(uint8_t channel)
     }
 }
 
+uint8_t otPlatRadioGetChannel(otInstance *aInstance)
+{
+    (void)aInstance;
+
+    return sChannel;
+}
+
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
     uint8_t *eui64 = (uint8_t *)IEEE_EUI64;
@@ -147,6 +157,13 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
     }
 }
 
+uint16_t otPlatRadioGetPanId(otInstance *aInstance)
+{
+    (void)aInstance;
+
+    return HWREG(RFCORE_FFSM_PAN_ID0) | (HWREG(RFCORE_FFSM_PAN_ID1) << 8);
+}
+
 void otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
 {
     (void)aInstance;
@@ -155,6 +172,16 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
 
     HWREG(RFCORE_FFSM_PAN_ID0) = panid & 0xFF;
     HWREG(RFCORE_FFSM_PAN_ID1) = panid >> 8;
+}
+
+void otPlatRadioGetExtendedAddress(otInstance *aInstance, uint8_t *address)
+{
+    (void)aInstance;
+
+    for (int i = 0; i < 8; i++)
+    {
+        address[i] = ((volatile uint32_t *)RFCORE_FFSM_EXT_ADDR0)[i];
+    }
 }
 
 void otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *address)
@@ -168,6 +195,13 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *address)
     {
         ((volatile uint32_t *)RFCORE_FFSM_EXT_ADDR0)[i] = address[i];
     }
+}
+
+uint16_t otPlatRadioGetShortAddress(otInstance *aInstance)
+{
+    (void)aInstance;
+
+    return HWREG(RFCORE_FFSM_SHORT_ADDR0) | (HWREG(RFCORE_FFSM_SHORT_ADDR1) << 8);
 }
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t address)
@@ -212,6 +246,14 @@ bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
     (void)aInstance;
     return (sState != kStateDisabled) ? true : false;
+}
+
+void otPlatRadioSetCallbacks(otInstance *aInstance, otPlatRadioReceiveDone receiveCallback,
+                             otPlatRadioTransmitDone transmitCallback)
+{
+    (void)aInstance;
+    sReceiveDoneCallback = receiveCallback;
+    sTransmitDoneCallback = transmitCallback;
 }
 
 ThreadError otPlatRadioEnable(otInstance *aInstance)
@@ -417,22 +459,15 @@ void cc2538RadioProcess(otInstance *aInstance)
     if ((sState == kStateReceive && sReceiveFrame.mLength > 0) ||
         (sState == kStateTransmit && sReceiveFrame.mLength > IEEE802154_ACK_LENGTH))
     {
-#if OPENTHREAD_ENABLE_DIAG
-
-        if (otPlatDiagModeGet())
+        // signal MAC layer for each received frame if promiscous is enabled
+        // otherwise only signal MAC layer for non-ACK frame
+        if (((HWREG(RFCORE_XREG_FRMFILT0) & RFCORE_XREG_FRMFILT0_FRAME_FILTER_EN) == 0) ||
+            (sReceiveFrame.mLength > IEEE802154_ACK_LENGTH))
         {
-            otPlatDiagRadioReceiveDone(aInstance, &sReceiveFrame, sReceiveError);
-        }
-        else
-#endif
-        {
-            // signal MAC layer for each received frame if promiscous is enabled
-            // otherwise only signal MAC layer for non-ACK frame
-            if (((HWREG(RFCORE_XREG_FRMFILT0) & RFCORE_XREG_FRMFILT0_FRAME_FILTER_EN) == 0) ||
-                (sReceiveFrame.mLength > IEEE802154_ACK_LENGTH))
+            if (sReceiveDoneCallback)
             {
                 otLogDebgPlat("Received %d bytes", sReceiveFrame.mLength);
-                otPlatRadioReceiveDone(aInstance, &sReceiveFrame, sReceiveError);
+                sReceiveDoneCallback(aInstance, &sReceiveFrame, sReceiveError);
             }
         }
     }
@@ -447,18 +482,7 @@ void cc2538RadioProcess(otInstance *aInstance)
             }
 
             sState = kStateReceive;
-
-#if OPENTHREAD_ENABLE_DIAG
-
-            if (otPlatDiagModeGet())
-            {
-                otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, false, sTransmitError);
-            }
-            else
-#endif
-            {
-                otPlatRadioTransmitDone(aInstance, &sTransmitFrame, false, sTransmitError);
-            }
+            sTransmitDoneCallback(aInstance, &sTransmitFrame, false, sTransmitError);
         }
         else if (sReceiveFrame.mLength == IEEE802154_ACK_LENGTH &&
                  (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK &&
@@ -466,18 +490,10 @@ void cc2538RadioProcess(otInstance *aInstance)
         {
             sState = kStateReceive;
 
-#if OPENTHREAD_ENABLE_DIAG
-
-            if (otPlatDiagModeGet())
+            if (sTransmitDoneCallback)
             {
-                otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0,
-                                            sTransmitError);
-            }
-            else
-#endif
-            {
-                otPlatRadioTransmitDone(aInstance, &sTransmitFrame, (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0,
-                                        sTransmitError);
+                sTransmitDoneCallback(aInstance, &sTransmitFrame, (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0,
+                                      sTransmitError);
             }
         }
     }

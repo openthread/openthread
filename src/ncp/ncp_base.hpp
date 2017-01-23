@@ -49,6 +49,15 @@
 
 namespace Thread {
 
+ /**
+ * Represents which layer NCP is currently bound to
+ */
+typedef enum otNcpBindingState
+{
+    kNcpBoundToThread,  ///< NCP is bound to the Thread layer (default)
+    kNcpBoundToRadio,   ///< NCP is bound to the 802.15.4 Radio/Phy layer
+} otNcpBindingState;
+
 class NcpBase
 {
 public:
@@ -147,11 +156,19 @@ private:
     void HandleDatagramFromStack(otMessage aMessage);
 
     /**
-     * Trampoline for HandleRawFrame().
-     */
-    static void HandleRawFrame(const RadioPacket *aFrame, void *aContext);
+    * Trampoline for HandleRadioReceive().
+    */
+    static void HandleRadioReceive(otInstance *aInstance, RadioPacket *aPacket, ThreadError aError);
 
-    void HandleRawFrame(const RadioPacket *aFrame);
+    void HandleRadioReceive(const RadioPacket *aPacket, ThreadError aError);
+
+    /**
+    * Trampoline for HandleRadioTransmit().
+    */
+    static void HandleRadioTransmit(otInstance *aInstance, RadioPacket *aPacket, bool aFramePending,
+        ThreadError aError);
+
+    void HandleRadioTransmit(const RadioPacket *aPacket, bool aFramePending, ThreadError aError);
 
     /**
      * Trampoline for HandleActiveScanResult().
@@ -384,6 +401,8 @@ private:
                                                   uint16_t value_len);
     ThreadError SetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                           uint16_t value_len);
+    ThreadError SetPropertyHandler_STREAM_RAW(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                              uint16_t value_len);
     ThreadError SetPropertyHandler_NET_IF_UP(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                uint16_t value_len);
     ThreadError SetPropertyHandler_NET_STACK_UP(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -516,7 +535,10 @@ private:
 
     bool mAllowLocalNetworkDataChange;
     bool mRequireJoinExistingNetwork;
-    bool mIsRawStreamEnabled;
+
+    otNcpBindingState mBindingState;
+    uint8_t mCurTransmintTID;
+    uint8_t mCurReceiveChannel;
 
     uint32_t mFramingErrorCounter;             // Number of improperly formed received spinel frames.
     uint32_t mRxSpinelFrameCounter;            // Number of received (inbound) spinel frames.

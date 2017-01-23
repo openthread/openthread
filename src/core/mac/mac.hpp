@@ -201,6 +201,18 @@ public:
     typedef void (*ActiveScanHandler)(void *aContext, Frame *aBeaconFrame);
 
     /**
+    * This method ensures the radio is in the proper state for use.
+    *
+    */
+    void EnableRadio();
+
+    /**
+    * This method disables the radio, indicating it's no longer needed.
+    *
+    */
+    void DisableRadio();
+
+    /**
      * This method starts an IEEE 802.15.4 Active Scan.
      *
      * @param[in]  aScanChannels  A bit vector indicating which channels to scan.
@@ -431,6 +443,17 @@ public:
     Blacklist &GetBlacklist(void);
 
     /**
+    * The radio driver calls this function pointer to notify OpenThread of a received packet.
+    *
+    * @param[in]  aInstance The OpenThread instance structure.
+    * @param[in]  aPacket   A pointer to the received packet or NULL if the receive operation was aborted.
+    * @param[in]  aError    ::kThreadError_None when successfully received a frame, ::kThreadError_Abort when reception
+    *                       was aborted and a frame was not received.
+    *
+    */
+    static void ReceiveDoneTask(otInstance *aInstance, RadioPacket *aFrame, ThreadError aError);
+
+    /**
      * This method is called to handle receive events.
      *
      * @param[in]  aFrame  A pointer to the received frame, or NULL if the receive operation aborted.
@@ -439,6 +462,20 @@ public:
      *
      */
     void ReceiveDoneTask(Frame *aFrame, ThreadError aError);
+
+    /**
+    * The radio driver calls this function pointer to notify OpenThread that the transmission has completed.
+    *
+    * @param[in]  aInstance      The OpenThread instance structure.
+    * @param[in]  aPacket        A pointer to the packet that was transmitted.
+    * @param[in]  aFramePending  TRUE if an ACK frame was received and the Frame Pending bit was set.
+    * @param[in]  aError  ::kThreadError_None when the frame was transmitted, ::kThreadError_NoAck when the frame was
+    *                     transmitted but no ACK was received, ::kThreadError_ChannelAccessFailure when the transmission
+    *                     could not take place due to activity on the channel, ::kThreadError_Abort when transmission was
+    *                     aborted for other reasons.
+    *
+    */
+    static void TransmitDoneTask(otInstance *aInstance, RadioPacket *aPacket, bool aRxPending, ThreadError aError);
 
     /**
      * This method is called to handle transmit events.
