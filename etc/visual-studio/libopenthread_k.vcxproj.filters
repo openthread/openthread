@@ -506,8 +506,5 @@
     <ClInclude Include="..\..\src\core\openthread-instance.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\openthread\link_raw.h">
-      <Filter>Source Files\api</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

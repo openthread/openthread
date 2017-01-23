@@ -66,10 +66,12 @@ typedef struct otInstance
     otHandleEnergyScanResult mEnergyScanCallback;
     void *mEnergyScanCallbackContext;
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API == 1
     bool                    mLinkRawEnabled;
     otLinkRawReceiveDone    mLinkRawReceiveDoneCallback;
     otLinkRawTransmitDone   mLinkRawTransmitDoneCallback;
     otLinkRawEnergyScanDone mLinkRawEnergyScanDoneCallback;
+#endif
 
     //
     // State

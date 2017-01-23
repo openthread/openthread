@@ -264,14 +264,18 @@ void Mac::StartEnergyScan(void)
 
 extern "C" void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi)
 {
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+
     if (aInstance->mLinkRawEnabled)
     {
         if (aInstance->mLinkRawEnergyScanDoneCallback)
         {
             aInstance->mLinkRawEnergyScanDoneCallback(aInstance, aEnergyScanMaxRssi);
+            aInstance->mLinkRawEnergyScanDoneCallback = NULL;
         }
     }
     else
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
     {
         aInstance->mThreadNetif.GetMac().EnergyScanDone(aEnergyScanMaxRssi);
     }
@@ -801,14 +805,18 @@ extern "C" void otPlatRadioTransmitDone(otInstance *aInstance, RadioPacket *aPac
 {
     otLogFuncEntryMsg("%!otError!, aRxPending=%u", aError, aRxPending ? 1 : 0);
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+
     if (aInstance->mLinkRawEnabled)
     {
         if (aInstance->mLinkRawTransmitDoneCallback)
         {
             aInstance->mLinkRawTransmitDoneCallback(aInstance, aPacket, aRxPending, aError);
+            aInstance->mLinkRawTransmitDoneCallback = NULL;
         }
     }
     else
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
     {
         aInstance->mThreadNetif.GetMac().TransmitDoneTask(aPacket, aRxPending, aError);
     }
@@ -1186,6 +1194,8 @@ extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, RadioPacket *aFram
 {
     otLogFuncEntryMsg("%!otError!", aError);
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+
     if (aInstance->mLinkRawEnabled)
     {
         if (aInstance->mLinkRawReceiveDoneCallback)
@@ -1194,6 +1204,7 @@ extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, RadioPacket *aFram
         }
     }
     else
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
     {
         aInstance->mThreadNetif.GetMac().ReceiveDoneTask(static_cast<Frame *>(aFrame), aError);
     }
