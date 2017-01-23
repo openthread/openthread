@@ -50,14 +50,24 @@ bool otLinkRawIsEnabled(otInstance *aInstance)
     return aInstance->mLinkRawEnabled;
 }
 
-void otLinkRawSetPanId(otInstance *aInstance, uint16_t aPanId)
+ThreadError otLinkRawSetPanId(otInstance *aInstance, uint16_t aPanId)
 {
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aInstance->mLinkRawEnabled, error = kThreadError_InvalidState);
+
     otPlatRadioSetPanId(aInstance, aPanId);
+
+exit:
+    return error;
 }
 
-void otLinkRawSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtendedAddress)
+ThreadError otLinkRawSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtendedAddress)
 {
+    ThreadError error = kThreadError_None;
     uint8_t buf[sizeof(otExtAddress)];
+
+    VerifyOrExit(aInstance->mLinkRawEnabled, error = kThreadError_InvalidState);
 
     for (size_t i = 0; i < sizeof(buf); i++)
     {
@@ -65,11 +75,21 @@ void otLinkRawSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExt
     }
 
     otPlatRadioSetExtendedAddress(aInstance, buf);
+
+exit:
+    return error;
 }
 
-void otLinkRawSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
+ThreadError otLinkRawSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
 {
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aInstance->mLinkRawEnabled, error = kThreadError_InvalidState);
+
     otPlatRadioSetShortAddress(aInstance, aShortAddress);
+
+exit:
+    return error;
 }
 
 bool otLinkRawGetPromiscuous(otInstance *aInstance)
@@ -77,33 +97,68 @@ bool otLinkRawGetPromiscuous(otInstance *aInstance)
     return otPlatRadioGetPromiscuous(aInstance);
 }
 
-void otLinkRawSetPromiscuous(otInstance *aInstance, bool aEnable)
+ThreadError otLinkRawSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aInstance->mLinkRawEnabled, error = kThreadError_InvalidState);
+
     otPlatRadioSetPromiscuous(aInstance, aEnable);
+
+exit:
+    return error;
 }
 
 ThreadError otLinkRawSleep(otInstance *aInstance)
 {
-    return otPlatRadioSleep(aInstance);
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aInstance->mLinkRawEnabled, error = kThreadError_InvalidState);
+
+    error = otPlatRadioSleep(aInstance);
+
+exit:
+    return error;
 }
 
 ThreadError otLinkRawReceive(otInstance *aInstance, uint8_t aChannel, otLinkRawReceiveDone aCallback)
 {
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aInstance->mLinkRawEnabled, error = kThreadError_InvalidState);
+
     aInstance->mLinkRawReceiveDoneCallback = aCallback;
 
-    return otPlatRadioReceive(aInstance, aChannel);
+    error = otPlatRadioReceive(aInstance, aChannel);
+
+exit:
+    return error;
 }
 
 RadioPacket *otLinkRawGetTransmitBuffer(otInstance *aInstance)
 {
-    return otPlatRadioGetTransmitBuffer(aInstance);
+    RadioPacket *buffer = NULL;
+
+    VerifyOrExit(aInstance->mLinkRawEnabled,);
+
+    buffer = otPlatRadioGetTransmitBuffer(aInstance);
+
+exit:
+    return buffer;
 }
 
 ThreadError otLinkRawTransmit(otInstance *aInstance, RadioPacket *aPacket, otLinkRawTransmitDone aCallback)
 {
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aInstance->mLinkRawEnabled, error = kThreadError_InvalidState);
+
     aInstance->mLinkRawTransmitDoneCallback = aCallback;
 
-    return otPlatRadioTransmit(aInstance, aPacket);
+    error = otPlatRadioTransmit(aInstance, aPacket);
+
+exit:
+    return error;
 }
 
 int8_t otLinkRawGetRssi(otInstance *aInstance)
@@ -119,42 +174,98 @@ otRadioCaps otLinkRawGetCaps(otInstance *aInstance)
 ThreadError otLinkRawEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration,
                                 otLinkRawEnergyScanDone aCallback)
 {
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aInstance->mLinkRawEnabled, error = kThreadError_InvalidState);
+
     aInstance->mLinkRawEnergyScanDoneCallback = aCallback;
 
-    return otPlatRadioEnergyScan(aInstance, aScanChannel, aScanDuration);
+    error = otPlatRadioEnergyScan(aInstance, aScanChannel, aScanDuration);
+
+exit:
+    return error;
 }
 
-void otLinkRawSrcMatchEnable(otInstance *aInstance, bool aEnable)
+ThreadError otLinkRawSrcMatchEnable(otInstance *aInstance, bool aEnable)
 {
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aInstance->mLinkRawEnabled, error = kThreadError_InvalidState);
+
     otPlatRadioEnableSrcMatch(aInstance, aEnable);
+
+exit:
+    return error;
 }
 
 ThreadError otLinkRawSrcMatchAddShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
-    return otPlatRadioAddSrcMatchShortEntry(aInstance, aShortAddress);
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aInstance->mLinkRawEnabled, error = kThreadError_InvalidState);
+
+    error = otPlatRadioAddSrcMatchShortEntry(aInstance, aShortAddress);
+
+exit:
+    return error;
 }
 
 ThreadError otLinkRawSrcMatchAddExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
 {
-    return otPlatRadioAddSrcMatchExtEntry(aInstance, aExtAddress);
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aInstance->mLinkRawEnabled, error = kThreadError_InvalidState);
+
+    error = otPlatRadioAddSrcMatchExtEntry(aInstance, aExtAddress);
+
+exit:
+    return error;
 }
 
 ThreadError otLinkRawSrcMatchClearShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
-    return otPlatRadioClearSrcMatchShortEntry(aInstance, aShortAddress);
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aInstance->mLinkRawEnabled, error = kThreadError_InvalidState);
+
+    error = otPlatRadioClearSrcMatchShortEntry(aInstance, aShortAddress);
+
+exit:
+    return error;
 }
 
 ThreadError otLinkRawSrcMatchClearExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
 {
-    return otPlatRadioClearSrcMatchExtEntry(aInstance, aExtAddress);
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aInstance->mLinkRawEnabled, error = kThreadError_InvalidState);
+
+    error = otPlatRadioClearSrcMatchExtEntry(aInstance, aExtAddress);
+
+exit:
+    return error;
 }
 
-void otLinkRawSrcMatchClearShortEntries(otInstance *aInstance)
+ThreadError otLinkRawSrcMatchClearShortEntries(otInstance *aInstance)
 {
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aInstance->mLinkRawEnabled, error = kThreadError_InvalidState);
+
     otPlatRadioClearSrcMatchShortEntries(aInstance);
+
+exit:
+    return error;
 }
 
-void otLinkRawSrcMatchClearExtEntries(otInstance *aInstance)
+ThreadError otLinkRawSrcMatchClearExtEntries(otInstance *aInstance)
 {
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aInstance->mLinkRawEnabled, error = kThreadError_InvalidState);
+
     otPlatRadioClearSrcMatchExtEntries(aInstance);
+
+exit:
+    return error;
 }

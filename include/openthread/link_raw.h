@@ -82,8 +82,11 @@ bool otLinkRawIsEnabled(otInstance *aInstance);
  * @param[in] aInstance      A pointer to an OpenThread instance.
  * @param[in] aPanId         The IEEE 802.15.4 PAN ID.
  *
+ * @retval kThreadError_None            If successful.
+ * @retval kThreadError_InvalidState    If the raw link-layer isn't enabled.
+ *
  */
-void otLinkRawSetPanId(otInstance *aInstance, uint16_t aPanId);
+ThreadError otLinkRawSetPanId(otInstance *aInstance, uint16_t aPanId);
 
 /**
  * This function sets the IEEE 802.15.4 Extended Address.
@@ -91,8 +94,11 @@ void otLinkRawSetPanId(otInstance *aInstance, uint16_t aPanId);
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aExtendedAddress  A pointer to the IEEE 802.15.4 Extended Address.
  *
+ * @retval kThreadError_None            If successful.
+ * @retval kThreadError_InvalidState    If the raw link-layer isn't enabled.
+ *
  */
-void otLinkRawSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtendedAddress);
+ThreadError otLinkRawSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtendedAddress);
 
 /**
  * Set the Short Address for address filtering.
@@ -100,8 +106,11 @@ void otLinkRawSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExt
  * @param[in] aInstance      A pointer to an OpenThread instance.
  * @param[in] aShortAddress  The IEEE 802.15.4 Short Address.
  *
+ * @retval kThreadError_None            If successful.
+ * @retval kThreadError_InvalidState    If the raw link-layer isn't enabled.
+ *
  */
-void otLinkRawSetShortAddress(otInstance *aInstance, uint16_t aShortAddress);
+ThreadError otLinkRawSetShortAddress(otInstance *aInstance, uint16_t aShortAddress);
 
 /**
  * This function gets the status of promiscuous mode.
@@ -120,8 +129,11 @@ bool otLinkRawGetPromiscuous(otInstance *aInstance);
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aEnable      A value to enable or disable promiscuous mode.
  *
+ * @retval kThreadError_None            If successful.
+ * @retval kThreadError_InvalidState    If the raw link-layer isn't enabled.
+ *
  */
-void otLinkRawSetPromiscuous(otInstance *aInstance, bool aEnable);
+ThreadError otLinkRawSetPromiscuous(otInstance *aInstance, bool aEnable);
 
 /**
  * Transition the radio from Receive to Sleep.
@@ -170,7 +182,7 @@ ThreadError otLinkRawReceive(otInstance *aInstance, uint8_t aChannel, otLinkRawR
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  *
- * @returns A pointer to the transmit buffer.
+ * @returns A pointer to the transmit buffer or NULL if the raw link-layer isn't enabled.
  *
  */
 RadioPacket *otLinkRawGetTransmitBuffer(otInstance *aInstance);
@@ -250,6 +262,7 @@ typedef void (*otLinkRawEnergyScanDone)(otInstance *aInstance, int8_t aEnergySca
  *
  * @retval kThreadError_None            Successfully started scanning the channel.
  * @retval kThreadError_NotImplemented  The radio doesn't support energy scanning.
+ * @retval kThreadError_InvalidState    If the raw link-layer isn't enabled.
  *
  */
 ThreadError otLinkRawEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration,
@@ -261,8 +274,11 @@ ThreadError otLinkRawEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uin
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aEnable      Enable/disable source match for automatical pending.
  *
+ * @retval kThreadError_None            If successful.
+ * @retval kThreadError_InvalidState    If the raw link-layer isn't enabled.
+ *
  */
-void otLinkRawSrcMatchEnable(otInstance *aInstance, bool aEnable);
+ThreadError otLinkRawSrcMatchEnable(otInstance *aInstance, bool aEnable);
 
 /**
  * Adding short address to the source match table.
@@ -270,8 +286,9 @@ void otLinkRawSrcMatchEnable(otInstance *aInstance, bool aEnable);
  * @param[in]  aInstance        A pointer to an OpenThread instance.
  * @param[in]  aShortAddress    The short address to be added.
  *
- * @retval kThreadError_None     Successfully added short address to the source match table.
- * @retval kThreadError_NoBufs   No available entry in the source match table.
+ * @retval kThreadError_None            Successfully added short address to the source match table.
+ * @retval kThreadError_NoBufs          No available entry in the source match table.
+ * @retval kThreadError_InvalidState    If the raw link-layer isn't enabled.
  *
  */
 ThreadError otLinkRawSrcMatchAddShortEntry(otInstance *aInstance, const uint16_t aShortAddress);
@@ -282,8 +299,9 @@ ThreadError otLinkRawSrcMatchAddShortEntry(otInstance *aInstance, const uint16_t
  * @param[in]  aInstance        A pointer to an OpenThread instance.
  * @param[in]  aExtAddress      The extended address to be added.
  *
- * @retval kThreadError_None     Successfully added extended address to the source match table.
- * @retval kThreadError_NoBufs   No available entry in the source match table.
+ * @retval kThreadError_None            Successfully added extended address to the source match table.
+ * @retval kThreadError_NoBufs          No available entry in the source match table.
+ * @retval kThreadError_InvalidState    If the raw link-layer isn't enabled.
  *
  */
 ThreadError otLinkRawSrcMatchAddExtEntry(otInstance *aInstance, const uint8_t *aExtAddress);
@@ -294,8 +312,9 @@ ThreadError otLinkRawSrcMatchAddExtEntry(otInstance *aInstance, const uint8_t *a
  * @param[in]  aInstance        A pointer to an OpenThread instance.
  * @param[in]  aShortAddress    The short address to be removed.
  *
- * @retval kThreadError_None        Successfully removed short address from the source match table.
- * @retval kThreadError_NoAddress   The short address is not in source match table.
+ * @retval kThreadError_None            Successfully removed short address from the source match table.
+ * @retval kThreadError_NoAddress       The short address is not in source match table.
+ * @retval kThreadError_InvalidState    If the raw link-layer isn't enabled.
  *
  */
 ThreadError otLinkRawSrcMatchClearShortEntry(otInstance *aInstance, const uint16_t aShortAddress);
@@ -306,8 +325,9 @@ ThreadError otLinkRawSrcMatchClearShortEntry(otInstance *aInstance, const uint16
  * @param[in]  aInstance        A pointer to an OpenThread instance.
  * @param[in]  aExtAddress      The extended address to be removed.
  *
- * @retval kThreadError_None        Successfully removed the extended address from the source match table.
- * @retval kThreadError_NoAddress   The extended address is not in source match table.
+ * @retval kThreadError_None            Successfully removed the extended address from the source match table.
+ * @retval kThreadError_NoAddress       The extended address is not in source match table.
+ * @retval kThreadError_InvalidState    If the raw link-layer isn't enabled.
  *
  */
 ThreadError otLinkRawSrcMatchClearExtEntry(otInstance *aInstance, const uint8_t *aExtAddress);
@@ -317,16 +337,22 @@ ThreadError otLinkRawSrcMatchClearExtEntry(otInstance *aInstance, const uint8_t 
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  *
+ * @retval kThreadError_None            If successful.
+ * @retval kThreadError_InvalidState    If the raw link-layer isn't enabled.
+ *
  */
-void otLinkRawSrcMatchClearShortEntries(otInstance *aInstance);
+ThreadError otLinkRawSrcMatchClearShortEntries(otInstance *aInstance);
 
 /**
  * Removing all the extended addresses from the source match table.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  *
+ * @retval kThreadError_None            If successful.
+ * @retval kThreadError_InvalidState    If the raw link-layer isn't enabled.
+ *
  */
-void otLinkRawSrcMatchClearExtEntries(otInstance *aInstance);
+ThreadError otLinkRawSrcMatchClearExtEntries(otInstance *aInstance);
 
 /**
  * @}

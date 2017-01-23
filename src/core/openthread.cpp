@@ -79,10 +79,12 @@ otInstance::otInstance(void) :
     mActiveScanCallbackContext(NULL),
     mEnergyScanCallback(NULL),
     mEnergyScanCallbackContext(NULL),
+#if OPENTHREAD_ENABLE_RAW_LINK_API
     mLinkRawEnabled(false),
     mLinkRawReceiveDoneCallback(NULL),
     mLinkRawTransmitDoneCallback(NULL),
     mLinkRawEnergyScanDoneCallback(NULL),
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
     mThreadNetif(mIp6)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     , mApplicationCoapServer(mIp6.mUdp, OT_DEFAULT_COAP_PORT)
@@ -1256,11 +1258,15 @@ ThreadError otInterfaceUp(otInstance *aInstance)
 
     otLogFuncEntry();
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
     VerifyOrExit(!aInstance->mLinkRawEnabled, error = kThreadError_InvalidState);
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
     error = aInstance->mThreadNetif.Up();
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
 exit:
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
     otLogFuncExitErr(error);
     return error;
 }
@@ -1271,11 +1277,15 @@ ThreadError otInterfaceDown(otInstance *aInstance)
 
     otLogFuncEntry();
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
     VerifyOrExit(!aInstance->mLinkRawEnabled, error = kThreadError_InvalidState);
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
     error = aInstance->mThreadNetif.Down();
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
 exit:
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
     otLogFuncExitErr(error);
     return error;
 }
