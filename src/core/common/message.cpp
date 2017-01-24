@@ -52,7 +52,7 @@ MessagePool::MessagePool(void) :
 
     mFreeBuffers = mBuffers;
 
-    for (int i = 0; i < kNumBuffers - 1; i++)
+    for (uint16_t i = 0; i < kNumBuffers - 1; i++)
     {
         mBuffers[i].SetNextBuffer(&mBuffers[i + 1]);
     }
@@ -148,7 +148,7 @@ ThreadError MessagePool::FreeBuffers(Buffer *aBuffer)
 
 ThreadError MessagePool::ReclaimBuffers(int aNumBuffers)
 {
-    int numFreeBuffers;
+    uint16_t numFreeBuffers;
 
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
     numFreeBuffers = otPlatMessagePoolNumFreeBuffers();
