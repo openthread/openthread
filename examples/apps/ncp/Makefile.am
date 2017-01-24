@@ -39,8 +39,8 @@ ot_ncp_CPPFLAGS                                                        = \
     $(NULL)
 
 ot_ncp_LDADD                                                           = \
-    $(top_builddir)/src/core/libopenthread-ftd.a                         \
     $(top_builddir)/src/ncp/libopenthread-ncp.a                          \
+    $(top_builddir)/src/core/libopenthread-ftd.a                         \
     $(NULL)
 
 ot_ncp_LDFLAGS                                                         = \
