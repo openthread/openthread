@@ -208,7 +208,7 @@ def any_mac_address():
 
 
 def any_hops_left():
-    return random.getrandbits(4)
+    return random.getrandbits(8)
 
 
 def any_data(length=None):
@@ -264,7 +264,7 @@ class TestLowpanIPHC(unittest.TestCase):
 
 class TestLowpanParser(unittest.TestCase):
 
-    def test_should_parse_6lowpan_packet_with_mesh_header_that_contains_hop_limit_storred_on_two_bytes_when_decompress_method_is_called(self):
+    def test_should_parse_6lowpan_packet_with_mesh_header_that_contains_hop_limit_stored_on_two_bytes_when_decompress_method_is_called(self):
         # GIVEN
         lowpan_packet = bytearray([0xbf, 0x13, 0x90, 0x00, 0x48, 0x01, 0x7c, 0x77,
                                    0x3f, 0xf2, 0xbf, 0xc0, 0x00, 0x24, 0xb1, 0x62,
@@ -2277,8 +2277,14 @@ class TestLowpanMeshHeaderFactory(unittest.TestCase):
         v = int(originator_address.type == common.MacAddressType.SHORT)
         f = int(final_destination_address.type == common.MacAddressType.SHORT)
 
-        mesh_header_data = bytearray([(2 << 6) | (v << 5) | (f << 4) | hops_left]) + \
-            originator_address.mac_address + final_destination_address.mac_address
+        mesh_header_first_byte = (2 << 6) | (v << 5) | (f << 4)
+
+        if hops_left >= 0x0f:
+            mesh_header_data = bytearray([mesh_header_first_byte | 0x0f, hops_left])
+        else:
+            mesh_header_data = bytearray([mesh_header_first_byte | hops_left])
+
+        mesh_header_data += originator_address.mac_address + final_destination_address.mac_address
 
         mesh_header_factory = lowpan.LowpanMeshHeaderFactory()
 
