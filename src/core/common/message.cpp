@@ -159,7 +159,7 @@ ThreadError MessagePool::ReclaimBuffers(int aNumBuffers)
     //First comparison is to get around issues with comparing
     //signed and unsigned numbers, if aNumBuffers is negative then
     //the second comparison wont be attempted.
-    if (aNumBuffers < 0 || aNumBuffers <= numFreeBuffers )
+    if (aNumBuffers < 0 || aNumBuffers <= numFreeBuffers)
     {
         return kThreadError_None;
     }
