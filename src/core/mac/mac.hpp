@@ -664,6 +664,7 @@ private:
     Frame *mTxFrame;
 
     otMacCounters mCounters;
+    uint32_t mKeyIdMode2FrameCounter;
 };
 
 /**

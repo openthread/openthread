@@ -2201,10 +2201,7 @@ class OpenThread(IThci):
 
             if listChannelMask != None:
                 cmd += ' channelmask '
-                if len(listChannelMask) > 2:
-                    cmd += '0x' + self.__convertLongToString(self.__convertChannelMask(listChannelMask))
-                elif len(listChannelMask) == 2:
-                    cmd += str(hex(1 << listChannelMask[1]))
+                cmd += '0x' + self.__convertLongToString(self.__convertChannelMask(listChannelMask))
 
             if sPSKc != None or listSecurityPolicy != None or \
                xCommissioningSessionId != None or xTmfPort != None or xSteeringData != None or xBorderRouterLocator != None or \
