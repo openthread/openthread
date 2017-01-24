@@ -38,9 +38,7 @@
 #include <openthread-diag.h>
 #include <diag_process.hpp>
 
-namespace Thread {
-
-namespace Diagnostics {
+using namespace Thread::Diagnostics;
 
 #ifdef __cplusplus
 extern "C" {
@@ -89,6 +87,3 @@ bool isDiagEnabled()
 #ifdef __cplusplus
 }  // extern "C"
 #endif
-
-}  // namespace Diagnostics
-}  // namespace Thread

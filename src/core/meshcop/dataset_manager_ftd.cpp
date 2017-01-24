@@ -62,7 +62,7 @@ ActiveDataset::ActiveDataset(ThreadNetif &aThreadNetif):
     mResourceGet(OPENTHREAD_URI_ACTIVE_GET, &ActiveDataset::HandleGet, this),
     mResourceSet(OPENTHREAD_URI_ACTIVE_SET, &ActiveDataset::HandleSet, this)
 {
-    mCoapServer.AddResource(mResourceGet);
+    mNetif.GetCoapServer().AddResource(mResourceGet);
 }
 
 bool ActiveDataset::IsTlvInitialized(Tlv::Type aType)
@@ -183,12 +183,12 @@ void ActiveDataset::StartLeader(void)
 
     mLocal.Store();
     mNetwork = mLocal;
-    mCoapServer.AddResource(mResourceSet);
+    mNetif.GetCoapServer().AddResource(mResourceSet);
 }
 
 void ActiveDataset::StopLeader(void)
 {
-    mCoapServer.RemoveResource(mResourceSet);
+    mNetif.GetCoapServer().RemoveResource(mResourceSet);
 }
 
 void ActiveDataset::HandleGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
@@ -226,7 +226,7 @@ PendingDataset::PendingDataset(ThreadNetif &aThreadNetif):
     mResourceGet(OPENTHREAD_URI_PENDING_GET, &PendingDataset::HandleGet, this),
     mResourceSet(OPENTHREAD_URI_PENDING_SET, &PendingDataset::HandleSet, this)
 {
-    mCoapServer.AddResource(mResourceGet);
+    mNetif.GetCoapServer().AddResource(mResourceGet);
 }
 
 void PendingDataset::StartLeader(void)
@@ -236,12 +236,12 @@ void PendingDataset::StartLeader(void)
     mNetwork = mLocal;
     ResetDelayTimer(kFlagNetworkUpdated);
 
-    mCoapServer.AddResource(mResourceSet);
+    mNetif.GetCoapServer().AddResource(mResourceSet);
 }
 
 void PendingDataset::StopLeader(void)
 {
-    mCoapServer.RemoveResource(mResourceSet);
+    mNetif.GetCoapServer().RemoveResource(mResourceSet);
 }
 
 void PendingDataset::HandleGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,

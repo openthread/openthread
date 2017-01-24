@@ -609,8 +609,6 @@ private:
     Timer mBackoffTimer;
     Timer mReceiveTimer;
 
-    KeyManager &mKeyManager;
-    Mle::MleRouter &mMle;
     ThreadNetif &mNetif;
 
     ExtAddress mExtAddress;
@@ -666,6 +664,7 @@ private:
     Frame *mTxFrame;
 
     otMacCounters mCounters;
+    uint32_t mKeyIdMode2FrameCounter;
 };
 
 /**

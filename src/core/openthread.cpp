@@ -67,6 +67,8 @@
 #include <coap/coap_client.hpp>
 #include <coap/coap_server.hpp>
 
+using namespace Thread;
+
 #ifndef OPENTHREAD_MULTIPLE_INSTANCE
 static otDEFINE_ALIGNED_VAR(sInstanceRaw, sizeof(otInstance), uint64_t);
 otInstance *sInstance = NULL;
@@ -91,8 +93,6 @@ otInstance::otInstance(void) :
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 {
 }
-
-namespace Thread {
 
 #ifdef __cplusplus
 extern "C" {
@@ -1656,6 +1656,21 @@ exit:
     return error;
 }
 
+bool otIsNodeCommissioned(otInstance *aInstance)
+{
+    otOperationalDataset dataset;
+
+    otGetActiveDataset(aInstance, &dataset);
+
+    if ((dataset.mIsMasterKeySet) && (dataset.mIsNetworkNameSet) &&
+        (dataset.mIsExtendedPanIdSet) && (dataset.mIsPanIdSet) && (dataset.mIsChannelSet))
+    {
+        return true;
+    }
+
+    return false;
+}
+
 ThreadError otGetPendingDataset(otInstance *aInstance, otOperationalDataset *aDataset)
 {
     ThreadError error = kThreadError_None;
@@ -1910,5 +1925,3 @@ ThreadError otCoapSendResponse(otInstance *aInstance, otMessage aMessage, const 
 #ifdef __cplusplus
 }  // extern "C"
 #endif
-
-}  // namespace Thread

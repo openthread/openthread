@@ -73,7 +73,6 @@ public:
 
 private:
     ThreadNetif &mNetif;
-    Coap::Client &mCoapClient;
 };
 
 /**

@@ -63,6 +63,13 @@ set -x
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp || die
+
+    git clean -xfd || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-nrf52840 || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp || die
 }
 
 [ $BUILD_TARGET != arm-gcc54 ] || {
@@ -78,6 +85,13 @@ set -x
     git clean -xfd || die
     ./bootstrap || die
     COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-da15000 || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp || die
+
+    git clean -xfd || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-nrf52840 || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp || die

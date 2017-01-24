@@ -29,7 +29,7 @@
 .NOTPARALLEL:
 
 AR                              = arm-none-eabi-ar
-AS                              = arm-none-eabi-as
+CCAS                            = arm-none-eabi-as
 CPP                             = arm-none-eabi-cpp
 CC                              = arm-none-eabi-gcc
 CXX                             = arm-none-eabi-g++

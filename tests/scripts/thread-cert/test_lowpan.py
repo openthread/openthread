@@ -208,7 +208,7 @@ def any_mac_address():
 
 
 def any_hops_left():
-    return random.getrandbits(4)
+    return random.getrandbits(8)
 
 
 def any_data(length=None):
@@ -263,6 +263,42 @@ class TestLowpanIPHC(unittest.TestCase):
 
 
 class TestLowpanParser(unittest.TestCase):
+
+    def test_should_parse_6lowpan_packet_with_mesh_header_that_contains_hop_limit_stored_on_two_bytes_when_decompress_method_is_called(self):
+        # GIVEN
+        lowpan_packet = bytearray([0xbf, 0x13, 0x90, 0x00, 0x48, 0x01, 0x7c, 0x77,
+                                   0x3f, 0xf2, 0xbf, 0xc0, 0x00, 0x24, 0xb1, 0x62,
+                                   0x44, 0x02, 0xf0, 0xba, 0x0d, 0xff, 0x04, 0x01,
+                                   0x00, 0x02, 0x02, 0x08, 0x00, 0x07, 0x09, 0x50,
+                                   0x20, 0x00, 0x20, 0x00, 0x08, 0x00, 0x00, 0x00])
+
+        ipv6_packet = bytearray([0x60, 0x00, 0x00, 0x00, 0x00, 0x21, 0x11, 0x3f,
+                                 0xfd, 0x00, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00,
+                                 0x00, 0x00, 0x00, 0xff, 0xfe, 0x00, 0x90, 0x00,
+                                 0xfd, 0x00, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00,
+                                 0x00, 0x00, 0x00, 0xff, 0xfe, 0x00, 0x48, 0x01,
+                                 0xf0, 0xbf, 0xc0, 0x00, 0x00, 0x21, 0xe2, 0xdd,
+                                 0x62, 0x44, 0x02, 0xf0, 0xba, 0x0d, 0xff, 0x04,
+                                 0x01, 0x00, 0x02, 0x02, 0x08, 0x00, 0x07, 0x09,
+                                 0x50, 0x20, 0x00, 0x20, 0x00, 0x08, 0x00, 0x00,
+                                 0x00])
+
+        message_info = common.MessageInfo()
+        message_info.source_mac_address = common.MacAddress.from_eui64(
+            bytearray([0x00, 0x99, 0x99, 0xff, 0xfe, 0x22, 0x11, 0x00]))
+        message_info.destination_mac_address = common.MacAddress.from_eui64(
+            bytearray([0x34, 0x29, 0x96, 0xff, 0xfe, 0xac, 0xff, 0x17]))
+
+        context_manager = lowpan.ContextManager()
+        context_manager[0] = lowpan.Context(prefix="fd00:db8::/64")
+
+        parser = create_default_lowpan_parser(context_manager)
+
+        # WHEN
+        actual_ipv6_packet = parser.parse(io.BytesIO(lowpan_packet), message_info)
+
+        # THEN
+        self.assertEqual(ipv6_packet, actual_ipv6_packet.to_bytes())
 
     def test_should_parse_6lowpan_packet_with_not_compressed_udp_and_without_hop_by_hop_extension_header_when_decompress_method_is_called(self):
         # GIVEN
@@ -2241,8 +2277,14 @@ class TestLowpanMeshHeaderFactory(unittest.TestCase):
         v = int(originator_address.type == common.MacAddressType.SHORT)
         f = int(final_destination_address.type == common.MacAddressType.SHORT)
 
-        mesh_header_data = bytearray([(2 << 6) | (v << 5) | (f << 4) | hops_left]) + \
-            originator_address.mac_address + final_destination_address.mac_address
+        mesh_header_first_byte = (2 << 6) | (v << 5) | (f << 4)
+
+        if hops_left >= 0x0f:
+            mesh_header_data = bytearray([mesh_header_first_byte | 0x0f, hops_left])
+        else:
+            mesh_header_data = bytearray([mesh_header_first_byte | hops_left])
+
+        mesh_header_data += originator_address.mac_address + final_destination_address.mac_address
 
         mesh_header_factory = lowpan.LowpanMeshHeaderFactory()
 

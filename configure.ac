@@ -201,6 +201,8 @@ AC_PROG_CXXCPP
 AC_PROG_CXX
 AC_PROG_CXX_C_O
 
+AM_PROG_AS
+
 # Check for other compiler toolchain tools.
 
 AC_CHECK_TOOL(AR, ar)
@@ -879,7 +881,7 @@ AC_ARG_WITH(examples,
     [
         case "${with_examples}" in
 
-        none|posix|cc2538|da15000)
+        none|posix|cc2538|da15000|nrf52840)
             ;;
         *)
             AC_MSG_ERROR([Invalid value ${with_examples} for --with-examples])
@@ -907,6 +909,11 @@ case ${with_examples} in
         AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_DA15000],[${OPENTHREAD_EXAMPLES_DA15000}],[Define to 1 if you want to use da15000 examples])
         ;;
 
+    nrf52840)
+        OPENTHREAD_EXAMPLES_NRF52840=1
+        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_NRF52840],[${OPENTHREAD_EXAMPLES_NRF52840}],[Define to 1 if you want to use nrf52840 examples])
+        ;;
+
 esac
 
 AC_MSG_RESULT(${OPENTHREAD_EXAMPLES})
@@ -923,6 +930,9 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2538], [test "${OPENTHREAD_EXAMPLES}" = "c
 
 AC_SUBST(OPENTHREAD_EXAMPLES_DA15000)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_DA15000], [test "${OPENTHREAD_EXAMPLES}" = "da15000"])
+
+AC_SUBST(OPENTHREAD_EXAMPLES_NRF52840)
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52840], [test "${OPENTHREAD_EXAMPLES}" = "nrf52840"])
 
 #
 # Platform Information
@@ -1058,6 +1068,7 @@ examples/apps/ncp/Makefile
 examples/platforms/Makefile
 examples/platforms/cc2538/Makefile
 examples/platforms/da15000/Makefile
+examples/platforms/nrf52840/Makefile
 examples/platforms/posix/Makefile
 examples/platforms/utils/Makefile
 tools/Makefile
@@ -1114,6 +1125,7 @@ AC_MSG_NOTICE([
   C Compiler                                : ${CC}
   C++ Preprocessor                          : ${CXXCPP}
   C++ Compiler                              : ${CXX}
+  Assembler Compiler                        : ${CCAS}
   Archiver                                  : ${AR}
   Archive Indexer                           : ${RANLIB}
   Symbol Stripper                           : ${STRIP}
@@ -1121,6 +1133,7 @@ AC_MSG_NOTICE([
   C Preprocessor flags                      : ${CPPFLAGS:--}
   C Compile flags                           : ${CFLAGS:--}
   C++ Compile flags                         : ${CXXFLAGS:--}
+  Assembler flags                           : ${CCASFLAGS:--}
   Link flags                                : ${LDFLAGS:--}
   Link libraries                            : ${LIBS}
   Pretty                                    : ${PRETTY:--}

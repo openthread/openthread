@@ -43,6 +43,7 @@
 #include <common/tlvs.hpp>
 #include <meshcop/timestamp.hpp>
 
+using Thread::Encoding::Reverse32;
 using Thread::Encoding::BigEndian::HostSwap16;
 using Thread::Encoding::BigEndian::HostSwap32;
 
@@ -1189,7 +1190,7 @@ public:
      */
     void ClearChannel(uint8_t aChannel) {
         uint8_t *mask = reinterpret_cast<uint8_t *>(this) + sizeof(*this);
-        mask[aChannel / 8] &= ~(1 << (aChannel % 8));
+        mask[aChannel / 8] &= ~(0x80 >> (aChannel % 8));
     }
 
     /**
@@ -1200,7 +1201,7 @@ public:
      */
     void SetChannel(uint8_t aChannel) {
         uint8_t *mask = reinterpret_cast<uint8_t *>(this) + sizeof(*this);
-        mask[aChannel / 8] |= 1 << (aChannel % 8);
+        mask[aChannel / 8] |= 0x80 >> (aChannel % 8);
     }
 
     /**
@@ -1211,7 +1212,7 @@ public:
      */
     bool IsChannelSet(uint8_t aChannel) const {
         const uint8_t *mask = reinterpret_cast<const uint8_t *>(this) + sizeof(*this);
-        return (aChannel < (mMaskLength * 8)) ? ((mask[aChannel / 8] & (1 << (aChannel % 8))) != 0) : false;
+        return (aChannel < (mMaskLength * 8)) ? ((mask[aChannel / 8] & (0x80 >> (aChannel % 8))) != 0) : false;
     }
 
 private:
@@ -1282,7 +1283,7 @@ public:
      * @returns The Channel Mask value.
      *
      */
-    uint32_t GetMask(void) const { return Thread::Encoding::LittleEndian::HostSwap32(mMask); }
+    uint32_t GetMask(void) const { return Reverse32(HostSwap32(mMask)); }
 
     /**
      * This method sets the Channel Mask value.
@@ -1290,7 +1291,7 @@ public:
      * @param[in]  aMask  The Channel Mask value.
      *
      */
-    void SetMask(uint32_t aMask) { mMask = Thread::Encoding::LittleEndian::HostSwap32(aMask); }
+    void SetMask(uint32_t aMask) { mMask = HostSwap32(Reverse32(aMask)); }
 
 private:
     uint32_t mMask;

@@ -1119,6 +1119,14 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "SPINEL_PROP_THREAD_STABLE_NETWORK_DATA";
         break;
 
+    case SPINEL_PROP_THREAD_LEADER_NETWORK_DATA:
+        ret = "SPINEL_PROP_THREAD_LEADER_NETWORK_DATA";
+        break;
+
+    case SPINEL_PROP_THREAD_STABLE_LEADER_NETWORK_DATA:
+        ret = "SPINEL_PROP_THREAD_STABLE_LEADER_NETWORK_DATA";
+        break;
+
     case SPINEL_PROP_THREAD_ON_MESH_NETS:
         ret = "SPINEL_PROP_THREAD_ON_MESH_NETS";
         break;

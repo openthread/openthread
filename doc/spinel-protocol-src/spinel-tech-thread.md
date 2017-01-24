@@ -66,6 +66,8 @@ The leader weight for this node.
 * Type: Read-Only
 * Packed-Encoding: `D`
 
+The local network data.
+
 ### PROP 87: PROP_THREAD_NETWORK_DATA_VERSION
 * Type: Read-Only
 * Packed-Encoding: `S`
@@ -73,6 +75,8 @@ The leader weight for this node.
 ### PROP 88: PROP_THREAD_STABLE_NETWORK_DATA
 * Type: Read-Only
 * Packed-Encoding: `D`
+
+The local stable network data.
 
 ### PROP 89: PROP_THREAD_STABLE_NETWORK_DATA_VERSION
 * Type: Read-Only
@@ -165,7 +169,7 @@ including ones sent to the RLOC16 address.
 
 Default value is `false`.
 
-### PROP 5383: SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED
+### PROP 5383: PROP_THREAD_ROUTER_ROLE_ENABLED
 * Type: Read-Write
 * Packed-Encoding: `b`
 
@@ -194,7 +198,7 @@ if it can not be used, a randomly generated router id is picked. This
 property can be set only when the device role is either detached or
 disabled.
 
-### PROP 5387: SPINEL_PROP_THREAD_NEIGHBOR_TABLE
+### PROP 5387: PROP_THREAD_NEIGHBOR_TABLE
 * Type: Read-Only
 * Packed-Encoding: `A(T(ESLCcCbLL))`
 
@@ -209,3 +213,23 @@ Data per item is:
 * `b`: `true` if neighbor is a child, `false` otherwise.
 * `L`: Link Frame Counter
 * `L`: MLE Frame Counter
+
+### PROP 5388: PROP_THREAD_CHILD_COUNT_MAX
+* Type: Read-Write
+* Packed-Encoding: `C`
+
+Specifies the maximum number of children currently allowed.
+This parameter can only be set when Thread protocol operation
+has been stopped.
+
+### PROP 5389: PROP_THREAD_LEADER_NETWORK_DATA
+* Type: Read-Only
+* Packed-Encoding: `D`
+
+The leader network data.
+
+### PROP 5390: PROP_THREAD_STABLE_LEADER_NETWORK_DATA
+* Type: Read-Only
+* Packed-Encoding: `D`
+
+The stable leader network data.

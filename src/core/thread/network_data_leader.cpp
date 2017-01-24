@@ -55,8 +55,7 @@ namespace Thread {
 namespace NetworkData {
 
 LeaderBase::LeaderBase(ThreadNetif &aThreadNetif):
-    NetworkData(aThreadNetif, false),
-    mNetif(aThreadNetif)
+    NetworkData(aThreadNetif, false)
 {
     Reset();
 }
@@ -86,9 +85,9 @@ ThreadError LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context
 
     aContext.mPrefixLength = 0;
 
-    if (PrefixMatch(mMle.GetMeshLocalPrefix(), aAddress.mFields.m8, 64) >= 0)
+    if (PrefixMatch(mNetif.GetMle().GetMeshLocalPrefix(), aAddress.mFields.m8, 64) >= 0)
     {
-        aContext.mPrefix = mMle.GetMeshLocalPrefix();
+        aContext.mPrefix = mNetif.GetMle().GetMeshLocalPrefix();
         aContext.mPrefixLength = 64;
         aContext.mContextId = 0;
         aContext.mCompressFlag = true;
@@ -137,7 +136,7 @@ ThreadError LeaderBase::GetContext(uint8_t aContextId, Lowpan::Context &aContext
 
     if (aContextId == 0)
     {
-        aContext.mPrefix = mMle.GetMeshLocalPrefix();
+        aContext.mPrefix = mNetif.GetMle().GetMeshLocalPrefix();
         aContext.mPrefixLength = 64;
         aContext.mContextId = 0;
         aContext.mCompressFlag = true;
@@ -209,7 +208,7 @@ bool LeaderBase::IsOnMesh(const Ip6::Address &aAddress)
     PrefixTlv *prefix;
     bool rval = false;
 
-    if (memcmp(aAddress.mFields.m8, mMle.GetMeshLocalPrefix(), 8) == 0)
+    if (memcmp(aAddress.mFields.m8, mNetif.GetMle().GetMeshLocalPrefix(), 8) == 0)
     {
         ExitNow(rval = true);
     }
@@ -332,7 +331,8 @@ ThreadError LeaderBase::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Addres
                     if (rvalRoute == NULL ||
                         entry->GetPreference() > rvalRoute->GetPreference() ||
                         (entry->GetPreference() == rvalRoute->GetPreference() &&
-                         mMle.GetRouteCost(entry->GetRloc()) < mMle.GetRouteCost(rvalRoute->GetRloc())))
+                         mNetif.GetMle().GetRouteCost(entry->GetRloc()) <
+                         mNetif.GetMle().GetRouteCost(rvalRoute->GetRloc())))
                     {
                         rvalRoute = entry;
                         rval_plen = static_cast<uint8_t>(plen);
@@ -389,7 +389,7 @@ ThreadError LeaderBase::DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16
             if (route == NULL ||
                 entry->GetPreference() > route->GetPreference() ||
                 (entry->GetPreference() == route->GetPreference() &&
-                 mMle.GetRouteCost(entry->GetRloc()) < mMle.GetRouteCost(route->GetRloc())))
+                 mNetif.GetMle().GetRouteCost(entry->GetRloc()) < mNetif.GetMle().GetRouteCost(route->GetRloc())))
             {
                 route = entry;
             }

@@ -1164,13 +1164,6 @@ protected:
     void SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLeaderRouterId);
 
     ThreadNetif           &mNetif;            ///< The Thread Network Interface object.
-    AddressResolver       &mAddressResolver;  ///< The Address Resolver object.
-    KeyManager            &mKeyManager;       ///< The Key Manager object.
-    Mac::Mac              &mMac;              ///< The MAC object.
-    MeshForwarder         &mMesh;             ///< The Mesh Forwarding object.
-    MleRouter             &mMleRouter;        ///< The MLE Router object.
-    NetworkData::Leader   &mNetworkData;      ///< The Network Data object.
-    MeshCoP::JoinerRouter &mJoinerRouter;     ///< The Joiner Router object.
 
     LeaderDataTlv mLeaderData;              ///< Last received Leader Data TLV.
     bool mRetrieveNewNetworkData;           ///< Indicating new Network Data is needed if set.

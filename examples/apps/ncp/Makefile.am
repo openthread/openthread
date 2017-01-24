@@ -85,6 +85,16 @@ ot_ncp_LDFLAGS                                                        += \
     $(NULL)
 endif # OPENTHREAD_EXAMPLES_DA15000
 
+if OPENTHREAD_EXAMPLES_NRF52840
+ot_ncp_LDADD                                                          += \
+    $(top_builddir)/examples/platforms/nrf52840/libopenthread-nrf52840.a \
+    $(NULL)
+
+ot_ncp_LDFLAGS                                                        += \
+    -T $(top_srcdir)/examples/platforms/nrf52840/nrf52840.ld             \
+    $(NULL)
+endif
+
 ot_ncp_SOURCES                                                         = \
     main.c                                                               \
     $(NULL)
