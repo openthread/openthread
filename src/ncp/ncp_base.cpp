@@ -1621,7 +1621,9 @@ ThreadError NcpBase::GetPropertyHandler_CAPS(uint8_t header, spinel_prop_key_t k
     SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_COUNTERS));
     SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_MAC_WHITELIST));
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
     SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_MAC_RAW));
+#endif
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_JAM_DETECT));
@@ -3179,16 +3181,6 @@ ThreadError NcpBase::SetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_
     {
         if (value == false)
         {
-            errorCode = otLinkRawSetEnable(mInstance, true);
-
-            // If we have raw stream enabled already, start receiving
-            if (errorCode == kThreadError_None && mIsRawStreamEnabled)
-            {
-                errorCode = otLinkRawReceive(mInstance, mCurReceiveChannel, &NcpBase::LinkRawReceiveDone);
-            }
-        }
-        else
-        {
             // If we have raw stream enabled stop receiving
             if (mIsRawStreamEnabled)
             {
@@ -3196,6 +3188,16 @@ ThreadError NcpBase::SetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_
             }
 
             errorCode = otLinkRawSetEnable(mInstance, false);
+        }
+        else
+        {
+            errorCode = otLinkRawSetEnable(mInstance, true);
+
+            // If we have raw stream enabled already, start receiving
+            if (errorCode == kThreadError_None && mIsRawStreamEnabled)
+            {
+                errorCode = otLinkRawReceive(mInstance, mCurReceiveChannel, &NcpBase::LinkRawReceiveDone);
+            }
         }
     }
     else
@@ -3251,7 +3253,7 @@ ThreadError NcpBase::SetPropertyHandler_PHY_CHAN(uint8_t header, spinel_prop_key
          if (errorCode == kThreadError_None)
          {
              // Cache the channel. If the raw link layer isn't enabled yet, the otSetChannel call
-             // doesn't call into otLinkRawReceive to set the channel. We will have to do it
+             // doesn't call into the radio layer to set the channel. We will have to do it
              // manually whenever the radios are enabled and/or raw stream is enabled.
              mCurReceiveChannel = static_cast<uint8_t>(i);
              
@@ -3581,14 +3583,16 @@ ThreadError NcpBase::SetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t header, s
 
 ThreadError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,uint16_t value_len)
 {
-    spinel_ssize_t parsedLength(0);
     ThreadError errorCode = kThreadError_None;
-    uint8_t *frame_buffer(NULL);
-    unsigned int frame_len(0);
-    RadioPacket *packet = otPlatRadioGetTransmitBuffer(mInstance);
 
     if (otLinkRawIsEnabled(mInstance))
     {
+        spinel_ssize_t parsedLength(0);
+        uint8_t *frame_buffer(NULL);
+        unsigned int frame_len(0);
+
+        RadioPacket *packet = otLinkRawGetTransmitBuffer(mInstance);
+
         parsedLength = spinel_datatype_unpack(
             value_ptr,
             value_len,
