@@ -65,15 +65,6 @@ HARNESS_HOME = 'C:\\GRL\\Thread1.1'
 HARNESS_URL = 'http://127.0.0.1:8000'
 """str: Harness front-end url"""
 
-APC_HOST = None
-"""str: PDU controller host.
-
-Keep this None if no APC PDU available.
-"""
-
-APC_OUTLET = 1
-"""int: PDU outlet, only needed when APC_HOST is not None."""
-
 TESTER_NAME = 'Thread Open'
 """str: Who are you"""
 
@@ -87,3 +78,40 @@ It should be something like [('COM1', 'OpenThread'), ('COM2', 'ARM')] on Windows
 
 OUTPUT_PATH = '.\\output'
 """str: Path to store results and logs, MUST be writable."""
+
+PDU_CONTROLLER_TYPE = None
+"""str: Type of connected PDU controller.
+
+Keep this None if no PDU controller available.
+
+Types of supported PDU controllers:
+    - None - when no PDU controller connected
+    - 'APC_PDU_CONTROLLER' - when APC PDU controller connected
+    - 'NORDIC_BOARD_PDU_CONTOLLER' - when Nordic boards PDU controller connected
+"""
+
+PDU_CONTROLLER_OPEN_PARAMS = {'port': 23, 'ip': '127.0.0.1'}
+"""dict: Parameters pass to the "open" method of PDU controller.
+
+Example parameters for the 'APC_PDU_CONTROLLER':
+    {'port': 23, 'ip': '127.0.0.1'}
+
+Example parameters for the 'NORDIC_BOARD_PDU_CONTOLLER':
+    {} - empty dictionary
+"""
+
+PDU_CONTROLLER_REBOOT_PARAMS = {'outlet': 1}
+"""dict: Parameters pass to the "reboot" method of PDU controller.
+
+Example parameters for the 'APC_PDU_CONTROLLER':
+    {'outlet': 1}
+
+Example parameters for the 'NORDIC_BOARD_PDU_CONTOLLER':
+    {'boards_serial_numbers': ('12345123', ...)}
+"""
+HARNESS_VERSION = 35
+"""int: Version of the installed Thread Harness."""
+
+GOLDEN_DEVICE_TYPE = 'OpenThread'
+"""str: Type of the Golden Device."""
+

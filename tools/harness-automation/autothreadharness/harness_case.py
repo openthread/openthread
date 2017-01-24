@@ -42,7 +42,7 @@ import time
 import unittest
 
 from autothreadharness import settings
-from autothreadharness.apc_pdu_controller import ApcPduController
+from autothreadharness.pdu_controller_factory import PduControllerFactory
 from autothreadharness.harness_controller import HarnessController
 from autothreadharness.helpers import HistoryHelper
 from autothreadharness.open_thread_controller import OpenThreadController
@@ -167,7 +167,7 @@ class HarnessCase(unittest.TestCase):
         if self.manual_reset:
             raw_input('Reset golden devices and press enter to continue..')
             return
-        elif not settings.APC_HOST:
+        elif not settings.PDU_CONTROLLER_TYPE:
             if settings.GOLDEN_DEVICE_TYPE != 'OpenThread':
                 logger.warning('All golden devices may not be resetted')
                 return
@@ -188,9 +188,12 @@ class HarnessCase(unittest.TestCase):
             return
 
         tries = 3
+        pdu_factory = PduControllerFactory()
+        
         while True:
             try:
-                apc = ApcPduController(settings.APC_HOST)
+                pdu = pdu_factory.create_pdu_controller(settings.PDU_CONTROLLER_TYPE)
+                pdu.open(**settings.PDU_CONTROLLER_OPEN_PARAMS)
             except EOFError:
                 logger.warning('Failed to connect to telnet')
                 tries = tries - 1
@@ -201,8 +204,8 @@ class HarnessCase(unittest.TestCase):
                     logger.error('Fatal error: cannot connect to apc')
                     raise
             else:
-                apc.reboot(settings.APC_OUTLET)
-                apc.close()
+                pdu.reboot(**settings.PDU_CONTROLLER_REBOOT_PARAMS)
+                pdu.close()
                 break
 
         time.sleep(20)
