@@ -1,0 +1,76 @@
+@startuml
+
+skinparam state {
+    BackgroundColor<< locked >> red
+    BackgroundColor<< unlocked >> green
+}
+
+
+[*]         --> Sleep << unlocked >>
+
+Sleep       -down-> Receive   : API: Receive()
+Receive     -up-> Sleep     : API: Sleep() / MUTEX: Lock; TASK: STOP; TASK: DISABLE\nEV: DISABLED / MUTEX: Unlock
+
+state Receive {
+    state WaitingRxFrame << unlocked >>
+    
+    state RxHeader << locked >>
+    state RxFrame  << locked >>
+    state TxAck    << locked >>
+    state ShortAckTx << locked >>
+    
+    Enter           -down-> WaitingRxFrame  : EV: DISABLED / TASK: RXEN; MUTEX: Unlock
+    WaitingRxFrame      --> WaitingRxFrame  : EV: READY / AutoACK: enable; TASK: START
+    
+    WaitingRxFrame  -down-> RxHeader        : EV: FRAMESTART / MUTEX: Lock
+    
+    RxHeader        -down-> RxFrame         : EV: BCMATCH, Frame type and address ok
+    RxHeader          -up-> Enter           : EV: BCMATCH, Frame type invalid or dst address mismatch
+    
+    RxFrame         -down-> TxAck           : EV: END, CRC: OK, ACK: requested
+    RxFrame           -up-> Enter         : EV: END, CRC: invalid / TASK: DISABLE
+    RxFrame           -up-> Enter         : EV: END, CRC: OK, ACK: not requested / TASK: DISABLE; received()
+     
+    TxAck             -up-> Enter         : EV: END / AutoACK: disable; TASK: DISABLE; received()
+    
+    RxFrame         -left-> ShortAckTx       : EV: END; AutoACK: enabled / SHORT: DISABLE
+    ShortAckTx      -left-> ShortAckTx       : EV: DISABLED; AutoACK: enabled / SHORT: TXEN
+    ShortAckTx      -right-> ShortAckTx       : EV: READY; AutoACK:enabled / AutoACK: disable; SHORT: START
+}
+
+state Transmit << locked >>{
+    [*]         --> CCA             : EV: DISABLED / TASK: RXEN
+    CCA         --> CCA             : EV: READY / TASK: CCA_START
+    CCA       -up-> Receive         : EV: CCABUSY / TransmitFailure(); TASK: DISABLE
+    CCA         --> TxFrame         : EV: CCAIDLE / SHORT: TXEN
+    TxFrame     --> TxFrame         : EV: READY / SHORT: START
+
+    state RxAck {
+        [*]             --> EnablingAckRx   : TASK: RXEN
+        EnablingAckRx   --> ReceivingAck    : EV: READY / TASK: START
+        
+        ReceivingAck    --> ReceivingAck    : EV: END (CRCERR) / TASK: START
+        ReceivingAck    --> ReceivingAck    : EV: END (CRCOK, Not valid ACK) / TASK: START
+        ReceivingAck    --> WaitingRxFrame  : EV: END (CRCOK, Valid ACK) / MUTEX: Unlock; TASK: START; transmitted()
+    }
+
+    TxFrame         --> RxAck       : EV: END (ACK)
+    TxFrame       -up-> Receive     : EV: END (NOACK) / transmitted(OK); SHORT: DISABLE
+}
+
+state ShortAckTx {
+}
+
+state EnergyDetection << locked >> {
+    [*]      --> ED      : EV: DISABLED / TASK: RXEN
+    ED       --> ED      : EV: READY / TASK: EDSTART
+    ED  -right-> Receive : EV: EDEND / energy_detected(); TASK: DISABLE
+}
+
+
+Receive   -down-> Transmit        : API: Transmit() / MUTEX:Lock; AutoACK: disable; TASK: DISABLE
+Transmit    -up-> Receive         : API: Receive() / TASK: CCASTOP; TASK: STOP; TASK: DISABLE
+Receive       --> Receive         : API: Receive()
+Receive   -left-> EnergyDetection : API: EnergyDetection() / MUTEX: Lock; AutoACK: disable; TASK: DISABLE
+
+@enduml

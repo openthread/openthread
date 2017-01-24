@@ -29,7 +29,7 @@
 .NOTPARALLEL:
 
 AR                              = arm-none-eabi-ar
-CCAS                            = arm-none-eabi-as
+CCAS                            = arm-none-eabi-gcc
 CPP                             = arm-none-eabi-cpp
 CC                              = arm-none-eabi-gcc
 CXX                             = arm-none-eabi-g++
@@ -45,10 +45,13 @@ configure_OPTIONS               = \
     --enable-cli                  \
     --enable-ncp                  \
     --enable-diag                 \
-    --enable-default-logging      \
-    --with-examples=cc2538        \
-    --with-platform-info=CC2538   \
+    --with-examples=nrf52840      \
+    --with-platform-info=NRF52840 \
     $(NULL)
+
+ifeq ($(DEFAULT_LOGGING),1)
+configure_OPTIONS              += --enable-default-logging
+endif
 
 ifeq ($(CERT_LOG),1)
 configure_OPTIONS              += --enable-cert-log
@@ -62,6 +65,22 @@ ifeq ($(JOINER),1)
 configure_OPTIONS              += --enable-joiner
 endif
 
+ifeq ($(JAM_DETECTION),1)
+configure_OPTIONS              += --enable-jam-detection
+endif
+
+ifeq ($(MAC_WHITELIST),1)
+configure_OPTIONS              += --enable-mac-whitelist
+endif
+
+ifeq ($(COAP),1)
+configure_OPTIONS              += --enable-application-coap
+endif
+
+ifeq ($(LEGACY),1)
+configure_OPTIONS              += --enable-legacy
+endif
+
 ifeq ($(DHCP6_SERVER),1)
 configure_OPTIONS              += --enable-dhcp6-server
 endif
@@ -70,11 +89,35 @@ ifeq ($(DHCP6_CLIENT),1)
 configure_OPTIONS              += --enable-dhcp6-client
 endif
 
+ifeq ($(COVERAGE),1)
+configure_OPTIONS              += --enable-coverage --enable-commissioner --enable-joiner --enable-dhcp6-client --enable-dhcp6-server
+endif
+
+ifeq ($(DEBUG),1)
+configure_OPTIONS              += --enable-debug --enable-optimization=no
+endif
+
+ifeq ($(DISABLE_DOC),1)
+configure_OPTIONS              += --disable-docs
+endif
+
+ifdef SRC_PATH
+configure_OPTIONS              += --srcdir="$(SRC_PATH)"
+endif
+
+TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
+AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
+
+CONFIG_FILE      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-nrf52840-config.h\"'
+CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/nrf52840/
+
 COMMONCFLAGS                   := \
     -fdata-sections               \
     -ffunction-sections           \
     -Os                           \
     -g                            \
+    -D$(CONFIG_FILE)              \
+    -I$(CONFIG_FILE_PATH)         \
     $(NULL)
 
 CPPFLAGS                       += \
@@ -97,11 +140,17 @@ CXXFLAGS                       += \
 LDFLAGS                        += \
     $(COMMONCFLAGS)               \
     $(target_LDFLAGS)             \
-    -nostartfiles                 \
     -specs=nano.specs             \
     -specs=nosys.specs            \
     -Wl,--gc-sections             \
     -Wl,-Map=map.map              \
+    $(NULL)
+
+CCASFLAGS                       += \
+    $(COMMONCCASFLAGS)             \
+    $(target_CCASFLAGS)            \
+    -x                             \
+    assembler-with-cpp             \
     $(NULL)
 
 ECHO                            := @echo
@@ -113,9 +162,6 @@ RM_F                            := rm -f
 INSTALL                         := /usr/bin/install
 INSTALLFLAGS                    := -p
 
-TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
-AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
-
 BuildPath                       = build
 TopBuildDir                     = $(BuildPath)
 AbsTopBuildDir                  = $(PWD)/$(TopBuildDir)
@@ -126,7 +172,7 @@ AbsTopResultDir                 = $(PWD)/$(TopResultDir)
 
 TargetTuple                     = arm-none-eabi
 
-ARCHS                           = cortex-m3
+ARCHS                           = cortex-m4
 
 TopTargetLibDir                 = $(TopResultDir)/$(if $(1),$(1)-,)$(TargetTuple)/lib
 
@@ -146,7 +192,7 @@ define configure-arch
 $(ECHO) "  CONFIG   $(1)-$(TargetTuple)..."
 (cd $(BuildPath)/$(1)-$(TargetTuple) && $(AbsTopSourceDir)/configure \
 INSTALL="$(INSTALL) $(INSTALLFLAGS)" \
-CPP="$(CPP)" CC="$(CC)" CXX="$(CXX)" OBJC="$(OBJC)" OBJCXX="$(OBJCXX)" AR="$(AR)" RANLIB="$(RANLIB)" NM="$(NM)" STRIP="$(STRIP)" CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)" \
+CPP="$(CPP)" CC="$(CC)" CXX="$(CXX)" CCAS="$(CCAS)" OBJC="$(OBJC)" OBJCXX="$(OBJCXX)" AR="$(AR)" RANLIB="$(RANLIB)" NM="$(NM)" STRIP="$(STRIP)" CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" CCASFLAGS="$(CCASFLAGS)" LDFLAGS="$(LDFLAGS)" \
 --host=arm-none-eabi \
 --target=arm-none-eabi \
 --prefix=/ \
@@ -201,6 +247,7 @@ configure-$(1): target_CPPFLAGS=$($(1)_target_CPPFLAGS)
 configure-$(1): target_CFLAGS=$($(1)_target_CFLAGS)
 configure-$(1): target_CXXFLAGS=$($(1)_target_CXXFLAGS)
 configure-$(1): target_LDFLAGS=$($(1)_target_LDFLAGS)
+configure-$(1): target_CCASFLAGS=$($(1)_target_CCASFLAGS)
 
 configure-$(1): $(BuildPath)/$(1)-$(TargetTuple)/config.status
 
@@ -225,14 +272,14 @@ endef # ARCH_template
 all: stage
 
 #
-# cortex-m3
+# Cortex-m4
 #
 
-cortex-m3_target_ABI                  = cortex-m3
-cortex-m3_target_CPPFLAGS             = -mcpu=cortex-m3 -mfloat-abi=soft -mthumb
-cortex-m3_target_CFLAGS               = -mcpu=cortex-m3 -mfloat-abi=soft -mthumb
-cortex-m3_target_CXXFLAGS             = -mcpu=cortex-m3 -mfloat-abi=soft -mthumb
-cortex-m3_target_LDFLAGS              = -mcpu=cortex-m3 -mfloat-abi=soft -mthumb
+cortex-m4_target_ABI                  = cortex-m4
+cortex-m4_target_CPPFLAGS             = -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb -mabi=aapcs
+cortex-m4_target_CFLAGS               = -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb -mabi=aapcs
+cortex-m4_target_CXXFLAGS             = -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb -mabi=aapcs
+cortex-m4_target_LDFLAGS              = -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb -mabi=aapcs
 
 # Instantiate an architecture-specific build template for each target
 # architecture.
