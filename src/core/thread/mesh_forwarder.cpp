@@ -989,7 +989,11 @@ ThreadError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
             aFrame.SetChannel(mScanChannel);
         }
 
-        SendFragment(*mSendMessage, aFrame);
+        if (SendFragment(*mSendMessage, aFrame) == kThreadError_NotCapable)
+        {
+            SendFragment(*mSendMessage, aFrame);
+        }
+
         assert(aFrame.GetLength() != 7);
         break;
 
@@ -1115,6 +1119,7 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
     uint16_t fragmentLength;
     uint16_t dstpan;
     uint8_t secCtl = Mac::Frame::kSecNone;
+    ThreadError error = kThreadError_None;
 
     if (mAddMeshHeader)
     {
@@ -1254,6 +1259,13 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
 
         if (payloadLength > fragmentLength)
         {
+            if (!aMessage.IsLinkSecurityEnabled())
+            {
+                aMessage.SetLinkSecurityEnabled(true);
+                aMessage.SetOffset(0);
+                ExitNow(error = kThreadError_NotCapable);
+            }
+
             // write Fragment header
             if (aMessage.GetDatagramTag() == 0)
             {
@@ -1322,7 +1334,9 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
         aFrame.SetFramePending(true);
     }
 
-    return kThreadError_None;
+exit:
+
+    return error;
 }
 
 ThreadError MeshForwarder::SendEmptyFrame(Mac::Frame &aFrame)
