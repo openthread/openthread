@@ -80,6 +80,15 @@ typedef enum
  */
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance);
 
+/**
+ * This function provides a platform specific implementation for assert.
+ *
+ * @param[in] aFilename    The name of the file where the assert occurred.
+ * @param[in] aLineNumber  The line number in the file where the assert occurred.
+ *
+ */
+void otPlatAssertFail(const char *aFilename, int aLineNumber);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif
