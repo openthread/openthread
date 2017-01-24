@@ -69,7 +69,7 @@ extern "C" {
  * @param[in] aBufferSize          The size in bytes of a Buffer object.
  *
  */
-void otPlatMessagePoolInit(int aMinNumFreeBuffers, size_t aBufferSize);
+void otPlatMessagePoolInit(uint16_t aMinNumFreeBuffers, size_t aBufferSize);
 
 /**
  * Allocate a buffer from the platform managed buffer pool.
@@ -93,7 +93,7 @@ void otPlatMessagePoolFree(struct BufferHeader *aBuffer);
  * @returns The number of buffers currently free and available to OpenThread.
  *
  */
-int otPlatMessagePoolNumFreeBuffers(void);
+uint16_t otPlatMessagePoolNumFreeBuffers(void);
 
 #ifdef __cplusplus
 }  // extern "C"
