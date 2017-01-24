@@ -161,6 +161,8 @@ Mac::Mac(ThreadNetif &aThreadNetif):
 
     otPlatRadioEnable(mNetif.GetInstance());
     mTxFrame = static_cast<Frame *>(otPlatRadioGetTransmitBuffer(mNetif.GetInstance()));
+
+    mKeyIdMode2FrameCounter = 0;
 }
 
 ThreadError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
@@ -685,7 +687,7 @@ void Mac::ProcessTransmitSecurity(Frame &aFrame)
     {
         const uint8_t keySource[] = {0xff, 0xff, 0xff, 0xff};
         key = sMode2Key;
-        frameCounter = 0xffffffff;
+        frameCounter = mKeyIdMode2FrameCounter++;
         aFrame.SetKeySource(keySource);
         aFrame.SetKeyId(0xff);
         extAddress = static_cast<const ExtAddress *>(&sMode2ExtAddress);

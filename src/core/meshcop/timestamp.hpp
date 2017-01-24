@@ -35,6 +35,10 @@
 #ifndef MESHCOP_TIMESTAMP_HPP_
 #define MESHCOP_TIMESTAMP_HPP_
 
+#include <common/encoding.hpp>
+
+using Thread::Encoding::BigEndian::HostSwap16;
+
 namespace Thread {
 namespace MeshCoP {
 
@@ -98,7 +102,7 @@ public:
      * @returns The Ticks value.
      *
      */
-    uint16_t GetTicks(void) const { return mTicks >> kTicksOffset; }
+    uint16_t GetTicks(void) const { return HostSwap16(mTicks) >> kTicksOffset; }
 
     /**
      * This method sets the Ticks value.
@@ -107,7 +111,7 @@ public:
      *
      */
     void SetTicks(uint16_t aTicks) {
-        mTicks = (mTicks & ~kTicksMask) | ((aTicks << kTicksOffset) & kTicksMask);
+        mTicks = HostSwap16((HostSwap16(mTicks) & ~kTicksMask) | ((aTicks << kTicksOffset) & kTicksMask));
     }
 
     /**
@@ -116,7 +120,7 @@ public:
      * @returns The Authoritative value.
      *
      */
-    bool GetAuthoritative(void) const { return (mTicks & kAuthoritativeMask) != 0; }
+    bool GetAuthoritative(void) const { return (HostSwap16(mTicks) & kAuthoritativeMask) != 0; }
 
     /**
      * This method sets the Authoritative value.
@@ -125,7 +129,8 @@ public:
      *
      */
     void SetAuthoritative(bool aAuthoritative) {
-        mTicks = (mTicks & kTicksMask) | ((aAuthoritative << kAuthoritativeOffset) & kAuthoritativeMask);
+        mTicks = HostSwap16((HostSwap16(mTicks) & kTicksMask) | ((aAuthoritative << kAuthoritativeOffset) &
+                                                                 kAuthoritativeMask));
     }
 
 private:
