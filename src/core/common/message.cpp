@@ -156,7 +156,17 @@ ThreadError MessagePool::ReclaimBuffers(int aNumBuffers)
     numFreeBuffers = mNumFreeBuffers;
 #endif
 
-    return (aNumBuffers <= numFreeBuffers) ? kThreadError_None : kThreadError_NoBufs;
+    //First comparison is to get around issues with comparing
+    //signed and unsigned numbers, if aNumBuffers is negative then
+    //the second comparison wont be attempted.
+    if (aNumBuffers < 0 || aNumBuffers <= numFreeBuffers )
+    {
+        return kThreadError_None;
+    }
+    else
+    {
+        return kThreadError_NoBufs;
+    }
 }
 
 Message *MessagePool::Iterator::Next(void) const
