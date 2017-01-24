@@ -460,6 +460,11 @@ ThreadError Mle::BecomeChild(otMleAttachFilter aFilter)
         mLastPartitionRouterIdSequence = mNetif.GetMle().GetRouterIdSequence();
     }
 
+    if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
+    {
+        mNetif.GetMeshForwarder().SetRxOnWhenIdle(true);
+    }
+
     mParentRequestTimer.Start(kParentRequestRouterTimeout);
 
 exit:

@@ -762,6 +762,18 @@ typedef enum
      */
     SPINEL_PROP_THREAD_CHILD_COUNT_MAX = SPINEL_PROP_THREAD_EXT__BEGIN + 12,
 
+    /// Leader network data
+    /** Format: `D` - Read only
+     */
+    SPINEL_PROP_THREAD_LEADER_NETWORK_DATA
+                                       = SPINEL_PROP_THREAD_EXT__BEGIN + 13,
+
+    /// Stable leader network data
+    /** Format: `D` - Read only
+     */
+    SPINEL_PROP_THREAD_STABLE_LEADER_NETWORK_DATA
+                                       = SPINEL_PROP_THREAD_EXT__BEGIN + 14,
+
     SPINEL_PROP_THREAD_EXT__END        = 0x1600,
 
     SPINEL_PROP_IPV6__BEGIN          = 0x60,

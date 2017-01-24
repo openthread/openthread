@@ -137,6 +137,8 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_THREAD_NETWORK_DATA_VERSION, &NcpBase::GetPropertyHandler_THREAD_NETWORK_DATA_VERSION },
     { SPINEL_PROP_THREAD_STABLE_NETWORK_DATA, &NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA },
     { SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION, &NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA_VERSION },
+    { SPINEL_PROP_THREAD_LEADER_NETWORK_DATA, &NcpBase::GetPropertyHandler_THREAD_LEADER_NETWORK_DATA },
+    { SPINEL_PROP_THREAD_STABLE_LEADER_NETWORK_DATA, &NcpBase::GetPropertyHandler_THREAD_STABLE_LEADER_NETWORK_DATA },
     { SPINEL_PROP_THREAD_LOCAL_ROUTES, &NcpBase::NcpBase::GetPropertyHandler_THREAD_LOCAL_ROUTES },
     { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::NcpBase::GetPropertyHandler_THREAD_ASSISTING_PORTS },
     { SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE, &NcpBase::GetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE },
@@ -478,6 +480,7 @@ NcpBase::NcpBase(otInstance *aInstance):
     mAllowLocalNetworkDataChange(false),
     mRequireJoinExistingNetwork(false),
     mIsRawStreamEnabled(false),
+    mDisableStreamWrite(false),
 
     mFramingErrorCounter(0),
     mRxSpinelFrameCounter(0),
@@ -520,6 +523,7 @@ void NcpBase::HandleDatagramFromStack(otMessage aMessage)
 {
     ThreadError errorCode = kThreadError_None;
     bool isSecure = otIsMessageLinkSecurityEnabled(aMessage);
+    uint16_t length = otGetMessageLength(aMessage);
 
     SuccessOrExit(errorCode = OutboundFrameBegin());
 
@@ -531,7 +535,7 @@ void NcpBase::HandleDatagramFromStack(otMessage aMessage)
             isSecure
             ? SPINEL_PROP_STREAM_NET
             : SPINEL_PROP_STREAM_NET_INSECURE,
-            otGetMessageLength(aMessage)
+            length
     ));
 
     SuccessOrExit(errorCode = OutboundFrameFeedMessage(aMessage));
@@ -590,7 +594,6 @@ void NcpBase::HandleRawFrame(const RadioPacket *aFrame)
     }
 
     SuccessOrExit(errorCode = OutboundFrameBegin());
-
 
     if (aFrame->mDidTX)
     {
@@ -734,7 +737,7 @@ void NcpBase::HandleEnergyScanResult(otEnergyScanResult *aResult)
             SPINEL_SCAN_STATE_IDLE
         );
 
-        // If we could not send the end of scan inidciator message now (no
+        // If we could not send the end of scan indicator message now (no
         // buffer space), we set `mShouldSignalEndOfScan` to true to send
         // it out when buffer space becomes available.
         if (errorCode != kThreadError_None)
@@ -881,6 +884,11 @@ void NcpBase::UpdateChangedProps(void)
                               SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
                               SPINEL_PROP_THREAD_ON_MESH_NETS
                           ));
+
+            SuccessOrExit(HandleCommandPropertyGet(
+                SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                SPINEL_PROP_THREAD_LEADER_NETWORK_DATA
+            ));
 
             mChangedFlags &= ~static_cast<uint32_t>(OT_THREAD_NETDATA_UPDATED);
         }
@@ -1503,15 +1511,12 @@ ThreadError NcpBase::GetPropertyHandler_CAPS(uint8_t header, spinel_prop_key_t k
     ThreadError errorCode = kThreadError_None;
 
     SuccessOrExit(errorCode = OutboundFrameBegin());
-
     SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
 
     // Begin adding capabilities //////////////////////////////////////////////
 
     SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_NET_THREAD_1_0));
-
     SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_COUNTERS));
-
     SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_MAC_WHITELIST));
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
@@ -1710,7 +1715,6 @@ ThreadError NcpBase::GetPropertyHandler_ChannelMaskHelper(uint8_t header, spinel
     ThreadError errorCode = kThreadError_None;
 
     SuccessOrExit(errorCode = OutboundFrameBegin());
-
     SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
 
     for (int i = 0; i < 32; i++)
@@ -1946,14 +1950,15 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_NETWORK_DATA(uint8_t header, spin
     uint8_t network_data[255];
     uint8_t network_data_len = 255;
 
-    SuccessOrExit(errorCode = OutboundFrameBegin());
-    SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
     otGetNetworkDataLocal(
         mInstance,
         false, // Stable?
         network_data,
         &network_data_len
     );
+
+    SuccessOrExit(errorCode = OutboundFrameBegin());
+    SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
     SuccessOrExit(errorCode = OutboundFrameFeedData(network_data, network_data_len));
     SuccessOrExit(errorCode = OutboundFrameSend());
 
@@ -1967,10 +1972,6 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA(uint8_t heade
     uint8_t network_data[255];
     uint8_t network_data_len = 255;
 
-
-    SuccessOrExit(errorCode = OutboundFrameBegin());
-
-    SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
     otGetNetworkDataLocal(
         mInstance,
         true, // Stable?
@@ -1978,6 +1979,52 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA(uint8_t heade
         &network_data_len
     );
 
+    SuccessOrExit(errorCode = OutboundFrameBegin());
+    SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
+    SuccessOrExit(errorCode = OutboundFrameFeedData(network_data, network_data_len));
+    SuccessOrExit(errorCode = OutboundFrameSend());
+
+exit:
+    return errorCode;
+}
+
+ThreadError NcpBase::GetPropertyHandler_THREAD_LEADER_NETWORK_DATA(uint8_t header, spinel_prop_key_t key)
+{
+    ThreadError errorCode = kThreadError_None;
+    uint8_t network_data[255];
+    uint8_t network_data_len = 255;
+
+    otGetNetworkDataLeader(
+        mInstance,
+        false, // Stable?
+        network_data,
+        &network_data_len
+    );
+
+    SuccessOrExit(errorCode = OutboundFrameBegin());
+    SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
+    SuccessOrExit(errorCode = OutboundFrameFeedData(network_data, network_data_len));
+    SuccessOrExit(errorCode = OutboundFrameSend());
+
+exit:
+    return errorCode;
+}
+
+ThreadError NcpBase::GetPropertyHandler_THREAD_STABLE_LEADER_NETWORK_DATA(uint8_t header, spinel_prop_key_t key)
+{
+    ThreadError errorCode = kThreadError_None;
+    uint8_t network_data[255];
+    uint8_t network_data_len = 255;
+
+    otGetNetworkDataLeader(
+        mInstance,
+        true, // Stable?
+        network_data,
+        &network_data_len
+    );
+
+    SuccessOrExit(errorCode = OutboundFrameBegin());
+    SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
     SuccessOrExit(errorCode = OutboundFrameFeedData(network_data, network_data_len));
     SuccessOrExit(errorCode = OutboundFrameSend());
 
@@ -2076,6 +2123,8 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_CHILD_TABLE(uint8_t header, spine
     uint8_t index;
     uint8_t modeFlags;
 
+    mDisableStreamWrite = true;
+
     SuccessOrExit(errorCode = OutboundFrameBegin());
     SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
 
@@ -2136,6 +2185,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_CHILD_TABLE(uint8_t header, spine
     SuccessOrExit(errorCode = OutboundFrameSend());
 
 exit:
+    mDisableStreamWrite = false;
     return errorCode;
 }
 
@@ -2145,6 +2195,8 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_NEIGHBOR_TABLE(uint8_t header, sp
     otNeighborInfoIterator iter = OT_NEIGHBOR_INFO_ITERATOR_INIT;
     otNeighborInfo neighInfo;
     uint8_t modeFlags;
+
+    mDisableStreamWrite = true;
 
     SuccessOrExit(errorCode = OutboundFrameBegin());
     SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
@@ -2201,6 +2253,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_NEIGHBOR_TABLE(uint8_t header, sp
     SuccessOrExit(errorCode = OutboundFrameSend());
 
 exit:
+    mDisableStreamWrite = false;
     return errorCode;
 }
 
@@ -2211,7 +2264,6 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, s
     const uint16_t *ports = otGetUnsecurePorts(mInstance, &num_entries);
 
     SuccessOrExit(errorCode = OutboundFrameBegin());
-
     SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
 
     for (; num_entries != 0; ports++, num_entries--)
@@ -2253,8 +2305,9 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spin
     otBorderRouterConfig border_router_config;
     uint8_t flags;
 
-    SuccessOrExit(errorCode = OutboundFrameBegin());
+    mDisableStreamWrite = true;
 
+    SuccessOrExit(errorCode = OutboundFrameBegin());
     SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
 
     // Fill from non-local network data first
@@ -2316,6 +2369,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spin
     SuccessOrExit(errorCode = OutboundFrameSend());
 
 exit:
+    mDisableStreamWrite = false;
     return errorCode;
 }
 
@@ -2396,9 +2450,9 @@ ThreadError NcpBase::GetPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spine
 {
     ThreadError errorCode = kThreadError_None;
 
+    mDisableStreamWrite = true;
+
     SuccessOrExit(errorCode = OutboundFrameBegin());
-
-
     SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
 
     for (const otNetifAddress *address = otGetUnicastAddresses(mInstance); address; address = address->mNext)
@@ -2416,6 +2470,7 @@ ThreadError NcpBase::GetPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spine
     SuccessOrExit(errorCode = OutboundFrameSend());
 
 exit:
+    mDisableStreamWrite = false;
     return errorCode;
 }
 
@@ -2671,7 +2726,6 @@ ThreadError NcpBase::GetPropertyHandler_MAC_CNTR(uint8_t header, spinel_prop_key
         value = macCounters->mRxErrOther;
         break;
 
-
     default:
         errorCode = SendLastStatus(header, SPINEL_STATUS_INTERNAL_ERROR);
         goto bail;
@@ -2759,9 +2813,7 @@ ThreadError NcpBase::GetPropertyHandler_MSG_BUFFER_COUNTERS(uint8_t header, spin
     otGetMessageBufferInfo(mInstance, &bufferInfo);
 
     SuccessOrExit(errorCode = OutboundFrameBegin());
-
     SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
-
     SuccessOrExit(errorCode = OutboundFrameFeedPacked("T(SSSSSSSSSSSSSSSS)",
         bufferInfo.mTotalBuffers,
         bufferInfo.mFreeBuffers,
@@ -2780,7 +2832,6 @@ ThreadError NcpBase::GetPropertyHandler_MSG_BUFFER_COUNTERS(uint8_t header, spin
         bufferInfo.mCoapClientMessages,
         bufferInfo.mCoapClientBuffers
     ));
-
     SuccessOrExit(errorCode = OutboundFrameSend());
 
 exit:
@@ -2792,8 +2843,9 @@ ThreadError NcpBase::GetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_pro
     otMacWhitelistEntry entry;
     ThreadError errorCode = kThreadError_None;
 
-    SuccessOrExit(errorCode = OutboundFrameBegin());
+    mDisableStreamWrite = true;
 
+    SuccessOrExit(errorCode = OutboundFrameBegin());
     SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
 
     for (uint8_t i = 0; (i != 255) && (errorCode == kThreadError_None); i++)
@@ -2819,6 +2871,7 @@ ThreadError NcpBase::GetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_pro
     SuccessOrExit(errorCode = OutboundFrameSend());
 
 exit:
+    mDisableStreamWrite = false;
     return errorCode;
 }
 
@@ -5400,23 +5453,18 @@ exit:
 
 #endif // OPENTHREAD_ENABLE_LEGACY
 
-}  // namespace Thread
-
-
-// ----------------------------------------------------------------------------
-// MARK: Virtual Datastream I/O (Public API)
-// ----------------------------------------------------------------------------
-
-ThreadError otNcpStreamWrite(int aStreamId, const uint8_t* aDataPtr, int aDataLen)
+ThreadError NcpBase::StreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen)
 {
+    ThreadError errorCode = kThreadError_None;
+
     if (aStreamId == 0)
     {
         aStreamId = SPINEL_PROP_STREAM_DEBUG;
     }
 
-    if (Thread::sNcpContext)
+    if (!mDisableStreamWrite)
     {
-        return Thread::sNcpContext->SendPropertyUpdate(
+        errorCode = SendPropertyUpdate(
             SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
             SPINEL_CMD_PROP_VALUE_IS,
             static_cast<spinel_prop_key_t>(aStreamId),
@@ -5426,8 +5474,29 @@ ThreadError otNcpStreamWrite(int aStreamId, const uint8_t* aDataPtr, int aDataLe
     }
     else
     {
-        return kThreadError_InvalidState;
+        errorCode = kThreadError_InvalidState;
     }
+
+    return errorCode;
+}
+
+}  // namespace Thread
+
+
+// ----------------------------------------------------------------------------
+// MARK: Virtual Datastream I/O (Public API)
+// ----------------------------------------------------------------------------
+
+ThreadError otNcpStreamWrite(int aStreamId, const uint8_t* aDataPtr, int aDataLen)
+{
+    ThreadError errorCode  = kThreadError_InvalidState;
+
+    if (Thread::sNcpContext)
+    {
+        errorCode = Thread::sNcpContext->StreamWrite(aStreamId, aDataPtr, aDataLen);
+    }
+
+    return errorCode;
 }
 
 // ----------------------------------------------------------------------------
