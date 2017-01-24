@@ -489,11 +489,14 @@
 <link href="#rfc.section.7.2.20" rel="Chapter" title="7.2.20 PROP 5380: PROP_THREAD_NETWORK_ID_TIMEOUT"/>
 <link href="#rfc.section.7.2.21" rel="Chapter" title="7.2.21 PROP 5381: PROP_THREAD_ACTIVE_ROUTER_IDS"/>
 <link href="#rfc.section.7.2.22" rel="Chapter" title="7.2.22 PROP 5382: PROP_THREAD_RLOC16_DEBUG_PASSTHRU"/>
-<link href="#rfc.section.7.2.23" rel="Chapter" title="7.2.23 PROP 5383: SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED"/>
+<link href="#rfc.section.7.2.23" rel="Chapter" title="7.2.23 PROP 5383: PROP_THREAD_ROUTER_ROLE_ENABLED"/>
 <link href="#rfc.section.7.2.24" rel="Chapter" title="7.2.24 PROP 5384: PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD"/>
 <link href="#rfc.section.7.2.25" rel="Chapter" title="7.2.25 PROP 5385: PROP_THREAD_ROUTER_SELECTION_JITTER"/>
 <link href="#rfc.section.7.2.26" rel="Chapter" title="7.2.26 PROP 5386: PROP_THREAD_PREFERRED_ROUTER_ID"/>
-<link href="#rfc.section.7.2.27" rel="Chapter" title="7.2.27 PROP 5387: SPINEL_PROP_THREAD_NEIGHBOR_TABLE"/>
+<link href="#rfc.section.7.2.27" rel="Chapter" title="7.2.27 PROP 5387: PROP_THREAD_NEIGHBOR_TABLE"/>
+<link href="#rfc.section.7.2.28" rel="Chapter" title="7.2.28 PROP 5388: PROP_THREAD_CHILD_COUNT_MAX"/>
+<link href="#rfc.section.7.2.29" rel="Chapter" title="7.2.29 PROP 5389: PROP_THREAD_LEADER_NETWORK_DATA"/>
+<link href="#rfc.section.7.2.30" rel="Chapter" title="7.2.30 PROP 5390: PROP_THREAD_STABLE_LEADER_NETWORK_DATA"/>
 <link href="#rfc.section.8" rel="Chapter" title="8 Feature: Network Save"/>
 <link href="#rfc.section.8.1" rel="Chapter" title="8.1 Commands"/>
 <link href="#rfc.section.8.1.1" rel="Chapter" title="8.1.1 CMD 9: (Host-&gt;NCP) CMD_NET_SAVE"/>
@@ -524,8 +527,13 @@
 <link href="#rfc.section.11.1.2" rel="Chapter" title="11.1.2 PROP 4098: PROP_GPIO_STATE"/>
 <link href="#rfc.section.11.1.3" rel="Chapter" title="11.1.3 PROP 4099: PROP_GPIO_STATE_SET"/>
 <link href="#rfc.section.11.1.4" rel="Chapter" title="11.1.4 PROP 4100: PROP_GPIO_STATE_CLEAR"/>
-<link href="#rfc.section.12" rel="Chapter" title="12 Security Considerations"/>
-<link href="#rfc.section.12.1" rel="Chapter" title="12.1 Raw Application Access"/>
+<link href="#rfc.section.12" rel="Chapter" title="12 Feature: True Random Number Generation"/>
+<link href="#rfc.section.12.1" rel="Chapter" title="12.1 Properties"/>
+<link href="#rfc.section.12.1.1" rel="Chapter" title="12.1.1 PROP 4101: PROP_TRNG_32"/>
+<link href="#rfc.section.12.1.2" rel="Chapter" title="12.1.2 PROP 4102: PROP_TRNG_128"/>
+<link href="#rfc.section.12.1.3" rel="Chapter" title="12.1.3 PROP 4103: PROP_TRNG_RAW_32"/>
+<link href="#rfc.section.13" rel="Chapter" title="13 Security Considerations"/>
+<link href="#rfc.section.13.1" rel="Chapter" title="13.1 Raw Application Access"/>
 <link href="#rfc.appendix.A" rel="Chapter" title="A Framing Protocol"/>
 <link href="#rfc.appendix.A.1" rel="Chapter" title="A.1 UART Recommendations"/>
 <link href="#rfc.appendix.A.1.1" rel="Chapter" title="A.1.1 UART Bit Rate Detection"/>
@@ -567,8 +575,8 @@
   <link rel="schema.dct" href="http://purl.org/dc/terms/" />
 
   <meta name="dct.creator" content="Quattlebaum, R." />
-  <meta name="dct.identifier" content="urn:ietf:id:draft-spinel-protocol-3df876d" />
-  <meta name="dct.issued" scheme="ISO8601" content="2016-12-2" />
+  <meta name="dct.identifier" content="urn:ietf:id:draft-spinel-protocol-d309a957-dirty" />
+  <meta name="dct.issued" scheme="ISO8601" content="2017-1-23" />
   <meta name="dct.abstract" content="This document describes a general management protocol for enabling a host device to communicate with and manage a Network Control Processor (NCP).  " />
   <meta name="description" content="This document describes a general management protocol for enabling a host device to communicate with and manage a Network Control Processor (NCP).  " />
 
@@ -589,7 +597,7 @@
 </tr>
 <tr>
   <td class="left"></td>
-  <td class="right">December 2, 2016</td>
+  <td class="right">January 23, 2017</td>
 </tr>
 
     	
@@ -597,7 +605,7 @@
   </table>
 
   <p class="title">Spinel Host-Controller Protocol<br />
-  <span class="filename">draft-spinel-protocol-3df876d</span></p>
+  <span class="filename">draft-spinel-protocol-d309a957-dirty</span></p>
   
   <h1 id="rfc.abstract">
   <a href="#rfc.abstract">Abstract</a>
@@ -747,11 +755,14 @@
 <li>7.2.20.   <a href="#rfc.section.7.2.20">PROP 5380: PROP_THREAD_NETWORK_ID_TIMEOUT</a></li>
 <li>7.2.21.   <a href="#rfc.section.7.2.21">PROP 5381: PROP_THREAD_ACTIVE_ROUTER_IDS</a></li>
 <li>7.2.22.   <a href="#rfc.section.7.2.22">PROP 5382: PROP_THREAD_RLOC16_DEBUG_PASSTHRU</a></li>
-<li>7.2.23.   <a href="#rfc.section.7.2.23">PROP 5383: SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED</a></li>
+<li>7.2.23.   <a href="#rfc.section.7.2.23">PROP 5383: PROP_THREAD_ROUTER_ROLE_ENABLED</a></li>
 <li>7.2.24.   <a href="#rfc.section.7.2.24">PROP 5384: PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD</a></li>
 <li>7.2.25.   <a href="#rfc.section.7.2.25">PROP 5385: PROP_THREAD_ROUTER_SELECTION_JITTER</a></li>
 <li>7.2.26.   <a href="#rfc.section.7.2.26">PROP 5386: PROP_THREAD_PREFERRED_ROUTER_ID</a></li>
-<li>7.2.27.   <a href="#rfc.section.7.2.27">PROP 5387: SPINEL_PROP_THREAD_NEIGHBOR_TABLE</a></li>
+<li>7.2.27.   <a href="#rfc.section.7.2.27">PROP 5387: PROP_THREAD_NEIGHBOR_TABLE</a></li>
+<li>7.2.28.   <a href="#rfc.section.7.2.28">PROP 5388: PROP_THREAD_CHILD_COUNT_MAX</a></li>
+<li>7.2.29.   <a href="#rfc.section.7.2.29">PROP 5389: PROP_THREAD_LEADER_NETWORK_DATA</a></li>
+<li>7.2.30.   <a href="#rfc.section.7.2.30">PROP 5390: PROP_THREAD_STABLE_LEADER_NETWORK_DATA</a></li>
 </ul></ul><li>8.   <a href="#rfc.section.8">Feature: Network Save</a></li>
 <ul><li>8.1.   <a href="#rfc.section.8.1">Commands</a></li>
 <ul><li>8.1.1.   <a href="#rfc.section.8.1.1">CMD 9: (Host-&gt;NCP) CMD_NET_SAVE</a></li>
@@ -782,8 +793,13 @@
 <li>11.1.2.   <a href="#rfc.section.11.1.2">PROP 4098: PROP_GPIO_STATE</a></li>
 <li>11.1.3.   <a href="#rfc.section.11.1.3">PROP 4099: PROP_GPIO_STATE_SET</a></li>
 <li>11.1.4.   <a href="#rfc.section.11.1.4">PROP 4100: PROP_GPIO_STATE_CLEAR</a></li>
-</ul></ul><li>12.   <a href="#rfc.section.12">Security Considerations</a></li>
-<ul><li>12.1.   <a href="#rfc.section.12.1">Raw Application Access</a></li>
+</ul></ul><li>12.   <a href="#rfc.section.12">Feature: True Random Number Generation</a></li>
+<ul><li>12.1.   <a href="#rfc.section.12.1">Properties</a></li>
+<ul><li>12.1.1.   <a href="#rfc.section.12.1.1">PROP 4101: PROP_TRNG_32</a></li>
+<li>12.1.2.   <a href="#rfc.section.12.1.2">PROP 4102: PROP_TRNG_128</a></li>
+<li>12.1.3.   <a href="#rfc.section.12.1.3">PROP 4103: PROP_TRNG_RAW_32</a></li>
+</ul></ul><li>13.   <a href="#rfc.section.13">Security Considerations</a></li>
+<ul><li>13.1.   <a href="#rfc.section.13.1">Raw Application Access</a></li>
 </ul><li>Appendix A.   <a href="#rfc.appendix.A">Framing Protocol</a></li>
 <ul><li>A.1.   <a href="#rfc.appendix.A.1">UART Recommendations</a></li>
 <ul><li>A.1.1.   <a href="#rfc.appendix.A.1.1">UART Bit Rate Detection</a></li>
@@ -1469,7 +1485,7 @@
 <p id="rfc.section.4.10.p.1">This command allows the NCP to fetch values from the RAM of the NCP for debugging purposes. Upon success, <samp>CMD_PEEK_RET</samp> is sent from the NCP to the host. Upon failure, <samp>PROP_LAST_STATUS</samp> is emitted with the appropriate error indication.  </p>
 <p id="rfc.section.4.10.p.2">Due to the low-level nature of this command, certain error conditions may induce the NCP to reset.  </p>
 <p id="rfc.section.4.10.p.3">The NCP MAY prevent certain regions of memory from being accessed.  </p>
-<p id="rfc.section.4.10.p.4">The implementation of this command has security implications.  See <a href="#security-considerations">Section 12</a> for more information.  </p>
+<p id="rfc.section.4.10.p.4">The implementation of this command has security implications.  See <a href="#security-considerations">Section 13</a> for more information.  </p>
 <p id="rfc.section.4.10.p.5">This command requires the capability <samp>CAP_PEEK_POKE</samp> to be present.  </p>
 <h1 id="rfc.section.4.11"><a href="#rfc.section.4.11">4.11.</a> <a href="#cmd-peek-ret" id="cmd-peek-ret">CMD 19: (NCP-&gt;Host) CMD_PEEK_RET</a></h1>
 <table cellpadding="3" cellspacing="0" class="tt full center">
@@ -1521,7 +1537,7 @@
 </table>
 <p id="rfc.section.4.12.p.1">This command writes the bytes to the specified memory address for debugging purposes.  </p>
 <p id="rfc.section.4.12.p.2">Due to the low-level nature of this command, certain error conditions may induce the NCP to reset.  </p>
-<p id="rfc.section.4.12.p.3">The implementation of this command has security implications.  See <a href="#security-considerations">Section 12</a> for more information.  </p>
+<p id="rfc.section.4.12.p.3">The implementation of this command has security implications.  See <a href="#security-considerations">Section 13</a> for more information.  </p>
 <p id="rfc.section.4.12.p.4">This command requires the capability <samp>CAP_PEEK_POKE</samp> to be present.  </p>
 <h1 id="rfc.section.5"><a href="#rfc.section.5">5.</a> <a href="#properties" id="properties">Properties</a></h1>
 <p id="rfc.section.5.p.1">While the majority of the properties that allow the configuration of network connectivity are network protocol specific, there are several properties that are required in all implementations.  </p>
@@ -1827,6 +1843,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
   <li>7: <samp>CAP_PEEK_POKE</samp>: PEEK/POKE debugging commands.</li>
   <li>8: <samp>CAP_WRITABLE_RAW_STREAM</samp>: <samp>PROP_STREAM_RAW</samp> is writable.</li>
   <li>9: <samp>CAP_GPIO</samp>: Support for GPIO access. See <a href="#feature-gpio-access">Section 11</a>.</li>
+  <li>10: <samp>CAP_TRNG</samp>: Support for true random number generation. See <a href="#feature-trng">Section 12</a>.</li>
   <li>16: <samp>CAP_802_15_4_2003</samp></li>
   <li>17: <samp>CAP_802_15_4_2006</samp></li>
   <li>18: <samp>CAP_802_15_4_2011</samp></li>
@@ -2796,6 +2813,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
+<p id="rfc.section.7.2.7.p.2">The local network data.  </p>
 <h1 id="rfc.section.7.2.8"><a href="#rfc.section.7.2.8">7.2.8.</a> <a href="#prop-87-propthreadnetworkdataversion" id="prop-87-propthreadnetworkdataversion">PROP 87: PROP_THREAD_NETWORK_DATA_VERSION</a></h1>
 <p/>
 
@@ -2814,6 +2832,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
+<p id="rfc.section.7.2.9.p.2">The local stable network data.  </p>
 <h1 id="rfc.section.7.2.10"><a href="#rfc.section.7.2.10">7.2.10.</a> <a href="#prop-89-propthreadstablenetworkdataversion" id="prop-89-propthreadstablenetworkdataversion">PROP 89: PROP_THREAD_STABLE_NETWORK_DATA_VERSION</a></h1>
 <p/>
 
@@ -2961,7 +2980,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 <p> </p>
 <p id="rfc.section.7.2.22.p.2">Allow the HOST to directly observe all IPv6 packets received by the NCP, including ones sent to the RLOC16 address.  </p>
 <p id="rfc.section.7.2.22.p.3">Default value is <samp>false</samp>.  </p>
-<h1 id="rfc.section.7.2.23"><a href="#rfc.section.7.2.23">7.2.23.</a> <a href="#prop-5383-spinelpropthreadrouterroleenabled" id="prop-5383-spinelpropthreadrouterroleenabled">PROP 5383: SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED</a></h1>
+<h1 id="rfc.section.7.2.23"><a href="#rfc.section.7.2.23">7.2.23.</a> <a href="#prop-5383-propthreadrouterroleenabled" id="prop-5383-propthreadrouterroleenabled">PROP 5383: PROP_THREAD_ROUTER_ROLE_ENABLED</a></h1>
 <p/>
 
 <ul>
@@ -3000,7 +3019,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 
 <p> </p>
 <p id="rfc.section.7.2.26.p.2">Specifies the preferred Router Id. Upon becoming a router/leader the node attempts to use this Router Id. If the preferred Router Id is not set or if it can not be used, a randomly generated router id is picked. This property can be set only when the device role is either detached or disabled.  </p>
-<h1 id="rfc.section.7.2.27"><a href="#rfc.section.7.2.27">7.2.27.</a> <a href="#prop-5387-spinelpropthreadneighbortable" id="prop-5387-spinelpropthreadneighbortable">PROP 5387: SPINEL_PROP_THREAD_NEIGHBOR_TABLE</a></h1>
+<h1 id="rfc.section.7.2.27"><a href="#rfc.section.7.2.27">7.2.27.</a> <a href="#prop-5387-propthreadneighbortable" id="prop-5387-propthreadneighbortable">PROP 5387: PROP_THREAD_NEIGHBOR_TABLE</a></h1>
 <p/>
 
 <ul>
@@ -3025,9 +3044,40 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
+<h1 id="rfc.section.7.2.28"><a href="#rfc.section.7.2.28">7.2.28.</a> <a href="#prop-5388-propthreadchildcountmax" id="prop-5388-propthreadchildcountmax">PROP 5388: PROP_THREAD_CHILD_COUNT_MAX</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>C</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.2.28.p.2">Specifies the maximum number of children currently allowed.  This parameter can only be set when Thread protocol operation has been stopped.  </p>
+<h1 id="rfc.section.7.2.29"><a href="#rfc.section.7.2.29">7.2.29.</a> <a href="#prop-5389-propthreadleadernetworkdata" id="prop-5389-propthreadleadernetworkdata">PROP 5389: PROP_THREAD_LEADER_NETWORK_DATA</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Only</li>
+  <li>Packed-Encoding: <samp>D</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.2.29.p.2">The leader network data.  </p>
+<h1 id="rfc.section.7.2.30"><a href="#rfc.section.7.2.30">7.2.30.</a> <a href="#prop-5390-propthreadstableleadernetworkdata" id="prop-5390-propthreadstableleadernetworkdata">PROP 5390: PROP_THREAD_STABLE_LEADER_NETWORK_DATA</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Only</li>
+  <li>Packed-Encoding: <samp>D</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.2.30.p.2">The stable leader network data.  </p>
 <h1 id="rfc.section.8"><a href="#rfc.section.8">8.</a> <a href="#feature-network-save" id="feature-network-save">Feature: Network Save</a></h1>
-<p id="rfc.section.8.p.1">The network save feature is an optional NCP capability that, when present, allows the host to save and recall network credentials and state to and from nonvolatile storage.  </p>
-<p id="rfc.section.8.p.2">The presence of this feature can be detected by checking for the presence of the <samp>CAP_NET_SAVE</samp> capability in <samp>PROP_CAPS</samp>.  </p>
+<p id="rfc.section.8.p.1">The network save/recall feature is an optional NCP capability that, when present, allows the host to save and recall network credentials and state to and from nonvolatile storage.  </p>
+<p id="rfc.section.8.p.2">The presence of the save/recall feature can be detected by checking for the presence of the <samp>CAP_NET_SAVE</samp> capability in <samp>PROP_CAPS</samp>.  </p>
+<p id="rfc.section.8.p.3">Network clear feature allows host to erase all network credentials and state from non-volatile memory.  </p>
 <h1 id="rfc.section.8.1"><a href="#rfc.section.8.1">8.1.</a> <a href="#commands-1" id="commands-1">Commands</a></h1>
 <h1 id="rfc.section.8.1.1"><a href="#rfc.section.8.1.1">8.1.1.</a> <a href="#cmd-9-hostncp-cmdnetsave" id="cmd-9-hostncp-cmdnetsave">CMD 9: (Host-&gt;NCP) CMD_NET_SAVE</a></h1>
 <table cellpadding="3" cellspacing="0" class="tt full center">
@@ -3067,10 +3117,10 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.8.1.2.p.1">Clear saved network state command. Clears any previously saved network credentials and state previously stored by <samp>CMD_NET_SAVE</samp> from non-volatile memory.  </p>
+<p id="rfc.section.8.1.2.p.1">Clear saved network settings command. Erases all network credentials and state from non-volatile memory. The erased settings include any data saved automatically by the network stack firmware and/or data saved by <samp>CMD_NET_SAVE</samp> operation.  </p>
 <p id="rfc.section.8.1.2.p.2">This operation affects non-volatile memory only. The current network information stored in volatile memory is unaffected.  </p>
 <p id="rfc.section.8.1.2.p.3">The response to this command is always a <samp>CMD_PROP_VALUE_IS</samp> for <samp>PROP_LAST_STATUS</samp>, indicating the result of the operation.  </p>
-<p id="rfc.section.8.1.2.p.4">This command is only available if the <samp>CAP_NET_SAVE</samp> capability is set.  </p>
+<p id="rfc.section.8.1.2.p.4">This command is always available independent of the value of <samp>CAP_NET_SAVE</samp> capability.  </p>
 <h1 id="rfc.section.8.1.3"><a href="#rfc.section.8.1.3">8.1.3.</a> <a href="#cmd-11-hostncp-cmdnetrecall" id="cmd-11-hostncp-cmdnetrecall">CMD 11: (Host-&gt;NCP) CMD_NET_RECALL</a></h1>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
@@ -3417,9 +3467,67 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 <p> </p>
 <p id="rfc.section.11.1.4.p.2">Allows for the state of various output GPIOs to be cleared without affecting other GPIO states. Contains a bit field identifying the output GPIOs that should have their state cleared to 0.  </p>
 <p id="rfc.section.11.1.4.p.3">When writing, unspecified bits are assumed to be zero. The value of any bits for GPIOs which are not specified in <samp>PROP_GPIO_CONFIG</samp> MUST be ignored.  </p>
-<h1 id="rfc.section.12"><a href="#rfc.section.12">12.</a> <a href="#security-considerations" id="security-considerations">Security Considerations</a></h1>
-<h1 id="rfc.section.12.1"><a href="#rfc.section.12.1">12.1.</a> <a href="#raw-application-access" id="raw-application-access">Raw Application Access</a></h1>
-<p id="rfc.section.12.1.p.1">Spinel MAY be used as an API boundary for allowing processes to configure the NCP. However, such a system MUST NOT give unprivileged processess the ability to send or receive arbitrary command frames to the NCP. Only the specific commands and properties that are required should be allowed to be passed, and then only after being checked for proper format.  </p>
+<h1 id="rfc.section.12"><a href="#rfc.section.12">12.</a> <a href="#feature-trng" id="feature-trng">Feature: True Random Number Generation</a></h1>
+<p id="rfc.section.12.p.1">This feature allows the host to have access to any strong hardware random number generator that might be present on the NCP, for things like key generation or seeding PRNGs.  </p>
+<p id="rfc.section.12.p.2">Support for this feature can be determined by the presence of <samp>CAP_TRNG</samp>.  </p>
+<p id="rfc.section.12.p.3">Note well that implementing a cryptographically-strong software-based true random number generator (that is impervious to things like temperature changes, manufacturing differences across devices, or unexpected output correlations) is non-trivial without a well-designed, dedicated hardware random number generator. Implementors who have little or no experience in this area are encouraged to not advertise this capability.  </p>
+<h1 id="rfc.section.12.1"><a href="#rfc.section.12.1">12.1.</a> <a href="#properties-4" id="properties-4">Properties</a></h1>
+<h1 id="rfc.section.12.1.1"><a href="#rfc.section.12.1.1">12.1.1.</a> <a href="#prop-4101-proptrng32" id="prop-4101-proptrng32">PROP 4101: PROP_TRNG_32</a></h1>
+<p/>
+
+<ul>
+  <li>Argument-Encoding: <samp>L</samp></li>
+  <li>Type: Read-Only</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.12.1.1.p.2">Fetching this property returns a strong random 32-bit integer that is suitable for use as a PRNG seed or for cryptographic use.  </p>
+<p id="rfc.section.12.1.1.p.3">While the exact mechanism behind the calculation of this value is implementation-specific, the implementation must satisfy the following requirements: </p>
+<p/>
+
+<ul>
+  <li>Data representing at least 32 bits of fresh entropy (extracted from the primary entropy source) MUST be consumed by the calculation of each query.</li>
+  <li>Each of the 32 bits returned MUST be free of bias and have no statistical correlation to any part of the raw data used for the calculation of any query.</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.12.1.1.p.5">Support for this property is REQUIRED if <samp>CAP_TRNG</samp> is included in the device capabilities.  </p>
+<h1 id="rfc.section.12.1.2"><a href="#rfc.section.12.1.2">12.1.2.</a> <a href="#prop-4102-proptrng128" id="prop-4102-proptrng128">PROP 4102: PROP_TRNG_128</a></h1>
+<p/>
+
+<ul>
+  <li>Argument-Encoding: <samp>D</samp></li>
+  <li>Type: Read-Only</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.12.1.2.p.2">Fetching this property returns 16 bytes of strong random data suitable for direct cryptographic use without further processing(For example, as an AES key).  </p>
+<p id="rfc.section.12.1.2.p.3">While the exact mechanism behind the calculation of this value is implementation-specific, the implementation must satisfy the following requirements: </p>
+<p/>
+
+<ul>
+  <li>Data representing at least 128 bits of fresh entropy (extracted from the primary entropy source) MUST be consumed by the calculation of each query.</li>
+  <li>Each of the 128 bits returned MUST be free of bias and have no statistical correlation to any part of the raw data used for the calculation of any query.</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.12.1.2.p.5">Support for this property is REQUIRED if <samp>CAP_TRNG</samp> is included in the device capabilities.  </p>
+<h1 id="rfc.section.12.1.3"><a href="#rfc.section.12.1.3">12.1.3.</a> <a href="#prop-4103-proptrngraw32" id="prop-4103-proptrngraw32">PROP 4103: PROP_TRNG_RAW_32</a></h1>
+<p/>
+
+<ul>
+  <li>Argument-Encoding: <samp>D</samp></li>
+  <li>Type: Read-Only</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.12.1.3.p.2">This property is primarily used to diagnose and debug the behavior of the entropy source used for strong random number generation.  </p>
+<p id="rfc.section.12.1.3.p.3">When queried, returns the raw output from the entropy source used to generate <samp>PROP_TRNG_32</samp>, prior to any reduction/whitening and/or mixing with prior state.  </p>
+<p id="rfc.section.12.1.3.p.4">The length of the returned buffer is implementation specific and should be expected to be non-deterministic.  </p>
+<p id="rfc.section.12.1.3.p.5">Support for this property is RECOMMENDED if <samp>CAP_TRNG</samp> is included in the device capabilities.  </p>
+<h1 id="rfc.section.13"><a href="#rfc.section.13">13.</a> <a href="#security-considerations" id="security-considerations">Security Considerations</a></h1>
+<h1 id="rfc.section.13.1"><a href="#rfc.section.13.1">13.1.</a> <a href="#raw-application-access" id="raw-application-access">Raw Application Access</a></h1>
+<p id="rfc.section.13.1.p.1">Spinel MAY be used as an API boundary for allowing processes to configure the NCP. However, such a system MUST NOT give unprivileged processess the ability to send or receive arbitrary command frames to the NCP. Only the specific commands and properties that are required should be allowed to be passed, and then only after being checked for proper format.  </p>
 <h1 id="rfc.appendix.A"><a href="#rfc.appendix.A">Appendix A.</a> <a href="#framing-protocol" id="framing-protocol">Framing Protocol</a></h1>
 <p id="rfc.section.A.p.1">Since this NCP protocol is defined independently of the physical transport or framing, any number of transports and framing protocols could be used successfully. However, in the interests of compatibility, this document provides some recommendations.  </p>
 <h1 id="rfc.appendix.A.1"><a href="#rfc.appendix.A.1">A.1.</a> <a href="#uart-recommendations" id="uart-recommendations">UART Recommendations</a></h1>
