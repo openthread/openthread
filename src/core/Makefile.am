@@ -133,6 +133,12 @@ SOURCES_COMMON                     += \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_JAM_DETECTION
 
+if OPENTHREAD_ENABLE_RAW_LINK_API
+SOURCES_COMMON                     += \
+    api/link_raw_api.cpp              \
+    $(NULL)
+endif  # OPENTHREAD_ENABLE_RAW_LINK_API
+
 libopenthread_ftd_a_CPPFLAGS        = \
     $(CPPFLAGS_COMMON)                \
     $(NULL)

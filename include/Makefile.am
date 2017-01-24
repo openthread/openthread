@@ -59,6 +59,7 @@ PRETTY_SUBDIRS                          = \
     $(NULL)
 
 include_HEADERS                         = \
+    openthread/link_raw.h                 \
     openthread.h                          \
     openthread-coap.h                     \
     openthread-crypto.h                   \

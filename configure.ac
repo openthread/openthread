@@ -842,6 +842,36 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_APPLICATION_COAP], [test "${enable_application
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_APPLICATION_COAP],[${OPENTHREAD_ENABLE_APPLICATION_COAP}],[Define to 1 if you want to enable CoAP to an application.])
 
 #
+# otLinkRaw API
+#
+
+AC_ARG_ENABLE(raw_link_api,
+    [AS_HELP_STRING([--enable-raw-link-api],[Enable raw link-layer API support @<:@default=yes@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_raw_link_api=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_raw_link_api} for --enable-raw-link-api])
+            ;;
+        esac
+    ],
+    [enable_raw_link_api=yes])
+
+if test "$enable_raw_link_api" = "yes"; then
+    OPENTHREAD_ENABLE_RAW_LINK_API=1
+else
+    OPENTHREAD_ENABLE_RAW_LINK_API=0
+fi
+
+AC_SUBST(OPENTHREAD_ENABLE_RAW_LINK_API)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_RAW_LINK_API], [test "${enable_raw_link_api}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_RAW_LINK_API],[${OPENTHREAD_ENABLE_RAW_LINK_API}],[Define to 1 if you want to enable raw link-layer API])
+
+#
 # Examples
 #
 
@@ -1125,6 +1155,7 @@ AC_MSG_NOTICE([
   OpenThread DHCPv6 Server support          : ${enable_dhcp6_server}
   OpenThread DHCPv6 Client support          : ${enable_dhcp6_client}
   Openthread Application CoAP support       : ${enable_application_coap}
+  Openthread Raw Link-Layer support         : ${enable_raw_link_api}
   OpenThread examples                       : ${OPENTHREAD_EXAMPLES}
   OpenThread platform information           : ${PLATFORM_INFO}
 
