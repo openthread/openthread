@@ -79,6 +79,7 @@ class OpenThread(IThci):
             self.localprefix = ModuleHelper.Default_MLPrefix
             self.pskc = "00000000000000000000000000000000"  # OT only accept hex format PSKc for now
             self.securityPolicySecs = ModuleHelper.Default_SecurityPolicy
+            self.securityPolicyFlags = "onrcb"
             self.activetimestamp = ModuleHelper.Default_ActiveTimestamp
             #self.sedPollingRate = ModuleHelper.Default_Harness_SED_Polling_Rate
             self.sedPollingRate = 3
@@ -625,10 +626,10 @@ class OpenThread(IThci):
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setChannelMask() Error: " + str(e))
 
-    def __setSecurityPolicy(self, securityPolicySecs):
+    def __setSecurityPolicy(self, securityPolicySecs, securityPolicyFlags):
         print 'call _setSecurityPolicy'
         try:
-            cmd = 'dataset securitypolicy %s' % str(securityPolicySecs)
+            cmd = 'dataset securitypolicy %s %s' % (str(securityPolicySecs), securityPolicyFlags)
             self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd) == 'Done'
         except Exception, e:
@@ -1241,7 +1242,7 @@ class OpenThread(IThci):
             self.setMAC(self.mac)
 
             self.__setChannelMask(self.channelMask)
-            self.__setSecurityPolicy(self.securityPolicySecs)
+            self.__setSecurityPolicy(self.securityPolicySecs, self.securityPolicyFlags)
             self.setChannel(self.channel)
             self.setPANID(self.panId)
             self.setXpanId(self.xpanId)
