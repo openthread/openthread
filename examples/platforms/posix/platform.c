@@ -41,6 +41,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifndef _WIN32
+#include <libgen.h>
+#include <syslog.h>
+#endif
+
 #include <openthread.h>
 #include <openthread-tasklet.h>
 #include <platform/alarm.h>
@@ -57,6 +62,11 @@ void PlatformInit(int argc, char *argv[])
     {
         exit(EXIT_FAILURE);
     }
+
+#ifndef _WIN32
+    openlog(basename(argv[0]), LOG_PID, LOG_USER);
+    setlogmask(setlogmask(0) & LOG_UPTO(LOG_NOTICE));
+#endif
 
     NODE_ID = (uint32_t)strtol(argv[1], &endptr, 0);
 
