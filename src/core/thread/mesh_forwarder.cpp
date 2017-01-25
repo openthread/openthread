@@ -866,9 +866,35 @@ void MeshForwarder::HandlePollTimer()
 
     error = SendMacDataRequest();
 
-    if (error == kThreadError_NoBufs)
+    switch (error)
     {
+    case kThreadError_None:
+        break;
+
+    case kThreadError_InvalidState:
+        // The poll timer should have been stopped. Hitting
+        // this might indicate a logic error.
+        otLogWarnMac("Poll timer fired while RxOnWhenIdle set!");
+        break;
+
+    case kThreadError_NoBufs:
+        // Failed to send DataRequest due to a lack of buffers.
+        // Try again following a brief pause to free buffers.
         mPollTimer.Start(kDataRequstRetryDelay);
+        break;
+
+    case kThreadError_Already:
+        // This is perhaps a sign of
+        // bad behavior, as it suggests that mPollPeriod was not long
+        // enough for the previously scheduled DataRequest to get out of
+        // the sendQueue.
+        otLogDebgMac("Poll timer fired with DataRequest in SendQueue.");
+
+    // Intentional fall-thru
+    default:
+        // Restart for any other error which might originate from SendMessage().
+        mPollTimer.Start(mPollPeriod);
+        break;
     }
 }
 
@@ -890,11 +916,20 @@ ThreadError MeshForwarder::SendMacDataRequest(void)
     message = mNetif.GetIp6().mMessagePool.New(Message::kTypeMacDataPoll, 0);
     VerifyOrExit(message != NULL, error = kThreadError_NoBufs);
 
-    SuccessOrExit(error = SendMessage(*message));
-    otLogInfoMac("Sent poll");
+    error = SendMessage(*message);
 
-    // restart the polling timer
-    mPollTimer.Start(mPollPeriod);
+    if (error == kThreadError_None)
+    {
+        otLogInfoMac("Sent poll");
+
+        // restart the polling timer
+        mPollTimer.Start(mPollPeriod);
+    }
+    else
+    {
+        message->Free();
+        message = NULL;
+    }
 
 exit:
     return error;
