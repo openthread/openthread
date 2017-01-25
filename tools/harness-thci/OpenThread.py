@@ -2353,8 +2353,6 @@ class OpenThread(IThci):
 
             if xCommissionerSessionId != None:
                 cmd += ' binary '
-
-            if xCommissionerSessionId != None:
                 cmd += '0b02'
                 sessionid = str(hex(xCommissionerSessionId))[2:]
 
@@ -2454,6 +2452,7 @@ class OpenThread(IThci):
     def setActiveTimestamp(self, xActiveTimestamp):
         print '%s call setActiveTimestamp' % self.port
         try:
+            self.activetimestamp = xActiveTimestamp
             cmd = 'dataset activetimestamp %s' % str(xActiveTimestamp)
             self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd)[0] == 'Done'
