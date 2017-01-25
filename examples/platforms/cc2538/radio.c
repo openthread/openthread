@@ -39,8 +39,10 @@
 #include <common/code_utils.hpp>
 #include <platform/platform.h>
 #include <common/logging.hpp>
+#include <platform/alarm.h>
 #include <platform/radio.h>
 #include <platform/diag.h>
+#include <platform/logging.h>
 #include "platform-cc2538.h"
 
 enum
@@ -62,10 +64,15 @@ enum
     CC2538_LQI_BIT_MASK = 0x7f,
 };
 
+enum
+{
+    kAckTimeout = 16 // In milliseconds
+};
+
 static RadioPacket sTransmitFrame;
 static RadioPacket sReceiveFrame;
-static ThreadError sTransmitError;
-static ThreadError sReceiveError;
+static ThreadError sTransmitError = kThreadError_None;
+static ThreadError sReceiveError = kThreadError_None;
 
 static uint8_t sTransmitPsdu[IEEE802154_MAX_LENGTH];
 static uint8_t sReceivePsdu[IEEE802154_MAX_LENGTH];
@@ -73,6 +80,9 @@ static uint8_t sChannel = 0;
 
 static PhyState sState = kStateDisabled;
 static bool sIsReceiverEnabled = false;
+
+static bool sIsWaitingForAck = false;
+static uint32_t sAckTimeout;
 
 void enableReceiver(void)
 {
@@ -316,6 +326,14 @@ ThreadError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
         while (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE);
 
         otLogDebgPlat("Transmitted %d bytes", aPacket->mLength);
+
+        // Check to see if we need to set ACK wait timeout
+        sIsWaitingForAck = (sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) != 0;
+
+        if (sIsWaitingForAck)
+        {
+            sAckTimeout = otPlatAlarmGetNow() + kAckTimeout;
+        }
     }
 
 exit:
@@ -337,7 +355,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     (void)aInstance;
-    return kRadioCapsNone;
+    return kRadioCapsAckTimeout;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
@@ -439,7 +457,7 @@ void cc2538RadioProcess(otInstance *aInstance)
 
     if (sState == kStateTransmit)
     {
-        if (sTransmitError != kThreadError_None || (sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0)
+        if (sTransmitError != kThreadError_None || !sIsWaitingForAck)
         {
             if (sTransmitError != kThreadError_None)
             {
@@ -464,7 +482,9 @@ void cc2538RadioProcess(otInstance *aInstance)
                  (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK &&
                  (sReceiveFrame.mPsdu[IEEE802154_DSN_OFFSET] == sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET]))
         {
+            otLogDebgPlat("Transmit complete with ACK received", NULL);
             sState = kStateReceive;
+            sIsWaitingForAck = false;
 
 #if OPENTHREAD_ENABLE_DIAG
 
@@ -478,6 +498,29 @@ void cc2538RadioProcess(otInstance *aInstance)
             {
                 otPlatRadioTransmitDone(aInstance, &sTransmitFrame, (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0,
                                         sTransmitError);
+            }
+        }
+    }
+
+    if (sIsWaitingForAck)
+    {
+        // See if we have expired our wait time (accounting for wrap around)
+        if (sAckTimeout - otPlatAlarmGetNow() > kAckTimeout)
+        {
+            otLogDebgPlat("Transmit timed out waiting for ACK", NULL);
+            sState = kStateReceive;
+            sIsWaitingForAck = false;
+            
+#if OPENTHREAD_ENABLE_DIAG
+
+            if (otPlatDiagModeGet())
+            {
+                otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, false, kThreadError_NoAck);
+            }
+            else
+#endif
+            {
+                otPlatRadioTransmitDone(aInstance, &sTransmitFrame, false, kThreadError_NoAck);
             }
         }
     }
