@@ -72,6 +72,8 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mParentRequestTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mle::HandleParentRequestTimer, this),
     mRouterSelectionJitter(kRouterSelectionJitter),
     mRouterSelectionJitterTimeout(0),
+    mLastPartitionRouterIdSequence(0),
+    mLastPartitionId(0),
     mParentRequestMode(kMleAttachAnyPartition),
     mParentLinkQuality(0),
     mParentPriority(0),
