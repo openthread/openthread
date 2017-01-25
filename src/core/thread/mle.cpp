@@ -882,6 +882,7 @@ Message *Mle::NewMleMessage(void)
     message = mSocket.NewMessage(0);
     VerifyOrExit(message != NULL, ;);
 
+    message->SetSubType(Message::kSubTypeMleGeneral);
     message->SetLinkSecurityEnabled(false);
     message->SetPriority(kMleMessagePriority);
 

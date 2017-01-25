@@ -1259,7 +1259,7 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
 
         if (payloadLength > fragmentLength)
         {
-            if (!aMessage.IsLinkSecurityEnabled())
+            if ((!aMessage.IsLinkSecurityEnabled()) && aMessage.IsSubTypeMle())
             {
                 aMessage.SetLinkSecurityEnabled(true);
                 aMessage.SetOffset(0);
