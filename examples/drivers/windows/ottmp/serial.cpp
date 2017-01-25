@@ -404,7 +404,7 @@ Return Value:
 
         // Xon and Xoff characters
         {
-            const SERIAL_CHARS sc = { 0, 0, 0, 0, 11, 13 };
+            const SERIAL_CHARS sc = { 0, 0, 0, 0, 0x11, 0x13 };
             WDF_MEMORY_DESCRIPTOR_INIT_BUFFER(&inputDesc, (PVOID)&sc, sizeof(sc));
 
             status = SerialSendIoctl(AdapterContext, IOCTL_SERIAL_SET_CHARS, &wrso, &inputDesc);

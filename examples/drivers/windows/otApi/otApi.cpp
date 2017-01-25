@@ -3205,6 +3205,157 @@ otIp6PrefixMatch(
     return rval;
 }
 
+OTAPI
+const char *
+OTCALL
+otThreadErrorToString(
+    ThreadError aError
+    )
+{
+    const char *retval;
+
+    switch (aError)
+    {
+    case kThreadError_None:
+        retval = "None";
+        break;
+
+    case kThreadError_Failed:
+        retval = "Failed";
+        break;
+
+    case kThreadError_Drop:
+        retval = "Drop";
+        break;
+
+    case kThreadError_NoBufs:
+        retval = "NoBufs";
+        break;
+
+    case kThreadError_NoRoute:
+        retval = "NoRoute";
+        break;
+
+    case kThreadError_Busy:
+        retval = "Busy";
+        break;
+
+    case kThreadError_Parse:
+        retval = "Parse";
+        break;
+
+    case kThreadError_InvalidArgs:
+        retval = "InvalidArgs";
+        break;
+
+    case kThreadError_Security:
+        retval = "Security";
+        break;
+
+    case kThreadError_AddressQuery:
+        retval = "AddressQuery";
+        break;
+
+    case kThreadError_NoAddress:
+        retval = "NoAddress";
+        break;
+
+    case kThreadError_NotReceiving:
+        retval = "NotReceiving";
+        break;
+
+    case kThreadError_Abort:
+        retval = "Abort";
+        break;
+
+    case kThreadError_NotImplemented:
+        retval = "NotImplemented";
+        break;
+
+    case kThreadError_InvalidState:
+        retval = "InvalidState";
+        break;
+
+    case kThreadError_NoTasklets:
+        retval = "NoTasklets";
+        break;
+
+    case kThreadError_NoAck:
+        retval = "NoAck";
+        break;
+
+    case kThreadError_ChannelAccessFailure:
+        retval = "ChannelAccessFailure";
+        break;
+
+    case kThreadError_Detached:
+        retval = "Detached";
+        break;
+
+    case kThreadError_FcsErr:
+        retval = "FcsErr";
+        break;
+
+    case kThreadError_NoFrameReceived:
+        retval = "NoFrameReceived";
+        break;
+
+    case kThreadError_UnknownNeighbor:
+        retval = "UnknownNeighbor";
+        break;
+
+    case kThreadError_InvalidSourceAddress:
+        retval = "InvalidSourceAddress";
+        break;
+
+    case kThreadError_WhitelistFiltered:
+        retval = "WhitelistFiltered";
+        break;
+
+    case kThreadError_DestinationAddressFiltered:
+        retval = "DestinationAddressFiltered";
+        break;
+
+    case kThreadError_NotFound:
+        retval = "NotFound";
+        break;
+
+    case kThreadError_Already:
+        retval = "Already";
+        break;
+
+    case kThreadError_BlacklistFiltered:
+        retval = "BlacklistFiltered";
+        break;
+
+    case kThreadError_Ipv6AddressCreationFailure:
+        retval = "Ipv6AddressCreationFailure";
+        break;
+
+    case kThreadError_NotCapable:
+        retval = "NotCapable";
+        break;
+
+    case kThreadError_ResponseTimeout:
+        retval = "ResponseTimeout";
+        break;
+
+    case kThreadError_Duplicated:
+        retval = "Duplicated";
+        break;
+
+    case kThreadError_Error:
+        retval = "GenericError";
+        break;
+
+    default:
+        retval = "UnknownErrorType";
+        break;
+    }
+
+    return retval;
+}
+
 OTAPI 
 ThreadError 
 OTCALL 
@@ -3267,7 +3418,7 @@ OTAPI
 ThreadError 
 OTCALL
 otCommissionerStart(
-     _In_ otInstance *aInstance
+    _In_ otInstance *aInstance
     )
 {
     if (aInstance == nullptr) return kThreadError_InvalidArgs;
@@ -3278,7 +3429,7 @@ OTAPI
 ThreadError 
 OTCALL
 otCommissionerAddJoiner(
-     _In_ otInstance *aInstance, 
+    _In_ otInstance *aInstance, 
     const otExtAddress *aExtAddress, 
     const char *aPSKd
     )
@@ -3308,7 +3459,7 @@ OTAPI
 ThreadError 
 OTCALL
 otCommissionerRemoveJoiner(
-     _In_ otInstance *aInstance, 
+    _In_ otInstance *aInstance, 
     const otExtAddress *aExtAddress
     )
 {
@@ -3329,7 +3480,7 @@ OTAPI
 ThreadError 
 OTCALL
 otCommissionerSetProvisioningUrl(
-     _In_ otInstance *aInstance,
+    _In_ otInstance *aInstance,
     const char *aProvisioningUrl
     )
 {
@@ -3371,7 +3522,7 @@ OTAPI
 ThreadError 
 OTCALL
 otCommissionerStop(
-     _In_ otInstance *aInstance
+    _In_ otInstance *aInstance
     )
 {
     if (aInstance == nullptr) return kThreadError_InvalidArgs;
@@ -3382,7 +3533,7 @@ OTAPI
 ThreadError 
 OTCALL
 otCommissionerEnergyScan(
-     _In_ otInstance *aInstance, 
+    _In_ otInstance *aInstance, 
     uint32_t aChannelMask, 
     uint8_t aCount, 
     uint16_t aPeriod,
@@ -3407,12 +3558,12 @@ OTAPI
 ThreadError 
 OTCALL
 otCommissionerPanIdQuery(
-     _In_ otInstance *aInstance, 
+    _In_ otInstance *aInstance, 
     uint16_t aPanId, 
     uint32_t aChannelMask,
     const otIp6Address *aAddress,
-     _In_ otCommissionerPanIdConflictCallback aCallback, 
-     _In_ void *aContext
+    _In_ otCommissionerPanIdConflictCallback aCallback, 
+    _In_ void *aContext
     )
 {
     if (aInstance == nullptr) return kThreadError_InvalidArgs;
@@ -3430,7 +3581,7 @@ OTAPI
 ThreadError 
 OTCALL 
 otSendMgmtCommissionerGet(
-     _In_ otInstance *aInstance, 
+    _In_ otInstance *aInstance, 
     const uint8_t *aTlvs, 
     uint8_t aLength
 )
@@ -3458,7 +3609,7 @@ OTAPI
 ThreadError 
 OTCALL 
 otSendMgmtCommissionerSet(
-     _In_ otInstance *aInstance,
+    _In_ otInstance *aInstance,
     const otCommissioningDataset *aDataset,
     const uint8_t *aTlvs,
     uint8_t aLength
@@ -3484,11 +3635,23 @@ otSendMgmtCommissionerSet(
     return result;
 }
 
+OTAPI
+uint16_t
+OTCALL
+otCommissionerGetSessionId(
+    _In_ otInstance *aInstance
+    )
+{
+    if (aInstance == nullptr) return 0;
+    // TODO
+    return 0;
+}
+
 OTAPI 
 ThreadError 
 OTCALL
 otJoinerStart(
-     _In_ otInstance *aInstance,
+    _In_ otInstance *aInstance,
     const char *aPSKd, 
     const char *aProvisioningUrl,
     const char *aVendorName,
@@ -3534,7 +3697,7 @@ OTAPI
 ThreadError 
 OTCALL
 otJoinerStop(
-     _In_ otInstance *aInstance
+    _In_ otInstance *aInstance
     )
 {
     if (aInstance == nullptr) return kThreadError_InvalidArgs;

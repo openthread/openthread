@@ -93,8 +93,12 @@ N.B.:  FILTER can use NdisRegisterDeviceEx to create a device, so the upper
     NTSTATUS                NtStatus;
     NDIS_FILTER_ATTRIBUTES  FilterAttributes;
     ULONG                   Size;
-    ULONG                   bytesProcessed = 0;
     COMPARTMENT_ID          OriginalCompartmentID;
+    OBJECT_ATTRIBUTES       ObjectAttributes = {0};
+
+    const ULONG RegKeyOffset = ARRAYSIZE(L"\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Services\\otlwf\\Parameters\\NdisAdapters\\") - 1;
+    DECLARE_CONST_UNICODE_STRING(RegKeyPath, L"\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Services\\otlwf\\Parameters\\NdisAdapters\\{00000000-0000-0000-0000-000000000000}");
+    RtlCopyMemory(RegKeyPath.Buffer + RegKeyOffset, AttachParameters->BaseMiniportName->Buffer + 8, sizeof(L"{00000000-0000-0000-0000-000000000000}"));
 
     LogFuncEntry(DRIVER_DEFAULT);
 
@@ -113,7 +117,6 @@ N.B.:  FILTER can use NdisRegisterDeviceEx to create a device, so the upper
         if (AttachParameters->MiniportMediaType != NdisMediumIP)
         {
             LogError(DRIVER_DEFAULT, "Unsupported media type, 0x%x.", (ULONG)AttachParameters->MiniportMediaType);
-
             Status = NDIS_STATUS_INVALID_PARAMETER;
             break;
         }
@@ -130,6 +133,24 @@ N.B.:  FILTER can use NdisRegisterDeviceEx to create a device, so the upper
 
         NdisZeroMemory(pFilter, sizeof(MS_FILTER));
 
+        LogVerbose(DRIVER_DEFAULT, "Opening interface registry key %S", RegKeyPath.Buffer);
+
+        InitializeObjectAttributes(
+            &ObjectAttributes,
+            (PUNICODE_STRING)&RegKeyPath,
+            OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+            NULL,
+            NULL);
+
+        // Open the registry key
+        NtStatus = ZwOpenKey(&pFilter->InterfaceRegKey, KEY_ALL_ACCESS, &ObjectAttributes);
+        if (!NT_SUCCESS(NtStatus))
+        {
+            LogError(DRIVER_DEFAULT, "ZwOpenKey failed to open %S, %!STATUS!", RegKeyPath.Buffer, NtStatus);
+            Status = NDIS_STATUS_FAILURE;
+            break;
+        }
+
         // Format of "\DEVICE\{5BA90C49-0D7E-455B-8D3B-614F6714A212}"
         AttachParameters->BaseMiniportName->Buffer += 8;
         AttachParameters->BaseMiniportName->Length -= 8 * sizeof(WCHAR);
@@ -142,12 +163,12 @@ N.B.:  FILTER can use NdisRegisterDeviceEx to create a device, so the upper
             Status = NDIS_STATUS_FAILURE;
             break;
         }
-        
-        pFilter->MiniportFriendlyName.Length = pFilter->MiniportFriendlyName.MaximumLength = AttachParameters->BaseMiniportInstanceName->Length;
-        pFilter->MiniportFriendlyName.Buffer = (PWSTR)((PUCHAR)pFilter + sizeof(MS_FILTER));
-        NdisMoveMemory(pFilter->MiniportFriendlyName.Buffer,
+
+        pFilter->InterfaceFriendlyName.Length = pFilter->InterfaceFriendlyName.MaximumLength = AttachParameters->BaseMiniportInstanceName->Length;
+        pFilter->InterfaceFriendlyName.Buffer = (PWSTR)((PUCHAR)pFilter + sizeof(MS_FILTER));
+        NdisMoveMemory(pFilter->InterfaceFriendlyName.Buffer,
                         AttachParameters->BaseMiniportInstanceName->Buffer,
-                        pFilter->MiniportFriendlyName.Length);
+                        pFilter->InterfaceFriendlyName.Length);
 
         pFilter->InterfaceIndex = AttachParameters->BaseMiniportIfIndex;
         pFilter->InterfaceLuid = AttachParameters->BaseMiniportNetLuid;
@@ -170,40 +191,18 @@ N.B.:  FILTER can use NdisRegisterDeviceEx to create a device, so the upper
 
         // Filter initially in Paused state
         pFilter->State = FilterPaused;
-        NdisInitializeEvent(&pFilter->FilterPauseComplete);
-
-        // Initialize initial ref count on IoControl to 1, which we release on shutdown
-        RtlInitializeReferenceCount(&pFilter->IoControlReferences);
-        NdisInitializeEvent(&pFilter->IoControlShutdownComplete);
 
         // Initialize PendingOidRequest lock
         NdisAllocateSpinLock(&pFilter->PendingOidRequestLock);
 
-        // Initialize datapath to disabled with no active references
-        pFilter->DataPathRundown.Count = EX_RUNDOWN_ACTIVE;
-        
-        // Create the NDIS pool for creating the SendNetBufferList
-        NET_BUFFER_LIST_POOL_PARAMETERS PoolParams = 
-        {
-            { NDIS_OBJECT_TYPE_DEFAULT, NET_BUFFER_LIST_POOL_PARAMETERS_REVISION_1, NDIS_SIZEOF_NET_BUFFER_LIST_POOL_PARAMETERS_REVISION_1 },
-            NDIS_PROTOCOL_ID_DEFAULT,
-            TRUE,
-            0,
-            'BNto', // otNB
-            0
-        };
-        pFilter->NetBufferListPool = NdisAllocateNetBufferListPool(pFilter->FilterHandle, &PoolParams);
-        if (pFilter->NetBufferListPool == NULL)
-        {
-            Status = NDIS_STATUS_RESOURCES;
-            LogWarning(DRIVER_DEFAULT, "Failed to create NetBufferList pool");
-            break;
-        }
+        // Initialize rundowns to disabled with no active references
+        pFilter->ExternalRefs.Count = EX_RUNDOWN_ACTIVE;
+        pFilter->cmdRundown.Count = EX_RUNDOWN_ACTIVE;
 
         // Query the compartment ID for this interface to use for the IP stack
         pFilter->InterfaceCompartmentID = GetInterfaceCompartmentID(&pFilter->InterfaceLuid);
         LogVerbose(DRIVER_DEFAULT, "Interface %!GUID! is in Compartment %u", &pFilter->InterfaceGuid, (ULONG)pFilter->InterfaceCompartmentID);
-    
+
         // Make sure we are in the right compartment
         (VOID)otLwfSetCompartment(pFilter, &OriginalCompartmentID);
 
@@ -227,45 +226,6 @@ N.B.:  FILTER can use NdisRegisterDeviceEx to create a device, so the upper
             break;
         }
 
-        // Little hack to pass the IfIndex to the VMP
-        *((ULONG*)&pFilter->MiniportCapabilities) = AttachParameters->BaseMiniportIfIndex;
-
-        // Query the MP capabilities
-        Status = 
-            otLwfSendInternalRequest(
-                pFilter,
-                NdisRequestQueryInformation,
-                OID_OT_CAPABILITIES,
-                &pFilter->MiniportCapabilities,
-                sizeof(OT_CAPABILITIES),
-                &bytesProcessed
-                );
-        if (Status != NDIS_STATUS_SUCCESS)
-        {
-            LogError(DRIVER_DEFAULT, "Query for OID_OT_CAPABILITIES failed, %!NDIS_STATUS!", Status);
-            break;
-        }
-
-        // Validate the return header
-        if (bytesProcessed != SIZEOF_OT_CAPABILITIES_REVISION_1 ||
-            pFilter->MiniportCapabilities.Header.Type != NDIS_OBJECT_TYPE_DEFAULT ||
-            pFilter->MiniportCapabilities.Header.Revision != OT_CAPABILITIES_REVISION_1 ||
-            pFilter->MiniportCapabilities.Header.Size != SIZEOF_OT_CAPABILITIES_REVISION_1)
-        {
-            Status = NDIS_STATUS_INVALID_DATA;
-            LogError(DRIVER_DEFAULT, "Query for OID_OT_CAPABILITIES returned invalid data");
-            break;
-        }
-
-        // Make sure we are in RADIO mode
-        if (pFilter->MiniportCapabilities.MiniportMode != OT_MP_MODE_RADIO &&
-            pFilter->MiniportCapabilities.MiniportMode != OT_MP_MODE_THREAD)
-        {
-            Status = NDIS_STATUS_NOT_SUPPORTED;
-            LogError(DRIVER_DEFAULT, "Miniport indicated it isn't running in RADIO or THREAD mode!");
-            break;
-        }
-
         // Add Filter to global list of Thread Filters
         NdisAcquireSpinLock(&FilterListLock);
         InsertTailList(&FilterModuleList, &pFilter->FilterModuleLink);
@@ -275,6 +235,7 @@ N.B.:  FILTER can use NdisRegisterDeviceEx to create a device, so the upper
 
     } while (FALSE);
 
+    // Clean up on failure
     if (Status != NDIS_STATUS_SUCCESS)
     {
         if (pFilter != NULL)
@@ -283,12 +244,6 @@ N.B.:  FILTER can use NdisRegisterDeviceEx to create a device, so the upper
             {
                 CancelMibChangeNotify2(pFilter->AddressChangeHandle);
                 pFilter->AddressChangeHandle = NULL;
-            }
-
-            // Free NBL Pool
-            if (pFilter->NetBufferListPool)
-            {
-                NdisFreeNetBufferPool(pFilter->NetBufferListPool);
             }
 
             NdisFreeMemory(pFilter, 0, 0);
@@ -330,49 +285,27 @@ NOTE: Called at PASSIVE_LEVEL and the filter is in paused state
 
     // Filter must be in paused state and pretty much inactive
     NT_ASSERT(pFilter->State == FilterPaused);
-    NT_ASSERT(pFilter->IoControlReferences > 0);
+    NT_ASSERT(pFilter->DeviceStatus == OTLWF_DEVICE_STATUS_UNINTIALIZED);
 
     //
     // Detach must not fail, so do not put any code here that can possibly fail.
     //
-
-    // Release IoControl reference and wait for shutdown if there are active refernces
-    NdisResetEvent(&pFilter->IoControlShutdownComplete);
-    if (!RtlDecrementReferenceCount(&pFilter->IoControlReferences))
-    {
-        LogInfo(DRIVER_DEFAULT, "Waiting for Io Control shutdown...");
-        NdisWaitEvent(&pFilter->IoControlShutdownComplete, 0);
-        NT_ASSERT(pFilter->IoControlReferences == 0);
-        LogInfo(DRIVER_DEFAULT, "Received Io Control shutdown event.");
-    }
-    
-    // Unregister from address change notifications
-    CancelMibChangeNotify2(pFilter->AddressChangeHandle);
-    pFilter->AddressChangeHandle = NULL;
-
-    if (pFilter->InternalStateInitialized)
-    {
-        if (pFilter->MiniportCapabilities.MiniportMode == OT_MP_MODE_RADIO)
-        {
-            otLwfUninitializeThreadMode(pFilter);
-        }
-        else if (pFilter->MiniportCapabilities.MiniportMode == OT_MP_MODE_THREAD)
-        {
-            otLwfUninitializeTunnelMode(pFilter);
-        }
-        else
-        {
-            NT_ASSERT(FALSE);
-        }
-    }
 
     // Remove this Filter from the global list
     NdisAcquireSpinLock(&FilterListLock);
     RemoveEntryList(&pFilter->FilterModuleLink);
     NdisReleaseSpinLock(&FilterListLock);
 
-    // Free NBL Pool
-    NdisFreeNetBufferPool(pFilter->NetBufferListPool);
+    // Unregister from address change notifications
+    CancelMibChangeNotify2(pFilter->AddressChangeHandle);
+    pFilter->AddressChangeHandle = NULL;
+
+    // Close the registry key
+    if (pFilter->InterfaceRegKey)
+    {
+        ZwClose(pFilter->InterfaceRegKey);
+        pFilter->InterfaceRegKey = NULL;
+    }
 
     // Free the memory allocated
     NdisFreeMemory(pFilter, 0, 0);
@@ -398,6 +331,74 @@ otLwfNotifyDeviceAvailabilityChange(
 
         otLwfIndicateNotification(NotifEntry);
     }
+}
+
+PAGED
+NTSTATUS
+GetRegDWORDValue(
+    _In_  PMS_FILTER        pFilter,
+    _In_  PCWSTR            ValueName,
+    _Out_ PULONG            ValueData
+)
+{
+    NTSTATUS            status;
+    ULONG               resultLength;
+    UCHAR               keybuf[128] = {0};
+    UNICODE_STRING      UValueName;
+
+    PAGED_CODE();
+
+    RtlInitUnicodeString(&UValueName, ValueName);
+
+    status = ZwQueryValueKey(
+        pFilter->InterfaceRegKey,
+        &UValueName,
+        KeyValueFullInformation,
+        keybuf,
+        sizeof(keybuf),
+        &resultLength);
+
+    if (NT_SUCCESS(status)) 
+    {
+        PKEY_VALUE_FULL_INFORMATION keyInfo = (PKEY_VALUE_FULL_INFORMATION)keybuf;
+
+        if (keyInfo->Type != REG_DWORD)
+        {
+            status = STATUS_INVALID_PARAMETER_MIX;
+        }
+        else
+        {
+            *ValueData = *((ULONG UNALIGNED *)(keybuf + keyInfo->DataOffset));
+        }
+    }
+
+    return status;
+}
+
+PAGED
+NTSTATUS
+SetRegDWORDValue(
+    _In_ PMS_FILTER     pFilter,
+    _In_ PCWSTR         ValueName,
+    _In_ ULONG          ValueData
+)
+{
+    NTSTATUS            status;
+    UNICODE_STRING      UValueName;
+
+    PAGED_CODE();
+
+    RtlInitUnicodeString(&UValueName, ValueName);
+
+    status = ZwSetValueKey(
+        pFilter->InterfaceRegKey,
+        &UValueName,
+        0,
+        REG_DWORD,
+        (PVOID)&ValueData,
+        sizeof(ValueData));
+
+    return status;
 }
 
 _Use_decl_annotations_
@@ -428,8 +429,12 @@ Return Value:
     NTSTATUS            NtStatus = STATUS_SUCCESS;
     NDIS_STATUS         NdisStatus = NDIS_STATUS_SUCCESS;
     PMS_FILTER          pFilter = (PMS_FILTER)FilterModuleContext;
+    PVOID               SpinelCapsDataBuffer = NULL;
+    const uint8_t*      SpinelCapsPtr = NULL;
+    spinel_size_t       SpinelCapsLen = 0;
     NL_INTERFACE_KEY    key = {0};
     NL_INTERFACE_RW     interfaceRw;
+    ULONG               ThreadOnHost = TRUE;
 
     PNDIS_RESTART_GENERAL_ATTRIBUTES NdisGeneralAttributes;
     PNDIS_RESTART_ATTRIBUTES         NdisRestartAttributes;
@@ -459,52 +464,116 @@ Return Value:
         //
         NdisGeneralAttributes->LookaheadSize = 128;
     }
-    
-        
-    // Initialize the processing logic
-    if (pFilter->MiniportCapabilities.MiniportMode == OT_MP_MODE_RADIO)
+
+    // Initialize the Spinel command processing
+    NdisStatus = otLwfCmdInitialize(pFilter);
+    if (NdisStatus != NDIS_STATUS_SUCCESS)
     {
+        LogError(DRIVER_DEFAULT, "otLwfCmdInitialize failed, %!NDIS_STATUS!", NdisStatus);
+        goto exit;
+    }
+
+    // Query the device capabilities
+    NtStatus = otLwfCmdGetProp(pFilter, SpinelCapsDataBuffer, SPINEL_PROP_CAPS, SPINEL_DATATYPE_DATA_S, &SpinelCapsPtr, &SpinelCapsLen);
+    if (!NT_SUCCESS(NtStatus))
+    {
+        NdisStatus = NDIS_STATUS_NOT_SUPPORTED;
+        LogError(DRIVER_DEFAULT, "Failed to query SPINEL_PROP_CAPS, %!STATUS!", NtStatus);
+        goto exit;
+    }
+
+    // Iterate and process returned capabilities
+    while (SpinelCapsLen > 0)
+    {
+        ULONG SpinelCap = 0;
+        spinel_ssize_t len = spinel_datatype_unpack(SpinelCapsPtr, SpinelCapsLen, SPINEL_DATATYPE_UINT_PACKED_S, &SpinelCap);
+        if (len < 1) break;
+        SpinelCapsLen -= (spinel_size_t)len;
+
+        switch (SpinelCap)
+        {
+        case SPINEL_CAP_MAC_RAW:
+            pFilter->DeviceCapabilities |= OTLWF_DEVICE_CAP_RADIO;
+            pFilter->DeviceCapabilities |= OTLWF_DEVICE_CAP_RADIO_ACK_TIMEOUT;
+            pFilter->DeviceCapabilities |= OTLWF_DEVICE_CAP_RADIO_ENERGY_SCAN;
+            break;
+        case SPINEL_CAP_NET_THREAD_1_0:
+            pFilter->DeviceCapabilities |= OTLWF_DEVICE_CAP_THREAD_1_0;
+            break;
+        default:
+            break;
+        }
+    }
+
+    // Set the state indicating where we should be running the Thread logic (Host or Device).
+    if (!NT_SUCCESS(GetRegDWORDValue(pFilter, L"RunOnHost", &ThreadOnHost)))
+    {
+        // Default to running on the host if the key isn't present
+        ThreadOnHost = TRUE;
+        SetRegDWORDValue(pFilter, L"RunOnHost", ThreadOnHost);
+    }
+
+    LogInfo(DRIVER_DEFAULT, "Filter: %p initializing ThreadOnHost=%d", FilterModuleContext, ThreadOnHost);
+
+    // Initialize the processing logic
+    if (ThreadOnHost)
+    {
+        // Ensure the device has the capabilities to support raw radio commands
+        if ((pFilter->DeviceCapabilities & OTLWF_DEVICE_CAP_RADIO) == 0)
+        {
+            LogError(DRIVER_DEFAULT, "Failed to start because device doesn't support raw radio commands");
+            NdisStatus = NDIS_STATUS_NOT_SUPPORTED;
+            goto exit;
+        }
+
+        pFilter->DeviceStatus = OTLWF_DEVICE_STATUS_RADIO_MODE;
         NtStatus = otLwfInitializeThreadMode(pFilter);
         if (!NT_SUCCESS(NtStatus))
         {
             LogError(DRIVER_DEFAULT, "otLwfInitializeThreadMode failed, %!STATUS!", NtStatus);
             NdisStatus = NDIS_STATUS_FAILURE;
+            pFilter->DeviceStatus = OTLWF_DEVICE_STATUS_UNINTIALIZED;
             goto exit;
         }
-        pFilter->InternalStateInitialized = TRUE;
     }
-    else if (pFilter->MiniportCapabilities.MiniportMode == OT_MP_MODE_THREAD)
+    else
     {
-        NtStatus = otLwfInitializeTunnelMode(pFilter);
+        // Ensure the device has the capabilities to support Thread commands
+        if ((pFilter->DeviceCapabilities & OTLWF_DEVICE_CAP_THREAD_1_0) == 0)
+        {
+            LogError(DRIVER_DEFAULT, "Failed to start because device doesn't support thread commands");
+            NdisStatus = NDIS_STATUS_NOT_SUPPORTED;
+            goto exit;
+        }
+
+        pFilter->DeviceStatus = OTLWF_DEVICE_STATUS_THREAD_MODE;
+        NtStatus = otLwfTunInitialize(pFilter);
         if (!NT_SUCCESS(NtStatus))
         {
             LogError(DRIVER_DEFAULT, "otLwfInitializeTunnelMode failed, %!STATUS!", NtStatus);
             NdisStatus = NDIS_STATUS_FAILURE;
+            pFilter->DeviceStatus = OTLWF_DEVICE_STATUS_UNINTIALIZED;
             goto exit;
         }
-        pFilter->InternalStateInitialized = TRUE;
     }
-    else
-    {
-        NT_ASSERT(FALSE);
-        NdisStatus = NDIS_STATUS_FAILURE;
-        goto exit;
-    }
-  
+
+    //
+    // Disable DAD and Neighbor advertisements
+    //
     key.Luid = pFilter->InterfaceLuid;
     NlInitializeInterfaceRw(&interfaceRw);
     interfaceRw.DadTransmits = 0;
     interfaceRw.SendUnsolicitedNeighborAdvertisementOnDad = FALSE;
   
-    NtStatus = 
+    NtStatus =
         NsiSetAllParameters(
-            NsiActive,  
-            NsiSetDefault,  
-            &NPI_MS_IPV6_MODULEID,  
-            NlInterfaceObject,   
-            &key,   
-            sizeof(key),   
-            &interfaceRw,   
+            NsiActive,
+            NsiSetDefault,
+            &NPI_MS_IPV6_MODULEID,
+            NlInterfaceObject,
+            &key,
+            sizeof(key),
+            &interfaceRw,
             sizeof(interfaceRw));
     if (!NT_SUCCESS(NtStatus))
     {
@@ -514,9 +583,9 @@ Return Value:
     }
 
     //
-    // Enable the data path
+    // Enable the external references to the filter
     //
-    otLwfEnableDataPath(pFilter);
+    ExReInitializeRundownProtection(&pFilter->ExternalRefs);
 
     //
     // If everything is OK, set the filter in running state.
@@ -534,18 +603,25 @@ exit:
     {
         pFilter->State = FilterPaused;
 
-        if (pFilter->InternalStateInitialized)
+        if (pFilter->DeviceStatus == OTLWF_DEVICE_STATUS_RADIO_MODE)
         {
-            pFilter->InternalStateInitialized = FALSE;
-            if (pFilter->MiniportCapabilities.MiniportMode == OT_MP_MODE_RADIO)
-            {
-                otLwfUninitializeThreadMode(pFilter);
-            }
-            else
-            {
-                otLwfUninitializeTunnelMode(pFilter);
-            }
+            otLwfUninitializeThreadMode(pFilter);
         }
+        else if (pFilter->DeviceStatus == OTLWF_DEVICE_STATUS_THREAD_MODE)
+        {
+            otLwfTunUninitialize(pFilter);
+        }
+
+        pFilter->DeviceStatus = OTLWF_DEVICE_STATUS_UNINTIALIZED;
+
+        // Clean up Spinel command processing
+        otLwfCmdUninitialize(pFilter);
+    }
+
+    // Free the buffer for the capabilities we queried
+    if (SpinelCapsDataBuffer != NULL)
+    {
+        FILTER_FREE_MEM(SpinelCapsDataBuffer);
     }
 
     LogFuncExitNDIS(DRIVER_DEFAULT, NdisStatus);
@@ -592,24 +668,49 @@ N.B.: When the filter is in Pausing state, it can still process OID requests,
 
     LogFuncEntryMsg(DRIVER_DEFAULT, "Filter: %p", FilterModuleContext);
 
-    // Reset the pause complete event
-    NdisResetEvent(&pFilter->FilterPauseComplete);
-
     //
     // Set the flag that the filter is going to pause
     //
     NT_ASSERT(pFilter->State == FilterRunning);
+    NdisAcquireSpinLock(&FilterListLock);
     pFilter->State = FilterPausing;
-    
+    NdisReleaseSpinLock(&FilterListLock);
+
+    //
+    // Send final notification of interface removal
+    //
     otLwfNotifyDeviceAvailabilityChange(pFilter, FALSE);
     LogInfo(DRIVER_DEFAULT, "Interface %!GUID! removal.", &pFilter->InterfaceGuid);
 
     //
-    // Disable the data path
+    // Disable external references and wait for existing calls to complete
     //
-    otLwfDisableDataPath(pFilter);
+    LogInfo(DRIVER_DEFAULT, "Disabling and waiting for external references to release");
+    ExWaitForRundownProtectionRelease(&pFilter->ExternalRefs);
+    LogInfo(DRIVER_DEFAULT, "External references released.");
 
+    //
+    // Clean up based on the device mode
+    //
+    if (pFilter->DeviceStatus == OTLWF_DEVICE_STATUS_RADIO_MODE)
+    {
+        otLwfUninitializeThreadMode(pFilter);
+    }
+    else if (pFilter->DeviceStatus == OTLWF_DEVICE_STATUS_THREAD_MODE)
+    {
+        otLwfTunUninitialize(pFilter);
+    }
+
+    pFilter->DeviceStatus = OTLWF_DEVICE_STATUS_UNINTIALIZED;
+
+    //
+    // Clean up the Spinel command processing
+    //
+    otLwfCmdUninitialize(pFilter);
+
+    //
     // Set the state back to Paused now that we are done
+    //
     pFilter->State = FilterPaused;
 
     LogFuncExitNDIS(DRIVER_DEFAULT, Status);
@@ -653,6 +754,7 @@ NOTE: called at <= DISPATCH_LEVEL
         // Cache the link state from the miniport
         memcpy(&pFilter->MiniportLinkState, LinkState, sizeof(NDIS_LINK_STATE));
     }
+    /* TODO
     else if (StatusIndication->StatusCode == NDIS_STATUS_OT_ENERGY_SCAN_RESULT)
     {
         NT_ASSERT(StatusIndication->StatusBufferSize == sizeof(OT_ENERGY_SCAN_RESULT));
@@ -663,11 +765,11 @@ NOTE: called at <= DISPATCH_LEVEL
         LogInfo(DRIVER_DEFAULT, "Filter: %p, completed energy scan: Rssi:%d, Status:%!NDIS_STATUS!", FilterModuleContext, ScanResult->MaxRssi, ScanResult->Status);
 
         // Marshal to OpenThread worker to indicate back
-        NT_ASSERT(pFilter->MiniportCapabilities.MiniportMode == OT_MP_MODE_RADIO);
+        NT_ASSERT(pFilter->DeviceStatus == OTLWF_DEVICE_STATUS_RADIO_MODE);
         otLwfEventProcessingIndicateEnergyScanResult(pFilter, ScanResult->MaxRssi);
     }
 
-exit:
+exit:*/
 
     NdisFIndicateStatus(pFilter->FilterHandle, StatusIndication);
     
@@ -704,106 +806,6 @@ otLwfIndicateLinkState(
     LogInfo(DRIVER_DEFAULT, "Interface %!GUID! new media state: %u", &pFilter->InterfaceGuid, MediaState);
   
     NdisFIndicateStatus(pFilter->FilterHandle, &StatusIndication);  
-}
-
-_Use_decl_annotations_
-VOID
-FilterDevicePnPEventNotify(
-    NDIS_HANDLE             FilterModuleContext,
-    PNET_DEVICE_PNP_EVENT   NetDevicePnPEvent
-    )
-/*++
-
-Routine Description:
-
-    Device PNP event handler
-
-Arguments:
-
-    FilterModuleContext         - our filter context
-    NetDevicePnPEvent           - a Device PnP event
-
-NOTE: called at PASSIVE_LEVEL
-
---*/
-{
-    PMS_FILTER             pFilter = (PMS_FILTER)FilterModuleContext;
-    NDIS_DEVICE_PNP_EVENT  DevicePnPEvent = NetDevicePnPEvent->DevicePnPEvent;
-#if DBG
-    BOOLEAN                bFalse = FALSE;
-#endif
-    
-    LogFuncEntryMsg(DRIVER_DEFAULT, "Filter: %p, DevicePnPEvent: %u", FilterModuleContext, NetDevicePnPEvent->DevicePnPEvent);
-
-    //
-    // The filter may do processing on the event here, including intercepting
-    // and dropping it entirely.  However, the sample does nothing with Device
-    // PNP events, except pass them down to the next lower* layer.  It is more
-    // efficient to omit the FilterDevicePnPEventNotify handler entirely if it
-    // does nothing, but it is included in this sample for illustrative purposes.
-    //
-    // * Trivia: Device PNP events percolate DOWN the stack, instead of upwards
-    // like status indications and Net PNP events.  So the next layer is the
-    // LOWER layer.
-    //
-
-    switch (DevicePnPEvent)
-    {
-        case NdisDevicePnPEventQueryRemoved:
-        case NdisDevicePnPEventRemoved:
-        case NdisDevicePnPEventSurpriseRemoved:
-        case NdisDevicePnPEventQueryStopped:
-        case NdisDevicePnPEventStopped:
-        case NdisDevicePnPEventPowerProfileChanged:
-        case NdisDevicePnPEventFilterListChanged:
-            break;
-
-        default:
-            LogError(DRIVER_DEFAULT, "FilterDevicePnPEventNotify: Invalid event.\n");
-            NT_ASSERT(bFalse);
-            break;
-    }
-
-    NdisFDevicePnPEventNotify(pFilter->FilterHandle, NetDevicePnPEvent);
-    
-    LogFuncExit(DRIVER_DEFAULT);
-}
-
-_Use_decl_annotations_
-NDIS_STATUS
-FilterNetPnPEvent(
-    NDIS_HANDLE              FilterModuleContext,
-    PNET_PNP_EVENT_NOTIFICATION NetPnPEventNotification
-    )
-/*++
-
-Routine Description:
-
-    Net PNP event handler
-
-Arguments:
-
-    FilterModuleContext         - our filter context
-    NetPnPEventNotification     - a Net PnP event
-
-NOTE: called at PASSIVE_LEVEL
-
---*/
-{
-    PMS_FILTER                pFilter = (PMS_FILTER)FilterModuleContext;
-    NDIS_STATUS               Status = NDIS_STATUS_SUCCESS;
-
-    //
-    // The filter may do processing on the event here, including intercepting
-    // and dropping it entirely.  However, the sample does nothing with Net PNP
-    // events, except pass them up to the next higher layer.  It is more
-    // efficient to omit the FilterNetPnPEvent handler entirely if it does
-    // nothing, but it is included in this sample for illustrative purposes.
-    //
-
-    Status = NdisFNetPnPEvent(pFilter->FilterHandle, NetPnPEventNotification);
-
-    return Status;
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)

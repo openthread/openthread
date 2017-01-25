@@ -35,108 +35,20 @@
 #ifndef _TUNNEL_H_
 #define _TUNNEL_H_
 
-typedef
-_IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
-(SPINEL_CMD_HANDLER)(
-    _In_ PMS_FILTER pFilter,
-    _In_ PVOID Context,
-    _In_ UINT Command,
-    _In_ spinel_prop_key_t Key,
-    _In_reads_bytes_(DataLength) const uint8_t* Data,
-    _In_ spinel_size_t DataLength
-    );
-
-typedef struct _SPINEL_CMD_HANDLER_ENTRY
-{
-    LIST_ENTRY          Link;
-    SPINEL_CMD_HANDLER *Handler;
-    PVOID               Context;
-    spinel_tid_t        TransactionId;
-} SPINEL_CMD_HANDLER_ENTRY;
-
 //
-// Initialization Functions
+// Initialization
 //
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NDIS_STATUS 
-otLwfInitializeTunnelMode(
+otLwfTunInitialize(
     _In_ PMS_FILTER pFilter
     );
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 void 
-otLwfUninitializeTunnelMode(
+otLwfTunUninitialize(
     _In_ PMS_FILTER pFilter
-    );
-
-//
-// Spinel Packet Functions
-//
-
-_IRQL_requires_max_(DISPATCH_LEVEL)
-BOOLEAN
-otLwfCancelCommandHandler(
-    _In_ PMS_FILTER pFilter,
-    _In_ BOOLEAN DispatchLevel,
-    _In_ spinel_tid_t tid
-    );
-
-_IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
-otLwfSendTunnelCommandWithHandlerV(
-    _In_ PMS_FILTER pFilter,
-    _In_opt_ SPINEL_CMD_HANDLER *Handler,
-    _In_opt_ PVOID HandlerContext,
-    _Out_opt_ spinel_tid_t *pTid,
-    _In_ UINT Command,
-    _In_ spinel_prop_key_t Key,
-    _In_ ULONG MaxDataLength,
-    _In_opt_ const char *pack_format, 
-    _In_opt_ va_list args
-    );
-
-_IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
-otLwfSendTunnelCommandWithHandler(
-    _In_ PMS_FILTER pFilter,
-    _In_opt_ SPINEL_CMD_HANDLER *Handler,
-    _In_opt_ PVOID HandlerContext,
-    _Out_opt_ spinel_tid_t *pTid,
-    _In_ UINT Command,
-    _In_ spinel_prop_key_t Key,
-    _In_ ULONG MaxDataLength,
-    _In_opt_ const char *pack_format, 
-    ...
-    );
-
-_IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
-otLwfSendTunnelPacket(
-    _In_ PMS_FILTER pFilter,
-    _In_ BOOLEAN DispatchLevel,
-    _In_ PNET_BUFFER IpNetBuffer,
-    _In_ BOOLEAN Secured
-    );
-
-_IRQL_requires_max_(DISPATCH_LEVEL)
-void 
-otLwfReceiveTunnelPacket(
-    _In_ PMS_FILTER pFilter,
-    _In_ BOOLEAN DispatchLevel,
-    _In_reads_bytes_(BufferLength) const PUCHAR Buffer,
-    _In_ ULONG BufferLength
-    );
-
-_IRQL_requires_max_(DISPATCH_LEVEL)
-void 
-otLwfProcessSpinelIPv6Packet(
-    _In_ PMS_FILTER pFilter,
-    _In_ BOOLEAN DispatchLevel,
-    _In_ BOOLEAN Secure,
-    _In_reads_bytes_(BufferLength) const uint8_t* Buffer,
-    _In_ UINT BufferLength
     );
 
 //
@@ -145,7 +57,7 @@ otLwfProcessSpinelIPv6Packet(
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
-otLwfSendTunnelCommandForIrp(
+otLwfTunSendCommandForIrp(
     _In_ PMS_FILTER pFilter,
     _In_ PIRP Irp,
     _In_opt_ SPINEL_IRP_CMD_HANDLER *Handler,
@@ -157,39 +69,38 @@ otLwfSendTunnelCommandForIrp(
     );
 
 //
-// Spinel Helper Functions
+// Value Callbacks
 //
 
-ThreadError
-SpinelStatusToThreadError(
-    spinel_status_t error
-    );
-
-BOOLEAN
-try_spinel_datatype_unpack(
-    const uint8_t *data_in,
-    spinel_size_t data_len,
-    const char *pack_format,
-    ...
-    );
-
-_IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
-otLwfGetTunProp(
+_IRQL_requires_max_(DISPATCH_LEVEL)
+void
+otLwfTunValueIs(
     _In_ PMS_FILTER pFilter,
-    _Out_opt_ PVOID *DataBuffer,
-    _In_ spinel_prop_key_t Key,
-    _In_ const char *pack_format, 
-    ...
+    _In_ BOOLEAN DispatchLevel,
+    _In_ spinel_prop_key_t key,
+    _In_reads_bytes_(value_data_len) const uint8_t* value_data_ptr,
+    _In_ spinel_size_t value_data_len
     );
 
-_IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
-otLwfSetTunProp(
+_IRQL_requires_max_(DISPATCH_LEVEL)
+void
+otLwfTunValueInserted(
     _In_ PMS_FILTER pFilter,
-    _In_ spinel_prop_key_t Key,
-    _In_ const char *pack_format, 
-    ...
+    _In_ BOOLEAN DispatchLevel,
+    _In_ spinel_prop_key_t key,
+    _In_reads_bytes_(value_data_len) const uint8_t* value_data_ptr,
+    _In_ spinel_size_t value_data_len
+    );
+
+// Called in response to receiving a Spinel Ip6 packet command
+_IRQL_requires_max_(DISPATCH_LEVEL)
+void 
+otLwfTunReceiveIp6Packet(
+    _In_ PMS_FILTER pFilter,
+    _In_ BOOLEAN DispatchLevel,
+    _In_ BOOLEAN Secure,
+    _In_reads_bytes_(BufferLength) const uint8_t* Buffer,
+    _In_ UINT BufferLength
     );
 
 #endif  //_TUNNEL_H_

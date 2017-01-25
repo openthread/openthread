@@ -132,14 +132,6 @@ otLwfFindAndRefInterface(
     _In_ PGUID  InterfaceGuid
     );
 
-// Releases a successfully referenced Thread interface from a previous 
-// call to otLwfFindAndRefInterface.
-_IRQL_requires_max_(PASSIVE_LEVEL)
-VOID
-otLwfReleaseInterface(
-    _In_ PMS_FILTER pFilter
-    );
-
 //
 // Notification Type and Functions
 //
