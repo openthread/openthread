@@ -31,41 +31,26 @@ It plugs into the networking stack, binding to a protocol driver (TCPIP) at the 
 at the bottom. It's job is to take IPv6 packets from TCPIP and pass the necessary data down to the Miniport
 in order to send the packets out over the network.
 
-`otLwf.sys` supports operating in two modes: Full Stack and Tunnel. Full Stack mode is where OpenThread is 
-running on the host (in Windows) and a simple radio device is connected externally. Tunnel mode is where 
+`otLwf.sys` supports operating in two modes: Full Stack and Tunnel. Full Stack mode is where OpenThread is
+running on the host (in Windows) and a simple radio device is connected externally. Tunnel mode is where
 OpenThread is running on the external device and Windows is merely a pass through for commands and packets.
 
-In Full Stack mode, `otLwf.sys` hosts the OpenThread core library and manages serializing all Windows
-networking inputs to the OpenThread APIs. It maintains one dedicated worker thread for running all
-OpenThread related logic, including IOCTL commands, data packets, and basic OpenThread processing logic.
-`otLwf.sys` uses [OID][oid]s to send control path commands (channel, panid, etc.) and [NBL][nbl]s to send and
-receive the 802.15.4 data packets to/from the miniport. The miniport then passes this information, in the
-proper format, off to the radio device.
+In both cases, `otLwf.sys` uses the Spinel command interface for interacting with the connected device. When operating
+in Full Stack mode, `otLwf.sys` uses only the low level PHY/MAC commands. In Tunnel mode, it uses the higher layer
+Spinel commands and lets the device manage the actual Thread stack.
 
-In Tunnel mode, `otLwf.sys` mainly just manages the serialization of Windows networking inputs to 
-Spinel commands (and back). The Spinel commands are passed down (in [NBL][nbl]s) to the miniport which will then pass
-the commands (correctly encoded) to whatever device is externally connected.
+### ottmp.sys ###
 
-### 802.15.4 PHY Miniport ###
+This is the component responsible passing the Spinel commands from `otLwf.sys` down to the device. It is responsible
+for abstracting the actual mechanism (USB, Serial, SPI) used for communicating with the device. It handles the device
+arrival/removal and the encoding/decoding of data when communicating with it. The current implementation only handles
+Serial devices.
 
-This is the component responsible for taking the [OID][oid]s and [NBL][nbl]s from `otLwf.sys` and sending the
-information down to the matching 802.15.4 PHY Device, in the proper format. In other words, it's job is mainly
-handling the arrival/removal of the physical device and serialization of the info in the proper format for
-the device it's paired with.
+### Device ###
 
-### Thread Miniport ###
-
-This is the component for taking the [NBL][nbl]s, containing Spinel commands, from `otLwf.sys` and sending them
-down to the matching OpenThread (NCP) Device. Again, like the PHY miniport, it's job is handling device arrival/removal
-and command serialization.
-
-### 802.15.4 PHY Device ###
-
-This is a 'simple' device, exposing a mostly PHY layer interface (with a few MAC layer constructs).
-
-### OpenThread (NCP) Device ###
-
-This is a 'full solution' device, that exposes the entire OpenThread interface via NCP.
+Windows supports OpenThread devices that implement the Spinel protocol. It supports devices that support either the raw
+link-layer PHY/MAC commands and devices that support the Thread commands (and devices that support both). By default,
+Windows will operate in Full Stack mode, only sending raw link-layer commands.
 
 ## Build ##
 
