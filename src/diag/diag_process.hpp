@@ -94,6 +94,7 @@ private:
     static uint32_t sTxPackets;
     static RadioPacket *sTxPacket;
     static otInstance *sContext;
+    static bool sRepeatActive;
 };
 
 }  // namespace Diagnostics

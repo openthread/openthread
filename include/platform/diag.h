@@ -39,6 +39,10 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include <platform/radio.h>
+
+#include <openthread-types.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -57,15 +61,16 @@ extern "C" {
 /**
  * Process the platform specific diagnostics features.
  *
+ * @param[in] aInstance  The OpenThread instance for current request.
  * @param[in] argc  The argument counter of diagnostics command line.
  * @param[in] argv  The argument vector of diagnostics command line.
  * @param[out] aOutput  The diagnostics execution result.
  * @param[in] aOutputMaxLen  The output buffer size.
  */
-void otPlatDiagProcess(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
+void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
 
 /**
- *  Set diagnostics mode.
+ * Set diagnostics mode.
  */
 void otPlatDiagModeSet(bool aMode);
 
@@ -73,6 +78,30 @@ void otPlatDiagModeSet(bool aMode);
  * Get diagnostics mode.
  */
 bool otPlatDiagModeGet(void);
+
+/**
+ * Set diagnostics channel
+ */
+void otPlatDiagChannelSet(uint8_t aChannel);
+
+/**
+ * Set diagnostics tx power
+ */
+void otPlatDiagTxPowerSet(int8_t aTxPower);
+
+/**
+ * Process the platform specific received frame parsing.
+ * @param[in] aInstance  The OpenThread instance for current request.
+ * @param[in] aFrame  The received radio frame.
+ * @param[in] aError  The received radio frame status.
+ */
+void otPlatDiagRadioReceived(otInstance *aInstance, RadioPacket *aFrame, ThreadError aError);
+
+/**
+ * Process the platform specific alarm callback.
+ * @param[in] aInstance  The OpenThread instance for current request.
+ */
+void otPlatDiagAlarmCallback(otInstance *aInstance);
 
 #ifdef __cplusplus
 }  // end of extern "C"

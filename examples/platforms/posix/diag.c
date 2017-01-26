@@ -39,16 +39,19 @@
 #include <platform/alarm.h>
 
 /**
- * diagnostics mode flag.
+ * Diagnostics mode variables.
  *
  */
 static bool sDiagMode = false;
+static uint8_t sChannel = 20;
+static int8_t sTxPower = 0;
 
-void otPlatDiagProcess(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
-    // no more diagnostics features for Posix platform
+    // Add more plarform specific diagnostics features here.
     snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", argv[0]);
-    (void)argc;
+    (void) argc;
+    (void) aInstance;
 }
 
 void otPlatDiagModeSet(bool aMode)
@@ -59,4 +62,22 @@ void otPlatDiagModeSet(bool aMode)
 bool otPlatDiagModeGet()
 {
     return sDiagMode;
+}
+
+void otPlatDiagChannelSet(uint8_t aChannel){
+    sChannel = aChannel;
+}
+
+void otPlatDiagTxPowerSet(int8_t aTxPower){
+    sTxPower = aTxPower;
+}
+
+void otPlatDiagRadioReceived(otInstance *aInstance, RadioPacket *aFrame, ThreadError aError){
+    (void) aInstance;
+    (void) aFrame;
+    (void) aError;
+}
+
+void otPlatDiagAlarmCallback(otInstance *aInstance){
+    (void) aInstance;
 }
