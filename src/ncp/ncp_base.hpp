@@ -519,6 +519,8 @@ private:
 
     uint16_t mDroppedReplyTidBitSet;
 
+    spinel_tid_t mNextExpectedTid;
+
     bool mAllowLocalNetworkDataChange;
     bool mRequireJoinExistingNetwork;
     bool mIsRawStreamEnabled;
@@ -526,6 +528,7 @@ private:
 
     uint32_t mFramingErrorCounter;             // Number of improperly formed received spinel frames.
     uint32_t mRxSpinelFrameCounter;            // Number of received (inbound) spinel frames.
+    uint32_t mRxSpinelOutOfOrderTidCounter;    // Number of out of order received spinel frames (tid increase > 1).
     uint32_t mTxSpinelFrameCounter;            // Number of sent (outbound) spinel frames.
     uint32_t mInboundSecureIpFrameCounter;     // Number of secure inbound data/IP frames.
     uint32_t mInboundInsecureIpFrameCounter;   // Number of insecure inbound data/IP frames.

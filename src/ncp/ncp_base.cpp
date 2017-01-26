@@ -478,6 +478,7 @@ NcpBase::NcpBase(otInstance *aInstance):
 #endif
     mDroppedReplyTid(0),
     mDroppedReplyTidBitSet(0),
+    mNextExpectedTid(0),
     mAllowLocalNetworkDataChange(false),
     mRequireJoinExistingNetwork(false),
     mIsRawStreamEnabled(false),
@@ -485,6 +486,7 @@ NcpBase::NcpBase(otInstance *aInstance):
 
     mFramingErrorCounter(0),
     mRxSpinelFrameCounter(0),
+    mRxSpinelOutOfOrderTidCounter(0),
     mTxSpinelFrameCounter(0),
     mInboundSecureIpFrameCounter(0),
     mInboundInsecureIpFrameCounter(0),
@@ -930,10 +932,19 @@ void NcpBase::HandleReceive(const uint8_t *buf, uint16_t bufLength)
     spinel_tid_t tid = 0;
 
     parsedLength = spinel_datatype_unpack(buf, bufLength, "CiD", &header, &command, &arg_ptr, &arg_len);
+    tid = SPINEL_HEADER_GET_TID(header);
 
     if (parsedLength == bufLength)
     {
         errorCode = HandleCommand(header, command, arg_ptr, static_cast<uint16_t>(arg_len));
+
+        // Check if we may have missed a `tid` in the sequence.
+        if ((mNextExpectedTid != 0) && (tid != mNextExpectedTid))
+        {
+            mRxSpinelOutOfOrderTidCounter++;
+        }
+
+        mNextExpectedTid = SPINEL_GET_NEXT_TID(tid);
     }
     else
     {
@@ -953,8 +964,6 @@ void NcpBase::HandleReceive(const uint8_t *buf, uint16_t bufLength)
         // The first/next dropped TID value in the set is stored in
         // `mDroppedReplyTid` (with value zero indicating that there
         // is no dropped reply).
-
-        tid = SPINEL_HEADER_GET_TID(header);
 
         if (tid != 0)
         {
@@ -2793,6 +2802,10 @@ ThreadError NcpBase::GetPropertyHandler_NCP_CNTR(uint8_t header, spinel_prop_key
 
     case SPINEL_PROP_CNTR_RX_SPINEL_TOTAL:
         value = mRxSpinelFrameCounter;
+        break;
+
+    case SPINEL_PROP_CNTR_RX_SPINEL_OUT_OF_ORDER_TID:
+        value = mRxSpinelOutOfOrderTidCounter;
         break;
 
     case SPINEL_PROP_CNTR_RX_SPINEL_ERR:
