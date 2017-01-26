@@ -123,7 +123,7 @@ class Router : public Neighbor
 public:
     uint8_t mNextHop;             ///< The next hop towards this router
     uint8_t mLinkQualityOut : 2;  ///< The link quality out for this router
-    uint8_t mCost : 4;            ///< The cost to this router
+    uint8_t mCost : 4;            ///< The cost to this router via neighbor router
     bool    mAllocated : 1;       ///< Indicates whether or not this entry is allocated
     bool    mReclaimDelay : 1;    ///< Indicates whether or not this entry is waiting to be reclaimed
 };

@@ -328,7 +328,7 @@ public:
      * @returns A RLOC16 of the next hop if a route is known, kInvalidRloc16 otherwise.
      *
      */
-    uint16_t GetNextHop(uint16_t aDestination) const;
+    uint16_t GetNextHop(uint16_t aDestination);
 
     /**
      * This method returns the NETWORK_ID_TIMEOUT value.

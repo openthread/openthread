@@ -1254,15 +1254,27 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
     // initialize Mesh header
     if (mAddMeshHeader)
     {
-        // Calculate the number of predicted hops.
-        hopsLeft = mNetif.GetMle().GetRouteCost(mMeshDest);
-        hopsLeft += mNetif.GetMle().GetLinkCost(mNetif.GetMle().GetRouterId(mNetif.GetMle().GetNextHop(mMeshDest)));
-
-        // The hopsLft field MUST be incremented by one if the device is not
-        // an active Router.
-        if (!mNetif.GetMle().IsActiveRouter(mMeshSource))
+        if (mNetif.GetMle().GetDeviceState() == Mle::kDeviceStateChild)
         {
-            hopsLeft += 1;
+            // REED sets hopsLeft to max (16) + 1. It does not know the route cost.
+            hopsLeft = Mle::kMaxRouteCost + 1;
+        }
+        else
+        {
+            // Calculate the number of predicted hops.
+            hopsLeft = mNetif.GetMle().GetRouteCost(mMeshDest);
+
+            if (hopsLeft != Mle::kMaxRouteCost)
+            {
+                hopsLeft += mNetif.GetMle().GetLinkCost(
+                                mNetif.GetMle().GetRouterId(mNetif.GetMle().GetNextHop(mMeshDest)));
+            }
+            else
+            {
+                // In case there is no route to the destination router (only link).
+                hopsLeft = mNetif.GetMle().GetLinkCost(mNetif.GetMle().GetRouterId(mMeshDest));
+            }
+
         }
 
         // The hopsLft field MUST be incremented by one if the destination RLOC16
