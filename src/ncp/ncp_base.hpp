@@ -304,6 +304,7 @@ private:
     ThreadError GetPropertyHandler_MAC_15_4_LADDR(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_15_4_SADDR(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_MAC_EXTENDED_ADDR(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_NET_IF_UP(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_NET_STACK_UP(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_NET_ROLE(uint8_t header, spinel_prop_key_t key);

@@ -975,6 +975,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_PHY_RSSI";
         break;
 
+    case SPINEL_PROP_MAC_EXTENDED_ADDR:
+        ret = "SPINEL_PROP_MAC_EXTENDED_ADDR";
+        break;
+
     case SPINEL_PROP_MAC_RAW_STREAM_ENABLED:
         ret = "PROP_MAC_RAW_STREAM_ENABLED";
         break;
