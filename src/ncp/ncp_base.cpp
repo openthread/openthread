@@ -489,6 +489,7 @@ NcpBase::NcpBase(otInstance *aInstance):
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     mCurTransmintTID(0),
     mCurReceiveChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL),
+    mCurScanChannel(-1),
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
     mFramingErrorCounter(0),
@@ -844,6 +845,30 @@ void NcpBase::LinkRawTransmitDone(RadioPacket *, bool aFramePending, ThreadError
 
     // Make sure we are back listening on the original receive channel,
     // since the transmit could have been on a different channel.
+    otLinkRawReceive(mInstance, mCurReceiveChannel, &NcpBase::LinkRawReceiveDone);
+}
+
+void NcpBase::LinkRawEnergyScanDone(otInstance *, int8_t aEnergyScanMaxRssi)
+{
+    sNcpContext->LinkRawEnergyScanDone(aEnergyScanMaxRssi);
+}
+
+void NcpBase::LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi)
+{
+    NcpBase::SendPropertyUpdate(
+        SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+        SPINEL_CMD_PROP_VALUE_IS,
+        SPINEL_PROP_MAC_ENERGY_SCAN_RESULT,
+        "Cc",
+        mCurScanChannel,
+        aEnergyScanMaxRssi
+    );
+
+    // Clear current scan channel
+    mCurScanChannel = -1;
+
+    // Make sure we are back listening on the original receive channel,
+    // since the energy scan could have been on a different channel.
     otLinkRawReceive(mInstance, mCurReceiveChannel, &NcpBase::LinkRawReceiveDone);
 }
 
@@ -1778,6 +1803,21 @@ ThreadError NcpBase::GetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_pr
 {
     ThreadError errorCode = kThreadError_None;
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+    if (otLinkRawIsEnabled(mInstance))
+    {
+        errorCode = SendPropertyUpdate(
+                        header,
+                        SPINEL_CMD_PROP_VALUE_IS,
+                        key,
+                        SPINEL_DATATYPE_UINT8_S,
+                        mCurScanChannel == -1 ?
+                            SPINEL_SCAN_STATE_IDLE :
+                            SPINEL_SCAN_STATE_ENERGY
+                    );
+    }
+    else
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
     if (otIsActiveScanInProgress(mInstance))
     {
         errorCode = SendPropertyUpdate(
@@ -3444,13 +3484,22 @@ ThreadError NcpBase::SetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_pr
             break;
 
         case SPINEL_SCAN_STATE_BEACON:
-            errorCode = otActiveScan(
-                            mInstance,
-                            mChannelMask,
-                            mScanPeriod,
-                            &HandleActiveScanResult_Jump,
-                            this
-                        );
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+            if (otLinkRawIsEnabled(mInstance))
+            {
+                errorCode = kThreadError_NotImplemented;
+            }
+            else
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+            {
+                errorCode = otActiveScan(
+                                mInstance,
+                                mChannelMask,
+                                mScanPeriod,
+                                &HandleActiveScanResult_Jump,
+                                this
+                            );
+            }
 
             if (errorCode == kThreadError_None)
             {
@@ -3460,13 +3509,53 @@ ThreadError NcpBase::SetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_pr
             break;
 
         case SPINEL_SCAN_STATE_ENERGY:
-            errorCode = otEnergyScan(
-                mInstance,
-                mChannelMask,
-                mScanPeriod,
-                &HandleEnergyScanResult_Jump,
-                this
-            );
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+            if (otLinkRawIsEnabled(mInstance))
+            {
+                if (mCurScanChannel == -1)
+                {
+                    uint8_t scanChannel;
+                    uint16_t scanDuration;
+
+                    parsedLength = spinel_datatype_unpack(
+                        value_ptr + parsedLength,
+                        value_len - parsedLength,
+                        SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT16_S,
+                        &scanChannel,
+                        &scanDuration
+                    );
+
+                    if (parsedLength > 0)
+                    {
+                        mCurScanChannel = scanChannel;
+                        errorCode = otLinkRawEnergyScan(
+                                        mInstance,
+                                        scanChannel,
+                                        scanDuration,
+                                        LinkRawEnergyScanDone
+                                    );
+                    }
+                    else
+                    {
+                        errorCode = kThreadError_Parse;
+                    }
+                }
+                else
+                {
+                    errorCode = kThreadError_InvalidState;
+                }
+            }
+            else
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+            {
+                errorCode = otEnergyScan(
+                                mInstance,
+                                mChannelMask,
+                                mScanPeriod,
+                                &HandleEnergyScanResult_Jump,
+                                this
+                            );
+            }
 
             if (errorCode == kThreadError_None)
             {

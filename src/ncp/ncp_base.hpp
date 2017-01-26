@@ -205,6 +205,13 @@ private:
 
     void LinkRawTransmitDone(RadioPacket *aPacket, bool aFramePending, ThreadError aError);
 
+    /**
+     * Trampoline for LinkRawEnergyScanDone().
+     */
+    static void LinkRawEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi);
+
+    void LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi);
+
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
     static void HandleNetifStateChanged(uint32_t flags, void *context);
@@ -551,6 +558,7 @@ private:
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     uint8_t mCurTransmintTID;
     uint8_t mCurReceiveChannel;
+    int8_t  mCurScanChannel;
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
     uint32_t mFramingErrorCounter;             // Number of improperly formed received spinel frames.
