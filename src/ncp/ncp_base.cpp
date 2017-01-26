@@ -3517,7 +3517,7 @@ ThreadError NcpBase::SetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_pr
 
                     parsedLength = spinel_datatype_unpack(
                         value_ptr + parsedLength,
-                        value_len - parsedLength,
+                        (spinel_size_t)(value_len - parsedLength),
                         SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT16_S,
                         &scanChannel,
                         &scanDuration
@@ -3525,7 +3525,7 @@ ThreadError NcpBase::SetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_pr
 
                     if (parsedLength > 0)
                     {
-                        mCurScanChannel = scanChannel;
+                        mCurScanChannel = (int8_t)scanChannel;
                         errorCode = otLinkRawEnergyScan(
                                         mInstance,
                                         scanChannel,
