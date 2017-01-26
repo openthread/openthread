@@ -342,6 +342,12 @@ void Leader::SendCommissioningGetResponse(const Coap::Header &aRequestHeader, co
         }
     }
 
+    if (message->GetLength() == responseHeader.GetLength())
+    {
+        // no payload, remove coap payload marker
+        message->SetLength(message->GetLength() - 1);
+    }
+
     SuccessOrExit(error = mNetif.GetCoapServer().SendMessage(*message, aMessageInfo));
 
     otLogInfoMeshCoP("sent commissioning dataset get response");
