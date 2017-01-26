@@ -2697,6 +2697,8 @@ ThreadError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::M
     StatusTlv status;
     ModeTlv mode;
     ResponseTlv response;
+    LinkFrameCounterTlv linkFrameCounter;
+    MleFrameCounterTlv mleFrameCounter;
     LeaderDataTlv leaderData;
     SourceAddressTlv sourceAddress;
     TimeoutTlv timeout;
@@ -2726,6 +2728,23 @@ ThreadError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::M
         VerifyOrExit(memcmp(response.GetResponse(), mParentRequest.mChallenge,
                             sizeof(mParentRequest.mChallenge)) == 0,
                      error = kThreadError_Drop);
+
+        SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLinkFrameCounter, sizeof(linkFrameCounter),
+                                          linkFrameCounter));
+        VerifyOrExit(linkFrameCounter.IsValid(), error = kThreadError_Parse);
+
+        if (Tlv::GetTlv(aMessage, Tlv::kMleFrameCounter, sizeof(mleFrameCounter), mleFrameCounter) ==
+            kThreadError_None)
+        {
+            VerifyOrExit(mleFrameCounter.IsValid(), error = kThreadError_Parse);
+        }
+        else
+        {
+            mleFrameCounter.SetFrameCounter(linkFrameCounter.GetFrameCounter());
+        }
+
+        mParent.mValid.mLinkFrameCounter = linkFrameCounter.GetFrameCounter();
+        mParent.mValid.mMleFrameCounter = mleFrameCounter.GetFrameCounter();
 
         SetStateChild(GetRloc16());
 
