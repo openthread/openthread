@@ -65,7 +65,7 @@ extern "C" {
 /**
  * Initialize the platform implemented message pool.
  *
- * @param[in] aMinNumFreeBuffers   An int containing the minimum number of free buffers desired by OpenThread.
+ * @param[in] aMinNumFreeBuffers   An uint16 containing the minimum number of free buffers desired by OpenThread.
  * @param[in] aBufferSize          The size in bytes of a Buffer object.
  *
  */
