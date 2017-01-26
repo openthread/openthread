@@ -556,7 +556,7 @@ private:
     bool mDisableStreamWrite;
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    uint8_t mCurTransmintTID;
+    uint8_t mCurTransmitTID;
     uint8_t mCurReceiveChannel;
     int8_t  mCurScanChannel;
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API

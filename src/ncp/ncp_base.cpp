@@ -231,6 +231,7 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     { SPINEL_PROP_PHY_ENABLED, &NcpBase::SetPropertyHandler_PHY_ENABLED },
+    { SPINEL_PROP_STREAM_RAW, &NcpBase::SetPropertyHandler_STREAM_RAW },
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
     { SPINEL_PROP_PHY_TX_POWER, &NcpBase::SetPropertyHandler_PHY_TX_POWER },
     { SPINEL_PROP_PHY_CHAN, &NcpBase::SetPropertyHandler_PHY_CHAN },
@@ -241,9 +242,6 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_MAC_SCAN_PERIOD, &NcpBase::SetPropertyHandler_MAC_SCAN_PERIOD },
     { SPINEL_PROP_MAC_15_4_PANID, &NcpBase::SetPropertyHandler_MAC_15_4_PANID },
     { SPINEL_PROP_MAC_RAW_STREAM_ENABLED, &NcpBase::SetPropertyHandler_MAC_RAW_STREAM_ENABLED },
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    { SPINEL_PROP_STREAM_RAW, &NcpBase::SetPropertyHandler_STREAM_RAW },
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
     { SPINEL_PROP_NET_IF_UP, &NcpBase::SetPropertyHandler_NET_IF_UP },
     { SPINEL_PROP_NET_STACK_UP, &NcpBase::SetPropertyHandler_NET_STACK_UP },
@@ -487,7 +485,7 @@ NcpBase::NcpBase(otInstance *aInstance):
     mIsRawStreamEnabled(false),
     mDisableStreamWrite(false),
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    mCurTransmintTID(0),
+    mCurTransmitTID(0),
     mCurReceiveChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL),
     mCurScanChannel(-1),
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
@@ -828,10 +826,10 @@ void NcpBase::LinkRawTransmitDone(otInstance *, RadioPacket *aPacket, bool aFram
 
 void NcpBase::LinkRawTransmitDone(RadioPacket *, bool aFramePending, ThreadError aError)
 {
-    if (mCurTransmintTID)
+    if (mCurTransmitTID)
     {
         SendPropertyUpdate(
-            SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0 | mCurTransmintTID,
+            SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0 | mCurTransmitTID,
             SPINEL_CMD_PROP_VALUE_IS,
             SPINEL_PROP_LAST_STATUS,
             "ib",
@@ -840,7 +838,7 @@ void NcpBase::LinkRawTransmitDone(RadioPacket *, bool aFramePending, ThreadError
         );
 
         // Clear cached transmit TID
-        mCurTransmintTID = 0;
+        mCurTransmitTID = 0;
     }
 
     // Make sure we are back listening on the original receive channel,
@@ -3670,7 +3668,8 @@ ThreadError NcpBase::SetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t header, s
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
-ThreadError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,uint16_t value_len)
+ThreadError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                   uint16_t value_len)
 {
     ThreadError errorCode = kThreadError_None;
 
@@ -3695,7 +3694,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t header, spinel_prop_k
         if (parsedLength > 0 && frame_len <= kMaxPHYPacketSize)
         {
             // Cache the transaction ID for async response
-            mCurTransmintTID = SPINEL_HEADER_GET_TID(header);
+            mCurTransmitTID = SPINEL_HEADER_GET_TID(header);
 
             // Update packet buffer and length
             packet->mLength = static_cast<uint8_t>(frame_len);
