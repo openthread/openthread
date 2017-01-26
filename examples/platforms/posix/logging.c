@@ -34,7 +34,10 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-#include <time.h>
+
+#ifndef _WIN32
+#include <syslog.h>
+#endif
 
 #include <platform/logging.h>
 
@@ -48,8 +51,6 @@
 
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
-    struct timeval tv;
-    char timeString[40];
     char logString[512];
     unsigned int offset;
     int charsWritten;
@@ -57,10 +58,7 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
 
     offset = 0;
 
-    gettimeofday(&tv, NULL);
-    strftime(timeString, sizeof(timeString), "%Y-%m-%d %H:%M:%S", localtime(&tv.tv_sec));
-
-    LOG_PRINTF("%s.%06d ", timeString, (uint32_t)tv.tv_usec);
+    LOG_PRINTF("[%d] ", NODE_ID);
 
     va_start(args, aFormat);
     charsWritten = vsnprintf(&logString[offset], sizeof(logString) - offset, aFormat, args);
@@ -69,7 +67,11 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     VerifyOrExit(charsWritten >= 0, logString[offset] = 0);
 
 exit:
-    fprintf(stderr, "%s\r\n", logString);
+#ifndef _WIN32
+    syslog(LOG_CRIT, "%s", logString);
+#else
+    printf("%s\r\n", logString);
+#endif
 
     (void)aLogLevel;
     (void)aLogRegion;

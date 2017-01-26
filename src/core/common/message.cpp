@@ -372,6 +372,21 @@ void Message::SetSubType(uint8_t aSubType)
     mInfo.mSubType = aSubType;
 }
 
+bool Message::IsSubTypeMle(void) const
+{
+    bool rval = false;
+
+    if (mInfo.mSubType == kSubTypeMleAnnounce ||
+        mInfo.mSubType == kSubTypeMleDiscoverRequest ||
+        mInfo.mSubType == kSubTypeMleDiscoverResponse ||
+        mInfo.mSubType == kSubTypeMleGeneral)
+    {
+        rval = true;
+    }
+
+    return rval;
+}
+
 uint8_t Message::GetPriority(void) const
 {
     return mInfo.mPriority;
