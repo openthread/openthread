@@ -215,6 +215,7 @@ public:
         kSubTypeMleDiscoverResponse = 3,  ///< MLE Discover Response
         kSubTypeJoinerEntrust       = 4,  ///< Joiner Entrust
         kSubTypeMplRetransmission   = 5,  ///< MPL next retranmission message
+        kSubTypeMleGeneral          = 6,  ///< General MLE
     };
 
     enum
@@ -319,6 +320,15 @@ public:
      *
      */
     void SetSubType(uint8_t aSubType);
+
+    /**
+     * This method returns whether or not the message is of MLE subtype.
+     *
+     * @retval TRUE   If message is of MLE subtype.
+     * @retval FLASE  If message is not of MLE subtype.
+     *
+     */
+    bool IsSubTypeMle(void) const;
 
     /**
      * This method returns the message priority level.

@@ -988,7 +988,6 @@ ThreadError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::Mess
         // update routing table
         if (routerId != mRouterId && !IsRouterIdValid(router->mNextHop))
         {
-            router->mNextHop = routerId;
             ResetAdvertiseInterval();
         }
 
@@ -1404,10 +1403,12 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
                     if (route.GetRouteCost(routeCount) > 0)
                     {
                         mRouters[GetLeaderId()].mNextHop = routerId;
+                        mRouters[GetLeaderId()].mCost = route.GetRouteCost(routeCount);
                     }
                     else
                     {
                         mRouters[GetLeaderId()].mNextHop = kInvalidRouterId;
+                        mRouters[GetLeaderId()].mCost = 0;
                     }
 
                     break;
@@ -1542,35 +1543,31 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
 
                 if (!IsRouterIdValid(mRouters[i].mNextHop) || mRouters[i].mNextHop == aRouterId)
                 {
-                    // route has no nexthop or nexthop is neighbor
-                    newCost = cost + GetLinkCost(aRouterId);
+                    // route has no nexthop or nexthop is neighbor (sender)
 
-                    if (i == aRouterId)
+                    if (i != aRouterId)
                     {
-                        if (!IsRouterIdValid(mRouters[i].mNextHop))
+                        if (cost + GetLinkCost(aRouterId) <= kMaxRouteCost)
                         {
-                            ResetAdvertiseInterval();
-                        }
+                            if (!IsRouterIdValid(mRouters[i].mNextHop) && GetLinkCost(i) >= kMaxRouteCost)
+                            {
+                                ResetAdvertiseInterval();
+                            }
 
-                        mRouters[i].mNextHop = aRouterId;
-                        mRouters[i].mCost = 0;
-                    }
-                    else if (newCost <= kMaxRouteCost)
-                    {
-                        if (!IsRouterIdValid(mRouters[i].mNextHop))
+                            mRouters[i].mNextHop = aRouterId;
+                            mRouters[i].mCost = cost;
+                        }
+                        else if (mRouters[i].mNextHop == aRouterId)
                         {
-                            ResetAdvertiseInterval();
-                        }
+                            if (GetLinkCost(i) >= kMaxRouteCost)
+                            {
+                                ResetAdvertiseInterval();
+                            }
 
-                        mRouters[i].mNextHop = aRouterId;
-                        mRouters[i].mCost = cost;
-                    }
-                    else if (IsRouterIdValid(mRouters[i].mNextHop))
-                    {
-                        ResetAdvertiseInterval();
-                        mRouters[i].mNextHop = kInvalidRouterId;
-                        mRouters[i].mCost = 0;
-                        mRouters[i].mLastHeard = Timer::GetNow();
+                            mRouters[i].mNextHop = kInvalidRouterId;
+                            mRouters[i].mCost = 0;
+                            mRouters[i].mLastHeard = Timer::GetNow();
+                        }
                     }
                 }
                 else
@@ -1578,7 +1575,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
                     curCost = mRouters[i].mCost + GetLinkCost(mRouters[i].mNextHop);
                     newCost = cost + GetLinkCost(aRouterId);
 
-                    if (newCost < curCost || (newCost == curCost && i == aRouterId))
+                    if (newCost < curCost && i != aRouterId)
                     {
                         mRouters[i].mNextHop = aRouterId;
                         mRouters[i].mCost = cost;
@@ -1637,7 +1634,11 @@ ThreadError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::M
     VerifyOrExit(GetLeaderAge() < mNetworkIdTimeout, error = kThreadError_Drop);
 
     // 3. Its current routing path cost to the Leader is infinite.
-    VerifyOrExit(IsRouterIdValid(mRouters[GetLeaderId()].mNextHop), error = kThreadError_Drop);
+    VerifyOrExit(GetDeviceState() == kDeviceStateLeader ||
+                 GetLinkCost(GetLeaderId()) < kMaxRouteCost ||
+                 (GetDeviceState() == kDeviceStateChild && mRouters[GetLeaderId()].mCost + 1 < kMaxRouteCost) ||
+                 (mRouters[GetLeaderId()].mCost + GetLinkCost(mRouters[GetLeaderId()].mNextHop) < kMaxRouteCost),
+                 error = kThreadError_Drop);
 
     macAddr.Set(aMessageInfo.GetPeerAddr());
 
@@ -1808,9 +1809,13 @@ void MleRouter::HandleStateUpdateTimer(void)
             {
                 mRouters[i].mState = Neighbor::kStateInvalid;
                 mRouters[i].mLinkInfo.Clear();
-                mRouters[i].mNextHop = kInvalidRouterId;
                 mRouters[i].mLinkQualityOut = 0;
                 mRouters[i].mLastHeard = Timer::GetNow();
+
+                if (mRouters[i].mNextHop == kInvalidRouterId)
+                {
+                    ResetAdvertiseInterval();
+                }
             }
         }
 
@@ -1819,6 +1824,7 @@ void MleRouter::HandleStateUpdateTimer(void)
             if (mRouters[i].mAllocated)
             {
                 if (!IsRouterIdValid(mRouters[i].mNextHop) &&
+                    GetLinkCost(i) >= kMaxRouteCost &&
                     (Timer::GetNow() - mRouters[i].mLastHeard) >= Timer::SecToMsec(kMaxLeaderToRouterTimeout))
                 {
                     ReleaseRouterId(i);
@@ -3209,23 +3215,43 @@ exit:
     return rval;
 }
 
-uint16_t MleRouter::GetNextHop(uint16_t aDestination) const
+uint16_t MleRouter::GetNextHop(uint16_t aDestination)
 {
+    uint8_t destinationId = GetRouterId(aDestination);
+    uint8_t routeCost;
+    uint8_t linkCost;
     uint16_t rval = Mac::kShortAddrInvalid;
     const Router *router;
+    const Router *nextHop;
 
     if (mDeviceState == kDeviceStateChild)
     {
         ExitNow(rval = Mle::GetNextHop(aDestination));
     }
 
-    router = GetRouter(GetRouterId(aDestination));
+    // The frame is destined to a child
+    if (destinationId == mRouterId)
+    {
+        ExitNow(rval = aDestination);
+    }
+
+    router = GetRouter(destinationId);
     VerifyOrExit(router != NULL,);
 
-    router = GetRouter(router->mNextHop);
-    VerifyOrExit(router != NULL && router->mState != Neighbor::kStateInvalid,);
+    linkCost = GetLinkCost(destinationId);
+    routeCost = GetRouteCost(aDestination);
 
-    rval = GetRloc16(router->mNextHop);
+    if ((routeCost + GetLinkCost(router->mNextHop)) < linkCost)
+    {
+        nextHop = GetRouter(router->mNextHop);
+        VerifyOrExit(nextHop != NULL && nextHop->mState != Neighbor::kStateInvalid,);
+
+        rval = GetRloc16(router->mNextHop);
+    }
+    else if (linkCost < kMaxRouteCost)
+    {
+        rval = GetRloc16(destinationId);
+    }
 
 exit:
     return rval;
@@ -4088,6 +4114,12 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
 
     case kDeviceStateRouter:
         cost += GetLinkCost(mRouters[GetLeaderId()].mNextHop);
+
+        if (!IsRouterIdValid(mRouters[GetLeaderId()].mNextHop) || GetLinkCost(GetLeaderId()) < cost)
+        {
+            cost = GetLinkCost(GetLeaderId());
+        }
+
         break;
 
     case kDeviceStateLeader:
@@ -4198,6 +4230,7 @@ exit:
 void MleRouter::FillRouteTlv(RouteTlv &tlv)
 {
     uint8_t routeCount = 0;
+    uint8_t linkCost;
     uint8_t cost;
 
     tlv.SetRouterIdSequence(mRouterIdSequence);
@@ -4220,18 +4253,25 @@ void MleRouter::FillRouteTlv(RouteTlv &tlv)
         }
         else
         {
+            linkCost = GetLinkCost(i);
+
             if (!IsRouterIdValid(mRouters[i].mNextHop))
             {
-                cost = 0;
+                cost = linkCost;
             }
             else
             {
                 cost = mRouters[i].mCost + GetLinkCost(mRouters[i].mNextHop);
 
-                if (cost >= kMaxRouteCost)
+                if (linkCost < cost)
                 {
-                    cost = 0;
+                    cost = linkCost;
                 }
+            }
+
+            if (cost >= kMaxRouteCost)
+            {
+                cost = 0;
             }
 
             tlv.SetRouteCost(routeCount, cost);

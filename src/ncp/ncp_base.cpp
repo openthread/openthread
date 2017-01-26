@@ -115,6 +115,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_MAC_15_4_SADDR, &NcpBase::GetPropertyHandler_MAC_15_4_SADDR },
     { SPINEL_PROP_MAC_RAW_STREAM_ENABLED, &NcpBase::GetPropertyHandler_MAC_RAW_STREAM_ENABLED },
     { SPINEL_PROP_MAC_PROMISCUOUS_MODE, &NcpBase::GetPropertyHandler_MAC_PROMISCUOUS_MODE },
+    { SPINEL_PROP_MAC_EXTENDED_ADDR, &NcpBase::GetPropertyHandler_MAC_EXTENDED_ADDR },
 
     { SPINEL_PROP_NET_IF_UP, &NcpBase::GetPropertyHandler_NET_IF_UP },
     { SPINEL_PROP_NET_STACK_UP, &NcpBase::GetPropertyHandler_NET_STACK_UP },
@@ -231,6 +232,7 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     { SPINEL_PROP_PHY_ENABLED, &NcpBase::SetPropertyHandler_PHY_ENABLED },
+    { SPINEL_PROP_STREAM_RAW, &NcpBase::SetPropertyHandler_STREAM_RAW },
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
     { SPINEL_PROP_PHY_TX_POWER, &NcpBase::SetPropertyHandler_PHY_TX_POWER },
     { SPINEL_PROP_PHY_CHAN, &NcpBase::SetPropertyHandler_PHY_CHAN },
@@ -241,9 +243,6 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_MAC_SCAN_PERIOD, &NcpBase::SetPropertyHandler_MAC_SCAN_PERIOD },
     { SPINEL_PROP_MAC_15_4_PANID, &NcpBase::SetPropertyHandler_MAC_15_4_PANID },
     { SPINEL_PROP_MAC_RAW_STREAM_ENABLED, &NcpBase::SetPropertyHandler_MAC_RAW_STREAM_ENABLED },
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    { SPINEL_PROP_STREAM_RAW, &NcpBase::SetPropertyHandler_STREAM_RAW },
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
     { SPINEL_PROP_NET_IF_UP, &NcpBase::SetPropertyHandler_NET_IF_UP },
     { SPINEL_PROP_NET_STACK_UP, &NcpBase::SetPropertyHandler_NET_STACK_UP },
@@ -482,17 +481,19 @@ NcpBase::NcpBase(otInstance *aInstance):
 #endif
     mDroppedReplyTid(0),
     mDroppedReplyTidBitSet(0),
+    mNextExpectedTid(0),
     mAllowLocalNetworkDataChange(false),
     mRequireJoinExistingNetwork(false),
     mIsRawStreamEnabled(false),
     mDisableStreamWrite(false),
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    mCurTransmintTID(0),
+    mCurTransmitTID(0),
     mCurReceiveChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL),
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
     mFramingErrorCounter(0),
     mRxSpinelFrameCounter(0),
+    mRxSpinelOutOfOrderTidCounter(0),
     mTxSpinelFrameCounter(0),
     mInboundSecureIpFrameCounter(0),
     mInboundInsecureIpFrameCounter(0),
@@ -827,10 +828,10 @@ void NcpBase::LinkRawTransmitDone(otInstance *, RadioPacket *aPacket, bool aFram
 
 void NcpBase::LinkRawTransmitDone(RadioPacket *, bool aFramePending, ThreadError aError)
 {
-    if (mCurTransmintTID)
+    if (mCurTransmitTID)
     {
         SendPropertyUpdate(
-            SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0 | mCurTransmintTID,
+            SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0 | mCurTransmitTID,
             SPINEL_CMD_PROP_VALUE_IS,
             SPINEL_PROP_LAST_STATUS,
             "ib",
@@ -839,7 +840,7 @@ void NcpBase::LinkRawTransmitDone(RadioPacket *, bool aFramePending, ThreadError
         );
 
         // Clear cached transmit TID
-        mCurTransmintTID = 0;
+        mCurTransmitTID = 0;
     }
 
     // Make sure we are back listening on the original receive channel,
@@ -1031,10 +1032,19 @@ void NcpBase::HandleReceive(const uint8_t *buf, uint16_t bufLength)
     spinel_tid_t tid = 0;
 
     parsedLength = spinel_datatype_unpack(buf, bufLength, "CiD", &header, &command, &arg_ptr, &arg_len);
+    tid = SPINEL_HEADER_GET_TID(header);
 
     if (parsedLength == bufLength)
     {
         errorCode = HandleCommand(header, command, arg_ptr, static_cast<uint16_t>(arg_len));
+
+        // Check if we may have missed a `tid` in the sequence.
+        if ((mNextExpectedTid != 0) && (tid != mNextExpectedTid))
+        {
+            mRxSpinelOutOfOrderTidCounter++;
+        }
+
+        mNextExpectedTid = SPINEL_GET_NEXT_TID(tid);
     }
     else
     {
@@ -1054,8 +1064,6 @@ void NcpBase::HandleReceive(const uint8_t *buf, uint16_t bufLength)
         // The first/next dropped TID value in the set is stored in
         // `mDroppedReplyTid` (with value zero indicating that there
         // is no dropped reply).
-
-        tid = SPINEL_HEADER_GET_TID(header);
 
         if (tid != 0)
         {
@@ -1892,6 +1900,17 @@ ThreadError NcpBase::GetPropertyHandler_MAC_15_4_SADDR(uint8_t header, spinel_pr
                key,
                SPINEL_DATATYPE_UINT16_S,
                otGetShortAddress(mInstance)
+           );
+}
+
+ThreadError NcpBase::GetPropertyHandler_MAC_EXTENDED_ADDR(uint8_t header, spinel_prop_key_t key)
+{
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_EUI64_S,
+               otGetExtendedAddress(mInstance)
            );
 }
 
@@ -2896,6 +2915,10 @@ ThreadError NcpBase::GetPropertyHandler_NCP_CNTR(uint8_t header, spinel_prop_key
         value = mRxSpinelFrameCounter;
         break;
 
+    case SPINEL_PROP_CNTR_RX_SPINEL_OUT_OF_ORDER_TID:
+        value = mRxSpinelOutOfOrderTidCounter;
+        break;
+
     case SPINEL_PROP_CNTR_RX_SPINEL_ERR:
         value = mFramingErrorCounter;
         break;
@@ -3581,7 +3604,8 @@ ThreadError NcpBase::SetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t header, s
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
-ThreadError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,uint16_t value_len)
+ThreadError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                   uint16_t value_len)
 {
     ThreadError errorCode = kThreadError_None;
 
@@ -3606,7 +3630,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t header, spinel_prop_k
         if (parsedLength > 0 && frame_len <= kMaxPHYPacketSize)
         {
             // Cache the transaction ID for async response
-            mCurTransmintTID = SPINEL_HEADER_GET_TID(header);
+            mCurTransmitTID = SPINEL_HEADER_GET_TID(header);
 
             // Update packet buffer and length
             packet->mLength = static_cast<uint8_t>(frame_len);
