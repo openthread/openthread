@@ -1246,6 +1246,7 @@ private:
     void SendOrphanAnnounce(void);
 
     bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, ConnectivityTlv &aConnectivityTlv) const;
+    void ResetParentCandidate(void);
 
     /**
      * This struct represents the device's own network information for persistent storage.
@@ -1283,6 +1284,8 @@ private:
     uint8_t mParentLinkQuality1;
     LeaderDataTlv mParentLeaderData;
     bool mParentIsSingleton;
+
+    Router mParentCandidate;
 
     Ip6::UdpSocket mSocket;
     uint32_t mTimeout;
