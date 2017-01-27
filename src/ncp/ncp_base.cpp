@@ -57,7 +57,8 @@ namespace Thread
 
 static NcpBase *sNcpContext = NULL;
 
-#define NCP_PLAT_RESET_REASON        (1U<<31)
+#define NCP_PLAT_RESET_REASON                 (1U<<31)
+#define NCP_ON_MESH_NETS_CHANGED_BIT_FLAG     (1U<<30)
 
 enum
 {
@@ -984,16 +985,26 @@ void NcpBase::UpdateChangedProps(void)
         else if ((mChangedFlags & OT_THREAD_NETDATA_UPDATED) != 0)
         {
             SuccessOrExit(HandleCommandPropertyGet(
-                              SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-                              SPINEL_PROP_THREAD_ON_MESH_NETS
-                          ));
-
-            SuccessOrExit(HandleCommandPropertyGet(
                 SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
                 SPINEL_PROP_THREAD_LEADER_NETWORK_DATA
             ));
 
             mChangedFlags &= ~static_cast<uint32_t>(OT_THREAD_NETDATA_UPDATED);
+
+            // If the network data is updated, after successfully sending (or queuing) the
+            // network data spinel message, we add `NCP_ON_MESH_NETS_CHANGED_BIT_FLAG` to
+            // the `mChangedFlags` so that we separately send the list of on-mesh prefixes.
+
+            mChangedFlags |= NCP_ON_MESH_NETS_CHANGED_BIT_FLAG;
+        }
+        else if ((mChangedFlags & NCP_ON_MESH_NETS_CHANGED_BIT_FLAG) != 0)
+        {
+            SuccessOrExit(HandleCommandPropertyGet(
+                SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                SPINEL_PROP_THREAD_ON_MESH_NETS
+            ));
+
+            mChangedFlags &= ~static_cast<uint32_t>(NCP_ON_MESH_NETS_CHANGED_BIT_FLAG);
         }
         else if ((mChangedFlags & (OT_IP6_RLOC_ADDED | OT_IP6_RLOC_REMOVED)) != 0)
         {
@@ -3279,7 +3290,7 @@ ThreadError NcpBase::SetPropertyHandler_PHY_CHAN(uint8_t header, spinel_prop_key
              // doesn't call into the radio layer to set the channel. We will have to do it
              // manually whenever the radios are enabled and/or raw stream is enabled.
              mCurReceiveChannel = static_cast<uint8_t>(i);
-             
+
              // Make sure we are update the receiving channel if raw link is enabled and we have raw
              // stream enabled already
              if (otLinkRawIsEnabled(mInstance) && mIsRawStreamEnabled)
