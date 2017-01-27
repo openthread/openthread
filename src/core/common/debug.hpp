@@ -58,6 +58,8 @@
 
 #elif OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT
 
+#include <platform/misc.h>
+
 #define assert(cond)                            \
   do {                                          \
     if (!(cond)) {                              \
