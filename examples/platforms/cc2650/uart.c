@@ -48,13 +48,17 @@
  * \note make sure that data being sent is not in a volatile area
  */
 
-static uint8_t const *sendBuffer = NULL;
-static uint16_t sendLen = 0;
+enum
+{
+    CC2650_RECV_CIRC_BUFF_SIZE = 256,
+};
 
-#define RECV_CIRC_BUFF_SIZE 256
-static uint8_t recvCircBuffer[RECV_CIRC_BUFF_SIZE];
-static uint16_t recvHeadIdx = 0;
-static uint16_t recvTailIdx = 0;
+static uint8_t const *sSendBuffer = NULL;
+static uint16_t sSendLen = 0;
+
+static uint8_t sReceiveBuffer[CC2650_RECV_CIRC_BUFF_SIZE];
+static uint16_t sReceiveHeadIdx = 0;
+static uint16_t sReceiveTailIdx = 0;
 
 void UART0_intHandler(void);
 
@@ -119,10 +123,10 @@ ThreadError otPlatUartDisable(void)
 ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
     ThreadError error = kThreadError_None;
-    VerifyOrExit(sendBuffer == NULL, error = kThreadError_Busy);
+    VerifyOrExit(sSendBuffer == NULL, error = kThreadError_Busy);
 
-    sendBuffer = aBuf;
-    sendLen = aBufLength;
+    sSendBuffer = aBuf;
+    sSendLen = aBufLength;
 
 exit:
     return error;
@@ -133,21 +137,21 @@ exit:
  */
 static void processReceive(void)
 {
-    while (recvHeadIdx != recvTailIdx)
+    while (sReceiveHeadIdx != sReceiveTailIdx)
     {
         uint16_t tailIdx;
 
-        if (recvHeadIdx < recvTailIdx)
+        if (sReceiveHeadIdx < sReceiveTailIdx)
         {
-            tailIdx = recvTailIdx;
-            otPlatUartReceived(&(recvCircBuffer[recvHeadIdx]), tailIdx - recvHeadIdx);
-            recvHeadIdx = tailIdx;
+            tailIdx = sReceiveTailIdx;
+            otPlatUartReceived(&(sReceiveBuffer[sReceiveHeadIdx]), tailIdx - sReceiveHeadIdx);
+            sReceiveHeadIdx = tailIdx;
         }
         else
         {
-            tailIdx = RECV_CIRC_BUFF_SIZE;
-            otPlatUartReceived(&(recvCircBuffer[recvHeadIdx]), tailIdx - recvHeadIdx);
-            recvHeadIdx = 0;
+            tailIdx = CC2650_RECV_CIRC_BUFF_SIZE;
+            otPlatUartReceived(&(sReceiveBuffer[sReceiveHeadIdx]), tailIdx - sReceiveHeadIdx);
+            sReceiveHeadIdx = 0;
         }
     }
 }
@@ -157,16 +161,16 @@ static void processReceive(void)
  */
 static void processTransmit(void)
 {
-    VerifyOrExit(sendBuffer != NULL, ;);
+    VerifyOrExit(sSendBuffer != NULL, ;);
 
-    for (; sendLen > 0; sendLen--)
+    for (; sSendLen > 0; sSendLen--)
     {
-        UARTCharPut(UART0_BASE, *sendBuffer);
-        sendBuffer++;
+        UARTCharPut(UART0_BASE, *sSendBuffer);
+        sSendBuffer++;
     }
 
-    sendBuffer = NULL;
-    sendLen = 0;
+    sSendBuffer = NULL;
+    sSendLen = 0;
     otPlatUartSendDone();
 
 exit:
@@ -190,13 +194,13 @@ void UART0_intHandler(void)
     while (UARTCharsAvail(UART0_BASE))
     {
         uint32_t c = UARTCharGet(UART0_BASE);
-        /* TODO process error flags for this character ?? */
-        recvCircBuffer[recvTailIdx] = (uint8_t)c;
-        recvTailIdx++;
+        /* XXX process error flags for this character ?? */
+        sReceiveBuffer[sReceiveTailIdx] = (uint8_t)c;
+        sReceiveTailIdx++;
 
-        if (recvTailIdx >= RECV_CIRC_BUFF_SIZE)
+        if (sReceiveTailIdx >= CC2650_RECV_CIRC_BUFF_SIZE)
         {
-            recvTailIdx = 0;
+            sReceiveTailIdx = 0;
         }
     }
 }

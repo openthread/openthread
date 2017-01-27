@@ -40,9 +40,12 @@
 
 #include <mbedtls/entropy_poll.h>
 
-#define CC2650_TRNG_MIN_SAMPLES_PER_CYCLE (1 << 6)
-#define CC2650_TRNG_MAX_SAMPLES_PER_CYCLE (1 << 24)
-#define CC2650_TRNG_CLOCKS_PER_SAMPLE 0
+enum
+{
+    CC2650_TRNG_MIN_SAMPLES_PER_CYCLE = (1 << 6),
+    CC2650_TRNG_MAX_SAMPLES_PER_CYCLE = (1 << 24),
+    CC2650_TRNG_CLOCKS_PER_SAMPLE     = 0,
+};
 
 /**
  * \note if more than 32 bits of entropy are needed, the TRNG core produces
@@ -85,14 +88,14 @@ uint32_t otPlatRandomGet(void)
 /**
  * Fill an arbitrary area with random data
  *
- * @param [out] output area to place the random data
- * @param [in] len size of the area to place random data
- * @param [out] olen how much of the output was written to
+ * @param [out] aOutput area to place the random data
+ * @param [in] aLen size of the area to place random data
+ * @param [out] oLen how much of the output was written to
  *
  * @return indication of error
  * @retval 0 no error occured
  */
-static int TRNGPoll(unsigned char *output, size_t len, size_t *olen)
+static int TRNGPoll(unsigned char *aOutput, size_t aLen, size_t *oLen)
 {
     size_t length = 0;
     union
@@ -101,7 +104,7 @@ static int TRNGPoll(unsigned char *output, size_t len, size_t *olen)
         uint8_t u8[8];
     } buffer;
 
-    while (length < len)
+    while (length < aLen)
     {
         if (length % 8 == 0)
         {
@@ -120,10 +123,10 @@ static int TRNGPoll(unsigned char *output, size_t len, size_t *olen)
             HWREG(TRNG_BASE + TRNG_O_IRQFLAGCLR) = 0x1;
         }
 
-        output[length] = buffer.u8[length % 8];
+        aOutput[length] = buffer.u8[length % 8];
 
         length++;
-        *olen = length;
+        *oLen = length;
     }
 
     return 0;
@@ -153,8 +156,8 @@ exit:
  *
  * Function defined in mbedtls/entropy_poll.h .
  */
-int mbedtls_hardware_poll(void *data, unsigned char *output, size_t len, size_t *olen)
+int mbedtls_hardware_poll(void *data, unsigned char *aOutput, size_t aLen, size_t *oLen)
 {
     (void)data;
-    return TRNGPoll(output, len, olen);
+    return TRNGPoll(aOutput, aLen, oLen);
 }

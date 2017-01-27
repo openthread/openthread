@@ -43,9 +43,9 @@
  * every ms, and not run when the processor is sleeping.
  */
 
-uint32_t time0 = 0;
-uint32_t alarmTime = 0;
-bool isRunning = false;
+static uint32_t sTime0 = 0;
+static uint32_t sAlarmTime = 0;
+static bool sIsRunning = false;
 
 /**
  * Function documented in platform-cc2650.h
@@ -56,7 +56,7 @@ void cc2650AlarmInit(void)
      * NOTE: this will not enable the individual rtc alarm channels
      */
     AONRTCEnable();
-    isRunning = true;
+    sIsRunning = true;
 }
 
 /**
@@ -76,12 +76,12 @@ uint32_t otPlatAlarmGetNow(void)
 /**
  * Function documented in platform/alarm.h
  */
-void otPlatAlarmStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
+void otPlatAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
     (void)aInstance;
-    time0 = t0;
-    alarmTime = dt;
-    isRunning = true;
+    sTime0 = aT0;
+    sAlarmTime = aDt;
+    sIsRunning = true;
 }
 
 /**
@@ -90,7 +90,7 @@ void otPlatAlarmStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
 void otPlatAlarmStop(otInstance *aInstance)
 {
     (void)aInstance;
-    isRunning = false;
+    sIsRunning = false;
 }
 
 /**
@@ -100,14 +100,14 @@ void cc2650AlarmProcess(otInstance *aInstance)
 {
     uint32_t offsetTime;
 
-    if (isRunning)
+    if (sIsRunning)
     {
         /* unsinged subtraction will result in the absolute offset */
-        offsetTime = otPlatAlarmGetNow() - time0;
+        offsetTime = otPlatAlarmGetNow() - sTime0;
 
-        if (alarmTime <= offsetTime)
+        if (sAlarmTime <= offsetTime)
         {
-            isRunning = false;
+            sIsRunning = false;
 #if OPENTHREAD_ENABLE_DIAG
 
             if (otPlatDiagModeGet())
