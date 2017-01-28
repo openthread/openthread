@@ -2181,6 +2181,22 @@ exit:
 
 ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
+    ThreadError error;
+
+    otLogInfoMle("Received Data Response");
+
+    error = HandleLeaderData(aMessage, aMessageInfo);
+
+    if (error != kThreadError_None)
+    {
+        otLogWarnMleErr(error, "Failed to process Data Response");
+    }
+
+    return error;
+}
+
+ThreadError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
     ThreadError error = kThreadError_None;
     LeaderDataTlv leaderData;
     NetworkDataTlv networkData;
@@ -2191,16 +2207,15 @@ ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageI
     bool dataRequest = false;
     Tlv tlv;
 
-    otLogInfoMle("Received Data Response");
-
     // Leader Data
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
     VerifyOrExit(leaderData.IsValid(), error = kThreadError_Parse);
 
     if ((leaderData.GetPartitionId() != mLeaderData.GetPartitionId()) ||
+        (leaderData.GetWeighting() != mLeaderData.GetWeighting()) ||
         (leaderData.GetLeaderRouterId() != GetLeaderId()))
     {
-        if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
+        if (mDeviceState == kDeviceStateChild)
         {
             SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
         }
@@ -2305,11 +2320,6 @@ ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageI
     mRetrieveNewNetworkData = false;
 
 exit:
-
-    if (error != kThreadError_None)
-    {
-        otLogWarnMleErr(error, "Failed to process Data Response");
-    }
 
     (void)aMessageInfo;
 
@@ -2734,11 +2744,8 @@ ThreadError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::M
     ResponseTlv response;
     LinkFrameCounterTlv linkFrameCounter;
     MleFrameCounterTlv mleFrameCounter;
-    LeaderDataTlv leaderData;
     SourceAddressTlv sourceAddress;
     TimeoutTlv timeout;
-    NetworkDataTlv networkData;
-    uint8_t tlvs[] = {Tlv::kNetworkData};
 
     otLogInfoMle("Received Child Update Response from parent");
 
@@ -2786,10 +2793,6 @@ ThreadError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::M
     // fall through
 
     case kDeviceStateChild:
-        // Leader Data
-        SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
-        VerifyOrExit(leaderData.IsValid(), error = kThreadError_Parse);
-
         // Source Address
         SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kSourceAddress, sizeof(sourceAddress), sourceAddress));
         VerifyOrExit(sourceAddress.IsValid(), error = kThreadError_Parse);
@@ -2800,22 +2803,14 @@ ThreadError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::M
             ExitNow();
         }
 
+        // Leader Data, Network Data, Active Timestamp, Pending Timestamp
+        SuccessOrExit(error = HandleLeaderData(aMessage, aMessageInfo));
+
         // Timeout optional
         if (Tlv::GetTlv(aMessage, Tlv::kTimeout, sizeof(timeout), timeout) == kThreadError_None)
         {
             VerifyOrExit(timeout.IsValid(), error = kThreadError_Parse);
             mTimeout = timeout.GetTimeout();
-        }
-
-        // Network Data optional
-        if (Tlv::GetTlv(aMessage, Tlv::kNetworkData, sizeof(networkData), networkData) == kThreadError_None)
-        {
-            VerifyOrExit(networkData.IsValid(), error = kThreadError_Parse);
-            mNetif.GetNetworkDataLeader().SetNetworkData(leaderData.GetDataVersion(),
-                                                         leaderData.GetStableDataVersion(),
-                                                         (mDeviceMode & ModeTlv::kModeFullNetworkData) == 0,
-                                                         networkData.GetNetworkData(),
-                                                         networkData.GetLength());
         }
 
         if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
@@ -2826,23 +2821,6 @@ ThreadError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::M
         else
         {
             mNetif.GetMeshForwarder().SetRxOnWhenIdle(true);
-        }
-
-        if (mDeviceMode & ModeTlv::kModeFullNetworkData)
-        {
-            // full network data
-            if (leaderData.GetDataVersion() != mNetif.GetNetworkDataLeader().GetVersion())
-            {
-                SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs));
-            }
-        }
-        else
-        {
-            // stable network data
-            if (leaderData.GetStableDataVersion() != mNetif.GetNetworkDataLeader().GetStableVersion())
-            {
-                SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs));
-            }
         }
 
         break;
