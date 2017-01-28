@@ -343,7 +343,7 @@ exit:
     return error;
 }
 
-ThreadError Mle::Discover(uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanId,
+ThreadError Mle::Discover(uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanId, bool aJoiner,
                           DiscoverHandler aCallback, void *aContext)
 {
     ThreadError error = kThreadError_None;
@@ -373,6 +373,7 @@ ThreadError Mle::Discover(uint32_t aScanChannels, uint16_t aScanDuration, uint16
     // Discovery Request TLV
     discoveryRequest.Init();
     discoveryRequest.SetVersion(kVersion);
+    discoveryRequest.SetJoiner(aJoiner);
     SuccessOrExit(error = message->Append(&discoveryRequest, sizeof(discoveryRequest)));
 
     tlv.SetLength(static_cast<uint8_t>(message->GetLength() - startOffset));
