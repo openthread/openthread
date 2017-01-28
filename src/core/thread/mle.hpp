@@ -426,6 +426,7 @@ public:
      * @param[in]  aScanChannels  A bit vector indicating which channels to scan.
      * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel.
      * @param[in]  aPanId         The PAN ID filter (set to Broadcast PAN to disable filter).
+     * @param[in]  aJoiner        Value of the Joiner Flag in the Discovery Request TLV.
      * @param[in]  aHandler       A pointer to a function that is called on receiving an MLE Discovery Response.
      * @param[in]  aContext       A pointer to arbitrary context information.
      *
@@ -433,7 +434,7 @@ public:
      * @retval kThreadError_Busy  Thread Discovery is already in progress.
      *
      */
-    ThreadError Discover(uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanId,
+    ThreadError Discover(uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanId, bool aJoiner,
                          DiscoverHandler aCallback, void *aContext);
 
     /**
