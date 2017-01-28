@@ -73,6 +73,7 @@ MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
     mScanDuration(0),
     mScanChannel(0),
     mRestoreChannel(0),
+    mRestorePanId(Mac::kPanIdBroadcast),
     mScanning(false),
     mNetif(aThreadNetif),
     mSrcMatchEnabled(false)
@@ -1022,6 +1023,7 @@ ThreadError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
             {
                 mScanChannel = kPhyMinChannel;
                 mRestoreChannel = mNetif.GetMac().GetChannel();
+                mRestorePanId = mNetif.GetMac().GetPanId();
                 mScanning = true;
             }
 
@@ -1033,6 +1035,24 @@ ThreadError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
 
             mNetif.GetMac().SetChannel(mScanChannel);
             aFrame.SetChannel(mScanChannel);
+
+            // In case a specific PAN ID of a Thread Network to be discovered is not known, Discovery
+            // Request messages MUST have the Destination PAN ID in the IEEE 802.15.4 MAC header set
+            // to be the Broadcast PAN ID (0xFFFF) and the Source PAN ID set to a randomly generated
+            // value.
+            if (mSendMessage->GetPanId() == Mac::kPanIdBroadcast &&
+                mNetif.GetMac().GetPanId() == Mac::kPanIdBroadcast)
+            {
+                uint16_t panid;
+
+                do
+                {
+                    panid = static_cast<uint16_t>(otPlatRandomGet());
+                }
+                while (panid == Mac::kPanIdBroadcast);
+
+                mNetif.GetMac().SetPanId(panid);
+            }
         }
 
         if (SendFragment(*mSendMessage, aFrame) == kThreadError_NotCapable)
@@ -1615,6 +1635,7 @@ void MeshForwarder::HandleDiscoverTimer(void)
             mSendMessage->Free();
             mSendMessage = NULL;
             mNetif.GetMac().SetChannel(mRestoreChannel);
+            mNetif.GetMac().SetPanId(mRestorePanId);
             mScanning = false;
             mNetif.GetMle().HandleDiscoverComplete();
             ExitNow();
