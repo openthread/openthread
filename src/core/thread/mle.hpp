@@ -1241,6 +1241,7 @@ private:
                                      uint32_t aKeySequence);
     ThreadError HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    ThreadError HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     ThreadError SendParentRequest(void);
     ThreadError SendChildIdRequest(void);
