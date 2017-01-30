@@ -367,7 +367,6 @@ void Leader::SendCommissioningSetResponse(const Coap::Header &aRequestHeader, co
     Coap::Header responseHeader;
     Message *message;
     MeshCoP::StateTlv state;
-    Ip6::MessageInfo responseInfo(aMessageInfo);
 
     VerifyOrExit((message = mNetif.GetCoapServer().NewMeshCoPMessage(0)) != NULL, error = kThreadError_NoBufs);
 
@@ -380,8 +379,7 @@ void Leader::SendCommissioningSetResponse(const Coap::Header &aRequestHeader, co
     state.SetState(aState);
     SuccessOrExit(error = message->Append(&state, sizeof(state)));
 
-    memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
-    SuccessOrExit(error = mNetif.GetCoapServer().SendMessage(*message, responseInfo));
+    SuccessOrExit(error = mNetif.GetCoapServer().SendMessage(*message, aMessageInfo));
 
     otLogInfoMeshCoP("sent commissioning dataset set response");
 

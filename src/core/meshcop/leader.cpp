@@ -109,7 +109,6 @@ ThreadError Leader::SendPetitionResponse(const Coap::Header &aRequestHeader, con
     StateTlv state;
     CommissionerSessionIdTlv sessionId;
     Message *message;
-    Ip6::MessageInfo responseInfo(aMessageInfo);
 
     VerifyOrExit((message = mNetif.GetCoapServer().NewMeshCoPMessage(0)) != NULL, error = kThreadError_NoBufs);
 
@@ -135,8 +134,7 @@ ThreadError Leader::SendPetitionResponse(const Coap::Header &aRequestHeader, con
         SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
     }
 
-    memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
-    SuccessOrExit(error = mNetif.GetCoapServer().SendMessage(*message, responseInfo));
+    SuccessOrExit(error = mNetif.GetCoapServer().SendMessage(*message, aMessageInfo));
 
     otLogInfoMeshCoP("sent petition response");
 
@@ -201,7 +199,6 @@ ThreadError Leader::SendKeepAliveResponse(const Coap::Header &aRequestHeader, co
     Coap::Header responseHeader;
     StateTlv state;
     Message *message;
-    Ip6::MessageInfo responseInfo(aMessageInfo);
 
     VerifyOrExit((message = mNetif.GetCoapServer().NewMeshCoPMessage(0)) != NULL, error = kThreadError_NoBufs);
 
@@ -214,7 +211,6 @@ ThreadError Leader::SendKeepAliveResponse(const Coap::Header &aRequestHeader, co
     state.SetState(aState);
     SuccessOrExit(error = message->Append(&state, sizeof(state)));
 
-    memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
     SuccessOrExit(error = mNetif.GetCoapServer().SendMessage(*message, aMessageInfo));
 
     otLogInfoMeshCoP("sent keep alive response");
