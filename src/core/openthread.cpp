@@ -1654,7 +1654,7 @@ exit:
     return error;
 }
 
-const uint8_t *otGetActiveDatasetBytes(otInstance *aInstance, uint16_t *aLength)
+const uint8_t *otGetActiveDatasetTlvs(otInstance *aInstance, uint16_t *aLength)
 {
     if (aLength != NULL)
     {
@@ -1664,12 +1664,12 @@ const uint8_t *otGetActiveDatasetBytes(otInstance *aInstance, uint16_t *aLength)
     return aInstance->mThreadNetif.GetActiveDataset().GetLocal().GetBytes();
 }
 
-ThreadError otSetActiveDatasetBytes(otInstance *aInstance, const uint8_t *aDatasetBytes, uint16_t aLength)
+ThreadError otUpdateActiveDatasetTlvs(otInstance *aInstance, const uint8_t *aTlvs, uint16_t aTlvsLength)
 {
-    return aInstance->mThreadNetif.GetActiveDataset().GetLocal().Set(aDatasetBytes, aLength);
+    return aInstance->mThreadNetif.GetActiveDataset().GetLocal().UpdateTlvs(aTlvs, aTlvsLength);
 }
 
-const uint8_t *otGetPendingDatasetBytes(otInstance *aInstance, uint16_t *aLength)
+const uint8_t *otGetPendingDatasetTlvs(otInstance *aInstance, uint16_t *aLength)
 {
     if (aLength != NULL)
     {
@@ -1679,9 +1679,9 @@ const uint8_t *otGetPendingDatasetBytes(otInstance *aInstance, uint16_t *aLength
     return aInstance->mThreadNetif.GetPendingDataset().GetLocal().GetBytes();
 }
 
-ThreadError otSetPendingDatasetBytes(otInstance *aInstance, const uint8_t *aDatasetBytes, uint16_t aLength)
+ThreadError otSetPendingDatasetTlvs(otInstance *aInstance, const uint8_t *aTlvs, uint16_t aTlvsLength)
 {
-    return aInstance->mThreadNetif.GetPendingDataset().GetLocal().Set(aDatasetBytes, aLength);
+    return aInstance->mThreadNetif.GetPendingDataset().GetLocal().UpdateTlvs(aTlvs, aTlvsLength);
 }
 
 ThreadError otSendActiveGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength,
