@@ -201,6 +201,8 @@ AC_PROG_CXXCPP
 AC_PROG_CXX
 AC_PROG_CXX_C_O
 
+AM_PROG_AS
+
 # Check for other compiler toolchain tools.
 
 AC_CHECK_TOOL(AR, ar)
@@ -840,16 +842,46 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_APPLICATION_COAP], [test "${enable_application
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_APPLICATION_COAP],[${OPENTHREAD_ENABLE_APPLICATION_COAP}],[Define to 1 if you want to enable CoAP to an application.])
 
 #
+# otLinkRaw API
+#
+
+AC_ARG_ENABLE(raw_link_api,
+    [AS_HELP_STRING([--enable-raw-link-api],[Enable raw link-layer API support @<:@default=yes@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_raw_link_api=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_raw_link_api} for --enable-raw-link-api])
+            ;;
+        esac
+    ],
+    [enable_raw_link_api=yes])
+
+if test "$enable_raw_link_api" = "yes"; then
+    OPENTHREAD_ENABLE_RAW_LINK_API=1
+else
+    OPENTHREAD_ENABLE_RAW_LINK_API=0
+fi
+
+AC_SUBST(OPENTHREAD_ENABLE_RAW_LINK_API)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_RAW_LINK_API], [test "${enable_raw_link_api}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_RAW_LINK_API],[${OPENTHREAD_ENABLE_RAW_LINK_API}],[Define to 1 if you want to enable raw link-layer API])
+
+#
 # Examples
 #
 
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
-        [Specify the examples from one of: none, posix, cc2538, cc2650, da15000 @<:@default=none@:>@.])],
+        [Specify the examples from one of: none, posix, cc2538, cc2650, da15000, nrf52840 @<:@default=none@:>@.])],
     [
         case "${with_examples}" in
 
-        none|posix|cc2538|cc2650|da15000)
+        none|posix|cc2538|cc2650|da15000|nrf52840)
             ;;
         *)
             AC_MSG_ERROR([Invalid value ${with_examples} for --with-examples])
@@ -882,6 +914,11 @@ case ${with_examples} in
         AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_DA15000],[${OPENTHREAD_EXAMPLES_DA15000}],[Define to 1 if you want to use da15000 examples])
         ;;
 
+    nrf52840)
+        OPENTHREAD_EXAMPLES_NRF52840=1
+        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_NRF52840],[${OPENTHREAD_EXAMPLES_NRF52840}],[Define to 1 if you want to use nrf52840 examples])
+        ;;
+
 esac
 
 AC_MSG_RESULT(${OPENTHREAD_EXAMPLES})
@@ -901,6 +938,9 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2650], [test "${OPENTHREAD_EXAMPLES}" = "c
 
 AC_SUBST(OPENTHREAD_EXAMPLES_DA15000)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_DA15000], [test "${OPENTHREAD_EXAMPLES}" = "da15000"])
+
+AC_SUBST(OPENTHREAD_EXAMPLES_NRF52840)
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52840], [test "${OPENTHREAD_EXAMPLES}" = "nrf52840"])
 
 #
 # Platform Information
@@ -1037,6 +1077,7 @@ examples/platforms/Makefile
 examples/platforms/cc2538/Makefile
 examples/platforms/cc2650/Makefile
 examples/platforms/da15000/Makefile
+examples/platforms/nrf52840/Makefile
 examples/platforms/posix/Makefile
 examples/platforms/utils/Makefile
 tools/Makefile
@@ -1093,6 +1134,7 @@ AC_MSG_NOTICE([
   C Compiler                                : ${CC}
   C++ Preprocessor                          : ${CXXCPP}
   C++ Compiler                              : ${CXX}
+  Assembler Compiler                        : ${CCAS}
   Archiver                                  : ${AR}
   Archive Indexer                           : ${RANLIB}
   Symbol Stripper                           : ${STRIP}
@@ -1100,6 +1142,7 @@ AC_MSG_NOTICE([
   C Preprocessor flags                      : ${CPPFLAGS:--}
   C Compile flags                           : ${CFLAGS:--}
   C++ Compile flags                         : ${CXXFLAGS:--}
+  Assembler flags                           : ${CCASFLAGS:--}
   Link flags                                : ${LDFLAGS:--}
   Link libraries                            : ${LIBS}
   Pretty                                    : ${PRETTY:--}
@@ -1121,6 +1164,7 @@ AC_MSG_NOTICE([
   OpenThread DHCPv6 Server support          : ${enable_dhcp6_server}
   OpenThread DHCPv6 Client support          : ${enable_dhcp6_client}
   Openthread Application CoAP support       : ${enable_application_coap}
+  Openthread Raw Link-Layer support         : ${enable_raw_link_api}
   OpenThread examples                       : ${OPENTHREAD_EXAMPLES}
   OpenThread platform information           : ${PLATFORM_INFO}
 

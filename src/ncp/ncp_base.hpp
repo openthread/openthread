@@ -188,6 +188,25 @@ private:
 
     void SendDoneTask(void);
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+
+    /**
+     * Trampoline for LinkRawReceiveDone().
+     */
+    static void LinkRawReceiveDone(otInstance *aInstance, RadioPacket *aPacket, ThreadError aError);
+
+    void LinkRawReceiveDone(RadioPacket *aPacket, ThreadError aError);
+
+    /**
+     * Trampoline for LinkRawTransmitDone().
+     */
+    static void LinkRawTransmitDone(otInstance *aInstance, RadioPacket *aPacket, bool aFramePending,
+                                    ThreadError aError);
+
+    void LinkRawTransmitDone(RadioPacket *aPacket, bool aFramePending, ThreadError aError);
+
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+
     static void HandleNetifStateChanged(uint32_t flags, void *context);
 
 private:
@@ -213,7 +232,7 @@ private:
 
     ThreadError SendLastStatus(uint8_t header, spinel_status_t lastStatus);
 
-public:
+private:
 
     ThreadError SendPropertyUpdate(uint8_t header, uint8_t command, spinel_prop_key_t key, const uint8_t *value_ptr,
                             uint16_t value_len);
@@ -304,6 +323,7 @@ private:
     ThreadError GetPropertyHandler_MAC_15_4_LADDR(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_15_4_SADDR(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_MAC_EXTENDED_ADDR(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_NET_IF_UP(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_NET_STACK_UP(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_NET_ROLE(uint8_t header, spinel_prop_key_t key);
@@ -336,6 +356,8 @@ private:
     ThreadError GetPropertyHandler_THREAD_NETWORK_DATA_VERSION(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_STABLE_NETWORK_DATA(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_STABLE_NETWORK_DATA_VERSION(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_THREAD_LEADER_NETWORK_DATA(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_THREAD_STABLE_LEADER_NETWORK_DATA(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_PROMISCUOUS_MODE(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE(uint8_t header, spinel_prop_key_t key);
@@ -384,6 +406,10 @@ private:
                                                   uint16_t value_len);
     ThreadError SetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                           uint16_t value_len);
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+    ThreadError SetPropertyHandler_STREAM_RAW(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                              uint16_t value_len);
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
     ThreadError SetPropertyHandler_NET_IF_UP(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                uint16_t value_len);
     ThreadError SetPropertyHandler_NET_STACK_UP(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -410,8 +436,10 @@ private:
                                                   uint16_t value_len);
     ThreadError SetPropertyHandler_THREAD_RLOC16_DEBUG_PASSTHRU(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                                 uint16_t value_len);
+#if OPENTHREAD_ENABLE_RAW_LINK_API
     ThreadError SetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                uint16_t value_len);
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
     ThreadError SetPropertyHandler_MAC_PROMISCUOUS_MODE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                    uint16_t value_len);
     ThreadError SetPropertyHandler_MAC_SCAN_PERIOD(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -482,6 +510,8 @@ private:
     ThreadError RemovePropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
     ThreadError RemovePropertyHandler_THREAD_ACTIVE_ROUTER_IDS(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                               uint16_t value_len);
+public:
+    ThreadError StreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen);
 
 #if OPENTHREAD_ENABLE_LEGACY
 public:
@@ -514,12 +544,21 @@ private:
 
     uint16_t mDroppedReplyTidBitSet;
 
+    spinel_tid_t mNextExpectedTid;
+
     bool mAllowLocalNetworkDataChange;
     bool mRequireJoinExistingNetwork;
     bool mIsRawStreamEnabled;
+    bool mDisableStreamWrite;
+
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+    uint8_t mCurTransmitTID;
+    uint8_t mCurReceiveChannel;
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
     uint32_t mFramingErrorCounter;             // Number of improperly formed received spinel frames.
     uint32_t mRxSpinelFrameCounter;            // Number of received (inbound) spinel frames.
+    uint32_t mRxSpinelOutOfOrderTidCounter;    // Number of out of order received spinel frames (tid increase > 1).
     uint32_t mTxSpinelFrameCounter;            // Number of sent (outbound) spinel frames.
     uint32_t mInboundSecureIpFrameCounter;     // Number of secure inbound data/IP frames.
     uint32_t mInboundInsecureIpFrameCounter;   // Number of insecure inbound data/IP frames.

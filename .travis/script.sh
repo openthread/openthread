@@ -79,16 +79,26 @@ fi
 [ $BUILD_TARGET != arm-gcc49 ] || {
     export PATH=$ARM_GCC_49_path:$PATH || die
 
-    git clean -dxf || die
+    git checkout -- . || die
+    git clean -xfd || die
     ./bootstrap || die
     COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-cc2538 || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp || die
 
+    git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
     COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-da15000 || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-nrf52840 || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp || die
@@ -97,6 +107,7 @@ fi
 [ $BUILD_TARGET != arm-gcc54 ] || {
     export PATH=$ARM_GCC_54_path:$PATH || die
 
+    git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
     COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-cc2538 || die
@@ -104,9 +115,18 @@ fi
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp || die
 
+    git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
     COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-da15000 || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-nrf52840 || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp || die

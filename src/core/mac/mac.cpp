@@ -161,6 +161,8 @@ Mac::Mac(ThreadNetif &aThreadNetif):
 
     otPlatRadioEnable(mNetif.GetInstance());
     mTxFrame = static_cast<Frame *>(otPlatRadioGetTransmitBuffer(mNetif.GetInstance()));
+
+    mKeyIdMode2FrameCounter = 0;
 }
 
 ThreadError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
@@ -262,7 +264,21 @@ void Mac::StartEnergyScan(void)
 
 extern "C" void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi)
 {
-    aInstance->mThreadNetif.GetMac().EnergyScanDone(aEnergyScanMaxRssi);
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+
+    if (aInstance->mLinkRawEnabled)
+    {
+        if (aInstance->mLinkRawEnergyScanDoneCallback)
+        {
+            aInstance->mLinkRawEnergyScanDoneCallback(aInstance, aEnergyScanMaxRssi);
+            aInstance->mLinkRawEnergyScanDoneCallback = NULL;
+        }
+    }
+    else
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+    {
+        aInstance->mThreadNetif.GetMac().EnergyScanDone(aEnergyScanMaxRssi);
+    }
 }
 
 void Mac::EnergyScanDone(int8_t aEnergyScanMaxRssi)
@@ -685,7 +701,7 @@ void Mac::ProcessTransmitSecurity(Frame &aFrame)
     {
         const uint8_t keySource[] = {0xff, 0xff, 0xff, 0xff};
         key = sMode2Key;
-        frameCounter = 0xffffffff;
+        frameCounter = mKeyIdMode2FrameCounter++;
         aFrame.SetKeySource(keySource);
         aFrame.SetKeyId(0xff);
         extAddress = static_cast<const ExtAddress *>(&sMode2ExtAddress);
@@ -789,7 +805,22 @@ extern "C" void otPlatRadioTransmitDone(otInstance *aInstance, RadioPacket *aPac
 {
     otLogFuncEntryMsg("%!otError!, aRxPending=%u", aError, aRxPending ? 1 : 0);
 
-    aInstance->mThreadNetif.GetMac().TransmitDoneTask(aPacket, aRxPending, aError);
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+
+    if (aInstance->mLinkRawEnabled)
+    {
+        if (aInstance->mLinkRawTransmitDoneCallback)
+        {
+            aInstance->mLinkRawTransmitDoneCallback(aInstance, aPacket, aRxPending, aError);
+            aInstance->mLinkRawTransmitDoneCallback = NULL;
+        }
+    }
+    else
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+    {
+        aInstance->mThreadNetif.GetMac().TransmitDoneTask(aPacket, aRxPending, aError);
+    }
+
     otLogFuncExit();
 }
 
@@ -1162,7 +1193,22 @@ exit:
 extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, RadioPacket *aFrame, ThreadError aError)
 {
     otLogFuncEntryMsg("%!otError!", aError);
-    aInstance->mThreadNetif.GetMac().ReceiveDoneTask(static_cast<Frame *>(aFrame), aError);
+
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+
+    if (aInstance->mLinkRawEnabled)
+    {
+        if (aInstance->mLinkRawReceiveDoneCallback)
+        {
+            aInstance->mLinkRawReceiveDoneCallback(aInstance, aFrame, aError);
+        }
+    }
+    else
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+    {
+        aInstance->mThreadNetif.GetMac().ReceiveDoneTask(static_cast<Frame *>(aFrame), aError);
+    }
+
     otLogFuncExit();
 }
 

@@ -73,6 +73,7 @@ MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
     mScanDuration(0),
     mScanChannel(0),
     mRestoreChannel(0),
+    mRestorePanId(Mac::kPanIdBroadcast),
     mScanning(false),
     mNetif(aThreadNetif),
     mSrcMatchEnabled(false)
@@ -177,6 +178,37 @@ void MeshForwarder::ScheduleTransmissionTask(void *aContext)
     static_cast<MeshForwarder *>(aContext)->ScheduleTransmissionTask();
 }
 
+void MeshForwarder::ClearChildIndirectMessages(Child &aChild)
+{
+    Message *nextMessage;
+
+    VerifyOrExit(aChild.mQueuedIndirectMessageCnt > 0,);
+
+    for (Message *message = mSendQueue.GetHead(); message; message = nextMessage)
+    {
+        nextMessage = message->GetNext();
+
+        message->ClearChildMask(mNetif.GetMle().GetChildIndex(aChild));
+
+        if (!message->IsChildPending())
+        {
+            if (mSendMessage == message)
+            {
+                mSendMessage = NULL;
+            }
+
+            mSendQueue.Dequeue(*message);
+            message->Free();
+        }
+    }
+
+    aChild.mQueuedIndirectMessageCnt = 0;
+    ClearSrcMatchEntry(aChild);
+
+exit:
+    return;
+}
+
 void MeshForwarder::UpdateIndirectMessages(void)
 {
     Child *children;
@@ -187,33 +219,13 @@ void MeshForwarder::UpdateIndirectMessages(void)
     for (uint8_t i = 0; i < numChildren; i++)
     {
         Child *child = &children[i];
-        Message *nextMessage;
 
         if (child->mState == Child::kStateValid || child->mQueuedIndirectMessageCnt == 0)
         {
             continue;
         }
 
-        for (Message *message = mSendQueue.GetHead(); message; message = nextMessage)
-        {
-            nextMessage = message->GetNext();
-
-            message->ClearChildMask(i);
-
-            if (!message->IsChildPending())
-            {
-                if (mSendMessage == message)
-                {
-                    mSendMessage = NULL;
-                }
-
-                mSendQueue.Dequeue(*message);
-                message->Free();
-            }
-        }
-
-        child->mQueuedIndirectMessageCnt = 0;
-        ClearSrcMatchEntry(*child);
+        ClearChildIndirectMessages(*child);
     }
 }
 
@@ -866,9 +878,35 @@ void MeshForwarder::HandlePollTimer()
 
     error = SendMacDataRequest();
 
-    if (error == kThreadError_NoBufs)
+    switch (error)
     {
+    case kThreadError_None:
+        break;
+
+    case kThreadError_InvalidState:
+        // The poll timer should have been stopped. Hitting
+        // this might indicate a logic error.
+        otLogWarnMac("Poll timer fired while RxOnWhenIdle set!");
+        break;
+
+    case kThreadError_NoBufs:
+        // Failed to send DataRequest due to a lack of buffers.
+        // Try again following a brief pause to free buffers.
         mPollTimer.Start(kDataRequstRetryDelay);
+        break;
+
+    case kThreadError_Already:
+        // This is perhaps a sign of
+        // bad behavior, as it suggests that mPollPeriod was not long
+        // enough for the previously scheduled DataRequest to get out of
+        // the sendQueue.
+        otLogDebgMac("Poll timer fired with DataRequest in SendQueue.");
+
+    // Intentional fall-thru
+    default:
+        // Restart for any other error which might originate from SendMessage().
+        mPollTimer.Start(mPollPeriod);
+        break;
     }
 }
 
@@ -890,11 +928,20 @@ ThreadError MeshForwarder::SendMacDataRequest(void)
     message = mNetif.GetIp6().mMessagePool.New(Message::kTypeMacDataPoll, 0);
     VerifyOrExit(message != NULL, error = kThreadError_NoBufs);
 
-    SuccessOrExit(error = SendMessage(*message));
-    otLogInfoMac("Sent poll");
+    error = SendMessage(*message);
 
-    // restart the polling timer
-    mPollTimer.Start(mPollPeriod);
+    if (error == kThreadError_None)
+    {
+        otLogInfoMac("Sent poll");
+
+        // restart the polling timer
+        mPollTimer.Start(mPollPeriod);
+    }
+    else
+    {
+        message->Free();
+        message = NULL;
+    }
 
 exit:
     return error;
@@ -976,6 +1023,7 @@ ThreadError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
             {
                 mScanChannel = kPhyMinChannel;
                 mRestoreChannel = mNetif.GetMac().GetChannel();
+                mRestorePanId = mNetif.GetMac().GetPanId();
                 mScanning = true;
             }
 
@@ -987,9 +1035,31 @@ ThreadError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
 
             mNetif.GetMac().SetChannel(mScanChannel);
             aFrame.SetChannel(mScanChannel);
+
+            // In case a specific PAN ID of a Thread Network to be discovered is not known, Discovery
+            // Request messages MUST have the Destination PAN ID in the IEEE 802.15.4 MAC header set
+            // to be the Broadcast PAN ID (0xFFFF) and the Source PAN ID set to a randomly generated
+            // value.
+            if (mSendMessage->GetPanId() == Mac::kPanIdBroadcast &&
+                mNetif.GetMac().GetPanId() == Mac::kPanIdBroadcast)
+            {
+                uint16_t panid;
+
+                do
+                {
+                    panid = static_cast<uint16_t>(otPlatRandomGet());
+                }
+                while (panid == Mac::kPanIdBroadcast);
+
+                mNetif.GetMac().SetPanId(panid);
+            }
         }
 
-        SendFragment(*mSendMessage, aFrame);
+        if (SendFragment(*mSendMessage, aFrame) == kThreadError_NotCapable)
+        {
+            SendFragment(*mSendMessage, aFrame);
+        }
+
         assert(aFrame.GetLength() != 7);
         break;
 
@@ -1115,6 +1185,7 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
     uint16_t fragmentLength;
     uint16_t dstpan;
     uint8_t secCtl = Mac::Frame::kSecNone;
+    ThreadError error = kThreadError_None;
 
     if (mAddMeshHeader)
     {
@@ -1214,15 +1285,27 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
     // initialize Mesh header
     if (mAddMeshHeader)
     {
-        // Calculate the number of predicted hops.
-        hopsLeft = mNetif.GetMle().GetRouteCost(mMeshDest);
-        hopsLeft += mNetif.GetMle().GetLinkCost(mNetif.GetMle().GetRouterId(mNetif.GetMle().GetNextHop(mMeshDest)));
-
-        // The hopsLft field MUST be incremented by one if the device is not
-        // an active Router.
-        if (!mNetif.GetMle().IsActiveRouter(mMeshSource))
+        if (mNetif.GetMle().GetDeviceState() == Mle::kDeviceStateChild)
         {
-            hopsLeft += 1;
+            // REED sets hopsLeft to max (16) + 1. It does not know the route cost.
+            hopsLeft = Mle::kMaxRouteCost + 1;
+        }
+        else
+        {
+            // Calculate the number of predicted hops.
+            hopsLeft = mNetif.GetMle().GetRouteCost(mMeshDest);
+
+            if (hopsLeft != Mle::kMaxRouteCost)
+            {
+                hopsLeft += mNetif.GetMle().GetLinkCost(
+                                mNetif.GetMle().GetRouterId(mNetif.GetMle().GetNextHop(mMeshDest)));
+            }
+            else
+            {
+                // In case there is no route to the destination router (only link).
+                hopsLeft = mNetif.GetMle().GetLinkCost(mNetif.GetMle().GetRouterId(mMeshDest));
+            }
+
         }
 
         // The hopsLft field MUST be incremented by one if the destination RLOC16
@@ -1254,6 +1337,13 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
 
         if (payloadLength > fragmentLength)
         {
+            if ((!aMessage.IsLinkSecurityEnabled()) && aMessage.IsSubTypeMle())
+            {
+                aMessage.SetLinkSecurityEnabled(true);
+                aMessage.SetOffset(0);
+                ExitNow(error = kThreadError_NotCapable);
+            }
+
             // write Fragment header
             if (aMessage.GetDatagramTag() == 0)
             {
@@ -1322,7 +1412,9 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
         aFrame.SetFramePending(true);
     }
 
-    return kThreadError_None;
+exit:
+
+    return error;
 }
 
 ThreadError MeshForwarder::SendEmptyFrame(Mac::Frame &aFrame)
@@ -1419,6 +1511,7 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
             break;
 
         case kThreadError_ChannelAccessFailure:
+        case kThreadError_Abort:
             break;
 
         case kThreadError_NoAck:
@@ -1543,6 +1636,7 @@ void MeshForwarder::HandleDiscoverTimer(void)
             mSendMessage->Free();
             mSendMessage = NULL;
             mNetif.GetMac().SetChannel(mRestoreChannel);
+            mNetif.GetMac().SetPanId(mRestorePanId);
             mScanning = false;
             mNetif.GetMle().HandleDiscoverComplete();
             ExitNow();

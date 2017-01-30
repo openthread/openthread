@@ -183,6 +183,14 @@ public:
     void SetDiscoverParameters(uint32_t aScanChannels, uint16_t aScanDuration);
 
     /**
+     * This method frees any indirect messages queued for a specific child.
+     *
+     * @param[in]  aChild  A reference to a child whom messages shall be removed.
+     *
+     */
+    void ClearChildIndirectMessages(Child &aChild);
+
+    /**
      * This method frees any indirect messages queued for children that are no longer attached.
      *
      */
@@ -296,6 +304,7 @@ private:
     uint16_t mScanDuration;
     uint8_t mScanChannel;
     uint8_t mRestoreChannel;
+    uint16_t mRestorePanId;
     bool mScanning;
 
     ThreadNetif &mNetif;

@@ -56,6 +56,13 @@
 /* Define to 1 to enable MAC whitelist/blacklist feature. */
 #define OPENTHREAD_ENABLE_MAC_WHITELIST 1
 
+/* Define to 1 to enable raw link-layer API. */
+#ifdef _KERNEL_MODE
+#define OPENTHREAD_ENABLE_RAW_LINK_API 0
+#else
+#define OPENTHREAD_ENABLE_RAW_LINK_API 1
+#endif
+
 /* Name of package */
 #define PACKAGE "openthread"
 

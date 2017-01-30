@@ -30,6 +30,7 @@
  *   This file implements an HDLC-lite encoder and decoder.
  */
 
+#include <stdlib.h>
 #include <common/code_utils.hpp>
 #include <ncp/hdlc.hpp>
 

@@ -103,15 +103,20 @@ public:
     enum
     {
         kMaxIp6AddressPerChild = OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD,
+        kMaxRequestTlvs        = 5,
     };
     Ip6::Address mIp6Address[kMaxIp6AddressPerChild];  ///< Registered IPv6 addresses
     uint32_t     mTimeout;                             ///< Child timeout
     uint16_t     mFragmentOffset;                      ///< 6LoWPAN fragment offset
-    uint8_t      mRequestTlvs[5];                      ///< Requested MLE TLVs
+    union
+    {
+        uint8_t mRequestTlvs[kMaxRequestTlvs];                 ///< Requested MLE TLVs
+        uint8_t mAttachChallenge[Mle::ChallengeTlv::kMaxSize]; ///< The challenge value
+    };
     uint8_t      mNetworkDataVersion;                  ///< Current Network Data version
     uint16_t     mQueuedIndirectMessageCnt;            ///< Count of queued messages
-    bool         mAddSrcMatchEntryShort;               ///< Indicates whether or not to force add short address
-    bool         mAddSrcMatchEntryPending;             ///< Indicates whether or not pending to add
+    bool         mAddSrcMatchEntryShort : 1;           ///< Indicates whether or not to force add short address
+    bool         mAddSrcMatchEntryPending : 1;         ///< Indicates whether or not pending to add
 };
 
 /**
@@ -123,7 +128,7 @@ class Router : public Neighbor
 public:
     uint8_t mNextHop;             ///< The next hop towards this router
     uint8_t mLinkQualityOut : 2;  ///< The link quality out for this router
-    uint8_t mCost : 4;            ///< The cost to this router
+    uint8_t mCost : 4;            ///< The cost to this router via neighbor router
     bool    mAllocated : 1;       ///< Indicates whether or not this entry is allocated
     bool    mReclaimDelay : 1;    ///< Indicates whether or not this entry is waiting to be reclaimed
 };

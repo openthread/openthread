@@ -71,6 +71,7 @@ typedef void (*testPlatRadioSetPanId)(otInstance *, uint16_t);
 typedef void (*testPlatRadioSetExtendedAddress)(otInstance *, uint8_t *);
 typedef void (*testPlatRadioSetShortAddress)(otInstance *, uint16_t);
 
+typedef bool(*testPlatRadioIsEnabled)(otInstance *);
 typedef ThreadError(*testPlatRadioEnable)(otInstance *);
 typedef ThreadError(*testPlatRadioDisable)(otInstance *);
 typedef ThreadError(*testPlatRadioReceive)(otInstance *, uint8_t);
@@ -81,6 +82,7 @@ extern otRadioCaps                      g_testPlatRadioCaps;
 extern testPlatRadioSetPanId            g_testPlatRadioSetPanId;
 extern testPlatRadioSetExtendedAddress  g_testPlatRadioSetExtendedAddress;
 extern testPlatRadioSetShortAddress     g_testPlatRadioSetShortAddress;
+extern testPlatRadioIsEnabled           g_testPlatRadioIsEnabled;
 extern testPlatRadioEnable              g_testPlatRadioEnable;
 extern testPlatRadioDisable             g_testPlatRadioDisable;
 extern testPlatRadioReceive             g_testPlatRadioReceive;

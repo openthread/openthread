@@ -48,7 +48,6 @@ BuildJobs                      ?= 99
 configure_OPTIONS               = \
     --enable-cli                  \
     --enable-ncp                  \
-    --enable-diag                 \
     --with-examples=cc2650        \
     --with-platform-info=cc2650   \
     MBEDTLS_CPPFLAGS="$(CC2650_MBEDTLS_CPPFLAGS)" \

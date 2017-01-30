@@ -52,7 +52,7 @@ MessagePool::MessagePool(void) :
 
     mFreeBuffers = mBuffers;
 
-    for (int i = 0; i < kNumBuffers - 1; i++)
+    for (uint16_t i = 0; i < kNumBuffers - 1; i++)
     {
         mBuffers[i].SetNextBuffer(&mBuffers[i + 1]);
     }
@@ -148,7 +148,7 @@ ThreadError MessagePool::FreeBuffers(Buffer *aBuffer)
 
 ThreadError MessagePool::ReclaimBuffers(int aNumBuffers)
 {
-    int numFreeBuffers;
+    uint16_t numFreeBuffers;
 
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
     numFreeBuffers = otPlatMessagePoolNumFreeBuffers();
@@ -156,7 +156,17 @@ ThreadError MessagePool::ReclaimBuffers(int aNumBuffers)
     numFreeBuffers = mNumFreeBuffers;
 #endif
 
-    return (aNumBuffers <= numFreeBuffers) ? kThreadError_None : kThreadError_NoBufs;
+    //First comparison is to get around issues with comparing
+    //signed and unsigned numbers, if aNumBuffers is negative then
+    //the second comparison wont be attempted.
+    if (aNumBuffers < 0 || aNumBuffers <= numFreeBuffers)
+    {
+        return kThreadError_None;
+    }
+    else
+    {
+        return kThreadError_NoBufs;
+    }
 }
 
 Message *MessagePool::Iterator::Next(void) const
@@ -370,6 +380,21 @@ uint8_t Message::GetSubType(void) const
 void Message::SetSubType(uint8_t aSubType)
 {
     mInfo.mSubType = aSubType;
+}
+
+bool Message::IsSubTypeMle(void) const
+{
+    bool rval = false;
+
+    if (mInfo.mSubType == kSubTypeMleAnnounce ||
+        mInfo.mSubType == kSubTypeMleDiscoverRequest ||
+        mInfo.mSubType == kSubTypeMleDiscoverResponse ||
+        mInfo.mSubType == kSubTypeMleGeneral)
+    {
+        rval = true;
+    }
+
+    return rval;
 }
 
 uint8_t Message::GetPriority(void) const

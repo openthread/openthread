@@ -39,8 +39,8 @@ ot_ncp_CPPFLAGS                                                        = \
     $(NULL)
 
 ot_ncp_LDADD                                                           = \
-    $(top_builddir)/src/core/libopenthread-ftd.a                         \
     $(top_builddir)/src/ncp/libopenthread-ncp.a                          \
+    $(top_builddir)/src/core/libopenthread-ftd.a                         \
     $(NULL)
 
 ot_ncp_LDFLAGS                                                         = \
@@ -114,6 +114,16 @@ ot_ncp_LDFLAGS                                                        += \
     -T $(top_srcdir)/examples/platforms/da15000/da15000.ld               \
     $(NULL)
 endif # OPENTHREAD_EXAMPLES_DA15000
+
+if OPENTHREAD_EXAMPLES_NRF52840
+ot_ncp_LDADD                                                          += \
+    $(top_builddir)/examples/platforms/nrf52840/libopenthread-nrf52840.a \
+    $(NULL)
+
+ot_ncp_LDFLAGS                                                        += \
+    -T $(top_srcdir)/examples/platforms/nrf52840/nrf52840.ld             \
+    $(NULL)
+endif
 
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                                                             = $(wildcard *.gcda *.gcno)

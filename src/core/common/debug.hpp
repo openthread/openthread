@@ -34,6 +34,7 @@
 #ifndef DEBUG_HPP_
 #define DEBUG_HPP_
 
+#include <openthread-core-config.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
@@ -54,6 +55,18 @@
 #elif defined(_WIN32)
 
 #include <assert.h>
+
+#elif OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT
+
+#include <platform/misc.h>
+
+#define assert(cond)                            \
+  do {                                          \
+    if (!(cond)) {                              \
+      otPlatAssertFail(__FILE__, __LINE__);     \
+      while (1) {}                              \
+    }                                           \
+  } while (0)
 
 #else
 

@@ -29,6 +29,8 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 bin_PROGRAMS                                                           = \
+    ot-cli-ftd                                                           \
+    ot-cli-mtd                                                           \
     $(NULL)
 
 CPPFLAGS_COMMON                                                        = \
@@ -68,11 +70,6 @@ LDADD_COMMON                                                          += \
 endif # OPENTHREAD_EXAMPLES_POSIX
 
 if OPENTHREAD_EXAMPLES_CC2538
-bin_PROGRAMS                                                          += \
-    ot-cli-ftd                                                           \
-    ot-cli-mtd                                                           \
-    $(NULL)
-
 LDADD_COMMON                                                          += \
     $(top_builddir)/examples/platforms/cc2538/libopenthread-cc2538.a     \
     $(NULL)
@@ -83,17 +80,6 @@ LDFLAGS_COMMON                                                        += \
 endif # OPENTHREAD_EXAMPLES_CC2538
 
 if OPENTHREAD_EXAMPLES_CC2650
-bin_PROGRAMS                                                          += \
-    ot-cli-mtd                                                           \
-    $(NULL)
-
-if !OPENTHREAD_ENABLE_JOINER
-bin_PROGRAMS                                                          += \
-    ot-cli-ftd                                                           \
-    $(NULL)
-
-endif # !OPENTHREAD_ENABLE_JOINER
-
 CPPFLAGS_COMMON                                                       += \
     -I$(top_srcdir)/third_party/cc26xxware                               \
     $(NULL)
@@ -128,6 +114,16 @@ LDFLAGS_COMMON                                                        += \
     -T $(top_srcdir)/examples/platforms/da15000/da15000.ld               \
     $(NULL)
 endif # OPENTHREAD_EXAMPLES_DA15000
+
+if OPENTHREAD_EXAMPLES_NRF52840
+LDADD_COMMON                                                          += \
+    $(top_builddir)/examples/platforms/nrf52840/libopenthread-nrf52840.a \
+    $(NULL)
+
+LDFLAGS_COMMON                                                        += \
+    -T $(top_srcdir)/examples/platforms/nrf52840/nrf52840.ld             \
+    $(NULL)
+endif
 
 ot_cli_ftd_CPPFLAGS                                                    = \
     $(CPPFLAGS_COMMON)                                                   \

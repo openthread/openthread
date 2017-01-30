@@ -34,6 +34,7 @@ DIST_SUBDIRS                            = \
     cc2538                                \
     cc2650                                \
     da15000                               \
+    nrf52840                              \
     posix                                 \
     utils                                 \
     $(NULL)
@@ -43,10 +44,6 @@ DIST_SUBDIRS                            = \
 SUBDIRS                                 = \
     utils                                 \
     $(NULL)
-
-if OPENTHREAD_EXAMPLES_POSIX
-SUBDIRS                                += posix
-endif
 
 if OPENTHREAD_EXAMPLES_CC2538
 SUBDIRS                                += cc2538
@@ -60,12 +57,21 @@ if OPENTHREAD_EXAMPLES_DA15000
 SUBDIRS                                += da15000
 endif
 
+if OPENTHREAD_EXAMPLES_NRF52840
+SUBDIRS                                += nrf52840
+endif
+
+if OPENTHREAD_EXAMPLES_POSIX
+SUBDIRS                                += posix
+endif
+
 # Always pretty (e.g. for 'make pretty') these subdirectories.
 
 PRETTY_SUBDIRS                          = \
     cc2538                                \
     cc2650                                \
     da15000                               \
+    nrf52840                              \
     posix                                 \
     utils                                 \
     $(NULL)

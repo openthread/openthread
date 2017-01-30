@@ -81,6 +81,12 @@ otInstance::otInstance(void) :
     mActiveScanCallbackContext(NULL),
     mEnergyScanCallback(NULL),
     mEnergyScanCallbackContext(NULL),
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+    mLinkRawEnabled(false),
+    mLinkRawReceiveDoneCallback(NULL),
+    mLinkRawTransmitDoneCallback(NULL),
+    mLinkRawEnergyScanDoneCallback(NULL),
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
     mThreadNetif(mIp6)
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     , mApplicationCoapServer(mIp6.mUdp, OT_DEFAULT_COAP_PORT)
@@ -1252,8 +1258,15 @@ ThreadError otInterfaceUp(otInstance *aInstance)
 
     otLogFuncEntry();
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+    VerifyOrExit(!aInstance->mLinkRawEnabled, error = kThreadError_InvalidState);
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+
     error = aInstance->mThreadNetif.Up();
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+exit:
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
     otLogFuncExitErr(error);
     return error;
 }
@@ -1264,8 +1277,15 @@ ThreadError otInterfaceDown(otInstance *aInstance)
 
     otLogFuncEntry();
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+    VerifyOrExit(!aInstance->mLinkRawEnabled, error = kThreadError_InvalidState);
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+
     error = aInstance->mThreadNetif.Down();
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+exit:
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
     otLogFuncExitErr(error);
     return error;
 }
@@ -1386,7 +1406,8 @@ bool otIsEnergyScanInProgress(otInstance *aInstance)
 ThreadError otDiscover(otInstance *aInstance, uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanId,
                        otHandleActiveScanResult aCallback, void *aCallbackContext)
 {
-    return aInstance->mThreadNetif.GetMle().Discover(aScanChannels, aScanDuration, aPanId, aCallback, aCallbackContext);
+    return aInstance->mThreadNetif.GetMle().Discover(aScanChannels, aScanDuration, aPanId, false, aCallback,
+                                                     aCallbackContext);
 }
 
 bool otIsDiscoverInProgress(otInstance *aInstance)
@@ -1634,6 +1655,21 @@ ThreadError otSetActiveDataset(otInstance *aInstance, const otOperationalDataset
 
 exit:
     return error;
+}
+
+bool otIsNodeCommissioned(otInstance *aInstance)
+{
+    otOperationalDataset dataset;
+
+    otGetActiveDataset(aInstance, &dataset);
+
+    if ((dataset.mIsMasterKeySet) && (dataset.mIsNetworkNameSet) &&
+        (dataset.mIsExtendedPanIdSet) && (dataset.mIsPanIdSet) && (dataset.mIsChannelSet))
+    {
+        return true;
+    }
+
+    return false;
 }
 
 ThreadError otGetPendingDataset(otInstance *aInstance, otOperationalDataset *aDataset)

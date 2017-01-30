@@ -931,6 +931,16 @@ OTAPI ThreadError OTCALL otGetActiveDataset(otInstance *aInstance, otOperational
 OTAPI ThreadError OTCALL otSetActiveDataset(otInstance *aInstance, const otOperationalDataset *aDataset);
 
 /**
+ * This function indicates whether a valid network is present in the Active Operational Dataset or not.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns TRUE if a valid network is present in the Active Operational Dataset, FALSE otherwise.
+ *
+ */
+OTAPI bool OTCALL otIsNodeCommissioned(otInstance *aInstance);
+
+/**
  * This function gets the Pending Operational Dataset.
  *
  * @param[in]   aInstance A pointer to an OpenThread instance.

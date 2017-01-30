@@ -549,4 +549,14 @@
 #define OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE                   1500
 #endif  // OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE
 
+/**
+ * @def OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT
+ *
+ * The assert is managed by platform defined logic when this flag is set.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT
+#define OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT            0
+#endif
+
 #endif  // OPENTHREAD_CORE_DEFAULT_CONFIG_H_

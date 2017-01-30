@@ -79,6 +79,7 @@ class OpenThread(IThci):
             self.localprefix = ModuleHelper.Default_MLPrefix
             self.pskc = "00000000000000000000000000000000"  # OT only accept hex format PSKc for now
             self.securityPolicySecs = ModuleHelper.Default_SecurityPolicy
+            self.securityPolicyFlags = "onrcb"
             self.activetimestamp = ModuleHelper.Default_ActiveTimestamp
             #self.sedPollingRate = ModuleHelper.Default_Harness_SED_Polling_Rate
             self.sedPollingRate = 3
@@ -625,10 +626,10 @@ class OpenThread(IThci):
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setChannelMask() Error: " + str(e))
 
-    def __setSecurityPolicy(self, securityPolicySecs):
+    def __setSecurityPolicy(self, securityPolicySecs, securityPolicyFlags):
         print 'call _setSecurityPolicy'
         try:
-            cmd = 'dataset securitypolicy %s' % str(securityPolicySecs)
+            cmd = 'dataset securitypolicy %s %s' % (str(securityPolicySecs), securityPolicyFlags)
             self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd) == 'Done'
         except Exception, e:
@@ -1241,7 +1242,7 @@ class OpenThread(IThci):
             self.setMAC(self.mac)
 
             self.__setChannelMask(self.channelMask)
-            self.__setSecurityPolicy(self.securityPolicySecs)
+            self.__setSecurityPolicy(self.securityPolicySecs, self.securityPolicyFlags)
             self.setChannel(self.channel)
             self.setPANID(self.panId)
             self.setXpanId(self.xpanId)
@@ -2200,10 +2201,7 @@ class OpenThread(IThci):
 
             if listChannelMask != None:
                 cmd += ' channelmask '
-                if len(listChannelMask) > 2:
-                    cmd += '0x' + self.__convertLongToString(self.__convertChannelMask(listChannelMask))
-                elif len(listChannelMask) == 2:
-                    cmd += str(hex(1 << listChannelMask[1]))
+                cmd += '0x' + self.__convertLongToString(self.__convertChannelMask(listChannelMask))
 
             if sPSKc != None or listSecurityPolicy != None or \
                xCommissioningSessionId != None or xTmfPort != None or xSteeringData != None or xBorderRouterLocator != None or \
@@ -2355,8 +2353,6 @@ class OpenThread(IThci):
 
             if xCommissionerSessionId != None:
                 cmd += ' binary '
-
-            if xCommissionerSessionId != None:
                 cmd += '0b02'
                 sessionid = str(hex(xCommissionerSessionId))[2:]
 
@@ -2456,6 +2452,7 @@ class OpenThread(IThci):
     def setActiveTimestamp(self, xActiveTimestamp):
         print '%s call setActiveTimestamp' % self.port
         try:
+            self.activetimestamp = xActiveTimestamp
             cmd = 'dataset activetimestamp %s' % str(xActiveTimestamp)
             self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd)[0] == 'Done'
