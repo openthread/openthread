@@ -769,11 +769,20 @@ static inline bool energy_detection_procedure_begin(uint8_t tx_channel)
 
     critical_section_enter();
 
-    if (mutex_lock())
+    switch (m_state)
     {
-        switch (m_state)
+    case RADIO_STATE_SLEEP:
+        channel_set(tx_channel);
+        state_set(RADIO_STATE_ED);
+        rx_enable();
+
+        result = true;
+
+        break;
+
+    case RADIO_STATE_WAITING_RX_FRAME:
+        if (mutex_lock())
         {
-        case RADIO_STATE_WAITING_RX_FRAME:
             channel_set(tx_channel);
             auto_ack_abort(RADIO_STATE_ED);
 
@@ -786,12 +795,12 @@ static inline bool energy_detection_procedure_begin(uint8_t tx_channel)
             nrf_radio_event_clear(NRF_RADIO_EVENT_READY);
 
             result = true;
-
-            break;
-
-        default:
-            assert(false); // This should not happen.
         }
+
+        break;
+
+    default:
+        assert(false); // This should not happen.
     }
 
     critical_section_exit();
@@ -968,6 +977,10 @@ void nrf_drv_radio802154_receive(uint8_t channel)
     case RADIO_STATE_TX_FRAME:
     case RADIO_STATE_RX_ACK:
         tx_procedure_abort();
+        break;
+
+    case RADIO_STATE_ED:
+        // Ignore receive function during energy detection procedure.
         break;
 
     default:
