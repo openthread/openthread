@@ -37,14 +37,13 @@
 #include <openthread.h>
 
 #include <platform/alarm.h>
+#include <platform/radio.h>
 
 /**
  * Diagnostics mode variables.
  *
  */
 static bool sDiagMode = false;
-static uint8_t sChannel = 20;
-static int8_t sTxPower = 0;
 
 void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
@@ -64,20 +63,24 @@ bool otPlatDiagModeGet()
     return sDiagMode;
 }
 
-void otPlatDiagChannelSet(uint8_t aChannel){
-    sChannel = aChannel;
+void otPlatDiagChannelSet(uint8_t aChannel)
+{
+    (void) aChannel;
 }
 
-void otPlatDiagTxPowerSet(int8_t aTxPower){
-    sTxPower = aTxPower;
+void otPlatDiagTxPowerSet(int8_t aTxPower)
+{
+    (void) aTxPower;
 }
 
-void otPlatDiagRadioReceived(otInstance *aInstance, RadioPacket *aFrame, ThreadError aError){
+void otPlatDiagRadioReceived(otInstance *aInstance, RadioPacket *aFrame, ThreadError aError)
+{
     (void) aInstance;
     (void) aFrame;
     (void) aError;
 }
 
-void otPlatDiagAlarmCallback(otInstance *aInstance){
+void otPlatDiagAlarmCallback(otInstance *aInstance)
+{
     (void) aInstance;
 }
