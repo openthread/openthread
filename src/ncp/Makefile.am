@@ -73,8 +73,6 @@ if OPENTHREAD_ENABLE_NCP_UART
 libopenthread_ncp_a_SOURCES        += \
     hdlc.cpp                          \
     hdlc.hpp                          \
-    flen.cpp                          \
-    flen.hpp                          \
     ncp_uart.cpp                      \
     ncp_uart.hpp                      \
     $(NULL)

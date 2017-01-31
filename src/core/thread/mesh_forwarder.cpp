@@ -73,6 +73,7 @@ MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
     mScanDuration(0),
     mScanChannel(0),
     mRestoreChannel(0),
+    mRestorePanId(Mac::kPanIdBroadcast),
     mScanning(false),
     mNetif(aThreadNetif),
     mSrcMatchEnabled(false)
@@ -177,6 +178,37 @@ void MeshForwarder::ScheduleTransmissionTask(void *aContext)
     static_cast<MeshForwarder *>(aContext)->ScheduleTransmissionTask();
 }
 
+void MeshForwarder::ClearChildIndirectMessages(Child &aChild)
+{
+    Message *nextMessage;
+
+    VerifyOrExit(aChild.mQueuedIndirectMessageCnt > 0,);
+
+    for (Message *message = mSendQueue.GetHead(); message; message = nextMessage)
+    {
+        nextMessage = message->GetNext();
+
+        message->ClearChildMask(mNetif.GetMle().GetChildIndex(aChild));
+
+        if (!message->IsChildPending())
+        {
+            if (mSendMessage == message)
+            {
+                mSendMessage = NULL;
+            }
+
+            mSendQueue.Dequeue(*message);
+            message->Free();
+        }
+    }
+
+    aChild.mQueuedIndirectMessageCnt = 0;
+    ClearSrcMatchEntry(aChild);
+
+exit:
+    return;
+}
+
 void MeshForwarder::UpdateIndirectMessages(void)
 {
     Child *children;
@@ -187,33 +219,13 @@ void MeshForwarder::UpdateIndirectMessages(void)
     for (uint8_t i = 0; i < numChildren; i++)
     {
         Child *child = &children[i];
-        Message *nextMessage;
 
         if (child->mState == Child::kStateValid || child->mQueuedIndirectMessageCnt == 0)
         {
             continue;
         }
 
-        for (Message *message = mSendQueue.GetHead(); message; message = nextMessage)
-        {
-            nextMessage = message->GetNext();
-
-            message->ClearChildMask(i);
-
-            if (!message->IsChildPending())
-            {
-                if (mSendMessage == message)
-                {
-                    mSendMessage = NULL;
-                }
-
-                mSendQueue.Dequeue(*message);
-                message->Free();
-            }
-        }
-
-        child->mQueuedIndirectMessageCnt = 0;
-        ClearSrcMatchEntry(*child);
+        ClearChildIndirectMessages(*child);
     }
 }
 
@@ -1011,6 +1023,7 @@ ThreadError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
             {
                 mScanChannel = kPhyMinChannel;
                 mRestoreChannel = mNetif.GetMac().GetChannel();
+                mRestorePanId = mNetif.GetMac().GetPanId();
                 mScanning = true;
             }
 
@@ -1022,6 +1035,24 @@ ThreadError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
 
             mNetif.GetMac().SetChannel(mScanChannel);
             aFrame.SetChannel(mScanChannel);
+
+            // In case a specific PAN ID of a Thread Network to be discovered is not known, Discovery
+            // Request messages MUST have the Destination PAN ID in the IEEE 802.15.4 MAC header set
+            // to be the Broadcast PAN ID (0xFFFF) and the Source PAN ID set to a randomly generated
+            // value.
+            if (mSendMessage->GetPanId() == Mac::kPanIdBroadcast &&
+                mNetif.GetMac().GetPanId() == Mac::kPanIdBroadcast)
+            {
+                uint16_t panid;
+
+                do
+                {
+                    panid = static_cast<uint16_t>(otPlatRandomGet());
+                }
+                while (panid == Mac::kPanIdBroadcast);
+
+                mNetif.GetMac().SetPanId(panid);
+            }
         }
 
         if (SendFragment(*mSendMessage, aFrame) == kThreadError_NotCapable)
@@ -1480,6 +1511,7 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
             break;
 
         case kThreadError_ChannelAccessFailure:
+        case kThreadError_Abort:
             break;
 
         case kThreadError_NoAck:
@@ -1604,6 +1636,7 @@ void MeshForwarder::HandleDiscoverTimer(void)
             mSendMessage->Free();
             mSendMessage = NULL;
             mNetif.GetMac().SetChannel(mRestoreChannel);
+            mNetif.GetMac().SetPanId(mRestorePanId);
             mScanning = false;
             mNetif.GetMle().HandleDiscoverComplete();
             ExitNow();

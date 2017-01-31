@@ -435,6 +435,12 @@ ThreadError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDa
         SuccessOrExit(error = message->Append(aTlvs, aLength));
     }
 
+    if (message->GetLength() == header.GetLength())
+    {
+        // no payload, remove coap payload marker
+        message->SetLength(message->GetLength() - 1);
+    }
+
     mNetif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr());
     messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo,

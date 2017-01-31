@@ -375,7 +375,9 @@ ThreadError Ip6::SendDatagram(Message &message, MessageInfo &messageInfo, IpProt
     header.SetNextHeader(ipproto);
     header.SetHopLimit(messageInfo.mHopLimit ? messageInfo.mHopLimit : static_cast<uint8_t>(kDefaultHopLimit));
 
-    if (messageInfo.GetSockAddr().IsUnspecified())
+    if (messageInfo.GetSockAddr().IsUnspecified() ||
+        messageInfo.GetSockAddr().IsAnycastRoutingLocator() ||
+        messageInfo.GetSockAddr().IsMulticast())
     {
         VerifyOrExit((source = SelectSourceAddress(messageInfo)) != NULL,
                      error = kThreadError_Error);
@@ -979,6 +981,12 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
                 {
                     continue;
                 }
+            }
+
+            if (candidateAddr->IsAnycastRoutingLocator())
+            {
+                // Don't use anycast address as source address.
+                continue;
             }
 
             if (rvalAddr == NULL)

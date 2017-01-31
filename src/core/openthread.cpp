@@ -1406,7 +1406,8 @@ bool otIsEnergyScanInProgress(otInstance *aInstance)
 ThreadError otDiscover(otInstance *aInstance, uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanId,
                        otHandleActiveScanResult aCallback, void *aCallbackContext)
 {
-    return aInstance->mThreadNetif.GetMle().Discover(aScanChannels, aScanDuration, aPanId, aCallback, aCallbackContext);
+    return aInstance->mThreadNetif.GetMle().Discover(aScanChannels, aScanDuration, aPanId, false, aCallback,
+                                                     aCallbackContext);
 }
 
 bool otIsDiscoverInProgress(otInstance *aInstance)
