@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="openthread.configuration.props" /> 
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{CAC8A00E-C6C8-4CF0-BA5A-C9A9A601C6DB}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>Thread</RootNamespace>
+    <ApplicationType>Windows Store</ApplicationType>
+    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
+    <WindowsTargetPlatformVersion>10.0.10586.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformMinVersion>10.0.10240.0</WindowsTargetPlatformMinVersion>
+    <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <IntDir>..\..\build\obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir>..\..\build\bin\$(Platform)\$(Configuration)\exe\</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>
+        %(PreprocessorDefinitions);
+        OTDLL;
+      </PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>
+        %(AdditionalIncludeDirectories);
+        ..\..\include;
+      </AdditionalIncludeDirectories>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\examples\drivers\windows\otCli\main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="libopenthread-cli-windows.vcxproj">
+      <Project>{28834498-3837-44a5-8f67-249abab7b97d}</Project>
+    </ProjectReference>
+    <ProjectReference Include="otApi.vcxproj">
+      <Project>{ed0ea262-c222-42c7-98d3-e70c72978ed2}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

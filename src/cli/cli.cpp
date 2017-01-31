@@ -41,21 +41,30 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef OTDLL
+#include <assert.h>
+#endif
+
 #include <openthread.h>
-#include <openthread-instance.h>
-#include <openthread-diag.h>
 #include <commissioning/commissioner.h>
 #include <commissioning/joiner.h>
+
+#ifndef OTDLL
+#include <openthread-instance.h>
+#include <openthread-diag.h>
+
+#include <common/new.hpp>
+#include <net/ip6.hpp>
 #include <dhcp6/dhcp6_server.h>
 #include <dhcp6/dhcp6_client.h>
+#include <platform/uart.h>
+#endif
+
+#include <common/encoding.hpp>
 
 #include "cli.hpp"
 #include "cli_dataset.hpp"
 #include "cli_uart.hpp"
-#include <common/encoding.hpp>
-#include <common/new.hpp>
-#include <net/ip6.hpp>
-#include <platform/uart.h>
 
 using Thread::Encoding::BigEndian::HostSwap16;
 using Thread::Encoding::BigEndian::HostSwap32;
@@ -93,8 +102,14 @@ const struct Command Interpreter::sCommands[] =
     { "factoryreset", &Interpreter::ProcessFactoryReset },
     { "hashmacaddr", &Interpreter::ProcessHashMacAddress },
     { "ifconfig", &Interpreter::ProcessIfconfig },
+#ifdef OTDLL
+    { "instance", &Interpreter::ProcessInstance },
+    { "instancelist", &Interpreter::ProcessInstanceList },
+#endif
     { "ipaddr", &Interpreter::ProcessIpAddr },
+#ifndef OTDLL
     { "ipmaddr", &Interpreter::ProcessIpMulticastAddr },
+#endif
 #if OPENTHREAD_ENABLE_JOINER
     { "joiner", &Interpreter::ProcessJoiner },
 #endif
@@ -112,9 +127,13 @@ const struct Command Interpreter::sCommands[] =
     { "networkname", &Interpreter::ProcessNetworkName },
     { "panid", &Interpreter::ProcessPanId },
     { "parent", &Interpreter::ProcessParent },
+#ifndef OTDLL
     { "ping", &Interpreter::ProcessPing },
+#endif
     { "pollperiod", &Interpreter::ProcessPollPeriod },
+#ifndef OTDLL
     { "promiscuous", &Interpreter::ProcessPromiscuous },
+#endif
     { "prefix", &Interpreter::ProcessPrefix },
     { "releaserouterid", &Interpreter::ProcessReleaseRouterId },
     { "reset", &Interpreter::ProcessReset },
@@ -133,14 +152,58 @@ const struct Command Interpreter::sCommands[] =
     { "whitelist", &Interpreter::ProcessWhitelist },
 };
 
-Interpreter::Interpreter(otInstance *aInstance):
+#ifdef OTDLL
+uint32_t otPlatRandomGet(void)
+{
+    return (uint32_t)rand();
+}
+#endif
+
+#ifdef OTDLL
+Interpreter::Interpreter():
+#else
+Interpreter::Interpreter(otInstance * aInstance):
+#endif
+#ifndef OTDLL
     sServer(NULL),
     sLength(8),
     sCount(1),
     sInterval(1000),
     sPingTimer(aInstance->mIp6.mTimerScheduler, &Interpreter::s_HandlePingTimer, this),
+#endif
+#ifdef OTDLL
+    mInstance(NULL),
+    mApiInstance(otApiInit()),
+    mInstanceIndex(0)
+#else
     mInstance(aInstance)
+#endif
 {
+#ifdef OTDLL
+    assert(mApiInstance);
+
+    if (mApiInstance)
+    {
+        otDeviceList *aDeviceList = otEnumerateDevices(mApiInstance);
+        assert(aDeviceList);
+
+        mInstancesLength = aDeviceList->aDevicesLength > MAX_CLI_OT_INSTANCES ? MAX_CLI_OT_INSTANCES :
+                           (uint8_t)aDeviceList->aDevicesLength;
+
+        for (uint8_t i = 0; i < mInstancesLength; i++)
+        {
+            mInstances[i].aInterpreter = this;
+            mInstances[i].aInstance = otInstanceInit(mApiInstance, &aDeviceList->aDevices[i]);
+            assert(mInstances[i].aInstance);
+            otSetStateChangedCallback(mInstances[i].aInstance, &Interpreter::s_HandleNetifStateChanged, &mInstances[i]);
+        }
+
+        otFreeMemory(aDeviceList);
+
+        if (mInstancesLength > 0) { mInstance = mInstances[0].aInstance; }
+    }
+
+#else
     memset(mSlaacAddresses, 0, sizeof(mSlaacAddresses));
     mInstance->mIp6.mIcmp.SetEchoReplyHandler(&s_HandleEchoResponse, this);
     otSetStateChangedCallback(mInstance, &Interpreter::s_HandleNetifStateChanged, this);
@@ -149,6 +212,7 @@ Interpreter::Interpreter(otInstance *aInstance):
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
     memset(mDhcpAddresses, 0, sizeof(mDhcpAddresses));
 #endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
+#endif
 }
 
 int Interpreter::Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength)
@@ -554,6 +618,9 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
             sServer->OutputFormat("    RxErrSec: %d\r\n", counters->mRxErrSec);
             sServer->OutputFormat("    RxErrFcs: %d\r\n", counters->mRxErrFcs);
             sServer->OutputFormat("    RxErrOther: %d\r\n", counters->mRxErrOther);
+#ifdef OTDLL
+            otFreeMemory(counters);
+#endif
         }
     }
 }
@@ -641,8 +708,12 @@ void Interpreter::ProcessExtAddress(int argc, char *argv[])
 
     if (argc == 0)
     {
-        OutputBytes(otGetExtendedAddress(mInstance), OT_EXT_ADDRESS_SIZE);
+        const uint8_t *aExtAddress = otGetExtendedAddress(mInstance);
+        OutputBytes(aExtAddress, OT_EXT_ADDRESS_SIZE);
         sServer->OutputFormat("\r\n");
+#ifdef OTDLL
+        otFreeMemory(aExtAddress);
+#endif
     }
     else
     {
@@ -672,8 +743,12 @@ void Interpreter::ProcessExtPanId(int argc, char *argv[])
 
     if (argc == 0)
     {
-        OutputBytes(otGetExtendedPanId(mInstance), OT_EXT_PAN_ID_SIZE);
+        const uint8_t *aExtPanId = otGetExtendedPanId(mInstance);
+        OutputBytes(aExtPanId, OT_EXT_PAN_ID_SIZE);
         sServer->OutputFormat("\r\n");
+#ifdef OTDLL
+        otFreeMemory(aExtPanId);
+#endif
     }
     else
     {
@@ -776,7 +851,9 @@ void Interpreter::ProcessIpAddr(int argc, char *argv[])
 
     if (argc == 0)
     {
-        for (const otNetifAddress *addr = otGetUnicastAddresses(mInstance); addr; addr = addr->mNext)
+        const otNetifAddress *aUnicastAddrs = otGetUnicastAddresses(mInstance);
+
+        for (const otNetifAddress *addr = aUnicastAddrs; addr; addr = addr->mNext)
         {
             sServer->OutputFormat("%x:%x:%x:%x:%x:%x:%x:%x\r\n",
                                   HostSwap16(addr->mAddress.mFields.m16[0]),
@@ -788,6 +865,10 @@ void Interpreter::ProcessIpAddr(int argc, char *argv[])
                                   HostSwap16(addr->mAddress.mFields.m16[6]),
                                   HostSwap16(addr->mAddress.mFields.m16[7]));
         }
+
+#ifdef OTDLL
+        otFreeMemory(aUnicastAddrs);
+#endif
     }
     else
     {
@@ -805,6 +886,7 @@ exit:
     AppendResult(error);
 }
 
+#ifndef OTDLL
 ThreadError Interpreter::ProcessIpMulticastAddrAdd(int argc, char *argv[])
 {
     ThreadError error;
@@ -906,6 +988,7 @@ void Interpreter::ProcessIpMulticastAddr(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
+#endif
 
 void Interpreter::ProcessKeySequence(int argc, char *argv[])
 {
@@ -1040,6 +1123,9 @@ void Interpreter::ProcessMasterKey(int argc, char *argv[])
         }
 
         sServer->OutputFormat("\r\n");
+#ifdef OTDLL
+        otFreeMemory(key);
+#endif
     }
     else
     {
@@ -1157,7 +1243,11 @@ void Interpreter::ProcessNetworkName(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sServer->OutputFormat("%.*s\r\n", OT_NETWORK_NAME_MAX_SIZE, otGetNetworkName(mInstance));
+        const char *aNetworkName = otGetNetworkName(mInstance);
+        sServer->OutputFormat("%.*s\r\n", OT_NETWORK_NAME_MAX_SIZE, aNetworkName);
+#ifdef OTDLL
+        otFreeMemory(aNetworkName);
+#endif
     }
     else
     {
@@ -1210,6 +1300,7 @@ exit:
     AppendResult(error);
 }
 
+#ifndef OTDLL
 void Interpreter::s_HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     static_cast<Interpreter *>(aContext)->HandleEchoResponse(aMessage, aMessageInfo);
@@ -1324,6 +1415,7 @@ exit:
         sPingTimer.Start(sInterval);
     }
 }
+#endif
 
 void Interpreter::ProcessPollPeriod(int argc, char *argv[])
 {
@@ -1344,6 +1436,7 @@ exit:
     AppendResult(error);
 }
 
+#ifndef OTDLL
 void Interpreter::ProcessPromiscuous(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
@@ -1447,6 +1540,7 @@ void Interpreter::HandleLinkPcapReceive(const RadioPacket *aFrame)
 
     sServer->OutputFormat("\r\n");
 }
+#endif
 
 ThreadError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
 {
@@ -1999,9 +2093,9 @@ void Interpreter::ProcessScan(int argc, char *argv[])
         scanChannels = 1 << value;
     }
 
-    SuccessOrExit(error = otActiveScan(mInstance, scanChannels, 0, &Interpreter::s_HandleActiveScanResult, this));
     sServer->OutputFormat("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |\r\n");
     sServer->OutputFormat("+---+------------------+------------------+------+------------------+----+-----+-----+\r\n");
+    SuccessOrExit(error = otActiveScan(mInstance, scanChannels, 0, &Interpreter::s_HandleActiveScanResult, this));
 
     return;
 
@@ -2009,7 +2103,7 @@ exit:
     AppendResult(error);
 }
 
-void Interpreter::s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext)
+void OTCALL Interpreter::s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleActiveScanResult(aResult);
 }
@@ -2143,8 +2237,12 @@ exit:
 
 void Interpreter::ProcessVersion(int argc, char *argv[])
 {
-    sServer->OutputFormat("%s\r\n", otGetVersionString());
+    const char *aVersion = otGetVersionString();
+    sServer->OutputFormat("%s\r\n", aVersion);
     AppendResult(kThreadError_None);
+#ifdef OTDLL
+    otFreeMemory(aVersion);
+#endif
     (void)argc;
     (void)argv;
 }
@@ -2396,8 +2494,9 @@ exit:
     AppendResult(error);
 }
 
-void Interpreter::s_HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyList, uint8_t aEnergyListLength,
-                                       void *aContext)
+void OTCALL Interpreter::s_HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyList,
+                                              uint8_t aEnergyListLength,
+                                              void *aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleEnergyReport(aChannelMask, aEnergyList, aEnergyListLength);
 }
@@ -2414,7 +2513,7 @@ void Interpreter::HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEner
     sServer->OutputFormat("\r\n");
 }
 
-void Interpreter::s_HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, void *aContext)
+void OTCALL Interpreter::s_HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, void *aContext)
 {
     static_cast<Interpreter *>(aContext)->HandlePanIdConflict(aPanId, aChannelMask);
 }
@@ -2454,7 +2553,7 @@ exit:
 
 #endif // OPENTHREAD_ENABLE_JOINER
 
-void Interpreter::s_HandleJoinerCallback(ThreadError aError, void *aContext)
+void OTCALL Interpreter::s_HandleJoinerCallback(ThreadError aError, void *aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleJoinerCallback(aError);
 }
@@ -2580,6 +2679,56 @@ void Interpreter::ProcessDiag(int argc, char *argv[])
 }
 #endif
 
+#if OTDLL
+#define GUID_FORMAT "{%08lX-%04hX-%04hX-%02hhX%02hhX-%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX}"
+#define GUID_ARG(guid) guid.Data1, guid.Data2, guid.Data3, guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3], guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]
+
+void Interpreter::ProcessInstanceList(int argc, char *argv[])
+{
+    sServer->OutputFormat("%d instances found:\r\n", mInstancesLength);
+
+    for (uint8_t i = 0; i < mInstancesLength; i++)
+    {
+        GUID aDeviceGuid = otGetDeviceGuid(mInstances[i].aInstance);
+        uint32_t aCompartment = otGetCompartmentId(mInstances[i].aInstance);
+        sServer->OutputFormat("[%d] " GUID_FORMAT " (Compartment %u)\r\n",
+                              i, GUID_ARG(aDeviceGuid), aCompartment);
+    }
+}
+
+void Interpreter::ProcessInstance(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    long value;
+
+    if (argc == 0)
+    {
+        if (mInstance == NULL)
+        {
+            sServer->OutputFormat("No Instance Set\r\n");
+        }
+        else
+        {
+            GUID aDeviceGuid = otGetDeviceGuid(mInstance);
+            uint32_t aCompartment = otGetCompartmentId(mInstance);
+            sServer->OutputFormat("[%d] " GUID_FORMAT " (Compartment %u)\r\n",
+                                  mInstanceIndex, GUID_ARG(aDeviceGuid), aCompartment);
+        }
+    }
+    else
+    {
+        SuccessOrExit(error = ParseLong(argv[0], value));
+        VerifyOrExit(value >= 0 && value < mInstancesLength, error = kThreadError_InvalidArgs);
+
+        mInstanceIndex = (uint8_t)value;
+        mInstance = mInstances[mInstanceIndex].aInstance;
+    }
+
+exit:
+    AppendResult(error);
+}
+#endif
+
 void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
 {
     char *argv[kMaxArgs];
@@ -2634,15 +2783,25 @@ exit:
     return;
 }
 
-void Interpreter::s_HandleNetifStateChanged(uint32_t aFlags, void *aContext)
+void OTCALL Interpreter::s_HandleNetifStateChanged(uint32_t aFlags, void *aContext)
 {
+#ifdef OTDLL
+    otCliContext *aCliContext = static_cast<otCliContext *>(aContext);
+    aCliContext->aInterpreter->HandleNetifStateChanged(aCliContext->aInstance, aFlags);
+#else
     static_cast<Interpreter *>(aContext)->HandleNetifStateChanged(aFlags);
+#endif
 }
 
+#ifdef OTDLL
+void Interpreter::HandleNetifStateChanged(otInstance *aInstance, uint32_t aFlags)
+#else
 void Interpreter::HandleNetifStateChanged(uint32_t aFlags)
+#endif
 {
     VerifyOrExit((aFlags & OT_THREAD_NETDATA_UPDATED) != 0, ;);
 
+#ifndef OTDLL
     otSlaacUpdate(mInstance, mSlaacAddresses, sizeof(mSlaacAddresses) / sizeof(mSlaacAddresses[0]), otCreateRandomIid,
                   NULL);
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
@@ -2652,6 +2811,7 @@ void Interpreter::HandleNetifStateChanged(uint32_t aFlags)
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
     otDhcp6ClientUpdate(mInstance, mDhcpAddresses, sizeof(mDhcpAddresses) / sizeof(mDhcpAddresses[0]), NULL);
 #endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
+#endif
 
 exit:
     return;
@@ -2696,6 +2856,7 @@ exit:
     AppendResult(error);
 }
 
+#ifndef OTDLL
 void Interpreter::s_HandleDiagnosticGetResponse(otMessage aMessage, const otMessageInfo *aMessageInfo,
                                                 void *aContext)
 {
@@ -2725,6 +2886,7 @@ void Interpreter::HandleDiagnosticGetResponse(Message &aMessage, const Ip6::Mess
 
     sServer->OutputFormat("\r\n");
 }
+#endif
 
 }  // namespace Cli
 }  // namespace Thread
