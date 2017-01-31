@@ -1761,7 +1761,7 @@ void Mle::SendOrphanAnnounce(void)
     SendAnnounce(channel, true);
 
     // Move to next channel
-    mAnnounceChannel++;
+    mAnnounceChannel = channel + 1;
 
     if (mAnnounceChannel > kPhyMaxChannel)
     {
