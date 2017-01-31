@@ -420,13 +420,14 @@ ThreadError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, u
     sEnergyDetectionTime    = (uint32_t) aScanDuration * 1000UL;
     sEnergyDetectionChannel = aScanChannel;
 
+    clearPendingEvents();
+
     if (nrf_drv_radio802154_energy_detection(aScanChannel, sEnergyDetectionTime))
     {
-        clearPendingEvents();
+        resetPendingEvent(kPendingEventEnergyDetectionStart);
     }
     else
     {
-        clearPendingEvents();
         setPendingEvent(kPendingEventEnergyDetectionStart);
     }
 
