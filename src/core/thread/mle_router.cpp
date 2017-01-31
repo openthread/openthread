@@ -1670,7 +1670,16 @@ ThreadError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::M
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kChallenge, sizeof(challenge), challenge));
     VerifyOrExit(challenge.IsValid(), error = kThreadError_Parse);
 
-    if ((child = FindChild(macAddr)) == NULL)
+    child = FindChild(macAddr);
+
+    if (child != NULL && !(child->mMode & ModeTlv::kModeFFD))
+    {
+        // Parent Request from a MTD child means that the child had detached. It can be safely removed.
+        RemoveNeighbor(*child);
+        child = NULL;
+    }
+
+    if (child == NULL)
     {
         VerifyOrExit((child = NewChild()) != NULL, ;);
 
