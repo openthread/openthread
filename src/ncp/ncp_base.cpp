@@ -57,6 +57,8 @@ namespace Thread
 
 static NcpBase *sNcpContext = NULL;
 
+#define NCP_INVALID_SCAN_CHANNEL (-1)
+
 #define NCP_PLAT_RESET_REASON        (1U<<31)
 
 enum
@@ -489,7 +491,7 @@ NcpBase::NcpBase(otInstance *aInstance):
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     mCurTransmitTID(0),
     mCurReceiveChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL),
-    mCurScanChannel(-1),
+    mCurScanChannel(NCP_INVALID_SCAN_CHANNEL),
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
     mFramingErrorCounter(0),
@@ -866,7 +868,7 @@ void NcpBase::LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi)
     );
 
     // Clear current scan channel
-    mCurScanChannel = -1;
+    mCurScanChannel = NCP_INVALID_SCAN_CHANNEL;
 
     // Make sure we are back listening on the original receive channel,
     // since the energy scan could have been on a different channel.
@@ -1819,7 +1821,7 @@ ThreadError NcpBase::GetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_pr
                         SPINEL_CMD_PROP_VALUE_IS,
                         key,
                         SPINEL_DATATYPE_UINT8_S,
-                        mCurScanChannel == -1 ?
+                        mCurScanChannel == NCP_INVALID_SCAN_CHANNEL ?
                             SPINEL_SCAN_STATE_IDLE :
                             SPINEL_SCAN_STATE_ENERGY
                     );
@@ -3535,7 +3537,7 @@ ThreadError NcpBase::SetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_pr
 #if OPENTHREAD_ENABLE_RAW_LINK_API
             if (otLinkRawIsEnabled(mInstance))
             {
-                if (mCurScanChannel == -1)
+                if (mCurScanChannel == NCP_INVALID_SCAN_CHANNEL)
                 {
                     uint8_t scanChannel;
                     uint16_t scanDuration;
