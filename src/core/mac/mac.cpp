@@ -845,6 +845,10 @@ void Mac::TransmitDoneTask(RadioPacket *aPacket, bool aRxPending, ThreadError aE
         mCounters.mTxUnicast++;
     }
 
+    if (aError == kThreadError_Abort)
+    {
+        mCounters.mTxErrAbort++;
+    }
 
     if (!RadioSupportsRetriesAndCsmaBackoff() &&
         aError == kThreadError_ChannelAccessFailure &&

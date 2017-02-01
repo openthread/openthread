@@ -192,6 +192,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_CNTR_TX_PKT_UNICAST, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_TX_PKT_BROADCAST, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_TX_ERR_CCA, &NcpBase::GetPropertyHandler_MAC_CNTR },
+    { SPINEL_PROP_CNTR_TX_ERR_ABORT, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_RX_PKT_TOTAL, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_RX_PKT_DATA, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_RX_PKT_DATA_POLL, &NcpBase::GetPropertyHandler_MAC_CNTR },
@@ -2799,6 +2800,10 @@ ThreadError NcpBase::GetPropertyHandler_MAC_CNTR(uint8_t header, spinel_prop_key
 
     case SPINEL_PROP_CNTR_TX_PKT_BROADCAST:
         value = macCounters->mTxBroadcast;
+        break;
+
+    case SPINEL_PROP_CNTR_TX_ERR_ABORT:
+        value = macCounters->mTxErrAbort;
         break;
 
     case SPINEL_PROP_CNTR_RX_PKT_TOTAL:
