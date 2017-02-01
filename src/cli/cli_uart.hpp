@@ -48,13 +48,6 @@ namespace Cli {
 class Uart: public Server
 {
 public:
-#ifdef OTDLL
-    /**
-     * Constructor
-     *
-     */
-    Uart();
-#else
     /**
      * Constructor
      *
@@ -62,7 +55,6 @@ public:
      *
      */
     Uart(otInstance *aInstance);
-#endif
 
     /**
      * This method delivers raw characters to the client.

@@ -55,6 +55,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\cli\cli.cpp" />
     <ClCompile Include="..\..\src\cli\cli_dataset.cpp" />
+    <ClCompile Include="..\..\src\cli\cli_instance.cpp" />
     <ClCompile Include="..\..\src\cli\cli_uart.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -88,19 +88,12 @@ class Interpreter
 {
 public:
 
-#ifdef OTDLL
-    /**
-     * Constructor
-     */
-    Interpreter();
-#else
     /**
      * Constructor
      *
      * @param[in]  aInstance  The OpenThread instance structure.
      */
     Interpreter(otInstance *aInstance);
-#endif
 
     /**
      * This method interprets a CLI command.
@@ -298,6 +291,9 @@ private:
     otInstance *mInstance;
 
 #ifdef OTDLL
+
+    void CacheInstances();
+
     otApiInstance *mApiInstance;
 
     struct otCliContext

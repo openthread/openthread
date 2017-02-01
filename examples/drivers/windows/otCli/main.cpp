@@ -37,11 +37,11 @@ bool skipNextLine = false;
 
 int main(int argc, char *argv[])
 {
-    otCliUartInit();
-    
+    otCliUartInit(NULL);
+
     char cmd[1024] = "\n";
     otPlatUartReceived((uint8_t*)cmd, 1);
-    
+
     for (;;)
     {
         cmd[0] = 0;
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 
         if (strncmp(cmd, "exit", 4) == 0) 
             break;
-        
+
         skipNextLine = true;
         otPlatUartReceived((uint8_t*)cmd, (uint16_t)cmdLen);
     }
@@ -73,7 +73,7 @@ EXTERN_C ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 
     if (aBuf[aBufLength - 1] == '\n')
         skipNextLine = false;
-    
+
     otPlatUartSendDone();
 
     return error;

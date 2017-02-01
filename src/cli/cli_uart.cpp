@@ -56,24 +56,14 @@ Uart *Uart::sUartServer;
 
 static otDEFINE_ALIGNED_VAR(sCliUartRaw, sizeof(Uart), uint64_t);
 
-#ifdef OTDLL
-extern "C" void otCliUartInit()
-{
-    Uart::sUartServer = new(&sCliUartRaw) Uart();
-}
-#else
+
 extern "C" void otCliUartInit(otInstance *aInstance)
 {
     Uart::sUartServer = new(&sCliUartRaw) Uart(aInstance);
 }
-#endif
 
-#ifdef OTDLL
-Uart::Uart()
-#else
 Uart::Uart(otInstance *aInstance):
     mInterpreter(aInstance)
-#endif
 {
     mRxLength = 0;
     mTxHead = 0;

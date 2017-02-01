@@ -42,13 +42,6 @@
 extern "C" {
 #endif
 
-#ifdef OTDLL
-/**
- * Initialize the CLI UART module.
- *
- */
-void otCliUartInit();
-#else
 /**
  * Initialize the CLI UART module.
  *
@@ -56,7 +49,6 @@ void otCliUartInit();
  *
  */
 void otCliUartInit(otInstance *aInstance);
-#endif
 
 #ifdef __cplusplus
 }  // extern "C"

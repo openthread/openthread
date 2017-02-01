@@ -2886,6 +2886,21 @@ otGetChildInfoByIndex(
 }
 
 OTAPI
+ThreadError
+OTCALL
+otGetNextNeighborInfo(
+    _In_ otInstance *aInstance,
+    _Inout_ otNeighborInfoIterator *aIterator,
+    _Out_ otNeighborInfo *aInfo
+    )
+{
+    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    UNREFERENCED_PARAMETER(aIterator);
+    UNREFERENCED_PARAMETER(aInfo);
+    return kThreadError_NotImplemented; // TODO
+}
+
+OTAPI
 otDeviceRole 
 OTCALL
 otGetDeviceRole(
