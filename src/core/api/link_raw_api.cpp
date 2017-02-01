@@ -285,6 +285,13 @@ otRadioCaps LinkRaw::GetCaps()
     RadioCaps = (otRadioCaps)(RadioCaps | kRadioCapsAckTimeout);
 #endif // OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT
 
+#if OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT
+    // The radio shouldn't support this capability if it is being compile
+    // time included into the raw link-layer code.
+    assert((RadioCaps & kRadioCapsTransmitRetries) == 0);
+    RadioCaps = (otRadioCaps)(RadioCaps | kRadioCapsTransmitRetries);
+#endif // OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT
+
 #if OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN
     // The radio shouldn't support this capability if it is being compile
     // time included into the raw link-layer code.
@@ -402,8 +409,10 @@ void LinkRaw::InvokeTransmitDone(RadioPacket *aPacket, bool aFramePending, Threa
         mTransmitDoneCallback = NULL;
     }
 
+#if OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT
 exit:
     return;
+#endif
 }
 
 ThreadError LinkRaw::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration, otLinkRawEnergyScanDone aCallback)
