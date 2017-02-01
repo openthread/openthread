@@ -291,6 +291,20 @@ exit:
     return error;
 }
 
+void Netif::UnsubscribeAllExternalMulticastAddresses(void)
+{
+    size_t num = sizeof(mExtMulticastAddresses) / sizeof(mExtMulticastAddresses[0]);
+
+    for (NetifMulticastAddress *entry = &mExtMulticastAddresses[0]; num > 0; num--, entry++)
+    {
+        // In unused entries, the `mNext` points back to the entry itself.
+        if (entry->mNext != entry)
+        {
+            UnsubscribeExternalMulticast(*static_cast<Address *>(&entry->mAddress));
+        }
+    }
+}
+
 bool Netif::IsMulticastPromiscuousModeEnabled(void)
 {
     return mMulticastPromiscuousMode;
@@ -448,6 +462,20 @@ exit:
     return error;
 }
 
+void Netif::RemoveAllExternalUnicastAddresses(void)
+{
+    size_t num = sizeof(mExtUnicastAddresses) / sizeof(mExtUnicastAddresses[0]);
+
+    for (NetifUnicastAddress *entry = &mExtUnicastAddresses[0]; num > 0; num--, entry++)
+    {
+        // In unused entries, the `mNext` points back to the entry itself.
+        if (entry->mNext != entry)
+        {
+            RemoveExternalUnicastAddress(*static_cast<Address *>(&entry->mAddress));
+        }
+    }
+}
+
 bool Netif::IsUnicastAddress(const Address &aAddress) const
 {
     bool rval = false;
@@ -463,7 +491,6 @@ bool Netif::IsUnicastAddress(const Address &aAddress) const
 exit:
     return rval;
 }
-
 
 bool Netif::IsStateChangedCallbackPending(void)
 {

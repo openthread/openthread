@@ -126,6 +126,8 @@ ThreadError ThreadNetif::Down(void)
     mMleRouter.Disable();
     mMeshForwarder.Stop();
     mIp6.RemoveNetif(*this);
+    RemoveAllExternalUnicastAddresses();
+    UnsubscribeAllExternalMulticastAddresses();
     mIsUp = false;
 
 #if OPENTHREAD_ENABLE_DTLS
