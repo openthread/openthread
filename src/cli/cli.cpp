@@ -164,17 +164,16 @@ void otFreeMemory(const void *aMem)
 }
 #endif
 
-Interpreter::Interpreter(otInstance * aInstance):
-#ifndef OTDLL
+Interpreter::Interpreter(otInstance *aInstance):
     sServer(NULL),
+#ifdef OTDLL
+    mApiInstance(otApiInit()),
+    mInstanceIndex(0),
+#else
     sLength(8),
     sCount(1),
     sInterval(1000),
     sPingTimer(aInstance->mIp6.mTimerScheduler, &Interpreter::s_HandlePingTimer, this),
-#endif
-#ifdef OTDLL
-    mApiInstance(otApiInit()),
-    mInstanceIndex(0),
 #endif
     mInstance(aInstance)
 {

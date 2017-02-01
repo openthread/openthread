@@ -275,21 +275,6 @@ private:
 
     Server *sServer;
 
-#ifndef OTDLL
-    Ip6::MessageInfo sMessageInfo;
-    uint16_t sLength;
-    uint16_t sCount;
-    uint32_t sInterval;
-    Timer sPingTimer;
-
-    otNetifAddress  mSlaacAddresses[OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES];
-#if OPENTHREAD_ENABLE_DHCP6_CLIENT
-    otDhcpAddress  mDhcpAddresses[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
-#endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
-#endif
-
-    otInstance *mInstance;
-
 #ifdef OTDLL
 
     void CacheInstances();
@@ -304,7 +289,23 @@ private:
     otCliContext mInstances[MAX_CLI_OT_INSTANCES];
     uint8_t mInstancesLength;
     uint8_t mInstanceIndex;
+
+#else
+
+    Ip6::MessageInfo sMessageInfo;
+    uint16_t sLength;
+    uint16_t sCount;
+    uint32_t sInterval;
+    Timer sPingTimer;
+
+    otNetifAddress  mSlaacAddresses[OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES];
+#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+    otDhcpAddress  mDhcpAddresses[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
+#endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
+
 #endif
+
+    otInstance *mInstance;
 };
 
 }  // namespace Cli

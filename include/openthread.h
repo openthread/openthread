@@ -1812,7 +1812,8 @@ OTAPI ThreadError OTCALL otGetChildInfoByIndex(otInstance *aInstance, uint8_t aC
  * @retval kThreadError_InvalidArgs  @p aIterator or @p aInfo was NULL.
  *
  */
-OTAPI ThreadError OTCALL otGetNextNeighborInfo(otInstance *aInstance, otNeighborInfoIterator *aIterator, otNeighborInfo *aInfo);
+OTAPI ThreadError OTCALL otGetNextNeighborInfo(otInstance *aInstance, otNeighborInfoIterator *aIterator,
+                                               otNeighborInfo *aInfo);
 
 /**
  * Get the device role.
