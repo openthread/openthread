@@ -754,22 +754,6 @@ NOTE: called at <= DISPATCH_LEVEL
         // Cache the link state from the miniport
         memcpy(&pFilter->MiniportLinkState, LinkState, sizeof(NDIS_LINK_STATE));
     }
-    /* TODO
-    else if (StatusIndication->StatusCode == NDIS_STATUS_OT_ENERGY_SCAN_RESULT)
-    {
-        NT_ASSERT(StatusIndication->StatusBufferSize == sizeof(OT_ENERGY_SCAN_RESULT));
-        if (StatusIndication->StatusBufferSize != sizeof(OT_ENERGY_SCAN_RESULT)) goto exit;
-
-        POT_ENERGY_SCAN_RESULT ScanResult = (POT_ENERGY_SCAN_RESULT)StatusIndication->StatusBuffer;
-
-        LogInfo(DRIVER_DEFAULT, "Filter: %p, completed energy scan: Rssi:%d, Status:%!NDIS_STATUS!", FilterModuleContext, ScanResult->MaxRssi, ScanResult->Status);
-
-        // Marshal to OpenThread worker to indicate back
-        NT_ASSERT(pFilter->DeviceStatus == OTLWF_DEVICE_STATUS_RADIO_MODE);
-        otLwfEventProcessingIndicateEnergyScanResult(pFilter, ScanResult->MaxRssi);
-    }
-
-exit:*/
 
     NdisFIndicateStatus(pFilter->FilterHandle, StatusIndication);
     

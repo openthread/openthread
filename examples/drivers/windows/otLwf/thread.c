@@ -554,6 +554,26 @@ otLwfThreadValueIs(
             // TODO - Handle reset
         }
     }
+    else if (key == SPINEL_PROP_MAC_ENERGY_SCAN_RESULT)
+    {
+        uint8_t scanChannel;
+        int8_t maxRssi;
+        spinel_ssize_t ret;
+
+        ret = spinel_datatype_unpack(
+            value_data_ptr,
+            value_data_len,
+            "Cc",
+            &scanChannel,
+            &maxRssi);
+
+        NT_ASSERT(ret > 0);
+        if (ret > 0)
+        {
+            LogInfo(DRIVER_DEFAULT, "Filter: %p, completed energy scan: Rssi:%d", pFilter, maxRssi);
+            otLwfEventProcessingIndicateEnergyScanResult(pFilter, maxRssi);
+        }
+    }
     else if (key == SPINEL_PROP_STREAM_RAW)
     {
         if (value_data_len < 256)
