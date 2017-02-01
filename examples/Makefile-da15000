@@ -45,6 +45,7 @@ configure_OPTIONS               = \
     --enable-cli                  \
     --enable-ncp                  \
     --enable-default-logging      \
+    --enable-sw-ack-timeout       \
     --with-examples=da15000       \
     --with-platform-info=DA15000  \
     $(NULL)

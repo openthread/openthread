@@ -872,6 +872,36 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_RAW_LINK_API], [test "${enable_raw_link_api}" 
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_RAW_LINK_API],[${OPENTHREAD_ENABLE_RAW_LINK_API}],[Define to 1 if you want to enable raw link-layer API])
 
 #
+# Software ACK Timeout Logic
+#
+
+AC_ARG_ENABLE(sw_ack_timeout,
+    [AS_HELP_STRING([--enable-sw-ack-timeout],[Enable software ACK timeout logic @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_sw_ack_timeout=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_sw_ack_timeout} for --enable-sw-ack-timeout])
+            ;;
+        esac
+    ],
+    [enable_sw_ack_timeout=no])
+
+if test "$enable_sw_ack_timeout" = "yes"; then
+    OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT=1
+else
+    OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT=0
+fi
+
+AC_SUBST(OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT], [test "${enable_sw_ack_timeout}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT],[${OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT}],[Define to 1 if you want to enable software ACK timeout logic])
+
+#
 # Examples
 #
 
@@ -1156,6 +1186,7 @@ AC_MSG_NOTICE([
   OpenThread DHCPv6 Client support          : ${enable_dhcp6_client}
   Openthread Application CoAP support       : ${enable_application_coap}
   Openthread Raw Link-Layer support         : ${enable_raw_link_api}
+  Openthread Software ACK Timeout support   : ${enable_sw_ack_timeout}
   OpenThread examples                       : ${OPENTHREAD_EXAMPLES}
   OpenThread platform information           : ${PLATFORM_INFO}
 

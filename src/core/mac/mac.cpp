@@ -266,13 +266,9 @@ extern "C" void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyS
 {
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
-    if (aInstance->mLinkRawEnabled)
+    if (aInstance->mLinkRaw.IsEnabled())
     {
-        if (aInstance->mLinkRawEnergyScanDoneCallback)
-        {
-            aInstance->mLinkRawEnergyScanDoneCallback(aInstance, aEnergyScanMaxRssi);
-            aInstance->mLinkRawEnergyScanDoneCallback = NULL;
-        }
+        aInstance->mLinkRaw.InvokeRawEnergyScanDone(aEnergyScanMaxRssi);
     }
     else
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
@@ -807,13 +803,9 @@ extern "C" void otPlatRadioTransmitDone(otInstance *aInstance, RadioPacket *aPac
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
-    if (aInstance->mLinkRawEnabled)
+    if (aInstance->mLinkRaw.IsEnabled())
     {
-        if (aInstance->mLinkRawTransmitDoneCallback)
-        {
-            aInstance->mLinkRawTransmitDoneCallback(aInstance, aPacket, aRxPending, aError);
-            aInstance->mLinkRawTransmitDoneCallback = NULL;
-        }
+        aInstance->mLinkRaw.InvokeRawTransmitDone(aPacket, aRxPending, aError);
     }
     else
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
@@ -1196,12 +1188,9 @@ extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, RadioPacket *aFram
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
-    if (aInstance->mLinkRawEnabled)
+    if (aInstance->mLinkRaw.IsEnabled())
     {
-        if (aInstance->mLinkRawReceiveDoneCallback)
-        {
-            aInstance->mLinkRawReceiveDoneCallback(aInstance, aFrame, aError);
-        }
+        aInstance->mLinkRaw.InvokeRawReceiveDone(aFrame, aError);
     }
     else
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
