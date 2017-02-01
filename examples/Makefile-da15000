@@ -46,6 +46,8 @@ configure_OPTIONS               = \
     --enable-ncp                  \
     --enable-default-logging      \
     --enable-sw-ack-timeout       \
+    --enable-sw-retransmit        \
+    --enable-sw-energy-scan       \
     --with-examples=da15000       \
     --with-platform-info=DA15000  \
     $(NULL)

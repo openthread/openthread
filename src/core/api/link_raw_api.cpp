@@ -32,6 +32,7 @@
  */
 
 #include <common/debug.hpp>
+#include <platform/random.h>
 #include "openthread-instance.h"
 
 #ifdef __cplusplus
@@ -260,10 +261,14 @@ LinkRaw::LinkRaw(otInstance &aInstance):
     mReceiveDoneCallback(NULL),
     mTransmitDoneCallback(NULL),
     mEnergyScanDoneCallback(NULL)
-#if OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT
-    , mAckTimer(aInstance.mIp6.mTimerScheduler, &LinkRaw::HandleAckTimer, this)
+#if OPENTHREAD_LINKRAW_TIMER_REQUIRED
+    , mTimer(aInstance.mIp6.mTimerScheduler, &LinkRaw::HandleTimer, this)
+    , mTimerReason(kTimerReasonNone)
     , mReceiveChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
-#endif // OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT
+#endif // OPENTHREAD_LINKRAW_TIMER_REQUIRED
+#if OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN
+    , mEnergyScanTask(aInstance.mIp6.mTaskletScheduler, &LinkRaw::HandleEnergyScanTask, this)
+#endif // OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN
 {
     // Query the capabilities to check asserts
     (void)GetCaps();
@@ -280,6 +285,13 @@ otRadioCaps LinkRaw::GetCaps()
     RadioCaps = (otRadioCaps)(RadioCaps | kRadioCapsAckTimeout);
 #endif // OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT
 
+#if OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN
+    // The radio shouldn't support this capability if it is being compile
+    // time included into the raw link-layer code.
+    assert((RadioCaps & kRadioCapsEnergyScan) == 0);
+    RadioCaps = (otRadioCaps)(RadioCaps | kRadioCapsEnergyScan);
+#endif // OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN
+
     return RadioCaps;
 }
 
@@ -289,9 +301,9 @@ ThreadError LinkRaw::Receive(uint8_t aChannel, otLinkRawReceiveDone aCallback)
 
     if (mEnabled)
     {
-#if OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT
-        // Only need to cache if we implement ACK timeout logic, so
-        // we can revert back to receive internally on timeout.
+#if OPENTHREAD_LINKRAW_TIMER_REQUIRED
+        // Only need to cache if we implement timer logic that needs to
+        // revert the channel on completion.
         mReceiveChannel = aChannel;
 #endif
 
@@ -302,7 +314,7 @@ ThreadError LinkRaw::Receive(uint8_t aChannel, otLinkRawReceiveDone aCallback)
     return error;
 }
 
-void LinkRaw::InvokeRawReceiveDone(RadioPacket *aPacket, ThreadError aError)
+void LinkRaw::InvokeReceiveDone(RadioPacket *aPacket, ThreadError aError)
 {
     if (mReceiveDoneCallback)
     {
@@ -317,27 +329,71 @@ ThreadError LinkRaw::Transmit(RadioPacket *aPacket, otLinkRawTransmitDone aCallb
     if (mEnabled)
     {
         mTransmitDoneCallback = aCallback;
-        error = otPlatRadioTransmit(&mInstance, aPacket);
 
-#if OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT
-
-        // If we are implementing the ACK timeout logic, start a timer here (if ACK request)
-        // to fire if we don't get a transmit done callback in time.
-        if (static_cast<Mac::Frame *>(otPlatRadioGetTransmitBuffer(&mInstance))->GetAckRequest())
-        {
-            mAckTimer.Start(kAckTimeout);
-        }
-
+#if OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT
+        error = kThreadError_None;
+        mTransmitAttempts = 0;
+        mCsmaAttempts = 0;
+        StartCsmaBackoff();
+#else
+        error = DoTransmit(aPacket);
 #endif
     }
 
     return error;
 }
 
-void LinkRaw::InvokeRawTransmitDone(RadioPacket *aPacket, bool aFramePending, ThreadError aError)
+ThreadError LinkRaw::DoTransmit(RadioPacket *aPacket)
+{
+    ThreadError error = otPlatRadioTransmit(&mInstance, aPacket);
+
+#if OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT
+
+    // If we are implementing the ACK timeout logic, start a timer here (if ACK request)
+    // to fire if we don't get a transmit done callback in time.
+    if (static_cast<Mac::Frame *>(aPacket)->GetAckRequest())
+    {
+        mTimerReason = kTimerReasonAckTimeout;
+        mTimer.Start(kAckTimeout);
+    }
+
+#endif
+
+    return error;
+}
+
+void LinkRaw::InvokeTransmitDone(RadioPacket *aPacket, bool aFramePending, ThreadError aError)
 {
 #if OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT
-    mAckTimer.Stop();
+    mTimer.Stop();
+#endif
+
+#if OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT
+
+    if (aError == kThreadError_ChannelAccessFailure)
+    {
+        if (mCsmaAttempts < Mac::kMaxCSMABackoffs)
+        {
+            mCsmaAttempts++;
+            StartCsmaBackoff();
+            goto exit;
+        }
+    }
+    else
+    {
+        mCsmaAttempts = 0;
+    }
+
+    if (aError == kThreadError_NoAck)
+    {
+        if (mTransmitAttempts < Mac::kMaxFrameAttempts)
+        {
+            mTransmitAttempts++;
+            StartCsmaBackoff();
+            goto exit;
+        }
+    }
+
 #endif
 
     if (mTransmitDoneCallback)
@@ -345,6 +401,9 @@ void LinkRaw::InvokeRawTransmitDone(RadioPacket *aPacket, bool aFramePending, Th
         mTransmitDoneCallback(&mInstance, aPacket, aFramePending, aError);
         mTransmitDoneCallback = NULL;
     }
+
+exit:
+    return;
 }
 
 ThreadError LinkRaw::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration, otLinkRawEnergyScanDone aCallback)
@@ -354,13 +413,25 @@ ThreadError LinkRaw::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration, ot
     if (mEnabled)
     {
         mEnergyScanDoneCallback = aCallback;
+
+#if OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN
+        // Start listening on the scan channel
+        otPlatRadioReceive(&mInstance, aScanChannel);
+
+        // Reset the RSSI value and start scanning
+        mEnergyScanRssi = kInvalidRssiValue;
+        mTimerReason = kTimerReasonEnergyScanComplete;
+        mTimer.Start(aScanDuration);
+        mEnergyScanTask.Post();
+#else
         error = otPlatRadioEnergyScan(&mInstance, aScanChannel, aScanDuration);
+#endif
     }
 
     return error;
 }
 
-void LinkRaw::InvokeRawEnergyScanDone(int8_t aEnergyScanMaxRssi)
+void LinkRaw::InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi)
 {
     if (mEnergyScanDoneCallback)
     {
@@ -369,22 +440,107 @@ void LinkRaw::InvokeRawEnergyScanDone(int8_t aEnergyScanMaxRssi)
     }
 }
 
+#if OPENTHREAD_LINKRAW_TIMER_REQUIRED
+
+void LinkRaw::HandleTimer(void *aContext)
+{
+    static_cast<LinkRaw *>(aContext)->HandleTimer();
+}
+
+void LinkRaw::HandleTimer(void)
+{
+    switch (mTimerReason)
+    {
 #if OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT
 
-void LinkRaw::HandleAckTimer(void *aContext)
-{
-    static_cast<LinkRaw *>(aContext)->HandleAckTimer();
-}
+    case kTimerReasonAckTimeout:
+    {
+        // Transition back to receive state on previous channel
+        otPlatRadioReceive(&mInstance, mReceiveChannel);
 
-void LinkRaw::HandleAckTimer(void)
-{
-    // Transition back to receive state
-    otPlatRadioReceive(&mInstance, mReceiveChannel);
-
-    // Invoke completion callback for transmit
-    InvokeRawTransmitDone(otPlatRadioGetTransmitBuffer(&mInstance), false, kThreadError_NoAck);
-}
+        // Invoke completion callback for transmit
+        InvokeTransmitDone(otPlatRadioGetTransmitBuffer(&mInstance), false, kThreadError_NoAck);
+    }
 
 #endif // OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT
+
+#if OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT
+
+    case kTimerReasonRetransmitTimeout:
+    {
+        RadioPacket *aPacket = otPlatRadioGetTransmitBuffer(&mInstance);
+
+        // Start the  transmit now
+        ThreadError error = DoTransmit(aPacket);
+
+        if (error != kThreadError_None)
+        {
+            InvokeTransmitDone(aPacket, false, error);
+        }
+    }
+
+#endif // OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT
+
+#if OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN
+
+    case kTimerReasonEnergyScanComplete:
+    {
+        // Invoke completion callback for the energy scan
+        InvokeEnergyScanDone(mEnergyScanRssi);
+    }
+
+#endif // OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN
+
+    default:
+        assert(false);
+    }
+}
+
+#endif // OPENTHREAD_LINKRAW_TIMER_REQUIRED
+
+#if OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT
+
+void LinkRaw::StartCsmaBackoff(void)
+{
+    uint32_t backoffExponent = Mac::kMinBE + mTransmitAttempts + mCsmaAttempts;
+    uint32_t backoff;
+
+    if (backoffExponent > Mac::kMaxBE)
+    {
+        backoffExponent = Mac::kMaxBE;
+    }
+
+    backoff = Mac::kMinBackoff + (Mac::kUnitBackoffPeriod * kPhyUsPerSymbol * (1 << backoffExponent)) / 1000;
+    backoff = (otPlatRandomGet() % backoff);
+
+    mTimerReason = kTimerReasonRetransmitTimeout;
+    mTimer.Start(backoff);
+}
+
+#endif // OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT
+
+#if OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN
+
+void LinkRaw::HandleEnergyScanTask(void *aContext)
+{
+    static_cast<LinkRaw *>(aContext)->HandleEnergyScanTask();
+}
+
+void LinkRaw::HandleEnergyScanTask(void)
+{
+    int8_t rssi = otPlatRadioGetRssi(&mInstance);
+
+    if (rssi != kInvalidRssiValue)
+    {
+        if ((mEnergyScanRssi == kInvalidRssiValue) || (rssi > mEnergyScanRssi))
+        {
+            mEnergyScanRssi = rssi;
+        }
+    }
+
+    mEnergyScanTask.Post();
+}
+
+#endif // OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN
 
 } // namespace Thread

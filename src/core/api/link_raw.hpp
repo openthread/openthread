@@ -36,6 +36,12 @@
 
 #include "openthread/link_raw.h"
 
+#if OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT || OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT || OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN
+#define OPENTHREAD_LINKRAW_TIMER_REQUIRED 1
+#else
+#define OPENTHREAD_LINKRAW_TIMER_REQUIRED 0
+#endif
+
 namespace Thread {
 
 class LinkRaw
@@ -64,7 +70,7 @@ public:
      *
      */
     otRadioCaps GetCaps();
-    
+
     /**
      * This method starts a (recurring) Receive on the link-layer.
      *
@@ -75,8 +81,8 @@ public:
      * This method invokes the mReceiveDoneCallback, if set.
      *
      */
-    void InvokeRawReceiveDone(RadioPacket *aPacket, ThreadError aError);
-    
+    void InvokeReceiveDone(RadioPacket *aPacket, ThreadError aError);
+
     /**
      * This method starts a (single) Transmit on the link-layer.
      *
@@ -87,8 +93,8 @@ public:
      * This method invokes the mTransmitDoneCallback, if set.
      *
      */
-    void InvokeRawTransmitDone(RadioPacket *aPacket, bool aFramePending, ThreadError aError);
-    
+    void InvokeTransmitDone(RadioPacket *aPacket, bool aFramePending, ThreadError aError);
+
     /**
      * This method starts a (single) Enery Scan on the link-layer.
      *
@@ -99,25 +105,60 @@ public:
      * This method invokes the mEnergyScanDoneCallback, if set.
      *
      */
-    void InvokeRawEnergyScanDone(int8_t aEnergyScanMaxRssi);
+    void InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi);
 
 private:
 
-    otInstance&             mInstance;
+    otInstance             &mInstance;
     bool                    mEnabled;
     otLinkRawReceiveDone    mReceiveDoneCallback;
     otLinkRawTransmitDone   mTransmitDoneCallback;
     otLinkRawEnergyScanDone mEnergyScanDoneCallback;
 
-#if OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT
+    ThreadError DoTransmit(RadioPacket *aPacket);
 
-    Timer                   mAckTimer;
+#if OPENTHREAD_LINKRAW_TIMER_REQUIRED
+
+    enum TimerReason
+    {
+        kTimerReasonNone,
+        kTimerReasonAckTimeout,
+        kTimerReasonRetransmitTimeout,
+        kTimerReasonEnergyScanComplete,
+    };
+
+    Timer                   mTimer;
+    TimerReason             mTimerReason;
     uint8_t                 mReceiveChannel;
 
-    static void HandleAckTimer(void *aContext);
-    void HandleAckTimer(void);
+    static void HandleTimer(void *aContext);
+    void HandleTimer(void);
 
-#endif
+#endif // OPENTHREAD_LINKRAW_TIMER_REQUIRED
+
+#if OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT
+
+    uint8_t                 mTransmitAttempts;
+    uint8_t                 mCsmaAttempts;
+
+    void StartCsmaBackoff(void);
+
+#endif // OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT
+
+#if OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN
+
+    enum
+    {
+        kInvalidRssiValue = 127
+    };
+
+    Tasklet                 mEnergyScanTask;
+    int8_t                  mEnergyScanRssi;
+
+    static void HandleEnergyScanTask(void *aContext);
+    void HandleEnergyScanTask(void);
+
+#endif // OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN
 };
 
 }  // namespace Thread

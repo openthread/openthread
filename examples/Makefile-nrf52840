@@ -46,6 +46,7 @@ configure_OPTIONS               = \
     --enable-ncp                  \
     --enable-diag                 \
     --enable-sw-ack-timeout       \
+    --enable-sw-retransmit        \
     --with-examples=nrf52840      \
     --with-platform-info=NRF52840 \
     $(NULL)

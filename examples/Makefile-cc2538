@@ -48,6 +48,8 @@ configure_OPTIONS               = \
     --enable-default-logging      \
     --enable-sw-ack-timeout       \
     --with-examples=cc2538        \
+    --enable-sw-retransmit        \
+    --enable-sw-energy-scan       \
     --with-platform-info=CC2538   \
     $(NULL)
 
