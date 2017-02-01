@@ -166,7 +166,21 @@ public:
 
     ThreadError Set(const otOperationalDataset &aDataset);
 
-    ThreadError Set(const uint8_t *aBytes, uint16_t aLength);
+    /**
+     * This methods updates the TLVs in the Dataset.
+     *
+     * If the Dataset does not contain a passed in TLV, the new TLV is added/inserted into the
+     * Dataset, otherwise for an existing TLV, the value gets updated.
+     *
+     * @param[in]  aTlvs          A pointer to buffer with new set of TLVs.
+     * @param[in]  aTlvsLength    Length of @p aTlvs sequence (number of bytes).
+     *
+     * @retval kThreadError_None         Successfully set the Pending Operational Dataset.
+     * @retval kThreadError_NoBufs       Insufficient buffer space to set the Pending Operational Dataset.
+     * @retval kThreadError_InvalidArgs  @p aTlvs was NULL or contained unknown/invalid or improperly formatted TLVs.
+     *
+     */
+    ThreadError Update(const uint8_t *aTlvs, uint16_t aTlvsLength);
 
     /**
      * This method removes a TLV from the Dataset.

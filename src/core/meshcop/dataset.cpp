@@ -361,14 +361,14 @@ exit:
     return error;
 }
 
-ThreadError Dataset::Set(const uint8_t *aBytes, uint16_t aLength)
+ThreadError Dataset::Update(const uint8_t *aTlvs, uint16_t aTlvsLength)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(aBytes != NULL, error = kThreadError_InvalidArgs);
-    VerifyOrExit(aLength <= sizeof(mTlvs), error = kThreadError_NoBufs);
-    memcpy(mTlvs, aBytes, aLength);
-    mLength = aLength;
+    VerifyOrExit(aTlvs != NULL, error = kThreadError_InvalidArgs);
+
+
+
 
 exit:
     return error;
