@@ -78,7 +78,7 @@ void nrf5RandomInit(void);
 void nrf5LogInit(void);
 
 /**
- * Function for processing SPI Slave driver.
+ * Initialization of Misc module.
  *
  */
 void nrf5MiscInit(void);
@@ -94,5 +94,11 @@ void nrf5RadioInit(void);
  *
  */
 void nrf5RadioProcess(otInstance *aInstance);
+
+/**
+ * Initialization of hardware crypto engine.
+ *
+ */
+void nrf5CryptoInit(void);
 
 #endif  // PLATFORM_NRF5_H_
