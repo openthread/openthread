@@ -858,7 +858,7 @@ void NcpBase::LinkRawEnergyScanDone(otInstance *, int8_t aEnergyScanMaxRssi)
 
 void NcpBase::LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi)
 {
-    NcpBase::SendPropertyUpdate(
+    SendPropertyUpdate(
         SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
         SPINEL_CMD_PROP_VALUE_IS,
         SPINEL_PROP_MAC_ENERGY_SCAN_RESULT,
@@ -873,6 +873,16 @@ void NcpBase::LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi)
     // Make sure we are back listening on the original receive channel,
     // since the energy scan could have been on a different channel.
     otLinkRawReceive(mInstance, mCurReceiveChannel, &NcpBase::LinkRawReceiveDone);
+
+    // We are finished with the scan, so send out
+    // a property update indicating such.
+    SendPropertyUpdate(
+        SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+        SPINEL_CMD_PROP_VALUE_IS,
+        SPINEL_PROP_MAC_SCAN_STATE,
+        SPINEL_DATATYPE_UINT8_S,
+        SPINEL_SCAN_STATE_IDLE
+    );
 }
 
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
@@ -3496,6 +3506,21 @@ ThreadError NcpBase::SetPropertyHandler_NET_REQUIRE_JOIN_EXISTING(uint8_t header
     return errorCode;
 }
 
+bool HasOnly1BitSet(uint32_t aValue)
+{
+    return aValue != 0 && ((aValue & (aValue-1)) == 0);
+}
+
+uint8_t IndexOfMSB(uint32_t aValue)
+{
+    uint8_t index = 0;
+    while (aValue >>= 1)
+    {
+        index++;
+    }
+    return index;
+}
+
 ThreadError NcpBase::SetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                        uint16_t value_len)
 {
@@ -3547,33 +3572,20 @@ ThreadError NcpBase::SetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_pr
 #if OPENTHREAD_ENABLE_RAW_LINK_API
             if (otLinkRawIsEnabled(mInstance))
             {
-                if (mCurScanChannel == NCP_INVALID_SCAN_CHANNEL)
+                // Make sure we aren't already scanning and that we have
+                // only 1 bit set for the channel mask.
+                if (mCurScanChannel == NCP_INVALID_SCAN_CHANNEL &&
+                    HasOnly1BitSet(mChannelMask))
                 {
-                    uint8_t scanChannel;
-                    uint16_t scanDuration;
+                    uint8_t scanChannel = IndexOfMSB(mChannelMask);
+                    mCurScanChannel = (int8_t)scanChannel;
 
-                    parsedLength = spinel_datatype_unpack(
-                        value_ptr + parsedLength,
-                        (spinel_size_t)(value_len - parsedLength),
-                        SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT16_S,
-                        &scanChannel,
-                        &scanDuration
-                    );
-
-                    if (parsedLength > 0)
-                    {
-                        mCurScanChannel = (int8_t)scanChannel;
-                        errorCode = otLinkRawEnergyScan(
-                                        mInstance,
-                                        scanChannel,
-                                        scanDuration,
-                                        LinkRawEnergyScanDone
-                                    );
-                    }
-                    else
-                    {
-                        errorCode = kThreadError_Parse;
-                    }
+                    errorCode = otLinkRawEnergyScan(
+                                    mInstance,
+                                    scanChannel,
+                                    mScanPeriod,
+                                    LinkRawEnergyScanDone
+                                );
                 }
                 else
                 {
