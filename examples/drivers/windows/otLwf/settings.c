@@ -40,7 +40,7 @@ void otPlatSettingsInit(otInstance *otCtx)
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
 
-    DECLARE_CONST_UNICODE_STRING(SubKeyName, L"\\OpenThread");
+    DECLARE_CONST_UNICODE_STRING(SubKeyName, L"OpenThread");
 
     OBJECT_ATTRIBUTES attributes;
     ULONG disposition;
@@ -128,7 +128,7 @@ NTSTATUS FilterReadSetting(_In_ PMS_FILTER pFilter, uint16_t aKey, int aIndex, u
 {
     HANDLE regKey = NULL;
     OBJECT_ATTRIBUTES attributes;
-    DECLARE_UNICODE_STRING_SIZE(Name, 8);
+    DECLARE_UNICODE_STRING_SIZE(Name, 20);
     PKEY_VALUE_PARTIAL_INFORMATION pInfo = NULL;
     ULONG InfoLength = sizeof(*pInfo) + *aValueLength;
 
@@ -200,7 +200,7 @@ NTSTATUS FilterWriteSetting(_In_ PMS_FILTER pFilter, uint16_t aKey, int aIndex, 
 {
     HANDLE regKey = NULL;
     OBJECT_ATTRIBUTES attributes;
-    DECLARE_UNICODE_STRING_SIZE(Name, 8);
+    DECLARE_UNICODE_STRING_SIZE(Name, 20);
 
     // Convert 'aKey' to a string
     RtlIntegerToUnicodeString((ULONG)aKey, 16, &Name);
@@ -260,7 +260,7 @@ NTSTATUS FilterDeleteSetting(_In_ PMS_FILTER pFilter, uint16_t aKey, int aIndex)
 {
     HANDLE regKey = NULL;
     OBJECT_ATTRIBUTES attributes;
-    DECLARE_UNICODE_STRING_SIZE(Name, 8);
+    DECLARE_UNICODE_STRING_SIZE(Name, 20);
 
     // Convert 'aKey' to a string
     RtlIntegerToUnicodeString((ULONG)aKey, 16, &Name);
@@ -290,7 +290,6 @@ NTSTATUS FilterDeleteSetting(_In_ PMS_FILTER pFilter, uint16_t aKey, int aIndex)
     {
         // Delete the registry key
         status = ZwDeleteKey(regKey);
-        regKey = NULL;
     }
     else
     {
@@ -318,9 +317,22 @@ NTSTATUS FilterDeleteSetting(_In_ PMS_FILTER pFilter, uint16_t aKey, int aIndex)
             goto error;
         }
 
-        // If we aren't deleting the last value, then we need to copy over it from the last value
-        if (pKeyInfo->Values - 1 != (ULONG)aIndex)
+        if ((ULONG)aIndex >= pKeyInfo->Values)
         {
+            // Attempt to delete beyond the end of the list
+            status = STATUS_OBJECT_NAME_NOT_FOUND;
+            goto error;
+        }
+        else if (pKeyInfo->Values == 1)
+        {
+            // Deleting the only value on the key, go ahead and delete the entire key
+            status = ZwDeleteKey(regKey);
+        }
+        else if (pKeyInfo->Values - 1 != (ULONG)aIndex)
+        {
+            // We aren't deleting the last value so we need to copy the last value
+            // over this one, and then delete the last one.
+
             PKEY_VALUE_PARTIAL_INFORMATION pValueInfo = NULL;
             ULONG ValueInfoLength = 0;
 
@@ -402,6 +414,9 @@ NTSTATUS FilterDeleteSetting(_In_ PMS_FILTER pFilter, uint16_t aKey, int aIndex)
         }
         else
         {
+            // Deleting the last value in the list (but not the only value)
+            // Just delete the value directly. No need to copy any others.
+
             // Convert 'aIndex' to a string
             RtlIntegerToUnicodeString((ULONG)aIndex, 16, &Name);
 
@@ -511,6 +526,7 @@ void otPlatSettingsWipe(otInstance *otCtx)
     if (pFilter->otSettingsRegKey)
     {
         ZwDeleteKey(pFilter->otSettingsRegKey);
+        ZwClose(pFilter->otSettingsRegKey);
         pFilter->otSettingsRegKey = NULL;
     }
 
