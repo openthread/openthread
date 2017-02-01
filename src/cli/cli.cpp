@@ -158,7 +158,7 @@ uint32_t otPlatRandomGet(void)
     return (uint32_t)rand();
 }
 #else
-void otFreeMemory(const void *aMem)
+void otFreeMemory(const void *)
 {
     // No-op on systems running OpenThread in-proc
 }
@@ -683,10 +683,10 @@ void Interpreter::ProcessExtAddress(int argc, char *argv[])
 
     if (argc == 0)
     {
-        const uint8_t *aExtAddress = otGetExtendedAddress(mInstance);
-        OutputBytes(aExtAddress, OT_EXT_ADDRESS_SIZE);
+        const uint8_t *extAddress = otGetExtendedAddress(mInstance);
+        OutputBytes(extAddress, OT_EXT_ADDRESS_SIZE);
         sServer->OutputFormat("\r\n");
-        otFreeMemory(aExtAddress);
+        otFreeMemory(extAddress);
     }
     else
     {
@@ -716,10 +716,10 @@ void Interpreter::ProcessExtPanId(int argc, char *argv[])
 
     if (argc == 0)
     {
-        const uint8_t *aExtPanId = otGetExtendedPanId(mInstance);
-        OutputBytes(aExtPanId, OT_EXT_PAN_ID_SIZE);
+        const uint8_t *extPanId = otGetExtendedPanId(mInstance);
+        OutputBytes(extPanId, OT_EXT_PAN_ID_SIZE);
         sServer->OutputFormat("\r\n");
-        otFreeMemory(aExtPanId);
+        otFreeMemory(extPanId);
     }
     else
     {
@@ -822,9 +822,9 @@ void Interpreter::ProcessIpAddr(int argc, char *argv[])
 
     if (argc == 0)
     {
-        const otNetifAddress *aUnicastAddrs = otGetUnicastAddresses(mInstance);
+        const otNetifAddress *unicastAddrs = otGetUnicastAddresses(mInstance);
 
-        for (const otNetifAddress *addr = aUnicastAddrs; addr; addr = addr->mNext)
+        for (const otNetifAddress *addr = unicastAddrs; addr; addr = addr->mNext)
         {
             sServer->OutputFormat("%x:%x:%x:%x:%x:%x:%x:%x\r\n",
                                   HostSwap16(addr->mAddress.mFields.m16[0]),
@@ -837,7 +837,7 @@ void Interpreter::ProcessIpAddr(int argc, char *argv[])
                                   HostSwap16(addr->mAddress.mFields.m16[7]));
         }
 
-        otFreeMemory(aUnicastAddrs);
+        otFreeMemory(unicastAddrs);
     }
     else
     {
@@ -1210,9 +1210,9 @@ void Interpreter::ProcessNetworkName(int argc, char *argv[])
 
     if (argc == 0)
     {
-        const char *aNetworkName = otGetNetworkName(mInstance);
-        sServer->OutputFormat("%.*s\r\n", OT_NETWORK_NAME_MAX_SIZE, aNetworkName);
-        otFreeMemory(aNetworkName);
+        const char *networkName = otGetNetworkName(mInstance);
+        sServer->OutputFormat("%.*s\r\n", OT_NETWORK_NAME_MAX_SIZE, networkName);
+        otFreeMemory(networkName);
     }
     else
     {
@@ -2202,10 +2202,10 @@ exit:
 
 void Interpreter::ProcessVersion(int argc, char *argv[])
 {
-    const char *aVersion = otGetVersionString();
-    sServer->OutputFormat("%s\r\n", aVersion);
+    const char *version = otGetVersionString();
+    sServer->OutputFormat("%s\r\n", version);
     AppendResult(kThreadError_None);
-    otFreeMemory(aVersion);
+    otFreeMemory(version);
     (void)argc;
     (void)argv;
 }
@@ -2699,8 +2699,8 @@ exit:
 void OTCALL Interpreter::s_HandleNetifStateChanged(uint32_t aFlags, void *aContext)
 {
 #ifdef OTDLL
-    otCliContext *aCliContext = static_cast<otCliContext *>(aContext);
-    aCliContext->aInterpreter->HandleNetifStateChanged(aCliContext->aInstance, aFlags);
+    otCliContext *cliContext = static_cast<otCliContext *>(aContext);
+    cliContext->aInterpreter->HandleNetifStateChanged(cliContext->aInstance, aFlags);
 #else
     static_cast<Interpreter *>(aContext)->HandleNetifStateChanged(aFlags);
 #endif
