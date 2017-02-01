@@ -3574,18 +3574,24 @@ ThreadError NcpBase::SetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_pr
             {
                 // Make sure we aren't already scanning and that we have
                 // only 1 bit set for the channel mask.
-                if (mCurScanChannel == NCP_INVALID_SCAN_CHANNEL &&
-                    HasOnly1BitSet(mChannelMask))
+                if (mCurScanChannel == NCP_INVALID_SCAN_CHANNEL)
                 {
-                    uint8_t scanChannel = IndexOfMSB(mChannelMask);
-                    mCurScanChannel = (int8_t)scanChannel;
+                    if (HasOnly1BitSet(mChannelMask))
+                    {
+                        uint8_t scanChannel = IndexOfMSB(mChannelMask);
+                        mCurScanChannel = (int8_t)scanChannel;
 
-                    errorCode = otLinkRawEnergyScan(
-                                    mInstance,
-                                    scanChannel,
-                                    mScanPeriod,
-                                    LinkRawEnergyScanDone
-                                );
+                        errorCode = otLinkRawEnergyScan(
+                                        mInstance,
+                                        scanChannel,
+                                        mScanPeriod,
+                                        LinkRawEnergyScanDone
+                                    );
+                    }
+                    else
+                    {
+                        errorCode = kThreadError_InvalidArgs;
+                    }
                 }
                 else
                 {
