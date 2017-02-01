@@ -539,46 +539,7 @@ private:
     uint32_t mStateChangedFlags;
 
     NetifUnicastAddress mExtUnicastAddresses[OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS];
-    uint8_t mMaskExtUnicastAddresses; // Must have enough bits to hold OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS
-
     NetifMulticastAddress mExtMulticastAddresses[OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS];
-    uint8_t mMaskExtMulticastAddresses; // Must have enough bits to hold OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS
-
-    /**
-     * This method determines if an address is one of the external unicast addresses, and if so returns
-     * the index in the mExtUnicastAddresses array.
-     *
-     * @param[in]  aAddress  A pointer to the Network Interface address.
-     *
-     * @returns The index in the mExtUnicastAddresses array or -1 if not part of the array.
-     *
-     */
-    int8_t GetExtUnicastAddressIndex(const NetifUnicastAddress *address) {
-        if (address < &mExtUnicastAddresses[0] ||
-            address >= &mExtUnicastAddresses[0] + OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS) {
-            return -1;
-        }
-
-        return static_cast<int8_t>(address - &mExtUnicastAddresses[0]);
-    }
-
-    /**
-     * This method determines if an address is one of the external multicast addresses, and if so returns
-     * the index in the mExtMulticastAddresses array.
-     *
-     * @param[in]  aAddress  A pointer to the Network Interface Multicast address.
-     *
-     * @returns The index in the mExtMulticastAddresses array or -1 if not part of the array.
-     *
-     */
-    int8_t GetExtMulticastAddressIndex(const NetifMulticastAddress *address) {
-        if (address < &mExtMulticastAddresses[0] ||
-            address >= &mExtMulticastAddresses[0] + OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS) {
-            return -1;
-        }
-
-        return static_cast<int8_t>(address - &mExtMulticastAddresses[0]);
-    }
 };
 
 /**
