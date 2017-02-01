@@ -40,7 +40,6 @@
 #endif
 
 #include <ncp/ncp_base.hpp>
-#include <ncp/flen.hpp>
 #include <ncp/hdlc.hpp>
 #include <ncp/ncp_buffer.hpp>
 

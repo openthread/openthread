@@ -831,35 +831,49 @@ ThreadError otPlatRadioEnergyScan(_In_ otInstance *otCtx, uint8_t aScanChannel, 
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
-    UNREFERENCED_PARAMETER(pFilter);
-    UNREFERENCED_PARAMETER(aScanChannel);
-    UNREFERENCED_PARAMETER(aScanDuration);
-    return kThreadError_NotImplemented;
-    /*NDIS_STATUS status;
-    ULONG bytesProcessed;
-    OT_ENERGY_SCAN OidBuffer = { {NDIS_OBJECT_TYPE_DEFAULT, OT_ENERGY_SCAN_REVISION_1, SIZEOF_OT_ENERGY_SCAN_REVISION_1}, aScanChannel, aScanDuration };
-    
-    LogInfo(DRIVER_DEFAULT, "Filter %p starting energy scan on channel %d (%d ms).", pFilter, aScanChannel, aScanDuration);
 
-    // Cache the listening channel
-    pFilter->otCurrentListenChannel = aScanChannel;
-
-    // Indicate to the miniport
-    status = 
-        otLwfSendInternalRequest(
+    NTSTATUS status =
+        otLwfCmdSetProp(
             pFilter,
-            NdisRequestSetInformation,
-            OID_OT_ENERGY_SCAN,
-            &OidBuffer,
-            sizeof(OidBuffer),
-            &bytesProcessed
-            );
-    if (status != NDIS_STATUS_SUCCESS)
+            SPINEL_PROP_MAC_SCAN_MASK,
+            SPINEL_DATATYPE_UINT8_S,
+            aScanChannel
+        );
+    if (!NT_SUCCESS(status))
     {
-        LogError(DRIVER_DEFAULT, "Set for OID_OT_ENERGY_SCAN failed, %!NDIS_STATUS!", status);
+        LogError(DRIVER_DEFAULT, "Set SPINEL_PROP_MAC_SCAN_MASK failed, %!STATUS!", status);
+        goto error;
     }
 
-    return NT_SUCCESS(status) ? kThreadError_None : kThreadError_Failed;*/
+    status =
+        otLwfCmdSetProp(
+            pFilter,
+            SPINEL_PROP_MAC_SCAN_PERIOD,
+            SPINEL_DATATYPE_UINT16_S,
+            aScanDuration
+        );
+    if (!NT_SUCCESS(status))
+    {
+        LogError(DRIVER_DEFAULT, "Set SPINEL_PROP_MAC_SCAN_PERIOD failed, %!STATUS!", status);
+        goto error;
+    }
+
+    status =
+        otLwfCmdSetProp(
+            pFilter,
+            SPINEL_PROP_MAC_SCAN_STATE,
+            SPINEL_DATATYPE_UINT8_S,
+            SPINEL_SCAN_STATE_ENERGY
+        );
+    if (!NT_SUCCESS(status))
+    {
+        LogError(DRIVER_DEFAULT, "Set SPINEL_PROP_MAC_SCAN_STATE failed, %!STATUS!", status);
+        goto error;
+    }
+
+error:
+
+    return NT_SUCCESS(status) ? kThreadError_None : kThreadError_Failed;
 }
 
 inline USHORT getDstShortAddress(const UCHAR *frame)

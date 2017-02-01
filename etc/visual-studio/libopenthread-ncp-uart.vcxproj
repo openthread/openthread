@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="openthread.configuration.props" /> 
   <PropertyGroup Label="Globals">
@@ -54,7 +54,6 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\ncp\flen.cpp" />
     <ClCompile Include="..\..\src\ncp\hdlc.cpp" />
     <ClCompile Include="..\..\src\ncp\ncp_base.cpp" />
     <ClCompile Include="..\..\src\ncp\ncp_buffer.cpp" />
@@ -62,7 +61,6 @@
     <ClCompile Include="..\..\src\ncp\spinel.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\ncp\flen.hpp" />
     <ClInclude Include="..\..\src\ncp\hdlc.hpp" />
     <ClInclude Include="..\..\src\ncp\ncp_base.hpp" />
     <ClInclude Include="..\..\src\ncp\ncp_buffer.hpp" />

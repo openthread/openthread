@@ -1028,6 +1028,9 @@ OTAPI ThreadError OTCALL otSendPendingSet(otInstance *aInstance, const otOperati
 /**
  * Get the data poll period of sleepy end device.
  *
+ * @note This function updates only poll period of sleepy end device. To update child timeout the function
+ *       otGetChildTimeout() shall be called.
+ *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns  The data poll period of sleepy end device.

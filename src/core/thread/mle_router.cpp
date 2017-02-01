@@ -1666,31 +1666,37 @@ ThreadError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::M
         break;
     }
 
-    if ((child = FindChild(macAddr)) != NULL)
-    {
-        RemoveNeighbor(*child);
-    }
-    else
-    {
-        VerifyOrExit((child = NewChild()) != NULL, ;);
-    }
-
-    memset(child, 0, sizeof(*child));
-
     // Challenge
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kChallenge, sizeof(challenge), challenge));
     VerifyOrExit(challenge.IsValid(), error = kThreadError_Parse);
 
-    // MAC Address
-    memcpy(&child->mMacAddr, &macAddr, sizeof(child->mMacAddr));
-    child->mLinkInfo.Clear();
-    child->mLinkInfo.AddRss(mNetif.GetMac().GetNoiseFloor(), threadMessageInfo->mRss);
-    child->mLinkFailures = 0;
-    child->mState = Neighbor::kStateParentRequest;
-    child->mDataRequest = false;
+    child = FindChild(macAddr);
 
-    child->mLastHeard = Timer::GetNow();
-    child->mTimeout = Timer::MsecToSec(kMaxChildIdRequestTimeout);
+    if (child != NULL && !(child->mMode & ModeTlv::kModeFFD))
+    {
+        // Parent Request from a MTD child means that the child had detached. It can be safely removed.
+        RemoveNeighbor(*child);
+        child = NULL;
+    }
+
+    if (child == NULL)
+    {
+        VerifyOrExit((child = NewChild()) != NULL, ;);
+
+        memset(child, 0, sizeof(*child));
+
+        // MAC Address
+        memcpy(&child->mMacAddr, &macAddr, sizeof(child->mMacAddr));
+        child->mLinkInfo.Clear();
+        child->mLinkInfo.AddRss(mNetif.GetMac().GetNoiseFloor(), threadMessageInfo->mRss);
+        child->mLinkFailures = 0;
+        child->mState = Neighbor::kStateParentRequest;
+        child->mDataRequest = false;
+
+        child->mLastHeard = Timer::GetNow();
+        child->mTimeout = Timer::MsecToSec(kMaxChildIdRequestTimeout);
+    }
+
     SuccessOrExit(error = SendParentResponse(child, challenge, !scanMask.IsEndDeviceFlagSet()));
 
 exit:
@@ -1976,12 +1982,12 @@ ThreadError MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &cha
     SuccessOrExit(error = AppendMleFrameCounter(*message));
     SuccessOrExit(error = AppendResponse(*message, challenge.GetChallenge(), challenge.GetLength()));
 
-    for (uint8_t i = 0; i < sizeof(aChild->mPending.mChallenge); i++)
+    for (uint8_t i = 0; i < sizeof(aChild->mAttachChallenge); i++)
     {
-        aChild->mPending.mChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
+        aChild->mAttachChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
     }
 
-    SuccessOrExit(error = AppendChallenge(*message, aChild->mPending.mChallenge, sizeof(aChild->mPending.mChallenge)));
+    SuccessOrExit(error = AppendChallenge(*message, aChild->mAttachChallenge, sizeof(aChild->mAttachChallenge)));
 
     if (isAssignLinkQuality &&
         (memcmp(mAddr64.m8, aChild->mMacAddr.m8, OT_EXT_ADDRESS_SIZE) == 0))
@@ -2083,7 +2089,7 @@ ThreadError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::
     // Response
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kResponse, sizeof(response), response));
     VerifyOrExit(response.IsValid() &&
-                 memcmp(response.GetResponse(), child->mPending.mChallenge, sizeof(child->mPending.mChallenge)) == 0, ;);
+                 memcmp(response.GetResponse(), child->mAttachChallenge, sizeof(child->mAttachChallenge)) == 0, ;);
 
     // Link-Layer Frame Counter
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLinkFrameCounter, sizeof(linkFrameCounter),
@@ -2154,6 +2160,16 @@ ThreadError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::
     {
         child->mState = Neighbor::kStateChildIdRequest;
     }
+    else
+    {
+        RemoveStoredChild(child->mValid.mRloc16);
+
+        if (!(child->mMode & ModeTlv::kModeRxOnWhenIdle))
+        {
+            mNetif.GetMeshForwarder().ClearChildIndirectMessages(*child);
+        }
+    }
+
 
     child->mLastHeard = Timer::GetNow();
     child->mValid.mLinkFrameCounter = linkFrameCounter.GetFrameCounter();
@@ -2757,6 +2773,8 @@ ThreadError MleRouter::SendChildUpdateRequest(Child *aChild)
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
     SuccessOrExit(error = AppendNetworkData(*message, (aChild->mMode & ModeTlv::kModeFullNetworkData) == 0));
+    SuccessOrExit(error = AppendActiveTimestamp(*message, false));
+    SuccessOrExit(error = AppendPendingTimestamp(*message, false));
     SuccessOrExit(error = AppendTlvRequest(*message, tlvs, sizeof(tlvs)));
 
     for (uint8_t i = 0; i < sizeof(aChild->mPending.mChallenge); i++)
@@ -2816,6 +2834,8 @@ ThreadError MleRouter::SendChildUpdateResponse(Child *aChild, const Ip6::Message
 
         case Tlv::kNetworkData:
             SuccessOrExit(error = AppendNetworkData(*message, (aChild->mMode & ModeTlv::kModeFullNetworkData) == 0));
+            SuccessOrExit(error = AppendActiveTimestamp(*message, false));
+            SuccessOrExit(error = AppendPendingTimestamp(*message, false));
             break;
 
         case Tlv::kResponse:
