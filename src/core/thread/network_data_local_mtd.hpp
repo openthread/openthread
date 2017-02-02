@@ -47,6 +47,8 @@ class Local
 public:
     explicit Local(ThreadNetif &) { }
 
+    void Clear(void) { }
+
     ThreadError AddOnMeshPrefix(const uint8_t *, uint8_t, int8_t, uint8_t, bool) { return kThreadError_NotImplemented; }
     ThreadError RemoveOnMeshPrefix(const uint8_t *, uint8_t) { return kThreadError_NotImplemented; }
 

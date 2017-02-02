@@ -246,6 +246,8 @@ ThreadError Mle::Stop(bool aClearNetworkDatasets)
     mNetif.GetKeyManager().Stop();
     SetStateDetached();
     mNetif.RemoveUnicastAddress(mMeshLocal16);
+    mNetif.GetNetworkDataLocal().Clear();
+    mNetif.GetNetworkDataLeader().Clear();
 
     if (aClearNetworkDatasets)
     {
