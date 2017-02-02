@@ -61,7 +61,8 @@ JoinerRouter::JoinerRouter(ThreadNetif &aNetif):
     mRelayTransmit(OPENTHREAD_URI_RELAY_TX, &JoinerRouter::HandleRelayTransmit, this),
     mNetif(aNetif),
     mJoinerUdpPort(0),
-    mIsJoinerPortConfigured(false)
+    mIsJoinerPortConfigured(false),
+    mTimer(aNetif.GetIp6().mTimerScheduler, &JoinerRouter::HandleTimer, this)
 {
     mSocket.GetSockName().mPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
     mNetif.GetCoapServer().AddResource(mRelayTransmit);
@@ -291,7 +292,9 @@ void JoinerRouter::HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage,
     {
         otLogInfoMeshCoP("Received kek");
         mNetif.GetKeyManager().SetKek(kek.GetKek());
-        SendJoinerEntrust(messageInfo);
+        mJoinerEntMessageInfo = messageInfo;
+
+        mTimer.Start(kDelayJoinEnt);
     }
 
 exit:
@@ -304,6 +307,18 @@ exit:
 
     otLogFuncExitErr(error);
 }
+
+void JoinerRouter::HandleTimer(void *aContext)
+{
+    static_cast<JoinerRouter *>(aContext)->HandleTimer();
+}
+
+void JoinerRouter::HandleTimer(void)
+{
+    otLogInfoMeshCoP("Sending JOIN_ENT.ntf");
+    SendJoinerEntrust(mJoinerEntMessageInfo);
+}
+
 
 ThreadError JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo)
 {

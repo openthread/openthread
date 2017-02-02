@@ -41,6 +41,7 @@
 #include <coap/coap_server.hpp>
 #include <coap/coap_base.hpp>
 #include <common/message.hpp>
+#include <common/timer.hpp>
 #include <mac/mac_frame.hpp>
 #include <net/udp6.hpp>
 
@@ -80,6 +81,11 @@ public:
     ThreadError SetJoinerUdpPort(uint16_t aJoinerUdpPort);
 
 private:
+    enum
+    {
+        kDelayJoinEnt = 50,  ///< milliseconds
+    };
+
     static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);
     void HandleNetifStateChanged(uint32_t aFlags);
 
@@ -94,6 +100,10 @@ private:
                                             const otMessageInfo *aMessageInfo, ThreadError result);
     void HandleJoinerEntrustResponse(Coap::Header *aHeader, Message *aMessage,
                                      const Ip6::MessageInfo *aMessageInfo, ThreadError result);
+
+    static void HandleTimer(void *aContext);
+    void HandleTimer(void);
+
     ThreadError SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo);
 
     ThreadError GetBorderAgentRloc(uint16_t &aRloc);
@@ -106,6 +116,9 @@ private:
 
     uint16_t mJoinerUdpPort;
     bool mIsJoinerPortConfigured;
+
+    Timer mTimer;
+    Ip6::MessageInfo mJoinerEntMessageInfo;
 };
 
 }  // namespace MeshCoP
