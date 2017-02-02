@@ -855,6 +855,7 @@ typedef struct otMacCounters
     uint32_t mTxOther;                ///< The number of transmitted other types of frames.
     uint32_t mTxRetry;                ///< The number of retransmission times.
     uint32_t mTxErrCca;               ///< The number of CCA failure times.
+    uint32_t mTxErrAbort;             ///< The number of frame transmission failures due to abort error.
     uint32_t mRxTotal;                ///< The total number of received packets.
     uint32_t mRxUnicast;              ///< The total number of unicast packets received.
     uint32_t mRxBroadcast;            ///< The total number of broadcast packets received.

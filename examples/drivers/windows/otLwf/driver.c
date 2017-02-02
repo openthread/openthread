@@ -75,68 +75,67 @@ Return Value:
 
 --*/
 {
-    NDIS_STATUS                         Status;
-    NDIS_FILTER_DRIVER_CHARACTERISTICS  FChars;
-    NDIS_STRING                         ServiceName = RTL_CONSTANT_STRING(FILTER_SERVICE_NAME);
-    NDIS_STRING                         UniqueName = RTL_CONSTANT_STRING(FILTER_UNIQUE_NAME);
-    NDIS_STRING                         FriendlyName = RTL_CONSTANT_STRING(FILTER_FRIENDLY_NAME);
-    BOOLEAN                             bFalse = FALSE;
+    NDIS_STATUS Status;
 
-    //
     // Initialize WPP logging
-    //
     WPP_INIT_TRACING(DriverObject, RegistryPath);
 
-    //
     // Save global DriverObject
-    //
     FilterDriverObject = DriverObject;
 
-    // Cache perf freq
+    // Set the driver unload handler
+    DriverObject->DriverUnload = DriverUnload;
+
+    // Cache performance counter frequency
     (VOID)KeQueryPerformanceCounter(&FilterPerformanceFrequency);
 
-    LogFuncEntry(DRIVER_DEFAULT);
+    LogFuncEntryMsg(DRIVER_DEFAULT, "Registry: %S", RegistryPath->Buffer);
 
     do
     {
-        NdisZeroMemory(&FChars, sizeof(NDIS_FILTER_DRIVER_CHARACTERISTICS));
-        FChars.Header.Type = NDIS_OBJECT_TYPE_FILTER_DRIVER_CHARACTERISTICS;
-        FChars.Header.Size = sizeof(NDIS_FILTER_DRIVER_CHARACTERISTICS);
+        NDIS_FILTER_DRIVER_CHARACTERISTICS  FChars = 
+        {
+            {
+                NDIS_OBJECT_TYPE_FILTER_DRIVER_CHARACTERISTICS,
 #if NDIS_SUPPORT_NDIS61
-        FChars.Header.Revision = NDIS_FILTER_CHARACTERISTICS_REVISION_2;
+                NDIS_FILTER_CHARACTERISTICS_REVISION_2,
 #else
-        FChars.Header.Revision = NDIS_FILTER_CHARACTERISTICS_REVISION_1;
+                NDIS_FILTER_CHARACTERISTICS_REVISION_1,
 #endif
+                sizeof(NDIS_FILTER_DRIVER_CHARACTERISTICS)
+            },
+            NDIS_FILTER_MAJOR_VERSION,
+            NDIS_FILTER_MINOR_VERSION,
+            1,
+            0,
+            0,
+            RTL_CONSTANT_STRING(FILTER_FRIENDLY_NAME),
+            RTL_CONSTANT_STRING(FILTER_UNIQUE_NAME),
+            RTL_CONSTANT_STRING(FILTER_SERVICE_NAME),
 
-        FChars.MajorNdisVersion = NDIS_FILTER_MAJOR_VERSION;
-        FChars.MinorNdisVersion = NDIS_FILTER_MINOR_VERSION;
-        FChars.MajorDriverVersion = 1;
-        FChars.MinorDriverVersion = 0;
-        FChars.Flags = 0;
-
-        FChars.FriendlyName = FriendlyName;
-        FChars.UniqueName = UniqueName;
-        FChars.ServiceName = ServiceName;
-
-        DriverObject->DriverUnload =                DriverUnload;
-
-        FChars.AttachHandler =                      FilterAttach;
-        FChars.DetachHandler =                      FilterDetach;
-        FChars.RestartHandler =                     FilterRestart;
-        FChars.PauseHandler =                       FilterPause;
-        FChars.StatusHandler =                      FilterStatus;
-
-        FChars.OidRequestHandler =                  FilterOidRequest;
-        FChars.OidRequestCompleteHandler =          FilterOidRequestComplete;
-
-        FChars.DevicePnPEventNotifyHandler =        FilterDevicePnPEventNotify;
-        FChars.NetPnPEventHandler =                 FilterNetPnPEvent;
-
-        FChars.SendNetBufferListsHandler =          FilterSendNetBufferLists;
-        FChars.ReturnNetBufferListsHandler =        FilterReturnNetBufferLists;
-        FChars.SendNetBufferListsCompleteHandler =  FilterSendNetBufferListsComplete;
-        FChars.ReceiveNetBufferListsHandler =       FilterReceiveNetBufferLists;
-        FChars.CancelSendNetBufferListsHandler =    FilterCancelSendNetBufferLists;
+            NULL,
+            NULL,
+            FilterAttach,
+            FilterDetach,
+            FilterRestart,
+            FilterPause,
+            FilterSendNetBufferLists,
+            FilterSendNetBufferListsComplete,
+            FilterCancelSendNetBufferLists,
+            FilterReceiveNetBufferLists,
+            FilterReturnNetBufferLists,
+            FilterOidRequest,
+            FilterOidRequestComplete,
+            NULL,
+            NULL,
+            NULL,
+            FilterStatus,
+#if (NDIS_SUPPORT_NDIS61)
+            NULL,
+            NULL,
+            NULL,
+#endif
+        };
 
         //
         // Initialize global variables
@@ -147,7 +146,6 @@ Return Value:
         //
         // Register the filter with NDIS
         //
-        FilterDriverHandle = NULL;
         Status = 
             NdisFRegisterFilterDriver(
                 DriverObject,
@@ -157,7 +155,6 @@ Return Value:
                 );
         if (Status != NDIS_STATUS_SUCCESS)
         {
-            NdisFreeSpinLock(&FilterListLock);
             LogError(DRIVER_DEFAULT, "Register filter driver failed, %!NDIS_STATUS!", Status);
             break;
         }
@@ -168,18 +165,21 @@ Return Value:
         Status = otLwfRegisterDevice();
         if (Status != NDIS_STATUS_SUCCESS)
         {
-            NdisFDeregisterFilterDriver(FilterDriverHandle);
-            NdisFreeSpinLock(&FilterListLock);
             LogError(DRIVER_DEFAULT, "Register device for the filter driver failed, %!NDIS_STATUS!", Status);
             break;
         }
 
-    } while (bFalse);
+    } while (FALSE);
 
     LogFuncExitNDIS(DRIVER_DEFAULT, Status);
 
     if (Status != NDIS_STATUS_SUCCESS)
     {
+        if (FilterDriverHandle)
+        {
+            NdisFDeregisterFilterDriver(FilterDriverHandle);
+            FilterDriverHandle = NULL;
+        }
         WPP_CLEANUP(DriverObject);
     }
 
@@ -223,6 +223,7 @@ Return Value:
     // Deregister the NDIS filter
     //
     NdisFDeregisterFilterDriver(FilterDriverHandle);
+    FilterDriverHandle = NULL;
 
     // Validate we have no outstanding filter instances
     NT_ASSERT(IsListEmpty(&FilterModuleList));

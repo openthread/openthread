@@ -80,7 +80,7 @@ otLwfRegisterDevice(
     NdisInitUnicodeString(&DeviceLinkUnicodeString, LINKNAME_STRING);
 
     Status = IoCreateDeviceSecure(FilterDriverObject,                     // DriverObject
-                                  sizeof(OTLWF_DEVICE_EXTENSION),        // DeviceExtension
+                                  sizeof(OTLWF_DEVICE_EXTENSION),         // DeviceExtension
                                   &DeviceName,                            // DeviceName
                                   FILE_DEVICE_NETWORK,                    // DeviceType
                                   FILE_DEVICE_SECURE_OPEN,                // DeviceCharacteristics
@@ -352,7 +352,7 @@ otLwfDeviceIoControl(
     ULONG               OutputBufferLength = IrpSp->Parameters.DeviceIoControl.OutputBufferLength;
     ULONG               IoControlCode = IrpSp->Parameters.DeviceIoControl.IoControlCode;
 
-	ULONG               FuncCode = (IoControlCode >> 2) & 0xFFF;
+    ULONG               FuncCode = (IoControlCode >> 2) & 0xFFF;
 
     LogFuncEntryMsg(DRIVER_IOCTL, "%p", IrpSp->FileObject);
 
@@ -442,9 +442,10 @@ otLwfFindAndRefInterface(
         if (pFilter->State == FilterRunning &&
             memcmp(InterfaceGuid, &pFilter->InterfaceGuid, sizeof(GUID)) == 0)
         {
-            // Increment ref count on interface
-            RtlIncrementReferenceCount(&pFilter->IoControlReferences);
-            pOutput = pFilter;
+            if (ExAcquireRundownProtection(&pFilter->ExternalRefs))
+            {
+                pOutput = pFilter;
+            }
             break;
         }
     }
@@ -452,19 +453,6 @@ otLwfFindAndRefInterface(
     NdisReleaseSpinLock(&FilterListLock);
 
     return pOutput;
-}
-
-_Use_decl_annotations_
-VOID
-otLwfReleaseInterface(
-    _In_ PMS_FILTER pFilter
-    )
-{
-    // Decrement ref count, and set shutdown event if it goes to 0
-    if (RtlDecrementReferenceCount(&pFilter->IoControlReferences))
-    {
-        NdisSetEvent(&pFilter->IoControlShutdownComplete);
-    }
 }
 
 //

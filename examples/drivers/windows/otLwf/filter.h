@@ -78,9 +78,44 @@ typedef enum _FILTER_STATE
     FilterRunning,
 } FILTER_STATE;
 
+// Flags for the different device capabilities
+typedef enum OTLWF_DEVICE_CAPABILITY
+{
+    // Device supports raw Radio commands
+    OTLWF_DEVICE_CAP_RADIO                                      = 1 << 0,
+
+    // Device supports Ack timeouts internally
+    OTLWF_DEVICE_CAP_RADIO_ACK_TIMEOUT                          = 1 << 1,
+
+    // Device supports MAC retry logic and timers; as well as collision avoidance.
+    OTLWF_DEVICE_CAP_RADIO_MAC_RETRY_AND_COLLISION_AVOIDANCE    = 1 << 2,
+
+    // Device supports the energy scan command.
+    OTLWF_DEVICE_CAP_RADIO_ENERGY_SCAN                          = 1 << 3,
+
+    // Device supports sleeping. If the device supports sleeping, it is assumed to
+    // default to the sleep state on bring up.
+    OTLWF_DEVICE_CAP_RADIO_SLEEP                                = 1 << 4,
+
+    // Device support Net & Thread commands.
+    OTLWF_DEVICE_CAP_THREAD_1_0                                 = 1 << 16,
+
+} OTLWF_DEVICE_CAPABILITY;
+
+// Flags for the different device capabilities
+typedef enum OTLWF_DEVICE_STATUS
+{
+    OTLWF_DEVICE_STATUS_UNINTIALIZED,   // Not yet initialzied.
+    OTLWF_DEVICE_STATUS_RADIO_MODE,     // The device is just operating as a simple radio.
+    OTLWF_DEVICE_STATUS_THREAD_MODE     // The device is managing the Thread stack.
+
+} OTLWF_DEVICE_STATUS;
+
 #define OT_EVENT_TIMER_NOT_RUNNING  0
 #define OT_EVENT_TIMER_RUNNING      1
 #define OT_EVENT_TIMER_FIRED        2
+
+#define MAX_PENDING_MAC_SIZE 32 // TODO
 
 //
 // Define the filter struct
@@ -95,26 +130,24 @@ typedef struct _MS_FILTER
 
     // Current state (Running or not) of the Filter instance
     FILTER_STATE                    State;
-    NDIS_EVENT                      FilterPauseComplete;
 
     // Handle for unicast IP address notifications
     HANDLE                          AddressChangeHandle;
-    
+
     //
-    // Interface / Adapter variables
+    // Interface variables
     //
     GUID                            InterfaceGuid;
     NET_IFINDEX                     InterfaceIndex;
     NET_LUID                        InterfaceLuid;
     COMPARTMENT_ID                  InterfaceCompartmentID;
-    NDIS_STRING                     MiniportFriendlyName;
-    volatile LONG                   PendingDisconnectTasks;
+    NDIS_STRING                     InterfaceFriendlyName;
+    HANDLE                          InterfaceRegKey;
 
     //
-    // Miniport Capabilities
+    // Miniport Link State
     //
-    OT_CAPABILITIES                 MiniportCapabilities;
-    NDIS_LINK_STATE                 MiniportLinkState;  
+    NDIS_LINK_STATE                 MiniportLinkState;
     
     //
     // Pending OID Handling
@@ -123,18 +156,29 @@ typedef struct _MS_FILTER
     PNDIS_OID_REQUEST               PendingOidRequest;
 
     //
-    // Io Control Path Synchronization
+    // External references management
+    //   Used for IOCTLs, SendNBLs, and Address Changed callbacks
     //
-    RTL_REFERENCE_COUNT             IoControlReferences;
-    NDIS_EVENT                      IoControlShutdownComplete;
+    EX_RUNDOWN_REF                  ExternalRefs;
 
     //
-    // Data Path
+    // Spinel Command State
     //
-    EX_RUNDOWN_REF                  DataPathRundown;
-    NDIS_HANDLE                     NetBufferListPool;
+    EX_RUNDOWN_REF                  cmdRundown;
+    NDIS_SPIN_LOCK                  cmdLock;
+    LIST_ENTRY                      cmdHandlers;
+    USHORT                          cmdTIDsInUse;
+    spinel_tid_t                    cmdNextTID;
+    NDIS_HANDLE                     cmdNblPool;
+#if DBG
+    ULONG                           cmdInitTryCount;
+#endif
 
-    BOOLEAN                         InternalStateInitialized;
+    //
+    // Device Capabilities / State
+    //
+    OTLWF_DEVICE_CAPABILITY         DeviceCapabilities;
+    OTLWF_DEVICE_STATUS             DeviceStatus;
 
     //
     // OpenThread addresses
@@ -158,10 +202,11 @@ typedef struct _MS_FILTER
         KEVENT                      EventWorkerThreadStopEvent;
         KEVENT                      EventWorkerThreadProcessAddressChanges;
         KEVENT                      EventWorkerThreadProcessNBLs;
+        KEVENT                      EventWorkerThreadProcessMacFrames;
         NDIS_SPIN_LOCK              EventsLock;
         LIST_ENTRY                  AddressChangesHead;
         LIST_ENTRY                  NBLsHead;
-        ULONG                       CountPendingRecvNBLs;
+        LIST_ENTRY                  MacFramesHead;
         LARGE_INTEGER               NextAlarmTickCount;
         KEVENT                      EventWorkerThreadWaitTimeUpdated;
         KEVENT                      EventWorkerThreadProcessTasklets;
@@ -180,7 +225,6 @@ typedef struct _MS_FILTER
         // OpenThread data path state
         //
         BOOLEAN                     SendPending;
-        PNET_BUFFER_LIST            SendNetBufferList;
         KEVENT                      SendNetBufferListComplete;
     
         //
@@ -193,6 +237,8 @@ typedef struct _MS_FILTER
         uint8_t                     otTransmitMessage[kMaxPHYPacketSize];
         RadioPacket                 otReceiveFrame;
         RadioPacket                 otTransmitFrame;
+        ThreadError                 otLastTransmitError;
+        BOOLEAN                     otLastTransmitFramePending;
         CHAR                        otLastEnergyScanMaxRssi;
 
         BOOLEAN                     otPromiscuous;
@@ -224,11 +270,6 @@ typedef struct _MS_FILTER
     };
     struct // Tunnel Mode Variables
     {
-        NDIS_SPIN_LOCK              tunCommandLock;
-        LIST_ENTRY                  tunCommandHandlers;
-        USHORT                      tunTIDsInUse;
-        spinel_tid_t                tunNextTID;
-        
         PVOID                       TunWorkerThread;
         KEVENT                      TunWorkerThreadStopEvent;
         KEVENT                      TunWorkerThreadAddressChangedEvent;
@@ -246,8 +287,6 @@ FILTER_DETACH FilterDetach;
 FILTER_RESTART FilterRestart;
 FILTER_PAUSE FilterPause;
 FILTER_STATUS FilterStatus;
-FILTER_DEVICE_PNP_EVENT_NOTIFY FilterDevicePnPEventNotify;
-FILTER_NET_PNP_EVENT FilterNetPnPEvent;
 FILTER_SEND_NET_BUFFER_LISTS FilterSendNetBufferLists;
 FILTER_RETURN_NET_BUFFER_LISTS FilterReturnNetBufferLists;
 FILTER_SEND_NET_BUFFER_LISTS_COMPLETE FilterSendNetBufferListsComplete;
@@ -280,22 +319,6 @@ _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID
 otLwfRevertCompartment(
     _In_ COMPARTMENT_ID             OriginalCompartment
-    );
-
-//
-// Data Path functions
-//
-
-_IRQL_requires_max_(PASSIVE_LEVEL)
-VOID
-otLwfEnableDataPath(
-    _In_ PMS_FILTER             pFilter
-    );
-
-_IRQL_requires_max_(PASSIVE_LEVEL)
-VOID
-otLwfDisableDataPath(
-    _In_ PMS_FILTER             pFilter
     );
 
 //

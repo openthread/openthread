@@ -42,45 +42,13 @@ otLwfInitializeThreadMode(
     )
 {
     NDIS_STATUS Status = NDIS_STATUS_SUCCESS;
-    PNET_BUFFER SendNetBuffer;
 
     LogFuncEntry(DRIVER_DEFAULT);
 
+    NT_ASSERT(pFilter->DeviceCapabilities & OTLWF_DEVICE_CAP_RADIO);
+
     do
     {
-        // Create the SendNetBufferList
-        pFilter->SendNetBufferList =
-            NdisAllocateNetBufferAndNetBufferList(
-                pFilter->NetBufferListPool,     // PoolHandle
-                0,                              // ContextSize
-                0,                              // ContextBackFill
-                NULL,                           // MdlChain
-                0,                              // DataOffset
-                0                               // DataLength
-                );
-        if (pFilter->SendNetBufferList == NULL)
-        {
-            Status = NDIS_STATUS_RESOURCES;
-            LogWarning(DRIVER_DEFAULT, "Failed to create Send NetBufferList");
-            break;
-        }
-        
-        // Initialize NetBuffer fields
-        SendNetBuffer = NET_BUFFER_LIST_FIRST_NB(pFilter->SendNetBufferList);
-        NET_BUFFER_CURRENT_MDL(SendNetBuffer) = NULL;
-        NET_BUFFER_CURRENT_MDL_OFFSET(SendNetBuffer) = 0;
-        NET_BUFFER_DATA_LENGTH(SendNetBuffer) = 0;
-        NET_BUFFER_DATA_OFFSET(SendNetBuffer) = 0;
-        NET_BUFFER_FIRST_MDL(SendNetBuffer) = NULL;
-
-        // Allocate the NetBuffer for SendNetBufferList
-        Status = NdisRetreatNetBufferDataStart(SendNetBuffer, kMaxPHYPacketSize, 0, NULL);
-        if (Status != NDIS_STATUS_SUCCESS)
-        {
-            LogError(DRIVER_DEFAULT, "Failed to allocate NB for Send NetBufferList, %!NDIS_STATUS!", Status);
-            break;
-        }
-
         KeInitializeEvent(
             &pFilter->SendNetBufferListComplete,
             SynchronizationEvent, // auto-clearing event
@@ -92,6 +60,7 @@ otLwfInitializeThreadMode(
         NdisAllocateSpinLock(&pFilter->EventsLock);
         InitializeListHead(&pFilter->AddressChangesHead);
         InitializeListHead(&pFilter->NBLsHead);
+        InitializeListHead(&pFilter->MacFramesHead);
         InitializeListHead(&pFilter->EventIrpListHead);
         KeInitializeEvent(
             &pFilter->EventWorkerThreadStopEvent,
@@ -119,6 +88,11 @@ otLwfInitializeThreadMode(
             FALSE                 // event initially non-signalled
             );
         KeInitializeEvent(
+            &pFilter->EventWorkerThreadProcessMacFrames,
+            SynchronizationEvent, // auto-clearing event
+            FALSE                 // event initially non-signalled
+            );
+        KeInitializeEvent(
             &pFilter->EventWorkerThreadProcessIrp,
             SynchronizationEvent, // auto-clearing event
             FALSE                 // event initially non-signalled
@@ -140,6 +114,19 @@ otLwfInitializeThreadMode(
             break;
         }
 
+        // Query the interface state (best effort, since it might not be supported)
+        BOOLEAN IfUp = FALSE;
+        Status = otLwfCmdGetProp(pFilter, NULL, SPINEL_PROP_NET_IF_UP, SPINEL_DATATYPE_BOOL_S, &IfUp);
+        if (!NT_SUCCESS(Status))
+        {
+            LogVerbose(DRIVER_DEFAULT, "Failed to query SPINEL_PROP_INTERFACE_TYPE, %!STATUS!", Status);
+            Status = NDIS_STATUS_SUCCESS;
+        }
+        else
+        {
+            NT_ASSERT(IfUp == FALSE);
+        }
+
         // Initialize the event processing thread
         if (!NT_SUCCESS(otLwfEventProcessingStart(pFilter)))
         {
@@ -158,13 +145,6 @@ otLwfInitializeThreadMode(
         if (pFilter->EventHighPrecisionTimer)
         {
             ExDeleteTimer(pFilter->EventHighPrecisionTimer, TRUE, FALSE, NULL);
-        }
-
-        // Free NBL
-        if (pFilter->SendNetBufferList)
-        {
-            NdisAdvanceNetBufferDataStart(NET_BUFFER_LIST_FIRST_NB(pFilter->SendNetBufferList), kMaxPHYPacketSize, TRUE, NULL);
-            NdisFreeNetBufferList(pFilter->SendNetBufferList);
         }
     }
 
@@ -185,11 +165,10 @@ otLwfUninitializeThreadMode(
     otLwfEventProcessingStop(pFilter);
     
     // Free timer
-    ExDeleteTimer(pFilter->EventHighPrecisionTimer, TRUE, FALSE, NULL);
-
-    // Free NBL & Pools
-    NdisAdvanceNetBufferDataStart(NET_BUFFER_LIST_FIRST_NB(pFilter->SendNetBufferList), kMaxPHYPacketSize, TRUE, NULL);
-    NdisFreeNetBufferList(pFilter->SendNetBufferList);
+    if (pFilter->EventHighPrecisionTimer)
+    {
+        ExDeleteTimer(pFilter->EventHighPrecisionTimer, TRUE, FALSE, NULL);
+    }
 
     LogFuncExit(DRIVER_DEFAULT);
 }
@@ -548,6 +527,113 @@ void otLwfCommissionerPanIdConflictCallback(uint16_t aPanId, uint32_t aChannelMa
         
         otLwfIndicateNotification(NotifEntry);
     }
+
+    LogFuncExit(DRIVER_DEFAULT);
+}
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+void
+otLwfThreadValueIs(
+    _In_ PMS_FILTER pFilter,
+    _In_ BOOLEAN DispatchLevel,
+    _In_ spinel_prop_key_t key,
+    _In_reads_bytes_(value_data_len) const uint8_t* value_data_ptr,
+    _In_ spinel_size_t value_data_len
+    )
+{
+    LogFuncEntryMsg(DRIVER_DEFAULT, "[%p] received Value for %s", pFilter, spinel_prop_key_to_cstr(key));
+
+    if (key == SPINEL_PROP_LAST_STATUS)
+    {
+        spinel_status_t status = SPINEL_STATUS_OK;
+        spinel_datatype_unpack(value_data_ptr, value_data_len, "i", &status);
+
+        if ((status >= SPINEL_STATUS_RESET__BEGIN) && (status <= SPINEL_STATUS_RESET__END))
+        {
+            LogInfo(DRIVER_DEFAULT, "Interface %!GUID! was reset (status %d).", &pFilter->InterfaceGuid, status);
+            // TODO - Handle reset
+        }
+    }
+    else if (key == SPINEL_PROP_MAC_ENERGY_SCAN_RESULT)
+    {
+        uint8_t scanChannel;
+        int8_t maxRssi;
+        spinel_ssize_t ret;
+
+        ret = spinel_datatype_unpack(
+            value_data_ptr,
+            value_data_len,
+            "Cc",
+            &scanChannel,
+            &maxRssi);
+
+        NT_ASSERT(ret > 0);
+        if (ret > 0)
+        {
+            LogInfo(DRIVER_DEFAULT, "Filter: %p, completed energy scan: Rssi:%d", pFilter, maxRssi);
+            otLwfEventProcessingIndicateEnergyScanResult(pFilter, maxRssi);
+        }
+    }
+    else if (key == SPINEL_PROP_STREAM_RAW)
+    {
+        if (value_data_len < 256)
+        {
+            otLwfEventProcessingIndicateNewMacFrameCommand(
+                pFilter,
+                DispatchLevel,
+                value_data_ptr,
+                (uint8_t)value_data_len);
+        }
+    }
+    else if (key == SPINEL_PROP_STREAM_DEBUG)
+    {
+        const uint8_t* output = NULL;
+        UINT output_len = 0;
+        spinel_ssize_t ret;
+
+        ret = spinel_datatype_unpack(
+            value_data_ptr,
+            value_data_len,
+            SPINEL_DATATYPE_DATA_S,
+            &output,
+            &output_len);
+
+        NT_ASSERT(ret > 0);
+        if (ret > 0 && output && output_len <= (UINT)ret)
+        {
+            if (strnlen((char*)output, output_len) != output_len)
+            {
+                LogInfo(DRIVER_DEFAULT, "DEVICE: %s", (char*)output);
+            }
+            else if (output_len < 128)
+            {
+                char strOutput[128] = { 0 };
+                memcpy(strOutput, output, output_len);
+                LogInfo(DRIVER_DEFAULT, "DEVICE: %s", strOutput);
+            }
+        }
+    }
+
+    LogFuncExit(DRIVER_DEFAULT);
+}
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+void
+otLwfThreadValueInserted(
+    _In_ PMS_FILTER pFilter,
+    _In_ BOOLEAN DispatchLevel,
+    _In_ spinel_prop_key_t key,
+    _In_reads_bytes_(value_data_len) const uint8_t* value_data_ptr,
+    _In_ spinel_size_t value_data_len
+    )
+{
+    LogFuncEntryMsg(DRIVER_DEFAULT, "[%p] received Value Inserted for %s", pFilter, spinel_prop_key_to_cstr(key));
+
+    UNREFERENCED_PARAMETER(pFilter);
+    UNREFERENCED_PARAMETER(DispatchLevel);
+    UNREFERENCED_PARAMETER(key);
+    UNREFERENCED_PARAMETER(value_data_ptr);
+    UNREFERENCED_PARAMETER(value_data_len);
 
     LogFuncExit(DRIVER_DEFAULT);
 }
