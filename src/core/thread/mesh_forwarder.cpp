@@ -438,7 +438,8 @@ ThreadError MeshForwarder::SendMessage(Message &aMessage)
             }
         }
         else if ((neighbor = mNetif.GetMle().GetNeighbor(ip6Header.GetDestination())) != NULL &&
-                 (neighbor->mMode & Mle::ModeTlv::kModeRxOnWhenIdle) == 0)
+                 (neighbor->mMode & Mle::ModeTlv::kModeRxOnWhenIdle) == 0 &&
+                 !aMessage.GetDirectTransmission())
         {
             // destined for a sleepy child
             children = static_cast<Child *>(neighbor);

@@ -4079,6 +4079,9 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spin
 
     if (errorCode == kThreadError_None)
     {
+        // Ensure the insecure message is forwarded using direct transmission.
+        otMessageSetDirectTransmission(message, true);
+
         errorCode = otSendIp6Datagram(mInstance, message);
     }
     else if (message)
