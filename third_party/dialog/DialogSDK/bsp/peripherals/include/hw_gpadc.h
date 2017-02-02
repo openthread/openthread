@@ -5,6 +5,7 @@
  * \{
  * \addtogroup GPADC
  * \{
+ * \brief General Purpose ADC
  */
 
 /**
@@ -37,7 +38,8 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- *   
+ *
+ *
  *****************************************************************************************
  */
 
@@ -48,7 +50,10 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <black_orca.h>
+#include <sdk_defs.h>
+
+extern int16_t hw_gpadc_differential_gain_error;
+extern int16_t hw_gpadc_single_ended_gain_error;
 
 /**
  * \brief ADC input mode
@@ -310,7 +315,7 @@ static inline void hw_gpadc_set_input(HW_GPADC_INPUT input)
  */
 static inline HW_GPADC_INPUT hw_gpadc_get_input(void)
 {
-        return REG_GETF(GPADC, GP_ADC_CTRL_REG, GP_ADC_SEL);
+        return (HW_GPADC_INPUT) REG_GETF(GPADC, GP_ADC_CTRL_REG, GP_ADC_SEL);
 }
 
 /**
@@ -332,7 +337,7 @@ static inline void hw_gpadc_set_input_mode(HW_GPADC_INPUT_MODE mode)
  */
 static inline HW_GPADC_INPUT_MODE hw_gpadc_get_input_mode(void)
 {
-        return REG_GETF(GPADC, GP_ADC_CTRL_REG, GP_ADC_SE);
+        return (HW_GPADC_INPUT_MODE) REG_GETF(GPADC, GP_ADC_CTRL_REG, GP_ADC_SE);
 }
 
 /**
@@ -354,7 +359,7 @@ static inline void hw_gpadc_set_clock(HW_GPADC_CLOCK clock)
  */
 static inline HW_GPADC_CLOCK hw_gpadc_get_clock(void)
 {
-        return REG_GETF(GPADC, GP_ADC_CTRL_REG, GP_ADC_CLK_SEL);
+        return (HW_GPADC_CLOCK) REG_GETF(GPADC, GP_ADC_CTRL_REG, GP_ADC_CLK_SEL);
 }
 
 /**
@@ -653,6 +658,43 @@ static inline uint16_t hw_gpadc_get_offset_negative(void)
 }
 
 /**
+ * \brief Store Single Ended ADC Gain Error
+ *
+ * \param [in] single ADC Single Ended Gain Error
+ *
+ */
+static inline void hw_gpadc_store_se_gain_error(int16_t single)
+{
+        hw_gpadc_single_ended_gain_error = single;
+}
+
+/**
+ * \brief Store Differential ADC Gain Error
+ *
+ * \param [in] diff ADC Differential Gain Error
+ *
+ */
+static inline void hw_gpadc_store_diff_gain_error(int16_t diff)
+{
+        hw_gpadc_differential_gain_error = diff;
+}
+
+/**
+ * \brief Check the availability of ADC Gain Error
+ *
+ * \return ADC Gain Error availability
+ *
+ */
+static inline bool hw_gpadc_pre_check_for_gain_error(void)
+{
+        if (dg_configUSE_ADC_GAIN_ERROR_CORRECTION == 1) {
+                return (hw_gpadc_single_ended_gain_error && hw_gpadc_differential_gain_error);
+        }
+
+        return false;
+}
+
+/**
  * \brief Get raw conversion result value
  *
  * Upper 10 bits are always valid, lower 6 bits are only valid in case oversampling is enabled.
@@ -664,10 +706,7 @@ static inline uint16_t hw_gpadc_get_offset_negative(void)
  * \sa hw_gpadc_get_value
  *
  */
-static inline uint16_t hw_gpadc_get_raw_value(void)
-{
-        return GPADC->GP_ADC_RESULT_REG;
-}
+uint16_t hw_gpadc_get_raw_value(void);
 
 /**
  * \brief Get conversion result value
@@ -684,6 +723,18 @@ static inline uint16_t hw_gpadc_get_raw_value(void)
 static inline uint16_t hw_gpadc_get_value(void)
 {
         return hw_gpadc_get_raw_value() >> (6 - MIN(6, hw_gpadc_get_oversampling()));
+}
+
+/**
+ * \brief Get conversion result value without gain compensation and over sampling.
+ *
+ * \return conversion result value
+ *
+ */
+static inline uint16_t hw_gpadc_get_value_without_gain(void)
+{
+        uint16_t adc_raw_res = GPADC->GP_ADC_RESULT_REG;
+        return adc_raw_res;
 }
 
 /**

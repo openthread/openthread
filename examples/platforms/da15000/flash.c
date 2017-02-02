@@ -46,8 +46,6 @@
 
 static uint32_t wait_status_timeout;
 
-#define QSPI_SECTION __attribute__ ((section ("text_retained")))
-
 QSPI_SECTION static inline uint8_t qspi_get_erase_status(void)
 {
     QSPIC->QSPIC_CHCKERASE_REG = 0;
@@ -97,17 +95,11 @@ ThreadError utilsFlashStatusWait(uint32_t aTimeout)
     {
         return kThreadError_None;
     }
-
 }
 
 ThreadError utilsFlashInit(void)
 {
-
-    qspi_automode_init();
     qspi_automode_flash_power_up();
-
-    utilsFlashErasePage(0);
-    utilsFlashErasePage(0x1000);
 
     if (utilsFlashStatusWait(1000) == kThreadError_Busy)
     {

@@ -5,6 +5,7 @@
  * \{
  * \addtogroup UART
  * \{
+ * \brief UART Controller
  */
 
 /**
@@ -37,7 +38,8 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
+ *
  *****************************************************************************************
  */
 
@@ -48,7 +50,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <black_orca.h>
+#include <sdk_defs.h>
 #include "hw_dma.h"
 
 #ifndef HW_UART_USE_DMA_SUPPORT
@@ -263,6 +265,18 @@ void hw_uart_set_isr(HW_UART_ID uart, hw_uart_interrupt_isr isr);
 typedef void (*hw_uart_tx_callback)(void *user_data, uint16_t written);
 typedef void (*hw_uart_rx_callback)(void *user_data, uint16_t read);
 
+//======================= Status functions ====================================
+
+/**
+ * \brief Check if a serial transfer is inprogress
+ *
+ * \return true or false
+ */
+static inline bool hw_uart_is_busy(HW_UART_ID uart)
+{
+        return HW_UART_REG_GETF(uart, USR, UART_BUSY);
+}
+
 //===================== Read/Write functions ===================================
 
 /**
@@ -300,8 +314,10 @@ void hw_uart_write(HW_UART_ID uart, uint8_t data);
  *
  * \param [in] uart identifies UART to use
  *
+ * \return number of bytes actually received
+ *
  */
-void hw_uart_abort_receive(HW_UART_ID uart);
+uint16_t hw_uart_abort_receive(HW_UART_ID uart);
 
 /**
  * \brief Get number of bytes currently received by asynchronous read
@@ -397,8 +413,6 @@ void hw_uart_read_buffer(HW_UART_ID uart, void *data, uint16_t len);
  */
 void hw_uart_receive(HW_UART_ID uart, void *data, uint16_t len, hw_uart_rx_callback cb,
                                                                                 void *user_data);
-
-void hw_uart_register_simple_rx_callback(void (*callback) (void), HW_UART_ID uart );
 
 #if HW_UART_USE_DMA_SUPPORT
 
@@ -502,6 +516,35 @@ static inline void hw_uart_pthre_int_set(HW_UART_ID uart, uint8_t pthre)
 static inline HW_UART_INT hw_uart_get_interrupt_id(HW_UART_ID uart)
 {
         return (HW_UART_INT) (UBA(uart)->UART2_IIR_FCR_REG & 0xF);
+}
+
+/**
+ * \brief Write Scratch pad register
+ *
+ * \param [in] uart identifies UART to use
+ * \param [in] value the value to be written
+ *
+ * /warning Reserved when retarget is used else it is free to use.
+ *
+ */
+static inline void hw_uart_write_scr(HW_UART_ID uart, uint8_t value)
+{
+        UBA(uart)->UART2_SCR_REG = value;
+}
+
+/**
+ * \brief Read Scratch pad register
+ *
+ * \param [in] uart identifies UART to use
+ *
+ * \return register value
+ *
+ * \warning Reserved when retarget is used else it is free to use.
+ *
+ */
+static inline uint8_t hw_uart_read_scr(HW_UART_ID uart)
+{
+        return UBA(uart)->UART2_SCR_REG;
 }
 
 //==================== Configuration functions =================================
@@ -1161,6 +1204,40 @@ bool hw_uart_tx_in_progress(HW_UART_ID uart);
  *
  */
 bool hw_uart_rx_in_progress(HW_UART_ID uart);
+
+#if dg_configUART_RX_CIRCULAR_DMA
+
+/**
+ * \brief Enable circular RX DMA for UART
+ *
+ * This reconfigures RX DMA channel to use circular buffer for incoming data and enabled it
+ * immediately. Incoming data will be read by DMA to intermediate buffer. Subsequent calls to
+ * hw_uart_receive() will fire callback as soon as enough data are available in buffer to be read,
+ * but the actual read from intermediate buffer has to be done using hw_uart_copy_rx_circular_dma_buffer().
+ *
+ * Recommended way to move between DMA buffer and user buffer is to call hw_uart_abort_receive()
+ * that will copy the amount specified on read or the actual number of received bytes if
+ * hw_uart_abort_receive() was called before requested the amount was received.
+ *
+ * \note
+ * This can be only called for an UART which is configured using \p dg_configUARTx_RX_CIRCULAR_DMA_BUF_SIZE.
+ *
+ * \param [in] uart identifies UART to use
+ *
+ */
+void hw_uart_enable_rx_circular_dma(HW_UART_ID uart);
+
+/**
+ * \brief Copy data from circular RX DMA buffer to user buffer
+ *
+ * \param [in] uart identifies UART to use
+ * \param [in] buf buffer to copy data to
+ * \param [in] len length of data to copy to buffer
+ *
+ */
+void hw_uart_copy_rx_circular_dma_buffer(HW_UART_ID uart, uint8_t *buf, uint16_t len);
+
+#endif /* dg_configUART_RX_CIRCULAR_DMA */
 
 #endif /* dg_configUSE_HW_UART */
 

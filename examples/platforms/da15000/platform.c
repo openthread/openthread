@@ -38,7 +38,7 @@
 #include "platform/alarm.h"
 #include <openthread-types.h>
 #include "platform-da15000.h"
-#include "black_orca.h"
+#include "sdk_defs.h"
 #include "hw_cpm.h"
 #include "hw_watchdog.h"
 #include "ftdf.h"

@@ -5,6 +5,7 @@
  * \{
  * \addtogroup OTPC
  * \{
+ * \brief OTP Memory Controller
  */
 
 /**
@@ -38,6 +39,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ *
  ****************************************************************************************
  */
 
@@ -48,7 +50,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <black_orca.h>
+#include <sdk_defs.h>
 
 
 /**
@@ -191,25 +193,29 @@ __RETAINED_CODE HW_OTPC_SYS_CLK_FREQ hw_otpc_convert_sys_clk_mhz(uint32_t clk_fr
  */
 static inline void hw_otpc_init(void)
 {
-#if (dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A)
-        /*
-         * Reset OTP controller
-         */
-        OTPC->OTPC_MODE_REG = HW_OTPC_MODE_STBY;    // Set OTPC to standby
-        REG_SET_BIT(CRG_TOP, SYS_CTRL_REG, OTPC_RESET_REQ); // Reset the OTP Controller
-        REG_CLR_BIT(CRG_TOP, SYS_CTRL_REG, OTPC_RESET_REQ);// Get the OTP Controller out of Reset
+        GLOBAL_INT_DISABLE();
+        if ((dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A)
+                || ((dg_configUSE_AUTO_CHIP_DETECTION == 1) && (CHIP_IS_AE))) {
+                /*
+                 * Reset OTP controller
+                 */
+                OTPC->OTPC_MODE_REG = HW_OTPC_MODE_STBY;                // Set OTPC to standby
+                REG_SET_BIT(CRG_TOP, SYS_CTRL_REG, OTPC_RESET_REQ);     // Reset the OTPC
+                REG_CLR_BIT(CRG_TOP, SYS_CTRL_REG, OTPC_RESET_REQ);     // Get the OTPC out of Reset
 
-        /*
-         * Initialize the POR registers
-         */
-        OTPC->OTPC_NWORDS_REG = OTPC_NWORDS_REG_RESET;
-        OTPC->OTPC_TIM1_REG = OTPC_TIM1_REG_RESET;
-        OTPC->OTPC_TIM2_REG = OTPC_TIM2_REG_RESET;
-#endif
+                /*
+                 * Initialize the POR registers
+                 */
+                OTPC->OTPC_NWORDS_REG = OTPC_NWORDS_REG_RESET;
+                OTPC->OTPC_TIM1_REG = OTPC_TIM1_REG_RESET;
+                OTPC->OTPC_TIM2_REG = OTPC_TIM2_REG_RESET;
+        }
+
         /*
          * Enable OTPC clock
          */
         CRG_TOP->CLK_AMBA_REG |= 1 << REG_POS(CRG_TOP, CLK_AMBA_REG, OTP_ENABLE);
+        GLOBAL_INT_RESTORE();
 }
 
 /**
@@ -221,7 +227,9 @@ static inline void hw_otpc_close(void)
         /*
          * Disable OTPC clock
          */
+        GLOBAL_INT_DISABLE();
         CRG_TOP->CLK_AMBA_REG &= ~REG_MSK(CRG_TOP, CLK_AMBA_REG, OTP_ENABLE);
+        GLOBAL_INT_RESTORE();
 }
 
 /**
@@ -235,7 +243,7 @@ static inline uint32_t hw_otpc_is_active(void) __attribute__((always_inline));
 static inline uint32_t hw_otpc_is_active(void)
 {
         /*
-         * Disable OTPC clock
+         * Check if the OTPC clock is enabled
          */
         return !!(CRG_TOP->CLK_AMBA_REG & REG_MSK(CRG_TOP, CLK_AMBA_REG, OTP_ENABLE));
 }

@@ -1,10 +1,11 @@
 /**
  * \addtogroup BSP
  * \{
- * \addtogroup DEVICES
+ * \addtogroup SYSTEM
  * \{
  * \addtogroup Exception_Handlers
  * \{
+ * \brief Generic Exception Handlers
  */
 
 /**
@@ -37,7 +38,8 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- *   
+ *
+ *
  *****************************************************************************************
  */
 
@@ -47,7 +49,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <black_orca.h>
+#include <sdk_defs.h>
 
 #define HARDFAULT_MAGIC_NUMBER          0xBADC0FFE
 

@@ -37,8 +37,7 @@
  * For Cortex-M cores, called from cpu/arm/cortex-m/boot/cstartup.c.
  */
 
-#include "global_io.h"
-#include "bsp/include/black_orca.h"
+#include "sdk_defs.h"
 #include "bsp/include/core_cm0.h"
 
 void __cpu_startup(void)
