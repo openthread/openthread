@@ -29,6 +29,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ *
  ****************************************************************************************
  */
 
@@ -282,6 +283,15 @@ void FTDF_sndMsg(FTDF_MsgBuffer *msgBuf)
         FTDF_REL_MSG_BUFFER(msgBuf);
         break;
 #endif /* FTDF_DBG_BUS_ENABLE */
+#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
+
+    case FTDF_FPPR_MODE_SET_REQUEST:
+        FTDF_fpprSetMode(((FTDF_FpprModeSetRequest *) msgBuf)->matchFp,
+                         ((FTDF_FpprModeSetRequest *) msgBuf)->fpOverride,
+                         ((FTDF_FpprModeSetRequest *) msgBuf)->fpForce);
+        FTDF_REL_MSG_BUFFER(msgBuf);
+        break;
+#endif /* dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A */
 
     default:
         // Silenty release the message buffer

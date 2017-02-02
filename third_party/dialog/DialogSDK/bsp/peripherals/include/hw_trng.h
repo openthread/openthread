@@ -29,12 +29,16 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ *
  *****************************************************************************************
  */
 
+#ifndef HW_TRNG_H_
+#define HW_TRNG_H_
+
 #if dg_configUSE_HW_TRNG
 
-#include <black_orca.h>
+#include <sdk_defs.h>
 
 /**
  * \brief TRNG callback.
@@ -64,15 +68,32 @@ typedef void (*hw_trng_cb)(void);
 void hw_trng_enable(hw_trng_cb callback);
 
 /**
- * \brief TRNG get numbers.
+ * \brief Get a random number from TRNG.
  *
- * This function reads the random number from the TRNG FIFO.
+ * This function reads a random number from the TRNG FIFO.
+ *
+ * \return A 32-bit unsigned random number.
+ *
+ * \warning This function does not check for number availability in the FIFO
+ *
+ */
+__attribute__((always_inline)) static inline uint32_t hw_trng_get_number(void)
+{
+        return *((volatile uint32_t *)MEMORY_TRNG_FIFO);
+}
+
+/**
+ * \brief Get random numbers from TRNG.
+ *
+ * This function fills a buffer with random numbers read from the TRNG FIFO.
  *
  * \param [in] buffer The buffer to write the numbers to.
  * \param [in] size The size of the buffer (max 32).
  *
  * \note Do not forget to disable the TRNG after reading the amount of numbers needed to save
  * power.
+ *
+ * \warning This function does not check for number availability in the FIFO
  *
  */
 void hw_trng_get_numbers(uint32_t* buffer, uint8_t size);
@@ -85,14 +106,40 @@ void hw_trng_get_numbers(uint32_t* buffer, uint8_t size);
  * \return The current level of the TRNG FIFO.
  *
  */
-uint8_t hw_trng_get_fifo_level(void);
+__RETAINED_CODE uint8_t hw_trng_get_fifo_level(void);
 
 /**
  * \brief TRNG disable.
  *
- * This function disables the TRNG and its interrupt.
+ * This function stops TRNG, disables its clock and its interrupt.
  *
  */
 void hw_trng_disable(void);
 
+/**
+ * \brief Stop TRNG operation.
+ */
+static inline void hw_trng_stop(void)
+{
+        REG_CLR_BIT(TRNG, TRNG_CTRL_REG, TRNG_ENABLE);
+}
+
+/**
+ * \brief Disable TRNG clock.
+ */
+void hw_trng_disable_clk(void);
+
+/**
+ * \brief Disable TRNG interrupt.
+ */
+void hw_trng_disable_interrupt(void);
+
+/**
+ * \brief Clear TRNG pending interrupt.
+ */
+void hw_trng_clear_pending(void);
+
 #endif /* dg_configUSE_HW_TRNG */
+
+#endif /* HW_TRNG_H_ */
+

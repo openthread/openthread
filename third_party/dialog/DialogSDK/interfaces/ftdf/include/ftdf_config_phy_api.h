@@ -28,14 +28,13 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- *   
+ *
+ *
  ****************************************************************************************
  */
 
 #ifndef FTDF_CONFIG_PHY_API_H_
 #define FTDF_CONFIG_PHY_API_H_
-
-//#include "osal.h" // OS_FREERTOS macro is checked within the header file.
 
 /**
  * \remark      phy configuration values in microseconds
@@ -43,10 +42,10 @@
 #define FTDF_PHYTXSTARTUP 0x4c
 #define FTDF_PHYTXLATENCY 0x01
 #define FTDF_PHYTXFINISH  0x00
-#define FTDF_PHYTRXWAIT   0x0f
+#define FTDF_PHYTRXWAIT   0x20
 #define FTDF_PHYRXSTARTUP 0
 #define FTDF_PHYRXLATENCY 0
-#define FTDF_PHYENABLE    0
+#define FTDF_PHYENABLE    0x21
 
 #ifndef FTDF_LITE
 #define FTDF_LITE
@@ -145,6 +144,19 @@ void vPortExitCritical( void );
 #if FTDF_DBG_BUS_ENABLE
 #define FTDF_DBG_BUS_GPIO_CONFIG   ad_ftdf_dbgBusGpioConfig
 #endif /* FTDF_DBG_BUS_ENABLE */
+
+#ifndef FTDF_USE_FP_PROCESSING_RAM
+/**
+ * \brief Whether to use HW acceleration for indirect sending.
+ *
+ * Feature is supported as of IC revision 14683-00.
+ */
+#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
+#define FTDF_USE_FP_PROCESSING_RAM              1
+#else
+#define FTDF_USE_FP_PROCESSING_RAM              0
+#endif
+#endif /* FTDF_USE_FP_PROCESSING_RAM */
 
 #endif /* FTDF_CONFIG_PHY_API_H_ */
 

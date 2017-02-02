@@ -79,16 +79,24 @@ FTDF_USec FTDF_canSleep(void)
     }
 
 #else
+#if FTDF_USE_SLEEP_DURING_BACKOFF
 
+    if (FTDF_pib.keepPhyEnabled)
+#else
     if (FTDF_reqCurrent || FTDF_pib.keepPhyEnabled)
+#endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
     {
         return 0;
     }
 
 #endif
+#if FTDF_USE_SLEEP_DURING_BACKOFF
 
+    if (FTDF_GET_FIELD(ON_OFF_REGMAP_SECBUSY) == 1)
+#else /* FTDF_USE_SLEEP_DURING_BACKOFF */
     if (FTDF_GET_FIELD(ON_OFF_REGMAP_LMACREADY4SLEEP) == 0 ||
         FTDF_GET_FIELD(ON_OFF_REGMAP_SECBUSY) == 1)
+#endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
     {
         return 0;
     }
@@ -97,6 +105,16 @@ FTDF_USec FTDF_canSleep(void)
 
     if (FTDF_pib.leEnabled)
     {
+#if FTDF_USE_SLEEP_DURING_BACKOFF
+
+        /* Abort sleep when LMAC is busy. */
+        if (FTDF_GET_FIELD(ON_OFF_REGMAP_LMACREADY4SLEEP) == 0)
+        {
+            return 0;
+        }
+
+#endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
+
         if (FTDF_txInProgress == FTDF_FALSE)
         {
             FTDF_Time curTime = FTDF_GET_FIELD(ON_OFF_REGMAP_SYMBOLTIMESNAPSHOTVAL);
@@ -123,6 +141,15 @@ FTDF_USec FTDF_canSleep(void)
 
     if (FTDF_pib.tschEnabled)
     {
+#if FTDF_USE_SLEEP_DURING_BACKOFF
+
+        /* Abort sleep when LMAC is busy. */
+        if (FTDF_GET_FIELD(ON_OFF_REGMAP_LMACREADY4SLEEP) == 0)
+        {
+            return 0;
+        }
+
+#endif
         FTDF_Time64 curTime64 = FTDF_getCurTime64();
         FTDF_Time64 delta     = curTime64 - FTDF_tschSlotTime;
 
@@ -179,7 +206,12 @@ FTDF_USec FTDF_canSleep(void)
     }
 
 #endif /* !FTDF_LITE */
+#if FTDF_USE_SLEEP_DURING_BACKOFF
+    return FTDF_sdbGetSleepTime();
+#else /* FTDF_USE_SLEEP_DURING_BACKOFF */
     return 0xffffffff;
+#endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
+
 }
 
 FTDF_Boolean FTDF_prepareForSleep(FTDF_USec sleepTime)
@@ -235,6 +267,10 @@ FTDF_Boolean FTDF_prepareForSleep(FTDF_USec sleepTime)
     *getGeneratorValE  = MSK_F_FTDF_ON_OFF_REGMAP_GETGENERATORVAL_E;
 #endif
     uint64_t nextWakeUpThr;
+#if FTDF_USE_SLEEP_DURING_BACKOFF
+    uint64_t picoSleepTime = (uint64_t)sleepTime * 1000000;
+    nextWakeUpThr = (picoSleepTime - FTDF_wakeUpLatency) / FTDF_lowPowerClockCycle;
+#else /* FTDF_USE_SLEEP_DURING_BACKOFF */
 
     if (FTDF_pib.leEnabled || FTDF_pib.tschEnabled)
     {
@@ -246,9 +282,11 @@ FTDF_Boolean FTDF_prepareForSleep(FTDF_USec sleepTime)
         nextWakeUpThr = FTDF_csmacaWakeupThr;
     }
 
+#endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
+
     // Set wake up threshold
     uint32_t wakeUpIntThr = FTDF_eventCurrVal + nextWakeUpThr;
-
+    // Note that for IC revs other than A the size of WAKEUPINTTHR is 25 bits.
     FTDF_SET_FIELD(ALWAYS_ON_REGMAP_WAKEUPINTTHR, wakeUpIntThr);
     FTDF_SET_FIELD(ALWAYS_ON_REGMAP_WAKEUPENABLE, 1);
 #endif
@@ -285,7 +323,21 @@ void FTDF_wakeUp(void)
 #endif
 
     // Backward calculate the time slept
-    FTDF_PSec sleepTime = ((uint64_t)(eventNewCurrVal - FTDF_eventCurrVal) * FTDF_lowPowerClockCycle) + FTDF_wakeUpLatency;
+    //FTDF_PSec sleepTime = ( (uint64_t)( eventNewCurrVal - FTDF_eventCurrVal ) * FTDF_lowPowerClockCycle ) + FTDF_wakeUpLatency;
+
+    FTDF_PSec sleepTime;
+
+    if (eventNewCurrVal >= FTDF_eventCurrVal)   /* Check for wraps. */
+    {
+        sleepTime = (eventNewCurrVal - FTDF_eventCurrVal) * FTDF_lowPowerClockCycle  +
+                    FTDF_wakeUpLatency;
+    }
+    else
+    {
+        sleepTime = (eventNewCurrVal +
+                     (MSK_R_FTDF_ON_OFF_REGMAP_EVENTCURRVAL - FTDF_eventCurrVal)) *
+                    FTDF_lowPowerClockCycle  + FTDF_wakeUpLatency;
+    }
 
     // Calculate sync values
     uint64_t newSyncVals = ((uint64_t)FTDF_timeStampCurrVal << 8) | (FTDF_timeStampCurrPhaseVal & 0xff);

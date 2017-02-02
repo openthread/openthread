@@ -38,6 +38,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ *
  ****************************************************************************************
  */
 
@@ -45,7 +46,7 @@
 
 
 #include <stdint.h>
-#include <global_io.h>
+#include <string.h>
 #include <core_cm0.h>
 #include <hw_uart.h>
 
@@ -55,6 +56,56 @@
 #  define SEGGER_SYSTEMVIEW_ISR_ENTER()
 #  define SEGGER_SYSTEMVIEW_ISR_EXIT()
 #endif
+
+#if (dg_configUART1_SOFTWARE_FIFO_SIZE && dg_configUART_SOFTWARE_FIFO)
+#if dg_configUART_RX_CIRCULAR_DMA && (dg_configUART1_RX_CIRCULAR_DMA_BUF_SIZE > 0)
+#error UART1 can not be configured to use software FIFO and circular DMA FIFO at the same time
+#endif
+__RETAINED static uint8_t uart1_sw_fifo[dg_configUART1_SOFTWARE_FIFO_SIZE];
+#else
+#define uart1_sw_fifo   (NULL)
+#endif
+
+#if (dg_configUART2_SOFTWARE_FIFO_SIZE && dg_configUART_SOFTWARE_FIFO)
+#if dg_configUART_RX_CIRCULAR_DMA && (dg_configUART2_RX_CIRCULAR_DMA_BUF_SIZE > 0)
+#error UART2 can not be configured to use software FIFO and circular DMA FIFO at the same time
+#endif
+__RETAINED static uint8_t uart2_sw_fifo[dg_configUART2_SOFTWARE_FIFO_SIZE];
+#else
+#define uart2_sw_fifo   (NULL)
+#endif
+
+#if dg_configUART1_SOFTWARE_FIFO_SIZE > 255 || dg_configUART2_SOFTWARE_FIFO_SIZE > 255
+typedef uint16_t fifo_size_t;
+#else
+typedef uint8_t fifo_size_t;
+#endif
+
+#if dg_configUART1_SOFTWARE_FIFO_SIZE > 256 || dg_configUART2_SOFTWARE_FIFO_SIZE > 256
+typedef uint16_t fifo_ptr_t;
+#else
+typedef uint8_t fifo_ptr_t;
+#endif
+
+#if dg_configUART_RX_CIRCULAR_DMA
+
+#if !HW_UART_USE_DMA_SUPPORT
+#       error "dg_configUART_RX_CIRCULAR_DMA requires HW_UART_USE_DMA_SUPPORT to be enabled!"
+#endif
+
+#if dg_configUART1_RX_CIRCULAR_DMA_BUF_SIZE > 0
+__RETAINED static uint8_t uart1_rx_dma_buf[dg_configUART1_RX_CIRCULAR_DMA_BUF_SIZE];
+#else
+#define uart1_rx_dma_buf (NULL)
+#endif
+
+#if dg_configUART2_RX_CIRCULAR_DMA_BUF_SIZE > 0
+__RETAINED static uint8_t uart2_rx_dma_buf[dg_configUART2_RX_CIRCULAR_DMA_BUF_SIZE];
+#else
+#define uart2_rx_dma_buf (NULL)
+#endif
+
+#endif /* dg_configUART_RX_CIRCULAR_DMA */
 
 typedef struct
 {
@@ -79,18 +130,24 @@ typedef struct
     uint8_t             rx_fifo_level: 2;
 #if dg_configUART_SOFTWARE_FIFO
     uint8_t            *rx_soft_fifo;
-    uint8_t             rx_soft_fifo_size;
-    uint8_t             rx_soft_fifo_rd_ptr;
-    uint8_t             rx_soft_fifo_wr_ptr;
+    fifo_size_t         rx_soft_fifo_size;
+    fifo_ptr_t          rx_soft_fifo_rd_ptr;
+    fifo_ptr_t          rx_soft_fifo_wr_ptr;
 #endif
 #if HW_UART_USE_DMA_SUPPORT
     uint8_t             use_dma: 1;
     DMA_setup           tx_dma;
     DMA_setup           rx_dma;
-#endif
+#if dg_configUART_RX_CIRCULAR_DMA
+    bool                rx_dma_active;
+    uint8_t             *rx_dma_buf;
+    uint16_t            rx_dma_buf_size;
+    uint16_t            rx_dma_head;
+#endif /* dg_configUART_RX_CIRCULAR_DMA */
+#endif /* HW_UART_USE_DMA_SUPPORT */
 } UART_Data;
 
-static UART_Data uart_data[2];
+__RETAINED_RW static UART_Data uart_data[2];
 
 #define UART_INT(id) ((id) == HW_UART1 ? (UART_IRQn) : (UART2_IRQn))
 #define UARTIX(id) ((id) == HW_UART1 ? 0 : 1)
@@ -189,44 +246,124 @@ static inline void hw_uart_enable_rx_int(HW_UART_ID uart, bool enable)
 
 #define SOFTWARE_FIFO_PRESENT(ud) ((ud)->rx_soft_fifo != NULL)
 
+/*
+ * Copy bytes from software FIFO to user provided buffer.
+ * This function allows software FIFO interrupts to read more data while copy takes place.
+ *
+ * Function returns true if all requested data is already in user buffer.
+ */
+static bool hw_uart_drain_rx(HW_UART_ID uart, UART_Data *ud, int len)
+{
+    /*
+     * This function is called with RX interrupt disabled.
+     *
+     * Get current software FIFO pointers before enabling interrupt again.
+     * ud->rx_len is still set to 0, so interrupt will not try to copy data to
+     * application buffer till all data from software FIFO is drained to user buffer.
+     */
+    fifo_ptr_t rd_ptr = ud->rx_soft_fifo_rd_ptr;
+    fifo_ptr_t wr_ptr = ud->rx_soft_fifo_wr_ptr;
+    int idx = 0;
+
+    /*
+     * ud->rx_ix is 0, set ud->rx_len to 0 to prevent interrupt from using it
+     * before all data from software FIFO is moved to application buffer.
+     */
+    ud->rx_len = 0;
+
+    hw_uart_enable_rx_int(uart, true);
+
+    while (idx < len)
+    {
+
+        if (wr_ptr == rd_ptr)
+        {
+            /*
+             * No more data in software FIFO, at least from state before
+             * interrupt was enabled.
+             * Disable interrupt and update read pointer to reflect position
+             * of already copied data.
+             */
+            hw_uart_enable_rx_int(uart, false);
+            ud->rx_soft_fifo_rd_ptr = rd_ptr;
+
+            /*
+             * Check if write pointer moved, if so interrupt put some more data
+             * in buffer. Remember current write position and try again with
+             * interrupts enabled.
+             */
+            if (ud->rx_soft_fifo_wr_ptr != wr_ptr)
+            {
+                wr_ptr = ud->rx_soft_fifo_wr_ptr;
+                hw_uart_enable_rx_int(uart, true);
+                continue;
+            }
+
+            /*
+             * All was copied from software FIFO.
+             * Setup user transaction ix and len so when interrupts are enabled
+             * again (not in this function) interrupt or DMA can continue.
+             */
+            ud->rx_ix = idx;
+            ud->rx_len = len;
+
+            return false;
+        }
+
+        /* Copy from software FIFO to user provided buffer */
+        ud->rx_buffer[idx++] = ud->rx_soft_fifo[rd_ptr++];
+
+        if (rd_ptr >= ud->rx_soft_fifo_size)
+        {
+            rd_ptr = 0;
+        }
+    }
+
+    /*
+     * User buffer is filled, block interrupt so end of transmission callback will not be
+     * called from interrupt.
+     */
+    hw_uart_enable_rx_int(uart, false);
+    ud->rx_soft_fifo_rd_ptr = rd_ptr;
+    ud->rx_len = len;
+    ud->rx_ix = len;
+
+    return true;
+}
+
 void hw_uart_read_buffer(HW_UART_ID uart, void *data, uint16_t len)
 {
     UART_Data *ud = UARTDATA(uart);
     uint8_t *p = data;
 
+    /*
+     * Disable RX interrupt before draining software FIFO.
+     */
     hw_uart_enable_rx_int(uart, false);
 
+    if (SOFTWARE_FIFO_PRESENT(ud))
+    {
+        /*
+         * Drain uses ud fields so setup them accordingly.
+         */
+        ud->rx_buffer = data;
+
+        hw_uart_drain_rx(uart, ud, len);
+        len -= ud->rx_ix;
+        p += ud->rx_ix;
+    }
+
+    /*
+     * Read all remaining bytes with RX interrupt still disabled.
+     */
     while (len > 0)
     {
-        uint8_t rd_ptr = ud->rx_soft_fifo_rd_ptr;
-
-        /*
-         * rd_ptr != rx_soft_fifo_wr_ptr --> data is in software FIFO
-         * rd_ptr == rx_soft_fifo_wr_ptr --> nothing in software FIFO, or software FIFO
-         *                                   is not in use
-         */
-        if (rd_ptr != ud->rx_soft_fifo_wr_ptr)
-        {
-            *p++ = ud->rx_soft_fifo[rd_ptr++];
-
-            if (rd_ptr >= ud->rx_soft_fifo_size)
-            {
-                ud->rx_soft_fifo_rd_ptr = 0;
-            }
-            else
-            {
-                ud->rx_soft_fifo_rd_ptr = rd_ptr;
-            }
-        }
-        else
-        {
-            /* Software FIFO drained or no software FIFO, just read from hardware */
-            *p++ = hw_uart_read(uart);
-        }
-
+        *p++ = hw_uart_read(uart);
         len--;
     }
 
+    ud->rx_ix = 0;
+    ud->rx_len = 0;
     hw_uart_enable_rx_int(uart, SOFTWARE_FIFO_PRESENT(ud));
 }
 
@@ -242,32 +379,6 @@ void hw_uart_set_soft_fifo(HW_UART_ID uart, uint8_t *buf, uint8_t size)
     ud->rx_soft_fifo_wr_ptr = 0;
 
     hw_uart_enable_rx_int(uart, buf != NULL);
-}
-
-static bool hw_uart_drain_rx(UART_Data *ud)
-{
-    while (ud->rx_ix < ud->rx_len)
-    {
-        uint8_t rd_ptr = ud->rx_soft_fifo_rd_ptr;
-
-        if (rd_ptr == ud->rx_soft_fifo_wr_ptr)
-        {
-            return false;
-        }
-
-        ud->rx_buffer[ud->rx_ix++] = ud->rx_soft_fifo[rd_ptr++];
-
-        if (rd_ptr >= ud->rx_soft_fifo_size)
-        {
-            ud->rx_soft_fifo_rd_ptr = 0;
-        }
-        else
-        {
-            ud->rx_soft_fifo_rd_ptr = rd_ptr;
-        }
-    }
-
-    return true;
 }
 
 #else
@@ -295,7 +406,7 @@ static void hw_uart_fire_callback(UART_Data *ud)
 
     if (cb)
     {
-        cb(ud->rx_user_data, ud->rx_ix);
+        cb(ud->rx_user_data, ud->rx_len);
     }
 }
 
@@ -320,9 +431,64 @@ void hw_uart_receive(HW_UART_ID uart, void *data, uint16_t len, hw_uart_rx_callb
     ud->rx_cb = cb;
 #if dg_configUART_SOFTWARE_FIFO
 
-    if (hw_uart_drain_rx(ud))
+    if (hw_uart_drain_rx(uart, ud, len))
     {
         hw_uart_fire_callback(ud);
+        return;
+    }
+
+#endif
+
+#if dg_configUART_RX_CIRCULAR_DMA
+
+    if (ud->rx_dma_buf_size > 0)
+    {
+        ASSERT_ERROR(len < ud->rx_dma_buf_size);
+
+        uint16_t new_int, cur_idx;
+        bool data_ready = false;
+
+        ASSERT_ERROR(ud->rx_dma_active == false);
+
+        /* Calculate index of end of requested data (do not wrap it!) */
+        new_int = ud->rx_dma_head + ud->rx_len - 1;
+
+        /* Freeze DMA so it does not move pointers while we try to update them */
+        hw_dma_freeze();
+
+        cur_idx = hw_dma_transfered_bytes(ud->rx_dma.channel_number);
+
+        /* cur_idx is lower than rx_head only if it wrapped-around - fix it */
+        if (cur_idx < ud->rx_dma_head)
+        {
+            cur_idx += ud->rx_dma_buf_size;
+        }
+
+        /*
+         * If DMA has not read past the calculated index, we can set it and just wait for an
+         * interrupt. In other case, data are ready immediately in buffer.
+         */
+        if (cur_idx <= new_int)
+        {
+            new_int %= ud->rx_dma_buf_size;
+            hw_dma_channel_update_int_ix(ud->rx_dma.channel_number, new_int);
+            ud->rx_dma_active = true;
+        }
+        else
+        {
+            hw_dma_channel_update_int_ix(ud->rx_dma.channel_number, cur_idx - 1);
+            data_ready = true;
+        }
+
+        /* Unfreeze DMA now, it can start reading */
+        hw_dma_unfreeze();
+
+        /* Fire callback immediately if data already available in buffer */
+        if (data_ready)
+        {
+            hw_uart_fire_callback(ud);
+        }
+
         return;
     }
 
@@ -354,10 +520,67 @@ static void hw_uart_irq_stop_receive(HW_UART_ID uart)
     // Disable RX interrupt
     hw_uart_enable_rx_int(uart, false);
 
+    ud->rx_len = ud->rx_ix;
+
     hw_uart_fire_callback(ud);
 }
 
-void hw_uart_abort_receive(HW_UART_ID uart)
+#if dg_configUART_RX_CIRCULAR_DMA
+static void hw_uart_copy_dma_rx_to_user_buffer(HW_UART_ID uart)
+{
+    UART_Data *ud = &uart_data[UARTIX(uart)];
+
+    uint16_t cur_idx;
+    uint16_t to_copy;
+    hw_uart_rx_callback cb;
+
+    ud->rx_dma_active = false;
+    cb = ud->rx_cb;
+
+    if (cb)
+    {
+        ud->rx_cb = NULL;
+        /*
+         * User callback was not fired, since rx_dma_active is false it will not
+         * fire even if requested number of bytes was received when abort was initiated.
+         */
+        cur_idx = hw_dma_transfered_bytes(ud->rx_dma.channel_number);
+
+        if (ud->rx_ix < ud->rx_len)
+        {
+            if (cur_idx < ud->rx_dma_head)
+            {
+                cur_idx += ud->rx_dma_buf_size;
+            }
+
+            to_copy = cur_idx - ud->rx_dma_head;
+
+            if (to_copy >= ud->rx_len - ud->rx_ix)
+            {
+                to_copy = ud->rx_len - ud->rx_ix;
+            }
+        }
+    }
+    else
+    {
+        /*
+         * Callback already fired, circular buffer holds enough data.
+         */
+        to_copy = ud->rx_len - ud->rx_ix;
+    }
+
+    hw_uart_copy_rx_circular_dma_buffer(uart, ud->rx_buffer + ud->rx_ix, to_copy);
+    ud->rx_ix += to_copy;
+    ud->rx_len = ud->rx_ix;
+
+    if (cb)
+    {
+        cb(ud->rx_user_data, ud->rx_len);
+    }
+}
+#endif
+
+uint16_t hw_uart_abort_receive(HW_UART_ID uart)
 {
     UART_Data *ud = &uart_data[UARTIX(uart)];
 
@@ -365,11 +588,24 @@ void hw_uart_abort_receive(HW_UART_ID uart)
 
     if (ud->rx_dma.channel_number != HW_DMA_CHANNEL_INVALID)
     {
+#if dg_configUART_RX_CIRCULAR_DMA
+
+        if (ud->rx_dma_buf_size > 0)
+        {
+            hw_uart_copy_dma_rx_to_user_buffer(uart);
+            return ud->rx_ix;
+        }
+
+#else
+        /* No DMA circular buffer, stop DMA */
         hw_dma_channel_stop(ud->rx_dma.channel_number);
+#endif
     }
     else
 #endif
         hw_uart_irq_stop_receive(uart);
+
+    return ud->rx_ix;
 }
 
 uint16_t hw_uart_peek_received(HW_UART_ID uart)
@@ -428,27 +664,9 @@ static inline void hw_uart_tx_isr(HW_UART_ID uart)
     }
 }
 
-
-void (*hw_uart_simple_rx_callback)(void) = NULL;
-
-void hw_uart_register_simple_rx_callback(void (*callback)(void), HW_UART_ID uart)
-{
-
-    hw_uart_simple_rx_callback = callback;
-    hw_uart_enable_rx_int(uart, 1);
-}
-
-
 static inline void hw_uart_rx_isr(HW_UART_ID uart)
 {
     UART_Data *ud = UARTDATA(uart);
-
-    if (hw_uart_simple_rx_callback != NULL)
-    {
-        //Simple callback defined
-        hw_uart_simple_rx_callback();
-        return;
-    }
 
     if (SOFTWARE_FIFO_PRESENT(ud))
     {
@@ -456,7 +674,7 @@ static inline void hw_uart_rx_isr(HW_UART_ID uart)
 
         for (;;)
         {
-            uint8_t wr_ptr = ud->rx_soft_fifo_wr_ptr + 1;
+            fifo_ptr_t wr_ptr = ud->rx_soft_fifo_wr_ptr + 1;
 
             if (wr_ptr >= ud->rx_soft_fifo_size)
             {
@@ -476,9 +694,23 @@ static inline void hw_uart_rx_isr(HW_UART_ID uart)
             }
 
             ud->rx_soft_fifo[ud->rx_soft_fifo_wr_ptr] = hw_uart_rxdata_getf(uart);
-            ud->rx_soft_fifo_wr_ptr = wr_ptr;
 
-            hw_uart_drain_rx(ud);
+            /*
+             * Application read is in progress. Copy data from software FIFO to
+             * user provided buffer.
+             */
+            if (ud->rx_ix < ud->rx_len)
+            {
+                ud->rx_buffer[ud->rx_ix++] = ud->rx_soft_fifo[ud->rx_soft_fifo_wr_ptr];
+                /*
+                 * When application read is in progress, rx_ix < rx_len
+                 * This interrupt is enabled only if all data was already copied from
+                 * FIFO to user buffer. It is safe to modify rx_soft_fifo_rd_ptr.
+                 */
+                ud->rx_soft_fifo_rd_ptr = wr_ptr;
+            }
+
+            ud->rx_soft_fifo_wr_ptr = wr_ptr;
         }
 
 #endif
@@ -499,11 +731,12 @@ static inline void hw_uart_rx_isr(HW_UART_ID uart)
     }
 
     // Everything read?
-    if (ud->rx_ix >= ud->rx_len)
+    if (ud->rx_len > 0 && ud->rx_ix >= ud->rx_len)
     {
         // Disable RX interrupts, fire callback if present
         hw_uart_irq_stop_receive(uart);
     }
+
 }
 
 static inline void hw_uart_rx_timeout_isr(HW_UART_ID uart)
@@ -677,6 +910,7 @@ uint8_t hw_uart_fifo_en_getf(HW_UART_ID uart)
 
     default:
         ASSERT_ERROR(0);
+        return 255;     // To satisfy the compiler
     }
 }
 
@@ -703,6 +937,7 @@ static void hw_uart_rx_dma_callback(void *user_data, uint16_t len)
 
     if (cb)
     {
+        ud->rx_len = ud->rx_ix;
         hw_uart_enable_rx_int(UARTID(ud), SOFTWARE_FIFO_PRESENT(ud));
         cb(ud->rx_user_data, ud->rx_ix);
     }
@@ -861,7 +1096,78 @@ void hw_uart_set_dma_channels_ex(HW_UART_ID uart, int8_t tx_channel, int8_t rx_c
         ud->tx_dma.user_data = ud;
     }
 }
-#endif
+
+#if dg_configUART_RX_CIRCULAR_DMA
+
+static void hw_uart_rx_circular_dma_callback(void *user_data, uint16_t len)
+{
+    UART_Data *ud = user_data;
+    hw_uart_rx_callback cb = ud->rx_cb;
+
+    if (!ud->rx_dma_active)
+    {
+        return;
+    }
+
+    ud->rx_cb = NULL;
+    ud->rx_dma_active = false;
+
+    if (cb)
+    {
+        cb(ud->rx_user_data, ud->rx_len);
+    }
+}
+
+void hw_uart_enable_rx_circular_dma(HW_UART_ID uart)
+{
+    UART_Data *ud = UARTDATA(uart);
+
+    ASSERT_ERROR(ud->rx_dma_buf_size > 0);
+
+    hw_dma_channel_enable(ud->rx_dma.channel_number, HW_DMA_STATE_DISABLED);
+
+    /* Need to reconfigure few things for circular operation... */
+    ud->rx_dma.circular = HW_DMA_MODE_CIRCULAR;
+    ud->rx_dma.dest_address = (uint32_t) ud->rx_dma_buf;
+    ud->rx_dma.length = ud->rx_dma_buf_size;
+    ud->rx_dma.callback = hw_uart_rx_circular_dma_callback;
+    ud->rx_dma.user_data = ud;
+
+    /* Reset DMA buffer read pointer */
+    ud->rx_dma_head = 0;
+
+    /* Start DMA now since it should be always-running */
+    hw_uart_clear_dma_request(uart);
+    hw_dma_channel_initialization(&ud->rx_dma);
+    hw_dma_channel_enable(ud->rx_dma.channel_number, HW_DMA_STATE_ENABLED);
+}
+
+void hw_uart_copy_rx_circular_dma_buffer(HW_UART_ID uart, uint8_t *buf, uint16_t len)
+{
+    UART_Data *ud = UARTDATA(uart);
+
+    ASSERT_ERROR(len < ud->rx_dma_buf_size);
+
+    if (ud->rx_dma_head + len <= ud->rx_dma_buf_size)
+    {
+        memcpy(buf, &ud->rx_dma_buf[ud->rx_dma_head], len);
+    }
+    else
+    {
+        uint16_t chunk_len = ud->rx_dma_buf_size - ud->rx_dma_head;
+        memcpy(buf, &ud->rx_dma_buf[ud->rx_dma_head], chunk_len);
+        memcpy(buf + chunk_len, &ud->rx_dma_buf[0], len - chunk_len);
+    }
+
+    /* This should be protected so ISR does not try to read rx_dma_head while we update it */
+    GLOBAL_INT_DISABLE();
+    ud->rx_dma_head = (ud->rx_dma_head + len) % ud->rx_dma_buf_size;
+    GLOBAL_INT_RESTORE();
+}
+
+#endif /* dg_configUART_RX_CIRCULAR_DMA */
+
+#endif /* HW_UART_USE_DMA_SUPPORT */
 
 //=========================== Line control functions ============================
 void hw_uart_init_ex(HW_UART_ID uart, const uart_config_ex *uart_init)
@@ -901,7 +1207,9 @@ void hw_uart_init_ex(HW_UART_ID uart, const uart_config_ex *uart_init)
         }
     }
 
+    GLOBAL_INT_DISABLE();
     REG_SET_BIT(CRG_PER, CLK_PER_REG, UART_ENABLE);
+    GLOBAL_INT_RESTORE();
 
     // Set Divisor Latch Access Bit in LCR register to access DLL & DLH registers
     HW_UART_REG_SETF(uart, LCR, UART_DLAB, 1);
@@ -943,7 +1251,9 @@ void hw_uart_reinit_ex(HW_UART_ID uart, const uart_config_ex *uart_init)
 {
     UART_Data *ud = UARTDATA(uart);
 
+    GLOBAL_INT_DISABLE();
     REG_SET_BIT(CRG_PER, CLK_PER_REG, UART_ENABLE);
+    GLOBAL_INT_RESTORE();
 
     /*
      * Read UART_USR_REG to clear any pending busy interrupt.
@@ -1032,7 +1342,9 @@ void hw_uart_init(HW_UART_ID uart, const uart_config *uart_init)
         }
     }
 
+    GLOBAL_INT_DISABLE();
     REG_SET_BIT(CRG_PER, CLK_PER_REG, UART_ENABLE);
+    GLOBAL_INT_RESTORE();
 
     // Set Divisor Latch Access Bit in LCR register to access DLL & DLH registers
     HW_UART_REG_SETF(uart, LCR, UART_DLAB, 1);
@@ -1074,7 +1386,9 @@ void hw_uart_reinit(HW_UART_ID uart, const uart_config *uart_init)
 {
     UART_Data *ud = UARTDATA(uart);
 
+    GLOBAL_INT_DISABLE();
     REG_SET_BIT(CRG_PER, CLK_PER_REG, UART_ENABLE);
+    GLOBAL_INT_RESTORE();
 
     /*
      * Read UART_USR_REG to clear any pending busy interrupt.

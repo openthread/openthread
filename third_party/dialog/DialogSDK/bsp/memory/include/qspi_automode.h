@@ -4,8 +4,6 @@
  * \addtogroup SYSTEM
  * \{
  * \addtogroup MEMORY
- * 
- * \brief QSPI flash access when running in auto mode
  *
  * \{
  */
@@ -16,6 +14,14 @@
  * @file qspi_automode.h
  *
  * @brief Access QSPI flash when running in auto mode
+ *
+ * The QSPI controller allows to execute code directly from QSPI flash.
+ * When code is executing from flash, it is not possible to reprogram the flash.
+ * To be able to modify the flash when it is used for code execution, it must me assured that
+ * for the time needed to erase/write, no code is running from flash.
+ * To achieve this, the code in this module is executed from the RAM.
+ * Code in this module will not access any other functions or constant variables that could reside
+ * in flash.
  *
  * Copyright (c) 2016, Dialog Semiconductor
  * All rights reserved.
@@ -41,6 +47,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ *
  ****************************************************************************************
  */
 
@@ -50,21 +57,43 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-#include <black_orca.h>
+#include <sdk_defs.h>
 #include <hw_qspi.h>
+#include "hw_cpm.h"
+/*
+ * Debug options
+ */
+#if __DBG_QSPI_ENABLED
+#define __DBG_QSPI_VOLATILE__           volatile
+#pragma message "Automode: Debugging is on!"
+#else
+#define __DBG_QSPI_VOLATILE__
+#endif
+
+
+/*
+ * Defines (generic)
+ */
+
+/* Macros to put functions that need to be copied to ram in one section (retained) */
+#define QSPI_SECTION              __attribute__((section ("text_retained"), optimize ("no-tree-switch-conversion")))
+#define QSPI_SECTION_NO_INLINE    __attribute__ ((section ("text_retained"))) __attribute__ ((noinline))
+
+typedef struct qspi_ucode_s {
+       const uint32_t *code;
+       uint8_t size;
+} qspi_ucode_t;
+
+/*
+ * Flash specific defines
+ */
 
 /**
- * QSPI controller allows to execute code directly from QSPI flash.
- * When code is executing from flash there is no possibility to reprogram it.
- * To be able to modify flash memory while it is used for code execution it must me assured that
- * for time needed for erase/write no code is running from flash.
- * To achieve this code in this file allows to copy programming functions to RAM and execute it
- * from there.
- * Great flexibility is achieved by putting all code needed for flash modification in one section
- * that will be copied to RAM.
- * Code in this section will not access any other functions or constant variables (that could reside
- * in flash).
+ * \brief SUS bit delay after SUSPEND command (in μsec)
+ *
  */
+#define FLASH_SUS_DELAY                 (20)
+
 
 /**
  * \brief Get size of RAM buffer needed for code to modify QSPI flash.
@@ -121,6 +150,11 @@ size_t qspi_automode_write_flash_page(uint32_t addr, const uint8_t *buf, size_t 
 void qspi_automode_erase_flash_sector(uint32_t addr);
 
 /**
+ * \brief Erase whole chip
+ */
+void qspi_automode_erase_chip(void);
+
+/**
  * \brief Read flash memory
  *
  * \param [in] addr starting offset
@@ -138,6 +172,8 @@ size_t qspi_automode_read(uint32_t addr, uint8_t *buf, size_t len);
  *
  * \returns address in CPU address space where data is located
  */
+static inline const void *qspi_automode_addr(uint32_t addr) __attribute__((always_inline));
+
 static inline const void *qspi_automode_addr(uint32_t addr)
 {
         return (const void *) (MEMORY_QSPIF_BASE + addr);
@@ -146,15 +182,134 @@ static inline const void *qspi_automode_addr(uint32_t addr)
 /**
  * \brief Power up flash
  */
-void qspi_automode_flash_power_up(void);
+QSPI_SECTION void qspi_automode_flash_power_up(void);
+
+/**
+ * \brief Set QSPI Flash into power down mode
+ */
+QSPI_SECTION void qspi_automode_flash_power_down(void);
 
 /**
  * \brief Init QSPI controller
  */
-bool qspi_automode_init(void);
+__RETAINED_CODE bool qspi_automode_init(void);
+
+#if (dg_configDISABLE_BACKGROUND_FLASH_OPS == 0)
+/**
+ * \brief Check if a program or sector erase operation is in progress
+ *
+ * \return bool True if the BUSY bit is set else false.
+ *
+ * \warning This function checks the value of the BUSY bit in the Status Register 1 of the Flash. It
+ *        is the responsibility of the caller to call the function in the right context. The
+ *        function must be called with interrupts disabled.
+ *
+ */
+__RETAINED_CODE bool qspi_check_program_erase_in_progress(void);
+
+/**
+ * \brief Suspend a Flash program or erase operation
+ *
+ * \details This function will try to suspend an ongoing program or erase procedure. The SUS bit is
+ *        checked and the actual status is returned to the caller. Note that the program or erase
+ *        procedure may have been completed before the suspend command is processed by the Flash. In
+ *        this case the SUS bit will be left to 0.
+ *
+ * \return bool True if the procedure has been suspended. False if the procedure was not suspended
+ *        successfully or had finished before the suspend command was processed by the Flash.
+ *
+ * \warning After the call to this function, the QSPI controller is set to auto mode and the Flash
+ *        access to quad mode (if QUAD_MODE is 1). The function must be called with interrupts
+ *        disabled.
+ *
+ */
+__RETAINED_CODE bool qspi_check_and_suspend(void);
+
+/**
+ * \brief Resume a Flash program or sector erase operation
+ *
+ * \warning After the call to this function, the QSPI controller is set to manual mode and the Flash
+ *        access to single mode. The function must be called with interrupts disabled.
+ *
+ */
+__RETAINED_CODE void qspi_resume(void);
+
+/**
+ * \brief Erase a sector of the Flash in manual mode
+ *
+ * \param[in] addr The address of the sector to be erased.
+ *
+ * \warning This function does not block until the Flash has processed the command! The QSPI
+ *        controller is left to manual mode after the call to this function. The function must be
+ *        called with interrupts disabled.
+ *
+ */
+__RETAINED_CODE void flash_erase_sector_manual_mode(uint32_t addr);
+
+/**
+ * \brief Program data into a page of the Flash in manual mode
+ *
+ * \param[in] addr The address of the Flash where the data will be written. It may be anywhere in a
+ *        page.
+ * \param[in] buf Pointer to the beginning of the buffer that contains the data to be written.
+ * \param[in] len The number of bytes to be written.
+ *
+ * \return size_t The number of bytes written.
+ *
+ * \warning The boundary of the page where addr belongs to, will not be crossed! The caller should
+ *        issue another flash_program_page_manual_mode() call in order to write the remaining data
+ *        to the next page. The QSPI controller is left to manual mode after the call to this
+ *        function. The function must be called with interrupts disabled.
+ *
+ */
+__RETAINED_CODE size_t flash_program_page_manual_mode(uint32_t addr, const uint8_t *buf,
+                                                      uint16_t len);
+#endif
+
+/**
+ * \brief Activate Flash command entry mode
+ *
+ * \note After the call to this function, the QSPI controller is set to manual mode and the Flash
+ *        access to single mode.
+ *
+ * \warning The function must be called with interrupts disabled.
+ *
+ */
+__RETAINED_CODE void flash_activate_command_entry_mode(void);
+
+/**
+ * \brief Deactivate Flash command entry mode
+ *
+ * \note After the call to this function, the QSPI controller is set to auto mode and the Flash
+ *        access to quad mode (if QUAD_MODE is 1).
+ *
+ * \warning The function must be called with interrupts disabled.
+ *
+ */
+__RETAINED_CODE void flash_deactivate_command_entry_mode(void);
+
+/**
+ * \brief Configure Flash and QSPI controller for system clock frequency
+ *
+ * This function is used to change the Flash configuration of the QSPI controller
+ * to work with the system clock frequency defined in sys_clk. Dummy clock
+ * cycles could be changed here to support higher clock frequencies.
+ * QSPI controller clock divider could also be changed if the Flash
+ * maximum frequency is smaller than the system clock frequency.
+ * This function must be called before changing system clock frequency.
+ *
+ * \param [in] sys_clk System clock frequency
+ *
+ */
+__RETAINED_CODE void qspi_automode_sys_clock_cfg(sys_clk_t sys_clk);
+
+/**
+ * \brief Get ucode required for wake-up sequence
+ * \return qspi_ucode_t Pointer to the structure containing the ucode and ucode size
+ */
+const qspi_ucode_t *qspi_automode_get_ucode(void);
 
 #endif /* QSPI_AUTOMODE_H_ */
-
 /**
  * \}
  * \}

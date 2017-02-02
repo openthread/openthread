@@ -44,9 +44,7 @@
 #define W25Q_STATUS1_BUSY_BIT        0
 #define W25Q_STATUS1_BUSY_MASK       (1 << W25Q_STATUS1_BUSY_BIT)
 
-static uint32_t wait_status_timeout;
-
-#define QSPI_SECTION __attribute__ ((section ("text_retained")))
+static uint32_t sWaitStatusTimeout;
 
 QSPI_SECTION static inline uint8_t qspi_get_erase_status(void)
 {
@@ -85,9 +83,9 @@ uint32_t utilsFlashGetSize(void)
 ThreadError utilsFlashStatusWait(uint32_t aTimeout)
 {
 
-    wait_status_timeout = otPlatAlarmGetNow();
+    sWaitStatusTimeout = otPlatAlarmGetNow();
 
-    while (qspi_get_erase_status()  && ((otPlatAlarmGetNow() - wait_status_timeout) < aTimeout));
+    while (qspi_get_erase_status()  && ((otPlatAlarmGetNow() - sWaitStatusTimeout) < aTimeout));
 
     if (qspi_get_erase_status())
     {
@@ -97,17 +95,11 @@ ThreadError utilsFlashStatusWait(uint32_t aTimeout)
     {
         return kThreadError_None;
     }
-
 }
 
 ThreadError utilsFlashInit(void)
 {
-
-    qspi_automode_init();
     qspi_automode_flash_power_up();
-
-    utilsFlashErasePage(0);
-    utilsFlashErasePage(0x1000);
 
     if (utilsFlashStatusWait(1000) == kThreadError_Busy)
     {

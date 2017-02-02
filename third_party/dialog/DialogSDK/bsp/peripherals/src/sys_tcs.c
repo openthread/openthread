@@ -9,11 +9,11 @@
 
 /**
 ****************************************************************************************
-*
-* @file sys_tcs.c
-*
-* @brief TCS HAndler
-*
+ *
+ * @file sys_tcs.c
+ *
+ * @brief TCS HAndler
+ *
  * Copyright (c) 2016, Dialog Semiconductor
  * All rights reserved.
  * Redistribution and use in source and binary forms, with or without modification,
@@ -38,11 +38,15 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ *
 ****************************************************************************************
 */
 
 #include <stdint.h>
+#include "hw_cpm.h"
 #include "sys_tcs.h"
+#include "hw_gpadc.h"
+#include "hw_gpio.h"
 
 #define APPEND_TCS_LENGTH       (0)
 
@@ -50,6 +54,9 @@
 #define PERIPHERAL_AREA_SIZE    (0xC4A)
 
 #define IS_IN_AREA(addr, base, size)    ((addr >= base) && (addr <= (base + size)))
+
+#define ADC_SE_GAIN_ERROR(value)        ((value)  & 0x0000FFFF)
+#define ADC_DIFF_GAIN_ERROR(value)      (((value) & 0xFFFF0000) >> 16)
 
 /*
  * Global and / or retained variables
@@ -60,10 +67,12 @@ uint8_t tcs_length __RETAINED_UNINIT;
 
 uint8_t area_offset[tcs_system + 1] __RETAINED;
 uint8_t area_size_global[tcs_system + 1] __RETAINED;
+uint16_t sys_tcs_xtal16m_settling_time __RETAINED;
+
 
 const uint32_t *tcs_ptr __RETAINED;
 
-bool is_calibrated_chip __RETAINED_UNINIT;      // Initial value: false
+bool sys_tcs_is_calibrated_chip __RETAINED_UNINIT;      // Initial value: false
 
 /*
  * Local variables
@@ -251,13 +260,13 @@ static void swap_entries(uint32_t first_pos, uint32_t second_pos)
  */
 static int sys_tcs_sort_area(uint32_t area_base, uint32_t area_size, uint32_t array_ptr, uint8_t *ptr, uint8_t *size)
 {
-    int i = array_ptr;
-    int sort_start;
-    int sort_end;
+    uint32_t i = array_ptr;
+    uint32_t sort_start;
+    uint32_t sort_end;
 
     if (array_ptr == tcs_length)
     {
-        return array_ptr;       // Nothing else is left in the array
+        return array_ptr;       // Nothing else is left in the array or tcs_length is zero
     }
 
     sort_start = array_ptr;
@@ -266,7 +275,7 @@ static int sys_tcs_sort_area(uint32_t area_base, uint32_t area_size, uint32_t ar
     /* Make sure that the values in TCS don't overflow the allocated array */
     ASSERT_WARNING(tcs_length <= sizeof(tcs_data) / sizeof(tcs_data[0]));
 
-    while (i < tcs_length)
+    while (i < (tcs_length - 1))
     {
         if (IS_IN_AREA(tcs_data[i], area_base, area_size))
         {
@@ -302,7 +311,8 @@ static int sys_tcs_sort_area(uint32_t area_base, uint32_t area_size, uint32_t ar
 void sys_tcs_init(void)
 {
     tcs_length = 0;
-    is_calibrated_chip = false;
+    sys_tcs_is_calibrated_chip = false;
+    hw_cpm_bod_enabled_in_tcs = 0;
 }
 
 bool sys_tcs_store_pair(uint32_t address, uint32_t value)
@@ -321,12 +331,35 @@ bool sys_tcs_store_pair(uint32_t address, uint32_t value)
     {
         if (address == (uint32_t)&CRG_TOP->BANDGAP_REG)
         {
-            is_calibrated_chip = true;
+            sys_tcs_is_calibrated_chip = true;
         }
-
-        if (address == (uint32_t)&CRG_TOP->CLK_16M_REG)
+        else if (address == (uint32_t)&CRG_TOP->CLK_16M_REG)
         {
-            value |= 1;     // Make sure that RC16 is enabled!
+            value |= CRG_TOP_CLK_16M_REG_RC16M_ENABLE_Msk; // Make sure that RC16 is enabled!
+        }
+        else if (address == (uint32_t)&CRG_TOP->XTALRDY_CTRL_REG)
+        {
+            sys_tcs_xtal16m_settling_time = value;
+        }
+        else if (address == (uint32_t)&CRG_TOP->BOD_CTRL2_REG)
+        {
+            hw_cpm_bod_enabled_in_tcs = value;
+            /*
+             * Read the ADC Gain Error. Given that the Chip Configuration Section
+             * (CCS) of OTP is out of space, the values are stored in the TCS section
+             * using as address the read-only register SYS_STAT_REG.
+             * The 16 LSB of the 32bit data-value is the single ended gain error.
+             * The 16 MSB of the 32bit data-value is the differential gain error.
+             * Both gain error values should be interpreted as signed 16bit integers.
+             */
+        }
+        else if (dg_configUSE_ADC_GAIN_ERROR_CORRECTION == 1)
+        {
+            if (address == (uint32_t)&CRG_TOP->SYS_STAT_REG)
+            {
+                hw_gpadc_store_se_gain_error(ADC_SE_GAIN_ERROR(value));
+                hw_gpadc_store_diff_gain_error(ADC_DIFF_GAIN_ERROR(value));
+            }
         }
 
         apply_pair(address, value);
@@ -336,7 +369,7 @@ bool sys_tcs_store_pair(uint32_t address, uint32_t value)
         store_in_array(address, value);
     }
 
-    return is_calibrated_chip;
+    return sys_tcs_is_calibrated_chip;
 }
 
 void sys_tcs_sort_array(void)
@@ -354,7 +387,7 @@ void sys_tcs_sort_array(void)
         CRG_TOP->CLK_FREQ_TRIM_REG = 0x0460;
     }
 
-    if (is_calibrated_chip)
+    if (sys_tcs_is_calibrated_chip)
     {
 #ifdef CONFIG_USE_BLE
         entry_ptr = sys_tcs_sort_area(BLE_BASE, sizeof(BLE_Type), entry_ptr,

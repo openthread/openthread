@@ -1,5 +1,17 @@
- /**
- ****************************************************************************************
+/**
+ * \addtogroup BSP
+ * \{
+ * \addtogroup BSP_CONFIG
+ * \{
+ * \addtogroup RF_FEM
+ *
+ * \brief RF Front-End module confguration
+ *
+ *\{
+ */
+
+/**
+ ***************************************************************************************
  *
  * @file bsp_fem.h
  *
@@ -28,9 +40,10 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- *   
- ****************************************************************************************
- */
+ *
+ *
+ ***************************************************************************************
+*/
 
 #ifndef BSP_FEM_H_
 #define BSP_FEM_H_
@@ -39,16 +52,12 @@
 
 #ifdef dg_configFEM_DLG_REF_BOARD
 
-#undef dg_configBLACK_ORCA_IC_STEP
-#define dg_configBLACK_ORCA_IC_STEP             BLACK_ORCA_IC_STEP_D
-
 #define dg_configFEM FEM_SKY66112_11
 
-#ifndef dg_configPOWER_EXT_1V8_PERIPHERALS
-#if dg_configPOWER_EXT_1V8_PERIPHERALS == 0
-#warning Setting dg_configPOWER_EXT_1V8_PERIPHERALS to 1 for FEM to work
-#define dg_configPOWER_EXT_1V8_PERIPHERALS      1
-#endif
+#if dg_configPOWER_1V8P == 0
+#warning Setting dg_configPOWER_1V8P to 1 for FEM to work
+#undef dg_configPOWER_1V8P
+#define dg_configPOWER_1V8P 1
 #endif
 
 #define dg_configFEM_SKY66112_11_FEM_BIAS_V18P
@@ -59,7 +68,7 @@
 #endif
 
 #ifndef dg_configFEM_SKY66112_11_CSD_PIN
-#define dg_configFEM_SKY66112_11_CSD_PIN HW_GPIO_PIN_2
+#define dg_configFEM_SKY66112_11_CSD_PIN HW_GPIO_PIN_3
 #endif
 
 #ifndef dg_configFEM_SKY66112_11_CPS_PORT
@@ -67,7 +76,7 @@
 #endif
 
 #ifndef dg_configFEM_SKY66112_11_CPS_PIN
-#define dg_configFEM_SKY66112_11_CPS_PIN HW_GPIO_PIN_7
+#define dg_configFEM_SKY66112_11_CPS_PIN HW_GPIO_PIN_6
 #endif
 
 #ifndef dg_configFEM_SKY66112_11_CRX_PORT
@@ -75,7 +84,7 @@
 #endif
 
 #ifndef dg_configFEM_SKY66112_11_CRX_PIN
-#define dg_configFEM_SKY66112_11_CRX_PIN HW_GPIO_PIN_4
+#define dg_configFEM_SKY66112_11_CRX_PIN HW_GPIO_PIN_2
 #endif
 
 #ifndef dg_configFEM_SKY66112_11_CTX_PORT
@@ -83,7 +92,7 @@
 #endif
 
 #ifndef dg_configFEM_SKY66112_11_CTX_PIN
-#define dg_configFEM_SKY66112_11_CTX_PIN HW_GPIO_PIN_6
+#define dg_configFEM_SKY66112_11_CTX_PIN HW_GPIO_PIN_5
 #endif
 
 #ifndef dg_configFEM_SKY66112_11_CHL_PORT
@@ -91,7 +100,7 @@
 #endif
 
 #ifndef dg_configFEM_SKY66112_11_CHL_PIN
-#define dg_configFEM_SKY66112_11_CHL_PIN HW_GPIO_PIN_5
+#define dg_configFEM_SKY66112_11_CHL_PIN HW_GPIO_PIN_4
 #endif
 
 #ifndef dg_configFEM_SKY66112_11_ANTSEL_PORT
@@ -99,7 +108,7 @@
 #endif
 
 #ifndef dg_configFEM_SKY66112_11_ANTSEL_PIN
-#define dg_configFEM_SKY66112_11_ANTSEL_PIN HW_GPIO_PIN_3
+#define dg_configFEM_SKY66112_11_ANTSEL_PIN HW_GPIO_PIN_0
 #endif
 
 #endif /* dg_configFEM_DLG_REF_BOARD */

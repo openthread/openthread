@@ -28,7 +28,7 @@
 
 #include <platform/misc.h>
 #include <openthread-types.h>
-#include "black_orca.h"
+#include "sdk_defs.h"
 
 void otPlatReset(otInstance *aInstance)
 {

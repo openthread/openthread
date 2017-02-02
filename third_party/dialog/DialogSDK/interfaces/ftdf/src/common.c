@@ -29,6 +29,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ *
  ****************************************************************************************
  */
 
@@ -38,7 +39,7 @@
 #include <ftdf.h>
 #include "internal.h"
 #include "regmap.h"
-#include "black_orca.h"
+#include "sdk_defs.h"
 
 #if dg_configCOEX_ENABLE_CONFIG
 #include "hw_coex.h"
@@ -57,6 +58,17 @@ typedef struct
 } PIBAttributeTable;
 
 struct FTDF_Pib                  FTDF_pib __attribute__((section(".retention")));
+
+#if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO
+#if FTDF_FPPR_DEFER_INVALIDATION
+static struct
+{
+    FTDF_AddressMode        addrMode;
+    FTDF_PANId              PANId;
+    FTDF_Address            addr;
+} FTDF_fpprPending __attribute__((section(".retention")));
+#endif /* FTDF_FPPR_DEFER_INVALIDATION */
+#endif /* FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO */
 
 #ifndef FTDF_LITE
 const FTDF_ChannelNumber         page0Channels[ FTDF_NR_OF_CHANNELS ] =
@@ -444,7 +456,7 @@ const PIBAttributeTable          pibAttributeTable =
     .attributeDefs[ FTDF_PIB_CCA_MODE ].addr                               = &FTDF_pib.CCAMode,
     .attributeDefs[ FTDF_PIB_CCA_MODE ].size                               = sizeof(FTDF_pib.CCAMode),
     .attributeDefs[ FTDF_PIB_CCA_MODE ].getFunc                            = NULL,
-    .attributeDefs[ FTDF_PIB_CCA_MODE ].setFunc                            = NULL,
+    .attributeDefs[ FTDF_PIB_CCA_MODE ].setFunc                            = FTDF_setTXPower,
 #ifndef FTDF_LITE
     .attributeDefs[ FTDF_PIB_CURRENT_PAGE ].addr                           = &FTDF_pib.currentPage,
     .attributeDefs[ FTDF_PIB_CURRENT_PAGE ].size                           = 0,
@@ -515,14 +527,27 @@ const PIBAttributeTable          pibAttributeTable =
     .attributeDefs[ FTDF_PIB_TS_SYNC_CORRECT_THRESHOLD ].addr              = &FTDF_pib.tsSyncCorrectThreshold,
     .attributeDefs[ FTDF_PIB_TS_SYNC_CORRECT_THRESHOLD ].size              = sizeof(FTDF_pib.tsSyncCorrectThreshold),
     .attributeDefs[ FTDF_PIB_TS_SYNC_CORRECT_THRESHOLD ].getFunc           = NULL,
-    .attributeDefs[ FTDF_PIB_TS_SYNC_CORRECT_THRESHOLD ].setFunc           = NULL
+    .attributeDefs[ FTDF_PIB_TS_SYNC_CORRECT_THRESHOLD ].setFunc           = NULL,
 #endif /* !FTDF_LITE */
+#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
+    .attributeDefs[ FTDF_PIB_BO_IRQ_THRESHOLD ].addr                       = &FTDF_pib.boIrqThreshold,
+    .attributeDefs[ FTDF_PIB_BO_IRQ_THRESHOLD ].size                       = sizeof(FTDF_pib.boIrqThreshold),
+    .attributeDefs[ FTDF_PIB_BO_IRQ_THRESHOLD ].getFunc                    = FTDF_getBoIrqThreshold,
+    .attributeDefs[ FTDF_PIB_BO_IRQ_THRESHOLD ].setFunc                    = FTDF_setBoIrqThreshold,
+    .attributeDefs[ FTDF_PIB_PTI_CONFIG ].addr                             = &FTDF_pib.ptiConfig,
+    .attributeDefs[ FTDF_PIB_PTI_CONFIG ].size                             = sizeof(FTDF_pib.ptiConfig),
+    .attributeDefs[ FTDF_PIB_PTI_CONFIG ].getFunc                          = NULL,
+    .attributeDefs[ FTDF_PIB_PTI_CONFIG ].setFunc                          = FTDF_setPtiConfig,
+#endif /* dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A */
 };
 
 FTDF_Boolean        FTDF_transparentMode                              __attribute__((section(".retention")));
 FTDF_Bitmap32       FTDF_transparentModeOptions                       __attribute__((section(".retention")));
 #if FTDF_DBG_BUS_ENABLE
 FTDF_DbgMode        FTDF_dbgMode                                      __attribute__((section(".retention")));
+#endif
+#if dg_configUSE_FTDF_DDPHY == 1
+uint16_t            FTDF_ddphyCcaReg                                  __attribute__((section(".retention")));
 #endif
 #ifndef FTDF_LITE
 FTDF_Buffer         FTDF_reqBuffers[ FTDF_NR_OF_REQ_BUFFERS ]         __attribute__((section(".retention")));
@@ -538,6 +563,9 @@ FTDF_Time           FTDF_txPendingTimerTime                           __attribut
 FTDF_MsgBuffer     *FTDF_reqCurrent                                   __attribute__((section(".retention")));
 #endif
 FTDF_Size           FTDF_nrOfRetries                                  __attribute__((section(".retention")));
+#if FTDF_USE_SLEEP_DURING_BACKOFF
+static FTDF_Sdb     FTDF_sdb                                          __attribute__((section(".retention")));
+#endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
 #ifndef FTDF_LITE
 FTDF_Boolean        FTDF_isPANCoordinator                             __attribute__((section(".retention")));
 FTDF_Time           FTDF_startCslSampleTime                           __attribute__((section(".retention")));
@@ -560,7 +588,7 @@ FTDF_SecurityHeader FTDF_sh;
 FTDF_AssocAdmin     FTDF_aa;
 #endif /* !FTDF_LITE */
 
-#if dg_configCOEX_ENABLE_CONFIG
+#if FTDF_USE_PTI
 /* Packet traffic information used when FTDF is in RX enable. */
 static FTDF_PTI  FTDF_RxPti __attribute__((section(".retention")));
 #endif
@@ -635,6 +663,15 @@ void FTDF_reset(int setDefaultPIB)
         FTDF_pib.timeslotTemplate.tsTimeslotLength = 10000;
         FTDF_pib.tsSyncCorrectThreshold            = 220;
         FTDF_pib.hoppingSequenceLength             = 16;
+#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
+        int i;
+
+        for (i = 0; i < FTDF_PTIS; i++)
+        {
+            FTDF_pib.ptiConfig.ptis[i] = 0;
+        }
+
+#endif
 #ifdef FTDF_NO_CSL
         FTDF_pib.LECapable                         = FTDF_FALSE;
 #else
@@ -666,6 +703,9 @@ void FTDF_reset(int setDefaultPIB)
 #ifndef FTDF_LITE
         memset(FTDF_pib.defaultKeySource, 0xff, 8);
 #endif /* !FTDF_LITE */
+#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
+        FTDF_pib.boIrqThreshold                         = FTDF_BO_IRQ_THRESHOLD;
+#endif /* #if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A */
     }
 
     FTDF_initQueues();
@@ -683,12 +723,22 @@ void FTDF_reset(int setDefaultPIB)
 
     volatile uint32_t *wakeupTimerEnableStatus = FTDF_GET_FIELD_ADDR(ON_OFF_REGMAP_WAKEUPTIMERENABLESTATUS);
 
+#if dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A
     FTDF_SET_FIELD(ALWAYS_ON_REGMAP_WAKEUPTIMERENABLE, 0);
+
+#else
+    FTDF_SET_FIELD(ON_OFF_REGMAP_WAKEUPTIMERENABLE_CLEAR, 1);
+#endif
 
     while (*wakeupTimerEnableStatus & MSK_F_FTDF_ON_OFF_REGMAP_WAKEUPTIMERENABLESTATUS)
     { }
 
+#if dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A
     FTDF_SET_FIELD(ALWAYS_ON_REGMAP_WAKEUPTIMERENABLE, 1);
+
+#else
+    FTDF_SET_FIELD(ON_OFF_REGMAP_WAKEUPTIMERENABLE_SET, 1);
+#endif
 
     while ((*wakeupTimerEnableStatus & MSK_F_FTDF_ON_OFF_REGMAP_WAKEUPTIMERENABLESTATUS) == 0)
     { }
@@ -735,13 +785,17 @@ void FTDF_reset(int setDefaultPIB)
 
 #endif /* FTDF_NO_TSCH */
 #endif /* !FTDF_LITE */
+#if FTDF_USE_SLEEP_DURING_BACKOFF
+    FTDF_sdbFsmReset();
+#endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
     FTDF_initLmac();
 
 #ifndef FTDF_NO_CSL
     FTDF_rzTime = FTDF_GET_FIELD(ON_OFF_REGMAP_SYMBOLTIMESNAPSHOTVAL);
 #endif /* FTDF_NO_CSL */
-#if dg_configCOEX_ENABLE_CONFIG
-    FTDF_RxPti = 0;
+
+#if dg_configUSE_FTDF_DDPHY == 1
+    FTDF_ddphySet(0);
 #endif
 }
 
@@ -821,6 +875,27 @@ void FTDF_initLmac(void)
     *txFlagClearM |= MSK_F_FTDF_ON_OFF_REGMAP_TX_FLAG_CLEAR_M;
     txFlagClearM   = FTDF_GET_FIELD_ADDR_INDEXED(ON_OFF_REGMAP_TX_FLAG_CLEAR_M, FTDF_TX_WAKEUP_BUFFER);
     *txFlagClearM |= MSK_F_FTDF_ON_OFF_REGMAP_TX_FLAG_CLEAR_M;
+#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
+#if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO
+    FTDF_fpprReset();
+    FTDF_fpprSetMode(FTDF_TRUE, FTDF_FALSE, FTDF_FALSE);
+#else
+    FTDF_fpprSetMode(FTDF_FALSE, FTDF_TRUE, FTDF_TRUE);
+#endif /* #if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO */
+#if FTDF_USE_SLEEP_DURING_BACKOFF
+    /* Unmask long BO interrupt. */
+    FTDF_SET_FIELD(ON_OFF_REGMAP_CSMA_CA_BO_THR_M, 1);
+#else /* FTDF_USE_SLEEP_DURING_BACKOFF */
+    /* Set BO threshold. */
+    FTDF_SET_FIELD(ON_OFF_REGMAP_CSMA_CA_BO_THRESHOLD, FTDF_BO_IRQ_THRESHOLD);
+
+    /* Mask long BO interrupt. */
+    FTDF_SET_FIELD(ON_OFF_REGMAP_CSMA_CA_BO_THR_M, 0);
+#endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
+#if FTDF_USE_LPDP == 1
+    FTDF_lpdpEnable(FTDF_TRUE);
+#endif /* #if FTDF_USE_LPDP == 1 */
+#endif /* #if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A */
 }
 
 #ifdef FTDF_PHY_API
@@ -1001,7 +1076,10 @@ void FTDF_sendCommStatusIndication(FTDF_MsgBuffer     *request,
 
         FTDF_REL_MSG_BUFFER(request);
         FTDF_RCV_MSG((FTDF_MsgBuffer *) commStatus);
-
+        /* Check for orphan response. */
+#if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO
+        FTDF_fpFsmClearPending();
+#endif /* FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO */
         FTDF_processNextRequest();
         return;
     }
@@ -1059,22 +1137,22 @@ FTDF_Octet *FTDF_addFrameHeader(FTDF_Octet       *txPtr,
         //        if ( panIdPresent || iesIncluded || seqNrSuppressed || ( options & FTDF_OPT_ENHANCED ) || FTDF_pib.tschEnabled )
         if (panIdPresent || iesIncluded || seqNrSuppressed || (options & FTDF_OPT_ENHANCED))
         {
-            frameVersion = 0x02; // 0b10;
+            frameVersion = 0b10;
         }
         else
         {
             if (secure ||
                 msduLength > FTDF_MAX_MAC_SAFE_PAYLOAD_SIZE)
             {
-                frameVersion = 0x01; // 0b01;
+                frameVersion = 0b01;
             }
             else
             {
-                frameVersion = 0x00; // 0b00;
+                frameVersion = 0b00;
             }
         }
 
-        if (frameVersion < 0x02)   //0b10 )
+        if (frameVersion < 0b10)
         {
             if (dstAddrMode != FTDF_NO_ADDRESS &&
                 srcAddrMode != FTDF_NO_ADDRESS &&
@@ -1121,7 +1199,7 @@ FTDF_Octet *FTDF_addFrameHeader(FTDF_Octet       *txPtr,
     }
     else
     {
-        if (frameVersion < 0x02)   //0b10 )
+        if (frameVersion < 0b10)
         {
             if (dstAddrMode != FTDF_NO_ADDRESS)
             {
@@ -1176,7 +1254,7 @@ FTDF_Octet *FTDF_addFrameHeader(FTDF_Octet       *txPtr,
 
     if (frameType != FTDF_MULTIPURPOSE_FRAME)
     {
-        if (frameVersion < 0x02)  // 0b10 )
+        if (frameVersion < 0b10)
         {
             if (srcAddrMode != FTDF_NO_ADDRESS && !panIdCompression)
             {
@@ -1229,7 +1307,7 @@ FTDF_Octet *FTDF_addFrameHeader(FTDF_Octet       *txPtr,
 
 FTDF_PTI FTDF_getRxPti(void)
 {
-#if dg_configCOEX_ENABLE_CONFIG
+#if FTDF_USE_PTI
     FTDF_PTI rx_pti;
     FTDF_criticalVar();
     FTDF_enterCritical();
@@ -1238,16 +1316,6 @@ FTDF_PTI FTDF_getRxPti(void)
     return rx_pti;
 #else
     return 0;
-#endif
-}
-
-void FTDF_setRxPti(FTDF_PTI rx_pti)
-{
-#if dg_configCOEX_ENABLE_CONFIG
-    FTDF_criticalVar();
-    FTDF_enterCritical();
-    FTDF_RxPti = rx_pti;
-    FTDF_exitCritical();
 #endif
 }
 
@@ -1286,7 +1354,7 @@ FTDF_Octet *FTDF_getFrameHeader(FTDF_Octet       *rxBuffer,
                                 FTDF_FrameHeader *frameHeader)
 {
     FTDF_FrameType   frameType    = *rxBuffer & 0x07;
-    uint8_t          frameVersion = 0; // 0b00;
+    uint8_t          frameVersion = 0;
     FTDF_Bitmap8     options      = 0;
     FTDF_AddressMode dstAddrMode;
     FTDF_AddressMode srcAddrMode;
@@ -1330,7 +1398,7 @@ FTDF_Octet *FTDF_getFrameHeader(FTDF_Octet       *rxBuffer,
                 options |= FTDF_OPT_IES_PRESENT;
             }
 
-            frameVersion              = 0x00; //0b00;
+            frameVersion              = 0;
 
             frameHeader->frameVersion = FTDF_FRAME_VERSION_E;
 
@@ -1364,7 +1432,7 @@ FTDF_Octet *FTDF_getFrameHeader(FTDF_Octet       *rxBuffer,
 
         frameVersion = (*rxBuffer & 0x30) >> 4;
 
-        if (frameVersion == 0x02)   //0b10 )
+        if (frameVersion == 0x02)
         {
             if (*rxBuffer & 0x01)
             {
@@ -1378,11 +1446,11 @@ FTDF_Octet *FTDF_getFrameHeader(FTDF_Octet       *rxBuffer,
 
             frameHeader->frameVersion = FTDF_FRAME_VERSION_E;
         }
-        else if (frameVersion == 0x01)   // 0b01 )
+        else if (frameVersion == 0x01)
         {
             frameHeader->frameVersion = FTDF_FRAME_VERSION_2011;
         }
-        else if (frameVersion == 0x00)   //0b00 )
+        else if (frameVersion == 0x00)
         {
             frameHeader->frameVersion = FTDF_FRAME_VERSION_2003;
         }
@@ -1411,7 +1479,7 @@ FTDF_Octet *FTDF_getFrameHeader(FTDF_Octet       *rxBuffer,
     }
     else
     {
-        if (frameVersion < 0x02)   //0b10 )
+        if (frameVersion < 0x02)
         {
             if (dstAddrMode != FTDF_NO_ADDRESS)
             {
@@ -1461,7 +1529,7 @@ FTDF_Octet *FTDF_getFrameHeader(FTDF_Octet       *rxBuffer,
 
     FTDF_Boolean hasSrcPANId = FTDF_FALSE;
 
-    if (frameVersion < 0x02 && frameType != FTDF_MULTIPURPOSE_FRAME)   //0b10
+    if (frameVersion < 0x02 && frameType != FTDF_MULTIPURPOSE_FRAME)
     {
         if (srcAddrMode != FTDF_NO_ADDRESS && !panIdCompression)
         {
@@ -1586,6 +1654,8 @@ static void processRxFrame(int readBuf)
         status |= rxMeta1 & MSK_F_FTDF_RETENTION_RAM_DPANID_ERROR ? FTDF_TRANSPARENT_RCV_UNEXP_DST_PAN_ID : 0;
         status |= rxMeta1 & MSK_F_FTDF_RETENTION_RAM_DADDR_ERROR ? FTDF_TRANSPARENT_RCV_UNEXP_DST_ADDR : 0;
 
+        FTDF_RCV_FRAME_TRANSPARENT(frameLen, rxPtr, status, lqi);
+
 #if FTDF_TRANSPARENT_USE_WAIT_FOR_ACK
 
         if ((FTDF_transparentModeOptions & FTDF_TRANSPARENT_WAIT_FOR_ACK))
@@ -1645,13 +1715,61 @@ static void processRxFrame(int readBuf)
         }
 
 #endif /* FTDF_TRANSPARENT_USE_WAIT_FOR_ACK */
-        FTDF_RCV_FRAME_TRANSPARENT(frameLen, rxPtr, status, lqi);
-
         return;
     }
 
 #ifndef FTDF_LITE
     rxPtr = FTDF_getFrameHeader(rxPtr, frameHeader);
+
+#if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_MANUAL
+
+    if (frameHeader->options & FTDF_OPT_ACK_REQUESTED)
+    {
+        int n;
+        FTDF_Boolean addressFound = FTDF_FALSE;
+
+        for (n = 0; n < FTDF_NR_OF_REQ_BUFFERS; n++)
+        {
+            if (FTDF_txPendingList[ n ].addrMode == frameHeader->srcAddrMode &&
+                FTDF_txPendingList[ n ].PANId == frameHeader->srcPANId)
+            {
+                if (frameHeader->srcAddrMode == FTDF_SHORT_ADDRESS)
+                {
+                    if (FTDF_txPendingList[ n ].addr.shortAddress ==
+                        frameHeader->srcAddr.shortAddress)
+                    {
+                        addressFound = FTDF_TRUE;
+                        break;
+                    }
+                }
+                else if (frameHeader->srcAddrMode == FTDF_EXTENDED_ADDRESS)
+                {
+                    if (FTDF_txPendingList[ n ].addr.extAddress ==
+                        frameHeader->srcAddr.extAddress)
+                    {
+                        addressFound = FTDF_TRUE;
+                        break;
+                    }
+                }
+                else
+                {
+                    // Invalid srcAddrMode
+                    return;
+                }
+            }
+        }
+
+        if (addressFound)
+        {
+            FTDF_fpprSetMode(FTDF_FALSE, FTDF_TRUE, FTDF_TRUE);
+        }
+        else
+        {
+            FTDF_fpprSetMode(FTDF_FALSE, FTDF_TRUE, FTDF_FALSE);
+        }
+    }
+
+#endif
 
     if (frameHeader->frameVersion == FTDF_FRAME_VERSION_NOT_SUPPORTED)
     {
@@ -2522,6 +2640,23 @@ static void processRxFrame(int readBuf)
         }
     }
 
+#if FTDF_USE_LPDP
+#if FTDF_FP_BIT_TEST_MODE
+
+    if (FTDF_lpdpIsEnabled() && !FTDF_reqCurrent && frameType == FTDF_DATA_FRAME)
+    {
+        FTDF_processTxPending(frameHeader, securityHeader);
+    }
+
+#else /* FTDF_FP_BIT_TEST_MODE */
+
+    if (!FTDF_reqCurrent && frameType == FTDF_DATA_FRAME)
+    {
+        FTDF_processTxPending(frameHeader, securityHeader);
+    }
+
+#endif /* FTDF_FP_BIT_TEST_MODE */
+#endif /* FTDF_USE_LPDP */
 #ifndef FTDF_NO_TSCH
 
     if (FTDF_pib.tschEnabled == FTDF_TRUE)
@@ -2616,6 +2751,11 @@ void FTDF_processRxEvent(void)
         *lmacEvent  = MSK_F_FTDF_ON_OFF_REGMAP_RXTIMEREXPIRED_E;
 #endif
 
+        if (FTDF_pib.metricsEnabled)
+        {
+            FTDF_pib.performanceMetrics.RxExpiredCount++;
+        }
+
 #ifndef FTDF_LITE
 #ifndef FTDF_NO_TSCH
 
@@ -2647,6 +2787,28 @@ void FTDF_processRxEvent(void)
 
 #endif /* !FTDF_LITE */
     }
+
+#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
+
+    if (*lmacEvent & MSK_F_FTDF_ON_OFF_REGMAP_CSMA_CA_BO_THR_E)
+    {
+#ifdef SIMULATOR
+        *lmacEvent &= ~MSK_F_FTDF_ON_OFF_REGMAP_CSMA_CA_BO_THR_E;
+#else
+        *lmacEvent  = MSK_F_FTDF_ON_OFF_REGMAP_CSMA_CA_BO_THR_E;
+#endif
+#if FTDF_USE_SLEEP_DURING_BACKOFF
+
+        if (FTDF_pib.metricsEnabled)
+        {
+            FTDF_pib.performanceMetrics.BOIrqCount++;
+        }
+
+        FTDF_sdbFsmBackoffIRQ();
+#endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
+    }
+
+#endif
 }
 
 static void sendConfirm(FTDF_Status status,
@@ -2829,7 +2991,9 @@ void FTDF_processTxEvent(void)
     volatile uint32_t *txFlagStatE;
     FTDF_Status        status = FTDF_SUCCESS;
 
-#if dg_configCOEX_ENABLE_CONFIG
+#if FTDF_USE_PTI && !FTDF_USE_AUTO_PTI
+    /* Restore Rx PTI in case the Tx transaction that just ended interrupted an Rx-always-on
+     * transaction. */
     hw_coex_pti_t tx_pti;
     hw_coex_update_ftdf_pti(FTDF_getRxPti(), &tx_pti, true);
 #endif
@@ -2893,7 +3057,9 @@ void FTDF_processTxEvent(void)
 
     FTDF_exitCritical();
 #endif
-
+#if FTDF_USE_SLEEP_DURING_BACKOFF
+    FTDF_sdbFsmTxIRQ();
+#endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
     FTDF_Boolean ackTX = FTDF_GET_FIELD_INDEXED(RETENTION_RAM_ACKREQUEST, FTDF_TX_DATA_BUFFER);
 
     if (status == FTDF_SUCCESS)
@@ -2985,7 +3151,7 @@ void FTDF_processTxEvent(void)
 #endif /* FTDF_NO_CSL */
 #endif /* !FTDF_LITE */
                     {
-#if dg_configCOEX_ENABLE_CONFIG
+#if FTDF_USE_PTI && !FTDF_USE_AUTO_PTI
                         hw_coex_update_ftdf_pti(tx_pti, NULL, true);
 #endif
                         volatile uint32_t *txFlagSet = FTDF_GET_FIELD_ADDR(ON_OFF_REGMAP_TX_FLAG_SET);
@@ -3236,7 +3402,7 @@ FTDF_Status FTDF_sendFrame(FTDF_ChannelNumber   channel,
     volatile uint32_t *metaData1 = FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_TX_META_DATA_1, FTDF_TX_DATA_BUFFER);
 
     uint16_t           phyAttr   = (FTDF_pib.CCAMode & 0x3) | 0x08 | ((channel - 11) & 0x0F) << 4 |
-                                   (FTDF_pib.TXPower & 0x03) << 8;
+                                   (FTDF_pib.TXPower & 0x07) << 12;
 
     metaData0  = FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_TX_META_DATA_0, FTDF_TX_DATA_BUFFER);
     metaData1  = FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_TX_META_DATA_1, FTDF_TX_DATA_BUFFER);
@@ -3252,7 +3418,8 @@ FTDF_Status FTDF_sendFrame(FTDF_ChannelNumber   channel,
     *metaData1 =
         ((frameHeader->SN << OFF_F_FTDF_RETENTION_RAM_MACSN) & MSK_F_FTDF_RETENTION_RAM_MACSN);
 
-    uint32_t phyCsmaCaAttr = (FTDF_pib.CCAMode & 0x3) | ((channel - 11) & 0xf) << 4;
+    uint32_t phyCsmaCaAttr = (FTDF_pib.CCAMode & 0x3) | ((channel - 11) & 0xf) << 4 |
+                             (FTDF_pib.TXPower & 0x07) << 12;
     FTDF_SET_FIELD(ON_OFF_REGMAP_PHYCSMACAATTR, phyCsmaCaAttr);
 
 #ifndef FTDF_NO_CSL
@@ -3295,8 +3462,11 @@ FTDF_Status FTDF_sendFrame(FTDF_ChannelNumber   channel,
 
         *metaData1 =
             ((frameHeader->SN << OFF_F_FTDF_RETENTION_RAM_MACSN) & MSK_F_FTDF_RETENTION_RAM_MACSN);
-
+#if FTDF_USE_PTI && FTDF_USE_AUTO_PTI
+        *txPriority |= MSK_F_FTDF_ON_OFF_REGMAP_ISWAKEUP;
+#else
         *txPriority = MSK_F_FTDF_ON_OFF_REGMAP_ISWAKEUP;
+#endif
     }
 
 #endif /* FTDF_NO_CSL */
@@ -3379,7 +3549,7 @@ FTDF_Status FTDF_sendAckFrame(FTDF_FrameHeader    *frameHeader,
 
     uint16_t           phyAttr    =
         (FTDF_pib.CCAMode & 0x3) | 0x08 | (FTDF_GET_FIELD(ON_OFF_REGMAP_PHYRXATTR) & 0x00f0) |
-        (FTDF_pib.TXPower & 0x03) << 8;
+        (FTDF_pib.TXPower & 0x07) << 12;
 
     *metaData0 =
         ((phyPayloadSize << OFF_F_FTDF_RETENTION_RAM_FRAME_LENGTH) & MSK_F_FTDF_RETENTION_RAM_FRAME_LENGTH) |
@@ -3390,7 +3560,11 @@ FTDF_Status FTDF_sendAckFrame(FTDF_FrameHeader    *frameHeader,
     *metaData1 =
         ((frameHeader->SN << OFF_F_FTDF_RETENTION_RAM_MACSN) & MSK_F_FTDF_RETENTION_RAM_MACSN);
 
+#if FTDF_USE_PTI && FTDF_USE_AUTO_PTI
+    *txPriority |= 1;
+#else
     *txPriority = 1;
+#endif
 
     volatile uint32_t *txFlagSet = FTDF_GET_FIELD_ADDR(ON_OFF_REGMAP_TX_FLAG_SET);
 
@@ -3431,6 +3605,7 @@ void FTDF_sendTransparentFrame(FTDF_DataLength    frameLength,
 {
     volatile uint32_t *metaData0 = FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_TX_META_DATA_0, FTDF_TX_DATA_BUFFER);
     volatile uint32_t *metaData1 = FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_TX_META_DATA_1, FTDF_TX_DATA_BUFFER);
+    volatile uint32_t *txPriority = FTDF_GET_REG_ADDR_INDEXED(ON_OFF_REGMAP_TX_PRIORITY, FTDF_TX_DATA_BUFFER);
 
 #if FTDF_TRANSPARENT_USE_WAIT_FOR_ACK
     FTDF_Boolean useAck = FTDF_FALSE;
@@ -3439,7 +3614,7 @@ void FTDF_sendTransparentFrame(FTDF_DataLength    frameLength,
     FTDF_SN SN;
 #endif
     uint16_t           phyAttr   = (FTDF_pib.CCAMode & 0x3) | 0x08 | ((channel - 11) & 0x0F) << 4 |
-                                   (FTDF_pib.TXPower & 0x03) << 8;
+                                   (FTDF_pib.TXPower & 0x07) << 12;
 #if FTDF_TRANSPARENT_USE_WAIT_FOR_ACK
 
     if (FTDF_transparentModeOptions & FTDF_TRANSPARENT_WAIT_FOR_ACK)
@@ -3456,6 +3631,10 @@ void FTDF_sendTransparentFrame(FTDF_DataLength    frameLength,
 
 #endif
 
+#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
+    *txPriority = ((pti << OFF_F_FTDF_ON_OFF_REGMAP_PTI_TX) &
+                   MSK_F_FTDF_ON_OFF_REGMAP_PTI_TX) | 1;
+#endif
     *metaData0 =
         ((frameLength << OFF_F_FTDF_RETENTION_RAM_FRAME_LENGTH) & MSK_F_FTDF_RETENTION_RAM_FRAME_LENGTH) |
         ((phyAttr << OFF_F_FTDF_RETENTION_RAM_PHYATTR) & MSK_F_FTDF_RETENTION_RAM_PHYATTR) |
@@ -3483,10 +3662,13 @@ void FTDF_sendTransparentFrame(FTDF_DataLength    frameLength,
         ((0 << OFF_F_FTDF_RETENTION_RAM_MACSN) & MSK_F_FTDF_RETENTION_RAM_MACSN);
 #endif
 
-    uint32_t phyCsmaCaAttr = (FTDF_pib.CCAMode & 0x3) | ((channel - 11) & 0xf) << 4;
+    uint32_t phyCsmaCaAttr = (FTDF_pib.CCAMode & 0x3) | ((channel - 11) & 0xf) << 4 |
+                             (FTDF_pib.TXPower & 0x07) << 12;
     FTDF_SET_FIELD(ON_OFF_REGMAP_PHYCSMACAATTR, phyCsmaCaAttr);
-#if dg_configCOEX_ENABLE_CONFIG
+#if FTDF_USE_PTI && !FTDF_USE_AUTO_PTI
     hw_coex_update_ftdf_pti((hw_coex_pti_t) pti, NULL, true);
+#else
+    // FTDF_SET_FIELD(ON_OFF_REGMAP_PTI_TX, pti);
 #endif
     volatile uint32_t *txFlagSet = FTDF_GET_FIELD_ADDR(ON_OFF_REGMAP_TX_FLAG_SET);
     *txFlagSet |= (1 << FTDF_TX_DATA_BUFFER);
@@ -3911,6 +4093,31 @@ void FTDF_sendTransactionExpired(FTDF_PendingTL *ptr)
         else
 #endif /* FTDF_NO_TSCH */
         {
+#if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO
+
+            if (FTDF_txPendingList[ ptr->pendListNr ].addrMode == FTDF_SHORT_ADDRESS)
+            {
+                uint8_t entry, shortAddrIdx;
+                FTDF_Boolean found = FTDF_fpprLookupShortAddress(
+                                         FTDF_txPendingList[ ptr->pendListNr ].addr.shortAddress, &entry,
+                                         &shortAddrIdx);
+                ASSERT_WARNING(found);
+                FTDF_fpprSetShortAddressValid(entry, shortAddrIdx, FTDF_FALSE);
+            }
+            else if (FTDF_txPendingList[ ptr->pendListNr ].addrMode == FTDF_EXTENDED_ADDRESS)
+            {
+                uint8_t entry;
+                FTDF_Boolean found = FTDF_fpprLookupExtAddress(
+                                         FTDF_txPendingList[ ptr->pendListNr ].addr.extAddress, &entry);
+                ASSERT_WARNING(found);
+                FTDF_fpprSetExtAddressValid(entry, FTDF_FALSE);
+            }
+            else
+            {
+                ASSERT_WARNING(0);
+            }
+
+#endif /* FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO */
             FTDF_txPendingList[ ptr->pendListNr ].addrMode = FTDF_NO_ADDRESS;
         }
     }
@@ -4329,12 +4536,12 @@ void FTDF_getRxOnWhenIdle(void)
 
 void FTDF_setRxOnWhenIdle(void)
 {
-#if dg_configCOEX_ENABLE_CONFIG
+#if FTDF_USE_PTI && !FTDF_USE_AUTO_PTI
     /* We do not force decision here. It will be automatically made when FTDF begins
      * transaction.
      */
     hw_coex_update_ftdf_pti((hw_coex_pti_t) FTDF_getRxPti(), NULL, false);
-#endif
+#endif /* FTDF_USE_PTI && !FTDF_USE_AUTO_PTI */
     FTDF_SET_FIELD(ON_OFF_REGMAP_RXENABLE, 0);
     FTDF_SET_FIELD(ON_OFF_REGMAP_RXALWAYSON, FTDF_pib.rxOnWhenIdle);
     FTDF_SET_FIELD(ON_OFF_REGMAP_RXENABLE, 1);
@@ -4358,9 +4565,17 @@ void FTDF_getCurrentChannel(void)
 
 void FTDF_setCurrentChannel(void)
 {
-    uint32_t phyAckAttr = 0x08 | ((FTDF_pib.currentChannel - 11) & 0xf) << 4 | (FTDF_pib.TXPower & 0x3) << 8;
+    uint32_t phyAckAttr = 0x08 | ((FTDF_pib.currentChannel - 11) & 0xf) << 4 | (FTDF_pib.TXPower & 0x7) << 12;
 
     FTDF_SET_FIELD(ON_OFF_REGMAP_PHYRXATTR, (((FTDF_pib.currentChannel - 11) & 0xf) << 4));
+    FTDF_SET_FIELD(ON_OFF_REGMAP_PHYACKATTR, phyAckAttr);
+}
+
+void FTDF_setTXPower(void)
+{
+    /* Just like setCurrentChannel, this sets pyAckAttr */
+    uint32_t phyAckAttr = 0x08 | ((FTDF_pib.currentChannel - 11) & 0xf) << 4 | (FTDF_pib.TXPower & 0x7) << 12;
+
     FTDF_SET_FIELD(ON_OFF_REGMAP_PHYACKATTR, phyAckAttr);
 }
 
@@ -4474,6 +4689,27 @@ void FTDF_setKeepPhyEnabled(void)
     FTDF_SET_FIELD(ON_OFF_REGMAP_KEEP_PHY_EN, FTDF_pib.keepPhyEnabled);
 }
 
+#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
+void FTDF_setBoIrqThreshold(void)
+{
+    FTDF_SET_FIELD(ON_OFF_REGMAP_CSMA_CA_BO_THRESHOLD, FTDF_pib.boIrqThreshold);
+}
+void FTDF_getBoIrqThreshold(void)
+{
+    FTDF_pib.boIrqThreshold = FTDF_GET_FIELD(ON_OFF_REGMAP_CSMA_CA_BO_THRESHOLD);
+}
+void FTDF_setPtiConfig(void)
+{
+    FTDF_SET_FIELD_INDEXED(ON_OFF_REGMAP_PTI_TX, FTDF_pib.ptiConfig.ptis[FTDF_PTI_CONFIG_TX],
+                           FTDF_TX_DATA_BUFFER);
+    FTDF_SET_FIELD_INDEXED(ON_OFF_REGMAP_PTI_TX, FTDF_pib.ptiConfig.ptis[FTDF_PTI_CONFIG_TX],
+                           FTDF_TX_WAKEUP_BUFFER);
+    FTDF_SET_FIELD_INDEXED(ON_OFF_REGMAP_PTI_TX, FTDF_pib.ptiConfig.ptis[FTDF_PTI_CONFIG_RX],
+                           FTDF_TX_ACK_BUFFER);
+    FTDF_SET_FIELD(ON_OFF_REGMAP_PTI_RX, FTDF_pib.ptiConfig.ptis[FTDF_PTI_CONFIG_RX]);
+}
+#endif /* #if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A */
+
 #ifndef FTDF_LITE
 #ifndef FTDF_NO_TSCH
 void FTDF_setTimeslotTemplate(void)
@@ -4487,3 +4723,877 @@ void FTDF_setTimeslotTemplate(void)
 }
 #endif /* FTDF_NO_TSCH */
 #endif /* !FTDF_LITE */
+
+#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
+#if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO
+/************************************ FPPR common functions ***************************************/
+#ifndef FTDF_LITE
+
+FTDF_Boolean FTDF_fpFsmShortAddressNew(FTDF_PANId panId, FTDF_ShortAddress shortAddress)
+{
+    uint8_t entry;
+    uint8_t shortAddrIdx;
+
+    if (FTDF_fpprGetFreeShortAddress(&entry, &shortAddrIdx) == FTDF_FALSE)
+    {
+        return FTDF_FALSE;
+    }
+
+    FTDF_fpprSetShortAddress(entry, shortAddrIdx, shortAddress);
+    FTDF_fpprSetShortAddressValid(entry, shortAddrIdx, FTDF_TRUE);
+
+    return FTDF_TRUE;
+}
+
+FTDF_Boolean FTDF_fpFsmExtAddressNew(FTDF_PANId panId, FTDF_ExtAddress extAddress)
+{
+    uint8_t entry;
+
+    if (FTDF_fpprGetFreeExtAddress(&entry) == FTDF_FALSE)
+    {
+        return FTDF_FALSE;
+    }
+
+    FTDF_fpprSetExtAddress(entry, extAddress);
+    FTDF_fpprSetExtAddressValid(entry, FTDF_TRUE);
+
+    return FTDF_TRUE;
+}
+
+void FTDF_fpFsmShortAddressLastFramePending(FTDF_PANId PANId, FTDF_ShortAddress shortAddress)
+{
+#if FTDF_FPPR_DEFER_INVALIDATION
+    FTDF_fpprPending.addrMode = FTDF_SHORT_ADDRESS;
+    FTDF_fpprPending.PANId = PANId;
+    FTDF_fpprPending.addr.shortAddress = shortAddress;
+#else /* FTDF_FPPR_DEFER_INVALIDATION */
+    uint8_t entry;
+    uint8_t shortAddrIdx;
+    FTDF_Boolean found = FTDF_fpprLookupShortAddress(shortAddress, &entry, &shortAddrIdx);
+    ASSERT_WARNING(found);
+    FTDF_fpprSetShortAddressValid(entry, shortAddrIdx, FTDF_FALSE);
+#endif /* FTDF_FPPR_DEFER_INVALIDATION */
+}
+
+void FTDF_fpFsmExtAddressLastFramePending(FTDF_PANId PANId, FTDF_ExtAddress extAddress)
+{
+#if FTDF_FPPR_DEFER_INVALIDATION
+    FTDF_fpprPending.addrMode = FTDF_EXTENDED_ADDRESS;
+    FTDF_fpprPending.PANId = PANId;
+    FTDF_fpprPending.addr.extAddress = extAddress;
+#else /* FTDF_FPPR_DEFER_INVALIDATION */
+    uint8_t entry;
+    FTDF_Boolean found = FTDF_fpprLookupExtAddress(extAddress, &entry);
+    ASSERT_WARNING(found);
+    FTDF_fpprSetExtAddressValid(entry, FTDF_FALSE);
+#endif /* FTDF_FPPR_DEFER_INVALIDATION */
+}
+
+void FTDF_fpFsmClearPending(void)
+{
+#if FTDF_FPPR_DEFER_INVALIDATION
+    int n;
+
+    if (FTDF_fpprPending.addrMode == FTDF_NO_ADDRESS)
+    {
+        return;
+    }
+
+    if (FTDF_fpprPending.addrMode == FTDF_SHORT_ADDRESS)
+    {
+        for (n = 0; n < FTDF_NR_OF_REQ_BUFFERS; n++)
+        {
+            if (FTDF_txPendingList[ n ].addrMode == FTDF_SHORT_ADDRESS)
+            {
+                if ((FTDF_txPendingList[ n ].PANId == FTDF_fpprPending.PANId) &&
+                    (FTDF_txPendingList[ n ].addr.shortAddress ==
+                     FTDF_fpprPending.addr.shortAddress))
+                {
+                    return;
+                }
+            }
+        }
+
+        // Address not found.
+        uint8_t entry;
+        uint8_t shortAddrIdx;
+        FTDF_Boolean found = FTDF_fpprLookupShortAddress(
+                                 FTDF_fpprPending.addr.shortAddress, &entry, &shortAddrIdx);
+        ASSERT_WARNING(found);
+        FTDF_fpprSetShortAddressValid(entry, shortAddrIdx, FTDF_FALSE);
+    }
+    else if (FTDF_fpprPending.addrMode == FTDF_EXTENDED_ADDRESS)
+    {
+        for (n = 0; n < FTDF_NR_OF_REQ_BUFFERS; n++)
+        {
+            if (FTDF_txPendingList[ n ].addrMode == FTDF_EXTENDED_ADDRESS)
+            {
+                if (FTDF_txPendingList[ n ].addr.extAddress ==
+                    FTDF_fpprPending.addr.extAddress)
+                {
+                    return;
+                }
+            }
+        }
+
+        // Address not found.
+        uint8_t entry;
+        FTDF_Boolean found = FTDF_fpprLookupExtAddress(FTDF_fpprPending.addr.extAddress,
+                                                       &entry);
+        ASSERT_WARNING(found);
+        FTDF_fpprSetExtAddressValid(entry, FTDF_FALSE);
+    }
+    else
+    {
+
+    }
+
+    FTDF_fpprPending.addrMode = FTDF_NO_ADDRESS;
+#endif /* FTDF_FPPR_DEFER_INVALIDATION */
+}
+
+#endif /* #ifndef FTDF_LITE */
+/*********************************** FPPR low-level access ****************************************/
+void FTDF_fpprReset(void)
+{
+    unsigned int i;
+
+    for (i = 0; i < FTDF_FPPR_TABLE_ENTRIES; i++)
+    {
+        *FTDF_GET_REG_ADDR_INDEXED(FP_PROCESSING_RAM_SIZE_AND_VAL, i) = 0;
+    }
+}
+
+FTDF_ShortAddress FTDF_fpprGetShortAddress(uint8_t entry, uint8_t shortAddrIdx)
+{
+    ASSERT_WARNING(entry < FTDF_FPPR_TABLE_ENTRIES);
+
+    switch (shortAddrIdx)
+    {
+    case 0:
+        return (FTDF_ShortAddress)
+               * FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_L, entry) &
+               0x0000ffff;
+
+    case 1:
+        return (FTDF_ShortAddress)
+               (*FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_L, entry) >> 16) &
+               0x0000ffff;
+
+    case 2:
+        return (FTDF_ShortAddress)
+               * FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_H, entry) &
+               0x0000ffff;
+
+    case 3:
+        return (FTDF_ShortAddress)
+               (*FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_H, entry) >> 16) &
+               0x0000ffff;
+
+    default:
+        ASSERT_WARNING(0);
+    }
+}
+
+void FTDF_fpprSetShortAddress(uint8_t entry, uint8_t shortAddrIdx,
+                              FTDF_ShortAddress shortAddress)
+{
+    ASSERT_WARNING(entry < FTDF_FPPR_TABLE_ENTRIES);
+    uint32_t val32;
+
+    switch (shortAddrIdx)
+    {
+    case 0:
+        val32 = *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_L, entry);
+        val32 &= 0xffff0000;
+        val32 |= (shortAddress & 0x0000ffff);
+        *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_L, entry) = val32;
+        break;
+
+    case 1:
+        val32 = *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_L, entry);
+        val32 &= 0x0000ffff;
+        val32 |= (shortAddress & 0x0000ffff) << 16;
+        *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_L, entry) = val32;
+        break;
+
+    case 2:
+        val32 = *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_H, entry);
+        val32 &= 0xffff0000;
+        val32 |= (shortAddress & 0x0000ffff);
+        *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_H, entry) = val32;
+        break;
+
+    case 3:
+        val32 = *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_H, entry);
+        val32 &= 0x0000ffff;
+        val32 |= (shortAddress & 0x0000ffff) << 16;
+        *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_H, entry) = val32;
+        break;
+
+    default:
+        ASSERT_WARNING(0);
+    }
+}
+
+FTDF_Boolean FTDF_fpprGetShortAddressValid(uint8_t entry, uint8_t shortAddrIdx)
+{
+    ASSERT_WARNING(entry < FTDF_FPPR_TABLE_ENTRIES);
+    ASSERT_WARNING(shortAddrIdx < 4);
+    uint32_t val32;
+    val32 = *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_VALID_SA, entry);
+    return ((val32 & (MSK_F_FTDF_FP_PROCESSING_RAM_SHORT_LONGNOT | (1 << shortAddrIdx))) ==
+            (MSK_F_FTDF_FP_PROCESSING_RAM_SHORT_LONGNOT | (1 << shortAddrIdx))) ?
+           FTDF_TRUE : FTDF_FALSE;
+}
+
+void FTDF_fpprSetShortAddressValid(uint8_t entry, uint8_t shortAddrIdx,
+                                   FTDF_Boolean valid)
+{
+    ASSERT_WARNING(entry < FTDF_FPPR_TABLE_ENTRIES);
+    ASSERT_WARNING(shortAddrIdx < 4);
+    uint32_t val32;
+    val32 = *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_VALID_SA, entry);
+
+    if (valid)
+    {
+        val32 |= MSK_F_FTDF_FP_PROCESSING_RAM_SHORT_LONGNOT | (1 << shortAddrIdx); /* Also indicate short address. */
+    }
+    else
+    {
+        val32 &= ~(1 << shortAddrIdx);
+    }
+
+    *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_VALID_SA, entry) = val32;
+}
+
+FTDF_ExtAddress FTDF_fpprGetExtAddress(uint8_t entry)
+{
+    FTDF_ExtAddress extAddress;
+    ASSERT_WARNING(entry < FTDF_FPPR_TABLE_ENTRIES);
+    extAddress = (FTDF_ExtAddress) * FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_H,
+                                                                 entry) << 32;
+    extAddress |= (FTDF_ExtAddress) * FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_L,
+                                                                  entry);
+    return extAddress;
+}
+
+void FTDF_fpprSetExtAddress(uint8_t entry, FTDF_ExtAddress extAddress)
+{
+    ASSERT_WARNING(entry < FTDF_FPPR_TABLE_ENTRIES);
+    *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_L, entry) =
+        (uint32_t)(extAddress);
+    *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_EXP_SA_H, entry) =
+        (uint32_t)((extAddress >> 32));
+}
+
+FTDF_Boolean FTDF_fpprGetExtAddressValid(uint8_t entry)
+{
+    return (*FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_VALID_SA, entry) == 0x1) ?
+           FTDF_TRUE : FTDF_FALSE;
+}
+
+void FTDF_fpprSetExtAddressValid(uint8_t entry, FTDF_Boolean valid)
+{
+    ASSERT_WARNING(entry < FTDF_FPPR_TABLE_ENTRIES);
+
+    if (valid)
+    {
+        /* Also indicate ext address. */
+        *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_VALID_SA, entry) = 0x1;
+    }
+    else
+    {
+        *FTDF_GET_FIELD_ADDR_INDEXED(FP_PROCESSING_RAM_VALID_SA, entry) = 0x0;
+    }
+}
+
+FTDF_Boolean FTDF_fpprGetFreeShortAddress(uint8_t *entry, uint8_t *shortAddrIdx)
+{
+    int i, j;
+    uint32_t sizeAndVal;
+    int emptyEntry;
+    bool emptyFound = false, nonEmptyFound = false;
+
+    for (i = 0; i < FTDF_FPPR_TABLE_ENTRIES; i++)
+    {
+        sizeAndVal = *FTDF_GET_REG_ADDR_INDEXED(FP_PROCESSING_RAM_SIZE_AND_VAL, i);
+
+        if (sizeAndVal == 0x1)
+        {
+            /* Check if there is a valid extended address.  */
+            continue;
+        }
+        else if ((sizeAndVal & MSK_F_FTDF_FP_PROCESSING_RAM_SHORT_LONGNOT) == 0)
+        {
+            /* There is an invalid extended address, ignore SA valid bits  */
+            sizeAndVal = 0;
+        }
+        else
+        {
+            /* There is a SA. We are interested in bits V0 - V3. */
+            sizeAndVal &= 0xf;
+        }
+
+        /* Check if entire entry is free. */
+        if (sizeAndVal == 0)
+        {
+            /* We prefer to use partially full entries. Make note of this and
+             * continue. */
+            if (!emptyFound)
+            {
+                emptyEntry = i;
+                emptyFound = true;
+            }
+
+            continue;
+        }
+
+        /* Check for free short address entries. */
+        sizeAndVal = (~sizeAndVal) & 0xf;
+        j = 0;
+
+        while (sizeAndVal)
+        {
+            if (sizeAndVal & 0x1)
+            {
+                nonEmptyFound = true;
+                break;
+            }
+
+            sizeAndVal >>= 1;
+            j++;
+        }
+
+        if (nonEmptyFound)
+        {
+            break;
+        }
+    }
+
+    if (nonEmptyFound)
+    {
+        *entry = i;
+        *shortAddrIdx = j;
+    }
+    else if (emptyFound)
+    {
+        *entry = emptyEntry;
+        *shortAddrIdx = 0;
+    }
+    else
+    {
+        return FTDF_FALSE;
+    }
+
+    return FTDF_TRUE;
+}
+
+FTDF_Boolean FTDF_fpprGetFreeExtAddress(uint8_t *entry)
+{
+    int i;
+    uint32_t sizeAndVal;
+    bool found = false;
+
+    for (i = 0; i < FTDF_FPPR_TABLE_ENTRIES; i++)
+    {
+        sizeAndVal = *FTDF_GET_REG_ADDR_INDEXED(FP_PROCESSING_RAM_SIZE_AND_VAL, i);
+
+        /* Check if there is no valid extended or short address.  */
+        if (!sizeAndVal || (sizeAndVal == MSK_F_FTDF_FP_PROCESSING_RAM_SHORT_LONGNOT))
+        {
+            found = true;
+            break;
+        }
+    }
+
+    if (found)
+    {
+        *entry = i;
+    }
+    else
+    {
+        return FTDF_FALSE;
+    }
+
+    return FTDF_TRUE;
+}
+
+FTDF_Boolean FTDF_fpprLookupShortAddress(FTDF_ShortAddress shortAddr, uint8_t *entry,
+                                         uint8_t *shortAddrIdx)
+{
+    uint8_t i;
+    uint32_t sizeAndVal;
+    uint32_t saPart;
+
+    for (i = 0; i < FTDF_FPPR_TABLE_ENTRIES; i++)
+    {
+        sizeAndVal = *FTDF_GET_REG_ADDR_INDEXED(FP_PROCESSING_RAM_SIZE_AND_VAL, i);
+
+        /* Check if there is a valid short address. */
+        if (!(sizeAndVal & MSK_F_FTDF_FP_PROCESSING_RAM_SHORT_LONGNOT) ||
+            !(sizeAndVal & MSK_F_FTDF_FP_PROCESSING_RAM_VALID_SA))
+        {
+            continue;
+        }
+
+        saPart = FTDF_GET_FIELD_INDEXED(FP_PROCESSING_RAM_EXP_SA_L, i);
+
+        if (sizeAndVal & 0x1)
+        {
+            if (shortAddr == (FTDF_ShortAddress)(saPart & 0x0000ffff))
+            {
+                *entry = i;
+                *shortAddrIdx = 0;
+                return FTDF_TRUE;
+            }
+        }
+
+        if (sizeAndVal & 0x2)
+        {
+            if (shortAddr == (FTDF_ShortAddress)((saPart >> 16) & 0x0000ffff))
+            {
+                *entry = i;
+                *shortAddrIdx = 1;
+                return FTDF_TRUE;
+            }
+        }
+
+        saPart = FTDF_GET_FIELD_INDEXED(FP_PROCESSING_RAM_EXP_SA_H, i);
+
+        if (sizeAndVal & 0x4)
+        {
+            if (shortAddr == (FTDF_ShortAddress)(saPart & 0x0000ffff))
+            {
+                *entry = i;
+                *shortAddrIdx = 2;
+                return FTDF_TRUE;
+            }
+        }
+
+        if (sizeAndVal & 0x8)
+        {
+            if (shortAddr == ((FTDF_ShortAddress)(saPart >> 16) & 0x0000ffff))
+            {
+                *entry = i;
+                *shortAddrIdx = 3;
+                return FTDF_TRUE;
+            }
+        }
+    }
+
+    return FTDF_FALSE;
+}
+
+FTDF_Boolean FTDF_fpprLookupExtAddress(FTDF_ExtAddress extAddr, uint8_t *entry)
+{
+    uint8_t i;
+    uint32_t sizeAndVal;
+    uint32_t extAddrHi, extAddrLo;
+    extAddrHi = (uint32_t)((extAddr >> 32) & 0xffffffff);
+    extAddrLo = (uint32_t)(extAddr & 0xffffffff);
+
+    for (i = 0; i < FTDF_FPPR_TABLE_ENTRIES; i++)
+    {
+        sizeAndVal = *FTDF_GET_REG_ADDR_INDEXED(FP_PROCESSING_RAM_SIZE_AND_VAL, i);
+
+        /* Check if there is a valid extended address. */
+        if (sizeAndVal != 0x1)
+        {
+            continue;
+        }
+
+        if ((extAddrLo == FTDF_GET_FIELD_INDEXED(FP_PROCESSING_RAM_EXP_SA_L, i)) &&
+            (extAddrHi == FTDF_GET_FIELD_INDEXED(FP_PROCESSING_RAM_EXP_SA_H, i)))
+        {
+            *entry = i;
+            return FTDF_TRUE;
+        }
+    }
+
+    return FTDF_FALSE;
+}
+
+#endif /* FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO */
+
+void FTDF_fpprSetMode(FTDF_Boolean matchFp, FTDF_Boolean fpOverride, FTDF_Boolean fpForce)
+{
+    FTDF_SET_FIELD(ON_OFF_REGMAP_ADDR_TAB_MATCH_FP_VALUE, matchFp ? 1 : 0);
+    FTDF_SET_FIELD(ON_OFF_REGMAP_FP_OVERRIDE, fpOverride ? 1 : 0);
+    FTDF_SET_FIELD(ON_OFF_REGMAP_FP_FORCE_VALUE, fpForce ? 1 : 0);
+}
+
+#if FTDF_FP_BIT_TEST_MODE
+void FTDF_fpprGetMode(FTDF_Boolean *matchFp, FTDF_Boolean *fpOverride, FTDF_Boolean *fpForce)
+{
+    *matchFp = FTDF_GET_FIELD(ON_OFF_REGMAP_ADDR_TAB_MATCH_FP_VALUE) ? FTDF_TRUE : FTDF_FALSE;
+    *fpOverride = FTDF_GET_FIELD(ON_OFF_REGMAP_FP_OVERRIDE) ? FTDF_TRUE : FTDF_FALSE;
+    *fpForce = FTDF_GET_FIELD(ON_OFF_REGMAP_FP_FORCE_VALUE) ? FTDF_TRUE : FTDF_FALSE;
+}
+#endif // FTDF_FP_BIT_TEST_MODE
+
+void FTDF_lpdpEnable(FTDF_Boolean enable)
+{
+    FTDF_SET_FIELD(ON_OFF_REGMAP_FTDF_LPDP_ENABLE, enable ? 1 : 0);
+}
+
+#if FTDF_FP_BIT_TEST_MODE
+FTDF_Boolean FTDF_lpdpIsEnabled(void)
+{
+    return FTDF_GET_FIELD(ON_OFF_REGMAP_FTDF_LPDP_ENABLE) ? FTDF_TRUE : FTDF_FALSE;
+}
+#endif
+
+#if FTDF_USE_SLEEP_DURING_BACKOFF
+
+static inline void FTDF_sdbSaveState(void)
+{
+    volatile uint32_t *txFifoPtr = FTDF_GET_REG_ADDR(RETENTION_RAM_TX_FIFO);
+    uint32_t *dstPtr = (uint32_t *) FTDF_sdb.buffer;
+    uint8_t word_length_rem;
+
+    FTDF_sdb.nrOfBackoffs = FTDF_GET_FIELD(ON_OFF_REGMAP_CSMA_CA_NB_STAT);
+
+    /* Read first 4 bytes. */
+    *dstPtr++ = *txFifoPtr++;
+
+    ASSERT_WARNING((FTDF_sdb.buffer[0] >= 3) && (FTDF_sdb.buffer[0] < FTDF_BUFFER_LENGTH));
+    /* The length is the buffer length excluding the length byte itself */
+    word_length_rem = (FTDF_sdb.buffer[0] + 4) / 4 - 1; /* 1 word we already read */
+
+    while (word_length_rem--)
+    {
+        *dstPtr++ = *txFifoPtr++;
+    }
+
+    FTDF_sdb.metadata0 = *FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_TX_META_DATA_0,
+                                                    FTDF_TX_DATA_BUFFER);
+    FTDF_sdb.metadata1 = *FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_TX_META_DATA_1,
+                                                    FTDF_TX_DATA_BUFFER);
+    FTDF_sdb.phyCsmaCaAttr = FTDF_GET_FIELD(ON_OFF_REGMAP_PHYCSMACAATTR);
+}
+
+static inline void FTDF_sdbResume(void)
+{
+    volatile uint32_t *txFifoPtr = FTDF_GET_REG_ADDR(RETENTION_RAM_TX_FIFO);
+    volatile uint32_t *txFlagSet = FTDF_GET_FIELD_ADDR(ON_OFF_REGMAP_TX_FLAG_SET);
+    uint32_t *srcPtr = (uint32_t *) FTDF_sdb.buffer;
+
+    uint8_t word_length_rem;
+
+    FTDF_SET_FIELD(ON_OFF_REGMAP_CSMA_CA_NB_VAL, FTDF_sdb.nrOfBackoffs);
+
+    FTDF_SET_FIELD(ON_OFF_REGMAP_CSMA_CA_RESUME_SET, 1);
+
+    ASSERT_WARNING((FTDF_sdb.buffer[0] >= 3) && (FTDF_sdb.buffer[0] < FTDF_BUFFER_LENGTH));
+
+    /* The length is the buffer length excluding the length byte itself */
+    word_length_rem = (FTDF_sdb.buffer[0] + 4) / 4;
+
+    while (word_length_rem--)
+    {
+        *txFifoPtr++ = *srcPtr++;
+    }
+
+    FTDF_SET_FIELD(ON_OFF_REGMAP_PHYCSMACAATTR, FTDF_sdb.phyCsmaCaAttr);
+
+    *FTDF_GET_REG_ADDR(RETENTION_RAM_TX_META_DATA_0) = FTDF_sdb.metadata0;
+
+    *FTDF_GET_REG_ADDR(RETENTION_RAM_TX_META_DATA_1) = FTDF_sdb.metadata1;
+
+    *txFlagSet |= (1 << FTDF_TX_DATA_BUFFER);
+}
+
+static inline void FTDF_sdbReset(void)
+{
+    FTDF_SET_FIELD(ON_OFF_REGMAP_CSMA_CA_RESUME_CLEAR, 1);
+}
+
+static inline void FTDF_sdbSetCCARetryTime(void)
+{
+    FTDF_Time timestamp = FTDF_GET_FIELD(ON_OFF_REGMAP_SYMBOLTIMESNAPSHOTVAL);
+    FTDF_Time boStat = FTDF_GET_FIELD(ON_OFF_REGMAP_CSMA_CA_BO_STAT) *
+                       FTDF_UNIT_BACKOFF_PERIOD;
+    FTDF_sdb.ccaRetryTime = timestamp + boStat;
+}
+
+void FTDF_sdbFsmReset(void)
+{
+    FTDF_sdbReset();
+    FTDF_sdb.state = FTDF_SDB_STATE_INIT;
+}
+
+void FTDF_sdbFsmBackoffIRQ(void)
+{
+#if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
+
+    if (FTDF_pib.leEnabled || FTDF_pib.tschEnabled)
+    {
+        return;
+    }
+
+#endif
+
+    switch (FTDF_sdb.state)
+    {
+    case FTDF_SDB_STATE_RESUMING:
+        FTDF_sdbReset();
+
+    case FTDF_SDB_STATE_INIT:
+    case FTDF_SDB_STATE_BACKING_OFF:
+        FTDF_sdbSetCCARetryTime();
+        FTDF_sdb.state = FTDF_SDB_STATE_BACKING_OFF;
+        break;
+
+    default:
+        ASSERT_WARNING(0);
+    }
+}
+
+void FTDF_sdbFsmSleep(void)
+{
+#if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
+
+    if (FTDF_pib.leEnabled || FTDF_pib.tschEnabled)
+    {
+        return;
+    }
+
+#endif
+
+    switch (FTDF_sdb.state)
+    {
+    case FTDF_SDB_STATE_BACKING_OFF:
+        FTDF_sdbSaveState();
+        FTDF_sdb.state = FTDF_SDB_STATE_WAITING_WAKE_UP_IRQ;
+        break;
+
+    case FTDF_SDB_STATE_INIT:
+        break;
+
+    default:
+        ASSERT_WARNING(0);
+    }
+}
+
+void FTDF_sdbFsmAbortSleep(void)
+{
+#if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
+
+    if (FTDF_pib.leEnabled || FTDF_pib.tschEnabled)
+    {
+        return;
+    }
+
+#endif
+
+    switch (FTDF_sdb.state)
+    {
+    case FTDF_SDB_STATE_BACKING_OFF:
+        FTDF_sdb.state = FTDF_SDB_STATE_INIT;
+        break;
+
+    case FTDF_SDB_STATE_INIT:
+    case FTDF_SDB_STATE_WAITING_WAKE_UP_IRQ:
+    case FTDF_SDB_STATE_RESUMING:
+        break;
+
+    default:
+        ASSERT_WARNING(0);
+    }
+}
+
+void FTDF_sdbFsmWakeUpIRQ(void)
+{
+#if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
+
+    if (FTDF_pib.leEnabled || FTDF_pib.tschEnabled)
+    {
+        return;
+    }
+
+#endif
+
+    switch (FTDF_sdb.state)
+    {
+    case FTDF_SDB_STATE_WAITING_WAKE_UP_IRQ:
+        FTDF_sdb.state = FTDF_SDB_STATE_RESUMING;
+        break;
+
+    case FTDF_SDB_STATE_INIT:
+        break;
+
+    default:
+        ASSERT_WARNING(0);
+    }
+}
+
+void FTDF_sdbFsmWakeUp(void)
+{
+#if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
+
+    if (FTDF_pib.leEnabled || FTDF_pib.tschEnabled)
+    {
+        return;
+    }
+
+#endif
+
+    switch (FTDF_sdb.state)
+    {
+    case FTDF_SDB_STATE_RESUMING:
+        FTDF_sdbResume();
+        break;
+
+    case FTDF_SDB_STATE_WAITING_WAKE_UP_IRQ:
+        break;
+
+    case FTDF_SDB_STATE_INIT:
+        break;
+
+    default:
+        ASSERT_WARNING(0);
+    }
+}
+
+void FTDF_sdbFsmTxIRQ(void)
+{
+#if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
+
+    if (FTDF_pib.leEnabled || FTDF_pib.tschEnabled)
+    {
+        return;
+    }
+
+#endif
+
+    switch (FTDF_sdb.state)
+    {
+    case FTDF_SDB_STATE_RESUMING:
+        FTDF_sdbReset();
+        FTDF_sdb.state = FTDF_SDB_STATE_INIT;
+        break;
+
+    case FTDF_SDB_STATE_BACKING_OFF:
+        FTDF_sdb.state = FTDF_SDB_STATE_INIT;
+        break;
+
+    case FTDF_SDB_STATE_INIT:
+        break;
+
+    default:
+        ASSERT_WARNING(0);
+    }
+}
+
+FTDF_USec FTDF_sdbGetSleepTime(void)
+{
+    FTDF_USec sleepTime = ~((FTDF_USec) 0);
+#if !defined(FTDF_NO_CSL) || !defined(FTDF_NO_TSCH)
+
+    if (FTDF_pib.leEnabled || FTDF_pib.tschEnabled)
+    {
+        return sleepTime;
+    }
+
+#endif
+
+    switch (FTDF_sdb.state)
+    {
+    case FTDF_SDB_STATE_INIT:
+    {
+        if ((FTDF_GET_FIELD(ON_OFF_REGMAP_LMACREADY4SLEEP) == 0) || FTDF_reqCurrent)
+        {
+            sleepTime = 0;
+        }
+        else
+        {
+            sleepTime = ~((FTDF_USec) 0);
+        }
+
+        break;
+    }
+
+    case FTDF_SDB_STATE_BACKING_OFF:
+    {
+        FTDF_Time currentTime = FTDF_GET_FIELD(ON_OFF_REGMAP_SYMBOLTIMESNAPSHOTVAL);
+
+        if (currentTime <= FTDF_sdb.ccaRetryTime)
+        {
+            sleepTime = (FTDF_sdb.ccaRetryTime - currentTime) * 16;
+        }
+        else
+        {
+            sleepTime = (1 << SIZE_F_FTDF_ON_OFF_REGMAP_SYMBOLTIMESNAPSHOTVAL - 1) -
+                        (currentTime + FTDF_sdb.ccaRetryTime) * 16;
+        }
+
+        if (sleepTime > 256 * FTDF_UNIT_BACKOFF_PERIOD * 16)
+        {
+            /* We have exceeded the CCA retry time. Abort sleep and wait for Tx IRQ. */
+            sleepTime = 0;
+        }
+
+        break;
+    }
+
+    case FTDF_SDB_STATE_RESUMING:
+        sleepTime = 0;
+        break;
+
+    case FTDF_SDB_STATE_WAITING_WAKE_UP_IRQ:
+        sleepTime = ~((FTDF_USec) 0);
+        break;
+
+    default:
+        ASSERT_WARNING(0);
+    }
+
+    return sleepTime;
+}
+
+#endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
+
+#endif /* #if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A */
+
+#if dg_configUSE_FTDF_DDPHY == 1
+void FTDF_ddphySet(uint16_t ccaReg)
+{
+    FTDF_criticalVar();
+    FTDF_enterCritical();
+    /* We use the critical section here as protection for the global variable and the HW sleep
+     * state. */
+    FTDF_ddphyCcaReg = ccaReg;
+
+    /* Apply immediately if block is up. */
+    if (REG_GETF(CRG_TOP, PMU_CTRL_REG, FTDF_SLEEP) == 0x0)
+    {
+        FTDF_DPHY->DDPHY_CCA_REG = FTDF_ddphyCcaReg;
+    }
+
+    FTDF_exitCritical();
+}
+
+void FTDF_ddphyRestore(void)
+{
+    if (FTDF_ddphyCcaReg)
+    {
+        /* Apply immediately if block is up. */
+        FTDF_criticalVar();
+        FTDF_enterCritical();
+        ASSERT_WARNING(REG_GETF(CRG_TOP, PMU_CTRL_REG, FTDF_SLEEP) == 0x0);
+        FTDF_DPHY->DDPHY_CCA_REG = FTDF_ddphyCcaReg;
+        FTDF_exitCritical();
+    }
+}
+
+void FTDF_ddphySave(void)
+{
+    /* Apply immediately if block is up. */
+    FTDF_criticalVar();
+    FTDF_enterCritical();
+    ASSERT_WARNING(REG_GETF(CRG_TOP, PMU_CTRL_REG, FTDF_SLEEP) == 0x0);
+    FTDF_ddphyCcaReg = FTDF_DPHY->DDPHY_CCA_REG;
+    FTDF_exitCritical();
+}
+#endif

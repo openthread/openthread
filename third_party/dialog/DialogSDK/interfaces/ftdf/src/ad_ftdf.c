@@ -29,8 +29,10 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ *
  ****************************************************************************************
  */
+#ifdef CONFIG_USE_FTDF
 
 #include <string.h>
 #include <stdbool.h>
@@ -45,14 +47,21 @@
 
 #include "sys_tcs.h"
 
-#include "black_orca.h"
+#include "sdk_defs.h"
 #include "ad_ftdf.h"
-#include "ad_rf.h"
 #include "internal.h"
 #include "regmap.h"
 #if FTDF_DBG_BUS_ENABLE
 #include "hw_gpio.h"
 #endif /* FTDF_DBG_BUS_ENABLE */
+
+#if FTDF_DBG_BLOCK_SLEEP_ENABLE
+#include "hw_gpio.h"
+#endif
+
+#if dg_configUSE_FTDF_DDPHY == 1
+#include "radio.h"
+#endif
 
 #define WUP_LATENCY  (AD_FTDF_LP_CLOCK_CYCLE * AD_FTDF_WUP_LATENCY)
 
@@ -61,7 +70,7 @@
 #define PRIVILEGED_DATA __attribute__((section("privileged_data_zi")))
 #endif
 #ifndef INITIALIZED_PRIVILEGED_DATA
-#define INITIALIZED_PRIVILEGED_DATA __attribute__((section("privileged_data_rw")))
+#define INITIALIZED_PRIVILEGED_DATA __attribute__((section("privileged_data_init")))
 #endif
 #endif
 
@@ -69,7 +78,6 @@ PRIVILEGED_DATA FTDF_Boolean explicit_sleep; /* = FTDF_FALSE; */
 PRIVILEGED_DATA eSleepStatus sleep_status;
 
 PRIVILEGED_DATA FTDF_ExtAddress uExtAddress;
-
 
 static void ad_ftdf_sleep(void)
 {
@@ -82,6 +90,10 @@ static void ad_ftdf_sleep(void)
     while (REG_GETF(CRG_TOP, SYS_STAT_REG, FTDF_IS_DOWN) == 0x0)    // don't go-go before I sleep
     {
     }
+
+#if FTDF_DBG_BLOCK_SLEEP_ENABLE
+    hw_gpio_set_inactive(FTDF_DBG_BLOCK_SLEEP_GPIO_PORT, FTDF_DBG_BLOCK_SLEEP_GPIO_PIN);
+#endif
 }
 
 void ad_ftdf_wake_up_internal(bool sync)
@@ -101,25 +113,18 @@ void ad_ftdf_wake_up_internal(bool sync)
     {
     }
 
-    /* Power on and configure RF */
-#if dg_configRF_ADAPTER
-    ad_rf_request_on(false);
-#else
-    vPortEnterCritical();
-    hw_rf_request_on(false);
-    vPortExitCritical();
+#if FTDF_DBG_BLOCK_SLEEP_ENABLE
+    hw_gpio_configure_pin(FTDF_DBG_BLOCK_SLEEP_GPIO_PORT, FTDF_DBG_BLOCK_SLEEP_GPIO_PIN,
+                          HW_GPIO_MODE_OUTPUT, HW_GPIO_FUNC_GPIO, true);
 #endif
+
+    /* Power on and configure RF */
+    ad_rf_request_on(false);
 
     /* Apply trim values */
-    sys_tcs_apply(tcs_ftdf);
+//        sys_tcs_apply(tcs_ftdf);
 
-#if dg_configRF_ADAPTER
     ad_rf_request_recommended_settings();
-#else
-    vPortEnterCritical();
-    hw_rf_request_recommended_settings();
-    vPortExitCritical();
-#endif
 
     if (sync)
     {
@@ -207,7 +212,19 @@ void sleep_when_possible(uint8_t explicit_request, uint32_t sleepTime)
             // FTDF ready to sleep, disable clocks
             sleep_status = BLOCK_SLEEPING;
             explicit_sleep = explicit_request;
+#if FTDF_USE_SLEEP_DURING_BACKOFF
+            FTDF_sdbFsmSleep();
+#endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
+#if dg_configUSE_FTDF_DDPHY == 1
+            FTDF_ddphySave();
+#endif /* dg_configUSE_FTDF_DDPHY */
             ad_ftdf_sleep();
+        }
+        else
+        {
+#if FTDF_USE_SLEEP_DURING_BACKOFF
+            FTDF_sdbFsmAbortSleep();
+#endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
         }
     }
 
@@ -215,13 +232,7 @@ void sleep_when_possible(uint8_t explicit_request, uint32_t sleepTime)
 
     if (blockSleep)
     {
-#if dg_configRF_ADAPTER
         ad_rf_request_off(false);
-#else
-        vPortEnterCritical();
-        hw_rf_request_off(false);
-        vPortExitCritical();
-#endif
     }
 }
 
@@ -237,6 +248,10 @@ void ad_ftdf_init(void)
     {
     }
 
+#if FTDF_DBG_BLOCK_SLEEP_ENABLE
+    hw_gpio_configure_pin(FTDF_DBG_BLOCK_SLEEP_GPIO_PORT, FTDF_DBG_BLOCK_SLEEP_GPIO_PIN,
+                          HW_GPIO_MODE_OUTPUT, HW_GPIO_FUNC_GPIO, true);
+#endif
     REG_SET_BIT(CRG_TOP, CLK_RADIO_REG, FTDF_MAC_ENABLE);   // on
     REG_SETF(CRG_TOP, CLK_RADIO_REG, FTDF_MAC_DIV, 0);      // divide by 1
 
@@ -276,13 +291,26 @@ void ad_ftdf_dbgBusGpioConfig(void)
                              HW_GPIO_FUNC_FTDF_DIAG);
     hw_gpio_set_pin_function(HW_GPIO_PORT_1, HW_GPIO_PIN_7, HW_GPIO_MODE_OUTPUT,
                              HW_GPIO_FUNC_FTDF_DIAG);
+#if FTDF_DBG_BUS_USE_SWDIO_PIN
+    /*
+     * Note that this pin has a conflict with SWD. Disable the debugger in order to use this
+     * pin.
+     */
     hw_gpio_set_pin_function(HW_GPIO_PORT_0, HW_GPIO_PIN_6, HW_GPIO_MODE_OUTPUT,
                              HW_GPIO_FUNC_FTDF_DIAG);
+#endif
     hw_gpio_set_pin_function(HW_GPIO_PORT_0, HW_GPIO_PIN_7, HW_GPIO_MODE_OUTPUT,
                              HW_GPIO_FUNC_FTDF_DIAG);
+#if FTDF_DBG_BUS_USE_GPIO_P1_3_P2_2
+    /*
+     * Note that these pins have a conflict with the pins used for UART by default. Configure
+     * UART on different pins if you would like to use the pins below for diagnostics.
+     */
     hw_gpio_set_pin_function(HW_GPIO_PORT_1, HW_GPIO_PIN_3, HW_GPIO_MODE_OUTPUT,
                              HW_GPIO_FUNC_FTDF_DIAG);
     hw_gpio_set_pin_function(HW_GPIO_PORT_2, HW_GPIO_PIN_3, HW_GPIO_MODE_OUTPUT,
                              HW_GPIO_FUNC_FTDF_DIAG);
+#endif
 }
 #endif /* FTDF_DBG_BUS_ENABLE */
+#endif

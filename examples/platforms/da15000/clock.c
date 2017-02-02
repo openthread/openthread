@@ -31,7 +31,7 @@
  * Clock init for Dialog da15000.
  *
  */
-#include "global_io.h"
+#include "sdk_defs.h"
 #include "hw_cpm.h"
 #include "hw_watchdog.h"
 

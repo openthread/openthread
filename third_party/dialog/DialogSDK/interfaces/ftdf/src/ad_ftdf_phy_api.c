@@ -28,19 +28,27 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *
  ****************************************************************************************
  */
+#ifdef CONFIG_USE_FTDF
+
+#ifdef FTDF_PHY_API
 
 #include <string.h>
 #include <stdbool.h>
 
-#include "black_orca.h"
+#include "sdk_defs.h"
 #include "ad_ftdf.h"
 #include "ad_ftdf_phy_api.h"
 #include "internal.h"
+#if FTDF_DBG_BUS_ENABLE
+#include "hw_gpio.h"
+#endif /* FTDF_DBG_BUS_ENABLE */
 
 #ifndef OS_FREERTOS
-static unsigned long uxCriticalNesting = 0x0 ;//0xaaaaaaaa;
+static unsigned long uxCriticalNesting = 0xaaaaaaaa;
 
 void vPortEnterCritical(void)
 {
@@ -116,6 +124,9 @@ FTDF_Status ad_ftdf_send_frame_simple(FTDF_DataLength    frameLength,
     {
         /* Wake-up the block */
         ad_ftdf_wake_up_async();
+#if FTDF_DBG_BUS_ENABLE
+        FTDF_checkDbgMode();
+#endif /* FTDF_DBG_BUS_ENABLE */
         sleep_status = BLOCK_ACTIVE;
     }
 
@@ -134,6 +145,9 @@ void ad_ftdf_wake_up(void)
     {
         /* Wake-up the block */
         ad_ftdf_wake_up_async();
+#if FTDF_DBG_BUS_ENABLE
+        FTDF_checkDbgMode();
+#endif /* FTDF_DBG_BUS_ENABLE */
         sleep_status = BLOCK_ACTIVE;
     }
 
@@ -151,5 +165,7 @@ void ad_ftdf_init_phy_api(void)
     uxCriticalNesting = 0;
 #endif
 
-    FTDF_reset(0);
+    FTDF_reset(1);
 }
+#endif /* FTDF_PHY_API */
+#endif

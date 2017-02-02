@@ -38,11 +38,12 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ *
  ****************************************************************************************
  */
 #include <stdint.h>
 #include <stdio.h>
-#include "black_orca.h"
+#include "sdk_defs.h"
 #include "hw_hard_fault.h"
 #include "hw_watchdog.h"
 #include "hw_cpm.h"
@@ -125,15 +126,15 @@ void HardFault_HandlerC(unsigned long *hardfault_args)
 
         if (VERBOSE_HARDFAULT)
         {
-            printf("HardFault Handler:\n\r");
-            printf("- R0  = 0x%08lx\n\r", hardfault_args[0]);
-            printf("- R1  = 0x%08lx\n\r", hardfault_args[1]);
-            printf("- R2  = 0x%08lx\n\r", hardfault_args[2]);
-            printf("- R3  = 0x%08lx\n\r", hardfault_args[3]);
-            printf("- R12 = 0x%08lx\n\r", hardfault_args[4]);
-            printf("- LR  = 0x%08lx\n\r", hardfault_args[5]);
-            printf("- PC  = 0x%08lx\n\r", hardfault_args[6]);
-            printf("- xPSR= 0x%08lx\n\r", hardfault_args[7]);
+            printf("HardFault Handler:\r\n");
+            printf("- R0  = 0x%08lx\r\n", hardfault_args[0]);
+            printf("- R1  = 0x%08lx\r\n", hardfault_args[1]);
+            printf("- R2  = 0x%08lx\r\n", hardfault_args[2]);
+            printf("- R3  = 0x%08lx\r\n", hardfault_args[3]);
+            printf("- R12 = 0x%08lx\r\n", hardfault_args[4]);
+            printf("- LR  = 0x%08lx\r\n", hardfault_args[5]);
+            printf("- PC  = 0x%08lx\r\n", hardfault_args[6]);
+            printf("- xPSR= 0x%08lx\r\n", hardfault_args[7]);
         }
 
         hw_cpm_assert_trigger_gpio();
