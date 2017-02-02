@@ -338,6 +338,7 @@ ThreadError LinkRaw::Transmit(RadioPacket *aPacket, otLinkRawTransmitDone aCallb
         mTransmitDoneCallback = aCallback;
 
 #if OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT
+        (void)aPacket;
         error = kThreadError_None;
         mTransmitAttempts = 0;
         mCsmaAttempts = 0;
