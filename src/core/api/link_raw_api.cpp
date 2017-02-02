@@ -278,23 +278,20 @@ otRadioCaps LinkRaw::GetCaps()
 {
     otRadioCaps RadioCaps = otPlatRadioGetCaps(&mInstance);
 
-#if OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT
-    // The radio shouldn't support this capability if it is being compile
+    // The radio shouldn't support a capability if it is being compile
     // time included into the raw link-layer code.
+
+#if OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT
     assert((RadioCaps & kRadioCapsAckTimeout) == 0);
     RadioCaps = (otRadioCaps)(RadioCaps | kRadioCapsAckTimeout);
 #endif // OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT
 
 #if OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT
-    // The radio shouldn't support this capability if it is being compile
-    // time included into the raw link-layer code.
     assert((RadioCaps & kRadioCapsTransmitRetries) == 0);
     RadioCaps = (otRadioCaps)(RadioCaps | kRadioCapsTransmitRetries);
 #endif // OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT
 
 #if OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN
-    // The radio shouldn't support this capability if it is being compile
-    // time included into the raw link-layer code.
     assert((RadioCaps & kRadioCapsEnergyScan) == 0);
     RadioCaps = (otRadioCaps)(RadioCaps | kRadioCapsEnergyScan);
 #endif // OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN
@@ -309,7 +306,7 @@ ThreadError LinkRaw::Receive(uint8_t aChannel, otLinkRawReceiveDone aCallback)
     if (mEnabled)
     {
 #if OPENTHREAD_LINKRAW_TIMER_REQUIRED
-        // Only need to cache if we implement timer logic that needs to
+        // Only need to cache if we implement timer logic that might
         // revert the channel on completion.
         mReceiveChannel = aChannel;
 #endif
@@ -339,11 +336,14 @@ ThreadError LinkRaw::Transmit(RadioPacket *aPacket, otLinkRawTransmitDone aCallb
 
 #if OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT
         (void)aPacket;
-        error = kThreadError_None;
         mTransmitAttempts = 0;
         mCsmaAttempts = 0;
+
+        // Start the transmission backlog logic
         StartCsmaBackoff();
+        error = kThreadError_None;
 #else
+        // Let the hardware do the transmission logic
         error = DoTransmit(aPacket);
 #endif
     }
@@ -434,6 +434,7 @@ ThreadError LinkRaw::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration, ot
         mTimer.Start(aScanDuration);
         mEnergyScanTask.Post();
 #else
+        // Do the HW offloaded energy scan
         error = otPlatRadioEnergyScan(&mInstance, aScanChannel, aScanDuration);
 #endif
     }
@@ -459,7 +460,10 @@ void LinkRaw::HandleTimer(void *aContext)
 
 void LinkRaw::HandleTimer(void)
 {
-    switch (mTimerReason)
+    TimerReason timerReason = mTimerReason;
+    mTimerReason = kTimerReasonNone;
+
+    switch (timerReason)
     {
 #if OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT
 
@@ -538,17 +542,24 @@ void LinkRaw::HandleEnergyScanTask(void *aContext)
 
 void LinkRaw::HandleEnergyScanTask(void)
 {
-    int8_t rssi = otPlatRadioGetRssi(&mInstance);
-
-    if (rssi != kInvalidRssiValue)
+    // Only process task if we are still energy scanning
+    if (mTimerReason == kTimerReasonEnergyScanComplete)
     {
-        if ((mEnergyScanRssi == kInvalidRssiValue) || (rssi > mEnergyScanRssi))
-        {
-            mEnergyScanRssi = rssi;
-        }
-    }
+        int8_t rssi = otPlatRadioGetRssi(&mInstance);
 
-    mEnergyScanTask.Post();
+        // Only apply the RSSI if it was a valid value
+        if (rssi != kInvalidRssiValue)
+        {
+            if ((mEnergyScanRssi == kInvalidRssiValue) || (rssi > mEnergyScanRssi))
+            {
+                mEnergyScanRssi = rssi;
+            }
+        }
+
+        // Post another instance of tha task, since we are
+        // still doing the energy scan.
+        mEnergyScanTask.Post();
+    }
 }
 
 #endif // OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN
