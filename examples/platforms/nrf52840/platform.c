@@ -53,6 +53,7 @@ void PlatformInit(int argc, char *argv[])
     nrf5RandomInit();
     nrf5UartInit();
     nrf5MiscInit();
+    nrf5CryptoInit();
     nrf5RadioInit();
 #if (OPENTHREAD_ENABLE_DEFAULT_LOGGING == 0)
     nrf5LogInit();
