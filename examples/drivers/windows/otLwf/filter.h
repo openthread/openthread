@@ -93,10 +93,6 @@ typedef enum OTLWF_DEVICE_CAPABILITY
     // Device supports the energy scan command.
     OTLWF_DEVICE_CAP_RADIO_ENERGY_SCAN                          = 1 << 3,
 
-    // Device supports sleeping. If the device supports sleeping, it is assumed to
-    // default to the sleep state on bring up.
-    OTLWF_DEVICE_CAP_RADIO_SLEEP                                = 1 << 4,
-
     // Device support Net & Thread commands.
     OTLWF_DEVICE_CAP_THREAD_1_0                                 = 1 << 16,
 
