@@ -1506,6 +1506,20 @@ bool otIsMessageLinkSecurityEnabled(otMessage aMessage)
     return message->IsLinkSecurityEnabled();
 }
 
+void otMessageSetDirectTransmission(otMessage aMessage, bool aEnabled)
+{
+    Message *message = static_cast<Message *>(aMessage);
+
+    if (aEnabled)
+    {
+        message->SetDirectTransmission();
+    }
+    else
+    {
+        message->ClearDirectTransmission();
+    }
+}
+
 ThreadError otAppendMessage(otMessage aMessage, const void *aBuf, uint16_t aLength)
 {
     Message *message = static_cast<Message *>(aMessage);
