@@ -126,7 +126,6 @@ otLwfRadioInit(
     LogFuncEntry(DRIVER_DEFAULT);
 
     NT_ASSERT(pFilter->DeviceStatus == OTLWF_DEVICE_STATUS_RADIO_MODE);
-    //NT_ASSERT((pFilter->DeviceCapabilities & OTLWF_DEVICE_CAP_RADIO_SLEEP) != 0);
 
     // Initialize the OpenThread radio capability flags
     pFilter->otRadioCapabilities = 0;
@@ -348,29 +347,6 @@ ThreadError otPlatRadioSleep(_In_ otInstance *otCtx)
         pFilter->otPhyState = kStateSleep;
         LogInfo(DRIVER_DEFAULT, "Filter %p PhyState = kStateSleep.", pFilter);
 
-        if ((pFilter->DeviceCapabilities & OTLWF_DEVICE_CAP_RADIO_SLEEP) != 0)
-        {
-            /* TODO
-            NDIS_STATUS status;
-            ULONG bytesProcessed;
-            OT_SLEEP_MODE OidBuffer = { {NDIS_OBJECT_TYPE_DEFAULT, OT_SLEEP_MODE_REVISION_1, SIZEOF_OT_SLEEP_MODE_REVISION_1}, TRUE };
-
-            // Indicate to the miniport
-            status = 
-                otLwfSendInternalRequest(
-                    pFilter,
-                    NdisRequestSetInformation,
-                    OID_OT_SLEEP_MODE,
-                    &OidBuffer,
-                    sizeof(OidBuffer),
-                    &bytesProcessed
-                    );
-            if (status != NDIS_STATUS_SUCCESS)
-            {
-                LogError(DRIVER_DEFAULT, "Set for OID_OT_SLEEP_MODE failed, %!NDIS_STATUS!", status);
-            }*/
-        }
-
         // Indicate to the miniport
         NTSTATUS status =
             otLwfCmdSetProp(
@@ -397,34 +373,6 @@ ThreadError otPlatRadioReceive(_In_ otInstance *otCtx, uint8_t aChannel)
     if (pFilter->otPhyState == kStateDisabled) return kThreadError_Busy;
     
     LogFuncEntryMsg(DRIVER_DATA_PATH, "Filter: %p", pFilter);
-    
-    // If we are currently in the sleep state and the minport supports sleep 
-    // mode, come out of sleep mode now.
-    if (pFilter->otPhyState == kStateSleep)
-    {
-        if ((pFilter->DeviceCapabilities & OTLWF_DEVICE_CAP_RADIO_SLEEP) != 0)
-        {
-            /* TODO
-            NDIS_STATUS status;
-            ULONG bytesProcessed;
-            OT_SLEEP_MODE OidBuffer = { {NDIS_OBJECT_TYPE_DEFAULT, OT_SLEEP_MODE_REVISION_1, SIZEOF_OT_SLEEP_MODE_REVISION_1}, FALSE };
-
-            // Indicate to the miniport
-            status = 
-                otLwfSendInternalRequest(
-                    pFilter,
-                    NdisRequestSetInformation,
-                    OID_OT_SLEEP_MODE,
-                    &OidBuffer,
-                    sizeof(OidBuffer),
-                    &bytesProcessed
-                    );
-            if (status != NDIS_STATUS_SUCCESS)
-            {
-                LogError(DRIVER_DEFAULT, "Set for OID_OT_SLEEP_MODE failed, %!NDIS_STATUS!", status);
-            }*/
-        }
-    }
 
     // Update current channel if different
     if (pFilter->otCurrentListenChannel != aChannel)
@@ -450,7 +398,7 @@ ThreadError otPlatRadioReceive(_In_ otInstance *otCtx, uint8_t aChannel)
         }
     }
 
-    // Only transition to the receive state if we were sleeping; otherwise we 
+    // Only transition to the receive state if we were sleeping; otherwise we
     // are already in receive or transmit state.
     if (pFilter->otPhyState == kStateSleep)
     {
