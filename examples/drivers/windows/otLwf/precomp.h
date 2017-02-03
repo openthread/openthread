@@ -113,7 +113,6 @@ typedef struct UDPHeader
 #include "driver.h"
 #include "device.h"
 #include "iocontrol.h"
-#include "oid.h"
 #include "radio.h"
 #include "filter.h"
 #include "command.h"

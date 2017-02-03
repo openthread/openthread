@@ -148,12 +148,6 @@ typedef struct _MS_FILTER
     // Miniport Link State
     //
     NDIS_LINK_STATE                 MiniportLinkState;
-    
-    //
-    // Pending OID Handling
-    //
-    NDIS_SPIN_LOCK                  PendingOidRequestLock;
-    PNDIS_OID_REQUEST               PendingOidRequest;
 
     //
     // External references management

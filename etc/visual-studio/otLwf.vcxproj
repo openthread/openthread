@@ -94,7 +94,6 @@
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\settings.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\thread.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\tunnel.c" />
-    <ClCompile Include="..\..\examples\drivers\windows\otLwf\oid.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\precomp.c">
       <AdditionalIncludeDirectories>..;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreProcessorDefinitions>%(PreProcessorDefinitions);NDIS_WDM=1</PreProcessorDefinitions>
@@ -109,7 +108,6 @@
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\driver.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\iocontrol.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\nsihelper.h" />
-    <ClInclude Include="..\..\examples\drivers\windows\otLwf\oid.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\radio.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\thread.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\tunnel.h" />

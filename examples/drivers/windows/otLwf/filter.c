@@ -36,20 +36,20 @@ GetInterfaceCompartmentID(
     )
 {  
     COMPARTMENT_ID CompartmentID = UNSPECIFIED_COMPARTMENT_ID;  
-  
-    NTSTATUS Status =  
-        NsiGetParameter(  
-            NsiActive,  
-            &NPI_MS_NDIS_MODULEID,  
-            NdisNsiObjectInterfaceInformation,  
-            pNetLuid, sizeof(*pNetLuid),  
-            NsiStructRoDynamic,  
-            &CompartmentID, sizeof(CompartmentID),  
+
+    NTSTATUS Status =
+        NsiGetParameter(
+            NsiActive,
+            &NPI_MS_NDIS_MODULEID,
+            NdisNsiObjectInterfaceInformation,
+            pNetLuid, sizeof(*pNetLuid),
+            NsiStructRoDynamic,
+            &CompartmentID, sizeof(CompartmentID),
             FIELD_OFFSET(NDIS_NSI_INTERFACE_INFORMATION_ROD, CompartmentId)
-            );  
-  
-    return (NT_SUCCESS(Status) ? CompartmentID : DEFAULT_COMPARTMENT_ID);  
-}  
+            );
+
+    return (NT_SUCCESS(Status) ? CompartmentID : DEFAULT_COMPARTMENT_ID);
+}
 
 _Use_decl_annotations_
 NDIS_STATUS
@@ -191,9 +191,6 @@ N.B.:  FILTER can use NdisRegisterDeviceEx to create a device, so the upper
 
         // Filter initially in Paused state
         pFilter->State = FilterPaused;
-
-        // Initialize PendingOidRequest lock
-        NdisAllocateSpinLock(&pFilter->PendingOidRequestLock);
 
         // Initialize rundowns to disabled with no active references
         pFilter->ExternalRefs.Count = EX_RUNDOWN_ACTIVE;

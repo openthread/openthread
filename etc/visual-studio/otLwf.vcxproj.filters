@@ -39,9 +39,6 @@
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\nsihelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\examples\drivers\windows\otLwf\oid.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\iocontrol.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -52,6 +49,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\tunnel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\drivers\windows\otLwf\command.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -72,9 +72,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\driver.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\examples\drivers\windows\otLwf\oid.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\iocontrol.c">
