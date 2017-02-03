@@ -102,6 +102,20 @@ otLwfTunInitialize(
         KeSetEvent(&pFilter->TunWorkerThreadStopEvent, IO_NO_INCREMENT, FALSE);
     }
 
+    // Make sure to enable RLOC passthrough
+    Status =
+        otLwfCmdSetProp(
+            pFilter,
+            SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU,
+            SPINEL_DATATYPE_BOOL_S,
+            TRUE
+        );
+    if (!NT_SUCCESS(Status))
+    {
+        LogError(DRIVER_DEFAULT, "Enabling RLOC pass through failed, %!STATUS!", Status);
+        goto error;
+    }
+
     // TODO - Query other values and capabilities
 
 error:
