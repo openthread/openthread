@@ -81,7 +81,7 @@ enum
     kNonceSize            = 13,                    ///< Size of IEEE 802.15.4 Nonce (bytes).
 
     kScanChannelsAll      = OT_CHANNEL_ALL,        ///< All channels.
-    kScanDurationDefault  = 200,                   ///< Default interval between channels (milliseconds).
+    kScanDurationDefault  = 300,                   ///< Default interval between channels (milliseconds).
 };
 
 /**
