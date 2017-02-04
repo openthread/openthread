@@ -933,7 +933,7 @@ ThreadError MeshForwarder::SendMacDataRequest(void)
 
     if (error == kThreadError_None)
     {
-        otLogInfoMac("Sent poll");
+        otLogDebgMac("Sent poll");
 
         // restart the polling timer
         mPollTimer.Start(mPollPeriod);

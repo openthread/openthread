@@ -618,7 +618,7 @@ void Mac::SendBeaconRequest(Frame &aFrame)
     aFrame.SetDstAddr(kShortAddrBroadcast);
     aFrame.SetCommandId(Frame::kMacCmdBeaconRequest);
 
-    otLogInfoMac("Sent Beacon Request");
+    otLogDebgMac("Sent Beacon Request");
 }
 
 void Mac::SendBeacon(Frame &aFrame)
@@ -654,7 +654,7 @@ void Mac::SendBeacon(Frame &aFrame)
 
     aFrame.SetPayloadLength(sizeof(*beacon));
 
-    otLogInfoMac("Sent Beacon");
+    otLogDebgMac("Sent Beacon");
 }
 
 void Mac::HandleBeginTransmit(void *aContext)
@@ -960,7 +960,7 @@ void Mac::HandleReceiveTimer(void *aContext)
 
 void Mac::HandleReceiveTimer(void)
 {
-    otLogInfoMac("data poll timeout!");
+    otLogDebgMac("data poll timeout!");
 
     if (mState == kStateIdle)
     {
@@ -1459,7 +1459,7 @@ ThreadError Mac::HandleMacCommand(Frame &aFrame)
     {
     case Frame::kMacCmdBeaconRequest:
         mCounters.mRxBeaconRequest++;
-        otLogInfoMac("Received Beacon Request");
+        otLogDebgMac("Received Beacon Request");
 
         mTransmitBeacon = true;
 
