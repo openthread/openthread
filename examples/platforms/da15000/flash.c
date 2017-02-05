@@ -33,10 +33,8 @@
 #include "platform/alarm.h"
 #include "openthread-config.h"
 
-#define FLASH_SECTOR_SIZE       0x1000
-#define FLASH_PAGE_SIZE         0x0100
-#define FLASH_BUFFER_SIZE       0x2000          // 8kB
-#define FLASH_OFFSET            0x7B000         // Flash memory size is 512kB (0x7D000) and starts from 0x8000000. Offset point to 500kB position
+#define FLASH_SECTOR_SIZE             0x1000
+#define FLASH_BUFFER_SIZE             0x2000
 
 #define W25Q_READ_STATUS_REGISTER1   0x05
 
@@ -46,29 +44,24 @@
 
 static uint32_t wait_status_timeout;
 
-#define QSPI_SECTION __attribute__ ((section ("text_retained")))
-
-QSPI_SECTION static inline uint8_t qspi_get_erase_status(void)
+QSPI_SECTION static  uint8_t qspi_get_erase_status(void)
 {
     QSPIC->QSPIC_CHCKERASE_REG = 0;
     return HW_QSPIC_REG_GETF(ERASECTRL, ERS_STATE);
 }
 
+volatile bool  DisableErase = false;
+
 // Erase QSPI memory section as non-blocking function. Remember to check utilsFlashStatusWait before write or read!!
 ThreadError utilsFlashErasePage(uint32_t aAddress)
 {
 
-    uint32_t flash_offset = (aAddress + FLASH_OFFSET) & ~(FLASH_SECTOR_SIZE - 1);
+    uint32_t flash_offset = (aAddress) & ~(FLASH_SECTOR_SIZE - 1);
 
-    if (aAddress > FLASH_BUFFER_SIZE)
-    {
-        return kThreadError_InvalidArgs;
-    }
+    if (DisableErase) { return kThreadError_None; }
 
-    /* Setup erase block page */
-    HW_QSPIC_REG_SETF(ERASECTRL, ERS_ADDR, (flash_offset >>= 4));
-    /* Fire erase */
-    HW_QSPIC_REG_SETF(ERASECTRL, ERASE_EN, 1);
+    qspi_automode_init();
+    qspi_automode_erase_flash_sector(flash_offset);
 
     CACHE->CACHE_CTRL1_REG = CACHE_CACHE_CTRL1_REG_CACHE_FLUSH_Msk;
 
@@ -97,17 +90,11 @@ ThreadError utilsFlashStatusWait(uint32_t aTimeout)
     {
         return kThreadError_None;
     }
-
 }
 
 ThreadError utilsFlashInit(void)
 {
-
-    qspi_automode_init();
     qspi_automode_flash_power_up();
-
-    utilsFlashErasePage(0);
-    utilsFlashErasePage(0x1000);
 
     if (utilsFlashStatusWait(1000) == kThreadError_Busy)
     {
@@ -121,44 +108,22 @@ ThreadError utilsFlashInit(void)
 
 uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
-    uint32_t flash_offset = (aAddress + FLASH_OFFSET);
-    return flash_offset;
-}
 
-
-uint32_t utilsFlashWrite2(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
-{
-
-    uint32_t flash_offset = (aAddress + FLASH_OFFSET);
     size_t offset = 0;
     size_t written;
 
-    while (flash_offset < (aAddress + FLASH_OFFSET) + aSize)
-    {
-        qspi_automode_erase_flash_sector(flash_offset);
-        flash_offset += FLASH_SECTOR_SIZE;
-    }
-
-    flash_offset = (aAddress + FLASH_OFFSET);
-
     while (offset < aSize)
     {
-        written = qspi_automode_write_flash_page(flash_offset + offset, aData + offset,
+        written = qspi_automode_write_flash_page(aAddress + offset, aData + offset,
                                                  aSize - offset);
         offset += written;
     }
 
-    return flash_offset;
+    return offset;
 }
 
 uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
-
-    size_t written = 0;
-    size_t offset = 0;
-    uint32_t flash_offset = (aAddress + FLASH_OFFSET);
-
-    memcpy(aData, (void *)(MEMORY_QSPIF_BASE + flash_offset), aSize);
-
+    memcpy(aData, (void *)(MEMORY_QSPIF_BASE + aAddress), aSize);
     return aSize;
 }

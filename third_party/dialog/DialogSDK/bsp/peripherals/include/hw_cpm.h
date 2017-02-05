@@ -5,15 +5,16 @@
 \{
 \addtogroup CPM
 \{
+\brief Clock and Power Manager
 */
 
 /**
 ****************************************************************************************
-*
-* @file hw_cpm.h
-*
-* @brief Clock and Power Manager header file.
-*
+ *
+ * @file hw_cpm.h
+ *
+ * @brief Clock and Power Manager header file.
+ *
  * Copyright (c) 2016, Dialog Semiconductor
  * All rights reserved.
  * Redistribution and use in source and binary forms, with or without modification, 
@@ -38,6 +39,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ *
 ****************************************************************************************
 */
 
@@ -46,12 +48,7 @@
 
 #if dg_configUSE_HW_CPM
 
-#include "black_orca.h"
-
-#define PRIVILEGED_DATA  __attribute__((section("privileged_data_zi")))
-
-
-
+#include "sdk_defs.h"
 
 #define SYS_CLK_IS_XTAL16M              (0)
 #define SYS_CLK_IS_RC16                 (1)
@@ -61,6 +58,7 @@
 #define LP_CLK_IS_RC32K                 (0)
 #define LP_CLK_IS_RCX                   (1)
 #define LP_CLK_IS_XTAL32K               (2)
+#define LP_CLK_IS_EXTERNAL              (3)
 
 #define DCDC_IS_READY \
         (REG_MSK(DCDC, DCDC_STATUS_1_REG, DCDC_VDD_AVAILABLE))
@@ -100,9 +98,9 @@ typedef enum ahbdiv_type {
         ahb_div16,              //!< Divide by 16
 } ahb_div_t;
 
-
 ahb_div_t cm_ahbclk;
 sys_clk_t cm_sysclk;
+
 /**
  * \brief The AMBA Peripheral Bus (APB) clock divider
  *
@@ -132,6 +130,14 @@ typedef enum cpu_clk_type {
         cpuclk_48M = 48,        //!< 48 MHz
         cpuclk_96M = 96         //!< 96 MHz
 } cpu_clk_t;
+
+
+/**
+ * \brief The TCS setting for the BOD control.
+ * \details If it is zero then the hard-coded SDK code for the BOD setup is used. It it is not zero,
+ *          this is the value that is written to the BOD_CTRL2_REG.
+ */
+extern uint16_t hw_cpm_bod_enabled_in_tcs;
 
 
 /**
@@ -166,12 +172,25 @@ __STATIC_INLINE void hw_cpm_set_cache_retained(void)
 }
 
 /**
+ * \brief Enable ECC microcode RAM retainment.
+ *
+ */
+__STATIC_INLINE void hw_cpm_set_eccram_retained(void)
+{
+        GLOBAL_INT_DISABLE();
+        REG_SET_BIT(CRG_TOP, PMU_CTRL_REG, RETAIN_ECCRAM);
+        GLOBAL_INT_RESTORE();
+}
+
+/**
  * \brief Enable QSPI initialization after wake-up.
  *
  */
 __STATIC_INLINE void hw_cpm_enable_qspi_init(void)
 {
+        GLOBAL_INT_DISABLE();
         REG_SET_BIT(CRG_TOP, SYS_CTRL_REG, QSPI_INIT);
+        GLOBAL_INT_RESTORE();
 }
 
 /**
@@ -186,60 +205,49 @@ __STATIC_INLINE void hw_cpm_setup_retmem(void)
 }
 
 /**
- * \brief Setup the Retention Memory configuration when the image data have to be retained.
- *
- */
-__STATIC_INLINE void hw_cpm_setup_retmem_no_img_copy(void)
-{
-        GLOBAL_INT_DISABLE();
-        REG_SETF(CRG_TOP, PMU_CTRL_REG, RETAIN_RAM, dg_configMEM_RETENTION_MODE_PRESERVE_IMAGE);
-        GLOBAL_INT_RESTORE();
-}
-
-/**
  * \brief Disable memory retention.
- *
- * \warning Interrupts must be disabled by the caller!
  *
  */
 __STATIC_INLINE void hw_cpm_no_retmem(void)
 {
-        CRG_TOP->PMU_CTRL_REG &= ~(REG_MSK(CRG_TOP, PMU_CTRL_REG, RETAIN_RAM) | 
-                                   REG_MSK(CRG_TOP, PMU_CTRL_REG, RETAIN_CACHE) | 
+        GLOBAL_INT_DISABLE();
+        CRG_TOP->PMU_CTRL_REG &= ~(REG_MSK(CRG_TOP, PMU_CTRL_REG, RETAIN_RAM) |
+                                   REG_MSK(CRG_TOP, PMU_CTRL_REG, RETAIN_CACHE) |
                                    REG_MSK(CRG_TOP, PMU_CTRL_REG, RETAIN_ECCRAM));
+        GLOBAL_INT_RESTORE();
 }
 
 /**
  * \brief Enable the clock-less sleep mode.
  *
- * \warning Interrupts must be disabled by the caller!
- *
  */
 __STATIC_INLINE void hw_cpm_enable_clockless(void)
 {
+        GLOBAL_INT_DISABLE();
         REG_SET_BIT(CRG_TOP, PMU_CTRL_REG, ENABLE_CLKLESS);
+        GLOBAL_INT_RESTORE();
 }
 
 /**
  * \brief Disable the clock-less sleep mode.
  *
- * \warning Interrupts must be disabled by the caller!
- *
  */
 __STATIC_INLINE void hw_cpm_disable_clockless(void)
 {
+        GLOBAL_INT_DISABLE();
         REG_CLR_BIT(CRG_TOP, PMU_CTRL_REG, ENABLE_CLKLESS);
+        GLOBAL_INT_RESTORE();
 }
 
 /**
  * \brief Activate the "Reset on wake-up" functionality.
  *
- * \warning Interrupts must be disabled by the caller!
- *
  */
 __STATIC_INLINE void hw_cpm_enable_reset_on_wup(void)
 {
+        GLOBAL_INT_DISABLE();
         REG_SET_BIT(CRG_TOP, PMU_CTRL_REG, RESET_ON_WAKEUP);
+        GLOBAL_INT_RESTORE();
 }
 
 /**
@@ -255,6 +263,14 @@ __RETAINED_CODE void hw_cpm_activate_bod_protection(void);
 void hw_cpm_activate_bod_protection_at_init(void);
 
 /**
+ * \brief Configure BOD protection.
+ *
+ * \note Not applicable for DA14680/1-00 chips.
+ *
+ */
+void hw_cpm_configure_bod_protection(void);
+
+/**
  * \brief Deactivate BOD protection.
  *
  */
@@ -263,6 +279,32 @@ __STATIC_INLINE void hw_cpm_deactivate_bod_protection(void) __attribute__((alway
 __STATIC_INLINE void hw_cpm_deactivate_bod_protection(void)
 {
         CRG_TOP->BOD_CTRL2_REG = 0;
+}
+
+/**
+ * \brief Activate BOD protection for 1V4 rail (only for DA14682/3-BA chips!).
+ *
+ */
+__STATIC_INLINE void hw_cpm_activate_1v4_bod_protection(void) __attribute__((always_inline));
+
+__STATIC_INLINE void hw_cpm_activate_1v4_bod_protection(void)
+{
+#if (dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_B)
+        REG_SET_BIT(CRG_TOP, BOD_CTRL2_REG, BOD_V14_EN);
+#endif
+}
+
+/**
+ * \brief Deactivate BOD protection for 1V4 rail (only for DA14682/3-BA chips!).
+ *
+ */
+__STATIC_INLINE void hw_cpm_deactivate_1v4_bod_protection(void) __attribute__((always_inline));
+
+__STATIC_INLINE void hw_cpm_deactivate_1v4_bod_protection(void)
+{
+#if (dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_B)
+        REG_CLR_BIT(CRG_TOP, BOD_CTRL2_REG, BOD_V14_EN);
+#endif
 }
 
 /**
@@ -279,14 +321,14 @@ __STATIC_INLINE void hw_cpm_power_down_radio(void)
 /**
  * \brief Power down the Peripheral Power Domain.
  *
- * \warning Interrupts must be disabled by the caller!
- *
  */
 __STATIC_INLINE void hw_cpm_power_down_periph_pd(void) __attribute__((always_inline));
 
 __STATIC_INLINE void hw_cpm_power_down_periph_pd(void)
 {
+        GLOBAL_INT_DISABLE();
         REG_SET_BIT(CRG_TOP, PMU_CTRL_REG, PERIPH_SLEEP);
+        GLOBAL_INT_RESTORE();
 }
 
 /**
@@ -314,14 +356,14 @@ __STATIC_INLINE void hw_cpm_wait_per_power_down(void)
 /**
  * \brief Power up the Peripherals Power Domain.
  *
- * \warning Interrupts must be disabled by the caller!
- *
  */
 __STATIC_INLINE void hw_cpm_power_up_per_pd(void) __attribute__((always_inline));
 
 __STATIC_INLINE void hw_cpm_power_up_per_pd(void)
 {
+        GLOBAL_INT_DISABLE();
         REG_CLR_BIT(CRG_TOP, PMU_CTRL_REG, PERIPH_SLEEP);
+        GLOBAL_INT_RESTORE();
         while ((CRG_TOP->SYS_STAT_REG & REG_MSK(CRG_TOP, SYS_STAT_REG, PER_IS_UP)) == 0);
 }
 
@@ -381,7 +423,9 @@ __STATIC_INLINE void hw_cpm_activate_pad_latches(void) __attribute__((always_inl
 
 __STATIC_INLINE void hw_cpm_activate_pad_latches(void)
 {
+        GLOBAL_INT_DISABLE();
         REG_CLR_BIT(CRG_TOP, SYS_CTRL_REG, PAD_LATCH_EN);
+        GLOBAL_INT_RESTORE();
 }
 
 /**
@@ -392,7 +436,9 @@ __STATIC_INLINE void hw_cpm_deactivate_pad_latches(void) __attribute__((always_i
 
 __STATIC_INLINE void hw_cpm_deactivate_pad_latches(void)
 {
+        GLOBAL_INT_DISABLE();
         REG_SET_BIT(CRG_TOP, SYS_CTRL_REG, PAD_LATCH_EN);
+        GLOBAL_INT_RESTORE();
 }
 
 /**
@@ -469,7 +515,10 @@ __STATIC_INLINE uint32_t hw_cpm_check_xtal16m_status(void)
  */
 __STATIC_INLINE void hw_cpm_enable_xtal16m(void)
 {
+        GLOBAL_INT_DISABLE();
         REG_CLR_BIT(CRG_TOP, CLK_CTRL_REG, XTAL16M_DISABLE);
+        GLOBAL_INT_RESTORE();
+
 }
 
 /**
@@ -501,6 +550,18 @@ __STATIC_INLINE void hw_cpm_set_sleep_flag(void) __attribute__((always_inline));
 __STATIC_INLINE void hw_cpm_set_sleep_flag(void)
 {
         GPIO->GPIO_CLK_SEL = 1;
+}
+
+/**
+ * \brief Prepare RESET type tracking.
+ */
+__STATIC_INLINE void hw_cpm_track_reset_type(void) __attribute__((always_inline));
+
+__STATIC_INLINE void hw_cpm_track_reset_type(void)
+{
+#if (dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_B)
+        CRG_TOP->RESET_STAT_REG = 0;
+#endif
 }
 
 /**
@@ -589,6 +650,8 @@ __STATIC_INLINE uint32_t hw_cpm_get_sysclk(void)
  * \retval 3 Divide by 16
  *
  */
+__STATIC_INLINE uint32_t hw_cpm_get_hclk_div(void) __attribute__((always_inline));
+
 __STATIC_INLINE uint32_t hw_cpm_get_hclk_div(void)
 {
         return REG_GETF(CRG_TOP, CLK_AMBA_REG, HCLK_DIV);
@@ -598,9 +661,13 @@ __STATIC_INLINE uint32_t hw_cpm_get_hclk_div(void)
  * \brief Set the divider of the AMBA High Speed Bus.
  *
  */
+__STATIC_INLINE void hw_cpm_set_hclk_div(uint32_t div) __attribute__((always_inline));
+
 __STATIC_INLINE void hw_cpm_set_hclk_div(uint32_t div)
 {
+        GLOBAL_INT_DISABLE();
         REG_SETF(CRG_TOP, CLK_AMBA_REG, HCLK_DIV, div);
+        GLOBAL_INT_RESTORE();
 }
 
 /**
@@ -621,9 +688,13 @@ __STATIC_INLINE uint32_t hw_cpm_get_pclk_div(void)
  * \brief Set the divider of the AMBA Peripheral Bus.
  *
  */
+__STATIC_INLINE void hw_cpm_set_pclk_div(uint32_t div) __attribute__((always_inline));
+
 __STATIC_INLINE void hw_cpm_set_pclk_div(uint32_t div)
 {
+        GLOBAL_INT_DISABLE();
         REG_SETF(CRG_TOP, CLK_AMBA_REG, PCLK_DIV, div);
+        GLOBAL_INT_RESTORE();
 }
 
 /**
@@ -689,7 +760,7 @@ __STATIC_INLINE bool hw_cpm_mac_is_active(void)
  */
 __STATIC_INLINE bool hw_cpm_lp_is_rc32k(void)
 {
-        return REG_GETF(CRG_TOP, CLK_32K_REG, RC32K_ENABLE) && 
+        return REG_GETF(CRG_TOP, CLK_32K_REG, RC32K_ENABLE) &&
               (REG_GETF(CRG_TOP, CLK_CTRL_REG, CLK32K_SOURCE) == LP_CLK_IS_RC32K);
 }
 
@@ -709,15 +780,35 @@ __STATIC_INLINE void hw_cpm_lp_set_rcx(void)
  * \brief Set XTAL32K as the Low Power clock.
  *
  * \warning The XTAL32K must have been enabled before calling this function!
+ *        Interrupts must have been disabled before calling this function!
  */
 __STATIC_INLINE void hw_cpm_lp_set_xtal32k(void)
 {
+        ASSERT_WARNING(__get_PRIMASK() == 1);
         ASSERT_WARNING(REG_GETF(CRG_TOP, CLK_32K_REG, XTAL32K_ENABLE) == 1);
 
         REG_SETF(CRG_TOP, CLK_CTRL_REG, CLK32K_SOURCE, LP_CLK_IS_XTAL32K);
 }
 
-/** 
+/**
+ * \brief Configure pin to connect an external digital clock.
+ *
+ */
+void hw_cpm_configure_ext32k_pins(void);
+
+/**
+ * \brief Set an external digital clock as the Low Power clock.
+ *
+ * \warning Interrupts must have been disabled before calling this function!
+ */
+__STATIC_INLINE void hw_cpm_lp_set_ext32k(void)
+{
+        ASSERT_WARNING(__get_PRIMASK() == 1);
+
+        REG_SETF(CRG_TOP, CLK_CTRL_REG, CLK32K_SOURCE, LP_CLK_IS_EXTERNAL);
+}
+
+/**
  * \brief Enable RC32K.
  *
  */
@@ -955,6 +1046,43 @@ __STATIC_INLINE void hw_cpm_3v3_clamp_off(void)
 }
 
 /**
+ * \brief Enable OSC16M amplitude regulation
+ */
+__STATIC_INLINE void hw_cpm_enable_osc16m_amp_reg(void) __attribute__((always_inline));
+
+__STATIC_INLINE void hw_cpm_enable_osc16m_amp_reg(void)
+{
+        REG_CLR_BIT(CRG_TOP, AON_SPARE_REG, OSC16_HOLD_AMP_REG);
+}
+
+/**
+ * \brief Disable OSC16M amplitude regulation
+ */
+__STATIC_INLINE void hw_cpm_disable_osc16m_amp_reg(void) __attribute__((always_inline));
+
+__STATIC_INLINE void hw_cpm_disable_osc16m_amp_reg(void)
+{
+        REG_SET_BIT(CRG_TOP, AON_SPARE_REG, OSC16_HOLD_AMP_REG);
+}
+
+/**
+ * \brief Sets the state of the 1v8 rail.
+ *
+ * \param[in] state true, the 1v8 rail is controlled via dg_config macros
+ *                  false, the 1v8 rail is off
+ *
+ */
+void hw_cpm_set_1v8_state(bool state);
+
+/**
+ * \brief Returns the state of the 1v8 rail.
+ *
+ * \return false if the 1v8 rail is off, true if it is controlled via dg_config macros
+ *
+ */
+__RETAINED_CODE bool hw_cpm_get_1v8_state(void);
+
+/**
  * \brief Enable the LDO_VBAT_RET.
  *
  */
@@ -982,11 +1110,17 @@ __STATIC_INLINE void hw_cpm_ldo_io_ret_off(void)
 {
         uint32_t reg = CRG_TOP->LDO_CTRL2_REG;
 
-        if (dg_configFLASH_POWER_OFF == 0) {
+        if (dg_configPOWER_1V8_SLEEP == 1) {
+                if (dg_configUSE_BOD == 1) {
+                        REG_CLR_BIT(CRG_TOP, BOD_CTRL2_REG, BOD_1V8_FLASH_EN);
+                }
                 REG_SET_FIELD(CRG_TOP, LDO_CTRL2_REG, LDO_1V8_FLASH_RET_DISABLE, reg, 1);
         }
 
-        if (dg_configPOWER_EXT_1V8_PERIPHERALS == 1) {
+        if (dg_configPOWER_1V8P == 1) {
+                if (dg_configUSE_BOD == 1) {
+                        REG_CLR_BIT(CRG_TOP, BOD_CTRL2_REG, BOD_1V8_PA_EN);
+                }
                 REG_SET_FIELD(CRG_TOP, LDO_CTRL2_REG, LDO_1V8_PA_RET_DISABLE, reg, 1);
         }
 
@@ -1010,13 +1144,16 @@ __STATIC_INLINE void hw_cpm_start_ldos(void) __attribute__((always_inline));
 __STATIC_INLINE void hw_cpm_start_ldos(void)
 {
         uint32_t reg = CRG_TOP->LDO_CTRL2_REG;
-
+        if ((dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_B) &&
+                (dg_configBLACK_ORCA_IC_STEP == BLACK_ORCA_IC_STEP_A)) {
+                REG_SETF(CRG_TOP, LDO_CTRL1_REG, LDO_VBAT_RET_LEVEL, 0);
+        }
         REG_SET_BIT(CRG_TOP, LDO_CTRL1_REG, LDO_RADIO_ENABLE);
         REG_SET_FIELD(CRG_TOP, LDO_CTRL2_REG, LDO_1V2_ON, reg, 1);
 
-        if (dg_configPOWER_FLASH == 1) {
+        if ((dg_configPOWER_1V8_ACTIVE == 1) && hw_cpm_get_1v8_state()) {
                 REG_SET_FIELD(CRG_TOP, LDO_CTRL2_REG, LDO_1V8_FLASH_ON, reg, 1);
-                if (dg_configFLASH_POWER_OFF == 1) {
+                if (dg_configPOWER_1V8_SLEEP == 0) {
                         REG_SET_FIELD(CRG_TOP, LDO_CTRL2_REG, LDO_1V8_FLASH_RET_DISABLE, reg, 1);
                 }
                 else {
@@ -1028,7 +1165,7 @@ __STATIC_INLINE void hw_cpm_start_ldos(void)
                 REG_SET_FIELD(CRG_TOP, LDO_CTRL2_REG, LDO_1V8_FLASH_RET_DISABLE, reg, 1);
         }
 
-        if (dg_configPOWER_EXT_1V8_PERIPHERALS == 1) {
+        if (dg_configPOWER_1V8P == 1) {
                 REG_SET_FIELD(CRG_TOP, LDO_CTRL2_REG, LDO_1V8_PA_ON, reg, 1);
                 REG_CLR_FIELD(CRG_TOP, LDO_CTRL2_REG, LDO_1V8_PA_RET_DISABLE, reg);
         }
@@ -1085,11 +1222,6 @@ __STATIC_INLINE void hw_cpm_dcdc_off(void)
 {
         // Enable the LDOs
         hw_cpm_start_ldos();
-
-        // Turn off LDO_RADIO (newer chip versions do this automatically!)
-        if (BLACK_ORCA_TARGET_IC == BLACK_ORCA_IC_VERSION(A, A)) {
-                REG_CLR_BIT(CRG_TOP, LDO_CTRL1_REG, LDO_RADIO_ENABLE);
-        }
 
         // Turn off DCDC
         DCDC->DCDC_CTRL_0_REG &= ~REG_MSK(DCDC, DCDC_CTRL_0_REG, DCDC_MODE);
@@ -1174,7 +1306,9 @@ __STATIC_INLINE void hw_cpm_rfcu_clk_off(void) __attribute__((always_inline));
 
 __STATIC_INLINE void hw_cpm_rfcu_clk_off(void)
 {
+        GLOBAL_INT_DISABLE();
         REG_CLR_BIT(CRG_TOP, CLK_RADIO_REG, RFCU_ENABLE);
+        GLOBAL_INT_RESTORE();
 }
 
 /**
@@ -1185,7 +1319,9 @@ __STATIC_INLINE void hw_cpm_enable_debugger(void) __attribute__((always_inline))
 
 __STATIC_INLINE void hw_cpm_enable_debugger(void)
 {
+        GLOBAL_INT_DISABLE();
         REG_SET_BIT(CRG_TOP, SYS_CTRL_REG, DEBUGGER_ENABLE);
+        GLOBAL_INT_RESTORE();
 }
 
 /**
@@ -1196,8 +1332,24 @@ __STATIC_INLINE void hw_cpm_disable_debugger(void) __attribute__((always_inline)
 
 __STATIC_INLINE void hw_cpm_disable_debugger(void)
 {
+        GLOBAL_INT_DISABLE();
         REG_CLR_BIT(CRG_TOP, SYS_CTRL_REG, DEBUGGER_ENABLE);
+        GLOBAL_INT_RESTORE();
 }
+
+/**
+ * \brief Check if the debugger is attached.
+ *
+ * \return true, if the debugger is attached, else false.
+ *
+ */
+__STATIC_INLINE bool hw_cpm_is_debugger_attached(void) __attribute__((always_inline));
+
+__STATIC_INLINE bool hw_cpm_is_debugger_attached(void)
+{
+        return (REG_GETF(CRG_TOP, SYS_STAT_REG, DBG_IS_ACTIVE) != 0);
+}
+
 
 /**
  * \brief Check if any DMA channel is active.
@@ -1259,7 +1411,8 @@ __RETAINED_CODE void hw_cpm_reboot_system(void);
  */
 __RETAINED_CODE void hw_cpm_delay_usec(uint32_t usec);
 
-/** \brief  Trigger a GPIO when ASSERT_WARNING() or ASSERT_ERROR() hits.
+/**
+ * \brief  Trigger a GPIO when ASSERT_WARNING() or ASSERT_ERROR() hits.
  *
  */
 __RETAINED_CODE void hw_cpm_assert_trigger_gpio(void);

@@ -1,4 +1,17 @@
 /**
+ * \addtogroup BSP
+ * \{
+ * \addtogroup BSP_CONFIG
+ * \{
+ * \addtogroup BSP_DEBUG
+ *
+ * \brief Doxygen documentation is not yet available for this module.
+ *        Please check the source code file(s)
+ *
+ * \{
+*/
+
+/**
  ****************************************************************************************
  *
  * @file bsp_debug.h
@@ -28,7 +41,8 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- *   
+ *
+ *
  ****************************************************************************************
  */
 
@@ -136,6 +150,10 @@
 #define DEBUG_USB_CHARGER_FSM                   (0)
 #endif
 
+#ifndef DEBUG_USB_CHARGER_PRINT
+#define DEBUG_USB_CHARGER_PRINT                 (0)
+#endif
+
 #ifndef USB_CHARGER_TIMING_DEBUG
 #define USB_CHARGER_TIMING_DEBUG                (0)
 #endif
@@ -181,20 +199,36 @@
 
 /* ---------------------------------------------------------------------------------------------- */
 
+
+/* ------------------------------------------ Flash --------------------------------------------- */
+#ifndef FLASH_DEBUG
+#define FLASH_DEBUG                             (0)     // Requires GPIO config.
+#endif
+
+#ifndef __DBG_QSPI_ENABLED
+#define __DBG_QSPI_ENABLED                      (0)
+#endif
+
 /* ---------------------------------------------------------------------------------------------- */
+
 
 /* ------------------------------------------ Common -------------------------------------------- */
 #ifndef CMN_TIMING_DEBUG
-#define CMN_TIMING_DEBUG                       (0)     // Requires GPIO config.
+#define CMN_TIMING_DEBUG                        (0)     // Requires GPIO config.
 #endif
 /* ---------------------------------------------------------------------------------------------- */
 
+/* -------------------------------------------- SPI --------------------------------------------- */
+#ifndef SPI_TIMING_DEBUG
+#define SPI_TIMING_DEBUG                        (0)     // Requires GPIO config.
+#endif
+/* ---------------------------------------------------------------------------------------------- */
 
 /* ------------------------------------ GPIO configuration -------------------------------------- */
 
 /* Enable/Disable GPIO pin assignment conflict detection
  */
-#define DEBUG_GPIO_ALLOC_MONITOR_ENABLED     (0)
+#define DEBUG_GPIO_ALLOC_MONITOR_ENABLED        (0)
 
 
 /* Exception handling debug configuration
@@ -447,12 +481,148 @@
 #endif
 
 
+/* Flash debug configuration
+ *
+ */
+#if (FLASH_DEBUG == 0)
+// Write page (initial configuration: low)
+#define FLASHDBG_PAGE_PROG_MODE_REG             *(volatile int *)0x20000000
+#define FLASHDBG_PAGE_PROG_SET_REG              *(volatile int *)0x20000000
+#define FLASHDBG_PAGE_PROG_RESET_REG            *(volatile int *)0x20000000
+#define FLASHDBG_PAGE_PROG_PIN                  (0)
+
+// Program page wait loop (initial configuration: low)
+#define FLASHDBG_PAGE_PROG_WL_MODE_REG          *(volatile int *)0x20000000
+#define FLASHDBG_PAGE_PROG_WL_SET_REG           *(volatile int *)0x20000000
+#define FLASHDBG_PAGE_PROG_WL_RESET_REG         *(volatile int *)0x20000000
+#define FLASHDBG_PAGE_PROG_WL_PIN               (0)
+
+// Program page wait loop - pending irq check (initial configuration: low)
+#define FLASHDBG_PAGE_PROG_WL_IRQ_MODE_REG      *(volatile int *)0x20000000
+#define FLASHDBG_PAGE_PROG_WL_IRQ_SET_REG       *(volatile int *)0x20000000
+#define FLASHDBG_PAGE_PROG_WL_IRQ_RESET_REG     *(volatile int *)0x20000000
+#define FLASHDBG_PAGE_PROG_WL_IRQ_PIN           (0)
+
+// Suspend op (initial configuration: low)
+#define FLASHDBG_SUSPEND_MODE_REG               *(volatile int *)0x20000000
+#define FLASHDBG_SUSPEND_SET_REG                *(volatile int *)0x20000000
+#define FLASHDBG_SUSPEND_RESET_REG              *(volatile int *)0x20000000
+#define FLASHDBG_SUSPEND_PIN                    (0)
+
+// Erase sector cmd (initial configuration: low)
+#define FLASHDBG_SECTOR_ERASE_MODE_REG          *(volatile int *)0x20000000
+#define FLASHDBG_SECTOR_ERASE_SET_REG           *(volatile int *)0x20000000
+#define FLASHDBG_SECTOR_ERASE_RESET_REG         *(volatile int *)0x20000000
+#define FLASHDBG_SECTOR_ERASE_PIN               (0)
+
+// Notify task (initial configuration: low)
+#define FLASHDBG_TASK_NOTIFY_MODE_REG           *(volatile int *)0x20000000
+#define FLASHDBG_TASK_NOTIFY_SET_REG            *(volatile int *)0x20000000
+#define FLASHDBG_TASK_NOTIFY_RESET_REG          *(volatile int *)0x20000000
+#define FLASHDBG_TASK_NOTIFY_PIN                (0)
+
+// Suspend action (low level) (initial configuration: low)
+#define FLASHDBG_SUSPEND_ACTION_MODE_REG        *(volatile int *)0x20000000
+#define FLASHDBG_SUSPEND_ACTION_SET_REG         *(volatile int *)0x20000000
+#define FLASHDBG_SUSPEND_ACTION_RESET_REG       *(volatile int *)0x20000000
+#define FLASHDBG_SUSPEND_ACTION_PIN             (0)
+
+// Resume op (initial configuration: low)
+#define FLASHDBG_RESUME_MODE_REG                *(volatile int *)0x20000000
+#define FLASHDBG_RESUME_SET_REG                 *(volatile int *)0x20000000
+#define FLASHDBG_RESUME_RESET_REG               *(volatile int *)0x20000000
+#define FLASHDBG_RESUME_PIN                     (0)
+
+#else
+
+// Write page (initial configuration: low)
+#define FLASHDBG_PAGE_PROG_MODE_REG             GPIO->P30_MODE_REG
+#define FLASHDBG_PAGE_PROG_SET_REG              GPIO->P3_SET_DATA_REG
+#define FLASHDBG_PAGE_PROG_RESET_REG            GPIO->P3_RESET_DATA_REG
+#define FLASHDBG_PAGE_PROG_PIN                  (1 << 0)
+
+// Program page wait loop (initial configuration: low)
+#define FLASHDBG_PAGE_PROG_WL_MODE_REG          GPIO->P31_MODE_REG
+#define FLASHDBG_PAGE_PROG_WL_SET_REG           GPIO->P3_SET_DATA_REG
+#define FLASHDBG_PAGE_PROG_WL_RESET_REG         GPIO->P3_RESET_DATA_REG
+#define FLASHDBG_PAGE_PROG_WL_PIN               (1 << 1)
+
+// Program page wait loop - pending irq check (initial configuration: low)
+#define FLASHDBG_PAGE_PROG_WL_IRQ_MODE_REG      GPIO->P32_MODE_REG
+#define FLASHDBG_PAGE_PROG_WL_IRQ_SET_REG       GPIO->P3_SET_DATA_REG
+#define FLASHDBG_PAGE_PROG_WL_IRQ_RESET_REG     GPIO->P3_RESET_DATA_REG
+#define FLASHDBG_PAGE_PROG_WL_IRQ_PIN           (1 << 2)
+
+// Suspend op (initial configuration: low)
+#define FLASHDBG_SUSPEND_MODE_REG               GPIO->P33_MODE_REG
+#define FLASHDBG_SUSPEND_SET_REG                GPIO->P3_SET_DATA_REG
+#define FLASHDBG_SUSPEND_RESET_REG              GPIO->P3_RESET_DATA_REG
+#define FLASHDBG_SUSPEND_PIN                    (1 << 3)
+
+// Erase sector cmd (initial configuration: low)
+#define FLASHDBG_SECTOR_ERASE_MODE_REG          GPIO->P34_MODE_REG
+#define FLASHDBG_SECTOR_ERASE_SET_REG           GPIO->P3_SET_DATA_REG
+#define FLASHDBG_SECTOR_ERASE_RESET_REG         GPIO->P3_RESET_DATA_REG
+#define FLASHDBG_SECTOR_ERASE_PIN               (1 << 4)
+
+// Notify task (initial configuration: low)
+#define FLASHDBG_TASK_NOTIFY_MODE_REG           GPIO->P35_MODE_REG
+#define FLASHDBG_TASK_NOTIFY_SET_REG            GPIO->P3_SET_DATA_REG
+#define FLASHDBG_TASK_NOTIFY_RESET_REG          GPIO->P3_RESET_DATA_REG
+#define FLASHDBG_TASK_NOTIFY_PIN                (1 << 5)
+
+// Suspend action (low level) (initial configuration: low)
+#define FLASHDBG_SUSPEND_ACTION_MODE_REG        GPIO->P36_MODE_REG
+#define FLASHDBG_SUSPEND_ACTION_SET_REG         GPIO->P3_SET_DATA_REG
+#define FLASHDBG_SUSPEND_ACTION_RESET_REG       GPIO->P3_RESET_DATA_REG
+#define FLASHDBG_SUSPEND_ACTION_PIN             (1 << 6)
+
+// Resume op (initial configuration: low)
+#define FLASHDBG_RESUME_MODE_REG                GPIO->P37_MODE_REG
+#define FLASHDBG_RESUME_SET_REG                 GPIO->P3_SET_DATA_REG
+#define FLASHDBG_RESUME_RESET_REG               GPIO->P3_RESET_DATA_REG
+#define FLASHDBG_RESUME_PIN                     (1 << 7)
+
+#endif
+
+
 /* Enables the logging of stack (RW) heap memories usage.
  *
  * The feature shall only be enabled in development/debug mode
  */
 #ifndef dg_configLOG_BLE_STACK_MEM_USAGE
 #define dg_configLOG_BLE_STACK_MEM_USAGE                (0)
+#endif
+
+/**
+ * \brief Enables BLE diagnostic signals.
+ *
+ * There are 4 diagnostic signal configurations that user can choose from. To enable a specific
+ * configuration, simply define dg_configBLE_DIAGN_CONFIG with the perspective configuration ID.
+ * Configuration ID 0 disables BLE diagnostics.
+ *
+ * ------------------------------------------------------------------------------------------------------
+ * | Signal     | Pin   | Config 1              | Config 2      | Config 3              | Config 4      |
+ * ------------------------------------------------------------------------------------------------------
+ * | ble_diag0  | P2_0  | -                     | -             | -                     | -             |
+ * ------------------------------------------------------------------------------------------------------
+ * | ble_diag1  | P2_1  | -                     | -             | -                     | -             |
+ * ------------------------------------------------------------------------------------------------------
+ * | ble_diag2  | P2_2  | -                     | -             | -                     | -             |
+ * ------------------------------------------------------------------------------------------------------
+ * | ble_diag3  | P1_0  | -                     | -             | -                     | -             |
+ * ------------------------------------------------------------------------------------------------------
+ * | ble_diag4  | P1_1  | ble_slp_irq           | radcntl_txen  | radcntl_txen          | radcntl_txen  |
+ * ------------------------------------------------------------------------------------------------------
+ * | ble_diag5  | P1_2  | ble_cscnt_irq         | radcntl_rxen  | rf_tx_en              | radcntl_rxen  |
+ * ------------------------------------------------------------------------------------------------------
+ * | ble_diag6  | P1_3  | ble_finetgtim_irq     | rf_rx_en      | rf_tx_data            | ble_rx_irq    |
+ * ------------------------------------------------------------------------------------------------------
+ * | ble_diag7  | P2_3  | ble_event_irq         | rf_rx_data    | rf_tx_data_valid      | ble_event_irq |
+ * ------------------------------------------------------------------------------------------------------
+ */
+#ifndef dg_configBLE_DIAGN_CONFIG
+#define dg_configBLE_DIAGN_CONFIG                   (0)
 #endif
 
 #endif /* BSP_DEBUG_H_ */

@@ -40,7 +40,8 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- *   
+ *
+ *
  *****************************************************************************************
  */
 
@@ -118,20 +119,27 @@ static inline bool in_interrupt(void)
  */
 extern const int8_t __dialog_interrupt_priorities[];
 
+
+#if (dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A) && (dg_configUSE_AUTO_CHIP_DETECTION != 1)
+        #define LAST_IRQn PLL_LOCK_IRQn
+#else
+        #define LAST_IRQn RESERVED31_IRQn
+#endif
+
 /*
  * Following macros allow easy way to build table with interrupt priorities.
  * See example in set_interrupt_priorities function description.
  */
 #define INTERRUPT_PRIORITY_CONFIG_START(name) const int8_t name[] = {
-#define PRIORITY_0      (RESERVED31_IRQn + 1)
-#define PRIORITY_1      (RESERVED31_IRQn + 2)
-#define PRIORITY_2      (RESERVED31_IRQn + 3)
-#define PRIORITY_3      (RESERVED31_IRQn + 4)
-#define PRIORITY_TABLE_END (RESERVED31_IRQn + 5)
+#define PRIORITY_0      (LAST_IRQn + 1)
+#define PRIORITY_1      (LAST_IRQn + 2)
+#define PRIORITY_2      (LAST_IRQn + 3)
+#define PRIORITY_3      (LAST_IRQn + 4)
+#define PRIORITY_TABLE_END (LAST_IRQn + 5)
 #define INTERRUPT_PRIORITY_CONFIG_END PRIORITY_TABLE_END };
 
 #ifdef __cplusplus
-extern }
+}
 #endif
 
 #endif /* INTERRUPTS_H_ */

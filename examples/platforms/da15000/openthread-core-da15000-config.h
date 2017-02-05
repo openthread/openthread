@@ -26,18 +26,15 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <platform/misc.h>
-#include <openthread-types.h>
-#include "sdk_defs.h"
+/**
+ * @file custom_config_qspi.h
+ * Custom configuration file for FreeRTOS applications executing from QSPI.
+ */
 
-void otPlatReset(otInstance *aInstance)
-{
-    (void)aInstance;
-    WDOG->WATCHDOG_CTRL_REG |= (1 << (WDOG_WATCHDOG_CTRL_REG_NMI_RST_Pos));
-}
+#ifndef CORE_DA15000_CONFIG_H_
+#define CORE_DA15000_CONFIG_H_
 
-otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
-{
-    (void)aInstance;
-    return kPlatResetReason_PowerOn;
-}
+#define SETTINGS_CONFIG_BASE_ADDRESS 		(0x7B000)
+
+
+#endif
