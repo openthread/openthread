@@ -28,21 +28,194 @@
 
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
 
 #include <platform/diag.h>
+#include <platform/alarm.h>
+#include <platform/radio.h>
+
+#include <common/code_utils.hpp>
+#include <common/logging.hpp>
+
+struct PlatformDiagCommand
+{
+    const char *mName;
+    void (*mCommand)(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
+};
+
+struct PlatformDiagMessage
+{
+    const char mMessageDescriptor[11];
+    uint8_t mChannel;
+    int16_t mID;
+    uint32_t mCnt;
+};
 
 /**
- * Diagnostics mode flag.
+ * Diagnostics mode variables.
  *
  */
 static bool sDiagMode = false;
+static bool sListen = false;
+static bool sTransmitActive = false;
+static uint8_t sChannel = 20;
+static int8_t sTxPower = 0;
+static uint32_t sTxPeriod = 1;
+static int32_t sTxCount = 0;
+static int32_t sTxRequestedCount = 1;
+static int16_t sID = -1;
+static struct PlatformDiagMessage sDiagMessage = {.mMessageDescriptor = "DiagMessage", .mChannel = 0, .mID = 0, .mCnt = 0};
 
-void otPlatDiagProcess(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+static ThreadError parseLong(char *argv, long *aValue)
 {
-    // Add more plarform specific diagnostics features here.
-    snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", argv[0]);
-    (void)argc;
+    char *endptr;
+    *aValue = strtol(argv, &endptr, 0);
+    return (*endptr == '\0') ? kThreadError_None : kThreadError_Parse;
+}
+
+static void appendErrorResult(ThreadError aError, char *aOutput, size_t aOutputMaxLen)
+{
+    if (aError != kThreadError_None)
+    {
+        snprintf(aOutput, aOutputMaxLen, "failed\r\nstatus %#x\r\n", aError);
+    }
+}
+
+static void processListen(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+{
+    (void) aInstance;
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(otPlatDiagModeGet(), error = kThreadError_InvalidState);
+
+    if (argc == 0)
+    {
+        snprintf(aOutput, aOutputMaxLen, "listen: %s\r\n", sListen == true ? "yes" : "no");
+    }
+    else
+    {
+        long value;
+
+        SuccessOrExit(error = parseLong(argv[0], &value));
+        sListen = (bool)(value);
+        snprintf(aOutput, aOutputMaxLen, "set listen to %s\r\nstatus 0x%02x\r\n", sListen == true ? "yes" : "no", error);
+    }
+
+exit:
+    appendErrorResult(error, aOutput, aOutputMaxLen);
+}
+
+static void processID(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+{
+    (void) aInstance;
+
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(otPlatDiagModeGet(), error = kThreadError_InvalidState);
+
+    if (argc == 0)
+    {
+        snprintf(aOutput, aOutputMaxLen, "ID: %" PRId16 "\r\n", sID);
+    }
+    else
+    {
+        long value;
+
+        SuccessOrExit(error = parseLong(argv[0], &value));
+        VerifyOrExit(value >= 0, error = kThreadError_InvalidArgs);
+        sID = (int16_t)(value);
+        snprintf(aOutput, aOutputMaxLen, "set ID to %" PRId16 "\r\nstatus 0x%02x\r\n", sID, error);
+    }
+
+exit:
+    appendErrorResult(error, aOutput, aOutputMaxLen);
+}
+
+static void processTransmit(otInstance *aInstance, int argc, char *argv[], char *aOutput,
+                            size_t aOutputMaxLen)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(otPlatDiagModeGet(), error = kThreadError_InvalidState);
+
+    if (argc == 0)
+    {
+        snprintf(aOutput, aOutputMaxLen, "transmit will send %" PRId32 " diagnostic messages with %" PRIu32
+                 " ms interval\r\nstatus 0x%02x\r\n",
+                 sTxRequestedCount, sTxPeriod, error);
+    }
+    else if (strcmp(argv[0], "stop") == 0)
+    {
+        otPlatAlarmStop(aInstance);
+        snprintf(aOutput, aOutputMaxLen, "diagnostic message transmission is stopped\r\nstatus 0x%02x\r\n", error);
+        sTransmitActive = false;
+    }
+    else if (strcmp(argv[0], "start") == 0)
+    {
+        otPlatAlarmStop(aInstance);
+        sTransmitActive = true;
+        sTxCount = sTxRequestedCount;
+        uint32_t now = otPlatAlarmGetNow();
+        otPlatAlarmStartAt(aInstance, now, sTxPeriod);
+        snprintf(aOutput, aOutputMaxLen, "sending %" PRId32 " diagnostic messages with %" PRIu32
+                 " ms interval\r\nstatus 0x%02x\r\n",
+                 sTxRequestedCount, sTxPeriod, error);
+    }
+    else if (strcmp(argv[0], "interval") == 0)
+    {
+        long value;
+
+        VerifyOrExit(argc == 2, error = kThreadError_InvalidArgs);
+
+        SuccessOrExit(error = parseLong(argv[1], &value));
+        VerifyOrExit(value > 0, error = kThreadError_InvalidArgs);
+        sTxPeriod = (uint32_t)(value);
+        snprintf(aOutput, aOutputMaxLen, "set diagnostic messages interval to %" PRIu32 " ms\r\nstatus 0x%02x\r\n", sTxPeriod,
+                 error);
+    }
+    else if (strcmp(argv[0], "count") == 0)
+    {
+        long value;
+
+        VerifyOrExit(argc == 2, error = kThreadError_InvalidArgs);
+
+        SuccessOrExit(error = parseLong(argv[1], &value));
+        VerifyOrExit((value > 0) || (value == -1), error = kThreadError_InvalidArgs);
+        sTxRequestedCount = (uint32_t)(value);
+        snprintf(aOutput, aOutputMaxLen, "set diagnostic messages count to %" PRId32 "\r\nstatus 0x%02x\r\n", sTxRequestedCount,
+                 error);
+    }
+
+exit:
+    appendErrorResult(error, aOutput, aOutputMaxLen);
+}
+
+const struct PlatformDiagCommand sCommands[] =
+{
+    {"listen", &processListen },
+    {"transmit", &processTransmit },
+    {"id", &processID }
+};
+
+void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+{
+    uint32_t i;
+
+    for (i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
+    {
+        if (strcmp(argv[0], sCommands[i].mName) == 0)
+        {
+            sCommands[i].mCommand(aInstance, argc - 1, argc > 1 ? &argv[1] : NULL, aOutput, aOutputMaxLen);
+            break;
+        }
+    }
+
+    if (i == sizeof(sCommands) / sizeof(sCommands[0]))
+    {
+        snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", argv[0]);
+    }
 }
 
 void otPlatDiagModeSet(bool aMode)
@@ -53,4 +226,84 @@ void otPlatDiagModeSet(bool aMode)
 bool otPlatDiagModeGet()
 {
     return sDiagMode;
+}
+
+void otPlatDiagChannelSet(uint8_t aChannel)
+{
+    sChannel = aChannel;
+}
+
+void otPlatDiagTxPowerSet(int8_t aTxPower)
+{
+    sTxPower = aTxPower;
+}
+
+void otPlatDiagRadioReceived(otInstance *aInstance, RadioPacket *aFrame, ThreadError aError)
+{
+    (void) aInstance;
+
+    if (sListen && (aError == kThreadError_None))
+    {
+        if (aFrame->mLength == sizeof(struct PlatformDiagMessage))
+        {
+            struct PlatformDiagMessage *message = (struct PlatformDiagMessage *)aFrame->mPsdu;
+
+            if (strncmp(message->mMessageDescriptor, "DiagMessage", 11) == 0)
+            {
+                otPlatLog(kLogLevelDebg, kLogRegionPlatform,
+                          "{\"Frame\":{"
+                          "\"LocalChannel\":%u ,"
+                          "\"RemoteChannel\":%u,"
+                          "\"CNT\":%" PRIu32 ","
+                          "\"LocalID\":%" PRId16 ","
+                          "\"RemoteID\":%" PRId16 ","
+                          "\"RSSI\":%d"
+                          "}}\r\n",
+                          aFrame->mChannel,
+                          message->mChannel,
+                          message->mCnt,
+                          sID,
+                          message->mID,
+                          aFrame->mPower
+                         );
+            }
+        }
+    }
+}
+
+void otPlatDiagAlarmCallback(otInstance *aInstance)
+{
+    if (sTransmitActive)
+    {
+        if ((sTxCount > 0) || (sTxCount == -1))
+        {
+            RadioPacket *sTxPacket = otPlatRadioGetTransmitBuffer(aInstance);
+
+            sTxPacket->mLength = sizeof(struct PlatformDiagMessage);
+            sTxPacket->mChannel = sChannel;
+            sTxPacket->mPower = sTxPower;
+
+            sDiagMessage.mChannel = sTxPacket->mChannel;
+            sDiagMessage.mID = sID;
+
+            memcpy(sTxPacket->mPsdu, &sDiagMessage, sizeof(struct PlatformDiagMessage));
+            otPlatRadioTransmit(aInstance, sTxPacket);
+
+            sDiagMessage.mCnt++;
+
+            if (sTxCount != -1)
+            {
+                sTxCount--;
+            }
+
+            uint32_t now = otPlatAlarmGetNow();
+            otPlatAlarmStartAt(aInstance, now, sTxPeriod);
+        }
+        else
+        {
+            sTransmitActive = false;
+            otPlatAlarmStop(aInstance);
+            otPlatLog(kLogLevelDebg, kLogRegionPlatform, "Transmit done");
+        }
+    }
 }
