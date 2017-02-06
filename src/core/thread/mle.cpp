@@ -1163,17 +1163,13 @@ exit:
     return error;
 }
 
-ThreadError Mle::AppendPendingTimestamp(Message &aMessage, bool aCouldUseLocal)
+ThreadError Mle::AppendPendingTimestamp(Message &aMessage)
 {
     ThreadError error;
     PendingTimestampTlv timestampTlv;
     const MeshCoP::Timestamp *timestamp;
 
-    if ((timestamp = mNetif.GetPendingDataset().GetNetwork().GetTimestamp()) == NULL && aCouldUseLocal)
-    {
-        timestamp = mNetif.GetPendingDataset().GetLocal().GetTimestamp();
-    }
-
+    timestamp = mNetif.GetPendingDataset().GetNetwork().GetTimestamp();
     VerifyOrExit(timestamp && timestamp->GetSeconds() != 0, error = kThreadError_None);
 
     timestampTlv.Init();
@@ -1485,10 +1481,7 @@ ThreadError Mle::SendChildIdRequest(void)
 
     SuccessOrExit(error = AppendTlvRequest(*message, tlvs, sizeof(tlvs)));
     SuccessOrExit(error = AppendActiveTimestamp(*message, true));
-    // SuccessOrExit(error = AppendPendingTimestamp(*message, false));
-    // we should not include the Local Pending Timestamp TLV in Child ID Request, this is a workaround for
-    // Certification test 9.2.15 and 9.2.16 (https://github.com/openthread/openthread/issues/918)
-    SuccessOrExit(error = AppendPendingTimestamp(*message, true));
+    SuccessOrExit(error = AppendPendingTimestamp(*message));
 
     memset(&destination, 0, sizeof(destination));
     destination.mFields.m16[0] = HostSwap16(0xfe80);
@@ -1521,7 +1514,7 @@ ThreadError Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandDataRequest));
     SuccessOrExit(error = AppendTlvRequest(*message, aTlvs, aTlvsLength));
     SuccessOrExit(error = AppendActiveTimestamp(*message, false));
-    SuccessOrExit(error = AppendPendingTimestamp(*message, false));
+    SuccessOrExit(error = AppendPendingTimestamp(*message));
 
     SuccessOrExit(error = SendMessage(*message, aDestination));
 
@@ -2587,12 +2580,6 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
         {
             aMessage.Read(offset, sizeof(tlv), &tlv);
             mNetif.GetPendingDataset().Set(pendingTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength());
-        }
-        // this is a workaround for Certification test 9.2.15 and 9.2.16 (https://github.com/openthread/openthread/issues/918)
-        else if (mNetif.GetPendingDataset().GetNetwork().GetTimestamp() == NULL &&
-                 mNetif.GetPendingDataset().GetLocal().GetTimestamp() != NULL)
-        {
-            mNetif.GetPendingDataset().Set(mNetif.GetPendingDataset().GetLocal());
         }
     }
     else
