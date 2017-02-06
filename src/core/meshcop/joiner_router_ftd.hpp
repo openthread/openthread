@@ -90,6 +90,10 @@ private:
                                     const otMessageInfo *aMessageInfo);
     void HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
+    static void HandleJoinerEntrustResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                            const otMessageInfo *aMessageInfo, ThreadError result);
+    void HandleJoinerEntrustResponse(Coap::Header *aHeader, Message *aMessage,
+                                     const Ip6::MessageInfo *aMessageInfo, ThreadError result);
     ThreadError SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo);
 
     ThreadError GetBorderAgentRloc(uint16_t &aRloc);

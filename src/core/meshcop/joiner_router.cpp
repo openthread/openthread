@@ -397,7 +397,8 @@ ThreadError JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo
 
     messageInfo = aMessageInfo;
     messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo,
+                                                             &JoinerRouter::HandleJoinerEntrustResponse, this));
 
     otLogInfoMeshCoP("Sent joiner entrust length = %d", message->GetLength());
     otLogCertMeshCoP("[THCI] direction=send | type=JOIN_ENT.ntf");
@@ -411,6 +412,31 @@ exit:
 
     otLogFuncExitErr(error);
     return error;
+}
+
+void JoinerRouter::HandleJoinerEntrustResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                               const otMessageInfo *aMessageInfo, ThreadError aResult)
+{
+    static_cast<JoinerRouter *>(aContext)->HandleJoinerEntrustResponse(static_cast<Coap::Header *>(aHeader),
+                                                                       static_cast<Message *>(aMessage),
+                                                                       static_cast<const Ip6::MessageInfo *>(aMessageInfo),
+                                                                       aResult);
+}
+
+void JoinerRouter::HandleJoinerEntrustResponse(Coap::Header *aHeader, Message *aMessage,
+                                               const Ip6::MessageInfo *aMessageInfo, ThreadError aResult)
+{
+    (void)aMessageInfo;
+
+    VerifyOrExit(aResult == kThreadError_None && aHeader != NULL && aMessage != NULL, ;);
+
+    VerifyOrExit(aHeader->GetCode() == kCoapResponseChanged, ;);
+
+    otLogInfoMeshCoP("Receive joiner entrust response");
+    otLogCertMeshCoP("[THCI] direction=recv | type=JOIN_ENT.rsp");
+
+exit:
+    return ;
 }
 
 }  // namespace Dtls
