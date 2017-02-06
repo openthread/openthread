@@ -38,21 +38,21 @@
 #include "hw_gpio.h"
 #include "platform-da15000.h"
 
-static bool s_is_running = false;
-static uint32_t s_alarm = 0;
-static uint32_t s_counter;
-volatile bool s_alarm_fired = false;
+static bool sIsRunning = false;
+static uint32_t sAlarm = 0;
+static uint32_t sCounter;
+volatile bool sAlarmFired = false;
 
 static void timer0_interrupt_cb(void)
 {
-    s_counter++;
+    sCounter++;
 }
 
 void da15000AlarmProcess(otInstance *aInstance)
 {
-    if ((s_is_running) && (s_alarm <= s_counter))
+    if ((sIsRunning) && (sAlarm <= sCounter))
     {
-        s_is_running = false;
+        sIsRunning = false;
         otPlatAlarmFired(aInstance);
     }
 }
@@ -70,24 +70,24 @@ void da15000AlarmInit(void)
 
 uint32_t otPlatAlarmGetNow(void)
 {
-    return s_counter;
+    return sCounter;
 }
 
 void otPlatAlarmStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
 {
     (void)aInstance;
-    s_alarm = t0 + dt;
-    s_is_running = true;
+    sAlarm = t0 + dt;
+    sIsRunning = true;
 
-    if (s_counter == 0)
+    if (sCounter == 0)
     {
         hw_timer0_enable();
     }
 
 
-    if (s_is_running == false)
+    if (sIsRunning == false)
     {
-        s_is_running = true;
+        sIsRunning = true;
     }
 
     hw_timer0_unfreeze();
@@ -96,7 +96,7 @@ void otPlatAlarmStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
 void otPlatAlarmStop(otInstance *aInstance)
 {
     (void)aInstance;
-    s_is_running = false;
+    sIsRunning = false;
     hw_timer0_freeze();
 }
 

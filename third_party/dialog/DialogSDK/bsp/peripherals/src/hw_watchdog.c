@@ -38,6 +38,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ *
  ****************************************************************************************
  */
 #include <stdio.h>
@@ -131,7 +132,7 @@ __RETAINED_CODE void hw_watchdog_handle_int(unsigned long *exception_args)
 
     if (REG_GETF(CRG_TOP, SYS_STAT_REG, DBG_IS_ACTIVE))
     {
-        __asm("BKPT #0\n");
+        __BKPT(0);
     }
     else
     {

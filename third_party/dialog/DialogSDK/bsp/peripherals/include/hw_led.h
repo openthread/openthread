@@ -5,6 +5,7 @@
  * \{
  * \addtogroup LED
  * \{
+ * \brief LED Controller
  */
 
 /**
@@ -38,13 +39,14 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ *
  *****************************************************************************************
  */
 
 #ifndef HW_LED_H_
 #define HW_LED_H_
 
-#include <black_orca.h>
+#include <sdk_defs.h>
 
 /**
  * \brief Source for LED1

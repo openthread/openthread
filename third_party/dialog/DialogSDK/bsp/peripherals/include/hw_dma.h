@@ -5,6 +5,7 @@
  * \{
  * \addtogroup DMA
  * \{
+ * \brief DMA Controller
  */
 
 /**
@@ -38,6 +39,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ *
  ****************************************************************************************
  */
 
@@ -47,7 +49,7 @@
 #if dg_configUSE_HW_DMA
 
 #include <stdint.h>
-#include <black_orca.h>
+#include <sdk_defs.h>
 
 /*
 * ENUMERATION DEFINITIONS
@@ -256,6 +258,56 @@ typedef struct {
  *
  */
 void hw_dma_channel_initialization(DMA_setup *channel_setup);
+
+/**
+ * \brief Update DMA source address and length
+ *
+ * When DMA is configured for some peripheral, it could be enough to setup only source address
+ * and data length. Other parameters most likely do not change for same type of transmission
+ * for values that ware specified in \p hw_dma_channel_initialization().
+ * This function should speed up DMA start time when only address and size changes from previous
+ * transmission.
+ *
+ * \param [in] channel DMA channel number to modify
+ * \param [in] addr new source address
+ * \param [in] length new data transfer length
+ * \param [in] cb function to call after transmission finishes
+ *
+ */
+void hw_dma_channel_update_source(HW_DMA_CHANNEL channel, void* addr, uint16_t length,
+                                                                        hw_dma_transfer_cb cb);
+
+/**
+ * \brief Update DMA destination address and length
+ *
+ * When DMA is configured for some peripheral, it could be enough to setup only destination address
+ * and data length. Other parameters most likely do not change for same type of transmission
+ * for values that ware specified in \p hw_dma_channel_initialization().
+ * This function should speed up DMA start time when only address and size changes from previous
+ * transmission.
+ *
+ * \param [in] channel DMA channel number to modify
+ * \param [in] addr new source address
+ * \param [in] length new data transfer length
+ * \param [in] cb function to call after transmission finishes
+ *
+ */
+void hw_dma_channel_update_destination(HW_DMA_CHANNEL channel, void *addr, uint16_t length,
+                                                                        hw_dma_transfer_cb cb);
+
+/**
+ * \brief Update DMA interrupt trigger index
+ *
+ * DMA channel can trigger an interrupt after arbitrary transfer has finished.
+ * Usually interrupt is triggered after transmission finishes but for cyclic mode,
+ * where DMA never stops, it is convenient trigger interrupt at other times.
+ * This function allows to specify the number of transfers after which the interrupt is triggered.
+ *
+ * \param [in] channel DMA channel number to modify
+ * \param [in] int_ix Number of transfers until the interrupt is triggered
+ *
+ */
+void hw_dma_channel_update_int_ix(HW_DMA_CHANNEL channel, uint16_t int_ix);
 
 /**
  * \brief Enable or disable a DMA channel

@@ -5,6 +5,7 @@
  * \{
  * \addtogroup RF
  * \{
+ * \brief Radio Control
  */
 
 /**
@@ -58,14 +59,14 @@
  *
  * @note
  * ~~~{.c}
- * uint32_t hw_rf_get_start_iff_time(void)
+ * uint64_t hw_rf_get_start_iff_time(void)
  * ~~~
  *
  * @note Called to get the time when IFF calibration starts
  *
  * @note
  * ~~~{.c}
- * bool hw_rf_check_iff_timeout(uint32_t start_time)
+ * bool hw_rf_check_iff_timeout(uint64_t start_time)
  * ~~~
  *
  * @note Called to check if IFF calibration has timed-out (i.e. took too long). It takes argument the
@@ -97,7 +98,8 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- *   
+ *
+ *
  *****************************************************************************************
  */
 #ifndef HW_RF_H_
@@ -106,13 +108,32 @@
 #if dg_configUSE_HW_RF
 
 #include <stdbool.h>
-#include "black_orca.h"
+#include "sdk_defs.h"
 
 #include "hw_cpm.h"
 
 #if dg_configFEM == FEM_SKY66112_11
 #include "hw_fem_sky66112-11.h"
 #endif
+
+typedef struct __attribute__ ((__packed__)) {
+        uint8_t tx_power_ble: 4;
+        uint8_t tx_power_ftdf: 4;
+} hw_rf_tx_power_luts_t;
+
+extern hw_rf_tx_power_luts_t rf_tx_power_luts;
+
+/**
+ * \brief Power LUT setting
+ *
+ */
+typedef enum {
+        HW_RF_PWR_LUT_0dbm = 0,   /**< TX PWR attenuation 0 dbm */
+        HW_RF_PWR_LUT_m1dbm = 1,  /**< TX PWR attenuation -1 dbm */
+        HW_RF_PWR_LUT_m2dbm = 2,  /**< TX PWR attenuation -2 dbm */
+        HW_RF_PWR_LUT_m3dbm = 3,  /**< TX PWR attenuation -3 dbm */
+        HW_RF_PWR_LUT_m4dbm = 4,  /**< TX PWR attenuation -4 dbm */
+} HW_RF_PWR_LUT_SETTING;
 
 /**
  * \brief Initializes RF system, and performs the initial calibration
@@ -122,16 +143,11 @@
  * \return True, if iff calib is successful, false otherwise
  */
 bool hw_rf_system_init(void);
-/**
 
+/**
  * \brief Sets parameters according to their recommended values.
  */
 void hw_rf_set_recommended_settings(void);
-
-/**
- * \brief (Re)calibrates Intermediate Frequency Filter (IFF).
- */
-bool hw_rf_iff_calibration(void);
 
 /**
  * \brief (Re)calibrates RF DC offset.
@@ -161,7 +177,70 @@ bool hw_rf_calibration(void);
  * \return True if calibration was successful, false if not (i.e. iff calib hang)
  *
  */
-bool hw_rf_start_calibration();
+bool hw_rf_start_calibration(void);
+
+#if dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A
+/**
+ * \brief Set TX Power
+ *
+ * This actually sets the index of the RF_TX_PWER_LUT_X_REG to use.
+ *
+ * \param [in] lut The TX power attenuation setting
+ *
+ * \warning Do not call this function before recommended settings are applied
+ */
+void hw_rf_set_tx_power(HW_RF_PWR_LUT_SETTING lut);
+#else
+
+#ifdef CONFIG_USE_BLE
+/**
+ * \brief Set TX Power for BLE
+ *
+ * This actually sets the index of the RF_TX_PWR_LUT_X_REG to use.
+ *
+ * \param [in] lut The TX power attenuation setting
+ *
+ * \warning Do not call this function before recommended settings are applied
+ */
+void hw_rf_set_tx_power_ble(HW_RF_PWR_LUT_SETTING lut);
+#endif
+
+#ifdef CONFIG_USE_FTDF
+/**
+ * \brief Set TX Power for FTDF
+ *
+ * This actually sets the index of the RF_TX_PWR_LUT_X_REG to use.
+ *
+ * \param [in] lut The TX power attenuation setting
+ *
+ * \warning Do not call this function before recommended settings are applied
+ */
+void hw_rf_set_tx_power_ftdf(HW_RF_PWR_LUT_SETTING lut);
+#endif
+
+/**
+ * \brief Set TX Power
+ *
+ * This actually sets the index of the RF_TX_PWR_LUT_X_REG to use.
+ *
+ * \param [in] lut The TX power attenuation setting
+ *
+ * \deprecated This function is deprecated since it can only set
+ *  BLE and FTDF TX power with the same value. Use hw_rf_set_tx_power_ble()
+ *  and hw_rf_set_tx_power_ftdf() instead.
+ *
+ * \warning Do not call this function before recommended settings are applied
+ */
+static inline void hw_rf_set_tx_power(HW_RF_PWR_LUT_SETTING lut)
+{
+#ifdef CONFIG_USE_BLE
+        hw_rf_set_tx_power_ble(lut);
+#endif
+#ifdef CONFIG_USE_FTDF
+        hw_rf_set_tx_power_ftdf(lut);
+#endif
+}
+#endif
 
 /**
  * \brief Turns on RF module.
@@ -170,33 +249,39 @@ static inline void hw_rf_poweron(void)  __attribute__((always_inline));
 
 static inline void hw_rf_poweron(void)
 {
-#if ( (dg_configUSE_BOD == 1) && (dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A) \
-        && (dg_configBLACK_ORCA_IC_STEP <= BLACK_ORCA_IC_STEP_D))
-        hw_cpm_deactivate_bod_protection();
-#endif
+        if ((dg_configUSE_BOD == 1) && ((dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A)
+                || ((dg_configUSE_AUTO_CHIP_DETECTION == 1) && (CHIP_IS_AE)))) {
+                hw_cpm_deactivate_bod_protection();
+        }
 
         /* If PD_RAD is up, make sure to power it down to issue a reset */
         if (REG_GETF(CRG_TOP, SYS_STAT_REG, RAD_IS_UP)) {
-#if ( (dg_configUSE_BOD == 1) && (dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A) \
-        && (dg_configBLACK_ORCA_IC_STEP <= BLACK_ORCA_IC_STEP_D))
-                hw_cpm_delay_usec(30);
-#endif
+                if ((dg_configUSE_BOD == 1) && ((dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A)
+                        || ((dg_configUSE_AUTO_CHIP_DETECTION == 1) && (CHIP_IS_AE)))) {
+                        hw_cpm_delay_usec(30);
+                }
+                GLOBAL_INT_DISABLE();
                 REG_SET_BIT(CRG_TOP, PMU_CTRL_REG, RADIO_SLEEP);
+                GLOBAL_INT_RESTORE();
                 while (REG_GETF(CRG_TOP, SYS_STAT_REG, RAD_IS_DOWN) == 0x0);
         }
 
+        GLOBAL_INT_DISABLE();
         REG_CLR_BIT(CRG_TOP, PMU_CTRL_REG, RADIO_SLEEP);
+        GLOBAL_INT_RESTORE();
         while (!REG_GETF(CRG_TOP, SYS_STAT_REG, RAD_IS_UP));
 
-#if ( (dg_configUSE_BOD == 1) && (dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A) \
-        && (dg_configBLACK_ORCA_IC_STEP <= BLACK_ORCA_IC_STEP_D))
+        if ((dg_configUSE_BOD == 1) && ((dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A)
+                || ((dg_configUSE_AUTO_CHIP_DETECTION == 1) && (CHIP_IS_AE)))) {
                 hw_cpm_delay_usec(30);
                 hw_cpm_activate_bod_protection();
-#endif
+        }
 
         // Enable the PLLdig/RFCU clock
+        GLOBAL_INT_DISABLE();
         REG_SET_BIT(CRG_TOP, CLK_RADIO_REG, RFCU_ENABLE);
         REG_SETF(CRG_TOP, CLK_RADIO_REG, RFCU_DIV, 1);
+        GLOBAL_INT_RESTORE();
 
 #if dg_configFEM == FEM_SKY66112_11
         hw_fem_start();
@@ -212,20 +297,22 @@ static inline void hw_rf_poweroff()
         hw_fem_stop();
 #endif
 
-#if ( (dg_configUSE_BOD == 1) && (dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A) \
-        && (dg_configBLACK_ORCA_IC_STEP <= BLACK_ORCA_IC_STEP_D))
-        hw_cpm_deactivate_bod_protection();
-        hw_cpm_delay_usec(30);
-#endif
+        if ((dg_configUSE_BOD == 1) && ((dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A)
+                || ((dg_configUSE_AUTO_CHIP_DETECTION == 1) && (CHIP_IS_AE)))) {
+                hw_cpm_deactivate_bod_protection();
+                hw_cpm_delay_usec(30);
+        }
 
+        GLOBAL_INT_DISABLE();
         REG_SET_BIT(CRG_TOP, PMU_CTRL_REG, RADIO_SLEEP);
+        GLOBAL_INT_RESTORE();
         while (!REG_GETF(CRG_TOP, SYS_STAT_REG, RAD_IS_DOWN));
 
-#if ( (dg_configUSE_BOD == 1) && (dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A) \
-        && (dg_configBLACK_ORCA_IC_STEP <= BLACK_ORCA_IC_STEP_D))
-        hw_cpm_delay_usec(30);
-        hw_cpm_activate_bod_protection();
-#endif
+        if ((dg_configUSE_BOD == 1) && ((dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A)
+                || ((dg_configUSE_AUTO_CHIP_DETECTION == 1) && (CHIP_IS_AE)))) {
+                hw_cpm_delay_usec(30);
+                hw_cpm_activate_bod_protection();
+        }
 }
 
 /**
@@ -260,7 +347,7 @@ __RETAINED_CODE void hw_rf_request_on(bool mode_ble);
  */
 void hw_rf_request_off(bool mode_ble);
 
-/*
+/**
  * \brief Start transmitting a continuous wave (unmodulated transmission)
  *
  * \param [in] mode is the mode to use. 1: BLE, 2 or 3: FTDF (0: Normal, use hw_rf_stop_*)
@@ -273,25 +360,11 @@ void hw_rf_request_off(bool mode_ble);
  */
 void hw_rf_start_continuous_wave(uint8_t mode, uint8_t ch);
 
-/*
+/**
  * \brief Stop transmitting a continuous wave (unmodulated transmission)
  *
  */
 void hw_rf_stop_continuous_wave(void);
-
-/*
- * \brief Set TX Power
- *
- * This actually sets the index of the RF_TX_PWER_LUT_X_REG to use.
- *
- * \param [in] lut The index of the LUT to use. 0 disables this functionality.
- *             1: 0dbm, 2: -1dbm, 3: -2dbm, 4: -3dbm, 5: -4dbm
- */
-static inline void hw_rf_set_tx_power(uint8_t lut)
-{
-        RFCU->RF_TX_PWR_REG = lut;
-}
-
 
 #endif /* dg_configUSE_HW_RF */
 

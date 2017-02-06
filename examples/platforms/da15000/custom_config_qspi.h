@@ -36,6 +36,9 @@
 
 #include "bsp_definitions.h"
 
+#define dg_configBLACK_ORCA_IC_REV                     BLACK_ORCA_IC_REV_B
+#define dg_configBLACK_ORCA_IC_STEP                    BLACK_ORCA_IC_STEP_A
+
 #undef CONFIG_USE_BLE
 #define CONFIG_USE_FTDF
 
@@ -44,8 +47,6 @@
 
 #define CONFIG_RETARGET
 #define CONFIG_RETARGET_UART                           HW_UART1
-
-#define dg_configPOWER_CONFIG                          (POWER_CONFIGURATION_2)
 
 #define dg_configUSE_LP_CLK                            LP_CLK_32768
 #define dg_configEXEC_MODE                             MODE_IS_CACHED
@@ -58,16 +59,15 @@
 #define dg_configUSER_CAN_USE_TIMER1                   (0)
 
 #define dg_configMEM_RETENTION_MODE                    (0x1F)
-#define dg_configMEM_RETENTION_MODE_PRESERVE_IMAGE     (0x1F)
 #define dg_configSHUFFLING_MODE                        (0x3)
 
 #define dg_configUSE_WDOG                              (0)
 
-#define dg_configUSE_DCDC                              (1)
-
-#define dg_configPOWER_FLASH                           (1)
+#define dg_configFLASH_CONNECTED_TO                    (FLASH_CONNECTED_TO_1V8)
 #define dg_configFLASH_POWER_DOWN                      (0)
-#define dg_configFLASH_POWER_OFF                       (0)
+
+#define dg_configPOWER_1V8_ACTIVE                      (1)
+#define dg_configPOWER_1V8_SLEEP                       (1)
 
 #define dg_configBATTERY_TYPE                          (BATTERY_TYPE_LIMN2O4)
 #define dg_configBATTERY_CHARGE_CURRENT                2       // 30mA
@@ -85,6 +85,8 @@
 #define dg_configCACHEABLE_QSPI_AREA_LEN               NVMS_PARAM_PART_start
 
 #define dg_configFEM_DLG_REF_BOARD                     (1)
+#define dg_configPOWER_1V8P                            (1)
+
 #define dg_configUSE_HW_TRNG                           (1)
 
 #define dg_configUSE_HW_TIMER0                         (1)

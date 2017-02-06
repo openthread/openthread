@@ -38,6 +38,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ *
  ****************************************************************************************
  */
 
@@ -48,15 +49,15 @@
 #include <hw_gpio.h>
 
 /* Register adresses */
-#define PX_DATA_REG_ADDR(_port)         ((uint16_t *)(GPIO_BASE + offsetof(GPIO_Type, P0_DATA_REG)) + _port)
+#define PX_DATA_REG_ADDR(_port)         ((volatile uint16_t *)(GPIO_BASE + offsetof(GPIO_Type, P0_DATA_REG)) + _port)
 #define PX_DATA_REG(_port)              *PX_DATA_REG_ADDR(_port)
-#define PX_SET_DATA_REG_ADDR(_port)     ((uint16_t *)(GPIO_BASE + offsetof(GPIO_Type, P0_SET_DATA_REG)) + _port)
+#define PX_SET_DATA_REG_ADDR(_port)     ((volatile uint16_t *)(GPIO_BASE + offsetof(GPIO_Type, P0_SET_DATA_REG)) + _port)
 #define PX_SET_DATA_REG(_port)          *PX_SET_DATA_REG_ADDR(_port)
-#define PX_RESET_DATA_REG_ADDR(_port)   ((uint16_t *)(GPIO_BASE + offsetof(GPIO_Type, P0_RESET_DATA_REG)) + _port)
+#define PX_RESET_DATA_REG_ADDR(_port)   ((volatile uint16_t *)(GPIO_BASE + offsetof(GPIO_Type, P0_RESET_DATA_REG)) + _port)
 #define PX_RESET_DATA_REG(_port)        *PX_RESET_DATA_REG_ADDR(_port)
-#define PXX_MODE_REG_ADDR(_port, _pin)  ((uint16_t *)(GPIO_BASE + offsetof(GPIO_Type, P00_MODE_REG)) + (_port * 8)  + _pin)
+#define PXX_MODE_REG_ADDR(_port, _pin)  ((volatile uint16_t *)(GPIO_BASE + offsetof(GPIO_Type, P00_MODE_REG)) + (_port * 8)  + _pin)
 #define PXX_MODE_REG(_port, _pin)       *PXX_MODE_REG_ADDR(_port, _pin)
-#define PX_PADPWR_CTRL_REG_ADDR(_port)  ((uint16_t *)(GPIO_BASE + offsetof(GPIO_Type, P0_PADPWR_CTRL_REG)) + _port)
+#define PX_PADPWR_CTRL_REG_ADDR(_port)  ((volatile uint16_t *)(GPIO_BASE + offsetof(GPIO_Type, P0_PADPWR_CTRL_REG)) + _port)
 #define PX_PADPWR_CTRL_REG(_port)       *PX_PADPWR_CTRL_REG_ADDR(_port)
 
 /* on FPGA we cannot read the state of an output GPIO */
@@ -87,7 +88,7 @@ void hw_gpio_configure(const gpio_config cfg[])
 {
 #if dg_configIMAGE_SETUP == DEVELOPMENT_MODE
     int num_pins = 0;
-    uint8_t set_mask[HW_GPIO_NUM_PORTS]; // = { };
+    uint8_t set_mask[HW_GPIO_NUM_PORTS];
 #endif
 
     if (!cfg)

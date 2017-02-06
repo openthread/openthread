@@ -38,33 +38,16 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ *
  ****************************************************************************************
  */
 
 #if dg_configUSE_HW_QSPI
 
-
-
 #include <stdint.h>
-#include <hw_qspi.h>
+#include "hw_qspi.h"
 
-#define BITS16(base, reg, field, v) \
-        ((uint16) (((uint16) (v) << (base ## _ ## reg ## _ ## field ## _Pos)) & \
-                (base ## _ ## reg ## _ ## field ## _Msk)))
-
-#define BITS32(base, reg, field, v) \
-        ((uint32) (((uint32) (v) << (base ## _ ## reg ## _ ## field ## _Pos)) & \
-                (base ## _ ## reg ## _ ## field ## _Msk)))
-
-#define GETBITS16(base, reg, v, field) \
-        ((uint16) (((uint16) (v)) & (base ## _ ## reg ## _ ## field ## _Msk)) >> \
-                (base ## _ ## reg ## _ ## field ## _Pos))
-
-#define GETBITS32(base, reg, v, field) \
-        ((uint32) (((uint32) (v)) & (base ## _ ## reg ## _ ## field ## _Msk)) >> \
-                (base ## _ ## reg ## _ ## field ## _Pos))
-
-static const uint8_t dummy_num[] = { 0, 1, 2, 0, 3 };
+__RETAINED_RW uint8_t dummy_num[] = { 0, 1, 2, 0, 3 };
 
 #if (dg_configFLASH_POWER_DOWN == 1)
 __attribute__((section("text_retained")))
@@ -89,10 +72,7 @@ void hw_qspi_set_bus_mode(HW_QSPI_BUS_MODE mode)
     }
 }
 
-#if (dg_configFLASH_POWER_DOWN == 1)
-__attribute__((section("text_retained")))
-#endif
-void hw_qspi_set_automode(bool automode)
+__attribute__((section("text_retained"))) void hw_qspi_set_automode(bool automode)
 {
     if (automode)
     {
@@ -125,25 +105,6 @@ void hw_qspi_set_automode(bool automode)
     HW_QSPIC_REG_SETF(CTRLMODE, AUTO_MD, automode);
 }
 
-void hw_qspi_set_read_instruction(uint8_t inst, uint8_t send_once, uint8_t dummy_count,
-                                  HW_QSPI_BUS_MODE inst_phase,
-                                  HW_QSPI_BUS_MODE addr_phase,
-                                  HW_QSPI_BUS_MODE dummy_phase,
-                                  HW_QSPI_BUS_MODE data_phase)
-{
-    QSPIC->QSPIC_BURSTCMDA_REG =
-        BITS32(QSPIC, QSPIC_BURSTCMDA_REG, QSPIC_INST, inst) |
-        BITS32(QSPIC, QSPIC_BURSTCMDA_REG, QSPIC_INST_TX_MD, inst_phase) |
-        BITS32(QSPIC, QSPIC_BURSTCMDA_REG, QSPIC_ADR_TX_MD, addr_phase) |
-        BITS32(QSPIC, QSPIC_BURSTCMDA_REG, QSPIC_DMY_TX_MD, dummy_phase);
-
-    QSPIC->QSPIC_BURSTCMDB_REG =
-        BITS32(QSPIC, QSPIC_BURSTCMDB_REG, QSPIC_DAT_RX_MD, data_phase) |
-        BITS32(QSPIC, QSPIC_BURSTCMDB_REG, QSPIC_INST_MD, send_once) |
-        BITS32(QSPIC, QSPIC_BURSTCMDB_REG, QSPIC_DMY_FORCE, (dummy_count == 3 ? 1 : 0)) |
-        BITS32(QSPIC, QSPIC_BURSTCMDB_REG, QSPIC_DMY_NUM, dummy_num[dummy_count]);
-}
-
 void hw_qspi_set_wrapping_burst_instruction(uint8_t inst, HW_QSPI_WRAP_LEN len,
                                             HW_QSPI_WRAP_SIZE size)
 {
@@ -155,23 +116,6 @@ void hw_qspi_set_wrapping_burst_instruction(uint8_t inst, HW_QSPI_WRAP_LEN len,
         BITS32(QSPIC, QSPIC_BURSTCMDB_REG, QSPIC_WRAP_SIZE, size) |
         BITS32(QSPIC, QSPIC_BURSTCMDB_REG, QSPIC_WRAP_LEN, len) |
         BITS32(QSPIC, QSPIC_BURSTCMDB_REG, QSPIC_WRAP_MD, 1);
-}
-
-void hw_qspi_set_extra_byte(uint8_t extra_byte, HW_QSPI_BUS_MODE bus_mode, uint8_t half_disable_out)
-{
-    QSPIC->QSPIC_BURSTCMDA_REG =
-        (QSPIC->QSPIC_BURSTCMDA_REG &
-         ~(REG_MSK(QSPIC, QSPIC_BURSTCMDA_REG, QSPIC_EXT_BYTE) |
-           REG_MSK(QSPIC, QSPIC_BURSTCMDA_REG, QSPIC_EXT_TX_MD))) |
-        BITS32(QSPIC, QSPIC_BURSTCMDA_REG, QSPIC_EXT_BYTE, extra_byte) |
-        BITS32(QSPIC, QSPIC_BURSTCMDA_REG, QSPIC_EXT_TX_MD, bus_mode);
-
-    QSPIC->QSPIC_BURSTCMDB_REG =
-        (QSPIC->QSPIC_BURSTCMDB_REG &
-         ~(REG_MSK(QSPIC, QSPIC_BURSTCMDB_REG, QSPIC_EXT_BYTE_EN) |
-           REG_MSK(QSPIC, QSPIC_BURSTCMDB_REG, QSPIC_EXT_HF_DS))) |
-        BITS32(QSPIC, QSPIC_BURSTCMDB_REG, QSPIC_EXT_BYTE_EN, 1) |
-        BITS32(QSPIC, QSPIC_BURSTCMDB_REG, QSPIC_EXT_HF_DS, half_disable_out ? 1 : 0);
 }
 
 void hw_qspi_set_dummy_bytes_count(uint8_t count)
@@ -189,68 +133,6 @@ void hw_qspi_set_dummy_bytes_count(uint8_t count)
             BITS32(QSPIC, QSPIC_BURSTCMDB_REG, QSPIC_DMY_NUM,
                    dummy_num[count]);
     }
-}
-
-void hw_qspi_set_read_status_instruction(uint8_t inst, HW_QSPI_BUS_MODE inst_phase,
-                                         HW_QSPI_BUS_MODE receive_phase,
-                                         uint8_t busy_pos,
-                                         uint8_t busy_val,
-                                         uint8_t reset_delay,
-                                         uint8_t sts_delay)
-{
-    QSPIC->QSPIC_STATUSCMD_REG =
-        BITS32(QSPIC, QSPIC_STATUSCMD_REG, QSPIC_BUSY_VAL, busy_val) |
-        BITS32(QSPIC, QSPIC_STATUSCMD_REG, QSPIC_BUSY_POS , busy_pos) |
-        BITS32(QSPIC, QSPIC_STATUSCMD_REG, QSPIC_RSTAT_RX_MD, receive_phase) |
-        BITS32(QSPIC, QSPIC_STATUSCMD_REG, QSPIC_RSTAT_TX_MD, inst_phase) |
-        BITS32(QSPIC, QSPIC_STATUSCMD_REG, QSPIC_RSTAT_INST, inst) |
-        BITS32(QSPIC, QSPIC_STATUSCMD_REG, QSPIC_STSDLY_SEL, sts_delay) |
-        BITS32(QSPIC, QSPIC_STATUSCMD_REG, QSPIC_RESSTS_DLY, reset_delay);
-}
-
-void hw_qspi_set_erase_instruction(uint8_t inst, HW_QSPI_BUS_MODE inst_phase,
-                                   HW_QSPI_BUS_MODE addr_phase, uint8_t hclk_cycles,
-                                   uint8_t cs_hi_cycles)
-{
-    HW_QSPIC_REG_SETF(ERASECMDA, ERS_INST, inst);
-    QSPIC->QSPIC_ERASECMDB_REG =
-        (QSPIC->QSPIC_ERASECMDB_REG &
-         ~(REG_MSK(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_ERS_TX_MD) |
-           REG_MSK(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_EAD_TX_MD) |
-           REG_MSK(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_ERSRES_HLD) |
-           REG_MSK(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_ERS_CS_HI))) |
-        BITS32(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_ERS_TX_MD, inst_phase) |
-        BITS32(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_EAD_TX_MD, addr_phase) |
-        BITS32(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_ERSRES_HLD, hclk_cycles) |
-        BITS32(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_ERS_CS_HI, cs_hi_cycles);
-}
-
-void hw_qspi_set_write_enable_instruction(uint8_t write_enable, HW_QSPI_BUS_MODE inst_phase)
-{
-    HW_QSPIC_REG_SETF(ERASECMDA, WEN_INST, write_enable);
-    HW_QSPIC_REG_SETF(ERASECMDB, WEN_TX_MD, inst_phase);
-}
-
-void hw_qspi_set_suspend_resume_instructions(uint8_t erase_suspend_inst,
-                                             HW_QSPI_BUS_MODE suspend_inst_phase,
-                                             uint8_t erase_resume_inst,
-                                             HW_QSPI_BUS_MODE resume_inst_phase,
-                                             uint8_t minimum_delay)
-{
-    QSPIC->QSPIC_ERASECMDA_REG =
-        (QSPIC->QSPIC_ERASECMDA_REG &
-         ~(REG_MSK(QSPIC, QSPIC_ERASECMDA_REG, QSPIC_SUS_INST) |
-           REG_MSK(QSPIC, QSPIC_ERASECMDA_REG, QSPIC_RES_INST))) |
-        BITS32(QSPIC, QSPIC_ERASECMDA_REG, QSPIC_SUS_INST, erase_suspend_inst) |
-        BITS32(QSPIC, QSPIC_ERASECMDA_REG, QSPIC_RES_INST, erase_resume_inst);
-    QSPIC->QSPIC_ERASECMDB_REG =
-        (QSPIC->QSPIC_ERASECMDB_REG &
-         ~(REG_MSK(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_SUS_TX_MD) |
-           REG_MSK(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_RES_TX_MD) |
-           REG_MSK(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_RESSUS_DLY))) |
-        BITS32(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_SUS_TX_MD, suspend_inst_phase) |
-        BITS32(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_RES_TX_MD, resume_inst_phase) |
-        BITS32(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_RESSUS_DLY, minimum_delay);
 }
 
 void hw_qspi_erase_block(uint32_t addr)
@@ -280,17 +162,6 @@ void hw_qspi_erase_block(uint32_t addr)
     HW_QSPIC_REG_SETF(ERASECTRL, ERASE_EN, 1);
 }
 
-void hw_qspi_set_break_sequence(uint16_t sequence, HW_QSPI_BUS_MODE mode,
-                                HW_QSPI_BREAK_SEQ_SIZE size, uint8_t dis_out)
-{
-    QSPIC->QSPIC_BURSTBRK_REG =
-        BITS32(QSPIC, QSPIC_BURSTBRK_REG, QSPIC_SEC_HF_DS, dis_out) |
-        BITS32(QSPIC, QSPIC_BURSTBRK_REG, QSPIC_BRK_SZ, size) |
-        BITS32(QSPIC, QSPIC_BURSTBRK_REG, QSPIC_BRK_TX_MD, mode) |
-        BITS32(QSPIC, QSPIC_BURSTBRK_REG, QSPIC_BRK_EN, 1) |
-        BITS32(QSPIC, QSPIC_BURSTBRK_REG, QSPIC_BRK_WRD, sequence);
-}
-
 void hw_qspi_set_pads(HW_QSPI_SLEW_RATE rate, HW_QSPI_DRIVE_CURRENT current)
 {
     QSPIC->QSPIC_GP_REG =
@@ -314,11 +185,6 @@ void hw_qspi_init(const qspi_config *cfg)
         hw_qspi_set_clock_mode(cfg->idle_clock);
         hw_qspi_set_read_sampling_edge(cfg->sampling_edge);
     }
-}
-
-__RETAINED_CODE void hw_qspi_set_div(HW_QSPI_DIV div)
-{
-    REG_SETF(CRG_TOP, CLK_AMBA_REG, QSPI_DIV, div);
 }
 
 #endif /* dg_configUSE_HW_QSPI */

@@ -38,16 +38,16 @@
 #include "platform/alarm.h"
 #include <openthread-types.h>
 #include "platform-da15000.h"
-#include "black_orca.h"
+#include "sdk_defs.h"
 #include "hw_cpm.h"
 #include "hw_watchdog.h"
 #include "ftdf.h"
 #include "hw_gpio.h"
 #include "platform/uart.h"
 
-static bool blink = false;
-static int  mscounter_init;
-static int  mscounter;
+static bool sBlink = false;
+static int  sMsCounterInit;
+static int  sMsCounter;
 
 #define LEADER_BLINK_TIME     (200)
 #define ROUTER_BLINK_TIME     (500)
@@ -95,13 +95,13 @@ void ExampleProcess(otInstance *aInstance)
 
     devRole = otGetDeviceRole(aInstance);
 
-    if (blink == false && otPlatAlarmGetNow() != 0)
+    if (sBlink == false && otPlatAlarmGetNow() != 0)
     {
-        mscounter_init = otPlatAlarmGetNow();
-        blink = true;
+        sMsCounterInit = otPlatAlarmGetNow();
+        sBlink = true;
     }
 
-    mscounter = otPlatAlarmGetNow() - mscounter_init;
+    sMsCounter = otPlatAlarmGetNow() - sMsCounterInit;
 
     switch (devRole)
     {
@@ -121,10 +121,10 @@ void ExampleProcess(otInstance *aInstance)
         thrValue = 0x00;
     }
 
-    if ((thrValue != 0x00) && (mscounter >= thrValue))
+    if ((thrValue != 0x00) && (sMsCounter >= thrValue))
     {
         hw_gpio_toggle(HW_GPIO_PORT_1, HW_GPIO_PIN_5);
-        mscounter_init = otPlatAlarmGetNow();
+        sMsCounterInit = otPlatAlarmGetNow();
     }
 
     if (thrValue == 0)
