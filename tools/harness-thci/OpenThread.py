@@ -2033,7 +2033,8 @@ class OpenThread(IThci):
                 elif "type" in infoType:
                     EncryptedPacket.Type = PlatformDiagnosticPacket_Type.JOIN_FIN_req if 'JOIN_FIN.req' in infoValue \
                         else PlatformDiagnosticPacket_Type.JOIN_FIN_rsp if 'JOIN_FIN.rsp' in infoValue \
-                        else PlatformDiagnosticPacket_Type.JOIN_ENT_rsp if 'JOIN_ENT.ntf' in infoValue \
+                        else PlatformDiagnosticPacket_Type.JOIN_ENT_req if 'JOIN_ENT.ntf' in infoValue \
+                        else PlatformDiagnosticPacket_Type.JOIN_ENT_rsp if 'JOIN_ENT.rsp' in infoValue \
                         else PlatformDiagnosticPacket_Type.UNKNOWN
                 elif "len" in infoType:
                     EncryptedPacket.TLVsLength = int(infoValue)
