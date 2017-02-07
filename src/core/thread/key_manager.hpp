@@ -56,6 +56,11 @@ class ThreadNetif;
 class KeyManager
 {
 public:
+    enum
+    {
+        kMaxKeyLength = 16,
+    };
+
     /**
      * This constructor initializes the object.
      *
@@ -308,7 +313,6 @@ public:
 private:
     enum
     {
-        kMaxKeyLength = 16,
         kMinKeyRotationTime = 1,
         kMaxKeyRotationTime = 0xffffffff / 3600u / 1000u,
         kDefaultKeyRotationTime = 672,

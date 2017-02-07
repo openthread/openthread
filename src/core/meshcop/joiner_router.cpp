@@ -62,7 +62,8 @@ JoinerRouter::JoinerRouter(ThreadNetif &aNetif):
     mNetif(aNetif),
     mJoinerUdpPort(0),
     mIsJoinerPortConfigured(false),
-    mTimer(aNetif.GetIp6().mTimerScheduler, &JoinerRouter::HandleTimer, this)
+    mTimer(aNetif.GetIp6().mTimerScheduler, &JoinerRouter::HandleTimer, this),
+    mExpectJoinerEntRsp(false)
 {
     mSocket.GetSockName().mPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
     mNetif.GetCoapServer().AddResource(mRelayTransmit);
@@ -248,6 +249,14 @@ void JoinerRouter::HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage,
     VerifyOrExit(aHeader.GetType() == kCoapTypeNonConfirmable &&
                  aHeader.GetCode() == kCoapRequestPost, error = kThreadError_Drop);
 
+    if (mExpectJoinerEntRsp || mTimer.IsRunning())
+    {
+        // During JOIN_ENT transaction drop other messages than retransmissions.
+        VerifyOrExit(Tlv::GetTlv(aMessage, Tlv::kJoinerRouterKek, sizeof(kek), kek) == kThreadError_None &&
+                     memcmp(mNetif.GetKeyManager().GetKek(), kek.GetKek(), KeyManager::kMaxKeyLength) == 0,
+                     error = kThreadError_Drop);
+    }
+
     otLogInfoMeshCoP("Received relay transmit");
 
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kJoinerUdpPort, sizeof(joinerPort), joinerPort));
@@ -411,6 +420,7 @@ ThreadError JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo
     messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo,
                                                              &JoinerRouter::HandleJoinerEntrustResponse, this));
+    mExpectJoinerEntRsp = true;
 
     otLogInfoMeshCoP("Sent joiner entrust length = %d", message->GetLength());
     otLogCertMeshCoP("[THCI] direction=send | type=JOIN_ENT.ntf");
@@ -439,6 +449,8 @@ void JoinerRouter::HandleJoinerEntrustResponse(Coap::Header *aHeader, Message *a
                                                const Ip6::MessageInfo *aMessageInfo, ThreadError aResult)
 {
     (void)aMessageInfo;
+
+    mExpectJoinerEntRsp = false;
 
     VerifyOrExit(aResult == kThreadError_None && aHeader != NULL && aMessage != NULL, ;);
 

@@ -119,6 +119,7 @@ private:
 
     Timer mTimer;
     Ip6::MessageInfo mJoinerEntMessageInfo;
+    bool mExpectJoinerEntRsp;
 };
 
 }  // namespace MeshCoP
