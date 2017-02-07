@@ -787,6 +787,7 @@ private:
     Child *FindChild(uint16_t aChildId);
     Child *FindChild(const Mac::ExtAddress &aMacAddr);
 
+    void SetChildStateToValid(Child *aChild);
     bool HasChildren(void);
     void RemoveChildren(void);
     bool HasMinDowngradeNeighborRouters(void);
