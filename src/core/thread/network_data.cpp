@@ -56,6 +56,11 @@ NetworkData::NetworkData(ThreadNetif &aThreadNetif, bool aLocal):
     mLength = 0;
 }
 
+void NetworkData::Clear(void)
+{
+    mLength = 0;
+}
+
 void NetworkData::GetNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLength)
 {
     assert(aData != NULL);

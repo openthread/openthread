@@ -100,6 +100,12 @@ public:
     NetworkData(ThreadNetif &aThreadNetif, bool aLocal);
 
     /**
+     * This method clears the network data.
+     *
+     */
+    void Clear(void);
+
+    /**
      * This method provides a full or stable copy of the Thread Network Data.
      *
      * @param[in]     aStable      TRUE when copying the stable version, FALSE when copying the full version.
