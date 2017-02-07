@@ -326,6 +326,27 @@ OTAPI ThreadError OTCALL otThreadStart(otInstance *aInstance);
 OTAPI ThreadError OTCALL otThreadStop(otInstance *aInstance);
 
 /**
+ * This function configures the Thread stack to automatically start on reinitialization.
+ * It has no effect on the current Thread state.
+ *
+ * @param[in] aInstance             A pointer to an OpenThread instance.
+ * @param[in] aStartAutomatically   TRUE to automatically start; FALSE to not automatically start.
+ *
+ */
+OTAPI void OTCALL otThreadSetAutoStart(otInstance *aInstance, bool aStartAutomatically);
+
+/**
+ * This function queries if the Thread stack is configured to automatically start on reinitialization.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
+ * @retval TRUE   It is configured to automatically start.
+ * @retval FALSE  It is not configured to automatically start.
+ *
+ */
+OTAPI bool OTCALL otThreadGetAutoStart(otInstance *aInstance);
+
+/**
  * This function indicates whether a node is the only router on the network.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.

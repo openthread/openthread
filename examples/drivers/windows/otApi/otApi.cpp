@@ -1201,6 +1201,29 @@ otThreadStop(
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_THREAD, (BOOLEAN)FALSE));
 }
 
+OTAPI
+void
+OTCALL
+otThreadSetAutoStart(
+    _In_ otInstance *aInstance,
+    bool aStartAutomatically
+    )
+{
+    if (aInstance) SetIOCTL(aInstance, IOCTL_OTLWF_OT_THREAD_AUTO_START, (BOOLEAN)(aStartAutomatically ? TRUE : FALSE));
+}
+
+OTAPI
+bool
+OTCALL
+otThreadGetAutoStart(
+    otInstance *aInstance
+    )
+{
+    BOOLEAN Result = FALSE;
+    if (aInstance) (void)QueryIOCTL(aInstance, IOCTL_OTLWF_OT_THREAD_AUTO_START, &Result);
+    return Result != FALSE;
+}
+
 OTAPI 
 bool 
 OTCALL
