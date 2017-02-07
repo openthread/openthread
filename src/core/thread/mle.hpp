@@ -999,13 +999,12 @@ protected:
      * This method appends a Pending Timestamp TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
-     * @param[in]  aCouldUseLocal  True to use local Pending Timestamp when network Pending Timestamp is not available, False not.
      *
      * @retval kThreadError_None    Successfully appended the Pending Timestamp TLV.
      * @retval kThreadError_NoBufs  Insufficient buffers available to append the Pending Timestamp TLV.
      *
      */
-    ThreadError AppendPendingTimestamp(Message &aMessage, bool aCouldUseLocal);
+    ThreadError AppendPendingTimestamp(Message &aMessage);
 
     /**
      * This method appends a Thread Discovery TLV to a message.
