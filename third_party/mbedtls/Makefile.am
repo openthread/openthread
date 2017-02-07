@@ -37,8 +37,7 @@ libmbedcrypto_a_CPPFLAGS                      = \
     -I$(top_srcdir)/include                     \
     -I$(top_srcdir)/src/core                    \
     -I$(MBEDTLS_SRCDIR)/include                 \
-    -I$(MBEDTLS_SRCDIR)/include/mbedtls         \
-    -DMBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"  \
+    $(MBEDTLS_CPPFLAGS)                         \
     $(NULL)
 
 libmbedcrypto_a_SOURCES                       = \
