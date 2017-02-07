@@ -341,7 +341,8 @@ ThreadError MleRouter::HandleChildStart(otMleAttachFilter aFilter)
 
     switch (aFilter)
     {
-    case kMleAttachSamePartition:
+    case kMleAttachSamePartition1:
+    case kMleAttachSamePartition2:
 
         // downgrade
         if (GetActiveRouterCount() > mRouterDowngradeThreshold)
@@ -1754,13 +1755,13 @@ void MleRouter::HandleStateUpdateTimer(void)
 
         if (GetLeaderAge() >= mNetworkIdTimeout)
         {
-            BecomeChild(kMleAttachSamePartition);
+            BecomeChild(kMleAttachSamePartition1);
         }
 
         if (routerStateUpdate && GetActiveRouterCount() > mRouterDowngradeThreshold)
         {
             // downgrade to REED
-            BecomeChild(kMleAttachSamePartition);
+            BecomeChild(kMleAttachSamePartition1);
         }
 
         break;

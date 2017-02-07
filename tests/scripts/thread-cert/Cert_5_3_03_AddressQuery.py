@@ -134,7 +134,7 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
 
         addrs = self.nodes[ROUTER3].get_addrs()
         self.nodes[ROUTER3].stop()
-        time.sleep(130)
+        time.sleep(140)
 
         for addr in addrs:
             if addr[0:4] != 'fe80':

@@ -109,7 +109,7 @@ class Cert_5_5_8_SplitRoutersLostLeader(unittest.TestCase):
                 self.assertTrue(self.nodes[LEADER1].ping(addr))
 
         self.nodes[ROUTER3].stop()
-        time.sleep(130)
+        time.sleep(140)
 
         self.nodes[ROUTER3].start()        
         time.sleep(60)

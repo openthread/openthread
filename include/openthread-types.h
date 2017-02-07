@@ -691,8 +691,9 @@ typedef struct otExternalRouteConfig
 typedef enum otMleAttachFilter
 {
     kMleAttachAnyPartition    = 0,  ///< Attach to any Thread partition.
-    kMleAttachSamePartition   = 1,  ///< Attach to the same Thread partition.
-    kMleAttachBetterPartition = 2,  ///< Attach to a better (i.e. higher weight/partition id) Thread partition.
+    kMleAttachSamePartition1  = 1,  ///< Attach to the same Thread partition (attempt 1).
+    kMleAttachSamePartition2  = 2,  ///< Attach to the same Thread partition (attempt 2).
+    kMleAttachBetterPartition = 3,  ///< Attach to a better (i.e. higher weight/partition id) Thread partition.
 } otMleAttachFilter;
 
 /**
