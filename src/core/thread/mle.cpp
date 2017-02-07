@@ -2218,6 +2218,7 @@ ThreadError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInf
         if (mDeviceState == kDeviceStateChild)
         {
             SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
+            mRetrieveNewNetworkData = true;
         }
         else
         {
