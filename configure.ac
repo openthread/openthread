@@ -872,96 +872,6 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_RAW_LINK_API], [test "${enable_raw_link_api}" 
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_RAW_LINK_API],[${OPENTHREAD_ENABLE_RAW_LINK_API}],[Define to 1 if you want to enable raw link-layer API])
 
 #
-# Software ACK Timeout Logic
-#
-
-AC_ARG_ENABLE(sw_ack_timeout,
-    [AS_HELP_STRING([--enable-sw-ack-timeout],[Enable software ACK timeout logic @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_sw_ack_timeout=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_sw_ack_timeout} for --enable-sw-ack-timeout])
-            ;;
-        esac
-    ],
-    [enable_sw_ack_timeout=no])
-
-if test "$enable_sw_ack_timeout" = "yes"; then
-    OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT=1
-else
-    OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT=0
-fi
-
-AC_SUBST(OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT], [test "${enable_sw_ack_timeout}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT],[${OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT}],[Define to 1 if you want to enable software ACK timeout logic])
-
-#
-# Software Retransmit Logic
-#
-
-AC_ARG_ENABLE(sw_retransmit,
-    [AS_HELP_STRING([--enable-sw-retransmit],[Enable software retransmit logic @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_sw_retransmit=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_sw_retransmit} for --enable-sw-retransmit])
-            ;;
-        esac
-    ],
-    [enable_sw_retransmit=no])
-
-if test "$enable_sw_retransmit" = "yes"; then
-    OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT=1
-else
-    OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT=0
-fi
-
-AC_SUBST(OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT], [test "${enable_sw_retransmit}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT],[${OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT}],[Define to 1 if you want to enable software retransmission logic])
-
-#
-# Software Energy Scanning Logic
-#
-
-AC_ARG_ENABLE(sw_energy_scan,
-    [AS_HELP_STRING([--enable-sw-energy-scan],[Enable software energy scanning logic @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_sw_energy_scan=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_sw_energy_scan} for --enable-sw-energy-scan])
-            ;;
-        esac
-    ],
-    [enable_sw_energy_scan=no])
-
-if test "$enable_sw_energy_scan" = "yes"; then
-    OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN=1
-else
-    OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN=0
-fi
-
-AC_SUBST(OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN], [test "${enable_sw_energy_scan}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN],[${OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN}],[Define to 1 if you want to enable software energy scanning logic])
-
-#
 # Examples
 #
 
@@ -1246,9 +1156,6 @@ AC_MSG_NOTICE([
   OpenThread DHCPv6 Client support          : ${enable_dhcp6_client}
   Openthread Application CoAP support       : ${enable_application_coap}
   Openthread Raw Link-Layer support         : ${enable_raw_link_api}
-  Openthread Software ACK Timeout support   : ${enable_sw_ack_timeout}
-  Openthread Software Retransmit support    : ${enable_sw_retransmit}
-  Openthread Software Energy Scan support   : ${enable_sw_energy_scan}
   OpenThread examples                       : ${OPENTHREAD_EXAMPLES}
   OpenThread platform information           : ${PLATFORM_INFO}
 
