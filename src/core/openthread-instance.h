@@ -44,7 +44,9 @@
 #include <net/ip6.hpp>
 #include <thread/thread_netif.hpp>
 #include <coap/coap_server.hpp>
-#include "openthread/link_raw.h"
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+#include <api/link_raw.hpp>
+#endif
 
 /**
  * This type represents all the static / global variables used by OpenThread allocated in one place.
@@ -66,13 +68,6 @@ typedef struct otInstance
     otHandleEnergyScanResult mEnergyScanCallback;
     void *mEnergyScanCallbackContext;
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    bool                    mLinkRawEnabled;
-    otLinkRawReceiveDone    mLinkRawReceiveDoneCallback;
-    otLinkRawTransmitDone   mLinkRawTransmitDoneCallback;
-    otLinkRawEnergyScanDone mLinkRawEnergyScanDoneCallback;
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
-
     //
     // State
     //
@@ -82,6 +77,10 @@ typedef struct otInstance
 #endif
     Thread::Ip6::Ip6 mIp6;
     Thread::ThreadNetif mThreadNetif;
+
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+    Thread::LinkRaw mLinkRaw;
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     Thread::Coap::Server mApplicationCoapServer;

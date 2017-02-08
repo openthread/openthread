@@ -167,6 +167,7 @@ noinst_HEADERS                      = \
     openthread-core-config.h          \
     openthread-core-default-config.h  \
     openthread-instance.h             \
+    api/link_raw.hpp                  \
     coap/coap_base.hpp                \
     coap/coap_client.hpp              \
     coap/coap_header.hpp              \
