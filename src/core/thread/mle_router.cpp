@@ -2252,7 +2252,7 @@ ThreadError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const I
 
     child = FindChild(macAddr);
 
-    if (child == NULL)
+    if ((child == NULL) || (child->mState != Neighbor::kStateValid))
     {
         tlvs[tlvslength++] = Tlv::kStatus;
         SendChildUpdateResponse(NULL, aMessageInfo, tlvs, tlvslength, NULL);
@@ -2326,7 +2326,6 @@ ThreadError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const I
 
     child->mLastHeard = Timer::GetNow();
     child->mAddSrcMatchEntryShort = true;
-    child->mState = Neighbor::kStateValid;
 
     SendChildUpdateResponse(child, aMessageInfo, tlvs, tlvslength, &challenge);
 
