@@ -266,9 +266,9 @@ LinkRaw::LinkRaw(otInstance &aInstance):
     , mTimerReason(kTimerReasonNone)
     , mReceiveChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
 #endif // OPENTHREAD_LINKRAW_TIMER_REQUIRED
-#if OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
     , mEnergyScanTask(aInstance.mIp6.mTaskletScheduler, &LinkRaw::HandleEnergyScanTask, this)
-#endif // OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN
+#endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 {
     // Query the capabilities to check asserts
     (void)GetCaps();
@@ -281,20 +281,20 @@ otRadioCaps LinkRaw::GetCaps()
     // The radio shouldn't support a capability if it is being compile
     // time included into the raw link-layer code.
 
-#if OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
     assert((RadioCaps & kRadioCapsAckTimeout) == 0);
     RadioCaps = (otRadioCaps)(RadioCaps | kRadioCapsAckTimeout);
-#endif // OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT
+#endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
 
-#if OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
     assert((RadioCaps & kRadioCapsTransmitRetries) == 0);
     RadioCaps = (otRadioCaps)(RadioCaps | kRadioCapsTransmitRetries);
-#endif // OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT
+#endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 
-#if OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
     assert((RadioCaps & kRadioCapsEnergyScan) == 0);
     RadioCaps = (otRadioCaps)(RadioCaps | kRadioCapsEnergyScan);
-#endif // OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN
+#endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 
     return RadioCaps;
 }
@@ -334,7 +334,7 @@ ThreadError LinkRaw::Transmit(RadioPacket *aPacket, otLinkRawTransmitDone aCallb
     {
         mTransmitDoneCallback = aCallback;
 
-#if OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
         (void)aPacket;
         mTransmitAttempts = 0;
         mCsmaAttempts = 0;
@@ -355,7 +355,7 @@ ThreadError LinkRaw::DoTransmit(RadioPacket *aPacket)
 {
     ThreadError error = otPlatRadioTransmit(&mInstance, aPacket);
 
-#if OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
 
     // If we are implementing the ACK timeout logic, start a timer here (if ACK request)
     // to fire if we don't get a transmit done callback in time.
@@ -372,11 +372,11 @@ ThreadError LinkRaw::DoTransmit(RadioPacket *aPacket)
 
 void LinkRaw::InvokeTransmitDone(RadioPacket *aPacket, bool aFramePending, ThreadError aError)
 {
-#if OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
     mTimer.Stop();
 #endif
 
-#if OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 
     if (aError == kThreadError_ChannelAccessFailure)
     {
@@ -410,7 +410,7 @@ void LinkRaw::InvokeTransmitDone(RadioPacket *aPacket, bool aFramePending, Threa
         mTransmitDoneCallback = NULL;
     }
 
-#if OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 exit:
     return;
 #endif
@@ -424,7 +424,7 @@ ThreadError LinkRaw::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration, ot
     {
         mEnergyScanDoneCallback = aCallback;
 
-#if OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
         // Start listening on the scan channel
         otPlatRadioReceive(&mInstance, aScanChannel);
 
@@ -465,7 +465,7 @@ void LinkRaw::HandleTimer(void)
 
     switch (timerReason)
     {
-#if OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
 
     case kTimerReasonAckTimeout:
     {
@@ -476,9 +476,9 @@ void LinkRaw::HandleTimer(void)
         InvokeTransmitDone(otPlatRadioGetTransmitBuffer(&mInstance), false, kThreadError_NoAck);
     }
 
-#endif // OPENTHREAD_ENABLE_SOFTWARE_ACK_TIMEOUT
+#endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
 
-#if OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 
     case kTimerReasonRetransmitTimeout:
     {
@@ -493,9 +493,9 @@ void LinkRaw::HandleTimer(void)
         }
     }
 
-#endif // OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT
+#endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 
-#if OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 
     case kTimerReasonEnergyScanComplete:
     {
@@ -503,7 +503,7 @@ void LinkRaw::HandleTimer(void)
         InvokeEnergyScanDone(mEnergyScanRssi);
     }
 
-#endif // OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN
+#endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 
     default:
         assert(false);
@@ -512,7 +512,7 @@ void LinkRaw::HandleTimer(void)
 
 #endif // OPENTHREAD_LINKRAW_TIMER_REQUIRED
 
-#if OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 
 void LinkRaw::StartCsmaBackoff(void)
 {
@@ -531,9 +531,9 @@ void LinkRaw::StartCsmaBackoff(void)
     mTimer.Start(backoff);
 }
 
-#endif // OPENTHREAD_ENABLE_SOFTWARE_RETRANSMIT
+#endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 
-#if OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN
+#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 
 void LinkRaw::HandleEnergyScanTask(void *aContext)
 {
@@ -562,6 +562,6 @@ void LinkRaw::HandleEnergyScanTask(void)
     }
 }
 
-#endif // OPENTHREAD_ENABLE_SOFTWARE_ENERGY_SCAN
+#endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 
 } // namespace Thread
