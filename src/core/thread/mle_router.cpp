@@ -2649,7 +2649,7 @@ ThreadError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, u
     // Steering Data TLV
     steeringData = mNetif.GetNetworkDataLeader().GetCommissioningDataSubTlv(MeshCoP::Tlv::kSteeringData);
 
-    if (steeringData != NULL)
+    if (steeringData != NULL && steeringData->GetLength() > 0)
     {
         SuccessOrExit(message->Append(steeringData, sizeof(*steeringData) + steeringData->GetLength()));
     }
