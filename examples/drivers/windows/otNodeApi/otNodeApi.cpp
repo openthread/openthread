@@ -119,13 +119,17 @@ otApiInstance* GetApiInstance()
         if (gApiInstance == nullptr)
         {
             printf("otApiInit failed!\r\n");
+            Unload();
             return nullptr;
         }
+
+        InitializeCriticalSection(&gCS);
 
         gVmpModule = LoadLibrary(TEXT("otvmpapi.dll"));
         if (gVmpModule == nullptr)
         {
             printf("LoadLibrary(\"otvmpapi\") failed!\r\n");
+            Unload();
             return nullptr;
         }
 
@@ -160,6 +164,7 @@ otApiInstance* GetApiInstance()
         if (gVmpHandle == nullptr)
         {
             printf("otvmpOpenHandle failed!\r\n");
+            Unload();
             return nullptr;
         }
 
@@ -167,10 +172,9 @@ otApiInstance* GetApiInstance()
         if (status != NO_ERROR)
         {
             printf("UuidCreate failed, 0x%x!\r\n", status);
+            Unload();
             return nullptr;
         }
-
-        InitializeCriticalSection(&gCS);
 
         auto offset = getenv("INSTANCE");
         if (offset)
@@ -191,7 +195,18 @@ otApiInstance* GetApiInstance()
         printf("New topology created\r\n" GUID_FORMAT " [%d]\r\n\r\n", GUID_ARG(gTopologyGuid), gNextBusNumber);
     }
 
+    InterlockedIncrement(&gNumberOfInterfaces);
+
     return gApiInstance;
+}
+
+void ReleaseApiInstance()
+{
+    if (0 == InterlockedDecrement(&gNumberOfInterfaces))
+    {
+        // Uninitialize everything else if this is the last ref
+        Unload();
+    }
 }
 
 void Unload()
@@ -219,14 +234,14 @@ void Unload()
 
         if (gVmpModule != nullptr)
         {
-            CloseHandle(gVmpModule);
+            FreeLibrary(gVmpModule);
             gVmpModule = nullptr;
         }
 
+        DeleteCriticalSection(&gCS);
+
         otApiFinalize(gApiInstance);
         gApiInstance = nullptr;
-
-        DeleteCriticalSection(&gCS);
 
         WSACleanup();
 
@@ -808,8 +823,6 @@ OTNODEAPI otNode* OTCALL otNodeInit(uint32_t id)
         goto error;
     }
 
-    InterlockedIncrement(&gNumberOfInterfaces);
-
     GUID DeviceGuid = otGetDeviceGuid(instance);
     uint32_t Compartment = otGetCompartmentId(instance);
 
@@ -845,11 +858,7 @@ error:
             otvmpRemoveVirtualBus(gVmpHandle, newBusIndex);
         }
 
-        if (0 == InterlockedDecrement(&gNumberOfInterfaces))
-        {
-            // Uninitialize everything else if this is the last ref
-            Unload();
-        }
+        ReleaseApiInstance();
     }
 
     return node;
@@ -897,11 +906,7 @@ OTNODEAPI int32_t OTCALL otNodeFinalize(otNode* aNode)
         otvmpRemoveVirtualBus(gVmpHandle, aNode->mBusIndex);
         delete aNode;
         
-        if (0 == InterlockedDecrement(&gNumberOfInterfaces))
-        {
-            // Uninitialize everything else if this is the last ref
-            Unload();
-        }
+        ReleaseApiInstance();
     }
     otLogFuncExit();
     return 0;
@@ -2213,8 +2218,6 @@ OTNODEAPI otListener* OTCALL otListenerInit(uint32_t /* nodeid */)
         return nullptr;
     }
 
-    InterlockedIncrement(&gNumberOfInterfaces);
-
     otListener *listener = new otListener();
     assert(listener);
 
@@ -2283,11 +2286,7 @@ OTNODEAPI int32_t OTCALL otListenerFinalize(otListener* aListener)
         DeleteCriticalSection(&aListener->mCS);
         delete aListener;
 
-        if (0 == InterlockedDecrement(&gNumberOfInterfaces))
-        {
-            // Uninitialize everything else if this is the last ref
-            Unload();
-        }
+        ReleaseApiInstance();
     }
 
     otLogFuncExit();
