@@ -766,8 +766,17 @@ OTNODEAPI otNode* OTCALL otNodeInit(uint32_t id)
         otvmpRemoveVirtualBus(gVmpHandle, newBusIndex);
         return nullptr;
     }
-    
-    auto instance = otInstanceInit(ApiInstance, &ifGuid);
+
+    // Try multiple times to instantiate the otInstance, as the MP comes up first
+    // and the LWF driver might not be ready immedaitely.
+    tries = 0;
+    otInstance *instance = nullptr;
+    do
+    {
+        if (tries != 0) Sleep(100);
+        instance = otInstanceInit(ApiInstance, &ifGuid);
+    } while (instance == nullptr && ++tries <= 30);
+
     if (instance == nullptr)
     {
         printf("otInstanceInit failed!\r\n");
