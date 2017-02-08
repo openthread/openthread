@@ -650,7 +650,7 @@ class SpinelCommandHandler(SpinelCodec):
     def handle_prop(self, wpan_api, name, payload, tid):
         (prop_id, prop_len) = self.parse_i(payload)
 
-        try:
+        if prop_id in SPINEL_PROP_DISPATCH:
             handler = SPINEL_PROP_DISPATCH[prop_id]
             prop_name = handler.__name__
             prop_value = handler(wpan_api, payload[prop_len:])
@@ -684,11 +684,9 @@ class SpinelCommandHandler(SpinelCodec):
                 wpan_api.queue_add(prop_id, prop_value, tid)
             else:
                 print("no wpan_api")
-
-        except Exception as _ex:
+        else:
             prop_name = "Property Unknown"
             logging.info("\n%s (%i): ", prop_name, prop_id)
-            print(traceback.format_exc())
 
     def PROP_VALUE_IS(self, wpan_api, payload, tid):
         self.handle_prop(wpan_api, "IS", payload, tid)
@@ -807,7 +805,7 @@ SPINEL_PROP_DISPATCH = {
     SPINEL.PROP_PIB_15_4_PHY_CHANNELS_SUPPORTED: WPAN_PROP_HANDLER.PIB_PHY_CHANNELS_SUPPORTED,
     SPINEL.PROP_PIB_15_4_MAC_PROMISCUOUS_MODE: WPAN_PROP_HANDLER.PIB_MAC_PROMISCUOUS_MODE,
     SPINEL.PROP_PIB_15_4_MAC_SECURITY_ENABLED: WPAN_PROP_HANDLER.PIB_MAC_SECURITY_ENABLED,
-    
+
     SPINEL.PROP_MSG_BUFFER_COUNTERS: WPAN_PROP_HANDLER.MSG_BUFFER_COUNTERS
 }
 
