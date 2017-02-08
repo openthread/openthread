@@ -718,6 +718,7 @@ public:
 private:
     enum
     {
+        kDiscoveryMaxJitter = 250u,  ///< Maximum jitter time used to delay Discovery Responses in milliseconds.
         kStateUpdatePeriod = 1000u,  ///< State update period in milliseconds.
     };
 
