@@ -202,10 +202,17 @@ namespace otTestRunner
             }
         }
 
+        enum TestResult
+        {
+            Fail,
+            Pass,
+            PassWithRetry
+        }
+
         /// <summary>
         /// Runs a python test file and returns success/failure
         /// </summary>
-        static async Task<bool> RunTest(string file, int index)
+        static async Task<TestResult> RunTest(string file, int index)
         {
             string pythonPath = "python.exe";
             if (AppVeyorMode)
@@ -255,7 +262,9 @@ namespace otTestRunner
                 Console.WriteLine("Exception while trying to write {0}:\n{1}!", outputFilePath, e.Message);
             }
 
-            return Results.Pass;
+            return Results.Pass ?
+                (tries == 1 ? TestResult.Pass : TestResult.PassWithRetry) :
+                TestResult.Fail;
         }
 
         /// <summary>
@@ -336,9 +345,16 @@ namespace otTestRunner
                         lock (ResultsFolder)
                         {
                             var PrevColor = Console.ForegroundColor;
-                            if (result)
+                            if (result != TestResult.Fail)
                             {
-                                Console.ForegroundColor = ConsoleColor.Green;
+                                if (result == TestResult.Pass)
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Green;
+                                }
+                                else
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Yellow;
+                                }
                                 Console.Write("PASS");
                                 TestPassCount++;
                             }
