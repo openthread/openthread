@@ -2412,11 +2412,11 @@ ThreadError MleRouter::HandleChildUpdateResponse(const Message &aMessage, const 
         }
     }
 
+    SetChildStateToValid(child);
     child->mLastHeard = Timer::GetNow();
     child->mKeySequence = aKeySequence;
     child->mLinkInfo.AddRss(mNetif.GetMac().GetNoiseFloor(), threadMessageInfo->mRss);
     child->mAddSrcMatchEntryShort = true;
-    child->mState = Neighbor::kStateValid;
 
 exit:
     return error;
@@ -2739,9 +2739,7 @@ ThreadError MleRouter::SendChildIdResponse(Child *aChild)
         SuccessOrExit(error = AppendChildAddresses(*message, *aChild));
     }
 
-    aChild->mState = Neighbor::kStateValid;
-    mNetif.SetStateChangedFlags(OT_THREAD_CHILD_ADDED);
-    StoreChild(aChild->mValid.mRloc16);
+    SetChildStateToValid(aChild);
 
     memset(&destination, 0, sizeof(destination));
     destination.mFields.m16[0] = HostSwap16(0xfe80);
@@ -4424,6 +4422,18 @@ exit:
     return rval;
 }
 
+void MleRouter::SetChildStateToValid(Child *aChild)
+{
+    VerifyOrExit(aChild->mState != Neighbor::kStateValid, ;);
+
+    aChild->mState = Neighbor::kStateValid;
+    mNetif.SetStateChangedFlags(OT_THREAD_CHILD_ADDED);
+    StoreChild(aChild->mValid.mRloc16);
+
+exit:
+    return;
+}
+
 bool MleRouter::HasChildren(void)
 {
     bool hasChildren = false;
@@ -4444,11 +4454,20 @@ void MleRouter::RemoveChildren(void)
 {
     for (uint8_t i = 0; i < mMaxChildrenAllowed; i++)
     {
-        if (mChildren[i].mState == Neighbor::kStateRestored ||
-            mChildren[i].mState == Neighbor::kStateChildUpdateRequest ||
-            mChildren[i].mState == Neighbor::kStateValid)
+        switch (mChildren[i].mState)
         {
+        case Neighbor::kStateValid:
+            mNetif.SetStateChangedFlags(OT_THREAD_CHILD_REMOVED);
+
+        // Fall-through to next case
+
+        case Neighbor::kStateChildUpdateRequest:
+        case Neighbor::kStateRestored:
             RemoveStoredChild(mChildren[i].mValid.mRloc16);
+            break;
+
+        default:
+            break;
         }
 
         mChildren[i].mState = Neighbor::kStateInvalid;
