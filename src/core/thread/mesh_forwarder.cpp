@@ -1056,11 +1056,18 @@ ThreadError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
             }
         }
 
-        if (SendFragment(*mSendMessage, aFrame) == kThreadError_NotCapable)
+        error = SendFragment(*mSendMessage, aFrame);
+
+        // `SendFragment()` fails with `NotCapable` error if the message is MLE (with
+        // no link layer security) and also requires fragmentation.
+        if (error == kThreadError_NotCapable)
         {
-            SendFragment(*mSendMessage, aFrame);
+            // Enable security and try again.
+            mSendMessage->SetLinkSecurityEnabled(true);
+            error = SendFragment(*mSendMessage, aFrame);
         }
 
+        assert(error == kThreadError_None);
         assert(aFrame.GetLength() != 7);
         break;
 
@@ -1340,7 +1347,6 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
         {
             if ((!aMessage.IsLinkSecurityEnabled()) && aMessage.IsSubTypeMle())
             {
-                aMessage.SetLinkSecurityEnabled(true);
                 aMessage.SetOffset(0);
                 ExitNow(error = kThreadError_NotCapable);
             }
