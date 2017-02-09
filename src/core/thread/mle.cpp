@@ -1268,7 +1268,6 @@ void Mle::HandleParentRequestTimer(void)
         mParentRequestState = kParentRequestRouter;
         mParentCandidate.mState = Neighbor::kStateInvalid;
         SendParentRequest();
-        mParentRequestTimer.Start(kParentRequestRouterTimeout);
         break;
 
     case kParentRequestRouter:
@@ -1278,13 +1277,13 @@ void Mle::HandleParentRequestTimer(void)
         {
             SendChildIdRequest();
             mParentRequestState = kChildIdRequest;
+            mParentRequestTimer.Start(kParentRequestChildTimeout);
         }
         else
         {
             SendParentRequest();
         }
 
-        mParentRequestTimer.Start(kParentRequestChildTimeout);
         break;
 
     case kParentRequestChild:
@@ -1346,7 +1345,12 @@ void Mle::HandleParentRequestTimer(void)
 
                     break;
 
-                case kMleAttachSamePartition:
+                case kMleAttachSamePartition1:
+                    mParentRequestState = kParentIdle;
+                    BecomeChild(kMleAttachSamePartition2);
+                    break;
+
+                case kMleAttachSamePartition2:
                     mParentRequestState = kParentIdle;
                     BecomeChild(kMleAttachAnyPartition);
                     break;
@@ -1401,17 +1405,13 @@ ThreadError Mle::SendParentRequest(void)
         mParentRequest.mChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
     }
 
-    VerifyOrExit((message = NewMleMessage()) != NULL, ;);
-    SuccessOrExit(error = AppendHeader(*message, Header::kCommandParentRequest));
-    SuccessOrExit(error = AppendMode(*message, mDeviceMode));
-    SuccessOrExit(error = AppendChallenge(*message, mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge)));
-
     switch (mParentRequestState)
     {
     case kParentRequestRouter:
         scanMask = ScanMaskTlv::kRouterFlag;
 
-        if (mParentRequestMode == kMleAttachSamePartition)
+        if (mParentRequestMode == kMleAttachSamePartition1 ||
+            mParentRequestMode == kMleAttachSamePartition2)
         {
             scanMask |= ScanMaskTlv::kEndDeviceFlag;
         }
@@ -1427,6 +1427,10 @@ ThreadError Mle::SendParentRequest(void)
         break;
     }
 
+    VerifyOrExit((message = NewMleMessage()) != NULL, ;);
+    SuccessOrExit(error = AppendHeader(*message, Header::kCommandParentRequest));
+    SuccessOrExit(error = AppendMode(*message, mDeviceMode));
+    SuccessOrExit(error = AppendChallenge(*message, mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge)));
     SuccessOrExit(error = AppendScanMask(*message, scanMask));
     SuccessOrExit(error = AppendVersion(*message));
 
@@ -1435,22 +1439,25 @@ ThreadError Mle::SendParentRequest(void)
     destination.mFields.m16[7] = HostSwap16(0x0002);
     SuccessOrExit(error = SendMessage(*message, destination));
 
-    switch (mParentRequestState)
+    if ((scanMask & ScanMaskTlv::kEndDeviceFlag) == 0)
     {
-    case kParentRequestRouter:
         otLogInfoMle("Sent parent request to routers");
-        break;
-
-    case kParentRequestChild:
+    }
+    else
+    {
         otLogInfoMle("Sent parent request to all devices");
-        break;
-
-    default:
-        assert(false);
-        break;
     }
 
 exit:
+
+    if ((scanMask & ScanMaskTlv::kEndDeviceFlag) == 0)
+    {
+        mParentRequestTimer.Start(kParentRequestRouterTimeout);
+    }
+    else
+    {
+        mParentRequestTimer.Start(kParentRequestChildTimeout);
+    }
 
     if (error != kThreadError_None && message != NULL)
     {
@@ -2435,7 +2442,8 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
             VerifyOrExit(leaderData.GetPartitionId() != mLeaderData.GetPartitionId() || diff > 0,);
             break;
 
-        case kMleAttachSamePartition:
+        case kMleAttachSamePartition1:
+        case kMleAttachSamePartition2:
             VerifyOrExit(leaderData.GetPartitionId() == mLeaderData.GetPartitionId(), ;);
             VerifyOrExit(diff > 0 ||
                          (diff == 0 && mNetif.GetMle().GetLeaderAge() < mNetif.GetMle().GetNetworkIdTimeout()), ;);

@@ -92,7 +92,7 @@ class Cert_5_5_7_SplitMergeThreeWay(unittest.TestCase):
         self.assertEqual(self.nodes[ROUTER3].get_state(), 'router')
 
         self.nodes[LEADER1].stop()
-        time.sleep(130)
+        time.sleep(140)
 
         self.nodes[LEADER1].start()
         time.sleep(30)
