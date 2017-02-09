@@ -720,6 +720,7 @@ private:
     {
         kDiscoveryMaxJitter = 250u,  ///< Maximum jitter time used to delay Discovery Responses in milliseconds.
         kStateUpdatePeriod = 1000u,  ///< State update period in milliseconds.
+        kUnsolicitedDataResponseJitter = 500u,  ///< Maximum delay before unsolicited Data Response in milliseconds.
     };
 
     ThreadError AppendConnectivity(Message &aMessage);
@@ -762,7 +763,8 @@ private:
     ThreadError SendChildUpdateRequest(Child *aChild);
     ThreadError SendChildUpdateResponse(Child *aChild, const Ip6::MessageInfo &aMessageInfo,
                                         const uint8_t *aTlvs, uint8_t aTlvsLength,  const ChallengeTlv *challenge);
-    ThreadError SendDataResponse(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength);
+    ThreadError SendDataResponse(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength,
+                                 uint16_t aDelay);
     ThreadError SendDiscoveryResponse(const Ip6::Address &aDestination, uint16_t aPanId);
 
     ThreadError SetStateRouter(uint16_t aRloc16);
