@@ -2609,6 +2609,7 @@ ThreadError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, u
     MeshCoP::NetworkNameTlv networkName;
     MeshCoP::JoinerUdpPortTlv joinerUdpPort;
     MeshCoP::Tlv *steeringData;
+    uint16_t delay;
 
     VerifyOrExit((message = NewMleMessage()) != NULL, ;);
     message->SetSubType(Message::kSubTypeMleDiscoverResponse);
@@ -2662,7 +2663,9 @@ ThreadError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, u
     tlv.SetLength(static_cast<uint8_t>(message->GetLength() - startOffset));
     message->Write(startOffset - sizeof(tlv), sizeof(tlv), &tlv);
 
-    SuccessOrExit(error = SendMessage(*message, aDestination));
+    delay = otPlatRandomGet() % (kDiscoveryMaxJitter + 1);
+
+    SuccessOrExit(error = AddDelayedResponse(*message, aDestination, delay));
 
     otLogInfoMle("Sent discovery response");
 
