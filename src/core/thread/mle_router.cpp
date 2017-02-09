@@ -508,8 +508,7 @@ bool MleRouter::HandleAdvertiseTimer(void)
 
 void MleRouter::ResetAdvertiseInterval(void)
 {
-    assert(GetDeviceState() == kDeviceStateRouter ||
-           GetDeviceState() == kDeviceStateLeader);
+    VerifyOrExit(mDeviceState == kDeviceStateRouter || mDeviceState == kDeviceStateLeader,);
 
     if (!mAdvertiseTimer.IsRunning())
     {
@@ -520,6 +519,9 @@ void MleRouter::ResetAdvertiseInterval(void)
     }
 
     mAdvertiseTimer.IndicateInconsistent();
+
+exit:
+    return;
 }
 
 ThreadError MleRouter::SendAdvertisement(void)
