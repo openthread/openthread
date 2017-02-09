@@ -2081,6 +2081,9 @@ ThreadError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::
 
     otLogInfoMle("Received Child ID Request");
 
+    // only process message when operating as a child, router, or leader
+    VerifyOrExit(mDeviceState >= kDeviceStateChild, error = kThreadError_InvalidState);
+
     // Find Child
     macAddr.Set(aMessageInfo.GetPeerAddr());
 
