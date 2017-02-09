@@ -472,6 +472,13 @@ ThreadError Ip6::HandleOptions(Message &message, Header &header, bool &forward)
     {
         VerifyOrExit(message.Read(message.GetOffset(), sizeof(optionHeader), &optionHeader) == sizeof(optionHeader),
                      error = kThreadError_Drop);
+
+        if (optionHeader.GetType() == OptionPad1::kType)
+        {
+            message.MoveOffset(sizeof(OptionPad1));
+            continue;
+        }
+
         VerifyOrExit(message.GetOffset() + sizeof(optionHeader) + optionHeader.GetLength() <= endOffset,
                      error = kThreadError_Drop);
 
@@ -503,15 +510,7 @@ ThreadError Ip6::HandleOptions(Message &message, Header &header, bool &forward)
             break;
         }
 
-        if (optionHeader.GetType() == OptionPad1::kType)
-        {
-            message.MoveOffset(sizeof(OptionPad1));
-        }
-        else
-        {
-            message.MoveOffset(sizeof(optionHeader) + optionHeader.GetLength());
-        }
-
+        message.MoveOffset(sizeof(optionHeader) + optionHeader.GetLength());
     }
 
 exit:
