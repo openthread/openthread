@@ -720,7 +720,7 @@ public:
      * @returns The ROUTER_SELECTION_JITTER value.
      *
      */
-    void SetRouterSelectionJitter(uint8_t aRouterJitter);
+    ThreadError SetRouterSelectionJitter(uint8_t aRouterJitter);
 
     /**
      * This method returns the Child ID portion of an RLOC16.

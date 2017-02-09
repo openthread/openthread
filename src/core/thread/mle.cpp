@@ -863,9 +863,16 @@ uint8_t Mle::GetRouterSelectionJitter(void) const
     return mRouterSelectionJitter;
 }
 
-void Mle::SetRouterSelectionJitter(uint8_t aRouterJitter)
+ThreadError Mle::SetRouterSelectionJitter(uint8_t aRouterJitter)
 {
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aRouterJitter > 0, error = kThreadError_InvalidArgs);
+
     mRouterSelectionJitter = aRouterJitter;
+
+exit:
+    return error;
 }
 
 void Mle::GenerateNonce(const Mac::ExtAddress &aMacAddr, uint32_t aFrameCounter, uint8_t aSecurityLevel,
