@@ -59,7 +59,8 @@ typedef enum _OTLWF_NOTIF_TYPE
     OTLWF_NOTIF_ACTIVE_SCAN,
     OTLWF_NOTIF_ENERGY_SCAN,
     OTLWF_NOTIF_COMMISSIONER_ENERGY_REPORT,
-    OTLWF_NOTIF_COMMISSIONER_PANID_QUERY
+    OTLWF_NOTIF_COMMISSIONER_PANID_QUERY,
+    OTLWF_NOTIF_JOINER_COMPLETE
 
 } OTLWF_NOTIF_TYPE;
 
@@ -123,6 +124,12 @@ typedef enum _OTLWF_NOTIF_TYPE
                 uint16_t                PanId;
                 uint32_t                ChannelMask;
             } CommissionerPanIdQueryPayload;
+
+            // Payload for OTLWF_NOTIF_JOINER_COMPLETE
+            struct
+            {
+                ThreadError             Error;
+            } JoinerCompletePayload;
         };
     } OTLWF_NOTIFICATION, *POTLWF_NOTIFICATION;
 
@@ -517,12 +524,12 @@ typedef enum _OTLWF_NOTIF_TYPE
 #define OPENTHREAD_VENDOR_DATA_MAX_LENGTH        64
 typedef struct otCommissionConfig
 {
-    uint8_t PSKd[OPENTHREAD_PSK_MAX_LENGTH + 1];
-    uint8_t ProvisioningUrl[OPENTHREAD_PROV_URL_MAX_LENGTH + 1];
-    uint8_t VendorName[OPENTHREAD_VENDOR_NAME_MAX_LENGTH + 1];
-    uint8_t VendorModel[OPENTHREAD_VENDOR_MODEL_MAX_LENGTH + 1];
-    uint8_t VendorSwVersion[OPENTHREAD_VENDOR_SW_VERSION_MAX_LENGTH + 1];
-    uint8_t VendorData[OPENTHREAD_VENDOR_DATA_MAX_LENGTH + 1];
+    char PSKd[OPENTHREAD_PSK_MAX_LENGTH + 1];
+    char ProvisioningUrl[OPENTHREAD_PROV_URL_MAX_LENGTH + 1];
+    char VendorName[OPENTHREAD_VENDOR_NAME_MAX_LENGTH + 1];
+    char VendorModel[OPENTHREAD_VENDOR_MODEL_MAX_LENGTH + 1];
+    char VendorSwVersion[OPENTHREAD_VENDOR_SW_VERSION_MAX_LENGTH + 1];
+    char VendorData[OPENTHREAD_VENDOR_DATA_MAX_LENGTH + 1];
 } otCommissionConfig;
     
 #define IOCTL_OTLWF_OT_JOINER_START \
