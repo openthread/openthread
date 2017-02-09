@@ -1309,7 +1309,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
         break;
     }
 
-    // Increment coutners
+    // Increment counters
     if (dstaddr.mShortAddress == kShortAddrBroadcast)
     {
         // Broadcast packet
