@@ -619,7 +619,25 @@ ThreadError otBecomeChild(otInstance *aInstance, otMleAttachFilter aFilter)
 
 ThreadError otBecomeRouter(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetMle().BecomeRouter(ThreadStatusTlv::kHaveChildIdRequest);
+    ThreadError error = kThreadError_InvalidState;
+
+    switch (aInstance->mThreadNetif.GetMle().GetDeviceState())
+    {
+    case Mle::kDeviceStateDisabled:
+    case Mle::kDeviceStateDetached:
+        break;
+
+    case Mle::kDeviceStateChild:
+        error = aInstance->mThreadNetif.GetMle().BecomeRouter(ThreadStatusTlv::kHaveChildIdRequest);
+        break;
+
+    case Mle::kDeviceStateRouter:
+    case Mle::kDeviceStateLeader:
+        error = kThreadError_None;
+        break;
+    }
+
+    return error;
 }
 
 ThreadError otBecomeLeader(otInstance *aInstance)
