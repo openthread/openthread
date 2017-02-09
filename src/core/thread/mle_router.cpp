@@ -2471,7 +2471,7 @@ ThreadError MleRouter::HandleDataRequest(const Message &aMessage, const Ip6::Mes
         tlvs[numTlvs++] = Tlv::kPendingDataset;
     }
 
-    SendDataResponse(aMessageInfo.GetPeerAddr(), tlvs, numTlvs);
+    SendDataResponse(aMessageInfo.GetPeerAddr(), tlvs, numTlvs, 0);
 
 exit:
     return error;
@@ -2481,6 +2481,7 @@ ThreadError MleRouter::HandleNetworkDataUpdateRouter(void)
 {
     static const uint8_t tlvs[] = {Tlv::kNetworkData};
     Ip6::Address destination;
+    uint16_t delay;
 
     VerifyOrExit(mDeviceState == kDeviceStateRouter || mDeviceState == kDeviceStateLeader, ;);
 
@@ -2488,7 +2489,8 @@ ThreadError MleRouter::HandleNetworkDataUpdateRouter(void)
     destination.mFields.m16[0] = HostSwap16(0xff02);
     destination.mFields.m16[7] = HostSwap16(0x0001);
 
-    SendDataResponse(destination, tlvs, sizeof(tlvs));
+    delay = (mDeviceState == kDeviceStateLeader) ? 0 : (otPlatRandomGet() % kUnsolicitedDataResponseJitter);
+    SendDataResponse(destination, tlvs, sizeof(tlvs), delay);
 
     for (uint8_t i = 0; i < mMaxChildrenAllowed; i++)
     {
@@ -2507,7 +2509,7 @@ ThreadError MleRouter::HandleNetworkDataUpdateRouter(void)
         {
             if (child->mNetworkDataVersion != mNetif.GetNetworkDataLeader().GetVersion())
             {
-                SendDataResponse(destination, tlvs, sizeof(tlvs));
+                SendDataResponse(destination, tlvs, sizeof(tlvs), 0);
             }
         }
         else
@@ -2516,7 +2518,7 @@ ThreadError MleRouter::HandleNetworkDataUpdateRouter(void)
             {
                 static const uint8_t responseTlvs[] = {Tlv::kNetworkData, Tlv::kActiveDataset, Tlv::kPendingDataset};
 
-                SendDataResponse(destination, responseTlvs, sizeof(responseTlvs));
+                SendDataResponse(destination, responseTlvs, sizeof(responseTlvs), 0);
             }
         }
     }
@@ -2871,7 +2873,8 @@ exit:
     return kThreadError_None;
 }
 
-ThreadError MleRouter::SendDataResponse(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength)
+ThreadError MleRouter::SendDataResponse(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength,
+                                        uint16_t aDelay)
 {
     ThreadError error = kThreadError_None;
     Message *message;
@@ -2905,7 +2908,14 @@ ThreadError MleRouter::SendDataResponse(const Ip6::Address &aDestination, const 
         }
     }
 
-    SuccessOrExit(error = SendMessage(*message, aDestination));
+    if (aDelay)
+    {
+        SuccessOrExit(error = AddDelayedResponse(*message, aDestination, aDelay));
+    }
+    else
+    {
+        SuccessOrExit(error = SendMessage(*message, aDestination));
+    }
 
     otLogInfoMle("Sent Data Response");
 
