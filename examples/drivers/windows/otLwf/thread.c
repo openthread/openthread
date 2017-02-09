@@ -531,6 +531,26 @@ void otLwfCommissionerPanIdConflictCallback(uint16_t aPanId, uint32_t aChannelMa
     LogFuncExit(DRIVER_DEFAULT);
 }
 
+void otLwfJoinerCallback(ThreadError aError, _In_ void *aContext)
+{
+    LogFuncEntry(DRIVER_DEFAULT);
+
+    PMS_FILTER pFilter = (PMS_FILTER)aContext;
+    PFILTER_NOTIFICATION_ENTRY NotifEntry = FILTER_ALLOC_NOTIF(pFilter);
+    if (NotifEntry)
+    {
+        RtlZeroMemory(NotifEntry, sizeof(FILTER_NOTIFICATION_ENTRY));
+        NotifEntry->Notif.InterfaceGuid = pFilter->InterfaceGuid;
+        NotifEntry->Notif.NotifType = OTLWF_NOTIF_JOINER_COMPLETE;
+
+        NotifEntry->Notif.JoinerCompletePayload.Error = aError;
+
+        otLwfIndicateNotification(NotifEntry);
+    }
+
+    LogFuncExit(DRIVER_DEFAULT);
+}
+
 _IRQL_requires_max_(DISPATCH_LEVEL)
 void
 otLwfThreadValueIs(

@@ -253,6 +253,14 @@ typedef struct _MS_FILTER
 #endif
 
         //
+        // OpenThread Joiner Vendor Info
+        //
+        char otVendorName[OPENTHREAD_VENDOR_NAME_MAX_LENGTH + 1];
+        char otVendorModel[OPENTHREAD_VENDOR_MODEL_MAX_LENGTH + 1];
+        char otVendorSwVersion[OPENTHREAD_VENDOR_SW_VERSION_MAX_LENGTH + 1];
+        char otVendorData[OPENTHREAD_VENDOR_DATA_MAX_LENGTH + 1];
+
+        //
         // OpenThread context buffer
         //
         otInstance*                 otCtx;
