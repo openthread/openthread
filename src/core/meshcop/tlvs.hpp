@@ -696,6 +696,7 @@ public:
     void SetCommissionerId(const char *aCommissionerId) {
         size_t length = strnlen(aCommissionerId, sizeof(mCommissionerId));
         memcpy(mCommissionerId, aCommissionerId, length);
+        SetLength(static_cast<uint8_t>(length));
     }
 
 private:
