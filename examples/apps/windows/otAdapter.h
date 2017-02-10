@@ -47,6 +47,8 @@ namespace Thread
 
 ref class otAdapter;
 
+public delegate void otAdapterRemovalDelegate(otAdapter^ sender);
+
 public delegate void otIpAddressAddedDelegate(otAdapter^ sender);
 public delegate void otIpAddressRemovedDelegate(otAdapter^ sender);
 public delegate void otIpRlocAddedDelegate(otAdapter^ sender);
@@ -88,9 +90,9 @@ private:
 
 public:
 
-    //
-    // Events
-    //
+#pragma region Events
+
+    event otAdapterRemovalDelegate^                 AdapterRemoval;
 
     event otIpAddressAddedDelegate^                 IpAddressAdded;
     event otIpAddressRemovedDelegate^               IpAddressRemoved;
@@ -107,9 +109,9 @@ public:
     event otThreadChildRemovedDelegate^             ThreadChildRemoved;
     event otThreadNetDataUpdatedDelegate^           ThreadNetDataUpdated;
 
-    //
-    // Properties
-    //
+#pragma endregion
+
+#pragma region Properties
 
     property IntPtr RawHandle
     {
@@ -442,9 +444,9 @@ public:
         }
     }
 
-    //
-    // Constructor/Destructor
-    //
+#pragma endregion
+
+#pragma region Constructor/Destructor
 
     otAdapter(_In_ IntPtr /*otInstance**/ aInstance)
     {
@@ -465,9 +467,9 @@ public:
         otFreeMemory(DeviceInstance);
     }
 
-    //
-    // Functions
-    //
+#pragma endregion
+
+#pragma region Functions
 
     void PlatformReset()
     {
@@ -487,6 +489,15 @@ public:
     void BecomeLeader()
     {
         ThrowOnFailure(otBecomeLeader(DeviceInstance));
+    }
+
+#pragma endregion
+
+internal:
+
+    void InvokeAdapterRemoval()
+    {
+        AdapterRemoval(this);
     }
 
 private:

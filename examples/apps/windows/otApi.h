@@ -38,7 +38,6 @@ using namespace Windows::Foundation::Collections;
 namespace Thread
 {
 
-public delegate void otAdapterRemovalDelegate(otAdapter^ aAdapter);
 public delegate void otAdapterArrivalDelegate(otAdapter^ aAdapter);
 
 public ref class otApi sealed
@@ -55,7 +54,6 @@ public:
 
     // Event for device availability changes
     event otAdapterArrivalDelegate^ AdapterArrival;
-    event otAdapterRemovalDelegate^ AdapterRemoval;
 
     property IntPtr RawHandle
     {
@@ -209,7 +207,7 @@ private:
 
             if (ret)
             {
-                pThis->AdapterRemoval(ret);
+                ret->InvokeAdapterRemoval();
             }
         }
     }

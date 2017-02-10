@@ -114,7 +114,7 @@
                         />
                     <TextBox
                         Name="InterfaceConfigKey"
-                        Text="Pas$W0rd"
+                        Text="00112233445566778899aabbccddeeff"
                         Grid.Row="1"
                         Grid.Column="1"
                         FontSize="18" 
@@ -130,9 +130,9 @@
                         Name="InterfaceConfigMaxChildren"
                         Grid.Row="2"
                         Grid.Column="1"
-                        Minimum="11"
-                        Maximum="26"
-                        Value="15"
+                        Minimum="0"
+                        Maximum="32"
+                        Value="16"
                         VerticalAlignment="Center"
                         />
                     <TextBlock
@@ -147,7 +147,7 @@
                         Grid.Column="1"
                         Minimum="11"
                         Maximum="24"
-                        Value="5"
+                        Value="11"
                         VerticalAlignment="Center"
                         />
                     <StackPanel
