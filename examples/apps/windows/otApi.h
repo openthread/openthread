@@ -57,6 +57,11 @@ public:
     event otAdapterArrivalDelegate^ AdapterArrival;
     event otAdapterRemovalDelegate^ AdapterRemoval;
 
+    property IntPtr RawHandle
+    {
+        IntPtr get() { return _apiInstance; }
+    }
+
     // Constructor
     otApi() :
         _adapters(ref new Vector<otAdapter^>())
@@ -114,14 +119,14 @@ public:
     }
 
     // Returns the entire list of adapters
-    /*Vector<otAdapter^>^ GetAdapters()
+    IVectorView<otAdapter^>^ GetAdapters()
     {
-        Vector<otAdapter^>^ adapters;
+        IVectorView<otAdapter^>^ adapters;
         EnterCriticalSection(&_cs);
-        adapters = ref new Vector<otAdapter^>(_adapters);
+        adapters = _adapters->GetView(); // TODO - Need to copy
         LeaveCriticalSection(&_cs);
         return adapters;
-    }*/
+    }
 
     // Helper to get an adapter, given its device guid
     otAdapter^ GetAdapter(Guid aDeviceGuid)
