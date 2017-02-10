@@ -107,9 +107,17 @@ VOID
 otLwfEventProcessingIndicateNewNetBufferLists(
     _In_ PMS_FILTER             pFilter,
     _In_ BOOLEAN                DispatchLevel,
-    _In_ BOOLEAN                Received,
-    _In_ NDIS_PORT_NUMBER       PortNumber,
     _In_ PNET_BUFFER_LIST       NetBufferLists
+    );
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+VOID
+otLwfEventProcessingIndicateNewMacFrameCommand(
+    _In_ PMS_FILTER             pFilter,
+    _In_ BOOLEAN                DispatchLevel,
+    _In_reads_bytes_(BufferLength) 
+         const uint8_t*         Buffer,
+    _In_ uint8_t                BufferLength
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
@@ -144,5 +152,30 @@ void otLwfEnergyScanCallback(_In_ otEnergyScanResult *aResult, _In_ void *aConte
 void otLwfDiscoverCallback(_In_ otActiveScanResult *aResult, _In_ void *aContext);
 void otLwfCommissionerEnergyReportCallback(uint32_t aChannelMask, const uint8_t *aEnergyList, uint8_t aEnergyListLength, void *aContext);
 void otLwfCommissionerPanIdConflictCallback(uint16_t aPanId, uint32_t aChannelMask, _In_ void *aContext);
+void otLwfJoinerCallback(ThreadError aError, _In_ void *aContext);
+
+//
+// Value Callbacks
+//
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+void
+otLwfThreadValueIs(
+    _In_ PMS_FILTER pFilter,
+    _In_ BOOLEAN DispatchLevel,
+    _In_ spinel_prop_key_t key,
+    _In_reads_bytes_(value_data_len) const uint8_t* value_data_ptr,
+    _In_ spinel_size_t value_data_len
+    );
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+void
+otLwfThreadValueInserted(
+    _In_ PMS_FILTER pFilter,
+    _In_ BOOLEAN DispatchLevel,
+    _In_ spinel_prop_key_t key,
+    _In_reads_bytes_(value_data_len) const uint8_t* value_data_ptr,
+    _In_ spinel_size_t value_data_len
+    );
 
 #endif  //_THREAD_H_

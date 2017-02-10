@@ -5,6 +5,7 @@
  * \{
  * \addtogroup Timer1
  * \{
+ * \brief Timer1
  */
 
 /**
@@ -37,7 +38,8 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- *   
+ *
+ *
  *****************************************************************************************
  */
 
@@ -48,7 +50,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <black_orca.h>
+#include <sdk_defs.h>
 
 
 /**
@@ -268,9 +270,10 @@ typedef struct {
         HW_TIMER1_CLK_SRC   clk_src;                    /**< clock source */
         uint16_t            prescaler;                  /**< clock prescaler */
 
+        union {
                 timer1_config_timer_capture   timer;    /**< configuration for timer/capture mode */
                 timer1_config_oneshot         oneshot;  /**< configuration for oneshot mode */
-       
+        };
         timer1_config_pwm   pwm;                        /**< PWM configuration */
 } timer1_config;
 
@@ -324,6 +327,35 @@ void hw_timer1_configure_timer(const timer1_config_timer_capture *cfg);
 void hw_timer1_configure_oneshot(const timer1_config_oneshot *cfg);
 
 /**
+ * \brief Freeze timer
+ *
+ */
+static inline void hw_timer1_freeze(void)
+{
+        GPREG->SET_FREEZE_REG = GPREG_SET_FREEZE_REG_FRZ_SWTIM1_Msk;
+}
+
+/**
+ * \brief Unfreeze timer
+ *
+ */
+static inline void hw_timer1_unfreeze(void)
+{
+        GPREG->RESET_FREEZE_REG = GPREG_RESET_FREEZE_REG_FRZ_SWTIM1_Msk;
+}
+
+/**
+ * \brief Check if timer is frozen
+ *
+ * \return true if it is frozen else false
+ *
+ */
+static inline bool hw_timer1_frozen(void)
+{
+        return GPREG->SET_FREEZE_REG & GPREG_SET_FREEZE_REG_FRZ_SWTIM1_Msk ? true : false;
+}
+
+/**
  * \brief Set clock source of the timer
  *
  * \param [in] clk clock source of the timer, external or internal
@@ -356,11 +388,24 @@ static inline void hw_timer1_set_prescaler(uint16_t value)
  * \param [in] value reload value
  *
  * \sa hw_timer1_set_oneshot_delay
- *
+ * \note For DA14682/3 chips, setting the reload value will also freeze the timer until both
+ * reload registers are set.
  */
 static inline void hw_timer1_set_reload(uint32_t value)
 {
+#if (dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A) && (dg_configUSE_AUTO_CHIP_DETECTION != 1)
+        bool timer1_frozen = hw_timer1_frozen();
+        if (!timer1_frozen) {
+                hw_timer1_freeze();
+        }
         TIMER1->CAPTIM_RELOAD_REG = (uint16_t) value;
+        TIMER1->CAPTIM_RELOAD_HIGH_REG = (uint16_t) value >> 16;
+        if (!timer1_frozen) {
+                hw_timer1_unfreeze();
+        }
+#else
+        TIMER1->CAPTIM_RELOAD_REG = (uint16_t) value;
+#endif
 }
 
 /**
@@ -626,7 +671,18 @@ static inline HW_TIMER1_MODE hw_timer1_get_mode(void)
  */
 static inline uint32_t hw_timer1_get_count(void)
 {
+#if (dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A) && (dg_configUSE_AUTO_CHIP_DETECTION != 1)
+        uint32_t lo, hi;
+        GLOBAL_INT_DISABLE();
+        do {
+                lo = TIMER1->CAPTIM_TIMER_VAL_REG;
+                hi = TIMER1->CAPTIM_TIMER_HVAL_REG;
+        } while (lo != TIMER1->CAPTIM_TIMER_VAL_REG);
+        GLOBAL_INT_RESTORE();
+        return (hi << 16) | lo;
+#else
         return TIMER1->CAPTIM_TIMER_VAL_REG;
+#endif
 }
 
 /**
@@ -695,32 +751,20 @@ void hw_timer1_register_int(hw_timer1_handler_cb handler);
  */
 void hw_timer1_unregister_int(void);
 
-/**
- * \brief Freeze timer
- *
- */
-static inline void hw_timer1_freeze(void)
-{
-        GPREG->SET_FREEZE_REG = GPREG_SET_FREEZE_REG_FRZ_SWTIM1_Msk;
-}
-
-/**
- * \brief Unfreeze timer
- *
- */
-static inline void hw_timer1_unfreeze(void)
-{
-        GPREG->RESET_FREEZE_REG = GPREG_SET_FREEZE_REG_FRZ_SWTIM1_Msk;
-}
-
-
 #else // (dg_configUSER_CAN_USE_TIMER1 == 0)
 
-
+#if dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A
 #define LP_CNT_REG_RANGE        ( 16 )
-#define LP_CNT_MAX_VALUE        ( (1 << LP_CNT_REG_RANGE) - 1 )
+#else
+#define LP_CNT_REG_RANGE        ( 32 )
+#endif
+#define LP_CNT_MAX_VALUE        ( (1ULL << LP_CNT_REG_RANGE) - 1 )
 #define LP_CNT_PRESCALED_MASK   ( LP_CNT_MAX_VALUE )
-#define LP_CNT_NATIVE_MASK      ( (1 << (LP_CNT_REG_RANGE + dg_configTim1PrescalerBitRange)) - 1 )
+#if dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A
+#define LP_CNT_NATIVE_MASK      ( (1ULL << (LP_CNT_REG_RANGE + dg_configTim1PrescalerBitRange)) - 1 )
+#else
+#define LP_CNT_NATIVE_MASK      ( (1ULL << (LP_CNT_REG_RANGE)) - 1 )
+#endif
 
 /**
  * \brief Configure timer as tick timer
@@ -745,6 +789,8 @@ void hw_timer1_lp_clk_init(void);
  * \return void
  *
  */
+static inline void hw_timer1_int_enable(void) __attribute__((always_inline));
+
 static inline void hw_timer1_int_enable(void)
 {
         HW_TIMER1_REG_SETF(CTRL, CAPTIM_IRQ_EN, 1);
@@ -759,6 +805,8 @@ static inline void hw_timer1_int_enable(void)
  * \return void
  *
  */
+static inline void hw_timer1_int_disable(void) __attribute__((always_inline));
+
 static inline void hw_timer1_int_disable(void)
 {
         NVIC_DisableIRQ(SWTIM1_IRQn);
@@ -776,7 +824,18 @@ static inline uint32_t hw_timer1_get_value(void) __attribute__((always_inline));
 
 static inline uint32_t hw_timer1_get_value(void)
 {
+#if dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A
         return TIMER1->CAPTIM_TIMER_VAL_REG;
+#else
+        uint32_t lo, hi;
+        GLOBAL_INT_DISABLE();
+        do {
+                lo = TIMER1->CAPTIM_TIMER_VAL_REG;
+                hi = TIMER1->CAPTIM_TIMER_HVAL_REG;
+        } while (lo != TIMER1->CAPTIM_TIMER_VAL_REG);
+        GLOBAL_INT_RESTORE();
+        return (hi << 16) | lo;
+#endif
 }
 
 
@@ -795,8 +854,10 @@ static inline uint32_t hw_timer1_get_value(void)
  *           respectively), so the time becomes {1, 0}
  *         - the reading of the prescaler's value will give 0 but {0, 0} is earlier than {0, 3} (when
  *           the operation started) and this may result in errors in time computations.
+ * \note This macro should be used inside a critical section.
  *
  */
+#if dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A
 #define HW_TIMER1_GET_INSTANT(prescaled, fine)                                                  \
 do {                                                                                            \
         if (dg_configTim1Prescaler != 0) {                                                      \
@@ -814,17 +875,45 @@ do {                                                                            
                 fine = prescaled;                                                               \
         }                                                                                       \
 } while (0)
-
+#else
+#define HW_TIMER1_GET_INSTANT(prescaled, fine)                                                  \
+do {                                                                                            \
+        uint32_t lo, hi;                                                                        \
+        do {                                                                                    \
+                lo = TIMER1->CAPTIM_TIMER_VAL_REG;                                              \
+                hi = TIMER1->CAPTIM_TIMER_HVAL_REG;                                             \
+        } while (lo != TIMER1->CAPTIM_TIMER_VAL_REG);                                           \
+        prescaled = fine = (hi << 16) | lo;                                                     \
+} while (0)
+#endif
 /**
  * \brief Macro to set the trigger value. The previous trigger value is returned to the caller.
- *
+ * \note For DA14682/3 chips, this macro will disable timer1 interrupt until reload registers
+ * programmed so that false interrupts are avoided.
  */
+#if dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A
 #define HW_TIMER1_SET_TRIGGER(value, last_value)        \
 do {                                                    \
         last_value = TIMER1->CAPTIM_RELOAD_REG;         \
         TIMER1->CAPTIM_RELOAD_REG = value;              \
 } while (0)
-
+#else
+#define HW_TIMER1_SET_TRIGGER(value, last_value)                                                   \
+do {                                                                                               \
+        bool timer1_irq_en =                                                                       \
+                TIMER1->CAPTIM_CTRL_REG & TIMER1_CAPTIM_CTRL_REG_CAPTIM_IRQ_EN_Msk ? true : false; \
+        last_value = TIMER1->CAPTIM_RELOAD_REG |                                                   \
+                ((uint32_t) TIMER1->CAPTIM_RELOAD_HIGH_REG) << 16;                                 \
+        if (timer1_irq_en) {                                                                       \
+                TIMER1->CAPTIM_CTRL_REG &= ~TIMER1_CAPTIM_CTRL_REG_CAPTIM_IRQ_EN_Msk;              \
+        }                                                                                          \
+        TIMER1->CAPTIM_RELOAD_REG = (uint16_t) value;                                              \
+        TIMER1->CAPTIM_RELOAD_HIGH_REG = (uint16_t) ((value) >> 16);                               \
+        if (timer1_irq_en) {                                                                       \
+                TIMER1->CAPTIM_CTRL_REG |= TIMER1_CAPTIM_CTRL_REG_CAPTIM_IRQ_EN_Msk;               \
+        }                                                                                          \
+} while (0)
+#endif
 
 /**
  * \brief Get trigger value
@@ -834,7 +923,11 @@ do {                                                    \
  */
 static inline uint32_t hw_timer1_get_trigger(void)
 {
+#if dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A
         return TIMER1->CAPTIM_RELOAD_REG;
+#else
+        return TIMER1->CAPTIM_RELOAD_REG | ((uint32_t) TIMER1->CAPTIM_RELOAD_HIGH_REG) << 16;
+#endif
 }
 
 /**
@@ -865,7 +958,9 @@ static inline void hw_timer1_invalidate_trigger(void)
 static inline void hw_timer1_enable(void)
 {
         HW_TIMER1_REG_SETF(CTRL, CAPTIM_EN, 1);
+        GLOBAL_INT_DISABLE();
         REG_SET_BIT(CRG_TOP, CLK_TMR_REG, TMR1_ENABLE);
+        GLOBAL_INT_RESTORE();
 }
 
 /**
@@ -875,7 +970,9 @@ static inline void hw_timer1_enable(void)
 static inline void hw_timer1_disable(void)
 {
         HW_TIMER1_REG_SETF(CTRL, CAPTIM_EN, 0);
+        GLOBAL_INT_DISABLE();
         REG_CLR_BIT(CRG_TOP, CLK_TMR_REG, TMR1_ENABLE);
+        GLOBAL_INT_RESTORE();
 }
 
 /**

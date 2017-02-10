@@ -86,6 +86,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\address.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\alarm.c" />
+    <ClCompile Include="..\..\examples\drivers\windows\otLwf\command.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\datapath.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\driver.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\eventprocessing.c" />
@@ -93,7 +94,6 @@
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\settings.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\thread.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\tunnel.c" />
-    <ClCompile Include="..\..\examples\drivers\windows\otLwf\oid.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\precomp.c">
       <AdditionalIncludeDirectories>..;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreProcessorDefinitions>%(PreProcessorDefinitions);NDIS_WDM=1</PreProcessorDefinitions>
@@ -103,11 +103,11 @@
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\filter.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\device.c" />
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\radio.c" />
+    <ClInclude Include="..\..\examples\drivers\windows\otLwf\command.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\device.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\driver.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\iocontrol.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\nsihelper.h" />
-    <ClInclude Include="..\..\examples\drivers\windows\otLwf\oid.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\radio.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\thread.h" />
     <ClInclude Include="..\..\examples\drivers\windows\otLwf\tunnel.h" />

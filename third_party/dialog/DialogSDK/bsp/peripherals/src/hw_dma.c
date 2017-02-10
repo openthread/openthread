@@ -12,6 +12,8 @@
  *
  * @file hw_dma.c
  *
+ * @brief Implementation of the DMA Low Level Driver.
+ *
  * Copyright (c) 2016, Dialog Semiconductor
  * All rights reserved.
  * Redistribution and use in source and binary forms, with or without modification,
@@ -42,8 +44,6 @@
 
 #if dg_configUSE_HW_DMA
 
-#include <global_io.h>
-#include <core_cm0.h>
 #include <hw_gpio.h>
 #include <hw_dma.h>
 
@@ -60,7 +60,7 @@ static struct hw_dma_callback_data
     void *user_data;
 } dma_callbacks_user_data[8];
 
-#define DMA_CHN_REG(reg, chan) ((uint16 *) (((int) &(reg)) + ((chan) << 4)))
+#define DMA_CHN_REG(reg, chan) ((volatile uint16 *)(&(reg)) + ((chan) * 8))
 
 /**
  * \brief Initialize DMA Channel
@@ -127,29 +127,95 @@ void hw_dma_channel_initialization(DMA_setup *channel_setup)
         {
         case HW_DMA_CHANNEL_0:
         case HW_DMA_CHANNEL_1:
+            GLOBAL_INT_DISABLE();
             REG_SETF(DMA, DMA_REQ_MUX_REG, DMA01_SEL, channel_setup->dma_req_mux);
+            GLOBAL_INT_RESTORE();
             break;
 
         case HW_DMA_CHANNEL_2:
         case HW_DMA_CHANNEL_3:
+            GLOBAL_INT_DISABLE();
             REG_SETF(DMA, DMA_REQ_MUX_REG, DMA23_SEL, channel_setup->dma_req_mux);
+            GLOBAL_INT_RESTORE();
             break;
 
         case HW_DMA_CHANNEL_4:
         case HW_DMA_CHANNEL_5:
+            GLOBAL_INT_DISABLE();
             REG_SETF(DMA, DMA_REQ_MUX_REG, DMA45_SEL, channel_setup->dma_req_mux);
+            GLOBAL_INT_RESTORE();
             break;
 
         case HW_DMA_CHANNEL_6:
         case HW_DMA_CHANNEL_7:
+            GLOBAL_INT_DISABLE();
             REG_SETF(DMA, DMA_REQ_MUX_REG, DMA67_SEL, channel_setup->dma_req_mux);
+            GLOBAL_INT_RESTORE();
             break;
 
         default:
             break;
         }
+
+#if dg_configDMA_DYNAMIC_MUX || (dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A)
+        /*
+         * When different DMA channels are used for same device it is important
+         * that only one trigger is set for specific device at a time.
+         * Having same trigger for different channels can cause unpredictable results.
+         * Following code also should help when SPI1 is assigned to non 0 channel.
+         */
+        GLOBAL_INT_DISABLE();
+
+        switch (channel_setup->channel_number)
+        {
+        case HW_DMA_CHANNEL_6:
+        case HW_DMA_CHANNEL_7:
+            if (REG_GETF(DMA, DMA_REQ_MUX_REG, DMA45_SEL) == channel_setup->dma_req_mux)
+            {
+                REG_SETF(DMA, DMA_REQ_MUX_REG, DMA45_SEL, HW_DMA_TRIG_NONE);
+            }
+
+        /* no break */
+        case HW_DMA_CHANNEL_4:
+        case HW_DMA_CHANNEL_5:
+            if (REG_GETF(DMA, DMA_REQ_MUX_REG, DMA23_SEL) == channel_setup->dma_req_mux)
+            {
+                REG_SETF(DMA, DMA_REQ_MUX_REG, DMA23_SEL, HW_DMA_TRIG_NONE);
+            }
+
+        /* no break */
+        case HW_DMA_CHANNEL_2:
+        case HW_DMA_CHANNEL_3:
+            if (REG_GETF(DMA, DMA_REQ_MUX_REG, DMA01_SEL) == channel_setup->dma_req_mux)
+            {
+                REG_SETF(DMA, DMA_REQ_MUX_REG, DMA01_SEL, HW_DMA_TRIG_NONE);
+            }
+
+            break;
+
+        case HW_DMA_CHANNEL_0:
+        case HW_DMA_CHANNEL_1:
+        default:
+            break;
+        }
+
+        GLOBAL_INT_RESTORE();
+#endif
     }
 
+#if (dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_B)
+
+    //Set REQ_SENSE bit of i2c and Uart peripherals TX path
+    if (((channel_setup->dma_req_mux == HW_DMA_TRIG_UART_RXTX) ||
+         (channel_setup->dma_req_mux == HW_DMA_TRIG_UART2_RXTX) ||
+         (channel_setup->dma_req_mux == HW_DMA_TRIG_I2C_RXTX) ||
+         (channel_setup->dma_req_mux == HW_DMA_TRIG_I2C2_RXTX)) &&
+        (channel_setup->channel_number & 1))  //odd channels used for TX
+    {
+        REG_SET_FIELD(DMA, DMA0_CTRL_REG, REQ_SENSE, *dma_x_ctrl_reg, 1);
+    }
+
+#endif
     src_address = black_orca_phy_addr(channel_setup->src_address);
     dest_address = black_orca_phy_addr(channel_setup->dest_address);
 
@@ -186,6 +252,69 @@ void hw_dma_channel_initialization(DMA_setup *channel_setup)
     }
 
     dma_callbacks_user_data[channel_setup->channel_number].user_data = channel_setup->user_data;
+}
+
+void hw_dma_channel_update_source(HW_DMA_CHANNEL channel, void *addr, uint16_t length,
+                                  hw_dma_transfer_cb cb)
+{
+    uint32_t phy_addr = black_orca_phy_addr((uint32_t) addr);
+
+    dma_callbacks_user_data[channel].callback = cb;
+
+    // Look up DMAx_A_STARTL_REG address
+    volatile uint16 *dma_x_a_start_low_reg = DMA_CHN_REG(DMA->DMA0_A_STARTL_REG, channel);
+
+    // Look up DMAx_A_STARTH_REG address
+    volatile uint16 *dma_x_a_start_high_reg = DMA_CHN_REG(DMA->DMA0_A_STARTH_REG, channel);
+
+    // Look up DMAX_LEN_REG address
+    volatile uint16 *dma_x_len_reg = DMA_CHN_REG(DMA->DMA0_LEN_REG, channel);
+
+
+    volatile uint16 *dma_x_int_reg = DMA_CHN_REG(DMA->DMA0_INT_REG, channel);
+
+    // Set source address registers
+    *dma_x_a_start_low_reg = (phy_addr & 0xffff);
+    *dma_x_a_start_high_reg = (phy_addr >> 16);
+
+    *dma_x_int_reg = length - 1;
+
+    // Set the transfer length
+    *dma_x_len_reg = length - 1;
+}
+
+void hw_dma_channel_update_destination(HW_DMA_CHANNEL channel, void *addr, uint16_t length,
+                                       hw_dma_transfer_cb cb)
+{
+    uint32_t phy_addr = black_orca_phy_addr((uint32_t) addr);
+
+    dma_callbacks_user_data[channel].callback = cb;
+
+    // Look up DMAx_B_STARTL_REG address
+    volatile uint16 *dma_x_b_start_low_reg = DMA_CHN_REG(DMA->DMA0_B_STARTL_REG, channel);
+
+    // Look up DMAx_B_STARTH_REG address
+    volatile uint16 *dma_x_b_start_high_reg = DMA_CHN_REG(DMA->DMA0_B_STARTH_REG, channel);
+
+    // Look up DMAX_LEN_REG address
+    volatile uint16 *dma_x_len_reg = DMA_CHN_REG(DMA->DMA0_LEN_REG, channel);
+    volatile uint16 *dma_x_int_reg = DMA_CHN_REG(DMA->DMA0_INT_REG, channel);
+
+    // Set destination address registers
+    *dma_x_b_start_low_reg = (phy_addr & 0xffff);
+    *dma_x_b_start_high_reg = (phy_addr >> 16);
+
+    *dma_x_int_reg = length - 1;
+
+    // Set the transfer length
+    *dma_x_len_reg = length - 1;
+}
+
+void hw_dma_channel_update_int_ix(HW_DMA_CHANNEL channel, uint16_t int_ix)
+{
+    volatile uint16 *dma_x_int_reg = DMA_CHN_REG(DMA->DMA0_INT_REG, channel);
+
+    *dma_x_int_reg = int_ix;
 }
 
 /**
@@ -264,7 +393,7 @@ bool hw_dma_channel_active(void)
 }
 
 /**
- * \brief Capture Timer Interrupt Handler
+ * \brief Capture DMA Interrupt Handler
  *
  * Calls user interrupt handler
  *
@@ -318,13 +447,13 @@ void DMA_Handler(void)
 void hw_dma_channel_stop(HW_DMA_CHANNEL channel_number)
 {
     // Stopping DMA will clear DMAx_IDX_REG so read it before
-    uint16 *dma_x_idx_reg = DMA_CHN_REG(DMA->DMA0_IDX_REG, channel_number);
+    volatile uint16 *dma_x_idx_reg = DMA_CHN_REG(DMA->DMA0_IDX_REG, channel_number);
     dma_helper(channel_number, *dma_x_idx_reg, true);
 }
 
 uint16_t hw_dma_transfered_bytes(HW_DMA_CHANNEL channel_number)
 {
-    uint16 *dma_x_int_reg = dma_x_int_reg = DMA_CHN_REG(DMA->DMA0_IDX_REG, channel_number);
+    volatile uint16 *dma_x_int_reg = dma_x_int_reg = DMA_CHN_REG(DMA->DMA0_IDX_REG, channel_number);
 
     return *dma_x_int_reg;
 }

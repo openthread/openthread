@@ -1,21 +1,4 @@
-
-/****************************************************************************************************//**
- * @file     DA14680AD.h
- *
- * @brief    CMSIS Cortex-M0 Peripheral Access Layer Header File for
- *           DA14680AD from Dialog.
- *
- * @version  V1.2
- * @date     18. February 2016
- *
- * @note     Generated with SVDConv V2.87g 
- *           from CMSIS SVD File 'DA14680AD.xml' Version 1.2,
- *
- * @par      Dialog GmbH (DLG) is supplying this software for use with Cortex-M
- *           processor based microcontroller, but can be equally used for other
- *           suitable processor architectures. This file can be freely distributed.
- *           Modifications to this file shall be clearly marked.
- *           
+/*
  * Copyright (c) 2016, Dialog Semiconductor
  * All rights reserved.
  * Redistribution and use in source and binary forms, with or without modification, 
@@ -39,8 +22,15 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- *   
- *******************************************************************************************************/
+ *
+ * @file     DA14680BA.h
+ * @brief    CMSIS Cortex-M0 Peripheral Access Layer Header File for DA14680BA from Dialog.
+ * @version  V1.2
+ * @date     9. August 2016
+ * @note     Generated with SVDConv V2.87g
+ *           from CMSIS SVD File 'DA14680BA.xml'
+ *           Version 1.2
+ */
 
 
 
@@ -48,12 +38,13 @@
   * @{
   */
 
-/** @addtogroup DA14680AD
+
+/** @addtogroup DA14680BA
   * @{
   */
 
-#ifndef DA14680AD_H
-#define DA14680AD_H
+#ifndef DA14680BA_H
+#define DA14680BA_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -74,7 +65,7 @@ typedef enum {
   SVCall_IRQn                   =  -5,              /*!<  11  System Service Call via SVC instruction                          */
   PendSV_IRQn                   =  -2,              /*!<  14  Pendable request for system service                              */
   SysTick_IRQn                  =  -1,              /*!<  15  System Tick Timer                                                */
-/* --------------------  DA14680AD Specific Interrupt Numbers  -------------------- */
+/* --------------------  DA14680BA Specific Interrupt Numbers  -------------------- */
   BLE_WAKEUP_LP_IRQn            =   0,              /*!<   0  BLE_WAKEUP_LP                                                    */
   BLE_GEN_IRQn                  =   1,              /*!<   1  BLE_GEN                                                          */
   FTDF_WAKEUP_IRQn              =   2,              /*!<   2  FTDF_WAKEUP                                                      */
@@ -106,11 +97,11 @@ typedef enum {
   TRNG_IRQn                     =  28,              /*!<  28  TRNG                                                             */
   DCDC_IRQn                     =  29,              /*!<  29  DCDC                                                             */
   XTAL16RDY_IRQn                =  30,              /*!<  30  XTAL16RDY                                                        */
-  RESERVED31_IRQn               =  31               /*!<  31  RESERVED31                                                       */
+  PLL_LOCK_IRQn                 =  31               /*!<  31  PLL_LOCK                                                         */
 } IRQn_Type;
 
 
-/** @addtogroup Configuration_of_CMSIS
+/** @addtogroup Configuration_of_CMSIS_DA14680BA
   * @{
   */
 
@@ -127,7 +118,7 @@ typedef enum {
 /** @} */ /* End of group Configuration_of_CMSIS */
 
 #include "core_cm0.h"                               /*!< Cortex-M0 processor and core peripherals                              */
-#include "system_DA14680.h"                         /*!< DA14680AD System                                                      */
+#include "system_DA14680.h"                       /*!< DA14680BA System                                                      */
 
 
 /* ================================================================================ */
@@ -135,7 +126,7 @@ typedef enum {
 /* ================================================================================ */
 
 
-/** @addtogroup Device_Peripheral_Registers
+/** @addtogroup Device_Peripheral_Registers_DA14680BA
   * @{
   */
 
@@ -335,8 +326,7 @@ typedef struct {                                    /*!< (@ 0x40000000) BLE Stru
   __IO uint32_t  BLE_COEXIFCNTL1_REG;               /*!< (@ 0x40000104) Coexistence interface Control 1 Register               */
   __IO uint32_t  BLE_BLEMPRIO0_REG;                 /*!< (@ 0x40000108) Coexistence interface Priority 0 Register              */
   __IO uint32_t  BLE_BLEMPRIO1_REG;                 /*!< (@ 0x4000010C) Coexistence interface Priority 1 Register              */
-  __IO uint32_t  BLE_BLEPRIOSCHARB_REG;             /*!< (@ 0x40000110) Priority Scheduling Arbiter Control Register           */
-  __I  uint32_t  RESERVED7[59];
+  __I  uint32_t  RESERVED7[60];
   __IO uint32_t  BLE_CNTL2_REG;                     /*!< (@ 0x40000200) BLE Control Register 2                                 */
   __I  uint32_t  RESERVED8;
   __IO uint32_t  BLE_EM_BASE_REG;                   /*!< (@ 0x40000208) Exchange Memory Base Register                          */
@@ -393,6 +383,7 @@ typedef struct {                                    /*!< (@ 0x50003200) CHIP_VER
   __I  uint16_t  RESERVED;
   __IO uint8_t   CHIP_TEST1_REG;                    /*!< (@ 0x5000320A) Chip test register 1.                                  */
   __IO uint8_t   CHIP_TEST2_REG;                    /*!< (@ 0x5000320B) Chip test register 2.                                  */
+  __IO uint8_t   CHIP_TEST3_REG;                    /*!< (@ 0x5000320C) Chip test register 3.                                  */
 } CHIP_VERSION_Type;
 
 
@@ -408,11 +399,11 @@ typedef struct {                                    /*!< (@ 0x50003200) CHIP_VER
 typedef struct {                                    /*!< (@ 0x50002F00) COEX Structure                                         */
   __IO uint16_t  COEX_CTRL_REG;                     /*!< (@ 0x50002F00) COEX Control Register                                  */
   __IO uint16_t  COEX_STAT_REG;                     /*!< (@ 0x50002F02) COEX Status Register                                   */
-  __IO uint16_t  COEX_INT_MASK_REG;                 /*!< (@ 0x50002F04) COEX Interrupt Mask Register                           */
-  __IO uint16_t  COEX_INT_STAT_REG;                 /*!< (@ 0x50002F06) COEX Interrupt Status Register                         */
-  __IO uint16_t  COEX_BLE_PTI_REG;                  /*!< (@ 0x50002F08) COEX BLE PTI Control Register                          */
-  __IO uint16_t  COEX_FTDF_PTI_REG;                 /*!< (@ 0x50002F0A) COEX FTDF PTI Control Register                         */
-  __IO uint16_t  COEX_DIAG_REG;                     /*!< (@ 0x50002F0C) COEX Diagnostic Monitor Register                       */
+  __IO uint16_t  COEX_STAT2_REG;                    /*!< (@ 0x50002F04) COEX Status 2 Register                                 */
+  __IO uint16_t  COEX_INT_MASK_REG;                 /*!< (@ 0x50002F06) COEX Interrupt Mask Register                           */
+  __IO uint16_t  COEX_INT_STAT_REG;                 /*!< (@ 0x50002F08) COEX Interrupt Status Register                         */
+  __IO uint16_t  COEX_BLE_PTI_REG;                  /*!< (@ 0x50002F0A) COEX BLE PTI Control Register                          */
+  __IO uint16_t  COEX_FTDF_PTI_REG;                 /*!< (@ 0x50002F0C) COEX FTDF PTI Control Register                         */
   __I  uint16_t  RESERVED[2];
   __IO uint16_t  COEX_PRI1_REG;                     /*!< (@ 0x50002F12) COEX Priority Register                                 */
   __IO uint16_t  COEX_PRI2_REG;                     /*!< (@ 0x50002F14) COEX Priority Register                                 */
@@ -429,8 +420,6 @@ typedef struct {                                    /*!< (@ 0x50002F00) COEX Str
   __IO uint16_t  COEX_PRI13_REG;                    /*!< (@ 0x50002F2A) COEX Priority Register                                 */
   __IO uint16_t  COEX_PRI14_REG;                    /*!< (@ 0x50002F2C) COEX Priority Register                                 */
   __IO uint16_t  COEX_PRI15_REG;                    /*!< (@ 0x50002F2E) COEX Priority Register                                 */
-  __IO uint16_t  COEX_PRI16_REG;                    /*!< (@ 0x50002F30) COEX Priority Register                                 */
-  __IO uint16_t  COEX_PRI17_REG;                    /*!< (@ 0x50002F32) COEX Priority Register                                 */
 } COEX_Type;
 
 
@@ -477,9 +466,7 @@ typedef struct {                                    /*!< (@ 0x50000000) CRG_TOP 
   __IO uint16_t  SYS_CTRL_REG;                      /*!< (@ 0x50000012) System Control register                                */
   __IO uint16_t  SYS_STAT_REG;                      /*!< (@ 0x50000014) System status register                                 */
   __IO uint16_t  TRIM_CTRL_REG;                     /*!< (@ 0x50000016) Control trimming of the XTAL16M                        */
-  __IO uint16_t  DIVN_SYNC_REG;                     /*!< (@ 0x50000018) Trigger to sync DIVN with the RF clock divider
-                                                         in case of 32 MHz crystal                                             */
-  __I  uint16_t  RESERVED2[3];
+  __I  uint32_t  RESERVED2[2];
   __IO uint16_t  CLK_32K_REG;                       /*!< (@ 0x50000020) 32 kHz oscillator register                             */
   __IO uint16_t  CLK_16M_REG;                       /*!< (@ 0x50000022) 16 MHz RC and xtal oscillator register                 */
   __IO uint16_t  CLK_RCX20K_REG;                    /*!< (@ 0x50000024) 20KHz RXC-oscillator control register                  */
@@ -497,14 +484,24 @@ typedef struct {                                    /*!< (@ 0x50000000) CRG_TOP 
   __IO uint16_t  LDO_CTRL2_REG;                     /*!< (@ 0x5000003C) LDO control register                                   */
   __IO uint16_t  SLEEP_TIMER_REG;                   /*!< (@ 0x5000003E) Timer for regulated sleep                              */
   __IO uint16_t  POWER_CTRL_REG;                    /*!< (@ 0x50000040) Power control register                                 */
-  __I  uint16_t  RESERVED5[7];
+  __IO uint16_t  POR_VBAT_CTRL_REG;                 /*!< (@ 0x50000042) Controls the POR on VBAT                               */
+  __I  uint32_t  RESERVED5[3];
   __IO uint16_t  XTALRDY_CTRL_REG;                  /*!< (@ 0x50000050) Control register for XTALRDY IRQ                       */
   __IO uint16_t  XTALRDY_STAT_REG;                  /*!< (@ 0x50000052) Difference between XTAL_OK and XTALRDY_IRQ in
                                                          LP clock cycles                                                       */
-  __I  uint32_t  RESERVED6[3];
+  __IO uint16_t  LDO_CTRL3_REG;                     /*!< (@ 0x50000054) Retention LDO control register                         */
+  __I  uint16_t  RESERVED6;
+  __IO uint16_t  XTAL16M_START_REG;                 /*!< (@ 0x50000058) Xtal frequency trimming register during startup        */
+  __IO uint16_t  XTAL16M_RAMP_REG;                  /*!< (@ 0x5000005A) Xtal frequency trimming register during ramping        */
+  __IO uint16_t  XTAL16M_TRSTAT_REG;                /*!< (@ 0x5000005C) Read back value of current XTAL trimming               */
+  __IO uint16_t  RESET_STAT_REG;                    /*!< (@ 0x5000005E) Reset status register                                  */
   __IO uint16_t  FORCE_SLEEP_REG;                   /*!< (@ 0x50000060) Force FTDF/BLE to sleep                                */
   __IO uint16_t  LDOS_DISABLE_REG;                  /*!< (@ 0x50000062) Force off all LDOs                                     */
   __IO uint16_t  AON_SPARE_REG;                     /*!< (@ 0x50000064) Spare register                                         */
+  __IO uint16_t  SECURE_BOOT_REG;                   /*!< (@ 0x50000066) Controls secure booting                                */
+  __IO uint16_t  PMU_RESET_RAIL_REG;                /*!< (@ 0x50000068) Controls rail resetting when RST is pulsed             */
+  __IO uint16_t  DISCHARGE_RAIL_REG;                /*!< (@ 0x5000006A) Immediate rail resetting. There is no LDO/DCDC
+                                                         gating                                                                */
 } CRG_TOP_Type;
 
 
@@ -596,6 +593,8 @@ typedef struct {                                    /*!< (@ 0x50002E00) DEM Stru
   __IO uint16_t  RF_FSSS_I_RESULT_REG;              /*!< (@ 0x50002E50) RF_FSSS_I_RESULT_REG                                   */
   __IO uint16_t  RF_FSSS_Q_RESULT_REG;              /*!< (@ 0x50002E52) RF_FSSS_Q_RESULT_REG                                   */
   __IO uint16_t  RF_FSSS_MAG_RESULT_REG;            /*!< (@ 0x50002E54) RF_FSSS_MAG_RESULT_REG                                 */
+  __IO uint16_t  RF_CCA_RSSITH_REG;                 /*!< (@ 0x50002E56) RF_CCA_RSSITH_REG                                      */
+  __IO uint16_t  RF_FTDF_SIGDET_CTRL_REG;           /*!< (@ 0x50002E58) RF_FTDF_SIGDET_CTRL_REG                                */
 } DEM_Type;
 
 
@@ -694,8 +693,6 @@ typedef struct {                                    /*!< (@ 0x50006000) ECC Stru
   __IO uint32_t  ECC_CONTROL_REG;                   /*!< (@ 0x50006008) Control register                                       */
   __IO uint32_t  ECC_STATUS_REG;                    /*!< (@ 0x5000600C) Status register                                        */
   __IO uint32_t  ECC_VERSION_REG;                   /*!< (@ 0x50006010) Version register                                       */
-  __IO uint32_t  ECC_LOADMICROCODE_REG;             /*!< (@ 0x50006014) Used to upload Crypto Code from CPU into the
-                                                         uCode ram                                                             */
 } ECC_Type;
 
 
@@ -879,7 +876,8 @@ typedef struct {                                    /*!< (@ 0x40080000) FTDF Str
   __IO uint32_t  FTDF_MACFCSERRORCOUNT_REG;         /*!< (@ 0x40090340) Lmac FCS error register                                */
   __I  uint32_t  RESERVED43[7];
   __IO uint32_t  FTDF_LMACRESET_REG;                /*!< (@ 0x40090360) Lmax reset register                                    */
-  __I  uint32_t  RESERVED44[7];
+  __IO uint32_t  FTDF_WAKEUP_CONTROL_OS_REG;        /*!< (@ 0x40090364) FTDF_WAKEUP_CONTROL_OS_REG                             */
+  __I  uint32_t  RESERVED44[6];
   __IO uint32_t  FTDF_SYMBOLTIMETHR_REG;            /*!< (@ 0x40090380) Symboltime threshold register 1                        */
   __IO uint32_t  FTDF_SYMBOLTIME2THR_REG;           /*!< (@ 0x40090384) Symboltime threshold register 2                        */
   __I  uint32_t  RESERVED45[2];
@@ -918,8 +916,11 @@ typedef struct {                                    /*!< (@ 0x40080000) FTDF Str
   __IO uint32_t  FTDF_TX_SET_OS_REG;                /*!< (@ 0x40090480) One shot register to set flag                          */
   __IO uint32_t  FTDF_TX_CLEAR_OS_REG;              /*!< (@ 0x40090484) One shot register to clear flag                        */
   __I  uint32_t  RESERVED55[734];
-  __IO uint32_t  FTDF_WAKEUPINTTHR_REG;             /*!< (@ 0x40091000) Treshold value Wakeup timer                            */
-  __IO uint32_t  FTDF_WAKEUP_CONTROL_REG;           /*!< (@ 0x40091004) Wakeup timer vcontrol register                         */
+  __IO uint32_t  FTDF_WAKEUP_CONTROL_REG;           /*!< (@ 0x40091000) Wakeup timer vcontrol register                         */
+  __I  uint32_t  RESERVED56[1023];
+  __IO uint32_t  FTDF_LONG_ADDR_0_0_REG;            /*!< (@ 0x40092000) FTDF_LONG_ADDR_0_0_REG                                 */
+  __IO uint32_t  FTDF_LONG_ADDR_1_0_REG;            /*!< (@ 0x40092004) FTDF_LONG_ADDR_1_0_REG                                 */
+  __IO uint32_t  FTDF_SIZE_AND_VAL_0_REG;           /*!< (@ 0x40092008) FTDF_SIZE_AND_VAL_0_REG                                */
 } FTDF_Type;
 
 
@@ -1047,9 +1048,10 @@ typedef struct {                                    /*!< (@ 0x50003000) GPIO Str
   __IO uint16_t  BIST_CTRL_REG;                     /*!< (@ 0x500030E0) BIST_CTRL_REG                                          */
   __IO uint16_t  RAMBIST_STATUS1_REG;               /*!< (@ 0x500030E2) RAMBIST_STATUS1_REG                                    */
   __IO uint16_t  RAMBIST_STATUS2_REG;               /*!< (@ 0x500030E4) RAMBIST_STATUS2_REG                                    */
-  __IO uint16_t  ROMBIST_RESULTL_REG;               /*!< (@ 0x500030E6) ROMBIST_RESULTL_REG                                    */
-  __IO uint16_t  ROMBIST_RESULTH_REG;               /*!< (@ 0x500030E8) ROMBIST_RESULTH_REG                                    */
-  __I  uint16_t  RESERVED4[3];
+  __IO uint16_t  RAMBIST_STATUS3_REG;               /*!< (@ 0x500030E6) RAMBIST_STATUS3_REG                                    */
+  __IO uint16_t  ROMBIST_RESULTL_REG;               /*!< (@ 0x500030E8) ROMBIST_RESULTL_REG                                    */
+  __IO uint16_t  ROMBIST_RESULTH_REG;               /*!< (@ 0x500030EA) ROMBIST_RESULTH_REG                                    */
+  __I  uint32_t  RESERVED4;
   __IO uint16_t  TEST_CTRL_REG;                     /*!< (@ 0x500030F0) TEST_CTRL_REG                                          */
   __IO uint16_t  TEST_CTRL2_REG;                    /*!< (@ 0x500030F2) TEST_CTRL2_REG                                         */
   __IO uint16_t  TEST_CTRL3_REG;                    /*!< (@ 0x500030F4) TEST_CTRL3_REG                                         */
@@ -1077,7 +1079,8 @@ typedef struct {                                    /*!< (@ 0x50003300) GPREG St
   __IO uint16_t  GP_CONTROL_REG;                    /*!< (@ 0x50003308) General purpose system control register.               */
   __IO uint16_t  ECC_BASE_ADDR_REG;                 /*!< (@ 0x5000330A) Base address of the ECC Crypto memory register.        */
   __IO uint16_t  LED_CONTROL_REG;                   /*!< (@ 0x5000330C) Controls muxing and enabling of the LEDs.              */
-  __I  uint16_t  RESERVED;
+  __IO uint16_t  BLE_FINECNT_SAMP_REG;              /*!< (@ 0x5000330E) BLE FINECNT sampled value while in deep sleep
+                                                         state.                                                                */
   __IO uint16_t  PLL_SYS_CTRL1_REG;                 /*!< (@ 0x50003310) System PLL control register 1.                         */
   __IO uint16_t  PLL_SYS_CTRL2_REG;                 /*!< (@ 0x50003312) System PLL control register 2.                         */
   __IO uint16_t  PLL_SYS_CTRL3_REG;                 /*!< (@ 0x50003314) System PLL control register 3.                         */
@@ -1101,77 +1104,75 @@ typedef struct {                                    /*!< (@ 0x50001400) I2C Stru
   __IO uint16_t  I2C_TAR_REG;                       /*!< (@ 0x50001404) I2C Target Address Register                            */
   __I  uint16_t  RESERVED1;
   __IO uint16_t  I2C_SAR_REG;                       /*!< (@ 0x50001408) I2C Slave Address Register                             */
-  __I  uint16_t  RESERVED2;
-  __IO uint16_t  I2C_HS_MADDR_REG;                  /*!< (@ 0x5000140C) I2C High Speed Master Mode Code Address Register       */
-  __I  uint16_t  RESERVED3;
+  __I  uint16_t  RESERVED2[3];
   __IO uint16_t  I2C_DATA_CMD_REG;                  /*!< (@ 0x50001410) I2C Rx/Tx Data Buffer and Command Register             */
-  __I  uint16_t  RESERVED4;
+  __I  uint16_t  RESERVED3;
   __IO uint16_t  I2C_SS_SCL_HCNT_REG;               /*!< (@ 0x50001414) Standard Speed I2C Clock SCL High Count Register       */
-  __I  uint16_t  RESERVED5;
+  __I  uint16_t  RESERVED4;
   __IO uint16_t  I2C_SS_SCL_LCNT_REG;               /*!< (@ 0x50001418) Standard Speed I2C Clock SCL Low Count Register        */
-  __I  uint16_t  RESERVED6;
+  __I  uint16_t  RESERVED5;
   __IO uint16_t  I2C_FS_SCL_HCNT_REG;               /*!< (@ 0x5000141C) Fast Speed I2C Clock SCL High Count Register           */
-  __I  uint16_t  RESERVED7;
+  __I  uint16_t  RESERVED6;
   __IO uint16_t  I2C_FS_SCL_LCNT_REG;               /*!< (@ 0x50001420) Fast Speed I2C Clock SCL Low Count Register            */
-  __I  uint16_t  RESERVED8[5];
+  __I  uint16_t  RESERVED7[5];
   __IO uint16_t  I2C_INTR_STAT_REG;                 /*!< (@ 0x5000142C) I2C Interrupt Status Register                          */
-  __I  uint16_t  RESERVED9;
+  __I  uint16_t  RESERVED8;
   __IO uint16_t  I2C_INTR_MASK_REG;                 /*!< (@ 0x50001430) I2C Interrupt Mask Register                            */
-  __I  uint16_t  RESERVED10;
+  __I  uint16_t  RESERVED9;
   __IO uint16_t  I2C_RAW_INTR_STAT_REG;             /*!< (@ 0x50001434) I2C Raw Interrupt Status Register                      */
-  __I  uint16_t  RESERVED11;
+  __I  uint16_t  RESERVED10;
   __IO uint16_t  I2C_RX_TL_REG;                     /*!< (@ 0x50001438) I2C Receive FIFO Threshold Register                    */
-  __I  uint16_t  RESERVED12;
+  __I  uint16_t  RESERVED11;
   __IO uint16_t  I2C_TX_TL_REG;                     /*!< (@ 0x5000143C) I2C Transmit FIFO Threshold Register                   */
-  __I  uint16_t  RESERVED13;
+  __I  uint16_t  RESERVED12;
   __IO uint16_t  I2C_CLR_INTR_REG;                  /*!< (@ 0x50001440) Clear Combined and Individual Interrupt Register       */
-  __I  uint16_t  RESERVED14;
+  __I  uint16_t  RESERVED13;
   __IO uint16_t  I2C_CLR_RX_UNDER_REG;              /*!< (@ 0x50001444) Clear RX_UNDER Interrupt Register                      */
-  __I  uint16_t  RESERVED15;
+  __I  uint16_t  RESERVED14;
   __IO uint16_t  I2C_CLR_RX_OVER_REG;               /*!< (@ 0x50001448) Clear RX_OVER Interrupt Register                       */
-  __I  uint16_t  RESERVED16;
+  __I  uint16_t  RESERVED15;
   __IO uint16_t  I2C_CLR_TX_OVER_REG;               /*!< (@ 0x5000144C) Clear TX_OVER Interrupt Register                       */
-  __I  uint16_t  RESERVED17;
+  __I  uint16_t  RESERVED16;
   __IO uint16_t  I2C_CLR_RD_REQ_REG;                /*!< (@ 0x50001450) Clear RD_REQ Interrupt Register                        */
-  __I  uint16_t  RESERVED18;
+  __I  uint16_t  RESERVED17;
   __IO uint16_t  I2C_CLR_TX_ABRT_REG;               /*!< (@ 0x50001454) Clear TX_ABRT Interrupt Register                       */
-  __I  uint16_t  RESERVED19;
+  __I  uint16_t  RESERVED18;
   __IO uint16_t  I2C_CLR_RX_DONE_REG;               /*!< (@ 0x50001458) Clear RX_DONE Interrupt Register                       */
-  __I  uint16_t  RESERVED20;
+  __I  uint16_t  RESERVED19;
   __IO uint16_t  I2C_CLR_ACTIVITY_REG;              /*!< (@ 0x5000145C) Clear ACTIVITY Interrupt Register                      */
-  __I  uint16_t  RESERVED21;
+  __I  uint16_t  RESERVED20;
   __IO uint16_t  I2C_CLR_STOP_DET_REG;              /*!< (@ 0x50001460) Clear STOP_DET Interrupt Register                      */
-  __I  uint16_t  RESERVED22;
+  __I  uint16_t  RESERVED21;
   __IO uint16_t  I2C_CLR_START_DET_REG;             /*!< (@ 0x50001464) Clear START_DET Interrupt Register                     */
-  __I  uint16_t  RESERVED23;
+  __I  uint16_t  RESERVED22;
   __IO uint16_t  I2C_CLR_GEN_CALL_REG;              /*!< (@ 0x50001468) Clear GEN_CALL Interrupt Register                      */
-  __I  uint16_t  RESERVED24;
+  __I  uint16_t  RESERVED23;
   __IO uint16_t  I2C_ENABLE_REG;                    /*!< (@ 0x5000146C) I2C Enable Register                                    */
-  __I  uint16_t  RESERVED25;
+  __I  uint16_t  RESERVED24;
   __IO uint16_t  I2C_STATUS_REG;                    /*!< (@ 0x50001470) I2C Status Register                                    */
-  __I  uint16_t  RESERVED26;
+  __I  uint16_t  RESERVED25;
   __IO uint16_t  I2C_TXFLR_REG;                     /*!< (@ 0x50001474) I2C Transmit FIFO Level Register                       */
-  __I  uint16_t  RESERVED27;
+  __I  uint16_t  RESERVED26;
   __IO uint16_t  I2C_RXFLR_REG;                     /*!< (@ 0x50001478) I2C Receive FIFO Level Register                        */
-  __I  uint16_t  RESERVED28;
+  __I  uint16_t  RESERVED27;
   __IO uint16_t  I2C_SDA_HOLD_REG;                  /*!< (@ 0x5000147C) I2C SDA Hold Time Length Register                      */
-  __I  uint16_t  RESERVED29;
+  __I  uint16_t  RESERVED28;
   __IO uint16_t  I2C_TX_ABRT_SOURCE_REG;            /*!< (@ 0x50001480) I2C Transmit Abort Source Register                     */
-  __I  uint16_t  RESERVED30[3];
+  __I  uint16_t  RESERVED29[3];
   __IO uint16_t  I2C_DMA_CR_REG;                    /*!< (@ 0x50001488) DMA Control Register                                   */
-  __I  uint16_t  RESERVED31;
+  __I  uint16_t  RESERVED30;
   __IO uint16_t  I2C_DMA_TDLR_REG;                  /*!< (@ 0x5000148C) DMA Transmit Data Level Register                       */
-  __I  uint16_t  RESERVED32;
+  __I  uint16_t  RESERVED31;
   __IO uint16_t  I2C_DMA_RDLR_REG;                  /*!< (@ 0x50001490) I2C Receive Data Level Register                        */
-  __I  uint16_t  RESERVED33;
+  __I  uint16_t  RESERVED32;
   __IO uint16_t  I2C_SDA_SETUP_REG;                 /*!< (@ 0x50001494) I2C SDA Setup Register                                 */
-  __I  uint16_t  RESERVED34;
+  __I  uint16_t  RESERVED33;
   __IO uint16_t  I2C_ACK_GENERAL_CALL_REG;          /*!< (@ 0x50001498) I2C ACK General Call Register                          */
-  __I  uint16_t  RESERVED35;
+  __I  uint16_t  RESERVED34;
   __IO uint16_t  I2C_ENABLE_STATUS_REG;             /*!< (@ 0x5000149C) I2C Enable Status Register                             */
-  __I  uint16_t  RESERVED36;
+  __I  uint16_t  RESERVED35;
   __IO uint16_t  I2C_IC_FS_SPKLEN_REG;              /*!< (@ 0x500014A0) I2C SS and FS spike suppression limit Size             */
-  __I  uint16_t  RESERVED37[41];
+  __I  uint16_t  RESERVED36[41];
   __IO uint16_t  I2C_COMP_PARAM1_REG;               /*!< (@ 0x500014F4) Component Parameter Register                           */
   __IO uint16_t  I2C_COMP_PARAM2_REG;               /*!< (@ 0x500014F6) Component Parameter Register 2                         */
   __IO uint16_t  I2C_COMP_VERSION_REG;              /*!< (@ 0x500014F8) I2C Component Version Register                         */
@@ -1196,77 +1197,75 @@ typedef struct {                                    /*!< (@ 0x50001500) I2C2 Str
   __IO uint16_t  I2C2_TAR_REG;                      /*!< (@ 0x50001504) I2C Target Address Register                            */
   __I  uint16_t  RESERVED1;
   __IO uint16_t  I2C2_SAR_REG;                      /*!< (@ 0x50001508) I2C Slave Address Register                             */
-  __I  uint16_t  RESERVED2;
-  __IO uint16_t  I2C2_HS_MADDR_REG;                 /*!< (@ 0x5000150C) I2C High Speed Master Mode Code Address Register       */
-  __I  uint16_t  RESERVED3;
+  __I  uint16_t  RESERVED2[3];
   __IO uint16_t  I2C2_DATA_CMD_REG;                 /*!< (@ 0x50001510) I2C Rx/Tx Data Buffer and Command Register             */
-  __I  uint16_t  RESERVED4;
+  __I  uint16_t  RESERVED3;
   __IO uint16_t  I2C2_SS_SCL_HCNT_REG;              /*!< (@ 0x50001514) Standard Speed I2C Clock SCL High Count Register       */
-  __I  uint16_t  RESERVED5;
+  __I  uint16_t  RESERVED4;
   __IO uint16_t  I2C2_SS_SCL_LCNT_REG;              /*!< (@ 0x50001518) Standard Speed I2C Clock SCL Low Count Register        */
-  __I  uint16_t  RESERVED6;
+  __I  uint16_t  RESERVED5;
   __IO uint16_t  I2C2_FS_SCL_HCNT_REG;              /*!< (@ 0x5000151C) Fast Speed I2C Clock SCL High Count Register           */
-  __I  uint16_t  RESERVED7;
+  __I  uint16_t  RESERVED6;
   __IO uint16_t  I2C2_FS_SCL_LCNT_REG;              /*!< (@ 0x50001520) Fast Speed I2C Clock SCL Low Count Register            */
-  __I  uint16_t  RESERVED8[5];
+  __I  uint16_t  RESERVED7[5];
   __IO uint16_t  I2C2_INTR_STAT_REG;                /*!< (@ 0x5000152C) I2C Interrupt Status Register                          */
-  __I  uint16_t  RESERVED9;
+  __I  uint16_t  RESERVED8;
   __IO uint16_t  I2C2_INTR_MASK_REG;                /*!< (@ 0x50001530) I2C Interrupt Mask Register                            */
-  __I  uint16_t  RESERVED10;
+  __I  uint16_t  RESERVED9;
   __IO uint16_t  I2C2_RAW_INTR_STAT_REG;            /*!< (@ 0x50001534) I2C Raw Interrupt Status Register                      */
-  __I  uint16_t  RESERVED11;
+  __I  uint16_t  RESERVED10;
   __IO uint16_t  I2C2_RX_TL_REG;                    /*!< (@ 0x50001538) I2C Receive FIFO Threshold Register                    */
-  __I  uint16_t  RESERVED12;
+  __I  uint16_t  RESERVED11;
   __IO uint16_t  I2C2_TX_TL_REG;                    /*!< (@ 0x5000153C) I2C Transmit FIFO Threshold Register                   */
-  __I  uint16_t  RESERVED13;
+  __I  uint16_t  RESERVED12;
   __IO uint16_t  I2C2_CLR_INTR_REG;                 /*!< (@ 0x50001540) Clear Combined and Individual Interrupt Register       */
-  __I  uint16_t  RESERVED14;
+  __I  uint16_t  RESERVED13;
   __IO uint16_t  I2C2_CLR_RX_UNDER_REG;             /*!< (@ 0x50001544) Clear RX_UNDER Interrupt Register                      */
-  __I  uint16_t  RESERVED15;
+  __I  uint16_t  RESERVED14;
   __IO uint16_t  I2C2_CLR_RX_OVER_REG;              /*!< (@ 0x50001548) Clear RX_OVER Interrupt Register                       */
-  __I  uint16_t  RESERVED16;
+  __I  uint16_t  RESERVED15;
   __IO uint16_t  I2C2_CLR_TX_OVER_REG;              /*!< (@ 0x5000154C) Clear TX_OVER Interrupt Register                       */
-  __I  uint16_t  RESERVED17;
+  __I  uint16_t  RESERVED16;
   __IO uint16_t  I2C2_CLR_RD_REQ_REG;               /*!< (@ 0x50001550) Clear RD_REQ Interrupt Register                        */
-  __I  uint16_t  RESERVED18;
+  __I  uint16_t  RESERVED17;
   __IO uint16_t  I2C2_CLR_TX_ABRT_REG;              /*!< (@ 0x50001554) Clear TX_ABRT Interrupt Register                       */
-  __I  uint16_t  RESERVED19;
+  __I  uint16_t  RESERVED18;
   __IO uint16_t  I2C2_CLR_RX_DONE_REG;              /*!< (@ 0x50001558) Clear RX_DONE Interrupt Register                       */
-  __I  uint16_t  RESERVED20;
+  __I  uint16_t  RESERVED19;
   __IO uint16_t  I2C2_CLR_ACTIVITY_REG;             /*!< (@ 0x5000155C) Clear ACTIVITY Interrupt Register                      */
-  __I  uint16_t  RESERVED21;
+  __I  uint16_t  RESERVED20;
   __IO uint16_t  I2C2_CLR_STOP_DET_REG;             /*!< (@ 0x50001560) Clear STOP_DET Interrupt Register                      */
-  __I  uint16_t  RESERVED22;
+  __I  uint16_t  RESERVED21;
   __IO uint16_t  I2C2_CLR_START_DET_REG;            /*!< (@ 0x50001564) Clear START_DET Interrupt Register                     */
-  __I  uint16_t  RESERVED23;
+  __I  uint16_t  RESERVED22;
   __IO uint16_t  I2C2_CLR_GEN_CALL_REG;             /*!< (@ 0x50001568) Clear GEN_CALL Interrupt Register                      */
-  __I  uint16_t  RESERVED24;
+  __I  uint16_t  RESERVED23;
   __IO uint16_t  I2C2_ENABLE_REG;                   /*!< (@ 0x5000156C) I2C Enable Register                                    */
-  __I  uint16_t  RESERVED25;
+  __I  uint16_t  RESERVED24;
   __IO uint16_t  I2C2_STATUS_REG;                   /*!< (@ 0x50001570) I2C Status Register                                    */
-  __I  uint16_t  RESERVED26;
+  __I  uint16_t  RESERVED25;
   __IO uint16_t  I2C2_TXFLR_REG;                    /*!< (@ 0x50001574) I2C Transmit FIFO Level Register                       */
-  __I  uint16_t  RESERVED27;
+  __I  uint16_t  RESERVED26;
   __IO uint16_t  I2C2_RXFLR_REG;                    /*!< (@ 0x50001578) I2C Receive FIFO Level Register                        */
-  __I  uint16_t  RESERVED28;
+  __I  uint16_t  RESERVED27;
   __IO uint16_t  I2C2_SDA_HOLD_REG;                 /*!< (@ 0x5000157C) I2C SDA Hold Time Length Register                      */
-  __I  uint16_t  RESERVED29;
+  __I  uint16_t  RESERVED28;
   __IO uint16_t  I2C2_TX_ABRT_SOURCE_REG;           /*!< (@ 0x50001580) I2C Transmit Abort Source Register                     */
-  __I  uint16_t  RESERVED30[3];
+  __I  uint16_t  RESERVED29[3];
   __IO uint16_t  I2C2_DMA_CR_REG;                   /*!< (@ 0x50001588) DMA Control Register                                   */
-  __I  uint16_t  RESERVED31;
+  __I  uint16_t  RESERVED30;
   __IO uint16_t  I2C2_DMA_TDLR_REG;                 /*!< (@ 0x5000158C) DMA Transmit Data Level Register                       */
-  __I  uint16_t  RESERVED32;
+  __I  uint16_t  RESERVED31;
   __IO uint16_t  I2C2_DMA_RDLR_REG;                 /*!< (@ 0x50001590) I2C Receive Data Level Register                        */
-  __I  uint16_t  RESERVED33;
+  __I  uint16_t  RESERVED32;
   __IO uint16_t  I2C2_SDA_SETUP_REG;                /*!< (@ 0x50001594) I2C SDA Setup Register                                 */
-  __I  uint16_t  RESERVED34;
+  __I  uint16_t  RESERVED33;
   __IO uint16_t  I2C2_ACK_GENERAL_CALL_REG;         /*!< (@ 0x50001598) I2C ACK General Call Register                          */
-  __I  uint16_t  RESERVED35;
+  __I  uint16_t  RESERVED34;
   __IO uint16_t  I2C2_ENABLE_STATUS_REG;            /*!< (@ 0x5000159C) I2C Enable Status Register                             */
-  __I  uint16_t  RESERVED36;
+  __I  uint16_t  RESERVED35;
   __IO uint16_t  I2C2_IC_FS_SPKLEN_REG;             /*!< (@ 0x500015A0) I2C SS and FS spike suppression limit Size             */
-  __I  uint16_t  RESERVED37[41];
+  __I  uint16_t  RESERVED36[41];
   __IO uint16_t  I2C2_COMP_PARAM1_REG;              /*!< (@ 0x500015F4) Component Parameter Register                           */
   __IO uint16_t  I2C2_COMP_PARAM2_REG;              /*!< (@ 0x500015F6) Component Parameter Register 2                         */
   __IO uint16_t  I2C2_COMP_VERSION_REG;             /*!< (@ 0x500015F8) I2C Component Version Register                         */
@@ -1382,6 +1381,7 @@ typedef struct {                                    /*!< (@ 0x07F40000) OTPC Str
                                                          be programmed, when the MPROG mode is used.                           */
   __IO uint32_t  OTPC_TIM1_REG;                     /*!< (@ 0x07F40028) Various timing parameters of the OTP cell.             */
   __IO uint32_t  OTPC_TIM2_REG;                     /*!< (@ 0x07F4002C) Various timing parameters of the OTP cell.             */
+  __IO uint32_t  OTPC_TEST_REG;                     /*!< (@ 0x07F40030) OTPC_TEST_REG                                          */
 } OTPC_Type;
 
 
@@ -1480,8 +1480,9 @@ typedef struct {                                    /*!< (@ 0x50002D00) PLLDIG S
   __IO uint16_t  RF_VCO_CALCAP_BIT14_REG;           /*!< (@ 0x50002D12) RF_VCO_CALCAP_BIT14_REG                                */
   __IO uint16_t  RF_VCO_CALCAP_BIT15_REG;           /*!< (@ 0x50002D14) RF_VCO_CALCAP_BIT15_REG                                */
   __IO uint16_t  RF_BMCW_REG;                       /*!< (@ 0x50002D16) RF_BMCW_REG                                            */
-  __IO uint16_t  RF_KMOD_ALPHA_REG;                 /*!< (@ 0x50002D18) RF_KMOD_ALPHA_REG                                      */
-  __I  uint16_t  RESERVED[2];
+  __IO uint16_t  RF_KMOD_ALPHA_BLE_REG;             /*!< (@ 0x50002D18) RF_KMOD_ALPHA_BLE_REG                                  */
+  __IO uint16_t  RF_KMOD_ALPHA_FTDF_REG;            /*!< (@ 0x50002D1A) RF_KMOD_ALPHA_FTDF_REG                                 */
+  __I  uint16_t  RESERVED;
   __IO uint16_t  RF_SYNTH_RESULT_BLE_REG;           /*!< (@ 0x50002D1E) Must be Retained                                       */
   __IO uint16_t  RF_SYNTH_RESULT_FTDF_REG;          /*!< (@ 0x50002D20) Must be Retained                                       */
   __IO uint16_t  RF_SYNTH_RESULT2_BLE_REG;          /*!< (@ 0x50002D22) Must be Retained                                       */
@@ -1489,18 +1490,22 @@ typedef struct {                                    /*!< (@ 0x50002D00) PLLDIG S
   __IO uint16_t  RF_SYNTH_RESULT3_FTDF_REG;         /*!< (@ 0x50002D26) RF_SYNTH_RESULT3_FTDF_REG                              */
   __IO uint16_t  RF_CALCAP1_REG;                    /*!< (@ 0x50002D28) RF_CALCAP1_REG                                         */
   __IO uint16_t  RF_CALCAP2_REG;                    /*!< (@ 0x50002D2A) RF_CALCAP2_REG                                         */
-  __I  uint16_t  RESERVED1[2];
+  __IO uint16_t  RF_NMD_OFFSET_REG;                 /*!< (@ 0x50002D2C) Offset values for phase alignment after VCO calibration. */
+  __I  uint16_t  RESERVED1;
   __IO uint16_t  RF_FTDF_PHYATTR_REG;               /*!< (@ 0x50002D30) RF_FTDF_PHYATTR_REG                                    */
   __IO uint16_t  RF_CALTRIM_STEP1_REG;              /*!< (@ 0x50002D32) RF_CALTRIM_STEP1_REG                                   */
   __IO uint16_t  RF_CALTRIM_STEP2_REG;              /*!< (@ 0x50002D34) RF_CALTRIM_STEP2_REG                                   */
   __IO uint16_t  RF_CALTRIM_STEP3_REG;              /*!< (@ 0x50002D36) RF_CALTRIM_STEP3_REG                                   */
   __IO uint16_t  RF_CALTRIM_STEP4_REG;              /*!< (@ 0x50002D38) RF_CALTRIM_STEP4_REG                                   */
-  __I  uint16_t  RESERVED2[3];
-  __IO uint16_t  RF_MSKMOD_CTRL1_REG;               /*!< (@ 0x50002D40) MSK modulator control register                         */
-  __IO uint16_t  RF_MSKMOD_CTRL2_REG;               /*!< (@ 0x50002D42) MSK modulator control register                         */
+  __IO uint16_t  RF_MGAIN_CTRL3_REG;                /*!< (@ 0x50002D3A) RF_MGAIN_CTRL3_REG                                     */
+  __IO uint16_t  RF_VCO_FREQ_EST_REG;               /*!< (@ 0x50002D3C) RF_VCO_FREQ_EST_REG                                    */
+  __I  uint16_t  RESERVED2;
+  __IO uint16_t  RF_SYNTH_SPARE_REG;                /*!< (@ 0x50002D40) MSK modulator control register                         */
+  __IO uint16_t  RF_MSKMOD_CTRL1_REG;               /*!< (@ 0x50002D42) MSK modulator control register                         */
   __IO uint16_t  RF_MSKMOD_CHIPL_REG;               /*!< (@ 0x50002D44) MSK modulator CHIP control lower 16 bit                */
   __IO uint16_t  RF_MSKMOD_CHIPH_REG;               /*!< (@ 0x50002D46) MSK modulator CHIP control upper 16 bit                */
-  __I  uint16_t  RESERVED3[4];
+  __IO uint16_t  RF_TXDAC_TEST_REG;                 /*!< (@ 0x50002D48) Register to provide value to TXDAC                     */
+  __I  uint16_t  RESERVED3[3];
   __IO uint16_t  RF_MGAIN_COMP_VAL0_REG;            /*!< (@ 0x50002D50) RF_MGAIN_COMP_VAL0_REG                                 */
   __IO uint16_t  RF_MGAIN_COMP_VAL1_REG;            /*!< (@ 0x50002D52) RF_MGAIN_COMP_VAL1_REG                                 */
   __IO uint16_t  RF_MGAIN_COMP_VAL2_REG;            /*!< (@ 0x50002D54) RF_MGAIN_COMP_VAL2_REG                                 */
@@ -1508,6 +1513,16 @@ typedef struct {                                    /*!< (@ 0x50002D00) PLLDIG S
   __IO uint16_t  RF_MGAIN_COMP_VAL4_REG;            /*!< (@ 0x50002D58) RF_MGAIN_COMP_VAL4_REG                                 */
   __IO uint16_t  RF_MGAIN_COMP_VAL5_REG;            /*!< (@ 0x50002D5A) RF_MGAIN_COMP_VAL5_REG                                 */
   __IO uint16_t  RF_MGAIN_COMP_VAL6_REG;            /*!< (@ 0x50002D5C) RF_MGAIN_COMP_VAL6_REG                                 */
+  __IO uint16_t  RF_MGAIN_COMP_VAL7_REG;            /*!< (@ 0x50002D5E) RF_MGAIN_COMP_VAL7_REG                                 */
+  __IO uint16_t  RF_PULSE_TBL_0_REG;                /*!< (@ 0x50002D60) RF_PULSE_TBL_0_REG                                     */
+  __IO uint16_t  RF_PULSE_TBL_1_REG;                /*!< (@ 0x50002D62) RF_PULSE_TBL_1_REG                                     */
+  __IO uint16_t  RF_PULSE_TBL_2_REG;                /*!< (@ 0x50002D64) RF_PULSE_TBL_2_REG                                     */
+  __IO uint16_t  RF_PULSE_TBL_3_REG;                /*!< (@ 0x50002D66) RF_PULSE_TBL_3_REG                                     */
+  __IO uint16_t  RF_PULSE_TBL_4_REG;                /*!< (@ 0x50002D68) RF_PULSE_TBL_4_REG                                     */
+  __IO uint16_t  RF_PULSE_TBL_5_REG;                /*!< (@ 0x50002D6A) RF_PULSE_TBL_5_REG                                     */
+  __IO uint16_t  RF_PULSE_TBL_6_REG;                /*!< (@ 0x50002D6C) RF_PULSE_TBL_6_REG                                     */
+  __IO uint16_t  RF_PULSE_TBL_7_REG;                /*!< (@ 0x50002D6E) RF_PULSE_TBL_7_REG                                     */
+  __IO uint16_t  RF_PULSE_CTRL_REG;                 /*!< (@ 0x50002D70) RF_PULSE_CTRL_REG                                      */
 } PLLDIG_Type;
 
 
@@ -1579,7 +1594,8 @@ typedef struct {                                    /*!< (@ 0x50002000) RFCU Str
   __IO uint16_t  RF_DIAGIRQ01_REG;                  /*!< (@ 0x50002012) BLE/RF Diagnostic IRQ Control Register                 */
   __IO uint16_t  RF_DIAGIRQ23_REG;                  /*!< (@ 0x50002014) BLE/RF Diagnostic IRQ Control Register                 */
   __IO uint16_t  RF_DIAGIRQ_STAT_REG;               /*!< (@ 0x50002016) BLE/RF Diagnostic IRQ Status Register                  */
-  __I  uint32_t  RESERVED1[2];
+  __IO uint16_t  RF_AGC_EXT1_LUT_REG;               /*!< (@ 0x50002018) RF_AGC_EXT1_LUT_REG                                    */
+  __I  uint16_t  RESERVED1[3];
   __IO uint16_t  RF_CALSTATE_REG;                   /*!< (@ 0x50002020) RF_CALSTATE_REG                                        */
   __I  uint16_t  RESERVED2[15];
   __IO uint16_t  RF_SCAN_FEEDBACK_REG;              /*!< (@ 0x50002040) RF_SCAN_FEEDBACK_REG                                   */
@@ -1619,22 +1635,25 @@ typedef struct {                                    /*!< (@ 0x50002000) RFCU Str
   __IO uint16_t  RF_LNA_CTRL1_REG;                  /*!< (@ 0x500020AC) RF_LNA_CTRL1_REG                                       */
   __IO uint16_t  RF_LNA_CTRL2_REG;                  /*!< (@ 0x500020AE) RF_LNA_CTRL2_REG                                       */
   __IO uint16_t  RF_LNA_CTRL3_REG;                  /*!< (@ 0x500020B0) RF_LNA_CTRL3_REG                                       */
-  __I  uint16_t  RESERVED7[7];
-  __IO uint16_t  RF_TX_PWR_REG;                     /*!< (@ 0x500020C0) TX Power setting                                       */
+  __IO uint16_t  RF_VCO_AMP_CTRL1_REG;              /*!< (@ 0x500020B2) RF_VCO_AMP_CTRL1_REG                                   */
+  __IO uint16_t  RF_VCO_AMP_CTRL2_REG;              /*!< (@ 0x500020B4) RF_VCO_AMP_CTRL2_REG                                   */
+  __I  uint16_t  RESERVED7[5];
+  __IO uint16_t  RF_TX_PWR_BLE_REG;                 /*!< (@ 0x500020C0) TX Power setting                                       */
   __IO uint16_t  RF_TX_PWR_LUT_1_REG;               /*!< (@ 0x500020C2) TX Power setting 1                                     */
   __IO uint16_t  RF_TX_PWR_LUT_2_REG;               /*!< (@ 0x500020C4) TX Power setting 2                                     */
   __IO uint16_t  RF_TX_PWR_LUT_3_REG;               /*!< (@ 0x500020C6) TX Power setting 3                                     */
   __IO uint16_t  RF_TX_PWR_LUT_4_REG;               /*!< (@ 0x500020C8) TX Power setting 4                                     */
   __IO uint16_t  RF_TX_PWR_LUT_5_REG;               /*!< (@ 0x500020CA) TX Power setting 5                                     */
-  __IO uint16_t  RF_TX_PWR_LUT_7_REG;               /*!< (@ 0x500020CC) TX Power setting 7                                     */
-  __IO uint16_t  RF_TX_PWR_LUT_6_REG;               /*!< (@ 0x500020CE) TX Power setting 6                                     */
-  __IO uint16_t  RF_TX_PWR_LUT_RD_REG;              /*!< (@ 0x500020D0) TX Power read back                                     */
-  __IO uint16_t  RF_DIV_IQ_RX_REG;                  /*!< (@ 0x500020D2) Bias trimming of IQ divider                            */
-  __IO uint16_t  RF_DIV_IQ_TX_REG;                  /*!< (@ 0x500020D4) Bias trimming of IQ divider                            */
-  __I  uint16_t  RESERVED8;
+  __IO uint16_t  RF_TX_PWR_LUT_6_REG;               /*!< (@ 0x500020CC) TX Power setting 6                                     */
+  __IO uint16_t  RF_TX_PWR_LUT_7_REG;               /*!< (@ 0x500020CE) TX Power setting 7                                     */
+  __IO uint16_t  RF_TX_PWR_FTDF_REG;                /*!< (@ 0x500020D0) TX Power setting                                       */
+  __IO uint16_t  RF_TX_PWR_LUT_RD_REG;              /*!< (@ 0x500020D2) TX Power read back                                     */
+  __IO uint16_t  RF_DIV_IQ_RX_REG;                  /*!< (@ 0x500020D4) Bias trimming of IQ divider                            */
+  __IO uint16_t  RF_DIV_IQ_TX_REG;                  /*!< (@ 0x500020D6) Bias trimming of IQ divider                            */
   __IO uint16_t  RF_LO_IQ_TRIM_REG;                 /*!< (@ 0x500020D8) Trim settings for IQ LO path                           */
   __IO uint16_t  RF_TXDAC_CTRL_REG;                 /*!< (@ 0x500020DA) Control settings for the TXDAC                         */
-  __I  uint32_t  RESERVED9;
+  __IO uint16_t  RF_TXDAC_CAL_CAP_STAT_REG;         /*!< (@ 0x500020DC) Current CAL CAP value for TXDAC                        */
+  __I  uint16_t  RESERVED8;
   __IO uint16_t  RF_IFF_RESULT_REG;                 /*!< (@ 0x500020E0) Not retained                                           */
   __IO uint16_t  RF_IFF_CC_BLE_SET1_REG;            /*!< (@ 0x500020E2) Must be retained                                       */
   __IO uint16_t  RF_IFF_CC_BLE_SET2_REG;            /*!< (@ 0x500020E4) Must be retained                                       */
@@ -1656,108 +1675,74 @@ typedef struct {                                    /*!< (@ 0x50002000) RFCU Str
   */
 
 typedef struct {                                    /*!< (@ 0x50002200) RFCU_POWER Structure                                   */
-  __IO uint16_t  RF_ENABLE_CONFIG0_BLE_REG;         /*!< (@ 0x50002200) RF_ENABLE_CONFIG0_BLE_REG                              */
-  __IO uint16_t  RF_ENABLE_CONFIG1_BLE_REG;         /*!< (@ 0x50002202) RF_ENABLE_CONFIG1_BLE_REG                              */
-  __IO uint16_t  RF_ENABLE_CONFIG2_BLE_REG;         /*!< (@ 0x50002204) RF_ENABLE_CONFIG2_BLE_REG                              */
-  __IO uint16_t  RF_ENABLE_CONFIG3_BLE_REG;         /*!< (@ 0x50002206) RF_ENABLE_CONFIG3_BLE_REG                              */
-  __IO uint16_t  RF_ENABLE_CONFIG4_BLE_REG;         /*!< (@ 0x50002208) RF_ENABLE_CONFIG4_BLE_REG                              */
-  __IO uint16_t  RF_ENABLE_CONFIG5_BLE_REG;         /*!< (@ 0x5000220A) RF_ENABLE_CONFIG5_BLE_REG                              */
-  __IO uint16_t  RF_ENABLE_CONFIG6_BLE_REG;         /*!< (@ 0x5000220C) RF_ENABLE_CONFIG6_BLE_REG                              */
-  __IO uint16_t  RF_ENABLE_CONFIG7_BLE_REG;         /*!< (@ 0x5000220E) RF_ENABLE_CONFIG7_BLE_REG                              */
-  __IO uint16_t  RF_ENABLE_CONFIG8_BLE_REG;         /*!< (@ 0x50002210) RF_ENABLE_CONFIG8_BLE_REG                              */
-  __IO uint16_t  RF_ENABLE_CONFIG9_BLE_REG;         /*!< (@ 0x50002212) RF_ENABLE_CONFIG9_BLE_REG                              */
-  __IO uint16_t  RF_ENABLE_CONFIG10_BLE_REG;        /*!< (@ 0x50002214) RF_ENABLE_CONFIG10_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG11_BLE_REG;        /*!< (@ 0x50002216) RF_ENABLE_CONFIG11_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG12_BLE_REG;        /*!< (@ 0x50002218) RF_ENABLE_CONFIG12_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG13_BLE_REG;        /*!< (@ 0x5000221A) RF_ENABLE_CONFIG13_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG14_BLE_REG;        /*!< (@ 0x5000221C) RF_ENABLE_CONFIG14_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG15_BLE_REG;        /*!< (@ 0x5000221E) RF_ENABLE_CONFIG15_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG16_BLE_REG;        /*!< (@ 0x50002220) RF_ENABLE_CONFIG16_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG17_BLE_REG;        /*!< (@ 0x50002222) RF_ENABLE_CONFIG17_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG18_BLE_REG;        /*!< (@ 0x50002224) RF_ENABLE_CONFIG18_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG19_BLE_REG;        /*!< (@ 0x50002226) RF_ENABLE_CONFIG19_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG20_BLE_REG;        /*!< (@ 0x50002228) RF_ENABLE_CONFIG20_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG21_BLE_REG;        /*!< (@ 0x5000222A) RF_ENABLE_CONFIG21_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG22_BLE_REG;        /*!< (@ 0x5000222C) RF_ENABLE_CONFIG22_BLE_REG                             */
+  __IO uint16_t  RF_ENABLE_CONFIG0_REG;             /*!< (@ 0x50002200) RF_ENABLE_CONFIG0_REG                                  */
+  __IO uint16_t  RF_ENABLE_CONFIG1_REG;             /*!< (@ 0x50002202) RF_ENABLE_CONFIG1_REG                                  */
+  __IO uint16_t  RF_ENABLE_CONFIG2_REG;             /*!< (@ 0x50002204) RF_ENABLE_CONFIG2_REG                                  */
+  __IO uint16_t  RF_ENABLE_CONFIG3_REG;             /*!< (@ 0x50002206) RF_ENABLE_CONFIG3_REG                                  */
+  __IO uint16_t  RF_ENABLE_CONFIG4_REG;             /*!< (@ 0x50002208) RF_ENABLE_CONFIG4_REG                                  */
+  __IO uint16_t  RF_ENABLE_CONFIG5_REG;             /*!< (@ 0x5000220A) RF_ENABLE_CONFIG5_REG                                  */
+  __IO uint16_t  RF_ENABLE_CONFIG6_REG;             /*!< (@ 0x5000220C) RF_ENABLE_CONFIG6_REG                                  */
+  __IO uint16_t  RF_ENABLE_CONFIG7_REG;             /*!< (@ 0x5000220E) RF_ENABLE_CONFIG7_REG                                  */
+  __IO uint16_t  RF_ENABLE_CONFIG8_REG;             /*!< (@ 0x50002210) RF_ENABLE_CONFIG8_REG                                  */
+  __IO uint16_t  RF_ENABLE_CONFIG9_REG;             /*!< (@ 0x50002212) RF_ENABLE_CONFIG9_REG                                  */
+  __IO uint16_t  RF_ENABLE_CONFIG10_REG;            /*!< (@ 0x50002214) RF_ENABLE_CONFIG10_REG                                 */
+  __IO uint16_t  RF_ENABLE_CONFIG11_REG;            /*!< (@ 0x50002216) RF_ENABLE_CONFIG11_REG                                 */
+  __IO uint16_t  RF_ENABLE_CONFIG12_REG;            /*!< (@ 0x50002218) RF_ENABLE_CONFIG12_REG                                 */
+  __IO uint16_t  RF_ENABLE_CONFIG13_REG;            /*!< (@ 0x5000221A) RF_ENABLE_CONFIG13_REG                                 */
+  __IO uint16_t  RF_ENABLE_CONFIG14_REG;            /*!< (@ 0x5000221C) RF_ENABLE_CONFIG14_REG                                 */
+  __IO uint16_t  RF_ENABLE_CONFIG15_REG;            /*!< (@ 0x5000221E) RF_ENABLE_CONFIG15_REG                                 */
+  __IO uint16_t  RF_ENABLE_CONFIG16_REG;            /*!< (@ 0x50002220) RF_ENABLE_CONFIG16_REG                                 */
+  __IO uint16_t  RF_ENABLE_CONFIG17_REG;            /*!< (@ 0x50002222) RF_ENABLE_CONFIG17_REG                                 */
+  __IO uint16_t  RF_ENABLE_CONFIG18_REG;            /*!< (@ 0x50002224) RF_ENABLE_CONFIG18_REG                                 */
+  __IO uint16_t  RF_ENABLE_CONFIG19_REG;            /*!< (@ 0x50002226) RF_ENABLE_CONFIG19_REG                                 */
+  __IO uint16_t  RF_ENABLE_CONFIG20_REG;            /*!< (@ 0x50002228) RF_ENABLE_CONFIG20_REG                                 */
+  __IO uint16_t  RF_ENABLE_CONFIG21_REG;            /*!< (@ 0x5000222A) RF_ENABLE_CONFIG21_REG                                 */
+  __IO uint16_t  RF_ENABLE_CONFIG22_REG;            /*!< (@ 0x5000222C) RF_ENABLE_CONFIG22_REG                                 */
   __IO uint16_t  RF_ENABLE_CONFIG23_BLE_REG;        /*!< (@ 0x5000222E) RF_ENABLE_CONFIG23_BLE_REG                             */
   __IO uint16_t  RF_ENABLE_CONFIG24_BLE_REG;        /*!< (@ 0x50002230) RF_ENABLE_CONFIG24_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG25_BLE_REG;        /*!< (@ 0x50002232) RF_ENABLE_CONFIG25_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG26_BLE_REG;        /*!< (@ 0x50002234) RF_ENABLE_CONFIG26_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG27_BLE_REG;        /*!< (@ 0x50002236) RF_ENABLE_CONFIG27_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG28_BLE_REG;        /*!< (@ 0x50002238) RF_ENABLE_CONFIG28_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG29_BLE_REG;        /*!< (@ 0x5000223A) RF_ENABLE_CONFIG29_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG30_BLE_REG;        /*!< (@ 0x5000223C) RF_ENABLE_CONFIG30_BLE_REG                             */
+  __IO uint16_t  RF_ENABLE_CONFIG25_REG;            /*!< (@ 0x50002232) RF_ENABLE_CONFIG25_REG                                 */
+  __IO uint16_t  RF_ENABLE_CONFIG26_REG;            /*!< (@ 0x50002234) RF_ENABLE_CONFIG26_REG                                 */
+  __IO uint16_t  RF_ENABLE_CONFIG27_REG;            /*!< (@ 0x50002236) RF_ENABLE_CONFIG27_REG                                 */
+  __IO uint16_t  RF_ENABLE_CONFIG28_REG;            /*!< (@ 0x50002238) RF_ENABLE_CONFIG28_REG                                 */
+  __IO uint16_t  RF_ENABLE_CONFIG29_REG;            /*!< (@ 0x5000223A) RF_ENABLE_CONFIG29_REG                                 */
+  __IO uint16_t  RF_ENABLE_CONFIG30_REG;            /*!< (@ 0x5000223C) RF_ENABLE_CONFIG30_REG                                 */
   __IO uint16_t  RF_ENABLE_CONFIG31_BLE_REG;        /*!< (@ 0x5000223E) RF_ENABLE_CONFIG31_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG32_BLE_REG;        /*!< (@ 0x50002240) RF_ENABLE_CONFIG32_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG33_BLE_REG;        /*!< (@ 0x50002242) RF_ENABLE_CONFIG33_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG34_BLE_REG;        /*!< (@ 0x50002244) RF_ENABLE_CONFIG34_BLE_REG                             */
+  __IO uint16_t  RF_ENABLE_CONFIG32_REG;            /*!< (@ 0x50002240) RF_ENABLE_CONFIG32_REG                                 */
+  __IO uint16_t  RF_ENABLE_CONFIG33_REG;            /*!< (@ 0x50002242) RF_ENABLE_CONFIG33_REG                                 */
+  __IO uint16_t  RF_ENABLE_CONFIG34_REG;            /*!< (@ 0x50002244) RF_ENABLE_CONFIG34_REG                                 */
   __IO uint16_t  RF_ENABLE_CONFIG35_BLE_REG;        /*!< (@ 0x50002246) RF_ENABLE_CONFIG35_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG36_BLE_REG;        /*!< (@ 0x50002248) RF_ENABLE_CONFIG36_BLE_REG                             */
+  __IO uint16_t  RF_ENABLE_CONFIG36_REG;            /*!< (@ 0x50002248) RF_ENABLE_CONFIG36_REG                                 */
   __IO uint16_t  RF_ENABLE_CONFIG37_BLE_REG;        /*!< (@ 0x5000224A) RF_ENABLE_CONFIG37_BLE_REG                             */
   __IO uint16_t  RF_ENABLE_CONFIG38_BLE_REG;        /*!< (@ 0x5000224C) RF_ENABLE_CONFIG38_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG39_BLE_REG;        /*!< (@ 0x5000224E) RF_ENABLE_CONFIG39_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG40_BLE_REG;        /*!< (@ 0x50002250) RF_ENABLE_CONFIG40_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG41_BLE_REG;        /*!< (@ 0x50002252) RF_ENABLE_CONFIG41_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG42_BLE_REG;        /*!< (@ 0x50002254) RF_ENABLE_CONFIG42_BLE_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG43_BLE_REG;        /*!< (@ 0x50002256) RF_ENABLE_CONFIG43_BLE_REG                             */
+  __IO uint16_t  RF_ENABLE_CONFIG39_REG;            /*!< (@ 0x5000224E) RF_ENABLE_CONFIG39_REG                                 */
+  __IO uint16_t  RF_ENABLE_CONFIG40_REG;            /*!< (@ 0x50002250) RF_ENABLE_CONFIG40_REG                                 */
+  __IO uint16_t  RF_ENABLE_CONFIG41_REG;            /*!< (@ 0x50002252) RF_ENABLE_CONFIG41_REG                                 */
+  __IO uint16_t  RF_ENABLE_CONFIG42_REG;            /*!< (@ 0x50002254) RF_ENABLE_CONFIG42_REG                                 */
+  __IO uint16_t  RF_ENABLE_CONFIG43_REG;            /*!< (@ 0x50002256) RF_ENABLE_CONFIG43_REG                                 */
   __IO uint16_t  RF_ENABLE_CONFIG44_BLE_REG;        /*!< (@ 0x50002258) RF_ENABLE_CONFIG44_BLE_REG                             */
   __IO uint16_t  RF_ENABLE_CONFIG45_BLE_REG;        /*!< (@ 0x5000225A) RF_ENABLE_CONFIG45_BLE_REG                             */
   __IO uint16_t  RF_ENABLE_CONFIG46_BLE_REG;        /*!< (@ 0x5000225C) RF_ENABLE_CONFIG46_BLE_REG                             */
   __IO uint16_t  RF_ENABLE_CONFIG47_BLE_REG;        /*!< (@ 0x5000225E) RF_ENABLE_CONFIG47_BLE_REG                             */
   __IO uint16_t  RF_ENABLE_CONFIG48_BLE_REG;        /*!< (@ 0x50002260) RF_ENABLE_CONFIG48_BLE_REG                             */
   __IO uint16_t  RF_ENABLE_CONFIG49_BLE_REG;        /*!< (@ 0x50002262) RF_ENABLE_CONFIG49_BLE_REG                             */
-  __I  uint32_t  RESERVED[7];
-  __IO uint16_t  RF_ENABLE_CONFIG0_FTDF_REG;        /*!< (@ 0x50002280) RF_ENABLE_CONFIG0_FTDF_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG1_FTDF_REG;        /*!< (@ 0x50002282) RF_ENABLE_CONFIG1_FTDF_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG2_FTDF_REG;        /*!< (@ 0x50002284) RF_ENABLE_CONFIG2_FTDF_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG3_FTDF_REG;        /*!< (@ 0x50002286) RF_ENABLE_CONFIG3_FTDF_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG4_FTDF_REG;        /*!< (@ 0x50002288) RF_ENABLE_CONFIG4_FTDF_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG5_FTDF_REG;        /*!< (@ 0x5000228A) RF_ENABLE_CONFIG5_FTDF_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG6_FTDF_REG;        /*!< (@ 0x5000228C) RF_ENABLE_CONFIG6_FTDF_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG7_FTDF_REG;        /*!< (@ 0x5000228E) RF_ENABLE_CONFIG7_FTDF_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG8_FTDF_REG;        /*!< (@ 0x50002290) RF_ENABLE_CONFIG8_FTDF_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG9_FTDF_REG;        /*!< (@ 0x50002292) RF_ENABLE_CONFIG9_FTDF_REG                             */
-  __IO uint16_t  RF_ENABLE_CONFIG10_FTDF_REG;       /*!< (@ 0x50002294) RF_ENABLE_CONFIG10_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG11_FTDF_REG;       /*!< (@ 0x50002296) RF_ENABLE_CONFIG11_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG12_FTDF_REG;       /*!< (@ 0x50002298) RF_ENABLE_CONFIG12_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG13_FTDF_REG;       /*!< (@ 0x5000229A) RF_ENABLE_CONFIG13_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG14_FTDF_REG;       /*!< (@ 0x5000229C) RF_ENABLE_CONFIG14_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG15_FTDF_REG;       /*!< (@ 0x5000229E) RF_ENABLE_CONFIG15_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG16_FTDF_REG;       /*!< (@ 0x500022A0) RF_ENABLE_CONFIG16_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG17_FTDF_REG;       /*!< (@ 0x500022A2) RF_ENABLE_CONFIG17_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG18_FTDF_REG;       /*!< (@ 0x500022A4) RF_ENABLE_CONFIG18_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG19_FTDF_REG;       /*!< (@ 0x500022A6) RF_ENABLE_CONFIG19_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG20_FTDF_REG;       /*!< (@ 0x500022A8) RF_ENABLE_CONFIG20_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG21_FTDF_REG;       /*!< (@ 0x500022AA) RF_ENABLE_CONFIG21_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG22_FTDF_REG;       /*!< (@ 0x500022AC) RF_ENABLE_CONFIG22_FTDF_REG                            */
+  __I  uint16_t  RESERVED[37];
   __IO uint16_t  RF_ENABLE_CONFIG23_FTDF_REG;       /*!< (@ 0x500022AE) RF_ENABLE_CONFIG23_FTDF_REG                            */
   __IO uint16_t  RF_ENABLE_CONFIG24_FTDF_REG;       /*!< (@ 0x500022B0) RF_ENABLE_CONFIG24_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG25_FTDF_REG;       /*!< (@ 0x500022B2) RF_ENABLE_CONFIG25_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG26_FTDF_REG;       /*!< (@ 0x500022B4) RF_ENABLE_CONFIG26_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG27_FTDF_REG;       /*!< (@ 0x500022B6) RF_ENABLE_CONFIG27_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG28_FTDF_REG;       /*!< (@ 0x500022B8) RF_ENABLE_CONFIG28_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG29_FTDF_REG;       /*!< (@ 0x500022BA) RF_ENABLE_CONFIG29_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG30_FTDF_REG;       /*!< (@ 0x500022BC) RF_ENABLE_CONFIG30_FTDF_REG                            */
+  __I  uint16_t  RESERVED1[6];
   __IO uint16_t  RF_ENABLE_CONFIG31_FTDF_REG;       /*!< (@ 0x500022BE) RF_ENABLE_CONFIG31_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG32_FTDF_REG;       /*!< (@ 0x500022C0) RF_ENABLE_CONFIG32_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG33_FTDF_REG;       /*!< (@ 0x500022C2) RF_ENABLE_CONFIG33_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG34_FTDF_REG;       /*!< (@ 0x500022C4) RF_ENABLE_CONFIG34_FTDF_REG                            */
+  __I  uint16_t  RESERVED2[3];
   __IO uint16_t  RF_ENABLE_CONFIG35_FTDF_REG;       /*!< (@ 0x500022C6) RF_ENABLE_CONFIG35_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG36_FTDF_REG;       /*!< (@ 0x500022C8) RF_ENABLE_CONFIG36_FTDF_REG                            */
+  __I  uint16_t  RESERVED3;
   __IO uint16_t  RF_ENABLE_CONFIG37_FTDF_REG;       /*!< (@ 0x500022CA) RF_ENABLE_CONFIG37_FTDF_REG                            */
   __IO uint16_t  RF_ENABLE_CONFIG38_FTDF_REG;       /*!< (@ 0x500022CC) RF_ENABLE_CONFIG38_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG39_FTDF_REG;       /*!< (@ 0x500022CE) RF_ENABLE_CONFIG39_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG40_FTDF_REG;       /*!< (@ 0x500022D0) RF_ENABLE_CONFIG40_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG41_FTDF_REG;       /*!< (@ 0x500022D2) RF_ENABLE_CONFIG41_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG42_FTDF_REG;       /*!< (@ 0x500022D4) RF_ENABLE_CONFIG42_FTDF_REG                            */
-  __IO uint16_t  RF_ENABLE_CONFIG43_FTDF_REG;       /*!< (@ 0x500022D6) RF_ENABLE_CONFIG43_FTDF_REG                            */
+  __I  uint16_t  RESERVED4[5];
   __IO uint16_t  RF_ENABLE_CONFIG44_FTDF_REG;       /*!< (@ 0x500022D8) RF_ENABLE_CONFIG44_FTDF_REG                            */
   __IO uint16_t  RF_ENABLE_CONFIG45_FTDF_REG;       /*!< (@ 0x500022DA) RF_ENABLE_CONFIG45_FTDF_REG                            */
   __IO uint16_t  RF_ENABLE_CONFIG46_FTDF_REG;       /*!< (@ 0x500022DC) RF_ENABLE_CONFIG46_FTDF_REG                            */
   __IO uint16_t  RF_ENABLE_CONFIG47_FTDF_REG;       /*!< (@ 0x500022DE) RF_ENABLE_CONFIG47_FTDF_REG                            */
   __IO uint16_t  RF_ENABLE_CONFIG48_FTDF_REG;       /*!< (@ 0x500022E0) RF_ENABLE_CONFIG48_FTDF_REG                            */
   __IO uint16_t  RF_ENABLE_CONFIG49_FTDF_REG;       /*!< (@ 0x500022E2) RF_ENABLE_CONFIG49_FTDF_REG                            */
-  __I  uint16_t  RESERVED1[15];
+  __I  uint16_t  RESERVED5[15];
   __IO uint16_t  RF_CNTRL_TIMER_1_REG;              /*!< (@ 0x50002302) RF_CNTRL_TIMER_1_REG                                   */
   __IO uint16_t  RF_CNTRL_TIMER_2_REG;              /*!< (@ 0x50002304) RF_CNTRL_TIMER_2_REG                                   */
   __IO uint16_t  RF_CNTRL_TIMER_3_REG;              /*!< (@ 0x50002306) RF_CNTRL_TIMER_3_REG                                   */
@@ -1789,13 +1774,14 @@ typedef struct {                                    /*!< (@ 0x50002200) RFCU_POW
   __IO uint16_t  RF_CNTRL_TIMER_29_REG;             /*!< (@ 0x5000233A) RF_CNTRL_TIMER_29_REG                                  */
   __IO uint16_t  RF_CNTRL_TIMER_30_REG;             /*!< (@ 0x5000233C) RF_CNTRL_TIMER_30_REG                                  */
   __IO uint16_t  RF_CNTRL_TIMER_31_REG;             /*!< (@ 0x5000233E) RF_CNTRL_TIMER_31_REG                                  */
-  __I  uint32_t  RESERVED2[16];
+  __I  uint32_t  RESERVED6[16];
   __IO uint16_t  RF_ALWAYS_EN1_REG;                 /*!< (@ 0x50002380) RF_ALWAYS_EN1_REG                                      */
   __IO uint16_t  RF_ALWAYS_EN2_REG;                 /*!< (@ 0x50002382) RF_ALWAYS_EN2_REG                                      */
   __IO uint16_t  RF_ALWAYS_EN3_REG;                 /*!< (@ 0x50002384) RF_ALWAYS_EN3_REG                                      */
   __IO uint16_t  RF_ALWAYS_EN4_REG;                 /*!< (@ 0x50002386) RF_ALWAYS_EN4_REG                                      */
-  __IO uint16_t  RF_PORT_EN_REG;                    /*!< (@ 0x50002388) RF_PORT_EN_REG                                         */
-  __IO uint16_t  RF_PORT_POL_REG;                   /*!< (@ 0x5000238A) RF_PORT_POL_REG                                        */
+  __IO uint16_t  RF_PORT_EN_BLE_REG;                /*!< (@ 0x50002388) RF_PORT_EN_BLE_REG                                     */
+  __IO uint16_t  RF_PORT_EN_FTDF_REG;               /*!< (@ 0x5000238A) RF_PORT_EN_FTDF_REG                                    */
+  __IO uint16_t  RF_PORT_POL_REG;                   /*!< (@ 0x5000238C) RF_PORT_POL_REG                                        */
 } RFCU_POWER_Type;
 
 
@@ -1878,10 +1864,14 @@ typedef struct {                                    /*!< (@ 0x50000200) TIMER1 S
   __IO uint16_t  CAPTIM_CAPTURE_GPIO1_REG;          /*!< (@ 0x50000210) Capture Timer value for event on GPIO1                 */
   __IO uint16_t  CAPTIM_CAPTURE_GPIO2_REG;          /*!< (@ 0x50000212) Capture Timer value for event on GPIO2                 */
   __IO uint16_t  CAPTIM_PRESCALER_VAL_REG;          /*!< (@ 0x50000214) Capture Timer interrupt status register                */
-  __IO uint16_t  CAPTIM_PWM_FREQ_REG;               /*!< (@ 0x50000216) Capture Timer pwm frequency register. PWM5 period
-                                                         is defined by the reference clock frequency multiplied by this
-                                                          value.                                                               */
+  __IO uint16_t  CAPTIM_PWM_FREQ_REG;               /*!< (@ 0x50000216) Capture Timer pwm frequency register                   */
   __IO uint16_t  CAPTIM_PWM_DC_REG;                 /*!< (@ 0x50000218) Capture Timer pwm dc register                          */
+  __IO uint16_t  CAPTIM_TIMER_HVAL_REG;             /*!< (@ 0x5000021A) Capture Timer counter high value                       */
+  __IO uint16_t  CAPTIM_RELOAD_HIGH_REG;            /*!< (@ 0x5000021C) Capture Timer reload high value and Delay in
+                                                         shot mode                                                             */
+  __IO uint16_t  CAPTIM_CAPTURE_HIGH_GPIO1_REG;     /*!< (@ 0x5000021E) Capture Timer high value for event on GPIO01           */
+  __IO uint16_t  CAPTIM_CAPTURE_HIGH_GPIO2_REG;     /*!< (@ 0x50000220) Capture Timer high value for event on GPIO02           */
+  __IO uint16_t  CAPTIM_SHOTWIDTH_HIGH_REG;         /*!< (@ 0x50000222) Capture Timer Shot high duration in shot mode          */
 } TIMER1_Type;
 
 
@@ -2123,10 +2113,9 @@ typedef struct {                                    /*!< (@ 0x50001800) USB Stru
 
 typedef struct {                                    /*!< (@ 0x50000100) WAKEUP Structure                                       */
   __IO uint16_t  WKUP_CTRL_REG;                     /*!< (@ 0x50000100) Control register for the wakeup counter                */
-  __IO uint16_t  WKUP_COMPARE_REG;                  /*!< (@ 0x50000102) Number of events before wakeup interrupt               */
+  __I  uint16_t  RESERVED;
   __IO uint16_t  WKUP_RESET_IRQ_REG;                /*!< (@ 0x50000104) Reset wakeup interrupt                                 */
-  __IO uint16_t  WKUP_COUNTER_REG;                  /*!< (@ 0x50000106) Actual number of events of the wakeup counter          */
-  __IO uint16_t  WKUP_RESET_CNTR_REG;               /*!< (@ 0x50000108) Reset the event counter                                */
+  __I  uint16_t  RESERVED1[2];
   __IO uint16_t  WKUP_SELECT_P0_REG;                /*!< (@ 0x5000010A) select which inputs from P0 port can trigger
                                                          wkup counter                                                          */
   __IO uint16_t  WKUP_SELECT_P1_REG;                /*!< (@ 0x5000010C) select which inputs from P1 port can trigger
@@ -2142,6 +2131,22 @@ typedef struct {                                    /*!< (@ 0x50000100) WAKEUP S
   __IO uint16_t  WKUP_POL_P2_REG;                   /*!< (@ 0x50000118) select the sesitivity polarity for each P2 input       */
   __IO uint16_t  WKUP_POL_P3_REG;                   /*!< (@ 0x5000011A) select the sesitivity polarity for each P3 input       */
   __IO uint16_t  WKUP_POL_P4_REG;                   /*!< (@ 0x5000011C) select the sesitivity polarity for each P3 input       */
+  __IO uint16_t  WKUP_STATUS_0_REG;                 /*!< (@ 0x5000011E) Event status register for P0 and P1                    */
+  __IO uint16_t  WKUP_STATUS_1_REG;                 /*!< (@ 0x50000120) Event status register for P2                           */
+  __IO uint16_t  WKUP_STATUS_2_REG;                 /*!< (@ 0x50000122) Event status register for P3 and P4                    */
+  __IO uint16_t  WKUP_CLEAR_0_REG;                  /*!< (@ 0x50000124) Clear event register for P0 and P1                     */
+  __IO uint16_t  WKUP_CLEAR_1_REG;                  /*!< (@ 0x50000126) Clear event register for P2                            */
+  __IO uint16_t  WKUP_CLEAR_2_REG;                  /*!< (@ 0x50000128) Clear event register for P3 and P4                     */
+  __IO uint16_t  WKUP_SEL_GPIO_P0_REG;              /*!< (@ 0x5000012A) select which inputs from P0 port can trigger
+                                                         interrupt                                                             */
+  __IO uint16_t  WKUP_SEL_GPIO_P1_REG;              /*!< (@ 0x5000012C) select which inputs from P1 port can trigger
+                                                         interrupt                                                             */
+  __IO uint16_t  WKUP_SEL_GPIO_P2_REG;              /*!< (@ 0x5000012E) select which inputs from P2 port can trigger
+                                                         interrupt                                                             */
+  __IO uint16_t  WKUP_SEL_GPIO_P3_REG;              /*!< (@ 0x50000130) select which inputs from P3 port can trigger
+                                                         interrupt                                                             */
+  __IO uint16_t  WKUP_SEL_GPIO_P4_REG;              /*!< (@ 0x50000132) select which inputs from P3 port can trigger
+                                                         interrupt                                                             */
 } WAKEUP_Type;
 
 
@@ -2811,6 +2816,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define APU_SRC1_CTRL_REG_SRC_OUT_US_Msk      (0x30000UL)               /*!< APU SRC1_CTRL_REG: SRC_OUT_US (Bitfield-Mask: 0x03)         */
 #define APU_SRC1_CTRL_REG_SRC_OUT_OK_Pos      (18UL)                    /*!< APU SRC1_CTRL_REG: SRC_OUT_OK (Bit 18)                      */
 #define APU_SRC1_CTRL_REG_SRC_OUT_OK_Msk      (0x40000UL)               /*!< APU SRC1_CTRL_REG: SRC_OUT_OK (Bitfield-Mask: 0x01)         */
+#define APU_SRC1_CTRL_REG_SRC_RESYNC_Pos      (19UL)                    /*!< APU SRC1_CTRL_REG: SRC_RESYNC (Bit 19)                      */
+#define APU_SRC1_CTRL_REG_SRC_RESYNC_Msk      (0x80000UL)               /*!< APU SRC1_CTRL_REG: SRC_RESYNC (Bitfield-Mask: 0x01)         */
 #define APU_SRC1_CTRL_REG_SRC_IN_OVFLOW_Pos   (20UL)                    /*!< APU SRC1_CTRL_REG: SRC_IN_OVFLOW (Bit 20)                   */
 #define APU_SRC1_CTRL_REG_SRC_IN_OVFLOW_Msk   (0x100000UL)              /*!< APU SRC1_CTRL_REG: SRC_IN_OVFLOW (Bitfield-Mask: 0x01)      */
 #define APU_SRC1_CTRL_REG_SRC_IN_UNFLOW_Pos   (21UL)                    /*!< APU SRC1_CTRL_REG: SRC_IN_UNFLOW (Bit 21)                   */
@@ -2823,8 +2830,12 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define APU_SRC1_CTRL_REG_SRC_IN_FLOWCLR_Msk  (0x1000000UL)             /*!< APU SRC1_CTRL_REG: SRC_IN_FLOWCLR (Bitfield-Mask: 0x01)     */
 #define APU_SRC1_CTRL_REG_SRC_OUT_FLOWCLR_Pos (25UL)                    /*!< APU SRC1_CTRL_REG: SRC_OUT_FLOWCLR (Bit 25)                 */
 #define APU_SRC1_CTRL_REG_SRC_OUT_FLOWCLR_Msk (0x2000000UL)             /*!< APU SRC1_CTRL_REG: SRC_OUT_FLOWCLR (Bitfield-Mask: 0x01)    */
+#define APU_SRC1_CTRL_REG_SRC_PDM_DI_DEL_Pos  (26UL)                    /*!< APU SRC1_CTRL_REG: SRC_PDM_DI_DEL (Bit 26)                  */
+#define APU_SRC1_CTRL_REG_SRC_PDM_DI_DEL_Msk  (0xc000000UL)             /*!< APU SRC1_CTRL_REG: SRC_PDM_DI_DEL (Bitfield-Mask: 0x03)     */
 #define APU_SRC1_CTRL_REG_SRC_PDM_MODE_Pos    (28UL)                    /*!< APU SRC1_CTRL_REG: SRC_PDM_MODE (Bit 28)                    */
 #define APU_SRC1_CTRL_REG_SRC_PDM_MODE_Msk    (0x30000000UL)            /*!< APU SRC1_CTRL_REG: SRC_PDM_MODE (Bitfield-Mask: 0x03)       */
+#define APU_SRC1_CTRL_REG_SRC_PDM_DO_DEL_Pos  (30UL)                    /*!< APU SRC1_CTRL_REG: SRC_PDM_DO_DEL (Bit 30)                  */
+#define APU_SRC1_CTRL_REG_SRC_PDM_DO_DEL_Msk  (0xc0000000UL)            /*!< APU SRC1_CTRL_REG: SRC_PDM_DO_DEL (Bitfield-Mask: 0x03)     */
 
 /* -----------------------------  APU_SRC1_IN_FS_REG  ----------------------------- */
 #define APU_SRC1_IN_FS_REG_SRC_IN_FS_Pos      (0UL)                     /*!< APU SRC1_IN_FS_REG: SRC_IN_FS (Bit 0)                       */
@@ -3244,6 +3255,10 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define BLE_BLE_SWPROFILING_REG_SWPROFVAL_Pos (0UL)                     /*!< BLE BLE_SWPROFILING_REG: SWPROFVAL (Bit 0)                  */
 #define BLE_BLE_SWPROFILING_REG_SWPROFVAL_Msk (0xffffffffUL)            /*!< BLE BLE_SWPROFILING_REG: SWPROFVAL (Bitfield-Mask: 0xffffffff) */
 
+/* ---------------------------  BLE_BLE_RADIOCNTL0_REG  --------------------------- */
+#define BLE_BLE_RADIOCNTL0_REG_field246rsv_Pos (2UL)                    /*!< BLE BLE_RADIOCNTL0_REG: field246rsv (Bit 2)                 */
+#define BLE_BLE_RADIOCNTL0_REG_field246rsv_Msk (0x1cUL)                 /*!< BLE BLE_RADIOCNTL0_REG: field246rsv (Bitfield-Mask: 0x07)   */
+
 /* ---------------------------  BLE_BLE_RADIOCNTL1_REG  --------------------------- */
 #define BLE_BLE_RADIOCNTL1_REG_XRFSEL_Pos     (16UL)                    /*!< BLE BLE_RADIOCNTL1_REG: XRFSEL (Bit 16)                     */
 #define BLE_BLE_RADIOCNTL1_REG_XRFSEL_Msk     (0x1f0000UL)              /*!< BLE BLE_RADIOCNTL1_REG: XRFSEL (Bitfield-Mask: 0x1f)        */
@@ -3412,12 +3427,6 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define BLE_BLE_BLEMPRIO1_REG_BLEMDEFAULT_Pos (28UL)                    /*!< BLE BLE_BLEMPRIO1_REG: BLEMDEFAULT (Bit 28)                 */
 #define BLE_BLE_BLEMPRIO1_REG_BLEMDEFAULT_Msk (0xf0000000UL)            /*!< BLE BLE_BLEMPRIO1_REG: BLEMDEFAULT (Bitfield-Mask: 0x0f)    */
 
-/* --------------------------  BLE_BLE_BLEPRIOSCHARB_REG  ------------------------- */
-#define BLE_BLE_BLEPRIOSCHARB_REG_BLEMARGIN_Pos (0UL)                   /*!< BLE BLE_BLEPRIOSCHARB_REG: BLEMARGIN (Bit 0)                */
-#define BLE_BLE_BLEPRIOSCHARB_REG_BLEMARGIN_Msk (0xffUL)                /*!< BLE BLE_BLEPRIOSCHARB_REG: BLEMARGIN (Bitfield-Mask: 0xff)  */
-#define BLE_BLE_BLEPRIOSCHARB_REG_BLEPRIOMODE_Pos (15UL)                /*!< BLE BLE_BLEPRIOSCHARB_REG: BLEPRIOMODE (Bit 15)             */
-#define BLE_BLE_BLEPRIOSCHARB_REG_BLEPRIOMODE_Msk (0x8000UL)            /*!< BLE BLE_BLEPRIOSCHARB_REG: BLEPRIOMODE (Bitfield-Mask: 0x01) */
-
 /* ------------------------------  BLE_BLE_CNTL2_REG  ----------------------------- */
 #define BLE_BLE_CNTL2_REG_EMACCERRSTAT_Pos    (0UL)                     /*!< BLE BLE_CNTL2_REG: EMACCERRSTAT (Bit 0)                     */
 #define BLE_BLE_CNTL2_REG_EMACCERRSTAT_Msk    (0x1UL)                   /*!< BLE BLE_CNTL2_REG: EMACCERRSTAT (Bitfield-Mask: 0x01)       */
@@ -3425,6 +3434,10 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define BLE_BLE_CNTL2_REG_EMACCERRACK_Msk     (0x2UL)                   /*!< BLE BLE_CNTL2_REG: EMACCERRACK (Bitfield-Mask: 0x01)        */
 #define BLE_BLE_CNTL2_REG_EMACCERRMSK_Pos     (2UL)                     /*!< BLE BLE_CNTL2_REG: EMACCERRMSK (Bit 2)                      */
 #define BLE_BLE_CNTL2_REG_EMACCERRMSK_Msk     (0x4UL)                   /*!< BLE BLE_CNTL2_REG: EMACCERRMSK (Bitfield-Mask: 0x01)        */
+#define BLE_BLE_CNTL2_REG_BLE_DIAG_OVR_Pos    (3UL)                     /*!< BLE BLE_CNTL2_REG: BLE_DIAG_OVR (Bit 3)                     */
+#define BLE_BLE_CNTL2_REG_BLE_DIAG_OVR_Msk    (0x8UL)                   /*!< BLE BLE_CNTL2_REG: BLE_DIAG_OVR (Bitfield-Mask: 0x01)       */
+#define BLE_BLE_CNTL2_REG_BLE_DIAG_OVR_SEL_Pos (4UL)                    /*!< BLE BLE_CNTL2_REG: BLE_DIAG_OVR_SEL (Bit 4)                 */
+#define BLE_BLE_CNTL2_REG_BLE_DIAG_OVR_SEL_Msk (0x30UL)                 /*!< BLE BLE_CNTL2_REG: BLE_DIAG_OVR_SEL (Bitfield-Mask: 0x03)   */
 #define BLE_BLE_CNTL2_REG_BLE_CLK_STAT_Pos    (6UL)                     /*!< BLE BLE_CNTL2_REG: BLE_CLK_STAT (Bit 6)                     */
 #define BLE_BLE_CNTL2_REG_BLE_CLK_STAT_Msk    (0x40UL)                  /*!< BLE BLE_CNTL2_REG: BLE_CLK_STAT (Bitfield-Mask: 0x01)       */
 #define BLE_BLE_CNTL2_REG_MON_LP_CLK_Pos      (7UL)                     /*!< BLE BLE_CNTL2_REG: MON_LP_CLK (Bit 7)                       */
@@ -3433,12 +3446,22 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define BLE_BLE_CNTL2_REG_RADIO_PWRDN_ALLOW_Msk (0x100UL)               /*!< BLE BLE_CNTL2_REG: RADIO_PWRDN_ALLOW (Bitfield-Mask: 0x01)  */
 #define BLE_BLE_CNTL2_REG_BLE_CLK_SEL_Pos     (9UL)                     /*!< BLE BLE_CNTL2_REG: BLE_CLK_SEL (Bit 9)                      */
 #define BLE_BLE_CNTL2_REG_BLE_CLK_SEL_Msk     (0x7e00UL)                /*!< BLE BLE_CNTL2_REG: BLE_CLK_SEL (Bitfield-Mask: 0x3f)        */
+#define BLE_BLE_CNTL2_REG_BLE_TRANSACTION_SRC_Pos (15UL)                /*!< BLE BLE_CNTL2_REG: BLE_TRANSACTION_SRC (Bit 15)             */
+#define BLE_BLE_CNTL2_REG_BLE_TRANSACTION_SRC_Msk (0x8000UL)            /*!< BLE BLE_CNTL2_REG: BLE_TRANSACTION_SRC (Bitfield-Mask: 0x01) */
+#define BLE_BLE_CNTL2_REG_BLE_TRANSACTION_MODE_Pos (16UL)               /*!< BLE BLE_CNTL2_REG: BLE_TRANSACTION_MODE (Bit 16)            */
+#define BLE_BLE_CNTL2_REG_BLE_TRANSACTION_MODE_Msk (0x10000UL)          /*!< BLE BLE_CNTL2_REG: BLE_TRANSACTION_MODE (Bitfield-Mask: 0x01) */
+#define BLE_BLE_CNTL2_REG_BLE_PTI_SOURCE_SEL_Pos (17UL)                 /*!< BLE BLE_CNTL2_REG: BLE_PTI_SOURCE_SEL (Bit 17)              */
+#define BLE_BLE_CNTL2_REG_BLE_PTI_SOURCE_SEL_Msk (0x20000UL)            /*!< BLE BLE_CNTL2_REG: BLE_PTI_SOURCE_SEL (Bitfield-Mask: 0x01) */
+#define BLE_BLE_CNTL2_REG_BB_ONLY_Pos         (18UL)                    /*!< BLE BLE_CNTL2_REG: BB_ONLY (Bit 18)                         */
+#define BLE_BLE_CNTL2_REG_BB_ONLY_Msk         (0x40000UL)               /*!< BLE BLE_CNTL2_REG: BB_ONLY (Bitfield-Mask: 0x01)            */
 #define BLE_BLE_CNTL2_REG_SW_RPL_SPI_Pos      (19UL)                    /*!< BLE BLE_CNTL2_REG: SW_RPL_SPI (Bit 19)                      */
 #define BLE_BLE_CNTL2_REG_SW_RPL_SPI_Msk      (0x80000UL)               /*!< BLE BLE_CNTL2_REG: SW_RPL_SPI (Bitfield-Mask: 0x01)         */
 #define BLE_BLE_CNTL2_REG_WAKEUPLPSTAT_Pos    (20UL)                    /*!< BLE BLE_CNTL2_REG: WAKEUPLPSTAT (Bit 20)                    */
 #define BLE_BLE_CNTL2_REG_WAKEUPLPSTAT_Msk    (0x100000UL)              /*!< BLE BLE_CNTL2_REG: WAKEUPLPSTAT (Bitfield-Mask: 0x01)       */
 #define BLE_BLE_CNTL2_REG_BLE_RSSI_SEL_Pos    (21UL)                    /*!< BLE BLE_CNTL2_REG: BLE_RSSI_SEL (Bit 21)                    */
 #define BLE_BLE_CNTL2_REG_BLE_RSSI_SEL_Msk    (0x200000UL)              /*!< BLE BLE_CNTL2_REG: BLE_RSSI_SEL (Bitfield-Mask: 0x01)       */
+#define BLE_BLE_CNTL2_REG_BLE_TRANSACTION_START_Pos (22UL)              /*!< BLE BLE_CNTL2_REG: BLE_TRANSACTION_START (Bit 22)           */
+#define BLE_BLE_CNTL2_REG_BLE_TRANSACTION_START_Msk (0xffc00000UL)      /*!< BLE BLE_CNTL2_REG: BLE_TRANSACTION_START (Bitfield-Mask: 0x3ff) */
 
 /* -----------------------------  BLE_BLE_EM_BASE_REG  ---------------------------- */
 #define BLE_BLE_EM_BASE_REG_BLE_EM_BASE_16_10_Pos (10UL)                /*!< BLE BLE_EM_BASE_REG: BLE_EM_BASE_16_10 (Bit 10)             */
@@ -3615,6 +3638,12 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 /* -----------------------------  COEX_COEX_CTRL_REG  ----------------------------- */
 #define COEX_COEX_CTRL_REG_PRGING_ARBITER_Pos (0UL)                     /*!< COEX COEX_CTRL_REG: PRGING_ARBITER (Bit 0)                  */
 #define COEX_COEX_CTRL_REG_PRGING_ARBITER_Msk (0x1UL)                   /*!< COEX COEX_CTRL_REG: PRGING_ARBITER (Bitfield-Mask: 0x01)    */
+#define COEX_COEX_CTRL_REG_DECISION_SW_ALL_Pos (1UL)                    /*!< COEX COEX_CTRL_REG: DECISION_SW_ALL (Bit 1)                 */
+#define COEX_COEX_CTRL_REG_DECISION_SW_ALL_Msk (0x2UL)                  /*!< COEX COEX_CTRL_REG: DECISION_SW_ALL (Bitfield-Mask: 0x01)   */
+#define COEX_COEX_CTRL_REG_TXRX_MON_FTDF_ALL_Pos (2UL)                  /*!< COEX COEX_CTRL_REG: TXRX_MON_FTDF_ALL (Bit 2)               */
+#define COEX_COEX_CTRL_REG_TXRX_MON_FTDF_ALL_Msk (0x4UL)                /*!< COEX COEX_CTRL_REG: TXRX_MON_FTDF_ALL (Bitfield-Mask: 0x01) */
+#define COEX_COEX_CTRL_REG_TXRX_MON_BLE_ALL_Pos (3UL)                   /*!< COEX COEX_CTRL_REG: TXRX_MON_BLE_ALL (Bit 3)                */
+#define COEX_COEX_CTRL_REG_TXRX_MON_BLE_ALL_Msk (0x8UL)                 /*!< COEX COEX_CTRL_REG: TXRX_MON_BLE_ALL (Bitfield-Mask: 0x01)  */
 #define COEX_COEX_CTRL_REG_SMART_ACT_IMPL_Pos (4UL)                     /*!< COEX COEX_CTRL_REG: SMART_ACT_IMPL (Bit 4)                  */
 #define COEX_COEX_CTRL_REG_SMART_ACT_IMPL_Msk (0x10UL)                  /*!< COEX COEX_CTRL_REG: SMART_ACT_IMPL (Bitfield-Mask: 0x01)    */
 #define COEX_COEX_CTRL_REG_SEL_COEX_DIAG_Pos  (5UL)                     /*!< COEX COEX_CTRL_REG: SEL_COEX_DIAG (Bit 5)                   */
@@ -3623,6 +3652,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define COEX_COEX_CTRL_REG_SEL_FTDF_CCA_Msk   (0x80UL)                  /*!< COEX COEX_CTRL_REG: SEL_FTDF_CCA (Bitfield-Mask: 0x01)      */
 #define COEX_COEX_CTRL_REG_SEL_FTDF_PTI_Pos   (8UL)                     /*!< COEX COEX_CTRL_REG: SEL_FTDF_PTI (Bit 8)                    */
 #define COEX_COEX_CTRL_REG_SEL_FTDF_PTI_Msk   (0x100UL)                 /*!< COEX COEX_CTRL_REG: SEL_FTDF_PTI (Bitfield-Mask: 0x01)      */
+#define COEX_COEX_CTRL_REG_SEL_BLE_PTI_Pos    (9UL)                     /*!< COEX COEX_CTRL_REG: SEL_BLE_PTI (Bit 9)                     */
+#define COEX_COEX_CTRL_REG_SEL_BLE_PTI_Msk    (0x200UL)                 /*!< COEX COEX_CTRL_REG: SEL_BLE_PTI (Bitfield-Mask: 0x01)       */
 #define COEX_COEX_CTRL_REG_SEL_BLE_WLAN_TX_RX_Pos (10UL)                /*!< COEX COEX_CTRL_REG: SEL_BLE_WLAN_TX_RX (Bit 10)             */
 #define COEX_COEX_CTRL_REG_SEL_BLE_WLAN_TX_RX_Msk (0x400UL)             /*!< COEX COEX_CTRL_REG: SEL_BLE_WLAN_TX_RX (Bitfield-Mask: 0x01) */
 #define COEX_COEX_CTRL_REG_SEL_BLE_RADIO_BUSY_Pos (11UL)                /*!< COEX COEX_CTRL_REG: SEL_BLE_RADIO_BUSY (Bit 11)             */
@@ -3636,11 +3667,11 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 
 /* -----------------------------  COEX_COEX_STAT_REG  ----------------------------- */
 #define COEX_COEX_STAT_REG_COEX_DECISION_PTR_Pos (0UL)                  /*!< COEX COEX_STAT_REG: COEX_DECISION_PTR (Bit 0)               */
-#define COEX_COEX_STAT_REG_COEX_DECISION_PTR_Msk (0x1fUL)               /*!< COEX COEX_STAT_REG: COEX_DECISION_PTR (Bitfield-Mask: 0x1f) */
+#define COEX_COEX_STAT_REG_COEX_DECISION_PTR_Msk (0xfUL)                /*!< COEX COEX_STAT_REG: COEX_DECISION_PTR (Bitfield-Mask: 0x0f) */
 #define COEX_COEX_STAT_REG_COEX_DECISION_Pos  (5UL)                     /*!< COEX COEX_STAT_REG: COEX_DECISION (Bit 5)                   */
 #define COEX_COEX_STAT_REG_COEX_DECISION_Msk  (0x60UL)                  /*!< COEX COEX_STAT_REG: COEX_DECISION (Bitfield-Mask: 0x03)     */
-#define COEX_COEX_STAT_REG_COEX_DECISION_CLOSING_Pos (7UL)              /*!< COEX COEX_STAT_REG: COEX_DECISION_CLOSING (Bit 7)           */
-#define COEX_COEX_STAT_REG_COEX_DECISION_CLOSING_Msk (0x80UL)           /*!< COEX COEX_STAT_REG: COEX_DECISION_CLOSING (Bitfield-Mask: 0x01) */
+#define COEX_COEX_STAT_REG_COEX_CLOSING_Pos   (7UL)                     /*!< COEX COEX_STAT_REG: COEX_CLOSING (Bit 7)                    */
+#define COEX_COEX_STAT_REG_COEX_CLOSING_Msk   (0x80UL)                  /*!< COEX COEX_STAT_REG: COEX_CLOSING (Bitfield-Mask: 0x01)      */
 #define COEX_COEX_STAT_REG_SMART_ACT_Pos      (8UL)                     /*!< COEX COEX_STAT_REG: SMART_ACT (Bit 8)                       */
 #define COEX_COEX_STAT_REG_SMART_ACT_Msk      (0x100UL)                 /*!< COEX COEX_STAT_REG: SMART_ACT (Bitfield-Mask: 0x01)         */
 #define COEX_COEX_STAT_REG_SMART_PRI_Pos      (9UL)                     /*!< COEX COEX_STAT_REG: SMART_PRI (Bit 9)                       */
@@ -3658,73 +3689,47 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define COEX_COEX_STAT_REG_IGNORE_BLE_STAT_Pos (15UL)                   /*!< COEX COEX_STAT_REG: IGNORE_BLE_STAT (Bit 15)                */
 #define COEX_COEX_STAT_REG_IGNORE_BLE_STAT_Msk (0x8000UL)               /*!< COEX COEX_STAT_REG: IGNORE_BLE_STAT (Bitfield-Mask: 0x01)   */
 
+/* -----------------------------  COEX_COEX_STAT2_REG  ---------------------------- */
+#define COEX_COEX_STAT2_REG_COEX_DECISION_WITH_CLOSING_Pos (0UL)        /*!< COEX COEX_STAT2_REG: COEX_DECISION_WITH_CLOSING (Bit 0)     */
+#define COEX_COEX_STAT2_REG_COEX_DECISION_WITH_CLOSING_Msk (0x7UL)      /*!< COEX COEX_STAT2_REG: COEX_DECISION_WITH_CLOSING (Bitfield-Mask: 0x07) */
+#define COEX_COEX_STAT2_REG_COEX_FTDF_ACTIVE_Pos (3UL)                  /*!< COEX COEX_STAT2_REG: COEX_FTDF_ACTIVE (Bit 3)               */
+#define COEX_COEX_STAT2_REG_COEX_FTDF_ACTIVE_Msk (0x8UL)                /*!< COEX COEX_STAT2_REG: COEX_FTDF_ACTIVE (Bitfield-Mask: 0x01) */
+#define COEX_COEX_STAT2_REG_COEX_FTDF_RX_EN_Pos (4UL)                   /*!< COEX COEX_STAT2_REG: COEX_FTDF_RX_EN (Bit 4)                */
+#define COEX_COEX_STAT2_REG_COEX_FTDF_RX_EN_Msk (0x10UL)                /*!< COEX COEX_STAT2_REG: COEX_FTDF_RX_EN (Bitfield-Mask: 0x01)  */
+#define COEX_COEX_STAT2_REG_COEX_FTDF_TX_EN_Pos (5UL)                   /*!< COEX COEX_STAT2_REG: COEX_FTDF_TX_EN (Bit 5)                */
+#define COEX_COEX_STAT2_REG_COEX_FTDF_TX_EN_Msk (0x20UL)                /*!< COEX COEX_STAT2_REG: COEX_FTDF_TX_EN (Bitfield-Mask: 0x01)  */
+#define COEX_COEX_STAT2_REG_COEX_FTDF_PTI_INT_Pos (6UL)                 /*!< COEX COEX_STAT2_REG: COEX_FTDF_PTI_INT (Bit 6)              */
+#define COEX_COEX_STAT2_REG_COEX_FTDF_PTI_INT_Msk (0x1c0UL)             /*!< COEX COEX_STAT2_REG: COEX_FTDF_PTI_INT (Bitfield-Mask: 0x07) */
+#define COEX_COEX_STAT2_REG_COEX_BLE_ACTIVE_Pos (9UL)                   /*!< COEX COEX_STAT2_REG: COEX_BLE_ACTIVE (Bit 9)                */
+#define COEX_COEX_STAT2_REG_COEX_BLE_ACTIVE_Msk (0x200UL)               /*!< COEX COEX_STAT2_REG: COEX_BLE_ACTIVE (Bitfield-Mask: 0x01)  */
+#define COEX_COEX_STAT2_REG_COEX_BLE_RX_EN_Pos (10UL)                   /*!< COEX COEX_STAT2_REG: COEX_BLE_RX_EN (Bit 10)                */
+#define COEX_COEX_STAT2_REG_COEX_BLE_RX_EN_Msk (0x400UL)                /*!< COEX COEX_STAT2_REG: COEX_BLE_RX_EN (Bitfield-Mask: 0x01)   */
+#define COEX_COEX_STAT2_REG_COEX_BLE_TX_EN_Pos (11UL)                   /*!< COEX COEX_STAT2_REG: COEX_BLE_TX_EN (Bit 11)                */
+#define COEX_COEX_STAT2_REG_COEX_BLE_TX_EN_Msk (0x800UL)                /*!< COEX COEX_STAT2_REG: COEX_BLE_TX_EN (Bitfield-Mask: 0x01)   */
+#define COEX_COEX_STAT2_REG_COEX_BLE_PTI_INT_Pos (12UL)                 /*!< COEX COEX_STAT2_REG: COEX_BLE_PTI_INT (Bit 12)              */
+#define COEX_COEX_STAT2_REG_COEX_BLE_PTI_INT_Msk (0x7000UL)             /*!< COEX COEX_STAT2_REG: COEX_BLE_PTI_INT (Bitfield-Mask: 0x07) */
+#define COEX_COEX_STAT2_REG_COEX_EXT_ACT_Pos  (15UL)                    /*!< COEX COEX_STAT2_REG: COEX_EXT_ACT (Bit 15)                  */
+#define COEX_COEX_STAT2_REG_COEX_EXT_ACT_Msk  (0x8000UL)                /*!< COEX COEX_STAT2_REG: COEX_EXT_ACT (Bitfield-Mask: 0x01)     */
+
 /* ---------------------------  COEX_COEX_INT_MASK_REG  --------------------------- */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_MASK_Pos (0UL)                  /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_MASK (Bit 0)               */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_MASK_Msk (0x1UL)                /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_MASK (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_SMART_ACT_R_Pos (1UL)        /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_SMART_ACT_R (Bit 1)     */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_SMART_ACT_R_Msk (0x2UL)      /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_SMART_ACT_R (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_SMART_ACT_F_Pos (2UL)        /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_SMART_ACT_F (Bit 2)     */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_SMART_ACT_F_Msk (0x4UL)      /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_SMART_ACT_F (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_SMART_PRI_R_Pos (3UL)        /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_SMART_PRI_R (Bit 3)     */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_SMART_PRI_R_Msk (0x8UL)      /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_SMART_PRI_R (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_SMART_PRI_F_Pos (4UL)        /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_SMART_PRI_F (Bit 4)     */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_SMART_PRI_F_Msk (0x10UL)     /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_SMART_PRI_F (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_EXT_ACT_R_Pos (5UL)          /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_EXT_ACT_R (Bit 5)       */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_EXT_ACT_R_Msk (0x20UL)       /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_EXT_ACT_R (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_EXT_ACT_F_Pos (6UL)          /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_EXT_ACT_F (Bit 6)       */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_EXT_ACT_F_Msk (0x40UL)       /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_EXT_ACT_F (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_FTDF_ACTIVE_R_Pos (7UL)      /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_FTDF_ACTIVE_R (Bit 7)   */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_FTDF_ACTIVE_R_Msk (0x80UL)   /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_FTDF_ACTIVE_R (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_FTDF_ACTIVE_F_Pos (8UL)      /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_FTDF_ACTIVE_F (Bit 8)   */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_FTDF_ACTIVE_F_Msk (0x100UL)  /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_FTDF_ACTIVE_F (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_BLE_ACTIVE_R_Pos (9UL)       /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_BLE_ACTIVE_R (Bit 9)    */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_BLE_ACTIVE_R_Msk (0x200UL)   /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_BLE_ACTIVE_R (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_BLE_ACTIVE_F_Pos (10UL)      /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_BLE_ACTIVE_F (Bit 10)   */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_BLE_ACTIVE_F_Msk (0x400UL)   /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_BLE_ACTIVE_F (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_RADIO_BUSY_R_Pos (11UL)      /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_RADIO_BUSY_R (Bit 11)   */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_RADIO_BUSY_R_Msk (0x800UL)   /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_RADIO_BUSY_R (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_RADIO_BUSY_F_Pos (12UL)      /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_RADIO_BUSY_F (Bit 12)   */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_RADIO_BUSY_F_Msk (0x1000UL)  /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_RADIO_BUSY_F (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_CLOSING_BRK_Pos (13UL)       /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_CLOSING_BRK (Bit 13)    */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_CLOSING_BRK_Msk (0x2000UL)   /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_CLOSING_BRK (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_START_MID_Pos (14UL)         /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_START_MID (Bit 14)      */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_START_MID_Msk (0x4000UL)     /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_START_MID (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_DECISION_SW_Pos (15UL)       /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_DECISION_SW (Bit 15)    */
-#define COEX_COEX_INT_MASK_REG_COEX_IRQ_ON_DECISION_SW_Msk (0x8000UL)   /*!< COEX COEX_INT_MASK_REG: COEX_IRQ_ON_DECISION_SW (Bitfield-Mask: 0x01) */
+#define COEX_COEX_INT_MASK_REG_IRQ_TXRX_MON_Pos (8UL)                   /*!< COEX COEX_INT_MASK_REG: IRQ_TXRX_MON (Bit 8)                */
+#define COEX_COEX_INT_MASK_REG_IRQ_TXRX_MON_Msk (0x100UL)               /*!< COEX COEX_INT_MASK_REG: IRQ_TXRX_MON (Bitfield-Mask: 0x01)  */
+#define COEX_COEX_INT_MASK_REG_IRQ_DECISION_SW_Pos (9UL)                /*!< COEX COEX_INT_MASK_REG: IRQ_DECISION_SW (Bit 9)             */
+#define COEX_COEX_INT_MASK_REG_IRQ_DECISION_SW_Msk (0x200UL)            /*!< COEX COEX_INT_MASK_REG: IRQ_DECISION_SW (Bitfield-Mask: 0x01) */
 
 /* ---------------------------  COEX_COEX_INT_STAT_REG  --------------------------- */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_STAT_Pos (0UL)                  /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_STAT (Bit 0)               */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_STAT_Msk (0x1UL)                /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_STAT (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_SMART_ACT_R_Pos (1UL)        /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_SMART_ACT_R (Bit 1)     */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_SMART_ACT_R_Msk (0x2UL)      /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_SMART_ACT_R (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_SMART_ACT_F_Pos (2UL)        /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_SMART_ACT_F (Bit 2)     */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_SMART_ACT_F_Msk (0x4UL)      /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_SMART_ACT_F (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_SMART_PRI_R_Pos (3UL)        /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_SMART_PRI_R (Bit 3)     */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_SMART_PRI_R_Msk (0x8UL)      /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_SMART_PRI_R (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_SMART_PRI_F_Pos (4UL)        /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_SMART_PRI_F (Bit 4)     */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_SMART_PRI_F_Msk (0x10UL)     /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_SMART_PRI_F (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_EXT_ACT_R_Pos (5UL)          /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_EXT_ACT_R (Bit 5)       */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_EXT_ACT_R_Msk (0x20UL)       /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_EXT_ACT_R (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_EXT_ACT_F_Pos (6UL)          /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_EXT_ACT_F (Bit 6)       */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_EXT_ACT_F_Msk (0x40UL)       /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_EXT_ACT_F (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_FTDF_ACTIVE_R_Pos (7UL)      /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_FTDF_ACTIVE_R (Bit 7)   */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_FTDF_ACTIVE_R_Msk (0x80UL)   /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_FTDF_ACTIVE_R (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_FTDF_ACTIVE_F_Pos (8UL)      /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_FTDF_ACTIVE_F (Bit 8)   */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_FTDF_ACTIVE_F_Msk (0x100UL)  /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_FTDF_ACTIVE_F (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_BLE_ACTIVE_R_Pos (9UL)       /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_BLE_ACTIVE_R (Bit 9)    */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_BLE_ACTIVE_R_Msk (0x200UL)   /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_BLE_ACTIVE_R (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_BLE_ACTIVE_F_Pos (10UL)      /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_BLE_ACTIVE_F (Bit 10)   */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_BLE_ACTIVE_F_Msk (0x400UL)   /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_BLE_ACTIVE_F (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_RADIO_BUSY_R_Pos (11UL)      /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_RADIO_BUSY_R (Bit 11)   */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_RADIO_BUSY_R_Msk (0x800UL)   /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_RADIO_BUSY_R (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_RADIO_BUSY_F_Pos (12UL)      /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_RADIO_BUSY_F (Bit 12)   */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_RADIO_BUSY_F_Msk (0x1000UL)  /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_RADIO_BUSY_F (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_CLOSING_BRK_Pos (13UL)       /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_CLOSING_BRK (Bit 13)    */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_CLOSING_BRK_Msk (0x2000UL)   /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_CLOSING_BRK (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_START_MID_Pos (14UL)         /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_START_MID (Bit 14)      */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_START_MID_Msk (0x4000UL)     /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_START_MID (Bitfield-Mask: 0x01) */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_DECISION_SW_Pos (15UL)       /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_DECISION_SW (Bit 15)    */
-#define COEX_COEX_INT_STAT_REG_COEX_IRQ_ON_DECISION_SW_Msk (0x8000UL)   /*!< COEX COEX_INT_STAT_REG: COEX_IRQ_ON_DECISION_SW (Bitfield-Mask: 0x01) */
+#define COEX_COEX_INT_STAT_REG_TXRX_MON_PTR_Pos (0UL)                   /*!< COEX COEX_INT_STAT_REG: TXRX_MON_PTR (Bit 0)                */
+#define COEX_COEX_INT_STAT_REG_TXRX_MON_PTR_Msk (0xfUL)                 /*!< COEX COEX_INT_STAT_REG: TXRX_MON_PTR (Bitfield-Mask: 0x0f)  */
+#define COEX_COEX_INT_STAT_REG_TXRX_MON_TX_Pos (5UL)                    /*!< COEX COEX_INT_STAT_REG: TXRX_MON_TX (Bit 5)                 */
+#define COEX_COEX_INT_STAT_REG_TXRX_MON_TX_Msk (0x20UL)                 /*!< COEX COEX_INT_STAT_REG: TXRX_MON_TX (Bitfield-Mask: 0x01)   */
+#define COEX_COEX_INT_STAT_REG_TXRX_MON_PASSED_Pos (6UL)                /*!< COEX COEX_INT_STAT_REG: TXRX_MON_PASSED (Bit 6)             */
+#define COEX_COEX_INT_STAT_REG_TXRX_MON_PASSED_Msk (0x40UL)             /*!< COEX COEX_INT_STAT_REG: TXRX_MON_PASSED (Bitfield-Mask: 0x01) */
+#define COEX_COEX_INT_STAT_REG_TXRX_MON_OVWR_Pos (7UL)                  /*!< COEX COEX_INT_STAT_REG: TXRX_MON_OVWR (Bit 7)               */
+#define COEX_COEX_INT_STAT_REG_TXRX_MON_OVWR_Msk (0x80UL)               /*!< COEX COEX_INT_STAT_REG: TXRX_MON_OVWR (Bitfield-Mask: 0x01) */
+#define COEX_COEX_INT_STAT_REG_IRQ_TXRX_MON_Pos (8UL)                   /*!< COEX COEX_INT_STAT_REG: IRQ_TXRX_MON (Bit 8)                */
+#define COEX_COEX_INT_STAT_REG_IRQ_TXRX_MON_Msk (0x100UL)               /*!< COEX COEX_INT_STAT_REG: IRQ_TXRX_MON (Bitfield-Mask: 0x01)  */
+#define COEX_COEX_INT_STAT_REG_IRQ_DECISION_SW_Pos (9UL)                /*!< COEX COEX_INT_STAT_REG: IRQ_DECISION_SW (Bit 9)             */
+#define COEX_COEX_INT_STAT_REG_IRQ_DECISION_SW_Msk (0x200UL)            /*!< COEX COEX_INT_STAT_REG: IRQ_DECISION_SW (Bitfield-Mask: 0x01) */
 
 /* ----------------------------  COEX_COEX_BLE_PTI_REG  --------------------------- */
 #define COEX_COEX_BLE_PTI_REG_COEX_BLE_PTI_Pos (0UL)                    /*!< COEX COEX_BLE_PTI_REG: COEX_BLE_PTI (Bit 0)                 */
@@ -3733,10 +3738,6 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 /* ---------------------------  COEX_COEX_FTDF_PTI_REG  --------------------------- */
 #define COEX_COEX_FTDF_PTI_REG_COEX_FTDF_PTI_Pos (0UL)                  /*!< COEX COEX_FTDF_PTI_REG: COEX_FTDF_PTI (Bit 0)               */
 #define COEX_COEX_FTDF_PTI_REG_COEX_FTDF_PTI_Msk (0x7UL)                /*!< COEX COEX_FTDF_PTI_REG: COEX_FTDF_PTI (Bitfield-Mask: 0x07) */
-
-/* -----------------------------  COEX_COEX_DIAG_REG  ----------------------------- */
-#define COEX_COEX_DIAG_REG_COEX_DIAG_MON_Pos  (0UL)                     /*!< COEX COEX_DIAG_REG: COEX_DIAG_MON (Bit 0)                   */
-#define COEX_COEX_DIAG_REG_COEX_DIAG_MON_Msk  (0xffffUL)                /*!< COEX COEX_DIAG_REG: COEX_DIAG_MON (Bitfield-Mask: 0xffff)   */
 
 /* -----------------------------  COEX_COEX_PRI1_REG  ----------------------------- */
 #define COEX_COEX_PRI1_REG_COEX_PRI_PTI_Pos   (0UL)                     /*!< COEX COEX_PRI1_REG: COEX_PRI_PTI (Bit 0)                    */
@@ -3827,18 +3828,6 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define COEX_COEX_PRI15_REG_COEX_PRI_PTI_Msk  (0x7UL)                   /*!< COEX COEX_PRI15_REG: COEX_PRI_PTI (Bitfield-Mask: 0x07)     */
 #define COEX_COEX_PRI15_REG_COEX_PRI_MAC_Pos  (3UL)                     /*!< COEX COEX_PRI15_REG: COEX_PRI_MAC (Bit 3)                   */
 #define COEX_COEX_PRI15_REG_COEX_PRI_MAC_Msk  (0x18UL)                  /*!< COEX COEX_PRI15_REG: COEX_PRI_MAC (Bitfield-Mask: 0x03)     */
-
-/* -----------------------------  COEX_COEX_PRI16_REG  ---------------------------- */
-#define COEX_COEX_PRI16_REG_COEX_PRI_PTI_Pos  (0UL)                     /*!< COEX COEX_PRI16_REG: COEX_PRI_PTI (Bit 0)                   */
-#define COEX_COEX_PRI16_REG_COEX_PRI_PTI_Msk  (0x7UL)                   /*!< COEX COEX_PRI16_REG: COEX_PRI_PTI (Bitfield-Mask: 0x07)     */
-#define COEX_COEX_PRI16_REG_COEX_PRI_MAC_Pos  (3UL)                     /*!< COEX COEX_PRI16_REG: COEX_PRI_MAC (Bit 3)                   */
-#define COEX_COEX_PRI16_REG_COEX_PRI_MAC_Msk  (0x18UL)                  /*!< COEX COEX_PRI16_REG: COEX_PRI_MAC (Bitfield-Mask: 0x03)     */
-
-/* -----------------------------  COEX_COEX_PRI17_REG  ---------------------------- */
-#define COEX_COEX_PRI17_REG_COEX_PRI_PTI_Pos  (0UL)                     /*!< COEX COEX_PRI17_REG: COEX_PRI_PTI (Bit 0)                   */
-#define COEX_COEX_PRI17_REG_COEX_PRI_PTI_Msk  (0x7UL)                   /*!< COEX COEX_PRI17_REG: COEX_PRI_PTI (Bitfield-Mask: 0x07)     */
-#define COEX_COEX_PRI17_REG_COEX_PRI_MAC_Pos  (3UL)                     /*!< COEX COEX_PRI17_REG: COEX_PRI_MAC (Bit 3)                   */
-#define COEX_COEX_PRI17_REG_COEX_PRI_MAC_Msk  (0x18UL)                  /*!< COEX COEX_PRI17_REG: COEX_PRI_MAC (Bitfield-Mask: 0x03)     */
 
 
 /* ================================================================================ */
@@ -3969,6 +3958,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define CRG_TOP_CLK_CTRL_REG_DIVN_SYNC_LEVEL_Msk (0x80UL)               /*!< CRG_TOP CLK_CTRL_REG: DIVN_SYNC_LEVEL (Bitfield-Mask: 0x01) */
 #define CRG_TOP_CLK_CTRL_REG_CLK32K_SOURCE_Pos (8UL)                    /*!< CRG_TOP CLK_CTRL_REG: CLK32K_SOURCE (Bit 8)                 */
 #define CRG_TOP_CLK_CTRL_REG_CLK32K_SOURCE_Msk (0x300UL)                /*!< CRG_TOP CLK_CTRL_REG: CLK32K_SOURCE (Bitfield-Mask: 0x03)   */
+#define CRG_TOP_CLK_CTRL_REG_DIVN_SHIFT_SEL_Pos (10UL)                  /*!< CRG_TOP CLK_CTRL_REG: DIVN_SHIFT_SEL (Bit 10)               */
+#define CRG_TOP_CLK_CTRL_REG_DIVN_SHIFT_SEL_Msk (0x400UL)               /*!< CRG_TOP CLK_CTRL_REG: DIVN_SHIFT_SEL (Bitfield-Mask: 0x01)  */
 #define CRG_TOP_CLK_CTRL_REG_RUNNING_AT_32K_Pos (12UL)                  /*!< CRG_TOP CLK_CTRL_REG: RUNNING_AT_32K (Bit 12)               */
 #define CRG_TOP_CLK_CTRL_REG_RUNNING_AT_32K_Msk (0x1000UL)              /*!< CRG_TOP CLK_CTRL_REG: RUNNING_AT_32K (Bitfield-Mask: 0x01)  */
 #define CRG_TOP_CLK_CTRL_REG_RUNNING_AT_RC16M_Pos (13UL)                /*!< CRG_TOP CLK_CTRL_REG: RUNNING_AT_RC16M (Bit 13)             */
@@ -4013,6 +4004,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define CRG_TOP_PMU_CTRL_REG_BLE_SLEEP_Msk    (0x4UL)                   /*!< CRG_TOP PMU_CTRL_REG: BLE_SLEEP (Bitfield-Mask: 0x01)       */
 #define CRG_TOP_PMU_CTRL_REG_FTDF_SLEEP_Pos   (3UL)                     /*!< CRG_TOP PMU_CTRL_REG: FTDF_SLEEP (Bit 3)                    */
 #define CRG_TOP_PMU_CTRL_REG_FTDF_SLEEP_Msk   (0x8UL)                   /*!< CRG_TOP PMU_CTRL_REG: FTDF_SLEEP (Bitfield-Mask: 0x01)      */
+#define CRG_TOP_PMU_CTRL_REG_MAP_BANDGAP_EN_Pos (4UL)                   /*!< CRG_TOP PMU_CTRL_REG: MAP_BANDGAP_EN (Bit 4)                */
+#define CRG_TOP_PMU_CTRL_REG_MAP_BANDGAP_EN_Msk (0x10UL)                /*!< CRG_TOP PMU_CTRL_REG: MAP_BANDGAP_EN (Bitfield-Mask: 0x01)  */
 #define CRG_TOP_PMU_CTRL_REG_RESET_ON_WAKEUP_Pos (5UL)                  /*!< CRG_TOP PMU_CTRL_REG: RESET_ON_WAKEUP (Bit 5)               */
 #define CRG_TOP_PMU_CTRL_REG_RESET_ON_WAKEUP_Msk (0x20UL)               /*!< CRG_TOP PMU_CTRL_REG: RESET_ON_WAKEUP (Bitfield-Mask: 0x01) */
 #define CRG_TOP_PMU_CTRL_REG_OTP_COPY_DIV_Pos (6UL)                     /*!< CRG_TOP PMU_CTRL_REG: OTP_COPY_DIV (Bit 6)                  */
@@ -4063,10 +4056,14 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define CRG_TOP_SYS_STAT_REG_PER_IS_DOWN_Msk  (0x4UL)                   /*!< CRG_TOP SYS_STAT_REG: PER_IS_DOWN (Bitfield-Mask: 0x01)     */
 #define CRG_TOP_SYS_STAT_REG_PER_IS_UP_Pos    (3UL)                     /*!< CRG_TOP SYS_STAT_REG: PER_IS_UP (Bit 3)                     */
 #define CRG_TOP_SYS_STAT_REG_PER_IS_UP_Msk    (0x8UL)                   /*!< CRG_TOP SYS_STAT_REG: PER_IS_UP (Bitfield-Mask: 0x01)       */
+#define CRG_TOP_SYS_STAT_REG_XTAL16_SW2_Pos   (4UL)                     /*!< CRG_TOP SYS_STAT_REG: XTAL16_SW2 (Bit 4)                    */
+#define CRG_TOP_SYS_STAT_REG_XTAL16_SW2_Msk   (0x10UL)                  /*!< CRG_TOP SYS_STAT_REG: XTAL16_SW2 (Bitfield-Mask: 0x01)      */
 #define CRG_TOP_SYS_STAT_REG_DBG_IS_ACTIVE_Pos (5UL)                    /*!< CRG_TOP SYS_STAT_REG: DBG_IS_ACTIVE (Bit 5)                 */
 #define CRG_TOP_SYS_STAT_REG_DBG_IS_ACTIVE_Msk (0x20UL)                 /*!< CRG_TOP SYS_STAT_REG: DBG_IS_ACTIVE (Bitfield-Mask: 0x01)   */
 #define CRG_TOP_SYS_STAT_REG_XTAL16_TRIM_READY_Pos (6UL)                /*!< CRG_TOP SYS_STAT_REG: XTAL16_TRIM_READY (Bit 6)             */
 #define CRG_TOP_SYS_STAT_REG_XTAL16_TRIM_READY_Msk (0x40UL)             /*!< CRG_TOP SYS_STAT_REG: XTAL16_TRIM_READY (Bitfield-Mask: 0x01) */
+#define CRG_TOP_SYS_STAT_REG_XTAL16_SETTLE_READY_Pos (7UL)              /*!< CRG_TOP SYS_STAT_REG: XTAL16_SETTLE_READY (Bit 7)           */
+#define CRG_TOP_SYS_STAT_REG_XTAL16_SETTLE_READY_Msk (0x80UL)           /*!< CRG_TOP SYS_STAT_REG: XTAL16_SETTLE_READY (Bitfield-Mask: 0x01) */
 #define CRG_TOP_SYS_STAT_REG_BLE_IS_DOWN_Pos  (8UL)                     /*!< CRG_TOP SYS_STAT_REG: BLE_IS_DOWN (Bit 8)                   */
 #define CRG_TOP_SYS_STAT_REG_BLE_IS_DOWN_Msk  (0x100UL)                 /*!< CRG_TOP SYS_STAT_REG: BLE_IS_DOWN (Bitfield-Mask: 0x01)     */
 #define CRG_TOP_SYS_STAT_REG_BLE_IS_UP_Pos    (9UL)                     /*!< CRG_TOP SYS_STAT_REG: BLE_IS_UP (Bit 9)                     */
@@ -4081,10 +4078,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define CRG_TOP_TRIM_CTRL_REG_XTAL_COUNT_N_Msk (0x3fUL)                 /*!< CRG_TOP TRIM_CTRL_REG: XTAL_COUNT_N (Bitfield-Mask: 0x3f)   */
 #define CRG_TOP_TRIM_CTRL_REG_XTAL_TRIM_SELECT_Pos (6UL)                /*!< CRG_TOP TRIM_CTRL_REG: XTAL_TRIM_SELECT (Bit 6)             */
 #define CRG_TOP_TRIM_CTRL_REG_XTAL_TRIM_SELECT_Msk (0xc0UL)             /*!< CRG_TOP TRIM_CTRL_REG: XTAL_TRIM_SELECT (Bitfield-Mask: 0x03) */
-
-/* ----------------------------  CRG_TOP_DIVN_SYNC_REG  --------------------------- */
-#define CRG_TOP_DIVN_SYNC_REG_DIVN_SYNC_Pos   (0UL)                     /*!< CRG_TOP DIVN_SYNC_REG: DIVN_SYNC (Bit 0)                    */
-#define CRG_TOP_DIVN_SYNC_REG_DIVN_SYNC_Msk   (0x1UL)                   /*!< CRG_TOP DIVN_SYNC_REG: DIVN_SYNC (Bitfield-Mask: 0x01)      */
+#define CRG_TOP_TRIM_CTRL_REG_XTAL_SETTLE_N_Pos (8UL)                   /*!< CRG_TOP TRIM_CTRL_REG: XTAL_SETTLE_N (Bit 8)                */
+#define CRG_TOP_TRIM_CTRL_REG_XTAL_SETTLE_N_Msk (0x3f00UL)              /*!< CRG_TOP TRIM_CTRL_REG: XTAL_SETTLE_N (Bitfield-Mask: 0x3f)  */
 
 /* -----------------------------  CRG_TOP_CLK_32K_REG  ---------------------------- */
 #define CRG_TOP_CLK_32K_REG_XTAL32K_ENABLE_Pos (0UL)                    /*!< CRG_TOP CLK_32K_REG: XTAL32K_ENABLE (Bit 0)                 */
@@ -4099,6 +4094,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define CRG_TOP_CLK_32K_REG_RC32K_TRIM_Msk    (0xf00UL)                 /*!< CRG_TOP CLK_32K_REG: RC32K_TRIM (Bitfield-Mask: 0x0f)       */
 #define CRG_TOP_CLK_32K_REG_XTAL32K_DISABLE_AMPREG_Pos (12UL)           /*!< CRG_TOP CLK_32K_REG: XTAL32K_DISABLE_AMPREG (Bit 12)        */
 #define CRG_TOP_CLK_32K_REG_XTAL32K_DISABLE_AMPREG_Msk (0x1000UL)       /*!< CRG_TOP CLK_32K_REG: XTAL32K_DISABLE_AMPREG (Bitfield-Mask: 0x01) */
+#define CRG_TOP_CLK_32K_REG_XTAL32K_XTAL1_BIAS_DISABLE_Pos (13UL)       /*!< CRG_TOP CLK_32K_REG: XTAL32K_XTAL1_BIAS_DISABLE (Bit 13)    */
+#define CRG_TOP_CLK_32K_REG_XTAL32K_XTAL1_BIAS_DISABLE_Msk (0x2000UL)   /*!< CRG_TOP CLK_32K_REG: XTAL32K_XTAL1_BIAS_DISABLE (Bitfield-Mask: 0x01) */
 
 /* -----------------------------  CRG_TOP_CLK_16M_REG  ---------------------------- */
 #define CRG_TOP_CLK_16M_REG_RC16M_ENABLE_Pos  (0UL)                     /*!< CRG_TOP CLK_16M_REG: RC16M_ENABLE (Bit 0)                   */
@@ -4139,8 +4136,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define CRG_TOP_BANDGAP_REG_BGR_ITRIM_Msk     (0x3e0UL)                 /*!< CRG_TOP BANDGAP_REG: BGR_ITRIM (Bitfield-Mask: 0x1f)        */
 #define CRG_TOP_BANDGAP_REG_LDO_SLEEP_TRIM_Pos (10UL)                   /*!< CRG_TOP BANDGAP_REG: LDO_SLEEP_TRIM (Bit 10)                */
 #define CRG_TOP_BANDGAP_REG_LDO_SLEEP_TRIM_Msk (0x3c00UL)               /*!< CRG_TOP BANDGAP_REG: LDO_SLEEP_TRIM (Bitfield-Mask: 0x0f)   */
-#define CRG_TOP_BANDGAP_REG_BYPASS_COLD_BOOT_DISABLE_Pos (14UL)         /*!< CRG_TOP BANDGAP_REG: BYPASS_COLD_BOOT_DISABLE (Bit 14)      */
-#define CRG_TOP_BANDGAP_REG_BYPASS_COLD_BOOT_DISABLE_Msk (0x4000UL)     /*!< CRG_TOP BANDGAP_REG: BYPASS_COLD_BOOT_DISABLE (Bitfield-Mask: 0x01) */
+#define CRG_TOP_BANDGAP_REG_LDO_SUPPLY_USE_BGREF_Pos (14UL)             /*!< CRG_TOP BANDGAP_REG: LDO_SUPPLY_USE_BGREF (Bit 14)          */
+#define CRG_TOP_BANDGAP_REG_LDO_SUPPLY_USE_BGREF_Msk (0x4000UL)         /*!< CRG_TOP BANDGAP_REG: LDO_SUPPLY_USE_BGREF (Bitfield-Mask: 0x01) */
 
 /* ---------------------------  CRG_TOP_ANA_STATUS_REG  --------------------------- */
 #define CRG_TOP_ANA_STATUS_REG_LDO_RADIO_OK_Pos (0UL)                   /*!< CRG_TOP ANA_STATUS_REG: LDO_RADIO_OK (Bit 0)                */
@@ -4179,8 +4176,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 /* -------------------------  CRG_TOP_STARTUP_STATUS_REG  ------------------------- */
 #define CRG_TOP_STARTUP_STATUS_REG_SU_BANDGAP_OK_Pos (0UL)              /*!< CRG_TOP STARTUP_STATUS_REG: SU_BANDGAP_OK (Bit 0)           */
 #define CRG_TOP_STARTUP_STATUS_REG_SU_BANDGAP_OK_Msk (0x1UL)            /*!< CRG_TOP STARTUP_STATUS_REG: SU_BANDGAP_OK (Bitfield-Mask: 0x01) */
-#define CRG_TOP_STARTUP_STATUS_REG_SU_VBUS_AVAILABLE_Pos (1UL)          /*!< CRG_TOP STARTUP_STATUS_REG: SU_VBUS_AVAILABLE (Bit 1)       */
-#define CRG_TOP_STARTUP_STATUS_REG_SU_VBUS_AVAILABLE_Msk (0x2UL)        /*!< CRG_TOP STARTUP_STATUS_REG: SU_VBUS_AVAILABLE (Bitfield-Mask: 0x01) */
+#define CRG_TOP_STARTUP_STATUS_REG_SU_NEWBAT_Pos (1UL)                  /*!< CRG_TOP STARTUP_STATUS_REG: SU_NEWBAT (Bit 1)               */
+#define CRG_TOP_STARTUP_STATUS_REG_SU_NEWBAT_Msk (0x2UL)                /*!< CRG_TOP STARTUP_STATUS_REG: SU_NEWBAT (Bitfield-Mask: 0x01) */
 #define CRG_TOP_STARTUP_STATUS_REG_SU_LDO_SUPPLY_VBAT_OK_Pos (2UL)      /*!< CRG_TOP STARTUP_STATUS_REG: SU_LDO_SUPPLY_VBAT_OK (Bit 2)   */
 #define CRG_TOP_STARTUP_STATUS_REG_SU_LDO_SUPPLY_VBAT_OK_Msk (0x4UL)    /*!< CRG_TOP STARTUP_STATUS_REG: SU_LDO_SUPPLY_VBAT_OK (Bitfield-Mask: 0x01) */
 #define CRG_TOP_STARTUP_STATUS_REG_SU_LOD_SUPPLY_USB_OK_Pos (3UL)       /*!< CRG_TOP STARTUP_STATUS_REG: SU_LOD_SUPPLY_USB_OK (Bit 3)    */
@@ -4201,10 +4198,10 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define CRG_TOP_STARTUP_STATUS_REG_SU_COMP_1V8_PA_HIGH_Msk (0x400UL)    /*!< CRG_TOP STARTUP_STATUS_REG: SU_COMP_1V8_PA_HIGH (Bitfield-Mask: 0x01) */
 #define CRG_TOP_STARTUP_STATUS_REG_SU_COMP_1V8_FLASH_HIGH_Pos (11UL)    /*!< CRG_TOP STARTUP_STATUS_REG: SU_COMP_1V8_FLASH_HIGH (Bit 11) */
 #define CRG_TOP_STARTUP_STATUS_REG_SU_COMP_1V8_FLASH_HIGH_Msk (0x800UL) /*!< CRG_TOP STARTUP_STATUS_REG: SU_COMP_1V8_FLASH_HIGH (Bitfield-Mask: 0x01) */
-#define CRG_TOP_STARTUP_STATUS_REG_SU_NEWBAT_Pos (12UL)                 /*!< CRG_TOP STARTUP_STATUS_REG: SU_NEWBAT (Bit 12)              */
-#define CRG_TOP_STARTUP_STATUS_REG_SU_NEWBAT_Msk (0x1000UL)             /*!< CRG_TOP STARTUP_STATUS_REG: SU_NEWBAT (Bitfield-Mask: 0x01) */
-#define CRG_TOP_STARTUP_STATUS_REG_SU_LDO_1V8_FLASH_OK_Pos (13UL)       /*!< CRG_TOP STARTUP_STATUS_REG: SU_LDO_1V8_FLASH_OK (Bit 13)    */
-#define CRG_TOP_STARTUP_STATUS_REG_SU_LDO_1V8_FLASH_OK_Msk (0x2000UL)   /*!< CRG_TOP STARTUP_STATUS_REG: SU_LDO_1V8_FLASH_OK (Bitfield-Mask: 0x01) */
+#define CRG_TOP_STARTUP_STATUS_REG_SU_LDO_1V8_FLASH_OK_Pos (12UL)       /*!< CRG_TOP STARTUP_STATUS_REG: SU_LDO_1V8_FLASH_OK (Bit 12)    */
+#define CRG_TOP_STARTUP_STATUS_REG_SU_LDO_1V8_FLASH_OK_Msk (0x1000UL)   /*!< CRG_TOP STARTUP_STATUS_REG: SU_LDO_1V8_FLASH_OK (Bitfield-Mask: 0x01) */
+#define CRG_TOP_STARTUP_STATUS_REG_SU_BOD_STATUS_Pos (13UL)             /*!< CRG_TOP STARTUP_STATUS_REG: SU_BOD_STATUS (Bit 13)          */
+#define CRG_TOP_STARTUP_STATUS_REG_SU_BOD_STATUS_Msk (0xe000UL)         /*!< CRG_TOP STARTUP_STATUS_REG: SU_BOD_STATUS (Bitfield-Mask: 0x07) */
 
 /* --------------------------  CRG_TOP_VBUS_IRQ_MASK_REG  ------------------------- */
 #define CRG_TOP_VBUS_IRQ_MASK_REG_VBUS_IRQ_EN_FALL_Pos (0UL)            /*!< CRG_TOP VBUS_IRQ_MASK_REG: VBUS_IRQ_EN_FALL (Bit 0)         */
@@ -4219,10 +4216,10 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 /* ----------------------------  CRG_TOP_BOD_CTRL_REG  ---------------------------- */
 #define CRG_TOP_BOD_CTRL_REG_BOD_VDD_TRIM_Pos (0UL)                     /*!< CRG_TOP BOD_CTRL_REG: BOD_VDD_TRIM (Bit 0)                  */
 #define CRG_TOP_BOD_CTRL_REG_BOD_VDD_TRIM_Msk (0x3UL)                   /*!< CRG_TOP BOD_CTRL_REG: BOD_VDD_TRIM (Bitfield-Mask: 0x03)    */
-#define CRG_TOP_BOD_CTRL_REG_BOD_1V8_FLASH_TRIM_Pos (2UL)               /*!< CRG_TOP BOD_CTRL_REG: BOD_1V8_FLASH_TRIM (Bit 2)            */
-#define CRG_TOP_BOD_CTRL_REG_BOD_1V8_FLASH_TRIM_Msk (0xcUL)             /*!< CRG_TOP BOD_CTRL_REG: BOD_1V8_FLASH_TRIM (Bitfield-Mask: 0x03) */
-#define CRG_TOP_BOD_CTRL_REG_BOD_1V8_PA_TRIM_Pos (4UL)                  /*!< CRG_TOP BOD_CTRL_REG: BOD_1V8_PA_TRIM (Bit 4)               */
-#define CRG_TOP_BOD_CTRL_REG_BOD_1V8_PA_TRIM_Msk (0x30UL)               /*!< CRG_TOP BOD_CTRL_REG: BOD_1V8_PA_TRIM (Bitfield-Mask: 0x03) */
+#define CRG_TOP_BOD_CTRL_REG_BOD_1V8_TRIM_Pos (2UL)                     /*!< CRG_TOP BOD_CTRL_REG: BOD_1V8_TRIM (Bit 2)                  */
+#define CRG_TOP_BOD_CTRL_REG_BOD_1V8_TRIM_Msk (0xcUL)                   /*!< CRG_TOP BOD_CTRL_REG: BOD_1V8_TRIM (Bitfield-Mask: 0x03)    */
+#define CRG_TOP_BOD_CTRL_REG_BOD_1V4_TRIM_Pos (4UL)                     /*!< CRG_TOP BOD_CTRL_REG: BOD_1V4_TRIM (Bit 4)                  */
+#define CRG_TOP_BOD_CTRL_REG_BOD_1V4_TRIM_Msk (0x30UL)                  /*!< CRG_TOP BOD_CTRL_REG: BOD_1V4_TRIM (Bitfield-Mask: 0x03)    */
 #define CRG_TOP_BOD_CTRL_REG_BOD_V33_TRIM_Pos (6UL)                     /*!< CRG_TOP BOD_CTRL_REG: BOD_V33_TRIM (Bit 6)                  */
 #define CRG_TOP_BOD_CTRL_REG_BOD_V33_TRIM_Msk (0xc0UL)                  /*!< CRG_TOP BOD_CTRL_REG: BOD_V33_TRIM (Bitfield-Mask: 0x03)    */
 #define CRG_TOP_BOD_CTRL_REG_BOD_VDD_LVL_Pos  (8UL)                     /*!< CRG_TOP BOD_CTRL_REG: BOD_VDD_LVL (Bit 8)                   */
@@ -4241,6 +4238,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define CRG_TOP_BOD_CTRL2_REG_BOD_1V8_FLASH_EN_Msk (0x10UL)             /*!< CRG_TOP BOD_CTRL2_REG: BOD_1V8_FLASH_EN (Bitfield-Mask: 0x01) */
 #define CRG_TOP_BOD_CTRL2_REG_BOD_VBAT_EN_Pos (5UL)                     /*!< CRG_TOP BOD_CTRL2_REG: BOD_VBAT_EN (Bit 5)                  */
 #define CRG_TOP_BOD_CTRL2_REG_BOD_VBAT_EN_Msk (0x20UL)                  /*!< CRG_TOP BOD_CTRL2_REG: BOD_VBAT_EN (Bitfield-Mask: 0x01)    */
+#define CRG_TOP_BOD_CTRL2_REG_BOD_V14_EN_Pos  (6UL)                     /*!< CRG_TOP BOD_CTRL2_REG: BOD_V14_EN (Bit 6)                   */
+#define CRG_TOP_BOD_CTRL2_REG_BOD_V14_EN_Msk  (0x40UL)                  /*!< CRG_TOP BOD_CTRL2_REG: BOD_V14_EN (Bitfield-Mask: 0x01)     */
 
 /* ---------------------------  CRG_TOP_BOD_STATUS_REG  --------------------------- */
 #define CRG_TOP_BOD_STATUS_REG_BOD_VDD_LOW_Pos (0UL)                    /*!< CRG_TOP BOD_STATUS_REG: BOD_VDD_LOW (Bit 0)                 */
@@ -4253,6 +4252,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define CRG_TOP_BOD_STATUS_REG_BOD_V33_LOW_Msk (0x8UL)                  /*!< CRG_TOP BOD_STATUS_REG: BOD_V33_LOW (Bitfield-Mask: 0x01)   */
 #define CRG_TOP_BOD_STATUS_REG_BOD_VBAT_LOW_Pos (4UL)                   /*!< CRG_TOP BOD_STATUS_REG: BOD_VBAT_LOW (Bit 4)                */
 #define CRG_TOP_BOD_STATUS_REG_BOD_VBAT_LOW_Msk (0x10UL)                /*!< CRG_TOP BOD_STATUS_REG: BOD_VBAT_LOW (Bitfield-Mask: 0x01)  */
+#define CRG_TOP_BOD_STATUS_REG_BOD_V14_LOW_Pos (5UL)                    /*!< CRG_TOP BOD_STATUS_REG: BOD_V14_LOW (Bit 5)                 */
+#define CRG_TOP_BOD_STATUS_REG_BOD_V14_LOW_Msk (0x20UL)                 /*!< CRG_TOP BOD_STATUS_REG: BOD_V14_LOW (Bitfield-Mask: 0x01)   */
 
 /* ----------------------------  CRG_TOP_LDO_CTRL1_REG  --------------------------- */
 #define CRG_TOP_LDO_CTRL1_REG_LDO_CORE_CURLIM_Pos (0UL)                 /*!< CRG_TOP LDO_CTRL1_REG: LDO_CORE_CURLIM (Bit 0)              */
@@ -4294,6 +4295,18 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define CRG_TOP_POWER_CTRL_REG_TRIM_NEWBAT_Pos (0UL)                    /*!< CRG_TOP POWER_CTRL_REG: TRIM_NEWBAT (Bit 0)                 */
 #define CRG_TOP_POWER_CTRL_REG_TRIM_NEWBAT_Msk (0x7UL)                  /*!< CRG_TOP POWER_CTRL_REG: TRIM_NEWBAT (Bitfield-Mask: 0x07)   */
 
+/* --------------------------  CRG_TOP_POR_VBAT_CTRL_REG  ------------------------- */
+#define CRG_TOP_POR_VBAT_CTRL_REG_POR_VBAT_THRES_LOW_Pos (0UL)          /*!< CRG_TOP POR_VBAT_CTRL_REG: POR_VBAT_THRES_LOW (Bit 0)       */
+#define CRG_TOP_POR_VBAT_CTRL_REG_POR_VBAT_THRES_LOW_Msk (0xfUL)        /*!< CRG_TOP POR_VBAT_CTRL_REG: POR_VBAT_THRES_LOW (Bitfield-Mask: 0x0f) */
+#define CRG_TOP_POR_VBAT_CTRL_REG_POR_VBAT_THRES_HIGH_Pos (4UL)         /*!< CRG_TOP POR_VBAT_CTRL_REG: POR_VBAT_THRES_HIGH (Bit 4)      */
+#define CRG_TOP_POR_VBAT_CTRL_REG_POR_VBAT_THRES_HIGH_Msk (0xf0UL)      /*!< CRG_TOP POR_VBAT_CTRL_REG: POR_VBAT_THRES_HIGH (Bitfield-Mask: 0x0f) */
+#define CRG_TOP_POR_VBAT_CTRL_REG_POR_VBAT_HYST_LOW_Pos (8UL)           /*!< CRG_TOP POR_VBAT_CTRL_REG: POR_VBAT_HYST_LOW (Bit 8)        */
+#define CRG_TOP_POR_VBAT_CTRL_REG_POR_VBAT_HYST_LOW_Msk (0xf00UL)       /*!< CRG_TOP POR_VBAT_CTRL_REG: POR_VBAT_HYST_LOW (Bitfield-Mask: 0x0f) */
+#define CRG_TOP_POR_VBAT_CTRL_REG_POR_VBAT_ENABLE_Pos (12UL)            /*!< CRG_TOP POR_VBAT_CTRL_REG: POR_VBAT_ENABLE (Bit 12)         */
+#define CRG_TOP_POR_VBAT_CTRL_REG_POR_VBAT_ENABLE_Msk (0x1000UL)        /*!< CRG_TOP POR_VBAT_CTRL_REG: POR_VBAT_ENABLE (Bitfield-Mask: 0x01) */
+#define CRG_TOP_POR_VBAT_CTRL_REG_POR_VBAT_MASK_N_Pos (13UL)            /*!< CRG_TOP POR_VBAT_CTRL_REG: POR_VBAT_MASK_N (Bit 13)         */
+#define CRG_TOP_POR_VBAT_CTRL_REG_POR_VBAT_MASK_N_Msk (0x2000UL)        /*!< CRG_TOP POR_VBAT_CTRL_REG: POR_VBAT_MASK_N (Bitfield-Mask: 0x01) */
+
 /* --------------------------  CRG_TOP_XTALRDY_CTRL_REG  -------------------------- */
 #define CRG_TOP_XTALRDY_CTRL_REG_XTALRDY_CNT_Pos (0UL)                  /*!< CRG_TOP XTALRDY_CTRL_REG: XTALRDY_CNT (Bit 0)               */
 #define CRG_TOP_XTALRDY_CTRL_REG_XTALRDY_CNT_Msk (0xffUL)               /*!< CRG_TOP XTALRDY_CTRL_REG: XTALRDY_CNT (Bitfield-Mask: 0xff) */
@@ -4301,6 +4314,48 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 /* --------------------------  CRG_TOP_XTALRDY_STAT_REG  -------------------------- */
 #define CRG_TOP_XTALRDY_STAT_REG_XTALRDY_STAT_Pos (0UL)                 /*!< CRG_TOP XTALRDY_STAT_REG: XTALRDY_STAT (Bit 0)              */
 #define CRG_TOP_XTALRDY_STAT_REG_XTALRDY_STAT_Msk (0xffUL)              /*!< CRG_TOP XTALRDY_STAT_REG: XTALRDY_STAT (Bitfield-Mask: 0xff) */
+
+/* ----------------------------  CRG_TOP_LDO_CTRL3_REG  --------------------------- */
+#define CRG_TOP_LDO_CTRL3_REG_LDO_VBAT_RET_ENABLE_Pos (0UL)             /*!< CRG_TOP LDO_CTRL3_REG: LDO_VBAT_RET_ENABLE (Bit 0)          */
+#define CRG_TOP_LDO_CTRL3_REG_LDO_VBAT_RET_ENABLE_Msk (0x1UL)           /*!< CRG_TOP LDO_CTRL3_REG: LDO_VBAT_RET_ENABLE (Bitfield-Mask: 0x01) */
+#define CRG_TOP_LDO_CTRL3_REG_LDO_VBAT_RET_VREF_HOLD_Pos (1UL)          /*!< CRG_TOP LDO_CTRL3_REG: LDO_VBAT_RET_VREF_HOLD (Bit 1)       */
+#define CRG_TOP_LDO_CTRL3_REG_LDO_VBAT_RET_VREF_HOLD_Msk (0x2UL)        /*!< CRG_TOP LDO_CTRL3_REG: LDO_VBAT_RET_VREF_HOLD (Bitfield-Mask: 0x01) */
+#define CRG_TOP_LDO_CTRL3_REG_LDO_1V8_FLASH_RET_ENABLE_Pos (2UL)        /*!< CRG_TOP LDO_CTRL3_REG: LDO_1V8_FLASH_RET_ENABLE (Bit 2)     */
+#define CRG_TOP_LDO_CTRL3_REG_LDO_1V8_FLASH_RET_ENABLE_Msk (0x4UL)      /*!< CRG_TOP LDO_CTRL3_REG: LDO_1V8_FLASH_RET_ENABLE (Bitfield-Mask: 0x01) */
+#define CRG_TOP_LDO_CTRL3_REG_LDO_1V8_FLASH_RET_VREF_HOLD_Pos (3UL)     /*!< CRG_TOP LDO_CTRL3_REG: LDO_1V8_FLASH_RET_VREF_HOLD (Bit 3)  */
+#define CRG_TOP_LDO_CTRL3_REG_LDO_1V8_FLASH_RET_VREF_HOLD_Msk (0x8UL)   /*!< CRG_TOP LDO_CTRL3_REG: LDO_1V8_FLASH_RET_VREF_HOLD (Bitfield-Mask: 0x01) */
+#define CRG_TOP_LDO_CTRL3_REG_LDO_1V8_PA_RET_ENABLE_Pos (4UL)           /*!< CRG_TOP LDO_CTRL3_REG: LDO_1V8_PA_RET_ENABLE (Bit 4)        */
+#define CRG_TOP_LDO_CTRL3_REG_LDO_1V8_PA_RET_ENABLE_Msk (0x10UL)        /*!< CRG_TOP LDO_CTRL3_REG: LDO_1V8_PA_RET_ENABLE (Bitfield-Mask: 0x01) */
+#define CRG_TOP_LDO_CTRL3_REG_LDO_1V8_PA_RET_VREF_HOLD_Pos (5UL)        /*!< CRG_TOP LDO_CTRL3_REG: LDO_1V8_PA_RET_VREF_HOLD (Bit 5)     */
+#define CRG_TOP_LDO_CTRL3_REG_LDO_1V8_PA_RET_VREF_HOLD_Msk (0x20UL)     /*!< CRG_TOP LDO_CTRL3_REG: LDO_1V8_PA_RET_VREF_HOLD (Bitfield-Mask: 0x01) */
+
+/* --------------------------  CRG_TOP_XTAL16M_START_REG  ------------------------- */
+#define CRG_TOP_XTAL16M_START_REG_FINE_ADJ_Pos (0UL)                    /*!< CRG_TOP XTAL16M_START_REG: FINE_ADJ (Bit 0)                 */
+#define CRG_TOP_XTAL16M_START_REG_FINE_ADJ_Msk (0xffUL)                 /*!< CRG_TOP XTAL16M_START_REG: FINE_ADJ (Bitfield-Mask: 0xff)   */
+#define CRG_TOP_XTAL16M_START_REG_COARSE_ADJ_Pos (8UL)                  /*!< CRG_TOP XTAL16M_START_REG: COARSE_ADJ (Bit 8)               */
+#define CRG_TOP_XTAL16M_START_REG_COARSE_ADJ_Msk (0x700UL)              /*!< CRG_TOP XTAL16M_START_REG: COARSE_ADJ (Bitfield-Mask: 0x07) */
+
+/* --------------------------  CRG_TOP_XTAL16M_RAMP_REG  -------------------------- */
+#define CRG_TOP_XTAL16M_RAMP_REG_FINE_ADJ_Pos (0UL)                     /*!< CRG_TOP XTAL16M_RAMP_REG: FINE_ADJ (Bit 0)                  */
+#define CRG_TOP_XTAL16M_RAMP_REG_FINE_ADJ_Msk (0xffUL)                  /*!< CRG_TOP XTAL16M_RAMP_REG: FINE_ADJ (Bitfield-Mask: 0xff)    */
+#define CRG_TOP_XTAL16M_RAMP_REG_COARSE_ADJ_Pos (8UL)                   /*!< CRG_TOP XTAL16M_RAMP_REG: COARSE_ADJ (Bit 8)                */
+#define CRG_TOP_XTAL16M_RAMP_REG_COARSE_ADJ_Msk (0x700UL)               /*!< CRG_TOP XTAL16M_RAMP_REG: COARSE_ADJ (Bitfield-Mask: 0x07)  */
+
+/* -------------------------  CRG_TOP_XTAL16M_TRSTAT_REG  ------------------------- */
+#define CRG_TOP_XTAL16M_TRSTAT_REG_XTAL16M_TRSTAT_Pos (0UL)             /*!< CRG_TOP XTAL16M_TRSTAT_REG: XTAL16M_TRSTAT (Bit 0)          */
+#define CRG_TOP_XTAL16M_TRSTAT_REG_XTAL16M_TRSTAT_Msk (0x7fffUL)        /*!< CRG_TOP XTAL16M_TRSTAT_REG: XTAL16M_TRSTAT (Bitfield-Mask: 0x7fff) */
+
+/* ---------------------------  CRG_TOP_RESET_STAT_REG  --------------------------- */
+#define CRG_TOP_RESET_STAT_REG_PORESET_STAT_Pos (0UL)                   /*!< CRG_TOP RESET_STAT_REG: PORESET_STAT (Bit 0)                */
+#define CRG_TOP_RESET_STAT_REG_PORESET_STAT_Msk (0x1UL)                 /*!< CRG_TOP RESET_STAT_REG: PORESET_STAT (Bitfield-Mask: 0x01)  */
+#define CRG_TOP_RESET_STAT_REG_HWRESET_STAT_Pos (1UL)                   /*!< CRG_TOP RESET_STAT_REG: HWRESET_STAT (Bit 1)                */
+#define CRG_TOP_RESET_STAT_REG_HWRESET_STAT_Msk (0x2UL)                 /*!< CRG_TOP RESET_STAT_REG: HWRESET_STAT (Bitfield-Mask: 0x01)  */
+#define CRG_TOP_RESET_STAT_REG_SWRESET_STAT_Pos (2UL)                   /*!< CRG_TOP RESET_STAT_REG: SWRESET_STAT (Bit 2)                */
+#define CRG_TOP_RESET_STAT_REG_SWRESET_STAT_Msk (0x4UL)                 /*!< CRG_TOP RESET_STAT_REG: SWRESET_STAT (Bitfield-Mask: 0x01)  */
+#define CRG_TOP_RESET_STAT_REG_WDOGRESET_STAT_Pos (3UL)                 /*!< CRG_TOP RESET_STAT_REG: WDOGRESET_STAT (Bit 3)              */
+#define CRG_TOP_RESET_STAT_REG_WDOGRESET_STAT_Msk (0x8UL)               /*!< CRG_TOP RESET_STAT_REG: WDOGRESET_STAT (Bitfield-Mask: 0x01) */
+#define CRG_TOP_RESET_STAT_REG_SWD_HWRESET_STAT_Pos (4UL)               /*!< CRG_TOP RESET_STAT_REG: SWD_HWRESET_STAT (Bit 4)            */
+#define CRG_TOP_RESET_STAT_REG_SWD_HWRESET_STAT_Msk (0x10UL)            /*!< CRG_TOP RESET_STAT_REG: SWD_HWRESET_STAT (Bitfield-Mask: 0x01) */
 
 /* ---------------------------  CRG_TOP_FORCE_SLEEP_REG  -------------------------- */
 #define CRG_TOP_FORCE_SLEEP_REG_FORCE_FTDF_SLEEP_Pos (0UL)              /*!< CRG_TOP FORCE_SLEEP_REG: FORCE_FTDF_SLEEP (Bit 0)           */
@@ -4321,6 +4376,28 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define CRG_TOP_AON_SPARE_REG_EN_BATSYS_RET_Msk (0x4UL)                 /*!< CRG_TOP AON_SPARE_REG: EN_BATSYS_RET (Bitfield-Mask: 0x01)  */
 #define CRG_TOP_AON_SPARE_REG_EN_BUSSYS_RET_Pos (3UL)                   /*!< CRG_TOP AON_SPARE_REG: EN_BUSSYS_RET (Bit 3)                */
 #define CRG_TOP_AON_SPARE_REG_EN_BUSSYS_RET_Msk (0x8UL)                 /*!< CRG_TOP AON_SPARE_REG: EN_BUSSYS_RET (Bitfield-Mask: 0x01)  */
+
+/* ---------------------------  CRG_TOP_SECURE_BOOT_REG  -------------------------- */
+#define CRG_TOP_SECURE_BOOT_REG_SECURE_BOOT_Pos (0UL)                   /*!< CRG_TOP SECURE_BOOT_REG: SECURE_BOOT (Bit 0)                */
+#define CRG_TOP_SECURE_BOOT_REG_SECURE_BOOT_Msk (0x1UL)                 /*!< CRG_TOP SECURE_BOOT_REG: SECURE_BOOT (Bitfield-Mask: 0x01)  */
+#define CRG_TOP_SECURE_BOOT_REG_FORCE_DEBUGGER_OFF_Pos (1UL)            /*!< CRG_TOP SECURE_BOOT_REG: FORCE_DEBUGGER_OFF (Bit 1)         */
+#define CRG_TOP_SECURE_BOOT_REG_FORCE_DEBUGGER_OFF_Msk (0x2UL)          /*!< CRG_TOP SECURE_BOOT_REG: FORCE_DEBUGGER_OFF (Bitfield-Mask: 0x01) */
+
+/* -------------------------  CRG_TOP_PMU_RESET_RAIL_REG  ------------------------- */
+#define CRG_TOP_PMU_RESET_RAIL_REG_RESET_V14_Pos (0UL)                  /*!< CRG_TOP PMU_RESET_RAIL_REG: RESET_V14 (Bit 0)               */
+#define CRG_TOP_PMU_RESET_RAIL_REG_RESET_V14_Msk (0x1UL)                /*!< CRG_TOP PMU_RESET_RAIL_REG: RESET_V14 (Bitfield-Mask: 0x01) */
+#define CRG_TOP_PMU_RESET_RAIL_REG_RESET_V18_Pos (1UL)                  /*!< CRG_TOP PMU_RESET_RAIL_REG: RESET_V18 (Bit 1)               */
+#define CRG_TOP_PMU_RESET_RAIL_REG_RESET_V18_Msk (0x2UL)                /*!< CRG_TOP PMU_RESET_RAIL_REG: RESET_V18 (Bitfield-Mask: 0x01) */
+#define CRG_TOP_PMU_RESET_RAIL_REG_RESET_V18P_Pos (2UL)                 /*!< CRG_TOP PMU_RESET_RAIL_REG: RESET_V18P (Bit 2)              */
+#define CRG_TOP_PMU_RESET_RAIL_REG_RESET_V18P_Msk (0x4UL)               /*!< CRG_TOP PMU_RESET_RAIL_REG: RESET_V18P (Bitfield-Mask: 0x01) */
+
+/* -------------------------  CRG_TOP_DISCHARGE_RAIL_REG  ------------------------- */
+#define CRG_TOP_DISCHARGE_RAIL_REG_RESET_V14_Pos (0UL)                  /*!< CRG_TOP DISCHARGE_RAIL_REG: RESET_V14 (Bit 0)               */
+#define CRG_TOP_DISCHARGE_RAIL_REG_RESET_V14_Msk (0x1UL)                /*!< CRG_TOP DISCHARGE_RAIL_REG: RESET_V14 (Bitfield-Mask: 0x01) */
+#define CRG_TOP_DISCHARGE_RAIL_REG_RESET_V18_Pos (1UL)                  /*!< CRG_TOP DISCHARGE_RAIL_REG: RESET_V18 (Bit 1)               */
+#define CRG_TOP_DISCHARGE_RAIL_REG_RESET_V18_Msk (0x2UL)                /*!< CRG_TOP DISCHARGE_RAIL_REG: RESET_V18 (Bitfield-Mask: 0x01) */
+#define CRG_TOP_DISCHARGE_RAIL_REG_RESET_V18P_Pos (2UL)                 /*!< CRG_TOP DISCHARGE_RAIL_REG: RESET_V18P (Bit 2)              */
+#define CRG_TOP_DISCHARGE_RAIL_REG_RESET_V18P_Msk (0x4UL)               /*!< CRG_TOP DISCHARGE_RAIL_REG: RESET_V18P (Bitfield-Mask: 0x01) */
 
 
 /* ================================================================================ */
@@ -4583,6 +4660,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define DCDC_DCDC_STATUS_3_REG_DCDC_I_LIM_V18P_Msk (0x3e0UL)            /*!< DCDC DCDC_STATUS_3_REG: DCDC_I_LIM_V18P (Bitfield-Mask: 0x1f) */
 #define DCDC_DCDC_STATUS_3_REG_DCDC_LV_MODE_Pos (10UL)                  /*!< DCDC DCDC_STATUS_3_REG: DCDC_LV_MODE (Bit 10)               */
 #define DCDC_DCDC_STATUS_3_REG_DCDC_LV_MODE_Msk (0x400UL)               /*!< DCDC DCDC_STATUS_3_REG: DCDC_LV_MODE (Bitfield-Mask: 0x01)  */
+#define DCDC_DCDC_STATUS_3_REG_DCDC_STARTUP_COMPLETE_Pos (11UL)         /*!< DCDC DCDC_STATUS_3_REG: DCDC_STARTUP_COMPLETE (Bit 11)      */
+#define DCDC_DCDC_STATUS_3_REG_DCDC_STARTUP_COMPLETE_Msk (0x800UL)      /*!< DCDC DCDC_STATUS_3_REG: DCDC_STARTUP_COMPLETE (Bitfield-Mask: 0x01) */
 
 /* ---------------------------  DCDC_DCDC_STATUS_4_REG  --------------------------- */
 #define DCDC_DCDC_STATUS_4_REG_DCDC_I_LIM_V14_Pos (0UL)                 /*!< DCDC DCDC_STATUS_4_REG: DCDC_I_LIM_V14 (Bit 0)              */
@@ -4669,6 +4748,12 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define DEM_RF_DEM_CTRL_REG_BLE_DDC_EN_Msk    (0x80UL)                  /*!< DEM RF_DEM_CTRL_REG: BLE_DDC_EN (Bitfield-Mask: 0x01)       */
 #define DEM_RF_DEM_CTRL_REG_IQCORR_EN_Pos     (8UL)                     /*!< DEM RF_DEM_CTRL_REG: IQCORR_EN (Bit 8)                      */
 #define DEM_RF_DEM_CTRL_REG_IQCORR_EN_Msk     (0x100UL)                 /*!< DEM RF_DEM_CTRL_REG: IQCORR_EN (Bitfield-Mask: 0x01)        */
+#define DEM_RF_DEM_CTRL_REG_CFE_DOUBLE_EN_Pos (9UL)                     /*!< DEM RF_DEM_CTRL_REG: CFE_DOUBLE_EN (Bit 9)                  */
+#define DEM_RF_DEM_CTRL_REG_CFE_DOUBLE_EN_Msk (0x200UL)                 /*!< DEM RF_DEM_CTRL_REG: CFE_DOUBLE_EN (Bitfield-Mask: 0x01)    */
+#define DEM_RF_DEM_CTRL_REG_CFE_MEDIAN_EN_Pos (10UL)                    /*!< DEM RF_DEM_CTRL_REG: CFE_MEDIAN_EN (Bit 10)                 */
+#define DEM_RF_DEM_CTRL_REG_CFE_MEDIAN_EN_Msk (0x400UL)                 /*!< DEM RF_DEM_CTRL_REG: CFE_MEDIAN_EN (Bitfield-Mask: 0x01)    */
+#define DEM_RF_DEM_CTRL_REG_CFE_PPOLE_Pos     (11UL)                    /*!< DEM RF_DEM_CTRL_REG: CFE_PPOLE (Bit 11)                     */
+#define DEM_RF_DEM_CTRL_REG_CFE_PPOLE_Msk     (0x3800UL)                /*!< DEM RF_DEM_CTRL_REG: CFE_PPOLE (Bitfield-Mask: 0x07)        */
 
 /* ----------------------------  DEM_RF_AGC_LUT_01_REG  --------------------------- */
 #define DEM_RF_AGC_LUT_01_REG_VGA2_GAIN0_Pos  (0UL)                     /*!< DEM RF_AGC_LUT_01_REG: VGA2_GAIN0 (Bit 0)                   */
@@ -4767,6 +4852,10 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define DEM_RF_AFC_CTRL_REG_POLE1_Msk         (0x30UL)                  /*!< DEM RF_AFC_CTRL_REG: POLE1 (Bitfield-Mask: 0x03)            */
 #define DEM_RF_AFC_CTRL_REG_POLE2_Pos         (6UL)                     /*!< DEM RF_AFC_CTRL_REG: POLE2 (Bit 6)                          */
 #define DEM_RF_AFC_CTRL_REG_POLE2_Msk         (0xc0UL)                  /*!< DEM RF_AFC_CTRL_REG: POLE2 (Bitfield-Mask: 0x03)            */
+#define DEM_RF_AFC_CTRL_REG_PAD_MODE_Pos      (8UL)                     /*!< DEM RF_AFC_CTRL_REG: PAD_MODE (Bit 8)                       */
+#define DEM_RF_AFC_CTRL_REG_PAD_MODE_Msk      (0x300UL)                 /*!< DEM RF_AFC_CTRL_REG: PAD_MODE (Bitfield-Mask: 0x03)         */
+#define DEM_RF_AFC_CTRL_REG_APD_MODE_Pos      (10UL)                    /*!< DEM RF_AFC_CTRL_REG: APD_MODE (Bit 10)                      */
+#define DEM_RF_AFC_CTRL_REG_APD_MODE_Msk      (0x1c00UL)                /*!< DEM RF_AFC_CTRL_REG: APD_MODE (Bitfield-Mask: 0x07)         */
 
 /* -------------------------  DEM_RF_DC_OFFSET_CTRL1_REG  ------------------------- */
 #define DEM_RF_DC_OFFSET_CTRL1_REG_DCOFFSET_I_WR_Pos (0UL)              /*!< DEM RF_DC_OFFSET_CTRL1_REG: DCOFFSET_I_WR (Bit 0)           */
@@ -4787,6 +4876,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define DEM_RF_DC_OFFSET_CTRL2_REG_DCNGAIN_Msk (0x180UL)                /*!< DEM RF_DC_OFFSET_CTRL2_REG: DCNGAIN (Bitfield-Mask: 0x03)   */
 #define DEM_RF_DC_OFFSET_CTRL2_REG_DCPARCAL_INIT_Pos (9UL)              /*!< DEM RF_DC_OFFSET_CTRL2_REG: DCPARCAL_INIT (Bit 9)           */
 #define DEM_RF_DC_OFFSET_CTRL2_REG_DCPARCAL_INIT_Msk (0x200UL)          /*!< DEM RF_DC_OFFSET_CTRL2_REG: DCPARCAL_INIT (Bitfield-Mask: 0x01) */
+#define DEM_RF_DC_OFFSET_CTRL2_REG_DCVGA1SCALE_EN_Pos (10UL)            /*!< DEM RF_DC_OFFSET_CTRL2_REG: DCVGA1SCALE_EN (Bit 10)         */
+#define DEM_RF_DC_OFFSET_CTRL2_REG_DCVGA1SCALE_EN_Msk (0x400UL)         /*!< DEM RF_DC_OFFSET_CTRL2_REG: DCVGA1SCALE_EN (Bitfield-Mask: 0x01) */
 
 /* -------------------------  DEM_RF_DC_OFFSET_CTRL3_REG  ------------------------- */
 #define DEM_RF_DC_OFFSET_CTRL3_REG_DCBETA_I_Pos (0UL)                   /*!< DEM RF_DC_OFFSET_CTRL3_REG: DCBETA_I (Bit 0)                */
@@ -4922,7 +5013,7 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 
 /* ---------------------------  DEM_RF_DEM_TESTMODE_REG  -------------------------- */
 #define DEM_RF_DEM_TESTMODE_REG_DEM_TESTMODE_Pos (0UL)                  /*!< DEM RF_DEM_TESTMODE_REG: DEM_TESTMODE (Bit 0)               */
-#define DEM_RF_DEM_TESTMODE_REG_DEM_TESTMODE_Msk (0xffUL)               /*!< DEM RF_DEM_TESTMODE_REG: DEM_TESTMODE (Bitfield-Mask: 0xff) */
+#define DEM_RF_DEM_TESTMODE_REG_DEM_TESTMODE_Msk (0x3ffUL)              /*!< DEM RF_DEM_TESTMODE_REG: DEM_TESTMODE (Bitfield-Mask: 0x3ff) */
 
 /* --------------------------  DEM_RF_DEM_IQCORRECT_REG  -------------------------- */
 #define DEM_RF_DEM_IQCORRECT_REG_IQCORR_BETA_Pos (0UL)                  /*!< DEM RF_DEM_IQCORRECT_REG: IQCORR_BETA (Bit 0)               */
@@ -4955,6 +5046,26 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 /* -------------------------  DEM_RF_FSSS_MAG_RESULT_REG  ------------------------- */
 #define DEM_RF_FSSS_MAG_RESULT_REG_FSSS_MAG_RD_Pos (0UL)                /*!< DEM RF_FSSS_MAG_RESULT_REG: FSSS_MAG_RD (Bit 0)             */
 #define DEM_RF_FSSS_MAG_RESULT_REG_FSSS_MAG_RD_Msk (0xffffUL)           /*!< DEM RF_FSSS_MAG_RESULT_REG: FSSS_MAG_RD (Bitfield-Mask: 0xffff) */
+
+/* ----------------------------  DEM_RF_CCA_RSSITH_REG  --------------------------- */
+#define DEM_RF_CCA_RSSITH_REG_CCA_RSSITH_Pos  (0UL)                     /*!< DEM RF_CCA_RSSITH_REG: CCA_RSSITH (Bit 0)                   */
+#define DEM_RF_CCA_RSSITH_REG_CCA_RSSITH_Msk  (0x1fffUL)                /*!< DEM RF_CCA_RSSITH_REG: CCA_RSSITH (Bitfield-Mask: 0x1fff)   */
+#define DEM_RF_CCA_RSSITH_REG_SIGDET_TIMEOUT_LEN_Pos (13UL)             /*!< DEM RF_CCA_RSSITH_REG: SIGDET_TIMEOUT_LEN (Bit 13)          */
+#define DEM_RF_CCA_RSSITH_REG_SIGDET_TIMEOUT_LEN_Msk (0xe000UL)         /*!< DEM RF_CCA_RSSITH_REG: SIGDET_TIMEOUT_LEN (Bitfield-Mask: 0x07) */
+
+/* -------------------------  DEM_RF_FTDF_SIGDET_CTRL_REG  ------------------------ */
+#define DEM_RF_FTDF_SIGDET_CTRL_REG_SIGDET_MODE_Pos (0UL)               /*!< DEM RF_FTDF_SIGDET_CTRL_REG: SIGDET_MODE (Bit 0)            */
+#define DEM_RF_FTDF_SIGDET_CTRL_REG_SIGDET_MODE_Msk (0x3UL)             /*!< DEM RF_FTDF_SIGDET_CTRL_REG: SIGDET_MODE (Bitfield-Mask: 0x03) */
+#define DEM_RF_FTDF_SIGDET_CTRL_REG_SIGDET_THRESHOLD_Pos (2UL)          /*!< DEM RF_FTDF_SIGDET_CTRL_REG: SIGDET_THRESHOLD (Bit 2)       */
+#define DEM_RF_FTDF_SIGDET_CTRL_REG_SIGDET_THRESHOLD_Msk (0xfcUL)       /*!< DEM RF_FTDF_SIGDET_CTRL_REG: SIGDET_THRESHOLD (Bitfield-Mask: 0x3f) */
+#define DEM_RF_FTDF_SIGDET_CTRL_REG_SIGDET_DIFF_Pos (8UL)               /*!< DEM RF_FTDF_SIGDET_CTRL_REG: SIGDET_DIFF (Bit 8)            */
+#define DEM_RF_FTDF_SIGDET_CTRL_REG_SIGDET_DIFF_Msk (0x100UL)           /*!< DEM RF_FTDF_SIGDET_CTRL_REG: SIGDET_DIFF (Bitfield-Mask: 0x01) */
+#define DEM_RF_FTDF_SIGDET_CTRL_REG_SIGDET_SFACTOR2_Pos (9UL)           /*!< DEM RF_FTDF_SIGDET_CTRL_REG: SIGDET_SFACTOR2 (Bit 9)        */
+#define DEM_RF_FTDF_SIGDET_CTRL_REG_SIGDET_SFACTOR2_Msk (0x600UL)       /*!< DEM RF_FTDF_SIGDET_CTRL_REG: SIGDET_SFACTOR2 (Bitfield-Mask: 0x03) */
+#define DEM_RF_FTDF_SIGDET_CTRL_REG_SIGDET_SFACTOR1_Pos (11UL)          /*!< DEM RF_FTDF_SIGDET_CTRL_REG: SIGDET_SFACTOR1 (Bit 11)       */
+#define DEM_RF_FTDF_SIGDET_CTRL_REG_SIGDET_SFACTOR1_Msk (0x1800UL)      /*!< DEM RF_FTDF_SIGDET_CTRL_REG: SIGDET_SFACTOR1 (Bitfield-Mask: 0x03) */
+#define DEM_RF_FTDF_SIGDET_CTRL_REG_SIGDET_DELAY_Pos (13UL)             /*!< DEM RF_FTDF_SIGDET_CTRL_REG: SIGDET_DELAY (Bit 13)          */
+#define DEM_RF_FTDF_SIGDET_CTRL_REG_SIGDET_DELAY_Msk (0x6000UL)         /*!< DEM RF_FTDF_SIGDET_CTRL_REG: SIGDET_DELAY (Bitfield-Mask: 0x03) */
 
 
 /* ================================================================================ */
@@ -5007,6 +5118,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define DMA_DMA0_CTRL_REG_DMA_IDLE_Msk        (0x800UL)                 /*!< DMA DMA0_CTRL_REG: DMA_IDLE (Bitfield-Mask: 0x01)           */
 #define DMA_DMA0_CTRL_REG_DMA_INIT_Pos        (12UL)                    /*!< DMA DMA0_CTRL_REG: DMA_INIT (Bit 12)                        */
 #define DMA_DMA0_CTRL_REG_DMA_INIT_Msk        (0x1000UL)                /*!< DMA DMA0_CTRL_REG: DMA_INIT (Bitfield-Mask: 0x01)           */
+#define DMA_DMA0_CTRL_REG_REQ_SENSE_Pos       (13UL)                    /*!< DMA DMA0_CTRL_REG: REQ_SENSE (Bit 13)                       */
+#define DMA_DMA0_CTRL_REG_REQ_SENSE_Msk       (0x2000UL)                /*!< DMA DMA0_CTRL_REG: REQ_SENSE (Bitfield-Mask: 0x01)          */
 
 /* ------------------------------  DMA_DMA0_IDX_REG  ------------------------------ */
 #define DMA_DMA0_IDX_REG_DMA0_IDX_Pos         (0UL)                     /*!< DMA DMA0_IDX_REG: DMA0_IDX (Bit 0)                          */
@@ -5057,6 +5170,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define DMA_DMA1_CTRL_REG_DMA_IDLE_Msk        (0x800UL)                 /*!< DMA DMA1_CTRL_REG: DMA_IDLE (Bitfield-Mask: 0x01)           */
 #define DMA_DMA1_CTRL_REG_DMA_INIT_Pos        (12UL)                    /*!< DMA DMA1_CTRL_REG: DMA_INIT (Bit 12)                        */
 #define DMA_DMA1_CTRL_REG_DMA_INIT_Msk        (0x1000UL)                /*!< DMA DMA1_CTRL_REG: DMA_INIT (Bitfield-Mask: 0x01)           */
+#define DMA_DMA1_CTRL_REG_REQ_SENSE_Pos       (13UL)                    /*!< DMA DMA1_CTRL_REG: REQ_SENSE (Bit 13)                       */
+#define DMA_DMA1_CTRL_REG_REQ_SENSE_Msk       (0x2000UL)                /*!< DMA DMA1_CTRL_REG: REQ_SENSE (Bitfield-Mask: 0x01)          */
 
 /* ------------------------------  DMA_DMA1_IDX_REG  ------------------------------ */
 #define DMA_DMA1_IDX_REG_DMA1_IDX_Pos         (0UL)                     /*!< DMA DMA1_IDX_REG: DMA1_IDX (Bit 0)                          */
@@ -5107,6 +5222,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define DMA_DMA2_CTRL_REG_DMA_IDLE_Msk        (0x800UL)                 /*!< DMA DMA2_CTRL_REG: DMA_IDLE (Bitfield-Mask: 0x01)           */
 #define DMA_DMA2_CTRL_REG_DMA_INIT_Pos        (12UL)                    /*!< DMA DMA2_CTRL_REG: DMA_INIT (Bit 12)                        */
 #define DMA_DMA2_CTRL_REG_DMA_INIT_Msk        (0x1000UL)                /*!< DMA DMA2_CTRL_REG: DMA_INIT (Bitfield-Mask: 0x01)           */
+#define DMA_DMA2_CTRL_REG_REQ_SENSE_Pos       (13UL)                    /*!< DMA DMA2_CTRL_REG: REQ_SENSE (Bit 13)                       */
+#define DMA_DMA2_CTRL_REG_REQ_SENSE_Msk       (0x2000UL)                /*!< DMA DMA2_CTRL_REG: REQ_SENSE (Bitfield-Mask: 0x01)          */
 
 /* ------------------------------  DMA_DMA2_IDX_REG  ------------------------------ */
 #define DMA_DMA2_IDX_REG_DMA2_IDX_Pos         (0UL)                     /*!< DMA DMA2_IDX_REG: DMA2_IDX (Bit 0)                          */
@@ -5157,6 +5274,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define DMA_DMA3_CTRL_REG_DMA_IDLE_Msk        (0x800UL)                 /*!< DMA DMA3_CTRL_REG: DMA_IDLE (Bitfield-Mask: 0x01)           */
 #define DMA_DMA3_CTRL_REG_DMA_INIT_Pos        (12UL)                    /*!< DMA DMA3_CTRL_REG: DMA_INIT (Bit 12)                        */
 #define DMA_DMA3_CTRL_REG_DMA_INIT_Msk        (0x1000UL)                /*!< DMA DMA3_CTRL_REG: DMA_INIT (Bitfield-Mask: 0x01)           */
+#define DMA_DMA3_CTRL_REG_REQ_SENSE_Pos       (13UL)                    /*!< DMA DMA3_CTRL_REG: REQ_SENSE (Bit 13)                       */
+#define DMA_DMA3_CTRL_REG_REQ_SENSE_Msk       (0x2000UL)                /*!< DMA DMA3_CTRL_REG: REQ_SENSE (Bitfield-Mask: 0x01)          */
 
 /* ------------------------------  DMA_DMA3_IDX_REG  ------------------------------ */
 #define DMA_DMA3_IDX_REG_DMA3_IDX_Pos         (0UL)                     /*!< DMA DMA3_IDX_REG: DMA3_IDX (Bit 0)                          */
@@ -5207,6 +5326,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define DMA_DMA4_CTRL_REG_DMA_IDLE_Msk        (0x800UL)                 /*!< DMA DMA4_CTRL_REG: DMA_IDLE (Bitfield-Mask: 0x01)           */
 #define DMA_DMA4_CTRL_REG_DMA_INIT_Pos        (12UL)                    /*!< DMA DMA4_CTRL_REG: DMA_INIT (Bit 12)                        */
 #define DMA_DMA4_CTRL_REG_DMA_INIT_Msk        (0x1000UL)                /*!< DMA DMA4_CTRL_REG: DMA_INIT (Bitfield-Mask: 0x01)           */
+#define DMA_DMA4_CTRL_REG_REQ_SENSE_Pos       (13UL)                    /*!< DMA DMA4_CTRL_REG: REQ_SENSE (Bit 13)                       */
+#define DMA_DMA4_CTRL_REG_REQ_SENSE_Msk       (0x2000UL)                /*!< DMA DMA4_CTRL_REG: REQ_SENSE (Bitfield-Mask: 0x01)          */
 
 /* ------------------------------  DMA_DMA4_IDX_REG  ------------------------------ */
 #define DMA_DMA4_IDX_REG_DMA4_IDX_Pos         (0UL)                     /*!< DMA DMA4_IDX_REG: DMA4_IDX (Bit 0)                          */
@@ -5257,6 +5378,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define DMA_DMA5_CTRL_REG_DMA_IDLE_Msk        (0x800UL)                 /*!< DMA DMA5_CTRL_REG: DMA_IDLE (Bitfield-Mask: 0x01)           */
 #define DMA_DMA5_CTRL_REG_DMA_INIT_Pos        (12UL)                    /*!< DMA DMA5_CTRL_REG: DMA_INIT (Bit 12)                        */
 #define DMA_DMA5_CTRL_REG_DMA_INIT_Msk        (0x1000UL)                /*!< DMA DMA5_CTRL_REG: DMA_INIT (Bitfield-Mask: 0x01)           */
+#define DMA_DMA5_CTRL_REG_REQ_SENSE_Pos       (13UL)                    /*!< DMA DMA5_CTRL_REG: REQ_SENSE (Bit 13)                       */
+#define DMA_DMA5_CTRL_REG_REQ_SENSE_Msk       (0x2000UL)                /*!< DMA DMA5_CTRL_REG: REQ_SENSE (Bitfield-Mask: 0x01)          */
 
 /* ------------------------------  DMA_DMA5_IDX_REG  ------------------------------ */
 #define DMA_DMA5_IDX_REG_DMA5_IDX_Pos         (0UL)                     /*!< DMA DMA5_IDX_REG: DMA5_IDX (Bit 0)                          */
@@ -5307,6 +5430,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define DMA_DMA6_CTRL_REG_DMA_IDLE_Msk        (0x800UL)                 /*!< DMA DMA6_CTRL_REG: DMA_IDLE (Bitfield-Mask: 0x01)           */
 #define DMA_DMA6_CTRL_REG_DMA_INIT_Pos        (12UL)                    /*!< DMA DMA6_CTRL_REG: DMA_INIT (Bit 12)                        */
 #define DMA_DMA6_CTRL_REG_DMA_INIT_Msk        (0x1000UL)                /*!< DMA DMA6_CTRL_REG: DMA_INIT (Bitfield-Mask: 0x01)           */
+#define DMA_DMA6_CTRL_REG_REQ_SENSE_Pos       (13UL)                    /*!< DMA DMA6_CTRL_REG: REQ_SENSE (Bit 13)                       */
+#define DMA_DMA6_CTRL_REG_REQ_SENSE_Msk       (0x2000UL)                /*!< DMA DMA6_CTRL_REG: REQ_SENSE (Bitfield-Mask: 0x01)          */
 
 /* ------------------------------  DMA_DMA6_IDX_REG  ------------------------------ */
 #define DMA_DMA6_IDX_REG_DMA6_IDX_Pos         (0UL)                     /*!< DMA DMA6_IDX_REG: DMA6_IDX (Bit 0)                          */
@@ -5357,6 +5482,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define DMA_DMA7_CTRL_REG_DMA_IDLE_Msk        (0x800UL)                 /*!< DMA DMA7_CTRL_REG: DMA_IDLE (Bitfield-Mask: 0x01)           */
 #define DMA_DMA7_CTRL_REG_DMA_INIT_Pos        (12UL)                    /*!< DMA DMA7_CTRL_REG: DMA_INIT (Bit 12)                        */
 #define DMA_DMA7_CTRL_REG_DMA_INIT_Msk        (0x1000UL)                /*!< DMA DMA7_CTRL_REG: DMA_INIT (Bitfield-Mask: 0x01)           */
+#define DMA_DMA7_CTRL_REG_REQ_SENSE_Pos       (13UL)                    /*!< DMA DMA7_CTRL_REG: REQ_SENSE (Bit 13)                       */
+#define DMA_DMA7_CTRL_REG_REQ_SENSE_Msk       (0x2000UL)                /*!< DMA DMA7_CTRL_REG: REQ_SENSE (Bitfield-Mask: 0x01)          */
 
 /* ------------------------------  DMA_DMA7_IDX_REG  ------------------------------ */
 #define DMA_DMA7_IDX_REG_DMA7_IDX_Pos         (0UL)                     /*!< DMA DMA7_IDX_REG: DMA7_IDX (Bit 0)                          */
@@ -5467,12 +5594,6 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define ECC_ECC_VERSION_REG_ECC_SVN_Msk       (0xffUL)                  /*!< ECC ECC_VERSION_REG: ECC_SVN (Bitfield-Mask: 0xff)          */
 #define ECC_ECC_VERSION_REG_ECC_HVN_Pos       (8UL)                     /*!< ECC ECC_VERSION_REG: ECC_HVN (Bit 8)                        */
 #define ECC_ECC_VERSION_REG_ECC_HVN_Msk       (0xff00UL)                /*!< ECC ECC_VERSION_REG: ECC_HVN (Bitfield-Mask: 0xff)          */
-
-/* --------------------------  ECC_ECC_LOADMICROCODE_REG  ------------------------- */
-#define ECC_ECC_LOADMICROCODE_REG_ECC_uCode_Pos (0UL)                   /*!< ECC ECC_LOADMICROCODE_REG: ECC_uCode (Bit 0)                */
-#define ECC_ECC_LOADMICROCODE_REG_ECC_uCode_Msk (0x3ffffUL)             /*!< ECC ECC_LOADMICROCODE_REG: ECC_uCode (Bitfield-Mask: 0x3ffff) */
-#define ECC_ECC_LOADMICROCODE_REG_ECC_FirstWord_Pos (18UL)              /*!< ECC ECC_LOADMICROCODE_REG: ECC_FirstWord (Bit 18)           */
-#define ECC_ECC_LOADMICROCODE_REG_ECC_FirstWord_Msk (0x40000UL)         /*!< ECC ECC_LOADMICROCODE_REG: ECC_FirstWord (Bitfield-Mask: 0x01) */
 
 
 /* ================================================================================ */
@@ -5921,8 +6042,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define FTDF_FTDF_LMAC_CONTROL_0_REG_RXONDURATION_Msk (0x1fffffeUL)     /*!< FTDF FTDF_LMAC_CONTROL_0_REG: RXONDURATION (Bitfield-Mask: 0xffffff) */
 #define FTDF_FTDF_LMAC_CONTROL_0_REG_RXALWAYSON_Pos (25UL)              /*!< FTDF FTDF_LMAC_CONTROL_0_REG: RXALWAYSON (Bit 25)           */
 #define FTDF_FTDF_LMAC_CONTROL_0_REG_RXALWAYSON_Msk (0x2000000UL)       /*!< FTDF FTDF_LMAC_CONTROL_0_REG: RXALWAYSON (Bitfield-Mask: 0x01) */
-#define FTDF_FTDF_LMAC_CONTROL_0_REG_PTI_Pos  (27UL)                    /*!< FTDF FTDF_LMAC_CONTROL_0_REG: PTI (Bit 27)                  */
-#define FTDF_FTDF_LMAC_CONTROL_0_REG_PTI_Msk  (0x78000000UL)            /*!< FTDF FTDF_LMAC_CONTROL_0_REG: PTI (Bitfield-Mask: 0x0f)     */
+#define FTDF_FTDF_LMAC_CONTROL_0_REG_PTI_RX_Pos (27UL)                  /*!< FTDF FTDF_LMAC_CONTROL_0_REG: PTI_RX (Bit 27)               */
+#define FTDF_FTDF_LMAC_CONTROL_0_REG_PTI_RX_Msk (0x78000000UL)          /*!< FTDF FTDF_LMAC_CONTROL_0_REG: PTI_RX (Bitfield-Mask: 0x0f)  */
 #define FTDF_FTDF_LMAC_CONTROL_0_REG_KEEP_PHY_EN_Pos (31UL)             /*!< FTDF FTDF_LMAC_CONTROL_0_REG: KEEP_PHY_EN (Bit 31)          */
 #define FTDF_FTDF_LMAC_CONTROL_0_REG_KEEP_PHY_EN_Msk (0x80000000UL)     /*!< FTDF FTDF_LMAC_CONTROL_0_REG: KEEP_PHY_EN (Bitfield-Mask: 0x01) */
 
@@ -5961,6 +6082,14 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define FTDF_FTDF_LMAC_CONTROL_3_REG_MACMAXFRAMETOTALWAITTIME_Msk (0xffffUL) /*!< FTDF FTDF_LMAC_CONTROL_3_REG: MACMAXFRAMETOTALWAITTIME (Bitfield-Mask: 0xffff) */
 #define FTDF_FTDF_LMAC_CONTROL_3_REG_CCAIDLEWAIT_Pos (16UL)             /*!< FTDF FTDF_LMAC_CONTROL_3_REG: CCAIDLEWAIT (Bit 16)          */
 #define FTDF_FTDF_LMAC_CONTROL_3_REG_CCAIDLEWAIT_Msk (0xff0000UL)       /*!< FTDF FTDF_LMAC_CONTROL_3_REG: CCAIDLEWAIT (Bitfield-Mask: 0xff) */
+#define FTDF_FTDF_LMAC_CONTROL_3_REG_ADDR_TAB_MATCH_FP_VALUE_Pos (24UL) /*!< FTDF FTDF_LMAC_CONTROL_3_REG: ADDR_TAB_MATCH_FP_VALUE (Bit 24) */
+#define FTDF_FTDF_LMAC_CONTROL_3_REG_ADDR_TAB_MATCH_FP_VALUE_Msk (0x1000000UL) /*!< FTDF FTDF_LMAC_CONTROL_3_REG: ADDR_TAB_MATCH_FP_VALUE (Bitfield-Mask: 0x01) */
+#define FTDF_FTDF_LMAC_CONTROL_3_REG_FP_OVERRIDE_Pos (25UL)             /*!< FTDF FTDF_LMAC_CONTROL_3_REG: FP_OVERRIDE (Bit 25)          */
+#define FTDF_FTDF_LMAC_CONTROL_3_REG_FP_OVERRIDE_Msk (0x2000000UL)      /*!< FTDF FTDF_LMAC_CONTROL_3_REG: FP_OVERRIDE (Bitfield-Mask: 0x01) */
+#define FTDF_FTDF_LMAC_CONTROL_3_REG_FP_FORCE_VALUE_Pos (26UL)          /*!< FTDF FTDF_LMAC_CONTROL_3_REG: FP_FORCE_VALUE (Bit 26)       */
+#define FTDF_FTDF_LMAC_CONTROL_3_REG_FP_FORCE_VALUE_Msk (0x4000000UL)   /*!< FTDF FTDF_LMAC_CONTROL_3_REG: FP_FORCE_VALUE (Bitfield-Mask: 0x01) */
+#define FTDF_FTDF_LMAC_CONTROL_3_REG_FTDF_LPDP_ENABLE_Pos (27UL)        /*!< FTDF FTDF_LMAC_CONTROL_3_REG: FTDF_LPDP_ENABLE (Bit 27)     */
+#define FTDF_FTDF_LMAC_CONTROL_3_REG_FTDF_LPDP_ENABLE_Msk (0x8000000UL) /*!< FTDF FTDF_LMAC_CONTROL_3_REG: FTDF_LPDP_ENABLE (Bitfield-Mask: 0x01) */
 
 /* ------------------------  FTDF_FTDF_LMAC_CONTROL_OS_REG  ----------------------- */
 #define FTDF_FTDF_LMAC_CONTROL_OS_REG_GETGENERATORVAL_Pos (0UL)         /*!< FTDF FTDF_LMAC_CONTROL_OS_REG: GETGENERATORVAL (Bit 0)      */
@@ -5969,6 +6098,10 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define FTDF_FTDF_LMAC_CONTROL_OS_REG_RXENABLE_Msk (0x2UL)              /*!< FTDF FTDF_LMAC_CONTROL_OS_REG: RXENABLE (Bitfield-Mask: 0x01) */
 #define FTDF_FTDF_LMAC_CONTROL_OS_REG_SINGLECCA_Pos (2UL)               /*!< FTDF FTDF_LMAC_CONTROL_OS_REG: SINGLECCA (Bit 2)            */
 #define FTDF_FTDF_LMAC_CONTROL_OS_REG_SINGLECCA_Msk (0x4UL)             /*!< FTDF FTDF_LMAC_CONTROL_OS_REG: SINGLECCA (Bitfield-Mask: 0x01) */
+#define FTDF_FTDF_LMAC_CONTROL_OS_REG_CSMA_CA_RESUME_SET_Pos (3UL)      /*!< FTDF FTDF_LMAC_CONTROL_OS_REG: CSMA_CA_RESUME_SET (Bit 3)   */
+#define FTDF_FTDF_LMAC_CONTROL_OS_REG_CSMA_CA_RESUME_SET_Msk (0x8UL)    /*!< FTDF FTDF_LMAC_CONTROL_OS_REG: CSMA_CA_RESUME_SET (Bitfield-Mask: 0x01) */
+#define FTDF_FTDF_LMAC_CONTROL_OS_REG_CSMA_CA_RESUME_CLEAR_Pos (4UL)    /*!< FTDF FTDF_LMAC_CONTROL_OS_REG: CSMA_CA_RESUME_CLEAR (Bit 4) */
+#define FTDF_FTDF_LMAC_CONTROL_OS_REG_CSMA_CA_RESUME_CLEAR_Msk (0x10UL) /*!< FTDF FTDF_LMAC_CONTROL_OS_REG: CSMA_CA_RESUME_CLEAR (Bitfield-Mask: 0x01) */
 
 /* ----------------------  FTDF_FTDF_LMAC_CONTROL_STATUS_REG  --------------------- */
 #define FTDF_FTDF_LMAC_CONTROL_STATUS_REG_LMACREADY4SLEEP_Pos (1UL)     /*!< FTDF FTDF_LMAC_CONTROL_STATUS_REG: LMACREADY4SLEEP (Bit 1)  */
@@ -5979,10 +6112,16 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define FTDF_FTDF_LMAC_CONTROL_STATUS_REG_WAKEUPTIMERENABLESTATUS_Msk (0x40UL) /*!< FTDF FTDF_LMAC_CONTROL_STATUS_REG: WAKEUPTIMERENABLESTATUS (Bitfield-Mask: 0x01) */
 #define FTDF_FTDF_LMAC_CONTROL_STATUS_REG_EDSCANVALUE_Pos (8UL)         /*!< FTDF FTDF_LMAC_CONTROL_STATUS_REG: EDSCANVALUE (Bit 8)      */
 #define FTDF_FTDF_LMAC_CONTROL_STATUS_REG_EDSCANVALUE_Msk (0xff00UL)    /*!< FTDF FTDF_LMAC_CONTROL_STATUS_REG: EDSCANVALUE (Bitfield-Mask: 0xff) */
+#define FTDF_FTDF_LMAC_CONTROL_STATUS_REG_CSMA_CA_NB_STAT_Pos (16UL)    /*!< FTDF FTDF_LMAC_CONTROL_STATUS_REG: CSMA_CA_NB_STAT (Bit 16) */
+#define FTDF_FTDF_LMAC_CONTROL_STATUS_REG_CSMA_CA_NB_STAT_Msk (0x70000UL) /*!< FTDF FTDF_LMAC_CONTROL_STATUS_REG: CSMA_CA_NB_STAT (Bitfield-Mask: 0x07) */
+#define FTDF_FTDF_LMAC_CONTROL_STATUS_REG_CSMA_CA_RESUME_STAT_Pos (19UL) /*!< FTDF FTDF_LMAC_CONTROL_STATUS_REG: CSMA_CA_RESUME_STAT (Bit 19) */
+#define FTDF_FTDF_LMAC_CONTROL_STATUS_REG_CSMA_CA_RESUME_STAT_Msk (0x80000UL) /*!< FTDF FTDF_LMAC_CONTROL_STATUS_REG: CSMA_CA_RESUME_STAT (Bitfield-Mask: 0x01) */
+#define FTDF_FTDF_LMAC_CONTROL_STATUS_REG_CSMA_CA_BO_STAT_Pos (24UL)    /*!< FTDF FTDF_LMAC_CONTROL_STATUS_REG: CSMA_CA_BO_STAT (Bit 24) */
+#define FTDF_FTDF_LMAC_CONTROL_STATUS_REG_CSMA_CA_BO_STAT_Msk (0xff000000UL) /*!< FTDF FTDF_LMAC_CONTROL_STATUS_REG: CSMA_CA_BO_STAT (Bitfield-Mask: 0xff) */
 
 /* -------------------------  FTDF_FTDF_EVENTCURRVAL_REG  ------------------------- */
 #define FTDF_FTDF_EVENTCURRVAL_REG_EVENTCURRVAL_Pos (0UL)               /*!< FTDF FTDF_EVENTCURRVAL_REG: EVENTCURRVAL (Bit 0)            */
-#define FTDF_FTDF_EVENTCURRVAL_REG_EVENTCURRVAL_Msk (0xffffffffUL)      /*!< FTDF FTDF_EVENTCURRVAL_REG: EVENTCURRVAL (Bitfield-Mask: 0xffffffff) */
+#define FTDF_FTDF_EVENTCURRVAL_REG_EVENTCURRVAL_Msk (0x1ffffffUL)       /*!< FTDF FTDF_EVENTCURRVAL_REG: EVENTCURRVAL (Bitfield-Mask: 0x1ffffff) */
 
 /* -----------------------  FTDF_FTDF_TIMESTAMPCURRVAL_REG  ----------------------- */
 #define FTDF_FTDF_TIMESTAMPCURRVAL_REG_TIMESTAMPCURRVAL_Pos (0UL)       /*!< FTDF FTDF_TIMESTAMPCURRVAL_REG: TIMESTAMPCURRVAL (Bit 0)    */
@@ -6033,6 +6172,10 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define FTDF_FTDF_LMAC_CONTROL_11_REG_MACRXTOTALCYCLETIME_Msk (0xffffUL) /*!< FTDF FTDF_LMAC_CONTROL_11_REG: MACRXTOTALCYCLETIME (Bitfield-Mask: 0xffff) */
 #define FTDF_FTDF_LMAC_CONTROL_11_REG_MACDISCARXOFFTORZ_Pos (16UL)      /*!< FTDF FTDF_LMAC_CONTROL_11_REG: MACDISCARXOFFTORZ (Bit 16)   */
 #define FTDF_FTDF_LMAC_CONTROL_11_REG_MACDISCARXOFFTORZ_Msk (0x10000UL) /*!< FTDF FTDF_LMAC_CONTROL_11_REG: MACDISCARXOFFTORZ (Bitfield-Mask: 0x01) */
+#define FTDF_FTDF_LMAC_CONTROL_11_REG_CSMA_CA_NB_VAL_Pos (17UL)         /*!< FTDF FTDF_LMAC_CONTROL_11_REG: CSMA_CA_NB_VAL (Bit 17)      */
+#define FTDF_FTDF_LMAC_CONTROL_11_REG_CSMA_CA_NB_VAL_Msk (0xe0000UL)    /*!< FTDF FTDF_LMAC_CONTROL_11_REG: CSMA_CA_NB_VAL (Bitfield-Mask: 0x07) */
+#define FTDF_FTDF_LMAC_CONTROL_11_REG_CSMA_CA_BO_THRESHOLD_Pos (24UL)   /*!< FTDF FTDF_LMAC_CONTROL_11_REG: CSMA_CA_BO_THRESHOLD (Bit 24) */
+#define FTDF_FTDF_LMAC_CONTROL_11_REG_CSMA_CA_BO_THRESHOLD_Msk (0xff000000UL) /*!< FTDF FTDF_LMAC_CONTROL_11_REG: CSMA_CA_BO_THRESHOLD (Bitfield-Mask: 0xff) */
 
 /* ----------------------  FTDF_FTDF_LMAC_CONTROL_DELTA_REG  ---------------------- */
 #define FTDF_FTDF_LMAC_CONTROL_DELTA_REG_LMACREADY4SLEEP_D_Pos (1UL)    /*!< FTDF FTDF_LMAC_CONTROL_DELTA_REG: LMACREADY4SLEEP_D (Bit 1) */
@@ -6077,6 +6220,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define FTDF_FTDF_LMAC_EVENT_REG_CCASTAT_E_Msk (0x2UL)                  /*!< FTDF FTDF_LMAC_EVENT_REG: CCASTAT_E (Bitfield-Mask: 0x01)   */
 #define FTDF_FTDF_LMAC_EVENT_REG_RXTIMEREXPIRED_E_Pos (2UL)             /*!< FTDF FTDF_LMAC_EVENT_REG: RXTIMEREXPIRED_E (Bit 2)          */
 #define FTDF_FTDF_LMAC_EVENT_REG_RXTIMEREXPIRED_E_Msk (0x4UL)           /*!< FTDF FTDF_LMAC_EVENT_REG: RXTIMEREXPIRED_E (Bitfield-Mask: 0x01) */
+#define FTDF_FTDF_LMAC_EVENT_REG_CSMA_CA_BO_THR_E_Pos (3UL)             /*!< FTDF FTDF_LMAC_EVENT_REG: CSMA_CA_BO_THR_E (Bit 3)          */
+#define FTDF_FTDF_LMAC_EVENT_REG_CSMA_CA_BO_THR_E_Msk (0x8UL)           /*!< FTDF FTDF_LMAC_EVENT_REG: CSMA_CA_BO_THR_E (Bitfield-Mask: 0x01) */
 
 /* ---------------------------  FTDF_FTDF_LMAC_MASK_REG  -------------------------- */
 #define FTDF_FTDF_LMAC_MASK_REG_EDSCANREADY_M_Pos (0UL)                 /*!< FTDF FTDF_LMAC_MASK_REG: EDSCANREADY_M (Bit 0)              */
@@ -6085,6 +6230,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define FTDF_FTDF_LMAC_MASK_REG_CCASTAT_M_Msk (0x2UL)                   /*!< FTDF FTDF_LMAC_MASK_REG: CCASTAT_M (Bitfield-Mask: 0x01)    */
 #define FTDF_FTDF_LMAC_MASK_REG_RXTIMEREXPIRED_M_Pos (2UL)              /*!< FTDF FTDF_LMAC_MASK_REG: RXTIMEREXPIRED_M (Bit 2)           */
 #define FTDF_FTDF_LMAC_MASK_REG_RXTIMEREXPIRED_M_Msk (0x4UL)            /*!< FTDF FTDF_LMAC_MASK_REG: RXTIMEREXPIRED_M (Bitfield-Mask: 0x01) */
+#define FTDF_FTDF_LMAC_MASK_REG_CSMA_CA_BO_THR_M_Pos (3UL)              /*!< FTDF FTDF_LMAC_MASK_REG: CSMA_CA_BO_THR_M (Bit 3)           */
+#define FTDF_FTDF_LMAC_MASK_REG_CSMA_CA_BO_THR_M_Msk (0x8UL)            /*!< FTDF FTDF_LMAC_MASK_REG: CSMA_CA_BO_THR_M (Bitfield-Mask: 0x01) */
 
 /* -------------------------  FTDF_FTDF_LMAC_MANUAL_1_REG  ------------------------ */
 #define FTDF_FTDF_LMAC_MANUAL_1_REG_LMAC_MANUAL_MODE_Pos (0UL)          /*!< FTDF FTDF_LMAC_MANUAL_1_REG: LMAC_MANUAL_MODE (Bit 0)       */
@@ -6287,6 +6434,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define FTDF_FTDF_PHY_PARAMETERS_3_REG_PHYRXLATENCY_Msk (0xff00UL)      /*!< FTDF FTDF_PHY_PARAMETERS_3_REG: PHYRXLATENCY (Bitfield-Mask: 0xff) */
 #define FTDF_FTDF_PHY_PARAMETERS_3_REG_PHYENABLE_Pos (16UL)             /*!< FTDF FTDF_PHY_PARAMETERS_3_REG: PHYENABLE (Bit 16)          */
 #define FTDF_FTDF_PHY_PARAMETERS_3_REG_PHYENABLE_Msk (0xff0000UL)       /*!< FTDF FTDF_PHY_PARAMETERS_3_REG: PHYENABLE (Bitfield-Mask: 0xff) */
+#define FTDF_FTDF_PHY_PARAMETERS_3_REG_USE_LEGACY_PHY_EN_Pos (24UL)     /*!< FTDF FTDF_PHY_PARAMETERS_3_REG: USE_LEGACY_PHY_EN (Bit 24)  */
+#define FTDF_FTDF_PHY_PARAMETERS_3_REG_USE_LEGACY_PHY_EN_Msk (0x1000000UL) /*!< FTDF FTDF_PHY_PARAMETERS_3_REG: USE_LEGACY_PHY_EN (Bitfield-Mask: 0x01) */
 
 /* -------------------------  FTDF_FTDF_RX_CONTROL_0_REG  ------------------------- */
 #define FTDF_FTDF_RX_CONTROL_0_REG_DBGRXTRANSPARENTMODE_Pos (0UL)       /*!< FTDF FTDF_RX_CONTROL_0_REG: DBGRXTRANSPARENTMODE (Bit 0)    */
@@ -6384,7 +6533,7 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 
 /* -----------------------  FTDF_FTDF_SYNCTIMESTAMPTHR_REG  ----------------------- */
 #define FTDF_FTDF_SYNCTIMESTAMPTHR_REG_SYNCTIMESTAMPTHR_Pos (0UL)       /*!< FTDF FTDF_SYNCTIMESTAMPTHR_REG: SYNCTIMESTAMPTHR (Bit 0)    */
-#define FTDF_FTDF_SYNCTIMESTAMPTHR_REG_SYNCTIMESTAMPTHR_Msk (0xffffffffUL) /*!< FTDF FTDF_SYNCTIMESTAMPTHR_REG: SYNCTIMESTAMPTHR (Bitfield-Mask: 0xffffffff) */
+#define FTDF_FTDF_SYNCTIMESTAMPTHR_REG_SYNCTIMESTAMPTHR_Msk (0x1ffffffUL) /*!< FTDF FTDF_SYNCTIMESTAMPTHR_REG: SYNCTIMESTAMPTHR (Bitfield-Mask: 0x1ffffff) */
 
 /* -----------------------  FTDF_FTDF_SYNCTIMESTAMPVAL_REG  ----------------------- */
 #define FTDF_FTDF_SYNCTIMESTAMPVAL_REG_SYNCTIMESTAMPVAL_Pos (0UL)       /*!< FTDF FTDF_SYNCTIMESTAMPVAL_REG: SYNCTIMESTAMPVAL (Bit 0)    */
@@ -6440,6 +6589,12 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define FTDF_FTDF_LMACRESET_REG_LMACGLOBRESET_COUNT_Pos (16UL)          /*!< FTDF FTDF_LMACRESET_REG: LMACGLOBRESET_COUNT (Bit 16)       */
 #define FTDF_FTDF_LMACRESET_REG_LMACGLOBRESET_COUNT_Msk (0x10000UL)     /*!< FTDF FTDF_LMACRESET_REG: LMACGLOBRESET_COUNT (Bitfield-Mask: 0x01) */
 
+/* -----------------------  FTDF_FTDF_WAKEUP_CONTROL_OS_REG  ---------------------- */
+#define FTDF_FTDF_WAKEUP_CONTROL_OS_REG_WAKEUPTIMERENABLE_SET_Pos (0UL) /*!< FTDF FTDF_WAKEUP_CONTROL_OS_REG: WAKEUPTIMERENABLE_SET (Bit 0) */
+#define FTDF_FTDF_WAKEUP_CONTROL_OS_REG_WAKEUPTIMERENABLE_SET_Msk (0x1UL) /*!< FTDF FTDF_WAKEUP_CONTROL_OS_REG: WAKEUPTIMERENABLE_SET (Bitfield-Mask: 0x01) */
+#define FTDF_FTDF_WAKEUP_CONTROL_OS_REG_WAKEUPTIMERENABLE_CLEAR_Pos (1UL) /*!< FTDF FTDF_WAKEUP_CONTROL_OS_REG: WAKEUPTIMERENABLE_CLEAR (Bit 1) */
+#define FTDF_FTDF_WAKEUP_CONTROL_OS_REG_WAKEUPTIMERENABLE_CLEAR_Msk (0x2UL) /*!< FTDF FTDF_WAKEUP_CONTROL_OS_REG: WAKEUPTIMERENABLE_CLEAR (Bitfield-Mask: 0x01) */
+
 /* -------------------------  FTDF_FTDF_SYMBOLTIMETHR_REG  ------------------------ */
 #define FTDF_FTDF_SYMBOLTIMETHR_REG_SYMBOLTIMETHR_Pos (0UL)             /*!< FTDF FTDF_SYMBOLTIMETHR_REG: SYMBOLTIMETHR (Bit 0)          */
 #define FTDF_FTDF_SYMBOLTIMETHR_REG_SYMBOLTIMETHR_Msk (0xffffffffUL)    /*!< FTDF FTDF_SYMBOLTIMETHR_REG: SYMBOLTIMETHR (Bitfield-Mask: 0xffffffff) */
@@ -6481,6 +6636,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define FTDF_FTDF_TX_PRIORITY_0_REG_TX_PRIORITY_Msk (0xfUL)             /*!< FTDF FTDF_TX_PRIORITY_0_REG: TX_PRIORITY (Bitfield-Mask: 0x0f) */
 #define FTDF_FTDF_TX_PRIORITY_0_REG_ISWAKEUP_Pos (4UL)                  /*!< FTDF FTDF_TX_PRIORITY_0_REG: ISWAKEUP (Bit 4)               */
 #define FTDF_FTDF_TX_PRIORITY_0_REG_ISWAKEUP_Msk (0x10UL)               /*!< FTDF FTDF_TX_PRIORITY_0_REG: ISWAKEUP (Bitfield-Mask: 0x01) */
+#define FTDF_FTDF_TX_PRIORITY_0_REG_PTI_TX_Pos (8UL)                    /*!< FTDF FTDF_TX_PRIORITY_0_REG: PTI_TX (Bit 8)                 */
+#define FTDF_FTDF_TX_PRIORITY_0_REG_PTI_TX_Msk (0xf00UL)                /*!< FTDF FTDF_TX_PRIORITY_0_REG: PTI_TX (Bitfield-Mask: 0x0f)   */
 
 /* --------------------------  FTDF_FTDF_TX_FLAG_S_1_REG  ------------------------- */
 #define FTDF_FTDF_TX_FLAG_S_1_REG_TX_FLAG_STAT_Pos (0UL)                /*!< FTDF FTDF_TX_FLAG_S_1_REG: TX_FLAG_STAT (Bit 0)             */
@@ -6499,6 +6656,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define FTDF_FTDF_TX_PRIORITY_1_REG_TX_PRIORITY_Msk (0xfUL)             /*!< FTDF FTDF_TX_PRIORITY_1_REG: TX_PRIORITY (Bitfield-Mask: 0x0f) */
 #define FTDF_FTDF_TX_PRIORITY_1_REG_ISWAKEUP_Pos (4UL)                  /*!< FTDF FTDF_TX_PRIORITY_1_REG: ISWAKEUP (Bit 4)               */
 #define FTDF_FTDF_TX_PRIORITY_1_REG_ISWAKEUP_Msk (0x10UL)               /*!< FTDF FTDF_TX_PRIORITY_1_REG: ISWAKEUP (Bitfield-Mask: 0x01) */
+#define FTDF_FTDF_TX_PRIORITY_1_REG_PTI_TX_Pos (8UL)                    /*!< FTDF FTDF_TX_PRIORITY_1_REG: PTI_TX (Bit 8)                 */
+#define FTDF_FTDF_TX_PRIORITY_1_REG_PTI_TX_Msk (0xf00UL)                /*!< FTDF FTDF_TX_PRIORITY_1_REG: PTI_TX (Bitfield-Mask: 0x0f)   */
 
 /* --------------------------  FTDF_FTDF_TX_FLAG_S_2_REG  ------------------------- */
 #define FTDF_FTDF_TX_FLAG_S_2_REG_TX_FLAG_STAT_Pos (0UL)                /*!< FTDF FTDF_TX_FLAG_S_2_REG: TX_FLAG_STAT (Bit 0)             */
@@ -6517,6 +6676,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define FTDF_FTDF_TX_PRIORITY_2_REG_TX_PRIORITY_Msk (0xfUL)             /*!< FTDF FTDF_TX_PRIORITY_2_REG: TX_PRIORITY (Bitfield-Mask: 0x0f) */
 #define FTDF_FTDF_TX_PRIORITY_2_REG_ISWAKEUP_Pos (4UL)                  /*!< FTDF FTDF_TX_PRIORITY_2_REG: ISWAKEUP (Bit 4)               */
 #define FTDF_FTDF_TX_PRIORITY_2_REG_ISWAKEUP_Msk (0x10UL)               /*!< FTDF FTDF_TX_PRIORITY_2_REG: ISWAKEUP (Bitfield-Mask: 0x01) */
+#define FTDF_FTDF_TX_PRIORITY_2_REG_PTI_TX_Pos (8UL)                    /*!< FTDF FTDF_TX_PRIORITY_2_REG: PTI_TX (Bit 8)                 */
+#define FTDF_FTDF_TX_PRIORITY_2_REG_PTI_TX_Msk (0xf00UL)                /*!< FTDF FTDF_TX_PRIORITY_2_REG: PTI_TX (Bitfield-Mask: 0x0f)   */
 
 /* --------------------------  FTDF_FTDF_TX_FLAG_S_3_REG  ------------------------- */
 #define FTDF_FTDF_TX_FLAG_S_3_REG_TX_FLAG_STAT_Pos (0UL)                /*!< FTDF FTDF_TX_FLAG_S_3_REG: TX_FLAG_STAT (Bit 0)             */
@@ -6535,6 +6696,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define FTDF_FTDF_TX_PRIORITY_3_REG_TX_PRIORITY_Msk (0xfUL)             /*!< FTDF FTDF_TX_PRIORITY_3_REG: TX_PRIORITY (Bitfield-Mask: 0x0f) */
 #define FTDF_FTDF_TX_PRIORITY_3_REG_ISWAKEUP_Pos (4UL)                  /*!< FTDF FTDF_TX_PRIORITY_3_REG: ISWAKEUP (Bit 4)               */
 #define FTDF_FTDF_TX_PRIORITY_3_REG_ISWAKEUP_Msk (0x10UL)               /*!< FTDF FTDF_TX_PRIORITY_3_REG: ISWAKEUP (Bitfield-Mask: 0x01) */
+#define FTDF_FTDF_TX_PRIORITY_3_REG_PTI_TX_Pos (8UL)                    /*!< FTDF FTDF_TX_PRIORITY_3_REG: PTI_TX (Bit 8)                 */
+#define FTDF_FTDF_TX_PRIORITY_3_REG_PTI_TX_Msk (0xf00UL)                /*!< FTDF FTDF_TX_PRIORITY_3_REG: PTI_TX (Bitfield-Mask: 0x0f)   */
 
 /* ---------------------------  FTDF_FTDF_TX_SET_OS_REG  -------------------------- */
 #define FTDF_FTDF_TX_SET_OS_REG_TX_FLAG_SET_Pos (0UL)                   /*!< FTDF FTDF_TX_SET_OS_REG: TX_FLAG_SET (Bit 0)                */
@@ -6544,15 +6707,27 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define FTDF_FTDF_TX_CLEAR_OS_REG_TX_FLAG_CLEAR_Pos (0UL)               /*!< FTDF FTDF_TX_CLEAR_OS_REG: TX_FLAG_CLEAR (Bit 0)            */
 #define FTDF_FTDF_TX_CLEAR_OS_REG_TX_FLAG_CLEAR_Msk (0xfUL)             /*!< FTDF FTDF_TX_CLEAR_OS_REG: TX_FLAG_CLEAR (Bitfield-Mask: 0x0f) */
 
-/* -------------------------  FTDF_FTDF_WAKEUPINTTHR_REG  ------------------------- */
-#define FTDF_FTDF_WAKEUPINTTHR_REG_WAKEUPINTTHR_Pos (0UL)               /*!< FTDF FTDF_WAKEUPINTTHR_REG: WAKEUPINTTHR (Bit 0)            */
-#define FTDF_FTDF_WAKEUPINTTHR_REG_WAKEUPINTTHR_Msk (0xffffffffUL)      /*!< FTDF FTDF_WAKEUPINTTHR_REG: WAKEUPINTTHR (Bitfield-Mask: 0xffffffff) */
-
 /* ------------------------  FTDF_FTDF_WAKEUP_CONTROL_REG  ------------------------ */
-#define FTDF_FTDF_WAKEUP_CONTROL_REG_WAKEUPTIMERENABLE_Pos (0UL)        /*!< FTDF FTDF_WAKEUP_CONTROL_REG: WAKEUPTIMERENABLE (Bit 0)     */
-#define FTDF_FTDF_WAKEUP_CONTROL_REG_WAKEUPTIMERENABLE_Msk (0x1UL)      /*!< FTDF FTDF_WAKEUP_CONTROL_REG: WAKEUPTIMERENABLE (Bitfield-Mask: 0x01) */
-#define FTDF_FTDF_WAKEUP_CONTROL_REG_WAKEUPENABLE_Pos (1UL)             /*!< FTDF FTDF_WAKEUP_CONTROL_REG: WAKEUPENABLE (Bit 1)          */
-#define FTDF_FTDF_WAKEUP_CONTROL_REG_WAKEUPENABLE_Msk (0x2UL)           /*!< FTDF FTDF_WAKEUP_CONTROL_REG: WAKEUPENABLE (Bitfield-Mask: 0x01) */
+#define FTDF_FTDF_WAKEUP_CONTROL_REG_WAKEUPINTTHR_Pos (0UL)             /*!< FTDF FTDF_WAKEUP_CONTROL_REG: WAKEUPINTTHR (Bit 0)          */
+#define FTDF_FTDF_WAKEUP_CONTROL_REG_WAKEUPINTTHR_Msk (0x1ffffffUL)     /*!< FTDF FTDF_WAKEUP_CONTROL_REG: WAKEUPINTTHR (Bitfield-Mask: 0x1ffffff) */
+#define FTDF_FTDF_WAKEUP_CONTROL_REG_WAKEUPENABLE_Pos (29UL)            /*!< FTDF FTDF_WAKEUP_CONTROL_REG: WAKEUPENABLE (Bit 29)         */
+#define FTDF_FTDF_WAKEUP_CONTROL_REG_WAKEUPENABLE_Msk (0x20000000UL)    /*!< FTDF FTDF_WAKEUP_CONTROL_REG: WAKEUPENABLE (Bitfield-Mask: 0x01) */
+#define FTDF_FTDF_WAKEUP_CONTROL_REG_WAKEUP_MODE_Pos (30UL)             /*!< FTDF FTDF_WAKEUP_CONTROL_REG: WAKEUP_MODE (Bit 30)          */
+#define FTDF_FTDF_WAKEUP_CONTROL_REG_WAKEUP_MODE_Msk (0xc0000000UL)     /*!< FTDF FTDF_WAKEUP_CONTROL_REG: WAKEUP_MODE (Bitfield-Mask: 0x03) */
+
+/* -------------------------  FTDF_FTDF_LONG_ADDR_0_0_REG  ------------------------ */
+#define FTDF_FTDF_LONG_ADDR_0_0_REG_EXP_SA_L_Pos (0UL)                  /*!< FTDF FTDF_LONG_ADDR_0_0_REG: EXP_SA_L (Bit 0)               */
+#define FTDF_FTDF_LONG_ADDR_0_0_REG_EXP_SA_L_Msk (0xffffffffUL)         /*!< FTDF FTDF_LONG_ADDR_0_0_REG: EXP_SA_L (Bitfield-Mask: 0xffffffff) */
+
+/* -------------------------  FTDF_FTDF_LONG_ADDR_1_0_REG  ------------------------ */
+#define FTDF_FTDF_LONG_ADDR_1_0_REG_EXP_SA_H_Pos (0UL)                  /*!< FTDF FTDF_LONG_ADDR_1_0_REG: EXP_SA_H (Bit 0)               */
+#define FTDF_FTDF_LONG_ADDR_1_0_REG_EXP_SA_H_Msk (0xffffffffUL)         /*!< FTDF FTDF_LONG_ADDR_1_0_REG: EXP_SA_H (Bitfield-Mask: 0xffffffff) */
+
+/* ------------------------  FTDF_FTDF_SIZE_AND_VAL_0_REG  ------------------------ */
+#define FTDF_FTDF_SIZE_AND_VAL_0_REG_VALID_SA_Pos (0UL)                 /*!< FTDF FTDF_SIZE_AND_VAL_0_REG: VALID_SA (Bit 0)              */
+#define FTDF_FTDF_SIZE_AND_VAL_0_REG_VALID_SA_Msk (0xfUL)               /*!< FTDF FTDF_SIZE_AND_VAL_0_REG: VALID_SA (Bitfield-Mask: 0x0f) */
+#define FTDF_FTDF_SIZE_AND_VAL_0_REG_SHORT_LONGNOT_Pos (4UL)            /*!< FTDF FTDF_SIZE_AND_VAL_0_REG: SHORT_LONGNOT (Bit 4)         */
+#define FTDF_FTDF_SIZE_AND_VAL_0_REG_SHORT_LONGNOT_Msk (0x10UL)         /*!< FTDF FTDF_SIZE_AND_VAL_0_REG: SHORT_LONGNOT (Bitfield-Mask: 0x01) */
 
 
 /* ================================================================================ */
@@ -6617,6 +6792,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define GP_TIMERS_TRIPLE_PWM_CTRL_REG_SW_PAUSE_EN_Msk (0x2UL)           /*!< GP_TIMERS TRIPLE_PWM_CTRL_REG: SW_PAUSE_EN (Bitfield-Mask: 0x01) */
 #define GP_TIMERS_TRIPLE_PWM_CTRL_REG_HW_PAUSE_EN_Pos (2UL)             /*!< GP_TIMERS TRIPLE_PWM_CTRL_REG: HW_PAUSE_EN (Bit 2)          */
 #define GP_TIMERS_TRIPLE_PWM_CTRL_REG_HW_PAUSE_EN_Msk (0x4UL)           /*!< GP_TIMERS TRIPLE_PWM_CTRL_REG: HW_PAUSE_EN (Bitfield-Mask: 0x01) */
+#define GP_TIMERS_TRIPLE_PWM_CTRL_REG_TRIPLE_PWM_CLK_SEL_Pos (3UL)      /*!< GP_TIMERS TRIPLE_PWM_CTRL_REG: TRIPLE_PWM_CLK_SEL (Bit 3)   */
+#define GP_TIMERS_TRIPLE_PWM_CTRL_REG_TRIPLE_PWM_CLK_SEL_Msk (0x8UL)    /*!< GP_TIMERS TRIPLE_PWM_CTRL_REG: TRIPLE_PWM_CLK_SEL (Bitfield-Mask: 0x01) */
 
 /* --------------------------  GP_TIMERS_BREATH_CFG_REG  -------------------------- */
 #define GP_TIMERS_BREATH_CFG_REG_BRTH_DIV_Pos (0UL)                     /*!< GP_TIMERS BREATH_CFG_REG: BRTH_DIV (Bit 0)                  */
@@ -7174,6 +7351,14 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define GPIO_RAMBIST_STATUS2_REG_CRYPTORAM_BIST_BUSY_Pos (14UL)         /*!< GPIO RAMBIST_STATUS2_REG: CRYPTORAM_BIST_BUSY (Bit 14)      */
 #define GPIO_RAMBIST_STATUS2_REG_CRYPTORAM_BIST_BUSY_Msk (0x4000UL)     /*!< GPIO RAMBIST_STATUS2_REG: CRYPTORAM_BIST_BUSY (Bitfield-Mask: 0x01) */
 
+/* --------------------------  GPIO_RAMBIST_STATUS3_REG  -------------------------- */
+#define GPIO_RAMBIST_STATUS3_REG_FTDF_FPRAM_BIST_LINE_FAIL_Pos (0UL)    /*!< GPIO RAMBIST_STATUS3_REG: FTDF_FPRAM_BIST_LINE_FAIL (Bit 0) */
+#define GPIO_RAMBIST_STATUS3_REG_FTDF_FPRAM_BIST_LINE_FAIL_Msk (0x1UL)  /*!< GPIO RAMBIST_STATUS3_REG: FTDF_FPRAM_BIST_LINE_FAIL (Bitfield-Mask: 0x01) */
+#define GPIO_RAMBIST_STATUS3_REG_FTDF_FPRAM_BIST_FAIL_Pos (1UL)         /*!< GPIO RAMBIST_STATUS3_REG: FTDF_FPRAM_BIST_FAIL (Bit 1)      */
+#define GPIO_RAMBIST_STATUS3_REG_FTDF_FPRAM_BIST_FAIL_Msk (0x2UL)       /*!< GPIO RAMBIST_STATUS3_REG: FTDF_FPRAM_BIST_FAIL (Bitfield-Mask: 0x01) */
+#define GPIO_RAMBIST_STATUS3_REG_FTDF_FPRAM_BIST_BUSY_Pos (2UL)         /*!< GPIO RAMBIST_STATUS3_REG: FTDF_FPRAM_BIST_BUSY (Bit 2)      */
+#define GPIO_RAMBIST_STATUS3_REG_FTDF_FPRAM_BIST_BUSY_Msk (0x4UL)       /*!< GPIO RAMBIST_STATUS3_REG: FTDF_FPRAM_BIST_BUSY (Bitfield-Mask: 0x01) */
+
 /* --------------------------  GPIO_ROMBIST_RESULTL_REG  -------------------------- */
 #define GPIO_ROMBIST_RESULTL_REG_ROMBIST_RESULTL_Pos (0UL)              /*!< GPIO ROMBIST_RESULTL_REG: ROMBIST_RESULTL (Bit 0)           */
 #define GPIO_ROMBIST_RESULTL_REG_ROMBIST_RESULTL_Msk (0xffffUL)         /*!< GPIO ROMBIST_RESULTL_REG: ROMBIST_RESULTL (Bitfield-Mask: 0xffff) */
@@ -7201,6 +7386,10 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define GPIO_TEST_CTRL_REG_SHOW_TXDAC_MOD_Msk (0x80UL)                  /*!< GPIO TEST_CTRL_REG: SHOW_TXDAC_MOD (Bitfield-Mask: 0x01)    */
 #define GPIO_TEST_CTRL_REG_SHOW_PWR_TST_OUT_Pos (8UL)                   /*!< GPIO TEST_CTRL_REG: SHOW_PWR_TST_OUT (Bit 8)                */
 #define GPIO_TEST_CTRL_REG_SHOW_PWR_TST_OUT_Msk (0x700UL)               /*!< GPIO TEST_CTRL_REG: SHOW_PWR_TST_OUT (Bitfield-Mask: 0x07)  */
+#define GPIO_TEST_CTRL_REG_XTAL16M_TST_SYS_Pos (12UL)                   /*!< GPIO TEST_CTRL_REG: XTAL16M_TST_SYS (Bit 12)                */
+#define GPIO_TEST_CTRL_REG_XTAL16M_TST_SYS_Msk (0x3000UL)               /*!< GPIO TEST_CTRL_REG: XTAL16M_TST_SYS (Bitfield-Mask: 0x03)   */
+#define GPIO_TEST_CTRL_REG_XTAL16M_TRIM_TEST_EN_Pos (14UL)              /*!< GPIO TEST_CTRL_REG: XTAL16M_TRIM_TEST_EN (Bit 14)           */
+#define GPIO_TEST_CTRL_REG_XTAL16M_TRIM_TEST_EN_Msk (0x4000UL)          /*!< GPIO TEST_CTRL_REG: XTAL16M_TRIM_TEST_EN (Bitfield-Mask: 0x01) */
 
 /* -----------------------------  GPIO_TEST_CTRL2_REG  ---------------------------- */
 #define GPIO_TEST_CTRL2_REG_ANA_TESTMUX_CTRL_Pos (0UL)                  /*!< GPIO TEST_CTRL2_REG: ANA_TESTMUX_CTRL (Bit 0)               */
@@ -7211,8 +7400,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 /* -----------------------------  GPIO_TEST_CTRL3_REG  ---------------------------- */
 #define GPIO_TEST_CTRL3_REG_RF_TEST_OUT_SEL_Pos (0UL)                   /*!< GPIO TEST_CTRL3_REG: RF_TEST_OUT_SEL (Bit 0)                */
 #define GPIO_TEST_CTRL3_REG_RF_TEST_OUT_SEL_Msk (0x3fUL)                /*!< GPIO TEST_CTRL3_REG: RF_TEST_OUT_SEL (Bitfield-Mask: 0x3f)  */
-#define GPIO_TEST_CTRL3_REG_USBCOMP_TEST_Pos  (6UL)                     /*!< GPIO TEST_CTRL3_REG: USBCOMP_TEST (Bit 6)                   */
-#define GPIO_TEST_CTRL3_REG_USBCOMP_TEST_Msk  (0x40UL)                  /*!< GPIO TEST_CTRL3_REG: USBCOMP_TEST (Bitfield-Mask: 0x01)     */
+#define GPIO_TEST_CTRL3_REG_VBUS_COMPARATOR_TEST_Pos (6UL)              /*!< GPIO TEST_CTRL3_REG: VBUS_COMPARATOR_TEST (Bit 6)           */
+#define GPIO_TEST_CTRL3_REG_VBUS_COMPARATOR_TEST_Msk (0x40UL)           /*!< GPIO TEST_CTRL3_REG: VBUS_COMPARATOR_TEST (Bitfield-Mask: 0x01) */
 #define GPIO_TEST_CTRL3_REG_RF_TEST_OUT_PARAM_Pos (8UL)                 /*!< GPIO TEST_CTRL3_REG: RF_TEST_OUT_PARAM (Bit 8)              */
 #define GPIO_TEST_CTRL3_REG_RF_TEST_OUT_PARAM_Msk (0xff00UL)            /*!< GPIO TEST_CTRL3_REG: RF_TEST_OUT_PARAM (Bitfield-Mask: 0xff) */
 
@@ -7251,6 +7440,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define GPIO_TEST_CTRL5_REG_TEST_VCONT_A_Msk  (0x1000UL)                /*!< GPIO TEST_CTRL5_REG: TEST_VCONT_A (Bitfield-Mask: 0x01)     */
 #define GPIO_TEST_CTRL5_REG_TEST_VREF_1V2_A_Pos (13UL)                  /*!< GPIO TEST_CTRL5_REG: TEST_VREF_1V2_A (Bit 13)               */
 #define GPIO_TEST_CTRL5_REG_TEST_VREF_1V2_A_Msk (0x2000UL)              /*!< GPIO TEST_CTRL5_REG: TEST_VREF_1V2_A (Bitfield-Mask: 0x01)  */
+#define GPIO_TEST_CTRL5_REG_TEST_POR_VBAT_NOK_AVD_Pos (14UL)            /*!< GPIO TEST_CTRL5_REG: TEST_POR_VBAT_NOK_AVD (Bit 14)         */
+#define GPIO_TEST_CTRL5_REG_TEST_POR_VBAT_NOK_AVD_Msk (0x4000UL)        /*!< GPIO TEST_CTRL5_REG: TEST_POR_VBAT_NOK_AVD (Bitfield-Mask: 0x01) */
 
 
 /* ================================================================================ */
@@ -7309,8 +7500,6 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define GPREG_GP_CONTROL_REG_BLE_H2H_BRIDGE_BYPASS_Msk (0x2UL)          /*!< GPREG GP_CONTROL_REG: BLE_H2H_BRIDGE_BYPASS (Bitfield-Mask: 0x01) */
 #define GPREG_GP_CONTROL_REG_BLE_WAKEUP_LP_IRQ_Pos (2UL)                /*!< GPREG GP_CONTROL_REG: BLE_WAKEUP_LP_IRQ (Bit 2)             */
 #define GPREG_GP_CONTROL_REG_BLE_WAKEUP_LP_IRQ_Msk (0x4UL)              /*!< GPREG GP_CONTROL_REG: BLE_WAKEUP_LP_IRQ (Bitfield-Mask: 0x01) */
-#define GPREG_GP_CONTROL_REG_BLE_DEEPSLDUR_MONITOR_Pos (8UL)            /*!< GPREG GP_CONTROL_REG: BLE_DEEPSLDUR_MONITOR (Bit 8)         */
-#define GPREG_GP_CONTROL_REG_BLE_DEEPSLDUR_MONITOR_Msk (0xff00UL)       /*!< GPREG GP_CONTROL_REG: BLE_DEEPSLDUR_MONITOR (Bitfield-Mask: 0xff) */
 
 /* ---------------------------  GPREG_ECC_BASE_ADDR_REG  -------------------------- */
 #define GPREG_ECC_BASE_ADDR_REG_ECC_BASE_ADDR_Pos (0UL)                 /*!< GPREG ECC_BASE_ADDR_REG: ECC_BASE_ADDR (Bit 0)              */
@@ -7329,6 +7518,12 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define GPREG_LED_CONTROL_REG_LED2_EN_Msk     (0x10UL)                  /*!< GPREG LED_CONTROL_REG: LED2_EN (Bitfield-Mask: 0x01)        */
 #define GPREG_LED_CONTROL_REG_LED3_EN_Pos     (5UL)                     /*!< GPREG LED_CONTROL_REG: LED3_EN (Bit 5)                      */
 #define GPREG_LED_CONTROL_REG_LED3_EN_Msk     (0x20UL)                  /*!< GPREG LED_CONTROL_REG: LED3_EN (Bitfield-Mask: 0x01)        */
+#define GPREG_LED_CONTROL_REG_LED_TRIM_Pos    (6UL)                     /*!< GPREG LED_CONTROL_REG: LED_TRIM (Bit 6)                     */
+#define GPREG_LED_CONTROL_REG_LED_TRIM_Msk    (0x3c0UL)                 /*!< GPREG LED_CONTROL_REG: LED_TRIM (Bitfield-Mask: 0x0f)       */
+
+/* -------------------------  GPREG_BLE_FINECNT_SAMP_REG  ------------------------- */
+#define GPREG_BLE_FINECNT_SAMP_REG_BLE_FINECNT_SAMP_Pos (0UL)           /*!< GPREG BLE_FINECNT_SAMP_REG: BLE_FINECNT_SAMP (Bit 0)        */
+#define GPREG_BLE_FINECNT_SAMP_REG_BLE_FINECNT_SAMP_Msk (0x3ffUL)       /*!< GPREG BLE_FINECNT_SAMP_REG: BLE_FINECNT_SAMP (Bitfield-Mask: 0x3ff) */
 
 /* ---------------------------  GPREG_PLL_SYS_CTRL1_REG  -------------------------- */
 #define GPREG_PLL_SYS_CTRL1_REG_PLL_EN_Pos    (0UL)                     /*!< GPREG PLL_SYS_CTRL1_REG: PLL_EN (Bit 0)                     */
@@ -7416,15 +7611,15 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define I2C_I2C_SAR_REG_IC_SAR_Pos            (0UL)                     /*!< I2C I2C_SAR_REG: IC_SAR (Bit 0)                             */
 #define I2C_I2C_SAR_REG_IC_SAR_Msk            (0x3ffUL)                 /*!< I2C I2C_SAR_REG: IC_SAR (Bitfield-Mask: 0x3ff)              */
 
-/* ----------------------------  I2C_I2C_HS_MADDR_REG  ---------------------------- */
-#define I2C_I2C_HS_MADDR_REG_IIC_HS_MAR_Pos   (0UL)                     /*!< I2C I2C_HS_MADDR_REG: IIC_HS_MAR (Bit 0)                    */
-#define I2C_I2C_HS_MADDR_REG_IIC_HS_MAR_Msk   (0x7UL)                   /*!< I2C I2C_HS_MADDR_REG: IIC_HS_MAR (Bitfield-Mask: 0x07)      */
-
 /* ----------------------------  I2C_I2C_DATA_CMD_REG  ---------------------------- */
 #define I2C_I2C_DATA_CMD_REG_DAT_Pos          (0UL)                     /*!< I2C I2C_DATA_CMD_REG: DAT (Bit 0)                           */
 #define I2C_I2C_DATA_CMD_REG_DAT_Msk          (0xffUL)                  /*!< I2C I2C_DATA_CMD_REG: DAT (Bitfield-Mask: 0xff)             */
 #define I2C_I2C_DATA_CMD_REG_CMD_Pos          (8UL)                     /*!< I2C I2C_DATA_CMD_REG: CMD (Bit 8)                           */
 #define I2C_I2C_DATA_CMD_REG_CMD_Msk          (0x100UL)                 /*!< I2C I2C_DATA_CMD_REG: CMD (Bitfield-Mask: 0x01)             */
+#define I2C_I2C_DATA_CMD_REG_STOP_Pos         (9UL)                     /*!< I2C I2C_DATA_CMD_REG: STOP (Bit 9)                          */
+#define I2C_I2C_DATA_CMD_REG_STOP_Msk         (0x200UL)                 /*!< I2C I2C_DATA_CMD_REG: STOP (Bitfield-Mask: 0x01)            */
+#define I2C_I2C_DATA_CMD_REG_RESTART_Pos      (10UL)                    /*!< I2C I2C_DATA_CMD_REG: RESTART (Bit 10)                      */
+#define I2C_I2C_DATA_CMD_REG_RESTART_Msk      (0x400UL)                 /*!< I2C I2C_DATA_CMD_REG: RESTART (Bitfield-Mask: 0x01)         */
 
 /* ---------------------------  I2C_I2C_SS_SCL_HCNT_REG  -------------------------- */
 #define I2C_I2C_SS_SCL_HCNT_REG_IC_SS_SCL_HCNT_Pos (0UL)                /*!< I2C I2C_SS_SCL_HCNT_REG: IC_SS_SCL_HCNT (Bit 0)             */
@@ -7525,8 +7720,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define I2C_I2C_RX_TL_REG_RX_TL_Msk           (0x1fUL)                  /*!< I2C I2C_RX_TL_REG: RX_TL (Bitfield-Mask: 0x1f)              */
 
 /* ------------------------------  I2C_I2C_TX_TL_REG  ----------------------------- */
-#define I2C_I2C_TX_TL_REG_RX_TL_Pos           (0UL)                     /*!< I2C I2C_TX_TL_REG: RX_TL (Bit 0)                            */
-#define I2C_I2C_TX_TL_REG_RX_TL_Msk           (0x1fUL)                  /*!< I2C I2C_TX_TL_REG: RX_TL (Bitfield-Mask: 0x1f)              */
+#define I2C_I2C_TX_TL_REG_TX_TL_Pos           (0UL)                     /*!< I2C I2C_TX_TL_REG: TX_TL (Bit 0)                            */
+#define I2C_I2C_TX_TL_REG_TX_TL_Msk           (0x1fUL)                  /*!< I2C I2C_TX_TL_REG: TX_TL (Bitfield-Mask: 0x1f)              */
 
 /* ----------------------------  I2C_I2C_CLR_INTR_REG  ---------------------------- */
 #define I2C_I2C_CLR_INTR_REG_CLR_INTR_Pos     (0UL)                     /*!< I2C I2C_CLR_INTR_REG: CLR_INTR (Bit 0)                      */
@@ -7728,15 +7923,15 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define I2C2_I2C2_SAR_REG_IC_SAR_Pos          (0UL)                     /*!< I2C2 I2C2_SAR_REG: IC_SAR (Bit 0)                           */
 #define I2C2_I2C2_SAR_REG_IC_SAR_Msk          (0x3ffUL)                 /*!< I2C2 I2C2_SAR_REG: IC_SAR (Bitfield-Mask: 0x3ff)            */
 
-/* ---------------------------  I2C2_I2C2_HS_MADDR_REG  --------------------------- */
-#define I2C2_I2C2_HS_MADDR_REG_IIC_HS_MAR_Pos (0UL)                     /*!< I2C2 I2C2_HS_MADDR_REG: IIC_HS_MAR (Bit 0)                  */
-#define I2C2_I2C2_HS_MADDR_REG_IIC_HS_MAR_Msk (0x7UL)                   /*!< I2C2 I2C2_HS_MADDR_REG: IIC_HS_MAR (Bitfield-Mask: 0x07)    */
-
 /* ---------------------------  I2C2_I2C2_DATA_CMD_REG  --------------------------- */
 #define I2C2_I2C2_DATA_CMD_REG_DAT_Pos        (0UL)                     /*!< I2C2 I2C2_DATA_CMD_REG: DAT (Bit 0)                         */
 #define I2C2_I2C2_DATA_CMD_REG_DAT_Msk        (0xffUL)                  /*!< I2C2 I2C2_DATA_CMD_REG: DAT (Bitfield-Mask: 0xff)           */
 #define I2C2_I2C2_DATA_CMD_REG_CMD_Pos        (8UL)                     /*!< I2C2 I2C2_DATA_CMD_REG: CMD (Bit 8)                         */
 #define I2C2_I2C2_DATA_CMD_REG_CMD_Msk        (0x100UL)                 /*!< I2C2 I2C2_DATA_CMD_REG: CMD (Bitfield-Mask: 0x01)           */
+#define I2C2_I2C2_DATA_CMD_REG_STOP_Pos       (9UL)                     /*!< I2C2 I2C2_DATA_CMD_REG: STOP (Bit 9)                        */
+#define I2C2_I2C2_DATA_CMD_REG_STOP_Msk       (0x200UL)                 /*!< I2C2 I2C2_DATA_CMD_REG: STOP (Bitfield-Mask: 0x01)          */
+#define I2C2_I2C2_DATA_CMD_REG_RESTART_Pos    (10UL)                    /*!< I2C2 I2C2_DATA_CMD_REG: RESTART (Bit 10)                    */
+#define I2C2_I2C2_DATA_CMD_REG_RESTART_Msk    (0x400UL)                 /*!< I2C2 I2C2_DATA_CMD_REG: RESTART (Bitfield-Mask: 0x01)       */
 
 /* --------------------------  I2C2_I2C2_SS_SCL_HCNT_REG  ------------------------- */
 #define I2C2_I2C2_SS_SCL_HCNT_REG_IC_SS_SCL_HCNT_Pos (0UL)              /*!< I2C2 I2C2_SS_SCL_HCNT_REG: IC_SS_SCL_HCNT (Bit 0)           */
@@ -7837,8 +8032,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define I2C2_I2C2_RX_TL_REG_RX_TL_Msk         (0x1fUL)                  /*!< I2C2 I2C2_RX_TL_REG: RX_TL (Bitfield-Mask: 0x1f)            */
 
 /* -----------------------------  I2C2_I2C2_TX_TL_REG  ---------------------------- */
-#define I2C2_I2C2_TX_TL_REG_RX_TL_Pos         (0UL)                     /*!< I2C2 I2C2_TX_TL_REG: RX_TL (Bit 0)                          */
-#define I2C2_I2C2_TX_TL_REG_RX_TL_Msk         (0x1fUL)                  /*!< I2C2 I2C2_TX_TL_REG: RX_TL (Bitfield-Mask: 0x1f)            */
+#define I2C2_I2C2_TX_TL_REG_TX_TL_Pos         (0UL)                     /*!< I2C2 I2C2_TX_TL_REG: TX_TL (Bit 0)                          */
+#define I2C2_I2C2_TX_TL_REG_TX_TL_Msk         (0x1fUL)                  /*!< I2C2 I2C2_TX_TL_REG: TX_TL (Bitfield-Mask: 0x1f)            */
 
 /* ---------------------------  I2C2_I2C2_CLR_INTR_REG  --------------------------- */
 #define I2C2_I2C2_CLR_INTR_REG_CLR_INTR_Pos   (0UL)                     /*!< I2C2 I2C2_CLR_INTR_REG: CLR_INTR (Bit 0)                    */
@@ -8493,6 +8688,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 /* ----------------------------  OTPC_OTPC_CELADR_REG  ---------------------------- */
 #define OTPC_OTPC_CELADR_REG_OTPC_CELADR_Pos  (0UL)                     /*!< OTPC OTPC_CELADR_REG: OTPC_CELADR (Bit 0)                   */
 #define OTPC_OTPC_CELADR_REG_OTPC_CELADR_Msk  (0x3fffUL)                /*!< OTPC OTPC_CELADR_REG: OTPC_CELADR (Bitfield-Mask: 0x3fff)   */
+#define OTPC_OTPC_CELADR_REG_OTPC_CELADR_LV_Pos (16UL)                  /*!< OTPC OTPC_CELADR_REG: OTPC_CELADR_LV (Bit 16)               */
+#define OTPC_OTPC_CELADR_REG_OTPC_CELADR_LV_Msk (0x3fff0000UL)          /*!< OTPC OTPC_CELADR_REG: OTPC_CELADR_LV (Bitfield-Mask: 0x3fff) */
 
 /* ----------------------------  OTPC_OTPC_NWORDS_REG  ---------------------------- */
 #define OTPC_OTPC_NWORDS_REG_OTPC_NWORDS_Pos  (0UL)                     /*!< OTPC OTPC_NWORDS_REG: OTPC_NWORDS (Bit 0)                   */
@@ -8535,6 +8732,16 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define OTPC_OTPC_TIM2_REG_OTPC_TIM2_CC_T_BCHK_Msk (0x7f0000UL)         /*!< OTPC OTPC_TIM2_REG: OTPC_TIM2_CC_T_BCHK (Bitfield-Mask: 0x7f) */
 #define OTPC_OTPC_TIM2_REG_OTPC_TIM2_RDENL_PROT_Pos (23UL)              /*!< OTPC OTPC_TIM2_REG: OTPC_TIM2_RDENL_PROT (Bit 23)           */
 #define OTPC_OTPC_TIM2_REG_OTPC_TIM2_RDENL_PROT_Msk (0x800000UL)        /*!< OTPC OTPC_TIM2_REG: OTPC_TIM2_RDENL_PROT (Bitfield-Mask: 0x01) */
+
+/* -----------------------------  OTPC_OTPC_TEST_REG  ----------------------------- */
+#define OTPC_OTPC_TEST_REG_OTPC_SECDED_COR_DIS_Pos (0UL)                /*!< OTPC OTPC_TEST_REG: OTPC_SECDED_COR_DIS (Bit 0)             */
+#define OTPC_OTPC_TEST_REG_OTPC_SECDED_COR_DIS_Msk (0x1UL)              /*!< OTPC OTPC_TEST_REG: OTPC_SECDED_COR_DIS (Bitfield-Mask: 0x01) */
+#define OTPC_OTPC_TEST_REG_OTPC_SECDED_RAW_ECC_Pos (16UL)               /*!< OTPC OTPC_TEST_REG: OTPC_SECDED_RAW_ECC (Bit 16)            */
+#define OTPC_OTPC_TEST_REG_OTPC_SECDED_RAW_ECC_Msk (0xff0000UL)         /*!< OTPC OTPC_TEST_REG: OTPC_SECDED_RAW_ECC (Bitfield-Mask: 0xff) */
+#define OTPC_OTPC_TEST_REG_OTPC_SECDED_STAT_Pos (24UL)                  /*!< OTPC OTPC_TEST_REG: OTPC_SECDED_STAT (Bit 24)               */
+#define OTPC_OTPC_TEST_REG_OTPC_SECDED_STAT_Msk (0x3000000UL)           /*!< OTPC OTPC_TEST_REG: OTPC_SECDED_STAT (Bitfield-Mask: 0x03)  */
+#define OTPC_OTPC_TEST_REG_OTPC_USED_RR_Pos   (26UL)                    /*!< OTPC OTPC_TEST_REG: OTPC_USED_RR (Bit 26)                   */
+#define OTPC_OTPC_TEST_REG_OTPC_USED_RR_Msk   (0x4000000UL)             /*!< OTPC OTPC_TEST_REG: OTPC_USED_RR (Bitfield-Mask: 0x01)      */
 
 
 /* ================================================================================ */
@@ -8787,8 +8994,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define PLLDIG_RF_SYNTH_CTRL2_BLE_REG_SD_ORDER_TX_Msk (0xcUL)           /*!< PLLDIG RF_SYNTH_CTRL2_BLE_REG: SD_ORDER_TX (Bitfield-Mask: 0x03) */
 #define PLLDIG_RF_SYNTH_CTRL2_BLE_REG_MODINDEX_Pos (4UL)                /*!< PLLDIG RF_SYNTH_CTRL2_BLE_REG: MODINDEX (Bit 4)             */
 #define PLLDIG_RF_SYNTH_CTRL2_BLE_REG_MODINDEX_Msk (0x30UL)             /*!< PLLDIG RF_SYNTH_CTRL2_BLE_REG: MODINDEX (Bitfield-Mask: 0x03) */
-#define PLLDIG_RF_SYNTH_CTRL2_BLE_REG_DELAY_Pos (6UL)                   /*!< PLLDIG RF_SYNTH_CTRL2_BLE_REG: DELAY (Bit 6)                */
-#define PLLDIG_RF_SYNTH_CTRL2_BLE_REG_DELAY_Msk (0xc0UL)                /*!< PLLDIG RF_SYNTH_CTRL2_BLE_REG: DELAY (Bitfield-Mask: 0x03)  */
+#define PLLDIG_RF_SYNTH_CTRL2_BLE_REG_GAUSS_DELAY_Pos (6UL)             /*!< PLLDIG RF_SYNTH_CTRL2_BLE_REG: GAUSS_DELAY (Bit 6)          */
+#define PLLDIG_RF_SYNTH_CTRL2_BLE_REG_GAUSS_DELAY_Msk (0xc0UL)          /*!< PLLDIG RF_SYNTH_CTRL2_BLE_REG: GAUSS_DELAY (Bitfield-Mask: 0x03) */
 #define PLLDIG_RF_SYNTH_CTRL2_BLE_REG_GAUSS_INV_Pos (8UL)               /*!< PLLDIG RF_SYNTH_CTRL2_BLE_REG: GAUSS_INV (Bit 8)            */
 #define PLLDIG_RF_SYNTH_CTRL2_BLE_REG_GAUSS_INV_Msk (0x100UL)           /*!< PLLDIG RF_SYNTH_CTRL2_BLE_REG: GAUSS_INV (Bitfield-Mask: 0x01) */
 #define PLLDIG_RF_SYNTH_CTRL2_BLE_REG_GAUSS_86_Pos (9UL)                /*!< PLLDIG RF_SYNTH_CTRL2_BLE_REG: GAUSS_86 (Bit 9)             */
@@ -8799,16 +9006,22 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define PLLDIG_RF_SYNTH_CTRL2_BLE_REG_EO_PACKET_DIS_Msk (0x800UL)       /*!< PLLDIG RF_SYNTH_CTRL2_BLE_REG: EO_PACKET_DIS (Bitfield-Mask: 0x01) */
 #define PLLDIG_RF_SYNTH_CTRL2_BLE_REG_BT_SEL_Pos (12UL)                 /*!< PLLDIG RF_SYNTH_CTRL2_BLE_REG: BT_SEL (Bit 12)              */
 #define PLLDIG_RF_SYNTH_CTRL2_BLE_REG_BT_SEL_Msk (0x1000UL)             /*!< PLLDIG RF_SYNTH_CTRL2_BLE_REG: BT_SEL (Bitfield-Mask: 0x01) */
+#define PLLDIG_RF_SYNTH_CTRL2_BLE_REG_BLE_DAC_SEL_Pos (13UL)            /*!< PLLDIG RF_SYNTH_CTRL2_BLE_REG: BLE_DAC_SEL (Bit 13)         */
+#define PLLDIG_RF_SYNTH_CTRL2_BLE_REG_BLE_DAC_SEL_Msk (0x2000UL)        /*!< PLLDIG RF_SYNTH_CTRL2_BLE_REG: BLE_DAC_SEL (Bitfield-Mask: 0x01) */
 
 /* -----------------------  PLLDIG_RF_SYNTH_CTRL2_FTDF_REG  ----------------------- */
 #define PLLDIG_RF_SYNTH_CTRL2_FTDF_REG_SD_ORDER_RX_Pos (0UL)            /*!< PLLDIG RF_SYNTH_CTRL2_FTDF_REG: SD_ORDER_RX (Bit 0)         */
 #define PLLDIG_RF_SYNTH_CTRL2_FTDF_REG_SD_ORDER_RX_Msk (0x3UL)          /*!< PLLDIG RF_SYNTH_CTRL2_FTDF_REG: SD_ORDER_RX (Bitfield-Mask: 0x03) */
 #define PLLDIG_RF_SYNTH_CTRL2_FTDF_REG_SD_ORDER_TX_Pos (2UL)            /*!< PLLDIG RF_SYNTH_CTRL2_FTDF_REG: SD_ORDER_TX (Bit 2)         */
 #define PLLDIG_RF_SYNTH_CTRL2_FTDF_REG_SD_ORDER_TX_Msk (0xcUL)          /*!< PLLDIG RF_SYNTH_CTRL2_FTDF_REG: SD_ORDER_TX (Bitfield-Mask: 0x03) */
-#define PLLDIG_RF_SYNTH_CTRL2_FTDF_REG_DELAY_Pos (6UL)                  /*!< PLLDIG RF_SYNTH_CTRL2_FTDF_REG: DELAY (Bit 6)               */
-#define PLLDIG_RF_SYNTH_CTRL2_FTDF_REG_DELAY_Msk (0xc0UL)               /*!< PLLDIG RF_SYNTH_CTRL2_FTDF_REG: DELAY (Bitfield-Mask: 0x03) */
-#define PLLDIG_RF_SYNTH_CTRL2_FTDF_REG_FTDF_MODINDEX_Pos (8UL)          /*!< PLLDIG RF_SYNTH_CTRL2_FTDF_REG: FTDF_MODINDEX (Bit 8)       */
-#define PLLDIG_RF_SYNTH_CTRL2_FTDF_REG_FTDF_MODINDEX_Msk (0x3f00UL)     /*!< PLLDIG RF_SYNTH_CTRL2_FTDF_REG: FTDF_MODINDEX (Bitfield-Mask: 0x3f) */
+#define PLLDIG_RF_SYNTH_CTRL2_FTDF_REG_MODINDEX_Pos (4UL)               /*!< PLLDIG RF_SYNTH_CTRL2_FTDF_REG: MODINDEX (Bit 4)            */
+#define PLLDIG_RF_SYNTH_CTRL2_FTDF_REG_MODINDEX_Msk (0x30UL)            /*!< PLLDIG RF_SYNTH_CTRL2_FTDF_REG: MODINDEX (Bitfield-Mask: 0x03) */
+#define PLLDIG_RF_SYNTH_CTRL2_FTDF_REG_TXDAC_DELAY_Pos (6UL)            /*!< PLLDIG RF_SYNTH_CTRL2_FTDF_REG: TXDAC_DELAY (Bit 6)         */
+#define PLLDIG_RF_SYNTH_CTRL2_FTDF_REG_TXDAC_DELAY_Msk (0x40UL)         /*!< PLLDIG RF_SYNTH_CTRL2_FTDF_REG: TXDAC_DELAY (Bitfield-Mask: 0x01) */
+#define PLLDIG_RF_SYNTH_CTRL2_FTDF_REG_GAUSS_INV_Pos (8UL)              /*!< PLLDIG RF_SYNTH_CTRL2_FTDF_REG: GAUSS_INV (Bit 8)           */
+#define PLLDIG_RF_SYNTH_CTRL2_FTDF_REG_GAUSS_INV_Msk (0x100UL)          /*!< PLLDIG RF_SYNTH_CTRL2_FTDF_REG: GAUSS_INV (Bitfield-Mask: 0x01) */
+#define PLLDIG_RF_SYNTH_CTRL2_FTDF_REG_TXDATA_INV_Pos (10UL)            /*!< PLLDIG RF_SYNTH_CTRL2_FTDF_REG: TXDATA_INV (Bit 10)         */
+#define PLLDIG_RF_SYNTH_CTRL2_FTDF_REG_TXDATA_INV_Msk (0x400UL)         /*!< PLLDIG RF_SYNTH_CTRL2_FTDF_REG: TXDATA_INV (Bitfield-Mask: 0x01) */
 
 /* --------------------------  PLLDIG_RF_SYNTH_CTRL3_REG  ------------------------- */
 #define PLLDIG_RF_SYNTH_CTRL3_REG_MODVAL_WR_Pos (0UL)                   /*!< PLLDIG RF_SYNTH_CTRL3_REG: MODVAL_WR (Bit 0)                */
@@ -8825,6 +9038,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define PLLDIG_RF_VCOCAL_CTRL_REG_VCO_FREQTRIM_SEL_Msk (0x30UL)         /*!< PLLDIG RF_VCOCAL_CTRL_REG: VCO_FREQTRIM_SEL (Bitfield-Mask: 0x03) */
 #define PLLDIG_RF_VCOCAL_CTRL_REG_VCOCAL_PERIOD_Pos (6UL)               /*!< PLLDIG RF_VCOCAL_CTRL_REG: VCOCAL_PERIOD (Bit 6)            */
 #define PLLDIG_RF_VCOCAL_CTRL_REG_VCOCAL_PERIOD_Msk (0xc0UL)            /*!< PLLDIG RF_VCOCAL_CTRL_REG: VCOCAL_PERIOD (Bitfield-Mask: 0x03) */
+#define PLLDIG_RF_VCOCAL_CTRL_REG_VCOCAL_MD_STATE_DLY_SEL_Pos (8UL)     /*!< PLLDIG RF_VCOCAL_CTRL_REG: VCOCAL_MD_STATE_DLY_SEL (Bit 8)  */
+#define PLLDIG_RF_VCOCAL_CTRL_REG_VCOCAL_MD_STATE_DLY_SEL_Msk (0x100UL) /*!< PLLDIG RF_VCOCAL_CTRL_REG: VCOCAL_MD_STATE_DLY_SEL (Bitfield-Mask: 0x01) */
 
 /* ------------------------  PLLDIG_RF_MGAIN_CTRL_BLE_REG  ------------------------ */
 #define PLLDIG_RF_MGAIN_CTRL_BLE_REG_GAUSS_GAIN_WR_Pos (0UL)            /*!< PLLDIG RF_MGAIN_CTRL_BLE_REG: GAUSS_GAIN_WR (Bit 0)         */
@@ -8840,15 +9055,19 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 
 /* ------------------------  PLLDIG_RF_MGAIN_CTRL_FTDF_REG  ----------------------- */
 #define PLLDIG_RF_MGAIN_CTRL_FTDF_REG_MSK_GAIN_WR_Pos (0UL)             /*!< PLLDIG RF_MGAIN_CTRL_FTDF_REG: MSK_GAIN_WR (Bit 0)          */
-#define PLLDIG_RF_MGAIN_CTRL_FTDF_REG_MSK_GAIN_WR_Msk (0x3fUL)          /*!< PLLDIG RF_MGAIN_CTRL_FTDF_REG: MSK_GAIN_WR (Bitfield-Mask: 0x3f) */
-#define PLLDIG_RF_MGAIN_CTRL_FTDF_REG_MSK_GAIN_SEL_Pos (6UL)            /*!< PLLDIG RF_MGAIN_CTRL_FTDF_REG: MSK_GAIN_SEL (Bit 6)         */
-#define PLLDIG_RF_MGAIN_CTRL_FTDF_REG_MSK_GAIN_SEL_Msk (0x40UL)         /*!< PLLDIG RF_MGAIN_CTRL_FTDF_REG: MSK_GAIN_SEL (Bitfield-Mask: 0x01) */
+#define PLLDIG_RF_MGAIN_CTRL_FTDF_REG_MSK_GAIN_WR_Msk (0x7fUL)          /*!< PLLDIG RF_MGAIN_CTRL_FTDF_REG: MSK_GAIN_WR (Bitfield-Mask: 0x7f) */
+#define PLLDIG_RF_MGAIN_CTRL_FTDF_REG_MSK_GAIN_SEL_Pos (7UL)            /*!< PLLDIG RF_MGAIN_CTRL_FTDF_REG: MSK_GAIN_SEL (Bit 7)         */
+#define PLLDIG_RF_MGAIN_CTRL_FTDF_REG_MSK_GAIN_SEL_Msk (0x80UL)         /*!< PLLDIG RF_MGAIN_CTRL_FTDF_REG: MSK_GAIN_SEL (Bitfield-Mask: 0x01) */
 #define PLLDIG_RF_MGAIN_CTRL_FTDF_REG_MSK_GAIN_OFFSET_Pos (8UL)         /*!< PLLDIG RF_MGAIN_CTRL_FTDF_REG: MSK_GAIN_OFFSET (Bit 8)      */
-#define PLLDIG_RF_MGAIN_CTRL_FTDF_REG_MSK_GAIN_OFFSET_Msk (0x3f00UL)    /*!< PLLDIG RF_MGAIN_CTRL_FTDF_REG: MSK_GAIN_OFFSET (Bitfield-Mask: 0x3f) */
+#define PLLDIG_RF_MGAIN_CTRL_FTDF_REG_MSK_GAIN_OFFSET_Msk (0xff00UL)    /*!< PLLDIG RF_MGAIN_CTRL_FTDF_REG: MSK_GAIN_OFFSET (Bitfield-Mask: 0xff) */
 
 /* --------------------------  PLLDIG_RF_MGAIN_CTRL2_REG  ------------------------- */
 #define PLLDIG_RF_MGAIN_CTRL2_REG_MGAIN_TRANSMIT_LENGTH_Pos (0UL)       /*!< PLLDIG RF_MGAIN_CTRL2_REG: MGAIN_TRANSMIT_LENGTH (Bit 0)    */
 #define PLLDIG_RF_MGAIN_CTRL2_REG_MGAIN_TRANSMIT_LENGTH_Msk (0x7fUL)    /*!< PLLDIG RF_MGAIN_CTRL2_REG: MGAIN_TRANSMIT_LENGTH (Bitfield-Mask: 0x7f) */
+#define PLLDIG_RF_MGAIN_CTRL2_REG_MGAIN_MODE_SEL_Pos (7UL)              /*!< PLLDIG RF_MGAIN_CTRL2_REG: MGAIN_MODE_SEL (Bit 7)           */
+#define PLLDIG_RF_MGAIN_CTRL2_REG_MGAIN_MODE_SEL_Msk (0x80UL)           /*!< PLLDIG RF_MGAIN_CTRL2_REG: MGAIN_MODE_SEL (Bitfield-Mask: 0x01) */
+#define PLLDIG_RF_MGAIN_CTRL2_REG_MSK_GAINCAL_LONG_Pos (8UL)            /*!< PLLDIG RF_MGAIN_CTRL2_REG: MSK_GAINCAL_LONG (Bit 8)         */
+#define PLLDIG_RF_MGAIN_CTRL2_REG_MSK_GAINCAL_LONG_Msk (0x100UL)        /*!< PLLDIG RF_MGAIN_CTRL2_REG: MSK_GAINCAL_LONG (Bitfield-Mask: 0x01) */
 
 /* -----------------------  PLLDIG_RF_VCO_CALCAP_BIT14_REG  ----------------------- */
 #define PLLDIG_RF_VCO_CALCAP_BIT14_REG_VCO_CALCAP_BIT14_Pos (0UL)       /*!< PLLDIG RF_VCO_CALCAP_BIT14_REG: VCO_CALCAP_BIT14 (Bit 0)    */
@@ -8868,11 +9087,15 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define PLLDIG_RF_BMCW_REG_HSI_SEL_Pos        (8UL)                     /*!< PLLDIG RF_BMCW_REG: HSI_SEL (Bit 8)                         */
 #define PLLDIG_RF_BMCW_REG_HSI_SEL_Msk        (0x100UL)                 /*!< PLLDIG RF_BMCW_REG: HSI_SEL (Bitfield-Mask: 0x01)           */
 
-/* --------------------------  PLLDIG_RF_KMOD_ALPHA_REG  -------------------------- */
-#define PLLDIG_RF_KMOD_ALPHA_REG_KMOD_ALPHA_BLE_Pos (0UL)               /*!< PLLDIG RF_KMOD_ALPHA_REG: KMOD_ALPHA_BLE (Bit 0)            */
-#define PLLDIG_RF_KMOD_ALPHA_REG_KMOD_ALPHA_BLE_Msk (0x3fUL)            /*!< PLLDIG RF_KMOD_ALPHA_REG: KMOD_ALPHA_BLE (Bitfield-Mask: 0x3f) */
-#define PLLDIG_RF_KMOD_ALPHA_REG_KMOD_ALPHA_FTDF_Pos (6UL)              /*!< PLLDIG RF_KMOD_ALPHA_REG: KMOD_ALPHA_FTDF (Bit 6)           */
-#define PLLDIG_RF_KMOD_ALPHA_REG_KMOD_ALPHA_FTDF_Msk (0xfc0UL)          /*!< PLLDIG RF_KMOD_ALPHA_REG: KMOD_ALPHA_FTDF (Bitfield-Mask: 0x3f) */
+/* ------------------------  PLLDIG_RF_KMOD_ALPHA_BLE_REG  ------------------------ */
+#define PLLDIG_RF_KMOD_ALPHA_BLE_REG_KMOD_ALPHA_GAUSSDAC_Pos (0UL)      /*!< PLLDIG RF_KMOD_ALPHA_BLE_REG: KMOD_ALPHA_GAUSSDAC (Bit 0)   */
+#define PLLDIG_RF_KMOD_ALPHA_BLE_REG_KMOD_ALPHA_GAUSSDAC_Msk (0x3fUL)   /*!< PLLDIG RF_KMOD_ALPHA_BLE_REG: KMOD_ALPHA_GAUSSDAC (Bitfield-Mask: 0x3f) */
+#define PLLDIG_RF_KMOD_ALPHA_BLE_REG_KMOD_ALPHA_TXDAC_Pos (6UL)         /*!< PLLDIG RF_KMOD_ALPHA_BLE_REG: KMOD_ALPHA_TXDAC (Bit 6)      */
+#define PLLDIG_RF_KMOD_ALPHA_BLE_REG_KMOD_ALPHA_TXDAC_Msk (0xfc0UL)     /*!< PLLDIG RF_KMOD_ALPHA_BLE_REG: KMOD_ALPHA_TXDAC (Bitfield-Mask: 0x3f) */
+
+/* ------------------------  PLLDIG_RF_KMOD_ALPHA_FTDF_REG  ----------------------- */
+#define PLLDIG_RF_KMOD_ALPHA_FTDF_REG_KMOD_ALPHA_FTDF_Pos (0UL)         /*!< PLLDIG RF_KMOD_ALPHA_FTDF_REG: KMOD_ALPHA_FTDF (Bit 0)      */
+#define PLLDIG_RF_KMOD_ALPHA_FTDF_REG_KMOD_ALPHA_FTDF_Msk (0x3fUL)      /*!< PLLDIG RF_KMOD_ALPHA_FTDF_REG: KMOD_ALPHA_FTDF (Bitfield-Mask: 0x3f) */
 
 /* -----------------------  PLLDIG_RF_SYNTH_RESULT_BLE_REG  ----------------------- */
 #define PLLDIG_RF_SYNTH_RESULT_BLE_REG_GAUSS_GAIN_CAL_RD_Pos (0UL)      /*!< PLLDIG RF_SYNTH_RESULT_BLE_REG: GAUSS_GAIN_CAL_RD (Bit 0)   */
@@ -8882,7 +9105,7 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 
 /* -----------------------  PLLDIG_RF_SYNTH_RESULT_FTDF_REG  ---------------------- */
 #define PLLDIG_RF_SYNTH_RESULT_FTDF_REG_MSK_GAIN_CAL_RD_Pos (0UL)       /*!< PLLDIG RF_SYNTH_RESULT_FTDF_REG: MSK_GAIN_CAL_RD (Bit 0)    */
-#define PLLDIG_RF_SYNTH_RESULT_FTDF_REG_MSK_GAIN_CAL_RD_Msk (0x3fUL)    /*!< PLLDIG RF_SYNTH_RESULT_FTDF_REG: MSK_GAIN_CAL_RD (Bitfield-Mask: 0x3f) */
+#define PLLDIG_RF_SYNTH_RESULT_FTDF_REG_MSK_GAIN_CAL_RD_Msk (0x7fUL)    /*!< PLLDIG RF_SYNTH_RESULT_FTDF_REG: MSK_GAIN_CAL_RD (Bitfield-Mask: 0x7f) */
 
 /* -----------------------  PLLDIG_RF_SYNTH_RESULT2_BLE_REG  ---------------------- */
 #define PLLDIG_RF_SYNTH_RESULT2_BLE_REG_GAUSS_GAIN_RD_Pos (0UL)         /*!< PLLDIG RF_SYNTH_RESULT2_BLE_REG: GAUSS_GAIN_RD (Bit 0)      */
@@ -8891,10 +9114,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define PLLDIG_RF_SYNTH_RESULT2_BLE_REG_CN_CAL_RD_Msk (0x3f00UL)        /*!< PLLDIG RF_SYNTH_RESULT2_BLE_REG: CN_CAL_RD (Bitfield-Mask: 0x3f) */
 
 /* ----------------------  PLLDIG_RF_SYNTH_RESULT2_FTDF_REG  ---------------------- */
-#define PLLDIG_RF_SYNTH_RESULT2_FTDF_REG_MSK_GAIN_LOWER_RD_Pos (0UL)    /*!< PLLDIG RF_SYNTH_RESULT2_FTDF_REG: MSK_GAIN_LOWER_RD (Bit 0) */
-#define PLLDIG_RF_SYNTH_RESULT2_FTDF_REG_MSK_GAIN_LOWER_RD_Msk (0x3fUL) /*!< PLLDIG RF_SYNTH_RESULT2_FTDF_REG: MSK_GAIN_LOWER_RD (Bitfield-Mask: 0x3f) */
-#define PLLDIG_RF_SYNTH_RESULT2_FTDF_REG_MSK_GAIN_UPPER_RD_Pos (6UL)    /*!< PLLDIG RF_SYNTH_RESULT2_FTDF_REG: MSK_GAIN_UPPER_RD (Bit 6) */
-#define PLLDIG_RF_SYNTH_RESULT2_FTDF_REG_MSK_GAIN_UPPER_RD_Msk (0xfc0UL) /*!< PLLDIG RF_SYNTH_RESULT2_FTDF_REG: MSK_GAIN_UPPER_RD (Bitfield-Mask: 0x3f) */
+#define PLLDIG_RF_SYNTH_RESULT2_FTDF_REG_MSK_GAIN_RD_Pos (0UL)          /*!< PLLDIG RF_SYNTH_RESULT2_FTDF_REG: MSK_GAIN_RD (Bit 0)       */
+#define PLLDIG_RF_SYNTH_RESULT2_FTDF_REG_MSK_GAIN_RD_Msk (0xffUL)       /*!< PLLDIG RF_SYNTH_RESULT2_FTDF_REG: MSK_GAIN_RD (Bitfield-Mask: 0xff) */
 
 /* ----------------------  PLLDIG_RF_SYNTH_RESULT3_FTDF_REG  ---------------------- */
 #define PLLDIG_RF_SYNTH_RESULT3_FTDF_REG_CN_CAL_FTDF_RD_Pos (0UL)       /*!< PLLDIG RF_SYNTH_RESULT3_FTDF_REG: CN_CAL_FTDF_RD (Bit 0)    */
@@ -8907,6 +9128,12 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 /* ----------------------------  PLLDIG_RF_CALCAP2_REG  --------------------------- */
 #define PLLDIG_RF_CALCAP2_REG_VCO_CALCAP_HIGH_Pos (0UL)                 /*!< PLLDIG RF_CALCAP2_REG: VCO_CALCAP_HIGH (Bit 0)              */
 #define PLLDIG_RF_CALCAP2_REG_VCO_CALCAP_HIGH_Msk (0x3UL)               /*!< PLLDIG RF_CALCAP2_REG: VCO_CALCAP_HIGH (Bitfield-Mask: 0x03) */
+
+/* --------------------------  PLLDIG_RF_NMD_OFFSET_REG  -------------------------- */
+#define PLLDIG_RF_NMD_OFFSET_REG_NMD_OFFSET_XTAL16M_Pos (0UL)           /*!< PLLDIG RF_NMD_OFFSET_REG: NMD_OFFSET_XTAL16M (Bit 0)        */
+#define PLLDIG_RF_NMD_OFFSET_REG_NMD_OFFSET_XTAL16M_Msk (0xffUL)        /*!< PLLDIG RF_NMD_OFFSET_REG: NMD_OFFSET_XTAL16M (Bitfield-Mask: 0xff) */
+#define PLLDIG_RF_NMD_OFFSET_REG_NMD_OFFSET_PLL96M_Pos (8UL)            /*!< PLLDIG RF_NMD_OFFSET_REG: NMD_OFFSET_PLL96M (Bit 8)         */
+#define PLLDIG_RF_NMD_OFFSET_REG_NMD_OFFSET_PLL96M_Msk (0xff00UL)       /*!< PLLDIG RF_NMD_OFFSET_REG: NMD_OFFSET_PLL96M (Bitfield-Mask: 0xff) */
 
 /* -------------------------  PLLDIG_RF_FTDF_PHYATTR_REG  ------------------------- */
 #define PLLDIG_RF_FTDF_PHYATTR_REG_FTDF_PHYATTR_Pos (0UL)               /*!< PLLDIG RF_FTDF_PHYATTR_REG: FTDF_PHYATTR (Bit 0)            */
@@ -8928,31 +9155,35 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define PLLDIG_RF_CALTRIM_STEP4_REG_MDSTATE_RD_Pos (0UL)                /*!< PLLDIG RF_CALTRIM_STEP4_REG: MDSTATE_RD (Bit 0)             */
 #define PLLDIG_RF_CALTRIM_STEP4_REG_MDSTATE_RD_Msk (0xffffUL)           /*!< PLLDIG RF_CALTRIM_STEP4_REG: MDSTATE_RD (Bitfield-Mask: 0xffff) */
 
-/* -------------------------  PLLDIG_RF_MSKMOD_CTRL1_REG  ------------------------- */
-#define PLLDIG_RF_MSKMOD_CTRL1_REG_TX_DAC_DELAY_Pos (0UL)               /*!< PLLDIG RF_MSKMOD_CTRL1_REG: TX_DAC_DELAY (Bit 0)            */
-#define PLLDIG_RF_MSKMOD_CTRL1_REG_TX_DAC_DELAY_Msk (0x3UL)             /*!< PLLDIG RF_MSKMOD_CTRL1_REG: TX_DAC_DELAY (Bitfield-Mask: 0x03) */
-#define PLLDIG_RF_MSKMOD_CTRL1_REG_INV_DAC_POL_Pos (2UL)                /*!< PLLDIG RF_MSKMOD_CTRL1_REG: INV_DAC_POL (Bit 2)             */
-#define PLLDIG_RF_MSKMOD_CTRL1_REG_INV_DAC_POL_Msk (0x4UL)              /*!< PLLDIG RF_MSKMOD_CTRL1_REG: INV_DAC_POL (Bitfield-Mask: 0x01) */
-#define PLLDIG_RF_MSKMOD_CTRL1_REG_INV_SDM_POL_Pos (3UL)                /*!< PLLDIG RF_MSKMOD_CTRL1_REG: INV_SDM_POL (Bit 3)             */
-#define PLLDIG_RF_MSKMOD_CTRL1_REG_INV_SDM_POL_Msk (0x8UL)              /*!< PLLDIG RF_MSKMOD_CTRL1_REG: INV_SDM_POL (Bitfield-Mask: 0x01) */
-#define PLLDIG_RF_MSKMOD_CTRL1_REG_DISABLE_DAC_Pos (4UL)                /*!< PLLDIG RF_MSKMOD_CTRL1_REG: DISABLE_DAC (Bit 4)             */
-#define PLLDIG_RF_MSKMOD_CTRL1_REG_DISABLE_DAC_Msk (0x10UL)             /*!< PLLDIG RF_MSKMOD_CTRL1_REG: DISABLE_DAC (Bitfield-Mask: 0x01) */
-#define PLLDIG_RF_MSKMOD_CTRL1_REG_DISABLE_SDM_Pos (5UL)                /*!< PLLDIG RF_MSKMOD_CTRL1_REG: DISABLE_SDM (Bit 5)             */
-#define PLLDIG_RF_MSKMOD_CTRL1_REG_DISABLE_SDM_Msk (0x20UL)             /*!< PLLDIG RF_MSKMOD_CTRL1_REG: DISABLE_SDM (Bitfield-Mask: 0x01) */
-#define PLLDIG_RF_MSKMOD_CTRL1_REG_TX_MOD_FROM_GPIO_Pos (6UL)           /*!< PLLDIG RF_MSKMOD_CTRL1_REG: TX_MOD_FROM_GPIO (Bit 6)        */
-#define PLLDIG_RF_MSKMOD_CTRL1_REG_TX_MOD_FROM_GPIO_Msk (0x40UL)        /*!< PLLDIG RF_MSKMOD_CTRL1_REG: TX_MOD_FROM_GPIO (Bitfield-Mask: 0x01) */
-#define PLLDIG_RF_MSKMOD_CTRL1_REG_MSK_BYPASS_PHASE_Pos (7UL)           /*!< PLLDIG RF_MSKMOD_CTRL1_REG: MSK_BYPASS_PHASE (Bit 7)        */
-#define PLLDIG_RF_MSKMOD_CTRL1_REG_MSK_BYPASS_PHASE_Msk (0x80UL)        /*!< PLLDIG RF_MSKMOD_CTRL1_REG: MSK_BYPASS_PHASE (Bitfield-Mask: 0x01) */
+/* --------------------------  PLLDIG_RF_MGAIN_CTRL3_REG  ------------------------- */
+#define PLLDIG_RF_MGAIN_CTRL3_REG_GFSK_GAIN_OFFSET_Pos (0UL)            /*!< PLLDIG RF_MGAIN_CTRL3_REG: GFSK_GAIN_OFFSET (Bit 0)         */
+#define PLLDIG_RF_MGAIN_CTRL3_REG_GFSK_GAIN_OFFSET_Msk (0xffUL)         /*!< PLLDIG RF_MGAIN_CTRL3_REG: GFSK_GAIN_OFFSET (Bitfield-Mask: 0xff) */
 
-/* -------------------------  PLLDIG_RF_MSKMOD_CTRL2_REG  ------------------------- */
-#define PLLDIG_RF_MSKMOD_CTRL2_REG_TX_DATA_Pos (0UL)                    /*!< PLLDIG RF_MSKMOD_CTRL2_REG: TX_DATA (Bit 0)                 */
-#define PLLDIG_RF_MSKMOD_CTRL2_REG_TX_DATA_Msk (0xfUL)                  /*!< PLLDIG RF_MSKMOD_CTRL2_REG: TX_DATA (Bitfield-Mask: 0x0f)   */
-#define PLLDIG_RF_MSKMOD_CTRL2_REG_TX_VALID_Pos (4UL)                   /*!< PLLDIG RF_MSKMOD_CTRL2_REG: TX_VALID (Bit 4)                */
-#define PLLDIG_RF_MSKMOD_CTRL2_REG_TX_VALID_Msk (0x10UL)                /*!< PLLDIG RF_MSKMOD_CTRL2_REG: TX_VALID (Bitfield-Mask: 0x01)  */
-#define PLLDIG_RF_MSKMOD_CTRL2_REG_MSK_TX_SEL_Pos (5UL)                 /*!< PLLDIG RF_MSKMOD_CTRL2_REG: MSK_TX_SEL (Bit 5)              */
-#define PLLDIG_RF_MSKMOD_CTRL2_REG_MSK_TX_SEL_Msk (0x20UL)              /*!< PLLDIG RF_MSKMOD_CTRL2_REG: MSK_TX_SEL (Bitfield-Mask: 0x01) */
-#define PLLDIG_RF_MSKMOD_CTRL2_REG_MSK_ALW_EN_Pos (6UL)                 /*!< PLLDIG RF_MSKMOD_CTRL2_REG: MSK_ALW_EN (Bit 6)              */
-#define PLLDIG_RF_MSKMOD_CTRL2_REG_MSK_ALW_EN_Msk (0x40UL)              /*!< PLLDIG RF_MSKMOD_CTRL2_REG: MSK_ALW_EN (Bitfield-Mask: 0x01) */
+/* -------------------------  PLLDIG_RF_VCO_FREQ_EST_REG  ------------------------- */
+#define PLLDIG_RF_VCO_FREQ_EST_REG_VCO_FREQ_EST_EN_Pos (0UL)            /*!< PLLDIG RF_VCO_FREQ_EST_REG: VCO_FREQ_EST_EN (Bit 0)         */
+#define PLLDIG_RF_VCO_FREQ_EST_REG_VCO_FREQ_EST_EN_Msk (0x1UL)          /*!< PLLDIG RF_VCO_FREQ_EST_REG: VCO_FREQ_EST_EN (Bitfield-Mask: 0x01) */
+#define PLLDIG_RF_VCO_FREQ_EST_REG_VCO_FREQ_EST_LEN_Pos (1UL)           /*!< PLLDIG RF_VCO_FREQ_EST_REG: VCO_FREQ_EST_LEN (Bit 1)        */
+#define PLLDIG_RF_VCO_FREQ_EST_REG_VCO_FREQ_EST_LEN_Msk (0xfeUL)        /*!< PLLDIG RF_VCO_FREQ_EST_REG: VCO_FREQ_EST_LEN (Bitfield-Mask: 0x7f) */
+#define PLLDIG_RF_VCO_FREQ_EST_REG_VCO_FREQ_EST_UPPER_RD_Pos (8UL)      /*!< PLLDIG RF_VCO_FREQ_EST_REG: VCO_FREQ_EST_UPPER_RD (Bit 8)   */
+#define PLLDIG_RF_VCO_FREQ_EST_REG_VCO_FREQ_EST_UPPER_RD_Msk (0x700UL)  /*!< PLLDIG RF_VCO_FREQ_EST_REG: VCO_FREQ_EST_UPPER_RD (Bitfield-Mask: 0x07) */
+
+/* --------------------------  PLLDIG_RF_SYNTH_SPARE_REG  ------------------------- */
+#define PLLDIG_RF_SYNTH_SPARE_REG_SPARE_Pos   (0UL)                     /*!< PLLDIG RF_SYNTH_SPARE_REG: SPARE (Bit 0)                    */
+#define PLLDIG_RF_SYNTH_SPARE_REG_SPARE_Msk   (0xffUL)                  /*!< PLLDIG RF_SYNTH_SPARE_REG: SPARE (Bitfield-Mask: 0xff)      */
+
+/* -------------------------  PLLDIG_RF_MSKMOD_CTRL1_REG  ------------------------- */
+#define PLLDIG_RF_MSKMOD_CTRL1_REG_TX_DATA_Pos (0UL)                    /*!< PLLDIG RF_MSKMOD_CTRL1_REG: TX_DATA (Bit 0)                 */
+#define PLLDIG_RF_MSKMOD_CTRL1_REG_TX_DATA_Msk (0xfUL)                  /*!< PLLDIG RF_MSKMOD_CTRL1_REG: TX_DATA (Bitfield-Mask: 0x0f)   */
+#define PLLDIG_RF_MSKMOD_CTRL1_REG_TX_VALID_Pos (4UL)                   /*!< PLLDIG RF_MSKMOD_CTRL1_REG: TX_VALID (Bit 4)                */
+#define PLLDIG_RF_MSKMOD_CTRL1_REG_TX_VALID_Msk (0x10UL)                /*!< PLLDIG RF_MSKMOD_CTRL1_REG: TX_VALID (Bitfield-Mask: 0x01)  */
+#define PLLDIG_RF_MSKMOD_CTRL1_REG_MSK_TX_SEL_Pos (5UL)                 /*!< PLLDIG RF_MSKMOD_CTRL1_REG: MSK_TX_SEL (Bit 5)              */
+#define PLLDIG_RF_MSKMOD_CTRL1_REG_MSK_TX_SEL_Msk (0x20UL)              /*!< PLLDIG RF_MSKMOD_CTRL1_REG: MSK_TX_SEL (Bitfield-Mask: 0x01) */
+#define PLLDIG_RF_MSKMOD_CTRL1_REG_MSK_ALW_EN_Pos (6UL)                 /*!< PLLDIG RF_MSKMOD_CTRL1_REG: MSK_ALW_EN (Bit 6)              */
+#define PLLDIG_RF_MSKMOD_CTRL1_REG_MSK_ALW_EN_Msk (0x40UL)              /*!< PLLDIG RF_MSKMOD_CTRL1_REG: MSK_ALW_EN (Bitfield-Mask: 0x01) */
+#define PLLDIG_RF_MSKMOD_CTRL1_REG_TX_MOD_FROM_GPIO_Pos (7UL)           /*!< PLLDIG RF_MSKMOD_CTRL1_REG: TX_MOD_FROM_GPIO (Bit 7)        */
+#define PLLDIG_RF_MSKMOD_CTRL1_REG_TX_MOD_FROM_GPIO_Msk (0x80UL)        /*!< PLLDIG RF_MSKMOD_CTRL1_REG: TX_MOD_FROM_GPIO (Bitfield-Mask: 0x01) */
+#define PLLDIG_RF_MSKMOD_CTRL1_REG_MSK_BYPASS_PHASE_Pos (8UL)           /*!< PLLDIG RF_MSKMOD_CTRL1_REG: MSK_BYPASS_PHASE (Bit 8)        */
+#define PLLDIG_RF_MSKMOD_CTRL1_REG_MSK_BYPASS_PHASE_Msk (0x100UL)       /*!< PLLDIG RF_MSKMOD_CTRL1_REG: MSK_BYPASS_PHASE (Bitfield-Mask: 0x01) */
 
 /* -------------------------  PLLDIG_RF_MSKMOD_CHIPL_REG  ------------------------- */
 #define PLLDIG_RF_MSKMOD_CHIPL_REG_MSK_CHIPL_Pos (0UL)                  /*!< PLLDIG RF_MSKMOD_CHIPL_REG: MSK_CHIPL (Bit 0)               */
@@ -8961,6 +9192,12 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 /* -------------------------  PLLDIG_RF_MSKMOD_CHIPH_REG  ------------------------- */
 #define PLLDIG_RF_MSKMOD_CHIPH_REG_MSK_CHIPH_Pos (0UL)                  /*!< PLLDIG RF_MSKMOD_CHIPH_REG: MSK_CHIPH (Bit 0)               */
 #define PLLDIG_RF_MSKMOD_CHIPH_REG_MSK_CHIPH_Msk (0xffffUL)             /*!< PLLDIG RF_MSKMOD_CHIPH_REG: MSK_CHIPH (Bitfield-Mask: 0xffff) */
+
+/* --------------------------  PLLDIG_RF_TXDAC_TEST_REG  -------------------------- */
+#define PLLDIG_RF_TXDAC_TEST_REG_RF_TXDAC_TEST_WR_Pos (0UL)             /*!< PLLDIG RF_TXDAC_TEST_REG: RF_TXDAC_TEST_WR (Bit 0)          */
+#define PLLDIG_RF_TXDAC_TEST_REG_RF_TXDAC_TEST_WR_Msk (0xffUL)          /*!< PLLDIG RF_TXDAC_TEST_REG: RF_TXDAC_TEST_WR (Bitfield-Mask: 0xff) */
+#define PLLDIG_RF_TXDAC_TEST_REG_RF_TXDAC_TEST_SEL_Pos (8UL)            /*!< PLLDIG RF_TXDAC_TEST_REG: RF_TXDAC_TEST_SEL (Bit 8)         */
+#define PLLDIG_RF_TXDAC_TEST_REG_RF_TXDAC_TEST_SEL_Msk (0x100UL)        /*!< PLLDIG RF_TXDAC_TEST_REG: RF_TXDAC_TEST_SEL (Bitfield-Mask: 0x01) */
 
 /* ------------------------  PLLDIG_RF_MGAIN_COMP_VAL0_REG  ----------------------- */
 #define PLLDIG_RF_MGAIN_COMP_VAL0_REG_MGAIN_COMP_VAL_Pos (0UL)          /*!< PLLDIG RF_MGAIN_COMP_VAL0_REG: MGAIN_COMP_VAL (Bit 0)       */
@@ -8989,6 +9226,52 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 /* ------------------------  PLLDIG_RF_MGAIN_COMP_VAL6_REG  ----------------------- */
 #define PLLDIG_RF_MGAIN_COMP_VAL6_REG_MGAIN_COMP_VAL_Pos (0UL)          /*!< PLLDIG RF_MGAIN_COMP_VAL6_REG: MGAIN_COMP_VAL (Bit 0)       */
 #define PLLDIG_RF_MGAIN_COMP_VAL6_REG_MGAIN_COMP_VAL_Msk (0x1fUL)       /*!< PLLDIG RF_MGAIN_COMP_VAL6_REG: MGAIN_COMP_VAL (Bitfield-Mask: 0x1f) */
+
+/* ------------------------  PLLDIG_RF_MGAIN_COMP_VAL7_REG  ----------------------- */
+#define PLLDIG_RF_MGAIN_COMP_VAL7_REG_MGAIN_COMP_VAL_Pos (0UL)          /*!< PLLDIG RF_MGAIN_COMP_VAL7_REG: MGAIN_COMP_VAL (Bit 0)       */
+#define PLLDIG_RF_MGAIN_COMP_VAL7_REG_MGAIN_COMP_VAL_Msk (0x1fUL)       /*!< PLLDIG RF_MGAIN_COMP_VAL7_REG: MGAIN_COMP_VAL (Bitfield-Mask: 0x1f) */
+
+/* --------------------------  PLLDIG_RF_PULSE_TBL_0_REG  ------------------------- */
+#define PLLDIG_RF_PULSE_TBL_0_REG_FTDF_PULSE_VAL_Pos (0UL)              /*!< PLLDIG RF_PULSE_TBL_0_REG: FTDF_PULSE_VAL (Bit 0)           */
+#define PLLDIG_RF_PULSE_TBL_0_REG_FTDF_PULSE_VAL_Msk (0x7ffUL)          /*!< PLLDIG RF_PULSE_TBL_0_REG: FTDF_PULSE_VAL (Bitfield-Mask: 0x7ff) */
+
+/* --------------------------  PLLDIG_RF_PULSE_TBL_1_REG  ------------------------- */
+#define PLLDIG_RF_PULSE_TBL_1_REG_FTDF_PULSE_VAL_Pos (0UL)              /*!< PLLDIG RF_PULSE_TBL_1_REG: FTDF_PULSE_VAL (Bit 0)           */
+#define PLLDIG_RF_PULSE_TBL_1_REG_FTDF_PULSE_VAL_Msk (0x7ffUL)          /*!< PLLDIG RF_PULSE_TBL_1_REG: FTDF_PULSE_VAL (Bitfield-Mask: 0x7ff) */
+
+/* --------------------------  PLLDIG_RF_PULSE_TBL_2_REG  ------------------------- */
+#define PLLDIG_RF_PULSE_TBL_2_REG_FTDF_PULSE_VAL_Pos (0UL)              /*!< PLLDIG RF_PULSE_TBL_2_REG: FTDF_PULSE_VAL (Bit 0)           */
+#define PLLDIG_RF_PULSE_TBL_2_REG_FTDF_PULSE_VAL_Msk (0x7ffUL)          /*!< PLLDIG RF_PULSE_TBL_2_REG: FTDF_PULSE_VAL (Bitfield-Mask: 0x7ff) */
+
+/* --------------------------  PLLDIG_RF_PULSE_TBL_3_REG  ------------------------- */
+#define PLLDIG_RF_PULSE_TBL_3_REG_FTDF_PULSE_VAL_Pos (0UL)              /*!< PLLDIG RF_PULSE_TBL_3_REG: FTDF_PULSE_VAL (Bit 0)           */
+#define PLLDIG_RF_PULSE_TBL_3_REG_FTDF_PULSE_VAL_Msk (0x7ffUL)          /*!< PLLDIG RF_PULSE_TBL_3_REG: FTDF_PULSE_VAL (Bitfield-Mask: 0x7ff) */
+
+/* --------------------------  PLLDIG_RF_PULSE_TBL_4_REG  ------------------------- */
+#define PLLDIG_RF_PULSE_TBL_4_REG_FTDF_PULSE_VAL_Pos (0UL)              /*!< PLLDIG RF_PULSE_TBL_4_REG: FTDF_PULSE_VAL (Bit 0)           */
+#define PLLDIG_RF_PULSE_TBL_4_REG_FTDF_PULSE_VAL_Msk (0x7ffUL)          /*!< PLLDIG RF_PULSE_TBL_4_REG: FTDF_PULSE_VAL (Bitfield-Mask: 0x7ff) */
+
+/* --------------------------  PLLDIG_RF_PULSE_TBL_5_REG  ------------------------- */
+#define PLLDIG_RF_PULSE_TBL_5_REG_FTDF_PULSE_VAL_Pos (0UL)              /*!< PLLDIG RF_PULSE_TBL_5_REG: FTDF_PULSE_VAL (Bit 0)           */
+#define PLLDIG_RF_PULSE_TBL_5_REG_FTDF_PULSE_VAL_Msk (0x7ffUL)          /*!< PLLDIG RF_PULSE_TBL_5_REG: FTDF_PULSE_VAL (Bitfield-Mask: 0x7ff) */
+
+/* --------------------------  PLLDIG_RF_PULSE_TBL_6_REG  ------------------------- */
+#define PLLDIG_RF_PULSE_TBL_6_REG_FTDF_PULSE_VAL_Pos (0UL)              /*!< PLLDIG RF_PULSE_TBL_6_REG: FTDF_PULSE_VAL (Bit 0)           */
+#define PLLDIG_RF_PULSE_TBL_6_REG_FTDF_PULSE_VAL_Msk (0x7ffUL)          /*!< PLLDIG RF_PULSE_TBL_6_REG: FTDF_PULSE_VAL (Bitfield-Mask: 0x7ff) */
+
+/* --------------------------  PLLDIG_RF_PULSE_TBL_7_REG  ------------------------- */
+#define PLLDIG_RF_PULSE_TBL_7_REG_FTDF_PULSE_VAL_Pos (0UL)              /*!< PLLDIG RF_PULSE_TBL_7_REG: FTDF_PULSE_VAL (Bit 0)           */
+#define PLLDIG_RF_PULSE_TBL_7_REG_FTDF_PULSE_VAL_Msk (0x7ffUL)          /*!< PLLDIG RF_PULSE_TBL_7_REG: FTDF_PULSE_VAL (Bitfield-Mask: 0x7ff) */
+
+/* --------------------------  PLLDIG_RF_PULSE_CTRL_REG  -------------------------- */
+#define PLLDIG_RF_PULSE_CTRL_REG_FTDF_PULSE_SEL_Pos (0UL)               /*!< PLLDIG RF_PULSE_CTRL_REG: FTDF_PULSE_SEL (Bit 0)            */
+#define PLLDIG_RF_PULSE_CTRL_REG_FTDF_PULSE_SEL_Msk (0x1UL)             /*!< PLLDIG RF_PULSE_CTRL_REG: FTDF_PULSE_SEL (Bitfield-Mask: 0x01) */
+#define PLLDIG_RF_PULSE_CTRL_REG_FTDF_PULSE_GATE_Pos (1UL)              /*!< PLLDIG RF_PULSE_CTRL_REG: FTDF_PULSE_GATE (Bit 1)           */
+#define PLLDIG_RF_PULSE_CTRL_REG_FTDF_PULSE_GATE_Msk (0x6UL)            /*!< PLLDIG RF_PULSE_CTRL_REG: FTDF_PULSE_GATE (Bitfield-Mask: 0x03) */
+#define PLLDIG_RF_PULSE_CTRL_REG_FTDF_LOWPASS_EN_Pos (3UL)              /*!< PLLDIG RF_PULSE_CTRL_REG: FTDF_LOWPASS_EN (Bit 3)           */
+#define PLLDIG_RF_PULSE_CTRL_REG_FTDF_LOWPASS_EN_Msk (0x8UL)            /*!< PLLDIG RF_PULSE_CTRL_REG: FTDF_LOWPASS_EN (Bitfield-Mask: 0x01) */
+#define PLLDIG_RF_PULSE_CTRL_REG_FTDF_PULSE_GAIN_Pos (4UL)              /*!< PLLDIG RF_PULSE_CTRL_REG: FTDF_PULSE_GAIN (Bit 4)           */
+#define PLLDIG_RF_PULSE_CTRL_REG_FTDF_PULSE_GAIN_Msk (0xf0UL)           /*!< PLLDIG RF_PULSE_CTRL_REG: FTDF_PULSE_GAIN (Bitfield-Mask: 0x0f) */
 
 
 /* ================================================================================ */
@@ -9278,6 +9561,10 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define RFCU_RF_DIAGIRQ_STAT_REG_DIAGIRQ_STAT_3_Pos (3UL)               /*!< RFCU RF_DIAGIRQ_STAT_REG: DIAGIRQ_STAT_3 (Bit 3)            */
 #define RFCU_RF_DIAGIRQ_STAT_REG_DIAGIRQ_STAT_3_Msk (0x8UL)             /*!< RFCU RF_DIAGIRQ_STAT_REG: DIAGIRQ_STAT_3 (Bitfield-Mask: 0x01) */
 
+/* --------------------------  RFCU_RF_AGC_EXT1_LUT_REG  -------------------------- */
+#define RFCU_RF_AGC_EXT1_LUT_REG_AGC_EXT_LUT_Pos (0UL)                  /*!< RFCU RF_AGC_EXT1_LUT_REG: AGC_EXT_LUT (Bit 0)               */
+#define RFCU_RF_AGC_EXT1_LUT_REG_AGC_EXT_LUT_Msk (0x3ffUL)              /*!< RFCU RF_AGC_EXT1_LUT_REG: AGC_EXT_LUT (Bitfield-Mask: 0x3ff) */
+
 /* ----------------------------  RFCU_RF_CALSTATE_REG  ---------------------------- */
 #define RFCU_RF_CALSTATE_REG_CALSTATE_Pos     (0UL)                     /*!< RFCU RF_CALSTATE_REG: CALSTATE (Bit 0)                      */
 #define RFCU_RF_CALSTATE_REG_CALSTATE_Msk     (0xfUL)                   /*!< RFCU RF_CALSTATE_REG: CALSTATE (Bitfield-Mask: 0x0f)        */
@@ -9337,10 +9624,12 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define RFCU_RF_SPARE1_BLE_REG_RF_XTAL_PLL_DXTAL16_TEST_Msk (0x2UL)     /*!< RFCU RF_SPARE1_BLE_REG: RF_XTAL_PLL_DXTAL16_TEST (Bitfield-Mask: 0x01) */
 #define RFCU_RF_SPARE1_BLE_REG_RF_VTUNE_TO_ADC_TEST_EN_Pos (2UL)        /*!< RFCU RF_SPARE1_BLE_REG: RF_VTUNE_TO_ADC_TEST_EN (Bit 2)     */
 #define RFCU_RF_SPARE1_BLE_REG_RF_VTUNE_TO_ADC_TEST_EN_Msk (0x4UL)      /*!< RFCU RF_SPARE1_BLE_REG: RF_VTUNE_TO_ADC_TEST_EN (Bitfield-Mask: 0x01) */
-#define RFCU_RF_SPARE1_BLE_REG_RFCU_TXRX_EN_OLD_Pos (7UL)               /*!< RFCU RF_SPARE1_BLE_REG: RFCU_TXRX_EN_OLD (Bit 7)            */
-#define RFCU_RF_SPARE1_BLE_REG_RFCU_TXRX_EN_OLD_Msk (0x80UL)            /*!< RFCU RF_SPARE1_BLE_REG: RFCU_TXRX_EN_OLD (Bitfield-Mask: 0x01) */
-#define RFCU_RF_SPARE1_BLE_REG_VCO_AMPL_SET_TX_Pos (8UL)                /*!< RFCU RF_SPARE1_BLE_REG: VCO_AMPL_SET_TX (Bit 8)             */
-#define RFCU_RF_SPARE1_BLE_REG_VCO_AMPL_SET_TX_Msk (0xff00UL)           /*!< RFCU RF_SPARE1_BLE_REG: VCO_AMPL_SET_TX (Bitfield-Mask: 0xff) */
+#define RFCU_RF_SPARE1_BLE_REG_RF_TXDAC_CLK_POL_SEL_Pos (3UL)           /*!< RFCU RF_SPARE1_BLE_REG: RF_TXDAC_CLK_POL_SEL (Bit 3)        */
+#define RFCU_RF_SPARE1_BLE_REG_RF_TXDAC_CLK_POL_SEL_Msk (0x8UL)         /*!< RFCU RF_SPARE1_BLE_REG: RF_TXDAC_CLK_POL_SEL (Bitfield-Mask: 0x01) */
+#define RFCU_RF_SPARE1_BLE_REG_RF_GDAC_CUR_SET_Pos (4UL)                /*!< RFCU RF_SPARE1_BLE_REG: RF_GDAC_CUR_SET (Bit 4)             */
+#define RFCU_RF_SPARE1_BLE_REG_RF_GDAC_CUR_SET_Msk (0x30UL)             /*!< RFCU RF_SPARE1_BLE_REG: RF_GDAC_CUR_SET (Bitfield-Mask: 0x03) */
+#define RFCU_RF_SPARE1_BLE_REG_RF_SPARE_REG_Pos (6UL)                   /*!< RFCU RF_SPARE1_BLE_REG: RF_SPARE_REG (Bit 6)                */
+#define RFCU_RF_SPARE1_BLE_REG_RF_SPARE_REG_Msk (0xffc0UL)              /*!< RFCU RF_SPARE1_BLE_REG: RF_SPARE_REG (Bitfield-Mask: 0x3ff) */
 
 /* ---------------------------  RFCU_RF_SPARE1_FTDF_REG  -------------------------- */
 #define RFCU_RF_SPARE1_FTDF_REG_RF_XTAL_RFCLK_TEST_Pos (0UL)            /*!< RFCU RF_SPARE1_FTDF_REG: RF_XTAL_RFCLK_TEST (Bit 0)         */
@@ -9349,14 +9638,12 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define RFCU_RF_SPARE1_FTDF_REG_RF_XTAL_PLL_DXTAL16_TEST_Msk (0x2UL)    /*!< RFCU RF_SPARE1_FTDF_REG: RF_XTAL_PLL_DXTAL16_TEST (Bitfield-Mask: 0x01) */
 #define RFCU_RF_SPARE1_FTDF_REG_RF_VTUNE_TO_ADC_TEST_EN_Pos (2UL)       /*!< RFCU RF_SPARE1_FTDF_REG: RF_VTUNE_TO_ADC_TEST_EN (Bit 2)    */
 #define RFCU_RF_SPARE1_FTDF_REG_RF_VTUNE_TO_ADC_TEST_EN_Msk (0x4UL)     /*!< RFCU RF_SPARE1_FTDF_REG: RF_VTUNE_TO_ADC_TEST_EN (Bitfield-Mask: 0x01) */
-#define RFCU_RF_SPARE1_FTDF_REG_DEM_AFC_ACTIVATION_MODE_Pos (11UL)      /*!< RFCU RF_SPARE1_FTDF_REG: DEM_AFC_ACTIVATION_MODE (Bit 11)   */
-#define RFCU_RF_SPARE1_FTDF_REG_DEM_AFC_ACTIVATION_MODE_Msk (0x800UL)   /*!< RFCU RF_SPARE1_FTDF_REG: DEM_AFC_ACTIVATION_MODE (Bitfield-Mask: 0x01) */
-#define RFCU_RF_SPARE1_FTDF_REG_VCO_COARSECAL_DELAY_Pos (12UL)          /*!< RFCU RF_SPARE1_FTDF_REG: VCO_COARSECAL_DELAY (Bit 12)       */
-#define RFCU_RF_SPARE1_FTDF_REG_VCO_COARSECAL_DELAY_Msk (0x3000UL)      /*!< RFCU RF_SPARE1_FTDF_REG: VCO_COARSECAL_DELAY (Bitfield-Mask: 0x03) */
-#define RFCU_RF_SPARE1_FTDF_REG_DEM_PAD_WRAP_Pos (14UL)                 /*!< RFCU RF_SPARE1_FTDF_REG: DEM_PAD_WRAP (Bit 14)              */
-#define RFCU_RF_SPARE1_FTDF_REG_DEM_PAD_WRAP_Msk (0x4000UL)             /*!< RFCU RF_SPARE1_FTDF_REG: DEM_PAD_WRAP (Bitfield-Mask: 0x01) */
-#define RFCU_RF_SPARE1_FTDF_REG_DEM_PAD_SAT_TO_ZERO_Pos (15UL)          /*!< RFCU RF_SPARE1_FTDF_REG: DEM_PAD_SAT_TO_ZERO (Bit 15)       */
-#define RFCU_RF_SPARE1_FTDF_REG_DEM_PAD_SAT_TO_ZERO_Msk (0x8000UL)      /*!< RFCU RF_SPARE1_FTDF_REG: DEM_PAD_SAT_TO_ZERO (Bitfield-Mask: 0x01) */
+#define RFCU_RF_SPARE1_FTDF_REG_RF_TXDAC_CLK_POL_SEL_Pos (3UL)          /*!< RFCU RF_SPARE1_FTDF_REG: RF_TXDAC_CLK_POL_SEL (Bit 3)       */
+#define RFCU_RF_SPARE1_FTDF_REG_RF_TXDAC_CLK_POL_SEL_Msk (0x8UL)        /*!< RFCU RF_SPARE1_FTDF_REG: RF_TXDAC_CLK_POL_SEL (Bitfield-Mask: 0x01) */
+#define RFCU_RF_SPARE1_FTDF_REG_RF_GDAC_CUR_SET_Pos (4UL)               /*!< RFCU RF_SPARE1_FTDF_REG: RF_GDAC_CUR_SET (Bit 4)            */
+#define RFCU_RF_SPARE1_FTDF_REG_RF_GDAC_CUR_SET_Msk (0x30UL)            /*!< RFCU RF_SPARE1_FTDF_REG: RF_GDAC_CUR_SET (Bitfield-Mask: 0x03) */
+#define RFCU_RF_SPARE1_FTDF_REG_RF_SPARE_REG_Pos (6UL)                  /*!< RFCU RF_SPARE1_FTDF_REG: RF_SPARE_REG (Bit 6)               */
+#define RFCU_RF_SPARE1_FTDF_REG_RF_SPARE_REG_Msk (0xffc0UL)             /*!< RFCU RF_SPARE1_FTDF_REG: RF_SPARE_REG (Bitfield-Mask: 0x3ff) */
 
 /* -------------------------  RFCU_RF_BIAS_CTRL1_BLE_REG  ------------------------- */
 #define RFCU_RF_BIAS_CTRL1_BLE_REG_MIX_BIAS_BLE_SET_Pos (0UL)           /*!< RFCU RF_BIAS_CTRL1_BLE_REG: MIX_BIAS_BLE_SET (Bit 0)        */
@@ -9415,8 +9702,12 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define RFCU_RF_ADC_CTRL3_REG_ADC_OFFN_Q_WR_Msk (0xff00UL)              /*!< RFCU RF_ADC_CTRL3_REG: ADC_OFFN_Q_WR (Bitfield-Mask: 0xff)  */
 
 /* -----------------------------  RFCU_RF_PA_CTRL_REG  ---------------------------- */
-#define RFCU_RF_PA_CTRL_REG_PA_RAMPSPEED_Pos  (5UL)                     /*!< RFCU RF_PA_CTRL_REG: PA_RAMPSPEED (Bit 5)                   */
-#define RFCU_RF_PA_CTRL_REG_PA_RAMPSPEED_Msk  (0x60UL)                  /*!< RFCU RF_PA_CTRL_REG: PA_RAMPSPEED (Bitfield-Mask: 0x03)     */
+#define RFCU_RF_PA_CTRL_REG_PA_RAMPSPEED_DOWN_Pos (5UL)                 /*!< RFCU RF_PA_CTRL_REG: PA_RAMPSPEED_DOWN (Bit 5)              */
+#define RFCU_RF_PA_CTRL_REG_PA_RAMPSPEED_DOWN_Msk (0x60UL)              /*!< RFCU RF_PA_CTRL_REG: PA_RAMPSPEED_DOWN (Bitfield-Mask: 0x03) */
+#define RFCU_RF_PA_CTRL_REG_PA_RAMPSPEED_UP_Pos (7UL)                   /*!< RFCU RF_PA_CTRL_REG: PA_RAMPSPEED_UP (Bit 7)                */
+#define RFCU_RF_PA_CTRL_REG_PA_RAMPSPEED_UP_Msk (0x180UL)               /*!< RFCU RF_PA_CTRL_REG: PA_RAMPSPEED_UP (Bitfield-Mask: 0x03)  */
+#define RFCU_RF_PA_CTRL_REG_PA_FAST_DISCHARGE_EN_Pos (9UL)              /*!< RFCU RF_PA_CTRL_REG: PA_FAST_DISCHARGE_EN (Bit 9)           */
+#define RFCU_RF_PA_CTRL_REG_PA_FAST_DISCHARGE_EN_Msk (0x200UL)          /*!< RFCU RF_PA_CTRL_REG: PA_FAST_DISCHARGE_EN (Bitfield-Mask: 0x01) */
 #define RFCU_RF_PA_CTRL_REG_LEVEL_LDO_RFPA_Pos (11UL)                   /*!< RFCU RF_PA_CTRL_REG: LEVEL_LDO_RFPA (Bit 11)                */
 #define RFCU_RF_PA_CTRL_REG_LEVEL_LDO_RFPA_Msk (0x7800UL)               /*!< RFCU RF_PA_CTRL_REG: LEVEL_LDO_RFPA (Bitfield-Mask: 0x0f)   */
 
@@ -9511,20 +9802,24 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define RFCU_RF_MIXER_CTRL1_FTDF_REG_MIX_SPARE_Msk (0xf000UL)           /*!< RFCU RF_MIXER_CTRL1_FTDF_REG: MIX_SPARE (Bitfield-Mask: 0x0f) */
 
 /* ---------------------------  RFCU_RF_MIXER_CTRL2_REG  -------------------------- */
-#define RFCU_RF_MIXER_CTRL2_REG_MIX_CAL_CAP_WR_Pos (0UL)                /*!< RFCU RF_MIXER_CTRL2_REG: MIX_CAL_CAP_WR (Bit 0)             */
-#define RFCU_RF_MIXER_CTRL2_REG_MIX_CAL_CAP_WR_Msk (0x1fUL)             /*!< RFCU RF_MIXER_CTRL2_REG: MIX_CAL_CAP_WR (Bitfield-Mask: 0x1f) */
+#define RFCU_RF_MIXER_CTRL2_REG_MIX_CAL_CAP_WR_BLE_Pos (0UL)            /*!< RFCU RF_MIXER_CTRL2_REG: MIX_CAL_CAP_WR_BLE (Bit 0)         */
+#define RFCU_RF_MIXER_CTRL2_REG_MIX_CAL_CAP_WR_BLE_Msk (0x1fUL)         /*!< RFCU RF_MIXER_CTRL2_REG: MIX_CAL_CAP_WR_BLE (Bitfield-Mask: 0x1f) */
 #define RFCU_RF_MIXER_CTRL2_REG_MIX_CAL_SELECT_Pos (5UL)                /*!< RFCU RF_MIXER_CTRL2_REG: MIX_CAL_SELECT (Bit 5)             */
 #define RFCU_RF_MIXER_CTRL2_REG_MIX_CAL_SELECT_Msk (0x20UL)             /*!< RFCU RF_MIXER_CTRL2_REG: MIX_CAL_SELECT (Bitfield-Mask: 0x01) */
+#define RFCU_RF_MIXER_CTRL2_REG_MIX_CAL_CAP_WR_FTDF_Pos (6UL)           /*!< RFCU RF_MIXER_CTRL2_REG: MIX_CAL_CAP_WR_FTDF (Bit 6)        */
+#define RFCU_RF_MIXER_CTRL2_REG_MIX_CAL_CAP_WR_FTDF_Msk (0x7c0UL)       /*!< RFCU RF_MIXER_CTRL2_REG: MIX_CAL_CAP_WR_FTDF (Bitfield-Mask: 0x1f) */
 
 /* -----------------------------  RFCU_RF_LF_CTRL_REG  ---------------------------- */
-#define RFCU_RF_LF_CTRL_REG_LF_CAL_CAP_WR_Pos (0UL)                     /*!< RFCU RF_LF_CTRL_REG: LF_CAL_CAP_WR (Bit 0)                  */
-#define RFCU_RF_LF_CTRL_REG_LF_CAL_CAP_WR_Msk (0x1fUL)                  /*!< RFCU RF_LF_CTRL_REG: LF_CAL_CAP_WR (Bitfield-Mask: 0x1f)    */
+#define RFCU_RF_LF_CTRL_REG_LF_CAL_CAP_WR_BLE_Pos (0UL)                 /*!< RFCU RF_LF_CTRL_REG: LF_CAL_CAP_WR_BLE (Bit 0)              */
+#define RFCU_RF_LF_CTRL_REG_LF_CAL_CAP_WR_BLE_Msk (0x1fUL)              /*!< RFCU RF_LF_CTRL_REG: LF_CAL_CAP_WR_BLE (Bitfield-Mask: 0x1f) */
 #define RFCU_RF_LF_CTRL_REG_LF_CAL_CAP_SEL_Pos (5UL)                    /*!< RFCU RF_LF_CTRL_REG: LF_CAL_CAP_SEL (Bit 5)                 */
 #define RFCU_RF_LF_CTRL_REG_LF_CAL_CAP_SEL_Msk (0x20UL)                 /*!< RFCU RF_LF_CTRL_REG: LF_CAL_CAP_SEL (Bitfield-Mask: 0x01)   */
 #define RFCU_RF_LF_CTRL_REG_LF_SHORT_R4_BLE_Pos (6UL)                   /*!< RFCU RF_LF_CTRL_REG: LF_SHORT_R4_BLE (Bit 6)                */
 #define RFCU_RF_LF_CTRL_REG_LF_SHORT_R4_BLE_Msk (0x40UL)                /*!< RFCU RF_LF_CTRL_REG: LF_SHORT_R4_BLE (Bitfield-Mask: 0x01)  */
 #define RFCU_RF_LF_CTRL_REG_LF_SHORT_R4_FTDF_Pos (7UL)                  /*!< RFCU RF_LF_CTRL_REG: LF_SHORT_R4_FTDF (Bit 7)               */
 #define RFCU_RF_LF_CTRL_REG_LF_SHORT_R4_FTDF_Msk (0x80UL)               /*!< RFCU RF_LF_CTRL_REG: LF_SHORT_R4_FTDF (Bitfield-Mask: 0x01) */
+#define RFCU_RF_LF_CTRL_REG_LF_CAL_CAP_WR_FTDF_Pos (8UL)                /*!< RFCU RF_LF_CTRL_REG: LF_CAL_CAP_WR_FTDF (Bit 8)             */
+#define RFCU_RF_LF_CTRL_REG_LF_CAL_CAP_WR_FTDF_Msk (0x1f00UL)           /*!< RFCU RF_LF_CTRL_REG: LF_CAL_CAP_WR_FTDF (Bitfield-Mask: 0x1f) */
 
 /* ----------------------------  RFCU_RF_TDC_CTRL_REG  ---------------------------- */
 #define RFCU_RF_TDC_CTRL_REG_CTRL_FAST_Pos    (0UL)                     /*!< RFCU RF_TDC_CTRL_REG: CTRL_FAST (Bit 0)                     */
@@ -9560,9 +9855,19 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define RFCU_RF_LNA_CTRL3_REG_LNA_TRIM_CGS_Pos (0UL)                    /*!< RFCU RF_LNA_CTRL3_REG: LNA_TRIM_CGS (Bit 0)                 */
 #define RFCU_RF_LNA_CTRL3_REG_LNA_TRIM_CGS_Msk (0x1fUL)                 /*!< RFCU RF_LNA_CTRL3_REG: LNA_TRIM_CGS (Bitfield-Mask: 0x1f)   */
 
-/* -----------------------------  RFCU_RF_TX_PWR_REG  ----------------------------- */
-#define RFCU_RF_TX_PWR_REG_TX_POWER_SET_Pos   (0UL)                     /*!< RFCU RF_TX_PWR_REG: TX_POWER_SET (Bit 0)                    */
-#define RFCU_RF_TX_PWR_REG_TX_POWER_SET_Msk   (0x7UL)                   /*!< RFCU RF_TX_PWR_REG: TX_POWER_SET (Bitfield-Mask: 0x07)      */
+/* --------------------------  RFCU_RF_VCO_AMP_CTRL1_REG  ------------------------- */
+#define RFCU_RF_VCO_AMP_CTRL1_REG_VCO_AMPL_MODE_Pos (0UL)               /*!< RFCU RF_VCO_AMP_CTRL1_REG: VCO_AMPL_MODE (Bit 0)            */
+#define RFCU_RF_VCO_AMP_CTRL1_REG_VCO_AMPL_MODE_Msk (0x7fUL)            /*!< RFCU RF_VCO_AMP_CTRL1_REG: VCO_AMPL_MODE (Bitfield-Mask: 0x7f) */
+
+/* --------------------------  RFCU_RF_VCO_AMP_CTRL2_REG  ------------------------- */
+#define RFCU_RF_VCO_AMP_CTRL2_REG_VCO_AMPL_SET_TX_Pos (0UL)             /*!< RFCU RF_VCO_AMP_CTRL2_REG: VCO_AMPL_SET_TX (Bit 0)          */
+#define RFCU_RF_VCO_AMP_CTRL2_REG_VCO_AMPL_SET_TX_Msk (0xffUL)          /*!< RFCU RF_VCO_AMP_CTRL2_REG: VCO_AMPL_SET_TX (Bitfield-Mask: 0xff) */
+#define RFCU_RF_VCO_AMP_CTRL2_REG_VCO_AMPL_SET_RX_Pos (8UL)             /*!< RFCU RF_VCO_AMP_CTRL2_REG: VCO_AMPL_SET_RX (Bit 8)          */
+#define RFCU_RF_VCO_AMP_CTRL2_REG_VCO_AMPL_SET_RX_Msk (0xff00UL)        /*!< RFCU RF_VCO_AMP_CTRL2_REG: VCO_AMPL_SET_RX (Bitfield-Mask: 0xff) */
+
+/* ---------------------------  RFCU_RF_TX_PWR_BLE_REG  --------------------------- */
+#define RFCU_RF_TX_PWR_BLE_REG_TX_POWER_SET_Pos (0UL)                   /*!< RFCU RF_TX_PWR_BLE_REG: TX_POWER_SET (Bit 0)                */
+#define RFCU_RF_TX_PWR_BLE_REG_TX_POWER_SET_Msk (0x7UL)                 /*!< RFCU RF_TX_PWR_BLE_REG: TX_POWER_SET (Bitfield-Mask: 0x07)  */
 
 /* --------------------------  RFCU_RF_TX_PWR_LUT_1_REG  -------------------------- */
 #define RFCU_RF_TX_PWR_LUT_1_REG_TX_PWR_RF_IO_CTRL1_REG_Pos (0UL)       /*!< RFCU RF_TX_PWR_LUT_1_REG: TX_PWR_RF_IO_CTRL1_REG (Bit 0)    */
@@ -9571,6 +9876,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define RFCU_RF_TX_PWR_LUT_1_REG_TX_PWR_RF_PA_CTRL_REG_Msk (0x3cUL)     /*!< RFCU RF_TX_PWR_LUT_1_REG: TX_PWR_RF_PA_CTRL_REG (Bitfield-Mask: 0x0f) */
 #define RFCU_RF_TX_PWR_LUT_1_REG_TX_PWR_RF_LNA_CTRL3_REG_Pos (6UL)      /*!< RFCU RF_TX_PWR_LUT_1_REG: TX_PWR_RF_LNA_CTRL3_REG (Bit 6)   */
 #define RFCU_RF_TX_PWR_LUT_1_REG_TX_PWR_RF_LNA_CTRL3_REG_Msk (0x7c0UL)  /*!< RFCU RF_TX_PWR_LUT_1_REG: TX_PWR_RF_LNA_CTRL3_REG (Bitfield-Mask: 0x1f) */
+#define RFCU_RF_TX_PWR_LUT_1_REG_TX_PWR_RFIO_TXRX_DCF_DIS_Pos (11UL)    /*!< RFCU RF_TX_PWR_LUT_1_REG: TX_PWR_RFIO_TXRX_DCF_DIS (Bit 11) */
+#define RFCU_RF_TX_PWR_LUT_1_REG_TX_PWR_RFIO_TXRX_DCF_DIS_Msk (0x800UL) /*!< RFCU RF_TX_PWR_LUT_1_REG: TX_PWR_RFIO_TXRX_DCF_DIS (Bitfield-Mask: 0x01) */
 
 /* --------------------------  RFCU_RF_TX_PWR_LUT_2_REG  -------------------------- */
 #define RFCU_RF_TX_PWR_LUT_2_REG_TX_PWR_RF_IO_CTRL1_REG_Pos (0UL)       /*!< RFCU RF_TX_PWR_LUT_2_REG: TX_PWR_RF_IO_CTRL1_REG (Bit 0)    */
@@ -9579,6 +9886,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define RFCU_RF_TX_PWR_LUT_2_REG_TX_PWR_RF_PA_CTRL_REG_Msk (0x3cUL)     /*!< RFCU RF_TX_PWR_LUT_2_REG: TX_PWR_RF_PA_CTRL_REG (Bitfield-Mask: 0x0f) */
 #define RFCU_RF_TX_PWR_LUT_2_REG_TX_PWR_RF_LNA_CTRL3_REG_Pos (6UL)      /*!< RFCU RF_TX_PWR_LUT_2_REG: TX_PWR_RF_LNA_CTRL3_REG (Bit 6)   */
 #define RFCU_RF_TX_PWR_LUT_2_REG_TX_PWR_RF_LNA_CTRL3_REG_Msk (0x7c0UL)  /*!< RFCU RF_TX_PWR_LUT_2_REG: TX_PWR_RF_LNA_CTRL3_REG (Bitfield-Mask: 0x1f) */
+#define RFCU_RF_TX_PWR_LUT_2_REG_TX_PWR_RFIO_TXRX_DCF_DIS_Pos (11UL)    /*!< RFCU RF_TX_PWR_LUT_2_REG: TX_PWR_RFIO_TXRX_DCF_DIS (Bit 11) */
+#define RFCU_RF_TX_PWR_LUT_2_REG_TX_PWR_RFIO_TXRX_DCF_DIS_Msk (0x800UL) /*!< RFCU RF_TX_PWR_LUT_2_REG: TX_PWR_RFIO_TXRX_DCF_DIS (Bitfield-Mask: 0x01) */
 
 /* --------------------------  RFCU_RF_TX_PWR_LUT_3_REG  -------------------------- */
 #define RFCU_RF_TX_PWR_LUT_3_REG_TX_PWR_RF_IO_CTRL1_REG_Pos (0UL)       /*!< RFCU RF_TX_PWR_LUT_3_REG: TX_PWR_RF_IO_CTRL1_REG (Bit 0)    */
@@ -9587,6 +9896,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define RFCU_RF_TX_PWR_LUT_3_REG_TX_PWR_RF_PA_CTRL_REG_Msk (0x3cUL)     /*!< RFCU RF_TX_PWR_LUT_3_REG: TX_PWR_RF_PA_CTRL_REG (Bitfield-Mask: 0x0f) */
 #define RFCU_RF_TX_PWR_LUT_3_REG_TX_PWR_RF_LNA_CTRL3_REG_Pos (6UL)      /*!< RFCU RF_TX_PWR_LUT_3_REG: TX_PWR_RF_LNA_CTRL3_REG (Bit 6)   */
 #define RFCU_RF_TX_PWR_LUT_3_REG_TX_PWR_RF_LNA_CTRL3_REG_Msk (0x7c0UL)  /*!< RFCU RF_TX_PWR_LUT_3_REG: TX_PWR_RF_LNA_CTRL3_REG (Bitfield-Mask: 0x1f) */
+#define RFCU_RF_TX_PWR_LUT_3_REG_TX_PWR_RFIO_TXRX_DCF_DIS_Pos (11UL)    /*!< RFCU RF_TX_PWR_LUT_3_REG: TX_PWR_RFIO_TXRX_DCF_DIS (Bit 11) */
+#define RFCU_RF_TX_PWR_LUT_3_REG_TX_PWR_RFIO_TXRX_DCF_DIS_Msk (0x800UL) /*!< RFCU RF_TX_PWR_LUT_3_REG: TX_PWR_RFIO_TXRX_DCF_DIS (Bitfield-Mask: 0x01) */
 
 /* --------------------------  RFCU_RF_TX_PWR_LUT_4_REG  -------------------------- */
 #define RFCU_RF_TX_PWR_LUT_4_REG_TX_PWR_RF_IO_CTRL1_REG_Pos (0UL)       /*!< RFCU RF_TX_PWR_LUT_4_REG: TX_PWR_RF_IO_CTRL1_REG (Bit 0)    */
@@ -9595,6 +9906,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define RFCU_RF_TX_PWR_LUT_4_REG_TX_PWR_RF_PA_CTRL_REG_Msk (0x3cUL)     /*!< RFCU RF_TX_PWR_LUT_4_REG: TX_PWR_RF_PA_CTRL_REG (Bitfield-Mask: 0x0f) */
 #define RFCU_RF_TX_PWR_LUT_4_REG_TX_PWR_RF_LNA_CTRL3_REG_Pos (6UL)      /*!< RFCU RF_TX_PWR_LUT_4_REG: TX_PWR_RF_LNA_CTRL3_REG (Bit 6)   */
 #define RFCU_RF_TX_PWR_LUT_4_REG_TX_PWR_RF_LNA_CTRL3_REG_Msk (0x7c0UL)  /*!< RFCU RF_TX_PWR_LUT_4_REG: TX_PWR_RF_LNA_CTRL3_REG (Bitfield-Mask: 0x1f) */
+#define RFCU_RF_TX_PWR_LUT_4_REG_TX_PWR_RFIO_TXRX_DCF_DIS_Pos (11UL)    /*!< RFCU RF_TX_PWR_LUT_4_REG: TX_PWR_RFIO_TXRX_DCF_DIS (Bit 11) */
+#define RFCU_RF_TX_PWR_LUT_4_REG_TX_PWR_RFIO_TXRX_DCF_DIS_Msk (0x800UL) /*!< RFCU RF_TX_PWR_LUT_4_REG: TX_PWR_RFIO_TXRX_DCF_DIS (Bitfield-Mask: 0x01) */
 
 /* --------------------------  RFCU_RF_TX_PWR_LUT_5_REG  -------------------------- */
 #define RFCU_RF_TX_PWR_LUT_5_REG_TX_PWR_RF_IO_CTRL1_REG_Pos (0UL)       /*!< RFCU RF_TX_PWR_LUT_5_REG: TX_PWR_RF_IO_CTRL1_REG (Bit 0)    */
@@ -9603,14 +9916,8 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define RFCU_RF_TX_PWR_LUT_5_REG_TX_PWR_RF_PA_CTRL_REG_Msk (0x3cUL)     /*!< RFCU RF_TX_PWR_LUT_5_REG: TX_PWR_RF_PA_CTRL_REG (Bitfield-Mask: 0x0f) */
 #define RFCU_RF_TX_PWR_LUT_5_REG_TX_PWR_RF_LNA_CTRL3_REG_Pos (6UL)      /*!< RFCU RF_TX_PWR_LUT_5_REG: TX_PWR_RF_LNA_CTRL3_REG (Bit 6)   */
 #define RFCU_RF_TX_PWR_LUT_5_REG_TX_PWR_RF_LNA_CTRL3_REG_Msk (0x7c0UL)  /*!< RFCU RF_TX_PWR_LUT_5_REG: TX_PWR_RF_LNA_CTRL3_REG (Bitfield-Mask: 0x1f) */
-
-/* --------------------------  RFCU_RF_TX_PWR_LUT_7_REG  -------------------------- */
-#define RFCU_RF_TX_PWR_LUT_7_REG_TX_PWR_RF_IO_CTRL1_REG_Pos (0UL)       /*!< RFCU RF_TX_PWR_LUT_7_REG: TX_PWR_RF_IO_CTRL1_REG (Bit 0)    */
-#define RFCU_RF_TX_PWR_LUT_7_REG_TX_PWR_RF_IO_CTRL1_REG_Msk (0x3UL)     /*!< RFCU RF_TX_PWR_LUT_7_REG: TX_PWR_RF_IO_CTRL1_REG (Bitfield-Mask: 0x03) */
-#define RFCU_RF_TX_PWR_LUT_7_REG_TX_PWR_RF_PA_CTRL_REG_Pos (2UL)        /*!< RFCU RF_TX_PWR_LUT_7_REG: TX_PWR_RF_PA_CTRL_REG (Bit 2)     */
-#define RFCU_RF_TX_PWR_LUT_7_REG_TX_PWR_RF_PA_CTRL_REG_Msk (0x3cUL)     /*!< RFCU RF_TX_PWR_LUT_7_REG: TX_PWR_RF_PA_CTRL_REG (Bitfield-Mask: 0x0f) */
-#define RFCU_RF_TX_PWR_LUT_7_REG_TX_PWR_RF_LNA_CTRL3_REG_Pos (6UL)      /*!< RFCU RF_TX_PWR_LUT_7_REG: TX_PWR_RF_LNA_CTRL3_REG (Bit 6)   */
-#define RFCU_RF_TX_PWR_LUT_7_REG_TX_PWR_RF_LNA_CTRL3_REG_Msk (0x7c0UL)  /*!< RFCU RF_TX_PWR_LUT_7_REG: TX_PWR_RF_LNA_CTRL3_REG (Bitfield-Mask: 0x1f) */
+#define RFCU_RF_TX_PWR_LUT_5_REG_TX_PWR_RFIO_TXRX_DCF_DIS_Pos (11UL)    /*!< RFCU RF_TX_PWR_LUT_5_REG: TX_PWR_RFIO_TXRX_DCF_DIS (Bit 11) */
+#define RFCU_RF_TX_PWR_LUT_5_REG_TX_PWR_RFIO_TXRX_DCF_DIS_Msk (0x800UL) /*!< RFCU RF_TX_PWR_LUT_5_REG: TX_PWR_RFIO_TXRX_DCF_DIS (Bitfield-Mask: 0x01) */
 
 /* --------------------------  RFCU_RF_TX_PWR_LUT_6_REG  -------------------------- */
 #define RFCU_RF_TX_PWR_LUT_6_REG_TX_PWR_RF_IO_CTRL1_REG_Pos (0UL)       /*!< RFCU RF_TX_PWR_LUT_6_REG: TX_PWR_RF_IO_CTRL1_REG (Bit 0)    */
@@ -9619,10 +9926,26 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define RFCU_RF_TX_PWR_LUT_6_REG_TX_PWR_RF_PA_CTRL_REG_Msk (0x3cUL)     /*!< RFCU RF_TX_PWR_LUT_6_REG: TX_PWR_RF_PA_CTRL_REG (Bitfield-Mask: 0x0f) */
 #define RFCU_RF_TX_PWR_LUT_6_REG_TX_PWR_RF_LNA_CTRL3_REG_Pos (6UL)      /*!< RFCU RF_TX_PWR_LUT_6_REG: TX_PWR_RF_LNA_CTRL3_REG (Bit 6)   */
 #define RFCU_RF_TX_PWR_LUT_6_REG_TX_PWR_RF_LNA_CTRL3_REG_Msk (0x7c0UL)  /*!< RFCU RF_TX_PWR_LUT_6_REG: TX_PWR_RF_LNA_CTRL3_REG (Bitfield-Mask: 0x1f) */
+#define RFCU_RF_TX_PWR_LUT_6_REG_TX_PWR_RFIO_TXRX_DCF_DIS_Pos (11UL)    /*!< RFCU RF_TX_PWR_LUT_6_REG: TX_PWR_RFIO_TXRX_DCF_DIS (Bit 11) */
+#define RFCU_RF_TX_PWR_LUT_6_REG_TX_PWR_RFIO_TXRX_DCF_DIS_Msk (0x800UL) /*!< RFCU RF_TX_PWR_LUT_6_REG: TX_PWR_RFIO_TXRX_DCF_DIS (Bitfield-Mask: 0x01) */
+
+/* --------------------------  RFCU_RF_TX_PWR_LUT_7_REG  -------------------------- */
+#define RFCU_RF_TX_PWR_LUT_7_REG_TX_PWR_RF_IO_CTRL1_REG_Pos (0UL)       /*!< RFCU RF_TX_PWR_LUT_7_REG: TX_PWR_RF_IO_CTRL1_REG (Bit 0)    */
+#define RFCU_RF_TX_PWR_LUT_7_REG_TX_PWR_RF_IO_CTRL1_REG_Msk (0x3UL)     /*!< RFCU RF_TX_PWR_LUT_7_REG: TX_PWR_RF_IO_CTRL1_REG (Bitfield-Mask: 0x03) */
+#define RFCU_RF_TX_PWR_LUT_7_REG_TX_PWR_RF_PA_CTRL_REG_Pos (2UL)        /*!< RFCU RF_TX_PWR_LUT_7_REG: TX_PWR_RF_PA_CTRL_REG (Bit 2)     */
+#define RFCU_RF_TX_PWR_LUT_7_REG_TX_PWR_RF_PA_CTRL_REG_Msk (0x3cUL)     /*!< RFCU RF_TX_PWR_LUT_7_REG: TX_PWR_RF_PA_CTRL_REG (Bitfield-Mask: 0x0f) */
+#define RFCU_RF_TX_PWR_LUT_7_REG_TX_PWR_RF_LNA_CTRL3_REG_Pos (6UL)      /*!< RFCU RF_TX_PWR_LUT_7_REG: TX_PWR_RF_LNA_CTRL3_REG (Bit 6)   */
+#define RFCU_RF_TX_PWR_LUT_7_REG_TX_PWR_RF_LNA_CTRL3_REG_Msk (0x7c0UL)  /*!< RFCU RF_TX_PWR_LUT_7_REG: TX_PWR_RF_LNA_CTRL3_REG (Bitfield-Mask: 0x1f) */
+#define RFCU_RF_TX_PWR_LUT_7_REG_TX_PWR_RFIO_TXRX_DCF_DIS_Pos (11UL)    /*!< RFCU RF_TX_PWR_LUT_7_REG: TX_PWR_RFIO_TXRX_DCF_DIS (Bit 11) */
+#define RFCU_RF_TX_PWR_LUT_7_REG_TX_PWR_RFIO_TXRX_DCF_DIS_Msk (0x800UL) /*!< RFCU RF_TX_PWR_LUT_7_REG: TX_PWR_RFIO_TXRX_DCF_DIS (Bitfield-Mask: 0x01) */
+
+/* ---------------------------  RFCU_RF_TX_PWR_FTDF_REG  -------------------------- */
+#define RFCU_RF_TX_PWR_FTDF_REG_TX_POWER_SET_Pos (0UL)                  /*!< RFCU RF_TX_PWR_FTDF_REG: TX_POWER_SET (Bit 0)               */
+#define RFCU_RF_TX_PWR_FTDF_REG_TX_POWER_SET_Msk (0x7UL)                /*!< RFCU RF_TX_PWR_FTDF_REG: TX_POWER_SET (Bitfield-Mask: 0x07) */
 
 /* --------------------------  RFCU_RF_TX_PWR_LUT_RD_REG  ------------------------- */
 #define RFCU_RF_TX_PWR_LUT_RD_REG_RF_TX_PWR_LUT_RD_Pos (0UL)            /*!< RFCU RF_TX_PWR_LUT_RD_REG: RF_TX_PWR_LUT_RD (Bit 0)         */
-#define RFCU_RF_TX_PWR_LUT_RD_REG_RF_TX_PWR_LUT_RD_Msk (0x7ffUL)        /*!< RFCU RF_TX_PWR_LUT_RD_REG: RF_TX_PWR_LUT_RD (Bitfield-Mask: 0x7ff) */
+#define RFCU_RF_TX_PWR_LUT_RD_REG_RF_TX_PWR_LUT_RD_Msk (0xfffUL)        /*!< RFCU RF_TX_PWR_LUT_RD_REG: RF_TX_PWR_LUT_RD (Bitfield-Mask: 0xfff) */
 
 /* ----------------------------  RFCU_RF_DIV_IQ_RX_REG  --------------------------- */
 #define RFCU_RF_DIV_IQ_RX_REG_DIV2_OFFN_TRIM_RX_Pos (0UL)               /*!< RFCU RF_DIV_IQ_RX_REG: DIV2_OFFN_TRIM_RX (Bit 0)            */
@@ -9645,8 +9968,20 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define RFCU_RF_LO_IQ_TRIM_REG_RF_LO_IQ_TRIM_Msk (0xffffUL)             /*!< RFCU RF_LO_IQ_TRIM_REG: RF_LO_IQ_TRIM (Bitfield-Mask: 0xffff) */
 
 /* ---------------------------  RFCU_RF_TXDAC_CTRL_REG  --------------------------- */
-#define RFCU_RF_TXDAC_CTRL_REG_TXDAC_CAP_SEL_Pos (0UL)                  /*!< RFCU RF_TXDAC_CTRL_REG: TXDAC_CAP_SEL (Bit 0)               */
-#define RFCU_RF_TXDAC_CTRL_REG_TXDAC_CAP_SEL_Msk (0xfUL)                /*!< RFCU RF_TXDAC_CTRL_REG: TXDAC_CAP_SEL (Bitfield-Mask: 0x0f) */
+#define RFCU_RF_TXDAC_CTRL_REG_TXDAC_CAL_CAP_WR_BLE_Pos (0UL)           /*!< RFCU RF_TXDAC_CTRL_REG: TXDAC_CAL_CAP_WR_BLE (Bit 0)        */
+#define RFCU_RF_TXDAC_CTRL_REG_TXDAC_CAL_CAP_WR_BLE_Msk (0x1fUL)        /*!< RFCU RF_TXDAC_CTRL_REG: TXDAC_CAL_CAP_WR_BLE (Bitfield-Mask: 0x1f) */
+#define RFCU_RF_TXDAC_CTRL_REG_TXDAC_CAL_CAP_SEL_Pos (5UL)              /*!< RFCU RF_TXDAC_CTRL_REG: TXDAC_CAL_CAP_SEL (Bit 5)           */
+#define RFCU_RF_TXDAC_CTRL_REG_TXDAC_CAL_CAP_SEL_Msk (0x20UL)           /*!< RFCU RF_TXDAC_CTRL_REG: TXDAC_CAL_CAP_SEL (Bitfield-Mask: 0x01) */
+#define RFCU_RF_TXDAC_CTRL_REG_TXDAC_FIXED_CAP_ON_Pos (6UL)             /*!< RFCU RF_TXDAC_CTRL_REG: TXDAC_FIXED_CAP_ON (Bit 6)          */
+#define RFCU_RF_TXDAC_CTRL_REG_TXDAC_FIXED_CAP_ON_Msk (0x40UL)          /*!< RFCU RF_TXDAC_CTRL_REG: TXDAC_FIXED_CAP_ON (Bitfield-Mask: 0x01) */
+#define RFCU_RF_TXDAC_CTRL_REG_TXDAC_CAL_CAP_WR_FTDF_Pos (7UL)          /*!< RFCU RF_TXDAC_CTRL_REG: TXDAC_CAL_CAP_WR_FTDF (Bit 7)       */
+#define RFCU_RF_TXDAC_CTRL_REG_TXDAC_CAL_CAP_WR_FTDF_Msk (0xf80UL)      /*!< RFCU RF_TXDAC_CTRL_REG: TXDAC_CAL_CAP_WR_FTDF (Bitfield-Mask: 0x1f) */
+
+/* -----------------------  RFCU_RF_TXDAC_CAL_CAP_STAT_REG  ----------------------- */
+#define RFCU_RF_TXDAC_CAL_CAP_STAT_REG_TXDAC_CAL_CAP_RD_Pos (0UL)       /*!< RFCU RF_TXDAC_CAL_CAP_STAT_REG: TXDAC_CAL_CAP_RD (Bit 0)    */
+#define RFCU_RF_TXDAC_CAL_CAP_STAT_REG_TXDAC_CAL_CAP_RD_Msk (0x1fUL)    /*!< RFCU RF_TXDAC_CAL_CAP_STAT_REG: TXDAC_CAL_CAP_RD (Bitfield-Mask: 0x1f) */
+#define RFCU_RF_TXDAC_CAL_CAP_STAT_REG_TXDAC_FIXED_CAP_ON_RD_Pos (5UL)  /*!< RFCU RF_TXDAC_CAL_CAP_STAT_REG: TXDAC_FIXED_CAP_ON_RD (Bit 5) */
+#define RFCU_RF_TXDAC_CAL_CAP_STAT_REG_TXDAC_FIXED_CAP_ON_RD_Msk (0x20UL) /*!< RFCU RF_TXDAC_CAL_CAP_STAT_REG: TXDAC_FIXED_CAP_ON_RD (Bitfield-Mask: 0x01) */
 
 /* ---------------------------  RFCU_RF_IFF_RESULT_REG  --------------------------- */
 #define RFCU_RF_IFF_RESULT_REG_IF_CAL_CAP_RD_Pos (0UL)                  /*!< RFCU RF_IFF_RESULT_REG: IF_CAL_CAP_RD (Bit 0)               */
@@ -9688,143 +10023,143 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 /* ================================================================================ */
 
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG0_BLE_REG  -------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG0_BLE_REG_lna_ldo_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG0_BLE_REG: lna_ldo_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG0_BLE_REG_lna_ldo_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG0_BLE_REG: lna_ldo_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG0_BLE_REG_lna_ldo_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG0_BLE_REG: lna_ldo_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG0_BLE_REG_lna_ldo_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG0_BLE_REG: lna_ldo_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG0_REG  ---------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG0_REG_lna_ldo_en_dcf_rx_Pos (0UL)    /*!< RFCU_POWER RF_ENABLE_CONFIG0_REG: lna_ldo_en_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG0_REG_lna_ldo_en_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG0_REG: lna_ldo_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG0_REG_lna_ldo_en_dcf_tx_Pos (5UL)    /*!< RFCU_POWER RF_ENABLE_CONFIG0_REG: lna_ldo_en_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG0_REG_lna_ldo_en_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG0_REG: lna_ldo_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG1_BLE_REG  -------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG1_BLE_REG_lna_core_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG1_BLE_REG: lna_core_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG1_BLE_REG_lna_core_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG1_BLE_REG: lna_core_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG1_BLE_REG_lna_core_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG1_BLE_REG: lna_core_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG1_BLE_REG_lna_core_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG1_BLE_REG: lna_core_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG1_REG  ---------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG1_REG_lna_core_en_dcf_rx_Pos (0UL)   /*!< RFCU_POWER RF_ENABLE_CONFIG1_REG: lna_core_en_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG1_REG_lna_core_en_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG1_REG: lna_core_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG1_REG_lna_core_en_dcf_tx_Pos (5UL)   /*!< RFCU_POWER RF_ENABLE_CONFIG1_REG: lna_core_en_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG1_REG_lna_core_en_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG1_REG: lna_core_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG2_BLE_REG  -------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG2_BLE_REG_lna_cgm_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG2_BLE_REG: lna_cgm_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG2_BLE_REG_lna_cgm_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG2_BLE_REG: lna_cgm_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG2_BLE_REG_lna_cgm_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG2_BLE_REG: lna_cgm_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG2_BLE_REG_lna_cgm_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG2_BLE_REG: lna_cgm_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG2_REG  ---------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG2_REG_lna_cgm_en_dcf_rx_Pos (0UL)    /*!< RFCU_POWER RF_ENABLE_CONFIG2_REG: lna_cgm_en_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG2_REG_lna_cgm_en_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG2_REG: lna_cgm_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG2_REG_lna_cgm_en_dcf_tx_Pos (5UL)    /*!< RFCU_POWER RF_ENABLE_CONFIG2_REG: lna_cgm_en_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG2_REG_lna_cgm_en_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG2_REG: lna_cgm_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG3_BLE_REG  -------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG3_BLE_REG_mix_ldo_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG3_BLE_REG: mix_ldo_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG3_BLE_REG_mix_ldo_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG3_BLE_REG: mix_ldo_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG3_BLE_REG_mix_ldo_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG3_BLE_REG: mix_ldo_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG3_BLE_REG_mix_ldo_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG3_BLE_REG: mix_ldo_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG3_REG  ---------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG3_REG_mix_ldo_en_dcf_rx_Pos (0UL)    /*!< RFCU_POWER RF_ENABLE_CONFIG3_REG: mix_ldo_en_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG3_REG_mix_ldo_en_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG3_REG: mix_ldo_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG3_REG_mix_ldo_en_dcf_tx_Pos (5UL)    /*!< RFCU_POWER RF_ENABLE_CONFIG3_REG: mix_ldo_en_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG3_REG_mix_ldo_en_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG3_REG: mix_ldo_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG4_BLE_REG  -------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG4_BLE_REG_iff_ldo_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG4_BLE_REG: iff_ldo_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG4_BLE_REG_iff_ldo_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG4_BLE_REG: iff_ldo_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG4_BLE_REG_iff_ldo_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG4_BLE_REG: iff_ldo_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG4_BLE_REG_iff_ldo_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG4_BLE_REG: iff_ldo_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG4_REG  ---------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG4_REG_iff_ldo_en_dcf_rx_Pos (0UL)    /*!< RFCU_POWER RF_ENABLE_CONFIG4_REG: iff_ldo_en_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG4_REG_iff_ldo_en_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG4_REG: iff_ldo_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG4_REG_iff_ldo_en_dcf_tx_Pos (5UL)    /*!< RFCU_POWER RF_ENABLE_CONFIG4_REG: iff_ldo_en_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG4_REG_iff_ldo_en_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG4_REG: iff_ldo_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG5_BLE_REG  -------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG5_BLE_REG_iffadc_ldo_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG5_BLE_REG: iffadc_ldo_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG5_BLE_REG_iffadc_ldo_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG5_BLE_REG: iffadc_ldo_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG5_BLE_REG_iffadc_ldo_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG5_BLE_REG: iffadc_ldo_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG5_BLE_REG_iffadc_ldo_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG5_BLE_REG: iffadc_ldo_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG5_REG  ---------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG5_REG_iffadc_ldo_en_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG5_REG: iffadc_ldo_en_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG5_REG_iffadc_ldo_en_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG5_REG: iffadc_ldo_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG5_REG_iffadc_ldo_en_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG5_REG: iffadc_ldo_en_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG5_REG_iffadc_ldo_en_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG5_REG: iffadc_ldo_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG6_BLE_REG  -------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG6_BLE_REG_vco_ldo_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG6_BLE_REG: vco_ldo_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG6_BLE_REG_vco_ldo_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG6_BLE_REG: vco_ldo_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG6_BLE_REG_vco_ldo_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG6_BLE_REG: vco_ldo_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG6_BLE_REG_vco_ldo_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG6_BLE_REG: vco_ldo_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG6_REG  ---------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG6_REG_vco_ldo_en_dcf_rx_Pos (0UL)    /*!< RFCU_POWER RF_ENABLE_CONFIG6_REG: vco_ldo_en_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG6_REG_vco_ldo_en_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG6_REG: vco_ldo_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG6_REG_vco_ldo_en_dcf_tx_Pos (5UL)    /*!< RFCU_POWER RF_ENABLE_CONFIG6_REG: vco_ldo_en_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG6_REG_vco_ldo_en_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG6_REG: vco_ldo_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG7_BLE_REG  -------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG7_BLE_REG_md_ldo_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG7_BLE_REG: md_ldo_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG7_BLE_REG_md_ldo_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG7_BLE_REG: md_ldo_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG7_BLE_REG_md_ldo_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG7_BLE_REG: md_ldo_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG7_BLE_REG_md_ldo_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG7_BLE_REG: md_ldo_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG7_REG  ---------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG7_REG_md_ldo_en_dcf_rx_Pos (0UL)     /*!< RFCU_POWER RF_ENABLE_CONFIG7_REG: md_ldo_en_dcf_rx (Bit 0)  */
+#define RFCU_POWER_RF_ENABLE_CONFIG7_REG_md_ldo_en_dcf_rx_Msk (0x1fUL)  /*!< RFCU_POWER RF_ENABLE_CONFIG7_REG: md_ldo_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG7_REG_md_ldo_en_dcf_tx_Pos (5UL)     /*!< RFCU_POWER RF_ENABLE_CONFIG7_REG: md_ldo_en_dcf_tx (Bit 5)  */
+#define RFCU_POWER_RF_ENABLE_CONFIG7_REG_md_ldo_en_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG7_REG: md_ldo_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG8_BLE_REG  -------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG8_BLE_REG_pfd_ldo_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG8_BLE_REG: pfd_ldo_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG8_BLE_REG_pfd_ldo_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG8_BLE_REG: pfd_ldo_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG8_BLE_REG_pfd_ldo_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG8_BLE_REG: pfd_ldo_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG8_BLE_REG_pfd_ldo_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG8_BLE_REG: pfd_ldo_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG8_REG  ---------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG8_REG_pfd_ldo_en_dcf_rx_Pos (0UL)    /*!< RFCU_POWER RF_ENABLE_CONFIG8_REG: pfd_ldo_en_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG8_REG_pfd_ldo_en_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG8_REG: pfd_ldo_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG8_REG_pfd_ldo_en_dcf_tx_Pos (5UL)    /*!< RFCU_POWER RF_ENABLE_CONFIG8_REG: pfd_ldo_en_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG8_REG_pfd_ldo_en_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG8_REG: pfd_ldo_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG9_BLE_REG  -------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG9_BLE_REG_pa_ldo_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG9_BLE_REG: pa_ldo_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG9_BLE_REG_pa_ldo_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG9_BLE_REG: pa_ldo_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG9_BLE_REG_pa_ldo_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG9_BLE_REG: pa_ldo_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG9_BLE_REG_pa_ldo_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG9_BLE_REG: pa_ldo_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG9_REG  ---------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG9_REG_pa_ldo_en_dcf_rx_Pos (0UL)     /*!< RFCU_POWER RF_ENABLE_CONFIG9_REG: pa_ldo_en_dcf_rx (Bit 0)  */
+#define RFCU_POWER_RF_ENABLE_CONFIG9_REG_pa_ldo_en_dcf_rx_Msk (0x1fUL)  /*!< RFCU_POWER RF_ENABLE_CONFIG9_REG: pa_ldo_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG9_REG_pa_ldo_en_dcf_tx_Pos (5UL)     /*!< RFCU_POWER RF_ENABLE_CONFIG9_REG: pa_ldo_en_dcf_tx (Bit 5)  */
+#define RFCU_POWER_RF_ENABLE_CONFIG9_REG_pa_ldo_en_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG9_REG: pa_ldo_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG10_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG10_BLE_REG_cp_switch_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG10_BLE_REG: cp_switch_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG10_BLE_REG_cp_switch_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG10_BLE_REG: cp_switch_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG10_BLE_REG_cp_switch_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG10_BLE_REG: cp_switch_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG10_BLE_REG_cp_switch_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG10_BLE_REG: cp_switch_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG10_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG10_REG_cp_switch_en_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG10_REG: cp_switch_en_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG10_REG_cp_switch_en_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG10_REG: cp_switch_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG10_REG_cp_switch_en_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG10_REG: cp_switch_en_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG10_REG_cp_switch_en_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG10_REG: cp_switch_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG11_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG11_BLE_REG_vco_bias_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG11_BLE_REG: vco_bias_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG11_BLE_REG_vco_bias_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG11_BLE_REG: vco_bias_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG11_BLE_REG_vco_bias_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG11_BLE_REG: vco_bias_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG11_BLE_REG_vco_bias_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG11_BLE_REG: vco_bias_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG11_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG11_REG_vco_bias_en_dcf_rx_Pos (0UL)  /*!< RFCU_POWER RF_ENABLE_CONFIG11_REG: vco_bias_en_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG11_REG_vco_bias_en_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG11_REG: vco_bias_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG11_REG_vco_bias_en_dcf_tx_Pos (5UL)  /*!< RFCU_POWER RF_ENABLE_CONFIG11_REG: vco_bias_en_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG11_REG_vco_bias_en_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG11_REG: vco_bias_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG12_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG12_BLE_REG_cp_bias_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG12_BLE_REG: cp_bias_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG12_BLE_REG_cp_bias_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG12_BLE_REG: cp_bias_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG12_BLE_REG_cp_bias_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG12_BLE_REG: cp_bias_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG12_BLE_REG_cp_bias_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG12_BLE_REG: cp_bias_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG12_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG12_REG_cp_bias_en_dcf_rx_Pos (0UL)   /*!< RFCU_POWER RF_ENABLE_CONFIG12_REG: cp_bias_en_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG12_REG_cp_bias_en_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG12_REG: cp_bias_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG12_REG_cp_bias_en_dcf_tx_Pos (5UL)   /*!< RFCU_POWER RF_ENABLE_CONFIG12_REG: cp_bias_en_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG12_REG_cp_bias_en_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG12_REG: cp_bias_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG13_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG13_BLE_REG_lna_ldo_zero_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG13_BLE_REG: lna_ldo_zero_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG13_BLE_REG_lna_ldo_zero_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG13_BLE_REG: lna_ldo_zero_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG13_BLE_REG_lna_ldo_zero_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG13_BLE_REG: lna_ldo_zero_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG13_BLE_REG_lna_ldo_zero_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG13_BLE_REG: lna_ldo_zero_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG13_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG13_REG_lna_ldo_zero_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG13_REG: lna_ldo_zero_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG13_REG_lna_ldo_zero_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG13_REG: lna_ldo_zero_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG13_REG_lna_ldo_zero_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG13_REG: lna_ldo_zero_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG13_REG_lna_ldo_zero_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG13_REG: lna_ldo_zero_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG14_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG14_BLE_REG_pa_ramp_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG14_BLE_REG: pa_ramp_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG14_BLE_REG_pa_ramp_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG14_BLE_REG: pa_ramp_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG14_BLE_REG_pa_ramp_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG14_BLE_REG: pa_ramp_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG14_BLE_REG_pa_ramp_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG14_BLE_REG: pa_ramp_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG14_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG14_REG_pa_ramp_en_dcf_rx_Pos (0UL)   /*!< RFCU_POWER RF_ENABLE_CONFIG14_REG: pa_ramp_en_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG14_REG_pa_ramp_en_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG14_REG: pa_ramp_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG14_REG_pa_ramp_en_dcf_tx_Pos (5UL)   /*!< RFCU_POWER RF_ENABLE_CONFIG14_REG: pa_ramp_en_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG14_REG_pa_ramp_en_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG14_REG: pa_ramp_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG15_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG15_BLE_REG_pa_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG15_BLE_REG: pa_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG15_BLE_REG_pa_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG15_BLE_REG: pa_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG15_BLE_REG_pa_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG15_BLE_REG: pa_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG15_BLE_REG_pa_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG15_BLE_REG: pa_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG15_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG15_REG_pa_en_dcf_rx_Pos (0UL)        /*!< RFCU_POWER RF_ENABLE_CONFIG15_REG: pa_en_dcf_rx (Bit 0)     */
+#define RFCU_POWER_RF_ENABLE_CONFIG15_REG_pa_en_dcf_rx_Msk (0x1fUL)     /*!< RFCU_POWER RF_ENABLE_CONFIG15_REG: pa_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG15_REG_pa_en_dcf_tx_Pos (5UL)        /*!< RFCU_POWER RF_ENABLE_CONFIG15_REG: pa_en_dcf_tx (Bit 5)     */
+#define RFCU_POWER_RF_ENABLE_CONFIG15_REG_pa_en_dcf_tx_Msk (0x3e0UL)    /*!< RFCU_POWER RF_ENABLE_CONFIG15_REG: pa_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG16_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG16_BLE_REG_mix_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG16_BLE_REG: mix_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG16_BLE_REG_mix_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG16_BLE_REG: mix_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG16_BLE_REG_mix_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG16_BLE_REG: mix_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG16_BLE_REG_mix_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG16_BLE_REG: mix_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG16_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG16_REG_mix_en_dcf_rx_Pos (0UL)       /*!< RFCU_POWER RF_ENABLE_CONFIG16_REG: mix_en_dcf_rx (Bit 0)    */
+#define RFCU_POWER_RF_ENABLE_CONFIG16_REG_mix_en_dcf_rx_Msk (0x1fUL)    /*!< RFCU_POWER RF_ENABLE_CONFIG16_REG: mix_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG16_REG_mix_en_dcf_tx_Pos (5UL)       /*!< RFCU_POWER RF_ENABLE_CONFIG16_REG: mix_en_dcf_tx (Bit 5)    */
+#define RFCU_POWER_RF_ENABLE_CONFIG16_REG_mix_en_dcf_tx_Msk (0x3e0UL)   /*!< RFCU_POWER RF_ENABLE_CONFIG16_REG: mix_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG17_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG17_BLE_REG_iff_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG17_BLE_REG: iff_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG17_BLE_REG_iff_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG17_BLE_REG: iff_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG17_BLE_REG_iff_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG17_BLE_REG: iff_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG17_BLE_REG_iff_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG17_BLE_REG: iff_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG17_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG17_REG_iff_en_dcf_rx_Pos (0UL)       /*!< RFCU_POWER RF_ENABLE_CONFIG17_REG: iff_en_dcf_rx (Bit 0)    */
+#define RFCU_POWER_RF_ENABLE_CONFIG17_REG_iff_en_dcf_rx_Msk (0x1fUL)    /*!< RFCU_POWER RF_ENABLE_CONFIG17_REG: iff_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG17_REG_iff_en_dcf_tx_Pos (5UL)       /*!< RFCU_POWER RF_ENABLE_CONFIG17_REG: iff_en_dcf_tx (Bit 5)    */
+#define RFCU_POWER_RF_ENABLE_CONFIG17_REG_iff_en_dcf_tx_Msk (0x3e0UL)   /*!< RFCU_POWER RF_ENABLE_CONFIG17_REG: iff_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG18_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG18_BLE_REG_adc_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG18_BLE_REG: adc_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG18_BLE_REG_adc_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG18_BLE_REG: adc_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG18_BLE_REG_adc_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG18_BLE_REG: adc_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG18_BLE_REG_adc_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG18_BLE_REG: adc_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG18_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG18_REG_adc_en_dcf_rx_Pos (0UL)       /*!< RFCU_POWER RF_ENABLE_CONFIG18_REG: adc_en_dcf_rx (Bit 0)    */
+#define RFCU_POWER_RF_ENABLE_CONFIG18_REG_adc_en_dcf_rx_Msk (0x1fUL)    /*!< RFCU_POWER RF_ENABLE_CONFIG18_REG: adc_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG18_REG_adc_en_dcf_tx_Pos (5UL)       /*!< RFCU_POWER RF_ENABLE_CONFIG18_REG: adc_en_dcf_tx (Bit 5)    */
+#define RFCU_POWER_RF_ENABLE_CONFIG18_REG_adc_en_dcf_tx_Msk (0x3e0UL)   /*!< RFCU_POWER RF_ENABLE_CONFIG18_REG: adc_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG19_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG19_BLE_REG_vco_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG19_BLE_REG: vco_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG19_BLE_REG_vco_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG19_BLE_REG: vco_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG19_BLE_REG_vco_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG19_BLE_REG: vco_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG19_BLE_REG_vco_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG19_BLE_REG: vco_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG19_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG19_REG_vco_en_dcf_rx_Pos (0UL)       /*!< RFCU_POWER RF_ENABLE_CONFIG19_REG: vco_en_dcf_rx (Bit 0)    */
+#define RFCU_POWER_RF_ENABLE_CONFIG19_REG_vco_en_dcf_rx_Msk (0x1fUL)    /*!< RFCU_POWER RF_ENABLE_CONFIG19_REG: vco_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG19_REG_vco_en_dcf_tx_Pos (5UL)       /*!< RFCU_POWER RF_ENABLE_CONFIG19_REG: vco_en_dcf_tx (Bit 5)    */
+#define RFCU_POWER_RF_ENABLE_CONFIG19_REG_vco_en_dcf_tx_Msk (0x3e0UL)   /*!< RFCU_POWER RF_ENABLE_CONFIG19_REG: vco_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG20_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG20_BLE_REG_lobuf_md_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG20_BLE_REG: lobuf_md_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG20_BLE_REG_lobuf_md_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG20_BLE_REG: lobuf_md_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG20_BLE_REG_lobuf_md_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG20_BLE_REG: lobuf_md_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG20_BLE_REG_lobuf_md_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG20_BLE_REG: lobuf_md_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG20_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG20_REG_lobuf_md_en_dcf_rx_Pos (0UL)  /*!< RFCU_POWER RF_ENABLE_CONFIG20_REG: lobuf_md_en_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG20_REG_lobuf_md_en_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG20_REG: lobuf_md_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG20_REG_lobuf_md_en_dcf_tx_Pos (5UL)  /*!< RFCU_POWER RF_ENABLE_CONFIG20_REG: lobuf_md_en_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG20_REG_lobuf_md_en_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG20_REG: lobuf_md_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG21_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG21_BLE_REG_cp_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG21_BLE_REG: cp_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG21_BLE_REG_cp_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG21_BLE_REG: cp_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG21_BLE_REG_cp_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG21_BLE_REG: cp_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG21_BLE_REG_cp_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG21_BLE_REG: cp_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG21_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG21_REG_cp_en_dcf_rx_Pos (0UL)        /*!< RFCU_POWER RF_ENABLE_CONFIG21_REG: cp_en_dcf_rx (Bit 0)     */
+#define RFCU_POWER_RF_ENABLE_CONFIG21_REG_cp_en_dcf_rx_Msk (0x1fUL)     /*!< RFCU_POWER RF_ENABLE_CONFIG21_REG: cp_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG21_REG_cp_en_dcf_tx_Pos (5UL)        /*!< RFCU_POWER RF_ENABLE_CONFIG21_REG: cp_en_dcf_tx (Bit 5)     */
+#define RFCU_POWER_RF_ENABLE_CONFIG21_REG_cp_en_dcf_tx_Msk (0x3e0UL)    /*!< RFCU_POWER RF_ENABLE_CONFIG21_REG: cp_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG22_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG22_BLE_REG_pfd_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG22_BLE_REG: pfd_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG22_BLE_REG_pfd_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG22_BLE_REG: pfd_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG22_BLE_REG_pfd_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG22_BLE_REG: pfd_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG22_BLE_REG_pfd_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG22_BLE_REG: pfd_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG22_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG22_REG_pfd_en_dcf_rx_Pos (0UL)       /*!< RFCU_POWER RF_ENABLE_CONFIG22_REG: pfd_en_dcf_rx (Bit 0)    */
+#define RFCU_POWER_RF_ENABLE_CONFIG22_REG_pfd_en_dcf_rx_Msk (0x1fUL)    /*!< RFCU_POWER RF_ENABLE_CONFIG22_REG: pfd_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG22_REG_pfd_en_dcf_tx_Pos (5UL)       /*!< RFCU_POWER RF_ENABLE_CONFIG22_REG: pfd_en_dcf_tx (Bit 5)    */
+#define RFCU_POWER_RF_ENABLE_CONFIG22_REG_pfd_en_dcf_tx_Msk (0x3e0UL)   /*!< RFCU_POWER RF_ENABLE_CONFIG22_REG: pfd_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
 /* --------------------  RFCU_POWER_RF_ENABLE_CONFIG23_BLE_REG  ------------------- */
 #define RFCU_POWER_RF_ENABLE_CONFIG23_BLE_REG_gauss_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG23_BLE_REG: gauss_en_ble_dcf_rx (Bit 0) */
@@ -9838,41 +10173,41 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define RFCU_POWER_RF_ENABLE_CONFIG24_BLE_REG_rfio_txrx_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG24_BLE_REG: rfio_txrx_ble_dcf_tx (Bit 5) */
 #define RFCU_POWER_RF_ENABLE_CONFIG24_BLE_REG_rfio_txrx_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG24_BLE_REG: rfio_txrx_ble_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG25_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG25_BLE_REG_lobuf_pa_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG25_BLE_REG: lobuf_pa_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG25_BLE_REG_lobuf_pa_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG25_BLE_REG: lobuf_pa_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG25_BLE_REG_lobuf_pa_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG25_BLE_REG: lobuf_pa_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG25_BLE_REG_lobuf_pa_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG25_BLE_REG: lobuf_pa_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG25_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG25_REG_lobuf_pa_en_dcf_rx_Pos (0UL)  /*!< RFCU_POWER RF_ENABLE_CONFIG25_REG: lobuf_pa_en_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG25_REG_lobuf_pa_en_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG25_REG: lobuf_pa_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG25_REG_lobuf_pa_en_dcf_tx_Pos (5UL)  /*!< RFCU_POWER RF_ENABLE_CONFIG25_REG: lobuf_pa_en_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG25_REG_lobuf_pa_en_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG25_REG: lobuf_pa_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG26_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG26_BLE_REG_lobuf_rxiq_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG26_BLE_REG: lobuf_rxiq_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG26_BLE_REG_lobuf_rxiq_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG26_BLE_REG: lobuf_rxiq_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG26_BLE_REG_lobuf_rxiq_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG26_BLE_REG: lobuf_rxiq_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG26_BLE_REG_lobuf_rxiq_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG26_BLE_REG: lobuf_rxiq_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG26_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG26_REG_lobuf_rxiq_en_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG26_REG: lobuf_rxiq_en_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG26_REG_lobuf_rxiq_en_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG26_REG: lobuf_rxiq_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG26_REG_lobuf_rxiq_en_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG26_REG: lobuf_rxiq_en_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG26_REG_lobuf_rxiq_en_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG26_REG: lobuf_rxiq_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG27_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG27_BLE_REG_div2_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG27_BLE_REG: div2_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG27_BLE_REG_div2_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG27_BLE_REG: div2_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG27_BLE_REG_div2_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG27_BLE_REG: div2_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG27_BLE_REG_div2_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG27_BLE_REG: div2_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG27_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG27_REG_div2_en_dcf_rx_Pos (0UL)      /*!< RFCU_POWER RF_ENABLE_CONFIG27_REG: div2_en_dcf_rx (Bit 0)   */
+#define RFCU_POWER_RF_ENABLE_CONFIG27_REG_div2_en_dcf_rx_Msk (0x1fUL)   /*!< RFCU_POWER RF_ENABLE_CONFIG27_REG: div2_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG27_REG_div2_en_dcf_tx_Pos (5UL)      /*!< RFCU_POWER RF_ENABLE_CONFIG27_REG: div2_en_dcf_tx (Bit 5)   */
+#define RFCU_POWER_RF_ENABLE_CONFIG27_REG_div2_en_dcf_tx_Msk (0x3e0UL)  /*!< RFCU_POWER RF_ENABLE_CONFIG27_REG: div2_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG28_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG28_BLE_REG_cp_bias_sh_open_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG28_BLE_REG: cp_bias_sh_open_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG28_BLE_REG_cp_bias_sh_open_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG28_BLE_REG: cp_bias_sh_open_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG28_BLE_REG_cp_bias_sh_open_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG28_BLE_REG: cp_bias_sh_open_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG28_BLE_REG_cp_bias_sh_open_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG28_BLE_REG: cp_bias_sh_open_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG28_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG28_REG_cp_bias_sh_open_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG28_REG: cp_bias_sh_open_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG28_REG_cp_bias_sh_open_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG28_REG: cp_bias_sh_open_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG28_REG_cp_bias_sh_open_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG28_REG: cp_bias_sh_open_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG28_REG_cp_bias_sh_open_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG28_REG: cp_bias_sh_open_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG29_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG29_BLE_REG_vco_bias_sh_open_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG29_BLE_REG: vco_bias_sh_open_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG29_BLE_REG_vco_bias_sh_open_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG29_BLE_REG: vco_bias_sh_open_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG29_BLE_REG_vco_bias_sh_open_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG29_BLE_REG: vco_bias_sh_open_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG29_BLE_REG_vco_bias_sh_open_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG29_BLE_REG: vco_bias_sh_open_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG29_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG29_REG_vco_bias_sh_open_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG29_REG: vco_bias_sh_open_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG29_REG_vco_bias_sh_open_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG29_REG: vco_bias_sh_open_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG29_REG_vco_bias_sh_open_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG29_REG: vco_bias_sh_open_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG29_REG_vco_bias_sh_open_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG29_REG: vco_bias_sh_open_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG30_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG30_BLE_REG_iffmix_bias_sh_open_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG30_BLE_REG: iffmix_bias_sh_open_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG30_BLE_REG_iffmix_bias_sh_open_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG30_BLE_REG: iffmix_bias_sh_open_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG30_BLE_REG_iffmix_bias_sh_open_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG30_BLE_REG: iffmix_bias_sh_open_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG30_BLE_REG_iffmix_bias_sh_open_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG30_BLE_REG: iffmix_bias_sh_open_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG30_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG30_REG_iffmix_bias_sh_open_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG30_REG: iffmix_bias_sh_open_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG30_REG_iffmix_bias_sh_open_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG30_REG: iffmix_bias_sh_open_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG30_REG_iffmix_bias_sh_open_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG30_REG: iffmix_bias_sh_open_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG30_REG_iffmix_bias_sh_open_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG30_REG: iffmix_bias_sh_open_dcf_tx (Bitfield-Mask: 0x1f) */
 
 /* --------------------  RFCU_POWER_RF_ENABLE_CONFIG31_BLE_REG  ------------------- */
 #define RFCU_POWER_RF_ENABLE_CONFIG31_BLE_REG_gauss_bias_sh_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG31_BLE_REG: gauss_bias_sh_ble_dcf_rx (Bit 0) */
@@ -9880,23 +10215,23 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define RFCU_POWER_RF_ENABLE_CONFIG31_BLE_REG_gauss_bias_sh_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG31_BLE_REG: gauss_bias_sh_ble_dcf_tx (Bit 5) */
 #define RFCU_POWER_RF_ENABLE_CONFIG31_BLE_REG_gauss_bias_sh_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG31_BLE_REG: gauss_bias_sh_ble_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG32_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG32_BLE_REG_mix_bias_sh_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG32_BLE_REG: mix_bias_sh_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG32_BLE_REG_mix_bias_sh_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG32_BLE_REG: mix_bias_sh_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG32_BLE_REG_mix_bias_sh_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG32_BLE_REG: mix_bias_sh_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG32_BLE_REG_mix_bias_sh_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG32_BLE_REG: mix_bias_sh_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG32_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG32_REG_mix_bias_sh_dcf_rx_Pos (0UL)  /*!< RFCU_POWER RF_ENABLE_CONFIG32_REG: mix_bias_sh_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG32_REG_mix_bias_sh_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG32_REG: mix_bias_sh_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG32_REG_mix_bias_sh_dcf_tx_Pos (5UL)  /*!< RFCU_POWER RF_ENABLE_CONFIG32_REG: mix_bias_sh_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG32_REG_mix_bias_sh_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG32_REG: mix_bias_sh_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG33_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG33_BLE_REG_pll_dig_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG33_BLE_REG: pll_dig_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG33_BLE_REG_pll_dig_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG33_BLE_REG: pll_dig_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG33_BLE_REG_pll_dig_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG33_BLE_REG: pll_dig_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG33_BLE_REG_pll_dig_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG33_BLE_REG: pll_dig_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG33_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG33_REG_pll_dig_en_dcf_rx_Pos (0UL)   /*!< RFCU_POWER RF_ENABLE_CONFIG33_REG: pll_dig_en_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG33_REG_pll_dig_en_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG33_REG: pll_dig_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG33_REG_pll_dig_en_dcf_tx_Pos (5UL)   /*!< RFCU_POWER RF_ENABLE_CONFIG33_REG: pll_dig_en_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG33_REG_pll_dig_en_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG33_REG: pll_dig_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG34_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG34_BLE_REG_pllclosed_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG34_BLE_REG: pllclosed_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG34_BLE_REG_pllclosed_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG34_BLE_REG: pllclosed_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG34_BLE_REG_pllclosed_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG34_BLE_REG: pllclosed_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG34_BLE_REG_pllclosed_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG34_BLE_REG: pllclosed_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG34_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG34_REG_pllclosed_en_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG34_REG: pllclosed_en_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG34_REG_pllclosed_en_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG34_REG: pllclosed_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG34_REG_pllclosed_en_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG34_REG: pllclosed_en_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG34_REG_pllclosed_en_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG34_REG: pllclosed_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
 /* --------------------  RFCU_POWER_RF_ENABLE_CONFIG35_BLE_REG  ------------------- */
 #define RFCU_POWER_RF_ENABLE_CONFIG35_BLE_REG_dem_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG35_BLE_REG: dem_en_ble_dcf_rx (Bit 0) */
@@ -9904,11 +10239,11 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define RFCU_POWER_RF_ENABLE_CONFIG35_BLE_REG_dem_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG35_BLE_REG: dem_en_ble_dcf_tx (Bit 5) */
 #define RFCU_POWER_RF_ENABLE_CONFIG35_BLE_REG_dem_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG35_BLE_REG: dem_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG36_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG36_BLE_REG_ldo_zero_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG36_BLE_REG: ldo_zero_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG36_BLE_REG_ldo_zero_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG36_BLE_REG: ldo_zero_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG36_BLE_REG_ldo_zero_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG36_BLE_REG: ldo_zero_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG36_BLE_REG_ldo_zero_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG36_BLE_REG: ldo_zero_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG36_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG36_REG_ldo_zero_en_dcf_rx_Pos (0UL)  /*!< RFCU_POWER RF_ENABLE_CONFIG36_REG: ldo_zero_en_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG36_REG_ldo_zero_en_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG36_REG: ldo_zero_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG36_REG_ldo_zero_en_dcf_tx_Pos (5UL)  /*!< RFCU_POWER RF_ENABLE_CONFIG36_REG: ldo_zero_en_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG36_REG_ldo_zero_en_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG36_REG: ldo_zero_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
 /* --------------------  RFCU_POWER_RF_ENABLE_CONFIG37_BLE_REG  ------------------- */
 #define RFCU_POWER_RF_ENABLE_CONFIG37_BLE_REG_cal_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG37_BLE_REG: cal_en_ble_dcf_rx (Bit 0) */
@@ -9922,35 +10257,35 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define RFCU_POWER_RF_ENABLE_CONFIG38_BLE_REG_tdc_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG38_BLE_REG: tdc_en_ble_dcf_tx (Bit 5) */
 #define RFCU_POWER_RF_ENABLE_CONFIG38_BLE_REG_tdc_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG38_BLE_REG: tdc_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG39_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG39_BLE_REG_ldo_rfio_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG39_BLE_REG: ldo_rfio_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG39_BLE_REG_ldo_rfio_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG39_BLE_REG: ldo_rfio_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG39_BLE_REG_ldo_rfio_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG39_BLE_REG: ldo_rfio_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG39_BLE_REG_ldo_rfio_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG39_BLE_REG: ldo_rfio_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG39_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG39_REG_ldo_rfio_en_dcf_rx_Pos (0UL)  /*!< RFCU_POWER RF_ENABLE_CONFIG39_REG: ldo_rfio_en_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG39_REG_ldo_rfio_en_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG39_REG: ldo_rfio_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG39_REG_ldo_rfio_en_dcf_tx_Pos (5UL)  /*!< RFCU_POWER RF_ENABLE_CONFIG39_REG: ldo_rfio_en_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG39_REG_ldo_rfio_en_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG39_REG: ldo_rfio_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG40_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG40_BLE_REG_rfio_bias_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG40_BLE_REG: rfio_bias_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG40_BLE_REG_rfio_bias_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG40_BLE_REG: rfio_bias_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG40_BLE_REG_rfio_bias_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG40_BLE_REG: rfio_bias_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG40_BLE_REG_rfio_bias_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG40_BLE_REG: rfio_bias_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG40_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG40_REG_rfio_bias_en_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG40_REG: rfio_bias_en_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG40_REG_rfio_bias_en_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG40_REG: rfio_bias_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG40_REG_rfio_bias_en_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG40_REG: rfio_bias_en_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG40_REG_rfio_bias_en_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG40_REG: rfio_bias_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG41_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG41_BLE_REG_rfio_bias_sh_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG41_BLE_REG: rfio_bias_sh_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG41_BLE_REG_rfio_bias_sh_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG41_BLE_REG: rfio_bias_sh_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG41_BLE_REG_rfio_bias_sh_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG41_BLE_REG: rfio_bias_sh_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG41_BLE_REG_rfio_bias_sh_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG41_BLE_REG: rfio_bias_sh_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG41_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG41_REG_rfio_bias_sh_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG41_REG: rfio_bias_sh_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG41_REG_rfio_bias_sh_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG41_REG: rfio_bias_sh_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG41_REG_rfio_bias_sh_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG41_REG: rfio_bias_sh_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG41_REG_rfio_bias_sh_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG41_REG: rfio_bias_sh_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG42_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG42_BLE_REG_ldo_radio_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG42_BLE_REG: ldo_radio_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG42_BLE_REG_ldo_radio_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG42_BLE_REG: ldo_radio_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG42_BLE_REG_ldo_radio_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG42_BLE_REG: ldo_radio_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG42_BLE_REG_ldo_radio_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG42_BLE_REG: ldo_radio_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG42_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG42_REG_ldo_radio_en_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG42_REG: ldo_radio_en_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG42_REG_ldo_radio_en_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG42_REG: ldo_radio_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG42_REG_ldo_radio_en_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG42_REG: ldo_radio_en_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG42_REG_ldo_radio_en_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG42_REG: ldo_radio_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG43_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG43_BLE_REG_adc_clk_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG43_BLE_REG: adc_clk_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG43_BLE_REG_adc_clk_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG43_BLE_REG: adc_clk_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG43_BLE_REG_adc_clk_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG43_BLE_REG: adc_clk_en_ble_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG43_BLE_REG_adc_clk_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG43_BLE_REG: adc_clk_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
+/* ----------------------  RFCU_POWER_RF_ENABLE_CONFIG43_REG  --------------------- */
+#define RFCU_POWER_RF_ENABLE_CONFIG43_REG_adc_clk_en_dcf_rx_Pos (0UL)   /*!< RFCU_POWER RF_ENABLE_CONFIG43_REG: adc_clk_en_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG43_REG_adc_clk_en_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG43_REG: adc_clk_en_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG43_REG_adc_clk_en_dcf_tx_Pos (5UL)   /*!< RFCU_POWER RF_ENABLE_CONFIG43_REG: adc_clk_en_dcf_tx (Bit 5) */
+#define RFCU_POWER_RF_ENABLE_CONFIG43_REG_adc_clk_en_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG43_REG: adc_clk_en_dcf_tx (Bitfield-Mask: 0x1f) */
 
 /* --------------------  RFCU_POWER_RF_ENABLE_CONFIG44_BLE_REG  ------------------- */
 #define RFCU_POWER_RF_ENABLE_CONFIG44_BLE_REG_tr_pwm_off_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG44_BLE_REG: tr_pwm_off_en_ble_dcf_rx (Bit 0) */
@@ -9965,20 +10300,20 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define RFCU_POWER_RF_ENABLE_CONFIG45_BLE_REG_txdac_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG45_BLE_REG: txdac_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
 
 /* --------------------  RFCU_POWER_RF_ENABLE_CONFIG46_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG46_BLE_REG_dcparcal_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG46_BLE_REG: dcparcal_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG46_BLE_REG_dcparcal_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG46_BLE_REG: dcparcal_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG46_BLE_REG_dem_dcparcal_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG46_BLE_REG: dem_dcparcal_en_ble_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG46_BLE_REG_dem_dcparcal_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG46_BLE_REG: dem_dcparcal_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
 #define RFCU_POWER_RF_ENABLE_CONFIG46_BLE_REG_spare2_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG46_BLE_REG: spare2_en_ble_dcf_tx (Bit 5) */
 #define RFCU_POWER_RF_ENABLE_CONFIG46_BLE_REG_spare2_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG46_BLE_REG: spare2_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
 
 /* --------------------  RFCU_POWER_RF_ENABLE_CONFIG47_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG47_BLE_REG_agcunfreeze_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG47_BLE_REG: agcunfreeze_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG47_BLE_REG_agcunfreeze_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG47_BLE_REG: agcunfreeze_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG47_BLE_REG_dem_agcunfreeze_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG47_BLE_REG: dem_agcunfreeze_en_ble_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG47_BLE_REG_dem_agcunfreeze_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG47_BLE_REG: dem_agcunfreeze_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
 #define RFCU_POWER_RF_ENABLE_CONFIG47_BLE_REG_spare3_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG47_BLE_REG: spare3_en_ble_dcf_tx (Bit 5) */
 #define RFCU_POWER_RF_ENABLE_CONFIG47_BLE_REG_spare3_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG47_BLE_REG: spare3_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
 
 /* --------------------  RFCU_POWER_RF_ENABLE_CONFIG48_BLE_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG48_BLE_REG_sigdetect_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG48_BLE_REG: sigdetect_en_ble_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG48_BLE_REG_sigdetect_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG48_BLE_REG: sigdetect_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG48_BLE_REG_dem_sigdetect_en_ble_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG48_BLE_REG: dem_sigdetect_en_ble_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG48_BLE_REG_dem_sigdetect_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG48_BLE_REG: dem_sigdetect_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
 #define RFCU_POWER_RF_ENABLE_CONFIG48_BLE_REG_spare4_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG48_BLE_REG: spare4_en_ble_dcf_tx (Bit 5) */
 #define RFCU_POWER_RF_ENABLE_CONFIG48_BLE_REG_spare4_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG48_BLE_REG: spare4_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
 
@@ -9987,144 +10322,6 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define RFCU_POWER_RF_ENABLE_CONFIG49_BLE_REG_dem_ftdf_en_ble_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG49_BLE_REG: dem_ftdf_en_ble_dcf_rx (Bitfield-Mask: 0x1f) */
 #define RFCU_POWER_RF_ENABLE_CONFIG49_BLE_REG_dem_ftdf_en_ble_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG49_BLE_REG: dem_ftdf_en_ble_dcf_tx (Bit 5) */
 #define RFCU_POWER_RF_ENABLE_CONFIG49_BLE_REG_dem_ftdf_en_ble_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG49_BLE_REG: dem_ftdf_en_ble_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG0_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG0_FTDF_REG_lna_ldo_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG0_FTDF_REG: lna_ldo_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG0_FTDF_REG_lna_ldo_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG0_FTDF_REG: lna_ldo_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG0_FTDF_REG_lna_ldo_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG0_FTDF_REG: lna_ldo_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG0_FTDF_REG_lna_ldo_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG0_FTDF_REG: lna_ldo_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG1_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG1_FTDF_REG_lna_core_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG1_FTDF_REG: lna_core_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG1_FTDF_REG_lna_core_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG1_FTDF_REG: lna_core_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG1_FTDF_REG_lna_core_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG1_FTDF_REG: lna_core_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG1_FTDF_REG_lna_core_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG1_FTDF_REG: lna_core_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG2_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG2_FTDF_REG_lna_cgm_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG2_FTDF_REG: lna_cgm_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG2_FTDF_REG_lna_cgm_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG2_FTDF_REG: lna_cgm_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG2_FTDF_REG_lna_cgm_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG2_FTDF_REG: lna_cgm_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG2_FTDF_REG_lna_cgm_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG2_FTDF_REG: lna_cgm_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG3_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG3_FTDF_REG_mix_ldo_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG3_FTDF_REG: mix_ldo_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG3_FTDF_REG_mix_ldo_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG3_FTDF_REG: mix_ldo_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG3_FTDF_REG_mix_ldo_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG3_FTDF_REG: mix_ldo_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG3_FTDF_REG_mix_ldo_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG3_FTDF_REG: mix_ldo_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG4_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG4_FTDF_REG_iff_ldo_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG4_FTDF_REG: iff_ldo_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG4_FTDF_REG_iff_ldo_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG4_FTDF_REG: iff_ldo_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG4_FTDF_REG_iff_ldo_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG4_FTDF_REG: iff_ldo_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG4_FTDF_REG_iff_ldo_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG4_FTDF_REG: iff_ldo_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG5_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG5_FTDF_REG_iffadc_ldo_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG5_FTDF_REG: iffadc_ldo_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG5_FTDF_REG_iffadc_ldo_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG5_FTDF_REG: iffadc_ldo_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG5_FTDF_REG_iffadc_ldo_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG5_FTDF_REG: iffadc_ldo_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG5_FTDF_REG_iffadc_ldo_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG5_FTDF_REG: iffadc_ldo_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG6_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG6_FTDF_REG_vco_ldo_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG6_FTDF_REG: vco_ldo_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG6_FTDF_REG_vco_ldo_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG6_FTDF_REG: vco_ldo_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG6_FTDF_REG_vco_ldo_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG6_FTDF_REG: vco_ldo_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG6_FTDF_REG_vco_ldo_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG6_FTDF_REG: vco_ldo_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG7_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG7_FTDF_REG_md_ldo_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG7_FTDF_REG: md_ldo_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG7_FTDF_REG_md_ldo_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG7_FTDF_REG: md_ldo_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG7_FTDF_REG_md_ldo_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG7_FTDF_REG: md_ldo_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG7_FTDF_REG_md_ldo_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG7_FTDF_REG: md_ldo_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG8_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG8_FTDF_REG_pfd_ldo_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG8_FTDF_REG: pfd_ldo_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG8_FTDF_REG_pfd_ldo_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG8_FTDF_REG: pfd_ldo_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG8_FTDF_REG_pfd_ldo_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG8_FTDF_REG: pfd_ldo_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG8_FTDF_REG_pfd_ldo_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG8_FTDF_REG: pfd_ldo_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* --------------------  RFCU_POWER_RF_ENABLE_CONFIG9_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG9_FTDF_REG_pa_ldo_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG9_FTDF_REG: pa_ldo_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG9_FTDF_REG_pa_ldo_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG9_FTDF_REG: pa_ldo_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG9_FTDF_REG_pa_ldo_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG9_FTDF_REG: pa_ldo_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG9_FTDF_REG_pa_ldo_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG9_FTDF_REG: pa_ldo_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG10_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG10_FTDF_REG_cp_switch_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG10_FTDF_REG: cp_switch_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG10_FTDF_REG_cp_switch_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG10_FTDF_REG: cp_switch_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG10_FTDF_REG_cp_switch_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG10_FTDF_REG: cp_switch_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG10_FTDF_REG_cp_switch_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG10_FTDF_REG: cp_switch_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG11_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG11_FTDF_REG_vco_bias_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG11_FTDF_REG: vco_bias_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG11_FTDF_REG_vco_bias_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG11_FTDF_REG: vco_bias_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG11_FTDF_REG_vco_bias_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG11_FTDF_REG: vco_bias_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG11_FTDF_REG_vco_bias_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG11_FTDF_REG: vco_bias_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG12_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG12_FTDF_REG_cp_bias_en_tfdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG12_FTDF_REG: cp_bias_en_tfdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG12_FTDF_REG_cp_bias_en_tfdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG12_FTDF_REG: cp_bias_en_tfdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG12_FTDF_REG_cp_bias_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG12_FTDF_REG: cp_bias_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG12_FTDF_REG_cp_bias_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG12_FTDF_REG: cp_bias_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG13_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG13_FTDF_REG_lna_ldo_zero_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG13_FTDF_REG: lna_ldo_zero_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG13_FTDF_REG_lna_ldo_zero_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG13_FTDF_REG: lna_ldo_zero_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG13_FTDF_REG_lna_ldo_zero_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG13_FTDF_REG: lna_ldo_zero_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG13_FTDF_REG_lna_ldo_zero_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG13_FTDF_REG: lna_ldo_zero_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG14_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG14_FTDF_REG_pa_ramp_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG14_FTDF_REG: pa_ramp_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG14_FTDF_REG_pa_ramp_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG14_FTDF_REG: pa_ramp_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG14_FTDF_REG_pa_ramp_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG14_FTDF_REG: pa_ramp_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG14_FTDF_REG_pa_ramp_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG14_FTDF_REG: pa_ramp_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG15_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG15_FTDF_REG_pa_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG15_FTDF_REG: pa_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG15_FTDF_REG_pa_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG15_FTDF_REG: pa_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG15_FTDF_REG_pa_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG15_FTDF_REG: pa_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG15_FTDF_REG_pa_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG15_FTDF_REG: pa_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG16_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG16_FTDF_REG_mix_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG16_FTDF_REG: mix_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG16_FTDF_REG_mix_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG16_FTDF_REG: mix_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG16_FTDF_REG_mix_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG16_FTDF_REG: mix_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG16_FTDF_REG_mix_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG16_FTDF_REG: mix_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG17_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG17_FTDF_REG_iff_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG17_FTDF_REG: iff_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG17_FTDF_REG_iff_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG17_FTDF_REG: iff_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG17_FTDF_REG_iff_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG17_FTDF_REG: iff_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG17_FTDF_REG_iff_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG17_FTDF_REG: iff_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG18_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG18_FTDF_REG_adc_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG18_FTDF_REG: adc_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG18_FTDF_REG_adc_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG18_FTDF_REG: adc_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG18_FTDF_REG_adc_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG18_FTDF_REG: adc_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG18_FTDF_REG_adc_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG18_FTDF_REG: adc_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG19_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG19_FTDF_REG_vco_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG19_FTDF_REG: vco_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG19_FTDF_REG_vco_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG19_FTDF_REG: vco_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG19_FTDF_REG_vco_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG19_FTDF_REG: vco_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG19_FTDF_REG_vco_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG19_FTDF_REG: vco_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG20_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG20_FTDF_REG_lobuf_md_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG20_FTDF_REG: lobuf_md_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG20_FTDF_REG_lobuf_md_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG20_FTDF_REG: lobuf_md_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG20_FTDF_REG_lobuf_md_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG20_FTDF_REG: lobuf_md_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG20_FTDF_REG_lobuf_md_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG20_FTDF_REG: lobuf_md_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG21_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG21_FTDF_REG_cp_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG21_FTDF_REG: cp_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG21_FTDF_REG_cp_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG21_FTDF_REG: cp_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG21_FTDF_REG_cp_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG21_FTDF_REG: cp_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG21_FTDF_REG_cp_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG21_FTDF_REG: cp_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG22_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG22_FTDF_REG_pfd_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG22_FTDF_REG: pfd_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG22_FTDF_REG_pfd_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG22_FTDF_REG: pfd_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG22_FTDF_REG_pfd_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG22_FTDF_REG: pfd_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG22_FTDF_REG_pfd_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG22_FTDF_REG: pfd_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
 
 /* -------------------  RFCU_POWER_RF_ENABLE_CONFIG23_FTDF_REG  ------------------- */
 #define RFCU_POWER_RF_ENABLE_CONFIG23_FTDF_REG_gauss_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG23_FTDF_REG: gauss_en_ftdf_dcf_rx (Bit 0) */
@@ -10138,77 +10335,17 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define RFCU_POWER_RF_ENABLE_CONFIG24_FTDF_REG_rfio_txrx_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG24_FTDF_REG: rfio_txrx_ftdf_dcf_tx (Bit 5) */
 #define RFCU_POWER_RF_ENABLE_CONFIG24_FTDF_REG_rfio_txrx_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG24_FTDF_REG: rfio_txrx_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG25_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG25_FTDF_REG_lobuf_pa_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG25_FTDF_REG: lobuf_pa_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG25_FTDF_REG_lobuf_pa_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG25_FTDF_REG: lobuf_pa_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG25_FTDF_REG_lobuf_pa_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG25_FTDF_REG: lobuf_pa_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG25_FTDF_REG_lobuf_pa_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG25_FTDF_REG: lobuf_pa_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG26_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG26_FTDF_REG_lobuf_rxiq_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG26_FTDF_REG: lobuf_rxiq_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG26_FTDF_REG_lobuf_rxiq_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG26_FTDF_REG: lobuf_rxiq_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG26_FTDF_REG_lobuf_rxiq_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG26_FTDF_REG: lobuf_rxiq_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG26_FTDF_REG_lobuf_rxiq_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG26_FTDF_REG: lobuf_rxiq_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG27_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG27_FTDF_REG_div2_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG27_FTDF_REG: div2_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG27_FTDF_REG_div2_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG27_FTDF_REG: div2_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG27_FTDF_REG_div2_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG27_FTDF_REG: div2_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG27_FTDF_REG_div2_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG27_FTDF_REG: div2_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG28_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG28_FTDF_REG_cp_bias_sh_open_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG28_FTDF_REG: cp_bias_sh_open_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG28_FTDF_REG_cp_bias_sh_open_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG28_FTDF_REG: cp_bias_sh_open_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG28_FTDF_REG_cp_bias_sh_open_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG28_FTDF_REG: cp_bias_sh_open_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG28_FTDF_REG_cp_bias_sh_open_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG28_FTDF_REG: cp_bias_sh_open_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG29_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG29_FTDF_REG_vco_bias_sh_open_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG29_FTDF_REG: vco_bias_sh_open_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG29_FTDF_REG_vco_bias_sh_open_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG29_FTDF_REG: vco_bias_sh_open_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG29_FTDF_REG_vco_bias_sh_open_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG29_FTDF_REG: vco_bias_sh_open_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG29_FTDF_REG_vco_bias_sh_open_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG29_FTDF_REG: vco_bias_sh_open_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG30_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG30_FTDF_REG_iffmix_bias_sh_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG30_FTDF_REG: iffmix_bias_sh_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG30_FTDF_REG_iffmix_bias_sh_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG30_FTDF_REG: iffmix_bias_sh_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG30_FTDF_REG_iffmix_bias_sh_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG30_FTDF_REG: iffmix_bias_sh_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG30_FTDF_REG_iffmix_bias_sh_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG30_FTDF_REG: iffmix_bias_sh_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
 /* -------------------  RFCU_POWER_RF_ENABLE_CONFIG31_FTDF_REG  ------------------- */
 #define RFCU_POWER_RF_ENABLE_CONFIG31_FTDF_REG_gauss_bias_sh_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG31_FTDF_REG: gauss_bias_sh_ftdf_dcf_rx (Bit 0) */
 #define RFCU_POWER_RF_ENABLE_CONFIG31_FTDF_REG_gauss_bias_sh_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG31_FTDF_REG: gauss_bias_sh_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
 #define RFCU_POWER_RF_ENABLE_CONFIG31_FTDF_REG_gauss_bias_sh_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG31_FTDF_REG: gauss_bias_sh_ftdf_dcf_tx (Bit 5) */
 #define RFCU_POWER_RF_ENABLE_CONFIG31_FTDF_REG_gauss_bias_sh_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG31_FTDF_REG: gauss_bias_sh_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
 
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG32_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG32_FTDF_REG_mix_bias_sh_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG32_FTDF_REG: mix_bias_sh_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG32_FTDF_REG_mix_bias_sh_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG32_FTDF_REG: mix_bias_sh_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG32_FTDF_REG_mix_bias_sh_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG32_FTDF_REG: mix_bias_sh_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG32_FTDF_REG_mix_bias_sh_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG32_FTDF_REG: mix_bias_sh_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG33_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG33_FTDF_REG_pll_dig_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG33_FTDF_REG: pll_dig_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG33_FTDF_REG_pll_dig_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG33_FTDF_REG: pll_dig_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG33_FTDF_REG_pll_dig_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG33_FTDF_REG: pll_dig_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG33_FTDF_REG_pll_dig_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG33_FTDF_REG: pll_dig_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG34_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG34_FTDF_REG_pllclosed_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG34_FTDF_REG: pllclosed_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG34_FTDF_REG_pllclosed_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG34_FTDF_REG: pllclosed_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG34_FTDF_REG_pllclosed_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG34_FTDF_REG: pllclosed_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG34_FTDF_REG_pllclosed_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG34_FTDF_REG: pllclosed_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
 /* -------------------  RFCU_POWER_RF_ENABLE_CONFIG35_FTDF_REG  ------------------- */
 #define RFCU_POWER_RF_ENABLE_CONFIG35_FTDF_REG_dem_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG35_FTDF_REG: dem_en_ftdf_dcf_rx (Bit 0) */
 #define RFCU_POWER_RF_ENABLE_CONFIG35_FTDF_REG_dem_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG35_FTDF_REG: dem_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
 #define RFCU_POWER_RF_ENABLE_CONFIG35_FTDF_REG_dem_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG35_FTDF_REG: dem_en_ftdf_dcf_tx (Bit 5) */
 #define RFCU_POWER_RF_ENABLE_CONFIG35_FTDF_REG_dem_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG35_FTDF_REG: dem_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG36_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG36_FTDF_REG_ldo_zero_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG36_FTDF_REG: ldo_zero_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG36_FTDF_REG_ldo_zero_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG36_FTDF_REG: ldo_zero_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG36_FTDF_REG_ldo_zero_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG36_FTDF_REG: ldo_zero_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG36_FTDF_REG_ldo_zero_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG36_FTDF_REG: ldo_zero_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
 
 /* -------------------  RFCU_POWER_RF_ENABLE_CONFIG37_FTDF_REG  ------------------- */
 #define RFCU_POWER_RF_ENABLE_CONFIG37_FTDF_REG_cal_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG37_FTDF_REG: cal_en_ftdf_dcf_rx (Bit 0) */
@@ -10221,36 +10358,6 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define RFCU_POWER_RF_ENABLE_CONFIG38_FTDF_REG_tdc_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG38_FTDF_REG: tdc_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
 #define RFCU_POWER_RF_ENABLE_CONFIG38_FTDF_REG_tdc_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG38_FTDF_REG: tdc_en_ftdf_dcf_tx (Bit 5) */
 #define RFCU_POWER_RF_ENABLE_CONFIG38_FTDF_REG_tdc_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG38_FTDF_REG: tdc_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG39_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG39_FTDF_REG_ldo_rfio_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG39_FTDF_REG: ldo_rfio_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG39_FTDF_REG_ldo_rfio_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG39_FTDF_REG: ldo_rfio_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG39_FTDF_REG_ldo_rfio_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG39_FTDF_REG: ldo_rfio_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG39_FTDF_REG_ldo_rfio_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG39_FTDF_REG: ldo_rfio_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG40_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG40_FTDF_REG_rfio_bias_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG40_FTDF_REG: rfio_bias_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG40_FTDF_REG_rfio_bias_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG40_FTDF_REG: rfio_bias_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG40_FTDF_REG_rfio_bias_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG40_FTDF_REG: rfio_bias_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG40_FTDF_REG_rfio_bias_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG40_FTDF_REG: rfio_bias_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG41_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG41_FTDF_REG_rfio_bias_sh_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG41_FTDF_REG: rfio_bias_sh_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG41_FTDF_REG_rfio_bias_sh_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG41_FTDF_REG: rfio_bias_sh_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG41_FTDF_REG_rfio_bias_sh_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG41_FTDF_REG: rfio_bias_sh_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG41_FTDF_REG_rfio_bias_sh_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG41_FTDF_REG: rfio_bias_sh_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG42_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG42_FTDF_REG_ldo_radio_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG42_FTDF_REG: ldo_radio_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG42_FTDF_REG_ldo_radio_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG42_FTDF_REG: ldo_radio_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG42_FTDF_REG_ldo_radio_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG42_FTDF_REG: ldo_radio_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG42_FTDF_REG_ldo_radio_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG42_FTDF_REG: ldo_radio_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
-
-/* -------------------  RFCU_POWER_RF_ENABLE_CONFIG43_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG43_FTDF_REG_adc_clk_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG43_FTDF_REG: adc_clk_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG43_FTDF_REG_adc_clk_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG43_FTDF_REG: adc_clk_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
-#define RFCU_POWER_RF_ENABLE_CONFIG43_FTDF_REG_adc_clk_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG43_FTDF_REG: adc_clk_en_ftdf_dcf_tx (Bit 5) */
-#define RFCU_POWER_RF_ENABLE_CONFIG43_FTDF_REG_adc_clk_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG43_FTDF_REG: adc_clk_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
 
 /* -------------------  RFCU_POWER_RF_ENABLE_CONFIG44_FTDF_REG  ------------------- */
 #define RFCU_POWER_RF_ENABLE_CONFIG44_FTDF_REG_tr_pwm_off_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG44_FTDF_REG: tr_pwm_off_en_ftdf_dcf_rx (Bit 0) */
@@ -10265,20 +10372,20 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define RFCU_POWER_RF_ENABLE_CONFIG45_FTDF_REG_txdac_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG45_FTDF_REG: txdac_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
 
 /* -------------------  RFCU_POWER_RF_ENABLE_CONFIG46_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG46_FTDF_REG_dcparcal_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG46_FTDF_REG: dcparcal_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG46_FTDF_REG_dcparcal_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG46_FTDF_REG: dcparcal_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG46_FTDF_REG_dem_dcparcal_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG46_FTDF_REG: dem_dcparcal_en_ftdf_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG46_FTDF_REG_dem_dcparcal_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG46_FTDF_REG: dem_dcparcal_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
 #define RFCU_POWER_RF_ENABLE_CONFIG46_FTDF_REG_spare2_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG46_FTDF_REG: spare2_en_ftdf_dcf_tx (Bit 5) */
 #define RFCU_POWER_RF_ENABLE_CONFIG46_FTDF_REG_spare2_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG46_FTDF_REG: spare2_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
 
 /* -------------------  RFCU_POWER_RF_ENABLE_CONFIG47_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG47_FTDF_REG_agcunfreeze_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG47_FTDF_REG: agcunfreeze_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG47_FTDF_REG_agcunfreeze_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG47_FTDF_REG: agcunfreeze_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG47_FTDF_REG_dem_agcunfreeze_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG47_FTDF_REG: dem_agcunfreeze_en_ftdf_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG47_FTDF_REG_dem_agcunfreeze_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG47_FTDF_REG: dem_agcunfreeze_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
 #define RFCU_POWER_RF_ENABLE_CONFIG47_FTDF_REG_spare3_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG47_FTDF_REG: spare3_en_ftdf_dcf_tx (Bit 5) */
 #define RFCU_POWER_RF_ENABLE_CONFIG47_FTDF_REG_spare3_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG47_FTDF_REG: spare3_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
 
 /* -------------------  RFCU_POWER_RF_ENABLE_CONFIG48_FTDF_REG  ------------------- */
-#define RFCU_POWER_RF_ENABLE_CONFIG48_FTDF_REG_sigdetect_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG48_FTDF_REG: sigdetect_en_ftdf_dcf_rx (Bit 0) */
-#define RFCU_POWER_RF_ENABLE_CONFIG48_FTDF_REG_sigdetect_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG48_FTDF_REG: sigdetect_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
+#define RFCU_POWER_RF_ENABLE_CONFIG48_FTDF_REG_dem_sigdetect_en_ftdf_dcf_rx_Pos (0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG48_FTDF_REG: dem_sigdetect_en_ftdf_dcf_rx (Bit 0) */
+#define RFCU_POWER_RF_ENABLE_CONFIG48_FTDF_REG_dem_sigdetect_en_ftdf_dcf_rx_Msk (0x1fUL) /*!< RFCU_POWER RF_ENABLE_CONFIG48_FTDF_REG: dem_sigdetect_en_ftdf_dcf_rx (Bitfield-Mask: 0x1f) */
 #define RFCU_POWER_RF_ENABLE_CONFIG48_FTDF_REG_spare4_en_ftdf_dcf_tx_Pos (5UL) /*!< RFCU_POWER RF_ENABLE_CONFIG48_FTDF_REG: spare4_en_ftdf_dcf_tx (Bit 5) */
 #define RFCU_POWER_RF_ENABLE_CONFIG48_FTDF_REG_spare4_en_ftdf_dcf_tx_Msk (0x3e0UL) /*!< RFCU_POWER RF_ENABLE_CONFIG48_FTDF_REG: spare4_en_ftdf_dcf_tx (Bitfield-Mask: 0x1f) */
 
@@ -10582,27 +10689,49 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define RFCU_POWER_RF_ALWAYS_EN4_REG_ALW_EN_DEM_FTDF_EN_Pos (1UL)       /*!< RFCU_POWER RF_ALWAYS_EN4_REG: ALW_EN_DEM_FTDF_EN (Bit 1)    */
 #define RFCU_POWER_RF_ALWAYS_EN4_REG_ALW_EN_DEM_FTDF_EN_Msk (0x2UL)     /*!< RFCU_POWER RF_ALWAYS_EN4_REG: ALW_EN_DEM_FTDF_EN (Bitfield-Mask: 0x01) */
 
-/* --------------------------  RFCU_POWER_RF_PORT_EN_REG  ------------------------- */
-#define RFCU_POWER_RF_PORT_EN_REG_RF_PORT0_RX_Pos (0UL)                 /*!< RFCU_POWER RF_PORT_EN_REG: RF_PORT0_RX (Bit 0)              */
-#define RFCU_POWER_RF_PORT_EN_REG_RF_PORT0_RX_Msk (0x1UL)               /*!< RFCU_POWER RF_PORT_EN_REG: RF_PORT0_RX (Bitfield-Mask: 0x01) */
-#define RFCU_POWER_RF_PORT_EN_REG_RF_PORT0_TX_Pos (1UL)                 /*!< RFCU_POWER RF_PORT_EN_REG: RF_PORT0_TX (Bit 1)              */
-#define RFCU_POWER_RF_PORT_EN_REG_RF_PORT0_TX_Msk (0x2UL)               /*!< RFCU_POWER RF_PORT_EN_REG: RF_PORT0_TX (Bitfield-Mask: 0x01) */
-#define RFCU_POWER_RF_PORT_EN_REG_RF_PORT1_RX_Pos (2UL)                 /*!< RFCU_POWER RF_PORT_EN_REG: RF_PORT1_RX (Bit 2)              */
-#define RFCU_POWER_RF_PORT_EN_REG_RF_PORT1_RX_Msk (0x4UL)               /*!< RFCU_POWER RF_PORT_EN_REG: RF_PORT1_RX (Bitfield-Mask: 0x01) */
-#define RFCU_POWER_RF_PORT_EN_REG_RF_PORT1_TX_Pos (3UL)                 /*!< RFCU_POWER RF_PORT_EN_REG: RF_PORT1_TX (Bit 3)              */
-#define RFCU_POWER_RF_PORT_EN_REG_RF_PORT1_TX_Msk (0x8UL)               /*!< RFCU_POWER RF_PORT_EN_REG: RF_PORT1_TX (Bitfield-Mask: 0x01) */
-#define RFCU_POWER_RF_PORT_EN_REG_RF_PORT2_RX_Pos (4UL)                 /*!< RFCU_POWER RF_PORT_EN_REG: RF_PORT2_RX (Bit 4)              */
-#define RFCU_POWER_RF_PORT_EN_REG_RF_PORT2_RX_Msk (0x10UL)              /*!< RFCU_POWER RF_PORT_EN_REG: RF_PORT2_RX (Bitfield-Mask: 0x01) */
-#define RFCU_POWER_RF_PORT_EN_REG_RF_PORT2_TX_Pos (5UL)                 /*!< RFCU_POWER RF_PORT_EN_REG: RF_PORT2_TX (Bit 5)              */
-#define RFCU_POWER_RF_PORT_EN_REG_RF_PORT2_TX_Msk (0x20UL)              /*!< RFCU_POWER RF_PORT_EN_REG: RF_PORT2_TX (Bitfield-Mask: 0x01) */
-#define RFCU_POWER_RF_PORT_EN_REG_RF_PORT3_RX_Pos (6UL)                 /*!< RFCU_POWER RF_PORT_EN_REG: RF_PORT3_RX (Bit 6)              */
-#define RFCU_POWER_RF_PORT_EN_REG_RF_PORT3_RX_Msk (0x40UL)              /*!< RFCU_POWER RF_PORT_EN_REG: RF_PORT3_RX (Bitfield-Mask: 0x01) */
-#define RFCU_POWER_RF_PORT_EN_REG_RF_PORT3_TX_Pos (7UL)                 /*!< RFCU_POWER RF_PORT_EN_REG: RF_PORT3_TX (Bit 7)              */
-#define RFCU_POWER_RF_PORT_EN_REG_RF_PORT3_TX_Msk (0x80UL)              /*!< RFCU_POWER RF_PORT_EN_REG: RF_PORT3_TX (Bitfield-Mask: 0x01) */
-#define RFCU_POWER_RF_PORT_EN_REG_RF_PORT4_RX_Pos (8UL)                 /*!< RFCU_POWER RF_PORT_EN_REG: RF_PORT4_RX (Bit 8)              */
-#define RFCU_POWER_RF_PORT_EN_REG_RF_PORT4_RX_Msk (0x100UL)             /*!< RFCU_POWER RF_PORT_EN_REG: RF_PORT4_RX (Bitfield-Mask: 0x01) */
-#define RFCU_POWER_RF_PORT_EN_REG_RF_PORT4_TX_Pos (9UL)                 /*!< RFCU_POWER RF_PORT_EN_REG: RF_PORT4_TX (Bit 9)              */
-#define RFCU_POWER_RF_PORT_EN_REG_RF_PORT4_TX_Msk (0x200UL)             /*!< RFCU_POWER RF_PORT_EN_REG: RF_PORT4_TX (Bitfield-Mask: 0x01) */
+/* ------------------------  RFCU_POWER_RF_PORT_EN_BLE_REG  ----------------------- */
+#define RFCU_POWER_RF_PORT_EN_BLE_REG_RF_PORT0_RX_Pos (0UL)             /*!< RFCU_POWER RF_PORT_EN_BLE_REG: RF_PORT0_RX (Bit 0)          */
+#define RFCU_POWER_RF_PORT_EN_BLE_REG_RF_PORT0_RX_Msk (0x1UL)           /*!< RFCU_POWER RF_PORT_EN_BLE_REG: RF_PORT0_RX (Bitfield-Mask: 0x01) */
+#define RFCU_POWER_RF_PORT_EN_BLE_REG_RF_PORT0_TX_Pos (1UL)             /*!< RFCU_POWER RF_PORT_EN_BLE_REG: RF_PORT0_TX (Bit 1)          */
+#define RFCU_POWER_RF_PORT_EN_BLE_REG_RF_PORT0_TX_Msk (0x2UL)           /*!< RFCU_POWER RF_PORT_EN_BLE_REG: RF_PORT0_TX (Bitfield-Mask: 0x01) */
+#define RFCU_POWER_RF_PORT_EN_BLE_REG_RF_PORT1_RX_Pos (2UL)             /*!< RFCU_POWER RF_PORT_EN_BLE_REG: RF_PORT1_RX (Bit 2)          */
+#define RFCU_POWER_RF_PORT_EN_BLE_REG_RF_PORT1_RX_Msk (0x4UL)           /*!< RFCU_POWER RF_PORT_EN_BLE_REG: RF_PORT1_RX (Bitfield-Mask: 0x01) */
+#define RFCU_POWER_RF_PORT_EN_BLE_REG_RF_PORT1_TX_Pos (3UL)             /*!< RFCU_POWER RF_PORT_EN_BLE_REG: RF_PORT1_TX (Bit 3)          */
+#define RFCU_POWER_RF_PORT_EN_BLE_REG_RF_PORT1_TX_Msk (0x8UL)           /*!< RFCU_POWER RF_PORT_EN_BLE_REG: RF_PORT1_TX (Bitfield-Mask: 0x01) */
+#define RFCU_POWER_RF_PORT_EN_BLE_REG_RF_PORT2_RX_Pos (4UL)             /*!< RFCU_POWER RF_PORT_EN_BLE_REG: RF_PORT2_RX (Bit 4)          */
+#define RFCU_POWER_RF_PORT_EN_BLE_REG_RF_PORT2_RX_Msk (0x10UL)          /*!< RFCU_POWER RF_PORT_EN_BLE_REG: RF_PORT2_RX (Bitfield-Mask: 0x01) */
+#define RFCU_POWER_RF_PORT_EN_BLE_REG_RF_PORT2_TX_Pos (5UL)             /*!< RFCU_POWER RF_PORT_EN_BLE_REG: RF_PORT2_TX (Bit 5)          */
+#define RFCU_POWER_RF_PORT_EN_BLE_REG_RF_PORT2_TX_Msk (0x20UL)          /*!< RFCU_POWER RF_PORT_EN_BLE_REG: RF_PORT2_TX (Bitfield-Mask: 0x01) */
+#define RFCU_POWER_RF_PORT_EN_BLE_REG_RF_PORT3_RX_Pos (6UL)             /*!< RFCU_POWER RF_PORT_EN_BLE_REG: RF_PORT3_RX (Bit 6)          */
+#define RFCU_POWER_RF_PORT_EN_BLE_REG_RF_PORT3_RX_Msk (0x40UL)          /*!< RFCU_POWER RF_PORT_EN_BLE_REG: RF_PORT3_RX (Bitfield-Mask: 0x01) */
+#define RFCU_POWER_RF_PORT_EN_BLE_REG_RF_PORT3_TX_Pos (7UL)             /*!< RFCU_POWER RF_PORT_EN_BLE_REG: RF_PORT3_TX (Bit 7)          */
+#define RFCU_POWER_RF_PORT_EN_BLE_REG_RF_PORT3_TX_Msk (0x80UL)          /*!< RFCU_POWER RF_PORT_EN_BLE_REG: RF_PORT3_TX (Bitfield-Mask: 0x01) */
+#define RFCU_POWER_RF_PORT_EN_BLE_REG_RF_PORT4_RX_Pos (8UL)             /*!< RFCU_POWER RF_PORT_EN_BLE_REG: RF_PORT4_RX (Bit 8)          */
+#define RFCU_POWER_RF_PORT_EN_BLE_REG_RF_PORT4_RX_Msk (0x100UL)         /*!< RFCU_POWER RF_PORT_EN_BLE_REG: RF_PORT4_RX (Bitfield-Mask: 0x01) */
+#define RFCU_POWER_RF_PORT_EN_BLE_REG_RF_PORT4_TX_Pos (9UL)             /*!< RFCU_POWER RF_PORT_EN_BLE_REG: RF_PORT4_TX (Bit 9)          */
+#define RFCU_POWER_RF_PORT_EN_BLE_REG_RF_PORT4_TX_Msk (0x200UL)         /*!< RFCU_POWER RF_PORT_EN_BLE_REG: RF_PORT4_TX (Bitfield-Mask: 0x01) */
+
+/* -----------------------  RFCU_POWER_RF_PORT_EN_FTDF_REG  ----------------------- */
+#define RFCU_POWER_RF_PORT_EN_FTDF_REG_RF_PORT0_RX_Pos (0UL)            /*!< RFCU_POWER RF_PORT_EN_FTDF_REG: RF_PORT0_RX (Bit 0)         */
+#define RFCU_POWER_RF_PORT_EN_FTDF_REG_RF_PORT0_RX_Msk (0x1UL)          /*!< RFCU_POWER RF_PORT_EN_FTDF_REG: RF_PORT0_RX (Bitfield-Mask: 0x01) */
+#define RFCU_POWER_RF_PORT_EN_FTDF_REG_RF_PORT0_TX_Pos (1UL)            /*!< RFCU_POWER RF_PORT_EN_FTDF_REG: RF_PORT0_TX (Bit 1)         */
+#define RFCU_POWER_RF_PORT_EN_FTDF_REG_RF_PORT0_TX_Msk (0x2UL)          /*!< RFCU_POWER RF_PORT_EN_FTDF_REG: RF_PORT0_TX (Bitfield-Mask: 0x01) */
+#define RFCU_POWER_RF_PORT_EN_FTDF_REG_RF_PORT1_RX_Pos (2UL)            /*!< RFCU_POWER RF_PORT_EN_FTDF_REG: RF_PORT1_RX (Bit 2)         */
+#define RFCU_POWER_RF_PORT_EN_FTDF_REG_RF_PORT1_RX_Msk (0x4UL)          /*!< RFCU_POWER RF_PORT_EN_FTDF_REG: RF_PORT1_RX (Bitfield-Mask: 0x01) */
+#define RFCU_POWER_RF_PORT_EN_FTDF_REG_RF_PORT1_TX_Pos (3UL)            /*!< RFCU_POWER RF_PORT_EN_FTDF_REG: RF_PORT1_TX (Bit 3)         */
+#define RFCU_POWER_RF_PORT_EN_FTDF_REG_RF_PORT1_TX_Msk (0x8UL)          /*!< RFCU_POWER RF_PORT_EN_FTDF_REG: RF_PORT1_TX (Bitfield-Mask: 0x01) */
+#define RFCU_POWER_RF_PORT_EN_FTDF_REG_RF_PORT2_RX_Pos (4UL)            /*!< RFCU_POWER RF_PORT_EN_FTDF_REG: RF_PORT2_RX (Bit 4)         */
+#define RFCU_POWER_RF_PORT_EN_FTDF_REG_RF_PORT2_RX_Msk (0x10UL)         /*!< RFCU_POWER RF_PORT_EN_FTDF_REG: RF_PORT2_RX (Bitfield-Mask: 0x01) */
+#define RFCU_POWER_RF_PORT_EN_FTDF_REG_RF_PORT2_TX_Pos (5UL)            /*!< RFCU_POWER RF_PORT_EN_FTDF_REG: RF_PORT2_TX (Bit 5)         */
+#define RFCU_POWER_RF_PORT_EN_FTDF_REG_RF_PORT2_TX_Msk (0x20UL)         /*!< RFCU_POWER RF_PORT_EN_FTDF_REG: RF_PORT2_TX (Bitfield-Mask: 0x01) */
+#define RFCU_POWER_RF_PORT_EN_FTDF_REG_RF_PORT3_RX_Pos (6UL)            /*!< RFCU_POWER RF_PORT_EN_FTDF_REG: RF_PORT3_RX (Bit 6)         */
+#define RFCU_POWER_RF_PORT_EN_FTDF_REG_RF_PORT3_RX_Msk (0x40UL)         /*!< RFCU_POWER RF_PORT_EN_FTDF_REG: RF_PORT3_RX (Bitfield-Mask: 0x01) */
+#define RFCU_POWER_RF_PORT_EN_FTDF_REG_RF_PORT3_TX_Pos (7UL)            /*!< RFCU_POWER RF_PORT_EN_FTDF_REG: RF_PORT3_TX (Bit 7)         */
+#define RFCU_POWER_RF_PORT_EN_FTDF_REG_RF_PORT3_TX_Msk (0x80UL)         /*!< RFCU_POWER RF_PORT_EN_FTDF_REG: RF_PORT3_TX (Bitfield-Mask: 0x01) */
+#define RFCU_POWER_RF_PORT_EN_FTDF_REG_RF_PORT4_RX_Pos (8UL)            /*!< RFCU_POWER RF_PORT_EN_FTDF_REG: RF_PORT4_RX (Bit 8)         */
+#define RFCU_POWER_RF_PORT_EN_FTDF_REG_RF_PORT4_RX_Msk (0x100UL)        /*!< RFCU_POWER RF_PORT_EN_FTDF_REG: RF_PORT4_RX (Bitfield-Mask: 0x01) */
+#define RFCU_POWER_RF_PORT_EN_FTDF_REG_RF_PORT4_TX_Pos (9UL)            /*!< RFCU_POWER RF_PORT_EN_FTDF_REG: RF_PORT4_TX (Bit 9)         */
+#define RFCU_POWER_RF_PORT_EN_FTDF_REG_RF_PORT4_TX_Msk (0x200UL)        /*!< RFCU_POWER RF_PORT_EN_FTDF_REG: RF_PORT4_TX (Bitfield-Mask: 0x01) */
 
 /* -------------------------  RFCU_POWER_RF_PORT_POL_REG  ------------------------- */
 #define RFCU_POWER_RF_PORT_POL_REG_RF_PORT0_POL_Pos (0UL)               /*!< RFCU_POWER RF_PORT_POL_REG: RF_PORT0_POL (Bit 0)            */
@@ -10855,6 +10984,26 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 /* --------------------------  TIMER1_CAPTIM_PWM_DC_REG  -------------------------- */
 #define TIMER1_CAPTIM_PWM_DC_REG_CAPTIM_PWM_DC_Pos (0UL)                /*!< TIMER1 CAPTIM_PWM_DC_REG: CAPTIM_PWM_DC (Bit 0)             */
 #define TIMER1_CAPTIM_PWM_DC_REG_CAPTIM_PWM_DC_Msk (0xffffUL)           /*!< TIMER1 CAPTIM_PWM_DC_REG: CAPTIM_PWM_DC (Bitfield-Mask: 0xffff) */
+
+/* ------------------------  TIMER1_CAPTIM_TIMER_HVAL_REG  ------------------------ */
+#define TIMER1_CAPTIM_TIMER_HVAL_REG_CAPTIM_TIMER_HVALUE_Pos (0UL)      /*!< TIMER1 CAPTIM_TIMER_HVAL_REG: CAPTIM_TIMER_HVALUE (Bit 0)   */
+#define TIMER1_CAPTIM_TIMER_HVAL_REG_CAPTIM_TIMER_HVALUE_Msk (0xffffUL) /*!< TIMER1 CAPTIM_TIMER_HVAL_REG: CAPTIM_TIMER_HVALUE (Bitfield-Mask: 0xffff) */
+
+/* ------------------------  TIMER1_CAPTIM_RELOAD_HIGH_REG  ----------------------- */
+#define TIMER1_CAPTIM_RELOAD_HIGH_REG_CAPTIM_RELOAD_HIGH_Pos (0UL)      /*!< TIMER1 CAPTIM_RELOAD_HIGH_REG: CAPTIM_RELOAD_HIGH (Bit 0)   */
+#define TIMER1_CAPTIM_RELOAD_HIGH_REG_CAPTIM_RELOAD_HIGH_Msk (0xffffUL) /*!< TIMER1 CAPTIM_RELOAD_HIGH_REG: CAPTIM_RELOAD_HIGH (Bitfield-Mask: 0xffff) */
+
+/* --------------------  TIMER1_CAPTIM_CAPTURE_HIGH_GPIO1_REG  -------------------- */
+#define TIMER1_CAPTIM_CAPTURE_HIGH_GPIO1_REG_CAPTIM_CAPTURE_HIGH_GPIO1_Pos (0UL) /*!< TIMER1 CAPTIM_CAPTURE_HIGH_GPIO1_REG: CAPTIM_CAPTURE_HIGH_GPIO1 (Bit 0) */
+#define TIMER1_CAPTIM_CAPTURE_HIGH_GPIO1_REG_CAPTIM_CAPTURE_HIGH_GPIO1_Msk (0xffffUL) /*!< TIMER1 CAPTIM_CAPTURE_HIGH_GPIO1_REG: CAPTIM_CAPTURE_HIGH_GPIO1 (Bitfield-Mask: 0xffff) */
+
+/* --------------------  TIMER1_CAPTIM_CAPTURE_HIGH_GPIO2_REG  -------------------- */
+#define TIMER1_CAPTIM_CAPTURE_HIGH_GPIO2_REG_CAPTIM_CAPTURE_HIGH_GPIO2_Pos (0UL) /*!< TIMER1 CAPTIM_CAPTURE_HIGH_GPIO2_REG: CAPTIM_CAPTURE_HIGH_GPIO2 (Bit 0) */
+#define TIMER1_CAPTIM_CAPTURE_HIGH_GPIO2_REG_CAPTIM_CAPTURE_HIGH_GPIO2_Msk (0xffffUL) /*!< TIMER1 CAPTIM_CAPTURE_HIGH_GPIO2_REG: CAPTIM_CAPTURE_HIGH_GPIO2 (Bitfield-Mask: 0xffff) */
+
+/* ----------------------  TIMER1_CAPTIM_SHOTWIDTH_HIGH_REG  ---------------------- */
+#define TIMER1_CAPTIM_SHOTWIDTH_HIGH_REG_CAPTIM_SHOTWIDTH_HIGH_Pos (0UL) /*!< TIMER1 CAPTIM_SHOTWIDTH_HIGH_REG: CAPTIM_SHOTWIDTH_HIGH (Bit 0) */
+#define TIMER1_CAPTIM_SHOTWIDTH_HIGH_REG_CAPTIM_SHOTWIDTH_HIGH_Msk (0xffffUL) /*!< TIMER1 CAPTIM_SHOTWIDTH_HIGH_REG: CAPTIM_SHOTWIDTH_HIGH (Bitfield-Mask: 0xffff) */
 
 
 /* ================================================================================ */
@@ -11756,21 +11905,9 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #define WAKEUP_WKUP_CTRL_REG_WKUP_ENABLE_IRQ_Pos (7UL)                  /*!< WAKEUP WKUP_CTRL_REG: WKUP_ENABLE_IRQ (Bit 7)               */
 #define WAKEUP_WKUP_CTRL_REG_WKUP_ENABLE_IRQ_Msk (0x80UL)               /*!< WAKEUP WKUP_CTRL_REG: WKUP_ENABLE_IRQ (Bitfield-Mask: 0x01) */
 
-/* ---------------------------  WAKEUP_WKUP_COMPARE_REG  -------------------------- */
-#define WAKEUP_WKUP_COMPARE_REG_COMPARE_Pos   (0UL)                     /*!< WAKEUP WKUP_COMPARE_REG: COMPARE (Bit 0)                    */
-#define WAKEUP_WKUP_COMPARE_REG_COMPARE_Msk   (0xffUL)                  /*!< WAKEUP WKUP_COMPARE_REG: COMPARE (Bitfield-Mask: 0xff)      */
-
 /* --------------------------  WAKEUP_WKUP_RESET_IRQ_REG  ------------------------- */
 #define WAKEUP_WKUP_RESET_IRQ_REG_WKUP_IRQ_RST_Pos (0UL)                /*!< WAKEUP WKUP_RESET_IRQ_REG: WKUP_IRQ_RST (Bit 0)             */
 #define WAKEUP_WKUP_RESET_IRQ_REG_WKUP_IRQ_RST_Msk (0xffffUL)           /*!< WAKEUP WKUP_RESET_IRQ_REG: WKUP_IRQ_RST (Bitfield-Mask: 0xffff) */
-
-/* ---------------------------  WAKEUP_WKUP_COUNTER_REG  -------------------------- */
-#define WAKEUP_WKUP_COUNTER_REG_EVENT_VALUE_Pos (0UL)                   /*!< WAKEUP WKUP_COUNTER_REG: EVENT_VALUE (Bit 0)                */
-#define WAKEUP_WKUP_COUNTER_REG_EVENT_VALUE_Msk (0xffUL)                /*!< WAKEUP WKUP_COUNTER_REG: EVENT_VALUE (Bitfield-Mask: 0xff)  */
-
-/* -------------------------  WAKEUP_WKUP_RESET_CNTR_REG  ------------------------- */
-#define WAKEUP_WKUP_RESET_CNTR_REG_WKUP_CNTR_RST_Pos (0UL)              /*!< WAKEUP WKUP_RESET_CNTR_REG: WKUP_CNTR_RST (Bit 0)           */
-#define WAKEUP_WKUP_RESET_CNTR_REG_WKUP_CNTR_RST_Msk (0xffffUL)         /*!< WAKEUP WKUP_RESET_CNTR_REG: WKUP_CNTR_RST (Bitfield-Mask: 0xffff) */
 
 /* --------------------------  WAKEUP_WKUP_SELECT_P0_REG  ------------------------- */
 #define WAKEUP_WKUP_SELECT_P0_REG_WKUP_SELECT_P0_Pos (0UL)              /*!< WAKEUP WKUP_SELECT_P0_REG: WKUP_SELECT_P0 (Bit 0)           */
@@ -11811,6 +11948,58 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 /* ---------------------------  WAKEUP_WKUP_POL_P4_REG  --------------------------- */
 #define WAKEUP_WKUP_POL_P4_REG_WKUP_POL_P4_Pos (0UL)                    /*!< WAKEUP WKUP_POL_P4_REG: WKUP_POL_P4 (Bit 0)                 */
 #define WAKEUP_WKUP_POL_P4_REG_WKUP_POL_P4_Msk (0xffUL)                 /*!< WAKEUP WKUP_POL_P4_REG: WKUP_POL_P4 (Bitfield-Mask: 0xff)   */
+
+/* --------------------------  WAKEUP_WKUP_STATUS_0_REG  -------------------------- */
+#define WAKEUP_WKUP_STATUS_0_REG_WKUP_STAT_P0_Pos (0UL)                 /*!< WAKEUP WKUP_STATUS_0_REG: WKUP_STAT_P0 (Bit 0)              */
+#define WAKEUP_WKUP_STATUS_0_REG_WKUP_STAT_P0_Msk (0xffUL)              /*!< WAKEUP WKUP_STATUS_0_REG: WKUP_STAT_P0 (Bitfield-Mask: 0xff) */
+#define WAKEUP_WKUP_STATUS_0_REG_WKUP_STAT_P1_Pos (8UL)                 /*!< WAKEUP WKUP_STATUS_0_REG: WKUP_STAT_P1 (Bit 8)              */
+#define WAKEUP_WKUP_STATUS_0_REG_WKUP_STAT_P1_Msk (0xff00UL)            /*!< WAKEUP WKUP_STATUS_0_REG: WKUP_STAT_P1 (Bitfield-Mask: 0xff) */
+
+/* --------------------------  WAKEUP_WKUP_STATUS_1_REG  -------------------------- */
+#define WAKEUP_WKUP_STATUS_1_REG_WKUP_STAT_P2_Pos (0UL)                 /*!< WAKEUP WKUP_STATUS_1_REG: WKUP_STAT_P2 (Bit 0)              */
+#define WAKEUP_WKUP_STATUS_1_REG_WKUP_STAT_P2_Msk (0x1fUL)              /*!< WAKEUP WKUP_STATUS_1_REG: WKUP_STAT_P2 (Bitfield-Mask: 0x1f) */
+
+/* --------------------------  WAKEUP_WKUP_STATUS_2_REG  -------------------------- */
+#define WAKEUP_WKUP_STATUS_2_REG_WKUP_STAT_P3_Pos (0UL)                 /*!< WAKEUP WKUP_STATUS_2_REG: WKUP_STAT_P3 (Bit 0)              */
+#define WAKEUP_WKUP_STATUS_2_REG_WKUP_STAT_P3_Msk (0xffUL)              /*!< WAKEUP WKUP_STATUS_2_REG: WKUP_STAT_P3 (Bitfield-Mask: 0xff) */
+#define WAKEUP_WKUP_STATUS_2_REG_WKUP_STAT_P4_Pos (8UL)                 /*!< WAKEUP WKUP_STATUS_2_REG: WKUP_STAT_P4 (Bit 8)              */
+#define WAKEUP_WKUP_STATUS_2_REG_WKUP_STAT_P4_Msk (0xff00UL)            /*!< WAKEUP WKUP_STATUS_2_REG: WKUP_STAT_P4 (Bitfield-Mask: 0xff) */
+
+/* ---------------------------  WAKEUP_WKUP_CLEAR_0_REG  -------------------------- */
+#define WAKEUP_WKUP_CLEAR_0_REG_WKUP_CLEAR_P0_Pos (0UL)                 /*!< WAKEUP WKUP_CLEAR_0_REG: WKUP_CLEAR_P0 (Bit 0)              */
+#define WAKEUP_WKUP_CLEAR_0_REG_WKUP_CLEAR_P0_Msk (0xffUL)              /*!< WAKEUP WKUP_CLEAR_0_REG: WKUP_CLEAR_P0 (Bitfield-Mask: 0xff) */
+#define WAKEUP_WKUP_CLEAR_0_REG_WKUP_CLEAR_P1_Pos (8UL)                 /*!< WAKEUP WKUP_CLEAR_0_REG: WKUP_CLEAR_P1 (Bit 8)              */
+#define WAKEUP_WKUP_CLEAR_0_REG_WKUP_CLEAR_P1_Msk (0xff00UL)            /*!< WAKEUP WKUP_CLEAR_0_REG: WKUP_CLEAR_P1 (Bitfield-Mask: 0xff) */
+
+/* ---------------------------  WAKEUP_WKUP_CLEAR_1_REG  -------------------------- */
+#define WAKEUP_WKUP_CLEAR_1_REG_WKUP_CLEAR_P2_Pos (0UL)                 /*!< WAKEUP WKUP_CLEAR_1_REG: WKUP_CLEAR_P2 (Bit 0)              */
+#define WAKEUP_WKUP_CLEAR_1_REG_WKUP_CLEAR_P2_Msk (0x1fUL)              /*!< WAKEUP WKUP_CLEAR_1_REG: WKUP_CLEAR_P2 (Bitfield-Mask: 0x1f) */
+
+/* ---------------------------  WAKEUP_WKUP_CLEAR_2_REG  -------------------------- */
+#define WAKEUP_WKUP_CLEAR_2_REG_WKUP_CLEAR_P3_Pos (0UL)                 /*!< WAKEUP WKUP_CLEAR_2_REG: WKUP_CLEAR_P3 (Bit 0)              */
+#define WAKEUP_WKUP_CLEAR_2_REG_WKUP_CLEAR_P3_Msk (0xffUL)              /*!< WAKEUP WKUP_CLEAR_2_REG: WKUP_CLEAR_P3 (Bitfield-Mask: 0xff) */
+#define WAKEUP_WKUP_CLEAR_2_REG_WKUP_CLEAR_P4_Pos (8UL)                 /*!< WAKEUP WKUP_CLEAR_2_REG: WKUP_CLEAR_P4 (Bit 8)              */
+#define WAKEUP_WKUP_CLEAR_2_REG_WKUP_CLEAR_P4_Msk (0xff00UL)            /*!< WAKEUP WKUP_CLEAR_2_REG: WKUP_CLEAR_P4 (Bitfield-Mask: 0xff) */
+
+/* -------------------------  WAKEUP_WKUP_SEL_GPIO_P0_REG  ------------------------ */
+#define WAKEUP_WKUP_SEL_GPIO_P0_REG_WKUP_SEL_GPIO_P0_Pos (0UL)          /*!< WAKEUP WKUP_SEL_GPIO_P0_REG: WKUP_SEL_GPIO_P0 (Bit 0)       */
+#define WAKEUP_WKUP_SEL_GPIO_P0_REG_WKUP_SEL_GPIO_P0_Msk (0xffUL)       /*!< WAKEUP WKUP_SEL_GPIO_P0_REG: WKUP_SEL_GPIO_P0 (Bitfield-Mask: 0xff) */
+
+/* -------------------------  WAKEUP_WKUP_SEL_GPIO_P1_REG  ------------------------ */
+#define WAKEUP_WKUP_SEL_GPIO_P1_REG_WKUP_SEL_GPIO_P1_Pos (0UL)          /*!< WAKEUP WKUP_SEL_GPIO_P1_REG: WKUP_SEL_GPIO_P1 (Bit 0)       */
+#define WAKEUP_WKUP_SEL_GPIO_P1_REG_WKUP_SEL_GPIO_P1_Msk (0xffUL)       /*!< WAKEUP WKUP_SEL_GPIO_P1_REG: WKUP_SEL_GPIO_P1 (Bitfield-Mask: 0xff) */
+
+/* -------------------------  WAKEUP_WKUP_SEL_GPIO_P2_REG  ------------------------ */
+#define WAKEUP_WKUP_SEL_GPIO_P2_REG_WKUP_SEL_GPIO_P2_Pos (0UL)          /*!< WAKEUP WKUP_SEL_GPIO_P2_REG: WKUP_SEL_GPIO_P2 (Bit 0)       */
+#define WAKEUP_WKUP_SEL_GPIO_P2_REG_WKUP_SEL_GPIO_P2_Msk (0x1fUL)       /*!< WAKEUP WKUP_SEL_GPIO_P2_REG: WKUP_SEL_GPIO_P2 (Bitfield-Mask: 0x1f) */
+
+/* -------------------------  WAKEUP_WKUP_SEL_GPIO_P3_REG  ------------------------ */
+#define WAKEUP_WKUP_SEL_GPIO_P3_REG_WKUP_SEL_GPIO_P3_Pos (0UL)          /*!< WAKEUP WKUP_SEL_GPIO_P3_REG: WKUP_SEL_GPIO_P3 (Bit 0)       */
+#define WAKEUP_WKUP_SEL_GPIO_P3_REG_WKUP_SEL_GPIO_P3_Msk (0xffUL)       /*!< WAKEUP WKUP_SEL_GPIO_P3_REG: WKUP_SEL_GPIO_P3 (Bitfield-Mask: 0xff) */
+
+/* -------------------------  WAKEUP_WKUP_SEL_GPIO_P4_REG  ------------------------ */
+#define WAKEUP_WKUP_SEL_GPIO_P4_REG_WKUP_SEL_GPIO_P4_Pos (0UL)          /*!< WAKEUP WKUP_SEL_GPIO_P4_REG: WKUP_SEL_GPIO_P4 (Bit 0)       */
+#define WAKEUP_WKUP_SEL_GPIO_P4_REG_WKUP_SEL_GPIO_P4_Msk (0xffUL)       /*!< WAKEUP WKUP_SEL_GPIO_P4_REG: WKUP_SEL_GPIO_P4 (Bitfield-Mask: 0xff) */
 
 
 /* ================================================================================ */
@@ -11923,7 +12112,7 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 
 
 /** @} */ /* End of group Device_Peripheral_Registers */
-/** @} */ /* End of group DA14680AD */
+/** @} */ /* End of group DA14680BA */
 /** @} */ /* End of group Dialog */
 
 #ifdef __cplusplus
@@ -11931,5 +12120,5 @@ typedef struct {                                    /*!< (@ 0x50003100) WDOG Str
 #endif
 
 
-#endif  /* DA14680AD_H */
+#endif  /* DA14680BA_H */
 

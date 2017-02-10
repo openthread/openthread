@@ -28,11 +28,25 @@ REM
 
 pushd %APPVEYOR_BUILD_FOLDER%
 
-REM Make the release directory
+REM Make the release directories
 mkdir release
+mkdir release\include
+mkdir release\include\commissioning
+mkdir release\include\missing
+mkdir release\include\platform
 mkdir release\libs
 mkdir release\symbols
 mkdir release\symbols\TraceFormat
+
+REM Copy the relavant include headers
+
+copy include\openthread.h release\include
+copy include\openthread-types.h release\include
+copy include\commissioning\commissioner.h release\include\commissioning
+copy include\commissioning\joiner.h release\include\commissioning
+copy include\platform\toolchain.h release\include\platform
+copy src\missing\stdbool\stdbool.h release\include\missing
+copy src\missing\stdint\stdint.h release\include\missing
 
 REM Copy the relavant binaries
 
@@ -52,6 +66,12 @@ copy build\bin\%Platform2%\%Configuration%\exe\otCli.exe release
 copy build\bin\%Platform2%\%Configuration%\exe\otCli.pdb release\symbols
 copy build\bin\%Platform2%\%Configuration%\exe\otTestRunner.exe release
 copy build\bin\%Platform2%\%Configuration%\exe\otTestRunner.pdb release\symbols
+
+REM Copy the tools
+
+copy tools\windows\* release
+copy tools\windows\%Platform%\otInstall.exe release
+copy "C:\Program Files (x86)\Windows Kits\10\Tools\%Platform%\devcon.exe" release
 
 REM Generate the trace format files to decode the WPP logs
 

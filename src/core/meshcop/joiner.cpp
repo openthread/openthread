@@ -445,6 +445,9 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Header &aRequestHeader,
 
     otLogInfoArp("Sent Joiner Entrust response");
 
+    otLogInfoMeshCoP("Sent joiner entrust response length = %d", message->GetLength());
+    otLogCertMeshCoP("[THCI] direction=send | type=JOIN_ENT.rsp");
+
 exit:
 
     if (error != kThreadError_None && message != NULL)

@@ -81,13 +81,10 @@ otInstance::otInstance(void) :
     mActiveScanCallbackContext(NULL),
     mEnergyScanCallback(NULL),
     mEnergyScanCallbackContext(NULL),
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    mLinkRawEnabled(false),
-    mLinkRawReceiveDoneCallback(NULL),
-    mLinkRawTransmitDoneCallback(NULL),
-    mLinkRawEnergyScanDoneCallback(NULL),
-#endif // OPENTHREAD_ENABLE_RAW_LINK_API
     mThreadNetif(mIp6)
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+    , mLinkRaw(*this)
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     , mApplicationCoapServer(mIp6.mUdp, OT_DEFAULT_COAP_PORT)
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
@@ -622,7 +619,25 @@ ThreadError otBecomeChild(otInstance *aInstance, otMleAttachFilter aFilter)
 
 ThreadError otBecomeRouter(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetMle().BecomeRouter(ThreadStatusTlv::kHaveChildIdRequest);
+    ThreadError error = kThreadError_InvalidState;
+
+    switch (aInstance->mThreadNetif.GetMle().GetDeviceState())
+    {
+    case Mle::kDeviceStateDisabled:
+    case Mle::kDeviceStateDetached:
+        break;
+
+    case Mle::kDeviceStateChild:
+        error = aInstance->mThreadNetif.GetMle().BecomeRouter(ThreadStatusTlv::kHaveChildIdRequest);
+        break;
+
+    case Mle::kDeviceStateRouter:
+    case Mle::kDeviceStateLeader:
+        error = kThreadError_None;
+        break;
+    }
+
+    return error;
 }
 
 ThreadError otBecomeLeader(otInstance *aInstance)
@@ -1259,7 +1274,7 @@ ThreadError otInterfaceUp(otInstance *aInstance)
     otLogFuncEntry();
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    VerifyOrExit(!aInstance->mLinkRawEnabled, error = kThreadError_InvalidState);
+    VerifyOrExit(!aInstance->mLinkRaw.IsEnabled(), error = kThreadError_InvalidState);
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
     error = aInstance->mThreadNetif.Up();
@@ -1278,7 +1293,7 @@ ThreadError otInterfaceDown(otInstance *aInstance)
     otLogFuncEntry();
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    VerifyOrExit(!aInstance->mLinkRawEnabled, error = kThreadError_InvalidState);
+    VerifyOrExit(!aInstance->mLinkRaw.IsEnabled(), error = kThreadError_InvalidState);
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
     error = aInstance->mThreadNetif.Down();
@@ -1507,6 +1522,20 @@ bool otIsMessageLinkSecurityEnabled(otMessage aMessage)
 {
     Message *message = static_cast<Message *>(aMessage);
     return message->IsLinkSecurityEnabled();
+}
+
+void otMessageSetDirectTransmission(otMessage aMessage, bool aEnabled)
+{
+    Message *message = static_cast<Message *>(aMessage);
+
+    if (aEnabled)
+    {
+        message->SetDirectTransmission();
+    }
+    else
+    {
+        message->ClearDirectTransmission();
+    }
 }
 
 ThreadError otAppendMessage(otMessage aMessage, const void *aBuf, uint16_t aLength)

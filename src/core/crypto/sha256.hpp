@@ -61,12 +61,14 @@ public:
     };
 
     /**
-     * @brief constructor for initializing mbedtls_sha256_context
+     * Constructor for initializing mbedtls_sha256_context.
+     *
      */
     Sha256();
 
     /**
-     * @brief destructor for freeing mbedtls_sha256_context
+     * Destructor for freeing mbedtls_sha256_context.
+     *
      */
     ~Sha256();
 

@@ -85,6 +85,7 @@ configure_OPTIONS               = \
     --enable-cli                  \
     --enable-ncp                  \
     --enable-diag                 \
+    --enable-raw-link-api=no      \
     --with-examples=posix         \
     --with-platform-info=POSIX    \
     --enable-commissioner         \

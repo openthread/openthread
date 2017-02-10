@@ -61,12 +61,14 @@ public:
     };
 
     /**
-     * @brief constructor for initialization of mbedtls_md_context_t
+     * Constructor for initialization of mbedtls_md_context_t.
+     *
      */
     HmacSha256();
 
     /**
-     * @brief destructor for freeing of mbedtls_md_context_t
+     * Destructor for freeing of mbedtls_md_context_t.
+     *
      */
     ~HmacSha256();
 

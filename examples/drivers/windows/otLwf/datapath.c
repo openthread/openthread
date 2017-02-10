@@ -74,52 +74,6 @@ otLogBuffer(
 
 #endif
 
-_IRQL_requires_max_(PASSIVE_LEVEL)
-VOID
-otLwfEnableDataPath(
-    _In_ PMS_FILTER             pFilter
-    )
-/*++
-
-Routine Description:
-
-    Enables the datapath to allow NLBs to go through to OpenThread.
-
---*/
-{
-    LogFuncEntry(DRIVER_DEFAULT);
-
-    LogInfo(DRIVER_DEFAULT, "Interface %!GUID! enabling data path.", &pFilter->InterfaceGuid);
-
-    // Re-enabling data path
-    ExReInitializeRundownProtection(&pFilter->DataPathRundown);
-
-    LogFuncExit(DRIVER_DEFAULT);
-}
-
-_IRQL_requires_max_(PASSIVE_LEVEL)
-VOID
-otLwfDisableDataPath(
-    _In_ PMS_FILTER             pFilter
-    )
-/*++
-
-Routine Description:
-
-    Disables the datapath and waits for any outstanding calls 
-    into OpenThread to complete.
-
---*/
-{
-    LogFuncEntry(DRIVER_DEFAULT);
-
-    LogInfo(DRIVER_DEFAULT, "Interface %!GUID! disabling data path.", &pFilter->InterfaceGuid);
-
-    ExWaitForRundownProtectionRelease(&pFilter->DataPathRundown);
-
-    LogFuncExit(DRIVER_DEFAULT);
-}
-
 _Use_decl_annotations_
 VOID
 FilterSendNetBufferListsComplete(
@@ -151,32 +105,35 @@ Arguments:
     
     LogFuncEntryMsg(DRIVER_DATA_PATH, "Filter: %p, NBL: %p %!STATUS!", FilterModuleContext, NetBufferLists, NetBufferLists->Status);
 
-    if (pFilter->MiniportCapabilities.MiniportMode == OT_MP_MODE_RADIO)
+    PNET_BUFFER_LIST NBL = NetBufferLists;
+    while (NBL)
     {
-        NT_ASSERT(NetBufferLists == pFilter->SendNetBufferList);
-        NT_ASSERT(kStateTransmit == pFilter->otPhyState);
-        KeSetEvent(&pFilter->SendNetBufferListComplete, 0, FALSE);
-    }
-    else
-    {
-        NT_ASSERT(NET_BUFFER_LIST_NEXT_NBL(NetBufferLists) == NULL);
-        PNET_BUFFER NetBuffer = NET_BUFFER_LIST_FIRST_NB(NetBufferLists);
+        PNET_BUFFER_LIST NextNBL = NBL->Next;
+        PNET_BUFFER NetBuffer = NET_BUFFER_LIST_FIRST_NB(NBL);
 
         // Cancel command if we failed to send the NBL
-        if (!NT_SUCCESS(NetBufferLists->Status))
+        if (!NT_SUCCESS(NBL->Status))
         {
             spinel_tid_t tid = (spinel_tid_t)(ULONG_PTR)NetBuffer->ProtocolReserved[1];
             if (tid != 0)
             {
-                otLwfCancelCommandHandler(pFilter, NDIS_TEST_SEND_COMPLETE_AT_DISPATCH_LEVEL(SendCompleteFlags), tid);
+#if DBG
+                NT_ASSERT(pFilter->cmdInitTryCount < 9 || NBL->Status != NDIS_STATUS_PAUSED);
+#endif
+                otLwfCmdCancel(pFilter, NDIS_TEST_SEND_COMPLETE_AT_DISPATCH_LEVEL(SendCompleteFlags), tid);
             }
         }
 
         NetBuffer->DataLength = (ULONG)(ULONG_PTR)NetBuffer->ProtocolReserved[0];
         NdisAdvanceNetBufferDataStart(NetBuffer, NetBuffer->DataLength, TRUE, NULL);
-        NdisFreeNetBufferList(NetBufferLists);
+        NdisFreeNetBufferList(NBL);
+
+        // Release the command rundown protection
+        ExReleaseRundownProtection(&pFilter->cmdRundown);
+
+        NBL = NextNBL;
     }
-    
+
     LogFuncExit(DRIVER_DATA_PATH);
 }
 
@@ -211,11 +168,13 @@ Arguments:
 {
     PMS_FILTER          pFilter = (PMS_FILTER)FilterModuleContext;
     BOOLEAN             DispatchLevel = NDIS_TEST_SEND_AT_DISPATCH_LEVEL(SendFlags);
-    
+
+    UNREFERENCED_PARAMETER(PortNumber);
+
     LogFuncEntryMsg(DRIVER_DATA_PATH, "Filter: %p, NBL: %p", FilterModuleContext, NetBufferLists);
-    
+
     // Try to grab a ref on the data path first, to make sure we are allowed
-    if (!ExAcquireRundownProtection(&pFilter->DataPathRundown))
+    if (!ExAcquireRundownProtection(&pFilter->ExternalRefs))
     {
         LogVerbose(DRIVER_DEFAULT, "Failing SendNetBufferLists because data path isn't active.");
 
@@ -234,14 +193,12 @@ Arguments:
     }
     else
     {
-        if (pFilter->MiniportCapabilities.MiniportMode == OT_MP_MODE_RADIO)
+        if (pFilter->DeviceStatus == OTLWF_DEVICE_STATUS_RADIO_MODE)
         {
             // Indicate a new NBL to process on our worker thread
             otLwfEventProcessingIndicateNewNetBufferLists(
                 pFilter,
                 DispatchLevel,
-                FALSE,
-                PortNumber,
                 NetBufferLists
                 );
         }
@@ -253,7 +210,7 @@ Arguments:
                 PNET_BUFFER CurrNb = NET_BUFFER_LIST_FIRST_NB(CurrNbl);
                 while (CurrNb)
                 {
-                    otLwfSendTunnelPacket(pFilter, DispatchLevel, CurrNb, TRUE);
+                    otLwfCmdSendIp6PacketAsync(pFilter, DispatchLevel, CurrNb, TRUE);
                     CurrNb = NET_BUFFER_NEXT_NB(CurrNb);
                 }
 
@@ -269,9 +226,45 @@ Arguments:
         }
 
         // Release the data path ref now
-        ExReleaseRundownProtection(&pFilter->DataPathRundown);
+        ExReleaseRundownProtection(&pFilter->ExternalRefs);
     }
     
+    LogFuncExit(DRIVER_DATA_PATH);
+}
+
+_Use_decl_annotations_
+VOID
+FilterCancelSendNetBufferLists(
+    NDIS_HANDLE             FilterModuleContext,
+    PVOID                   CancelId
+    )
+/*++
+
+Routine Description:
+
+    This function cancels any NET_BUFFER_LISTs pended in the filter and then
+    calls the NdisFCancelSendNetBufferLists to propagate the cancel operation.
+
+    If your driver does not queue any send NBLs, you may omit this routine.
+    NDIS will propagate the cancelation on your behalf more efficiently.
+
+Arguments:
+
+    FilterModuleContext      - our filter context area.
+    CancelId                 - an identifier for all NBLs that should be dequeued
+
+*/
+{
+    PMS_FILTER pFilter = (PMS_FILTER)FilterModuleContext;
+
+    LogFuncEntryMsg(DRIVER_DATA_PATH, "Filter: %p, CancelId: %p", FilterModuleContext, CancelId);
+
+    // Only cancel if we are 'Thread on Host', otherwise we do everything inline
+    if (pFilter->DeviceStatus == OTLWF_DEVICE_STATUS_RADIO_MODE)
+    {
+        otLwfEventProcessingIndicateNetBufferListsCancelled(pFilter, CancelId);
+    }
+
     LogFuncExit(DRIVER_DATA_PATH);
 }
 
@@ -318,19 +311,15 @@ Arguments:
         {
             LogVerbose(DRIVER_DATA_PATH, "NBL failed on return: %!STATUS!", CurrNbl->Status);
         }
-        
-        //if (pFilter->MiniportCapabilities.MiniportMode == OT_MP_MODE_RADIO ||
-        //    pFilter->MiniportCapabilities.MiniportMode == OT_MP_MODE_THREAD)
-        {
-            PNET_BUFFER_LIST NblToFree = CurrNbl;
-            PNET_BUFFER NbToFree = NET_BUFFER_LIST_FIRST_NB(NblToFree);
 
-            CurrNbl = NET_BUFFER_LIST_NEXT_NBL(CurrNbl);
-            NET_BUFFER_LIST_NEXT_NBL(NblToFree) = NULL;
+        PNET_BUFFER_LIST NblToFree = CurrNbl;
+        PNET_BUFFER NbToFree = NET_BUFFER_LIST_FIRST_NB(NblToFree);
 
-            NdisAdvanceNetBufferDataStart(NbToFree, NET_BUFFER_DATA_LENGTH(NbToFree), TRUE, NULL);
-            NdisFreeNetBufferList(NblToFree);
-        }
+        CurrNbl = NET_BUFFER_LIST_NEXT_NBL(CurrNbl);
+        NET_BUFFER_LIST_NEXT_NBL(NblToFree) = NULL;
+
+        NdisAdvanceNetBufferDataStart(NbToFree, NET_BUFFER_DATA_LENGTH(NbToFree), TRUE, NULL);
+        NdisFreeNetBufferList(NblToFree);
     }
     
     LogFuncExit(DRIVER_DATA_PATH);
@@ -375,143 +364,55 @@ N.B.: It is important to check the ReceiveFlags in NDIS_TEST_RECEIVE_CANNOT_PEND
 
     PMS_FILTER  pFilter = (PMS_FILTER)FilterModuleContext;
     BOOLEAN     DispatchLevel = NDIS_TEST_RECEIVE_AT_DISPATCH_LEVEL(ReceiveFlags);
-    
+
+    UNREFERENCED_PARAMETER(PortNumber);
+    UNREFERENCED_PARAMETER(NumberOfNetBufferLists);
+
     LogFuncEntryMsg(DRIVER_DATA_PATH, "Filter: %p, NBL: %p", FilterModuleContext, NetBufferLists);
 
-    ASSERT(NumberOfNetBufferLists >= 1);
-    UNREFERENCED_PARAMETER(NumberOfNetBufferLists);
-    
-    // We don't support non-pending NBLs
-    NT_ASSERT(NDIS_TEST_RECEIVE_CAN_PEND(ReceiveFlags));
-    if (NDIS_TEST_RECEIVE_CANNOT_PEND(ReceiveFlags))
+    // Iterate through each NBL/NB and grab the data as a contiguous buffer to
+    // indicate to the Spinel command layer.
+    PNET_BUFFER_LIST CurrNbl = NetBufferLists;
+    while (CurrNbl)
     {
-        PNET_BUFFER_LIST CurrNbl = NetBufferLists;
-        while (CurrNbl)
+        PNET_BUFFER CurrNb = NET_BUFFER_LIST_FIRST_NB(CurrNbl);
+        while (CurrNb)
         {
-            NET_BUFFER_LIST_STATUS(CurrNbl) = NDIS_STATUS_NOT_SUPPORTED;
-            CurrNbl = NET_BUFFER_LIST_NEXT_NBL(CurrNbl);
-        }
-    }
-    else if (pFilter->MiniportCapabilities.MiniportMode == OT_MP_MODE_THREAD)
-    {
-        PNET_BUFFER_LIST CurrNbl = NetBufferLists;
-        while (CurrNbl)
-        {
-            PNET_BUFFER CurrNb = NET_BUFFER_LIST_FIRST_NB(CurrNbl);
-            while (CurrNb)
+            PUCHAR Buffer = (PUCHAR)NdisGetDataBuffer(CurrNb, CurrNb->DataLength, NULL, 1, 0);
+            if (Buffer == NULL)
             {
-                PUCHAR Buffer = (PUCHAR)NdisGetDataBuffer(CurrNb, CurrNb->DataLength, NULL, 1, 0);
-                if (Buffer == NULL)
+                Buffer = (PUCHAR)FILTER_ALLOC_MEM(pFilter->FilterHandle, CurrNb->DataLength);
+                if (Buffer != NULL)
                 {
-                    Buffer = (PUCHAR)FILTER_ALLOC_MEM(pFilter->FilterHandle, CurrNb->DataLength);
-                    if (Buffer != NULL)
+                    PUCHAR _Buffer = (PUCHAR)NdisGetDataBuffer(CurrNb, CurrNb->DataLength, Buffer, 1, 0);
+                    NT_ASSERT(_Buffer == Buffer);
+                    if (_Buffer)
                     {
-                        PUCHAR _Buffer = (PUCHAR)NdisGetDataBuffer(CurrNb, CurrNb->DataLength, Buffer, 1, 0);
-                        NT_ASSERT(_Buffer == Buffer);
-                        UNREFERENCED_PARAMETER(_Buffer);
-                        otLwfReceiveTunnelPacket(pFilter, DispatchLevel, Buffer, CurrNb->DataLength);
-                        FILTER_FREE_MEM(Buffer);
+                        otLwfCmdRecveive(pFilter, DispatchLevel, Buffer, CurrNb->DataLength);
                     }
+                    FILTER_FREE_MEM(Buffer);
                 }
-                else
-                {
-                    otLwfReceiveTunnelPacket(pFilter, DispatchLevel, Buffer, CurrNb->DataLength);
-                }
-                CurrNb = NET_BUFFER_NEXT_NB(CurrNb);
             }
-
-            NET_BUFFER_LIST_STATUS(CurrNbl) = NDIS_STATUS_SUCCESS;
-            CurrNbl = NET_BUFFER_LIST_NEXT_NBL(CurrNbl);
+            else
+            {
+                otLwfCmdRecveive(pFilter, DispatchLevel, Buffer, CurrNb->DataLength);
+            }
+            CurrNb = NET_BUFFER_NEXT_NB(CurrNb);
         }
-            
+
+        NET_BUFFER_LIST_STATUS(CurrNbl) = NDIS_STATUS_SUCCESS;
+        CurrNbl = NET_BUFFER_LIST_NEXT_NBL(CurrNbl);
+    }
+
+    if (NDIS_TEST_RECEIVE_CAN_PEND(ReceiveFlags))
+    {
         NdisFReturnNetBufferLists(
             pFilter->FilterHandle,
             NetBufferLists,
             DispatchLevel ? NDIS_RETURN_FLAGS_DISPATCH_LEVEL : 0
             );
     }
-    // Try to grab a ref on the data path first, to make sure we are allowed
-    else if (pFilter->otPhyState == kStateDisabled || !ExAcquireRundownProtection(&pFilter->DataPathRundown))
-    {
-        LogVerbose(DRIVER_DATA_PATH, "Failing ReceiveNetBufferLists because data path isn't active.");
 
-        // Ignore any NBLs we get if we aren't active (can't get a ref)
-        PNET_BUFFER_LIST CurrNbl = NetBufferLists;
-        while (CurrNbl)
-        {
-            NET_BUFFER_LIST_STATUS(CurrNbl) = NDIS_STATUS_PAUSED;
-            CurrNbl = NET_BUFFER_LIST_NEXT_NBL(CurrNbl);
-        }
-        NdisFReturnNetBufferLists(
-            pFilter->FilterHandle,
-            NetBufferLists,
-            DispatchLevel ? NDIS_RETURN_FLAGS_DISPATCH_LEVEL : 0
-            );
-    }
-    else
-    {
-#if DBG
-        PNET_BUFFER_LIST CurrNbl = NetBufferLists;
-        while (CurrNbl)
-        {
-            POT_NBL_CONTEXT NblContext = GetNBLContext(CurrNbl);
-            NT_ASSERT(NblContext->Channel >= 11 && NblContext->Channel <= 26);
-            CurrNbl = NET_BUFFER_LIST_NEXT_NBL(CurrNbl);
-        }
-        
-#endif
-        // Indicate a new NBL to process on our worker thread
-        otLwfEventProcessingIndicateNewNetBufferLists(
-            pFilter,
-            DispatchLevel,
-            TRUE,
-            PortNumber,
-            NetBufferLists
-            );
-
-        // Release the data path ref now
-        ExReleaseRundownProtection(&pFilter->DataPathRundown);
-    }
-    
-    LogFuncExit(DRIVER_DATA_PATH);
-}
-
-_Use_decl_annotations_
-VOID
-FilterCancelSendNetBufferLists(
-    NDIS_HANDLE             FilterModuleContext,
-    PVOID                   CancelId
-    )
-/*++
-
-Routine Description:
-
-    This function cancels any NET_BUFFER_LISTs pended in the filter and then
-    calls the NdisFCancelSendNetBufferLists to propagate the cancel operation.
-
-    If your driver does not queue any send NBLs, you may omit this routine.
-    NDIS will propagate the cancelation on your behalf more efficiently.
-
-Arguments:
-
-    FilterModuleContext      - our filter context area.
-    CancelId                 - an identifier for all NBLs that should be dequeued
-
-*/
-{
-    PMS_FILTER pFilter = (PMS_FILTER)FilterModuleContext;
-    
-    LogFuncEntryMsg(DRIVER_DATA_PATH, "Filter: %p, CancelId: %p", FilterModuleContext, CancelId);
-    
-    if (pFilter->MiniportCapabilities.MiniportMode == OT_MP_MODE_RADIO)
-    {
-        otLwfEventProcessingIndicateNetBufferListsCancelled(pFilter, CancelId);
-    }
-    else
-    {
-        NT_ASSERT(FALSE); // TODO
-    }
-    
     LogFuncExit(DRIVER_DATA_PATH);
 }
 
@@ -539,7 +440,7 @@ otLwfReceiveIp6DatagramCallback(
     // Create the NetBufferList
     NetBufferList =
         NdisAllocateNetBufferAndNetBufferList(
-            pFilter->NetBufferListPool,     // PoolHandle
+            pFilter->cmdNblPool,            // PoolHandle
             0,                              // ContextSize
             0,                              // ContextBackFill
             NULL,                           // MdlChain
@@ -556,7 +457,7 @@ otLwfReceiveIp6DatagramCallback(
     NdisSetNblFlag(NetBufferList, NDIS_NBL_FLAGS_IS_IPV6);
     NET_BUFFER_LIST_INFO(NetBufferList, NetBufferListFrameType) =
         UlongToPtr(RtlUshortByteSwap(ETHERNET_TYPE_IPV6));
-        
+
     // Initialize NetBuffer fields
     NetBuffer = NET_BUFFER_LIST_FIRST_NB(NetBufferList);
     NET_BUFFER_CURRENT_MDL(NetBuffer) = NULL;
@@ -607,7 +508,7 @@ otLwfReceiveIp6DatagramCallback(
         LogVerbose(DRIVER_DATA_PATH, "Filter: %p dropping internal address message.", pFilter);
         goto error;
     }
-    
+
     // Filter internal Thread messages
     if (v6Header->NextHeader == IPPROTO_UDP &&
         messageLength >= sizeof(IPV6_HEADER) + sizeof(UDPHeader) &&
@@ -624,7 +525,7 @@ otLwfReceiveIp6DatagramCallback(
             goto error;
         }
     }
-    
+
     LogVerbose(DRIVER_DATA_PATH, "Filter: %p, IP6_RECV: %p : %!IPV6ADDR! => %!IPV6ADDR! (%u bytes)", 
                pFilter, NetBufferList, &v6Header->SourceAddress, &v6Header->DestinationAddress,
                messageLength);
@@ -663,4 +564,109 @@ otLwfReceiveIp6DatagramCallback(
 error:
 
     otFreeMessage(aMessage);
+}
+
+// Called in response to receiving a Spinel Ip6 packet command
+_IRQL_requires_max_(DISPATCH_LEVEL)
+void 
+otLwfTunReceiveIp6Packet(
+    _In_ PMS_FILTER pFilter,
+    _In_ BOOLEAN DispatchLevel,
+    _In_ BOOLEAN Secure,
+    _In_reads_bytes_(BufferLength) const uint8_t* Buffer,
+    _In_ UINT BufferLength
+    )
+{
+    NTSTATUS status = STATUS_SUCCESS;
+    PNET_BUFFER_LIST NetBufferList = NULL;
+    PNET_BUFFER NetBuffer = NULL;
+    PUCHAR DataBuffer = NULL;
+    IPV6_HEADER* v6Header;
+
+    UNREFERENCED_PARAMETER(Secure); // TODO - What should we do with unsecured packets?
+
+    NetBufferList =
+        NdisAllocateNetBufferAndNetBufferList(
+            pFilter->cmdNblPool,            // PoolHandle
+            0,                              // ContextSize
+            0,                              // ContextBackFill
+            NULL,                           // MdlChain
+            0,                              // DataOffset
+            0                               // DataLength
+            );
+    if (NetBufferList == NULL)
+    {
+        status = STATUS_INSUFFICIENT_RESOURCES;
+        LogWarning(DRIVER_DEFAULT, "Failed to create command NetBufferList");
+        goto exit;
+    }
+
+    // Set the flag to indicate its a IPv6 packet
+    NdisSetNblFlag(NetBufferList, NDIS_NBL_FLAGS_IS_IPV6);
+    NET_BUFFER_LIST_INFO(NetBufferList, NetBufferListFrameType) =
+        UlongToPtr(RtlUshortByteSwap(ETHERNET_TYPE_IPV6));
+
+    // Initialize NetBuffer fields
+    NetBuffer = NET_BUFFER_LIST_FIRST_NB(NetBufferList);
+    NET_BUFFER_CURRENT_MDL(NetBuffer) = NULL;
+    NET_BUFFER_CURRENT_MDL_OFFSET(NetBuffer) = 0;
+    NET_BUFFER_DATA_LENGTH(NetBuffer) = 0;
+    NET_BUFFER_DATA_OFFSET(NetBuffer) = 0;
+    NET_BUFFER_FIRST_MDL(NetBuffer) = NULL;
+
+    // Allocate the NetBuffer for NetBufferList
+    if (NdisRetreatNetBufferDataStart(NetBuffer, BufferLength, 0, NULL) != NDIS_STATUS_SUCCESS)
+    {
+        NetBuffer = NULL;
+        status = STATUS_INSUFFICIENT_RESOURCES;
+        LogError(DRIVER_DEFAULT, "Failed to allocate NB for command NetBufferList, %u bytes", BufferLength);
+        goto exit;
+    }
+
+    // Get the pointer to the data buffer for the header data
+    DataBuffer = (PUCHAR)NdisGetDataBuffer(NetBuffer, BufferLength, NULL, 1, 0);
+    NT_ASSERT(DataBuffer);
+    
+    // Copy the data over
+    RtlCopyMemory(DataBuffer, Buffer, BufferLength);
+
+    v6Header = (IPV6_HEADER*)DataBuffer;
+
+    // Filter messages to addresses we expose
+    if (!IN6_IS_ADDR_MULTICAST(&v6Header->DestinationAddress) &&
+        otLwfFindCachedAddrIndex(pFilter, &v6Header->DestinationAddress) == -1)
+    {
+        LogVerbose(DRIVER_DATA_PATH, "Filter: %p dropping internal address message.", pFilter);
+        goto exit;
+    }
+
+    LogVerbose(DRIVER_DATA_PATH, "Filter: %p, IP6_RECV: %p : %!IPV6ADDR! => %!IPV6ADDR! (%u bytes)", 
+               pFilter, NetBufferList, &v6Header->SourceAddress, &v6Header->DestinationAddress,
+               BufferLength);
+
+#ifdef LOG_BUFFERS
+    otLogBuffer(DataBuffer, BufferLength);
+#endif
+
+    // Send the NBL down
+    NdisFIndicateReceiveNetBufferLists(
+        pFilter->FilterHandle, 
+        NetBufferList, 
+        NDIS_DEFAULT_PORT_NUMBER,
+        1,
+        DispatchLevel ? NDIS_RECEIVE_FLAGS_DISPATCH_LEVEL : 0);
+
+    // Clear local variable because we don't own the NBL any more
+    NetBufferList = NULL;
+
+exit:
+
+    if (NetBufferList)
+    {
+        if (NetBuffer)
+        {
+            NdisAdvanceNetBufferDataStart(NetBuffer, NetBuffer->DataLength, TRUE, NULL);
+        }
+        NdisFreeNetBufferList(NetBufferList);
+    }
 }

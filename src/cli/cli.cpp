@@ -1961,6 +1961,7 @@ void Interpreter::ProcessRouterSelectionJitter(int argc, char *argv[])
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
+        VerifyOrExit(0 < value && value < 256, error = kThreadError_InvalidArgs);
         otSetRouterSelectionJitter(mInstance, static_cast<uint8_t>(value));
     }
 
@@ -2100,7 +2101,7 @@ void Interpreter::ProcessState(int argc, char *argv[])
         }
         else if (strcmp(argv[0], "child") == 0)
         {
-            SuccessOrExit(error = otBecomeChild(mInstance, kMleAttachSamePartition));
+            SuccessOrExit(error = otBecomeChild(mInstance, kMleAttachSamePartition1));
         }
         else if (strcmp(argv[0], "router") == 0)
         {

@@ -29,6 +29,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ *
  ****************************************************************************************
  */
 
@@ -44,31 +45,26 @@
 #endif
 
 #define HW_TRNG_FIFO_DEPTH      (32)
-#define HW_TRNG_RAM             (0x40040000)
 
 static hw_trng_cb trng_cb;
 
-static void hw_disable_trng(void)
+void hw_trng_disable_clk(void)
 {
-    REG_CLR_BIT(TRNG, TRNG_CTRL_REG, TRNG_ENABLE);
-}
-
-static void hw_disable_trng_clk(void)
-{
+    GLOBAL_INT_DISABLE();
     REG_CLR_BIT(CRG_TOP, CLK_AMBA_REG, TRNG_CLK_ENABLE);
+    GLOBAL_INT_RESTORE();
 }
 
-static void hw_trng_clear_pending(void)
+void hw_trng_clear_pending(void)
 {
-    // read TRNG_FIFOLVL_REG to clear level-sensitive source.
-    TRNG->TRNG_FIFOLVL_REG;
+    uint32_t dummy __attribute__((unused));
+    /* read TRNG_FIFOLVL_REG to clear level-sensitive source. */
+    dummy = TRNG->TRNG_FIFOLVL_REG;
     NVIC_ClearPendingIRQ(TRNG_IRQn);
 }
 
 void hw_trng_enable(hw_trng_cb callback)
 {
-    hw_trng_disable();
-
     if (callback != NULL)
     {
         trng_cb = callback;
@@ -76,7 +72,9 @@ void hw_trng_enable(hw_trng_cb callback)
         NVIC_EnableIRQ(TRNG_IRQn);
     }
 
+    GLOBAL_INT_DISABLE();
     REG_SET_BIT(CRG_TOP, CLK_AMBA_REG, TRNG_CLK_ENABLE);
+    GLOBAL_INT_RESTORE();
     REG_SET_BIT(TRNG, TRNG_CTRL_REG, TRNG_ENABLE);
 }
 
@@ -89,26 +87,34 @@ void hw_trng_get_numbers(uint32_t *buffer, uint8_t size)
 
     for (int i = 0; i < size ; i++)
     {
-        buffer[i] = *((volatile uint32_t *)HW_TRNG_RAM);
+        buffer[i] = hw_trng_get_number();
     }
 }
 
-uint8_t hw_trng_get_fifo_level(void)
+__RETAINED_CODE uint8_t hw_trng_get_fifo_level(void)
 {
     return (TRNG->TRNG_FIFOLVL_REG) & (REG_MSK(TRNG, TRNG_FIFOLVL_REG, TRNG_FIFOLVL) |
                                        REG_MSK(TRNG, TRNG_FIFOLVL_REG, TRNG_FIFOFULL));
 }
 
+void hw_trng_disable_interrupt(void)
+{
+    NVIC_DisableIRQ(TRNG_IRQn);
+    trng_cb = NULL;
+}
+
 void hw_trng_disable(void)
 {
-    hw_disable_trng();
-    NVIC_DisableIRQ(TRNG_IRQn);
+    hw_trng_stop();
+    hw_trng_disable_interrupt();
     hw_trng_clear_pending();
-    hw_disable_trng_clk();
+    hw_trng_disable_clk();
 }
 
 void TRNG_Handler(void)
 {
+    uint32_t dummy __attribute__((unused));
+
     SEGGER_SYSTEMVIEW_ISR_ENTER();
 
     if (trng_cb != NULL)
@@ -116,7 +122,8 @@ void TRNG_Handler(void)
         trng_cb();
     }
 
-    hw_trng_clear_pending();
+    /* read TRNG_FIFOLVL_REG to clear level-sensitive source. */
+    dummy = TRNG->TRNG_FIFOLVL_REG;
 
     SEGGER_SYSTEMVIEW_ISR_EXIT();
 }

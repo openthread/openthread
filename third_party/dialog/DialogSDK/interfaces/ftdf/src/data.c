@@ -29,6 +29,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ *
  ****************************************************************************************
  */
 
@@ -128,7 +129,7 @@ void FTDF_processDataRequest(FTDF_DataRequest *dataRequest)
 
         if (status != FTDF_SUCCESS)
         {
-            // Queueing of indirect transfer was successful
+            // Queueing of indirect transfer was not successful
             FTDF_sendDataConfirm(dataRequest,
                                  status,
                                  0,
@@ -138,6 +139,30 @@ void FTDF_processDataRequest(FTDF_DataRequest *dataRequest)
 
             return;
         }
+
+#if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO
+        uint8_t entry, shortAddrIdx;
+
+        if (dstAddrMode == FTDF_SHORT_ADDRESS)
+        {
+            if (FTDF_fpprGetFreeShortAddress(&entry, &shortAddrIdx) == FTDF_FALSE)
+            {
+                goto transaction_overflow;
+            }
+        }
+        else if (dstAddrMode == FTDF_EXTENDED_ADDRESS)
+        {
+            if (FTDF_fpprGetFreeExtAddress(&entry) == FTDF_FALSE)
+            {
+                goto transaction_overflow;
+            }
+        }
+        else
+        {
+            status = FTDF_INVALID_PARAMETER;
+        }
+
+#endif
 
         // Search for an empty indirect queue
         for (queue = 0; queue < FTDF_NR_OF_REQ_BUFFERS; queue++)
@@ -153,6 +178,24 @@ void FTDF_processDataRequest(FTDF_DataRequest *dataRequest)
 
                 if (status == FTDF_SUCCESS)
                 {
+#if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO
+
+                    if (dstAddrMode == FTDF_SHORT_ADDRESS)
+                    {
+                        FTDF_fpprSetShortAddress(entry, shortAddrIdx, dstAddr.shortAddress);
+                        FTDF_fpprSetShortAddressValid(entry, shortAddrIdx, FTDF_TRUE);
+                    }
+                    else if (dstAddrMode == FTDF_EXTENDED_ADDRESS)
+                    {
+                        FTDF_fpprSetExtAddress(entry, dstAddr.shortAddress);
+                        FTDF_fpprSetExtAddressValid(entry, FTDF_TRUE);
+                    }
+                    else
+                    {
+                        ASSERT_WARNING(0);
+                    }
+
+#endif /* FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO */
                     FTDF_addTxPendingTimer((FTDF_MsgBuffer *) dataRequest,
                                            queue,
                                            FTDF_pib.transactionPersistenceTime * FTDF_BASE_SUPERFRAME_DURATION,
@@ -167,6 +210,9 @@ void FTDF_processDataRequest(FTDF_DataRequest *dataRequest)
         }
 
         // Did not find an existing or an empty queue
+#if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO
+transaction_overflow:
+#endif
         FTDF_sendDataConfirm(dataRequest, FTDF_TRANSACTION_OVERFLOW,
                              0,
                              0,
@@ -331,7 +377,9 @@ void FTDF_sendDataConfirm(FTDF_DataRequest  *dataRequest,
 
     FTDF_REL_MSG_BUFFER((FTDF_MsgBuffer *) dataRequest);
     FTDF_RCV_MSG((FTDF_MsgBuffer *) dataConfirm);
-
+#if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO
+    FTDF_fpFsmClearPending();
+#endif /* FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO */
     FTDF_processNextRequest();
 }
 
@@ -506,6 +554,31 @@ void FTDF_processPurgeRequest(FTDF_PurgeRequest *purgeRequest)
             if (dataRequest->indirectTX == FTDF_TRUE)
             {
                 FTDF_removeTxPendingTimer(request);
+#if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO
+
+                if (FTDF_txPendingList[ n ].addrMode == FTDF_SHORT_ADDRESS)
+                {
+                    uint8_t entry, shortAddrIdx;
+                    FTDF_Boolean found = FTDF_fpprLookupShortAddress(
+                                             FTDF_txPendingList[ n ].addr.shortAddress, &entry,
+                                             &shortAddrIdx);
+                    ASSERT_WARNING(found);
+                    FTDF_fpprSetShortAddressValid(entry, shortAddrIdx, FTDF_FALSE);
+                }
+                else if (FTDF_txPendingList[ n ].addrMode  == FTDF_EXTENDED_ADDRESS)
+                {
+                    uint8_t entry;
+                    FTDF_Boolean found = FTDF_fpprLookupExtAddress(
+                                             FTDF_txPendingList[ n ].addr.extAddress, &entry);
+                    ASSERT_WARNING(found);
+                    FTDF_fpprSetExtAddressValid(entry, FTDF_FALSE);
+                }
+                else
+                {
+                    ASSERT_WARNING(0);
+                }
+
+#endif /* FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO */
 
                 if (FTDF_isQueueEmpty(&FTDF_txPendingList[ n ].queue))
                 {
