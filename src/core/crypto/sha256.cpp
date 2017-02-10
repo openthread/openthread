@@ -36,9 +36,18 @@
 namespace Thread {
 namespace Crypto {
 
-void Sha256::Start(void)
+Sha256::Sha256()
 {
     mbedtls_sha256_init(&mContext);
+}
+
+Sha256::~Sha256()
+{
+    mbedtls_sha256_free(&mContext);
+}
+
+void Sha256::Start(void)
+{
     mbedtls_sha256_starts(&mContext, 0);
 }
 
@@ -50,7 +59,6 @@ void Sha256::Update(const uint8_t *aBuf, uint16_t aBufLength)
 void Sha256::Finish(uint8_t aHash[kHashSize])
 {
     mbedtls_sha256_finish(&mContext, aHash);
-    mbedtls_sha256_free(&mContext);
 }
 
 }  // namespace Crypto
