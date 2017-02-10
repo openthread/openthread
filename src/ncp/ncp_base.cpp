@@ -2328,7 +2328,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_CHILD_TABLE(uint8_t header, spine
 {
     ThreadError errorCode = kThreadError_None;
     otChildInfo childInfo;
-    uint8_t index;
+    uint8_t maxChildren;
     uint8_t modeFlags;
 
     mDisableStreamWrite = true;
@@ -2336,58 +2336,60 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_CHILD_TABLE(uint8_t header, spine
     SuccessOrExit(errorCode = OutboundFrameBegin());
     SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
 
-    index = 0;
+    maxChildren = otGetMaxAllowedChildren(mInstance);
 
-    while (otGetChildInfoByIndex(mInstance, index, &childInfo) == kThreadError_None)
+    for (uint8_t index = 0; index < maxChildren; index++)
     {
-        if (childInfo.mTimeout > 0)
+        errorCode = otGetChildInfoByIndex(mInstance, index, &childInfo);
+
+        if (errorCode != kThreadError_None)
         {
-            modeFlags = 0;
-
-            if (childInfo.mRxOnWhenIdle)
-            {
-                modeFlags |= kThreadMode_RxOnWhenIdle;
-            }
-
-            if (childInfo.mSecureDataRequest)
-            {
-                modeFlags |= kThreadMode_SecureDataRequest;
-            }
-
-            if (childInfo.mFullFunction)
-            {
-                modeFlags |= kThreadMode_FullFunctionDevice;
-            }
-
-            if (childInfo.mFullNetworkData)
-            {
-                modeFlags |= kThreadMode_FullNetworkData;
-            }
-
-            SuccessOrExit(
-                errorCode = OutboundFrameFeedPacked(
-                    "T("
-                        SPINEL_DATATYPE_EUI64_S         // EUI64 Address
-                        SPINEL_DATATYPE_UINT16_S        // Rloc16
-                        SPINEL_DATATYPE_UINT32_S        // Timeout
-                        SPINEL_DATATYPE_UINT32_S        // Age
-                        SPINEL_DATATYPE_UINT8_S         // Network Data Version
-                        SPINEL_DATATYPE_UINT8_S         // Link Quality In
-                        SPINEL_DATATYPE_INT8_S          // Average RSS
-                        SPINEL_DATATYPE_UINT8_S         // Mode (flags)
-                    ")",
-                    childInfo.mExtAddress.m8,
-                    childInfo.mRloc16,
-                    childInfo.mTimeout,
-                    childInfo.mAge,
-                    childInfo.mNetworkDataVersion,
-                    childInfo.mLinkQualityIn,
-                    childInfo.mAverageRssi,
-                    modeFlags
-            ));
+            continue;
         }
 
-        index++;
+        modeFlags = 0;
+
+        if (childInfo.mRxOnWhenIdle)
+        {
+            modeFlags |= kThreadMode_RxOnWhenIdle;
+        }
+
+        if (childInfo.mSecureDataRequest)
+        {
+            modeFlags |= kThreadMode_SecureDataRequest;
+        }
+
+        if (childInfo.mFullFunction)
+        {
+            modeFlags |= kThreadMode_FullFunctionDevice;
+        }
+
+        if (childInfo.mFullNetworkData)
+        {
+            modeFlags |= kThreadMode_FullNetworkData;
+        }
+
+        SuccessOrExit(
+            errorCode = OutboundFrameFeedPacked(
+                "T("
+                    SPINEL_DATATYPE_EUI64_S         // EUI64 Address
+                    SPINEL_DATATYPE_UINT16_S        // Rloc16
+                    SPINEL_DATATYPE_UINT32_S        // Timeout
+                    SPINEL_DATATYPE_UINT32_S        // Age
+                    SPINEL_DATATYPE_UINT8_S         // Network Data Version
+                    SPINEL_DATATYPE_UINT8_S         // Link Quality In
+                    SPINEL_DATATYPE_INT8_S          // Average RSS
+                    SPINEL_DATATYPE_UINT8_S         // Mode (flags)
+                ")",
+                childInfo.mExtAddress.m8,
+                childInfo.mRloc16,
+                childInfo.mTimeout,
+                childInfo.mAge,
+                childInfo.mNetworkDataVersion,
+                childInfo.mLinkQualityIn,
+                childInfo.mAverageRssi,
+                modeFlags
+        ));
     }
 
     SuccessOrExit(errorCode = OutboundFrameSend());
