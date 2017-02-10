@@ -4,8 +4,7 @@
 * Type: Read-Only
 * Packed-Encoding: `b`
 
-Returns true if there is a network state stored that can be
-restored with a call to `CMD_NET_RECALL`.
+Returns true if there is a network state stored/saved.
 
 ### PROP 65: PROP_NET_IF_UP  {#prop-net-if-up}
 * Type: Read-Write
