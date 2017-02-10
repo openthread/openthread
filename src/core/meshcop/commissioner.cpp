@@ -250,7 +250,7 @@ ThreadError Commissioner::RemoveJoiner(const Mac::ExtAddress *aExtAddress)
 
         if (aExtAddress != NULL)
         {
-            if (memcmp(&mJoiners[i].mExtAddress, &aExtAddress, sizeof(mJoiners[i].mExtAddress)))
+            if (memcmp(&mJoiners[i].mExtAddress, aExtAddress, sizeof(mJoiners[i].mExtAddress)))
             {
                 continue;
             }
