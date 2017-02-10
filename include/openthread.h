@@ -149,16 +149,6 @@ OTAPI void OTCALL otApiFinalize(otApiInstance *aApiInstance);
 OTAPI void OTCALL otFreeMemory(const void *aMem);
 
 /**
- * This function pointer is called to notify addition and removal of OpenThread devices.
- *
- * @param[in]  aAdded       A flag indicating if the device was added or removed.
- * @param[in]  aDeviceGuid  A GUID indicating which device state changed.
- * @param[in]  aContext     A pointer to application-specific context.
- *
- */
-typedef void (OTCALL *otDeviceAvailabilityChangedCallback)(bool aAdded, const GUID *aDeviceGuid, void *aContext);
-
-/**
  * This function registers a callback to indicate OpenThread devices come and go.
  *
  * @param[in]  aApiInstance     The OpenThread api instance.
@@ -337,16 +327,6 @@ OTAPI ThreadError OTCALL otThreadStop(otInstance *aInstance);
 OTAPI bool OTCALL otIsSingleton(otInstance *aInstance);
 
 /**
- * This function pointer is called during an IEEE 802.15.4 Active Scan when an IEEE 802.15.4 Beacon is received or
- * the scan completes.
- *
- * @param[in]  aResult   A valid pointer to the beacon information or NULL when the active scan completes.
- * @param[in]  aContext  A pointer to application-specific context.
- *
- */
-typedef void (OTCALL *otHandleActiveScanResult)(otActiveScanResult *aResult, void *aContext);
-
-/**
  * This function starts an IEEE 802.15.4 Active Scan
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
@@ -370,16 +350,6 @@ OTAPI ThreadError OTCALL otActiveScan(otInstance *aInstance, uint32_t aScanChann
  * @returns true if an IEEE 802.15.4 Active Scan is in progress, false otherwise.
  */
 OTAPI bool OTCALL otIsActiveScanInProgress(otInstance *aInstance);
-
-/**
- * This function pointer is called during an IEEE 802.15.4 Energy Scan when the result for a channel is ready or the
- * scan completes.
- *
- * @param[in]  aResult   A valid pointer to the energy scan result information or NULL when the energy scan completes.
- * @param[in]  aContext  A pointer to application-specific context.
- *
- */
-typedef void (OTCALL *otHandleEnergyScanResult)(otEnergyScanResult *aResult, void *aContext);
 
 /**
  * This function starts an IEEE 802.15.4 Energy Scan
@@ -870,15 +840,6 @@ OTAPI ThreadError OTCALL otAddUnicastAddress(otInstance *aInstance, const otNeti
  * @retval kThreadError_NotFound     The IP Address indicated by @p aAddress was not found.
  */
 OTAPI ThreadError OTCALL otRemoveUnicastAddress(otInstance *aInstance, const otIp6Address *aAddress);
-
-/**
- * This function pointer is called to notify certain configuration or state changes within OpenThread.
- *
- * @param[in]  aFlags    A bit-field indicating specific state that has changed.
- * @param[in]  aContext  A pointer to application-specific context.
- *
- */
-typedef void (OTCALL *otStateChangedCallback)(uint32_t aFlags, void *aContext);
 
 /**
  * This function registers a callback to indicate when certain configuration or state changes within OpenThread.
@@ -1934,18 +1895,6 @@ OTAPI ThreadError OTCALL otGetParentInfo(otInstance *aInstance, otRouterInfo *aP
  * @returns The Stable Network Data Version.
  */
 OTAPI uint8_t OTCALL otGetStableNetworkDataVersion(otInstance *aInstance);
-
-/**
- * This function pointer is called when Network Diagnostic Get response is received.
- *
- * @param[in]  aMessage      A pointer to the message buffer containing the received Network Diagnostic
- *                           Get response payload.
- * @param[in]  aMessageInfo  A pointer to the message info for @p aMessage.
- * @param[in]  aContext      A pointer to application-specific context.
- *
- */
-typedef void (*otReceiveDiagnosticGetCallback)(otMessage aMessage, const otMessageInfo *aMessageInfo,
-                                               void *aContext);
 
 /**
  * This function registers a callback to provide received raw Network Diagnostic Get response payload.
