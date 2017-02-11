@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2017, Texas Instruments Incorporated
- *
+ * Copyright (c) 2017, The OpenThread Authors.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -846,6 +845,7 @@ static uint_fast16_t rfCoreSendEnableCmd(void)
         {
             IntMasterEnable();
         }
+
         return ret;
     }
 
@@ -902,6 +902,7 @@ static uint_fast16_t rfCoreSendDisableCmd(void)
         {
             IntMasterEnable();
         }
+
         return doorbell_ret;
     }
 

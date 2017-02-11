@@ -1,6 +1,5 @@
 #
-#  Copyright (c) 2017, Texas Instruments Incorporated
-# 
+#  Copyright (c) 2017, The OpenThread Authors.
 #  All rights reserved.
 # 
 #  Redistribution and use in source and binary forms, with or without
@@ -59,7 +58,7 @@ endif
 
 CC2650_MBEDTLS_CPPFLAGS  = -DMBEDTLS_CONFIG_FILE='\"cc2650-mbedtls-config.h\"'
 CC2650_MBEDTLS_CPPFLAGS += -I$(PWD)/examples/platforms/cc2650/crypto
-CC2650_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/cc26xxware
+CC2650_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/ti/cc26xxware
 CC2650_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/mbedtls
 CC2650_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/mbedtls/repo/include
 

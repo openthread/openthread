@@ -81,21 +81,21 @@ endif # OPENTHREAD_EXAMPLES_CC2538
 
 if OPENTHREAD_EXAMPLES_CC2650
 ot_ncp_CPPFLAGS                                                       += \
-    -I$(top_srcdir)/third_party/cc26xxware                               \
+    -I$(top_srcdir)/third_party/ti/cc26xxware                            \
     $(NULL)
 
-ot_ncp_LDADD                                                          += \
-    $(top_builddir)/examples/platforms/cc2650/libopenthread-cc2650.a     \
-    $(top_srcdir)/third_party/cc26xxware/driverlib/bin/gcc/driverlib.a   \
+ot_ncp_LDADD                                                          +=  \
+    $(top_builddir)/examples/platforms/cc2650/libopenthread-cc2650.a      \
+    $(top_srcdir)/third_party/ti/cc26xxware/driverlib/bin/gcc/driverlib.a \
     $(NULL)
 
-ot_ncp_LDFLAGS                                                        += \
-    -T $(top_srcdir)/third_party/cc26xxware/linker_files/cc26x0f128.lds  \
+ot_ncp_LDFLAGS                                                        +=   \
+    -T $(top_srcdir)/third_party/ti/cc26xxware/linker_files/cc26x0f128.lds \
     $(NULL)
 
 ot_ncp_SOURCES                                                        += \
-    ../../../third_party/cc26xxware/startup_files/ccfg.c                 \
-    ../../../third_party/cc26xxware/startup_files/startup_gcc.c          \
+    ../../../third_party/ti/cc26xxware/startup_files/ccfg.c              \
+    ../../../third_party/ti/cc26xxware/startup_files/startup_gcc.c       \
     $(NULL)
 
 #

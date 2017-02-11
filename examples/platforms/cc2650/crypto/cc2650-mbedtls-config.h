@@ -1,5 +1,5 @@
-/******************************************************************************
- *  Copyright (c) 2016, Texas Instruments Incorporated
+/*
+ * Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- ******************************************************************************/
+ */
 
 #ifndef MBEDTLS_CONFIG_H
 #define MBEDTLS_CONFIG_H

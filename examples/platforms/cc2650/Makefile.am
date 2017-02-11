@@ -1,6 +1,5 @@
 #
-#  Copyright (c) 2017, Texas Instruments Incorporated
-# 
+#  Copyright (c) 2017, The OpenThread Authors.
 #  All rights reserved.
 # 
 #  Redistribution and use in source and binary forms, with or without
@@ -40,7 +39,7 @@ libopenthread_cc2650_a_CPPFLAGS                       = \
     -I$(top_srcdir)/src/core                            \
     -I$(top_srcdir)/examples/platforms                  \
     -I$(top_srcdir)/examples/platforms/cc2650           \
-    -I$(top_srcdir)/third_party/cc26xxware              \
+    -I$(top_srcdir)/third_party/ti/cc26xxware           \
     -I$(top_srcdir)/third_party/mbedtls/repo/include    \
     $(MBEDTLS_CPPFLAGS)                                 \
     $(NULL)
@@ -57,8 +56,8 @@ libopenthread_cc2650_a_SOURCES                        = \
     crypto/aes_alt.c                                    \
     $(NULL)
 
-libopenthread_cc2650_a_DEPENDENCIES =                                  \
-    $(top_srcdir)/third_party/cc26xxware/driverlib/bin/gcc/driverlib.a \
+libopenthread_cc2650_a_DEPENDENCIES =                                     \
+    $(top_srcdir)/third_party/ti/cc26xxware/driverlib/bin/gcc/driverlib.a \
     $(NULL)
 
 if OPENTHREAD_ENABLE_DIAG
