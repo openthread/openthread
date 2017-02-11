@@ -38,7 +38,7 @@ script:
   - .travis/script.sh
 
 after_success:
-  - .travis/after_success.sh
+  - bash <(curl -s https://codecov.io/bash)
 
 matrix:
   include:

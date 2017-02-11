@@ -1,8 +1,4 @@
-#! /bin/bash
-#----------------------------------------
-# NOTE: this uses and required $BASH_SOURCE
-#       Hence this is a bash script, not a 'sh' script
-#----------------------------------------
+#!/bin/sh
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -31,53 +27,28 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set -x
-
-# See:
-# http://stackoverflow.com/questions/59895/getting-the-current-present-working-directory-of-a-bash-script-from-within-the-s
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-. ${DIR}/common.sh
-
 die() {
-        echo " *** ERROR: " $*
-        exit 1
+	echo " *** ERROR: " $*
+	exit 1
 }
 
-echo "-------------"
-echo "Environment: "
-echo "-------------"
-set
-echo "-------------"
-
-if [ -z "$BUILD_TARGET" ]
-then
-    die "BUILD_TARGET" is not set
-fi
-
-if [ $BUILD_TARGET == 'prep-tools' ]
-then
-    echo "Prep Tools not actually build anything"
-    exit 0
-fi
+set -x
 
 [ $BUILD_TARGET != pretty-check ] || {
-    git clean -dxf || die
+    export PATH=/tmp/astyle/build/gcc/bin:$PATH || die
     ./bootstrap || die
-    export PATH=$ASTYLE_path:$PATH || die
     ./configure --enable-cli --enable-diag --enable-dhcp6-client --enable-dhcp6-server --enable-commissioner --enable-joiner --with-examples=posix || die
     make pretty-check || die
 }
 
 [ $BUILD_TARGET != scan-build ] || {
-    git clean -dxf || die
     ./bootstrap || die
     scan-build ./configure --with-examples=posix --enable-cli --enable-ncp || die
     scan-build --status-bugs -analyze-headers -v make || die
 }
 
 [ $BUILD_TARGET != arm-gcc49 ] || {
-    export PATH=$ARM_GCC_49_path:$PATH || die
+    export PATH=/tmp/gcc-arm-none-eabi-4_9-2015q3/bin:$PATH || die
 
     git checkout -- . || die
     git clean -xfd || die
@@ -105,7 +76,7 @@ fi
 }
 
 [ $BUILD_TARGET != arm-gcc54 ] || {
-    export PATH=$ARM_GCC_54_path:$PATH || die
+    export PATH=/tmp/gcc-arm-none-eabi-5_4-2016q3/bin:$PATH || die
 
     git checkout -- . || die
     git clean -xfd || die
@@ -133,16 +104,6 @@ fi
 }
 
 [ $BUILD_TARGET != posix ] || {
-    git clean -xfd || die
-    ./bootstrap || die
-    if [ -z "$CC" ]
-    then
-        export CC=gcc
-    fi
-    if [ -z "$CXX" ]
-    then
-        export CXX=g++
-    fi
     sh -c '$CC --version' || die
     sh -c '$CXX --version' || die
     ./bootstrap || die
@@ -152,26 +113,21 @@ fi
 [ $BUILD_TARGET != posix-distcheck ] || {
     export ASAN_SYMBOLIZER_PATH=`which llvm-symbolizer-3.4` || die
     export ASAN_OPTIONS=symbolize=1 || die
-    git clean -xfd || die
     ./bootstrap || die
     BuildJobs=10 make -f examples/Makefile-posix distcheck || die
 }
 
 [ $BUILD_TARGET != posix-32-bit ] || {
-    git clean -xfd || die
     ./bootstrap || die
     COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 BuildJobs=10 make -f examples/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != posix-ncp-spi ] || {
-    git clean -xfd || die
     ./bootstrap || die
     BuildJobs=10 make -f examples/Makefile-posix check configure_OPTIONS="--enable-ncp=spi --with-examples=posix --with-platform-info=POSIX" || die
 }
 
 [ $BUILD_TARGET != posix-ncp ] || {
-    git clean -xfd || die
     ./bootstrap || die
     COVERAGE=1 NODE_TYPE=ncp-sim BuildJobs=10 make -f examples/Makefile-posix check || die
 }
-
