@@ -511,15 +511,17 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Header &aHeader, Messag
     VerifyOrExit((message = mNetif.GetCoapServer().NewMessage(0)) != NULL, error = kThreadError_NoBufs);
 
     header.SetDefaultResponseHeader(aHeader);
-
-    if (networkDiagnosticTlv.GetLength() > 0)
-    {
-        header.SetPayloadMarker();
-    }
+    header.SetPayloadMarker();
 
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
 
     SuccessOrExit(error = FillRequestedTlvs(aMessage, *message, networkDiagnosticTlv));
+
+    if (message->GetLength() == header.GetLength())
+    {
+        // Remove Payload Marker if payload is actually empty.
+        message->SetLength(header.GetLength() - 1);
+    }
 
     SuccessOrExit(error = mNetif.GetCoapServer().SendMessage(*message, messageInfo));
 
