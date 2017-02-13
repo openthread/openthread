@@ -1560,6 +1560,7 @@ ThreadError Mle::SendChildUpdateRequest(void)
     VerifyOrExit((message = NewMleMessage()) != NULL, ;);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildUpdateRequest));
     SuccessOrExit(error = AppendMode(*message, mDeviceMode));
+    SuccessOrExit(error = AppendSourceAddress(*message));
 
     if ((mDeviceMode & ModeTlv::kModeFFD) == 0)
     {
@@ -1579,7 +1580,6 @@ ThreadError Mle::SendChildUpdateRequest(void)
         break;
 
     case kDeviceStateChild:
-        SuccessOrExit(error = AppendSourceAddress(*message));
         SuccessOrExit(error = AppendLeaderData(*message));
         SuccessOrExit(error = AppendTimeout(*message, mTimeout));
         break;
