@@ -339,15 +339,17 @@ otLwfEventProcessingIndicateAddressChange(
     _In_ PIN6_ADDR              pAddr
     )
 {
-    if (pFilter->DeviceCapabilities == OTLWF_DEVICE_STATUS_RADIO_MODE)
+    LogFuncEntryMsg(DRIVER_DEFAULT, "Filter: %p", pFilter);
+
+    NT_ASSERT(pFilter->DeviceStatus == OTLWF_DEVICE_STATUS_RADIO_MODE);
+
+    POTLWF_ADDR_EVENT Event = FILTER_ALLOC_MEM(pFilter->FilterHandle, sizeof(OTLWF_ADDR_EVENT));
+    if (Event == NULL)
     {
-        POTLWF_ADDR_EVENT Event = FILTER_ALLOC_MEM(pFilter->FilterHandle, sizeof(OTLWF_ADDR_EVENT));
-        if (Event == NULL)
-        {
-            LogWarning(DRIVER_DATA_PATH, "Failed to alloc new OTLWF_ADDR_EVENT");
-            return;
-        }
-    
+        LogWarning(DRIVER_DEFAULT, "Failed to alloc new OTLWF_ADDR_EVENT");
+    }
+    else
+    {
         Event->NotificationType = NotificationType;
         Event->Address = *pAddr;
 
@@ -355,10 +357,12 @@ otLwfEventProcessingIndicateAddressChange(
         NdisAcquireSpinLock(&pFilter->EventsLock);
         InsertTailList(&pFilter->AddressChangesHead, &Event->Link);
         NdisReleaseSpinLock(&pFilter->EventsLock);
-    
+
         // Set the event to indicate we have a new address to process
         KeSetEvent(&pFilter->EventWorkerThreadProcessAddressChanges, 0, FALSE);
     }
+
+    LogFuncExit(DRIVER_DEFAULT);
 }
 
 // Called to indicate that we have a NetBufferLists to process
