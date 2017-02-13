@@ -160,9 +160,11 @@ typedef struct _MS_FILTER
     USHORT                          cmdTIDsInUse;
     spinel_tid_t                    cmdNextTID;
     NDIS_HANDLE                     cmdNblPool;
-#if DBG
+#ifdef COMMAND_INIT_RETRY
     ULONG                           cmdInitTryCount;
 #endif
+    otPlatResetReason               cmdResetReason;
+    KEVENT                          cmdResetCompleteEvent;
 
     //
     // Device Capabilities / State

@@ -51,6 +51,13 @@ otLwfCmdUninitialize(
     _In_ PMS_FILTER pFilter
     );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+otLwfCmdResetDevice(
+    _In_ PMS_FILTER pFilter,
+    _In_ BOOLEAN fAsync
+    );
+
 //
 // Receive Spinel Encoded Command
 //

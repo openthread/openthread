@@ -563,18 +563,7 @@ otLwfThreadValueIs(
 {
     LogFuncEntryMsg(DRIVER_DEFAULT, "[%p] received Value for %s", pFilter, spinel_prop_key_to_cstr(key));
 
-    if (key == SPINEL_PROP_LAST_STATUS)
-    {
-        spinel_status_t status = SPINEL_STATUS_OK;
-        spinel_datatype_unpack(value_data_ptr, value_data_len, "i", &status);
-
-        if ((status >= SPINEL_STATUS_RESET__BEGIN) && (status <= SPINEL_STATUS_RESET__END))
-        {
-            LogInfo(DRIVER_DEFAULT, "Interface %!GUID! was reset (status %d).", &pFilter->InterfaceGuid, status);
-            // TODO - Handle reset
-        }
-    }
-    else if (key == SPINEL_PROP_MAC_ENERGY_SCAN_RESULT)
+    if (key == SPINEL_PROP_MAC_ENERGY_SCAN_RESULT)
     {
         uint8_t scanChannel;
         int8_t maxRssi;
