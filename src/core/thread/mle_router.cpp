@@ -3489,6 +3489,8 @@ ThreadError MleRouter::StoreChild(uint16_t aChildRloc16)
 
     SuccessOrExit(error = GetChildInfoById(GetChildId(aChildRloc16), childInfo));
 
+    IgnoreReturnValue(RemoveStoredChild(aChildRloc16));
+
     error = otPlatSettingsAdd(mNetif.GetInstance(), kKeyChildInfo, reinterpret_cast<uint8_t *>(&childInfo),
                               sizeof(childInfo));
 
