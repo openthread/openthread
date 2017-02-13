@@ -916,6 +916,10 @@ typedef enum
     /** Format: `L` (Read-only) */
     SPINEL_PROP_CNTR_TX_PKT_BROADCAST  = SPINEL_PROP_CNTR__BEGIN + 13,
 
+    /// The number of frame transmission failures due to abort error.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_TX_ERR_ABORT      = SPINEL_PROP_CNTR__BEGIN + 14,
+
     /// The total number of received packets.
     /** Format: `L` (Read-only) */
     SPINEL_PROP_CNTR_RX_PKT_TOTAL      = SPINEL_PROP_CNTR__BEGIN + 100,

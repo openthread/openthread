@@ -57,8 +57,8 @@ enum
 {
     kVersion                       = 2,     ///< MLE Version
     kUdpPort                       = 19788, ///< MLE UDP Port
-    kParentRequestRouterTimeout    = 1000,  ///< Router Request timeout
-    kParentRequestChildTimeout     = 2000,  ///< End Device Request timeout
+    kParentRequestRouterTimeout    = 750,   ///< Router Request timeout
+    kParentRequestChildTimeout     = 1250,  ///< End Device Request timeout
     kParentResponseMaxDelayRouters = 500,   ///< Maximum delay for response for Parent Request sent to routers only
     kParentResponseMaxDelayAll     = 1000,  ///< Maximum delay for response for Parent Request sent to all devices
     kMaxResponseDelay              = 1000,  ///< Maximum delay before responding to a multicast request

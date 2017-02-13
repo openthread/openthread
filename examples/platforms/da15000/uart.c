@@ -37,8 +37,8 @@
 #include "hw_gpio.h"
 #include "platform-da15000.h"
 
-static int s_in_fd;
-static int s_out_fd;
+static int sInFd;
+static int sOutFd;
 void UartBuffClear(void);
 
 ThreadError otPlatUartEnable(void)
@@ -72,8 +72,8 @@ ThreadError otPlatUartDisable(void)
 {
     ThreadError error = kThreadError_None;
 
-    close(s_in_fd);
-    close(s_out_fd);
+    close(sInFd);
+    close(sOutFd);
 
     return error;
 }

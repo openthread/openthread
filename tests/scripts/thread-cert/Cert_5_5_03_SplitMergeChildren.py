@@ -117,7 +117,7 @@ class Cert_5_5_3_SplitMergeChildren(unittest.TestCase):
         self.nodes[ED1].add_whitelist(self.nodes[ROUTER1].get_addr64())
         self.nodes[ROUTER1].add_whitelist(self.nodes[ED1].get_addr64())
 
-        time.sleep(130)
+        time.sleep(140)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'leader')
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'leader')
 

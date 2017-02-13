@@ -57,6 +57,7 @@ namespace Thread
 
 static NcpBase *sNcpContext = NULL;
 
+#define NCP_INVALID_SCAN_CHANNEL              (-1)
 #define NCP_PLAT_RESET_REASON                 (1U<<31)
 #define NCP_ON_MESH_NETS_CHANGED_BIT_FLAG     (1U<<30)
 
@@ -118,6 +119,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_MAC_PROMISCUOUS_MODE, &NcpBase::GetPropertyHandler_MAC_PROMISCUOUS_MODE },
     { SPINEL_PROP_MAC_EXTENDED_ADDR, &NcpBase::GetPropertyHandler_MAC_EXTENDED_ADDR },
 
+    { SPINEL_PROP_NET_SAVED, &NcpBase::GetPropertyHandler_NET_SAVED },
     { SPINEL_PROP_NET_IF_UP, &NcpBase::GetPropertyHandler_NET_IF_UP },
     { SPINEL_PROP_NET_STACK_UP, &NcpBase::GetPropertyHandler_NET_STACK_UP },
     { SPINEL_PROP_NET_ROLE, &NcpBase::GetPropertyHandler_NET_ROLE },
@@ -192,6 +194,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_CNTR_TX_PKT_UNICAST, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_TX_PKT_BROADCAST, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_TX_ERR_CCA, &NcpBase::GetPropertyHandler_MAC_CNTR },
+    { SPINEL_PROP_CNTR_TX_ERR_ABORT, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_RX_PKT_TOTAL, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_RX_PKT_DATA, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_RX_PKT_DATA_POLL, &NcpBase::GetPropertyHandler_MAC_CNTR },
@@ -490,6 +493,7 @@ NcpBase::NcpBase(otInstance *aInstance):
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     mCurTransmitTID(0),
     mCurReceiveChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL),
+    mCurScanChannel(NCP_INVALID_SCAN_CHANNEL),
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
     mFramingErrorCounter(0),
@@ -511,6 +515,7 @@ NcpBase::NcpBase(otInstance *aInstance):
     otSetReceiveIp6DatagramCallback(mInstance, &NcpBase::HandleDatagramFromStack, this);
     otSetLinkPcapCallback(mInstance, &NcpBase::HandleRawFrame, static_cast<void*>(this));
     otSetIcmpEchoEnabled(mInstance, false);
+    otSetReceiveIp6DatagramFilterEnabled(mInstance, true);
 
     mUpdateChangedPropsTask.Post();
 
@@ -847,6 +852,40 @@ void NcpBase::LinkRawTransmitDone(RadioPacket *, bool aFramePending, ThreadError
     // Make sure we are back listening on the original receive channel,
     // since the transmit could have been on a different channel.
     otLinkRawReceive(mInstance, mCurReceiveChannel, &NcpBase::LinkRawReceiveDone);
+}
+
+void NcpBase::LinkRawEnergyScanDone(otInstance *, int8_t aEnergyScanMaxRssi)
+{
+    sNcpContext->LinkRawEnergyScanDone(aEnergyScanMaxRssi);
+}
+
+void NcpBase::LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi)
+{
+    SendPropertyUpdate(
+        SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+        SPINEL_CMD_PROP_VALUE_IS,
+        SPINEL_PROP_MAC_ENERGY_SCAN_RESULT,
+        "Cc",
+        mCurScanChannel,
+        aEnergyScanMaxRssi
+    );
+
+    // Clear current scan channel
+    mCurScanChannel = NCP_INVALID_SCAN_CHANNEL;
+
+    // Make sure we are back listening on the original receive channel,
+    // since the energy scan could have been on a different channel.
+    otLinkRawReceive(mInstance, mCurReceiveChannel, &NcpBase::LinkRawReceiveDone);
+
+    // We are finished with the scan, so send out
+    // a property update indicating such.
+    SendPropertyUpdate(
+        SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+        SPINEL_CMD_PROP_VALUE_IS,
+        SPINEL_PROP_MAC_SCAN_STATE,
+        SPINEL_DATATYPE_UINT8_S,
+        SPINEL_SCAN_STATE_IDLE
+    );
 }
 
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
@@ -1797,6 +1836,21 @@ ThreadError NcpBase::GetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_pr
 {
     ThreadError errorCode = kThreadError_None;
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+    if (otLinkRawIsEnabled(mInstance))
+    {
+        errorCode = SendPropertyUpdate(
+                        header,
+                        SPINEL_CMD_PROP_VALUE_IS,
+                        key,
+                        SPINEL_DATATYPE_UINT8_S,
+                        mCurScanChannel == NCP_INVALID_SCAN_CHANNEL ?
+                            SPINEL_SCAN_STATE_IDLE :
+                            SPINEL_SCAN_STATE_ENERGY
+                    );
+    }
+    else
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
     if (otIsActiveScanInProgress(mInstance))
     {
         errorCode = SendPropertyUpdate(
@@ -1933,6 +1987,17 @@ ThreadError NcpBase::GetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t header, s
                key,
                SPINEL_DATATYPE_BOOL_S,
                mIsRawStreamEnabled
+           );
+}
+
+ThreadError NcpBase::GetPropertyHandler_NET_SAVED(uint8_t header, spinel_prop_key_t key)
+{
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_BOOL_S,
+               otIsNodeCommissioned(mInstance)
            );
 }
 
@@ -2801,6 +2866,10 @@ ThreadError NcpBase::GetPropertyHandler_MAC_CNTR(uint8_t header, spinel_prop_key
         value = macCounters->mTxBroadcast;
         break;
 
+    case SPINEL_PROP_CNTR_TX_ERR_ABORT:
+        value = macCounters->mTxErrAbort;
+        break;
+
     case SPINEL_PROP_CNTR_RX_PKT_TOTAL:
         value = macCounters->mRxTotal;
         break;
@@ -3455,6 +3524,21 @@ ThreadError NcpBase::SetPropertyHandler_NET_REQUIRE_JOIN_EXISTING(uint8_t header
     return errorCode;
 }
 
+bool HasOnly1BitSet(uint32_t aValue)
+{
+    return aValue != 0 && ((aValue & (aValue-1)) == 0);
+}
+
+uint8_t IndexOfMSB(uint32_t aValue)
+{
+    uint8_t index = 0;
+    while (aValue >>= 1)
+    {
+        index++;
+    }
+    return index;
+}
+
 ThreadError NcpBase::SetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                        uint16_t value_len)
 {
@@ -3478,13 +3562,22 @@ ThreadError NcpBase::SetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_pr
             break;
 
         case SPINEL_SCAN_STATE_BEACON:
-            errorCode = otActiveScan(
-                            mInstance,
-                            mChannelMask,
-                            mScanPeriod,
-                            &HandleActiveScanResult_Jump,
-                            this
-                        );
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+            if (otLinkRawIsEnabled(mInstance))
+            {
+                errorCode = kThreadError_NotImplemented;
+            }
+            else
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+            {
+                errorCode = otActiveScan(
+                                mInstance,
+                                mChannelMask,
+                                mScanPeriod,
+                                &HandleActiveScanResult_Jump,
+                                this
+                            );
+            }
 
             if (errorCode == kThreadError_None)
             {
@@ -3494,13 +3587,46 @@ ThreadError NcpBase::SetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_pr
             break;
 
         case SPINEL_SCAN_STATE_ENERGY:
-            errorCode = otEnergyScan(
-                mInstance,
-                mChannelMask,
-                mScanPeriod,
-                &HandleEnergyScanResult_Jump,
-                this
-            );
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+            if (otLinkRawIsEnabled(mInstance))
+            {
+                // Make sure we aren't already scanning and that we have
+                // only 1 bit set for the channel mask.
+                if (mCurScanChannel == NCP_INVALID_SCAN_CHANNEL)
+                {
+                    if (HasOnly1BitSet(mChannelMask))
+                    {
+                        uint8_t scanChannel = IndexOfMSB(mChannelMask);
+                        mCurScanChannel = (int8_t)scanChannel;
+
+                        errorCode = otLinkRawEnergyScan(
+                                        mInstance,
+                                        scanChannel,
+                                        mScanPeriod,
+                                        LinkRawEnergyScanDone
+                                    );
+                    }
+                    else
+                    {
+                        errorCode = kThreadError_InvalidArgs;
+                    }
+                }
+                else
+                {
+                    errorCode = kThreadError_InvalidState;
+                }
+            }
+            else
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+            {
+                errorCode = otEnergyScan(
+                                mInstance,
+                                mChannelMask,
+                                mScanPeriod,
+                                &HandleEnergyScanResult_Jump,
+                                this
+                            );
+            }
 
             if (errorCode == kThreadError_None)
             {
@@ -4074,6 +4200,9 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spin
 
     if (errorCode == kThreadError_None)
     {
+        // Ensure the insecure message is forwarded using direct transmission.
+        otMessageSetDirectTransmission(message, true);
+
         errorCode = otSendIp6Datagram(mInstance, message);
     }
     else if (message)

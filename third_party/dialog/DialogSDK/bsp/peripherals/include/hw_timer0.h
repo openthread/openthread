@@ -5,6 +5,7 @@
  * \{
  * \addtogroup Timer0
  * \{
+ * \brief Timer0 
  */
 
 /**
@@ -37,7 +38,8 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- *   
+ *
+ *
  *****************************************************************************************
  */
 
@@ -48,7 +50,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <black_orca.h>
+#include <sdk_defs.h>
 
 
 /**
@@ -232,7 +234,9 @@ static inline HW_TIMER0_CLK_SRC hw_timer0_get_clock_source(void)
  */
 static inline void hw_timer0_set_fast_clock_div(HW_TIMER0_FAST_CLK_DIV div)
 {
+        GLOBAL_INT_DISABLE();
         REG_SETF(CRG_TOP, CLK_TMR_REG, TMR0_DIV, div);
+        GLOBAL_INT_RESTORE();
 }
 
 /**

@@ -38,6 +38,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ *
  ****************************************************************************************
  */
 
@@ -247,7 +248,7 @@ __STATIC_INLINE bool have_prog_error(void)
  * Function definitions
  */
 
-HW_OTPC_SYS_CLK_FREQ hw_otpc_convert_sys_clk_mhz(uint32_t clk_freq)
+__RETAINED_CODE HW_OTPC_SYS_CLK_FREQ hw_otpc_convert_sys_clk_mhz(uint32_t clk_freq)
 {
     HW_OTPC_SYS_CLK_FREQ f;
 
@@ -376,7 +377,7 @@ void hw_otpc_disable(void)
 }
 
 
-void hw_otpc_set_speed(HW_OTPC_SYS_CLK_FREQ clk_speed)
+__RETAINED_CODE void hw_otpc_set_speed(HW_OTPC_SYS_CLK_FREQ clk_speed)
 {
     ASSERT_WARNING_OTP_CLK_ENABLED;
 
@@ -757,10 +758,19 @@ bool hw_otpc_dma_prog(const uint32_t *p_data, uint32_t cell_offset, HW_OTPC_WORD
         (IS_REMAPPED_ADDRESS(p_data) && (remap_type == 0x3)))
     {
         OTPC->OTPC_AHBADR_REG = black_orca_phy_addr((uint32_t)p_data);
+#if dg_configEXEC_MODE != MODE_IS_CACHED
+    }
+    else if (IS_CACHERAM_ADDRESS(p_data))
+    {
+        OTPC->OTPC_AHBADR_REG = black_orca_phy_addr((uint32_t)p_data);
+#endif
     }
     else
     {
-        /* Only RAM addresses are accepted */
+        /*
+         * Destination address can only reside in RAM or Cache RAM, but in case of remapped
+         * address, REMAP_ADR0 cannot be 0x6 (Cache Data RAM)
+         */
         ASSERT_WARNING(0);
     }
 
@@ -822,10 +832,19 @@ void hw_otpc_dma_read(uint32_t *p_data, uint32_t cell_offset, HW_OTPC_WORD cell_
         (IS_REMAPPED_ADDRESS(p_data) && (remap_type == 0x3)))
     {
         OTPC->OTPC_AHBADR_REG = black_orca_phy_addr((uint32_t)p_data);
+#if dg_configEXEC_MODE != MODE_IS_CACHED
+    }
+    else if (IS_CACHERAM_ADDRESS(p_data))
+    {
+        OTPC->OTPC_AHBADR_REG = black_orca_phy_addr((uint32_t)p_data);
+#endif
     }
     else
     {
-        /* Only RAM addresses are accepted */
+        /*
+         * Destination address can only reside in RAM or Cache RAM, but in case of remapped
+         * address, REMAP_ADR0 cannot be 0x6 (Cache Data RAM)
+         */
         ASSERT_WARNING(0);
     }
 

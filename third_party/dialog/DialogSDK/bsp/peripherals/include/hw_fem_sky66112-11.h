@@ -5,6 +5,7 @@
  * \{
  * \addtogroup FEM
  * \{
+ * \brief Front End Module for SKYWORKS SKY66112-11
  */
 
 /**
@@ -24,12 +25,24 @@
  *      CHL   : dg_configFEM_SKY66112_11_CHL_PORT/PIN
  *      ANTSEL: dg_configFEM_SKY66112_11_ANTSEL_PORT/PIN
  *
+ * In order to control an external PA, three GPIOs can be used. These are called RF_ANT_TRIMx, x=0,1,2. Each one of
+ * these bits is enabled if the corresponding PORT/PIN macros are set:
+ *
+ *      RF_ANT_TRIM0 : dg_configFEM_SKY66112_11_ANT_TRIM_0_PORT/PIN
+ *      RF_ANT_TRIM1 : dg_configFEM_SKY66112_11_ANT_TRIM_1_PORT/PIN
+ *      RF_ANT_TRIM2 : dg_configFEM_SKY66112_11_ANT_TRIM_2_PORT/PIN
+ *
+ * The actual GPIO values for RF_ANT_TRIMx are set by the corresponding MAC, whenever it gains access by the arbiter
+ * to the RF. This driver only handles the GPIO initialization.
+ *
  * FEM BIAS Voltage control is enabled by the following macros:
  *
  *      V18            : dg_configFEM_SKY66112_11_FEM_BIAS_V18
  *      V18P           : dg_configFEM_SKY66112_11_FEM_BIAS_V18P
  *
  * If none of them is set, FEM BIAS will not be controlled by this driver.
+ *
+ ***************************************************************************************
  *
  * Copyright (c) 2016, Dialog Semiconductor
  * All rights reserved.
@@ -54,7 +67,8 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
+ *
  *****************************************************************************************
  */
 
@@ -70,13 +84,23 @@
 
 /* Configuration/state structure (actually just a byte) */
 typedef struct __attribute__ ((__packed__)) {
+#if dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A
         uint8_t tx_power: 1;
         uint8_t tx_bypass: 1;
         uint8_t rx_bypass: 1;
+#else
+        uint8_t tx_power_ble: 1;
+        uint8_t tx_bypass_ble: 1;
+        uint8_t rx_bypass_ble: 1;
+        uint8_t tx_power_ftdf: 1;
+        uint8_t tx_bypass_ftdf: 1;
+        uint8_t rx_bypass_ftdf: 1;
+#endif
         uint8_t antsel: 1;
         uint8_t started: 1;
 } hw_fem_config;
 
+#if dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A
 /**
  * \brief Configures FEM TX Power
  *
@@ -84,14 +108,6 @@ typedef struct __attribute__ ((__packed__)) {
  *
  */
 void hw_fem_set_txpower(bool high);
-
-/**
- * \brief Configures FEM Antenna to use
- *
- * \param [in] one false: antenna 0, true: antenna 1
- *
- */
-void hw_fem_set_antenna(bool one);
 
 /**
  * \brief Configures FEM TX bypass mode
@@ -118,14 +134,6 @@ void hw_fem_set_rx_bypass(bool enable);
 bool hw_fem_get_txpower(void);
 
 /**
- * \brief Gets the selected antenna
- *
- * \return false: antenna 1, true: antenna 2
- *
- */
-bool hw_fem_get_antenna(void);
-
-/**
  * \brief Gets the TX bypass mode
  *
  * \return false: No TX bypass, true: TX bypass
@@ -140,6 +148,179 @@ bool hw_fem_get_tx_bypass(void);
  *
  */
 bool hw_fem_get_rx_bypass(void);
+
+#else /* dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_B */
+#ifdef CONFIG_USE_BLE
+/**
+ * \brief Configures FEM TX Power for BLE
+ *
+ * \param [in] high Set true to enable high TX power
+ *
+ */
+void hw_fem_set_txpower_ble(bool high);
+
+/**
+ * \brief Configures FEM TX bypass mode for BLE
+ *
+ * \param [in] enable false: Use PA, true: bypass
+ *
+ */
+void hw_fem_set_tx_bypass_ble(bool enable);
+
+/**
+ * \brief Configures FEM RX bypass mode for BLE
+ *
+ * \param [in] enable false: Use LNA, true: bypass
+ *
+ */
+void hw_fem_set_rx_bypass_ble(bool enable);
+
+/**
+ * \brief Gets the TX Power setting for BLE
+ *
+ * \return true, if TX Power is high, false if low
+ *
+ */
+bool hw_fem_get_txpower_ble(void);
+
+/**
+ * \brief Gets the TX bypass mode for BLE
+ *
+ * \return false: No TX bypass, true: TX bypass
+ *
+ */
+bool hw_fem_get_tx_bypass_ble(void);
+
+/**
+ * \brief Gets the RX bypass mode for BLE
+ *
+ * \return false: No RX bypass, true: RX bypass
+ *
+ */
+bool hw_fem_get_rx_bypass_ble(void);
+#endif /* CONFIG_USE_BLE */
+
+#ifdef CONFIG_USE_FTDF
+/**
+ * \brief Configures FEM TX Power for FTDF
+ *
+ * \param [in] high Set true to enable high TX power
+ *
+ */
+void hw_fem_set_txpower_ftdf(bool high);
+
+/**
+ * \brief Configures FEM TX bypass mode for FTDF
+ *
+ * \param [in] enable false: Use PA, true: bypass
+ *
+ */
+void hw_fem_set_tx_bypass_ftdf(bool enable);
+
+/**
+ * \brief Configures FEM RX bypass mode for FTDF
+ *
+ * \param [in] enable false: Use LNA, true: bypass
+ *
+ */
+void hw_fem_set_rx_bypass_ftdf(bool enable);
+
+/**
+ * \brief Gets the TX Power setting for FTDF
+ *
+ * \return true, if TX Power is high, false if low
+ *
+ */
+bool hw_fem_get_txpower_ftdf(void);
+
+/**
+ * \brief Gets the TX bypass mode for FTDF
+ *
+ * \return false: No TX bypass, true: TX bypass
+ *
+ */
+bool hw_fem_get_tx_bypass_ftdf(void);
+
+/**
+ * \brief Gets the RX bypass mode for FTDF
+ *
+ * \return false: No RX bypass, true: RX bypass
+ *
+ */
+bool hw_fem_get_rx_bypass_ftdf(void);
+#endif /* CONFIG_USE_FTDF */
+
+/**
+ * \brief Configures FEM TX Power
+ *
+ * \param [in] high Set true to enable high TX power
+ *
+ * \deprecated Use the BLE/FTDF specific functions instead
+ */
+void hw_fem_set_txpower(bool high) DEPRECATED;
+
+/**
+ * \brief Configures FEM TX bypass mode
+ *
+ * \param [in] enable false: Use PA, true: bypass
+ *
+ * \deprecated Use the BLE/FTDF specific functions instead
+ */
+void hw_fem_set_tx_bypass(bool enable) DEPRECATED;
+
+/**
+ * \brief Configures FEM RX bypass mode
+ *
+ * \param [in] enable false: Use LNA, true: bypass
+ *
+ * \deprecated Use the BLE/FTDF specific functions instead
+ */
+void hw_fem_set_rx_bypass(bool enable) DEPRECATED;
+
+/**
+ * \brief Gets the TX Power setting
+ *
+ * \return true, if TX Power is high, false if low
+ *
+ * \deprecated Use the BLE/FTDF specific functions instead
+  */
+bool hw_fem_get_txpower(void) DEPRECATED;
+
+/**
+ * \brief Gets the TX bypass mode
+ *
+ * \return false: No TX bypass, true: TX bypass
+ *
+ * \deprecated Use the BLE/FTDF specific functions instead
+ */
+bool hw_fem_get_tx_bypass(void) DEPRECATED;
+
+/**
+ * \brief Gets the RX bypass mode
+ *
+ * \return false: No RX bypass, true: RX bypass
+ *
+ * \deprecated Use the BLE/FTDF specific functions instead
+ */
+bool hw_fem_get_rx_bypass(void) DEPRECATED;
+#endif /* dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_B */
+
+
+/**
+ * \brief Configures FEM Antenna to use
+ *
+ * \param [in] one false: antenna 0, true: antenna 1
+ *
+ */
+void hw_fem_set_antenna(bool one);
+
+/**
+ * \brief Gets the selected antenna
+ *
+ * \return false: antenna 1, true: antenna 2
+ *
+ */
+bool hw_fem_get_antenna(void);
 
 /**
  * \brief Sets the FEM Bias

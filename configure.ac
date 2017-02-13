@@ -483,7 +483,7 @@ AC_ARG_ENABLE(builtin-mbedtls,
     ],
     [enable_builtin_mbedtls=yes])
 
-if test "$enable_builtin_mbedtls" = "yes"; then
+if test "$enable_builtin_mbedtls" = "yes" -a ! "${MBEDTLS_CPPFLAGS}"; then
     MBEDTLS_CPPFLAGS="-I\${abs_top_srcdir}/third_party/mbedtls"
     MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include"
     MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include/mbedtls"

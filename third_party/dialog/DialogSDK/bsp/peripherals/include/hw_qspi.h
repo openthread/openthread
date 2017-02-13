@@ -5,6 +5,7 @@
  * \{
  * \addtogroup QSPI
  * \{
+ * \brief QSPI Flash Memory Controller
  */
 
 /**
@@ -37,7 +38,8 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
+ *
  *****************************************************************************************
  */
 
@@ -48,7 +50,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <black_orca.h>
+#include <sdk_defs.h>
 
 
 /**
@@ -95,6 +97,8 @@
         QSPIC->QSPIC_##reg##_REG = ((QSPIC->QSPIC_##reg##_REG & ~(QSPIC_QSPIC_##reg##_REG_##QSPIC_##field##_Msk)) | \
         ((QSPIC_QSPIC_##reg##_REG_##QSPIC_##field##_Msk) & ((new_val) << (QSPIC_QSPIC_##reg##_REG_##QSPIC_##field##_Pos))))
 
+
+extern uint8_t dummy_num[];
 
 /*
  * ENUMERATION DEFINITIONS
@@ -216,9 +220,8 @@ typedef struct {
  * Use this in manual mode.
  *
  */
-#if (dg_configFLASH_POWER_DOWN == 1)
-__attribute__((section("text_retained")))
-#endif
+static inline void hw_qspi_cs_enable(void) __attribute__((always_inline));
+
 static inline void hw_qspi_cs_enable(void)
 {
         QSPIC->QSPIC_CTRLBUS_REG = QSPIC_QSPIC_CTRLBUS_REG_QSPIC_EN_CS_Msk;
@@ -230,9 +233,8 @@ static inline void hw_qspi_cs_enable(void)
  * Use this in manual mode.
  *
  */
-#if (dg_configFLASH_POWER_DOWN == 1)
-__attribute__((section("text_retained")))
-#endif
+static inline void hw_qspi_cs_disable(void) __attribute__((always_inline));
+
 static inline void hw_qspi_cs_disable(void)
 {
         QSPIC->QSPIC_CTRLBUS_REG = QSPIC_QSPIC_CTRLBUS_REG_QSPIC_DIS_CS_Msk;
@@ -257,6 +259,8 @@ void hw_qspi_set_bus_mode(HW_QSPI_BUS_MODE mode);
  *         1 - SPI Bus is active. ReadData, WriteData or DummyData activity is in progress
  *
  */
+static inline uint8_t hw_qspi_is_busy(void) __attribute__((always_inline));
+
 static inline uint8_t hw_qspi_is_busy(void)
 {
         return (uint8_t) QSPIC->QSPIC_STATUS_REG;
@@ -271,6 +275,8 @@ static inline uint8_t hw_qspi_is_busy(void)
  * \return data read during read transfer
  *
  */
+static inline uint32_t hw_qspi_read32(void) __attribute__((always_inline));
+
 static inline uint32_t hw_qspi_read32(void)
 {
         return QSPIC->QSPIC_READDATA_REG;
@@ -285,6 +291,8 @@ static inline uint32_t hw_qspi_read32(void)
  * \return data read during read transfer
  *
  */
+static inline uint16_t hw_qspi_read16(void) __attribute__((always_inline));
+
 static inline uint16_t hw_qspi_read16(void)
 {
         return *((volatile uint16_t *) &(QSPIC->QSPIC_READDATA_REG));
@@ -299,6 +307,8 @@ static inline uint16_t hw_qspi_read16(void)
  * \return data read during read transfer
  *
  */
+static inline uint8_t hw_qspi_read8(void) __attribute__((always_inline));
+
 static inline uint8_t hw_qspi_read8(void)
 {
         return *((volatile uint8_t *) &(QSPIC->QSPIC_READDATA_REG));
@@ -313,6 +323,8 @@ static inline uint8_t hw_qspi_read8(void)
  * param [in] data data to transfer
  *
  */
+static inline void hw_qspi_write32(uint32_t data) __attribute__((always_inline));
+
 static inline void hw_qspi_write32(uint32_t data)
 {
         QSPIC->QSPIC_WRITEDATA_REG = data;
@@ -327,6 +339,8 @@ static inline void hw_qspi_write32(uint32_t data)
  * param [in] data data to transfer
  *
  */
+static inline void hw_qspi_write16(uint16_t data) __attribute__((always_inline));
+
 static inline void hw_qspi_write16(uint16_t data)
 {
         *((volatile uint16_t *) &(QSPIC->QSPIC_WRITEDATA_REG)) = data;
@@ -341,9 +355,8 @@ static inline void hw_qspi_write16(uint16_t data)
  * param [in] data data to transfer
  *
  */
-#if (dg_configFLASH_POWER_DOWN == 1)
-__attribute__((section("text_retained")))
-#endif
+static inline void hw_qspi_write8(uint8_t data) __attribute__((always_inline));
+
 static inline void hw_qspi_write8(uint8_t data)
 {
         *((volatile uint8_t *) &(QSPIC->QSPIC_WRITEDATA_REG)) = data;
@@ -356,6 +369,8 @@ static inline void hw_qspi_write8(uint8_t data)
  * Number of pulses depends on selected mode of the SPI bus (SPI, Dual SPI, Quad SPI).
  *
  */
+static inline void hw_qspi_dummy32(void) __attribute__((always_inline));
+
 static inline void hw_qspi_dummy32(void)
 {
         QSPIC->QSPIC_DUMMYDATA_REG = 0;
@@ -368,6 +383,8 @@ static inline void hw_qspi_dummy32(void)
  * Number of pulses depends on selected mode of the SPI bus (SPI, Dual SPI, Quad SPI).
  *
  */
+static inline void hw_qspi_dummy16(void) __attribute__((always_inline));
+
 static inline void hw_qspi_dummy16(void)
 {
         *((volatile uint16_t *) &(QSPIC->QSPIC_DUMMYDATA_REG)) = 0;
@@ -380,6 +397,8 @@ static inline void hw_qspi_dummy16(void)
  * Number of pulses depends on selected mode of the SPI bus (SPI, Dual SPI, Quad SPI).
  *
  */
+static inline void hw_qspi_dummy8(void) __attribute__((always_inline));
+
 static inline void hw_qspi_dummy8(void)
 {
         *((volatile uint8_t *) &(QSPIC->QSPIC_DUMMYDATA_REG)) = 0;
@@ -393,6 +412,8 @@ static inline void hw_qspi_dummy8(void)
  * \param [in] size selects 32 or 24 address size
  *
  */
+static inline void hw_qspi_set_address_size(HW_QSPI_ADDR_SIZE size) __attribute__((always_inline));
+
 static inline void hw_qspi_set_address_size(HW_QSPI_ADDR_SIZE size)
 {
         HW_QSPIC_REG_SETF(CTRLMODE, USE_32BA, (size == HW_QSPI_ADDR_SIZE_32 ? 1 : 0));
@@ -408,6 +429,8 @@ static inline void hw_qspi_set_address_size(HW_QSPI_ADDR_SIZE size)
  * \sa hw_qspi_set_address_size
  *
  */
+static inline HW_QSPI_ADDR_SIZE hw_qspi_get_address_size(void) __attribute__((always_inline));
+
 static inline HW_QSPI_ADDR_SIZE hw_qspi_get_address_size(void)
 {
         return (HW_QSPI_ADDR_SIZE) HW_QSPIC_REG_GETF(CTRLMODE, USE_32BA);
@@ -430,6 +453,8 @@ static inline HW_QSPI_ADDR_SIZE hw_qspi_get_address_size(void)
  *                       respect to QSPIC_FORCENSEQ_EN=0 at cost of performance
  *
  */
+static inline void hw_qspi_force_nseq(uint8_t force) __attribute__((always_inline));
+
 static inline void hw_qspi_force_nseq(uint8_t force)
 {
         HW_QSPIC_REG_SETF(CTRLMODE, FORCENSEQ_EN, force);
@@ -462,6 +487,8 @@ void hw_qspi_set_automode(bool automode);
  *         false manual mode is selected
  *
  */
+static inline bool hw_qspi_get_automode(void) __attribute__((always_inline));
+
 static inline bool hw_qspi_get_automode(void)
 {
         return HW_QSPIC_REG_GETF(CTRLMODE, AUTO_MD);
@@ -473,6 +500,8 @@ static inline bool hw_qspi_get_automode(void)
  * \return read pipe clock delay relative to the falling edge of QSPI_SCK
  *
  */
+static inline uint8_t hw_qspi_get_read_pipe_clock_delay(void) __attribute__((always_inline));
+
 static inline uint8_t hw_qspi_get_read_pipe_clock_delay(void)
 {
         return HW_QSPIC_REG_GETF(CTRLMODE, PCLK_MD);
@@ -485,6 +514,8 @@ static inline uint8_t hw_qspi_get_read_pipe_clock_delay(void)
  *                   value should be in range 0..7
  *
  */
+static inline void hw_qspi_set_read_pipe_clock_delay(uint8_t delay) __attribute__((always_inline));
+
 static inline void hw_qspi_set_read_pipe_clock_delay(uint8_t delay)
 {
         HW_QSPIC_REG_SETF(CTRLMODE, PCLK_MD, delay);
@@ -496,6 +527,8 @@ static inline void hw_qspi_set_read_pipe_clock_delay(uint8_t delay)
  * \return 1 if read pipe is enabled, 0 otherwise
  *
  */
+static inline uint8_t hw_qspi_is_read_pipe_clock_enabled(void) __attribute__((always_inline));
+
 static inline uint8_t hw_qspi_is_read_pipe_clock_enabled(void)
 {
         return HW_QSPIC_REG_GETF(CTRLMODE, RPIPE_EN);
@@ -508,6 +541,8 @@ static inline uint8_t hw_qspi_is_read_pipe_clock_enabled(void)
  *                    0 disable read pipe
  *
  */
+static inline void hw_qspi_enable_readpipe(uint8_t enable) __attribute__((always_inline));
+
 static inline void hw_qspi_enable_readpipe(uint8_t enable)
 {
         HW_QSPIC_REG_SETF(CTRLMODE, RPIPE_EN, enable);
@@ -519,6 +554,8 @@ static inline void hw_qspi_enable_readpipe(uint8_t enable)
  * \return type of QSPI_CLK edge for sampling received data
  *
  */
+static inline HW_QSPI_SAMPLING_EDGE hw_qspi_get_read_sampling_edge(void) __attribute__((always_inline));
+
 static inline HW_QSPI_SAMPLING_EDGE hw_qspi_get_read_sampling_edge(void)
 {
         return HW_QSPIC_REG_GETF(CTRLMODE, RXD_NEG);
@@ -531,6 +568,8 @@ static inline HW_QSPI_SAMPLING_EDGE hw_qspi_get_read_sampling_edge(void)
  *                  of QSPI_SCK
  *
  */
+static inline void hw_qspi_set_read_sampling_edge(HW_QSPI_SAMPLING_EDGE edge) __attribute__((always_inline));
+
 static inline void hw_qspi_set_read_sampling_edge(HW_QSPI_SAMPLING_EDGE edge)
 {
         HW_QSPIC_REG_SETF(CTRLMODE, RXD_NEG, edge);
@@ -547,6 +586,8 @@ static inline void hw_qspi_set_read_sampling_edge(HW_QSPI_SAMPLING_EDGE edge)
  *             activity at the SPI bus
  *
  */
+static inline uint8_t hw_qspi_is_hready_enabled(void) __attribute__((always_inline));
+
 static inline uint8_t hw_qspi_is_hready_enabled(void)
 {
         return HW_QSPIC_REG_GETF(CTRLMODE, HRDY_MD);
@@ -559,6 +600,8 @@ static inline uint8_t hw_qspi_is_hready_enabled(void)
  *                        QSPIC_WRITEDATA, QSPIC_READDATA and QSPIC_DUMMYDATA registers
  *
  */
+static inline void hw_qspi_enable_hready(uint8_t enable) __attribute__((always_inline));
+
 static inline void hw_qspi_enable_hready(uint8_t enable)
 {
         HW_QSPIC_REG_SETF(CTRLMODE, HRDY_MD, enable);
@@ -571,6 +614,8 @@ static inline void hw_qspi_enable_hready(uint8_t enable)
  *         1 - SPI mode 3 is used for QSPI_CLK, the QSPI_SCK is high when QSPI_CS is high (idle)
  *
  */
+static inline uint8_t hw_qspi_get_clock_mode(void) __attribute__((always_inline));
+
 static inline uint8_t hw_qspi_get_clock_mode(void)
 {
         return HW_QSPIC_REG_GETF(CTRLMODE, CLK_MD);
@@ -585,6 +630,8 @@ static inline uint8_t hw_qspi_get_clock_mode(void)
  *                      The QSPI_SCK is high when QSPI_CS is high (idle)
  *
  */
+static inline void hw_qspi_set_clock_mode(HW_QSPI_POL mode) __attribute__((always_inline));
+
 static inline void hw_qspi_set_clock_mode(HW_QSPI_POL mode)
 {
         HW_QSPIC_REG_SETF(CTRLMODE, CLK_MD, mode);
@@ -603,6 +650,8 @@ static inline void hw_qspi_set_clock_mode(HW_QSPI_POL mode)
 #if (dg_configFLASH_POWER_DOWN == 1)
 __attribute__((section("text_retained")))
 #endif
+static inline void hw_qspi_set_io2_output(bool output) __attribute__((always_inline));
+
 static inline void hw_qspi_set_io2_output(bool output)
 {
         HW_QSPIC_REG_SETF(CTRLMODE, IO2_OEN, output);
@@ -621,6 +670,8 @@ static inline void hw_qspi_set_io2_output(bool output)
 #if (dg_configFLASH_POWER_DOWN == 1)
 __attribute__((section("text_retained")))
 #endif
+static inline void hw_qspi_set_io3_output(bool output) __attribute__((always_inline));
+
 static inline void hw_qspi_set_io3_output(bool output)
 {
         HW_QSPIC_REG_SETF(CTRLMODE, IO3_OEN, output);
@@ -634,6 +685,8 @@ static inline void hw_qspi_set_io3_output(bool output)
  * \sa hw_qspi_set_io2_direction
  *
  */
+static inline void hw_qspi_set_io2(uint8_t val) __attribute__((always_inline));
+
 static inline void hw_qspi_set_io2(uint8_t val)
 {
         HW_QSPIC_REG_SETF(CTRLMODE, IO2_DAT, val);
@@ -647,6 +700,8 @@ static inline void hw_qspi_set_io2(uint8_t val)
  * \sa hw_qspi_set_io3_direction
  *
  */
+static inline void hw_qspi_set_io3(uint8_t val) __attribute__((always_inline));
+
 static inline void hw_qspi_set_io3(uint8_t val)
 {
         HW_QSPIC_REG_SETF(CTRLMODE, IO3_DAT, val);
@@ -658,6 +713,8 @@ static inline void hw_qspi_set_io3(uint8_t val)
  * \return value of IO2 pin (0 or 1)
  *
  */
+static inline uint8_t hw_qspi_get_io2(void) __attribute__((always_inline));
+
 static inline uint8_t hw_qspi_get_io2(void)
 {
         return HW_QSPIC_REG_GETF(CTRLMODE, IO2_DAT);
@@ -669,6 +726,8 @@ static inline uint8_t hw_qspi_get_io2(void)
  * \return value of IO3 pin (0 or 1)
  *
  */
+static inline uint8_t hw_qspi_get_io3(void) __attribute__((always_inline));
+
 static inline uint8_t hw_qspi_get_io3(void)
 {
         return HW_QSPIC_REG_GETF(CTRLMODE, IO3_DAT);
@@ -697,11 +756,35 @@ static inline uint8_t hw_qspi_get_io3(void)
  * \sa hw_qspi_set_wrapping_burst_instruction
  *
  */
-void hw_qspi_set_read_instruction(uint8_t inst, uint8_t send_once, uint8_t dummy_count,
-                                                                HW_QSPI_BUS_MODE inst_phase,
-                                                                HW_QSPI_BUS_MODE addr_phase,
-                                                                HW_QSPI_BUS_MODE dummy_phase,
-                                                                HW_QSPI_BUS_MODE data_phase);
+static inline void hw_qspi_set_read_instruction(uint8_t inst,
+                                                uint8_t send_once,
+                                                uint8_t dummy_count,
+                                                HW_QSPI_BUS_MODE inst_phase,
+                                                HW_QSPI_BUS_MODE addr_phase,
+                                                HW_QSPI_BUS_MODE dummy_phase,
+                                                HW_QSPI_BUS_MODE data_phase)
+                                                __attribute((always_inline));
+
+static inline void hw_qspi_set_read_instruction(uint8_t inst,
+                                                uint8_t send_once,
+                                                uint8_t dummy_count,
+                                                HW_QSPI_BUS_MODE inst_phase,
+                                                HW_QSPI_BUS_MODE addr_phase,
+                                                HW_QSPI_BUS_MODE dummy_phase,
+                                                HW_QSPI_BUS_MODE data_phase)
+{
+        QSPIC->QSPIC_BURSTCMDA_REG =
+                BITS32(QSPIC, QSPIC_BURSTCMDA_REG, QSPIC_INST, inst) |
+                BITS32(QSPIC, QSPIC_BURSTCMDA_REG, QSPIC_INST_TX_MD, inst_phase) |
+                BITS32(QSPIC, QSPIC_BURSTCMDA_REG, QSPIC_ADR_TX_MD, addr_phase) |
+                BITS32(QSPIC, QSPIC_BURSTCMDA_REG, QSPIC_DMY_TX_MD, dummy_phase);
+
+        QSPIC->QSPIC_BURSTCMDB_REG =
+                BITS32(QSPIC, QSPIC_BURSTCMDB_REG, QSPIC_DAT_RX_MD, data_phase) |
+                BITS32(QSPIC, QSPIC_BURSTCMDB_REG, QSPIC_INST_MD, send_once) |
+                BITS32(QSPIC, QSPIC_BURSTCMDB_REG, QSPIC_DMY_FORCE, (dummy_count == 3 ? 1 : 0)) |
+                BITS32(QSPIC, QSPIC_BURSTCMDB_REG, QSPIC_DMY_NUM, dummy_num[dummy_count]);
+}
 
 /**
  * \brief Set wrapping burst read instructions for QSPI flash
@@ -732,8 +815,26 @@ void hw_qspi_set_wrapping_burst_instruction(uint8_t inst, HW_QSPI_WRAP_LEN len,
  * \sa hw_qspi_set_read_instruction
  *
  */
-void hw_qspi_set_extra_byte(uint8_t extra_byte, HW_QSPI_BUS_MODE bus_mode,
-                                                                        uint8_t half_disable_out);
+static inline void hw_qspi_set_extra_byte(uint8_t extra_byte, HW_QSPI_BUS_MODE bus_mode,
+                        uint8_t half_disable_out) __attribute__((always_inline));
+
+static inline void hw_qspi_set_extra_byte(uint8_t extra_byte, HW_QSPI_BUS_MODE bus_mode,
+                                                                        uint8_t half_disable_out)
+{
+        QSPIC->QSPIC_BURSTCMDA_REG =
+                (QSPIC->QSPIC_BURSTCMDA_REG &
+                        ~(REG_MSK(QSPIC, QSPIC_BURSTCMDA_REG, QSPIC_EXT_BYTE) |
+                                REG_MSK(QSPIC, QSPIC_BURSTCMDA_REG, QSPIC_EXT_TX_MD))) |
+                BITS32(QSPIC, QSPIC_BURSTCMDA_REG, QSPIC_EXT_BYTE, extra_byte) |
+                BITS32(QSPIC, QSPIC_BURSTCMDA_REG, QSPIC_EXT_TX_MD, bus_mode);
+
+        QSPIC->QSPIC_BURSTCMDB_REG =
+                (QSPIC->QSPIC_BURSTCMDB_REG &
+                        ~(REG_MSK(QSPIC, QSPIC_BURSTCMDB_REG, QSPIC_EXT_BYTE_EN) |
+                                REG_MSK(QSPIC, QSPIC_BURSTCMDB_REG, QSPIC_EXT_HF_DS))) |
+                BITS32(QSPIC, QSPIC_BURSTCMDB_REG, QSPIC_EXT_BYTE_EN, 1) |
+                BITS32(QSPIC, QSPIC_BURSTCMDB_REG, QSPIC_EXT_HF_DS, half_disable_out ? 1 : 0);
+}
 
 /**
  * \brief Set dummy byte count
@@ -754,6 +855,8 @@ void hw_qspi_set_dummy_bytes_count(uint8_t count);
  *                         register for an exception
  *
  */
+static inline void hw_qspi_set_min_cs_high(uint8_t clock_count) __attribute__((always_inline));
+
 static inline void hw_qspi_set_min_cs_high(uint8_t clock_count)
 {
         HW_QSPIC_REG_SETF(BURSTCMDB, CS_HIGH_MIN, clock_count);
@@ -777,8 +880,25 @@ static inline void hw_qspi_set_min_cs_high(uint8_t clock_count)
  * \sa hw_qspi_erase_block
  *
  */
-void hw_qspi_set_erase_instruction(uint8_t inst, HW_QSPI_BUS_MODE inst_phase,
-                        HW_QSPI_BUS_MODE addr_phase, uint8_t hclk_cycles, uint8_t cs_hi_cycles);
+static inline void hw_qspi_set_erase_instruction(uint8_t inst, HW_QSPI_BUS_MODE inst_phase,
+                        HW_QSPI_BUS_MODE addr_phase, uint8_t hclk_cycles, uint8_t cs_hi_cycles)
+                        __attribute__((always_inline));
+
+static inline void hw_qspi_set_erase_instruction(uint8_t inst, HW_QSPI_BUS_MODE inst_phase,
+                        HW_QSPI_BUS_MODE addr_phase, uint8_t hclk_cycles, uint8_t cs_hi_cycles)
+{
+        HW_QSPIC_REG_SETF(ERASECMDA, ERS_INST, inst);
+        QSPIC->QSPIC_ERASECMDB_REG =
+                (QSPIC->QSPIC_ERASECMDB_REG &
+                        ~(REG_MSK(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_ERS_TX_MD) |
+                                REG_MSK(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_EAD_TX_MD) |
+                                REG_MSK(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_ERSRES_HLD) |
+                                REG_MSK(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_ERS_CS_HI))) |
+                                BITS32(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_ERS_TX_MD, inst_phase) |
+                                BITS32(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_EAD_TX_MD, addr_phase) |
+                                BITS32(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_ERSRES_HLD, hclk_cycles) |
+                                BITS32(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_ERS_CS_HI, cs_hi_cycles);
+}
 
 /**
  * \brief Set up write enable instruction
@@ -792,7 +912,16 @@ void hw_qspi_set_erase_instruction(uint8_t inst, HW_QSPI_BUS_MODE inst_phase,
  * \sa hw_qspi_set_erase_instruction
  *
  */
-void hw_qspi_set_write_enable_instruction(uint8_t write_enable, HW_QSPI_BUS_MODE inst_phase);
+static inline void hw_qspi_set_write_enable_instruction(uint8_t write_enable,
+                                                        HW_QSPI_BUS_MODE inst_phase)
+                                                __attribute((always_inline));
+
+static inline void hw_qspi_set_write_enable_instruction(uint8_t write_enable,
+                                                        HW_QSPI_BUS_MODE inst_phase)
+{
+        HW_QSPIC_REG_SETF(ERASECMDA, WEN_INST, write_enable);
+        HW_QSPIC_REG_SETF(ERASECMDB, WEN_TX_MD, inst_phase);
+}
 
 /**
  * \brief Set up erase suspend/resume instructions
@@ -813,11 +942,34 @@ void hw_qspi_set_write_enable_instruction(uint8_t write_enable, HW_QSPI_BUS_MODE
  *                                   the end of the previous erase resume
  *
  */
-void hw_qspi_set_suspend_resume_instructions(uint8_t erase_suspend_inst,
+static inline void hw_qspi_set_suspend_resume_instructions(uint8_t erase_suspend_inst,
                                                                 HW_QSPI_BUS_MODE suspend_inst_phase,
                                                                 uint8_t erase_resume_inst,
                                                                 HW_QSPI_BUS_MODE resume_inst_phase,
-                                                                uint8_t minimum_delay);
+                                                                uint8_t minimum_delay)
+                                                        __attribute((always_inline));
+
+static inline void hw_qspi_set_suspend_resume_instructions(uint8_t erase_suspend_inst,
+                                                                HW_QSPI_BUS_MODE suspend_inst_phase,
+                                                                uint8_t erase_resume_inst,
+                                                                HW_QSPI_BUS_MODE resume_inst_phase,
+                                                                uint8_t minimum_delay)
+{
+        QSPIC->QSPIC_ERASECMDA_REG =
+                (QSPIC->QSPIC_ERASECMDA_REG &
+                        ~(REG_MSK(QSPIC, QSPIC_ERASECMDA_REG, QSPIC_SUS_INST) |
+                                REG_MSK(QSPIC, QSPIC_ERASECMDA_REG, QSPIC_RES_INST))) |
+                BITS32(QSPIC, QSPIC_ERASECMDA_REG, QSPIC_SUS_INST, erase_suspend_inst) |
+                BITS32(QSPIC, QSPIC_ERASECMDA_REG, QSPIC_RES_INST, erase_resume_inst);
+        QSPIC->QSPIC_ERASECMDB_REG =
+                (QSPIC->QSPIC_ERASECMDB_REG &
+                        ~(REG_MSK(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_SUS_TX_MD) |
+                                REG_MSK(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_RES_TX_MD) |
+                                REG_MSK(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_RESSUS_DLY))) |
+                BITS32(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_SUS_TX_MD, suspend_inst_phase) |
+                BITS32(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_RES_TX_MD, resume_inst_phase) |
+                BITS32(QSPIC, QSPIC_ERASECMDB_REG, QSPIC_RESSUS_DLY, minimum_delay);
+}
 
 /**
  * \brief Set status command
@@ -856,12 +1008,32 @@ void hw_qspi_set_suspend_resume_instructions(uint8_t erase_suspend_inst,
  * \sa hw_qspi_get_erase_status
  *
  */
-void hw_qspi_set_read_status_instruction(uint8_t inst, HW_QSPI_BUS_MODE inst_phase,
-                                                                HW_QSPI_BUS_MODE receive_phase,
-                                                                uint8_t busy_pos,
-                                                                uint8_t busy_val,
-                                                                uint8_t read_delay,
-                                                                uint8_t sts_delay);
+static inline void hw_qspi_set_read_status_instruction(uint8_t inst,
+                                                        HW_QSPI_BUS_MODE inst_phase,
+                                                        HW_QSPI_BUS_MODE receive_phase,
+                                                        uint8_t busy_pos,
+                                                        uint8_t busy_val,
+                                                        uint8_t read_delay,
+                                                        uint8_t sts_delay)
+                                                __attribute((always_inline));
+
+static inline void hw_qspi_set_read_status_instruction(uint8_t inst,
+                                                        HW_QSPI_BUS_MODE inst_phase,
+                                                        HW_QSPI_BUS_MODE receive_phase,
+                                                        uint8_t busy_pos,
+                                                        uint8_t busy_val,
+                                                        uint8_t read_delay,
+                                                        uint8_t sts_delay)
+{
+        QSPIC->QSPIC_STATUSCMD_REG =
+                BITS32(QSPIC, QSPIC_STATUSCMD_REG, QSPIC_BUSY_VAL, busy_val) |
+                BITS32(QSPIC, QSPIC_STATUSCMD_REG, QSPIC_BUSY_POS , busy_pos) |
+                BITS32(QSPIC, QSPIC_STATUSCMD_REG, QSPIC_RSTAT_RX_MD, receive_phase) |
+                BITS32(QSPIC, QSPIC_STATUSCMD_REG, QSPIC_RSTAT_TX_MD, inst_phase) |
+                BITS32(QSPIC, QSPIC_STATUSCMD_REG, QSPIC_RSTAT_INST, inst) |
+                BITS32(QSPIC, QSPIC_STATUSCMD_REG, QSPIC_STSDLY_SEL, sts_delay) |
+                BITS32(QSPIC, QSPIC_STATUSCMD_REG, QSPIC_RESSTS_DLY, read_delay);
+}
 
 /**
  * \brief Erase block/sector of flash memory
@@ -897,6 +1069,8 @@ void hw_qspi_erase_block(uint32_t addr);
  *         4 = finishing the erase procedure
  *
  */
+static inline uint8_t hw_qspi_get_erase_status(void) __attribute__((always_inline));
+
 static inline uint8_t hw_qspi_get_erase_status(void)
 {
         QSPIC->QSPIC_CHCKERASE_REG = 0;
@@ -917,13 +1091,27 @@ static inline uint8_t hw_qspi_get_erase_status(void)
  *                         of the sequence[3:0]
  *
  */
-void hw_qspi_set_break_sequence(uint16_t sequence, HW_QSPI_BUS_MODE mode,
-                                                HW_QSPI_BREAK_SEQ_SIZE size, uint8_t dis_out);
+static inline void hw_qspi_set_break_sequence(uint16_t sequence, HW_QSPI_BUS_MODE mode,
+                                                HW_QSPI_BREAK_SEQ_SIZE size, uint8_t dis_out)
+                                                __attribute__((always_inline));
+
+static inline void hw_qspi_set_break_sequence(uint16_t sequence, HW_QSPI_BUS_MODE mode,
+                                                HW_QSPI_BREAK_SEQ_SIZE size, uint8_t dis_out)
+{
+        QSPIC->QSPIC_BURSTBRK_REG =
+                BITS32(QSPIC, QSPIC_BURSTBRK_REG, QSPIC_SEC_HF_DS, dis_out) |
+                BITS32(QSPIC, QSPIC_BURSTBRK_REG, QSPIC_BRK_SZ, size) |
+                BITS32(QSPIC, QSPIC_BURSTBRK_REG, QSPIC_BRK_TX_MD, mode) |
+                BITS32(QSPIC, QSPIC_BURSTBRK_REG, QSPIC_BRK_EN, 1) |
+                BITS32(QSPIC, QSPIC_BURSTBRK_REG, QSPIC_BRK_WRD, sequence);
+}
 
 /**
  * \brief Disable burst break sequence
  *
  */
+static inline void hw_qspi_disable_burst_break_sequence(void) __attribute__((always_inline));
+
 static inline void hw_qspi_disable_burst_break_sequence(void)
 {
         HW_QSPIC_REG_SETF(BURSTBRK, BRK_EN, 0);
@@ -952,18 +1140,26 @@ void hw_qspi_init(const qspi_config *cfg);
  * \brief Enable QSPI controller clock
  *
  */
+static inline void hw_qspi_enable_clock(void) __attribute__((always_inline));
+
 static inline void hw_qspi_enable_clock(void)
 {
+        GLOBAL_INT_DISABLE();
         CRG_TOP->CLK_AMBA_REG |= 1 << REG_POS(CRG_TOP, CLK_AMBA_REG, QSPI_ENABLE);
+        GLOBAL_INT_RESTORE();
 }
 
 /**
  * \brief Disable QSPI controller clock
  *
  */
+static inline void hw_qspi_disable_clock(void) __attribute__((always_inline));
+
 static inline void hw_qspi_disable_clock(void)
 {
+        GLOBAL_INT_DISABLE();
         CRG_TOP->CLK_AMBA_REG &= ~REG_MSK(CRG_TOP, CLK_AMBA_REG, QSPI_ENABLE);
+        GLOBAL_INT_RESTORE();
 }
 
 /**
@@ -973,7 +1169,14 @@ static inline void hw_qspi_disable_clock(void)
  *
  * \sa HW_QSPI_DIV
  */
-void hw_qspi_set_div(HW_QSPI_DIV div);
+static inline void hw_qspi_set_div(HW_QSPI_DIV div) __attribute__((always_inline));
+
+static inline void hw_qspi_set_div(HW_QSPI_DIV div)
+{
+        GLOBAL_INT_DISABLE();
+        REG_SETF(CRG_TOP, CLK_AMBA_REG, QSPI_DIV, div);
+        GLOBAL_INT_RESTORE();
+}
 
 /**
  * \brief Get the QSPI clock divider
@@ -982,6 +1185,8 @@ void hw_qspi_set_div(HW_QSPI_DIV div);
  *
  * \sa HW_QSPI_DIV
  */
+static inline HW_QSPI_DIV hw_qspi_get_div(void) __attribute__((always_inline));
+
 static inline HW_QSPI_DIV hw_qspi_get_div(void)
 {
         return REG_GETF(CRG_TOP, CLK_AMBA_REG, QSPI_DIV);

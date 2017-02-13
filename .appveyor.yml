@@ -39,7 +39,7 @@ clone_depth: 10
 install:
     - cmd: Bcdedit.exe -set TESTSIGNING ON
     # Configure logging
-    - cmd: reg import .appveyor\ThreadEtw.reg
+    - cmd: reg import tools\windows\ThreadEtw.reg
     - ps: Restart-Computer -Force
     - ps: Start-Sleep -s 10
 before_build:
@@ -58,7 +58,7 @@ test_script:
     # Run the unit tests
     - cmd: .appveyor\run_unit_tests.cmd
     # Run the tests for the driver (only runs on x64)
-    - cmd: .appveyor\test_driver.cmd
+    #- cmd: .appveyor\test_driver.cmd
 artifacts:
 - path: release
   name: release

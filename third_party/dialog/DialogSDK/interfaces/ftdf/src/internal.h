@@ -29,6 +29,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ *
  ****************************************************************************************
  */
 
@@ -36,7 +37,9 @@
 
 #define FTDF_FCS_LENGTH            2
 #define FTDF_BUFFER_LENGTH         128
-#define FTDF_NR_OF_REQ_BUFFERS     16
+#ifndef FTDF_NR_OF_REQ_BUFFERS
+#define FTDF_NR_OF_REQ_BUFFERS     96
+#endif
 #define FTDF_NR_OF_RX_BUFFERS      8
 #define FTDF_NR_OF_CHANNELS        16
 #define FTDF_NR_OF_SCAN_RESULTS    16
@@ -90,6 +93,14 @@
 #define FTDF_SET_FIELD( fieldName, value )              do {            \
         uint32_t tmp =  *FTDF_GET_FIELD_ADDR( fieldName ) & ~MSK_F_FTDF_ ## fieldName; \
         *FTDF_GET_FIELD_ADDR( fieldName ) = tmp | \
+                                            ( ( ( value ) << OFF_F_FTDF_ ## fieldName ) & MSK_F_FTDF_ ## fieldName ); \
+} \
+    while ( 0 )
+
+
+#define FTDF_SET_FIELD_INDEXED( fieldName, value, index )              do {            \
+        uint32_t tmp =  *FTDF_GET_FIELD_ADDR_INDEXED( fieldName, index ) & ~MSK_F_FTDF_ ## fieldName; \
+        *FTDF_GET_FIELD_ADDR_INDEXED( fieldName, index ) = tmp | \
                                             ( ( ( value ) << OFF_F_FTDF_ ## fieldName ) & MSK_F_FTDF_ ## fieldName ); \
 } \
     while ( 0 )
@@ -219,6 +230,10 @@ struct FTDF_Pib
     FTDF_Boolean            tschCapable;
     FTDF_Period             tsSyncCorrectThreshold;
 #endif /* !FTDF_LITE */
+#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
+    FTDF_NrBackoffPeriods   boIrqThreshold;
+    FTDF_PtiConfig          ptiConfig;
+#endif
 };
 
 typedef uint8_t FTDF_FrameVersion;
@@ -600,6 +615,7 @@ void            FTDF_getPANId( void );
 void            FTDF_setPANId( void );
 void            FTDF_getCurrentChannel( void );
 void            FTDF_setCurrentChannel( void );
+void            FTDF_setTXPower( void );
 void            FTDF_getMaxFrameTotalWaitTime( void );
 void            FTDF_setMaxFrameTotalWaitTime( void );
 #ifndef FTDF_NO_CSL
@@ -614,6 +630,12 @@ void            FTDF_setMaxBE( void );
 void            FTDF_setMinBE( void );
 void            FTDF_getKeepPhyEnabled( void );
 void            FTDF_setKeepPhyEnabled( void );
+#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
+void            FTDF_setBoIrqThreshold( void );
+void            FTDF_getBoIrqThreshold( void );
+void            FTDF_setPtiConfig( void );
+#endif /* dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A */
+
 #ifndef FTDF_NO_TSCH
 void            FTDF_setTimeslotTemplate( void );
 #endif /* FTDF_NO_TSCH */
@@ -638,6 +660,9 @@ void            FTDF_sendTransactionExpired( FTDF_PendingTL* ptr );
 void            FTDF_processKeepAliveTimerExp( FTDF_PendingTL* ptr );
 void            FTDF_resetKeepAliveTimer( FTDF_ShortAddress dstAddr );
 #endif /* FTDF_NO_TSCH */
+
+void FTDF_processTxPending(FTDF_FrameHeader*    frameHeader,
+        FTDF_SecurityHeader* securityHeader );
 
 void            FTDF_processCommandFrame( FTDF_Octet*          rxBuffer,
                                           FTDF_FrameHeader*    frameHeader,
@@ -671,3 +696,49 @@ FTDF_SN            FTDF_processTschSN( FTDF_MsgBuffer* msg, FTDF_SN sn, uint8_t*
 
 FTDF_Time64        FTDF_getCurTime64( void );
 void               FTDF_initCurTime64( void );
+
+#if FTDF_USE_SLEEP_DURING_BACKOFF
+typedef enum
+{
+        FTDF_SDB_STATE_INIT = 0,
+        FTDF_SDB_STATE_BACKING_OFF,
+        FTDF_SDB_STATE_WAITING_WAKE_UP_IRQ,
+        FTDF_SDB_STATE_RESUMING,
+} FTDF_SdbState;
+
+typedef struct
+{
+        FTDF_SdbState state;
+        FTDF_Size nrOfBackoffs;
+        FTDF_Time ccaRetryTime;
+        FTDF_Octet buffer[FTDF_BUFFER_LENGTH];
+        uint32_t metadata0;
+        uint32_t metadata1;
+        uint32_t phyCsmaCaAttr;
+} FTDF_Sdb;
+
+void FTDF_sdbFsmReset(void);
+
+void FTDF_sdbFsmBackoffIRQ(void);
+
+void FTDF_sdbFsmSleep(void);
+
+void FTDF_sdbFsmAbortSleep(void);
+
+void FTDF_sdbFsmWakeUpIRQ(void);
+
+void FTDF_sdbFsmWakeUp(void);
+
+void FTDF_sdbFsmTxIRQ(void);
+
+FTDF_USec FTDF_sdbGetSleepTime(void);
+
+#endif /* FTDF_USE_SLEEP_DURING_BACKOFF */
+
+#if dg_configUSE_FTDF_DDPHY == 1
+
+void FTDF_ddphyRestore(void);
+
+void FTDF_ddphySave(void);
+
+#endif

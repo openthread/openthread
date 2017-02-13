@@ -89,6 +89,8 @@ class OpenThread(IThci):
             self.logThread = Queue()
             self.logStatus = {'stop':'stop', 'running':'running', "pauseReq":'pauseReq', 'paused':'paused'}
             self.logThreadStatus = self.logStatus['stop']
+            self.joinStatus = {'notstart':'notstart', 'ongoing':'ongoing', 'succeed':'succeed', "failed":'failed'}
+            self.joinCommissionedStatus = self.joinStatus['notstart']
             self.intialize()
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("initialize() Error: " + str(e))
@@ -590,6 +592,11 @@ class OpenThread(IThci):
                 if line:
                     print line
                     logs.put(line)
+
+                    if "Join success" in line:
+                        self.joinCommissionedStatus = self.joinStatus['succeed']
+                    elif "Join failed" in line:
+                        self.joinCommissionedStatus = self.joinStatus['failed']
 
             except Exception, e:
                 pass
@@ -1986,17 +1993,28 @@ class OpenThread(IThci):
             strPSKd: Joiner's PSKd
 
         Returns:
-            True: successful to start commissioner
-            False: fail to start commissioner
+            True: successful to start joiner
+            False: fail to start joiner
         """
         print '%s call joinCommissioned' % self.port
         self.__sendCommand('ifconfig up')
         cmd = 'joiner start %s %s' %(strPSKd, self.provisioningUrl)
         print cmd
         if self.__sendCommand(cmd)[0] == "Done":
+            maxDuration = 150 # seconds
+            self.joinCommissionedStatus = self.joinStatus['ongoing']
+
             if self.logThreadStatus == self.logStatus['stop']:
-                self.logThread = ThreadRunner.run(target=self.__readCommissioningLogs, args=(90,))
-            time.sleep(100)
+                self.logThread = ThreadRunner.run(target=self.__readCommissioningLogs, args=(maxDuration,))
+
+            t_end = time.time() + maxDuration
+            while time.time() < t_end:
+                if self.joinCommissionedStatus == self.joinStatus['succeed']:
+                    break;
+                elif self.joinCommissionedStatus == self.joinStatus['failed']:
+                    return False
+
+                time.sleep(1)
 
             self.__sendCommand('thread start')
             time.sleep(30)
@@ -2033,11 +2051,13 @@ class OpenThread(IThci):
                 elif "type" in infoType:
                     EncryptedPacket.Type = PlatformDiagnosticPacket_Type.JOIN_FIN_req if 'JOIN_FIN.req' in infoValue \
                         else PlatformDiagnosticPacket_Type.JOIN_FIN_rsp if 'JOIN_FIN.rsp' in infoValue \
-                        else PlatformDiagnosticPacket_Type.JOIN_ENT_rsp if 'JOIN_ENT.ntf' in infoValue \
+                        else PlatformDiagnosticPacket_Type.JOIN_ENT_req if 'JOIN_ENT.ntf' in infoValue \
+                        else PlatformDiagnosticPacket_Type.JOIN_ENT_rsp if 'JOIN_ENT.rsp' in infoValue \
                         else PlatformDiagnosticPacket_Type.UNKNOWN
                 elif "len" in infoType:
+                    bytesInEachLine = 16
                     EncryptedPacket.TLVsLength = int(infoValue)
-                    payloadLineCount = int(infoValue)/16 + 1
+                    payloadLineCount = (int(infoValue) + bytesInEachLine - 1)/bytesInEachLine
                     while payloadLineCount > 0:
                         payloadLineCount = payloadLineCount - 1
                         payloadLine = rawLogs.get()

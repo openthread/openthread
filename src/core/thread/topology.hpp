@@ -39,6 +39,7 @@
 #include <net/ip6.hpp>
 #include <thread/mle_tlvs.hpp>
 #include <thread/link_quality.hpp>
+#include <common/message.hpp>
 
 namespace Thread {
 
@@ -107,7 +108,8 @@ public:
     };
     Ip6::Address mIp6Address[kMaxIp6AddressPerChild];  ///< Registered IPv6 addresses
     uint32_t     mTimeout;                             ///< Child timeout
-    uint16_t     mFragmentOffset;                      ///< 6LoWPAN fragment offset
+    uint16_t     mFragmentOffset;                      ///< 6LoWPAN fragment offset for the indirect message
+    Message     *mIndirectSendMessage;                 ///< Current indirect message being sent.
     union
     {
         uint8_t mRequestTlvs[kMaxRequestTlvs];                 ///< Requested MLE TLVs

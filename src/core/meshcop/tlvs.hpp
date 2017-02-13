@@ -696,6 +696,7 @@ public:
     void SetCommissionerId(const char *aCommissionerId) {
         size_t length = strnlen(aCommissionerId, sizeof(mCommissionerId));
         memcpy(mCommissionerId, aCommissionerId, length);
+        SetLength(static_cast<uint8_t>(length));
     }
 
 private:
@@ -1134,8 +1135,9 @@ public:
 
     enum
     {
-        kMaxDelayTimer = 259200,  ///< maximum delay timer value for a Pending Dataset in seconds
-        kMinDelayTimer = 28800,   ///< minimum delay timer value for a Pending Dataset in seconds
+        kMaxDelayTimer     = 259200,  ///< maximum delay timer value for a Pending Dataset in seconds
+        kDelayTimerMinimal = 30000,   ///< Minimum Delay Timer value for a Pending Operational Dataset (ms)
+        kDelayTimerDefault = 300000,  ///< Default Delay Timer value for a Pending Operational Dataset (ms)
     };
 
 private:

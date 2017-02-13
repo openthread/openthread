@@ -67,7 +67,6 @@ EXTRA_DIST                                                         = \
     thread-cert/Cert_5_5_03_SplitMergeChildren.py                    \
     thread-cert/Cert_5_5_04_SplitMergeRouters.py                     \
     thread-cert/Cert_5_5_05_SplitMergeREED.py                        \
-    thread-cert/Cert_5_5_06_SplitWeight.py                           \
     thread-cert/Cert_5_5_07_SplitMergeThreeWay.py                    \
     thread-cert/Cert_5_5_08_SplitRoutersLostLeader.py                \
     thread-cert/Cert_5_6_01_NetworkDataRegisterBeforeAttachLeader.py \
@@ -225,7 +224,6 @@ check_SCRIPTS                                                     += \
     thread-cert/Cert_5_5_03_SplitMergeChildren.py                    \
     thread-cert/Cert_5_5_04_SplitMergeRouters.py                     \
     thread-cert/Cert_5_5_05_SplitMergeREED.py                        \
-    thread-cert/Cert_5_5_06_SplitWeight.py                           \
     thread-cert/Cert_5_5_07_SplitMergeThreeWay.py                    \
     thread-cert/Cert_5_5_08_SplitRoutersLostLeader.py                \
     thread-cert/Cert_5_6_01_NetworkDataRegisterBeforeAttachLeader.py \

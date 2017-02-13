@@ -266,13 +266,9 @@ extern "C" void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyS
 {
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
-    if (aInstance->mLinkRawEnabled)
+    if (aInstance->mLinkRaw.IsEnabled())
     {
-        if (aInstance->mLinkRawEnergyScanDoneCallback)
-        {
-            aInstance->mLinkRawEnergyScanDoneCallback(aInstance, aEnergyScanMaxRssi);
-            aInstance->mLinkRawEnergyScanDoneCallback = NULL;
-        }
+        aInstance->mLinkRaw.InvokeEnergyScanDone(aEnergyScanMaxRssi);
     }
     else
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
@@ -618,7 +614,7 @@ void Mac::SendBeaconRequest(Frame &aFrame)
     aFrame.SetDstAddr(kShortAddrBroadcast);
     aFrame.SetCommandId(Frame::kMacCmdBeaconRequest);
 
-    otLogInfoMac("Sent Beacon Request");
+    otLogDebgMac("Sent Beacon Request");
 }
 
 void Mac::SendBeacon(Frame &aFrame)
@@ -654,7 +650,7 @@ void Mac::SendBeacon(Frame &aFrame)
 
     aFrame.SetPayloadLength(sizeof(*beacon));
 
-    otLogInfoMac("Sent Beacon");
+    otLogDebgMac("Sent Beacon");
 }
 
 void Mac::HandleBeginTransmit(void *aContext)
@@ -807,13 +803,9 @@ extern "C" void otPlatRadioTransmitDone(otInstance *aInstance, RadioPacket *aPac
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
-    if (aInstance->mLinkRawEnabled)
+    if (aInstance->mLinkRaw.IsEnabled())
     {
-        if (aInstance->mLinkRawTransmitDoneCallback)
-        {
-            aInstance->mLinkRawTransmitDoneCallback(aInstance, aPacket, aRxPending, aError);
-            aInstance->mLinkRawTransmitDoneCallback = NULL;
-        }
+        aInstance->mLinkRaw.InvokeTransmitDone(aPacket, aRxPending, aError);
     }
     else
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
@@ -845,6 +837,10 @@ void Mac::TransmitDoneTask(RadioPacket *aPacket, bool aRxPending, ThreadError aE
         mCounters.mTxUnicast++;
     }
 
+    if (aError == kThreadError_Abort)
+    {
+        mCounters.mTxErrAbort++;
+    }
 
     if (!RadioSupportsRetriesAndCsmaBackoff() &&
         aError == kThreadError_ChannelAccessFailure &&
@@ -956,7 +952,7 @@ void Mac::HandleReceiveTimer(void *aContext)
 
 void Mac::HandleReceiveTimer(void)
 {
-    otLogInfoMac("data poll timeout!");
+    otLogDebgMac("data poll timeout!");
 
     if (mState == kStateIdle)
     {
@@ -1196,12 +1192,9 @@ extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, RadioPacket *aFram
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
-    if (aInstance->mLinkRawEnabled)
+    if (aInstance->mLinkRaw.IsEnabled())
     {
-        if (aInstance->mLinkRawReceiveDoneCallback)
-        {
-            aInstance->mLinkRawReceiveDoneCallback(aInstance, aFrame, aError);
-        }
+        aInstance->mLinkRaw.InvokeReceiveDone(aFrame, aError);
     }
     else
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
@@ -1316,7 +1309,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
         break;
     }
 
-    // Increment coutners
+    // Increment counters
     if (dstaddr.mShortAddress == kShortAddrBroadcast)
     {
         // Broadcast packet
@@ -1455,7 +1448,7 @@ ThreadError Mac::HandleMacCommand(Frame &aFrame)
     {
     case Frame::kMacCmdBeaconRequest:
         mCounters.mRxBeaconRequest++;
-        otLogInfoMac("Received Beacon Request");
+        otLogDebgMac("Received Beacon Request");
 
         mTransmitBeacon = true;
 

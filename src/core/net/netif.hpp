@@ -341,6 +341,13 @@ public:
     ThreadError RemoveExternalUnicastAddress(const Address &aAddress);
 
     /**
+     * This method removes all the previously added external (to OpenThread) unicast addresses from the
+     * network interface.
+     *
+     */
+    void RemoveAllExternalUnicastAddresses(void);
+
+    /**
      * This method indicates whether or not an address is assigned to this interface.
      *
      * @param[in]  aAddress  A reference to the unicast address.
@@ -417,7 +424,7 @@ public:
     ThreadError SubscribeExternalMulticast(const Address &aAddress);
 
     /**
-     * This method ussubscribes the network interface to the external (to OpenThread) multicast address.
+     * This method unsubscribes the network interface to the external (to OpenThread) multicast address.
      *
      * @param[in]  aAddress  A reference to the multicast address.
      *
@@ -427,6 +434,12 @@ public:
      *
      */
     ThreadError UnsubscribeExternalMulticast(const Address &aAddress);
+
+    /**
+     * This method unsubscribes the network interface from all previously added external (to OpenThread) multicast
+     * addresses.
+     */
+    void UnsubscribeAllExternalMulticastAddresses(void);
 
     /**
      * This method checks if multicast promiscuous mode is enabled on the network interface.
@@ -539,46 +552,7 @@ private:
     uint32_t mStateChangedFlags;
 
     NetifUnicastAddress mExtUnicastAddresses[OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS];
-    uint8_t mMaskExtUnicastAddresses; // Must have enough bits to hold OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS
-
     NetifMulticastAddress mExtMulticastAddresses[OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS];
-    uint8_t mMaskExtMulticastAddresses; // Must have enough bits to hold OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS
-
-    /**
-     * This method determines if an address is one of the external unicast addresses, and if so returns
-     * the index in the mExtUnicastAddresses array.
-     *
-     * @param[in]  aAddress  A pointer to the Network Interface address.
-     *
-     * @returns The index in the mExtUnicastAddresses array or -1 if not part of the array.
-     *
-     */
-    int8_t GetExtUnicastAddressIndex(const NetifUnicastAddress *address) {
-        if (address < &mExtUnicastAddresses[0] ||
-            address >= &mExtUnicastAddresses[0] + OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS) {
-            return -1;
-        }
-
-        return static_cast<int8_t>(address - &mExtUnicastAddresses[0]);
-    }
-
-    /**
-     * This method determines if an address is one of the external multicast addresses, and if so returns
-     * the index in the mExtMulticastAddresses array.
-     *
-     * @param[in]  aAddress  A pointer to the Network Interface Multicast address.
-     *
-     * @returns The index in the mExtMulticastAddresses array or -1 if not part of the array.
-     *
-     */
-    int8_t GetExtMulticastAddressIndex(const NetifMulticastAddress *address) {
-        if (address < &mExtMulticastAddresses[0] ||
-            address >= &mExtMulticastAddresses[0] + OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS) {
-            return -1;
-        }
-
-        return static_cast<int8_t>(address - &mExtMulticastAddresses[0]);
-    }
 };
 
 /**

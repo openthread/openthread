@@ -341,7 +341,8 @@ ThreadError MleRouter::HandleChildStart(otMleAttachFilter aFilter)
 
     switch (aFilter)
     {
-    case kMleAttachSamePartition:
+    case kMleAttachSamePartition1:
+    case kMleAttachSamePartition2:
 
         // downgrade
         if (GetActiveRouterCount() > mRouterDowngradeThreshold)
@@ -508,8 +509,7 @@ bool MleRouter::HandleAdvertiseTimer(void)
 
 void MleRouter::ResetAdvertiseInterval(void)
 {
-    assert(GetDeviceState() == kDeviceStateRouter ||
-           GetDeviceState() == kDeviceStateLeader);
+    VerifyOrExit(mDeviceState == kDeviceStateRouter || mDeviceState == kDeviceStateLeader,);
 
     if (!mAdvertiseTimer.IsRunning())
     {
@@ -520,6 +520,9 @@ void MleRouter::ResetAdvertiseInterval(void)
     }
 
     mAdvertiseTimer.IndicateInconsistent();
+
+exit:
+    return;
 }
 
 ThreadError MleRouter::SendAdvertisement(void)
@@ -1754,13 +1757,13 @@ void MleRouter::HandleStateUpdateTimer(void)
 
         if (GetLeaderAge() >= mNetworkIdTimeout)
         {
-            BecomeChild(kMleAttachSamePartition);
+            BecomeChild(kMleAttachSamePartition1);
         }
 
         if (routerStateUpdate && GetActiveRouterCount() > mRouterDowngradeThreshold)
         {
             // downgrade to REED
-            BecomeChild(kMleAttachSamePartition);
+            BecomeChild(kMleAttachSamePartition1);
         }
 
         break;
@@ -2081,6 +2084,9 @@ ThreadError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::
 
     otLogInfoMle("Received Child ID Request");
 
+    // only process message when operating as a child, router, or leader
+    VerifyOrExit(mDeviceState >= kDeviceStateChild, error = kThreadError_InvalidState);
+
     // Find Child
     macAddr.Set(aMessageInfo.GetPeerAddr());
 
@@ -2252,7 +2258,7 @@ ThreadError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const I
 
     child = FindChild(macAddr);
 
-    if (child == NULL)
+    if ((child == NULL) || (child->mState != Neighbor::kStateValid))
     {
         tlvs[tlvslength++] = Tlv::kStatus;
         SendChildUpdateResponse(NULL, aMessageInfo, tlvs, tlvslength, NULL);
@@ -2326,7 +2332,6 @@ ThreadError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const I
 
     child->mLastHeard = Timer::GetNow();
     child->mAddSrcMatchEntryShort = true;
-    child->mState = Neighbor::kStateValid;
 
     SendChildUpdateResponse(child, aMessageInfo, tlvs, tlvslength, &challenge);
 
@@ -2413,11 +2418,11 @@ ThreadError MleRouter::HandleChildUpdateResponse(const Message &aMessage, const 
         }
     }
 
+    SetChildStateToValid(child);
     child->mLastHeard = Timer::GetNow();
     child->mKeySequence = aKeySequence;
     child->mLinkInfo.AddRss(mNetif.GetMac().GetNoiseFloor(), threadMessageInfo->mRss);
     child->mAddSrcMatchEntryShort = true;
-    child->mState = Neighbor::kStateValid;
 
 exit:
     return error;
@@ -2472,7 +2477,7 @@ ThreadError MleRouter::HandleDataRequest(const Message &aMessage, const Ip6::Mes
         tlvs[numTlvs++] = Tlv::kPendingDataset;
     }
 
-    SendDataResponse(aMessageInfo.GetPeerAddr(), tlvs, numTlvs);
+    SendDataResponse(aMessageInfo.GetPeerAddr(), tlvs, numTlvs, 0);
 
 exit:
     return error;
@@ -2482,6 +2487,7 @@ ThreadError MleRouter::HandleNetworkDataUpdateRouter(void)
 {
     static const uint8_t tlvs[] = {Tlv::kNetworkData};
     Ip6::Address destination;
+    uint16_t delay;
 
     VerifyOrExit(mDeviceState == kDeviceStateRouter || mDeviceState == kDeviceStateLeader, ;);
 
@@ -2489,7 +2495,8 @@ ThreadError MleRouter::HandleNetworkDataUpdateRouter(void)
     destination.mFields.m16[0] = HostSwap16(0xff02);
     destination.mFields.m16[7] = HostSwap16(0x0001);
 
-    SendDataResponse(destination, tlvs, sizeof(tlvs));
+    delay = (mDeviceState == kDeviceStateLeader) ? 0 : (otPlatRandomGet() % kUnsolicitedDataResponseJitter);
+    SendDataResponse(destination, tlvs, sizeof(tlvs), delay);
 
     for (uint8_t i = 0; i < mMaxChildrenAllowed; i++)
     {
@@ -2508,7 +2515,7 @@ ThreadError MleRouter::HandleNetworkDataUpdateRouter(void)
         {
             if (child->mNetworkDataVersion != mNetif.GetNetworkDataLeader().GetVersion())
             {
-                SendDataResponse(destination, tlvs, sizeof(tlvs));
+                SendDataResponse(destination, tlvs, sizeof(tlvs), 0);
             }
         }
         else
@@ -2517,7 +2524,7 @@ ThreadError MleRouter::HandleNetworkDataUpdateRouter(void)
             {
                 static const uint8_t responseTlvs[] = {Tlv::kNetworkData, Tlv::kActiveDataset, Tlv::kPendingDataset};
 
-                SendDataResponse(destination, responseTlvs, sizeof(responseTlvs));
+                SendDataResponse(destination, responseTlvs, sizeof(responseTlvs), 0);
             }
         }
     }
@@ -2610,6 +2617,7 @@ ThreadError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, u
     MeshCoP::NetworkNameTlv networkName;
     MeshCoP::JoinerUdpPortTlv joinerUdpPort;
     MeshCoP::Tlv *steeringData;
+    uint16_t delay;
 
     VerifyOrExit((message = NewMleMessage()) != NULL, ;);
     message->SetSubType(Message::kSubTypeMleDiscoverResponse);
@@ -2663,7 +2671,9 @@ ThreadError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, u
     tlv.SetLength(static_cast<uint8_t>(message->GetLength() - startOffset));
     message->Write(startOffset - sizeof(tlv), sizeof(tlv), &tlv);
 
-    SuccessOrExit(error = SendMessage(*message, aDestination));
+    delay = otPlatRandomGet() % (kDiscoveryMaxJitter + 1);
+
+    SuccessOrExit(error = AddDelayedResponse(*message, aDestination, delay));
 
     otLogInfoMle("Sent discovery response");
 
@@ -2688,7 +2698,7 @@ ThreadError MleRouter::SendChildIdResponse(Child *aChild)
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
     SuccessOrExit(error = AppendActiveTimestamp(*message, false));
-    SuccessOrExit(error = AppendPendingTimestamp(*message, false));
+    SuccessOrExit(error = AppendPendingTimestamp(*message));
 
     if (aChild->mState != Neighbor::kStateValid)
     {
@@ -2740,9 +2750,7 @@ ThreadError MleRouter::SendChildIdResponse(Child *aChild)
         SuccessOrExit(error = AppendChildAddresses(*message, *aChild));
     }
 
-    aChild->mState = Neighbor::kStateValid;
-    mNetif.SetStateChangedFlags(OT_THREAD_CHILD_ADDED);
-    StoreChild(aChild->mValid.mRloc16);
+    SetChildStateToValid(aChild);
 
     memset(&destination, 0, sizeof(destination));
     destination.mFields.m16[0] = HostSwap16(0xfe80);
@@ -2774,7 +2782,7 @@ ThreadError MleRouter::SendChildUpdateRequest(Child *aChild)
     SuccessOrExit(error = AppendLeaderData(*message));
     SuccessOrExit(error = AppendNetworkData(*message, (aChild->mMode & ModeTlv::kModeFullNetworkData) == 0));
     SuccessOrExit(error = AppendActiveTimestamp(*message, false));
-    SuccessOrExit(error = AppendPendingTimestamp(*message, false));
+    SuccessOrExit(error = AppendPendingTimestamp(*message));
     SuccessOrExit(error = AppendTlvRequest(*message, tlvs, sizeof(tlvs)));
 
     for (uint8_t i = 0; i < sizeof(aChild->mPending.mChallenge); i++)
@@ -2835,7 +2843,7 @@ ThreadError MleRouter::SendChildUpdateResponse(Child *aChild, const Ip6::Message
         case Tlv::kNetworkData:
             SuccessOrExit(error = AppendNetworkData(*message, (aChild->mMode & ModeTlv::kModeFullNetworkData) == 0));
             SuccessOrExit(error = AppendActiveTimestamp(*message, false));
-            SuccessOrExit(error = AppendPendingTimestamp(*message, false));
+            SuccessOrExit(error = AppendPendingTimestamp(*message));
             break;
 
         case Tlv::kResponse:
@@ -2874,7 +2882,8 @@ exit:
     return kThreadError_None;
 }
 
-ThreadError MleRouter::SendDataResponse(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength)
+ThreadError MleRouter::SendDataResponse(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength,
+                                        uint16_t aDelay)
 {
     ThreadError error = kThreadError_None;
     Message *message;
@@ -2886,7 +2895,7 @@ ThreadError MleRouter::SendDataResponse(const Ip6::Address &aDestination, const 
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
     SuccessOrExit(error = AppendActiveTimestamp(*message, false));
-    SuccessOrExit(error = AppendPendingTimestamp(*message, false));
+    SuccessOrExit(error = AppendPendingTimestamp(*message));
 
     for (int i = 0; i < aTlvsLength; i++)
     {
@@ -2908,7 +2917,14 @@ ThreadError MleRouter::SendDataResponse(const Ip6::Address &aDestination, const 
         }
     }
 
-    SuccessOrExit(error = SendMessage(*message, aDestination));
+    if (aDelay)
+    {
+        SuccessOrExit(error = AddDelayedResponse(*message, aDestination, aDelay));
+    }
+    else
+    {
+        SuccessOrExit(error = SendMessage(*message, aDestination));
+    }
 
     otLogInfoMle("Sent Data Response");
 
@@ -4425,6 +4441,18 @@ exit:
     return rval;
 }
 
+void MleRouter::SetChildStateToValid(Child *aChild)
+{
+    VerifyOrExit(aChild->mState != Neighbor::kStateValid, ;);
+
+    aChild->mState = Neighbor::kStateValid;
+    mNetif.SetStateChangedFlags(OT_THREAD_CHILD_ADDED);
+    StoreChild(aChild->mValid.mRloc16);
+
+exit:
+    return;
+}
+
 bool MleRouter::HasChildren(void)
 {
     bool hasChildren = false;
@@ -4445,11 +4473,20 @@ void MleRouter::RemoveChildren(void)
 {
     for (uint8_t i = 0; i < mMaxChildrenAllowed; i++)
     {
-        if (mChildren[i].mState == Neighbor::kStateRestored ||
-            mChildren[i].mState == Neighbor::kStateChildUpdateRequest ||
-            mChildren[i].mState == Neighbor::kStateValid)
+        switch (mChildren[i].mState)
         {
+        case Neighbor::kStateValid:
+            mNetif.SetStateChangedFlags(OT_THREAD_CHILD_REMOVED);
+
+        // Fall-through to next case
+
+        case Neighbor::kStateChildUpdateRequest:
+        case Neighbor::kStateRestored:
             RemoveStoredChild(mChildren[i].mValid.mRloc16);
+            break;
+
+        default:
+            break;
         }
 
         mChildren[i].mState = Neighbor::kStateInvalid;

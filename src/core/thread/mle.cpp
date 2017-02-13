@@ -246,6 +246,8 @@ ThreadError Mle::Stop(bool aClearNetworkDatasets)
     mNetif.GetKeyManager().Stop();
     SetStateDetached();
     mNetif.RemoveUnicastAddress(mMeshLocal16);
+    mNetif.GetNetworkDataLocal().Clear();
+    mNetif.GetNetworkDataLeader().Clear();
 
     if (aClearNetworkDatasets)
     {
@@ -861,9 +863,16 @@ uint8_t Mle::GetRouterSelectionJitter(void) const
     return mRouterSelectionJitter;
 }
 
-void Mle::SetRouterSelectionJitter(uint8_t aRouterJitter)
+ThreadError Mle::SetRouterSelectionJitter(uint8_t aRouterJitter)
 {
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aRouterJitter > 0, error = kThreadError_InvalidArgs);
+
     mRouterSelectionJitter = aRouterJitter;
+
+exit:
+    return error;
 }
 
 void Mle::GenerateNonce(const Mac::ExtAddress &aMacAddr, uint32_t aFrameCounter, uint8_t aSecurityLevel,
@@ -1163,17 +1172,13 @@ exit:
     return error;
 }
 
-ThreadError Mle::AppendPendingTimestamp(Message &aMessage, bool aCouldUseLocal)
+ThreadError Mle::AppendPendingTimestamp(Message &aMessage)
 {
     ThreadError error;
     PendingTimestampTlv timestampTlv;
     const MeshCoP::Timestamp *timestamp;
 
-    if ((timestamp = mNetif.GetPendingDataset().GetNetwork().GetTimestamp()) == NULL && aCouldUseLocal)
-    {
-        timestamp = mNetif.GetPendingDataset().GetLocal().GetTimestamp();
-    }
-
+    timestamp = mNetif.GetPendingDataset().GetNetwork().GetTimestamp();
     VerifyOrExit(timestamp && timestamp->GetSeconds() != 0, error = kThreadError_None);
 
     timestampTlv.Init();
@@ -1270,7 +1275,6 @@ void Mle::HandleParentRequestTimer(void)
         mParentRequestState = kParentRequestRouter;
         mParentCandidate.mState = Neighbor::kStateInvalid;
         SendParentRequest();
-        mParentRequestTimer.Start(kParentRequestRouterTimeout);
         break;
 
     case kParentRequestRouter:
@@ -1280,13 +1284,13 @@ void Mle::HandleParentRequestTimer(void)
         {
             SendChildIdRequest();
             mParentRequestState = kChildIdRequest;
+            mParentRequestTimer.Start(kParentRequestChildTimeout);
         }
         else
         {
             SendParentRequest();
         }
 
-        mParentRequestTimer.Start(kParentRequestChildTimeout);
         break;
 
     case kParentRequestChild:
@@ -1348,7 +1352,12 @@ void Mle::HandleParentRequestTimer(void)
 
                     break;
 
-                case kMleAttachSamePartition:
+                case kMleAttachSamePartition1:
+                    mParentRequestState = kParentIdle;
+                    BecomeChild(kMleAttachSamePartition2);
+                    break;
+
+                case kMleAttachSamePartition2:
                     mParentRequestState = kParentIdle;
                     BecomeChild(kMleAttachAnyPartition);
                     break;
@@ -1403,17 +1412,13 @@ ThreadError Mle::SendParentRequest(void)
         mParentRequest.mChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
     }
 
-    VerifyOrExit((message = NewMleMessage()) != NULL, ;);
-    SuccessOrExit(error = AppendHeader(*message, Header::kCommandParentRequest));
-    SuccessOrExit(error = AppendMode(*message, mDeviceMode));
-    SuccessOrExit(error = AppendChallenge(*message, mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge)));
-
     switch (mParentRequestState)
     {
     case kParentRequestRouter:
         scanMask = ScanMaskTlv::kRouterFlag;
 
-        if (mParentRequestMode == kMleAttachSamePartition)
+        if (mParentRequestMode == kMleAttachSamePartition1 ||
+            mParentRequestMode == kMleAttachSamePartition2)
         {
             scanMask |= ScanMaskTlv::kEndDeviceFlag;
         }
@@ -1429,6 +1434,10 @@ ThreadError Mle::SendParentRequest(void)
         break;
     }
 
+    VerifyOrExit((message = NewMleMessage()) != NULL, ;);
+    SuccessOrExit(error = AppendHeader(*message, Header::kCommandParentRequest));
+    SuccessOrExit(error = AppendMode(*message, mDeviceMode));
+    SuccessOrExit(error = AppendChallenge(*message, mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge)));
     SuccessOrExit(error = AppendScanMask(*message, scanMask));
     SuccessOrExit(error = AppendVersion(*message));
 
@@ -1437,22 +1446,25 @@ ThreadError Mle::SendParentRequest(void)
     destination.mFields.m16[7] = HostSwap16(0x0002);
     SuccessOrExit(error = SendMessage(*message, destination));
 
-    switch (mParentRequestState)
+    if ((scanMask & ScanMaskTlv::kEndDeviceFlag) == 0)
     {
-    case kParentRequestRouter:
         otLogInfoMle("Sent parent request to routers");
-        break;
-
-    case kParentRequestChild:
+    }
+    else
+    {
         otLogInfoMle("Sent parent request to all devices");
-        break;
-
-    default:
-        assert(false);
-        break;
     }
 
 exit:
+
+    if ((scanMask & ScanMaskTlv::kEndDeviceFlag) == 0)
+    {
+        mParentRequestTimer.Start(kParentRequestRouterTimeout);
+    }
+    else
+    {
+        mParentRequestTimer.Start(kParentRequestChildTimeout);
+    }
 
     if (error != kThreadError_None && message != NULL)
     {
@@ -1485,10 +1497,7 @@ ThreadError Mle::SendChildIdRequest(void)
 
     SuccessOrExit(error = AppendTlvRequest(*message, tlvs, sizeof(tlvs)));
     SuccessOrExit(error = AppendActiveTimestamp(*message, true));
-    // SuccessOrExit(error = AppendPendingTimestamp(*message, false));
-    // we should not include the Local Pending Timestamp TLV in Child ID Request, this is a workaround for
-    // Certification test 9.2.15 and 9.2.16 (https://github.com/openthread/openthread/issues/918)
-    SuccessOrExit(error = AppendPendingTimestamp(*message, true));
+    SuccessOrExit(error = AppendPendingTimestamp(*message));
 
     memset(&destination, 0, sizeof(destination));
     destination.mFields.m16[0] = HostSwap16(0xfe80);
@@ -1521,7 +1530,7 @@ ThreadError Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandDataRequest));
     SuccessOrExit(error = AppendTlvRequest(*message, aTlvs, aTlvsLength));
     SuccessOrExit(error = AppendActiveTimestamp(*message, false));
-    SuccessOrExit(error = AppendPendingTimestamp(*message, false));
+    SuccessOrExit(error = AppendPendingTimestamp(*message));
 
     SuccessOrExit(error = SendMessage(*message, aDestination));
 
@@ -2218,6 +2227,7 @@ ThreadError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInf
         if (mDeviceState == kDeviceStateChild)
         {
             SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
+            mRetrieveNewNetworkData = true;
         }
         else
         {
@@ -2439,7 +2449,8 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
             VerifyOrExit(leaderData.GetPartitionId() != mLeaderData.GetPartitionId() || diff > 0,);
             break;
 
-        case kMleAttachSamePartition:
+        case kMleAttachSamePartition1:
+        case kMleAttachSamePartition2:
             VerifyOrExit(leaderData.GetPartitionId() == mLeaderData.GetPartitionId(), ;);
             VerifyOrExit(diff > 0 ||
                          (diff == 0 && mNetif.GetMle().GetLeaderAge() < mNetif.GetMle().GetNetworkIdTimeout()), ;);
@@ -2587,12 +2598,6 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
         {
             aMessage.Read(offset, sizeof(tlv), &tlv);
             mNetif.GetPendingDataset().Set(pendingTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength());
-        }
-        // this is a workaround for Certification test 9.2.15 and 9.2.16 (https://github.com/openthread/openthread/issues/918)
-        else if (mNetif.GetPendingDataset().GetNetwork().GetTimestamp() == NULL &&
-                 mNetif.GetPendingDataset().GetLocal().GetTimestamp() != NULL)
-        {
-            mNetif.GetPendingDataset().Set(mNetif.GetPendingDataset().GetLocal());
         }
     }
     else

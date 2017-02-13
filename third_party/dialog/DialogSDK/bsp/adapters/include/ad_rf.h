@@ -41,21 +41,22 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ *
  *****************************************************************************************
  */
+
+
+
 
 #ifndef AD_RF_H_
 #define AD_RF_H_
 
 #if dg_configRF_ADAPTER
+
 #include <stdbool.h>
 #include <stdint.h>
-//#include "platform_devices.h"
 
 #include "hw_rf.h"
-
-
-
 
 /**
  * @brief Performs RF adapter initialization
@@ -111,9 +112,7 @@ static inline void ad_rf_system_init()
  */
 static inline void ad_rf_start_calibration()
 {
-    //    OS_ENTER_CRITICAL_SECTION();
         ad_rf_start_and_check_calibration();
-    //    OS_LEAVE_CRITICAL_SECTION();
 }
 
 /**
@@ -125,9 +124,7 @@ static inline void ad_rf_start_calibration()
  */
 static inline void ad_rf_request_recommended_settings(void)
 {
-    //    OS_ENTER_CRITICAL_SECTION();
         hw_rf_request_recommended_settings();
-   //     OS_LEAVE_CRITICAL_SECTION();
 }
 
 /**
@@ -140,9 +137,7 @@ static inline void ad_rf_request_recommended_settings(void)
  */
 static inline void ad_rf_request_on(bool mode_ble)
 {
-      //  OS_ENTER_CRITICAL_SECTION();
         hw_rf_request_on(mode_ble);
-      //  OS_LEAVE_CRITICAL_SECTION();
 }
 
 /**
@@ -157,11 +152,7 @@ static inline void ad_rf_request_on(bool mode_ble)
  */
 static inline void ad_rf_request_off(bool mode_ble)
 {
-    //    ad_gpadc_acquire();
-     //   OS_ENTER_CRITICAL_SECTION();
         hw_rf_request_off(mode_ble);
-    //    OS_LEAVE_CRITICAL_SECTION();
-    //    ad_gpadc_release();
 }
 
 #endif /* dg_configRF_ADAPTER */

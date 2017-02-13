@@ -62,6 +62,7 @@ uint8_t Diag::sTxLen;
 uint32_t Diag::sTxPeriod;
 uint32_t Diag::sTxPackets;
 RadioPacket * Diag::sTxPacket;
+bool Diag::sRepeatActive;
 
 otInstance *Diag::sContext;
 
@@ -73,8 +74,11 @@ void Diag::Init(otInstance *aInstance)
     sTxPeriod = 0;
     sTxLen = 0;
     sTxPackets = 0;
+    sRepeatActive = false;
     memset(&sStats, 0, sizeof(struct DiagStats));
     sTxPacket = otPlatRadioGetTransmitBuffer(sContext);
+    otPlatDiagChannelSet(sChannel);
+    otPlatDiagTxPowerSet(sTxPower);
 }
 
 char *Diag::ProcessCmd(int argc, char *argv[])
@@ -99,7 +103,7 @@ char *Diag::ProcessCmd(int argc, char *argv[])
         // more platform specific features will be processed under platform layer
         if (i == sizeof(sCommands) / sizeof(sCommands[0]))
         {
-            otPlatDiagProcess(argc, argv, sDiagOutput, sizeof(sDiagOutput));
+            otPlatDiagProcess(sContext, argc, argv, sDiagOutput, sizeof(sDiagOutput));
         }
     }
 
@@ -190,7 +194,6 @@ void Diag::TxPacket()
     {
         sTxPacket->mPsdu[i] = i;
     }
-
     otPlatRadioTransmit(sContext, sTxPacket);
 }
 
@@ -214,6 +217,7 @@ void Diag::ProcessChannel(int argc, char *argv[], char *aOutput, size_t aOutputM
 
         // listen on the set channel immediately
         otPlatRadioReceive(sContext, sChannel);
+        otPlatDiagChannelSet(sChannel);
         snprintf(aOutput, aOutputMaxLen, "set channel to %d\r\nstatus 0x%02x\r\n", sChannel, error);
     }
 
@@ -237,6 +241,7 @@ void Diag::ProcessPower(int argc, char *argv[], char *aOutput, size_t aOutputMax
 
         SuccessOrExit(error = ParseLong(argv[0], value));
         sTxPower = static_cast<int8_t>(value);
+        otPlatDiagTxPowerSet(sTxPower);
         snprintf(aOutput, aOutputMaxLen, "set tx power to %d dBm\r\nstatus 0x%02x\r\n", sTxPower, error);
     }
 
@@ -276,6 +281,7 @@ void Diag::ProcessRepeat(int argc, char *argv[], char *aOutput, size_t aOutputMa
     if (strcmp(argv[0], "stop") == 0)
     {
         otPlatAlarmStop(sContext);
+        sRepeatActive = false;
         snprintf(aOutput, aOutputMaxLen, "repeated packet transmission is stopped\r\nstatus 0x%02x\r\n", error);
     }
     else
@@ -291,6 +297,7 @@ void Diag::ProcessRepeat(int argc, char *argv[], char *aOutput, size_t aOutputMa
         VerifyOrExit(value <= kMaxPHYPacketSize, error = kThreadError_InvalidArgs);
         sTxLen = static_cast<uint8_t>(value);
 
+        sRepeatActive = true;
         uint32_t now = otPlatAlarmGetNow();
         otPlatAlarmStartAt(sContext, now, sTxPeriod);
         snprintf(aOutput, aOutputMaxLen, "sending packets of length %#x at the delay of %#x ms\r\nstatus 0x%02x\r\n", static_cast<int>(sTxLen), static_cast<int>(sTxPeriod), error);
@@ -359,16 +366,23 @@ void Diag::DiagReceiveDone(otInstance *aInstance, RadioPacket *aFrame, ThreadErr
 
         sStats.received_packets++;
     }
-
+    otPlatDiagRadioReceived(aInstance, aFrame, aError);
     otPlatRadioReceive(aInstance, sChannel);
 }
 
 void Diag::AlarmFired(otInstance *aInstance)
 {
-    uint32_t now = otPlatAlarmGetNow();
+    if(sRepeatActive)
+    {
+        uint32_t now = otPlatAlarmGetNow();
 
-    TxPacket();
-    otPlatAlarmStartAt(aInstance, now, sTxPeriod);
+        TxPacket();
+        otPlatAlarmStartAt(aInstance, now, sTxPeriod);
+    }
+    else
+    {
+        otPlatDiagAlarmCallback(aInstance);
+    }
 }
 
 extern "C" void otPlatDiagAlarmFired(otInstance *aInstance)

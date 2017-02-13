@@ -46,11 +46,18 @@ typedef struct _OTLWF_ADDR_EVENT
 typedef struct _OTLWF_NBL_EVENT
 {
     LIST_ENTRY          Link;
-    BOOLEAN             Received;
-    NDIS_PORT_NUMBER    PortNumber;
     PNET_BUFFER_LIST    NetBufferLists;
 
 } OTLWF_NBL_EVENT, *POTLWF_NBL_EVENT;
+
+typedef struct _OTLWF_MAC_FRAME_EVENT
+{
+    LIST_ENTRY          Link;
+    uint8_t             BufferLength;
+    uint8_t             Buffer[0];
+
+} OTLWF_MAC_FRAME_EVENT, *POTLWF_MAC_FRAME_EVENT;
+
 
 KSTART_ROUTINE otLwfEventWorkerThread;
 
@@ -59,7 +66,6 @@ VOID
 otLwfCompleteNBLs(
     _In_ PMS_FILTER             pFilter,
     _In_ BOOLEAN                DispatchLevel,
-    _In_ BOOLEAN                Received,
     _In_ PNET_BUFFER_LIST       NetBufferLists,
     _In_ NTSTATUS               Status
     );
@@ -196,7 +202,21 @@ otLwfEventProcessingStop(
             POTLWF_NBL_EVENT Event = CONTAINING_RECORD(Link, OTLWF_NBL_EVENT, Link);
             Link = Link->Flink;
 
-            otLwfCompleteNBLs(pFilter, FALSE, Event->Received, Event->NetBufferLists, STATUS_CANCELLED);
+            otLwfCompleteNBLs(pFilter, FALSE, Event->NetBufferLists, STATUS_CANCELLED);
+
+            // Delete the event
+            NdisFreeMemory(Event, 0, 0);
+        }
+    }
+
+    // Clean up any left over events
+    if (pFilter->MacFramesHead.Flink)
+    {
+        Link = pFilter->MacFramesHead.Flink;
+        while (Link != &pFilter->MacFramesHead)
+        {
+            POTLWF_MAC_FRAME_EVENT Event = CONTAINING_RECORD(Link, OTLWF_MAC_FRAME_EVENT, Link);
+            Link = Link->Flink;
 
             // Delete the event
             NdisFreeMemory(Event, 0, 0);
@@ -206,6 +226,7 @@ otLwfEventProcessingStop(
     // Reinitialize the list head
     InitializeListHead(&pFilter->AddressChangesHead);
     InitializeListHead(&pFilter->NBLsHead);
+    InitializeListHead(&pFilter->MacFramesHead);
     
     if (pFilter->EventIrpListHead.Flink)
     {
@@ -318,20 +339,17 @@ otLwfEventProcessingIndicateAddressChange(
     _In_ PIN6_ADDR              pAddr
     )
 {
-    if (pFilter->InternalStateInitialized == FALSE)
-    {
-        return;
-    }
+    LogFuncEntryMsg(DRIVER_DEFAULT, "Filter: %p", pFilter);
 
-    if (pFilter->MiniportCapabilities.MiniportMode == OT_MP_MODE_RADIO)
+    NT_ASSERT(pFilter->DeviceStatus == OTLWF_DEVICE_STATUS_RADIO_MODE);
+
+    POTLWF_ADDR_EVENT Event = FILTER_ALLOC_MEM(pFilter->FilterHandle, sizeof(OTLWF_ADDR_EVENT));
+    if (Event == NULL)
     {
-        POTLWF_ADDR_EVENT Event = FILTER_ALLOC_MEM(pFilter->FilterHandle, sizeof(OTLWF_ADDR_EVENT));
-        if (Event == NULL)
-        {
-            LogWarning(DRIVER_DATA_PATH, "Failed to alloc new OTLWF_ADDR_EVENT");
-            return;
-        }
-    
+        LogWarning(DRIVER_DEFAULT, "Failed to alloc new OTLWF_ADDR_EVENT");
+    }
+    else
+    {
         Event->NotificationType = NotificationType;
         Event->Address = *pAddr;
 
@@ -339,10 +357,12 @@ otLwfEventProcessingIndicateAddressChange(
         NdisAcquireSpinLock(&pFilter->EventsLock);
         InsertTailList(&pFilter->AddressChangesHead, &Event->Link);
         NdisReleaseSpinLock(&pFilter->EventsLock);
-    
+
         // Set the event to indicate we have a new address to process
         KeSetEvent(&pFilter->EventWorkerThreadProcessAddressChanges, 0, FALSE);
     }
+
+    LogFuncExit(DRIVER_DEFAULT);
 }
 
 // Called to indicate that we have a NetBufferLists to process
@@ -351,8 +371,6 @@ VOID
 otLwfEventProcessingIndicateNewNetBufferLists(
     _In_ PMS_FILTER             pFilter,
     _In_ BOOLEAN                DispatchLevel,
-    _In_ BOOLEAN                Received,
-    _In_ NDIS_PORT_NUMBER       PortNumber,
     _In_ PNET_BUFFER_LIST       NetBufferLists
     )
 {
@@ -360,22 +378,48 @@ otLwfEventProcessingIndicateNewNetBufferLists(
     if (Event == NULL)
     {
         LogWarning(DRIVER_DATA_PATH, "Failed to alloc new OTLWF_NBL_EVENT");
-        otLwfCompleteNBLs(pFilter, DispatchLevel, Received, NetBufferLists, STATUS_INSUFFICIENT_RESOURCES);
+        otLwfCompleteNBLs(pFilter, DispatchLevel, NetBufferLists, STATUS_INSUFFICIENT_RESOURCES);
         return;
     }
 
-    Event->Received = Received;
-    Event->PortNumber = PortNumber;
     Event->NetBufferLists = NetBufferLists;
 
     // Add the event to the queue
     FILTER_ACQUIRE_LOCK(&pFilter->EventsLock, DispatchLevel);
-    if (Received) pFilter->CountPendingRecvNBLs++;
     InsertTailList(&pFilter->NBLsHead, &Event->Link);
     FILTER_RELEASE_LOCK(&pFilter->EventsLock, DispatchLevel);
     
     // Set the event to indicate we have a new NBL to process
     KeSetEvent(&pFilter->EventWorkerThreadProcessNBLs, 0, FALSE);
+}
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+VOID
+otLwfEventProcessingIndicateNewMacFrameCommand(
+    _In_ PMS_FILTER             pFilter,
+    _In_ BOOLEAN                DispatchLevel,
+    _In_reads_bytes_(BufferLength) 
+         const uint8_t*         Buffer,
+    _In_ uint8_t                BufferLength
+    )
+{
+    POTLWF_MAC_FRAME_EVENT Event = FILTER_ALLOC_MEM(pFilter->FilterHandle, FIELD_OFFSET(OTLWF_MAC_FRAME_EVENT, Buffer) + BufferLength);
+    if (Event == NULL)
+    {
+        LogWarning(DRIVER_DATA_PATH, "Failed to alloc new OTLWF_MAC_FRAME_EVENT");
+        return;
+    }
+
+    Event->BufferLength = BufferLength;
+    memcpy(Event->Buffer, Buffer, BufferLength);
+
+    // Add the event to the queue
+    FILTER_ACQUIRE_LOCK(&pFilter->EventsLock, DispatchLevel);
+    InsertTailList(&pFilter->MacFramesHead, &Event->Link);
+    FILTER_RELEASE_LOCK(&pFilter->EventsLock, DispatchLevel);
+    
+    // Set the event to indicate we have a new Mac Frame to process
+    KeSetEvent(&pFilter->EventWorkerThreadProcessMacFrames, 0, FALSE);
 }
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
@@ -412,7 +456,7 @@ otLwfEventProcessingIndicateNetBufferListsCancelled(
         POTLWF_NBL_EVENT Event = CONTAINING_RECORD(Link, OTLWF_NBL_EVENT, Link);
         Link = Link->Flink;
 
-        otLwfCompleteNBLs(pFilter, FALSE, Event->Received, Event->NetBufferLists, STATUS_CANCELLED);
+        otLwfCompleteNBLs(pFilter, FALSE, Event->NetBufferLists, STATUS_CANCELLED);
 
         // Delete the event
         NdisFreeMemory(Event, 0, 0);
@@ -425,12 +469,11 @@ VOID
 otLwfCompleteNBLs(
     _In_ PMS_FILTER             pFilter,
     _In_ BOOLEAN                DispatchLevel,
-    _In_ BOOLEAN                Received,
     _In_ PNET_BUFFER_LIST       NetBufferLists,
     _In_ NTSTATUS               Status
     )
 {
-    LogVerbose(DRIVER_DATA_PATH, "otLwfCompleteNBLs, Filter:%p, NBL:%p, Recv:%u, Status:%!STATUS!", pFilter, NetBufferLists, Received, Status);
+    LogVerbose(DRIVER_DATA_PATH, "otLwfCompleteNBLs, Filter:%p, NBL:%p, Status:%!STATUS!", pFilter, NetBufferLists, Status);
 
     // Set the status for all the NBLs
     PNET_BUFFER_LIST CurrNbl = NetBufferLists;
@@ -443,22 +486,11 @@ otLwfCompleteNBLs(
     NT_ASSERT(NetBufferLists);
 
     // Indicate the completion
-    if (Received)
-    {
-        NdisFReturnNetBufferLists(
-            pFilter->FilterHandle,
-            NetBufferLists,
-            DispatchLevel ? NDIS_SEND_COMPLETE_FLAGS_DISPATCH_LEVEL : 0
-            );
-    }
-    else
-    {
-        NdisFSendNetBufferListsComplete(
-            pFilter->FilterHandle,
-            NetBufferLists,
-            DispatchLevel ? NDIS_RETURN_FLAGS_DISPATCH_LEVEL : 0
-            );
-    }
+    NdisFSendNetBufferListsComplete(
+        pFilter->FilterHandle,
+        NetBufferLists,
+        DispatchLevel ? NDIS_SEND_COMPLETE_FLAGS_DISPATCH_LEVEL : 0
+        );
 }
 
 _Function_class_(DRIVER_CANCEL)
@@ -689,6 +721,7 @@ otLwfEventWorkerThread(
     { 
         &pFilter->EventWorkerThreadStopEvent,
         &pFilter->EventWorkerThreadProcessNBLs,
+        &pFilter->EventWorkerThreadProcessMacFrames,
         &pFilter->EventWorkerThreadWaitTimeUpdated,
         &pFilter->EventWorkerThreadProcessTasklets,
         &pFilter->SendNetBufferListComplete,
@@ -823,7 +856,7 @@ otLwfEventWorkerThread(
         //
 
         if (status == STATUS_TIMEOUT || 
-            (pFilter->EventTimerState == OT_EVENT_TIMER_FIRED && status == STATUS_WAIT_0 + 2))
+            (pFilter->EventTimerState == OT_EVENT_TIMER_FIRED && status == STATUS_WAIT_0 + 3))
         {
             // Reset the wait timeout
             pFilter->NextAlarmTickCount.QuadPart = 0;
@@ -840,12 +873,11 @@ otLwfEventWorkerThread(
                 POTLWF_NBL_EVENT Event = NULL;
                 NdisAcquireSpinLock(&pFilter->EventsLock);
 
-                // Just get the first item ('send' or 'recv'), if available
+                // Just get the first item, if available
                 if (!IsListEmpty(&pFilter->NBLsHead))
                 {
                     PLIST_ENTRY Link = RemoveHeadList(&pFilter->NBLsHead);
                     Event = CONTAINING_RECORD(Link, OTLWF_NBL_EVENT, Link);
-                    if (Event->Received) pFilter->CountPendingRecvNBLs--;
                 }
 
                 NdisReleaseSpinLock(&pFilter->EventsLock);
@@ -857,135 +889,162 @@ otLwfEventWorkerThread(
                 NTSTATUS NblStatus = STATUS_INSUFFICIENT_RESOURCES;
 
                 // Process the event
-                if (Event->Received) // Received a MAC frame
+                PNET_BUFFER_LIST CurrNbl = Event->NetBufferLists;
+                while (CurrNbl != NULL)
                 {
-                    PNET_BUFFER_LIST CurrNbl = Event->NetBufferLists;
-                    NT_ASSERT(CurrNbl);
-                    while (CurrNbl != NULL)
+                    PNET_BUFFER CurrNb = NET_BUFFER_LIST_FIRST_NB(CurrNbl);
+                    while (CurrNb != NULL)
                     {
-                        LogVerbose(DRIVER_DATA_PATH, "Passing NBL:%p to OpenThread to recv.", CurrNbl);
-
-                        PNET_BUFFER CurrNb = NET_BUFFER_LIST_FIRST_NB(CurrNbl);
-                        NT_ASSERT(CurrNb);
-                        while (CurrNb != NULL)
+                        NT_ASSERT(NET_BUFFER_DATA_LENGTH(CurrNb) <= MessageBufferSize);
+                        if (NET_BUFFER_DATA_LENGTH(CurrNb) <= MessageBufferSize)
                         {
-                            NT_ASSERT(NET_BUFFER_DATA_LENGTH(CurrNb) <= sizeof(pFilter->otReceiveMessage));
-                            if (NET_BUFFER_DATA_LENGTH(CurrNb) <= sizeof(pFilter->otReceiveMessage))
+                            // Copy NB data into message
+                            if (NT_SUCCESS(CopyDataBuffer(CurrNb, NET_BUFFER_DATA_LENGTH(CurrNb), MessageBuffer)))
                             {
-                                // Copy NB data into message
-                                if (NT_SUCCESS(CopyDataBuffer(CurrNb, NET_BUFFER_DATA_LENGTH(CurrNb), &pFilter->otReceiveMessage)))
+                                ThreadError error = kThreadError_None;
+
+                                // Create a new message
+                                otMessage message = otNewIp6Message(pFilter->otCtx, TRUE);
+                                if (message)
                                 {
-                                    POT_NBL_CONTEXT NblContext = GetNBLContext(CurrNbl);
-                                    pFilter->otReceiveFrame.mChannel = NblContext->Channel;
-                                    pFilter->otReceiveFrame.mPower = NblContext->Power;
-                                    pFilter->otReceiveFrame.mLqi = NblContext->Lqi;
-                                    pFilter->otReceiveFrame.mLength = (uint8_t)NET_BUFFER_DATA_LENGTH(CurrNb);
-                                    otLwfRadioReceiveFrame(pFilter, CurrNbl);
-                                    NblStatus = STATUS_SUCCESS;
-                                }
-                            }
-
-                            CurrNb = NET_BUFFER_NEXT_NB(CurrNb);
-                        }
-
-                        CurrNbl = NET_BUFFER_LIST_NEXT_NBL(CurrNbl);
-                    }
-                }
-                else // Sending an IPv6 packet
-                {
-                    PNET_BUFFER_LIST CurrNbl = Event->NetBufferLists;
-                    while (CurrNbl != NULL)
-                    {
-                        PNET_BUFFER CurrNb = NET_BUFFER_LIST_FIRST_NB(CurrNbl);
-                        while (CurrNb != NULL)
-                        {
-                            NT_ASSERT(NET_BUFFER_DATA_LENGTH(CurrNb) <= MessageBufferSize);
-                            if (NET_BUFFER_DATA_LENGTH(CurrNb) <= MessageBufferSize)
-                            {
-                                // Copy NB data into message
-                                if (NT_SUCCESS(CopyDataBuffer(CurrNb, NET_BUFFER_DATA_LENGTH(CurrNb), MessageBuffer)))
-                                {
-                                    ThreadError error = kThreadError_None;
-
-                                    // Create a new message
-                                    otMessage message = otNewIp6Message(pFilter->otCtx, TRUE);
-                                    if (message)
+                                    // Write to the message
+                                    error = otAppendMessage(message, MessageBuffer, (uint16_t)NET_BUFFER_DATA_LENGTH(CurrNb));
+                                    if (error != kThreadError_None)
                                     {
-                                        // Write to the message
-                                        error = otAppendMessage(message, MessageBuffer, (uint16_t)NET_BUFFER_DATA_LENGTH(CurrNb));
-                                        if (error != kThreadError_None)
-                                        {
-                                            LogError(DRIVER_DATA_PATH, "otAppendMessage failed with %!otError!", error);
-                                            otFreeMessage(message);
-                                        }
-                                        else
-                                        {
-                                            IPV6_HEADER* v6Header = (IPV6_HEADER*)MessageBuffer;
-                                            
-                                            LogVerbose(DRIVER_DATA_PATH, "Filter: %p, IP6_SEND: %p : %!IPV6ADDR! => %!IPV6ADDR! (%u bytes)", 
-                                                       pFilter, CurrNbl, &v6Header->SourceAddress, &v6Header->DestinationAddress, 
-                                                       NET_BUFFER_DATA_LENGTH(CurrNb));
-                                        
-                                            #ifdef LOG_BUFFERS
-                                            otLogBuffer(MessageBuffer, NET_BUFFER_DATA_LENGTH(CurrNb));
-                                            #endif
-
-                                            // Send message (it will free 'message')
-                                            error = otSendIp6Datagram(pFilter->otCtx, message);
-                                            if (error != kThreadError_None)
-                                            {
-                                                LogError(DRIVER_DATA_PATH, "otSendIp6Datagram failed with %!otError!", error);
-                                            }
-                                            else
-                                            {
-                                                NblStatus = STATUS_SUCCESS;
-                                            }
-                                        }
+                                        LogError(DRIVER_DATA_PATH, "otAppendMessage failed with %!otError!", error);
+                                        otFreeMessage(message);
                                     }
                                     else
                                     {
-                                        LogError(DRIVER_DATA_PATH, "otNewIPv6Message failed!");
+                                        IPV6_HEADER* v6Header = (IPV6_HEADER*)MessageBuffer;
+
+                                        LogVerbose(DRIVER_DATA_PATH, "Filter: %p, IP6_SEND: %p : %!IPV6ADDR! => %!IPV6ADDR! (%u bytes)",
+                                            pFilter, CurrNbl, &v6Header->SourceAddress, &v6Header->DestinationAddress,
+                                            NET_BUFFER_DATA_LENGTH(CurrNb));
+
+#ifdef LOG_BUFFERS
+                                        otLogBuffer(MessageBuffer, NET_BUFFER_DATA_LENGTH(CurrNb));
+#endif
+
+                                        // Send message (it will free 'message')
+                                        error = otSendIp6Datagram(pFilter->otCtx, message);
+                                        if (error != kThreadError_None)
+                                        {
+                                            LogError(DRIVER_DATA_PATH, "otSendIp6Datagram failed with %!otError!", error);
+                                        }
+                                        else
+                                        {
+                                            NblStatus = STATUS_SUCCESS;
+                                        }
                                     }
                                 }
+                                else
+                                {
+                                    LogError(DRIVER_DATA_PATH, "otNewIPv6Message failed!");
+                                }
                             }
-
-                            CurrNb = NET_BUFFER_NEXT_NB(CurrNb);
                         }
 
-                        CurrNbl = NET_BUFFER_LIST_NEXT_NBL(CurrNbl);
+                        CurrNb = NET_BUFFER_NEXT_NB(CurrNb);
                     }
+
+                    CurrNbl = NET_BUFFER_LIST_NEXT_NBL(CurrNbl);
                 }
 
                 if (Event->NetBufferLists)
                 {
                     // Complete the NBLs
-                    otLwfCompleteNBLs(pFilter, FALSE, Event->Received, Event->NetBufferLists, NblStatus);
+                    otLwfCompleteNBLs(pFilter, FALSE, Event->NetBufferLists, NblStatus);
                 }
 
                 // Free the event
                 NdisFreeMemory(Event, 0, 0);
             }
         }
-        else if (status == STATUS_WAIT_0 + 2) // EventWorkerThreadWaitTimeUpdated fired
+        else if (status == STATUS_WAIT_0 + 2) // EventWorkerThreadProcessMacFrames fired
+        {
+            // Go through the queue until there are no more items
+            for (;;)
+            {
+                POTLWF_MAC_FRAME_EVENT Event = NULL;
+                NdisAcquireSpinLock(&pFilter->EventsLock);
+
+                // Just get the first item, if available
+                if (!IsListEmpty(&pFilter->MacFramesHead))
+                {
+                    PLIST_ENTRY Link = RemoveHeadList(&pFilter->MacFramesHead);
+                    Event = CONTAINING_RECORD(Link, OTLWF_MAC_FRAME_EVENT, Link);
+                }
+
+                NdisReleaseSpinLock(&pFilter->EventsLock);
+
+                // Break out of the loop if we have emptied the queue
+                if (Event == NULL) break;
+
+                // Read the initial length value and validate
+                uint16_t packetLength = 0;
+                if (try_spinel_datatype_unpack(
+                        Event->Buffer,
+                        Event->BufferLength,
+                        SPINEL_DATATYPE_UINT16_S,
+                        &packetLength) &&
+                    packetLength <= sizeof(pFilter->otReceiveMessage) &&
+                    Event->BufferLength > sizeof(uint16_t) + packetLength)
+                {
+                    pFilter->otReceiveFrame.mLength = (uint8_t)packetLength;
+
+                    uint8_t offset = 2;
+                    uint8_t length = Event->BufferLength - 2;
+
+                    if (packetLength != 0)
+                    {
+                        memcpy(&pFilter->otReceiveMessage, Event->Buffer + offset, packetLength);
+                        offset += pFilter->otReceiveFrame.mLength;
+                        length -= pFilter->otReceiveFrame.mLength;
+                    }
+
+                    ThreadError errorCode;
+                    int8_t noiseFloor = -128;
+                    uint16_t flags = 0;
+                    if (try_spinel_datatype_unpack(
+                            Event->Buffer + offset,
+                            length,
+                            "ccSiCC",
+                            &pFilter->otReceiveFrame.mPower,
+                            &noiseFloor,
+                            &flags,
+                            &errorCode,
+                            &pFilter->otReceiveFrame.mChannel,
+                            &pFilter->otReceiveFrame.mLqi))
+                    {
+                        otLwfRadioReceiveFrame(pFilter, errorCode);
+                    }
+                }
+
+                // Free the event
+                NdisFreeMemory(Event, 0, 0);
+            }
+        }
+        else if (status == STATUS_WAIT_0 + 3) // EventWorkerThreadWaitTimeUpdated fired
         {
             // Nothing to do, the next time we wait, we will be using the updated time
         }
-        else if (status == STATUS_WAIT_0 + 3) // EventWorkerThreadProcessTasklets fired
+        else if (status == STATUS_WAIT_0 + 4) // EventWorkerThreadProcessTasklets fired
         {
             // Process all tasklets that were indicated to us from OpenThread
             otProcessQueuedTasklets(pFilter->otCtx);
         }
-        else if (status == STATUS_WAIT_0 + 4) // SendNetBufferListComplete fired
+        else if (status == STATUS_WAIT_0 + 5) // SendNetBufferListComplete fired
         {
             // Handle the completion of the NBL send
             otLwfRadioTransmitFrameDone(pFilter);
         }
-        else if (status == STATUS_WAIT_0 + 5) // EventWorkerThreadProcessIrp fired
+        else if (status == STATUS_WAIT_0 + 6) // EventWorkerThreadProcessIrp fired
         {
             // Process any IRPs that were pended
             otLwfEventProcessingNextIrp(pFilter);
         }
-        else if (status == STATUS_WAIT_0 + 6) // EventWorkerThreadProcessAddressChanges fired
+        else if (status == STATUS_WAIT_0 + 7) // EventWorkerThreadProcessAddressChanges fired
         {
             // Go through the queue until there are no more items
             for (;;)
@@ -1012,7 +1071,7 @@ otLwfEventWorkerThread(
                 NdisFreeMemory(Event, 0, 0);
             }
         }
-        else if (status == STATUS_WAIT_0 + 7) // EventWorkerThreadEnergyScanComplete fired
+        else if (status == STATUS_WAIT_0 + 8) // EventWorkerThreadEnergyScanComplete fired
         {
             // Indicate energy scan complete
             otPlatRadioEnergyScanDone(pFilter->otCtx, pFilter->otLastEnergyScanMaxRssi);

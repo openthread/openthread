@@ -691,8 +691,9 @@ typedef struct otExternalRouteConfig
 typedef enum otMleAttachFilter
 {
     kMleAttachAnyPartition    = 0,  ///< Attach to any Thread partition.
-    kMleAttachSamePartition   = 1,  ///< Attach to the same Thread partition.
-    kMleAttachBetterPartition = 2,  ///< Attach to a better (i.e. higher weight/partition id) Thread partition.
+    kMleAttachSamePartition1  = 1,  ///< Attach to the same Thread partition (attempt 1).
+    kMleAttachSamePartition2  = 2,  ///< Attach to the same Thread partition (attempt 2).
+    kMleAttachBetterPartition = 3,  ///< Attach to a better (i.e. higher weight/partition id) Thread partition.
 } otMleAttachFilter;
 
 /**
@@ -855,6 +856,7 @@ typedef struct otMacCounters
     uint32_t mTxOther;                ///< The number of transmitted other types of frames.
     uint32_t mTxRetry;                ///< The number of retransmission times.
     uint32_t mTxErrCca;               ///< The number of CCA failure times.
+    uint32_t mTxErrAbort;             ///< The number of frame transmission failures due to abort error.
     uint32_t mRxTotal;                ///< The total number of received packets.
     uint32_t mRxUnicast;              ///< The total number of unicast packets received.
     uint32_t mRxBroadcast;            ///< The total number of broadcast packets received.
@@ -1033,6 +1035,61 @@ typedef struct otUdpSocket
     void                *mTransport; ///< A pointer to the transport object (internal use only).
     struct otUdpSocket  *mNext;      ///< A pointer to the next UDP socket (internal use only).
 } otUdpSocket;
+
+#ifdef OTDLL
+
+/**
+ * This function pointer is called to notify addition and removal of OpenThread devices.
+ *
+ * @param[in]  aAdded       A flag indicating if the device was added or removed.
+ * @param[in]  aDeviceGuid  A GUID indicating which device state changed.
+ * @param[in]  aContext     A pointer to application-specific context.
+ *
+ */
+typedef void (OTCALL *otDeviceAvailabilityChangedCallback)(bool aAdded, const GUID *aDeviceGuid, void *aContext);
+
+#endif // OTDLL
+
+/**
+ * This function pointer is called during an IEEE 802.15.4 Active Scan when an IEEE 802.15.4 Beacon is received or
+ * the scan completes.
+ *
+ * @param[in]  aResult   A valid pointer to the beacon information or NULL when the active scan completes.
+ * @param[in]  aContext  A pointer to application-specific context.
+ *
+ */
+typedef void (OTCALL *otHandleActiveScanResult)(otActiveScanResult *aResult, void *aContext);
+
+/**
+ * This function pointer is called during an IEEE 802.15.4 Energy Scan when the result for a channel is ready or the
+ * scan completes.
+ *
+ * @param[in]  aResult   A valid pointer to the energy scan result information or NULL when the energy scan completes.
+ * @param[in]  aContext  A pointer to application-specific context.
+ *
+ */
+typedef void (OTCALL *otHandleEnergyScanResult)(otEnergyScanResult *aResult, void *aContext);
+
+/**
+ * This function pointer is called to notify certain configuration or state changes within OpenThread.
+ *
+ * @param[in]  aFlags    A bit-field indicating specific state that has changed.
+ * @param[in]  aContext  A pointer to application-specific context.
+ *
+ */
+typedef void (OTCALL *otStateChangedCallback)(uint32_t aFlags, void *aContext);
+
+/**
+ * This function pointer is called when Network Diagnostic Get response is received.
+ *
+ * @param[in]  aMessage      A pointer to the message buffer containing the received Network Diagnostic
+ *                           Get response payload.
+ * @param[in]  aMessageInfo  A pointer to the message info for @p aMessage.
+ * @param[in]  aContext      A pointer to application-specific context.
+ *
+ */
+typedef void (*otReceiveDiagnosticGetCallback)(otMessage aMessage, const otMessageInfo *aMessageInfo,
+                                               void *aContext);
 
 /**
  * @}

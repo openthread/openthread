@@ -38,6 +38,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ *
  ****************************************************************************************
  */
 
@@ -45,7 +46,7 @@
 
 
 #include <stdio.h>
-#include <black_orca.h>
+#include <sdk_defs.h>
 #include <hw_timer0.h>
 
 #if (dg_configSYSTEMVIEW)

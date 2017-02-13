@@ -33,6 +33,11 @@
 
 static uint32_t sResetReason;
 
+__WEAK void nrf5CryptoInit(void)
+{
+    // This function is defined as weak so it could be overridden with external implementation.
+}
+
 void nrf5MiscInit(void)
 {
     // Read the reason of last reset.

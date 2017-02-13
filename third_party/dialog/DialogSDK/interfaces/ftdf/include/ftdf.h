@@ -1,10 +1,9 @@
 /**
  \addtogroup INTERFACES
  \{
- \addtogroup RADIO
- \{
  \addtogroup FTDF
  \{
+ \brief IEEE 802.15.4 Wireless
  */
 /**
  ****************************************************************************************
@@ -36,7 +35,8 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- *   
+ *
+ *
  ****************************************************************************************
  */
 
@@ -164,7 +164,9 @@ typedef uint8_t FTDF_MsgId;
 #if FTDF_DBG_BUS_ENABLE
 #define FTDF_DBG_MODE_SET_REQUEST       54
 #endif /* FTDF_DBG_BUS_ENABLE */
-
+#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
+#define FTDF_FPPR_MODE_SET_REQUEST      55
+#endif /* dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A */
 /**
  * \brief  Request status
  * \remark Valid statuses:
@@ -368,6 +370,8 @@ typedef uint32_t FTDF_USec;
 typedef uint64_t FTDF_PSec;
 
 typedef uint32_t FTDF_NrLowPowerClockCycles;
+
+typedef uint8_t FTDF_NrBackoffPeriods;
 
 /**
  * \brief  Period of time
@@ -651,8 +655,23 @@ typedef uint8_t FTDF_PIBAttribute;
 #define FTDF_PIB_TSCH_CAPABLE              103
 #define FTDF_PIB_TS_SYNC_CORRECT_THRESHOLD 104
 
+/* Proprietary PIB. */
+#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
+#define FTDF_PIB_BO_IRQ_THRESHOLD          105
+#define FTDF_PIB_PTI_CONFIG                106
+#endif /* dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A */
+
 // Total number of PIB attributes
-#define FTDF_NR_OF_PIB_ATTRIBUTES        104
+#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
+#define FTDF_NR_OF_PIB_ATTRIBUTES          106
+#else /* dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A */
+#define FTDF_NR_OF_PIB_ATTRIBUTES          104
+#endif /* dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A */
+
+/* Default values */
+#ifndef FTDF_BO_IRQ_THRESHOLD
+#define FTDF_BO_IRQ_THRESHOLD               0xff
+#endif
 
 #if FTDF_DBG_BUS_ENABLE
 /**
@@ -1247,6 +1266,27 @@ typedef uint8_t  FTDF_ChannelNumber;
  */
 typedef uint8_t  FTDF_PTI;
 
+enum
+{
+        /* PTI index for explicit Rx. */
+        FTDF_PTI_CONFIG_RX,
+        /* PTI index for Tx. */
+        FTDF_PTI_CONFIG_TX,
+        FTDF_PTI_CONFIG_RESERVED0,
+        FTDF_PTI_CONFIG_RESERVED1,
+        FTDF_PTI_CONFIG_RESERVED2,
+        FTDF_PTI_CONFIG_RESERVED3,
+        FTDF_PTI_CONFIG_RESERVED4,
+        FTDF_PTI_CONFIG_RESERVED5,
+        /* Enumeration end. */
+        FTDF_PTIS,
+};
+
+typedef struct
+{
+        FTDF_PTI ptis[FTDF_PTIS];
+} FTDF_PtiConfig;
+
 /**
  * \brief  Channel page
  * \remark Supported values: 0
@@ -1440,6 +1480,8 @@ typedef struct
     FTDF_Count duplicateFrameCount;
     FTDF_Count RXSuccessCount;
     FTDF_Count NACKCount;
+    FTDF_Count RxExpiredCount;
+    FTDF_Count BOIrqCount;
 } FTDF_PerformanceMetrics;
 
 typedef struct
@@ -2703,6 +2745,19 @@ typedef struct
 } FTDF_DbgModeSetRequest;
 #endif /* FTDF_DBG_BUS_ENABLE */
 
+#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
+typedef struct
+{
+        /** \brief Message ID = FTDF_FPPR_MODE_SET_REQUEST */
+        FTDF_MsgId msgId;
+        /** \brief fp bit value to set when src address matches*/
+        FTDF_Bitmap8 matchFp;
+        /** \brief When set, fp_force_value will be applied to fp bit for all src addresses*/
+        FTDF_Bitmap8 fpOverride;
+        /** \brief The value will be set to fp bit for all src addresses when fp_override is set*/
+        FTDF_Bitmap8 fpForce;
+} FTDF_FpprModeSetRequest;
+#endif /* dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A */
 /**
  * \brief       FTDF_getReleaseInfo - gets the LMAC (FPGA) and UMAC (FTDF SW driver) release info
  * \param[out]  lmacRelName:     LMAC release name
@@ -3062,7 +3117,13 @@ void FTDF_reset(int setDefaultPIB);
 
 FTDF_PTI FTDF_getRxPti( void );
 
+#if FTDF_USE_PTI
 void FTDF_setRxPti( FTDF_PTI rx_pti );
+#if FTDF_USE_AUTO_PTI
+void FTDF_restoreRxPti(void);
+#endif
+#endif
+
 #ifdef FTDF_PHY_API
 FTDF_Status FTDF_sendFrameSimple( FTDF_DataLength    frameLength,
         FTDF_Octet*        frame,
@@ -3091,6 +3152,274 @@ void FTDF_setDbgMode(FTDF_DbgMode dbgMode);
  */
 void FTDF_DBG_BUS_GPIO_CONFIG(void);
 #endif /* FTDF_DBG_BUS_ENABLE */
+
+#if dg_configUSE_FTDF_DDPHY == 1
+void FTDF_ddphySet(uint16_t ccaReg);
+#endif /* dg_configUSE_FTDF_DDPHY == 1 */
+
+#if dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A
+
+#if FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO
+#ifndef FTDF_LITE
+/**
+ * \brief Controls when the FPPR address invalidation will be performed.
+ *
+ * If set to 0 (recommended), address invalidation in FPPR occurs right after the frame is passed to
+ * LMAC for direct transmission. If set to 1, address invalidation occurs after the associated
+ * confirm message is received.
+ */
+#define FTDF_FPPR_DEFER_INVALIDATION                    0
+
+/**
+ * \brief Adds a new short address to FPPR, initializing the corresponding FSM.
+ *
+ * A short address FP FSM accepts the following notifications (events):
+ *
+ * - New address (initialize) by calling @ref FTDF_fpFsmShortAddressNew()
+ * - Last frame pending (passed to direct sending) by calling @ref
+ * FTDF_fpFsmShortAddressLastFramePending()
+ * - Last pending frame sent by calling @ref FTDF_fpFsmClearPending()
+ *
+ * A new address may be rejected if there is no adequate space left in FPPR.
+ *
+ * \param [in] panId Destination PAN ID.
+ * \param [in] shortAddress Destination short address.
+ *
+ * \return \ref FTDF_TRUE on success.
+ */
+FTDF_Boolean FTDF_fpFsmShortAddressNew(FTDF_PANId panId, FTDF_ShortAddress shortAddress);
+
+/**
+ * \brief Adds a new extended address to FPPR, initializing the corresponding FSM.
+ *
+ * An extended address FP FSM accepts the following notifications (events):
+ *
+ * - New address (initialize) by calling @ref FTDF_fpFsmExtAddressNew()
+ * - Last frame pending (passed to direct sending) by calling @ref
+ * FTDF_fpFsmExtAddressLastFramePending()
+ * - Last pending frame sent by calling @ref FTDF_fpFsmClearPending()
+ *
+ * A new address may be rejected if there is no adequate space left in FPPR.
+ *
+ * \param [in] panId Destination PAN ID.
+ * \param [in] extAddress Destination extended address.
+ *
+ * \return \ref FTDF_TRUE on success.
+ */
+FTDF_Boolean FTDF_fpFsmExtAddressNew(FTDF_PANId panId, FTDF_ExtAddress extAddress);
+
+/**
+ * \brief Notifies FP FSM that the last packet for the associated destination has been passed for
+ * direct transmission.
+ *
+ * \param [in] panId Destination PAN ID.
+ * \param [in] shortAddress Destination short address.
+ */
+void FTDF_fpFsmShortAddressLastFramePending(FTDF_PANId panId, FTDF_ShortAddress shortAddress);
+
+/**
+ * \brief Notifies FP FSM that the last packet for the associated destination has been passed for
+ * direct transmission.
+ *
+ * \param [in] panId Destination PAN ID.
+ * \param [in] shortAddress Destination extended address.
+ */
+void FTDF_fpFsmExtAddressLastFramePending(FTDF_PANId panId, FTDF_ExtAddress extAddress);
+
+/**
+ * \brief Notifies FP FSM that the last pending packet has been transmitted (UMAC state machine
+ * closed).
+ */
+void FTDF_fpFsmClearPending(void);
+
+#endif /* #ifndef FTDF_LITE */
+
+/**
+ * \brief Number of FPPR table entries.
+ */
+#define FTDF_FPPR_TABLE_ENTRIES                         24
+
+/**
+ * \brief Number of extended address table entries.
+ */
+#define FTDF_FPPR_TABLE_EXT_ADDRESS_ENTRIES             FTDF_FPPR_TABLE_ENTRIES
+
+/**
+ * \brief Number of short address table entries.
+ */
+#define FTDF_FPPR_TABLE_SHORT_ADDRESS_ENTRIES           (FTDF_FPPR_TABLE_ENTRIES * 4)
+
+/**
+ * \brief Resets FPPR table, invalidating all addresses.
+ */
+void FTDF_fpprReset(void);
+
+/**
+ * \brief Gets the short address programmed at the specified FPPR table position.
+ *
+ * \param [in] entry FPPR table entry (0 to \ref FTDF_FPPR_TABLE_ENTRIES - 1).
+ * \param [in] shortAddrIdx Short address position within the entry (0 to 3).
+ *
+ * \return Requested short address
+ */
+FTDF_ShortAddress FTDF_fpprGetShortAddress(uint8_t entry, uint8_t shortAddrIdx);
+
+/**
+ * \brief Programs a short address programmed at the specified FPPR table position.
+ *
+ * \param [in] entry FPPR table entry (0 to \ref FTDF_FPPR_TABLE_ENTRIES - 1).
+ * \param [in] shortAddrIdx Short address position within the entry (0 to 3).
+ * \param [in] Associated short address.
+ */
+void FTDF_fpprSetShortAddress(uint8_t entry, uint8_t shortAddrIdx,
+        FTDF_ShortAddress shortAddress);
+
+/**
+ * \brief Determines validity of a short address programmed at the specified FPPR table position.
+ *
+ * \param [in] entry FPPR table entry (0 to \ref FTDF_FPPR_TABLE_ENTRIES - 1).
+ * \param [in] shortAddrIdx Short address position within the entry (0 to 3).
+ *
+ * \return FTDF_TRUE if the address is valid.
+ */
+FTDF_Boolean FTDF_fpprGetShortAddressValid(uint8_t entry, uint8_t shortAddrIdx);
+
+/**
+ * \brief Sets validity of a short address programmed at the specified FPPR table position.
+ *
+ * \param [in] entry FPPR table entry (0 to \ref FTDF_FPPR_TABLE_ENTRIES - 1).
+ * \param [in] shortAddrIdx Short address position within the entry (0 to 3).
+ * \param [in] valid Associated validity.
+ */
+void FTDF_fpprSetShortAddressValid(uint8_t entry, uint8_t shortAddrIdx,
+        FTDF_Boolean valid);
+
+/**
+ * \brief Gets the extended address programmed at the specified FPPR table position.
+ *
+ * \param [in] entry FPPR table entry (0 to \ref FTDF_FPPR_TABLE_ENTRIES - 1).
+ *
+ * \return Requested extended address
+ */
+FTDF_ExtAddress FTDF_fpprGetExtAddress(uint8_t entry);
+
+/**
+ * \brief Programs an extended address programmed at the specified FPPR table position.
+ *
+ * \param [in] entry FPPR table entry (0 to \ref FTDF_FPPR_TABLE_ENTRIES - 1).
+ * \param [in] Associated extended address.
+ */
+void FTDF_fpprSetExtAddress(uint8_t entry, FTDF_ExtAddress extAddress);
+
+/**
+ * \brief Determines validity of an extended address programmed at the specified FPPR table
+ * position.
+ *
+ * \param [in] entry FPPR table entry (0 to \ref FTDF_FPPR_TABLE_ENTRIES - 1).
+ *
+ * \return \ref FTDF_TRUE if the address is valid.
+ */
+FTDF_Boolean FTDF_fpprGetExtAddressValid(uint8_t entry);
+
+/**
+ * \brief Sets validity of an extended address programmed at the specified FPPR table position.
+ *
+ * \param [in] entry FPPR table entry (0 to \ref FTDF_FPPR_TABLE_ENTRIES - 1).
+ * \param [in] valid Associated validity.
+ */
+void FTDF_fpprSetExtAddressValid(uint8_t entry, FTDF_Boolean valid);
+
+/**
+ * \brief Gets a free (invalid) short address position in the FPPR table.
+ *
+ * \param [out] entry Reference to the FPPR table entry.
+ * \param [out] shortAddrIdx Reference to the short address position within the entry.
+ *
+ * \return \ref FTDF_TRUE if a free position was found.
+ */
+FTDF_Boolean FTDF_fpprGetFreeShortAddress(uint8_t * entry,
+        uint8_t * shortAddrIdx);
+
+/**
+ * \brief Gets a free (invalid) extended address position in the FPPR table.
+ *
+ * \param [out] entry Reference to the FPPR table entry.
+ *
+ * \return \ref FTDF_TRUE if a free position was found.
+ */
+FTDF_Boolean FTDF_fpprGetFreeExtAddress(uint8_t * entry);
+
+/**
+ * \brief Looks up a short address within the FPPR table.
+ *
+ * \param [in] shortAddr Associated short address.
+ * \param [out] entry Reference to the FPPR table entry.
+ * \param [out] shortAddrIdx Reference to the short address position within the entry.
+ *
+ *  * \return \ref FTDF_TRUE if the address was found.
+ */
+FTDF_Boolean FTDF_fpprLookupShortAddress(FTDF_ShortAddress shortAddr, uint8_t * entry,
+        uint8_t * shortAddrIdx);
+
+/**
+ * \brief Looks up an extended address within the FPPR table.
+ *
+ * \param [in] extAddr Associated extended address.
+ * \param [out] entry Reference to the FPPR table entry.
+ *
+ *  * \return \ref FTDF_TRUE if the address was found.
+ */
+FTDF_Boolean FTDF_fpprLookupExtAddress(FTDF_ExtAddress extAddr, uint8_t * entry);
+
+#endif /* FTDF_FP_BIT_MODE == FTDF_FP_BIT_MODE_AUTO */
+
+/**
+ * \brief Sets FPPR mode.
+ *
+ * \param [in] matchFp Specifies the value of the FP bit when acknowledging a received frame with a
+ * source address that matches a valid a address in the FPPR table. The opposite value is set if the
+ * source address does not match. Ignored if \a fpOverride is \ref FTDF_TRUE.
+ *
+ * \param [in] fpOverride If \ref FTDF_TRUE, the value of \a fpForce is used for setting the FP bit,
+ * regardless of the address table matching result.
+ *
+ * \param [in] fpForce FP bit value when fpOverride is \ref FTDF_TRUE. Ignored otherwise.
+ */
+void FTDF_fpprSetMode(FTDF_Boolean matchFp, FTDF_Boolean fpOverride, FTDF_Boolean fpForce);
+
+#if FTDF_FP_BIT_TEST_MODE
+/**
+ * \brief Gets FPPR mode.
+ *
+ * \param [out] matchFp Reference to the returned value. \see FTDF_fpprRamSetMode
+ *
+ * \param [out] fpOverride Reference to the returned value. \see FTDF_fpprRamSetMode
+ *
+ * \param [out] fpForce FP Reference to the returned value. \see FTDF_fpprRamSetMode
+ */
+void FTDF_fpprGetMode(FTDF_Boolean * matchFp, FTDF_Boolean * fpOverride, FTDF_Boolean * fpForce);
+#endif //FTDF_FP_BIT_TEST_MODE
+
+#if FTDF_USE_LPDP == 1
+
+/**
+ * \brief Enable or disable LPDP.
+ *
+ * \param [in] enable if FTDF_TRUE, LPDP functionality is enabled.
+ */
+void FTDF_lpdpEnable(FTDF_Boolean enable);
+
+#if FTDF_FP_BIT_TEST_MODE
+/**
+ * \brief Checks whether LPDP is enabled.
+ *
+ * \return FTDF_TRUE, if LPDP functionality is enabled.
+ */
+FTDF_Boolean FTDF_lpdpIsEnabled(void);
+#endif
+
+#endif /* #if FTDF_USE_LPDP == 1 */
+#endif /* dg_configBLACK_ORCA_IC_REV != BLACK_ORCA_IC_REV_A */
 
 #endif /* FTDF_H_ */
 

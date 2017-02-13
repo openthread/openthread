@@ -5,7 +5,9 @@ This directory contains example platform drivers for the [Dialog Semiconductor D
 [da15000]: https://support.dialog-semiconductor.com/connectivity/product/openthread-sandbox
 
 **NOTE:** Each Thread node requires a unique EUI-64.  
-Please make sure all Thread nodes in your network have a unique EUI-64 by setting NODE_ID in radio.c to a unique value.
+Please make sure all Thread nodes in your network have a unique EUI-64 by setting HARDCODED_NODE_ID in radio.c to a unique value.
+
+**NOTE:** Current version works only with DA15000 rev. BA
 
 ## Build Examples (How to build and flash):
 ```bash
@@ -36,7 +38,7 @@ Flash Binaries:
 2. Return to previous terminal window and execute a command in order to flash the board:
 
    ```bash
-   $ ./cli_programmer -b uartboot.bin gdbserver write_qspi 0x0 ../../../output/bin/arm-none-eabi-ot-cli-ftd.img
+   $ ./cli_programmer gdbserver write_qspi_exec ../../../output/bin/arm-none-eabi-ot-cli-ftd.bin
    ```
 
 ## Interact:
@@ -113,7 +115,7 @@ Board will indicate state of device according to LED blink speed.
 ## Remarks
 * Validation
 
-   The DA15000 example has been validated by Dialog Semiconductor with commit 0bc2efe included.
+   The DA15000 example has been validated by Dialog Semiconductor with commit d250105 included.
   
 * Build environment
 

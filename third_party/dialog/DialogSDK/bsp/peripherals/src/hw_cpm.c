@@ -14,30 +14,31 @@
 *
 * @brief Clock and Power Manager Driver
 *
- * Copyright (c) 2016, Dialog Semiconductor
- * All rights reserved.
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
- * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- * 3. Neither the name of the copyright holder nor the names of its contributors
- *    may be used to endorse or promote products derived from this software without
- *    specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL,  SPECIAL,  EXEMPLARY,  OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
- * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+* Copyright (c) 2016, Dialog Semiconductor
+* All rights reserved.
+* Redistribution and use in source and binary forms, with or without modification,
+* are permitted provided that the following conditions are met:
+* 1. Redistributions of source code must retain the above copyright notice,
+*    this list of conditions and the following disclaimer.
+* 2. Redistributions in binary form must reproduce the above copyright notice,
+*    this list of conditions and the following disclaimer in the documentation
+*    and/or other materials provided with the distribution.
+* 3. Neither the name of the copyright holder nor the names of its contributors
+*    may be used to endorse or promote products derived from this software without
+*    specific prior written permission.
+*
+* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+* AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+* IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+* INDIRECT, INCIDENTAL,  SPECIAL,  EXEMPLARY,  OR CONSEQUENTIAL DAMAGES (INCLUDING,
+* BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+* WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+* ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+* OF THE POSSIBILITY OF SUCH DAMAGE.
+*
+*
 ****************************************************************************************
 */
 
@@ -54,7 +55,19 @@
  */
 extern sys_clk_t cm_sysclk;
 extern ahb_div_t cm_ahbclk;
-\
+
+
+/*
+ * Global variables
+ */
+__RETAINED_UNINIT uint16_t hw_cpm_bod_enabled_in_tcs;
+
+#if (dg_configPOWER_1V8_ACTIVE == 1)
+__RETAINED_RW static bool cpm_1v8_state = true;
+#else
+static const bool cpm_1v8_state = false;
+#endif
+
 
 /*
  * Local variables
@@ -117,7 +130,9 @@ void hw_cpm_set_divn(bool freq)
     REG_SET_FIELD(CRG_TOP, CLK_CTRL_REG, DIVN_XTAL32M_MODE, regval, val);
     REG_SET_FIELD(CRG_TOP, CLK_CTRL_REG, XTAL32M_MODE, regval, val);
     CRG_TOP->CLK_CTRL_REG = regval;
+#if (dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A)
     CRG_TOP->DIVN_SYNC_REG = val;
+#endif
 }
 
 
@@ -329,7 +344,7 @@ void hw_cpm_pll_sys_off(void)
 }
 
 
-void hw_cpm_start_calibration(cal_clk_t clk_type, uint32_t cycles)
+__RETAINED_CODE void hw_cpm_start_calibration(cal_clk_t clk_type, uint32_t cycles)
 {
     ASSERT_WARNING(REG_GETF(ANAMISC, CLK_REF_SEL_REG, REF_CAL_START) == 0); // Must be disabled
 
@@ -386,24 +401,25 @@ void hw_cpm_dcdc_config(void)
                               REG_MSK(DCDC, DCDC_VDD_0_REG, DCDC_VDD_FAST_RAMPING));
 
     REG_SETF(DCDC, DCDC_VDD_1_REG, DCDC_VDD_CUR_LIM_MAX_LV, 0xD);
+
+    REG_SETF(DCDC, DCDC_V14_0_REG, DCDC_V14_VOLTAGE, 0x7);
+
+    if (dg_configPOWER_1V8_ACTIVE == 1)
+    {
+        REG_SETF(DCDC, DCDC_V18_0_REG, DCDC_V18_VOLTAGE, 0x16);
+    }
+
+    if (dg_configPOWER_1V8P == 1)
+    {
+        REG_SETF(DCDC, DCDC_V18P_0_REG, DCDC_V18P_VOLTAGE, 0x16);
+    }
+
     // End of preferred settings
 
     DCDC->DCDC_VDD_1_REG |= ((1 << REG_POS(DCDC, DCDC_VDD_1_REG, DCDC_VDD_ENABLE_HV)) |
                              (1 << REG_POS(DCDC, DCDC_VDD_1_REG, DCDC_VDD_ENABLE_LV)));
 
-    REG_SETF(DCDC, DCDC_V14_0_REG, DCDC_V14_VOLTAGE, 0x7);
-
-    if (dg_configPOWER_FLASH == 1)
-    {
-        REG_SETF(DCDC, DCDC_V18_0_REG, DCDC_V18_VOLTAGE, 0x16);
-    }
-
-    if (dg_configPOWER_EXT_1V8_PERIPHERALS == 1)
-    {
-        REG_SETF(DCDC, DCDC_V18P_0_REG, DCDC_V18P_VOLTAGE, 0x16);
-    }
-
-    if (dg_configPOWER_FLASH == 1)
+    if ((dg_configPOWER_1V8_ACTIVE == 1) && cpm_1v8_state)
     {
         DCDC->DCDC_V18_1_REG |= (1 << REG_POS(DCDC, DCDC_V18_1_REG, DCDC_V18_ENABLE_HV));
         DCDC->DCDC_V18_1_REG &= ~REG_MSK(DCDC, DCDC_V18_1_REG, DCDC_V18_ENABLE_LV);
@@ -414,7 +430,7 @@ void hw_cpm_dcdc_config(void)
                                   REG_MSK(DCDC, DCDC_V18_1_REG, DCDC_V18_ENABLE_LV));
     }
 
-    if (dg_configPOWER_EXT_1V8_PERIPHERALS == 1)
+    if (dg_configPOWER_1V8P == 1)
     {
         DCDC->DCDC_V18P_1_REG |= (1 << REG_POS(DCDC, DCDC_V18P_1_REG, DCDC_V18P_ENABLE_HV));
         DCDC->DCDC_V18P_1_REG &= ~REG_MSK(DCDC, DCDC_V18P_1_REG, DCDC_V18P_ENABLE_LV);
@@ -464,11 +480,9 @@ void hw_cpm_set_preferred_values(void)
     CRG_TOP->CLK_16M_REG = reg;
 
     REG_SETF(CRG_TOP, BANDGAP_REG, LDO_SLEEP_TRIM, 0x8);
-
-    if (BLACK_ORCA_TARGET_IC >= BLACK_ORCA_IC_VERSION(A, C))
-    {
-        REG_SETF(CRG_TOP, BANDGAP_REG, BYPASS_COLD_BOOT_DISABLE, 1); // Last review date: Feb 15, 2016 - 12:25:47
-    }
+#if dg_configBLACK_ORCA_IC_REV == BLACK_ORCA_IC_REV_A
+    REG_SETF(CRG_TOP, BANDGAP_REG, BYPASS_COLD_BOOT_DISABLE, 1); // Last review date: Feb 15, 2016 - 12:25:47
+#endif
 }
 
 void hw_cpm_configure_xtal32k_pins(void)
@@ -477,13 +491,16 @@ void hw_cpm_configure_xtal32k_pins(void)
     GPIO->P21_MODE_REG = 0x26;
 }
 
+void hw_cpm_configure_ext32k_pins(void)
+{
+    GPIO->P20_MODE_REG = 0x0;
+}
+
 void hw_cpm_trigger_sw_cursor(void)
 {
-    volatile int i;
-
     if (dg_configUSE_SW_CURSOR == 1)
     {
-        if (dg_configBLACK_ORCA_MB_REV == BLACK_ORCA_MB_REV_B)
+        if (dg_configBLACK_ORCA_MB_REV == BLACK_ORCA_MB_REV_D)
         {
             SW_CURSOR_SET = 1 << SW_CURSOR_PIN;
         }
@@ -494,11 +511,9 @@ void hw_cpm_trigger_sw_cursor(void)
 
         SW_CURSOR_GPIO = 0x300;
 
-        for (i = 0; i < 100; i++)
-        {
-        }
+        hw_cpm_delay_usec(50);
 
-        if (dg_configBLACK_ORCA_MB_REV == BLACK_ORCA_MB_REV_B)
+        if (dg_configBLACK_ORCA_MB_REV == BLACK_ORCA_MB_REV_D)
         {
             SW_CURSOR_RESET = 1 << SW_CURSOR_PIN;
         }
@@ -533,7 +548,12 @@ void hw_cpm_assert_trigger_gpio(void)
 {
     if (EXCEPTION_DEBUG == 1)
     {
-        if (dg_configUSE_LP_CLK != LP_CLK_RCX)
+        if (dg_configLP_CLK_SOURCE == LP_CLK_IS_DIGITAL)
+        {
+            hw_cpm_configure_ext32k_pins();
+        }
+        else if ((dg_configUSE_LP_CLK == LP_CLK_32000)
+                 || (dg_configUSE_LP_CLK == LP_CLK_32768))
         {
             hw_cpm_configure_xtal32k_pins();
         }
@@ -549,27 +569,27 @@ void hw_cpm_assert_trigger_gpio(void)
 do {                                                                                               \
         uint16_t val = 0;                                                                          \
                                                                                                    \
-        REG_SET_FIELD(CRG_TOP, BOD_CTRL_REG, BOD_VDD_LVL, val, 1);        /* VDD Level (700mV) */  \
-        REG_SET_FIELD(CRG_TOP, BOD_CTRL_REG, BOD_V33_TRIM, val, 2);       /* V33 trim */           \
-        REG_SET_FIELD(CRG_TOP, BOD_CTRL_REG, BOD_1V8_PA_TRIM, val, 2);    /* 1V8P trim */          \
-        REG_SET_FIELD(CRG_TOP, BOD_CTRL_REG, BOD_1V8_FLASH_TRIM, val, 2); /* 1V8 trim */           \
-        REG_SET_FIELD(CRG_TOP, BOD_CTRL_REG, BOD_VDD_TRIM, val, 2);       /* VDD trim */           \
-        CRG_TOP->BOD_CTRL_REG = val;                                                               \
+        REG_SETF(CRG_TOP, BOD_CTRL_REG, BOD_VDD_LVL, 1);                /* VDD Level (700mV) */    \
                                                                                                    \
-        val = 0;                                                                                   \
-        /* 1V8 Flash enable */                                                                     \
-        REG_SET_FIELD(CRG_TOP, BOD_CTRL2_REG, BOD_VBAT_EN, val, 1);                                \
-        /* 1V8 Flash enable */                                                                     \
-        if ((dg_configPOWER_FLASH == 1) && (dg_configFLASH_POWER_OFF == 0)) {                      \
-                REG_SET_FIELD(CRG_TOP, BOD_CTRL2_REG, BOD_1V8_FLASH_EN, val, 1);                   \
+        if (hw_cpm_bod_enabled_in_tcs == 0) {                                                      \
+                val = 0;                                                                           \
+                /* VBAT enable */                                                                  \
+                REG_SET_FIELD(CRG_TOP, BOD_CTRL2_REG, BOD_VBAT_EN, val, 1);                        \
+                /* 1V8 Flash enable */                                                             \
+                if ((dg_configPOWER_1V8_ACTIVE == 1) && (dg_configPOWER_1V8_SLEEP == 1)) {         \
+                        REG_SET_FIELD(CRG_TOP, BOD_CTRL2_REG, BOD_1V8_FLASH_EN, val, 1);           \
+                }                                                                                  \
+                /* 1V8P enable */                                                                  \
+                if (dg_configPOWER_1V8P == 1) {                                                    \
+                        REG_SET_FIELD(CRG_TOP, BOD_CTRL2_REG, BOD_1V8_PA_EN, val, 1);              \
+                }                                                                                  \
+                REG_SET_FIELD(CRG_TOP, BOD_CTRL2_REG, BOD_VDD_EN, val, 1);       /* VDD enable */  \
+                REG_SET_FIELD(CRG_TOP, BOD_CTRL2_REG, BOD_RESET_EN, val, 1);     /* Reset enable */\
+                CRG_TOP->BOD_CTRL2_REG = val;                                                      \
         }                                                                                          \
-        /* 1V8P enable */                                                                          \
-        if (dg_configPOWER_EXT_1V8_PERIPHERALS == 1) {                                             \
-                REG_SET_FIELD(CRG_TOP, BOD_CTRL2_REG, BOD_1V8_PA_EN, val, 1);                      \
+        else {                                                                                     \
+                 CRG_TOP->BOD_CTRL2_REG = hw_cpm_bod_enabled_in_tcs;                               \
         }                                                                                          \
-        REG_SET_FIELD(CRG_TOP, BOD_CTRL2_REG, BOD_VDD_EN, val, 1);        /* VDD enable */         \
-        REG_SET_FIELD(CRG_TOP, BOD_CTRL2_REG, BOD_RESET_EN, val, 1);      /* Reset enable */       \
-        CRG_TOP->BOD_CTRL2_REG = val;                                                              \
 } while (0);
 
 void hw_cpm_activate_bod_protection(void)
@@ -580,6 +600,137 @@ void hw_cpm_activate_bod_protection(void)
 void hw_cpm_activate_bod_protection_at_init(void)
 {
     HW_CPM_ACTIVATE_BOD_PROTECTION
+}
+
+void hw_cpm_configure_bod_protection(void)
+{
+    REG_SETF(CRG_TOP, BOD_CTRL_REG, BOD_VDD_LVL, 1);                /* VDD Level (700mV) */
+
+    if (hw_cpm_bod_enabled_in_tcs == 0)
+    {
+        /* VBAT enable */
+        REG_SET_BIT(CRG_TOP, BOD_CTRL2_REG, BOD_VBAT_EN);
+
+        /* 1V8 Flash enable */
+        if ((dg_configPOWER_1V8_ACTIVE == 1) && (dg_configPOWER_1V8_SLEEP == 1))
+        {
+            REG_SET_BIT(CRG_TOP, BOD_CTRL2_REG, BOD_1V8_FLASH_EN);
+        }
+        else
+        {
+            REG_CLR_BIT(CRG_TOP, BOD_CTRL2_REG, BOD_1V8_FLASH_EN);
+        }
+
+        /* 1V8P enable */
+        if (dg_configPOWER_1V8P == 1)
+        {
+            REG_SET_BIT(CRG_TOP, BOD_CTRL2_REG, BOD_1V8_PA_EN);
+        }
+        else
+        {
+            REG_CLR_BIT(CRG_TOP, BOD_CTRL2_REG, BOD_1V8_PA_EN);
+        }
+
+        /* Generate Reset on a BOD event */
+        REG_SET_BIT(CRG_TOP, BOD_CTRL2_REG, BOD_RESET_EN);
+    }
+    else
+    {
+        CRG_TOP->BOD_CTRL2_REG = hw_cpm_bod_enabled_in_tcs;
+    }
+}
+
+void hw_cpm_set_1v8_state(bool state)
+{
+    if ((dg_configPOWER_1V8_ACTIVE == 1) && (cpm_1v8_state != state))
+    {
+        uint32_t reg;
+        uint32_t dcdc_state;
+
+        GLOBAL_INT_DISABLE();
+
+        reg = CRG_TOP->LDO_CTRL2_REG;
+        dcdc_state = (uint32_t)REG_GETF(DCDC, DCDC_CTRL_0_REG, DCDC_MODE);
+
+#if (dg_configPOWER_1V8_ACTIVE == 1)
+        cpm_1v8_state = state;
+#endif
+
+        if (!cpm_1v8_state)
+        {
+            // Disable BOD for the 1V8 rail
+            if (dg_configUSE_BOD == 1)
+            {
+                REG_CLR_BIT(CRG_TOP, BOD_CTRL2_REG, BOD_1V8_FLASH_EN);
+            }
+
+            // Deactivate 1V8 rail in LDOs
+            REG_CLR_FIELD(CRG_TOP, LDO_CTRL2_REG, LDO_1V8_FLASH_ON, reg);
+
+            if (dg_configPOWER_1V8_SLEEP == 1)
+            {
+                REG_SET_FIELD(CRG_TOP, LDO_CTRL2_REG, LDO_1V8_FLASH_RET_DISABLE,
+                              reg, 1);
+            }
+
+            CRG_TOP->LDO_CTRL2_REG = reg;
+
+            // Deactivate 1V8 rail in DCDC
+            if (dg_configUSE_DCDC == 1)
+            {
+                // Disable DCDC to apply change
+                REG_SETF(DCDC, DCDC_CTRL_0_REG, DCDC_MODE, 0);
+
+                DCDC->DCDC_V18_1_REG &=
+                    ~(REG_MSK(DCDC, DCDC_V18_1_REG, DCDC_V18_ENABLE_HV) |
+                      REG_MSK(DCDC, DCDC_V18_1_REG, DCDC_V18_ENABLE_LV));
+
+                // Restore DCDC
+                REG_SETF(DCDC, DCDC_CTRL_0_REG, DCDC_MODE, dcdc_state);
+            }
+        }
+        else
+        {
+            // Restore 1V8 rail in LDOs
+            /* But not when DCDC is running... */
+            if (dcdc_state != 1)
+            {
+                REG_SET_FIELD(CRG_TOP, LDO_CTRL2_REG, LDO_1V8_FLASH_ON,
+                              reg, 1);
+            }
+
+            if (dg_configPOWER_1V8_SLEEP == 1)
+            {
+                REG_CLR_FIELD(CRG_TOP, LDO_CTRL2_REG, LDO_1V8_FLASH_RET_DISABLE,
+                              reg);
+            }
+
+            CRG_TOP->LDO_CTRL2_REG = reg;
+
+            // Restore 1V8 rail in DCDC
+            if (dg_configUSE_DCDC == 1)
+            {
+                DCDC->DCDC_V18_1_REG |= (1 << REG_POS(DCDC, DCDC_V18_1_REG,
+                                                      DCDC_V18_ENABLE_HV));
+                DCDC->DCDC_V18_1_REG &= ~REG_MSK(DCDC, DCDC_V18_1_REG,
+                                                 DCDC_V18_ENABLE_LV);
+            }
+
+            // Restore BOD setup
+            if (dg_configUSE_BOD == 1)
+            {
+                hw_cpm_delay_usec(200);
+                hw_cpm_configure_bod_protection();
+            }
+        }
+
+        GLOBAL_INT_RESTORE();
+    }
+}
+
+bool hw_cpm_get_1v8_state(void)
+{
+    return cpm_1v8_state;
 }
 
 void hw_cpm_delay_usec(uint32_t usec)

@@ -205,6 +205,13 @@ private:
 
     void LinkRawTransmitDone(RadioPacket *aPacket, bool aFramePending, ThreadError aError);
 
+    /**
+     * Trampoline for LinkRawEnergyScanDone().
+     */
+    static void LinkRawEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi);
+
+    void LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi);
+
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
     static void HandleNetifStateChanged(uint32_t flags, void *context);
@@ -324,6 +331,7 @@ private:
     ThreadError GetPropertyHandler_MAC_15_4_SADDR(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_EXTENDED_ADDR(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_NET_SAVED(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_NET_IF_UP(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_NET_STACK_UP(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_NET_ROLE(uint8_t header, spinel_prop_key_t key);
@@ -554,6 +562,7 @@ private:
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     uint8_t mCurTransmitTID;
     uint8_t mCurReceiveChannel;
+    int8_t  mCurScanChannel;
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
     uint32_t mFramingErrorCounter;             // Number of improperly formed received spinel frames.

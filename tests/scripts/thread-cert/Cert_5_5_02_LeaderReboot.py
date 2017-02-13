@@ -79,7 +79,7 @@ class Cert_5_5_2_LeaderReboot(unittest.TestCase):
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
         self.nodes[LEADER].stop()
-        time.sleep(130)
+        time.sleep(140)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'leader')
 
         self.nodes[LEADER].start()

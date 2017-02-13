@@ -36,7 +36,7 @@
 
 #include <platform/random.h>
 #include "platform-da15000.h"
-#include "black_orca.h"
+#include "sdk_defs.h"
 #include "hw_trng.h"
 #include <string.h>
 
@@ -44,8 +44,8 @@
 
 #define HW_TRNG_RAM             (0x40040000)
 
-static uint32_t s_state = 1;
-static uint32_t seed;
+static uint32_t sState = 1;
+static uint32_t sSeed;
 
 int zhal_get_entropy(uint8_t *outEntropy, size_t inSize)
 {
@@ -82,8 +82,8 @@ int zhal_get_entropy(uint8_t *outEntropy, size_t inSize)
 
 void da15000RandomInit(void)
 {
-    zhal_get_entropy((uint8_t *)&seed, sizeof(seed));
-    s_state = seed;
+    zhal_get_entropy((uint8_t *)&sSeed, sizeof(sSeed));
+    sState = sSeed;
 }
 
 uint32_t otPlatRandomGet(void)

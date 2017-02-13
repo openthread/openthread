@@ -178,6 +178,17 @@ ThreadError otSetMessageOffset(otMessage aMessage, uint16_t aOffset);
 bool otIsMessageLinkSecurityEnabled(otMessage aMessage);
 
 /**
+ * This function sets/forces the message to be forwarded using direct transmission.
+ * Default setting for a new message is `false`.
+ *
+ * @param[in]  aMessage  A pointer to a message buffer.
+ * @param[in]  aEnabled  If `true` message will be forced to use direct transmission. If `false` message will
+ *                       follow the normal procedure.
+ *
+ */
+void otMessageSetDirectTransmission(otMessage aMessage, bool aEnabled);
+
+/**
  * Append bytes to a message.
  *
  * @param[in]  aMessage  A pointer to a message buffer.
