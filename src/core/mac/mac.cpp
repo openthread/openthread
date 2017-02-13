@@ -1237,6 +1237,12 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
     aFrame->GetSrcAddr(srcaddr);
     neighbor = mNetif.GetMle().GetNeighbor(srcaddr);
 
+    // Ensure that the neighbor is in valid state.
+    if ((neighbor != NULL) && (neighbor->mState != Neighbor::kStateValid))
+    {
+        neighbor = NULL;
+    }
+
     switch (srcaddr.mLength)
     {
     case 0:
