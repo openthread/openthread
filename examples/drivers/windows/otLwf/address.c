@@ -251,7 +251,7 @@ otLwfAddressChangeCallback(
     // Ignore notifications that aren't for our interface
     if (Row->InterfaceIndex != pFilter->InterfaceIndex) return;
 
-    LogFuncEntryMsg(DRIVER_DEFAULT, "%p (%u)", pFilter, NotificationType);
+    LogFuncEntryMsg(DRIVER_DEFAULT, "%p (%u) %!IPV6ADDR!", pFilter, NotificationType, &Row->Address.Ipv6.sin6_addr);
 
     // Since we don't pass in the initial flag, we shouldn't get this type
     NT_ASSERT(NotificationType != MibInitialNotification);
@@ -259,12 +259,19 @@ otLwfAddressChangeCallback(
     // Make sure we can reference the interface
     if (ExAcquireRundownProtection(&pFilter->ExternalRefs))
     {
-        // Queue up the event for processing
-        otLwfEventProcessingIndicateAddressChange(
-            pFilter,
-            NotificationType,
-            &Row->Address.Ipv6.sin6_addr
-            );
+        if (pFilter->DeviceStatus == OTLWF_DEVICE_STATUS_RADIO_MODE)
+        {
+            // Queue up the event for processing
+            otLwfEventProcessingIndicateAddressChange(
+                pFilter,
+                NotificationType,
+                &Row->Address.Ipv6.sin6_addr
+                );
+        }
+        else
+        {
+            NT_ASSERT(FALSE); // Need to add support for this in tunnel mode
+        }
 
         // Release reference on the interface
         ExReleaseRundownProtection(&pFilter->ExternalRefs);
