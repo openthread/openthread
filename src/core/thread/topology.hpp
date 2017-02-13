@@ -83,7 +83,7 @@ public:
         kStateParentRequest,             ///< Received an MLE Parent Request message
         kStateChildIdRequest,            ///< Received an MLE Child ID Request message
         kStateLinkRequest,               ///< Sent an MLE Link Request message
-        kStateChildUpdateRequest,        ///< Sent an MLE Child Update Request message
+        kStateChildUpdateRequest,        ///< Sent an MLE Child Update Request message (trying to restore the child)
         kStateValid,                     ///< Link is valid
     };
 
