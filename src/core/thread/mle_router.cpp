@@ -1818,6 +1818,20 @@ void MleRouter::HandleStateUpdateTimer(void)
                 mRouters[i].mLinkQualityOut = 0;
                 mRouters[i].mLastHeard = Timer::GetNow();
 
+                for (uint8_t j = 0; j <= kMaxRouterId; j++)
+                {
+                    if (mRouters[j].mNextHop == i)
+                    {
+                        mRouters[j].mNextHop = kInvalidRouterId;
+                        mRouters[j].mCost = 0;
+
+                        if (GetLinkCost(j) >= kMaxRouteCost)
+                        {
+                            ResetAdvertiseInterval();
+                        }
+                    }
+                }
+
                 if (mRouters[i].mNextHop == kInvalidRouterId)
                 {
                     ResetAdvertiseInterval();
