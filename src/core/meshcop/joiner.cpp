@@ -162,6 +162,13 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
     {
         otLogFuncEntryMsg("aResult = %llX", HostSwap64(*reinterpret_cast<uint64_t *>(&aResult->mExtAddress)));
 
+        // Joining is disabled if the Steering Data is not included
+        if (aResult->mSteeringData.mLength == 0)
+        {
+            otLogDebgMeshCoP("No steering data, joining disabled");
+            ExitNow();
+        }
+
         SteeringDataTlv steeringData;
         Mac::ExtAddress extAddress;
         Crc16 ccitt(Crc16::kCcitt);
@@ -178,8 +185,9 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
         steeringData.SetLength(aResult->mSteeringData.mLength);
         memcpy(steeringData.GetValue(), aResult->mSteeringData.m8, steeringData.GetLength());
 
-        if (steeringData.GetBit(ccitt.Get() % steeringData.GetNumBits()) &&
-            steeringData.GetBit(ansi.Get() % steeringData.GetNumBits()))
+        if (steeringData.DoesAllowAny() ||
+            (steeringData.GetBit(ccitt.Get() % steeringData.GetNumBits()) &&
+             steeringData.GetBit(ansi.Get() % steeringData.GetNumBits())))
         {
             mJoinerUdpPort = aResult->mJoinerUdpPort;
             mJoinerRouterPanId = aResult->mPanId;
@@ -188,7 +196,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
         }
         else
         {
-            otLogDebgMeshCoP("Steering data not set");
+            otLogDebgMeshCoP("Steering data does not include this device");
         }
     }
     else if (mJoinerRouterPanId != Mac::kPanIdBroadcast)
@@ -213,6 +221,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
         Complete(kThreadError_NotFound);
     }
 
+exit:
     otLogFuncExit();
 }
 
