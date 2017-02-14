@@ -1617,6 +1617,10 @@ ThreadError Mle::SendChildUpdateRequest(void)
         mNetif.GetMeshForwarder().SetPollPeriod(kAttachDataPollPeriod);
         mNetif.GetMeshForwarder().SetRxOnWhenIdle(false);
     }
+    else
+    {
+        mNetif.GetMeshForwarder().SetRxOnWhenIdle(true);
+    }
 
 exit:
 

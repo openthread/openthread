@@ -263,10 +263,6 @@ ThreadError MleRouter::BecomeLeader(void)
         mRouters[i].mNextHop = kInvalidRouterId;
     }
 
-    mAdvertiseTimer.Stop();
-    mStateUpdateTimer.Start(kStateUpdatePeriod);
-    mNetif.GetAddressResolver().Clear();
-
     routerId = IsRouterIdValid(mPreviousRouterId) ? AllocateRouterId(mPreviousRouterId) : AllocateRouterId();
     router = GetRouter(routerId);
     VerifyOrExit(router != NULL, error = kThreadError_NoBufs);
@@ -274,6 +270,8 @@ ThreadError MleRouter::BecomeLeader(void)
     SetRouterId(routerId);
 
     memcpy(&router->mMacAddr, mNetif.GetMac().GetExtAddress(), sizeof(router->mMacAddr));
+    mAdvertiseTimer.Stop();
+    mNetif.GetAddressResolver().Clear();
 
     if (mFixedLeaderPartitionId != 0)
     {
@@ -289,10 +287,6 @@ ThreadError MleRouter::BecomeLeader(void)
     mNetif.GetNetworkDataLeader().Reset();
 
     SuccessOrExit(error = SetStateLeader(GetRloc16(mRouterId)));
-
-    SuccessOrExit(error = AddLeaderAloc());
-
-    ResetAdvertiseInterval();
 
 exit:
     return error;
@@ -399,6 +393,7 @@ ThreadError MleRouter::SetStateRouter(uint16_t aRloc16)
     mDeviceState = kDeviceStateRouter;
     mParentRequestState = kParentIdle;
     mParentRequestTimer.Stop();
+    ResetAdvertiseInterval();
 
     mNetif.SubscribeAllRoutersMulticast();
     mRouters[mRouterId].mNextHop = mRouterId;
@@ -432,10 +427,13 @@ ThreadError MleRouter::SetStateLeader(uint16_t aRloc16)
     mDeviceState = kDeviceStateLeader;
     mParentRequestState = kParentIdle;
     mParentRequestTimer.Stop();
+    ResetAdvertiseInterval();
+    AddLeaderAloc();
 
     mNetif.SubscribeAllRoutersMulticast();
     mRouters[mRouterId].mNextHop = mRouterId;
     mPreviousPartitionId = mLeaderData.GetPartitionId();
+    mStateUpdateTimer.Start(kStateUpdatePeriod);
     mRouters[mRouterId].mLastHeard = Timer::GetNow();
 
     mNetif.GetNetworkDataLeader().Start();
@@ -1821,6 +1819,20 @@ void MleRouter::HandleStateUpdateTimer(void)
                 mRouters[i].mLinkQualityOut = 0;
                 mRouters[i].mLastHeard = Timer::GetNow();
 
+                for (uint8_t j = 0; j <= kMaxRouterId; j++)
+                {
+                    if (mRouters[j].mNextHop == i)
+                    {
+                        mRouters[j].mNextHop = kInvalidRouterId;
+                        mRouters[j].mCost = 0;
+
+                        if (GetLinkCost(j) >= kMaxRouteCost)
+                        {
+                            ResetAdvertiseInterval();
+                        }
+                    }
+                }
+
                 if (mRouters[i].mNextHop == kInvalidRouterId)
                 {
                     ResetAdvertiseInterval();
@@ -3011,6 +3023,26 @@ exit:
     return error;
 }
 
+bool MleRouter::IsValidOrRestoringChild(const Neighbor &aNeighbor)
+{
+    bool result;
+
+    switch (aNeighbor.mState)
+    {
+    case Neighbor::kStateValid:
+    case Neighbor::kStateRestored:
+    case Neighbor::kStateChildUpdateRequest:
+        result = !IsActiveRouter(aNeighbor.mValid.mRloc16);
+        break;
+
+    default:
+        result = false;
+        break;
+    }
+
+    return result;
+}
+
 ThreadError MleRouter::RemoveNeighbor(const Mac::Address &aAddress)
 {
     ThreadError error = kThreadError_None;
@@ -3041,7 +3073,7 @@ ThreadError MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
 
     case kDeviceStateRouter:
     case kDeviceStateLeader:
-        if (aNeighbor.mState == Neighbor::kStateValid && !IsActiveRouter(aNeighbor.mValid.mRloc16))
+        if (IsValidOrRestoringChild(aNeighbor))
         {
             aNeighbor.mState = Neighbor::kStateInvalid;
             mNetif.GetMeshForwarder().UpdateIndirectMessages();
@@ -3081,7 +3113,7 @@ Neighbor *MleRouter::GetNeighbor(uint16_t aAddress)
     case kDeviceStateLeader:
         for (int i = 0; i < mMaxChildrenAllowed; i++)
         {
-            if (mChildren[i].mState == Neighbor::kStateValid && mChildren[i].mValid.mRloc16 == aAddress)
+            if (IsValidOrRestoringChild(mChildren[i]) && mChildren[i].mValid.mRloc16 == aAddress)
             {
                 ExitNow(rval = &mChildren[i]);
             }
@@ -3120,7 +3152,7 @@ Neighbor *MleRouter::GetNeighbor(const Mac::ExtAddress &aAddress)
     case kDeviceStateLeader:
         for (int i = 0; i < mMaxChildrenAllowed; i++)
         {
-            if (mChildren[i].mState == Neighbor::kStateValid &&
+            if (IsValidOrRestoringChild(mChildren[i]) &&
                 memcmp(&mChildren[i].mMacAddr, &aAddress, sizeof(mChildren[i].mMacAddr)) == 0)
             {
                 ExitNow(rval = &mChildren[i]);
@@ -3488,6 +3520,8 @@ ThreadError MleRouter::StoreChild(uint16_t aChildRloc16)
     otChildInfo childInfo;
 
     SuccessOrExit(error = GetChildInfoById(GetChildId(aChildRloc16), childInfo));
+
+    IgnoreReturnValue(RemoveStoredChild(aChildRloc16));
 
     error = otPlatSettingsAdd(mNetif.GetInstance(), kKeyChildInfo, reinterpret_cast<uint8_t *>(&childInfo),
                               sizeof(childInfo));
@@ -3857,7 +3891,6 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
 
     // send link request
     SendLinkRequest(NULL);
-    ResetAdvertiseInterval();
 
     // send child id responses
     for (int i = 0; i < mMaxChildrenAllowed; i++)
