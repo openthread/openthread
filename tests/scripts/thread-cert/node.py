@@ -217,8 +217,8 @@ class Node:
     def scan(self):
         return self.interface.scan()
 
-    def ping(self, ipaddr, num_responses=1, size=None):
-        return self.interface.ping(ipaddr, num_responses, size)
+    def ping(self, ipaddr, num_responses=1, size=None, timeout=5000):
+        return self.interface.ping(ipaddr, num_responses, size, timeout)
 
     def set_router_selection_jitter(self, jitter):
         self.interface.set_router_selection_jitter(jitter)

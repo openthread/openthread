@@ -235,10 +235,11 @@ class otApi:
     def scan(self):
         return self.Api.otNodeScan(self.otNode).decode("utf-8").split("\n")
 
-    def ping(self, ipaddr, num_responses=1, size=None):
+    def ping(self, ipaddr, num_responses=1, size=None, timeout=5000):
         if size == None:
             size = 100
-        numberOfResponders = self.Api.otNodePing(self.otNode, ipaddr.encode('utf-8'), ctypes.c_ushort(size), ctypes.c_uint(num_responses))
+        numberOfResponders = self.Api.otNodePing(self.otNode, ipaddr.encode('utf-8'), ctypes.c_ushort(size),
+                                                 ctypes.c_uint(num_responses), ctypes.c_uint16(timeout))
         return numberOfResponders >= num_responses
 
     def set_router_selection_jitter(self, jitter):
@@ -533,7 +534,8 @@ class otApi:
         self.Api.otNodePing.argtypes = [ctypes.c_void_p, 
                                         ctypes.c_char_p,
                                         ctypes.c_ushort,
-                                        ctypes.c_uint]
+                                        ctypes.c_uint,
+                                        ctypes.c_uint16]
         self.Api.otNodePing.restype = ctypes.c_uint
 
         self.Api.otNodeSetRouterSelectionJitter.argtypes = [ctypes.c_void_p, 
