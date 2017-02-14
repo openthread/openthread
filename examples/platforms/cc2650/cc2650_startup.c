@@ -26,40 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <platform/diag.h>
-
-/**
- * diagnostics mode flag.
- *
+/*
+ * Include the standard startup files for the gcc toolchain
  */
-static bool sDiagMode = false;
-
-/**
- * Function documented in platform/diag.h
- */
-void otPlatDiagProcess(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
-{
-    // add more plarform specific diagnostics features here
-
-    snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", argv[0]);
-    (void)argc;
-}
-
-/**
- * Function documented in platform/diag.h
- */
-void otPlatDiagModeSet(bool aMode)
-{
-    sDiagMode = aMode;
-}
-
-/**
- * Function documented in platform/diag.h
- */
-bool otPlatDiagModeGet()
-{
-    return sDiagMode;
-}
+#include <startup_files/startup_gcc.c>

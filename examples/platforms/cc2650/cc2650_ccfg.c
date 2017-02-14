@@ -26,40 +26,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <platform/diag.h>
-
-/**
- * diagnostics mode flag.
- *
+/*
+ * Configure the Customer Configuration Area.
  */
-static bool sDiagMode = false;
 
-/**
- * Function documented in platform/diag.h
+/*
+ * Include the default ccfg struct and configuration code.
  */
-void otPlatDiagProcess(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
-{
-    // add more plarform specific diagnostics features here
-
-    snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", argv[0]);
-    (void)argc;
-}
-
-/**
- * Function documented in platform/diag.h
- */
-void otPlatDiagModeSet(bool aMode)
-{
-    sDiagMode = aMode;
-}
-
-/**
- * Function documented in platform/diag.h
- */
-bool otPlatDiagModeGet()
-{
-    return sDiagMode;
-}
+#include <startup_files/ccfg.c>

@@ -454,7 +454,8 @@ __root const ccfg_t __ccfg @ ".ccfg" =
 #pragma RETAIN(__ccfg)
 const ccfg_t __ccfg =
 #else
-const ccfg_t __ccfg __attribute__((section(".ccfg"))) __attribute__((used)) =
+__attribute__((__section__(".ccfg"), used))
+const ccfg_t __ccfg =
 #endif
 {                                     // Mapped to address
     DEFAULT_CCFG_EXT_LF_CLK         , // 0x50003FA8 (0x50003xxx maps to last

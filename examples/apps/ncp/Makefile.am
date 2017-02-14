@@ -93,17 +93,7 @@ ot_ncp_LDFLAGS                                                        +=   \
     -T $(top_srcdir)/third_party/ti/cc26xxware/linker_files/cc26x0f128.lds \
     $(NULL)
 
-ot_ncp_SOURCES                                                        += \
-    ../../../third_party/ti/cc26xxware/startup_files/ccfg.c              \
-    ../../../third_party/ti/cc26xxware/startup_files/startup_gcc.c       \
-    $(NULL)
-
-#
-# Ignore configuration files for pretty check
-#
-PRETTY_FILES := $(filter-out ccfg.c startup_gcc.c ,$(PRETTY_FILES))
-
-endif
+endif # OPENTHREAD_EXAMPLES_CC2650
 
 if OPENTHREAD_EXAMPLES_DA15000
 ot_ncp_LDADD                                                          += \

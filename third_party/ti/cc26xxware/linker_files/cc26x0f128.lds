@@ -41,6 +41,9 @@
 /* Entry Point */
 ENTRY( ResetISR )
 
+/* Ensure Customer Configuration Area is an undefined symbol */
+EXTERN( __ccfg )
+
 /* System memory map */
 MEMORY
 {
