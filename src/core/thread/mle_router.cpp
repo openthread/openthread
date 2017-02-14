@@ -263,10 +263,6 @@ ThreadError MleRouter::BecomeLeader(void)
         mRouters[i].mNextHop = kInvalidRouterId;
     }
 
-    mAdvertiseTimer.Stop();
-    mStateUpdateTimer.Start(kStateUpdatePeriod);
-    mNetif.GetAddressResolver().Clear();
-
     routerId = IsRouterIdValid(mPreviousRouterId) ? AllocateRouterId(mPreviousRouterId) : AllocateRouterId();
     router = GetRouter(routerId);
     VerifyOrExit(router != NULL, error = kThreadError_NoBufs);
@@ -274,6 +270,8 @@ ThreadError MleRouter::BecomeLeader(void)
     SetRouterId(routerId);
 
     memcpy(&router->mMacAddr, mNetif.GetMac().GetExtAddress(), sizeof(router->mMacAddr));
+    mAdvertiseTimer.Stop();
+    mNetif.GetAddressResolver().Clear();
 
     if (mFixedLeaderPartitionId != 0)
     {
@@ -289,10 +287,6 @@ ThreadError MleRouter::BecomeLeader(void)
     mNetif.GetNetworkDataLeader().Reset();
 
     SuccessOrExit(error = SetStateLeader(GetRloc16(mRouterId)));
-
-    SuccessOrExit(error = AddLeaderAloc());
-
-    ResetAdvertiseInterval();
 
 exit:
     return error;
@@ -399,6 +393,7 @@ ThreadError MleRouter::SetStateRouter(uint16_t aRloc16)
     mDeviceState = kDeviceStateRouter;
     mParentRequestState = kParentIdle;
     mParentRequestTimer.Stop();
+    ResetAdvertiseInterval();
 
     mNetif.SubscribeAllRoutersMulticast();
     mRouters[mRouterId].mNextHop = mRouterId;
@@ -432,10 +427,13 @@ ThreadError MleRouter::SetStateLeader(uint16_t aRloc16)
     mDeviceState = kDeviceStateLeader;
     mParentRequestState = kParentIdle;
     mParentRequestTimer.Stop();
+    ResetAdvertiseInterval();
+    AddLeaderAloc();
 
     mNetif.SubscribeAllRoutersMulticast();
     mRouters[mRouterId].mNextHop = mRouterId;
     mPreviousPartitionId = mLeaderData.GetPartitionId();
+    mStateUpdateTimer.Start(kStateUpdatePeriod);
     mRouters[mRouterId].mLastHeard = Timer::GetNow();
 
     mNetif.GetNetworkDataLeader().Start();
@@ -3879,7 +3877,6 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
 
     // send link request
     SendLinkRequest(NULL);
-    ResetAdvertiseInterval();
 
     // send child id responses
     for (int i = 0; i < mMaxChildrenAllowed; i++)
