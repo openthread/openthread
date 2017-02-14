@@ -1896,12 +1896,12 @@ const uint8_t *otCoapHeaderGetToken(const otCoapHeader *aHeader)
     return static_cast<const Coap::Header *>(aHeader)->GetToken();
 }
 
-const otCoapOption *otCoapGetCurrentOption(const otCoapHeader *aHeader)
+const otCoapOption *otCoapHeaderGetCurrentOption(const otCoapHeader *aHeader)
 {
     return static_cast<const otCoapOption *>(static_cast<const Coap::Header *>(aHeader)->GetCurrentOption());
 }
 
-const otCoapOption *otCoapGetNextOption(otCoapHeader *aHeader)
+const otCoapOption *otCoapHeaderGetNextOption(otCoapHeader *aHeader)
 {
     return static_cast<const otCoapOption *>(static_cast<Coap::Header *>(aHeader)->GetNextOption());
 }
