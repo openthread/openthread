@@ -2954,7 +2954,7 @@ Child *MleRouter::GetChild(uint16_t aAddress)
 {
     for (int i = 0; i < mMaxChildrenAllowed; i++)
     {
-        if (mChildren[i].mState == Neighbor::kStateValid && mChildren[i].mValid.mRloc16 == aAddress)
+        if (mChildren[i].IsStateValidOrRestoring() && mChildren[i].mValid.mRloc16 == aAddress)
         {
             return &mChildren[i];
         }
@@ -2967,7 +2967,7 @@ Child *MleRouter::GetChild(const Mac::ExtAddress &aAddress)
 {
     for (int i = 0; i < mMaxChildrenAllowed; i++)
     {
-        if (mChildren[i].mState == Neighbor::kStateValid &&
+        if (mChildren[i].IsStateValidOrRestoring() &&
             memcmp(&mChildren[i].mMacAddr, &aAddress, sizeof(mChildren[i].mMacAddr)) == 0)
         {
             return &mChildren[i];
@@ -3023,26 +3023,6 @@ exit:
     return error;
 }
 
-bool MleRouter::IsValidOrRestoringChild(const Neighbor &aNeighbor)
-{
-    bool result;
-
-    switch (aNeighbor.mState)
-    {
-    case Neighbor::kStateValid:
-    case Neighbor::kStateRestored:
-    case Neighbor::kStateChildUpdateRequest:
-        result = !IsActiveRouter(aNeighbor.mValid.mRloc16);
-        break;
-
-    default:
-        result = false;
-        break;
-    }
-
-    return result;
-}
-
 ThreadError MleRouter::RemoveNeighbor(const Mac::Address &aAddress)
 {
     ThreadError error = kThreadError_None;
@@ -3073,7 +3053,7 @@ ThreadError MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
 
     case kDeviceStateRouter:
     case kDeviceStateLeader:
-        if (IsValidOrRestoringChild(aNeighbor))
+        if (aNeighbor.IsStateValidOrRestoring() && !IsActiveRouter(aNeighbor.mValid.mRloc16))
         {
             aNeighbor.mState = Neighbor::kStateInvalid;
             mNetif.GetMeshForwarder().UpdateIndirectMessages();
@@ -3113,7 +3093,7 @@ Neighbor *MleRouter::GetNeighbor(uint16_t aAddress)
     case kDeviceStateLeader:
         for (int i = 0; i < mMaxChildrenAllowed; i++)
         {
-            if (IsValidOrRestoringChild(mChildren[i]) && mChildren[i].mValid.mRloc16 == aAddress)
+            if (mChildren[i].IsStateValidOrRestoring() && mChildren[i].mValid.mRloc16 == aAddress)
             {
                 ExitNow(rval = &mChildren[i]);
             }
@@ -3152,7 +3132,7 @@ Neighbor *MleRouter::GetNeighbor(const Mac::ExtAddress &aAddress)
     case kDeviceStateLeader:
         for (int i = 0; i < mMaxChildrenAllowed; i++)
         {
-            if (IsValidOrRestoringChild(mChildren[i]) &&
+            if (mChildren[i].IsStateValidOrRestoring() &&
                 memcmp(&mChildren[i].mMacAddr, &aAddress, sizeof(mChildren[i].mMacAddr)) == 0)
             {
                 ExitNow(rval = &mChildren[i]);
@@ -3236,7 +3216,7 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
     {
         child = &mChildren[i];
 
-        if (child->mState != Neighbor::kStateValid)
+        if (!child->IsStateValidOrRestoring())
         {
             continue;
         }
