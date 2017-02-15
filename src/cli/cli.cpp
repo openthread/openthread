@@ -1007,6 +1007,7 @@ void Interpreter::ProcessLinkQuality(int argc, char *argv[])
     uint8_t linkQuality;
     long value;
 
+    VerifyOrExit(argc > 0, error = kThreadError_InvalidArgs);
     VerifyOrExit(Hex2Bin(argv[0], extAddress, OT_EXT_ADDRESS_SIZE) >= 0, error = kThreadError_Parse);
 
     if (argc == 1)
