@@ -220,7 +220,7 @@ void MeshForwarder::UpdateIndirectMessages(void)
     {
         Child *child = &children[i];
 
-        if (child->mState == Child::kStateValid || child->mQueuedIndirectMessageCnt == 0)
+        if (child->IsStateValidOrRestoring() || child->mQueuedIndirectMessageCnt == 0)
         {
             continue;
         }
@@ -245,7 +245,7 @@ void MeshForwarder::ScheduleTransmissionTask()
     {
         Child &child = children[i];
 
-        if (child.mState != Child::kStateValid || !child.mDataRequest)
+        if (!child.IsStateValidOrRestoring() || !child.mDataRequest)
         {
             continue;
         }
@@ -311,7 +311,7 @@ ThreadError MeshForwarder::AddPendingSrcMatchEntries(void)
     // Add pending short address first
     for (uint8_t i = 0; i < numChildren; i++)
     {
-        if (children[i].mState == Child::kStateValid &&
+        if (children[i].IsStateValidOrRestoring() &&
             children[i].mAddSrcMatchEntryPending &&
             children[i].mAddSrcMatchEntryShort)
         {
@@ -322,7 +322,7 @@ ThreadError MeshForwarder::AddPendingSrcMatchEntries(void)
     // Add pending extended address
     for (uint8_t i = 0; i < numChildren; i++)
     {
-        if (children[i].mState == Child::kStateValid &&
+        if (children[i].IsStateValidOrRestoring() &&
             children[i].mAddSrcMatchEntryPending &&
             !children[i].mAddSrcMatchEntryShort)
         {
@@ -447,7 +447,7 @@ ThreadError MeshForwarder::SendMessage(Message &aMessage)
 
                 for (uint8_t i = 0; i < numChildren; i++)
                 {
-                    if (children[i].mState == Neighbor::kStateValid && (children[i].mMode & Mle::ModeTlv::kModeRxOnWhenIdle) == 0)
+                    if (children[i].IsStateValidOrRestoring() && (children[i].mMode & Mle::ModeTlv::kModeRxOnWhenIdle) == 0)
                     {
                         children[i].mQueuedIndirectMessageCnt++;
                         AddSrcMatchEntry(children[i]);
