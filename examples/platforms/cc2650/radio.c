@@ -99,8 +99,8 @@ static uint32_t sRatOffset = 0;
 static volatile rfc_CMD_SYNC_START_RAT_t     sStartRatCmd;
 static volatile rfc_CMD_RADIO_SETUP_t        sRadioSetupCmd;
 
-static volatile rfc_CMD_SYNC_STOP_RAT_t      sStopRatCmd;
 static volatile rfc_CMD_FS_POWERDOWN_t       sFsPowerdownCmd;
+static volatile rfc_CMD_SYNC_STOP_RAT_t      sStopRatCmd;
 
 static volatile rfc_CMD_CLEAR_RX_t           sClearReceiveQueueCmd;
 static volatile rfc_CMD_IEEE_MOD_FILT_t      sModifyReceiveFilterCmd;
@@ -178,78 +178,71 @@ static void rfCoreInitBufs(void)
  */
 static void rfCoreInitReceiveParams(void)
 {
-    memset((void *)&sReceiveCmd, 0x00, sizeof(sReceiveCmd));
+    static const rfc_CMD_IEEE_RX_t cReceiveCmd =
+    {
+        .commandNo                  = CMD_IEEE_RX,
+        .status                     = IDLE,
+        .startTrigger.triggerType   = TRIG_NOW,
+        .condition.rule             = COND_NEVER,
+        .channel                    = kPhyMinChannel,
+        .rxConfig                   =
+        {
+            .bAutoFlushCrc          = 1,
+            .bAutoFlushIgn          = 0,
+            .bIncludePhyHdr         = 0,
+            .bIncludeCrc            = 0,
+            .bAppendRssi            = 1,
+            .bAppendCorrCrc         = 1,
+            .bAppendSrcInd          = 0,
+            .bAppendTimestamp       = 0,
+        },
+        .frameFiltOpt               =
+        {
+            .frameFiltEn            = 1,
+            .frameFiltStop          = 1,
+            .autoAckEn              = 1,
+            .slottedAckEn           = 0,
+            .autoPendEn             = 0,
+            .defaultPend            = 0,
+            .bPendDataReqOnly       = 0,
+            .bPanCoord              = 0,
+            .maxFrameVersion        = 3,
+            .bStrictLenFilter       = 1,
+        },
+        .frameTypes                 =
+        {
+            .bAcceptFt0Beacon       = 1,
+            .bAcceptFt1Data         = 1,
+            .bAcceptFt2Ack          = 0,
+            .bAcceptFt3MacCmd       = 1,
+            .bAcceptFt4Reserved     = 1,
+            .bAcceptFt5Reserved     = 1,
+            .bAcceptFt6Reserved     = 1,
+            .bAcceptFt7Reserved     = 1,
+        },
+        .ccaOpt                     =
+        {
+            .ccaEnEnergy            = 1,
+            .ccaEnCorr              = 1,
+            .ccaEnSync              = 1,
+            .ccaCorrOp              = 1,
+            .ccaSyncOp              = 0,
+            .ccaCorrThr             = 3,
+        },
+        .ccaRssiThr                 = -90,
+        .endTrigger.triggerType     = TRIG_NEVER,
+        .endTime                    = 0x00000000,
+    };
+    sReceiveCmd = cReceiveCmd;
 
-    sReceiveCmd.commandNo = CMD_IEEE_RX;
-    sReceiveCmd.status = IDLE;
-    sReceiveCmd.pNextOp = NULL;
-    sReceiveCmd.startTime = 0x00000000;
-    sReceiveCmd.startTrigger.triggerType = TRIG_NOW;
-    sReceiveCmd.condition.rule = COND_NEVER;
-    sReceiveCmd.channel = kPhyMinChannel;
-
-    sReceiveCmd.rxConfig.bAutoFlushCrc = 1;
-    sReceiveCmd.rxConfig.bAutoFlushIgn = 0;
-    sReceiveCmd.rxConfig.bIncludePhyHdr = 0;
-    sReceiveCmd.rxConfig.bIncludeCrc = 0;
-    sReceiveCmd.rxConfig.bAppendRssi = 1;
-    sReceiveCmd.rxConfig.bAppendCorrCrc = 1;
-    sReceiveCmd.rxConfig.bAppendSrcInd = 0;
-    sReceiveCmd.rxConfig.bAppendTimestamp = 0;
-
-    sReceiveCmd.pRxQ = &sRxDataQueue;
+    sReceiveCmd.pRxQ    = &sRxDataQueue;
     sReceiveCmd.pOutput = &sRfStats;
-
-    sReceiveCmd.frameFiltOpt.frameFiltEn = 1;
-    sReceiveCmd.frameFiltOpt.frameFiltStop = 1;
-    sReceiveCmd.frameFiltOpt.autoAckEn = 1;
-    sReceiveCmd.frameFiltOpt.slottedAckEn = 0;
-    sReceiveCmd.frameFiltOpt.autoPendEn = 0;
-    sReceiveCmd.frameFiltOpt.defaultPend = 0;
-    sReceiveCmd.frameFiltOpt.bPendDataReqOnly = 0;
-    sReceiveCmd.frameFiltOpt.bPanCoord = 0;
-    sReceiveCmd.frameFiltOpt.maxFrameVersion = 3;
-    sReceiveCmd.frameFiltOpt.bStrictLenFilter = 1;
 
     sReceiveCmd.numShortEntries = CC2650_SHORTADD_SRC_MATCH_NUM;
     sReceiveCmd.pShortEntryList = (void *)&sSrcMatchShortData;
 
     sReceiveCmd.numExtEntries = CC2650_EXTADD_SRC_MATCH_NUM;
     sReceiveCmd.pExtEntryList = (uint32_t *)&sSrcMatchExtData;
-
-    /* Receive all frame types */
-    sReceiveCmd.frameTypes.bAcceptFt0Beacon = 1;
-    sReceiveCmd.frameTypes.bAcceptFt1Data = 1;
-    sReceiveCmd.frameTypes.bAcceptFt2Ack = 0;
-    sReceiveCmd.frameTypes.bAcceptFt3MacCmd = 1;
-    sReceiveCmd.frameTypes.bAcceptFt4Reserved = 1;
-    sReceiveCmd.frameTypes.bAcceptFt5Reserved = 1;
-    sReceiveCmd.frameTypes.bAcceptFt6Reserved = 1;
-    sReceiveCmd.frameTypes.bAcceptFt7Reserved = 1;
-
-    /* Configure CCA settings */
-    sReceiveCmd.ccaOpt.ccaEnEnergy = 1;
-    sReceiveCmd.ccaOpt.ccaEnCorr = 1;
-    sReceiveCmd.ccaOpt.ccaEnSync = 1;
-    sReceiveCmd.ccaOpt.ccaCorrOp = 1;
-    sReceiveCmd.ccaOpt.ccaSyncOp = 0;
-    sReceiveCmd.ccaOpt.ccaCorrThr = 3;
-
-    sReceiveCmd.ccaRssiThr = -90;
-
-    sReceiveCmd.endTrigger.triggerType = TRIG_NEVER;
-    sReceiveCmd.endTime = 0x00000000;
-}
-
-static void rfCoreInitTransmitParams(void)
-{
-    uint16_t olen_dummy;
-    memset((void *)&sCsmacaBackoffCmd, 0x00, sizeof(sCsmacaBackoffCmd));
-
-    /* initialize the random state with a true random seed for the radio core's
-     * psudo rng */
-    otPlatRandomSecureGet(sizeof(uint16_t) / sizeof(uint8_t), (uint8_t *) & (sCsmacaBackoffCmd.randomState), &olen_dummy);
-    sCsmacaBackoffCmd.commandNo = CMD_IEEE_CSMA;
 }
 
 /**
@@ -290,8 +283,7 @@ static uint_fast8_t rfCoreExecutePingCmd(void)
  */
 static uint_fast8_t rfCoreClearReceiveQueue(dataQueue_t *aQueue)
 {
-    memset((void *)&sClearReceiveQueueCmd, 0, sizeof(sClearReceiveQueueCmd));
-
+    /* memset skipped because sClearReceiveQueueCmd has only 2 members and padding */
     sClearReceiveQueueCmd.commandNo = CMD_CLEAR_RX;
     sClearReceiveQueueCmd.pQueue = aQueue;
 
@@ -317,13 +309,14 @@ static uint_fast8_t rfCoreClearReceiveQueue(dataQueue_t *aQueue)
  */
 static uint_fast8_t rfCoreModifyRxFrameFilter(bool aEnable)
 {
-    memset((void *)&sModifyReceiveFilterCmd, 0, sizeof(sModifyReceiveFilterCmd));
-
+    /* memset skipped because sModifyReceiveFilterCmd has only 3 members */
     sModifyReceiveFilterCmd.commandNo = CMD_IEEE_MOD_FILT;
+    /* copy current frame filtering and frame types from running RX command */
     memcpy((void *)&sModifyReceiveFilterCmd.newFrameFiltOpt, (void *)&sReceiveCmd.frameFiltOpt,
            sizeof(sModifyReceiveFilterCmd.newFrameFiltOpt));
     memcpy((void *)&sModifyReceiveFilterCmd.newFrameTypes, (void *)&sReceiveCmd.frameTypes,
            sizeof(sModifyReceiveFilterCmd.newFrameTypes));
+
     sModifyReceiveFilterCmd.newFrameFiltOpt.frameFiltEn = aEnable ? 1 : 0;
 
     return (RFCDoorbellSendTo((uint32_t)&sModifyReceiveFilterCmd) & 0xFF);
@@ -348,13 +341,14 @@ static uint_fast8_t rfCoreModifyRxFrameFilter(bool aEnable)
  */
 static uint_fast8_t rfCoreModifyRxAutoPend(bool aEnable)
 {
-    memset((void *)&sModifyReceiveFilterCmd, 0, sizeof(sModifyReceiveFilterCmd));
-
+    /* memset skipped because sModifyReceiveFilterCmd has only 3 members */
     sModifyReceiveFilterCmd.commandNo = CMD_IEEE_MOD_FILT;
+    /* copy current frame filtering and frame types from running RX command */
     memcpy((void *)&sModifyReceiveFilterCmd.newFrameFiltOpt, (void *)&sReceiveCmd.frameFiltOpt,
            sizeof(sModifyReceiveFilterCmd.newFrameFiltOpt));
     memcpy((void *)&sModifyReceiveFilterCmd.newFrameTypes, (void *)&sReceiveCmd.frameTypes,
            sizeof(sModifyReceiveFilterCmd.newFrameTypes));
+
     sModifyReceiveFilterCmd.newFrameFiltOpt.autoPendEn = aEnable ? 1 : 0;
 
     return (RFCDoorbellSendTo((uint32_t)&sModifyReceiveFilterCmd) & 0xFF);
@@ -380,6 +374,10 @@ static uint_fast8_t rfCoreModifyRxAutoPend(bool aEnable)
  */
 static uint_fast8_t rfCoreModifySourceMatchEntry(uint8_t aEntryNo, cc2650_address_t aType, bool aEnable)
 {
+    /* memset kept to save 60 bytes of text space, gcc can't optimize the
+     * following bitfield operation if it doesn't know the fields are zero
+     * already.
+     */
     memset((void *)&sModifyReceiveSrcMatchCmd, 0, sizeof(sModifyReceiveSrcMatchCmd));
 
     sModifyReceiveSrcMatchCmd.commandNo = CMD_IEEE_MOD_SRC_MATCH;
@@ -507,33 +505,63 @@ static uint8_t rfCoreFindEmptyExtSrcMatchIdx(void)
  */
 static uint_fast8_t rfCoreSendTransmitCmd(uint8_t *aPsdu, uint8_t aLen)
 {
-    /* no memset for CSMA-CA to preserve the random state */
-    memset((void *)&sTransmitCmd, 0, sizeof(sTransmitCmd));
+    static const rfc_CMD_IEEE_CSMA_t cCsmacaBackoffCmd =
+    {
+        .commandNo                  = CMD_IEEE_CSMA,
+        .status                     = IDLE,
+        .startTrigger.triggerType   = TRIG_NOW,
+        .condition.rule             = COND_ALWAYS,
+        .macMaxBE                   = IEEE802154_MAC_MAX_BE,
+        .macMaxCSMABackoffs         = IEEE802154_MAC_MAX_CSMA_BACKOFFS,
+        .csmaConfig                 =
+        {
+            .initCW                 = 1,
+            .bSlotted               = 0,
+            .rxOffMode              = 0,
+        },
+        .NB                         = 0,
+        .BE                         = IEEE802154_MAC_MIN_BE,
+        .remainingPeriods           = 0,
+        .endTrigger.triggerType     = TRIG_NEVER,
+        .endTime                    = 0x00000000,
+    };
+    static const rfc_CMD_IEEE_TX_t cTransmitCmd =
+    {
+        .commandNo                  = CMD_IEEE_TX,
+        .status                     = IDLE,
+        .startTrigger.triggerType   = TRIG_NOW,
+        .condition.rule             = COND_NEVER,
+        .pNextOp                    = NULL,
+    };
+    static const rfc_CMD_IEEE_RX_ACK_t cTransmitRxAckCmd =
+    {
+        .commandNo                  = CMD_IEEE_RX_ACK,
+        .status                     = IDLE,
+        .startTrigger.triggerType   = TRIG_NOW,
+        .endTrigger                 =
+        {
+            .triggerType            = TRIG_REL_START,
+            .pastTrig               = 1,
+        },
+        .condition.rule             = COND_NEVER,
+        .pNextOp                    = NULL,
+        /* number of RAT ticks to wait before claiming we haven't received an ack */
+        .endTime                    = ((IEEE802154_MAC_ACK_WAIT_DURATION * CC2650_RAT_TICKS_PER_SEC) / IEEE802154_SYMBOLS_PER_SEC),
+    };
+
     /* reset retry count */
     sTransmitRetryCount = 0;
 
-    sCsmacaBackoffCmd.status = IDLE;
-    sCsmacaBackoffCmd.macMaxBE = IEEE802154_MAC_MAX_BE;
-    sCsmacaBackoffCmd.macMaxCSMABackoffs = IEEE802154_MAC_MAX_CSMA_BACKOFFS;
-    sCsmacaBackoffCmd.csmaConfig.initCW = 1;
-    sCsmacaBackoffCmd.csmaConfig.bSlotted = 0;
-    sCsmacaBackoffCmd.csmaConfig.rxOffMode = 0;
-    sCsmacaBackoffCmd.NB = 0;
-    sCsmacaBackoffCmd.BE = IEEE802154_MAC_MIN_BE;
-    sCsmacaBackoffCmd.remainingPeriods = 0;
-    sCsmacaBackoffCmd.endTrigger.triggerType = TRIG_NEVER;
-    sCsmacaBackoffCmd.endTime = 0x00000000;
-    sCsmacaBackoffCmd.pNextOp = (rfc_radioOp_t *) &sTransmitCmd;
+    sCsmacaBackoffCmd               = cCsmacaBackoffCmd;
+    /* initialize the random state with a true random seed for the radio core's
+     * psudo rng */
+    sCsmacaBackoffCmd.randomState   = otPlatRandomGet();
+    sCsmacaBackoffCmd.pNextOp       = (rfc_radioOp_t *) &sTransmitCmd;
 
-    sTransmitCmd.commandNo = CMD_IEEE_TX;
+    sTransmitCmd = cTransmitCmd;
     /* no need to look for an ack if the tx operation was stopped */
     sTransmitCmd.payloadLen = aLen;
     sTransmitCmd.pPayload = aPsdu;
-    sTransmitCmd.startTrigger.triggerType = TRIG_NOW;
-
-    /* always clear the rx_ack and retries commands just incase the status is
-     * not IDLE for the interrupt handler */
-    memset((void *)&sTransmitRxAckCmd, 0, sizeof(sTransmitRxAckCmd));
 
     if (aPsdu[0] & IEEE802154_ACK_REQUEST)
     {
@@ -541,22 +569,8 @@ static uint_fast8_t rfCoreSendTransmitCmd(uint8_t *aPsdu, uint8_t aLen)
         sTransmitCmd.condition.rule = COND_STOP_ON_FALSE;
         sTransmitCmd.pNextOp = (rfc_radioOp_t *) &sTransmitRxAckCmd;
 
-        sTransmitRxAckCmd.commandNo = CMD_IEEE_RX_ACK;
-        sTransmitRxAckCmd.startTrigger.triggerType = TRIG_NOW;
+        sTransmitRxAckCmd = cTransmitRxAckCmd;
         sTransmitRxAckCmd.seqNo = aPsdu[IEEE802154_DSN_OFFSET];
-        sTransmitRxAckCmd.endTrigger.triggerType = TRIG_REL_START;
-        sTransmitRxAckCmd.endTrigger.pastTrig = 1;
-        sTransmitRxAckCmd.condition.rule = COND_NEVER;
-        sTransmitRxAckCmd.pNextOp = NULL;
-        /* number of RAT ticks to wait before claiming we haven't received an ack */
-        sTransmitRxAckCmd.endTime = ((IEEE802154_MAC_ACK_WAIT_DURATION * CC2650_RAT_TICKS_PER_SEC) /
-                                     IEEE802154_SYMBOLS_PER_SEC);
-    }
-    else
-    {
-        /* we are not looking for an ack, no retries because we won't know if we need to */
-        sTransmitCmd.condition.rule = COND_NEVER;
-        sTransmitCmd.pNextOp = NULL;
     }
 
     return (RFCDoorbellSendTo((uint32_t)&sCsmacaBackoffCmd) & 0xFF);
@@ -583,24 +597,31 @@ static uint_fast8_t rfCoreSendReceiveCmd(void)
 
 static uint_fast8_t rfCoreSendEdScanCmd(uint8_t aChannel, uint16_t aDurration)
 {
-    memset((void *)&sEdScanCmd, 0, sizeof(sEdScanCmd));
+    static const rfc_CMD_IEEE_ED_SCAN_t cEdScanCmd =
+    {
+        .commandNo                  = CMD_IEEE_ED_SCAN,
+        .startTrigger.triggerType   = TRIG_NOW,
+        .condition.rule             = COND_NEVER,
+        .ccaOpt                     =
+        {
+            .ccaEnEnergy            = 1,
+            .ccaEnCorr              = 1,
+            .ccaEnSync              = 1,
+            .ccaCorrOp              = 1,
+            .ccaSyncOp              = 0,
+            .ccaCorrThr             = 3,
+        },
+        .ccaRssiThr                 = -90,
+        .endTrigger                 =
+        {
+            .triggerType            = TRIG_REL_START,
+            .pastTrig               = 1,
+        },
+    };
+    sEdScanCmd = cEdScanCmd;
 
-    sEdScanCmd.commandNo = CMD_IEEE_ED_SCAN;
-    sEdScanCmd.startTrigger.triggerType = TRIG_NOW;
-    sEdScanCmd.condition.rule = COND_NEVER;
     sEdScanCmd.channel = aChannel;
 
-    sEdScanCmd.ccaOpt.ccaEnEnergy = 1;
-    sEdScanCmd.ccaOpt.ccaEnCorr = 1;
-    sEdScanCmd.ccaOpt.ccaEnSync = 1;
-    sEdScanCmd.ccaOpt.ccaCorrOp = 1;
-    sEdScanCmd.ccaOpt.ccaSyncOp = 0;
-    sEdScanCmd.ccaOpt.ccaCorrThr = 3;
-
-    sEdScanCmd.ccaRssiThr = -90;
-
-    sEdScanCmd.endTrigger.triggerType = TRIG_REL_START;
-    sEdScanCmd.endTrigger.pastTrig = 1;
     /* durration is in ms */
     sEdScanCmd.endTime = aDurration * (CC2650_RAT_TICKS_PER_SEC / 1000);
 
@@ -812,24 +833,32 @@ static uint_fast16_t rfCoreSendEnableCmd(void)
 {
     uint8_t ret;
     bool interruptsWereDisabled;
+    static const rfc_CMD_SYNC_START_RAT_t cStartRatCmd =
+    {
+        .commandNo                = CMD_SYNC_START_RAT,
+        .startTrigger.triggerType = TRIG_NOW,
+        .condition.rule           = COND_STOP_ON_FALSE,
+    };
+    static const rfc_CMD_RADIO_SETUP_t cRadioSetupCmd =
+    {
+        .commandNo                = CMD_RADIO_SETUP,
+        .startTrigger.triggerType = TRIG_NOW,
+        .condition.rule           = COND_NEVER,
+        .mode                     = 1, // IEEE 802.15.4 mode
+    };
     /* turn on the clock line to the radio core */
     HWREGBITW(AON_RTC_BASE + AON_RTC_O_CTL, AON_RTC_CTL_RTC_UPD_EN_BITN) = 1;
 
     /* initialize the rat start command */
-    memset((void *)&sStartRatCmd, 0x00, sizeof(sStartRatCmd));
-    sStartRatCmd.commandNo = CMD_SYNC_START_RAT;
-    sStartRatCmd.condition.rule = COND_STOP_ON_FALSE;
+    sStartRatCmd         = cStartRatCmd;
     sStartRatCmd.pNextOp = (rfc_radioOp_t *) &sRadioSetupCmd;
-    sStartRatCmd.rat0 = sRatOffset;
+    sStartRatCmd.rat0    = sRatOffset;
 
     /* initialize radio setup command */
-    memset((void *)&sRadioSetupCmd, 0, sizeof(sRadioSetupCmd));
-    sRadioSetupCmd.commandNo = CMD_RADIO_SETUP;
-    sRadioSetupCmd.condition.rule = COND_NEVER;
+    sRadioSetupCmd              = cRadioSetupCmd;
     /* initally set the radio tx power to the max */
-    sRadioSetupCmd.txPower = sCurrentOutputPower->value;
+    sRadioSetupCmd.txPower      = sCurrentOutputPower->value;
     sRadioSetupCmd.pRegOverride = sIEEEOverrides;
-    sRadioSetupCmd.mode = 1;
 
     interruptsWereDisabled = IntMasterDisable();
 
@@ -866,35 +895,43 @@ static uint_fast16_t rfCoreSendEnableCmd(void)
  */
 static uint_fast16_t rfCoreSendDisableCmd(void)
 {
-    uint8_t doorbell_ret;
+    uint8_t doorbellRet;
     bool interruptsWereDisabled;
+    static const rfc_CMD_FS_POWERDOWN_t cFsPowerdownCmd =
+    {
+        .commandNo                = CMD_FS_POWERDOWN,
+        .startTrigger.triggerType = TRIG_NOW,
+        .condition.rule           = COND_ALWAYS,
+    };
+    static const rfc_CMD_SYNC_STOP_RAT_t cStopRatCmd =
+    {
+        .commandNo                = CMD_SYNC_STOP_RAT,
+        .startTrigger.triggerType = TRIG_NOW,
+        .condition.rule           = COND_NEVER,
+    };
 
     HWREGBITW(AON_RTC_BASE + AON_RTC_O_CTL, AON_RTC_CTL_RTC_UPD_EN_BITN) = 1;
 
     /* initialize the command to power down the frequency synth */
-    memset((void *)&sFsPowerdownCmd, 0, sizeof(sFsPowerdownCmd));
-    sFsPowerdownCmd.commandNo = CMD_FS_POWERDOWN;
-    sFsPowerdownCmd.condition.rule = COND_ALWAYS;
+    sFsPowerdownCmd = cFsPowerdownCmd;
     sFsPowerdownCmd.pNextOp = (rfc_radioOp_t *)&sStopRatCmd;
 
-    memset((void *)&sStopRatCmd, 0, sizeof(sStopRatCmd));
-    sStopRatCmd.commandNo = CMD_SYNC_STOP_RAT;
-    sStopRatCmd.condition.rule = COND_NEVER;
+    sStopRatCmd = cStopRatCmd;
 
     interruptsWereDisabled = IntMasterDisable();
 
     HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = ~IRQ_LAST_COMMAND_DONE;
 
-    doorbell_ret = (RFCDoorbellSendTo((uint32_t)&sFsPowerdownCmd) & 0xFF);
+    doorbellRet = (RFCDoorbellSendTo((uint32_t)&sFsPowerdownCmd) & 0xFF);
 
-    if (doorbell_ret != CMDSTA_Done)
+    if (doorbellRet != CMDSTA_Done)
     {
         if (!interruptsWereDisabled)
         {
             IntMasterEnable();
         }
 
-        return doorbell_ret;
+        return doorbellRet;
     }
 
     /* synchronously wait for the CM0 to stop */
@@ -918,10 +955,6 @@ static uint_fast16_t rfCoreSendDisableCmd(void)
  */
 void RFCCPE1IntHandler(void)
 {
-    if (!PRCMRfReady())
-    {
-    }
-
     /* Clear INTERNAL_ERROR interrupt flag */
     HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = 0x7FFFFFFF;
 }
@@ -935,13 +968,12 @@ void RFCCPE0IntHandler(void)
     {
         HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = ~IRQ_LAST_COMMAND_DONE;
 
-        if (sState == cc2650_stateReceive)
+        if (sState == cc2650_stateReceive &&
+            sReceiveCmd.status != ACTIVE &&
+            sReceiveCmd.status != IEEE_SUSPENDED)
         {
-            if (sReceiveCmd.status != ACTIVE && sReceiveCmd.status != IEEE_SUSPENDED)
-            {
-                /* the rx command was probably aborted to change the channel */
-                sState = cc2650_stateSleep;
-            }
+            /* the rx command was probably aborted to change the channel */
+            sState = cc2650_stateSleep;
         }
         else if (sState == cc2650_stateEdScan)
         {
@@ -955,53 +987,50 @@ void RFCCPE0IntHandler(void)
 
         if (sState == cc2650_stateTransmit)
         {
-            if (sTransmitRxAckCmd.status == IEEE_DONE_TIMEOUT)
+            if (sTransmitCmd.pPayload[0] & IEEE802154_ACK_REQUEST)
             {
-                if (sTransmitRetryCount < IEEE802154_MAC_MAX_FRAMES_RETRIES)
-                {
-                    /* re-submit the tx command chain */
-                    sTransmitRetryCount++;
-                    RFCDoorbellSendTo((uint32_t)&sCsmacaBackoffCmd);
-                }
-                else
-                {
-                    /* signal polling function we are done transmitting, we failed to send the packet */
-                    sState = cc2650_stateTransmitComplete;
-                    sTransmitError = kThreadError_NoAck;
-                }
-            }
-            else if (sTransmitRxAckCmd.status != IDLE)
-            {
-                /* signal polling function we are done transmitting */
-                sState = cc2650_stateTransmitComplete;
-
-                /* we were looking for an ack, and the TX command didn't fail */
+                /* we are looking for an ack */
                 switch (sTransmitRxAckCmd.status)
                 {
+                case IEEE_DONE_TIMEOUT:
+                    if (sTransmitRetryCount < IEEE802154_MAC_MAX_FRAMES_RETRIES)
+                    {
+                        /* re-submit the tx command chain */
+                        sTransmitRetryCount++;
+                        RFCDoorbellSendTo((uint32_t)&sCsmacaBackoffCmd);
+                    }
+                    else
+                    {
+                        sTransmitError = kThreadError_NoAck;
+                        /* signal polling function we are done transmitting, we failed to send the packet */
+                        sState = cc2650_stateTransmitComplete;
+                    }
+
+                    break;
+
                 case IEEE_DONE_ACK:
                     sReceivedAckPendingBit = false;
                     sTransmitError = kThreadError_None;
+                    /* signal polling function we are done transmitting */
+                    sState = cc2650_stateTransmitComplete;
                     break;
 
                 case IEEE_DONE_ACKPEND:
                     sReceivedAckPendingBit = true;
                     sTransmitError = kThreadError_None;
-                    break;
-
-                case IEEE_DONE_TIMEOUT:
-                    sTransmitError = kThreadError_NoAck;
+                    /* signal polling function we are done transmitting */
+                    sState = cc2650_stateTransmitComplete;
                     break;
 
                 default:
                     sTransmitError = kThreadError_Failed;
+                    /* signal polling function we are done transmitting */
+                    sState = cc2650_stateTransmitComplete;
                     break;
                 }
             }
             else
             {
-                /* signal polling function we are done transmitting */
-                sState = cc2650_stateTransmitComplete;
-
                 /* The TX command was either stopped or we are not looking for
                  * an ack */
                 switch (sTransmitCmd.status)
@@ -1029,6 +1058,9 @@ void RFCCPE0IntHandler(void)
                     sTransmitError = kThreadError_Error;
                     break;
                 }
+
+                /* signal polling function we are done transmitting */
+                sState = cc2650_stateTransmitComplete;
             }
         }
     }
@@ -1041,8 +1073,6 @@ void cc2650RadioInit(void)
 {
     /* Populate the RX parameters data structure with default values */
     rfCoreInitReceiveParams();
-    /* Populate the CSMA parameters */
-    rfCoreInitTransmitParams();
 
     sState = cc2650_stateDisabled;
 }
@@ -1059,8 +1089,7 @@ ThreadError otPlatRadioEnable(otInstance *aInstance)
     {
         error = kThreadError_None;
     }
-
-    if (sState == cc2650_stateDisabled)
+    else if (sState == cc2650_stateDisabled)
     {
         VerifyOrExit(rfCorePowerOn() == CMDSTA_Done, error = kThreadError_Failed);
         VerifyOrExit(rfCoreSendEnableCmd() == DONE_OK, error = kThreadError_Failed);
@@ -1099,8 +1128,7 @@ ThreadError otPlatRadioDisable(otInstance *aInstance)
     {
         error = kThreadError_None;
     }
-
-    if (sState == cc2650_stateSleep)
+    else if (sState == cc2650_stateSleep)
     {
         rfCoreSendDisableCmd();
         /* we don't want to fail if this command string doesn't work, just turn
@@ -1196,8 +1224,7 @@ ThreadError otPlatRadioSleep(otInstance *aInstance)
     {
         error = kThreadError_None;
     }
-
-    if (sState == cc2650_stateReceive)
+    else if (sState == cc2650_stateReceive)
     {
         if (rfCoreExecuteAbortCmd() != CMDSTA_Done)
         {

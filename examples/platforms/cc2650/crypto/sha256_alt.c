@@ -28,7 +28,7 @@
 
 #include "sha256_alt.h"
 
-#if defined(MBEDTLS_SHA256_ALT)
+#ifdef MBEDTLS_SHA256_ALT
 
 #include <string.h>
 

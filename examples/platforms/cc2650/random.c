@@ -99,10 +99,7 @@ static int TRNGPoll(unsigned char *aOutput, size_t aLen, size_t *oLen)
         if (length % 8 == 0)
         {
             /* we've run to the end of the buffer */
-            while (!(TRNGStatusGet() & TRNG_NUMBER_READY))
-            {
-                ;
-            }
+            while (!(TRNGStatusGet() & TRNG_NUMBER_READY));
 
             /*
              * don't use TRNGNumberGet here because it will tell the TRNG to

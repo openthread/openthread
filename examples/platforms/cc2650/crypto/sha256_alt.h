@@ -29,13 +29,13 @@
 #ifndef MBEDTLS_SHA256_ALT_H
 #define MBEDTLS_SHA256_ALT_H
 
-#if !defined(MBEDTLS_CONFIG_FILE)
+#ifndef MBEDTLS_CONFIG_FILE
 #include "cc2650-mbedtls-config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#if defined(MBEDTLS_SHA256_ALT)
+#ifdef MBEDTLS_SHA256_ALT
 
 #include "driverlib/rom_crypto.h"
 

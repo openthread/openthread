@@ -29,7 +29,7 @@
 #include "mbedtls/aes.h"
 #include "aes_alt.h"
 
-#if defined(MBEDTLS_AES_ALT)
+#ifdef MBEDTLS_AES_ALT
 
 #include <string.h>
 #include <driverlib/crypto.h>
@@ -76,10 +76,7 @@ void mbedtls_aes_init(mbedtls_aes_context *ctx)
 
 void mbedtls_aes_free(mbedtls_aes_context *ctx)
 {
-    if (ctx->magic != CC2650_AES_CTX_MAGIC)
-    {
-        return;
-    }
+    VerifyOrExit(ctx->magic == CC2650_AES_CTX_MAGIC, ;);
 
     if (ctx->key_idx != CC2650_AES_KEY_UNUSED)
     {
@@ -106,6 +103,9 @@ void mbedtls_aes_free(mbedtls_aes_context *ctx)
     }
 
     memset((void *)ctx, 0x00, sizeof(ctx));
+
+exit:
+    return;
 }
 
 int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key, unsigned int keybits)
@@ -113,10 +113,7 @@ int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key, u
     unsigned char key_idx;
     int retval = 0;
 
-    if (ctx->magic != CC2650_AES_CTX_MAGIC)
-    {
-        return -1;
-    }
+    VerifyOrExit(ctx->magic == CC2650_AES_CTX_MAGIC, retval = -1);
 
     if (ctx->key_idx != CC2650_AES_KEY_UNUSED)
     {
@@ -144,10 +141,7 @@ int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key, u
     unsigned char key_idx;
     int retval = 0;
 
-    if (ctx->magic != CC2650_AES_CTX_MAGIC)
-    {
-        return -1;
-    }
+    VerifyOrExit(ctx->magic == CC2650_AES_CTX_MAGIC, retval = -1);
 
     if (ctx->key_idx != CC2650_AES_KEY_UNUSED)
     {
