@@ -55,7 +55,6 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     Mle(aThreadNetif),
     mAdvertiseTimer(aThreadNetif.GetIp6().mTimerScheduler, &MleRouter::HandleAdvertiseTimer, NULL, this),
     mStateUpdateTimer(aThreadNetif.GetIp6().mTimerScheduler, &MleRouter::HandleStateUpdateTimer, this),
-    mDelayedResponseTimer(aThreadNetif.GetIp6().mTimerScheduler, &MleRouter::HandleDelayedResponseTimer, this),
     mChildUpdateRequestTimer(aThreadNetif.GetIp6().mTimerScheduler, &MleRouter::HandleChildUpdateRequestTimer, this),
     mAddressSolicit(OPENTHREAD_URI_ADDRESS_SOLICIT, &MleRouter::HandleAddressSolicit, this),
     mAddressRelease(OPENTHREAD_URI_ADDRESS_RELEASE, &MleRouter::HandleAddressRelease, this)
@@ -963,7 +962,7 @@ ThreadError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::Mess
             static const uint8_t tlvs[] = {Tlv::kNetworkData};
             SetStateRouter(GetRloc16());
             mRetrieveNewNetworkData = true;
-            SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs));
+            SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), 0);
         }
 
         break;
@@ -1868,59 +1867,6 @@ exit:
     {}
 }
 
-void MleRouter::HandleDelayedResponseTimer(void *aContext)
-{
-    static_cast<MleRouter *>(aContext)->HandleDelayedResponseTimer();
-}
-
-void MleRouter::HandleDelayedResponseTimer(void)
-{
-    DelayedResponseHeader delayedResponse;
-    uint32_t now = otPlatAlarmGetNow();
-    uint32_t nextDelay = 0xffffffff;
-    Message *message = mDelayedResponses.GetHead();
-    Message *nextMessage = NULL;
-
-    while (message != NULL)
-    {
-        nextMessage = message->GetNext();
-        delayedResponse.ReadFrom(*message);
-
-        if (delayedResponse.IsLater(now))
-        {
-            // Calculate the next delay and choose the lowest.
-            if (delayedResponse.GetSendTime() - now < nextDelay)
-            {
-                nextDelay = delayedResponse.GetSendTime() - now;
-            }
-        }
-        else
-        {
-            mDelayedResponses.Dequeue(*message);
-
-            // Remove the DelayedResponseHeader from the message.
-            DelayedResponseHeader::RemoveFrom(*message);
-
-            // Send the message.
-            if (SendMessage(*message, delayedResponse.GetDestination()) == kThreadError_None)
-            {
-                otLogInfoMle("Sent delayed response");
-            }
-            else
-            {
-                message->Free();
-            }
-        }
-
-        message = nextMessage;
-    }
-
-    if (nextDelay != 0xffffffff)
-    {
-        mDelayedResponseTimer.Start(nextDelay);
-    }
-}
-
 void MleRouter::HandleChildUpdateRequestTimer(void *aContext)
 {
     static_cast<MleRouter *>(aContext)->HandleChildUpdateRequestTimer();
@@ -1949,37 +1895,6 @@ void MleRouter::HandleChildUpdateRequestTimer(void)
 
 exit:
     {}
-}
-
-ThreadError MleRouter::AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestination, uint16_t aDelay)
-{
-    ThreadError error = kThreadError_None;
-    uint32_t alarmFireTime;
-    uint32_t sendTime = otPlatAlarmGetNow() + aDelay;
-
-    // Append the message with DelayedRespnoseHeader and add to the list.
-    DelayedResponseHeader delayedResponse(sendTime, aDestination);
-    SuccessOrExit(error = delayedResponse.AppendTo(aMessage));
-    mDelayedResponses.Enqueue(aMessage);
-
-    if (mDelayedResponseTimer.IsRunning())
-    {
-        // If timer is already running, check if it should be restarted with earlier fire time.
-        alarmFireTime = mDelayedResponseTimer.Gett0() + mDelayedResponseTimer.Getdt();
-
-        if (delayedResponse.IsEarlier(alarmFireTime))
-        {
-            mDelayedResponseTimer.Start(aDelay);
-        }
-    }
-    else
-    {
-        // Otherwise just set the timer.
-        mDelayedResponseTimer.Start(aDelay);
-    }
-
-exit:
-    return error;
 }
 
 ThreadError MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &challenge, bool aRoutersOnlyRequest)
