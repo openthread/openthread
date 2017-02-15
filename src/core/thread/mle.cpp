@@ -70,6 +70,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mParentRequestState(kParentIdle),
     mReattachState(kReattachStop),
     mParentRequestTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mle::HandleParentRequestTimer, this),
+    mDelayedResponseTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mle::HandleDelayedResponseTimer, this),
     mRouterSelectionJitter(kRouterSelectionJitter),
     mRouterSelectionJitterTimeout(0),
     mLastPartitionRouterIdSequence(0),
@@ -1400,6 +1401,59 @@ void Mle::HandleParentRequestTimer(void)
     }
 }
 
+void Mle::HandleDelayedResponseTimer(void *aContext)
+{
+    static_cast<Mle *>(aContext)->HandleDelayedResponseTimer();
+}
+
+void Mle::HandleDelayedResponseTimer(void)
+{
+    DelayedResponseHeader delayedResponse;
+    uint32_t now = otPlatAlarmGetNow();
+    uint32_t nextDelay = 0xffffffff;
+    Message *message = mDelayedResponses.GetHead();
+    Message *nextMessage = NULL;
+
+    while (message != NULL)
+    {
+        nextMessage = message->GetNext();
+        delayedResponse.ReadFrom(*message);
+
+        if (delayedResponse.IsLater(now))
+        {
+            // Calculate the next delay and choose the lowest.
+            if (delayedResponse.GetSendTime() - now < nextDelay)
+            {
+                nextDelay = delayedResponse.GetSendTime() - now;
+            }
+        }
+        else
+        {
+            mDelayedResponses.Dequeue(*message);
+
+            // Remove the DelayedResponseHeader from the message.
+            DelayedResponseHeader::RemoveFrom(*message);
+
+            // Send the message.
+            if (SendMessage(*message, delayedResponse.GetDestination()) == kThreadError_None)
+            {
+                otLogInfoMle("Sent delayed response");
+            }
+            else
+            {
+                message->Free();
+            }
+        }
+
+        message = nextMessage;
+    }
+
+    if (nextDelay != 0xffffffff)
+    {
+        mDelayedResponseTimer.Start(nextDelay);
+    }
+}
+
 ThreadError Mle::SendParentRequest(void)
 {
     ThreadError error = kThreadError_None;
@@ -1521,7 +1575,8 @@ exit:
     return error;
 }
 
-ThreadError Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength)
+ThreadError Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength,
+                                 uint16_t aDelay)
 {
     ThreadError error = kThreadError_None;
     Message *message;
@@ -1532,7 +1587,14 @@ ThreadError Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t
     SuccessOrExit(error = AppendActiveTimestamp(*message, false));
     SuccessOrExit(error = AppendPendingTimestamp(*message));
 
-    SuccessOrExit(error = SendMessage(*message, aDestination));
+    if (aDelay)
+    {
+        SuccessOrExit(error = AddDelayedResponse(*message, aDestination, aDelay));
+    }
+    else
+    {
+        SuccessOrExit(error = SendMessage(*message, aDestination));
+    }
 
     otLogInfoMle("Sent Data Request");
 
@@ -1851,6 +1913,37 @@ exit:
     return error;
 }
 
+ThreadError Mle::AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestination, uint16_t aDelay)
+{
+    ThreadError error = kThreadError_None;
+    uint32_t alarmFireTime;
+    uint32_t sendTime = otPlatAlarmGetNow() + aDelay;
+
+    // Append the message with DelayedRespnoseHeader and add to the list.
+    DelayedResponseHeader delayedResponse(sendTime, aDestination);
+    SuccessOrExit(error = delayedResponse.AppendTo(aMessage));
+    mDelayedResponses.Enqueue(aMessage);
+
+    if (mDelayedResponseTimer.IsRunning())
+    {
+        // If timer is already running, check if it should be restarted with earlier fire time.
+        alarmFireTime = mDelayedResponseTimer.Gett0() + mDelayedResponseTimer.Getdt();
+
+        if (delayedResponse.IsEarlier(alarmFireTime))
+        {
+            mDelayedResponseTimer.Start(aDelay);
+        }
+    }
+    else
+    {
+        // Otherwise just set the timer.
+        mDelayedResponseTimer.Start(aDelay);
+    }
+
+exit:
+    return error;
+}
+
 void Mle::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
 {
     static_cast<Mle *>(aContext)->HandleUdpReceive(*static_cast<Message *>(aMessage),
@@ -2109,6 +2202,7 @@ ThreadError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::Message
     LeaderDataTlv leaderData;
     RouteTlv route;
     uint8_t tlvs[] = {Tlv::kNetworkData};
+    uint16_t delay;
 
     // Source Address
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kSourceAddress, sizeof(sourceAddress), sourceAddress));
@@ -2178,7 +2272,8 @@ ThreadError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::Message
         if (mRetrieveNewNetworkData ||
             (static_cast<int8_t>(leaderData.GetDataVersion() - mNetif.GetNetworkDataLeader().GetVersion()) > 0))
         {
-            SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs));
+            delay = otPlatRandomGet() % kMleMaxResponseDelay;
+            SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay);
         }
     }
 
@@ -2219,6 +2314,7 @@ ThreadError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInf
     uint16_t pendingDatasetOffset = 0;
     bool dataRequest = false;
     Tlv tlv;
+    uint16_t delay;
 
     // Leader Data
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
@@ -2341,7 +2437,9 @@ exit:
     {
         static const uint8_t tlvs[] = {Tlv::kNetworkData};
 
-        SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs));
+        delay = aMessageInfo.GetSockAddr().IsMulticast() ? (otPlatRandomGet() % kMleMaxResponseDelay) : 0;
+
+        SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay);
     }
 
     return error;
@@ -2736,7 +2834,7 @@ ThreadError Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::Me
 
     if (mRetrieveNewNetworkData)
     {
-        SendDataRequest(aMessageInfo.GetPeerAddr(), dataRequestTlvs, sizeof(tlvs));
+        SendDataRequest(aMessageInfo.GetPeerAddr(), dataRequestTlvs, sizeof(tlvs), 0);
     }
 
     SuccessOrExit(error = SendChildUpdateResponse(tlvs, numTlvs, challenge));
