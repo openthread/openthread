@@ -53,14 +53,14 @@ typedef SHA256_memory_t mbedtls_sha256_context;
  *
  * @param [in,out] ctx SHA-256 context to be initialized
  */
-void mbedtls_sha256_init( mbedtls_sha256_context *ctx );
+void mbedtls_sha256_init(mbedtls_sha256_context *ctx);
 
 /**
  * @brief Clear SHA-256 context
  *
  * @param [in,out] ctx SHA-256 context to be cleared
  */
-void mbedtls_sha256_free( mbedtls_sha256_context *ctx );
+void mbedtls_sha256_free(mbedtls_sha256_context *ctx);
 
 /**
  * @brief Clone (the state of) a SHA-256 context
@@ -68,8 +68,8 @@ void mbedtls_sha256_free( mbedtls_sha256_context *ctx );
  * @param [out] dst The destination context
  * @param [in] src The context to be cloned
  */
-void mbedtls_sha256_clone( mbedtls_sha256_context *dst,
-                           const mbedtls_sha256_context *src );
+void mbedtls_sha256_clone(mbedtls_sha256_context *dst,
+                          const mbedtls_sha256_context *src);
 
 /**
  * @brief SHA-256 context setup
@@ -77,7 +77,7 @@ void mbedtls_sha256_clone( mbedtls_sha256_context *dst,
  * @param [in,out] ctx context to be initialized
  * @param [in] is224 0 = use SHA256, 1 = use SHA224
  */
-void mbedtls_sha256_starts( mbedtls_sha256_context *ctx, int is224 );
+void mbedtls_sha256_starts(mbedtls_sha256_context *ctx, int is224);
 
 /**
  * @brief SHA-256 process buffer
@@ -86,7 +86,7 @@ void mbedtls_sha256_starts( mbedtls_sha256_context *ctx, int is224 );
  * @param [in] input buffer holding the  data
  * @param [in] ilen length of the input data
  */
-void mbedtls_sha256_update( mbedtls_sha256_context *ctx, const unsigned char *input, size_t ilen );
+void mbedtls_sha256_update(mbedtls_sha256_context *ctx, const unsigned char *input, size_t ilen);
 
 /**
  * @brief SHA-256 final digest
@@ -94,10 +94,10 @@ void mbedtls_sha256_update( mbedtls_sha256_context *ctx, const unsigned char *in
  * @param [in,out] ctx SHA-256 context
  * @param [out] output SHA-224/256 checksum result
  */
-void mbedtls_sha256_finish( mbedtls_sha256_context *ctx, unsigned char output[32] );
+void mbedtls_sha256_finish(mbedtls_sha256_context *ctx, unsigned char output[32]);
 
 /* Internal use */
-void mbedtls_sha256_process( mbedtls_sha256_context *ctx, const unsigned char data[64] );
+void mbedtls_sha256_process(mbedtls_sha256_context *ctx, const unsigned char data[64]);
 
 #ifdef __cplusplus
 }

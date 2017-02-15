@@ -55,10 +55,7 @@ void cc2650RandomInit(void)
 {
     PRCMPowerDomainOn(PRCM_DOMAIN_PERIPH);
 
-    while (PRCMPowerDomainStatus(PRCM_DOMAIN_PERIPH) != PRCM_DOMAIN_POWER_ON)
-    {
-        ;
-    }
+    while (PRCMPowerDomainStatus(PRCM_DOMAIN_PERIPH) != PRCM_DOMAIN_POWER_ON);
 
     PRCMPeripheralRunEnable(PRCM_PERIPH_TRNG);
     PRCMPeripheralSleepEnable(PRCM_DOMAIN_PERIPH);
@@ -73,10 +70,7 @@ void cc2650RandomInit(void)
  */
 uint32_t otPlatRandomGet(void)
 {
-    while (!(TRNGStatusGet() & TRNG_NUMBER_READY))
-    {
-        ;
-    }
+    while (!(TRNGStatusGet() & TRNG_NUMBER_READY));
 
     return TRNGNumberGet(TRNG_LOW_WORD);
 }

@@ -50,11 +50,11 @@ enum
 };
 
 static uint8_t const *sSendBuffer = NULL;
-static uint16_t sSendLen = 0;
+static uint16_t       sSendLen    = 0;
 
-static uint8_t sReceiveBuffer[CC2650_RECV_CIRC_BUFF_SIZE];
-static uint16_t sReceiveHeadIdx = 0;
-static uint16_t sReceiveTailIdx = 0;
+static uint8_t        sReceiveBuffer[CC2650_RECV_CIRC_BUFF_SIZE];
+static uint16_t       sReceiveHeadIdx = 0;
+static uint16_t       sReceiveTailIdx = 0;
 
 void UART0_intHandler(void);
 
@@ -65,20 +65,14 @@ ThreadError otPlatUartEnable(void)
 {
     PRCMPowerDomainOn(PRCM_DOMAIN_SERIAL);
 
-    while (PRCMPowerDomainStatus(PRCM_DOMAIN_SERIAL) != PRCM_DOMAIN_POWER_ON)
-    {
-        ;
-    }
+    while (PRCMPowerDomainStatus(PRCM_DOMAIN_SERIAL) != PRCM_DOMAIN_POWER_ON);
 
     PRCMPeripheralRunEnable(PRCM_PERIPH_UART0);
     PRCMPeripheralSleepEnable(PRCM_PERIPH_UART0);
     PRCMPeripheralDeepSleepEnable(PRCM_PERIPH_UART0);
     PRCMLoadSet();
 
-    while (!PRCMLoadGet())
-    {
-        ;
-    }
+    while (!PRCMLoadGet());
 
     IOCPinTypeUart(UART0_BASE, IOID_2, IOID_3, IOID_UNUSED, IOID_UNUSED);
 

@@ -31,35 +31,53 @@
 #include <stdio.h>
 #include <platform/diag.h>
 
+
 /**
- * diagnostics mode flag.
+ * Diagnostics mode variables.
  *
  */
 static bool sDiagMode = false;
 
-/**
- * Function documented in platform/diag.h
- */
-void otPlatDiagProcess(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
-    // add more plarform specific diagnostics features here
+    // Add more plarform specific diagnostics features here.
+    if (argc > 1)
+    {
+        snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", argv[0]);
+    }
 
-    snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", argv[0]);
-    (void)argc;
+    (void) argc;
+    (void) aInstance;
 }
 
-/**
- * Function documented in platform/diag.h
- */
 void otPlatDiagModeSet(bool aMode)
 {
     sDiagMode = aMode;
 }
 
-/**
- * Function documented in platform/diag.h
- */
 bool otPlatDiagModeGet()
 {
     return sDiagMode;
+}
+
+void otPlatDiagChannelSet(uint8_t aChannel)
+{
+    (void) aChannel;
+}
+
+void otPlatDiagTxPowerSet(int8_t aTxPower)
+{
+    (void) aTxPower;
+}
+
+void otPlatDiagRadioReceived(otInstance *aInstance, RadioPacket *aFrame, ThreadError aError)
+{
+    (void) aInstance;
+    (void) aFrame;
+    (void) aError;
+}
+
+void otPlatDiagAlarmCallback(otInstance *aInstance)
+{
+    (void) aInstance;
 }

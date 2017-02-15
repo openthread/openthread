@@ -49,8 +49,9 @@ enum
     IEEE802154_PHY_SYMBOLS_PER_OCTET  = 2,
     ///< (IEEE 802.15.4-2006 6.4.2) PHY PIB attribute, specifically the O-QPSK PHY
     IEEE802154_MAC_ACK_WAIT_DURATION  = (IEEE802154_A_UINT_BACKOFF_PERIOD +
-            IEEE802154_A_TURNAROUND_TIME + IEEE802154_PHY_SHR_DURATION + ( 6 *
-                IEEE802154_PHY_SYMBOLS_PER_OCTET)),
+                                         IEEE802154_A_TURNAROUND_TIME     +
+                                         IEEE802154_PHY_SHR_DURATION      +
+                                         ( 6 * IEEE802154_PHY_SYMBOLS_PER_OCTET)),
     ///< (IEEE 802.15.4-2006 7.4.2) macAckWaitDuration PIB attribute
     IEEE802154_SYMBOLS_PER_SEC        = 62500    ///< (IEEE 802.15.4-2006 6.5.3.2) O-QPSK symbol rate
 };
@@ -68,21 +69,21 @@ enum
  */
 typedef struct output_config
 {
-    int dbm;
+    int      dbm;
     uint16_t value;
 } output_config_t;
 
 static const output_config_t rgOutputPower[] =
 {
-    { 5, 0x9330},
-    { 4, 0x9324},
-    { 3, 0x5a1c},
-    { 2, 0x4e18},
-    { 1, 0x4214},
-    { 0, 0x3161},
-    { -3, 0x2558},
-    { -6, 0x1d52},
-    { -9, 0x194e},
+    {   5, 0x9330},
+    {   4, 0x9324},
+    {   3, 0x5a1c},
+    {   2, 0x4e18},
+    {   1, 0x4214},
+    {   0, 0x3161},
+    {  -3, 0x2558},
+    {  -6, 0x1d52},
+    {  -9, 0x194e},
     { -12, 0x144b},
     { -15, 0x0ccb},
     { -18, 0x0cc9},
@@ -144,7 +145,7 @@ typedef struct __attribute__((aligned(4))) short_src_match_data
 typedef enum cc2650_address
 {
     SHORT_ADDRESS = 1,
-    EXT_ADDRESS = 0,
+    EXT_ADDRESS   = 0,
 } cc2650_address_t;
 
 /**

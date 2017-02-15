@@ -39,9 +39,9 @@
  * every ms, and not run when the processor is sleeping.
  */
 
-static uint32_t sTime0 = 0;
+static uint32_t sTime0     = 0;
 static uint32_t sAlarmTime = 0;
-static bool sIsRunning = false;
+static bool     sIsRunning = false;
 
 /**
  * Function documented in platform-cc2650.h

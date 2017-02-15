@@ -96,26 +96,26 @@ static uint32_t sRatOffset = 0;
 /*
  * radio command structures that run on the CM0
  */
-static volatile rfc_CMD_SYNC_START_RAT_t sStartRatCmd;
-static volatile rfc_CMD_RADIO_SETUP_t sRadioSetupCmd;
+static volatile rfc_CMD_SYNC_START_RAT_t     sStartRatCmd;
+static volatile rfc_CMD_RADIO_SETUP_t        sRadioSetupCmd;
 
-static volatile rfc_CMD_SYNC_STOP_RAT_t sStopRatCmd;
-static volatile rfc_CMD_FS_POWERDOWN_t sFsPowerdownCmd;
+static volatile rfc_CMD_SYNC_STOP_RAT_t      sStopRatCmd;
+static volatile rfc_CMD_FS_POWERDOWN_t       sFsPowerdownCmd;
 
-static volatile rfc_CMD_CLEAR_RX_t sClearReceiveQueueCmd;
-static volatile rfc_CMD_IEEE_MOD_FILT_t sModifyReceiveFilterCmd;
+static volatile rfc_CMD_CLEAR_RX_t           sClearReceiveQueueCmd;
+static volatile rfc_CMD_IEEE_MOD_FILT_t      sModifyReceiveFilterCmd;
 static volatile rfc_CMD_IEEE_MOD_SRC_MATCH_t sModifyReceiveSrcMatchCmd;
 
-static volatile rfc_CMD_IEEE_ED_SCAN_t sEdScanCmd;
+static volatile rfc_CMD_IEEE_ED_SCAN_t       sEdScanCmd;
 
-static volatile rfc_CMD_IEEE_RX_t sReceiveCmd;
+static volatile rfc_CMD_IEEE_RX_t            sReceiveCmd;
 
-static volatile rfc_CMD_IEEE_CSMA_t sCsmacaBackoffCmd;
-static volatile rfc_CMD_IEEE_TX_t sTransmitCmd;
-static volatile rfc_CMD_IEEE_RX_ACK_t sTransmitRxAckCmd;
+static volatile rfc_CMD_IEEE_CSMA_t          sCsmacaBackoffCmd;
+static volatile rfc_CMD_IEEE_TX_t            sTransmitCmd;
+static volatile rfc_CMD_IEEE_RX_ACK_t        sTransmitRxAckCmd;
 
-static volatile ext_src_match_data_t sSrcMatchExtData;
-static volatile short_src_match_data_t sSrcMatchShortData;
+static volatile ext_src_match_data_t         sSrcMatchExtData;
+static volatile short_src_match_data_t       sSrcMatchShortData;
 
 /* struct containing radio stats */
 static rfc_ieeeRxOutput_t sRfStats;
@@ -243,12 +243,12 @@ static void rfCoreInitReceiveParams(void)
 
 static void rfCoreInitTransmitParams(void)
 {
-    uint16_t dummy;
+    uint16_t olen_dummy;
     memset((void *)&sCsmacaBackoffCmd, 0x00, sizeof(sCsmacaBackoffCmd));
 
     /* initialize the random state with a true random seed for the radio core's
      * psudo rng */
-    otPlatRandomSecureGet(sizeof(uint16_t) / sizeof(uint8_t), (uint8_t *) & (sCsmacaBackoffCmd.randomState), &dummy);
+    otPlatRandomSecureGet(sizeof(uint16_t) / sizeof(uint8_t), (uint8_t *) & (sCsmacaBackoffCmd.randomState), &olen_dummy);
     sCsmacaBackoffCmd.commandNo = CMD_IEEE_CSMA;
 }
 
@@ -391,15 +391,14 @@ static uint_fast8_t rfCoreModifySourceMatchEntry(uint8_t aEntryNo, cc2650_addres
     {
         sModifyReceiveSrcMatchCmd.options.bEnable = 1;
         sModifyReceiveSrcMatchCmd.options.srcPend = 1;
-        sModifyReceiveSrcMatchCmd.options.entryType = aType;
     }
     else
     {
         sModifyReceiveSrcMatchCmd.options.bEnable = 0;
         sModifyReceiveSrcMatchCmd.options.srcPend = 0;
-        sModifyReceiveSrcMatchCmd.options.entryType = aType;
     }
 
+    sModifyReceiveSrcMatchCmd.options.entryType = aType;
     sModifyReceiveSrcMatchCmd.entryNo = aEntryNo;
 
     return (RFCDoorbellSendTo((uint32_t)&sModifyReceiveSrcMatchCmd) & 0xFF);
@@ -747,18 +746,12 @@ static uint_fast8_t rfCorePowerOn(void)
     /* Enable RF Core power domain */
     PRCMPowerDomainOn(PRCM_DOMAIN_RFCORE);
 
-    while (PRCMPowerDomainStatus(PRCM_DOMAIN_RFCORE) != PRCM_DOMAIN_POWER_ON)
-    {
-        ;
-    }
+    while (PRCMPowerDomainStatus(PRCM_DOMAIN_RFCORE) != PRCM_DOMAIN_POWER_ON);
 
     PRCMDomainEnable(PRCM_DOMAIN_RFCORE);
     PRCMLoadSet();
 
-    while (!PRCMLoadGet())
-    {
-        ;
-    }
+    while (!PRCMLoadGet());
 
     rfCoreSetupInt();
 
@@ -791,17 +784,11 @@ static void rfCorePowerOff(void)
     PRCMDomainDisable(PRCM_DOMAIN_RFCORE);
     PRCMLoadSet();
 
-    while (!PRCMLoadGet())
-    {
-        ;
-    }
+    while (!PRCMLoadGet());
 
     PRCMPowerDomainOff(PRCM_DOMAIN_RFCORE);
 
-    while (PRCMPowerDomainStatus(PRCM_DOMAIN_RFCORE) != PRCM_DOMAIN_POWER_OFF)
-    {
-        ;
-    }
+    while (PRCMPowerDomainStatus(PRCM_DOMAIN_RFCORE) != PRCM_DOMAIN_POWER_OFF);
 
     if (OSCClockSourceGet(OSC_SRC_CLK_HF) != OSC_RCOSC_HF)
     {
@@ -857,10 +844,7 @@ static uint_fast16_t rfCoreSendEnableCmd(void)
     }
 
     /* synchronously wait for the CM0 to stop executing */
-    while ((HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) & IRQ_LAST_COMMAND_DONE) == 0x00)
-    {
-        ;
-    }
+    while ((HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) & IRQ_LAST_COMMAND_DONE) == 0x00);
 
     if (!interruptsWereDisabled)
     {
@@ -914,10 +898,7 @@ static uint_fast16_t rfCoreSendDisableCmd(void)
     }
 
     /* synchronously wait for the CM0 to stop */
-    while ((HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) & IRQ_LAST_COMMAND_DONE) == 0x00)
-    {
-        ;
-    }
+    while ((HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) & IRQ_LAST_COMMAND_DONE) == 0x00);
 
     if (!interruptsWereDisabled)
     {
@@ -1472,7 +1453,6 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
     uint8_t *eui64;
     unsigned int i;
-    bool unknown = true;
     (void)aInstance;
 
     /* The IEEE MAC address can be stored two places. We check the Customer
@@ -1485,12 +1465,13 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
     {
         if (eui64[i] != CC2650_UNKNOWN_EUI64)
         {
-            unknown = false;
+            break;
         }
     }
 
-    if (unknown)
+    if (i >= OT_EXT_ADDRESS_SIZE)
     {
+        /* The ccfg address was all 0xFF, switch to the fcfg */
         eui64 = (uint8_t *)(FCFG1_BASE + FCFG1_O_MAC_15_4_0);
     }
 
