@@ -356,6 +356,7 @@ void Interpreter::ProcessChild(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
     otChildInfo childInfo;
+    uint8_t maxChildren;
     long value;
     bool isTable = false;
 
@@ -369,7 +370,9 @@ void Interpreter::ProcessChild(int argc, char *argv[])
             sServer->OutputFormat("+-----+--------+------------+------------+--------+------+-+-+-+-+------------------+\r\n");
         }
 
-        for (uint8_t i = 0; ; i++)
+        maxChildren = otGetMaxAllowedChildren(mInstance);
+
+        for (uint8_t i = 0; i < maxChildren ; i++)
         {
             if (otGetChildInfoByIndex(mInstance, i, &childInfo) != kThreadError_None)
             {

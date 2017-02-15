@@ -1746,6 +1746,10 @@ OTAPI void OTCALL otSetRouterSelectionJitter(otInstance *aInstance, uint8_t aRou
  * @param[in]   aChildId    The Child ID or RLOC16 for the attached child.
  * @param[out]  aChildInfo  A pointer to where the child information is placed.
  *
+ * @retavl kThreadError_None         @p aChildInfo was successfully updated with the info for the given ID.
+ * @retval kThreadError_NotFound     No valid child with this Child ID.
+ * @retavl kThreadError_InvalidArgs  If @p aChildInfo is NULL.
+ *
  */
 OTAPI ThreadError OTCALL otGetChildInfoById(otInstance *aInstance, uint16_t aChildId, otChildInfo *aChildInfo);
 
@@ -1755,6 +1759,13 @@ OTAPI ThreadError OTCALL otGetChildInfoById(otInstance *aInstance, uint16_t aChi
  * @param[in]   aInstance    A pointer to an OpenThread instance.
  * @param[in]   aChildIndex  The table index.
  * @param[out]  aChildInfo   A pointer to where the child information is placed.
+ *
+ * @retavl kThreadError_None            @p aChildInfo was successfully updated with the info for the given index.
+ * @retval kThreadError_NotFound        No valid child at this index.
+ * @retavl kThreadError_InvalidArgs     Either @p aChildInfo is NULL, or @p aChildIndex is out of range (higher
+ *                                      than max table index).
+ *
+ * @sa otGetMaxAllowedChildren
  *
  */
 OTAPI ThreadError OTCALL otGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex, otChildInfo *aChildInfo);

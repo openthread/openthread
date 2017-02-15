@@ -616,7 +616,7 @@ private:
     ThreadError AppendRoute(Message &aMessage);
     ThreadError AppendActiveDataset(Message &aMessage);
     ThreadError AppendPendingDataset(Message &aMessage);
-    void GetChildInfo(Child &aChild, otChildInfo &aChildInfo);
+    ThreadError GetChildInfo(Child &aChild, otChildInfo &aChildInfo);
     ThreadError HandleDetachStart(void);
     ThreadError HandleChildStart(otMleAttachFilter aFilter);
     ThreadError HandleLinkRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
