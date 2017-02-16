@@ -59,8 +59,6 @@ public:
     void RemoveBorderRouter(uint16_t) { }
 
     ThreadError SendServerDataNotification(uint16_t) { return kThreadError_NotImplemented; }
-
-    ThreadError GeneratePSKc(const char *, const char *, const uint8_t *, uint8_t *) { return kThreadError_NotImplemented; }
 };
 
 }  // namespace NetworkData

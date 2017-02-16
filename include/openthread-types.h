@@ -249,7 +249,6 @@ typedef struct otMeshLocalPrefix
 
 #define OT_COMMISSIONING_PASSPHRASE_MIN_SIZE         6   ///< Minimum size of the Commissioning Passphrase
 #define OT_COMMISSIONING_PASSPHRASE_MAX_SIZE         255 ///< Maximum size of the Commissioning Passphrase
-#define OT_COMMISSIONING_PASSPHRASE_DEFAULT          "OpenThreadPassphrase"  ///< The default commissioning passphrase
 
 /**
   * This structure represents PSKc.

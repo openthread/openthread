@@ -640,24 +640,6 @@ OTAPI const uint8_t *OTCALL otGetMasterKey(otInstance *aInstance, uint8_t *aKeyL
 OTAPI ThreadError OTCALL otSetMasterKey(otInstance *aInstance, const uint8_t *aKey, uint8_t aKeyLength);
 
 /**
- * This method generates PSKc.
- *
- * PSKc is used to establish the Commissioner Session.
- *
- * @param[in]  aInstance     A pointer to an OpenThread instance.
- * @param[in]  aPassPhrase   The commissioning passphrase.
- * @param[in]  aNetworkName  The network name for PSKc computation.
- * @param[in]  aExtPanId     The extended pan id for PSKc computation.
- * @param[out] aPSKc         A pointer to where the generated PSKc will be placed.
- *
- * @retval kThreadErrorNone          Successfully generate PSKc.
- * @retval kThreadError_InvalidArgs  If any of the input arguments is invalid.
- *
- */
-OTAPI ThreadError OTCALL otGeneratePSKc(otInstance *aInstance, const char *aPassPhrase, const char *aNetworkName,
-                                        const uint8_t *aExtPanId, uint8_t *aPSKc);
-
-/**
  * This function returns the maximum transmit power setting in dBm.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.

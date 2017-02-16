@@ -156,13 +156,8 @@ ThreadError ActiveDataset::GenerateLocal(void)
     // PSKc
     if (!IsTlvInitialized(Tlv::kPSKc))
     {
+        const uint8_t pskc[OT_PSKC_MAX_SIZE] = {0};
         PSKcTlv tlv;
-        uint8_t pskc[OT_PSKC_MAX_SIZE] = {0};
-        const char password[OT_COMMISSIONING_PASSPHRASE_MAX_SIZE] = OT_COMMISSIONING_PASSPHRASE_DEFAULT;
-        const char *networkName = mNetif.GetMac().GetNetworkName();
-        const uint8_t *extPanId = mNetif.GetMac().GetExtendedPanId();
-
-        mNetif.GetNetworkDataLeader().GeneratePSKc(password, networkName, extPanId, pskc);
         tlv.Init();
         tlv.SetPSKc(pskc);
         mLocal.Set(tlv);
