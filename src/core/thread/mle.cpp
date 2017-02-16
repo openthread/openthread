@@ -539,6 +539,7 @@ ThreadError Mle::SetStateChild(uint16_t aRloc16)
 
     if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) != 0)
     {
+        mKeepAliveAttemptsSent = 0;
         mParentRequestTimer.Start(Timer::SecToMsec(mTimeout / kMaxChildKeepAliveAttempts));
     }
 
@@ -1256,8 +1257,17 @@ void Mle::HandleParentRequestTimer(void)
         {
             if (mDeviceMode & ModeTlv::kModeRxOnWhenIdle)
             {
-                SendChildUpdateRequest();
-                mParentRequestTimer.Start(Timer::SecToMsec(mTimeout / kMaxChildKeepAliveAttempts));
+                if (mKeepAliveAttemptsSent >= kMaxChildKeepAliveAttempts)
+                {
+                    // Reattach when no Child Update Response received for more than kMaxChildKeepAliveAttempts
+                    BecomeDetached();
+                }
+                else
+                {
+                    SendChildUpdateRequest();
+                    mKeepAliveAttemptsSent++;
+                    mParentRequestTimer.Start(Timer::SecToMsec(mTimeout / kMaxChildKeepAliveAttempts));
+                }
             }
         }
         else
@@ -2927,6 +2937,7 @@ ThreadError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::M
         }
         else
         {
+            mKeepAliveAttemptsSent = 0;
             mNetif.GetMeshForwarder().SetRxOnWhenIdle(true);
         }
 
