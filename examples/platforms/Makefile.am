@@ -32,6 +32,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 DIST_SUBDIRS                            = \
     cc2538                                \
+    cc2650                                \
     da15000                               \
     nrf52840                              \
     posix                                 \
@@ -46,6 +47,10 @@ SUBDIRS                                 = \
 
 if OPENTHREAD_EXAMPLES_CC2538
 SUBDIRS                                += cc2538
+endif
+
+if OPENTHREAD_EXAMPLES_CC2650
+SUBDIRS                                += cc2650
 endif
 
 if OPENTHREAD_EXAMPLES_DA15000
@@ -64,6 +69,7 @@ endif
 
 PRETTY_SUBDIRS                          = \
     cc2538                                \
+    cc2650                                \
     da15000                               \
     nrf52840                              \
     posix                                 \

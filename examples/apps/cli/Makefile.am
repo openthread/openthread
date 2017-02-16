@@ -40,6 +40,7 @@ CPPFLAGS_COMMON                                                        = \
     $(NULL)
 
 LDADD_COMMON                                                           = \
+    $(top_builddir)/src/cli/libopenthread-cli.a                          \
     $(NULL)
 
 LDFLAGS_COMMON                                                         = \
@@ -78,6 +79,22 @@ LDFLAGS_COMMON                                                        += \
     $(NULL)
 endif # OPENTHREAD_EXAMPLES_CC2538
 
+if OPENTHREAD_EXAMPLES_CC2650
+CPPFLAGS_COMMON                                                       += \
+    -I$(top_srcdir)/third_party/ti/cc26xxware                            \
+    $(NULL)
+
+LDADD_COMMON                                                          +=  \
+    $(top_builddir)/examples/platforms/cc2650/libopenthread-cc2650.a      \
+    $(top_srcdir)/third_party/ti/cc26xxware/driverlib/bin/gcc/driverlib.a \
+    $(NULL)
+
+LDFLAGS_COMMON                                                        +=   \
+    -T $(top_srcdir)/third_party/ti/cc26xxware/linker_files/cc26x0f128.lds \
+    $(NULL)
+
+endif #OPENTHREAD_EXAMPLES_CC2650
+
 if OPENTHREAD_EXAMPLES_DA15000
 LDADD_COMMON                                                          += \
     $(top_builddir)/examples/platforms/da15000/libopenthread-da15000.a   \
@@ -103,7 +120,6 @@ ot_cli_ftd_CPPFLAGS                                                    = \
     $(NULL)
 
 ot_cli_ftd_LDADD                                                       = \
-    $(top_builddir)/src/cli/libopenthread-cli.a                          \
     $(top_builddir)/src/core/libopenthread-ftd.a                         \
     $(LDADD_COMMON)                                                      \
     $(NULL)
@@ -121,7 +137,6 @@ ot_cli_mtd_CPPFLAGS                                                    = \
     $(NULL)
 
 ot_cli_mtd_LDADD                                                       = \
-    $(top_builddir)/src/cli/libopenthread-cli.a                          \
     $(top_builddir)/src/core/libopenthread-mtd.a                         \
     $(LDADD_COMMON)                                                      \
     $(NULL)
