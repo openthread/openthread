@@ -408,6 +408,9 @@
 <link href="#rfc.section.4.10" rel="Chapter" title="4.10 CMD 18: (Host-&gt;NCP) CMD_PEEK"/>
 <link href="#rfc.section.4.11" rel="Chapter" title="4.11 CMD 19: (NCP-&gt;Host) CMD_PEEK_RET"/>
 <link href="#rfc.section.4.12" rel="Chapter" title="4.12 CMD 20: (Host-&gt;NCP) CMD_POKE"/>
+<link href="#rfc.section.4.13" rel="Chapter" title="4.13 CMD 21: (Host-&gt;NCP) CMD_PROP_VALUE_MULTI_GET"/>
+<link href="#rfc.section.4.14" rel="Chapter" title="4.14 CMD 22: (Host-&gt;NCP) CMD_PROP_VALUE_MULTI_SET"/>
+<link href="#rfc.section.4.15" rel="Chapter" title="4.15 CMD 23: (NCP-&gt;Host) CMD_PROP_VALUES_ARE"/>
 <link href="#rfc.section.5" rel="Chapter" title="5 Properties"/>
 <link href="#rfc.section.5.1" rel="Chapter" title="5.1 Property Sections"/>
 <link href="#rfc.section.5.2" rel="Chapter" title="5.2 Core Properties"/>
@@ -575,8 +578,8 @@
   <link rel="schema.dct" href="http://purl.org/dc/terms/" />
 
   <meta name="dct.creator" content="Quattlebaum, R." />
-  <meta name="dct.identifier" content="urn:ietf:id:draft-spinel-protocol-d309a957-dirty" />
-  <meta name="dct.issued" scheme="ISO8601" content="2017-1-23" />
+  <meta name="dct.identifier" content="urn:ietf:id:draft-spinel-protocol-5d2d596b1" />
+  <meta name="dct.issued" scheme="ISO8601" content="2017-2-16" />
   <meta name="dct.abstract" content="This document describes a general management protocol for enabling a host device to communicate with and manage a Network Control Processor (NCP).  " />
   <meta name="description" content="This document describes a general management protocol for enabling a host device to communicate with and manage a Network Control Processor (NCP).  " />
 
@@ -597,7 +600,7 @@
 </tr>
 <tr>
   <td class="left"></td>
-  <td class="right">January 23, 2017</td>
+  <td class="right">February 16, 2017</td>
 </tr>
 
     	
@@ -605,7 +608,7 @@
   </table>
 
   <p class="title">Spinel Host-Controller Protocol<br />
-  <span class="filename">draft-spinel-protocol-d309a957-dirty</span></p>
+  <span class="filename">draft-spinel-protocol-5d2d596b1</span></p>
   
   <h1 id="rfc.abstract">
   <a href="#rfc.abstract">Abstract</a>
@@ -674,6 +677,9 @@
 <li>4.10.   <a href="#rfc.section.4.10">CMD 18: (Host-&gt;NCP) CMD_PEEK</a></li>
 <li>4.11.   <a href="#rfc.section.4.11">CMD 19: (NCP-&gt;Host) CMD_PEEK_RET</a></li>
 <li>4.12.   <a href="#rfc.section.4.12">CMD 20: (Host-&gt;NCP) CMD_POKE</a></li>
+<li>4.13.   <a href="#rfc.section.4.13">CMD 21: (Host-&gt;NCP) CMD_PROP_VALUE_MULTI_GET</a></li>
+<li>4.14.   <a href="#rfc.section.4.14">CMD 22: (Host-&gt;NCP) CMD_PROP_VALUE_MULTI_SET</a></li>
+<li>4.15.   <a href="#rfc.section.4.15">CMD 23: (NCP-&gt;Host) CMD_PROP_VALUES_ARE</a></li>
 </ul><li>5.   <a href="#rfc.section.5">Properties</a></li>
 <ul><li>5.1.   <a href="#rfc.section.5.1">Property Sections</a></li>
 <li>5.2.   <a href="#rfc.section.5.2">Core Properties</a></li>
@@ -1539,6 +1545,117 @@
 <p id="rfc.section.4.12.p.2">Due to the low-level nature of this command, certain error conditions may induce the NCP to reset.  </p>
 <p id="rfc.section.4.12.p.3">The implementation of this command has security implications.  See <a href="#security-considerations">Section 13</a> for more information.  </p>
 <p id="rfc.section.4.12.p.4">This command requires the capability <samp>CAP_PEEK_POKE</samp> to be present.  </p>
+<h1 id="rfc.section.4.13"><a href="#rfc.section.4.13">4.13.</a> <a href="#prop-value-multi-get" id="prop-value-multi-get">CMD 21: (Host-&gt;NCP) CMD_PROP_VALUE_MULTI_GET</a></h1>
+<p/>
+
+<ul>
+  <li>Argument-Encoding: <samp>A(i)</samp></li>
+  <li>Required Capability: <samp>CAP_CMD_MULTI</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.4.13.p.2">Fetch the value of multiple properties in one command. Arguments are an array of property IDs. If all properties are fetched successfully, a <samp>CMD_PROP_VALUES_ARE</samp> command is sent back to the host containing the propertyid and value of each fetched property. The order of the results in <samp>CMD_PROP_VALUES_ARE</samp> match the order of properties given in <samp>CMD_PROP_VALUE_GET</samp>.  </p>
+<p id="rfc.section.4.13.p.3">Errors fetching individual properties are reflected as indicating a change to <samp>PROP_LAST_STATUS</samp> for that property's place.  </p>
+<p id="rfc.section.4.13.p.4">Not all properties can be fetched using this method. As a general rule of thumb, any property that blocks when getting will fail for that individual property with <samp>STATUS_INVALID_COMMAND_FOR_PROP</samp>.  </p>
+<h1 id="rfc.section.4.14"><a href="#rfc.section.4.14">4.14.</a> <a href="#prop-value-multi-set" id="prop-value-multi-set">CMD 22: (Host-&gt;NCP) CMD_PROP_VALUE_MULTI_SET</a></h1>
+<p/>
+
+<ul>
+  <li>Argument-Encoding: <samp>A(T(iD))</samp></li>
+  <li>Required Capability: <samp>CAP_CMD_MULTI</samp></li>
+</ul>
+
+<p> </p>
+<table cellpadding="3" cellspacing="0" class="tt full center">
+  <thead>
+    <tr>
+      <th class="center">Octets:</th>
+      <th class="center">1</th>
+      <th class="center">1</th>
+      <th class="center">n</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="center">Fields:</td>
+      <td class="center">HEADER</td>
+      <td class="center">CMD_PROP_VALUE_MULTI_SET</td>
+      <td class="center">Property/Value Pairs</td>
+    </tr>
+  </tbody>
+</table>
+<p id="rfc.section.4.14.p.2">With each property/value pair being: </p>
+<table cellpadding="3" cellspacing="0" class="tt full center">
+  <thead>
+    <tr>
+      <th class="center">Octets:</th>
+      <th class="center">2</th>
+      <th class="center">1-3</th>
+      <th class="center">n</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="center">Fields:</td>
+      <td class="center">LENGTH</td>
+      <td class="center">PROP_ID</td>
+      <td class="center">PROP_VALUE</td>
+    </tr>
+  </tbody>
+</table>
+<p id="rfc.section.4.14.p.3">This command sets the value of several properties at once in the given order. The setting of properties stops at the first error, ignoring any later properties.  </p>
+<p id="rfc.section.4.14.p.4">The result of this command is generally <samp>CMD_PROP_VALUES_ARE</samp> unless (for example) a parsing error has occured (in which case <samp>CMD_PROP_VALUE_IS</samp> for <samp>PROP_LAST_STATUS</samp> would be the result). The order of the results in <samp>CMD_PROP_VALUES_ARE</samp> match the order of properties given in <samp>CMD_PROP_VALUE_SET</samp>.  </p>
+<p id="rfc.section.4.14.p.5">Since the processing of properties to set stops at the first error, the resulting <samp>CMD_PROP_VALUES_ARE</samp> can contain fewer items than the requested number of properties to set.  </p>
+<p id="rfc.section.4.14.p.6">Not all properties can be set using this method. As a general rule of thumb, any property that blocks when setting will fail for that individual property with <samp>STATUS_INVALID_COMMAND_FOR_PROP</samp>.  </p>
+<h1 id="rfc.section.4.15"><a href="#rfc.section.4.15">4.15.</a> <a href="#prop-values-are" id="prop-values-are">CMD 23: (NCP-&gt;Host) CMD_PROP_VALUES_ARE</a></h1>
+<p/>
+
+<ul>
+  <li>Argument-Encoding: <samp>A(T(iD))</samp></li>
+  <li>Required Capability: <samp>CAP_CMD_MULTI</samp></li>
+</ul>
+
+<p> </p>
+<table cellpadding="3" cellspacing="0" class="tt full center">
+  <thead>
+    <tr>
+      <th class="center">Octets:</th>
+      <th class="center">1</th>
+      <th class="center">1</th>
+      <th class="center">n</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="center">Fields:</td>
+      <td class="center">HEADER</td>
+      <td class="center">CMD_PROP_VALUE_MULTI_SET</td>
+      <td class="center">Property/Value Pairs</td>
+    </tr>
+  </tbody>
+</table>
+<p id="rfc.section.4.15.p.2">With each property/value pair being: </p>
+<table cellpadding="3" cellspacing="0" class="tt full center">
+  <thead>
+    <tr>
+      <th class="center">Octets:</th>
+      <th class="center">2</th>
+      <th class="center">1-3</th>
+      <th class="center">n</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="center">Fields:</td>
+      <td class="center">LENGTH</td>
+      <td class="center">PROP_ID</td>
+      <td class="center">PROP_VALUE</td>
+    </tr>
+  </tbody>
+</table>
+<p id="rfc.section.4.15.p.3">This command is emitted by the NCP as the response to both the <samp>CMD_PROP_VALUE_MULTI_GET</samp> and <samp>CMD_PROP_VALUE_MULTI_SET</samp> commands. It is roughly analogous to <samp>CMD_PROP_VALUE_IS</samp>, except that it contains more than one property.  </p>
+<p id="rfc.section.4.15.p.4">This command SHOULD NOT be emitted asynchronously, or in response to any command other than <samp>CMD_PROP_VALUE_MULTI_GET</samp> or <samp>CMD_PROP_VALUE_MULTI_SET</samp>.  </p>
+<p id="rfc.section.4.15.p.5">The arguments are a list of structures containing the emitted property and the associated value. These are presented in the same order as given in the associated initiating command. In cases where getting or setting a specific property resulted in an error, the associated slot in this command will describe <samp>PROP_LAST_STATUS</samp>.  </p>
 <h1 id="rfc.section.5"><a href="#rfc.section.5">5.</a> <a href="#properties" id="properties">Properties</a></h1>
 <p id="rfc.section.5.p.1">While the majority of the properties that allow the configuration of network connectivity are network protocol specific, there are several properties that are required in all implementations.  </p>
 <p id="rfc.section.5.p.2">Future property allocations SHALL be made from the following allocation plan: </p>
@@ -1844,6 +1961,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
   <li>8: <samp>CAP_WRITABLE_RAW_STREAM</samp>: <samp>PROP_STREAM_RAW</samp> is writable.</li>
   <li>9: <samp>CAP_GPIO</samp>: Support for GPIO access. See <a href="#feature-gpio-access">Section 11</a>.</li>
   <li>10: <samp>CAP_TRNG</samp>: Support for true random number generation. See <a href="#feature-trng">Section 12</a>.</li>
+  <li>11: <samp>CAP_CMD_MULTI</samp>: Support for <samp>CMD_PROP_VALUE_MULTI_GET</samp> (<a href="#prop-value-multi-get">Section 4.13</a>), <samp>CMD_PROP_VALUE_MULTI_SET</samp> (<a href="#prop-value-multi-set">Section 4.14</a>, and <samp>CMD_PROP_VALUES_ARE</samp> (<a href="#prop-values-are">Section 4.15</a>).</li>
   <li>16: <samp>CAP_802_15_4_2003</samp></li>
   <li>17: <samp>CAP_802_15_4_2006</samp></li>
   <li>18: <samp>CAP_802_15_4_2011</samp></li>
@@ -2710,7 +2828,8 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
   <li>18: <samp>STATUS_CCA_FAILURE</samp>: The packet was not sent due to a CCA failure.</li>
   <li>19: <samp>STATUS_ALREADY</samp>: The operation is already in progress or the property was already set to the given value.</li>
   <li>20: <samp>STATUS_ITEM_NOT_FOUND</samp>: The given item could not be found in the property.</li>
-  <li>21-111: RESERVED</li>
+  <li>21: <samp>STATUS_INVALID_COMMAND_FOR_PROP</samp>: The given command cannot be performed on this property.</li>
+  <li>22-111: RESERVED</li>
   <li>112-127: Reset Causes <ul><li>112: <samp>STATUS_RESET_POWER_ON</samp></li><li>113: <samp>STATUS_RESET_EXTERNAL</samp></li><li>114: <samp>STATUS_RESET_SOFTWARE</samp></li><li>115: <samp>STATUS_RESET_FAULT</samp></li><li>116: <samp>STATUS_RESET_CRASH</samp></li><li>117: <samp>STATUS_RESET_ASSERT</samp></li><li>118: <samp>STATUS_RESET_OTHER</samp></li><li>119: <samp>STATUS_RESET_UNKNOWN</samp></li><li>120: <samp>STATUS_RESET_WATCHDOG</samp></li><li>121-127: RESERVED-RESET-CODES</li></ul></li>
   <li>128 - 15,359: UNALLOCATED</li>
   <li>15,360 - 16,383: Vendor-specific</li>
