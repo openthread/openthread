@@ -8,7 +8,7 @@
 
 
                     Spinel Host-Controller Protocol
-                    draft-spinel-protocol-5d2d596b1
+                    draft-spinel-protocol-00deac5b1
 
 Abstract
 
@@ -55,7 +55,7 @@ Copyright Notice
 
 Quattlebaum              Expires August 20, 2017                [Page 1]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
@@ -111,7 +111,7 @@ Table of Contents
 
 Quattlebaum              Expires August 20, 2017                [Page 2]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
      5.2.  Core Properties . . . . . . . . . . . . . . . . . . . . .  24
@@ -167,7 +167,7 @@ Quattlebaum              Expires August 20, 2017                [Page 2]
 
 Quattlebaum              Expires August 20, 2017                [Page 3]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
        5.7.1.  PROP 96: PROP_IPV6_LL_ADDR  . . . . . . . . . . . . .  39
@@ -223,7 +223,7 @@ Quattlebaum              Expires August 20, 2017                [Page 3]
 
 Quattlebaum              Expires August 20, 2017                [Page 4]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
        9.1.3.  CMD 14: (NCP->Host) CMD_HBO_DROP  . . . . . . . . . .  50
@@ -279,7 +279,7 @@ Quattlebaum              Expires August 20, 2017                [Page 4]
 
 Quattlebaum              Expires August 20, 2017                [Page 5]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
      B.11. Test Vector: Removing a local on-mesh network . . . . . .  66
@@ -335,7 +335,7 @@ Quattlebaum              Expires August 20, 2017                [Page 5]
 
 Quattlebaum              Expires August 20, 2017                [Page 6]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
 1.1.1.  Renumbering
@@ -391,7 +391,7 @@ Quattlebaum              Expires August 20, 2017                [Page 6]
 
 Quattlebaum              Expires August 20, 2017                [Page 7]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    Applications aren't necessarily interested in everything that an NCP
@@ -447,7 +447,7 @@ Quattlebaum              Expires August 20, 2017                [Page 7]
 
 Quattlebaum              Expires August 20, 2017                [Page 8]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    registers for peripherals.  The goal is to avoid, as much as
@@ -503,7 +503,7 @@ Quattlebaum              Expires August 20, 2017                [Page 8]
 
 Quattlebaum              Expires August 20, 2017                [Page 9]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    o  Network name (Represented as a UTF-8 encoded string)
@@ -559,7 +559,7 @@ Quattlebaum              Expires August 20, 2017                [Page 9]
 
 Quattlebaum              Expires August 20, 2017               [Page 10]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    Some of these properties also support the host send data back to the
@@ -615,7 +615,7 @@ Quattlebaum              Expires August 20, 2017               [Page 10]
 
 Quattlebaum              Expires August 20, 2017               [Page 11]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    The first subinterface (0) is considered the primary subinterface and
@@ -671,7 +671,7 @@ Quattlebaum              Expires August 20, 2017               [Page 11]
 
 Quattlebaum              Expires August 20, 2017               [Page 12]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    Goals:
@@ -727,7 +727,7 @@ Quattlebaum              Expires August 20, 2017               [Page 12]
 
 Quattlebaum              Expires August 20, 2017               [Page 13]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    All multi-byte values are little-endian unless explicitly stated
@@ -783,7 +783,7 @@ Quattlebaum              Expires August 20, 2017               [Page 13]
 
 Quattlebaum              Expires August 20, 2017               [Page 14]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    size of the buffer, and the length of the data is simply the rest of
@@ -839,7 +839,7 @@ Quattlebaum              Expires August 20, 2017               [Page 14]
 
 Quattlebaum              Expires August 20, 2017               [Page 15]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    another member and use "A(6cC)".  To allow for data to be added
@@ -895,7 +895,7 @@ Quattlebaum              Expires August 20, 2017               [Page 15]
 
 Quattlebaum              Expires August 20, 2017               [Page 16]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
                      +---------+--------+-----------+
@@ -951,7 +951,7 @@ Quattlebaum              Expires August 20, 2017               [Page 16]
 
 Quattlebaum              Expires August 20, 2017               [Page 17]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    The payload for this command is the property identifier encoded in
@@ -1007,7 +1007,7 @@ Quattlebaum              Expires August 20, 2017               [Page 17]
 
 Quattlebaum              Expires August 20, 2017               [Page 18]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    If an error occurs, the value of "PROP_LAST_STATUS" will be emitted
@@ -1063,7 +1063,7 @@ Quattlebaum              Expires August 20, 2017               [Page 18]
 
 Quattlebaum              Expires August 20, 2017               [Page 19]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    Property value removal notification command.  This command can be
@@ -1119,7 +1119,7 @@ Quattlebaum              Expires August 20, 2017               [Page 19]
 
 Quattlebaum              Expires August 20, 2017               [Page 20]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    This command requires the capability "CAP_PEEK_POKE" to be present.
@@ -1175,7 +1175,7 @@ Quattlebaum              Expires August 20, 2017               [Page 20]
 
 Quattlebaum              Expires August 20, 2017               [Page 21]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    +---------+--------+--------------------------+---------------------+
@@ -1216,12 +1216,11 @@ Quattlebaum              Expires August 20, 2017               [Page 21]
    o  Argument-Encoding: "A(T(iD))"
    o  Required Capability: "CAP_CMD_MULTI"
 
-   +---------+--------+--------------------------+---------------------+
-   | Octets: |   1    |            1             |          n          |
-   +---------+--------+--------------------------+---------------------+
-   | Fields: | HEADER | CMD_PROP_VALUE_MULTI_SET |    Property/Value   |
-   |         |        |                          |        Pairs        |
-   +---------+--------+--------------------------+---------------------+
+     +---------+--------+---------------------+----------------------+
+     | Octets: |   1    |          1          |          n           |
+     +---------+--------+---------------------+----------------------+
+     | Fields: | HEADER | CMD_PROP_VALUES_ARE | Property/Value Pairs |
+     +---------+--------+---------------------+----------------------+
 
    With each property/value pair being:
 
@@ -1229,9 +1228,10 @@ Quattlebaum              Expires August 20, 2017               [Page 21]
 
 
 
+
 Quattlebaum              Expires August 20, 2017               [Page 22]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
                 +---------+--------+---------+------------+
@@ -1287,7 +1287,7 @@ Quattlebaum              Expires August 20, 2017               [Page 22]
 
 Quattlebaum              Expires August 20, 2017               [Page 23]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
       +--------+------------------------------+---------------------+
@@ -1343,7 +1343,7 @@ Quattlebaum              Expires August 20, 2017               [Page 23]
 
 Quattlebaum              Expires August 20, 2017               [Page 24]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
                 +---------+---------------+---------------+
@@ -1399,7 +1399,7 @@ Quattlebaum              Expires August 20, 2017               [Page 24]
 
 Quattlebaum              Expires August 20, 2017               [Page 25]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
  STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
@@ -1455,7 +1455,7 @@ Quattlebaum              Expires August 20, 2017               [Page 25]
 
 Quattlebaum              Expires August 20, 2017               [Page 26]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
                      +---------+-------+-------+-----+
@@ -1511,7 +1511,7 @@ Quattlebaum              Expires August 20, 2017               [Page 26]
 
 Quattlebaum              Expires August 20, 2017               [Page 27]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
         +-----------------------+--------------------------------+
@@ -1567,7 +1567,7 @@ Quattlebaum              Expires August 20, 2017               [Page 27]
 
 Quattlebaum              Expires August 20, 2017               [Page 28]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    o  2: "POWER_STATE_STANDBY": NCP is in the lowest power state that
@@ -1623,7 +1623,7 @@ Quattlebaum              Expires August 20, 2017               [Page 28]
 
 Quattlebaum              Expires August 20, 2017               [Page 29]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
 5.3.  Stream Properties
@@ -1679,7 +1679,7 @@ Quattlebaum              Expires August 20, 2017               [Page 29]
 
 Quattlebaum              Expires August 20, 2017               [Page 30]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    If the capability "CAP_WRITABLE_RAW_STREAM" is set, then packets
@@ -1735,7 +1735,7 @@ Quattlebaum              Expires August 20, 2017               [Page 30]
 
 Quattlebaum              Expires August 20, 2017               [Page 31]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    +---------+--------+------------------+-----------------------------+
@@ -1791,7 +1791,7 @@ Quattlebaum              Expires August 20, 2017               [Page 31]
 
 Quattlebaum              Expires August 20, 2017               [Page 32]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
 5.3.4.  PROP 114: PROP_STREAM_NET_INSECURE
@@ -1847,7 +1847,7 @@ Quattlebaum              Expires August 20, 2017               [Page 32]
 
 Quattlebaum              Expires August 20, 2017               [Page 33]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
 5.4.3.  PROP 34: PROP_PHY_CHAN_SUPPORTED
@@ -1903,7 +1903,7 @@ Quattlebaum              Expires August 20, 2017               [Page 33]
 
 Quattlebaum              Expires August 20, 2017               [Page 34]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
 5.5.  MAC Properties
@@ -1959,7 +1959,7 @@ Quattlebaum              Expires August 20, 2017               [Page 34]
 
 Quattlebaum              Expires August 20, 2017               [Page 35]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    MAC and NET layer currently in use.  The format below is for an
@@ -2015,7 +2015,7 @@ Quattlebaum              Expires August 20, 2017               [Page 35]
 
 Quattlebaum              Expires August 20, 2017               [Page 36]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
 5.5.8.  PROP 55: PROP_MAC_RAW_STREAM_ENABLED
@@ -2071,7 +2071,7 @@ Quattlebaum              Expires August 20, 2017               [Page 36]
 
 Quattlebaum              Expires August 20, 2017               [Page 37]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
 5.6.  NET Properties
@@ -2127,7 +2127,7 @@ Quattlebaum              Expires August 20, 2017               [Page 37]
 
 Quattlebaum              Expires August 20, 2017               [Page 38]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
 5.6.6.  PROP 69: PROP_NET_XPANID
@@ -2183,7 +2183,7 @@ Quattlebaum              Expires August 20, 2017               [Page 38]
 
 Quattlebaum              Expires August 20, 2017               [Page 39]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    IPv6 Prefix + Prefix Length
@@ -2239,7 +2239,7 @@ Quattlebaum              Expires August 20, 2017               [Page 39]
 
 Quattlebaum              Expires August 20, 2017               [Page 40]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    o  3: "STATUS_INVALID_ARGUMENT": An argument to the given operation
@@ -2295,7 +2295,7 @@ Quattlebaum              Expires August 20, 2017               [Page 40]
 
 Quattlebaum              Expires August 20, 2017               [Page 41]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    o  16,384 - 1,999,999: UNALLOCATED
@@ -2351,7 +2351,7 @@ Quattlebaum              Expires August 20, 2017               [Page 41]
 
 Quattlebaum              Expires August 20, 2017               [Page 42]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
 7.2.3.  PROP 82: PROP_THREAD_CHILD_TABLE
@@ -2407,7 +2407,7 @@ Quattlebaum              Expires August 20, 2017               [Page 42]
 
 Quattlebaum              Expires August 20, 2017               [Page 43]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
 7.2.10.  PROP 89: PROP_THREAD_STABLE_NETWORK_DATA_VERSION
@@ -2463,7 +2463,7 @@ Quattlebaum              Expires August 20, 2017               [Page 43]
 
 Quattlebaum              Expires August 20, 2017               [Page 44]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
 7.2.15.  PROP 94: PROP_THREAD_MODE
@@ -2519,7 +2519,7 @@ Quattlebaum              Expires August 20, 2017               [Page 44]
 
 Quattlebaum              Expires August 20, 2017               [Page 45]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
 7.2.22.  PROP 5382: PROP_THREAD_RLOC16_DEBUG_PASSTHRU
@@ -2575,7 +2575,7 @@ Quattlebaum              Expires August 20, 2017               [Page 45]
 
 Quattlebaum              Expires August 20, 2017               [Page 46]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    Data per item is:
@@ -2631,7 +2631,7 @@ Quattlebaum              Expires August 20, 2017               [Page 46]
 
 Quattlebaum              Expires August 20, 2017               [Page 47]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
 8.1.  Commands
@@ -2687,7 +2687,7 @@ Quattlebaum              Expires August 20, 2017               [Page 47]
 
 Quattlebaum              Expires August 20, 2017               [Page 48]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
 8.1.3.  CMD 11: (Host->NCP) CMD_NET_RECALL
@@ -2743,7 +2743,7 @@ Quattlebaum              Expires August 20, 2017               [Page 48]
 
 Quattlebaum              Expires August 20, 2017               [Page 49]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
 9.1.2.  CMD 13: (NCP->Host) CMD_HBO_RECLAIM
@@ -2799,7 +2799,7 @@ Quattlebaum              Expires August 20, 2017               [Page 49]
 
 Quattlebaum              Expires August 20, 2017               [Page 50]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    Describes the number of bytes that may be offloaded from the NCP to
@@ -2855,7 +2855,7 @@ Quattlebaum              Expires August 20, 2017               [Page 50]
 
 Quattlebaum              Expires August 20, 2017               [Page 51]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
                   +---------+--------------------------+
@@ -2911,7 +2911,7 @@ Quattlebaum              Expires August 20, 2017               [Page 51]
 
 Quattlebaum              Expires August 20, 2017               [Page 52]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    o  Default Value: Implementation-specific
@@ -2967,7 +2967,7 @@ Quattlebaum              Expires August 20, 2017               [Page 52]
 
 Quattlebaum              Expires August 20, 2017               [Page 53]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    Support for this feature can be determined by the presence of
@@ -3023,7 +3023,7 @@ Quattlebaum              Expires August 20, 2017               [Page 53]
 
 Quattlebaum              Expires August 20, 2017               [Page 54]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    would be ignored.  This command can only be used to modify the
@@ -3079,7 +3079,7 @@ Quattlebaum              Expires August 20, 2017               [Page 54]
 
 Quattlebaum              Expires August 20, 2017               [Page 55]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    When writing, unspecified bits are assumed to be zero.  The value of
@@ -3135,7 +3135,7 @@ Quattlebaum              Expires August 20, 2017               [Page 55]
 
 Quattlebaum              Expires August 20, 2017               [Page 56]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    o  Data representing at least 32 bits of fresh entropy (extracted
@@ -3191,7 +3191,7 @@ Quattlebaum              Expires August 20, 2017               [Page 56]
 
 Quattlebaum              Expires August 20, 2017               [Page 57]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    Support for this property is RECOMMENDED if "CAP_TRNG" is included in
@@ -3247,7 +3247,7 @@ A.1.  UART Recommendations
 
 Quattlebaum              Expires August 20, 2017               [Page 58]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    These values may be adjusted depending on the individual needs of the
@@ -3303,7 +3303,7 @@ A.1.2.  HDLC-Lite
 
 Quattlebaum              Expires August 20, 2017               [Page 59]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    To transmit a frame with HDLC-lite, the 16-bit CRC must first be
@@ -3359,7 +3359,7 @@ A.2.  SPI Recommendations
 
 Quattlebaum              Expires August 20, 2017               [Page 60]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    The "I&#773;N&#773;T&#773;" signal is used by the NCP to indicate to
@@ -3415,7 +3415,7 @@ A.2.1.  SPI Framing Protocol
 
 Quattlebaum              Expires August 20, 2017               [Page 61]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    o  "CRC": This bit is set when that device supports writing a 16-bit
@@ -3471,7 +3471,7 @@ Quattlebaum              Expires August 20, 2017               [Page 61]
 
 Quattlebaum              Expires August 20, 2017               [Page 62]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    must be rejected and the "CRC_FAIL" bit on the next frame (and ONLY
@@ -3527,7 +3527,7 @@ B.2.  Test Vector: Reset Command
 
 Quattlebaum              Expires August 20, 2017               [Page 63]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
 B.3.  Test Vector: Reset Notification
@@ -3583,7 +3583,7 @@ B.5.  Test Vector: Inbound IPv6 Packet
 
 Quattlebaum              Expires August 20, 2017               [Page 64]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
 B.6.  Test Vector: Outbound IPv6 Packet
@@ -3639,7 +3639,7 @@ B.9.  Test Vector: Adding an on-mesh network
 
 Quattlebaum              Expires August 20, 2017               [Page 65]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
        +--------------+---------------+-------------+-------------+
@@ -3695,7 +3695,7 @@ B.11.  Test Vector: Removing a local on-mesh network
 
 Quattlebaum              Expires August 20, 2017               [Page 66]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
 B.12.  Test Vector: Removal notification of an on-mesh network
@@ -3751,7 +3751,7 @@ C.1.  NCP Initialization
 
 Quattlebaum              Expires August 20, 2017               [Page 67]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    o  CMD_NET_RECALL
@@ -3807,7 +3807,7 @@ C.3.  Successfully joining a pre-existing network
 
 Quattlebaum              Expires August 20, 2017               [Page 68]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    This example session is identical to the above session up to the
@@ -3863,7 +3863,7 @@ C.5.  Detaching from a network
 
 Quattlebaum              Expires August 20, 2017               [Page 69]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
 C.6.  Attaching to a saved network
@@ -3919,7 +3919,7 @@ C.10.  Sniffing raw packets
 
 Quattlebaum              Expires August 20, 2017               [Page 70]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
    o  CMD_VALUE_SET:PROP_PHY_CHAN:x
@@ -3975,7 +3975,7 @@ Appendix D.  Acknowledgments
 
 Quattlebaum              Expires August 20, 2017               [Page 71]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
 Appendix E.  Glossary
@@ -4031,7 +4031,7 @@ Editorial Comments
 
 Quattlebaum              Expires August 20, 2017               [Page 72]
 
-                       Spinel Protocol (5d2d596b1)         February 2017
+                       Spinel Protocol (00deac5b1)         February 2017
 
 
 [CREF7] RQ: FIXME: This test vector is incomplete.
