@@ -138,6 +138,7 @@ otLwfCmdInitialize(
         if (!NT_SUCCESS(NtStatus))
         {
             Status = NDIS_STATUS_FAILURE;
+            break;
         }
 
     } while (FALSE);
