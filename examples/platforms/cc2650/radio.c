@@ -182,8 +182,15 @@ static void rfCoreInitReceiveParams(void)
     {
         .commandNo                  = CMD_IEEE_RX,
         .status                     = IDLE,
-        .startTrigger.triggerType   = TRIG_NOW,
-        .condition.rule             = COND_NEVER,
+        .pNextOp                    = NULL,
+        .startTime                  = 0u,
+        .startTrigger               =
+        {
+            .triggerType            = TRIG_NOW,
+        },
+        .condition                  = {
+            .rule                   = COND_NEVER,
+        },
         .channel                    = kPhyMinChannel,
         .rxConfig                   =
         {
@@ -230,8 +237,11 @@ static void rfCoreInitReceiveParams(void)
             .ccaCorrThr             = 3,
         },
         .ccaRssiThr                 = -90,
-        .endTrigger.triggerType     = TRIG_NEVER,
-        .endTime                    = 0x00000000,
+        .endTrigger                 =
+        {
+            .triggerType            = TRIG_NEVER,
+        },
+        .endTime                    = 0u,
     };
     sReceiveCmd = cReceiveCmd;
 
@@ -509,8 +519,13 @@ static uint_fast8_t rfCoreSendTransmitCmd(uint8_t *aPsdu, uint8_t aLen)
     {
         .commandNo                  = CMD_IEEE_CSMA,
         .status                     = IDLE,
-        .startTrigger.triggerType   = TRIG_NOW,
-        .condition.rule             = COND_ALWAYS,
+        .startTrigger               =
+        {
+            .triggerType            = TRIG_NOW,
+        },
+        .condition                  = {
+            .rule                   = COND_ALWAYS,
+        },
         .macMaxBE                   = IEEE802154_MAC_MAX_BE,
         .macMaxCSMABackoffs         = IEEE802154_MAC_MAX_CSMA_BACKOFFS,
         .csmaConfig                 =
@@ -522,28 +537,41 @@ static uint_fast8_t rfCoreSendTransmitCmd(uint8_t *aPsdu, uint8_t aLen)
         .NB                         = 0,
         .BE                         = IEEE802154_MAC_MIN_BE,
         .remainingPeriods           = 0,
-        .endTrigger.triggerType     = TRIG_NEVER,
+        .endTrigger                 =
+        {
+            .triggerType            = TRIG_NEVER,
+        },
         .endTime                    = 0x00000000,
     };
     static const rfc_CMD_IEEE_TX_t cTransmitCmd =
     {
         .commandNo                  = CMD_IEEE_TX,
         .status                     = IDLE,
-        .startTrigger.triggerType   = TRIG_NOW,
-        .condition.rule             = COND_NEVER,
+        .startTrigger               =
+        {
+            .triggerType            = TRIG_NOW,
+        },
+        .condition                  = {
+            .rule                   = COND_NEVER,
+        },
         .pNextOp                    = NULL,
     };
     static const rfc_CMD_IEEE_RX_ACK_t cTransmitRxAckCmd =
     {
         .commandNo                  = CMD_IEEE_RX_ACK,
         .status                     = IDLE,
-        .startTrigger.triggerType   = TRIG_NOW,
+        .startTrigger               =
+        {
+            .triggerType            = TRIG_NOW,
+        },
         .endTrigger                 =
         {
             .triggerType            = TRIG_REL_START,
             .pastTrig               = 1,
         },
-        .condition.rule             = COND_NEVER,
+        .condition                  = {
+            .rule                   = COND_NEVER,
+        },
         .pNextOp                    = NULL,
         /* number of RAT ticks to wait before claiming we haven't received an ack */
         .endTime                    = ((IEEE802154_MAC_ACK_WAIT_DURATION * CC2650_RAT_TICKS_PER_SEC) / IEEE802154_SYMBOLS_PER_SEC),
@@ -600,8 +628,13 @@ static uint_fast8_t rfCoreSendEdScanCmd(uint8_t aChannel, uint16_t aDurration)
     static const rfc_CMD_IEEE_ED_SCAN_t cEdScanCmd =
     {
         .commandNo                  = CMD_IEEE_ED_SCAN,
-        .startTrigger.triggerType   = TRIG_NOW,
-        .condition.rule             = COND_NEVER,
+        .startTrigger               =
+        {
+            .triggerType            = TRIG_NOW,
+        },
+        .condition                  = {
+            .rule                   = COND_NEVER,
+        },
         .ccaOpt                     =
         {
             .ccaEnEnergy            = 1,
@@ -835,16 +868,26 @@ static uint_fast16_t rfCoreSendEnableCmd(void)
     bool interruptsWereDisabled;
     static const rfc_CMD_SYNC_START_RAT_t cStartRatCmd =
     {
-        .commandNo                = CMD_SYNC_START_RAT,
-        .startTrigger.triggerType = TRIG_NOW,
-        .condition.rule           = COND_STOP_ON_FALSE,
+        .commandNo                  = CMD_SYNC_START_RAT,
+        .startTrigger               =
+        {
+            .triggerType            = TRIG_NOW,
+        },
+        .condition                  = {
+            .rule                   = COND_STOP_ON_FALSE,
+        },
     };
     static const rfc_CMD_RADIO_SETUP_t cRadioSetupCmd =
     {
-        .commandNo                = CMD_RADIO_SETUP,
-        .startTrigger.triggerType = TRIG_NOW,
-        .condition.rule           = COND_NEVER,
-        .mode                     = 1, // IEEE 802.15.4 mode
+        .commandNo                  = CMD_RADIO_SETUP,
+        .startTrigger               =
+        {
+            .triggerType            = TRIG_NOW,
+        },
+        .condition                  = {
+            .rule                   = COND_NEVER,
+        },
+        .mode                       = 1, // IEEE 802.15.4 mode
     };
     /* turn on the clock line to the radio core */
     HWREGBITW(AON_RTC_BASE + AON_RTC_O_CTL, AON_RTC_CTL_RTC_UPD_EN_BITN) = 1;
@@ -899,15 +942,25 @@ static uint_fast16_t rfCoreSendDisableCmd(void)
     bool interruptsWereDisabled;
     static const rfc_CMD_FS_POWERDOWN_t cFsPowerdownCmd =
     {
-        .commandNo                = CMD_FS_POWERDOWN,
-        .startTrigger.triggerType = TRIG_NOW,
-        .condition.rule           = COND_ALWAYS,
+        .commandNo                  = CMD_FS_POWERDOWN,
+        .startTrigger               =
+        {
+            .triggerType            = TRIG_NOW,
+        },
+        .condition                  = {
+            .rule                   = COND_ALWAYS,
+        },
     };
     static const rfc_CMD_SYNC_STOP_RAT_t cStopRatCmd =
     {
-        .commandNo                = CMD_SYNC_STOP_RAT,
-        .startTrigger.triggerType = TRIG_NOW,
-        .condition.rule           = COND_NEVER,
+        .commandNo                  = CMD_SYNC_STOP_RAT,
+        .startTrigger               =
+        {
+            .triggerType            = TRIG_NOW,
+        },
+        .condition                  = {
+            .rule                   = COND_NEVER,
+        },
     };
 
     HWREGBITW(AON_RTC_BASE + AON_RTC_O_CTL, AON_RTC_CTL_RTC_UPD_EN_BITN) = 1;
