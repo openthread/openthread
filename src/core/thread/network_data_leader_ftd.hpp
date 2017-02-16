@@ -140,6 +140,22 @@ public:
      */
     ThreadError SendServerDataNotification(uint16_t aRloc16);
 
+    /**
+     * This method generates PSKc.
+     *
+     * PSKc is used to establish the Commissioner Session.
+     *
+     * @param[in]  aPassPhrase   The commissioning passphrase.
+     * @param[in]  aNetworkName  The network name for PSKc computation.
+     * @param[in]  aExtPanId     The extended pan id for PSKc computation.
+     * @param[out] aPSKc         A pointer to where the generated PSKc will be placed.
+     *
+     * @retval kThreadErrorNone          Successfully generate PSKc.
+     * @retval kThreadError_InvalidArgs  If the length of passphrase is out of range.
+     *
+     */
+    ThreadError GeneratePSKc(const char *aPassPhrase, const char *aNetworkName, const uint8_t *aExtPanId, uint8_t *aPSKc);
+
 private:
     static void HandleServerData(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
                                  const otMessageInfo *aMessageInfo);

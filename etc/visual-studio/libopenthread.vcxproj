@@ -72,6 +72,7 @@
     <ClCompile Include="..\..\src\core\crypto\aes_ecb.cpp" />
     <ClCompile Include="..\..\src\core\crypto\hmac_sha256.cpp" />
     <ClCompile Include="..\..\src\core\crypto\mbedtls.cpp" />
+    <ClCompile Include="..\..\src\core\crypto\pbkdf2_cmac.cpp" />
     <ClCompile Include="..\..\src\core\crypto\sha256.cpp" />
     <ClCompile Include="..\..\src\core\mac\mac.cpp" />
     <ClCompile Include="..\..\src\core\mac\mac_blacklist.cpp" />
@@ -145,6 +146,7 @@
     <ClInclude Include="..\..\src\core\crypto\aes_ecb.hpp" />
     <ClInclude Include="..\..\src\core\crypto\hmac_sha256.hpp" />
     <ClInclude Include="..\..\src\core\crypto\mbedtls.hpp" />
+    <ClInclude Include="..\..\src\core\crypto\pbkdf2_cmac.h" />
     <ClInclude Include="..\..\src\core\crypto\sha256.hpp" />
     <ClInclude Include="..\..\src\core\mac\mac.hpp" />
     <ClInclude Include="..\..\src\core\mac\mac_blacklist.hpp" />
