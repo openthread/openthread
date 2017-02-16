@@ -458,12 +458,34 @@ OTAPI uint8_t OTCALL otGetChannel(otInstance *aInstance);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aChannel  The IEEE 802.15.4 channel.
  *
- * @retval  kThreadErrorNone         Successfully set the channel.
- * @retval  kThreadErrorInvalidArgs  If @p aChnanel is not in the range [11, 26].
+ * @retval  kThreadError_None         Successfully set the channel.
+ * @retval  kThreadError_InvalidArgs  If @p aChannel is not in the range [11, 26].
  *
  * @sa otGetChannel
  */
 OTAPI ThreadError OTCALL otSetChannel(otInstance *aInstance, uint8_t aChannel);
+
+/**
+ * Set minimal delay timer.
+ *
+ * @param[in]  aInstance           A pointer to an OpenThread instance.
+ * @param[in]  aDelayTimerMinimal  The value of minimal delay timer (in ms).
+ *
+ * @retval  kThreadError_None         Successfully set minimal delay timer.
+ * @retval  kThreadError_InvalidArgs  If @p aDelayTimerMinimal is not valid.
+ *
+ */
+OTAPI ThreadError OTCALL otSetDelayTimerMinimal(otInstance *aInstance, uint32_t aDelayTimerMinimal);
+
+/**
+ * Get minimal delay timer.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @retval the value of minimal delay timer (in ms).
+ *
+ */
+OTAPI uint32_t OTCALL otGetDelayTimerMinimal(otInstance *aInstance);
 
 /**
  * Get the maximum number of children currently allowed.

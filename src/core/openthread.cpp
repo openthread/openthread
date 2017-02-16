@@ -120,6 +120,16 @@ ThreadError otSetChannel(otInstance *aInstance, uint8_t aChannel)
     return aInstance->mThreadNetif.GetMac().SetChannel(aChannel);
 }
 
+ThreadError otSetDelayTimerMinimal(otInstance *aInstance, uint32_t aDelayTimerMinimal)
+{
+    return aInstance->mThreadNetif.GetLeader().SetDelayTimerMinimal(aDelayTimerMinimal);
+}
+
+uint32_t otGetDelayTimerMinimal(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetLeader().GetDelayTimerMinimal();
+}
+
 uint8_t otGetMaxAllowedChildren(otInstance *aInstance)
 {
     uint8_t aNumChildren;
