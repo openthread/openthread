@@ -1352,7 +1352,10 @@ bool otThreadGetAutoStart(otInstance *aInstance)
 {
     uint8_t autoStart = 0;
     uint16_t autoStartLength = sizeof(autoStart);
-    otPlatSettingsGet(aInstance, kKeyThreadAutoStart, -1, &autoStart, &autoStartLength);
+    if (otPlatSettingsGet(aInstance, kKeyThreadAutoStart, 0, &autoStart, &autoStartLength) != kThreadError_None)
+    {
+        autoStart = 0;
+    }
     return autoStart != 0;
 }
 
