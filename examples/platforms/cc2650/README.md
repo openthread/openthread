@@ -3,8 +3,6 @@
 This directory contains example platform drivers for the [Texas
 Instruments CC2650][cc2650].
 
-[cc2650]: http://www.ti.com/product/CC2650
-
 The example platform drivers are intended to present the minimal code
 necessary to support OpenThread.  As a result, the example platform
 drivers do not necessarily highlight the platform's full capabilities.
@@ -13,6 +11,10 @@ Due to flash size limitations, some features of OpenThread are not supported on
 the [Texas Instruments CC2650][cc2650]. This platform is intended for
 exprimentation and exploration of OpenThread, not a production ready
 environment. Texas Instruments recommends future TI SoCs for production.
+
+Building with gcc 5.4 is recommended due to generated code size concerns.
+
+[cc2650]: http://www.ti.com/product/CC2650
 
 ## Build Environment
 
