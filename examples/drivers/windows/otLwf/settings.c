@@ -478,7 +478,7 @@ ThreadError otPlatSettingsSet(otInstance *otCtx, uint16_t aKey, const uint8_t *a
         FilterWriteSetting(
             pFilter,
             aKey,
-            -1,
+            0,
             aValue,
             aValueLength);
 

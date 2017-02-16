@@ -230,11 +230,9 @@ ThreadError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_
 /** This function deletes a specific value from the
  *  setting identified by aKey from the settings store.
  *
- *  This is the only function which mutates the settings store
- *  that is required to maintain the relative order of the
- *  values associated with aKey. For example, if you have three
- *  items ordered (A, B, C) and you delete B, the resulting order
- *  is guaranteed to be (A, C).
+ *  Note that the underlying implementation is not required
+ *  to maintain the order of the items associated with a
+ *  specific key.
  *
  *  @param[in] aInstance
  *             The OpenThread instance structure.
