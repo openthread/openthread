@@ -168,6 +168,14 @@ otLwfUninitializeThreadMode(
     if (pFilter->EventHighPrecisionTimer)
     {
         ExDeleteTimer(pFilter->EventHighPrecisionTimer, TRUE, FALSE, NULL);
+        pFilter->EventHighPrecisionTimer = NULL;
+    }
+
+    // Close handle to settings registry key
+    if (pFilter->otSettingsRegKey)
+    {
+        ZwClose(pFilter->otSettingsRegKey);
+        pFilter->otSettingsRegKey = NULL;
     }
 
     LogFuncExit(DRIVER_DEFAULT);

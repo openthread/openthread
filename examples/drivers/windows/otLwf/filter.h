@@ -207,6 +207,11 @@ typedef struct _MS_FILTER
         KEVENT                      EventWorkerThreadEnergyScanComplete;
 
         //
+        // OpenThread Settings Management
+        //
+        HANDLE                      otSettingsRegKey;
+
+        //
         // OpenThread state management
         //
         otDeviceRole                otCachedRole;
