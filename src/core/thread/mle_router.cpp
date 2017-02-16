@@ -320,14 +320,11 @@ ThreadError MleRouter::HandleDetachStart(void)
 ThreadError MleRouter::HandleChildStart(otMleAttachFilter aFilter)
 {
     mRouterIdSequenceLastUpdated = Timer::GetNow();
+    mRouterSelectionJitterTimeout = (otPlatRandomGet() % mRouterSelectionJitter) + 1;
 
     StopLeader();
     mStateUpdateTimer.Start(kStateUpdatePeriod);
 
-    mAdvertiseTimer.Start(
-        Timer::SecToMsec(kReedAdvertiseInterval),
-        Timer::SecToMsec(kReedAdvertiseInterval + kReedAdvertiseJitter),
-        TrickleTimer::kModePlainTimer);
     mNetif.SubscribeAllRoutersMulticast();
 
     VerifyOrExit(IsRouterIdValid(mPreviousRouterId), ;);
@@ -375,7 +372,6 @@ exit:
         (!IsRouterIdValid(mPreviousRouterId) || !HasChildren()))
     {
         SetRouterId(kInvalidRouterId);
-        SendAdvertisement();
     }
 
     return kThreadError_None;
@@ -1739,10 +1735,23 @@ void MleRouter::HandleStateUpdateTimer(void)
         ExitNow();
 
     case kDeviceStateChild:
-        if (routerStateUpdate && GetActiveRouterCount() < mRouterUpgradeThreshold)
+        if (routerStateUpdate)
         {
-            // upgrade to Router
-            BecomeRouter(ThreadStatusTlv::kTooFewRouters);
+            if (GetActiveRouterCount() < mRouterUpgradeThreshold)
+            {
+                // upgrade to Router
+                BecomeRouter(ThreadStatusTlv::kTooFewRouters);
+            }
+            else if (!mAdvertiseTimer.IsRunning())
+            {
+                SendAdvertisement();
+
+                mAdvertiseTimer.Start(
+                    Timer::SecToMsec(kReedAdvertiseInterval),
+                    Timer::SecToMsec(kReedAdvertiseInterval + kReedAdvertiseJitter),
+                    TrickleTimer::kModePlainTimer);
+            }
+
             ExitNow();
         }
 
