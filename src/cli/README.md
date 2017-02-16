@@ -655,15 +655,6 @@ Set pskc with hex format.
 Done
 ```
 
-### dataset pskc \[passphrase\] \[networkname\] \[extpanid\]
-
-Generate pskc from passphrase, network name and extended panid.
-
-```bash
-> dataset pskc OpenThreadPassphrase OpenThread dead00beef00cafe
-Done
-```
-
 ### dataset userdata \[size\] \[data\]
 
 Set user specific data for the command.

@@ -174,6 +174,23 @@ public:
     ThreadError SendMgmtCommissionerSetRequest(const otCommissioningDataset &aDataset,
                                                const uint8_t *aTlvs, uint8_t aLength);
 
+    /**
+     * This static method generates PSKc.
+     *
+     * PSKc is used to establish the Commissioner Session.
+     *
+     * @param[in]  aPassPhrase   The commissioning passphrase.
+     * @param[in]  aNetworkName  The network name for PSKc computation.
+     * @param[in]  aExtPanId     The extended pan id for PSKc computation.
+     * @param[out] aPSKc         A pointer to where the generated PSKc will be placed.
+     *
+     * @retval kThreadErrorNone          Successfully generate PSKc.
+     * @retval kThreadError_InvalidArgs  If the length of passphrase is out of range.
+     *
+     */
+    static ThreadError GeneratePSKc(const char *aPassPhrase, const char *aNetworkName, const uint8_t *aExtPanId,
+                                    uint8_t *aPSKc);
+
     AnnounceBeginClient mAnnounceBegin;
     EnergyScanClient mEnergyScan;
     PanIdQueryClient mPanIdQuery;

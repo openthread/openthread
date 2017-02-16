@@ -270,12 +270,6 @@ ThreadError otSetMasterKey(otInstance *aInstance, const uint8_t *aKey, uint8_t a
     return aInstance->mThreadNetif.GetKeyManager().SetMasterKey(aKey, aKeyLength);
 }
 
-ThreadError otGeneratePSKc(otInstance *aInstance, const char *aPassPhrase, const char *aNetworkName,
-                           const uint8_t *aExtPanId, uint8_t *aPSKc)
-{
-    return aInstance->mThreadNetif.GetNetworkDataLeader().GeneratePSKc(aPassPhrase, aNetworkName, aExtPanId, aPSKc);
-}
-
 int8_t otGetMaxTransmitPower(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMac().GetMaxTransmitPower();
@@ -1820,6 +1814,12 @@ ThreadError otSendMgmtCommissionerSet(otInstance *aInstance, const otCommissioni
 uint16_t otCommissionerGetSessionId(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetCommissioner().GetSessionId();
+}
+
+ThreadError otCommissionerGeneratePSKc(otInstance *aInstance, const char *aPassPhrase, const char *aNetworkName,
+                                       const uint8_t *aExtPanId, uint8_t *aPSKc)
+{
+    return aInstance->mThreadNetif.GetCommissioner().GeneratePSKc(aPassPhrase, aNetworkName, aExtPanId, aPSKc);
 }
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 

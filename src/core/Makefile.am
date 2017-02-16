@@ -97,6 +97,7 @@ endif  # OPENTHREAD_ENABLE_MAC_WHITELIST
 if OPENTHREAD_ENABLE_COMMISSIONER
 SOURCES_COMMON                     += \
     coap/secure_coap_server.cpp       \
+    crypto/pbkdf2_cmac.cpp            \
     meshcop/announce_begin_client.cpp \
     meshcop/commissioner.cpp          \
     meshcop/energy_scan_client.cpp    \
@@ -147,7 +148,6 @@ libopenthread_ftd_a_CPPFLAGS        = \
 
 libopenthread_ftd_a_SOURCES         = \
     $(SOURCES_COMMON)                 \
-    crypto/pbkdf2_cmac.cpp            \
     meshcop/dataset_manager_ftd.cpp   \
     meshcop/joiner_router.cpp         \
     meshcop/leader.cpp                \
