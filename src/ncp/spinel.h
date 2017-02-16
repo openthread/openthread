@@ -105,6 +105,7 @@ typedef enum
     SPINEL_STATUS_CCA_FAILURE       = 18, ///< The packet was not sent due to a CCA failure.
     SPINEL_STATUS_ALREADY           = 19, ///< The operation is already in progress.
     SPINEL_STATUS_ITEM_NOT_FOUND    = 20, ///< The given item could not be found.
+    SPINEL_STATUS_INVALID_COMMAND_FOR_PROP = 21, ///< The given command cannot be performed on this property.
 
     SPINEL_STATUS_JOIN__BEGIN       = 104,
 

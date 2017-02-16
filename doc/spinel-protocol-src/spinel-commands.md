@@ -276,9 +276,9 @@ individual property with `STATUS_INVALID_COMMAND_FOR_PROP`.
 *   Argument-Encoding: `A(T(iD))`
 *   Required Capability: `CAP_CMD_MULTI`
 
-Octets: |    1   |          1               |   *n*
---------|--------|--------------------------|----------------------
-Fields: | HEADER | CMD_PROP_VALUE_MULTI_SET | Property/Value Pairs
+Octets: |    1   |          1          |   *n*
+--------|--------|---------------------|----------------------
+Fields: | HEADER | CMD_PROP_VALUES_ARE | Property/Value Pairs
 
 With each property/value pair being:
 
