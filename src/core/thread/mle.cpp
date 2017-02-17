@@ -2981,11 +2981,6 @@ ThreadError Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo 
 
     if (localTimestamp == NULL || localTimestamp->Compare(timestamp) > 0)
     {
-        if ((mDeviceMode & ModeTlv::kModeFFD) == 0)
-        {
-            mRetrieveNewNetworkData = true;
-        }
-
         Stop(false);
         mPreviousChannel = mNetif.GetMac().GetChannel();
         mPreviousPanId = mNetif.GetMac().GetPanId();
