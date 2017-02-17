@@ -1096,18 +1096,19 @@ ThreadError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
             error = SendFragment(*mSendMessage, aFrame);
         }
 
-        assert(error == kThreadError_None);
         assert(aFrame.GetLength() != 7);
         break;
 
     case Message::kType6lowpan:
-        SendMesh(*mSendMessage, aFrame);
+        error = SendMesh(*mSendMessage, aFrame);
         break;
 
     case Message::kTypeMacDataPoll:
-        SendPoll(*mSendMessage, aFrame);
+        error = SendPoll(*mSendMessage, aFrame);
         break;
     }
+
+    assert(error == kThreadError_None);
 
     // set FramePending if there are more queued messages for the child
     aFrame.GetDstAddr(macDest);
@@ -1125,13 +1126,9 @@ exit:
 
 ThreadError MeshForwarder::SendPoll(Message &aMessage, Mac::Frame &aFrame)
 {
-    ThreadError error = kThreadError_None;
     Mac::Address macSource;
     uint16_t fcf;
     Neighbor *neighbor;
-
-    // only send MAC Data Requests in rx-off-when-idle mode
-    VerifyOrExit(!mNetif.GetMac().GetRxOnWhenIdle(), error = kThreadError_InvalidState);
 
     macSource.mShortAddress = mNetif.GetMac().GetShortAddress();
 
@@ -1180,8 +1177,7 @@ ThreadError MeshForwarder::SendPoll(Message &aMessage, Mac::Frame &aFrame)
 
     mMessageNextOffset = aMessage.GetLength();
 
-exit:
-    return error;
+    return kThreadError_None;
 }
 
 ThreadError MeshForwarder::SendMesh(Message &aMessage, Mac::Frame &aFrame)
