@@ -506,9 +506,9 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
                 {
                     delayTimerTlv->SetDelayTimer(DelayTimerTlv::kDelayTimerDefault);
                 }
-                else if (delayTimerTlv->GetDelayTimer() < DelayTimerTlv::kDelayTimerMinimal)
+                else if (delayTimerTlv->GetDelayTimer() < mNetif.GetLeader().GetDelayTimerMinimal())
                 {
-                    delayTimerTlv->SetDelayTimer(DelayTimerTlv::kDelayTimerMinimal);
+                    delayTimerTlv->SetDelayTimer(mNetif.GetLeader().GetDelayTimerMinimal());
                 }
             }
 
@@ -1118,7 +1118,7 @@ void PendingDatasetBase::ApplyActiveDataset(const Timestamp &aTimestamp, Message
 
     // add delay timer tlv
     delayTimer.Init();
-    delayTimer.SetDelayTimer(DelayTimerTlv::kDelayTimerMinimal);
+    delayTimer.SetDelayTimer(mNetif.GetLeader().GetDelayTimerMinimal());
     mNetwork.Set(delayTimer);
 
     // add pending timestamp tlv

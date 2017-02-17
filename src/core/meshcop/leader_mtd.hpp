@@ -44,6 +44,8 @@ class Leader
 public:
     Leader(ThreadNetif &) { }
     ThreadError SendDatasetChanged(const Ip6::Address &) { return kThreadError_NotImplemented; }
+    ThreadError SetDelayTimerMinimal(uint32_t) { return kThreadError_NotImplemented; }
+    uint32_t GetDelayTimerMinimal(void) { return 0; }
 };
 
 }  // namespace MeshCoP

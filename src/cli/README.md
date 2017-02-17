@@ -16,6 +16,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [contextreusedelay](#contextreusedelay)
 * [counter](#counter)
 * [dataset](#dataset)
+* [delaytimermin](#delaytimermin)
 * [discover](#discover)
 * [eidcache](#eidcache)
 * [eui64](#eui64)
@@ -117,6 +118,7 @@ Remove an IEEE 802.15.4 Extended Address from the blacklist.
 > blacklist remove 166e0a0000000002
 Done
 ```
+
 ### channel
 
 Get the IEEE 802.15.4 Channel value.
@@ -661,6 +663,25 @@ Set user specific data for the command.
 
 ```bash
 > dataset userdata 3 820155
+Done
+```
+
+### delaytimermin
+
+Get the minimal delay timer (in seconds).
+
+```bash
+> delaytimermin
+30
+Done
+```
+
+### delaytimermin \<delaytimermin\>
+
+Set the minimal delay timer (in seconds).
+
+```bash
+> delaytimermin 60
 Done
 ```
 

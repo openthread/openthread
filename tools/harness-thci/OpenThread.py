@@ -2534,3 +2534,6 @@ class OpenThread(IThci):
 
     def setMinDelayTimer(self, iSeconds):
         print '%s call setMinDelayTimer' % self.port
+        cmd = 'delaytimermin %s' % iSeconds
+        print cmd
+        return self.__sendCommand(cmd)[0] == 'Done'
