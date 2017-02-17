@@ -296,6 +296,9 @@ void MeshForwarder::ScheduleTransmissionTask()
         ExitNow();
     }
 
+    // Reset offset for this message
+    mMessageNextOffset = 0;
+
 exit:
     (void) error;
 }
