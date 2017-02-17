@@ -440,8 +440,19 @@ ThreadError Dataset::Restore(void)
 
 ThreadError Dataset::Store(void)
 {
-    return otPlatSettingsSet(mInstance, static_cast<uint16_t>(mType == Tlv::kActiveTimestamp ? kKeyActiveDataset :
-                                                              kKeyPendingDataset), mTlvs, mLength);
+    uint16_t key = static_cast<uint16_t>((mType == Tlv::kActiveTimestamp) ? kKeyActiveDataset : kKeyPendingDataset);
+    ThreadError error;
+
+    if (mLength == 0)
+    {
+        error = otPlatSettingsDelete(mInstance, key, 0);
+    }
+    else
+    {
+        error = otPlatSettingsSet(mInstance, key, mTlvs, mLength);
+    }
+
+    return error;
 }
 
 ThreadError Dataset::Set(const Tlv &aTlv)
