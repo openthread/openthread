@@ -56,26 +56,11 @@ otPlatReset(
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
-    NTSTATUS status;
 
     LogInfo(DRIVER_DEFAULT, "Interface %!GUID! resetting...", &pFilter->InterfaceGuid);
 
     // Indicate to the miniport
-    status =
-        otLwfCmdSendAsync(
-            pFilter,
-            NULL,
-            NULL,
-            NULL,
-            SPINEL_CMD_RESET,
-            0,
-            0,
-            NULL
-        );
-    if (!NT_SUCCESS(status))
-    {
-        LogError(DRIVER_DEFAULT, "Send SPINEL_CMD_RESET failed, %!STATUS!", status);
-    }
+    (void)otLwfCmdResetDevice(pFilter, TRUE);
 }
 
 otPlatResetReason 
@@ -84,8 +69,8 @@ otPlatGetResetReason(
     )
 {
     NT_ASSERT(otCtx);
-    UNREFERENCED_PARAMETER(otCtx); // TODO - Cache from last status for RESET
-    return kPlatResetReason_PowerOn;
+    PMS_FILTER pFilter = otCtxToFilter(otCtx);
+    return pFilter->cmdResetReason;
 }
 
 VOID 
