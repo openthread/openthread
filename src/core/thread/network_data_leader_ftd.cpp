@@ -877,7 +877,7 @@ ThreadError Leader::RemoveRloc(PrefixTlv &prefix, uint16_t aRloc16)
         if (prefix.GetSubTlvsLength() == sizeof(ContextTlv))
         {
             context->ClearCompress();
-            mContextLastUsed[context->GetContextId() - kMinContextId] = Timer::GetNow();
+            mContextLastUsed[context->GetContextId() - kMinContextId] = Time::GetNow();
 
             if (mContextLastUsed[context->GetContextId() - kMinContextId] == 0)
             {
@@ -1058,7 +1058,7 @@ void Leader::HandleTimer(void)
             continue;
         }
 
-        if ((Timer::GetNow() - mContextLastUsed[i]) >= Timer::SecToMsec(mContextIdReuseDelay))
+        if ((Time::GetNow() - mContextLastUsed[i]) >= Timer::SecToMsec(mContextIdReuseDelay))
         {
             FreeContext(kMinContextId + i);
         }

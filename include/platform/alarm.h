@@ -54,14 +54,21 @@ extern "C" {
  *
  */
 
+typedef struct
+{
+    uint32_t mMs;
+    uint16_t mUs;
+} otPlatAlarmTime;
+
 /**
  * Set the alarm to fire at @p aDt milliseconds after @p aT0.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aT0        The reference time.
- * @param[in] aDt        The time delay in milliseconds from @p aT0.
+ * @param[in] aDt        The time delay in milliseconds and microseconds from @p aT0.
  */
-void otPlatAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
+void otPlatAlarmStartAt(otInstance *aInstance, const otPlatAlarmTime *aT0, const otPlatAlarmTime *aDt);
+
 
 /**
  * Stop the alarm.
@@ -76,6 +83,13 @@ void otPlatAlarmStop(otInstance *aInstance);
  * @returns The current time in milliseconds.
  */
 uint32_t otPlatAlarmGetNow(void);
+
+/**
+ * Get the current time.
+ *
+ * @param[out]  aNow  The current time in milliseconds and microseconds fraction.
+ */
+void otPlatAlarmGetPreciseNow(otPlatAlarmTime *aNow);
 
 /**
  * Signal that the alarm has fired.

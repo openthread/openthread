@@ -2071,7 +2071,7 @@ void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const Thre
     VerifyOrExit(mNetif.GetMle().GetDeviceState() != Mle::kDeviceStateDetached, ;);
 
     VerifyOrExit((child = mNetif.GetMle().GetChild(aMacSource)) != NULL, ;);
-    child->mLastHeard = Timer::GetNow();
+    child->mLastHeard = Time::GetNow();
     child->mLinkFailures = 0;
 
     if (!mSrcMatchEnabled || child->mQueuedIndirectMessageCnt > 0)

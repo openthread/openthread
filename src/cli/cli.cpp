@@ -1241,7 +1241,7 @@ void Interpreter::HandleEchoResponse(Message &aMessage, const Ip6::MessageInfo &
     if (aMessage.Read(aMessage.GetOffset() + sizeof(icmp6Header), sizeof(uint32_t), &timestamp) >=
         static_cast<int>(sizeof(uint32_t)))
     {
-        sServer->OutputFormat(" time=%dms", Timer::GetNow() - HostSwap32(timestamp));
+        sServer->OutputFormat(" time=%dms", Time::GetNow() - HostSwap32(timestamp));
     }
 
     sServer->OutputFormat("\r\n");
@@ -1306,7 +1306,7 @@ void Interpreter::s_HandlePingTimer(void *aContext)
 void Interpreter::HandlePingTimer()
 {
     ThreadError error = kThreadError_None;
-    uint32_t timestamp = HostSwap32(Timer::GetNow());
+    uint32_t timestamp = HostSwap32(Time::GetNow());
     Message *message;
 
     VerifyOrExit((message = mInstance->mIp6.mIcmp.NewMessage(0)) != NULL, error = kThreadError_NoBufs);

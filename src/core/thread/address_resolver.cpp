@@ -478,7 +478,7 @@ void AddressResolver::HandleAddressQuery(Coap::Header &aHeader, Message &aMessag
             children[i].mMacAddr.m8[0] ^= 0x2;
             mlIidTlv.SetIid(children[i].mMacAddr.m8);
             children[i].mMacAddr.m8[0] ^= 0x2;
-            lastTransactionTimeTlv.SetTime(Timer::GetNow() - children[i].mLastHeard);
+            lastTransactionTimeTlv.SetTime(Time::GetNow() - children[i].mLastHeard);
             SendAddressQueryResponse(targetTlv, mlIidTlv, &lastTransactionTimeTlv, aMessageInfo.GetPeerAddr());
             ExitNow();
         }

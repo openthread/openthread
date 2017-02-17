@@ -35,6 +35,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <common/code_utils.hpp>
+#include <common/timer.hpp>
 
 #include "diag_process.hpp"
 
@@ -298,8 +299,11 @@ void Diag::ProcessRepeat(int argc, char *argv[], char *aOutput, size_t aOutputMa
         sTxLen = static_cast<uint8_t>(value);
 
         sRepeatActive = true;
-        uint32_t now = otPlatAlarmGetNow();
-        otPlatAlarmStartAt(sContext, now, sTxPeriod);
+        Time now;
+        Time::GetNow(now);
+        Time txPeriod(sTxPeriod);
+
+        otPlatAlarmStartAt(sContext, &now, &txPeriod);
         snprintf(aOutput, aOutputMaxLen, "sending packets of length %#x at the delay of %#x ms\r\nstatus 0x%02x\r\n", static_cast<int>(sTxLen), static_cast<int>(sTxPeriod), error);
     }
 
@@ -374,10 +378,12 @@ void Diag::AlarmFired(otInstance *aInstance)
 {
     if(sRepeatActive)
     {
-        uint32_t now = otPlatAlarmGetNow();
+        Time now;
+        Time::GetNow(now);
+        Time txPeriod(sTxPeriod);
 
         TxPacket();
-        otPlatAlarmStartAt(aInstance, now, sTxPeriod);
+        otPlatAlarmStartAt(aInstance, &now, &txPeriod);
     }
     else
     {

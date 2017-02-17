@@ -84,7 +84,7 @@ void Mac::StartCsmaBackoff(void)
     {
         // If the radio supports the retry and back off logic, immediately schedule the send,
         // and the radio will take care of everything.
-        mBackoffTimer.Start(0);
+        mBackoffTimer.Start(Time(0));
     }
     else
     {
@@ -96,10 +96,12 @@ void Mac::StartCsmaBackoff(void)
             backoffExponent = kMaxBE;
         }
 
-        backoff = kMinBackoff + (kUnitBackoffPeriod * kPhyUsPerSymbol * (1 << backoffExponent)) / 1000;
-        backoff = (otPlatRandomGet() % backoff);
+        backoff = (otPlatRandomGet() % (1UL << backoffExponent));
+        backoff *= (kUnitBackoffPeriod * kPhyUsPerSymbol);
 
-        mBackoffTimer.Start(backoff);
+        Time backoffTime(backoff / 1000, backoff % 1000);
+
+        mBackoffTimer.Start(backoffTime);
     }
 }
 

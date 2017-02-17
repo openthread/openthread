@@ -45,6 +45,7 @@ uint32_t                        g_testPlatAlarmNext = 0;
 testPlatAlarmStop               g_testPlatAlarmStop = NULL;
 testPlatAlarmStartAt            g_testPlatAlarmStartAt = NULL;
 testPlatAlarmGetNow             g_testPlatAlarmGetNow = NULL;
+testPlatAlarmGetPreciseNow      g_testPlatAlarmGetPreciseNow = NULL;
 
 otRadioCaps                     g_testPlatRadioCaps = kRadioCapsNone;
 testPlatRadioSetPanId           g_testPlatRadioSetPanId = NULL;
@@ -64,6 +65,7 @@ void testPlatResetToDefaults(void)
     g_testPlatAlarmStop = NULL;
     g_testPlatAlarmStartAt = NULL;
     g_testPlatAlarmGetNow = NULL;
+    g_testPlatAlarmGetPreciseNow = NULL;
 
     g_testPlatRadioCaps = kRadioCapsNone;
     g_testPlatRadioSetPanId = NULL;
@@ -101,7 +103,7 @@ extern "C" {
         }
     }
 
-    void otPlatAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
+    void otPlatAlarmStartAt(otInstance *aInstance, const otPlatAlarmTime *aT0, const otPlatAlarmTime *aDt)
     {
         if (g_testPlatAlarmStartAt)
         {
@@ -110,7 +112,7 @@ extern "C" {
         else
         {
             g_testPlatAlarmSet = true;
-            g_testPlatAlarmNext = aT0 + aDt;
+            g_testPlatAlarmNext = aT0->mMs + aDt->mMs;
         }
     }
 
@@ -125,6 +127,21 @@ extern "C" {
             struct timeval tv;
             gettimeofday(&tv, NULL);
             return (uint32_t)((tv.tv_sec * 1000) + (tv.tv_usec / 1000) + 123456);
+        }
+    }
+
+    void otPlatAlarmGetPreciseNow(otPlatAlarmTime *aNow)
+    {
+        if (g_testPlatAlarmGetPreciseNow)
+        {
+            g_testPlatAlarmGetPreciseNow(aNow);
+        }
+        else
+        {
+            struct timeval tv;
+            gettimeofday(&tv, NULL);
+            aNow->mMs = (uint32_t)((tv.tv_sec * 1000) + (tv.tv_usec / 1000) + 123456);
+            aNow->mUs = (uint16_t)(tv.tv_usec % 1000);
         }
     }
 

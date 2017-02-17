@@ -55,53 +55,47 @@
 #define US_PER_TICK         ((US_PER_S + RTC_FREQUENCY - 1ULL) / RTC_FREQUENCY)
 
 #define MS_PER_S            1000UL
-#define MS_PER_OVERFLOW     (512UL * MS_PER_S)  ///< Time that has passed between overflow events. On full RTC speed, it occurs every 512 s.
+#define MS_PER_OVERFLOW     (512UL * MS_PER_S)        ///< Time that has passed between overflow events. On full RTC speed, it occurs every 512 s.
 
-typedef struct
-{
-    uint32_t ms;
-    uint16_t us;
-} AlarmTime;
-
-static volatile bool sFireAlarm = false;        ///< Information for processing function, that alarm should fire.
-static volatile AlarmTime sTimeOffset = { 0 };  ///< Time offset to keep track of current time.
-static AlarmTime sT0Time = { 0 };               ///< Alarm start time, for tracking overflows.
-static AlarmTime sTargetTime = { 0 };           ///< Alarm fire time.
+static volatile bool sFireAlarm = false;              ///< Information for processing function, that alarm should fire.
+static volatile otPlatAlarmTime sTimeOffset = { 0 };  ///< Time offset to keep track of current time.
+static otPlatAlarmTime sT0Time = { 0 };               ///< Alarm start time, for tracking overflows.
+static otPlatAlarmTime sTargetTime = { 0 };           ///< Alarm fire time.
 
 static void HandleOverflow(void);
 
-static inline uint32_t TimeToTicks(AlarmTime aTime)
+static inline uint32_t TimeToTicks(otPlatAlarmTime aTime)
 {
-    uint64_t microseconds = US_PER_MS * (uint64_t)aTime.ms + (uint64_t)aTime.us;
+    uint64_t microseconds = US_PER_MS * (uint64_t)aTime.mMs + (uint64_t)aTime.mUs;
     return (uint32_t)((microseconds * RTC_FREQUENCY) / US_PER_S) & RTC_CC_COMPARE_Msk;
 }
 
-static inline AlarmTime TicksToTime(uint32_t aTicks)
+static inline otPlatAlarmTime TicksToTime(uint32_t aTicks)
 {
     uint64_t microseconds = (US_PER_S * (uint64_t)aTicks) / RTC_FREQUENCY;
-    return (AlarmTime) {microseconds / US_PER_MS, microseconds % US_PER_MS};
+    return (otPlatAlarmTime) {microseconds / US_PER_MS, microseconds % US_PER_MS};
 }
 
-static inline AlarmTime TimeAdd(AlarmTime aTime1, AlarmTime aTime2)
+static inline otPlatAlarmTime TimeAdd(otPlatAlarmTime aTime1, otPlatAlarmTime aTime2)
 {
-    AlarmTime result = { aTime1.ms + aTime2.ms, aTime1.us + aTime2.us };
+    otPlatAlarmTime result = { aTime1.mMs + aTime2.mMs, aTime1.mUs + aTime2.mUs };
 
-    assert(result.us < 2 * US_PER_MS);
+    assert(result.mUs < 2 * US_PER_MS);
 
-    if (result.us >= US_PER_MS)
+    if (result.mUs >= US_PER_MS)
     {
-        result.ms++;
-        result.us -= US_PER_MS;
+        result.mMs++;
+        result.mUs -= US_PER_MS;
     }
 
     return result;
 }
 
-static inline AlarmTime AlarmGetCurrentTime(void)
+static inline otPlatAlarmTime AlarmGetCurrentTime(void)
 {
     uint32_t rtcValue1;
     uint32_t rtcValue2;
-    AlarmTime offset;
+    otPlatAlarmTime offset;
 
     rtcValue1 = nrf_rtc_counter_get(RTC_INSTANCE);
 
@@ -139,18 +133,18 @@ static inline AlarmTime AlarmGetCurrentTime(void)
     return TimeAdd(offset, TicksToTime(rtcValue2));
 }
 
-static inline AlarmTime AlarmGetCurrentTimeRtcProtected(void)
+static inline otPlatAlarmTime AlarmGetCurrentTimeRtcProtected(void)
 {
-    return TimeAdd(AlarmGetCurrentTime(), (AlarmTime) {0, 2 * US_PER_TICK});
+    return TimeAdd(AlarmGetCurrentTime(), (otPlatAlarmTime) {0, 2 * US_PER_TICK});
 }
 
-static inline bool TimeIsLower(AlarmTime aTime1, AlarmTime aTime2)
+static inline bool TimeIsLower(otPlatAlarmTime aTime1, otPlatAlarmTime aTime2)
 {
-    return ((aTime1.ms < aTime2.ms) ||
-            ((aTime1.ms == aTime2.ms) && (aTime1.us < aTime2.us)));
+    return ((aTime1.mMs < aTime2.mMs) ||
+            ((aTime1.mMs == aTime2.mMs) && (aTime1.mUs < aTime2.mUs)));
 }
 
-static inline bool AlarmShallStrike(AlarmTime aNow)
+static inline bool AlarmShallStrike(otPlatAlarmTime aNow)
 {
     if (TimeIsLower(sTargetTime, sT0Time))
     {
@@ -175,7 +169,7 @@ static void HandleCompare0Match(void)
 {
     nrf_rtc_event_clear(RTC_INSTANCE, NRF_RTC_EVENT_COMPARE_0);
 
-    AlarmTime now = AlarmGetCurrentTimeRtcProtected();
+    otPlatAlarmTime now = AlarmGetCurrentTimeRtcProtected();
 
     // In case the target time was larger than single overflow,
     // we should only strike the timer on final compare event.
@@ -193,7 +187,7 @@ static void HandleOverflow(void)
     nrf_rtc_event_clear(RTC_INSTANCE, NRF_RTC_EVENT_OVERFLOW);
 
     // Increment counter on overflow.
-    sTimeOffset = TimeAdd(sTimeOffset, (AlarmTime) {MS_PER_OVERFLOW, 0});
+    sTimeOffset = TimeAdd(sTimeOffset, (otPlatAlarmTime) {MS_PER_OVERFLOW, 0});
 }
 
 void nrf5AlarmInit(void)
@@ -248,22 +242,28 @@ void nrf5AlarmProcess(otInstance *aInstance)
 
 uint32_t otPlatAlarmGetNow(void)
 {
-    AlarmTime now = AlarmGetCurrentTime();
+    otPlatAlarmTime now = AlarmGetCurrentTime();
 
-    return now.ms;
+    return now.mMs;
 }
 
-void otPlatAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
+void otPlatAlarmGetPreciseNow(otPlatAlarmTime *aNow)
+{
+    otPlatAlarmTime now = AlarmGetCurrentTime();
+    memcpy(aNow, &now, sizeof(*aNow));
+}
+
+void otPlatAlarmStartAt(otInstance *aInstance, const otPlatAlarmTime *aT0, const otPlatAlarmTime *aDt)
 {
     (void)aInstance;
     uint32_t targetCounter;
-    AlarmTime now;
+    otPlatAlarmTime now;
 
     nrf_rtc_int_disable(RTC_INSTANCE, NRF_RTC_INT_COMPARE0_MASK);
     nrf_rtc_event_enable(RTC_INSTANCE, RTC_EVTEN_COMPARE0_Msk);
 
-    sT0Time = (AlarmTime) {aT0, 0};
-    sTargetTime = (AlarmTime) {aT0 + aDt, 0};
+    memcpy(&sT0Time, aT0, sizeof(sT0Time));
+    sTargetTime = TimeAdd(*aT0, *aDt);
 
     targetCounter = TimeToTicks(sTargetTime);
 

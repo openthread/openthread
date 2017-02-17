@@ -54,14 +54,16 @@
 //
 
 typedef void (*testPlatAlarmStop)(otInstance *);
-typedef void (*testPlatAlarmStartAt)(otInstance *, uint32_t, uint32_t);
+typedef void (*testPlatAlarmStartAt)(otInstance *, const otPlatAlarmTime *, const otPlatAlarmTime *);
 typedef uint32_t (*testPlatAlarmGetNow)(void);
+typedef void (*testPlatAlarmGetPreciseNow)(otPlatAlarmTime *);
 
 extern bool                             g_testPlatAlarmSet;
 extern uint32_t                         g_testPlatAlarmNext;
 extern testPlatAlarmStop                g_testPlatAlarmStop;
 extern testPlatAlarmStartAt             g_testPlatAlarmStartAt;
 extern testPlatAlarmGetNow              g_testPlatAlarmGetNow;
+extern testPlatAlarmGetPreciseNow       g_testPlatAlarmGetPreciseNow;
 
 //
 // Radio Platform

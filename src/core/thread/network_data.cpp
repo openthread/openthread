@@ -601,7 +601,7 @@ ThreadError NetworkData::SendServerDataNotification(uint16_t aRloc16)
     Message *message = NULL;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit(!mLastAttemptWait || static_cast<int32_t>(Timer::GetNow() - mLastAttempt) < kDataResubmitDelay,
+    VerifyOrExit(!mLastAttemptWait || static_cast<int32_t>(Time::GetNow() - mLastAttempt) < kDataResubmitDelay,
                  error = kThreadError_Already);
 
     header.Init(kCoapTypeConfirmable, kCoapRequestPost);
@@ -635,7 +635,7 @@ ThreadError NetworkData::SendServerDataNotification(uint16_t aRloc16)
 
     if (mLocal)
     {
-        mLastAttempt = Timer::GetNow();
+        mLastAttempt = Time::GetNow();
         mLastAttemptWait = true;
     }
 

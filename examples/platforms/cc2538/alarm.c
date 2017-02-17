@@ -65,11 +65,23 @@ uint32_t otPlatAlarmGetNow(void)
     return sCounter;
 }
 
-void otPlatAlarmStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
+void otPlatAlarmGetPreciseNow(otPlatAlarmTime *aNow)
+{
+    aNow->mMs = otPlatAlarmGetNow();
+    aNow->mUs = 0;
+}
+
+void otPlatAlarmStartAt(otInstance *aInstance, const otPlatAlarmTime *aT0, const otPlatAlarmTime *aDt)
 {
     (void)aInstance;
-    sAlarmT0 = t0;
-    sAlarmDt = dt;
+    sAlarmT0 = aT0->mMs;
+    sAlarmDt = aDt->mMs;
+
+    if (aDt->mUs)
+    {
+        sAlarmDt++;
+    }
+
     sIsRunning = true;
 }
 

@@ -167,12 +167,12 @@ void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
         mKeyRotationTimer.IsRunning() &&
         mKeySwitchGuardEnabled)
     {
-        uint32_t now = Timer::GetNow();
-        uint32_t guardStartTimestamp = mKeyRotationTimer.Gett0();
+        uint32_t now = Time::GetNow();
+        uint32_t guardStartTimestamp = mKeyRotationTimer.GetT0();
         uint32_t guardEndTimestamp = guardStartTimestamp + Timer::HoursToMsec(mKeySwitchGuardTime);
 
         // Check for timer overflow
-        if (guardEndTimestamp < mKeyRotationTimer.Gett0())
+        if (guardEndTimestamp < mKeyRotationTimer.GetT0())
         {
             if ((now > guardStartTimestamp) || (now < guardEndTimestamp))
             {

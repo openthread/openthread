@@ -41,8 +41,11 @@ enum
 };
 
 uint32_t sNow;
+uint16_t sNowUs;
 uint32_t sPlatT0;
+uint16_t sPlatT0Us;
 uint32_t sPlatDt;
+uint16_t sPlatDtUs;
 bool     sTimerOn;
 uint32_t sCallCount[kCallCountIndexMax];
 
@@ -52,12 +55,14 @@ void testTimerAlarmStop(otInstance *)
     sCallCount[kCallCountIndexAlarmStop]++;
 }
 
-void testTimerAlarmStartAt(otInstance *, uint32_t aT0, uint32_t aDt)
+void testTimerAlarmStartAt(otInstance *, const otPlatAlarmTime *aT0, const otPlatAlarmTime *aDt)
 {
     sTimerOn = true;
     sCallCount[kCallCountIndexAlarmStart]++;
-    sPlatT0 = aT0;
-    sPlatDt = aDt;
+    sPlatT0 = aT0->mMs;
+    sPlatDt = aDt->mMs;
+    sPlatT0Us = aT0->mUs;
+    sPlatDtUs = aDt->mUs;
 }
 
 uint32_t testTimerAlarmGetNow(void)
@@ -65,11 +70,18 @@ uint32_t testTimerAlarmGetNow(void)
     return sNow;
 }
 
+void testTimerAlarmGetPreciseNow(otPlatAlarmTime *aNow)
+{
+    aNow->mMs = sNow;
+    aNow->mUs = sNowUs;
+}
+
 void InitTestTimer(void)
 {
     g_testPlatAlarmStop = testTimerAlarmStop;
     g_testPlatAlarmStartAt = testTimerAlarmStartAt;
     g_testPlatAlarmGetNow = testTimerAlarmGetNow;
+    g_testPlatAlarmGetPreciseNow = testTimerAlarmGetPreciseNow;
 }
 
 void InitCounters(void)
@@ -408,10 +420,490 @@ int TestTenTimers(void)
     return 0;
 }
 
+/**
+ * Test the TimerScheduler's behavior of one microsecond timer started and fired.
+ */
+int TestMicrosecondTimer(void)
+{
+    const uint32_t kTimeT0Ms = 1000;
+    const uint16_t kTimeT0Us = 500;
+    const uint32_t kTimerIntervalMs = 10;
+    const uint16_t kTimerIntervalUs = 100;
+    otInstance aInstance;
+    Thread::TimerUs timer(aInstance.mIp6.mTimerScheduler, TestTimerHandler, NULL);
+
+    // Test one Timer basic operation.
+
+    InitTestTimer();
+    InitCounters();
+
+    sNow = kTimeT0Ms;
+    sNowUs = kTimeT0Us;
+    timer.Start(Thread::Time(kTimerIntervalMs, kTimerIntervalUs));
+
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1, "TestMicrosecondTimer: Start CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0, "TestMicrosecondTimer: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 0, "TestMicrosecondTimer: Handler CallCount Failed.\n");
+    VerifyOrQuit(sPlatT0 == 1000 && sPlatT0Us == 500 && sPlatDt == 10 && sPlatDtUs == 100,
+                 "TestMicrosecondTimer: Start params Failed.\n");
+    VerifyOrQuit(timer.IsRunning(),                             "TestMicrosecondTimer: Timer running Failed.\n");
+    VerifyOrQuit(sTimerOn,                                      "TestMicrosecondTimer: Platform Timer State Failed.\n");
+
+    sNow += kTimerIntervalMs;
+    sNowUs += kTimerIntervalUs;
+
+    otPlatAlarmFired(&aInstance);
+
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1, "TestMicrosecondTimer: Start CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 1, "TestMicrosecondTimer: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 1, "TestMicrosecondTimer: Handler CallCount Failed.\n");
+    VerifyOrQuit(timer.IsRunning() == false,                    "TestMicrosecondTimer: Timer running Failed.\n");
+    VerifyOrQuit(sTimerOn == false,                             "TestMicrosecondTimer: Platform Timer State Failed.\n");
+
+    // Test one Timer with microseconds overflow.
+
+    InitCounters();
+
+    sNow = kTimeT0Ms;
+    sNowUs = 1005 - kTimerIntervalUs;
+    timer.Start(Thread::Time(kTimerIntervalMs, kTimerIntervalUs));
+
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1, "TestMicrosecondTimer: Start CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0, "TestMicrosecondTimer: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 0, "TestMicrosecondTimer: Handler CallCount Failed.\n");
+    VerifyOrQuit(sPlatT0 == 1000 && sPlatT0Us == 1005 - kTimerIntervalUs && sPlatDt == 10 && sPlatDtUs == 100,
+                 "TestMicrosecondTimer: Start params Failed.\n");
+    VerifyOrQuit(timer.IsRunning(),                             "TestMicrosecondTimer: Timer running Failed.\n");
+    VerifyOrQuit(sTimerOn,                                      "TestMicrosecondTimer: Platform Timer State Failed.\n");
+
+    sNow += kTimerIntervalMs;
+    sNowUs += kTimerIntervalUs;
+    // Microseconds overflow
+    sNow ++;
+    sNowUs -= 1000;
+
+    otPlatAlarmFired(&aInstance);
+
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1, "TestMicrosecondTimer: Start CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 1, "TestMicrosecondTimer: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 1, "TestMicrosecondTimer: Handler CallCount Failed.\n");
+    VerifyOrQuit(timer.IsRunning() == false,                    "TestMicrosecondTimer: Timer running Failed.\n");
+    VerifyOrQuit(sTimerOn == false,                             "TestMicrosecondTimer: Platform Timer State Failed.\n");
+
+    // Test one Timer with millisecond overflow.
+
+    InitCounters();
+
+    sNow = 0 - kTimerIntervalMs + 2;
+    sNowUs = 500;
+    timer.Start(Thread::Time(kTimerIntervalMs, kTimerIntervalUs));
+
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1, "TestMicrosecondTimer: Start CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0, "TestMicrosecondTimer: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 0, "TestMicrosecondTimer: Handler CallCount Failed.\n");
+    VerifyOrQuit(sPlatT0 == (2 - kTimerIntervalMs) && sPlatT0Us == 500 && sPlatDt == 10 && sPlatDtUs == 100,
+                 "TestMicrosecondTimer: Start params Failed.\n");
+    VerifyOrQuit(timer.IsRunning(),                             "TestMicrosecondTimer: Timer running Failed.\n");
+    VerifyOrQuit(sTimerOn,                                      "TestMicrosecondTimer: Platform Timer State Failed.\n");
+
+    sNow += kTimerIntervalMs;
+    sNowUs += kTimerIntervalUs;
+
+    otPlatAlarmFired(&aInstance);
+
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1, "TestMicrosecondTimer: Start CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 1, "TestMicrosecondTimer: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 1, "TestMicrosecondTimer: Handler CallCount Failed.\n");
+    VerifyOrQuit(timer.IsRunning() == false,                    "TestMicrosecondTimer: Timer running Failed.\n");
+    VerifyOrQuit(sTimerOn == false,                             "TestMicrosecondTimer: Platform Timer State Failed.\n");
+
+    // Test one Timer with milliseconds and microseconds overflow.
+
+    InitCounters();
+
+    sNow = 0 - kTimerIntervalMs;
+    sNowUs = 1005 - kTimerIntervalUs;
+    timer.Start(Thread::Time(kTimerIntervalMs, kTimerIntervalUs));
+
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1, "TestMicrosecondTimer: Start CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0, "TestMicrosecondTimer: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 0, "TestMicrosecondTimer: Handler CallCount Failed.\n");
+    VerifyOrQuit(sPlatT0 == (0 - kTimerIntervalMs) && sPlatT0Us == (1005 - kTimerIntervalUs) && sPlatDt == 10 &&
+                 sPlatDtUs == 100,
+                 "TestMicrosecondTimer: Start params Failed.\n");
+    VerifyOrQuit(timer.IsRunning(),                             "TestMicrosecondTimer: Timer running Failed.\n");
+    VerifyOrQuit(sTimerOn,                                      "TestMicrosecondTimer: Platform Timer State Failed.\n");
+
+    sNow += kTimerIntervalMs;
+    sNowUs += kTimerIntervalUs;
+    // Microseconds overflow
+    sNow ++;
+    sNowUs -= 1000;
+
+    otPlatAlarmFired(&aInstance);
+
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1, "TestMicrosecondTimer: Start CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 1, "TestMicrosecondTimer: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 1, "TestMicrosecondTimer: Handler CallCount Failed.\n");
+    VerifyOrQuit(timer.IsRunning() == false,                    "TestMicrosecondTimer: Timer running Failed.\n");
+    VerifyOrQuit(sTimerOn == false,                             "TestMicrosecondTimer: Platform Timer State Failed.\n");
+
+    // Test one late Timer.
+
+    InitTestTimer();
+    InitCounters();
+
+    sNow = kTimeT0Ms;
+    sNowUs = kTimeT0Us;
+    timer.Start(Thread::Time(kTimerIntervalMs, kTimerIntervalUs));
+
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1, "TestMicrosecondTimer: Start CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0, "TestMicrosecondTimer: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 0, "TestMicrosecondTimer: Handler CallCount Failed.\n");
+    VerifyOrQuit(sPlatT0 == 1000 && sPlatT0Us == 500 && sPlatDt == 10 && sPlatDtUs == 100,
+                 "TestMicrosecondTimer: Start params Failed.\n");
+    VerifyOrQuit(timer.IsRunning(),                             "TestMicrosecondTimer: Timer running Failed.\n");
+    VerifyOrQuit(sTimerOn,                                      "TestMicrosecondTimer: Platform Timer State Failed.\n");
+
+    sNow += kTimerIntervalMs;
+    sNowUs += kTimerIntervalUs;
+    sNow++;
+    sNowUs--;
+
+    otPlatAlarmFired(&aInstance);
+
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1, "TestMicrosecondTimer: Start CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 1, "TestMicrosecondTimer: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 1, "TestMicrosecondTimer: Handler CallCount Failed.\n");
+    VerifyOrQuit(timer.IsRunning() == false,                    "TestMicrosecondTimer: Timer running Failed.\n");
+    VerifyOrQuit(sTimerOn == false,                             "TestMicrosecondTimer: Platform Timer State Failed.\n");
+
+    // Test one early Timer.
+
+    InitTestTimer();
+    InitCounters();
+
+    sNow = kTimeT0Ms;
+    sNowUs = kTimeT0Us;
+    timer.Start(Thread::Time(kTimerIntervalMs, kTimerIntervalUs));
+
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1, "TestMicrosecondTimer: Start CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0, "TestMicrosecondTimer: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 0, "TestMicrosecondTimer: Handler CallCount Failed.\n");
+    VerifyOrQuit(sPlatT0 == 1000 && sPlatT0Us == 500 && sPlatDt == 10 && sPlatDtUs == 100,
+                 "TestMicrosecondTimer: Start params Failed.\n");
+    VerifyOrQuit(timer.IsRunning(),                             "TestMicrosecondTimer: Timer running Failed.\n");
+    VerifyOrQuit(sTimerOn,                                      "TestMicrosecondTimer: Platform Timer State Failed.\n");
+
+    sNow += kTimerIntervalMs;
+    sNowUs += kTimerIntervalUs;
+    sNowUs--;
+
+    otPlatAlarmFired(&aInstance);
+
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 2, "TestMicrosecondTimer: Start CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0, "TestMicrosecondTimer: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 0, "TestMicrosecondTimer: Handler CallCount Failed.\n");
+    VerifyOrQuit(timer.IsRunning(),                             "TestMicrosecondTimer: Timer running Failed.\n");
+    VerifyOrQuit(sTimerOn,                                      "TestMicrosecondTimer: Platform Timer State Failed.\n");
+
+    sNowUs++;
+
+    otPlatAlarmFired(&aInstance);
+
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 2, "TestMicrosecondTimer: Start CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 1, "TestMicrosecondTimer: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 1, "TestMicrosecondTimer: Handler CallCount Failed.\n");
+    VerifyOrQuit(timer.IsRunning() == false,                    "TestMicrosecondTimer: Timer running Failed.\n");
+    VerifyOrQuit(sTimerOn == false,                             "TestMicrosecondTimer: Platform Timer State Failed.\n");
+
+    return 0;
+}
+
+int TestMixedMillisecondsAndMicrosecondsTimers()
+{
+    const uint32_t kNumMsTimers = 5;
+    const uint32_t kNumUsTimers = 5;
+    const uint32_t kNumTriggers = 7;
+    const uint32_t kTimeT0Ms[kNumMsTimers] =
+    {
+        1000,
+        1000,
+        1002,
+        1004,
+        1008
+    };
+    const uint32_t kMsTimerInterval[kNumMsTimers] =
+    {
+        20,
+        100,
+        (0 - kTimeT0Ms[2]),
+        1000000,
+        10,
+    };
+    const Thread::Time kTimeT0Us[kNumUsTimers] =
+    {
+        Thread::Time(1000, 0),
+        Thread::Time(1000, 900),
+        Thread::Time(1003, 900),
+        Thread::Time(1005, 100),
+        Thread::Time(1010, 0),
+    };
+    const Thread::Time kUsTimerInterval[kNumUsTimers] =
+    {
+        Thread::Time(20, 2),
+        Thread::Time(19, 101),
+        Thread::Time(0 - kTimeT0Us[2].mMs - 1, 100),
+        Thread::Time(0 - kTimeT0Us[3].mMs, 300),
+        Thread::Time(0, 100),
+    };
+    // Expected timer fire order
+    // timer #    Trigger time
+    //   9         1010.100
+    //   4         1018
+    //   0         1020
+    //   6         1020.001
+    //   5         1020.002
+    //   1         1100
+    //   3      1001004
+    //   2            0 <timer wrapped>
+    //   7            0.000
+    //   8            0.400
+    const Thread::Time kTriggerTimes[kNumTriggers] =
+    {
+        Thread::Time(1010, 0),
+        Thread::Time(1011, 2),
+        Thread::Time(1020, 1),
+        Thread::Time(1100, 0),
+        Thread::Time(1001004, 0),
+        /* timer wrap here */
+        Thread::Time(0, 0),
+        Thread::Time(0, 500),
+    };
+    // Expected timers fired by each kTriggerTimes[] value
+    //  Trigger #    Timers Fired
+    //    0
+    //    1             9
+    //    2             4, 0, 6
+    //    3             5, 1
+    //    4             3
+    //    5             2, 7
+    //    6             8
+    const bool kMsTimerStateAfterTrigger [kNumTriggers][kNumMsTimers] =
+    {
+        {  true,  true,  true,  true,  true},  //
+        {  true,  true,  true,  true,  true},  // 9
+        { false,  true,  true,  true, false},  // 4, 0, 6
+        { false, false,  true,  true, false},  // 5, 1
+        { false, false,  true, false, false},  // 3
+        { false, false, false, false, false},  // 2, 7
+        { false, false, false, false, false}   // 8
+    };
+    const bool kUsTimerStateAfterTrigger [kNumTriggers][kNumUsTimers] =
+    {
+        {  true,  true,  true,  true,  true},  //
+        {  true,  true,  true,  true, false},  // 9
+        {  true, false,  true,  true, false},  // 4, 0, 6
+        { false, false,  true,  true, false},  // 5, 1
+        { false, false,  true,  true, false},  // 3
+        { false, false, false,  true, false},  // 2, 7
+        { false, false, false, false, false}   // 8
+    };
+
+    const bool kSchedulerStateAfterTrigger[kNumTriggers] =
+    {
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+    };
+
+    const uint32_t kTimerHandlerCountAfterTrigger[kNumTriggers] =
+    {
+        0,
+        1,
+        4,
+        6,
+        7,
+        9,
+        10
+    };
+
+    const uint32_t kTimerStopCountAfterTrigger[kNumTriggers] =
+    {
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+    };
+
+    const uint32_t kTimerStartCountAfterTrigger[kNumTriggers] =
+    {
+        6,
+        7,
+        10,
+        12,
+        13,
+        15,
+        15
+    };
+
+    otInstance aInstance;
+
+    uint32_t msTimerContextHandleCounter[kNumMsTimers] = {0};
+    Thread::Timer timer0(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &msTimerContextHandleCounter[0]);
+    Thread::Timer timer1(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &msTimerContextHandleCounter[1]);
+    Thread::Timer timer2(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &msTimerContextHandleCounter[2]);
+    Thread::Timer timer3(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &msTimerContextHandleCounter[3]);
+    Thread::Timer timer4(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &msTimerContextHandleCounter[4]);
+    Thread::Timer *msTimers[kNumMsTimers] = {&timer0, &timer1, &timer2, &timer3, &timer4};
+    uint32_t usTimerContextHandleCounter[kNumUsTimers] = {0};
+    Thread::TimerUs usTimer0(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &usTimerContextHandleCounter[0]);
+    Thread::TimerUs usTimer1(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &usTimerContextHandleCounter[1]);
+    Thread::TimerUs usTimer2(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &usTimerContextHandleCounter[2]);
+    Thread::TimerUs usTimer3(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &usTimerContextHandleCounter[3]);
+    Thread::TimerUs usTimer4(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &usTimerContextHandleCounter[4]);
+    Thread::TimerUs *usTimers[kNumUsTimers] = {&usTimer0, &usTimer1, &usTimer2, &usTimer3, &usTimer4};
+    size_t i;
+
+    // Start the Ten timers.
+
+    InitTestTimer();
+    InitCounters();
+
+    size_t iMs = 0;
+    size_t iUs = 0;
+
+    do
+    {
+        bool add_ms;
+
+        if (iMs >= kNumMsTimers)
+        {
+            add_ms = false;
+        }
+        else if (iUs >= kNumUsTimers)
+        {
+            add_ms = true;
+        }
+        else
+        {
+            if (kTimeT0Ms[iMs] <= kTimeT0Us[iUs].mMs)
+            {
+                add_ms = true;
+            }
+            else
+            {
+                add_ms = false;
+            }
+        }
+
+        if (add_ms)
+        {
+            sNow = kTimeT0Ms[iMs];
+            sNowUs = 0;
+            msTimers[iMs]->Start(kMsTimerInterval[iMs]);
+
+            iMs++;
+        }
+        else
+        {
+            sNow = kTimeT0Us[iUs].mMs;
+            sNowUs = kTimeT0Us[iUs].mUs;
+            usTimers[iUs]->Start(kUsTimerInterval[iUs]);
+
+            iUs++;
+        }
+    }
+    while (iMs < kNumMsTimers || iUs < kNumUsTimers);
+
+    // given the order in which timers are started, the TimerScheduler should call otPlatAlarmStartAt 4 times.
+    // one for timer[0] and one for timer[4] which will supercede timer[0] and one for timer[5] (first in the other queue) and one for timer[6] and one for timer[9].
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 5,         "TestMixedTimers: Start CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0,         "TestMixedTimers: Stop CallCount Failed.\n");
+    VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 0,         "TestMixedTimers: Handler CallCount Failed.\n");
+    VerifyOrQuit(sPlatT0   == kTimeT0Us[4].mMs &&
+                 sPlatT0Us == kTimeT0Us[4].mUs &&
+                 sPlatDt   == kUsTimerInterval[4].mMs &&
+                 sPlatDtUs == kUsTimerInterval[4].mUs,                  "TestMixedTimers: Start params Failed.\n");
+    VerifyOrQuit(sTimerOn,                                              "TestMixedTimers: Platform Timer State Failed.\n");
+
+    for (i = 0 ; i < kNumMsTimers ; i++)
+    {
+        VerifyOrQuit(msTimers[i]->IsRunning(), "TestMixedTimers: Timer running Failed.\n");
+    }
+
+    for (i = 0 ; i < kNumUsTimers ; i++)
+    {
+        VerifyOrQuit(usTimers[i]->IsRunning(), "TestMixedTimers: Timer running Failed.\n");
+    }
+
+    // Issue the triggers and test the State after each trigger.
+
+    for (size_t trigger = 0 ; trigger < kNumTriggers ; trigger++)
+    {
+        sNow = kTriggerTimes[trigger].mMs;
+        sNowUs = kTriggerTimes[trigger].mUs;
+
+        do
+        {
+            // By design, each call to otPlatAlarmFired() can result in 0 or 1 calls to a timer handler.
+            // For some combinations of sNow and Timers queued, it is necessary to call otPlatAlarmFired()
+            // multiple times in order to handle all the expired timers.  It can be determined that another
+            // timer is ready to be triggered by examining the aDt arg passed into otPlatAlarmStartAt().  If
+            // that value is 0, then otPlatAlarmFired should be fired immediately. This loop calls otPlatAlarmFired()
+            // the requisite number of times based on the aDt argument.
+            otPlatAlarmFired(&aInstance);
+        }
+        while ((sPlatDt == 0) && (sPlatDtUs == 0));
+
+        VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == kTimerStartCountAfterTrigger[trigger],
+                     "TestMixedTimers: Start CallCount Failed.\n");
+        VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == kTimerStopCountAfterTrigger[trigger],
+                     "TestMixedTimers: Stop CallCount Failed.\n");
+        VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == kTimerHandlerCountAfterTrigger[trigger],
+                     "TestMixedTimers: Handler CallCount Failed.\n");
+        VerifyOrQuit(sTimerOn                                 == kSchedulerStateAfterTrigger[trigger],
+                     "TestMixedTimers: Platform Timer State Failed.\n");
+
+        for (i = 0 ; i < kNumMsTimers ; i++)
+        {
+            VerifyOrQuit(msTimers[i]->IsRunning() == kMsTimerStateAfterTrigger[trigger][i],
+                         "TestMixedTimers: Timer running Failed.\n");
+        }
+
+        for (i = 0 ; i < kNumUsTimers ; i++)
+        {
+            VerifyOrQuit(usTimers[i]->IsRunning() == kUsTimerStateAfterTrigger[trigger][i],
+                         "TestMixedTimers: Timer running Failed.\n");
+        }
+    }
+
+    for (i = 0 ; i < kNumMsTimers ; i++)
+    {
+        VerifyOrQuit(msTimerContextHandleCounter[i] == 1, "TestMixedTimers: Timer context counter Failed.\n");
+    }
+
+    for (i = 0 ; i < kNumUsTimers ; i++)
+    {
+        VerifyOrQuit(usTimerContextHandleCounter[i] == 1, "TestMixedTimers: Timer context counter Failed.\n");
+    }
+
+    return 0;
+}
+
 void RunTimerTests(void)
 {
     TestOneTimer();
     TestTenTimers();
+    TestMicrosecondTimer();
+    TestMixedMillisecondsAndMicrosecondsTimers();
 }
 
 #ifdef ENABLE_TEST_MAIN
