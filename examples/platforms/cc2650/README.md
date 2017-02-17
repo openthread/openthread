@@ -3,9 +3,11 @@
 This directory contains example platform drivers for the [Texas
 Instruments CC2650][cc2650].
 
-The example platform drivers are intended to present the minimal code
-necessary to support OpenThread.  As a result, the example platform
-drivers do not necessarily highlight the platform's full capabilities.
+The example platform drivers are intended to present the minimal code necessary
+to support OpenThread. As a result, the example platform drivers do not
+necessarily highlight the platform's full capabilities. The platform
+abstraction layer was build for the [CC2650 LAUNCHXL][cc2650-launchxl], usage
+on other boards with a CC2650 will require changes to the peripheral drivers.
 
 Due to flash size limitations, some features of OpenThread are not supported on
 the [Texas Instruments CC2650][cc2650]. This platform is intended for
@@ -14,7 +16,14 @@ environment. Texas Instruments recommends future TI SoCs for production.
 
 Building with gcc 5.4 is recommended due to generated code size concerns.
 
+All three configurations were tested with `arm-none-eabi-gcc 5.4.1 20160609
+(release)` on [this commit][tested-commit]. The automatic integration builds have since
+been limited to only the `cli-mtd` configuration to limit the impact on pull
+requests.
+
 [cc2650]: http://www.ti.com/product/CC2650
+[cc2650-launchxl]: http://www.ti.com/tool/Launchxl-cc2650
+[tested-commit]: https://github.com/openthread/openthread/commit/e8611291d65e8ad28d77a7645695c5352504c3dd
 
 ## Build Environment
 
