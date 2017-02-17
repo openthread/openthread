@@ -111,7 +111,7 @@ public:
     ThreadError RemoveJoiner(const Mac::ExtAddress *aExtAddress);
 
     /**
-     * This function sets the Provisioning URL.
+     * This method sets the Provisioning URL.
      *
      * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
      *

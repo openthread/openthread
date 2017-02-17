@@ -179,7 +179,7 @@ public:
     explicit Dhcp6Client(ThreadNetif &aThreadNetif);
 
     /**
-     * This function update addresses that shall be automatically created using DHCP.
+     * This method update addresses that shall be automatically created using DHCP.
      *
      * @param[in]     aInstance     A pointer to openThread instance.
      * @param[inout]  aAddresses    A pointer to an array containing addresses created by this module.

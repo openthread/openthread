@@ -213,7 +213,7 @@ OTAPI ThreadError OTCALL otSendMgmtCommissionerSet(otInstance *, const otCommiss
                                                    const uint8_t *aTlvs, uint8_t aLength);
 
 /**
- * This function returns the origian Commissioner Session ID.
+ * This function returns the Commissioner Session ID.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *

@@ -327,7 +327,7 @@ otMessage otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader);
 /**
  * This function sends a CoAP request.
  *
- * If a response for a request is expected, respective function and contex information should be provided.
+ * If a response for a request is expected, respective function and context information should be provided.
  * If no response is expected, these arguments should be NULL pointers.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.

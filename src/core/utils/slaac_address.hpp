@@ -102,7 +102,7 @@ class SemanticallyOpaqueIidGenerator: public otSemanticallyOpaqueIidGeneratorDat
 {
 public:
     /**
-     * This function creates semantically opaque IID for given IPv6 address and context.
+     * This method creates semantically opaque IID for given IPv6 address and context.
      *
      * The generator starts with DAD counter provided as a class member field. The DAD counter is automatically
      * incremented at most kMaxRetries times if creation of valid IPv6 address fails.
@@ -124,7 +124,7 @@ private:
     };
 
     /**
-     * This function creates semantically opaque IID for given arguments.
+     * This method creates semantically opaque IID for given arguments.
      *
      * This function creates IID only for given DAD counter value.
      *
@@ -139,7 +139,7 @@ private:
     ThreadError CreateIidOnce(otInstance *aInstance, otNetifAddress *aAddress);
 
     /**
-     * This function checks if created IPv6 address is already registered in the Thread interface.
+     * This method checks if created IPv6 address is already registered in the Thread interface.
      *
      * @param[in]  aInstance        A pointer to an OpenThread instance.
      * @param[in]  aCreatedAddress  A pointer to created IPv6 address.
