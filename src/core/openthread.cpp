@@ -1214,6 +1214,7 @@ void otInstancePostConstructor(otInstance *aInstance)
     otPlatSettingsInit(aInstance);
     aInstance->mThreadNetif.GetMle().Restore();
 
+#if OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
     // If auto start is configured, do that now
     if (otThreadGetAutoStart(aInstance))
     {
@@ -1227,6 +1228,7 @@ void otInstancePostConstructor(otInstance *aInstance)
             }
         }
     }
+#endif
 }
 
 #ifdef OPENTHREAD_MULTIPLE_INSTANCE
@@ -1390,14 +1392,21 @@ ThreadError otThreadStop(otInstance *aInstance)
     return error;
 }
 
-void otThreadSetAutoStart(otInstance *aInstance, bool aStartAutomatically)
+ThreadError otThreadSetAutoStart(otInstance *aInstance, bool aStartAutomatically)
 {
+#if OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
     uint8_t autoStart = aStartAutomatically ? 1 : 0;
-    otPlatSettingsSet(aInstance, kKeyThreadAutoStart, &autoStart, sizeof(autoStart));
+    return otPlatSettingsSet(aInstance, kKeyThreadAutoStart, &autoStart, sizeof(autoStart));
+#else
+    (void)aInstance;
+    (void)aStartAutomatically;
+    return kThreadError_NotImplemented;
+#endif
 }
 
 bool otThreadGetAutoStart(otInstance *aInstance)
 {
+#if OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
     uint8_t autoStart = 0;
     uint16_t autoStartLength = sizeof(autoStart);
     if (otPlatSettingsGet(aInstance, kKeyThreadAutoStart, 0, &autoStart, &autoStartLength) != kThreadError_None)
@@ -1405,6 +1414,10 @@ bool otThreadGetAutoStart(otInstance *aInstance)
         autoStart = 0;
     }
     return autoStart != 0;
+#else
+    (void)aInstance;
+    return false;
+#endif
 }
 
 bool otIsSingleton(otInstance *aInstance)

@@ -323,7 +323,7 @@ OTAPI ThreadError OTCALL otThreadStop(otInstance *aInstance);
  * @param[in] aStartAutomatically   TRUE to automatically start; FALSE to not automatically start.
  *
  */
-OTAPI void OTCALL otThreadSetAutoStart(otInstance *aInstance, bool aStartAutomatically);
+OTAPI ThreadError OTCALL otThreadSetAutoStart(otInstance *aInstance, bool aStartAutomatically);
 
 /**
  * This function queries if the Thread stack is configured to automatically start on reinitialization.

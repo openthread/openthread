@@ -1245,14 +1245,15 @@ otThreadStop(
 }
 
 OTAPI
-void
+ThreadError
 OTCALL
 otThreadSetAutoStart(
     _In_ otInstance *aInstance,
     bool aStartAutomatically
     )
 {
-    if (aInstance) SetIOCTL(aInstance, IOCTL_OTLWF_OT_THREAD_AUTO_START, (BOOLEAN)(aStartAutomatically ? TRUE : FALSE));
+    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_THREAD_AUTO_START, (BOOLEAN)(aStartAutomatically ? TRUE : FALSE)));
 }
 
 OTAPI
