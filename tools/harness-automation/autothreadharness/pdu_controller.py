@@ -58,7 +58,7 @@ class DummyPduController(PduController):
         pass
 
     def reboot(self, **params):
-        print('No PDU controller connected.')
+        logger.info('No PDU controller connected.')
 
     def close(self):
         pass
@@ -174,13 +174,8 @@ class NordicBoardPduController(PduController):
         boards_serial_numbers = params['boards_serial_numbers']
 
         for serial_number in boards_serial_numbers:
-            print('Resetting board with the serial number: {}'.format(serial_number))
+            logger.info('Resetting board with the serial number: %s', serial_number)
             self._pin_reset(serial_number)
 
     def close(self):
         pass
-
-
-if __name__ == '__main__':
-    apc = ApcPduController('192.168.1.88')
-    apc.reboot()
