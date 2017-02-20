@@ -45,7 +45,7 @@ from autothreadharness import settings
 logging.basicConfig(level=logging.INFO)
 
 logger = logging.getLogger()
-'''Logger: The global logger'''
+"""Logger: The global logger"""
 
 logger.setLevel(logging.INFO)
 
@@ -54,12 +54,12 @@ RESUME_SCRIPT_PATH = '%appdata%\\Microsoft\\Windows\\Start Menu\\Programs\\' \
 
 class SimpleTestResult(unittest.TestResult):
     def __init__(self, path, auto_reboot_args=None, manual_reset=False):
-        '''Record test results in json file
+        """Record test results in json file
 
         Args:
             path (str): File path to record the results
             auto_reboot (bool): Whether reboot when harness die
-        '''
+        """
         super(SimpleTestResult, self).__init__()
         self.path = path
         self.manual_reset = manual_reset
@@ -91,12 +91,12 @@ class SimpleTestResult(unittest.TestResult):
         logger.addHandler(self.log_handler)
 
     def add_result(self, test, passed, error=None):
-        '''Record test result into json file
+        """Record test result into json file
 
         Args:
             test (TestCase): The test just run
             passed (bool): Whether the case is passed
-        '''
+        """
         self.result[unicode(test.__class__.__name__)] = {
             'started': self.started,
             'stopped': time.strftime('%Y-%m-%dT%H:%M:%S'),
@@ -163,13 +163,13 @@ def list_devices(names=None, continue_from=None, **kwargs):
 def discover(names=None, pattern=['*.py'], skip='efp', dry_run=False, blacklist=None, name_greps=None,
              manual_reset=False, delete_history=False, max_devices=0,
              continue_from=None, result_file='./result.json', auto_reboot=False):
-    '''Discover all test cases and skip those passed
+    """Discover all test cases and skip those passed
 
     Args:
         pattern (str): Pattern to match case modules, refer python's unittest
                        documentation for more details
         skip (str): types cases to skip
-    '''
+    """
     if not os.path.exists(settings.OUTPUT_PATH):
         os.mkdir(settings.OUTPUT_PATH)
 
@@ -192,7 +192,6 @@ def discover(names=None, pattern=['*.py'], skip='efp', dry_run=False, blacklist=
             log = json.load(open(result_file, 'r'))
         except:
             logger.exception('Failed to open result file')
-            pass
 
     if not log:
         log = {}

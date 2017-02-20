@@ -25,7 +25,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pdu_controller
+from . import pdu_controller
 
 
 class PduControllerFactory(object):

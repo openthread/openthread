@@ -26,21 +26,21 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-'''
+"""
 >> Thread Host Controller Interface
 >> Device : OpenThread THCI
 >> Class : OpenThread
-'''
+"""
 
 import re
-import sys
 import time
-import serial
 import socket
 import logging
+
+import serial
 from IThci import IThci
 from GRLLibs.UtilityModules.Test import Thread_Device_Role, Device_Data_Requirement, MacType
-from GRLLibs.UtilityModules.enums import PlatformDiagnosticPacket_Direction, PlatformDiagnosticPacket_Type, AddressType
+from GRLLibs.UtilityModules.enums import PlatformDiagnosticPacket_Direction, PlatformDiagnosticPacket_Type
 from GRLLibs.UtilityModules.ModuleHelper import ModuleHelper, ThreadRunner
 from GRLLibs.ThreadPacket.PlatformPackets import PlatformDiagnosticPacket, PlatformPackets
 from Queue import Queue
@@ -112,7 +112,7 @@ class OpenThread(IThci):
         print '[%s] Expecting [%s]' % (self.port, expected)
 
         retry_times = 10
-        for i in range(0, times):
+        while times:
             if not retry_times:
                 break
 
@@ -126,6 +126,8 @@ class OpenThread(IThci):
             if not line:
                 retry_times -= 1
                 time.sleep(0.1)
+
+            times -= 1
 
         raise Exception('failed to find expected string[%s]' % expected)
 
@@ -206,15 +208,15 @@ class OpenThread(IThci):
 
         try:
             # command retransmit times
-            retryTimes = 3
-            while retryTimes:
-                retryTimes -= 1
+            retry_times = 3
+            while retry_times:
+                retry_times -= 1
                 try:
                     self._sendline(cmd)
                     self._expect(cmd)
                 except Exception as e:
                     logging.exception('%s: failed to send command[%s]: %s', self.port, cmd, str(e))
-                    if not retryTimes:
+                    if not retry_times:
                         raise
                 else:
                     break
