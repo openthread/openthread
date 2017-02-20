@@ -5255,18 +5255,38 @@ otLwfIoCtl_otJoinerStart(
     if (InBufferLength >= sizeof(otCommissionConfig))
     {
         otCommissionConfig *aConfig = (otCommissionConfig*)InBuffer;
-        status = ThreadErrorToNtstatus(
-            otJoinerStart(
-                pFilter->otCtx,
-                (const char*)aConfig->PSKd,
-                (const char*)aConfig->ProvisioningUrl,
-                (const char*)aConfig->VendorName,
-                (const char*)aConfig->VendorModel,
-                (const char*)aConfig->VendorSwVersion,
-                (const char*)aConfig->VendorData,
-                NULL,  // TODO: handle the joiner completion callback
-                NULL)
-            );
+
+#define IsNotNullTerminated(buf) (strnlen(buf, sizeof(buf)) == sizeof(buf))
+
+        if (IsNotNullTerminated(aConfig->PSKd) ||
+            IsNotNullTerminated(aConfig->ProvisioningUrl) ||
+            IsNotNullTerminated(aConfig->VendorName) ||
+            IsNotNullTerminated(aConfig->VendorModel) ||
+            IsNotNullTerminated(aConfig->VendorSwVersion) ||
+            IsNotNullTerminated(aConfig->VendorData))
+        {
+            status = STATUS_INVALID_PARAMETER;
+        }
+        else
+        {
+            strcpy_s(pFilter->otVendorName, sizeof(pFilter->otVendorName), aConfig->VendorName);
+            strcpy_s(pFilter->otVendorModel, sizeof(pFilter->otVendorModel), aConfig->VendorModel);
+            strcpy_s(pFilter->otVendorSwVersion, sizeof(pFilter->otVendorSwVersion), aConfig->VendorSwVersion);
+            strcpy_s(pFilter->otVendorData, sizeof(pFilter->otVendorData), aConfig->VendorData);
+
+            status = ThreadErrorToNtstatus(
+                otJoinerStart(
+                    pFilter->otCtx,
+                    aConfig->PSKd,
+                    aConfig->ProvisioningUrl,
+                    pFilter->otVendorName,
+                    pFilter->otVendorModel,
+                    pFilter->otVendorSwVersion,
+                    pFilter->otVendorData,
+                    otLwfJoinerCallback,
+                    pFilter)
+                );
+        }
     }
 
     return status;

@@ -422,7 +422,7 @@ AC_ARG_ENABLE(cli,
     [
         case "${enableval}" in
 
-        no|yes)
+        no|yes|mtd|ftd)
             enable_cli=${enableval}
             ;;
 
@@ -433,7 +433,9 @@ AC_ARG_ENABLE(cli,
     ],
     [enable_cli=no])
 AC_MSG_RESULT(${enable_cli})
-AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI], [test "${enable_cli}" = "yes"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI], [test "${enable_cli}" != "no"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI_FTD], [test "${enable_cli}" = "yes" -o "${enable_cli}" = "ftd"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI_MTD], [test "${enable_cli}" = "yes" -o "${enable_cli}" = "mtd"])
 
 #
 # NCP Library
@@ -483,7 +485,7 @@ AC_ARG_ENABLE(builtin-mbedtls,
     ],
     [enable_builtin_mbedtls=yes])
 
-if test "$enable_builtin_mbedtls" = "yes"; then
+if test "$enable_builtin_mbedtls" = "yes" -a ! "${MBEDTLS_CPPFLAGS}"; then
     MBEDTLS_CPPFLAGS="-I\${abs_top_srcdir}/third_party/mbedtls"
     MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include"
     MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include/mbedtls"
@@ -877,11 +879,11 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_RAW_LINK_API],[${OPENTHREAD_ENABLE_RAW_LIN
 
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
-        [Specify the examples from one of: none, posix, cc2538, da15000 @<:@default=none@:>@.])],
+        [Specify the examples from one of: none, posix, cc2538, cc2650, da15000, nrf52840 @<:@default=none@:>@.])],
     [
         case "${with_examples}" in
 
-        none|posix|cc2538|da15000|nrf52840)
+        none|posix|cc2538|cc2650|da15000|nrf52840)
             ;;
         *)
             AC_MSG_ERROR([Invalid value ${with_examples} for --with-examples])
@@ -902,6 +904,11 @@ case ${with_examples} in
     cc2538)
         OPENTHREAD_EXAMPLES_CC2538=1
         AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_CC2538],[${OPENTHREAD_EXAMPLES_CC2538}],[Define to 1 if you want to use cc2538 examples])
+        ;;
+
+    cc2650)
+        OPENTHREAD_EXAMPLES_CC2650=1
+        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_CC2650],[${OPENTHREAD_EXAMPLES_CC2650}],[Define to 1 if you want to use cc2650 examples])
         ;;
 
     da15000)
@@ -927,6 +934,9 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_POSIX], [test "${OPENTHREAD_EXAMPLES}" = "po
 
 AC_SUBST(OPENTHREAD_EXAMPLES_CC2538)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2538], [test "${OPENTHREAD_EXAMPLES}" = "cc2538"])
+
+AC_SUBST(OPENTHREAD_EXAMPLES_CC2650)
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2650], [test "${OPENTHREAD_EXAMPLES}" = "cc2650"])
 
 AC_SUBST(OPENTHREAD_EXAMPLES_DA15000)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_DA15000], [test "${OPENTHREAD_EXAMPLES}" = "da15000"])
@@ -1067,6 +1077,7 @@ examples/apps/cli/Makefile
 examples/apps/ncp/Makefile
 examples/platforms/Makefile
 examples/platforms/cc2538/Makefile
+examples/platforms/cc2650/Makefile
 examples/platforms/da15000/Makefile
 examples/platforms/nrf52840/Makefile
 examples/platforms/posix/Makefile

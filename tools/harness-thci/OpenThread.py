@@ -26,21 +26,21 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-'''
+"""
 >> Thread Host Controller Interface
 >> Device : OpenThread THCI
 >> Class : OpenThread
-'''
+"""
 
 import re
-import sys
 import time
-import serial
 import socket
 import logging
+
+import serial
 from IThci import IThci
 from GRLLibs.UtilityModules.Test import Thread_Device_Role, Device_Data_Requirement, MacType
-from GRLLibs.UtilityModules.enums import PlatformDiagnosticPacket_Direction, PlatformDiagnosticPacket_Type, AddressType
+from GRLLibs.UtilityModules.enums import PlatformDiagnosticPacket_Direction, PlatformDiagnosticPacket_Type
 from GRLLibs.UtilityModules.ModuleHelper import ModuleHelper, ThreadRunner
 from GRLLibs.ThreadPacket.PlatformPackets import PlatformDiagnosticPacket, PlatformPackets
 from Queue import Queue
@@ -89,6 +89,8 @@ class OpenThread(IThci):
             self.logThread = Queue()
             self.logStatus = {'stop':'stop', 'running':'running', "pauseReq":'pauseReq', 'paused':'paused'}
             self.logThreadStatus = self.logStatus['stop']
+            self.joinStatus = {'notstart':'notstart', 'ongoing':'ongoing', 'succeed':'succeed', "failed":'failed'}
+            self.joinCommissionedStatus = self.joinStatus['notstart']
             self.intialize()
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("initialize() Error: " + str(e))
@@ -110,7 +112,7 @@ class OpenThread(IThci):
         print '[%s] Expecting [%s]' % (self.port, expected)
 
         retry_times = 10
-        for i in range(0, times):
+        while times:
             if not retry_times:
                 break
 
@@ -124,6 +126,8 @@ class OpenThread(IThci):
             if not line:
                 retry_times -= 1
                 time.sleep(0.1)
+
+            times -= 1
 
         raise Exception('failed to find expected string[%s]' % expected)
 
@@ -204,15 +208,15 @@ class OpenThread(IThci):
 
         try:
             # command retransmit times
-            retryTimes = 3
-            while retryTimes:
-                retryTimes -= 1
+            retry_times = 3
+            while retry_times:
+                retry_times -= 1
                 try:
                     self._sendline(cmd)
                     self._expect(cmd)
                 except Exception as e:
                     logging.exception('%s: failed to send command[%s]: %s', self.port, cmd, str(e))
-                    if not retryTimes:
+                    if not retry_times:
                         raise
                 else:
                     break
@@ -590,6 +594,11 @@ class OpenThread(IThci):
                 if line:
                     print line
                     logs.put(line)
+
+                    if "Join success" in line:
+                        self.joinCommissionedStatus = self.joinStatus['succeed']
+                    elif "Join failed" in line:
+                        self.joinCommissionedStatus = self.joinStatus['failed']
 
             except Exception, e:
                 pass
@@ -1986,17 +1995,28 @@ class OpenThread(IThci):
             strPSKd: Joiner's PSKd
 
         Returns:
-            True: successful to start commissioner
-            False: fail to start commissioner
+            True: successful to start joiner
+            False: fail to start joiner
         """
         print '%s call joinCommissioned' % self.port
         self.__sendCommand('ifconfig up')
         cmd = 'joiner start %s %s' %(strPSKd, self.provisioningUrl)
         print cmd
         if self.__sendCommand(cmd)[0] == "Done":
+            maxDuration = 150 # seconds
+            self.joinCommissionedStatus = self.joinStatus['ongoing']
+
             if self.logThreadStatus == self.logStatus['stop']:
-                self.logThread = ThreadRunner.run(target=self.__readCommissioningLogs, args=(90,))
-            time.sleep(100)
+                self.logThread = ThreadRunner.run(target=self.__readCommissioningLogs, args=(maxDuration,))
+
+            t_end = time.time() + maxDuration
+            while time.time() < t_end:
+                if self.joinCommissionedStatus == self.joinStatus['succeed']:
+                    break;
+                elif self.joinCommissionedStatus == self.joinStatus['failed']:
+                    return False
+
+                time.sleep(1)
 
             self.__sendCommand('thread start')
             time.sleep(30)
@@ -2516,3 +2536,6 @@ class OpenThread(IThci):
 
     def setMinDelayTimer(self, iSeconds):
         print '%s call setMinDelayTimer' % self.port
+        cmd = 'delaytimermin %s' % iSeconds
+        print cmd
+        return self.__sendCommand(cmd)[0] == 'Done'

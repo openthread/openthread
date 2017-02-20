@@ -266,13 +266,9 @@ extern "C" void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyS
 {
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
-    if (aInstance->mLinkRawEnabled)
+    if (aInstance->mLinkRaw.IsEnabled())
     {
-        if (aInstance->mLinkRawEnergyScanDoneCallback)
-        {
-            aInstance->mLinkRawEnergyScanDoneCallback(aInstance, aEnergyScanMaxRssi);
-            aInstance->mLinkRawEnergyScanDoneCallback = NULL;
-        }
+        aInstance->mLinkRaw.InvokeEnergyScanDone(aEnergyScanMaxRssi);
     }
     else
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
@@ -807,13 +803,9 @@ extern "C" void otPlatRadioTransmitDone(otInstance *aInstance, RadioPacket *aPac
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
-    if (aInstance->mLinkRawEnabled)
+    if (aInstance->mLinkRaw.IsEnabled())
     {
-        if (aInstance->mLinkRawTransmitDoneCallback)
-        {
-            aInstance->mLinkRawTransmitDoneCallback(aInstance, aPacket, aRxPending, aError);
-            aInstance->mLinkRawTransmitDoneCallback = NULL;
-        }
+        aInstance->mLinkRaw.InvokeTransmitDone(aPacket, aRxPending, aError);
     }
     else
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
@@ -1130,20 +1122,28 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
             ExitNow(error = kThreadError_Security);
         }
 
-        if (keySequence < aNeighbor->mKeySequence)
+        // If the frame is from a neighbor not in valid state (e.g., it is from a child being
+        // restored), skip the key sequence and frame counter checks but continue to verify
+        // the tag/MIC. Such a frame is later filtered in `RxDoneTask` which only allows MAC
+        // Data Request frames from a child being restored.
+
+        if (aNeighbor->mState == Neighbor::kStateValid)
         {
-            ExitNow(error = kThreadError_Security);
-        }
-        else if (keySequence == aNeighbor->mKeySequence)
-        {
-            if ((frameCounter + 1) < aNeighbor->mValid.mLinkFrameCounter)
+            if (keySequence < aNeighbor->mKeySequence)
             {
                 ExitNow(error = kThreadError_Security);
             }
-            else if ((frameCounter + 1) == aNeighbor->mValid.mLinkFrameCounter)
+            else if (keySequence == aNeighbor->mKeySequence)
             {
-                // drop duplicated packets
-                ExitNow(error = kThreadError_Duplicated);
+                if ((frameCounter + 1) < aNeighbor->mValid.mLinkFrameCounter)
+                {
+                    ExitNow(error = kThreadError_Security);
+                }
+                else if ((frameCounter + 1) == aNeighbor->mValid.mLinkFrameCounter)
+                {
+                    // drop duplicated packets
+                    ExitNow(error = kThreadError_Duplicated);
+                }
             }
         }
 
@@ -1172,7 +1172,7 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
 
     VerifyOrExit(memcmp(tag, aFrame.GetFooter(), tagLength) == 0, error = kThreadError_Security);
 
-    if (keyIdMode == Frame::kKeyIdMode1)
+    if ((keyIdMode == Frame::kKeyIdMode1) && (aNeighbor->mState == Neighbor::kStateValid))
     {
         if (aNeighbor->mKeySequence != keySequence)
         {
@@ -1200,12 +1200,9 @@ extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, RadioPacket *aFram
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
-    if (aInstance->mLinkRawEnabled)
+    if (aInstance->mLinkRaw.IsEnabled())
     {
-        if (aInstance->mLinkRawReceiveDoneCallback)
-        {
-            aInstance->mLinkRawReceiveDoneCallback(aInstance, aFrame, aError);
-        }
+        aInstance->mLinkRaw.InvokeReceiveDone(aFrame, aError);
     }
     else
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
@@ -1226,6 +1223,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
     otMacBlacklistEntry *blacklistEntry;
     int8_t rssi;
     bool receive = false;
+    uint8_t commandId;
     ThreadError error = aError;
 
     mCounters.mRxTotal++;
@@ -1320,7 +1318,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
         break;
     }
 
-    // Increment coutners
+    // Increment counters
     if (dstaddr.mShortAddress == kShortAddrBroadcast)
     {
         // Broadcast packet
@@ -1338,6 +1336,28 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
     if (neighbor != NULL)
     {
         neighbor->mLinkInfo.AddRss(mNoiseFloor, aFrame->mPower);
+
+        if (aFrame->GetSecurityEnabled() == true)
+        {
+            switch (neighbor->mState)
+            {
+            case Neighbor::kStateValid:
+                break;
+
+            case Neighbor::kStateRestored:
+            case Neighbor::kStateChildUpdateRequest:
+
+                // Only accept a "MAC Data Request" frame from a child being restored.
+                VerifyOrExit(aFrame->GetType() == Frame::kFcfFrameMacCmd, error = kThreadError_Drop);
+                VerifyOrExit(aFrame->GetCommandId(commandId) == kThreadError_None, error = kThreadError_Drop);
+                VerifyOrExit(commandId == Frame::kMacCmdDataRequest, error = kThreadError_Drop);
+
+                break;
+
+            default:
+                ExitNow(error = kThreadError_UnknownNeighbor);
+            }
+        }
     }
 
     switch (mState)

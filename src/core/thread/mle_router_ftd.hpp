@@ -65,110 +65,6 @@ class NetworkDataLeader;
  */
 
 /**
- * This class implements functionality required for delaying MLE responses.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class DelayedResponseHeader
-{
-public:
-    /**
-     * Default constructor for the object.
-     *
-     */
-    DelayedResponseHeader(void) { memset(this, 0, sizeof(*this)); };
-
-    /**
-     * This constructor initializes the object with specific values.
-     *
-     * @param[in]  aSendTime     Time when the message shall be sent.
-     * @param[in]  aDestination  IPv6 address of the message destination.
-     *
-     */
-    DelayedResponseHeader(uint32_t aSendTime, const Ip6::Address &aDestination) {
-        mSendTime = aSendTime;
-        mDestination = aDestination;
-    };
-
-    /**
-     * This method appends delayed response header to the message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @retval kThreadError_None    Successfully appended the bytes.
-     * @retval kThreadError_NoBufs  Insufficient available buffers to grow the message.
-     *
-     */
-    ThreadError AppendTo(Message &aMessage) {
-        return aMessage.Append(this, sizeof(*this));
-    };
-
-    /**
-     * This method reads delayed response header from the message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @returns The number of bytes read.
-     *
-     */
-    uint16_t ReadFrom(Message &aMessage) {
-        return aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
-    };
-
-    /**
-     * This method removes delayed response header from the message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @retval kThreadError_None  Successfully removed the header.
-     *
-     */
-    static ThreadError RemoveFrom(Message &aMessage) {
-        return aMessage.SetLength(aMessage.GetLength() - sizeof(DelayedResponseHeader));
-    };
-
-    /**
-     * This method returns a time when the message shall be sent.
-     *
-     * @returns  A time when the message shall be sent.
-     *
-     */
-    uint32_t GetSendTime(void) const { return mSendTime; };
-
-    /**
-     * This method returns a destination of the delayed message.
-     *
-     * @returns  A destination of the delayed message.
-     *
-     */
-    const Ip6::Address &GetDestination(void) const { return mDestination; };
-
-    /**
-     * This method checks if the message shall be sent before the given time.
-     *
-     * @param[in]  aTime  A time to compare.
-     *
-     * @retval TRUE   If the message shall be sent before the given time.
-     * @retval FALSE  Otherwise.
-     */
-    bool IsEarlier(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) > 0); };
-
-    /**
-     * This method checks if the message shall be sent after the given time.
-     *
-     * @param[in]  aTime  A time to compare.
-     *
-     * @retval TRUE   If the message shall be sent after the given time.
-     * @retval FALSE  Otherwise.
-     */
-    bool IsLater(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) < 0); };
-
-private:
-    Ip6::Address mDestination;  ///< IPv6 address of the message destination.
-    uint32_t mSendTime;         ///< Time when the message shall be sent.
-} OT_TOOL_PACKED_END;
-
-/**
  * This class implements MLE functionality required by the Thread Router and Leader roles.
  *
  */
@@ -707,18 +603,12 @@ public:
      */
     void FillRouteTlv(RouteTlv &aTlv);
 
-    /**
-     * This method returns a reference to the send queue.
-     *
-     * @returns A reference to the send queue.
-     *
-     */
-    const MessageQueue &GetMessageQueue(void) const { return mDelayedResponses; }
-
 private:
     enum
     {
+        kDiscoveryMaxJitter = 250u,  ///< Maximum jitter time used to delay Discovery Responses in milliseconds.
         kStateUpdatePeriod = 1000u,  ///< State update period in milliseconds.
+        kUnsolicitedDataResponseJitter = 500u,  ///< Maximum delay before unsolicited Data Response in milliseconds.
     };
 
     ThreadError AppendConnectivity(Message &aMessage);
@@ -726,7 +616,7 @@ private:
     ThreadError AppendRoute(Message &aMessage);
     ThreadError AppendActiveDataset(Message &aMessage);
     ThreadError AppendPendingDataset(Message &aMessage);
-    void GetChildInfo(Child &aChild, otChildInfo &aChildInfo);
+    ThreadError GetChildInfo(Child &aChild, otChildInfo &aChildInfo);
     ThreadError HandleDetachStart(void);
     ThreadError HandleChildStart(otMleAttachFilter aFilter);
     ThreadError HandleLinkRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -761,7 +651,8 @@ private:
     ThreadError SendChildUpdateRequest(Child *aChild);
     ThreadError SendChildUpdateResponse(Child *aChild, const Ip6::MessageInfo &aMessageInfo,
                                         const uint8_t *aTlvs, uint8_t aTlvsLength,  const ChallengeTlv *challenge);
-    ThreadError SendDataResponse(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength);
+    ThreadError SendDataResponse(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength,
+                                 uint16_t aDelay);
     ThreadError SendDiscoveryResponse(const Ip6::Address &aDestination, uint16_t aPanId);
 
     ThreadError SetStateRouter(uint16_t aRloc16);
@@ -787,6 +678,7 @@ private:
     Child *FindChild(uint16_t aChildId);
     Child *FindChild(const Mac::ExtAddress &aMacAddr);
 
+    void SetChildStateToValid(Child *aChild);
     bool HasChildren(void);
     void RemoveChildren(void);
     bool HasMinDowngradeNeighborRouters(void);
@@ -802,18 +694,11 @@ private:
     bool HandleAdvertiseTimer(void);
     static void HandleStateUpdateTimer(void *aContext);
     void HandleStateUpdateTimer(void);
-    static void HandleDelayedResponseTimer(void *aContext);
-    void HandleDelayedResponseTimer(void);
     static void HandleChildUpdateRequestTimer(void *aContext);
     void HandleChildUpdateRequestTimer(void);
 
-    ThreadError AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestination, uint16_t aDelay);
-
-    MessageQueue mDelayedResponses;
-
     TrickleTimer mAdvertiseTimer;
     Timer mStateUpdateTimer;
-    Timer mDelayedResponseTimer;
     Timer mChildUpdateRequestTimer;
 
     Coap::Resource mAddressSolicit;

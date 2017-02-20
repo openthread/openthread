@@ -105,6 +105,7 @@ typedef otCallback<otHandleEnergyScanResult> otApiEnergyScanCallback;
 typedef otCallback<otStateChangedCallback> otApiStateChangeCallback;
 typedef otCallback<otCommissionerEnergyReportCallback> otApiCommissionerEnergyReportCallback;
 typedef otCallback<otCommissionerPanIdConflictCallback> otApiCommissionerPanIdConflictCallback;
+typedef otCallback<otJoinerCallback> otApiJoinerCallback;
 
 typedef struct otApiInstance
 {
@@ -127,6 +128,7 @@ typedef struct otApiInstance
     vector<otApiStateChangeCallback*>   StateChangedCallbacks;
     vector<otApiCommissionerEnergyReportCallback*>  CommissionerEnergyReportCallbacks;
     vector<otApiCommissionerPanIdConflictCallback*> CommissionerPanIdConflictCallbacks;
+    vector<otApiJoinerCallback*>        JoinerCallbacks;
 
     // Constructor
     otApiInstance() : 
@@ -358,6 +360,9 @@ otApiFinalize(
         vector<otApiCommissionerPanIdConflictCallback*> CommissionerPanIdConflictCallbacks(aApitInstance->CommissionerPanIdConflictCallbacks);
         aApitInstance->CommissionerPanIdConflictCallbacks.clear();
 
+        vector<otApiJoinerCallback*> JoinerCallbacks(aApitInstance->JoinerCallbacks);
+        aApitInstance->JoinerCallbacks.clear();
+
         #ifdef DEBUG_ASYNC_IO
         otLogDebgApi("Clearing Threadpool Wait");
         #endif
@@ -403,6 +408,11 @@ otApiFinalize(
         {
             CommissionerPanIdConflictCallbacks[i]->Release(true);
             delete CommissionerPanIdConflictCallbacks[i];
+        }
+        for (size_t i = 0; i < JoinerCallbacks.size(); i++)
+        {
+            JoinerCallbacks[i]->Release(true);
+            delete JoinerCallbacks[i];
         }
         
         // Clean up threadpool wait
@@ -649,6 +659,39 @@ ProcessNotification(
             Callback->Callback(
                 Notif->CommissionerPanIdQueryPayload.PanId,
                 Notif->CommissionerPanIdQueryPayload.ChannelMask,
+                Callback->CallbackContext);
+
+            Callback->Release();
+        }
+    }
+    else if (Notif->NotifType == OTLWF_NOTIF_JOINER_COMPLETE)
+    {
+        otCallback<otJoinerCallback>* Callback = nullptr;
+
+        EnterCriticalSection(&aApitInstance->CallbackLock);
+
+        for (size_t i = 0; i < aApitInstance->JoinerCallbacks.size(); i++)
+        {
+            if (aApitInstance->JoinerCallbacks[i]->InterfaceGuid == Notif->InterfaceGuid)
+            {
+                aApitInstance->JoinerCallbacks[i]->AddRef();
+                Callback = aApitInstance->JoinerCallbacks[i];
+                break;
+            }
+        }
+
+        LeaveCriticalSection(&aApitInstance->CallbackLock);
+        
+        // Invoke the callback outside the lock and release ref when done
+        if (Callback)
+        {
+            aApitInstance->SetCallback(
+                aApitInstance->JoinerCallbacks,
+                Notif->InterfaceGuid, (otJoinerCallback)nullptr, (PVOID)nullptr
+                );
+
+            Callback->Callback(
+                Notif->JoinerCompletePayload.Error,
                 Callback->CallbackContext);
 
             Callback->Release();
@@ -3675,12 +3718,12 @@ ThreadError
 OTCALL
 otJoinerStart(
     _In_ otInstance *aInstance,
-    const char *aPSKd, 
-    const char *aProvisioningUrl,
-    const char *aVendorName,
-    const char *aVendorModel,
-    const char *aVendorSwVersion,
-    const char *aVendorData,
+    _Null_terminated_ const char *aPSKd,
+    _Null_terminated_ const char *aProvisioningUrl,
+    _Null_terminated_ const char *aVendorName,
+    _Null_terminated_ const char *aVendorModel,
+    _Null_terminated_ const char *aVendorSwVersion,
+    _Null_terminated_ const char *aVendorData,
     _In_ otJoinerCallback aCallback,
     _In_ void *aCallbackContext
     )
@@ -3713,7 +3756,22 @@ otJoinerStart(
     memcpy_s(config.VendorSwVersion, sizeof(config.VendorSwVersion), aVendorSwVersion, aVendorSwVersionLength);
     memcpy_s(config.VendorData, sizeof(config.VendorData), aVendorData, aVendorDataLength);
 
-    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_JOINER_START, (const otCommissionConfig*)&config));
+    aInstance->ApiHandle->SetCallback(
+        aInstance->ApiHandle->JoinerCallbacks,
+        aInstance->InterfaceGuid, aCallback, aCallbackContext
+        );
+
+    auto ret = DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_JOINER_START, (const otCommissionConfig*)&config));
+
+    if (ret != kThreadError_None)
+    {
+        aInstance->ApiHandle->SetCallback(
+            aInstance->ApiHandle->JoinerCallbacks,
+            aInstance->InterfaceGuid, (otJoinerCallback)nullptr, (PVOID)nullptr
+            );
+    }
+
+    return ret;
 }
 
 OTAPI 

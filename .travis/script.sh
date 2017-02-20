@@ -73,6 +73,12 @@ set -x
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    ONLY_MTD=1 make -f examples/Makefile-cc2650 || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
 }
 
 [ $BUILD_TARGET != arm-gcc54 ] || {
@@ -101,6 +107,12 @@ set -x
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    ONLY_MTD=1 make -f examples/Makefile-cc2650 || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
 }
 
 [ $BUILD_TARGET != posix ] || {

@@ -39,6 +39,7 @@
 // Temporary, until the warnings can get fixed in the mbed library
 #pragma warning(disable:4242)  // conversion from '*' to '*', possible loss of data
 #pragma warning(disable:4244)  // conversion from '*' to '*', possible loss of data
+#pragma warning(disable:4267)  // conversion from '*' to '*', possible loss of data
 #endif
 
 #if defined(_KERNEL_MODE)
@@ -1696,7 +1697,7 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
  * Requires: MBEDTLS_AES_C or MBEDTLS_DES_C
  *
  */
-//#define MBEDTLS_CMAC_C
+#define MBEDTLS_CMAC_C
 
 /**
  * \def MBEDTLS_CTR_DRBG_C
@@ -2626,6 +2627,6 @@ __inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ..
 #include MBEDTLS_USER_CONFIG_FILE
 #endif
 
-#include "check_config.h"
+#include "mbedtls/check_config.h"
 
 #endif /* MBEDTLS_CONFIG_H */

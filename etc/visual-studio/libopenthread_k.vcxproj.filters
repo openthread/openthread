@@ -231,6 +231,9 @@
     <ClCompile Include="..\..\src\core\crypto\hmac_sha256.cpp">
       <Filter>Source Files\crypto</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\crypto\pbkdf2_cmac.cpp">
+      <Filter>Source Files\crypto</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\crypto\sha256.cpp">
       <Filter>Source Files\crypto</Filter>
     </ClCompile>
@@ -468,6 +471,9 @@
       <Filter>Header Files\crypto</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\crypto\mbedtls.hpp">
+      <Filter>Header Files\crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\crypto\pbkdf2_cmac.h">
       <Filter>Header Files\crypto</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\crypto\sha256.hpp">

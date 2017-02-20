@@ -80,6 +80,7 @@ const struct Command Interpreter::sCommands[] =
     { "contextreusedelay", &Interpreter::ProcessContextIdReuseDelay },
     { "counter", &Interpreter::ProcessCounters },
     { "dataset", &Interpreter::ProcessDataset },
+    { "delaytimermin", &Interpreter::ProcessDelayTimerMin},
 #if OPENTHREAD_ENABLE_DIAG
     { "diag", &Interpreter::ProcessDiag },
 #endif
@@ -382,6 +383,7 @@ void Interpreter::ProcessChild(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
     otChildInfo childInfo;
+    uint8_t maxChildren;
     long value;
     bool isTable = false;
 
@@ -395,7 +397,9 @@ void Interpreter::ProcessChild(int argc, char *argv[])
             sServer->OutputFormat("+-----+--------+------------+------------+--------+------+-+-+-+-+------------------+\r\n");
         }
 
-        for (uint8_t i = 0; ; i++)
+        maxChildren = otGetMaxAllowedChildren(mInstance);
+
+        for (uint8_t i = 0; i < maxChildren ; i++)
         {
             if (otGetChildInfoByIndex(mInstance, i, &childInfo) != kThreadError_None)
             {
@@ -588,6 +592,29 @@ void Interpreter::ProcessDataset(int argc, char *argv[])
 {
     ThreadError error;
     error = Dataset::Process(mInstance, argc, argv, *sServer);
+    AppendResult(error);
+}
+
+void Interpreter::ProcessDelayTimerMin(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+
+    if (argc == 0)
+    {
+        sServer->OutputFormat("%d\r\n", (otGetDelayTimerMinimal(mInstance) / 1000));
+    }
+    else if (argc == 1)
+    {
+        unsigned long value;
+        SuccessOrExit(error = ParseUnsignedLong(argv[0], value));
+        SuccessOrExit(error = otSetDelayTimerMinimal(mInstance, static_cast<uint32_t>(value * 1000)));
+    }
+    else
+    {
+        error = kThreadError_InvalidArgs;
+    }
+
+exit:
     AppendResult(error);
 }
 
@@ -1033,6 +1060,7 @@ void Interpreter::ProcessLinkQuality(int argc, char *argv[])
     uint8_t linkQuality;
     long value;
 
+    VerifyOrExit(argc > 0, error = kThreadError_InvalidArgs);
     VerifyOrExit(Hex2Bin(argv[0], extAddress, OT_EXT_ADDRESS_SIZE) >= 0, error = kThreadError_Parse);
 
     if (argc == 1)
@@ -1987,6 +2015,7 @@ void Interpreter::ProcessRouterSelectionJitter(int argc, char *argv[])
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
+        VerifyOrExit(0 < value && value < 256, error = kThreadError_InvalidArgs);
         otSetRouterSelectionJitter(mInstance, static_cast<uint8_t>(value));
     }
 
@@ -2126,7 +2155,7 @@ void Interpreter::ProcessState(int argc, char *argv[])
         }
         else if (strcmp(argv[0], "child") == 0)
         {
-            SuccessOrExit(error = otBecomeChild(mInstance, kMleAttachSamePartition));
+            SuccessOrExit(error = otBecomeChild(mInstance, kMleAttachSamePartition1));
         }
         else if (strcmp(argv[0], "router") == 0)
         {

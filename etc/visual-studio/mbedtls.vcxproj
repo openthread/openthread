@@ -59,6 +59,7 @@
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\ccm.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\cipher.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\cipher_wrap.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\cmac.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\ctr_drbg.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\debug.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\ecjpake.c" />

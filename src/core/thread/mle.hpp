@@ -341,6 +341,110 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
+ * This class implements functionality required for delaying MLE responses.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class DelayedResponseHeader
+{
+public:
+    /**
+     * Default constructor for the object.
+     *
+     */
+    DelayedResponseHeader(void) { memset(this, 0, sizeof(*this)); };
+
+    /**
+     * This constructor initializes the object with specific values.
+     *
+     * @param[in]  aSendTime     Time when the message shall be sent.
+     * @param[in]  aDestination  IPv6 address of the message destination.
+     *
+     */
+    DelayedResponseHeader(uint32_t aSendTime, const Ip6::Address &aDestination) {
+        mSendTime = aSendTime;
+        mDestination = aDestination;
+    };
+
+    /**
+     * This method appends delayed response header to the message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @retval kThreadError_None    Successfully appended the bytes.
+     * @retval kThreadError_NoBufs  Insufficient available buffers to grow the message.
+     *
+     */
+    ThreadError AppendTo(Message &aMessage) {
+        return aMessage.Append(this, sizeof(*this));
+    };
+
+    /**
+     * This method reads delayed response header from the message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @returns The number of bytes read.
+     *
+     */
+    uint16_t ReadFrom(Message &aMessage) {
+        return aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+    };
+
+    /**
+     * This method removes delayed response header from the message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @retval kThreadError_None  Successfully removed the header.
+     *
+     */
+    static ThreadError RemoveFrom(Message &aMessage) {
+        return aMessage.SetLength(aMessage.GetLength() - sizeof(DelayedResponseHeader));
+    };
+
+    /**
+     * This method returns a time when the message shall be sent.
+     *
+     * @returns  A time when the message shall be sent.
+     *
+     */
+    uint32_t GetSendTime(void) const { return mSendTime; };
+
+    /**
+     * This method returns a destination of the delayed message.
+     *
+     * @returns  A destination of the delayed message.
+     *
+     */
+    const Ip6::Address &GetDestination(void) const { return mDestination; };
+
+    /**
+     * This method checks if the message shall be sent before the given time.
+     *
+     * @param[in]  aTime  A time to compare.
+     *
+     * @retval TRUE   If the message shall be sent before the given time.
+     * @retval FALSE  Otherwise.
+     */
+    bool IsEarlier(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) > 0); };
+
+    /**
+     * This method checks if the message shall be sent after the given time.
+     *
+     * @param[in]  aTime  A time to compare.
+     *
+     * @retval TRUE   If the message shall be sent after the given time.
+     * @retval FALSE  Otherwise.
+     */
+    bool IsLater(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) < 0); };
+
+private:
+    Ip6::Address mDestination;  ///< IPv6 address of the message destination.
+    uint32_t mSendTime;         ///< Time when the message shall be sent.
+} OT_TOOL_PACKED_END;
+
+/**
  * This class implements MLE functionality required by the Thread EndDevices, Router, and Leader roles.
  *
  */
@@ -720,7 +824,7 @@ public:
      * @returns The ROUTER_SELECTION_JITTER value.
      *
      */
-    void SetRouterSelectionJitter(uint8_t aRouterJitter);
+    ThreadError SetRouterSelectionJitter(uint8_t aRouterJitter);
 
     /**
      * This method returns the Child ID portion of an RLOC16.
@@ -772,7 +876,19 @@ public:
      */
     void FillNetworkDataTlv(NetworkDataTlv &aTlv, bool aStableOnly);
 
+    /**
+     * This method returns a reference to the send queue.
+     *
+     * @returns A reference to the send queue.
+     *
+     */
+    const MessageQueue &GetMessageQueue(void) const { return mDelayedResponses; }
+
 protected:
+    enum
+    {
+        kMleMaxResponseDelay = 1000u,  ///< Maximum delay before responding to a multicast request.
+    };
 
     /**
      * This method allocates a new message buffer for preparing an MLE message.
@@ -1086,12 +1202,14 @@ protected:
      * @param[in]  aDestination  A reference to the IPv6 address of the destination.
      * @param[in]  aTlvs         A pointer to requested TLV types.
      * @param[in]  aTlvsLength   The number of TLV types in @p aTlvs.
+     * @param[in]  aDelay        Delay in milliseconds before the Data Request message is sent.
      *
      * @retval kThreadError_None    Successfully generated an MLE Data Request message.
      * @retval kThreadError_NoBufs  Insufficient buffers to generate the MLE Data Request message.
      *
      */
-    ThreadError SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength);
+    ThreadError SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength,
+                                uint16_t aDelay);
 
     /**
      * This method generates an MLE Child Update Request message.
@@ -1163,6 +1281,19 @@ protected:
      */
     void SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLeaderRouterId);
 
+    /**
+     * This method adds a message to the message queue. The queued message will be transmitted after given delay.
+     *
+     * @param[in]  aMessage      The message to transmit after given delay.
+     * @param[in]  aDestination  The IPv6 address of the recipient of the message.
+     * @param[in]  aDelay        The delay in milliseconds before transmission of the message.
+     *
+     * @retval kThreadError_None    Successfully queued the message to transmit after the delay.
+     * @retval kThreadError_NoBufs  Insufficient buffers to queue the message.
+     *
+     */
+    ThreadError AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestination, uint16_t aDelay);
+
     ThreadNetif           &mNetif;            ///< The Thread Network Interface object.
 
     LeaderDataTlv mLeaderData;              ///< Last received Leader Data TLV.
@@ -1205,7 +1336,8 @@ protected:
     };
     ReattachState mReattachState;
 
-    Timer mParentRequestTimer;  ///< The timer for driving the Parent Request process.
+    Timer mParentRequestTimer;    ///< The timer for driving the Parent Request process.
+    Timer mDelayedResponseTimer;  ///< The timer to delay MLE responses.
 
     uint8_t mRouterSelectionJitter;         ///< The variable to save the assigned jitter value.
     uint8_t mRouterSelectionJitterTimeout;  ///< The Timeout prior to request/release Router ID.
@@ -1226,6 +1358,8 @@ private:
     void HandleNetifStateChanged(uint32_t aFlags);
     static void HandleParentRequestTimer(void *aContext);
     void HandleParentRequestTimer(void);
+    static void HandleDelayedResponseTimer(void *aContext);
+    void HandleDelayedResponseTimer(void);
     static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     static void HandleSendChildUpdateRequest(void *aContext);
@@ -1248,6 +1382,8 @@ private:
 
     bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, ConnectivityTlv &aConnectivityTlv) const;
     void ResetParentCandidate(void);
+
+    MessageQueue mDelayedResponses;
 
     /**
      * This struct represents the device's own network information for persistent storage.
@@ -1283,6 +1419,7 @@ private:
     uint8_t mParentLinkQuality3;
     uint8_t mParentLinkQuality2;
     uint8_t mParentLinkQuality1;
+    uint8_t mKeepAliveAttemptsSent;
     LeaderDataTlv mParentLeaderData;
     bool mParentIsSingleton;
 

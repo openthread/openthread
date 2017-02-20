@@ -35,6 +35,8 @@ lib_LIBRARIES                       = \
 
 CPPFLAGS_COMMON                     = \
     -I$(top_srcdir)/include           \
+    -I${abs_top_srcdir}/third_party/mbedtls/repo/include \
+    $(MBEDTLS_CPPFLAGS)               \
     $(OPENTHREAD_TARGET_DEFINES)      \
     $(NULL)
 
@@ -95,6 +97,7 @@ endif  # OPENTHREAD_ENABLE_MAC_WHITELIST
 if OPENTHREAD_ENABLE_COMMISSIONER
 SOURCES_COMMON                     += \
     coap/secure_coap_server.cpp       \
+    crypto/pbkdf2_cmac.cpp            \
     meshcop/announce_begin_client.cpp \
     meshcop/commissioner.cpp          \
     meshcop/energy_scan_client.cpp    \
@@ -167,6 +170,7 @@ noinst_HEADERS                      = \
     openthread-core-config.h          \
     openthread-core-default-config.h  \
     openthread-instance.h             \
+    api/link_raw.hpp                  \
     coap/coap_base.hpp                \
     coap/coap_client.hpp              \
     coap/coap_header.hpp              \
@@ -189,6 +193,7 @@ noinst_HEADERS                      = \
     crypto/aes_ecb.hpp                \
     crypto/hmac_sha256.hpp            \
     crypto/mbedtls.hpp                \
+    crypto/pbkdf2_cmac.h              \
     crypto/sha256.hpp                 \
     mac/mac.hpp                       \
     mac/mac_blacklist.hpp             \

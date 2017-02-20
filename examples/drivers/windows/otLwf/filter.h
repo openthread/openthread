@@ -160,9 +160,11 @@ typedef struct _MS_FILTER
     USHORT                          cmdTIDsInUse;
     spinel_tid_t                    cmdNextTID;
     NDIS_HANDLE                     cmdNblPool;
-#if DBG
+#ifdef COMMAND_INIT_RETRY
     ULONG                           cmdInitTryCount;
 #endif
+    otPlatResetReason               cmdResetReason;
+    KEVENT                          cmdResetCompleteEvent;
 
     //
     // Device Capabilities / State
@@ -205,6 +207,11 @@ typedef struct _MS_FILTER
         LIST_ENTRY                  EventIrpListHead;
         KEVENT                      EventWorkerThreadProcessIrp;
         KEVENT                      EventWorkerThreadEnergyScanComplete;
+
+        //
+        // OpenThread Settings Management
+        //
+        HANDLE                      otSettingsRegKey;
 
         //
         // OpenThread state management
@@ -251,6 +258,14 @@ typedef struct _MS_FILTER
         LIST_ENTRY                  otOutStandingAllocations;
         ULONG                       otAllocationID;
 #endif
+
+        //
+        // OpenThread Joiner Vendor Info
+        //
+        char otVendorName[OPENTHREAD_VENDOR_NAME_MAX_LENGTH + 1];
+        char otVendorModel[OPENTHREAD_VENDOR_MODEL_MAX_LENGTH + 1];
+        char otVendorSwVersion[OPENTHREAD_VENDOR_SW_VERSION_MAX_LENGTH + 1];
+        char otVendorData[OPENTHREAD_VENDOR_DATA_MAX_LENGTH + 1];
 
         //
         // OpenThread context buffer

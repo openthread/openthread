@@ -62,6 +62,7 @@ GUID gTopologyGuid = {0};
 volatile LONG gNumberOfInterfaces = 0;
 CRITICAL_SECTION gCS;
 vector<otNode*> gNodes;
+HANDLE gDeviceArrivalEvent = nullptr;
 
 otApiInstance *gApiInstance = nullptr;
 
@@ -97,6 +98,11 @@ ThreadError otNodeParsePrefix(const char *aStrPrefix, _Out_ otIp6Prefix *aPrefix
     return kThreadError_None;
 }
 
+void OTCALL otNodeDeviceAvailabilityChanged(bool aAdded, const GUID *, void *)
+{
+    if (aAdded) SetEvent(gDeviceArrivalEvent);
+}
+
 otApiInstance* GetApiInstance()
 {
     if (gApiInstance == nullptr)
@@ -113,13 +119,17 @@ otApiInstance* GetApiInstance()
         if (gApiInstance == nullptr)
         {
             printf("otApiInit failed!\r\n");
+            Unload();
             return nullptr;
         }
+
+        InitializeCriticalSection(&gCS);
 
         gVmpModule = LoadLibrary(TEXT("otvmpapi.dll"));
         if (gVmpModule == nullptr)
         {
             printf("LoadLibrary(\"otvmpapi\") failed!\r\n");
+            Unload();
             return nullptr;
         }
 
@@ -154,6 +164,7 @@ otApiInstance* GetApiInstance()
         if (gVmpHandle == nullptr)
         {
             printf("otvmpOpenHandle failed!\r\n");
+            Unload();
             return nullptr;
         }
 
@@ -161,10 +172,9 @@ otApiInstance* GetApiInstance()
         if (status != NO_ERROR)
         {
             printf("UuidCreate failed, 0x%x!\r\n", status);
+            Unload();
             return nullptr;
         }
-
-        InitializeCriticalSection(&gCS);
 
         auto offset = getenv("INSTANCE");
         if (offset)
@@ -177,10 +187,26 @@ otApiInstance* GetApiInstance()
             gNextBusNumber = rand() % 1000 + 1;
         }
 
+        gDeviceArrivalEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+
+        // Set callback to wait for device arrival notifications
+        otSetDeviceAvailabilityChangedCallback(gApiInstance, otNodeDeviceAvailabilityChanged, nullptr);
+
         printf("New topology created\r\n" GUID_FORMAT " [%d]\r\n\r\n", GUID_ARG(gTopologyGuid), gNextBusNumber);
     }
 
+    InterlockedIncrement(&gNumberOfInterfaces);
+
     return gApiInstance;
+}
+
+void ReleaseApiInstance()
+{
+    if (0 == InterlockedDecrement(&gNumberOfInterfaces))
+    {
+        // Uninitialize everything else if this is the last ref
+        Unload();
+    }
 }
 
 void Unload()
@@ -192,6 +218,14 @@ void Unload()
 
     if (gApiInstance)
     {
+        otSetDeviceAvailabilityChangedCallback(gApiInstance, nullptr, nullptr);
+
+        if (gDeviceArrivalEvent != nullptr)
+        {
+            CloseHandle(gDeviceArrivalEvent);
+            gDeviceArrivalEvent = nullptr;
+        }
+
         if (gVmpHandle != nullptr)
         {
             otvmpCloseHandle(gVmpHandle);
@@ -200,14 +234,14 @@ void Unload()
 
         if (gVmpModule != nullptr)
         {
-            CloseHandle(gVmpModule);
+            FreeLibrary(gVmpModule);
             gVmpModule = nullptr;
         }
 
+        DeleteCriticalSection(&gCS);
+
         otApiFinalize(gApiInstance);
         gApiInstance = nullptr;
-
-        DeleteCriticalSection(&gCS);
 
         WSACleanup();
 
@@ -706,8 +740,12 @@ OTNODEAPI otNode* OTCALL otNodeInit(uint32_t id)
         return nullptr;
     }
 
+    bool BusAdded = false;
     DWORD newBusIndex;
     NET_IFINDEX ifIndex = {};
+    NET_LUID ifLuid = {};
+    GUID ifGuid = {};
+    otNode *node = nullptr;
     
     DWORD dwError;
     DWORD tries = 0;
@@ -719,6 +757,7 @@ OTNODEAPI otNode* OTCALL otNodeInit(uint32_t id)
         dwError = otvmpAddVirtualBus(gVmpHandle, &newBusIndex, &ifIndex);
         if (dwError == ERROR_SUCCESS)
         {
+            BusAdded = true;
             gNextBusNumber = newBusIndex + 1;
             break;
         }
@@ -730,7 +769,7 @@ OTNODEAPI otNode* OTCALL otNodeInit(uint32_t id)
         {
             printf("otvmpAddVirtualBus failed, 0x%x!\r\n", dwError);
             otLogFuncExitMsg("otvmpAddVirtualBus failed");
-            return nullptr;
+            goto error;
         }
     }
 
@@ -738,50 +777,56 @@ OTNODEAPI otNode* OTCALL otNodeInit(uint32_t id)
     {
         printf("otvmpAddVirtualBus failed to find an empty bus!\r\n");
         otLogFuncExitMsg("otvmpAddVirtualBus failed to find an empty bus");
-        return nullptr;
+        goto error;
     }
 
     if ((dwError = otvmpSetAdapterTopologyGuid(gVmpHandle, newBusIndex, &gTopologyGuid)) != ERROR_SUCCESS)
     {
         printf("otvmpSetAdapterTopologyGuid failed, 0x%x!\r\n", dwError);
         otLogFuncExitMsg("otvmpSetAdapterTopologyGuid failed");
-        otvmpRemoveVirtualBus(gVmpHandle, newBusIndex);
-        return nullptr;
+        goto error;
     }
 
-    NET_LUID ifLuid = {};
     if (ERROR_SUCCESS != ConvertInterfaceIndexToLuid(ifIndex, &ifLuid))
     {
         printf("ConvertInterfaceIndexToLuid(%u) failed!\r\n", ifIndex);
         otLogFuncExitMsg("ConvertInterfaceIndexToLuid failed");
-        otvmpRemoveVirtualBus(gVmpHandle, newBusIndex);
-        return nullptr;
+        goto error;
     }
 
-    GUID ifGuid = {};
     if (ERROR_SUCCESS != ConvertInterfaceLuidToGuid(&ifLuid, &ifGuid))
     {
         printf("ConvertInterfaceLuidToGuid failed!\r\n");
         otLogFuncExitMsg("ConvertInterfaceLuidToGuid failed");
-        otvmpRemoveVirtualBus(gVmpHandle, newBusIndex);
-        return nullptr;
+        goto error;
     }
-    
-    auto instance = otInstanceInit(ApiInstance, &ifGuid);
+
+    // Keep trying for up to 30 seconds
+    auto StartTick = GetTickCount64();
+    otInstance *instance = nullptr;
+    do
+    {
+        instance = otInstanceInit(ApiInstance, &ifGuid);
+        if (instance != nullptr) break;
+
+        auto waitTimeMs = (30 * 1000 - (LONGLONG)(GetTickCount64() - StartTick));
+        if (waitTimeMs <= 0) break;
+        auto waitResult = WaitForSingleObject(gDeviceArrivalEvent, (DWORD)waitTimeMs);
+        if (waitResult != WAIT_OBJECT_0) break;
+
+    } while (true);
+
     if (instance == nullptr)
     {
         printf("otInstanceInit failed!\r\n");
         otLogFuncExitMsg("otInstanceInit failed");
-        otvmpRemoveVirtualBus(gVmpHandle, newBusIndex);
-        return nullptr;
+        goto error;
     }
-
-    InterlockedIncrement(&gNumberOfInterfaces);
 
     GUID DeviceGuid = otGetDeviceGuid(instance);
     uint32_t Compartment = otGetCompartmentId(instance);
 
-    otNode *node = new otNode();
+    node = new otNode();
     printf("%d: New Device " GUID_FORMAT " in compartment %d\r\n", id, GUID_ARG(DeviceGuid), Compartment);
 
     node->mId = id;
@@ -803,6 +848,18 @@ OTNODEAPI otNode* OTCALL otNodeInit(uint32_t id)
     HandleAddressChanges(node);
 
     otLogFuncExitMsg("success. [%d] = %!GUID!", id, &DeviceGuid);
+
+error:
+
+    if (node == nullptr)
+    {
+        if (BusAdded)
+        {
+            otvmpRemoveVirtualBus(gVmpHandle, newBusIndex);
+        }
+
+        ReleaseApiInstance();
+    }
 
     return node;
 }
@@ -849,11 +906,7 @@ OTNODEAPI int32_t OTCALL otNodeFinalize(otNode* aNode)
         otvmpRemoveVirtualBus(gVmpHandle, aNode->mBusIndex);
         delete aNode;
         
-        if (0 == InterlockedDecrement(&gNumberOfInterfaces))
-        {
-            // Uninitialize everything else if this is the last ref
-            Unload();
-        }
+        ReleaseApiInstance();
     }
     otLogFuncExit();
     return 0;
@@ -1788,7 +1841,7 @@ OTNODEAPI uint32_t OTCALL otNodePing(otNode* aNode, const char *aAddr, uint16_t 
         {
             //printf("waiting for completion event...\r\n");
             // Wait for the receive to complete
-            result = WSAWaitForMultipleEvents(1, &Overlapped.hEvent, TRUE, (DWORD)(2000 - (GetTickCount64() - StartTick)), TRUE);
+            result = WSAWaitForMultipleEvents(1, &Overlapped.hEvent, TRUE, (DWORD)(5000 - (GetTickCount64() - StartTick)), TRUE);
             if (result == WSA_WAIT_TIMEOUT)
             {
                 //printf("recv timeout\r\n");
@@ -2165,8 +2218,6 @@ OTNODEAPI otListener* OTCALL otListenerInit(uint32_t /* nodeid */)
         return nullptr;
     }
 
-    InterlockedIncrement(&gNumberOfInterfaces);
-
     otListener *listener = new otListener();
     assert(listener);
 
@@ -2177,12 +2228,23 @@ OTNODEAPI otListener* OTCALL otListenerInit(uint32_t /* nodeid */)
 
     // Create the listener
     listener->mListener = otvmpListenerCreate(&gTopologyGuid);
-    assert(listener->mListener);
+    if (listener->mListener == nullptr) goto error;
 
     // Register for callbacks
     otvmpListenerRegister(listener->mListener, otListenerCallback, listener);
 
     printf("S: Sniffer started\r\n");
+
+error:
+
+    // Clean up on failure
+    if (listener)
+    {
+        if (listener->mListener == nullptr)
+        {
+            otListenerFinalize(listener);
+        }
+    }
 
     otLogFuncExit();
 
@@ -2192,22 +2254,28 @@ OTNODEAPI otListener* OTCALL otListenerInit(uint32_t /* nodeid */)
 OTNODEAPI int32_t OTCALL otListenerFinalize(otListener* aListener)
 {
     otLogFuncEntry();
+
     if (aListener != nullptr)
     {
         // Set stop event to prevent cancel any pending otListenerRead calls
         SetEvent(aListener->mStopEvent);
 
-        // Unregisters (and waits for callbacks to complete) and cleans up the handle
-        otvmpListenerDestroy(aListener->mListener);
-        aListener->mListener = nullptr;
-
-        // Clean up left over frames
-        PLIST_ENTRY Link = aListener->mFrames.Flink;
-        while (Link != &aListener->mFrames)
+        if (aListener->mListener)
         {
-            otMacFrameEntry *entry = CONTAINING_RECORD(Link, otMacFrameEntry, Link);
-            Link = Link->Flink;
-            delete entry;
+            // Unregisters (and waits for callbacks to complete) and cleans up the handle
+            otvmpListenerDestroy(aListener->mListener);
+            aListener->mListener = nullptr;
+
+            // Clean up left over frames
+            PLIST_ENTRY Link = aListener->mFrames.Flink;
+            while (Link != &aListener->mFrames)
+            {
+                otMacFrameEntry *entry = CONTAINING_RECORD(Link, otMacFrameEntry, Link);
+                Link = Link->Flink;
+                delete entry;
+            }
+
+            printf("S: Sniffer stopped\r\n");
         }
 
         // Clean up everything else
@@ -2218,15 +2286,11 @@ OTNODEAPI int32_t OTCALL otListenerFinalize(otListener* aListener)
         DeleteCriticalSection(&aListener->mCS);
         delete aListener;
 
-        printf("S: Sniffer stopped\r\n");
-
-        if (0 == InterlockedDecrement(&gNumberOfInterfaces))
-        {
-            // Uninitialize everything else if this is the last ref
-            Unload();
-        }
+        ReleaseApiInstance();
     }
+
     otLogFuncExit();
+
     return 0;
 }
 

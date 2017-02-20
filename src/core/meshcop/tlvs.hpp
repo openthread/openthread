@@ -575,6 +575,26 @@ public:
     void Set(void) { memset(mSteeringData, 0xff, GetLength()); }
 
     /**
+     * Ths method indicates whether or not the SteeringData allows all Joiners.
+     *
+     * @retval TRUE   If the SteeringData allows all Joiners.
+     * @retval FALSE  If the SteeringData doesn't allow any Joiner.
+     *
+     */
+    bool DoesAllowAny(void) {
+        bool rval = true;
+
+        for (uint8_t i = 0; i < GetLength(); i++) {
+            if (mSteeringData[i] != 0xff) {
+                rval = false;
+                break;
+            }
+        }
+
+        return rval;
+    }
+
+    /**
      * This method returns the number of bits in the Bloom Filter.
      *
      * @returns The number of bits in the Bloom Filter.
@@ -696,6 +716,7 @@ public:
     void SetCommissionerId(const char *aCommissionerId) {
         size_t length = strnlen(aCommissionerId, sizeof(mCommissionerId));
         memcpy(mCommissionerId, aCommissionerId, length);
+        SetLength(static_cast<uint8_t>(length));
     }
 
 private:
@@ -1134,8 +1155,9 @@ public:
 
     enum
     {
-        kMaxDelayTimer = 259200,  ///< maximum delay timer value for a Pending Dataset in seconds
-        kMinDelayTimer = 28800,   ///< minimum delay timer value for a Pending Dataset in seconds
+        kMaxDelayTimer     = 259200,  ///< maximum delay timer value for a Pending Dataset in seconds
+        kDelayTimerMinimal = 30000,   ///< Minimum Delay Timer value for a Pending Operational Dataset (ms)
+        kDelayTimerDefault = 300000,  ///< Default Delay Timer value for a Pending Operational Dataset (ms)
     };
 
 private:

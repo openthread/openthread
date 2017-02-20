@@ -154,6 +154,7 @@ private:
     void ProcessContextIdReuseDelay(int argc, char *argv[]);
     void ProcessCounters(int argc, char *argv[]);
     void ProcessDataset(int argc, char *argv[]);
+    void ProcessDelayTimerMin(int argc, char *argv[]);
 #if OPENTHREAD_ENABLE_DIAG
     void ProcessDiag(int argc, char *argv[]);
 #endif  // OPENTHREAD_ENABLE_DIAG

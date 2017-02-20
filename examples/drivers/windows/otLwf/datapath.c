@@ -117,7 +117,7 @@ Arguments:
             spinel_tid_t tid = (spinel_tid_t)(ULONG_PTR)NetBuffer->ProtocolReserved[1];
             if (tid != 0)
             {
-#if DBG
+#ifdef COMMAND_INIT_RETRY
                 NT_ASSERT(pFilter->cmdInitTryCount < 9 || NBL->Status != NDIS_STATUS_PAUSED);
 #endif
                 otLwfCmdCancel(pFilter, NDIS_TEST_SEND_COMPLETE_AT_DISPATCH_LEVEL(SendCompleteFlags), tid);

@@ -213,7 +213,7 @@ OTAPI ThreadError OTCALL otSendMgmtCommissionerSet(otInstance *, const otCommiss
                                                    const uint8_t *aTlvs, uint8_t aLength);
 
 /**
- * This function returns the origian Commissioner Session ID.
+ * This function returns the Commissioner Session ID.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
@@ -221,6 +221,25 @@ OTAPI ThreadError OTCALL otSendMgmtCommissionerSet(otInstance *, const otCommiss
  *
  */
 OTAPI uint16_t OTCALL otCommissionerGetSessionId(otInstance *);
+
+/**
+ * This method generates PSKc.
+ *
+ * PSKc is used to establish the Commissioner Session.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aPassPhrase   The commissioning passphrase.
+ * @param[in]  aNetworkName  The network name for PSKc computation.
+ * @param[in]  aExtPanId     The extended pan id for PSKc computation.
+ * @param[out] aPSKc         A pointer to where the generated PSKc will be placed.
+ *
+ * @retval kThreadErrorNone          Successfully generate PSKc.
+ * @retval kThreadError_InvalidArgs  If any of the input arguments is invalid.
+ *
+ */
+OTAPI ThreadError OTCALL otCommissionerGeneratePSKc(otInstance *aInstance, const char *aPassPhrase,
+                                                    const char *aNetworkName, const uint8_t *aExtPanId,
+                                                    uint8_t *aPSKc);
 
 /**
  * @}

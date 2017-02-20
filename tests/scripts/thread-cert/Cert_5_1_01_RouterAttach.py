@@ -73,6 +73,7 @@ class Cert_5_1_01_RouterAttach(unittest.TestCase):
         self.nodes[LEADER].start()
         self.nodes[LEADER].set_state('leader')
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
+        time.sleep(4)
 
         self.nodes[ROUTER].start()
         time.sleep(7)

@@ -81,6 +81,25 @@ public:
      */
     ThreadError SendDatasetChanged(const Ip6::Address &aAddress);
 
+    /**
+     * This method sets minimal delay timer.
+     *
+     * @param[in]  aDelayTimerMinimal The value of minimal delay timer (in ms).
+     *
+     * @retval  kThreadError_None        Successfully set the minimal delay timer.
+     * @retval  kThreadError_InvalidArgs If @p aDelayTimerMinimal is not valid.
+     *
+     */
+    ThreadError SetDelayTimerMinimal(uint32_t aDelayTimerMinimal);
+
+    /**
+     * This method gets minimal delay timer.
+     *
+     * @retval the miniaml delay timer (in ms).
+     *
+     */
+    uint32_t GetDelayTimerMinimal(void) const;
+
 private:
     enum
     {
@@ -109,6 +128,8 @@ private:
     Coap::Resource mPetition;
     Coap::Resource mKeepAlive;
     Timer mTimer;
+
+    uint32_t mDelayTimerMinimal;
 
     CommissionerIdTlv mCommissionerId;
     uint16_t mSessionId;

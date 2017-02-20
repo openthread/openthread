@@ -669,11 +669,10 @@ ThreadError Dataset::ProcessPSKc(otInstance *aInstance, int argc, char *argv[])
     uint16_t length;
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
-
     length = static_cast<uint16_t>((strlen(argv[0]) + 1) / 2);
     VerifyOrExit(length <= OT_PSKC_MAX_SIZE, error = kThreadError_NoBufs);
-    VerifyOrExit(Interpreter::Hex2Bin(argv[0], sDataset.mPSKc.m8 + OT_PSKC_MAX_SIZE - length, length)
-                 == length, error = kThreadError_Parse);
+    VerifyOrExit(Interpreter::Hex2Bin(argv[0], sDataset.mPSKc.m8 + OT_PSKC_MAX_SIZE - length, length) == length,
+                 error = kThreadError_Parse);
 
     sDataset.mIsPSKcSet = true;
     (void)aInstance;

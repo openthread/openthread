@@ -10,14 +10,16 @@ OpenThread test scripts use the CLI to execute test cases.
 * [autostart](#autostart)
 * [blacklist](#blacklist)
 * [channel](#channel)
-* [child](#child)
+* [child](#child-list)
 * [childmax](#childmax)
 * [childtimeout](#childtimeout)
-* [commissioner](#commissioner)
+* [commissioner](#commissioner-start-provisioningurl)
 * [contextreusedelay](#contextreusedelay)
 * [counter](#counter)
-* [dataset](#dataset)
-* [discover](#discover)
+* [dataset](#dataset-help)
+* [delaytimermin](#delaytimermin)
+* [diagnostic](#diagnostic-get-addr-type-)
+* [discover](#discover-channel)
 * [eidcache](#eidcache)
 * [eui64](#eui64)
 * [extaddr](#extaddr)
@@ -27,11 +29,11 @@ OpenThread test scripts use the CLI to execute test cases.
 * [ifconfig](#ifconfig)
 * [ipaddr](#ipaddr)
 * [ipmaddr](#ipmaddr)
-* [joiner](#joiner)
-* [keysequence](#keysequence)
+* [joiner](#joiner-start-pskd-provisioningurl)
+* [keysequence](#keysequence-counter)
 * [leaderpartitionid](#leaderpartitionid)
 * [leaderweight](#leaderweight)
-* [linkquality](#linkquality)
+* [linkquality](#linkquality-extaddr)
 * [masterkey](#masterkey)
 * [mode](#mode)
 * [netdataregister](#netdataregister)
@@ -39,23 +41,23 @@ OpenThread test scripts use the CLI to execute test cases.
 * [networkname](#networkname)
 * [panid](#panid)
 * [parent](#parent)
-* [ping](#ping)
-* [pollperiod](#pollperiod)
-* [prefix](#prefix)
+* [ping](#ping-ipaddr-size-count-interval)
+* [pollperiod](#pollperiod-pollperiod)
+* [prefix](#prefix-add-prefix-pvdcsr-prf)
 * [promiscuous](#promiscuous)
-* [releaserouterid](#releaserouterid)
+* [releaserouterid](#releaserouterid-routerid)
 * [reset](#reset)
 * [rloc16](#rloc16)
-* [route](#route)
-* [router](#router)
+* [route](#route-add-prefix-s-prf)
+* [router](#router-list)
 * [routerdowngradethreshold](#routerdowngradethreshold)
 * [routerrole](#routerrole)
 * [routerselectionjitter](#routerselectionjitter)
 * [routerupgradethreshold](#routerupgradethreshold)
-* [scan](#scan)
+* [scan](#scan-channel)
 * [singleton](#singleton)
 * [state](#state)
-* [thread](#thread)
+* [thread](#thread-start)
 * [version](#version)
 * [whitelist](#whitelist)
 * [diag](#diag)
@@ -146,6 +148,7 @@ Remove an IEEE 802.15.4 Extended Address from the blacklist.
 > blacklist remove 166e0a0000000002
 Done
 ```
+
 ### channel
 
 Get the IEEE 802.15.4 Channel value.
@@ -435,6 +438,7 @@ networkname
 panid
 pending
 pendingtimestamp
+pskc
 userdata
 Done
 ```
@@ -674,12 +678,61 @@ Set pending timestamp.
 Done
 ```
 
+### dataset pskc \[pskc\]
+
+Set pskc with hex format.
+
+```bash
+> dataset pskc 67c0c203aa0b042bfb5381c47aef4d9e
+Done
+```
+
 ### dataset userdata \[size\] \[data\]
 
 Set user specific data for the command.
 
 ```bash
 > dataset userdata 3 820155
+Done
+```
+
+### delaytimermin
+
+Get the minimal delay timer (in seconds).
+
+```bash
+> delaytimermin
+30
+Done
+```
+
+### delaytimermin \<delaytimermin\>
+
+Set the minimal delay timer (in seconds).
+
+```bash
+> delaytimermin 60
+Done
+```
+
+### diagnostic get \<addr\> \<type\> ..
+
+Send network diagnostic request to retrieve tlv of \<type\>s.
+
+If \<addr\> is unicast address, `Diagnostic Get` will be sent.
+if \<addr\> is multicast address, `Diagnostic Query` will be sent.
+
+```bash
+> diagnostic get fd00:db8::ff:fe00:0 1 2
+> diagnostic get ff02::1 1
+```
+
+### diagnostic reset \<addr\> \<type\> ..
+
+Send network diagnostic request to reset \<addr\>'s tlv of \<type\>s. Currently only `MAC Counters`(9) is supported.
+
+```bash
+> diagnostic reset fd00:db8::ff:fe00:0 9
 Done
 ```
 
@@ -774,6 +827,16 @@ e0b220eb7d8dda7e
 Done
 ```
 
+### ifconfig
+
+Show the status of the IPv6 interface.
+
+```bash
+> ifconfig
+down
+Done
+```
+
 ### ifconfig up
 
 Bring up the IPv6 interface.
@@ -789,16 +852,6 @@ Bring down the IPv6 interface.
 
 ```bash
 > ifconfig down
-Done
-```
-
-### ifconfig
-
-Show the status of the IPv6 interface.
-
-```bash
-> ifconfig
-down
 Done
 ```
 
@@ -963,7 +1016,7 @@ Get the Thread Leader Partition ID.
 Done
 ```
 
-### leaderpartitionid \<partitionid>\
+### leaderpartitionid \<partitionid\>
 
 Set the Thread Leader Partition ID.
 
@@ -991,7 +1044,7 @@ Set the Thread Leader Weight.
 Done
 ```
 
-### linkquality \<extaddr>\
+### linkquality \<extaddr\>
 
 Get the link quality on the link to a given extended address.
 
@@ -1001,7 +1054,7 @@ Get the link quality on the link to a given extended address.
 Done
 ```
 
-### linkquality \<extaddr>\ \<linkquality>\
+### linkquality \<extaddr\> \<linkquality\>
 
 Set the link quality on the link to a given extended address.
 
@@ -1154,7 +1207,7 @@ Get the customized data poll period of sleepy end device (seconds). Only for cer
 Done
 ```
 
-### pollperiod \<pollperiod>\
+### pollperiod \<pollperiod\>
 
 Set the customized data poll period for sleepy end device (seconds). Only for certification test
 
@@ -1426,6 +1479,23 @@ Return true when there are no other nodes in the network, otherwise return false
 ```bash
 > singleton
 true or false
+Done
+```
+
+### state
+Return state of current state.
+
+```bash
+> state
+offline, disabled, detached, child, router or leader
+Done
+```
+
+### state <state>
+Try to switch to state `detached`, `child`, `router` or `leader`.
+
+```bash
+> state leader
 Done
 ```
 
