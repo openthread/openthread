@@ -422,7 +422,7 @@ AC_ARG_ENABLE(cli,
     [
         case "${enableval}" in
 
-        no|yes)
+        no|yes|mtd|ftd)
             enable_cli=${enableval}
             ;;
 
@@ -433,7 +433,9 @@ AC_ARG_ENABLE(cli,
     ],
     [enable_cli=no])
 AC_MSG_RESULT(${enable_cli})
-AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI], [test "${enable_cli}" = "yes"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI], [test "${enable_cli}" != "no"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI_FTD], [test "${enable_cli}" = "yes" -o "${enable_cli}" = "ftd"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI_MTD], [test "${enable_cli}" = "yes" -o "${enable_cli}" = "mtd"])
 
 #
 # NCP Library

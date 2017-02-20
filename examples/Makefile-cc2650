@@ -42,15 +42,26 @@ OBJCOPY                         = arm-none-eabi-objcopy
 BuildJobs                      ?= 99
 
 configure_OPTIONS               = \
-    --enable-cli                  \
-    --enable-ncp                  \
     --with-examples=cc2650        \
     --with-platform-info=cc2650   \
     MBEDTLS_CPPFLAGS="$(CC2650_MBEDTLS_CPPFLAGS)" \
     $(NULL)
 
 ifeq ($(DISABLE_DOC),1)
-configure_OPTIONS              += --disable-docs
+configure_OPTIONS              += \
+    --disable-docs                \
+    $(NULL)
+endif
+
+ifeq ($(ONLY_MTD),1)
+configure_OPTIONS              += \
+    --enable-cli=mtd              \
+    $(NULL)
+else
+configure_OPTIONS              += \
+    --enable-cli                  \
+    --enable-ncp                  \
+    $(NULL)
 endif
 
 CC2650_MBEDTLS_CPPFLAGS  = -DMBEDTLS_CONFIG_FILE='\"cc2650-mbedtls-config.h\"'
