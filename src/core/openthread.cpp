@@ -1215,6 +1215,7 @@ void otInstancePostConstructor(otInstance *aInstance)
     aInstance->mThreadNetif.GetMle().Restore();
 
 #if OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
+
     // If auto start is configured, do that now
     if (otThreadGetAutoStart(aInstance))
     {
@@ -1228,6 +1229,7 @@ void otInstancePostConstructor(otInstance *aInstance)
             }
         }
     }
+
 #endif
 }
 
@@ -1409,10 +1411,12 @@ bool otThreadGetAutoStart(otInstance *aInstance)
 #if OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
     uint8_t autoStart = 0;
     uint16_t autoStartLength = sizeof(autoStart);
+
     if (otPlatSettingsGet(aInstance, kKeyThreadAutoStart, 0, &autoStart, &autoStartLength) != kThreadError_None)
     {
         autoStart = 0;
     }
+
     return autoStart != 0;
 #else
     (void)aInstance;
