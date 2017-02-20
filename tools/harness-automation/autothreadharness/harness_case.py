@@ -167,7 +167,7 @@ class HarnessCase(unittest.TestCase):
         """Reboot all usb devices.
 
         Note:
-            If APC_HOST is not valid, usb devices is not rebooted.
+            If PDU_CONTROLLER_TYPE is not valid, usb devices is not rebooted.
         """
         if self.manual_reset:
             raw_input('Reset golden devices and press enter to continue..')
@@ -244,7 +244,7 @@ class HarnessCase(unittest.TestCase):
         dut = OpenThreadController(dut_port)
         self.dut = dut
 
-        if not settings.APC_HOST or self.manual_reset:
+        if not settings.PDU_CONTROLLER_TYPE or self.manual_reset:
             self.dut.reset()
 
     def _destroy_dut(self):
@@ -508,11 +508,13 @@ class HarnessCase(unittest.TestCase):
                             bad_ones.append(selected_hw)
 
                     for selected_hw in bad_ones:
+                        form_inputs = selected_hw.find_elements_by_tag_name('input')
+                        form_port = form_inputs[0]
                         port = form_port.get_attribute('value').encode('utf8')
                         if settings.DUT_DEVICE and port == settings.DUT_DEVICE[0]:
                             raise SystemExit('DUT device failed')
 
-                        if not settings.APC_HOST:
+                        if not settings.PDU_CONTROLLER_TYPE:
                             # port cannot recover without power off
                             self.history.mark_bad_golden_device(port)
 
