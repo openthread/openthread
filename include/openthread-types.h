@@ -270,7 +270,7 @@ typedef struct otSecurityPolicy
 } otSecurityPolicy;
 
 /**
- * This enumeration represents flags that indicate security related behaviours within OpenThread.
+ * This enumeration defines the Security Policy TLV flags.
  *
  */
 enum
