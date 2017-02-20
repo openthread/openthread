@@ -116,6 +116,10 @@ class HarnessCase(unittest.TestCase):
     """int: Child timeout in seconds
     """
 
+    sed_polling_interval = settings.THREAD_SED_POLLING_INTERVAL
+    """int: SED polling interval in seconds
+    """
+
     manual_reset = False
     """bool: whether reset manually"""
 
@@ -124,6 +128,7 @@ class HarnessCase(unittest.TestCase):
 
     timeout = hasattr(settings, 'TIMEOUT') and settings.TIMEOUT or DEFAULT_TIMEOUT
 
+    started = 0
     def wait_until(self, what, times=-1):
         """Wait until `what` return True
 
@@ -168,10 +173,6 @@ class HarnessCase(unittest.TestCase):
             raw_input('Reset golden devices and press enter to continue..')
             return
         elif not settings.PDU_CONTROLLER_TYPE:
-            if settings.GOLDEN_DEVICE_TYPE != 'OpenThread':
-                logger.warning('All golden devices may not be resetted')
-                return
-
             if settings.AUTO_DUT:
                 return
 
@@ -189,7 +190,7 @@ class HarnessCase(unittest.TestCase):
 
         tries = 3
         pdu_factory = PduControllerFactory()
-        
+
         while True:
             try:
                 pdu = pdu_factory.create_pdu_controller(settings.PDU_CONTROLLER_TYPE)
@@ -322,6 +323,13 @@ class HarnessCase(unittest.TestCase):
     def _setup_page(self):
         """Do sniffer settings and general settings
         """
+        if not self.started:
+            self.started = time.time()
+
+        if time.time() - self.started > 30:
+            self._browser.refresh()
+            return
+
         # Detect Sniffer
         try:
             dialog = self._browser.find_element_by_id('capture-Setup-modal')
@@ -374,25 +382,28 @@ class HarnessCase(unittest.TestCase):
 
         # General Setup
         try:
-            button = self._browser.find_element_by_id('general-Setup')
-            button.click()
-            time.sleep(2)
+            if self.child_timeout or self.sed_polling_interval:
+                button = self._browser.find_element_by_id('general-Setup')
+                button.click()
+                time.sleep(2)
 
-            dialog = self._browser.find_element_by_id('general-Setup-modal')
-            if dialog.get_attribute('aria-hidden') != 'false':
-                raise Exception('Missing General Setup dialog')
+                dialog = self._browser.find_element_by_id('general-Setup-modal')
+                if dialog.get_attribute('aria-hidden') != 'false':
+                    raise Exception('Missing General Setup dialog')
 
-            field = dialog.find_element_by_id('inp_general_child_update_wait_time')
-            field.clear()
-            field.send_keys(str(self.child_timeout))
+                field = dialog.find_element_by_id('inp_general_child_update_wait_time')
+                field.clear()
+                if self.child_timeout:
+                    field.send_keys(str(self.child_timeout))
 
-            field = dialog.find_element_by_id('inp_general_sed_polling_rate')
-            field.clear()
-            field.send_keys(str(settings.THREAD_SED_POLLING_INTERVAL))
+                field = dialog.find_element_by_id('inp_general_sed_polling_rate')
+                field.clear()
+                if self.sed_polling_interval:
+                    field.send_keys(str(self.sed_polling_interval))
 
-            button = dialog.find_element_by_id('saveGeneralSettings')
-            button.click()
-            time.sleep(1)
+                button = dialog.find_element_by_id('saveGeneralSettings')
+                button.click()
+                time.sleep(1)
 
         except:
             logger.exception('Failed to do general setup')
@@ -470,6 +481,18 @@ class HarnessCase(unittest.TestCase):
         if settings.DUT_DEVICE:
             self._add_device(*settings.DUT_DEVICE)
 
+        # enable AUTO DUT
+        if self.auto_dut:
+            checkbox_auto_dut = browser.find_element_by_id('EnableAutoDutSelection')
+            if not checkbox_auto_dut.is_selected():
+                checkbox_auto_dut.click()
+                time.sleep(1)
+
+            if settings.DUT_DEVICE:
+                radio_auto_dut = browser.find_element_by_class_name('AutoDUT_RadBtns')
+                if not radio_auto_dut.is_selected():
+                    radio_auto_dut.click()
+
         while True:
             try:
                 self._connect_devices()
@@ -477,6 +500,7 @@ class HarnessCase(unittest.TestCase):
                 if not self.wait_until(lambda: 'disabled' not in button_next.get_attribute('class'),
                                        times=(30 + 4 * self.golden_devices_required)):
                     bad_ones = []
+                    selected_hw_set = test_bed.find_elements_by_class_name('selected-hw')
                     for selected_hw in selected_hw_set:
                         form_inputs = selected_hw.find_elements_by_tag_name('input')
                         form_port = form_inputs[0]
@@ -486,7 +510,7 @@ class HarnessCase(unittest.TestCase):
                     for selected_hw in bad_ones:
                         port = form_port.get_attribute('value').encode('utf8')
                         if settings.DUT_DEVICE and port == settings.DUT_DEVICE[0]:
-                            raise Exception('DUT device failed')
+                            raise SystemExit('DUT device failed')
 
                         if not settings.APC_HOST:
                             # port cannot recover without power off
@@ -508,12 +532,7 @@ class HarnessCase(unittest.TestCase):
                         logger.info('Try again with new golden devices')
                         continue
 
-                if self.auto_dut:
-                    checkbox_auto_dut = browser.find_element_by_id('EnableAutoDutSelection')
-                    if not checkbox_auto_dut.is_selected():
-                        checkbox_auto_dut.click()
-
-                    time.sleep(1)
+                if self.auto_dut and not settings.DUT_DEVICE:
                     radio_auto_dut = browser.find_element_by_class_name('AutoDUT_RadBtns')
                     if not radio_auto_dut.is_selected():
                         radio_auto_dut.click()
@@ -765,13 +784,19 @@ class HarnessCase(unittest.TestCase):
             inp.clear()
             inp.send_keys(ml64)
 
-        elif title.startswith('Sheild DUT'):
+        elif title.startswith('Shield Devices') or title.startswith('Sheild DUT'):
             # FIXME should find better way to simulate
-            self.dut.channel = (self.channel == THREAD_CHANNEL_MAX
-                                 and THREAD_CHANNEL_MIN) or (self.channel + 1)
+            if self.dut and settings.SHIELD_SIMULATION:
+                self.dut.channel = (self.channel == THREAD_CHANNEL_MAX
+                                     and THREAD_CHANNEL_MIN) or (self.channel + 1)
+            else:
+                raw_input('Shield DUT and press enter to continue..')
 
-        elif title.startswith('Bring DUT Back to network'):
-            self.dut.channel = self.channel
+        elif title.startswith('Unshield Devices') or title.startswith('Bring DUT Back to network'):
+            if self.dut and settings.SHIELD_SIMULATION:
+                self.dut.channel = self.channel
+            else:
+                raw_input('Bring DUT and press enter to continue..')
 
         elif title.startswith('Configure Prefix on DUT'):
             body = dialog.find_element_by_id('cnfrmMsg').text
@@ -815,6 +840,10 @@ class HarnessCase(unittest.TestCase):
         except UnexpectedAlertPresentException:
             logger.exception('Failed to connect to harness server')
             raise SystemExit()
+        except SystemExit:
+            raise
+        except:
+            logger.exception('Something wrong')
 
         self._select_case(self.role, self.case)
 

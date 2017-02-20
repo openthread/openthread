@@ -28,11 +28,11 @@
 #
 
 
-AUTO_DUT = False
+AUTO_DUT = True
 """bool: Whether use the auto DUT feature of thread harness."""
 
 DUT_DEVICE = ('COM16', 'OpenThread')
-"""(str,str): The first element is serial port of the DUT, and the second is
+"""(str, str): The first element is serial port of the DUT, and the second is
 the device type. This must be set if AUTO_DUT=False."""
 
 DUT_VERSION = 'g12345'
@@ -53,11 +53,11 @@ THREAD_NETWORKNAME = 'GRL'
 THREAD_EXTPANID = '000db80000000000'
 """str: Thread extended PAN ID"""
 
-THREAD_CHILD_TIMEOUT = 100
-"""int: Child timeout in seconds"""
+THREAD_CHILD_TIMEOUT = 0
+"""int: Child timeout in seconds. Set to 0 to use Harness's default value."""
 
-THREAD_SED_POLLING_INTERVAL = 100
-"""int: SED polling interval in seconds"""
+THREAD_SED_POLLING_INTERVAL = 0
+"""int: SED polling interval in seconds. Set to 0 to use Harness's default value."""
 
 HARNESS_HOME = 'C:\\GRL\\Thread1.1'
 """str: Harness installation path, e.g. ``C:\GRL\Thread1.1``"""
@@ -74,10 +74,17 @@ TESTER_REMARKS = 'OpenThread is great'
 GOLDEN_DEVICES = []
 """[(str, str)]: devices list.
 
-It should be something like [('COM1', 'OpenThread'), ('COM2', 'ARM')] on Windows and can be found on Windows Device Manager."""
+It should be something like [('COM1', 'OpenThread'), ('COM2', 'ARM')] for devices connected to Windows.
+
+For OpenThread golden devices, ser2net is also supported, just use IP:PORT for the name. For example,
+('192.168.1.2:5001', 'OpenThread').
+"""
 
 OUTPUT_PATH = '.\\output'
 """str: Path to store results and logs, MUST be writable."""
+
+SHIELD_SIMULATION = False
+"""bool: whether to simulate RF shield by changing channel"""
 
 PDU_CONTROLLER_TYPE = None
 """str: Type of connected PDU controller.
@@ -109,9 +116,6 @@ Example parameters for the 'APC_PDU_CONTROLLER':
 Example parameters for the 'NORDIC_BOARD_PDU_CONTOLLER':
     {'boards_serial_numbers': ('12345123', ...)}
 """
+
 HARNESS_VERSION = 35
 """int: Version of the installed Thread Harness."""
-
-GOLDEN_DEVICE_TYPE = 'OpenThread'
-"""str: Type of the Golden Device."""
-

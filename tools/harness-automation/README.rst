@@ -2,7 +2,7 @@
 Harness Automation Tool
 =======================
 
-This is a tool to automate testing openthread with GRL Thread-Test-Harness1.1-Alpha v1.0-Release_19.0.
+This is a tool to automate testing openthread with GRL Thread-Test-Harness1.1-Alpha v1.0-Release_40.0.
 
 -----------
 Quick Start
@@ -33,14 +33,20 @@ Other options::
     -h, --help
         Show help message and exit.
 
+    --blacklist BLACKLIST_FILE, -b BLACKLIST_FILE
+        skip test cases listed in BLACKLIST_FILE.
+
     --pattern PATTERN, -p PATTERN
         File name pattern, Default to all python files.
 
     --delete-blacklist, -d
-        Clear blacklist on startup. By default, golden devices failed to be connected are kept in a blacklist automatically. Add this option to clear blacklist on startup.
+        Clear golden device blacklist on startup. By default, golden devices failed to be connected are kept in a blacklist automatically. Add this option to clear blacklist on startup.
+
+    --name-greps NAME_GREPS, -g NAME_GREPS
+        Filter case by its name using filename matching syntax. Multiple this options are OR-ed to allow more tests.
 
     --skip SKIP, -k SKIP
-        Type of test case status to skip. ``e`` for error, ``f`` for fail, ``p`` for pass. Default to "efp". If test case names are given by ``NAME``, this option will not work.
+        Type of test case status to skip. ``e`` for error, ``f`` for fail, ``p`` for pass. If test case names are given by ``NAME``, this option will not work.
 
     --dry-run, -n
         Just show what test case will be run.
