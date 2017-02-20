@@ -6090,9 +6090,13 @@ otLwfIoCtl_otThreadAutoStart(
 
     if (InBufferLength >= sizeof(BOOLEAN))
     {
-        otThreadSetAutoStart(pFilter->otCtx, *(BOOLEAN*)InBuffer != FALSE);
+        status = 
+            ThreadErrorToNtstatus(
+                otThreadSetAutoStart(
+                    pFilter->otCtx,
+                    *(BOOLEAN*)InBuffer != FALSE)
+            );
         *OutBufferLength = 0;
-        status = STATUS_SUCCESS;
     }
     else if (*OutBufferLength >= sizeof(BOOLEAN))
     {
