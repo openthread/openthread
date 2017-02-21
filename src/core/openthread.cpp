@@ -1949,9 +1949,24 @@ ThreadError otCoapHeaderAppendOption(otCoapHeader *aHeader, const otCoapOption *
     return static_cast<Coap::Header *>(aHeader)->AppendOption(*static_cast<const Coap::Header::Option *>(aOption));
 }
 
+ThreadError otCoapHeaderAppendObserveOption(otCoapHeader *aHeader, uint32_t aObserve)
+{
+    return static_cast<Coap::Header *>(aHeader)->AppendObserveOption(aObserve);
+}
+
 ThreadError otCoapHeaderAppendUriPathOptions(otCoapHeader *aHeader, const char *aUriPath)
 {
     return static_cast<Coap::Header *>(aHeader)->AppendUriPathOptions(aUriPath);
+}
+
+ThreadError otCoapHeaderAppendMaxAgeOption(otCoapHeader *aHeader, uint32_t aMaxAge)
+{
+    return static_cast<Coap::Header *>(aHeader)->AppendMaxAgeOption(aMaxAge);
+}
+
+ThreadError otCoapHeaderAppendUriQueryOption(otCoapHeader *aHeader, const char *aUriQuery)
+{
+	return static_cast<Coap::Header *>(aHeader)->AppendUriQueryOption(aUriQuery);
 }
 
 void otCoapHeaderSetPayloadMarker(otCoapHeader *aHeader)

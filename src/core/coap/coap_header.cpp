@@ -244,6 +244,32 @@ exit:
     return error;
 }
 
+ThreadError Header::AppendObserveOption(uint32_t aObserve)
+{
+	Option coapOption;
+	uint8_t buf[3];
+
+	coapOption.mNumber = kCoapOptionObserve;
+
+	if (aObserve <= 0xff) {
+		buf[0] = aObserve;
+		coapOption.mLength = 1;
+	} else if (aObserve <= 0xffff) {
+		buf[0] = aObserve >> 8;
+		buf[1] = aObserve;
+		coapOption.mLength = 2;
+	} else {
+		buf[0] = aObserve >> 16;
+		buf[1] = aObserve >> 8;
+		buf[2] = aObserve;
+		coapOption.mLength = 3;
+	}
+
+	coapOption.mValue = buf;
+
+	return AppendOption(coapOption);
+}
+
 ThreadError Header::AppendUriPathOptions(const char *aUriPath)
 {
     ThreadError error = kThreadError_None;
@@ -279,6 +305,49 @@ ThreadError Header::AppendContentFormatOption(MediaType aType)
     coapOption.mValue = &type;
 
     return AppendOption(coapOption);
+}
+
+ThreadError Header::AppendMaxAgeOption(uint32_t aMaxAge)
+{
+	Option coapOption;
+	uint8_t buf[4];
+
+	coapOption.mNumber = kCoapOptionMaxAge;
+
+	if (aMaxAge <= 0xff) {
+		buf[0] = aMaxAge;
+		coapOption.mLength = 1;
+	} else if (aMaxAge <= 0xffff) {
+		buf[0] = aMaxAge >> 8;
+		buf[1] = aMaxAge;
+		coapOption.mLength = 2;
+	} else if (aMaxAge <= 0xffffff) {
+		buf[0] = aMaxAge >> 16;
+		buf[1] = aMaxAge >> 8;
+		buf[2] = aMaxAge;
+		coapOption.mLength = 3;
+	} else {
+		buf[0] = aMaxAge >> 24;
+		buf[1] = aMaxAge >> 16;
+		buf[2] = aMaxAge >> 8;
+		buf[3] = aMaxAge;
+		coapOption.mLength = 4;
+	}
+
+	coapOption.mValue = buf;
+
+	return AppendOption(coapOption);
+}
+
+ThreadError Header::AppendUriQueryOption(const char *aUriQuery)
+{
+	Option coapOption;
+
+	coapOption.mNumber = kCoapOptionUriQuery;
+	coapOption.mLength = strlen(aUriQuery);
+	coapOption.mValue = (uint8_t *)aUriQuery;
+
+	return AppendOption(coapOption);
 }
 
 const Header::Option *Header::GetCurrentOption(void) const
