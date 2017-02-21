@@ -116,6 +116,3 @@ Example parameters for the 'APC_PDU_CONTROLLER':
 Example parameters for the 'NORDIC_BOARD_PDU_CONTOLLER':
     {'boards_serial_numbers': ('12345123', ...)}
 """
-
-HARNESS_VERSION = 35
-"""int: Version of the installed Thread Harness."""

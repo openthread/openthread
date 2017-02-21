@@ -28,6 +28,7 @@
 #
 
 
+import ConfigParser
 import logging
 import os
 import subprocess
@@ -36,6 +37,9 @@ import time
 from autothreadharness import settings
 
 logger = logging.getLogger(__name__)
+
+HARNESS_SVN_VERSION_R44 = 1471
+"""int: this is the first published release that miniweb was removed from Harness"""
 
 def _try_kill(proc):
     logger.info('Try kill process')
@@ -71,6 +75,10 @@ class HarnessController(object):
         self.result_dir = result_dir
         self.harness_file = ''
 
+        harness_info = ConfigParser.ConfigParser()
+        harness_info.read('%s\\info.ini' % settings.HARNESS_HOME)
+        self.version = harness_info.getint('Thread_Harness_Info', 'SVN')
+
     def start(self):
         logger.info('Starting harness service')
         if self.harness:
@@ -89,7 +97,7 @@ class HarnessController(object):
                                                 env=env)
             time.sleep(2)
 
-        if settings.HARNESS_VERSION > 33:
+        if self.version >= HARNESS_SVN_VERSION_R44:
             return
 
         if self.miniweb:
@@ -110,7 +118,7 @@ class HarnessController(object):
         else:
             logger.warning('Harness not started yet')
 
-        if settings.HARNESS_VERSION > 33:
+        if self.version >= HARNESS_SVN_VERSION_R44:
             return
 
         if self.miniweb:
