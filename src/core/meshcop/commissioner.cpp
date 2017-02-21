@@ -507,6 +507,7 @@ ThreadError Commissioner::SendPetition(void)
 
     mNetif.GetMle().GetLeaderAloc(*static_cast<Ip6::Address *>(&messageInfo.mPeerAddr));
     messageInfo.SetPeerPort(kCoapUdpPort);
+    messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo,
                                                              Commissioner::HandleLeaderPetitionResponse, this));
 
