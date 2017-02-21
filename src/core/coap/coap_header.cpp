@@ -251,14 +251,19 @@ ThreadError Header::AppendObserveOption(uint32_t aObserve)
 
     coapOption.mNumber = kCoapOptionObserve;
 
-    if (aObserve <= 0xff) {
+    if (aObserve <= 0xff)
+    {
         buf[0] = aObserve;
         coapOption.mLength = 1;
-    } else if (aObserve <= 0xffff) {
+    }
+    else if (aObserve <= 0xffff)
+    {
         buf[0] = aObserve >> 8;
         buf[1] = aObserve;
         coapOption.mLength = 2;
-    } else {
+    }
+    else
+    {
         buf[0] = aObserve >> 16;
         buf[1] = aObserve >> 8;
         buf[2] = aObserve;
@@ -314,19 +319,26 @@ ThreadError Header::AppendMaxAgeOption(uint32_t aMaxAge)
 
     coapOption.mNumber = kCoapOptionMaxAge;
 
-    if (aMaxAge <= 0xff) {
+    if (aMaxAge <= 0xff)
+    {
         buf[0] = aMaxAge;
         coapOption.mLength = 1;
-    } else if (aMaxAge <= 0xffff) {
+    }
+    else if (aMaxAge <= 0xffff)
+    {
         buf[0] = aMaxAge >> 8;
         buf[1] = aMaxAge;
         coapOption.mLength = 2;
-    } else if (aMaxAge <= 0xffffff) {
+    }
+    else if (aMaxAge <= 0xffffff)
+    {
         buf[0] = aMaxAge >> 16;
         buf[1] = aMaxAge >> 8;
         buf[2] = aMaxAge;
         coapOption.mLength = 3;
-    } else {
+    }
+    else
+    {
         buf[0] = aMaxAge >> 24;
         buf[1] = aMaxAge >> 16;
         buf[2] = aMaxAge >> 8;
@@ -345,7 +357,7 @@ ThreadError Header::AppendUriQueryOption(const char *aUriQuery)
 
     coapOption.mNumber = kCoapOptionUriQuery;
     coapOption.mLength = strlen(aUriQuery);
-    coapOption.mValue = (uint8_t *)aUriQuery;
+    coapOption.mValue  = (uint8_t *)aUriQuery;
 
     return AppendOption(coapOption);
 }
