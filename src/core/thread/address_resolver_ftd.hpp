@@ -138,6 +138,7 @@ private:
         uint16_t          mRetryTimeout;
         uint8_t           mTimeout;
         uint8_t           mFailures;
+        uint8_t           mAge;
 
         enum State
         {
@@ -147,6 +148,10 @@ private:
         };
         State             mState;
     };
+
+    Cache *NewCacheEntry(void);
+    void MarkCacheEntryAsUsed(Cache &aEntry);
+    void InvalidateCacheEntry(Cache &aEntry);
 
     ThreadError SendAddressQuery(const Ip6::Address &aEid);
     ThreadError SendAddressError(const ThreadTargetTlv &aTarget, const ThreadMeshLocalEidTlv &aEid,
