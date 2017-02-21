@@ -49,6 +49,7 @@
 #include <common/logging.hpp>
 #include <common/message.hpp>
 #include <common/new.hpp>
+#include <common/settings.hpp>
 #include <common/tasklet.hpp>
 #include <common/timer.hpp>
 #include <crypto/mbedtls.hpp>
@@ -1207,6 +1208,31 @@ ThreadError otSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId)
     return aInstance->mThreadNetif.GetMle().SetPreferredRouterId(aRouterId);
 }
 
+void otInstancePostConstructor(otInstance *aInstance)
+{
+    // restore datasets and network information
+    otPlatSettingsInit(aInstance);
+    aInstance->mThreadNetif.GetMle().Restore();
+
+#if OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
+
+    // If auto start is configured, do that now
+    if (otThreadGetAutoStart(aInstance))
+    {
+        if (otInterfaceUp(aInstance) == kThreadError_None)
+        {
+            // Only try to start Thread if we could bring up the interface
+            if (otThreadStart(aInstance) != kThreadError_None)
+            {
+                // Bring the interface down if Thread failed to start
+                otInterfaceDown(aInstance);
+            }
+        }
+    }
+
+#endif
+}
+
 #ifdef OPENTHREAD_MULTIPLE_INSTANCE
 
 otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
@@ -1226,9 +1252,8 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
     // Construct the context
     aInstance = new(aInstanceBuffer)otInstance();
 
-    // restore datasets and network information
-    otPlatSettingsInit(aInstance);
-    aInstance->mThreadNetif.GetMle().Restore();
+    // Execute post constructor operations
+    otInstancePostConstructor(aInstance);
 
 exit:
 
@@ -1249,9 +1274,8 @@ otInstance *otInstanceInit()
     // Construct the context
     sInstance = new(&sInstanceRaw)otInstance();
 
-    // restore datasets and network information
-    otPlatSettingsInit(sInstance);
-    sInstance->mThreadNetif.GetMle().Restore();
+    // Execute post constructor operations
+    otInstancePostConstructor(sInstance);
 
 exit:
 
@@ -1368,6 +1392,36 @@ ThreadError otThreadStop(otInstance *aInstance)
 
     otLogFuncExitErr(error);
     return error;
+}
+
+ThreadError otThreadSetAutoStart(otInstance *aInstance, bool aStartAutomatically)
+{
+#if OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
+    uint8_t autoStart = aStartAutomatically ? 1 : 0;
+    return otPlatSettingsSet(aInstance, kKeyThreadAutoStart, &autoStart, sizeof(autoStart));
+#else
+    (void)aInstance;
+    (void)aStartAutomatically;
+    return kThreadError_NotImplemented;
+#endif
+}
+
+bool otThreadGetAutoStart(otInstance *aInstance)
+{
+#if OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
+    uint8_t autoStart = 0;
+    uint16_t autoStartLength = sizeof(autoStart);
+
+    if (otPlatSettingsGet(aInstance, kKeyThreadAutoStart, 0, &autoStart, &autoStartLength) != kThreadError_None)
+    {
+        autoStart = 0;
+    }
+
+    return autoStart != 0;
+#else
+    (void)aInstance;
+    return false;
+#endif
 }
 
 bool otIsSingleton(otInstance *aInstance)

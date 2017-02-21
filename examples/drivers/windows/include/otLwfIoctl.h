@@ -677,9 +677,14 @@ typedef struct otCommissionConfig
 #define IOCTL_OTLWF_OT_FACTORY_RESET \
     OTLWF_CTL_CODE(192, METHOD_BUFFERED, FILE_WRITE_DATA)
     // GUID - InterfaceGuid
+    
+#define IOCTL_OTLWF_OT_THREAD_AUTO_START \
+    OTLWF_CTL_CODE(193, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA)
+    // GUID - InterfaceGuid
+    // BOOLEAN - aAutoStart
 
 // OpenThread function IOCTL codes
 #define MIN_OTLWF_IOCTL_FUNC_CODE 100
-#define MAX_OTLWF_IOCTL_FUNC_CODE 192
+#define MAX_OTLWF_IOCTL_FUNC_CODE 193
 
 #endif //__OTLWFIOCTL_H__
