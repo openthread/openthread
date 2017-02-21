@@ -1966,7 +1966,7 @@ ThreadError otCoapHeaderAppendMaxAgeOption(otCoapHeader *aHeader, uint32_t aMaxA
 
 ThreadError otCoapHeaderAppendUriQueryOption(otCoapHeader *aHeader, const char *aUriQuery)
 {
-	return static_cast<Coap::Header *>(aHeader)->AppendUriQueryOption(aUriQuery);
+    return static_cast<Coap::Header *>(aHeader)->AppendUriQueryOption(aUriQuery);
 }
 
 void otCoapHeaderSetPayloadMarker(otCoapHeader *aHeader)
