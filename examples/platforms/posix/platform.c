@@ -49,7 +49,6 @@
 #include <openthread.h>
 #include <openthread-tasklet.h>
 #include <platform/alarm.h>
-#include <platform/uart.h>
 
 uint32_t NODE_ID = 1;
 uint32_t WELLKNOWN_NODE_ID = 34;
@@ -81,8 +80,6 @@ void PlatformInit(int argc, char *argv[])
     platformRandomInit();
 }
 
-bool UartInitialized = false;
-
 void PlatformProcessDrivers(otInstance *aInstance)
 {
     fd_set read_fds;
@@ -91,12 +88,6 @@ void PlatformProcessDrivers(otInstance *aInstance)
     int max_fd = -1;
     struct timeval timeout;
     int rval;
-
-    if (!UartInitialized)
-    {
-        UartInitialized = true;
-        otPlatUartEnable();
-    }
 
     FD_ZERO(&read_fds);
     FD_ZERO(&write_fds);
@@ -121,4 +112,3 @@ void PlatformProcessDrivers(otInstance *aInstance)
     platformRadioProcess(aInstance);
     platformAlarmProcess(aInstance);
 }
-
