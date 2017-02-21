@@ -62,6 +62,10 @@ otPlatReset(
     // Indicate to the miniport
     (void)otLwfCmdResetDevice(pFilter, TRUE);
 
+    // Finalize previous OpenThread instance
+    otInstanceFinalize(pFilter->otCtx);
+    pFilter->otCtx = NULL;
+
     // Reinitialize the OpenThread library
     pFilter->otCachedRole = kDeviceRoleDisabled;
     pFilter->otCtx = otInstanceInit(pFilter->otInstanceBuffer + sizeof(PMS_FILTER), &pFilter->otInstanceSize);
