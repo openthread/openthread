@@ -253,20 +253,20 @@ ThreadError Header::AppendObserveOption(uint32_t aObserve)
 
     if (aObserve <= 0xff)
     {
-        buf[0] = aObserve;
+        buf[0] = static_cast<uint8_t>(aObserve);
         coapOption.mLength = 1;
     }
     else if (aObserve <= 0xffff)
     {
-        buf[0] = aObserve >> 8;
-        buf[1] = aObserve;
+        buf[0] = static_cast<uint8_t>(aObserve >> 8);
+        buf[1] = static_cast<uint8_t>(aObserve);
         coapOption.mLength = 2;
     }
     else
     {
-        buf[0] = aObserve >> 16;
-        buf[1] = aObserve >> 8;
-        buf[2] = aObserve;
+        buf[0] = static_cast<uint8_t>(aObserve >> 16);
+        buf[1] = static_cast<uint8_t>(aObserve >> 8);
+        buf[2] = static_cast<uint8_t>(aObserve);
         coapOption.mLength = 3;
     }
 
@@ -321,28 +321,28 @@ ThreadError Header::AppendMaxAgeOption(uint32_t aMaxAge)
 
     if (aMaxAge <= 0xff)
     {
-        buf[0] = aMaxAge;
+        buf[0] = static_cast<uint8_t>(aMaxAge);
         coapOption.mLength = 1;
     }
     else if (aMaxAge <= 0xffff)
     {
-        buf[0] = aMaxAge >> 8;
-        buf[1] = aMaxAge;
+        buf[0] = static_cast<uint8_t>(aMaxAge >> 8);
+        buf[1] = static_cast<uint8_t>(aMaxAge);
         coapOption.mLength = 2;
     }
     else if (aMaxAge <= 0xffffff)
     {
-        buf[0] = aMaxAge >> 16;
-        buf[1] = aMaxAge >> 8;
-        buf[2] = aMaxAge;
+        buf[0] = static_cast<uint8_t>(aMaxAge >> 16);
+        buf[1] = static_cast<uint8_t>(aMaxAge >> 8);
+        buf[2] = static_cast<uint8_t>(aMaxAge);
         coapOption.mLength = 3;
     }
     else
     {
-        buf[0] = aMaxAge >> 24;
-        buf[1] = aMaxAge >> 16;
-        buf[2] = aMaxAge >> 8;
-        buf[3] = aMaxAge;
+        buf[0] = static_cast<uint8_t>(aMaxAge >> 24);
+        buf[1] = static_cast<uint8_t>(aMaxAge >> 16);
+        buf[2] = static_cast<uint8_t>(aMaxAge >> 8);
+        buf[3] = static_cast<uint8_t>(aMaxAge);
         coapOption.mLength = 4;
     }
 
@@ -356,8 +356,8 @@ ThreadError Header::AppendUriQueryOption(const char *aUriQuery)
     Option coapOption;
 
     coapOption.mNumber = kCoapOptionUriQuery;
-    coapOption.mLength = strlen(aUriQuery);
-    coapOption.mValue  = (uint8_t *)aUriQuery;
+    coapOption.mLength = static_cast<uint16_t>(strlen(aUriQuery));
+    coapOption.mValue  = reinterpret_cast<const uint8_t *>(aUriQuery);
 
     return AppendOption(coapOption);
 }
