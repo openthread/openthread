@@ -66,6 +66,11 @@ otPlatReset(
     otInstanceFinalize(pFilter->otCtx);
     pFilter->otCtx = NULL;
 
+    // Reset radio layer
+    pFilter->otPhyState = kStateDisabled;
+    pFilter->otCurrentListenChannel = 0xFF;
+    pFilter->otPromiscuous = false;
+
     // Reinitialize the OpenThread library
     pFilter->otCachedRole = kDeviceRoleDisabled;
     pFilter->otCtx = otInstanceInit(pFilter->otInstanceBuffer + sizeof(PMS_FILTER), &pFilter->otInstanceSize);
