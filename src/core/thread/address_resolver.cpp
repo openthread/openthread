@@ -59,7 +59,7 @@ AddressResolver::AddressResolver(ThreadNetif &aThreadNetif) :
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, &AddressResolver::HandleTimer, this),
     mNetif(aThreadNetif)
 {
-    memset(&mCache, 0, sizeof(mCache));
+    Clear();
 
     mNetif.GetCoapServer().AddResource(mAddressError);
     mNetif.GetCoapServer().AddResource(mAddressQuery);
@@ -71,6 +71,11 @@ AddressResolver::AddressResolver(ThreadNetif &aThreadNetif) :
 void AddressResolver::Clear()
 {
     memset(&mCache, 0, sizeof(mCache));
+
+    for (uint8_t i = 0; i < kCacheEntries; i++)
+    {
+        mCache[i].mAge = i;
+    }
 }
 
 ThreadError AddressResolver::GetEntry(uint8_t aIndex, otEidCacheEntry &aEntry) const
@@ -90,11 +95,64 @@ void AddressResolver::Remove(uint8_t routerId)
 {
     for (int i = 0; i < kCacheEntries; i++)
     {
-        if ((mCache[i].mRloc16 >> 10) == routerId)
+        if (Mle::Mle::GetRouterId(mCache[i].mRloc16) == routerId)
         {
-            mCache[i].mState = Cache::kStateInvalid;
+            InvalidateCacheEntry(mCache[i]);
         }
     }
+}
+
+AddressResolver::Cache *AddressResolver::NewCacheEntry(void)
+{
+    Cache *rval = NULL;
+
+    for (int i = 0; i < kCacheEntries; i++)
+    {
+        if (mCache[i].mState == Cache::kStateQuery && mCache[i].mFailures == 0)
+        {
+            continue;
+        }
+
+        if (rval == NULL || rval->mAge < mCache[i].mAge)
+        {
+            rval = &mCache[i];
+        }
+    }
+
+    if (rval != NULL)
+    {
+        InvalidateCacheEntry(*rval);
+    }
+
+    return rval;
+}
+
+void AddressResolver::MarkCacheEntryAsUsed(Cache &aEntry)
+{
+    for (int i = 0; i < kCacheEntries; i++)
+    {
+        if (mCache[i].mAge < aEntry.mAge)
+        {
+            mCache[i].mAge++;
+        }
+    }
+
+    aEntry.mAge = 0;
+}
+
+void AddressResolver::InvalidateCacheEntry(Cache &aEntry)
+{
+    for (int i = 0; i < kCacheEntries; i++)
+    {
+        if (mCache[i].mAge > aEntry.mAge)
+        {
+            mCache[i].mAge--;
+        }
+    }
+
+    aEntry.mAge = kCacheEntries - 1;
+    aEntry.mState = Cache::kStateInvalid;
+    otLogInfoArp("cache entry removed!");
 }
 
 ThreadError AddressResolver::Resolve(const Ip6::Address &aEid, uint16_t &aRloc16)
@@ -112,10 +170,11 @@ ThreadError AddressResolver::Resolve(const Ip6::Address &aEid, uint16_t &aRloc16
                 break;
             }
         }
-        else if (entry == NULL)
-        {
-            entry = &mCache[i];
-        }
+    }
+
+    if (entry == NULL)
+    {
+        entry = NewCacheEntry();
     }
 
     VerifyOrExit(entry != NULL, error = kThreadError_NoBufs);
@@ -153,6 +212,7 @@ ThreadError AddressResolver::Resolve(const Ip6::Address &aEid, uint16_t &aRloc16
 
     case Cache::kStateCached:
         aRloc16 = entry->mRloc16;
+        MarkCacheEntryAsUsed(*entry);
         break;
     }
 
@@ -277,6 +337,7 @@ void AddressResolver::HandleAddressNotification(Coap::Header &aHeader, Message &
             mCache[i].mTimeout = 0;
             mCache[i].mFailures = 0;
             mCache[i].mState = Cache::kStateCached;
+            MarkCacheEntryAsUsed(mCache[i]);
 
             if (mNetif.GetCoapServer().SendEmptyAck(aHeader, aMessageInfo) == kThreadError_None)
             {
@@ -605,8 +666,7 @@ void AddressResolver::HandleDstUnreach(Message &aMessage, const Ip6::MessageInfo
         if (mCache[i].mState != Cache::kStateInvalid &&
             memcmp(&mCache[i].mTarget, &ip6Header.GetDestination(), sizeof(mCache[i].mTarget)) == 0)
         {
-            mCache[i].mState = Cache::kStateInvalid;
-            otLogInfoArp("cache entry removed!");
+            InvalidateCacheEntry(mCache[i]);
             break;
         }
     }
