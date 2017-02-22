@@ -42,11 +42,11 @@ from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import UnexpectedAlertPresentException
 
 from autothreadharness import settings
-from autothreadharness.pdu_controller_factory import PduControllerFactory
+from autothreadharness.exceptions import FailError, FatalError, GoldenDeviceNotEnoughError
 from autothreadharness.harness_controller import HarnessController
 from autothreadharness.helpers import HistoryHelper
 from autothreadharness.open_thread_controller import OpenThreadController
-from autothreadharness.exceptions import *
+from autothreadharness.pdu_controller_factory import PduControllerFactory
 
 logger = logging.getLogger(__name__)
 
@@ -146,9 +146,6 @@ class HarnessCase(unittest.TestCase):
     """int: SED polling interval in seconds
     """
 
-    manual_reset = False
-    """bool: whether reset manually"""
-
     auto_dut = settings.AUTO_DUT
     """bool: whether use harness auto dut feature"""
 
@@ -173,10 +170,7 @@ class HarnessCase(unittest.TestCase):
         Note:
             If PDU_CONTROLLER_TYPE is not valid, usb devices is not rebooted.
         """
-        if self.manual_reset:
-            raw_input('Reset golden devices and press enter to continue..')
-            return
-        elif not settings.PDU_CONTROLLER_TYPE:
+        if not settings.PDU_CONTROLLER_TYPE:
             if settings.AUTO_DUT:
                 return
 
@@ -213,7 +207,7 @@ class HarnessCase(unittest.TestCase):
                 pdu.close()
                 break
 
-        time.sleep(20)
+        time.sleep(len(settings.GOLDEN_DEVICES))
 
     def _init_harness(self):
         """Restart harness backend service.
@@ -252,9 +246,6 @@ class HarnessCase(unittest.TestCase):
         dut_port = settings.DUT_DEVICE[0]
         dut = OpenThreadController(dut_port)
         self.dut = dut
-
-        if not settings.PDU_CONTROLLER_TYPE or self.manual_reset:
-            self.dut.reset()
 
     def _destroy_dut(self):
         self.dut = None
@@ -853,8 +844,10 @@ class HarnessCase(unittest.TestCase):
             logger.exception('Failed to connect to harness server')
             raise SystemExit()
         except FatalError:
+            logger.exception('Test stopped for fatal error')
             raise SystemExit()
         except FailError:
+            logger.exception('Test failed')
             raise
         except:
             logger.exception('Something wrong')
