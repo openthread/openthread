@@ -45,6 +45,8 @@ void otPlatSettingsInit(otInstance *otCtx)
     OBJECT_ATTRIBUTES attributes;
     ULONG disposition;
 
+    LogFuncEntry(DRIVER_DEFAULT);
+
     InitializeObjectAttributes(
         &attributes,
         (PUNICODE_STRING)&SubKeyName,
@@ -68,6 +70,8 @@ void otPlatSettingsInit(otInstance *otCtx)
     {
         LogError(DRIVER_DEFAULT, "ZwCreateKey for 'OpenThread' key failed, %!STATUS!", status);
     }
+
+    LogFuncExit(DRIVER_DEFAULT);
 }
 
 uint16_t FilterCountSettings(_In_ PMS_FILTER pFilter, uint16_t aKey)
@@ -522,14 +526,84 @@ void otPlatSettingsWipe(otInstance *otCtx)
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
 
-    // Delete the entire 'OpenThread' sub key
+    LogFuncEntry(DRIVER_DEFAULT);
+
+    // Delete all subkeys of 'OpenThread'
     if (pFilter->otSettingsRegKey)
     {
-        ZwDeleteKey(pFilter->otSettingsRegKey);
-        ZwClose(pFilter->otSettingsRegKey);
-        pFilter->otSettingsRegKey = NULL;
+        NTSTATUS status = STATUS_SUCCESS;
+        ULONG index = 0;
+        UCHAR keyInfo[sizeof(KEY_BASIC_INFORMATION) + 64];
+
+        while (status == STATUS_SUCCESS)
+        {
+            ULONG size = sizeof(keyInfo);
+            status =
+                ZwEnumerateKey(
+                    pFilter->otSettingsRegKey,
+                    index,
+                    KeyBasicInformation,
+                    keyInfo,
+                    size,
+                    &size);
+
+            bool deleted = false;
+            if (NT_SUCCESS(status))
+            {
+                HANDLE subKey = NULL;
+                OBJECT_ATTRIBUTES attributes;
+                PKEY_BASIC_INFORMATION pKeyInfo = (PKEY_BASIC_INFORMATION)keyInfo;
+
+                UNICODE_STRING subKeyName = 
+                {
+                    (USHORT)pKeyInfo->NameLength,
+                    (USHORT)pKeyInfo->NameLength,
+                    pKeyInfo->Name
+                };
+
+                InitializeObjectAttributes(
+                    &attributes,
+                    &subKeyName,
+                    OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                    pFilter->otSettingsRegKey,
+                    NULL);
+
+                // Open the sub key
+                status =
+                    ZwOpenKey(
+                        &subKey,
+                        KEY_ALL_ACCESS,
+                        &attributes);
+
+                if (NT_SUCCESS(status))
+                {
+                    // Delete the key
+                    status = ZwDeleteKey(subKey);
+                    if (!NT_SUCCESS(status))
+                    {
+                        LogError(DRIVER_DEFAULT, "ZwDeleteKey for subkey failed, %!STATUS!", status);
+                    }
+                    else
+                    {
+                        deleted = true;
+                    }
+
+                    // Close handle
+                    ZwClose(subKey);
+                }
+                else
+                {
+                    LogError(DRIVER_DEFAULT, "ZwOpenKey for subkey failed, %!STATUS!", status);
+                }
+            }
+
+            // Only increment index if we didn't delete
+            if (!deleted)
+            {
+                index++;
+            }
+        }
     }
 
-    // Recreate and open the 'OpenThread' sub key
-    otPlatSettingsInit(otCtx);
+    LogFuncExit(DRIVER_DEFAULT);
 }

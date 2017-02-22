@@ -57,6 +57,8 @@ otPlatReset(
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
 
+    LogFuncEntry(DRIVER_DEFAULT);
+
     LogInfo(DRIVER_DEFAULT, "Interface %!GUID! resetting...", &pFilter->InterfaceGuid);
 
     // Indicate to the miniport
@@ -70,6 +72,9 @@ otPlatReset(
     pFilter->otPhyState = kStateDisabled;
     pFilter->otCurrentListenChannel = 0xFF;
     pFilter->otPromiscuous = false;
+    pFilter->otPendingMacOffloadEnabled = FALSE;
+    pFilter->otPendingShortAddressCount = 0;
+    pFilter->otPendingExtendedAddressCount = 0;
 
     // Reinitialize the OpenThread library
     pFilter->otCachedRole = kDeviceRoleDisabled;
@@ -91,6 +96,8 @@ otPlatReset(
 
     // Initialze media connect state to disconnected
     otLwfIndicateLinkState(pFilter, MediaConnectStateDisconnected);
+
+    LogFuncExit(DRIVER_DEFAULT);
 }
 
 otPlatResetReason 
