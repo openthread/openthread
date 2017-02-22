@@ -906,7 +906,16 @@ ThreadError otGetParentInfo(otInstance *aInstance, otRouterInfo *aParentInfo)
 
     parent = aInstance->mThreadNetif.GetMle().GetParent();
     memcpy(aParentInfo->mExtAddress.m8, parent->mMacAddr.m8, OT_EXT_ADDRESS_SIZE);
-    aParentInfo->mRloc16 = parent->mValid.mRloc16;
+
+    aParentInfo->mRloc16          = parent->mValid.mRloc16;
+    aParentInfo->mRouterId        = (parent->mValid.mRloc16 >> 10) & 0x3F;
+    aParentInfo->mNextHop         = parent->mNextHop;
+    aParentInfo->mPathCost        = parent->mCost;
+    aParentInfo->mLinkQualityIn   = parent->mLinkInfo.GetLinkQuality(aInstance->mThreadNetif.GetMac().GetNoiseFloor());
+    aParentInfo->mLinkQualityOut  = parent->mLinkQualityOut;
+    aParentInfo->mAge             = static_cast<uint8_t>(Timer::MsecToSec(Timer::GetNow() - parent->mLastHeard));
+    aParentInfo->mAllocated       = parent->mAllocated;
+    aParentInfo->mLinkEstablished = parent->mState == Neighbor::kStateValid;
 
 exit:
     return error;
