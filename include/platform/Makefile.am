@@ -42,6 +42,7 @@ ot_platform_headers                      =\
     settings.h                            \
     messagepool.h                         \
     toolchain.h                           \
+    usec-alarm.h                          \
     $(NULL)
 
 ot_platformdir = $(includedir)/platform

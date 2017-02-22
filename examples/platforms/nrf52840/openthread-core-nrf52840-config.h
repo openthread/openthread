@@ -84,6 +84,14 @@
 #define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT            1
 
 /**
+ * @def OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
+ *
+ * Define to 1 if you want to enable microsecond backoff timer implemented in platform.
+ *
+ */
+#define OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER     1
+
+/**
  * @def SETTINGS_CONFIG_BASE_ADDRESS
  *
  * The base address of settings.

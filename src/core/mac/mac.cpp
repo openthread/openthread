@@ -50,6 +50,7 @@
 #include <mac/mac.hpp>
 #include <mac/mac_frame.hpp>
 #include <platform/random.h>
+#include <platform/usec-alarm.h>
 #include <thread/mle_router.hpp>
 #include <thread/thread_netif.hpp>
 #include <openthread-instance.h>
@@ -84,7 +85,7 @@ void Mac::StartCsmaBackoff(void)
     {
         // If the radio supports the retry and back off logic, immediately schedule the send,
         // and the radio will take care of everything.
-        mBackoffTimer.Start(0);
+        HandleBeginTransmit();
     }
     else
     {
@@ -96,16 +97,29 @@ void Mac::StartCsmaBackoff(void)
             backoffExponent = kMaxBE;
         }
 
-        backoff = kMinBackoff + (kUnitBackoffPeriod * kPhyUsPerSymbol * (1 << backoffExponent)) / 1000;
-        backoff = (otPlatRandomGet() % backoff);
+        backoff = (otPlatRandomGet() % (1UL << backoffExponent));
+        backoff *= (kUnitBackoffPeriod * kPhyUsPerSymbol);
 
-        mBackoffTimer.Start(backoff);
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
+        otPlatUsecAlarmTime now;
+        otPlatUsecAlarmTime delay;
+
+        otPlatUsecAlarmGetNow(&now);
+        delay.mMs = backoff / 1000UL;
+        delay.mUs = backoff - (delay.mMs * 1000UL);
+
+        otPlatUsecAlarmStartAt(mNetif.GetInstance(), &now, &delay, &Mac::HandleBeginTransmit, this);
+#else // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
+        mBackoffTimer.Start(backoff / 1000UL);
+#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
     }
 }
 
 Mac::Mac(ThreadNetif &aThreadNetif):
     mMacTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleMacTimer, this),
+#if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
     mBackoffTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleBeginTransmit, this),
+#endif
     mReceiveTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleReceiveTimer, this),
     mNetif(aThreadNetif),
     mEnergyScanSampleRssiTask(aThreadNetif.GetIp6().mTaskletScheduler, &Mac::HandleEnergyScanSampleRssi, this),
@@ -1629,6 +1643,7 @@ void Mac::ClearSrcMatchEntries()
     otPlatRadioClearSrcMatchExtEntries(mNetif.GetInstance());
     otLogDebgMac("Clearing source match table");
 }
+
 
 }  // namespace Mac
 }  // namespace Thread
