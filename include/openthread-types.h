@@ -329,6 +329,21 @@ struct otIp6Address
 
 typedef struct otIp6Address otIp6Address;
 
+
+/**
+ * This structure represents the local and peer IPv6 socket addresses.
+ */
+typedef struct otMessageInfo
+{
+    otIp6Address mSockAddr;     ///< The local IPv6 address.
+    otIp6Address mPeerAddr;     ///< The peer IPv6 address.
+    uint16_t     mSockPort;     ///< The local transport-layer port.
+    uint16_t     mPeerPort;     ///< The peer transport-layer port.
+    int8_t       mInterfaceId;  ///< An IPv6 interface identifier.
+    uint8_t      mHopLimit;     ///< The IPv6 Hop Limit.
+    const void  *mLinkInfo;     ///< A pointer to link-specific information.
+} otMessageInfo;
+
 /**
  * @addtogroup commands  Commands
  *
@@ -988,6 +1003,86 @@ typedef struct
  */
 
 /**
+ * @addtogroup icmp6  ICMPv6
+ *
+ * @brief
+ *   This module includes functions that control ICMPv6 communication.
+ *
+ * @{
+ *
+ */
+
+/**
+ * ICMPv6 Message Types
+ *
+*/
+typedef enum otIcmp6Type
+{
+    kIcmp6TypeDstUnreach  = 1,     ///< Destination Unreachable
+    kIcmp6TypeEchoRequest = 128,   ///< Echo Request
+    kIcmp6TypeEchoReply   = 129,   ///< Echo Reply
+} otIcmp6Type;
+
+/**
+ * ICMPv6 Message Codes
+ *
+ */
+typedef enum otIcmp6Code
+{
+    kIcmp6CodeDstUnreachNoRoute = 0,  ///< Destination Unreachable No Route
+} otIcmp6Code;
+
+#define OT_ICMP6_HEADER_DATA_SIZE  4   ///< Size of an message specific data of ICMPv6 Header.
+
+/**
+ * This structure represents an ICMPv6 header.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+struct otIcmp6Header
+{
+    uint8_t      mType;      ///< Type
+    uint8_t      mCode;      ///< Code
+    uint16_t     mChecksum;  ///< Checksum
+    union
+    {
+        uint8_t  m8[OT_ICMP6_HEADER_DATA_SIZE / sizeof(uint8_t)];
+        uint16_t m16[OT_ICMP6_HEADER_DATA_SIZE / sizeof(uint16_t)];
+        uint32_t m32[OT_ICMP6_HEADER_DATA_SIZE / sizeof(uint32_t)];
+    } mData;                 ///< Message-specific data
+} OT_TOOL_PACKED_END;
+
+typedef struct otIcmp6Header otIcmp6Header;
+
+/**
+ * This callback allows OpenThread to inform the application of a received ICMPv6 message.
+ *
+ * @param[in]  aContext      A pointer to arbitrary context information.
+ * @param[in]  aMessage      A pointer to the received message.
+ * @param[in]  aMessageInfo  A pointer to message information associated with @p aMessage.
+ * @param[in]  aIcmpHeader   A pointer to the received ICMPv6 header.
+ *
+ */
+typedef void (*otIcmp6ReceiveCallback)(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo,
+                                       const otIcmp6Header *aIcmpHeader);
+
+/**
+ * This structure implements ICMPv6 message handler.
+ *
+ */
+typedef struct otIcmp6Handler
+{
+    otIcmp6ReceiveCallback  mReceiveCallback;
+    void                   *mContext;
+    struct otIcmp6Handler  *mNext;
+} otIcmp6Handler;
+
+/**
+ * @}
+ *
+ */
+
+/**
  * @addtogroup udp  UDP
  *
  * @brief
@@ -1006,20 +1101,6 @@ typedef struct otSockAddr
     uint16_t     mPort;     ///< A transport-layer port.
     int8_t       mScopeId;  ///< An IPv6 scope identifier.
 } otSockAddr;
-
-/**
- * This structure represents the local and peer IPv6 socket addresses.
- */
-typedef struct otMessageInfo
-{
-    otIp6Address mSockAddr;     ///< The local IPv6 address.
-    otIp6Address mPeerAddr;     ///< The peer IPv6 address.
-    uint16_t     mSockPort;     ///< The local transport-layer port.
-    uint16_t     mPeerPort;     ///< The peer transport-layer port.
-    int8_t       mInterfaceId;  ///< An IPv6 interface identifier.
-    uint8_t      mHopLimit;     ///< The IPv6 Hop Limit.
-    const void  *mLinkInfo;     ///< A pointer to link-specific information.
-} otMessageInfo;
 
 /**
  * This callback allows OpenThread to inform the application of a received UDP message.

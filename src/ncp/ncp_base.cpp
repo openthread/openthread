@@ -44,6 +44,7 @@
 #include <net/ip6.hpp>
 #include <openthread.h>
 #include <openthread-diag.h>
+#include <openthread-icmp6.h>
 #if OPENTHREAD_ENABLE_JAM_DETECTION
 #include <openthread-jam-detection.h>
 #endif
@@ -515,7 +516,7 @@ NcpBase::NcpBase(otInstance *aInstance):
     otSetStateChangedCallback(mInstance, &NcpBase::HandleNetifStateChanged, this);
     otSetReceiveIp6DatagramCallback(mInstance, &NcpBase::HandleDatagramFromStack, this);
     otSetLinkPcapCallback(mInstance, &NcpBase::HandleRawFrame, static_cast<void*>(this));
-    otSetIcmpEchoEnabled(mInstance, false);
+    otIcmp6SetEchoEnabled(mInstance, false);
     otSetReceiveIp6DatagramFilterEnabled(mInstance, true);
 
     mUpdateChangedPropsTask.Post();
@@ -2711,7 +2712,7 @@ ThreadError NcpBase::GetPropertyHandler_IPV6_ICMP_PING_OFFLOAD(uint8_t header, s
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_BOOL_S,
-               otIsIcmpEchoEnabled(mInstance)
+               otIcmp6IsEchoEnabled(mInstance)
            );
 }
 
@@ -4379,7 +4380,7 @@ ThreadError NcpBase::SetPropertyHandler_IPV6_ICMP_PING_OFFLOAD(uint8_t header, s
 
     if (parsedLength > 0)
     {
-        otSetIcmpEchoEnabled(mInstance, isEnabled);
+        otIcmp6SetEchoEnabled(mInstance, isEnabled);
 
         errorCode = HandleCommandPropertyGet(header, key);
     }

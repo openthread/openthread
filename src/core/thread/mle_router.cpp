@@ -3619,8 +3619,8 @@ ThreadError MleRouter::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDes
     messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(aMeshSource);
     messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
 
-    mNetif.GetIp6().mIcmp.SendError(Ip6::IcmpHeader::kTypeDstUnreach,
-                                    Ip6::IcmpHeader::kCodeDstUnreachNoRoute,
+    mNetif.GetIp6().mIcmp.SendError(kIcmp6TypeDstUnreach,
+                                    kIcmp6CodeDstUnreachNoRoute,
                                     messageInfo, aIp6Header);
 
     return kThreadError_Drop;

@@ -343,26 +343,6 @@ void otSetReceiveIp6DatagramFilterEnabled(otInstance *aInstance, bool aEnabled);
 ThreadError otSendIp6Datagram(otInstance *aInstance, otMessage aMessage);
 
 /**
- * This function indicates whether or not ICMPv6 Echo processing is enabled.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- *
- * @retval TRUE   ICMPv6 Echo processing is enabled.
- * @retval FALSE  ICMPv6 Echo processing is disabled.
- *
- */
-bool otIsIcmpEchoEnabled(otInstance *aInstance);
-
-/**
- * This function sets whether or not ICMPv6 Echo processing is enabled.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aEnabled  TRUE to enable ICMPv6 Echo processing, FALSE otherwise.
- *
- */
-void otSetIcmpEchoEnabled(otInstance *aInstance, bool aEnabled);
-
-/**
  * @}
  *
  */

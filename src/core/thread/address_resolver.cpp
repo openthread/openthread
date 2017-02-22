@@ -55,7 +55,7 @@ AddressResolver::AddressResolver(ThreadNetif &aThreadNetif) :
     mAddressError(OPENTHREAD_URI_ADDRESS_ERROR, &AddressResolver::HandleAddressError, this),
     mAddressQuery(OPENTHREAD_URI_ADDRESS_QUERY, &AddressResolver::HandleAddressQuery, this),
     mAddressNotification(OPENTHREAD_URI_ADDRESS_NOTIFY, &AddressResolver::HandleAddressNotification, this),
-    mIcmpHandler(&AddressResolver::HandleDstUnreach, this),
+    mIcmpHandler(&AddressResolver::HandleIcmpReceive, this),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, &AddressResolver::HandleTimer, this),
     mNetif(aThreadNetif)
 {
@@ -65,7 +65,7 @@ AddressResolver::AddressResolver(ThreadNetif &aThreadNetif) :
     mNetif.GetCoapServer().AddResource(mAddressQuery);
     mNetif.GetCoapServer().AddResource(mAddressNotification);
 
-    mNetif.GetIp6().mIcmp.RegisterCallbacks(mIcmpHandler);
+    mNetif.GetIp6().mIcmp.RegisterHandler(mIcmpHandler);
 }
 
 void AddressResolver::Clear()
@@ -645,20 +645,23 @@ void AddressResolver::HandleTimer()
     }
 }
 
-void AddressResolver::HandleDstUnreach(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
-                                       const Ip6::IcmpHeader &aIcmpHeader)
+void AddressResolver::HandleIcmpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo,
+                                        const otIcmp6Header *aIcmpHeader)
 {
-    static_cast<AddressResolver *>(aContext)->HandleDstUnreach(aMessage, aMessageInfo, aIcmpHeader);
+    static_cast<AddressResolver *>(aContext)->HandleIcmpReceive(*static_cast<Message *>(aMessage),
+                                                                *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
+                                                                *static_cast<const Ip6::IcmpHeader *>(aIcmpHeader));
 
     (void)aMessageInfo;
 }
 
-void AddressResolver::HandleDstUnreach(Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
-                                       const Ip6::IcmpHeader &aIcmpHeader)
+void AddressResolver::HandleIcmpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
+                                        const Ip6::IcmpHeader &aIcmpHeader)
 {
     Ip6::Header ip6Header;
 
-    VerifyOrExit(aIcmpHeader.GetCode() == Ip6::IcmpHeader::kCodeDstUnreachNoRoute, ;);
+    VerifyOrExit(aIcmpHeader.GetType() == kIcmp6TypeDstUnreach, ;);
+    VerifyOrExit(aIcmpHeader.GetCode() == kIcmp6CodeDstUnreachNoRoute, ;);
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(ip6Header), &ip6Header) == sizeof(ip6Header), ;);
 
     for (int i = 0; i < kCacheEntries; i++)
