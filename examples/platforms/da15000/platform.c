@@ -43,7 +43,6 @@
 #include "hw_watchdog.h"
 #include "ftdf.h"
 #include "hw_gpio.h"
-#include "platform/uart.h"
 
 static bool sBlink = false;
 static int  sMsCounterInit;
@@ -144,8 +143,6 @@ void PlatformInit(int argc, char *argv[])
     da15000AlarmInit();
     // Initialize Radio
     da15000RadioInit();
-    // Initialize UART
-    otPlatUartEnable();
     // enable interrupts
     portENABLE_INTERRUPTS();
 
