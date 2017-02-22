@@ -39,7 +39,7 @@
       <PreprocessorDefinitions>
         ;%(PreprocessorDefinitions);
         MBEDTLS_CONFIG_FILE="mbedtls-config.h";
-        OPENTHREAD_MULTIPLE_INSTANCE
+        OPENTHREAD_MULTIPLE_INSTANCE;
       </PreprocessorDefinitions>
       <AdditionalIncludeDirectories>
         ..\..\include;
@@ -71,7 +71,6 @@
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\md.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\md_wrap.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\memory_buffer_alloc.c" />
-    <ClCompile Include="..\..\third_party\mbedtls\repo\library\pkcs5.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\platform.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\sha256.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_ciphersuites.c" />

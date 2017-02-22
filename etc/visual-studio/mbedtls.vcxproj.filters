@@ -88,8 +88,5 @@
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_tls.c">
       <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\mbedtls\repo\library\pkcs5.c">
-      <Filter>Source Files\repo\library</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>
