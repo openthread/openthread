@@ -78,7 +78,7 @@ typedef enum otCoapCode
     kCoapRequestPost     = 0x02,  ///< Post
     kCoapRequestPut      = 0x03,  ///< Put
     kCoapRequestDelete   = 0x04,  ///< Delete
-    kCoapResponse200     = 0x40,  ///< 2.00
+    kCoapResponseCodeMin = 0x40,  ///< 2.00
     kCoapResponseCreated = 0x41,  ///< Created
     kCoapResponseDeleted = 0x42,  ///< Deleted
     kCoapResponseValid   = 0x43,  ///< Valid

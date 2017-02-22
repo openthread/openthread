@@ -380,7 +380,7 @@ public:
      * @retval FALSE  Header is not a response header.
      *
      */
-    bool IsResponse(void) const { return (GetCode() >= kCoapResponse200); };
+    bool IsResponse(void) const { return (GetCode() >= kCoapResponseCodeMin); };
 
     /**
      * This method checks if a header is a CON message header.
