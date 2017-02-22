@@ -608,6 +608,23 @@ typedef enum
      *  Specified by Thread. Randomly-chosen, but non-volatile EUI-64.
      */
     SPINEL_PROP_MAC_EXTENDED_ADDR      = SPINEL_PROP_MAC_EXT__BEGIN + 2,
+
+    /// MAC Source Match Enabled Flag
+    /** Format: `b`
+     */
+    SPINEL_PROP_MAC_SRC_MATCH_ENABLED  = SPINEL_PROP_MAC_EXT__BEGIN + 3,
+
+    /// MAC Source Match Short Address List
+    /** Format: `A(S)`
+     */
+    SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES
+                                       = SPINEL_PROP_MAC_EXT__BEGIN + 4,
+
+    /// MAC Source Match Extended Address List
+    /** Format: `A(E)`
+     */
+    SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES
+                                       = SPINEL_PROP_MAC_EXT__BEGIN + 5,
     SPINEL_PROP_MAC_EXT__END           = 0x1400,
 
     SPINEL_PROP_NET__BEGIN           = 0x40,

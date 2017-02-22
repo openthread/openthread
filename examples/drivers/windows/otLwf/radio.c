@@ -129,8 +129,6 @@ otLwfRadioInit(
     pFilter->otTransmitFrame.mPsdu = pFilter->otTransmitMessage;
     
     pFilter->otPendingMacOffloadEnabled = FALSE;
-    pFilter->otPendingShortAddressCount = 0;
-    pFilter->otPendingExtendedAddressCount = 0;
 
     // Cache the factory address
     otLwfRadioGetFactoryAddress(pFilter);
@@ -529,64 +527,6 @@ otLwfRadioTransmitFrameDone(
     LogFuncExit(DRIVER_DATA_PATH);
 }
 
-NDIS_STATUS 
-otPlatRadioSendPendingMacOffload(
-    _In_ PMS_FILTER pFilter
-    )
-{
-    // TODO
-    UNREFERENCED_PARAMETER(pFilter);
-    return STATUS_NOT_SUPPORTED;
-    /*NDIS_STATUS status;
-    ULONG bytesProcessed;
-    UCHAR ShortAddressCount = pFilter->otPendingMacOffloadEnabled == TRUE ? pFilter->otPendingShortAddressCount : 0;
-    UCHAR ExtendedAddressCount = pFilter->otPendingMacOffloadEnabled == TRUE ? pFilter->otPendingExtendedAddressCount : 0;
-    USHORT OidBufferSize = COMPLETE_SIZEOF_OT_PENDING_MAC_OFFLOAD_REVISION_1(ShortAddressCount, ExtendedAddressCount);
-    POT_PENDING_MAC_OFFLOAD OidBuffer = (POT_PENDING_MAC_OFFLOAD)FILTER_ALLOC_MEM(pFilter->FilterHandle, OidBufferSize);
-    PUCHAR Offset = (PUCHAR)(OidBuffer + 1);
-    ULONG BufferSizeLeft = OidBufferSize - sizeof(OT_PENDING_MAC_OFFLOAD);
-
-    OidBuffer->Header.Type = NDIS_OBJECT_TYPE_DEFAULT;
-    OidBuffer->Header.Revision = OT_PENDING_MAC_OFFLOAD_REVISION_1;
-    OidBuffer->Header.Size = OidBufferSize;
-
-    OidBuffer->ShortAddressCount = ShortAddressCount;
-    OidBuffer->ExtendedAddressCount = ExtendedAddressCount;
-
-    if (ShortAddressCount != 0)
-    {
-        memcpy_s(Offset, BufferSizeLeft, pFilter->otPendingShortAddresses, sizeof(USHORT) * ShortAddressCount);
-        Offset += sizeof(USHORT) * ShortAddressCount;
-        BufferSizeLeft -= sizeof(USHORT) * ShortAddressCount;
-    }
-
-    if (ExtendedAddressCount != 0)
-    {
-        memcpy_s(Offset, BufferSizeLeft, pFilter->otPendingExtendedAddresses, sizeof(ULONGLONG) * ExtendedAddressCount);
-    }
-
-    LogInfo(DRIVER_DEFAULT, "Interface %!GUID! indicating updated Pending Mac Offload", &pFilter->InterfaceGuid);
-    
-    // Indicate to the miniport
-    status = 
-        otLwfSendInternalRequest(
-            pFilter,
-            NdisRequestSetInformation,
-            OID_OT_PENDING_MAC_OFFLOAD,
-            OidBuffer,
-            OidBufferSize,
-            &bytesProcessed
-            );
-    if (status != NDIS_STATUS_SUCCESS)
-    {
-        LogError(DRIVER_DEFAULT, "Set for OID_OT_PENDING_MAC_OFFLOAD failed, %!NDIS_STATUS!", status);
-    }
-
-    FILTER_FREE_MEM(OidBuffer);
-
-    return status;*/
-}
-
 void otPlatRadioEnableSrcMatch(_In_ otInstance *otCtx, bool aEnable)
 {
     NT_ASSERT(otCtx);
@@ -595,9 +535,21 @@ void otPlatRadioEnableSrcMatch(_In_ otInstance *otCtx, bool aEnable)
     // Ignore if we are already in the correct state
     if (aEnable == pFilter->otPendingMacOffloadEnabled) return;
 
-    // Set the new value and update the miniport
+    // Cache the new value
     pFilter->otPendingMacOffloadEnabled = aEnable ? TRUE : FALSE;
-    otPlatRadioSendPendingMacOffload(pFilter);
+
+    // Indicate to the miniport
+    NTSTATUS status =
+        otLwfCmdSetProp(
+            pFilter,
+            SPINEL_PROP_MAC_SRC_MATCH_ENABLED,
+            SPINEL_DATATYPE_BOOL_S,
+            (aEnable ? TRUE : FALSE)
+        );
+    if (!NT_SUCCESS(status))
+    {
+        LogError(DRIVER_DEFAULT, "Set SPINEL_PROP_MAC_SRC_MATCH_ENABLED failed, %!STATUS!", status);
+    }
 }
 
 ThreadError otPlatRadioAddSrcMatchShortEntry(_In_ otInstance *otCtx, const uint16_t aShortAddress)
@@ -605,34 +557,20 @@ ThreadError otPlatRadioAddSrcMatchShortEntry(_In_ otInstance *otCtx, const uint1
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
 
-    // Check to see if it is in the list
-    BOOLEAN Found = false;
-    for (ULONG i = 0; i < pFilter->otPendingShortAddressCount; i++)
+    // Indicate to the miniport
+    NTSTATUS status =
+        otLwfCmdInsertProp(
+            pFilter,
+            SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES,
+            SPINEL_DATATYPE_UINT16_S,
+            aShortAddress
+        );
+    if (!NT_SUCCESS(status))
     {
-        if (aShortAddress == pFilter->otPendingShortAddresses[i])
-        {
-            Found = TRUE;
-            break;
-        }
+        LogError(DRIVER_DEFAULT, "Insert SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES failed, %!STATUS!", status);
     }
 
-    // Already in the list, return success
-    if (Found) return kThreadError_None;
-
-    // Make sure we have room
-    if (pFilter->otPendingShortAddressCount == MAX_PENDING_MAC_SIZE) return kThreadError_NoBufs;
-    
-    // Copy to the list
-    pFilter->otPendingShortAddresses[pFilter->otPendingShortAddressCount] = aShortAddress;
-    pFilter->otPendingShortAddressCount++;
-
-    // Update the miniport if enabled
-    if (pFilter->otPendingMacOffloadEnabled)
-    {
-        otPlatRadioSendPendingMacOffload(pFilter);
-    }
-
-    return kThreadError_None;
+    return NT_SUCCESS(status) ? kThreadError_None : kThreadError_Failed;
 }
 
 ThreadError otPlatRadioAddSrcMatchExtEntry(_In_ otInstance *otCtx, const uint8_t *aExtAddress)
@@ -640,34 +578,20 @@ ThreadError otPlatRadioAddSrcMatchExtEntry(_In_ otInstance *otCtx, const uint8_t
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
 
-    // Check to see if it is in the list
-    BOOLEAN Found = false;
-    for (ULONG i = 0; i < pFilter->otPendingExtendedAddressCount; i++)
+    // Indicate to the miniport
+    NTSTATUS status =
+        otLwfCmdInsertProp(
+            pFilter,
+            SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES,
+            SPINEL_DATATYPE_EUI64_S,
+            aExtAddress
+        );
+    if (!NT_SUCCESS(status))
     {
-        if (memcmp(aExtAddress, &pFilter->otPendingExtendedAddresses[i], sizeof(ULONGLONG)) == 0)
-        {
-            Found = TRUE;
-            break;
-        }
+        LogError(DRIVER_DEFAULT, "Insert SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES failed, %!STATUS!", status);
     }
 
-    // Already in the list, return success
-    if (Found) return kThreadError_None;
-
-    // Make sure we have room
-    if (pFilter->otPendingExtendedAddressCount == MAX_PENDING_MAC_SIZE) return kThreadError_NoBufs;
-    
-    // Copy to the list
-    memcpy(&pFilter->otPendingExtendedAddresses[pFilter->otPendingExtendedAddressCount], aExtAddress, sizeof(ULONGLONG));
-    pFilter->otPendingExtendedAddressCount++;
-
-    // Update the miniport if enabled
-    if (pFilter->otPendingMacOffloadEnabled)
-    {
-        otPlatRadioSendPendingMacOffload(pFilter);
-    }
-
-    return kThreadError_None;
+    return NT_SUCCESS(status) ? kThreadError_None : kThreadError_Failed;
 }
 
 ThreadError otPlatRadioClearSrcMatchShortEntry(_In_ otInstance *otCtx, const uint16_t aShortAddress)
@@ -675,31 +599,20 @@ ThreadError otPlatRadioClearSrcMatchShortEntry(_In_ otInstance *otCtx, const uin
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
 
-    // Check to see if it is in the list
-    BOOLEAN Found = false;
-    for (ULONG i = 0; i < pFilter->otPendingShortAddressCount; i++)
+    // Indicate to the miniport
+    NTSTATUS status =
+        otLwfCmdRemoveProp(
+            pFilter,
+            SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES,
+            SPINEL_DATATYPE_UINT16_S,
+            aShortAddress
+        );
+    if (!NT_SUCCESS(status))
     {
-        if (aShortAddress == pFilter->otPendingShortAddresses[i])
-        {
-            // Remove it from the list
-            if (i + 1 != pFilter->otPendingShortAddressCount)
-                pFilter->otPendingShortAddresses[i] = pFilter->otPendingShortAddresses[pFilter->otPendingShortAddressCount - 1];
-            pFilter->otPendingShortAddressCount--;
-            Found = TRUE;
-            break;
-        }
+        LogError(DRIVER_DEFAULT, "Remove SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES failed, %!STATUS!", status);
     }
 
-    // Wasn't in the list, return failure
-    if (Found == FALSE) return kThreadError_NotFound;
-
-    // Update the miniport if enabled
-    if (pFilter->otPendingMacOffloadEnabled)
-    {
-        otPlatRadioSendPendingMacOffload(pFilter);
-    }
-
-    return kThreadError_None;
+    return NT_SUCCESS(status) ? kThreadError_None : kThreadError_Failed;
 }
 
 ThreadError otPlatRadioClearSrcMatchExtEntry(_In_ otInstance *otCtx, const uint8_t *aExtAddress)
@@ -707,31 +620,20 @@ ThreadError otPlatRadioClearSrcMatchExtEntry(_In_ otInstance *otCtx, const uint8
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
 
-    // Check to see if it is in the list
-    BOOLEAN Found = false;
-    for (ULONG i = 0; i < pFilter->otPendingExtendedAddressCount; i++)
+    // Indicate to the miniport
+    NTSTATUS status =
+        otLwfCmdRemoveProp(
+            pFilter,
+            SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES,
+            SPINEL_DATATYPE_EUI64_S,
+            aExtAddress
+        );
+    if (!NT_SUCCESS(status))
     {
-        if (memcmp(aExtAddress, &pFilter->otPendingExtendedAddresses[i], sizeof(ULONGLONG)) == 0)
-        {
-            // Remove it from the list
-            if (i + 1 != pFilter->otPendingExtendedAddressCount)
-                pFilter->otPendingExtendedAddresses[i] = pFilter->otPendingExtendedAddresses[pFilter->otPendingExtendedAddressCount - 1];
-            pFilter->otPendingExtendedAddressCount--;
-            Found = TRUE;
-            break;
-        }
-    }
-    
-    // Wasn't in the list, return failure
-    if (Found == FALSE) return kThreadError_NotFound;
-
-    // Update the miniport if enabled
-    if (pFilter->otPendingMacOffloadEnabled)
-    {
-        otPlatRadioSendPendingMacOffload(pFilter);
+        LogError(DRIVER_DEFAULT, "Remove SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES failed, %!STATUS!", status);
     }
 
-    return kThreadError_None;
+    return NT_SUCCESS(status) ? kThreadError_None : kThreadError_Failed;
 }
 
 void otPlatRadioClearSrcMatchShortEntries(_In_ otInstance *otCtx)
@@ -739,12 +641,17 @@ void otPlatRadioClearSrcMatchShortEntries(_In_ otInstance *otCtx)
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
 
-    // Ignore if we are already in the correct state
-    if (pFilter->otPendingShortAddressCount == 0) return;
-
-    // Set the new value and update the miniport
-    pFilter->otPendingShortAddressCount = 0;
-    otPlatRadioSendPendingMacOffload(pFilter);
+    // Indicate to the miniport
+    NTSTATUS status =
+        otLwfCmdSetProp(
+            pFilter,
+            SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES,
+            NULL
+        );
+    if (!NT_SUCCESS(status))
+    {
+        LogError(DRIVER_DEFAULT, "Set SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES failed, %!STATUS!", status);
+    }
 }
 
 void otPlatRadioClearSrcMatchExtEntries(_In_ otInstance *otCtx)
@@ -752,12 +659,17 @@ void otPlatRadioClearSrcMatchExtEntries(_In_ otInstance *otCtx)
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
 
-    // Ignore if we are already in the correct state
-    if (pFilter->otPendingExtendedAddressCount == 0) return;
-
-    // Set the new value and update the miniport
-    pFilter->otPendingExtendedAddressCount = 0;
-    otPlatRadioSendPendingMacOffload(pFilter);
+    // Indicate to the miniport
+    NTSTATUS status =
+        otLwfCmdSetProp(
+            pFilter,
+            SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES,
+            NULL
+        );
+    if (!NT_SUCCESS(status))
+    {
+        LogError(DRIVER_DEFAULT, "Set SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES failed, %!STATUS!", status);
+    }
 }
 
 ThreadError otPlatRadioEnergyScan(_In_ otInstance *otCtx, uint8_t aScanChannel, uint16_t aScanDuration)

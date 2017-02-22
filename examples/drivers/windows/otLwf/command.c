@@ -1114,6 +1114,7 @@ otLwfCmdGetProp(
 typedef struct _SPINEL_SET_PROP_CONTEXT
 {
     KEVENT              CompletionEvent;
+    UINT                ExpectedResultCommand;
     spinel_prop_key_t   Key;
     NTSTATUS            Status;
 } SPINEL_SET_PROP_CONTEXT;
@@ -1139,11 +1140,7 @@ otLwfSetPropHandler(
     {
         CmdContext->Status = STATUS_CANCELLED;
     }
-    else if (Command != SPINEL_CMD_PROP_VALUE_IS)
-    {
-        CmdContext->Status = STATUS_INVALID_PARAMETER;
-    }
-    else if (Key == SPINEL_PROP_LAST_STATUS)
+    else if (Command == SPINEL_CMD_PROP_VALUE_IS && Key == SPINEL_PROP_LAST_STATUS)
     {
         spinel_status_t spinel_status = SPINEL_STATUS_OK;
         spinel_ssize_t packed_len = spinel_datatype_unpack(Data, DataLength, "i", &spinel_status);
@@ -1158,12 +1155,18 @@ otLwfSetPropHandler(
             CmdContext->Status = ThreadErrorToNtstatus(errorCode);
         }
     }
+    else if (Command != CmdContext->ExpectedResultCommand)
+    {
+        NT_ASSERT(FALSE);
+        CmdContext->Status = STATUS_INVALID_PARAMETER;
+    }
     else if (Key == CmdContext->Key)
     {
         CmdContext->Status = STATUS_SUCCESS;
     }
     else
     {
+        NT_ASSERT(FALSE);
         CmdContext->Status = STATUS_INVALID_PARAMETER;
     }
 
@@ -1175,11 +1178,12 @@ otLwfSetPropHandler(
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
-otLwfCmdSetProp(
+otLwfCmdSetPropV(
     _In_ PMS_FILTER pFilter,
+    _In_ UINT Command,
     _In_ spinel_prop_key_t Key,
-    _In_ const char *pack_format, 
-    ...
+    _In_opt_ const char *pack_format,
+    _In_opt_ va_list args
     )
 {
     NTSTATUS status;
@@ -1192,10 +1196,24 @@ otLwfCmdSetProp(
     Context.Key = Key;
     Context.Status = STATUS_SUCCESS;
 
-    LogFuncEntryMsg(DRIVER_DEFAULT, "Key=%u", (ULONG)Key);
+    LogFuncEntryMsg(DRIVER_DEFAULT, "Cmd=%u Key=%u", Command, (ULONG)Key);
 
-    va_list args;
-    va_start(args, pack_format);
+    if (Command == SPINEL_CMD_PROP_VALUE_SET)
+    {
+        Context.ExpectedResultCommand = SPINEL_CMD_PROP_VALUE_IS;
+    }
+    else if (Command == SPINEL_CMD_PROP_VALUE_INSERT)
+    {
+        Context.ExpectedResultCommand = SPINEL_CMD_PROP_VALUE_INSERTED;
+    }
+    else if (Command == SPINEL_CMD_PROP_VALUE_REMOVE)
+    {
+        Context.ExpectedResultCommand = SPINEL_CMD_PROP_VALUE_REMOVED;
+    }
+    else
+    {
+        ASSERT(FALSE);
+    }
 
     // Send the request transaction
     status = 
@@ -1204,7 +1222,7 @@ otLwfCmdSetProp(
             otLwfSetPropHandler, 
             &Context, 
             &tid,
-            SPINEL_CMD_PROP_VALUE_SET, 
+            Command,
             Key, 
             8, 
             pack_format,
@@ -1237,12 +1255,58 @@ otLwfCmdSetProp(
     {
         Context.Status = status;
     }
-    
-    va_end(args);
 
     LogFuncExitNT(DRIVER_DEFAULT, Context.Status);
 
     return Context.Status;
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+otLwfCmdSetProp(
+    _In_ PMS_FILTER pFilter,
+    _In_ spinel_prop_key_t Key,
+    _In_opt_ const char *pack_format,
+    ...
+    )
+{
+    va_list args;
+    va_start(args, pack_format);
+    NTSTATUS status = otLwfCmdSetPropV(pFilter, SPINEL_CMD_PROP_VALUE_SET, Key, pack_format, args);
+    va_end(args);
+    return status;
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+otLwfCmdInsertProp(
+    _In_ PMS_FILTER pFilter,
+    _In_ spinel_prop_key_t Key,
+    _In_opt_ const char *pack_format,
+    ...
+    )
+{
+    va_list args;
+    va_start(args, pack_format);
+    NTSTATUS status = otLwfCmdSetPropV(pFilter, SPINEL_CMD_PROP_VALUE_INSERT, Key, pack_format, args);
+    va_end(args);
+    return status;
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+otLwfCmdRemoveProp(
+    _In_ PMS_FILTER pFilter,
+    _In_ spinel_prop_key_t Key,
+    _In_opt_ const char *pack_format,
+    ...
+    )
+{
+    va_list args;
+    va_start(args, pack_format);
+    NTSTATUS status = otLwfCmdSetPropV(pFilter, SPINEL_CMD_PROP_VALUE_REMOVE, Key, pack_format, args);
+    va_end(args);
+    return status;
 }
 
 //
