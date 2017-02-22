@@ -2842,12 +2842,12 @@ ThreadError Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::Me
         tlvs[numTlvs++] = Tlv::kLinkFrameCounter;
     }
 
+    SuccessOrExit(error = SendChildUpdateResponse(tlvs, numTlvs, challenge));
+
     if (mRetrieveNewNetworkData)
     {
-        SendDataRequest(aMessageInfo.GetPeerAddr(), dataRequestTlvs, sizeof(tlvs), 0);
+        SendDataRequest(aMessageInfo.GetPeerAddr(), dataRequestTlvs, sizeof(dataRequestTlvs), 0);
     }
-
-    SuccessOrExit(error = SendChildUpdateResponse(tlvs, numTlvs, challenge));
 
 exit:
     return error;
