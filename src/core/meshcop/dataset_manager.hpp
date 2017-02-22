@@ -122,6 +122,13 @@ public:
     ThreadError Set(const Dataset &aDataset);
 
     ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
+
+private:
+    static void HandleGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                          const otMessageInfo *aMessageInfo);
+    void HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    Coap::Resource mResourceGet;
 };
 
 class PendingDatasetBase: public DatasetManager
@@ -155,6 +162,13 @@ protected:
     Timer mTimer;
     uint32_t mLocalTime;
     uint32_t mNetworkTime;
+
+private:
+    static void HandleGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                          const otMessageInfo *aMessageInfo);
+    void HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    Coap::Resource mResourceGet;
 };
 
 }  // namespace MeshCoP
