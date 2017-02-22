@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="openthread.configuration.props" /> 
+  <Import Project="openthread.configuration.props" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>{4111C8BB-D354-4348-AD3C-EB6832E84831}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -38,7 +38,8 @@
     <ClCompile>
       <PreprocessorDefinitions>
         ;%(PreprocessorDefinitions);
-        MBEDTLS_CONFIG_FILE="mbedtls-config.h"
+        MBEDTLS_CONFIG_FILE="mbedtls-config.h";
+        OPENTHREAD_MULTIPLE_INSTANCE
       </PreprocessorDefinitions>
       <AdditionalIncludeDirectories>
         ..\..\include;
@@ -70,6 +71,7 @@
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\md.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\md_wrap.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\memory_buffer_alloc.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\pkcs5.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\platform.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\sha256.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_ciphersuites.c" />

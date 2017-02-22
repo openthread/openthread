@@ -192,7 +192,23 @@ void TestMessageQueueOtApis(void)
     ThreadError error;
     otMessage message;
 
+#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+    uint64_t otInstanceBufferLength = 0;
+    uint8_t *otInstanceBuffer = NULL;
+
+    // Call to query the buffer size
+    (void)otInstanceInit(NULL, &otInstanceBufferLength);
+
+    // Call to allocate the buffer
+    otInstanceBuffer = (uint8_t *)malloc(otInstanceBufferLength);
+    assert(otInstanceBuffer);
+
+    // Initialize Openthread with the buffer
+    instance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
+#else
     instance = otInstanceInit();
+#endif
+
     VerifyOrQuit(instance != NULL, "Failed to get and init an otInstance.\n");
 
     for (int i = 0; i < kNumTestMessages; i++)
@@ -251,6 +267,11 @@ void TestMessageQueueOtApis(void)
     // Remove all element and make sure queue is empty
     SuccessOrQuit(otMessageQueueDequeue(&queue, msg[2]), "Failed to dequeue a message from otMessageQueue.\n");
     VerifyMessageQueueContentUsingOtApi(&queue, 0);
+
+     otInstanceFinalize(instance);
+#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+     free(otInstanceBuffer);
+#endif
 }
 
 #ifdef ENABLE_TEST_MAIN
