@@ -921,6 +921,22 @@ exit:
     return error;
 }
 
+ThreadError otGetParentAverageRssi(otInstance *aInstance, int8_t *aParentRssi)
+{
+    ThreadError error = kThreadError_None;
+    Router *parent;
+
+    VerifyOrExit(aParentRssi != NULL, error = kThreadError_InvalidArgs);
+
+    parent = aInstance->mThreadNetif.GetMle().GetParent();
+    *aParentRssi = parent->mLinkInfo.GetAverageRss();
+
+    VerifyOrExit(*aParentRssi != LinkQualityInfo::kUnknownRss, error = kThreadError_Failed);
+
+exit:
+    return error;
+}
+
 uint8_t otGetStableNetworkDataVersion(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMle().GetLeaderDataTlv().GetStableDataVersion();
