@@ -229,20 +229,30 @@ void Leader::HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, co
     // verify whether or not MGMT_COMM_SET.req includes at least one valid TLV
     VerifyOrExit(hasValidTlv, state = MeshCoP::StateTlv::kReject);
 
-    for (MeshCoP::Tlv *cur = reinterpret_cast<MeshCoP::Tlv *>(mTlvs + sizeof(CommissioningDataTlv));
-         cur < reinterpret_cast<MeshCoP::Tlv *>(mTlvs + mLength);
-         cur = cur->GetNext())
+    // Find Commissioning Data TLV
+    for (NetworkDataTlv *netDataTlv = reinterpret_cast<NetworkDataTlv *>(mTlvs);
+         netDataTlv < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
+         netDataTlv = netDataTlv->GetNext())
     {
-        if (cur->GetType() == MeshCoP::Tlv::kCommissionerSessionId)
+        if (netDataTlv->GetType() == NetworkDataTlv::kTypeCommissioningData)
         {
-            VerifyOrExit(sessionId ==
-                         static_cast<MeshCoP::CommissionerSessionIdTlv *>(cur)->GetCommissionerSessionId(),
-                         state = MeshCoP::StateTlv::kReject);
-        }
-        else if (cur->GetType() == MeshCoP::Tlv::kBorderAgentLocator)
-        {
-            memcpy(tlvs + length, reinterpret_cast<uint8_t *>(cur), cur->GetLength() + sizeof(MeshCoP::Tlv));
-            length += (cur->GetLength() + sizeof(MeshCoP::Tlv));
+            // Iterate over MeshCoP TLVs and extract desired data
+            for (MeshCoP::Tlv *cur = reinterpret_cast<MeshCoP::Tlv *>(netDataTlv->GetValue());
+                 cur < reinterpret_cast<MeshCoP::Tlv *>(netDataTlv->GetValue() + netDataTlv->GetLength());
+                 cur = cur->GetNext())
+            {
+                if (cur->GetType() == MeshCoP::Tlv::kCommissionerSessionId)
+                {
+                    VerifyOrExit(sessionId ==
+                                 static_cast<MeshCoP::CommissionerSessionIdTlv *>(cur)->GetCommissionerSessionId(),
+                                 state = MeshCoP::StateTlv::kReject);
+                }
+                else if (cur->GetType() == MeshCoP::Tlv::kBorderAgentLocator)
+                {
+                    memcpy(tlvs + length, reinterpret_cast<uint8_t *>(cur), cur->GetLength() + sizeof(MeshCoP::Tlv));
+                    length += (cur->GetLength() + sizeof(MeshCoP::Tlv));
+                }
+            }
         }
     }
 
