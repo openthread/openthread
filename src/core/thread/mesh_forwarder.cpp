@@ -922,7 +922,7 @@ void MeshForwarder::HandlePollTimer()
     case kThreadError_NoBufs:
         // Failed to send DataRequest due to a lack of buffers.
         // Try again following a brief pause to free buffers.
-        mPollTimer.Start(kDataRequstRetryDelay);
+        mPollTimer.Start(kDataRequestRetryDelay);
         break;
 
     case kThreadError_Already:
@@ -1735,8 +1735,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
 
     if (mPollTimer.IsRunning() && aFrame.GetFramePending())
     {
-        // add delay to avoid packet loss due to possible switch senarios between transmit/receive status
-        mPollTimer.Start(OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD);
+        HandlePollTimer();
     }
 
     switch (aFrame.GetType())
