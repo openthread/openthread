@@ -242,7 +242,6 @@ otLwfCmdProcess(
                 KeSetEvent(&pFilter->cmdResetCompleteEvent, IO_NO_INCREMENT, FALSE);
 
                 // TODO - Should this be passed on to Thread or Tunnel logic?
-                NT_ASSERT(pFilter->DeviceStatus == OTLWF_DEVICE_STATUS_UNINTIALIZED);
             }
         }
         else if (ExAcquireRundownProtection(&pFilter->ExternalRefs))

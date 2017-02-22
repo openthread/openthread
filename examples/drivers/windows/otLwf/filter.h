@@ -271,6 +271,7 @@ typedef struct _MS_FILTER
         // OpenThread context buffer
         //
         otInstance*                 otCtx;
+        size_t                      otInstanceSize;
         PUCHAR                      otInstanceBuffer;
     };
     struct // Tunnel Mode Variables
