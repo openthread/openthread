@@ -223,8 +223,8 @@ public:
 private:
     enum
     {
-        kStateUpdatePeriod    = 1000,  ///< State update period in milliseconds.
-        kDataRequstRetryDelay = 1000,  ///< Retry delay in milliseconds.
+        kStateUpdatePeriod     = 1000,  ///< State update period in milliseconds.
+        kDataRequestRetryDelay = 200,   ///< Retry delay in milliseconds (for sending data request if no buffer).
     };
 
     ThreadError CheckReachability(uint8_t *aFrame, uint8_t aFrameLength,
