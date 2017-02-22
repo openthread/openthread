@@ -53,7 +53,7 @@ RESUME_SCRIPT_PATH = '%appdata%\\Microsoft\\Windows\\Start Menu\\Programs\\' \
                      'Startup\\continue_harness.bat'
 
 class SimpleTestResult(unittest.TestResult):
-    def __init__(self, path, auto_reboot_args=None, manual_reset=False):
+    def __init__(self, path, auto_reboot_args=None):
         """Record test results in json file
 
         Args:
@@ -62,7 +62,6 @@ class SimpleTestResult(unittest.TestResult):
         """
         super(SimpleTestResult, self).__init__()
         self.path = path
-        self.manual_reset = manual_reset
         self.auto_reboot_args = auto_reboot_args
         self.result = json.load(open(self.path, 'r'))
         self.log_handler = None
@@ -82,8 +81,6 @@ class SimpleTestResult(unittest.TestResult):
         # record start timestamp
         self.started = time.strftime('%Y-%m-%dT%H:%M:%S')
 
-        # manual reset
-        test.manual_reset = self.manual_reset
         os.system('mkdir %s' % test.result_dir)
         self.log_handler = logging.FileHandler('%s\\auto-%s.log' % (test.result_dir, time.strftime('%Y%m%d%H%M%S')))
         self.log_handler.setLevel(logging.DEBUG)
@@ -268,7 +265,13 @@ def discover(names=None, pattern=['*.py'], skip='efp', dry_run=False, blacklist=
         auto_reboot_args = None
         os.system('del "%s"' % RESUME_SCRIPT_PATH)
 
-    result = SimpleTestResult(result_file, auto_reboot_args, manual_reset)
+    # manual reset
+    if manual_reset:
+        settings.PDU_CONTROLLER_TYPE = 'MANUAL_PDU_CONTROLLER'
+        settings.PDU_CONTROLLER_OPEN_PARAMS = {}
+        settings.PDU_CONTROLLER_REBOOT_PARAMS = {}
+
+    result = SimpleTestResult(result_file, auto_reboot_args)
     for case in suite:
         logger.info(case.__class__.__name__)
 
