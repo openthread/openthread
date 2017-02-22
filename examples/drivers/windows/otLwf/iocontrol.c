@@ -5282,7 +5282,7 @@ otLwfIoCtl_otJoinerStart(
                     pFilter->otVendorName,
                     pFilter->otVendorModel,
                     pFilter->otVendorSwVersion,
-                    pFilter->otVendorData,
+                    pFilter->otVendorData[0] == '\0' ? NULL : pFilter->otVendorData,
                     otLwfJoinerCallback,
                     pFilter)
                 );
