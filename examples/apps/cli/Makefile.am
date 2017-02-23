@@ -112,7 +112,7 @@ LDFLAGS_COMMON                                                        += \
     $(NULL)
 endif
 
-if OPENTHREAD_ENABLE_CLI_FTD
+if OPENTHREAD_ENABLE_FTD
 bin_PROGRAMS                                                          += \
     ot-cli-ftd                                                           \
     $(NULL)
@@ -134,9 +134,8 @@ ot_cli_ftd_LDFLAGS                                                     = \
 ot_cli_ftd_SOURCES                                                     = \
     $(SOURCES_COMMON)                                                    \
     $(NULL)
-endif # OPENTHREAD_ENABLE_CLI_FTD
+endif # OPENTHREAD_ENABLE_FTD
 
-if OPENTHREAD_ENABLE_CLI_MTD
 bin_PROGRAMS                                                          += \
     ot-cli-mtd                                                           \
     $(NULL)
@@ -158,7 +157,6 @@ ot_cli_mtd_LDFLAGS                                                     = \
 ot_cli_mtd_SOURCES                                                     = \
     $(SOURCES_COMMON)                                                    \
     $(NULL)
-endif # OPENTHREAD_ENABLE_CLI_MTD
 
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                                                             = $(wildcard *.gcda *.gcno)

@@ -32,6 +32,7 @@ AM_MAKEFLAGS                        = --no-print-directory
 
 AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-address-sanitizer        \
+    --enable-ftd                      \
     --enable-cli                      \
     --enable-ncp                      \
     --enable-diag                     \

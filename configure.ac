@@ -414,6 +414,28 @@ if test "${nl_cv_build_tests}" = "yes"; then
 fi
 
 #
+#  Full Thread Device
+#
+
+AC_ARG_ENABLE(ftd,
+    [AS_HELP_STRING([--enable-ftd],[Enable Full Thread Device features @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_ftd=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_ftd} for --enable-ftd])
+            ;;
+        esac
+    ],
+    [enable_ftd=no])
+AC_MSG_RESULT(${enable_ftd})
+AM_CONDITIONAL([OPENTHREAD_ENABLE_FTD], [test "${enable_ftd}" = "yes"])
+
+#
 # CLI Library
 #
 
@@ -422,7 +444,7 @@ AC_ARG_ENABLE(cli,
     [
         case "${enableval}" in
 
-        no|yes|mtd|ftd)
+        no|yes)
             enable_cli=${enableval}
             ;;
 
@@ -434,8 +456,6 @@ AC_ARG_ENABLE(cli,
     [enable_cli=no])
 AC_MSG_RESULT(${enable_cli})
 AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI], [test "${enable_cli}" != "no"])
-AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI_FTD], [test "${enable_cli}" = "yes" -o "${enable_cli}" = "ftd"])
-AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI_MTD], [test "${enable_cli}" = "yes" -o "${enable_cli}" = "mtd"])
 
 #
 # NCP Library
@@ -1151,6 +1171,7 @@ AC_MSG_NOTICE([
   Pretty args                               : ${PRETTY_ARGS:--}
   Pretty check                              : ${PRETTY_CHECK:--}
   Pretty check args                         : ${PRETTY_CHECK_ARGS:--}
+  OpenThread Full Thread Device support     : ${enable_ftd}
   OpenThread CLI support                    : ${enable_cli}
   OpenThread NCP support                    : ${enable_ncp}
   OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}

@@ -46,7 +46,7 @@ sudo pip install --user ipaddress
     -p <PIPE>, --pipe=<PIPE>
         Open a piped process connection to the OpenThread NCP device
         where <PIPE> is the command to start an emulator, such as
-        "ot-ncp".  Spinel-cli will communicate with the child process
+        "ot-ncp-ftd".  Spinel-cli will communicate with the child process
         via stdin/stdout.
 
     -s <SOCKET>, --socket=<SOCKET>

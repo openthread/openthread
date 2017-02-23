@@ -47,7 +47,7 @@ from spinel.stream import StreamOpen
 from spinel.pcap import PcapCodec
 
 
-# Nodeid is required to execute ot-ncp for its sim radio socket port.
+# Nodeid is required to execute ot-ncp-ftd for its sim radio socket port.
 # This is maximum that works for MacOS.
 DEFAULT_NODEID = 34    # same as WELLKNOWN_NODE_ID
 DEFAULT_CHANNEL = 11
@@ -100,7 +100,7 @@ def main():
 
     # Set default stream to pipe
     stream_type = 'p'
-    stream_descriptor = "../../examples/apps/ncp/ot-ncp "+options.nodeid
+    stream_descriptor = "../../examples/apps/ncp/ot-ncp-ftd "+options.nodeid
 
     if options.uart:
         stream_type = 'u'

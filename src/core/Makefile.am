@@ -29,8 +29,6 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 lib_LIBRARIES                       = \
-    libopenthread-ftd.a               \
-    libopenthread-mtd.a               \
     $(NULL)
 
 CPPFLAGS_COMMON                     = \
@@ -142,6 +140,11 @@ SOURCES_COMMON                     += \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_RAW_LINK_API
 
+if OPENTHREAD_ENABLE_FTD
+lib_LIBRARIES                      += \
+    libopenthread-ftd.a               \
+    $(NULL)
+
 libopenthread_ftd_a_CPPFLAGS        = \
     $(CPPFLAGS_COMMON)                \
     $(NULL)
@@ -155,6 +158,11 @@ libopenthread_ftd_a_SOURCES         = \
     thread/mle_router.cpp             \
     thread/network_data_leader_ftd.cpp \
     thread/network_data_local.cpp     \
+    $(NULL)
+endif # OPENTHREAD_ENABLE_FTD
+
+lib_LIBRARIES                      += \
+    libopenthread-mtd.a               \
     $(NULL)
 
 libopenthread_mtd_a_CPPFLAGS        = \

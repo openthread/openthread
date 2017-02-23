@@ -2076,7 +2076,7 @@ def main():
 
     # Set default stream to pipe
     stream_type = 'p'
-    stream_descriptor = "../../examples/apps/ncp/ot-ncp " + options.nodeid
+    stream_descriptor = "../../examples/apps/ncp/ot-ncp-ftd " + options.nodeid
 
     if options.uart:
         stream_type = 'u'

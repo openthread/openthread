@@ -82,9 +82,11 @@ TargetTuple                     = $(shell ${AbsTopSourceDir}/third_party/nlbuild
 # accordingly.
 
 configure_OPTIONS               = \
+    --enable-ftd                  \
     --enable-cli                  \
     --enable-ncp                  \
     --enable-diag                 \
+    --enable-default-logging      \
     --enable-raw-link-api=no      \
     --with-examples=posix         \
     --with-platform-info=POSIX    \
