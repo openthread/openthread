@@ -42,8 +42,10 @@
 #include <internal.h>
 #include <regmap.h>
 
+#define FACTORY_TEST_TIMESTAMP      (0x7F8EA08) // Register holds a timestamp of facotry test of a chip
+#define FACTORY_TESTER_ID           (0x7F8EA0C) // Register holds test machine ID used for factory test
+
 #define DEFAULT_CHANNEL                 (11)
-#define HARDCODED_NODE_ID               (1)
 
 #define PRIVILEGED_DATA                 __attribute__((section("privileged_data_zi")))
 
@@ -95,15 +97,17 @@ void da15000RadioInit(void)
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
     (void)aInstance;
+    uint32_t *factoryTestTimeStamp  = (uint32_t *) FACTORY_TEST_TIMESTAMP;
+    uint32_t *factoryTestId         = (uint32_t *) FACTORY_TESTER_ID;
 
     aIeeeEui64[0] = 0x80;    //80-EA-CA is for Dialog Semiconductor
     aIeeeEui64[1] = 0xEA;
     aIeeeEui64[2] = 0xCA;
-    aIeeeEui64[3] = 0x00;
-    aIeeeEui64[4] = (HARDCODED_NODE_ID >> 24) & 0xff;
-    aIeeeEui64[5] = (HARDCODED_NODE_ID >> 16) & 0xff;
-    aIeeeEui64[6] = (HARDCODED_NODE_ID >>  8) & 0xff;
-    aIeeeEui64[7] =  HARDCODED_NODE_ID        & 0xff;
+    aIeeeEui64[3] = (*factoryTestId        >>  8) & 0xff;
+    aIeeeEui64[4] = (*factoryTestTimeStamp >> 24) & 0xff;
+    aIeeeEui64[5] = (*factoryTestTimeStamp >> 16) & 0xff;
+    aIeeeEui64[6] = (*factoryTestTimeStamp >>  8) & 0xff;
+    aIeeeEui64[7] =  *factoryTestTimeStamp        & 0xff;
 }
 
 void otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
