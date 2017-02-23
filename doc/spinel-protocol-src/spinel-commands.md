@@ -261,7 +261,7 @@ The result of this command is generally `CMD_PROP_VALUES_ARE` unless
 (for example) a parsing error has occured (in which case
 `CMD_PROP_VALUE_IS` for `PROP_LAST_STATUS` would be the result). The
 order of the results in `CMD_PROP_VALUES_ARE` match the order of
-properties given in `CMD_PROP_VALUE_SET`.
+properties given in `CMD_PROP_VALUE_MULTI_SET`.
 
 Since the processing of properties to set stops at the first error,
 the resulting `CMD_PROP_VALUES_ARE` can contain fewer items than the
