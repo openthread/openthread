@@ -1933,13 +1933,22 @@ OTAPI uint8_t OTCALL otGetRouterIdSequence(otInstance *aInstance);
 OTAPI ThreadError OTCALL otGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRouterInfo *aRouterInfo);
 
 /**
- * The function retains diagnostic information for a Thread Router as parent.
+ * The function retrieves diagnostic information for a Thread Router as parent.
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
  * @param[out]  aParentInfo  A pointer to where the parent router information is placed.
  *
  */
 OTAPI ThreadError OTCALL otGetParentInfo(otInstance *aInstance, otRouterInfo *aParentInfo);
+
+/**
+ * The function retrieves the average RSSI for the Thread Parent.
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ * @param[out]  aParentInfo  A pointer to where the parent rssi should be placed.
+ *
+ */
+OTAPI ThreadError OTCALL otGetParentAverageRssi(otInstance *aInstance, int8_t *aParentRssi);
 
 /**
  * Get the Stable Network Data Version.
