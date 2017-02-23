@@ -164,6 +164,22 @@ void otFreeMemory(const void *)
 }
 #endif
 
+template <class T> class otPtr
+{
+    T *ptr;
+public:
+    otPtr(T *_ptr) : ptr(_ptr) { }
+    ~otPtr() { if (ptr) { otFreeMemory(ptr); } }
+    T *get() const { return ptr; }
+    operator T *() const { return ptr; }
+    T *operator->() const { return ptr; }
+};
+
+typedef otPtr<const otMacCounters> otMacCountersPtr;
+typedef otPtr<const otNetifAddress> otNetifAddressPtr;
+typedef otPtr<const uint8_t> otBufferPtr;
+typedef otPtr<const char> otStringPtr;
+
 Interpreter::Interpreter(otInstance *aInstance):
     sServer(NULL),
 #ifdef OTDLL
@@ -564,7 +580,7 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
     {
         if (strcmp(argv[0], "mac") == 0)
         {
-            const otMacCounters *counters = otGetMacCounters(mInstance);
+            otMacCountersPtr counters(otGetMacCounters(mInstance));
             sServer->OutputFormat("TxTotal: %d\r\n", counters->mTxTotal);
             sServer->OutputFormat("    TxUnicast: %d\r\n", counters->mTxUnicast);
             sServer->OutputFormat("    TxBroadcast: %d\r\n", counters->mTxBroadcast);
@@ -595,7 +611,6 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
             sServer->OutputFormat("    RxErrSec: %d\r\n", counters->mRxErrSec);
             sServer->OutputFormat("    RxErrFcs: %d\r\n", counters->mRxErrFcs);
             sServer->OutputFormat("    RxErrOther: %d\r\n", counters->mRxErrOther);
-            otFreeMemory(counters);
         }
     }
 }
@@ -683,10 +698,9 @@ void Interpreter::ProcessExtAddress(int argc, char *argv[])
 
     if (argc == 0)
     {
-        const uint8_t *extAddress = otGetExtendedAddress(mInstance);
+        otBufferPtr extAddress(otGetExtendedAddress(mInstance));
         OutputBytes(extAddress, OT_EXT_ADDRESS_SIZE);
         sServer->OutputFormat("\r\n");
-        otFreeMemory(extAddress);
     }
     else
     {
@@ -716,10 +730,9 @@ void Interpreter::ProcessExtPanId(int argc, char *argv[])
 
     if (argc == 0)
     {
-        const uint8_t *extPanId = otGetExtendedPanId(mInstance);
+        otBufferPtr extPanId(otGetExtendedPanId(mInstance));
         OutputBytes(extPanId, OT_EXT_PAN_ID_SIZE);
         sServer->OutputFormat("\r\n");
-        otFreeMemory(extPanId);
     }
     else
     {
@@ -822,7 +835,7 @@ void Interpreter::ProcessIpAddr(int argc, char *argv[])
 
     if (argc == 0)
     {
-        const otNetifAddress *unicastAddrs = otGetUnicastAddresses(mInstance);
+        otNetifAddressPtr unicastAddrs(otGetUnicastAddresses(mInstance));
 
         for (const otNetifAddress *addr = unicastAddrs; addr; addr = addr->mNext)
         {
@@ -836,8 +849,6 @@ void Interpreter::ProcessIpAddr(int argc, char *argv[])
                                   HostSwap16(addr->mAddress.mFields.m16[6]),
                                   HostSwap16(addr->mAddress.mFields.m16[7]));
         }
-
-        otFreeMemory(unicastAddrs);
     }
     else
     {
@@ -1084,7 +1095,7 @@ void Interpreter::ProcessMasterKey(int argc, char *argv[])
     if (argc == 0)
     {
         uint8_t keyLength;
-        const uint8_t *key = otGetMasterKey(mInstance, &keyLength);
+        otBufferPtr key(otGetMasterKey(mInstance, &keyLength));
 
         for (int i = 0; i < keyLength; i++)
         {
@@ -1092,7 +1103,6 @@ void Interpreter::ProcessMasterKey(int argc, char *argv[])
         }
 
         sServer->OutputFormat("\r\n");
-        otFreeMemory(key);
     }
     else
     {
@@ -1210,9 +1220,8 @@ void Interpreter::ProcessNetworkName(int argc, char *argv[])
 
     if (argc == 0)
     {
-        const char *networkName = otGetNetworkName(mInstance);
-        sServer->OutputFormat("%.*s\r\n", OT_NETWORK_NAME_MAX_SIZE, networkName);
-        otFreeMemory(networkName);
+        otStringPtr networkName(otGetNetworkName(mInstance));
+        sServer->OutputFormat("%.*s\r\n", OT_NETWORK_NAME_MAX_SIZE, (const char *)networkName);
     }
     else
     {
@@ -2203,10 +2212,9 @@ exit:
 
 void Interpreter::ProcessVersion(int argc, char *argv[])
 {
-    const char *version = otGetVersionString();
-    sServer->OutputFormat("%s\r\n", version);
+    otStringPtr version(otGetVersionString());
+    sServer->OutputFormat("%s\r\n", (const char *)version);
     AppendResult(kThreadError_None);
-    otFreeMemory(version);
     (void)argc;
     (void)argv;
 }
