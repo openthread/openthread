@@ -44,7 +44,9 @@ See (#prop-last-status) for more information on `PROP_LAST_STATUS`.
  *  19: `STATUS_ALREADY`: The operation is already in progress or
     the property was already set to the given value.
  *  20: `STATUS_ITEM_NOT_FOUND`: The given item could not be found in the property. 
- *  21-111: RESERVED
+ *  21: `STATUS_INVALID_COMMAND_FOR_PROP`: The given command cannot be performed
+    on this property.
+ *  22-111: RESERVED
  *  112-127: Reset Causes
      *  112: `STATUS_RESET_POWER_ON`
      *  113: `STATUS_RESET_EXTERNAL`

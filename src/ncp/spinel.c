@@ -1374,6 +1374,10 @@ const char *spinel_status_to_cstr(spinel_status_t status)
         ret = "STATUS_ITEM_NOT_FOUND";
         break;
 
+    case SPINEL_STATUS_INVALID_COMMAND_FOR_PROP:
+        ret = "STATUS_INVALID_COMMAND_FOR_PROP";
+        break;
+
     case SPINEL_STATUS_JOIN_FAILURE:
         ret = "STATUS_JOIN_FAILURE";
         break;
