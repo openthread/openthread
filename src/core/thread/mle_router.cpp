@@ -3395,6 +3395,7 @@ ThreadError MleRouter::RestoreChildren(void)
                        (childInfo.mFullFunction ? ModeTlv::kModeFFD : 0) |
                        (childInfo.mFullNetworkData ? ModeTlv::kModeFullNetworkData : 0);
         child->mState = Neighbor::kStateRestored;
+        child->mAddSrcMatchEntryShort = true;
         child->mLastHeard = Timer::GetNow();
     }
 
