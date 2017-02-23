@@ -222,6 +222,7 @@ ThreadError MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
 
     mAdvertiseTimer.Stop();
     mNetif.GetAddressResolver().Clear();
+    mNetif.GetMeshForwarder().SetRxOnWhenIdle(true);
     mRouterSelectionJitterTimeout = 0;
 
     switch (mDeviceState)
@@ -1385,7 +1386,7 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
 
             if (mParent.mValid.mRloc16 != sourceAddress.GetRloc16())
             {
-                SetStateDetached();
+                BecomeDetached();
                 ExitNow(error = kThreadError_NoRoute);
             }
 
@@ -1738,8 +1739,7 @@ void MleRouter::HandleStateUpdateTimer(void)
         break;
 
     case kDeviceStateDetached:
-        SetStateDetached();
-        BecomeChild(kMleAttachAnyPartition);
+        BecomeDetached();
         ExitNow();
 
     case kDeviceStateChild:
