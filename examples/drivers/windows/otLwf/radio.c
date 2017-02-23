@@ -73,8 +73,6 @@ otPlatReset(
     pFilter->otCurrentListenChannel = 0xFF;
     pFilter->otPromiscuous = false;
     pFilter->otPendingMacOffloadEnabled = FALSE;
-    pFilter->otPendingShortAddressCount = 0;
-    pFilter->otPendingExtendedAddressCount = 0;
 
     // Reinitialize the OpenThread library
     pFilter->otCachedRole = kDeviceRoleDisabled;
