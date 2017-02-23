@@ -268,9 +268,9 @@ void TestMessageQueueOtApis(void)
     SuccessOrQuit(otMessageQueueDequeue(&queue, msg[2]), "Failed to dequeue a message from otMessageQueue.\n");
     VerifyMessageQueueContentUsingOtApi(&queue, 0);
 
-     otInstanceFinalize(instance);
+    otInstanceFinalize(instance);
 #ifdef OPENTHREAD_MULTIPLE_INSTANCE
-     free(otInstanceBuffer);
+    free(otInstanceBuffer);
 #endif
 }
 
