@@ -53,14 +53,22 @@ configure_OPTIONS              += \
     $(NULL)
 endif
 
-ifeq ($(ONLY_MTD),1)
-configure_OPTIONS              += \
-    --enable-cli=mtd              \
-    $(NULL)
-else
+ifeq ($(ENABLE_FTD),1)
+
+ifeq ($(ENABLE_NCP),1)
 configure_OPTIONS              += \
     --enable-cli                  \
     --enable-ncp                  \
+    $(NULL)
+else # !ENABLE_NCP
+configure_OPTIONS              += \
+    --enable-cli                  \
+    $(NULL)
+endif
+
+else # !ENABLE_FTD
+configure_OPTIONS              += \
+    --enable-cli=mtd              \
     $(NULL)
 endif
 

@@ -77,7 +77,7 @@ set -x
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    ONLY_MTD=1 make -f examples/Makefile-cc2650 || die
+    make -f examples/Makefile-cc2650 || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
 }
 
@@ -111,7 +111,7 @@ set -x
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    ONLY_MTD=1 make -f examples/Makefile-cc2650 || die
+    make -f examples/Makefile-cc2650 || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
 }
 
