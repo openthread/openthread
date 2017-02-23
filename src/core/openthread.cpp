@@ -908,7 +908,7 @@ ThreadError otGetParentInfo(otInstance *aInstance, otRouterInfo *aParentInfo)
     memcpy(aParentInfo->mExtAddress.m8, parent->mMacAddr.m8, OT_EXT_ADDRESS_SIZE);
 
     aParentInfo->mRloc16          = parent->mValid.mRloc16;
-    aParentInfo->mRouterId        = (parent->mValid.mRloc16 >> 10) & 0x3F;
+    aParentInfo->mRouterId        = Mle::Mle::GetRouterId(parent->mValid.mRloc16);
     aParentInfo->mNextHop         = parent->mNextHop;
     aParentInfo->mPathCost        = parent->mCost;
     aParentInfo->mLinkQualityIn   = parent->mLinkInfo.GetLinkQuality(aInstance->mThreadNetif.GetMac().GetNoiseFloor());
