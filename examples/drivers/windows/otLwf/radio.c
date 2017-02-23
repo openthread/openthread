@@ -116,6 +116,7 @@ otLwfRadioGetFactoryAddress(
     )
 {
     NTSTATUS status;
+    PVOID SpinelBuffer = NULL;
     uint8_t *hwAddress = NULL;
 
     RtlZeroMemory(&pFilter->otFactoryAddress, sizeof(pFilter->otFactoryAddress));
@@ -124,7 +125,7 @@ otLwfRadioGetFactoryAddress(
     status =
         otLwfCmdGetProp(
             pFilter,
-            NULL,
+            &SpinelBuffer,
             SPINEL_PROP_HWADDR,
             SPINEL_DATATYPE_EUI64_S,
             &hwAddress
@@ -135,7 +136,9 @@ otLwfRadioGetFactoryAddress(
         return;
     }
 
+    NT_ASSERT(SpinelBuffer);
     memcpy(&pFilter->otFactoryAddress, hwAddress, sizeof(pFilter->otFactoryAddress));
+    FILTER_FREE_MEM(SpinelBuffer);
 
     LogInfo(DRIVER_DEFAULT, "Interface %!GUID! cached factory Extended Mac Address: %llX", &pFilter->InterfaceGuid, pFilter->otFactoryAddress);
 }
