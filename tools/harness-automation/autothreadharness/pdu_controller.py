@@ -179,3 +179,14 @@ class NordicBoardPduController(PduController):
 
     def close(self):
         pass
+
+class ManualPduController(PduController):
+
+    def open(self, **kwargs):
+        pass
+
+    def reboot(self, **kwargs):
+        raw_input('Reset all devices and press enter to continue..')
+
+    def close(self):
+        pass

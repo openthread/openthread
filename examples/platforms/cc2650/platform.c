@@ -27,7 +27,6 @@
  */
 
 #include <openthread-types.h>
-#include <platform/uart.h>
 #include "platform-cc2650.h"
 
 otInstance *sInstance;
@@ -42,7 +41,6 @@ void PlatformInit(int argc, char *argv[])
     cc2650AlarmInit();
     cc2650RandomInit();
     cc2650RadioInit();
-    otPlatUartEnable();
 }
 
 /**

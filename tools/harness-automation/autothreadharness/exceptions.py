@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+#
 # Copyright (c) 2016, The OpenThread Authors.
 # All rights reserved.
 #
@@ -25,18 +27,17 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-from . import pdu_controller
+class FailError(Exception):
+    """This error class is the base for all errors that cause the current test case fails.
+    """
+    pass
 
+class FatalError(FailError):
+    """This error class is the base for all errors that cause the whole test procedure stops.
+    """
+    pass
 
-class PduControllerFactory(object):
-    """Factory that creates PDU controllers."""
-
-    def create_pdu_controller(self, _type):
-        if _type == 'NORDIC_BOARD_PDU_CONTOLLER':
-            return pdu_controller.NordicBoardPduController()
-        elif _type == 'APC_PDU_CONTROLLER':
-            return pdu_controller.ApcPduController()
-        elif _type == 'MANUAL_PDU_CONTROLLER':
-            return pdu_controller.ManualPduController()
-        else:
-            return pdu_controller.DummyPduController()
+class GoldenDeviceNotEnoughError(FailError):
+    """Raised when no more golden devices are available for trying.
+    """
+    pass

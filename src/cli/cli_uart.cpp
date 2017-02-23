@@ -68,6 +68,8 @@ Uart::Uart(otInstance *aInstance):
     mTxHead = 0;
     mTxLength = 0;
     mSendLength = 0;
+
+    otPlatUartEnable();
 }
 
 extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
