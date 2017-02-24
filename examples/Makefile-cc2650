@@ -42,6 +42,8 @@ OBJCOPY                         = arm-none-eabi-objcopy
 BuildJobs                      ?= 99
 
 configure_OPTIONS               = \
+    --enable-cli                  \
+    --enable-ncp                  \
     --with-examples=cc2650        \
     --with-platform-info=cc2650   \
     MBEDTLS_CPPFLAGS="$(CC2650_MBEDTLS_CPPFLAGS)" \
@@ -50,25 +52,6 @@ configure_OPTIONS               = \
 ifeq ($(DISABLE_DOC),1)
 configure_OPTIONS              += \
     --disable-docs                \
-    $(NULL)
-endif
-
-ifeq ($(ENABLE_FTD),1)
-
-ifeq ($(ENABLE_NCP),1)
-configure_OPTIONS              += \
-    --enable-cli                  \
-    --enable-ncp                  \
-    $(NULL)
-else # !ENABLE_NCP
-configure_OPTIONS              += \
-    --enable-cli                  \
-    $(NULL)
-endif
-
-else # !ENABLE_FTD
-configure_OPTIONS              += \
-    --enable-cli=mtd              \
     $(NULL)
 endif
 
