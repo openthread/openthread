@@ -1830,29 +1830,7 @@ void MleRouter::HandleStateUpdateTimer(void)
         {
             if ((Timer::GetNow() - mRouters[i].mLastHeard) >= Timer::SecToMsec(kMaxNeighborAge))
             {
-                mRouters[i].mState = Neighbor::kStateInvalid;
-                mRouters[i].mLinkInfo.Clear();
-                mRouters[i].mLinkQualityOut = 0;
-                mRouters[i].mLastHeard = Timer::GetNow();
-
-                for (uint8_t j = 0; j <= kMaxRouterId; j++)
-                {
-                    if (mRouters[j].mNextHop == i)
-                    {
-                        mRouters[j].mNextHop = kInvalidRouterId;
-                        mRouters[j].mCost = 0;
-
-                        if (GetLinkCost(j) >= kMaxRouteCost)
-                        {
-                            ResetAdvertiseInterval();
-                        }
-                    }
-                }
-
-                if (mRouters[i].mNextHop == kInvalidRouterId)
-                {
-                    ResetAdvertiseInterval();
-                }
+                RemoveNeighbor(mRouters[i]);
             }
         }
 
@@ -2993,10 +2971,37 @@ ThreadError MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
             mNetif.GetNetworkDataLeader().SendServerDataNotification(aNeighbor.mValid.mRloc16);
             RemoveStoredChild(aNeighbor.mValid.mRloc16);
         }
+        else if ((aNeighbor.mState == Neighbor::kStateValid) && IsActiveRouter(aNeighbor.mValid.mRloc16))
+        {
+            Router &routerToRemove = static_cast<Router &>(aNeighbor);
+
+            routerToRemove.mLinkQualityOut = 0;
+            routerToRemove.mLastHeard = Timer::GetNow();
+
+            for (uint8_t j = 0; j <= kMaxRouterId; j++)
+            {
+                if (mRouters[j].mNextHop == GetRouterId(routerToRemove.mValid.mRloc16))
+                {
+                    mRouters[j].mNextHop = kInvalidRouterId;
+                    mRouters[j].mCost = 0;
+
+                    if (GetLinkCost(j) >= kMaxRouteCost)
+                    {
+                        ResetAdvertiseInterval();
+                    }
+                }
+            }
+
+            if (routerToRemove.mNextHop == kInvalidRouterId)
+            {
+                ResetAdvertiseInterval();
+            }
+        }
 
         break;
     }
 
+    aNeighbor.mLinkInfo.Clear();
     aNeighbor.mState = Neighbor::kStateInvalid;
 
     return kThreadError_None;
