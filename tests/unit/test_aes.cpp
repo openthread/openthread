@@ -33,7 +33,9 @@
 #include <crypto/mbedtls.hpp>
 #include <string.h>
 
+#ifndef OPENTHREAD_MULTIPLE_INSTANCE
 static Thread::Crypto::MbedTls mbedtls;
+#endif
 
 /**
  * Verifies test vectors from IEEE 802.15.4-2006 Annex C Section C.2.1
