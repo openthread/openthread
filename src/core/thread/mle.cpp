@@ -3033,7 +3033,7 @@ ThreadError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Mes
     VerifyOrExit(offset < end, error = kThreadError_Parse);
 
     offset += sizeof(tlv);
-    end = offset + sizeof(tlv) + tlv.GetLength();
+    end = offset + tlv.GetLength();
 
     memset(&result, 0, sizeof(result));
     result.mPanId = threadMessageInfo->mPanId;
