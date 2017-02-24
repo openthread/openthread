@@ -41,6 +41,7 @@
 #include <coap/coap_server.hpp>
 #include <coap/secure_coap_client.hpp>
 #include <common/message.hpp>
+#include <common/crc16.hpp>
 #include <net/udp6.hpp>
 #include <meshcop/dtls.hpp>
 #include <meshcop/tlvs.hpp>
@@ -133,6 +134,9 @@ private:
 
     otJoinerCallback mCallback;
     void *mContext;
+
+    Crc16 mCcitt;
+    Crc16 mAnsi;
 
     uint8_t mJoinerRouterChannel;
     uint16_t mJoinerRouterPanId;
