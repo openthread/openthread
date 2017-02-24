@@ -52,7 +52,7 @@
 #ifndef OTDLL
 #include <openthread-instance.h>
 #include "openthread/diag.h"
-#include <openthread-icmp6.h>
+#include "openthread/icmp6.h"
 
 #include <common/new.hpp>
 #include <net/ip6.hpp>

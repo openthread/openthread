@@ -28,43 +28,41 @@
 
 /**
  * @file
- *   This file implements the top-level interface to the OpenThread stack.
+ *   This file implements the OpenThread UDP API.
  */
 
-#define WPP_NAME "openthread.tmh"
+#include "openthread/icmp6.h"
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
-
-#include "openthread/openthread.h"
-#include "openthread/platform/settings.h"
-#include "openthread/platform/radio.h"
-#include "openthread/platform/random.h"
-#include "openthread/platform/misc.h"
-
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <common/logging.hpp>
-#include <common/message.hpp>
-#include <common/new.hpp>
-#include <common/settings.hpp>
-#include <common/timer.hpp>
-#include <crypto/mbedtls.hpp>
-#include <net/icmp6.hpp>
-#include <net/ip6.hpp>
-#include <thread/thread_netif.hpp>
-#include <thread/thread_uris.hpp>
-#include <openthread-instance.h>
-#include <coap/coap_server.hpp>
+#include "openthread-instance.h"
 
 using namespace Thread;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+bool otIcmp6IsEchoEnabled(otInstance *aInstance)
+{
+    return aInstance->mIp6.mIcmp.IsEchoEnabled();
+}
+
+void otIcmp6SetEchoEnabled(otInstance *aInstance, bool aEnabled)
+{
+    aInstance->mIp6.mIcmp.SetEchoEnabled(aEnabled);
+}
+
+ThreadError otIcmp6RegisterHandler(otInstance *aInstance, otIcmp6Handler *aHandler)
+{
+    return aInstance->mIp6.mIcmp.RegisterHandler(*static_cast<Ip6::IcmpHandler *>(aHandler));
+}
+
+ThreadError otIcmp6SendEchoRequest(otInstance *aInstance, otMessage aMessage,
+                                   const otMessageInfo *aMessageInfo, uint16_t aIdentifier)
+{
+    return aInstance->mIp6.mIcmp.SendEchoRequest(*static_cast<Message *>(aMessage),
+                                                 *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
+                                                 aIdentifier);
+}
 
 #ifdef __cplusplus
 }  // extern "C"
