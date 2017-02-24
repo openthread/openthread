@@ -46,10 +46,6 @@ PRETTY_SUBDIRS                          = \
     openthread                            \
     $(NULL)
 
-include_HEADERS                         = \
-    openthread-icmp6.h                    \
-    $(NULL)
-
 install-headers: install-includeHEADERS
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
