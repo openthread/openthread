@@ -235,6 +235,18 @@ public:
                             otCoapResponseHandler aHandler = NULL, void *aContext = NULL);
 
     /**
+     * This method aborts CoAP transactions associated with given handler and context.
+     *
+     * @param[in]  aHandler  A function pointer that should be called when the transaction ends.
+     * @param[in]  aContext  A pointer to arbitrary context information.
+     *
+     * @retval kThreadError_None      Successfully aborted CoAP transactions.
+     * @retval kThreadError_NotFound  CoAP transaction associated with given handler was not found.
+     *
+     */
+    ThreadError AbortTransaction(otCoapResponseHandler aHandler, void *aContext);
+
+    /**
      * This method returns a reference to the request message list.
      *
      * @returns A reference to the request message list.

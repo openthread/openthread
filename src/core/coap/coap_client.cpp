@@ -125,6 +125,27 @@ exit:
     return error;
 }
 
+ThreadError Client::AbortTransaction(otCoapResponseHandler aHandler, void *aContext)
+{
+    ThreadError error = kThreadError_NotFound;
+    Message *message;
+    RequestMetadata requestMetadata;
+
+    for (message = mPendingRequests.GetHead(); message != NULL; message = message->GetNext())
+    {
+        requestMetadata.ReadFrom(*message);
+
+        if (requestMetadata.mResponseHandler == aHandler && requestMetadata.mResponseContext == aContext)
+        {
+            DequeueMessage(*message);
+            error = kThreadError_None;
+        }
+    }
+
+    return error;
+}
+
+
 Message *Client::CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLength,
                                        const RequestMetadata &aRequestMetadata)
 {
