@@ -2197,26 +2197,33 @@ ThreadError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const I
 
     otLogInfoMle("Received Child Update Request from child");
 
-    // Find Child
-    macAddr.Set(aMessageInfo.GetPeerAddr());
-
-    child = FindChild(macAddr);
-
-    if ((child == NULL) || (child->mState != Neighbor::kStateValid))
-    {
-        tlvs[tlvslength++] = Tlv::kStatus;
-        SendChildUpdateResponse(NULL, aMessageInfo, tlvs, tlvslength, NULL);
-        ExitNow();
-    }
-
-    tlvs[tlvslength++] = Tlv::kSourceAddress;
-    tlvs[tlvslength++] = Tlv::kLeaderData;
-
     // Mode
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kMode, sizeof(mode), mode));
     VerifyOrExit(mode.IsValid(), error = kThreadError_Parse);
+
+    // Find Child
+    macAddr.Set(aMessageInfo.GetPeerAddr());
+    child = FindChild(macAddr);
+
+    tlvs[tlvslength++] = Tlv::kSourceAddress;
+
+    if ((child == NULL) || (child->mState != Neighbor::kStateValid))
+    {
+        // Send Child Update Response with status TLV(error) for invalid non-sleepy child
+        // No Child Update Response for invalid sleepy child
+        if (mode.GetMode() & ModeTlv::kModeRxOnWhenIdle)
+        {
+            tlvs[tlvslength++] = Tlv::kStatus;
+            SendChildUpdateResponse(NULL, aMessageInfo, tlvs, tlvslength, NULL);
+        }
+
+        ExitNow();
+    }
+
     child->mMode = mode.GetMode();
     tlvs[tlvslength++] = Tlv::kMode;
+
+    tlvs[tlvslength++] = Tlv::kLeaderData;
 
     // Challenge
     if (Tlv::GetTlv(aMessage, Tlv::kChallenge, sizeof(challenge), challenge) == kThreadError_None)
