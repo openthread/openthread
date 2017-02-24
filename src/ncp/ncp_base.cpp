@@ -4769,11 +4769,15 @@ ThreadError NcpBase::SetPropertyHandler_MAC_SRC_MATCH_SHORT_ADDRESSES(uint8_t he
                                                                       const uint8_t *value_ptr, uint16_t value_len)
 {
     ThreadError errorCode = kThreadError_None;
+    spinel_status_t errorStatus = SPINEL_STATUS_OK;
     const uint8_t *data = value_ptr;
     uint16_t data_len = value_len;
 
     // Clear the list first
-    SuccessOrExit(errorCode = otLinkRawSrcMatchClearShortEntries(mInstance));
+    errorCode = otLinkRawSrcMatchClearShortEntries(mInstance);
+
+    VerifyOrExit(errorCode == kThreadError_None,
+        errorStatus = ThreadErrorToSpinelStatus(errorCode));
 
     // Loop through the addresses and add them
     while (data_len >= sizeof(uint16_t))
@@ -4788,15 +4792,19 @@ ThreadError NcpBase::SetPropertyHandler_MAC_SRC_MATCH_SHORT_ADDRESSES(uint8_t he
             &short_address
         );
 
-        VerifyOrExit(parsedLength > 0, errorCode = kThreadError_Parse);
+        VerifyOrExit(parsedLength > 0, errorStatus = SPINEL_STATUS_PARSE_ERROR);
 
         data += parsedLength;
         data_len -= (uint16_t)parsedLength;
 
-        SuccessOrExit(errorCode = otLinkRawSrcMatchAddShortEntry(mInstance, short_address));
+        errorCode = otLinkRawSrcMatchAddShortEntry(mInstance, short_address);
+
+        VerifyOrExit(errorCode == kThreadError_None,
+            errorStatus = ThreadErrorToSpinelStatus(errorCode));
     }
 
-    (void)SendPropertyUpdate(
+    errorCode =
+        SendPropertyUpdate(
             header,
             SPINEL_CMD_PROP_VALUE_IS,
             key,
@@ -4806,9 +4814,9 @@ ThreadError NcpBase::SetPropertyHandler_MAC_SRC_MATCH_SHORT_ADDRESSES(uint8_t he
 
 exit:
 
-    if (errorCode != kThreadError_None)
+    if (errorStatus != SPINEL_STATUS_OK)
     {
-        errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+        errorCode = SendLastStatus(header, errorStatus);
     }
 
     return errorCode;
@@ -4818,11 +4826,15 @@ ThreadError NcpBase::SetPropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES(uint8_t
                                                                          const uint8_t *value_ptr, uint16_t value_len)
 {
     ThreadError errorCode = kThreadError_None;
+    spinel_status_t errorStatus = SPINEL_STATUS_OK;
     const uint8_t *data = value_ptr;
     uint16_t data_len = value_len;
 
     // Clear the list first
-    SuccessOrExit(errorCode = otLinkRawSrcMatchClearExtEntries(mInstance));
+    errorCode = otLinkRawSrcMatchClearExtEntries(mInstance);
+
+    VerifyOrExit(errorCode == kThreadError_None,
+        errorStatus = ThreadErrorToSpinelStatus(errorCode));
 
     // Loop through the addresses and add them
     while (data_len >= sizeof(otExtAddress))
@@ -4837,15 +4849,19 @@ ThreadError NcpBase::SetPropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES(uint8_t
             &ext_address
         );
 
-        VerifyOrExit(parsedLength > 0, errorCode = kThreadError_Parse);
+        VerifyOrExit(parsedLength > 0, errorStatus = SPINEL_STATUS_PARSE_ERROR);
 
         data += parsedLength;
         data_len -= (uint16_t)parsedLength;
 
-        SuccessOrExit(errorCode = otLinkRawSrcMatchAddExtEntry(mInstance, ext_address));
+        errorCode = otLinkRawSrcMatchAddExtEntry(mInstance, ext_address);
+
+        VerifyOrExit(errorCode == kThreadError_None,
+            errorStatus = ThreadErrorToSpinelStatus(errorCode));
     }
 
-    (void)SendPropertyUpdate(
+    errorCode =
+        SendPropertyUpdate(
             header,
             SPINEL_CMD_PROP_VALUE_IS,
             key,
@@ -4855,9 +4871,9 @@ ThreadError NcpBase::SetPropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES(uint8_t
 
 exit:
 
-    if (errorCode != kThreadError_None)
+    if (errorStatus != SPINEL_STATUS_OK)
     {
-        errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+        errorCode = SendLastStatus(header, errorStatus);
     }
 
     return errorCode;
@@ -5420,8 +5436,9 @@ ThreadError NcpBase::InsertPropertyHandler_MAC_SRC_MATCH_SHORT_ADDRESSES(uint8_t
 
     VerifyOrExit(errorCode == kThreadError_None,
                  errorStatus = ThreadErrorToSpinelStatus(errorCode));
-    
-    (void)SendPropertyUpdate(
+
+    errorCode =
+        SendPropertyUpdate(
             header,
             SPINEL_CMD_PROP_VALUE_INSERTED,
             key,
@@ -5461,7 +5478,8 @@ ThreadError NcpBase::InsertPropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES(uint
     VerifyOrExit(errorCode == kThreadError_None,
                  errorStatus = ThreadErrorToSpinelStatus(errorCode));
 
-    (void)SendPropertyUpdate(
+    errorCode =
+        SendPropertyUpdate(
             header,
             SPINEL_CMD_PROP_VALUE_INSERTED,
             key,
