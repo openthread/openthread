@@ -59,10 +59,8 @@ namespace MeshCoP {
 
 ActiveDataset::ActiveDataset(ThreadNetif &aThreadNetif):
     ActiveDatasetBase(aThreadNetif),
-    mResourceGet(OPENTHREAD_URI_ACTIVE_GET, &ActiveDataset::HandleGet, this),
     mResourceSet(OPENTHREAD_URI_ACTIVE_SET, &ActiveDataset::HandleSet, this)
 {
-    mNetif.GetCoapServer().AddResource(mResourceGet);
 }
 
 bool ActiveDataset::IsTlvInitialized(Tlv::Type aType)
@@ -156,10 +154,10 @@ ThreadError ActiveDataset::GenerateLocal(void)
     // PSKc
     if (!IsTlvInitialized(Tlv::kPSKc))
     {
-        const uint8_t PSKc[16] = {0};
+        const uint8_t pskc[OT_PSKC_MAX_SIZE] = {0};
         PSKcTlv tlv;
         tlv.Init();
-        tlv.SetPSKc(PSKc);
+        tlv.SetPSKc(pskc);
         mLocal.Set(tlv);
     }
 
@@ -191,19 +189,6 @@ void ActiveDataset::StopLeader(void)
     mNetif.GetCoapServer().RemoveResource(mResourceSet);
 }
 
-void ActiveDataset::HandleGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                              const otMessageInfo *aMessageInfo)
-{
-    static_cast<ActiveDataset *>(aContext)->HandleGet(
-        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
-        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
-}
-
-void ActiveDataset::HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    DatasetManager::Get(aHeader, aMessage, aMessageInfo);
-}
-
 void ActiveDataset::HandleSet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
                               const otMessageInfo *aMessageInfo)
 {
@@ -223,10 +208,8 @@ exit:
 
 PendingDataset::PendingDataset(ThreadNetif &aThreadNetif):
     PendingDatasetBase(aThreadNetif),
-    mResourceGet(OPENTHREAD_URI_PENDING_GET, &PendingDataset::HandleGet, this),
     mResourceSet(OPENTHREAD_URI_PENDING_SET, &PendingDataset::HandleSet, this)
 {
-    mNetif.GetCoapServer().AddResource(mResourceGet);
 }
 
 void PendingDataset::StartLeader(void)
@@ -242,19 +225,6 @@ void PendingDataset::StartLeader(void)
 void PendingDataset::StopLeader(void)
 {
     mNetif.GetCoapServer().RemoveResource(mResourceSet);
-}
-
-void PendingDataset::HandleGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                               const otMessageInfo *aMessageInfo)
-{
-    static_cast<PendingDataset *>(aContext)->HandleGet(
-        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
-        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
-}
-
-void PendingDataset::HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    DatasetManager::Get(aHeader, aMessage, aMessageInfo);
 }
 
 void PendingDataset::HandleSet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,

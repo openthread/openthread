@@ -34,7 +34,9 @@
 #include <crypto/hmac_sha256.hpp>
 #include <crypto/mbedtls.hpp>
 
-static Thread::Crypto::MbedTls mbedtls;
+#ifndef OPENTHREAD_MULTIPLE_INSTANCE
+static Thread::Crypto::MbedTls mMbedTls;
+#endif
 
 void TestHmacSha256(void)
 {

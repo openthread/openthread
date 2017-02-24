@@ -316,6 +316,27 @@ OTAPI ThreadError OTCALL otThreadStart(otInstance *aInstance);
 OTAPI ThreadError OTCALL otThreadStop(otInstance *aInstance);
 
 /**
+ * This function configures the Thread stack to automatically start on reinitialization.
+ * It has no effect on the current Thread state.
+ *
+ * @param[in] aInstance             A pointer to an OpenThread instance.
+ * @param[in] aStartAutomatically   TRUE to automatically start; FALSE to not automatically start.
+ *
+ */
+OTAPI ThreadError OTCALL otThreadSetAutoStart(otInstance *aInstance, bool aStartAutomatically);
+
+/**
+ * This function queries if the Thread stack is configured to automatically start on reinitialization.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
+ * @retval TRUE   It is configured to automatically start.
+ * @retval FALSE  It is not configured to automatically start.
+ *
+ */
+OTAPI bool OTCALL otThreadGetAutoStart(otInstance *aInstance);
+
+/**
  * This function indicates whether a node is the only router on the network.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
@@ -458,12 +479,34 @@ OTAPI uint8_t OTCALL otGetChannel(otInstance *aInstance);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aChannel  The IEEE 802.15.4 channel.
  *
- * @retval  kThreadErrorNone         Successfully set the channel.
- * @retval  kThreadErrorInvalidArgs  If @p aChnanel is not in the range [11, 26].
+ * @retval  kThreadError_None         Successfully set the channel.
+ * @retval  kThreadError_InvalidArgs  If @p aChannel is not in the range [11, 26].
  *
  * @sa otGetChannel
  */
 OTAPI ThreadError OTCALL otSetChannel(otInstance *aInstance, uint8_t aChannel);
+
+/**
+ * Set minimal delay timer.
+ *
+ * @param[in]  aInstance           A pointer to an OpenThread instance.
+ * @param[in]  aDelayTimerMinimal  The value of minimal delay timer (in ms).
+ *
+ * @retval  kThreadError_None         Successfully set minimal delay timer.
+ * @retval  kThreadError_InvalidArgs  If @p aDelayTimerMinimal is not valid.
+ *
+ */
+OTAPI ThreadError OTCALL otSetDelayTimerMinimal(otInstance *aInstance, uint32_t aDelayTimerMinimal);
+
+/**
+ * Get minimal delay timer.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @retval the value of minimal delay timer (in ms).
+ *
+ */
+OTAPI uint32_t OTCALL otGetDelayTimerMinimal(otInstance *aInstance);
 
 /**
  * Get the maximum number of children currently allowed.
@@ -1746,6 +1789,10 @@ OTAPI void OTCALL otSetRouterSelectionJitter(otInstance *aInstance, uint8_t aRou
  * @param[in]   aChildId    The Child ID or RLOC16 for the attached child.
  * @param[out]  aChildInfo  A pointer to where the child information is placed.
  *
+ * @retavl kThreadError_None         @p aChildInfo was successfully updated with the info for the given ID.
+ * @retval kThreadError_NotFound     No valid child with this Child ID.
+ * @retavl kThreadError_InvalidArgs  If @p aChildInfo is NULL.
+ *
  */
 OTAPI ThreadError OTCALL otGetChildInfoById(otInstance *aInstance, uint16_t aChildId, otChildInfo *aChildInfo);
 
@@ -1755,6 +1802,13 @@ OTAPI ThreadError OTCALL otGetChildInfoById(otInstance *aInstance, uint16_t aChi
  * @param[in]   aInstance    A pointer to an OpenThread instance.
  * @param[in]   aChildIndex  The table index.
  * @param[out]  aChildInfo   A pointer to where the child information is placed.
+ *
+ * @retavl kThreadError_None            @p aChildInfo was successfully updated with the info for the given index.
+ * @retval kThreadError_NotFound        No valid child at this index.
+ * @retavl kThreadError_InvalidArgs     Either @p aChildInfo is NULL, or @p aChildIndex is out of range (higher
+ *                                      than max table index).
+ *
+ * @sa otGetMaxAllowedChildren
  *
  */
 OTAPI ThreadError OTCALL otGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex, otChildInfo *aChildInfo);
@@ -1880,13 +1934,22 @@ OTAPI uint8_t OTCALL otGetRouterIdSequence(otInstance *aInstance);
 OTAPI ThreadError OTCALL otGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRouterInfo *aRouterInfo);
 
 /**
- * The function retains diagnostic information for a Thread Router as parent.
+ * The function retrieves diagnostic information for a Thread Router as parent.
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
  * @param[out]  aParentInfo  A pointer to where the parent router information is placed.
  *
  */
 OTAPI ThreadError OTCALL otGetParentInfo(otInstance *aInstance, otRouterInfo *aParentInfo);
+
+/**
+ * The function retrieves the average RSSI for the Thread Parent.
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ * @param[out]  aParentInfo  A pointer to where the parent rssi should be placed.
+ *
+ */
+OTAPI ThreadError OTCALL otGetParentAverageRssi(otInstance *aInstance, int8_t *aParentRssi);
 
 /**
  * Get the Stable Network Data Version.

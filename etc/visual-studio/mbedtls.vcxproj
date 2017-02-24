@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="openthread.configuration.props" /> 
+  <Import Project="openthread.configuration.props" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>{4111C8BB-D354-4348-AD3C-EB6832E84831}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -38,7 +38,8 @@
     <ClCompile>
       <PreprocessorDefinitions>
         ;%(PreprocessorDefinitions);
-        MBEDTLS_CONFIG_FILE="mbedtls-config.h"
+        MBEDTLS_CONFIG_FILE="mbedtls-config.h";
+        OPENTHREAD_MULTIPLE_INSTANCE;
       </PreprocessorDefinitions>
       <AdditionalIncludeDirectories>
         ..\..\include;
@@ -59,6 +60,7 @@
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\ccm.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\cipher.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\cipher_wrap.c" />
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\cmac.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\ctr_drbg.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\debug.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\ecjpake.c" />

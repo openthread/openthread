@@ -40,6 +40,18 @@
 #include <ncp/ncp.h>
 #include <platform/platform.h>
 
+#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+void *otPlatCAlloc(size_t aNum, size_t aSize)
+{
+    return calloc(aNum, aSize);
+}
+
+void otPlatFree(void *aPtr)
+{
+    free(aPtr);
+}
+#endif
+
 void otSignalTaskletPending(otInstance *aInstance)
 {
     (void)aInstance;

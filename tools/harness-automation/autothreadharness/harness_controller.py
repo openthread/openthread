@@ -28,6 +28,7 @@
 #
 
 
+import ConfigParser
 import logging
 import os
 import subprocess
@@ -36,6 +37,28 @@ import time
 from autothreadharness import settings
 
 logger = logging.getLogger(__name__)
+
+HARNESS_SVN_VERSION_R44 = 1471
+"""int: this is the first published release that miniweb was removed from Harness"""
+
+def _try_kill(proc):
+    logger.info('Try kill process')
+    times = 1
+
+    while proc.poll() is None:
+        proc.kill()
+
+        time.sleep(5)
+
+        if proc.poll() is not None:
+            logger.info('Process has been killed')
+            break
+
+        logger.info('Trial %d failed', times)
+        times += 1
+
+        if times > 3:
+            raise SystemExit()
 
 class HarnessController(object):
     """Harness service control
@@ -52,6 +75,10 @@ class HarnessController(object):
         self.result_dir = result_dir
         self.harness_file = ''
 
+        harness_info = ConfigParser.ConfigParser()
+        harness_info.read('%s\\info.ini' % settings.HARNESS_HOME)
+        self.version = harness_info.getint('Thread_Harness_Info', 'SVN')
+
     def start(self):
         logger.info('Starting harness service')
         if self.harness:
@@ -61,71 +88,49 @@ class HarnessController(object):
                        % (settings.HARNESS_HOME, settings.HARNESS_HOME))
 
             self.harness_file = '%s\\harness-%s.log' % (self.result_dir, time.strftime('%Y%m%d%H%M%S'))
-            with open(self.harness_file, 'w') as harnessOut:
+            with open(self.harness_file, 'w') as harness_out:
                 self.harness = subprocess.Popen([settings.HARNESS_HOME + '\\Python27\\python.exe',
                                                  settings.HARNESS_HOME + '\\Thread_Harness\\Run.py'],
                                                 cwd=settings.HARNESS_HOME,
-                                                stdout=harnessOut,
-                                                stderr=harnessOut,
+                                                stdout=harness_out,
+                                                stderr=harness_out,
                                                 env=env)
             time.sleep(2)
 
-        if settings.HARNESS_VERSION > 33:
+        if self.version >= HARNESS_SVN_VERSION_R44:
             return
 
         if self.miniweb:
             logger.warning('Miniweb already started')
         else:
-            with open('%s\\miniweb-%s.log' % (self.result_dir, time.strftime('%Y%m%d%H%M%S')), 'w') as miniwebOut:
+            with open('%s\\miniweb-%s.log' % (self.result_dir, time.strftime('%Y%m%d%H%M%S')), 'w') as miniweb_out:
                 self.miniweb = subprocess.Popen([settings.HARNESS_HOME + '\\MiniWeb\\miniweb.exe'],
-                                                stdout=miniwebOut,
-                                                stderr=miniwebOut,
+                                                stdout=miniweb_out,
+                                                stderr=miniweb_out,
                                                 cwd=settings.HARNESS_HOME + '\\MiniWeb')
 
     def stop(self):
         logger.info('Stopping harness service')
 
         if self.harness:
-            self._try_kill(self.harness)
+            _try_kill(self.harness)
             self.harness = None
         else:
             logger.warning('Harness not started yet')
 
-        if settings.HARNESS_VERSION > 33:
+        if self.version >= HARNESS_SVN_VERSION_R44:
             return
 
         if self.miniweb:
-            self._try_kill(self.miniweb)
+            _try_kill(self.miniweb)
             self.miniweb = None
         else:
             logger.warning('Miniweb not started yet')
 
     def tail(self):
-        with open(self.harness_file) as harnessOut:
-            harnessOut.seek(-100, 2)
-            return ''.join(harnessOut.readlines())
-
-    def _try_kill(self, proc):
-        logger.info('Try kill process')
-        times = 1
-
-        while proc.poll() is None:
-            proc.kill()
-
-            time.sleep(5)
-
-            if proc.poll() is not None:
-                logger.info('Process has been killed')
-                break
-
-            logger.info('Trial {} failed'.format(times))
-            times += 1
-
-            if times > 3:
-                raise SystemExit()
+        with open(self.harness_file) as harness_out:
+            harness_out.seek(-100, 2)
+            return ''.join(harness_out.readlines())
 
     def __del__(self):
         self.stop()
-
-if __name__ == '__main__':
-    hc = HarnessController()

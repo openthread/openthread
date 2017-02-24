@@ -83,7 +83,7 @@ public:
         kStateParentRequest,             ///< Received an MLE Parent Request message
         kStateChildIdRequest,            ///< Received an MLE Child ID Request message
         kStateLinkRequest,               ///< Sent an MLE Link Request message
-        kStateChildUpdateRequest,        ///< Sent an MLE Child Update Request message
+        kStateChildUpdateRequest,        ///< Sent an MLE Child Update Request message (trying to restore the child)
         kStateValid,                     ///< Link is valid
     };
 
@@ -92,6 +92,27 @@ public:
     bool            mDataRequest : 1;    ///< Indicates whether or not a Data Poll was received
     uint8_t         mLinkFailures;       ///< Consecutive link failure count
     LinkQualityInfo mLinkInfo;           ///< Link quality info (contains average RSS, link margin and link quality)
+
+public:
+    /*
+     * Check if the neighbor/child is in valid state or if it is being restored.
+     * When in these states messages can be sent to and/or received from the neighbor/child.
+     *
+     * @returns `true` if the neighbor is in valid, restored, or being restored states, `false` otherwise.
+     *
+     */
+    bool IsStateValidOrRestoring(void) const {
+        switch (mState) {
+        case kStateValid:
+        case kStateRestored:
+        case kStateChildUpdateRequest:
+            return true;
+
+        default:
+            return false;
+        }
+    }
+
 };
 
 /**

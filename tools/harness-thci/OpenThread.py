@@ -26,26 +26,26 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-'''
+"""
 >> Thread Host Controller Interface
 >> Device : OpenThread THCI
 >> Class : OpenThread
-'''
+"""
 
 import re
-import sys
 import time
-import serial
 import socket
 import logging
-from IThci import IThci
-from GRLLibs.UtilityModules.Test import Thread_Device_Role, Device_Data_Requirement, MacType
-from GRLLibs.UtilityModules.enums import PlatformDiagnosticPacket_Direction, PlatformDiagnosticPacket_Type, AddressType
-from GRLLibs.UtilityModules.ModuleHelper import ModuleHelper, ThreadRunner
-from GRLLibs.ThreadPacket.PlatformPackets import PlatformDiagnosticPacket, PlatformPackets
 from Queue import Queue
 
-linesepx = re.compile(r'\r\n|\n')
+import serial
+from IThci import IThci
+from GRLLibs.UtilityModules.Test import Thread_Device_Role, Device_Data_Requirement, MacType
+from GRLLibs.UtilityModules.enums import PlatformDiagnosticPacket_Direction, PlatformDiagnosticPacket_Type
+from GRLLibs.UtilityModules.ModuleHelper import ModuleHelper, ThreadRunner
+from GRLLibs.ThreadPacket.PlatformPackets import PlatformDiagnosticPacket, PlatformPackets
+
+LINESEPX = re.compile(r'\r\n|\n')
 """regex: used to split lines"""
 
 class OpenThread(IThci):
@@ -55,6 +55,8 @@ class OpenThread(IThci):
     isWhiteListEnabled = False       # indicate if Thread device enables white list filter
     isBlackListEnabled = False       # indicate if Thread device enables black list filter
     isActiveCommissioner = False     # indicate if Thread device is an active commissioner
+    _is_net = False                  # whether device is through ser2net
+    _lines = None                    # buffered lines read from device
     LOWEST_POSSIBLE_PARTATION_ID = 0x1
     LINK_QUALITY_CHANGE_TIME = 100
 
@@ -112,10 +114,7 @@ class OpenThread(IThci):
         print '[%s] Expecting [%s]' % (self.port, expected)
 
         retry_times = 10
-        for i in range(0, times):
-            if not retry_times:
-                break
-
+        while times > 0 and retry_times > 0:
             line = self._readline()
             print '[%s] Got line [%s]' % (self.port, line)
 
@@ -126,6 +125,8 @@ class OpenThread(IThci):
             if not line:
                 retry_times -= 1
                 time.sleep(0.1)
+
+            times -= 1
 
         raise Exception('failed to find expected string[%s]' % expected)
 
@@ -150,12 +151,12 @@ class OpenThread(IThci):
             None on no data
         """
         logging.info('%s: reading line', self.port)
-        if len(self.lines) > 1:
-            return self.lines.pop(0)
+        if len(self._lines) > 1:
+            return self._lines.pop(0)
 
         tail = ''
-        if len(self.lines):
-            tail = self.lines.pop()
+        if len(self._lines):
+            tail = self._lines.pop()
 
         try:
             tail += self._read()
@@ -163,9 +164,9 @@ class OpenThread(IThci):
             logging.exception('%s: No new data', self.port)
             time.sleep(0.1)
 
-        self.lines += linesepx.split(tail)
-        if len(self.lines) > 1:
-            return self.lines.pop(0)
+        self._lines += LINESEPX.split(tail)
+        if len(self._lines) > 1:
+            return self._lines.pop(0)
 
     def _sendline(self, line):
         """Send exactly one line to the device
@@ -175,7 +176,7 @@ class OpenThread(IThci):
         """
         logging.info('%s: sending line', self.port)
         # clear buffer
-        self.lines = []
+        self._lines = []
         try:
             self._read()
         except socket.error:
@@ -206,15 +207,15 @@ class OpenThread(IThci):
 
         try:
             # command retransmit times
-            retryTimes = 3
-            while retryTimes:
-                retryTimes -= 1
+            retry_times = 3
+            while retry_times > 0:
+                retry_times -= 1
                 try:
                     self._sendline(cmd)
                     self._expect(cmd)
                 except Exception as e:
                     logging.exception('%s: failed to send command[%s]: %s', self.port, cmd, str(e))
-                    if not retryTimes:
+                    if retry_times == 0:
                         raise
                 else:
                     break
@@ -222,7 +223,7 @@ class OpenThread(IThci):
             line = None
             response = []
             retry_times = 10
-            while retry_times:
+            while retry_times > 0:
                 line = self._readline()
                 logging.info('%s: the read line is[%s]', self.port, line)
                 if line:
@@ -258,7 +259,6 @@ class OpenThread(IThci):
         addrs = []
         globalAddr = []
         linkLocal64Addr = ''
-        linkLocal16Addr = ''
         rlocAddr = ''
         meshEIDAddr = ''
 
@@ -272,8 +272,6 @@ class OpenThread(IThci):
                 # link local address
                 if ip6Addr.split(':')[4] != '0':
                     linkLocal64Addr = ip6Addr
-                else:
-                    linkLocal16Addr = ip6Addr
             elif ip6AddrPrefix == 'fd00':
                 # mesh local address
                 if ip6Addr.split(':')[4] == '0':
@@ -598,7 +596,7 @@ class OpenThread(IThci):
                     elif "Join failed" in line:
                         self.joinCommissionedStatus = self.joinStatus['failed']
 
-            except Exception, e:
+            except Exception:
                 pass
 
             if self.logThreadStatus == self.logStatus['pauseReq']:
@@ -1004,7 +1002,7 @@ class OpenThread(IThci):
                 self.channel = ModuleHelper.Default_Channel
 
             # FIXME: when Harness call setNetworkDataRequirement()?
-            # only sleep end device requires stable netowrkdata now
+            # only sleep end device requires stable networkdata now
             if eRoleId == Thread_Device_Role.Leader:
                 print 'join as leader'
                 mode = 'rsdn'
@@ -1597,8 +1595,6 @@ class OpenThread(IThci):
             if self.__sendCommand(cmd)[0] == 'Done':
                 # send server data ntf to leader
                 return self.__sendCommand('netdataregister')[0] == 'Done'
-            else:
-                False
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("configExternalRouter() Error: " + str(e))
 
@@ -1791,7 +1787,7 @@ class OpenThread(IThci):
             # get global addrs set if multiple
             globalAddrs = self.getGlobal()
 
-            if filterByPrefix == None:
+            if filterByPrefix is None:
                 return globalAddrs[0]
             else:
                 for line in globalAddrs:
@@ -1984,7 +1980,7 @@ class OpenThread(IThci):
             else:
                 return False
         except Exception, e:
-            Modulehelper.writeintodebuglogger("allowcommission() error: " + str(e))
+            ModuleHelper.writeintodebuglogger("allowcommission() error: " + str(e))
 
     def joinCommissioned(self, strPSKd='threadjpaketest', waitTime=20):
         """start joiner
@@ -2010,7 +2006,7 @@ class OpenThread(IThci):
             t_end = time.time() + maxDuration
             while time.time() < t_end:
                 if self.joinCommissionedStatus == self.joinStatus['succeed']:
-                    break;
+                    break
                 elif self.joinCommissionedStatus == self.joinStatus['failed']:
                     return False
 
@@ -2097,7 +2093,7 @@ class OpenThread(IThci):
             print cmd
             return self.__sendCommand(cmd) == 'Done'
         except Exception, e:
-            Modulehelper.writeintodebuglogger("MGMT_ED_SCAN() error: " + str(e))
+            ModuleHelper.writeintodebuglogger("MGMT_ED_SCAN() error: " + str(e))
 
     def MGMT_PANID_QUERY(self, sAddr, xCommissionerSessionId, listChannelMask, xPanId):
         """send MGMT_PANID_QUERY message to a given destination
@@ -2122,7 +2118,7 @@ class OpenThread(IThci):
             print cmd
             return self.__sendCommand(cmd) == 'Done'
         except Exception, e:
-            Modulehelper.writeintodebuglogger("MGMT_PANID_QUERY() error: " + str(e))
+            ModuleHelper.writeintodebuglogger("MGMT_PANID_QUERY() error: " + str(e))
 
     def MGMT_ANNOUNCE_BEGIN(self, sAddr, xCommissionerSessionId, listChannelMask, xCount, xPeriod):
         """send MGMT_ANNOUNCE_BEGIN message to a given destination
@@ -2139,7 +2135,7 @@ class OpenThread(IThci):
             print cmd
             return self.__sendCommand(cmd) == 'Done'
         except Exception, e:
-            Modulehelper.writeintodebuglogger("MGMT_ANNOUNCE_BEGIN() error: " + str(e))
+            ModuleHelper.writeintodebuglogger("MGMT_ANNOUNCE_BEGIN() error: " + str(e))
 
     def MGMT_ACTIVE_GET(self, Addr='', TLVs=[]):
         """send MGMT_ACTIVE_GET command
@@ -2266,7 +2262,7 @@ class OpenThread(IThci):
                 sessionid = str(hex(xCommissioningSessionId))[2:]
 
                 if len(sessionid) < 4:
-                    sessionid = sissionid.zfill(4)
+                    sessionid = sessionid.zfill(4)
 
                 cmd += sessionid
 
@@ -2377,7 +2373,7 @@ class OpenThread(IThci):
                 sessionid = str(hex(xCommissionerSessionId))[2:]
 
                 if len(sessionid) < 4:
-                    sessionid = sissionid.zfill(4)
+                    sessionid = sessionid.zfill(4)
 
                 cmd += sessionid
 
@@ -2427,9 +2423,9 @@ class OpenThread(IThci):
                 # use assigned session id
                 cmd += ' sessionid '
                 cmd += str(xCommissionerSessionID)
-            elif xCommissionerSessionID == None:
+            elif xCommissionerSessionID is None:
                 # use original session id
-                if self.isActiveCommissioner == True:
+                if self.isActiveCommissioner is True:
                     cmd += ' sessionid '
                     cmd += self.__getCommissionerSessionId()
                 else:
@@ -2534,3 +2530,6 @@ class OpenThread(IThci):
 
     def setMinDelayTimer(self, iSeconds):
         print '%s call setMinDelayTimer' % self.port
+        cmd = 'delaytimermin %s' % iSeconds
+        print cmd
+        return self.__sendCommand(cmd)[0] == 'Done'

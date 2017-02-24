@@ -242,7 +242,7 @@ private:
 private:
 
     ThreadError SendPropertyUpdate(uint8_t header, uint8_t command, spinel_prop_key_t key, const uint8_t *value_ptr,
-                            uint16_t value_len);
+                                   uint16_t value_len);
 
     ThreadError SendPropertyUpdate(uint8_t header, uint8_t command, spinel_prop_key_t key, otMessage message);
 
@@ -305,8 +305,10 @@ private:
     ThreadError CommandHandler_PROP_VALUE_REMOVE(uint8_t header, unsigned int command, const uint8_t *arg_ptr,
                                                  uint16_t arg_len);
     ThreadError CommandHandler_NET_SAVE(uint8_t header, unsigned int command, const uint8_t *arg_ptr, uint16_t arg_len);
-    ThreadError CommandHandler_NET_CLEAR(uint8_t header, unsigned int command, const uint8_t *arg_ptr, uint16_t arg_len);
-    ThreadError CommandHandler_NET_RECALL(uint8_t header, unsigned int command, const uint8_t *arg_ptr, uint16_t arg_len);
+    ThreadError CommandHandler_NET_CLEAR(uint8_t header, unsigned int command, const uint8_t *arg_ptr,
+                                         uint16_t arg_len);
+    ThreadError CommandHandler_NET_RECALL(uint8_t header, unsigned int command, const uint8_t *arg_ptr,
+                                          uint16_t arg_len);
 
     ThreadError GetPropertyHandler_ChannelMaskHelper(uint8_t header, spinel_prop_key_t key, uint32_t channel_mask);
 
@@ -325,6 +327,7 @@ private:
     ThreadError GetPropertyHandler_PHY_CHAN_SUPPORTED(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_PHY_CHAN(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_PHY_RSSI(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_PHY_TX_POWER(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_15_4_PANID(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_15_4_LADDR(uint8_t header, spinel_prop_key_t key);
@@ -412,16 +415,18 @@ private:
                                                   uint16_t value_len);
     ThreadError SetPropertyHandler_MAC_15_4_PANID(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                   uint16_t value_len);
-    ThreadError SetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
-                                                          uint16_t value_len);
+    ThreadError SetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t header, spinel_prop_key_t key,
+                                                          const uint8_t *value_ptr, uint16_t value_len);
+
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     ThreadError SetPropertyHandler_STREAM_RAW(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                               uint16_t value_len);
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
+
     ThreadError SetPropertyHandler_NET_IF_UP(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
-                                               uint16_t value_len);
-    ThreadError SetPropertyHandler_NET_STACK_UP(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                              uint16_t value_len);
+    ThreadError SetPropertyHandler_NET_STACK_UP(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                uint16_t value_len);
     ThreadError SetPropertyHandler_NET_ROLE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                             uint16_t value_len);
     ThreadError SetPropertyHandler_NET_NETWORK_NAME(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -430,59 +435,75 @@ private:
                                               uint16_t value_len);
     ThreadError SetPropertyHandler_NET_MASTER_KEY(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                   uint16_t value_len);
-    ThreadError SetPropertyHandler_NET_KEY_SEQUENCE_COUNTER(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
-                                                    uint16_t value_len);
-    ThreadError SetPropertyHandler_NET_KEY_SWITCH_GUARDTIME(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
-                                                    uint16_t value_len);
+    ThreadError SetPropertyHandler_NET_KEY_SEQUENCE_COUNTER(uint8_t header, spinel_prop_key_t key,
+                                                            const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError SetPropertyHandler_NET_KEY_SWITCH_GUARDTIME(uint8_t header, spinel_prop_key_t key,
+                                                            const uint8_t *value_ptr, uint16_t value_len);
     ThreadError SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                        uint16_t value_len);
     ThreadError SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                               uint16_t value_len);
     ThreadError SetPropertyHandler_IPV6_ML_PREFIX(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                   uint16_t value_len);
-    ThreadError SetPropertyHandler_IPV6_ICMP_PING_OFFLOAD(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
-                                                  uint16_t value_len);
-    ThreadError SetPropertyHandler_THREAD_RLOC16_DEBUG_PASSTHRU(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
-                                                                uint16_t value_len);
+    ThreadError SetPropertyHandler_IPV6_ICMP_PING_OFFLOAD(uint8_t header, spinel_prop_key_t key,
+                                                          const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError SetPropertyHandler_THREAD_RLOC16_DEBUG_PASSTHRU(uint8_t header, spinel_prop_key_t key,
+                                                                const uint8_t *value_ptr, uint16_t value_len);
+
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     ThreadError SetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                uint16_t value_len);
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
+
     ThreadError SetPropertyHandler_MAC_PROMISCUOUS_MODE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
-                                                   uint16_t value_len);
+                                                        uint16_t value_len);
     ThreadError SetPropertyHandler_MAC_SCAN_PERIOD(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                    uint16_t value_len);
     ThreadError SetPropertyHandler_THREAD_LOCAL_LEADER_WEIGHT(uint8_t header, spinel_prop_key_t key,
-                                                              const uint8_t *value_ptr,
-                                                              uint16_t value_len);
-    ThreadError SetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
-    ThreadError SetPropertyHandler_MAC_WHITELIST_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
-    ThreadError SetPropertyHandler_THREAD_MODE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
-    ThreadError SetPropertyHandler_THREAD_CHILD_COUNT_MAX(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
-    ThreadError SetPropertyHandler_THREAD_CHILD_TIMEOUT(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
-    ThreadError SetPropertyHandler_THREAD_ROUTER_UPGRADE_THRESHOLD(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
-    ThreadError SetPropertyHandler_THREAD_ROUTER_DOWNGRADE_THRESHOLD(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
-    ThreadError SetPropertyHandler_THREAD_ROUTER_SELECTION_JITTER(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
-    ThreadError SetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
-    ThreadError SetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
-    ThreadError SetPropertyHandler_THREAD_PREFERRED_ROUTER_ID(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
+                                                              const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError SetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                 uint16_t value_len);
+    ThreadError SetPropertyHandler_MAC_WHITELIST_ENABLED(uint8_t header, spinel_prop_key_t key,
+                                                         const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError SetPropertyHandler_THREAD_MODE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                               uint16_t value_len);
+    ThreadError SetPropertyHandler_THREAD_CHILD_COUNT_MAX(uint8_t header, spinel_prop_key_t key,
+                                                          const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError SetPropertyHandler_THREAD_CHILD_TIMEOUT(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                        uint16_t value_len);
+    ThreadError SetPropertyHandler_THREAD_ROUTER_UPGRADE_THRESHOLD(uint8_t header, spinel_prop_key_t key,
+                                                                   const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError SetPropertyHandler_THREAD_ROUTER_DOWNGRADE_THRESHOLD(uint8_t header, spinel_prop_key_t key,
+                                                                     const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError SetPropertyHandler_THREAD_ROUTER_SELECTION_JITTER(uint8_t header, spinel_prop_key_t key,
+                                                                  const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError SetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY(uint8_t header, spinel_prop_key_t key,
+                                                              const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError SetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header, spinel_prop_key_t key,
+                                                             const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError SetPropertyHandler_THREAD_PREFERRED_ROUTER_ID(uint8_t header, spinel_prop_key_t key,
+                                                              const uint8_t *value_ptr, uint16_t value_len);
 
     ThreadError SetPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, spinel_prop_key_t key,
-                                                    const uint8_t *value_ptr, uint16_t value_len);
+                                                          const uint8_t *value_ptr, uint16_t value_len);
     ThreadError SetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE(uint8_t header, spinel_prop_key_t key,
-                                                   const uint8_t *value_ptr, uint16_t value_len);
+                                                                      const uint8_t *value_ptr, uint16_t value_len);
     ThreadError SetPropertyHandler_THREAD_ROUTER_ROLE_ENABLED(uint8_t header, spinel_prop_key_t key,
-                                                   const uint8_t *value_ptr, uint16_t value_len);
+                                                              const uint8_t *value_ptr, uint16_t value_len);
     ThreadError SetPropertyHandler_NET_REQUIRE_JOIN_EXISTING(uint8_t header, spinel_prop_key_t key,
-                                                   const uint8_t *value_ptr, uint16_t value_len);
+                                                             const uint8_t *value_ptr, uint16_t value_len);
     ThreadError SetPropertyHandler_CNTR_RESET(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                               uint16_t value_len);
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
-    ThreadError SetPropertyHandler_JAM_DETECT_ENABLE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
-    ThreadError SetPropertyHandler_JAM_DETECT_RSSI_THRESHOLD(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
-    ThreadError SetPropertyHandler_JAM_DETECT_WINDOW(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
-    ThreadError SetPropertyHandler_JAM_DETECT_BUSY(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError SetPropertyHandler_JAM_DETECT_ENABLE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                     uint16_t value_len);
+    ThreadError SetPropertyHandler_JAM_DETECT_RSSI_THRESHOLD(uint8_t header, spinel_prop_key_t key,
+                                                             const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError SetPropertyHandler_JAM_DETECT_WINDOW(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                     uint16_t value_len);
+    ThreadError SetPropertyHandler_JAM_DETECT_BUSY(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                   uint16_t value_len);
 #endif
 
 #if OPENTHREAD_ENABLE_DIAG
@@ -492,32 +513,32 @@ private:
 
 #if OPENTHREAD_ENABLE_LEGACY
     ThreadError SetPropertyHandler_NEST_LEGACY_ULA_PREFIX(uint8_t header, spinel_prop_key_t key,
-                                                   const uint8_t *value_ptr, uint16_t value_len);
+                                                          const uint8_t *value_ptr, uint16_t value_len);
 #endif
 
-    ThreadError InsertPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
-                                                         uint16_t value_len);
-    ThreadError InsertPropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
-                                                          uint16_t value_len);
-    ThreadError InsertPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
-                                                          uint16_t value_len);
+    ThreadError InsertPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel_prop_key_t key,
+                                                         const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError InsertPropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_prop_key_t key,
+                                                          const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError InsertPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_prop_key_t key,
+                                                          const uint8_t *value_ptr, uint16_t value_len);
     ThreadError InsertPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, spinel_prop_key_t key,
-                                                             const uint8_t *value_ptr,
-                                                             uint16_t value_len);
-    ThreadError InsertPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
+                                                             const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError InsertPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                    uint16_t value_len);
 
-    ThreadError RemovePropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
-                                                         uint16_t value_len);
-    ThreadError RemovePropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
-                                                          uint16_t value_len);
-    ThreadError RemovePropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
-                                                          uint16_t value_len);
+    ThreadError RemovePropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel_prop_key_t key,
+                                                         const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError RemovePropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_prop_key_t key,
+                                                          const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError RemovePropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_prop_key_t key,
+                                                          const uint8_t *value_ptr, uint16_t value_len);
     ThreadError RemovePropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, spinel_prop_key_t key,
-                                                             const uint8_t *value_ptr,
-                                                             uint16_t value_len);
-    ThreadError RemovePropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
-    ThreadError RemovePropertyHandler_THREAD_ACTIVE_ROUTER_IDS(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
-                                              uint16_t value_len);
+                                                             const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError RemovePropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                    uint16_t value_len);
+    ThreadError RemovePropertyHandler_THREAD_ACTIVE_ROUTER_IDS(uint8_t header, spinel_prop_key_t key,
+                                                               const uint8_t *value_ptr, uint16_t value_len);
 public:
     ThreadError StreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen);
 

@@ -105,6 +105,7 @@ typedef enum
     SPINEL_STATUS_CCA_FAILURE       = 18, ///< The packet was not sent due to a CCA failure.
     SPINEL_STATUS_ALREADY           = 19, ///< The operation is already in progress.
     SPINEL_STATUS_ITEM_NOT_FOUND    = 20, ///< The given item could not be found.
+    SPINEL_STATUS_INVALID_COMMAND_FOR_PROP = 21, ///< The given command cannot be performed on this property.
 
     SPINEL_STATUS_JOIN__BEGIN       = 104,
 
@@ -286,6 +287,10 @@ enum
     SPINEL_CMD_PEEK_RET             = 19,
     SPINEL_CMD_POKE                 = 20,
 
+    SPINEL_CMD_PROP_VALUE_MULTI_GET = 21,
+    SPINEL_CMD_PROP_VALUE_MULTI_SET = 22,
+    SPINEL_CMD_PROP_VALUES_ARE      = 23,
+
     SPINEL_CMD_NEST__BEGIN          = 15296,
     SPINEL_CMD_NEST__END            = 15360,
 
@@ -311,6 +316,7 @@ enum
     SPINEL_CAP_WRITABLE_RAW_STREAM   = 8,
     SPINEL_CAP_GPIO                  = 9,
     SPINEL_CAP_TRNG                  = 10,
+    SPINEL_CAP_CMD_MULTI             = 11,
 
     SPINEL_CAP_802_15_4__BEGIN        = 16,
     SPINEL_CAP_802_15_4_2003          = (SPINEL_CAP_802_15_4__BEGIN + 0),

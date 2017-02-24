@@ -78,6 +78,10 @@ typedef enum otCoapCode
     kCoapRequestPost     = 0x02,  ///< Post
     kCoapRequestPut      = 0x03,  ///< Put
     kCoapRequestDelete   = 0x04,  ///< Delete
+    kCoapResponseCodeMin = 0x40,  ///< 2.00
+    kCoapResponseCreated = 0x41,  ///< Created
+    kCoapResponseDeleted = 0x42,  ///< Deleted
+    kCoapResponseValid   = 0x43,  ///< Valid
     kCoapResponseChanged = 0x44,  ///< Changed
     kCoapResponseContent = 0x45,  ///< Content
 } otCoapCode;
@@ -327,7 +331,7 @@ otMessage otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader);
 /**
  * This function sends a CoAP request.
  *
- * If a response for a request is expected, respective function and contex information should be provided.
+ * If a response for a request is expected, respective function and context information should be provided.
  * If no response is expected, these arguments should be NULL pointers.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.

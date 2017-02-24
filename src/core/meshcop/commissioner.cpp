@@ -46,6 +46,7 @@
 #include <common/crc16.hpp>
 #include <common/encoding.hpp>
 #include <common/logging.hpp>
+#include <crypto/pbkdf2_cmac.h>
 #include <meshcop/commissioner.hpp>
 #include <meshcop/joiner_router.hpp>
 #include <meshcop/tlvs.hpp>
@@ -507,6 +508,7 @@ ThreadError Commissioner::SendPetition(void)
 
     mNetif.GetMle().GetLeaderAloc(*static_cast<Ip6::Address *>(&messageInfo.mPeerAddr));
     messageInfo.SetPeerPort(kCoapUdpPort);
+    messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo,
                                                              Commissioner::HandleLeaderPetitionResponse, this));
 
@@ -696,11 +698,6 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
     if (!mNetif.GetSecureCoapServer().IsConnectionActive())
     {
         memcpy(mJoinerIid, joinerIid.GetIid(), sizeof(mJoinerIid));
-        mJoinerPort = joinerPort.GetUdpPort();
-        mJoinerRloc = joinerRloc.GetJoinerRouterLocator();
-
-        otLogInfoMeshCoP("Received relay receive for %llX, rloc:%x", HostSwap64(mJoinerIid64), mJoinerRloc);
-
         mJoinerIid[0] ^= 0x2;
 
         for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
@@ -730,6 +727,11 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
     }
 
     VerifyOrExit(enableJoiner, ;);
+
+    mJoinerPort = joinerPort.GetUdpPort();
+    mJoinerRloc = joinerRloc.GetJoinerRouterLocator();
+
+    otLogInfoMeshCoP("Received relay receive for %llX, rloc:%x", HostSwap64(mJoinerIid64), mJoinerRloc);
 
     aMessage.SetOffset(offset);
     SuccessOrExit(error = aMessage.SetLength(offset + length));
@@ -923,6 +925,34 @@ exit:
     }
 
     otLogFuncExitErr(error);
+    return error;
+}
+
+ThreadError Commissioner::GeneratePSKc(const char *aPassPhrase, const char *aNetworkName, const uint8_t *aExtPanId,
+                                       uint8_t *aPSKc)
+{
+    ThreadError error = kThreadError_None;
+    const char *saltPrefix = "Thread";
+    uint8_t salt[OT_PBKDF2_SALT_MAX_LEN];
+    uint16_t saltLen = 0;
+
+    VerifyOrExit((strlen(aPassPhrase) >= OT_COMMISSIONING_PASSPHRASE_MIN_SIZE) &&
+                 (strlen(aPassPhrase) <= OT_COMMISSIONING_PASSPHRASE_MAX_SIZE), error = kThreadError_InvalidArgs);
+
+    memset(salt, 0, sizeof(salt));
+    memcpy(salt, saltPrefix, strlen(saltPrefix));
+    saltLen += static_cast<uint16_t>(strlen(saltPrefix));
+
+    memcpy(salt + saltLen, aExtPanId, OT_EXT_PAN_ID_SIZE);
+    saltLen += OT_EXT_PAN_ID_SIZE;
+
+    memcpy(salt + saltLen, aNetworkName, strlen(aNetworkName));
+    saltLen += static_cast<uint16_t>(strlen(aNetworkName));
+
+    otPbkdf2Cmac(reinterpret_cast<const uint8_t *>(aPassPhrase), static_cast<uint16_t>(strlen(aPassPhrase)),
+                 reinterpret_cast<const uint8_t *>(salt), saltLen, 16384, OT_PSKC_MAX_SIZE, aPSKc);
+
+exit:
     return error;
 }
 

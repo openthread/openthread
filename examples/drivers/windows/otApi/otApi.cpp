@@ -1244,6 +1244,30 @@ otThreadStop(
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_THREAD, (BOOLEAN)FALSE));
 }
 
+OTAPI
+ThreadError
+OTCALL
+otThreadSetAutoStart(
+    _In_ otInstance *aInstance,
+    bool aStartAutomatically
+    )
+{
+    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_THREAD_AUTO_START, (BOOLEAN)(aStartAutomatically ? TRUE : FALSE)));
+}
+
+OTAPI
+bool
+OTCALL
+otThreadGetAutoStart(
+    otInstance *aInstance
+    )
+{
+    BOOLEAN Result = FALSE;
+    if (aInstance) (void)QueryIOCTL(aInstance, IOCTL_OTLWF_OT_THREAD_AUTO_START, &Result);
+    return Result != FALSE;
+}
+
 OTAPI 
 bool 
 OTCALL
@@ -1393,6 +1417,32 @@ otSetChannel(
 {
     if (aInstance == nullptr) return kThreadError_InvalidArgs;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_CHANNEL, aChannel));
+}
+
+OTAPI
+ThreadError
+OTCALL
+otSetDelayTimerMinimal(
+    _In_ otInstance *aInstance,
+    uint32_t aDelayTimerMinimal
+    )
+{
+    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    // TODO
+    UNREFERENCED_PARAMETER(aDelayTimerMinimal);
+    return kThreadError_NotImplemented;
+}
+
+OTAPI
+uint32_t
+OTCALL
+otGetDelayTimerMinimal(
+    _In_ otInstance *aInstance
+    )
+{
+    if (aInstance == nullptr) return 0;
+    // TODO
+    return 0;
 }
 
 OTAPI 

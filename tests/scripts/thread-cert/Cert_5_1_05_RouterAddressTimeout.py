@@ -73,6 +73,7 @@ class Cert_5_1_05_RouterAddressTimeout(unittest.TestCase):
         self.nodes[LEADER].start()
         self.nodes[LEADER].set_state('leader')
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
+        time.sleep(4)
 
         self.nodes[ROUTER1].start()
         time.sleep(5)

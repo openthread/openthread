@@ -220,7 +220,7 @@ void MeshForwarder::UpdateIndirectMessages(void)
     {
         Child *child = &children[i];
 
-        if (child->mState == Child::kStateValid || child->mQueuedIndirectMessageCnt == 0)
+        if (child->IsStateValidOrRestoring() || child->mQueuedIndirectMessageCnt == 0)
         {
             continue;
         }
@@ -245,7 +245,7 @@ void MeshForwarder::ScheduleTransmissionTask()
     {
         Child &child = children[i];
 
-        if (child.mState != Child::kStateValid || !child.mDataRequest)
+        if (!child.IsStateValidOrRestoring() || !child.mDataRequest)
         {
             continue;
         }
@@ -311,7 +311,7 @@ ThreadError MeshForwarder::AddPendingSrcMatchEntries(void)
     // Add pending short address first
     for (uint8_t i = 0; i < numChildren; i++)
     {
-        if (children[i].mState == Child::kStateValid &&
+        if (children[i].IsStateValidOrRestoring() &&
             children[i].mAddSrcMatchEntryPending &&
             children[i].mAddSrcMatchEntryShort)
         {
@@ -322,7 +322,7 @@ ThreadError MeshForwarder::AddPendingSrcMatchEntries(void)
     // Add pending extended address
     for (uint8_t i = 0; i < numChildren; i++)
     {
-        if (children[i].mState == Child::kStateValid &&
+        if (children[i].IsStateValidOrRestoring() &&
             children[i].mAddSrcMatchEntryPending &&
             !children[i].mAddSrcMatchEntryShort)
         {
@@ -447,7 +447,7 @@ ThreadError MeshForwarder::SendMessage(Message &aMessage)
 
                 for (uint8_t i = 0; i < numChildren; i++)
                 {
-                    if (children[i].mState == Neighbor::kStateValid && (children[i].mMode & Mle::ModeTlv::kModeRxOnWhenIdle) == 0)
+                    if (children[i].IsStateValidOrRestoring() && (children[i].mMode & Mle::ModeTlv::kModeRxOnWhenIdle) == 0)
                     {
                         children[i].mQueuedIndirectMessageCnt++;
                         AddSrcMatchEntry(children[i]);
@@ -922,7 +922,7 @@ void MeshForwarder::HandlePollTimer()
     case kThreadError_NoBufs:
         // Failed to send DataRequest due to a lack of buffers.
         // Try again following a brief pause to free buffers.
-        mPollTimer.Start(kDataRequstRetryDelay);
+        mPollTimer.Start(kDataRequestRetryDelay);
         break;
 
     case kThreadError_Already:
@@ -1096,18 +1096,19 @@ ThreadError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
             error = SendFragment(*mSendMessage, aFrame);
         }
 
-        assert(error == kThreadError_None);
         assert(aFrame.GetLength() != 7);
         break;
 
     case Message::kType6lowpan:
-        SendMesh(*mSendMessage, aFrame);
+        error = SendMesh(*mSendMessage, aFrame);
         break;
 
     case Message::kTypeMacDataPoll:
-        SendPoll(*mSendMessage, aFrame);
+        error = SendPoll(*mSendMessage, aFrame);
         break;
     }
+
+    assert(error == kThreadError_None);
 
     // set FramePending if there are more queued messages for the child
     aFrame.GetDstAddr(macDest);
@@ -1125,13 +1126,9 @@ exit:
 
 ThreadError MeshForwarder::SendPoll(Message &aMessage, Mac::Frame &aFrame)
 {
-    ThreadError error = kThreadError_None;
     Mac::Address macSource;
     uint16_t fcf;
     Neighbor *neighbor;
-
-    // only send MAC Data Requests in rx-off-when-idle mode
-    VerifyOrExit(!mNetif.GetMac().GetRxOnWhenIdle(), error = kThreadError_InvalidState);
 
     macSource.mShortAddress = mNetif.GetMac().GetShortAddress();
 
@@ -1180,8 +1177,7 @@ ThreadError MeshForwarder::SendPoll(Message &aMessage, Mac::Frame &aFrame)
 
     mMessageNextOffset = aMessage.GetLength();
 
-exit:
-    return error;
+    return kThreadError_None;
 }
 
 ThreadError MeshForwarder::SendMesh(Message &aMessage, Mac::Frame &aFrame)
@@ -1739,8 +1735,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
 
     if (mPollTimer.IsRunning() && aFrame.GetFramePending())
     {
-        // add delay to avoid packet loss due to possible switch senarios between transmit/receive status
-        mPollTimer.Start(OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD);
+        HandlePollTimer();
     }
 
     switch (aFrame.GetType())

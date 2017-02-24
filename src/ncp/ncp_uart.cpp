@@ -95,6 +95,8 @@ NcpUart::NcpUart(otInstance *aInstance):
     mUartSendTask(aInstance->mIp6.mTaskletScheduler, EncodeAndSendToUart, this)
 {
     mTxFrameBuffer.SetCallbacks(NULL, TxFrameBufferHasData, this);
+
+    otPlatUartEnable();
 }
 
 ThreadError NcpUart::OutboundFrameBegin(void)

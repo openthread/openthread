@@ -39,6 +39,7 @@
 #include <common/code_utils.hpp>
 #include <common/logging.hpp>
 #include <meshcop/leader.hpp>
+#include <meshcop/tlvs.hpp>
 #include <platform/random.h>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
@@ -51,6 +52,7 @@ Leader::Leader(ThreadNetif &aThreadNetif):
     mPetition(OPENTHREAD_URI_LEADER_PETITION, Leader::HandlePetition, this),
     mKeepAlive(OPENTHREAD_URI_LEADER_KEEP_ALIVE, Leader::HandleKeepAlive, this),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this),
+    mDelayTimerMinimal(DelayTimerTlv::kDelayTimerMinimal),
     mSessionId(0xffff),
     mNetif(aThreadNetif)
 {
@@ -252,6 +254,22 @@ exit:
     }
 
     return error;
+}
+
+ThreadError Leader::SetDelayTimerMinimal(uint32_t aDelayTimerMinimal)
+{
+    ThreadError error = kThreadError_None;
+    VerifyOrExit((aDelayTimerMinimal != 0 && aDelayTimerMinimal < DelayTimerTlv::kDelayTimerDefault),
+                 error = kThreadError_InvalidArgs);
+    mDelayTimerMinimal = aDelayTimerMinimal;
+
+exit:
+    return error;
+}
+
+uint32_t Leader::GetDelayTimerMinimal(void) const
+{
+    return mDelayTimerMinimal;
 }
 
 void Leader::HandleTimer(void *aContext)

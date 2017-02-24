@@ -64,7 +64,7 @@
 
 #define RFCORE_FFSM_SRCADDRESS_TABLE            0x40088400  // Source Address Table
 
-#define RFCORE_FFSM_SRCEXTPENDEN0               0x4008858C  // Enable/Disable automatic pending per extended address
+#define RFCORE_FFSM_SRCEXTPENDEN0               0x40088590  // Enable/Disable automatic pending per extended address
 #define RFCORE_FFSM_SRCSHORTPENDEN0             0x4008859C  // Enable/Disable automatic pending per short address
 #define RFCORE_FFSM_EXT_ADDR0                   0x400885A8  // Local address information
 #define RFCORE_FFSM_PAN_ID0                     0x400885C8  // Local address information

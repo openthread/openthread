@@ -49,6 +49,7 @@
 #include <common/logging.hpp>
 #include <common/message.hpp>
 #include <common/new.hpp>
+#include <common/settings.hpp>
 #include <common/tasklet.hpp>
 #include <common/timer.hpp>
 #include <crypto/mbedtls.hpp>
@@ -118,6 +119,16 @@ uint8_t otGetChannel(otInstance *aInstance)
 ThreadError otSetChannel(otInstance *aInstance, uint8_t aChannel)
 {
     return aInstance->mThreadNetif.GetMac().SetChannel(aChannel);
+}
+
+ThreadError otSetDelayTimerMinimal(otInstance *aInstance, uint32_t aDelayTimerMinimal)
+{
+    return aInstance->mThreadNetif.GetLeader().SetDelayTimerMinimal(aDelayTimerMinimal);
+}
+
+uint32_t otGetDelayTimerMinimal(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetLeader().GetDelayTimerMinimal();
 }
 
 uint8_t otGetMaxAllowedChildren(otInstance *aInstance)
@@ -895,7 +906,32 @@ ThreadError otGetParentInfo(otInstance *aInstance, otRouterInfo *aParentInfo)
 
     parent = aInstance->mThreadNetif.GetMle().GetParent();
     memcpy(aParentInfo->mExtAddress.m8, parent->mMacAddr.m8, OT_EXT_ADDRESS_SIZE);
-    aParentInfo->mRloc16 = parent->mValid.mRloc16;
+
+    aParentInfo->mRloc16          = parent->mValid.mRloc16;
+    aParentInfo->mRouterId        = Mle::Mle::GetRouterId(parent->mValid.mRloc16);
+    aParentInfo->mNextHop         = parent->mNextHop;
+    aParentInfo->mPathCost        = parent->mCost;
+    aParentInfo->mLinkQualityIn   = parent->mLinkInfo.GetLinkQuality(aInstance->mThreadNetif.GetMac().GetNoiseFloor());
+    aParentInfo->mLinkQualityOut  = parent->mLinkQualityOut;
+    aParentInfo->mAge             = static_cast<uint8_t>(Timer::MsecToSec(Timer::GetNow() - parent->mLastHeard));
+    aParentInfo->mAllocated       = parent->mAllocated;
+    aParentInfo->mLinkEstablished = parent->mState == Neighbor::kStateValid;
+
+exit:
+    return error;
+}
+
+ThreadError otGetParentAverageRssi(otInstance *aInstance, int8_t *aParentRssi)
+{
+    ThreadError error = kThreadError_None;
+    Router *parent;
+
+    VerifyOrExit(aParentRssi != NULL, error = kThreadError_InvalidArgs);
+
+    parent = aInstance->mThreadNetif.GetMle().GetParent();
+    *aParentRssi = parent->mLinkInfo.GetAverageRss();
+
+    VerifyOrExit(*aParentRssi != LinkQualityInfo::kUnknownRss, error = kThreadError_Failed);
 
 exit:
     return error;
@@ -1145,16 +1181,39 @@ void otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback a
 
 const char *otGetVersionString(void)
 {
-    static const char sVersion[] =
+    /**
+     * PLATFORM_VERSION_ATTR_PREFIX and PLATFORM_VERSION_ATTR_SUFFIX are
+     * intended to be used to specify compiler directives to indicate
+     * what linker section the platform version string should be stored.
+     *
+     * This is useful for specifying an exact locaiton of where the version
+     * string will be located so that it can be easily retrieved from the
+     * raw firmware image.
+     *
+     * If PLATFORM_VERSION_ATTR_PREFIX is unspecified, the keyword `static`
+     * is used instead.
+     *
+     * If both are unspecified, the location of the string in the firmware
+     * image will be undefined and may change.
+     */
+
+#ifdef PLATFORM_VERSION_ATTR_PREFIX
+    PLATFORM_VERSION_ATTR_PREFIX
+#else
+    static
+#endif
+    const char sVersion[] =
         PACKAGE_NAME "/" PACKAGE_VERSION
 #ifdef  PLATFORM_INFO
         "; " PLATFORM_INFO
 #endif
 #if defined(__DATE__)
-        "; " __DATE__ " " __TIME__;
-#else
-        ;
+        "; " __DATE__ " " __TIME__
 #endif
+#ifdef PLATFORM_VERSION_ATTR_SUFFIX
+        PLATFORM_VERSION_ATTR_SUFFIX
+#endif
+        ; // Trailing semicolon to end statement.
 
     return sVersion;
 }
@@ -1172,6 +1231,31 @@ void otSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod)
 ThreadError otSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId)
 {
     return aInstance->mThreadNetif.GetMle().SetPreferredRouterId(aRouterId);
+}
+
+void otInstancePostConstructor(otInstance *aInstance)
+{
+    // restore datasets and network information
+    otPlatSettingsInit(aInstance);
+    aInstance->mThreadNetif.GetMle().Restore();
+
+#if OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
+
+    // If auto start is configured, do that now
+    if (otThreadGetAutoStart(aInstance))
+    {
+        if (otInterfaceUp(aInstance) == kThreadError_None)
+        {
+            // Only try to start Thread if we could bring up the interface
+            if (otThreadStart(aInstance) != kThreadError_None)
+            {
+                // Bring the interface down if Thread failed to start
+                otInterfaceDown(aInstance);
+            }
+        }
+    }
+
+#endif
 }
 
 #ifdef OPENTHREAD_MULTIPLE_INSTANCE
@@ -1193,9 +1277,8 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
     // Construct the context
     aInstance = new(aInstanceBuffer)otInstance();
 
-    // restore datasets and network information
-    otPlatSettingsInit(aInstance);
-    aInstance->mThreadNetif.GetMle().Restore();
+    // Execute post constructor operations
+    otInstancePostConstructor(aInstance);
 
 exit:
 
@@ -1216,9 +1299,8 @@ otInstance *otInstanceInit()
     // Construct the context
     sInstance = new(&sInstanceRaw)otInstance();
 
-    // restore datasets and network information
-    otPlatSettingsInit(sInstance);
-    sInstance->mThreadNetif.GetMle().Restore();
+    // Execute post constructor operations
+    otInstancePostConstructor(sInstance);
 
 exit:
 
@@ -1335,6 +1417,36 @@ ThreadError otThreadStop(otInstance *aInstance)
 
     otLogFuncExitErr(error);
     return error;
+}
+
+ThreadError otThreadSetAutoStart(otInstance *aInstance, bool aStartAutomatically)
+{
+#if OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
+    uint8_t autoStart = aStartAutomatically ? 1 : 0;
+    return otPlatSettingsSet(aInstance, kKeyThreadAutoStart, &autoStart, sizeof(autoStart));
+#else
+    (void)aInstance;
+    (void)aStartAutomatically;
+    return kThreadError_NotImplemented;
+#endif
+}
+
+bool otThreadGetAutoStart(otInstance *aInstance)
+{
+#if OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
+    uint8_t autoStart = 0;
+    uint16_t autoStartLength = sizeof(autoStart);
+
+    if (otPlatSettingsGet(aInstance, kKeyThreadAutoStart, 0, &autoStart, &autoStartLength) != kThreadError_None)
+    {
+        autoStart = 0;
+    }
+
+    return autoStart != 0;
+#else
+    (void)aInstance;
+    return false;
+#endif
 }
 
 bool otIsSingleton(otInstance *aInstance)
@@ -1640,14 +1752,27 @@ ThreadError otSendUdp(otUdpSocket *aSocket, otMessage aMessage, const otMessageI
                           *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-bool otIsIcmpEchoEnabled(otInstance *aInstance)
+bool otIcmp6IsEchoEnabled(otInstance *aInstance)
 {
     return aInstance->mIp6.mIcmp.IsEchoEnabled();
 }
 
-void otSetIcmpEchoEnabled(otInstance *aInstance, bool aEnabled)
+void otIcmp6SetEchoEnabled(otInstance *aInstance, bool aEnabled)
 {
     aInstance->mIp6.mIcmp.SetEchoEnabled(aEnabled);
+}
+
+ThreadError otIcmp6RegisterHandler(otInstance *aInstance, otIcmp6Handler *aHandler)
+{
+    return aInstance->mIp6.mIcmp.RegisterHandler(*static_cast<Ip6::IcmpHandler *>(aHandler));
+}
+
+ThreadError otIcmp6SendEchoRequest(otInstance *aInstance, otMessage aMessage,
+                                   const otMessageInfo *aMessageInfo, uint16_t aIdentifier)
+{
+    return aInstance->mIp6.mIcmp.SendEchoRequest(*static_cast<Message *>(aMessage),
+                                                 *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
+                                                 aIdentifier);
 }
 
 uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond)
@@ -1815,6 +1940,12 @@ uint16_t otCommissionerGetSessionId(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetCommissioner().GetSessionId();
 }
+
+ThreadError otCommissionerGeneratePSKc(otInstance *aInstance, const char *aPassPhrase, const char *aNetworkName,
+                                       const uint8_t *aExtPanId, uint8_t *aPSKc)
+{
+    return aInstance->mThreadNetif.GetCommissioner().GeneratePSKc(aPassPhrase, aNetworkName, aExtPanId, aPSKc);
+}
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
 #if OPENTHREAD_ENABLE_JOINER
@@ -1896,12 +2027,12 @@ const uint8_t *otCoapHeaderGetToken(const otCoapHeader *aHeader)
     return static_cast<const Coap::Header *>(aHeader)->GetToken();
 }
 
-const otCoapOption *otCoapGetCurrentOption(const otCoapHeader *aHeader)
+const otCoapOption *otCoapHeaderGetCurrentOption(const otCoapHeader *aHeader)
 {
     return static_cast<const otCoapOption *>(static_cast<const Coap::Header *>(aHeader)->GetCurrentOption());
 }
 
-const otCoapOption *otCoapGetNextOption(otCoapHeader *aHeader)
+const otCoapOption *otCoapHeaderGetNextOption(otCoapHeader *aHeader)
 {
     return static_cast<const otCoapOption *>(static_cast<Coap::Header *>(aHeader)->GetNextOption());
 }

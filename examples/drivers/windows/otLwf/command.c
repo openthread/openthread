@@ -79,9 +79,16 @@ otLwfCmdInitialize(
     {
         pFilter->cmdTIDsInUse = 0;
         pFilter->cmdNextTID = 1;
+        pFilter->cmdResetReason = kPlatResetReason_PowerOn;
 
         NdisAllocateSpinLock(&pFilter->cmdLock);
         InitializeListHead(&pFilter->cmdHandlers);
+
+        KeInitializeEvent(
+            &pFilter->cmdResetCompleteEvent,
+            SynchronizationEvent, // auto-clearing event
+            FALSE                 // event initially non-signalled
+            );
 
         // Enable rundown protection
         ExReInitializeRundownProtection(&pFilter->cmdRundown);
@@ -96,7 +103,7 @@ otLwfCmdInitialize(
         }
 
         // Query the interface type to make sure it is a Thread device
-#if DBG
+#ifdef COMMAND_INIT_RETRY
         pFilter->cmdInitTryCount = 0;
         while (pFilter->cmdInitTryCount < 10)
         {
@@ -124,6 +131,13 @@ otLwfCmdInitialize(
         {
             Status = NDIS_STATUS_NOT_SUPPORTED;
             LogError(DRIVER_DEFAULT, "SPINEL_PROP_INTERFACE_TYPE is invalid, %d", InterfaceType);
+            break;
+        }
+
+        NtStatus = otLwfCmdResetDevice(pFilter, FALSE);
+        if (!NT_SUCCESS(NtStatus))
+        {
+            Status = NDIS_STATUS_FAILURE;
             break;
         }
 
@@ -214,7 +228,23 @@ otLwfCmdProcess(
     // Get the transaction ID
     if (SPINEL_HEADER_GET_TID(Header) == 0)
     {
-        if (ExAcquireRundownProtection(&pFilter->ExternalRefs))
+        // Handle out of band last status locally
+        if (command == SPINEL_CMD_PROP_VALUE_IS && key == SPINEL_PROP_LAST_STATUS)
+        {
+            // Check if this is a reset
+            spinel_status_t status = SPINEL_STATUS_OK;
+            spinel_datatype_unpack(value_data_ptr, value_data_len, "i", &status);
+
+            if ((status >= SPINEL_STATUS_RESET__BEGIN) && (status <= SPINEL_STATUS_RESET__END))
+            {
+                LogInfo(DRIVER_DEFAULT, "Interface %!GUID! was reset (status %d).", &pFilter->InterfaceGuid, status);
+                pFilter->cmdResetReason = status - SPINEL_STATUS_RESET__BEGIN;
+                KeSetEvent(&pFilter->cmdResetCompleteEvent, IO_NO_INCREMENT, FALSE);
+
+                // TODO - Should this be passed on to Thread or Tunnel logic?
+            }
+        }
+        else if (ExAcquireRundownProtection(&pFilter->ExternalRefs))
         {
             // If this is a 'Value Is' command, process it for notification of state changes.
             if (command == SPINEL_CMD_PROP_VALUE_IS)
@@ -514,6 +544,41 @@ exit:
             NdisAdvanceNetBufferDataStart(NetBuffer, NetBuffer->DataLength, TRUE, NULL);
         }
         NdisFreeNetBufferList(NetBufferList);
+    }
+
+    LogFuncExitNT(DRIVER_DEFAULT, status);
+
+    return status;
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+otLwfCmdResetDevice(
+    _In_ PMS_FILTER pFilter,
+    _In_ BOOLEAN fAsync
+    )
+{
+    LogFuncEntry(DRIVER_DEFAULT);
+
+    KeResetEvent(&pFilter->cmdResetCompleteEvent);
+
+    NTSTATUS status = otLwfCmdEncodeAndSendAsync(pFilter, SPINEL_CMD_RESET, 0, 0, 0, NULL, NULL);
+    if (!NT_SUCCESS(status))
+    {
+        LogError(DRIVER_DEFAULT, "Failed to send SPINEL_CMD_RESET, %!STATUS!", status);
+    }
+    else if (!fAsync)
+    {
+        // Create the relative (negative) time to wait for 5 seconds
+        LARGE_INTEGER Timeout;
+        Timeout.QuadPart = -5000 * 10000;
+
+        status = KeWaitForSingleObject(&pFilter->cmdResetCompleteEvent, Executive, KernelMode, FALSE, &Timeout);
+        if (status != STATUS_SUCCESS)
+        {
+            LogError(DRIVER_DEFAULT, "Failed waiting for reset complete, %!STATUS!", status);
+            status = STATUS_DEVICE_BUSY;
+        }
     }
 
     LogFuncExitNT(DRIVER_DEFAULT, status);

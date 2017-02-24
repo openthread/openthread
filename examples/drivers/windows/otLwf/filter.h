@@ -160,9 +160,11 @@ typedef struct _MS_FILTER
     USHORT                          cmdTIDsInUse;
     spinel_tid_t                    cmdNextTID;
     NDIS_HANDLE                     cmdNblPool;
-#if DBG
+#ifdef COMMAND_INIT_RETRY
     ULONG                           cmdInitTryCount;
 #endif
+    otPlatResetReason               cmdResetReason;
+    KEVENT                          cmdResetCompleteEvent;
 
     //
     // Device Capabilities / State
@@ -205,6 +207,11 @@ typedef struct _MS_FILTER
         LIST_ENTRY                  EventIrpListHead;
         KEVENT                      EventWorkerThreadProcessIrp;
         KEVENT                      EventWorkerThreadEnergyScanComplete;
+
+        //
+        // OpenThread Settings Management
+        //
+        HANDLE                      otSettingsRegKey;
 
         //
         // OpenThread state management
@@ -264,6 +271,7 @@ typedef struct _MS_FILTER
         // OpenThread context buffer
         //
         otInstance*                 otCtx;
+        size_t                      otInstanceSize;
         PUCHAR                      otInstanceBuffer;
     };
     struct // Tunnel Mode Variables

@@ -589,4 +589,14 @@
 #define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN           0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
+ *
+ * Define to 1 if you want to enable auto start logic.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
+#define OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT             1
+#endif
+
 #endif  // OPENTHREAD_CORE_DEFAULT_CONFIG_H_

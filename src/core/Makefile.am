@@ -29,12 +29,12 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 lib_LIBRARIES                       = \
-    libopenthread-ftd.a               \
-    libopenthread-mtd.a               \
     $(NULL)
 
 CPPFLAGS_COMMON                     = \
     -I$(top_srcdir)/include           \
+    -I${abs_top_srcdir}/third_party/mbedtls/repo/include \
+    $(MBEDTLS_CPPFLAGS)               \
     $(OPENTHREAD_TARGET_DEFINES)      \
     $(NULL)
 
@@ -95,6 +95,7 @@ endif  # OPENTHREAD_ENABLE_MAC_WHITELIST
 if OPENTHREAD_ENABLE_COMMISSIONER
 SOURCES_COMMON                     += \
     coap/secure_coap_server.cpp       \
+    crypto/pbkdf2_cmac.cpp            \
     meshcop/announce_begin_client.cpp \
     meshcop/commissioner.cpp          \
     meshcop/energy_scan_client.cpp    \
@@ -139,6 +140,11 @@ SOURCES_COMMON                     += \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_RAW_LINK_API
 
+if OPENTHREAD_ENABLE_FTD
+lib_LIBRARIES                      += \
+    libopenthread-ftd.a               \
+    $(NULL)
+
 libopenthread_ftd_a_CPPFLAGS        = \
     $(CPPFLAGS_COMMON)                \
     $(NULL)
@@ -152,6 +158,11 @@ libopenthread_ftd_a_SOURCES         = \
     thread/mle_router.cpp             \
     thread/network_data_leader_ftd.cpp \
     thread/network_data_local.cpp     \
+    $(NULL)
+endif # OPENTHREAD_ENABLE_FTD
+
+lib_LIBRARIES                      += \
+    libopenthread-mtd.a               \
     $(NULL)
 
 libopenthread_mtd_a_CPPFLAGS        = \
@@ -190,6 +201,7 @@ noinst_HEADERS                      = \
     crypto/aes_ecb.hpp                \
     crypto/hmac_sha256.hpp            \
     crypto/mbedtls.hpp                \
+    crypto/pbkdf2_cmac.h              \
     crypto/sha256.hpp                 \
     mac/mac.hpp                       \
     mac/mac_blacklist.hpp             \

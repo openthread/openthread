@@ -64,6 +64,7 @@ include_HEADERS                         = \
     openthread-coap.h                     \
     openthread-crypto.h                   \
     openthread-diag.h                     \
+    openthread-icmp6.h                    \
     openthread-ip6.h                      \
     openthread-jam-detection.h            \
     openthread-message.h                  \

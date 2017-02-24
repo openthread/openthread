@@ -712,7 +712,6 @@ otLwfEventWorkerThread(
     )
 {
     PMS_FILTER pFilter = (PMS_FILTER)Context;
-    size_t otInstanceSize = 0;
     NT_ASSERT(pFilter);
 
     LogFuncEntry(DRIVER_DEFAULT);
@@ -753,32 +752,33 @@ otLwfEventWorkerThread(
     otLwfRadioInit(pFilter);
 
     // Calculate the size of the otInstance and allocate it
-    (VOID)otInstanceInit(NULL, &otInstanceSize);
-    NT_ASSERT(otInstanceSize != 0);
+    pFilter->otInstanceSize = 0;
+    (VOID)otInstanceInit(NULL, &pFilter->otInstanceSize);
+    NT_ASSERT(pFilter->otInstanceSize != 0);
 
     // Add space for a pointer back to the filter
-    otInstanceSize += sizeof(PMS_FILTER);
+    pFilter->otInstanceSize += sizeof(PMS_FILTER);
 
     // Allocate the buffer
-    pFilter->otInstanceBuffer = (PUCHAR)FILTER_ALLOC_MEM(pFilter->FilterHandle, (ULONG)otInstanceSize);
+    pFilter->otInstanceBuffer = (PUCHAR)FILTER_ALLOC_MEM(pFilter->FilterHandle, (ULONG)pFilter->otInstanceSize);
     if (pFilter == NULL)
     {
-        LogWarning(DRIVER_DEFAULT, "Failed to allocate otInstance buffer, 0x%x bytes", (ULONG)otInstanceSize);
+        LogWarning(DRIVER_DEFAULT, "Failed to allocate otInstance buffer, 0x%x bytes", (ULONG)pFilter->otInstanceSize);
         goto exit;
     }
-    RtlZeroMemory(pFilter->otInstanceBuffer, otInstanceSize);
+    RtlZeroMemory(pFilter->otInstanceBuffer, pFilter->otInstanceSize);
 
     // Store the pointer and decrement the size
     memcpy(pFilter->otInstanceBuffer, &pFilter, sizeof(PMS_FILTER));
-    otInstanceSize -= sizeof(PMS_FILTER);
+    pFilter->otInstanceSize -= sizeof(PMS_FILTER);
 
     // Initialize the OpenThread library
     pFilter->otCachedRole = kDeviceRoleDisabled;
-    pFilter->otCtx = otInstanceInit(pFilter->otInstanceBuffer + sizeof(PMS_FILTER), &otInstanceSize);
+    pFilter->otCtx = otInstanceInit(pFilter->otInstanceBuffer + sizeof(PMS_FILTER), &pFilter->otInstanceSize);
     NT_ASSERT(pFilter->otCtx);
     if (pFilter->otCtx == NULL)
     {
-        LogError(DRIVER_DEFAULT, "otInstanceInit failed, otInstanceSize = %u bytes", (ULONG)otInstanceSize);
+        LogError(DRIVER_DEFAULT, "otInstanceInit failed, otInstanceSize = %u bytes", (ULONG)pFilter->otInstanceSize);
         goto exit;
     }
 
@@ -786,7 +786,7 @@ otLwfEventWorkerThread(
     NT_ASSERT(otCtxToFilter(pFilter->otCtx) == pFilter);
 
     // Disable Icmp (ping) handling
-    otSetIcmpEchoEnabled(pFilter->otCtx, FALSE);
+    otIcmp6SetEchoEnabled(pFilter->otCtx, FALSE);
 
     // Register callbacks with OpenThread
     otSetStateChangedCallback(pFilter->otCtx, otLwfStateChangedCallback, pFilter);

@@ -27,26 +27,47 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-
 import logging
+import os
+import re
 import telnetlib
 import time
-import re
 
 logger = logging.getLogger(__name__)
 
-class ApcPduController(object):
-    def __init__(self, ip, port=23):
-        """Create APC PDU controller
 
-        Args:
-            ip (str), ip address or hostname
-            port (int), port number
-        """
-        self.port = port
-        self.ip = ip
+class PduController(object):
+
+    def open(self, **params):
+        """Open PDU controller connection"""
+        raise NotImplementedError
+
+    def reboot(self, **params):
+        """Reboot an outlet or a board passed as params"""
+        raise NotImplementedError
+
+    def close(self):
+        """Close PDU controller connection"""
+        raise NotImplementedError
+
+
+class DummyPduController(PduController):
+    """Dummy implementation which only says that PDU controller is not connected"""
+
+    def open(self, **params):
+        pass
+
+    def reboot(self, **params):
+        logger.info('No PDU controller connected.')
+
+    def close(self):
+        pass
+
+
+class ApcPduController(PduController):
+
+    def __init__(self):
         self.tn = None
-        self._init()
 
     def __del__(self):
         self.close()
@@ -60,6 +81,21 @@ class ApcPduController(object):
         self.tn.read_until('Password')
         self.tn.write('apc\r\n')
         self.until_done()
+
+    def open(self, **params):
+        """Open telnet connection
+
+        Args:
+            params (dict), must contain two parameters "ip" - ip address or hostname and "port" - port number
+
+        Example:
+            params = {'port': 23, 'ip': 'localhost'}
+        """
+        logger.info('opening telnet')
+        self.port = params['port']
+        self.ip = params['ip']
+        self.tn = None
+        self._init()
 
     def close(self):
         """Close telnet connection"""
@@ -79,9 +115,17 @@ class ApcPduController(object):
         r = re.compile(regex, re.M)
         self.tn.expect([r])
 
-    def reboot(self, outlet=1):
+    def reboot(self, **params):
         """Reboot outlet
+
+        Args:
+            params (dict), must contain parameter "outlet" - outlet number
+
+        Example:
+            params = {'outlet': 1}
         """
+        outlet = params['outlet']
+
         # main menu
         self.tn.write('\x1b\r\n')
         self.until_done()
@@ -117,6 +161,32 @@ class ApcPduController(object):
         self.tn.write('\r\n')
         self.until_done()
 
-if __name__ == '__main__':
-    apc = ApcPduController('192.168.1.88')
-    apc.reboot()
+
+class NordicBoardPduController(PduController):
+
+    def open(self, **params):
+        pass
+
+    def _pin_reset(self, serial_number):
+        os.system('nrfjprog -f NRF52 --snr {} -p'.format(serial_number))
+
+    def reboot(self, **params):
+        boards_serial_numbers = params['boards_serial_numbers']
+
+        for serial_number in boards_serial_numbers:
+            logger.info('Resetting board with the serial number: %s', serial_number)
+            self._pin_reset(serial_number)
+
+    def close(self):
+        pass
+
+class ManualPduController(PduController):
+
+    def open(self, **kwargs):
+        pass
+
+    def reboot(self, **kwargs):
+        raw_input('Reset all devices and press enter to continue..')
+
+    def close(self):
+        pass
