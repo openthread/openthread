@@ -34,6 +34,7 @@
 #ifndef ICMP6_HPP_
 #define ICMP6_HPP_
 
+#include <openthread-types.h>
 #include <common/encoding.hpp>
 #include <net/ip6_headers.hpp>
 
@@ -52,35 +53,12 @@ namespace Ip6 {
  *
  */
 
-enum
-{
-    kIcmp6DataSize = 4,
-};
-
-/**
- * This structure represents an ICMPv6 header.
- *
- */
-OT_TOOL_PACKED_BEGIN
-struct IcmpHeaderPoD
-{
-    uint8_t      mType;      ///< Type
-    uint8_t      mCode;      ///< Code
-    uint16_t     mChecksum;  ///< Checksum
-    union
-    {
-        uint8_t  m8[kIcmp6DataSize / sizeof(uint8_t)];
-        uint16_t m16[kIcmp6DataSize / sizeof(uint16_t)];
-        uint32_t m32[kIcmp6DataSize / sizeof(uint32_t)];
-    } mData;                 ///< Message-specific data
-} OT_TOOL_PACKED_END;
-
-/**
+/*
  * This class implements ICMPv6 header generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
-class IcmpHeader: private IcmpHeaderPoD
+class IcmpHeader: public otIcmp6Header
 {
 public:
     /**
@@ -93,12 +71,13 @@ public:
      * ICMPv6 Message Types
      *
      */
-    enum Type
-    {
-        kTypeDstUnreach  = 1,     ///< Destination Unreachable
-        kTypeEchoRequest = 128,   ///< Echo Request
-        kTypeEchoReply   = 129,   ///< Echo Reply
-    };
+    typedef otIcmp6Type Type;
+
+    /**
+     * ICMPv6 Message Codes
+     *
+     */
+    typedef otIcmp6Code Code;
 
     /**
      * This method returns the ICMPv6 message type.
@@ -115,15 +94,6 @@ public:
      *
      */
     void SetType(Type aType) { mType = static_cast<uint8_t>(aType); }
-
-    /**
-     * ICMPv6 Message Codes
-     *
-     */
-    enum Code
-    {
-        kCodeDstUnreachNoRoute = 0,  ///< Destination Unreachable No Route
-    };
 
     /**
      * This method returns the ICMPv6 message code.
@@ -194,7 +164,7 @@ public:
      * @returns The byte offset of the Checksum field.
      *
      */
-    static uint8_t GetChecksumOffset(void) { return offsetof(IcmpHeaderPoD, mChecksum); }
+    static uint8_t GetChecksumOffset(void) { return offsetof(otIcmp6Header, mChecksum); }
 
     /**
      * This static method returns the byte offset of the ICMPv6 payload.
@@ -202,7 +172,7 @@ public:
      * @returns The Byte offset of the ICMPv6 payload.
      *
      */
-    static uint8_t GetDataOffset(void) { return offsetof(IcmpHeaderPoD, mData); }
+    static uint8_t GetDataOffset(void) { return offsetof(otIcmp6Header, mData); }
 
 } OT_TOOL_PACKED_END;
 
@@ -210,45 +180,30 @@ public:
  * This class implements ICMPv6 message handlers.
  *
  */
-class IcmpHandler
+class IcmpHandler : public otIcmp6Handler
 {
     friend class Icmp;
 
 public:
     /**
-     * This function pointer is called when receiving an ICMPv6 Destination Unreachable message.
-     *
-     * @param[in]  aContext      A pointer to arbitrary context information.
-     * @param[in]  aMessage      A reference to the received message.
-     * @param[in]  aMessageInfo  A reference to message information associated with @p aMessage.
-     * @param[in]  aIcmpHeader   A reference to the received ICMPv6 header.
-     *
-     */
-    typedef void (*DstUnreachHandler)(void *aContext, Message &aMesage, const MessageInfo &aMessageInfo,
-                                      const IcmpHeader &aIcmpHeader);
-
-    /**
      * This constructor creates an ICMPv6 message handler.
      *
-     * @param[in]  aDstUnreachHandler  A pointer to the function that is called when receiving a Destination
-     *                                 Unreachable message.
-     * @param[in]  aContext            A pointer to arbitrary context information.
+     * @param[in]  aCallback  A pointer to the function that is called when receiving an ICMPv6 message.
+     * @param[in]  aContext   A pointer to arbitrary context information.
      *
      */
-    IcmpHandler(DstUnreachHandler aDstUnreachHandler, void *aContext) {
-        mDstUnreachHandler = aDstUnreachHandler;
-        mContext = aContext;
-        mNext = NULL;
+    IcmpHandler(otIcmp6ReceiveCallback aCallback, void *aContext) {
+        mReceiveCallback = aCallback;
+        mContext         = aContext;
+        mNext            = NULL;
     }
 
 private:
-    void HandleDstUnreach(Message &message, const MessageInfo &messageInfo, const IcmpHeader &icmp6Header) {
-        mDstUnreachHandler(mContext, message, messageInfo, icmp6Header);
+    void HandleReceiveMessage(Message &message, const MessageInfo &messageInfo, const IcmpHeader &icmp6Header) {
+        mReceiveCallback(mContext, &message, &messageInfo, &icmp6Header);
     }
 
-    DstUnreachHandler    mDstUnreachHandler;
-    void                *mContext;
-    IcmpHandler         *mNext;
+    IcmpHandler *GetNext(void) { return static_cast<IcmpHandler *>(mNext); }
 };
 
 /**
@@ -277,46 +232,29 @@ public:
     Message *NewMessage(uint16_t aReserved);
 
     /**
-     * This method registers ICMPv6 handlers.
+     * This method registers ICMPv6 handler.
      *
      * @param[in]  aHandler  A reference to the ICMPv6 handler.
      *
-     * @retval kThreadError_None  Successfully registered the ICMPv6 handler.
+     * @retval kThreadError_None     Successfully registered the ICMPv6 handler.
      * @retval kThreadError_Already  The ICMPv6 handler is already registered.
      *
      */
-    ThreadError RegisterCallbacks(IcmpHandler &aHandler);
-
-    /**
-     * This function pointer is called when receiving an ICMPv6 Echo Reply in response to an Echo Request.
-     *
-     * @param[in]  aContext      A pointer to arbitrary context information.
-     * @param[in]  aMessage      A reference to the received message.
-     * @param[in]  aMessageInfo  A reference to message information associated with @p aMessage.
-     *
-     */
-    typedef void (*EchoReplyHandler)(void *aContext, Message &aMessage, const MessageInfo &aMessageInfo);
-
-    /**
-     * This method sets the Echo Reply handler.
-     *
-     * @param[in]  aHandler  A pointer to a function that is called when receiving an ICMPv6 Echo Reply.
-     * @param[in]  aContext  A pointer to arbitrary context information.
-     *
-     */
-    void SetEchoReplyHandler(EchoReplyHandler aHandler, void *aContext);
+    ThreadError RegisterHandler(IcmpHandler &aHandler);
 
     /**
      * This method sends an ICMPv6 Echo Request message.
      *
      * @param[in]  aMessage      A reference to the Echo Request payload.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
+     * @param[in]  aIdentifier   An identifier to aid in matching Echo Replies to this Echo Request.
+     *                           May be zero.
      *
      * @retval kThreadError_None    Successfully enqueued the ICMPv6 Echo Request message.
      * @retval kThreadError_NoBufs  Insufficient buffers available to generate an ICMPv6 Echo Request message.
      *
      */
-    ThreadError SendEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo);
+    ThreadError SendEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo, uint16_t aIdentifier);
 
     /**
      * This method sends an ICMPv6 error message.
@@ -376,15 +314,11 @@ public:
     void SetEchoEnabled(bool aEnabled);
 
 private:
-    ThreadError HandleDstUnreach(Message &aMessage, const MessageInfo &aMessageInfo, const IcmpHeader &aIcmpHeader);
     ThreadError HandleEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo);
-    ThreadError HandleEchoReply(Message &aMessage, const MessageInfo &aMessageInfo);
 
     IcmpHandler *mHandlers;
 
     uint16_t mEchoSequence;
-    EchoReplyHandler mEchoReplyHandler;
-    void *mEchoReplyContext;
     bool mIsEchoEnabled;
 
     Ip6 &mIp6;

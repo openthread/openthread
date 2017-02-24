@@ -786,7 +786,7 @@ otLwfEventWorkerThread(
     NT_ASSERT(otCtxToFilter(pFilter->otCtx) == pFilter);
 
     // Disable Icmp (ping) handling
-    otSetIcmpEchoEnabled(pFilter->otCtx, FALSE);
+    otIcmp6SetEchoEnabled(pFilter->otCtx, FALSE);
 
     // Register callbacks with OpenThread
     otSetStateChangedCallback(pFilter->otCtx, otLwfStateChangedCallback, pFilter);

@@ -617,7 +617,7 @@ ThreadError Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageIn
                 aMessage.Read(aMessage.GetOffset(), sizeof(icmp), &icmp);
 
                 // do not pass ICMP Echo Request messages
-                VerifyOrExit(icmp.GetType() != IcmpHeader::kTypeEchoRequest, error = kThreadError_NoRoute);
+                VerifyOrExit(icmp.GetType() != kIcmp6TypeEchoRequest, error = kThreadError_NoRoute);
             }
 
             break;

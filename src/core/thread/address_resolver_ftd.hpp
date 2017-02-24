@@ -174,9 +174,9 @@ private:
                                           const otMessageInfo *aMessageInfo);
     void HandleAddressNotification(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleDstUnreach(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
-                                 const Ip6::IcmpHeader &aIcmpHeader);
-    void HandleDstUnreach(Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Ip6::IcmpHeader &aIcmpHeader);
+    static void HandleIcmpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo,
+                                  const otIcmp6Header *aIcmpHeader);
+    void HandleIcmpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Ip6::IcmpHeader &aIcmpHeader);
 
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
