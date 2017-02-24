@@ -39,7 +39,6 @@ CPPFLAGS_COMMON                     = \
     $(NULL)
 
 SOURCES_COMMON                      = \
-    openthread.cpp                    \
     api/crypto_api.cpp                \
     api/dataset_api.cpp               \
     api/icmp6_api.cpp                 \

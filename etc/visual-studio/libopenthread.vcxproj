@@ -113,7 +113,6 @@
     <ClCompile Include="..\..\src\core\net\ip6_routes.cpp" />
     <ClCompile Include="..\..\src\core\net\netif.cpp" />
     <ClCompile Include="..\..\src\core\net\udp6.cpp" />
-    <ClCompile Include="..\..\src\core\openthread.cpp" />
     <ClCompile Include="..\..\src\core\thread\address_resolver.cpp" />
     <ClCompile Include="..\..\src\core\thread\announce_begin_server.cpp" />
     <ClCompile Include="..\..\src\core\thread\energy_scan_server.cpp" />

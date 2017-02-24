@@ -219,9 +219,6 @@
     <ClCompile Include="..\..\src\core\net\udp6.cpp">
       <Filter>Source Files\net</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\openthread.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\core\mac\mac_blacklist.cpp">
       <Filter>Source Files\mac</Filter>
     </ClCompile>
