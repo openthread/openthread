@@ -2343,7 +2343,18 @@ ThreadError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInf
     }
     else if (!mRetrieveNewNetworkData)
     {
-        int8_t diff = static_cast<int8_t>(leaderData.GetDataVersion() - mNetif.GetNetworkDataLeader().GetVersion());
+        int8_t diff;
+
+        if (mDeviceMode & ModeTlv::kModeFullNetworkData)
+        {
+            diff = static_cast<int8_t>(leaderData.GetDataVersion() - mNetif.GetNetworkDataLeader().GetVersion());
+        }
+        else
+        {
+            diff = static_cast<int8_t>(leaderData.GetStableDataVersion() -
+                                       mNetif.GetNetworkDataLeader().GetStableVersion());
+        }
+
         VerifyOrExit(diff > 0, ;);
     }
 
