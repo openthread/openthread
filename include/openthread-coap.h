@@ -254,8 +254,7 @@ ThreadError otCoapHeaderAppendMaxAgeOption(otCoapHeader *aHeader, uint32_t aMaxA
  * This function appends a single Uri-Query option.
  *
  * @param[inout]  aHeader   A pointer to the CoAP header.
- * @param[in]     aUriQuery A pointer to NULL-terminated string, which should contain
- *  a single key=value pair.
+ * @param[in]     aUriQuery A pointer to NULL-terminated string, which should contain a single key=value pair.
  *
  * @retval kThreadError_None         Successfully appended the option.
  * @retval kThreadError_InvalidArgs  The option type is not equal or greater than the last option type.

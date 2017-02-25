@@ -247,30 +247,15 @@ exit:
 ThreadError Header::AppendObserveOption(uint32_t aObserve)
 {
     Option coapOption;
-    uint8_t buf[3];
 
-    coapOption.mNumber = kCoapOptionObserve;
-
-    if (aObserve <= 0xff)
-    {
-        buf[0] = static_cast<uint8_t>(aObserve);
-        coapOption.mLength = 1;
+    aObserve = Encoding::BigEndian::HostSwap32(aObserve & 0xFFFFFF);
+    coapOption.mLength = 4;
+    coapOption.mValue = reinterpret_cast<uint8_t *>(&aObserve);
+    // skip preceding zeros, but make sure mLength is at least 1
+    while (coapOption.mValue[0] == 0 && coapOption.mLength > 1) {
+        coapOption.mValue++;
+        coapOption.mLength--;
     }
-    else if (aObserve <= 0xffff)
-    {
-        buf[0] = static_cast<uint8_t>(aObserve >> 8);
-        buf[1] = static_cast<uint8_t>(aObserve);
-        coapOption.mLength = 2;
-    }
-    else
-    {
-        buf[0] = static_cast<uint8_t>(aObserve >> 16);
-        buf[1] = static_cast<uint8_t>(aObserve >> 8);
-        buf[2] = static_cast<uint8_t>(aObserve);
-        coapOption.mLength = 3;
-    }
-
-    coapOption.mValue = buf;
 
     return AppendOption(coapOption);
 }
@@ -315,38 +300,15 @@ ThreadError Header::AppendContentFormatOption(MediaType aType)
 ThreadError Header::AppendMaxAgeOption(uint32_t aMaxAge)
 {
     Option coapOption;
-    uint8_t buf[4];
 
-    coapOption.mNumber = kCoapOptionMaxAge;
-
-    if (aMaxAge <= 0xff)
-    {
-        buf[0] = static_cast<uint8_t>(aMaxAge);
-        coapOption.mLength = 1;
+    aMaxAge = Encoding::BigEndian::HostSwap32(aMaxAge);
+    coapOption.mLength = 4;
+    coapOption.mValue = reinterpret_cast<uint8_t *>(&aMaxAge);
+    // skip preceding zeros, but make sure mLength is at least 1
+    while (coapOption.mValue[0] == 0 && coapOption.mLength > 1) {
+        coapOption.mValue++;
+        coapOption.mLength--;
     }
-    else if (aMaxAge <= 0xffff)
-    {
-        buf[0] = static_cast<uint8_t>(aMaxAge >> 8);
-        buf[1] = static_cast<uint8_t>(aMaxAge);
-        coapOption.mLength = 2;
-    }
-    else if (aMaxAge <= 0xffffff)
-    {
-        buf[0] = static_cast<uint8_t>(aMaxAge >> 16);
-        buf[1] = static_cast<uint8_t>(aMaxAge >> 8);
-        buf[2] = static_cast<uint8_t>(aMaxAge);
-        coapOption.mLength = 3;
-    }
-    else
-    {
-        buf[0] = static_cast<uint8_t>(aMaxAge >> 24);
-        buf[1] = static_cast<uint8_t>(aMaxAge >> 16);
-        buf[2] = static_cast<uint8_t>(aMaxAge >> 8);
-        buf[3] = static_cast<uint8_t>(aMaxAge);
-        coapOption.mLength = 4;
-    }
-
-    coapOption.mValue = buf;
 
     return AppendOption(coapOption);
 }
