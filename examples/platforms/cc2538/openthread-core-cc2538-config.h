@@ -34,6 +34,22 @@
 #ifndef OPENTHREAD_CORE_CC2538_CONFIG_H_
 #define OPENTHREAD_CORE_CC2538_CONFIG_H_
 
+/**
+ * @def OPENTHREAD_CONFIG_LOG_LEVEL
+ *
+ * The log level.
+ *
+ */
+#define OPENTHREAD_CONFIG_LOG_LEVEL                             OPENTHREAD_LOG_LEVEL_DEBG
+
+ /**
+  * @def OPENTHREAD_CONFIG_LOG_PLATFORM
+  *
+  * Define to enable platform region logging.
+  *
+  */
+#define OPENTHREAD_CONFIG_LOG_PLATFORM                          1
+
  /**
   * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
   *
