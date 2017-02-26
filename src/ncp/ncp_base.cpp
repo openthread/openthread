@@ -4788,7 +4788,7 @@ ThreadError NcpBase::SetPropertyHandler_MAC_SRC_MATCH_SHORT_ADDRESSES(uint8_t he
         parsedLength = spinel_datatype_unpack(
             data,
             data_len,
-            "S",
+            SPINEL_DATATYPE_UINT16_S,
             &short_address
         );
 
@@ -4845,7 +4845,7 @@ ThreadError NcpBase::SetPropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES(uint8_t
         parsedLength = spinel_datatype_unpack(
             data,
             data_len,
-            "E",
+            SPINEL_DATATYPE_EUI64_S,
             &ext_address
         );
 
@@ -5426,7 +5426,7 @@ ThreadError NcpBase::InsertPropertyHandler_MAC_SRC_MATCH_SHORT_ADDRESSES(uint8_t
     parsedLength = spinel_datatype_unpack(
                        value_ptr,
                        value_len,
-                       "S",
+                       SPINEL_DATATYPE_UINT16_S,
                        &short_address
                    );
 
@@ -5467,7 +5467,7 @@ ThreadError NcpBase::InsertPropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES(uint
     parsedLength = spinel_datatype_unpack(
                        value_ptr,
                        value_len,
-                       "E",
+                       SPINEL_DATATYPE_EUI64_S,
                        &ext_address
                    );
 
@@ -5810,7 +5810,7 @@ ThreadError NcpBase::RemovePropertyHandler_MAC_SRC_MATCH_SHORT_ADDRESSES(uint8_t
     parsedLength = spinel_datatype_unpack(
                        value_ptr,
                        value_len,
-                       "S",
+                       SPINEL_DATATYPE_UINT16_S,
                        &short_address
                    );
 
@@ -5851,7 +5851,7 @@ ThreadError NcpBase::RemovePropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES(uint
     parsedLength = spinel_datatype_unpack(
                        value_ptr,
                        value_len,
-                       "E",
+                       SPINEL_DATATYPE_EUI64_S,
                        &ext_address
                    );
 

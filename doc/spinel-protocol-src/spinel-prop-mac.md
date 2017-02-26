@@ -128,13 +128,15 @@ Structure Parameters:
 * Type: Write
 * Packed-Encoding: `b`
 
-Set to true to enable radio source matching or false to disable it.
+Set to true to enable radio source matching or false to disable it. This property
+is only available if the `SPINEL_CAP_MAC_RAW` capability is present.
 
 ### PROP 4868: SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES  {#prop-mac-src-match-short-addresses}
 * Type: Write
 * Packed-Encoding: `A(S)`
 
-Configures the list of short addresses used for source matching.
+Configures the list of short addresses used for source matching. This property
+is only available if the `SPINEL_CAP_MAC_RAW` capability is present.
 
 Structure Parameters:
 
@@ -144,7 +146,8 @@ Structure Parameters:
 * Type: Write
 * Packed-Encoding: `A(E)`
 
-Configures the list of extended addresses used for source matching.
+Configures the list of extended addresses used for source matching. This property
+is only available if the `SPINEL_CAP_MAC_RAW` capability is present.
 
 Structure Parameters:
 
