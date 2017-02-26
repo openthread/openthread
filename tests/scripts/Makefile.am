@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2017, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -28,300 +28,29 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-LOG_DRIVER=$(abs_top_srcdir)/third_party/openthread-test-driver/test-driver
+# Always package (e.g. for 'make dist') these subdirectories.
 
-EXTRA_DIST                                                         = \
-    thread-cert/Cert_5_1_01_RouterAttach.py                          \
-    thread-cert/Cert_5_1_02_ChildAddressTimeout.py                   \
-    thread-cert/Cert_5_1_03_RouterAddressReallocation.py             \
-    thread-cert/Cert_5_1_04_RouterAddressReallocation.py             \
-    thread-cert/Cert_5_1_05_RouterAddressTimeout.py                  \
-    thread-cert/Cert_5_1_06_RemoveRouterId.py                        \
-    thread-cert/Cert_5_1_07_MaxChildCount.py                         \
-    thread-cert/Cert_5_1_08_RouterAttachConnectivity.py              \
-    thread-cert/Cert_5_1_09_REEDAttachConnectivity.py                \
-    thread-cert/Cert_5_1_10_RouterAttachLinkQuality.py               \
-    thread-cert/Cert_5_1_11_REEDAttachLinkQuality.py                 \
-    thread-cert/Cert_5_1_12_NewRouterNeighborSync.py                 \
-    thread-cert/Cert_5_1_13_RouterReset.py                           \
-    thread-cert/Cert_5_2_01_BecomeActiveRouter.py                    \
-    thread-cert/Cert_5_2_02_LeaderReject1Hop.py                      \
-    thread-cert/Cert_5_2_03_LeaderReject2Hops.py                     \
-    thread-cert/Cert_5_2_04_REEDUpgrade.py                           \
-    thread-cert/Cert_5_2_05_AddressQuery.py                          \
-    thread-cert/Cert_5_2_06_RouterDowngrade.py                       \
-    thread-cert/Cert_5_2_07_REEDSynchronization.py                   \
-    thread-cert/Cert_5_3_01_LinkLocal.py                             \
-    thread-cert/Cert_5_3_02_RealmLocal.py                            \
-    thread-cert/Cert_5_3_03_AddressQuery.py                          \
-    thread-cert/Cert_5_3_04_AddressMapCache.py                       \
-    thread-cert/Cert_5_3_05_RoutingLinkQuality.py                    \
-    thread-cert/Cert_5_3_06_RouterIdMask.py                          \
-    thread-cert/Cert_5_3_06b_RouterIdMask.py                         \
-    thread-cert/Cert_5_3_07_DuplicateAddress.py                      \
-    thread-cert/Cert_5_3_08_ChildAddressSet.py                       \
-    thread-cert/Cert_5_3_09_AddressQuery.py                          \
-    thread-cert/Cert_5_3_10_AddressQuery.py                          \
-    thread-cert/Cert_5_5_01_LeaderReset.py                           \
-    thread-cert/Cert_5_5_02_LeaderReboot.py                          \
-    thread-cert/Cert_5_5_03_SplitMergeChildren.py                    \
-    thread-cert/Cert_5_5_04_SplitMergeRouters.py                     \
-    thread-cert/Cert_5_5_05_SplitMergeREED.py                        \
-    thread-cert/Cert_5_5_07_SplitMergeThreeWay.py                    \
-    thread-cert/Cert_5_5_08_SplitRoutersLostLeader.py                \
-    thread-cert/Cert_5_6_01_NetworkDataRegisterBeforeAttachLeader.py \
-    thread-cert/Cert_5_6_02_NetworkDataRegisterBeforeAttachRouter.py \
-    thread-cert/Cert_5_6_03_NetworkDataRegisterAfterAttachLeader.py  \
-    thread-cert/Cert_5_6_04_NetworkDataRegisterAfterAttachRouter.py  \
-    thread-cert/Cert_5_6_05_NetworkDataRegisterAfterAttachRouter.py  \
-    thread-cert/Cert_5_6_06_NetworkDataExpiration.py                 \
-    thread-cert/Cert_5_6_07_NetworkDataRequestREED.py                \
-    thread-cert/Cert_5_6_08_ContextManagement.py                     \
-    thread-cert/Cert_5_6_09_NetworkDataForwarding.py                 \
-    thread-cert/Cert_5_8_01_KeySynchronization.py                    \
-    thread-cert/Cert_5_8_02_KeyIncrement.py                          \
-    thread-cert/Cert_5_8_03_KeyIncrementRollOver.py                  \
-    thread-cert/Cert_6_1_01_RouterAttach.py                          \
-    thread-cert/Cert_6_1_02_REEDAttach.py                            \
-    thread-cert/Cert_6_1_03_RouterAttachConnectivity.py              \
-    thread-cert/Cert_6_1_04_REEDAttachConnectivity.py                \
-    thread-cert/Cert_6_1_05_RouterAttachLinkQuality.py               \
-    thread-cert/Cert_6_1_06_REEDAttachLinkQuality.py                 \
-    thread-cert/Cert_6_1_07_EDSynchronization.py                     \
-    thread-cert/Cert_6_2_01_NewPartition.py                          \
-    thread-cert/Cert_6_2_02_NewPartition.py                          \
-    thread-cert/Cert_6_3_01_OrphanReattach.py                        \
-    thread-cert/Cert_6_3_02_NetworkDataUpdate.py                     \
-    thread-cert/Cert_6_4_01_LinkLocal.py                             \
-    thread-cert/Cert_6_4_02_RealmLocal.py                            \
-    thread-cert/Cert_6_5_01_ChildResetSynchronize.py                 \
-    thread-cert/Cert_6_5_02_ChildResetReattach.py                    \
-    thread-cert/Cert_6_6_01_KeyIncrement.py                          \
-    thread-cert/Cert_6_6_02_KeyIncrementRollOver.py                  \
-    thread-cert/Cert_7_1_01_BorderRouterAsLeader.py                  \
-    thread-cert/Cert_7_1_02_BorderRouterAsRouter.py                  \
-    thread-cert/Cert_7_1_03_BorderRouterAsLeader.py                  \
-    thread-cert/Cert_7_1_04_BorderRouterAsRouter.py                  \
-    thread-cert/Cert_7_1_05_BorderRouterAsRouter.py                  \
-    thread-cert/Cert_8_1_01_Commissioning.py                         \
-    thread-cert/Cert_8_1_02_Commissioning.py                         \
-    thread-cert/Cert_8_2_01_JoinerRouter.py                          \
-    thread-cert/Cert_8_2_02_JoinerRouter.py                          \
-    thread-cert/Cert_9_2_04_ActiveDataset.py                         \
-    thread-cert/Cert_9_2_07_DelayTimer.py                            \
-    thread-cert/Cert_9_2_08_PersistentDatasets.py                    \
-    thread-cert/Cert_9_2_09_PendingPartition.py                      \
-    thread-cert/Cert_9_2_10_PendingPartition.py                      \
-    thread-cert/Cert_9_2_11_MasterKey.py                             \
-    thread-cert/Cert_9_2_12_Announce.py                              \
-    thread-cert/Cert_9_2_13_EnergyScan.py                            \
-    thread-cert/Cert_9_2_14_PanIdQuery.py                            \
-    thread-cert/Cert_9_2_15_PendingPartition.py                      \
-    thread-cert/Cert_9_2_16_ActivePendingPartition.py                \
-    thread-cert/Cert_9_2_17_Orphan.py                                \
-    thread-cert/Cert_9_2_18_RollBackActiveTimestamp.py               \
-    thread-cert/coap.py                                              \
-    thread-cert/common.py                                            \
-    thread-cert/config.py                                            \
-    thread-cert/ipv6.py                                              \
-    thread-cert/lowpan.py                                            \
-    thread-cert/mac802154.py                                         \
-    thread-cert/message.py                                           \
-    thread-cert/mle.py                                               \
-    thread-cert/net_crypto.py                                        \
-    thread-cert/network_data.py                                      \
-    thread-cert/network_layer.py                                     \
-    thread-cert/node.py                                              \
-    thread-cert/node_cli.py                                          \
-    thread-cert/sniffer.py                                           \
-    thread-cert/sniffer_transport.py                                 \
-    thread-cert/test_coap.py                                         \
-    thread-cert/test_common.py                                       \
-    thread-cert/test_crypto.py                                       \
-    thread-cert/test_ipv6.py                                         \
-    thread-cert/test_lowpan.py                                       \
-    thread-cert/test_mac802154.py                                    \
-    thread-cert/test_mle.py                                          \
-    thread-cert/test_network_data.py                                 \
-    thread-cert/test_network_layer.py                                \
+DIST_SUBDIRS                            = \
+    thread-cert                           \
     $(NULL)
 
-if OPENTHREAD_BUILD_TESTS
+# Always build (e.g. for 'make all') these subdirectories.
 
-# First, list all essential program and script tests that MUST be run.
-
-check_PROGRAMS =
-
-check_SCRIPTS                                                      = \
-    thread-cert/test_coap.py                                         \
-    thread-cert/test_common.py                                       \
-    thread-cert/test_crypto.py                                       \
-    thread-cert/test_ipv6.py                                         \
-    thread-cert/test_lowpan.py                                       \
-    thread-cert/test_mac802154.py                                    \
-    thread-cert/test_mle.py                                          \
-    thread-cert/test_network_data.py                                 \
-    thread-cert/test_network_layer.py                                \
+SUBDIRS                                 = \
     $(NULL)
 
-if OPENTHREAD_TESTS_SUBSET1
-
-check_SCRIPTS                                                     += \
-    thread-cert/Cert_5_1_01_RouterAttach.py                          \
-    thread-cert/Cert_5_1_02_ChildAddressTimeout.py                   \
-    thread-cert/Cert_5_1_03_RouterAddressReallocation.py             \
-    thread-cert/Cert_5_1_04_RouterAddressReallocation.py             \
-    thread-cert/Cert_5_1_05_RouterAddressTimeout.py                  \
-    thread-cert/Cert_5_1_06_RemoveRouterId.py                        \
-    thread-cert/Cert_5_1_07_MaxChildCount.py                         \
-    thread-cert/Cert_5_1_08_RouterAttachConnectivity.py              \
-    thread-cert/Cert_5_1_09_REEDAttachConnectivity.py                \
+if OPENTHREAD_EXAMPLES_POSIX
+if OPENTHREAD_ENABLE_CLI
+SUBDIRS                                += \
+    thread-cert                           \
     $(NULL)
+endif
+endif
 
-endif # OPENTHREAD_TESTS_SUBSET1
+# Always pretty (e.g. for 'make pretty') these subdirectories.
 
-if OPENTHREAD_TESTS_SUBSET2
-
-check_SCRIPTS                                                     += \
-    thread-cert/Cert_5_1_10_RouterAttachLinkQuality.py               \
-    thread-cert/Cert_5_1_11_REEDAttachLinkQuality.py                 \
-    thread-cert/Cert_5_1_12_NewRouterNeighborSync.py                 \
-    thread-cert/Cert_5_1_13_RouterReset.py                           \
-    thread-cert/Cert_5_2_01_BecomeActiveRouter.py                    \
-    thread-cert/Cert_5_2_02_LeaderReject1Hop.py                      \
-    thread-cert/Cert_5_2_03_LeaderReject2Hops.py                     \
-    thread-cert/Cert_5_2_04_REEDUpgrade.py                           \
-    thread-cert/Cert_5_2_05_AddressQuery.py                          \
-    thread-cert/Cert_5_2_06_RouterDowngrade.py                       \
-    thread-cert/Cert_5_2_07_REEDSynchronization.py                   \
-    thread-cert/Cert_5_3_01_LinkLocal.py                             \
-    thread-cert/Cert_5_3_02_RealmLocal.py                            \
-    thread-cert/Cert_5_3_03_AddressQuery.py                          \
-    thread-cert/Cert_5_3_04_AddressMapCache.py                       \
-    thread-cert/Cert_5_3_05_RoutingLinkQuality.py                    \
+PRETTY_SUBDIRS                          = \
     $(NULL)
-
-endif # OPENTHREAD_TESTS_SUBSET2
-
-if OPENTHREAD_TESTS_SUBSET3
-
-check_SCRIPTS                                                     += \
-    thread-cert/Cert_5_3_06_RouterIdMask.py                          \
-    thread-cert/Cert_5_3_06b_RouterIdMask.py                         \
-    thread-cert/Cert_5_3_07_DuplicateAddress.py                      \
-    thread-cert/Cert_5_3_08_ChildAddressSet.py                       \
-    thread-cert/Cert_5_3_09_AddressQuery.py                       \
-    thread-cert/Cert_5_3_10_AddressQuery.py                          \
-    thread-cert/Cert_5_5_01_LeaderReset.py                           \
-    thread-cert/Cert_5_5_02_LeaderReboot.py                          \
-    $(NULL)
-
-endif # OPENTHREAD_TESTS_SUBSET3
-
-if OPENTHREAD_TESTS_SUBSET4
-
-check_SCRIPTS                                                     += \
-    thread-cert/Cert_5_5_03_SplitMergeChildren.py                    \
-    thread-cert/Cert_5_5_04_SplitMergeRouters.py                     \
-    thread-cert/Cert_5_5_05_SplitMergeREED.py                        \
-    thread-cert/Cert_5_5_07_SplitMergeThreeWay.py                    \
-    thread-cert/Cert_5_5_08_SplitRoutersLostLeader.py                \
-    thread-cert/Cert_5_6_01_NetworkDataRegisterBeforeAttachLeader.py \
-    thread-cert/Cert_5_6_02_NetworkDataRegisterBeforeAttachRouter.py \
-    $(NULL)
-
-endif # OPENTHREAD_TESTS_SUBSET4
-
-if OPENTHREAD_TESTS_SUBSET5
-
-check_SCRIPTS                                                     += \
-    thread-cert/Cert_5_6_03_NetworkDataRegisterAfterAttachLeader.py  \
-    thread-cert/Cert_5_6_04_NetworkDataRegisterAfterAttachRouter.py  \
-    thread-cert/Cert_5_6_05_NetworkDataRegisterAfterAttachRouter.py  \
-    thread-cert/Cert_5_6_06_NetworkDataExpiration.py                 \
-    thread-cert/Cert_5_6_07_NetworkDataRequestREED.py                \
-    thread-cert/Cert_5_6_08_ContextManagement.py                     \
-    thread-cert/Cert_5_6_09_NetworkDataForwarding.py                 \
-    thread-cert/Cert_5_8_01_KeySynchronization.py                    \
-    thread-cert/Cert_5_8_02_KeyIncrement.py                          \
-    thread-cert/Cert_5_8_03_KeyIncrementRollOver.py                  \
-    thread-cert/Cert_6_1_01_RouterAttach.py                          \
-    thread-cert/Cert_6_1_02_REEDAttach.py                            \
-    thread-cert/Cert_6_1_03_RouterAttachConnectivity.py              \
-    thread-cert/Cert_6_1_04_REEDAttachConnectivity.py                \
-    thread-cert/Cert_6_1_05_RouterAttachLinkQuality.py               \
-    thread-cert/Cert_6_1_06_REEDAttachLinkQuality.py                 \
-    thread-cert/Cert_6_1_07_EDSynchronization.py                     \
-    thread-cert/Cert_6_2_01_NewPartition.py                          \
-    thread-cert/Cert_6_2_02_NewPartition.py                          \
-    thread-cert/Cert_6_3_01_OrphanReattach.py                        \
-    thread-cert/Cert_6_3_02_NetworkDataUpdate.py                     \
-    thread-cert/Cert_6_4_01_LinkLocal.py                             \
-    thread-cert/Cert_6_4_02_RealmLocal.py                            \
-    thread-cert/Cert_6_5_01_ChildResetSynchronize.py                 \
-    thread-cert/Cert_6_5_02_ChildResetReattach.py                    \
-    thread-cert/Cert_6_6_01_KeyIncrement.py                          \
-    thread-cert/Cert_6_6_02_KeyIncrementRollOver.py                  \
-    thread-cert/Cert_7_1_01_BorderRouterAsLeader.py                  \
-    thread-cert/Cert_7_1_02_BorderRouterAsRouter.py                  \
-    thread-cert/Cert_7_1_03_BorderRouterAsLeader.py                  \
-    thread-cert/Cert_7_1_04_BorderRouterAsRouter.py                  \
-    thread-cert/Cert_7_1_05_BorderRouterAsRouter.py                  \
-    thread-cert/Cert_8_1_01_Commissioning.py                         \
-    thread-cert/Cert_8_1_02_Commissioning.py                         \
-    thread-cert/Cert_8_2_01_JoinerRouter.py                          \
-    thread-cert/Cert_8_2_02_JoinerRouter.py                          \
-    thread-cert/Cert_9_2_04_ActiveDataset.py                         \
-    thread-cert/Cert_9_2_07_DelayTimer.py                            \
-    thread-cert/Cert_9_2_08_PersistentDatasets.py                    \
-    thread-cert/Cert_9_2_09_PendingPartition.py                      \
-    thread-cert/Cert_9_2_10_PendingPartition.py                      \
-    thread-cert/Cert_9_2_11_MasterKey.py                             \
-    thread-cert/Cert_9_2_12_Announce.py                              \
-    thread-cert/Cert_9_2_13_EnergyScan.py                            \
-    thread-cert/Cert_9_2_14_PanIdQuery.py                            \
-    thread-cert/Cert_9_2_15_PendingPartition.py                      \
-    thread-cert/Cert_9_2_16_ActivePendingPartition.py                \
-    thread-cert/Cert_9_2_17_Orphan.py                                \
-    thread-cert/Cert_9_2_18_RollBackActiveTimestamp.py               \
-    $(NULL)
-
-endif # OPENTHREAD_TESTS_SUBSET5
-
-TESTS_ENVIRONMENT                                                  = \
-    export                                                           \
-    top_builddir='$(top_builddir)'                                   \
-    VERBOSE=1;                                                       \
-    $(NULL)
-
-TESTS                                                              = \
-    $(check_PROGRAMS)                                                \
-    $(check_SCRIPTS)                                                 \
-    $(NULL)
-
-XFAIL_NCP_TESTS                                                    = \
-    thread-cert/Cert_5_3_09_AddressQuery.py                          \
-    thread-cert/Cert_8_1_01_Commissioning.py                         \
-    thread-cert/Cert_8_1_02_Commissioning.py                         \
-    thread-cert/Cert_8_2_01_JoinerRouter.py                          \
-    thread-cert/Cert_8_2_02_JoinerRouter.py                          \
-    thread-cert/Cert_9_2_04_ActiveDataset.py                         \
-    thread-cert/Cert_9_2_07_DelayTimer.py                            \
-    thread-cert/Cert_9_2_08_PersistentDatasets.py                    \
-    thread-cert/Cert_9_2_09_PendingPartition.py                      \
-    thread-cert/Cert_9_2_10_PendingPartition.py                      \
-    thread-cert/Cert_9_2_11_MasterKey.py                             \
-    thread-cert/Cert_9_2_12_Announce.py                              \
-    thread-cert/Cert_9_2_13_EnergyScan.py                            \
-    thread-cert/Cert_9_2_14_PanIdQuery.py                            \
-    thread-cert/Cert_9_2_15_PendingPartition.py                      \
-    thread-cert/Cert_9_2_16_ActivePendingPartition.py                \
-    thread-cert/Cert_9_2_17_Orphan.py                                \
-    thread-cert/Cert_9_2_18_RollBackActiveTimestamp.py               \
-    $(NULL)
-
-XFAIL_TESTS = $(if $(filter $(NODE_TYPE),ncp-sim),$(XFAIL_NCP_TESTS))
-
-endif # OPENTHREAD_BUILD_TESTS
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
+
