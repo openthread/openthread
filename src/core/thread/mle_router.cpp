@@ -59,6 +59,8 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     mAddressSolicit(OPENTHREAD_URI_ADDRESS_SOLICIT, &MleRouter::HandleAddressSolicit, this),
     mAddressRelease(OPENTHREAD_URI_ADDRESS_RELEASE, &MleRouter::HandleAddressRelease, this)
 {
+    mDeviceMode |= ModeTlv::kModeFFD | ModeTlv::kModeFullNetworkData;
+
     mChallengeTimeout = 0;
     mNextChildId = kMaxChildId;
     mRouterIdSequence = 0;
