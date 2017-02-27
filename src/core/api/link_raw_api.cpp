@@ -33,6 +33,7 @@
 
 #include <common/debug.hpp>
 #include <platform/random.h>
+#include <platform/usec-alarm.h>
 #include "openthread-instance.h"
 
 #ifdef __cplusplus
@@ -524,11 +525,24 @@ void LinkRaw::StartCsmaBackoff(void)
         backoffExponent = Mac::kMaxBE;
     }
 
-    backoff = Mac::kMinBackoff + (Mac::kUnitBackoffPeriod * kPhyUsPerSymbol * (1 << backoffExponent)) / 1000;
-    backoff = (otPlatRandomGet() % backoff);
+    backoff = (otPlatRandomGet() % (1UL << backoffExponent));
+    backoff *= (Mac::kUnitBackoffPeriod * kPhyUsPerSymbol);
+
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
+    otPlatUsecAlarmTime now;
+    otPlatUsecAlarmTime delay;
+
+    otPlatUsecAlarmGetNow(&now);
+    delay.mMs = backoff / 1000UL;
+    delay.mUs = backoff - (delay.mMs * 1000UL);
 
     mTimerReason = kTimerReasonRetransmitTimeout;
-    mTimer.Start(backoff);
+    otPlatUsecAlarmStartAt(&mInstance, &now, &delay, &HandleTimer, this);
+#else // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
+    mTimerReason = kTimerReasonRetransmitTimeout;
+    mTimer.Start(backoff / 1000UL);
+#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
+
 }
 
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT

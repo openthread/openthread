@@ -580,6 +580,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
+ *
+ * Define to 1 if you want to enable microsecond backoff timer implemented in platform.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
+#define OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER     0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
  *
  * Define to 1 if you want to enable software energy scanning logic.
