@@ -91,7 +91,8 @@ typedef enum otRadioCaps
     kRadioCapsNone              = 0,  ///< None
     kRadioCapsAckTimeout        = 1,  ///< Radio supports AckTime event
     kRadioCapsEnergyScan        = 2,  ///< Radio supports Energy Scans
-    kRadioCapsTransmitRetries   = 4,  ///< Radio supports transmission retry logic with collision avoidance
+    kRadioCapsTransmitRetries   = 4,  ///< Radio supports transmission retry logic with collision avoidance (CSMA).
+    kRadioCapsCsmaBackOff       = 8,  ///< Radio supports CSMA backoff for frame transmission (but no retry).
 } otRadioCaps;
 
 /**
