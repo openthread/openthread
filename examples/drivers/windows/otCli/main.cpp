@@ -26,50 +26,60 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file contains definitions for adding a CLI command to the CLI server.
- */
+#include <windows.h>
+#include <stdio.h>
 
-#ifndef CLI_SERVER_HPP_
-#define CLI_SERVER_HPP_
+#include <openthread.h>
+#include <cli/cli-uart.h>
+#include <platform/uart.h>
 
-#include <openthread-types.h>
+bool skipNextLine = false;
 
-namespace Thread {
-namespace Cli {
-
-/**
- * This class implements the CLI server.
- *
- */
-class Server
+int main(int argc, char *argv[])
 {
-public:
-    /**
-     * This method delivers raw characters to the client.
-     *
-     * @param[in]  aBuf        A pointer to a buffer.
-     * @param[in]  aBufLength  Number of bytes in the buffer.
-     *
-     * @returns The number of bytes placed in the output queue.
-     *
-     */
-    virtual int Output(const char *aBuf, uint16_t aBufLength) = 0;
+    otCliUartInit(NULL);
 
-    /**
-     * This method delivers formatted output to the client.
-     *
-     * @param[in]  aFmt  A pointer to the format string.
-     * @param[in]  ...   A variable list of arguments to format.
-     *
-     * @returns The number of bytes placed in the output queue.
-     *
-     */
-    virtual int OutputFormat(const char *fmt, ...) = 0;
-};
+    char cmd[1024] = "\n";
+    otPlatUartReceived((uint8_t*)cmd, 1);
 
-}  // namespace Cli
-}  // namespace Thread
+    for (;;)
+    {
+        cmd[0] = 0;
+        if (NULL == fgets(cmd, sizeof(cmd), stdin))
+            continue;
 
-#endif  // CLI_SERVER_HPP_
+        size_t cmdLen = strlen(cmd);
+        if (cmdLen >= sizeof(cmd)) cmdLen = sizeof(cmd);
+
+        if (strncmp(cmd, "exit", 4) == 0) 
+            break;
+
+        skipNextLine = true;
+        otPlatUartReceived((uint8_t*)cmd, (uint16_t)cmdLen);
+    }
+
+    return NO_ERROR;
+}
+
+EXTERN_C ThreadError otPlatUartEnable(void)
+{
+    return kThreadError_None;
+}
+
+EXTERN_C ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
+{
+    ThreadError error = kThreadError_None;
+
+    if (!skipNextLine)
+    {
+        for (uint16_t i = 0; i < aBufLength; i++)
+            fputc(aBuf[i], stdout);
+    }
+
+    if (aBuf[aBufLength - 1] == '\n')
+        skipNextLine = false;
+
+    otPlatUartSendDone();
+
+    return error;
+}

@@ -39,15 +39,23 @@
 #else
 #include <openthread-config.h>
 #endif
+#include <openthread.h>
 
 #include <stdarg.h>
-
 #include <openthread-ip6.h>
 #include <openthread-udp.h>
 #include <cli/cli_server.hpp>
+#include <common/code_utils.hpp>
+
+#ifndef OTDLL
 #include <net/icmp6.hpp>
 #include <common/timer.hpp>
 #include <dhcp6/dhcp6_client.h>
+#endif
+
+#ifdef OTDLL
+#define MAX_CLI_OT_INSTANCES 64
+#endif
 
 namespace Thread {
 
@@ -82,6 +90,8 @@ public:
 
     /**
      * Constructor
+     *
+     * @param[in]  aInstance  The OpenThread instance structure.
      */
     Interpreter(otInstance *aInstance);
 
@@ -173,9 +183,11 @@ private:
     ThreadError ProcessIpAddrAdd(int argc, char *argv[]);
     ThreadError ProcessIpAddrDel(int argc, char *argv[]);
     void ProcessIpMulticastAddr(int argc, char *argv[]);
+#ifndef OTDLL
     ThreadError ProcessIpMulticastAddrAdd(int argc, char *argv[]);
     ThreadError ProcessIpMulticastAddrDel(int argc, char *argv[]);
     ThreadError ProcessMulticastPromiscuous(int argc, char *argv[]);
+#endif
 #if OPENTHREAD_ENABLE_JOINER
     void ProcessJoiner(int argc, char *argv[]);
 #endif  // OPENTHREAD_ENABLE_JOINER
@@ -218,34 +230,74 @@ private:
     void ProcessVersion(int argc, char *argv[]);
     void ProcessWhitelist(int argc, char *argv[]);
 
+#ifdef OTDLL
+    void ProcessInstanceList(int argc, char *argv[]);
+    void ProcessInstance(int argc, char *argv[]);
+#endif
+
+#ifndef OTDLL
     static void s_HandleIcmpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo,
                                     const otIcmp6Header *aIcmpHeader);
     static void s_HandlePingTimer(void *aContext);
-    static void s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
-    static void s_HandleNetifStateChanged(uint32_t aFlags, void *aContext);
+#endif
+    static void OTCALL s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
+    static void OTCALL s_HandleNetifStateChanged(uint32_t aFlags, void *aContext);
+#ifndef OTDLL
     static void s_HandleLinkPcapReceive(const RadioPacket *aFrame, void *aContext);
-    static void s_HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyList, uint8_t aEnergyListLength,
-                                     void *aContext);
-    static void s_HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, void *aContext);
-    static void s_HandleDiagnosticGetResponse(otMessage aMessage, const otMessageInfo *aMessageInfo, void *aContext);
-    static void s_HandleJoinerCallback(ThreadError aError, void *aContext);
+#endif
+    static void OTCALL s_HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyList, uint8_t aEnergyListLength,
+                                            void *aContext);
+    static void OTCALL s_HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, void *aContext);
+#ifndef OTDLL
+    static void OTCALL s_HandleDiagnosticGetResponse(otMessage aMessage, const otMessageInfo *aMessageInfo,
+                                                     void *aContext);
+#endif
+    static void OTCALL s_HandleJoinerCallback(ThreadError aError, void *aContext);
 
+#ifndef OTDLL
     void HandleIcmpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
                            const Ip6::IcmpHeader &aIcmpHeader);
     void HandlePingTimer();
+#endif
     void HandleActiveScanResult(otActiveScanResult *aResult);
+#ifdef OTDLL
+    void HandleNetifStateChanged(otInstance *aInstance, uint32_t aFlags);
+#else
     void HandleNetifStateChanged(uint32_t aFlags);
+#endif
+#ifndef OTDLL
     void HandleLinkPcapReceive(const RadioPacket *aFrame);
+#endif
     void HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyList, uint8_t aEnergyListLength);
     void HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask);
+#ifndef OTDLL
     void HandleDiagnosticGetResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+#endif
     void HandleJoinerCallback(ThreadError aError);
 
     static const struct Command sCommands[];
 
+    Server *sServer;
+
+#ifdef OTDLL
+
+    void CacheInstances();
+
+    otApiInstance *mApiInstance;
+
+    struct otCliContext
+    {
+        Interpreter *aInterpreter;
+        otInstance  *aInstance;
+    };
+    otCliContext mInstances[MAX_CLI_OT_INSTANCES];
+    uint8_t mInstancesLength;
+    uint8_t mInstanceIndex;
+
+#else
+
     Ip6::MessageInfo sMessageInfo;
 
-    Server *sServer;
     uint16_t sLength;
     uint16_t sCount;
     uint32_t sInterval;
@@ -257,6 +309,8 @@ private:
 #endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
 
     otIcmp6Handler mIcmpHandler;
+#endif
+
     otInstance *mInstance;
 };
 

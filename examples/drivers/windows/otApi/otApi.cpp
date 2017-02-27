@@ -1419,6 +1419,32 @@ otSetChannel(
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_CHANNEL, aChannel));
 }
 
+OTAPI
+ThreadError
+OTCALL
+otSetDelayTimerMinimal(
+    _In_ otInstance *aInstance,
+    uint32_t aDelayTimerMinimal
+    )
+{
+    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    // TODO
+    UNREFERENCED_PARAMETER(aDelayTimerMinimal);
+    return kThreadError_NotImplemented;
+}
+
+OTAPI
+uint32_t
+OTCALL
+otGetDelayTimerMinimal(
+    _In_ otInstance *aInstance
+    )
+{
+    if (aInstance == nullptr) return 0;
+    // TODO
+    return 0;
+}
+
 OTAPI 
 uint8_t 
 OTCALL
@@ -2950,6 +2976,21 @@ otGetChildInfoByIndex(
 {
     if (aInstance == nullptr) return kThreadError_InvalidArgs;
     return DwordToThreadError(QueryIOCTL(aInstance, IOCTL_OTLWF_OT_CHILD_INFO_BY_INDEX, &aChildIndex, aChildInfo));
+}
+
+OTAPI
+ThreadError
+OTCALL
+otGetNextNeighborInfo(
+    _In_ otInstance *aInstance,
+    _Inout_ otNeighborInfoIterator *aIterator,
+    _Out_ otNeighborInfo *aInfo
+    )
+{
+    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    UNREFERENCED_PARAMETER(aIterator);
+    UNREFERENCED_PARAMETER(aInfo);
+    return kThreadError_NotImplemented; // TODO
 }
 
 OTAPI
