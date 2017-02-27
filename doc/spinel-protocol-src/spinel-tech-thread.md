@@ -233,3 +233,24 @@ The leader network data.
 * Packed-Encoding: `D`
 
 The stable leader network data.
+
+### PROP 5391: PROP_THREAD_JOINERS {#prop-thread-joiners}
+
+* Type: Read-Write
+* Packed-Encoding: `A(T(EDc))`
+
+Data per item is:
+
+* `E`: Extended/long address
+* `D`: PSKd
+* `c`: PSKd length
+
+Passess Extended address and PSKd to the NCP in the commissioning process.
+
+
+### PROP 5392: PROP_THREAD_COMMISSIONER_ENABLED {#prop-thread-commissioner-enabled}
+
+* Type: Read-Write
+* Packed-Encoding: `b`
+
+Set to true to enable the native commissioner. It is mandatory before adding the joiner to the network.

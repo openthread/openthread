@@ -513,6 +513,10 @@ private:
                                               uint16_t value_len);
     ThreadError SetPropertyHandler_DEBUG_NCP_LOG_LEVEL(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                    uint16_t value_len);
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    ThreadError SetPropertyHandler_THREAD_COMMISSIONER_ENABLED(uint8_t header, spinel_prop_key_t key,
+                                                               const uint8_t *value_ptr, uint16_t value_len);
+#endif
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     ThreadError SetPropertyHandler_JAM_DETECT_ENABLE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
