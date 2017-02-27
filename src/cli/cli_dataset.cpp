@@ -239,8 +239,7 @@ ThreadError Dataset::ProcessActiveTimestamp(otInstance *aInstance, int argc, cha
     ThreadError error = kThreadError_None;
     long value;
 
-    VerifyOrExit(argc > 0, ;);
-
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
     sDataset.mActiveTimestamp = static_cast<uint64_t>(value);
     sDataset.mIsActiveTimestampSet = true;
