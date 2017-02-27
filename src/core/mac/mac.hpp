@@ -560,13 +560,22 @@ public:
     void ClearSrcMatchEntries(void);
 
     /**
-     * This method indicates whether or not transmit retries and CSMA backoff logic is supported by the radio layer.
+     * This method indicates whether or not CSMA backoff is supported by the radio layer.
      *
-     * @retval true   Retries and CSMA are supported by the radio.
-     * @retval false  Retries and CSMA are not supported by the radio.
+     * @retval true   CSMA backoff is supported by the radio.
+     * @retval false  CSMA backoff is not supported by the radio.
      *
      */
-    bool RadioSupportsRetriesAndCsmaBackoff(void);
+    bool RadioSupportsCsmaBackoff(void);
+
+    /**
+     * This method indicates whether or not transmit retries is supported by the radio layer.
+     *
+     * @retval true   Retries (and CSMA) are supported by the radio.
+     * @retval false  Retries (and CSMA) are not supported by the radio.
+     *
+     */
+    bool RadioSupportsRetries(void);
 
 private:
     enum ScanType
