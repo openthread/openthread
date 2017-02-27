@@ -252,8 +252,10 @@ ThreadError Header::AppendObserveOption(uint32_t aObserve)
     coapOption.mNumber = kCoapOptionObserve;
     coapOption.mLength = 4;
     coapOption.mValue = reinterpret_cast<uint8_t *>(&aObserve);
+
     // skip preceding zeros, but make sure mLength is at least 1
-    while (coapOption.mValue[0] == 0 && coapOption.mLength > 1) {
+    while (coapOption.mValue[0] == 0 && coapOption.mLength > 1)
+    {
         coapOption.mValue++;
         coapOption.mLength--;
     }
@@ -306,8 +308,10 @@ ThreadError Header::AppendMaxAgeOption(uint32_t aMaxAge)
     coapOption.mNumber = kCoapOptionMaxAge;
     coapOption.mLength = 4;
     coapOption.mValue = reinterpret_cast<uint8_t *>(&aMaxAge);
+
     // skip preceding zeros, but make sure mLength is at least 1
-    while (coapOption.mValue[0] == 0 && coapOption.mLength > 1) {
+    while (coapOption.mValue[0] == 0 && coapOption.mLength > 1)
+    {
         coapOption.mValue++;
         coapOption.mLength--;
     }
