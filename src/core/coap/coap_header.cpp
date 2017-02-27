@@ -249,6 +249,7 @@ ThreadError Header::AppendObserveOption(uint32_t aObserve)
     Option coapOption;
 
     aObserve = Encoding::BigEndian::HostSwap32(aObserve & 0xFFFFFF);
+    coapOption.mNumber = kCoapOptionObserve;
     coapOption.mLength = 4;
     coapOption.mValue = reinterpret_cast<uint8_t *>(&aObserve);
     // skip preceding zeros, but make sure mLength is at least 1
@@ -302,6 +303,7 @@ ThreadError Header::AppendMaxAgeOption(uint32_t aMaxAge)
     Option coapOption;
 
     aMaxAge = Encoding::BigEndian::HostSwap32(aMaxAge);
+    coapOption.mNumber = kCoapOptionMaxAge;
     coapOption.mLength = 4;
     coapOption.mValue = reinterpret_cast<uint8_t *>(&aMaxAge);
     // skip preceding zeros, but make sure mLength is at least 1
