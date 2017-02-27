@@ -244,6 +244,25 @@ exit:
     return error;
 }
 
+ThreadError Header::AppendObserveOption(uint32_t aObserve)
+{
+    Option coapOption;
+
+    aObserve = Encoding::BigEndian::HostSwap32(aObserve & 0xFFFFFF);
+    coapOption.mNumber = kCoapOptionObserve;
+    coapOption.mLength = 4;
+    coapOption.mValue = reinterpret_cast<uint8_t *>(&aObserve);
+
+    // skip preceding zeros, but make sure mLength is at least 1
+    while (coapOption.mValue[0] == 0 && coapOption.mLength > 1)
+    {
+        coapOption.mValue++;
+        coapOption.mLength--;
+    }
+
+    return AppendOption(coapOption);
+}
+
 ThreadError Header::AppendUriPathOptions(const char *aUriPath)
 {
     ThreadError error = kThreadError_None;
@@ -277,6 +296,36 @@ ThreadError Header::AppendContentFormatOption(MediaType aType)
     coapOption.mNumber = kCoapOptionContentFormat;
     coapOption.mLength = 1;
     coapOption.mValue = &type;
+
+    return AppendOption(coapOption);
+}
+
+ThreadError Header::AppendMaxAgeOption(uint32_t aMaxAge)
+{
+    Option coapOption;
+
+    aMaxAge = Encoding::BigEndian::HostSwap32(aMaxAge);
+    coapOption.mNumber = kCoapOptionMaxAge;
+    coapOption.mLength = 4;
+    coapOption.mValue = reinterpret_cast<uint8_t *>(&aMaxAge);
+
+    // skip preceding zeros, but make sure mLength is at least 1
+    while (coapOption.mValue[0] == 0 && coapOption.mLength > 1)
+    {
+        coapOption.mValue++;
+        coapOption.mLength--;
+    }
+
+    return AppendOption(coapOption);
+}
+
+ThreadError Header::AppendUriQueryOption(const char *aUriQuery)
+{
+    Option coapOption;
+
+    coapOption.mNumber = kCoapOptionUriQuery;
+    coapOption.mLength = static_cast<uint16_t>(strlen(aUriQuery));
+    coapOption.mValue  = reinterpret_cast<const uint8_t *>(aUriQuery);
 
     return AppendOption(coapOption);
 }
