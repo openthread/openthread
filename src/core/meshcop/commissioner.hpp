@@ -150,6 +150,22 @@ public:
     uint8_t GetState(void) const;
 
     /**
+     * This method sets Joiner timeout.
+     *
+     * @param[in]  aTimeout  A time after which Joiners are automatically removed, in seconds.
+     *
+     */
+    void SetJoinerTimeout(uint32_t aTimeout) { mJoinerTimeout = aTimeout; };
+
+    /**
+     * This method gets current Joiner timeout.
+     *
+     * @returns  A time after which Joiners are automatically removed, in seconds.
+     *
+     */
+    uint32_t GetJoinerTimeout(void) { return mJoinerTimeout; };
+
+    /**
      * This method sends MGMT_COMMISSIONER_GET.
      *
      * @param[in]  aTlvs        A pointer to Commissioning Data TLVs.
@@ -199,14 +215,18 @@ public:
 private:
     enum
     {
-        kPetitionAttemptDelay = 5,   ///< COMM_PET_ATTEMPT_DELAY (seconds)
-        kPetitionRetryCount   = 2,   ///< COMM_PET_RETRY_COUNT
-        kPetitionRetryDelay   = 1,   ///< COMM_PET_RETRY_DELAY (seconds)
-        kKeepAliveTimeout     = 50,  ///< TIMEOUT_COMM_PET (seconds)
+        kPetitionAttemptDelay = 5,      ///< COMM_PET_ATTEMPT_DELAY (seconds)
+        kPetitionRetryCount   = 2,      ///< COMM_PET_RETRY_COUNT
+        kPetitionRetryDelay   = 1,      ///< COMM_PET_RETRY_DELAY (seconds)
+        kKeepAliveTimeout     = 50,     ///< TIMEOUT_COMM_PET (seconds)
+        kDefaultJoinerTimeout = 120,    ///< Default time after which Joiner is removed (seconds)
     };
 
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
+
+    static void HandleJoinerExpirationTimer(void *aContext);
+    void HandleJoinerExpirationTimer(void);
 
     static void HandleMgmtCommissionerSetResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                                   const otMessageInfo *aMessageInfo, ThreadError aResult);
@@ -251,6 +271,7 @@ private:
     struct Joiner
     {
         Mac::ExtAddress mExtAddress;
+        uint32_t mExpirationTime;
         char mPsk[Dtls::kPskMaxLength + 1];
         bool mValid : 1;
         bool mAny : 1;
@@ -264,6 +285,8 @@ private:
     };
     uint16_t mJoinerPort;
     uint16_t mJoinerRloc;
+    uint32_t mJoinerTimeout;
+    Timer mJoinerExpirationTimer;
 
     Timer mTimer;
     uint16_t mSessionId;

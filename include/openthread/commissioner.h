@@ -243,6 +243,25 @@ OTAPI ThreadError OTCALL otCommissionerGeneratePSKc(otInstance *aInstance, const
                                                     uint8_t *aPSKc);
 
 /**
+ * This method sets Joiner timeout.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aTimeout   A time after which Joiners are automatically removed, in seconds.
+ *
+ */
+OTAPI void OTCALL otCommissionerSetJoinerTimeout(otInstance *aInstance, uint32_t aTimeout);
+
+/**
+ * This method gets current Joiner timeout.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns  A time after which Joiners are automatically removed, in seconds.
+ *
+ */
+OTAPI uint32_t OTCALL otCommissionerGetJoinerTimeout(otInstance *aInstance);
+
+/**
  * @}
  *
  */

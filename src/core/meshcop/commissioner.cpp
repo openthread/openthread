@@ -68,6 +68,8 @@ Commissioner::Commissioner(ThreadNetif &aThreadNetif):
     mState(kStateDisabled),
     mJoinerPort(0),
     mJoinerRloc(0),
+    mJoinerTimeout(kDefaultJoinerTimeout),
+    mJoinerExpirationTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleJoinerExpirationTimer, this),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this),
     mSessionId(0),
     mTransmitAttempts(0),
@@ -226,6 +228,22 @@ ThreadError Commissioner::AddJoiner(const Mac::ExtAddress *aExtAddress, const ch
 
         strncpy(mJoiners[i].mPsk, aPSKd, sizeof(mJoiners[i].mPsk) - 1);
         mJoiners[i].mValid = true;
+        mJoiners[i].mExpirationTime = Timer::GetNow() + Timer::SecToMsec(mJoinerTimeout);
+
+        if (mJoinerExpirationTimer.IsRunning())
+        {
+            uint32_t nextJoinerExpirationTime = mJoinerExpirationTimer.Gett0() + mJoinerExpirationTimer.Getdt();
+
+            // Restart the timer to a lower timeout if needed.
+            if (static_cast<int32_t>(nextJoinerExpirationTime - mJoiners[i].mExpirationTime) > 0)
+            {
+                mJoinerExpirationTimer.Start(Timer::SecToMsec(mJoinerTimeout));
+            }
+        }
+        else
+        {
+            mJoinerExpirationTimer.Start(Timer::SecToMsec(mJoinerTimeout));
+        }
 
         SendCommissionerSet();
 
@@ -308,6 +326,46 @@ void Commissioner::HandleTimer(void)
     case kStateActive:
         SendKeepAlive();
         break;
+    }
+}
+
+void Commissioner::HandleJoinerExpirationTimer(void *aContext)
+{
+    static_cast<Commissioner *>(aContext)->HandleJoinerExpirationTimer();
+}
+
+void Commissioner::HandleJoinerExpirationTimer(void)
+{
+    uint32_t now = Timer::GetNow();
+    uint32_t nextTimeout = 0xffffffff;
+
+    for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
+    {
+        if (!mJoiners[i].mValid)
+        {
+            continue;
+        }
+
+        // Check if the Joiner has expired.
+        if (static_cast<int32_t>(now - mJoiners[i].mExpirationTime) < 0)
+        {
+            // If not, update next timeout value to the lowest one.
+            if (mJoiners[i].mExpirationTime - now < nextTimeout)
+            {
+                nextTimeout = mJoiners[i].mExpirationTime - now;
+            }
+        }
+        else
+        {
+            // Otherwise remove the Joiner.
+            otLogDebgMeshCoP("removing joiner due to timeout");
+            RemoveJoiner(&mJoiners[i].mExtAddress);
+        }
+    }
+
+    if (nextTimeout != 0xffffffff)
+    {
+        mJoinerExpirationTimer.Start(nextTimeout);
     }
 }
 
@@ -822,6 +880,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, 
     Ip6::MessageInfo joinerMessageInfo;
     MeshCoP::StateTlv stateTlv;
     Message *message;
+    Mac::ExtAddress extAddr;
 
     otLogFuncEntry();
 
@@ -841,6 +900,10 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, 
 
     mSendKek = true;
     SuccessOrExit(error = mNetif.GetSecureCoapServer().SendMessage(*message, joinerMessageInfo));
+
+    memcpy(extAddr.m8, mJoinerIid, sizeof(extAddr.m8));
+    extAddr.SetLocal(!extAddr.IsLocal());
+    RemoveJoiner(&extAddr);
 
     otLogInfoMeshCoP("sent joiner finalize response");
     otLogCertMeshCoP("[THCI] direction=send | type=JOIN_FIN.rsp");

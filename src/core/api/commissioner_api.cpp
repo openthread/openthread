@@ -114,6 +114,16 @@ ThreadError otCommissionerGeneratePSKc(otInstance *aInstance, const char *aPassP
     return aInstance->mThreadNetif.GetCommissioner().GeneratePSKc(aPassPhrase, aNetworkName, aExtPanId, aPSKc);
 }
 
+void otCommissionerSetJoinerTimeout(otInstance *aInstance, uint32_t aTimeout)
+{
+    aInstance->mThreadNetif.GetCommissioner().SetJoinerTimeout(aTimeout);
+}
+
+uint32_t otCommissionerGetJoinerTimeout(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetCommissioner().GetJoinerTimeout();
+}
+
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
 #ifdef __cplusplus
