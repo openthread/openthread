@@ -466,6 +466,8 @@
 <link href="#rfc.section.5.7.3" rel="Chapter" title="5.7.3 PROP 98: PROP_IPV6_ML_PREFIX"/>
 <link href="#rfc.section.5.7.4" rel="Chapter" title="5.7.4 PROP 99: PROP_IPV6_ADDRESS_TABLE"/>
 <link href="#rfc.section.5.7.5" rel="Chapter" title="5.7.5 PROP 101: PROP_IPv6_ICMP_PING_OFFLOAD"/>
+<link href="#rfc.section.5.8" rel="Chapter" title="5.8 Debug Properties"/>
+<link href="#rfc.section.5.8.1" rel="Chapter" title="5.8.1 PROP 16384: SPINEL_PROP_DEBUG_TEST_ASSERT"/>
 <link href="#rfc.section.6" rel="Chapter" title="6 Status Codes"/>
 <link href="#rfc.section.7" rel="Chapter" title="7 Technology: Thread"/>
 <link href="#rfc.section.7.1" rel="Chapter" title="7.1 Thread Capabilities"/>
@@ -578,8 +580,8 @@
   <link rel="schema.dct" href="http://purl.org/dc/terms/" />
 
   <meta name="dct.creator" content="Quattlebaum, R." />
-  <meta name="dct.identifier" content="urn:ietf:id:draft-spinel-protocol-00deac5b1" />
-  <meta name="dct.issued" scheme="ISO8601" content="2017-2-16" />
+  <meta name="dct.identifier" content="urn:ietf:id:draft-spinel-protocol-860a3959" />
+  <meta name="dct.issued" scheme="ISO8601" content="2017-2-28" />
   <meta name="dct.abstract" content="This document describes a general management protocol for enabling a host device to communicate with and manage a Network Control Processor (NCP).  " />
   <meta name="description" content="This document describes a general management protocol for enabling a host device to communicate with and manage a Network Control Processor (NCP).  " />
 
@@ -600,7 +602,7 @@
 </tr>
 <tr>
   <td class="left"></td>
-  <td class="right">February 16, 2017</td>
+  <td class="right">February 28, 2017</td>
 </tr>
 
     	
@@ -608,7 +610,7 @@
   </table>
 
   <p class="title">Spinel Host-Controller Protocol<br />
-  <span class="filename">draft-spinel-protocol-00deac5b1</span></p>
+  <span class="filename">draft-spinel-protocol-860a3959</span></p>
   
   <h1 id="rfc.abstract">
   <a href="#rfc.abstract">Abstract</a>
@@ -735,6 +737,8 @@
 <li>5.7.3.   <a href="#rfc.section.5.7.3">PROP 98: PROP_IPV6_ML_PREFIX</a></li>
 <li>5.7.4.   <a href="#rfc.section.5.7.4">PROP 99: PROP_IPV6_ADDRESS_TABLE</a></li>
 <li>5.7.5.   <a href="#rfc.section.5.7.5">PROP 101: PROP_IPv6_ICMP_PING_OFFLOAD</a></li>
+</ul><li>5.8.   <a href="#rfc.section.5.8">Debug Properties</a></li>
+<ul><li>5.8.1.   <a href="#rfc.section.5.8.1">PROP 16384: SPINEL_PROP_DEBUG_TEST_ASSERT</a></li>
 </ul></ul><li>6.   <a href="#rfc.section.6">Status Codes</a></li>
 <li>7.   <a href="#rfc.section.7">Technology: Thread</a></li>
 <ul><li>7.1.   <a href="#rfc.section.7.1">Thread Capabilities</a></li>
@@ -1604,7 +1608,7 @@
   </tbody>
 </table>
 <p id="rfc.section.4.14.p.3">This command sets the value of several properties at once in the given order. The setting of properties stops at the first error, ignoring any later properties.  </p>
-<p id="rfc.section.4.14.p.4">The result of this command is generally <samp>CMD_PROP_VALUES_ARE</samp> unless (for example) a parsing error has occured (in which case <samp>CMD_PROP_VALUE_IS</samp> for <samp>PROP_LAST_STATUS</samp> would be the result). The order of the results in <samp>CMD_PROP_VALUES_ARE</samp> match the order of properties given in <samp>CMD_PROP_VALUE_SET</samp>.  </p>
+<p id="rfc.section.4.14.p.4">The result of this command is generally <samp>CMD_PROP_VALUES_ARE</samp> unless (for example) a parsing error has occured (in which case <samp>CMD_PROP_VALUE_IS</samp> for <samp>PROP_LAST_STATUS</samp> would be the result). The order of the results in <samp>CMD_PROP_VALUES_ARE</samp> match the order of properties given in <samp>CMD_PROP_VALUE_MULTI_SET</samp>.  </p>
 <p id="rfc.section.4.14.p.5">Since the processing of properties to set stops at the first error, the resulting <samp>CMD_PROP_VALUES_ARE</samp> can contain fewer items than the requested number of properties to set.  </p>
 <p id="rfc.section.4.14.p.6">Not all properties can be set using this method. As a general rule of thumb, any property that blocks when setting will fail for that individual property with <samp>STATUS_INVALID_COMMAND_FOR_PROP</samp>.  </p>
 <h1 id="rfc.section.4.15"><a href="#rfc.section.4.15">4.15.</a> <a href="#prop-values-are" id="prop-values-are">CMD 23: (NCP-&gt;Host) CMD_PROP_VALUES_ARE</a></h1>
@@ -1748,9 +1752,16 @@
         <a href="#prop-core">Section 5.2</a>
       </td>
     </tr>
+    <tr>
+      <td class="center">Debug</td>
+      <td class="center">0x4000 - 0x4400</td>
+      <td class="center">
+        <a href="#prop-debug">Section 5.8</a>
+      </td>
+    </tr>
   </tbody>
 </table>
-<p id="rfc.section.5.1.p.2">Note that each property section has two reserved ranges: a primary range (which is encoded as a single byte) and an extended range (which is encoded as two bytes). properties which are used more frequently are generally allocated from the former range.  </p>
+<p id="rfc.section.5.1.p.2">Note that some of the property sections have two reserved ranges: a primary range (which is encoded as a single byte) and an extended range (which is encoded as two bytes).  properties which are used more frequently are generally allocated from the former range.  </p>
 <h1 id="rfc.section.5.2"><a href="#rfc.section.5.2">5.2.</a> <a href="#prop-core" id="prop-core">Core Properties</a></h1>
 <h1 id="rfc.section.5.2.1"><a href="#rfc.section.5.2.1">5.2.1.</a> <a href="#prop-last-status" id="prop-last-status">PROP 0: PROP_LAST_STATUS</a></h1>
 <p/>
@@ -2639,7 +2650,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.5.6.1.p.2">Returns true if there is a network state stored that can be restored with a call to <samp>CMD_NET_RECALL</samp>.  </p>
+<p id="rfc.section.5.6.1.p.2">Returns true if there is a network state stored/saved.  </p>
 <h1 id="rfc.section.5.6.2"><a href="#rfc.section.5.6.2">5.6.2.</a> <a href="#prop-net-if-up" id="prop-net-if-up">PROP 65: PROP_NET_IF_UP</a></h1>
 <p/>
 
@@ -2800,6 +2811,17 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 <p> </p>
 <p id="rfc.section.5.7.5.p.2">Allow the NCP to directly respond to ICMP ping requests. If this is turned on, ping request ICMP packets will not be passed to the host.  </p>
 <p id="rfc.section.5.7.5.p.3">Default value is <samp>false</samp>.  </p>
+<h1 id="rfc.section.5.8"><a href="#rfc.section.5.8">5.8.</a> <a href="#prop-debug" id="prop-debug">Debug Properties</a></h1>
+<h1 id="rfc.section.5.8.1"><a href="#rfc.section.5.8.1">5.8.1.</a> <a href="#prop-debug-test-assert" id="prop-debug-test-assert">PROP 16384: SPINEL_PROP_DEBUG_TEST_ASSERT</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Only</li>
+  <li>Packed-Encoding: <samp>b</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.5.8.1.p.2">Reading this property will cause an assert on the NCP. This is intended for testing the assert functionality of underlying platform/NCP. Assert should ideally cause the NCP to reset, but if <samp>assert</samp> is not supported or disabled boolean value of <samp>false</samp> is returned in response.  </p>
 <h1 id="rfc.section.6"><a href="#rfc.section.6">6.</a> <a href="#status-codes" id="status-codes">Status Codes</a></h1>
 <p id="rfc.section.6.p.1">Status codes are sent from the NCP to the host via <samp>PROP_LAST_STATUS</samp> using the <samp>CMD_VALUE_IS</samp> command to indicate the return status of a previous command. As with any response, the TID field of the FLAG byte is used to correlate the response with the request.  </p>
 <p id="rfc.section.6.p.2">Note that most successfully executed commands do not indicate a last status of <samp>STATUS_OK</samp>. The usual way the NCP indicates a successful command is to mirror the property change back to the host. For example, if you do a <samp>CMD_VALUE_SET</samp> on <samp>PROP_PHY_ENABLED</samp>, the NCP would indicate success by responding with a <samp>CMD_VALUE_IS</samp> for <samp>PROP_PHY_ENABLED</samp>. If the command failed, <samp>PROP_LAST_STATUS</samp> would be emitted instead.  </p>
