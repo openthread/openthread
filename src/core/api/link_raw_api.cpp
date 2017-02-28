@@ -505,6 +505,7 @@ void LinkRaw::HandleTimer(void)
         {
             InvokeTransmitDone(aPacket, false, error);
         }
+
         break;
     }
 
