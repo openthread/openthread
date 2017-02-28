@@ -1078,6 +1078,19 @@ typedef enum
     SPINEL_PROP_VENDOR__BEGIN       = 15360,
     SPINEL_PROP_VENDOR__END         = 16384,
 
+    SPINEL_PROP_DEBUG__BEGIN        = 16384,
+
+    /// Reading this property will cause an assert on the NCP.
+    /// This is intended for testing the assert functionality of
+    /// underlying platform/NCP. Assert should ideally cause the
+    /// NCP to reset, but if this is not supported a `false` boolean
+    /// is returned in response.
+    /** Format: 'b' (read-only) */
+    SPINEL_PROP_DEBUG_TEST_ASSERT
+                                    = SPINEL_PROP_DEBUG__BEGIN + 0,
+
+    SPINEL_PROP_DEBUG__END          = 17408,
+
     SPINEL_PROP_EXPERIMENTAL__BEGIN = 2000000,
     SPINEL_PROP_EXPERIMENTAL__END   = 2097152,
 } spinel_prop_key_t;

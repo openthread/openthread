@@ -33,12 +33,13 @@ NET    | 0x40 - 0x4F, 0x1400 - 0x14FF | (#prop-net)
 Tech   | 0x50 - 0x5F, 0x1500 - 0x15FF | Technology-specific
 IPv6   | 0x60 - 0x6F, 0x1600 - 0x16FF | (#prop-ipv6)
 Stream | 0x70 - 0x7F, 0x1700 - 0x17FF | (#prop-core)
+Debug  |              0x4000 - 0x4400 | (#prop-debug)
 
-Note that each property section has two reserved ranges: a
-primary range (which is encoded as a single byte) and
-an extended range (which is encoded as two bytes). properties
-which are used more frequently are generally allocated
-from the former range.
+Note that some of the property sections have two reserved
+ranges: a primary range (which is encoded as a single byte)
+and an extended range (which is encoded as two bytes).
+properties which are used more frequently are generally
+allocated from the former range.
 
 {{spinel-prop-core.md}}
 
@@ -50,3 +51,4 @@ from the former range.
 
 {{spinel-prop-ipv6.md}}
 
+{{spinel-prop-debug.md}}

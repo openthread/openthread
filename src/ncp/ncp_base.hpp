@@ -389,6 +389,7 @@ private:
     ThreadError GetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_NET_REQUIRE_JOIN_EXISTING(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_DEBUG_TEST_ASSERT(uint8_t header, spinel_prop_key_t key);
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     ThreadError GetPropertyHandler_JAM_DETECT_ENABLE(uint8_t header, spinel_prop_key_t key);
@@ -402,6 +403,7 @@ private:
 #if OPENTHREAD_ENABLE_LEGACY
     ThreadError GetPropertyHandler_NEST_LEGACY_ULA_PREFIX(uint8_t header, spinel_prop_key_t key);
 #endif
+
 
     ThreadError SetPropertyHandler_POWER_STATE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                uint16_t value_len);

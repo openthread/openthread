@@ -36,9 +36,9 @@
 #include <openthread-config.h>
 #endif
 
-#include <assert.h>
 #include <stdlib.h>
 #include <common/code_utils.hpp>
+ #include <common/debug.hpp>
 #include <ncp/ncp.h>
 #include <ncp/ncp_base.hpp>
 #include <net/ip6.hpp>
@@ -226,6 +226,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_CNTR_RX_SPINEL_ERR, &NcpBase::GetPropertyHandler_NCP_CNTR },
 
     { SPINEL_PROP_MSG_BUFFER_COUNTERS, &NcpBase::GetPropertyHandler_MSG_BUFFER_COUNTERS },
+    { SPINEL_PROP_DEBUG_TEST_ASSERT, &NcpBase::GetPropertyHandler_DEBUG_TEST_ASSERT },
 
 #if OPENTHREAD_ENABLE_LEGACY
     { SPINEL_PROP_NEST_LEGACY_ULA_PREFIX, &NcpBase::GetPropertyHandler_NEST_LEGACY_ULA_PREFIX },
@@ -3067,6 +3068,24 @@ ThreadError NcpBase::GetPropertyHandler_MSG_BUFFER_COUNTERS(uint8_t header, spin
 
 exit:
     return errorCode;
+}
+
+ThreadError NcpBase::GetPropertyHandler_DEBUG_TEST_ASSERT(uint8_t header, spinel_prop_key_t key)
+{
+    assert(false);
+
+    // We only get to this point if `assert(false)`
+    // does not cause an NCP reset on the platform.
+    // In such a case we return `false` as the
+    // property value to inidicate this.
+
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_BOOL_S,
+               false
+            );
 }
 
 ThreadError NcpBase::GetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop_key_t key)
