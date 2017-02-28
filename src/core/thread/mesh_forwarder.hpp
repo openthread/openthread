@@ -139,15 +139,22 @@ public:
     void SetRxOnWhenIdle(bool aRxOnWhenIdle);
 
     /**
-     * This method sets customized Data Poll period. Only for certification test
+     * This method sets a user-specified Data Poll period.
      *
-     * @param[in]  aPeriod  The Data Poll period in milliseconds.
+     * If the value is set to zero, then the poll interval is managed by the OpenThread stack.
+     * If the user has provided a non-zero poll period, the user value specifies the maximum period between data
+     * request transmissions. Note that OpenThread may send data request transmissions more frequently when expecting
+     * a control-message from a parent.
+     *
+     * Initial/Default value for "assign poll period" is zero.
+     *
+     * @param[in]  aPeriod  The Data Poll period in milliseconds, or zero to mean no user-specified poll period.
      *
      */
     void SetAssignPollPeriod(uint32_t aPeriod);
 
     /**
-     * This method gets the customized Data Poll period. Only for certification test
+     * This method gets the current user-specified Data Poll period.
      *
      * @returns  The Data Poll period in milliseconds.
      *
@@ -155,7 +162,13 @@ public:
     uint32_t GetAssignPollPeriod(void);
 
     /**
-     * This method sets the Data Poll period.
+     *
+     * This method sets the maximum period between data request command transmissions. Note that OpenThread may send
+     * data request transmissions more frequently when expecting a control-message from a parent.
+     *
+     * If the user has provided a non-zero assign poll period (@sa SetAssignPollPeriod), the user value specifies the
+     * maximum period between data request command transmissions and is used in place of @p aPeriod.
+     *
      *
      * @param[in]  aPeriod  The Data Poll period in milliseconds.
      *
