@@ -129,7 +129,9 @@ Structure Parameters:
 * Packed-Encoding: `b`
 
 Set to true to enable radio source matching or false to disable it. This property
-is only available if the `SPINEL_CAP_MAC_RAW` capability is present.
+is only available if the `SPINEL_CAP_MAC_RAW` capability is present. The source match
+functionality is used by radios when generating ACKs. The short and extended address
+lists are used for settings the Frame Pending bit in the ACKs.
 
 ### PROP 4868: SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES  {#prop-mac-src-match-short-addresses}
 * Type: Write
