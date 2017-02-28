@@ -89,7 +89,6 @@ NcpUart::NcpUart(otInstance *aInstance):
     NcpBase(aInstance),
     mFrameDecoder(mRxBuffer, sizeof(mRxBuffer), &NcpUart::HandleFrame, &NcpUart::HandleError, this),
     mUartBuffer(),
-    mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer)),
     mState(kStartingFrame),
     mByte(0),
     mUartSendTask(aInstance->mIp6.mTaskletScheduler, EncodeAndSendToUart, this)
@@ -97,26 +96,6 @@ NcpUart::NcpUart(otInstance *aInstance):
     mTxFrameBuffer.SetCallbacks(NULL, TxFrameBufferHasData, this);
 
     otPlatUartEnable();
-}
-
-ThreadError NcpUart::OutboundFrameBegin(void)
-{
-    return mTxFrameBuffer.InFrameBegin();
-}
-
-ThreadError NcpUart::OutboundFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDataBufferLength)
-{
-    return mTxFrameBuffer.InFrameFeedData(aDataBuffer, aDataBufferLength);
-}
-
-ThreadError NcpUart::OutboundFrameFeedMessage(otMessage aMessage)
-{
-    return mTxFrameBuffer.InFrameFeedMessage(aMessage);
-}
-
-ThreadError NcpUart::OutboundFrameEnd(void)
-{
-    return mTxFrameBuffer.InFrameEnd();
 }
 
 void NcpUart::TxFrameBufferHasData(void *aContext, NcpFrameBuffer *aNcpFrameBuffer)

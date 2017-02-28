@@ -41,7 +41,6 @@
 
 #include <ncp/ncp_base.hpp>
 #include <ncp/hdlc.hpp>
-#include <ncp/ncp_buffer.hpp>
 
 namespace Thread {
 
@@ -57,55 +56,6 @@ public:
      *
      */
     NcpUart(otInstance *aInstance);
-
-    /**
-     * This method is called to start a new outbound frame.
-     *
-     * @retval kThreadError_None      Successfully started a new frame.
-     * @retval kThreadError_NoBufs    Insufficient buffer space available to start a new frame.
-     *
-     */
-    virtual ThreadError OutboundFrameBegin(void);
-
-    /**
-     * This method adds data to the current outbound frame being written.
-     *
-     * If no buffer space is available, this method will discard and clear the frame before returning an error status.
-     *
-     * @param[in]  aDataBuffer        A pointer to data buffer.
-     * @param[in]  aDataBufferLength  The length of the data buffer.
-     *
-     * @retval kThreadError_None      Successfully added new data to the frame.
-     * @retval kThreadError_NoBufs    Insufficient buffer space available to add data.
-     *
-     */
-    virtual ThreadError OutboundFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDataBufferLength);
-
-    /**
-     * This method adds a message to the current outbound frame being written.
-     *
-     * If no buffer space is available, this method will discard and clear the frame before returning an error status.
-     * In case of success, the passed-in message @aMessage will be owned by outbound buffer and will be freed
-     * when either the the frame is successfully sent and removed or if the frame is discarded.
-     *
-     * @param[in]  aMessage         A message instance to be added to current frame.
-     *
-     * @retval kThreadError_None    Successfully added the message to the frame.
-     * @retval kThreadError_NoBufs  Insufficient buffer space available to add message.
-     *
-     */
-    virtual ThreadError OutboundFrameFeedMessage(otMessage aMessage);
-
-    /**
-     * This method finalizes and sends the current outbound frame.
-     *
-     * If no buffer space is available, this method will discard and clear the frame before returning an error status.
-     *
-     * @retval kThreadError_None    Successfully added the message to the frame.
-     * @retval kThreadError_NoBufs  Insufficient buffer space available to add message.
-     *
-     */
-    virtual ThreadError OutboundFrameEnd(void);
 
     /**
      * This method is called when uart tx is finished. It prepares and sends the next data chunk (if any) to uart.
@@ -124,7 +74,6 @@ private:
     enum
     {
         kUartTxBufferSize = OPENTHREAD_CONFIG_NCP_UART_TX_CHUNK_SIZE,  // Uart tx buffer size.
-        kTxBufferSize = OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE,          // Tx Buffer size (used by mTxFrameBuffer).
         kRxBufferSize = OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE,     // Rx buffer size (should be large enough to fit
                                                                        // one whole (decoded) received frame).
     };
@@ -163,10 +112,8 @@ private:
     Hdlc::Encoder   mFrameEncoder;
     Hdlc::Decoder   mFrameDecoder;
     UartTxBuffer    mUartBuffer;
-    NcpFrameBuffer  mTxFrameBuffer;
     UartTxState     mState;
     uint8_t         mByte;
-    uint8_t         mTxBuffer[kTxBufferSize];
     uint8_t         mRxBuffer[kRxBufferSize];
     Tasklet         mUartSendTask;
 };

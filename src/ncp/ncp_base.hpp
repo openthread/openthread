@@ -44,6 +44,7 @@
 #include <openthread-ip6.h>
 #include <common/tasklet.hpp>
 #include <ncp/ncp.h>
+#include <ncp/ncp_buffer.hpp>
 
 #include "spinel.h"
 
@@ -75,7 +76,7 @@ protected:
      * @retval kThreadError_NoBufs    Insufficient buffer space available to start a new frame.
      *
      */
-    virtual ThreadError OutboundFrameBegin(void) = 0;
+    ThreadError OutboundFrameBegin(void);
 
     /**
      * This method adds data to the current outbound frame being written.
@@ -89,7 +90,7 @@ protected:
      * @retval kThreadError_NoBufs    Insufficient buffer space available to add data.
      *
      */
-    virtual ThreadError OutboundFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDataBufferLength) = 0;
+    ThreadError OutboundFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDataBufferLength);
 
     /**
      * This method adds a message to the current outbound frame being written.
@@ -104,7 +105,7 @@ protected:
      * @retval kThreadError_NoBufs  Insufficient buffer space available to add message.
      *
      */
-    virtual ThreadError OutboundFrameFeedMessage(otMessage aMessage) = 0;
+    ThreadError OutboundFrameFeedMessage(otMessage aMessage);
 
     /**
      * This method finalizes and sends the current outbound frame
@@ -115,7 +116,7 @@ protected:
      * @retval kThreadError_NoBufs  Insufficient buffer space available to add message.
      *
      */
-    virtual ThreadError OutboundFrameEnd(void) = 0;
+    ThreadError OutboundFrameEnd(void);
 
     /**
      * This method is called by the framer whenever a framing error
@@ -551,7 +552,14 @@ public:
     void RegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers);
 #endif
 
+protected:
+    NcpFrameBuffer  mTxFrameBuffer;
+
 private:
+    enum
+    {
+        kTxBufferSize = OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE,  // Tx Buffer size (used by mTxFrameBuffer).
+    };
 
     spinel_status_t mLastStatus;
 
@@ -576,6 +584,8 @@ private:
     uint16_t mDroppedReplyTidBitSet;
 
     spinel_tid_t mNextExpectedTid;
+
+    uint8_t mTxBuffer[kTxBufferSize];
 
     bool mAllowLocalNetworkDataChange;
     bool mRequireJoinExistingNetwork;

@@ -476,6 +476,7 @@ static uint8_t BorderRouterConfigToFlagByte(const otBorderRouterConfig &config)
 
 NcpBase::NcpBase(otInstance *aInstance):
     mInstance(aInstance),
+    mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer)),
     mLastStatus(SPINEL_STATUS_OK),
     mSupportedChannelMask(kPhySupportedChannelMask),
     mChannelMask(kPhySupportedChannelMask),
@@ -527,6 +528,30 @@ NcpBase::NcpBase(otInstance *aInstance):
     mLegacyHandlers = NULL;
     memset(mLegacyUlaPrefix, 0, sizeof(mLegacyUlaPrefix));
 #endif
+}
+
+// ----------------------------------------------------------------------------
+// MARK: Outbound Frame methods
+// ----------------------------------------------------------------------------
+
+ThreadError NcpBase::OutboundFrameBegin(void)
+{
+    return mTxFrameBuffer.InFrameBegin();
+}
+
+ThreadError NcpBase::OutboundFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDataBufferLength)
+{
+    return mTxFrameBuffer.InFrameFeedData(aDataBuffer, aDataBufferLength);
+}
+
+ThreadError NcpBase::OutboundFrameFeedMessage(otMessage aMessage)
+{
+    return mTxFrameBuffer.InFrameFeedMessage(aMessage);
+}
+
+ThreadError NcpBase::OutboundFrameEnd(void)
+{
+    return mTxFrameBuffer.InFrameEnd();
 }
 
 // ----------------------------------------------------------------------------
