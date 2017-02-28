@@ -36,22 +36,6 @@
 #define OPENTHREAD_CORE_NRF52840_CONFIG_H_
 
 /**
- * @def OPENTHREAD_CONFIG_LOG_LEVEL
- *
- * The log level.
- *
- */
-#define OPENTHREAD_CONFIG_LOG_LEVEL                             OPENTHREAD_LOG_LEVEL_DEBG
-
- /**
-  * @def OPENTHREAD_CONFIG_LOG_PLATFORM
-  *
-  * Define to enable platform region logging.
-  *
-  */
-#define OPENTHREAD_CONFIG_LOG_PLATFORM                          1
-
-/**
  * @def OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
  *
  * The number of message buffers in the buffer pool.
