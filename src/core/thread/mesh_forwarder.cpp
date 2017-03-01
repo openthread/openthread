@@ -921,7 +921,7 @@ void MeshForwarder::ScheduleNextPoll(uint32_t aDelay)
     }
     else
     {
-        otLogWarnMac("Cannot start poll timer with non-initialized value of poll period.");
+        otLogWarnMac("Cannot start poll timer with uninitialized value of poll period.");
     }
 }
 
