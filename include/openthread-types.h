@@ -66,30 +66,6 @@ extern "C" {
 #define CONTAINING_RECORD(address, type, field) \
     ((type *)((uint8_t*)(address) - myoffsetof(type, field)))
 #endif /* CONTAINING_RECORD */
-typedef int errno_t;
-__inline errno_t strcpy_s(char *Dest, uint32_t DestSize, char const *Src)
-{
-    errno_t result = 1;
-    uint32_t index = 0;
-
-    while (index < DestSize)
-    {
-        // Copy the character
-        Dest[index] = Src[index];
-
-        // Break out if we have reached the end of 'Src'
-        if (Src[index] == '\0')
-        {
-        result = 0;  // Success
-        break;
-    }
-
-    // Increment index
-    index++;
-    }
-
-    return result;
-}
 #endif /* _WIN32 */
 
 /**
