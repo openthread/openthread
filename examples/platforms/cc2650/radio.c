@@ -1493,6 +1493,24 @@ exit:
 }
 
 /**
+* Function documented in platform/radio.h
+*/
+void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
+{
+    (void)aInstance;
+    // TODO - This function needs to be implemented
+}
+
+/**
+* Function documented in platform/radio.h
+*/
+void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
+{
+    (void)aInstance;
+    // TODO - This function needs to be implemented
+}
+
+/**
  * Function documented in platform/radio.h
  */
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)

@@ -145,8 +145,8 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION, &NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA_VERSION },
     { SPINEL_PROP_THREAD_LEADER_NETWORK_DATA, &NcpBase::GetPropertyHandler_THREAD_LEADER_NETWORK_DATA },
     { SPINEL_PROP_THREAD_STABLE_LEADER_NETWORK_DATA, &NcpBase::GetPropertyHandler_THREAD_STABLE_LEADER_NETWORK_DATA },
-    { SPINEL_PROP_THREAD_LOCAL_ROUTES, &NcpBase::NcpBase::GetPropertyHandler_THREAD_LOCAL_ROUTES },
-    { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::NcpBase::GetPropertyHandler_THREAD_ASSISTING_PORTS },
+    { SPINEL_PROP_THREAD_LOCAL_ROUTES, &NcpBase::GetPropertyHandler_THREAD_LOCAL_ROUTES },
+    { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::GetPropertyHandler_THREAD_ASSISTING_PORTS },
     { SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE, &NcpBase::GetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE },
     { SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED, &NcpBase::GetPropertyHandler_THREAD_ROUTER_ROLE_ENABLED },
 
@@ -160,7 +160,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD, &NcpBase::GetPropertyHandler_THREAD_ROUTER_DOWNGRADE_THRESHOLD },
     { SPINEL_PROP_THREAD_CONTEXT_REUSE_DELAY, &NcpBase::GetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY },
     { SPINEL_PROP_THREAD_NETWORK_ID_TIMEOUT, &NcpBase::GetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT },
-    { SPINEL_PROP_THREAD_ON_MESH_NETS, &NcpBase::NcpBase::GetPropertyHandler_THREAD_ON_MESH_NETS },
+    { SPINEL_PROP_THREAD_ON_MESH_NETS, &NcpBase::GetPropertyHandler_THREAD_ON_MESH_NETS },
     { SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING, &NcpBase::GetPropertyHandler_NET_REQUIRE_JOIN_EXISTING },
     { SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER, &NcpBase::GetPropertyHandler_THREAD_ROUTER_SELECTION_JITTER },
 
@@ -275,6 +275,11 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
 
     { SPINEL_PROP_MAC_WHITELIST, &NcpBase::SetPropertyHandler_MAC_WHITELIST },
     { SPINEL_PROP_MAC_WHITELIST_ENABLED, &NcpBase::SetPropertyHandler_MAC_WHITELIST_ENABLED },
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+    { SPINEL_PROP_MAC_SRC_MATCH_ENABLED, &NcpBase::SetPropertyHandler_MAC_SRC_MATCH_ENABLED },
+    { SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES, &NcpBase::SetPropertyHandler_MAC_SRC_MATCH_SHORT_ADDRESSES },
+    { SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES, &NcpBase::SetPropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES },
+#endif
     { SPINEL_PROP_THREAD_MODE, &NcpBase::SetPropertyHandler_THREAD_MODE },
     { SPINEL_PROP_THREAD_CHILD_COUNT_MAX, &NcpBase::SetPropertyHandler_THREAD_CHILD_COUNT_MAX },
     { SPINEL_PROP_THREAD_CHILD_TIMEOUT, &NcpBase::SetPropertyHandler_THREAD_CHILD_TIMEOUT },
@@ -303,10 +308,14 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
 
 const NcpBase::InsertPropertyHandlerEntry NcpBase::mInsertPropertyHandlerTable[] =
 {
-    { SPINEL_PROP_IPV6_ADDRESS_TABLE, &NcpBase::NcpBase::InsertPropertyHandler_IPV6_ADDRESS_TABLE },
-    { SPINEL_PROP_THREAD_LOCAL_ROUTES, &NcpBase::NcpBase::InsertPropertyHandler_THREAD_LOCAL_ROUTES },
-    { SPINEL_PROP_THREAD_ON_MESH_NETS, &NcpBase::NcpBase::InsertPropertyHandler_THREAD_ON_MESH_NETS },
-    { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::NcpBase::InsertPropertyHandler_THREAD_ASSISTING_PORTS },
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+    { SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES, &NcpBase::InsertPropertyHandler_MAC_SRC_MATCH_SHORT_ADDRESSES },
+    { SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES, &NcpBase::InsertPropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES },
+#endif
+    { SPINEL_PROP_IPV6_ADDRESS_TABLE, &NcpBase::InsertPropertyHandler_IPV6_ADDRESS_TABLE },
+    { SPINEL_PROP_THREAD_LOCAL_ROUTES, &NcpBase::InsertPropertyHandler_THREAD_LOCAL_ROUTES },
+    { SPINEL_PROP_THREAD_ON_MESH_NETS, &NcpBase::InsertPropertyHandler_THREAD_ON_MESH_NETS },
+    { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::InsertPropertyHandler_THREAD_ASSISTING_PORTS },
 
     { SPINEL_PROP_CNTR_RESET, &NcpBase::SetPropertyHandler_CNTR_RESET },
 
@@ -315,10 +324,14 @@ const NcpBase::InsertPropertyHandlerEntry NcpBase::mInsertPropertyHandlerTable[]
 
 const NcpBase::RemovePropertyHandlerEntry NcpBase::mRemovePropertyHandlerTable[] =
 {
-    { SPINEL_PROP_IPV6_ADDRESS_TABLE, &NcpBase::NcpBase::RemovePropertyHandler_IPV6_ADDRESS_TABLE },
-    { SPINEL_PROP_THREAD_LOCAL_ROUTES, &NcpBase::NcpBase::RemovePropertyHandler_THREAD_LOCAL_ROUTES },
-    { SPINEL_PROP_THREAD_ON_MESH_NETS, &NcpBase::NcpBase::RemovePropertyHandler_THREAD_ON_MESH_NETS },
-    { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::NcpBase::RemovePropertyHandler_THREAD_ASSISTING_PORTS },
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+    { SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES, &NcpBase::RemovePropertyHandler_MAC_SRC_MATCH_SHORT_ADDRESSES },
+    { SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES, &NcpBase::RemovePropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES },
+#endif
+    { SPINEL_PROP_IPV6_ADDRESS_TABLE, &NcpBase::RemovePropertyHandler_IPV6_ADDRESS_TABLE },
+    { SPINEL_PROP_THREAD_LOCAL_ROUTES, &NcpBase::RemovePropertyHandler_THREAD_LOCAL_ROUTES },
+    { SPINEL_PROP_THREAD_ON_MESH_NETS, &NcpBase::RemovePropertyHandler_THREAD_ON_MESH_NETS },
+    { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::RemovePropertyHandler_THREAD_ASSISTING_PORTS },
     { SPINEL_PROP_MAC_WHITELIST, &NcpBase::RemovePropertyHandler_MAC_WHITELIST },
     { SPINEL_PROP_THREAD_ACTIVE_ROUTER_IDS, &NcpBase::RemovePropertyHandler_THREAD_ACTIVE_ROUTER_IDS },
 };
@@ -4736,6 +4749,158 @@ ThreadError NcpBase::SetPropertyHandler_MAC_WHITELIST_ENABLED(uint8_t header, sp
     return errorCode;
 }
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+
+ThreadError NcpBase::SetPropertyHandler_MAC_SRC_MATCH_ENABLED(uint8_t header, spinel_prop_key_t key,
+                                                              const uint8_t *value_ptr, uint16_t value_len)
+{
+    bool isEnabled;
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_BOOL_S,
+                       &isEnabled
+                   );
+
+    if (parsedLength > 0)
+    {
+        errorCode = otLinkRawSrcMatchEnable(mInstance, isEnabled);
+        if (errorCode == kThreadError_None)
+        {
+            errorCode = HandleCommandPropertyGet(header, key);
+        }
+        else
+        {
+            errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+        }
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
+ThreadError NcpBase::SetPropertyHandler_MAC_SRC_MATCH_SHORT_ADDRESSES(uint8_t header, spinel_prop_key_t key,
+                                                                      const uint8_t *value_ptr, uint16_t value_len)
+{
+    ThreadError errorCode = kThreadError_None;
+    spinel_status_t errorStatus = SPINEL_STATUS_OK;
+    const uint8_t *data = value_ptr;
+    uint16_t data_len = value_len;
+
+    // Clear the list first
+    errorCode = otLinkRawSrcMatchClearShortEntries(mInstance);
+
+    VerifyOrExit(errorCode == kThreadError_None,
+        errorStatus = ThreadErrorToSpinelStatus(errorCode));
+
+    // Loop through the addresses and add them
+    while (data_len >= sizeof(uint16_t))
+    {
+        spinel_ssize_t parsedLength;
+        uint16_t short_address;
+
+        parsedLength = spinel_datatype_unpack(
+            data,
+            data_len,
+            SPINEL_DATATYPE_UINT16_S,
+            &short_address
+        );
+
+        VerifyOrExit(parsedLength > 0, errorStatus = SPINEL_STATUS_PARSE_ERROR);
+
+        data += parsedLength;
+        data_len -= (uint16_t)parsedLength;
+
+        errorCode = otLinkRawSrcMatchAddShortEntry(mInstance, short_address);
+
+        VerifyOrExit(errorCode == kThreadError_None,
+            errorStatus = ThreadErrorToSpinelStatus(errorCode));
+    }
+
+    errorCode =
+        SendPropertyUpdate(
+            header,
+            SPINEL_CMD_PROP_VALUE_IS,
+            key,
+            value_ptr,
+            value_len
+        );
+
+exit:
+
+    if (errorStatus != SPINEL_STATUS_OK)
+    {
+        errorCode = SendLastStatus(header, errorStatus);
+    }
+
+    return errorCode;
+}
+
+ThreadError NcpBase::SetPropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES(uint8_t header, spinel_prop_key_t key,
+                                                                         const uint8_t *value_ptr, uint16_t value_len)
+{
+    ThreadError errorCode = kThreadError_None;
+    spinel_status_t errorStatus = SPINEL_STATUS_OK;
+    const uint8_t *data = value_ptr;
+    uint16_t data_len = value_len;
+
+    // Clear the list first
+    errorCode = otLinkRawSrcMatchClearExtEntries(mInstance);
+
+    VerifyOrExit(errorCode == kThreadError_None,
+        errorStatus = ThreadErrorToSpinelStatus(errorCode));
+
+    // Loop through the addresses and add them
+    while (data_len >= sizeof(otExtAddress))
+    {
+        spinel_ssize_t parsedLength;
+        uint8_t *ext_address;
+
+        parsedLength = spinel_datatype_unpack(
+            data,
+            data_len,
+            SPINEL_DATATYPE_EUI64_S,
+            &ext_address
+        );
+
+        VerifyOrExit(parsedLength > 0, errorStatus = SPINEL_STATUS_PARSE_ERROR);
+
+        data += parsedLength;
+        data_len -= (uint16_t)parsedLength;
+
+        errorCode = otLinkRawSrcMatchAddExtEntry(mInstance, ext_address);
+
+        VerifyOrExit(errorCode == kThreadError_None,
+            errorStatus = ThreadErrorToSpinelStatus(errorCode));
+    }
+
+    errorCode =
+        SendPropertyUpdate(
+            header,
+            SPINEL_CMD_PROP_VALUE_IS,
+            key,
+            value_ptr,
+            value_len
+        );
+
+exit:
+
+    if (errorStatus != SPINEL_STATUS_OK)
+    {
+        errorCode = SendLastStatus(header, errorStatus);
+    }
+
+    return errorCode;
+}
+
+#endif
+
 ThreadError NcpBase::SetPropertyHandler_THREAD_MODE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                     uint16_t value_len)
 {
@@ -5268,6 +5433,91 @@ ThreadError NcpBase::SetPropertyHandler_NEST_LEGACY_ULA_PREFIX(uint8_t header, s
 // MARK: Individual Property Inserters
 // ----------------------------------------------------------------------------
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+
+ThreadError NcpBase::InsertPropertyHandler_MAC_SRC_MATCH_SHORT_ADDRESSES(uint8_t header, spinel_prop_key_t key,
+                                                                         const uint8_t *value_ptr, uint16_t value_len)
+{
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+    spinel_status_t errorStatus = SPINEL_STATUS_OK;
+    uint16_t short_address;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_UINT16_S,
+                       &short_address
+                   );
+
+    VerifyOrExit(parsedLength > 0, errorStatus = SPINEL_STATUS_PARSE_ERROR);
+
+    errorCode = otLinkRawSrcMatchAddShortEntry(mInstance, short_address);
+
+    VerifyOrExit(errorCode == kThreadError_None,
+                 errorStatus = ThreadErrorToSpinelStatus(errorCode));
+
+    errorCode =
+        SendPropertyUpdate(
+            header,
+            SPINEL_CMD_PROP_VALUE_INSERTED,
+            key,
+            value_ptr,
+            value_len
+        );
+
+exit:
+
+    if (errorStatus != SPINEL_STATUS_OK)
+    {
+        errorCode = SendLastStatus(header, errorStatus);
+    }
+
+    return errorCode;
+}
+
+ThreadError NcpBase::InsertPropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES(uint8_t header, spinel_prop_key_t key,
+                                                                            const uint8_t *value_ptr, uint16_t value_len)
+{
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+    spinel_status_t errorStatus = SPINEL_STATUS_OK;
+    uint8_t *ext_address = NULL;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_EUI64_S,
+                       &ext_address
+                   );
+
+    VerifyOrExit(parsedLength > 0, errorStatus = SPINEL_STATUS_PARSE_ERROR);
+
+    errorCode = otLinkRawSrcMatchAddExtEntry(mInstance, ext_address);
+
+    VerifyOrExit(errorCode == kThreadError_None,
+                 errorStatus = ThreadErrorToSpinelStatus(errorCode));
+
+    errorCode =
+        SendPropertyUpdate(
+            header,
+            SPINEL_CMD_PROP_VALUE_INSERTED,
+            key,
+            value_ptr,
+            value_len
+        );
+
+exit:
+
+    if (errorStatus != SPINEL_STATUS_OK)
+    {
+        errorCode = SendLastStatus(header, errorStatus);
+    }
+
+    return errorCode;
+}
+
+#endif
 
 ThreadError NcpBase::InsertPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel_prop_key_t key,
                                                               const uint8_t *value_ptr, uint16_t value_len)
@@ -5568,6 +5818,91 @@ ThreadError NcpBase::InsertPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_
 // MARK: Individual Property Removers
 // ----------------------------------------------------------------------------
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+
+ThreadError NcpBase::RemovePropertyHandler_MAC_SRC_MATCH_SHORT_ADDRESSES(uint8_t header, spinel_prop_key_t key,
+                                                                         const uint8_t *value_ptr, uint16_t value_len)
+{
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+    uint16_t short_address;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_UINT16_S,
+                       &short_address
+                   );
+
+    if (parsedLength > 0)
+    {
+        errorCode = otLinkRawSrcMatchClearShortEntry(mInstance, short_address);
+
+        if (errorCode == kThreadError_None)
+        {
+            errorCode = SendPropertyUpdate(
+                            header,
+                            SPINEL_CMD_PROP_VALUE_REMOVED,
+                            key,
+                            value_ptr,
+                            value_len
+                        );
+        }
+        else
+        {
+            errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+        }
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
+ThreadError NcpBase::RemovePropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES(uint8_t header, spinel_prop_key_t key,
+                                                                            const uint8_t *value_ptr, uint16_t value_len)
+{
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+    uint8_t *ext_address;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_EUI64_S,
+                       &ext_address
+                   );
+
+    if (parsedLength > 0)
+    {
+        errorCode = otLinkRawSrcMatchClearExtEntry(mInstance, ext_address);
+
+        if (errorCode == kThreadError_None)
+        {
+            errorCode = SendPropertyUpdate(
+                            header,
+                            SPINEL_CMD_PROP_VALUE_REMOVED,
+                            key,
+                            value_ptr,
+                            value_len
+                        );
+        }
+        else
+        {
+            errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+        }
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
+#endif
 
 ThreadError NcpBase::RemovePropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel_prop_key_t key,
                                                               const uint8_t *value_ptr, uint16_t value_len)
