@@ -89,8 +89,7 @@ static uint16_t spi_header_get_data_len(const uint8_t *header)
 NcpSpi::NcpSpi(otInstance *aInstance):
     NcpBase(aInstance),
     mHandleRxFrameTask(aInstance->mIp6.mTaskletScheduler, &NcpSpi::HandleRxFrame, this),
-    mPrepareTxFrameTask(aInstance->mIp6.mTaskletScheduler, &NcpSpi::PrepareTxFrame, this),
-    mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer))
+    mPrepareTxFrameTask(aInstance->mIp6.mTaskletScheduler, &NcpSpi::PrepareTxFrame, this)
 {
     memset(mEmptySendFrame, 0, kSpiHeaderLength);
     memset(mSendFrame, 0, kSpiHeaderLength);
@@ -230,26 +229,6 @@ NcpSpi::SpiTransactionComplete(
         aMOSIBufLen,
         (mTxState == kTxStateSending)
     );
-}
-
-ThreadError NcpSpi::OutboundFrameBegin(void)
-{
-    return mTxFrameBuffer.InFrameBegin();
-}
-
-ThreadError NcpSpi::OutboundFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDataBufferLength)
-{
-    return mTxFrameBuffer.InFrameFeedData(aDataBuffer, aDataBufferLength);
-}
-
-ThreadError NcpSpi::OutboundFrameFeedMessage(otMessage aMessage)
-{
-    return mTxFrameBuffer.InFrameFeedMessage(aMessage);
-}
-
-ThreadError NcpSpi::OutboundFrameEnd(void)
-{
-    return mTxFrameBuffer.InFrameEnd();
 }
 
 void NcpSpi::TxFrameBufferHasData(void *aContext, NcpFrameBuffer *aNcpFrameBuffer)
