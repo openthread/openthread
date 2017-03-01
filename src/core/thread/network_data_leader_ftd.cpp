@@ -596,7 +596,6 @@ ThreadError Leader::AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength)
             break;
 
         default:
-            assert(false);
             break;
         }
 
@@ -626,7 +625,6 @@ ThreadError Leader::AddPrefix(PrefixTlv &aPrefix)
             break;
 
         default:
-            assert(false);
             break;
         }
 
@@ -814,10 +812,7 @@ ThreadError Leader::RemoveRloc(uint16_t aRloc16)
         }
 
         default:
-        {
-            assert(false);
             break;
-        }
         }
 
         cur = cur->GetNext();
@@ -871,11 +866,7 @@ ThreadError Leader::RemoveRloc(PrefixTlv &prefix, uint16_t aRloc16)
 
             break;
 
-        case NetworkDataTlv::kTypeContext:
-            break;
-
         default:
-            assert(false);
             break;
         }
 
@@ -985,10 +976,7 @@ ThreadError Leader::RemoveContext(uint8_t aContextId)
         }
 
         default:
-        {
-            assert(false);
             break;
-        }
         }
 
         cur = cur->GetNext();
@@ -1017,11 +1005,6 @@ ThreadError Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
 
         switch (cur->GetType())
         {
-        case NetworkDataTlv::kTypeBorderRouter:
-        {
-            break;
-        }
-
         case NetworkDataTlv::kTypeContext:
         {
             // remove context tlv
@@ -1039,10 +1022,7 @@ ThreadError Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
         }
 
         default:
-        {
-            assert(false);
             break;
-        }
         }
 
         cur = cur->GetNext();
