@@ -483,7 +483,7 @@ ThreadError Mac::SetNetworkName(const char *aNetworkName)
 
     VerifyOrExit(strlen(aNetworkName) <= OT_NETWORK_NAME_MAX_SIZE, error = kThreadError_InvalidArgs);
 
-    strncpy(mNetworkName.m8, aNetworkName, sizeof(mNetworkName) - 1);
+    strcpy_s(mNetworkName.m8, sizeof(mNetworkName), aNetworkName);
 
 exit:
     otLogFuncExitErr(error);
