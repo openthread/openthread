@@ -2303,7 +2303,7 @@ ThreadError MleRouter::HandleChildUpdateResponse(const Message &aMessage, const 
     if (Tlv::GetTlv(aMessage, Tlv::kResponse, sizeof(response), response) == kThreadError_None)
     {
         VerifyOrExit(response.IsValid() &&
-                     memcmp(response.GetResponse(), child->mPending.mChallenge, sizeof(child->mPending.mChallenge)) == 0, ;);
+                     memcmp(response.GetResponse(), child->mAttachChallenge, sizeof(child->mAttachChallenge)) == 0, ;);
     }
 
     // Link-Layer Frame Counter
@@ -2716,13 +2716,13 @@ ThreadError MleRouter::SendChildUpdateRequest(Child *aChild)
     SuccessOrExit(error = AppendPendingTimestamp(*message));
     SuccessOrExit(error = AppendTlvRequest(*message, tlvs, sizeof(tlvs)));
 
-    for (uint8_t i = 0; i < sizeof(aChild->mPending.mChallenge); i++)
+    for (uint8_t i = 0; i < sizeof(aChild->mAttachChallenge); i++)
     {
-        aChild->mPending.mChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
+        aChild->mAttachChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
     }
 
-    SuccessOrExit(error = AppendChallenge(*message, aChild->mPending.mChallenge,
-                                          sizeof(aChild->mPending.mChallenge)));
+    SuccessOrExit(error = AppendChallenge(*message, aChild->mAttachChallenge,
+                                          sizeof(aChild->mAttachChallenge)));
 
     memset(&destination, 0, sizeof(destination));
     destination.mFields.m16[0] = HostSwap16(0xfe80);
