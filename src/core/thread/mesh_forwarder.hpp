@@ -114,6 +114,12 @@ public:
     void HandleResolved(const Ip6::Address &aEid, ThreadError aError);
 
     /**
+     * This method sets the radio receiver and polling timer off.
+     *
+     */
+    void SetRxOff(void);
+
+    /**
      * This method indicates whether or not rx-on-when-idle mode is enabled.
      *
      * @retval TRUE   The rx-on-when-idle mode is enabled.
@@ -229,6 +235,8 @@ private:
 
     ThreadError CheckReachability(uint8_t *aFrame, uint8_t aFrameLength,
                                   const Mac::Address &aMeshSource, const Mac::Address &aMeshDest);
+
+    void ScheduleNextPoll(uint32_t aDelay);
     ThreadError GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     ThreadError GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     Message *GetDirectTransmission(void);
