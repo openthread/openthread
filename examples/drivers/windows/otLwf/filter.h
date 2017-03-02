@@ -122,11 +122,14 @@ typedef struct BufferPool
 
 enum
 {
-    kPageSize                = 1024 * 4,    // 4 KB
-    kPagesPerBufferPool      = 4,
+    kPageSize                = PAGE_SIZE,
+    kPagesPerBufferPool      = 1,
+    kMaxPagesForBufferPools  = 64,
+    kMaxBytesForBufferPools  = kPageSize * kMaxPagesForBufferPools,
+
     kEstimatedBufferSize     = 128,         // sizeof(Thread::Buffer)
     kEstimatedBufferPoolSize = ((kPageSize * kPagesPerBufferPool) - sizeof(BufferPool)) / kEstimatedBufferSize,
-    kEstimatedMaxBufferPools = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS / kEstimatedBufferPoolSize
+    kEstimatedMaxBuffers     = kMaxPagesForBufferPools * kEstimatedBufferPoolSize
 };
 
 #endif
@@ -265,12 +268,12 @@ typedef struct _MS_FILTER
         BOOLEAN                     otPendingMacOffloadEnabled;
 
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
-        uint16_t                    otBufferSize;
-        uint16_t                    otBufferPoolSize;
-        uint16_t                    otBufferPoolByteSize;
-        uint16_t                    otBuffersLeft;
-        BufferPool*                 otBufferPoolHead;
-        struct BufferHeader*        otFreeBuffers;
+        uint16_t                    otBufferSize;               // Bytes in a single buffer
+        uint16_t                    otBufferPoolByteSize;       // Bytes in a buffer pool
+        uint16_t                    otBufferPoolBufferCount;    // Number of buffers in a pool
+        uint16_t                    otBuffersLeft;              // Number of buffers left to return
+        BufferPool*                 otBufferPoolHead;           // List of buffer pools
+        struct BufferHeader*        otFreeBuffers;              // List of buffers to return
 #endif
 
 #if DEBUG_ALLOC

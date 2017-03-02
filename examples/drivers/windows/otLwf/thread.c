@@ -208,6 +208,7 @@ otLwfFindFromCurrentThread()
 }
 #endif
 
+#define OTPLAT_CALLOC_TAG 'OTDM'
 #define BUFFER_POOL_TAG 'OTBP'
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -249,7 +250,7 @@ otLwfReleaseInstance(
 
             LogVerbose(DRIVER_DEFAULT, "Leaked Alloc ID:%u", AllocHeader->ID);
 
-            ExFreePoolWithTag(AllocHeader, 'OTDM');
+            ExFreePoolWithTag(AllocHeader, OTPLAT_CALLOC_TAG);
         }
 
 #endif
@@ -269,7 +270,7 @@ void *otPlatCAlloc(size_t aNum, size_t aSize)
 #if DEBUG_ALLOC
     totalSize += sizeof(OT_ALLOC);
 #endif
-    PVOID mem = ExAllocatePoolWithTag(NonPagedPoolNx, totalSize, 'OTDM');
+    PVOID mem = ExAllocatePoolWithTag(PagedPool, totalSize, OTPLAT_CALLOC_TAG);
     if (mem)
     {
         RtlZeroMemory(mem, totalSize);
@@ -292,7 +293,7 @@ void *otPlatCAlloc(size_t aNum, size_t aSize)
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-void otPlatFree(void *aPtr)
+void otPlatFree(_In_opt_ void *aPtr)
 {
     if (aPtr == NULL) return;
 #if DEBUG_ALLOC
@@ -305,7 +306,7 @@ void otPlatFree(void *aPtr)
     InterlockedAdd(&pFilter->otOutstandingMemoryAllocated, -AllocHeader->Length);
     RemoveEntryList(&AllocHeader->Link);
 #endif
-    ExFreePoolWithTag(aPtr, 'OTDM');
+    ExFreePoolWithTag(aPtr, OTPLAT_CALLOC_TAG);
 }
 
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
@@ -314,7 +315,7 @@ _IRQL_requires_max_(PASSIVE_LEVEL)
 BufferPool* AllocBufferPool(_In_ PMS_FILTER pFilter)
 {
     // Allocate the memory
-    BufferPool* bufPool = (BufferPool*)ExAllocatePoolWithTag(NonPagedPoolNx, pFilter->otBufferPoolByteSize, BUFFER_POOL_TAG);
+    BufferPool* bufPool = (BufferPool*)ExAllocatePoolWithTag(PagedPool, pFilter->otBufferPoolByteSize, BUFFER_POOL_TAG);
     if (bufPool == NULL)
     {
         LogWarning(DRIVER_DEFAULT, "Failed to allocate new buffer pool!");
@@ -326,7 +327,7 @@ BufferPool* AllocBufferPool(_In_ PMS_FILTER pFilter)
 
     // Set all mNext for the buffers
     struct BufferHeader* prevBuf = (struct BufferHeader*)bufPool->Buffers;
-    for (uint16_t i = 1; i < pFilter->otBufferPoolSize; i++)
+    for (uint16_t i = 1; i < pFilter->otBufferPoolBufferCount; i++)
     {
         struct BufferHeader* curBuf =
             (struct BufferHeader*)&bufPool->Buffers[i * pFilter->otBufferSize];
@@ -375,13 +376,13 @@ void otPlatMessagePoolInit(_In_ otInstance *otCtx, uint16_t aMinNumFreeBuffers, 
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
 
     LogFuncEntry(DRIVER_DEFAULT);
+    UNREFERENCED_PARAMETER(aMinNumFreeBuffers);
 
     // Initialize parameters
-    UNREFERENCED_PARAMETER(aMinNumFreeBuffers);
     pFilter->otBufferSize = (uint16_t)aBufferSize;
-    pFilter->otBufferPoolSize = (uint16_t)(((kPageSize * kPagesPerBufferPool) - sizeof(BufferPool)) / aBufferSize);
-    pFilter->otBufferPoolByteSize = (uint16_t)sizeof(BufferPool) + pFilter->otBufferSize * pFilter->otBufferPoolSize;
-    pFilter->otBuffersLeft = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS;
+    pFilter->otBufferPoolByteSize = (uint16_t)(kPageSize * kPagesPerBufferPool);
+    pFilter->otBufferPoolBufferCount = (uint16_t)((pFilter->otBufferPoolByteSize - sizeof(BufferPool)) / aBufferSize);
+    pFilter->otBuffersLeft = kMaxPagesForBufferPools * pFilter->otBufferPoolBufferCount;
 
     // Allocate first pool
     pFilter->otBufferPoolHead = AllocBufferPool(pFilter);
