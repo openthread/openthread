@@ -42,7 +42,7 @@
   * Define to 1 if you want to enable software ACK timeout logic.
   *
   */
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT           1
+#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT           0
 
  /**
   * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
@@ -50,7 +50,7 @@
   * Define to 1 if you want to enable software retransmission logic.
   *
   */
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT            1
+#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT            0
 
  /**
   * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
