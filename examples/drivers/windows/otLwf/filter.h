@@ -273,7 +273,7 @@ typedef struct _MS_FILTER
         uint16_t                    otBufferPoolBufferCount;    // Number of buffers in a pool
         uint16_t                    otBuffersLeft;              // Number of buffers left to return
         BufferPool*                 otBufferPoolHead;           // List of buffer pools
-        struct BufferHeader*        otFreeBuffers;              // List of buffers to return
+        otMessage*                  otFreeBuffers;              // List of buffers to return
 #endif
 
 #if DEBUG_ALLOC

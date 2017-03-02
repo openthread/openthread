@@ -57,7 +57,7 @@ public:
     void StopLeader(void);
 
 private:
-    static void HandleSet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleSet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                           const otMessageInfo *aMessageInfo);
     void HandleSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -76,7 +76,7 @@ public:
     void StopLeader(void);
 
 private:
-    static void HandleSet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleSet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                           const otMessageInfo *aMessageInfo);
     void HandleSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 

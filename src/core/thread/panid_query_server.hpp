@@ -71,7 +71,7 @@ private:
         kScanDelay = 1000,  ///< SCAN_DELAY (milliseconds)
     };
 
-    static void HandleQuery(void *aContext, otCoapHeader *aHeader, otMessage aMessage, const otMessageInfo *aMessageInfo);
+    static void HandleQuery(void *aContext, otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void HandleQuery(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleScanResult(void *aContext, Mac::Frame *aFrame);
@@ -80,7 +80,7 @@ private:
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
 
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
+    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
     ThreadError SendConflict(void);
 

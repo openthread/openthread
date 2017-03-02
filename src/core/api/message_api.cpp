@@ -41,42 +41,42 @@ using namespace Thread;
 extern "C" {
 #endif
 
-ThreadError otMessageFree(otMessage aMessage)
+ThreadError otMessageFree(otMessage *aMessage)
 {
     return static_cast<Message *>(aMessage)->Free();
 }
 
-uint16_t otMessageGetLength(otMessage aMessage)
+uint16_t otMessageGetLength(otMessage *aMessage)
 {
     Message *message = static_cast<Message *>(aMessage);
     return message->GetLength();
 }
 
-ThreadError otMessageSetLength(otMessage aMessage, uint16_t aLength)
+ThreadError otMessageSetLength(otMessage *aMessage, uint16_t aLength)
 {
     Message *message = static_cast<Message *>(aMessage);
     return message->SetLength(aLength);
 }
 
-uint16_t otMessageGetOffset(otMessage aMessage)
+uint16_t otMessageGetOffset(otMessage *aMessage)
 {
     Message *message = static_cast<Message *>(aMessage);
     return message->GetOffset();
 }
 
-ThreadError otMessageSetOffset(otMessage aMessage, uint16_t aOffset)
+ThreadError otMessageSetOffset(otMessage *aMessage, uint16_t aOffset)
 {
     Message *message = static_cast<Message *>(aMessage);
     return message->SetOffset(aOffset);
 }
 
-bool otMessageIsLinkSecurityEnabled(otMessage aMessage)
+bool otMessageIsLinkSecurityEnabled(otMessage *aMessage)
 {
     Message *message = static_cast<Message *>(aMessage);
     return message->IsLinkSecurityEnabled();
 }
 
-void otMessageSetDirectTransmission(otMessage aMessage, bool aEnabled)
+void otMessageSetDirectTransmission(otMessage *aMessage, bool aEnabled)
 {
     Message *message = static_cast<Message *>(aMessage);
 
@@ -90,19 +90,19 @@ void otMessageSetDirectTransmission(otMessage aMessage, bool aEnabled)
     }
 }
 
-ThreadError otMessageAppend(otMessage aMessage, const void *aBuf, uint16_t aLength)
+ThreadError otMessageAppend(otMessage *aMessage, const void *aBuf, uint16_t aLength)
 {
     Message *message = static_cast<Message *>(aMessage);
     return message->Append(aBuf, aLength);
 }
 
-int otMessageRead(otMessage aMessage, uint16_t aOffset, void *aBuf, uint16_t aLength)
+int otMessageRead(otMessage *aMessage, uint16_t aOffset, void *aBuf, uint16_t aLength)
 {
     Message *message = static_cast<Message *>(aMessage);
     return message->Read(aOffset, aLength, aBuf);
 }
 
-int otMessageWrite(otMessage aMessage, uint16_t aOffset, const void *aBuf, uint16_t aLength)
+int otMessageWrite(otMessage *aMessage, uint16_t aOffset, const void *aBuf, uint16_t aLength)
 {
     Message *message = static_cast<Message *>(aMessage);
     return message->Write(aOffset, aLength, aBuf);
@@ -113,30 +113,30 @@ void otMessageQueueInit(otMessageQueue *aQueue)
     aQueue->mData = NULL;
 }
 
-ThreadError otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage aMessage)
+ThreadError otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage *aMessage)
 {
     Message *message = static_cast<Message *>(aMessage);
     MessageQueue *queue = static_cast<MessageQueue *>(aQueue);
     return queue->Enqueue(*message);
 }
 
-ThreadError otMessageQueueDequeue(otMessageQueue *aQueue, otMessage aMessage)
+ThreadError otMessageQueueDequeue(otMessageQueue *aQueue, otMessage *aMessage)
 {
     Message *message = static_cast<Message *>(aMessage);
     MessageQueue *queue = static_cast<MessageQueue *>(aQueue);
     return queue->Dequeue(*message);
 }
 
-otMessage otMessageQueueGetHead(otMessageQueue *aQueue)
+otMessage *otMessageQueueGetHead(otMessageQueue *aQueue)
 {
     MessageQueue *queue = static_cast<MessageQueue *>(aQueue);
     return queue->GetHead();
 }
 
-otMessage otMessageQueueGetNext(otMessageQueue *aQueue, otMessage aMessage)
+otMessage *otMessageQueueGetNext(otMessageQueue *aQueue, const otMessage *aMessage)
 {
     Message *next;
-    Message *message = static_cast<Message *>(aMessage);
+    const Message *message = static_cast<const Message *>(aMessage);
     MessageQueue *queue = static_cast<MessageQueue *>(aQueue);
 
     VerifyOrExit(message != NULL, next = NULL);

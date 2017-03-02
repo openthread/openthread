@@ -93,8 +93,8 @@ private:
         kMaxLineLength = 128,
     };
 
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
-    void HandleUdpReceive(otMessage aMessage, const otMessageInfo *aMessageInfo);
+    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
     otUdpSocket mSocket;
     otMessageInfo mPeer;

@@ -326,11 +326,11 @@ BufferPool* AllocBufferPool(_In_ PMS_FILTER pFilter)
     RtlZeroMemory(bufPool, pFilter->otBufferPoolByteSize);
 
     // Set all mNext for the buffers
-    struct BufferHeader* prevBuf = (struct BufferHeader*)bufPool->Buffers;
+    otMessage* prevBuf = (otMessage*)bufPool->Buffers;
     for (uint16_t i = 1; i < pFilter->otBufferPoolBufferCount; i++)
     {
-        struct BufferHeader* curBuf =
-            (struct BufferHeader*)&bufPool->Buffers[i * pFilter->otBufferSize];
+        otMessage* curBuf =
+            (otMessage*)&bufPool->Buffers[i * pFilter->otBufferSize];
 
         prevBuf->mNext = curBuf;
         prevBuf = curBuf;
@@ -342,7 +342,7 @@ BufferPool* AllocBufferPool(_In_ PMS_FILTER pFilter)
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-struct BufferHeader* GetNextFreeBufferFromPool(_In_ PMS_FILTER pFilter)
+otMessage* GetNextFreeBufferFromPool(_In_ PMS_FILTER pFilter)
 {
     // Immediately return if we have hit our limit
     if (pFilter->otBuffersLeft == 0) return NULL;
@@ -358,11 +358,11 @@ struct BufferHeader* GetNextFreeBufferFromPool(_In_ PMS_FILTER pFilter)
         pFilter->otBufferPoolHead = newPool;
 
         // Set the free buffer list
-        pFilter->otFreeBuffers = (struct BufferHeader*)newPool->Buffers;
+        pFilter->otFreeBuffers = (otMessage*)newPool->Buffers;
     }
 
     // Pop the top free buffer
-    struct BufferHeader* buffer = pFilter->otFreeBuffers;
+    otMessage* buffer = pFilter->otFreeBuffers;
     pFilter->otFreeBuffers = pFilter->otFreeBuffers->mNext;
     pFilter->otBuffersLeft--;
     buffer->mNext = NULL;
@@ -389,13 +389,13 @@ void otPlatMessagePoolInit(_In_ otInstance *otCtx, uint16_t aMinNumFreeBuffers, 
     ASSERT(pFilter->otBufferPoolHead); // Should this API allow for failure ???
 
     // Set initial free buffer list
-    pFilter->otFreeBuffers = (struct BufferHeader*)pFilter->otBufferPoolHead->Buffers;
+    pFilter->otFreeBuffers = (otMessage*)pFilter->otBufferPoolHead->Buffers;
 
     LogFuncExit(DRIVER_DEFAULT);
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-struct BufferHeader *otPlatMessagePoolNew(_In_ otInstance *otCtx)
+otMessage *otPlatMessagePoolNew(_In_ otInstance *otCtx)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
@@ -403,7 +403,7 @@ struct BufferHeader *otPlatMessagePoolNew(_In_ otInstance *otCtx)
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-void otPlatMessagePoolFree(_In_ otInstance *otCtx, _In_ struct BufferHeader *aBuffer)
+void otPlatMessagePoolFree(_In_ otInstance *otCtx, _In_ otMessage *aBuffer)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);

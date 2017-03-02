@@ -126,12 +126,12 @@ const otCoapOption *otCoapHeaderGetNextOption(otCoapHeader *aHeader)
     return static_cast<const otCoapOption *>(static_cast<Coap::Header *>(aHeader)->GetNextOption());
 }
 
-otMessage otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader)
+otMessage *otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader)
 {
     return aInstance->mThreadNetif.GetCoapClient().NewMessage(*(static_cast<const Coap::Header *>(aHeader)));
 }
 
-ThreadError otCoapSendRequest(otInstance *aInstance, otMessage aMessage, const otMessageInfo *aMessageInfo,
+ThreadError otCoapSendRequest(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo,
                               otCoapResponseHandler aHandler, void *aContext)
 {
     return aInstance->mThreadNetif.GetCoapClient().SendMessage(
@@ -165,7 +165,7 @@ void otCoapServerRemoveResource(otInstance *aInstance, otCoapResource *aResource
     aInstance->mApplicationCoapServer.RemoveResource(*static_cast<Coap::Resource *>(aResource));
 }
 
-ThreadError otCoapSendResponse(otInstance *aInstance, otMessage aMessage, const otMessageInfo *aMessageInfo)
+ThreadError otCoapSendResponse(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     return aInstance->mApplicationCoapServer.SendMessage(
                *static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));

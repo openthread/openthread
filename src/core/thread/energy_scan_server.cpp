@@ -64,7 +64,7 @@ EnergyScanServer::EnergyScanServer(ThreadNetif &aThreadNetif) :
     mNetif.GetCoapServer().AddResource(mEnergyScan);
 }
 
-void EnergyScanServer::HandleRequest(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void EnergyScanServer::HandleRequest(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                      const otMessageInfo *aMessageInfo)
 {
     static_cast<EnergyScanServer *>(aContext)->HandleRequest(

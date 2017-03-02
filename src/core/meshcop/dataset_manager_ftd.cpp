@@ -189,7 +189,7 @@ void ActiveDataset::StopLeader(void)
     mNetif.GetCoapServer().RemoveResource(mResourceSet);
 }
 
-void ActiveDataset::HandleSet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void ActiveDataset::HandleSet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                               const otMessageInfo *aMessageInfo)
 {
     static_cast<ActiveDataset *>(aContext)->HandleSet(
@@ -227,7 +227,7 @@ void PendingDataset::StopLeader(void)
     mNetif.GetCoapServer().RemoveResource(mResourceSet);
 }
 
-void PendingDataset::HandleSet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void PendingDataset::HandleSet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                const otMessageInfo *aMessageInfo)
 {
     static_cast<PendingDataset *>(aContext)->HandleSet(

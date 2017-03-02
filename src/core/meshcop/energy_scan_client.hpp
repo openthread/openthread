@@ -79,7 +79,7 @@ public:
                           const Ip6::Address &aAddress, otCommissionerEnergyReportCallback aCallback, void *aContext);
 
 private:
-    static void HandleReport(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleReport(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                              const otMessageInfo *aMessageInfo);
     void HandleReport(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 

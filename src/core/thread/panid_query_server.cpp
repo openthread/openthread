@@ -56,7 +56,7 @@ PanIdQueryServer::PanIdQueryServer(ThreadNetif &aThreadNetif) :
     mNetif.GetCoapServer().AddResource(mPanIdQuery);
 }
 
-void PanIdQueryServer::HandleQuery(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void PanIdQueryServer::HandleQuery(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                    const otMessageInfo *aMessageInfo)
 {
     static_cast<PanIdQueryServer *>(aContext)->HandleQuery(

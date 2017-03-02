@@ -156,7 +156,7 @@ otLwfEventProcessingIndicateEnergyScanResult(
 //
 
 void otLwfStateChangedCallback(uint32_t aFlags, _In_ void *aContext);
-void otLwfReceiveIp6DatagramCallback(_In_ otMessage aMessage, _In_ void *aContext);
+void otLwfReceiveIp6DatagramCallback(_In_ otMessage *aMessage, _In_ void *aContext);
 void otLwfActiveScanCallback(_In_ otActiveScanResult *aResult, _In_ void *aContext);
 void otLwfEnergyScanCallback(_In_ otEnergyScanResult *aResult, _In_ void *aContext);
 void otLwfDiscoverCallback(_In_ otActiveScanResult *aResult, _In_ void *aContext);

@@ -39,6 +39,8 @@
 
 #include "openthread/types.h"
 
+#include "openthread/message.h"
+
 /**
  * @defgroup messagepool MessagePool
  * @ingroup platform
@@ -49,15 +51,6 @@
  * @{
  *
  */
-
-/**
- * This structure contains a pointer to the next Message buffer.
- *
- */
-struct BufferHeader
-{
-    struct BufferHeader *mNext;  ///< A pointer to the next Message buffer.
-};
 
 #ifdef __cplusplus
 extern "C" {
@@ -78,7 +71,7 @@ void otPlatMessagePoolInit(otInstance *aInstance, uint16_t aMinNumFreeBuffers, s
  * @returns A pointer to the Buffer or NULL if no Buffers are available.
  *
  */
-struct BufferHeader *otPlatMessagePoolNew(otInstance *aInstance);
+otMessage *otPlatMessagePoolNew(otInstance *aInstance);
 
 /**
  * This function is used to free a Buffer back to the platform managed buffer pool.
@@ -86,7 +79,7 @@ struct BufferHeader *otPlatMessagePoolNew(otInstance *aInstance);
  * @param[in]  aBuffer  The Buffer to free.
  *
  */
-void otPlatMessagePoolFree(otInstance *aInstance, struct BufferHeader *aBuffer);
+void otPlatMessagePoolFree(otInstance *aInstance, otMessage *aBuffer);
 
 /**
  * Get the number of free buffers.

@@ -139,7 +139,7 @@ ThreadError MessagePool::FreeBuffers(Buffer *aBuffer)
     {
         tmpBuffer = aBuffer->GetNextBuffer();
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
-        otPlatMessagePoolFree(mInstance, static_cast<struct BufferHeader *>(aBuffer));
+        otPlatMessagePoolFree(mInstance, aBuffer);
 #else // OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
         aBuffer->SetNextBuffer(mFreeBuffers);
         mFreeBuffers = aBuffer;
