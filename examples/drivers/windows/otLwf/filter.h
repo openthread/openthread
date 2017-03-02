@@ -116,7 +116,6 @@ typedef enum OTLWF_DEVICE_STATUS
 typedef struct BufferPool
 {
     struct BufferPool* Next;
-    struct BufferHeader* FreeBuffers;
     uint8_t Buffers[0];
 
 } BufferPool;
@@ -271,6 +270,7 @@ typedef struct _MS_FILTER
         uint16_t                    otBufferPoolByteSize;
         uint16_t                    otBuffersLeft;
         BufferPool*                 otBufferPoolHead;
+        struct BufferHeader*        otFreeBuffers;
 #endif
 
 #if DEBUG_ALLOC

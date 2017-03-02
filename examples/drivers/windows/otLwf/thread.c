@@ -208,12 +208,16 @@ otLwfFindFromCurrentThread()
 }
 #endif
 
+#define BUFFER_POOL_TAG 'OTBP'
+
 _IRQL_requires_max_(PASSIVE_LEVEL)
 void
 otLwfReleaseInstance(
     _In_ PMS_FILTER pFilter
     )
 {
+    LogFuncEntry(DRIVER_DEFAULT);
+
     if (pFilter->otCtx != NULL)
     {
         otInstanceFinalize(pFilter->otCtx);
@@ -227,35 +231,38 @@ otLwfReleaseInstance(
         while (curPool != NULL)
         {
             BufferPool *nextPool = curPool->Next;
-            ExFreePoolWithTag(curPool, 'OTBP');
+            ExFreePoolWithTag(curPool, BUFFER_POOL_TAG);
             curPool = nextPool;
         }
 
 #endif
 
 #if DEBUG_ALLOC
+
+        NT_ASSERT(pFilter->otOutstandingAllocationCount == 0);
+        NT_ASSERT(pFilter->otOutstandingMemoryAllocated == 0);
+        PLIST_ENTRY Link = pFilter->otOutStandingAllocations.Flink;
+        while (Link != &pFilter->otOutStandingAllocations)
         {
-            NT_ASSERT(pFilter->otOutstandingAllocationCount == 0);
-            NT_ASSERT(pFilter->otOutstandingMemoryAllocated == 0);
-            PLIST_ENTRY Link = pFilter->otOutStandingAllocations.Flink;
-            while (Link != &pFilter->otOutStandingAllocations)
-            {
-                OT_ALLOC* AllocHeader = CONTAINING_RECORD(Link, OT_ALLOC, Link);
-                Link = Link->Flink;
+            OT_ALLOC* AllocHeader = CONTAINING_RECORD(Link, OT_ALLOC, Link);
+            Link = Link->Flink;
 
-                LogVerbose(DRIVER_DEFAULT, "Leaked Alloc ID:%u", AllocHeader->ID);
+            LogVerbose(DRIVER_DEFAULT, "Leaked Alloc ID:%u", AllocHeader->ID);
 
-                ExFreePoolWithTag(AllocHeader, 'OTDM');
-            }
+            ExFreePoolWithTag(AllocHeader, 'OTDM');
         }
+
 #endif
     }
+
+    LogFuncExit(DRIVER_DEFAULT);
 }
 
 //
 // OpenThread Platform functions
 //
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 void *otPlatCAlloc(size_t aNum, size_t aSize)
 {
     size_t totalSize = aNum * aSize;
@@ -284,6 +291,7 @@ void *otPlatCAlloc(size_t aNum, size_t aSize)
     return mem;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 void otPlatFree(void *aPtr)
 {
     if (aPtr == NULL) return;
@@ -302,20 +310,22 @@ void otPlatFree(void *aPtr)
 
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 BufferPool* AllocBufferPool(_In_ PMS_FILTER pFilter)
 {
     // Allocate the memory
-    BufferPool* bufPool = (BufferPool*)ExAllocatePoolWithTag(NonPagedPoolNx, pFilter->otBufferPoolByteSize, 'OTBP');
-    if (bufPool == NULL) return NULL;
+    BufferPool* bufPool = (BufferPool*)ExAllocatePoolWithTag(NonPagedPoolNx, pFilter->otBufferPoolByteSize, BUFFER_POOL_TAG);
+    if (bufPool == NULL)
+    {
+        LogWarning(DRIVER_DEFAULT, "Failed to allocate new buffer pool!");
+        return NULL;
+    }
 
     // Zero out the memory
     RtlZeroMemory(bufPool, pFilter->otBufferPoolByteSize);
 
-    // Initialize member variables
-    bufPool->FreeBuffers = (struct BufferHeader*)bufPool->Buffers;
-    struct BufferHeader* prevBuf = bufPool->FreeBuffers;
-
     // Set all mNext for the buffers
+    struct BufferHeader* prevBuf = (struct BufferHeader*)bufPool->Buffers;
     for (uint16_t i = 1; i < pFilter->otBufferPoolSize; i++)
     {
         struct BufferHeader* curBuf =
@@ -325,56 +335,46 @@ BufferPool* AllocBufferPool(_In_ PMS_FILTER pFilter)
         prevBuf = curBuf;
     }
 
+    LogVerbose(DRIVER_DEFAULT, "Allocated new buffer pool (%d bytes)!", pFilter->otBufferPoolByteSize);
+
     return bufPool;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 struct BufferHeader* GetNextFreeBufferFromPool(_In_ PMS_FILTER pFilter)
 {
     // Immediately return if we have hit our limit
     if (pFilter->otBuffersLeft == 0) return NULL;
 
-    // Try to find a free buffer already allocated
-    for (BufferPool *curPool = pFilter->otBufferPoolHead; curPool != NULL; curPool = curPool->Next)
+    // If we don't have any free buffers left, allocate another pool
+    if (pFilter->otFreeBuffers == NULL)
     {
-        if (curPool->FreeBuffers != NULL)
-        {
-            struct BufferHeader* buffer = curPool->FreeBuffers;
-            curPool->FreeBuffers = curPool->FreeBuffers->mNext;
-            pFilter->otBuffersLeft--;
-            return buffer;
-        }
+        BufferPool *newPool = AllocBufferPool(pFilter);
+        if (newPool == NULL) return NULL; // Out of physical memory
 
-        // If we have reached the end, allocate a new pool if allowed
-        if (curPool->Next == NULL)
-        {
-            NT_ASSERT(pFilter->otBuffersLeft > 0);
-            curPool->Next = AllocBufferPool(pFilter);
-        }
+        // Push on top of the pool list
+        newPool->Next = pFilter->otBufferPoolHead;
+        pFilter->otBufferPoolHead = newPool;
+
+        // Set the free buffer list
+        pFilter->otFreeBuffers = (struct BufferHeader*)newPool->Buffers;
     }
 
-    // Out of memory
-    return NULL;
+    // Pop the top free buffer
+    struct BufferHeader* buffer = pFilter->otFreeBuffers;
+    pFilter->otFreeBuffers = pFilter->otFreeBuffers->mNext;
+    pFilter->otBuffersLeft--;
+    buffer->mNext = NULL;
+    return buffer;
 }
 
-bool FreeBufferFromPool(_In_ PMS_FILTER pFilter, BufferPool *bufPool, struct BufferHeader *buf)
-{
-    // Is the buffer within the bounds of this pool?
-    if ((PUCHAR)buf < (PUCHAR)bufPool || (PUCHAR)buf > ((PUCHAR)bufPool) + pFilter->otBufferPoolByteSize)
-    {
-        return false;
-    }
-
-    // Add pool back to the front of the free list
-    buf->mNext = bufPool->FreeBuffers;
-    bufPool->FreeBuffers = buf;
-
-    return true;
-}
-
-void otPlatMessagePoolInit(otInstance *otCtx, uint16_t aMinNumFreeBuffers, size_t aBufferSize)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+void otPlatMessagePoolInit(_In_ otInstance *otCtx, uint16_t aMinNumFreeBuffers, size_t aBufferSize)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
+
+    LogFuncEntry(DRIVER_DEFAULT);
 
     // Initialize parameters
     UNREFERENCED_PARAMETER(aMinNumFreeBuffers);
@@ -386,35 +386,35 @@ void otPlatMessagePoolInit(otInstance *otCtx, uint16_t aMinNumFreeBuffers, size_
     // Allocate first pool
     pFilter->otBufferPoolHead = AllocBufferPool(pFilter);
     ASSERT(pFilter->otBufferPoolHead); // Should this API allow for failure ???
+
+    // Set initial free buffer list
+    pFilter->otFreeBuffers = (struct BufferHeader*)pFilter->otBufferPoolHead->Buffers;
+
+    LogFuncExit(DRIVER_DEFAULT);
 }
 
-struct BufferHeader *otPlatMessagePoolNew(otInstance *otCtx)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+struct BufferHeader *otPlatMessagePoolNew(_In_ otInstance *otCtx)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
     return GetNextFreeBufferFromPool(pFilter);
 }
 
-void otPlatMessagePoolFree(otInstance *otCtx, struct BufferHeader *aBuffer)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+void otPlatMessagePoolFree(_In_ otInstance *otCtx, _In_ struct BufferHeader *aBuffer)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
 
-    bool freed = false;
-    for (BufferPool *curPool = pFilter->otBufferPoolHead; curPool != NULL; curPool = curPool->Next)
-    {
-        if (FreeBufferFromPool(pFilter, curPool, aBuffer))
-        {
-            freed = true;
-            break;
-        }
-    }
-
-    ASSERT(freed);
+    // Put buffer back on the list
+    aBuffer->mNext = pFilter->otFreeBuffers;
+    pFilter->otFreeBuffers = aBuffer;
     pFilter->otBuffersLeft++;
 }
 
-uint16_t otPlatMessagePoolNumFreeBuffers(otInstance *otCtx)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+uint16_t otPlatMessagePoolNumFreeBuffers(_In_ otInstance *otCtx)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
