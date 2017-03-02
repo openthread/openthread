@@ -491,38 +491,44 @@ bool Leader::IsStableUpdated(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLeng
     bool rval = false;
     NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aTlvs);
     NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(aTlvs + aTlvsLength);
-    PrefixTlv *prefix;
-    PrefixTlv *prefixBase;
-    BorderRouterTlv *borderRouter;
-    HasRouteTlv *hasRoute;
-    ContextTlv *context;
 
     while (cur < end)
     {
         if (cur->GetType() == NetworkDataTlv::kTypePrefix)
         {
-            prefix = static_cast<PrefixTlv *>(cur);
-            context = FindContext(*prefix);
-            borderRouter = FindBorderRouter(*prefix);
-            hasRoute = FindHasRoute(*prefix);
+            PrefixTlv *prefix = static_cast<PrefixTlv *>(cur);
+            ContextTlv *context = FindContext(*prefix);
+            BorderRouterTlv *borderRouter = FindBorderRouter(*prefix);
+            HasRouteTlv *hasRoute = FindHasRoute(*prefix);
 
             if (cur->IsStable() && (!context || borderRouter))
             {
-                prefixBase = FindPrefix(prefix->GetPrefix(), prefix->GetPrefixLength(), aTlvsBase, aTlvsBaseLength);
+                PrefixTlv *prefixBase = FindPrefix(prefix->GetPrefix(), prefix->GetPrefixLength(),
+                                                   aTlvsBase, aTlvsBaseLength);
 
                 if (!prefixBase)
                 {
                     ExitNow(rval = true);
                 }
 
-                if (borderRouter && memcmp(borderRouter, FindBorderRouter(*prefixBase), borderRouter->GetLength()) != 0)
+                if (borderRouter)
                 {
-                    ExitNow(rval = true);
+                    BorderRouterTlv *borderRouterBase = FindBorderRouter(*prefixBase);
+
+                    if (!borderRouterBase || memcmp(borderRouter, borderRouterBase, borderRouter->GetLength()) != 0)
+                    {
+                        ExitNow(rval = true);
+                    }
                 }
 
-                if (hasRoute && (memcmp(hasRoute, FindHasRoute(*prefixBase), hasRoute->GetLength()) != 0))
+                if (hasRoute)
                 {
-                    ExitNow(rval = true);
+                    HasRouteTlv *hasRouteBase = FindHasRoute(*prefixBase);
+
+                    if (!hasRouteBase || (memcmp(hasRoute, hasRouteBase, hasRoute->GetLength()) != 0))
+                    {
+                        ExitNow(rval = true);
+                    }
                 }
             }
         }
@@ -596,7 +602,6 @@ ThreadError Leader::AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength)
             break;
 
         default:
-            assert(false);
             break;
         }
 
@@ -626,7 +631,6 @@ ThreadError Leader::AddPrefix(PrefixTlv &aPrefix)
             break;
 
         default:
-            assert(false);
             break;
         }
 
@@ -814,10 +818,7 @@ ThreadError Leader::RemoveRloc(uint16_t aRloc16)
         }
 
         default:
-        {
-            assert(false);
             break;
-        }
         }
 
         cur = cur->GetNext();
@@ -871,11 +872,7 @@ ThreadError Leader::RemoveRloc(PrefixTlv &prefix, uint16_t aRloc16)
 
             break;
 
-        case NetworkDataTlv::kTypeContext:
-            break;
-
         default:
-            assert(false);
             break;
         }
 
@@ -985,10 +982,7 @@ ThreadError Leader::RemoveContext(uint8_t aContextId)
         }
 
         default:
-        {
-            assert(false);
             break;
-        }
         }
 
         cur = cur->GetNext();
@@ -1017,11 +1011,6 @@ ThreadError Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
 
         switch (cur->GetType())
         {
-        case NetworkDataTlv::kTypeBorderRouter:
-        {
-            break;
-        }
-
         case NetworkDataTlv::kTypeContext:
         {
             // remove context tlv
@@ -1039,10 +1028,7 @@ ThreadError Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
         }
 
         default:
-        {
-            assert(false);
             break;
-        }
         }
 
         cur = cur->GetNext();
