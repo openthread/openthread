@@ -188,6 +188,34 @@ void nrf5RadioInit(void)
     nrf_drv_radio802154_init();
 }
 
+PhyState otPlatRadioGetState(otInstance *aInstance)
+{
+    (void) aInstance;
+
+    if (sDisabled)
+    {
+        return kStateDisabled;
+    }
+
+    switch (nrf_drv_radio802154_state_get())
+    {
+    case NRF_DRV_RADIO802154_STATE_SLEEP:
+        return kStateSleep;
+
+    case NRF_DRV_RADIO802154_STATE_RECEIVE:
+    case NRF_DRV_RADIO802154_STATE_ENERGY_DETECTION:
+        return kStateReceive;
+
+    case NRF_DRV_RADIO802154_STATE_TRANSMIT:
+        return kStateTransmit;
+
+    default:
+        assert(false); // Make sure driver returned valid state.
+    }
+
+    return kStateReceive; // It is the default state. Return it in case of unknown.
+}
+
 ThreadError otPlatRadioEnable(otInstance *aInstance)
 {
     (void) aInstance;

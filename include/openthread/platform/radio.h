@@ -201,6 +201,19 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddress);
  */
 
 /**
+ * Get current state of the radio.
+ *
+ * This function is not required by OpenThread. It may be used for debugging and/or application-specific purposes.
+ *
+ * @note This function may be not implemented. It does not affect OpenThread.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ *
+ * @return  Current state of the radio.
+ */
+PhyState otPlatRadioGetState(otInstance *aInstance);
+
+/**
  * Enable the radio.
  *
  * @param[in] aInstance  The OpenThread instance structure.
