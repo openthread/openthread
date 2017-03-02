@@ -759,6 +759,13 @@ error:
     return NT_SUCCESS(status) ? kThreadError_None : kThreadError_Failed;
 }
 
+void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+{
+    // TODO: Create a proper implementation for this driver.
+    (void)aInstance;
+    (void)aPower;
+}
+
 inline USHORT getDstShortAddress(const UCHAR *frame)
 {
     return (((USHORT)frame[IEEE802154_DSTADDR_OFFSET + 1]) << 8) | frame[IEEE802154_DSTADDR_OFFSET];

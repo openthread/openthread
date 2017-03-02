@@ -289,6 +289,7 @@ int8_t otGetMaxTransmitPower(otInstance *aInstance)
 void otSetMaxTransmitPower(otInstance *aInstance, int8_t aPower)
 {
     aInstance->mThreadNetif.GetMac().SetMaxTransmitPower(aPower);
+    otPlatRadioSetDefaultTxPower(aInstance, aPower);
 }
 
 const otIp6Address *otGetMeshLocalEid(otInstance *aInstance)

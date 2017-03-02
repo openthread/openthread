@@ -738,3 +738,9 @@ ThreadError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, u
     (void)aScanDuration;
     return kThreadError_NotImplemented;
 }
+
+void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+{
+    (void)aInstance;
+    (void)aPower;
+}
