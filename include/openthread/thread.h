@@ -848,7 +848,7 @@ OTAPI ThreadError OTCALL otThreadGetParentAverageRssi(otInstance *aInstance, int
  * @param[in]  aContext      A pointer to application-specific context.
  *
  */
-typedef void (*otReceiveDiagnosticGetCallback)(otMessage aMessage, const otMessageInfo *aMessageInfo,
+typedef void (*otReceiveDiagnosticGetCallback)(otMessage *aMessage, const otMessageInfo *aMessageInfo,
                                                void *aContext);
 
 /**

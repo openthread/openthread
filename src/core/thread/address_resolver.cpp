@@ -264,7 +264,7 @@ exit:
     return error;
 }
 
-void AddressResolver::HandleAddressNotification(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void AddressResolver::HandleAddressNotification(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                                 const otMessageInfo *aMessageInfo)
 {
     static_cast<AddressResolver *>(aContext)->HandleAddressNotification(
@@ -400,7 +400,7 @@ exit:
     return error;
 }
 
-void AddressResolver::HandleAddressError(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void AddressResolver::HandleAddressError(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                          const otMessageInfo *aMessageInfo)
 {
     static_cast<AddressResolver *>(aContext)->HandleAddressError(
@@ -483,7 +483,7 @@ exit:
     {}
 }
 
-void AddressResolver::HandleAddressQuery(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void AddressResolver::HandleAddressQuery(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                          const otMessageInfo *aMessageInfo)
 {
     static_cast<AddressResolver *>(aContext)->HandleAddressQuery(
@@ -646,7 +646,7 @@ void AddressResolver::HandleTimer()
     }
 }
 
-void AddressResolver::HandleIcmpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo,
+void AddressResolver::HandleIcmpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo,
                                         const otIcmp6Header *aIcmpHeader)
 {
     static_cast<AddressResolver *>(aContext)->HandleIcmpReceive(*static_cast<Message *>(aMessage),

@@ -241,7 +241,7 @@ ThreadError otIp6CreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddre
  *
  * @sa otFreeMessage
  */
-otMessage otIp6NewMessage(otInstance *aInstance, bool aLinkSecurityEnabled);
+otMessage *otIp6NewMessage(otInstance *aInstance, bool aLinkSecurityEnabled);
 
 /**
  * This function pointer is called when an IPv6 datagram is received.
@@ -250,7 +250,7 @@ otMessage otIp6NewMessage(otInstance *aInstance, bool aLinkSecurityEnabled);
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void (*otIp6ReceiveCallback)(otMessage aMessage, void *aContext);
+typedef void (*otIp6ReceiveCallback)(otMessage *aMessage, void *aContext);
 
 /**
  * This function registers a callback to provide received IPv6 datagrams.
@@ -303,7 +303,7 @@ void otIp6SetReceiveFilterEnabled(otInstance *aInstance, bool aEnabled);
  * @param[in]  aMessage  A pointer to the message buffer containing the IPv6 datagram.
  *
  */
-ThreadError otIp6Send(otInstance *aInstance, otMessage aMessage);
+ThreadError otIp6Send(otInstance *aInstance, otMessage *aMessage);
 
 /**
  * This function adds a port to the allowed unsecured port list.

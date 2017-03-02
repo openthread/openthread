@@ -91,14 +91,14 @@ private:
     static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);
     void HandleNetifStateChanged(uint32_t aFlags);
 
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
+    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleRelayTransmit(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleRelayTransmit(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                     const otMessageInfo *aMessageInfo);
     void HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleJoinerEntrustResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleJoinerEntrustResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                             const otMessageInfo *aMessageInfo, ThreadError result);
     void HandleJoinerEntrustResponse(Coap::Header *aHeader, Message *aMessage,
                                      const Ip6::MessageInfo *aMessageInfo, ThreadError result);

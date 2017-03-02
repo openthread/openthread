@@ -106,7 +106,7 @@ exit:
     return error;
 }
 
-void PanIdQueryClient::HandleConflict(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void PanIdQueryClient::HandleConflict(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                       const otMessageInfo *aMessageInfo)
 {
     static_cast<PanIdQueryClient *>(aContext)->HandleConflict(

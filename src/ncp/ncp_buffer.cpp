@@ -55,7 +55,7 @@ NcpFrameBuffer::~NcpFrameBuffer()
 
 void NcpFrameBuffer::Clear(void)
 {
-    otMessage message;
+    otMessage *message;
     bool wasEmpty = IsEmpty();
 
     // Write (InFrame) related variables
@@ -243,7 +243,7 @@ void NcpFrameBuffer::InFrameEndSegment(uint16_t aHeaderFlags)
 // This method discards the current frame.
 void NcpFrameBuffer::InFrameDiscard(void)
 {
-    otMessage message;
+    otMessage *message;
 
     // Move the write segment head and tail pointers back to frame start.
     mWriteSegmentHead = mWriteSegmentTail = mWriteFrameStart;
@@ -281,7 +281,7 @@ exit:
     return error;
 }
 
-ThreadError NcpFrameBuffer::InFrameFeedMessage(otMessage aMessage)
+ThreadError NcpFrameBuffer::InFrameFeedMessage(otMessage *aMessage)
 {
     ThreadError error = kThreadError_None;
 
@@ -300,7 +300,7 @@ exit:
 
 ThreadError NcpFrameBuffer::InFrameEnd(void)
 {
-    otMessage message;
+    otMessage *message;
     bool wasEmpty = IsEmpty();
 
     // End/Close the current segment (if any).
@@ -547,7 +547,7 @@ ThreadError NcpFrameBuffer::OutFrameRemove(void)
 {
     ThreadError error = kThreadError_None;
     uint8_t *bufPtr;
-    otMessage message;
+    otMessage *message;
     uint16_t header;
 
     VerifyOrExit(!IsEmpty(), error = kThreadError_NotFound);
@@ -609,7 +609,7 @@ uint16_t NcpFrameBuffer::OutFrameGetLength(void)
     uint16_t frameLength = 0;
     uint16_t header;
     uint8_t *bufPtr;
-    otMessage message = NULL;
+    otMessage *message = NULL;
 
     // If the frame length was calculated before, return the previously calculated length.
     VerifyOrExit(mReadFrameLength == kUnknownFrameLength, frameLength = mReadFrameLength);

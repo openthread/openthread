@@ -121,7 +121,7 @@ exit:
     return error;
 }
 
-void EnergyScanClient::HandleReport(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void EnergyScanClient::HandleReport(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                     const otMessageInfo *aMessageInfo)
 {
     static_cast<EnergyScanClient *>(aContext)->HandleReport(

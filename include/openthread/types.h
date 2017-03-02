@@ -347,7 +347,10 @@ typedef struct otMessageInfo
 /**
  * This type points to an OpenThread message buffer.
  */
-typedef void *otMessage;
+typedef struct otMessage
+{
+    struct otMessage *mNext;  ///< A pointer to the next Message buffer.
+} otMessage;
 
 /**
  * @addtogroup commands  Commands
@@ -1040,7 +1043,7 @@ typedef struct otIcmp6Header otIcmp6Header;
  * @param[in]  aIcmpHeader   A pointer to the received ICMPv6 header.
  *
  */
-typedef void (*otIcmp6ReceiveCallback)(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo,
+typedef void (*otIcmp6ReceiveCallback)(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo,
                                        const otIcmp6Header *aIcmpHeader);
 
 /**

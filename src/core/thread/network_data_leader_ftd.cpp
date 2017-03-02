@@ -138,7 +138,7 @@ exit:
     return;
 }
 
-void Leader::HandleServerData(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void Leader::HandleServerData(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                               const otMessageInfo *aMessageInfo)
 {
     static_cast<Leader *>(aContext)->HandleServerData(
@@ -175,7 +175,7 @@ exit:
     return;
 }
 
-void Leader::HandleCommissioningSet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void Leader::HandleCommissioningSet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                     const otMessageInfo *aMessageInfo)
 {
     static_cast<Leader *>(aContext)->HandleCommissioningSet(
@@ -269,7 +269,7 @@ exit:
     return;
 }
 
-void Leader::HandleCommissioningGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void Leader::HandleCommissioningGet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                     const otMessageInfo *aMessageInfo)
 {
     static_cast<Leader *>(aContext)->HandleCommissioningGet(

@@ -129,7 +129,7 @@ exit:
     return error;
 }
 
-void NetworkDiagnostic::HandleDiagnosticGetResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void NetworkDiagnostic::HandleDiagnosticGetResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                                     const otMessageInfo *aMessageInfo, ThreadError aResult)
 {
     static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetResponse(*static_cast<Coap::Header *>(aHeader),
@@ -156,7 +156,7 @@ exit:
     return;
 }
 
-void NetworkDiagnostic::HandleDiagnosticGetAnswer(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void NetworkDiagnostic::HandleDiagnosticGetAnswer(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                                   const otMessageInfo *aMessageInfo)
 {
     static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetAnswer(*static_cast<Coap::Header *>(aHeader),
@@ -413,7 +413,7 @@ exit:
     return error;
 }
 
-void NetworkDiagnostic::HandleDiagnosticGetQuery(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void NetworkDiagnostic::HandleDiagnosticGetQuery(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                                  const otMessageInfo *aMessageInfo)
 {
     static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetQuery(
@@ -480,7 +480,7 @@ exit:
     }
 }
 
-void NetworkDiagnostic::HandleDiagnosticGetRequest(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void NetworkDiagnostic::HandleDiagnosticGetRequest(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                                    const otMessageInfo *aMessageInfo)
 {
     static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetRequest(
@@ -576,7 +576,7 @@ exit:
     return error;
 }
 
-void NetworkDiagnostic::HandleDiagnosticReset(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void NetworkDiagnostic::HandleDiagnosticReset(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                               const otMessageInfo *aMessageInfo)
 {
     static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticReset(

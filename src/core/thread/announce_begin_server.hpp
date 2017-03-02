@@ -89,7 +89,7 @@ private:
         kDefaultPeriod = 1000,
     };
 
-    static void HandleRequest(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleRequest(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                               const otMessageInfo *aMessageInfo);
     void HandleRequest(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 

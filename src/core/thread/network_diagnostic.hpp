@@ -112,24 +112,24 @@ private:
     ThreadError AppendChildTable(Message &aMessage);
     ThreadError FillRequestedTlvs(Message &aRequest, Message &aResponse, NetworkDiagnosticTlv &aNetworkDiagnosticTlv);
 
-    static void HandleDiagnosticGetRequest(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleDiagnosticGetRequest(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                            const otMessageInfo *aMessageInfo);
     void HandleDiagnosticGetRequest(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleDiagnosticGetQuery(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleDiagnosticGetQuery(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                          const otMessageInfo *aMessageInfo);
     void HandleDiagnosticGetQuery(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleDiagnosticGetResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleDiagnosticGetResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                             const otMessageInfo *aMessageInfo, ThreadError aResult);
     void HandleDiagnosticGetResponse(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
                                      ThreadError aResult);
 
-    static void HandleDiagnosticGetAnswer(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleDiagnosticGetAnswer(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                           const otMessageInfo *aMessageInfo);
     void HandleDiagnosticGetAnswer(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleDiagnosticReset(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleDiagnosticReset(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                       const otMessageInfo *aMessageInfo);
     void HandleDiagnosticReset(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 

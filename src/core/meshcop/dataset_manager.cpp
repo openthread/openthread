@@ -942,7 +942,7 @@ exit:
     return error;
 }
 
-void ActiveDatasetBase::HandleGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void ActiveDatasetBase::HandleGet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                   const otMessageInfo *aMessageInfo)
 {
     static_cast<ActiveDatasetBase *>(aContext)->HandleGet(
@@ -1154,7 +1154,7 @@ void PendingDatasetBase::HandleNetworkUpdate(uint8_t &aFlags)
     DatasetManager::HandleNetworkUpdate(aFlags);
 }
 
-void PendingDatasetBase::HandleGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void PendingDatasetBase::HandleGet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                    const otMessageInfo *aMessageInfo)
 {
     static_cast<PendingDatasetBase *>(aContext)->HandleGet(

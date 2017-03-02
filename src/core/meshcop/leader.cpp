@@ -61,7 +61,7 @@ Leader::Leader(ThreadNetif &aThreadNetif):
     mNetif.GetCoapServer().AddResource(mKeepAlive);
 }
 
-void Leader::HandlePetition(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void Leader::HandlePetition(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                             const otMessageInfo *aMessageInfo)
 {
     static_cast<Leader *>(aContext)->HandlePetition(
@@ -151,7 +151,7 @@ exit:
     return error;
 }
 
-void Leader::HandleKeepAlive(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void Leader::HandleKeepAlive(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                              const otMessageInfo *aMessageInfo)
 {
     static_cast<Leader *>(aContext)->HandleKeepAlive(

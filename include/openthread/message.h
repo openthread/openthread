@@ -66,7 +66,7 @@ extern "C" {
  * @sa otMessageRead
  * @sa otMessageWrite
  */
-ThreadError otMessageFree(otMessage aMessage);
+ThreadError otMessageFree(otMessage *aMessage);
 
 /**
  * Get the message length in bytes.
@@ -84,7 +84,7 @@ ThreadError otMessageFree(otMessage aMessage);
  * @sa otMessageWrite
  * @sa otMessageSetLength
  */
-uint16_t otMessageGetLength(otMessage aMessage);
+uint16_t otMessageGetLength(otMessage *aMessage);
 
 /**
  * Set the message length in bytes.
@@ -103,7 +103,7 @@ uint16_t otMessageGetLength(otMessage aMessage);
  * @sa otMessageRead
  * @sa otMessageWrite
  */
-ThreadError otMessageSetLength(otMessage aMessage, uint16_t aLength);
+ThreadError otMessageSetLength(otMessage *aMessage, uint16_t aLength);
 
 /**
  * Get the message offset in bytes.
@@ -120,7 +120,7 @@ ThreadError otMessageSetLength(otMessage aMessage, uint16_t aLength);
  * @sa otMessageRead
  * @sa otMessageWrite
  */
-uint16_t otMessageGetOffset(otMessage aMessage);
+uint16_t otMessageGetOffset(otMessage *aMessage);
 
 /**
  * Set the message offset in bytes.
@@ -139,7 +139,7 @@ uint16_t otMessageGetOffset(otMessage aMessage);
  * @sa otMessageRead
  * @sa otMessageWrite
  */
-ThreadError otMessageSetOffset(otMessage aMessage, uint16_t aOffset);
+ThreadError otMessageSetOffset(otMessage *aMessage, uint16_t aOffset);
 
 /**
  * This function indicates whether or not link security is enabled for the message.
@@ -150,7 +150,7 @@ ThreadError otMessageSetOffset(otMessage aMessage, uint16_t aOffset);
  * @retval FALSE  If link security is not enabled.
  *
  */
-bool otMessageIsLinkSecurityEnabled(otMessage aMessage);
+bool otMessageIsLinkSecurityEnabled(otMessage *aMessage);
 
 /**
  * This function sets/forces the message to be forwarded using direct transmission.
@@ -161,7 +161,7 @@ bool otMessageIsLinkSecurityEnabled(otMessage aMessage);
  *                       follow the normal procedure.
  *
  */
-void otMessageSetDirectTransmission(otMessage aMessage, bool aEnabled);
+void otMessageSetDirectTransmission(otMessage *aMessage, bool aEnabled);
 
 /**
  * Append bytes to a message.
@@ -181,7 +181,7 @@ void otMessageSetDirectTransmission(otMessage aMessage, bool aEnabled);
  * @sa otMessageRead
  * @sa otMessageWrite
  */
-ThreadError otMessageAppend(otMessage aMessage, const void *aBuf, uint16_t aLength);
+ThreadError otMessageAppend(otMessage *aMessage, const void *aBuf, uint16_t aLength);
 
 /**
  * Read bytes from a message.
@@ -201,7 +201,7 @@ ThreadError otMessageAppend(otMessage aMessage, const void *aBuf, uint16_t aLeng
  * @sa otMessageSetOffset
  * @sa otMessageWrite
  */
-int otMessageRead(otMessage aMessage, uint16_t aOffset, void *aBuf, uint16_t aLength);
+int otMessageRead(otMessage *aMessage, uint16_t aOffset, void *aBuf, uint16_t aLength);
 
 /**
  * Write bytes to a message.
@@ -221,7 +221,7 @@ int otMessageRead(otMessage aMessage, uint16_t aOffset, void *aBuf, uint16_t aLe
  * @sa otMessageSetOffset
  * @sa otMessageRead
  */
-int otMessageWrite(otMessage aMessage, uint16_t aOffset, const void *aBuf, uint16_t aLength);
+int otMessageWrite(otMessage *aMessage, uint16_t aOffset, const void *aBuf, uint16_t aLength);
 
 /**
  * This structure represents an OpenThread message queue.
@@ -254,7 +254,7 @@ void otMessageQueueInit(otMessageQueue *aQueue);
  * @retval kThreadError_Already  The message is already enqueued in a queue.
  *
  */
-ThreadError otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage aMessage);
+ThreadError otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage *aMessage);
 
 /**
  * This function removes a message from the given message queue.
@@ -266,7 +266,7 @@ ThreadError otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage aMessage);
  * @retval kThreadError_NotFound  The message is not enqueued in this queue.
  *
  */
-ThreadError otMessageQueueDequeue(otMessageQueue *aQueue, otMessage aMessage);
+ThreadError otMessageQueueDequeue(otMessageQueue *aQueue, otMessage *aMessage);
 
 /**
  * This function returns a pointer to the message at the head of the queue.
@@ -276,7 +276,7 @@ ThreadError otMessageQueueDequeue(otMessageQueue *aQueue, otMessage aMessage);
  * @returns  A pointer to the message at the head of queue or NULL if queue is empty.
  *
  */
-otMessage otMessageQueueGetHead(otMessageQueue *aQueue);
+otMessage *otMessageQueueGetHead(otMessageQueue *aQueue);
 
 /**
  * This function returns a pointer to the next message in the queue by iterating forward (from head to tail).
@@ -288,7 +288,7 @@ otMessage otMessageQueueGetHead(otMessageQueue *aQueue);
  *           NULL is returned if `aMessage` is not in the queue `aQueue`.
  *
  */
-otMessage otMessageQueueGetNext(otMessageQueue *aQueue, const otMessage aMessage);
+otMessage *otMessageQueueGetNext(otMessageQueue *aQueue, const otMessage *aMessage);
 
 /**
  * Get the Message Buffer information.

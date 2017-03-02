@@ -359,7 +359,7 @@ exit:
     return error;
 }
 
-void Commissioner::HandleMgmtCommissionerGetResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void Commissioner::HandleMgmtCommissionerGetResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                                      const otMessageInfo *aMessageInfo, ThreadError aResult)
 {
     static_cast<Commissioner *>(aContext)->HandleMgmtCommissisonerGetResponse(
@@ -461,7 +461,7 @@ exit:
     return error;
 }
 
-void Commissioner::HandleMgmtCommissionerSetResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void Commissioner::HandleMgmtCommissionerSetResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                                      const otMessageInfo *aMessageInfo, ThreadError aResult)
 {
     static_cast<Commissioner *>(aContext)->HandleMgmtCommissisonerSetResponse(
@@ -526,7 +526,7 @@ exit:
     return error;
 }
 
-void Commissioner::HandleLeaderPetitionResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void Commissioner::HandleLeaderPetitionResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                                 const otMessageInfo *aMessageInfo, ThreadError aResult)
 {
     static_cast<Commissioner *>(aContext)->HandleLeaderPetitionResponse(
@@ -626,7 +626,7 @@ exit:
     return error;
 }
 
-void Commissioner::HandleLeaderKeepAliveResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void Commissioner::HandleLeaderKeepAliveResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                                  const otMessageInfo *aMessageInfo, ThreadError aResult)
 {
     static_cast<Commissioner *>(aContext)->HandleLeaderKeepAliveResponse(
@@ -660,7 +660,7 @@ exit:
     otLogFuncExit();
 }
 
-void Commissioner::HandleRelayReceive(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void Commissioner::HandleRelayReceive(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                       const otMessageInfo *aMessageInfo)
 {
     static_cast<Commissioner *>(aContext)->HandleRelayReceive(
@@ -748,7 +748,7 @@ exit:
     otLogFuncExit();
 }
 
-void Commissioner::HandleDatasetChanged(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void Commissioner::HandleDatasetChanged(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                         const otMessageInfo *aMessageInfo)
 {
     static_cast<Commissioner *>(aContext)->HandleDatasetChanged(
@@ -773,7 +773,7 @@ exit:
     otLogFuncExit();
 }
 
-void Commissioner::HandleJoinerFinalize(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void Commissioner::HandleJoinerFinalize(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                         const otMessageInfo *aMessageInfo)
 {
     static_cast<Commissioner *>(aContext)->HandleJoinerFinalize(

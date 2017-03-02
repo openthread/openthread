@@ -92,7 +92,7 @@ exit:
     return error;
 }
 
-void AnnounceBeginServer::HandleRequest(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void AnnounceBeginServer::HandleRequest(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                         const otMessageInfo *aMessageInfo)
 {
     static_cast<AnnounceBeginServer *>(aContext)->HandleRequest(
