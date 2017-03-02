@@ -61,22 +61,22 @@ RtlCopyBufferToMdl(
 
 #include <openthread-windows-config.h>
 #include <openthread-core-config.h>
-#include <openthread.h>
-#include <openthread-icmp6.h>
-#include <openthread-ip6.h>
-#include <openthread-tasklet.h>
-#include <commissioning/commissioner.h>
-#include <commissioning/joiner.h>
-#include <dhcp6/dhcp6_server.h>
-#include <dhcp6/dhcp6_client.h>
+#include <openthread/openthread.h>
+#include <openthread/icmp6.h>
+#include <openthread/ip6.h>
+#include <openthread/tasklet.h>
+#include <openthread/commissioner.h>
+#include <openthread/joiner.h>
+#include <openthread/dhcp6_server.h>
+#include <openthread/dhcp6_client.h>
 #include <common/code_utils.hpp>
-#include <platform/logging.h>
-#include <platform/logging-windows.h>
-#include <platform/radio.h>
-#include <platform/misc.h>
-#include <platform/alarm.h>
-#include <platform/settings.h>
-#include <platform/messagepool.h>
+#include <openthread/platform/logging.h>
+#include <openthread/platform/logging-windows.h>
+#include <openthread/platform/radio.h>
+#include <openthread/platform/misc.h>
+#include <openthread/platform/alarm.h>
+#include <openthread/platform/settings.h>
+#include <openthread/platform/messagepool.h>
 #include <ncp/spinel.h>
 
 #include <otLwfIoctl.h>

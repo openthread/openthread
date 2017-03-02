@@ -68,7 +68,7 @@ AC_SUBST(LIBOPENTHREAD_VERSION_INFO,     [${LIBOPENTHREAD_VERSION_CURRENT}:${LIB
 # Check the sanity of the source directory by checking for the
 # presence of a key watch file
 #
-AC_CONFIG_SRCDIR([include/openthread.h])
+AC_CONFIG_SRCDIR([include/openthread/openthread.h])
 
 #
 # Tell autoconf where to find auxilliary build tools (e.g. config.guess,
@@ -1079,11 +1079,8 @@ NL_RESTORE_WERROR
 AC_CONFIG_FILES([
 Makefile
 include/Makefile
-include/cli/Makefile
-include/commissioning/Makefile
-include/dhcp6/Makefile
-include/ncp/Makefile
-include/platform/Makefile
+include/openthread/Makefile
+include/openthread/platform/Makefile
 src/Makefile
 src/cli/Makefile
 src/ncp/Makefile

@@ -28,7 +28,7 @@
 
 #include "platform-posix.h"
 
-#include <platform/uart.h>
+#include "openthread/platform/uart.h"
 
 static HANDLE s_WorkerThread;
 static HANDLE s_StopWorkerEvent;

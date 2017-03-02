@@ -34,7 +34,8 @@
 #ifndef TCP_HPP_
 #define TCP_HPP_
 
-#include <openthread.h>
+#include "openthread/openthread.h"
+
 #include <net/ip6_headers.hpp>
 
 namespace Thread {

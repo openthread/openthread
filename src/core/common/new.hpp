@@ -35,7 +35,8 @@
 #define NEW_HPP_
 
 #include <stddef.h>
-#include <platform/toolchain.h>
+
+#include "openthread/platform/toolchain.h"
 
 inline void *operator new(size_t, void *p) throw() { return p; }
 

@@ -76,7 +76,7 @@ __forceinline void timersub(struct timeval *a, struct timeval *b, struct timeval
 #define POLL poll
 #endif
 
-#include <openthread.h>
+#include "openthread/openthread.h"
 #include <common/code_utils.hpp>
 
 #include <assert.h>

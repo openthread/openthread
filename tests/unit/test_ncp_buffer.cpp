@@ -28,7 +28,7 @@
 
 #include <ctype.h>
 #include "test_util.h"
-#include <openthread.h>
+#include "openthread/openthread.h"
 #include <openthread-instance.h>
 #include <common/code_utils.hpp>
 #include <common/message.hpp>

@@ -31,22 +31,29 @@ pushd %APPVEYOR_BUILD_FOLDER%
 REM Make the release directories
 mkdir release
 mkdir release\include
-mkdir release\include\commissioning
-mkdir release\include\missing
-mkdir release\include\platform
+mkdir release\include\openthread\
+mkdir release\include\openthread\missing
+mkdir release\include\openthread\platform
 mkdir release\libs
 mkdir release\symbols
 mkdir release\symbols\TraceFormat
 
 REM Copy the relavant include headers
 
-copy include\openthread.h release\include
-copy include\openthread-types.h release\include
-copy include\commissioning\commissioner.h release\include\commissioning
-copy include\commissioning\joiner.h release\include\commissioning
-copy include\platform\toolchain.h release\include\platform
-copy src\missing\stdbool\stdbool.h release\include\missing
-copy src\missing\stdint\stdint.h release\include\missing
+copy include\openthread\commissioner.h release\include\openthread
+copy include\openthread\dataset.h release\include\openthread
+copy include\openthread\instance.h release\include\openthread
+copy include\openthread\ip6.h release\include\openthread
+copy include\openthread\joiner.h release\include\openthread
+copy include\openthread\link.h release\include\openthread
+copy include\openthread\message.h release\include\openthread
+copy include\openthread\netdata.h release\include\openthread
+copy include\openthread\openthread.h release\include\openthread
+copy include\openthread\thread.h release\include\openthread
+copy include\openthread\types.h release\include\openthread
+copy include\openthread\platform\toolchain.h release\include\openthread\platform
+copy src\missing\stdbool\stdbool.h release\include\openthread\missing
+copy src\missing\stdint\stdint.h release\include\openthread\missing
 
 REM Copy the relavant binaries
 

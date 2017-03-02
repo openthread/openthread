@@ -31,12 +31,13 @@
  *   This file implements the CoAP header generation and parsing.
  */
 
+#include "openthread/platform/random.h"
+
 #include <coap/coap_header.hpp>
 #include <coap/coap_client.hpp>
 #include <common/debug.hpp>
 #include <common/code_utils.hpp>
 #include <common/encoding.hpp>
-#include <platform/random.h>
 
 namespace Thread {
 namespace Coap {

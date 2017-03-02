@@ -93,7 +93,7 @@ extern "C" {
     }
 #endif
 
-    void otSignalTaskletPending(otInstance *)
+    void otTaskletsSignalPending(otInstance *)
     {
     }
 

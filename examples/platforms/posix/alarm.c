@@ -32,8 +32,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <platform/alarm.h>
-#include <platform/diag.h>
+#include "openthread/platform/alarm.h"
+#include "openthread/platform/diag.h"
 
 static bool s_is_running = false;
 static uint32_t s_alarm = 0;

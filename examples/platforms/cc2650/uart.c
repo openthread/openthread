@@ -33,9 +33,9 @@
 #include <driverlib/ioc.h>
 #include <driverlib/sys_ctrl.h>
 
-#include <openthread-types.h>
+#include <openthread/types.h>
 #include <common/code_utils.hpp>
-#include <platform/uart.h>
+#include <openthread/platform/uart.h>
 
 /**
  * \note this will configure the uart for 115200 baud 8-N-1, no HW flow control

@@ -31,7 +31,8 @@
  *   This file implements the tasklet scheduler.
  */
 
-#include <openthread.h>
+#include "openthread/openthread.h"
+
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/tasklet.hpp>
@@ -68,7 +69,7 @@ ThreadError TaskletScheduler::Post(Tasklet &aTasklet)
     {
         mHead = &aTasklet;
         mTail = &aTasklet;
-        otSignalTaskletPending(aTasklet.mScheduler.GetIp6()->GetInstance());
+        otTaskletsSignalPending(aTasklet.mScheduler.GetIp6()->GetInstance());
     }
     else
     {
@@ -118,7 +119,7 @@ void TaskletScheduler::ProcessQueuedTasklets(void)
         {
             if (mHead != NULL)
             {
-                otSignalTaskletPending(cur->mScheduler.GetIp6()->GetInstance());
+                otTaskletsSignalPending(cur->mScheduler.GetIp6()->GetInstance());
             }
 
             break;

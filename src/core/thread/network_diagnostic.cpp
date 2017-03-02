@@ -33,6 +33,8 @@
 
 #define WPP_NAME "network_diagnostic.tmh"
 
+#include "openthread/platform/random.h"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
@@ -40,7 +42,6 @@
 #include <common/encoding.hpp>
 #include <mac/mac_frame.hpp>
 #include <net/netif.hpp>
-#include <platform/random.h>
 #include <thread/mesh_forwarder.hpp>
 #include <thread/mle_router.hpp>
 #include <thread/thread_netif.hpp>

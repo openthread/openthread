@@ -36,7 +36,7 @@
 
 #include <stdint.h>
 
-#include <openthread-types.h>
+#include "openthread/types.h"
 
 namespace Thread {
 namespace Ip6 {

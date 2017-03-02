@@ -114,7 +114,7 @@ uint16_t Ip6::ComputePseudoheaderChecksum(const Address &src, const Address &dst
     return checksum;
 }
 
-void Ip6::SetReceiveDatagramCallback(otReceiveIp6DatagramCallback aCallback, void *aCallbackContext)
+void Ip6::SetReceiveDatagramCallback(otIp6ReceiveCallback aCallback, void *aCallbackContext)
 {
     mReceiveIp6DatagramCallback = aCallback;
     mReceiveIp6DatagramCallbackContext = aCallbackContext;
@@ -697,7 +697,7 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
             {
                 receive = true;
             }
-            else if (netif->IsMulticastPromiscuousModeEnabled())
+            else if (netif->IsMulticastPromiscuousEnabled())
             {
                 multicastPromiscuous = true;
             }

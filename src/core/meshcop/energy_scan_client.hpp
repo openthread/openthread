@@ -35,8 +35,9 @@
 #define ENERGY_SCAN_CLIENT_HPP_
 
 #include <openthread-core-config.h>
-#include <openthread-types.h>
-#include <commissioning/commissioner.h>
+
+#include "openthread/commissioner.h"
+
 #include <coap/coap_client.hpp>
 #include <coap/coap_server.hpp>
 #include <net/ip6_address.hpp>

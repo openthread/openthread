@@ -36,10 +36,10 @@
 
 #include "platform-posix.h"
 
-#include <openthread-types.h>
+#include "openthread/types.h"
+#include "openthread/platform/random.h"
 
 #include <common/code_utils.hpp>
-#include <platform/random.h>
 
 static uint32_t s_state = 1;
 

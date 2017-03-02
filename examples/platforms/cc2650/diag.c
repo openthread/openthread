@@ -29,7 +29,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <platform/diag.h>
+#include <openthread/platform/diag.h>
 
 
 /**

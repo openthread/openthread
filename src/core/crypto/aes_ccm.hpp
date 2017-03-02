@@ -36,7 +36,8 @@
 
 #include <stdint.h>
 
-#include <openthread-types.h>
+#include "openthread/types.h"
+
 #include <crypto/aes_ecb.hpp>
 
 namespace Thread {

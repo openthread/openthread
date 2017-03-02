@@ -81,13 +81,13 @@ void NcpFrameBuffer::Clear(void)
     while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != NULL)
     {
         otMessageQueueDequeue(&mWriteFrameMessageQueue, message);
-        otFreeMessage(message);
+        otMessageFree(message);
     }
 
     while ((message = otMessageQueueGetHead(&mMessageQueue)) != NULL)
     {
         otMessageQueueDequeue(&mMessageQueue, message);
-        otFreeMessage(message);
+        otMessageFree(message);
     }
 
     if (!wasEmpty)
@@ -252,7 +252,7 @@ void NcpFrameBuffer::InFrameDiscard(void)
     while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != NULL)
     {
         otMessageQueueDequeue(&mWriteFrameMessageQueue, message);
-        otFreeMessage(message);
+        otMessageFree(message);
     }
 }
 
@@ -433,10 +433,10 @@ ThreadError NcpFrameBuffer::OutFrameFillMessageBuffer(void)
 
     VerifyOrExit(mReadMessage != NULL, error = kThreadError_NotFound);
 
-    VerifyOrExit(mReadMessageOffset < otGetMessageLength(mReadMessage), error = kThreadError_NotFound);
+    VerifyOrExit(mReadMessageOffset < otMessageGetLength(mReadMessage), error = kThreadError_NotFound);
 
     // Read portion of current message from the offset into message buffer.
-    readLength = otReadMessage(mReadMessage, mReadMessageOffset, mMessageBuffer, sizeof(mMessageBuffer));
+    readLength = otMessageRead(mReadMessage, mReadMessageOffset, mMessageBuffer, sizeof(mMessageBuffer));
 
     VerifyOrExit(readLength > 0, error = kThreadError_NotFound);
 
@@ -577,7 +577,7 @@ ThreadError NcpFrameBuffer::OutFrameRemove(void)
             if ((message = otMessageQueueGetHead(&mMessageQueue)) != NULL)
             {
                 otMessageQueueDequeue(&mMessageQueue, message);
-                otFreeMessage(message);
+                otMessageFree(message);
             }
         }
 
@@ -644,7 +644,7 @@ uint16_t NcpFrameBuffer::OutFrameGetLength(void)
 
             if (message != NULL)
             {
-                frameLength += otGetMessageLength(message);
+                frameLength += otMessageGetLength(message);
             }
         }
 

@@ -26,8 +26,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <platform/misc.h>
-#include <openthread-types.h>
+#include "openthread/types.h"
+
+#include "openthread/platform/misc.h"
 #include "sdk_defs.h"
 
 void otPlatReset(otInstance *aInstance)

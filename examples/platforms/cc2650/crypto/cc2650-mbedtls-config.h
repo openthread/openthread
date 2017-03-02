@@ -32,7 +32,7 @@
 #include <inttypes.h>
 #include <stdlib.h>
 
-#include <platform/logging.h>
+#include <openthread/platform/logging.h>
 
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_DEPRECATE)
 #define _CRT_SECURE_NO_DEPRECATE 1

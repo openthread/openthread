@@ -26,13 +26,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread-types.h>
+#include <openthread/types.h>
 
 #include <assert.h>
 #include <common/code_utils.hpp>
 #include "cc2650_radio.h"
-#include <platform/radio.h>
-#include <platform/random.h> /* to seed the CSMA-CA funciton */
+#include <openthread/platform/radio.h>
+#include <openthread/platform/random.h> /* to seed the CSMA-CA funciton */
 
 #include <driverlib/prcm.h>
 #include <inc/hw_prcm.h>

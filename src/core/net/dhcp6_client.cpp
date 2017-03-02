@@ -33,14 +33,15 @@
 
 #define WPP_NAME "dhcp6_client.tmh"
 
-#include <openthread-types.h>
+#include "openthread/types.h"
+#include "openthread/platform/random.h"
+
 #include <common/code_utils.hpp>
 #include <common/encoding.hpp>
 #include <common/logging.hpp>
 #include <mac/mac.hpp>
 #include <net/dhcp6.hpp>
 #include <net/dhcp6_client.hpp>
-#include <platform/random.h>
 #include <thread/thread_netif.hpp>
 
 using Thread::Encoding::BigEndian::HostSwap16;
@@ -95,7 +96,7 @@ void Dhcp6Client::UpdateAddresses(otInstance *aInstance, otDhcpAddress *aAddress
         found = false;
         iterator = OT_NETWORK_DATA_ITERATOR_INIT;
 
-        while ((otGetNextOnMeshPrefix(aInstance, false, &iterator, &config)) == kThreadError_None)
+        while ((otNetDataGetNextPrefixInfo(aInstance, false, &iterator, &config)) == kThreadError_None)
         {
             if (!config.mDhcp)
             {
@@ -113,7 +114,7 @@ void Dhcp6Client::UpdateAddresses(otInstance *aInstance, otDhcpAddress *aAddress
 
         if (!found)
         {
-            otRemoveUnicastAddress(aInstance, &(address->mAddress.mAddress));
+            otIp6RemoveUnicastAddress(aInstance, &(address->mAddress.mAddress));
             RemoveIdentityAssociation(config.mRloc16, config.mPrefix);
             memset(address, 0, sizeof(*address));
         }
@@ -122,7 +123,7 @@ void Dhcp6Client::UpdateAddresses(otInstance *aInstance, otDhcpAddress *aAddress
     // add IdentityAssociation for new configured prefix
     iterator = OT_NETWORK_DATA_ITERATOR_INIT;
 
-    while (otGetNextOnMeshPrefix(aInstance, false, &iterator, &config) == kThreadError_None)
+    while (otNetDataGetNextPrefixInfo(aInstance, false, &iterator, &config) == kThreadError_None)
     {
         if (!config.mDhcp)
         {
@@ -688,7 +689,7 @@ ThreadError Dhcp6Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
             address->mValidLifetime = option.GetValidLifetime();
             address->mAddress.mPreferred = address->mPreferredLifetime != 0;
             address->mAddress.mValid = address->mValidLifetime != 0;
-            otAddUnicastAddress(mNetif.GetInstance(), &address->mAddress);
+            otIp6AddUnicastAddress(mNetif.GetInstance(), &address->mAddress);
             break;
         }
     }

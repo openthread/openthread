@@ -31,10 +31,11 @@
  *   This file implements the trickle timer logic.
  */
 
+#include "openthread/platform/random.h"
+
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/trickle_timer.hpp>
-#include <platform/random.h>
 
 namespace Thread {
 

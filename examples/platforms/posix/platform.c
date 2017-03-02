@@ -46,9 +46,9 @@
 #include <syslog.h>
 #endif
 
-#include <openthread.h>
-#include <openthread-tasklet.h>
-#include <platform/alarm.h>
+#include "openthread/openthread.h"
+#include "openthread/tasklet.h"
+#include "openthread/platform/alarm.h"
 
 uint32_t NODE_ID = 1;
 uint32_t WELLKNOWN_NODE_ID = 34;
@@ -97,7 +97,7 @@ void PlatformProcessDrivers(otInstance *aInstance)
     platformRadioUpdateFdSet(&read_fds, &write_fds, &max_fd);
     platformAlarmUpdateTimeout(&timeout);
 
-    if (!otAreTaskletsPending(aInstance))
+    if (!otTaskletsArePending(aInstance))
     {
         rval = select(max_fd + 1, &read_fds, &write_fds, &error_fds, &timeout);
 

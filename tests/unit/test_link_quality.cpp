@@ -27,7 +27,7 @@
  */
 
 #include "test_util.h"
-#include <openthread.h>
+#include "openthread/openthread.h"
 #include <thread/link_quality.hpp>
 
 #include <string.h>

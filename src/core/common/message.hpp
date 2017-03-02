@@ -43,11 +43,12 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "openthread/message.h"
+#include "openthread/platform/messagepool.h"
+
 #include <openthread-core-config.h>
-#include <openthread-types.h>
 #include <common/code_utils.hpp>
 #include <mac/mac_frame.hpp>
-#include <platform/messagepool.h>
 
 namespace Thread {
 

@@ -40,16 +40,16 @@
 
 #include <common/code_utils.hpp>
 #include <platform-config.h>
-#include <platform/logging.h>
-#include <platform/radio.h>
-#include <platform/diag.h>
+#include <openthread/platform/logging.h>
+#include <openthread/platform/radio.h>
+#include <openthread/platform/diag.h>
 
 #include "device/nrf.h"
 #include "drivers/nrf_drv_radio802154.h"
 
 #include <openthread-core-config.h>
 #include <openthread-config.h>
-#include <openthread-types.h>
+#include <openthread/types.h>
 
 #define SHORT_ADDRESS_SIZE    2
 #define EXTENDED_ADDRESS_SIZE 8

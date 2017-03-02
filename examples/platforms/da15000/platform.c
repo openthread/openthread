@@ -34,9 +34,9 @@
 #include <assert.h>
 #include <stdint.h>
 
-#include <openthread.h>
-#include "platform/alarm.h"
-#include <openthread-types.h>
+#include "openthread/openthread.h"
+#include "openthread/platform/alarm.h"
+#include "openthread/platform/uart.h"
 #include "platform-da15000.h"
 #include "sdk_defs.h"
 #include "hw_cpm.h"
@@ -92,7 +92,7 @@ void ExampleProcess(otInstance *aInstance)
     otDeviceRole  devRole;
     static int    thrValue;
 
-    devRole = otGetDeviceRole(aInstance);
+    devRole = otThreadGetDeviceRole(aInstance);
 
     if (sBlink == false && otPlatAlarmGetNow() != 0)
     {
