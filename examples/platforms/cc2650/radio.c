@@ -1214,6 +1214,13 @@ exit:
     return error;
 }
 
+void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+{
+    // TODO: Create a proper implementation for this driver.
+    (void)aInstance;
+    (void)aPower;
+}
+
 /**
  * Function documented in platform/radio.h
  */

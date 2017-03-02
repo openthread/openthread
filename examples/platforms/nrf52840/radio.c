@@ -434,6 +434,13 @@ ThreadError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, u
     return kThreadError_None;
 }
 
+void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+{
+    // TODO: Create a proper implementation for this driver.
+    (void)aInstance;
+    (void)aPower;
+}
+
 void nrf5RadioProcess(otInstance *aInstance)
 {
     for (uint32_t i = 0; i < RADIO_RX_BUFFERS; i++)
