@@ -759,11 +759,24 @@ error:
     return NT_SUCCESS(status) ? kThreadError_None : kThreadError_Failed;
 }
 
-void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+void otPlatRadioSetDefaultTxPower(_In_ otInstance *otCtx, int8_t aPower)
 {
-    // TODO: Create a proper implementation for this driver.
-    (void)aInstance;
-    (void)aPower;
+    NT_ASSERT(otCtx);
+    PMS_FILTER pFilter = otCtxToFilter(otCtx);
+    NTSTATUS status;
+
+    // Indicate to the miniport
+    status =
+        otLwfCmdSetProp(
+            pFilter,
+            SPINEL_PROP_PHY_TX_POWER,
+            SPINEL_DATATYPE_INT8_S,
+            aPower
+        );
+    if (!NT_SUCCESS(status))
+    {
+        LogError(DRIVER_DEFAULT, "Set SPINEL_PROP_PHY_TX_POWER failed, %!STATUS!", status);
+    }
 }
 
 inline USHORT getDstShortAddress(const UCHAR *frame)
