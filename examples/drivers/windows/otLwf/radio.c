@@ -65,8 +65,7 @@ otPlatReset(
     (void)otLwfCmdResetDevice(pFilter, TRUE);
 
     // Finalize previous OpenThread instance
-    otInstanceFinalize(pFilter->otCtx);
-    pFilter->otCtx = NULL;
+    otLwfReleaseInstance(pFilter);
 
     // Reset radio layer
     pFilter->otPhyState = kStateDisabled;

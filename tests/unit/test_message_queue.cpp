@@ -29,6 +29,7 @@
 #include "test_util.h"
 
 #include <openthread.h>
+#include <openthread-instance.h>
 #include <openthread-message.h>
 #include <openthread-ip6.h>
 
@@ -74,7 +75,8 @@ void VerifyMessageQueueContent(Thread::MessageQueue &aMessageQueue, int aExpecte
 
 void TestMessageQueue(void)
 {
-    Thread::MessagePool messagePool;
+    otInstance instance;
+    Thread::MessagePool messagePool(&instance);
     Thread::MessageQueue messageQueue;
     Thread::Message *msg[kNumTestMessages];
     ThreadError error;

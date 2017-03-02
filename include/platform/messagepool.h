@@ -69,7 +69,7 @@ extern "C" {
  * @param[in] aBufferSize          The size in bytes of a Buffer object.
  *
  */
-void otPlatMessagePoolInit(uint16_t aMinNumFreeBuffers, size_t aBufferSize);
+void otPlatMessagePoolInit(otInstance *aInstance, uint16_t aMinNumFreeBuffers, size_t aBufferSize);
 
 /**
  * Allocate a buffer from the platform managed buffer pool.
@@ -77,7 +77,7 @@ void otPlatMessagePoolInit(uint16_t aMinNumFreeBuffers, size_t aBufferSize);
  * @returns A pointer to the Buffer or NULL if no Buffers are available.
  *
  */
-struct BufferHeader *otPlatMessagePoolNew(void);
+struct BufferHeader *otPlatMessagePoolNew(otInstance *aInstance);
 
 /**
  * This function is used to free a Buffer back to the platform managed buffer pool.
@@ -85,7 +85,7 @@ struct BufferHeader *otPlatMessagePoolNew(void);
  * @param[in]  aBuffer  The Buffer to free.
  *
  */
-void otPlatMessagePoolFree(struct BufferHeader *aBuffer);
+void otPlatMessagePoolFree(otInstance *aInstance, struct BufferHeader *aBuffer);
 
 /**
  * Get the number of free buffers.
@@ -93,7 +93,7 @@ void otPlatMessagePoolFree(struct BufferHeader *aBuffer);
  * @returns The number of buffers currently free and available to OpenThread.
  *
  */
-uint16_t otPlatMessagePoolNumFreeBuffers(void);
+uint16_t otPlatMessagePoolNumFreeBuffers(otInstance *aInstance);
 
 #ifdef __cplusplus
 }  // extern "C"

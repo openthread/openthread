@@ -111,6 +111,27 @@ typedef enum OTLWF_DEVICE_STATUS
 #define OT_EVENT_TIMER_RUNNING      1
 #define OT_EVENT_TIMER_FIRED        2
 
+#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+
+typedef struct BufferPool
+{
+    struct BufferPool* Next;
+    struct BufferHeader* FreeBuffers;
+    uint8_t Buffers[0];
+
+} BufferPool;
+
+enum
+{
+    kPageSize                = 1024 * 4,    // 4 KB
+    kPagesPerBufferPool      = 4,
+    kEstimatedBufferSize     = 128,         // sizeof(Thread::Buffer)
+    kEstimatedBufferPoolSize = ((kPageSize * kPagesPerBufferPool) - sizeof(BufferPool)) / kEstimatedBufferSize,
+    kEstimatedMaxBufferPools = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS / kEstimatedBufferPoolSize
+};
+
+#endif
+
 //
 // Define the filter struct
 //
@@ -243,6 +264,14 @@ typedef struct _MS_FILTER
         uint16_t                    otShortAddress;
 
         BOOLEAN                     otPendingMacOffloadEnabled;
+
+#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+        uint16_t                    otBufferSize;
+        uint16_t                    otBufferPoolSize;
+        uint16_t                    otBufferPoolByteSize;
+        uint16_t                    otBuffersLeft;
+        BufferPool*                 otBufferPoolHead;
+#endif
 
 #if DEBUG_ALLOC
         // Used for tracking memory allocations
