@@ -408,6 +408,15 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance);
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance);
 
 /**
+ * Set the radio Tx power used for auto-generated frames.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ * @param[in] aPower     The Tx power to use in dBm.
+ *
+ */
+void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower);
+
+/**
  * Get the status of promiscuous mode.
  *
  * @param[in] aInstance  The OpenThread instance structure.
