@@ -311,6 +311,7 @@ typedef struct otExtAddress
     uint8_t m8[OT_EXT_ADDRESS_SIZE];  ///< IEEE 802.15.4 Extended Address bytes
 } otExtAddress;
 
+#define OT_IP6_PREFIX_SIZE         8   ///< Size of an IPv6 prefix (bytes)
 #define OT_IP6_ADDRESS_SIZE        16  ///< Size of an IPv6 address (bytes)
 
 /**
