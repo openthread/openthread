@@ -181,62 +181,83 @@ void MainPage::AddAdapterToList(otAdapter^ adapter)
 {
     try
     {
-        GUID interfaceGuid = adapter->InterfaceGuid;
-        auto state = adapter->State;
-
-        WCHAR szText[256] = { 0 };
-        swprintf_s(szText, 256, L"%s\r\n\t" GUID_FORMAT L"\r\n\t%s",
-            L"openthread interface", // TODO ...
-            GUID_ARG(interfaceGuid),
-            state->Data());
-
         auto InterfaceStackPanel = ref new StackPanel();
         InterfaceStackPanel->Orientation = Orientation::Horizontal;
 
+        // Basic description text
         auto InterfaceTextBlock = ref new TextBlock();
-        InterfaceTextBlock->Text = ref new String(szText);
+        InterfaceTextBlock->Text = ref new String(L"openthread interface");
         InterfaceTextBlock->FontSize = 16;
         InterfaceTextBlock->Margin = Thickness(10);
         InterfaceTextBlock->TextWrapping = TextWrapping::Wrap;
         InterfaceStackPanel->Children->Append(InterfaceTextBlock);
 
-        if (state == "Disabled")
-        {
-            auto ConnectButton = ref new Button();
-            ConnectButton->Content = ref new String(L"Connect");
-            ConnectButton->Click +=
-                ref new RoutedEventHandler(
-                    [=](Platform::Object^, RoutedEventArgs^) {
-                        this->_curAdapter = adapter;
-                        this->InterfaceConfiguration->Visibility = Windows::UI::Xaml::Visibility::Visible;
-                    }
+        // Connect button
+        auto ConnectButton = ref new Button();
+        ConnectButton->Visibility = Windows::UI::Xaml::Visibility::Collapsed;
+        ConnectButton->Content = ref new String(L"Connect");
+        ConnectButton->Click +=
+            ref new RoutedEventHandler(
+                [=](Platform::Object^, RoutedEventArgs^) {
+                    this->_curAdapter = adapter;
+                    this->InterfaceConfiguration->Visibility = Windows::UI::Xaml::Visibility::Visible;
+                }
             );
-            InterfaceStackPanel->Children->Append(ConnectButton);
-        }
-        else
-        {
-            auto DetailsButton = ref new Button();
-            DetailsButton->Content = ref new String(L"Details");
-            DetailsButton->Click +=
-                ref new RoutedEventHandler(
-                    [=](Platform::Object^, RoutedEventArgs^) {
-                        this->ShowInterfaceDetails(adapter);
-                    }
-            );
-            InterfaceStackPanel->Children->Append(DetailsButton);
+        InterfaceStackPanel->Children->Append(ConnectButton);
 
-            auto DisconnectButton = ref new Button();
-            DisconnectButton->Content = ref new String(L"Disconnect");
-            DisconnectButton->Click +=
-                ref new RoutedEventHandler(
-                    [=](Platform::Object^, RoutedEventArgs^) {
-                        this->DisconnectNetwork(adapter);
-                    }
+        // Details button
+        auto DetailsButton = ref new Button();
+        DetailsButton->Visibility = Windows::UI::Xaml::Visibility::Collapsed;
+        DetailsButton->Content = ref new String(L"Details");
+        DetailsButton->Click +=
+            ref new RoutedEventHandler(
+                [=](Platform::Object^, RoutedEventArgs^) {
+                    this->ShowInterfaceDetails(adapter);
+                }
             );
-            InterfaceStackPanel->Children->Append(DisconnectButton);
-        }
+        InterfaceStackPanel->Children->Append(DetailsButton);
 
-        // Register for callbacks on the device
+        // Disconnect button
+        auto DisconnectButton = ref new Button();
+        DisconnectButton->Visibility = Windows::UI::Xaml::Visibility::Collapsed;
+        DisconnectButton->Content = ref new String(L"Disconnect");
+        DisconnectButton->Click +=
+            ref new RoutedEventHandler(
+                [=](Platform::Object^, RoutedEventArgs^) {
+                    this->DisconnectNetwork(adapter);
+                }
+            );
+        InterfaceStackPanel->Children->Append(DisconnectButton);
+
+        // Delegate for handling role changes
+        auto OnAdapterRoleChanged =
+            [=]() {
+                GUID interfaceGuid = adapter->InterfaceGuid;
+                auto state = adapter->State;
+
+                WCHAR szText[256] = { 0 };
+                swprintf_s(szText, 256, L"%s\r\n\t" GUID_FORMAT L"\r\n\t%s",
+                    L"openthread interface", // TODO ...
+                    GUID_ARG(interfaceGuid),
+                    state->Data());
+
+                InterfaceTextBlock->Text = ref new String(szText);
+
+                if (state == "Disabled")
+                {
+                    ConnectButton->Visibility = Windows::UI::Xaml::Visibility::Visible;
+                    DetailsButton->Visibility = Windows::UI::Xaml::Visibility::Collapsed;
+                    DisconnectButton->Visibility = Windows::UI::Xaml::Visibility::Collapsed;
+                }
+                else
+                {
+                    ConnectButton->Visibility = Windows::UI::Xaml::Visibility::Collapsed;
+                    DetailsButton->Visibility = Windows::UI::Xaml::Visibility::Visible;
+                    DisconnectButton->Visibility = Windows::UI::Xaml::Visibility::Visible;
+                }
+            };
+
+        // Register for role change callbacks
         auto adapterRoleChangedToken = 
             adapter->NetRoleChanged +=
                 ref new otNetRoleChangedDelegate(
@@ -246,20 +267,14 @@ void MainPage::AddAdapterToList(otAdapter^ adapter)
                             Windows::UI::Core::CoreDispatcherPriority::Normal,
                             ref new Windows::UI::Core::DispatchedHandler(
                                 [=]() {
-                                    // Generate new status text
-                                    GUID guid = adapter->InterfaceGuid;
-                                    WCHAR szText[256] = { 0 };
-                                    swprintf_s(szText, 256, L"%s\r\n\t" GUID_FORMAT L"\r\n\t%s",
-                                        L"openthread interface", // TODO ...
-                                        GUID_ARG(guid),
-                                        adapter->State->Data());
-                                    InterfaceTextBlock->Text = ref new String(szText);
+                                    OnAdapterRoleChanged();
                                 }
                             )
                         );
                     }
                 );
 
+        // Register for adapter removal callbacks
         Windows::Foundation::EventRegistrationToken adapterRemovalToken;
         adapterRemovalToken =
             adapter->AdapterRemoval +=
@@ -285,6 +300,10 @@ void MainPage::AddAdapterToList(otAdapter^ adapter)
                                 }));
                     });
 
+        // Trigger the initial role change
+        OnAdapterRoleChanged();
+
+        // Add the interface to the list
         InterfaceList->Items->Append(InterfaceStackPanel);
     }
     catch (Exception^)
