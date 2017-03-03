@@ -39,7 +39,7 @@ MKDIR_P                        := mkdir -p
 LN_S                           := ln -s
 RM_F                           := rm -f
 
-BuildJobs                      ?= 99
+BuildJobs                      ?= 10
 
 COMMONCFLAGS                   := \
     -O1                           \
