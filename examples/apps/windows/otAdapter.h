@@ -29,9 +29,9 @@
 #pragma once
 
 #define OTDLL 1
-#include <openthread.h>
-#include <commissioning/commissioner.h>
-#include <commissioning/joiner.h>
+#include <openthread/openthread.h>
+#include <openthread/commissioner.h>
+#include <openthread/joiner.h>
 
 #include <wrl.h>
 #include <collection.h>
@@ -135,49 +135,49 @@ public:
 
     property signed int /*int8_t*/ MaxTransmitPower
     {
-        signed int get() { return otGetMaxTransmitPower(DeviceInstance); }
+        signed int get() { return otLinkGetMaxTransmitPower(DeviceInstance); }
         void set(signed int value)
         {
             if (value > 127) throw Exception::CreateException(E_INVALIDARG);
-            otSetMaxTransmitPower(DeviceInstance, (int8_t)value);
+            otLinkSetMaxTransmitPower(DeviceInstance, (int8_t)value);
         }
     }
 
     property uint32_t PollPeriod
     {
-        uint32_t get() { return otGetPollPeriod(DeviceInstance); }
-        void set(uint32_t value) { otSetPollPeriod(DeviceInstance, value); }
+        uint32_t get() { return otLinkGetPollPeriod(DeviceInstance); }
+        void set(uint32_t value) { otLinkSetPollPeriod(DeviceInstance, value); }
     }
 
-    property uint8_t Channel 
+    property uint8_t Channel
     { 
-        uint8_t get() { return otGetChannel(DeviceInstance); }
-        void set(uint8_t value) { ThrowOnFailure(otSetChannel(DeviceInstance, value)); }
+        uint8_t get() { return otLinkGetChannel(DeviceInstance); }
+        void set(uint8_t value) { ThrowOnFailure(otLinkSetChannel(DeviceInstance, value)); }
     }
 
     property uint16_t PanId
     {
-        uint16_t get() { return otGetPanId(DeviceInstance); }
-        void set(uint16_t value) { ThrowOnFailure(otSetPanId(DeviceInstance, value)); }
+        uint16_t get() { return otLinkGetPanId(DeviceInstance); }
+        void set(uint16_t value) { ThrowOnFailure(otLinkSetPanId(DeviceInstance, value)); }
     }
 
     property uint16_t ShortAddress
     {
-        uint16_t get() { return otGetShortAddress(DeviceInstance); }
+        uint16_t get() { return otLinkGetShortAddress(DeviceInstance); }
     }
 
     property uint64_t ExtendedAddress
     {
         uint64_t get()
-        { 
-            auto addr = otGetExtendedAddress(DeviceInstance);
+        {
+            auto addr = otLinkGetExtendedAddress(DeviceInstance);
             auto ret = *(uint64_t*)addr;
             otFreeMemory(addr);
             return ret;
         }
         void set(uint64_t value) 
         {
-            ThrowOnFailure(otSetExtendedAddress(DeviceInstance, (otExtAddress*)&value));
+            ThrowOnFailure(otLinkSetExtendedAddress(DeviceInstance, (otExtAddress*)&value));
         }
     }
 
@@ -186,17 +186,17 @@ public:
         uint64_t get()
         {
             uint64_t addr;
-            otGetFactoryAssignedIeeeEui64(DeviceInstance, (otExtAddress*)&addr);
+            otLinkGetFactoryAssignedIeeeEui64(DeviceInstance, (otExtAddress*)&addr);
             return addr;
         }
     }
 
-    property uint64_t HashMacAddress
+    property uint64_t JoinerId
     {
         uint64_t get()
         {
             uint64_t addr;
-            otGetHashMacAddress(DeviceInstance, (otExtAddress*)&addr);
+            otLinkGetJoinerId(DeviceInstance, (otExtAddress*)&addr);
             return addr;
         }
     }
@@ -205,14 +205,14 @@ public:
     {
         uint64_t get()
         {
-            auto panid = otGetExtendedPanId(DeviceInstance);
+            auto panid = otThreadGetExtendedPanId(DeviceInstance);
             auto ret = *(uint64_t*)panid;
             otFreeMemory(panid);
             return ret;
         }
         void set(uint64_t value)
         {
-            otSetExtendedPanId(DeviceInstance, (uint8_t*)&value);
+            otThreadSetExtendedPanId(DeviceInstance, (uint8_t*)&value);
         }
     }
 
@@ -220,7 +220,7 @@ public:
     {
         otLinkModeFlags get()
         {
-            auto linkmode = otGetLinkMode(DeviceInstance);
+            auto linkmode = otThreadGetLinkMode(DeviceInstance);
             otLinkModeFlags flags = otLinkModeFlags::None;
             if (linkmode.mRxOnWhenIdle)         flags = flags | otLinkModeFlags::RxOnWhenIdle;
             if (linkmode.mSecureDataRequests)   flags = flags | otLinkModeFlags::SecureDataRequests;
@@ -239,7 +239,7 @@ public:
                 linkmode.mDeviceType = true;
             if ((value & otLinkModeFlags::NetworkData) != otLinkModeFlags::None)
                 linkmode.mNetworkData = true;
-            ThrowOnFailure(otSetLinkMode(DeviceInstance, linkmode));
+            ThrowOnFailure(otThreadSetLinkMode(DeviceInstance, linkmode));
         }
     }
 
@@ -269,7 +269,7 @@ public:
         {
             constexpr char hexmap[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
             uint8_t keyLen;
-            auto key = otGetMasterKey(DeviceInstance, &keyLen);
+            auto key = otThreadGetMasterKey(DeviceInstance, &keyLen);
             WCHAR szKey[OT_MASTER_KEY_SIZE * 2 + 1] = { 0 };
             for (uint8_t i = 0; i < keyLen; i++)
             {
@@ -300,7 +300,7 @@ public:
                         charToValue(value->Data()[i + 1]));
                 }
             }
-            ThrowOnFailure(otSetMasterKey(DeviceInstance, key, keyLen));
+            ThrowOnFailure(otThreadSetMasterKey(DeviceInstance, key, keyLen));
         }
     }
 
@@ -308,7 +308,7 @@ public:
     {
         String^ get()
         {
-            auto _name = otGetNetworkName(DeviceInstance);
+            auto _name = otThreadGetNetworkName(DeviceInstance);
             WCHAR name[OT_NETWORK_NAME_MAX_SIZE + 1];
             MultiByteToWideChar(CP_UTF8, 0, _name, -1, name, ARRAYSIZE(name));
             otFreeMemory(_name);
@@ -318,51 +318,49 @@ public:
         {
             char name[OT_NETWORK_NAME_MAX_SIZE + 1];
             WideCharToMultiByte(CP_UTF8, WC_NO_BEST_FIT_CHARS, value->Data(), -1, name, ARRAYSIZE(name), nullptr, nullptr);
-            ThrowOnFailure(otSetNetworkName(DeviceInstance, name));
+            ThrowOnFailure(otThreadSetNetworkName(DeviceInstance, name));
         }
     }
 
     property uint8_t MaxAllowedChildren
     {
-        uint8_t get() { return otGetMaxAllowedChildren(DeviceInstance); }
-        void set(uint8_t value) { ThrowOnFailure(otSetMaxAllowedChildren(DeviceInstance, value)); }
+        uint8_t get() { return otThreadGetMaxAllowedChildren(DeviceInstance); }
+        void set(uint8_t value) { ThrowOnFailure(otThreadSetMaxAllowedChildren(DeviceInstance, value)); }
     }
 
     property uint32_t ChildTimeout
     {
-        uint32_t get() { return otGetChildTimeout(DeviceInstance); }
-        void set(uint32_t value) { otSetChildTimeout(DeviceInstance, value); }
+        uint32_t get() { return otThreadGetChildTimeout(DeviceInstance); }
+        void set(uint32_t value) { otThreadSetChildTimeout(DeviceInstance, value); }
     }
 
-    property bool InterfaceUp 
+    property bool InterfaceEnabled
     { 
-        bool get() { return otIsInterfaceUp(DeviceInstance); }
-        void set(bool value)
-        {
-            if (value) ThrowOnFailure(otInterfaceUp(DeviceInstance));
-            else       ThrowOnFailure(otInterfaceDown(DeviceInstance));
-        }
+        bool get() { return otIp6IsEnabled(DeviceInstance); }
+        void set(bool value) { ThrowOnFailure(otIp6SetEnabled(DeviceInstance, value)); }
     }
 
-    property bool ThreadStarted
+    property bool ThreadEnabled
     {
         //bool get() { return otIsThreadStarted(DeviceInstance); }
-        void set(bool value)
-        {
-            if (value) ThrowOnFailure(otThreadStart(DeviceInstance));
-            else       ThrowOnFailure(otThreadStop(DeviceInstance));
-        }
+        void set(bool value) { ThrowOnFailure(otThreadSetEnabled(DeviceInstance, value)); }
+    }
+
+    property bool AutoStart
+    {
+        bool get() { return otThreadGetAutoStart(DeviceInstance); }
+        void set(bool value) { ThrowOnFailure(otThreadSetAutoStart(DeviceInstance, value)); }
     }
 
     property bool Singleton
     {
-        bool get() { return otIsSingleton(DeviceInstance); }
+        bool get() { return otThreadIsSingleton(DeviceInstance); }
     }
 
     property bool RouterRoleEnabled
     {
-        bool get() { return otIsRouterRoleEnabled(DeviceInstance); }
-        void set(bool value) { otSetRouterRoleEnabled(DeviceInstance, value); }
+        bool get() { return otThreadIsRouterRoleEnabled(DeviceInstance); }
+        void set(bool value) { otThreadSetRouterRoleEnabled(DeviceInstance, value); }
     }
 
     /*property uint8_t PreferredRouterId
@@ -374,7 +372,7 @@ public:
     {
         HostName^ get()
         {
-            auto addr = otGetMeshLocalEid(DeviceInstance);
+            auto addr = otThreadGetMeshLocalEid(DeviceInstance);
             WCHAR szAddr[46];
             RtlIpv6AddressToString((IN6_ADDR*)addr, szAddr);
             otFreeMemory(addr);
@@ -387,7 +385,7 @@ public:
         HostName^ get()
         {
             IN6_ADDR addr;
-            ThrowOnFailure(otGetLeaderRloc(DeviceInstance, (otIp6Address*)&addr));
+            ThrowOnFailure(otThreadGetLeaderRloc(DeviceInstance, (otIp6Address*)&addr));
             WCHAR szAddr[46];
             RtlIpv6AddressToString(&addr, szAddr);
             return ref new HostName(ref new String(szAddr));
@@ -396,41 +394,41 @@ public:
 
     property uint8_t LocalLeaderWeight
     {
-        uint8_t get() { return otGetLocalLeaderWeight(DeviceInstance); }
-        void set(uint8_t value) { otSetLocalLeaderWeight(DeviceInstance, value); }
+        uint8_t get() { return otThreadGetLocalLeaderWeight(DeviceInstance); }
+        void set(uint8_t value) { otThreadSetLocalLeaderWeight(DeviceInstance, value); }
     }
 
     property uint32_t LocalLeaderPartitionId
     {
-        uint32_t get() { return otGetLocalLeaderPartitionId(DeviceInstance); }
-        void set(uint32_t value) { otSetLocalLeaderPartitionId(DeviceInstance, value); }
+        uint32_t get() { return otThreadGetLocalLeaderPartitionId(DeviceInstance); }
+        void set(uint32_t value) { otThreadSetLocalLeaderPartitionId(DeviceInstance, value); }
     }
 
     property uint8_t LeaderWeight
     {
-        uint8_t get() { return otGetLeaderWeight(DeviceInstance); }
+        uint8_t get() { return otThreadGetLeaderWeight(DeviceInstance); }
     }
 
     property uint32_t LeaderRouterId
     {
-        uint32_t get() { return otGetLeaderRouterId(DeviceInstance); }
+        uint32_t get() { return otThreadGetLeaderRouterId(DeviceInstance); }
     }
 
     property uint32_t PartitionId
     {
-        uint32_t get() { return otGetPartitionId(DeviceInstance); }
+        uint32_t get() { return otThreadGetPartitionId(DeviceInstance); }
     }
 
     property uint16_t Rloc16
     {
-        uint16_t get() { return otGetRloc16(DeviceInstance); }
+        uint16_t get() { return otThreadGetRloc16(DeviceInstance); }
     }
 
     property String^ State
     {
         String^ get()
         {
-            switch (otGetDeviceRole(DeviceInstance))
+            switch (otThreadGetDeviceRole(DeviceInstance))
             {
             case kDeviceRoleOffline:    return L"Offline";
             case kDeviceRoleDisabled:   return L"Disabled";
@@ -473,22 +471,22 @@ public:
 
     void PlatformReset()
     {
-        otPlatformReset(DeviceInstance);
+        otInstanceReset(DeviceInstance);
     }
 
     void FactoryReset()
     {
-        otFactoryReset(DeviceInstance);
+        otInstanceFactoryReset(DeviceInstance);
     }
 
     void BecomeRouter()
     {
-        ThrowOnFailure(otBecomeRouter(DeviceInstance));
+        ThrowOnFailure(otThreadBecomeRouter(DeviceInstance));
     }
 
     void BecomeLeader()
     {
-        ThrowOnFailure(otBecomeLeader(DeviceInstance));
+        ThrowOnFailure(otThreadBecomeLeader(DeviceInstance));
     }
 
 #pragma endregion

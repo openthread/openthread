@@ -304,8 +304,8 @@ void MainPage::ConnectNetwork(otAdapter^ adapter)
         adapter->PanId = 0x4567;
 
         // Bring up the interface and start the Thread logic
-        adapter->InterfaceUp = true;
-        adapter->ThreadStarted = true;
+        adapter->InterfaceEnabled = true;
+        adapter->ThreadEnabled = true;
     }
     catch (Exception^)
     {
@@ -318,8 +318,8 @@ void MainPage::DisconnectNetwork(otAdapter^ adapter)
     try
     {
         // Stop the Thread network and bring down the interface
-        adapter->ThreadStarted = false;
-        adapter->InterfaceUp = false;
+        adapter->ThreadEnabled = false;
+        adapter->InterfaceEnabled = false;
     }
     catch (Exception^)
     {
