@@ -47,6 +47,8 @@ configure_OPTIONS               = \
     --enable-ncp                  \
     --enable-diag                 \
     --enable-default-logging      \
+    --enable-dtls                 \
+    --enable-border-agent         \
     --with-examples=cc2538        \
     --with-platform-info=CC2538   \
     $(NULL)

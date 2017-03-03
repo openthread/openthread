@@ -75,9 +75,11 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
     mNetworkDataLeader(*this),
     mNetworkDiagnostic(*this),
 #if OPENTHREAD_ENABLE_COMMISSIONER
-    mSecureCoapServer(*this, OPENTHREAD_CONFIG_JOINER_UDP_PORT),
+    // mSecureCoapServer(*this, OPENTHREAD_CONFIG_JOINER_UDP_PORT),
     mCommissioner(*this),
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
+    mSecureCoapServer(*this, 49191),
+    mBorderAgent(*this),
 #if OPENTHREAD_ENABLE_DTLS
     mDtls(*this),
 #endif
@@ -109,6 +111,7 @@ ThreadError ThreadNetif::Up(void)
 #if OPENTHREAD_ENABLE_JOINER
         mSecureCoapClient.Start();
 #endif
+        mBorderAgent.Start();
         mMleRouter.Enable();
         mIsUp = true;
     }
@@ -125,6 +128,7 @@ ThreadError ThreadNetif::Down(void)
 #endif
     mMleRouter.Disable();
     mMeshForwarder.Stop();
+    mBorderAgent.Stop();
     mIp6.RemoveNetif(*this);
     RemoveAllExternalUnicastAddresses();
     UnsubscribeAllExternalMulticastAddresses();

@@ -50,6 +50,7 @@
 #include <meshcop/dataset_manager.hpp>
 #include <meshcop/joiner_router.hpp>
 #include <meshcop/leader.hpp>
+#include <meshcop/border_agent.hpp>
 #include <net/dhcp6.hpp>
 #include <net/dhcp6_client.hpp>
 #include <net/dhcp6_server.hpp>
@@ -285,8 +286,10 @@ public:
 #if OPENTHREAD_ENABLE_COMMISSIONER
     MeshCoP::Commissioner &GetCommissioner(void) { return mCommissioner; }
 
-    Coap::SecureServer &GetSecureCoapServer(void) { return mSecureCoapServer; }
+    // Coap::SecureServer &GetSecureCoapServer(void) { return mSecureCoapServer; }
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
+    MeshCoP::BorderAgent &GetBorderAgent(void) {return mBorderAgent;}
+    Coap::SecureServer &GetSecureCoapServer(void) { return mSecureCoapServer; }
 
 #if OPENTHREAD_ENABLE_DTLS
     MeshCoP::Dtls &GetDtls(void) { return mDtls; }
@@ -340,9 +343,11 @@ private:
     bool mIsUp;
 
 #if OPENTHREAD_ENABLE_COMMISSIONER
-    Coap::SecureServer mSecureCoapServer;
+    // Coap::SecureServer mSecureCoapServer;
     MeshCoP::Commissioner mCommissioner;
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
+    Coap::SecureServer mSecureCoapServer;
+    MeshCoP::BorderAgent mBorderAgent;
 
 #if OPENTHREAD_ENABLE_DTLS
     MeshCoP::Dtls mDtls;

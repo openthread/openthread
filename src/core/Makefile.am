@@ -103,6 +103,13 @@ SOURCES_COMMON                     += \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_COMMISSIONER
 
+if OPENTHREAD_ENABLE_BORDER_AGENT
+SOURCES_COMMON                     += \
+    coap/secure_coap_server.cpp       \
+    meshcop/border_agent.cpp          \
+    $(NULL)
+endif  # OPENTHREAD_ENABLE_BORDER_AGENT
+
 if OPENTHREAD_ENABLE_JOINER
 SOURCES_COMMON                     += \
     coap/secure_coap_client.cpp       \
@@ -213,6 +220,7 @@ noinst_HEADERS                      = \
     mac/mac_whitelist_stub.hpp        \
     meshcop/announce_begin_client.hpp \
     meshcop/commissioner.hpp          \
+    meshcop/border_agent.hpp          \
     meshcop/dataset.hpp               \
     meshcop/dataset_manager.hpp       \
     meshcop/dataset_manager_ftd.hpp   \

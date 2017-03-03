@@ -172,6 +172,9 @@ void Server::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &a
         case kCoapOptionContentFormat:
             break;
 
+        case kCoapOptionAccept:
+            break;
+
         default:
             ExitNow();
         }
