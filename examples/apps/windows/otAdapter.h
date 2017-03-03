@@ -333,8 +333,9 @@ public:
         void set(String^ value)
         {
             char name[OT_NETWORK_NAME_MAX_SIZE + 1];
-            WideCharToMultiByte(CP_UTF8, WC_NO_BEST_FIT_CHARS, value->Data(), -1, name, ARRAYSIZE(name), nullptr, nullptr);
-            ThrowOnFailure(otThreadSetNetworkName(DeviceInstance, name));
+            auto err = WideCharToMultiByte(CP_UTF8, WC_NO_BEST_FIT_CHARS, value->Data(), -1, name, ARRAYSIZE(name), nullptr, nullptr);
+            if (err == 0) ThrowOnFailure(otThreadSetNetworkName(DeviceInstance, name));
+            else throw Exception::CreateException(E_INVALIDARG);
         }
     }
 

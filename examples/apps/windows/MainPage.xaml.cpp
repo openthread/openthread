@@ -48,6 +48,20 @@ using namespace Windows::UI::Xaml::Navigation;
 #define MAC8_FORMAT L"%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X"
 #define MAC8_ARG(mac) mac[0], mac[1], mac[2], mac[3], mac[4], mac[5], mac[6], mac[7]
 
+#define LOGGING 1
+
+void otLog(PCSTR aFormat, ...)
+{
+    va_list args;
+    va_start(args, aFormat);
+
+    CHAR logString[512] = { 0 };
+    int charsWritten = vsprintf_s(logString, sizeof(logString), aFormat, args);
+    if (charsWritten > 0) OutputDebugStringA(logString);
+
+    va_end(args);
+}
+
 MainPage::MainPage() : _otApi(nullptr)
 {
     InitializeComponent();
@@ -181,8 +195,15 @@ void MainPage::AddAdapterToList(otAdapter^ adapter)
 {
     try
     {
+        GUID interfaceGuid = adapter->InterfaceGuid;
+        WCHAR szName[256] = { 0 };
+        swprintf_s(szName, 256, GUID_FORMAT, GUID_ARG(interfaceGuid));
+
         auto InterfaceStackPanel = ref new StackPanel();
+        InterfaceStackPanel->Name = ref new String(szName);
         InterfaceStackPanel->Orientation = Orientation::Horizontal;
+
+        otLog("%S arrival!\n", InterfaceStackPanel->Name->Data());
 
         // Basic description text
         auto InterfaceTextBlock = ref new TextBlock();
@@ -243,6 +264,8 @@ void MainPage::AddAdapterToList(otAdapter^ adapter)
 
                 InterfaceTextBlock->Text = ref new String(szText);
 
+                otLog("%S state = %S\n", InterfaceStackPanel->Name->Data(), state->Data());
+
                 if (state == "Disabled")
                 {
                     ConnectButton->Visibility = Windows::UI::Xaml::Visibility::Visible;
@@ -291,8 +314,10 @@ void MainPage::AddAdapterToList(otAdapter^ adapter)
                                 [=]() {
                                     for (uint32_t i = 0; i < this->InterfaceList->Items->Size; i++)
                                     {
-                                        if (this->InterfaceList->Items->GetAt(i) == InterfaceStackPanel)
+                                        auto Item = dynamic_cast<StackPanel^>(this->InterfaceList->Items->GetAt(i));
+                                        if (Item == InterfaceStackPanel)
                                         {
+                                            otLog("%S removal!\n", InterfaceStackPanel->Name->Data());
                                             this->InterfaceList->Items->RemoveAt(i);
                                             break;
                                         }
@@ -315,6 +340,11 @@ void MainPage::ConnectNetwork(otAdapter^ adapter)
 {
     try
     {
+        GUID interfaceGuid = adapter->InterfaceGuid;
+        WCHAR szName[256] = { 0 };
+        swprintf_s(szName, 256, GUID_FORMAT, GUID_ARG(interfaceGuid));
+        otLog("%S starting connection...\n", szName);
+
         // Configure
         adapter->NetworkName = InterfaceConfigName->Text;
         adapter->MasterKey = InterfaceConfigKey->Text;
@@ -336,6 +366,11 @@ void MainPage::DisconnectNetwork(otAdapter^ adapter)
 {
     try
     {
+        GUID interfaceGuid = adapter->InterfaceGuid;
+        WCHAR szName[256] = { 0 };
+        swprintf_s(szName, 256, GUID_FORMAT, GUID_ARG(interfaceGuid));
+        otLog("%S disconnecting...\n", szName);
+
         // Stop the Thread network and bring down the interface
         adapter->ThreadEnabled = false;
         adapter->IpEnabled = false;
