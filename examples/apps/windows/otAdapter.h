@@ -133,6 +133,8 @@ public:
         uint32_t get() { return otGetCompartmentId(DeviceInstance); }
     }
 
+#pragma region Link Layer
+
     property signed int /*int8_t*/ MaxTransmitPower
     {
         signed int get() { return otLinkGetMaxTransmitPower(DeviceInstance); }
@@ -200,6 +202,20 @@ public:
             return addr;
         }
     }
+
+#pragma endregion
+
+#pragma region IP Layer
+
+    property bool IpEnabled
+    {
+        bool get() { return otIp6IsEnabled(DeviceInstance); }
+        void set(bool value) { ThrowOnFailure(otIp6SetEnabled(DeviceInstance, value)); }
+    }
+
+#pragma endregion
+
+#pragma region Thread Layer
 
     property uint64_t ExtendedPanId
     {
@@ -334,12 +350,6 @@ public:
         void set(uint32_t value) { otThreadSetChildTimeout(DeviceInstance, value); }
     }
 
-    property bool InterfaceEnabled
-    { 
-        bool get() { return otIp6IsEnabled(DeviceInstance); }
-        void set(bool value) { ThrowOnFailure(otIp6SetEnabled(DeviceInstance, value)); }
-    }
-
     property bool ThreadEnabled
     {
         //bool get() { return otIsThreadStarted(DeviceInstance); }
@@ -363,10 +373,10 @@ public:
         void set(bool value) { otThreadSetRouterRoleEnabled(DeviceInstance, value); }
     }
 
-    /*property uint8_t PreferredRouterId
+    property uint8_t PreferredRouterId
     {
-        void set(uint8_t value) { ThrowOnFailure(otSetPreferredRouterId(DeviceInstance, value)); }
-    }*/
+        void set(uint8_t value) { ThrowOnFailure(otThreadSetPreferredRouterId(DeviceInstance, value)); }
+    }
 
     property HostName^ MeshLocalEid
     {
@@ -441,6 +451,8 @@ public:
             throw Exception::CreateException(E_INVALIDARG);
         }
     }
+
+#pragma endregion
 
 #pragma endregion
 
