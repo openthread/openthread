@@ -43,11 +43,12 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "openthread/message.h"
+#include "openthread/platform/messagepool.h"
+
 #include <openthread-core-config.h>
-#include <openthread-types.h>
 #include <common/code_utils.hpp>
 #include <mac/mac_frame.hpp>
-#include <platform/messagepool.h>
 
 namespace Thread {
 
@@ -120,7 +121,7 @@ struct MessageInfo
  * This class represents a Message buffer.
  *
  */
-class Buffer : public ::BufferHeader
+class Buffer : public ::otMessage
 {
     friend class Message;
 
@@ -137,7 +138,7 @@ public:
      * This method sets the pointer to the next message buffer.
      *
      */
-    void SetNextBuffer(class Buffer *buf) { mNext = static_cast<BufferHeader *>(buf); }
+    void SetNextBuffer(class Buffer *buf) { mNext = static_cast<otMessage *>(buf); }
 
 private:
     /**
@@ -174,7 +175,7 @@ private:
 
     enum
     {
-        kBufferDataSize = kBufferSize - sizeof(struct BufferHeader),
+        kBufferDataSize = kBufferSize - sizeof(struct otMessage),
         kHeadBufferDataSize = kBufferDataSize - sizeof(struct MessageInfo),
     };
 
@@ -193,7 +194,7 @@ private:
  * This class represents a message.
  *
  */
-class Message: private Buffer
+class Message: public Buffer
 {
     friend class MessagePool;
     friend class MessageQueue;

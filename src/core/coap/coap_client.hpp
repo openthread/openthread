@@ -29,8 +29,8 @@
 #ifndef COAP_CLIENT_HPP_
 #define COAP_CLIENT_HPP_
 
-#include <openthread-types.h>
-#include <openthread-coap.h>
+#include "openthread/coap.h"
+
 #include <coap/coap_base.hpp>
 #include <coap/coap_header.hpp>
 #include <common/message.hpp>
@@ -233,6 +233,18 @@ public:
      */
     ThreadError SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
                             otCoapResponseHandler aHandler = NULL, void *aContext = NULL);
+
+    /**
+     * This method aborts CoAP transactions associated with given handler and context.
+     *
+     * @param[in]  aHandler  A function pointer that should be called when the transaction ends.
+     * @param[in]  aContext  A pointer to arbitrary context information.
+     *
+     * @retval kThreadError_None      Successfully aborted CoAP transactions.
+     * @retval kThreadError_NotFound  CoAP transaction associated with given handler was not found.
+     *
+     */
+    ThreadError AbortTransaction(otCoapResponseHandler aHandler, void *aContext);
 
     /**
      * This method returns a reference to the request message list.

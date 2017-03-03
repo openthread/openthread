@@ -30,12 +30,13 @@
  *   This file implements a SPI interface to the OpenThread stack.
  */
 
+#include "openthread/ncp.h"
+#include "openthread/platform/spi-slave.h"
+
 #include <common/code_utils.hpp>
 #include <common/new.hpp>
 #include <net/ip6.hpp>
-#include <ncp/ncp.h>
 #include <ncp/ncp_spi.hpp>
-#include <platform/spi-slave.h>
 #include <core/openthread-core-config.h>
 #include <openthread-instance.h>
 
@@ -89,8 +90,7 @@ static uint16_t spi_header_get_data_len(const uint8_t *header)
 NcpSpi::NcpSpi(otInstance *aInstance):
     NcpBase(aInstance),
     mHandleRxFrameTask(aInstance->mIp6.mTaskletScheduler, &NcpSpi::HandleRxFrame, this),
-    mPrepareTxFrameTask(aInstance->mIp6.mTaskletScheduler, &NcpSpi::PrepareTxFrame, this),
-    mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer))
+    mPrepareTxFrameTask(aInstance->mIp6.mTaskletScheduler, &NcpSpi::PrepareTxFrame, this)
 {
     memset(mEmptySendFrame, 0, kSpiHeaderLength);
     memset(mSendFrame, 0, kSpiHeaderLength);
@@ -230,26 +230,6 @@ NcpSpi::SpiTransactionComplete(
         aMOSIBufLen,
         (mTxState == kTxStateSending)
     );
-}
-
-ThreadError NcpSpi::OutboundFrameBegin(void)
-{
-    return mTxFrameBuffer.InFrameBegin();
-}
-
-ThreadError NcpSpi::OutboundFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDataBufferLength)
-{
-    return mTxFrameBuffer.InFrameFeedData(aDataBuffer, aDataBufferLength);
-}
-
-ThreadError NcpSpi::OutboundFrameFeedMessage(otMessage aMessage)
-{
-    return mTxFrameBuffer.InFrameFeedMessage(aMessage);
-}
-
-ThreadError NcpSpi::OutboundFrameEnd(void)
-{
-    return mTxFrameBuffer.InFrameEnd();
 }
 
 void NcpSpi::TxFrameBufferHasData(void *aContext, NcpFrameBuffer *aNcpFrameBuffer)

@@ -471,7 +471,7 @@ Return Value:
     }
 
     // Query the device capabilities
-    NtStatus = otLwfCmdGetProp(pFilter, SpinelCapsDataBuffer, SPINEL_PROP_CAPS, SPINEL_DATATYPE_DATA_S, &SpinelCapsPtr, &SpinelCapsLen);
+    NtStatus = otLwfCmdGetProp(pFilter, &SpinelCapsDataBuffer, SPINEL_PROP_CAPS, SPINEL_DATATYPE_DATA_S, &SpinelCapsPtr, &SpinelCapsLen);
     if (!NT_SUCCESS(NtStatus))
     {
         NdisStatus = NDIS_STATUS_NOT_SUPPORTED;
@@ -480,18 +480,21 @@ Return Value:
     }
 
     // Iterate and process returned capabilities
+    NT_ASSERT(SpinelCapsDataBuffer);
     while (SpinelCapsLen > 0)
     {
         ULONG SpinelCap = 0;
         spinel_ssize_t len = spinel_datatype_unpack(SpinelCapsPtr, SpinelCapsLen, SPINEL_DATATYPE_UINT_PACKED_S, &SpinelCap);
         if (len < 1) break;
         SpinelCapsLen -= (spinel_size_t)len;
+        SpinelCapsPtr += len;
 
         switch (SpinelCap)
         {
         case SPINEL_CAP_MAC_RAW:
             pFilter->DeviceCapabilities |= OTLWF_DEVICE_CAP_RADIO;
             pFilter->DeviceCapabilities |= OTLWF_DEVICE_CAP_RADIO_ACK_TIMEOUT;
+            pFilter->DeviceCapabilities |= OTLWF_DEVICE_CAP_RADIO_MAC_RETRY_AND_COLLISION_AVOIDANCE;
             pFilter->DeviceCapabilities |= OTLWF_DEVICE_CAP_RADIO_ENERGY_SCAN;
             break;
         case SPINEL_CAP_NET_THREAD_1_0:

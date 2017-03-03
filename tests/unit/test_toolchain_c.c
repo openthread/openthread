@@ -30,7 +30,9 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
-#include <platform/toolchain.h>
+
+#include "openthread/platform/toolchain.h"
+
 #include "test_util.h"
 
 uint32_t otNetifAddress_Size_c()

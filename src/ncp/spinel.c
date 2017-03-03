@@ -1248,6 +1248,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_GPIO_STATE_CLEAR";
         break;
 
+    case SPINEL_PROP_DEBUG_TEST_ASSERT:
+        ret = "SPINEL_PROP_DEBUG_TEST_ASSERT";
+        break;
+
     default:
         break;
     }
@@ -1372,6 +1376,10 @@ const char *spinel_status_to_cstr(spinel_status_t status)
 
     case SPINEL_STATUS_ITEM_NOT_FOUND:
         ret = "STATUS_ITEM_NOT_FOUND";
+        break;
+
+    case SPINEL_STATUS_INVALID_COMMAND_FOR_PROP:
+        ret = "STATUS_INVALID_COMMAND_FOR_PROP";
         break;
 
     case SPINEL_STATUS_JOIN_FAILURE:

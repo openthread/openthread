@@ -1,0 +1,68 @@
+; /****************************************************************************
+; *  @file           cc26x0f128.sct
+; *  @brief          CC26x0F128 rev2 scatter loading file for ARM linker.
+; *
+; *  Revised         $Date: 2016-04-13 17:25:07 +0200 (on, 13 apr 2016) $
+; *  Revision        $Revision: 17017 $
+; *
+; *  This file is auto-generated.
+; *
+; *  Copyright (C) 2016 Texas Instruments Incorporated - http://www.ti.com/
+; *
+; *
+; *  Redistribution and use in source and binary forms, with or without
+; *  modification, are permitted provided that the following conditions
+; *  are met:
+; *
+; *    Redistributions of source code must retain the above copyright
+; *    notice, this list of conditions and the following disclaimer.
+; *
+; *    Redistributions in binary form must reproduce the above copyright
+; *    notice, this list of conditions and the following disclaimer in the
+; *    documentation and/or other materials provided with the distribution.
+; *
+; *    Neither the name of Texas Instruments Incorporated nor the names of
+; *    its contributors may be used to endorse or promote products derived
+; *    from this software without specific prior written permission.
+; *
+; *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+; *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+; *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+; *  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+; *  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+; *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+; *  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+; *  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+; *  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+; *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+; *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+; *
+; ****************************************************************************/
+
+LR_IROM1 0x00000000 0x20000  { ; load region size_region
+    ER_IROM1 0x00000000 0x20000  { ; load address = execution address
+        *.o (RESET, +First)
+        *(InRoot$$Sections)
+        .ANY (+RO)
+    }
+
+    RW_IRAM1 0x20000000 0x5000 { ; RW data
+        .ANY (+RW +ZI)
+    }
+
+    ; Define a region for the on-chip GPRAM/cache.
+    ; Application can use this region as RAM if cache is disabled in the CCFG
+    ; (DEFAULT_CCFG_SIZE_AND_DIS_FLAGS.SET_CCFG_SIZE_AND_DIS_FLAGS_DIS_GPRAM = 0)
+    ;RW_IRAM2 0x11000000 0x00002000 {
+    ;    *(.gpram)
+    ;}
+}
+
+; Customer configuration area (CCFG) placed at end of device flash.
+; Make sure the entry in this linker file is aligned with your application's
+; CCFG area.
+LR_CCFG     (0x20000-88) { ; load region size_region
+    ER_CCFG ImageBase(LR_CCFG) { ; load address = execution address
+        *(.ccfg, +First)
+    }
+}

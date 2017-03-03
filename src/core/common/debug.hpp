@@ -58,7 +58,7 @@
 
 #elif OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT
 
-#include <platform/misc.h>
+#include "openthread/platform/misc.h"
 
 #define assert(cond)                            \
   do {                                          \

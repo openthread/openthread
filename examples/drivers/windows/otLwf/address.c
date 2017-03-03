@@ -251,7 +251,7 @@ otLwfAddressChangeCallback(
     // Ignore notifications that aren't for our interface
     if (Row->InterfaceIndex != pFilter->InterfaceIndex) return;
 
-    LogFuncEntryMsg(DRIVER_DEFAULT, "%p (%u)", pFilter, NotificationType);
+    LogFuncEntryMsg(DRIVER_DEFAULT, "%p (%u) %!IPV6ADDR!", pFilter, NotificationType, &Row->Address.Ipv6.sin6_addr);
 
     // Since we don't pass in the initial flag, we shouldn't get this type
     NT_ASSERT(NotificationType != MibInitialNotification);
@@ -259,12 +259,19 @@ otLwfAddressChangeCallback(
     // Make sure we can reference the interface
     if (ExAcquireRundownProtection(&pFilter->ExternalRefs))
     {
-        // Queue up the event for processing
-        otLwfEventProcessingIndicateAddressChange(
-            pFilter,
-            NotificationType,
-            &Row->Address.Ipv6.sin6_addr
-            );
+        if (pFilter->DeviceStatus == OTLWF_DEVICE_STATUS_RADIO_MODE)
+        {
+            // Queue up the event for processing
+            otLwfEventProcessingIndicateAddressChange(
+                pFilter,
+                NotificationType,
+                &Row->Address.Ipv6.sin6_addr
+                );
+        }
+        else
+        {
+            NT_ASSERT(FALSE); // Need to add support for this in tunnel mode
+        }
 
         // Release reference on the interface
         ExReleaseRundownProtection(&pFilter->ExternalRefs);
@@ -336,10 +343,10 @@ otLwfEventProcessingAddressChanged(
                 LogInfo(DRIVER_DEFAULT, "Filter %p trying to add/update address: %!IPV6ADDR!", pFilter, pAddr);
 
                 // Add (or update) the address to OpenThread
-                ThreadError otError = otAddUnicastAddress(pFilter->otCtx, &otAddr);
+                ThreadError otError = otIp6AddUnicastAddress(pFilter->otCtx, &otAddr);
                 if (otError != kThreadError_None)
                 {
-                    LogError(DRIVER_DEFAULT, "otAddUnicastAddress failed, %!otError!", otError);
+                    LogError(DRIVER_DEFAULT, "otIp6AddUnicastAddress failed, %!otError!", otError);
                     ShouldDelete = otError == kThreadError_NoBufs ? TRUE : FALSE;
                 }
             }
@@ -371,7 +378,7 @@ otLwfEventProcessingAddressChanged(
             LogInfo(DRIVER_DEFAULT, "Filter %p trying to remove address: %!IPV6ADDR!", pFilter, pAddr);
 
             // Find the correct address from OpenThread to remove (best effort)
-            (void)otRemoveUnicastAddress(pFilter->otCtx, (otIp6Address*)pAddr);
+            (void)otIp6RemoveUnicastAddress(pFilter->otCtx, (otIp6Address*)pAddr);
         }
     }
 
@@ -391,7 +398,7 @@ otLwfRadioAddressesUpdated(
     
     NT_ASSERT(pFilter->DeviceStatus == OTLWF_DEVICE_STATUS_RADIO_MODE);
 
-    const otNetifAddress* addr = otGetUnicastAddresses(pFilter->otCtx);
+    const otNetifAddress* addr = otIp6GetUnicastAddresses(pFilter->otCtx);
 
     // Process the addresses
     while (addr)

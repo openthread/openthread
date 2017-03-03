@@ -31,11 +31,12 @@
  *   This file implements MPL.
  */
 
+#include "openthread/platform/random.h"
+
 #include <common/code_utils.hpp>
 #include <common/message.hpp>
 #include <net/ip6.hpp>
 #include <net/ip6_mpl.hpp>
-#include <platform/random.h>
 
 namespace Thread {
 namespace Ip6 {

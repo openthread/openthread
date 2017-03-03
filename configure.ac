@@ -68,7 +68,7 @@ AC_SUBST(LIBOPENTHREAD_VERSION_INFO,     [${LIBOPENTHREAD_VERSION_CURRENT}:${LIB
 # Check the sanity of the source directory by checking for the
 # presence of a key watch file
 #
-AC_CONFIG_SRCDIR([include/openthread.h])
+AC_CONFIG_SRCDIR([include/openthread/openthread.h])
 
 #
 # Tell autoconf where to find auxilliary build tools (e.g. config.guess,
@@ -414,6 +414,28 @@ if test "${nl_cv_build_tests}" = "yes"; then
 fi
 
 #
+#  Full Thread Device
+#
+
+AC_ARG_ENABLE(ftd,
+    [AS_HELP_STRING([--enable-ftd],[Enable Full Thread Device features @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_ftd=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_ftd} for --enable-ftd])
+            ;;
+        esac
+    ],
+    [enable_ftd=no])
+AC_MSG_RESULT(${enable_ftd})
+AM_CONDITIONAL([OPENTHREAD_ENABLE_FTD], [test "${enable_ftd}" = "yes"])
+
+#
 # CLI Library
 #
 
@@ -433,7 +455,7 @@ AC_ARG_ENABLE(cli,
     ],
     [enable_cli=no])
 AC_MSG_RESULT(${enable_cli})
-AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI], [test "${enable_cli}" = "yes"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI], [test "${enable_cli}" != "no"])
 
 #
 # NCP Library
@@ -877,11 +899,11 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_RAW_LINK_API],[${OPENTHREAD_ENABLE_RAW_LIN
 
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
-        [Specify the examples from one of: none, posix, cc2538, da15000 @<:@default=none@:>@.])],
+        [Specify the examples from one of: none, posix, cc2538, cc2650, da15000, nrf52840 @<:@default=none@:>@.])],
     [
         case "${with_examples}" in
 
-        none|posix|cc2538|da15000|nrf52840)
+        none|posix|cc2538|cc2650|da15000|nrf52840)
             ;;
         *)
             AC_MSG_ERROR([Invalid value ${with_examples} for --with-examples])
@@ -902,6 +924,11 @@ case ${with_examples} in
     cc2538)
         OPENTHREAD_EXAMPLES_CC2538=1
         AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_CC2538],[${OPENTHREAD_EXAMPLES_CC2538}],[Define to 1 if you want to use cc2538 examples])
+        ;;
+
+    cc2650)
+        OPENTHREAD_EXAMPLES_CC2650=1
+        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_CC2650],[${OPENTHREAD_EXAMPLES_CC2650}],[Define to 1 if you want to use cc2650 examples])
         ;;
 
     da15000)
@@ -927,6 +954,9 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_POSIX], [test "${OPENTHREAD_EXAMPLES}" = "po
 
 AC_SUBST(OPENTHREAD_EXAMPLES_CC2538)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2538], [test "${OPENTHREAD_EXAMPLES}" = "cc2538"])
+
+AC_SUBST(OPENTHREAD_EXAMPLES_CC2650)
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2650], [test "${OPENTHREAD_EXAMPLES}" = "cc2650"])
 
 AC_SUBST(OPENTHREAD_EXAMPLES_DA15000)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_DA15000], [test "${OPENTHREAD_EXAMPLES}" = "da15000"])
@@ -1049,11 +1079,8 @@ NL_RESTORE_WERROR
 AC_CONFIG_FILES([
 Makefile
 include/Makefile
-include/cli/Makefile
-include/commissioning/Makefile
-include/dhcp6/Makefile
-include/ncp/Makefile
-include/platform/Makefile
+include/openthread/Makefile
+include/openthread/platform/Makefile
 src/Makefile
 src/cli/Makefile
 src/ncp/Makefile
@@ -1067,6 +1094,7 @@ examples/apps/cli/Makefile
 examples/apps/ncp/Makefile
 examples/platforms/Makefile
 examples/platforms/cc2538/Makefile
+examples/platforms/cc2650/Makefile
 examples/platforms/da15000/Makefile
 examples/platforms/nrf52840/Makefile
 examples/platforms/posix/Makefile
@@ -1079,6 +1107,7 @@ tools/spinel-cli/Makefile
 tools/spinel-cli/spinel/Makefile
 tests/Makefile
 tests/scripts/Makefile
+tests/scripts/thread-cert/Makefile
 tests/unit/Makefile
 doc/Makefile
 ])
@@ -1140,6 +1169,7 @@ AC_MSG_NOTICE([
   Pretty args                               : ${PRETTY_ARGS:--}
   Pretty check                              : ${PRETTY_CHECK:--}
   Pretty check args                         : ${PRETTY_CHECK_ARGS:--}
+  OpenThread Full Thread Device support     : ${enable_ftd}
   OpenThread CLI support                    : ${enable_cli}
   OpenThread NCP support                    : ${enable_ncp}
   OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}

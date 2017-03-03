@@ -83,6 +83,7 @@ class Cert_5_1_04_RouterAddressReallocation(unittest.TestCase):
         self.nodes[LEADER].start()
         self.nodes[LEADER].set_state('leader')
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
+        time.sleep(4)
 
         self.nodes[ROUTER1].start()
         time.sleep(5)
@@ -96,7 +97,7 @@ class Cert_5_1_04_RouterAddressReallocation(unittest.TestCase):
 
         self.nodes[ROUTER2].set_network_id_timeout(200)
         self.nodes[LEADER].stop()
-        time.sleep(210)
+        time.sleep(220)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'leader')
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
         self.assertEqual(self.nodes[ROUTER1].get_addr16(), rloc16)
@@ -151,7 +152,7 @@ class Cert_5_1_04_RouterAddressReallocation(unittest.TestCase):
 
         # 5 - Router1
         # Router1 make two attempts to reconnect to its current Partition.
-        for _ in range(2):
+        for _ in range(4):
             msg = router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
             msg.assertSentWithHopLimit(255)
             msg.assertSentToDestinationAddress("ff02::2")

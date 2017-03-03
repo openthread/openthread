@@ -36,8 +36,8 @@
 
 #include <string.h>
 
-#include <openthread-types.h>
-#include <openthread-coap.h>
+#include "openthread/coap.h"
+
 #include <common/encoding.hpp>
 #include <common/message.hpp>
 
@@ -274,6 +274,17 @@ public:
     ThreadError AppendOption(const Option &aOption);
 
     /**
+     * This method appends an Observe option.
+     *
+     * @param[in]  aObserve  Observe field value.
+     *
+     * @retval kThreadError_None         Successfully appended the option.
+     * @retval kThreadError_InvalidArgs  The option type is not equal or greater than the last option type.
+     * @retval kThreadError_NoBufs       The option length exceeds the buffer size.
+     */
+    ThreadError AppendObserveOption(uint32_t aObserve);
+
+    /**
      * This method appends a Uri-Path option.
      *
      * @param[in]  aUriPath  A pointer to a NULL-terminated string.
@@ -305,6 +316,28 @@ public:
      *
      */
     ThreadError AppendContentFormatOption(MediaType aType);
+
+    /**
+     * This method appends a Max-Age option.
+     *
+     * @param[in]  aMaxAge  The Max-Age value.
+     *
+     * @retval kThreadError_None         Successfully appended the option.
+     * @retval kThreadError_InvalidArgs  The option type is not equal or greater than the last option type.
+     * @retval kThreadError_NoBufs       The option length exceeds the buffer size.
+     */
+    ThreadError AppendMaxAgeOption(uint32_t aMaxAge);
+
+    /**
+     * This method appends a single Uri-Query option.
+     *
+     * @param[in]  aUriQuery  A pointer to NULL-terminated string, which should contain a single key=value pair.
+     *
+     * @retval kThreadError_None         Successfully appended the option.
+     * @retval kThreadError_InvalidArgs  The option type is not equal or greater than the last option type.
+     * @retval kThreadError_NoBufs       The option length exceeds the buffer size.
+     */
+    ThreadError AppendUriQueryOption(const char *aUriQuery);
 
     /**
      * This method returns a pointer to the current option.
@@ -380,7 +413,7 @@ public:
      * @retval FALSE  Header is not a response header.
      *
      */
-    bool IsResponse(void) const { return (GetCode() >= kCoapResponseChanged); };
+    bool IsResponse(void) const { return (GetCode() >= kCoapResponseCodeMin); };
 
     /**
      * This method checks if a header is a CON message header.

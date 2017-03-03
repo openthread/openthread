@@ -42,6 +42,7 @@ OBJCOPY                         = arm-none-eabi-objcopy
 BuildJobs                      ?= 99
 
 configure_OPTIONS               = \
+    --enable-ftd                  \
     --enable-cli                  \
     --enable-ncp                  \
     --enable-default-logging      \
@@ -69,11 +70,19 @@ ifeq ($(DHCP6_CLIENT),1)
 configure_OPTIONS              += --enable-dhcp6-client
 endif
 
+TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
+AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
+
+CONFIG_FILE                      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-da15000-config.h\"'
+CONFIG_FILE_PATH                 = $(AbsTopSourceDir)/examples/platforms/da15000/
+
 COMMONCFLAGS                   := \
     -fdata-sections               \
     -ffunction-sections           \
     -Os                           \
     -g                            \
+    -D$(CONFIG_FILE)              \
+    -I$(CONFIG_FILE_PATH)         \
     $(NULL)
 
 CPPFLAGS                       += \
@@ -111,9 +120,6 @@ RM_F                            := rm -f
 
 INSTALL                         := /usr/bin/install
 INSTALLFLAGS                    := -p
-
-TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
-AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
 BuildPath                       = build
 TopBuildDir                     = $(BuildPath)

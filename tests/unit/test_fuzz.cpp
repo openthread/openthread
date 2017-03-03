@@ -110,7 +110,7 @@ void TestFuzz(uint32_t aSeconds)
 #endif
 
 #ifdef OPENTHREAD_MULTIPLE_INSTANCE
-    uint64_t otInstanceBufferLength = 0;
+    size_t otInstanceBufferLength = 0;
     uint8_t *otInstanceBuffer = NULL;
 
     // Call to query the buffer size
@@ -119,7 +119,7 @@ void TestFuzz(uint32_t aSeconds)
     // Call to allocate the buffer
     otInstanceBuffer = (uint8_t *)malloc(otInstanceBufferLength);
     VerifyOrQuit(otInstanceBuffer != NULL, "Failed to allocate otInstance");
-    memset(&otInstanceBuffer, 0, otInstanceBufferLength);
+    memset(otInstanceBuffer, 0, otInstanceBufferLength);
 
     // Initialize Openthread with the buffer
     aInstance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
@@ -130,15 +130,15 @@ void TestFuzz(uint32_t aSeconds)
     VerifyOrQuit(aInstance != NULL, "Failed to initialize otInstance");
 
     // Start the Thread network
-    otSetPanId(aInstance, (otPanId)0xFACE);
-    otInterfaceUp(aInstance);
-    otThreadStart(aInstance);
+    otLinkSetPanId(aInstance, (otPanId)0xFACE);
+    otIp6SetEnabled(aInstance, true);
+    otThreadSetEnabled(aInstance, true);
 
     uint32_t countRecv = 0;
 
     while (otPlatAlarmGetNow() < tEnd)
     {
-        otProcessQueuedTasklets(aInstance);
+        otTaskletsProcess(aInstance);
 
         if (g_testPlatAlarmSet && otPlatAlarmGetNow() >= g_testPlatAlarmNext)
         {
@@ -186,7 +186,7 @@ void TestFuzz(uint32_t aSeconds)
 #endif
 
                 // Hack to get a receive poll immediately
-                otSetChannel(aInstance, 11);
+                otLinkSetChannel(aInstance, 11);
             }
         }
     }

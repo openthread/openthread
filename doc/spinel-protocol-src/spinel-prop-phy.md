@@ -7,7 +7,8 @@
 
 Set to 1 if the PHY is enabled, set to 0 otherwise.
 May be directly enabled to bypass higher-level packet processing
-in order to implement things like packet sniffers.
+in order to implement things like packet sniffers. This property
+can only be written if the `SPINEL_CAP_MAC_RAW` capability is present.
 
 ### PROP 33: PROP_PHY_CHAN {#prop-phy-chan}
 * Type: Read-Write

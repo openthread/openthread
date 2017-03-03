@@ -168,6 +168,14 @@ otLwfUninitializeThreadMode(
     if (pFilter->EventHighPrecisionTimer)
     {
         ExDeleteTimer(pFilter->EventHighPrecisionTimer, TRUE, FALSE, NULL);
+        pFilter->EventHighPrecisionTimer = NULL;
+    }
+
+    // Close handle to settings registry key
+    if (pFilter->otSettingsRegKey)
+    {
+        ZwClose(pFilter->otSettingsRegKey);
+        pFilter->otSettingsRegKey = NULL;
     }
 
     LogFuncExit(DRIVER_DEFAULT);
@@ -276,9 +284,9 @@ ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint1
     return kThreadError_None;
 }
 
-void otSignalTaskletPending(_In_ otInstance *otCtx)
+void otTaskletsSignalPending(_In_ otInstance *otCtx)
 {
-    LogVerbose(DRIVER_DEFAULT, "otSignalTaskletPending");
+    LogVerbose(DRIVER_DEFAULT, "otTaskletsSignalPending");
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
     otLwfEventProcessingIndicateNewTasklet(pFilter);
 }
@@ -291,7 +299,7 @@ otLwfProcessRoleStateChange(
     )
 {
     otDeviceRole prevRole = pFilter->otCachedRole;
-    pFilter->otCachedRole = otGetDeviceRole(pFilter->otCtx);
+    pFilter->otCachedRole = otThreadGetDeviceRole(pFilter->otCtx);
     if (prevRole == pFilter->otCachedRole) return;
 
     LogInfo(DRIVER_DEFAULT, "Interface %!GUID! new role: %!otDeviceRole!", &pFilter->InterfaceGuid, pFilter->otCachedRole);
@@ -368,7 +376,7 @@ void otLwfStateChangedCallback(uint32_t aFlags, _In_ void *aContext)
     if ((aFlags & OT_THREAD_NETDATA_UPDATED) != 0)
     {
         LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_THREAD_NETDATA_UPDATED", pFilter);
-        otSlaacUpdate(pFilter->otCtx, pFilter->otAutoAddresses, ARRAYSIZE(pFilter->otAutoAddresses), otCreateRandomIid, NULL);
+        otIp6SlaacUpdate(pFilter->otCtx, pFilter->otAutoAddresses, ARRAYSIZE(pFilter->otAutoAddresses), otIp6CreateRandomIid, NULL);
 
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
         otDhcp6ServerUpdate(pFilter->otCtx);
@@ -531,6 +539,26 @@ void otLwfCommissionerPanIdConflictCallback(uint16_t aPanId, uint32_t aChannelMa
     LogFuncExit(DRIVER_DEFAULT);
 }
 
+void otLwfJoinerCallback(ThreadError aError, _In_ void *aContext)
+{
+    LogFuncEntry(DRIVER_DEFAULT);
+
+    PMS_FILTER pFilter = (PMS_FILTER)aContext;
+    PFILTER_NOTIFICATION_ENTRY NotifEntry = FILTER_ALLOC_NOTIF(pFilter);
+    if (NotifEntry)
+    {
+        RtlZeroMemory(NotifEntry, sizeof(FILTER_NOTIFICATION_ENTRY));
+        NotifEntry->Notif.InterfaceGuid = pFilter->InterfaceGuid;
+        NotifEntry->Notif.NotifType = OTLWF_NOTIF_JOINER_COMPLETE;
+
+        NotifEntry->Notif.JoinerCompletePayload.Error = aError;
+
+        otLwfIndicateNotification(NotifEntry);
+    }
+
+    LogFuncExit(DRIVER_DEFAULT);
+}
+
 _IRQL_requires_max_(DISPATCH_LEVEL)
 void
 otLwfThreadValueIs(
@@ -543,18 +571,7 @@ otLwfThreadValueIs(
 {
     LogFuncEntryMsg(DRIVER_DEFAULT, "[%p] received Value for %s", pFilter, spinel_prop_key_to_cstr(key));
 
-    if (key == SPINEL_PROP_LAST_STATUS)
-    {
-        spinel_status_t status = SPINEL_STATUS_OK;
-        spinel_datatype_unpack(value_data_ptr, value_data_len, "i", &status);
-
-        if ((status >= SPINEL_STATUS_RESET__BEGIN) && (status <= SPINEL_STATUS_RESET__END))
-        {
-            LogInfo(DRIVER_DEFAULT, "Interface %!GUID! was reset (status %d).", &pFilter->InterfaceGuid, status);
-            // TODO - Handle reset
-        }
-    }
-    else if (key == SPINEL_PROP_MAC_ENERGY_SCAN_RESULT)
+    if (key == SPINEL_PROP_MAC_ENERGY_SCAN_RESULT)
     {
         uint8_t scanChannel;
         int8_t maxRssi;

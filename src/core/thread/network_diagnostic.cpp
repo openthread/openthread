@@ -33,6 +33,8 @@
 
 #define WPP_NAME "network_diagnostic.tmh"
 
+#include "openthread/platform/random.h"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
@@ -40,7 +42,6 @@
 #include <common/encoding.hpp>
 #include <mac/mac_frame.hpp>
 #include <net/netif.hpp>
-#include <platform/random.h>
 #include <thread/mesh_forwarder.hpp>
 #include <thread/mle_router.hpp>
 #include <thread/thread_netif.hpp>
@@ -128,7 +129,7 @@ exit:
     return error;
 }
 
-void NetworkDiagnostic::HandleDiagnosticGetResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void NetworkDiagnostic::HandleDiagnosticGetResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                                     const otMessageInfo *aMessageInfo, ThreadError aResult)
 {
     static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetResponse(*static_cast<Coap::Header *>(aHeader),
@@ -155,7 +156,7 @@ exit:
     return;
 }
 
-void NetworkDiagnostic::HandleDiagnosticGetAnswer(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void NetworkDiagnostic::HandleDiagnosticGetAnswer(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                                   const otMessageInfo *aMessageInfo)
 {
     static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetAnswer(*static_cast<Coap::Header *>(aHeader),
@@ -412,7 +413,7 @@ exit:
     return error;
 }
 
-void NetworkDiagnostic::HandleDiagnosticGetQuery(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void NetworkDiagnostic::HandleDiagnosticGetQuery(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                                  const otMessageInfo *aMessageInfo)
 {
     static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetQuery(
@@ -479,7 +480,7 @@ exit:
     }
 }
 
-void NetworkDiagnostic::HandleDiagnosticGetRequest(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void NetworkDiagnostic::HandleDiagnosticGetRequest(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                                    const otMessageInfo *aMessageInfo)
 {
     static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetRequest(
@@ -511,15 +512,17 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Header &aHeader, Messag
     VerifyOrExit((message = mNetif.GetCoapServer().NewMessage(0)) != NULL, error = kThreadError_NoBufs);
 
     header.SetDefaultResponseHeader(aHeader);
-
-    if (networkDiagnosticTlv.GetLength() > 0)
-    {
-        header.SetPayloadMarker();
-    }
+    header.SetPayloadMarker();
 
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
 
     SuccessOrExit(error = FillRequestedTlvs(aMessage, *message, networkDiagnosticTlv));
+
+    if (message->GetLength() == header.GetLength())
+    {
+        // Remove Payload Marker if payload is actually empty.
+        message->SetLength(header.GetLength() - 1);
+    }
 
     SuccessOrExit(error = mNetif.GetCoapServer().SendMessage(*message, messageInfo));
 
@@ -573,7 +576,7 @@ exit:
     return error;
 }
 
-void NetworkDiagnostic::HandleDiagnosticReset(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void NetworkDiagnostic::HandleDiagnosticReset(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                               const otMessageInfo *aMessageInfo)
 {
     static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticReset(

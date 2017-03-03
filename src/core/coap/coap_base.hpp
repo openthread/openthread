@@ -29,7 +29,8 @@
 #ifndef COAP_BASE_HPP_
 #define COAP_BASE_HPP_
 
-#include <openthread-types.h>
+#include "openthread/coap.h"
+
 #include <coap/coap_header.hpp>
 #include <common/message.hpp>
 #include <net/netif.hpp>
@@ -133,7 +134,7 @@ protected:
     ReceiverFunction mReceiver;
 
 private:
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
+    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 };
 
 }  // namespace Coap

@@ -34,7 +34,8 @@
 #ifndef DTLS_HPP_
 #define DTLS_HPP_
 
-#include <openthread-types.h>
+#include "openthread/types.h"
+
 #include <common/message.hpp>
 #include <common/timer.hpp>
 #include <crypto/sha256.hpp>

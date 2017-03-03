@@ -49,7 +49,7 @@
         ..\..\include;
       </AdditionalIncludeDirectories>
       <WppEnabled>true</WppEnabled>
-      <WppScanConfigurationData>..\..\include\platform\logging-windows.h</WppScanConfigurationData>
+      <WppScanConfigurationData>..\..\include\openthread\platform\logging-windows.h</WppScanConfigurationData>
       <WppModuleName>otApi</WppModuleName>
       <EnablePREfast>true</EnablePREfast>
       <ExceptionHandling Condition="'$(Platform)'=='ARM'">Sync</ExceptionHandling>

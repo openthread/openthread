@@ -22,8 +22,8 @@
 
 #include <stddef.h>
 
-#include <openthread-types.h>
-#include <platform/random.h>
+#include "openthread/types.h"
+#include "openthread/platform/random.h"
 
 #include "mbedtls/entropy.h"
 

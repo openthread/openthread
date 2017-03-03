@@ -34,15 +34,18 @@
 #ifndef JOINER_ROUTER_HPP_
 #define JOINER_ROUTER_HPP_
 
-#include <openthread-types.h>
+#include "openthread/types.h"
 
 #include <coap/coap_header.hpp>
 #include <coap/coap_client.hpp>
 #include <coap/coap_server.hpp>
 #include <coap/coap_base.hpp>
 #include <common/message.hpp>
+#include <common/timer.hpp>
 #include <mac/mac_frame.hpp>
+#include <meshcop/tlvs.hpp>
 #include <net/udp6.hpp>
+#include <thread/key_manager.hpp>
 
 namespace Thread {
 
@@ -80,21 +83,32 @@ public:
     ThreadError SetJoinerUdpPort(uint16_t aJoinerUdpPort);
 
 private:
+    enum
+    {
+        kDelayJoinEnt = 50,  ///< milliseconds
+    };
+
     static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);
     void HandleNetifStateChanged(uint32_t aFlags);
 
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
+    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleRelayTransmit(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleRelayTransmit(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                     const otMessageInfo *aMessageInfo);
     void HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleJoinerEntrustResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleJoinerEntrustResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                             const otMessageInfo *aMessageInfo, ThreadError result);
     void HandleJoinerEntrustResponse(Coap::Header *aHeader, Message *aMessage,
                                      const Ip6::MessageInfo *aMessageInfo, ThreadError result);
-    ThreadError SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo);
+
+    static void HandleTimer(void *aContext);
+    void HandleTimer(void);
+
+    ThreadError DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const JoinerRouterKekTlv &aKek);
+    void SendDelayedJoinerEntrust(void);
+    ThreadError SendJoinerEntrust(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     ThreadError GetBorderAgentRloc(uint16_t &aRloc);
 
@@ -106,7 +120,125 @@ private:
 
     uint16_t mJoinerUdpPort;
     bool mIsJoinerPortConfigured;
+
+    Timer mTimer;
+    MessageQueue mDelayedJoinEnts;
+    bool mExpectJoinEntRsp;
 };
+
+/**
+ * This class implements functionality required for delaying JOIN_ENT.ntf messages.
+ *
+ */
+class DelayedJoinEntHeader
+{
+public:
+    /**
+     * Default constructor for the object.
+     *
+     */
+    DelayedJoinEntHeader(void) { memset(this, 0, sizeof(*this)); }
+
+    /**
+     * This constructor initializes the object with specific values.
+     *
+     * @param[in]  aSendTime     Time when the message shall be sent.
+     * @param[in]  aDestination  IPv6 address of the message destination.
+     *
+     */
+    DelayedJoinEntHeader(uint32_t aSendTime, Ip6::MessageInfo &aMessageInfo, const uint8_t *aKek) {
+        mSendTime = aSendTime;
+        mMessageInfo = aMessageInfo;
+        memcpy(&mKek, aKek, sizeof(mKek));
+    }
+
+    /**
+     * This method appends delayed response header to the message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @retval kThreadError_None    Successfully appended the bytes.
+     * @retval kThreadError_NoBufs  Insufficient available buffers to grow the message.
+     *
+     */
+    ThreadError AppendTo(Message &aMessage) {
+        return aMessage.Append(this, sizeof(*this));
+    }
+
+    /**
+     * This method reads delayed response header from the message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @returns The number of bytes read.
+     *
+     */
+    uint16_t ReadFrom(Message &aMessage) {
+        return aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+    }
+
+    /**
+     * This method removes delayed response header from the message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @retval kThreadError_None  Successfully removed the header.
+     *
+     */
+    static ThreadError RemoveFrom(Message &aMessage) {
+        return aMessage.SetLength(aMessage.GetLength() - sizeof(DelayedJoinEntHeader));
+    }
+
+    /**
+     * This method returns a time when the message shall be sent.
+     *
+     * @returns  A time when the message shall be sent.
+     *
+     */
+    uint32_t GetSendTime(void) const { return mSendTime; }
+
+    /**
+     * This method returns a destination of the delayed message.
+     *
+     * @returns  A destination of the delayed message.
+     *
+     */
+    const Ip6::MessageInfo *GetMessageInfo(void) const { return &mMessageInfo; }
+
+    /**
+     * This method returns a pointer to the KEK that should be used to send the delayed message.
+     *
+     * @returns  A pointer to the KEK.
+     *
+     */
+    const uint8_t *GetKek(void) const { return mKek; }
+
+    /**
+     * This method checks if the message shall be sent before the given time.
+     *
+     * @param[in]  aTime  A time to compare.
+     *
+     * @retval TRUE   If the message shall be sent before the given time.
+     * @retval FALSE  Otherwise.
+     */
+    bool IsEarlier(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) > 0); }
+
+    /**
+     * This method checks if the message shall be sent after the given time.
+     *
+     * @param[in]  aTime  A time to compare.
+     *
+     * @retval TRUE   If the message shall be sent after the given time.
+     * @retval FALSE  Otherwise.
+     */
+    bool IsLater(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) < 0); }
+
+private:
+    Ip6::MessageInfo mMessageInfo;            ///< Message info of the message to send.
+    uint32_t mSendTime;                       ///< Time when the message shall be sent.
+    uint8_t mKek[KeyManager::kMaxKeyLength];  ///< KEK used by MAC layer to encode this message.
+};
+
 
 }  // namespace MeshCoP
 }  // namespace Thread

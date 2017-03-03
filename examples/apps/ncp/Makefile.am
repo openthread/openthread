@@ -29,74 +29,133 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 bin_PROGRAMS                                                           = \
-    ot-ncp                                                               \
     $(NULL)
 
-ot_ncp_CPPFLAGS                                                        = \
+CPPFLAGS_COMMON                                                        = \
     -I$(top_srcdir)/include                                              \
     -I$(top_srcdir)/src/core                                             \
     -I$(top_srcdir)/examples/platforms                                   \
     $(NULL)
 
-ot_ncp_LDADD                                                           = \
-    $(top_builddir)/src/ncp/libopenthread-ncp.a                          \
-    $(top_builddir)/src/core/libopenthread-ftd.a                         \
+LDADD_COMMON                                                           = \
     $(NULL)
 
-ot_ncp_LDFLAGS                                                         = \
+LDFLAGS_COMMON                                                         = \
+    $(NULL)
+
+SOURCES_COMMON                                                         = \
+    main.c                                                               \
     $(NULL)
 
 if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
-ot_ncp_LDADD                                                          += \
+LDADD_COMMON                                                          += \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a                  \
     $(NULL)
 endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 
 if OPENTHREAD_ENABLE_DIAG
-ot_ncp_LDADD                                                          += \
+LDADD_COMMON                                                          += \
     $(top_builddir)/src/diag/libopenthread-diag.a                        \
     $(NULL)
 endif
 
 if OPENTHREAD_EXAMPLES_POSIX
-ot_ncp_LDADD                                                          += \
+LDADD_COMMON                                                          += \
     $(top_builddir)/examples/platforms/posix/libopenthread-posix.a       \
     -lstdc++                                                             \
     $(NULL)
 endif # OPENTHREAD_EXAMPLES_POSIX
 
 if OPENTHREAD_EXAMPLES_CC2538
-ot_ncp_LDADD                                                          += \
+LDADD_COMMON                                                          += \
     $(top_builddir)/examples/platforms/cc2538/libopenthread-cc2538.a     \
     $(NULL)
 
-ot_ncp_LDFLAGS                                                        += \
+LDFLAGS_COMMON                                                        += \
     -T $(top_srcdir)/examples/platforms/cc2538/cc2538.ld                 \
     $(NULL)
 endif # OPENTHREAD_EXAMPLES_CC2538
 
+if OPENTHREAD_EXAMPLES_CC2650
+CPPFLAGS_COMMON                                                       += \
+    -I$(top_srcdir)/third_party/ti/cc26xxware                            \
+    $(NULL)
+
+LDADD_COMMON                                                          +=  \
+    $(top_builddir)/examples/platforms/cc2650/libopenthread-cc2650.a      \
+    $(top_srcdir)/third_party/ti/cc26xxware/driverlib/bin/gcc/driverlib.a \
+    $(NULL)
+
+LDFLAGS_COMMON                                                        +=   \
+    -T $(top_srcdir)/third_party/ti/cc26xxware/linker_files/cc26x0f128.lds \
+    $(NULL)
+
+endif # OPENTHREAD_EXAMPLES_CC2650
+
 if OPENTHREAD_EXAMPLES_DA15000
-ot_ncp_LDADD                                                          += \
+LDADD_COMMON                                                          += \
     $(top_builddir)/examples/platforms/da15000/libopenthread-da15000.a   \
     $(NULL)
 
-ot_ncp_LDFLAGS                                                        += \
+LDFLAGS_COMMON                                                        += \
     -T $(top_srcdir)/examples/platforms/da15000/da15000.ld               \
     $(NULL)
 endif # OPENTHREAD_EXAMPLES_DA15000
 
 if OPENTHREAD_EXAMPLES_NRF52840
-ot_ncp_LDADD                                                          += \
+LDADD_COMMON                                                          += \
     $(top_builddir)/examples/platforms/nrf52840/libopenthread-nrf52840.a \
     $(NULL)
 
-ot_ncp_LDFLAGS                                                        += \
+LDFLAGS_COMMON                                                        += \
     -T $(top_srcdir)/examples/platforms/nrf52840/nrf52840.ld             \
     $(NULL)
 endif
 
-ot_ncp_SOURCES                                                         = \
-    main.c                                                               \
+if OPENTHREAD_ENABLE_FTD
+bin_PROGRAMS                                                          += \
+    ot-ncp-ftd                                                           \
+    $(NULL)
+
+ot_ncp_ftd_CPPFLAGS                                                    = \
+    $(CPPFLAGS_COMMON)                                                   \
+    $(NULL)
+
+ot_ncp_ftd_LDADD                                                       = \
+    $(top_builddir)/src/ncp/libopenthread-ncp.a                          \
+    $(top_builddir)/src/core/libopenthread-ftd.a                         \
+    $(LDADD_COMMON)                                                      \
+    $(NULL)
+
+ot_ncp_ftd_LDFLAGS                                                     = \
+    $(LDFLAGS_COMMON)                                                    \
+    $(NULL)
+
+ot_ncp_ftd_SOURCES                                                     = \
+    $(SOURCES_COMMON)                                                    \
+    $(NULL)
+endif # OPENTHREAD_ENABLE_FTD
+
+bin_PROGRAMS                                                          += \
+    ot-ncp-mtd                                                           \
+    $(NULL)
+
+ot_ncp_mtd_CPPFLAGS                                                    = \
+    $(CPPFLAGS_COMMON)                                                   \
+    $(NULL)
+
+ot_ncp_mtd_LDADD                                                       = \
+    $(top_builddir)/src/ncp/libopenthread-ncp.a                          \
+    $(top_builddir)/src/core/libopenthread-mtd.a                         \
+    $(LDADD_COMMON)                                                      \
+    $(NULL)
+
+ot_ncp_mtd_LDFLAGS                                                     = \
+    $(LDFLAGS_COMMON)                                                    \
+    $(NULL)
+
+ot_ncp_mtd_SOURCES                                                     = \
+    $(SOURCES_COMMON)                                                    \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE

@@ -30,10 +30,11 @@
 
 import logging
 import re
-import serial
 import socket
 import threading
 import time
+
+import serial
 
 from . import settings
 
@@ -56,6 +57,7 @@ class OpenThreadController(threading.Thread):
         super(OpenThreadController, self).__init__()
         self.port = port
         self.handle = None
+        self.lines = []
         self._log = log
         self._is_net = False
         self._init()
@@ -89,10 +91,10 @@ class OpenThreadController(threading.Thread):
             self.handle = None
 
     def _connect(self):
-        logger.debug('My port is %s' % self.port)
+        logger.debug('My port is %s', self.port)
         if self.port.startswith('NET'):
             portnum = settings.SER2NET_PORTBASE + int(self.port.split('NET')[1])
-            logger.debug('My port num is %d' % portnum)
+            logger.debug('My port num is %d', portnum)
             address = (settings.SER2NET_HOSTNAME, portnum)
             self.handle = socket.create_connection(address)
             self.handle.setblocking(0)
@@ -125,9 +127,9 @@ class OpenThreadController(threading.Thread):
             expected    str: the expected string
             times       int: number of trials
         """
-        logger.debug('[%s] Expecting [%s]' % (self.port, expected))
+        logger.debug('[%s] Expecting [%s]', self.port, expected)
         retry_times = 10
-        for i in range(0, times):
+        while times:
             if not retry_times:
                 break
 
@@ -139,6 +141,8 @@ class OpenThreadController(threading.Thread):
             if not line:
                 retry_times -= 1
                 time.sleep(0.1)
+
+            times -= 1
 
         raise Exception('failed to find expected string[%s]' % expected)
 
@@ -177,7 +181,7 @@ class OpenThreadController(threading.Thread):
         except socket.error:
             logging.debug('Nothing cleared')
 
-        logger.debug('sending [%s]' % line)
+        logger.debug('sending [%s]', line)
         self._write(line + '\r\n')
 
         # wait for write to complete

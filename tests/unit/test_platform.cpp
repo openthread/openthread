@@ -81,7 +81,19 @@ bool sDiagMode = false;
 
 extern "C" {
 
-    void otSignalTaskletPending(otInstance *)
+#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+    void *otPlatCAlloc(size_t aNum, size_t aSize)
+    {
+        return calloc(aNum, aSize);
+    }
+
+    void otPlatFree(void *aPtr)
+    {
+        free(aPtr);
+    }
+#endif
+
+    void otTaskletsSignalPending(otInstance *)
     {
     }
 

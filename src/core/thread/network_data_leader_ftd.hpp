@@ -141,7 +141,7 @@ public:
     ThreadError SendServerDataNotification(uint16_t aRloc16);
 
 private:
-    static void HandleServerData(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleServerData(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                  const otMessageInfo *aMessageInfo);
     void HandleServerData(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -172,11 +172,11 @@ private:
     bool IsStableUpdated(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvsBase,
                          uint8_t aTlvsBaseLength);
 
-    static void HandleCommissioningSet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleCommissioningSet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                        const otMessageInfo *aMessageInfo);
     void HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleCommissioningGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleCommissioningGet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                        const otMessageInfo *aMessageInfo);
     void HandleCommissioningGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 

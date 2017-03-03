@@ -35,7 +35,7 @@
 #ifndef __OTLWFIOCTL_H__
 #define __OTLWFIOCTL_H__
 
-#include <openthread-types.h>
+#include <openthread/types.h>
 
 __inline LONG ThreadErrorToNtstatus(ThreadError error) { return (LONG)-((int)error); }
 
@@ -59,7 +59,8 @@ typedef enum _OTLWF_NOTIF_TYPE
     OTLWF_NOTIF_ACTIVE_SCAN,
     OTLWF_NOTIF_ENERGY_SCAN,
     OTLWF_NOTIF_COMMISSIONER_ENERGY_REPORT,
-    OTLWF_NOTIF_COMMISSIONER_PANID_QUERY
+    OTLWF_NOTIF_COMMISSIONER_PANID_QUERY,
+    OTLWF_NOTIF_JOINER_COMPLETE
 
 } OTLWF_NOTIF_TYPE;
 
@@ -123,6 +124,12 @@ typedef enum _OTLWF_NOTIF_TYPE
                 uint16_t                PanId;
                 uint32_t                ChannelMask;
             } CommissionerPanIdQueryPayload;
+
+            // Payload for OTLWF_NOTIF_JOINER_COMPLETE
+            struct
+            {
+                ThreadError             Error;
+            } JoinerCompletePayload;
         };
     } OTLWF_NOTIFICATION, *POTLWF_NOTIFICATION;
 
@@ -517,12 +524,12 @@ typedef enum _OTLWF_NOTIF_TYPE
 #define OPENTHREAD_VENDOR_DATA_MAX_LENGTH        64
 typedef struct otCommissionConfig
 {
-    uint8_t PSKd[OPENTHREAD_PSK_MAX_LENGTH + 1];
-    uint8_t ProvisioningUrl[OPENTHREAD_PROV_URL_MAX_LENGTH + 1];
-    uint8_t VendorName[OPENTHREAD_VENDOR_NAME_MAX_LENGTH + 1];
-    uint8_t VendorModel[OPENTHREAD_VENDOR_MODEL_MAX_LENGTH + 1];
-    uint8_t VendorSwVersion[OPENTHREAD_VENDOR_SW_VERSION_MAX_LENGTH + 1];
-    uint8_t VendorData[OPENTHREAD_VENDOR_DATA_MAX_LENGTH + 1];
+    char PSKd[OPENTHREAD_PSK_MAX_LENGTH + 1];
+    char ProvisioningUrl[OPENTHREAD_PROV_URL_MAX_LENGTH + 1];
+    char VendorName[OPENTHREAD_VENDOR_NAME_MAX_LENGTH + 1];
+    char VendorModel[OPENTHREAD_VENDOR_MODEL_MAX_LENGTH + 1];
+    char VendorSwVersion[OPENTHREAD_VENDOR_SW_VERSION_MAX_LENGTH + 1];
+    char VendorData[OPENTHREAD_VENDOR_DATA_MAX_LENGTH + 1];
 } otCommissionConfig;
     
 #define IOCTL_OTLWF_OT_JOINER_START \
@@ -670,9 +677,14 @@ typedef struct otCommissionConfig
 #define IOCTL_OTLWF_OT_FACTORY_RESET \
     OTLWF_CTL_CODE(192, METHOD_BUFFERED, FILE_WRITE_DATA)
     // GUID - InterfaceGuid
+    
+#define IOCTL_OTLWF_OT_THREAD_AUTO_START \
+    OTLWF_CTL_CODE(193, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA)
+    // GUID - InterfaceGuid
+    // BOOLEAN - aAutoStart
 
 // OpenThread function IOCTL codes
 #define MIN_OTLWF_IOCTL_FUNC_CODE 100
-#define MAX_OTLWF_IOCTL_FUNC_CODE 192
+#define MAX_OTLWF_IOCTL_FUNC_CODE 193
 
 #endif //__OTLWFIOCTL_H__

@@ -7,16 +7,19 @@ OpenThread test scripts use the CLI to execute test cases.
 
 ## OpenThread Command List
 
-* [channel](#channel)
+* [autostart](#autostart)
 * [blacklist](#blacklist)
-* [child](#child)
+* [bufferinfo](#bufferinfo)
+* [channel](#channel)
+* [child](#child-list)
 * [childmax](#childmax)
 * [childtimeout](#childtimeout)
-* [commissioner](#commissioner)
+* [commissioner](#commissioner-start-provisioningurl)
 * [contextreusedelay](#contextreusedelay)
 * [counter](#counter)
-* [dataset](#dataset)
-* [discover](#discover)
+* [dataset](#dataset-help)
+* [delaytimermin](#delaytimermin)
+* [discover](#discover-channel)
 * [eidcache](#eidcache)
 * [eui64](#eui64)
 * [extaddr](#extaddr)
@@ -26,40 +29,71 @@ OpenThread test scripts use the CLI to execute test cases.
 * [ifconfig](#ifconfig)
 * [ipaddr](#ipaddr)
 * [ipmaddr](#ipmaddr)
-* [joiner](#joiner)
-* [keysequence](#keysequence)
+* [joiner](#joiner-start-pskd-provisioningurl)
+* [joinerport](#joinerport-port)
+* [keysequence](#keysequence-counter)
+* [leaderdata](#leaderdata)
 * [leaderpartitionid](#leaderpartitionid)
 * [leaderweight](#leaderweight)
-* [linkquality](#linkquality)
+* [linkquality](#linkquality-extaddr)
 * [masterkey](#masterkey)
 * [mode](#mode)
 * [netdataregister](#netdataregister)
+* [networkdiagnostic](#networkdiagnostic-get-addr-type-)
 * [networkidtimeout](#networkidtimeout)
 * [networkname](#networkname)
 * [panid](#panid)
 * [parent](#parent)
-* [ping](#ping)
-* [pollperiod](#pollperiod)
-* [prefix](#prefix)
+* [ping](#ping-ipaddr-size-count-interval)
+* [pollperiod](#pollperiod-pollperiod)
+* [prefix](#prefix-add-prefix-pvdcsr-prf)
 * [promiscuous](#promiscuous)
-* [releaserouterid](#releaserouterid)
+* [releaserouterid](#releaserouterid-routerid)
 * [reset](#reset)
 * [rloc16](#rloc16)
-* [route](#route)
-* [router](#router)
+* [route](#route-add-prefix-s-prf)
+* [router](#router-list)
 * [routerdowngradethreshold](#routerdowngradethreshold)
 * [routerrole](#routerrole)
 * [routerselectionjitter](#routerselectionjitter)
 * [routerupgradethreshold](#routerupgradethreshold)
-* [scan](#scan)
+* [scan](#scan-channel)
 * [singleton](#singleton)
 * [state](#state)
-* [thread](#thread)
+* [thread](#thread-start)
 * [version](#version)
 * [whitelist](#whitelist)
 * [diag](#diag)
 
 ## OpenThread Command Details
+
+### autostart true
+
+Automatically start Thread on initialization.
+
+```bash
+> autostart true
+Done
+```
+
+### autostart false
+
+Don't automatically start Thread on initialization.
+
+```bash
+> autostart false
+Done
+```
+
+### autostart
+
+Show the status of automatically starting Thread on initialization.
+
+```bash
+> autostart
+false
+Done
+```
 
 ### blacklist
 
@@ -117,6 +151,25 @@ Remove an IEEE 802.15.4 Extended Address from the blacklist.
 > blacklist remove 166e0a0000000002
 Done
 ```
+
+### bufferinfo
+
+Show the current message buffer information.
+
+```bash
+> bufferinfo
+total: 40
+free: 40
+6lo send: 0 0
+6lo reas: 0 0
+ip6: 0 0
+mpl: 0 0
+mle: 0 0
+arp: 0 0
+coap: 0 0
+Done
+```
+
 ### channel
 
 Get the IEEE 802.15.4 Channel value.
@@ -394,6 +447,7 @@ help
 active
 activetimestamp
 channel
+channelmask
 clear
 commit
 delay
@@ -406,8 +460,10 @@ networkname
 panid
 pending
 pendingtimestamp
-userdata
+pskc
+securitypolicy
 Done
+> 
 ```
 
 ### dataset active
@@ -420,16 +476,7 @@ Active Timestamp: 0
 Done
 ```
 
-### dataset activetimestamp
-
-Set getting active timestamp flag.
-
-```bash
-> dataset activestamp
-Done
-```
-
-### dataset activetimestamp \[activetimestamp\]
+### dataset activetimestamp \<activetimestamp\>
 
 Set active timestamp.
 
@@ -438,21 +485,21 @@ Set active timestamp.
 Done
 ```
 
-### dataset channel
-
-Set getting channel flag.
-
-```bash
-> dataset channel
-Done
-```
-
-### dataset channel \[channel\]
+### dataset channel \<channel\>
 
 Set channel.
 
 ```bash
 > dataset channel 12
+Done
+```
+
+### dataset channelmask \<channelmask\>
+
+Set channel mask.
+
+```bash
+> dataset channelmask e0ff1f00
 Done
 ```
 
@@ -465,7 +512,7 @@ Reset operational dataset buffer.
 Done
 ```
 
-### dataset commit \[commit\]
+### dataset commit \<dataset\>
 
 Commit operational dataset buffer to active/pending operational dataset.
 
@@ -474,16 +521,7 @@ Commit operational dataset buffer to active/pending operational dataset.
 Done
 ```
 
-### dataset delay
-
-Set getting delay timer value flag.
-
-```bash
-> dataset delay
-Done
-```
-
-### dataset delay \[delay\]
+### dataset delay \<delay\>
 
 Set delay timer value.
 
@@ -492,16 +530,7 @@ Set delay timer value.
 Done
 ```
 
-### dataset extpanid
-
-Set getting extended panid flag.
-
-```bash
-> dataset extpanid
-Done
-```
-
-### dataset extpanid \[extpanid\]
+### dataset extpanid \<extpanid\>
 
 Set extended panid.
 
@@ -510,16 +539,7 @@ Set extended panid.
 Done
 ```
 
-### dataset masterkey
-
-Set getting master key flag.
-
-```bash
-> dataset masterkey
-Done
-```
-
-### dataset masterkey \[masterkey\]
+### dataset masterkey \<masterkey\>
 
 Set master key.
 
@@ -528,16 +548,7 @@ Set master key.
 Done
 ```
 
-### dataset meshlocalprefix
-
-Set getting mesh local prefix flag.
-
-```bash
-> dataset meshlocalprefix
-Done
-```
-
-### dataset meshlocalprefix fd00:db8::
+### dataset meshlocalprefix \<meshlocalprefix\>
 
 Set mesh local prefix.
 
@@ -582,16 +593,7 @@ Send MGMT_PENDING_SET.
 Done
 ```
 
-### dataset networkname
-
-Set getting network name flag.
-
-```bash
-> dataset networkname
-Done
-```
-
-### dataset networkname \[networkname\]
+### dataset networkname \<networkname\>
 
 Set network name.
 
@@ -600,16 +602,7 @@ Set network name.
 Done
 ```
 
-### dataset panid
-
-Set getting panid flag.
-
-```bash
-> dataset panid
-Done
-```
-
-### dataset panid \[panid\]
+### dataset panid \<panid\>
 
 Set panid.
 
@@ -627,16 +620,7 @@ Print meshcop pending operational dataset.
 Done
 ```
 
-### dataset pendingtimestamp
-
-Set getting pending timestamp flag.
-
-```bash
-> dataset pendingtimestamp
-Done
-```
-
-### dataset pendingtimestamp \[pendingtimestamp\]
+### dataset pendingtimestamp \<pendingtimestamp\>
 
 Set pending timestamp.
 
@@ -645,12 +629,46 @@ Set pending timestamp.
 Done
 ```
 
-### dataset userdata \[size\] \[data\]
+### dataset pskc \<pskc\>
 
-Set user specific data for the command.
+Set pskc with hex format.
 
 ```bash
-> dataset userdata 3 820155
+> dataset pskc 67c0c203aa0b042bfb5381c47aef4d9e
+Done
+```
+
+### dataset securitypolicy \<rotationtime\> \[onrcb\]
+
+Set security policy.
+
+* o: Obtaining the Master Key for out-of-band commissioning is enabled.
+* n: Native Commissioning using PSKc is allowed.
+* r: Thread 1.x Routers are enabled.
+* c: External Commissioner authentication is allowed using PSKc.
+* b: Thread 1.x Beacons are enabled.
+
+```bash
+> dataset securitypolicy 672 onrcb
+Done
+```
+
+### delaytimermin
+
+Get the minimal delay timer (in seconds).
+
+```bash
+> delaytimermin
+30
+Done
+```
+
+### delaytimermin \<delaytimermin\>
+
+Set the minimal delay timer (in seconds).
+
+```bash
+> delaytimermin 60
 Done
 ```
 
@@ -745,6 +763,16 @@ e0b220eb7d8dda7e
 Done
 ```
 
+### ifconfig
+
+Show the status of the IPv6 interface.
+
+```bash
+> ifconfig
+down
+Done
+```
+
 ### ifconfig up
 
 Bring up the IPv6 interface.
@@ -760,16 +788,6 @@ Bring down the IPv6 interface.
 
 ```bash
 > ifconfig down
-Done
-```
-
-### ifconfig
-
-Show the status of the IPv6 interface.
-
-```bash
-> ifconfig
-down
 Done
 ```
 
@@ -885,6 +903,15 @@ Stop the Joiner role.
 Done
 ```
 
+### joinerport \<port\>
+
+Set the Joiner port.
+
+```bash
+> joinerport 1000
+Done
+```
+
 ### keysequence counter
 
 Get the Thread Key Sequence Counter.
@@ -934,12 +961,26 @@ Get the Thread Leader Partition ID.
 Done
 ```
 
-### leaderpartitionid \<partitionid>\
+### leaderpartitionid \<partitionid\>
 
 Set the Thread Leader Partition ID.
 
 ```bash
 > leaderpartitionid 0xffffffff
+Done
+```
+
+### leaderdata
+
+Show the Thread Leader Data.
+
+```bash
+> leaderdata
+Partition ID: 1077744240
+Weighting: 64
+Data Version: 109
+Stable Data Version: 211
+Leader Router ID: 60
 Done
 ```
 
@@ -962,7 +1003,7 @@ Set the Thread Leader Weight.
 Done
 ```
 
-### linkquality \<extaddr>\
+### linkquality \<extaddr\>
 
 Get the link quality on the link to a given extended address.
 
@@ -972,7 +1013,7 @@ Get the link quality on the link to a given extended address.
 Done
 ```
 
-### linkquality \<extaddr>\ \<linkquality>\
+### linkquality \<extaddr\> \<linkquality\>
 
 Set the link quality on the link to a given extended address.
 
@@ -1035,6 +1076,31 @@ Register local network data with Thread Leader.
 
 ```bash
 > netdataregister
+Done
+```
+
+### networkdiagnostic get \<addr\> \<type\> ..
+
+Send network diagnostic request to retrieve tlv of \<type\>s.
+
+If \<addr\> is unicast address, `Diagnostic Get` will be sent.
+if \<addr\> is multicast address, `Diagnostic Query` will be sent.
+
+```bash
+> networkdiagnostic get fdde:ad00:beef:0:0:ff:fe00:f400 0 1 6
+DIAG_GET.rsp: 00088e18ad17a24b0b740102f400060841dcb82d40bac63d
+
+> networkdiagnostic get ff02::1 0 1
+DIAG_GET.rsp: 0008567e31a79667a8cc0102f000
+DIAG_GET.rsp: 0008aaa7e584759e4e6401025400
+```
+
+### networkdiagnostic reset \<addr\> \<type\> ..
+
+Send network diagnostic request to reset \<addr\>'s tlv of \<type\>s. Currently only `MAC Counters`(9) is supported.
+
+```bash
+> diagnostic reset fd00:db8::ff:fe00:0 9
 Done
 ```
 
@@ -1125,7 +1191,7 @@ Get the customized data poll period of sleepy end device (seconds). Only for cer
 Done
 ```
 
-### pollperiod \<pollperiod>\
+### pollperiod \<pollperiod\>
 
 Set the customized data poll period for sleepy end device (seconds). Only for certification test
 
@@ -1397,6 +1463,23 @@ Return true when there are no other nodes in the network, otherwise return false
 ```bash
 > singleton
 true or false
+Done
+```
+
+### state
+Return state of current state.
+
+```bash
+> state
+offline, disabled, detached, child, router or leader
+Done
+```
+
+### state <state>
+Try to switch to state `detached`, `child`, `router` or `leader`.
+
+```bash
+> state leader
 Done
 ```
 

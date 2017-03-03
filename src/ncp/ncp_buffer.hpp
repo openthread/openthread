@@ -33,8 +33,8 @@
 #ifndef NCP_FRAME_BUFFER_HPP_
 #define NCP_FRAME_BUFFER_HPP_
 
-#include <openthread-types.h>
-#include <openthread-message.h>
+#include "openthread/types.h"
+#include "openthread/message.h"
 
 namespace Thread {
 
@@ -125,7 +125,7 @@ public:
      * @retval kThreadError_NoBufs  Insufficient buffer space available to add message.
      *
      */
-    ThreadError InFrameFeedMessage(otMessage aMessage);
+    ThreadError InFrameFeedMessage(otMessage *aMessage);
 
     /**
      * This method finalizes/ends the current input frame being written to the buffer.
@@ -347,7 +347,7 @@ private:
     uint8_t *       mReadSegmentTail;           // Pointer to end of current segment in the frame being read.
     uint8_t *       mReadPointer;               // Pointer to next byte to read (either in segment or in msg buffer).
 
-    otMessage       mReadMessage;               // Current Message in the frame being read.
+    otMessage *     mReadMessage;               // Current Message in the frame being read.
     uint16_t        mReadMessageOffset;         // Offset within current message being read.
 
     uint8_t         mMessageBuffer[kMessageReadBufferSize];   // Buffer to hold part of current message being read.

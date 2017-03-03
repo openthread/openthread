@@ -46,10 +46,9 @@
 #include <syslog.h>
 #endif
 
-#include <openthread.h>
-#include <openthread-tasklet.h>
-#include <platform/alarm.h>
-#include <platform/uart.h>
+#include "openthread/openthread.h"
+#include "openthread/tasklet.h"
+#include "openthread/platform/alarm.h"
 
 uint32_t NODE_ID = 1;
 uint32_t WELLKNOWN_NODE_ID = 34;
@@ -81,8 +80,6 @@ void PlatformInit(int argc, char *argv[])
     platformRandomInit();
 }
 
-bool UartInitialized = false;
-
 void PlatformProcessDrivers(otInstance *aInstance)
 {
     fd_set read_fds;
@@ -92,12 +89,6 @@ void PlatformProcessDrivers(otInstance *aInstance)
     struct timeval timeout;
     int rval;
 
-    if (!UartInitialized)
-    {
-        UartInitialized = true;
-        otPlatUartEnable();
-    }
-
     FD_ZERO(&read_fds);
     FD_ZERO(&write_fds);
     FD_ZERO(&error_fds);
@@ -106,7 +97,7 @@ void PlatformProcessDrivers(otInstance *aInstance)
     platformRadioUpdateFdSet(&read_fds, &write_fds, &max_fd);
     platformAlarmUpdateTimeout(&timeout);
 
-    if (!otAreTaskletsPending(aInstance))
+    if (!otTaskletsArePending(aInstance))
     {
         rval = select(max_fd + 1, &read_fds, &write_fds, &error_fds, &timeout);
 
@@ -121,4 +112,3 @@ void PlatformProcessDrivers(otInstance *aInstance)
     platformRadioProcess(aInstance);
     platformAlarmProcess(aInstance);
 }
-

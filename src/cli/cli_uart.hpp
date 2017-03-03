@@ -34,7 +34,8 @@
 #ifndef CLI_UART_HPP_
 #define CLI_UART_HPP_
 
-#include <openthread-types.h>
+#include "openthread/types.h"
+
 #include <cli/cli_server.hpp>
 #include <common/tasklet.hpp>
 

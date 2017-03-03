@@ -49,19 +49,14 @@ Whitelist::Whitelist(void)
     }
 }
 
-void Whitelist::Enable(void)
-{
-    mEnabled = true;
-}
-
-void Whitelist::Disable(void)
-{
-    mEnabled = false;
-}
-
 bool Whitelist::IsEnabled(void) const
 {
     return mEnabled;
+}
+
+void Whitelist::SetEnabled(bool aEnabled)
+{
+    mEnabled = aEnabled;
 }
 
 int Whitelist::GetMaxEntries(void) const

@@ -57,7 +57,7 @@ sudo pip install --user scapy==2.3.2
     -p <PIPE>, --pipe=<PIPE>
         Open a piped process connection to the OpenThread NCP device
         where <PIPE> is the command to start an emulator, such as
-        "ot-ncp".  Spinel-cli will communicate with the child process
+        "ot-ncp-ftd".  Spinel-cli will communicate with the child process
         via stdin/stdout.
 
     -s <SOCKET>, --socket=<SOCKET>
@@ -88,7 +88,7 @@ documented in the command reference section.
 ```
 openthread$ cd tools/spinel-cli/
 spinel-cli$ ./spinel-cli.py
-Opening pipe to ../../examples/apps/ncp/ot-ncp 1
+Opening pipe to ../../examples/apps/ncp/ot-ncp-ftd 1
 spinel-cli > help
 
 Available commands (type help <name> for more information):

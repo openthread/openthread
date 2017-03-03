@@ -35,6 +35,7 @@
 #define COMMISSIONER_HPP_
 
 #include <openthread-core-config.h>
+#include "openthread/commissioner.h"
 
 #include <coap/coap_client.hpp>
 #include <coap/coap_server.hpp>
@@ -111,7 +112,7 @@ public:
     ThreadError RemoveJoiner(const Mac::ExtAddress *aExtAddress);
 
     /**
-     * This function sets the Provisioning URL.
+     * This method sets the Provisioning URL.
      *
      * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
      *
@@ -174,6 +175,23 @@ public:
     ThreadError SendMgmtCommissionerSetRequest(const otCommissioningDataset &aDataset,
                                                const uint8_t *aTlvs, uint8_t aLength);
 
+    /**
+     * This static method generates PSKc.
+     *
+     * PSKc is used to establish the Commissioner Session.
+     *
+     * @param[in]  aPassPhrase   The commissioning passphrase.
+     * @param[in]  aNetworkName  The network name for PSKc computation.
+     * @param[in]  aExtPanId     The extended pan id for PSKc computation.
+     * @param[out] aPSKc         A pointer to where the generated PSKc will be placed.
+     *
+     * @retval kThreadErrorNone          Successfully generate PSKc.
+     * @retval kThreadError_InvalidArgs  If the length of passphrase is out of range.
+     *
+     */
+    static ThreadError GeneratePSKc(const char *aPassPhrase, const char *aNetworkName, const uint8_t *aExtPanId,
+                                    uint8_t *aPSKc);
+
     AnnounceBeginClient mAnnounceBegin;
     EnergyScanClient mEnergyScan;
     PanIdQueryClient mPanIdQuery;
@@ -190,32 +208,32 @@ private:
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
 
-    static void HandleMgmtCommissionerSetResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleMgmtCommissionerSetResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                                   const otMessageInfo *aMessageInfo, ThreadError aResult);
     void HandleMgmtCommissisonerSetResponse(Coap::Header *aHeader, Message *aMessage,
                                             const Ip6::MessageInfo *aMessageInfo, ThreadError aResult);
-    static void HandleMgmtCommissionerGetResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleMgmtCommissionerGetResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                                   const otMessageInfo *aMessageInfo, ThreadError aResult);
     void HandleMgmtCommissisonerGetResponse(Coap::Header *aHeader, Message *aMessage,
                                             const Ip6::MessageInfo *aMessageInfo, ThreadError aResult);
-    static void HandleLeaderPetitionResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleLeaderPetitionResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                              const otMessageInfo *aMessageInfo, ThreadError aResult);
     void HandleLeaderPetitionResponse(Coap::Header *aHeader, Message *aMessage,
                                       const Ip6::MessageInfo *aMessageInfo, ThreadError aResult);
-    static void HandleLeaderKeepAliveResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleLeaderKeepAliveResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                               const otMessageInfo *aMessageInfo, ThreadError aResult);
     void HandleLeaderKeepAliveResponse(Coap::Header *aHeader, Message *aMessage,
                                        const Ip6::MessageInfo *aMessageInfo, ThreadError aResult);
 
-    static void HandleRelayReceive(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleRelayReceive(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                    const otMessageInfo *aMessageInfo);
     void HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleDatasetChanged(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleDatasetChanged(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                      const otMessageInfo *aMessageInfo);
     void HandleDatasetChanged(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleJoinerFinalize(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleJoinerFinalize(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                      const otMessageInfo *aMessageInfo);
     void HandleJoinerFinalize(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 

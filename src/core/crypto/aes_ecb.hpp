@@ -59,6 +59,18 @@ public:
     };
 
     /**
+     * Constructor to initialize the mbedtls_aes_context.
+     *
+     */
+    AesEcb();
+
+    /**
+     * Destructor to free the mbedtls_aes_context.
+     *
+     */
+    ~AesEcb();
+
+    /**
      * This method sets the key.
      *
      * @param[in]  aKey        A pointer to the key.

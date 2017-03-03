@@ -35,7 +35,9 @@
 #define ADDRESS_RESOLVER_HPP_
 
 #include <openthread-core-config.h>
-#include <openthread-types.h>
+
+#include "openthread/types.h"
+
 #include <coap/coap_client.hpp>
 #include <coap/coap_server.hpp>
 #include <common/timer.hpp>
@@ -138,6 +140,7 @@ private:
         uint16_t          mRetryTimeout;
         uint8_t           mTimeout;
         uint8_t           mFailures;
+        uint8_t           mAge;
 
         enum State
         {
@@ -148,6 +151,10 @@ private:
         State             mState;
     };
 
+    Cache *NewCacheEntry(void);
+    void MarkCacheEntryAsUsed(Cache &aEntry);
+    void InvalidateCacheEntry(Cache &aEntry);
+
     ThreadError SendAddressQuery(const Ip6::Address &aEid);
     ThreadError SendAddressError(const ThreadTargetTlv &aTarget, const ThreadMeshLocalEidTlv &aEid,
                                  const Ip6::Address *aDestination);
@@ -155,23 +162,23 @@ private:
                                   const ThreadLastTransactionTimeTlv *aLastTransactionTimeTlv,
                                   const Ip6::Address &aDestination);
 
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
+    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
-    static void HandleAddressError(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleAddressError(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                    const otMessageInfo *aMessageInfo);
     void HandleAddressError(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleAddressQuery(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleAddressQuery(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                    const otMessageInfo *aMessageInfo);
     void HandleAddressQuery(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleAddressNotification(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleAddressNotification(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                           const otMessageInfo *aMessageInfo);
     void HandleAddressNotification(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleDstUnreach(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
-                                 const Ip6::IcmpHeader &aIcmpHeader);
-    void HandleDstUnreach(Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Ip6::IcmpHeader &aIcmpHeader);
+    static void HandleIcmpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo,
+                                  const otIcmp6Header *aIcmpHeader);
+    void HandleIcmpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Ip6::IcmpHeader &aIcmpHeader);
 
     static void HandleTimer(void *aContext);
     void HandleTimer(void);

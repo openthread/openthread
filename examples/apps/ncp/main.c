@@ -32,15 +32,27 @@
 #include <openthread-config.h>
 #endif
 
-#include <openthread-core-config.h>
-#include <openthread.h>
-#include <openthread-diag.h>
-#include <openthread-tasklet.h>
-#include <common/debug.hpp>
-#include <ncp/ncp.h>
-#include <platform/platform.h>
+#include "openthread/openthread.h"
+#include "openthread/diag.h"
+#include "openthread/ncp.h"
+#include "openthread/platform/platform.h"
 
-void otSignalTaskletPending(otInstance *aInstance)
+#include <openthread-core-config.h>
+#include <common/debug.hpp>
+
+#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+void *otPlatCAlloc(size_t aNum, size_t aSize)
+{
+    return calloc(aNum, aSize);
+}
+
+void otPlatFree(void *aPtr)
+{
+    free(aPtr);
+}
+#endif
+
+void otTaskletsSignalPending(otInstance *aInstance)
 {
     (void)aInstance;
 }
@@ -74,12 +86,12 @@ int main(int argc, char *argv[])
     otNcpInit(sInstance);
 
 #if OPENTHREAD_ENABLE_DIAG
-    diagInit(sInstance);
+    otDiagInit(sInstance);
 #endif
 
     while (1)
     {
-        otProcessQueuedTasklets(sInstance);
+        otTaskletsProcess(sInstance);
         PlatformProcessDrivers(sInstance);
     }
 

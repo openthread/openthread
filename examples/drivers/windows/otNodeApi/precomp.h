@@ -49,10 +49,10 @@ using namespace std;
 #define OTDLL
 #define OTNODEAPI EXTERN_C __declspec(dllexport)
 
-#include <openthread.h>
-#include <commissioning/commissioner.h>
-#include <commissioning/joiner.h>
-#include <platform/logging-windows.h>
+#include <openthread/openthread.h>
+#include <openthread/commissioner.h>
+#include <openthread/joiner.h>
+#include <openthread/platform/logging-windows.h>
 #include <otNode.h>
 
 void Unload();

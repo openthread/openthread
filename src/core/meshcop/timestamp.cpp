@@ -33,7 +33,8 @@
 
 #include <string.h>
 
-#include <openthread-types.h>
+#include "openthread/types.h"
+
 #include <meshcop/timestamp.hpp>
 
 namespace Thread {

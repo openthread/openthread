@@ -32,7 +32,7 @@
 #include <fcntl.h>
 
 #include <openthread-config.h>
-#include <platform/alarm.h>
+#include "openthread/platform/alarm.h"
 #include <utils/flash.h>
 
 #include <common/code_utils.hpp>

@@ -56,6 +56,7 @@ libmbedcrypto_a_SOURCES                      += \
     repo/library/ccm.c                          \
     repo/library/cipher.c                       \
     repo/library/cipher_wrap.c                  \
+    repo/library/cmac.c                         \
     repo/library/ctr_drbg.c                     \
     repo/library/debug.c                        \
     repo/library/ecjpake.c                      \

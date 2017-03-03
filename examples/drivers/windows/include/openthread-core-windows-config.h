@@ -75,5 +75,13 @@
  */
 #define OPENTHREAD_CONFIG_LOG_LEVEL                         OPENTHREAD_LOG_LEVEL_DEBG
 
+ /**
+ * @def OPENTHREAD_CONFIG_LOG_PKT_DUMP
+ *
+ * Define to enable log content of packets.
+ *
+ */
+#define OPENTHREAD_CONFIG_LOG_PKT_DUMP                      0
+
 #endif  // OPENTHREAD_CORE_WINDOWS_CONFIG_H_
 

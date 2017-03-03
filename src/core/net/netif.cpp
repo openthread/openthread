@@ -47,7 +47,7 @@ Netif::Netif(Ip6 &aIp6, int8_t aInterfaceId):
     mMulticastAddresses(NULL),
     mInterfaceId(aInterfaceId),
     mAllRoutersSubscribed(false),
-    mMulticastPromiscuousMode(false),
+    mMulticastPromiscuous(false),
     mStateChangedTask(aIp6.mTaskletScheduler, &Netif::HandleStateChangedTask, this),
     mNext(NULL),
     mStateChangedFlags(0)
@@ -305,19 +305,14 @@ void Netif::UnsubscribeAllExternalMulticastAddresses(void)
     }
 }
 
-bool Netif::IsMulticastPromiscuousModeEnabled(void)
+bool Netif::IsMulticastPromiscuousEnabled(void)
 {
-    return mMulticastPromiscuousMode;
+    return mMulticastPromiscuous;
 }
 
-void Netif::EnableMulticastPromiscuousMode(void)
+void Netif::SetMulticastPromiscuous(bool aEnabled)
 {
-    mMulticastPromiscuousMode = true;
-}
-
-void Netif::DisableMulticastPromiscuousMode(void)
-{
-    mMulticastPromiscuousMode = false;
+    mMulticastPromiscuous = aEnabled;
 }
 
 const NetifUnicastAddress *Netif::GetUnicastAddresses() const

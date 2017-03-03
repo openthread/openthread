@@ -1,10 +1,17 @@
 OpenThread THCI
 ===============
 
-OpenThread THCI(Thread Host Controller Interface) is implemented according
-to the python abstract class template-"IThci" that is provided by GRL. It's
-intented to be called by Thread Test Harness Software to control the reference
-device behavior.
+OpenThread THCI (Thread Host Controller Interface) is an implementation of the Python abstract class template "IThci",
+which is used by Thread Test Harness Software to control OpenThread-based reference devices according to each test
+scenario.
+
+The current implementation is based on the CC2538 example platform and is included in the current Thread Test Harness
+Software release.
+
+Platform developers should modify the THCI implementation directly to match their platform (e.g. serial baud rate).
+Alternatively, platform developers may follow the instructions below to add a new THCI implementation to the Test
+Harness. Adding a new THCI implementation allows the existing CC2538-based THCI implementation to coexist with the
+new THCI implementation.
 
 ## Environment Setup ##
 
@@ -21,4 +28,3 @@ device behavior.
 6. Drag OpenThread: TI CC2538DK reference device to Test Bed list with desired number.
 
 7. Select one or multiple test cases to execute.
-

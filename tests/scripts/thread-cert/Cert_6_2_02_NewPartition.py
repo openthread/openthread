@@ -93,7 +93,7 @@ class Cert_6_2_2_NewPartition(unittest.TestCase):
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
         self.nodes[LEADER].stop()
-        time.sleep(130)
+        time.sleep(140)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'leader')
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
         self.assertEqual(self.nodes[ED].get_state(), 'child')

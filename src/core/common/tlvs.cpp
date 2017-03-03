@@ -39,7 +39,7 @@ namespace Thread {
 
 ThreadError Tlv::Get(const Message &aMessage, uint8_t aType, uint16_t aMaxLength, Tlv &aTlv)
 {
-    ThreadError error = kThreadError_Parse;
+    ThreadError error = kThreadError_NotFound;
     uint16_t offset;
 
     SuccessOrExit(error = GetOffset(aMessage, aType, offset));
@@ -58,7 +58,7 @@ exit:
 
 ThreadError Tlv::GetOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset)
 {
-    ThreadError error = kThreadError_Parse;
+    ThreadError error = kThreadError_NotFound;
     uint16_t offset = aMessage.GetOffset();
     uint16_t end = aMessage.GetLength();
     Tlv tlv;
@@ -93,7 +93,7 @@ exit:
 
 ThreadError Tlv::GetValueOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset, uint16_t &aLength)
 {
-    ThreadError error = kThreadError_Parse;
+    ThreadError error = kThreadError_NotFound;
     uint16_t offset = aMessage.GetOffset();
     uint16_t end = aMessage.GetLength();
 

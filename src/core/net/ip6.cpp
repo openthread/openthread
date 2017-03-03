@@ -113,7 +113,7 @@ uint16_t Ip6::ComputePseudoheaderChecksum(const Address &src, const Address &dst
     return checksum;
 }
 
-void Ip6::SetReceiveDatagramCallback(otReceiveIp6DatagramCallback aCallback, void *aCallbackContext)
+void Ip6::SetReceiveDatagramCallback(otIp6ReceiveCallback aCallback, void *aCallbackContext)
 {
     mReceiveIp6DatagramCallback = aCallback;
     mReceiveIp6DatagramCallbackContext = aCallbackContext;
@@ -472,6 +472,13 @@ ThreadError Ip6::HandleOptions(Message &message, Header &header, bool &forward)
     {
         VerifyOrExit(message.Read(message.GetOffset(), sizeof(optionHeader), &optionHeader) == sizeof(optionHeader),
                      error = kThreadError_Drop);
+
+        if (optionHeader.GetType() == OptionPad1::kType)
+        {
+            message.MoveOffset(sizeof(OptionPad1));
+            continue;
+        }
+
         VerifyOrExit(message.GetOffset() + sizeof(optionHeader) + optionHeader.GetLength() <= endOffset,
                      error = kThreadError_Drop);
 
@@ -503,15 +510,7 @@ ThreadError Ip6::HandleOptions(Message &message, Header &header, bool &forward)
             break;
         }
 
-        if (optionHeader.GetType() == OptionPad1::kType)
-        {
-            message.MoveOffset(sizeof(OptionPad1));
-        }
-        else
-        {
-            message.MoveOffset(sizeof(optionHeader) + optionHeader.GetLength());
-        }
-
+        message.MoveOffset(sizeof(optionHeader) + optionHeader.GetLength());
     }
 
 exit:
@@ -618,7 +617,7 @@ ThreadError Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageIn
                 aMessage.Read(aMessage.GetOffset(), sizeof(icmp), &icmp);
 
                 // do not pass ICMP Echo Request messages
-                VerifyOrExit(icmp.GetType() != IcmpHeader::kTypeEchoRequest, error = kThreadError_NoRoute);
+                VerifyOrExit(icmp.GetType() != kIcmp6TypeEchoRequest, error = kThreadError_NoRoute);
             }
 
             break;
@@ -697,7 +696,7 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
             {
                 receive = true;
             }
-            else if (netif->IsMulticastPromiscuousModeEnabled())
+            else if (netif->IsMulticastPromiscuousEnabled())
             {
                 multicastPromiscuous = true;
             }

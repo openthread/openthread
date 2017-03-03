@@ -38,8 +38,9 @@
 #include <errno.h>
 #include <signal.h>
 
+#include "openthread/platform/uart.h"
+
 #include <common/code_utils.hpp>
-#include <platform/uart.h>
 
 #ifdef OPENTHREAD_TARGET_LINUX
 #include <sys/prctl.h>

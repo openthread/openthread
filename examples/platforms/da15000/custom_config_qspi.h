@@ -115,4 +115,11 @@
 /* Include bsp default values */
 #include "bsp_defaults.h"
 
+
+/*************************************************************************************************\
+ * Open Thread specific config
+ */
+
+#define SETTINGS_CONFIG_BASE_ADDRESS                   (0x7B000)
+
 #endif /* CUSTOM_CONFIG_QSPI_H_ */

@@ -27,14 +27,16 @@
  */
 
 #include "test_util.h"
-#include <openthread.h>
+#include "openthread/openthread.h"
 #include <common/debug.hpp>
 #include <string.h>
 
 #include <crypto/hmac_sha256.hpp>
 #include <crypto/mbedtls.hpp>
 
-static Thread::Crypto::MbedTls mbedtls;
+#ifndef OPENTHREAD_MULTIPLE_INSTANCE
+static Thread::Crypto::MbedTls mMbedTls;
+#endif
 
 void TestHmacSha256(void)
 {

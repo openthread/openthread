@@ -435,18 +435,7 @@ otLwfTunValueIs(
 
     LogFuncEntryMsg(DRIVER_DEFAULT, "[%p] received Value for %s", pFilter, spinel_prop_key_to_cstr(key));
 
-    if (key == SPINEL_PROP_LAST_STATUS)
-    {
-        spinel_status_t status = SPINEL_STATUS_OK;
-        spinel_datatype_unpack(value_data_ptr, value_data_len, "i", &status);
-
-        if ((status >= SPINEL_STATUS_RESET__BEGIN) && (status <= SPINEL_STATUS_RESET__END))
-        {
-            LogInfo(DRIVER_DEFAULT, "Interface %!GUID! was reset (status %d).", &pFilter->InterfaceGuid, status);
-            // TODO - Handle reset
-        }
-    }
-    else if (key == SPINEL_PROP_NET_ROLE)
+    if (key == SPINEL_PROP_NET_ROLE)
     {
         uint8_t value;
         spinel_datatype_unpack(value_data_ptr, value_data_len, SPINEL_DATATYPE_UINT8_S, &value);

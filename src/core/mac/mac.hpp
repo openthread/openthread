@@ -34,13 +34,15 @@
 #ifndef MAC_HPP_
 #define MAC_HPP_
 
+#include "openthread/platform/radio.h"
+
 #include <openthread-core-config.h>
+
 #include <common/tasklet.hpp>
 #include <common/timer.hpp>
 #include <mac/mac_frame.hpp>
 #include <mac/mac_whitelist.hpp>
 #include <mac/mac_blacklist.hpp>
-#include <platform/radio.h>
 #include <thread/key_manager.hpp>
 #include <thread/topology.hpp>
 #include <thread/network_diagnostic_tlvs.hpp>
@@ -67,7 +69,7 @@ namespace Mac {
  */
 enum
 {
-    kMinBE                = 1,                     ///< macMinBE (IEEE 802.15.4-2006)
+    kMinBE                = 3,                     ///< macMinBE (IEEE 802.15.4-2006)
     kMaxBE                = 5,                     ///< macMaxBE (IEEE 802.15.4-2006)
     kMaxCSMABackoffs      = 4,                     ///< macMaxCSMABackoffs (IEEE 802.15.4-2006)
     kMaxFrameRetries      = 3,                     ///< macMaxFrameRetries (IEEE 802.15.4-2006)
@@ -222,7 +224,7 @@ public:
     typedef void (*EnergyScanHandler)(void *aContext, otEnergyScanResult *aResult);
 
     /**
-     * This function starts an IEEE 802.15.4 Energy Scan.
+     * This method starts an IEEE 802.15.4 Energy Scan.
      *
      * @param[in]  aScanChannels     A bit vector indicating on which channels to perform energy scan.
      * @param[in]  aScanDuration     The time in milliseconds to spend scanning each channel.
@@ -236,7 +238,7 @@ public:
     ThreadError EnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, EnergyScanHandler aHandler, void *aContext);
 
     /**
-     * This function indicates the energy scan for the current channel is complete.
+     * This method indicates the energy scan for the current channel is complete.
      *
      * @param[in]  aEnergyScanMaxRssi  The maximum RSSI encountered on the scanned channel.
      *
@@ -465,7 +467,7 @@ public:
     bool IsEnergyScanInProgress(void);
 
     /**
-     * This function registers a callback to provide received raw IEEE 802.15.4 frames.
+     * This method registers a callback to provide received raw IEEE 802.15.4 frames.
      *
      * @param[in]  aPcapCallback     A pointer to a function that is called when receiving an IEEE 802.15.4 link frame or
      *                               NULL to disable the callback.
@@ -475,7 +477,7 @@ public:
     void SetPcapCallback(otLinkPcapCallback aPcapCallback, void *aCallbackContext);
 
     /**
-     * This function indicates whether or not promiscuous mode is enabled at the link layer.
+     * This method indicates whether or not promiscuous mode is enabled at the link layer.
      *
      * @retval true   Promiscuous mode is enabled.
      * @retval false  Promiscuous mode is not enabled.
@@ -484,7 +486,7 @@ public:
     bool IsPromiscuous(void);
 
     /**
-     * This function enables or disables the link layer promiscuous mode.
+     * This method enables or disables the link layer promiscuous mode.
      *
      * Promiscuous mode keeps the receiver enabled, overriding the value of mRxOnWhenIdle.
      *
@@ -494,7 +496,7 @@ public:
     void SetPromiscuous(bool aPromiscuous);
 
     /**
-     * This function fills network diagnostic MacCounterTlv.
+     * This method fills network diagnostic MacCounterTlv.
      *
      * @param[in]  aMacCountersTlv The reference to the network diagnostic MacCounterTlv.
      *
@@ -502,7 +504,7 @@ public:
     void FillMacCountersTlv(NetworkDiagnostic::MacCountersTlv &aMacCounters) const;
 
     /**
-     * This function resets mac counters
+     * This method resets mac counters
      *
      */
     void ResetCounters(void);
@@ -524,7 +526,7 @@ public:
     LinkQualityInfo &GetNoiseFloor(void) { return mNoiseFloor; }
 
     /**
-     * This function enable/disable source match.
+     * This method enables/disables source match feature.
      *
      * @param[in]  aEnable  Enable/disable source match for automatical pending.
      *
@@ -532,7 +534,7 @@ public:
     void EnableSrcMatch(bool aEnable);
 
     /**
-     * This function adds the address into the source match table.
+     * This method adds the address into the source match table.
      *
      * @param[in]  aAddr  The address to be added into the source match table.
      *
@@ -543,7 +545,7 @@ public:
     ThreadError AddSrcMatchEntry(Address &aAddr);
 
     /**
-     * This function removes the address from the source match table.
+     * This method removes the address from the source match table.
      *
      * @param[in]  aAddr  The address to be removed from the source match table.
      *
@@ -554,19 +556,28 @@ public:
     ThreadError ClearSrcMatchEntry(Address &aAddr);
 
     /**
-     * This function emptys the source match table.
+     * This method clears the source match table.
      *
      */
     void ClearSrcMatchEntries(void);
 
     /**
-     * This function indicates whether or not transmit retries and CSMA backoff logic is supported by the radio layer.
+     * This method indicates whether or not CSMA backoff is supported by the radio layer.
      *
-     * @retval true   Retries and CSMA are supported by the radio.
-     * @retval false  Retries and CSMA are not supported by the radio.
+     * @retval true   CSMA backoff is supported by the radio.
+     * @retval false  CSMA backoff is not supported by the radio.
      *
      */
-    bool RadioSupportsRetriesAndCsmaBackoff(void);
+    bool RadioSupportsCsmaBackoff(void);
+
+    /**
+     * This method indicates whether or not transmit retries is supported by the radio layer.
+     *
+     * @retval true   Retries (and CSMA) are supported by the radio.
+     * @retval false  Retries (and CSMA) are not supported by the radio.
+     *
+     */
+    bool RadioSupportsRetries(void);
 
 private:
     enum ScanType
@@ -606,7 +617,9 @@ private:
     ThreadError Scan(ScanType aType, uint32_t aScanChannels, uint16_t aScanDuration, void *aContext);
 
     Timer mMacTimer;
+#if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
     Timer mBackoffTimer;
+#endif
     Timer mReceiveTimer;
 
     ThreadNetif &mNetif;

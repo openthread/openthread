@@ -35,7 +35,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <openthread-diag.h>
+#include "openthread/diag.h"
 #include <diag_process.hpp>
 
 using namespace Thread::Diagnostics;
@@ -44,17 +44,17 @@ using namespace Thread::Diagnostics;
 extern "C" {
 #endif
 
-void diagInit(otInstance *aInstance)
+void otDiagInit(otInstance *aInstance)
 {
     Diag::Init(aInstance);
 }
 
-char *diagProcessCmd(int argc, char *argv[])
+char *otDiagProcessCmd(int argc, char *argv[])
 {
     return Diag::ProcessCmd(argc, argv);
 }
 
-char *diagProcessCmdLine(char *string)
+char *otDiagProcessCmdLine(char *string)
 {
     char *argv[8];
     int argc = 0;
@@ -79,7 +79,7 @@ char *diagProcessCmdLine(char *string)
     return Diag::ProcessCmd(argc, argv);
 }
 
-bool isDiagEnabled()
+bool otDiagIsEnabled()
 {
     return Diag::isEnabled();
 }
