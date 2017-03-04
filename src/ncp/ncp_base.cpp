@@ -3939,6 +3939,9 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t header, spinel_prop_k
             packet->mLength = static_cast<uint8_t>(frame_len);
             memcpy(packet->mPsdu, frame_buffer, packet->mLength);
 
+            // TODO: This should be later added in the STREAM_RAW argument to allow user to directly specify it.
+            packet->mMaxTxAttempts = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT;
+
             // Pass packet to the radio layer. Note, this fails if we
             // haven't enabled raw stream or are already transmitting.
             errorCode = otLinkRawTransmit(mInstance, packet, &NcpBase::LinkRawTransmitDone);

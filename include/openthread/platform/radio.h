@@ -105,8 +105,10 @@ typedef struct RadioPacket
     uint8_t  mChannel;         ///< Channel used to transmit/receive the frame.
     int8_t   mPower;           ///< Transmit/receive power in dBm.
     uint8_t  mLqi;             ///< Link Quality Indicator for received frames.
+    uint8_t  mMaxTxAttempts;   ///< Max number of transmit attempts for an outbound frame.
     bool     mSecurityValid: 1; ///< Security Enabled flag is set and frame passes security checks.
     bool     mDidTX: 1;        ///< Set to true if this packet sent from the radio. Ignored by radio driver.
+    bool     mIsARetx: 1;      ///< Set to true if this packet is a retransmission. Should be ignored by radio driver.
 } RadioPacket;
 
 /**

@@ -407,7 +407,7 @@ void LinkRaw::InvokeTransmitDone(RadioPacket *aPacket, bool aFramePending, Threa
 
     if (aError == kThreadError_NoAck)
     {
-        if (mTransmitAttempts < Mac::kMaxFrameAttempts)
+        if (mTransmitAttempts < aPacket->mMaxTxAttempts)
         {
             mTransmitAttempts++;
             StartCsmaBackoff();

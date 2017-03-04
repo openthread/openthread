@@ -127,10 +127,18 @@ public:
         kMaxIp6AddressPerChild = OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD,
         kMaxRequestTlvs        = 5,
     };
+
     Ip6::Address mIp6Address[kMaxIp6AddressPerChild];  ///< Registered IPv6 addresses
     uint32_t     mTimeout;                             ///< Child timeout
-    uint16_t     mFragmentOffset;                      ///< 6LoWPAN fragment offset for the indirect message
-    Message     *mIndirectSendMessage;                 ///< Current indirect message being sent.
+    struct
+    {
+        uint32_t     mFrameCounter;                    ///< Frame counter for current indirect message (used fore retx).
+        Message     *mMessage;                         ///< Current indirect message.
+        uint16_t     mFragmentOffset;                  ///< 6LoWPAN fragment offset for the indirect message.
+        uint8_t      mKeyId;                           ///< Key Id for current indirect message (used for retx).
+        uint8_t      mTxAttemptCounter;                ///< Number of data poll triggered tx attempts.
+        uint8_t      mDataSequenceNumber;              ///< MAC level Data Sequence Number (DSN) for retx attempts.
+    } mIndirectSendInfo;                               ///< Info about current outbound indirect message.
     union
     {
         uint8_t mRequestTlvs[kMaxRequestTlvs];                 ///< Requested MLE TLVs

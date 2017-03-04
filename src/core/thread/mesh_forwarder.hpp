@@ -248,6 +248,30 @@ private:
         kDataRequestRetryDelay = 200,   ///< Retry delay in milliseconds (for sending data request if no buffer).
     };
 
+    enum
+    {
+        /**
+         * Maximum number of MAC layer tx attempts for an outbound direct frame.
+         *
+         */
+        kDirectFrameMacTxAttempts   = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT,
+
+        /**
+         * Maximum number of MAC layer tx attempts for an outbound indirect frame (for a sleepy child) after receiving
+         * a data request command (data poll) from the child.
+         *
+         */
+        kIndirectFrameMacTxAttempts = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_PER_POLL,
+
+        /**
+         * Maximum number of tx attempts by `MeshForwarder` for an outbound indirect frame (for a sleepy child). The
+         * `MeshForwader` attempts occur following the reception of a new data request command (a new data poll) from
+         * the sleepy child.
+         *
+         */
+        kMaxPollTriggeredTxAttempts = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_POLLS,
+    };
+
     ThreadError CheckReachability(uint8_t *aFrame, uint8_t aFrameLength,
                                   const Mac::Address &aMeshSource, const Mac::Address &aMeshDest);
 
@@ -255,8 +279,8 @@ private:
     ThreadError GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     ThreadError GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     Message *GetDirectTransmission(void);
-    Message *GetIndirectTransmission(const Child &aChild);
-    void PrepareIndirectTransmission(const Message &aMessage, const Child &aChild);
+    Message *GetIndirectTransmission(Child &aChild);
+    void PrepareIndirectTransmission(Message &aMessage, const Child &aChild);
     void HandleMesh(uint8_t *aFrame, uint8_t aPayloadLength, const Mac::Address &aMacSource,
                     const ThreadMessageInfo &aMessageInfo);
     void HandleFragment(uint8_t *aFrame, uint8_t aPayloadLength,
@@ -311,7 +335,13 @@ private:
     uint16_t mMessageNextOffset;
     uint32_t mPollPeriod;
     uint32_t mAssignPollPeriod;  ///< only for certification test
+
+    uint32_t mSendMessageFrameCounter;
     Message *mSendMessage;
+    bool     mSendMessageIsARetransmission;
+    uint8_t  mSendMessageMaxMacTxAttempts;
+    uint8_t  mSendMessageKeyId;
+    uint8_t  mSendMessageDataSequenceNumber;
 
     Mac::Address mMacSource;
     Mac::Address mMacDest;
