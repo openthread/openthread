@@ -1571,6 +1571,7 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
 
             break;
 
+        case kThreadError_Abort:
         case kThreadError_ChannelAccessFailure:
         case kThreadError_Abort:
             break;

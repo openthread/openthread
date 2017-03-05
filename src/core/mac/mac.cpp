@@ -128,6 +128,8 @@ Mac::Mac(ThreadNetif &aThreadNetif):
 {
     mState = kStateIdle;
 
+    mRadioOn = false;
+    mDisableRadioOnIdle = false;
     mRxOnWhenIdle = false;
     mCsmaAttempts = 0;
     mTransmitAttempts = 0;
@@ -173,10 +175,22 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mPcapCallback = NULL;
     mPcapCallbackContext = NULL;
 
-    otPlatRadioEnable(mNetif.GetInstance());
     mTxFrame = static_cast<Frame *>(otPlatRadioGetTransmitBuffer(mNetif.GetInstance()));
 
     mKeyIdMode2FrameCounter = 0;
+}
+
+void Mac::EnableRadio()
+{
+    mRadioOn = true;
+    otPlatRadioEnable(mNetif.GetInstance());
+}
+
+void Mac::DisableRadio()
+{
+    mRadioOn = false;
+    mState = kStateIdle;
+    otPlatRadioDisable(mNetif.GetInstance());
 }
 
 ThreadError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
@@ -219,6 +233,13 @@ ThreadError Mac::Scan(ScanType aScanType, uint32_t aScanChannels, uint16_t aScan
     {
         mScanChannels >>= 1;
         mScanChannel++;
+    }
+
+    // If the radio isn't enabled, enable it now
+    if (!mRadioOn)
+    {
+        mDisableRadioOnIdle = true;
+        EnableRadio();
     }
 
     if (mState == kStateIdle)
@@ -545,6 +566,9 @@ exit:
 
 void Mac::NextOperation(void)
 {
+    // Make sure the radio has been turned on
+    VerifyOrExit(mRadioOn,);
+
     switch (mState)
     {
     case kStateActiveScan:
@@ -564,6 +588,9 @@ void Mac::NextOperation(void)
 
         break;
     }
+
+exit:
+    return;
 }
 
 void Mac::ScheduleNextTransmission(void)
@@ -593,6 +620,12 @@ void Mac::ScheduleNextTransmission(void)
     else
     {
         mState = kStateIdle;
+
+        if (mDisableRadioOnIdle)
+        {
+            mDisableRadioOnIdle = false;
+            DisableRadio();
+        }
     }
 
     NextOperation();
@@ -746,6 +779,8 @@ void Mac::HandleBeginTransmit(void)
     Frame &sendFrame(*mTxFrame);
     ThreadError error = kThreadError_None;
 
+    VerifyOrExit(mRadioOn, error = kThreadError_Abort);
+
     if (mCsmaAttempts == 0 && mTransmitAttempts == 0)
     {
         sendFrame.SetPower(mMaxTransmitPower);
@@ -886,7 +921,8 @@ void Mac::TransmitDoneTask(RadioPacket *aPacket, bool aRxPending, ThreadError aE
         break;
 
     default:
-        assert(false);
+        // The shutdown case is the only valid case
+        assert(!mRadioOn);
         break;
     }
 

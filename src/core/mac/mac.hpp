@@ -203,6 +203,18 @@ public:
     typedef void (*ActiveScanHandler)(void *aContext, Frame *aBeaconFrame);
 
     /**
+    * This method ensures the radio is in the proper state for use.
+    *
+    */
+    void EnableRadio();
+
+    /**
+    * This method disables the radio, indicating it's no longer needed.
+    *
+    */
+    void DisableRadio();
+
+    /**
      * This method starts an IEEE 802.15.4 Active Scan.
      *
      * @param[in]  aScanChannels  A bit vector indicating which channels to scan.
@@ -648,6 +660,8 @@ private:
 
     uint8_t mBeaconSequence;
     uint8_t mDataSequence;
+    bool mRadioOn;
+    bool mDisableRadioOnIdle;
     bool mRxOnWhenIdle;
     uint8_t mCsmaAttempts;
     uint8_t mTransmitAttempts;
