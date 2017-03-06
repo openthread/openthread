@@ -92,13 +92,14 @@ public:
      * This method adds a Joiner entry.
      *
      * @param[in]  aExtAddress      A pointer to the Joiner's extended address or NULL for any Joiner.
-     * @param[in]  aPSKd            A pointer to the PSKd
+     * @param[in]  aPSKd            A pointer to the PSKd.
+     * @param[in]  aTimeout         A time after which a Joiner is automatically removed, in seconds.
      *
      * @retval kThreadError_None    Successfully added the Joiner.
      * @retval kThreadError_NoBufs  No buffers available to add the Joiner.
      *
      */
-    ThreadError AddJoiner(const Mac::ExtAddress *aExtAddress, const char *aPSKd);
+    ThreadError AddJoiner(const Mac::ExtAddress *aExtAddress, const char *aPSKd, uint32_t aTimeout);
 
     /**
      * This method removes a Joiner entry.
@@ -148,22 +149,6 @@ public:
      *
      */
     uint8_t GetState(void) const;
-
-    /**
-     * This method sets Joiner timeout.
-     *
-     * @param[in]  aTimeout  A time after which Joiners are automatically removed, in seconds.
-     *
-     */
-    void SetJoinerTimeout(uint32_t aTimeout) { mJoinerTimeout = aTimeout; };
-
-    /**
-     * This method gets current Joiner timeout.
-     *
-     * @returns  A time after which Joiners are automatically removed, in seconds.
-     *
-     */
-    uint32_t GetJoinerTimeout(void) { return mJoinerTimeout; };
 
     /**
      * This method sends MGMT_COMMISSIONER_GET.
@@ -219,7 +204,6 @@ private:
         kPetitionRetryCount   = 2,      ///< COMM_PET_RETRY_COUNT
         kPetitionRetryDelay   = 1,      ///< COMM_PET_RETRY_DELAY (seconds)
         kKeepAliveTimeout     = 50,     ///< TIMEOUT_COMM_PET (seconds)
-        kDefaultJoinerTimeout = 120,    ///< Default time after which Joiner is removed (seconds)
     };
 
     static void HandleTimer(void *aContext);
@@ -227,6 +211,8 @@ private:
 
     static void HandleJoinerExpirationTimer(void *aContext);
     void HandleJoinerExpirationTimer(void);
+
+    void UpdateJoinerExpirationTimer(void);
 
     static void HandleMgmtCommissionerSetResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                                   const otMessageInfo *aMessageInfo, ThreadError aResult);
@@ -285,7 +271,6 @@ private:
     };
     uint16_t mJoinerPort;
     uint16_t mJoinerRloc;
-    uint32_t mJoinerTimeout;
     Timer mJoinerExpirationTimer;
 
     Timer mTimer;

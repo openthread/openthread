@@ -53,9 +53,11 @@ ThreadError otCommissionerStop(otInstance *aInstance)
     return aInstance->mThreadNetif.GetCommissioner().Stop();
 }
 
-ThreadError otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aExtAddress, const char *aPSKd)
+ThreadError otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aExtAddress, const char *aPSKd,
+                                    uint32_t aTimeout)
 {
-    return aInstance->mThreadNetif.GetCommissioner().AddJoiner(static_cast<const Mac::ExtAddress *>(aExtAddress), aPSKd);
+    return aInstance->mThreadNetif.GetCommissioner().AddJoiner(static_cast<const Mac::ExtAddress *>(aExtAddress), aPSKd,
+                                                               aTimeout);
 }
 
 ThreadError otCommissionerRemoveJoiner(otInstance *aInstance, const otExtAddress *aExtAddress)
@@ -112,16 +114,6 @@ ThreadError otCommissionerGeneratePSKc(otInstance *aInstance, const char *aPassP
                                        const uint8_t *aExtPanId, uint8_t *aPSKc)
 {
     return aInstance->mThreadNetif.GetCommissioner().GeneratePSKc(aPassPhrase, aNetworkName, aExtPanId, aPSKc);
-}
-
-void otCommissionerSetJoinerTimeout(otInstance *aInstance, uint32_t aTimeout)
-{
-    aInstance->mThreadNetif.GetCommissioner().SetJoinerTimeout(aTimeout);
-}
-
-uint32_t otCommissionerGetJoinerTimeout(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetCommissioner().GetJoinerTimeout();
 }
 
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER

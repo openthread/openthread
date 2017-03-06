@@ -68,7 +68,6 @@ Commissioner::Commissioner(ThreadNetif &aThreadNetif):
     mState(kStateDisabled),
     mJoinerPort(0),
     mJoinerRloc(0),
-    mJoinerTimeout(kDefaultJoinerTimeout),
     mJoinerExpirationTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleJoinerExpirationTimer, this),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this),
     mSessionId(0),
@@ -201,7 +200,7 @@ void Commissioner::ClearJoiners(void)
     otLogFuncExit();
 }
 
-ThreadError Commissioner::AddJoiner(const Mac::ExtAddress *aExtAddress, const char *aPSKd)
+ThreadError Commissioner::AddJoiner(const Mac::ExtAddress *aExtAddress, const char *aPSKd, uint32_t aTimeout)
 {
     ThreadError error = kThreadError_NoBufs;
 
@@ -228,22 +227,9 @@ ThreadError Commissioner::AddJoiner(const Mac::ExtAddress *aExtAddress, const ch
 
         strncpy(mJoiners[i].mPsk, aPSKd, sizeof(mJoiners[i].mPsk) - 1);
         mJoiners[i].mValid = true;
-        mJoiners[i].mExpirationTime = Timer::GetNow() + Timer::SecToMsec(mJoinerTimeout);
+        mJoiners[i].mExpirationTime = Timer::GetNow() + Timer::SecToMsec(aTimeout);
 
-        if (mJoinerExpirationTimer.IsRunning())
-        {
-            uint32_t nextJoinerExpirationTime = mJoinerExpirationTimer.Gett0() + mJoinerExpirationTimer.Getdt();
-
-            // Restart the timer to a lower timeout if needed.
-            if (static_cast<int32_t>(nextJoinerExpirationTime - mJoiners[i].mExpirationTime) > 0)
-            {
-                mJoinerExpirationTimer.Start(Timer::SecToMsec(mJoinerTimeout));
-            }
-        }
-        else
-        {
-            mJoinerExpirationTimer.Start(Timer::SecToMsec(mJoinerTimeout));
-        }
+        UpdateJoinerExpirationTimer();
 
         SendCommissionerSet();
 
@@ -281,6 +267,8 @@ ThreadError Commissioner::RemoveJoiner(const Mac::ExtAddress *aExtAddress)
         }
 
         mJoiners[i].mValid = false;
+
+        UpdateJoinerExpirationTimer();
 
         SendCommissionerSet();
 
@@ -337,8 +325,8 @@ void Commissioner::HandleJoinerExpirationTimer(void *aContext)
 void Commissioner::HandleJoinerExpirationTimer(void)
 {
     uint32_t now = Timer::GetNow();
-    uint32_t nextTimeout = 0xffffffff;
 
+    // Remove expired Joiners.
     for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
     {
         if (!mJoiners[i].mValid)
@@ -346,26 +334,46 @@ void Commissioner::HandleJoinerExpirationTimer(void)
             continue;
         }
 
-        // Check if the Joiner has expired.
-        if (static_cast<int32_t>(now - mJoiners[i].mExpirationTime) < 0)
+        if (static_cast<int32_t>(now - mJoiners[i].mExpirationTime) >= 0)
         {
-            // If not, update next timeout value to the lowest one.
-            if (mJoiners[i].mExpirationTime - now < nextTimeout)
-            {
-                nextTimeout = mJoiners[i].mExpirationTime - now;
-            }
-        }
-        else
-        {
-            // Otherwise remove the Joiner.
             otLogDebgMeshCoP("removing joiner due to timeout");
             RemoveJoiner(&mJoiners[i].mExtAddress);
         }
     }
 
+    UpdateJoinerExpirationTimer();
+}
+
+void Commissioner::UpdateJoinerExpirationTimer(void)
+{
+    uint32_t now = Timer::GetNow();
+    uint32_t nextTimeout = 0xffffffff;
+
+    // Check if timer should be set for next Joiner.
+    for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
+    {
+        {
+            if (!mJoiners[i].mValid)
+            {
+                continue;
+            }
+
+            if (mJoiners[i].mExpirationTime - now < nextTimeout)
+            {
+                nextTimeout = mJoiners[i].mExpirationTime - now;
+            }
+        }
+    }
+
     if (nextTimeout != 0xffffffff)
     {
+        // Update the timer to the timeout of the next Joiner.
         mJoinerExpirationTimer.Start(nextTimeout);
+    }
+    else
+    {
+        // No Joiners, stop the timer.
+        mJoinerExpirationTimer.Stop();
     }
 }
 

@@ -75,6 +75,7 @@ OTAPI ThreadError OTCALL otCommissionerStop(otInstance *aInstance);
  * @param[in]  aInstance             A pointer to an OpenThread instance.
  * @param[in]  aExtAddress           A pointer to the Joiner's extended address or NULL for any Joiner.
  * @param[in]  aPSKd                 A pointer to the PSKd.
+ * @param[in]  aTimeout              A time after which a Joiner is automatically removed, in seconds.
  *
  * @retval kThreadError_None         Successfully added the Joiner.
  * @retval kThreadError_NoBufs       No buffers available to add the Joiner.
@@ -82,7 +83,7 @@ OTAPI ThreadError OTCALL otCommissionerStop(otInstance *aInstance);
  *
  */
 OTAPI ThreadError OTCALL otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aExtAddress,
-                                                 const char *aPSKd);
+                                                 const char *aPSKd, uint32_t aTimeout);
 
 /**
  * This function removes a Joiner entry.
@@ -241,25 +242,6 @@ OTAPI uint16_t OTCALL otCommissionerGetSessionId(otInstance *);
 OTAPI ThreadError OTCALL otCommissionerGeneratePSKc(otInstance *aInstance, const char *aPassPhrase,
                                                     const char *aNetworkName, const uint8_t *aExtPanId,
                                                     uint8_t *aPSKc);
-
-/**
- * This method sets Joiner timeout.
- *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aTimeout   A time after which Joiners are automatically removed, in seconds.
- *
- */
-OTAPI void OTCALL otCommissionerSetJoinerTimeout(otInstance *aInstance, uint32_t aTimeout);
-
-/**
- * This method gets current Joiner timeout.
- *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- *
- * @returns  A time after which Joiners are automatically removed, in seconds.
- *
- */
-OTAPI uint32_t OTCALL otCommissionerGetJoinerTimeout(otInstance *aInstance);
 
 /**
  * @}
