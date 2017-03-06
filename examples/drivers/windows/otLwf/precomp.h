@@ -76,6 +76,7 @@ RtlCopyBufferToMdl(
 #include <openthread/platform/misc.h>
 #include <openthread/platform/alarm.h>
 #include <openthread/platform/settings.h>
+#include <openthread/platform/messagepool.h>
 #include <ncp/spinel.h>
 
 #include <otLwfIoctl.h>

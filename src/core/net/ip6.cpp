@@ -54,6 +54,7 @@ Ip6::Ip6(void):
     mIcmp(*this),
     mUdp(*this),
     mMpl(*this),
+    mMessagePool(GetInstance()),
     mForwardingEnabled(false),
     mSendQueueTask(mTaskletScheduler, HandleSendQueue, this),
     mReceiveIp6DatagramCallback(NULL),

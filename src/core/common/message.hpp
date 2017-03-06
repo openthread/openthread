@@ -1053,7 +1053,7 @@ public:
      * This constructor initializes the object.
      *
      */
-    MessagePool(void);
+    MessagePool(otInstance *aInstance);
 
     /**
      * This method is used to obtain a new message. The default priority `kDefaultMessagePriority`
@@ -1103,7 +1103,7 @@ public:
      *
      */
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
-    uint16_t GetFreeBufferCount(void) const { return otPlatMessagePoolNumFreeBuffers(); }
+    uint16_t GetFreeBufferCount(void) const { return otPlatMessagePoolNumFreeBuffers(mInstance); }
 #else
     uint16_t GetFreeBufferCount(void) const { return mNumFreeBuffers; }
 #endif
@@ -1123,6 +1123,8 @@ private:
     uint16_t mNumFreeBuffers;
     Buffer   mBuffers[kNumBuffers];
     Buffer   *mFreeBuffers;
+#else
+    otInstance *mInstance;
 #endif
     PriorityQueue mAllQueue;
 };

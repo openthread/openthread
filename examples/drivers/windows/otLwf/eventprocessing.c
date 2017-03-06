@@ -1090,28 +1090,7 @@ otLwfEventWorkerThread(
 
 exit:
 
-    if (pFilter->otCtx != NULL)
-    {
-        otInstanceFinalize(pFilter->otCtx);
-        pFilter->otCtx = NULL;
-        
-#if DEBUG_ALLOC
-        {
-            NT_ASSERT(pFilter->otOutstandingAllocationCount == 0);
-            NT_ASSERT(pFilter->otOutstandingMemoryAllocated == 0);
-            PLIST_ENTRY Link = pFilter->otOutStandingAllocations.Flink;
-            while (Link != &pFilter->otOutStandingAllocations)
-            {
-                OT_ALLOC* AllocHeader = CONTAINING_RECORD(Link, OT_ALLOC, Link);
-                Link = Link->Flink;
-
-                LogVerbose(DRIVER_DEFAULT, "Leaked Alloc ID:%u", AllocHeader->ID);
-            
-                ExFreePoolWithTag(AllocHeader, 'OTDM');
-            }
-        }
-#endif
-    }
+    otLwfReleaseInstance(pFilter);
 
     if (pFilter->otInstanceBuffer != NULL)
     {

@@ -64,6 +64,16 @@ otLwfUninitializeThreadMode(
     );
 
 //
+// Clean up otInstance
+//
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+void
+otLwfReleaseInstance(
+    _In_ PMS_FILTER pFilter
+    );
+
+//
 // Event Processing Functions
 //
 
