@@ -45,11 +45,6 @@ using namespace Windows::UI::Xaml::Navigation;
 #define GUID_FORMAT L"{%08lX-%04hX-%04hX-%02hhX%02hhX-%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX}"
 #define GUID_ARG(guid) guid.Data1, guid.Data2, guid.Data3, guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3], guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]
 
-#define MAC8_FORMAT L"%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X"
-#define MAC8_ARG(mac) mac[0], mac[1], mac[2], mac[3], mac[4], mac[5], mac[6], mac[7]
-
-#define LOGGING 1
-
 void otLog(PCSTR aFormat, ...)
 {
     va_list args;
@@ -156,16 +151,15 @@ void MainPage::ShowInterfaceDetails(otAdapter^ adapter)
 {
     try
     {
-        InterfaceMacAddress->Text = adapter->ExtendedAddress.ToString();
+        InterfaceMacAddress->Text = otApi::ToString(adapter->ExtendedAddress);
         InterfaceML_EID->Text = adapter->MeshLocalEid->ToString();
-        InterfaceRLOC->Text = adapter->Rloc16.ToString();
+        InterfaceRLOC->Text = otApi::ToString(adapter->Rloc16);
 
-        /* TODO
-        if (otGetDeviceRole(device) > kDeviceRoleChild)
+        if (adapter->State > otThreadState::Child)
         {
             uint8_t index = 0;
             otChildInfo childInfo;
-            while (kThreadError_None == otGetChildInfoByIndex(device, index, &childInfo))
+            while (kThreadError_None == otThreadGetChildInfoByIndex((otInstance*)(void*)adapter->RawHandle, index, &childInfo))
             {
                 index++;
             }
@@ -180,7 +174,7 @@ void MainPage::ShowInterfaceDetails(otAdapter^ adapter)
             InterfaceNeighborsText->Visibility = Windows::UI::Xaml::Visibility::Visible;
             InterfaceChildren->Visibility = Windows::UI::Xaml::Visibility::Visible;
             InterfaceChildrenText->Visibility = Windows::UI::Xaml::Visibility::Visible;
-        }*/
+        }
 
         // Show the details
         InterfaceDetails->Visibility = Windows::UI::Xaml::Visibility::Visible;
@@ -255,18 +249,21 @@ void MainPage::AddAdapterToList(otAdapter^ adapter)
             [=]() {
                 GUID interfaceGuid = adapter->InterfaceGuid;
                 auto state = adapter->State;
+                auto stateStr = otApi::ToString(adapter->State);
 
                 WCHAR szText[256] = { 0 };
-                swprintf_s(szText, 256, L"%s\r\n\t" GUID_FORMAT L"\r\n\t%s",
-                    L"openthread interface", // TODO ...
+                swprintf_s(szText, 256, GUID_FORMAT L"\r\n\t%s\r\n\t%s",
                     GUID_ARG(interfaceGuid),
-                    state->Data());
+                    stateStr->Data(),
+                    state >= otThreadState::Child ? 
+                        adapter->MeshLocalEid->ToString()->Data() : 
+                        L"");
 
                 InterfaceTextBlock->Text = ref new String(szText);
 
-                otLog("%S state = %S\n", InterfaceStackPanel->Name->Data(), state->Data());
+                otLog("%S state = %S\n", InterfaceStackPanel->Name->Data(), stateStr->Data());
 
-                if (state == "Disabled")
+                if (state == otThreadState::Disabled)
                 {
                     ConnectButton->Visibility = Windows::UI::Xaml::Visibility::Visible;
                     DetailsButton->Visibility = Windows::UI::Xaml::Visibility::Collapsed;
@@ -297,6 +294,23 @@ void MainPage::AddAdapterToList(otAdapter^ adapter)
                     }
                 );
 
+        // Register for address change callbacks
+        auto adapterMeshLocalAddresChangedToken =
+            adapter->IpMeshLocalAddresChanged +=
+                ref new otIpMeshLocalAddresChangedDelegate(
+                    [=](auto sender) {
+                        // Update the text on the UI thread
+                        this->Dispatcher->RunAsync(
+                            Windows::UI::Core::CoreDispatcherPriority::Normal,
+                            ref new Windows::UI::Core::DispatchedHandler(
+                                [=]() {
+                                    OnAdapterRoleChanged();
+                                }
+                            )
+                        );
+                    }
+                );
+
         // Register for adapter removal callbacks
         Windows::Foundation::EventRegistrationToken adapterRemovalToken;
         adapterRemovalToken =
@@ -305,6 +319,7 @@ void MainPage::AddAdapterToList(otAdapter^ adapter)
                     [=](otAdapter^ adapter) {
                         // Unregister
                         adapter->NetRoleChanged -= adapterRoleChangedToken;
+                        adapter->IpMeshLocalAddresChanged -= adapterMeshLocalAddresChangedToken;
                         adapter->AdapterRemoval -= adapterRemovalToken;
 
                         // Remove the item on the UI thread

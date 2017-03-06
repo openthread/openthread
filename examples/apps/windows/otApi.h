@@ -35,11 +35,15 @@ using namespace Platform;
 using namespace Platform::Collections;
 using namespace Windows::Foundation::Collections;
 
+#define MAC8_FORMAT L"%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X"
+#define MAC8_ARG(mac) mac[0], mac[1], mac[2], mac[3], mac[4], mac[5], mac[6], mac[7]
+
 namespace Thread
 {
 
 public delegate void otAdapterArrivalDelegate(otAdapter^ aAdapter);
 
+// Helper class for OpenThread API
 public ref class otApi sealed
 {
 private:
@@ -147,8 +151,40 @@ public:
         return ret;
     }
 
+    // Helper function to convert mac address to string
+    static String^ ToString(uint64_t mac)
+    {
+        WCHAR szMac[64] = { 0 };
+        swprintf_s(szMac, 64, MAC8_FORMAT, MAC8_ARG(((UCHAR*)&mac)));
+        return ref new String(szMac);
+    }
+
+    // Helper function to convert RLOC16/PANID to string
+    static String^ ToString(uint16_t rloc)
+    {
+        WCHAR szRloc[16] = { 0 };
+        swprintf_s(szRloc, 16, L"0x%X", rloc);
+        return ref new String(szRloc);
+    }
+
+    // Helper function to convert state to string
+    static String^ ToString(otThreadState state)
+    {
+        switch (state)
+        {
+        default:
+        case otThreadState::Offline:    return L"Offline";
+        case otThreadState::Disabled:   return L"Disabled";
+        case otThreadState::Detached:   return L"Disconnected";
+        case otThreadState::Child:      return L"Connected - Child";
+        case otThreadState::Router:     return L"Connected - Router";
+        case otThreadState::Leader:     return L"Connected - Leader";
+        }
+    }
+
 private:
 
+    // Callback from OpenThread indicating arrival or removal of interfaces
     static void OTCALL
     ThreadDeviceAvailabilityCallback(
         bool        aAdded,

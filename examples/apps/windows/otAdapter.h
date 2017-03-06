@@ -74,6 +74,17 @@ public enum class otLinkModeFlags : unsigned int
     NetworkData         = 0x8   /* 1, if the sender requires the full Network Data.  0, otherwise. */
 };
 
+public enum class otThreadState
+{
+    Offline,
+    Disabled,
+    Detached,
+    Child,
+    Router,
+    Leader
+};
+
+// Helper class for OpenThread Interface/Adapter specific APIs
 public ref class otAdapter sealed
 {
 private:
@@ -435,21 +446,11 @@ public:
         uint16_t get() { return otThreadGetRloc16(DeviceInstance); }
     }
 
-    property String^ State
+    property otThreadState State
     {
-        String^ get()
+        otThreadState get()
         {
-            switch (otThreadGetDeviceRole(DeviceInstance))
-            {
-            case kDeviceRoleOffline:    return L"Offline";
-            case kDeviceRoleDisabled:   return L"Disabled";
-            case kDeviceRoleDetached:   return L"Disconnected";
-            case kDeviceRoleChild:      return L"Connected - Child";
-            case kDeviceRoleRouter:     return L"Connected - Router";
-            case kDeviceRoleLeader:     return L"Connected - Leader";
-            }
-
-            throw Exception::CreateException(E_INVALIDARG);
+            return (otThreadState)otThreadGetDeviceRole(DeviceInstance);
         }
     }
 
