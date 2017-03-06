@@ -319,6 +319,12 @@ extern "C" {
         return kThreadError_NotImplemented;
     }
 
+    void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+    {
+        (void)aInstance;
+        (void)aPower;
+    }
+
     //
     // Random
     //

@@ -254,15 +254,26 @@ ThreadError otPlatRadioSleep(otInstance *aInstance);
 ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel);
 
 /**
- * Enable/Disable source match for AutoPend.
+ * Enable/Disable source address match feature.
+ *
+ * The source address match feature controls how the radio layer decides the "frame pending" bit for acks sent in
+ * response to data request commands from children.
+ *
+ * If disabled, the radio layer must set the "frame pending" on all acks to data request commands.
+ *
+ * If enabled, the radio layer uses the source address match table to determine whether to set or clear the "frame
+ * pending" bit in an ack to a data request command.
+ *
+ * The source address match table provides the list of children for which there is a pending frame. Either a short
+ * address or an extended/long address can be added to the source address match table.
  *
  * @param[in]  aInstance   The OpenThread instance structure.
- * @param[in]  aEnable     Enable/disable source match for automatical pending.
+ * @param[in]  aEnable     Enable/disable source address match feature.
  */
 void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable);
 
 /**
- * Adding short address to the source match table.
+ * Add a short address to the source address match table.
  *
  * @param[in]  aInstance      The OpenThread instance structure.
  * @param[in]  aShortAddress  The short address to be added.
@@ -273,7 +284,7 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable);
 ThreadError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress);
 
 /**
- * Adding extended address to the source match table.
+ * Add an extended address to the source address match table.
  *
  * @param[in]  aInstance    The OpenThread instance structure.
  * @param[in]  aExtAddress  The extended address to be added.
@@ -284,29 +295,29 @@ ThreadError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16
 ThreadError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress);
 
 /**
- * Removing short address to the source match table.
+ * Remove a short address from the source address match table.
  *
  * @param[in]  aInstance      The OpenThread instance structure.
  * @param[in]  aShortAddress  The short address to be removed.
  *
  * @retval ::kThreadError_None        Successfully removed short address from the source match table.
- * @retval ::kThreadError_NoAddress   The short address is not in source match table.
+ * @retval ::kThreadError_NoAddress   The short address is not in source address match table.
  */
 ThreadError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress);
 
 /**
- * Removing extended address to the source match table of the radio.
+ * Remove an extended address from the source address match table.
  *
  * @param[in]  aInstance    The OpenThread instance structure.
  * @param[in]  aExtAddress  The extended address to be removed.
  *
  * @retval ::kThreadError_None        Successfully removed the extended address from the source match table.
- * @retval ::kThreadError_NoAddress   The extended address is not in source match table.
+ * @retval ::kThreadError_NoAddress   The extended address is not in source address match table.
  */
 ThreadError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress);
 
 /**
- * Removing all the short addresses from the source match table.
+ * Clear all short addresses from the source address match table.
  *
  * @param[in]  aInstance   The OpenThread instance structure.
  *
@@ -314,7 +325,7 @@ ThreadError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_
 void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance);
 
 /**
- * Removing all the extended addresses from the source match table.
+ * Clear all the extended/long addresses from source address match table.
  *
  * @param[in]  aInstance   The OpenThread instance structure.
  *
@@ -395,6 +406,15 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance);
  * @returns The radio capability bit vector. The stack enables or disables some functions based on this value.
  */
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance);
+
+/**
+ * Set the radio Tx power used for auto-generated frames.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ * @param[in] aPower     The Tx power to use in dBm.
+ *
+ */
+void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower);
 
 /**
  * Get the status of promiscuous mode.

@@ -140,10 +140,28 @@
     <ClCompile Include="..\..\src\core\utils\jam_detector.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\openthread.h" />
+    <ClInclude Include="..\..\examples\drivers\windows\include\openthread-core-windows-config.h" />
+    <ClInclude Include="..\..\include\openthread\coap.h" />
+    <ClInclude Include="..\..\include\openthread\commissioner.h" />
+    <ClInclude Include="..\..\include\openthread\crypto.h" />
+    <ClInclude Include="..\..\include\openthread\dataset.h" />
+    <ClInclude Include="..\..\include\openthread\dhcp6_client.h" />
+    <ClInclude Include="..\..\include\openthread\dhcp6_server.h" />
+    <ClInclude Include="..\..\include\openthread\icmp6.h" />
+    <ClInclude Include="..\..\include\openthread\instance.h" />
+    <ClInclude Include="..\..\include\openthread\ip6.h" />
+    <ClInclude Include="..\..\include\openthread\jam_detection.h" />
+    <ClInclude Include="..\..\include\openthread\joiner.h" />
+    <ClInclude Include="..\..\include\openthread\link.h" />
+    <ClInclude Include="..\..\include\openthread\message.h" />
+    <ClInclude Include="..\..\include\openthread\netdata.h" />
+    <ClInclude Include="..\..\include\openthread\openthread.h" />
+    <ClInclude Include="..\..\include\openthread\tasklet.h" />
+    <ClInclude Include="..\..\include\openthread\thread.h" />
     <ClInclude Include="..\..\include\openthread\types.h" />
     <ClInclude Include="..\..\include\openthread-windows-config.h" />
-    <ClInclude Include="..\..\include\openthread\link_raw.h" />
+    <ClInclude Include="..\..\include\openthread\udp.h" />
+    <ClInclude Include="..\..\src\core\api\link_raw.hpp" />
     <ClInclude Include="..\..\src\core\coap\coap_base.hpp" />
     <ClInclude Include="..\..\src\core\coap\coap_client.hpp" />
     <ClInclude Include="..\..\src\core\coap\coap_header.hpp" />
@@ -201,7 +219,6 @@
     <ClInclude Include="..\..\src\core\net\udp6.hpp" />
     <ClInclude Include="..\..\src\core\openthread-core-config.h" />
     <ClInclude Include="..\..\src\core\openthread-core-default-config.h" />
-    <ClInclude Include="..\..\src\core\openthread-core-windows-config.h" />
     <ClInclude Include="..\..\src\core\openthread-instance.h" />
     <ClInclude Include="..\..\src\core\thread\address_resolver.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\announce_begin_server.hpp" />

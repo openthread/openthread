@@ -91,6 +91,7 @@ int8_t otLinkGetMaxTransmitPower(otInstance *aInstance)
 void otLinkSetMaxTransmitPower(otInstance *aInstance, int8_t aPower)
 {
     aInstance->mThreadNetif.GetMac().SetMaxTransmitPower(aPower);
+    otPlatRadioSetDefaultTxPower(aInstance, aPower);
 }
 
 otPanId otLinkGetPanId(otInstance *aInstance)

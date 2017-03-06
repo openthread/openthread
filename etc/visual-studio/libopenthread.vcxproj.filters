@@ -58,6 +58,9 @@
     <Filter Include="Header Files\utils">
       <UniqueIdentifier>{5ac96cb9-6257-4387-9238-27649915463a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\api">
+      <UniqueIdentifier>{25a5662d-0709-4698-8fd9-3abfde8f0fc6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\core\api\commissioner_api.cpp">
@@ -285,14 +288,11 @@
     <ClCompile Include="..\..\src\core\common\crc16.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\thread\network_diagnostic.cpp">
+      <Filter>Source Files\thread</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\core\openthreadcontext.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\openthread-core-config.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\core\coap\coap_base.hpp">
       <Filter>Header Files\coap</Filter>
     </ClInclude>
@@ -440,12 +440,6 @@
     <ClInclude Include="..\..\src\core\thread\network_data_tlvs.hpp">
       <Filter>Header Files\thread</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\thread\network_diag.hpp">
-      <Filter>Header Files\thread</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\thread\network_diag_tlvs.hpp">
-      <Filter>Header Files\thread</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\core\thread\panid_query_server.hpp">
       <Filter>Header Files\thread</Filter>
     </ClInclude>
@@ -529,6 +523,15 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\common\crc16.hpp">
       <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread\link_raw.h">
+      <Filter>Header Files\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\thread\network_diagnostic.hpp">
+      <Filter>Header Files\thread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\thread\network_diagnostic_tlvs.hpp">
+      <Filter>Header Files\thread</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

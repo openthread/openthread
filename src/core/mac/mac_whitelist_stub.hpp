@@ -50,11 +50,9 @@ public:
 
     Whitelist(void) { }
 
-    void Enable(void) { }
-
-    void Disable(void) { }
-
     bool IsEnabled(void) const { return false; }
+
+    void SetEnabled(bool) { }
 
     int GetMaxEntries(void) const { return 0; }
 
