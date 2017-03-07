@@ -55,7 +55,7 @@ using Thread::Encoding::BigEndian::HostSwap16;
 namespace Thread {
 
 MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
-    mMacReceiver(&MeshForwarder::HandleReceivedFrame, this),
+    mMacReceiver(&MeshForwarder::HandleReceivedFrame, &MeshForwarder::HandleDataPollTimeout, this),
     mMacSender(&MeshForwarder::HandleFrameRequest, &MeshForwarder::HandleSentFrame, this),
     mDiscoverTimer(aThreadNetif.GetIp6().mTimerScheduler, &MeshForwarder::HandleDiscoverTimer, this),
     mPollTimer(aThreadNetif.GetIp6().mTimerScheduler, &MeshForwarder::HandlePollTimer, this),
@@ -76,6 +76,7 @@ MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
     mRestoreChannel(0),
     mRestorePanId(Mac::kPanIdBroadcast),
     mScanning(false),
+    mBacktoBackPollTimeoutCounter(0),
     mNetif(aThreadNetif),
     mSrcMatchEnabled(false)
 {
@@ -1821,6 +1822,8 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
         ExitNow(error = kThreadError_InvalidState);
     }
 
+    mBacktoBackPollTimeoutCounter = 0;
+
     SuccessOrExit(error = aFrame.GetSrcAddr(macSource));
     SuccessOrExit(aFrame.GetDstAddr(macDest));
 
@@ -2191,6 +2194,25 @@ void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const Thre
 
 exit:
     {}
+}
+
+void MeshForwarder::HandleDataPollTimeout(void *aContext)
+{
+    static_cast<MeshForwarder *>(aContext)->HandleDataPollTimeout();
+}
+
+void MeshForwarder::HandleDataPollTimeout(void)
+{
+    mBacktoBackPollTimeoutCounter++;
+
+    if (mBacktoBackPollTimeoutCounter <= kQuickPollsAfterTimout)
+    {
+        SendMacDataRequest();
+    }
+    else
+    {
+        mBacktoBackPollTimeoutCounter = 0;
+    }
 }
 
 }  // namespace Thread
