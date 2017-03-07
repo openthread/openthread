@@ -87,6 +87,13 @@ packed unsigned integer format described in (#packed-unsigned-integer), followed
 the value to be inserted. The exact format of the value is defined by
 the property.
 
+If the type signature of the property specified by `PROP_ID` consists
+of a single structure enclosed by an array (`A(t(...))`), then the
+contents of `VALUE` MUST contain the contents of the structure (`...`)
+rather than the serialization of the whole item (`t(...)`).  Specifically,
+the length of the structure MUST NOT be prepended to `VALUE`. This
+helps to eliminate redundant data.
+
 If an error occurs, the value of `PROP_LAST_STATUS` will be emitted
 with the value set to the generated status code for the error.
 
@@ -109,6 +116,13 @@ The payload for this command is the property identifier encoded in the
 packed unsigned integer format described in (#packed-unsigned-integer), followed by
 the value to be removed. The exact format of the value is defined by
 the property.
+
+If the type signature of the property specified by `PROP_ID` consists
+of a single structure enclosed by an array (`A(t(...))`), then the
+contents of `VALUE` MUST contain the contents of the structure (`...`)
+rather than the serialization of the whole item (`t(...)`).  Specifically,
+the length of the structure MUST NOT be prepended to `VALUE`. This
+helps to eliminate redundant data.
 
 If an error occurs, the value of `PROP_LAST_STATUS` will be emitted
 with the value set to the generated status code for the error.
@@ -146,6 +160,13 @@ The payload for this command is the property identifier encoded in the
 packed unsigned integer format described in (#packed-unsigned-integer), followed by
 the value that was inserted into the given property.
 
+If the type signature of the property specified by `PROP_ID` consists
+of a single structure enclosed by an array (`A(t(...))`), then the
+contents of `VALUE` MUST contain the contents of the structure (`...`)
+rather than the serialization of the whole item (`t(...)`).  Specifically,
+the length of the structure MUST NOT be prepended to `VALUE`. This
+helps to eliminate redundant data.
+
 The resulting order of items in the list is defined by the given
 property.
 
@@ -165,6 +186,13 @@ Note that this command operates *by value*, not by index!
 The payload for this command is the property identifier encoded in the
 packed unsigned integer format described in (#packed-unsigned-integer), followed by
 the value that was removed from the given property.
+
+If the type signature of the property specified by `PROP_ID` consists
+of a single structure enclosed by an array (`A(t(...))`), then the
+contents of `VALUE` MUST contain the contents of the structure (`...`)
+rather than the serialization of the whole item (`t(...)`).  Specifically,
+the length of the structure MUST NOT be prepended to `VALUE`. This
+helps to eliminate redundant data.
 
 The resulting order of items in the list is defined by the given
 property.
@@ -240,7 +268,7 @@ individual property with `STATUS_INVALID_COMMAND_FOR_PROP`.
 
 ## CMD 22: (Host->NCP) CMD_PROP_VALUE_MULTI_SET {#prop-value-multi-set}
 
-*   Argument-Encoding: `A(T(iD))`
+*   Argument-Encoding: `A(iD)`
 *   Required Capability: `CAP_CMD_MULTI`
 
 Octets: |    1   |          1               |   *n*
@@ -273,7 +301,7 @@ individual property with `STATUS_INVALID_COMMAND_FOR_PROP`.
 
 ## CMD 23: (NCP->Host) CMD_PROP_VALUES_ARE {#prop-values-are}
 
-*   Argument-Encoding: `A(T(iD))`
+*   Argument-Encoding: `A(iD)`
 *   Required Capability: `CAP_CMD_MULTI`
 
 Octets: |    1   |          1          |   *n*

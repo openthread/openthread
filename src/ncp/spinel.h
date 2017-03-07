@@ -69,7 +69,7 @@
 // ----------------------------------------------------------------------------
 
 #define SPINEL_PROTOCOL_VERSION_THREAD_MAJOR    4
-#define SPINEL_PROTOCOL_VERSION_THREAD_MINOR    2
+#define SPINEL_PROTOCOL_VERSION_THREAD_MINOR    3
 
 #define SPINEL_FRAME_MAX_SIZE                   1300
 
@@ -583,7 +583,7 @@ typedef enum
     SPINEL_PROP_MAC_SCAN_STATE         = SPINEL_PROP_MAC__BEGIN + 0, ///< [C]
     SPINEL_PROP_MAC_SCAN_MASK          = SPINEL_PROP_MAC__BEGIN + 1, ///< [A(C)]
     SPINEL_PROP_MAC_SCAN_PERIOD        = SPINEL_PROP_MAC__BEGIN + 2, ///< ms-per-channel [S]
-    SPINEL_PROP_MAC_SCAN_BEACON        = SPINEL_PROP_MAC__BEGIN + 3, ///< chan,rssi,(laddr,saddr,panid,lqi),(proto,xtra) [CcT(ESSC.)T(i).]
+    SPINEL_PROP_MAC_SCAN_BEACON        = SPINEL_PROP_MAC__BEGIN + 3, ///< chan,rssi,mac_data,net_data [CcdD]
     SPINEL_PROP_MAC_15_4_LADDR         = SPINEL_PROP_MAC__BEGIN + 4, ///< [E]
     SPINEL_PROP_MAC_15_4_SADDR         = SPINEL_PROP_MAC__BEGIN + 5, ///< [S]
     SPINEL_PROP_MAC_15_4_PANID         = SPINEL_PROP_MAC__BEGIN + 6, ///< [S]
@@ -594,7 +594,7 @@ typedef enum
 
     SPINEL_PROP_MAC_EXT__BEGIN         = 0x1300,
     /// MAC Whitelist
-    /** Format: `A(T(Ec))`
+    /** Format: `A(t(Ec))`
      *
      * Structure Parameters:
      *
@@ -674,7 +674,7 @@ typedef enum
     SPINEL_PROP_THREAD__BEGIN          = 0x50,
     SPINEL_PROP_THREAD_LEADER_ADDR     = SPINEL_PROP_THREAD__BEGIN + 0, ///< [6]
     SPINEL_PROP_THREAD_PARENT          = SPINEL_PROP_THREAD__BEGIN + 1, ///< LADDR, SADDR [ES]
-    SPINEL_PROP_THREAD_CHILD_TABLE     = SPINEL_PROP_THREAD__BEGIN + 2, ///< array(EUI64,rloc16,timeout,age,netDataVer,inLqi,aveRSS,mode) [A(T(ESLLCCcC))]
+    SPINEL_PROP_THREAD_CHILD_TABLE     = SPINEL_PROP_THREAD__BEGIN + 2, ///< array(EUI64,rloc16,timeout,age,netDataVer,inLqi,aveRSS,mode) [A(t(ESLLCCcC))]
     SPINEL_PROP_THREAD_LEADER_RID      = SPINEL_PROP_THREAD__BEGIN + 3, ///< [C]
     SPINEL_PROP_THREAD_LEADER_WEIGHT   = SPINEL_PROP_THREAD__BEGIN + 4, ///< [C]
     SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT
@@ -686,8 +686,8 @@ typedef enum
                                        = SPINEL_PROP_THREAD__BEGIN + 8, ///< [D]
     SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION
                                        = SPINEL_PROP_THREAD__BEGIN + 9,  ///< [S]
-    SPINEL_PROP_THREAD_ON_MESH_NETS    = SPINEL_PROP_THREAD__BEGIN + 10, ///< array(ipv6prefix,prefixlen,stable,flags) [A(T(6CbC))]
-    SPINEL_PROP_THREAD_LOCAL_ROUTES    = SPINEL_PROP_THREAD__BEGIN + 11, ///< array(ipv6prefix,prefixlen,stable,flags) [A(T(6CbC))]
+    SPINEL_PROP_THREAD_ON_MESH_NETS    = SPINEL_PROP_THREAD__BEGIN + 10, ///< array(ipv6prefix,prefixlen,stable,flags) [A(t(6CbC))]
+    SPINEL_PROP_THREAD_LOCAL_ROUTES    = SPINEL_PROP_THREAD__BEGIN + 11, ///< array(ipv6prefix,prefixlen,stable,flags) [A(t(6CbC))]
     SPINEL_PROP_THREAD_ASSISTING_PORTS = SPINEL_PROP_THREAD__BEGIN + 12, ///< array(portn) [A(S)]
     SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE
                                        = SPINEL_PROP_THREAD__BEGIN + 13, ///< [b]
@@ -776,7 +776,7 @@ typedef enum
                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 10,
 
     /// Thread Neighbor Table
-    /** Format: `A(T(ESLCcCbLL))`
+    /** Format: `A(t(ESLCcCbLL))`
      *  eui64, rloc16, age, inLqi ,aveRSS, mode, isChild. linkFrameCounter, mleCounter
      */
     SPINEL_PROP_THREAD_NEIGHBOR_TABLE  = SPINEL_PROP_THREAD_EXT__BEGIN + 11,
@@ -804,8 +804,8 @@ typedef enum
     SPINEL_PROP_IPV6_LL_ADDR         = SPINEL_PROP_IPV6__BEGIN + 0, ///< [6]
     SPINEL_PROP_IPV6_ML_ADDR         = SPINEL_PROP_IPV6__BEGIN + 1, ///< [6C]
     SPINEL_PROP_IPV6_ML_PREFIX       = SPINEL_PROP_IPV6__BEGIN + 2, ///< [6C]
-    SPINEL_PROP_IPV6_ADDRESS_TABLE   = SPINEL_PROP_IPV6__BEGIN + 3, ///< array(ipv6addr,prefixlen,valid,preferred,flags) [A(T(6CLLC))]
-    SPINEL_PROP_IPV6_ROUTE_TABLE     = SPINEL_PROP_IPV6__BEGIN + 4, ///< array(ipv6prefix,prefixlen,iface,flags) [A(T(6CCC))]
+    SPINEL_PROP_IPV6_ADDRESS_TABLE   = SPINEL_PROP_IPV6__BEGIN + 3, ///< array(ipv6addr,prefixlen,valid,preferred,flags) [A(t(6CLLC))]
+    SPINEL_PROP_IPV6_ROUTE_TABLE     = SPINEL_PROP_IPV6__BEGIN + 4, ///< array(ipv6prefix,prefixlen,iface,flags) [A(t(6CCC))]
 
 
     /// IPv6 ICMP Ping Offload
@@ -822,9 +822,9 @@ typedef enum
 
     SPINEL_PROP_STREAM__BEGIN       = 0x70,
     SPINEL_PROP_STREAM_DEBUG        = SPINEL_PROP_STREAM__BEGIN + 0, ///< [U]
-    SPINEL_PROP_STREAM_RAW          = SPINEL_PROP_STREAM__BEGIN + 1, ///< [D]
-    SPINEL_PROP_STREAM_NET          = SPINEL_PROP_STREAM__BEGIN + 2, ///< [D]
-    SPINEL_PROP_STREAM_NET_INSECURE = SPINEL_PROP_STREAM__BEGIN + 3, ///< [D]
+    SPINEL_PROP_STREAM_RAW          = SPINEL_PROP_STREAM__BEGIN + 1, ///< [dD]
+    SPINEL_PROP_STREAM_NET          = SPINEL_PROP_STREAM__BEGIN + 2, ///< [dD]
+    SPINEL_PROP_STREAM_NET_INSECURE = SPINEL_PROP_STREAM__BEGIN + 3, ///< [dD]
     SPINEL_PROP_STREAM__END         = 0x80,
 
 
@@ -1053,8 +1053,7 @@ typedef enum
                                        = SPINEL_PROP_CNTR__BEGIN + 303,
 
     /// The message buffer counter info
-    /** Format: `T(SSSSSSSSSSSSSSSS)` (Read-only)
-     *  `T(`
+    /** Format: `SSSSSSSSSSSSSSSS` (Read-only)
      *      `S`, (TotalBuffers)           The number of buffers in the pool.
      *      `S`, (FreeBuffers)            The number of free message buffers.
      *      `S`, (6loSendMessages)        The number of messages in the 6lo send queue.
@@ -1071,7 +1070,6 @@ typedef enum
      *      `S`, (ArpBuffers)             The number of buffers in the ARP send queue.
      *      `S`, (CoapClientMessages)     The number of messages in the CoAP client send queue.
      *      `S`, (CoapClientBuffers)      The number of buffers in the CoAP client send queue.
-     *  `)`
      */
     SPINEL_PROP_MSG_BUFFER_COUNTERS    = SPINEL_PROP_CNTR__BEGIN + 400,
 
@@ -1154,9 +1152,10 @@ enum
     SPINEL_DATATYPE_IPv6ADDR_C    = '6',
     SPINEL_DATATYPE_EUI64_C       = 'E',
     SPINEL_DATATYPE_EUI48_C       = 'e',
+    SPINEL_DATATYPE_DATA_WLEN_C   = 'd',
     SPINEL_DATATYPE_DATA_C        = 'D',
     SPINEL_DATATYPE_UTF8_C        = 'U', //!< Zero-Terminated UTF8-Encoded String
-    SPINEL_DATATYPE_STRUCT_C      = 'T',
+    SPINEL_DATATYPE_STRUCT_C      = 't',
     SPINEL_DATATYPE_ARRAY_C       = 'A',
 };
 
@@ -1175,10 +1174,43 @@ typedef char spinel_datatype_t;
 #define SPINEL_DATATYPE_IPv6ADDR_S    "6"
 #define SPINEL_DATATYPE_EUI64_S       "E"
 #define SPINEL_DATATYPE_EUI48_S       "e"
+#define SPINEL_DATATYPE_DATA_WLEN_S   "d"
 #define SPINEL_DATATYPE_DATA_S        "D"
 #define SPINEL_DATATYPE_UTF8_S        "U" //!< Zero-Terminated UTF8-Encoded String
-#define SPINEL_DATATYPE_STRUCT_S      "T"
-#define SPINEL_DATATYPE_ARRAY_S       "A"
+
+#define SPINEL_DATATYPE_ARRAY_S(x)        "A(" x ")"
+#define SPINEL_DATATYPE_STRUCT_S(x)       "t(" x ")"
+
+#define SPINEL_DATATYPE_ARRAY_STRUCT_S(x)                                     \
+        SPINEL_DATATYPE_ARRAY_S(SPINEL_DATATYPE_STRUCT_WLEN_S(x))
+
+#define SPINEL_DATATYPE_COMMAND_S                                             \
+        SPINEL_DATATYPE_UINT8_S       /* header  */                           \
+        SPINEL_DATATYPE_UINT_PACKED_S /* command */
+
+#define SPINEL_DATATYPE_COMMAND_PROP_S                                        \
+        SPINEL_DATATYPE_COMMAND_S     /* prop command  */                     \
+        SPINEL_DATATYPE_UINT_PACKED_S /* property id */
+
+#define SPINEL_DATATYPE_MAC_SCAN_RESULT_S(mac_format_str, net_format_str)     \
+        SPINEL_DATATYPE_UINT8_S /* Channel */                                 \
+        SPINEL_DATATYPE_INT8_S  /* RSSI */                                    \
+        SPINEL_DATATYPE_STRUCT_S(mac_format_str) /* mac-layer data */         \
+        SPINEL_DATATYPE_STRUCT_S(net_format_str) /* net-layer data */
+
+#define SPINEL_802_15_4_DATATYPE_MAC_SCAN_RESULT_V1_S                         \
+        SPINEL_DATATYPE_EUI64_S  /* laddr */                                  \
+        SPINEL_DATATYPE_UINT16_S /* saddr */                                  \
+        SPINEL_DATATYPE_UINT16_S /* panid */                                  \
+        SPINEL_DATATYPE_UINT8_S  /* lqi   */
+
+#define SPINEL_NET_DATATYPE_MAC_SCAN_RESULT_V1_S                              \
+        SPINEL_DATATYPE_UINT_PACKED_S /* type */                              \
+        SPINEL_DATATYPE_UINT8_S /* flags */                                   \
+        SPINEL_DATATYPE_UTF8_S /* network name */                             \
+        SPINEL_DATATYPE_DATA_WLEN_S /* xpanid */
+
+#define SPINEL_MAX_UINT_PACKED        2097151
 
 SPINEL_API_EXTERN spinel_ssize_t spinel_datatype_pack(uint8_t *data_out, spinel_size_t data_len,
                                                       const char *pack_format, ...);

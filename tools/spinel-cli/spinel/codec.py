@@ -84,8 +84,9 @@ TIMEOUT_PROP = 2
 #'E': DATATYPE_EUI64: EUI-64 Address. (Big-endian)
 #'e': DATATYPE_EUI48: EUI-48 Address. (Big-endian)
 #'D': DATATYPE_DATA: Arbitrary Data. (See section 7.3)
+#'d': DATATYPE_DATA_WLEN: Arbitrary Data with Prepended Length. (See section 7.3)
 #'U': DATATYPE_UTF8: Zero-terminated UTF8-encoded string.
-#'T': DATATYPE_STRUCT: Structured datatype. Compound type. (See section 7.4)
+#'t': DATATYPE_STRUCT: Structured datatype. Compound type. Length prepended. (See section 7.4)
 #'A': DATATYPE_ARRAY: Array of datatypes. Compound type. (See section 7.5)
 
 
@@ -123,10 +124,13 @@ class SpinelCodec(object):
     def parse_e(cls, payload): return payload[:6]
 
     @classmethod
-    def parse_U(cls, payload): return payload[:-1]  # strip null
+    def parse_U(cls, payload): return payload[:payload.index('\0')]  # strip null
 
     @classmethod
     def parse_D(cls, payload): return payload
+
+    @classmethod
+    def parse_d(cls, payload): return payload[2:unpack("<H", payload[:2])[0]]
 
     @classmethod
     def parse_i(cls, payload):
@@ -146,6 +150,27 @@ class SpinelCodec(object):
         return (value, value_len + 1)
 
     @classmethod
+    def parse_i_len(cls, payload):
+        """ Decode length of EXI integer format. """
+        return cls.parse_i(payload)[1];
+
+    @classmethod
+    def index_of_ending_brace(cls, spinel_format, idx):
+        """ Determines the index of the matching closing brace. """
+        count = 1
+        orig_idx = idx
+        while count > 0 and idx < len(spinel_format)-1:
+            idx += 1
+            if spinel_format[idx] == ')':
+                count -= 1
+            elif spinel_format[idx] == '(':
+                count += 1
+        if count != 0:
+            raise ValueError('Unbalanced parenthesis in format string "' + spinel_format + '", idx=' + idx)
+        return idx;
+
+
+    @classmethod
     def parse_field(cls, payload, spinel_format):
         map_decode = {
             'b': cls.parse_b,
@@ -160,6 +185,7 @@ class SpinelCodec(object):
             'e': cls.parse_e,
             'U': cls.parse_U,
             'D': cls.parse_D,
+            'd': cls.parse_d,
             'i': cls.parse_i,
         }
         try:
@@ -169,7 +195,7 @@ class SpinelCodec(object):
             return None
 
     @classmethod
-    def get_payload_size(cls, spinel_format):
+    def get_payload_size(cls, payload, spinel_format):
         map_lengths = {
             'b': 1,
             'c': 1,
@@ -189,16 +215,33 @@ class SpinelCodec(object):
         while idx < len(spinel_format):
             format = spinel_format[idx]
 
-            if format == 'T':
+            if format == 't':
                 if spinel_format[idx+1] != '(':
                     raise ValueError('Invalid structure format')
-                # TODO: count parentheses. There is a problem with nested structs.
-                struct_end = idx + spinel_format[idx:].index(')')
 
-                struct_format = spinel_format[idx+2:struct_end]
-                result += cls.get_payload_size(struct_format)
+                struct_end = cls.index_of_ending_brace(spinel_format, idx + 1);
 
+                result += 2 + cls.parse_S(payload[result:]);
                 idx = struct_end + 1
+
+            elif format == 'd':
+                result += 2 + cls.parse_S(payload[result:]);
+                idx += 1
+
+            elif format == 'D' or format == 'A':
+                if idx != len(spinel_format) - 1:
+                    raise ValueError('Invalid type syntax for "' + format + '", must go at end of format string')
+                result = len(payload);
+                idx += 1
+
+            elif format == 'U':
+                result += payload[result:].index(0) + 1;
+                idx += 1
+
+            elif format == 'i':
+                result += cls.parse_i_len(payload[result:])
+                idx += 1
+
             else:
                 result += map_lengths[format]
                 idx += 1
@@ -216,35 +259,36 @@ class SpinelCodec(object):
             if format == 'A':
                 if spinel_format[idx+1] != '(':
                     raise ValueError('Invalid structure format')
-                # TODO: count parentheses. There is a problem with arrays placed one by one.
-                array_end = idx + spinel_format[idx:].rindex(')')
+
+                array_end = cls.index_of_ending_brace(spinel_format, idx + 1);
 
                 array_format = spinel_format[idx+2:array_end]
 
                 array = []
                 while len(payload):
                     array.append(cls.parse_fields(payload, array_format))
-                    payload = payload[cls.get_payload_size(array_format):]
+                    payload = payload[cls.get_payload_size(payload, array_format):]
 
                 result.append(tuple(array))
                 idx = array_end + 1
 
-            elif format == 'T':
+            elif format == 't':
                 if spinel_format[idx+1] != '(':
                     raise ValueError('Invalid structure format')
-                # TODO: count parentheses. There is a problem with nested structs.
-                struct_end = idx + spinel_format[idx:].index(')')
+
+                struct_end = cls.index_of_ending_brace(spinel_format, idx + 1);
 
                 struct_format = spinel_format[idx+2:struct_end]
-                struct_len = cls.get_payload_size(struct_format)
+                struct_len = cls.parse_S(payload);
 
-                result.append(cls.parse_fields(payload, struct_format))
-                payload = payload[struct_len:]
+                result.append(cls.parse_fields(payload[2:struct_len+2], struct_format))
+                payload = payload[struct_len+2:]
 
                 idx = struct_end + 1
+
             else:
                 result.append(cls.parse_field(payload, format))
-                payload = payload[cls.get_payload_size(format):]
+                payload = payload[cls.get_payload_size(payload, format):]
 
                 idx += 1
 
@@ -299,6 +343,9 @@ class SpinelCodec(object):
     def encode_D(cls, value): return value
 
     @classmethod
+    def encode_d(cls, value): return cls.encode_S(len(value)) + value
+
+    @classmethod
     def encode_field(cls, code, value):
         map_encode = {
             'b': cls.encode_b,
@@ -313,6 +360,7 @@ class SpinelCodec(object):
             'e': cls.encode_e,
             'U': cls.encode_U,
             'D': cls.encode_D,
+            'd': cls.encode_d,
             'i': cls.encode_i,
         }
         try:
@@ -434,7 +482,7 @@ class SpinelPropertyHandler(SpinelCodec):
 
     def THREAD_PARENT(self, _wpan_api, payload): return self.parse_fields(payload, "ES")
 
-    def THREAD_CHILD_TABLE(self, _, payload): return self.parse_fields(payload, "A(T(ESLLCCcC))")
+    def THREAD_CHILD_TABLE(self, _, payload): return self.parse_fields(payload, "A(t(ESLLCCcC))")
 
     def THREAD_LEADER_RID(self, _, payload): return self.parse_C(payload)
 
@@ -587,7 +635,7 @@ class SpinelPropertyHandler(SpinelCodec):
         return self.parse_C(payload)
 
     def THREAD_NEIGHBOR_TABLE(self, _, payload):
-        return self.parse_fields(payload, 'A(T(ESLCcCbLL))')
+        return self.parse_fields(payload, 'A(t(ESLCcCbLL))')
 
     def THREAD_CONTEXT_REUSE_DELAY(self, _, payload):
         return self.parse_L(payload)
@@ -640,7 +688,7 @@ class SpinelPropertyHandler(SpinelCodec):
 
     def PIB_MAC_SECURITY_ENABLED(self, _wpan_api, payload): pass
 
-    def MSG_BUFFER_COUNTERS(self, _wpan_api, payload): return self.parse_fields(payload, "T(SSSSSSSSSSSSSSSS)")
+    def MSG_BUFFER_COUNTERS(self, _wpan_api, payload): return self.parse_fields(payload, "SSSSSSSSSSSSSSSS")
 
 #=========================================
 

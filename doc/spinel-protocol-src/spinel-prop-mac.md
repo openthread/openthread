@@ -33,7 +33,7 @@ Values switches to `SCAN_STATE_IDLE` when scan is complete.
 
 ### PROP 51: PROP_MAC_SCAN_BEACON {#prop-mac-scan-beacon}
 * Type: Read-Only-Stream
-* Packed-Encoding: `CcDD.` (or `CcT(ESSc.)T(iCUD.).`)
+* Packed-Encoding: `Ccdd` (or `Cct(ESSc)t(iCUd)`)
 
 Octets: | 1  |   1  |    2    |   *n*    |    2    |   *n*  
 --------|----|------|---------|----------|---------|----------  
@@ -46,16 +46,16 @@ The format below is for an 802.15.4 MAC with Thread:
 
 * `C`: Channel
 * `c`: RSSI of the beacon
-* `T`: MAC layer properties
+* `t`: MAC layer properties (802.15.4 layer shown below for convenience)
   * `E`: Long address
   * `S`: Short address
   * `S`: PAN-ID
   * `c`: LQI
-* `T`: NET layer properties
+* NET layer properties (Standard net layer shown below for convenience)
   * `i`: Protocol Number
   * `C`: Flags
   * `U`: Network Name
-  * `D`: XPANID
+  * `d`: XPANID
 
 Extra parameters may be added to each of the structures
 in the future, so care should be taken to read the length

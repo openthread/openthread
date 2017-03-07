@@ -497,7 +497,7 @@ otLwfTunValueIs(
         ret = spinel_datatype_unpack(
             value_data_ptr,
             value_data_len,
-            SPINEL_DATATYPE_DATA_S SPINEL_DATATYPE_DATA_S,
+            SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_DATA_S,
             &frame_ptr,
             &frame_len,
             NULL,
@@ -601,11 +601,13 @@ otLwfTunValueInserted(
             const char *aNetworkName = NULL;
             unsigned int xpanid_len = 0;
 
-            //chan,rssi,(laddr,saddr,panid,lqi),(proto,flags,networkid,xpanid) [CcT(ESSC)T(iCUD.).]
             if (try_spinel_datatype_unpack(
                 value_data_ptr,
                 value_data_len,
-                "CcT(ESSC.)T(iCUD.).",
+                SPINEL_DATATYPE_MAC_SCAN_RESULT_S(
+                    SPINEL_802_15_4_DATATYPE_MAC_SCAN_RESULT_V1_S,
+                    SPINEL_NET_DATATYPE_MAC_SCAN_RESULT_V1_S
+                ),
                 &NotifEntry->Notif.ActiveScanPayload.Results.mChannel,
                 &NotifEntry->Notif.ActiveScanPayload.Results.mRssi,
                 &aExtAddr,
