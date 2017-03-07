@@ -146,11 +146,8 @@ EXTRA_DIST                                                         = \
     test_network_layer.py                                            \
     $(NULL)
 
-if OPENTHREAD_BUILD_TESTS
-
-# First, list all essential program and script tests that MUST be run.
-
-check_PROGRAMS =
+check_PROGRAMS                                                     = \
+    $(NULL)
 
 check_SCRIPTS                                                      = \
     test_coap.py                                                     \
@@ -162,11 +159,6 @@ check_SCRIPTS                                                      = \
     test_mle.py                                                      \
     test_network_data.py                                             \
     test_network_layer.py                                            \
-    $(NULL)
-
-if OPENTHREAD_TESTS_SUBSET1
-
-check_SCRIPTS                                                     += \
     Cert_5_1_01_RouterAttach.py                                      \
     Cert_5_1_02_ChildAddressTimeout.py                               \
     Cert_5_1_03_RouterAddressReallocation.py                         \
@@ -176,13 +168,6 @@ check_SCRIPTS                                                     += \
     Cert_5_1_07_MaxChildCount.py                                     \
     Cert_5_1_08_RouterAttachConnectivity.py                          \
     Cert_5_1_09_REEDAttachConnectivity.py                            \
-    $(NULL)
-
-endif # OPENTHREAD_TESTS_SUBSET1
-
-if OPENTHREAD_TESTS_SUBSET2
-
-check_SCRIPTS                                                     += \
     Cert_5_1_10_RouterAttachLinkQuality.py                           \
     Cert_5_1_11_REEDAttachLinkQuality.py                             \
     Cert_5_1_12_NewRouterNeighborSync.py                             \
@@ -199,13 +184,6 @@ check_SCRIPTS                                                     += \
     Cert_5_3_03_AddressQuery.py                                      \
     Cert_5_3_04_AddressMapCache.py                                   \
     Cert_5_3_05_RoutingLinkQuality.py                                \
-    $(NULL)
-
-endif # OPENTHREAD_TESTS_SUBSET2
-
-if OPENTHREAD_TESTS_SUBSET3
-
-check_SCRIPTS                                                     += \
     Cert_5_3_06_RouterIdMask.py                                      \
     Cert_5_3_06b_RouterIdMask.py                                     \
     Cert_5_3_07_DuplicateAddress.py                                  \
@@ -214,13 +192,6 @@ check_SCRIPTS                                                     += \
     Cert_5_3_10_AddressQuery.py                                      \
     Cert_5_5_01_LeaderReset.py                                       \
     Cert_5_5_02_LeaderReboot.py                                      \
-    $(NULL)
-
-endif # OPENTHREAD_TESTS_SUBSET3
-
-if OPENTHREAD_TESTS_SUBSET4
-
-check_SCRIPTS                                                     += \
     Cert_5_5_03_SplitMergeChildren.py                                \
     Cert_5_5_04_SplitMergeRouters.py                                 \
     Cert_5_5_05_SplitMergeREED.py                                    \
@@ -228,13 +199,6 @@ check_SCRIPTS                                                     += \
     Cert_5_5_08_SplitRoutersLostLeader.py                            \
     Cert_5_6_01_NetworkDataRegisterBeforeAttachLeader.py             \
     Cert_5_6_02_NetworkDataRegisterBeforeAttachRouter.py             \
-    $(NULL)
-
-endif # OPENTHREAD_TESTS_SUBSET4
-
-if OPENTHREAD_TESTS_SUBSET5
-
-check_SCRIPTS                                                     += \
     Cert_5_6_03_NetworkDataRegisterAfterAttachLeader.py              \
     Cert_5_6_04_NetworkDataRegisterAfterAttachRouter.py              \
     Cert_5_6_05_NetworkDataRegisterAfterAttachRouter.py              \
@@ -286,8 +250,6 @@ check_SCRIPTS                                                     += \
     Cert_9_2_18_RollBackActiveTimestamp.py                           \
     $(NULL)
 
-endif # OPENTHREAD_TESTS_SUBSET5
-
 TESTS_ENVIRONMENT                                                  = \
     export                                                           \
     top_builddir='$(top_builddir)'                                   \
@@ -321,7 +283,5 @@ XFAIL_NCP_TESTS                                                    = \
     $(NULL)
 
 XFAIL_TESTS = $(if $(filter $(NODE_TYPE),ncp-sim),$(XFAIL_NCP_TESTS))
-
-endif # OPENTHREAD_BUILD_TESTS
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

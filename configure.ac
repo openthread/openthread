@@ -338,62 +338,6 @@ NL_ENABLE_TESTS([yes])
 
 AM_CONDITIONAL([OPENTHREAD_BUILD_TESTS], [test "${nl_cv_build_tests}" = "yes"])
 
-# Check whether to run only the minimum set of tests.
-
-AC_ARG_WITH(tests,
-    [AS_HELP_STRING([--with-tests=TESTS],
-        [Specify the tests from one of: all, subset1, subset2, subset3, subset4, subset5 @<:@default=all@:>@.])],
-    [
-        case "${with_tests}" in
-
-        all|subset1|subset2|subset3|subset4|subset5)
-            ;;
-        *)
-            AC_MSG_ERROR([Invalid value ${with_tests} for --with-tests])
-            ;;
-        esac
-    ],
-    [with_tests=all])
-
-case ${with_tests} in
-
-    all)
-        OPENTHREAD_TESTS_SUBSET1=yes
-        OPENTHREAD_TESTS_SUBSET2=yes
-        OPENTHREAD_TESTS_SUBSET3=yes
-        OPENTHREAD_TESTS_SUBSET4=yes
-        OPENTHREAD_TESTS_SUBSET5=yes
-        ;;
-
-    subset1)
-        OPENTHREAD_TESTS_SUBSET1=yes
-        ;;
-
-    subset2)
-        OPENTHREAD_TESTS_SUBSET2=yes
-        ;;
-
-    subset3)
-        OPENTHREAD_TESTS_SUBSET3=yes
-        ;;
-
-    subset4)
-        OPENTHREAD_TESTS_SUBSET4=yes
-        ;;
-
-    subset5)
-        OPENTHREAD_TESTS_SUBSET5=yes
-        ;;
-
-esac
-
-AC_SUBST(OPENTHREAD_TESTS_SUBSET1)
-AM_CONDITIONAL([OPENTHREAD_TESTS_SUBSET1], [test "${OPENTHREAD_TESTS_SUBSET1}" = "yes"])
-AM_CONDITIONAL([OPENTHREAD_TESTS_SUBSET2], [test "${OPENTHREAD_TESTS_SUBSET2}" = "yes"])
-AM_CONDITIONAL([OPENTHREAD_TESTS_SUBSET3], [test "${OPENTHREAD_TESTS_SUBSET3}" = "yes"])
-AM_CONDITIONAL([OPENTHREAD_TESTS_SUBSET4], [test "${OPENTHREAD_TESTS_SUBSET4}" = "yes"])
-AM_CONDITIONAL([OPENTHREAD_TESTS_SUBSET5], [test "${OPENTHREAD_TESTS_SUBSET5}" = "yes"])
-
 # Check for Python and Python libraries used in the tests
 if test "${nl_cv_build_tests}" = "yes"; then
     AC_MSG_CHECKING([checking for Python and Python libraries used in tests.])
