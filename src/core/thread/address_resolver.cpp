@@ -289,7 +289,8 @@ void AddressResolver::HandleAddressNotification(Coap::Header &aHeader, Message &
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
                  aHeader.GetCode() == kCoapRequestPost, ;);
 
-    otLogInfoArp(GetInstance(), "Received address notification from %04x", HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
+    otLogInfoArp(GetInstance(), "Received address notification from %04x",
+                 HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
 
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kTarget, sizeof(targetTlv), targetTlv));
     VerifyOrExit(targetTlv.IsValid(), ;);
