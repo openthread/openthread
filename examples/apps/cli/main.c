@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
     otInstance *sInstance;
 
 #ifdef OPENTHREAD_MULTIPLE_INSTANCE
-    uint64_t otInstanceBufferLength = 0;
+    size_t otInstanceBufferLength = 0;
     uint8_t *otInstanceBuffer = NULL;
 #endif
 
