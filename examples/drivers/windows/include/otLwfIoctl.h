@@ -602,6 +602,7 @@ typedef struct otCommissionConfig
     // uint8_t - aExtAddressValid
     // otExtAddress - aExtAddress (optional)
     // char[OPENTHREAD_PSK_MAX_LENGTH + 1] - aPSKd
+    // uint32_t - aTimeout
 
 #define IOCTL_OTLWF_OT_COMMISIONER_REMOVE_JOINER \
     OTLWF_CTL_CODE(181, METHOD_BUFFERED, FILE_WRITE_DATA)

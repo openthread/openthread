@@ -1010,11 +1010,13 @@ OTNODEAPI int32_t OTCALL otNodeCommissionerJoinerAdd(otNode* aNode, const char *
     otLogFuncEntryMsg("[%d] %s %s", aNode->mId, aExtAddr, aPSKd);
     printf("%d: commissioner joiner add %s %s\r\n", aNode->mId, aExtAddr, aPSKd);
 
+    const uint32_t kDefaultJoinerTimeout = 120;
+
     ThreadError error;
     
     if (strcmp(aExtAddr, "*") == 0)
     {
-        error = otCommissionerAddJoiner(aNode->mInstance, nullptr, aPSKd);
+        error = otCommissionerAddJoiner(aNode->mInstance, nullptr, aPSKd, kDefaultJoinerTimeout);
     }
     else
     {
@@ -1022,7 +1024,7 @@ OTNODEAPI int32_t OTCALL otNodeCommissionerJoinerAdd(otNode* aNode, const char *
         if (Hex2Bin(aExtAddr, extAddr.m8, sizeof(extAddr)) != sizeof(extAddr))
             return kThreadError_Parse;
 
-        error = otCommissionerAddJoiner(aNode->mInstance, &extAddr, aPSKd);
+        error = otCommissionerAddJoiner(aNode->mInstance, &extAddr, aPSKd, kDefaultJoinerTimeout);
     }
     
     otLogFuncExit();

@@ -5596,19 +5596,20 @@ otLwfIoCtl_otCommissionerAddJoiner(
     
     if (InBufferLength >= sizeof(uint8_t) + sizeof(otExtAddress))
     {
-        const ULONG aPSKdBufferLength = InBufferLength - sizeof(uint8_t) - sizeof(otExtAddress);
+        const ULONG aPSKdBufferLength = InBufferLength - sizeof(uint8_t) - sizeof(otExtAddress) - sizeof(uint32_t);
 
         if (aPSKdBufferLength <= OPENTHREAD_PSK_MAX_LENGTH + 1)
         {
             uint8_t aExtAddressValid = *(uint8_t*)InBuffer;
             const otExtAddress *aExtAddress = aExtAddressValid == 0 ? NULL : (otExtAddress*)(InBuffer + sizeof(uint8_t));
             char *aPSKd = (char*)(InBuffer + sizeof(uint8_t) + sizeof(otExtAddress));
+            uint32_t aTimeout = *(uint32_t*)(InBuffer + sizeof(uint8_t) + sizeof(otExtAddress) + aPSKdBufferLength);
 
             // Ensure aPSKd is NULL terminated in the buffer
             if (strnlen(aPSKd, aPSKdBufferLength) < aPSKdBufferLength)
             {
                 status = ThreadErrorToNtstatus(otCommissionerAddJoiner(
-                    pFilter->otCtx, aExtAddress, aPSKd));
+                    pFilter->otCtx, aExtAddress, aPSKd, aTimeout));
             }
         }
     }
