@@ -338,25 +338,6 @@ NL_ENABLE_TESTS([yes])
 
 AM_CONDITIONAL([OPENTHREAD_BUILD_TESTS], [test "${nl_cv_build_tests}" = "yes"])
 
-# Check for Python and Python libraries used in the tests
-if test "${nl_cv_build_tests}" = "yes"; then
-    AC_MSG_CHECKING([checking for Python and Python libraries used in tests.])
-
-    # Check for Python
-    python --version 2> /dev/null
-    if test $? != 0; then
-        AC_MSG_ERROR(["Cannot run tests: missing Python."])
-    fi
-
-    # Check for Python pexpect library
-    python -c 'import pexpect' 2> /dev/null
-    if test $? != 0; then
-        AC_MSG_ERROR(["Cannot run tests: missing Python pexpect library."])
-    fi
-
-    AC_MSG_RESULT([ok])
-fi
-
 #
 #  Full Thread Device
 #
