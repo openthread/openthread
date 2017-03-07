@@ -53,6 +53,15 @@ namespace MeshCoP {
 class DatasetManager
 {
 public:
+
+    /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
     Dataset &GetLocal(void) { return mLocal; }
     Dataset &GetNetwork(void) { return mNetwork; }
 

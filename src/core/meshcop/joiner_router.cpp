@@ -71,6 +71,11 @@ JoinerRouter::JoinerRouter(ThreadNetif &aNetif):
     mNetif.RegisterCallback(mNetifCallback);
 }
 
+otInstance *JoinerRouter::GetInstance()
+{
+    return mNetif.GetInstance();
+}
+
 void JoinerRouter::HandleNetifStateChanged(uint32_t aFlags, void *aContext)
 {
     static_cast<JoinerRouter *>(aContext)->HandleNetifStateChanged(aFlags);
@@ -92,7 +97,7 @@ void JoinerRouter::HandleNetifStateChanged(uint32_t aFlags)
         mSocket.Open(&JoinerRouter::HandleUdpReceive, this);
         mSocket.Bind(sockaddr);
         mNetif.GetIp6Filter().AddUnsecurePort(sockaddr.mPort);
-        otLogInfoMeshCoP("Joiner Router: start");
+        otLogInfoMeshCoP(GetInstance(), "Joiner Router: start");
     }
     else
     {
@@ -165,7 +170,7 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
 
     otLogFuncEntryMsg("from peer: %llX",
                       HostSwap64(*reinterpret_cast<const uint64_t *>(aMessageInfo.GetPeerAddr().mFields.m8 + 8)));
-    otLogInfoMeshCoP("JoinerRouter::HandleUdpReceive");
+    otLogInfoMeshCoP(GetInstance(), "JoinerRouter::HandleUdpReceive");
 
     SuccessOrExit(error = GetBorderAgentRloc(borderAgentRloc));
 
@@ -214,7 +219,7 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
 
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
 
-    otLogInfoMeshCoP("Sent relay rx");
+    otLogInfoMeshCoP(GetInstance(), "Sent relay rx");
 
 exit:
 
@@ -249,7 +254,7 @@ void JoinerRouter::HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage,
     VerifyOrExit(aHeader.GetType() == kCoapTypeNonConfirmable &&
                  aHeader.GetCode() == kCoapRequestPost, error = kThreadError_Drop);
 
-    otLogInfoMeshCoP("Received relay transmit");
+    otLogInfoMeshCoP(GetInstance(), "Received relay transmit");
 
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kJoinerUdpPort, sizeof(joinerPort), joinerPort));
     VerifyOrExit(joinerPort.IsValid(), error = kThreadError_Parse);
@@ -291,7 +296,7 @@ void JoinerRouter::HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage,
 
     if (Tlv::GetTlv(aMessage, Tlv::kJoinerRouterKek, sizeof(kek), kek) == kThreadError_None)
     {
-        otLogInfoMeshCoP("Received kek");
+        otLogInfoMeshCoP(GetInstance(), "Received kek");
 
         DelaySendingJoinerEntrust(messageInfo, kek);
     }
@@ -482,12 +487,12 @@ ThreadError JoinerRouter::SendJoinerEntrust(Message &aMessage, const Ip6::Messag
 
     mNetif.GetCoapClient().AbortTransaction(&JoinerRouter::HandleJoinerEntrustResponse, this);
 
-    otLogInfoMeshCoP("Sending JOIN_ENT.ntf");
+    otLogInfoMeshCoP(GetInstance(), "Sending JOIN_ENT.ntf");
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(aMessage, aMessageInfo,
                                                              &JoinerRouter::HandleJoinerEntrustResponse, this));
 
-    otLogInfoMeshCoP("Sent joiner entrust length = %d", aMessage.GetLength());
-    otLogCertMeshCoP("[THCI] direction=send | type=JOIN_ENT.ntf");
+    otLogInfoMeshCoP(GetInstance(), "Sent joiner entrust length = %d", aMessage.GetLength());
+    otLogCertMeshCoP(GetInstance(), "[THCI] direction=send | type=JOIN_ENT.ntf");
 
     mExpectJoinEntRsp = true;
 
@@ -516,8 +521,8 @@ void JoinerRouter::HandleJoinerEntrustResponse(Coap::Header *aHeader, Message *a
 
     VerifyOrExit(aHeader->GetCode() == kCoapResponseChanged, ;);
 
-    otLogInfoMeshCoP("Receive joiner entrust response");
-    otLogCertMeshCoP("[THCI] direction=recv | type=JOIN_ENT.rsp");
+    otLogInfoMeshCoP(GetInstance(), "Receive joiner entrust response");
+    otLogCertMeshCoP(GetInstance(), "[THCI] direction=recv | type=JOIN_ENT.rsp");
 
 exit:
     return ;

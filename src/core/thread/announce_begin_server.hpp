@@ -61,6 +61,14 @@ public:
     AnnounceBeginServer(ThreadNetif &aThreadNetif);
 
     /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
+    /**
      * This method begins the MLE Announce transmission process using Count=3 and Period=1s.
      *
      * @param[in]  aChannelMask   The channels to use for transmission.

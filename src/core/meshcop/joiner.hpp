@@ -63,6 +63,14 @@ public:
     Joiner(ThreadNetif &aThreadNetif);
 
     /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
+    /**
      * This method starts the Joiner service.
      *
      * @param[in]  aPSKd             A pointer to the PSKd.

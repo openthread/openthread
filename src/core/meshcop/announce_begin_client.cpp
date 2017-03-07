@@ -57,6 +57,11 @@ AnnounceBeginClient::AnnounceBeginClient(ThreadNetif &aThreadNetif) :
 {
 }
 
+otInstance *AnnounceBeginClient::GetInstance()
+{
+    return mNetif.GetInstance();
+}
+
 ThreadError AnnounceBeginClient::SendRequest(uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod,
                                              const Ip6::Address &aAddress)
 {
@@ -100,7 +105,7 @@ ThreadError AnnounceBeginClient::SendRequest(uint32_t aChannelMask, uint8_t aCou
 
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent announce begin query");
+    otLogInfoMeshCoP(GetInstance(), "sent announce begin query");
 
 exit:
 

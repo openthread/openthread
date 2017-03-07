@@ -60,6 +60,14 @@ public:
     AnnounceBeginClient(ThreadNetif &aThreadNetif);
 
     /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
+    /**
      * This method sends a Announce Begin message.
      *
      * @param[in]  aChannelMask   The channel mask value.

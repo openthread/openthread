@@ -152,7 +152,7 @@ void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
     ThreadNetworkDataTlv networkData;
     ThreadRloc16Tlv rloc16;
 
-    otLogInfoNetData("Received network data registration");
+    otLogInfoNetData(GetInstance(), "Received network data registration");
 
     if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rloc16), rloc16) == kThreadError_None)
     {
@@ -169,7 +169,7 @@ void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
 
     SuccessOrExit(mNetif.GetCoapServer().SendEmptyAck(aHeader, aMessageInfo));
 
-    otLogInfoNetData("Sent network data registration acknowledgment");
+    otLogInfoNetData(GetInstance(), "Sent network data registration acknowledgment");
 
 exit:
     return;
@@ -361,7 +361,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Header &aRequestHeader, co
 
     SuccessOrExit(error = mNetif.GetCoapServer().SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP("sent commissioning dataset get response");
+    otLogInfoMeshCoP(GetInstance(), "sent commissioning dataset get response");
 
 exit:
 
@@ -392,7 +392,7 @@ void Leader::SendCommissioningSetResponse(const Coap::Header &aRequestHeader, co
 
     SuccessOrExit(error = mNetif.GetCoapServer().SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP("sent commissioning dataset set response");
+    otLogInfoMeshCoP(GetInstance(), "sent commissioning dataset set response");
 
 exit:
 
@@ -750,7 +750,7 @@ int Leader::AllocateContext(void)
         {
             mContextUsed |= 1 << i;
             rval = i;
-            otLogInfoNetData("Allocated Context ID = %d", rval);
+            otLogInfoNetData(GetInstance(), "Allocated Context ID = %d", rval);
             ExitNow();
         }
     }
@@ -761,7 +761,7 @@ exit:
 
 ThreadError Leader::FreeContext(uint8_t aContextId)
 {
-    otLogInfoNetData("Free Context Id = %d", aContextId);
+    otLogInfoNetData(GetInstance(), "Free Context Id = %d", aContextId);
     RemoveContext(aContextId);
     mContextUsed &= ~(1 << aContextId);
     mVersion++;

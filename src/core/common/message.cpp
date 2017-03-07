@@ -105,28 +105,25 @@ Buffer *MessagePool::NewBuffer(void)
     Buffer *buffer = NULL;
 
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
-    buffer = static_cast<Buffer *>(otPlatMessagePoolNew(mInstance));
 
-    if (buffer == NULL)
-    {
-        otLogInfoMac("No available message buffer");
-    }
+    buffer = static_cast<Buffer *>(otPlatMessagePoolNew(mInstance));
 
 #else
 
-    if (mFreeBuffers == NULL)
+    if (mFreeBuffers != NULL)
     {
-        otLogInfoMac("No available message buffer");
-        ExitNow();
+        buffer = mFreeBuffers;
+        mFreeBuffers = mFreeBuffers->GetNextBuffer();
+        buffer->SetNextBuffer(NULL);
+        mNumFreeBuffers--;
     }
 
-    buffer = mFreeBuffers;
-    mFreeBuffers = mFreeBuffers->GetNextBuffer();
-    buffer->SetNextBuffer(NULL);
-    mNumFreeBuffers--;
-
-exit:
 #endif
+
+    if (buffer == NULL)
+    {
+        otLogInfoMem("No available message buffer");
+    }
 
     return buffer;
 }

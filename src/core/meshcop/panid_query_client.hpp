@@ -61,6 +61,14 @@ public:
     PanIdQueryClient(ThreadNetif &aThreadNetif);
 
     /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
+    /**
      * This method sends a PAN ID Query message.
      *
      * @param[in]  aPanId         The PAN ID to query.

@@ -76,6 +76,14 @@ public:
     explicit NetworkDiagnostic(ThreadNetif &aThreadNetif);
 
     /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
+    /**
      * This method registers a callback to provide received raw DIAG_GET.rsp or an DIAG_GET.ans payload.
      *
      * @param[in]  aCallback         A pointer to a function that is called when an DIAG_GET.rsp or an DIAG_GET.ans
