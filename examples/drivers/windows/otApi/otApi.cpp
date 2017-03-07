@@ -1868,6 +1868,18 @@ otThreadSetRouterRoleEnabled(
 }
 
 OTAPI
+ThreadError
+OTCALL
+otThreadSetPreferredRouterId(
+    _In_ otInstance *aInstance,
+    uint8_t aRouterId
+    )
+{
+    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_PAN_ID, aRouterId));
+}
+
+OTAPI
 otShortAddress 
 OTCALL
 otLinkGetShortAddress(

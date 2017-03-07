@@ -21,6 +21,8 @@
     <ClInclude Include="..\..\examples\apps\windows\pch.h" />
     <ClInclude Include="..\..\examples\apps\windows\App.xaml.h" />
     <ClInclude Include="..\..\examples\apps\windows\MainPage.xaml.h" />
+    <ClInclude Include="..\..\examples\apps\windows\otAdapter.h" />
+    <ClInclude Include="..\..\examples\apps\windows\otApi.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\LockScreenLogo.scale-200.png">

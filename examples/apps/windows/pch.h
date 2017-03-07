@@ -38,9 +38,7 @@
 #include <ws2def.h>
 #include <ws2ipdef.h>
 #include <mstcpip.h>
-#define OTDLL 1
-#include <openthread/openthread.h>
-#include <openthread/commissioner.h>
-#include <openthread/joiner.h>
+
+#include "otApi.h"
 
 #include "App.xaml.h"

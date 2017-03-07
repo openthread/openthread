@@ -225,5 +225,6 @@ DECL_IOCTL_FUNC(otSendMgmtCommissionerSet);
 DECL_IOCTL_FUNC_WITH_TUN2(otKeySwitchGuardtime);
 DECL_IOCTL_FUNC(otFactoryReset);
 DECL_IOCTL_FUNC(otThreadAutoStart);
+DECL_IOCTL_FUNC(otThreadPreferredRouterId);
 
 #endif // _IOCONTROL_H
