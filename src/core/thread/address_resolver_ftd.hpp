@@ -76,6 +76,14 @@ public:
     explicit AddressResolver(ThreadNetif &aThreadNetif);
 
     /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
+    /**
      * This method clears the EID-to-RLOC cache.
      *
      */

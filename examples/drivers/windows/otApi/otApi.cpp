@@ -230,13 +230,13 @@ otApiInit(
     DWORD dwError = ERROR_SUCCESS;
     otApiInstance *aApitInstance = nullptr;
     
-    otLogFuncEntry();
+    LogFuncEntry(API_DEFAULT);
 
     aApitInstance = new(std::nothrow)otApiInstance();
     if (aApitInstance == nullptr)
     {
         dwError = GetLastError();
-        otLogWarnApi("Failed to allocate otApiInstance");
+        LogWarning(API_DEFAULT, "Failed to allocate otApiInstance");
         goto error;
     }
 
@@ -254,7 +254,7 @@ otApiInit(
     if (aApitInstance->DeviceHandle == INVALID_HANDLE_VALUE)
     {
         dwError = GetLastError();
-        otLogCritApi("CreateFile failed, %!WINERROR!", dwError);
+        LogError(API_DEFAULT, "CreateFile failed, %!WINERROR!", dwError);
         goto error;
     }
 
@@ -263,7 +263,7 @@ otApiInit(
     if (aApitInstance->Overlapped.hEvent == nullptr)
     {
         dwError = GetLastError();
-        otLogCritApi("CreateEvent (Overlapped.hEvent) failed, %!WINERROR!", dwError);
+        LogError(API_DEFAULT, "CreateEvent (Overlapped.hEvent) failed, %!WINERROR!", dwError);
         goto error;
     }
 
@@ -277,7 +277,7 @@ otApiInit(
     if (aApitInstance->ThreadpoolWait == nullptr)
     {
         dwError = GetLastError();
-        otLogCritApi("CreateThreadpoolWait failed, %!WINERROR!", dwError);
+        LogError(API_DEFAULT, "CreateThreadpoolWait failed, %!WINERROR!", dwError);
         goto error;
     }
 
@@ -285,7 +285,7 @@ otApiInit(
     SetThreadpoolWait(aApitInstance->ThreadpoolWait, aApitInstance->Overlapped.hEvent, nullptr);
 
 #ifdef DEBUG_ASYNC_IO
-    otLogDebgApi("Querying for 1st notification");
+    LogVerbose(API_DEFAULT, "Querying for 1st notification");
 #endif
 
     // Request first notification asynchronously
@@ -300,7 +300,7 @@ otApiInit(
         dwError = GetLastError();
         if (dwError != ERROR_IO_PENDING)
         {
-            otLogCritApi("DeviceIoControl for first notification failed, %!WINERROR!", dwError);
+            LogError(API_DEFAULT, "DeviceIoControl for first notification failed, %!WINERROR!", dwError);
             goto error;
         }
         dwError = ERROR_SUCCESS;
@@ -314,7 +314,7 @@ error:
         aApitInstance = nullptr;
     }
     
-    otLogFuncExit();
+    LogFuncExit(API_DEFAULT);
 
     return aApitInstance;
 }
@@ -328,7 +328,7 @@ otApiFinalize(
 {
     if (aApitInstance == nullptr) return;
     
-    otLogFuncEntry();
+    LogFuncEntry(API_DEFAULT);
 
     // If we never got the handle, nothing left to clean up
     if (aApitInstance->DeviceHandle != INVALID_HANDLE_VALUE)
@@ -364,7 +364,7 @@ otApiFinalize(
         aApitInstance->JoinerCallbacks.clear();
 
         #ifdef DEBUG_ASYNC_IO
-        otLogDebgApi("Clearing Threadpool Wait");
+        LogVerbose(API_DEFAULT, "Clearing Threadpool Wait");
         #endif
 
         // Clear the threadpool wait to prevent further waits from being scheduled
@@ -419,14 +419,14 @@ otApiFinalize(
         if (tpWait)
         {
             #ifdef DEBUG_ASYNC_IO
-            otLogDebgApi("Waiting for outstanding threadpool callbacks to compelte");
+            LogVerbose(API_DEFAULT, "Waiting for outstanding threadpool callbacks to compelte");
             #endif
 
             // Cancel any queued waits and wait for any outstanding calls to compelte
             WaitForThreadpoolWaitCallbacks(tpWait, TRUE);
         
             #ifdef DEBUG_ASYNC_IO
-            otLogDebgApi("Cancelling any pending IO");
+            LogVerbose(API_DEFAULT, "Cancelling any pending IO");
             #endif
 
             // Cancel any async IO
@@ -448,7 +448,7 @@ otApiFinalize(
 
     delete aApitInstance;
     
-    otLogFuncExit();
+    LogFuncExit(API_DEFAULT);
 }
 
 OTAPI 
@@ -713,7 +713,7 @@ otIoComplete(
     )
 {
 #ifdef DEBUG_ASYNC_IO
-    otLogFuncEntry();
+    LogFuncEntry(API_DEFAULT);
 #endif
 
     otApiInstance *aApitInstance = (otApiInstance*)Context;
@@ -728,11 +728,11 @@ otIoComplete(
             FALSE))
     {
         DWORD dwError = GetLastError();
-        otLogCritApi("GetOverlappedResult for notification failed, %!WINERROR!", dwError);
+        LogError(API_DEFAULT, "GetOverlappedResult for notification failed, %!WINERROR!", dwError);
     }
     else
     {
-        otLogDebgApi("Received successful callback for notification, type=%d", 
+        LogVerbose(API_DEFAULT, "Received successful callback for notification, type=%d", 
                      aApitInstance->NotificationBuffer.NotifType);
 
         // Invoke the callback if set
@@ -749,7 +749,7 @@ otIoComplete(
             SetThreadpoolWait(tpWait, aApitInstance->Overlapped.hEvent, nullptr);
             
 #ifdef DEBUG_ASYNC_IO
-            otLogDebgApi("Querying for next notification");
+            LogVerbose(API_DEFAULT, "Querying for next notification");
 #endif
 
             // Request next notification
@@ -764,14 +764,14 @@ otIoComplete(
                 DWORD dwError = GetLastError();
                 if (dwError != ERROR_IO_PENDING)
                 {
-                    otLogCritApi("DeviceIoControl for new notification failed, %!WINERROR!", dwError);
+                    LogError(API_DEFAULT, "DeviceIoControl for new notification failed, %!WINERROR!", dwError);
                 }
             }
         }
     }
     
 #ifdef DEBUG_ASYNC_IO
-    otLogFuncExit();
+    LogFuncExit(API_DEFAULT);
 #endif
 }
 
@@ -793,7 +793,7 @@ SendIOCTL(
     if (Overlapped.hEvent == nullptr)
     {
         dwError = GetLastError();
-        otLogCritApi("CreateEvent (Overlapped.hEvent) failed, %!WINERROR!", dwError);
+        LogError(API_DEFAULT, "CreateEvent (Overlapped.hEvent) failed, %!WINERROR!", dwError);
         goto error;
     }
     
@@ -809,7 +809,7 @@ SendIOCTL(
         dwError = GetLastError();
         if (dwError != ERROR_IO_PENDING)
         {
-            otLogCritApi("DeviceIoControl(0x%x) failed, %!WINERROR!", dwIoControlCode, dwError);
+            LogError(API_DEFAULT, "DeviceIoControl(0x%x) failed, %!WINERROR!", dwIoControlCode, dwError);
             goto error;
         }
         dwError = ERROR_SUCCESS;
@@ -830,14 +830,14 @@ SendIOCTL(
             dwError = ERROR_TIMEOUT;
             CancelIoEx(aApitInstance->DeviceHandle, &Overlapped);
         }
-        otLogCritApi("GetOverlappedResult failed, %!WINERROR!", dwError);
+        LogError(API_DEFAULT, "GetOverlappedResult failed, %!WINERROR!", dwError);
         goto error;
     }
 
     if (dwBytesReturned != nOutBufferSize)
     {
         dwError = ERROR_INVALID_DATA;
-        otLogCritApi("GetOverlappedResult returned invalid output size, expected=%u actual=%u", 
+        LogError(API_DEFAULT, "GetOverlappedResult returned invalid output size, expected=%u actual=%u", 
                      nOutBufferSize, dwBytesReturned);
         goto error;
     }
@@ -1004,20 +1004,20 @@ otEnumerateDevices(
     otDeviceList* pDeviceList = nullptr;
     DWORD cbDeviceList = sizeof(otDeviceList);
     
-    otLogFuncEntry();
+    LogFuncEntry(API_DEFAULT);
 
     Overlapped.hEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     if (Overlapped.hEvent == nullptr)
     {
         dwError = GetLastError();
-        otLogCritApi("CreateEvent (Overlapped.hEvent) failed, %!WINERROR!", dwError);
+        LogError(API_DEFAULT, "CreateEvent (Overlapped.hEvent) failed, %!WINERROR!", dwError);
         goto error;
     }
     
     pDeviceList = (otDeviceList*)malloc(cbDeviceList);
     if (pDeviceList == nullptr)
     {
-        otLogWarnApi("Failed to allocate otDeviceList of %u bytes.", cbDeviceList);
+        LogWarning(API_DEFAULT, "Failed to allocate otDeviceList of %u bytes.", cbDeviceList);
         dwError = ERROR_NOT_ENOUGH_MEMORY;
         goto error;
     }
@@ -1038,7 +1038,7 @@ otEnumerateDevices(
             dwError = GetLastError();
             if (dwError != ERROR_IO_PENDING)
             {
-                otLogCritApi("DeviceIoControl(IOCTL_OTLWF_ENUMERATE_DEVICES) failed, %!WINERROR!", dwError);
+                LogError(API_DEFAULT, "DeviceIoControl(IOCTL_OTLWF_ENUMERATE_DEVICES) failed, %!WINERROR!", dwError);
                 goto error;
             }
             dwError = ERROR_SUCCESS;
@@ -1058,7 +1058,7 @@ otEnumerateDevices(
                 dwError = ERROR_TIMEOUT;
                 CancelIoEx(aApitInstance->DeviceHandle, &Overlapped);
             }
-            otLogCritApi("GetOverlappedResult for notification failed, %!WINERROR!", dwError);
+            LogError(API_DEFAULT, "GetOverlappedResult for notification failed, %!WINERROR!", dwError);
             goto error;
         }
         
@@ -1076,7 +1076,7 @@ otEnumerateDevices(
         pDeviceList = (otDeviceList*)malloc(cbDeviceList);
         if (pDeviceList == nullptr)
         {
-            otLogCritApi("Failed to allocate otDeviceList of %u bytes.", cbDeviceList);
+            LogError(API_DEFAULT, "Failed to allocate otDeviceList of %u bytes.", cbDeviceList);
             dwError = ERROR_NOT_ENOUGH_MEMORY;
             goto error;
         }
@@ -1096,7 +1096,7 @@ error:
         CloseHandle(Overlapped.hEvent);
     }
     
-    otLogFuncExitMsg("%d devices", pDeviceList == nullptr ? -1 : (int)pDeviceList->aDevicesLength);
+    LogFuncExitMsg(API_DEFAULT, "%d devices", pDeviceList == nullptr ? -1 : (int)pDeviceList->aDevicesLength);
 
     return pDeviceList;
 }
@@ -1132,7 +1132,7 @@ otInstanceInit(
             if (ConvertInterfaceGuidToLuid(aDeviceGuid, &aInstance->InterfaceLuid) != ERROR_SUCCESS ||
                 ConvertInterfaceLuidToIndex(&aInstance->InterfaceLuid, &aInstance->InterfaceIndex) != ERROR_SUCCESS)
             {
-                otLogCritApi("Failed to convert interface guid to index!");
+                LogError(API_DEFAULT, "Failed to convert interface guid to index!");
                 free(aInstance);
                 aInstance = nullptr;
             }
@@ -1920,10 +1920,10 @@ otIp6GetUnicastAddresses(
     _In_ otInstance *aInstance
     )
 {
-    otLogFuncEntry();
+    LogFuncEntry(API_DEFAULT);
     if (aInstance == nullptr)
     {
-        otLogFuncExit();
+        LogFuncExit(API_DEFAULT);
         return nullptr;
     }
 
@@ -1935,7 +1935,7 @@ otIp6GetUnicastAddresses(
         DWORD dwError = ERROR_SUCCESS;
         if ((dwError = SetCurrentThreadCompartmentId(aInstance->CompartmentID)) != ERROR_SUCCESS)
         {
-            otLogCritApi("SetCurrentThreadCompartmentId failed, %!WINERROR!", dwError);
+            LogError(API_DEFAULT, "SetCurrentThreadCompartmentId failed, %!WINERROR!", dwError);
             return nullptr;
         }
         RevertCompartmentOnExit = true;
@@ -1972,7 +1972,7 @@ otIp6GetUnicastAddresses(
         addrs = (otNetifAddress*)malloc(AddrCount * sizeof(otNetifAddress));
         if (addrs == nullptr)
         {
-            otLogWarnApi("Not enough memory to alloc otNetifAddress array");
+            LogWarning(API_DEFAULT, "Not enough memory to alloc otNetifAddress array");
             goto error;
         }
         ZeroMemory(addrs, AddrCount * sizeof(otNetifAddress));
@@ -2015,7 +2015,7 @@ otIp6GetUnicastAddresses(
     }
     else
     {
-        otLogCritApi("GetAdapterAddresses failed!");
+        LogError(API_DEFAULT, "GetAdapterAddresses failed!");
     }
 
     // Revert the comparment if necessary
@@ -2024,7 +2024,7 @@ otIp6GetUnicastAddresses(
         (VOID)SetCurrentThreadCompartmentId(OriginalCompartmentID);
     }
     
-    otLogFuncExitMsg("%d addrs", AddrCount);
+    LogFuncExitMsg(API_DEFAULT, "%d addrs", AddrCount);
     return addrs;
 }
 
@@ -2046,7 +2046,7 @@ otIp6AddUnicastAddress(
         DWORD dwError = ERROR_SUCCESS;
         if ((dwError = SetCurrentThreadCompartmentId(aInstance->CompartmentID)) != ERROR_SUCCESS)
         {
-            otLogCritApi("SetCurrentThreadCompartmentId failed, %!WINERROR!", dwError);
+            LogError(API_DEFAULT, "SetCurrentThreadCompartmentId failed, %!WINERROR!", dwError);
             return kThreadError_Failed;
         }
         RevertCompartmentOnExit = true;
@@ -2088,7 +2088,7 @@ otIp6AddUnicastAddress(
 
     if (dwError != ERROR_SUCCESS)
     {
-        otLogCritApi("CreateUnicastIpAddressEntry failed %!WINERROR!", dwError);
+        LogError(API_DEFAULT, "CreateUnicastIpAddressEntry failed %!WINERROR!", dwError);
         return kThreadError_Failed;
     }
 
@@ -2113,7 +2113,7 @@ otIp6RemoveUnicastAddress(
         DWORD dwError = ERROR_SUCCESS;
         if ((dwError = SetCurrentThreadCompartmentId(aInstance->CompartmentID)) != ERROR_SUCCESS)
         {
-            otLogCritApi("SetCurrentThreadCompartmentId failed, %!WINERROR!", dwError);
+            LogError(API_DEFAULT, "SetCurrentThreadCompartmentId failed, %!WINERROR!", dwError);
             return kThreadError_Failed;
         }
         RevertCompartmentOnExit = true;
@@ -2138,7 +2138,7 @@ otIp6RemoveUnicastAddress(
 
     if (dwError != ERROR_SUCCESS)
     {
-        otLogCritApi("DeleteUnicastIpAddressEntry failed %!WINERROR!", dwError);
+        LogError(API_DEFAULT, "DeleteUnicastIpAddressEntry failed %!WINERROR!", dwError);
         return kThreadError_Failed;
     }
 

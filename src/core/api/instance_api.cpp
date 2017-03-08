@@ -102,7 +102,6 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
     otInstance *aInstance = NULL;
 
     otLogFuncEntry();
-    otLogInfoApi("otInstanceInit");
 
     VerifyOrExit(aInstanceBufferSize != NULL, ;);
 
@@ -117,6 +116,8 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
     // Execute post constructor operations
     otInstancePostConstructor(aInstance);
 
+    otLogInfoApi(aInstance, "otInstance Initialized");
+
 exit:
 
     otLogFuncExit();
@@ -129,8 +130,6 @@ otInstance *otInstanceInit()
 {
     otLogFuncEntry();
 
-    otLogInfoApi("otInstanceInit");
-
     VerifyOrExit(sInstance == NULL, ;);
 
     // Construct the context
@@ -138,6 +137,8 @@ otInstance *otInstanceInit()
 
     // Execute post constructor operations
     otInstancePostConstructor(sInstance);
+
+    otLogInfoApi(sInstance, "otInstance Initialized");
 
 exit:
 

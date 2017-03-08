@@ -222,6 +222,14 @@ public:
     Icmp(Ip6 &aIp6);
 
     /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
+    /**
      * This method returns a new ICMP message with sufficient header space reserved.
      *
      * @param[in]  aReserved  The number of header bytes to reserve after the ICMP header.

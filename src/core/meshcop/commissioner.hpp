@@ -67,6 +67,14 @@ public:
     Commissioner(ThreadNetif &aThreadNetif);
 
     /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
+    /**
      * This method starts the Commissioner service.
      *
      * @retval kThreadError_None  Successfully started the Commissioner service.

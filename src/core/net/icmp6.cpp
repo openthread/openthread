@@ -55,6 +55,11 @@ Icmp::Icmp(Ip6 &aIp6):
 {
 }
 
+otInstance *Icmp::GetInstance()
+{
+    return mIp6.GetInstance();
+}
+
 Message *Icmp::NewMessage(uint16_t aReserved)
 {
     return mIp6.NewMessage(sizeof(IcmpHeader) + aReserved);
@@ -97,7 +102,7 @@ ThreadError Icmp::SendEchoRequest(Message &aMessage, const MessageInfo &aMessage
     aMessage.SetOffset(0);
     SuccessOrExit(error = mIp6.SendDatagram(aMessage, messageInfoLocal, kProtoIcmp6));
 
-    otLogInfoIcmp("Sent echo request: (seq = %d)", icmpHeader.GetSequence());
+    otLogInfoIcmp(GetInstance(), "Sent echo request: (seq = %d)", icmpHeader.GetSequence());
 
 exit:
     return error;
@@ -125,7 +130,7 @@ ThreadError Icmp::SendError(IcmpHeader::Type aType, IcmpHeader::Code aCode, cons
 
     SuccessOrExit(error = mIp6.SendDatagram(*message, messageInfoLocal, kProtoIcmp6));
 
-    otLogInfoIcmp("Sent ICMPv6 Error");
+    otLogInfoIcmp(GetInstance(), "Sent ICMPv6 Error");
 
 exit:
 
@@ -177,14 +182,14 @@ ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo 
     MessageInfo replyMessageInfo;
     uint16_t payloadLength;
 
-    otLogInfoIcmp("Received Echo Request");
+    otLogInfoIcmp(GetInstance(), "Received Echo Request");
 
     icmp6Header.Init();
     icmp6Header.SetType(kIcmp6TypeEchoReply);
 
     if ((replyMessage = mIp6.NewMessage(0)) == NULL)
     {
-        otLogDebgIcmp("Failed to allocate a new message");
+        otLogDebgIcmp(GetInstance(), "Failed to allocate a new message");
         ExitNow();
     }
 
@@ -207,7 +212,7 @@ ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo 
     SuccessOrExit(error = mIp6.SendDatagram(*replyMessage, replyMessageInfo, kProtoIcmp6));
 
     replyMessage->Read(replyMessage->GetOffset(), sizeof(icmp6Header), &icmp6Header);
-    otLogInfoIcmp("Sent Echo Reply (seq = %d)", icmp6Header.GetSequence());
+    otLogInfoIcmp(GetInstance(), "Sent Echo Reply (seq = %d)", icmp6Header.GetSequence());
 
 exit:
 

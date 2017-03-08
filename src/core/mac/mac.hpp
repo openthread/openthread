@@ -192,6 +192,14 @@ public:
     explicit Mac(ThreadNetif &aThreadNetif);
 
     /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
+    /**
      * This function pointer is called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
      *
      * @param[in]  aContext       A pointer to arbitrary context information.

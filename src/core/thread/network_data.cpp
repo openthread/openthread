@@ -57,6 +57,11 @@ NetworkData::NetworkData(ThreadNetif &aThreadNetif, bool aLocal):
     mLength = 0;
 }
 
+otInstance *NetworkData::GetInstance()
+{
+    return mNetif.GetInstance();
+}
+
 void NetworkData::Clear(void)
 {
     mLength = 0;
@@ -640,7 +645,7 @@ ThreadError NetworkData::SendServerDataNotification(uint16_t aRloc16)
         mLastAttemptWait = true;
     }
 
-    otLogInfoNetData("Sent server data notification");
+    otLogInfoNetData(GetInstance(), "Sent server data notification");
 
 exit:
 

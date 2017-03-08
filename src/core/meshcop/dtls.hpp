@@ -72,6 +72,14 @@ public:
     Dtls(ThreadNetif &aNetif);
 
     /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
+    /**
      * This function pointer is called when a connection is established or torn down.
      *
      * @param[in]  aContext    A pointer to application-specific context.

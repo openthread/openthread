@@ -65,6 +65,14 @@ public:
     JoinerRouter(ThreadNetif &aNetif);
 
     /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
+    /**
      * This method returns the Joiner UDP Port.
      *
      * @returns The Joiner UDP Port number .

@@ -179,6 +179,14 @@ public:
     explicit Dhcp6Client(ThreadNetif &aThreadNetif);
 
     /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
+    /**
      * This method update addresses that shall be automatically created using DHCP.
      *
      * @param[in]     aInstance     A pointer to openThread instance.

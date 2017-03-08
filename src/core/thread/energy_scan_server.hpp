@@ -65,6 +65,14 @@ public:
      */
     EnergyScanServer(ThreadNetif &aThreadNetif);
 
+    /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
 private:
     enum
     {

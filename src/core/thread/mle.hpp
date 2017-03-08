@@ -461,6 +461,14 @@ public:
     explicit Mle(ThreadNetif &aThreadNetif);
 
     /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
+    /**
      * This method enables MLE.
      *
      * @retval kThreadError_None     Successfully enabled MLE.

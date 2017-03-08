@@ -81,6 +81,14 @@ public:
     explicit MeshForwarder(ThreadNetif &aThreadNetif);
 
     /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
+    /**
      * This method enables mesh forwarding and the IEEE 802.15.4 MAC layer.
      *
      * @retval kThreadError_None          Successfully enabled the mesh forwarder.

@@ -85,6 +85,11 @@ MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
     mMacDest.mLength = 0;
 }
 
+otInstance *MeshForwarder::GetInstance()
+{
+    return mNetif.GetInstance();
+}
+
 ThreadError MeshForwarder::Start(void)
 {
     ThreadError error = kThreadError_None;
@@ -341,8 +346,8 @@ ThreadError MeshForwarder::AddSrcMatchEntry(Child &aChild)
     ThreadError error = kThreadError_NoBufs;
     Mac::Address macAddr;
 
-    otLogDebgMac("Queuing for child (0x%x)", aChild.mValid.mRloc16);
-    otLogDebgMac("SrcMatch %d (0:Dis, 1:En))", mSrcMatchEnabled);
+    otLogDebgMac(GetInstance(), "Queuing for child (0x%x)", aChild.mValid.mRloc16);
+    otLogDebgMac(GetInstance(), "SrcMatch %d (0:Dis, 1:En))", mSrcMatchEnabled);
 
     // first queued message, to be added into source match table
     if (aChild.mQueuedIndirectMessageCnt == 1)
@@ -390,7 +395,7 @@ exit:
 void MeshForwarder::ClearSrcMatchEntry(Child &aChild)
 {
     Mac::Address macAddr;
-    otLogDebgMac("SrcMatch %d (0:Dis, 1:En))", mSrcMatchEnabled);
+    otLogDebgMac(GetInstance(), "SrcMatch %d (0:Dis, 1:En))", mSrcMatchEnabled);
 
     if (aChild.mAddSrcMatchEntryShort)
     {
@@ -937,7 +942,7 @@ void MeshForwarder::ScheduleNextPoll(uint32_t aDelay)
     }
     else
     {
-        otLogWarnMac("Cannot start poll timer with uninitialized value of poll period.");
+        otLogWarnMac(GetInstance(), "Cannot start poll timer with uninitialized value of poll period.");
     }
 }
 
@@ -960,7 +965,7 @@ void MeshForwarder::HandlePollTimer()
     case kThreadError_InvalidState:
         // The poll timer should have been stopped. Hitting
         // this might indicate a logic error.
-        otLogWarnMac("Poll timer fired while RxOnWhenIdle set!");
+        otLogWarnMac(GetInstance(), "Poll timer fired while RxOnWhenIdle set!");
         break;
 
     case kThreadError_NoBufs:
@@ -974,7 +979,7 @@ void MeshForwarder::HandlePollTimer()
         // bad behavior, as it suggests that mPollPeriod was not long
         // enough for the previously scheduled DataRequest to get out of
         // the sendQueue.
-        otLogDebgMac("Poll timer fired with DataRequest in SendQueue.");
+        otLogDebgMac(GetInstance(), "Poll timer fired with DataRequest in SendQueue.");
 
     // Intentional fall-thru
     default:
@@ -1006,7 +1011,7 @@ ThreadError MeshForwarder::SendMacDataRequest(void)
 
     if (error == kThreadError_None)
     {
-        otLogDebgMac("Sent poll");
+        otLogDebgMac(GetInstance(), "Sent poll");
 
         // restart the polling timer
         ScheduleNextPoll(mPollPeriod);
@@ -1695,7 +1700,7 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
             if ((child->mMode & Mle::ModeTlv::kModeRxOnWhenIdle) == 0)
             {
                 child->mQueuedIndirectMessageCnt--;
-                otLogDebgMac("Sent to child (0x%x), still queued message (%d)",
+                otLogDebgMac(GetInstance(), "Sent to child (0x%x), still queued message (%d)",
                              child->mValid.mRloc16, child->mQueuedIndirectMessageCnt);
 
                 if (child->mQueuedIndirectMessageCnt == 0)
@@ -1878,7 +1883,7 @@ exit:
 
     if (error != kThreadError_None)
     {
-        otLogDebgMacErr(error, "Dropping received frame");
+        otLogDebgMacErr(GetInstance(), error, "Dropping received frame");
     }
 }
 
@@ -1943,7 +1948,7 @@ exit:
 
     if (error != kThreadError_None)
     {
-        otLogDebgMacErr(error, "Dropping received mesh frame");
+        otLogDebgMacErr(GetInstance(), error, "Dropping received mesh frame");
 
         if (message != NULL)
         {
@@ -2072,7 +2077,7 @@ exit:
     }
     else
     {
-        otLogDebgMacErr(error, "Dropping received fragment");
+        otLogDebgMacErr(GetInstance(), error, "Dropping received fragment");
 
         if (message != NULL)
         {
@@ -2146,7 +2151,7 @@ exit:
     }
     else
     {
-        otLogDebgMacErr(error, "Dropping received lowpan HC");
+        otLogDebgMacErr(GetInstance(), error, "Dropping received lowpan HC");
 
         if (message != NULL)
         {

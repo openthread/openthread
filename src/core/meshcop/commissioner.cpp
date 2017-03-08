@@ -84,6 +84,11 @@ Commissioner::Commissioner(ThreadNetif &aThreadNetif):
     mNetif.GetSecureCoapServer().AddResource(mJoinerFinalize);
 }
 
+otInstance *Commissioner::GetInstance()
+{
+    return mNetif.GetInstance();
+}
+
 ThreadError Commissioner::Start(void)
 {
     ThreadError error = kThreadError_None;
@@ -336,7 +341,7 @@ void Commissioner::HandleJoinerExpirationTimer(void)
 
         if (static_cast<int32_t>(now - mJoiners[i].mExpirationTime) >= 0)
         {
-            otLogDebgMeshCoP("removing joiner due to timeout");
+            otLogDebgMeshCoP(GetInstance(), "removing joiner due to timeout");
             RemoveJoiner(&mJoiners[i].mExtAddress);
         }
     }
@@ -412,7 +417,7 @@ ThreadError Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs,
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo,
                                                              Commissioner::HandleMgmtCommissionerGetResponse, this));
 
-    otLogInfoMeshCoP("sent MGMT_COMMISSIONER_GET.req to leader");
+    otLogInfoMeshCoP(GetInstance(), "sent MGMT_COMMISSIONER_GET.req to leader");
 
 exit:
 
@@ -442,7 +447,7 @@ void Commissioner::HandleMgmtCommissisonerGetResponse(Coap::Header *aHeader, Mes
     otLogFuncEntry();
 
     VerifyOrExit(aResult == kThreadError_None && aHeader->GetCode() == kCoapResponseChanged, ;);
-    otLogInfoMeshCoP("received MGMT_COMMISSIONER_GET response");
+    otLogInfoMeshCoP(GetInstance(), "received MGMT_COMMISSIONER_GET response");
 
 exit:
     otLogFuncExit();
@@ -514,7 +519,7 @@ ThreadError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDa
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo,
                                                              Commissioner::HandleMgmtCommissionerSetResponse, this));
 
-    otLogInfoMeshCoP("sent MGMT_COMMISSIONER_SET.req to leader");
+    otLogInfoMeshCoP(GetInstance(), "sent MGMT_COMMISSIONER_SET.req to leader");
 
 exit:
 
@@ -544,7 +549,7 @@ void Commissioner::HandleMgmtCommissisonerSetResponse(Coap::Header *aHeader, Mes
     otLogFuncEntry();
 
     VerifyOrExit(aResult == kThreadError_None && aHeader->GetCode() == kCoapResponseChanged, ;);
-    otLogInfoMeshCoP("received MGMT_COMMISSIONER_SET response");
+    otLogInfoMeshCoP(GetInstance(), "received MGMT_COMMISSIONER_SET response");
 
 exit:
     otLogFuncExit();
@@ -579,7 +584,7 @@ ThreadError Commissioner::SendPetition(void)
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo,
                                                              Commissioner::HandleLeaderPetitionResponse, this));
 
-    otLogInfoMeshCoP("sent petition");
+    otLogInfoMeshCoP(GetInstance(), "sent petition");
 
 exit:
 
@@ -616,7 +621,7 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Header *aHeader, Message *
     VerifyOrExit(aResult == kThreadError_None &&
                  aHeader->GetCode() == kCoapResponseChanged, retransmit = true);
 
-    otLogInfoMeshCoP("received Leader Petition response");
+    otLogInfoMeshCoP(GetInstance(), "received Leader Petition response");
 
     SuccessOrExit(Tlv::GetTlv(*aMessage, Tlv::kState, sizeof(state), state));
     VerifyOrExit(state.IsValid(), ;);
@@ -679,7 +684,7 @@ ThreadError Commissioner::SendKeepAlive(void)
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo,
                                                              Commissioner::HandleLeaderKeepAliveResponse, this));
 
-    otLogInfoMeshCoP("sent keep alive");
+    otLogInfoMeshCoP(GetInstance(), "sent keep alive");
 
 exit:
 
@@ -713,7 +718,7 @@ void Commissioner::HandleLeaderKeepAliveResponse(Coap::Header *aHeader, Message 
     VerifyOrExit(aResult == kThreadError_None &&
                  aHeader->GetCode() == kCoapResponseChanged, mState = kStateDisabled);
 
-    otLogInfoMeshCoP("received Leader Petition response");
+    otLogInfoMeshCoP(GetInstance(), "received Leader Petition response");
 
     SuccessOrExit(Tlv::GetTlv(*aMessage, Tlv::kState, sizeof(state), state));
     VerifyOrExit(state.IsValid(), ;);
@@ -780,7 +785,7 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
                 error = mNetif.GetSecureCoapServer().SetPsk(reinterpret_cast<const uint8_t *>(mJoiners[i].mPsk),
                                                             static_cast<uint8_t>(strlen(mJoiners[i].mPsk)));
                 SuccessOrExit(error);
-                otLogInfoMeshCoP("found joiner, starting new session");
+                otLogInfoMeshCoP(GetInstance(), "found joiner, starting new session");
                 enableJoiner = true;
                 break;
             }
@@ -798,7 +803,7 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
     mJoinerPort = joinerPort.GetUdpPort();
     mJoinerRloc = joinerRloc.GetJoinerRouterLocator();
 
-    otLogInfoMeshCoP("Received relay receive for %llX, rloc:%x", HostSwap64(mJoinerIid64), mJoinerRloc);
+    otLogInfoMeshCoP(GetInstance(), "Received relay receive for %llX, rloc:%x", HostSwap64(mJoinerIid64), mJoinerRloc);
 
     aMessage.SetOffset(offset);
     SuccessOrExit(error = aMessage.SetLength(offset + length));
@@ -828,12 +833,12 @@ void Commissioner::HandleDatasetChanged(Coap::Header &aHeader, Message &aMessage
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
                  aHeader.GetCode() == kCoapRequestPost, ;);
 
-    otLogInfoMeshCoP("received dataset changed");
+    otLogInfoMeshCoP(GetInstance(), "received dataset changed");
     (void)aMessage;
 
     SuccessOrExit(mNetif.GetCoapServer().SendEmptyAck(aHeader, aMessageInfo));
 
-    otLogInfoMeshCoP("sent dataset changed acknowledgment");
+    otLogInfoMeshCoP(GetInstance(), "sent dataset changed acknowledgment");
 
 exit:
     otLogFuncExit();
@@ -854,7 +859,7 @@ void Commissioner::HandleJoinerFinalize(Coap::Header &aHeader, Message &aMessage
     ProvisioningUrlTlv provisioningUrl;
 
     otLogFuncEntry();
-    otLogInfoMeshCoP("received joiner finalize");
+    otLogInfoMeshCoP(GetInstance(), "received joiner finalize");
 
     if (Tlv::GetTlv(aMessage, Tlv::kProvisioningUrl, sizeof(provisioningUrl), provisioningUrl) == kThreadError_None)
     {
@@ -913,8 +918,8 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, 
     extAddr.SetLocal(!extAddr.IsLocal());
     RemoveJoiner(&extAddr);
 
-    otLogInfoMeshCoP("sent joiner finalize response");
-    otLogCertMeshCoP("[THCI] direction=send | type=JOIN_FIN.rsp");
+    otLogInfoMeshCoP(GetInstance(), "sent joiner finalize response");
+    otLogCertMeshCoP(GetInstance(), "[THCI] direction=send | type=JOIN_FIN.rsp");
 exit:
 
     if (error != kThreadError_None && message != NULL)
