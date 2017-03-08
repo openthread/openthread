@@ -1214,11 +1214,12 @@ exit:
     return error;
 }
 
-void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+ThreadError otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
 {
     // TODO: Create a proper implementation for this driver.
     (void)aInstance;
     (void)aPower;
+    return kThreadError_NotImplemented;
 }
 
 /**
