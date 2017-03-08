@@ -1164,12 +1164,12 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         break;
 
     case SPINEL_PROP_THREAD_JOINERS:
-    	ret = "SPINEL_PROP_THREAD_JOINERS";
-    	break;
+        ret = "SPINEL_PROP_THREAD_JOINERS";
+        break;
 
     case SPINEL_PROP_THREAD_COMMISSIONER_ENABLED:
-    	ret = "SPINEL_PROP_THREAD_COMMISSIONER_ENABLED";
-    	break;
+        ret = "SPINEL_PROP_THREAD_COMMISSIONER_ENABLED";
+        break;
 
     case SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU:
         ret = "PROP_THREAD_RLOC16_DEBUG_PASSTHRU";
