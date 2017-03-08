@@ -87,7 +87,7 @@ const uint8_t *NcpUart::UartTxBuffer::GetBuffer(void) const
 
 NcpUart::NcpUart(otInstance *aInstance):
     NcpBase(aInstance),
-    mFrameDecoder(mRxBuffer, sizeof(mRxBuffer), &NcpUart::HandleFrame, &NcpUart::HandleError, this),
+    mFrameDecoder(mRxBuffer, sizeof(mRxBuffer), &NcpUart::HandleFrame, &NcpUart::HandleError, &NcpUart::HandlePendingFrame, this),
     mUartBuffer(),
     mState(kStartingFrame),
     mByte(0),
@@ -197,6 +197,28 @@ void NcpUart::HandleUartReceiveDone(const uint8_t *aBuf, uint16_t aBufLength)
     mFrameDecoder.Decode(aBuf, aBufLength);
 }
 
+uint16_t NcpUart::HandlePendingFrame(void *context, uint8_t *aBuf, uint16_t aBufLength)
+{
+    (void)context;
+    return sNcpUart->HandlePendingFrame(aBuf, aBufLength);
+}
+
+uint16_t NcpUart::HandlePendingFrame(uint8_t *aBuf, uint16_t aBufLength)
+{
+    uint16_t handledLength = super_t::HandleReceivePending(aBuf, aBufLength);
+
+    VerifyOrExit(handledLength <= aBufLength, handledLength = 0);
+
+    if (handledLength > 0)
+    {
+        memmove(aBuf, aBuf + handledLength, aBufLength - handledLength);
+    }
+
+exit:
+
+    return aBufLength - handledLength;
+}
+
 void NcpUart::HandleFrame(void *context, uint8_t *aBuf, uint16_t aBufLength)
 {
     sNcpUart->HandleFrame(aBuf, aBufLength);
@@ -220,6 +242,13 @@ void NcpUart::HandleError(ThreadError aError, uint8_t *aBuf, uint16_t aBufLength
     uint16_t i = 0;
 
     super_t::IncrementFrameErrorCounter();
+
+    // Abort possible pending frame handling
+    if (mPendingFrame.mMessage != NULL)
+    {
+        otMessageFree(mPendingFrame.mMessage);
+        memset(&mPendingFrame, 0, sizeof(mPendingFrame));
+    }
 
     // We can get away with sprintf because we know
     // `hexbuf` is large enough.

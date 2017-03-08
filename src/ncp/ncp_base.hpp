@@ -51,6 +51,14 @@
 
 namespace Thread {
 
+struct PendingFrame
+{
+    otMessage *mMessage;
+    spinel_prop_key_t mKey;
+    uint16_t mPendingLength;
+    uint8_t mHeader;
+};
+
 class NcpBase
 {
 public:
@@ -126,6 +134,11 @@ protected:
     void IncrementFrameErrorCounter(void);
 
 protected:
+
+    /**
+     * Called by the subclass to indicate when a pending frame has been received.
+     */
+    uint16_t HandleReceivePending(const uint8_t *buf, uint16_t bufLength);
 
     /**
      * Called by the subclass to indicate when a frame has been received.
@@ -296,6 +309,7 @@ private:
     static const InsertPropertyHandlerEntry mInsertPropertyHandlerTable[];
     static const RemovePropertyHandlerEntry mRemovePropertyHandlerTable[];
 
+    ThreadError PendingCommandHandler_PROP_VALUE_SET(uint8_t header, unsigned int command, const uint8_t *arg_ptr, uint16_t arg_len);
     ThreadError CommandHandler_NOOP(uint8_t header, unsigned int command, const uint8_t *arg_ptr, uint16_t arg_len);
     ThreadError CommandHandler_RESET(uint8_t header, unsigned int command, const uint8_t *arg_ptr, uint16_t arg_len);
     ThreadError CommandHandler_PROP_VALUE_GET(uint8_t header, unsigned int command, const uint8_t *arg_ptr,
@@ -579,6 +593,7 @@ public:
 
 protected:
     NcpFrameBuffer  mTxFrameBuffer;
+    PendingFrame mPendingFrame;
 
 private:
     enum
@@ -639,7 +654,6 @@ private:
     uint8_t mLegacyUlaPrefix[OT_NCP_LEGACY_ULA_PREFIX_LENGTH];
     bool mLegacyNodeDidJoin;
 #endif
-
 };
 
 }  // namespace Thread

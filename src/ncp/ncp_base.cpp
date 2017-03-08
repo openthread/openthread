@@ -547,6 +547,8 @@ NcpBase::NcpBase(otInstance *aInstance):
     mLegacyHandlers = NULL;
     memset(mLegacyUlaPrefix, 0, sizeof(mLegacyUlaPrefix));
 #endif
+
+    memset(&mPendingFrame, 0, sizeof(mPendingFrame));
 }
 
 // ----------------------------------------------------------------------------
@@ -1120,20 +1122,41 @@ exit:
 
 void NcpBase::HandleReceive(const uint8_t *buf, uint16_t bufLength)
 {
-    uint8_t header = 0;
-    unsigned int command = 0;
-    spinel_ssize_t parsedLength;
-    const uint8_t *arg_ptr = NULL;
-    unsigned int arg_len = 0;
     ThreadError errorCode = kThreadError_None;
     spinel_tid_t tid = 0;
 
-    parsedLength = spinel_datatype_unpack(buf, bufLength, "CiD", &header, &command, &arg_ptr, &arg_len);
-    tid = SPINEL_HEADER_GET_TID(header);
-
-    if (parsedLength == bufLength)
+    if (mPendingFrame.mMessage == NULL)
     {
-        errorCode = HandleCommand(header, command, arg_ptr, static_cast<uint16_t>(arg_len));
+        uint8_t header = 0;
+        unsigned int command = 0;
+        spinel_ssize_t parsedLength;
+        const uint8_t *arg_ptr = NULL;
+        unsigned int arg_len = 0;
+
+        parsedLength = spinel_datatype_unpack(buf, bufLength, "CiD", &header, &command, &arg_ptr, &arg_len);
+        tid = SPINEL_HEADER_GET_TID(header);
+
+        if (parsedLength == bufLength)
+        {
+            errorCode = HandleCommand(header, command, arg_ptr, static_cast<uint16_t>(arg_len));
+
+            // Check if we may have missed a `tid` in the sequence.
+            if ((mNextExpectedTid != 0) && (tid != mNextExpectedTid))
+            {
+                mRxSpinelOutOfOrderTidCounter++;
+            }
+
+            mNextExpectedTid = SPINEL_GET_NEXT_TID(tid);
+        }
+        else
+        {
+            errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+        }
+    }
+    else
+    {
+        // This is the last part of the current frame.
+        tid = SPINEL_HEADER_GET_TID(mPendingFrame.mHeader);
 
         // Check if we may have missed a `tid` in the sequence.
         if ((mNextExpectedTid != 0) && (tid != mNextExpectedTid))
@@ -1142,10 +1165,49 @@ void NcpBase::HandleReceive(const uint8_t *buf, uint16_t bufLength)
         }
 
         mNextExpectedTid = SPINEL_GET_NEXT_TID(tid);
-    }
-    else
-    {
-        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+
+        if (mPendingFrame.mPendingLength > 0)
+        {
+            errorCode = (bufLength < mPendingFrame.mPendingLength) ? kThreadError_Parse :
+                otMessageAppend(mPendingFrame.mMessage, buf, mPendingFrame.mPendingLength);
+
+            if (errorCode == kThreadError_None)
+            {
+                buf += mPendingFrame.mPendingLength;
+                bufLength -= mPendingFrame.mPendingLength;
+            }
+            else
+            {
+                otMessageFree(mPendingFrame.mMessage);
+                memset(&mPendingFrame, 0, sizeof(mPendingFrame));
+            }
+        }
+
+        if (errorCode == kThreadError_None)
+        {
+            if (mPendingFrame.mKey == SPINEL_PROP_STREAM_NET)
+            {
+                errorCode = SetPropertyHandler_STREAM_NET(mPendingFrame.mHeader, mPendingFrame.mKey, buf, bufLength);
+            }
+            else if (mPendingFrame.mKey == SPINEL_PROP_STREAM_NET_INSECURE)
+            {
+                errorCode = SetPropertyHandler_STREAM_NET_INSECURE(mPendingFrame.mHeader, mPendingFrame.mKey, buf, bufLength);
+            }
+            else
+            {
+                otMessageFree(mPendingFrame.mMessage);
+                mPendingFrame.mMessage = NULL;
+
+                errorCode = SendLastStatus(mPendingFrame.mHeader, SPINEL_STATUS_PARSE_ERROR);
+            }
+        }
+        else
+        {
+            errorCode = SendLastStatus(mPendingFrame.mHeader, SPINEL_STATUS_PARSE_ERROR);
+        }
+
+        // Mark this pending frame ended.
+        memset(&mPendingFrame, 0, sizeof(mPendingFrame));
     }
 
     if (errorCode == kThreadError_NoBufs)
@@ -1175,6 +1237,99 @@ void NcpBase::HandleReceive(const uint8_t *buf, uint16_t bufLength)
 
     mRxSpinelFrameCounter++;
 }
+
+ThreadError NcpBase::PendingCommandHandler_PROP_VALUE_SET(uint8_t header, unsigned int command, const uint8_t *arg_ptr,
+        uint16_t arg_len)
+{
+    unsigned int propKey = 0;
+    spinel_ssize_t parsedLength;
+    const uint8_t *value_ptr;
+    unsigned int value_len;
+    ThreadError errorCode = kThreadError_None;
+    SetPropertyHandlerType handler = NULL;
+
+    parsedLength = spinel_datatype_unpack(arg_ptr, arg_len, "iD", &propKey, &value_ptr, &value_len);
+
+    VerifyOrExit(parsedLength == arg_len, errorCode = kThreadError_Parse);
+    // We only care about Property STREAM_NET and STREAM_NET_INSECURE
+    if (propKey == SPINEL_PROP_STREAM_NET)
+    {
+        handler = &NcpBase::SetPropertyHandler_STREAM_NET;
+    }
+    else if (propKey == SPINEL_PROP_STREAM_NET_INSECURE)
+    {
+        handler = &NcpBase::SetPropertyHandler_STREAM_NET_INSECURE;
+    }
+
+    VerifyOrExit(handler != NULL, errorCode = kThreadError_Parse);
+
+    // Mark this is a pending frame.
+    mPendingFrame.mKey = static_cast<spinel_prop_key_t>(propKey);
+
+    errorCode = (this->*handler)(header, static_cast<spinel_prop_key_t>(propKey), value_ptr,
+                                             static_cast<uint16_t>(value_len));
+exit:
+
+    (void)command;
+
+    return errorCode;
+}
+
+// This method is only for handling net streaming whose payload may be much bigger.
+// This method must only be called when the receiving buffer is overflowed.
+uint16_t NcpBase::HandleReceivePending(const uint8_t *buf, uint16_t bufLength)
+{
+    ThreadError errorCode = kThreadError_None;
+    uint16_t handledLength = bufLength;
+
+    if (mPendingFrame.mMessage == NULL)
+    {
+        // This is the first part of the frame, we should route to possible handler and create message their.
+
+        uint8_t header = 0;
+        unsigned int command = 0;
+        spinel_ssize_t parsedLength;
+        const uint8_t *arg_ptr = NULL;
+        unsigned int arg_len = 0;
+
+        parsedLength = spinel_datatype_unpack(buf, bufLength, "CiD", &header, &command, &arg_ptr, &arg_len);
+
+        // We only care about Set Property Value command
+        VerifyOrExit((parsedLength == bufLength && command == SPINEL_CMD_PROP_VALUE_SET),
+                errorCode = kThreadError_Parse);
+
+        errorCode = PendingCommandHandler_PROP_VALUE_SET(header, command, arg_ptr, static_cast<uint16_t>(arg_len));
+    }
+    else
+    {
+        // Continue handling part of the frame
+
+        // We are not going to handle frames that cannot fit in one otMessage plus the RxBuffer
+        VerifyOrExit(mPendingFrame.mPendingLength > 0, errorCode = kThreadError_Parse);
+
+        handledLength = (mPendingFrame.mPendingLength >= bufLength ? bufLength : mPendingFrame.mPendingLength);
+
+        errorCode = otMessageAppend(mPendingFrame.mMessage, buf, handledLength);
+
+        mPendingFrame.mPendingLength -= handledLength;
+    }
+
+exit:
+
+    if (errorCode != kThreadError_None)
+    {
+        if (mPendingFrame.mMessage != NULL)
+        {
+            otMessageFree(mPendingFrame.mMessage);
+            memset(&mPendingFrame, 0, sizeof(mPendingFrame));
+        }
+
+        handledLength = 0;
+    }
+
+    return handledLength;
+}
+
 
 void NcpBase::HandleSpaceAvailableInTxBuffer(void)
 {
@@ -4330,11 +4485,30 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spin
     unsigned int meta_len(0);
 
     // STREAM_NET_INSECURE packets are not secured at layer 2.
-    otMessage *message = otIp6NewMessage(mInstance, false);
+    otMessage *message = (mPendingFrame.mMessage == NULL) ?
+        otIp6NewMessage(mInstance, false) : mPendingFrame.mMessage;
 
     if (message == NULL)
     {
         errorCode = kThreadError_NoBufs;
+    }
+    else if (mPendingFrame.mMessage != NULL)
+    {
+        // It's guaranteed that this is the final call for this pending frame.
+
+        parsedLength = spinel_datatype_unpack(
+                           value_ptr,
+                           value_len,
+                           SPINEL_DATATYPE_DATA_S,
+                           &meta_ptr,
+                           &meta_len
+                       );
+
+        // We ignore metadata for now.
+        // May later include TX power, allow retransmits, etc...
+        (void)meta_ptr;
+        (void)meta_len;
+        (void)parsedLength;
     }
     else
     {
@@ -4354,8 +4528,35 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spin
         (void)meta_len;
         (void)parsedLength;
 
-        errorCode = otMessageAppend(message, frame_ptr, static_cast<uint16_t>(frame_len));
+        if (frame_len == 0)
+        {
+            // Make sure this is a pending frame.
+            VerifyOrExit(mPendingFrame.mKey == SPINEL_PROP_STREAM_NET_INSECURE, errorCode = kThreadError_Parse);
+
+            spinel_ssize_t pui_len = spinel_datatype_unpack(value_ptr, value_len, SPINEL_DATATYPE_UINT16_S, &frame_len);
+            VerifyOrExit(pui_len > 0 && (static_cast<int32_t>(frame_len) > value_len - pui_len), errorCode = kThreadError_Parse);
+
+            frame_ptr = value_ptr + pui_len;
+            errorCode = otMessageAppend(message, frame_ptr, static_cast<uint16_t>(value_len - pui_len));
+            if (errorCode == kThreadError_None)
+            {
+                // Waiting for more data
+                mPendingFrame.mMessage = message;
+                mPendingFrame.mKey = key;
+                mPendingFrame.mPendingLength = static_cast<uint16_t>(frame_len - otMessageGetLength(message));
+                mPendingFrame.mHeader = header;
+
+                return kThreadError_None;
+            }
+        }
+        else
+        {
+
+            errorCode = otMessageAppend(message, frame_ptr, static_cast<uint16_t>(frame_len));
+        }
     }
+
+exit:
 
     if (errorCode == kThreadError_None)
     {
@@ -4403,11 +4604,30 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_k
     unsigned int meta_len(0);
 
     // STREAM_NET requires layer 2 security.
-    otMessage *message = otIp6NewMessage(mInstance, true);
+    otMessage *message = (mPendingFrame.mMessage == NULL) ?
+        otIp6NewMessage(mInstance, true) : mPendingFrame.mMessage;
 
     if (message == NULL)
     {
         errorCode = kThreadError_NoBufs;
+    }
+    else if (mPendingFrame.mMessage != NULL)
+    {
+        // It's guaranteed that this is the final call for this pending frame.
+
+        parsedLength = spinel_datatype_unpack(
+                           value_ptr,
+                           value_len,
+                           SPINEL_DATATYPE_DATA_S,
+                           &meta_ptr,
+                           &meta_len
+                       );
+
+        // We ignore metadata for now.
+        // May later include TX power, allow retransmits, etc...
+        (void)meta_ptr;
+        (void)meta_len;
+        (void)parsedLength;
     }
     else
     {
@@ -4427,8 +4647,34 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_k
         (void)meta_len;
         (void)parsedLength;
 
-        errorCode = otMessageAppend(message, frame_ptr, static_cast<uint16_t>(frame_len));
+        if (frame_len == 0)
+        {
+            // Make sure this is a pending frame.
+            VerifyOrExit(mPendingFrame.mKey == SPINEL_PROP_STREAM_NET, errorCode = kThreadError_Parse);
+
+            spinel_ssize_t pui_len = spinel_datatype_unpack(value_ptr, value_len, SPINEL_DATATYPE_UINT16_S, &frame_len);
+            VerifyOrExit(pui_len > 0 && (static_cast<int32_t>(frame_len) > value_len - pui_len), errorCode = kThreadError_Parse);
+
+            frame_ptr = value_ptr + pui_len;
+            errorCode = otMessageAppend(message, frame_ptr, static_cast<uint16_t>(value_len - pui_len));
+            if (kThreadError_None == errorCode)
+            {
+                // Waiting for more data
+                mPendingFrame.mMessage = message;
+                mPendingFrame.mKey = key;
+                mPendingFrame.mPendingLength = static_cast<uint16_t>(frame_len - otMessageGetLength(message));
+                mPendingFrame.mHeader = header;
+
+                return kThreadError_None;
+            }
+        }
+        else
+        {
+            errorCode = otMessageAppend(message, frame_ptr, static_cast<uint16_t>(frame_len));
+        }
     }
+
+exit:
 
     if (errorCode == kThreadError_None)
     {
