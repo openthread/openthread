@@ -28,7 +28,8 @@
 
 #include <ctype.h>
 #include "test_util.h"
-#include <openthread.h>
+#include "openthread/openthread.h"
+#include <openthread-instance.h>
 #include <common/code_utils.hpp>
 #include <common/message.hpp>
 #include <ncp/ncp_buffer.hpp>
@@ -49,7 +50,8 @@ static const uint8_t sHelloText[]      = "Hello there!";
 static const uint8_t sMottoText[]      = "Think good thoughts, say good words, do good deeds!";
 static const uint8_t sMysteryText[]    = "4871(\\):|(3$}{4|/4/2%14(\\)";
 
-static MessagePool sMessagePool;
+static otInstance sInstance;
+static MessagePool sMessagePool(&sInstance);
 
 struct CallbackContext
 {

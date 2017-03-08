@@ -36,7 +36,8 @@
 
 #include <stdint.h>
 
-#include <openthread-types.h>
+#include "openthread/types.h"
+
 #include <mac/mac_frame.hpp>
 
 namespace Thread {
@@ -70,18 +71,6 @@ public:
     Blacklist(void);
 
     /**
-     * This method enables the blacklist filter.
-     *
-     */
-    void Enable(void);
-
-    /**
-     * This method disables the blacklist filter.
-     *
-     */
-    void Disable(void);
-
-    /**
      * This method indicates whether or not the blacklist filter is enabled.
      *
      * @retval TRUE   If the blacklist filter is enabled.
@@ -89,6 +78,14 @@ public:
      *
      */
     bool IsEnabled(void) const;
+
+    /**
+     * This method enables the blacklist filter.
+     *
+     * @param[in]  aEnabled  TRUE to enable the blacklist filter, FALSE otherwise.
+     *
+     */
+    void SetEnabled(bool aEnabled);
 
     /**
      * This method returns the maximum number of blacklist entries.

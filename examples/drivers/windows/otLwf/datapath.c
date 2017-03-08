@@ -117,7 +117,7 @@ Arguments:
             spinel_tid_t tid = (spinel_tid_t)(ULONG_PTR)NetBuffer->ProtocolReserved[1];
             if (tid != 0)
             {
-#if DBG
+#ifdef COMMAND_INIT_RETRY
                 NT_ASSERT(pFilter->cmdInitTryCount < 9 || NBL->Status != NDIS_STATUS_PAUSED);
 #endif
                 otLwfCmdCancel(pFilter, NDIS_TEST_SEND_COMPLETE_AT_DISPATCH_LEVEL(SendCompleteFlags), tid);
@@ -420,12 +420,12 @@ N.B.: It is important to check the ReceiveFlags in NDIS_TEST_RECEIVE_CANNOT_PEND
 // delivery to TCPIP.
 void 
 otLwfReceiveIp6DatagramCallback(
-    _In_ otMessage aMessage, 
+    _In_ otMessage *aMessage,
     _In_ void *aContext
     )
 {
     PMS_FILTER pFilter = (PMS_FILTER)aContext;
-    uint16_t messageLength = otGetMessageLength(aMessage);
+    uint16_t messageLength = otMessageGetLength(aMessage);
     PNET_BUFFER_LIST NetBufferList = NULL;
     PNET_BUFFER NetBuffer = NULL;
     NDIS_STATUS Status = NDIS_STATUS_SUCCESS;
@@ -487,7 +487,7 @@ otLwfReceiveIp6DatagramCallback(
     }
 
     // Read the bytes to the buffer
-    BytesRead = otReadMessage(aMessage, 0, DataBuffer, messageLength);
+    BytesRead = otMessageRead(aMessage, 0, DataBuffer, messageLength);
     NT_ASSERT(BytesRead == (int)messageLength);
     if (BytesRead != (int)messageLength)
     {
@@ -563,7 +563,7 @@ otLwfReceiveIp6DatagramCallback(
 
 error:
 
-    otFreeMessage(aMessage);
+    otMessageFree(aMessage);
 }
 
 // Called in response to receiving a Spinel Ip6 packet command

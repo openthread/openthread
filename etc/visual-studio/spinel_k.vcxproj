@@ -50,7 +50,7 @@
       <DisableSpecificWarnings>4100;4706;4748;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WppEnabled>true</WppEnabled>
-      <WppScanConfigurationData>..\..\include\platform\logging-windows.h</WppScanConfigurationData>
+      <WppScanConfigurationData>..\..\include\openthread\platform\logging-windows.h</WppScanConfigurationData>
       <WppAdditionalOptions>-km %(WppAdditionalOptions)</WppAdditionalOptions>
       <WppModuleName>otCore</WppModuleName>
       <WppSearchString>WPP_INIT_TRACING</WppSearchString>

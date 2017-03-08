@@ -31,6 +31,7 @@
 #include "config.h"
 #endif
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -66,7 +67,7 @@
 /* ------------------------------------------------------------------------- */
 /* MARK: Macros and Constants */
 
-#define SPI_HDLC_VERSION                "0.03"
+#define SPI_HDLC_VERSION                "0.04"
 
 #define MAX_FRAME_SIZE                  2048
 #define HEADER_LEN                      5
@@ -157,6 +158,13 @@ static uint32_t sSpiFrameCount = 0;
 static uint32_t sSpiValidFrameCount = 0;
 
 static bool sSlaveDidReset = false;
+
+// If sUseRawFrames is set to true, HDLC encoding/encoding
+// is skipped and the raw frames are read-from/written-to
+// the sHdlcInputFd/sHdlcOutputFd whole. See `--raw`.
+static bool sUseRawFrames = false;
+
+static int sMTU = MAX_FRAME_SIZE - HEADER_LEN;
 
 static int sRet = 0;
 
@@ -990,6 +998,111 @@ static int pull_hdlc(void)
 
 
 /* ------------------------------------------------------------------------- */
+/* MARK: Raw Transfer Functions */
+
+static int push_raw(void)
+{
+    int ret = 0;
+    const uint8_t* spiRxFrameBuffer = get_real_rx_frame_start();
+    static uint8_t raw_frame_buffer[MAX_FRAME_SIZE];
+    static uint16_t raw_frame_len;
+    static uint16_t raw_frame_sent;
+
+    if (raw_frame_len == 0)
+    {
+        if (sSlaveDidReset)
+        {
+            // Indicates an MCU reset.
+            // We don't have anything to do here because
+            // raw mode doesn't have any way to signal
+            // resets out-of-band.
+            sSlaveDidReset = false;
+        }
+        else if (sSpiRxPayloadSize > 0)
+        {
+            // Read the frame into raw_frame_buffer
+            assert(sSpiRxPayloadSize <= sizeof(raw_frame_buffer));
+            memcpy(raw_frame_buffer, &spiRxFrameBuffer[HEADER_LEN], sSpiRxPayloadSize);
+            raw_frame_len = sSpiRxPayloadSize;
+            raw_frame_sent = 0;
+            sSpiRxPayloadSize = 0;
+        }
+        else
+        {
+            // Nothing to do.
+            goto bail;
+        }
+    }
+
+    ret = (int)write(
+        sHdlcOutputFd,
+        raw_frame_buffer + raw_frame_sent,
+        raw_frame_len    - raw_frame_sent
+    );
+
+    if (ret < 0)
+    {
+        if (errno == EAGAIN)
+        {
+            ret = 0;
+        }
+        else
+        {
+            perror("push_raw:write");
+            syslog(LOG_ERR, "push_raw:write: errno=%d (%s)", errno, strerror(errno));
+        }
+        goto bail;
+    }
+
+    raw_frame_sent += ret;
+
+    // Reset state once we have sent the entire frame.
+    if (raw_frame_len == raw_frame_sent)
+    {
+        raw_frame_len = raw_frame_sent = 0;
+    }
+
+    ret = 0;
+
+bail:
+    return ret;
+}
+
+static int pull_raw(void)
+{
+    int ret = 0;
+
+    if (!sSpiTxIsReady)
+    {
+        ret = (int)read(sHdlcInputFd, &sSpiTxFrameBuffer[HEADER_LEN], (size_t)sMTU);
+
+        if (ret < 0)
+        {
+            if (errno == EAGAIN)
+            {
+                ret = 0;
+            }
+            else
+            {
+                perror("pull_raw:read");
+                syslog(LOG_ERR, "pull_raw:read: errno=%d (%s)", errno, strerror(errno));
+            }
+
+        }
+        else if (ret > 0)
+        {
+            sSpiTxPayloadSize = (uint16_t)ret;
+            sSpiTxIsReady = true;
+        }
+    }
+
+    return ret < 0
+        ? ret
+        : 0;
+}
+
+
+/* ------------------------------------------------------------------------- */
 /* MARK: Setup Functions */
 
 static bool update_spi_mode(int x)
@@ -1288,6 +1401,14 @@ static void print_help(void)
     "                                   will be written to `stdout`, followed by a\n"
     "                                   newline.\n"
 #endif // HAVE_OPENPTY
+    "    --raw ........................ Do not encode/decode packets using HDLC.\n"
+    "                                   Instead, write whole, raw frames to the\n"
+    "                                   specified input and output FDs. This is useful\n"
+    "                                   for emulating a serial port, or when datagram-\n"
+    "                                   based sockets are supplied for stdin and\n"
+    "                                   stdout` (when used with --stdio).\n"
+    "    --mtu=[MTU] .................. Specify the MTU. Currently only used in raw mode.\n"
+    "                                   Default and maximum value is 2043.\n"
     "    -i/--gpio-int[=gpio-path] .... Specify a path to the Linux sysfs-exported\n"
     "                                   GPIO directory for the `I̅N̅T̅` pin. If not\n"
     "                                   specified, `spi-hdlc` will fall back to\n"
@@ -1298,7 +1419,7 @@ static void print_help(void)
     "    --spi-speed[=hertz] .......... Specify the SPI speed in hertz.\n"
     "    --spi-cs-delay[=usec] ........ Specify the delay after C̅S̅ assertion, in usec\n"
     "    --spi-align-allowance[=n] .... Specify the the maximum number of FF bytes to\n"
-    "                                   clip from start of RX frame.\n"
+    "                                   clip from start of MISO frame.\n"
     "    -v/--verbose ................. Increase debug verbosity. (Repeatable)\n"
     "    -h/-?/--help ................. Print out usage information and exit.\n"
     "\n";
@@ -1331,6 +1452,8 @@ int main(int argc, char *argv[])
         ARG_VERBOSE = 1003,
         ARG_SPI_CS_DELAY = 1004,
         ARG_SPI_ALIGN_ALLOWANCE = 1005,
+        ARG_RAW = 1006,
+        ARG_MTU = 1007,
     };
 
     static struct option options[] = {
@@ -1340,6 +1463,8 @@ int main(int argc, char *argv[])
         { "gpio-res",   required_argument, NULL,   'r'           },
         { "verbose",    optional_argument, NULL,   ARG_VERBOSE   },
         { "version",    no_argument,       NULL,   'V'           },
+        { "raw",        no_argument,       NULL,   ARG_RAW       },
+        { "mtu",        required_argument, NULL,   ARG_MTU       },
         { "help",       no_argument,       NULL,   'h'           },
         { "spi-mode",   required_argument, NULL,   ARG_SPI_MODE  },
         { "spi-speed",  required_argument, NULL,   ARG_SPI_SPEED },
@@ -1430,6 +1555,24 @@ int main(int argc, char *argv[])
             case ARG_SPI_CS_DELAY:
                 sSpiCsDelay = atoi(optarg);
                 syslog(LOG_NOTICE, "SPI CS Delay set to %d usec", sSpiCsDelay);
+                break;
+
+            case ARG_RAW:
+                sUseRawFrames = true;
+                syslog(LOG_NOTICE, "HDLC encoding/decoding disabled. Will use raw frames for input/output.");
+                break;
+
+            case ARG_MTU:
+                sMTU = atoi(optarg);
+                if (sMTU > MAX_FRAME_SIZE - HEADER_LEN) {
+                    syslog(LOG_ERR, "Specified MTU of %d is too large, maximum is %d bytes.", sMTU, MAX_FRAME_SIZE - HEADER_LEN);
+                    exit(EXIT_FAILURE);
+                }
+                if (sMTU < 1) {
+                    syslog(LOG_ERR, "Specified MTU of %d is too small, minimum is 1 byte.", sMTU);
+                    exit(EXIT_FAILURE);
+                }
+                syslog(LOG_NOTICE, "MTU set to %d bytes", sMTU);
                 break;
 
             case 'r':
@@ -1665,7 +1808,7 @@ int main(int argc, char *argv[])
         if (FD_ISSET(sHdlcInputFd, &read_set))
         {
             // Read in the data.
-            if (pull_hdlc() < 0)
+            if ((sUseRawFrames ? pull_raw() : pull_hdlc()) < 0)
             {
                 sRet = EXIT_FAILURE;
                 break;
@@ -1676,7 +1819,7 @@ int main(int argc, char *argv[])
         if (FD_ISSET(sHdlcOutputFd, &write_set))
         {
             // Write out the data.
-            if (push_hdlc() < 0)
+            if ((sUseRawFrames ? push_raw() : push_hdlc()) < 0)
             {
                 sRet = EXIT_FAILURE;
                 break;

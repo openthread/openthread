@@ -30,8 +30,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <platform/uart.h>
-#include <platform/spi-slave.h>
+
+#include "openthread/platform/uart.h"
+#include "openthread/platform/spi-slave.h"
 
 // Spi-slave stubs
 

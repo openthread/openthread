@@ -36,7 +36,8 @@
 
 #include <stdint.h>
 
-#include <openthread-types.h>
+#include "openthread/types.h"
+
 #include <common/timer.hpp>
 #include <crypto/hmac_sha256.hpp>
 
@@ -56,6 +57,11 @@ class ThreadNetif;
 class KeyManager
 {
 public:
+    enum
+    {
+        kMaxKeyLength = 16,
+    };
+
     /**
      * This constructor initializes the object.
      *
@@ -308,7 +314,6 @@ public:
 private:
     enum
     {
-        kMaxKeyLength = 16,
         kMinKeyRotationTime = 1,
         kMaxKeyRotationTime = 0xffffffff / 3600u / 1000u,
         kDefaultKeyRotationTime = 672,

@@ -36,15 +36,15 @@
 #include <openthread-config.h>
 #endif
 
+#include "openthread/ncp.h"
+#include "openthread/platform/logging.h"
+#include "openthread/platform/uart.h"
+
 #include <stdio.h>
-#include <ncp/ncp.h>
 #include <common/code_utils.hpp>
 #include <common/new.hpp>
 #include <net/ip6.hpp>
-#include <ncp/ncp.h>
 #include <ncp/ncp_uart.hpp>
-#include <platform/logging.h>
-#include <platform/uart.h>
 #include <core/openthread-core-config.h>
 #include <openthread-instance.h>
 
@@ -89,32 +89,13 @@ NcpUart::NcpUart(otInstance *aInstance):
     NcpBase(aInstance),
     mFrameDecoder(mRxBuffer, sizeof(mRxBuffer), &NcpUart::HandleFrame, &NcpUart::HandleError, this),
     mUartBuffer(),
-    mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer)),
     mState(kStartingFrame),
     mByte(0),
     mUartSendTask(aInstance->mIp6.mTaskletScheduler, EncodeAndSendToUart, this)
 {
     mTxFrameBuffer.SetCallbacks(NULL, TxFrameBufferHasData, this);
-}
 
-ThreadError NcpUart::OutboundFrameBegin(void)
-{
-    return mTxFrameBuffer.InFrameBegin();
-}
-
-ThreadError NcpUart::OutboundFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDataBufferLength)
-{
-    return mTxFrameBuffer.InFrameFeedData(aDataBuffer, aDataBufferLength);
-}
-
-ThreadError NcpUart::OutboundFrameFeedMessage(otMessage aMessage)
-{
-    return mTxFrameBuffer.InFrameFeedMessage(aMessage);
-}
-
-ThreadError NcpUart::OutboundFrameEnd(void)
-{
-    return mTxFrameBuffer.InFrameEnd();
+    otPlatUartEnable();
 }
 
 void NcpUart::TxFrameBufferHasData(void *aContext, NcpFrameBuffer *aNcpFrameBuffer)

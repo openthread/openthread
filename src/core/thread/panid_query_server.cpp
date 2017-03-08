@@ -33,12 +33,13 @@
 
 #define WPP_NAME "panid_query_server.tmh"
 
+#include "openthread/platform/random.h"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
 #include <meshcop/tlvs.hpp>
-#include <platform/random.h>
 #include <thread/panid_query_server.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
@@ -55,7 +56,7 @@ PanIdQueryServer::PanIdQueryServer(ThreadNetif &aThreadNetif) :
     mNetif.GetCoapServer().AddResource(mPanIdQuery);
 }
 
-void PanIdQueryServer::HandleQuery(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void PanIdQueryServer::HandleQuery(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                    const otMessageInfo *aMessageInfo)
 {
     static_cast<PanIdQueryServer *>(aContext)->HandleQuery(

@@ -29,8 +29,6 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 bin_PROGRAMS                                                           = \
-    ot-cli-ftd                                                           \
-    ot-cli-mtd                                                           \
     $(NULL)
 
 CPPFLAGS_COMMON                                                        = \
@@ -78,6 +76,22 @@ LDFLAGS_COMMON                                                        += \
     $(NULL)
 endif # OPENTHREAD_EXAMPLES_CC2538
 
+if OPENTHREAD_EXAMPLES_CC2650
+CPPFLAGS_COMMON                                                       += \
+    -I$(top_srcdir)/third_party/ti/cc26xxware                            \
+    $(NULL)
+
+LDADD_COMMON                                                          +=  \
+    $(top_builddir)/examples/platforms/cc2650/libopenthread-cc2650.a      \
+    $(top_srcdir)/third_party/ti/cc26xxware/driverlib/bin/gcc/driverlib.a \
+    $(NULL)
+
+LDFLAGS_COMMON                                                        +=   \
+    -T $(top_srcdir)/third_party/ti/cc26xxware/linker_files/cc26x0f128.lds \
+    $(NULL)
+
+endif #OPENTHREAD_EXAMPLES_CC2650
+
 if OPENTHREAD_EXAMPLES_DA15000
 LDADD_COMMON                                                          += \
     $(top_builddir)/examples/platforms/da15000/libopenthread-da15000.a   \
@@ -98,6 +112,11 @@ LDFLAGS_COMMON                                                        += \
     $(NULL)
 endif
 
+if OPENTHREAD_ENABLE_FTD
+bin_PROGRAMS                                                          += \
+    ot-cli-ftd                                                           \
+    $(NULL)
+
 ot_cli_ftd_CPPFLAGS                                                    = \
     $(CPPFLAGS_COMMON)                                                   \
     $(NULL)
@@ -114,6 +133,11 @@ ot_cli_ftd_LDFLAGS                                                     = \
 
 ot_cli_ftd_SOURCES                                                     = \
     $(SOURCES_COMMON)                                                    \
+    $(NULL)
+endif # OPENTHREAD_ENABLE_FTD
+
+bin_PROGRAMS                                                          += \
+    ot-cli-mtd                                                           \
     $(NULL)
 
 ot_cli_mtd_CPPFLAGS                                                    = \

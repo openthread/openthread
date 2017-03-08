@@ -33,6 +33,10 @@
 
 #define WPP_NAME "mle.tmh"
 
+#include "openthread/platform/radio.h"
+#include "openthread/platform/random.h"
+#include "openthread/platform/settings.h"
+
 #include <thread/mle.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
@@ -44,9 +48,6 @@
 #include <meshcop/tlvs.hpp>
 #include <net/netif.hpp>
 #include <net/udp6.hpp>
-#include <platform/radio.h>
-#include <platform/random.h>
-#include <platform/settings.h>
 #include <thread/address_resolver.hpp>
 #include <thread/key_manager.hpp>
 #include <thread/mle_router.hpp>
@@ -61,8 +62,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mNetif(aThreadNetif),
     mRetrieveNewNetworkData(false),
     mDeviceState(kDeviceStateDisabled),
-    mDeviceMode(ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeSecureDataRequest | ModeTlv::kModeFFD |
-                ModeTlv::kModeFullNetworkData),
+    mDeviceMode(ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeSecureDataRequest),
     isAssignLinkQuality(false),
     mAssignLinkQuality(0),
     mAssignLinkMargin(0),
@@ -70,6 +70,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mParentRequestState(kParentIdle),
     mReattachState(kReattachStop),
     mParentRequestTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mle::HandleParentRequestTimer, this),
+    mDelayedResponseTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mle::HandleDelayedResponseTimer, this),
     mRouterSelectionJitter(kRouterSelectionJitter),
     mRouterSelectionJitterTimeout(0),
     mLastPartitionRouterIdSequence(0),
@@ -127,7 +128,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     meshLocalPrefix[7] = 0x00;
 
     // mesh-local 64
-    for (int i = 8; i < 16; i++)
+    for (int i = OT_IP6_PREFIX_SIZE; i < OT_IP6_ADDRESS_SIZE; i++)
     {
         mMeshLocal64.GetAddress().mFields.m8[i] = static_cast<uint8_t>(otPlatRandomGet());
     }
@@ -283,6 +284,10 @@ ThreadError Mle::Restore(void)
     mNetif.GetMac().SetExtAddress(networkInfo.mExtAddress);
     UpdateLinkLocalAddress();
 
+    memcpy(&mMeshLocal64.GetAddress().mFields.m8[OT_IP6_PREFIX_SIZE],
+           networkInfo.mMlIid,
+           OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE);
+
     if (networkInfo.mDeviceState == kDeviceStateChild)
     {
         length = sizeof(mParent);
@@ -326,6 +331,10 @@ ThreadError Mle::Store(void)
                                    OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
     networkInfo.mPreviousPartitionId = mLeaderData.GetPartitionId();
     memcpy(networkInfo.mExtAddress.m8, mNetif.GetMac().GetExtAddress(), sizeof(networkInfo.mExtAddress));
+    memcpy(networkInfo.mMlIid,
+           &mMeshLocal64.GetAddress().mFields.m8[OT_IP6_PREFIX_SIZE],
+           OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE);
+
 
     if (mDeviceState == kDeviceStateChild)
     {
@@ -471,10 +480,7 @@ ThreadError Mle::BecomeChild(otMleAttachFilter aFilter)
         mLastPartitionRouterIdSequence = mNetif.GetMle().GetRouterIdSequence();
     }
 
-    if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
-    {
-        mNetif.GetMeshForwarder().SetRxOnWhenIdle(true);
-    }
+    mNetif.GetMeshForwarder().SetRxOnWhenIdle(true);
 
     mParentRequestTimer.Start(kParentRequestRouterTimeout);
 
@@ -511,7 +517,7 @@ ThreadError Mle::SetStateDetached(void)
     mDeviceState = kDeviceStateDetached;
     mParentRequestState = kParentIdle;
     mParentRequestTimer.Stop();
-    mNetif.GetMeshForwarder().SetRxOnWhenIdle(true);
+    mNetif.GetMeshForwarder().SetRxOff();
     mNetif.GetMle().HandleDetachStart();
     mNetif.GetIp6().SetForwardingEnabled(false);
     mNetif.GetIp6().mMpl.SetTimerExpirations(0);
@@ -538,6 +544,7 @@ ThreadError Mle::SetStateChild(uint16_t aRloc16)
 
     if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) != 0)
     {
+        mKeepAliveAttemptsSent = 0;
         mParentRequestTimer.Start(Timer::SecToMsec(mTimeout / kMaxChildKeepAliveAttempts));
     }
 
@@ -1255,8 +1262,17 @@ void Mle::HandleParentRequestTimer(void)
         {
             if (mDeviceMode & ModeTlv::kModeRxOnWhenIdle)
             {
-                SendChildUpdateRequest();
-                mParentRequestTimer.Start(Timer::SecToMsec(mTimeout / kMaxChildKeepAliveAttempts));
+                if (mKeepAliveAttemptsSent >= kMaxChildKeepAliveAttempts)
+                {
+                    // Reattach when no Child Update Response received for more than kMaxChildKeepAliveAttempts
+                    BecomeDetached();
+                }
+                else
+                {
+                    SendChildUpdateRequest();
+                    mKeepAliveAttemptsSent++;
+                    mParentRequestTimer.Start(Timer::SecToMsec(mTimeout / kMaxChildKeepAliveAttempts));
+                }
             }
         }
         else
@@ -1400,6 +1416,59 @@ void Mle::HandleParentRequestTimer(void)
     }
 }
 
+void Mle::HandleDelayedResponseTimer(void *aContext)
+{
+    static_cast<Mle *>(aContext)->HandleDelayedResponseTimer();
+}
+
+void Mle::HandleDelayedResponseTimer(void)
+{
+    DelayedResponseHeader delayedResponse;
+    uint32_t now = otPlatAlarmGetNow();
+    uint32_t nextDelay = 0xffffffff;
+    Message *message = mDelayedResponses.GetHead();
+    Message *nextMessage = NULL;
+
+    while (message != NULL)
+    {
+        nextMessage = message->GetNext();
+        delayedResponse.ReadFrom(*message);
+
+        if (delayedResponse.IsLater(now))
+        {
+            // Calculate the next delay and choose the lowest.
+            if (delayedResponse.GetSendTime() - now < nextDelay)
+            {
+                nextDelay = delayedResponse.GetSendTime() - now;
+            }
+        }
+        else
+        {
+            mDelayedResponses.Dequeue(*message);
+
+            // Remove the DelayedResponseHeader from the message.
+            DelayedResponseHeader::RemoveFrom(*message);
+
+            // Send the message.
+            if (SendMessage(*message, delayedResponse.GetDestination()) == kThreadError_None)
+            {
+                otLogInfoMle("Sent delayed response");
+            }
+            else
+            {
+                message->Free();
+            }
+        }
+
+        message = nextMessage;
+    }
+
+    if (nextDelay != 0xffffffff)
+    {
+        mDelayedResponseTimer.Start(nextDelay);
+    }
+}
+
 ThreadError Mle::SendParentRequest(void)
 {
     ThreadError error = kThreadError_None;
@@ -1521,7 +1590,8 @@ exit:
     return error;
 }
 
-ThreadError Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength)
+ThreadError Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength,
+                                 uint16_t aDelay)
 {
     ThreadError error = kThreadError_None;
     Message *message;
@@ -1532,7 +1602,14 @@ ThreadError Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t
     SuccessOrExit(error = AppendActiveTimestamp(*message, false));
     SuccessOrExit(error = AppendPendingTimestamp(*message));
 
-    SuccessOrExit(error = SendMessage(*message, aDestination));
+    if (aDelay)
+    {
+        SuccessOrExit(error = AddDelayedResponse(*message, aDestination, aDelay));
+    }
+    else
+    {
+        SuccessOrExit(error = SendMessage(*message, aDestination));
+    }
 
     otLogInfoMle("Sent Data Request");
 
@@ -1616,6 +1693,10 @@ ThreadError Mle::SendChildUpdateRequest(void)
     {
         mNetif.GetMeshForwarder().SetPollPeriod(kAttachDataPollPeriod);
         mNetif.GetMeshForwarder().SetRxOnWhenIdle(false);
+    }
+    else
+    {
+        mNetif.GetMeshForwarder().SetRxOnWhenIdle(true);
     }
 
 exit:
@@ -1847,7 +1928,38 @@ exit:
     return error;
 }
 
-void Mle::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
+ThreadError Mle::AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestination, uint16_t aDelay)
+{
+    ThreadError error = kThreadError_None;
+    uint32_t alarmFireTime;
+    uint32_t sendTime = otPlatAlarmGetNow() + aDelay;
+
+    // Append the message with DelayedRespnoseHeader and add to the list.
+    DelayedResponseHeader delayedResponse(sendTime, aDestination);
+    SuccessOrExit(error = delayedResponse.AppendTo(aMessage));
+    mDelayedResponses.Enqueue(aMessage);
+
+    if (mDelayedResponseTimer.IsRunning())
+    {
+        // If timer is already running, check if it should be restarted with earlier fire time.
+        alarmFireTime = mDelayedResponseTimer.Gett0() + mDelayedResponseTimer.Getdt();
+
+        if (delayedResponse.IsEarlier(alarmFireTime))
+        {
+            mDelayedResponseTimer.Start(aDelay);
+        }
+    }
+    else
+    {
+        // Otherwise just set the timer.
+        mDelayedResponseTimer.Start(aDelay);
+    }
+
+exit:
+    return error;
+}
+
+void Mle::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     static_cast<Mle *>(aContext)->HandleUdpReceive(*static_cast<Message *>(aMessage),
                                                    *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
@@ -2105,6 +2217,7 @@ ThreadError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::Message
     LeaderDataTlv leaderData;
     RouteTlv route;
     uint8_t tlvs[] = {Tlv::kNetworkData};
+    uint16_t delay;
 
     // Source Address
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kSourceAddress, sizeof(sourceAddress), sourceAddress));
@@ -2174,7 +2287,8 @@ ThreadError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::Message
         if (mRetrieveNewNetworkData ||
             (static_cast<int8_t>(leaderData.GetDataVersion() - mNetif.GetNetworkDataLeader().GetVersion()) > 0))
         {
-            SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs));
+            delay = otPlatRandomGet() % kMleMaxResponseDelay;
+            SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay);
         }
     }
 
@@ -2215,6 +2329,7 @@ ThreadError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInf
     uint16_t pendingDatasetOffset = 0;
     bool dataRequest = false;
     Tlv tlv;
+    uint16_t delay;
 
     // Leader Data
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
@@ -2236,7 +2351,18 @@ ThreadError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInf
     }
     else if (!mRetrieveNewNetworkData)
     {
-        int8_t diff = static_cast<int8_t>(leaderData.GetDataVersion() - mNetif.GetNetworkDataLeader().GetVersion());
+        int8_t diff;
+
+        if (mDeviceMode & ModeTlv::kModeFullNetworkData)
+        {
+            diff = static_cast<int8_t>(leaderData.GetDataVersion() - mNetif.GetNetworkDataLeader().GetVersion());
+        }
+        else
+        {
+            diff = static_cast<int8_t>(leaderData.GetStableDataVersion() -
+                                       mNetif.GetNetworkDataLeader().GetStableVersion());
+        }
+
         VerifyOrExit(diff > 0, ;);
     }
 
@@ -2337,7 +2463,9 @@ exit:
     {
         static const uint8_t tlvs[] = {Tlv::kNetworkData};
 
-        SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs));
+        delay = aMessageInfo.GetSockAddr().IsMulticast() ? (otPlatRandomGet() % kMleMaxResponseDelay) : 0;
+
+        SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay);
     }
 
     return error;
@@ -2730,12 +2858,12 @@ ThreadError Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::Me
         tlvs[numTlvs++] = Tlv::kLinkFrameCounter;
     }
 
+    SuccessOrExit(error = SendChildUpdateResponse(tlvs, numTlvs, challenge));
+
     if (mRetrieveNewNetworkData)
     {
-        SendDataRequest(aMessageInfo.GetPeerAddr(), dataRequestTlvs, sizeof(tlvs));
+        SendDataRequest(aMessageInfo.GetPeerAddr(), dataRequestTlvs, sizeof(dataRequestTlvs), 0);
     }
-
-    SuccessOrExit(error = SendChildUpdateResponse(tlvs, numTlvs, challenge));
 
 exit:
     return error;
@@ -2825,6 +2953,7 @@ ThreadError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::M
         }
         else
         {
+            mKeepAliveAttemptsSent = 0;
             mNetif.GetMeshForwarder().SetRxOnWhenIdle(true);
         }
 
@@ -2868,11 +2997,6 @@ ThreadError Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo 
 
     if (localTimestamp == NULL || localTimestamp->Compare(timestamp) > 0)
     {
-        if ((mDeviceMode & ModeTlv::kModeFFD) == 0)
-        {
-            mRetrieveNewNetworkData = true;
-        }
-
         Stop(false);
         mPreviousChannel = mNetif.GetMac().GetChannel();
         mPreviousPanId = mNetif.GetMac().GetPanId();
@@ -2928,7 +3052,7 @@ ThreadError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Mes
     VerifyOrExit(offset < end, error = kThreadError_Parse);
 
     offset += sizeof(tlv);
-    end = offset + sizeof(tlv) + tlv.GetLength();
+    end = offset + tlv.GetLength();
 
     memset(&result, 0, sizeof(result));
     result.mPanId = threadMessageInfo->mPanId;
@@ -3098,8 +3222,8 @@ ThreadError Mle::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6
     messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(aMeshSource);
     messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
 
-    mNetif.GetIp6().mIcmp.SendError(Ip6::IcmpHeader::kTypeDstUnreach,
-                                    Ip6::IcmpHeader::kCodeDstUnreachNoRoute,
+    mNetif.GetIp6().mIcmp.SendError(kIcmp6TypeDstUnreach,
+                                    kIcmp6CodeDstUnreachNoRoute,
                                     messageInfo, aIp6Header);
 
 exit:

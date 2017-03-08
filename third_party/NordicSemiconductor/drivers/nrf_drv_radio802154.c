@@ -915,6 +915,31 @@ void nrf_drv_radio802154_init(void)
     irq_init();
 }
 
+nrf_drv_radio802154_state_t nrf_drv_radio802154_state_get(void)
+{
+    switch (m_state)
+    {
+    case RADIO_STATE_SLEEP:
+        return NRF_DRV_RADIO802154_STATE_SLEEP;
+
+    case RADIO_STATE_WAITING_RX_FRAME:
+    case RADIO_STATE_RX_HEADER:
+    case RADIO_STATE_RX_FRAME:
+    case RADIO_STATE_TX_ACK:
+        return NRF_DRV_RADIO802154_STATE_RECEIVE;
+
+    case RADIO_STATE_CCA:
+    case RADIO_STATE_TX_FRAME:
+    case RADIO_STATE_RX_ACK:
+        return NRF_DRV_RADIO802154_STATE_TRANSMIT;
+
+    case RADIO_STATE_ED:
+        return NRF_DRV_RADIO802154_STATE_ENERGY_DETECTION;
+    }
+
+    return NRF_DRV_RADIO802154_STATE_INVALID;
+}
+
 bool nrf_drv_radio802154_sleep(void)
 {
     bool result = true;

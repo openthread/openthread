@@ -28,8 +28,8 @@
 
 #include "platform-posix.h"
 
-#include <platform/radio.h>
-#include <platform/diag.h>
+#include "openthread/platform/diag.h"
+#include "openthread/platform/radio.h"
 
 enum
 {
@@ -737,4 +737,10 @@ ThreadError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, u
     (void)aScanChannel;
     (void)aScanDuration;
     return kThreadError_NotImplemented;
+}
+
+void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+{
+    (void)aInstance;
+    (void)aPower;
 }

@@ -58,9 +58,48 @@
     <Filter Include="Header Files\utils">
       <UniqueIdentifier>{5ac96cb9-6257-4387-9238-27649915463a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\api">
+      <UniqueIdentifier>{63a27d20-b039-46b4-aff9-63ace2010b9b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\openthread">
+      <UniqueIdentifier>{2b66635d-fb09-421b-9942-8c43df5c8c77}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\core\api\link_raw_api.cpp">
+    <ClCompile Include="..\..\src\core\api\commissioner_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\api\dataset_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\api\dhcp6_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\api\icmp6_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\api\ip6_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\api\instance_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\api\joiner_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\api\link_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\api\message_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\api\netdata_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\api\tasklet_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\api\thread_api.cpp">
       <Filter>Source Files\api</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\coap\coap_base.cpp">
@@ -186,9 +225,6 @@
     <ClCompile Include="..\..\src\core\net\udp6.cpp">
       <Filter>Source Files\net</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\openthread.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\core\mac\mac_blacklist.cpp">
       <Filter>Source Files\mac</Filter>
     </ClCompile>
@@ -229,6 +265,9 @@
       <Filter>Source Files\crypto</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\crypto\hmac_sha256.cpp">
+      <Filter>Source Files\crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\crypto\pbkdf2_cmac.cpp">
       <Filter>Source Files\crypto</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\crypto\sha256.cpp">
@@ -470,6 +509,9 @@
     <ClInclude Include="..\..\src\core\crypto\mbedtls.hpp">
       <Filter>Header Files\crypto</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\core\crypto\pbkdf2_cmac.h">
+      <Filter>Header Files\crypto</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\core\crypto\sha256.hpp">
       <Filter>Header Files\crypto</Filter>
     </ClInclude>
@@ -488,23 +530,77 @@
     <ClInclude Include="..\..\src\core\common\crc16.hpp">
       <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\openthread.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\openthread-types.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\openthread-windows-config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\openthread-core-default-config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\openthread-core-windows-config.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\core\openthread-instance.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread\types.h">
+      <Filter>Header Files\openthread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\drivers\windows\include\openthread-core-windows-config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread\coap.h">
+      <Filter>Header Files\openthread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread\commissioner.h">
+      <Filter>Header Files\openthread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread\crypto.h">
+      <Filter>Header Files\openthread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread\dataset.h">
+      <Filter>Header Files\openthread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread\dhcp6_client.h">
+      <Filter>Header Files\openthread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread\dhcp6_server.h">
+      <Filter>Header Files\openthread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread\icmp6.h">
+      <Filter>Header Files\openthread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread\instance.h">
+      <Filter>Header Files\openthread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread\ip6.h">
+      <Filter>Header Files\openthread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread\jam_detection.h">
+      <Filter>Header Files\openthread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread\joiner.h">
+      <Filter>Header Files\openthread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread\link.h">
+      <Filter>Header Files\openthread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread\message.h">
+      <Filter>Header Files\openthread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread\netdata.h">
+      <Filter>Header Files\openthread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread\openthread.h">
+      <Filter>Header Files\openthread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread\tasklet.h">
+      <Filter>Header Files\openthread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread\thread.h">
+      <Filter>Header Files\openthread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread\udp.h">
+      <Filter>Header Files\openthread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\api\link_raw.hpp">
+      <Filter>Header Files\api</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

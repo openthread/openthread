@@ -81,7 +81,19 @@ bool sDiagMode = false;
 
 extern "C" {
 
-    void otSignalTaskletPending(otInstance *)
+#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+    void *otPlatCAlloc(size_t aNum, size_t aSize)
+    {
+        return calloc(aNum, aSize);
+    }
+
+    void otPlatFree(void *aPtr)
+    {
+        free(aPtr);
+    }
+#endif
+
+    void otTaskletsSignalPending(otInstance *)
     {
     }
 
@@ -305,6 +317,12 @@ extern "C" {
     ThreadError otPlatRadioEnergyScan(otInstance *, uint8_t, uint16_t)
     {
         return kThreadError_NotImplemented;
+    }
+
+    void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+    {
+        (void)aInstance;
+        (void)aPower;
     }
 
     //

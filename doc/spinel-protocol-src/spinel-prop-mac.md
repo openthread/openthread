@@ -124,3 +124,34 @@ Structure Parameters:
 * Type: Read-Write
 * Packed-Encoding: `b`
 
+### PROP 4867: SPINEL_PROP_MAC_SRC_MATCH_ENABLED  {#prop-mac-src-match-enabled}
+* Type: Write
+* Packed-Encoding: `b`
+
+Set to true to enable radio source matching or false to disable it. This property
+is only available if the `SPINEL_CAP_MAC_RAW` capability is present. The source match
+functionality is used by radios when generating ACKs. The short and extended address
+lists are used for settings the Frame Pending bit in the ACKs.
+
+### PROP 4868: SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES  {#prop-mac-src-match-short-addresses}
+* Type: Write
+* Packed-Encoding: `A(S)`
+
+Configures the list of short addresses used for source matching. This property
+is only available if the `SPINEL_CAP_MAC_RAW` capability is present.
+
+Structure Parameters:
+
+* `S`: Short address for hardware generated ACKs
+
+### PROP 4869: SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES  {#prop-mac-src-match-extended-addresses}
+* Type: Write
+* Packed-Encoding: `A(E)`
+
+Configures the list of extended addresses used for source matching. This property
+is only available if the `SPINEL_CAP_MAC_RAW` capability is present.
+
+Structure Parameters:
+
+* `E`: EUI64 address for hardware generated ACKs
+

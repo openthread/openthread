@@ -35,7 +35,9 @@
 #define MESH_FORWARDER_HPP_
 
 #include <openthread-core-config.h>
-#include <openthread-types.h>
+
+#include "openthread/types.h"
+
 #include <common/tasklet.hpp>
 #include <mac/mac.hpp>
 #include <net/ip6.hpp>
@@ -114,6 +116,12 @@ public:
     void HandleResolved(const Ip6::Address &aEid, ThreadError aError);
 
     /**
+     * This method sets the radio receiver and polling timer off.
+     *
+     */
+    void SetRxOff(void);
+
+    /**
      * This method indicates whether or not rx-on-when-idle mode is enabled.
      *
      * @retval TRUE   The rx-on-when-idle mode is enabled.
@@ -131,15 +139,22 @@ public:
     void SetRxOnWhenIdle(bool aRxOnWhenIdle);
 
     /**
-     * This method sets customized Data Poll period. Only for certification test
+     * This method sets a user-specified Data Poll period.
      *
-     * @param[in]  aPeriod  The Data Poll period in milliseconds.
+     * If the value is set to zero, then the poll interval is managed by the OpenThread stack.
+     * If the user has provided a non-zero poll period, the user value specifies the maximum period between data
+     * request transmissions. Note that OpenThread may send data request transmissions more frequently when expecting
+     * a control-message from a parent.
+     *
+     * Initial/Default value for "assign poll period" is zero.
+     *
+     * @param[in]  aPeriod  The Data Poll period in milliseconds, or zero to mean no user-specified poll period.
      *
      */
     void SetAssignPollPeriod(uint32_t aPeriod);
 
     /**
-     * This method gets the customized Data Poll period. Only for certification test
+     * This method gets the current user-specified Data Poll period.
      *
      * @returns  The Data Poll period in milliseconds.
      *
@@ -147,7 +162,13 @@ public:
     uint32_t GetAssignPollPeriod(void);
 
     /**
-     * This method sets the Data Poll period.
+     *
+     * This method sets the maximum period between data request command transmissions. Note that OpenThread may send
+     * data request transmissions more frequently when expecting a control-message from a parent.
+     *
+     * If the user has provided a non-zero assign poll period (@sa SetAssignPollPeriod), the user value specifies the
+     * maximum period between data request command transmissions and is used in place of @p aPeriod.
+     *
      *
      * @param[in]  aPeriod  The Data Poll period in milliseconds.
      *
@@ -223,12 +244,14 @@ public:
 private:
     enum
     {
-        kStateUpdatePeriod    = 1000,  ///< State update period in milliseconds.
-        kDataRequstRetryDelay = 1000,  ///< Retry delay in milliseconds.
+        kStateUpdatePeriod     = 1000,  ///< State update period in milliseconds.
+        kDataRequestRetryDelay = 200,   ///< Retry delay in milliseconds (for sending data request if no buffer).
     };
 
     ThreadError CheckReachability(uint8_t *aFrame, uint8_t aFrameLength,
                                   const Mac::Address &aMeshSource, const Mac::Address &aMeshDest);
+
+    void ScheduleNextPoll(uint32_t aDelay);
     ThreadError GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     ThreadError GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     Message *GetDirectTransmission(void);

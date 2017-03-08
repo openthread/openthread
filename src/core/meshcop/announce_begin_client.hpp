@@ -35,8 +35,9 @@
 #define ANNOUNCE_BEGIN_CLIENT_HPP_
 
 #include <openthread-core-config.h>
-#include <openthread-types.h>
-#include <commissioning/commissioner.h>
+
+#include "openthread/commissioner.h"
+
 #include <coap/coap_client.hpp>
 #include <net/ip6_address.hpp>
 #include <net/udp6.hpp>

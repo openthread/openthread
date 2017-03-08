@@ -32,8 +32,7 @@
  *
  */
 
-#include <platform/logging.h>
-#include <platform/uart.h>
+#include <openthread/platform/logging.h>
 
 #include "drivers/nrf_drv_clock.h"
 #include "platform-nrf5.h"
@@ -58,9 +57,6 @@ void PlatformInit(int argc, char *argv[])
 #if (OPENTHREAD_ENABLE_DEFAULT_LOGGING == 0)
     nrf5LogInit();
 #endif
-
-    // Enable UART since its not enabled by higher level layers.
-    otPlatUartEnable();
 }
 
 void PlatformProcessDrivers(otInstance *aInstance)

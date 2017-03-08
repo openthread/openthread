@@ -60,7 +60,7 @@
       <PreCompiledHeaderFile>precomp.h</PreCompiledHeaderFile>
       <PreCompiledHeader>Use</PreCompiledHeader>
       <WppEnabled>true</WppEnabled>
-      <WppScanConfigurationData>..\..\include\platform\logging-windows.h</WppScanConfigurationData>
+      <WppScanConfigurationData>..\..\include\openthread\platform\logging-windows.h</WppScanConfigurationData>
       <WppAdditionalOptions>-km %(WppAdditionalOptions)</WppAdditionalOptions>
       <WppModuleName>otLwf</WppModuleName>
       <WppSearchString>WPP_INIT_TRACING</WppSearchString>

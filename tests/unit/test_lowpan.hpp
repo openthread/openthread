@@ -31,7 +31,8 @@
 
 #include <stdint.h>
 
-#include <openthread.h>
+#include "openthread/openthread.h"
+
 #include <mac/mac.hpp>
 #include <net/ip6_headers.hpp>
 #include <thread/thread_netif.hpp>

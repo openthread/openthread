@@ -27,13 +27,15 @@
  */
 
 #include "test_util.h"
-#include <openthread.h>
+#include "openthread/openthread.h"
 #include <common/debug.hpp>
 #include <crypto/aes_ccm.hpp>
 #include <crypto/mbedtls.hpp>
 #include <string.h>
 
+#ifndef OPENTHREAD_MULTIPLE_INSTANCE
 static Thread::Crypto::MbedTls mbedtls;
+#endif
 
 /**
  * Verifies test vectors from IEEE 802.15.4-2006 Annex C Section C.2.1

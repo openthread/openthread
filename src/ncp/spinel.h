@@ -105,6 +105,7 @@ typedef enum
     SPINEL_STATUS_CCA_FAILURE       = 18, ///< The packet was not sent due to a CCA failure.
     SPINEL_STATUS_ALREADY           = 19, ///< The operation is already in progress.
     SPINEL_STATUS_ITEM_NOT_FOUND    = 20, ///< The given item could not be found.
+    SPINEL_STATUS_INVALID_COMMAND_FOR_PROP = 21, ///< The given command cannot be performed on this property.
 
     SPINEL_STATUS_JOIN__BEGIN       = 104,
 
@@ -286,6 +287,10 @@ enum
     SPINEL_CMD_PEEK_RET             = 19,
     SPINEL_CMD_POKE                 = 20,
 
+    SPINEL_CMD_PROP_VALUE_MULTI_GET = 21,
+    SPINEL_CMD_PROP_VALUE_MULTI_SET = 22,
+    SPINEL_CMD_PROP_VALUES_ARE      = 23,
+
     SPINEL_CMD_NEST__BEGIN          = 15296,
     SPINEL_CMD_NEST__END            = 15360,
 
@@ -311,6 +316,7 @@ enum
     SPINEL_CAP_WRITABLE_RAW_STREAM   = 8,
     SPINEL_CAP_GPIO                  = 9,
     SPINEL_CAP_TRNG                  = 10,
+    SPINEL_CAP_CMD_MULTI             = 11,
 
     SPINEL_CAP_802_15_4__BEGIN        = 16,
     SPINEL_CAP_802_15_4_2003          = (SPINEL_CAP_802_15_4__BEGIN + 0),
@@ -608,6 +614,23 @@ typedef enum
      *  Specified by Thread. Randomly-chosen, but non-volatile EUI-64.
      */
     SPINEL_PROP_MAC_EXTENDED_ADDR      = SPINEL_PROP_MAC_EXT__BEGIN + 2,
+
+    /// MAC Source Match Enabled Flag
+    /** Format: `b`
+     */
+    SPINEL_PROP_MAC_SRC_MATCH_ENABLED  = SPINEL_PROP_MAC_EXT__BEGIN + 3,
+
+    /// MAC Source Match Short Address List
+    /** Format: `A(S)`
+     */
+    SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES
+                                       = SPINEL_PROP_MAC_EXT__BEGIN + 4,
+
+    /// MAC Source Match Extended Address List
+    /** Format: `A(E)`
+     */
+    SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES
+                                       = SPINEL_PROP_MAC_EXT__BEGIN + 5,
     SPINEL_PROP_MAC_EXT__END           = 0x1400,
 
     SPINEL_PROP_NET__BEGIN           = 0x40,
@@ -1071,6 +1094,19 @@ typedef enum
 
     SPINEL_PROP_VENDOR__BEGIN       = 15360,
     SPINEL_PROP_VENDOR__END         = 16384,
+
+    SPINEL_PROP_DEBUG__BEGIN        = 16384,
+
+    /// Reading this property will cause an assert on the NCP.
+    /// This is intended for testing the assert functionality of
+    /// underlying platform/NCP. Assert should ideally cause the
+    /// NCP to reset, but if this is not supported a `false` boolean
+    /// is returned in response.
+    /** Format: 'b' (read-only) */
+    SPINEL_PROP_DEBUG_TEST_ASSERT
+                                    = SPINEL_PROP_DEBUG__BEGIN + 0,
+
+    SPINEL_PROP_DEBUG__END          = 17408,
 
     SPINEL_PROP_EXPERIMENTAL__BEGIN = 2000000,
     SPINEL_PROP_EXPERIMENTAL__END   = 2097152,

@@ -90,6 +90,7 @@ class Cert_5_1_11_REEDAttachLinkQuality(unittest.TestCase):
         self.nodes[LEADER].start()
         self.nodes[LEADER].set_state('leader')
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
+        time.sleep(4)
 
         self.nodes[REED].start()
         time.sleep(5)

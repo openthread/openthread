@@ -80,7 +80,7 @@ ThreadError CoapBase::Stop(void)
     return mSocket.Close();
 }
 
-void CoapBase::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
+void CoapBase::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     static_cast<CoapBase *>(aContext)->mReceiver(aContext, *static_cast<Message *>(aMessage),
                                                  *static_cast<const Ip6::MessageInfo *>(aMessageInfo));

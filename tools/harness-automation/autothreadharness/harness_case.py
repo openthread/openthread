@@ -27,12 +27,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-
-from selenium import webdriver
-from selenium.webdriver import ActionChains
-from selenium.webdriver.support.ui import Select
-from selenium.common.exceptions import UnexpectedAlertPresentException
-
+import ConfigParser
 import json
 import logging
 import os
@@ -41,11 +36,17 @@ import re
 import time
 import unittest
 
+from selenium import webdriver
+from selenium.webdriver import ActionChains
+from selenium.webdriver.support.ui import Select
+from selenium.common.exceptions import UnexpectedAlertPresentException
+
 from autothreadharness import settings
-from autothreadharness.apc_pdu_controller import ApcPduController
+from autothreadharness.exceptions import FailError, FatalError, GoldenDeviceNotEnoughError
 from autothreadharness.harness_controller import HarnessController
 from autothreadharness.helpers import HistoryHelper
 from autothreadharness.open_thread_controller import OpenThreadController
+from autothreadharness.pdu_controller_factory import PduControllerFactory
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +58,31 @@ THREAD_CHANNEL_MIN = 11
 
 DEFAULT_TIMEOUT = 2700
 """Timeout for each test case in seconds"""
+
+def wait_until(what, times=-1):
+    """Wait until `what` return True
+
+    Args:
+        what (Callable[bool]): Call `wait()` again and again until it returns True
+        times (int): Maximum times of trials before giving up
+
+    Returns:
+        True if success, False if times threshold reached
+
+    """
+    while times:
+        logger.info('Waiting times left %d', times)
+        try:
+            if what() is True:
+                return True
+        except:
+            logger.exception('Wait failed')
+        else:
+            logger.warning('Trial[%d] failed', times)
+        times -= 1
+        time.sleep(1)
+
+    return False
 
 class HarnessCase(unittest.TestCase):
     """This is the case class of all automation test cases.
@@ -116,38 +142,18 @@ class HarnessCase(unittest.TestCase):
     """int: Child timeout in seconds
     """
 
-    manual_reset = False
-    """bool: whether reset manually"""
+    sed_polling_interval = settings.THREAD_SED_POLLING_INTERVAL
+    """int: SED polling interval in seconds
+    """
 
     auto_dut = settings.AUTO_DUT
     """bool: whether use harness auto dut feature"""
 
     timeout = hasattr(settings, 'TIMEOUT') and settings.TIMEOUT or DEFAULT_TIMEOUT
+    """number: timeout in seconds to stop running this test case"""
 
-    def wait_until(self, what, times=-1):
-        """Wait until `what` return True
-
-        Args:
-            what (Callable[bool]): Call `wait()` again and again until it returns True
-            times (int): Maximum times of trials before giving up
-
-        Returns:
-            True if success, False if times threshold reached
-
-        """
-        while times:
-            logger.info('Waiting times left %d', times)
-            try:
-                if what() is True:
-                    return True
-            except:
-                logger.exception('Wait failed')
-            else:
-                logger.warning('Trial[%d] failed', times)
-            times -= 1
-            time.sleep(1)
-
-        return False
+    started = 0
+    """number: test case started timestamp"""
 
     def __init__(self, *args, **kwargs):
         self.dut = None
@@ -162,16 +168,9 @@ class HarnessCase(unittest.TestCase):
         """Reboot all usb devices.
 
         Note:
-            If APC_HOST is not valid, usb devices is not rebooted.
+            If PDU_CONTROLLER_TYPE is not valid, usb devices is not rebooted.
         """
-        if self.manual_reset:
-            raw_input('Reset golden devices and press enter to continue..')
-            return
-        elif not settings.APC_HOST:
-            if settings.GOLDEN_DEVICE_TYPE != 'OpenThread':
-                logger.warning('All golden devices may not be resetted')
-                return
-
+        if not settings.PDU_CONTROLLER_TYPE:
             if settings.AUTO_DUT:
                 return
 
@@ -179,18 +178,21 @@ class HarnessCase(unittest.TestCase):
                 port, _ = device
                 try:
                     with OpenThreadController(port) as otc:
-                        logger.info('Resetting %s' % port)
+                        logger.info('Resetting %s', port)
                         otc.reset()
                 except:
-                    logger.exception('Failed to reset device %s' % port)
+                    logger.exception('Failed to reset device %s', port)
                     self.history.mark_bad_golden_device(device)
 
             return
 
         tries = 3
+        pdu_factory = PduControllerFactory()
+
         while True:
             try:
-                apc = ApcPduController(settings.APC_HOST)
+                pdu = pdu_factory.create_pdu_controller(settings.PDU_CONTROLLER_TYPE)
+                pdu.open(**settings.PDU_CONTROLLER_OPEN_PARAMS)
             except EOFError:
                 logger.warning('Failed to connect to telnet')
                 tries = tries - 1
@@ -201,11 +203,11 @@ class HarnessCase(unittest.TestCase):
                     logger.error('Fatal error: cannot connect to apc')
                     raise
             else:
-                apc.reboot(settings.APC_OUTLET)
-                apc.close()
+                pdu.reboot(**settings.PDU_CONTROLLER_REBOOT_PARAMS)
+                pdu.close()
                 break
 
-        time.sleep(20)
+        time.sleep(len(settings.GOLDEN_DEVICES))
 
     def _init_harness(self):
         """Restart harness backend service.
@@ -217,7 +219,12 @@ class HarnessCase(unittest.TestCase):
         time.sleep(1)
         self._hc.start()
         time.sleep(2)
-        os.system('taskkill /t /f /im chrome.exe')
+
+        harness_config = ConfigParser.ConfigParser()
+        harness_config.read('%s\\Config\\Configuration.ini' % settings.HARNESS_HOME)
+        if harness_config.has_option('THREAD_HARNESS_CONFIG', 'BrowserAutoNavigate') and \
+                harness_config.getboolean('THREAD_HARNESS_CONFIG', 'BrowserAutoNavigate'):
+            os.system('taskkill /t /f /im chrome.exe')
 
     def _destroy_harness(self):
         """Stop harness backend service
@@ -239,9 +246,6 @@ class HarnessCase(unittest.TestCase):
         dut_port = settings.DUT_DEVICE[0]
         dut = OpenThreadController(dut_port)
         self.dut = dut
-
-        if not settings.APC_HOST or self.manual_reset:
-            self.dut.reset()
 
     def _destroy_dut(self):
         self.dut = None
@@ -267,7 +271,7 @@ class HarnessCase(unittest.TestCase):
         browser.maximize_window()
         browser.get(settings.HARNESS_URL)
         self._browser = browser
-        if not self.wait_until(lambda: 'Thread' in browser.title, 30):
+        if not wait_until(lambda: 'Thread' in browser.title, 30):
             self.assertIn('Thread', browser.title)
 
     def _destroy_browser(self):
@@ -319,6 +323,13 @@ class HarnessCase(unittest.TestCase):
     def _setup_page(self):
         """Do sniffer settings and general settings
         """
+        if not self.started:
+            self.started = time.time()
+
+        if time.time() - self.started > 30:
+            self._browser.refresh()
+            return
+
         # Detect Sniffer
         try:
             dialog = self._browser.find_element_by_id('capture-Setup-modal')
@@ -326,7 +337,7 @@ class HarnessCase(unittest.TestCase):
             logger.exception('Failed to get dialog.')
         else:
             if dialog and dialog.get_attribute('aria-hidden') == 'false':
-                times = 100 # FIXME better to be a more meaningful value
+                times = 60
                 while times:
                     status = dialog.find_element_by_class_name('status-notify').text
                     if 'Searching' in status:
@@ -371,25 +382,28 @@ class HarnessCase(unittest.TestCase):
 
         # General Setup
         try:
-            button = self._browser.find_element_by_id('general-Setup')
-            button.click()
-            time.sleep(2)
+            if self.child_timeout or self.sed_polling_interval:
+                button = self._browser.find_element_by_id('general-Setup')
+                button.click()
+                time.sleep(2)
 
-            dialog = self._browser.find_element_by_id('general-Setup-modal')
-            if dialog.get_attribute('aria-hidden') != 'false':
-                raise Exception('Missing General Setup dialog')
+                dialog = self._browser.find_element_by_id('general-Setup-modal')
+                if dialog.get_attribute('aria-hidden') != 'false':
+                    raise Exception('Missing General Setup dialog')
 
-            field = dialog.find_element_by_id('inp_general_child_update_wait_time')
-            field.clear()
-            field.send_keys(str(self.child_timeout))
+                field = dialog.find_element_by_id('inp_general_child_update_wait_time')
+                field.clear()
+                if self.child_timeout:
+                    field.send_keys(str(self.child_timeout))
 
-            field = dialog.find_element_by_id('inp_general_sed_polling_rate')
-            field.clear()
-            field.send_keys(str(settings.THREAD_SED_POLLING_INTERVAL))
+                field = dialog.find_element_by_id('inp_general_sed_polling_rate')
+                field.clear()
+                if self.sed_polling_interval:
+                    field.send_keys(str(self.sed_polling_interval))
 
-            button = dialog.find_element_by_id('saveGeneralSettings')
-            button.click()
-            time.sleep(1)
+                button = dialog.find_element_by_id('saveGeneralSettings')
+                button.click()
+                time.sleep(1)
 
         except:
             logger.exception('Failed to do general setup')
@@ -443,11 +457,9 @@ class HarnessCase(unittest.TestCase):
             remove_button.click()
             selected_hw_num = selected_hw_num - 1
 
-        devices = list(settings.GOLDEN_DEVICES)
-        for index, device in enumerate(devices):
-            port = device[0]
-            if (self.history.is_bad_golden_device(port) or (settings.DUT_DEVICE and port == settings.DUT_DEVICE[0])):
-                devices.remove(device)
+        devices = [device for device in settings.GOLDEN_DEVICES
+                   if not self.history.is_bad_golden_device(device[0]) and \
+                   not (settings.DUT_DEVICE and device[0] == settings.DUT_DEVICE[0])]
 
         logger.info('Available golden devices: %s', json.dumps(devices, indent=2))
         golden_devices_required = self.golden_devices_required
@@ -456,7 +468,7 @@ class HarnessCase(unittest.TestCase):
             golden_devices_required += 1
 
         if len(devices) < golden_devices_required:
-            raise Exception('Golden devices is not enough')
+            raise GoldenDeviceNotEnoughError()
 
         # add golden devices
         while golden_devices_required:
@@ -467,13 +479,26 @@ class HarnessCase(unittest.TestCase):
         if settings.DUT_DEVICE:
             self._add_device(*settings.DUT_DEVICE)
 
+        # enable AUTO DUT
+        if self.auto_dut:
+            checkbox_auto_dut = browser.find_element_by_id('EnableAutoDutSelection')
+            if not checkbox_auto_dut.is_selected():
+                checkbox_auto_dut.click()
+                time.sleep(1)
+
+            if settings.DUT_DEVICE:
+                radio_auto_dut = browser.find_element_by_class_name('AutoDUT_RadBtns')
+                if not radio_auto_dut.is_selected():
+                    radio_auto_dut.click()
+
         while True:
             try:
                 self._connect_devices()
                 button_next = browser.find_element_by_id('nextBtn')
-                if not self.wait_until(lambda: 'disabled' not in button_next.get_attribute('class'),
-                                       times=(30 + 4 * self.golden_devices_required)):
+                if not wait_until(lambda: 'disabled' not in button_next.get_attribute('class'),
+                                  times=(30 + 4 * self.golden_devices_required)):
                     bad_ones = []
+                    selected_hw_set = test_bed.find_elements_by_class_name('selected-hw')
                     for selected_hw in selected_hw_set:
                         form_inputs = selected_hw.find_elements_by_tag_name('input')
                         form_port = form_inputs[0]
@@ -481,12 +506,18 @@ class HarnessCase(unittest.TestCase):
                             bad_ones.append(selected_hw)
 
                     for selected_hw in bad_ones:
+                        form_inputs = selected_hw.find_elements_by_tag_name('input')
+                        form_port = form_inputs[0]
                         port = form_port.get_attribute('value').encode('utf8')
                         if settings.DUT_DEVICE and port == settings.DUT_DEVICE[0]:
-                            raise Exception('DUT device failed')
+                            if settings.PDU_CONTROLLER_TYPE is None:
+                                # connection error cannot recover without power cycling
+                                raise FatalError('Failed to connect to DUT')
+                            else:
+                                raise FailError('Failed to connect to DUT')
 
-                        if not settings.APC_HOST:
-                            # port cannot recover without power off
+                        if settings.PDU_CONTROLLER_TYPE is None:
+                            # port cannot recover without power cycling
                             self.history.mark_bad_golden_device(port)
 
                         # remove the bad one
@@ -500,17 +531,12 @@ class HarnessCase(unittest.TestCase):
 
                     if devices is None:
                         logger.warning('Golden devices not enough')
-                        raise SystemExit()
+                        raise GoldenDeviceNotEnoughError()
                     else:
                         logger.info('Try again with new golden devices')
                         continue
 
-                if self.auto_dut:
-                    checkbox_auto_dut = browser.find_element_by_id('EnableAutoDutSelection')
-                    if not checkbox_auto_dut.is_selected():
-                        checkbox_auto_dut.click()
-
-                    time.sleep(1)
+                if self.auto_dut and not settings.DUT_DEVICE:
                     radio_auto_dut = browser.find_element_by_class_name('AutoDUT_RadBtns')
                     if not radio_auto_dut.is_selected():
                         radio_auto_dut.click()
@@ -518,7 +544,7 @@ class HarnessCase(unittest.TestCase):
                     time.sleep(5)
 
                 button_next.click()
-            except SystemExit:
+            except FailError:
                 raise
             except:
                 logger.exception('Unexpected error')
@@ -534,7 +560,7 @@ class HarnessCase(unittest.TestCase):
         time.sleep(1)
 
         checkbox = None
-        self.wait_until(lambda: self._browser.find_elements_by_css_selector('.tree-node .tree-title') and True)
+        wait_until(lambda: self._browser.find_elements_by_css_selector('.tree-node .tree-title') and True)
         elems = self._browser.find_elements_by_css_selector('.tree-node .tree-title')
         finder = re.compile(r'.*\b' + case + r'\b')
         finder_dotted = re.compile(r'.*\b' + case.replace(' ', r'\.') + r'\b')
@@ -552,13 +578,13 @@ class HarnessCase(unittest.TestCase):
             time.sleep(5)
             raise Exception('Failed to find the case')
 
-        self._browser.execute_script("$('.overview').css('left', '0')");
+        self._browser.execute_script("$('.overview').css('left', '0')")
         checkbox.click()
         time.sleep(1)
 
         elem = self._browser.find_element_by_id('runTest')
         elem.click()
-        if not self.wait_until(lambda: self._browser.find_element_by_id('stopTest') and True, 10):
+        if not wait_until(lambda: self._browser.find_element_by_id('stopTest') and True, 10):
             raise Exception('Failed to start test case')
 
     def _collect_result(self):
@@ -590,22 +616,21 @@ class HarnessCase(unittest.TestCase):
         # generate excel
         self._browser.find_element_by_class_name('save-excel').click()
         time.sleep(1)
-        for wh in self._browser.window_handles:
-            if wh != main_window:
-                self._browser.switch_to.window(wh)
+        for window_handle in self._browser.window_handles:
+            if window_handle != main_window:
+                self._browser.switch_to.window(window_handle)
                 self._browser.close()
         self._browser.switch_to.window(main_window)
 
         # save pcap
         self._browser.find_element_by_class_name('save-wireshark').click()
         time.sleep(1)
-        for wh in self._browser.window_handles:
-            if wh != main_window:
-                self._browser.switch_to.window(wh)
+        for window_handle in self._browser.window_handles:
+            if window_handle != main_window:
+                self._browser.switch_to.window(window_handle)
                 self._browser.close()
         self._browser.switch_to.window(main_window)
 
-        timestamp = time.strftime('%Y%m%d%H%M%S')
         os.system('copy "%%HOMEPATH%%\\Downloads\\NewPdf_*.pdf" %s\\'
                   % self.result_dir)
         os.system('copy "%%HOMEPATH%%\\Downloads\\ExcelReport_*.xlsx" %s\\'
@@ -636,11 +661,11 @@ class HarnessCase(unittest.TestCase):
                     try:
                         done = self._handle_dialog(dialog, title)
                     except:
-                        logger.exception('Error handling dialog: %s' % title)
+                        logger.exception('Error handling dialog: %s', title)
                         error = True
 
                     if done is None:
-                        raise Exception('Unexpected dialog occurred')
+                        raise FailError('Unexpected dialog occurred')
 
                     dialog.find_element_by_id('ConfirmOk').click()
 
@@ -664,15 +689,16 @@ class HarnessCase(unittest.TestCase):
                 lines = self._hc.tail()
                 if 'SUCCESS: The process "dumpcap.exe" with PID ' in lines:
                     logger.info('Tshark should be ended now, lets wait at most 30 seconds.')
-                    if not self.wait_until(lambda: 'tshark.exe' not in subprocess.check_output('tasklist'), 30):
-                        res = subprocess.check_output('taskkill /t /f /im tshark.exe', stderr=subprocess.STDOUT, shell=True)
+                    if not wait_until(lambda: 'tshark.exe' not in subprocess.check_output('tasklist'), 30):
+                        res = subprocess.check_output('taskkill /t /f /im tshark.exe',
+                                                      stderr=subprocess.STDOUT, shell=True)
                         logger.info(res)
 
         # Wait until case really stopped
-        self.wait_until(lambda: self._browser.find_element_by_id('runTest') and True, 30)
+        wait_until(lambda: self._browser.find_element_by_id('runTest') and True, 30)
 
         if error:
-            raise Exception('Fail for previous exceptions')
+            raise FailError('Fail for previous exceptions')
 
     def _handle_dialog(self, dialog, title):
         """Handle a dialog.
@@ -722,7 +748,7 @@ class HarnessCase(unittest.TestCase):
                     break
 
             if not ll64:
-                raise Exception('No link local address found')
+                raise FailError('No link local address found')
 
             logger.info('Link local address is %s', ll64)
             inp = dialog.find_element_by_id('cnfrmInpText')
@@ -762,19 +788,24 @@ class HarnessCase(unittest.TestCase):
             inp.clear()
             inp.send_keys(ml64)
 
-        elif title.startswith('Sheild DUT'):
-            # FIXME should find better way to simulate
-            self.dut.channel = (self.channel == THREAD_CHANNEL_MAX
-                                 and THREAD_CHANNEL_MIN) or (self.channel + 1)
+        elif title.startswith('Shield Devices') or title.startswith('Sheild DUT'):
+            if self.dut and settings.SHIELD_SIMULATION:
+                self.dut.channel = (self.channel == THREAD_CHANNEL_MAX
+                                    and THREAD_CHANNEL_MIN) or (self.channel + 1)
+            else:
+                raw_input('Shield DUT and press enter to continue..')
 
-        elif title.startswith('Bring DUT Back to network'):
-            self.dut.channel = self.channel
+        elif title.startswith('Unshield Devices') or title.startswith('Bring DUT Back to network'):
+            if self.dut and settings.SHIELD_SIMULATION:
+                self.dut.channel = self.channel
+            else:
+                raw_input('Bring DUT and press enter to continue..')
 
         elif title.startswith('Configure Prefix on DUT'):
             body = dialog.find_element_by_id('cnfrmMsg').text
             body = body.split(': ')[1]
             params = reduce(lambda params, param: params.update(((param[0].strip(' '), param[1]),)) or params,
-                            map(lambda it: it.split('='), body.split(', ')), {})
+                            [it.split('=') for it in body.split(', ')], {})
             prefix = params['P_Prefix'].strip('\0\r\n\t ')
             flags = []
             if params.get('P_slaac_preferred', 0) == '1':
@@ -812,6 +843,14 @@ class HarnessCase(unittest.TestCase):
         except UnexpectedAlertPresentException:
             logger.exception('Failed to connect to harness server')
             raise SystemExit()
+        except FatalError:
+            logger.exception('Test stopped for fatal error')
+            raise SystemExit()
+        except FailError:
+            logger.exception('Test failed')
+            raise
+        except:
+            logger.exception('Something wrong')
 
         self._select_case(self.role, self.case)
 

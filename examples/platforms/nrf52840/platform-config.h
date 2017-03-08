@@ -170,7 +170,15 @@
  * RTC Instance.
  *
  */
-#define RTC_INSTANCE  NRF_RTC0
+#define RTC_INSTANCE  NRF_RTC2
+
+/**
+ * @def RTC_IRQ_HANDLER
+ *
+ * RTC interrupt handler name
+ *
+ */
+#define RTC_IRQ_HANDLER  RTC2_IRQHandler
 
 /**
  * @def RTC_IRQN
@@ -178,7 +186,7 @@
  * RTC Interrupt number.
  *
  */
-#define RTC_IRQN  RTC0_IRQn
+#define RTC_IRQN  RTC2_IRQn
 
 /**
  * @def RTC_IRQ_PRIORITY

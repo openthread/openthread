@@ -51,6 +51,13 @@ otLwfCmdUninitialize(
     _In_ PMS_FILTER pFilter
     );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+otLwfCmdResetDevice(
+    _In_ PMS_FILTER pFilter,
+    _In_ BOOLEAN fAsync
+    );
+
 //
 // Receive Spinel Encoded Command
 //
@@ -155,7 +162,25 @@ NTSTATUS
 otLwfCmdSetProp(
     _In_ PMS_FILTER pFilter,
     _In_ spinel_prop_key_t Key,
-    _In_ const char *pack_format, 
+    _In_opt_ const char *pack_format, 
+    ...
+    );
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+otLwfCmdInsertProp(
+    _In_ PMS_FILTER pFilter,
+    _In_ spinel_prop_key_t Key,
+    _In_opt_ const char *pack_format,
+    ...
+    );
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+otLwfCmdRemoveProp(
+    _In_ PMS_FILTER pFilter,
+    _In_ spinel_prop_key_t Key,
+    _In_opt_ const char *pack_format,
     ...
     );
 

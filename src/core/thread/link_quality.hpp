@@ -34,7 +34,7 @@
 #ifndef LINK_QUALITY_HPP_
 #define LINK_QUALITY_HPP_
 
-#include <openthread-types.h>
+#include "openthread/types.h"
 
 namespace Thread {
 
@@ -228,7 +228,7 @@ private:
 int8_t GetAverageNoiseFloor(LinkQualityInfo &aNoiseFloor);
 
 /**
- * This method adds a new noise floor value (in dBm) to the running average.
+ * This function adds a new noise floor value (in dBm) to the running average.
  *
  * @param[in]  aNoiseFloor    A reference to the noise state.
  * @param[in]  aNoise         A new noise floor value (in dBm) to be added to the average.
@@ -237,7 +237,7 @@ int8_t GetAverageNoiseFloor(LinkQualityInfo &aNoiseFloor);
 void AddNoiseFloor(LinkQualityInfo &aNoiseFloor, int8_t aNoise);
 
 /**
- * This method clears the current average noise floor value.
+ * This function clears the current average noise floor value.
  *
  * @param[in]  aNoiseFloor  A reference to the noise state.
  *

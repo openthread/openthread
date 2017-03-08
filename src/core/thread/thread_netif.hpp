@@ -40,7 +40,7 @@
 #include <openthread-config.h>
 #endif
 
-#include <openthread-types.h>
+#include "openthread/types.h"
 
 #include <coap/coap_server.hpp>
 #include <coap/coap_client.hpp>

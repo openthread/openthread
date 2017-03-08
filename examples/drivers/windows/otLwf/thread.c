@@ -168,6 +168,14 @@ otLwfUninitializeThreadMode(
     if (pFilter->EventHighPrecisionTimer)
     {
         ExDeleteTimer(pFilter->EventHighPrecisionTimer, TRUE, FALSE, NULL);
+        pFilter->EventHighPrecisionTimer = NULL;
+    }
+
+    // Close handle to settings registry key
+    if (pFilter->otSettingsRegKey)
+    {
+        ZwClose(pFilter->otSettingsRegKey);
+        pFilter->otSettingsRegKey = NULL;
     }
 
     LogFuncExit(DRIVER_DEFAULT);
@@ -200,17 +208,69 @@ otLwfFindFromCurrentThread()
 }
 #endif
 
+#define OTPLAT_CALLOC_TAG 'OTDM'
+#define BUFFER_POOL_TAG 'OTBP'
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+void
+otLwfReleaseInstance(
+    _In_ PMS_FILTER pFilter
+    )
+{
+    LogFuncEntry(DRIVER_DEFAULT);
+
+    if (pFilter->otCtx != NULL)
+    {
+        otInstanceFinalize(pFilter->otCtx);
+        pFilter->otCtx = NULL;
+
+#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+
+        // Free all the pools as there should be no outstanding
+        // references to the buffers any more.
+        BufferPool *curPool = pFilter->otBufferPoolHead;
+        while (curPool != NULL)
+        {
+            BufferPool *nextPool = curPool->Next;
+            ExFreePoolWithTag(curPool, BUFFER_POOL_TAG);
+            curPool = nextPool;
+        }
+
+#endif
+
+#if DEBUG_ALLOC
+
+        NT_ASSERT(pFilter->otOutstandingAllocationCount == 0);
+        NT_ASSERT(pFilter->otOutstandingMemoryAllocated == 0);
+        PLIST_ENTRY Link = pFilter->otOutStandingAllocations.Flink;
+        while (Link != &pFilter->otOutStandingAllocations)
+        {
+            OT_ALLOC* AllocHeader = CONTAINING_RECORD(Link, OT_ALLOC, Link);
+            Link = Link->Flink;
+
+            LogVerbose(DRIVER_DEFAULT, "Leaked Alloc ID:%u", AllocHeader->ID);
+
+            ExFreePoolWithTag(AllocHeader, OTPLAT_CALLOC_TAG);
+        }
+
+#endif
+    }
+
+    LogFuncExit(DRIVER_DEFAULT);
+}
+
 //
 // OpenThread Platform functions
 //
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 void *otPlatCAlloc(size_t aNum, size_t aSize)
 {
     size_t totalSize = aNum * aSize;
 #if DEBUG_ALLOC
     totalSize += sizeof(OT_ALLOC);
 #endif
-    PVOID mem = ExAllocatePoolWithTag(NonPagedPoolNx, totalSize, 'OTDM');
+    PVOID mem = ExAllocatePoolWithTag(PagedPool, totalSize, OTPLAT_CALLOC_TAG);
     if (mem)
     {
         RtlZeroMemory(mem, totalSize);
@@ -232,7 +292,8 @@ void *otPlatCAlloc(size_t aNum, size_t aSize)
     return mem;
 }
 
-void otPlatFree(void *aPtr)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+void otPlatFree(_In_opt_ void *aPtr)
 {
     if (aPtr == NULL) return;
 #if DEBUG_ALLOC
@@ -245,8 +306,123 @@ void otPlatFree(void *aPtr)
     InterlockedAdd(&pFilter->otOutstandingMemoryAllocated, -AllocHeader->Length);
     RemoveEntryList(&AllocHeader->Link);
 #endif
-    ExFreePoolWithTag(aPtr, 'OTDM');
+    ExFreePoolWithTag(aPtr, OTPLAT_CALLOC_TAG);
 }
+
+#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+BufferPool* AllocBufferPool(_In_ PMS_FILTER pFilter)
+{
+    // Allocate the memory
+    BufferPool* bufPool = (BufferPool*)ExAllocatePoolWithTag(PagedPool, pFilter->otBufferPoolByteSize, BUFFER_POOL_TAG);
+    if (bufPool == NULL)
+    {
+        LogWarning(DRIVER_DEFAULT, "Failed to allocate new buffer pool!");
+        return NULL;
+    }
+
+    // Zero out the memory
+    RtlZeroMemory(bufPool, pFilter->otBufferPoolByteSize);
+
+    // Set all mNext for the buffers
+    otMessage* prevBuf = (otMessage*)bufPool->Buffers;
+    for (uint16_t i = 1; i < pFilter->otBufferPoolBufferCount; i++)
+    {
+        otMessage* curBuf =
+            (otMessage*)&bufPool->Buffers[i * pFilter->otBufferSize];
+
+        prevBuf->mNext = curBuf;
+        prevBuf = curBuf;
+    }
+
+    LogVerbose(DRIVER_DEFAULT, "Allocated new buffer pool (%d bytes)!", pFilter->otBufferPoolByteSize);
+
+    return bufPool;
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+otMessage* GetNextFreeBufferFromPool(_In_ PMS_FILTER pFilter)
+{
+    // Immediately return if we have hit our limit
+    if (pFilter->otBuffersLeft == 0) return NULL;
+
+    // If we don't have any free buffers left, allocate another pool
+    if (pFilter->otFreeBuffers == NULL)
+    {
+        BufferPool *newPool = AllocBufferPool(pFilter);
+        if (newPool == NULL) return NULL; // Out of physical memory
+
+        // Push on top of the pool list
+        newPool->Next = pFilter->otBufferPoolHead;
+        pFilter->otBufferPoolHead = newPool;
+
+        // Set the free buffer list
+        pFilter->otFreeBuffers = (otMessage*)newPool->Buffers;
+    }
+
+    // Pop the top free buffer
+    otMessage* buffer = pFilter->otFreeBuffers;
+    pFilter->otFreeBuffers = pFilter->otFreeBuffers->mNext;
+    pFilter->otBuffersLeft--;
+    buffer->mNext = NULL;
+    return buffer;
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+void otPlatMessagePoolInit(_In_ otInstance *otCtx, uint16_t aMinNumFreeBuffers, size_t aBufferSize)
+{
+    NT_ASSERT(otCtx);
+    PMS_FILTER pFilter = otCtxToFilter(otCtx);
+
+    LogFuncEntry(DRIVER_DEFAULT);
+    UNREFERENCED_PARAMETER(aMinNumFreeBuffers);
+
+    // Initialize parameters
+    pFilter->otBufferSize = (uint16_t)aBufferSize;
+    pFilter->otBufferPoolByteSize = (uint16_t)(kPageSize * kPagesPerBufferPool);
+    pFilter->otBufferPoolBufferCount = (uint16_t)((pFilter->otBufferPoolByteSize - sizeof(BufferPool)) / aBufferSize);
+    pFilter->otBuffersLeft = kMaxPagesForBufferPools * pFilter->otBufferPoolBufferCount;
+
+    // Allocate first pool
+    pFilter->otBufferPoolHead = AllocBufferPool(pFilter);
+    ASSERT(pFilter->otBufferPoolHead); // Should this API allow for failure ???
+
+    // Set initial free buffer list
+    pFilter->otFreeBuffers = (otMessage*)pFilter->otBufferPoolHead->Buffers;
+
+    LogFuncExit(DRIVER_DEFAULT);
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+otMessage *otPlatMessagePoolNew(_In_ otInstance *otCtx)
+{
+    NT_ASSERT(otCtx);
+    PMS_FILTER pFilter = otCtxToFilter(otCtx);
+    return GetNextFreeBufferFromPool(pFilter);
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+void otPlatMessagePoolFree(_In_ otInstance *otCtx, _In_ otMessage *aBuffer)
+{
+    NT_ASSERT(otCtx);
+    PMS_FILTER pFilter = otCtxToFilter(otCtx);
+
+    // Put buffer back on the list
+    aBuffer->mNext = pFilter->otFreeBuffers;
+    pFilter->otFreeBuffers = aBuffer;
+    pFilter->otBuffersLeft++;
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+uint16_t otPlatMessagePoolNumFreeBuffers(_In_ otInstance *otCtx)
+{
+    NT_ASSERT(otCtx);
+    PMS_FILTER pFilter = otCtxToFilter(otCtx);
+    return pFilter->otBuffersLeft;
+}
+
+#endif
 
 uint32_t otPlatRandomGet()
 {
@@ -276,9 +452,9 @@ ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint1
     return kThreadError_None;
 }
 
-void otSignalTaskletPending(_In_ otInstance *otCtx)
+void otTaskletsSignalPending(_In_ otInstance *otCtx)
 {
-    LogVerbose(DRIVER_DEFAULT, "otSignalTaskletPending");
+    LogVerbose(DRIVER_DEFAULT, "otTaskletsSignalPending");
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
     otLwfEventProcessingIndicateNewTasklet(pFilter);
 }
@@ -291,7 +467,7 @@ otLwfProcessRoleStateChange(
     )
 {
     otDeviceRole prevRole = pFilter->otCachedRole;
-    pFilter->otCachedRole = otGetDeviceRole(pFilter->otCtx);
+    pFilter->otCachedRole = otThreadGetDeviceRole(pFilter->otCtx);
     if (prevRole == pFilter->otCachedRole) return;
 
     LogInfo(DRIVER_DEFAULT, "Interface %!GUID! new role: %!otDeviceRole!", &pFilter->InterfaceGuid, pFilter->otCachedRole);
@@ -368,7 +544,7 @@ void otLwfStateChangedCallback(uint32_t aFlags, _In_ void *aContext)
     if ((aFlags & OT_THREAD_NETDATA_UPDATED) != 0)
     {
         LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_THREAD_NETDATA_UPDATED", pFilter);
-        otSlaacUpdate(pFilter->otCtx, pFilter->otAutoAddresses, ARRAYSIZE(pFilter->otAutoAddresses), otCreateRandomIid, NULL);
+        otIp6SlaacUpdate(pFilter->otCtx, pFilter->otAutoAddresses, ARRAYSIZE(pFilter->otAutoAddresses), otIp6CreateRandomIid, NULL);
 
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
         otDhcp6ServerUpdate(pFilter->otCtx);
@@ -563,18 +739,7 @@ otLwfThreadValueIs(
 {
     LogFuncEntryMsg(DRIVER_DEFAULT, "[%p] received Value for %s", pFilter, spinel_prop_key_to_cstr(key));
 
-    if (key == SPINEL_PROP_LAST_STATUS)
-    {
-        spinel_status_t status = SPINEL_STATUS_OK;
-        spinel_datatype_unpack(value_data_ptr, value_data_len, "i", &status);
-
-        if ((status >= SPINEL_STATUS_RESET__BEGIN) && (status <= SPINEL_STATUS_RESET__END))
-        {
-            LogInfo(DRIVER_DEFAULT, "Interface %!GUID! was reset (status %d).", &pFilter->InterfaceGuid, status);
-            // TODO - Handle reset
-        }
-    }
-    else if (key == SPINEL_PROP_MAC_ENERGY_SCAN_RESULT)
+    if (key == SPINEL_PROP_MAC_ENERGY_SCAN_RESULT)
     {
         uint8_t scanChannel;
         int8_t maxRssi;

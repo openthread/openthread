@@ -36,7 +36,9 @@
 
 #include <stdio.h>
 
-#include <openthread-types.h>
+#include "openthread/platform/random.h"
+#include "openthread/platform/radio.h"
+
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <coap/coap_header.hpp>
@@ -47,8 +49,6 @@
 #include <meshcop/dataset.hpp>
 #include <meshcop/dataset_manager.hpp>
 #include <meshcop/tlvs.hpp>
-#include <platform/random.h>
-#include <platform/radio.h>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
@@ -506,9 +506,9 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
                 {
                     delayTimerTlv->SetDelayTimer(DelayTimerTlv::kDelayTimerDefault);
                 }
-                else if (delayTimerTlv->GetDelayTimer() < DelayTimerTlv::kDelayTimerMinimal)
+                else if (delayTimerTlv->GetDelayTimer() < mNetif.GetLeader().GetDelayTimerMinimal())
                 {
-                    delayTimerTlv->SetDelayTimer(DelayTimerTlv::kDelayTimerMinimal);
+                    delayTimerTlv->SetDelayTimer(mNetif.GetLeader().GetDelayTimerMinimal());
                 }
             }
 
@@ -872,8 +872,10 @@ exit:
 }
 
 ActiveDatasetBase::ActiveDatasetBase(ThreadNetif &aThreadNetif):
-    DatasetManager(aThreadNetif, Tlv::kActiveTimestamp, OPENTHREAD_URI_ACTIVE_SET, OPENTHREAD_URI_ACTIVE_GET)
+    DatasetManager(aThreadNetif, Tlv::kActiveTimestamp, OPENTHREAD_URI_ACTIVE_SET, OPENTHREAD_URI_ACTIVE_GET),
+    mResourceGet(OPENTHREAD_URI_ACTIVE_GET, &ActiveDatasetBase::HandleGet, this)
 {
+    mNetif.GetCoapServer().AddResource(mResourceGet);
 }
 
 ThreadError ActiveDatasetBase::Restore(void)
@@ -940,12 +942,27 @@ exit:
     return error;
 }
 
+void ActiveDatasetBase::HandleGet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+                                  const otMessageInfo *aMessageInfo)
+{
+    static_cast<ActiveDatasetBase *>(aContext)->HandleGet(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+}
+
+void ActiveDatasetBase::HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    DatasetManager::Get(aHeader, aMessage, aMessageInfo);
+}
+
 PendingDatasetBase::PendingDatasetBase(ThreadNetif &aThreadNetif):
     DatasetManager(aThreadNetif, Tlv::kPendingTimestamp, OPENTHREAD_URI_PENDING_SET, OPENTHREAD_URI_PENDING_GET),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, &PendingDatasetBase::HandleTimer, this),
     mLocalTime(0),
-    mNetworkTime(0)
+    mNetworkTime(0),
+    mResourceGet(OPENTHREAD_URI_PENDING_GET, &PendingDatasetBase::HandleGet, this)
 {
+    mNetif.GetCoapServer().AddResource(mResourceGet);
 }
 
 ThreadError PendingDatasetBase::Restore(void)
@@ -1118,7 +1135,7 @@ void PendingDatasetBase::ApplyActiveDataset(const Timestamp &aTimestamp, Message
 
     // add delay timer tlv
     delayTimer.Init();
-    delayTimer.SetDelayTimer(DelayTimerTlv::kDelayTimerMinimal);
+    delayTimer.SetDelayTimer(mNetif.GetLeader().GetDelayTimerMinimal());
     mNetwork.Set(delayTimer);
 
     // add pending timestamp tlv
@@ -1135,6 +1152,19 @@ exit:
 void PendingDatasetBase::HandleNetworkUpdate(uint8_t &aFlags)
 {
     DatasetManager::HandleNetworkUpdate(aFlags);
+}
+
+void PendingDatasetBase::HandleGet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+                                   const otMessageInfo *aMessageInfo)
+{
+    static_cast<PendingDatasetBase *>(aContext)->HandleGet(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+}
+
+void PendingDatasetBase::HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    DatasetManager::Get(aHeader, aMessage, aMessageInfo);
 }
 
 }  // namespace MeshCoP

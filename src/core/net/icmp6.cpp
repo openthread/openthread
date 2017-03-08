@@ -50,8 +50,6 @@ namespace Ip6 {
 Icmp::Icmp(Ip6 &aIp6):
     mHandlers(NULL),
     mEchoSequence(1),
-    mEchoReplyHandler(NULL),
-    mEchoReplyContext(NULL),
     mIsEchoEnabled(true),
     mIp6(aIp6)
 {
@@ -62,11 +60,11 @@ Message *Icmp::NewMessage(uint16_t aReserved)
     return mIp6.NewMessage(sizeof(IcmpHeader) + aReserved);
 }
 
-ThreadError Icmp::RegisterCallbacks(IcmpHandler &aHandler)
+ThreadError Icmp::RegisterHandler(IcmpHandler &aHandler)
 {
     ThreadError error = kThreadError_None;
 
-    for (IcmpHandler *cur = mHandlers; cur; cur = cur->mNext)
+    for (IcmpHandler *cur = mHandlers; cur; cur = cur->GetNext())
     {
         if (cur == &aHandler)
         {
@@ -81,13 +79,8 @@ exit:
     return error;
 }
 
-void Icmp::SetEchoReplyHandler(EchoReplyHandler aHandler, void *aContext)
-{
-    mEchoReplyHandler = aHandler;
-    mEchoReplyContext = aContext;
-}
-
-ThreadError Icmp::SendEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo)
+ThreadError Icmp::SendEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo,
+                                  uint16_t aIdentifier)
 {
     ThreadError error = kThreadError_None;
     MessageInfo messageInfoLocal;
@@ -96,8 +89,8 @@ ThreadError Icmp::SendEchoRequest(Message &aMessage, const MessageInfo &aMessage
     messageInfoLocal = aMessageInfo;
 
     icmpHeader.Init();
-    icmpHeader.SetType(IcmpHeader::kTypeEchoRequest);
-    icmpHeader.SetId(1);
+    icmpHeader.SetType(kIcmp6TypeEchoRequest);
+    icmpHeader.SetId(aIdentifier);
     icmpHeader.SetSequence(mEchoSequence++);
 
     SuccessOrExit(error = aMessage.Prepend(&icmpHeader, sizeof(icmpHeader)));
@@ -160,33 +153,20 @@ ThreadError Icmp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
     checksum = aMessage.UpdateChecksum(checksum, aMessage.GetOffset(), payloadLength);
     VerifyOrExit(checksum == 0xffff, ;);
 
-    switch (icmp6Header.GetType())
+    if (mIsEchoEnabled && (icmp6Header.GetType() == kIcmp6TypeEchoRequest))
     {
-    case IcmpHeader::kTypeEchoRequest:
-        return HandleEchoRequest(aMessage, aMessageInfo);
+        HandleEchoRequest(aMessage, aMessageInfo);
+    }
 
-    case IcmpHeader::kTypeEchoReply:
-        return HandleEchoReply(aMessage, aMessageInfo);
+    aMessage.MoveOffset(sizeof(icmp6Header));
 
-    case IcmpHeader::kTypeDstUnreach:
-        return HandleDstUnreach(aMessage, aMessageInfo, icmp6Header);
+    for (IcmpHandler *handler = mHandlers; handler; handler = handler->GetNext())
+    {
+        handler->HandleReceiveMessage(aMessage, aMessageInfo, icmp6Header);
     }
 
 exit:
     return error;
-}
-
-ThreadError Icmp::HandleDstUnreach(Message &aMessage, const MessageInfo &aMessageInfo,
-                                   const IcmpHeader &aIcmpheader)
-{
-    aMessage.MoveOffset(sizeof(aIcmpheader));
-
-    for (IcmpHandler *handler = mHandlers; handler; handler = handler->mNext)
-    {
-        handler->HandleDstUnreach(aMessage, aMessageInfo, aIcmpheader);
-    }
-
-    return kThreadError_None;
 }
 
 ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMessageInfo)
@@ -197,16 +177,14 @@ ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo 
     MessageInfo replyMessageInfo;
     uint16_t payloadLength;
 
-    VerifyOrExit(mIsEchoEnabled, ;);
-
     otLogInfoIcmp("Received Echo Request");
 
     icmp6Header.Init();
-    icmp6Header.SetType(IcmpHeader::kTypeEchoReply);
+    icmp6Header.SetType(kIcmp6TypeEchoReply);
 
     if ((replyMessage = mIp6.NewMessage(0)) == NULL)
     {
-        otLogDebgIcmp("icmp fail");
+        otLogDebgIcmp("Failed to allocate a new message");
         ExitNow();
     }
 
@@ -239,16 +217,6 @@ exit:
     }
 
     return error;
-}
-
-ThreadError Icmp::HandleEchoReply(Message &aMessage, const MessageInfo &aMessageInfo)
-{
-    VerifyOrExit(mIsEchoEnabled && mEchoReplyHandler, ;);
-
-    mEchoReplyHandler(mEchoReplyContext, aMessage, aMessageInfo);
-
-exit:
-    return kThreadError_None;
 }
 
 ThreadError Icmp::UpdateChecksum(Message &aMessage, uint16_t aChecksum)

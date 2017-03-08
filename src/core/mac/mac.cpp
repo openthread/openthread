@@ -41,6 +41,9 @@
 
 #include <string.h>
 
+#include "openthread/platform/random.h"
+#include "openthread/platform/usec-alarm.h"
+
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/encoding.hpp>
@@ -49,7 +52,6 @@
 #include <crypto/sha256.hpp>
 #include <mac/mac.hpp>
 #include <mac/mac_frame.hpp>
-#include <platform/random.h>
 #include <thread/mle_router.hpp>
 #include <thread/thread_netif.hpp>
 #include <openthread-instance.h>
@@ -80,11 +82,10 @@ static_assert(kMinBackoffSum > 0, "The min backoff value should be greater than 
 
 void Mac::StartCsmaBackoff(void)
 {
-    if (RadioSupportsRetriesAndCsmaBackoff())
+    if (RadioSupportsCsmaBackoff())
     {
-        // If the radio supports the retry and back off logic, immediately schedule the send,
-        // and the radio will take care of everything.
-        mBackoffTimer.Start(0);
+        // If the radio supports CSMA back off logic, immediately schedule the send.
+        HandleBeginTransmit();
     }
     else
     {
@@ -96,16 +97,29 @@ void Mac::StartCsmaBackoff(void)
             backoffExponent = kMaxBE;
         }
 
-        backoff = kMinBackoff + (kUnitBackoffPeriod * kPhyUsPerSymbol * (1 << backoffExponent)) / 1000;
-        backoff = (otPlatRandomGet() % backoff);
+        backoff = (otPlatRandomGet() % (1UL << backoffExponent));
+        backoff *= (kUnitBackoffPeriod * kPhyUsPerSymbol);
 
-        mBackoffTimer.Start(backoff);
+#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
+        otPlatUsecAlarmTime now;
+        otPlatUsecAlarmTime delay;
+
+        otPlatUsecAlarmGetNow(&now);
+        delay.mMs = backoff / 1000UL;
+        delay.mUs = backoff - (delay.mMs * 1000UL);
+
+        otPlatUsecAlarmStartAt(mNetif.GetInstance(), &now, &delay, &Mac::HandleBeginTransmit, this);
+#else // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
+        mBackoffTimer.Start(backoff / 1000UL);
+#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
     }
 }
 
 Mac::Mac(ThreadNetif &aThreadNetif):
     mMacTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleMacTimer, this),
+#if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
     mBackoffTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleBeginTransmit, this),
+#endif
     mReceiveTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleReceiveTimer, this),
     mNetif(aThreadNetif),
     mEnergyScanSampleRssiTask(aThreadNetif.GetIp6().mTaskletScheduler, &Mac::HandleEnergyScanSampleRssi, this),
@@ -842,7 +856,7 @@ void Mac::TransmitDoneTask(RadioPacket *aPacket, bool aRxPending, ThreadError aE
         mCounters.mTxErrAbort++;
     }
 
-    if (!RadioSupportsRetriesAndCsmaBackoff() &&
+    if (!RadioSupportsCsmaBackoff() &&
         aError == kThreadError_ChannelAccessFailure &&
         mCsmaAttempts < kMaxCSMABackoffs)
     {
@@ -975,7 +989,7 @@ void Mac::SentFrame(ThreadError aError)
     case kThreadError_NoAck:
         otDumpDebgMac("NO ACK", sendFrame.GetHeader(), 16);
 
-        if (!RadioSupportsRetriesAndCsmaBackoff() &&
+        if (!RadioSupportsRetries() &&
             mTransmitAttempts < kMaxFrameAttempts)
         {
             mTransmitAttempts++;
@@ -1122,20 +1136,28 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
             ExitNow(error = kThreadError_Security);
         }
 
-        if (keySequence < aNeighbor->mKeySequence)
+        // If the frame is from a neighbor not in valid state (e.g., it is from a child being
+        // restored), skip the key sequence and frame counter checks but continue to verify
+        // the tag/MIC. Such a frame is later filtered in `RxDoneTask` which only allows MAC
+        // Data Request frames from a child being restored.
+
+        if (aNeighbor->mState == Neighbor::kStateValid)
         {
-            ExitNow(error = kThreadError_Security);
-        }
-        else if (keySequence == aNeighbor->mKeySequence)
-        {
-            if ((frameCounter + 1) < aNeighbor->mValid.mLinkFrameCounter)
+            if (keySequence < aNeighbor->mKeySequence)
             {
                 ExitNow(error = kThreadError_Security);
             }
-            else if ((frameCounter + 1) == aNeighbor->mValid.mLinkFrameCounter)
+            else if (keySequence == aNeighbor->mKeySequence)
             {
-                // drop duplicated packets
-                ExitNow(error = kThreadError_Duplicated);
+                if ((frameCounter + 1) < aNeighbor->mValid.mLinkFrameCounter)
+                {
+                    ExitNow(error = kThreadError_Security);
+                }
+                else if ((frameCounter + 1) == aNeighbor->mValid.mLinkFrameCounter)
+                {
+                    // drop duplicated packets
+                    ExitNow(error = kThreadError_Duplicated);
+                }
             }
         }
 
@@ -1164,7 +1186,7 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
 
     VerifyOrExit(memcmp(tag, aFrame.GetFooter(), tagLength) == 0, error = kThreadError_Security);
 
-    if (keyIdMode == Frame::kKeyIdMode1)
+    if ((keyIdMode == Frame::kKeyIdMode1) && (aNeighbor->mState == Neighbor::kStateValid))
     {
         if (aNeighbor->mKeySequence != keySequence)
         {
@@ -1215,6 +1237,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
     otMacBlacklistEntry *blacklistEntry;
     int8_t rssi;
     bool receive = false;
+    uint8_t commandId;
     ThreadError error = aError;
 
     mCounters.mRxTotal++;
@@ -1236,12 +1259,6 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
 
     aFrame->GetSrcAddr(srcaddr);
     neighbor = mNetif.GetMle().GetNeighbor(srcaddr);
-
-    // Ensure that the neighbor is in valid state.
-    if ((neighbor != NULL) && (neighbor->mState != Neighbor::kStateValid))
-    {
-        neighbor = NULL;
-    }
 
     switch (srcaddr.mLength)
     {
@@ -1333,6 +1350,28 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
     if (neighbor != NULL)
     {
         neighbor->mLinkInfo.AddRss(mNoiseFloor, aFrame->mPower);
+
+        if (aFrame->GetSecurityEnabled() == true)
+        {
+            switch (neighbor->mState)
+            {
+            case Neighbor::kStateValid:
+                break;
+
+            case Neighbor::kStateRestored:
+            case Neighbor::kStateChildUpdateRequest:
+
+                // Only accept a "MAC Data Request" frame from a child being restored.
+                VerifyOrExit(aFrame->GetType() == Frame::kFcfFrameMacCmd, error = kThreadError_Drop);
+                VerifyOrExit(aFrame->GetCommandId(commandId) == kThreadError_None, error = kThreadError_Drop);
+                VerifyOrExit(commandId == Frame::kMacCmdDataRequest, error = kThreadError_Drop);
+
+                break;
+
+            default:
+                ExitNow(error = kThreadError_UnknownNeighbor);
+            }
+        }
     }
 
     switch (mState)
@@ -1501,7 +1540,16 @@ void Mac::SetPromiscuous(bool aPromiscuous)
     }
 }
 
-bool Mac::RadioSupportsRetriesAndCsmaBackoff(void)
+bool Mac::RadioSupportsCsmaBackoff(void)
+{
+    /* Check either of the following conditions:
+     *   1) Radio provides the CSMA backoff capability (i.e., `kRadioCapsCsmaBackOff` bit is set) or;
+     *   2) It provides `kRadioCapsTransmitRetries` which indicates support for MAC retries along with CSMA backoff.
+     */
+    return (otPlatRadioGetCaps(mNetif.GetInstance()) & (kRadioCapsTransmitRetries | kRadioCapsCsmaBackOff)) != 0;
+}
+
+bool Mac::RadioSupportsRetries(void)
 {
     return (otPlatRadioGetCaps(mNetif.GetInstance()) & kRadioCapsTransmitRetries) != 0;
 }
@@ -1604,6 +1652,7 @@ void Mac::ClearSrcMatchEntries()
     otPlatRadioClearSrcMatchExtEntries(mNetif.GetInstance());
     otLogDebgMac("Clearing source match table");
 }
+
 
 }  // namespace Mac
 }  // namespace Thread

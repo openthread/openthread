@@ -27,7 +27,8 @@
  */
 
 #include "test_util.h"
-#include <openthread.h>
+#include "openthread/openthread.h"
+#include <openthread-instance.h>
 #include <common/debug.hpp>
 #include <common/message.hpp>
 #include <string.h>
@@ -203,7 +204,8 @@ void VerifyMsgQueueContent(Thread::MessageQueue &aMessageQueue, int aExpectedLen
 
 void TestPriorityQueue(void)
 {
-    Thread::MessagePool messagePool;
+    otInstance instance;
+    Thread::MessagePool messagePool(&instance);
     Thread::PriorityQueue queue;
     Thread::MessageQueue messageQueue;
     Thread::Message *msgHigh    [kNumTestMessages];

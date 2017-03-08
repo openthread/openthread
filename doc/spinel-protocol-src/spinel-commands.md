@@ -219,3 +219,84 @@ See (#security-considerations) for more information.
 
 This command requires the capability `CAP_PEEK_POKE` to be present.
 
+## CMD 21: (Host->NCP) CMD_PROP_VALUE_MULTI_GET {#prop-value-multi-get}
+
+*   Argument-Encoding: `A(i)`
+*   Required Capability: `CAP_CMD_MULTI`
+
+Fetch the value of multiple properties in one command. Arguments are
+an array of property IDs. If all properties are fetched successfully,
+a `CMD_PROP_VALUES_ARE` command is sent back to the host containing
+the propertyid and value of each fetched property. The order of the
+results in `CMD_PROP_VALUES_ARE` match the order of properties given
+in `CMD_PROP_VALUE_GET`.
+
+Errors fetching individual properties are reflected as indicating a
+change to `PROP_LAST_STATUS` for that property's place.
+
+Not all properties can be fetched using this method. As a general rule
+of thumb, any property that blocks when getting will fail for that
+individual property with `STATUS_INVALID_COMMAND_FOR_PROP`.
+
+## CMD 22: (Host->NCP) CMD_PROP_VALUE_MULTI_SET {#prop-value-multi-set}
+
+*   Argument-Encoding: `A(T(iD))`
+*   Required Capability: `CAP_CMD_MULTI`
+
+Octets: |    1   |          1               |   *n*
+--------|--------|--------------------------|----------------------
+Fields: | HEADER | CMD_PROP_VALUE_MULTI_SET | Property/Value Pairs
+
+With each property/value pair being:
+
+Octets: |    2   |   1-3   |  *n*
+--------|--------|---------|------------
+Fields: | LENGTH | PROP_ID | PROP_VALUE
+
+This command sets the value of several properties at once in the given
+order. The setting of properties stops at the first error, ignoring
+any later properties.
+
+The result of this command is generally `CMD_PROP_VALUES_ARE` unless
+(for example) a parsing error has occured (in which case
+`CMD_PROP_VALUE_IS` for `PROP_LAST_STATUS` would be the result). The
+order of the results in `CMD_PROP_VALUES_ARE` match the order of
+properties given in `CMD_PROP_VALUE_MULTI_SET`.
+
+Since the processing of properties to set stops at the first error,
+the resulting `CMD_PROP_VALUES_ARE` can contain fewer items than the
+requested number of properties to set.
+
+Not all properties can be set using this method. As a general rule
+of thumb, any property that blocks when setting will fail for that
+individual property with `STATUS_INVALID_COMMAND_FOR_PROP`.
+
+## CMD 23: (NCP->Host) CMD_PROP_VALUES_ARE {#prop-values-are}
+
+*   Argument-Encoding: `A(T(iD))`
+*   Required Capability: `CAP_CMD_MULTI`
+
+Octets: |    1   |          1          |   *n*
+--------|--------|---------------------|----------------------
+Fields: | HEADER | CMD_PROP_VALUES_ARE | Property/Value Pairs
+
+With each property/value pair being:
+
+Octets: |    2   |   1-3   |  *n*
+--------|--------|---------|------------
+Fields: | LENGTH | PROP_ID | PROP_VALUE
+
+This command is emitted by the NCP as the response to both the
+`CMD_PROP_VALUE_MULTI_GET` and `CMD_PROP_VALUE_MULTI_SET` commands. It
+is roughly analogous to `CMD_PROP_VALUE_IS`, except that it contains
+more than one property.
+
+This command SHOULD NOT be emitted asynchronously, or in response to
+any command other than `CMD_PROP_VALUE_MULTI_GET` or
+`CMD_PROP_VALUE_MULTI_SET`.
+
+The arguments are a list of structures containing the emitted property
+and the associated value. These are presented in the same order as
+given in the associated initiating command. In cases where getting or
+setting a specific property resulted in an error, the associated slot
+in this command will describe `PROP_LAST_STATUS`.

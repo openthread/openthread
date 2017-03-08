@@ -71,4 +71,4 @@ typedef struct _OTTMP_DEVICE_CONTEXT *POTTMP_DEVICE_CONTEXT;
 #include "device.hpp"
 #include "serial.hpp"
 #include "oid.hpp"
-#include "platform/logging-windows.h"
+#include "openthread/platform/logging-windows.h"

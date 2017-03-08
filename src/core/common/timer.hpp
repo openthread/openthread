@@ -37,9 +37,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <openthread-types.h>
+#include "openthread/types.h"
+#include "openthread/platform/alarm.h"
+
 #include <common/tasklet.hpp>
-#include <platform/alarm.h>
 
 namespace Thread {
 

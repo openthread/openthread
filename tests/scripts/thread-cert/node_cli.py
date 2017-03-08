@@ -75,9 +75,9 @@ class otCli:
             else:
                 srcdir = os.path.dirname(os.path.realpath(__file__))
                 srcdir += "/../../.."
-            cmd = 'python %s/tools/spinel-cli/spinel-cli.py -p %s/examples/apps/ncp/ot-ncp -n' % (srcdir, builddir)
+            cmd = 'python %s/tools/spinel-cli/spinel-cli.py -p %s/examples/apps/ncp/ot-ncp-ftd -n' % (srcdir, builddir)
         else:
-            cmd = './ot-ncp'
+            cmd = './ot-ncp-ftd'
         cmd += ' %d' % nodeid
         print ("%s" % cmd)
 

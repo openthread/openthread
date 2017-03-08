@@ -41,6 +41,9 @@
 
 #include <stdio.h>
 
+#include "openthread/platform/radio.h"
+#include "openthread/platform/random.h"
+
 #include <common/code_utils.hpp>
 #include <common/crc16.hpp>
 #include <common/debug.hpp>
@@ -48,8 +51,6 @@
 #include <common/logging.hpp>
 #include <mac/mac_frame.hpp>
 #include <meshcop/joiner.hpp>
-#include <platform/radio.h>
-#include <platform/random.h>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
 
@@ -63,6 +64,8 @@ Joiner::Joiner(ThreadNetif &aNetif):
     mState(kStateIdle),
     mCallback(NULL),
     mContext(NULL),
+    mCcitt(Crc16::kCcitt),
+    mAnsi(Crc16::kAnsi),
     mJoinerRouterChannel(0),
     mJoinerRouterPanId(0),
     mJoinerUdpPort(0),
@@ -92,6 +95,12 @@ ThreadError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl,
     mNetif.GetMac().GetHashMacAddress(&extAddress);
     mNetif.GetMac().SetExtAddress(extAddress);
     mNetif.GetMle().UpdateLinkLocalAddress();
+
+    for (size_t i = 0; i < sizeof(extAddress); i++)
+    {
+        mCcitt.Update(extAddress.m8[i]);
+        mAnsi.Update(extAddress.m8[i]);
+    }
 
     error = mNetif.GetSecureCoapClient().GetDtls().SetPsk(reinterpret_cast<const uint8_t *>(aPSKd),
                                                           static_cast<uint8_t>(strlen(aPSKd)));
@@ -162,24 +171,20 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
     {
         otLogFuncEntryMsg("aResult = %llX", HostSwap64(*reinterpret_cast<uint64_t *>(&aResult->mExtAddress)));
 
-        SteeringDataTlv steeringData;
-        Mac::ExtAddress extAddress;
-        Crc16 ccitt(Crc16::kCcitt);
-        Crc16 ansi(Crc16::kAnsi);
-
-        mNetif.GetMac().GetHashMacAddress(&extAddress);
-
-        for (size_t i = 0; i < sizeof(extAddress); i++)
+        // Joining is disabled if the Steering Data is not included
+        if (aResult->mSteeringData.mLength == 0)
         {
-            ccitt.Update(extAddress.m8[i]);
-            ansi.Update(extAddress.m8[i]);
+            otLogDebgMeshCoP("No steering data, joining disabled");
+            ExitNow();
         }
 
+        SteeringDataTlv steeringData;
         steeringData.SetLength(aResult->mSteeringData.mLength);
         memcpy(steeringData.GetValue(), aResult->mSteeringData.m8, steeringData.GetLength());
 
-        if (steeringData.GetBit(ccitt.Get() % steeringData.GetNumBits()) &&
-            steeringData.GetBit(ansi.Get() % steeringData.GetNumBits()))
+        if (steeringData.DoesAllowAny() ||
+            (steeringData.GetBit(mCcitt.Get() % steeringData.GetNumBits()) &&
+             steeringData.GetBit(mAnsi.Get() % steeringData.GetNumBits())))
         {
             mJoinerUdpPort = aResult->mJoinerUdpPort;
             mJoinerRouterPanId = aResult->mPanId;
@@ -188,7 +193,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
         }
         else
         {
-            otLogDebgMeshCoP("Steering data not set");
+            otLogDebgMeshCoP("Steering data does not include this device");
         }
     }
     else if (mJoinerRouterPanId != Mac::kPanIdBroadcast)
@@ -213,6 +218,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
         Complete(kThreadError_NotFound);
     }
 
+exit:
     otLogFuncExit();
 }
 
@@ -322,7 +328,7 @@ exit:
     otLogFuncExit();
 }
 
-void Joiner::HandleJoinerFinalizeResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void Joiner::HandleJoinerFinalizeResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                           const otMessageInfo *aMessageInfo, ThreadError aResult)
 {
     static_cast<Joiner *>(aContext)->HandleJoinerFinalizeResponse(
@@ -357,7 +363,7 @@ exit:
     otLogFuncExit();
 }
 
-void Joiner::HandleJoinerEntrust(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void Joiner::HandleJoinerEntrust(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                  const otMessageInfo *aMessageInfo)
 {
     static_cast<Joiner *>(aContext)->HandleJoinerEntrust(

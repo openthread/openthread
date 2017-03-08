@@ -35,7 +35,7 @@
 #ifndef OTNODE_H_
 #define OTNODE_H_
 
-#include <openthread.h>
+#include <openthread/openthread.h>
 
 #ifndef OTNODEAPI
 #define OTNODEAPI __declspec(dllimport)

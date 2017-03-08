@@ -34,7 +34,8 @@
 #ifndef CLI_UDP_HPP_
 #define CLI_UDP_HPP_
 
-#include <openthread-types.h>
+#include "openthread/types.h"
+
 #include <cli/cli_server.hpp>
 
 namespace Thread {
@@ -92,8 +93,8 @@ private:
         kMaxLineLength = 128,
     };
 
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
-    void HandleUdpReceive(otMessage aMessage, const otMessageInfo *aMessageInfo);
+    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
     otUdpSocket mSocket;
     otMessageInfo mPeer;

@@ -29,17 +29,27 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 lib_LIBRARIES                       = \
-    libopenthread-ftd.a               \
-    libopenthread-mtd.a               \
     $(NULL)
 
 CPPFLAGS_COMMON                     = \
     -I$(top_srcdir)/include           \
+    -I${abs_top_srcdir}/third_party/mbedtls/repo/include \
+    $(MBEDTLS_CPPFLAGS)               \
     $(OPENTHREAD_TARGET_DEFINES)      \
     $(NULL)
 
 SOURCES_COMMON                      = \
-    openthread.cpp                    \
+    api/crypto_api.cpp                \
+    api/dataset_api.cpp               \
+    api/icmp6_api.cpp                 \
+    api/instance_api.cpp              \
+    api/ip6_api.cpp                   \
+    api/link_api.cpp                  \
+    api/message_api.cpp               \
+    api/netdata_api.cpp               \
+    api/tasklet_api.cpp               \
+    api/thread_api.cpp                \
+    api/udp_api.cpp                   \
     coap/coap_base.cpp                \
     coap/coap_client.cpp              \
     coap/coap_header.cpp              \
@@ -54,7 +64,6 @@ SOURCES_COMMON                      = \
     crypto/aes_ccm.cpp                \
     crypto/aes_ecb.cpp                \
     crypto/hmac_sha256.cpp            \
-    crypto/openthread-crypto.cpp      \
     crypto/mbedtls.cpp                \
     crypto/sha256.cpp                 \
     mac/mac.cpp                       \
@@ -85,6 +94,12 @@ SOURCES_COMMON                      = \
     utils/slaac_address.cpp           \
     $(NULL)
 
+if OPENTHREAD_ENABLE_APPLICATION_COAP
+SOURCES_COMMON                     += \
+    api/coap_api.cpp                  \
+    $(NULL)
+endif  # OPENTHREAD_ENABLE_APPLICATION_COAP
+
 if OPENTHREAD_ENABLE_MAC_WHITELIST
 SOURCES_COMMON                     += \
     mac/mac_blacklist.cpp             \
@@ -94,7 +109,9 @@ endif  # OPENTHREAD_ENABLE_MAC_WHITELIST
 
 if OPENTHREAD_ENABLE_COMMISSIONER
 SOURCES_COMMON                     += \
+    api/commissioner_api.cpp          \
     coap/secure_coap_server.cpp       \
+    crypto/pbkdf2_cmac.cpp            \
     meshcop/announce_begin_client.cpp \
     meshcop/commissioner.cpp          \
     meshcop/energy_scan_client.cpp    \
@@ -104,6 +121,7 @@ endif  # OPENTHREAD_ENABLE_COMMISSIONER
 
 if OPENTHREAD_ENABLE_JOINER
 SOURCES_COMMON                     += \
+    api/joiner_api.cpp                \
     coap/secure_coap_client.cpp       \
     meshcop/joiner.cpp                \
     $(NULL)
@@ -117,18 +135,21 @@ endif  # OPENTHREAD_ENABLE_DTLS
 
 if OPENTHREAD_ENABLE_DHCP6_CLIENT
 SOURCES_COMMON                     += \
+    api/dhcp6_api.cpp                 \
     net/dhcp6_client.cpp              \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_DHCP6_CLIENT
 
 if OPENTHREAD_ENABLE_DHCP6_SERVER
 SOURCES_COMMON                     += \
+    api/dhcp6_api.cpp                 \
     net/dhcp6_server.cpp              \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_DHCP6_SERVER
 
 if OPENTHREAD_ENABLE_JAM_DETECTION
 SOURCES_COMMON                     += \
+    api/jam_detection_api.cpp         \
     utils/jam_detector.cpp            \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_JAM_DETECTION
@@ -138,6 +159,11 @@ SOURCES_COMMON                     += \
     api/link_raw_api.cpp              \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_RAW_LINK_API
+
+if OPENTHREAD_ENABLE_FTD
+lib_LIBRARIES                      += \
+    libopenthread-ftd.a               \
+    $(NULL)
 
 libopenthread_ftd_a_CPPFLAGS        = \
     $(CPPFLAGS_COMMON)                \
@@ -152,6 +178,11 @@ libopenthread_ftd_a_SOURCES         = \
     thread/mle_router.cpp             \
     thread/network_data_leader_ftd.cpp \
     thread/network_data_local.cpp     \
+    $(NULL)
+endif # OPENTHREAD_ENABLE_FTD
+
+lib_LIBRARIES                      += \
+    libopenthread-mtd.a               \
     $(NULL)
 
 libopenthread_mtd_a_CPPFLAGS        = \
@@ -190,6 +221,7 @@ noinst_HEADERS                      = \
     crypto/aes_ecb.hpp                \
     crypto/hmac_sha256.hpp            \
     crypto/mbedtls.hpp                \
+    crypto/pbkdf2_cmac.h              \
     crypto/sha256.hpp                 \
     mac/mac.hpp                       \
     mac/mac_blacklist.hpp             \

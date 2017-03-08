@@ -30,9 +30,9 @@
 #include <string.h>
 #include <assert.h>
 
-#include <openthread-types.h>
+#include <openthread/types.h>
 #include <common/code_utils.hpp>
-#include <platform/alarm.h>
+#include <openthread/platform/alarm.h>
 #include <utils/flash.h>
 
 #include "hal/nrf_nvmc.h"

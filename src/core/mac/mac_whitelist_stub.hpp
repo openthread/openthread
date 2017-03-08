@@ -36,7 +36,8 @@
 
 #include <stdint.h>
 
-#include <openthread-types.h>
+#include "openthread/types.h"
+
 #include <mac/mac_frame.hpp>
 
 namespace Thread {
@@ -49,11 +50,9 @@ public:
 
     Whitelist(void) { }
 
-    void Enable(void) { }
-
-    void Disable(void) { }
-
     bool IsEnabled(void) const { return false; }
+
+    void SetEnabled(bool) { }
 
     int GetMaxEntries(void) const { return 0; }
 

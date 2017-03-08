@@ -40,7 +40,6 @@
 #endif
 
 #include <ncp/ncp_base.hpp>
-#include <ncp/ncp_buffer.hpp>
 
 namespace Thread {
 
@@ -57,11 +56,6 @@ public:
      */
     NcpSpi(otInstance *aInstance);
 
-    virtual ThreadError OutboundFrameBegin(void);
-    virtual ThreadError OutboundFrameFeedData(const uint8_t *frame, uint16_t frameLength);
-    virtual ThreadError OutboundFrameFeedMessage(otMessage message);
-    virtual ThreadError OutboundFrameEnd(void);
-
     void ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength);
 
 private:
@@ -69,7 +63,6 @@ private:
     {
         kSpiBufferSize   = OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE, // Spi buffer size (should be large enough to fit a
                                                                   // max length frame + spi header).
-        kTxBufferSize    = OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE,  // Tx Buffer size (used by mTxFrameBuffer).
         kSpiHeaderLength = 5,                                     // Size of spi header.
     };
 
@@ -122,8 +115,6 @@ private:
     uint8_t mEmptySendFrame[kSpiHeaderLength];
     uint8_t mEmptyReceiveFrame[kSpiHeaderLength];
 
-    uint8_t mTxBuffer[kTxBufferSize];
-    NcpFrameBuffer  mTxFrameBuffer;
 };
 
 }  // namespace Thread

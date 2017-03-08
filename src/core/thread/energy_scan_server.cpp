@@ -33,12 +33,13 @@
 
 #define WPP_NAME "energy_scan_server.tmh"
 
+#include "openthread/platform/random.h"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
 #include <meshcop/tlvs.hpp>
-#include <platform/random.h>
 #include <thread/energy_scan_server.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
@@ -63,7 +64,7 @@ EnergyScanServer::EnergyScanServer(ThreadNetif &aThreadNetif) :
     mNetif.GetCoapServer().AddResource(mEnergyScan);
 }
 
-void EnergyScanServer::HandleRequest(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void EnergyScanServer::HandleRequest(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                      const otMessageInfo *aMessageInfo)
 {
     static_cast<EnergyScanServer *>(aContext)->HandleRequest(
