@@ -134,20 +134,20 @@ set -x
     export ASAN_SYMBOLIZER_PATH=`which llvm-symbolizer-3.4` || die
     export ASAN_OPTIONS=symbolize=1 || die
     ./bootstrap || die
-    BuildJobs=10 make -f examples/Makefile-posix distcheck || die
+    make -f examples/Makefile-posix distcheck || die
 }
 
 [ $BUILD_TARGET != posix-32-bit ] || {
     ./bootstrap || die
-    COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 BuildJobs=10 make -f examples/Makefile-posix check || die
+    COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 make -f examples/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != posix-ncp-spi ] || {
     ./bootstrap || die
-    BuildJobs=10 make -f examples/Makefile-posix check configure_OPTIONS="--enable-ftd --enable-ncp=spi --with-examples=posix --with-platform-info=POSIX" || die
+    make -f examples/Makefile-posix check configure_OPTIONS="--enable-ftd --enable-ncp=spi --with-examples=posix --with-platform-info=POSIX" || die
 }
 
 [ $BUILD_TARGET != posix-ncp ] || {
     ./bootstrap || die
-    COVERAGE=1 NODE_TYPE=ncp-sim BuildJobs=10 make -f examples/Makefile-posix check || die
+    COVERAGE=1 NODE_TYPE=ncp-sim make -f examples/Makefile-posix check || die
 }
