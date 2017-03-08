@@ -44,6 +44,18 @@ extern "C" {
 #endif
 
 /**
+ * @brief States of the driver.
+ */
+typedef enum
+{
+    NRF_DRV_RADIO802154_STATE_INVALID,
+    NRF_DRV_RADIO802154_STATE_SLEEP,
+    NRF_DRV_RADIO802154_STATE_RECEIVE,
+    NRF_DRV_RADIO802154_STATE_TRANSMIT,
+    NRF_DRV_RADIO802154_STATE_ENERGY_DETECTION,
+} nrf_drv_radio802154_state_t;
+
+/**
  * @brief Initialize 802.15.4 driver.
  *
  * @note This function shall be called once, before any other function from this module.
@@ -90,7 +102,7 @@ void nrf_drv_radio802154_short_address_set(const uint8_t *p_short_address);
 
 
 /**
- * @section Functions to request FSM transitions.
+ * @section Functions to request FSM transitions and check current state.
  *
  *          receive()       transmit()
  *          -------->       -------->
@@ -102,6 +114,11 @@ void nrf_drv_radio802154_short_address_set(const uint8_t *p_short_address);
  *                   \|/  |
  *               Energy detection
  */
+
+/**
+ * @brief Get current state of the radio.
+ */
+nrf_drv_radio802154_state_t nrf_drv_radio802154_state_get(void);
 
 /**
  * @brief Change radio state to Sleep.
