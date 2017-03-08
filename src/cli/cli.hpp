@@ -147,6 +147,7 @@ private:
     {
         kMaxArgs = 32,
         kMaxAutoAddresses = 8,
+        kDefaultJoinerTimeout = 120,    ///< Default timeout for Joiners, in seconds.
     };
 
     void AppendResult(ThreadError error);
