@@ -182,6 +182,19 @@ public:
     typedef void (*ErrorHandler)(void *aContext, ThreadError aError, uint8_t *aFrame, uint16_t aFrameLength);
 
     /**
+     * This function pointer is called when rx buffer is full but the frame is not complete.
+     *
+     * Handler must return the number of bytes not handled, and shift out bytes handled, i.e. moving
+     * not handled bytes to @a aFrame. Returning the same size as @a aFrameLength indicates failure.
+     *
+     * @param[in]  aContext      A pointer to arbitrary context information.
+     * @param[in]  aFrame        A pointer to the frame.
+     * @param[in]  aFrameLength  The frame length in bytes.
+     *
+     */
+    typedef uint16_t (*PendingFrameHandler)(void *aContext, uint8_t *aFrame, uint16_t aFrameLength);
+
+    /**
      * This constructor initializes the decoder.
      *
      * @param[in]  aOutBuf        A pointer to the output buffer.
@@ -190,7 +203,8 @@ public:
      * @param[in]  aContext       A pointer to arbitrary context information.
      *
      */
-    Decoder(uint8_t *aOutBuf, uint16_t aOutLength, FrameHandler aFrameHandler, ErrorHandler aErrorHandler, void *aContext);
+    Decoder(uint8_t *aOutBuf, uint16_t aOutLength, FrameHandler aFrameHandler, ErrorHandler aErrorHandler,
+            PendingFrameHandler aPendingFrameHandler, void *aContext);
 
     /**
      * This method streams bytes into the decoder.
@@ -212,6 +226,7 @@ private:
 
     FrameHandler mFrameHandler;
     ErrorHandler mErrorHandler;
+    PendingFrameHandler mPendingFrameHandler;
     void *mContext;
 
     uint8_t *mOutBuf;

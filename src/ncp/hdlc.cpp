@@ -226,10 +226,11 @@ exit:
     return error;
 }
 
-Decoder::Decoder(uint8_t *aOutBuf, uint16_t aOutLength, FrameHandler aFrameHandler, ErrorHandler aErrorHandler, void *aContext):
+Decoder::Decoder(uint8_t *aOutBuf, uint16_t aOutLength, FrameHandler aFrameHandler, ErrorHandler aErrorHandler, PendingFrameHandler aPendingFrameHandler, void *aContext):
     mState(kStateNoSync),
     mFrameHandler(aFrameHandler),
     mErrorHandler(aErrorHandler),
+    mPendingFrameHandler(aPendingFrameHandler),
     mContext(aContext),
     mOutBuf(aOutBuf),
     mOutOffset(0),
@@ -286,6 +287,10 @@ void Decoder::Decode(const uint8_t *aInBuf, uint16_t aInLength)
                 break;
 
             default:
+                if (mOutOffset == mOutLength && mPendingFrameHandler != NULL)
+                {
+                    mOutOffset = mPendingFrameHandler(mContext, mOutBuf, mOutOffset);
+                }
                 if (mOutOffset < mOutLength)
                 {
                     mFcs = UpdateFcs(mFcs, byte);
@@ -306,6 +311,10 @@ void Decoder::Decode(const uint8_t *aInBuf, uint16_t aInLength)
             break;
 
         case kStateEscaped:
+            if (mOutOffset == mOutLength && mPendingFrameHandler != NULL)
+            {
+                mOutOffset = mPendingFrameHandler(mContext, mOutBuf, mOutOffset);
+            }
             if (mOutOffset < mOutLength)
             {
                 byte ^= 0x20;
