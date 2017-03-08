@@ -1846,7 +1846,7 @@ OTNODEAPI uint32_t OTCALL otNodePing(otNode* aNode, const char *aAddr, uint16_t 
         {
             //printf("waiting for completion event...\r\n");
             // Wait for the receive to complete
-			ULONGLONG elapsed = (GetTickCount64() - StartTick);
+            ULONGLONG elapsed = (GetTickCount64() - StartTick);
             result = WSAWaitForMultipleEvents(1, &Overlapped.hEvent, TRUE, (DWORD)(aTimeout - min(aTimeout, elapsed)), TRUE);
             if (result == WSA_WAIT_TIMEOUT)
             {
