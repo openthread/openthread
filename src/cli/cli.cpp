@@ -2327,7 +2327,15 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
         if (strcmp(argv[1], "add") == 0)
         {
             VerifyOrExit(argc > 3, error = kThreadError_Parse);
-            SuccessOrExit(error = otCommissionerAddJoiner(mInstance, addrPtr, argv[3]));
+            // Timeout parameter is optional - if not specified, use default value.
+            unsigned long timeout = kDefaultJoinerTimeout;
+
+            if (argc > 4)
+            {
+                SuccessOrExit(error = ParseUnsignedLong(argv[4], timeout));
+            }
+
+            SuccessOrExit(error = otCommissionerAddJoiner(mInstance, addrPtr, argv[3], static_cast<uint32_t>(timeout)));
         }
         else if (strcmp(argv[1], "remove") == 0)
         {

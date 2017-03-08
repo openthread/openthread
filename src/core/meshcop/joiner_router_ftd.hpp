@@ -126,12 +126,13 @@ private:
     Coap::Resource mRelayTransmit;
     ThreadNetif &mNetif;
 
-    uint16_t mJoinerUdpPort;
-    bool mIsJoinerPortConfigured;
-
     Timer mTimer;
     MessageQueue mDelayedJoinEnts;
-    bool mExpectJoinEntRsp;
+
+    uint16_t mJoinerUdpPort;
+
+    bool mIsJoinerPortConfigured : 1;
+    bool mExpectJoinEntRsp : 1;
 };
 
 /**

@@ -59,6 +59,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\examples\apps\windows\otAdapter.h" />
+    <ClInclude Include="..\..\examples\apps\windows\otApi.h" />
     <ClInclude Include="..\..\examples\apps\windows\pch.h" />
     <ClInclude Include="..\..\examples\apps\windows\App.xaml.h">
       <DependentUpon>..\..\examples\apps\windows\App.xaml</DependentUpon>

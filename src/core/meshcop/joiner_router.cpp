@@ -60,9 +60,9 @@ JoinerRouter::JoinerRouter(ThreadNetif &aNetif):
     mSocket(aNetif.GetIp6().mUdp),
     mRelayTransmit(OPENTHREAD_URI_RELAY_TX, &JoinerRouter::HandleRelayTransmit, this),
     mNetif(aNetif),
+    mTimer(aNetif.GetIp6().mTimerScheduler, &JoinerRouter::HandleTimer, this),
     mJoinerUdpPort(0),
     mIsJoinerPortConfigured(false),
-    mTimer(aNetif.GetIp6().mTimerScheduler, &JoinerRouter::HandleTimer, this),
     mExpectJoinEntRsp(false)
 {
     mSocket.GetSockName().mPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;

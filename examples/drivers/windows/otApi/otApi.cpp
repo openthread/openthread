@@ -1868,6 +1868,18 @@ otThreadSetRouterRoleEnabled(
 }
 
 OTAPI
+ThreadError
+OTCALL
+otThreadSetPreferredRouterId(
+    _In_ otInstance *aInstance,
+    uint8_t aRouterId
+    )
+{
+    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_PAN_ID, aRouterId));
+}
+
+OTAPI
 otShortAddress 
 OTCALL
 otLinkGetShortAddress(
@@ -3501,7 +3513,8 @@ OTCALL
 otCommissionerAddJoiner(
     _In_ otInstance *aInstance, 
     const otExtAddress *aExtAddress, 
-    const char *aPSKd
+    const char *aPSKd,
+    uint32_t aTimeout
     )
 {
     if (aInstance == nullptr || aPSKd == nullptr) return kThreadError_InvalidArgs;
@@ -3514,13 +3527,14 @@ otCommissionerAddJoiner(
 
     uint8_t aExtAddressValid = aExtAddress ? 1 : 0;
     
-    const ULONG BufferLength = sizeof(GUID) + sizeof(uint8_t) + sizeof(otExtAddress) + (ULONG)aPSKdLength + 1;
-    BYTE Buffer[sizeof(GUID) + sizeof(uint8_t) + sizeof(otExtAddress) + OPENTHREAD_PSK_MAX_LENGTH + 1] = {0};
+    const ULONG BufferLength = sizeof(GUID) + sizeof(uint8_t) + sizeof(otExtAddress) + (ULONG)aPSKdLength + 1 + sizeof(aTimeout);
+    BYTE Buffer[sizeof(GUID) + sizeof(uint8_t) + sizeof(otExtAddress) + OPENTHREAD_PSK_MAX_LENGTH + 1 + sizeof(aTimeout)] = {0};
     memcpy_s(Buffer, sizeof(Buffer), &aInstance->InterfaceGuid, sizeof(GUID));
     memcpy_s(Buffer + sizeof(GUID), sizeof(Buffer) - sizeof(GUID), &aExtAddressValid, sizeof(aExtAddressValid));
     if (aExtAddressValid)
         memcpy_s(Buffer + sizeof(GUID) + sizeof(uint8_t), sizeof(Buffer) - sizeof(GUID) - sizeof(uint8_t), aExtAddress, sizeof(otExtAddress));
     memcpy_s(Buffer + sizeof(GUID) + sizeof(uint8_t) + sizeof(otExtAddress), sizeof(Buffer) - sizeof(GUID) - sizeof(uint8_t) - sizeof(otExtAddress), aPSKd, aPSKdLength);
+    memcpy_s(Buffer + sizeof(GUID) + sizeof(uint8_t) + sizeof(otExtAddress) + aPSKdLength + 1, sizeof(Buffer) - sizeof(GUID) - sizeof(uint8_t) - sizeof(otExtAddress) - aPSKdLength - 1, &aTimeout, sizeof(aTimeout));
     
     return DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_COMMISIONER_ADD_JOINER, Buffer, BufferLength, nullptr, 0));
 }

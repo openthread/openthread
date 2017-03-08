@@ -128,7 +128,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     meshLocalPrefix[7] = 0x00;
 
     // mesh-local 64
-    for (int i = 8; i < 16; i++)
+    for (int i = OT_IP6_PREFIX_SIZE; i < OT_IP6_ADDRESS_SIZE; i++)
     {
         mMeshLocal64.GetAddress().mFields.m8[i] = static_cast<uint8_t>(otPlatRandomGet());
     }
@@ -289,6 +289,10 @@ ThreadError Mle::Restore(void)
     mNetif.GetMac().SetExtAddress(networkInfo.mExtAddress);
     UpdateLinkLocalAddress();
 
+    memcpy(&mMeshLocal64.GetAddress().mFields.m8[OT_IP6_PREFIX_SIZE],
+           networkInfo.mMlIid,
+           OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE);
+
     if (networkInfo.mDeviceState == kDeviceStateChild)
     {
         length = sizeof(mParent);
@@ -332,6 +336,10 @@ ThreadError Mle::Store(void)
                                    OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
     networkInfo.mPreviousPartitionId = mLeaderData.GetPartitionId();
     memcpy(networkInfo.mExtAddress.m8, mNetif.GetMac().GetExtAddress(), sizeof(networkInfo.mExtAddress));
+    memcpy(networkInfo.mMlIid,
+           &mMeshLocal64.GetAddress().mFields.m8[OT_IP6_PREFIX_SIZE],
+           OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE);
+
 
     if (mDeviceState == kDeviceStateChild)
     {

@@ -366,7 +366,7 @@ OTAPI void OTCALL otThreadSetRouterRoleEnabled(otInstance *aInstance, bool aEnab
  * @retval kThreadError_InvalidState Could not set (role is not detached or disabled)
  *
  */
-ThreadError otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId);
+OTAPI ThreadError OTCALL otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId);
 
 /**
  * @}

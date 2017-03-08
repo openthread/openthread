@@ -100,13 +100,14 @@ public:
      * This method adds a Joiner entry.
      *
      * @param[in]  aExtAddress      A pointer to the Joiner's extended address or NULL for any Joiner.
-     * @param[in]  aPSKd            A pointer to the PSKd
+     * @param[in]  aPSKd            A pointer to the PSKd.
+     * @param[in]  aTimeout         A time after which a Joiner is automatically removed, in seconds.
      *
      * @retval kThreadError_None    Successfully added the Joiner.
      * @retval kThreadError_NoBufs  No buffers available to add the Joiner.
      *
      */
-    ThreadError AddJoiner(const Mac::ExtAddress *aExtAddress, const char *aPSKd);
+    ThreadError AddJoiner(const Mac::ExtAddress *aExtAddress, const char *aPSKd, uint32_t aTimeout);
 
     /**
      * This method removes a Joiner entry.
@@ -207,14 +208,19 @@ public:
 private:
     enum
     {
-        kPetitionAttemptDelay = 5,   ///< COMM_PET_ATTEMPT_DELAY (seconds)
-        kPetitionRetryCount   = 2,   ///< COMM_PET_RETRY_COUNT
-        kPetitionRetryDelay   = 1,   ///< COMM_PET_RETRY_DELAY (seconds)
-        kKeepAliveTimeout     = 50,  ///< TIMEOUT_COMM_PET (seconds)
+        kPetitionAttemptDelay = 5,      ///< COMM_PET_ATTEMPT_DELAY (seconds)
+        kPetitionRetryCount   = 2,      ///< COMM_PET_RETRY_COUNT
+        kPetitionRetryDelay   = 1,      ///< COMM_PET_RETRY_DELAY (seconds)
+        kKeepAliveTimeout     = 50,     ///< TIMEOUT_COMM_PET (seconds)
     };
 
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
+
+    static void HandleJoinerExpirationTimer(void *aContext);
+    void HandleJoinerExpirationTimer(void);
+
+    void UpdateJoinerExpirationTimer(void);
 
     static void HandleMgmtCommissionerSetResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                                   const otMessageInfo *aMessageInfo, ThreadError aResult);
@@ -259,6 +265,7 @@ private:
     struct Joiner
     {
         Mac::ExtAddress mExtAddress;
+        uint32_t mExpirationTime;
         char mPsk[Dtls::kPskMaxLength + 1];
         bool mValid : 1;
         bool mAny : 1;
@@ -272,6 +279,7 @@ private:
     };
     uint16_t mJoinerPort;
     uint16_t mJoinerRloc;
+    Timer mJoinerExpirationTimer;
 
     Timer mTimer;
     uint16_t mSessionId;
