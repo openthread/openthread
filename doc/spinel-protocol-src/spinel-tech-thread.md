@@ -237,13 +237,12 @@ The stable leader network data.
 ### PROP 5391: PROP_THREAD_JOINERS {#prop-thread-joiners}
 
 * Type: Read-Write
-* Packed-Encoding: `A(T(EDc))`
+* Packed-Encoding: `A(T(ED.))`
 
 Data per item is:
 
 * `E`: Extended/long address
 * `D`: PSKd
-* `c`: PSKd length
 
 Passess Extended address and PSKd to the NCP in the commissioning process.
 

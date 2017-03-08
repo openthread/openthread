@@ -6097,9 +6097,6 @@ ThreadError NcpBase::InsertPropertyHandler_SPINEL_PROP_THREAD_JOINERS(uint8_t he
 
     otExtAddress *ot_ext_address = NULL;
     const char *aPSKd = NULL;
-    const int PSK_MIN_LENGTH = 6;
-    const int PSK_MAX_LENGTH = 32;
-    int psk_len;
 
     VerifyOrExit(
         mAllowLocalNetworkDataChange == true,
@@ -6109,13 +6106,12 @@ ThreadError NcpBase::InsertPropertyHandler_SPINEL_PROP_THREAD_JOINERS(uint8_t he
     parsedLength = spinel_datatype_unpack(
                        value_ptr,
                        value_len,
-                       "EDc",
+                       "ED.",
                        &ot_ext_address,
-                       &aPSKd,
-                       &psk_len
+                       &aPSKd
                    );
 
-    if (parsedLength > 0 && psk_len >= PSK_MIN_LENGTH && psk_len <= PSK_MAX_LENGTH)
+    if (parsedLength > 0)
     {
         errorCode = otCommissionerAddJoiner(mInstance, ot_ext_address, aPSKd);
 
