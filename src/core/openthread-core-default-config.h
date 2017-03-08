@@ -116,6 +116,40 @@
 #endif  // OPENTHREAD_CONFIG_DEFAULT_MAX_TRANSMIT_POWER
 
 /**
+ * @def OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT
+ *
+ * Maximum number of MAC layer transmit attempts for an outbound direct frame.
+ * Per IEEE 802.15.4-2006, default value is set to (macMaxFrameRetries + 1) with macMaxFrameRetries = 3.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT
+#define OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT                4
+#endif // OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT
+
+/**
+ * @def OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_PER_POLL
+ *
+ * Maximum number of MAC layer transmit attempts for an outbound indirect frame (to a sleepy child) after receiving
+ * a data request command (data poll) from the child.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_PER_POLL
+#define OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_PER_POLL     1
+#endif // OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_PER_POLL
+
+/**
+ * @def OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_POLLS
+ *
+ * Maximum number of transmit attempts for an outbound indirect frame (for a sleepy child) each triggered by the
+ * reception of a new data request command (a new data poll) from the sleepy child. Each data poll triggered attempt is
+ * retried by the MAC layer up to `OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_PER_POLL` times.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_POLLS
+#define OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_POLLS        4
+#endif // OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_POLLS
+
+/**
  * @def OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD
  *
  * The Data Poll period during attach in milliseconds.
@@ -536,7 +570,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE
-#define OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE               1500
+#define OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE               1300
 #endif  // OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE
 
 /**
@@ -546,7 +580,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE
-#define OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE                   1500
+#define OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE                   1300
 #endif  // OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE
 
 /**

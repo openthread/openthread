@@ -694,24 +694,41 @@ void Mac::ProcessTransmitSecurity(Frame &aFrame)
     {
     case Frame::kKeyIdMode0:
         key = mNetif.GetKeyManager().GetKek();
-        frameCounter = mNetif.GetKeyManager().GetKekFrameCounter();
-        mNetif.GetKeyManager().IncrementKekFrameCounter();
         extAddress = &mExtAddress;
+
+        if (!aFrame.IsARetransmission())
+        {
+            aFrame.SetFrameCounter(mNetif.GetKeyManager().GetKekFrameCounter());
+            mNetif.GetKeyManager().IncrementKekFrameCounter();
+        }
+
         break;
 
     case Frame::kKeyIdMode1:
         key = mNetif.GetKeyManager().GetCurrentMacKey();
-        frameCounter = mNetif.GetKeyManager().GetMacFrameCounter();
-        mNetif.GetKeyManager().IncrementMacFrameCounter();
-        aFrame.SetKeyId((mNetif.GetKeyManager().GetCurrentKeySequence() & 0x7f) + 1);
         extAddress = &mExtAddress;
+
+        // If the frame is marked as a retransmission, the `Mac::Sender` which
+        // prepared the frame should set the frame counter and key id to the
+        // same values used in the earlier transmit attempt. For a new frame (not
+        // a retransmission), we get a new frame counter and key id from the key
+        // manager.
+
+        if (!aFrame.IsARetransmission())
+        {
+            aFrame.SetFrameCounter(mNetif.GetKeyManager().GetMacFrameCounter());
+            mNetif.GetKeyManager().IncrementMacFrameCounter();
+            aFrame.SetKeyId((mNetif.GetKeyManager().GetCurrentKeySequence() & 0x7f) + 1);
+        }
+
         break;
 
     case Frame::kKeyIdMode2:
     {
         const uint8_t keySource[] = {0xff, 0xff, 0xff, 0xff};
         key = sMode2Key;
-        frameCounter = mKeyIdMode2FrameCounter++;
+        mKeyIdMode2FrameCounter++;
+        aFrame.SetFrameCounter(mKeyIdMode2FrameCounter);
         aFrame.SetKeySource(keySource);
         aFrame.SetKeyId(0xff);
         extAddress = static_cast<const ExtAddress *>(&sMode2ExtAddress);
@@ -724,7 +741,7 @@ void Mac::ProcessTransmitSecurity(Frame &aFrame)
     }
 
     aFrame.GetSecurityLevel(securityLevel);
-    aFrame.SetFrameCounter(frameCounter);
+    aFrame.GetFrameCounter(frameCounter);
 
     GenerateNonce(*extAddress, frameCounter, securityLevel, nonce);
 
@@ -768,7 +785,13 @@ void Mac::HandleBeginTransmit(void)
         case kStateTransmitData:
             sendFrame.SetChannel(mChannel);
             SuccessOrExit(error = mSendHead->HandleFrameRequest(sendFrame));
-            sendFrame.SetSequence(mDataSequence);
+
+            // If the frame is marked as a retransmission, then data sequence number is already set by the `Sender`.
+            if (!sendFrame.IsARetransmission())
+            {
+                sendFrame.SetSequence(mDataSequence);
+            }
+
             break;
 
         default:
@@ -990,7 +1013,7 @@ void Mac::SentFrame(ThreadError aError)
         otDumpDebgMac("NO ACK", sendFrame.GetHeader(), 16);
 
         if (!RadioSupportsRetries() &&
-            mTransmitAttempts < kMaxFrameAttempts)
+            mTransmitAttempts < sendFrame.GetMaxTxAttempts())
         {
             mTransmitAttempts++;
             StartCsmaBackoff();
@@ -1056,7 +1079,11 @@ void Mac::SentFrame(ThreadError aError)
 
         sender->mNext = NULL;
 
-        mDataSequence++;
+        if (!sendFrame.IsARetransmission())
+        {
+            mDataSequence++;
+        }
+
         otDumpDebgMac("TX", sendFrame.GetHeader(), sendFrame.GetLength());
         sender->HandleSentFrame(sendFrame, aError);
 
@@ -1245,7 +1272,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
     VerifyOrExit(error == kThreadError_None, ;);
     VerifyOrExit(aFrame != NULL, error = kThreadError_NoFrameReceived);
 
-    aFrame->mSecurityValid = false;
+    aFrame->SetSecurityValid(false);
 
     if (mPcapCallback)
     {

@@ -633,6 +633,23 @@ public:
     void SetLqi(uint8_t aLqi) { mLqi = aLqi; }
 
     /**
+     * This method returns the maximum number of transmit attempts for the frame.
+     *
+     * @returns The maximum number of transmit attempts.
+     *
+     */
+    uint8_t GetMaxTxAttempts(void) const { return mMaxTxAttempts; }
+
+
+    /**
+     * This method set the maximum number of transmit attempts for frame.
+     *
+     * @returns The maximum number of transmit attempts.
+     *
+     */
+    void SetMaxTxAttempts(uint8_t aMaxTxAttempts) { mMaxTxAttempts = aMaxTxAttempts; }
+
+    /**
      * This method indicates whether or not frame security was enabled and passed security validation.
      *
      * @retval TRUE   Frame security was enabled and passed security validation.
@@ -648,6 +665,23 @@ public:
      *
      */
     void SetSecurityValid(bool aSecurityValid) { mSecurityValid = aSecurityValid; }
+
+    /**
+     * This method indicates whether or not the frame is a retransmission.
+     *
+     * @retval TRUE   Frame is a retransmission
+     * @retval FALSE  This is a new frame and not a retransmission of an earlier frame.
+     *
+     */
+    bool IsARetransmission(void) const { return mIsARetx; }
+
+    /**
+     * This method sets the retransmission flag attribute.
+     *
+     * @param[in]  aIsARetx  TRUE if frame is a retransmission of an earlier frame, FALSE otherwise.
+     *
+     */
+    void SetIsARetransmission(bool aIsARetx) { mIsARetx = aIsARetx; }
 
     /**
      * This method returns the IEEE 802.15.4 PSDU length.
