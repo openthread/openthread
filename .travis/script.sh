@@ -53,7 +53,7 @@ set -x
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    BuildJobs=99 COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-cc2538 || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-cc2538 || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp-ftd || die
@@ -62,7 +62,7 @@ set -x
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    BuildJobs=99 COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-da15000 || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-da15000 || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp-ftd || die
@@ -71,7 +71,7 @@ set -x
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    BuildJobs=99 COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-nrf52840 || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-nrf52840 || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp-ftd || die
@@ -80,7 +80,7 @@ set -x
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    BuildJobs=99 make -f examples/Makefile-cc2650 || die
+    make -f examples/Makefile-cc2650 || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp-mtd || die
 }
@@ -91,7 +91,7 @@ set -x
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    BuildJobs=99 COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-cc2538 || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-cc2538 || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp-ftd || die
@@ -100,7 +100,7 @@ set -x
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    BuildJobs=99 COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-da15000 || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-da15000 || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp-ftd || die
@@ -109,7 +109,7 @@ set -x
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    BuildJobs=99 COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-nrf52840 || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-nrf52840 || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp-ftd || die
@@ -118,7 +118,7 @@ set -x
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    BuildJobs=99 make -f examples/Makefile-cc2650 || die
+    make -f examples/Makefile-cc2650 || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp-mtd || die
 }
@@ -127,27 +127,27 @@ set -x
     sh -c '$CC --version' || die
     sh -c '$CXX --version' || die
     ./bootstrap || die
-    BuildJobs=99 make -f examples/Makefile-posix || die
+    make -f examples/Makefile-posix || die
 }
 
 [ $BUILD_TARGET != posix-distcheck ] || {
     export ASAN_SYMBOLIZER_PATH=`which llvm-symbolizer-3.4` || die
     export ASAN_OPTIONS=symbolize=1 || die
     ./bootstrap || die
-    BuildJobs=10 make -f examples/Makefile-posix distcheck || die
+    make -f examples/Makefile-posix distcheck || die
 }
 
 [ $BUILD_TARGET != posix-32-bit ] || {
     ./bootstrap || die
-    BuildJobs=99 COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 BuildJobs=10 make -f examples/Makefile-posix check || die
+    COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 make -f examples/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != posix-ncp-spi ] || {
     ./bootstrap || die
-    BuildJobs=10 make -f examples/Makefile-posix check configure_OPTIONS="--enable-ftd --enable-ncp=spi --with-examples=posix --with-platform-info=POSIX" || die
+    make -f examples/Makefile-posix check configure_OPTIONS="--enable-ftd --enable-ncp=spi --with-examples=posix --with-platform-info=POSIX" || die
 }
 
 [ $BUILD_TARGET != posix-ncp ] || {
     ./bootstrap || die
-    BuildJobs=99 COVERAGE=1 NODE_TYPE=ncp-sim BuildJobs=10 make -f examples/Makefile-posix check || die
+    COVERAGE=1 NODE_TYPE=ncp-sim make -f examples/Makefile-posix check || die
 }
