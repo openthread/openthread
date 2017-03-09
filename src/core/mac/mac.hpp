@@ -103,22 +103,39 @@ public:
     typedef void (*ReceiveFrameHandler)(void *aContext, Frame &aFrame);
 
     /**
+     * This function pointer is called on a data request command (data poll) timeout, i.e., when the ack in response to
+     * a data request command indicated a frame is pending, but no frame was received after `kDataPollTimeout` interval.
+     *
+     * @param[in]  aContext  A pointer to arbitrary context information.
+     *
+     */
+    typedef void (*DataPollTimeoutHandler)(void *aContext);
+
+    /**
      * This constructor creates a MAC receiver client.
      *
      * @param[in]  aReceiveFrameHandler  A pointer to a function that is called on MAC frame reception.
+     * @param[in]  aPollTimeoutHandler   A pointer to a function called on data poll timeout (may be set to NULL).
      * @param[in]  aContext              A pointer to arbitrary context information.
      *
      */
-    Receiver(ReceiveFrameHandler aReceiveFrameHandler, void *aContext) {
+    Receiver(ReceiveFrameHandler aReceiveFrameHandler, DataPollTimeoutHandler aPollTimeoutHandler, void *aContext) {
         mReceiveFrameHandler = aReceiveFrameHandler;
+        mPollTimeoutHandler = aPollTimeoutHandler;
         mContext = aContext;
         mNext = NULL;
     }
 
 private:
     void HandleReceivedFrame(Frame &frame) { mReceiveFrameHandler(mContext, frame); }
+    void HandleDataPollTimeout(void) {
+        if (mPollTimeoutHandler != NULL) {
+            mPollTimeoutHandler(mContext);
+        }
+    }
 
     ReceiveFrameHandler mReceiveFrameHandler;
+    DataPollTimeoutHandler mPollTimeoutHandler;
     void *mContext;
     Receiver *mNext;
 };

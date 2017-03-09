@@ -254,6 +254,7 @@ private:
     {
         kStateUpdatePeriod     = 1000,  ///< State update period in milliseconds.
         kDataRequestRetryDelay = 200,   ///< Retry delay in milliseconds (for sending data request if no buffer).
+        kQuickPollsAfterTimout = 5,     ///< Maximum number of quick data poll tx in case of back-to-back poll timeouts.
     };
 
     enum
@@ -310,6 +311,9 @@ private:
     static void HandleReceivedFrame(void *aContext, Mac::Frame &aFrame);
     void HandleReceivedFrame(Mac::Frame &aFrame);
 
+    static void HandleDataPollTimeout(void *aContext);
+    void HandleDataPollTimeout(void);
+
     static ThreadError HandleFrameRequest(void *aContext, Mac::Frame &aFrame);
     ThreadError HandleFrameRequest(Mac::Frame &aFrame);
 
@@ -342,7 +346,7 @@ private:
     uint16_t mFragTag;
     uint16_t mMessageNextOffset;
     uint32_t mPollPeriod;
-    uint32_t mAssignPollPeriod;  ///< only for certification test
+    uint32_t mAssignPollPeriod;
 
     uint32_t mSendMessageFrameCounter;
     Message *mSendMessage;
@@ -368,6 +372,8 @@ private:
     uint8_t mRestoreChannel;
     uint16_t mRestorePanId;
     bool mScanning;
+
+    uint8_t mBacktoBackPollTimeoutCounter;
 
     ThreadNetif &mNetif;
 

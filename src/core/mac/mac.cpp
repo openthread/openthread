@@ -996,6 +996,11 @@ void Mac::HandleReceiveTimer(void)
 {
     otLogDebgMac(GetInstance(), "data poll timeout!");
 
+    for (Receiver *receiver = mReceiveHead; receiver; receiver = receiver->mNext)
+    {
+        receiver->HandleDataPollTimeout();
+    }
+
     if (mState == kStateIdle)
     {
         NextOperation();
