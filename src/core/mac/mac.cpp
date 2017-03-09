@@ -672,11 +672,6 @@ void Mac::SendBeacon(Frame &aFrame)
     otLogDebgMac(GetInstance(), "Sent Beacon");
 }
 
-void Mac::HandleBeginTransmit(void *aContext)
-{
-    static_cast<Mac *>(aContext)->HandleBeginTransmit();
-}
-
 void Mac::ProcessTransmitSecurity(Frame &aFrame)
 {
     uint32_t frameCounter = 0;
@@ -763,6 +758,11 @@ exit:
     return;
 }
 
+void Mac::HandleBeginTransmit(void *aContext)
+{
+    static_cast<Mac *>(aContext)->HandleBeginTransmit();
+}
+
 void Mac::HandleBeginTransmit(void)
 {
     Frame &sendFrame(*mTxFrame);
@@ -779,12 +779,14 @@ void Mac::HandleBeginTransmit(void)
             sendFrame.SetChannel(mScanChannel);
             SendBeaconRequest(sendFrame);
             sendFrame.SetSequence(0);
+            sendFrame.SetMaxTxAttempts(kDirectFrameMacTxAttempts);
             break;
 
         case kStateTransmitBeacon:
             sendFrame.SetChannel(mChannel);
             SendBeacon(sendFrame);
             sendFrame.SetSequence(mBeaconSequence++);
+            sendFrame.SetMaxTxAttempts(kIndirectFrameMacTxAttempts);
             break;
 
         case kStateTransmitData:
@@ -1015,12 +1017,16 @@ void Mac::SentFrame(ThreadError aError)
     switch (aError)
     {
     case kThreadError_None:
-    case kThreadError_ChannelAccessFailure:
-    case kThreadError_Abort:
         break;
 
+    case kThreadError_ChannelAccessFailure:
+    case kThreadError_Abort:
+        otLogInfoMac(GetInstance(), "Tx failed with error %s (%d)", otThreadErrorToString(aError), aError);
+
+    // Intentional fall through to next case.
+
     case kThreadError_NoAck:
-        otDumpDebgMac("NO ACK", sendFrame.GetHeader(), 16);
+        otDumpDebgMac("TX ERR", sendFrame.GetHeader(), 16);
 
         if (!RadioSupportsRetries() &&
             mTransmitAttempts < sendFrame.GetMaxTxAttempts())

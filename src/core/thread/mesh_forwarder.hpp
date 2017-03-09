@@ -260,19 +260,6 @@ private:
     enum
     {
         /**
-         * Maximum number of MAC layer tx attempts for an outbound direct frame.
-         *
-         */
-        kDirectFrameMacTxAttempts   = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT,
-
-        /**
-         * Maximum number of MAC layer tx attempts for an outbound indirect frame (for a sleepy child) after receiving
-         * a data request command (data poll) from the child.
-         *
-         */
-        kIndirectFrameMacTxAttempts = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_PER_POLL,
-
-        /**
          * Maximum number of tx attempts by `MeshForwarder` for an outbound indirect frame (for a sleepy child). The
          * `MeshForwader` attempts occur following the reception of a new data request command (a new data poll) from
          * the sleepy child.

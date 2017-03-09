@@ -260,7 +260,7 @@ void MeshForwarder::ScheduleTransmissionTask(void)
         }
 
         mSendMessage = child.mIndirectSendInfo.mMessage;
-        mSendMessageMaxMacTxAttempts = kIndirectFrameMacTxAttempts;
+        mSendMessageMaxMacTxAttempts = Mac::kIndirectFrameMacTxAttempts;
 
         if (mSendMessage == NULL)
         {
@@ -300,7 +300,7 @@ void MeshForwarder::ScheduleTransmissionTask(void)
     if ((mSendMessage = GetDirectTransmission()) != NULL)
     {
         mNetif.GetMac().SendFrameRequest(mMacSender);
-        mSendMessageMaxMacTxAttempts = kDirectFrameMacTxAttempts;
+        mSendMessageMaxMacTxAttempts = Mac::kDirectFrameMacTxAttempts;
         ExitNow();
     }
 
@@ -1092,7 +1092,7 @@ ThreadError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
     {
         SendEmptyFrame(aFrame);
         aFrame.SetIsARetransmission(false);
-        aFrame.SetMaxTxAttempts(kDirectFrameMacTxAttempts);
+        aFrame.SetMaxTxAttempts(Mac::kDirectFrameMacTxAttempts);
         ExitNow();
     }
 
