@@ -705,18 +705,63 @@ private:
     uint8_t *FindSrcAddr(void);
     uint8_t *FindSecurityHeader(void);
     static uint8_t GetKeySourceLength(uint8_t aKeyIdMode);
-};
+} OT_TOOL_PACKED_END;
 
-/**
- * This class implements IEEE 802.15.4 Beacon generation and parsing.
- *
- */
+OT_TOOL_PACKED_BEGIN
 class Beacon
 {
 public:
     enum
     {
         kSuperFrameSpec   = 0x0fff,                 ///< Superframe Specification value.
+    };
+
+    /**
+     * This method initializes the Beacon message.
+     *
+     */
+    void Init(void) {
+        mSuperframeSpec = Thread::Encoding::LittleEndian::HostSwap16(kSuperFrameSpec);
+        mGtsSpec = 0;
+        mPendingAddressSpec = 0;
+    }
+
+    /**
+     * This method indicates whether or not the beacon appears to be a valid Thread Beacon message.
+     *
+     * @retval TRUE  if the beacon appears to be a valid Thread Beacon message.
+     * @retval FALSE if the beacon does not appear to be a valid Thread Beacon message.
+     *
+     */
+    bool IsValid(void) {
+        return (mSuperframeSpec == Thread::Encoding::LittleEndian::HostSwap16(kSuperFrameSpec)) &&
+               (mGtsSpec == 0) && (mPendingAddressSpec == 0);
+    }
+
+    /**
+     * This method returns the pointer to the beacon payload address.
+     *
+     * @retval A pointer to the beacon payload address.
+     *
+     */
+    uint8_t *GetPayload() { return reinterpret_cast<uint8_t *>(this) + sizeof(*this); }
+
+private:
+    uint16_t mSuperframeSpec;
+    uint8_t  mGtsSpec;
+    uint8_t  mPendingAddressSpec;
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements IEEE 802.15.4 Beacon Payload generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class BeaconPayload
+{
+public:
+    enum
+    {
         kProtocolId       = 3,                      ///< Thread Protocol ID.
         kNetworkNameSize  = 16,                     ///< Size of Thread Network Name (bytes).
         kExtPanIdSize     = 8,                      ///< Size of Thread Extended PAN ID.
@@ -732,27 +777,23 @@ public:
     };
 
     /**
-     * This method initializes the Beacon message.
+     * This method initializes the Beacon Payload.
      *
      */
     void Init(void) {
-        mSuperframeSpec = Thread::Encoding::LittleEndian::HostSwap16(kSuperFrameSpec);
-        mGtsSpec = 0;
-        mPendingAddressSpec = 0;
         mProtocolId = kProtocolId;
         mFlags = kProtocolVersion << kVersionOffset;
     }
 
     /**
-     * This method indicates whether or not the beacon appears to be a valid Thread Beacon message.
+     * This method indicates whether or not the beacon appears to be a valid Thread Beacon Payload.
      *
-     * @retval TRUE  if the beacon appears to be a valid Thread Beacon message.
-     * @retval FALSE if the beacon does not appear to be a valid Thread Beacon message.
+     * @retval TRUE  if the beacon appears to be a valid Thread Beacon Payload.
+     * @retval FALSE if the beacon does not appear to be a valid Thread Beacon Payload.
      *
      */
     bool IsValid(void) {
-        return (mSuperframeSpec == Thread::Encoding::LittleEndian::HostSwap16(kSuperFrameSpec)) &&
-               (mGtsSpec == 0) && (mPendingAddressSpec == 0) && (mProtocolId == kProtocolId);
+        return (mProtocolId == kProtocolId);
     }
 
     /**
@@ -857,9 +898,6 @@ public:
     void SetExtendedPanId(const uint8_t *aExtPanId) { memcpy(mExtendedPanId, aExtPanId, sizeof(mExtendedPanId)); }
 
 private:
-    uint16_t mSuperframeSpec;
-    uint8_t  mGtsSpec;
-    uint8_t  mPendingAddressSpec;
     uint8_t  mProtocolId;
     uint8_t  mFlags;
     char     mNetworkName[kNetworkNameSize];

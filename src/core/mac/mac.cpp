@@ -634,8 +634,10 @@ void Mac::SendBeaconRequest(Frame &aFrame)
 void Mac::SendBeacon(Frame &aFrame)
 {
     uint8_t numUnsecurePorts;
-    Beacon *beacon;
+    uint8_t beaconLength;
     uint16_t fcf;
+    Beacon *beacon = NULL;
+    BeaconPayload *beaconPayload = NULL;
 
     // initialize MAC header
     fcf = Frame::kFcfFrameBeacon | Frame::kFcfDstAddrNone | Frame::kFcfSrcAddrExt;
@@ -646,23 +648,33 @@ void Mac::SendBeacon(Frame &aFrame)
     // write payload
     beacon = reinterpret_cast<Beacon *>(aFrame.GetPayload());
     beacon->Init();
+    beaconLength = sizeof(*beacon);
 
-    // set the Joining Permitted flag
-    mNetif.GetIp6Filter().GetUnsecurePorts(numUnsecurePorts);
+    beaconPayload = reinterpret_cast<BeaconPayload *>(beacon->GetPayload());
 
-    if (numUnsecurePorts)
+    if (mNetif.GetKeyManager().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_BEACONS)
     {
-        beacon->SetJoiningPermitted();
-    }
-    else
-    {
-        beacon->ClearJoiningPermitted();
+        beaconPayload->Init();
+
+        // set the Joining Permitted flag
+        mNetif.GetIp6Filter().GetUnsecurePorts(numUnsecurePorts);
+
+        if (numUnsecurePorts)
+        {
+            beaconPayload->SetJoiningPermitted();
+        }
+        else
+        {
+            beaconPayload->ClearJoiningPermitted();
+        }
+
+        beaconPayload->SetNetworkName(mNetworkName.m8);
+        beaconPayload->SetExtendedPanId(mExtendedPanId.m8);
+
+        beaconLength += sizeof(*beaconPayload);
     }
 
-    beacon->SetNetworkName(mNetworkName.m8);
-    beacon->SetExtendedPanId(mExtendedPanId.m8);
-
-    aFrame.SetPayloadLength(sizeof(*beacon));
+    aFrame.SetPayloadLength(beaconLength);
 
     otLogDebgMac("Sent Beacon");
 }

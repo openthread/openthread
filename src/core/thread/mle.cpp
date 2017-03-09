@@ -2663,7 +2663,6 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
     PendingTimestampTlv pendingTimestamp;
     Tlv tlv;
     uint16_t offset;
-    uint8_t numRouters = 0;
 
     otLogInfoMle("Received Child ID Response");
 
@@ -2747,19 +2746,6 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
         (mDeviceMode & ModeTlv::kModeFFD))
     {
         SuccessOrExit(error = mNetif.GetMle().ProcessRouteTlv(route));
-
-        for (uint8_t i = 0; i <= kMaxRouterId; i++)
-        {
-            if (route.IsRouterIdSet(i))
-            {
-                numRouters++;
-            }
-        }
-
-        if (mRouterSelectionJitterTimeout == 0 && numRouters < mNetif.GetMle().GetRouterUpgradeThreshold())
-        {
-            mRouterSelectionJitterTimeout = (otPlatRandomGet() % mRouterSelectionJitter) + 1;
-        }
     }
 
     mParent = mParentCandidate;
@@ -2772,6 +2758,7 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
                                                  networkData.GetNetworkData(), networkData.GetLength());
 
     mNetif.GetActiveDataset().ApplyConfiguration();
+
     SuccessOrExit(error = SetStateChild(shortAddress.GetRloc16()));
 
 exit:

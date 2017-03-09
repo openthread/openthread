@@ -294,7 +294,8 @@ void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame)
     otInstance *aInstance = static_cast<otInstance *>(aContext);
     otActiveScanResult result;
     Mac::Address address;
-    Mac::Beacon *beacon;
+    Mac::Beacon *beacon = NULL;
+    Mac::BeaconPayload *beaconPayload = NULL;
     uint8_t payloadLength;
 
     memset(&result, 0, sizeof(otActiveScanResult));
@@ -315,15 +316,17 @@ void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame)
     result.mLqi = aFrame->GetLqi();
 
     payloadLength = aFrame->GetPayloadLength();
-    beacon = reinterpret_cast<Mac::Beacon *>(aFrame->GetPayload());
 
-    if (payloadLength >= sizeof(*beacon) && beacon->IsValid())
+    beacon = reinterpret_cast<Mac::Beacon *>(aFrame->GetPayload());
+    beaconPayload = reinterpret_cast<Mac::BeaconPayload *>(beacon->GetPayload());
+
+    if ((payloadLength >= (sizeof(*beacon) + sizeof(*beaconPayload))) && beacon->IsValid() && beaconPayload->IsValid())
     {
-        result.mVersion = beacon->GetProtocolVersion();
-        result.mIsJoinable = beacon->IsJoiningPermitted();
-        result.mIsNative = beacon->IsNative();
-        memcpy(&result.mNetworkName, beacon->GetNetworkName(), sizeof(result.mNetworkName));
-        memcpy(&result.mExtendedPanId, beacon->GetExtendedPanId(), sizeof(result.mExtendedPanId));
+        result.mVersion = beaconPayload->GetProtocolVersion();
+        result.mIsJoinable = beaconPayload->IsJoiningPermitted();
+        result.mIsNative = beaconPayload->IsNative();
+        memcpy(&result.mNetworkName, beaconPayload->GetNetworkName(), sizeof(result.mNetworkName));
+        memcpy(&result.mExtendedPanId, beaconPayload->GetExtendedPanId(), sizeof(result.mExtendedPanId));
     }
 
     aInstance->mActiveScanCallback(&result, aInstance->mActiveScanCallbackContext);
