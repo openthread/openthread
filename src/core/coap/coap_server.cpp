@@ -191,7 +191,7 @@ void Server::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &a
     }
 
 exit:
-    {}
+    return;
 }
 
 ThreadError Server::SetPort(uint16_t aPort)

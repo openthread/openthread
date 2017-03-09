@@ -93,7 +93,7 @@ void Udp::HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInf
     mInterpreter->ProcessLine(buf, payloadLength, *this);
 
 exit:
-    {}
+    return;
 }
 
 int Udp::Output(const char *aBuf, uint16_t aBufLength)

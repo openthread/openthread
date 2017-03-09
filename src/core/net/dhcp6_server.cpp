@@ -267,7 +267,7 @@ void Dhcp6Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aM
     ProcessSolicit(aMessage, dst, header.GetTransactionId());
 
 exit:
-    {}
+    return;
 }
 
 void Dhcp6Server::ProcessSolicit(Message &aMessage, otIp6Address &aDst, uint8_t *aTransactionId)
@@ -301,7 +301,7 @@ void Dhcp6Server::ProcessSolicit(Message &aMessage, otIp6Address &aDst, uint8_t 
     SuccessOrExit(SendReply(aDst, aTransactionId, clientIdentifier, iana));
 
 exit:
-    {}
+    return;
 }
 
 uint16_t Dhcp6Server::FindOption(Message &aMessage, uint16_t aOffset, uint16_t aLength, Code aCode)

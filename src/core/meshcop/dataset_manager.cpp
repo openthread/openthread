@@ -1151,7 +1151,7 @@ void PendingDatasetBase::ApplyActiveDataset(const Timestamp &aTimestamp, Message
     ResetDelayTimer(kFlagNetworkUpdated);
 
 exit:
-    {}
+    return;
 }
 
 void PendingDatasetBase::HandleNetworkUpdate(uint8_t &aFlags)

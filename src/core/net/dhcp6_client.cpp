@@ -219,7 +219,7 @@ void Dhcp6Client::AddIdentityAssociation(uint16_t aRloc16, otIp6Prefix &aIp6Pref
     }
 
 exit:
-    {}
+    return;
 }
 
 void Dhcp6Client::RemoveIdentityAssociation(uint16_t aRloc16, otIp6Prefix &aIp6Prefix)
@@ -260,7 +260,7 @@ void Dhcp6Client::RemoveIdentityAssociation(uint16_t aRloc16, otIp6Prefix &aIp6P
     }
 
 exit:
-    {}
+    return;
 }
 
 ThreadError Dhcp6Client::Start(void)
@@ -534,7 +534,7 @@ void Dhcp6Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aM
     }
 
 exit:
-    {}
+    return;
 }
 
 void Dhcp6Client::ProcessReply(Message &aMessage)

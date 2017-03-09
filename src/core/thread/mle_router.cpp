@@ -1863,7 +1863,7 @@ void MleRouter::HandleStateUpdateTimer(void)
     mStateUpdateTimer.Start(kStateUpdatePeriod);
 
 exit:
-    {}
+    return;
 }
 
 void MleRouter::HandleChildUpdateRequestTimer(void *aContext)
@@ -1893,7 +1893,7 @@ void MleRouter::HandleChildUpdateRequestTimer(void)
     }
 
 exit:
-    {}
+    return;
 }
 
 ThreadError MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &challenge, bool aRoutersOnlyRequest)
@@ -3847,7 +3847,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
     }
 
 exit:
-    {}
+    return;
 }
 
 void MleRouter::HandleAddressSolicit(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
@@ -4053,7 +4053,7 @@ void MleRouter::HandleAddressRelease(Coap::Header &aHeader, Message &aMessage,
     otLogInfoMle(GetInstance(), "Sent address release response");
 
 exit:
-    {}
+    return;
 }
 
 void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)

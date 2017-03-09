@@ -115,7 +115,7 @@ void Blacklist::Remove(const ExtAddress &address)
     memset(entry, 0, sizeof(*entry));
 
 exit:
-    {}
+    return;
 }
 
 Blacklist::Entry *Blacklist::Find(const ExtAddress &address)
