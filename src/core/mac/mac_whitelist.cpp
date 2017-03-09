@@ -118,7 +118,7 @@ void Whitelist::Remove(const ExtAddress &address)
     memset(entry, 0, sizeof(*entry));
 
 exit:
-    {}
+    return;
 }
 
 Whitelist::Entry *Whitelist::Find(const ExtAddress &address)

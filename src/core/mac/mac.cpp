@@ -760,7 +760,7 @@ void Mac::ProcessTransmitSecurity(Frame &aFrame)
     aesCcm.Finalize(aFrame.GetFooter(), &tagLength);
 
 exit:
-    {}
+    return;
 }
 
 void Mac::HandleBeginTransmit(void)
@@ -1106,7 +1106,7 @@ void Mac::SentFrame(ThreadError aError)
     }
 
 exit:
-    {}
+    return;
 }
 
 ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor)

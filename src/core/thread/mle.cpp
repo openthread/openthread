@@ -1250,7 +1250,7 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags)
     }
 
 exit:
-    {}
+    return;
 }
 
 void Mle::HandleParentRequestTimer(void *aContext)
@@ -2209,7 +2209,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     }
 
 exit:
-    {}
+    return;
 }
 
 ThreadError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

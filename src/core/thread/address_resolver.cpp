@@ -486,7 +486,7 @@ void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessag
     }
 
 exit:
-    {}
+    return;
 }
 
 void AddressResolver::HandleAddressQuery(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
@@ -553,7 +553,7 @@ void AddressResolver::HandleAddressQuery(Coap::Header &aHeader, Message &aMessag
     }
 
 exit:
-    {}
+    return;
 }
 
 void AddressResolver::SendAddressQueryResponse(const ThreadTargetTlv &aTargetTlv,

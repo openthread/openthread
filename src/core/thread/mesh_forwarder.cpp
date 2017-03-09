@@ -2193,7 +2193,7 @@ void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const Thre
     mScheduleTransmissionTask.Post();
 
 exit:
-    {}
+    return;
 }
 
 void MeshForwarder::HandleDataPollTimeout(void *aContext)
