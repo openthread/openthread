@@ -429,7 +429,7 @@ class otCli:
 
         return results
 
-    def ping(self, ipaddr, num_responses=1, size=None):
+    def ping(self, ipaddr, num_responses=1, size=None, timeout=5000):
         cmd = 'ping ' + ipaddr
         if size != None:
             cmd += ' ' + str(size)
