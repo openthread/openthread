@@ -537,7 +537,7 @@ extern "C" {
 #define otLogWarnMac(aInstance, aFormat, ...) otLogWarn(kLogRegionMac, aFormat, ## __VA_ARGS__)
 #define otLogInfoMac(aInstance, aFormat, ...) otLogInfo(kLogRegionMac, aFormat, ## __VA_ARGS__)
 #define otLogDebgMac(aInstance, aFormat, ...) otLogDebg(kLogRegionMac, aFormat, ## __VA_ARGS__)
-#define otLogDebgMacErr(aError, aFormat, ...) otLogWarn(kLogRegionMac, "Error %s: " aFormat, otThreadErrorToString(aError), ## __VA_ARGS__)
+#define otLogDebgMacErr(aInstance, aError, aFormat, ...) otLogWarn(kLogRegionMac, "Error %s: " aFormat, otThreadErrorToString(aError), ## __VA_ARGS__)
 #else
 #define otLogCritMac(aInstance, aFormat, ...)
 #define otLogWarnMac(aInstance, aFormat, ...)
