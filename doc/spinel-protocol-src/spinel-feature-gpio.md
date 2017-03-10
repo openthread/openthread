@@ -11,7 +11,7 @@ Support for this feature can be determined by the presence of `CAP_GPIO`.
 
 ### PROP 4096: PROP\_GPIO\_CONFIG ###
 
-*   Argument-Encoding: `A(CCU)`
+*   Argument-Encoding: `A(t(CCU))`
 *   Type: Read-write (Writable only using `CMD_PROP_VALUE_INSERT`,
     (#prop-value-insert))
 

@@ -451,7 +451,7 @@ otLwfTunAddressesUpdated(
         const uint8_t *entry_ptr = NULL;
         spinel_size_t entry_len = 0;
 
-        spinel_ssize_t len = spinel_datatype_unpack(value_data_ptr, value_data_len, "D.", &entry_ptr, &entry_len);
+        spinel_ssize_t len = spinel_datatype_unpack(value_data_ptr, value_data_len, "d", &entry_ptr, &entry_len);
         if (len < 1) break;
 
         {

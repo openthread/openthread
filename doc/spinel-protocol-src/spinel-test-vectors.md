@@ -45,7 +45,7 @@ Frame:
 * TID: 0
 * CMD: 7 (`CMD_VALUE_INSERTED`)
 * PROP: 51 (`PROP_MAC_SCAN_BEACON`)
-* VALUE: Structure, encoded as `CcT(ESSc.)T(iCUD.).`
+* VALUE: Structure, encoded as `Cct(ESSc)t(iCUd)`
     * CHAN: 15
     * RSSI: -60dBm
     * MAC_DATA: (0D 00 B6 40 D4 8C E9 38 F9 52 FF FF D2 04 00)
@@ -94,7 +94,7 @@ Frame:
 * TID: 4
 * CMD: 6 (`CMD_VALUE_IS`)
 * PROP: 90 (`PROP_THREAD_ON_MESH_NETS`)
-* VALUE: Array of structures, encoded as `A(T(6CbC))`
+* VALUE: Array of structures, encoded as `A(t(6CbC))`
 
 IPv6 Prefix  | Prefix Length | Stable Flag | Other Flags
 -------------|---------------|-------------|--------------

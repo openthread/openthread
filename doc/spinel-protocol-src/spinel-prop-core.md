@@ -262,7 +262,7 @@ commands for this property from the NCP.
 ### PROP 113: PROP_STREAM_RAW {#prop-stream-raw}
 
 * Type: Read-Write-Stream
-* Packed-Encoding: `DD`
+* Packed-Encoding: `dD`
 
 Octets: |        2       |     *n*    |       *n*
 --------|----------------|------------|----------------
@@ -303,8 +303,8 @@ The frame metadata field consists of the following fields:
 MD_POWER | (dBm) RSSI/TX-Power          | `c` int8   | 1     | -128
 MD_NOISE | (dBm) Noise floor            | `c` int8   | 1     | -128
 MD_FLAG  | Flags (defined below)        | `S` uint16 | 2     |
-MD_PHY   | PHY-specific data            | `D` data   | >=2   |
-MD_VEND  | Vendor-specific data         | `D` data   | >=2   |
+MD_PHY   | PHY-specific data            | `d` data   | >=2   |
+MD_VEND  | Vendor-specific data         | `d` data   | >=2   |
 
 The following fields are ignored by the NCP for packets sent to it from
 the host:
@@ -333,7 +333,7 @@ pertainent information.
 ### PROP 114: PROP_STREAM_NET {#prop-stream-net}
 
 * Type: Read-Write-Stream
-* Packed-Encoding: `DD`
+* Packed-Encoding: `dD`
 
 Octets: |        2       |     *n*    |       *n*
 --------|----------------|------------|----------------
@@ -356,7 +356,7 @@ format of which is described in (#frame-metadata-format).
 ### PROP 114: PROP_STREAM_NET_INSECURE {#prop-stream-net-insecure}
 
 * Type: Read-Write-Stream
-* Packed-Encoding: `DD`
+* Packed-Encoding: `dD`
 
 Octets: |        2       |     *n*    |       *n*
 --------|----------------|------------|----------------

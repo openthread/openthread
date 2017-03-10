@@ -20,7 +20,7 @@ IPv6 Prefix + Prefix Length
 
 ### PROP 99: PROP_IPV6_ADDRESS_TABLE {#prop-ipv6-address-table}
 * Type: Read-Write
-* Packed-Encoding: `A(T(6CLLC))`
+* Packed-Encoding: `A(t(6CLLC))`
 
 Array of structures containing:
 

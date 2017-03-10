@@ -103,7 +103,7 @@ class SPINEL(object):
     PROP_MAC_SCAN_STATE = PROP_MAC__BEGIN + 0  # < [C]
     PROP_MAC_SCAN_MASK = PROP_MAC__BEGIN + 1  # < [A(C)]
     PROP_MAC_SCAN_PERIOD = PROP_MAC__BEGIN + 2  # < ms-per-channel [S]
-    # < chan,rssi,(laddr,saddr,panid,lqi),(proto,xtra) [CcT(ESSC.)T(i).]
+    # < chan,rssi,(laddr,saddr,panid,lqi),(proto,xtra) [Cct(ESSC)t(i)]
     PROP_MAC_SCAN_BEACON = PROP_MAC__BEGIN + 3
     PROP_MAC_15_4_LADDR = PROP_MAC__BEGIN + 4  # < [E]
     PROP_MAC_15_4_SADDR = PROP_MAC__BEGIN + 5  # < [S]
@@ -136,7 +136,7 @@ class SPINEL(object):
     PROP_THREAD__BEGIN = 0x50
     PROP_THREAD_LEADER_ADDR = PROP_THREAD__BEGIN + 0  # < [6]
     PROP_THREAD_PARENT = PROP_THREAD__BEGIN + 1  # < LADDR, SADDR [ES]
-    PROP_THREAD_CHILD_TABLE = PROP_THREAD__BEGIN + 2  # < [A(T(ES))]
+    PROP_THREAD_CHILD_TABLE = PROP_THREAD__BEGIN + 2  # < [A(t(ES))]
     PROP_THREAD_LEADER_RID = PROP_THREAD__BEGIN + 3  # < [C]
     PROP_THREAD_LEADER_WEIGHT = PROP_THREAD__BEGIN + 4  # < [C]
     PROP_THREAD_LOCAL_LEADER_WEIGHT = PROP_THREAD__BEGIN + 5  # < [C]
@@ -144,9 +144,9 @@ class SPINEL(object):
     PROP_THREAD_NETWORK_DATA_VERSION = PROP_THREAD__BEGIN + 7  # < [S]
     PROP_THREAD_STABLE_NETWORK_DATA = PROP_THREAD__BEGIN + 8  # < [D]
     PROP_THREAD_STABLE_NETWORK_DATA_VERSION = PROP_THREAD__BEGIN + 9  # < [S]
-    # < array(ipv6prefix,prefixlen,stable,flags) [A(T(6CbC))]
+    # < array(ipv6prefix,prefixlen,stable,flags) [A(t(6CbC))]
     PROP_THREAD_ON_MESH_NETS = PROP_THREAD__BEGIN + 10
-    # < array(ipv6prefix,prefixlen,stable,flags) [A(T(6CbC))]
+    # < array(ipv6prefix,prefixlen,stable,flags) [A(t(6CbC))]
     PROP_THREAD_LOCAL_ROUTES = PROP_THREAD__BEGIN + 11
     PROP_THREAD_ASSISTING_PORTS = PROP_THREAD__BEGIN + 12  # < array(portn) [A(S)]
     PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE = PROP_THREAD__BEGIN + 13  # < [b]
@@ -165,7 +165,7 @@ class SPINEL(object):
     PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD = PROP_THREAD_EXT__BEGIN + 8  # < [C]
     PROP_THREAD_ROUTER_SELECTION_JITTER = PROP_THREAD_EXT__BEGIN + 9  # < [C]
     PROP_THREAD_PREFERRED_ROUTER_ID = PROP_THREAD_EXT__BEGIN + 10  # < [C]
-    PROP_THREAD_NEIGHBOR_TABLE = PROP_THREAD_EXT__BEGIN + 11  # < [A(T(ESLCcCbLL))]
+    PROP_THREAD_NEIGHBOR_TABLE = PROP_THREAD_EXT__BEGIN + 11  # < [A(t(ESLCcCbLL))]
     PROP_THREAD_CHILD_COUNT_MAX = PROP_THREAD_EXT__BEGIN + 12  # < [C]
 
     PROP_THREAD_EXT__END = 0x1600
@@ -181,9 +181,9 @@ class SPINEL(object):
     PROP_IPV6_LL_ADDR = PROP_IPV6__BEGIN + 0  # < [6]
     PROP_IPV6_ML_ADDR = PROP_IPV6__BEGIN + 1  # < [6C]
     PROP_IPV6_ML_PREFIX = PROP_IPV6__BEGIN + 2  # < [6C]
-    # < array(ipv6addr,prefixlen,valid,preferred,flags) [A(T(6CLLC))]
+    # < array(ipv6addr,prefixlen,valid,preferred,flags) [A(t(6CLLC))]
     PROP_IPV6_ADDRESS_TABLE = PROP_IPV6__BEGIN + 3
-    # < array(ipv6prefix,prefixlen,iface,flags) [A(T(6CCC))]
+    # < array(ipv6prefix,prefixlen,iface,flags) [A(t(6CCC))]
     PROP_IPV6_ROUTE_TABLE = PROP_IPV6__BEGIN + 4
     PROP_IPv6_ICMP_PING_OFFLOAD = PROP_IPV6__BEGIN + 5  # < [b]
 
@@ -315,8 +315,7 @@ class SPINEL(object):
     PROP_CNTR_RX_ERR_OTHER = PROP_CNTR__BEGIN + 113
 
     # The message buffer counter info
-    # Format: `T(SSSSSSSSSSSSSSSS)` (Read-only)
-    # `T(`
+    # Format: `SSSSSSSSSSSSSSSS` (Read-only)
     #     `S`, (TotalBuffers)           The number of buffers in the pool.
     #     `S`, (FreeBuffers)            The number of free message buffers.
     #     `S`, (6loSendMessages)        The number of messages in the 6lo send queue.
@@ -332,8 +331,7 @@ class SPINEL(object):
     #     `S`, (ArpMessages)            The number of messages in the ARP send queue.
     #     `S`, (ArpBuffers)             The number of buffers in the ARP send queue.
     #     `S`, (CoapClientMessages)     The number of messages in the CoAP client send queue.
-    #     `S`, (CoapClientBuffers)      The number of buffers in the CoAP client send queue.
-    # `)`
+    #     `S`  (CoapClientBuffers)      The number of buffers in the CoAP client send queue.
     PROP_MSG_BUFFER_COUNTERS = PROP_CNTR__BEGIN + 400
 
     #=========================================
