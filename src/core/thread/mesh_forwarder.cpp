@@ -192,7 +192,7 @@ void MeshForwarder::ClearChildIndirectMessages(Child &aChild)
 
         message->ClearChildMask(mNetif.GetMle().GetChildIndex(aChild));
 
-        if (!message->IsChildPending())
+        if (!message->IsChildPending() && !message->GetDirectTransmission())
         {
             if (mSendMessage == message)
             {
