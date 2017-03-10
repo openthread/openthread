@@ -35,7 +35,7 @@ die() {
 set -x
 
 [ $BUILD_TARGET != pretty-check ] || {
-    export PATH=/tmp/astyle/build/gcc/bin:$PATH || die
+    export PATH=/tmp/uncrustify-uncrustify-0.64/build:$PATH || die
     ./bootstrap || die
     ./configure || die
     make pretty-check || die

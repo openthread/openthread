@@ -49,13 +49,15 @@ cd /tmp || die
     }
 
     [ $BUILD_TARGET != pretty-check ] || {
-        wget http://jaist.dl.sourceforge.net/project/astyle/astyle/astyle%202.05.1/astyle_2.05.1_linux.tar.gz || die
-        tar xzvf astyle_2.05.1_linux.tar.gz || die
-        cd astyle/build/gcc || die
-        LDFLAGS=" " make || die
-        cd ../../..
-        export PATH=/tmp/astyle/build/gcc/bin:$PATH || die
-        astyle --version || die
+        wget https://github.com/uncrustify/uncrustify/archive/uncrustify-0.64.tar.gz || die
+        tar xzf uncrustify-0.64.tar.gz || die
+        cd uncrustify-uncrustify-0.64 || die
+        mkdir build || die
+        cd build || die
+        cmake -DCMAKE_BUILD_TYPE=Release .. || die
+        make || die
+        export PATH=/tmp/uncrustify-uncrustify-0.64/build:$PATH || die
+        uncrustify --version || die
     }
 
     [ $BUILD_TARGET != scan-build ] || {
