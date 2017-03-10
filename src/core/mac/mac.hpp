@@ -82,6 +82,19 @@ enum
 
     kScanChannelsAll      = OT_CHANNEL_ALL,        ///< All channels.
     kScanDurationDefault  = 300,                   ///< Default interval between channels (milliseconds).
+
+    /**
+     * Maximum number of MAC layer tx attempts for an outbound direct frame.
+     *
+     */
+    kDirectFrameMacTxAttempts   = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT,
+
+    /**
+     * Maximum number of MAC layer tx attempts for an outbound indirect frame (for a sleepy child) after receiving
+     * a data request command (data poll) from the child.
+     *
+     */
+    kIndirectFrameMacTxAttempts = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_PER_POLL,
 };
 
 /**
