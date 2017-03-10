@@ -428,8 +428,10 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance);
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aPower     The Tx power to use in dBm.
  *
+ * @retval ::kThreadError_None         Successfully set default tx power.
+ * @retval ::kThreadError_InvalidArgs  aPower is not within the available range supported by hardware.
  */
-void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower);
+ThreadError otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower);
 
 /**
  * Get the status of promiscuous mode.

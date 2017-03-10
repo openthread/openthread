@@ -410,11 +410,12 @@ ThreadError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, u
     return kThreadError_NotImplemented;
 }
 
-void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+ThreadError otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
 {
     // TODO: Create a proper implementation for this driver.
     (void)aInstance;
     (void)aPower;
+    return kThreadError_NotImplemented;
 }
 
 void da15000RadioProcess(otInstance *aInstance)

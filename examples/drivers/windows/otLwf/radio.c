@@ -758,7 +758,7 @@ error:
     return NT_SUCCESS(status) ? kThreadError_None : kThreadError_Failed;
 }
 
-void otPlatRadioSetDefaultTxPower(_In_ otInstance *otCtx, int8_t aPower)
+ThreadError otPlatRadioSetDefaultTxPower(_In_ otInstance *otCtx, int8_t aPower)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
@@ -776,6 +776,8 @@ void otPlatRadioSetDefaultTxPower(_In_ otInstance *otCtx, int8_t aPower)
     {
         LogError(DRIVER_DEFAULT, "Set SPINEL_PROP_PHY_TX_POWER failed, %!STATUS!", status);
     }
+
+    return NT_SUCCESS(status) ? kThreadError_None : kThreadError_Failed;
 }
 
 inline USHORT getDstShortAddress(const UCHAR *frame)
