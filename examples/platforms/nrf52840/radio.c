@@ -188,6 +188,11 @@ void nrf5RadioInit(void)
     nrf_drv_radio802154_init();
 }
 
+void nrf5RadioDeinit(void)
+{
+    nrf_drv_radio802154_deinit();
+}
+
 PhyState otPlatRadioGetState(otInstance *aInstance)
 {
     (void) aInstance;

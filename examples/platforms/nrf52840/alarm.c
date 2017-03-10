@@ -265,7 +265,6 @@ static void AlarmStop(AlarmIndex aIndex)
     sTimerData[aIndex].mFireAlarm = false;
 }
 
-
 void nrf5AlarmInit(void)
 {
     sTimeOffset.mMs = 0;
@@ -296,6 +295,28 @@ void nrf5AlarmInit(void)
     }
 
     nrf_rtc_task_trigger(RTC_INSTANCE, NRF_RTC_TASK_START);
+}
+
+void nrf5AlarmDeinit(void)
+{
+    nrf_rtc_task_trigger(RTC_INSTANCE, NRF_RTC_TASK_STOP);
+
+    for (uint32_t i = 0; i < kNumTimers; i++)
+    {
+        nrf_rtc_event_clear(RTC_INSTANCE, sChannelData[i].mCompareEvent);
+        nrf_rtc_event_disable(RTC_INSTANCE, sChannelData[i].mCompareEventMask);
+        nrf_rtc_int_disable(RTC_INSTANCE, sChannelData[i].mCompareInt);
+    }
+
+    nrf_rtc_int_disable(RTC_INSTANCE, NRF_RTC_INT_OVERFLOW_MASK);
+    nrf_rtc_event_disable(RTC_INSTANCE, RTC_EVTEN_OVRFLW_Msk);
+    nrf_rtc_event_clear(RTC_INSTANCE, NRF_RTC_EVENT_OVERFLOW);
+
+    NVIC_DisableIRQ(RTC_IRQN);
+    NVIC_ClearPendingIRQ(RTC_IRQN);
+    NVIC_SetPriority(RTC_IRQN, 0);
+
+    nrf_drv_clock_lfclk_release();
 }
 
 void nrf5AlarmProcess(otInstance *aInstance)

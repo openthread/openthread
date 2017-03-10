@@ -244,6 +244,13 @@ static void critical_section_exit(void)
 }
 
 
+// Reset radio peripheral
+static void nrf_radio_reset(void)
+{
+    nrf_radio_power_set(false);
+    nrf_radio_power_set(true);
+}
+
 // Set radio state
 static inline void state_set(radio_state_t state)
 {
@@ -309,6 +316,13 @@ static void irq_init(void)
     NVIC_SetPriority(RADIO_IRQn, RADIO_IRQ_PRIORITY);
     NVIC_ClearPendingIRQ(RADIO_IRQn);
     NVIC_EnableIRQ(RADIO_IRQn);
+}
+
+static void irq_deinit(void)
+{
+    NVIC_DisableIRQ(RADIO_IRQn);
+    NVIC_ClearPendingIRQ(RADIO_IRQn);
+    NVIC_SetPriority(RADIO_IRQn, 0);
 }
 
 // Set radio channel
@@ -850,9 +864,7 @@ static void radio_reset(void)
 {
     uint8_t channel = channel_get();
 
-    nrf_radio_power_set(false);
-    nrf_radio_power_set(true);
-
+    nrf_radio_reset();
     nrf_radio_init();
 
     channel_set(channel);
@@ -919,8 +931,15 @@ void nrf_drv_radio802154_init(void)
 {
     data_init();
 
+    nrf_radio_reset();
     nrf_radio_init();
     irq_init();
+}
+
+void nrf_drv_radio802154_deinit(void)
+{
+    nrf_radio_reset();
+    irq_deinit();
 }
 
 nrf_drv_radio802154_state_t nrf_drv_radio802154_state_get(void)

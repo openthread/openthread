@@ -59,6 +59,19 @@ void PlatformInit(int argc, char *argv[])
 #endif
 }
 
+void PlatformDeinit(void)
+{
+#if (OPENTHREAD_ENABLE_DEFAULT_LOGGING == 0)
+    nrf5LogDeinit();
+#endif
+    nrf5RadioDeinit();
+    nrf5CryptoDeinit();
+    nrf5MiscDeinit();
+    nrf5UartDeinit();
+    nrf5RandomDeinit();
+    nrf5AlarmDeinit();
+}
+
 void PlatformProcessDrivers(otInstance *aInstance)
 {
     nrf5AlarmProcess(aInstance);

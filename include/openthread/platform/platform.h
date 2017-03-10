@@ -48,6 +48,12 @@ extern "C" {
 void PlatformInit(int argc, char *argv[]);
 
 /**
+ * This function performs all platform-specific deinitialization.
+ *
+ */
+void PlatformDeinit(void);
+
+/**
  * This function performs all platform-specific processing.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
