@@ -278,13 +278,13 @@ extern "C" {
 #if OPENTHREAD_CONFIG_LOG_MLE == 1
 #define otLogCritMle(aInstance, aFormat, ...) otLogCrit(kLogRegionMle, aFormat, ## __VA_ARGS__)
 #define otLogWarnMle(aInstance, aFormat, ...) otLogWarn(kLogRegionMle, aFormat, ## __VA_ARGS__)
-#define otLogWarnMleErr(aError, aFormat, ...) otLogWarn(kLogRegionMac, "Error %s: " aFormat, otThreadErrorToString(aError), ## __VA_ARGS__)
+#define otLogWarnMleErr(aInstance, aError, aFormat, ...) otLogWarn(kLogRegionMac, "Error %s: " aFormat, otThreadErrorToString(aError), ## __VA_ARGS__)
 #define otLogInfoMle(aInstance, aFormat, ...) otLogInfo(kLogRegionMle, aFormat, ## __VA_ARGS__)
 #define otLogDebgMle(aInstance, aFormat, ...) otLogDebg(kLogRegionMle, aFormat, ## __VA_ARGS__)
 #else
 #define otLogCritMle(aInstance, aFormat, ...)
 #define otLogWarnMle(aInstance, aFormat, ...)
-#define otLogWarnMleErr(aError, aFormat, ...)
+#define otLogWarnMleErr(aInsatnce, aError, aFormat, ...)
 #define otLogInfoMle(aInstance, aFormat, ...)
 #define otLogDebgMle(aInstance, aFormat, ...)
 #endif
@@ -543,7 +543,7 @@ extern "C" {
 #define otLogWarnMac(aInstance, aFormat, ...)
 #define otLogInfoMac(aInstance, aFormat, ...)
 #define otLogDebgMac(aInstance, aFormat, ...)
-#define otLogDebgMacErr(aError, aFormat, ...)
+#define otLogDebgMacErr(aInstance, aError, aFormat, ...)
 #endif
 
 /**
