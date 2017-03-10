@@ -142,6 +142,9 @@ static rx_buffer_t * const mp_current_rx_buffer = &m_receive_buffers[0]; // If t
 static uint8_t m_ack_psdu[ACK_LENGTH + 1]
                 __attribute__ ((section ("nrf_radio_buffer.m_ack_psdu")));
 
+// Transmit power used for ACK frames.
+static int8_t m_ack_tx_power = 0;
+
 // Radio driver states
 typedef enum
 {
@@ -892,6 +895,11 @@ uint8_t nrf_drv_radio802154_channel_get(void)
     return channel_get();
 }
 
+void nrf_drv_radio802154_ack_tx_power_set(int8_t power)
+{
+    m_ack_tx_power = power;
+}
+
 void nrf_drv_radio802154_pan_id_set(const uint8_t * p_pan_id)
 {
     memcpy(m_pan_id, p_pan_id, PAN_ID_SIZE);
@@ -1476,6 +1484,7 @@ void RADIO_IRQHandler(void)
             mutex_unlock();
 
             rx_buffer_in_use_set(free_rx_buffer_find());
+            tx_power_set(m_ack_tx_power);
 
             // Clear this event after RXEN task in case event is triggered just before.
             nrf_radio_event_clear(NRF_RADIO_EVENT_DISABLED);
