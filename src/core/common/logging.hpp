@@ -284,7 +284,7 @@ extern "C" {
 #else
 #define otLogCritMle(aInstance, aFormat, ...)
 #define otLogWarnMle(aInstance, aFormat, ...)
-#define otLogWarnMleErr(aInsatnce, aError, aFormat, ...)
+#define otLogWarnMleErr(aInstance, aError, aFormat, ...)
 #define otLogInfoMle(aInstance, aFormat, ...)
 #define otLogDebgMle(aInstance, aFormat, ...)
 #endif
