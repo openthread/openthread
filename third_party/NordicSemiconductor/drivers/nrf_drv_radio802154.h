@@ -65,6 +65,13 @@ typedef enum
 void nrf_drv_radio802154_init(void);
 
 /**
+ * @brief Deinitialize 802.15.4 driver.
+ *
+ * Deinitialize radio peripheral and reset it to the default state.
+ */
+void nrf_drv_radio802154_deinit(void);
+
+/**
  * @brief Get channel on which the radio operates right now.
  */
 uint8_t nrf_drv_radio802154_channel_get(void);

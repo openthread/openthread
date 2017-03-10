@@ -136,6 +136,11 @@ exit:
     return;
 }
 
+void nrf5LogDeinit()
+{
+    sLogInitialized = false;
+}
+
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion,
                const char *aFormat, ...)
 {

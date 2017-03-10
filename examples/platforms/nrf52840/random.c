@@ -136,6 +136,15 @@ void nrf5RandomInit(void)
     srand(seed);
 }
 
+void nrf5RandomDeinit(void)
+{
+    generatorStop();
+
+    NVIC_DisableIRQ(RNG_IRQn);
+    NVIC_ClearPendingIRQ(RNG_IRQn);
+    NVIC_SetPriority(RNG_IRQn, 0);
+}
+
 uint32_t otPlatRandomGet(void)
 {
     return (uint32_t)rand();
