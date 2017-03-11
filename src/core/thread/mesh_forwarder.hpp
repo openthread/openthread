@@ -226,6 +226,15 @@ public:
     void UpdateIndirectMessages(void);
 
     /**
+     * This method sets whether or not to perform source matching on the extended or short address for Frame Pending determination.
+     *
+     * @param[in]  aChild       A reference to the child.
+     * @param[in]  aMatchShort  TRUE to match on short source address, FALSE otherwise.
+     *
+     */
+    void SetSrcMatchAsShort(Child &aChild, bool aMatchShort);
+
+    /**
      * This method returns a reference to the send queue.
      *
      * @returns  A reference to the send queue.
