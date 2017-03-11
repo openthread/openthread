@@ -424,6 +424,25 @@ void MeshForwarder::ClearSrcMatchEntry(Child &aChild)
     }
 }
 
+void MeshForwarder::SetSrcMatchAsShort(Child &aChild, bool aShortSource)
+{
+    VerifyOrExit(aChild.mAddSrcMatchEntryShort != aShortSource, ;);
+
+    if (aChild.mQueuedIndirectMessageCnt > 0)
+    {
+        ClearSrcMatchEntry(aChild);
+        aChild.mAddSrcMatchEntryShort = aShortSource;
+        AddSrcMatchEntry(aChild);
+    }
+    else
+    {
+        aChild.mAddSrcMatchEntryShort = aShortSource;
+    }
+
+exit:
+    return;
+}
+
 ThreadError MeshForwarder::SendMessage(Message &aMessage)
 {
     ThreadError error = kThreadError_None;
@@ -1835,7 +1854,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
         if (((child->mMode & Mle::ModeTlv::kModeRxOnWhenIdle) == 0) &&
             macSource.mLength == sizeof(otShortAddress))
         {
-            child->mAddSrcMatchEntryShort = true;
+            SetSrcMatchAsShort(*child, true);
         }
     }
 
