@@ -1429,7 +1429,7 @@ private:
     uint8_t mParentLinkQuality3;
     uint8_t mParentLinkQuality2;
     uint8_t mParentLinkQuality1;
-    uint8_t mKeepAliveAttemptsSent;
+    uint8_t mChildUpdateAttempts;
     LeaderDataTlv mParentLeaderData;
     bool mParentIsSingleton;
 
