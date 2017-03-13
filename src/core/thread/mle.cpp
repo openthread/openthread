@@ -487,7 +487,7 @@ ThreadError Mle::BecomeChild(otMleAttachFilter aFilter)
 
     mNetif.GetMeshForwarder().SetRxOnWhenIdle(true);
 
-    mParentRequestTimer.Start(kParentRequestRouterTimeout);
+    mParentRequestTimer.Start((otPlatRandomGet() % kParentRequestRouterTimeout) + 1);
 
 exit:
     otLogFuncExitErr(error);
