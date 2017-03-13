@@ -1,4 +1,4 @@
-﻿/*
+/*
  *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
@@ -28,50 +28,44 @@
 
 #pragma once
 
-#include "MainPage.g.h"
-#include "IMainPageUIElements.h"
+#include "IListenerContext.h"
+#include "IAsyncThreadNotify.h"
+#include "ListenerArgs.h"
 
 namespace Thread
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
-    public ref class MainPage sealed : public IMainPageUIElements
-    {
-    public:
-        MainPage();
 
-        void OnResuming();
+[Windows::Foundation::Metadata::WebHostHidden]
+public ref class StreamListenerContext sealed : public IListenerContext
+{
+public:
+    using StreamSocketListener = Windows::Networking::Sockets::StreamSocketListener;
 
-        void ConnectNetwork(otAdapter^ adapter);
-        void ShowInterfaceDetails(otAdapter^ adapter);
-        void DisconnectNetwork(otAdapter^ adapter);
+    StreamListenerContext(IAsyncThreadNotify^ notify, StreamSocketListener^ listener, ListenerArgs^ args);
+    virtual ~StreamListenerContext();
 
-        property Windows::UI::Xaml::UIElement^ ThreadGrid
-        {
-            virtual Windows::UI::Xaml::UIElement^ get();
-        }
-        
-        property Windows::UI::Xaml::UIElement^ TalkGrid
-        {
-           virtual Windows::UI::Xaml::UIElement^ get();
-        }
+    virtual void Listen_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 
-        protected:
-        virtual void OnNavigatedTo(Windows::UI::Xaml::Navigation::NavigationEventArgs^ e) override;
+    virtual Windows::Foundation::IAsyncAction^ CancelIO();
 
-    private:
+private:
+    using ConnectionReceivedEventArgs = Windows::Networking::Sockets::StreamSocketListenerConnectionReceivedEventArgs;
+    using ConnectionHandler = Windows::Foundation::TypedEventHandler<StreamSocketListener^, ConnectionReceivedEventArgs^>;
+    using DataReader = Windows::Storage::Streams::DataReader;
+    using DataWriter = Windows::Storage::Streams::DataWriter;
+    using Listener = StreamSocketListener;
+    using StreamSocket = Windows::Networking::Sockets::StreamSocket;
+    using Args = ListenerArgs;
 
-        void OnLoaded(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
-        void OnUnloaded(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
+    void OnConnection(StreamSocketListener^ listener, ConnectionReceivedEventArgs^ args);
+    void ReceiveLoop(StreamSocket^, DataReader^, DataWriter^);
+    void Receive(DataReader^, unsigned int strLen, DataWriter^);
+    String^ CreateEchoMessage(String^ msg);
+    void EchoMessage(DataWriter^, String^ echo);
 
-        void AddAdapterToList(otAdapter^ adapter);
-        
-        otApi^ _otApi;
+    IAsyncThreadNotify^ _notify;
+    Listener^           _listener;
+    Args^               _args;
+};
 
-        Windows::Foundation::EventRegistrationToken _adapterArrivalToken;
-
-        otAdapter^ _curAdapter;
-
-    };
-}
+} // namespace Thread

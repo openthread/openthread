@@ -1,4 +1,4 @@
-﻿/*
+/*
  *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
@@ -28,50 +28,51 @@
 
 #pragma once
 
-#include "MainPage.g.h"
-#include "IMainPageUIElements.h"
+#include "IClientContext.h"
+#include "IAsyncThreadNotify.h"
+#include "ClientArgs.h"
 
 namespace Thread
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
-    public ref class MainPage sealed : public IMainPageUIElements
-    {
-    public:
-        MainPage();
 
-        void OnResuming();
+[Windows::Foundation::Metadata::WebHostHidden]
+public ref class DatagramClientContext sealed : public IClientContext
+{
+public:
+    using DatagramSocket = Windows::Networking::Sockets::DatagramSocket;
 
-        void ConnectNetwork(otAdapter^ adapter);
-        void ShowInterfaceDetails(otAdapter^ adapter);
-        void DisconnectNetwork(otAdapter^ adapter);
+    DatagramClientContext(IAsyncThreadNotify^ notify, DatagramSocket^ client, ClientArgs^ args);
+    virtual ~DatagramClientContext();
 
-        property Windows::UI::Xaml::UIElement^ ThreadGrid
-        {
-            virtual Windows::UI::Xaml::UIElement^ get();
-        }
-        
-        property Windows::UI::Xaml::UIElement^ TalkGrid
-        {
-           virtual Windows::UI::Xaml::UIElement^ get();
-        }
+    virtual void Connect_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 
-        protected:
-        virtual void OnNavigatedTo(Windows::UI::Xaml::Navigation::NavigationEventArgs^ e) override;
+    virtual void Send_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e, Platform::String^ input);
 
-    private:
+    virtual Windows::Foundation::IAsyncAction^ CancelIO();
 
-        void OnLoaded(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
-        void OnUnloaded(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
+private:
+    using MessageReceivedEventArgs = Windows::Networking::Sockets::DatagramSocketMessageReceivedEventArgs;
+    using MessageHandler = Windows::Foundation::TypedEventHandler<DatagramSocket^, MessageReceivedEventArgs^>;
+    using DataReader = Windows::Storage::Streams::DataReader;
+    using DataWriter = Windows::Storage::Streams::DataWriter;
+    using Args = ClientArgs;
 
-        void AddAdapterToList(otAdapter^ adapter);
-        
-        otApi^ _otApi;
+    void SetConnected(bool connected);
+    bool IsConnected() const;
 
-        Windows::Foundation::EventRegistrationToken _adapterArrivalToken;
+    void OnMessage(DatagramSocket^ socket, MessageReceivedEventArgs^ eventArgs);
+    void Receive(DataReader^, unsigned int strLen);
 
-        otAdapter^ _curAdapter;
+    void SendMessage(DataWriter^, String^ msg);
 
-    };
-}
+    DataWriter^ GetDataWriter();
+
+    IAsyncThreadNotify^ _notify;
+    DatagramSocket^     _client;
+    Args^               _args;
+    bool                _connected = false;
+    DataReader^         _dataReader;
+    DataWriter^         _dataWriter;
+};
+
+} // namespace Thread

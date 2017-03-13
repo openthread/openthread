@@ -28,6 +28,7 @@
 
 #include "pch.h"
 #include "MainPage.xaml.h"
+#include "TalkGrid.xaml.h"
 
 using namespace Thread;
 
@@ -82,6 +83,15 @@ MainPage::MainPage() : _otApi(nullptr)
                 this->InterfaceDetails->Visibility = Windows::UI::Xaml::Visibility::Collapsed;
             }
     );
+    Talk->Click +=
+        ref new RoutedEventHandler(
+            [=](Platform::Object^, RoutedEventArgs^) {
+                this->ThreadGrid->Visibility = Windows::UI::Xaml::Visibility::Collapsed;
+                this->TalkGrid->Visibility = Windows::UI::Xaml::Visibility::Visible;
+            }
+    );
+
+    TlkGrid->Init(this);
 }
 
 void MainPage::OnNavigatedTo(NavigationEventArgs^ e)
@@ -394,4 +404,16 @@ void MainPage::DisconnectNetwork(otAdapter^ adapter)
     {
 
     }
+}
+
+Windows::UI::Xaml::UIElement^
+MainPage::ThreadGrid::get()
+{
+    return ThrdGrid;
+}
+
+Windows::UI::Xaml::UIElement^
+MainPage::TalkGrid::get()
+{
+    return TlkGrid;
 }

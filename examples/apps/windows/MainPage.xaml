@@ -35,13 +35,14 @@
     IsTabStop="false"
     mc:Ignorable="d">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <Grid>
-            <Grid.Background>
-                <ImageBrush ImageSource="ms-appx:///Assets/Wide310x150Logo.png" Opacity="0.25" Stretch="Uniform"/>
-            </Grid.Background>
-        </Grid>
+    <Grid>
+        <Grid.Background>
+            <ImageBrush ImageSource="ms-appx:///Assets/Wide310x150Logo.png" Opacity="0.25" Stretch="Uniform"/>
+        </Grid.Background>
         <!-- Interface List -->
+        <Grid
+            x:Name="ThrdGrid"
+            >
         <TextBlock
             Text="Thread UX" 
             HorizontalAlignment="Left" 
@@ -49,6 +50,10 @@
             Margin="20" 
             FontSize="50"
             />
+        <StackPanel
+            Orientation="Horizontal"
+            VerticalAlignment="Top"
+            >
         <TextBlock
             Text="Interfaces" 
             HorizontalAlignment="Left" 
@@ -56,6 +61,12 @@
             Margin="60,90" 
             FontSize="25"
             />
+        <Button
+            x:Name="Talk"
+            Content="Talk"
+            Margin="10,0"
+            />
+        </StackPanel>
         <ListView
             Name="InterfaceList"
             Margin="60,130,20,150"
@@ -286,5 +297,11 @@
                 </Grid>
             </StackPanel>
         </Grid>
+        </Grid>
+        <local:TalkGrid
+            x:Name="TlkGrid"
+            Margin="20"
+            Visibility="Collapsed"
+            />
     </Grid>
 </Page>

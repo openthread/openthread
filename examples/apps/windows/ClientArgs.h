@@ -1,4 +1,4 @@
-﻿/*
+/*
  *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
@@ -28,50 +28,16 @@
 
 #pragma once
 
-#include "MainPage.g.h"
-#include "IMainPageUIElements.h"
-
 namespace Thread
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
-    public ref class MainPage sealed : public IMainPageUIElements
-    {
-    public:
-        MainPage();
 
-        void OnResuming();
+public ref class ClientArgs sealed
+{
+public:
+    property Windows::Networking::HostName^ ServerHostName;
+    property Platform::String^              ServerPort;
+    property Windows::Networking::HostName^ ClientHostName;
+    property Platform::String^              ClientPort;
+};
 
-        void ConnectNetwork(otAdapter^ adapter);
-        void ShowInterfaceDetails(otAdapter^ adapter);
-        void DisconnectNetwork(otAdapter^ adapter);
-
-        property Windows::UI::Xaml::UIElement^ ThreadGrid
-        {
-            virtual Windows::UI::Xaml::UIElement^ get();
-        }
-        
-        property Windows::UI::Xaml::UIElement^ TalkGrid
-        {
-           virtual Windows::UI::Xaml::UIElement^ get();
-        }
-
-        protected:
-        virtual void OnNavigatedTo(Windows::UI::Xaml::Navigation::NavigationEventArgs^ e) override;
-
-    private:
-
-        void OnLoaded(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
-        void OnUnloaded(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
-
-        void AddAdapterToList(otAdapter^ adapter);
-        
-        otApi^ _otApi;
-
-        Windows::Foundation::EventRegistrationToken _adapterArrivalToken;
-
-        otAdapter^ _curAdapter;
-
-    };
-}
+} // namespace Thread

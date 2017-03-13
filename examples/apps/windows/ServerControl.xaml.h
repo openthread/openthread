@@ -28,50 +28,35 @@
 
 #pragma once
 
-#include "MainPage.g.h"
+#include "ServerControl.g.h"
+#include "TalkConsts.h"
+#include "IAsyncThreadNotify.h"
 #include "IMainPageUIElements.h"
+#include "Protocol.h"
 
 namespace Thread
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
-    public ref class MainPage sealed : public IMainPageUIElements
-    {
-    public:
-        MainPage();
 
-        void OnResuming();
+[Windows::Foundation::Metadata::WebHostHidden]
+public ref class ServerControl sealed
+{
+public:
+    ServerControl();
 
-        void ConnectNetwork(otAdapter^ adapter);
-        void ShowInterfaceDetails(otAdapter^ adapter);
-        void DisconnectNetwork(otAdapter^ adapter);
+    void Init(IAsyncThreadNotify^ notify, IMainPageUIElements^ mainPageUIElements);
 
-        property Windows::UI::Xaml::UIElement^ ThreadGrid
-        {
-            virtual Windows::UI::Xaml::UIElement^ get();
-        }
-        
-        property Windows::UI::Xaml::UIElement^ TalkGrid
-        {
-           virtual Windows::UI::Xaml::UIElement^ get();
-        }
+    void ProtocolChanged(Protocol protocol);
 
-        protected:
-        virtual void OnNavigatedTo(Windows::UI::Xaml::Navigation::NavigationEventArgs^ e) override;
+private:
+    static constexpr unsigned short DEF_PORT = TalkConsts::DEF_SERVER_PORT;
 
-    private:
+    void Listen_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 
-        void OnLoaded(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
-        void OnUnloaded(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
+    void Exit_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 
-        void AddAdapterToList(otAdapter^ adapter);
-        
-        otApi^ _otApi;
+    IAsyncThreadNotify^  _notify;
+    IMainPageUIElements^ _mainPageUIElements;
+    Protocol             _protocol;
+};
 
-        Windows::Foundation::EventRegistrationToken _adapterArrivalToken;
-
-        otAdapter^ _curAdapter;
-
-    };
-}
+} // namespace Thread
