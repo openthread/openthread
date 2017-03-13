@@ -112,6 +112,16 @@ LDFLAGS_COMMON                                                        += \
     $(NULL)
 endif
 
+if OPENTHREAD_EXAMPLES_EMSK
+LDADD_COMMON                                                          += \
+    $(top_builddir)/examples/platforms/emsk/libopenthread-emsk.a         \
+    $(NULL)
+
+LDFLAGS_COMMON                                                        += \
+    -T $(top_srcdir)/examples/platforms/emsk/emsk.ld                     \
+    $(NULL)
+endif # OPENTHREAD_EXAMPLES_EMSK
+
 if OPENTHREAD_ENABLE_FTD
 bin_PROGRAMS                                                          += \
     ot-ncp-ftd                                                           \
