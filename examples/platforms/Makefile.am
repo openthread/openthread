@@ -35,6 +35,7 @@ DIST_SUBDIRS                            = \
     cc2650                                \
     da15000                               \
     nrf52840                              \
+    emsk                                  \
     posix                                 \
     utils                                 \
     $(NULL)
@@ -61,6 +62,10 @@ if OPENTHREAD_EXAMPLES_NRF52840
 SUBDIRS                                += nrf52840
 endif
 
+if OPENTHREAD_EXAMPLES_EMSK
+SUBDIRS                                += emsk
+endif
+
 if OPENTHREAD_EXAMPLES_POSIX
 SUBDIRS                                += posix
 endif
@@ -72,6 +77,7 @@ PRETTY_SUBDIRS                          = \
     cc2650                                \
     da15000                               \
     nrf52840                              \
+    emsk                                  \
     posix                                 \
     utils                                 \
     $(NULL)
