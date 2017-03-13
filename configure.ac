@@ -338,6 +338,25 @@ NL_ENABLE_TESTS([yes])
 
 AM_CONDITIONAL([OPENTHREAD_BUILD_TESTS], [test "${nl_cv_build_tests}" = "yes"])
 
+# Check for Python and Python libraries used in the tests
+if test "${nl_cv_build_tests}" = "yes"; then
+    AC_MSG_CHECKING([checking for Python and Python libraries used in tests.])
+
+    # Check for Python
+    python --version 2> /dev/null
+    if test $? != 0; then
+        AC_MSG_ERROR(["Cannot run tests: missing Python."])
+    fi
+
+    # Check for Python pexpect library
+    python -c 'import pexpect' 2> /dev/null
+    if test $? != 0; then
+        AC_MSG_ERROR(["Cannot run tests: missing Python pexpect library."])
+    fi
+
+    AC_MSG_RESULT([ok])
+fi
+
 #
 #  Full Thread Device
 #
@@ -824,11 +843,11 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_RAW_LINK_API],[${OPENTHREAD_ENABLE_RAW_LIN
 
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
-        [Specify the examples from one of: none, posix, cc2538, cc2650, da15000, nrf52840 @<:@default=none@:>@.])],
+        [Specify the examples from one of: none, posix, cc2538, cc2650, da15000, nrf52840, emsk @<:@default=none@:>@.])],
     [
         case "${with_examples}" in
 
-        none|posix|cc2538|cc2650|da15000|nrf52840)
+        none|posix|cc2538|cc2650|da15000|nrf52840|emsk)
             ;;
         *)
             AC_MSG_ERROR([Invalid value ${with_examples} for --with-examples])
@@ -866,6 +885,11 @@ case ${with_examples} in
         AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_NRF52840],[${OPENTHREAD_EXAMPLES_NRF52840}],[Define to 1 if you want to use nrf52840 examples])
         ;;
 
+    emsk)
+        OPENTHREAD_EXAMPLES_EMSK=1
+        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_EMSK],[${OPENTHREAD_EXAMPLES_EMSK}],[Define to 1 if you want to use emsk examples])
+        ;;
+
 esac
 
 AC_MSG_RESULT(${OPENTHREAD_EXAMPLES})
@@ -888,6 +912,9 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_DA15000], [test "${OPENTHREAD_EXAMPLES}" = "
 
 AC_SUBST(OPENTHREAD_EXAMPLES_NRF52840)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52840], [test "${OPENTHREAD_EXAMPLES}" = "nrf52840"])
+
+AC_SUBST(OPENTHREAD_EXAMPLES_EMSK)
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EMSK], [test "${OPENTHREAD_EXAMPLES}" = "emsk"])
 
 #
 # Platform Information
@@ -1022,6 +1049,7 @@ examples/platforms/cc2538/Makefile
 examples/platforms/cc2650/Makefile
 examples/platforms/da15000/Makefile
 examples/platforms/nrf52840/Makefile
+examples/platforms/emsk/Makefile
 examples/platforms/posix/Makefile
 examples/platforms/utils/Makefile
 tools/Makefile
