@@ -41,13 +41,14 @@ OBJCOPY                         = arm-none-eabi-objcopy
 
 BuildJobs                      ?= 10
 
-configure_OPTIONS               = \
-    --enable-ftd                  \
-    --enable-cli                  \
-    --enable-ncp                  \
-    --enable-diag                 \
-    --with-examples=nrf52840      \
-    --with-platform-info=NRF52840 \
+configure_OPTIONS                                 = \
+    --enable-ftd                                    \
+    --enable-cli                                    \
+    --enable-ncp                                    \
+    --enable-diag                                   \
+    --with-examples=nrf52840                        \
+    --with-platform-info=NRF52840                   \
+    MBEDTLS_CPPFLAGS="$(NRF52840_MBEDTLS_CPPFLAGS)" \
     $(NULL)
 
 ifeq ($(DEFAULT_LOGGING),1)
@@ -108,6 +109,13 @@ endif
 
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
+
+NRF52840_MBEDTLS_CPPFLAGS  = -DMBEDTLS_CONFIG_FILE='\"mbedtls-config.h\"'
+NRF52840_MBEDTLS_CPPFLAGS += -DMBEDTLS_USER_CONFIG_FILE='\"nrf52840-mbedtls-config.h\"'
+NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/nrf52840/crypto
+NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls
+NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include
+NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include/mbedtls
 
 CONFIG_FILE      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-nrf52840-config.h\"'
 CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/nrf52840/
