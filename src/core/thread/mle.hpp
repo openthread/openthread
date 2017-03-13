@@ -341,6 +341,145 @@ private:
     uint8_t mCommand;
 } OT_TOOL_PACKED_END;
 
+#if OPENTHREAD_CONFIG_MLE_MAX_TRANSMISSION_COUNT > 1
+OT_TOOL_PACKED_BEGIN
+class RetransmissionMetadata
+{
+public:
+    RetransmissionMetadata() {}
+    RetransmissionMetadata(const Ip6::Address &aDestination, uint8_t aCommand);
+
+    /**
+     * This method checks if the message shall be sent before the given time.
+     *
+     * @param[in]  aTime  A time to compare.
+     *
+     * @retval TRUE   If the message shall be sent before the given time.
+     * @retval FALSE  Otherwise.
+     */
+    bool IsEarlier(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mTransmissionTime) > 0); };
+
+    /**
+     * This method checks if the message shall be sent after the given time.
+     *
+     * @param[in]  aTime  A time to compare.
+     *
+     * @retval TRUE   If the message shall be sent after the given time.
+     * @retval FALSE  Otherwise.
+     */
+    bool IsLater(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mTransmissionTime) < 0); };
+
+    /**
+     * This method returns the transmission timestamp of the message.
+     *
+     * @returns The transmission timestamp of the message.
+     *
+     */
+    uint32_t GetTransmissionTime(void) const { return mTransmissionTime; }
+
+    /**
+     * This method sets the transmission timestamp of the message.
+     *
+     * @param[in]  aTransmissionTime  The transmission timestamp of the message.
+     *
+     */
+    void SetTransmissionTime(uint32_t aTransmissionTime) { mTransmissionTime = aTransmissionTime; }
+
+    /**
+     * This method returns the number of transmission retries left.
+     *
+     * @returns The number of transmission retries left.
+     *
+     */
+    uint8_t GetTransmissionLeft() const {
+        return mTransmissionLeft;
+    }
+
+    /**
+     * This method sets the number of transmission retries left.
+     *
+     * @param[in]  aTransmissionLeft  The number of transmission retries left.
+     *
+     */
+    void SetTransmissionLeft(uint8_t aTransmissionLeft) {
+        mTransmissionLeft = aTransmissionLeft;
+    }
+
+    /**
+     * This method reads metadata from the message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @returns The number of bytes that have been read.
+     *
+     */
+    uint16_t ReadFrom(const Message &aMessage) {
+        return aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+    };
+
+    /**
+     * This method appends metadata to the message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @retval kThreadError_None    Successfully appended the bytes.
+     * @retval kThreadError_NoBufs  Insufficient available buffers to grow the message.
+     *
+     */
+    ThreadError AppendTo(Message &aMessage) const {
+        return aMessage.Append(this, sizeof(*this));
+    };
+
+    /**
+     * This method updates metadata in the message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @returns The number of bytes that have been updated.
+     *
+     */
+    int UpdateIn(Message &aMessage) const {
+        return aMessage.Write(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+    }
+
+    /**
+     * This method returns the Command Type value.
+     *
+     * @returns The Command Type value.
+     *
+     */
+    uint8_t GetCommand(void) const {
+        return mCommand;
+    }
+
+    /**
+     * This method returns a destination of the delayed message.
+     *
+     * @returns  A destination of the delayed message.
+     *
+     */
+    const Ip6::Address &GetDestination() const {
+        return mDestination;
+    }
+
+    void GenerateNextTransmissionTime(uint32_t aCurrentTime);
+
+private:
+    enum
+    {
+        kMaxTransmissionCount = OPENTHREAD_CONFIG_MLE_MAX_TRANSMISSION_COUNT,
+        kUnicastRetransmissionDelay = OPENTHREAD_CONFIG_MLE_UNICAST_RETRANSMISSION_DELAY,
+        kMulticastRetransmissionDelay = OPENTHREAD_CONFIG_MLE_MULTICAST_RETRANSMISSION_DELAY,
+    };
+
+    Ip6::Address mDestination;
+    uint32_t mTransmissionTime;
+    uint8_t  mTransmissionLeft;
+    uint8_t mCommand;
+} OT_TOOL_PACKED_END;
+
+#endif // if OPENTHREAD_CONFIG_MLE_MAX_TRANSMISSION_COUNT > 1
+
 /**
  * This class implements functionality required for delaying MLE responses.
  *
@@ -1253,6 +1392,7 @@ protected:
      *
      */
     ThreadError SendMessage(Message &aMessage, const Ip6::Address &aDestination);
+    ThreadError DoTransmit(Message &aMessage, const Ip6::Address &aDestination);
 
     /**
      * This method sets the RLOC16 assigned to the Thread interface.
@@ -1346,7 +1486,7 @@ protected:
     ReattachState mReattachState;
 
     Timer mParentRequestTimer;    ///< The timer for driving the Parent Request process.
-    Timer mDelayedResponseTimer;  ///< The timer to delay MLE responses.
+    Timer mTransmissionTimer;     ///< The timer to delay MLE responses or retransmit MLE requests.
 
     uint8_t mRouterSelectionJitter;         ///< The variable to save the assigned jitter value.
     uint8_t mRouterSelectionJitterTimeout;  ///< The Timeout prior to request/release Router ID.
@@ -1367,9 +1507,15 @@ private:
     void HandleNetifStateChanged(uint32_t aFlags);
     static void HandleParentRequestTimer(void *aContext);
     void HandleParentRequestTimer(void);
-    static void HandleDelayedResponseTimer(void *aContext);
+    static void HandleTransmissionTimer(void *aContext);
     void HandleDelayedResponseTimer(void);
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+#if OPENTHREAD_CONFIG_MLE_MAX_TRANSMISSION_COUNT > 1
+    void RetransmissionHandler(void);
+    void RetransmissionDequeue(const Ip6::Address &aDestination, uint8_t aCommand);
+    void RetransmissionEnqueue(const Message &aMessage, const Ip6::Address &aDestination, uint8_t aCommand);
+    void RetransmissionClear();
+#endif
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     static void HandleSendChildUpdateRequest(void *aContext);
     void HandleSendChildUpdateRequest(void);
@@ -1393,6 +1539,9 @@ private:
     void ResetParentCandidate(void);
 
     MessageQueue mDelayedResponses;
+#if OPENTHREAD_CONFIG_MLE_MAX_TRANSMISSION_COUNT > 1
+    MessageQueue mPendingRequests;
+#endif
 
     /**
      * This struct represents the device's own network information for persistent storage.
