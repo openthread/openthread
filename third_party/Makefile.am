@@ -33,6 +33,7 @@ EXTRA_DIST                              = \
     nlbuild-autotools                     \
     openthread-test-driver                \
     NordicSemiconductor                   \
+    synopsys                              \
     $(NULL)
 
 # Always package (e.g. for 'make dist') these subdirectories.
