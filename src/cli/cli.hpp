@@ -53,6 +53,7 @@
 #include <net/icmp6.hpp>
 #include <common/timer.hpp>
 #include "openthread/dhcp6_client.h"
+#include "openthread/dns.h"
 #endif
 
 #ifdef OTDLL
@@ -172,6 +173,9 @@ private:
     void ProcessDiag(int argc, char *argv[]);
 #endif  // OPENTHREAD_ENABLE_DIAG
     void ProcessDiscover(int argc, char *argv[]);
+#if OPENTHREAD_ENABLE_DNS_CLIENT
+    void ProcessDns(int argc, char *argv[]);
+#endif
     void ProcessEidCache(int argc, char *argv[]);
     void ProcessEui64(int argc, char *argv[]);
 #ifdef OPENTHREAD_EXAMPLES_POSIX
@@ -257,6 +261,11 @@ private:
 #endif
     static void OTCALL s_HandleJoinerCallback(ThreadError aError, void *aContext);
 
+#if OPENTHREAD_ENABLE_DNS_CLIENT
+    static void s_HandleDnsResponse(void *aContext, const char *aHostname, otIp6Address *aAddress,
+                                    uint32_t aTtl, ThreadError aResult);
+#endif
+
 #ifndef OTDLL
     void HandleIcmpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
                            const Ip6::IcmpHeader &aIcmpHeader);
@@ -277,6 +286,10 @@ private:
     void HandleDiagnosticGetResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 #endif
     void HandleJoinerCallback(ThreadError aError);
+
+#if OPENTHREAD_ENABLE_DNS_CLIENT
+    void HandleDnsResponse(const char *aHostname, Ip6::Address &aAddress, uint32_t aTtl, ThreadError aResult);
+#endif
 
     static const struct Command sCommands[];
 
@@ -312,6 +325,11 @@ private:
 #endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
 
     otIcmp6Handler mIcmpHandler;
+#if OPENTHREAD_ENABLE_DNS_CLIENT
+    bool mResolvingInProgress;
+    char mResolvingHostname[OT_DNS_MAX_HOSTNAME_LENGTH];
+#endif
+
 #endif
 
     otInstance *mInstance;

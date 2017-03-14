@@ -147,6 +147,13 @@ SOURCES_COMMON                     += \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_DHCP6_SERVER
 
+if OPENTHREAD_ENABLE_DNS_CLIENT
+SOURCES_COMMON                     += \
+    api/dns_api.cpp                   \
+    net/dns_client.cpp                \
+    $(NULL)
+endif  # OPENTHREAD_ENABLE_DNS_CLIENT
+
 if OPENTHREAD_ENABLE_JAM_DETECTION
 SOURCES_COMMON                     += \
     api/jam_detection_api.cpp         \
@@ -249,6 +256,11 @@ noinst_HEADERS                      = \
     meshcop/panid_query_client.hpp    \
     meshcop/timestamp.hpp             \
     meshcop/tlvs.hpp                  \
+    net/dhcp6.hpp                     \
+    net/dhcp6_client.hpp              \
+    net/dhcp6_server.hpp              \
+    net/dns_client.hpp                \
+    net/dns_headers.hpp               \
     net/icmp6.hpp                     \
     net/ip6.hpp                       \
     net/ip6_address.hpp               \
@@ -258,11 +270,8 @@ noinst_HEADERS                      = \
     net/ip6_routes.hpp                \
     net/netif.hpp                     \
     net/socket.hpp                    \
-    net/udp6.hpp                      \
     net/tcp.hpp                       \
-    net/dhcp6.hpp                     \
-    net/dhcp6_client.hpp              \
-    net/dhcp6_server.hpp              \
+    net/udp6.hpp                      \
     thread/address_resolver.hpp       \
     thread/address_resolver_ftd.hpp   \
     thread/address_resolver_mtd.hpp   \

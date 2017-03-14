@@ -322,6 +322,26 @@
 #endif  // OPENTHREAD_CONFIG_COAP_MAX_RETRANSMIT
 
 /**
+ * @def OPENTHREAD_CONFIG_DNS_RESPONSE_TIMEOUT
+ *
+ * Maximum time that DNS Client waits for response in milliseconds.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_RESPONSE_TIMEOUT
+#define OPENTHREAD_CONFIG_DNS_RESPONSE_TIMEOUT                  3000
+#endif  // OPENTHREAD_CONFIG_DNS_RESPONSE_TIMEOUT
+
+/**
+ * @def OPENTHREAD_CONFIG_DNS_MAX_RETRANSMIT
+ *
+ * Maximum number of retransmissions for DNS client.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_MAX_RETRANSMIT
+#define OPENTHREAD_CONFIG_DNS_MAX_RETRANSMIT                    2
+#endif  // OPENTHREAD_CONFIG_DNS_MAX_RETRANSMIT
+
+/**
  * @def OPENTHREAD_CONFIG_JOIN_BEACON_VERSION
  *
  * The Beacon version to use when the beacon join flag is set.

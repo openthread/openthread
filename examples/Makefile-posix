@@ -95,7 +95,7 @@ configure_OPTIONS               = \
     $(NULL)
 
 ifeq ($(COVERAGE),1)
-configure_OPTIONS              += --enable-coverage --enable-commissioner --enable-joiner --enable-dhcp6-client --enable-dhcp6-server
+configure_OPTIONS              += --enable-coverage --enable-commissioner --enable-joiner --enable-dhcp6-client --enable-dhcp6-server --enable-dns-client
 else
 configure_OPTIONS              +=
 endif
@@ -295,4 +295,3 @@ help:
 	$(ECHO) ""
 	$(ECHO) "    $(TargetTuple)"
 	$(ECHO) ""
-

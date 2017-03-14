@@ -37,7 +37,7 @@ set -x
 [ $BUILD_TARGET != pretty-check ] || {
     export PATH=/tmp/astyle/build/gcc/bin:$PATH || die
     ./bootstrap || die
-    ./configure --enable-ftd --enable-cli --enable-diag --enable-dhcp6-client --enable-dhcp6-server --enable-commissioner --enable-joiner --with-examples=posix || die
+    ./configure --enable-ftd --enable-cli --enable-diag --enable-dhcp6-client --enable-dhcp6-server --enable-dns-client --enable-commissioner --enable-joiner --with-examples=posix || die
     make pretty-check || die
 }
 
@@ -53,7 +53,7 @@ set -x
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-cc2538 || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-cc2538 || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp-ftd || die
@@ -62,7 +62,7 @@ set -x
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-da15000 || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-da15000 || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp-ftd || die
@@ -71,7 +71,7 @@ set -x
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-nrf52840 || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-nrf52840 || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp-ftd || die
@@ -91,7 +91,7 @@ set -x
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-cc2538 || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-cc2538 || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp-ftd || die
@@ -100,7 +100,7 @@ set -x
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-da15000 || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-da15000 || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp-ftd || die
@@ -109,7 +109,7 @@ set -x
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-nrf52840 || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-nrf52840 || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp-ftd || die

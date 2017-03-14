@@ -20,6 +20,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [dataset](#dataset-help)
 * [delaytimermin](#delaytimermin)
 * [discover](#discover-channel)
+* [dns](#dns-resolve-hostname-dns-server-ip-dns-server-port)
 * [eidcache](#eidcache)
 * [eui64](#eui64)
 * [extaddr](#extaddr)
@@ -463,7 +464,7 @@ pendingtimestamp
 pskc
 securitypolicy
 Done
-> 
+>
 ```
 
 ### dataset active
@@ -684,6 +685,18 @@ Perform an MLE Discovery operation.
 +---+------------------+------------------+------+------------------+----+-----+-----+
 | 0 | OpenThread       | dead00beef00cafe | ffff | f1d92a82c8d8fe43 | 11 | -20 |   0 |
 Done
+```
+
+### dns resolve \<hostname\> \[DNS server IP\] \[DNS server port\]
+
+Send DNS Query to obtain IPv6 address for given hostname.
+The latter two parameters have following default values:
+ * DNS server IP: 2001:4860:4860::8888 (Google DNS Server)
+ * DNS server port: 53
+
+```bash
+> dns resolve ipv6.google.com
+> DNS response for ipv6.google.com - [2a00:1450:401b:801:0:0:0:200e] TTL: 300
 ```
 
 ### eidcache
