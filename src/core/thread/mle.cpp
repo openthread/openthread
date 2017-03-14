@@ -81,6 +81,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mParentLinkQuality3(0),
     mParentLinkQuality2(0),
     mParentLinkQuality1(0),
+    mChildUpdateAttempts(0),
     mParentIsSingleton(false),
     mSocket(aThreadNetif.GetIp6().mUdp),
     mTimeout(kMleEndDeviceTimeout),
