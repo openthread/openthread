@@ -624,7 +624,8 @@ ThreadError Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageIn
             break;
 
         case kProtoUdp:
-            if (messageInfo.GetSockAddr().IsLinkLocal())
+            if (messageInfo.GetSockAddr().IsLinkLocal() ||
+                messageInfo.GetSockAddr().IsLinkLocalMulticast())
             {
                 UdpHeader udp;
                 aMessage.Read(aMessage.GetOffset(), sizeof(udp), &udp);
