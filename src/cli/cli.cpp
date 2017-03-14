@@ -723,15 +723,14 @@ exit:
 void Interpreter::ProcessDns(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    long port = OT_DNS_DEFAULT_SERVER_PORT;
+    long port = OT_DNS_DEFAULT_DNS_SERVER_PORT;
     Ip6::MessageInfo messageInfo;
     otDnsQuery query;
 
-    if (argc && strcmp(argv[0], "resolve") == 0)
+    if (argc >= 2 && strcmp(argv[0], "resolve") == 0)
     {
         VerifyOrExit(!mResolvingInProgress, error = kThreadError_Busy);
-        VerifyOrExit(argc >= 2, error = kThreadError_Parse);
-        VerifyOrExit(strlen(argv[1]) < OT_DNS_MAX_HOSTNAME_LENGTH, error = kThreadError_Parse);
+        VerifyOrExit(strlen(argv[1]) < OT_DNS_MAX_HOSTNAME_LENGTH, error = kThreadError_InvalidArgs);
 
         strcpy(mResolvingHostname, argv[1]);
 
@@ -744,8 +743,8 @@ void Interpreter::ProcessDns(int argc, char *argv[])
         }
         else
         {
-            // Use Google Public IPv6 DNS Server.
-            SuccessOrExit(error = messageInfo.GetPeerAddr().FromString("2001:4860:4860::8888"));
+            // Use IPv6 address of default DNS server.
+            SuccessOrExit(error = messageInfo.GetPeerAddr().FromString(OT_DNS_DEFAULT_DNS_SERVER_IP));
         }
 
         if (argc > 3)
@@ -763,6 +762,10 @@ void Interpreter::ProcessDns(int argc, char *argv[])
 
         mResolvingInProgress = true;
         return;
+    }
+    else
+    {
+        ExitNow(error = kThreadError_InvalidArgs);
     }
 
 exit:
