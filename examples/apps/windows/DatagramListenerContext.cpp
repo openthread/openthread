@@ -95,6 +95,10 @@ DatagramListenerContext::Listen_Click(
             CoreApplication::Properties->Remove("listenerContext");
         });
     }
+    else
+    {
+        removeContext = create_task([]() {});
+    }
 
     _listener->MessageReceived += ref new MessageHandler(
         this, &DatagramListenerContext::OnMessage);
