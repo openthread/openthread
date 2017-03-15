@@ -19,8 +19,8 @@ either as a server or a client role and talks to each other over a TCP or a UDP 
 
 The server listens to the clients.
 
-![Talk Functionality] (../../../doc/images/windows-app-talk-server.png)
+![Talk Functionality](../../../doc/images/windows-app-talk-server.png)
 
 The client sends a message to the server and the server echos that message back to the client.
 
-![Talk Functionality] (../../../doc/images/windows-app-talk-client.png)
+![Talk Functionality](../../../doc/images/windows-app-talk-client.png)
