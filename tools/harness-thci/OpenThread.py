@@ -1937,7 +1937,10 @@ class OpenThread(IThci):
             JoinerAddr = ModuleHelper.CalculateHashMac(xEUI)
             JoinerHashMac = hex(int(JoinerAddr)).rstrip("L").lstrip("0x")
 
-        cmd = 'commissioner joiner add %s %s' % (JoinerHashMac, strPSKd)
+        # long timeout value to avoid automatic joiner removal (in seconds)
+        timeout = 500
+
+        cmd = 'commissioner joiner add %s %s %s' % (JoinerHashMac, strPSKd, str(timeout))
         print cmd
         if self.__sendCommand(cmd)[0] == 'Done':
             if self.logThreadStatus == self.logStatus['stop']:
@@ -2533,3 +2536,6 @@ class OpenThread(IThci):
         cmd = 'delaytimermin %s' % iSeconds
         print cmd
         return self.__sendCommand(cmd)[0] == 'Done'
+
+    def ValidateDeviceFirmware(self):
+        pass
