@@ -57,6 +57,10 @@ ifdef SRC_PATH
 configure_OPTIONS              += --srcdir="$(SRC_PATH)"
 endif
 
+ifeq ($(USB),1)
+configure_OPTIONS              += --with-serial-transport=usb
+endif
+
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 

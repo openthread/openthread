@@ -1158,6 +1158,47 @@ AC_MSG_RESULT(${enable_linker_map})
 AM_CONDITIONAL([OPENTHREAD_ENABLE_LINKER_MAP], [test "${enable_linker_map}" = "yes"])
 
 #
+# Serial transport
+#
+
+AC_ARG_WITH(serial_transport,
+    [AS_HELP_STRING([--with-serial-transport[[=uart|usb]]],[Select transport for serial communication @<:@default=uart@:>@.])],
+    [
+        case "${with_serial_transport}" in
+        "uart")
+            OPENTHREAD_SERIAL_TRANSPORT_UART=1
+            OPENTHREAD_SERIAL_TRANSPORT_USB=0
+            ;;
+
+        "usb")
+            OPENTHREAD_SERIAL_TRANSPORT_UART=0
+            OPENTHREAD_SERIAL_TRANSPORT_USB=1
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${with_serial_transport} for --with-serial-transport])
+            ;;
+        esac
+    ],
+    [
+        with_serial_transport=uart
+        OPENTHREAD_SERIAL_TRANSPORT_UART=1
+        OPENTHREAD_SERIAL_TRANSPORT_USB=0
+    ])
+
+AC_SUBST(OPENTHREAD_SERIAL_TRANSPORT_UART)
+AM_CONDITIONAL([OPENTHREAD_SERIAL_TRANSPORT_UART],  [test "${with_serial_transport}" = "uart"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_SERIAL_TRANSPORT_UART],[${OPENTHREAD_SERIAL_TRANSPORT_UART}],[Define to 1 to enable the serial transport over UART.])
+AC_MSG_CHECKING([should serial transport be UART])
+AC_MSG_RESULT([${OPENTHREAD_SERIAL_TRANSPORT_UART}])
+
+AC_SUBST(OPENTHREAD_SERIAL_TRANSPORT_USB)
+AM_CONDITIONAL([OPENTHREAD_SERIAL_TRANSPORT_USB], [test "${with_serial_transport}" = "usb"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_SERIAL_TRANSPORT_USB],[${OPENTHREAD_SERIAL_TRANSPORT_USB}],[Define to 1 to enable the serial transport over USB CDC.])
+AC_MSG_CHECKING([should serial transport be USB CDC])
+AC_MSG_RESULT([${OPENTHREAD_SERIAL_TRANSPORT_USB}])
+
+#
 # Examples
 #
 
@@ -1514,6 +1555,7 @@ AC_MSG_NOTICE([
   OpenThread Application CoAP support       : ${enable_application_coap}
   OpenThread Raw Link-Layer support         : ${enable_raw_link_api}
   OpenThread Border Router support          : ${enable_border_router}
+  Openthread serial transport               : ${with_serial_transport}
   OpenThread examples                       : ${OPENTHREAD_EXAMPLES}
 
 ])

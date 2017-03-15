@@ -269,4 +269,12 @@
  */
 #define LOG_TIMESTAMP_ENABLE  1
 
+/**
+ * @def USB_INITIAL_DELAY_MS
+ *
+ * Init delay for USB driver, used when software reset was detected to help OS to re-enumerate the device.
+ *
+ */
+#define USB_INITIAL_DELAY_MS      600
+
 #endif  // PLATFORM_CONFIG_H_

@@ -37,6 +37,17 @@ files using `arm-none-eabi-objcopy`:
 $ arm-none-eabi-objcopy -O ihex ot-cli-ftd ot-cli-ftd.hex
 ```
 
+## Native USB support
+
+You can build the libraries with support for native USB CDC ACM as a serial transport. 
+To do so, build the libraries with the following parameter:
+```
+$ make -f examples/Makefile-nrf52840 USB=1
+```
+
+Note, that if Windows 7 or earlier is used, an additional USB CDC driver has to be loaded. 
+It can be found in third_party/NordicSemiconductor/libraries/usb/nordic_cdc_acm_example.inf
+
 ## Flashing the binaries
 
 Flash the compiled binaries onto nRF52840 using `nrfjprog` which is
