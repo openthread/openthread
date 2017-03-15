@@ -361,7 +361,12 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Header *aHeader, Message *aMessa
     mTimer.Start(kTimeout);
 
     otLogInfoMeshCoP(GetInstance(), "received joiner finalize response %d", static_cast<uint8_t>(state.GetState()));
-    otLogCertMeshCoP(GetInstance(), "[THCI] direction=recv | type=JOIN_FIN.rsp");
+#if OPENTHREAD_ENABLE_CERT_LOG
+    uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
+    VerifyOrExit(aMessage->GetLength() <= sizeof(buf), ;);
+    aMessage->Read(aHeader->GetLength(), aMessage->GetLength() - aHeader->GetLength(), buf);
+    otDumpCertMeshCoP("[THCI] direction=recv | type=JOIN_FIN.rsp |", buf, aMessage->GetLength() - aHeader->GetLength());
+#endif
 
 exit:
     Close();

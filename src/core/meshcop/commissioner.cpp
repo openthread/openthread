@@ -912,6 +912,14 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, 
     joinerMessageInfo.SetPeerPort(mJoinerPort);
 
     mSendKek = true;
+#if OPENTHREAD_ENABLE_CERT_LOG
+    uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
+    VerifyOrExit(message->GetLength() <= sizeof(buf), ;);
+    message->Read(responseHeader.GetLength(), message->GetLength() - responseHeader.GetLength(), buf);
+    otDumpCertMeshCoP("[THCI] direction=send | type=JOIN_FIN.rsp |", buf,
+                      message->GetLength() - responseHeader.GetLength());
+#endif
+
     SuccessOrExit(error = mNetif.GetSecureCoapServer().SendMessage(*message, joinerMessageInfo));
 
     memcpy(extAddr.m8, mJoinerIid, sizeof(extAddr.m8));
@@ -919,7 +927,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, 
     RemoveJoiner(&extAddr);
 
     otLogInfoMeshCoP(GetInstance(), "sent joiner finalize response");
-    otLogCertMeshCoP(GetInstance(), "[THCI] direction=send | type=JOIN_FIN.rsp");
+
 exit:
 
     if (error != kThreadError_None && message != NULL)
