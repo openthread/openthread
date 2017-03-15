@@ -589,7 +589,7 @@ ThreadError otThreadSetEnabled(otInstance *aInstance, bool aEnabled)
     {
         VerifyOrExit(aInstance->mThreadNetif.GetMac().GetPanId() != Mac::kPanIdBroadcast,
                      error = kThreadError_InvalidState);
-        error = aInstance->mThreadNetif.GetMle().Start(true);
+        error = aInstance->mThreadNetif.GetMle().Start(true, false);
     }
     else
     {
