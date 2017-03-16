@@ -505,7 +505,7 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
 
             case Tlv::kDelayTimer:
             {
-                DelayTimerTlv *delayTimerTlv = reinterpret_cast<DelayTimerTlv *>(&tlv);
+                DelayTimerTlv *delayTimerTlv = static_cast<DelayTimerTlv *>(&data.tlv);
 
                 if (doesAffectMasterKey && delayTimerTlv->GetDelayTimer() < DelayTimerTlv::kDelayTimerDefault)
                 {
