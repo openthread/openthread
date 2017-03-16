@@ -488,13 +488,15 @@ public:
     /**
      * This method starts the MLE protocol operation.
      *
-     * @param[in]  aEnableReattach  True to enable reattach process using stored dataset, False not.
+     * @param[in]  aEnableReattach True if reattach using stored dataset, or False if not.
+     * @param[in]  aAnnounceAttach True if attach on the announced thread network with newer active timestamp,
+     *                             or False if not.
      *
      * @retval kThreadError_None     Successfully started the protocol operation.
      * @retval kThreadError_Already  The protocol operation was already started.
      *
      */
-    ThreadError Start(bool aEnableReattach);
+    ThreadError Start(bool aEnableReattach, bool aAnnounceAttach);
 
     /**
      * This method stops the MLE protocol operation.
