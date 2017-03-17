@@ -264,6 +264,7 @@ private:
         kStateUpdatePeriod     = 1000,  ///< State update period in milliseconds.
         kDataRequestRetryDelay = 200,   ///< Retry delay in milliseconds (for sending data request if no buffer).
         kQuickPollsAfterTimout = 5,     ///< Maximum number of quick data poll tx in case of back-to-back poll timeouts.
+        kMaxPollRetxAttempts   = 5,     ///< Maximum number of retransmit attempts of data poll (mac data request).
     };
 
     enum
@@ -370,6 +371,7 @@ private:
     bool mScanning;
 
     uint8_t mBacktoBackPollTimeoutCounter;
+    uint8_t mBackToBackPollTxFailures;
 
     ThreadNetif &mNetif;
 

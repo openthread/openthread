@@ -82,6 +82,7 @@ MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
     mRestorePanId(Mac::kPanIdBroadcast),
     mScanning(false),
     mBacktoBackPollTimeoutCounter(0),
+    mBackToBackPollTxFailures(0),
     mNetif(aThreadNetif),
     mSrcMatchEnabled(false)
 {
@@ -1769,6 +1770,24 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
         {
             mPollTimer.Stop();
             mNetif.GetMle().BecomeDetached();
+        }
+        else
+        {
+            switch (aError)
+            {
+            case kThreadError_None:
+                mBackToBackPollTxFailures = 0;
+                break;
+
+            default:
+                if (mBackToBackPollTxFailures < kMaxPollRetxAttempts)
+                {
+                    mBackToBackPollTxFailures++;
+                    SendMacDataRequest();
+                }
+
+                break;
+            }
         }
     }
 
