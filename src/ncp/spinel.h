@@ -811,7 +811,7 @@ typedef enum
                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 14,
 
     /// Thread joiner data
-    /** Format `A(T(EDc))`
+    /** Format `A(T(EDL))`
      *  eui64, PSKd, PSKd length
      */
     SPINEL_PROP_THREAD_JOINERS = SPINEL_PROP_THREAD_EXT__BEGIN + 15,

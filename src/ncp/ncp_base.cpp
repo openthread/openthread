@@ -154,6 +154,10 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE, &NcpBase::GetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE },
     { SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED, &NcpBase::GetPropertyHandler_THREAD_ROUTER_ROLE_ENABLED },
 
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    { SPINEL_PROP_THREAD_COMMISSIONER_ENABLED, &NcpBase::GetPropertyHandler_THREAD_COMMISSIONER_ENABLED },
+#endif
+
     { SPINEL_PROP_MAC_WHITELIST, &NcpBase::GetPropertyHandler_MAC_WHITELIST },
     { SPINEL_PROP_MAC_WHITELIST_ENABLED, &NcpBase::GetPropertyHandler_MAC_WHITELIST_ENABLED },
     { SPINEL_PROP_THREAD_MODE, &NcpBase::GetPropertyHandler_THREAD_MODE },
@@ -3368,6 +3372,23 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header
            );
 }
 
+#if OPENTHREAD_ENABLE_COMMISSIONER
+ThreadError NcpBase::GetPropertyHandler_THREAD_COMMISSIONER_ENABLED(uint8_t header, spinel_prop_key_t key)
+{
+    bool isEnabled = false;
+    if (otCommissionerGetState(mInstance))
+    isEnabled = true;
+
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_BOOL_S,
+               isEnabled
+           );
+}
+#endif
+
 ThreadError NcpBase::GetPropertyHandler_NET_REQUIRE_JOIN_EXISTING(uint8_t header, spinel_prop_key_t key)
 {
     return SendPropertyUpdate(
@@ -6097,6 +6118,7 @@ ThreadError NcpBase::InsertPropertyHandler_SPINEL_PROP_THREAD_JOINERS(uint8_t he
 
     otExtAddress *ot_ext_address = NULL;
     const char *aPSKd = NULL;
+    uint32_t joiner_timeout = 0;
 
     VerifyOrExit(
         mAllowLocalNetworkDataChange == true,
@@ -6106,14 +6128,15 @@ ThreadError NcpBase::InsertPropertyHandler_SPINEL_PROP_THREAD_JOINERS(uint8_t he
     parsedLength = spinel_datatype_unpack(
                        value_ptr,
                        value_len,
-                       "ED.",
+                       "EDL",
                        &ot_ext_address,
-                       &aPSKd
+                       &aPSKd,
+                       &joiner_timeout
                    );
 
     if (parsedLength > 0)
     {
-        errorCode = otCommissionerAddJoiner(mInstance, ot_ext_address, aPSKd);
+        errorCode = otCommissionerAddJoiner(mInstance, ot_ext_address, aPSKd, joiner_timeout);
 
         if (errorCode == kThreadError_None)
         {

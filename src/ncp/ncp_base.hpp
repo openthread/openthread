@@ -394,6 +394,10 @@ private:
     ThreadError GetPropertyHandler_DEBUG_TEST_ASSERT(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_DEBUG_NCP_LOG_LEVEL(uint8_t header, spinel_prop_key_t key);
 
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    ThreadError GetPropertyHandler_THREAD_COMMISSIONER_ENABLED(uint8_t header, spinel_prop_key_t key);
+#endif
+
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     ThreadError GetPropertyHandler_JAM_DETECT_ENABLE(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_JAM_DETECTED(uint8_t header, spinel_prop_key_t key);
