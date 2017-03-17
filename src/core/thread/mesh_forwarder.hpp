@@ -42,6 +42,7 @@
 #include <mac/mac.hpp>
 #include <net/ip6.hpp>
 #include <thread/address_resolver.hpp>
+#include <thread/data_poll_manager.hpp>
 #include <thread/lowpan.hpp>
 #include <thread/network_data_leader.hpp>
 #include <thread/topology.hpp>
@@ -86,7 +87,7 @@ public:
      * @returns The pointer to the parent otInstance structure.
      *
      */
-    otInstance *GetInstance();
+    otInstance *GetInstance(void);
 
     /**
      * This method enables mesh forwarding and the IEEE 802.15.4 MAC layer.
@@ -147,62 +148,6 @@ public:
     void SetRxOnWhenIdle(bool aRxOnWhenIdle);
 
     /**
-     * This method sets a user-specified Data Poll period.
-     *
-     * If the value is set to zero, then the poll interval is managed by the OpenThread stack.
-     * If the user has provided a non-zero poll period, the user value specifies the maximum period between data
-     * request transmissions. Note that OpenThread may send data request transmissions more frequently when expecting
-     * a control-message from a parent.
-     *
-     * Initial/Default value for "assign poll period" is zero.
-     *
-     * @param[in]  aPeriod  The Data Poll period in milliseconds, or zero to mean no user-specified poll period.
-     *
-     */
-    void SetAssignPollPeriod(uint32_t aPeriod);
-
-    /**
-     * This method gets the current user-specified Data Poll period.
-     *
-     * @returns  The Data Poll period in milliseconds.
-     *
-     */
-    uint32_t GetAssignPollPeriod(void);
-
-    /**
-     *
-     * This method sets the maximum period between data request command transmissions. Note that OpenThread may send
-     * data request transmissions more frequently when expecting a control-message from a parent.
-     *
-     * If the user has provided a non-zero assign poll period (@sa SetAssignPollPeriod), the user value specifies the
-     * maximum period between data request command transmissions and is used in place of @p aPeriod.
-     *
-     *
-     * @param[in]  aPeriod  The Data Poll period in milliseconds.
-     *
-     */
-    void SetPollPeriod(uint32_t aPeriod);
-
-    /**
-     * This method enqueues an IEEE 802.15.4 Data Request message.
-     *
-     * @retval kThreadError_None          Successfully enqueued an IEEE 802.15.4 Data Request message.
-     * @retval kThreadError_Already       An IEEE 802.15.4 Data Request message is already enqueued.
-     * @retval kThreadError_InvalidState  Device is not in rx-off-when-idle mode.
-     * @retval kThreadError_NoBufs        Insufficient message buffers available.
-     *
-     */
-    ThreadError SendMacDataRequest(void);
-
-    /**
-     * This method gets the Data Poll period.
-     *
-     * @returns  The Data Poll period in milliseconds.
-     *
-     */
-    uint32_t GetPollPeriod(void);
-
-    /**
      * This method sets the scan parameters for MLE Discovery Request messages.
      *
      * @param[in]  aScanChannels  A bit vector indicating which channels to scan.
@@ -235,6 +180,13 @@ public:
     void SetSrcMatchAsShort(Child &aChild, bool aMatchShort);
 
     /**
+     * This method returns a reference to the thread network interface instance.
+     *
+     * @ returns   A reference to the thread network interface instance.
+     */
+    ThreadNetif &GetNetif(void) { return mNetif; }
+
+    /**
      * This method returns a reference to the send queue.
      *
      * @returns  A reference to the send queue.
@@ -258,12 +210,18 @@ public:
      */
     const MessageQueue &GetResolvingQueue(void) const { return mResolvingQueue; }
 
+    /**
+     * This method returns a reference to the data poll manager.
+     *
+     * @returns  A reference to the data poll manager.
+     *
+     */
+    DataPollManager &GetDataPollManager(void) { return mDataPollManager; }
+
 private:
     enum
     {
         kStateUpdatePeriod     = 1000,  ///< State update period in milliseconds.
-        kDataRequestRetryDelay = 200,   ///< Retry delay in milliseconds (for sending data request if no buffer).
-        kQuickPollsAfterTimout = 5,     ///< Maximum number of quick data poll tx in case of back-to-back poll timeouts.
     };
 
     enum
@@ -286,7 +244,6 @@ private:
     ThreadError CheckReachability(uint8_t *aFrame, uint8_t aFrameLength,
                                   const Mac::Address &aMeshSource, const Mac::Address &aMeshDest);
 
-    void ScheduleNextPoll(uint32_t aDelay);
     ThreadError GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     ThreadError GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     Message *GetDirectTransmission(void);
@@ -313,25 +270,17 @@ private:
 
     static void HandleReceivedFrame(void *aContext, Mac::Frame &aFrame);
     void HandleReceivedFrame(Mac::Frame &aFrame);
-
-    static void HandleDataPollTimeout(void *aContext);
-    void HandleDataPollTimeout(void);
-
     static ThreadError HandleFrameRequest(void *aContext, Mac::Frame &aFrame);
     ThreadError HandleFrameRequest(Mac::Frame &aFrame);
-
     static void HandleSentFrame(void *aContext, Mac::Frame &aFrame, ThreadError aError);
     void HandleSentFrame(Mac::Frame &aFrame, ThreadError aError);
-
     static void HandleDiscoverTimer(void *aContext);
     void HandleDiscoverTimer(void);
     static void HandleReassemblyTimer(void *aContext);
     void HandleReassemblyTimer(void);
-    static void HandlePollTimer(void *aContext);
-    void HandlePollTimer(void);
-
     static void ScheduleTransmissionTask(void *aContext);
     void ScheduleTransmissionTask(void);
+    static void HandleDataPollTimeout(void *aContext);
 
     ThreadError AddPendingSrcMatchEntries(void);
     ThreadError AddSrcMatchEntry(Child &aChild);
@@ -340,10 +289,11 @@ private:
     void LogIp6Message(MessageAction aAction, const Message &aMessage, const Mac::Address &aMacAddress,
                        ThreadError aError);
 
+    ThreadNetif &mNetif;
+
     Mac::Receiver mMacReceiver;
     Mac::Sender mMacSender;
     Timer mDiscoverTimer;
-    Timer mPollTimer;
     Timer mReassemblyTimer;
 
     PriorityQueue mSendQueue;
@@ -351,8 +301,6 @@ private:
     MessageQueue mResolvingQueue;
     uint16_t mFragTag;
     uint16_t mMessageNextOffset;
-    uint32_t mPollPeriod;
-    uint32_t mAssignPollPeriod;
 
     uint32_t mSendMessageFrameCounter;
     Message *mSendMessage;
@@ -379,9 +327,7 @@ private:
     uint16_t mRestorePanId;
     bool mScanning;
 
-    uint8_t mBacktoBackPollTimeoutCounter;
-
-    ThreadNetif &mNetif;
+    DataPollManager mDataPollManager;
 
     bool mSrcMatchEnabled;
 };

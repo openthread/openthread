@@ -1362,7 +1362,6 @@ protected:
 private:
     enum
     {
-        kAttachDataPollPeriod = OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD,
         kMleMessagePriority = Message::kPriorityHigh,
     };
 
