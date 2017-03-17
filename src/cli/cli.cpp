@@ -727,9 +727,12 @@ void Interpreter::ProcessDns(int argc, char *argv[])
     Ip6::MessageInfo messageInfo;
     otDnsQuery query;
 
-    if (argc >= 2 && strcmp(argv[0], "resolve") == 0)
+    VerifyOrExit(argc > 0, error = kThreadError_InvalidArgs);
+
+    if (strcmp(argv[0], "resolve") == 0)
     {
         VerifyOrExit(!mResolvingInProgress, error = kThreadError_Busy);
+        VerifyOrExit(argc > 1, error = kThreadError_InvalidArgs);
         VerifyOrExit(strlen(argv[1]) < OT_DNS_MAX_HOSTNAME_LENGTH, error = kThreadError_InvalidArgs);
 
         strcpy(mResolvingHostname, argv[1]);
