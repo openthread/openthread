@@ -242,7 +242,7 @@ of `STATUS_ALREADY`.
 ### PROP 112: PROP_STREAM_DEBUG {#prop-stream-debug}
 
 * Type: Read-Only-Stream
-* Packed-Encoding: `U`
+* Packed-Encoding: `D`
 
 Octets: |    *n*
 --------|------------
