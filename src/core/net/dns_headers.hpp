@@ -65,25 +65,11 @@ namespace Dns {
  */
 
 /**
- * This structure represents an DNS header.
- *
- */
-OT_TOOL_PACKED_BEGIN
-struct HeaderPoD
-{
-    uint16_t mMessageId;  ///< A message identifier that is used by the requester to match up replies to outstanding queries.
-    uint8_t  mFlags[2];   ///< DNS header flags.
-    uint16_t mQdCount;    ///< A number specifying the number of entries in the question section.
-    uint16_t mAnCount;    ///< A number specifying the number of entries in the answer section.
-    uint16_t mNsCount;    ///< A number specifying the number of entries in the authority records section.
-    uint16_t mArCount;    ///< A number specifying the number of entries in the additional records section.
-} OT_TOOL_PACKED_END;
-
-/**
  * This class implements DNS header generation and parsing.
  *
  */
-class Header: private HeaderPoD
+OT_TOOL_PACKED_BEGIN
+class Header
 {
 public:
 
@@ -371,26 +357,21 @@ private:
         kRCodeMask    = 0x0f << kRCodeOffset,    ///< RCODE field mask.
     };
 
-};
+    uint16_t mMessageId;  ///< A message identifier that is used by the requester to match up replies to outstanding queries.
+    uint8_t  mFlags[2];   ///< DNS header flags.
+    uint16_t mQdCount;    ///< A number specifying the number of entries in the question section.
+    uint16_t mAnCount;    ///< A number specifying the number of entries in the answer section.
+    uint16_t mNsCount;    ///< A number specifying the number of entries in the authority records section.
+    uint16_t mArCount;    ///< A number specifying the number of entries in the additional records section.
 
-/**
- * This structure represents an Resource record body format (RR).
- *
- */
-OT_TOOL_PACKED_BEGIN
-struct ResourceRecordPoD
-{
-    uint16_t mType;    ///< The type of the data in RDATA section.
-    uint16_t mClass;   ///< The class of the data in RDATA section.
-    uint32_t mTtl;     ///< Specifies the maximum time that the resource record may be cached.
-    uint16_t mLength;  ///< The length of RDATA section in bytes.
 } OT_TOOL_PACKED_END;
 
 /**
  * This class implements Resource Record body format (RR).
  *
  */
-class ResourceRecord: private ResourceRecordPoD
+OT_TOOL_PACKED_BEGIN
+class ResourceRecord
 {
 public:
     /**
@@ -453,14 +434,20 @@ public:
      */
     void SetLength(uint16_t aLength) { mLength = HostSwap16(aLength); }
 
-};
+private:
+    uint16_t mType;    ///< The type of the data in RDATA section.
+    uint16_t mClass;   ///< The class of the data in RDATA section.
+    uint32_t mTtl;     ///< Specifies the maximum time that the resource record may be cached.
+    uint16_t mLength;  ///< The length of RDATA section in bytes.
+
+} OT_TOOL_PACKED_END;
 
 /**
- * This class implements Resource Record body format (RR).
+ * This class implements Resource Record body format of AAAA type.
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ResourceRecordAAAA: public ResourceRecord
+class ResourceRecordAaaa: public ResourceRecord
 {
 public:
     enum
@@ -503,21 +490,11 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This structure represents an Resource record body format (RR).
- *
- */
-OT_TOOL_PACKED_BEGIN
-struct QuestionPoD
-{
-    uint16_t mType;      ///< The type of the data in question section.
-    uint16_t mClass;     ///< The class of the data in question section.
-} OT_TOOL_PACKED_END;
-
-/**
  * This class implements Question format.
  *
  */
-class Question: public QuestionPoD
+OT_TOOL_PACKED_BEGIN
+class Question
 {
 public:
     /**
@@ -559,14 +536,18 @@ public:
      */
     void SetClass(uint16_t aClass) { mClass = HostSwap16(aClass); }
 
-};
+private:
+    uint16_t mType;      ///< The type of the data in question section.
+    uint16_t mClass;     ///< The class of the data in question section.
+
+} OT_TOOL_PACKED_END;
 
 
 /**
- * This class implements Resource Record body format (RR).
+ * This class implements Question format of AAAA type.
  *
  */
-class QuestionAAAA: public Question
+class QuestionAaaa: public Question
 {
 public:
     enum
@@ -579,7 +560,7 @@ public:
      * Default constructor for AAAA Question.
      *
      */
-    QuestionAAAA(void) : Question(kType, kClass) {};
+    QuestionAaaa(void) : Question(kType, kClass) {};
 
     /**
      * This method appends request data to the message.

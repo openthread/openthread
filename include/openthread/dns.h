@@ -58,9 +58,9 @@ extern "C" {
 #define OT_DNS_DEFAULT_DNS_SERVER_PORT 53                    ///< Defines default DNS Server port.
 
 /**
-* This structure implements DNS Query parameters.
-*
-*/
+ * This structure implements DNS Query parameters.
+ *
+ */
 typedef struct otDnsQuery
 {
     const char          *mHostname;     ///< Identifies hostname to be found. It shall not change during resolving.
@@ -69,22 +69,22 @@ typedef struct otDnsQuery
 } otDnsQuery;
 
 /**
-* This function pointer is called when a DNS response is received.
+ * This function pointer is called when a DNS response is received.
  *
-* @param[in]  aContext   A pointer to application-specific context.
-* @param[in]  aHostname  Identifies hostname related with DNS response.
-* @param[in]  aAddress   A pointer to the IPv6 address received in DNS response. May be null.
-* @param[in]  aTtl       Specifies the maximum time in seconds that the resource record may be cached.
-* @param[in]  aResult    A result of the DNS transaction.
-*
-* @retval  kThreadError_None             A response was received successfully and IPv6 address is provided
-*                                        in @p aAddress.
-* @retval  kThreadError_Abort            A DNS transaction was aborted by stack.
-* @retval  kThreadError_ResponseTimeout  No DNS response has been received within timeout.
-* @retval  kThreadError_NotFound         A response was received but no IPv6 address has been found.
-* @retval  kThreadError_Failed           A response was received but status code is different than success.
-*
-*/
+ * @param[in]  aContext   A pointer to application-specific context.
+ * @param[in]  aHostname  Identifies hostname related with DNS response.
+ * @param[in]  aAddress   A pointer to the IPv6 address received in DNS response. May be null.
+ * @param[in]  aTtl       Specifies the maximum time in seconds that the resource record may be cached.
+ * @param[in]  aResult    A result of the DNS transaction.
+ *
+ * @retval  kThreadError_None             A response was received successfully and IPv6 address is provided
+ *                                        in @p aAddress.
+ * @retval  kThreadError_Abort            A DNS transaction was aborted by stack.
+ * @retval  kThreadError_ResponseTimeout  No DNS response has been received within timeout.
+ * @retval  kThreadError_NotFound         A response was received but no IPv6 address has been found.
+ * @retval  kThreadError_Failed           A response was received but status code is different than success.
+ *
+ */
 typedef void (*otDnsResponseHandler)(void *aContext, const char *aHostname, otIp6Address *aAddress,
                                      uint32_t aTtl, ThreadError aResult);
 

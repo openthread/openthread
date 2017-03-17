@@ -81,7 +81,7 @@ ThreadError Client::Query(const otDnsQuery *aQuery, otDnsResponseHandler aHandle
     Message *message = NULL;
     Message *messageCopy = NULL;
     Header header;
-    QuestionAAAA question;
+    QuestionAaaa question;
     const Ip6::MessageInfo *messageInfo;
 
     VerifyOrExit(aQuery->mHostname != NULL && aQuery->mMessageInfo != NULL,
@@ -271,8 +271,8 @@ exit:
 ThreadError Client::CompareQuestions(Message &aMessageResponse, Message &aMessageQuery, uint16_t &aOffset)
 {
     ThreadError error = kThreadError_None;
-    uint8_t bufQuery[16];
-    uint8_t bufResponse[16];
+    uint8_t bufQuery[kBufSize];
+    uint8_t bufResponse[kBufSize];
     uint16_t read = 0;
 
     // Compare question section of the query with the response.
@@ -302,7 +302,7 @@ exit:
 ThreadError Client::SkipHostname(Message &aMessage, uint16_t &aOffset)
 {
     ThreadError error = kThreadError_None;
-    uint8_t buf[16];
+    uint8_t buf[kBufSize];
     uint16_t index;
     uint16_t read = 0;
     uint16_t offset = aOffset;
@@ -406,7 +406,7 @@ void Client::HandleRetransmissionTimer(void)
         else if (queryMetadata.mRetransmissionCount < kMaxRetransmit)
         {
             // Increment retransmission counter and timer.
-            queryMetadata.mRetransmissionCount += 1;
+            queryMetadata.mRetransmissionCount++;
             queryMetadata.mTransmissionTime = now + kResponseTimeout;
             queryMetadata.UpdateIn(*message);
 
@@ -449,7 +449,7 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     ThreadError error = kThreadError_None;
     Header responseHeader;
     QueryMetadata queryMetadata;
-    ResourceRecordAAAA record;
+    ResourceRecordAaaa record;
     Message *message = NULL;
     uint16_t offset;
 
@@ -487,8 +487,8 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
         }
 
         if (aMessage.Read(offset, sizeof(record), &record) != sizeof(record) ||
-            record.GetType() != ResourceRecordAAAA::kType ||
-            record.GetClass() != ResourceRecordAAAA::kClass)
+            record.GetType() != ResourceRecordAaaa::kType ||
+            record.GetClass() != ResourceRecordAaaa::kClass)
         {
             offset += sizeof(ResourceRecord) + record.GetLength();
 

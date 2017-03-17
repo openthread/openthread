@@ -222,6 +222,14 @@ private:
         kCompressionOffsetMask = 0xc0
     };
 
+    /**
+     * Operating on message buffers.
+     */
+    enum
+    {
+        kBufSize = 16
+    };
+
     Message *NewMessage(const Header &aHeader);
     Message *CopyAndEnqueueMessage(const Message &aMessage, const QueryMetadata &aQueryMetadata);
     void DequeueMessage(Message &aMessage);
