@@ -1025,6 +1025,7 @@ void Mac::SentFrame(ThreadError aError)
 {
     Frame &sendFrame(*mTxFrame);
     Sender *sender;
+    Address dstAddr;
 
     switch (aError)
     {
@@ -1033,11 +1034,34 @@ void Mac::SentFrame(ThreadError aError)
 
     case kThreadError_ChannelAccessFailure:
     case kThreadError_Abort:
-        otLogInfoMac(GetInstance(), "Tx failed with error %s (%d)", otThreadErrorToString(aError), aError);
-
-    // Intentional fall through to next case.
-
     case kThreadError_NoAck:
+
+        sendFrame.GetDstAddr(dstAddr);
+
+        switch (dstAddr.mLength)
+        {
+        case sizeof(ShortAddress):
+            otLogInfoMac(GetInstance(), "Tx failed - Error: %s (%d) - SeqNum: %d - Attempt %d/%d - Dst (short): %04x",
+                         otThreadErrorToString(aError), aError, sendFrame.GetSequence(), mTransmitAttempts + 1,
+                         sendFrame.GetMaxTxAttempts(), dstAddr.mShortAddress);
+            break;
+
+        case sizeof(ExtAddress):
+            otLogInfoMac(GetInstance(), "Tx failed - Error: %s (%d) - SeqNum: %d - Attempt %d/%d - "
+                         "Dst: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
+                         otThreadErrorToString(aError), aError, sendFrame.GetSequence(), mTransmitAttempts + 1,
+                         sendFrame.GetMaxTxAttempts(), dstAddr.mExtAddress.m8[0], dstAddr.mExtAddress.m8[1],
+                         dstAddr.mExtAddress.m8[2], dstAddr.mExtAddress.m8[3], dstAddr.mExtAddress.m8[4],
+                         dstAddr.mExtAddress.m8[5], dstAddr.mExtAddress.m8[6], dstAddr.mExtAddress.m8[7]);
+            break;
+
+        default:
+            otLogInfoMac(GetInstance(), "Tx failed - Error: %s (%d) - SeqNum: %d - Attempt %d/%d",
+                         otThreadErrorToString(aError), aError, sendFrame.GetSequence(), mTransmitAttempts + 1,
+                         sendFrame.GetMaxTxAttempts());
+            break;
+        }
+
         otDumpDebgMac("TX ERR", sendFrame.GetHeader(), 16);
 
         if (!RadioSupportsRetries() &&
