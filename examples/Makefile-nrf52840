@@ -91,8 +91,12 @@ ifeq ($(DHCP6_CLIENT),1)
 configure_OPTIONS              += --enable-dhcp6-client
 endif
 
+ifeq ($(DNS_CLIENT),1)
+configure_OPTIONS              += --enable-dns-client
+endif
+
 ifeq ($(COVERAGE),1)
-configure_OPTIONS              += --enable-coverage --enable-commissioner --enable-joiner --enable-dhcp6-client --enable-dhcp6-server
+configure_OPTIONS              += --enable-coverage --enable-commissioner --enable-joiner --enable-dhcp6-client --enable-dhcp6-server --enable-dns-client
 endif
 
 ifeq ($(DEBUG),1)

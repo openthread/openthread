@@ -53,6 +53,7 @@
 #include <net/dhcp6.hpp>
 #include <net/dhcp6_client.hpp>
 #include <net/dhcp6_server.hpp>
+#include <net/dns_client.hpp>
 #include <net/ip6_filter.hpp>
 #include <net/netif.hpp>
 #include <thread/address_resolver.hpp>
@@ -157,15 +158,15 @@ public:
     ThreadError RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch);
 
     /**
-     * This method returns a pointer to the address resolver object.
+     * This method returns a reference to the address resolver object.
      *
-     * @returns A pointer to the address resolver object.
+     * @returns A reference to the address resolver object.
      *
      */
     AddressResolver &GetAddressResolver(void) { return mAddressResolver; }
 
     /**
-     * This method returns a pointer to the network diagnostic object.
+     * This method returns a reference to the network diagnostic object.
      *
      * @returns A reference to the address resolver object.
      *
@@ -174,7 +175,7 @@ public:
 
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
     /**
-     * This method returns a pointer to the dhcp client object.
+     * This method returns a reference to the dhcp client object.
      *
      * @returns A reference to the dhcp client object.
      *
@@ -184,13 +185,23 @@ public:
 
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
     /**
-     * This method returns a pointer to the dhcp server object.
+     * This method returns a reference to the dhcp server object.
      *
      * @returns A reference to the the dhcp server object.
      *
      */
     Dhcp6::Dhcp6Server &GetDhcp6Server(void) { return mDhcp6Server; }
 #endif  // OPENTHREAD_ENABLE_DHCP6_SERVER
+
+#if OPENTHREAD_ENABLE_DNS_CLIENT
+    /**
+     * This method returns a reference to the dns client object.
+     *
+     * @returns A reference to the dns client object.
+     *
+     */
+    Dns::Client &GetDnsClient(void) { return mDnsClient; }
+#endif  // OPENTHREAD_ENABLE_DNS_CLIENT
 
     /**
      * This method returns a reference to the CoAP server object.
@@ -217,57 +228,57 @@ public:
     Ip6::Filter &GetIp6Filter(void) { return mIp6Filter; }
 
     /**
-     * This method returns a pointer to the key manager object.
+     * This method returns a reference to the key manager object.
      *
-     * @returns A pointer to the key manager object.
+     * @returns A reference to the key manager object.
      *
      */
     KeyManager &GetKeyManager(void) { return mKeyManager; }
 
     /**
-     * This method returns a pointer to the lowpan object.
+     * This method returns a reference to the lowpan object.
      *
-     * @returns A pointer to the lowpan object.
+     * @returns A reference to the lowpan object.
      *
      */
     Lowpan::Lowpan &GetLowpan(void) { return mLowpan; }
 
     /**
-     * This method returns a pointer to the mac object.
+     * This method returns a reference to the mac object.
      *
-     * @returns A pointer to the mac object.
+     * @returns A reference to the mac object.
      *
      */
     Mac::Mac &GetMac(void) { return mMac; }
 
     /**
-     * This method returns a pointer to the mle object.
+     * This method returns a reference to the mle object.
      *
-     * @returns A pointer to the mle object.
+     * @returns A reference to the mle object.
      *
      */
     Mle::MleRouter &GetMle(void) { return mMleRouter; }
 
     /**
-     * This method returns a pointer to the mesh forwarder object.
+     * This method returns a reference to the mesh forwarder object.
      *
-     * @returns A pointer to the mesh forwarder object.
+     * @returns A reference to the mesh forwarder object.
      *
      */
     MeshForwarder &GetMeshForwarder(void) { return mMeshForwarder; }
 
     /**
-     * This method returns a pointer to the network data local object.
+     * This method returns a reference to the network data local object.
      *
-     * @returns A pointer to the network data local object.
+     * @returns A reference to the network data local object.
      *
      */
     NetworkData::Local &GetNetworkDataLocal(void) { return mNetworkDataLocal; }
 
     /**
-     * This method returns a pointer to the network data leader object.
+     * This method returns a reference to the network data leader object.
      *
-     * @returns A pointer to the network data leader object.
+     * @returns A reference to the network data leader object.
      *
      */
     NetworkData::Leader &GetNetworkDataLeader(void) { return mNetworkDataLeader; }
@@ -326,6 +337,9 @@ private:
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
     Dhcp6::Dhcp6Server mDhcp6Server;
 #endif  // OPENTHREAD_ENABLE_DHCP6_SERVER
+#if OPENTHREAD_ENABLE_DNS_CLIENT
+    Dns::Client mDnsClient;
+#endif  // OPENTHREAD_ENABLE_DNS_CLIENT
     MeshCoP::ActiveDataset mActiveDataset;
     MeshCoP::PendingDataset mPendingDataset;
     Ip6::Filter mIp6Filter;
