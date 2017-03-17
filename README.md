@@ -2,6 +2,9 @@
 [![Build Status][ot-travis-svg]][ot-travis]
 [![Build Status][ot-appveyor-svg]][ot-appveyor]
 [![Coverage Status][ot-codecov-svg]][ot-codecov]
+<a href="http://threadgroup.org/technology/ourtechnology#certifiedproducts">
+<img src="https://cdn.rawgit.com/openthread/openthread/master/doc/images/certified.svg" alt="Thread Certified Component" width="93px">
+</a>
 
 ---
 
