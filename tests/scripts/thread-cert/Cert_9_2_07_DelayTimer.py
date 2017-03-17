@@ -111,7 +111,7 @@ class Cert_9_2_7_DelayTimer(unittest.TestCase):
                                                        delay_timer=10000,
                                                        channel=COMMISSIONER_PENDING_CHANNEL,
                                                        panid=COMMISSIONER_PENDING_PANID)
-        time.sleep(20)
+        time.sleep(40)
         self.assertEqual(self.nodes[LEADER].get_panid(), COMMISSIONER_PENDING_PANID)
         self.assertEqual(self.nodes[COMMISSIONER].get_panid(), COMMISSIONER_PENDING_PANID)
         self.assertEqual(self.nodes[ROUTER].get_panid(), COMMISSIONER_PENDING_PANID)
