@@ -674,7 +674,7 @@ class SpinelPropertyHandler(SpinelCodec):
     def IPv6_ICMP_PING_OFFLOAD(self, _, payload):
         return self.parse_b(payload)
 
-    def STREAM_DEBUG(self, _, payload): return self.parse_U(payload)
+    def STREAM_DEBUG(self, _, payload): return self.parse_D(payload)
 
     def STREAM_RAW(self, _, payload): return self.parse_D(payload)
 
