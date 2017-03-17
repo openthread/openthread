@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2016, The OpenThread Authors.
+ *    Copyright (c) 2017, The OpenThread Authors.
  *    All rights reserved.
  *
  *    Redistribution and use in source and binary forms, with or without
@@ -67,7 +67,7 @@
 /* ------------------------------------------------------------------------- */
 /* MARK: Macros and Constants */
 
-#define SPI_HDLC_VERSION                "0.05"
+#define SPI_HDLC_VERSION                "0.06"
 
 #define MAX_FRAME_SIZE                  2048
 #define HEADER_LEN                      5
@@ -90,12 +90,12 @@
 #define USEC_PER_SEC                    (USEC_PER_MSEC * MSEC_PER_SEC)
 #endif
 
-#define SPI_POLL_PERIOD_MSEC            (MSEC_PER_SEC/100)
+#define SPI_POLL_PERIOD_MSEC            (MSEC_PER_SEC/30)
 
 #define GPIO_INT_ASSERT_STATE           0 // I̅N̅T̅ is asserted low
 #define GPIO_RES_ASSERT_STATE           0 // R̅E̅S̅ is asserted low
 
-#define SPI_RX_ALIGN_ALLOWANCE_MAX      3
+#define SPI_RX_ALIGN_ALLOWANCE_MAX      6
 
 #define SOCKET_DEBUG_BYTES_PER_LINE     16
 
@@ -148,10 +148,11 @@ static uint8_t sSpiRxFrameBuffer[MAX_FRAME_SIZE + SPI_RX_ALIGN_ALLOWANCE_MAX];
 
 static uint16_t sSpiTxPayloadSize;
 static bool sSpiTxIsReady = false;
-static bool sSpiTxFlowControl = false;
+static int sSpiTxRefusedCount = 0;
 static uint8_t sSpiTxFrameBuffer[MAX_FRAME_SIZE + SPI_RX_ALIGN_ALLOWANCE_MAX];
 
 static int sSpiRxAlignAllowance = 0;
+static int sSpiSmallPacketSize  = 32;      // in bytes
 
 static bool sSlaveDidReset = false;
 
@@ -164,7 +165,7 @@ static int sMTU = MAX_FRAME_SIZE - HEADER_LEN;
 
 static int sRet = 0;
 
-static bool sDumpInfo = false;
+static bool sDumpStats = false;
 
 static sig_t sPreviousHandlerForSIGINT;
 static sig_t sPreviousHandlerForSIGTERM;
@@ -172,10 +173,14 @@ static sig_t sPreviousHandlerForSIGTERM;
 /* ------------------------------------------------------------------------- */
 /* MARK: Statistics */
 
+static uint64_t sSlaveResetCount = 0;
 static uint64_t sSpiFrameCount = 0;
 static uint64_t sSpiValidFrameCount = 0;
 static uint64_t sSpiGarbageFrameCount = 0;
 static uint64_t sSpiDuplexFrameCount = 0;
+static uint64_t sSpiUnresponsiveFrameCount = 0;
+static uint64_t sHdlcRxFrameByteCount = 0;
+static uint64_t sHdlcTxFrameByteCount = 0;
 static uint64_t sHdlcRxFrameCount = 0;
 static uint64_t sHdlcTxFrameCount = 0;
 static uint64_t sHdlcRxBadCrcCount = 0;
@@ -198,6 +203,7 @@ static void signal_SIGINT(int sig)
     signal(SIGINT, sPreviousHandlerForSIGINT);
     sPreviousHandlerForSIGINT = NULL;
 
+    // Ignore signal argument.
     (void)sig;
 }
 
@@ -216,6 +222,7 @@ static void signal_SIGTERM(int sig)
     signal(SIGTERM, sPreviousHandlerForSIGTERM);
     sPreviousHandlerForSIGTERM = NULL;
 
+    // Ignore signal argument.
     (void)sig;
 }
 
@@ -233,19 +240,34 @@ static void signal_SIGHUP(int sig)
     // because we always want to let the main
     // loop decide what to do for hangups.
 
+    // Ignore signal argument.
     (void)sig;
 }
 
-static void signal_SIGUSR1(int sig)
+static void signal_dumpstats(int sig)
 {
-    static const char message[] = "\nCaught SIGUSR1!\n";
+    sDumpStats = true;
 
-    sDumpInfo = true;
+    // Ignore signal argument.
+    (void)sig;
+}
 
-    // Can't use syslog() because it isn't async signal safe.
-    // So we write to stderr
-    IGNORE_RETURN_VALUE(write(STDERR_FILENO, message, sizeof(message)-1));
+static void signal_clearstats(int sig)
+{
+    sDumpStats = true;
+    sSlaveResetCount = 0;
+    sSpiFrameCount = 0;
+    sSpiValidFrameCount = 0;
+    sSpiGarbageFrameCount = 0;
+    sSpiDuplexFrameCount = 0;
+    sSpiUnresponsiveFrameCount = 0;
+    sHdlcRxFrameByteCount = 0;
+    sHdlcTxFrameByteCount = 0;
+    sHdlcRxFrameCount = 0;
+    sHdlcTxFrameCount = 0;
+    sHdlcRxBadCrcCount = 0;
 
+    // Ignore signal argument.
     (void)sig;
 }
 
@@ -310,11 +332,11 @@ static void signal_critical(int sig, siginfo_t * info, void * ucontext)
 }
 #endif // if AUTO_PRINT_BACKTRACE
 
-static void log_debug_buffer(const char* desc, const uint8_t* buffer_ptr, int buffer_len)
+static void log_debug_buffer(const char* desc, const uint8_t* buffer_ptr, int buffer_len, bool force)
 {
     int i = 0;
 
-    if (sVerbose < LOG_DEBUG)
+    if (!force && (sVerbose < LOG_DEBUG))
     {
         return;
     }
@@ -329,7 +351,7 @@ static void log_debug_buffer(const char* desc, const uint8_t* buffer_ptr, int bu
             sprintf(dump_string+j*3, "%02X ", buffer_ptr[i]);
         }
 
-        syslog(LOG_DEBUG, "%s: %s%s", desc, dump_string, (i < buffer_len)?" ...":"");
+        syslog(force ? LOG_WARNING : LOG_DEBUG, "%s: %s%s", desc, dump_string, (i < buffer_len)?" ...":"");
     }
 }
 
@@ -430,8 +452,8 @@ static int do_spi_xfer(int len)
 
     if (ret != -1)
     {
-        log_debug_buffer("SPI-TX", sSpiTxFrameBuffer, (int)xfer[1].len);
-        log_debug_buffer("SPI-RX", sSpiRxFrameBuffer, (int)xfer[1].len);
+        log_debug_buffer("SPI-TX", sSpiTxFrameBuffer, (int)xfer[1].len, false);
+        log_debug_buffer("SPI-RX", sSpiRxFrameBuffer, (int)xfer[1].len, false);
 
         sSpiFrameCount++;
     }
@@ -439,20 +461,20 @@ static int do_spi_xfer(int len)
     return ret;
 }
 
-static void debug_spi_header(const char* hint)
+static void debug_spi_header(const char* hint, bool force)
 {
-    if (sVerbose >= LOG_DEBUG)
+    if (force || (sVerbose >= LOG_DEBUG))
     {
         const uint8_t* spiRxFrameBuffer = get_real_rx_frame_start();
 
-        syslog(LOG_DEBUG, "%s-TX: H:%02X ACCEPT:%d DATA:%0d\n",
+        syslog(force ? LOG_WARNING : LOG_DEBUG, "%s-TX: H:%02X ACCEPT:%d DATA:%0d\n",
             hint,
             spi_header_get_flag_byte(sSpiTxFrameBuffer),
             spi_header_get_accept_len(sSpiTxFrameBuffer),
             spi_header_get_data_len(sSpiTxFrameBuffer)
         );
 
-        syslog(LOG_DEBUG, "%s-RX: H:%02X ACCEPT:%d DATA:%0d\n",
+        syslog(force ? LOG_WARNING : LOG_DEBUG, "%s-RX: H:%02X ACCEPT:%d DATA:%0d\n",
             hint,
             spi_header_get_flag_byte(spiRxFrameBuffer),
             spi_header_get_accept_len(spiRxFrameBuffer),
@@ -463,8 +485,6 @@ static void debug_spi_header(const char* hint)
 
 static int push_pull_spi(void)
 {
-    static const uint16_t SMALL_PACKET_SIZE = 5;
-
     int ret;
     uint16_t spi_xfer_bytes = 0;
     const uint8_t* spiRxFrameBuffer = NULL;
@@ -473,8 +493,6 @@ static int push_pull_spi(void)
     int successful_exchanges = 0;
 
     static uint16_t slave_data_len;
-
-    sSpiTxFlowControl = false;
 
     // For now, sSpiRxPayloadSize must be zero
     // when entering this function. This may change
@@ -531,9 +549,9 @@ static int push_pull_spi(void)
             // Set up a minimum transfer size to allow small
             // frames the slave wants to send us to be handled
             // in a single transaction.
-            if (SMALL_PACKET_SIZE > spi_xfer_bytes)
+            if (sSpiSmallPacketSize > spi_xfer_bytes)
             {
-                spi_xfer_bytes = SMALL_PACKET_SIZE;
+                spi_xfer_bytes = (uint16_t)sSpiSmallPacketSize;
             }
         }
 
@@ -560,7 +578,7 @@ static int push_pull_spi(void)
     // Account for misalignment (0xFF bytes at the start)
     spiRxFrameBuffer = get_real_rx_frame_start();
 
-    debug_spi_header("push_pull");
+    debug_spi_header("push_pull", false);
 
     slave_header = spi_header_get_flag_byte(spiRxFrameBuffer);
 
@@ -573,23 +591,29 @@ static int push_pull_spi(void)
         ) {
             // Device is off or in a bad state.
             // In some cases may be induced by flow control.
-            syslog(slave_data_len == 0 ? LOG_DEBUG : LOG_WARNING, "Discarded frame.");
+            syslog(slave_data_len == 0 ? LOG_DEBUG : LOG_WARNING, "Slave did not respond to frame. (Header was all 0x%02X)", slave_header);
+            sSpiUnresponsiveFrameCount++;
         }
         else
         {
             // Header is full of garbage
             syslog(
                 LOG_WARNING,
-                "Gibberish in header : %02X %02X %02X %02X %02X",
+                "Garbage in header : %02X %02X %02X %02X %02X",
                 spiRxFrameBuffer[0],
                 spiRxFrameBuffer[1],
                 spiRxFrameBuffer[2],
                 spiRxFrameBuffer[3],
                 spiRxFrameBuffer[4]
             );
+            sSpiGarbageFrameCount++;
+            if (sVerbose < LOG_DEBUG)
+            {
+                log_debug_buffer("SPI-TX", sSpiTxFrameBuffer, (int)spi_xfer_bytes + HEADER_LEN + sSpiRxAlignAllowance, true);
+                log_debug_buffer("SPI-RX", sSpiRxFrameBuffer, (int)spi_xfer_bytes + HEADER_LEN + sSpiRxAlignAllowance, true);
+            }
         }
-        sSpiGarbageFrameCount++;
-        sSpiTxFlowControl = true;
+        sSpiTxRefusedCount++;
         goto bail;
     }
 
@@ -602,15 +626,22 @@ static int push_pull_spi(void)
     )
     {
         sSpiGarbageFrameCount++;
-        sSpiTxFlowControl = true;
+        sSpiTxRefusedCount++;
         slave_data_len = 0;
         syslog(
             LOG_WARNING,
-            "Gibberish in header (h:0x%02X, max_rx:0x%04X, data_len:0x%04X)",
-            slave_header,
-            slave_max_rx,
-            slave_data_len
+            "Garbage in header : %02X %02X %02X %02X %02X",
+            spiRxFrameBuffer[0],
+            spiRxFrameBuffer[1],
+            spiRxFrameBuffer[2],
+            spiRxFrameBuffer[3],
+            spiRxFrameBuffer[4]
         );
+        if (sVerbose < LOG_DEBUG)
+        {
+            log_debug_buffer("SPI-TX", sSpiTxFrameBuffer, (int)spi_xfer_bytes + HEADER_LEN + sSpiRxAlignAllowance, true);
+            log_debug_buffer("SPI-RX", sSpiRxFrameBuffer, (int)spi_xfer_bytes + HEADER_LEN + sSpiRxAlignAllowance, true);
+        }
         goto bail;
     }
 
@@ -618,8 +649,10 @@ static int push_pull_spi(void)
 
     if ( (slave_header & SPI_HEADER_RESET_FLAG) == SPI_HEADER_RESET_FLAG)
     {
-        syslog(LOG_NOTICE, "Slave did reset");
+        sSlaveResetCount++;
+        syslog(LOG_NOTICE, "Slave did reset (%llu resets so far)", (unsigned long long)sSlaveResetCount);
         sSlaveDidReset = true;
+        sDumpStats = true;
     }
 
     // Handle received packet, if any.
@@ -637,8 +670,9 @@ static int push_pull_spi(void)
     }
 
     // Handle transmitted packet, if any.
-    if (sSpiTxPayloadSize == spi_header_get_data_len(sSpiTxFrameBuffer))
-    {
+    if ( sSpiTxIsReady
+      && (sSpiTxPayloadSize == spi_header_get_data_len(sSpiTxFrameBuffer))
+    ) {
         if (spi_header_get_data_len(sSpiTxFrameBuffer) <= slave_max_rx)
         {
             // Our outbound packet has been successfully transmitted. Clear
@@ -646,17 +680,23 @@ static int push_pull_spi(void)
             // pull another packet for us to send.
             sSpiTxIsReady = false;
             sSpiTxPayloadSize = 0;
-            sSpiTxFlowControl = false;
+            sSpiTxRefusedCount = 0;
             successful_exchanges++;
         }
         else
         {
             // The slave Wasn't ready for what we had to
-            // send them. Turn on rate limiting so that we
+            // send them. Incrementing this counter will
+            // turn on rate limiting so that we
             // don't waste a ton of CPU bombarding them
             // with useless SPI transfers.
-            sSpiTxFlowControl = true;
+            sSpiTxRefusedCount++;
         }
+    }
+
+    if (!sSpiTxIsReady)
+    {
+        sSpiTxRefusedCount = 0;
     }
 
     if (successful_exchanges == 2)
@@ -777,6 +817,7 @@ static int push_hdlc(void)
     int ret = 0;
     const uint8_t* spiRxFrameBuffer = get_real_rx_frame_start();
     static uint8_t escaped_frame_buffer[MAX_FRAME_SIZE*2];
+    static uint16_t unescaped_frame_len;
     static uint16_t escaped_frame_len;
     static uint16_t escaped_frame_sent;
 
@@ -788,6 +829,9 @@ static int push_hdlc(void)
             memcpy(escaped_frame_buffer, kHdlcResetSignal, sizeof(kHdlcResetSignal));
             escaped_frame_len = sizeof(kHdlcResetSignal);
             sSlaveDidReset = false;
+
+            // Set this to zero, since this isn't a real frame.
+            unescaped_frame_len = 0;
         }
         else if (sSpiRxPayloadSize != 0)
         {
@@ -795,6 +839,8 @@ static int push_hdlc(void)
             uint8_t c;
             uint16_t fcs = kHdlcCrcResetValue;
             uint16_t i;
+
+            unescaped_frame_len = sSpiRxPayloadSize;
 
             for (i = 0; i < sSpiRxPayloadSize; i++)
             {
@@ -876,6 +922,7 @@ static int push_hdlc(void)
 
         // Increment counter for statistics
         sHdlcTxFrameCount++;
+        sHdlcTxFrameByteCount += unescaped_frame_len;
     }
 
     ret = 0;
@@ -929,8 +976,9 @@ static int pull_hdlc(void)
                 // Indicate that a frame is ready to go out
                 sSpiTxIsReady = true;
 
-                // Increment counter for statistics
+                // Increment counters for statistics
                 sHdlcRxFrameCount++;
+                sHdlcRxFrameByteCount += sSpiTxPayloadSize;
 
                 // Clean up for the next frame
                 unescape_next_byte = false;
@@ -1042,10 +1090,11 @@ static int push_raw(void)
     // Reset state once we have sent the entire frame.
     if (raw_frame_len == raw_frame_sent)
     {
-        raw_frame_len = raw_frame_sent = 0;
-
         // Increment counter for statistics
         sHdlcTxFrameCount++;
+        sHdlcTxFrameByteCount += raw_frame_len;
+
+        raw_frame_len = raw_frame_sent = 0;
     }
 
     ret = 0;
@@ -1080,8 +1129,9 @@ static int pull_raw(void)
             sSpiTxPayloadSize = (uint16_t)ret;
             sSpiTxIsReady = true;
 
-            // Increment counter for statistics
+            // Increment counters for statistics
             sHdlcRxFrameCount++;
+            sHdlcRxFrameByteCount += sSpiTxPayloadSize;
         }
     }
 
@@ -1366,8 +1416,8 @@ bail:
 
 static void print_version(void)
 {
-    printf("spi-hdlc " SPI_HDLC_VERSION "(" __TIME__ " " __DATE__ ")\n");
-    printf("Copyright (c) 2016 The OpenThread Authors, All Rights Reserved\n");
+    printf("spi-hdlc-adapter " SPI_HDLC_VERSION " (" __TIME__ " " __DATE__ ")\n");
+    printf("Copyright (c) 2017 The OpenThread Authors, All Rights Reserved\n");
 }
 
 static void print_help(void)
@@ -1409,6 +1459,9 @@ static void print_help(void)
     "    --spi-cs-delay[=usec] ........ Specify the delay after C̅S̅ assertion, in µsec\n"
     "    --spi-align-allowance[=n] .... Specify the the maximum number of FF bytes to\n"
     "                                   clip from start of MISO frame. Max value is 3.\n"
+    "    --spi-small-packet=[n] ....... Specify the smallest packet we can receive\n"
+    "                                   in a single transaction(larger packets will\n"
+    "                                   require two transactions). Default value is 32.\n"
     "    -v/--verbose ................. Increase debug verbosity. (Repeatable)\n"
     "    -h/-?/--help ................. Print out usage information and exit.\n"
     "\n";
@@ -1443,6 +1496,7 @@ int main(int argc, char *argv[])
         ARG_SPI_ALIGN_ALLOWANCE = 1005,
         ARG_RAW = 1006,
         ARG_MTU = 1007,
+        ARG_SPI_SMALL_PACKET = 1008,
     };
 
     static struct option options[] = {
@@ -1459,6 +1513,7 @@ int main(int argc, char *argv[])
         { "spi-speed",  required_argument, NULL,   ARG_SPI_SPEED },
         { "spi-cs-delay",required_argument,NULL,   ARG_SPI_CS_DELAY },
         { "spi-align-allowance", required_argument, NULL, ARG_SPI_ALIGN_ALLOWANCE },
+        { "spi-small-packet", required_argument, NULL, ARG_SPI_SMALL_PACKET },
         { NULL,         0,                 NULL,   0             },
     };
 
@@ -1478,7 +1533,8 @@ int main(int argc, char *argv[])
     sPreviousHandlerForSIGINT = signal(SIGINT, &signal_SIGINT);
     sPreviousHandlerForSIGTERM = signal(SIGTERM, &signal_SIGTERM);
     signal(SIGHUP, &signal_SIGHUP);
-    signal(SIGUSR1, &signal_SIGUSR1);
+    signal(SIGUSR1, &signal_dumpstats);
+    signal(SIGUSR2, &signal_clearstats);
 
 #if AUTO_PRINT_BACKTRACE
     sigact.sa_sigaction = &signal_critical;
@@ -1519,10 +1575,17 @@ int main(int argc, char *argv[])
             case ARG_SPI_ALIGN_ALLOWANCE:
                 errno = 0;
                 sSpiRxAlignAllowance = atoi(optarg);
-                if (errno != 0 || (sSpiRxAlignAllowance > SPI_RX_ALIGN_ALLOWANCE_MAX))
+
+                if (errno != 0 || (sSpiRxAlignAllowance < 0))
                 {
-                    syslog(LOG_ERR, "Invalid SPI RX Align Allowance \"%s\" (MAX: %d)", optarg, SPI_RX_ALIGN_ALLOWANCE_MAX);
+                    syslog(LOG_ERR, "Invalid SPI RX Align Allowance \"%s\"", optarg);
                     exit(EXIT_FAILURE);
+                }
+
+                if (sSpiRxAlignAllowance > SPI_RX_ALIGN_ALLOWANCE_MAX)
+                {
+                    syslog(LOG_WARNING, "Reducing SPI RX Align Allowance from %s to %d", optarg, SPI_RX_ALIGN_ALLOWANCE_MAX);
+                    sSpiRxAlignAllowance = SPI_RX_ALIGN_ALLOWANCE_MAX;
                 }
 
                 break;
@@ -1541,6 +1604,21 @@ int main(int argc, char *argv[])
                     syslog(LOG_ERR, "Unable to set SPI speed to \"%s\", %s", optarg, strerror(errno));
                     exit(EXIT_FAILURE);
                 }
+                break;
+
+            case ARG_SPI_SMALL_PACKET:
+                sSpiSmallPacketSize = atoi(optarg);
+                if (sSpiSmallPacketSize > MAX_FRAME_SIZE - HEADER_LEN)
+                {
+                    syslog(LOG_WARNING, "Reducing SPI small-packet size from %s to %d", optarg, MAX_FRAME_SIZE - HEADER_LEN);
+                    sSpiSmallPacketSize = MAX_FRAME_SIZE - HEADER_LEN;
+                }
+                if (sSpiSmallPacketSize < 0)
+                {
+                    syslog(LOG_ERR, "The argument to --spi-small-packet cannot be negative. (Given: \"%s\")", optarg);
+                    exit(EXIT_FAILURE);
+                }
+                syslog(LOG_NOTICE, "SPI small-packet size set to %d bytes.", sSpiSmallPacketSize);
                 break;
 
             case ARG_SPI_CS_DELAY:
@@ -1611,6 +1689,8 @@ int main(int argc, char *argv[])
             }
         }
     }
+
+    syslog(LOG_NOTICE,"spi-hdlc-adapter " SPI_HDLC_VERSION " (" __TIME__ " " __DATE__ ")\n");
 
     argc -= optind;
     argv += optind;
@@ -1779,27 +1859,54 @@ int main(int argc, char *argv[])
             timeout_ms = SPI_POLL_PERIOD_MSEC;
         }
 
-        if (sDumpInfo)
+        if (sDumpStats)
         {
             timeout_ms = 0;
         }
 
-        if (sSpiTxFlowControl)
+        if (sSpiTxRefusedCount)
         {
-            // We are being rate-limited by the NCP. This is
+            // We are being rate-limited by the slave. This is
             // fairly normal behavior. We poll because we
-            // won't get an interrupt unless the NCP happens
+            // won't get an interrupt unless the slave happens
             // to be trying to send us something.
             if (timeout_ms < SPI_POLL_PERIOD_MSEC)
             {
                 timeout_ms = SPI_POLL_PERIOD_MSEC;
+            }
 
-                if (!did_print_rate_limit_log)
-                {
-                    // Avoid printing out this message over and over.
-                    syslog(LOG_INFO, "NCP is rate limiting transactions");
-                    did_print_rate_limit_log = true;
-                }
+            if ( sSpiTxIsReady
+              && !did_print_rate_limit_log
+              && (sSpiTxRefusedCount > 1)
+            ) {
+                // To avoid printing out this message over and over,
+                // we only print it out once the refused count is at
+                // two or higher when we actually have something to
+                // send the slave. And then, we only print it once.
+                syslog(LOG_INFO, "Slave is rate limiting transactions");
+
+                did_print_rate_limit_log = true;
+            }
+
+            if (sSpiTxRefusedCount == 30)
+            {
+                // Ua-oh. The slave hasn't given us a chance to send
+                // it anything for over thirty frames. If this ever
+                // happens, print out a warning to the logs.
+                syslog(LOG_WARNING, "Slave seems stuck.");
+            }
+
+            if (sSpiTxRefusedCount == 100)
+            {
+                // Double ua-oh. The slave hasn't given us a chance
+                // to send it anything for over a hundred frames.
+                // This almost certainly means that the slave has
+                // locked up or gotten into an unrecoverable state.
+                // It is not spi-hdlc-adapter's job to identify and
+                // reset misbehaving devices (that is handled at a
+                // higher level), but we go ahead and log the condition
+                // for debugging purposes.
+                syslog(LOG_ERR, "Slave seems REALLY stuck.");
             }
         }
         else
@@ -1814,15 +1921,19 @@ int main(int argc, char *argv[])
         // Wait for something to happen.
         IGNORE_RETURN_VALUE(select(max_fd + 1, &read_set, &write_set, &error_set, &timeout));
 
-        if (sDumpInfo || sRet != 0)
+        if (sDumpStats || sRet != 0)
         {
-            sDumpInfo = false;
+            sDumpStats = false;
+            syslog(LOG_NOTICE, "INFO: sSlaveResetCount=%llu", (unsigned long long)sSlaveResetCount);
             syslog(LOG_NOTICE, "INFO: sSpiFrameCount=%llu", (unsigned long long)sSpiFrameCount);
             syslog(LOG_NOTICE, "INFO: sSpiValidFrameCount=%llu", (unsigned long long)sSpiValidFrameCount);
-            syslog(LOG_NOTICE, "INFO: sSpiGarbageFrameCount=%llu", (unsigned long long)sSpiGarbageFrameCount);
             syslog(LOG_NOTICE, "INFO: sSpiDuplexFrameCount=%llu", (unsigned long long)sSpiDuplexFrameCount);
+            syslog(LOG_NOTICE, "INFO: sSpiUnresponsiveFrameCount=%llu", (unsigned long long)sSpiUnresponsiveFrameCount);
+            syslog(LOG_NOTICE, "INFO: sSpiGarbageFrameCount=%llu", (unsigned long long)sSpiGarbageFrameCount);
             syslog(LOG_NOTICE, "INFO: sHdlcTxFrameCount=%llu", (unsigned long long)sHdlcTxFrameCount);
+            syslog(LOG_NOTICE, "INFO: sHdlcTxFrameByteCount=%llu", (unsigned long long)sHdlcTxFrameByteCount);
             syslog(LOG_NOTICE, "INFO: sHdlcRxFrameCount=%llu", (unsigned long long)sHdlcRxFrameCount);
+            syslog(LOG_NOTICE, "INFO: sHdlcRxFrameByteCount=%llu", (unsigned long long)sHdlcRxFrameByteCount);
             syslog(LOG_NOTICE, "INFO: sHdlcRxBadCrcCount=%llu", (unsigned long long)sHdlcRxBadCrcCount);
         }
 

@@ -42,8 +42,14 @@ protocol document.
     bytes to clip from start of MISO frame. This makes this tool usable
     with SPI slaves which have buggy SPI blocks that prepend up to
     three 0xFF bytes to the start of MISO frame. Default value is `0`.
-    Maximum value is `3`. *This must be set to at least `2` for chips
-    in the SiLabs EM35x family.*
+    Maximum value is `6`. *This must be set to `4` for chips in the
+    SiLabs EM35x family.*
+*   `--spi-small-packet=[n]`: Specify the smallest packet we can receive
+    in a single SPI transaction. Packets sent by the slave which are smaller
+    than or equal to this size will require only a single SPI transaction
+    to be successfully transmitted. Increasing this value will (up to a point)
+    decrease latency for smaller packets at the expense of overall bandwidth.
+    Default value is 32. The minimum value is 0. The maximum value is 2043.
 *   `--verbose`: Increase debug verbosity.
 *   `--help`: Print out usage information to `stdout` and exit.
 
@@ -84,7 +90,16 @@ that signal to `spi-hdlc-adapter` is like this:
 
 At which point you will see something like this in the syslogs:
 
-    spi-hdlc-adapter[5215]: INFO: sSpiFrameCount=45660
-    spi-hdlc-adapter[5215]: INFO: sSpiValidFrameCount=45643
-    spi-hdlc-adapter[5215]: INFO: sSpiGarbageFrameCount=17
-    spi-hdlc-adapter[5215]: INFO: sSpiDuplexFrameCount=20931
+    spi-hdlc-adapter[18408]: INFO: sSlaveResetCount=16
+    spi-hdlc-adapter[18408]: INFO: sSpiFrameCount=2673
+    spi-hdlc-adapter[18408]: INFO: sSpiValidFrameCount=2668
+    spi-hdlc-adapter[18408]: INFO: sSpiDuplexFrameCount=3
+    spi-hdlc-adapter[18408]: INFO: sSpiUnresponsiveFrameCount=5
+    spi-hdlc-adapter[18408]: INFO: sSpiGarbageFrameCount=0
+    spi-hdlc-adapter[18408]: INFO: sHdlcTxFrameCount=1454
+    spi-hdlc-adapter[18408]: INFO: sHdlcTxFrameByteCount=2908
+    spi-hdlc-adapter[18408]: INFO: sHdlcRxFrameCount=884
+    spi-hdlc-adapter[18408]: INFO: sHdlcRxFrameByteCount=3875
+    spi-hdlc-adapter[18408]: INFO: sHdlcRxBadCrcCount=0
+
+Sending `SIGUSR2` will clear the counters.
