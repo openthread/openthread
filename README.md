@@ -32,7 +32,8 @@ applications. More information about Thread can be found on
 
  *  Highly portable: OS and platform agnostic with a radio
     abstraction layer
- *  Implements the End Device, Router, Leader and Border Router roles
+ *  Certified Thread Component: Implements all features defined in the Thread 1.1.1 specification
+ *  Tools: Provides tools used for development, such as an integration into the Thread Test Harness and a Sniffer 
  *  Small memory footprint
 
 OpenThread implements all Thread networking layers including IPv6,
