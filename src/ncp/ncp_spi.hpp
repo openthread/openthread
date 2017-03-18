@@ -114,7 +114,6 @@ private:
 
     uint8_t mEmptySendFrame[kSpiHeaderLength];
     uint8_t mEmptyReceiveFrame[kSpiHeaderLength];
-
 };
 
 }  // namespace Thread
