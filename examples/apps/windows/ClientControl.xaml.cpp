@@ -105,7 +105,9 @@ ClientControl::Connect_Click(
                 return false;
             }
         }))
+        {
             Exception::CreateException(E_INVALIDARG, "Not a valid Server IPv6 address");
+        }
 
         clientArgs->ServerHostName = ref new HostName(serverIP);
 
@@ -134,7 +136,9 @@ ClientControl::Connect_Click(
                 return false;
             }
         }))
+        {
             Exception::CreateException(E_INVALIDARG, "Not a valid client IPv6 address");
+        }
 
 
         clientArgs->ClientHostName = ref new HostName(clientIP);
@@ -187,7 +191,9 @@ ClientControl::Send_Click(
         auto clientContext = dynamic_cast<IClientContext^>(
             CoreApplication::Properties->Lookup("clientContext"));
         if (clientContext == nullptr)
+        {
             Exception::CreateException(E_UNEXPECTED, "No clientContext");
+        }
 
         clientContext->Send_Click(sender, e, input);
     }

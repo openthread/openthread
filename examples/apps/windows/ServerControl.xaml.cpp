@@ -101,7 +101,9 @@ ServerControl::Listen_Click(
                 return false;
             }
         }))
+        {
             Exception::CreateException(E_INVALIDARG, "Not a valid Server IPv6 address");
+        }
 
         listenerArgs->ServerHostName = ref new HostName(serverIP);
 
