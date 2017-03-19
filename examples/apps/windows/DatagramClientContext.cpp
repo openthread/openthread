@@ -204,7 +204,7 @@ Thread::DatagramClientContext::OnMessage(
         {
             // This error would indicate that a previous send operation resulted in an ICMP "Port Unreachable" message.
             _notify->NotifyFromAsyncThread(
-                "Peer does not listen on the specific port. Please make sure that you run step 1 first " +
+                "Peer does not listen on the specific port. Please make sure that you run step 1 first "
                 "or you have a server properly working on a remote server.",
                 NotifyType::Error);
         }
