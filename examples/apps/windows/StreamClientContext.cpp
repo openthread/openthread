@@ -253,7 +253,10 @@ StreamClientContext::Receive(
     DataReader^  dataReader,
     unsigned int strLen)
 {
-    if (!strLen) return;
+    if (!strLen)
+    {
+        return;
+    }
 
     auto msg = dataReader->ReadString(strLen);
     _notify->NotifyFromAsyncThread("Received data from server: \"" + msg + "\"",

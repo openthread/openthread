@@ -113,7 +113,10 @@ TalkGrid::Protocol_Changed(
     RoutedEventArgs^ e)
 {
     auto radioBtn = dynamic_cast<RadioButton^>(sender);
-    if (!radioBtn) { return; }
+    if (!radioBtn)
+    {
+        return;
+    }
 
     auto protocol = (radioBtn == TcpRadio) ? Protocol::TCP : Protocol::UDP;
 
@@ -127,7 +130,10 @@ TalkGrid::Role_Changed(
     RoutedEventArgs^ e)
 {
     auto radioBtn = dynamic_cast<RadioButton^>(sender);
-    if (!radioBtn) { return; }
+    if (!radioBtn)
+    {
+        return;
+    }
 
     if (radioBtn == ServerRadio)
     {

@@ -83,7 +83,10 @@ ServerControl::Listen_Click(
         listenerArgs->ServerName = ServerName->Text;
 
         auto serverIP = ServerIP->Text;
-        if (serverIP->IsEmpty()) Exception::CreateException(E_INVALIDARG, "No Server IP");
+        if (serverIP->IsEmpty())
+        {
+            Exception::CreateException(E_INVALIDARG, "No Server IP");
+        }
 
         // check valid chars of Ipv6 Address
         if (std::all_of(serverIP->Data(), serverIP->Data() + serverIP->Length(),
@@ -102,7 +105,10 @@ ServerControl::Listen_Click(
 
         listenerArgs->ServerHostName = ref new HostName(serverIP);
 
-        if (ServerPort->Text->IsEmpty()) Exception::CreateException(E_INVALIDARG, "No Server Port");
+        if (ServerPort->Text->IsEmpty())
+        {
+            Exception::CreateException(E_INVALIDARG, "No Server Port");
+        }
         listenerArgs->ServerPort = ServerPort->Text;
 
         auto listenerContext = Factory::CreateListenerContext(_notify, listenerArgs, _protocol);

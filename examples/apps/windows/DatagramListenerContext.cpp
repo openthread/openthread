@@ -177,7 +177,10 @@ DatagramListenerContext::OnMessage(
 
             // It might happen that the OnMessage was invoked more than once before the GetOutputStreamAsync call
             // completed. In this case we will end up with multiple streams - just keep one of them.
-            if (_outputStream == nullptr) _outputStream = stream;
+            if (_outputStream == nullptr)
+            {
+                _outputStream = stream;
+            }
         }
 
         auto dataReader = eventArgs->GetDataReader();
@@ -207,7 +210,10 @@ DatagramListenerContext::Receive(
     unsigned int strLen,
     DataWriter^  dataWriter)
 {
-    if (!strLen) return;
+    if (!strLen)
+    {
+        return;
+    }
 
     auto msg = dataReader->ReadString(strLen);
     _notify->NotifyFromAsyncThread("Received data from client: \"" + msg + "\"",
