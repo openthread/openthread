@@ -147,12 +147,11 @@ ClientControl::Connect_Click(
 
         auto cleintContext = Factory::CreateClientContext(_notify, clientArgs, _protocol);
         cleintContext->Connect_Click(sender, e);
-        {
-            // fix Only usage of each socket address (protocol/network address/port)
-            // is normally permitted. 
-            auto clientPort = ++_clientPort;
-            ClientPort->Text = clientPort.ToString();
-        }
+
+        // fix Only usage of each socket address (protocol/network address/port)
+        // is normally permitted. 
+        auto clientPort = ++_clientPort;
+        ClientPort->Text = clientPort.ToString();
     }
     catch (Exception^ ex)
     {
