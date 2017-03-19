@@ -89,12 +89,14 @@ ServerControl::Listen_Click(
         if (std::all_of(serverIP->Data(), serverIP->Data() + serverIP->Length(),
             [](wchar_t c)
         {
-            if (c < '0') return false;
-            else if (c <= '9') return true; // '0' ~ '9'
-            else if (c == ':') return true; // ':'
-            else if (c < 'a') return false;
-            else if (c <= 'z') return true; // 'a' ~ 'z'
-            else return false;
+            if ((c >= '0' && c <= '9') || (c == ':') || (c >= 'a' && c <= 'z'))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }))
             Exception::CreateException(E_INVALIDARG, "Not a valid Server IPv6 address");
 
