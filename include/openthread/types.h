@@ -283,6 +283,18 @@ enum
 };
 
 /**
+* This enumeration defines the Commissioner State.
+*
+*/
+typedef enum otCommissionerState
+{
+
+    kCommissionerStateDisabled = 0,
+    kCommissionerStatePetition = 1,
+    kCommissionerStateActive = 2,
+} otCommissionerState;
+
+/**
   * This type represents Channel Mask Page 0.
   *
   */

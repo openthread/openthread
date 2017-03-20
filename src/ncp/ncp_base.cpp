@@ -47,6 +47,10 @@
 #include "openthread/jam_detection.h"
 #endif
 
+#if OPENTHREAD_ENABLE_COMMISSIONER
+#include "meshcop/commissioner.hpp"
+#endif
+
 #include "openthread/platform/radio.h"
 #include "openthread/platform/misc.h"
 
@@ -3376,8 +3380,8 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header
 ThreadError NcpBase::GetPropertyHandler_THREAD_COMMISSIONER_ENABLED(uint8_t header, spinel_prop_key_t key)
 {
     bool isEnabled = false;
-    if (otCommissionerGetState(mInstance))
-    isEnabled = true;
+    if (otCommissionerGetState(mInstance) == kCommissionerStateActive)
+        isEnabled = true;
 
     return SendPropertyUpdate(
                header,

@@ -110,7 +110,7 @@ uint16_t otCommissionerGetSessionId(otInstance *aInstance)
     return aInstance->mThreadNetif.GetCommissioner().GetSessionId();
 }
 
-uint8_t otCommissionerGetState(otInstance *aInstance)
+otCommissionerState otCommissionerGetState(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetCommissioner().GetState();
 }
