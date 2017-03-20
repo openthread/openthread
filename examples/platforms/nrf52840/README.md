@@ -23,7 +23,7 @@ $ make -f examples/Makefile-nrf52840
 ```
 
 After a successful build, the `elf` files can be found in
-`<path-to-openthread>/output/bin`.  You can convert them to `hex`
+`<path-to-openthread>/output/nrf52840/bin`.  You can convert them to `hex`
 files using `arm-none-eabi-objcopy`:
 ```bash
 $ arm-none-eabi-objcopy -O ihex arm-none-eabi-ot-cli-ftd arm-none-eabi-ot-cli-ftd.hex
@@ -37,7 +37,7 @@ part of the [nRF5x Command Line Tools][nRF5x-Command-Line-Tools].
 [nRF5x-Command-Line-Tools]: https://www.nordicsemi.com/eng/Products/nRF52840#Downloads
 
 ```bash
-$ nrfjprog -f nrf52 --chiperase --program output/bin/arm-none-eabi-ot-cli-ftd.hex
+$ nrfjprog -f nrf52 --chiperase --program output/nrf52840/bin/arm-none-eabi-ot-cli-ftd.hex
 $ nrfjprog -f nrf52 -r
 ```
 
