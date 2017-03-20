@@ -33,12 +33,16 @@
 
 #include <coap/coap_server.hpp>
 #include <common/code_utils.hpp>
+#include <net/ip6.hpp>
+
+#include <cstring>
 
 namespace Thread {
 namespace Coap {
 
-Server::Server(Ip6::Udp &aUdp, uint16_t aPort, SenderFunction aSender, ReceiverFunction aReceiver):
-    CoapBase(aUdp, aSender, aReceiver)
+Server::Server(Ip6::Netif &aNetif, uint16_t aPort, SenderFunction aSender, ReceiverFunction aReceiver):
+    CoapBase(aNetif.GetIp6().mUdp, aSender, aReceiver),
+    mResponsesQueue(aNetif)
 {
     mPort = aPort;
     mResources = NULL;
@@ -114,6 +118,8 @@ exit:
 
 ThreadError Server::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
+    mResponsesQueue.EnqueueResponse(aMessage, aMessageInfo);
+
     return mSender(this, aMessage, aMessageInfo);
 }
 
@@ -147,9 +153,18 @@ void Server::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &a
     char uriPath[Resource::kMaxReceivedUriPath] = "";
     char *curUriPath = uriPath;
     const Header::Option *coapOption;
+    Message *response;
 
-    SuccessOrExit(header.FromMessage(aMessage, false));
+    SuccessOrExit(header.FromMessage(aMessage, 0));
     aMessage.MoveOffset(header.GetLength());
+
+    response = mResponsesQueue.GetMatchedResponseCopy(header, aMessageInfo);
+
+    if (response != NULL)
+    {
+        SendMessage(*response, aMessageInfo);
+        ExitNow();
+    }
 
     coapOption = header.GetCurrentOption();
 
@@ -203,6 +218,136 @@ ThreadError Server::SetPort(uint16_t aPort)
 
     return mSocket.Bind(sockaddr);
 }
+
+Server::ResponsesQueue::ResponsesQueue(Ip6::Netif &aNetif):
+    mTimer(aNetif.GetIp6().mTimerScheduler, &ResponsesQueue::HandleTimer, this)
+{
+    // Intentionally empty
+}
+
+Message *Server::ResponsesQueue::GetMatchedResponseCopy(const Header &aHeader, const Ip6::MessageInfo &aMessageInfo)
+{
+    Message *message;
+    Message *copy;
+    EnqueuedResponseHeader enqueuedResponseHeader;
+    Ip6::MessageInfo messageInfo;
+    Header header;
+
+    for (message = mQueue.GetHead(); message != NULL; message = message->GetNext())
+    {
+        enqueuedResponseHeader.ReadFrom(*message);
+        memcpy(&messageInfo, &enqueuedResponseHeader.GetMessageInfo(), sizeof(messageInfo));
+
+        // Check source endpoint
+        if (messageInfo.GetPeerPort() != aMessageInfo.GetPeerPort())
+        {
+            continue;
+        }
+
+        if (memcmp(&messageInfo.GetPeerAddr(), &aMessageInfo.GetPeerAddr(), sizeof(Ip6::Address)))
+        {
+            continue;
+        }
+
+        // Check Message Id
+        if (header.FromMessage(*message, sizeof(EnqueuedResponseHeader)) != kThreadError_None)
+        {
+            continue;
+        }
+
+        if (header.GetMessageId() != aHeader.GetMessageId())
+        {
+            continue;
+        }
+
+        copy = message->Clone();
+        EnqueuedResponseHeader::RemoveFrom(*copy);
+
+        return copy;
+    }
+
+    return NULL;
+}
+
+Message *Server::ResponsesQueue::GetMatchedResponseCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    Header header;
+
+    SuccessOrExit(header.FromMessage(aMessage, 0));
+
+    return GetMatchedResponseCopy(header, aMessageInfo);
+
+exit:
+    return NULL;
+}
+
+void Server::ResponsesQueue::EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    Message *copy;
+    EnqueuedResponseHeader enqueuedResponseHeader(aMessageInfo);
+
+    VerifyOrExit((copy = GetMatchedResponseCopy(aMessage, aMessageInfo)) == NULL, copy->Free());
+
+    copy = aMessage.Clone();
+    enqueuedResponseHeader.AppendTo(*copy);
+    mQueue.Enqueue(*copy);
+
+    if (!mTimer.IsRunning())
+    {
+        mTimer.Start(kExchangeLifetime);
+    }
+
+exit:
+    return;
+}
+
+void Server::ResponsesQueue::HandleTimer(void *aContext)
+{
+    static_cast<ResponsesQueue *>(aContext)->HandleTimer();
+}
+
+void Server::ResponsesQueue::HandleTimer(void)
+{
+    Message *message;
+    EnqueuedResponseHeader enqueuedResponseHeader;
+
+    do
+    {
+        VerifyOrExit((message = mQueue.GetHead()) != NULL,);
+
+        enqueuedResponseHeader.ReadFrom(*message);
+
+        if (enqueuedResponseHeader.IsEarlier(Timer::GetNow()))
+        {
+            mQueue.Dequeue(*message);
+            message->Free();
+        }
+        else
+        {
+            mTimer.Start(enqueuedResponseHeader.GetRemainingTime());
+            break;
+        }
+    }
+    while (message != NULL);
+
+exit:
+    return;
+}
+
+Server::ResponsesQueue::EnqueuedResponseHeader::EnqueuedResponseHeader(const Ip6::MessageInfo &aMessageInfo):
+    mDequeueTime(Timer::GetNow() + kExchangeLifetime),
+    mMessageInfo(aMessageInfo)
+{
+    // Intentionally empty
+}
+
+uint32_t Server::ResponsesQueue::EnqueuedResponseHeader::GetRemainingTime(void) const
+{
+    int32_t remainingTime = static_cast<int32_t>(mDequeueTime - Timer::GetNow());
+
+    return remainingTime >= 0 ? static_cast<uint32_t>(remainingTime) : 0;
+}
+
 
 }  // namespace Coap
 }  // namespace Thread

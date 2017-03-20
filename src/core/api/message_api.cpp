@@ -173,6 +173,9 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
 
     aInstance->mThreadNetif.GetCoapClient().GetRequestMessages().GetInfo(aBufferInfo->mCoapClientMessages,
                                                                          aBufferInfo->mCoapClientBuffers);
+
+    aInstance->mThreadNetif.GetCoapServer().GetCachedResponses().GetInfo(aBufferInfo->mCoapServerMessages,
+                                                                         aBufferInfo->mCoapServerBuffers);
 }
 
 #ifdef __cplusplus
