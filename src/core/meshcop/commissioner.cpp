@@ -875,7 +875,8 @@ void Commissioner::HandleJoinerFinalize(Coap::Header &aHeader, Message &aMessage
     uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
     VerifyOrExit(aMessage.GetLength() <= sizeof(buf), ;);
     aMessage.Read(aHeader.GetLength(), aMessage.GetLength() - aHeader.GetLength(), buf);
-    otDumpCertMeshCoP("[THCI] direction=recv | type=JOIN_FIN.req |", buf, aMessage.GetLength() - aHeader.GetLength());
+    otDumpCertMeshCoP(GetInstance(), "[THCI] direction=recv | type=JOIN_FIN.req |", buf,
+                      aMessage.GetLength() - aHeader.GetLength());
 
 exit:
 #endif
@@ -916,7 +917,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, 
     uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
     VerifyOrExit(message->GetLength() <= sizeof(buf), ;);
     message->Read(responseHeader.GetLength(), message->GetLength() - responseHeader.GetLength(), buf);
-    otDumpCertMeshCoP("[THCI] direction=send | type=JOIN_FIN.rsp |", buf,
+    otDumpCertMeshCoP(GetInstance(), "[THCI] direction=send | type=JOIN_FIN.rsp |", buf,
                       message->GetLength() - responseHeader.GetLength());
 #endif
 

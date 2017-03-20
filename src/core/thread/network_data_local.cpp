@@ -76,7 +76,7 @@ ThreadError Local::AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength
 
     ClearResubmitDelayTimer();
 
-    otDumpDebgNetData("add prefix done", mTlvs, mLength);
+    otDumpDebgNetData(GetInstance(), "add prefix done", mTlvs, mLength);
     return kThreadError_None;
 }
 
@@ -91,7 +91,7 @@ ThreadError Local::RemoveOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLen
     ClearResubmitDelayTimer();
 
 exit:
-    otDumpDebgNetData("remove done", mTlvs, mLength);
+    otDumpDebgNetData(GetInstance(), "remove done", mTlvs, mLength);
     return error;
 }
 
@@ -122,7 +122,7 @@ ThreadError Local::AddHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLeng
 
     ClearResubmitDelayTimer();
 
-    otDumpDebgNetData("add route done", mTlvs, mLength);
+    otDumpDebgNetData(GetInstance(), "add route done", mTlvs, mLength);
     return kThreadError_None;
 }
 
@@ -137,7 +137,7 @@ ThreadError Local::RemoveHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixL
     ClearResubmitDelayTimer();
 
 exit:
-    otDumpDebgNetData("remove done", mTlvs, mLength);
+    otDumpDebgNetData(GetInstance(), "remove done", mTlvs, mLength);
     return error;
 }
 

@@ -42,16 +42,13 @@
 namespace Thread {
 
 MessagePool::MessagePool(otInstance *aInstance) :
-#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
     mInstance(aInstance),
-#endif
     mAllQueue()
 {
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
     // Initialize Platform buffer pool management.
     otPlatMessagePoolInit(mInstance, kNumBuffers, sizeof(Buffer));
 #else
-    (void)aInstance;
     memset(mBuffers, 0, sizeof(mBuffers));
 
     mFreeBuffers = mBuffers;
@@ -64,6 +61,9 @@ MessagePool::MessagePool(otInstance *aInstance) :
     mBuffers[kNumBuffers - 1].SetNextBuffer(NULL);
     mNumFreeBuffers = kNumBuffers;
 #endif
+
+    // This is required to remove warning of "unused member variable".
+    (void)mInstance;
 }
 
 Message *MessagePool::New(uint8_t aType, uint16_t aReserved)
@@ -122,7 +122,7 @@ Buffer *MessagePool::NewBuffer(void)
 
     if (buffer == NULL)
     {
-        otLogInfoMem("No available message buffer");
+        otLogInfoMem(mInstance, "No available message buffer");
     }
 
     return buffer;

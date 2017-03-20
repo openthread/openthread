@@ -231,6 +231,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
 
     { SPINEL_PROP_MSG_BUFFER_COUNTERS, &NcpBase::GetPropertyHandler_MSG_BUFFER_COUNTERS },
     { SPINEL_PROP_DEBUG_TEST_ASSERT, &NcpBase::GetPropertyHandler_DEBUG_TEST_ASSERT },
+    { SPINEL_PROP_DEBUG_NCP_LOG_LEVEL, &NcpBase::GetPropertyHandler_DEBUG_NCP_LOG_LEVEL },
 
 #if OPENTHREAD_ENABLE_LEGACY
     { SPINEL_PROP_NEST_LEGACY_ULA_PREFIX, &NcpBase::GetPropertyHandler_NEST_LEGACY_ULA_PREFIX },
@@ -295,6 +296,7 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING, &NcpBase::SetPropertyHandler_NET_REQUIRE_JOIN_EXISTING },
     { SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER, &NcpBase::SetPropertyHandler_THREAD_ROUTER_SELECTION_JITTER },
     { SPINEL_PROP_THREAD_PREFERRED_ROUTER_ID, &NcpBase::SetPropertyHandler_THREAD_PREFERRED_ROUTER_ID },
+    { SPINEL_PROP_DEBUG_NCP_LOG_LEVEL, &NcpBase::SetPropertyHandler_DEBUG_NCP_LOG_LEVEL },
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     { SPINEL_PROP_JAM_DETECT_ENABLE, &NcpBase::SetPropertyHandler_JAM_DETECT_ENABLE },
@@ -3141,7 +3143,7 @@ ThreadError NcpBase::GetPropertyHandler_DEBUG_TEST_ASSERT(uint8_t header, spinel
     // We only get to this point if `assert(false)`
     // does not cause an NCP reset on the platform.
     // In such a case we return `false` as the
-    // property value to inidicate this.
+    // property value to indicate this.
 
     return SendPropertyUpdate(
                header,
@@ -3150,6 +3152,42 @@ ThreadError NcpBase::GetPropertyHandler_DEBUG_TEST_ASSERT(uint8_t header, spinel
                SPINEL_DATATYPE_BOOL_S,
                false
             );
+}
+
+ThreadError NcpBase::GetPropertyHandler_DEBUG_NCP_LOG_LEVEL(uint8_t header, spinel_prop_key_t key)
+{
+    uint8_t logLevel = 0;
+
+    switch (otGetDynamicLogLevel(mInstance))
+    {
+    case kLogLevelNone:
+        logLevel = SPINEL_NCP_LOG_LEVEL_EMERG;
+        break;
+
+    case kLogLevelCrit:
+        logLevel = SPINEL_NCP_LOG_LEVEL_CRIT;
+        break;
+
+    case kLogLevelWarn:
+        logLevel = SPINEL_NCP_LOG_LEVEL_WARN;
+        break;
+
+    case kLogLevelInfo:
+        logLevel = SPINEL_NCP_LOG_LEVEL_INFO;
+        break;
+
+    case kLogLevelDebg:
+        logLevel = SPINEL_NCP_LOG_LEVEL_DEBUG;
+        break;
+    }
+
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_UINT8_S,
+               logLevel
+           );
 }
 
 ThreadError NcpBase::GetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop_key_t key)
@@ -5230,6 +5268,82 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_PREFERRED_ROUTER_ID(uint8_t heade
         else
         {
             errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+        }
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
+ThreadError NcpBase::SetPropertyHandler_DEBUG_NCP_LOG_LEVEL(uint8_t header, spinel_prop_key_t key,
+                                                            const uint8_t *value_ptr, uint16_t value_len)
+{
+    uint8_t spinelNcpLogLevel = 0;
+    otLogLevel logLevel;
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_UINT8_S,
+                       &spinelNcpLogLevel
+                   );
+
+    if (parsedLength > 0)
+    {
+        switch (spinelNcpLogLevel)
+        {
+        case SPINEL_NCP_LOG_LEVEL_EMERG:
+        case SPINEL_NCP_LOG_LEVEL_ALERT:
+            logLevel = kLogLevelNone;
+            break;
+
+        case SPINEL_NCP_LOG_LEVEL_CRIT:
+            logLevel = kLogLevelCrit;
+            break;
+
+        case SPINEL_NCP_LOG_LEVEL_ERR:
+        case SPINEL_NCP_LOG_LEVEL_WARN:
+            logLevel = kLogLevelWarn;
+            break;
+
+        case SPINEL_NCP_LOG_LEVEL_NOTICE:
+        case SPINEL_NCP_LOG_LEVEL_INFO:
+            logLevel = kLogLevelInfo;
+            break;
+
+        case SPINEL_NCP_LOG_LEVEL_DEBUG:
+            logLevel = kLogLevelDebg;
+            break;
+
+        default:
+            errorCode = kThreadError_InvalidArgs;
+            break;
+        }
+
+        if (errorCode == kThreadError_None)
+        {
+            errorCode = otSetDynamicLogLevel(mInstance, logLevel);
+        }
+
+        if (errorCode == kThreadError_None)
+        {
+            errorCode = HandleCommandPropertyGet(header, key);
+        }
+        else
+        {
+            if (errorCode == kThreadError_NotCapable)
+            {
+                errorCode = SendLastStatus(header, SPINEL_STATUS_INVALID_COMMAND_FOR_PROP);
+            }
+            else
+            {
+                errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+            }
         }
     }
     else
