@@ -636,6 +636,8 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Header *aHeader, Message *
     mTransmitAttempts = 0;
     mTimer.Start(Timer::SecToMsec(kKeepAliveTimeout) / 2);
 
+    SendCommissionerSet();
+
 exit:
 
     if (retransmit)
