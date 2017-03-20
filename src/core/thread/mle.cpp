@@ -477,6 +477,11 @@ ThreadError Mle::BecomeChild(otMleAttachFilter aFilter)
     if (aFilter != kMleAttachBetterPartition)
     {
         memset(&mParent, 0, sizeof(mParent));
+
+        if (mDeviceMode & ModeTlv::kModeFFD)
+        {
+            mNetif.GetMle().StopAdvertiseTimer();
+        }
     }
 
     if (aFilter == kMleAttachAnyPartition)

@@ -504,6 +504,11 @@ bool MleRouter::HandleAdvertiseTimer(void)
     return true;
 }
 
+void MleRouter::StopAdvertiseTimer(void)
+{
+    mAdvertiseTimer.Stop();
+}
+
 void MleRouter::ResetAdvertiseInterval(void)
 {
     VerifyOrExit(mDeviceState == kDeviceStateRouter || mDeviceState == kDeviceStateLeader,);
