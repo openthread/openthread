@@ -257,6 +257,11 @@ bool Mac::IsEnergyScanInProgress(void)
     return (mState == kStateEnergyScan) || (mPendingScanRequest == kScanTypeEnergy);
 }
 
+bool Mac::IsInTransmitState(void)
+{
+    return (mState == kStateTransmitData) || (mState == kStateTransmitBeacon);
+}
+
 void Mac::StartEnergyScan(void)
 {
     mState = kStateEnergyScan;

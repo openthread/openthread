@@ -355,6 +355,10 @@ bool otLinkIsEnergyScanInProgress(otInstance *aInstance)
     return aInstance->mThreadNetif.GetMac().IsEnergyScanInProgress();
 }
 
+bool otLinkIsInTransmitState(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetMac().IsInTransmitState();
+}
 
 
 #ifdef __cplusplus

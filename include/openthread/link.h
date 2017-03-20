@@ -137,6 +137,20 @@ OTAPI bool OTCALL otLinkIsEnergyScanInProgress(otInstance *aInstance);
 OTAPI ThreadError OTCALL otLinkSendDataRequest(otInstance *aInstance);
 
 /**
+ * This function indicates whether or not an IEEE 802.15.4 MAC is in the transmit state.
+ *
+ * MAC module is in the transmit state during CSMA/CA procedure, CCA, Data, Beacon or Data Request frame transmission
+ * and receiving an ACK of a transmitted frame. MAC module is not in the transmit state during transmission of an ACK
+ * frame or a Beacon Request frame.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
+ * @returns true if an IEEE 802.15.4 MAC is in the transmit state, false otherwise.
+ *
+ */
+OTAPI bool OTCALL otLinkIsInTransmitState(otInstance *aInstance);
+
+/**
  * Get the IEEE 802.15.4 channel.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
