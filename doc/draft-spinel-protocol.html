@@ -449,6 +449,9 @@
 <link href="#rfc.section.5.5.9" rel="Chapter" title="5.5.9 PROP 56: PROP_MAC_PROMISCUOUS_MODE"/>
 <link href="#rfc.section.5.5.10" rel="Chapter" title="5.5.10 PROP 4864: PROP_MAC_WHITELIST"/>
 <link href="#rfc.section.5.5.11" rel="Chapter" title="5.5.11 PROP 4865: PROP_MAC_WHITELIST_ENABLED"/>
+<link href="#rfc.section.5.5.12" rel="Chapter" title="5.5.12 PROP 4867: SPINEL_PROP_MAC_SRC_MATCH_ENABLED"/>
+<link href="#rfc.section.5.5.13" rel="Chapter" title="5.5.13 PROP 4868: SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES"/>
+<link href="#rfc.section.5.5.14" rel="Chapter" title="5.5.14 PROP 4869: SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES"/>
 <link href="#rfc.section.5.6" rel="Chapter" title="5.6 NET Properties"/>
 <link href="#rfc.section.5.6.1" rel="Chapter" title="5.6.1 PROP 64: PROP_NET_SAVED"/>
 <link href="#rfc.section.5.6.2" rel="Chapter" title="5.6.2 PROP 65: PROP_NET_IF_UP"/>
@@ -580,8 +583,8 @@
   <link rel="schema.dct" href="http://purl.org/dc/terms/" />
 
   <meta name="dct.creator" content="Quattlebaum, R." />
-  <meta name="dct.identifier" content="urn:ietf:id:draft-spinel-protocol-860a3959" />
-  <meta name="dct.issued" scheme="ISO8601" content="2017-2-28" />
+  <meta name="dct.identifier" content="urn:ietf:id:draft-spinel-protocol-6d981f72" />
+  <meta name="dct.issued" scheme="ISO8601" content="2017-3-20" />
   <meta name="dct.abstract" content="This document describes a general management protocol for enabling a host device to communicate with and manage a Network Control Processor (NCP).  " />
   <meta name="description" content="This document describes a general management protocol for enabling a host device to communicate with and manage a Network Control Processor (NCP).  " />
 
@@ -602,7 +605,7 @@
 </tr>
 <tr>
   <td class="left"></td>
-  <td class="right">February 28, 2017</td>
+  <td class="right">March 20, 2017</td>
 </tr>
 
     	
@@ -610,7 +613,7 @@
   </table>
 
   <p class="title">Spinel Host-Controller Protocol<br />
-  <span class="filename">draft-spinel-protocol-860a3959</span></p>
+  <span class="filename">draft-spinel-protocol-6d981f72</span></p>
   
   <h1 id="rfc.abstract">
   <a href="#rfc.abstract">Abstract</a>
@@ -720,6 +723,9 @@
 <li>5.5.9.   <a href="#rfc.section.5.5.9">PROP 56: PROP_MAC_PROMISCUOUS_MODE</a></li>
 <li>5.5.10.   <a href="#rfc.section.5.5.10">PROP 4864: PROP_MAC_WHITELIST</a></li>
 <li>5.5.11.   <a href="#rfc.section.5.5.11">PROP 4865: PROP_MAC_WHITELIST_ENABLED</a></li>
+<li>5.5.12.   <a href="#rfc.section.5.5.12">PROP 4867: SPINEL_PROP_MAC_SRC_MATCH_ENABLED</a></li>
+<li>5.5.13.   <a href="#rfc.section.5.5.13">PROP 4868: SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES</a></li>
+<li>5.5.14.   <a href="#rfc.section.5.5.14">PROP 4869: SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES</a></li>
 </ul><li>5.6.   <a href="#rfc.section.5.6">NET Properties</a></li>
 <ul><li>5.6.1.   <a href="#rfc.section.5.6.1">PROP 64: PROP_NET_SAVED</a></li>
 <li>5.6.2.   <a href="#rfc.section.5.6.2">PROP 65: PROP_NET_IF_UP</a></li>
@@ -1072,7 +1078,8 @@
 <p id="rfc.section.2.1.5.p.1">Depending on the semantics of the command in question, a payload MAY be included in the frame. The exact composition and length of the payload is defined by the command identifier.  </p>
 <h1 id="rfc.section.3"><a href="#rfc.section.3">3.</a> <a href="#data-packing" id="data-packing">Data Packing</a></h1>
 <p id="rfc.section.3.p.1">Data serialization for properties is performed using a light-weight data packing format which was loosely inspired by D-Bus. The format of a serialization is defined by a specially formatted string.  </p>
-<p id="rfc.section.3.p.2">Goals: </p>
+<p id="rfc.section.3.p.2">This packing format is used for notational convenience. While this string-based datatype format has been designed so that the strings may be directly used by a structured data parser, such a thing is not required to implement Spinel. Indeed, higly constrained applications may find such a thing to be too heavyweight.  </p>
+<p id="rfc.section.3.p.3">Goals: </p>
 <p/>
 
 <ul>
@@ -1083,17 +1090,17 @@
 </ul>
 
 <p> </p>
-<p id="rfc.section.3.p.4">Each primitive datatype has an ASCII character associated with it.  Structures can be represented as strings of these characters. For example: </p>
+<p id="rfc.section.3.p.5">Each primitive datatype has an ASCII character associated with it.  Structures can be represented as strings of these characters. For example: </p>
 <p/>
 
 <ul>
   <li><samp>C</samp>: A single unsigned byte.</li>
   <li><samp>C6U</samp>: A single unsigned byte, followed by a 128-bit IPv6 address, followed by a zero-terminated UTF8 string.</li>
-  <li><samp>A(6)</samp>: An array of IPv6 addresses</li>
+  <li><samp>A(6)</samp>: An array of concatenated IPv6 addresses</li>
 </ul>
 
 <p> </p>
-<p id="rfc.section.3.p.6">In each case, the data is represented exactly as described. For example, an array of 10 IPv6 address is stored as 160 bytes.  </p>
+<p id="rfc.section.3.p.7">In each case, the data is represented exactly as described. For example, an array of 10 IPv6 address is stored as 160 bytes.  </p>
 <h1 id="rfc.section.3.1"><a href="#rfc.section.3.1">3.1.</a> <a href="#primitive-types" id="primitive-types">Primitive Types</a></h1>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
@@ -1193,7 +1200,14 @@
         <samp>D</samp>
       </td>
       <td class="left">DATATYPE_DATA</td>
-      <td class="left">Arbitrary Data. See <a href="#data-blobs">Section 3.3</a>.</td>
+      <td class="left">Arbitrary data. See <a href="#data-blobs">Section 3.3</a>.</td>
+    </tr>
+    <tr>
+      <td class="center">
+        <samp>d</samp>
+      </td>
+      <td class="left">DATATYPE_DATA_WLEN</td>
+      <td class="left">Arbitrary data with prepended length. See <a href="#data-blobs">Section 3.3</a>.</td>
     </tr>
     <tr>
       <td class="center">
@@ -1204,14 +1218,14 @@
     </tr>
     <tr>
       <td class="center">
-        <samp>T</samp>
+        <samp>t(...)</samp>
       </td>
       <td class="left">DATATYPE_STRUCT</td>
-      <td class="left">Structured datatype. Compound type. See <a href="#structured-data">Section 3.4</a>.</td>
+      <td class="left">Structured datatype with prepended length. See <a href="#structured-data">Section 3.4</a>.</td>
     </tr>
     <tr>
       <td class="center">
-        <samp>A</samp>
+        <samp>A(...)</samp>
       </td>
       <td class="left">DATATYPE_ARRAY</td>
       <td class="left">Array of datatypes. Compound type. See <a href="#arrays">Section 3.5</a>.</td>
@@ -1220,7 +1234,7 @@
 </table>
 <p id="rfc.section.3.1.p.1">All multi-byte values are little-endian unless explicitly stated otherwise.  </p>
 <h1 id="rfc.section.3.2"><a href="#rfc.section.3.2">3.2.</a> <a href="#packed-unsigned-integer" id="packed-unsigned-integer">Packed Unsigned Integer</a></h1>
-<p id="rfc.section.3.2.p.1">For certain types of integers, such command or property identifiers, usually have a value on the wire that is less than 127. However, in order to not preclude the use of values larger than 255, we would need to add an extra byte. Doing this would add an extra byte to the vast majority of instances, which can add up in terms of bandwidth.  </p>
+<p id="rfc.section.3.2.p.1">For certain types of integers, such command or property identifiers, usually have a value on the wire that is less than 127. However, in order to not preclude the use of values larger than 255, we would need to add an extra byte. Doing this would add an extra byte to the majority of instances, which can add up in terms of bandwidth.  </p>
 <p id="rfc.section.3.2.p.2">The packed unsigned integer format is based on the <a href="https://www.w3.org/TR/exi/#encodingUnsignedInteger">unsigned integer format in EXI</a>, except that we limit the maximum value to the largest value that can be encoded into three bytes(2,097,151).  </p>
 <p id="rfc.section.3.2.p.3">For all values less than 127, the packed form of the number is simply a single byte which directly represents the number. For values larger than 127, the following process is used to encode the value: </p>
 <p/>
@@ -1241,28 +1255,27 @@
 </pre>
 <p id="rfc.section.3.2.p.7">To decode the value, you collect the 7-bit chunks until you find an octet with the most significant bit clear.  </p>
 <h1 id="rfc.section.3.3"><a href="#rfc.section.3.3">3.3.</a> <a href="#data-blobs" id="data-blobs">Data Blobs</a></h1>
-<p id="rfc.section.3.3.p.1">Data blobs are special datatypes in that the data that they contain does not inherently define the size of the data. This means that if the length of the data blob isn't <em>implied</em>, then the length of the blob must be prepended as a packed unsigned integer.  </p>
-<p id="rfc.section.3.3.p.2">The length of a data blob is <em>implied</em> only when it is the last datatype in a given buffer. This works because we already know the size of the buffer, and the length of the data is simply the rest of the size of the buffer.  </p>
-<p id="rfc.section.3.3.p.3">For example, let's say we have a buffer that is encoded with the datatype signature of <samp>CLLD</samp>. In this case, it is pretty easy to tell where the start and end of the data blob is: the start is 9 bytes from the start of the buffer, and its length is the length of the buffer minus 9. (9 is the number of bytes taken up by a byte and two longs) </p>
-<p id="rfc.section.3.3.p.4">However, things are a little different with <samp>CLDL</samp>. Since our data blob is no longer the last item in the signature, the length must be prepended.  </p>
-<p id="rfc.section.3.3.p.5">If you are a little confused, keep reading. This theme comes up in a a few different ways in the following sections.  </p>
-<p id="rfc.section.3.3.p.6">When a length is prepended, the length is encoded as a little-endian unsigned 16-bit integer.  </p>
+<p id="rfc.section.3.3.p.1">There are two types for data blobs: <samp>d</samp> and <samp>D</samp>.  </p>
 <p/>
 
-<ul class="empty">
-  <li>Originally the length was a <a href="#packed-unsigned-integer">Section 3.2</a>, but it was changed to an unsigned 16-bit integer in order to help reduce protocol requirements.  </li>
+<ul>
+  <li><samp>d</samp> has the length of the data (in bytes) prepended to the data (with the length encoded as type <samp>S</samp>). The size of the length field is not included in the length.</li>
+  <li><samp>D</samp> does not have a prepended length: the length of the data is implied by the bytes remaining to be parsed. It is an error for <samp>D</samp> to not be the last type in a type in a type signature.</li>
 </ul>
+
+<p> </p>
+<p id="rfc.section.3.3.p.3">This dichotomy allows for more efficient encoding by eliminating redundency. If the rest of the buffer is a data blob, encoding the length would be redundant because we already know how many bytes are in the rest of the buffer.  </p>
+<p id="rfc.section.3.3.p.4">In some cases we use <samp>d</samp> even if it is the last field in a type signature.  We do this to allow for us to be able to append additional fields to the type signature if necessary in the future. This is usually the case with embedded structs, like in the scan results.  </p>
+<p id="rfc.section.3.3.p.5">For example, let's say we have a buffer that is encoded with the datatype signature of <samp>CLLD</samp>. In this case, it is pretty easy to tell where the start and end of the data blob is: the start is 9 bytes from the start of the buffer, and its length is the length of the buffer minus 9. (9 is the number of bytes taken up by a byte and two longs) </p>
+<p id="rfc.section.3.3.p.6">The datatype signature <samp>CLLDU</samp> is illegal because we can't determine where the last field (a zero-terminated UTF8 string) starts. But the datatype <samp>CLLdU</samp> <em>is</em> legal, because the parser can determine the exact length of the data blob&#8212;allowing it to know where the start of the next field would be.  </p>
 <h1 id="rfc.section.3.4"><a href="#rfc.section.3.4">3.4.</a> <a href="#structured-data" id="structured-data">Structured Data</a></h1>
-<p id="rfc.section.3.4.p.1">The structured data type is a way of bundling together a bunch of data into a single data structure. This may at first seem useless. What is the difference between <samp>T(Cii)</samp> and just <samp>Cii</samp>? The answer is, in that particular case, nothing: they are stored in exactly the same way.  </p>
-<p id="rfc.section.3.4.p.2">However, one case where the structure datatype makes a difference is when you compare <samp>T(Cii)L</samp> to <samp>CiiL</samp>: they end up being represented entirely differently. This is because the structured data type follows the exact same semantics as the data blob type: if it isn't the last datatype in a signature, <em>it must be prepended with a length</em>. This is useful because it allows for new datatypes to be appended to the structure's signature while remaining <em>backward parsing compatibility</em>.  </p>
-<p id="rfc.section.3.4.p.3">More explicitly, if you take data that was encoded with <samp>T(Cii6)L</samp>, you can still decode it as <samp>T(Cii)L</samp>.  </p>
-<p id="rfc.section.3.4.p.4">Let's take, for example, the property <samp>PROP_IPv6_ADDR_TABLE</samp>.  Conceptually it is just a list of IPv6 addresses, so we can encode it as <samp>A(6c)</samp>. However, if we ever want to associate more data with the type (like flags), we break our backward compatibility if we add another member and use <samp>A(6cC)</samp>. To allow for data to be added without breaking backward compatibility, we use the structured data type from the start: <samp>A(T(6c))</samp>. Then when we add a new member to the structure (<samp>A(T(6cC))</samp>), we don't break backward compatibility.  </p>
-<p id="rfc.section.3.4.p.5">It's also worth noting that <samp>T(Cii)L</samp> also parses as <samp>DL</samp>. You could then take the resultant data blob and parse it as <samp>Cii</samp>.  </p>
-<p id="rfc.section.3.4.p.6">When a length is prepended, the length is encoded as a little-endian unsigned 16-bit integer.  </p>
+<p id="rfc.section.3.4.p.1">The structure data type (<samp>t(...)</samp>) is a way of bundling together several fields into a single structure. It can be thought of as a <samp>d</samp> type except that instead of being opaque, the fields in the content are known. This is useful for things like scan results where you have substructures which are defined by different layers.  </p>
+<p id="rfc.section.3.4.p.2">For example, consider the type signature <samp>Lt(ES)t(6C)</samp>. In this hypothetical case, the first struct is defined by the MAC layer, and the second struct is defined by the PHY layer. Because of the use of structures, we know exactly what part comes from that layer.  Additionally, we can add fields to each structure without introducing backward compatability problems: Data encoded as <samp>Lt(ESU)t(6C)</samp> (Notice the extra <samp>U</samp>) will decode just fine as <samp>Lt(ES)t(6C)</samp>. Additionally, if we don't care about the MAC layer and only care about the network layer, we could parse as <samp>Lt()t(6C)</samp>.  </p>
+<p id="rfc.section.3.4.p.3">Note that data encoded as <samp>Lt(ES)t(6C)</samp> will also parse as <samp>Ldd</samp>, with the structures from both layers now being opaque data blobs.  </p>
 <h1 id="rfc.section.3.5"><a href="#rfc.section.3.5">3.5.</a> <a href="#arrays" id="arrays">Arrays</a></h1>
-<p id="rfc.section.3.5.p.1">An array is simply a concatenated set of <em>n</em> data encodings. For example, the type <samp>A(6)</samp> is simply a list of IPv6 addresses---one after the other.  </p>
-<p id="rfc.section.3.5.p.2">Just like the data blob type and the structured data type, the length of the entire array must be prepended <em>unless</em> the array is the last type in a given signature. Thus, <samp>A(C)</samp> (An array of unsigned bytes) encodes identically to <samp>D</samp>.  </p>
-<p id="rfc.section.3.5.p.3">When a length is prepended, the length is encoded as a little-endian unsigned 16-bit integer.  </p>
+<p id="rfc.section.3.5.p.1">An array is simply a concatenated set of <em>n</em> data encodings. For example, the type <samp>A(6)</samp> is simply a list of IPv6 addresses---one after the other.  The type <samp>A(6E)</samp> likewise a concatenation of IPv6-address/EUI-64 pairs.  </p>
+<p id="rfc.section.3.5.p.2">If an array contains many fields, the fields will often be surrounded by a structure (<samp>t(...)</samp>). This effectively prepends each item in the array with its length. This is useful for improving parsing performance or to allow additional fields to be added in the future in a backward compatible way. If there is a high certainty that additional fields will never be added, the struct may be omitted (saving two bytes per item).  </p>
+<p id="rfc.section.3.5.p.3">This specification does not define a way to embed an array as a field alongside other fields.  </p>
 <h1 id="rfc.section.4"><a href="#rfc.section.4">4.</a> <a href="#commands" id="commands">Commands</a></h1>
 <h1 id="rfc.section.4.1"><a href="#rfc.section.4.1">4.1.</a> <a href="#cmd-noop" id="cmd-noop">CMD 0: (Host-&gt;NCP) CMD_NOOP</a></h1>
 <table cellpadding="3" cellspacing="0" class="tt full center">
@@ -1373,7 +1386,8 @@
 </table>
 <p id="rfc.section.4.5.p.1">Insert value into property command. Instructs the NCP to insert the given value into a list-oriented property, without removing other items in the list. The resulting order of items in the list is defined by the individual property being operated on.  </p>
 <p id="rfc.section.4.5.p.2">The payload for this command is the property identifier encoded in the packed unsigned integer format described in <a href="#packed-unsigned-integer">Section 3.2</a>, followed by the value to be inserted. The exact format of the value is defined by the property.  </p>
-<p id="rfc.section.4.5.p.3">If an error occurs, the value of <samp>PROP_LAST_STATUS</samp> will be emitted with the value set to the generated status code for the error.  </p>
+<p id="rfc.section.4.5.p.3">If the type signature of the property specified by <samp>PROP_ID</samp> consists of a single structure enclosed by an array (<samp>A(t(...))</samp>), then the contents of <samp>VALUE</samp> MUST contain the contents of the structure (<samp>...</samp>) rather than the serialization of the whole item (<samp>t(...)</samp>).  Specifically, the length of the structure MUST NOT be prepended to <samp>VALUE</samp>. This helps to eliminate redundant data.  </p>
+<p id="rfc.section.4.5.p.4">If an error occurs, the value of <samp>PROP_LAST_STATUS</samp> will be emitted with the value set to the generated status code for the error.  </p>
 <h1 id="rfc.section.4.6"><a href="#rfc.section.4.6">4.6.</a> <a href="#prop-value-remove" id="prop-value-remove">CMD 5: (Host-&gt;NCP) CMD_PROP_VALUE_REMOVE</a></h1>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
@@ -1398,7 +1412,8 @@
 <p id="rfc.section.4.6.p.1">Remove value from property command. Instructs the NCP to remove the given value from a list-oriented property, without affecting other items in the list. The resulting order of items in the list is defined by the individual property being operated on.  </p>
 <p id="rfc.section.4.6.p.2">Note that this command operates <em>by value</em>, not by index! </p>
 <p id="rfc.section.4.6.p.3">The payload for this command is the property identifier encoded in the packed unsigned integer format described in <a href="#packed-unsigned-integer">Section 3.2</a>, followed by the value to be removed. The exact format of the value is defined by the property.  </p>
-<p id="rfc.section.4.6.p.4">If an error occurs, the value of <samp>PROP_LAST_STATUS</samp> will be emitted with the value set to the generated status code for the error.  </p>
+<p id="rfc.section.4.6.p.4">If the type signature of the property specified by <samp>PROP_ID</samp> consists of a single structure enclosed by an array (<samp>A(t(...))</samp>), then the contents of <samp>VALUE</samp> MUST contain the contents of the structure (<samp>...</samp>) rather than the serialization of the whole item (<samp>t(...)</samp>).  Specifically, the length of the structure MUST NOT be prepended to <samp>VALUE</samp>. This helps to eliminate redundant data.  </p>
+<p id="rfc.section.4.6.p.5">If an error occurs, the value of <samp>PROP_LAST_STATUS</samp> will be emitted with the value set to the generated status code for the error.  </p>
 <h1 id="rfc.section.4.7"><a href="#rfc.section.4.7">4.7.</a> <a href="#prop-value-is" id="prop-value-is">CMD 6: (NCP-&gt;Host) CMD_PROP_VALUE_IS</a></h1>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
@@ -1445,7 +1460,8 @@
 </table>
 <p id="rfc.section.4.8.p.1">Property value insertion notification command. This command can be sent by the NCP in response to the <samp>CMD_PROP_VALUE_INSERT</samp> command, or it can be sent by the NCP in an unsolicited fashion to notify the host of various state changes asynchronously.  </p>
 <p id="rfc.section.4.8.p.2">The payload for this command is the property identifier encoded in the packed unsigned integer format described in <a href="#packed-unsigned-integer">Section 3.2</a>, followed by the value that was inserted into the given property.  </p>
-<p id="rfc.section.4.8.p.3">The resulting order of items in the list is defined by the given property.  </p>
+<p id="rfc.section.4.8.p.3">If the type signature of the property specified by <samp>PROP_ID</samp> consists of a single structure enclosed by an array (<samp>A(t(...))</samp>), then the contents of <samp>VALUE</samp> MUST contain the contents of the structure (<samp>...</samp>) rather than the serialization of the whole item (<samp>t(...)</samp>).  Specifically, the length of the structure MUST NOT be prepended to <samp>VALUE</samp>. This helps to eliminate redundant data.  </p>
+<p id="rfc.section.4.8.p.4">The resulting order of items in the list is defined by the given property.  </p>
 <h1 id="rfc.section.4.9"><a href="#rfc.section.4.9">4.9.</a> <a href="#prop-value-removed" id="prop-value-removed">CMD 8: (NCP-&gt;Host) CMD_PROP_VALUE_REMOVED</a></h1>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
@@ -1470,7 +1486,8 @@
 <p id="rfc.section.4.9.p.1">Property value removal notification command. This command can be sent by the NCP in response to the <samp>CMD_PROP_VALUE_REMOVE</samp> command, or it can be sent by the NCP in an unsolicited fashion to notify the host of various state changes asynchronously.  </p>
 <p id="rfc.section.4.9.p.2">Note that this command operates <em>by value</em>, not by index! </p>
 <p id="rfc.section.4.9.p.3">The payload for this command is the property identifier encoded in the packed unsigned integer format described in <a href="#packed-unsigned-integer">Section 3.2</a>, followed by the value that was removed from the given property.  </p>
-<p id="rfc.section.4.9.p.4">The resulting order of items in the list is defined by the given property.  </p>
+<p id="rfc.section.4.9.p.4">If the type signature of the property specified by <samp>PROP_ID</samp> consists of a single structure enclosed by an array (<samp>A(t(...))</samp>), then the contents of <samp>VALUE</samp> MUST contain the contents of the structure (<samp>...</samp>) rather than the serialization of the whole item (<samp>t(...)</samp>).  Specifically, the length of the structure MUST NOT be prepended to <samp>VALUE</samp>. This helps to eliminate redundant data.  </p>
+<p id="rfc.section.4.9.p.5">The resulting order of items in the list is defined by the given property.  </p>
 <h1 id="rfc.section.4.10"><a href="#rfc.section.4.10">4.10.</a> <a href="#cmd-peek" id="cmd-peek">CMD 18: (Host-&gt;NCP) CMD_PEEK</a></h1>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
@@ -1565,7 +1582,7 @@
 <p/>
 
 <ul>
-  <li>Argument-Encoding: <samp>A(T(iD))</samp></li>
+  <li>Argument-Encoding: <samp>A(iD)</samp></li>
   <li>Required Capability: <samp>CAP_CMD_MULTI</samp></li>
 </ul>
 
@@ -1615,7 +1632,7 @@
 <p/>
 
 <ul>
-  <li>Argument-Encoding: <samp>A(T(iD))</samp></li>
+  <li>Argument-Encoding: <samp>A(iD)</samp></li>
   <li>Required Capability: <samp>CAP_CMD_MULTI</samp></li>
 </ul>
 
@@ -2145,7 +2162,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 
 <ul>
   <li>Type: Read-Only-Stream</li>
-  <li>Packed-Encoding: <samp>U</samp></li>
+  <li>Packed-Encoding: <samp>D</samp></li>
 </ul>
 
 <p> </p>
@@ -2171,7 +2188,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 
 <ul>
   <li>Type: Read-Write-Stream</li>
-  <li>Packed-Encoding: <samp>DD</samp></li>
+  <li>Packed-Encoding: <samp>dD</samp></li>
 </ul>
 
 <p> </p>
@@ -2236,14 +2253,14 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
     <tr>
       <td class="left">MD_PHY</td>
       <td class="left">PHY-specific data</td>
-      <td class="left"><samp>D</samp> data</td>
+      <td class="left"><samp>d</samp> data</td>
       <td class="center">&gt;=2</td>
       <td class="center"/>
     </tr>
     <tr>
       <td class="left">MD_VEND</td>
       <td class="left">Vendor-specific data</td>
-      <td class="left"><samp>D</samp> data</td>
+      <td class="left"><samp>d</samp> data</td>
       <td class="center">&gt;=2</td>
       <td class="center"/>
     </tr>
@@ -2302,7 +2319,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 
 <ul>
   <li>Type: Read-Write-Stream</li>
-  <li>Packed-Encoding: <samp>DD</samp></li>
+  <li>Packed-Encoding: <samp>dD</samp></li>
 </ul>
 
 <p> </p>
@@ -2333,7 +2350,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 
 <ul>
   <li>Type: Read-Write-Stream</li>
-  <li>Packed-Encoding: <samp>DD</samp></li>
+  <li>Packed-Encoding: <samp>dD</samp></li>
 </ul>
 
 <p> </p>
@@ -2369,7 +2386,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.5.4.1.p.2">Set to 1 if the PHY is enabled, set to 0 otherwise.  May be directly enabled to bypass higher-level packet processing in order to implement things like packet sniffers.  </p>
+<p id="rfc.section.5.4.1.p.2">Set to 1 if the PHY is enabled, set to 0 otherwise.  May be directly enabled to bypass higher-level packet processing in order to implement things like packet sniffers. This property can only be written if the <samp>SPINEL_CAP_MAC_RAW</samp> capability is present.  </p>
 <h1 id="rfc.section.5.4.2"><a href="#rfc.section.5.4.2">5.4.2.</a> <a href="#prop-phy-chan" id="prop-phy-chan">PROP 33: PROP_PHY_CHAN</a></h1>
 <p/>
 
@@ -2486,7 +2503,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 
 <ul>
   <li>Type: Read-Only-Stream</li>
-  <li>Packed-Encoding: <samp>CcDD.</samp> (or <samp>CcT(ESSc.)T(iCUD.).</samp>)</li>
+  <li>Packed-Encoding: <samp>Ccdd</samp> (or <samp>Cct(ESSc)t(iCUd)</samp>)</li>
 </ul>
 
 <p> </p>
@@ -2520,8 +2537,8 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 <ul>
   <li><samp>C</samp>: Channel</li>
   <li><samp>c</samp>: RSSI of the beacon</li>
-  <li><samp>T</samp>: MAC layer properties <ul><li><samp>E</samp>: Long address</li><li><samp>S</samp>: Short address</li><li><samp>S</samp>: PAN-ID</li><li><samp>c</samp>: LQI</li></ul></li>
-  <li><samp>T</samp>: NET layer properties <ul><li><samp>i</samp>: Protocol Number</li><li><samp>C</samp>: Flags</li><li><samp>U</samp>: Network Name</li><li><samp>D</samp>: XPANID</li></ul></li>
+  <li><samp>t</samp>: MAC layer properties (802.15.4 layer shown below for convenience) <ul><li><samp>E</samp>: Long address</li><li><samp>S</samp>: Short address</li><li><samp>S</samp>: PAN-ID</li><li><samp>c</samp>: LQI</li></ul></li>
+  <li>NET layer properties (Standard net layer shown below for convenience) <ul><li><samp>i</samp>: Protocol Number</li><li><samp>C</samp>: Flags</li><li><samp>U</samp>: Network Name</li><li><samp>d</samp>: XPANID</li></ul></li>
 </ul>
 
 <p> </p>
@@ -2637,6 +2654,52 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 <ul>
   <li>Type: Read-Write</li>
   <li>Packed-Encoding: <samp>b</samp></li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.section.5.5.12"><a href="#rfc.section.5.5.12">5.5.12.</a> <a href="#prop-mac-src-match-enabled" id="prop-mac-src-match-enabled">PROP 4867: SPINEL_PROP_MAC_SRC_MATCH_ENABLED</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Write</li>
+  <li>Packed-Encoding: <samp>b</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.5.5.12.p.2">Set to true to enable radio source matching or false to disable it. This property is only available if the <samp>SPINEL_CAP_MAC_RAW</samp> capability is present. The source match functionality is used by radios when generating ACKs. The short and extended address lists are used for settings the Frame Pending bit in the ACKs.  </p>
+<h1 id="rfc.section.5.5.13"><a href="#rfc.section.5.5.13">5.5.13.</a> <a href="#prop-mac-src-match-short-addresses" id="prop-mac-src-match-short-addresses">PROP 4868: SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Write</li>
+  <li>Packed-Encoding: <samp>A(S)</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.5.5.13.p.2">Configures the list of short addresses used for source matching. This property is only available if the <samp>SPINEL_CAP_MAC_RAW</samp> capability is present.  </p>
+<p id="rfc.section.5.5.13.p.3">Structure Parameters: </p>
+<p/>
+
+<ul>
+  <li><samp>S</samp>: Short address for hardware generated ACKs</li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.section.5.5.14"><a href="#rfc.section.5.5.14">5.5.14.</a> <a href="#prop-mac-src-match-extended-addresses" id="prop-mac-src-match-extended-addresses">PROP 4869: SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Write</li>
+  <li>Packed-Encoding: <samp>A(E)</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.5.5.14.p.2">Configures the list of extended addresses used for source matching. This property is only available if the <samp>SPINEL_CAP_MAC_RAW</samp> capability is present.  </p>
+<p id="rfc.section.5.5.14.p.3">Structure Parameters: </p>
+<p/>
+
+<ul>
+  <li><samp>E</samp>: EUI64 address for hardware generated ACKs</li>
 </ul>
 
 <p> </p>
@@ -2784,7 +2847,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 
 <ul>
   <li>Type: Read-Write</li>
-  <li>Packed-Encoding: <samp>A(T(6CLLC))</samp></li>
+  <li>Packed-Encoding: <samp>A(t(6CLLC))</samp></li>
 </ul>
 
 <p> </p>
@@ -2910,7 +2973,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 
 <ul>
   <li>Type: Read-Only</li>
-  <li>Packed-Encoding: <samp>A(T(ES))</samp></li>
+  <li>Packed-Encoding: <samp>A(t(ES))</samp></li>
 </ul>
 
 <p> </p>
@@ -2988,7 +3051,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 
 <ul>
   <li>Type: Read-Write</li>
-  <li>Packed-Encoding: <samp>A(T(6CbCb))</samp></li>
+  <li>Packed-Encoding: <samp>A(t(6CbCb))</samp></li>
 </ul>
 
 <p> </p>
@@ -3009,7 +3072,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 
 <ul>
   <li>Type: Read-Write</li>
-  <li>Packed-Encoding: <samp>A(T(6CbC))</samp></li>
+  <li>Packed-Encoding: <samp>A(t(6CbC))</samp></li>
 </ul>
 
 <p> </p>
@@ -3165,7 +3228,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 
 <ul>
   <li>Type: Read-Only</li>
-  <li>Packed-Encoding: <samp>A(T(ESLCcCbLL))</samp></li>
+  <li>Packed-Encoding: <samp>A(t(ESLCcCbLL))</samp></li>
 </ul>
 
 <p> </p>
@@ -3514,7 +3577,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 <p/>
 
 <ul>
-  <li>Argument-Encoding: <samp>A(CCU)</samp></li>
+  <li>Argument-Encoding: <samp>A(t(CCU))</samp></li>
   <li>Type: Read-write (Writable only using <samp>CMD_PROP_VALUE_INSERT</samp>, <a href="#prop-value-insert">Section 4.5</a>)</li>
 </ul>
 
@@ -3943,7 +4006,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
   <li>TID: 0</li>
   <li>CMD: 7 (<samp>CMD_VALUE_INSERTED</samp>)</li>
   <li>PROP: 51 (<samp>PROP_MAC_SCAN_BEACON</samp>)</li>
-  <li>VALUE: Structure, encoded as <samp>CcT(ESSc.)T(iCUD.).</samp> <ul><li>CHAN: 15</li><li>RSSI: -60dBm</li><li>MAC_DATA: (0D 00 B6 40 D4 8C E9 38 F9 52 FF FF D2 04 00) <ul><li>Long address: B6:40:D4:8C:E9:38:F9:52</li><li>Short address: 0xFFFF</li><li>PAN-ID: 0x04D2</li><li>LQI: 0</li></ul></li><li>NET_DATA: (13 00 03 20 73 70 69 6E 65 6C 00 08 00 DE AD 00 BE EF 00 CA FE) <ul><li>Protocol Number: 3</li><li>Flags: 0x20</li><li>Network Name: <samp>spinel</samp></li><li>XPANID: <samp>DE AD 00 BE EF 00 CA FE</samp></li></ul></li></ul></li>
+  <li>VALUE: Structure, encoded as <samp>Cct(ESSc)t(iCUd)</samp> <ul><li>CHAN: 15</li><li>RSSI: -60dBm</li><li>MAC_DATA: (0D 00 B6 40 D4 8C E9 38 F9 52 FF FF D2 04 00) <ul><li>Long address: B6:40:D4:8C:E9:38:F9:52</li><li>Short address: 0xFFFF</li><li>PAN-ID: 0x04D2</li><li>LQI: 0</li></ul></li><li>NET_DATA: (13 00 03 20 73 70 69 6E 65 6C 00 08 00 DE AD 00 BE EF 00 CA FE) <ul><li>Protocol Number: 3</li><li>Flags: 0x20</li><li>Network Name: <samp>spinel</samp></li><li>XPANID: <samp>DE AD 00 BE EF 00 CA FE</samp></li></ul></li></ul></li>
 </ul>
 
 <p> </p>
@@ -3986,7 +4049,7 @@ FE
   <li>TID: 4</li>
   <li>CMD: 6 (<samp>CMD_VALUE_IS</samp>)</li>
   <li>PROP: 90 (<samp>PROP_THREAD_ON_MESH_NETS</samp>)</li>
-  <li>VALUE: Array of structures, encoded as <samp>A(T(6CbC))</samp></li>
+  <li>VALUE: Array of structures, encoded as <samp>A(t(6CbC))</samp></li>
 </ul>
 
 <p> </p>
