@@ -8,6 +8,7 @@
 <a href="http://threadgroup.org/technology/ourtechnology#certifiedproducts">
 <img src="https://cdn.rawgit.com/openthread/openthread/master/doc/images/certified.svg" alt="Thread Certified Component" width="93px" align="right">
 </a>
+
 OpenThread is an open-source implementation of the [Thread][thread]
 networking protocol. Nest has released OpenThread to make the technology
 used in Nest products more broadly available to developers to accelerate
