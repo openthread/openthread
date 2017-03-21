@@ -31,10 +31,34 @@
 #
 # USAGE:
 #
+# # In one terminal, start the JLinkGDBServer
+#
 # JLinkGDBServer -if swd -device <device_name> &
+#
+# # Device name examples: CC2538SF53, CC2650F128, DA14680, NRF52
+# # Full list found here: https://www.segger.com/jlink_supported_devices.html
+#
+# # In a second terminal, start gdb with the image name, and run this script.
+#
 # arm-none-eabi-gdb build/cortex-m4-arm-none-eabi/examples/apps/cli/ot-cli-ftd
 # > source tools/gdb/jlink.gdb
 #
+#
+# INSTRUCTIONS FOR USING MULTIPLE PODS:
+#
+# # Discover USB device numbers
+#
+# JLinkExe
+# J-Link>ShowEmuList
+# J-Link[0]: Connection: USB, Serial number: 480065113, ProductName: J-Link-OB
+# J-Link[1]: Connection: USB, Serial number: 480065300, ProductName: J-Link-OB
+# J-Link>exit
+#
+# # Then pass extra flags to select USB and gdb port to JLinkGDBServer
+#
+# JLinkGDBServer -select USB=480065113 -if swd -port 2331
+# JLinkGDBServer -select USB=480065300 -if swd -port 2345
+# 
 
 target remote:2331
 load
