@@ -35,7 +35,7 @@
 #include <common/code_utils.hpp>
 #include <net/ip6.hpp>
 
-#include <cstring>
+#include <string.h>
 
 namespace Thread {
 namespace Coap {
@@ -58,6 +58,8 @@ ThreadError Server::Start(void)
 
 ThreadError Server::Stop(void)
 {
+    mResponsesQueue.DequeueAllResponses();
+
     return CoapBase::Stop();
 }
 
@@ -158,12 +160,19 @@ void Server::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &a
     SuccessOrExit(header.FromMessage(aMessage, 0));
     aMessage.MoveOffset(header.GetLength());
 
-    response = mResponsesQueue.GetMatchedResponseCopy(header, aMessageInfo);
-
-    if (response != NULL)
+    switch (mResponsesQueue.GetMatchedResponseCopy(header, aMessageInfo, &response))
     {
+    case kThreadError_None:
         SendMessage(*response, aMessageInfo);
+
+    // fall through
+
+    case kThreadError_NoBufs:
         ExitNow();
+
+    case kThreadError_NotFound:
+    default:
+        break;
     }
 
     coapOption = header.GetCurrentOption();
@@ -219,19 +228,15 @@ ThreadError Server::SetPort(uint16_t aPort)
     return mSocket.Bind(sockaddr);
 }
 
-Server::ResponsesQueue::ResponsesQueue(Ip6::Netif &aNetif):
-    mTimer(aNetif.GetIp6().mTimerScheduler, &ResponsesQueue::HandleTimer, this)
+ThreadError ResponsesQueue::GetMatchedResponseCopy(const Header &aHeader,
+                                                   const Ip6::MessageInfo &aMessageInfo,
+                                                   Message **aResponse)
 {
-    // Intentionally empty
-}
-
-Message *Server::ResponsesQueue::GetMatchedResponseCopy(const Header &aHeader, const Ip6::MessageInfo &aMessageInfo)
-{
-    Message *message;
-    Message *copy;
+    ThreadError            error = kThreadError_NotFound;
+    Message               *message;
     EnqueuedResponseHeader enqueuedResponseHeader;
-    Ip6::MessageInfo messageInfo;
-    Header header;
+    Ip6::MessageInfo       messageInfo;
+    Header                 header;
 
     for (message = mQueue.GetHead(); message != NULL; message = message->GetNext())
     {
@@ -260,67 +265,121 @@ Message *Server::ResponsesQueue::GetMatchedResponseCopy(const Header &aHeader, c
             continue;
         }
 
-        copy = message->Clone();
-        EnqueuedResponseHeader::RemoveFrom(*copy);
+        *aResponse = message->Clone();
+        VerifyOrExit(*aResponse != NULL, error = kThreadError_NoBufs);
 
-        return copy;
+        EnqueuedResponseHeader::RemoveFrom(**aResponse);
+
+        error = kThreadError_None;
+        break;
     }
 
-    return NULL;
+exit:
+    return error;
 }
 
-Message *Server::ResponsesQueue::GetMatchedResponseCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+ThreadError ResponsesQueue::GetMatchedResponseCopy(const Message &aRequest,
+                                                   const Ip6::MessageInfo &aMessageInfo,
+                                                   Message **aResponse)
 {
-    Header header;
+    ThreadError error = kThreadError_None;
+    Header      header;
 
-    SuccessOrExit(header.FromMessage(aMessage, 0));
+    SuccessOrExit(error = header.FromMessage(aRequest, 0));
 
-    return GetMatchedResponseCopy(header, aMessageInfo);
+    error = GetMatchedResponseCopy(header, aMessageInfo, aResponse);
 
 exit:
-    return NULL;
+    return error;
 }
 
-void Server::ResponsesQueue::EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void ResponsesQueue::EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    Message *copy;
+    Header                 header;
+    Message               *copy;
     EnqueuedResponseHeader enqueuedResponseHeader(aMessageInfo);
+    uint16_t               messageCount;
+    uint16_t               bufferCount;
 
-    VerifyOrExit((copy = GetMatchedResponseCopy(aMessage, aMessageInfo)) == NULL, copy->Free());
+    SuccessOrExit(header.FromMessage(aMessage, 0));
+    VerifyOrExit(header.GetType() == kCoapTypeAcknowledgment ||
+                 header.GetType() == kCoapTypeReset,);
+
+    switch (GetMatchedResponseCopy(aMessage, aMessageInfo, &copy))
+    {
+    case kThreadError_NotFound:
+        break;
+
+    case kThreadError_None:
+        copy->Free();
+
+    // fall through
+
+    case kThreadError_NoBufs:
+    default:
+        ExitNow();
+    }
+
+    mQueue.GetInfo(messageCount, bufferCount);
+
+    if (messageCount >= kMaxCachedResponses)
+    {
+        DequeueOldestResponse();
+    }
 
     copy = aMessage.Clone();
+    VerifyOrExit(copy != NULL,);
+
     enqueuedResponseHeader.AppendTo(*copy);
     mQueue.Enqueue(*copy);
 
     if (!mTimer.IsRunning())
     {
-        mTimer.Start(kExchangeLifetime);
+        mTimer.Start(Timer::SecToMsec(kExchangeLifetime));
     }
 
 exit:
     return;
 }
 
-void Server::ResponsesQueue::HandleTimer(void *aContext)
+void ResponsesQueue::DequeueOldestResponse(void)
+{
+    Message *message;
+
+    VerifyOrExit((message = mQueue.GetHead()) != NULL,);
+    DequeueResponse(*message);
+
+exit:
+    return;
+}
+
+void ResponsesQueue::DequeueAllResponses(void)
+{
+    Message *message;
+
+    while ((message = mQueue.GetHead()) != NULL)
+    {
+        DequeueResponse(*message);
+    }
+}
+
+void ResponsesQueue::HandleTimer(void *aContext)
 {
     static_cast<ResponsesQueue *>(aContext)->HandleTimer();
 }
 
-void Server::ResponsesQueue::HandleTimer(void)
+void ResponsesQueue::HandleTimer(void)
 {
-    Message *message;
+    Message               *message;
     EnqueuedResponseHeader enqueuedResponseHeader;
 
-    do
+    while ((message = mQueue.GetHead()) != NULL)
     {
-        VerifyOrExit((message = mQueue.GetHead()) != NULL,);
-
         enqueuedResponseHeader.ReadFrom(*message);
 
         if (enqueuedResponseHeader.IsEarlier(Timer::GetNow()))
         {
-            mQueue.Dequeue(*message);
-            message->Free();
+            DequeueResponse(*message);
         }
         else
         {
@@ -328,20 +387,9 @@ void Server::ResponsesQueue::HandleTimer(void)
             break;
         }
     }
-    while (message != NULL);
-
-exit:
-    return;
 }
 
-Server::ResponsesQueue::EnqueuedResponseHeader::EnqueuedResponseHeader(const Ip6::MessageInfo &aMessageInfo):
-    mDequeueTime(Timer::GetNow() + kExchangeLifetime),
-    mMessageInfo(aMessageInfo)
-{
-    // Intentionally empty
-}
-
-uint32_t Server::ResponsesQueue::EnqueuedResponseHeader::GetRemainingTime(void) const
+uint32_t EnqueuedResponseHeader::GetRemainingTime(void) const
 {
     int32_t remainingTime = static_cast<int32_t>(mDequeueTime - Timer::GetNow());
 

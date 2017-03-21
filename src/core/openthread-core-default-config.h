@@ -322,6 +322,18 @@
 #endif  // OPENTHREAD_CONFIG_COAP_MAX_RETRANSMIT
 
 /**
+ * @def OPENTHREAD_CONFIG_COAP_SERVER_MAX_CACHED_RESPONSES
+ *
+ * Maximum number of cached responses for CoAP Confirmable messages.
+ *
+ * Cached responses are used for message deduplication.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_COAP_SERVER_MAX_CACHED_RESPONSES
+#define OPENTHREAD_CONFIG_COAP_SERVER_MAX_CACHED_RESPONSES      10
+#endif  // OPENTHREAD_CONFIG_COAP_SERVER_MAX_CACHED_RESPONSES
+
+/**
  * @def OPENTHREAD_CONFIG_DNS_RESPONSE_TIMEOUT
  *
  * Maximum time that DNS Client waits for response in milliseconds.

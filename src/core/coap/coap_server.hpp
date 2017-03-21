@@ -40,6 +40,7 @@
 #include <coap/coap_header.hpp>
 #include <common/message.hpp>
 #include <common/timer.hpp>
+#include <net/ip6.hpp>
 #include <net/udp6.hpp>
 
 namespace Thread {
@@ -92,6 +93,193 @@ private:
     void HandleRequest(Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) {
         mHandler(mContext, &aHeader, &aMessage, &aMessageInfo);
     }
+};
+
+/**
+ * This class implements metadata required for caching CoAP responses.
+ *
+ */
+class EnqueuedResponseHeader
+{
+public:
+    /**
+     * Default constructor creating empty object.
+     *
+     */
+    EnqueuedResponseHeader(void): mDequeueTime(0), mMessageInfo() {}
+
+    /**
+     * Constructor creating object with valid dequeue time and message info.
+     *
+     * @param[in]  aMessageInfo  The message info containing source endpoint identification.
+     *
+     */
+    EnqueuedResponseHeader(const Ip6::MessageInfo &aMessageInfo):
+        mDequeueTime(Timer::GetNow() + Timer::SecToMsec(kExchangeLifetime)),
+        mMessageInfo(aMessageInfo) {}
+
+    /**
+     * This method append metadata to the message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @retval kThreadError_None    Successfully appended the bytes.
+     * @retval kThreadError_NoBufs  Insufficient available buffers to grow the message.
+     */
+    ThreadError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
+
+    /**
+     * This method reads request data from the message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @returns The number of bytes read.
+     *
+     */
+    uint16_t ReadFrom(const Message &aMessage) {
+        return aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+    }
+
+    /**
+     * This method removes metadata from the message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @retval kThreadError_None    Successfully removed the bytes.
+     * @retval kThreadError_NoBufs  Insufficient available buffers to place the message.
+     *
+     */
+    static ThreadError RemoveFrom(Message &aMessage) {
+        return aMessage.SetLength(aMessage.GetLength() - sizeof(EnqueuedResponseHeader));
+    }
+
+    /**
+     * This method checks if the message shall be sent before the given time.
+     *
+     * @param[in]  aTime  A time to compare.
+     *
+     * @retval TRUE   If the message shall be sent before the given time.
+     * @retval FALSE  Otherwise.
+     *
+     */
+    bool IsEarlier(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mDequeueTime) > 0); }
+
+    /**
+     * This method returns number of milliseconds in which the message should be sent.
+     *
+     * @returns  The number of milliseconds in which the message should be sent.
+     *
+     */
+    uint32_t GetRemainingTime(void) const;
+
+    /**
+     * This method returns the message info of cached CoAP response.
+     *
+     * @returns  The message info of the cached CoAP response.
+     *
+     */
+    const Ip6::MessageInfo &GetMessageInfo(void) const { return mMessageInfo; }
+
+private:
+    uint32_t mDequeueTime;
+    const Ip6::MessageInfo mMessageInfo;
+};
+
+/**
+ * This class caches CoAP responses to implement message deduplication.
+ *
+ */
+class ResponsesQueue
+{
+public:
+    /**
+     * Default class constructor.
+     *
+     * @param[in]  aNetif  A reference to the network interface that CoAP server should be assigned to.
+     *
+     */
+    ResponsesQueue(Ip6::Netif &aNetif):
+        mTimer(aNetif.GetIp6().mTimerScheduler, &ResponsesQueue::HandleTimer, this) {}
+
+    /**
+     * Add given response to the cache.
+     *
+     * If matching response (the same Message ID, source endpoint address and port) exists in the cache given
+     * response is not added.
+     * The CoAP response is copied before it is added to the cache.
+     *
+     * @param[in]  aMessage      The CoAP response to add to the cache.
+     * @param[in]  aMessageInfo  The message info corresponding to @p aMessage.
+     *
+     */
+    void EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    /**
+     * Remove the oldest response from the cache.
+     *
+     */
+    void DequeueOldestResponse(void);
+
+    /**
+     * Remove all responses from the cache.
+     *
+     */
+    void DequeueAllResponses(void);
+
+    /**
+     * Get a copy of CoAP response from the cache that matches given Message ID and source endpoint.
+     *
+     * @param[in]  aHeader       The CoAP message header containing Message ID.
+     * @param[in]  aMessageInfo  The message info containing source endpoint address and port.
+     * @param[out] aResponse     A pointer to a copy of a cached CoAP response matching given arguments.
+     *
+     * @retval kThreadError_None      Matching response found and successfully created a copy.
+     * @retval kThreadError_NoBufs    Matching response found but there is not sufficient buffer to create a copy.
+     * @retval kThreadError_NotFound  Matching response not found.
+     *
+     */
+    ThreadError GetMatchedResponseCopy(const Header &aHeader,
+                                       const Ip6::MessageInfo &aMessageInfo,
+                                       Message **aResponse);
+
+    /**
+     * Get a copy of CoAP response from the cache that matches given Message ID and source endpoint.
+     *
+     * @param[in]  aRequest      The CoAP message containing Message ID.
+     * @param[in]  aMessageInfo  The message info containing source endpoint address and port.
+     * @param[out] aResponse     A pointer to a copy of a cached CoAP response matching given arguments.
+     *
+     * @retval kThreadError_None      Matching response found and successfully created a copy.
+     * @retval kThreadError_NoBufs    Matching response found but there is not sufficient buffer to create a copy.
+     * @retval kThreadError_NotFound  Matching response not found.
+     * @retval kThreadError_Parse     Could not parse CoAP header in the request message.
+     *
+     */
+    ThreadError GetMatchedResponseCopy(const Message &aRequest,
+                                       const Ip6::MessageInfo &aMessageInfo,
+                                       Message **aResponse);
+
+    /**
+     * Get a reference to the cached CoAP responses queue.
+     *
+     * @returns  A reference to the cached CoAP responses queue.
+     *
+     */
+    const MessageQueue &GetResponses(void) const { return mQueue; }
+
+private:
+    enum
+    {
+        kMaxCachedResponses = OPENTHREAD_CONFIG_COAP_SERVER_MAX_CACHED_RESPONSES,
+    };
+
+    void DequeueResponse(Message &aMessage) { mQueue.Dequeue(aMessage); aMessage.Free(); }
+
+    MessageQueue mQueue;
+    Timer        mTimer;
+
+    static void HandleTimer(void *aContext);
+    void HandleTimer(void);
 };
 
 /**
@@ -240,169 +428,9 @@ private:
     uint16_t mPort;
     Resource *mResources;
 
-    /**
-     * This class caches CoAP responses to implement message deduplication.
-     *
-     */
-    class ResponsesQueue
-    {
-    public:
-        /**
-         * Default class constructor.
-         *
-         * @param[in]  aNetif  A reference to the network interface that CoAP server should be assigned to.
-         *
-         */
-        ResponsesQueue(Ip6::Netif &aNetif);
-
-        /**
-         * Add given response to the cache.
-         *
-         * If matching response (the same Message ID, source endpoint address and port) exists in the cache given
-         * response is not added.
-         * The CoAP response is copied before it is added to the cache.
-         *
-         * @param[in]  aMessage      The CoAP response to add to the cache.
-         * @param[in]  aMessageInfo  The message info corresponding to @p aMessage.
-         *
-         */
-        void EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-        /**
-         * Get a copy of CoAP response from the cache that matches given Message ID and source endpoint.
-         *
-         * @param[in]  aHeader       The CoAP message header containing Message ID.
-         * @param[in]  aMessageInfo  The message info containing source endpoint address and port.
-         *
-         * @returns  A pointer to a copy of a cached CoAP response matching given arguments. Or NULL if there
-         *           is no matching response in the cache.
-         *
-         */
-        Message *GetMatchedResponseCopy(const Header &aHeader, const Ip6::MessageInfo &aMessageInfo);
-
-        /**
-         * Get a copy of CoAP response from the cache that matches given Message ID and source endpoint.
-         *
-         * @param[in]  aMessage      The CoAP message containing Message ID.
-         * @param[in]  aMessageInfo  The message info containing source endpoint address and port.
-         *
-         * @returns  A pointer to a copy of a cached CoAP response matching given arguments. Or NULL if there
-         *           is no matching response in the cache.
-         *
-         */
-        Message *GetMatchedResponseCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-        /**
-         * Get a reference to the cached CoAP responses queue.
-         *
-         * @returns  A reference to the cached CoAP responses queue.
-         *
-         */
-        const MessageQueue &GetResponses(void) const { return mQueue; }
-
-    private:
-        enum
-        {
-            kExchangeLifetime = 247u * 1000u, ///< CoAP EXCHANGE_LIFETIME in milliseconds.
-        };
-
-        MessageQueue mQueue;
-        Timer        mTimer;
-
-        /**
-         * This class implements metadata required for caching CoAP responses.
-         *
-         */
-        class EnqueuedResponseHeader
-        {
-        public:
-            /**
-             * Default constructor creating empty object.
-             *
-             */
-            EnqueuedResponseHeader(void): mDequeueTime(0), mMessageInfo() {}
-
-            /**
-             * Constructor creating object with valid dequeue time and message info.
-             *
-             * @param[in]  aMessageInfo  The message info containing source endpoint identification.
-             *
-             */
-            EnqueuedResponseHeader(const Ip6::MessageInfo &aMessageInfo);
-
-            /**
-             * This method append metadata to the message.
-             *
-             * @param[in]  aMessage  A reference to the message.
-             *
-             * @retval kThreadError_None    Successfully appended the bytes.
-             * @retval kThreadError_NoBufs  Insufficient available buffers to grow the message.
-             */
-            ThreadError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
-
-            /**
-             * This method reads request data from the message.
-             *
-             * @param[in]  aMessage  A reference to the message.
-             *
-             * @returns The number of bytes read.
-             *
-             */
-            uint16_t ReadFrom(const Message &aMessage) {
-                return aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
-            }
-
-            /**
-             * This method removes metadata from the message.
-             *
-             * @param[in]  aMessage  A reference to the message.
-             *
-             * @retval kThreadError_None    Successfully removed the bytes.
-             * @retval kThreadError_NoBufs  Insufficient available buffers to place the message.
-             *
-             */
-            static ThreadError RemoveFrom(Message &aMessage) {
-                return aMessage.SetLength(aMessage.GetLength() - sizeof(EnqueuedResponseHeader));
-            }
-
-            /**
-             * This method checks if the message shall be sent before the given time.
-             *
-             * @param[in]  aTime  A time to compare.
-             *
-             * @retval TRUE   If the message shall be sent before the given time.
-             * @retval FALSE  Otherwise.
-             *
-             */
-            bool IsEarlier(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mDequeueTime) > 0); }
-
-            /**
-             * This method returns number of milliseconds in which the message should be sent.
-             *
-             * @returns  The number of milliseconds in which the message should be sent.
-             *
-             */
-            uint32_t GetRemainingTime(void) const;
-
-            /**
-             * This method returns the message info of cached CoAP response.
-             *
-             * @returns  The message info of the cached CoAP response.
-             *
-             */
-            const Ip6::MessageInfo &GetMessageInfo(void) const { return mMessageInfo; }
-
-        private:
-            uint32_t mDequeueTime;
-            const Ip6::MessageInfo mMessageInfo;
-        };
-
-        static void HandleTimer(void *aContext);
-        void HandleTimer(void);
-    };
-
     ResponsesQueue mResponsesQueue;
 };
+
 
 /**
  * @}
