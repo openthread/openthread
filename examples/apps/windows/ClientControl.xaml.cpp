@@ -31,6 +31,7 @@
 #include <algorithm>
 #include "ClientControl.xaml.h"
 #include "Factory.h"
+#include "TalkHelper.h"
 
 using namespace Thread;
 
@@ -93,18 +94,7 @@ ClientControl::Connect_Click(
         }
 
         // check valid chars of Ipv6 Address
-        if (std::all_of(serverIP->Data(), serverIP->Data() + serverIP->Length(),
-            [](wchar_t c)
-        {
-            if ((c >= '0' && c <= '9') || (c == ':') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }))
+        if (!TalkHelper::AllValidIpv6Chars(serverIP->Data(), serverIP->Data() + serverIP->Length()))
         {
             Exception::CreateException(E_INVALIDARG, "Not a valid Server IPv6 address");
         }
@@ -124,22 +114,10 @@ ClientControl::Connect_Click(
         }
 
         // check valid chars of Ipv6 Address
-        if (std::all_of(clientIP->Data(), clientIP->Data() + clientIP->Length(),
-            [](wchar_t c)
-        {
-            if ((c >= '0' && c <= '9') || (c == ':') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }))
+        if (!TalkHelper::AllValidIpv6Chars(clientIP->Data(), clientIP->Data() + clientIP->Length()))
         {
             Exception::CreateException(E_INVALIDARG, "Not a valid client IPv6 address");
         }
-
 
         clientArgs->ClientHostName = ref new HostName(clientIP);
 
