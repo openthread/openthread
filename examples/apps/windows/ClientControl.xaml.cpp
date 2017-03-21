@@ -137,14 +137,9 @@ ClientControl::Connect_Click(
     }
     catch (Exception^ ex)
     {
-        CoreApplication::Properties->Remove("clientContext");
         _notify->NotifyFromAsyncThread(
             "Connecting failed with input error: " + ex->Message,
             NotifyType::Error);
-    }
-    catch (task_canceled&)
-    {
-        CoreApplication::Properties->Remove("clientContext");
     }
 }
 
