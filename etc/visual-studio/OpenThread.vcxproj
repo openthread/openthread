@@ -90,6 +90,7 @@
     <ClInclude Include="..\..\examples\apps\windows\TalkGrid.xaml.h">
       <DependentUpon>..\..\examples\apps\windows\TalkGrid.xaml</DependentUpon>
     </ClInclude>
+    <ClInclude Include="..\..\examples\apps\windows\TalkHelper.h" />
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="..\..\examples\apps\windows\App.xaml">

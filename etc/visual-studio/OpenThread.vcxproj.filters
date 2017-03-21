@@ -47,6 +47,7 @@
     <ClInclude Include="..\..\examples\apps\windows\StreamClientContext.h" />
     <ClInclude Include="..\..\examples\apps\windows\StreamListenerContext.h" />
     <ClInclude Include="..\..\examples\apps\windows\TalkConsts.h" />
+    <ClInclude Include="..\..\examples\apps\windows\TalkHelper.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\LockScreenLogo.scale-200.png">
