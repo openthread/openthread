@@ -1,4 +1,4 @@
-﻿/*
+/*
  *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
@@ -28,50 +28,36 @@
 
 #pragma once
 
-#include "MainPage.g.h"
-#include "IMainPageUIElements.h"
-
 namespace Thread
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
-    public ref class MainPage sealed : public IMainPageUIElements
+ref class ClientControl;
+ref class ServerControl;
+
+class TalkHelper
+{
+private:
+    friend ref class ClientControl;
+    friend ref class ServerControl;
+
+    // this is a private method for specific usage, not a general purpose one
+    // checks all chars are valid Ipv6 chars in the range [begin, end)
+    static bool AllValidIpv6Chars(const wchar_t* begin, const wchar_t* end)
     {
-    public:
-        MainPage();
-
-        void OnResuming();
-
-        void ConnectNetwork(otAdapter^ adapter);
-        void ShowInterfaceDetails(otAdapter^ adapter);
-        void DisconnectNetwork(otAdapter^ adapter);
-
-        property Windows::UI::Xaml::UIElement^ ThreadGrid
+        for (auto it = begin; it != end; ++it)
         {
-            virtual Windows::UI::Xaml::UIElement^ get();
-        }
-        
-        property Windows::UI::Xaml::UIElement^ TalkGrid
-        {
-           virtual Windows::UI::Xaml::UIElement^ get();
+            auto c = *it;
+
+            if ((c >= '0' && c <= '9') || (c == ':') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))
+            {
+            }
+            else
+            {
+                return false;
+            }
         }
 
-        protected:
-        virtual void OnNavigatedTo(Windows::UI::Xaml::Navigation::NavigationEventArgs^ e) override;
+        return true;
+    }
+};
 
-    private:
-
-        void OnLoaded(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
-        void OnUnloaded(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
-
-        void AddAdapterToList(otAdapter^ adapter);
-        
-        otApi^ _otApi;
-
-        Windows::Foundation::EventRegistrationToken _adapterArrivalToken;
-
-        otAdapter^ _curAdapter;
-
-    };
 }
