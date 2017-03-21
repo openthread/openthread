@@ -6,7 +6,7 @@
 ---
 
 <a href="http://threadgroup.org/technology/ourtechnology#certifiedproducts">
-<img src="https://cdn.rawgit.com/openthread/openthread/master/doc/images/certified.svg" alt="Thread Certified Component" width="93px" align="right">
+<img src="https://cdn.rawgit.com/openthread/openthread/ab4c4e1e/doc/images/certified.svg" alt="Thread Certified Component" width="150px" align="right">
 </a>
 
 OpenThread is an open-source implementation of the [Thread][thread]
