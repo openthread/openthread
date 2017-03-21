@@ -141,10 +141,10 @@ StreamListenerContext::Listen_Click(
             }
             catch (Exception^ ex)
             {
-                CoreApplication::Properties->Remove("listenerContext");
                 _notify->NotifyFromAsyncThread(
                     "Start listening failed with error: " + ex->Message,
                     NotifyType::Error);
+                CoreApplication::Properties->Remove("listenerContext");
             }
         });
     });

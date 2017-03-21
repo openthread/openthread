@@ -146,10 +146,10 @@ DatagramClientContext::Connect_Click(
             }
             catch (Exception^ ex)
             {
-                CoreApplication::Properties->Remove("clientContext");
                 _notify->NotifyFromAsyncThread(
                     "Start binding failed with error: " + ex->Message,
                     NotifyType::Error);
+                CoreApplication::Properties->Remove("clientContext");
             }
             catch (task_canceled&)
             {
