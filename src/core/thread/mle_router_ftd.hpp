@@ -637,6 +637,7 @@ private:
     ThreadError HandleDiscoveryRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     ThreadError ProcessRouteTlv(const RouteTlv &aRoute);
+    void StopAdvertiseTimer(void);
     void ResetAdvertiseInterval(void);
     ThreadError SendAddressSolicit(ThreadStatusTlv::Status aStatus);
     ThreadError SendAddressRelease(void);
