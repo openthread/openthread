@@ -92,7 +92,7 @@ ServerControl::Listen_Click(
         if (std::all_of(serverIP->Data(), serverIP->Data() + serverIP->Length(),
             [](wchar_t c)
         {
-            if ((c >= '0' && c <= '9') || (c == ':') || (c >= 'a' && c <= 'z'))
+            if ((c >= '0' && c <= '9') || (c == ':') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))
             {
                 return true;
             }
