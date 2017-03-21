@@ -90,40 +90,40 @@ ClientControl::Connect_Click(
         auto serverIP = ServerIP->Text;
         if (serverIP->IsEmpty())
         {
-            Exception::CreateException(E_INVALIDARG, "No Server IP");
+            throw Exception::CreateException(E_INVALIDARG, "No Server IP");
         }
 
         // check valid chars of Ipv6 Address
         if (!TalkHelper::AllValidIpv6Chars(serverIP->Data(), serverIP->Data() + serverIP->Length()))
         {
-            Exception::CreateException(E_INVALIDARG, "Not a valid Server IPv6 address");
+            throw Exception::CreateException(E_INVALIDARG, "Not a valid Server IPv6 address");
         }
 
         clientArgs->ServerHostName = ref new HostName(serverIP);
 
         if (ServerPort->Text->IsEmpty())
         {
-            Exception::CreateException(E_INVALIDARG, "No Server Port");
+            throw Exception::CreateException(E_INVALIDARG, "No Server Port");
         }
         clientArgs->ServerPort = ServerPort->Text;
 
         auto clientIP = ClientIP->Text;
         if (clientIP->IsEmpty())
         {
-            Exception::CreateException(E_INVALIDARG, "No Client IP");
+            throw Exception::CreateException(E_INVALIDARG, "No Client IP");
         }
 
         // check valid chars of Ipv6 Address
         if (!TalkHelper::AllValidIpv6Chars(clientIP->Data(), clientIP->Data() + clientIP->Length()))
         {
-            Exception::CreateException(E_INVALIDARG, "Not a valid client IPv6 address");
+            throw Exception::CreateException(E_INVALIDARG, "Not a valid client IPv6 address");
         }
 
         clientArgs->ClientHostName = ref new HostName(clientIP);
 
         if (ClientPort->Text->IsEmpty())
         {
-            Exception::CreateException(E_INVALIDARG, "No Client Port");
+            throw Exception::CreateException(E_INVALIDARG, "No Client Port");
         }
         clientArgs->ClientPort = ClientPort->Text;
 
@@ -158,19 +158,19 @@ ClientControl::Send_Click(
         auto input = Input->Text;
         if (input->IsEmpty())
         {
-            Exception::CreateException(E_INVALIDARG, "No Input");
+            throw Exception::CreateException(E_INVALIDARG, "No Input");
         }
 
         if (!CoreApplication::Properties->HasKey("clientContext"))
         {
-            Exception::CreateException(E_UNEXPECTED, "Not Connected");
+            throw Exception::CreateException(E_UNEXPECTED, "Not Connected");
         }
 
         auto clientContext = dynamic_cast<IClientContext^>(
             CoreApplication::Properties->Lookup("clientContext"));
         if (clientContext == nullptr)
         {
-            Exception::CreateException(E_UNEXPECTED, "No clientContext");
+            throw Exception::CreateException(E_UNEXPECTED, "No clientContext");
         }
 
         clientContext->Send_Click(sender, e, input);

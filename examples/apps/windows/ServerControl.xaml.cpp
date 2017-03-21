@@ -86,20 +86,20 @@ ServerControl::Listen_Click(
         auto serverIP = ServerIP->Text;
         if (serverIP->IsEmpty())
         {
-            Exception::CreateException(E_INVALIDARG, "No Server IP");
+            throw Exception::CreateException(E_INVALIDARG, "No Server IP");
         }
 
         // check valid chars of Ipv6 Address
         if (!TalkHelper::AllValidIpv6Chars(serverIP->Data(), serverIP->Data() + serverIP->Length()))
         {
-            Exception::CreateException(E_INVALIDARG, "Not a valid Server IPv6 address");
+            throw Exception::CreateException(E_INVALIDARG, "Not a valid Server IPv6 address");
         }
 
         listenerArgs->ServerHostName = ref new HostName(serverIP);
 
         if (ServerPort->Text->IsEmpty())
         {
-            Exception::CreateException(E_INVALIDARG, "No Server Port");
+            throw Exception::CreateException(E_INVALIDARG, "No Server Port");
         }
         listenerArgs->ServerPort = ServerPort->Text;
 
