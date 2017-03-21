@@ -5,9 +5,13 @@
 
 ---
 
+<a href="http://threadgroup.org/technology/ourtechnology#certifiedproducts">
+<img src="https://cdn.rawgit.com/openthread/openthread/master/doc/images/certified.svg" alt="Thread Certified Component" width="93px" align="right">
+</a>
+
 OpenThread is an open-source implementation of the [Thread][thread]
 networking protocol. Nest has released OpenThread to make the technology
-used in Nest products more broadly available to developers to accelerate 
+used in Nest products more broadly available to developers to accelerate
 the development of products for the connected home.
 
 The Thread specification defines an IPv6-based reliable, secure and
@@ -29,7 +33,8 @@ applications. More information about Thread can be found on
 
  *  Highly portable: OS and platform agnostic with a radio
     abstraction layer
- *  Implements the End Device, Router, Leader and Border Router roles
+ *  Certified Thread Component: Implements all features defined in the Thread 1.1.1 specification
+ *  Tools: Provides tools used for development, such as an integration into the Thread Test Harness and a Sniffer
  *  Small memory footprint
 
 OpenThread implements all Thread networking layers including IPv6,
