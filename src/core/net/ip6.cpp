@@ -838,7 +838,7 @@ ThreadError Ip6::ForwardMessage(Message &message, MessageInfo &messageInfo, uint
             break;
 
         case kThreadError_NoRoute:
-            otDumpDebgIp6("no route", &messageInfo.GetSockAddr(), 16);
+            otDumpDebgIp6(GetInstance(), "no route", &messageInfo.GetSockAddr(), 16);
             break;
 
         default:

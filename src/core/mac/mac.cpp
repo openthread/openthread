@@ -179,7 +179,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mKeyIdMode2FrameCounter = 0;
 }
 
-otInstance *Mac::GetInstance()
+otInstance *Mac::GetInstance(void)
 {
     return mNetif.GetInstance();
 }
@@ -1067,7 +1067,7 @@ void Mac::SentFrame(ThreadError aError)
             break;
         }
 
-        otDumpDebgMac("TX ERR", sendFrame.GetHeader(), 16);
+        otDumpDebgMac(GetInstance(), "TX ERR", sendFrame.GetHeader(), 16);
 
         if (!RadioSupportsRetries() &&
             mTransmitAttempts < sendFrame.GetMaxTxAttempts())
@@ -1141,7 +1141,7 @@ void Mac::SentFrame(ThreadError aError)
             mDataSequence++;
         }
 
-        otDumpDebgMac("TX", sendFrame.GetHeader(), sendFrame.GetLength());
+        otDumpDebgMac(GetInstance(), "TX", sendFrame.GetHeader(), sendFrame.GetLength());
         sender->HandleSentFrame(sendFrame, aError);
 
         ScheduleNextTransmission();
@@ -1508,7 +1508,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
 
         if (receive)
         {
-            otDumpDebgMac("RX", aFrame->GetHeader(), aFrame->GetLength());
+            otDumpDebgMac(GetInstance(), "RX", aFrame->GetHeader(), aFrame->GetLength());
 
             for (Receiver *receiver = mReceiveHead; receiver; receiver = receiver->mNext)
             {

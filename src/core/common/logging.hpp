@@ -39,6 +39,8 @@
 #include <string.h>
 
 #include <openthread-core-config.h>
+#include "openthread/types.h"
+#include "openthread/instance.h"
 #include "openthread/platform/logging.h"
 
 #ifdef WINDOWS_LOGGING
@@ -74,9 +76,10 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OPENTHREAD_LOG_LEVEL_CRIT
-#define otLogCrit(aRegion, aFormat, ...)  _otLogFormatter(kLogLevelCrit, aRegion, aFormat, ## __VA_ARGS__)
+#define otLogCrit(aInstance, aRegion, aFormat, ...)                         \
+    _otLogFormatter(aInstane, kLogLevelCrit, aRegion, aFormat, ## __VA_ARGS__)
 #else
-#define otLogCrit(aRegion, aFormat, ...)
+#define otLogCrit(aInstance, aRegion, aFormat, ...)
 #endif
 
 /**
@@ -90,9 +93,10 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OPENTHREAD_LOG_LEVEL_WARN
-#define otLogWarn(aRegion, aFormat, ...)  _otLogFormatter(kLogLevelWarn, aRegion, aFormat, ## __VA_ARGS__)
+#define otLogWarn(aInstance, aRegion, aFormat, ...)                         \
+    _otLogFormatter(aInstance, kLogLevelWarn, aRegion, aFormat, ## __VA_ARGS__)
 #else
-#define otLogWarn(aRegion, aFormat, ...)
+#define otLogWarn(aInstance, aRegion, aFormat, ...)
 #endif
 
 /**
@@ -106,9 +110,10 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OPENTHREAD_LOG_LEVEL_INFO
-#define otLogInfo(aRegion, aFormat, ...)  _otLogFormatter(kLogLevelInfo, aRegion, aFormat, ## __VA_ARGS__)
+#define otLogInfo(aInstance, aRegion, aFormat, ...)                         \
+    _otLogFormatter(aInstance, kLogLevelInfo, aRegion, aFormat, ## __VA_ARGS__)
 #else
-#define otLogInfo(aRegion, aFormat, ...)
+#define otLogInfo(aInstance, aRegion, aFormat, ...)
 #endif
 
 /**
@@ -122,9 +127,10 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OPENTHREAD_LOG_LEVEL_DEBG
-#define otLogDebg(aRegion, aFormat, ...)  _otLogFormatter(kLogLevelDebg, aRegion, aFormat, ## __VA_ARGS__)
+#define otLogDebg(aInstance, aRegion, aFormat, ...)                         \
+    _otLogFormatter(aInstance, kLogLevelDebg, aRegion, aFormat, ## __VA_ARGS__)
 #else
-#define otLogDebg(aRegion, aFormat, ...)
+#define otLogDebg(aInstance, aRegion, aFormat, ...)
 #endif
 
 #ifndef WINDOWS_LOGGING
@@ -169,10 +175,10 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_API == 1
-#define otLogCritApi(aInstance, aFormat, ...) otLogCrit(kLogRegionApi, aFormat, ## __VA_ARGS__)
-#define otLogWarnApi(aInstance, aFormat, ...) otLogWarn(kLogRegionApi, aFormat, ## __VA_ARGS__)
-#define otLogInfoApi(aInstance, aFormat, ...) otLogInfo(kLogRegionApi, aFormat, ## __VA_ARGS__)
-#define otLogDebgApi(aInstance, aFormat, ...) otLogDebg(kLogRegionApi, aFormat, ## __VA_ARGS__)
+#define otLogCritApi(aInstance, aFormat, ...) otLogCrit(aInstance, kLogRegionApi, aFormat, ## __VA_ARGS__)
+#define otLogWarnApi(aInstance, aFormat, ...) otLogWarn(aInstance, kLogRegionApi, aFormat, ## __VA_ARGS__)
+#define otLogInfoApi(aInstance, aFormat, ...) otLogInfo(aInstance, kLogRegionApi, aFormat, ## __VA_ARGS__)
+#define otLogDebgApi(aInstance, aFormat, ...) otLogDebg(aInstance, kLogRegionApi, aFormat, ## __VA_ARGS__)
 #else
 #define otLogCritApi(aInstance, aFormat, ...)
 #define otLogWarnApi(aInstance, aFormat, ...)
@@ -220,10 +226,10 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_MLE == 1
-#define otLogCritMeshCoP(aInstance, aFormat, ...) otLogCrit(kLogRegionMeshCoP, aFormat, ## __VA_ARGS__)
-#define otLogWarnMeshCoP(aInstance, aFormat, ...) otLogWarn(kLogRegionMeshCoP, aFormat, ## __VA_ARGS__)
-#define otLogInfoMeshCoP(aInstance, aFormat, ...) otLogInfo(kLogRegionMeshCoP, aFormat, ## __VA_ARGS__)
-#define otLogDebgMeshCoP(aInstance, aFormat, ...) otLogDebg(kLogRegionMeshCoP, aFormat, ## __VA_ARGS__)
+#define otLogCritMeshCoP(aInstance, aFormat, ...) otLogCrit(aInstance, kLogRegionMeshCoP, aFormat, ## __VA_ARGS__)
+#define otLogWarnMeshCoP(aInstance, aFormat, ...) otLogWarn(aInstance, kLogRegionMeshCoP, aFormat, ## __VA_ARGS__)
+#define otLogInfoMeshCoP(aInstance, aFormat, ...) otLogInfo(aInstance, kLogRegionMeshCoP, aFormat, ## __VA_ARGS__)
+#define otLogDebgMeshCoP(aInstance, aFormat, ...) otLogDebg(aInstance, kLogRegionMeshCoP, aFormat, ## __VA_ARGS__)
 #else
 #define otLogCritMeshCoP(aInstance, aFormat, ...)
 #define otLogWarnMeshCoP(aInstance, aFormat, ...)
@@ -276,11 +282,12 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_MLE == 1
-#define otLogCritMle(aInstance, aFormat, ...) otLogCrit(kLogRegionMle, aFormat, ## __VA_ARGS__)
-#define otLogWarnMle(aInstance, aFormat, ...) otLogWarn(kLogRegionMle, aFormat, ## __VA_ARGS__)
-#define otLogWarnMleErr(aInstance, aError, aFormat, ...) otLogWarn(kLogRegionMac, "Error %s: " aFormat, otThreadErrorToString(aError), ## __VA_ARGS__)
-#define otLogInfoMle(aInstance, aFormat, ...) otLogInfo(kLogRegionMle, aFormat, ## __VA_ARGS__)
-#define otLogDebgMle(aInstance, aFormat, ...) otLogDebg(kLogRegionMle, aFormat, ## __VA_ARGS__)
+#define otLogCritMle(aInstance, aFormat, ...) otLogCrit(aInstance, kLogRegionMle, aFormat, ## __VA_ARGS__)
+#define otLogWarnMle(aInstance, aFormat, ...) otLogWarn(aInstance, kLogRegionMle, aFormat, ## __VA_ARGS__)
+#define otLogWarnMleErr(aInstance, aError, aFormat, ...)                    \
+    otLogWarn(aInstance, kLogRegionMac, "Error %s: " aFormat, otThreadErrorToString(aError), ## __VA_ARGS__)
+#define otLogInfoMle(aInstance, aFormat, ...) otLogInfo(aInstance, kLogRegionMle, aFormat, ## __VA_ARGS__)
+#define otLogDebgMle(aInstance, aFormat, ...) otLogDebg(aInstance, kLogRegionMle, aFormat, ## __VA_ARGS__)
 #else
 #define otLogCritMle(aInstance, aFormat, ...)
 #define otLogWarnMle(aInstance, aFormat, ...)
@@ -329,10 +336,10 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_ARP == 1
-#define otLogCritArp(aInstance, aFormat, ...) otLogCrit(kLogRegionArp, aFormat, ## __VA_ARGS__)
-#define otLogWarnArp(aInstance, aFormat, ...) otLogWarn(kLogRegionArp, aFormat, ## __VA_ARGS__)
-#define otLogInfoArp(aInstance, aFormat, ...) otLogInfo(kLogRegionArp, aFormat, ## __VA_ARGS__)
-#define otLogDebgArp(aInstance, aFormat, ...) otLogDebg(kLogRegionArp, aFormat, ## __VA_ARGS__)
+#define otLogCritArp(aInstance, aFormat, ...) otLogCrit(aInstance, kLogRegionArp, aFormat, ## __VA_ARGS__)
+#define otLogWarnArp(aInstance, aFormat, ...) otLogWarn(aInstance, kLogRegionArp, aFormat, ## __VA_ARGS__)
+#define otLogInfoArp(aInstance, aFormat, ...) otLogInfo(aInstance, kLogRegionArp, aFormat, ## __VA_ARGS__)
+#define otLogDebgArp(aInstance, aFormat, ...) otLogDebg(aInstance, kLogRegionArp, aFormat, ## __VA_ARGS__)
 #else
 #define otLogCritArp(aInstance, aFormat, ...)
 #define otLogWarnArp(aInstance, aFormat, ...)
@@ -380,10 +387,10 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_NETDATA == 1
-#define otLogCritNetData(aInstance, aFormat, ...) otLogCrit(kLogRegionNetData, aFormat, ## __VA_ARGS__)
-#define otLogWarnNetData(aInstance, aFormat, ...) otLogWarn(kLogRegionNetData, aFormat, ## __VA_ARGS__)
-#define otLogInfoNetData(aInstance, aFormat, ...) otLogInfo(kLogRegionNetData, aFormat, ## __VA_ARGS__)
-#define otLogDebgNetData(aInstance, aFormat, ...) otLogDebg(kLogRegionNetData, aFormat, ## __VA_ARGS__)
+#define otLogCritNetData(aInstance, aFormat, ...) otLogCrit(aInstance, kLogRegionNetData, aFormat, ## __VA_ARGS__)
+#define otLogWarnNetData(aInstance, aFormat, ...) otLogWarn(aInstance, kLogRegionNetData, aFormat, ## __VA_ARGS__)
+#define otLogInfoNetData(aInstance, aFormat, ...) otLogInfo(aInstance, kLogRegionNetData, aFormat, ## __VA_ARGS__)
+#define otLogDebgNetData(aInstance, aFormat, ...) otLogDebg(aInstance, kLogRegionNetData, aFormat, ## __VA_ARGS__)
 #else
 #define otLogCritNetData(aInstance, aFormat, ...)
 #define otLogWarnNetData(aInstance, aFormat, ...)
@@ -431,10 +438,10 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_ICMP == 1
-#define otLogCritIcmp(aInstance, aFormat, ...) otLogCrit(kLogRegionIcmp, aFormat, ## __VA_ARGS__)
-#define otLogWarnIcmp(aInstance, aFormat, ...) otLogWarn(kLogRegionIcmp, aFormat, ## __VA_ARGS__)
-#define otLogInfoIcmp(aInstance, aFormat, ...) otLogInfo(kLogRegionIcmp, aFormat, ## __VA_ARGS__)
-#define otLogDebgIcmp(aInstance, aFormat, ...) otLogDebg(kLogRegionIcmp, aFormat, ## __VA_ARGS__)
+#define otLogCritIcmp(aInstance, aFormat, ...) otLogCrit(aInstance, kLogRegionIcmp, aFormat, ## __VA_ARGS__)
+#define otLogWarnIcmp(aInstance, aFormat, ...) otLogWarn(aInstance, kLogRegionIcmp, aFormat, ## __VA_ARGS__)
+#define otLogInfoIcmp(aInstance, aFormat, ...) otLogInfo(aInstance, kLogRegionIcmp, aFormat, ## __VA_ARGS__)
+#define otLogDebgIcmp(aInstance, aFormat, ...) otLogDebg(aInstance, kLogRegionIcmp, aFormat, ## __VA_ARGS__)
 #else
 #define otLogCritIcmp(aInstance, aFormat, ...)
 #define otLogWarnIcmp(aInstance, aFormat, ...)
@@ -482,10 +489,10 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_IP6 == 1
-#define otLogCritIp6(aInstance, aFormat, ...) otLogCrit(kLogRegionIp6, aFormat, ## __VA_ARGS__)
-#define otLogWarnIp6(aInstance, aFormat, ...) otLogWarn(kLogRegionIp6, aFormat, ## __VA_ARGS__)
-#define otLogInfoIp6(aInstance, aFormat, ...) otLogInfo(kLogRegionIp6, aFormat, ## __VA_ARGS__)
-#define otLogDebgIp6(aInstance, aFormat, ...) otLogDebg(kLogRegionIp6, aFormat, ## __VA_ARGS__)
+#define otLogCritIp6(aInstance, aFormat, ...) otLogCrit(aInstance, kLogRegionIp6, aFormat, ## __VA_ARGS__)
+#define otLogWarnIp6(aInstance, aFormat, ...) otLogWarn(aInstance, kLogRegionIp6, aFormat, ## __VA_ARGS__)
+#define otLogInfoIp6(aInstance, aFormat, ...) otLogInfo(aInstance, kLogRegionIp6, aFormat, ## __VA_ARGS__)
+#define otLogDebgIp6(aInstance, aFormat, ...) otLogDebg(aInstance, kLogRegionIp6, aFormat, ## __VA_ARGS__)
 #else
 #define otLogCritIp6(aInstance, aFormat, ...)
 #define otLogWarnIp6(aInstance, aFormat, ...)
@@ -533,11 +540,12 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_MAC == 1
-#define otLogCritMac(aInstance, aFormat, ...) otLogCrit(kLogRegionMac, aFormat, ## __VA_ARGS__)
-#define otLogWarnMac(aInstance, aFormat, ...) otLogWarn(kLogRegionMac, aFormat, ## __VA_ARGS__)
-#define otLogInfoMac(aInstance, aFormat, ...) otLogInfo(kLogRegionMac, aFormat, ## __VA_ARGS__)
-#define otLogDebgMac(aInstance, aFormat, ...) otLogDebg(kLogRegionMac, aFormat, ## __VA_ARGS__)
-#define otLogDebgMacErr(aInstance, aError, aFormat, ...) otLogWarn(kLogRegionMac, "Error %s: " aFormat, otThreadErrorToString(aError), ## __VA_ARGS__)
+#define otLogCritMac(aInstance, aFormat, ...) otLogCrit(aInstance, kLogRegionMac, aFormat, ## __VA_ARGS__)
+#define otLogWarnMac(aInstance, aFormat, ...) otLogWarn(aInstance, kLogRegionMac, aFormat, ## __VA_ARGS__)
+#define otLogInfoMac(aInstance, aFormat, ...) otLogInfo(aInstance, kLogRegionMac, aFormat, ## __VA_ARGS__)
+#define otLogDebgMac(aInstance, aFormat, ...) otLogDebg(aInstance, kLogRegionMac, aFormat, ## __VA_ARGS__)
+#define otLogDebgMacErr(aInstance, aError, aFormat, ...)                    \
+    otLogWarn(aInstance, kLogRegionMac, "Error %s: " aFormat, otThreadErrorToString(aError), ## __VA_ARGS__)
 #else
 #define otLogCritMac(aInstance, aFormat, ...)
 #define otLogWarnMac(aInstance, aFormat, ...)
@@ -586,15 +594,15 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_MEM == 1
-#define otLogCritMem(aFormat, ...) otLogCrit(kLogRegionMem, aFormat, ## __VA_ARGS__)
-#define otLogWarnMem(aFormat, ...) otLogWarn(kLogRegionMem, aFormat, ## __VA_ARGS__)
-#define otLogInfoMem(aFormat, ...) otLogInfo(kLogRegionMem, aFormat, ## __VA_ARGS__)
-#define otLogDebgMem(aFormat, ...) otLogDebg(kLogRegionMem, aFormat, ## __VA_ARGS__)
+#define otLogCritMem(aInstance, aFormat, ...) otLogCrit(aInstance, kLogRegionMem, aFormat, ## __VA_ARGS__)
+#define otLogWarnMem(aInstance, aFormat, ...) otLogWarn(aInstance, kLogRegionMem, aFormat, ## __VA_ARGS__)
+#define otLogInfoMem(aInstance, aFormat, ...) otLogInfo(aInstance, kLogRegionMem, aFormat, ## __VA_ARGS__)
+#define otLogDebgMem(aInstance, aFormat, ...) otLogDebg(aInstance, kLogRegionMem, aFormat, ## __VA_ARGS__)
 #else
-#define otLogCritMem(aFormat, ...)
-#define otLogWarnMem(aFormat, ...)
-#define otLogInfoMem(aFormat, ...)
-#define otLogDebgMem(aFormat, ...)
+#define otLogCritMem(aInstance, aFormat, ...)
+#define otLogWarnMem(aInstance, aFormat, ...)
+#define otLogInfoMem(aInstance, aFormat, ...)
+#define otLogDebgMem(aInstance, aFormat, ...)
 #endif
 
 /**
@@ -637,10 +645,10 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_NETDIAG == 1
-#define otLogCritNetDiag(aInstance, aFormat, ...) otLogCrit(kLogRegionNetDiag, aFormat, ## __VA_ARGS__)
-#define otLogWarnNetDiag(aInstance, aFormat, ...) otLogWarn(kLogRegionNetDiag, aFormat, ## __VA_ARGS__)
-#define otLogInfoNetDiag(aInstance, aFormat, ...) otLogInfo(kLogRegionNetDiag, aFormat, ## __VA_ARGS__)
-#define otLogDebgNetDiag(aInstance, aFormat, ...) otLogDebg(kLogRegionNetDiag, aFormat, ## __VA_ARGS__)
+#define otLogCritNetDiag(aInstance, aFormat, ...) otLogCrit(aInstance, kLogRegionNetDiag, aFormat, ## __VA_ARGS__)
+#define otLogWarnNetDiag(aInstance, aFormat, ...) otLogWarn(aInstance, kLogRegionNetDiag, aFormat, ## __VA_ARGS__)
+#define otLogInfoNetDiag(aInstance, aFormat, ...) otLogInfo(aInstance, kLogRegionNetDiag, aFormat, ## __VA_ARGS__)
+#define otLogDebgNetDiag(aInstance, aFormat, ...) otLogDebg(aInstance, kLogRegionNetDiag, aFormat, ## __VA_ARGS__)
 #else
 #define otLogCritNetDiag(aInstance, aFormat, ...)
 #define otLogWarnNetDiag(aInstance, aFormat, ...)
@@ -658,7 +666,8 @@ extern "C" {
  *
  */
 #if OPENTHREAD_ENABLE_CERT_LOG
-#define otLogCertMeshCoP(aInstance, aFormat, ...) _otLogFormatter(kLogLevelNone, kLogRegionMeshCoP, aFormat, ## __VA_ARGS__)
+#define otLogCertMeshCoP(aInstance, aFormat, ...)                           \
+    _otLogFormatter(aInstance, kLogLevelNone, kLogRegionMeshCoP, aFormat, ## __VA_ARGS__)
 #else
 #define otLogCertMeshCoP(aInstance, aFormat, ...)
 #endif
@@ -703,15 +712,15 @@ extern "C" {
 *
 */
 #if OPENTHREAD_CONFIG_LOG_PLATFORM == 1
-#define otLogCritPlat(aFormat, ...) otLogCrit(kLogRegionPlatform, aFormat, ## __VA_ARGS__)
-#define otLogWarnPlat(aFormat, ...) otLogWarn(kLogRegionPlatform, aFormat, ## __VA_ARGS__)
-#define otLogInfoPlat(aFormat, ...) otLogInfo(kLogRegionPlatform, aFormat, ## __VA_ARGS__)
-#define otLogDebgPlat(aFormat, ...) otLogDebg(kLogRegionPlatform, aFormat, ## __VA_ARGS__)
+#define otLogCritPlat(aInstance, aFormat, ...) otLogCrit(aInstance, kLogRegionPlatform, aFormat, ## __VA_ARGS__)
+#define otLogWarnPlat(aInstance, aFormat, ...) otLogWarn(aInstance, kLogRegionPlatform, aFormat, ## __VA_ARGS__)
+#define otLogInfoPlat(aInstance, aFormat, ...) otLogInfo(aInstance, kLogRegionPlatform, aFormat, ## __VA_ARGS__)
+#define otLogDebgPlat(aInstance, aFormat, ...) otLogDebg(aInstance, kLogRegionPlatform, aFormat, ## __VA_ARGS__)
 #else
-#define otLogCritPlat(aFormat, ...)
-#define otLogWarnPlat(aFormat, ...)
-#define otLogInfoPlat(aFormat, ...)
-#define otLogDebgPlat(aFormat, ...)
+#define otLogCritPlat(aInstance, aFormat, ...)
+#define otLogWarnPlat(aInstance, aFormat, ...)
+#define otLogInfoPlat(aInstance, aFormat, ...)
+#define otLogDebgPlat(aInstance, aFormat, ...)
 #endif
 
 #endif // WINDOWS_LOGGING
@@ -728,9 +737,10 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OPENTHREAD_LOG_LEVEL_CRIT
-#define otDumpCrit(aRegion, aId, aBuf, aLength)  otDump(kLogLevelCrit, aRegion, aId, aBuf, aLength)
+#define otDumpCrit(aInstance, aRegion, aId, aBuf, aLength)                  \
+    otDump(aInstance, kLogLevelCrit, aRegion, aId, aBuf, aLength)
 #else
-#define otDumpCrit(aRegion, aId, aBuf, aLength)
+#define otDumpCrit(aInstance, aRegion, aId, aBuf, aLength)
 #endif
 
 /**
@@ -745,9 +755,10 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OPENTHREAD_LOG_LEVEL_WARN
-#define otDumpWarn(aRegion, aId, aBuf, aLength)  otDump(kLogLevelWarn, aRegion, aId, aBuf, aLength)
+#define otDumpWarn(aInstance, aRegion, aId, aBuf, aLength)                  \
+    otDump(aInstance, kLogLevelWarn, aRegion, aId, aBuf, aLength)
 #else
-#define otDumpWarn(aRegion, aId, aBuf, aLength)
+#define otDumpWarn(aInstance, aRegion, aId, aBuf, aLength)
 #endif
 
 /**
@@ -762,9 +773,10 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OPENTHREAD_LOG_LEVEL_INFO
-#define otDumpInfo(aRegion, aId, aBuf, aLength)  otDump(kLogLevelInfo, aRegion, aId, aBuf, aLength)
+#define otDumpInfo(aInstance, aRegion, aId, aBuf, aLength)                  \
+    otDump(aInstance, kLogLevelInfo, aRegion, aId, aBuf, aLength)
 #else
-#define otDumpInfo(aRegion, aId, aBuf, aLength)
+#define otDumpInfo(aInstance, aRegion, aId, aBuf, aLength)
 #endif
 
 /**
@@ -779,9 +791,10 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OPENTHREAD_LOG_LEVEL_DEBG
-#define otDumpDebg(aRegion, aId, aBuf, aLength)  otDump(kLogLevelDebg, aRegion, aId, aBuf, aLength)
+#define otDumpDebg(aInstance, aRegion, aId, aBuf, aLength)                  \
+    otDump(aInstance, kLogLevelDebg, aRegion, aId, aBuf, aLength)
 #else
-#define otDumpDebg(aRegion, aId, aBuf, aLength)
+#define otDumpDebg(aInstance, aRegion, aId, aBuf, aLength)
 #endif
 
 /**
@@ -828,15 +841,15 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_NETDATA == 1
-#define otDumpCritNetData(aId, aBuf, aLength) otDumpCrit(kLogRegionNetData, aId, aBuf, aLength)
-#define otDumpWarnNetData(aId, aBuf, aLength) otDumpWarn(kLogRegionNetData, aId, aBuf, aLength)
-#define otDumpInfoNetData(aId, aBuf, aLength) otDumpInfo(kLogRegionNetData, aId, aBuf, aLength)
-#define otDumpDebgNetData(aId, aBuf, aLength) otDumpDebg(kLogRegionNetData, aId, aBuf, aLength)
+#define otDumpCritNetData(aInstance, aId, aBuf, aLength) otDumpCrit(aInstance, kLogRegionNetData, aId, aBuf, aLength)
+#define otDumpWarnNetData(aInstance, aId, aBuf, aLength) otDumpWarn(aInstance, kLogRegionNetData, aId, aBuf, aLength)
+#define otDumpInfoNetData(aInstance, aId, aBuf, aLength) otDumpInfo(aInstance, kLogRegionNetData, aId, aBuf, aLength)
+#define otDumpDebgNetData(aInstance, aId, aBuf, aLength) otDumpDebg(aInstance, kLogRegionNetData, aId, aBuf, aLength)
 #else
-#define otDumpCritNetData(aId, aBuf, aLength)
-#define otDumpWarnNetData(aId, aBuf, aLength)
-#define otDumpInfoNetData(aId, aBuf, aLength)
-#define otDumpDebgNetData(aId, aBuf, aLength)
+#define otDumpCritNetData(aInstance, aId, aBuf, aLength)
+#define otDumpWarnNetData(aInstance, aId, aBuf, aLength)
+#define otDumpInfoNetData(aInstance, aId, aBuf, aLength)
+#define otDumpDebgNetData(aInstance, aId, aBuf, aLength)
 #endif
 
 /**
@@ -883,15 +896,15 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_MLE == 1
-#define otDumpCritMle(aId, aBuf, aLength) otDumpCrit(kLogRegionMle, aId, aBuf, aLength)
-#define otDumpWarnMle(aId, aBuf, aLength) otDumpWarn(kLogRegionMle, aId, aBuf, aLength)
-#define otDumpInfoMle(aId, aBuf, aLength) otDumpInfo(kLogRegionMle, aId, aBuf, aLength)
-#define otDumpDebgMle(aId, aBuf, aLength) otDumpDebg(kLogRegionMle, aId, aBuf, aLength)
+#define otDumpCritMle(aInstance, aId, aBuf, aLength) otDumpCrit(aInstance, kLogRegionMle, aId, aBuf, aLength)
+#define otDumpWarnMle(aInstance, aId, aBuf, aLength) otDumpWarn(aInstance, kLogRegionMle, aId, aBuf, aLength)
+#define otDumpInfoMle(aInstance, aId, aBuf, aLength) otDumpInfo(aInstance, kLogRegionMle, aId, aBuf, aLength)
+#define otDumpDebgMle(aInstance, aId, aBuf, aLength) otDumpDebg(aInstance, kLogRegionMle, aId, aBuf, aLength)
 #else
-#define otDumpCritMle(aId, aBuf, aLength)
-#define otDumpWarnMle(aId, aBuf, aLength)
-#define otDumpInfoMle(aId, aBuf, aLength)
-#define otDumpDebgMle(aId, aBuf, aLength)
+#define otDumpCritMle(aInstance, aId, aBuf, aLength)
+#define otDumpWarnMle(aInstance, aId, aBuf, aLength)
+#define otDumpInfoMle(aInstance, aId, aBuf, aLength)
+#define otDumpDebgMle(aInstance, aId, aBuf, aLength)
 #endif
 
 /**
@@ -938,15 +951,15 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_ARP == 1
-#define otDumpCritArp(aId, aBuf, aLength) otDumpCrit(kLogRegionArp, aId, aBuf, aLength)
-#define otDumpWarnArp(aId, aBuf, aLength) otDumpWarn(kLogRegionArp, aId, aBuf, aLength)
-#define otDumpInfoArp(aId, aBuf, aLength) otDumpInfo(kLogRegionArp, aId, aBuf, aLength)
-#define otDumpDebgArp(aId, aBuf, aLength) otDumpDebg(kLogRegionArp, aId, aBuf, aLength)
+#define otDumpCritArp(aInstance, aId, aBuf, aLength) otDumpCrit(aInstance, kLogRegionArp, aId, aBuf, aLength)
+#define otDumpWarnArp(aInstance, aId, aBuf, aLength) otDumpWarn(aInstance, kLogRegionArp, aId, aBuf, aLength)
+#define otDumpInfoArp(aInstance, aId, aBuf, aLength) otDumpInfo(aInstance, kLogRegionArp, aId, aBuf, aLength)
+#define otDumpDebgArp(aInstance, aId, aBuf, aLength) otDumpDebg(aInstance, kLogRegionArp, aId, aBuf, aLength)
 #else
-#define otDumpCritArp(aId, aBuf, aLength)
-#define otDumpWarnArp(aId, aBuf, aLength)
-#define otDumpInfoArp(aId, aBuf, aLength)
-#define otDumpDebgArp(aId, aBuf, aLength)
+#define otDumpCritArp(aInstance, aId, aBuf, aLength)
+#define otDumpWarnArp(aInstance, aId, aBuf, aLength)
+#define otDumpInfoArp(aInstance, aId, aBuf, aLength)
+#define otDumpDebgArp(aInstance, aId, aBuf, aLength)
 #endif
 
 /**
@@ -993,15 +1006,15 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_ICMP == 1
-#define otDumpCritIcmp(aId, aBuf, aLength) otDumpCrit(kLogRegionIcmp, aId, aBuf, aLength)
-#define otDumpWarnIcmp(aId, aBuf, aLength) otDumpWarn(kLogRegionIcmp, aId, aBuf, aLength)
-#define otDumpInfoIcmp(aId, aBuf, aLength) otDumpInfo(kLogRegionIcmp, aId, aBuf, aLength)
-#define otDumpDebgIcmp(aId, aBuf, aLength) otDumpDebg(kLogRegionIcmp, aId, aBuf, aLength)
+#define otDumpCritIcmp(aInstance, aId, aBuf, aLength) otDumpCrit(aInstance, kLogRegionIcmp, aId, aBuf, aLength)
+#define otDumpWarnIcmp(aInstance, aId, aBuf, aLength) otDumpWarn(aInstance, kLogRegionIcmp, aId, aBuf, aLength)
+#define otDumpInfoIcmp(aInstance, aId, aBuf, aLength) otDumpInfo(aInstance, kLogRegionIcmp, aId, aBuf, aLength)
+#define otDumpDebgIcmp(aInstance, aId, aBuf, aLength) otDumpDebg(aInstance, kLogRegionIcmp, aId, aBuf, aLength)
 #else
-#define otDumpCritIcmp(aId, aBuf, aLength)
-#define otDumpWarnIcmp(aId, aBuf, aLength)
-#define otDumpInfoIcmp(aId, aBuf, aLength)
-#define otDumpDebgIcmp(aId, aBuf, aLength)
+#define otDumpCritIcmp(aInstance, aId, aBuf, aLength)
+#define otDumpWarnIcmp(aInstance, aId, aBuf, aLength)
+#define otDumpInfoIcmp(aInstance, aId, aBuf, aLength)
+#define otDumpDebgIcmp(aInstance, aId, aBuf, aLength)
 #endif
 
 /**
@@ -1048,15 +1061,15 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_IP6 == 1
-#define otDumpCritIp6(aId, aBuf, aLength) otDumpCrit(kLogRegionIp6, aId, aBuf, aLength)
-#define otDumpWarnIp6(aId, aBuf, aLength) otDumpWarn(kLogRegionIp6, aId, aBuf, aLength)
-#define otDumpInfoIp6(aId, aBuf, aLength) otDumpInfo(kLogRegionIp6, aId, aBuf, aLength)
-#define otDumpDebgIp6(aId, aBuf, aLength) otDumpDebg(kLogRegionIp6, aId, aBuf, aLength)
+#define otDumpCritIp6(aInstance, aId, aBuf, aLength) otDumpCrit(aInstance, kLogRegionIp6, aId, aBuf, aLength)
+#define otDumpWarnIp6(aInstance, aId, aBuf, aLength) otDumpWarn(aInstance, kLogRegionIp6, aId, aBuf, aLength)
+#define otDumpInfoIp6(aInstance, aId, aBuf, aLength) otDumpInfo(aInstance, kLogRegionIp6, aId, aBuf, aLength)
+#define otDumpDebgIp6(aInstance, aId, aBuf, aLength) otDumpDebg(aInstance, kLogRegionIp6, aId, aBuf, aLength)
 #else
-#define otDumpCritIp6(aId, aBuf, aLength)
-#define otDumpWarnIp6(aId, aBuf, aLength)
-#define otDumpInfoIp6(aId, aBuf, aLength)
-#define otDumpDebgIp6(aId, aBuf, aLength)
+#define otDumpCritIp6(aInstance, aId, aBuf, aLength)
+#define otDumpWarnIp6(aInstance, aId, aBuf, aLength)
+#define otDumpInfoIp6(aInstance, aId, aBuf, aLength)
+#define otDumpDebgIp6(aInstance, aId, aBuf, aLength)
 #endif
 
 /**
@@ -1103,15 +1116,15 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_MAC == 1
-#define otDumpCritMac(aId, aBuf, aLength) otDumpCrit(kLogRegionMac, aId, aBuf, aLength)
-#define otDumpWarnMac(aId, aBuf, aLength) otDumpWarn(kLogRegionMac, aId, aBuf, aLength)
-#define otDumpInfoMac(aId, aBuf, aLength) otDumpInfo(kLogRegionMac, aId, aBuf, aLength)
-#define otDumpDebgMac(aId, aBuf, aLength) otDumpDebg(kLogRegionMac, aId, aBuf, aLength)
+#define otDumpCritMac(aInstance, aId, aBuf, aLength) otDumpCrit(aInstance, kLogRegionMac, aId, aBuf, aLength)
+#define otDumpWarnMac(aInstance, aId, aBuf, aLength) otDumpWarn(aInstance, kLogRegionMac, aId, aBuf, aLength)
+#define otDumpInfoMac(aInstance, aId, aBuf, aLength) otDumpInfo(aInstance, kLogRegionMac, aId, aBuf, aLength)
+#define otDumpDebgMac(aInstance, aId, aBuf, aLength) otDumpDebg(aInstance, kLogRegionMac, aId, aBuf, aLength)
 #else
-#define otDumpCritMac(aId, aBuf, aLength)
-#define otDumpWarnMac(aId, aBuf, aLength)
-#define otDumpInfoMac(aId, aBuf, aLength)
-#define otDumpDebgMac(aId, aBuf, aLength)
+#define otDumpCritMac(aInstance, aId, aBuf, aLength)
+#define otDumpWarnMac(aInstance, aId, aBuf, aLength)
+#define otDumpInfoMac(aInstance, aId, aBuf, aLength)
+#define otDumpDebgMac(aInstance, aId, aBuf, aLength)
 #endif
 
 /**
@@ -1158,15 +1171,15 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_MEM == 1
-#define otDumpCritMem(aId, aBuf, aLength) otDumpCrit(kLogRegionMem, aId, aBuf, aLength)
-#define otDumpWarnMem(aId, aBuf, aLength) otDumpWarn(kLogRegionMem, aId, aBuf, aLength)
-#define otDumpInfoMem(aId, aBuf, aLength) otDumpInfo(kLogRegionMem, aId, aBuf, aLength)
-#define otDumpDebgMem(aId, aBuf, aLength) otDumpDebg(kLogRegionMem, aId, aBuf, aLength)
+#define otDumpCritMem(aInstance, aId, aBuf, aLength) otDumpCrit(aInstance, kLogRegionMem, aId, aBuf, aLength)
+#define otDumpWarnMem(aInstance, aId, aBuf, aLength) otDumpWarn(aInstance, kLogRegionMem, aId, aBuf, aLength)
+#define otDumpInfoMem(aInstance, aId, aBuf, aLength) otDumpInfo(aInstance, kLogRegionMem, aId, aBuf, aLength)
+#define otDumpDebgMem(aInstance, aId, aBuf, aLength) otDumpDebg(aInstance, kLogRegionMem, aId, aBuf, aLength)
 #else
-#define otDumpCritMem(aId, aBuf, aLength)
-#define otDumpWarnMem(aId, aBuf, aLength)
-#define otDumpInfoMem(aId, aBuf, aLength)
-#define otDumpDebgMem(aId, aBuf, aLength)
+#define otDumpCritMem(aInstance, aId, aBuf, aLength)
+#define otDumpWarnMem(aInstance, aId, aBuf, aLength)
+#define otDumpInfoMem(aInstance, aId, aBuf, aLength)
+#define otDumpDebgMem(aInstance, aId, aBuf, aLength)
 #endif
 
 /**
@@ -1180,9 +1193,10 @@ extern "C" {
  *
  */
 #if OPENTHREAD_ENABLE_CERT_LOG
-#define otDumpCertMeshCoP(aId, aBuf, aLength) otDump(kLogLevelNone, kLogRegionMeshCoP, aId, aBuf, aLength)
+#define otDumpCertMeshCoP(aInstance, aId, aBuf, aLength)                    \
+    otDump(aInstance, kLogLevelNone, kLogRegionMeshCoP, aId, aBuf, aLength)
 #else
-#define otDumpCertMeshCoP(aId, aBuf, aLength)
+#define otDumpCertMeshCoP(aInstance, aId, aBuf, aLength)
 #endif
 
 /**
@@ -1195,7 +1209,8 @@ extern "C" {
  * @param[in]  aLength  Number of bytes to print.
  *
  */
-void otDump(otLogLevel aLevel, otLogRegion aRegion, const char *aId, const void *aBuf, const size_t aLength);
+void otDump(otInstance *aIntsance, otLogLevel aLevel, otLogRegion aRegion, const char *aId, const void *aBuf,
+            const size_t aLength);
 
 #if OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL == 1
 /**
@@ -1228,8 +1243,9 @@ const char *otLogRegionToString(otLogRegion aRegion);
 /**
  * Local/private macro to format the log message
  */
-#define _otLogFormatter(aLogLevel, aRegion, aFormat, ...)                   \
-    otPlatLog(                                                              \
+#define _otLogFormatter(aInstance, aLogLevel, aRegion, aFormat, ...)        \
+    _otPlatLog(                                                             \
+        aInstance,                                                          \
         aLogLevel,                                                          \
         aRegion,                                                            \
         "[%s]%s: " aFormat OPENTHREAD_CONFIG_LOG_SUFFIX,                    \
@@ -1243,8 +1259,9 @@ const char *otLogRegionToString(otLogRegion aRegion);
 /**
 * Local/private macro to format the log message
 */
-#define _otLogFormatter(aLogLevel, aRegion, aFormat, ...)                   \
-    otPlatLog(                                                              \
+#define _otLogFormatter(aInstanc, aLogLevel, aRegion, aFormat, ...)         \
+    _otPlatLog(                                                             \
+        aInstance,                                                          \
         aLogLevel,                                                          \
         aRegion,                                                            \
         "[%s]: " aFormat OPENTHREAD_CONFIG_LOG_SUFFIX,                      \
@@ -1261,8 +1278,9 @@ const char *otLogRegionToString(otLogRegion aRegion);
 /**
 * Local/private macro to format the log message
 */
-#define _otLogFormatter(aLogLevel, aRegion, aFormat, ...)                   \
-    otPlatLog(                                                              \
+#define _otLogFormatter(aInstance, aLogLevel, aRegion, aFormat, ...)        \
+    _otPlatLog(                                                             \
+        aInstance,                                                          \
         aLogLevel,                                                          \
         aRegion,                                                            \
         "%s: " aFormat OPENTHREAD_CONFIG_LOG_SUFFIX,                        \
@@ -1275,8 +1293,9 @@ const char *otLogRegionToString(otLogRegion aRegion);
 /**
 * Local/private macro to format the log message
 */
-#define _otLogFormatter(aLogLevel, aRegion, aFormat, ...)                   \
-    otPlatLog(                                                              \
+#define _otLogFormatter(aInstace, aLogLevel, aRegion, aFormat, ...)         \
+    _otPlatLog(                                                             \
+        aInstance,                                                          \
         aLogLevel,                                                          \
         aRegion,                                                            \
         aFormat OPENTHREAD_CONFIG_LOG_SUFFIX,                               \
@@ -1286,6 +1305,24 @@ const char *otLogRegionToString(otLogRegion aRegion);
 #endif
 
 #endif // OPENTHREAD_CONFIG_LOG_PREPEND_REGION
+
+
+#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL == 1
+
+/**
+* Local/private macro to dynamically filter log level.
+*/
+#define _otPlatLog(aInstance, aLogLevel, aRegion, aFormat, ...)             \
+    do {                                                                    \
+        if (otGetDynamicLogLevel(aInstance) >= aLogLevel)                   \
+            otPlatLog(aLogLevel, aRegion, aFormat, ## __VA_ARGS__);         \
+    } while (false)
+
+#else // OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+
+#define _otPlatLog(aInstance, aLogLevel, aRegion, aFormat, ...) otPlatLog(aLogLevel, aRegion, aFormat, ## __VA_ARGS__)
+
+#endif // OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
 
 #ifdef __cplusplus
 };

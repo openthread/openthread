@@ -44,7 +44,8 @@
 #include <common/logging.hpp>
 
 #ifndef WINDOWS_LOGGING
-#define otLogDump(aFormat, ...) otPlatLog(aLogLevel, aLogRegion, aFormat OPENTHREAD_CONFIG_LOG_SUFFIX, ## __VA_ARGS__)
+#define otLogDump(aFormat, ...)                                             \
+    _otPlatLog(aInstance, aLogLevel, aLogRegion, aFormat OPENTHREAD_CONFIG_LOG_SUFFIX, ## __VA_ARGS__)
 #endif
 
 #ifdef __cplusplus
@@ -61,7 +62,8 @@ extern "C" {
  * @param[in]  aLength     Number of bytes in the buffer.
  *
  */
-static void DumpLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const void *aBuf, const size_t aLength)
+static void DumpLine(otInstance *aInstance, otLogLevel aLogLevel, otLogRegion aLogRegion, const void *aBuf,
+                     const size_t aLength)
 {
     char buf[80];
     char *cur = buf;
@@ -109,9 +111,12 @@ static void DumpLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const void *a
     }
 
     otLogDump("%s", buf);
+
+    (void)aInstance;
 }
 
-void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const void *aBuf, const size_t aLength)
+void otDump(otInstance *aInstance, otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const void *aBuf,
+            const size_t aLength)
 {
     size_t idlen = strlen(aId);
     const size_t width = 72;
@@ -137,7 +142,7 @@ void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const
 
     for (size_t i = 0; i < aLength; i += 16)
     {
-        DumpLine(aLogLevel, aLogRegion, (uint8_t *)(aBuf) + i, (aLength - i) < 16 ? (aLength - i) : 16);
+        DumpLine(aInstance, aLogLevel, aLogRegion, (uint8_t *)(aBuf) + i, (aLength - i) < 16 ? (aLength - i) : 16);
     }
 
     cur = buf;
@@ -150,9 +155,9 @@ void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const
 
     otLogDump("%s", buf);
 }
-#else
-void otDump(otLogLevel, otLogRegion, const char *, const void *, const size_t) {}
-#endif
+#else // OPENTHREAD_CONFIG_LOG_PKT_DUMP
+void otDump(otInstance *, otLogLevel, otLogRegion, const char *, const void *, const size_t) {}
+#endif // OPENTHREAD_CONFIG_LOG_PKT_DUMP
 
 #ifdef OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
 const char *otLogLevelToString(otLogLevel aLevel)

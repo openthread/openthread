@@ -1123,9 +1123,9 @@ private:
     uint16_t mNumFreeBuffers;
     Buffer   mBuffers[kNumBuffers];
     Buffer   *mFreeBuffers;
-#else
-    otInstance *mInstance;
 #endif
+
+    otInstance *mInstance;
     PriorityQueue mAllQueue;
 };
 
