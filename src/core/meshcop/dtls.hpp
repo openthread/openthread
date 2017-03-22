@@ -60,7 +60,11 @@ public:
     enum
     {
         kPskMaxLength = 32,
+#if OPENTHREAD_ENABLE_BORDER_AGENT
+        kApplicationDataMaxLength = 1024,
+#else
         kApplicationDataMaxLength = 128,
+#endif
     };
 
     /**
