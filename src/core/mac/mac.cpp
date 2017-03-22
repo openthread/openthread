@@ -1032,6 +1032,8 @@ void Mac::SentFrame(ThreadError aError)
     Sender *sender;
     Address dstAddr;
 
+    mTransmitAttempts++;
+
     switch (aError)
     {
     case kThreadError_None:
@@ -1047,14 +1049,14 @@ void Mac::SentFrame(ThreadError aError)
         {
         case sizeof(ShortAddress):
             otLogInfoMac(GetInstance(), "Tx failed - Error: %s (%d) - SeqNum: %d - Attempt %d/%d - Dst (short): %04x",
-                         otThreadErrorToString(aError), aError, sendFrame.GetSequence(), mTransmitAttempts + 1,
+                         otThreadErrorToString(aError), aError, sendFrame.GetSequence(), mTransmitAttempts,
                          sendFrame.GetMaxTxAttempts(), dstAddr.mShortAddress);
             break;
 
         case sizeof(ExtAddress):
             otLogInfoMac(GetInstance(), "Tx failed - Error: %s (%d) - SeqNum: %d - Attempt %d/%d - "
                          "Dst: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
-                         otThreadErrorToString(aError), aError, sendFrame.GetSequence(), mTransmitAttempts + 1,
+                         otThreadErrorToString(aError), aError, sendFrame.GetSequence(), mTransmitAttempts,
                          sendFrame.GetMaxTxAttempts(), dstAddr.mExtAddress.m8[0], dstAddr.mExtAddress.m8[1],
                          dstAddr.mExtAddress.m8[2], dstAddr.mExtAddress.m8[3], dstAddr.mExtAddress.m8[4],
                          dstAddr.mExtAddress.m8[5], dstAddr.mExtAddress.m8[6], dstAddr.mExtAddress.m8[7]);
@@ -1062,7 +1064,7 @@ void Mac::SentFrame(ThreadError aError)
 
         default:
             otLogInfoMac(GetInstance(), "Tx failed - Error: %s (%d) - SeqNum: %d - Attempt %d/%d",
-                         otThreadErrorToString(aError), aError, sendFrame.GetSequence(), mTransmitAttempts + 1,
+                         otThreadErrorToString(aError), aError, sendFrame.GetSequence(), mTransmitAttempts,
                          sendFrame.GetMaxTxAttempts());
             break;
         }
@@ -1072,11 +1074,8 @@ void Mac::SentFrame(ThreadError aError)
         if (!RadioSupportsRetries() &&
             mTransmitAttempts < sendFrame.GetMaxTxAttempts())
         {
-            mTransmitAttempts++;
             StartCsmaBackoff();
-
             mCounters.mTxRetry++;
-
             ExitNow();
         }
 
