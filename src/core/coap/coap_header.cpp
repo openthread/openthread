@@ -59,7 +59,7 @@ void Header::Init(Type aType, Code aCode)
     SetCode(aCode);
 }
 
-ThreadError Header::FromMessage(const Message &aMessage, uint32_t aMetadataSize)
+ThreadError Header::FromMessage(const Message &aMessage, uint16_t aMetadataSize)
 {
     ThreadError error = kThreadError_Parse;
     uint16_t offset = aMessage.GetOffset();

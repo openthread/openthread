@@ -115,7 +115,7 @@ public:
      * @retval kThreadError_Parse  Failed to parse the message.
      *
      */
-    ThreadError FromMessage(const Message &aMessage, uint32_t aMetadataSize);
+    ThreadError FromMessage(const Message &aMessage, uint16_t aMetadataSize);
 
     /**
      * This method returns the Version value.
