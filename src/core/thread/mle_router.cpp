@@ -936,6 +936,7 @@ ThreadError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::Mess
         break;
 
     case Neighbor::kStateInvalid:
+    case Neighbor::kStateValid:
         VerifyOrExit((mChallengeTimeout > 0) && (memcmp(mChallenge, response.GetResponse(), sizeof(mChallenge)) == 0),
                      error = kThreadError_Error);
         break;
@@ -3825,6 +3826,18 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
             mNetif.GetAddressResolver().Remove(i);
         }
     }
+
+    // Keep route path to the Leader reported by the parent before it is updated.
+    if (mRouters[GetLeaderId()].mCost == 0)
+    {
+        mRouters[GetLeaderId()].mCost = mParentLeaderCost;
+    }
+
+    mRouters[GetLeaderId()].mNextHop = GetRouterId(mParent.mValid.mRloc16);
+
+    // Keep link to the parent in order to response to Parent Requests before new link is established.
+    mRouters[GetRouterId(mParent.mValid.mRloc16)] = mParent;
+    mRouters[GetRouterId(mParent.mValid.mRloc16)].mAllocated = true;
 
     // send link request
     SendLinkRequest(NULL);

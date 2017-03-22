@@ -76,7 +76,6 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mLastPartitionRouterIdSequence(0),
     mLastPartitionId(0),
     mParentRequestMode(kMleAttachAnyPartition),
-    mParentLinkQuality(0),
     mParentPriority(0),
     mParentLinkQuality3(0),
     mParentLinkQuality2(0),
@@ -493,7 +492,7 @@ ThreadError Mle::BecomeChild(otMleAttachFilter aFilter)
 
     mNetif.GetMeshForwarder().SetRxOnWhenIdle(true);
 
-    mParentRequestTimer.Start(kParentRequestRouterTimeout);
+    mParentRequestTimer.Start((otPlatRandomGet() % kParentRequestRouterTimeout) + 1);
 
 exit:
     otLogFuncExitErr(error);
@@ -2474,13 +2473,17 @@ exit:
     return error;
 }
 
-bool Mle::IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, ConnectivityTlv &aConnectivityTlv) const
+bool Mle::IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, ConnectivityTlv &aConnectivityTlv)
 {
     bool rval = false;
 
-    if (aLinkQuality != mParentLinkQuality)
+    uint8_t candidateLinkQualityIn = mParentCandidate.mLinkInfo.GetLinkQuality(mNetif.GetMac().GetNoiseFloor());
+    uint8_t candidateTwoWayLinkQuality = (candidateLinkQualityIn < mParentCandidate.mLinkQualityOut)
+                                         ?  candidateLinkQualityIn : mParentCandidate.mLinkQualityOut;
+
+    if (aLinkQuality != candidateTwoWayLinkQuality)
     {
-        ExitNow(rval = (aLinkQuality > mParentLinkQuality));
+        ExitNow(rval = (aLinkQuality > candidateTwoWayLinkQuality));
     }
 
     if (IsActiveRouter(aRloc16) != IsActiveRouter(mParentCandidate.mValid.mRloc16))
@@ -2641,14 +2644,15 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
     mParentCandidate.mLinkInfo.Clear();
     mParentCandidate.mLinkInfo.AddRss(mNetif.GetMac().GetNoiseFloor(), threadMessageInfo->mRss);
     mParentCandidate.mLinkFailures = 0;
+    mParentCandidate.mLinkQualityOut = LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMarginTlv.GetLinkMargin());
     mParentCandidate.mState = Neighbor::kStateValid;
     mParentCandidate.mKeySequence = aKeySequence;
 
-    mParentLinkQuality = linkQuality;
     mParentPriority = connectivity.GetParentPriority();
     mParentLinkQuality3 = connectivity.GetLinkQuality3();
     mParentLinkQuality2 = connectivity.GetLinkQuality2();
     mParentLinkQuality1 = connectivity.GetLinkQuality1();
+    mParentLeaderCost = connectivity.GetLeaderCost();
     mParentLeaderData = leaderData;
     mParentIsSingleton = connectivity.GetActiveRouters() <= 1;
 

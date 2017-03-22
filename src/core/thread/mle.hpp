@@ -1355,6 +1355,10 @@ protected:
 
     uint8_t mLastPartitionRouterIdSequence;
     uint32_t mLastPartitionId;
+
+protected:
+    uint8_t mParentLeaderCost;
+
 private:
     enum
     {
@@ -1391,7 +1395,7 @@ private:
     ThreadError SendChildIdRequest(void);
     void SendOrphanAnnounce(void);
 
-    bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, ConnectivityTlv &aConnectivityTlv) const;
+    bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, ConnectivityTlv &aConnectivityTlv);
     void ResetParentCandidate(void);
 
     MessageQueue mDelayedResponses;
@@ -1426,7 +1430,6 @@ private:
     } mParentRequest;
 
     otMleAttachFilter mParentRequestMode;
-    uint8_t mParentLinkQuality;
     int8_t mParentPriority;
     uint8_t mParentLinkQuality3;
     uint8_t mParentLinkQuality2;
