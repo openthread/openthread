@@ -151,10 +151,9 @@ public:
      * This method sets the scan parameters for MLE Discovery Request messages.
      *
      * @param[in]  aScanChannels  A bit vector indicating which channels to scan.
-     * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel.
      *
      */
-    void SetDiscoverParameters(uint32_t aScanChannels, uint16_t aScanDuration);
+    void SetDiscoverParameters(uint32_t aScanChannels);
 
     /**
      * This method frees any indirect messages queued for a specific child.
@@ -321,7 +320,6 @@ private:
     bool mEnabled;
 
     uint32_t mScanChannels;
-    uint16_t mScanDuration;
     uint8_t mScanChannel;
     uint8_t mRestoreChannel;
     uint16_t mRestorePanId;

@@ -375,8 +375,8 @@ exit:
     return error;
 }
 
-ThreadError Mle::Discover(uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanId, bool aJoiner,
-                          DiscoverHandler aCallback, void *aContext)
+ThreadError Mle::Discover(uint32_t aScanChannels, uint16_t aPanId, bool aJoiner, DiscoverHandler aCallback,
+                          void *aContext)
 {
     ThreadError error = kThreadError_None;
     Message *message = NULL;
@@ -389,7 +389,7 @@ ThreadError Mle::Discover(uint32_t aScanChannels, uint16_t aScanDuration, uint16
 
     mDiscoverHandler = aCallback;
     mDiscoverContext = aContext;
-    mNetif.GetMeshForwarder().SetDiscoverParameters(aScanChannels, aScanDuration);
+    mNetif.GetMeshForwarder().SetDiscoverParameters(aScanChannels);
 
     VerifyOrExit((message = NewMleMessage()) != NULL);
     message->SetSubType(Message::kSubTypeMleDiscoverRequest);

@@ -114,7 +114,6 @@ OTAPI bool OTCALL otThreadIsSingleton(otInstance *aInstance);
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aScanChannels     A bit vector indicating which channels to scan (e.g. OT_CHANNEL_11_MASK).
- * @param[in]  aScanDuration     The time in milliseconds to spend scanning each channel.
  * @param[in]  aPanId            The PAN ID filter (set to Broadcast PAN to disable filter).
  * @param[in]  aCallback         A pointer to a function called on receiving an MLE Discovery Response or scan completes.
  * @param[in]  aCallbackContext  A pointer to application-specific context.
@@ -123,8 +122,7 @@ OTAPI bool OTCALL otThreadIsSingleton(otInstance *aInstance);
  * @retval kThreadError_Busy  Already performing an Thread Discovery.
  *
  */
-OTAPI ThreadError OTCALL otThreadDiscover(otInstance *aInstance, uint32_t aScanChannels, uint16_t aScanDuration,
-                                          uint16_t aPanid,
+OTAPI ThreadError OTCALL otThreadDiscover(otInstance *aInstance, uint32_t aScanChannels, uint16_t aPanid,
                                           otHandleActiveScanResult aCallback, void *aCallbackContext);
 
 /**
