@@ -250,6 +250,16 @@
 #endif  // OPENTHREAD_CONFIG_JOINER_UDP_PORT
 
 /**
+ * @def OPENTHREAD_CONFIG_COMMISSIONER_UDP_PORT
+ *
+ * The border agent udp port.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_COMMISSIONER_UDP_PORT
+#define OPENTHREAD_CONFIG_COMMISSIONER_UDP_PORT                       49191
+#endif  // OPENTHREAD_CONFIG_COMMISSIONER_UDP_PORT
+
+/**
  * @def OPENTHREAD_CONFIG_MAX_ENERGY_RESULTS
  *
  * The maximum number of Energy List entries.

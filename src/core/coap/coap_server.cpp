@@ -169,6 +169,7 @@ void Server::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &a
             curUriPath += coapOption->mLength;
             break;
 
+        case kCoapOptionAccept:
         case kCoapOptionContentFormat:
             break;
 
