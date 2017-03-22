@@ -2195,10 +2195,6 @@ ThreadError MeshForwarder::HandleDatagram(Message &aMessage, const ThreadMessage
     return mNetif.GetIp6().HandleDatagram(aMessage, &mNetif, mNetif.GetInterfaceId(), &aMessageInfo, false);
 }
 
-void MeshForwarder::UpdateFramePending()
-{
-}
-
 void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const ThreadMessageInfo &aMessageInfo)
 {
     Child *child;
