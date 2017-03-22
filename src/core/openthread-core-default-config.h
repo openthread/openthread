@@ -677,4 +677,14 @@
 #define OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT             1
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE
+ *
+ * The size of mbedTLS heap buffer when DTLS is enabled.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE
+#define OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE                     (2048 * sizeof(void *))
+#endif
+
 #endif  // OPENTHREAD_CORE_DEFAULT_CONFIG_H_
