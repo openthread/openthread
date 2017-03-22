@@ -1719,6 +1719,13 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
             {
                 child->mIndirectSendInfo.mFragmentOffset = 0;
                 child->mIndirectSendInfo.mMessage = NULL;
+
+                // add short address for subsequent indirect messages after
+                // one indirect message to valid sleepy devices is sent out successfully
+                if (aError == kThreadError_None)
+                {
+                    SetSrcMatchAsShort(*child, true);
+                }
             }
 
             childIndex = mNetif.GetMle().GetChildIndex(*child);
@@ -1841,7 +1848,6 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
     uint8_t *payload;
     uint8_t payloadLength;
     uint8_t commandId;
-    Child *child = NULL;
     ThreadError error = kThreadError_None;
 
     if (!mEnabled)
@@ -1853,15 +1859,6 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
 
     SuccessOrExit(error = aFrame.GetSrcAddr(macSource));
     SuccessOrExit(aFrame.GetDstAddr(macDest));
-
-    if ((child = mNetif.GetMle().GetChild(macSource)) != NULL)
-    {
-        if (((child->mMode & Mle::ModeTlv::kModeRxOnWhenIdle) == 0) &&
-            macSource.mLength == sizeof(otShortAddress))
-        {
-            SetSrcMatchAsShort(*child, true);
-        }
-    }
 
     aFrame.GetSrcPanId(messageInfo.mPanId);
     messageInfo.mChannel = aFrame.GetChannel();
