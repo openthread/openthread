@@ -338,7 +338,7 @@ const NcpBase::InsertPropertyHandlerEntry NcpBase::mInsertPropertyHandlerTable[]
     { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::InsertPropertyHandler_THREAD_ASSISTING_PORTS },
 
 #if OPENTHREAD_ENABLE_COMMISSIONER
-    { SPINEL_PROP_THREAD_JOINERS, &NcpBase::NcpBase::InsertPropertyHandler_SPINEL_PROP_THREAD_JOINERS },
+    { SPINEL_PROP_THREAD_JOINERS, &NcpBase::NcpBase::InsertPropertyHandler_THREAD_JOINERS },
 #endif
 
     { SPINEL_PROP_CNTR_RESET, &NcpBase::SetPropertyHandler_CNTR_RESET },
@@ -6114,8 +6114,8 @@ ThreadError NcpBase::InsertPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_
 }
 
 #if OPENTHREAD_ENABLE_COMMISSIONER
-ThreadError NcpBase::InsertPropertyHandler_SPINEL_PROP_THREAD_JOINERS(uint8_t header, spinel_prop_key_t key,
-                                                                      const uint8_t *value_ptr, uint16_t value_len)
+ThreadError NcpBase::InsertPropertyHandler_THREAD_JOINERS(uint8_t header, spinel_prop_key_t key,
+                                                          const uint8_t *value_ptr, uint16_t value_len)
 {
     spinel_ssize_t parsedLength;
     ThreadError errorCode = kThreadError_None;
@@ -6132,11 +6132,23 @@ ThreadError NcpBase::InsertPropertyHandler_SPINEL_PROP_THREAD_JOINERS(uint8_t he
     parsedLength = spinel_datatype_unpack(
                        value_ptr,
                        value_len,
-                       "EDL",
-                       &ot_ext_address,
+                       "ULE",
                        &aPSKd,
-                       &joiner_timeout
+                       &joiner_timeout,
+                       &ot_ext_address
                    );
+
+    if (parsedLength <= 0)
+    {
+        parsedLength = spinel_datatype_unpack(
+                           value_ptr,
+                           value_len,
+                           "UL",
+                           &aPSKd,
+                           &joiner_timeout
+                       );
+        ot_ext_address = NULL;
+    }
 
     if (parsedLength > 0)
     {

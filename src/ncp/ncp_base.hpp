@@ -559,6 +559,10 @@ private:
                                                              const uint8_t *value_ptr, uint16_t value_len);
     ThreadError InsertPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                     uint16_t value_len);
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    ThreadError InsertPropertyHandler_THREAD_JOINERS(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+            uint16_t value_len);
+#endif
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     ThreadError RemovePropertyHandler_MAC_SRC_MATCH_SHORT_ADDRESSES(uint8_t header, spinel_prop_key_t key,
