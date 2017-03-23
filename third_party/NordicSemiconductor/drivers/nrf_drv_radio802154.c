@@ -597,6 +597,12 @@ static inline void shorts_tifs_no_ack_disable(void)
     nrf_radio_ifs_set(0);
 }
 
+// Check if tifs shorts are enabled.
+static inline bool shorts_tifs_are_enabled(void)
+{
+    return NRF_RADIO->SHORTS & NRF_RADIO_SHORT_FRAMESTART_BCSTART_MASK;
+}
+
 // Assert that peripheral shorts used during automatic ACK transmission are enabled.
 static inline void assert_tifs_shorts_enabled(void)
 {
@@ -716,9 +722,11 @@ static inline void tx_procedure_abort(void)
         break;
 
     // Just before entering this event handler Ack Frame could be received and
-    // driver enters WatiningRxFrame state. In this case just clear pending events
-    // because change of state was requested.
+    // driver enters WatiningRxFrame state (or any other RX state if this function was interrupted).
     case RADIO_STATE_WAITING_RX_FRAME:
+    case RADIO_STATE_RX_HEADER:
+    case RADIO_STATE_RX_FRAME:
+    case RADIO_STATE_TX_ACK:
         break;
 
     default:
@@ -747,12 +755,15 @@ static inline void enabling_rx_procedure_begin(rx_buffer_t * p_buffer)
         case NRF_RADIO_STATE_DISABLED:   // This one could happen during stopping ACK.
         case NRF_RADIO_STATE_RX_RU:      // This one could happen during enabling receiver (after sending ACK).
         case NRF_RADIO_STATE_RX:         // This one could happen if any other buffer is in use.
+        case NRF_RADIO_STATE_TX_RU:      // This one could happen if received a short frame.
+        case NRF_RADIO_STATE_TX_IDLE:    // This one could happen if received a short frame.
             break;
 
         case NRF_RADIO_STATE_RX_IDLE:
             // Mutex to make sure Radio State did not change between IRQ and this process.
+            // Check shorts to make sure RX_IDLE state is due to occupied buffers - not during END/DISABLE short.
             // If API call changed Radio state leave Radio as it is.
-            if (mutex_lock())
+            if (mutex_lock() && !shorts_tifs_are_enabled())
             {
                 shorts_tifs_initial_enable();
 
