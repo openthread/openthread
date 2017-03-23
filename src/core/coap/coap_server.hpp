@@ -38,6 +38,7 @@
 
 #include <coap/coap_base.hpp>
 #include <coap/coap_header.hpp>
+#include <common/debug.hpp>
 #include <common/message.hpp>
 #include <common/timer.hpp>
 #include <net/ip6.hpp>
@@ -145,12 +146,9 @@ public:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval kThreadError_None    Successfully removed the bytes.
-     * @retval kThreadError_NoBufs  Insufficient available buffers to place the message.
-     *
      */
-    static ThreadError RemoveFrom(Message &aMessage) {
-        return aMessage.SetLength(aMessage.GetLength() - sizeof(EnqueuedResponseHeader));
+    static void RemoveFrom(Message &aMessage) {
+        assert(aMessage.SetLength(aMessage.GetLength() - sizeof(EnqueuedResponseHeader)) == kThreadError_None);
     }
 
     /**

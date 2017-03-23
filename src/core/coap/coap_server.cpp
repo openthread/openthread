@@ -35,8 +35,6 @@
 #include <common/code_utils.hpp>
 #include <net/ip6.hpp>
 
-#include <string.h>
-
 namespace Thread {
 namespace Coap {
 
@@ -241,7 +239,7 @@ ThreadError ResponsesQueue::GetMatchedResponseCopy(const Header &aHeader,
     for (message = mQueue.GetHead(); message != NULL; message = message->GetNext())
     {
         enqueuedResponseHeader.ReadFrom(*message);
-        memcpy(&messageInfo, &enqueuedResponseHeader.GetMessageInfo(), sizeof(messageInfo));
+        messageInfo = enqueuedResponseHeader.GetMessageInfo();
 
         // Check source endpoint
         if (messageInfo.GetPeerPort() != aMessageInfo.GetPeerPort())
@@ -249,7 +247,7 @@ ThreadError ResponsesQueue::GetMatchedResponseCopy(const Header &aHeader,
             continue;
         }
 
-        if (memcmp(&messageInfo.GetPeerAddr(), &aMessageInfo.GetPeerAddr(), sizeof(Ip6::Address)))
+        if (messageInfo.GetPeerAddr() != aMessageInfo.GetPeerAddr())
         {
             continue;
         }
