@@ -58,6 +58,60 @@ using Thread::Encoding::BigEndian::HostSwap16;
 namespace Thread {
 namespace Mle {
 
+#if OPENTHREAD_CONFIG_MLE_MAX_TRANSMISSION_COUNT > 1
+
+const static uint32_t kCorrespondingRequestsMask[] =
+{
+    //  0: kCommandLinkRequest
+    0,
+    //  1: kCommandLinkAccept
+    ((1 << Header::kCommandLinkRequest) | (1 << Header::kCommandLinkAcceptAndRequest)),
+    //  2: kCommandLinkAcceptAndRequest
+    (1 << Header::kCommandLinkRequest),
+    //  3: kCommandLinkReject
+    ((1 << Header::kCommandLinkRequest) | (1 << Header::kCommandLinkAcceptAndRequest)),
+    //  4: kCommandAdvertisement
+    0,
+    //  5: kCommandUpdate
+    0,
+    //  6: kCommandUpdateRequest
+    0,
+    //  7: kCommandDataRequest
+    0,
+    //  8: kCommandDataResponse
+    (1 << Header::kCommandDataRequest),
+    //  9: kCommandParentRequest
+    0,
+    // 10: kCommandParentResponse
+    0,
+    // 11: kCommandChildIdRequest
+    0,
+    // 12: kCommandChildIdResponse
+    (1 << Header::kCommandChildIdRequest),
+    // 13: kCommandChildUpdateRequest
+    0,
+    // 14: kCommandChildUpdateResponse
+    (1 << Header::kCommandChildUpdateRequest),
+    // 15: kCommandAnnounce
+    0,
+    // 16: kCommandDiscoveryRequest
+    0,
+    // 17: kCommandDiscoveryResponse
+    (1 << Header::kCommandDiscoveryRequest),
+};
+
+RetransmissionMetadata::RetransmissionMetadata(const Ip6::Address &aDestination, uint8_t aCommand)
+    : mDestination(aDestination), mTransmissionLeft(kMaxTransmissionCount - 1), mCommand(aCommand) {}
+
+void RetransmissionMetadata::GenerateNextTransmissionTime(uint32_t aCurrentTime)
+{
+    // Uniform distribution between 0.9 and 1.1 with resolution 1ms
+    uint32_t t = (otPlatRandomGet() % 200 + 900)
+                 * (mDestination.IsMulticast() ? kMulticastRetransmissionDelay : kUnicastRetransmissionDelay);
+    mTransmissionTime = aCurrentTime + t;
+}
+#endif // OPENTHREAD_CONFIG_MLE_MAX_TRANSMISSION_COUNT > 1
+
 Mle::Mle(ThreadNetif &aThreadNetif) :
     mNetif(aThreadNetif),
     mRetrieveNewNetworkData(false),
@@ -70,7 +124,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mParentRequestState(kParentIdle),
     mReattachState(kReattachStop),
     mParentRequestTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mle::HandleParentRequestTimer, this),
-    mDelayedResponseTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mle::HandleDelayedResponseTimer, this),
+    mTransmissionTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mle::HandleTransmissionTimer, this),
     mRouterSelectionJitter(kRouterSelectionJitter),
     mRouterSelectionJitterTimeout(0),
     mLastPartitionRouterIdSequence(0),
@@ -432,6 +486,10 @@ ThreadError Mle::BecomeDetached(void)
     otLogFuncEntry();
 
     VerifyOrExit(mDeviceState != kDeviceStateDisabled, error = kThreadError_InvalidState);
+
+#if OPENTHREAD_CONFIG_MLE_MAX_TRANSMISSION_COUNT > 1
+    RetransmissionClear();
+#endif
 
     if (mReattachState == kReattachStop)
     {
@@ -1414,9 +1472,12 @@ void Mle::HandleParentRequestTimer(void)
     }
 }
 
-void Mle::HandleDelayedResponseTimer(void *aContext)
+void Mle::HandleTransmissionTimer(void *aContext)
 {
     static_cast<Mle *>(aContext)->HandleDelayedResponseTimer();
+#if OPENTHREAD_CONFIG_MLE_MAX_TRANSMISSION_COUNT > 1
+    static_cast<Mle *>(aContext)->RetransmissionHandler();
+#endif
 }
 
 void Mle::HandleDelayedResponseTimer(void)
@@ -1463,7 +1524,7 @@ void Mle::HandleDelayedResponseTimer(void)
 
     if (nextDelay != 0xffffffff)
     {
-        mDelayedResponseTimer.Start(nextDelay);
+        mTransmissionTimer.Start(nextDelay);
     }
 }
 
@@ -1870,6 +1931,184 @@ exit:
     return;
 }
 
+#if OPENTHREAD_CONFIG_MLE_MAX_TRANSMISSION_COUNT > 1
+void Mle::RetransmissionDequeue(const Ip6::Address &aDestination, uint8_t aCommand)
+{
+    const uint32_t requestsMask = kCorrespondingRequestsMask[aCommand];
+
+    if (requestsMask == 0)
+    {
+        return;
+    }
+
+    otLogInfoMle(GetInstance(), "Retransmission dequeue\n");
+
+    Message *nextMessage = NULL;
+    RetransmissionMetadata retransmissionMetadata;
+
+    for (Message *message = mPendingRequests.GetHead(); message != NULL; message = nextMessage)
+    {
+        nextMessage = message->GetNext();
+        retransmissionMetadata.ReadFrom(*message);
+
+        if ((requestsMask & (1 << retransmissionMetadata.GetCommand())) != 0 &&
+            (retransmissionMetadata.GetDestination().IsMulticast() ||
+             retransmissionMetadata.GetDestination() == aDestination))
+        {
+            mPendingRequests.Dequeue(*message);
+            message->Free();
+            otLogInfoMle(GetInstance(), "One request dequeued\n");
+        }
+    }
+
+}
+
+void Mle::RetransmissionHandler(void)
+{
+    RetransmissionMetadata retransmissionMetadata;
+    uint32_t now = Timer::GetNow();
+    uint32_t nextDelta = 0xffffffff;
+
+    Message *message = mPendingRequests.GetHead();
+    Message *nextMessage = NULL;
+
+    while (message != NULL)
+    {
+        nextMessage = message->GetNext();
+        retransmissionMetadata.ReadFrom(*message);
+
+        if (retransmissionMetadata.IsLater(now))
+        {
+            // Calculate the next retransmission time and choose the lowest.
+            if (retransmissionMetadata.GetTransmissionTime() - now < nextDelta)
+            {
+                nextDelta = retransmissionMetadata.GetTransmissionTime() - now;
+            }
+        }
+        else
+        {
+            retransmissionMetadata.SetTransmissionLeft(retransmissionMetadata.GetTransmissionLeft() - 1);
+
+            if (retransmissionMetadata.GetTransmissionLeft() > 0)
+            {
+                Message *messageCopy = message->Clone(message->GetLength() - sizeof(RetransmissionMetadata));
+
+                if (messageCopy != NULL)
+                {
+                    if (kThreadError_None != DoTransmit(*messageCopy, retransmissionMetadata.GetDestination()))
+                    {
+                        messageCopy->Free();
+                    }
+                }
+
+                retransmissionMetadata.GenerateNextTransmissionTime(now);
+                retransmissionMetadata.UpdateIn(*message);
+
+                // Check if retransmission time is lower than the current lowest one.
+                if (retransmissionMetadata.GetTransmissionTime() - now < nextDelta)
+                {
+                    nextDelta = retransmissionMetadata.GetTransmissionTime() - now;
+                }
+            }
+            else
+            {
+                // Send the last time
+                mPendingRequests.Dequeue(*message);
+                message->SetLength(message->GetLength() - sizeof(RetransmissionMetadata));
+
+                if (kThreadError_None != DoTransmit(*message, retransmissionMetadata.GetDestination()))
+                {
+                    message->Free();
+                }
+            }
+        }
+
+        message = nextMessage;
+    }
+
+    if (nextDelta != 0xffffffff)
+    {
+        if (mTransmissionTimer.IsRunning())
+        {
+            uint32_t currentDelta = mTransmissionTimer.Getdt() - (now - mTransmissionTimer.Gett0());
+
+            if (nextDelta < currentDelta)
+            {
+                mTransmissionTimer.Start(nextDelta);
+            }
+        }
+        else
+        {
+            mTransmissionTimer.Start(nextDelta);
+        }
+    }
+
+    return;
+}
+
+void Mle::RetransmissionClear()
+{
+    Message *message = mPendingRequests.GetHead();
+    Message *nextMessage = NULL;
+
+    while (message != NULL)
+    {
+        nextMessage = message->GetNext();
+        mPendingRequests.Dequeue(*message);
+        message->Free();
+        message = nextMessage;
+    }
+
+    otLogInfoMle(GetInstance(), "Retransmission cleared");
+}
+
+void Mle::RetransmissionEnqueue(const Message &aMessage, const Ip6::Address &aDestination, uint8_t aCommand)
+{
+    ThreadError error = kThreadError_None;
+    Message *messageCopy = NULL;
+    uint32_t now = Timer::GetNow();
+
+    RetransmissionMetadata retransmissionMetadata(aDestination, aCommand);
+    retransmissionMetadata.GenerateNextTransmissionTime(now);
+
+    VerifyOrExit((messageCopy = aMessage.Clone()) != NULL, error = kThreadError_NoBufs);
+    SuccessOrExit(error = retransmissionMetadata.AppendTo(*messageCopy));
+
+    // Check if fire time should be adjusted.
+    if (!mTransmissionTimer.IsRunning() ||
+        retransmissionMetadata.IsEarlier(mTransmissionTimer.Gett0() + mTransmissionTimer.Getdt()))
+    {
+        mTransmissionTimer.Start(retransmissionMetadata.GetTransmissionTime() - now);
+    }
+
+    mPendingRequests.Enqueue(*messageCopy);
+
+    otLogInfoMle(GetInstance(), "Retransmission enqueued");
+
+exit:
+
+    if (error != kThreadError_None && messageCopy != NULL)
+    {
+        messageCopy->Free();
+    }
+
+    return;
+}
+#endif // if OPENTHREAD_CONFIG_MLE_MAX_TRANSMISSION_COUNT > 1
+
+ThreadError Mle::DoTransmit(Message &aMessage, const Ip6::Address &aDestination)
+{
+    Ip6::MessageInfo messageInfo;
+
+    messageInfo.SetPeerAddr(aDestination);
+    messageInfo.SetSockAddr(mLinkLocal64.GetAddress());
+    messageInfo.SetPeerPort(kUdpPort);
+    messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
+    messageInfo.SetHopLimit(255);
+
+    return mSocket.SendTo(aMessage, messageInfo);
+}
+
 ThreadError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination)
 {
     ThreadError error = kThreadError_None;
@@ -1924,13 +2163,26 @@ ThreadError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination
         mNetif.GetKeyManager().IncrementMleFrameCounter();
     }
 
-    messageInfo.SetPeerAddr(aDestination);
-    messageInfo.SetSockAddr(mLinkLocal64.GetAddress());
-    messageInfo.SetPeerPort(kUdpPort);
-    messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
-    messageInfo.SetHopLimit(255);
+#if OPENTHREAD_CONFIG_MLE_MAX_TRANSMISSION_COUNT > 1
 
-    SuccessOrExit(error = mSocket.SendTo(aMessage, messageInfo));
+    switch (header.GetCommand())
+    {
+    case Header::kCommandLinkRequest:
+    case Header::kCommandLinkAcceptAndRequest:
+    case Header::kCommandDataRequest:
+    case Header::kCommandChildIdRequest:
+    case Header::kCommandChildUpdateRequest:
+    case Header::kCommandDiscoveryRequest:
+        RetransmissionEnqueue(aMessage, aDestination, header.GetCommand());
+        break;
+
+    default:
+        break;
+    }
+
+#endif // if OPENTHREAD_CONFIG_MLE_MAX_TRANSMISSION_COUNT > 1
+
+    SuccessOrExit(error = DoTransmit(aMessage, aDestination));
 
 exit:
     return error;
@@ -1947,20 +2199,20 @@ ThreadError Mle::AddDelayedResponse(Message &aMessage, const Ip6::Address &aDest
     SuccessOrExit(error = delayedResponse.AppendTo(aMessage));
     mDelayedResponses.Enqueue(aMessage);
 
-    if (mDelayedResponseTimer.IsRunning())
+    if (mTransmissionTimer.IsRunning())
     {
         // If timer is already running, check if it should be restarted with earlier fire time.
-        alarmFireTime = mDelayedResponseTimer.Gett0() + mDelayedResponseTimer.Getdt();
+        alarmFireTime = mTransmissionTimer.Gett0() + mTransmissionTimer.Getdt();
 
         if (delayedResponse.IsEarlier(alarmFireTime))
         {
-            mDelayedResponseTimer.Start(aDelay);
+            mTransmissionTimer.Start(aDelay);
         }
     }
     else
     {
         // Otherwise just set the timer.
-        mDelayedResponseTimer.Start(aDelay);
+        mTransmissionTimer.Start(aDelay);
     }
 
 exit:
@@ -2000,6 +2252,9 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     if (header.GetSecuritySuite() == Header::kNoSecurity)
     {
         aMessage.MoveOffset(header.GetLength());
+#if OPENTHREAD_CONFIG_MLE_MAX_TRANSMISSION_COUNT > 1
+        RetransmissionDequeue(aMessageInfo.GetPeerAddr(), header.GetCommand());
+#endif
 
         switch (header.GetCommand())
         {
@@ -2072,6 +2327,10 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     aMessage.Read(aMessage.GetOffset(), sizeof(command), &command);
     aMessage.MoveOffset(sizeof(command));
+
+#if OPENTHREAD_CONFIG_MLE_MAX_TRANSMISSION_COUNT > 1
+    RetransmissionDequeue(aMessageInfo.GetPeerAddr(), command);
+#endif
 
     switch (mDeviceState)
     {
