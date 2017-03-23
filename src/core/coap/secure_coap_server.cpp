@@ -42,7 +42,7 @@ namespace Thread {
 namespace Coap {
 
 SecureServer::SecureServer(ThreadNetif &aNetif, uint16_t aPort):
-    Server(aNetif.GetIp6().mUdp, aPort, &SecureServer::Send, &SecureServer::Receive),
+    Server(aNetif, aPort, &SecureServer::Send, &SecureServer::Receive),
     mTransmitCallback(NULL),
     mContext(NULL),
     mNetif(aNetif),

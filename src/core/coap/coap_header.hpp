@@ -109,13 +109,13 @@ public:
      * This method parses the CoAP header from a message.
      *
      * @param[in]  aMessage       A reference to the message.
-     * @param[in]  aCopiedMessage To indicate if this message is a copied one or not
+     * @param[in]  aMetadataSize  A size of metadata appended to the message.
      *
      * @retval kThreadError_None   Successfully parsed the message.
      * @retval kThreadError_Parse  Failed to parse the message.
      *
      */
-    ThreadError FromMessage(const Message &aMessage, bool aCopiedMessage);
+    ThreadError FromMessage(const Message &aMessage, uint16_t aMetadataSize);
 
     /**
      * This method returns the Version value.
