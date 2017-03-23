@@ -887,7 +887,7 @@ exit:
     return error;
 }
 
-void MeshForwarder::SetRxOff()
+void MeshForwarder::SetRxOff(void)
 {
     mNetif.GetMac().SetRxOnWhenIdle(false);
 
@@ -2061,6 +2061,15 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
         // Security Check
         VerifyOrExit(mNetif.GetIp6Filter().Accept(*message), error = kThreadError_Drop);
 
+        // Allow re-assembly of only one message at a time on a SED by clearing
+        // any remaining fragments in reassembly list upon receiving of a new
+        // (secure) first fragment.
+
+        if ((GetRxOnWhenIdle() == false) && message->IsLinkSecurityEnabled())
+        {
+            ClearReassemblyList();
+        }
+
         mReassemblyList.Enqueue(*message);
 
         if (!mReassemblyTimer.IsRunning())
@@ -2082,6 +2091,20 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
                 message->IsLinkSecurityEnabled() == aMessageInfo.mLinkSecurity)
             {
                 break;
+            }
+        }
+
+        // For a sleepy-end-device, if we receive a new (secure) next fragment
+        // with a non-matching fragmentation offset or tag, it indicates that
+        // we have either missed a fragment, or the parent has moved to a new
+        // message with a new tag. In either case, we can safely clear any
+        // remaining fragments stored in the reassembly list.
+
+        if (GetRxOnWhenIdle() == false)
+        {
+            if ((message == NULL) && (aMessageInfo.mLinkSecurity))
+            {
+                ClearReassemblyList();
             }
         }
 
@@ -2110,6 +2133,19 @@ exit:
         {
             message->Free();
         }
+    }
+}
+
+void MeshForwarder::ClearReassemblyList(void)
+{
+    Message *message;
+    Message *next;
+
+    for (message = mReassemblyList.GetHead(); message; message = next)
+    {
+        next = message->GetNext();
+        mReassemblyList.Dequeue(*message);
+        message->Free();
     }
 }
 
