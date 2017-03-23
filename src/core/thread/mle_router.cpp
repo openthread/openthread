@@ -2270,7 +2270,6 @@ ThreadError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const I
     }
 
     child->mLastHeard = Timer::GetNow();
-    mNetif.GetMeshForwarder().SetSrcMatchAsShort(*child, true);
 
     SendChildUpdateResponse(child, aMessageInfo, tlvs, tlvslength, &challenge);
 
@@ -2361,7 +2360,6 @@ ThreadError MleRouter::HandleChildUpdateResponse(const Message &aMessage, const 
     child->mLastHeard = Timer::GetNow();
     child->mKeySequence = aKeySequence;
     child->mLinkInfo.AddRss(mNetif.GetMac().GetNoiseFloor(), threadMessageInfo->mRss);
-    mNetif.GetMeshForwarder().SetSrcMatchAsShort(*child, true);
 
 exit:
     return error;
@@ -2687,6 +2685,11 @@ ThreadError MleRouter::SendChildIdResponse(Child *aChild)
     if ((aChild->mMode & ModeTlv::kModeFFD) == 0)
     {
         SuccessOrExit(error = AppendChildAddresses(*message, *aChild));
+    }
+
+    if ((aChild->mMode & ModeTlv::kModeRxOnWhenIdle) == 0)
+    {
+        mNetif.GetMeshForwarder().SetSrcMatchAsShort(*aChild, false);
     }
 
     SetChildStateToValid(aChild);
