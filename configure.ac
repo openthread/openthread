@@ -471,6 +471,38 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_COMMISSIONER], [test "${enable_commissioner}" 
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_COMMISSIONER],[${OPENTHREAD_ENABLE_COMMISSIONER}],[Define to 1 to enable the commissioner role.])
 
 #
+# Thread Border Agent
+#
+
+AC_ARG_ENABLE(border_agent,
+    [AS_HELP_STRING([--enable-border-agent],[Enable border agent support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_border_agent=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_border_agent} for --enable-border-agent])
+            ;;
+        esac
+    ],
+    [enable_border_agent=no])
+
+if test "$enable_border_agent" = "yes"; then
+    OPENTHREAD_ENABLE_BORDER_AGENT=1
+else
+    OPENTHREAD_ENABLE_BORDER_AGENT=0
+fi
+
+AC_MSG_RESULT(${enable_border_agent})
+AC_SUBST(OPENTHREAD_ENABLE_BORDER_AGENT)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_BORDER_AGENT], [test "${enable_border_agent}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_BORDER_AGENT],[${OPENTHREAD_ENABLE_BORDER_AGENT}],[Define to 1 to enable the border agent role.])
+
+
+#
 # Thread Joiner
 #
 
@@ -501,7 +533,7 @@ AC_SUBST(OPENTHREAD_ENABLE_JOINER)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_JOINER], [test "${enable_joiner}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_JOINER],[${OPENTHREAD_ENABLE_JOINER}],[Define to 1 to enable the joiner role.])
 
-if test "${enable_commissioner}" = "yes" -o "${enable_joiner}" = "yes"; then
+if test "${enable_commissioner}" = "yes" -o "${enable_joiner}" = "yes" -o "${enable_border_agent}" = "yes"; then
     enable_dtls="yes"
     OPENTHREAD_ENABLE_DTLS=1
 else
@@ -1129,6 +1161,7 @@ AC_MSG_NOTICE([
   OpenThread NCP support                    : ${enable_ncp}
   OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}
   OpenThread Commissioner support           : ${enable_commissioner}
+  OpenThread Border Agent support           : ${enable_border_agent}
   OpenThread Joiner support                 : ${enable_joiner}
   OpenThread DTLS support                   : ${enable_dtls}
   OpenThread Jam Detection support          : ${enable_jam_detection}

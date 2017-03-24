@@ -119,6 +119,14 @@ SOURCES_COMMON                     += \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_COMMISSIONER
 
+if OPENTHREAD_ENABLE_BORDER_AGENT
+SOURCES_COMMON                     += \
+    api/border_agent_api.cpp          \
+    coap/secure_coap_server.cpp       \
+    meshcop/border_agent.cpp          \
+    $(NULL)
+endif  # OPENTHREAD_ENABLE_BORDER_AGENT
+
 if OPENTHREAD_ENABLE_JOINER
 SOURCES_COMMON                     += \
     api/joiner_api.cpp                \

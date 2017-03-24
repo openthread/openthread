@@ -63,6 +63,10 @@ ifeq ($(COMMISSIONER),1)
 configure_OPTIONS              += --enable-commissioner
 endif
 
+ifeq ($(BORDER_AGENT),1)
+configure_OPTIONS              += --enable-border-agent
+endif
+
 ifeq ($(JOINER),1)
 configure_OPTIONS              += --enable-joiner
 endif

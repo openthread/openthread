@@ -112,12 +112,13 @@ void SecureServer::Receive(void *aContext, Message &aMessage, const Ip6::Message
 void SecureServer::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     otLogFuncEntry();
-
+    
     if (!mNetif.GetDtls().IsStarted())
     {
         mPeerAddress.SetPeerAddr(aMessageInfo.GetPeerAddr());
         mPeerAddress.SetPeerPort(aMessageInfo.GetPeerPort());
-
+        mPeerAddress.SetSockAddr(aMessageInfo.GetSockAddr());
+        mPeerAddress.SetSockPort(aMessageInfo.GetSockPort());
         mNetif.GetDtls().Start(false, HandleDtlsConnected, HandleDtlsReceive, HandleDtlsSend, this);
     }
     else
@@ -190,7 +191,11 @@ ThreadError SecureServer::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength)
     if (mTransmitMessage == NULL)
     {
         VerifyOrExit((mTransmitMessage = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+#ifdef OPENTHREAD_ENABLE_BORDER_AGENT
+        mTransmitMessage->SetLinkSecurityEnabled(true);
+#else
         mTransmitMessage->SetLinkSecurityEnabled(false);
+#endif
     }
 
     VerifyOrExit(mTransmitMessage->Append(aBuf, aLength) == kThreadError_None, error = kThreadError_NoBufs);

@@ -81,6 +81,10 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
     mSecureCoapServer(*this, OPENTHREAD_CONFIG_JOINER_UDP_PORT),
     mCommissioner(*this),
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_ENABLE_BORDER_AGENT
+    mBASecureCoapServer(*this, OPENTHREAD_CONFIG_COMMISSIONER_UDP_PORT),
+    mBorderAgent(*this),
+#endif  // OPENTHREAD_ENABLE_BORDER_AGENT
 #if OPENTHREAD_ENABLE_DTLS
     mDtls(*this),
 #endif

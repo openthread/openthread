@@ -103,6 +103,7 @@ typedef enum otCoapOptionType
     kCoapOptionContentFormat = 12,   ///< Content-Format
     kCoapOptionMaxAge        = 14,   ///< Max-Age
     kCoapOptionUriQuery      = 15,   ///< Uri-Query
+    kCoapOptionAccept        = 17,   ///< Accept
 } otCoapOptionType;
 
 /**
