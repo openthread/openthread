@@ -347,6 +347,14 @@ public:
      */
     const PriorityQueue &GetSendQueue(void) const { return mSendQueue; }
 
+    /**
+     * This static method converts an `IpProto` enumeration to a string.
+     *
+     * @returns The string representation of an IP protocol enumeration.
+     *
+     */
+    static const char *IpProtoToString(IpProto aIpProto);
+
     Routes mRoutes;
     Icmp mIcmp;
     Udp mUdp;

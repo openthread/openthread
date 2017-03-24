@@ -297,6 +297,7 @@ const char *Address::ToString(char *aBuf, uint16_t aSize) const
              HostSwap16(mFields.m16[2]), HostSwap16(mFields.m16[3]),
              HostSwap16(mFields.m16[4]), HostSwap16(mFields.m16[5]),
              HostSwap16(mFields.m16[6]), HostSwap16(mFields.m16[7]));
+
     return aBuf;
 }
 

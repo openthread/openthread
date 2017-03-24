@@ -277,6 +277,12 @@ private:
         kMaxPollTriggeredTxAttempts = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_POLLS,
     };
 
+    enum MessageAction              ///< Defines the action parameter in `LogMessageInfo()` method.
+    {
+        kMessageReceive,            ///< Indicates that the message was received.
+        kMessageTransmit,           ///< Indicates that the message was sent.
+    };
+
     ThreadError CheckReachability(uint8_t *aFrame, uint8_t aFrameLength,
                                   const Mac::Address &aMeshSource, const Mac::Address &aMeshDest);
 
@@ -301,7 +307,8 @@ private:
     ThreadError SendEmptyFrame(Mac::Frame &aFrame);
     ThreadError UpdateIp6Route(Message &aMessage);
     ThreadError UpdateMeshRoute(Message &aMessage);
-    ThreadError HandleDatagram(Message &aMessage, const ThreadMessageInfo &aMessageInfo);
+    ThreadError HandleDatagram(Message &aMessage, const ThreadMessageInfo &aMessageInfo,
+                               const Mac::Address &aMacSource);
     void ClearReassemblyList(void);
 
     static void HandleReceivedFrame(void *aContext, Mac::Frame &aFrame);
@@ -329,6 +336,9 @@ private:
     ThreadError AddPendingSrcMatchEntries(void);
     ThreadError AddSrcMatchEntry(Child &aChild);
     void ClearSrcMatchEntry(Child &aChild);
+
+    void LogIp6Message(MessageAction aAction, const Message &aMessage, const Mac::Address &aMacAddress,
+                       ThreadError aError);
 
     Mac::Receiver mMacReceiver;
     Mac::Sender mMacSender;
