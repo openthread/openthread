@@ -302,6 +302,7 @@ private:
     ThreadError UpdateIp6Route(Message &aMessage);
     ThreadError UpdateMeshRoute(Message &aMessage);
     ThreadError HandleDatagram(Message &aMessage, const ThreadMessageInfo &aMessageInfo);
+    void ClearReassemblyList(void);
 
     static void HandleReceivedFrame(void *aContext, Mac::Frame &aFrame);
     void HandleReceivedFrame(Mac::Frame &aFrame);
