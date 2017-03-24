@@ -33,3 +33,4 @@ libtool
 Makefile
 Makefile.in
 output
+.vagrant
