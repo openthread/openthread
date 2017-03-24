@@ -176,12 +176,12 @@ exit:
     otLogFuncExit();
 }
 
-ThreadError SecureServer::HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t aLength)
+ThreadError SecureServer::HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType)
 {
-    return static_cast<SecureServer *>(aContext)->HandleDtlsSend(aBuf, aLength);
+    return static_cast<SecureServer *>(aContext)->HandleDtlsSend(aBuf, aLength, aMessageSubType);
 }
 
-ThreadError SecureServer::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength)
+ThreadError SecureServer::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType)
 {
     ThreadError error = kThreadError_None;
 
@@ -190,6 +190,7 @@ ThreadError SecureServer::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength)
     if (mTransmitMessage == NULL)
     {
         VerifyOrExit((mTransmitMessage = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+        mTransmitMessage->SetSubType(aMessageSubType);
         mTransmitMessage->SetLinkSecurityEnabled(false);
     }
 

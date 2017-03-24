@@ -284,7 +284,6 @@ private:
     Timer mTimer;
     uint16_t mSessionId;
     uint8_t mTransmitAttempts;
-    bool mSendKek;
 
     Coap::Resource mRelayReceive;
     Coap::Resource mDatasetChanged;
