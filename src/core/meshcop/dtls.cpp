@@ -61,6 +61,7 @@ Dtls::Dtls(ThreadNetif &aNetif):
     mSendHandler(NULL),
     mContext(NULL),
     mClient(false),
+    mMessageSubType(0),
     mNetif(aNetif)
 {
     memset(mPsk, 0, sizeof(mPsk));
@@ -89,6 +90,7 @@ ThreadError Dtls::Start(bool aClient, ConnectedHandler aConnectedHandler, Receiv
     mContext = aContext;
     mClient = aClient;
     mReceiveMessage = NULL;
+    mMessageSubType = 0;
 
     mbedtls_ssl_init(&mSsl);
     mbedtls_ssl_config_init(&mConf);
@@ -204,6 +206,8 @@ ThreadError Dtls::Send(Message &aMessage, uint16_t aLength)
 
     VerifyOrExit(aLength <= kApplicationDataMaxLength, error = kThreadError_NoBufs);
 
+    // Store message specific sub type.
+    mMessageSubType = aMessage.GetSubType();
     aMessage.Read(0, aLength, buffer);
 
     SuccessOrExit(error = MapError(mbedtls_ssl_write(&mSsl, buffer, aLength)));
@@ -237,7 +241,10 @@ int Dtls::HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength)
 
     otLogInfoMeshCoP(GetInstance(), "Dtls::HandleMbedtlsTransmit");
 
-    error = mSendHandler(mContext, aBuf, (uint16_t)aLength);
+    error = mSendHandler(mContext, aBuf, static_cast<uint16_t>(aLength), mMessageSubType);
+
+    // Restore default sub type.
+    mMessageSubType = 0;
 
     switch (error)
     {

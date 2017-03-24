@@ -147,8 +147,8 @@ private:
     static void HandleDtlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength);
     void HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength);
 
-    static ThreadError HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t aLength);
-    ThreadError HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength);
+    static ThreadError HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
+    ThreadError HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
 
     static void HandleUdpTransmit(void *aContext);
     void HandleUdpTransmit(void);
