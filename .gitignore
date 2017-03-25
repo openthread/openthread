@@ -15,6 +15,7 @@
 .dirstamp
 .DS_Store
 .local-version
+.vagrant
 aclocal.m4
 autom4te.cache
 build
