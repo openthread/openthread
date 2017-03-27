@@ -70,15 +70,18 @@ LinkQualityInfo::LinkQualityInfo(void)
 
 void LinkQualityInfo::Clear(void)
 {
-    mRssAverage = 0;
-    mCount = 0;
+    mRssAverage  = 0;
+    mCount       = 0;
     mLinkQuality = 0;
+    mLastRss     = 0;
 }
 
 void LinkQualityInfo::AddRss(LinkQualityInfo &aNoiseFloor, int8_t anRss)
 {
     uint16_t    newValue;
     uint16_t    oldAverage;
+
+    mLastRss = anRss;
 
     // Restrict/Cap the RSS value to the closed range [0, -128] so the value can fit in 8 bits.
 
@@ -182,6 +185,11 @@ uint8_t LinkQualityInfo::GetLinkQuality(LinkQualityInfo &aNoiseFloor)
     UpdateLinkQuality(aNoiseFloor);
 
     return mLinkQuality;
+}
+
+int8_t LinkQualityInfo::GetLastRss(void) const
+{
+    return mLastRss;
 }
 
 void LinkQualityInfo::UpdateLinkQuality(LinkQualityInfo &aNoiseFloor)

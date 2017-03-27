@@ -3483,6 +3483,7 @@ ThreadError MleRouter::GetChildInfo(Child &aChild, otChildInfo &aChildInfo)
     aChildInfo.mAge = Timer::MsecToSec(Timer::GetNow() - aChild.mLastHeard);
     aChildInfo.mLinkQualityIn = aChild.mLinkInfo.GetLinkQuality(mNetif.GetMac().GetNoiseFloor());
     aChildInfo.mAverageRssi = aChild.mLinkInfo.GetAverageRss();
+    aChildInfo.mLastRssi = neighbor->mLinkInfo.GetLastRss();
 
     aChildInfo.mRxOnWhenIdle = (aChild.mMode & ModeTlv::kModeRxOnWhenIdle) != 0;
     aChildInfo.mSecureDataRequest = (aChild.mMode & ModeTlv::kModeSecureDataRequest) != 0;
@@ -3581,6 +3582,7 @@ exit:
         aNeighInfo.mMleFrameCounter = neighbor->mValid.mMleFrameCounter;
         aNeighInfo.mLinkQualityIn = neighbor->mLinkInfo.GetLinkQuality(mNetif.GetMac().GetNoiseFloor());
         aNeighInfo.mAverageRssi = neighbor->mLinkInfo.GetAverageRss();
+        aNeighInfo.mLastRssi = neighbor->mLinkInfo.GetLastRss();
         aNeighInfo.mRxOnWhenIdle = (neighbor->mMode & ModeTlv::kModeRxOnWhenIdle) != 0;
         aNeighInfo.mSecureDataRequest = (neighbor->mMode & ModeTlv::kModeSecureDataRequest) != 0;
         aNeighInfo.mFullFunction = (neighbor->mMode & ModeTlv::kModeFFD) != 0;
