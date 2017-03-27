@@ -152,7 +152,7 @@ public:
     }
 
     // Helper function to convert mac address to string
-    static String^ ToString(uint64_t mac)
+    static String^ MacToString(uint64_t mac)
     {
         WCHAR szMac[64] = { 0 };
         swprintf_s(szMac, 64, MAC8_FORMAT, MAC8_ARG(((UCHAR*)&mac)));
@@ -160,7 +160,7 @@ public:
     }
 
     // Helper function to convert RLOC16/PANID to string
-    static String^ ToString(uint16_t rloc)
+    static String^ Rloc16ToString(uint16_t rloc)
     {
         WCHAR szRloc[16] = { 0 };
         swprintf_s(szRloc, 16, L"0x%X", rloc);
@@ -168,7 +168,7 @@ public:
     }
 
     // Helper function to convert state to string
-    static String^ ToString(otThreadState state)
+    static String^ ThreadStateToString(otThreadState state)
     {
         switch (state)
         {
