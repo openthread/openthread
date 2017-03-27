@@ -3476,19 +3476,20 @@ ThreadError MleRouter::GetChildInfo(Child &aChild, otChildInfo &aChildInfo)
 
     memset(&aChildInfo, 0, sizeof(aChildInfo));
     memcpy(&aChildInfo.mExtAddress, &aChild.mMacAddr, sizeof(aChildInfo.mExtAddress));
-    aChildInfo.mTimeout = aChild.mTimeout;
-    aChildInfo.mRloc16 = aChild.mValid.mRloc16;
-    aChildInfo.mChildId = GetChildId(aChild.mValid.mRloc16);
-    aChildInfo.mNetworkDataVersion = aChild.mNetworkDataVersion;
-    aChildInfo.mAge = Timer::MsecToSec(Timer::GetNow() - aChild.mLastHeard);
-    aChildInfo.mLinkQualityIn = aChild.mLinkInfo.GetLinkQuality(mNetif.GetMac().GetNoiseFloor());
-    aChildInfo.mAverageRssi = aChild.mLinkInfo.GetAverageRss();
-    aChildInfo.mLastRssi = neighbor->mLinkInfo.GetLastRss();
 
-    aChildInfo.mRxOnWhenIdle = (aChild.mMode & ModeTlv::kModeRxOnWhenIdle) != 0;
+    aChildInfo.mTimeout            = aChild.mTimeout;
+    aChildInfo.mRloc16             = aChild.mValid.mRloc16;
+    aChildInfo.mChildId            = GetChildId(aChild.mValid.mRloc16);
+    aChildInfo.mNetworkDataVersion = aChild.mNetworkDataVersion;
+    aChildInfo.mAge                = Timer::MsecToSec(Timer::GetNow() - aChild.mLastHeard);
+    aChildInfo.mLinkQualityIn      = aChild.mLinkInfo.GetLinkQuality(mNetif.GetMac().GetNoiseFloor());
+    aChildInfo.mAverageRssi        = aChild.mLinkInfo.GetAverageRss();
+    aChildInfo.mLastRssi           = neighbor->mLinkInfo.GetLastRss();
+
+    aChildInfo.mRxOnWhenIdle      = (aChild.mMode & ModeTlv::kModeRxOnWhenIdle) != 0;
     aChildInfo.mSecureDataRequest = (aChild.mMode & ModeTlv::kModeSecureDataRequest) != 0;
-    aChildInfo.mFullFunction = (aChild.mMode & ModeTlv::kModeFFD) != 0;
-    aChildInfo.mFullNetworkData = (aChild.mMode & ModeTlv::kModeFullNetworkData) != 0;
+    aChildInfo.mFullFunction      = (aChild.mMode & ModeTlv::kModeFFD) != 0;
+    aChildInfo.mFullNetworkData   = (aChild.mMode & ModeTlv::kModeFullNetworkData) != 0;
 
 exit:
     return error;
@@ -3513,15 +3514,16 @@ ThreadError MleRouter::GetRouterInfo(uint16_t aRouterId, otRouterInfo &aRouterIn
     VerifyOrExit(router != NULL, error = kThreadError_InvalidArgs);
 
     memcpy(&aRouterInfo.mExtAddress, &router->mMacAddr, sizeof(aRouterInfo.mExtAddress));
-    aRouterInfo.mAllocated = router->mAllocated;
-    aRouterInfo.mRouterId = routerId;
-    aRouterInfo.mRloc16 = GetRloc16(routerId);
-    aRouterInfo.mNextHop = router->mNextHop;
+
+    aRouterInfo.mAllocated       = router->mAllocated;
+    aRouterInfo.mRouterId        = routerId;
+    aRouterInfo.mRloc16          = GetRloc16(routerId);
+    aRouterInfo.mNextHop         = router->mNextHop;
     aRouterInfo.mLinkEstablished = router->mState == Neighbor::kStateValid;
-    aRouterInfo.mPathCost = router->mCost;
-    aRouterInfo.mLinkQualityIn = router->mLinkInfo.GetLinkQuality(mNetif.GetMac().GetNoiseFloor());
-    aRouterInfo.mLinkQualityOut = router->mLinkQualityOut;
-    aRouterInfo.mAge = static_cast<uint8_t>(Timer::MsecToSec(Timer::GetNow() - router->mLastHeard));
+    aRouterInfo.mPathCost        = router->mCost;
+    aRouterInfo.mLinkQualityIn   = router->mLinkInfo.GetLinkQuality(mNetif.GetMac().GetNoiseFloor());
+    aRouterInfo.mLinkQualityOut  = router->mLinkQualityOut;
+    aRouterInfo.mAge             = static_cast<uint8_t>(Timer::MsecToSec(Timer::GetNow() - router->mLastHeard));
 
 exit:
     return error;
