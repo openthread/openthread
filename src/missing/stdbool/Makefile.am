@@ -28,41 +28,8 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-# Always package (e.g. for 'make dist') these subdirectories.
-
-DIST_SUBDIRS                            = \
-    missing                               \
-    core                                  \
-    cli                                   \
-    ncp                                   \
-    diag                                  \
-    $(NULL)
-
-# Always build (e.g. for 'make all') these subdirectories.
-
-SUBDIRS                                 = \
-    missing                               \
-    core                                  \
-    $(NULL)
-
-if OPENTHREAD_ENABLE_CLI
-SUBDIRS                                += cli
-endif
-
-if OPENTHREAD_ENABLE_NCP
-SUBDIRS                                += ncp
-endif
-
-if OPENTHREAD_ENABLE_DIAG
-SUBDIRS                                += diag
-endif
-
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    cli                                   \
-    core                                  \
-    missing                               \
+EXTRA_DIST                              = \
+    stdbool.h                             \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

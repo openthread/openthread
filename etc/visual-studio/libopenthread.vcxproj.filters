@@ -31,6 +31,9 @@
     <Filter Include="Source Files\utils">
       <UniqueIdentifier>{A0D2E990-DC5E-4B56-A552-888F97214A17}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\missing">
+      <UniqueIdentifier>{F0DDA90-D13F-4B56-A552-328F97124A81}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Header Files">
       <UniqueIdentifier>{b4905c15-9702-4ff0-8d57-e7926337d50f}</UniqueIdentifier>
     </Filter>
@@ -60,6 +63,9 @@
     </Filter>
     <Filter Include="Header Files\api">
       <UniqueIdentifier>{25a5662d-0709-4698-8fd9-3abfde8f0fc6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\missing">
+      <UniqueIdentifier>{971969f2-f6ec-50b4-806a-97965c934cef}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -290,6 +296,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\core\thread\network_diagnostic.cpp">
       <Filter>Source Files\thread</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\missing\strlcpy\strlcpy.c">
+      <Filter>Source Files\missing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\missing\strlcat\strlcat.c">
+      <Filter>Source Files\missing</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -532,6 +544,12 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\thread\network_diagnostic_tlvs.hpp">
       <Filter>Header Files\thread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\missing\strlcpy\strlcpy.h">
+      <Filter>Header Files\missing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\missing\strlcat\strlcat.h">
+      <Filter>Header Files\missing</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

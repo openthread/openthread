@@ -253,6 +253,11 @@ AX_CHECK_COMPILER_OPTIONS([C++], ${PROSPECTIVE_CXXFLAGS})
 # Check for and initialize libtool
 
 LT_INIT
+AC_PROG_LIBTOOL
+
+# Disable building shared libraries by default (can be enabled with --enable-shared)
+
+AC_DISABLE_SHARED
 
 #
 # Debug instances
@@ -985,8 +990,27 @@ AC_MSG_NOTICE([checking required package dependencies])
 # NL_WITH_PACKAGE(...)
 
 #
+# Checks for missing functions
+#
+
+AC_DEFUN([CHECK_MISSING_FUNC], [
+    AC_CHECK_FUNC($1, [], [
+        nl_cv_missing_$1=yes
+        MISSING_CPPFLAGS="${MISSING_CPPFLAGS} "'-include $(top_srcdir)/src/missing/$1/$1.h'
+        MISSING_LIBADD="${MISSING_LIBADD} "'$(top_builddir)/src/missing/$1/lib$1.la'
+    ])
+    AM_CONDITIONAL(m4_toupper(MISSING_$1), [test "${nl_cv_missing_$1}" = "yes"])
+])
+AC_SUBST(MISSING_CPPFLAGS)
+AC_SUBST(MISSING_LIBADD)
+
+CHECK_MISSING_FUNC([strlcpy])
+CHECK_MISSING_FUNC([strlcat])
+
+#
 # Check for headers
 #
+
 AC_HEADER_STDBOOL
 AC_HEADER_STDC
 
@@ -1041,6 +1065,11 @@ src/cli/Makefile
 src/ncp/Makefile
 src/core/Makefile
 src/diag/Makefile
+src/missing/Makefile
+src/missing/stdbool/Makefile
+src/missing/stdint/Makefile
+src/missing/strlcat/Makefile
+src/missing/strlcpy/Makefile
 third_party/Makefile
 third_party/mbedtls/Makefile
 examples/Makefile
