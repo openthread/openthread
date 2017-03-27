@@ -36,7 +36,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <platform/random.h>
+#include <openthread/platform/random.h>
 #include <common/code_utils.hpp>
 
 #include "hal/nrf_rng.h"
@@ -134,6 +134,15 @@ void nrf5RandomInit(void)
 
     uint32_t seed = bufferGetUint32();
     srand(seed);
+}
+
+void nrf5RandomDeinit(void)
+{
+    generatorStop();
+
+    NVIC_DisableIRQ(RNG_IRQn);
+    NVIC_ClearPendingIRQ(RNG_IRQn);
+    NVIC_SetPriority(RNG_IRQn, 0);
 }
 
 uint32_t otPlatRandomGet(void)

@@ -26,14 +26,19 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread-types.h>
-#include <platform/misc.h>
+#include <openthread/types.h>
+#include <openthread/platform/misc.h>
 
 #include "device/nrf.h"
 
 static uint32_t sResetReason;
 
 __WEAK void nrf5CryptoInit(void)
+{
+    // This function is defined as weak so it could be overridden with external implementation.
+}
+
+__WEAK void nrf5CryptoDeinit(void)
 {
     // This function is defined as weak so it could be overridden with external implementation.
 }
@@ -45,6 +50,11 @@ void nrf5MiscInit(void)
 
     // Clear the register, as the reasons cumulate over resets.
     NRF_POWER->RESETREAS = 0xFFFFFFFF;
+}
+
+void nrf5MiscDeinit(void)
+{
+    // Intentionally empty.
 }
 
 void otPlatReset(otInstance *aInstance)

@@ -41,11 +41,15 @@
         MBEDTLS_CONFIG_FILE="mbedtls-config.h";
         OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";
         OPENTHREAD_MULTIPLE_INSTANCE;
+        OTBUILD;
       </PreprocessorDefinitions>
       <AdditionalIncludeDirectories>
         %(AdditionalIncludeDirectories);
         ..\..\include;
         ..\..\src\core;
+        ..\..\src\missing;
+        ..\..\src\missing\stdint;
+        ..\..\src\missing\stdbool;
         ..\..\third_party\mbedtls;
         ..\..\third_party\mbedtls\repo\include;
       </AdditionalIncludeDirectories>
@@ -55,7 +59,19 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\core\api\commissioner_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\dataset_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\dhcp6_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\icmp6_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\ip6_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\instance_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\joiner_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\link_api.cpp" />
     <ClCompile Include="..\..\src\core\api\link_raw_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\message_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\netdata_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\tasklet_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\thread_api.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_base.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_client.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_header.cpp" />
@@ -101,7 +117,6 @@
     <ClCompile Include="..\..\src\core\net\ip6_routes.cpp" />
     <ClCompile Include="..\..\src\core\net\netif.cpp" />
     <ClCompile Include="..\..\src\core\net\udp6.cpp" />
-    <ClCompile Include="..\..\src\core\openthread.cpp" />
     <ClCompile Include="..\..\src\core\thread\address_resolver.cpp" />
     <ClCompile Include="..\..\src\core\thread\announce_begin_server.cpp" />
     <ClCompile Include="..\..\src\core\thread\energy_scan_server.cpp" />
@@ -120,11 +135,10 @@
     <ClCompile Include="..\..\src\core\thread\thread_netif.cpp" />
     <ClCompile Include="..\..\src\core\utils\slaac_address.cpp" />
     <ClCompile Include="..\..\src\core\utils\jam_detector.cpp" />
+    <ClCompile Include="..\..\src\missing\strlcpy\strlcpy.c" />
+    <ClCompile Include="..\..\src\missing\strlcat\strlcat.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\openthread.h" />
-    <ClInclude Include="..\..\include\openthread-types.h" />
-    <ClInclude Include="..\..\include\openthread-windows-config.h" />
     <ClInclude Include="..\..\include\openthread\link_raw.h" />
     <ClInclude Include="..\..\src\core\coap\coap_base.hpp" />
     <ClInclude Include="..\..\src\core\coap\coap_client.hpp" />
@@ -178,8 +192,6 @@
     <ClInclude Include="..\..\src\core\net\netif.hpp" />
     <ClInclude Include="..\..\src\core\net\socket.hpp" />
     <ClInclude Include="..\..\src\core\net\udp6.hpp" />
-    <ClInclude Include="..\..\src\core\openthread-core-config.h" />
-    <ClInclude Include="..\..\src\core\openthreadcontext.h" />
     <ClInclude Include="..\..\src\core\thread\address_resolver.hpp" />
     <ClInclude Include="..\..\src\core\thread\announce_begin_server.hpp" />
     <ClInclude Include="..\..\src\core\thread\energy_scan_server.hpp" />
@@ -207,6 +219,8 @@
     <ClInclude Include="..\..\src\core\thread\topology.hpp" />
     <ClInclude Include="..\..\src\core\utils\slaac_address.hpp" />
     <ClInclude Include="..\..\src\core\utils\jam_detector.hpp" />
+    <ClInclude Include="..\..\src\missing\strlcpy\strlcpy.h" />
+    <ClInclude Include="..\..\src\missing\strlcat\strlcat.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

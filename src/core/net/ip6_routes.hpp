@@ -34,7 +34,8 @@
  *   This file includes definitions for manipulating IPv6 routing tables.
  */
 
-#include <openthread-types.h>
+#include "openthread/types.h"
+
 #include <common/message.hpp>
 #include <net/ip6_address.hpp>
 

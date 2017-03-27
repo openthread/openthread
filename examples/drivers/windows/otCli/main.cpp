@@ -29,9 +29,9 @@
 #include <windows.h>
 #include <stdio.h>
 
-#include <openthread.h>
-#include <cli/cli-uart.h>
-#include <platform/uart.h>
+#include <openthread/openthread.h>
+#include <openthread/cli.h>
+#include <openthread/platform/uart.h>
 
 bool skipNextLine = false;
 

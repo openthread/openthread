@@ -34,7 +34,8 @@
 #ifndef DHCP6_SERVER_HPP_
 #define DHCP6_SERVER_HPP_
 
-#include <openthread-types.h>
+#include "openthread/types.h"
+
 #include <mac/mac_frame.hpp>
 #include <mac/mac.hpp>
 #include <net/dhcp6.hpp>
@@ -133,7 +134,7 @@ private:
 
     ThreadError AddIaAddress(Message &aMessage, otIp6Prefix &aIp6Prefix, ClientIdentifier &aClient);
 
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
+    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     void ProcessSolicit(Message &aMessage, otIp6Address &aDst, uint8_t *aTransactionId);

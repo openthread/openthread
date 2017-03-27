@@ -31,6 +31,9 @@
     <Filter Include="Source Files\utils">
       <UniqueIdentifier>{A0D2E990-DC5E-4B56-A552-888F97214A17}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\missing">
+      <UniqueIdentifier>{F0DDA90-D13F-4B56-A552-328F97124A81}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Header Files">
       <UniqueIdentifier>{b4905c15-9702-4ff0-8d57-e7926337d50f}</UniqueIdentifier>
     </Filter>
@@ -58,9 +61,51 @@
     <Filter Include="Header Files\utils">
       <UniqueIdentifier>{5ac96cb9-6257-4387-9238-27649915463a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\api">
+      <UniqueIdentifier>{25a5662d-0709-4698-8fd9-3abfde8f0fc6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\missing">
+      <UniqueIdentifier>{971969f2-f6ec-50b4-806a-97965c934cef}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\core\api\commissioner_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\api\dataset_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\api\dhcp6_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\api\icmp6_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\api\ip6_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\api\instance_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\api\joiner_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\api\link_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\api\link_raw_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\api\message_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\api\netdata_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\api\tasklet_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\api\thread_api.cpp">
       <Filter>Source Files\api</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\coap\coap_base.cpp">
@@ -183,9 +228,6 @@
     <ClCompile Include="..\..\src\core\net\udp6.cpp">
       <Filter>Source Files\net</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\openthread.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\core\mac\mac_blacklist.cpp">
       <Filter>Source Files\mac</Filter>
     </ClCompile>
@@ -252,14 +294,17 @@
     <ClCompile Include="..\..\src\core\common\crc16.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\thread\network_diagnostic.cpp">
+      <Filter>Source Files\thread</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\missing\strlcpy\strlcpy.c">
+      <Filter>Source Files\missing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\missing\strlcat\strlcat.c">
+      <Filter>Source Files\missing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\core\openthreadcontext.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\openthread-core-config.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\core\coap\coap_base.hpp">
       <Filter>Header Files\coap</Filter>
     </ClInclude>
@@ -407,12 +452,6 @@
     <ClInclude Include="..\..\src\core\thread\network_data_tlvs.hpp">
       <Filter>Header Files\thread</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\thread\network_diag.hpp">
-      <Filter>Header Files\thread</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\thread\network_diag_tlvs.hpp">
-      <Filter>Header Files\thread</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\core\thread\panid_query_server.hpp">
       <Filter>Header Files\thread</Filter>
     </ClInclude>
@@ -496,6 +535,21 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\common\crc16.hpp">
       <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread\link_raw.h">
+      <Filter>Header Files\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\thread\network_diagnostic.hpp">
+      <Filter>Header Files\thread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\thread\network_diagnostic_tlvs.hpp">
+      <Filter>Header Files\thread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\missing\strlcpy\strlcpy.h">
+      <Filter>Header Files\missing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\missing\strlcat\strlcat.h">
+      <Filter>Header Files\missing</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

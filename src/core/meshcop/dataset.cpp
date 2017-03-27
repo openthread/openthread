@@ -34,11 +34,12 @@
 
 #include <stdio.h>
 
+#include "openthread/platform/settings.h"
+
 #include <common/code_utils.hpp>
 #include <common/settings.hpp>
 #include <meshcop/dataset.hpp>
 #include <meshcop/tlvs.hpp>
-#include <platform/settings.h>
 #include <thread/mle_tlvs.hpp>
 
 namespace Thread {

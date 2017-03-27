@@ -36,7 +36,8 @@
 
 #include <stdint.h>
 
-#include <openthread-types.h>
+#include "openthread/types.h"
+
 #include <mac/mac_frame.hpp>
 
 namespace Thread {
@@ -70,18 +71,6 @@ public:
     Whitelist(void);
 
     /**
-     * This method enables the whitelist filter.
-     *
-     */
-    void Enable(void);
-
-    /**
-     * This method disables the whitelist filter.
-     *
-     */
-    void Disable(void);
-
-    /**
      * This method indicates whether or not the whitelist filter is enabled.
      *
      * @retval TRUE   If the whitelist filter is enabled.
@@ -89,6 +78,14 @@ public:
      *
      */
     bool IsEnabled(void) const;
+
+    /**
+     * This method enables the whitelist filter.
+     *
+     * @param[in]  aEnabled  TRUE to enable the whitelist filter, FALSE otherwise.
+     *
+     */
+    void SetEnabled(bool aEnabled);
 
     /**
      * This method returns the maximum number of whitelist entries.

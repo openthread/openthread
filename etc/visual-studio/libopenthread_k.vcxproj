@@ -43,12 +43,14 @@
         OPENTHREAD_PROJECT_CORE_CONFIG_FILE="openthread-core-windows-config.h";
         WINDOWS_LOGGING;
         OPENTHREAD_MULTIPLE_INSTANCE;
+        OTBUILD;
       </PreprocessorDefinitions>
       <AdditionalIncludeDirectories>
         %(AdditionalIncludeDirectories);
         ..\..\include;
         ..\..\examples\drivers\windows\include;
         ..\..\src\core;
+        ..\..\src\missing;
         ..\..\src\missing\stdint;
         ..\..\src\missing\stdbool;
         ..\..\third_party\mbedtls;
@@ -57,13 +59,25 @@
       <DisableSpecificWarnings>4100;4706;4748;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WppEnabled>true</WppEnabled>
-      <WppScanConfigurationData>..\..\include\platform\logging-windows.h</WppScanConfigurationData>
+      <WppScanConfigurationData>..\..\include\openthread\platform\logging-windows.h</WppScanConfigurationData>
       <WppAdditionalOptions>-km %(WppAdditionalOptions)</WppAdditionalOptions>
       <WppModuleName>otCore</WppModuleName>
       <WppSearchString>WPP_INIT_TRACING</WppSearchString>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\core\api\commissioner_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\dataset_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\dhcp6_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\icmp6_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\ip6_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\instance_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\joiner_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\link_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\message_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\netdata_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\tasklet_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\thread_api.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_base.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_client.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_header.cpp" />
@@ -108,7 +122,6 @@
     <ClCompile Include="..\..\src\core\net\ip6_routes.cpp" />
     <ClCompile Include="..\..\src\core\net\netif.cpp" />
     <ClCompile Include="..\..\src\core\net\udp6.cpp" />
-    <ClCompile Include="..\..\src\core\openthread.cpp" />
     <ClCompile Include="..\..\src\core\thread\address_resolver.cpp" />
     <ClCompile Include="..\..\src\core\thread\announce_begin_server.cpp" />
     <ClCompile Include="..\..\src\core\thread\energy_scan_server.cpp" />
@@ -127,12 +140,32 @@
     <ClCompile Include="..\..\src\core\thread\thread_netif.cpp" />
     <ClCompile Include="..\..\src\core\utils\slaac_address.cpp" />
     <ClCompile Include="..\..\src\core\utils\jam_detector.cpp" />
+    <ClCompile Include="..\..\src\missing\strlcat\strlcat.c" />
+    <ClCompile Include="..\..\src\missing\strlcpy\strlcpy.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\openthread.h" />
-    <ClInclude Include="..\..\include\openthread-types.h" />
+    <ClInclude Include="..\..\examples\drivers\windows\include\openthread-core-windows-config.h" />
+    <ClInclude Include="..\..\include\openthread\coap.h" />
+    <ClInclude Include="..\..\include\openthread\commissioner.h" />
+    <ClInclude Include="..\..\include\openthread\crypto.h" />
+    <ClInclude Include="..\..\include\openthread\dataset.h" />
+    <ClInclude Include="..\..\include\openthread\dhcp6_client.h" />
+    <ClInclude Include="..\..\include\openthread\dhcp6_server.h" />
+    <ClInclude Include="..\..\include\openthread\icmp6.h" />
+    <ClInclude Include="..\..\include\openthread\instance.h" />
+    <ClInclude Include="..\..\include\openthread\ip6.h" />
+    <ClInclude Include="..\..\include\openthread\jam_detection.h" />
+    <ClInclude Include="..\..\include\openthread\joiner.h" />
+    <ClInclude Include="..\..\include\openthread\link.h" />
+    <ClInclude Include="..\..\include\openthread\message.h" />
+    <ClInclude Include="..\..\include\openthread\netdata.h" />
+    <ClInclude Include="..\..\include\openthread\openthread.h" />
+    <ClInclude Include="..\..\include\openthread\tasklet.h" />
+    <ClInclude Include="..\..\include\openthread\thread.h" />
+    <ClInclude Include="..\..\include\openthread\types.h" />
     <ClInclude Include="..\..\include\openthread-windows-config.h" />
-    <ClInclude Include="..\..\include\openthread\link_raw.h" />
+    <ClInclude Include="..\..\include\openthread\udp.h" />
+    <ClInclude Include="..\..\src\core\api\link_raw.hpp" />
     <ClInclude Include="..\..\src\core\coap\coap_base.hpp" />
     <ClInclude Include="..\..\src\core\coap\coap_client.hpp" />
     <ClInclude Include="..\..\src\core\coap\coap_header.hpp" />
@@ -190,7 +223,6 @@
     <ClInclude Include="..\..\src\core\net\udp6.hpp" />
     <ClInclude Include="..\..\src\core\openthread-core-config.h" />
     <ClInclude Include="..\..\src\core\openthread-core-default-config.h" />
-    <ClInclude Include="..\..\src\core\openthread-core-windows-config.h" />
     <ClInclude Include="..\..\src\core\openthread-instance.h" />
     <ClInclude Include="..\..\src\core\thread\address_resolver.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\announce_begin_server.hpp" />
@@ -216,6 +248,8 @@
     <ClInclude Include="..\..\src\core\thread\topology.hpp" />
     <ClInclude Include="..\..\src\core\utils\slaac_address.hpp" />
     <ClInclude Include="..\..\src\core\utils\jam_detector.hpp" />
+    <ClInclude Include="..\..\src\missing\strlcpy\strlcpy.h" />
+    <ClInclude Include="..\..\src\missing\strlcat\strlcat.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

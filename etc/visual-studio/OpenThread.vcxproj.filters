@@ -16,11 +16,38 @@
     <ClCompile Include="..\..\examples\apps\windows\App.xaml.cpp" />
     <ClCompile Include="..\..\examples\apps\windows\MainPage.xaml.cpp" />
     <ClCompile Include="..\..\examples\apps\windows\pch.cpp" />
+    <ClCompile Include="..\..\examples\apps\windows\Factory.cpp" />
+    <ClCompile Include="..\..\examples\apps\windows\ClientControl.xaml.cpp" />
+    <ClCompile Include="..\..\examples\apps\windows\ServerControl.xaml.cpp" />
+    <ClCompile Include="..\..\examples\apps\windows\TalkGrid.xaml.cpp" />
+    <ClCompile Include="..\..\examples\apps\windows\DatagramClientContext.cpp" />
+    <ClCompile Include="..\..\examples\apps\windows\DatagramListenerContext.cpp" />
+    <ClCompile Include="..\..\examples\apps\windows\StreamClientContext.cpp" />
+    <ClCompile Include="..\..\examples\apps\windows\StreamListenerContext.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\examples\apps\windows\pch.h" />
     <ClInclude Include="..\..\examples\apps\windows\App.xaml.h" />
     <ClInclude Include="..\..\examples\apps\windows\MainPage.xaml.h" />
+    <ClInclude Include="..\..\examples\apps\windows\otAdapter.h" />
+    <ClInclude Include="..\..\examples\apps\windows\otApi.h" />
+    <ClInclude Include="..\..\examples\apps\windows\IAsyncThreadNotify.h" />
+    <ClInclude Include="..\..\examples\apps\windows\IMainPageUIElements.h" />
+    <ClInclude Include="..\..\examples\apps\windows\ListenerArgs.h" />
+    <ClInclude Include="..\..\examples\apps\windows\ClientArgs.h" />
+    <ClInclude Include="..\..\examples\apps\windows\Protocol.h" />
+    <ClInclude Include="..\..\examples\apps\windows\IListenerContext.h" />
+    <ClInclude Include="..\..\examples\apps\windows\Factory.h" />
+    <ClInclude Include="..\..\examples\apps\windows\IClientContext.h" />
+    <ClInclude Include="..\..\examples\apps\windows\ClientControl.xaml.h" />
+    <ClInclude Include="..\..\examples\apps\windows\ServerControl.xaml.h" />
+    <ClInclude Include="..\..\examples\apps\windows\TalkGrid.xaml.h" />
+    <ClInclude Include="..\..\examples\apps\windows\DatagramClientContext.h" />
+    <ClInclude Include="..\..\examples\apps\windows\DatagramListenerContext.h" />
+    <ClInclude Include="..\..\examples\apps\windows\StreamClientContext.h" />
+    <ClInclude Include="..\..\examples\apps\windows\StreamListenerContext.h" />
+    <ClInclude Include="..\..\examples\apps\windows\TalkConsts.h" />
+    <ClInclude Include="..\..\examples\apps\windows\TalkHelper.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\LockScreenLogo.scale-200.png">
@@ -53,5 +80,8 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="..\..\examples\apps\windows\MainPage.xaml" />
+    <Page Include="..\..\examples\apps\windows\TalkGrid.xaml" />
+    <Page Include="..\..\examples\apps\windows\ClientControl.xaml" />
+    <Page Include="..\..\examples\apps\windows\ServerControl.xaml" />
   </ItemGroup>
 </Project>

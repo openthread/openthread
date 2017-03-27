@@ -35,12 +35,13 @@
 
 #include <stdio.h>
 
+#include "openthread/platform/random.h"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/logging.hpp>
 #include <meshcop/leader.hpp>
 #include <meshcop/tlvs.hpp>
-#include <platform/random.h>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
@@ -60,7 +61,12 @@ Leader::Leader(ThreadNetif &aThreadNetif):
     mNetif.GetCoapServer().AddResource(mKeepAlive);
 }
 
-void Leader::HandlePetition(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+otInstance *Leader::GetInstance()
+{
+    return mNetif.GetInstance();
+}
+
+void Leader::HandlePetition(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                             const otMessageInfo *aMessageInfo)
 {
     static_cast<Leader *>(aContext)->HandlePetition(
@@ -74,7 +80,7 @@ void Leader::HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6:
     CommissionerIdTlv commissionerId;
     StateTlv::State state = StateTlv::kReject;
 
-    otLogInfoMeshCoP("received petition");
+    otLogInfoMeshCoP(GetInstance(), "received petition");
 
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kCommissionerId, sizeof(commissionerId), commissionerId));
     VerifyOrExit(commissionerId.IsValid(), ;);
@@ -138,7 +144,7 @@ ThreadError Leader::SendPetitionResponse(const Coap::Header &aRequestHeader, con
 
     SuccessOrExit(error = mNetif.GetCoapServer().SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP("sent petition response");
+    otLogInfoMeshCoP(GetInstance(), "sent petition response");
 
 exit:
 
@@ -150,7 +156,7 @@ exit:
     return error;
 }
 
-void Leader::HandleKeepAlive(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void Leader::HandleKeepAlive(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                              const otMessageInfo *aMessageInfo)
 {
     static_cast<Leader *>(aContext)->HandleKeepAlive(
@@ -164,7 +170,7 @@ void Leader::HandleKeepAlive(Coap::Header &aHeader, Message &aMessage, const Ip6
     CommissionerSessionIdTlv sessionId;
     StateTlv::State responseState;
 
-    otLogInfoMeshCoP("received keep alive");
+    otLogInfoMeshCoP(GetInstance(), "received keep alive");
 
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kState, sizeof(state), state));
     VerifyOrExit(state.IsValid(),);
@@ -215,7 +221,7 @@ ThreadError Leader::SendKeepAliveResponse(const Coap::Header &aRequestHeader, co
 
     SuccessOrExit(error = mNetif.GetCoapServer().SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP("sent keep alive response");
+    otLogInfoMeshCoP(GetInstance(), "sent keep alive response");
 
 exit:
 
@@ -244,7 +250,7 @@ ThreadError Leader::SendDatasetChanged(const Ip6::Address &aAddress)
     messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent dataset changed");
+    otLogInfoMeshCoP(GetInstance(), "sent dataset changed");
 
 exit:
 
@@ -297,7 +303,7 @@ void Leader::ResignCommissioner(void)
     mNetif.GetNetworkDataLeader().SetCommissioningData(reinterpret_cast<uint8_t *>(&mCommissionerSessionId),
                                                        sizeof(Tlv) + mCommissionerSessionId.GetLength());
 
-    otLogInfoMeshCoP("commissioner inactive");
+    otLogInfoMeshCoP(GetInstance(), "commissioner inactive");
 }
 
 }  // namespace MeshCoP

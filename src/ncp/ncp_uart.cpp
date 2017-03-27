@@ -36,15 +36,15 @@
 #include <openthread-config.h>
 #endif
 
+#include "openthread/ncp.h"
+#include "openthread/platform/logging.h"
+#include "openthread/platform/uart.h"
+
 #include <stdio.h>
-#include <ncp/ncp.h>
 #include <common/code_utils.hpp>
 #include <common/new.hpp>
 #include <net/ip6.hpp>
-#include <ncp/ncp.h>
 #include <ncp/ncp_uart.hpp>
-#include <platform/logging.h>
-#include <platform/uart.h>
 #include <core/openthread-core-config.h>
 #include <openthread-instance.h>
 

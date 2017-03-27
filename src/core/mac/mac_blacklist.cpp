@@ -49,19 +49,14 @@ Blacklist::Blacklist(void)
     }
 }
 
-void Blacklist::Enable(void)
-{
-    mEnabled = true;
-}
-
-void Blacklist::Disable(void)
-{
-    mEnabled = false;
-}
-
 bool Blacklist::IsEnabled(void) const
 {
     return mEnabled;
+}
+
+void Blacklist::SetEnabled(bool aEnabled)
+{
+    mEnabled = aEnabled;
 }
 
 int Blacklist::GetMaxEntries(void) const
@@ -120,7 +115,7 @@ void Blacklist::Remove(const ExtAddress &address)
     memset(entry, 0, sizeof(*entry));
 
 exit:
-    {}
+    return;
 }
 
 Blacklist::Entry *Blacklist::Find(const ExtAddress &address)

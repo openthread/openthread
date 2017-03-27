@@ -33,6 +33,8 @@
 
 #define WPP_NAME "network_data_leader_ftd.tmh"
 
+#include "openthread/platform/random.h"
+
 #include <coap/coap_header.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
@@ -41,7 +43,6 @@
 #include <common/message.hpp>
 #include <common/timer.hpp>
 #include <mac/mac_frame.hpp>
-#include <platform/random.h>
 #include <thread/mle_router.hpp>
 #include <thread/network_data_leader.hpp>
 #include <thread/thread_netif.hpp>
@@ -137,7 +138,7 @@ exit:
     return;
 }
 
-void Leader::HandleServerData(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void Leader::HandleServerData(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                               const otMessageInfo *aMessageInfo)
 {
     static_cast<Leader *>(aContext)->HandleServerData(
@@ -151,7 +152,7 @@ void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
     ThreadNetworkDataTlv networkData;
     ThreadRloc16Tlv rloc16;
 
-    otLogInfoNetData("Received network data registration");
+    otLogInfoNetData(GetInstance(), "Received network data registration");
 
     if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rloc16), rloc16) == kThreadError_None)
     {
@@ -168,13 +169,13 @@ void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
 
     SuccessOrExit(mNetif.GetCoapServer().SendEmptyAck(aHeader, aMessageInfo));
 
-    otLogInfoNetData("Sent network data registration acknowledgment");
+    otLogInfoNetData(GetInstance(), "Sent network data registration acknowledgment");
 
 exit:
     return;
 }
 
-void Leader::HandleCommissioningSet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void Leader::HandleCommissioningSet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                     const otMessageInfo *aMessageInfo)
 {
     static_cast<Leader *>(aContext)->HandleCommissioningSet(
@@ -268,7 +269,7 @@ exit:
     return;
 }
 
-void Leader::HandleCommissioningGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void Leader::HandleCommissioningGet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                     const otMessageInfo *aMessageInfo)
 {
     static_cast<Leader *>(aContext)->HandleCommissioningGet(
@@ -360,7 +361,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Header &aRequestHeader, co
 
     SuccessOrExit(error = mNetif.GetCoapServer().SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP("sent commissioning dataset get response");
+    otLogInfoMeshCoP(GetInstance(), "sent commissioning dataset get response");
 
 exit:
 
@@ -391,7 +392,7 @@ void Leader::SendCommissioningSetResponse(const Coap::Header &aRequestHeader, co
 
     SuccessOrExit(error = mNetif.GetCoapServer().SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP("sent commissioning dataset set response");
+    otLogInfoMeshCoP(GetInstance(), "sent commissioning dataset set response");
 
 exit:
 
@@ -491,38 +492,44 @@ bool Leader::IsStableUpdated(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLeng
     bool rval = false;
     NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aTlvs);
     NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(aTlvs + aTlvsLength);
-    PrefixTlv *prefix;
-    PrefixTlv *prefixBase;
-    BorderRouterTlv *borderRouter;
-    HasRouteTlv *hasRoute;
-    ContextTlv *context;
 
     while (cur < end)
     {
         if (cur->GetType() == NetworkDataTlv::kTypePrefix)
         {
-            prefix = static_cast<PrefixTlv *>(cur);
-            context = FindContext(*prefix);
-            borderRouter = FindBorderRouter(*prefix);
-            hasRoute = FindHasRoute(*prefix);
+            PrefixTlv *prefix = static_cast<PrefixTlv *>(cur);
+            ContextTlv *context = FindContext(*prefix);
+            BorderRouterTlv *borderRouter = FindBorderRouter(*prefix);
+            HasRouteTlv *hasRoute = FindHasRoute(*prefix);
 
             if (cur->IsStable() && (!context || borderRouter))
             {
-                prefixBase = FindPrefix(prefix->GetPrefix(), prefix->GetPrefixLength(), aTlvsBase, aTlvsBaseLength);
+                PrefixTlv *prefixBase = FindPrefix(prefix->GetPrefix(), prefix->GetPrefixLength(),
+                                                   aTlvsBase, aTlvsBaseLength);
 
                 if (!prefixBase)
                 {
                     ExitNow(rval = true);
                 }
 
-                if (borderRouter && memcmp(borderRouter, FindBorderRouter(*prefixBase), borderRouter->GetLength()) != 0)
+                if (borderRouter)
                 {
-                    ExitNow(rval = true);
+                    BorderRouterTlv *borderRouterBase = FindBorderRouter(*prefixBase);
+
+                    if (!borderRouterBase || memcmp(borderRouter, borderRouterBase, borderRouter->GetLength()) != 0)
+                    {
+                        ExitNow(rval = true);
+                    }
                 }
 
-                if (hasRoute && (memcmp(hasRoute, FindHasRoute(*prefixBase), hasRoute->GetLength()) != 0))
+                if (hasRoute)
                 {
-                    ExitNow(rval = true);
+                    HasRouteTlv *hasRouteBase = FindHasRoute(*prefixBase);
+
+                    if (!hasRouteBase || (memcmp(hasRoute, hasRouteBase, hasRoute->GetLength()) != 0))
+                    {
+                        ExitNow(rval = true);
+                    }
                 }
             }
         }
@@ -592,18 +599,17 @@ ThreadError Leader::AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength)
         {
         case NetworkDataTlv::kTypePrefix:
             AddPrefix(*static_cast<PrefixTlv *>(cur));
-            otDumpDebgNetData("add prefix done", mTlvs, mLength);
+            otDumpDebgNetData(GetInstance(), "add prefix done", mTlvs, mLength);
             break;
 
         default:
-            assert(false);
             break;
         }
 
         cur = cur->GetNext();
     }
 
-    otDumpDebgNetData("add done", mTlvs, mLength);
+    otDumpDebgNetData(GetInstance(), "add done", mTlvs, mLength);
 
     return kThreadError_None;
 }
@@ -626,7 +632,6 @@ ThreadError Leader::AddPrefix(PrefixTlv &aPrefix)
             break;
 
         default:
-            assert(false);
             break;
         }
 
@@ -745,7 +750,7 @@ int Leader::AllocateContext(void)
         {
             mContextUsed |= 1 << i;
             rval = i;
-            otLogInfoNetData("Allocated Context ID = %d", rval);
+            otLogInfoNetData(GetInstance(), "Allocated Context ID = %d", rval);
             ExitNow();
         }
     }
@@ -756,7 +761,7 @@ exit:
 
 ThreadError Leader::FreeContext(uint8_t aContextId)
 {
-    otLogInfoNetData("Free Context Id = %d", aContextId);
+    otLogInfoNetData(GetInstance(), "Free Context Id = %d", aContextId);
     RemoveContext(aContextId);
     mContextUsed &= ~(1 << aContextId);
     mVersion++;
@@ -809,21 +814,18 @@ ThreadError Leader::RemoveRloc(uint16_t aRloc16)
                 continue;
             }
 
-            otDumpDebgNetData("remove prefix done", mTlvs, mLength);
+            otDumpDebgNetData(GetInstance(), "remove prefix done", mTlvs, mLength);
             break;
         }
 
         default:
-        {
-            assert(false);
             break;
-        }
         }
 
         cur = cur->GetNext();
     }
 
-    otDumpDebgNetData("remove done", mTlvs, mLength);
+    otDumpDebgNetData(GetInstance(), "remove done", mTlvs, mLength);
 
     return kThreadError_None;
 }
@@ -871,11 +873,7 @@ ThreadError Leader::RemoveRloc(PrefixTlv &prefix, uint16_t aRloc16)
 
             break;
 
-        case NetworkDataTlv::kTypeContext:
-            break;
-
         default:
-            assert(false);
             break;
         }
 
@@ -980,21 +978,18 @@ ThreadError Leader::RemoveContext(uint8_t aContextId)
                 continue;
             }
 
-            otDumpDebgNetData("remove prefix done", mTlvs, mLength);
+            otDumpDebgNetData(GetInstance(), "remove prefix done", mTlvs, mLength);
             break;
         }
 
         default:
-        {
-            assert(false);
             break;
-        }
         }
 
         cur = cur->GetNext();
     }
 
-    otDumpDebgNetData("remove done", mTlvs, mLength);
+    otDumpDebgNetData(GetInstance(), "remove done", mTlvs, mLength);
 
     return kThreadError_None;
 }
@@ -1017,11 +1012,6 @@ ThreadError Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
 
         switch (cur->GetType())
         {
-        case NetworkDataTlv::kTypeBorderRouter:
-        {
-            break;
-        }
-
         case NetworkDataTlv::kTypeContext:
         {
             // remove context tlv
@@ -1039,10 +1029,7 @@ ThreadError Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
         }
 
         default:
-        {
-            assert(false);
             break;
-        }
         }
 
         cur = cur->GetNext();

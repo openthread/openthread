@@ -33,11 +33,12 @@
 
 #define WPP_NAME "panid_query_client.tmh"
 
+#include "openthread/platform/random.h"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
-#include <platform/random.h>
 #include <meshcop/panid_query_client.hpp>
 #include <meshcop/tlvs.hpp>
 #include <thread/thread_netif.hpp>
@@ -52,6 +53,11 @@ PanIdQueryClient::PanIdQueryClient(ThreadNetif &aThreadNetif) :
     mNetif(aThreadNetif)
 {
     mNetif.GetCoapServer().AddResource(mPanIdQuery);
+}
+
+otInstance *PanIdQueryClient::GetInstance()
+{
+    return mNetif.GetInstance();
 }
 
 ThreadError PanIdQueryClient::SendQuery(uint16_t aPanId, uint32_t aChannelMask, const Ip6::Address &aAddress,
@@ -90,7 +96,7 @@ ThreadError PanIdQueryClient::SendQuery(uint16_t aPanId, uint32_t aChannelMask, 
     messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent panid query");
+    otLogInfoMeshCoP(GetInstance(), "sent panid query");
 
     mCallback = aCallback;
     mContext = aContext;
@@ -105,7 +111,7 @@ exit:
     return error;
 }
 
-void PanIdQueryClient::HandleConflict(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void PanIdQueryClient::HandleConflict(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                       const otMessageInfo *aMessageInfo)
 {
     static_cast<PanIdQueryClient *>(aContext)->HandleConflict(
@@ -122,7 +128,7 @@ void PanIdQueryClient::HandleConflict(Coap::Header &aHeader, Message &aMessage, 
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
                  aHeader.GetCode() == kCoapRequestPost, ;);
 
-    otLogInfoMeshCoP("received panid conflict");
+    otLogInfoMeshCoP(GetInstance(), "received panid conflict");
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kPanId, sizeof(panId), panId));
     VerifyOrExit(panId.IsValid(), ;);
@@ -138,7 +144,7 @@ void PanIdQueryClient::HandleConflict(Coap::Header &aHeader, Message &aMessage, 
     memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
     SuccessOrExit(mNetif.GetCoapServer().SendEmptyAck(aHeader, responseInfo));
 
-    otLogInfoMeshCoP("sent panid query conflict response");
+    otLogInfoMeshCoP(GetInstance(), "sent panid query conflict response");
 
 exit:
     return;

@@ -33,7 +33,8 @@
 
 #define WPP_NAME "dhcp6_server.tmh"
 
-#include <openthread-types.h>
+#include "openthread/types.h"
+
 #include <common/code_utils.hpp>
 #include <common/encoding.hpp>
 #include <common/logging.hpp>
@@ -246,7 +247,7 @@ exit:
     return error;
 }
 
-void Dhcp6Server::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
+void Dhcp6Server::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     Dhcp6Server *obj = static_cast<Dhcp6Server *>(aContext);
     obj->HandleUdpReceive(*static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
@@ -266,7 +267,7 @@ void Dhcp6Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aM
     ProcessSolicit(aMessage, dst, header.GetTransactionId());
 
 exit:
-    {}
+    return;
 }
 
 void Dhcp6Server::ProcessSolicit(Message &aMessage, otIp6Address &aDst, uint8_t *aTransactionId)
@@ -300,7 +301,7 @@ void Dhcp6Server::ProcessSolicit(Message &aMessage, otIp6Address &aDst, uint8_t 
     SuccessOrExit(SendReply(aDst, aTransactionId, clientIdentifier, iana));
 
 exit:
-    {}
+    return;
 }
 
 uint16_t Dhcp6Server::FindOption(Message &aMessage, uint16_t aOffset, uint16_t aLength, Code aCode)

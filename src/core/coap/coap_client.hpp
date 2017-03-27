@@ -29,8 +29,8 @@
 #ifndef COAP_CLIENT_HPP_
 #define COAP_CLIENT_HPP_
 
-#include <openthread-types.h>
-#include <openthread-coap.h>
+#include "openthread/coap.h"
+
 #include <coap/coap_base.hpp>
 #include <coap/coap_header.hpp>
 #include <common/message.hpp>
@@ -47,32 +47,6 @@ namespace Thread {
 namespace Coap {
 
 class Client;
-
-/**
- * Protocol Constants (RFC 7252).
- *
- */
-enum
-{
-    kAckTimeout                 = OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT,
-    kAckRandomFactorNumerator   = OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR_NUMERATOR,
-    kAckRandomFactorDenominator = OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR_DENOMINATOR,
-    kMaxRetransmit              = OPENTHREAD_CONFIG_COAP_MAX_RETRANSMIT,
-    kNStart                     = 1,
-    kDefaultLeisure             = 5,
-    kProbingRate                = 1,
-
-    // Note that 2 << (kMaxRetransmit - 1) is equal to kMaxRetransmit power of 2
-    kMaxTransmitSpan            = kAckTimeout * ((2 << (kMaxRetransmit - 1)) - 1) *
-                                  kAckRandomFactorNumerator / kAckRandomFactorDenominator,
-    kMaxTransmitWait            = kAckTimeout * ((2 << kMaxRetransmit) - 1) *
-                                  kAckRandomFactorNumerator / kAckRandomFactorDenominator,
-    kMaxLatency                 = 100,
-    kProcessingDelay            = kAckTimeout,
-    kMaxRtt                     = 2 * kMaxLatency + kProcessingDelay,
-    kExchangeLifetime           = kMaxTransmitSpan + 2 * (kMaxLatency) + kProcessingDelay,
-    kNonLifetime                = kMaxTransmitSpan + kMaxLatency
-};
 
 /**
  * This class implements metadata required for CoAP retransmission.

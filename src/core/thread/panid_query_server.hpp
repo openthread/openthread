@@ -35,7 +35,9 @@
 #define PANID_QUERY_SERVER_HPP_
 
 #include <openthread-core-config.h>
-#include <openthread-types.h>
+
+#include "openthread/types.h"
+
 #include <coap/coap_client.hpp>
 #include <coap/coap_server.hpp>
 #include <common/timer.hpp>
@@ -63,13 +65,21 @@ public:
      */
     PanIdQueryServer(ThreadNetif &aThreadNetif);
 
+    /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
 private:
     enum
     {
         kScanDelay = 1000,  ///< SCAN_DELAY (milliseconds)
     };
 
-    static void HandleQuery(void *aContext, otCoapHeader *aHeader, otMessage aMessage, const otMessageInfo *aMessageInfo);
+    static void HandleQuery(void *aContext, otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void HandleQuery(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleScanResult(void *aContext, Mac::Frame *aFrame);
@@ -78,7 +88,7 @@ private:
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
 
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
+    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
     ThreadError SendConflict(void);
 

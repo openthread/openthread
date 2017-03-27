@@ -35,7 +35,9 @@
 #define MESH_FORWARDER_HPP_
 
 #include <openthread-core-config.h>
-#include <openthread-types.h>
+
+#include "openthread/types.h"
+
 #include <common/tasklet.hpp>
 #include <mac/mac.hpp>
 #include <net/ip6.hpp>
@@ -79,6 +81,14 @@ public:
     explicit MeshForwarder(ThreadNetif &aThreadNetif);
 
     /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
+    /**
      * This method enables mesh forwarding and the IEEE 802.15.4 MAC layer.
      *
      * @retval kThreadError_None          Successfully enabled the mesh forwarder.
@@ -114,6 +124,12 @@ public:
     void HandleResolved(const Ip6::Address &aEid, ThreadError aError);
 
     /**
+     * This method sets the radio receiver and polling timer off.
+     *
+     */
+    void SetRxOff(void);
+
+    /**
      * This method indicates whether or not rx-on-when-idle mode is enabled.
      *
      * @retval TRUE   The rx-on-when-idle mode is enabled.
@@ -131,15 +147,22 @@ public:
     void SetRxOnWhenIdle(bool aRxOnWhenIdle);
 
     /**
-     * This method sets customized Data Poll period. Only for certification test
+     * This method sets a user-specified Data Poll period.
      *
-     * @param[in]  aPeriod  The Data Poll period in milliseconds.
+     * If the value is set to zero, then the poll interval is managed by the OpenThread stack.
+     * If the user has provided a non-zero poll period, the user value specifies the maximum period between data
+     * request transmissions. Note that OpenThread may send data request transmissions more frequently when expecting
+     * a control-message from a parent.
+     *
+     * Initial/Default value for "assign poll period" is zero.
+     *
+     * @param[in]  aPeriod  The Data Poll period in milliseconds, or zero to mean no user-specified poll period.
      *
      */
     void SetAssignPollPeriod(uint32_t aPeriod);
 
     /**
-     * This method gets the customized Data Poll period. Only for certification test
+     * This method gets the current user-specified Data Poll period.
      *
      * @returns  The Data Poll period in milliseconds.
      *
@@ -147,7 +170,13 @@ public:
     uint32_t GetAssignPollPeriod(void);
 
     /**
-     * This method sets the Data Poll period.
+     *
+     * This method sets the maximum period between data request command transmissions. Note that OpenThread may send
+     * data request transmissions more frequently when expecting a control-message from a parent.
+     *
+     * If the user has provided a non-zero assign poll period (@sa SetAssignPollPeriod), the user value specifies the
+     * maximum period between data request command transmissions and is used in place of @p aPeriod.
+     *
      *
      * @param[in]  aPeriod  The Data Poll period in milliseconds.
      *
@@ -197,6 +226,15 @@ public:
     void UpdateIndirectMessages(void);
 
     /**
+     * This method sets whether or not to perform source matching on the extended or short address for Frame Pending determination.
+     *
+     * @param[in]  aChild       A reference to the child.
+     * @param[in]  aMatchShort  TRUE to match on short source address, FALSE otherwise.
+     *
+     */
+    void SetSrcMatchAsShort(Child &aChild, bool aMatchShort);
+
+    /**
      * This method returns a reference to the send queue.
      *
      * @returns  A reference to the send queue.
@@ -225,15 +263,29 @@ private:
     {
         kStateUpdatePeriod     = 1000,  ///< State update period in milliseconds.
         kDataRequestRetryDelay = 200,   ///< Retry delay in milliseconds (for sending data request if no buffer).
+        kQuickPollsAfterTimout = 5,     ///< Maximum number of quick data poll tx in case of back-to-back poll timeouts.
+    };
+
+    enum
+    {
+        /**
+         * Maximum number of tx attempts by `MeshForwarder` for an outbound indirect frame (for a sleepy child). The
+         * `MeshForwader` attempts occur following the reception of a new data request command (a new data poll) from
+         * the sleepy child.
+         *
+         */
+        kMaxPollTriggeredTxAttempts = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_POLLS,
     };
 
     ThreadError CheckReachability(uint8_t *aFrame, uint8_t aFrameLength,
                                   const Mac::Address &aMeshSource, const Mac::Address &aMeshDest);
+
+    void ScheduleNextPoll(uint32_t aDelay);
     ThreadError GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     ThreadError GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     Message *GetDirectTransmission(void);
-    Message *GetIndirectTransmission(const Child &aChild);
-    void PrepareIndirectTransmission(const Message &aMessage, const Child &aChild);
+    Message *GetIndirectTransmission(Child &aChild);
+    void PrepareIndirectTransmission(Message &aMessage, const Child &aChild);
     void HandleMesh(uint8_t *aFrame, uint8_t aPayloadLength, const Mac::Address &aMacSource,
                     const ThreadMessageInfo &aMessageInfo);
     void HandleFragment(uint8_t *aFrame, uint8_t aPayloadLength,
@@ -247,13 +299,16 @@ private:
     ThreadError SendMesh(Message &aMessage, Mac::Frame &aFrame);
     ThreadError SendFragment(Message &aMessage, Mac::Frame &aFrame);
     ThreadError SendEmptyFrame(Mac::Frame &aFrame);
-    void UpdateFramePending(void);
     ThreadError UpdateIp6Route(Message &aMessage);
     ThreadError UpdateMeshRoute(Message &aMessage);
     ThreadError HandleDatagram(Message &aMessage, const ThreadMessageInfo &aMessageInfo);
+    void ClearReassemblyList(void);
 
     static void HandleReceivedFrame(void *aContext, Mac::Frame &aFrame);
     void HandleReceivedFrame(Mac::Frame &aFrame);
+
+    static void HandleDataPollTimeout(void *aContext);
+    void HandleDataPollTimeout(void);
 
     static ThreadError HandleFrameRequest(void *aContext, Mac::Frame &aFrame);
     ThreadError HandleFrameRequest(Mac::Frame &aFrame);
@@ -287,8 +342,14 @@ private:
     uint16_t mFragTag;
     uint16_t mMessageNextOffset;
     uint32_t mPollPeriod;
-    uint32_t mAssignPollPeriod;  ///< only for certification test
+    uint32_t mAssignPollPeriod;
+
+    uint32_t mSendMessageFrameCounter;
     Message *mSendMessage;
+    bool     mSendMessageIsARetransmission;
+    uint8_t  mSendMessageMaxMacTxAttempts;
+    uint8_t  mSendMessageKeyId;
+    uint8_t  mSendMessageDataSequenceNumber;
 
     Mac::Address mMacSource;
     Mac::Address mMacDest;
@@ -307,6 +368,8 @@ private:
     uint8_t mRestoreChannel;
     uint16_t mRestorePanId;
     bool mScanning;
+
+    uint8_t mBacktoBackPollTimeoutCounter;
 
     ThreadNetif &mNetif;
 

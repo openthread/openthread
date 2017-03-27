@@ -142,6 +142,9 @@ static rx_buffer_t * const mp_current_rx_buffer = &m_receive_buffers[0]; // If t
 static uint8_t m_ack_psdu[ACK_LENGTH + 1]
                 __attribute__ ((section ("nrf_radio_buffer.m_ack_psdu")));
 
+// Transmit power used for ACK frames.
+static int8_t m_ack_tx_power = 0;
+
 // Radio driver states
 typedef enum
 {
@@ -241,6 +244,13 @@ static void critical_section_exit(void)
 }
 
 
+// Reset radio peripheral
+static void nrf_radio_reset(void)
+{
+    nrf_radio_power_set(false);
+    nrf_radio_power_set(true);
+}
+
 // Set radio state
 static inline void state_set(radio_state_t state)
 {
@@ -306,6 +316,13 @@ static void irq_init(void)
     NVIC_SetPriority(RADIO_IRQn, RADIO_IRQ_PRIORITY);
     NVIC_ClearPendingIRQ(RADIO_IRQn);
     NVIC_EnableIRQ(RADIO_IRQn);
+}
+
+static void irq_deinit(void)
+{
+    NVIC_DisableIRQ(RADIO_IRQn);
+    NVIC_ClearPendingIRQ(RADIO_IRQn);
+    NVIC_SetPriority(RADIO_IRQn, 0);
 }
 
 // Set radio channel
@@ -580,6 +597,12 @@ static inline void shorts_tifs_no_ack_disable(void)
     nrf_radio_ifs_set(0);
 }
 
+// Check if tifs shorts are enabled.
+static inline bool shorts_tifs_are_enabled(void)
+{
+    return NRF_RADIO->SHORTS & NRF_RADIO_SHORT_FRAMESTART_BCSTART_MASK;
+}
+
 // Assert that peripheral shorts used during automatic ACK transmission are enabled.
 static inline void assert_tifs_shorts_enabled(void)
 {
@@ -699,9 +722,11 @@ static inline void tx_procedure_abort(void)
         break;
 
     // Just before entering this event handler Ack Frame could be received and
-    // driver enters WatiningRxFrame state. In this case just clear pending events
-    // because change of state was requested.
+    // driver enters WatiningRxFrame state (or any other RX state if this function was interrupted).
     case RADIO_STATE_WAITING_RX_FRAME:
+    case RADIO_STATE_RX_HEADER:
+    case RADIO_STATE_RX_FRAME:
+    case RADIO_STATE_TX_ACK:
         break;
 
     default:
@@ -730,12 +755,15 @@ static inline void enabling_rx_procedure_begin(rx_buffer_t * p_buffer)
         case NRF_RADIO_STATE_DISABLED:   // This one could happen during stopping ACK.
         case NRF_RADIO_STATE_RX_RU:      // This one could happen during enabling receiver (after sending ACK).
         case NRF_RADIO_STATE_RX:         // This one could happen if any other buffer is in use.
+        case NRF_RADIO_STATE_TX_RU:      // This one could happen if received a short frame.
+        case NRF_RADIO_STATE_TX_IDLE:    // This one could happen if received a short frame.
             break;
 
         case NRF_RADIO_STATE_RX_IDLE:
             // Mutex to make sure Radio State did not change between IRQ and this process.
+            // Check shorts to make sure RX_IDLE state is due to occupied buffers - not during END/DISABLE short.
             // If API call changed Radio state leave Radio as it is.
-            if (mutex_lock())
+            if (mutex_lock() && !shorts_tifs_are_enabled())
             {
                 shorts_tifs_initial_enable();
 
@@ -847,9 +875,7 @@ static void radio_reset(void)
 {
     uint8_t channel = channel_get();
 
-    nrf_radio_power_set(false);
-    nrf_radio_power_set(true);
-
+    nrf_radio_reset();
     nrf_radio_init();
 
     channel_set(channel);
@@ -892,6 +918,11 @@ uint8_t nrf_drv_radio802154_channel_get(void)
     return channel_get();
 }
 
+void nrf_drv_radio802154_ack_tx_power_set(int8_t power)
+{
+    m_ack_tx_power = power;
+}
+
 void nrf_drv_radio802154_pan_id_set(const uint8_t * p_pan_id)
 {
     memcpy(m_pan_id, p_pan_id, PAN_ID_SIZE);
@@ -911,8 +942,40 @@ void nrf_drv_radio802154_init(void)
 {
     data_init();
 
+    nrf_radio_reset();
     nrf_radio_init();
     irq_init();
+}
+
+void nrf_drv_radio802154_deinit(void)
+{
+    nrf_radio_reset();
+    irq_deinit();
+}
+
+nrf_drv_radio802154_state_t nrf_drv_radio802154_state_get(void)
+{
+    switch (m_state)
+    {
+    case RADIO_STATE_SLEEP:
+        return NRF_DRV_RADIO802154_STATE_SLEEP;
+
+    case RADIO_STATE_WAITING_RX_FRAME:
+    case RADIO_STATE_RX_HEADER:
+    case RADIO_STATE_RX_FRAME:
+    case RADIO_STATE_TX_ACK:
+        return NRF_DRV_RADIO802154_STATE_RECEIVE;
+
+    case RADIO_STATE_CCA:
+    case RADIO_STATE_TX_FRAME:
+    case RADIO_STATE_RX_ACK:
+        return NRF_DRV_RADIO802154_STATE_TRANSMIT;
+
+    case RADIO_STATE_ED:
+        return NRF_DRV_RADIO802154_STATE_ENERGY_DETECTION;
+    }
+
+    return NRF_DRV_RADIO802154_STATE_INVALID;
 }
 
 bool nrf_drv_radio802154_sleep(void)
@@ -1451,6 +1514,7 @@ void RADIO_IRQHandler(void)
             mutex_unlock();
 
             rx_buffer_in_use_set(free_rx_buffer_find());
+            tx_power_set(m_ack_tx_power);
 
             // Clear this event after RXEN task in case event is triggered just before.
             nrf_radio_event_clear(NRF_RADIO_EVENT_DISABLED);

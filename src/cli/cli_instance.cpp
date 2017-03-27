@@ -42,7 +42,7 @@
 #include <string.h>
 #include <assert.h>
 
-#include <openthread.h>
+#include "openthread/openthread.h"
 #include "cli.hpp"
 
 namespace Thread {

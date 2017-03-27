@@ -30,10 +30,9 @@ The power of this tool is three fold:
 ### Package Installation
 
 ```
-sudo easy_install pip
-sudo pip install --user pyserial
-sudo pip install --user ipaddress
-sudo pip install --user scapy==2.3.2
+# From openthread root
+cd tools/spinel-cli
+sudo python setup.py install
 ```
 
 ## Usage

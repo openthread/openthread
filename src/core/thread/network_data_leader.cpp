@@ -33,6 +33,8 @@
 
 #define WPP_NAME "network_data_leader.tmh"
 
+#include "openthread/platform/random.h"
+
 #include <coap/coap_header.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
@@ -41,7 +43,6 @@
 #include <common/message.hpp>
 #include <common/timer.hpp>
 #include <mac/mac_frame.hpp>
-#include <platform/random.h>
 #include <thread/mle_router.hpp>
 #include <thread/network_data_leader.hpp>
 #include <thread/thread_netif.hpp>
@@ -422,7 +423,7 @@ void LeaderBase::SetNetworkData(uint8_t aVersion, uint8_t aStableVersion, bool a
         RemoveTemporaryData(mTlvs, mLength);
     }
 
-    otDumpDebgNetData("set network data", mTlvs, mLength);
+    otDumpDebgNetData(GetInstance(), "set network data", mTlvs, mLength);
 
     mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
 }

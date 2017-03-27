@@ -39,7 +39,7 @@ The long address and short address of the parent of this node.
 
 ### PROP 82: PROP_THREAD_CHILD_TABLE
 * Type: Read-Only
-* Packed-Encoding: `A(T(ES))`
+* Packed-Encoding: `A(t(ES))`
 
 Table containing the long and short addresses of all
 the children of this node.
@@ -84,7 +84,7 @@ The local stable network data.
 
 ### PROP 90: PROP_THREAD_ON_MESH_NETS
 * Type: Read-Write
-* Packed-Encoding: `A(T(6CbCb))`
+* Packed-Encoding: `A(t(6CbCb))`
 
 Data per item is:
 
@@ -98,7 +98,7 @@ Data per item is:
 
 ### PROP 91: PROP_THREAD_LOCAL_ROUTES
 * Type: Read-Write
-* Packed-Encoding: `A(T(6CbC))`
+* Packed-Encoding: `A(t(6CbC))`
 
 Data per item is:
 
@@ -200,7 +200,7 @@ disabled.
 
 ### PROP 5387: PROP_THREAD_NEIGHBOR_TABLE
 * Type: Read-Only
-* Packed-Encoding: `A(T(ESLCcCbLL))`
+* Packed-Encoding: `A(t(ESLCcCbLL))`
 
 Data per item is:
 

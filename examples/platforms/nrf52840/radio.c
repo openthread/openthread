@@ -40,16 +40,16 @@
 
 #include <common/code_utils.hpp>
 #include <platform-config.h>
-#include <platform/logging.h>
-#include <platform/radio.h>
-#include <platform/diag.h>
+#include <openthread/platform/logging.h>
+#include <openthread/platform/radio.h>
+#include <openthread/platform/diag.h>
 
 #include "device/nrf.h"
 #include "drivers/nrf_drv_radio802154.h"
 
 #include <openthread-core-config.h>
 #include <openthread-config.h>
-#include <openthread-types.h>
+#include <openthread/types.h>
 
 #define SHORT_ADDRESS_SIZE    2
 #define EXTENDED_ADDRESS_SIZE 8
@@ -186,6 +186,39 @@ void nrf5RadioInit(void)
 {
     dataInit();
     nrf_drv_radio802154_init();
+}
+
+void nrf5RadioDeinit(void)
+{
+    nrf_drv_radio802154_deinit();
+}
+
+PhyState otPlatRadioGetState(otInstance *aInstance)
+{
+    (void) aInstance;
+
+    if (sDisabled)
+    {
+        return kStateDisabled;
+    }
+
+    switch (nrf_drv_radio802154_state_get())
+    {
+    case NRF_DRV_RADIO802154_STATE_SLEEP:
+        return kStateSleep;
+
+    case NRF_DRV_RADIO802154_STATE_RECEIVE:
+    case NRF_DRV_RADIO802154_STATE_ENERGY_DETECTION:
+        return kStateReceive;
+
+    case NRF_DRV_RADIO802154_STATE_TRANSMIT:
+        return kStateTransmit;
+
+    default:
+        assert(false); // Make sure driver returned valid state.
+    }
+
+    return kStateReceive; // It is the default state. Return it in case of unknown.
 }
 
 ThreadError otPlatRadioEnable(otInstance *aInstance)
@@ -432,6 +465,13 @@ ThreadError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, u
     }
 
     return kThreadError_None;
+}
+
+void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+{
+    (void)aInstance;
+
+    nrf_drv_radio802154_ack_tx_power_set(aPower);
 }
 
 void nrf5RadioProcess(otInstance *aInstance)

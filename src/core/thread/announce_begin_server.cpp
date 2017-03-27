@@ -39,12 +39,13 @@
 #include <openthread-config.h>
 #endif
 
+#include "openthread/platform/radio.h"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
 #include <meshcop/tlvs.hpp>
-#include <platform/radio.h>
 #include <thread/announce_begin_server.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
@@ -63,6 +64,11 @@ AnnounceBeginServer::AnnounceBeginServer(ThreadNetif &aThreadNetif) :
     mNetif(aThreadNetif)
 {
     mNetif.GetCoapServer().AddResource(mAnnounceBegin);
+}
+
+otInstance *AnnounceBeginServer::GetInstance()
+{
+    return mNetif.GetInstance();
 }
 
 ThreadError AnnounceBeginServer::SendAnnounce(uint32_t aChannelMask)
@@ -91,7 +97,7 @@ exit:
     return error;
 }
 
-void AnnounceBeginServer::HandleRequest(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void AnnounceBeginServer::HandleRequest(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                         const otMessageInfo *aMessageInfo)
 {
     static_cast<AnnounceBeginServer *>(aContext)->HandleRequest(
@@ -121,7 +127,7 @@ void AnnounceBeginServer::HandleRequest(Coap::Header &aHeader, Message &aMessage
     memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
     SuccessOrExit(mNetif.GetCoapServer().SendEmptyAck(aHeader, responseInfo));
 
-    otLogInfoMeshCoP("sent announce begin response");
+    otLogInfoMeshCoP(GetInstance(), "sent announce begin response");
 
 exit:
     return;

@@ -34,7 +34,8 @@
 #ifndef DTLS_HPP_
 #define DTLS_HPP_
 
-#include <openthread-types.h>
+#include "openthread/types.h"
+
 #include <common/message.hpp>
 #include <common/timer.hpp>
 #include <crypto/sha256.hpp>
@@ -71,6 +72,14 @@ public:
     Dtls(ThreadNetif &aNetif);
 
     /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
+    /**
      * This function pointer is called when a connection is established or torn down.
      *
      * @param[in]  aContext    A pointer to application-specific context.
@@ -92,12 +101,13 @@ public:
     /**
      * This function pointer is called when data is ready to transmit for the DTLS session.
      *
-     * @param[in]  aContext  A pointer to application-specific context.
-     * @param[in]  aBuf      A pointer to the transmit data buffer.
-     * @param[in]  aLength   Number of bytes in the transmit data buffer.
+     * @param[in]  aContext         A pointer to application-specific context.
+     * @param[in]  aBuf             A pointer to the transmit data buffer.
+     * @param[in]  aLength          Number of bytes in the transmit data buffer.
+     * @param[in]  aMessageSubtype  A message sub type information for the sender.
      *
      */
-    typedef ThreadError(*SendHandler)(void *aContext, const uint8_t *aBuf, uint16_t aLength);
+    typedef ThreadError(*SendHandler)(void *aContext, const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
 
     /**
      * This method starts the DTLS service.
@@ -243,6 +253,8 @@ private:
     SendHandler mSendHandler;
     void *mContext;
     bool mClient;
+
+    uint8_t mMessageSubType;
 
     ThreadNetif &mNetif;
 };

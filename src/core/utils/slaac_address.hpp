@@ -34,8 +34,8 @@
 #ifndef SLAAC_ADDRESS_HPP_
 #define SLAAC_ADDRESS_HPP_
 
-#include <openthread-types.h>
-#include <platform/random.h>
+#include "openthread/types.h"
+#include "openthread/platform/random.h"
 
 namespace Thread {
 namespace Utils {

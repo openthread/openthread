@@ -34,7 +34,8 @@
 #ifndef NETWORK_DATA_HPP_
 #define NETWORK_DATA_HPP_
 
-#include <openthread-types.h>
+#include "openthread/types.h"
+
 #include <coap/coap_client.hpp>
 #include <net/udp6.hpp>
 #include <thread/lowpan.hpp>
@@ -98,6 +99,14 @@ public:
      *
      */
     NetworkData(ThreadNetif &aThreadNetif, bool aLocal);
+
+    /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
 
     /**
      * This method clears the network data.

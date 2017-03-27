@@ -54,6 +54,7 @@ Ip6::Ip6(void):
     mIcmp(*this),
     mUdp(*this),
     mMpl(*this),
+    mMessagePool(GetInstance()),
     mForwardingEnabled(false),
     mSendQueueTask(mTaskletScheduler, HandleSendQueue, this),
     mReceiveIp6DatagramCallback(NULL),
@@ -113,7 +114,7 @@ uint16_t Ip6::ComputePseudoheaderChecksum(const Address &src, const Address &dst
     return checksum;
 }
 
-void Ip6::SetReceiveDatagramCallback(otReceiveIp6DatagramCallback aCallback, void *aCallbackContext)
+void Ip6::SetReceiveDatagramCallback(otIp6ReceiveCallback aCallback, void *aCallbackContext)
 {
     mReceiveIp6DatagramCallback = aCallback;
     mReceiveIp6DatagramCallbackContext = aCallbackContext;
@@ -623,7 +624,8 @@ ThreadError Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageIn
             break;
 
         case kProtoUdp:
-            if (messageInfo.GetSockAddr().IsLinkLocal())
+            if (messageInfo.GetSockAddr().IsLinkLocal() ||
+                messageInfo.GetSockAddr().IsLinkLocalMulticast())
             {
                 UdpHeader udp;
                 aMessage.Read(aMessage.GetOffset(), sizeof(udp), &udp);
@@ -696,7 +698,7 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
             {
                 receive = true;
             }
-            else if (netif->IsMulticastPromiscuousModeEnabled())
+            else if (netif->IsMulticastPromiscuousEnabled())
             {
                 multicastPromiscuous = true;
             }
@@ -836,7 +838,7 @@ ThreadError Ip6::ForwardMessage(Message &message, MessageInfo &messageInfo, uint
             break;
 
         case kThreadError_NoRoute:
-            otDumpDebgIp6("no route", &messageInfo.GetSockAddr(), 16);
+            otDumpDebgIp6(GetInstance(), "no route", &messageInfo.GetSockAddr(), 16);
             break;
 
         default:

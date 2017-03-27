@@ -35,11 +35,22 @@ CPPFLAGS_COMMON                     = \
     -I$(top_srcdir)/include           \
     -I${abs_top_srcdir}/third_party/mbedtls/repo/include \
     $(MBEDTLS_CPPFLAGS)               \
+    $(MISSING_CPPFLAGS)               \
     $(OPENTHREAD_TARGET_DEFINES)      \
     $(NULL)
 
 SOURCES_COMMON                      = \
-    openthread.cpp                    \
+    api/crypto_api.cpp                \
+    api/dataset_api.cpp               \
+    api/icmp6_api.cpp                 \
+    api/instance_api.cpp              \
+    api/ip6_api.cpp                   \
+    api/link_api.cpp                  \
+    api/message_api.cpp               \
+    api/netdata_api.cpp               \
+    api/tasklet_api.cpp               \
+    api/thread_api.cpp                \
+    api/udp_api.cpp                   \
     coap/coap_base.cpp                \
     coap/coap_client.cpp              \
     coap/coap_header.cpp              \
@@ -54,7 +65,6 @@ SOURCES_COMMON                      = \
     crypto/aes_ccm.cpp                \
     crypto/aes_ecb.cpp                \
     crypto/hmac_sha256.cpp            \
-    crypto/openthread-crypto.cpp      \
     crypto/mbedtls.cpp                \
     crypto/sha256.cpp                 \
     mac/mac.cpp                       \
@@ -85,6 +95,46 @@ SOURCES_COMMON                      = \
     utils/slaac_address.cpp           \
     $(NULL)
 
+if MISSING_STRLCPY
+###############################################################
+# You'll see something similar to the next four lines in all
+# of these `MISSING_*` blocks. These makefile gynmastics are
+# to work around some unfortunate bugs in automake which
+# prevent a more elegant solution. We can't just pull in the
+# convenience libraries in `$(MISSING_LIBADD)` because that
+# doesn't seem to work on some platforms. Also, we can't
+# just include `$(top_srcdir)/src/missing/X/X.c` directly
+# because a bug in automake causes the `clean` target to
+# break. The following code may look ugly, but it gets the
+# job done. It does this by copying the source file to the
+# local build directory as an intermediate target. We then
+# compile that file. We have to add the path in CPPFLAGS
+# because the file might include headers from that directory.
+# Because the copied source file is explicitly labeled as
+# an intermediate target, it will always get deleted (unless
+# it already existed in the first place). -- RQ 2017-03-22
+strlcpy.c: $(top_srcdir)/src/missing/strlcpy/strlcpy.c
+	$(AM_V_GEN)cp $< $@
+.INTERMEDIATE: strlcpy.c
+CPPFLAGS_COMMON += -I$(top_srcdir)/src/missing/strlcpy
+SOURCES_COMMON += strlcpy.c
+endif
+
+if MISSING_STRLCAT
+# See comment above for explanation.
+strlcat.c: $(top_srcdir)/src/missing/strlcat/strlcat.c
+	$(AM_V_GEN)cp $< $@
+.INTERMEDIATE: strlcat.c
+CPPFLAGS_COMMON += -I$(top_srcdir)/src/missing/strlcat
+SOURCES_COMMON += strlcat.c
+endif
+
+if OPENTHREAD_ENABLE_APPLICATION_COAP
+SOURCES_COMMON                     += \
+    api/coap_api.cpp                  \
+    $(NULL)
+endif  # OPENTHREAD_ENABLE_APPLICATION_COAP
+
 if OPENTHREAD_ENABLE_MAC_WHITELIST
 SOURCES_COMMON                     += \
     mac/mac_blacklist.cpp             \
@@ -94,6 +144,7 @@ endif  # OPENTHREAD_ENABLE_MAC_WHITELIST
 
 if OPENTHREAD_ENABLE_COMMISSIONER
 SOURCES_COMMON                     += \
+    api/commissioner_api.cpp          \
     coap/secure_coap_server.cpp       \
     crypto/pbkdf2_cmac.cpp            \
     meshcop/announce_begin_client.cpp \
@@ -105,6 +156,7 @@ endif  # OPENTHREAD_ENABLE_COMMISSIONER
 
 if OPENTHREAD_ENABLE_JOINER
 SOURCES_COMMON                     += \
+    api/joiner_api.cpp                \
     coap/secure_coap_client.cpp       \
     meshcop/joiner.cpp                \
     $(NULL)
@@ -118,18 +170,28 @@ endif  # OPENTHREAD_ENABLE_DTLS
 
 if OPENTHREAD_ENABLE_DHCP6_CLIENT
 SOURCES_COMMON                     += \
+    api/dhcp6_api.cpp                 \
     net/dhcp6_client.cpp              \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_DHCP6_CLIENT
 
 if OPENTHREAD_ENABLE_DHCP6_SERVER
 SOURCES_COMMON                     += \
+    api/dhcp6_api.cpp                 \
     net/dhcp6_server.cpp              \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_DHCP6_SERVER
 
+if OPENTHREAD_ENABLE_DNS_CLIENT
+SOURCES_COMMON                     += \
+    api/dns_api.cpp                   \
+    net/dns_client.cpp                \
+    $(NULL)
+endif  # OPENTHREAD_ENABLE_DNS_CLIENT
+
 if OPENTHREAD_ENABLE_JAM_DETECTION
 SOURCES_COMMON                     += \
+    api/jam_detection_api.cpp         \
     utils/jam_detector.cpp            \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_JAM_DETECTION
@@ -229,6 +291,11 @@ noinst_HEADERS                      = \
     meshcop/panid_query_client.hpp    \
     meshcop/timestamp.hpp             \
     meshcop/tlvs.hpp                  \
+    net/dhcp6.hpp                     \
+    net/dhcp6_client.hpp              \
+    net/dhcp6_server.hpp              \
+    net/dns_client.hpp                \
+    net/dns_headers.hpp               \
     net/icmp6.hpp                     \
     net/ip6.hpp                       \
     net/ip6_address.hpp               \
@@ -238,11 +305,8 @@ noinst_HEADERS                      = \
     net/ip6_routes.hpp                \
     net/netif.hpp                     \
     net/socket.hpp                    \
-    net/udp6.hpp                      \
     net/tcp.hpp                       \
-    net/dhcp6.hpp                     \
-    net/dhcp6_client.hpp              \
-    net/dhcp6_server.hpp              \
+    net/udp6.hpp                      \
     thread/address_resolver.hpp       \
     thread/address_resolver_ftd.hpp   \
     thread/address_resolver_mtd.hpp   \

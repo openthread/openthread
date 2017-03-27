@@ -34,7 +34,7 @@
 #ifndef ADDRESS_RESOLVER_HPP_
 #define ADDRESS_RESOLVER_HPP_
 
-#include <openthread-types.h>
+#include "openthread/types.h"
 
 namespace Thread {
 

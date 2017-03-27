@@ -39,15 +39,16 @@ NM                              = arm-none-eabi-nm
 RANLIB                          = arm-none-eabi-ranlib
 OBJCOPY                         = arm-none-eabi-objcopy
 
-BuildJobs                      ?= 99
+BuildJobs                      ?= 10
 
-configure_OPTIONS               = \
-    --enable-ftd                  \
-    --enable-cli                  \
-    --enable-ncp                  \
-    --enable-diag                 \
-    --with-examples=nrf52840      \
-    --with-platform-info=NRF52840 \
+configure_OPTIONS                                 = \
+    --enable-ftd                                    \
+    --enable-cli                                    \
+    --enable-ncp                                    \
+    --enable-diag                                   \
+    --with-examples=nrf52840                        \
+    --with-platform-info=NRF52840                   \
+    MBEDTLS_CPPFLAGS="$(NRF52840_MBEDTLS_CPPFLAGS)" \
     $(NULL)
 
 ifeq ($(DEFAULT_LOGGING),1)
@@ -90,8 +91,12 @@ ifeq ($(DHCP6_CLIENT),1)
 configure_OPTIONS              += --enable-dhcp6-client
 endif
 
+ifeq ($(DNS_CLIENT),1)
+configure_OPTIONS              += --enable-dns-client
+endif
+
 ifeq ($(COVERAGE),1)
-configure_OPTIONS              += --enable-coverage --enable-commissioner --enable-joiner --enable-dhcp6-client --enable-dhcp6-server
+configure_OPTIONS              += --enable-coverage --enable-commissioner --enable-joiner --enable-dhcp6-client --enable-dhcp6-server --enable-dns-client
 endif
 
 ifeq ($(DEBUG),1)
@@ -108,6 +113,13 @@ endif
 
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
+
+NRF52840_MBEDTLS_CPPFLAGS  = -DMBEDTLS_CONFIG_FILE='\"mbedtls-config.h\"'
+NRF52840_MBEDTLS_CPPFLAGS += -DMBEDTLS_USER_CONFIG_FILE='\"nrf52840-mbedtls-config.h\"'
+NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/nrf52840/crypto
+NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls
+NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include
+NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include/mbedtls
 
 CONFIG_FILE      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-nrf52840-config.h\"'
 CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/nrf52840/
@@ -171,11 +183,11 @@ ResultPath                      = output
 TopResultDir                    = $(ResultPath)
 AbsTopResultDir                 = $(PWD)/$(TopResultDir)
 
-TargetTuple                     = arm-none-eabi
+TargetTuple                     = nrf52840
 
 ARCHS                           = cortex-m4
 
-TopTargetLibDir                 = $(TopResultDir)/$(if $(1),$(1)-,)$(TargetTuple)/lib
+TopTargetLibDir                 = $(TopResultDir)/$(TargetTuple)/lib
 
 ifndef BuildJobs
 BuildJobs := $(shell getconf _NPROCESSORS_ONLN)
@@ -190,13 +202,14 @@ JOBSFLAG := -j$(BuildJobs)
 #   arch - The architecture to configure.
 #
 define configure-arch
-$(ECHO) "  CONFIG   $(1)-$(TargetTuple)..."
-(cd $(BuildPath)/$(1)-$(TargetTuple) && $(AbsTopSourceDir)/configure \
+$(ECHO) "  CONFIG   $(TargetTuple)..."
+(cd $(BuildPath)/$(TargetTuple) && $(AbsTopSourceDir)/configure \
 INSTALL="$(INSTALL) $(INSTALLFLAGS)" \
 CPP="$(CPP)" CC="$(CC)" CXX="$(CXX)" CCAS="$(CCAS)" OBJC="$(OBJC)" OBJCXX="$(OBJCXX)" AR="$(AR)" RANLIB="$(RANLIB)" NM="$(NM)" STRIP="$(STRIP)" CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" CCASFLAGS="$(CCASFLAGS)" LDFLAGS="$(LDFLAGS)" \
 --host=arm-none-eabi \
 --target=arm-none-eabi \
 --prefix=/ \
+--exec-prefix=/$(TargetTuple) \
 $(configure_OPTIONS))
 endef # configure-arch
 
@@ -209,8 +222,8 @@ endef # configure-arch
 #   arch - The architecture to build.
 #
 define build-arch
-$(ECHO) "  BUILD    $(1)-$(TargetTuple)"
-$(MAKE) $(JOBSFLAG) -C $(BuildPath)/$(1)-$(TargetTuple) --no-print-directory \
+$(ECHO) "  BUILD    $(TargetTuple)"
+$(MAKE) $(JOBSFLAG) -C $(BuildPath)/$(TargetTuple) --no-print-directory \
 all
 endef # build-arch
 
@@ -223,8 +236,8 @@ endef # build-arch
 #   arch - The architecture to stage.
 #
 define stage-arch
-$(ECHO) "  STAGE    $(1)-$(TargetTuple)"
-$(MAKE) $(JOBSFLAG) -C $(BuildPath)/$(1)-$(TargetTuple) --no-print-directory \
+$(ECHO) "  STAGE    $(TargetTuple)"
+$(MAKE) $(JOBSFLAG) -C $(BuildPath)/$(TargetTuple) --no-print-directory \
 DESTDIR=$(AbsTopResultDir) \
 install
 endef # stage-arch
@@ -241,8 +254,8 @@ define ARCH_template
 CONFIGURE_TARGETS += configure-$(1)
 BUILD_TARGETS     += do-build-$(1)
 STAGE_TARGETS     += stage-$(1)
-BUILD_DIRS        += $(BuildPath)/$(1)-$(TargetTuple)
-DIRECTORIES       += $(BuildPath)/$(1)-$(TargetTuple)
+BUILD_DIRS        += $(BuildPath)/$(TargetTuple)
+DIRECTORIES       += $(BuildPath)/$(TargetTuple)
 
 configure-$(1): target_CPPFLAGS=$($(1)_target_CPPFLAGS)
 configure-$(1): target_CFLAGS=$($(1)_target_CFLAGS)
@@ -250,9 +263,9 @@ configure-$(1): target_CXXFLAGS=$($(1)_target_CXXFLAGS)
 configure-$(1): target_LDFLAGS=$($(1)_target_LDFLAGS)
 configure-$(1): target_CCASFLAGS=$($(1)_target_CCASFLAGS)
 
-configure-$(1): $(BuildPath)/$(1)-$(TargetTuple)/config.status
+configure-$(1): $(BuildPath)/$(TargetTuple)/config.status
 
-$(BuildPath)/$(1)-$(TargetTuple)/config.status: | $(BuildPath)/$(1)-$(TargetTuple)
+$(BuildPath)/$(TargetTuple)/config.status: | $(BuildPath)/$(TargetTuple)
 	$$(call configure-arch,$(1))
 
 do-build-$(1): configure-$(1)

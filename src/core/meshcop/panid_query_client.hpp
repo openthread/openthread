@@ -35,8 +35,9 @@
 #define PANID_QUERY_CLIENT_HPP_
 
 #include <openthread-core-config.h>
-#include <openthread-types.h>
-#include <commissioning/commissioner.h>
+
+#include "openthread/commissioner.h"
+
 #include <coap/coap_client.hpp>
 #include <coap/coap_server.hpp>
 #include <net/ip6_address.hpp>
@@ -60,6 +61,14 @@ public:
     PanIdQueryClient(ThreadNetif &aThreadNetif);
 
     /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
+    /**
      * This method sends a PAN ID Query message.
      *
      * @param[in]  aPanId         The PAN ID to query.
@@ -76,7 +85,7 @@ public:
                           otCommissionerPanIdConflictCallback aCallback, void *aContext);
 
 private:
-    static void HandleConflict(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleConflict(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                const otMessageInfo *aMessageInfo);
     void HandleConflict(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 

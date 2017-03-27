@@ -68,7 +68,7 @@ AC_SUBST(LIBOPENTHREAD_VERSION_INFO,     [${LIBOPENTHREAD_VERSION_CURRENT}:${LIB
 # Check the sanity of the source directory by checking for the
 # presence of a key watch file
 #
-AC_CONFIG_SRCDIR([include/openthread.h])
+AC_CONFIG_SRCDIR([include/openthread/openthread.h])
 
 #
 # Tell autoconf where to find auxilliary build tools (e.g. config.guess,
@@ -253,6 +253,11 @@ AX_CHECK_COMPILER_OPTIONS([C++], ${PROSPECTIVE_CXXFLAGS})
 # Check for and initialize libtool
 
 LT_INIT
+AC_PROG_LIBTOOL
+
+# Disable building shared libraries by default (can be enabled with --enable-shared)
+
+AC_DISABLE_SHARED
 
 #
 # Debug instances
@@ -337,81 +342,6 @@ AC_MSG_NOTICE([checking whether to build tests])
 NL_ENABLE_TESTS([yes])
 
 AM_CONDITIONAL([OPENTHREAD_BUILD_TESTS], [test "${nl_cv_build_tests}" = "yes"])
-
-# Check whether to run only the minimum set of tests.
-
-AC_ARG_WITH(tests,
-    [AS_HELP_STRING([--with-tests=TESTS],
-        [Specify the tests from one of: all, subset1, subset2, subset3, subset4, subset5 @<:@default=all@:>@.])],
-    [
-        case "${with_tests}" in
-
-        all|subset1|subset2|subset3|subset4|subset5)
-            ;;
-        *)
-            AC_MSG_ERROR([Invalid value ${with_tests} for --with-tests])
-            ;;
-        esac
-    ],
-    [with_tests=all])
-
-case ${with_tests} in
-
-    all)
-        OPENTHREAD_TESTS_SUBSET1=yes
-        OPENTHREAD_TESTS_SUBSET2=yes
-        OPENTHREAD_TESTS_SUBSET3=yes
-        OPENTHREAD_TESTS_SUBSET4=yes
-        OPENTHREAD_TESTS_SUBSET5=yes
-        ;;
-
-    subset1)
-        OPENTHREAD_TESTS_SUBSET1=yes
-        ;;
-
-    subset2)
-        OPENTHREAD_TESTS_SUBSET2=yes
-        ;;
-
-    subset3)
-        OPENTHREAD_TESTS_SUBSET3=yes
-        ;;
-
-    subset4)
-        OPENTHREAD_TESTS_SUBSET4=yes
-        ;;
-
-    subset5)
-        OPENTHREAD_TESTS_SUBSET5=yes
-        ;;
-
-esac
-
-AC_SUBST(OPENTHREAD_TESTS_SUBSET1)
-AM_CONDITIONAL([OPENTHREAD_TESTS_SUBSET1], [test "${OPENTHREAD_TESTS_SUBSET1}" = "yes"])
-AM_CONDITIONAL([OPENTHREAD_TESTS_SUBSET2], [test "${OPENTHREAD_TESTS_SUBSET2}" = "yes"])
-AM_CONDITIONAL([OPENTHREAD_TESTS_SUBSET3], [test "${OPENTHREAD_TESTS_SUBSET3}" = "yes"])
-AM_CONDITIONAL([OPENTHREAD_TESTS_SUBSET4], [test "${OPENTHREAD_TESTS_SUBSET4}" = "yes"])
-AM_CONDITIONAL([OPENTHREAD_TESTS_SUBSET5], [test "${OPENTHREAD_TESTS_SUBSET5}" = "yes"])
-
-# Check for Python and Python libraries used in the tests
-if test "${nl_cv_build_tests}" = "yes"; then
-    AC_MSG_CHECKING([checking for Python and Python libraries used in tests.])
-
-    # Check for Python
-    python --version 2> /dev/null
-    if test $? != 0; then
-        AC_MSG_ERROR(["Cannot run tests: missing Python."])
-    fi
-
-    # Check for Python pexpect library
-    python -c 'import pexpect' 2> /dev/null
-    if test $? != 0; then
-        AC_MSG_ERROR(["Cannot run tests: missing Python pexpect library."])
-    fi
-
-    AC_MSG_RESULT([ok])
-fi
 
 #
 #  Full Thread Device
@@ -834,6 +764,36 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_DHCP6_SERVER], [test "${enable_dhcp6_server}" 
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DHCP6_SERVER],[${OPENTHREAD_ENABLE_DHCP6_SERVER}],[Define to 1 if you want to enable DHCPv6 Server])
 
 #
+# DNS Client
+#
+
+AC_ARG_ENABLE(dns_client,
+    [AS_HELP_STRING([--enable-dns-client],[Enable DNS client support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_dns_client=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_dns_client} for --enable-dns-client])
+            ;;
+        esac
+    ],
+    [enable_dns_client=no])
+
+if test "$enable_dns_client" = "yes"; then
+    OPENTHREAD_ENABLE_DNS_CLIENT=1
+else
+    OPENTHREAD_ENABLE_DNS_CLIENT=0
+fi
+
+AC_SUBST(OPENTHREAD_ENABLE_DNS_CLIENT)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_DNS_CLIENT], [test "${enable_dns_client}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DNS_CLIENT],[${OPENTHREAD_ENABLE_DNS_CLIENT}],[Define to 1 if you want to enable DNS Client])
+
+#
 # Application CoAP
 #
 
@@ -1030,8 +990,27 @@ AC_MSG_NOTICE([checking required package dependencies])
 # NL_WITH_PACKAGE(...)
 
 #
+# Checks for missing functions
+#
+
+AC_DEFUN([CHECK_MISSING_FUNC], [
+    AC_CHECK_FUNC($1, [], [
+        nl_cv_missing_$1=yes
+        MISSING_CPPFLAGS="${MISSING_CPPFLAGS} "'-include $(top_srcdir)/src/missing/$1/$1.h'
+        MISSING_LIBADD="${MISSING_LIBADD} "'$(top_builddir)/src/missing/$1/lib$1.la'
+    ])
+    AM_CONDITIONAL(m4_toupper(MISSING_$1), [test "${nl_cv_missing_$1}" = "yes"])
+])
+AC_SUBST(MISSING_CPPFLAGS)
+AC_SUBST(MISSING_LIBADD)
+
+CHECK_MISSING_FUNC([strlcpy])
+CHECK_MISSING_FUNC([strlcat])
+
+#
 # Check for headers
 #
+
 AC_HEADER_STDBOOL
 AC_HEADER_STDC
 
@@ -1079,16 +1058,18 @@ NL_RESTORE_WERROR
 AC_CONFIG_FILES([
 Makefile
 include/Makefile
-include/cli/Makefile
-include/commissioning/Makefile
-include/dhcp6/Makefile
-include/ncp/Makefile
-include/platform/Makefile
+include/openthread/Makefile
+include/openthread/platform/Makefile
 src/Makefile
 src/cli/Makefile
 src/ncp/Makefile
 src/core/Makefile
 src/diag/Makefile
+src/missing/Makefile
+src/missing/stdbool/Makefile
+src/missing/stdint/Makefile
+src/missing/strlcat/Makefile
+src/missing/strlcpy/Makefile
 third_party/Makefile
 third_party/mbedtls/Makefile
 examples/Makefile
@@ -1187,6 +1168,7 @@ AC_MSG_NOTICE([
   OpenThread Certification log support      : ${enable_cert_log}
   OpenThread DHCPv6 Server support          : ${enable_dhcp6_server}
   OpenThread DHCPv6 Client support          : ${enable_dhcp6_client}
+  OpenThread DNS Client support             : ${enable_dns_client}
   Openthread Application CoAP support       : ${enable_application_coap}
   Openthread Raw Link-Layer support         : ${enable_raw_link_api}
   OpenThread examples                       : ${OPENTHREAD_EXAMPLES}

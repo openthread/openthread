@@ -34,8 +34,7 @@
 #ifndef JOINER_HPP_
 #define JOINER_HPP_
 
-#include <openthread-types.h>
-#include <commissioning/joiner.h>
+#include "openthread/joiner.h"
 
 #include <coap/coap_header.hpp>
 #include <coap/coap_server.hpp>
@@ -62,6 +61,14 @@ public:
      *
      */
     Joiner(ThreadNetif &aThreadNetif);
+
+    /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
 
     /**
      * This method starts the Joiner service.
@@ -111,12 +118,12 @@ private:
     void HandleSecureCoapClientConnect(bool aConnected);
 
     void SendJoinerFinalize(void);
-    static void HandleJoinerFinalizeResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleJoinerFinalizeResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                              const otMessageInfo *aMessageInfo, ThreadError aResult);
     void HandleJoinerFinalizeResponse(Coap::Header *aHeader, Message *aMessage,
                                       const Ip6::MessageInfo *aMessageInfo, ThreadError aResult);
 
-    static void HandleJoinerEntrust(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleJoinerEntrust(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                     const otMessageInfo *aMessageInfo);
     void HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void SendJoinerEntrustResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestInfo);

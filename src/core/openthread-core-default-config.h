@@ -116,6 +116,40 @@
 #endif  // OPENTHREAD_CONFIG_DEFAULT_MAX_TRANSMIT_POWER
 
 /**
+ * @def OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT
+ *
+ * Maximum number of MAC layer transmit attempts for an outbound direct frame.
+ * Per IEEE 802.15.4-2006, default value is set to (macMaxFrameRetries + 1) with macMaxFrameRetries = 3.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT
+#define OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT                4
+#endif // OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT
+
+/**
+ * @def OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_PER_POLL
+ *
+ * Maximum number of MAC layer transmit attempts for an outbound indirect frame (to a sleepy child) after receiving
+ * a data request command (data poll) from the child.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_PER_POLL
+#define OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_PER_POLL     1
+#endif // OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_PER_POLL
+
+/**
+ * @def OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_POLLS
+ *
+ * Maximum number of transmit attempts for an outbound indirect frame (for a sleepy child) each triggered by the
+ * reception of a new data request command (a new data poll) from the sleepy child. Each data poll triggered attempt is
+ * retried by the MAC layer up to `OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_PER_POLL` times.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_POLLS
+#define OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_POLLS        4
+#endif // OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_POLLS
+
+/**
  * @def OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD
  *
  * The Data Poll period during attach in milliseconds.
@@ -288,6 +322,38 @@
 #endif  // OPENTHREAD_CONFIG_COAP_MAX_RETRANSMIT
 
 /**
+ * @def OPENTHREAD_CONFIG_COAP_SERVER_MAX_CACHED_RESPONSES
+ *
+ * Maximum number of cached responses for CoAP Confirmable messages.
+ *
+ * Cached responses are used for message deduplication.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_COAP_SERVER_MAX_CACHED_RESPONSES
+#define OPENTHREAD_CONFIG_COAP_SERVER_MAX_CACHED_RESPONSES      10
+#endif  // OPENTHREAD_CONFIG_COAP_SERVER_MAX_CACHED_RESPONSES
+
+/**
+ * @def OPENTHREAD_CONFIG_DNS_RESPONSE_TIMEOUT
+ *
+ * Maximum time that DNS Client waits for response in milliseconds.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_RESPONSE_TIMEOUT
+#define OPENTHREAD_CONFIG_DNS_RESPONSE_TIMEOUT                  3000
+#endif  // OPENTHREAD_CONFIG_DNS_RESPONSE_TIMEOUT
+
+/**
+ * @def OPENTHREAD_CONFIG_DNS_MAX_RETRANSMIT
+ *
+ * Maximum number of retransmissions for DNS client.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_MAX_RETRANSMIT
+#define OPENTHREAD_CONFIG_DNS_MAX_RETRANSMIT                    2
+#endif  // OPENTHREAD_CONFIG_DNS_MAX_RETRANSMIT
+
+/**
  * @def OPENTHREAD_CONFIG_JOIN_BEACON_VERSION
  *
  * The Beacon version to use when the beacon join flag is set.
@@ -342,12 +408,26 @@
 /**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL
  *
- * The log level.
+ * The log level (used at compile time).
  *
  */
 #ifndef OPENTHREAD_CONFIG_LOG_LEVEL
 #define OPENTHREAD_CONFIG_LOG_LEVEL                             OPENTHREAD_LOG_LEVEL_CRIT
 #endif  // OPENTHREAD_CONFIG_LOG_LEVEL
+
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+ *
+ * Define as 1 to enable dynamic log level control.
+ *
+ * Note that the OPENTHREAD_CONFIG_LOG_LEVEL determines the log level at
+ * compile time. The dynamic log level control (if enabled) only allows
+ * decreasing the log level from the compile time value.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+#define OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL              0
+#endif // OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_API
@@ -536,7 +616,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE
-#define OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE               1500
+#define OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE               1300
 #endif  // OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE
 
 /**
@@ -546,7 +626,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE
-#define OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE                   1500
+#define OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE                   1300
 #endif  // OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE
 
 /**
@@ -607,6 +687,16 @@
  */
 #ifndef OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
 #define OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT             1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE
+ *
+ * The size of mbedTLS heap buffer when DTLS is enabled.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE
+#define OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE                     (2048 * sizeof(void *))
 #endif
 
 #endif  // OPENTHREAD_CORE_DEFAULT_CONFIG_H_

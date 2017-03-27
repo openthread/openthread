@@ -43,6 +43,7 @@ libopenthread_ncp_a_CPPFLAGS        = \
     -I$(top_srcdir)/third_party       \
     -D_GNU_SOURCE                     \
     $(OPENTHREAD_TARGET_DEFINES)      \
+    $(MISSING_CPPFLAGS)               \
     $(NULL)
 
 libopenthread_ncp_a_CXXFLAGS        = \

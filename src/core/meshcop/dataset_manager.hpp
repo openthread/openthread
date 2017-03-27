@@ -35,7 +35,7 @@
 #ifndef MESHCOP_DATASET_MANAGER_HPP_
 #define MESHCOP_DATASET_MANAGER_HPP_
 
-#include <openthread-types.h>
+#include "openthread/types.h"
 
 #include <coap/coap_server.hpp>
 #include <common/timer.hpp>
@@ -53,6 +53,15 @@ namespace MeshCoP {
 class DatasetManager
 {
 public:
+
+    /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
     Dataset &GetLocal(void) { return mLocal; }
     Dataset &GetNetwork(void) { return mNetwork; }
 
@@ -91,7 +100,7 @@ protected:
     ThreadNetif &mNetif;
 
 private:
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
+    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleTimer(void *aContext);
@@ -124,7 +133,7 @@ public:
     ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
 private:
-    static void HandleGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleGet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                           const otMessageInfo *aMessageInfo);
     void HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -164,7 +173,7 @@ protected:
     uint32_t mNetworkTime;
 
 private:
-    static void HandleGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleGet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                           const otMessageInfo *aMessageInfo);
     void HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 

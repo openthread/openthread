@@ -343,10 +343,10 @@ otLwfEventProcessingAddressChanged(
                 LogInfo(DRIVER_DEFAULT, "Filter %p trying to add/update address: %!IPV6ADDR!", pFilter, pAddr);
 
                 // Add (or update) the address to OpenThread
-                ThreadError otError = otAddUnicastAddress(pFilter->otCtx, &otAddr);
+                ThreadError otError = otIp6AddUnicastAddress(pFilter->otCtx, &otAddr);
                 if (otError != kThreadError_None)
                 {
-                    LogError(DRIVER_DEFAULT, "otAddUnicastAddress failed, %!otError!", otError);
+                    LogError(DRIVER_DEFAULT, "otIp6AddUnicastAddress failed, %!otError!", otError);
                     ShouldDelete = otError == kThreadError_NoBufs ? TRUE : FALSE;
                 }
             }
@@ -378,7 +378,7 @@ otLwfEventProcessingAddressChanged(
             LogInfo(DRIVER_DEFAULT, "Filter %p trying to remove address: %!IPV6ADDR!", pFilter, pAddr);
 
             // Find the correct address from OpenThread to remove (best effort)
-            (void)otRemoveUnicastAddress(pFilter->otCtx, (otIp6Address*)pAddr);
+            (void)otIp6RemoveUnicastAddress(pFilter->otCtx, (otIp6Address*)pAddr);
         }
     }
 
@@ -398,7 +398,7 @@ otLwfRadioAddressesUpdated(
     
     NT_ASSERT(pFilter->DeviceStatus == OTLWF_DEVICE_STATUS_RADIO_MODE);
 
-    const otNetifAddress* addr = otGetUnicastAddresses(pFilter->otCtx);
+    const otNetifAddress* addr = otIp6GetUnicastAddresses(pFilter->otCtx);
 
     // Process the addresses
     while (addr)
@@ -451,7 +451,7 @@ otLwfTunAddressesUpdated(
         const uint8_t *entry_ptr = NULL;
         spinel_size_t entry_len = 0;
 
-        spinel_ssize_t len = spinel_datatype_unpack(value_data_ptr, value_data_len, "D.", &entry_ptr, &entry_len);
+        spinel_ssize_t len = spinel_datatype_unpack(value_data_ptr, value_data_len, "d", &entry_ptr, &entry_len);
         if (len < 1) break;
 
         {

@@ -27,14 +27,16 @@
  */
 
 #include "test_util.h"
-#include <openthread.h>
+#include "openthread/openthread.h"
+#include <openthread-instance.h>
 #include <common/debug.hpp>
 #include <common/message.hpp>
 #include <string.h>
 
 void TestMessage(void)
 {
-    Thread::MessagePool messagePool;
+    otInstance instance;
+    Thread::MessagePool messagePool(&instance);
     Thread::Message *message;
     uint8_t writeBuffer[1024];
     uint8_t readBuffer[1024];

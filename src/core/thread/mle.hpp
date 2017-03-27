@@ -34,7 +34,8 @@
 #ifndef MLE_HPP_
 #define MLE_HPP_
 
-#include <openthread.h>
+#include "openthread/openthread.h"
+
 #include <common/encoding.hpp>
 #include <common/timer.hpp>
 #include <mac/mac.hpp>
@@ -460,6 +461,14 @@ public:
     explicit Mle(ThreadNetif &aThreadNetif);
 
     /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
+    /**
      * This method enables MLE.
      *
      * @retval kThreadError_None     Successfully enabled MLE.
@@ -479,13 +488,15 @@ public:
     /**
      * This method starts the MLE protocol operation.
      *
-     * @param[in]  aEnableReattach  True to enable reattach process using stored dataset, False not.
+     * @param[in]  aEnableReattach True if reattach using stored dataset, or False if not.
+     * @param[in]  aAnnounceAttach True if attach on the announced thread network with newer active timestamp,
+     *                             or False if not.
      *
      * @retval kThreadError_None     Successfully started the protocol operation.
      * @retval kThreadError_Already  The protocol operation was already started.
      *
      */
-    ThreadError Start(bool aEnableReattach);
+    ThreadError Start(bool aEnableReattach, bool aAnnounceAttach);
 
     /**
      * This method stops the MLE protocol operation.
@@ -1344,6 +1355,10 @@ protected:
 
     uint8_t mLastPartitionRouterIdSequence;
     uint32_t mLastPartitionId;
+
+protected:
+    uint8_t mParentLeaderCost;
+
 private:
     enum
     {
@@ -1360,7 +1375,7 @@ private:
     void HandleParentRequestTimer(void);
     static void HandleDelayedResponseTimer(void *aContext);
     void HandleDelayedResponseTimer(void);
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
+    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     static void HandleSendChildUpdateRequest(void *aContext);
     void HandleSendChildUpdateRequest(void);
@@ -1380,7 +1395,7 @@ private:
     ThreadError SendChildIdRequest(void);
     void SendOrphanAnnounce(void);
 
-    bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, ConnectivityTlv &aConnectivityTlv) const;
+    bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, ConnectivityTlv &aConnectivityTlv);
     void ResetParentCandidate(void);
 
     MessageQueue mDelayedResponses;
@@ -1391,15 +1406,16 @@ private:
      */
     typedef struct NetworkInfo
     {
-        DeviceState          mDeviceState;                ///< Current Thread interface state.
+        DeviceState          mDeviceState;                                      ///< Current Thread interface state.
 
-        uint8_t              mDeviceMode;                 ///< Device mode setting.
-        uint16_t             mRloc16;                     ///< RLOC16
-        uint32_t             mKeySequence;                ///< Key Sequence
-        uint32_t             mMleFrameCounter;            ///< MLE Frame Counter
-        uint32_t             mMacFrameCounter;            ///< MAC Frame Counter
-        uint32_t             mPreviousPartitionId;        ///< PartitionId
-        Mac::ExtAddress      mExtAddress;                 ///< Extended Address
+        uint8_t              mDeviceMode;                                       ///< Device mode setting.
+        uint16_t             mRloc16;                                           ///< RLOC16
+        uint32_t             mKeySequence;                                      ///< Key Sequence
+        uint32_t             mMleFrameCounter;                                  ///< MLE Frame Counter
+        uint32_t             mMacFrameCounter;                                  ///< MAC Frame Counter
+        uint32_t             mPreviousPartitionId;                              ///< PartitionId
+        Mac::ExtAddress      mExtAddress;                                       ///< Extended Address
+        uint8_t              mMlIid[OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE];  ///< IID from ML-EID
     } NetworkInfo;
 
     struct
@@ -1414,12 +1430,11 @@ private:
     } mParentRequest;
 
     otMleAttachFilter mParentRequestMode;
-    uint8_t mParentLinkQuality;
     int8_t mParentPriority;
     uint8_t mParentLinkQuality3;
     uint8_t mParentLinkQuality2;
     uint8_t mParentLinkQuality1;
-    uint8_t mKeepAliveAttemptsSent;
+    uint8_t mChildUpdateAttempts;
     LeaderDataTlv mParentLeaderData;
     bool mParentIsSingleton;
 

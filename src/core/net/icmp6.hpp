@@ -34,7 +34,7 @@
 #ifndef ICMP6_HPP_
 #define ICMP6_HPP_
 
-#include <openthread-types.h>
+#include <openthread/types.h>
 #include <common/encoding.hpp>
 #include <net/ip6_headers.hpp>
 
@@ -220,6 +220,14 @@ public:
      *
      */
     Icmp(Ip6 &aIp6);
+
+    /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
 
     /**
      * This method returns a new ICMP message with sufficient header space reserved.

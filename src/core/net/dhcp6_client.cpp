@@ -33,14 +33,15 @@
 
 #define WPP_NAME "dhcp6_client.tmh"
 
-#include <openthread-types.h>
+#include "openthread/types.h"
+#include "openthread/platform/random.h"
+
 #include <common/code_utils.hpp>
 #include <common/encoding.hpp>
 #include <common/logging.hpp>
 #include <mac/mac.hpp>
 #include <net/dhcp6.hpp>
 #include <net/dhcp6_client.hpp>
-#include <platform/random.h>
 #include <thread/thread_netif.hpp>
 
 using Thread::Encoding::BigEndian::HostSwap16;
@@ -69,6 +70,11 @@ Dhcp6Client::Dhcp6Client(ThreadNetif &aThreadNetif) :
     mIdentityAssociationAvail = &mIdentityAssociations[0];
 }
 
+otInstance *Dhcp6Client::GetInstance()
+{
+    return mNetif.GetInstance();
+}
+
 void Dhcp6Client::UpdateAddresses(otInstance *aInstance, otDhcpAddress *aAddresses, uint32_t aNumAddresses,
                                   void *aContext)
 {
@@ -95,7 +101,7 @@ void Dhcp6Client::UpdateAddresses(otInstance *aInstance, otDhcpAddress *aAddress
         found = false;
         iterator = OT_NETWORK_DATA_ITERATOR_INIT;
 
-        while ((otGetNextOnMeshPrefix(aInstance, false, &iterator, &config)) == kThreadError_None)
+        while ((otNetDataGetNextPrefixInfo(aInstance, false, &iterator, &config)) == kThreadError_None)
         {
             if (!config.mDhcp)
             {
@@ -113,7 +119,7 @@ void Dhcp6Client::UpdateAddresses(otInstance *aInstance, otDhcpAddress *aAddress
 
         if (!found)
         {
-            otRemoveUnicastAddress(aInstance, &(address->mAddress.mAddress));
+            otIp6RemoveUnicastAddress(aInstance, &(address->mAddress.mAddress));
             RemoveIdentityAssociation(config.mRloc16, config.mPrefix);
             memset(address, 0, sizeof(*address));
         }
@@ -122,7 +128,7 @@ void Dhcp6Client::UpdateAddresses(otInstance *aInstance, otDhcpAddress *aAddress
     // add IdentityAssociation for new configured prefix
     iterator = OT_NETWORK_DATA_ITERATOR_INIT;
 
-    while (otGetNextOnMeshPrefix(aInstance, false, &iterator, &config) == kThreadError_None)
+    while (otNetDataGetNextPrefixInfo(aInstance, false, &iterator, &config) == kThreadError_None)
     {
         if (!config.mDhcp)
         {
@@ -213,7 +219,7 @@ void Dhcp6Client::AddIdentityAssociation(uint16_t aRloc16, otIp6Prefix &aIp6Pref
     }
 
 exit:
-    {}
+    return;
 }
 
 void Dhcp6Client::RemoveIdentityAssociation(uint16_t aRloc16, otIp6Prefix &aIp6Prefix)
@@ -254,7 +260,7 @@ void Dhcp6Client::RemoveIdentityAssociation(uint16_t aRloc16, otIp6Prefix &aIp6P
     }
 
 exit:
-    {}
+    return;
 }
 
 ThreadError Dhcp6Client::Start(void)
@@ -393,7 +399,7 @@ ThreadError Dhcp6Client::Solicit(uint16_t aRloc16)
     messageInfo.mInterfaceId = mNetif.GetInterfaceId();
 
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
-    otLogInfoIp6("solicit\n");
+    otLogInfoIp6(GetInstance(), "solicit");
 
 exit:
 
@@ -508,7 +514,7 @@ ThreadError Dhcp6Client::AppendRapidCommit(Message &aMessage)
     return aMessage.Append(&option, sizeof(option));
 }
 
-void Dhcp6Client::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
+void Dhcp6Client::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     Dhcp6Client *obj = static_cast<Dhcp6Client *>(aContext);
     obj->HandleUdpReceive(*static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
@@ -528,7 +534,7 @@ void Dhcp6Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aM
     }
 
 exit:
-    {}
+    return;
 }
 
 void Dhcp6Client::ProcessReply(Message &aMessage)
@@ -688,7 +694,7 @@ ThreadError Dhcp6Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
             address->mValidLifetime = option.GetValidLifetime();
             address->mAddress.mPreferred = address->mPreferredLifetime != 0;
             address->mAddress.mValid = address->mValidLifetime != 0;
-            otAddUnicastAddress(mNetif.GetInstance(), &address->mAddress);
+            otIp6AddUnicastAddress(mNetif.GetInstance(), &address->mAddress);
             break;
         }
     }

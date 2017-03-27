@@ -33,13 +33,14 @@
 
 #define WPP_NAME "address_resolver.tmh"
 
+#include "openthread/platform/random.h"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
 #include <common/encoding.hpp>
 #include <mac/mac_frame.hpp>
-#include <platform/random.h>
 #include <thread/address_resolver.hpp>
 #include <thread/mesh_forwarder.hpp>
 #include <thread/mle_router.hpp>
@@ -66,6 +67,11 @@ AddressResolver::AddressResolver(ThreadNetif &aThreadNetif) :
     mNetif.GetCoapServer().AddResource(mAddressNotification);
 
     mNetif.GetIp6().mIcmp.RegisterHandler(mIcmpHandler);
+}
+
+otInstance *AddressResolver::GetInstance()
+{
+    return mNetif.GetInstance();
 }
 
 void AddressResolver::Clear()
@@ -152,7 +158,7 @@ void AddressResolver::InvalidateCacheEntry(Cache &aEntry)
 
     aEntry.mAge = kCacheEntries - 1;
     aEntry.mState = Cache::kStateInvalid;
-    otLogInfoArp("cache entry removed!");
+    otLogInfoArp(GetInstance(), "cache entry removed!");
 }
 
 ThreadError AddressResolver::Resolve(const Ip6::Address &aEid, uint16_t &aRloc16)
@@ -246,7 +252,7 @@ ThreadError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
 
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
 
-    otLogInfoArp("Sent address query");
+    otLogInfoArp(GetInstance(), "Sent address query");
 
 exit:
 
@@ -263,7 +269,7 @@ exit:
     return error;
 }
 
-void AddressResolver::HandleAddressNotification(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void AddressResolver::HandleAddressNotification(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                                 const otMessageInfo *aMessageInfo)
 {
     static_cast<AddressResolver *>(aContext)->HandleAddressNotification(
@@ -283,7 +289,8 @@ void AddressResolver::HandleAddressNotification(Coap::Header &aHeader, Message &
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
                  aHeader.GetCode() == kCoapRequestPost, ;);
 
-    otLogInfoArp("Received address notification from %04x", HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
+    otLogInfoArp(GetInstance(), "Received address notification from %04x",
+                 HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
 
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kTarget, sizeof(targetTlv), targetTlv));
     VerifyOrExit(targetTlv.IsValid(), ;);
@@ -341,7 +348,7 @@ void AddressResolver::HandleAddressNotification(Coap::Header &aHeader, Message &
 
             if (mNetif.GetCoapServer().SendEmptyAck(aHeader, aMessageInfo) == kThreadError_None)
             {
-                otLogInfoArp("Sent address notification acknowledgment");
+                otLogInfoArp(GetInstance(), "Sent address notification acknowledgment");
             }
 
             mNetif.GetMeshForwarder().HandleResolved(*targetTlv.GetTarget(), kThreadError_None);
@@ -387,7 +394,7 @@ ThreadError AddressResolver::SendAddressError(const ThreadTargetTlv &aTarget, co
 
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
 
-    otLogInfoArp("Sent address error");
+    otLogInfoArp(GetInstance(), "Sent address error");
 
 exit:
 
@@ -399,7 +406,7 @@ exit:
     return error;
 }
 
-void AddressResolver::HandleAddressError(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void AddressResolver::HandleAddressError(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                          const otMessageInfo *aMessageInfo)
 {
     static_cast<AddressResolver *>(aContext)->HandleAddressError(
@@ -421,13 +428,13 @@ void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessag
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
                  aHeader.GetCode() == kCoapRequestPost, error = kThreadError_Drop);
 
-    otLogInfoArp("Received address error notification");
+    otLogInfoArp(GetInstance(), "Received address error notification");
 
     if (!aMessageInfo.GetSockAddr().IsMulticast())
     {
         if (mNetif.GetCoapServer().SendEmptyAck(aHeader, aMessageInfo) == kThreadError_None)
         {
-            otLogInfoArp("Sent address error notification acknowledgment");
+            otLogInfoArp(GetInstance(), "Sent address error notification acknowledgment");
         }
     }
 
@@ -479,10 +486,10 @@ void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessag
     }
 
 exit:
-    {}
+    return;
 }
 
-void AddressResolver::HandleAddressQuery(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void AddressResolver::HandleAddressQuery(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                          const otMessageInfo *aMessageInfo)
 {
     static_cast<AddressResolver *>(aContext)->HandleAddressQuery(
@@ -502,7 +509,7 @@ void AddressResolver::HandleAddressQuery(Coap::Header &aHeader, Message &aMessag
     VerifyOrExit(aHeader.GetType() == kCoapTypeNonConfirmable &&
                  aHeader.GetCode() == kCoapRequestPost, ;);
 
-    otLogInfoArp("Received address query from %04x", HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
+    otLogInfoArp(GetInstance(), "Received address query from %04x", HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
 
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kTarget, sizeof(targetTlv), targetTlv));
     VerifyOrExit(targetTlv.IsValid(), ;);
@@ -546,7 +553,7 @@ void AddressResolver::HandleAddressQuery(Coap::Header &aHeader, Message &aMessag
     }
 
 exit:
-    {}
+    return;
 }
 
 void AddressResolver::SendAddressQueryResponse(const ThreadTargetTlv &aTargetTlv,
@@ -584,7 +591,7 @@ void AddressResolver::SendAddressQueryResponse(const ThreadTargetTlv &aTargetTlv
 
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
 
-    otLogInfoArp("Sent address notification");
+    otLogInfoArp(GetInstance(), "Sent address notification");
 
 exit:
 
@@ -645,7 +652,7 @@ void AddressResolver::HandleTimer()
     }
 }
 
-void AddressResolver::HandleIcmpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo,
+void AddressResolver::HandleIcmpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo,
                                         const otIcmp6Header *aIcmpHeader)
 {
     static_cast<AddressResolver *>(aContext)->HandleIcmpReceive(*static_cast<Message *>(aMessage),

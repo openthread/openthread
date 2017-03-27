@@ -38,7 +38,7 @@ Flash Binaries:
 2. Return to previous terminal window and execute a command in order to flash the board:
 
    ```bash
-   $ ./cli_programmer gdbserver write_qspi_exec ../../../output/bin/arm-none-eabi-ot-cli-ftd.bin
+   $ ./cli_programmer gdbserver write_qspi_exec ../../../output/da15000/bin/arm-none-eabi-ot-cli-ftd.bin
    ```
 
 ## Interact:

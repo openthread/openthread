@@ -33,12 +33,13 @@
 
 #define WPP_NAME "panid_query_server.tmh"
 
+#include "openthread/platform/random.h"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
 #include <meshcop/tlvs.hpp>
-#include <platform/random.h>
 #include <thread/panid_query_server.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
@@ -55,7 +56,12 @@ PanIdQueryServer::PanIdQueryServer(ThreadNetif &aThreadNetif) :
     mNetif.GetCoapServer().AddResource(mPanIdQuery);
 }
 
-void PanIdQueryServer::HandleQuery(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+otInstance *PanIdQueryServer::GetInstance()
+{
+    return mNetif.GetInstance();
+}
+
+void PanIdQueryServer::HandleQuery(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                    const otMessageInfo *aMessageInfo)
 {
     static_cast<PanIdQueryServer *>(aContext)->HandleQuery(
@@ -85,7 +91,7 @@ void PanIdQueryServer::HandleQuery(Coap::Header &aHeader, Message &aMessage, con
     memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
     SuccessOrExit(mNetif.GetCoapServer().SendEmptyAck(aHeader, responseInfo));
 
-    otLogInfoMeshCoP("sent panid query response");
+    otLogInfoMeshCoP(GetInstance(), "sent panid query response");
 
 exit:
     return;
@@ -143,7 +149,7 @@ ThreadError PanIdQueryServer::SendConflict(void)
     messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent panid conflict");
+    otLogInfoMeshCoP(GetInstance(), "sent panid conflict");
 
 exit:
 

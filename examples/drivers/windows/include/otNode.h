@@ -35,7 +35,7 @@
 #ifndef OTNODE_H_
 #define OTNODE_H_
 
-#include <openthread.h>
+#include <openthread/openthread.h>
 
 #ifndef OTNODEAPI
 #define OTNODEAPI __declspec(dllimport)
@@ -328,7 +328,7 @@ OTNODEAPI const char* OTCALL otNodeScan(otNode* aNode);
 /**
  * Performs an scan for the node
  */
-OTNODEAPI uint32_t OTCALL otNodePing(otNode* aNode, const char *aAddr, uint16_t aSize, uint32_t aMinReplies);
+OTNODEAPI uint32_t OTCALL otNodePing(otNode* aNode, const char *aAddr, uint16_t aSize, uint32_t aMinReplies, uint16_t aTimeout);
 
 /**
  * Sets the router selection jitter value for a node

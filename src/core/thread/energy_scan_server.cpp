@@ -33,12 +33,13 @@
 
 #define WPP_NAME "energy_scan_server.tmh"
 
+#include "openthread/platform/random.h"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
 #include <meshcop/tlvs.hpp>
-#include <platform/random.h>
 #include <thread/energy_scan_server.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
@@ -63,7 +64,12 @@ EnergyScanServer::EnergyScanServer(ThreadNetif &aThreadNetif) :
     mNetif.GetCoapServer().AddResource(mEnergyScan);
 }
 
-void EnergyScanServer::HandleRequest(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+otInstance *EnergyScanServer::GetInstance()
+{
+    return mNetif.GetInstance();
+}
+
+void EnergyScanServer::HandleRequest(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                      const otMessageInfo *aMessageInfo)
 {
     static_cast<EnergyScanServer *>(aContext)->HandleRequest(
@@ -107,7 +113,7 @@ void EnergyScanServer::HandleRequest(Coap::Header &aHeader, Message &aMessage, c
     memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
     SuccessOrExit(mNetif.GetCoapServer().SendEmptyAck(aHeader, responseInfo));
 
-    otLogInfoMeshCoP("sent energy scan query response");
+    otLogInfoMeshCoP(GetInstance(), "sent energy scan query response");
 
 exit:
     return;
@@ -204,7 +210,7 @@ ThreadError EnergyScanServer::SendReport(void)
     messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent scan results");
+    otLogInfoMeshCoP(GetInstance(), "sent scan results");
 
 exit:
 

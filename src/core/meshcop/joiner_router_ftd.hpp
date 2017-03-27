@@ -34,7 +34,7 @@
 #ifndef JOINER_ROUTER_HPP_
 #define JOINER_ROUTER_HPP_
 
-#include <openthread-types.h>
+#include "openthread/types.h"
 
 #include <coap/coap_header.hpp>
 #include <coap/coap_client.hpp>
@@ -65,6 +65,14 @@ public:
     JoinerRouter(ThreadNetif &aNetif);
 
     /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
+    /**
      * This method returns the Joiner UDP Port.
      *
      * @returns The Joiner UDP Port number .
@@ -91,14 +99,14 @@ private:
     static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);
     void HandleNetifStateChanged(uint32_t aFlags);
 
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
+    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleRelayTransmit(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleRelayTransmit(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                     const otMessageInfo *aMessageInfo);
     void HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleJoinerEntrustResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleJoinerEntrustResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                             const otMessageInfo *aMessageInfo, ThreadError result);
     void HandleJoinerEntrustResponse(Coap::Header *aHeader, Message *aMessage,
                                      const Ip6::MessageInfo *aMessageInfo, ThreadError result);
@@ -118,12 +126,13 @@ private:
     Coap::Resource mRelayTransmit;
     ThreadNetif &mNetif;
 
-    uint16_t mJoinerUdpPort;
-    bool mIsJoinerPortConfigured;
-
     Timer mTimer;
     MessageQueue mDelayedJoinEnts;
-    bool mExpectJoinEntRsp;
+
+    uint16_t mJoinerUdpPort;
+
+    bool mIsJoinerPortConfigured : 1;
+    bool mExpectJoinEntRsp : 1;
 };
 
 /**

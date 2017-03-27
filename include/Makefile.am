@@ -31,46 +31,19 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 # Always package (e.g. for 'make dist') these subdirectories.
 
 DIST_SUBDIRS                            = \
-    cli                                   \
-    commissioning                         \
-    dhcp6                                 \
-    ncp                                   \
-    platform                              \
+    openthread                            \
     $(NULL)
 
 # Always build (e.g. for 'make all') these subdirectories.
 
 SUBDIRS                                 = \
-    cli                                   \
-    commissioning                         \
-    dhcp6                                 \
-    ncp                                   \
-    platform                              \
+    openthread                            \
     $(NULL)
 
 # Always pretty (e.g. for 'make pretty') these subdirectories.
 
 PRETTY_SUBDIRS                          = \
-    cli                                   \
-    commissioning                         \
-    dhcp6                                 \
-    ncp                                   \
-    platform                              \
-    $(NULL)
-
-include_HEADERS                         = \
-    openthread/link_raw.h                 \
-    openthread.h                          \
-    openthread-coap.h                     \
-    openthread-crypto.h                   \
-    openthread-diag.h                     \
-    openthread-icmp6.h                    \
-    openthread-ip6.h                      \
-    openthread-jam-detection.h            \
-    openthread-message.h                  \
-    openthread-tasklet.h                  \
-    openthread-types.h                    \
-    openthread-udp.h                      \
+    openthread                            \
     $(NULL)
 
 install-headers: install-includeHEADERS

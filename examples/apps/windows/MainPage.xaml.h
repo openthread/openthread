@@ -29,26 +29,35 @@
 #pragma once
 
 #include "MainPage.g.h"
+#include "IMainPageUIElements.h"
 
 namespace Thread
 {
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public ref class MainPage sealed
+    public ref class MainPage sealed : public IMainPageUIElements
     {
     public:
         MainPage();
 
         void OnResuming();
 
-        void BuildInterfaceList();
+        void ConnectNetwork(otAdapter^ adapter);
+        void ShowInterfaceDetails(otAdapter^ adapter);
+        void DisconnectNetwork(otAdapter^ adapter);
 
-        void ConnectNetwork(Platform::Guid InterfaceGuid);
-        void ShowInterfaceDetails(Platform::Guid InterfaceGuid);
-        void DisconnectNetwork(Platform::Guid InterfaceGuid);
+        property Windows::UI::Xaml::UIElement^ ThreadGrid
+        {
+            virtual Windows::UI::Xaml::UIElement^ get();
+        }
+        
+        property Windows::UI::Xaml::UIElement^ TalkGrid
+        {
+           virtual Windows::UI::Xaml::UIElement^ get();
+        }
 
-    protected:
+        protected:
         virtual void OnNavigatedTo(Windows::UI::Xaml::Navigation::NavigationEventArgs^ e) override;
 
     private:
@@ -56,25 +65,13 @@ namespace Thread
         void OnLoaded(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
         void OnUnloaded(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 
-        void OnWindowSizeChanged(Object^ sender, Windows::UI::Xaml::SizeChangedEventArgs^ args);
-        void OnVisibilityChanged(Windows::UI::Core::CoreWindow^ coreWindow, Windows::UI::Core::VisibilityChangedEventArgs^ args);
-
-        UIElement^ CreateNewInterface(Platform::Guid InterfaceGuid); 
-
-        bool _isVisible;
-        bool _isFullScreen;
-
-        Windows::Foundation::Size _windowSize;
+        void AddAdapterToList(otAdapter^ adapter);
         
-        void *_apiInstance;
-        #define ApiInstance ((otApiInstance*)_apiInstance)
+        otApi^ _otApi;
 
-        std::vector<void*> _devices;
+        Windows::Foundation::EventRegistrationToken _adapterArrivalToken;
 
-        Platform::Guid _currentInterface;
-
-    internal:
-        static MainPage^ Current;
+        otAdapter^ _curAdapter;
 
     };
 }

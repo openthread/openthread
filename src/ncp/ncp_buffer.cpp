@@ -55,7 +55,7 @@ NcpFrameBuffer::~NcpFrameBuffer()
 
 void NcpFrameBuffer::Clear(void)
 {
-    otMessage message;
+    otMessage *message;
     bool wasEmpty = IsEmpty();
 
     // Write (InFrame) related variables
@@ -81,13 +81,13 @@ void NcpFrameBuffer::Clear(void)
     while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != NULL)
     {
         otMessageQueueDequeue(&mWriteFrameMessageQueue, message);
-        otFreeMessage(message);
+        otMessageFree(message);
     }
 
     while ((message = otMessageQueueGetHead(&mMessageQueue)) != NULL)
     {
         otMessageQueueDequeue(&mMessageQueue, message);
-        otFreeMessage(message);
+        otMessageFree(message);
     }
 
     if (!wasEmpty)
@@ -243,7 +243,7 @@ void NcpFrameBuffer::InFrameEndSegment(uint16_t aHeaderFlags)
 // This method discards the current frame.
 void NcpFrameBuffer::InFrameDiscard(void)
 {
-    otMessage message;
+    otMessage *message;
 
     // Move the write segment head and tail pointers back to frame start.
     mWriteSegmentHead = mWriteSegmentTail = mWriteFrameStart;
@@ -252,7 +252,7 @@ void NcpFrameBuffer::InFrameDiscard(void)
     while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != NULL)
     {
         otMessageQueueDequeue(&mWriteFrameMessageQueue, message);
-        otFreeMessage(message);
+        otMessageFree(message);
     }
 }
 
@@ -281,7 +281,7 @@ exit:
     return error;
 }
 
-ThreadError NcpFrameBuffer::InFrameFeedMessage(otMessage aMessage)
+ThreadError NcpFrameBuffer::InFrameFeedMessage(otMessage *aMessage)
 {
     ThreadError error = kThreadError_None;
 
@@ -300,7 +300,7 @@ exit:
 
 ThreadError NcpFrameBuffer::InFrameEnd(void)
 {
-    otMessage message;
+    otMessage *message;
     bool wasEmpty = IsEmpty();
 
     // End/Close the current segment (if any).
@@ -433,10 +433,10 @@ ThreadError NcpFrameBuffer::OutFrameFillMessageBuffer(void)
 
     VerifyOrExit(mReadMessage != NULL, error = kThreadError_NotFound);
 
-    VerifyOrExit(mReadMessageOffset < otGetMessageLength(mReadMessage), error = kThreadError_NotFound);
+    VerifyOrExit(mReadMessageOffset < otMessageGetLength(mReadMessage), error = kThreadError_NotFound);
 
     // Read portion of current message from the offset into message buffer.
-    readLength = otReadMessage(mReadMessage, mReadMessageOffset, mMessageBuffer, sizeof(mMessageBuffer));
+    readLength = otMessageRead(mReadMessage, mReadMessageOffset, mMessageBuffer, sizeof(mMessageBuffer));
 
     VerifyOrExit(readLength > 0, error = kThreadError_NotFound);
 
@@ -547,7 +547,7 @@ ThreadError NcpFrameBuffer::OutFrameRemove(void)
 {
     ThreadError error = kThreadError_None;
     uint8_t *bufPtr;
-    otMessage message;
+    otMessage *message;
     uint16_t header;
 
     VerifyOrExit(!IsEmpty(), error = kThreadError_NotFound);
@@ -577,7 +577,7 @@ ThreadError NcpFrameBuffer::OutFrameRemove(void)
             if ((message = otMessageQueueGetHead(&mMessageQueue)) != NULL)
             {
                 otMessageQueueDequeue(&mMessageQueue, message);
-                otFreeMessage(message);
+                otMessageFree(message);
             }
         }
 
@@ -609,7 +609,7 @@ uint16_t NcpFrameBuffer::OutFrameGetLength(void)
     uint16_t frameLength = 0;
     uint16_t header;
     uint8_t *bufPtr;
-    otMessage message = NULL;
+    otMessage *message = NULL;
 
     // If the frame length was calculated before, return the previously calculated length.
     VerifyOrExit(mReadFrameLength == kUnknownFrameLength, frameLength = mReadFrameLength);
@@ -644,7 +644,7 @@ uint16_t NcpFrameBuffer::OutFrameGetLength(void)
 
             if (message != NULL)
             {
-                frameLength += otGetMessageLength(message);
+                frameLength += otMessageGetLength(message);
             }
         }
 

@@ -41,6 +41,9 @@
 
 #include <stdio.h>
 
+#include "openthread/platform/radio.h"
+#include "openthread/platform/random.h"
+
 #include <common/code_utils.hpp>
 #include <common/crc16.hpp>
 #include <common/debug.hpp>
@@ -48,8 +51,6 @@
 #include <common/logging.hpp>
 #include <mac/mac_frame.hpp>
 #include <meshcop/joiner.hpp>
-#include <platform/radio.h>
-#include <platform/random.h>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
 
@@ -77,6 +78,11 @@ Joiner::Joiner(ThreadNetif &aNetif):
     mNetif(aNetif)
 {
     mNetif.GetCoapServer().AddResource(mJoinerEntrust);
+}
+
+otInstance *Joiner::GetInstance()
+{
+    return mNetif.GetInstance();
 }
 
 ThreadError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl,
@@ -173,7 +179,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
         // Joining is disabled if the Steering Data is not included
         if (aResult->mSteeringData.mLength == 0)
         {
-            otLogDebgMeshCoP("No steering data, joining disabled");
+            otLogDebgMeshCoP(GetInstance(), "No steering data, joining disabled");
             ExitNow();
         }
 
@@ -192,7 +198,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
         }
         else
         {
-            otLogDebgMeshCoP("Steering data does not include this device");
+            otLogDebgMeshCoP(GetInstance(), "Steering data does not include this device");
         }
     }
     else if (mJoinerRouterPanId != Mac::kPanIdBroadcast)
@@ -213,7 +219,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
     }
     else
     {
-        otLogDebgMeshCoP("No joinable network found");
+        otLogDebgMeshCoP(GetInstance(), "No joinable network found");
         Complete(kThreadError_NotFound);
     }
 
@@ -310,12 +316,13 @@ void Joiner::SendJoinerFinalize(void)
     uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
     VerifyOrExit(message->GetLength() <= sizeof(buf), ;);
     message->Read(header.GetLength(), message->GetLength() - header.GetLength(), buf);
-    otDumpCertMeshCoP("[THCI] direction=send | type=JOIN_FIN.req |", buf, message->GetLength() - header.GetLength());
+    otDumpCertMeshCoP(GetInstance(), "[THCI] direction=send | type=JOIN_FIN.req |", buf,
+                      message->GetLength() - header.GetLength());
 #endif
 
     mNetif.GetSecureCoapClient().SendMessage(*message, Joiner::HandleJoinerFinalizeResponse, this);
 
-    otLogInfoMeshCoP("Sent joiner finalize");
+    otLogInfoMeshCoP(GetInstance(), "Sent joiner finalize");
 
 exit:
 
@@ -327,7 +334,7 @@ exit:
     otLogFuncExit();
 }
 
-void Joiner::HandleJoinerFinalizeResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void Joiner::HandleJoinerFinalizeResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                           const otMessageInfo *aMessageInfo, ThreadError aResult)
 {
     static_cast<Joiner *>(aContext)->HandleJoinerFinalizeResponse(
@@ -354,15 +361,21 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Header *aHeader, Message *aMessa
     mState = kStateEntrust;
     mTimer.Start(kTimeout);
 
-    otLogInfoMeshCoP("received joiner finalize response %d", static_cast<uint8_t>(state.GetState()));
-    otLogCertMeshCoP("[THCI] direction=recv | type=JOIN_FIN.rsp");
+    otLogInfoMeshCoP(GetInstance(), "received joiner finalize response %d", static_cast<uint8_t>(state.GetState()));
+#if OPENTHREAD_ENABLE_CERT_LOG
+    uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
+    VerifyOrExit(aMessage->GetLength() <= sizeof(buf), ;);
+    aMessage->Read(aHeader->GetLength(), aMessage->GetLength() - aHeader->GetLength(), buf);
+    otDumpCertMeshCoP(GetInstance(), "[THCI] direction=recv | type=JOIN_FIN.rsp |", buf,
+                      aMessage->GetLength() - aHeader->GetLength());
+#endif
 
 exit:
     Close();
     otLogFuncExit();
 }
 
-void Joiner::HandleJoinerEntrust(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void Joiner::HandleJoinerEntrust(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                  const otMessageInfo *aMessageInfo)
 {
     static_cast<Joiner *>(aContext)->HandleJoinerEntrust(
@@ -387,8 +400,8 @@ void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const
                  aHeader.GetType() == kCoapTypeConfirmable &&
                  aHeader.GetCode() == kCoapRequestPost, error = kThreadError_Drop);
 
-    otLogInfoMeshCoP("Received joiner entrust");
-    otLogCertMeshCoP("[THCI] direction=recv | type=JOIN_ENT.ntf");
+    otLogInfoMeshCoP(GetInstance(), "Received joiner entrust");
+    otLogCertMeshCoP(GetInstance(), "[THCI] direction=recv | type=JOIN_ENT.ntf");
 
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kNetworkMasterKey, sizeof(masterKey), masterKey));
     VerifyOrExit(masterKey.IsValid(), error = kThreadError_Parse);
@@ -414,7 +427,7 @@ void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const
     mNetif.GetMac().SetExtendedPanId(extendedPanId.GetExtendedPanId());
     mNetif.GetMac().SetNetworkName(networkName.GetNetworkName());
 
-    otLogInfoMeshCoP("join success!");
+    otLogInfoMeshCoP(GetInstance(), "join success!");
 
     // Send dummy response.
     SendJoinerEntrustResponse(aHeader, aMessageInfo);
@@ -448,10 +461,10 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Header &aRequestHeader,
 
     mState = kStateJoined;
 
-    otLogInfoArp("Sent Joiner Entrust response");
+    otLogInfoArp(GetInstance(), "Sent Joiner Entrust response");
 
-    otLogInfoMeshCoP("Sent joiner entrust response length = %d", message->GetLength());
-    otLogCertMeshCoP("[THCI] direction=send | type=JOIN_ENT.rsp");
+    otLogInfoMeshCoP(GetInstance(), "Sent joiner entrust response length = %d", message->GetLength());
+    otLogCertMeshCoP(GetInstance(), "[THCI] direction=send | type=JOIN_ENT.rsp");
 
 exit:
 

@@ -35,7 +35,9 @@
 #define ENERGY_SCAN_SERVER_HPP_
 
 #include <openthread-core-config.h>
-#include <openthread-types.h>
+
+#include "openthread/types.h"
+
 #include <coap/coap_client.hpp>
 #include <coap/coap_server.hpp>
 #include <common/timer.hpp>
@@ -63,6 +65,14 @@ public:
      */
     EnergyScanServer(ThreadNetif &aThreadNetif);
 
+    /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
 private:
     enum
     {
@@ -70,7 +80,7 @@ private:
         kReportDelay = 500,   ///< Delay before sending a report (milliseconds)
     };
 
-    static void HandleRequest(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleRequest(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                               const otMessageInfo *aMessageInfo);
     void HandleRequest(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 

@@ -35,8 +35,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <platform/uart.h>
-#include <openthread-types.h>
+#include <openthread/types.h>
+#include <openthread/platform/uart.h>
 #include <common/code_utils.hpp>
 
 #include "drivers/nrf_drv_clock.h"
@@ -177,6 +177,20 @@ void nrf5UartInit(void)
     NVIC_EnableIRQ(UART_IRQN);
 }
 
+void nrf5UartDeinit(void)
+{
+    // Disable NVIC interrupt.
+    NVIC_DisableIRQ(UART_IRQN);
+    NVIC_ClearPendingIRQ(UART_IRQN);
+    NVIC_SetPriority(UART_IRQN, 0);
+
+    // Disable interrupts for TX.
+    nrf_uart_int_disable(UART_INSTANCE, NRF_UART_INT_MASK_TXDRDY);
+
+    // Disable interrupts for RX.
+    nrf_uart_int_disable(UART_INSTANCE, NRF_UART_INT_MASK_RXDRDY | NRF_UART_INT_MASK_ERROR);
+}
+
 ThreadError otPlatUartEnable(void)
 {
     // Start HFCLK
@@ -193,20 +207,11 @@ ThreadError otPlatUartEnable(void)
 
 ThreadError otPlatUartDisable(void)
 {
-    // Release HF clock.
-    nrf_drv_clock_hfclk_release();
-
-    // Disable interrupts for TX.
-    nrf_uart_int_disable(UART_INSTANCE, NRF_UART_INT_MASK_TXDRDY);
-
-    // Disable interrupts for RX.
-    nrf_uart_int_disable(UART_INSTANCE, NRF_UART_INT_MASK_RXDRDY | NRF_UART_INT_MASK_ERROR);
-
-    // Disable NVIC interrupt.
-    NVIC_DisableIRQ(UART_IRQN);
-
     // Disable UART instance.
     nrf_uart_disable(UART_INSTANCE);
+
+    // Release HF clock.
+    nrf_drv_clock_hfclk_release();
 
     return kThreadError_None;
 }

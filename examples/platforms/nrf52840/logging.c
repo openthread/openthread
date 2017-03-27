@@ -35,15 +35,15 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include <platform/logging.h>
-#include <platform/alarm.h>
+#include <openthread/platform/logging.h>
+#include <openthread/platform/alarm.h>
 #include <common/code_utils.hpp>
 
 #include "platform-nrf5.h"
 
 #include <openthread-core-config.h>
 #include <openthread-config.h>
-#include <openthread-types.h>
+#include <openthread/types.h>
 
 #if (OPENTHREAD_ENABLE_DEFAULT_LOGGING == 0)
 #include <segger_rtt/SEGGER_RTT.h>
@@ -134,6 +134,11 @@ void nrf5LogInit()
 
 exit:
     return;
+}
+
+void nrf5LogDeinit()
+{
+    sLogInitialized = false;
 }
 
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion,

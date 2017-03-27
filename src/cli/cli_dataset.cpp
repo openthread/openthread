@@ -41,7 +41,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <openthread.h>
+#include "openthread/openthread.h"
 
 #include "cli.hpp"
 #include "cli_dataset.hpp"
@@ -227,7 +227,7 @@ ThreadError Dataset::ProcessHelp(otInstance *aInstance, int argc, char *argv[])
 ThreadError Dataset::ProcessActive(otInstance *aInstance, int argc, char *argv[])
 {
     otOperationalDataset dataset;
-    otGetActiveDataset(aInstance, &dataset);
+    otDatasetGetActive(aInstance, &dataset);
 
     (void)argc;
     (void)argv;
@@ -239,8 +239,7 @@ ThreadError Dataset::ProcessActiveTimestamp(otInstance *aInstance, int argc, cha
     ThreadError error = kThreadError_None;
     long value;
 
-    VerifyOrExit(argc > 0, ;);
-
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
     sDataset.mActiveTimestamp = static_cast<uint64_t>(value);
     sDataset.mIsActiveTimestampSet = true;
@@ -299,11 +298,11 @@ ThreadError Dataset::ProcessCommit(otInstance *aInstance, int argc, char *argv[]
 
     if (strcmp(argv[0], "active") == 0)
     {
-        SuccessOrExit(error = otSetActiveDataset(aInstance, &sDataset));
+        SuccessOrExit(error = otDatasetSetActive(aInstance, &sDataset));
     }
     else if (strcmp(argv[0], "pending") == 0)
     {
-        SuccessOrExit(error = otSetPendingDataset(aInstance, &sDataset));
+        SuccessOrExit(error = otDatasetSetPending(aInstance, &sDataset));
     }
     else
     {
@@ -422,7 +421,7 @@ exit:
 ThreadError Dataset::ProcessPending(otInstance *aInstance, int argc, char *argv[])
 {
     otOperationalDataset dataset;
-    otGetPendingDataset(aInstance, &dataset);
+    otDatasetGetPending(aInstance, &dataset);
 
     (void)argc;
     (void)argv;
@@ -550,11 +549,11 @@ ThreadError Dataset::ProcessMgmtSetCommand(otInstance *aInstance, int argc, char
 
     if (strcmp(argv[0], "active") == 0)
     {
-        SuccessOrExit(error = otSendActiveSet(aInstance, &dataset, tlvs, static_cast<uint8_t>(length)));
+        SuccessOrExit(error = otDatasetSendMgmtActiveSet(aInstance, &dataset, tlvs, static_cast<uint8_t>(length)));
     }
     else if (strcmp(argv[0], "pending") == 0)
     {
-        SuccessOrExit(error = otSendPendingSet(aInstance, &dataset, tlvs, static_cast<uint8_t>(length)));
+        SuccessOrExit(error = otDatasetSendMgmtPendingSet(aInstance, &dataset, tlvs, static_cast<uint8_t>(length)));
     }
     else
     {
@@ -644,13 +643,13 @@ ThreadError Dataset::ProcessMgmtGetCommand(otInstance *aInstance, int argc, char
 
     if (strcmp(argv[0], "active") == 0)
     {
-        SuccessOrExit(error = otSendActiveGet(aInstance, tlvs, static_cast<uint8_t>(length),
-                                              destAddrSpecified ? &address : NULL));
+        SuccessOrExit(error = otDatasetSendMgmtActiveGet(aInstance, tlvs, static_cast<uint8_t>(length),
+                                                         destAddrSpecified ? &address : NULL));
     }
     else if (strcmp(argv[0], "pending") == 0)
     {
-        SuccessOrExit(error = otSendPendingGet(aInstance, tlvs, static_cast<uint8_t>(length),
-                                               destAddrSpecified ? &address : NULL));
+        SuccessOrExit(error = otDatasetSendMgmtPendingGet(aInstance, tlvs, static_cast<uint8_t>(length),
+                                                          destAddrSpecified ? &address : NULL));
     }
     else
     {

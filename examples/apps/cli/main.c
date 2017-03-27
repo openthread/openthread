@@ -32,12 +32,12 @@
 #include <openthread-config.h>
 #endif
 
+#include "openthread/openthread.h"
+#include "openthread/cli.h"
+#include "openthread/diag.h"
+#include "openthread/platform/platform.h"
+
 #include <openthread-core-config.h>
-#include <openthread.h>
-#include <openthread-diag.h>
-#include <openthread-tasklet.h>
-#include <cli/cli-uart.h>
-#include <platform/platform.h>
 #include <assert.h>
 
 #ifdef OPENTHREAD_MULTIPLE_INSTANCE
@@ -52,7 +52,7 @@ void otPlatFree(void *aPtr)
 }
 #endif
 
-void otSignalTaskletPending(otInstance *aInstance)
+void otTaskletsSignalPending(otInstance *aInstance)
 {
     (void)aInstance;
 }
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
     otInstance *sInstance;
 
 #ifdef OPENTHREAD_MULTIPLE_INSTANCE
-    uint64_t otInstanceBufferLength = 0;
+    size_t otInstanceBufferLength = 0;
     uint8_t *otInstanceBuffer = NULL;
 #endif
 
@@ -86,12 +86,12 @@ int main(int argc, char *argv[])
     otCliUartInit(sInstance);
 
 #if OPENTHREAD_ENABLE_DIAG
-    diagInit(sInstance);
+    otDiagInit(sInstance);
 #endif
 
     while (1)
     {
-        otProcessQueuedTasklets(sInstance);
+        otTaskletsProcess(sInstance);
         PlatformProcessDrivers(sInstance);
     }
 

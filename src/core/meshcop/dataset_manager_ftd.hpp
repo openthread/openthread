@@ -35,7 +35,7 @@
 #ifndef MESHCOP_DATASET_MANAGER_FTD_HPP_
 #define MESHCOP_DATASET_MANAGER_FTD_HPP_
 
-#include <openthread-types.h>
+#include "openthread/types.h"
 
 #include <coap/coap_server.hpp>
 
@@ -57,7 +57,7 @@ public:
     void StopLeader(void);
 
 private:
-    static void HandleSet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleSet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                           const otMessageInfo *aMessageInfo);
     void HandleSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -76,7 +76,7 @@ public:
     void StopLeader(void);
 
 private:
-    static void HandleSet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleSet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                           const otMessageInfo *aMessageInfo);
     void HandleSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 

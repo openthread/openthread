@@ -71,6 +71,14 @@ public:
     Leader(ThreadNetif &aThreadNetif);
 
     /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
+    /**
      * This method sends a MGMT_DATASET_CHANGED message to commissioner.
      *
      * @param[in]  aAddress   The IPv6 address of destination.
@@ -109,19 +117,19 @@ private:
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
 
-    static void HandlePetition(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandlePetition(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                const otMessageInfo *aMessageInfo);
     void HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError SendPetitionResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
                                      StateTlv::State aState);
 
-    static void HandleKeepAlive(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleKeepAlive(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                 const otMessageInfo *aMessageInfo);
     void HandleKeepAlive(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError SendKeepAliveResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
                                       StateTlv::State aState);
 
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
+    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
     void ResignCommissioner(void);
 

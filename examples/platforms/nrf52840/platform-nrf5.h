@@ -37,7 +37,7 @@
 
 #include <stdint.h>
 
-#include <openthread-types.h>
+#include <openthread/types.h>
 
 #include "platform-config.h"
 
@@ -46,6 +46,12 @@
  *
  */
 void nrf5UartInit(void);
+
+/**
+ * Deinitialization of UART driver.
+ *
+ */
+void nrf5UartDeinit(void);
 
 /**
  * This function performs UART driver processing.
@@ -60,6 +66,12 @@ void nrf5UartProcess(void);
 void nrf5AlarmInit(void);
 
 /**
+ * Deinitialization of Alarm driver.
+ *
+ */
+void nrf5AlarmDeinit(void);
+
+/**
  * Function for processing Alarm.
  *
  */
@@ -72,10 +84,22 @@ void nrf5AlarmProcess(otInstance *aInstance);
 void nrf5RandomInit(void);
 
 /**
+ * Deinitialization of Random Number Generator.
+ *
+ */
+void nrf5RandomDeinit(void);
+
+/**
  * Initialization of Logger driver.
  *
  */
 void nrf5LogInit(void);
+
+/**
+ * Deinitialization of Logger driver.
+ *
+ */
+void nrf5LogDeinit(void);
 
 /**
  * Initialization of Misc module.
@@ -84,10 +108,22 @@ void nrf5LogInit(void);
 void nrf5MiscInit(void);
 
 /**
- * Initialization of Radio peripheral.
+ * Deinitialization of Misc module.
+ *
+ */
+void nrf5MiscDeinit(void);
+
+/**
+ * Initialization of Radio driver.
  *
  */
 void nrf5RadioInit(void);
+
+/**
+ * Deinitialization of Radio driver.
+ *
+ */
+void nrf5RadioDeinit(void);
 
 /**
  * Function for processing Radio.
@@ -100,5 +136,11 @@ void nrf5RadioProcess(otInstance *aInstance);
  *
  */
 void nrf5CryptoInit(void);
+
+/**
+ * Deinitialization of hardware crypto engine.
+ *
+ */
+void nrf5CryptoDeinit(void);
 
 #endif  // PLATFORM_NRF5_H_

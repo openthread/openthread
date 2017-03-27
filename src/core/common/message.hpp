@@ -43,11 +43,12 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "openthread/message.h"
+#include "openthread/platform/messagepool.h"
+
 #include <openthread-core-config.h>
-#include <openthread-types.h>
 #include <common/code_utils.hpp>
 #include <mac/mac_frame.hpp>
-#include <platform/messagepool.h>
 
 namespace Thread {
 
@@ -120,7 +121,7 @@ struct MessageInfo
  * This class represents a Message buffer.
  *
  */
-class Buffer : public ::BufferHeader
+class Buffer : public ::otMessage
 {
     friend class Message;
 
@@ -137,7 +138,7 @@ public:
      * This method sets the pointer to the next message buffer.
      *
      */
-    void SetNextBuffer(class Buffer *buf) { mNext = static_cast<BufferHeader *>(buf); }
+    void SetNextBuffer(class Buffer *buf) { mNext = static_cast<otMessage *>(buf); }
 
 private:
     /**
@@ -174,7 +175,7 @@ private:
 
     enum
     {
-        kBufferDataSize = kBufferSize - sizeof(struct BufferHeader),
+        kBufferDataSize = kBufferSize - sizeof(struct otMessage),
         kHeadBufferDataSize = kBufferDataSize - sizeof(struct MessageInfo),
     };
 
@@ -193,7 +194,7 @@ private:
  * This class represents a message.
  *
  */
-class Message: private Buffer
+class Message: public Buffer
 {
     friend class MessagePool;
     friend class MessageQueue;
@@ -209,13 +210,14 @@ public:
 
     enum
     {
-        kSubTypeNone                = 0,  ///< None
-        kSubTypeMleAnnounce         = 1,  ///< MLE Announce
-        kSubTypeMleDiscoverRequest  = 2,  ///< MLE Discover Request
-        kSubTypeMleDiscoverResponse = 3,  ///< MLE Discover Response
-        kSubTypeJoinerEntrust       = 4,  ///< Joiner Entrust
-        kSubTypeMplRetransmission   = 5,  ///< MPL next retranmission message
-        kSubTypeMleGeneral          = 6,  ///< General MLE
+        kSubTypeNone                   = 0,  ///< None
+        kSubTypeMleAnnounce            = 1,  ///< MLE Announce
+        kSubTypeMleDiscoverRequest     = 2,  ///< MLE Discover Request
+        kSubTypeMleDiscoverResponse    = 3,  ///< MLE Discover Response
+        kSubTypeJoinerEntrust          = 4,  ///< Joiner Entrust
+        kSubTypeMplRetransmission      = 5,  ///< MPL next retranmission message
+        kSubTypeMleGeneral             = 6,  ///< General MLE
+        kSubTypeJoinerFinalizeResponse = 7,  ///< Joiner Finalize Response
     };
 
     enum
@@ -1052,7 +1054,7 @@ public:
      * This constructor initializes the object.
      *
      */
-    MessagePool(void);
+    MessagePool(otInstance *aInstance);
 
     /**
      * This method is used to obtain a new message. The default priority `kDefaultMessagePriority`
@@ -1102,7 +1104,7 @@ public:
      *
      */
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
-    uint16_t GetFreeBufferCount(void) const { return otPlatMessagePoolNumFreeBuffers(); }
+    uint16_t GetFreeBufferCount(void) const { return otPlatMessagePoolNumFreeBuffers(mInstance); }
 #else
     uint16_t GetFreeBufferCount(void) const { return mNumFreeBuffers; }
 #endif
@@ -1123,6 +1125,8 @@ private:
     Buffer   mBuffers[kNumBuffers];
     Buffer   *mFreeBuffers;
 #endif
+
+    otInstance *mInstance;
     PriorityQueue mAllQueue;
 };
 

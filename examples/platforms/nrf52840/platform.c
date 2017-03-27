@@ -32,7 +32,7 @@
  *
  */
 
-#include <platform/logging.h>
+#include <openthread/platform/logging.h>
 
 #include "drivers/nrf_drv_clock.h"
 #include "platform-nrf5.h"
@@ -57,6 +57,19 @@ void PlatformInit(int argc, char *argv[])
 #if (OPENTHREAD_ENABLE_DEFAULT_LOGGING == 0)
     nrf5LogInit();
 #endif
+}
+
+void PlatformDeinit(void)
+{
+#if (OPENTHREAD_ENABLE_DEFAULT_LOGGING == 0)
+    nrf5LogDeinit();
+#endif
+    nrf5RadioDeinit();
+    nrf5CryptoDeinit();
+    nrf5MiscDeinit();
+    nrf5UartDeinit();
+    nrf5RandomDeinit();
+    nrf5AlarmDeinit();
 }
 
 void PlatformProcessDrivers(otInstance *aInstance)

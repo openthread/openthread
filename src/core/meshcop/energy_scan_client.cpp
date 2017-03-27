@@ -33,12 +33,13 @@
 
 #define WPP_NAME "energy_scan_client.tmh"
 
+#include "openthread/platform/random.h"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/encoding.hpp>
 #include <common/logging.hpp>
-#include <platform/random.h>
 #include <meshcop/energy_scan_client.hpp>
 #include <meshcop/tlvs.hpp>
 #include <thread/thread_netif.hpp>
@@ -56,6 +57,11 @@ EnergyScanClient::EnergyScanClient(ThreadNetif &aThreadNetif) :
     mContext = NULL;
     mCallback = NULL;
     mNetif.GetCoapServer().AddResource(mEnergyScan);
+}
+
+otInstance *EnergyScanClient::GetInstance()
+{
+    return mNetif.GetInstance();
 }
 
 ThreadError EnergyScanClient::SendQuery(uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod,
@@ -105,7 +111,7 @@ ThreadError EnergyScanClient::SendQuery(uint32_t aChannelMask, uint8_t aCount, u
     messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent energy scan query");
+    otLogInfoMeshCoP(GetInstance(), "sent energy scan query");
 
     mCallback = aCallback;
     mContext = aContext;
@@ -120,7 +126,7 @@ exit:
     return error;
 }
 
-void EnergyScanClient::HandleReport(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void EnergyScanClient::HandleReport(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                     const otMessageInfo *aMessageInfo)
 {
     static_cast<EnergyScanClient *>(aContext)->HandleReport(
@@ -143,7 +149,7 @@ void EnergyScanClient::HandleReport(Coap::Header &aHeader, Message &aMessage, co
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
                  aHeader.GetCode() == kCoapRequestPost, ;);
 
-    otLogInfoMeshCoP("received energy scan report");
+    otLogInfoMeshCoP(GetInstance(), "received energy scan report");
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask));
     VerifyOrExit(channelMask.IsValid(),);
@@ -159,7 +165,7 @@ void EnergyScanClient::HandleReport(Coap::Header &aHeader, Message &aMessage, co
     memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
     SuccessOrExit(mNetif.GetCoapServer().SendEmptyAck(aHeader, responseInfo));
 
-    otLogInfoMeshCoP("sent energy scan report response");
+    otLogInfoMeshCoP(GetInstance(), "sent energy scan report response");
 
 exit:
     return;

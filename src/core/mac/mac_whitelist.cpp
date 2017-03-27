@@ -49,19 +49,14 @@ Whitelist::Whitelist(void)
     }
 }
 
-void Whitelist::Enable(void)
-{
-    mEnabled = true;
-}
-
-void Whitelist::Disable(void)
-{
-    mEnabled = false;
-}
-
 bool Whitelist::IsEnabled(void) const
 {
     return mEnabled;
+}
+
+void Whitelist::SetEnabled(bool aEnabled)
+{
+    mEnabled = aEnabled;
 }
 
 int Whitelist::GetMaxEntries(void) const
@@ -123,7 +118,7 @@ void Whitelist::Remove(const ExtAddress &address)
     memset(entry, 0, sizeof(*entry));
 
 exit:
-    {}
+    return;
 }
 
 Whitelist::Entry *Whitelist::Find(const ExtAddress &address)

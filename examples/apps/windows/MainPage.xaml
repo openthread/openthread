@@ -35,256 +35,273 @@
     IsTabStop="false"
     mc:Ignorable="d">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <Grid>
-            <Grid.Background>
-                <ImageBrush ImageSource="ms-appx:///Assets/Wide310x150Logo.png" Opacity="0.25" Stretch="Uniform"/>
-            </Grid.Background>
-        </Grid>
+    <Grid>
+        <Grid.Background>
+            <ImageBrush ImageSource="ms-appx:///Assets/Wide310x150Logo.png" Opacity="0.25" Stretch="Uniform"/>
+        </Grid.Background>
         <!-- Interface List -->
-        <TextBlock
-            Text="Thread UX" 
-            HorizontalAlignment="Left" 
-            VerticalAlignment="Top" 
-            Margin="20" 
-            FontSize="50"
-            />
-        <TextBlock
-            Text="Interfaces" 
-            HorizontalAlignment="Left" 
-            VerticalAlignment="Top" 
-            Margin="60,90" 
-            FontSize="25"
-            />
-        <ListView
-            Name="InterfaceList"
-            Margin="60,130,20,150"
-            SelectionMode="None">
-        </ListView>
-
-        <!-- Interface Configuration -->
-        <Grid 
-            x:Name="InterfaceConfiguration" 
-            Background="#B2FFFFFF"
-            Visibility="Collapsed"
+        <Grid
+            x:Name="ThrdGrid"
             >
+            <TextBlock
+                Text="Thread UX" 
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top" 
+                Margin="20" 
+                FontSize="50"
+                />
             <StackPanel
-                Background="{StaticResource ApplicationPageBackgroundThemeBrush}"
-                Width="600" 
-                Height="360" 
-                HorizontalAlignment="Center" 
-                VerticalAlignment="Center"
+                Orientation="Horizontal"
+                VerticalAlignment="Top"
                 >
                 <TextBlock
-                    Text="Interface Configuration" 
+                    Text="Interfaces" 
                     HorizontalAlignment="Left" 
                     VerticalAlignment="Top" 
-                    Margin="20" 
+                    Margin="60,90" 
                     FontSize="25"
                     />
-                <Grid Margin="40,10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="200"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="50"/>
-                        <RowDefinition Height="50"/>
-                        <RowDefinition Height="50"/>
-                        <RowDefinition Height="50"/>
-                        <RowDefinition Height="50"/>
-                    </Grid.RowDefinitions>
-                    <TextBlock
-                        Text="Name"
-                        FontSize="22" 
-                        VerticalAlignment="Center"
-                        />
-                    <TextBox
-                        Name="InterfaceConfigName"
-                        Text="Test Network"
-                        Grid.Column="1"
-                        FontSize="18" 
-                        VerticalAlignment="Center"
-                        />
-                    <TextBlock
-                        Text="Key"
-                        FontSize="22" 
-                        VerticalAlignment="Center"
-                        Grid.Row="1"
-                        />
-                    <TextBox
-                        Name="InterfaceConfigKey"
-                        Text="Pas$W0rd"
-                        Grid.Row="1"
-                        Grid.Column="1"
-                        FontSize="18" 
-                        VerticalAlignment="Center"
-                        />
-                    <TextBlock
-                        Text="Max Children"
-                        FontSize="22" 
-                        VerticalAlignment="Center"
-                        Grid.Row="2"
-                        />
-                    <Slider
-                        Name="InterfaceConfigMaxChildren"
-                        Grid.Row="2"
-                        Grid.Column="1"
-                        Minimum="11"
-                        Maximum="26"
-                        Value="15"
-                        VerticalAlignment="Center"
-                        />
-                    <TextBlock
-                        Text="Channel"
-                        FontSize="22" 
-                        VerticalAlignment="Center"
-                        Grid.Row="3"
-                        />
-                    <Slider
-                        Name="InterfaceConfigChannel"
-                        Grid.Row="3"
-                        Grid.Column="1"
-                        Minimum="11"
-                        Maximum="24"
-                        Value="5"
-                        VerticalAlignment="Center"
-                        />
-                    <StackPanel
-                        Grid.Row="5"
-                        Grid.ColumnSpan="2"
-                        HorizontalAlignment="Center"
-                        Orientation="Horizontal">
-                        <Button
-                            Name="InterfaceConfigOkButton"
-                            Content="Ok" 
-                            FontSize="22"
-                            Margin="20,0"
-                            />
-                        <Button
-                            Name="InterfaceConfigCancelButton"
-                            Content="Cancel" 
-                            FontSize="22"
-                            Margin="20,0"
-                            />
-                    </StackPanel>
-                </Grid>
+                <Button
+                    x:Name="Talk"
+                    Content="Talk"
+                    Margin="10,0"
+                    />
             </StackPanel>
-        </Grid>
+            <ListView
+                Name="InterfaceList"
+                Margin="60,130,20,150"
+                SelectionMode="None">
+            </ListView>
 
-        <!-- Interface Details -->
-        <Grid 
-            x:Name="InterfaceDetails" 
-            Background="#B2FFFFFF"
-            Visibility="Collapsed"
-            >
-            <StackPanel
-                Background="{StaticResource ApplicationPageBackgroundThemeBrush}"
-                Width="600" 
-                Height="405" 
-                HorizontalAlignment="Center" 
-                VerticalAlignment="Center"
+            <!-- Interface Configuration -->
+            <Grid 
+                x:Name="InterfaceConfiguration" 
+                Background="#B2FFFFFF"
+                Visibility="Collapsed"
                 >
-                <TextBlock
-                    Text="Interface Details" 
-                    HorizontalAlignment="Left" 
-                    VerticalAlignment="Top" 
-                    Margin="20" 
-                    FontSize="25"
-                    />
-                <Grid Margin="40,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="200"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="50"/>
-                        <RowDefinition Height="50"/>
-                        <RowDefinition Height="50"/>
-                        <RowDefinition Height="50"/>
-                        <RowDefinition Height="50"/>
-                        <RowDefinition Height="50"/>
-                    </Grid.RowDefinitions>
+                <StackPanel
+                    Background="{StaticResource ApplicationPageBackgroundThemeBrush}"
+                    Width="600" 
+                    Height="360" 
+                    HorizontalAlignment="Center" 
+                    VerticalAlignment="Center"
+                    >
                     <TextBlock
-                        Text="MAC"
-                        FontSize="22" 
-                        VerticalAlignment="Center"
+                        Text="Interface Configuration" 
+                        HorizontalAlignment="Left" 
+                        VerticalAlignment="Top" 
+                        Margin="20" 
+                        FontSize="25"
                         />
+                    <Grid Margin="40,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="200"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="50"/>
+                            <RowDefinition Height="50"/>
+                            <RowDefinition Height="50"/>
+                            <RowDefinition Height="50"/>
+                            <RowDefinition Height="50"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock
+                            Text="Name"
+                            FontSize="22" 
+                            VerticalAlignment="Center"
+                            />
+                        <TextBox
+                            Name="InterfaceConfigName"
+                            Text="Test Network"
+                            Grid.Column="1"
+                            FontSize="18" 
+                            VerticalAlignment="Center"
+                            />
+                        <TextBlock
+                            Text="Key"
+                            FontSize="22" 
+                            VerticalAlignment="Center"
+                            Grid.Row="1"
+                            />
+                        <TextBox
+                            Name="InterfaceConfigKey"
+                            Text="00112233445566778899aabbccddeeff"
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            FontSize="18" 
+                            VerticalAlignment="Center"
+                            />
+                        <TextBlock
+                            Text="Max Children"
+                            FontSize="22" 
+                            VerticalAlignment="Center"
+                            Grid.Row="2"
+                            />
+                        <Slider
+                            Name="InterfaceConfigMaxChildren"
+                            Grid.Row="2"
+                            Grid.Column="1"
+                            Minimum="0"
+                            Maximum="32"
+                            Value="16"
+                            VerticalAlignment="Center"
+                            />
+                        <TextBlock
+                            Text="Channel"
+                            FontSize="22" 
+                            VerticalAlignment="Center"
+                            Grid.Row="3"
+                            />
+                        <Slider
+                            Name="InterfaceConfigChannel"
+                            Grid.Row="3"
+                            Grid.Column="1"
+                            Minimum="11"
+                            Maximum="24"
+                            Value="11"
+                            VerticalAlignment="Center"
+                            />
+                        <StackPanel
+                            Grid.Row="5"
+                            Grid.ColumnSpan="2"
+                            HorizontalAlignment="Center"
+                            Orientation="Horizontal">
+                            <Button
+                                Name="InterfaceConfigOkButton"
+                                Content="Ok" 
+                                FontSize="22"
+                                Margin="20,0"
+                                />
+                            <Button
+                                Name="InterfaceConfigCancelButton"
+                                Content="Cancel" 
+                                FontSize="22"
+                                Margin="20,0"
+                                />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Grid>
+
+            <!-- Interface Details -->
+            <Grid 
+                x:Name="InterfaceDetails" 
+                Background="#B2FFFFFF"
+                Visibility="Collapsed"
+                >
+                <StackPanel
+                    Background="{StaticResource ApplicationPageBackgroundThemeBrush}"
+                    Width="600" 
+                    Height="405" 
+                    HorizontalAlignment="Center" 
+                    VerticalAlignment="Center"
+                    >
                     <TextBlock
-                        Name="InterfaceMacAddress"
-                        Text="00:00:00:00:00:00:00:00"
-                        Grid.Column="1"
-                        FontSize="18" 
-                        VerticalAlignment="Center"
+                        Text="Interface Details" 
+                        HorizontalAlignment="Left" 
+                        VerticalAlignment="Top" 
+                        Margin="20" 
+                        FontSize="25"
                         />
-                    <TextBlock
-                        Text="ML-EID"
-                        Grid.Row="1"
-                        FontSize="22" 
-                        VerticalAlignment="Center"
-                        />
-                    <TextBlock
-                        Name="InterfaceML_EID"
-                        Text="::01"
-                        Grid.Row="1"
-                        Grid.Column="1"
-                        FontSize="18" 
-                        VerticalAlignment="Center"
-                        />
-                    <TextBlock
-                        Text="RLOC"
-                        Grid.Row="2"
-                        FontSize="22" 
-                        VerticalAlignment="Center"
-                        />
-                    <TextBlock
-                        Name="InterfaceRLOC"
-                        Text="::01"
-                        Grid.Row="2"
-                        Grid.Column="1"
-                        FontSize="18" 
-                        VerticalAlignment="Center"
-                        />
-                    <TextBlock
-                        Name="InterfaceNeighborsText"
-                        Text="Neighbors"
-                        Grid.Row="3"
-                        FontSize="22" 
-                        VerticalAlignment="Center"
-                        />
-                    <TextBlock
-                        Name="InterfaceNeighbors"
-                        Text="0"
-                        Grid.Row="3"
-                        Grid.Column="1"
-                        FontSize="22" 
-                        VerticalAlignment="Center"
-                        />
-                    <TextBlock
-                        Name="InterfaceChildrenText"
-                        Text="Children"
-                        Grid.Row="4"
-                        FontSize="22" 
-                        VerticalAlignment="Center"
-                        />
-                    <TextBlock
-                        Name="InterfaceChildren"
-                        Text="0"
-                        Grid.Row="4"
-                        Grid.Column="1"
-                        FontSize="22" 
-                        VerticalAlignment="Center"
-                        />
-                    <Button
-                        Name="InterfaceDetailsCloseButton"
-                        Grid.Row="6"
-                        Grid.ColumnSpan="2"
-                        Content="Close" 
-                        HorizontalAlignment="Center"
-                        FontSize="22"
-                        />
-                </Grid>
-            </StackPanel>
+                    <Grid Margin="40,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="200"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="50"/>
+                            <RowDefinition Height="50"/>
+                            <RowDefinition Height="50"/>
+                            <RowDefinition Height="50"/>
+                            <RowDefinition Height="50"/>
+                            <RowDefinition Height="50"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock
+                            Text="MAC"
+                            FontSize="22" 
+                            VerticalAlignment="Center"
+                            />
+                        <TextBlock
+                            Name="InterfaceMacAddress"
+                            Text="00:00:00:00:00:00:00:00"
+                            Grid.Column="1"
+                            FontSize="18" 
+                            VerticalAlignment="Center"
+                            />
+                        <TextBlock
+                            Text="ML-EID"
+                            Grid.Row="1"
+                            FontSize="22" 
+                            VerticalAlignment="Center"
+                            />
+                        <TextBlock
+                            Name="InterfaceML_EID"
+                            Text="::01"
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            FontSize="18" 
+                            VerticalAlignment="Center"
+                            />
+                        <TextBlock
+                            Text="RLOC"
+                            Grid.Row="2"
+                            FontSize="22" 
+                            VerticalAlignment="Center"
+                            />
+                        <TextBlock
+                            Name="InterfaceRLOC"
+                            Text="::01"
+                            Grid.Row="2"
+                            Grid.Column="1"
+                            FontSize="18" 
+                            VerticalAlignment="Center"
+                            />
+                        <TextBlock
+                            Name="InterfaceNeighborsText"
+                            Text="Neighbors"
+                            Grid.Row="3"
+                            FontSize="22" 
+                            VerticalAlignment="Center"
+                            />
+                        <TextBlock
+                            Name="InterfaceNeighbors"
+                            Text="0"
+                            Grid.Row="3"
+                            Grid.Column="1"
+                            FontSize="22" 
+                            VerticalAlignment="Center"
+                            />
+                        <TextBlock
+                            Name="InterfaceChildrenText"
+                            Text="Children"
+                            Grid.Row="4"
+                            FontSize="22" 
+                            VerticalAlignment="Center"
+                            />
+                        <TextBlock
+                            Name="InterfaceChildren"
+                            Text="0"
+                            Grid.Row="4"
+                            Grid.Column="1"
+                            FontSize="22" 
+                            VerticalAlignment="Center"
+                            />
+                        <Button
+                            Name="InterfaceDetailsCloseButton"
+                            Grid.Row="6"
+                            Grid.ColumnSpan="2"
+                            Content="Close" 
+                            HorizontalAlignment="Center"
+                            FontSize="22"
+                            />
+                    </Grid>
+                </StackPanel>
+            </Grid>
         </Grid>
+        <local:TalkGrid
+            x:Name="TlkGrid"
+            Margin="20"
+            Visibility="Collapsed"
+            />
     </Grid>
 </Page>

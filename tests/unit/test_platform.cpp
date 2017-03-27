@@ -93,7 +93,7 @@ extern "C" {
     }
 #endif
 
-    void otSignalTaskletPending(otInstance *)
+    void otTaskletsSignalPending(otInstance *)
     {
     }
 
@@ -317,6 +317,12 @@ extern "C" {
     ThreadError otPlatRadioEnergyScan(otInstance *, uint8_t, uint16_t)
     {
         return kThreadError_NotImplemented;
+    }
+
+    void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
+    {
+        (void)aInstance;
+        (void)aPower;
     }
 
     //

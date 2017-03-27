@@ -39,18 +39,21 @@
 #else
 #include <openthread-config.h>
 #endif
-#include <openthread.h>
 
 #include <stdarg.h>
-#include <openthread-ip6.h>
-#include <openthread-udp.h>
+
+#include "openthread/openthread.h"
+#include "openthread/ip6.h"
+#include "openthread/udp.h"
+
 #include <cli/cli_server.hpp>
 #include <common/code_utils.hpp>
 
 #ifndef OTDLL
 #include <net/icmp6.hpp>
 #include <common/timer.hpp>
-#include <dhcp6/dhcp6_client.h>
+#include "openthread/dhcp6_client.h"
+#include "openthread/dns.h"
 #endif
 
 #ifdef OTDLL
@@ -145,6 +148,7 @@ private:
     {
         kMaxArgs = 32,
         kMaxAutoAddresses = 8,
+        kDefaultJoinerTimeout = 120,    ///< Default timeout for Joiners, in seconds.
     };
 
     void AppendResult(ThreadError error);
@@ -169,6 +173,9 @@ private:
     void ProcessDiag(int argc, char *argv[]);
 #endif  // OPENTHREAD_ENABLE_DIAG
     void ProcessDiscover(int argc, char *argv[]);
+#if OPENTHREAD_ENABLE_DNS_CLIENT
+    void ProcessDns(int argc, char *argv[]);
+#endif
     void ProcessEidCache(int argc, char *argv[]);
     void ProcessEui64(int argc, char *argv[]);
 #ifdef OPENTHREAD_EXAMPLES_POSIX
@@ -236,7 +243,7 @@ private:
 #endif
 
 #ifndef OTDLL
-    static void s_HandleIcmpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo,
+    static void s_HandleIcmpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo,
                                     const otIcmp6Header *aIcmpHeader);
     static void s_HandlePingTimer(void *aContext);
 #endif
@@ -249,10 +256,15 @@ private:
                                             void *aContext);
     static void OTCALL s_HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, void *aContext);
 #ifndef OTDLL
-    static void OTCALL s_HandleDiagnosticGetResponse(otMessage aMessage, const otMessageInfo *aMessageInfo,
+    static void OTCALL s_HandleDiagnosticGetResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo,
                                                      void *aContext);
 #endif
     static void OTCALL s_HandleJoinerCallback(ThreadError aError, void *aContext);
+
+#if OPENTHREAD_ENABLE_DNS_CLIENT
+    static void s_HandleDnsResponse(void *aContext, const char *aHostname, otIp6Address *aAddress,
+                                    uint32_t aTtl, ThreadError aResult);
+#endif
 
 #ifndef OTDLL
     void HandleIcmpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
@@ -274,6 +286,10 @@ private:
     void HandleDiagnosticGetResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 #endif
     void HandleJoinerCallback(ThreadError aError);
+
+#if OPENTHREAD_ENABLE_DNS_CLIENT
+    void HandleDnsResponse(const char *aHostname, Ip6::Address &aAddress, uint32_t aTtl, ThreadError aResult);
+#endif
 
     static const struct Command sCommands[];
 
@@ -309,6 +325,11 @@ private:
 #endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
 
     otIcmp6Handler mIcmpHandler;
+#if OPENTHREAD_ENABLE_DNS_CLIENT
+    bool mResolvingInProgress;
+    char mResolvingHostname[OT_DNS_MAX_HOSTNAME_LENGTH];
+#endif
+
 #endif
 
     otInstance *mInstance;

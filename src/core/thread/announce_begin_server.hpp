@@ -35,7 +35,9 @@
 #define ANNOUNCE_BEGIN_SERVER_HPP_
 
 #include <openthread-core-config.h>
-#include <openthread-types.h>
+
+#include "openthread/types.h"
+
 #include <coap/coap_client.hpp>
 #include <coap/coap_server.hpp>
 #include <common/timer.hpp>
@@ -57,6 +59,14 @@ public:
      *
      */
     AnnounceBeginServer(ThreadNetif &aThreadNetif);
+
+    /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
 
     /**
      * This method begins the MLE Announce transmission process using Count=3 and Period=1s.
@@ -87,7 +97,7 @@ private:
         kDefaultPeriod = 1000,
     };
 
-    static void HandleRequest(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+    static void HandleRequest(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                               const otMessageInfo *aMessageInfo);
     void HandleRequest(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 

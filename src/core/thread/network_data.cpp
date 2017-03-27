@@ -33,12 +33,13 @@
 
 #define WPP_NAME "network_data.tmh"
 
+#include "openthread/platform/random.h"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
 #include <mac/mac_frame.hpp>
-#include <platform/random.h>
 #include <thread/network_data.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
@@ -54,6 +55,11 @@ NetworkData::NetworkData(ThreadNetif &aThreadNetif, bool aLocal):
     mLastAttempt(0)
 {
     mLength = 0;
+}
+
+otInstance *NetworkData::GetInstance()
+{
+    return mNetif.GetInstance();
 }
 
 void NetworkData::Clear(void)
@@ -294,7 +300,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
                 continue;
             }
 
-            otDumpDebgNetData("remove prefix done", mTlvs, mLength);
+            otDumpDebgNetData(GetInstance(), "remove prefix done", mTlvs, mLength);
             break;
         }
 
@@ -318,7 +324,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
         cur = cur->GetNext();
     }
 
-    otDumpDebgNetData("remove done", aData, aDataLength);
+    otDumpDebgNetData(GetInstance(), "remove done", aData, aDataLength);
 }
 
 void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, PrefixTlv &aPrefix)
@@ -639,7 +645,7 @@ ThreadError NetworkData::SendServerDataNotification(uint16_t aRloc16)
         mLastAttemptWait = true;
     }
 
-    otLogInfoNetData("Sent server data notification");
+    otLogInfoNetData(GetInstance(), "Sent server data notification");
 
 exit:
 

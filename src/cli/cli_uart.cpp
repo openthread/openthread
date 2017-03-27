@@ -36,15 +36,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "openthread/cli.h"
+#include "openthread/platform/logging.h"
+#include "openthread/platform/uart.h"
+
 #include <cli/cli.hpp>
-#include <cli/cli-uart.h>
 #include <cli/cli_uart.hpp>
 #include <common/code_utils.hpp>
 #include <common/encoding.hpp>
 #include <common/new.hpp>
 #include <common/tasklet.hpp>
-#include <platform/logging.h>
-#include <platform/uart.h>
 
 namespace Thread {
 namespace Cli {

@@ -33,6 +33,8 @@
 
 #define WPP_NAME "network_diagnostic.tmh"
 
+#include "openthread/platform/random.h"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
@@ -40,7 +42,6 @@
 #include <common/encoding.hpp>
 #include <mac/mac_frame.hpp>
 #include <net/netif.hpp>
-#include <platform/random.h>
 #include <thread/mesh_forwarder.hpp>
 #include <thread/mle_router.hpp>
 #include <thread/thread_netif.hpp>
@@ -68,6 +69,11 @@ NetworkDiagnostic::NetworkDiagnostic(ThreadNetif &aThreadNetif) :
     mNetif.GetCoapServer().AddResource(mDiagnosticGetQuery);
     mNetif.GetCoapServer().AddResource(mDiagnosticGetAnswer);
     mNetif.GetCoapServer().AddResource(mDiagnosticReset);
+}
+
+otInstance *NetworkDiagnostic::GetInstance()
+{
+    return mNetif.GetInstance();
 }
 
 void NetworkDiagnostic::SetReceiveDiagnosticGetCallback(otReceiveDiagnosticGetCallback aCallback,
@@ -116,7 +122,7 @@ ThreadError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestinatio
 
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo, handler, this));
 
-    otLogInfoNetDiag("Sent diagnostic get");
+    otLogInfoNetDiag(GetInstance(), "Sent diagnostic get");
 
 exit:
 
@@ -128,7 +134,7 @@ exit:
     return error;
 }
 
-void NetworkDiagnostic::HandleDiagnosticGetResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void NetworkDiagnostic::HandleDiagnosticGetResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                                     const otMessageInfo *aMessageInfo, ThreadError aResult)
 {
     static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetResponse(*static_cast<Coap::Header *>(aHeader),
@@ -144,7 +150,7 @@ void NetworkDiagnostic::HandleDiagnosticGetResponse(Coap::Header &aHeader, Messa
     VerifyOrExit(aResult == kThreadError_None, ;);
     VerifyOrExit(aHeader.GetCode() == kCoapResponseChanged, ;);
 
-    otLogInfoNetDiag("Received diagnostic get response");
+    otLogInfoNetDiag(GetInstance(), "Received diagnostic get response");
 
     if (mReceiveDiagnosticGetCallback)
     {
@@ -155,7 +161,7 @@ exit:
     return;
 }
 
-void NetworkDiagnostic::HandleDiagnosticGetAnswer(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void NetworkDiagnostic::HandleDiagnosticGetAnswer(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                                   const otMessageInfo *aMessageInfo)
 {
     static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetAnswer(*static_cast<Coap::Header *>(aHeader),
@@ -169,7 +175,7 @@ void NetworkDiagnostic::HandleDiagnosticGetAnswer(Coap::Header &aHeader, Message
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
                  aHeader.GetCode() == kCoapRequestPost, ;);
 
-    otLogInfoNetDiag("Diagnostic get answer received");
+    otLogInfoNetDiag(GetInstance(), "Diagnostic get answer received");
 
     if (mReceiveDiagnosticGetCallback)
     {
@@ -178,7 +184,7 @@ void NetworkDiagnostic::HandleDiagnosticGetAnswer(Coap::Header &aHeader, Message
 
     SuccessOrExit(mNetif.GetCoapServer().SendEmptyAck(aHeader, aMessageInfo));
 
-    otLogInfoNetDiag("Sent diagnostic answer acknowledgment");
+    otLogInfoNetDiag(GetInstance(), "Sent diagnostic answer acknowledgment");
 
 exit:
     return;
@@ -269,7 +275,7 @@ ThreadError NetworkDiagnostic::FillRequestedTlvs(Message &aRequest, Message &aRe
     {
         VerifyOrExit(aRequest.Read(offset, sizeof(type), &type) == sizeof(type), error = kThreadError_Drop);
 
-        otLogInfoNetDiag("Received diagnostic get type %d", type);
+        otLogInfoNetDiag(GetInstance(), "Received diagnostic get type %d", type);
 
         switch (type)
         {
@@ -412,7 +418,7 @@ exit:
     return error;
 }
 
-void NetworkDiagnostic::HandleDiagnosticGetQuery(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void NetworkDiagnostic::HandleDiagnosticGetQuery(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                                  const otMessageInfo *aMessageInfo)
 {
     static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetQuery(
@@ -431,7 +437,7 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Header &aHeader, Message 
 
     VerifyOrExit(aHeader.GetCode() == kCoapRequestPost, error = kThreadError_Drop);
 
-    otLogInfoNetDiag("Received diagnostic get query");
+    otLogInfoNetDiag(GetInstance(), "Received diagnostic get query");
 
     VerifyOrExit((aMessage.Read(aMessage.GetOffset(), sizeof(NetworkDiagnosticTlv),
                                 &networkDiagnosticTlv) == sizeof(NetworkDiagnosticTlv)), error = kThreadError_Drop);
@@ -445,7 +451,7 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Header &aHeader, Message 
     {
         if (mNetif.GetCoapServer().SendEmptyAck(aHeader, aMessageInfo) == kThreadError_None)
         {
-            otLogInfoNetDiag("Sent diagnostic get query acknowledgment");
+            otLogInfoNetDiag(GetInstance(), "Sent diagnostic get query acknowledgment");
         }
     }
 
@@ -469,7 +475,7 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Header &aHeader, Message 
 
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo, NULL, this));
 
-    otLogInfoNetDiag("Sent diagnostic get answer");
+    otLogInfoNetDiag(GetInstance(), "Sent diagnostic get answer");
 
 exit:
 
@@ -479,7 +485,7 @@ exit:
     }
 }
 
-void NetworkDiagnostic::HandleDiagnosticGetRequest(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void NetworkDiagnostic::HandleDiagnosticGetRequest(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                                    const otMessageInfo *aMessageInfo)
 {
     static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetRequest(
@@ -499,7 +505,7 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Header &aHeader, Messag
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
                  aHeader.GetCode() == kCoapRequestPost, error = kThreadError_Drop);
 
-    otLogInfoNetDiag("Received diagnostic get request");
+    otLogInfoNetDiag(GetInstance(), "Received diagnostic get request");
 
     VerifyOrExit((aMessage.Read(aMessage.GetOffset(), sizeof(NetworkDiagnosticTlv),
                                 &networkDiagnosticTlv) == sizeof(NetworkDiagnosticTlv)), error = kThreadError_Drop);
@@ -525,7 +531,7 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Header &aHeader, Messag
 
     SuccessOrExit(error = mNetif.GetCoapServer().SendMessage(*message, messageInfo));
 
-    otLogInfoNetDiag("Sent diagnostic get response");
+    otLogInfoNetDiag(GetInstance(), "Sent diagnostic get response");
 
 exit:
 
@@ -563,7 +569,7 @@ ThreadError NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestinat
 
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
 
-    otLogInfoNetDiag("Sent network diagnostic reset");
+    otLogInfoNetDiag(GetInstance(), "Sent network diagnostic reset");
 
 exit:
 
@@ -575,7 +581,7 @@ exit:
     return error;
 }
 
-void NetworkDiagnostic::HandleDiagnosticReset(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+void NetworkDiagnostic::HandleDiagnosticReset(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                               const otMessageInfo *aMessageInfo)
 {
     static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticReset(
@@ -590,7 +596,7 @@ void NetworkDiagnostic::HandleDiagnosticReset(Coap::Header &aHeader, Message &aM
     uint8_t type;
     NetworkDiagnosticTlv networkDiagnosticTlv;
 
-    otLogInfoNetDiag("Received diagnostic reset request");
+    otLogInfoNetDiag(GetInstance(), "Received diagnostic reset request");
 
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
                  aHeader.GetCode() == kCoapRequestPost, ;);
@@ -612,18 +618,18 @@ void NetworkDiagnostic::HandleDiagnosticReset(Coap::Header &aHeader, Message &aM
         {
         case NetworkDiagnosticTlv::kMacCounters:
             mNetif.GetMac().ResetCounters();
-            otLogInfoNetDiag("Received diagnostic reset type kMacCounters(9)");
+            otLogInfoNetDiag(GetInstance(), "Received diagnostic reset type kMacCounters(9)");
             break;
 
         default:
-            otLogInfoNetDiag("Received diagnostic reset other type %d not resetable", type);
+            otLogInfoNetDiag(GetInstance(), "Received diagnostic reset other type %d not resetable", type);
             break;
         }
     }
 
     SuccessOrExit(mNetif.GetCoapServer().SendEmptyAck(aHeader, aMessageInfo));
 
-    otLogInfoNetDiag("Sent diagnostic reset acknowledgment");
+    otLogInfoNetDiag(GetInstance(), "Sent diagnostic reset acknowledgment");
 
 exit:
     return;

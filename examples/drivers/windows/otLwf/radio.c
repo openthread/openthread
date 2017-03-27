@@ -65,8 +65,7 @@ otPlatReset(
     (void)otLwfCmdResetDevice(pFilter, TRUE);
 
     // Finalize previous OpenThread instance
-    otInstanceFinalize(pFilter->otCtx);
-    pFilter->otCtx = NULL;
+    otLwfReleaseInstance(pFilter);
 
     // Reset radio layer
     pFilter->otPhyState = kStateDisabled;
@@ -87,7 +86,7 @@ otPlatReset(
 
     // Register callbacks with OpenThread
     otSetStateChangedCallback(pFilter->otCtx, otLwfStateChangedCallback, pFilter);
-    otSetReceiveIp6DatagramCallback(pFilter->otCtx, otLwfReceiveIp6DatagramCallback, pFilter);
+    otIp6SetReceiveCallback(pFilter->otCtx, otLwfReceiveIp6DatagramCallback, pFilter);
 
     // Query the current addresses from TCPIP and cache them
     (void)otLwfInitializeAddresses(pFilter);
@@ -757,6 +756,26 @@ ThreadError otPlatRadioEnergyScan(_In_ otInstance *otCtx, uint8_t aScanChannel, 
 error:
 
     return NT_SUCCESS(status) ? kThreadError_None : kThreadError_Failed;
+}
+
+void otPlatRadioSetDefaultTxPower(_In_ otInstance *otCtx, int8_t aPower)
+{
+    NT_ASSERT(otCtx);
+    PMS_FILTER pFilter = otCtxToFilter(otCtx);
+    NTSTATUS status;
+
+    // Indicate to the miniport
+    status =
+        otLwfCmdSetProp(
+            pFilter,
+            SPINEL_PROP_PHY_TX_POWER,
+            SPINEL_DATATYPE_INT8_S,
+            aPower
+        );
+    if (!NT_SUCCESS(status))
+    {
+        LogError(DRIVER_DEFAULT, "Set SPINEL_PROP_PHY_TX_POWER failed, %!STATUS!", status);
+    }
 }
 
 inline USHORT getDstShortAddress(const UCHAR *frame)

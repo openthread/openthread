@@ -34,7 +34,7 @@
 #ifndef DHCP6_CLIENT_HPP_
 #define DHCP6_CLIENT_HPP_
 
-#include <dhcp6/dhcp6_client.h>
+#include "openthread/dhcp6_client.h"
 
 #include <common/message.hpp>
 #include <common/timer.hpp>
@@ -179,6 +179,14 @@ public:
     explicit Dhcp6Client(ThreadNetif &aThreadNetif);
 
     /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
+    /**
      * This method update addresses that shall be automatically created using DHCP.
      *
      * @param[in]     aInstance     A pointer to openThread instance.
@@ -207,7 +215,7 @@ private:
     ThreadError AppendElapsedTime(Message &aMessage);
     ThreadError AppendRapidCommit(Message &aMessage);
 
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
+    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     void ProcessReply(Message &aMessage);

@@ -28,11 +28,11 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <openthread-types.h>
+#include <openthread/types.h>
 #include <driverlib/aon_rtc.h>
 
-#include <platform/alarm.h>
-#include <platform/diag.h>
+#include <openthread/platform/alarm.h>
+#include <openthread/platform/diag.h>
 
 /**
  * /NOTE: we could use systick, but that would sacrifice atleast a few ops

@@ -26,13 +26,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread-types.h>
+#include <openthread/types.h>
 #include <common/code_utils.hpp>
 
 #include <driverlib/prcm.h>
 #include <driverlib/trng.h>
 
-#include <platform/random.h>
+#include <openthread/platform/random.h>
 
 #include <mbedtls/entropy_poll.h>
 

@@ -33,8 +33,8 @@
 
 #include <common/debug.hpp>
 #include <common/logging.hpp>
-#include <platform/random.h>
-#include <platform/usec-alarm.h>
+#include "openthread/platform/random.h"
+#include "openthread/platform/usec-alarm.h"
 #include "openthread-instance.h"
 
 #ifdef __cplusplus
@@ -113,7 +113,7 @@ ThreadError otLinkRawSetPromiscuous(otInstance *aInstance, bool aEnable)
 
     VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = kThreadError_InvalidState);
 
-    otLogInfoPlat("LinkRaw Promiscuous=%d", aEnabled ? 1 : 0);
+    otLogInfoPlat("LinkRaw Promiscuous=%d", aEnable ? 1 : 0);
 
     otPlatRadioSetPromiscuous(aInstance, aEnable);
 
@@ -127,7 +127,7 @@ ThreadError otLinkRawSleep(otInstance *aInstance)
 
     VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = kThreadError_InvalidState);
 
-    otLogDebgPlat("LinkRaw Sleep");
+    otLogDebgPlat(aInstance, "LinkRaw Sleep");
 
     error = otPlatRadioSleep(aInstance);
 
@@ -137,7 +137,7 @@ exit:
 
 ThreadError otLinkRawReceive(otInstance *aInstance, uint8_t aChannel, otLinkRawReceiveDone aCallback)
 {
-    otLogDebgPlat("LinkRaw Recv (Channel %d)", aChannel);
+    otLogDebgPlat(aInstance, "LinkRaw Recv (Channel %d)", aChannel);
     return aInstance->mLinkRaw.Receive(aChannel, aCallback);
 }
 
@@ -155,7 +155,7 @@ exit:
 
 ThreadError otLinkRawTransmit(otInstance *aInstance, RadioPacket *aPacket, otLinkRawTransmitDone aCallback)
 {
-    otLogDebgPlat("LinkRaw Transmit (%d bytes)", aPacket->mLength);
+    otLogDebgPlat(aInstance, "LinkRaw Transmit (%d bytes)", aPacket->mLength);
     return aInstance->mLinkRaw.Transmit(aPacket, aCallback);
 }
 
@@ -371,7 +371,7 @@ ThreadError LinkRaw::DoTransmit(RadioPacket *aPacket)
     // to fire if we don't get a transmit done callback in time.
     if (static_cast<Mac::Frame *>(aPacket)->GetAckRequest())
     {
-        otLogDebgPlat("LinkRaw Starting AckTimeout Timer");
+        otLogDebgPlat(aInstance, "LinkRaw Starting AckTimeout Timer");
         mTimerReason = kTimerReasonAckTimeout;
         mTimer.Start(kAckTimeout);
     }
@@ -383,7 +383,7 @@ ThreadError LinkRaw::DoTransmit(RadioPacket *aPacket)
 
 void LinkRaw::InvokeTransmitDone(RadioPacket *aPacket, bool aFramePending, ThreadError aError)
 {
-    otLogDebgPlat("LinkRaw Transmit Done (err=0x%x)", aError);
+    otLogDebgPlat(aInstance, "LinkRaw Transmit Done (err=0x%x)", aError);
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
     mTimer.Stop();
@@ -407,7 +407,7 @@ void LinkRaw::InvokeTransmitDone(RadioPacket *aPacket, bool aFramePending, Threa
 
     if (aError == kThreadError_NoAck)
     {
-        if (mTransmitAttempts < Mac::kMaxFrameAttempts)
+        if (mTransmitAttempts < aPacket->mMaxTxAttempts)
         {
             mTransmitAttempts++;
             StartCsmaBackoff();
@@ -419,7 +419,7 @@ void LinkRaw::InvokeTransmitDone(RadioPacket *aPacket, bool aFramePending, Threa
 
     if (mTransmitDoneCallback)
     {
-        otLogDebgPlat("LinkRaw Invoke Transmit Done");
+        otLogDebgPlat(aInstance, "LinkRaw Invoke Transmit Done");
         mTransmitDoneCallback(&mInstance, aPacket, aFramePending, aError);
         mTransmitDoneCallback = NULL;
     }
@@ -553,7 +553,7 @@ void LinkRaw::StartCsmaBackoff(void)
     delay.mMs = backoff / 1000UL;
     delay.mUs = backoff - (delay.mMs * 1000UL);
 
-    otLogDebgPlat("LinkRaw Starting RetransmitTimeout Timer (%d ms)", backoff);
+    otLogDebgPlat(aInstance, "LinkRaw Starting RetransmitTimeout Timer (%d ms)", backoff);
     mTimerReason = kTimerReasonRetransmitTimeout;
     otPlatUsecAlarmStartAt(&mInstance, &now, &delay, &HandleTimer, this);
 #else // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER

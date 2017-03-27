@@ -31,12 +31,13 @@
  *   This file implements the CoAP header generation and parsing.
  */
 
+#include "openthread/platform/random.h"
+
 #include <coap/coap_header.hpp>
 #include <coap/coap_client.hpp>
 #include <common/debug.hpp>
 #include <common/code_utils.hpp>
 #include <common/encoding.hpp>
-#include <platform/random.h>
 
 namespace Thread {
 namespace Coap {
@@ -58,7 +59,7 @@ void Header::Init(Type aType, Code aCode)
     SetCode(aCode);
 }
 
-ThreadError Header::FromMessage(const Message &aMessage, bool aCopiedMessage)
+ThreadError Header::FromMessage(const Message &aMessage, uint16_t aMetadataSize)
 {
     ThreadError error = kThreadError_Parse;
     uint16_t offset = aMessage.GetOffset();
@@ -68,10 +69,7 @@ ThreadError Header::FromMessage(const Message &aMessage, bool aCopiedMessage)
     uint16_t optionDelta;
     uint16_t optionLength;
 
-    if (aCopiedMessage)
-    {
-        length -= sizeof(RequestMetadata);
-    }
+    length -= aMetadataSize;
 
     VerifyOrExit(length >= kTokenOffset, error = kThreadError_Parse);
     aMessage.Read(offset, kTokenOffset, mHeader.mBytes);

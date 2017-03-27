@@ -39,11 +39,12 @@
 #include <openthread-config.h>
 #endif
 
+#include "openthread/platform/random.h"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
-#include <platform/random.h>
 #include <meshcop/announce_begin_client.hpp>
 #include <meshcop/tlvs.hpp>
 #include <thread/thread_netif.hpp>
@@ -54,6 +55,11 @@ namespace Thread {
 AnnounceBeginClient::AnnounceBeginClient(ThreadNetif &aThreadNetif) :
     mNetif(aThreadNetif)
 {
+}
+
+otInstance *AnnounceBeginClient::GetInstance()
+{
+    return mNetif.GetInstance();
 }
 
 ThreadError AnnounceBeginClient::SendRequest(uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod,
@@ -99,7 +105,7 @@ ThreadError AnnounceBeginClient::SendRequest(uint32_t aChannelMask, uint8_t aCou
 
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent announce begin query");
+    otLogInfoMeshCoP(GetInstance(), "sent announce begin query");
 
 exit:
 

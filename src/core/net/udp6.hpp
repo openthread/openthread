@@ -34,7 +34,8 @@
 #ifndef UDP6_HPP_
 #define UDP6_HPP_
 
-#include <openthread.h>
+#include "openthread/udp.h"
+
 #include <net/ip6_headers.hpp>
 
 namespace Thread {

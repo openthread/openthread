@@ -132,7 +132,7 @@ class Cert_9_2_18_RollBackActiveTimestamp(unittest.TestCase):
                                                        delay_timer=20000,
                                                        network_name='MyHouse',
                                                        master_key=KEY2)
-        time.sleep(25)
+        time.sleep(310)
 
         self.assertEqual(self.nodes[COMMISSIONER].get_masterkey(), KEY2)
         self.assertEqual(self.nodes[LEADER].get_masterkey(), KEY2)

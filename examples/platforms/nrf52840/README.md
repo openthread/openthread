@@ -4,6 +4,10 @@ This directory contains example platform drivers for [Nordic Semiconductor nRF52
 
 [nRF52840]: https://www.nordicsemi.com/eng/Products/nRF52840
 
+To facilitate Thread products development with the nRF52840 platform, Nordic Semiconductor provides <i>nRF5 SDK for Thread</i>. See [Nordic Semiconductor's nRF5 SDK for Thread][nRF5-SDK-section] section for more details.
+
+[nRF5-SDK-section]: #nordic-semiconductors-nrf5-sdk-for-thread
+
 ## Toolchain
 
 Download and install [GNU toolchain for ARM Cortex-M][gnu-toolchain].
@@ -19,7 +23,7 @@ $ make -f examples/Makefile-nrf52840
 ```
 
 After a successful build, the `elf` files can be found in
-`<path-to-openthread>/output/bin`.  You can convert them to `hex`
+`<path-to-openthread>/output/nrf52840/bin`.  You can convert them to `hex`
 files using `arm-none-eabi-objcopy`:
 ```bash
 $ arm-none-eabi-objcopy -O ihex arm-none-eabi-ot-cli-ftd arm-none-eabi-ot-cli-ftd.hex
@@ -33,7 +37,7 @@ part of the [nRF5x Command Line Tools][nRF5x-Command-Line-Tools].
 [nRF5x-Command-Line-Tools]: https://www.nordicsemi.com/eng/Products/nRF52840#Downloads
 
 ```bash
-$ nrfjprog -f nrf52 --chiperase --program output/bin/arm-none-eabi-ot-cli-ftd.hex
+$ nrfjprog -f nrf52 --chiperase --program output/nrf52840/bin/arm-none-eabi-ot-cli-ftd.hex
 $ nrfjprog -f nrf52 -r
 ```
 
@@ -48,7 +52,7 @@ $ nrfjprog -f nrf52 -r
     - No parity
     - HW flow control: RTS/CTS
 
-   On Linux system a port name should be called e.g. `/dev/ttyACM0` and `/dev/ttyACM1`.
+   On Linux system a port name should be called e.g. `/dev/ttyACM0` or `/dev/ttyACM1`.
 3. Open a terminal connection on the first board and start a new Thread network.
 
  ```bash
@@ -122,7 +126,7 @@ The intended log level can be set using `OPENTHREAD_CONFIG_LOG_LEVEL` define.
 ## Radio driver documentation
 
 The radio driver comes with documentation that describes the operation of state
-machines in this the module. To  open the `*.uml` sequence diagrams, use [PlantUML][PlantUML-url].
+machines in this module. To open the `*.uml` sequence diagrams, use [PlantUML][PlantUML-url].
 
 [PlantUML-url]: http://plantuml.com/
 
@@ -132,4 +136,26 @@ The following toolchains have been used for testing and verification:
   - gcc version 4.9.3
   - gcc version 6.2.0
 
-The nRF52840 example has been verified by Nordic Semiconductor with commit `50db58d`.
+The nRF52840 example has been verified by Nordic Semiconductor with following commits:
+  - `de48acf` - 02.03.2017 (the newest checked)
+  - `50db58d` - 23.01.2017
+
+# Nordic Semiconductor's nRF5 SDK for Thread
+
+The [nRF5 Software Development Kit (SDK) for Thread][nRF5-SDK-Thread] helps you when developing Thread products with Nordic Semiconductor's advanced nRF52840 System on Chip (SoC).
+
+The <i>nRF5 SDK for Thread</i> includes:
+ - a pre-built OpenThread stack for the Nordic nRF52840 SoC with ARM® CryptoCell-310 support,
+ - unique support for DFU-over-Thread (Device Firmware Upgrade),
+ - examples to demonstrate interactions between nodes performing different Thread roles with the use of OpenThread and built-in CoAP protocol,
+ - support for an OpenThread Network Co-Processor (NCP),
+ - Border Router and cloud connectivity example,
+ - Thread native commissioning with NFC example,
+ - range of PC tools including a Thread Topology Monitor,
+ - software modules inherited from the nRF5 SDK e.g. peripheral drivers, NFC libraries etc.
+
+#### Important notice
+
+Due to legal restrictions support for hardware-accelerated cryptography utilizing ARM CryptoCell-310 is only available in mbedTLS library (libmbedcrypto.a) provided with the <i>nRF5 SDK for Thread</i>. The library available in OpenThread repository does not support hardware acceleration. You can still use it, but the commissioning procedure takes much more time in such case. For the best performance and user experience, use the library provided with the SDK.
+
+[nRF5-SDK-Thread]: http://www.nordicsemi.com/eng/Products/nRF5-SDK-for-Thread
