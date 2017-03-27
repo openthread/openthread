@@ -210,13 +210,14 @@ public:
 
     enum
     {
-        kSubTypeNone                = 0,  ///< None
-        kSubTypeMleAnnounce         = 1,  ///< MLE Announce
-        kSubTypeMleDiscoverRequest  = 2,  ///< MLE Discover Request
-        kSubTypeMleDiscoverResponse = 3,  ///< MLE Discover Response
-        kSubTypeJoinerEntrust       = 4,  ///< Joiner Entrust
-        kSubTypeMplRetransmission   = 5,  ///< MPL next retranmission message
-        kSubTypeMleGeneral          = 6,  ///< General MLE
+        kSubTypeNone                   = 0,  ///< None
+        kSubTypeMleAnnounce            = 1,  ///< MLE Announce
+        kSubTypeMleDiscoverRequest     = 2,  ///< MLE Discover Request
+        kSubTypeMleDiscoverResponse    = 3,  ///< MLE Discover Response
+        kSubTypeJoinerEntrust          = 4,  ///< Joiner Entrust
+        kSubTypeMplRetransmission      = 5,  ///< MPL next retranmission message
+        kSubTypeMleGeneral             = 6,  ///< General MLE
+        kSubTypeJoinerFinalizeResponse = 7,  ///< Joiner Finalize Response
     };
 
     enum

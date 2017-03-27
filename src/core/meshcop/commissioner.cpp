@@ -72,7 +72,6 @@ Commissioner::Commissioner(ThreadNetif &aThreadNetif):
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this),
     mSessionId(0),
     mTransmitAttempts(0),
-    mSendKek(false),
     mRelayReceive(OPENTHREAD_URI_RELAY_RX, &Commissioner::HandleRelayReceive, this),
     mDatasetChanged(OPENTHREAD_URI_DATASET_CHANGED, &Commissioner::HandleDatasetChanged, this),
     mJoinerFinalize(OPENTHREAD_URI_JOINER_FINALIZE, &Commissioner::HandleJoinerFinalize, this),
@@ -100,7 +99,6 @@ ThreadError Commissioner::Start(void)
 
     mState = kStatePetition;
     mTransmitAttempts = 0;
-    mSendKek = false;
 
     SendPetition();
 
@@ -120,7 +118,6 @@ ThreadError Commissioner::Stop(void)
 
     mState = kStateDisabled;
     mTransmitAttempts = 0;
-    mSendKek = false;
 
     mTimer.Stop();
 
@@ -636,6 +633,8 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Header *aHeader, Message *
     mTransmitAttempts = 0;
     mTimer.Start(Timer::SecToMsec(kKeepAliveTimeout) / 2);
 
+    SendCommissionerSet();
+
 exit:
 
     if (retransmit)
@@ -904,6 +903,8 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, 
     VerifyOrExit((message = mNetif.GetSecureCoapServer().NewMeshCoPMessage(responseHeader)) != NULL,
                  error = kThreadError_NoBufs);
 
+    message->SetSubType(Message::kSubTypeJoinerFinalizeResponse);
+
     stateTlv.Init();
     stateTlv.SetState(aState);
     SuccessOrExit(error = message->Append(&stateTlv, sizeof(stateTlv)));
@@ -912,7 +913,6 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, 
     joinerMessageInfo.GetPeerAddr().SetIid(mJoinerIid);
     joinerMessageInfo.SetPeerPort(mJoinerPort);
 
-    mSendKek = true;
 #if OPENTHREAD_ENABLE_CERT_LOG
     uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
     VerifyOrExit(message->GetLength() <= sizeof(buf), ;);
@@ -933,7 +933,6 @@ exit:
 
     if (error != kThreadError_None && message != NULL)
     {
-        mSendKek = false;
         message->Free();
     }
 
@@ -978,13 +977,12 @@ ThreadError Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::Messag
     rloc.SetJoinerRouterLocator(mJoinerRloc);
     SuccessOrExit(error = message->Append(&rloc, sizeof(rloc)));
 
-    if (mSendKek)
+    if (aMessage.GetSubType() == Message::kSubTypeJoinerFinalizeResponse)
     {
         JoinerRouterKekTlv kek;
         kek.Init();
         kek.SetKek(mNetif.GetKeyManager().GetKek());
         SuccessOrExit(error = message->Append(&kek, sizeof(kek)));
-        mSendKek = false;
     }
 
     tlv.SetType(Tlv::kJoinerDtlsEncapsulation);

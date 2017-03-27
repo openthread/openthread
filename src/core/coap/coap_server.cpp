@@ -33,12 +33,14 @@
 
 #include <coap/coap_server.hpp>
 #include <common/code_utils.hpp>
+#include <net/ip6.hpp>
 
 namespace Thread {
 namespace Coap {
 
-Server::Server(Ip6::Udp &aUdp, uint16_t aPort, SenderFunction aSender, ReceiverFunction aReceiver):
-    CoapBase(aUdp, aSender, aReceiver)
+Server::Server(Ip6::Netif &aNetif, uint16_t aPort, SenderFunction aSender, ReceiverFunction aReceiver):
+    CoapBase(aNetif.GetIp6().mUdp, aSender, aReceiver),
+    mResponsesQueue(aNetif)
 {
     mPort = aPort;
     mResources = NULL;
@@ -54,6 +56,8 @@ ThreadError Server::Start(void)
 
 ThreadError Server::Stop(void)
 {
+    mResponsesQueue.DequeueAllResponses();
+
     return CoapBase::Stop();
 }
 
@@ -114,6 +118,8 @@ exit:
 
 ThreadError Server::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
+    mResponsesQueue.EnqueueResponse(aMessage, aMessageInfo);
+
     return mSender(this, aMessage, aMessageInfo);
 }
 
@@ -147,9 +153,25 @@ void Server::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &a
     char uriPath[Resource::kMaxReceivedUriPath] = "";
     char *curUriPath = uriPath;
     const Header::Option *coapOption;
+    Message *response;
 
-    SuccessOrExit(header.FromMessage(aMessage, false));
+    SuccessOrExit(header.FromMessage(aMessage, 0));
     aMessage.MoveOffset(header.GetLength());
+
+    switch (mResponsesQueue.GetMatchedResponseCopy(header, aMessageInfo, &response))
+    {
+    case kThreadError_None:
+        SendMessage(*response, aMessageInfo);
+
+    // fall through
+
+    case kThreadError_NoBufs:
+        ExitNow();
+
+    case kThreadError_NotFound:
+    default:
+        break;
+    }
 
     coapOption = header.GetCurrentOption();
 
@@ -203,6 +225,175 @@ ThreadError Server::SetPort(uint16_t aPort)
 
     return mSocket.Bind(sockaddr);
 }
+
+ThreadError ResponsesQueue::GetMatchedResponseCopy(const Header &aHeader,
+                                                   const Ip6::MessageInfo &aMessageInfo,
+                                                   Message **aResponse)
+{
+    ThreadError            error = kThreadError_NotFound;
+    Message               *message;
+    EnqueuedResponseHeader enqueuedResponseHeader;
+    Ip6::MessageInfo       messageInfo;
+    Header                 header;
+
+    for (message = mQueue.GetHead(); message != NULL; message = message->GetNext())
+    {
+        enqueuedResponseHeader.ReadFrom(*message);
+        messageInfo = enqueuedResponseHeader.GetMessageInfo();
+
+        // Check source endpoint
+        if (messageInfo.GetPeerPort() != aMessageInfo.GetPeerPort())
+        {
+            continue;
+        }
+
+        if (messageInfo.GetPeerAddr() != aMessageInfo.GetPeerAddr())
+        {
+            continue;
+        }
+
+        // Check Message Id
+        if (header.FromMessage(*message, sizeof(EnqueuedResponseHeader)) != kThreadError_None)
+        {
+            continue;
+        }
+
+        if (header.GetMessageId() != aHeader.GetMessageId())
+        {
+            continue;
+        }
+
+        *aResponse = message->Clone();
+        VerifyOrExit(*aResponse != NULL, error = kThreadError_NoBufs);
+
+        EnqueuedResponseHeader::RemoveFrom(**aResponse);
+
+        error = kThreadError_None;
+        break;
+    }
+
+exit:
+    return error;
+}
+
+ThreadError ResponsesQueue::GetMatchedResponseCopy(const Message &aRequest,
+                                                   const Ip6::MessageInfo &aMessageInfo,
+                                                   Message **aResponse)
+{
+    ThreadError error = kThreadError_None;
+    Header      header;
+
+    SuccessOrExit(error = header.FromMessage(aRequest, 0));
+
+    error = GetMatchedResponseCopy(header, aMessageInfo, aResponse);
+
+exit:
+    return error;
+}
+
+void ResponsesQueue::EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    Header                 header;
+    Message               *copy;
+    EnqueuedResponseHeader enqueuedResponseHeader(aMessageInfo);
+    uint16_t               messageCount;
+    uint16_t               bufferCount;
+
+    SuccessOrExit(header.FromMessage(aMessage, 0));
+    VerifyOrExit(header.GetType() == kCoapTypeAcknowledgment ||
+                 header.GetType() == kCoapTypeReset,);
+
+    switch (GetMatchedResponseCopy(aMessage, aMessageInfo, &copy))
+    {
+    case kThreadError_NotFound:
+        break;
+
+    case kThreadError_None:
+        copy->Free();
+
+    // fall through
+
+    case kThreadError_NoBufs:
+    default:
+        ExitNow();
+    }
+
+    mQueue.GetInfo(messageCount, bufferCount);
+
+    if (messageCount >= kMaxCachedResponses)
+    {
+        DequeueOldestResponse();
+    }
+
+    copy = aMessage.Clone();
+    VerifyOrExit(copy != NULL,);
+
+    enqueuedResponseHeader.AppendTo(*copy);
+    mQueue.Enqueue(*copy);
+
+    if (!mTimer.IsRunning())
+    {
+        mTimer.Start(Timer::SecToMsec(kExchangeLifetime));
+    }
+
+exit:
+    return;
+}
+
+void ResponsesQueue::DequeueOldestResponse(void)
+{
+    Message *message;
+
+    VerifyOrExit((message = mQueue.GetHead()) != NULL,);
+    DequeueResponse(*message);
+
+exit:
+    return;
+}
+
+void ResponsesQueue::DequeueAllResponses(void)
+{
+    Message *message;
+
+    while ((message = mQueue.GetHead()) != NULL)
+    {
+        DequeueResponse(*message);
+    }
+}
+
+void ResponsesQueue::HandleTimer(void *aContext)
+{
+    static_cast<ResponsesQueue *>(aContext)->HandleTimer();
+}
+
+void ResponsesQueue::HandleTimer(void)
+{
+    Message               *message;
+    EnqueuedResponseHeader enqueuedResponseHeader;
+
+    while ((message = mQueue.GetHead()) != NULL)
+    {
+        enqueuedResponseHeader.ReadFrom(*message);
+
+        if (enqueuedResponseHeader.IsEarlier(Timer::GetNow()))
+        {
+            DequeueResponse(*message);
+        }
+        else
+        {
+            mTimer.Start(enqueuedResponseHeader.GetRemainingTime());
+            break;
+        }
+    }
+}
+
+uint32_t EnqueuedResponseHeader::GetRemainingTime(void) const
+{
+    int32_t remainingTime = static_cast<int32_t>(mDequeueTime - Timer::GetNow());
+
+    return remainingTime >= 0 ? static_cast<uint32_t>(remainingTime) : 0;
+}
+
 
 }  // namespace Coap
 }  // namespace Thread

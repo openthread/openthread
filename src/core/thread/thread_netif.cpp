@@ -55,7 +55,7 @@ static const uint8_t kThreadMasterKey[] =
 
 ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
     Netif(aIp6, OT_NETIF_INTERFACE_ID_THREAD),
-    mCoapServer(aIp6.mUdp, kCoapUdpPort),
+    mCoapServer(*this, kCoapUdpPort),
     mCoapClient(*this),
     mAddressResolver(*this),
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT

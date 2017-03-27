@@ -401,7 +401,6 @@ exit:
 void MeshForwarder::ClearSrcMatchEntry(Child &aChild)
 {
     Mac::Address macAddr;
-    otLogDebgMac(GetInstance(), "SrcMatch %d (0:Dis, 1:En))", mSrcMatchEnabled);
 
     if (aChild.mAddSrcMatchEntryShort)
     {
@@ -887,7 +886,7 @@ exit:
     return error;
 }
 
-void MeshForwarder::SetRxOff()
+void MeshForwarder::SetRxOff(void)
 {
     mNetif.GetMac().SetRxOnWhenIdle(false);
 
@@ -1719,6 +1718,13 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
             {
                 child->mIndirectSendInfo.mFragmentOffset = 0;
                 child->mIndirectSendInfo.mMessage = NULL;
+
+                // add short address for subsequent indirect messages after
+                // one indirect message to valid sleepy devices is sent out successfully
+                if (aError == kThreadError_None)
+                {
+                    SetSrcMatchAsShort(*child, true);
+                }
             }
 
             childIndex = mNetif.GetMle().GetChildIndex(*child);
@@ -1841,7 +1847,6 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
     uint8_t *payload;
     uint8_t payloadLength;
     uint8_t commandId;
-    Child *child = NULL;
     ThreadError error = kThreadError_None;
 
     if (!mEnabled)
@@ -1853,15 +1858,6 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
 
     SuccessOrExit(error = aFrame.GetSrcAddr(macSource));
     SuccessOrExit(aFrame.GetDstAddr(macDest));
-
-    if ((child = mNetif.GetMle().GetChild(macSource)) != NULL)
-    {
-        if (((child->mMode & Mle::ModeTlv::kModeRxOnWhenIdle) == 0) &&
-            macSource.mLength == sizeof(otShortAddress))
-        {
-            SetSrcMatchAsShort(*child, true);
-        }
-    }
 
     aFrame.GetSrcPanId(messageInfo.mPanId);
     messageInfo.mChannel = aFrame.GetChannel();
@@ -2064,6 +2060,15 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
         // Security Check
         VerifyOrExit(mNetif.GetIp6Filter().Accept(*message), error = kThreadError_Drop);
 
+        // Allow re-assembly of only one message at a time on a SED by clearing
+        // any remaining fragments in reassembly list upon receiving of a new
+        // (secure) first fragment.
+
+        if ((GetRxOnWhenIdle() == false) && message->IsLinkSecurityEnabled())
+        {
+            ClearReassemblyList();
+        }
+
         mReassemblyList.Enqueue(*message);
 
         if (!mReassemblyTimer.IsRunning())
@@ -2085,6 +2090,20 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
                 message->IsLinkSecurityEnabled() == aMessageInfo.mLinkSecurity)
             {
                 break;
+            }
+        }
+
+        // For a sleepy-end-device, if we receive a new (secure) next fragment
+        // with a non-matching fragmentation offset or tag, it indicates that
+        // we have either missed a fragment, or the parent has moved to a new
+        // message with a new tag. In either case, we can safely clear any
+        // remaining fragments stored in the reassembly list.
+
+        if (GetRxOnWhenIdle() == false)
+        {
+            if ((message == NULL) && (aMessageInfo.mLinkSecurity))
+            {
+                ClearReassemblyList();
             }
         }
 
@@ -2113,6 +2132,19 @@ exit:
         {
             message->Free();
         }
+    }
+}
+
+void MeshForwarder::ClearReassemblyList(void)
+{
+    Message *message;
+    Message *next;
+
+    for (message = mReassemblyList.GetHead(); message; message = next)
+    {
+        next = message->GetNext();
+        mReassemblyList.Dequeue(*message);
+        message->Free();
     }
 }
 
@@ -2193,10 +2225,6 @@ exit:
 ThreadError MeshForwarder::HandleDatagram(Message &aMessage, const ThreadMessageInfo &aMessageInfo)
 {
     return mNetif.GetIp6().HandleDatagram(aMessage, &mNetif, mNetif.GetInterfaceId(), &aMessageInfo, false);
-}
-
-void MeshForwarder::UpdateFramePending()
-{
 }
 
 void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const ThreadMessageInfo &aMessageInfo)
