@@ -2540,7 +2540,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_NEIGHBOR_TABLE(uint8_t header, sp
                 neighInfo.mIsChild,
                 neighInfo.mLinkFrameCounter,
                 neighInfo.mMleFrameCounter,
-                neighInfo.mLastRssi,
+                neighInfo.mLastRssi
         ));
     }
 

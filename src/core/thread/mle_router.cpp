@@ -3484,7 +3484,7 @@ ThreadError MleRouter::GetChildInfo(Child &aChild, otChildInfo &aChildInfo)
     aChildInfo.mAge                = Timer::MsecToSec(Timer::GetNow() - aChild.mLastHeard);
     aChildInfo.mLinkQualityIn      = aChild.mLinkInfo.GetLinkQuality(mNetif.GetMac().GetNoiseFloor());
     aChildInfo.mAverageRssi        = aChild.mLinkInfo.GetAverageRss();
-    aChildInfo.mLastRssi           = neighbor->mLinkInfo.GetLastRss();
+    aChildInfo.mLastRssi           = aChild.mLinkInfo.GetLastRss();
 
     aChildInfo.mRxOnWhenIdle      = (aChild.mMode & ModeTlv::kModeRxOnWhenIdle) != 0;
     aChildInfo.mSecureDataRequest = (aChild.mMode & ModeTlv::kModeSecureDataRequest) != 0;
