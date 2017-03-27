@@ -168,7 +168,6 @@ public:
     }
 
     // Helper function to convert state to string
-    [DefaultOverload()]
     static String^ ToString(otThreadState state)
     {
         switch (state)
