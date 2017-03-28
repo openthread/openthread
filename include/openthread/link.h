@@ -284,6 +284,18 @@ OTAPI uint32_t OTCALL otLinkGetPollPeriod(otInstance *aInstance);
 OTAPI void OTCALL otLinkSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod);
 
 /**
+ * Enqueue an IEEE 802.15.4 Data Request message.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @retval kThreadError_None          Successfully enqueued an IEEE 802.15.4 Data Request message.
+ * @retval kThreadError_Already       An IEEE 802.15.4 Data Request message is already enqueued.
+ * @retval kThreadError_InvalidState  Device is not in rx-off-when-idle mode.
+ * @retval kThreadError_NoBufs        Insufficient message buffers available.
+ */
+OTAPI ThreadError OTCALL otSendMacDataRequest(otInstance *aInstance);
+
+/**
  * Get the IEEE 802.15.4 Short Address.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.

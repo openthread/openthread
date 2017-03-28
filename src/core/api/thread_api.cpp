@@ -648,11 +648,6 @@ bool otThreadIsDiscoverInProgress(otInstance *aInstance)
     return aInstance->mThreadNetif.GetMle().IsDiscoverInProgress();
 }
 
-ThreadError otSendMacDataRequest(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetMeshForwarder().SendMacDataRequest();
-}
-
 #ifdef __cplusplus
 }  // extern "C"
 #endif
