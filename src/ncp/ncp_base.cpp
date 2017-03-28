@@ -691,10 +691,10 @@ void NcpBase::HandleRawFrame(const RadioPacket *aFrame)
             SPINEL_DATATYPE_INT8_S
             SPINEL_DATATYPE_UINT16_S
             SPINEL_DATATYPE_STRUCT_S( // PHY-data
-                // Empty for now
+                "" // Empty for now
             )
             SPINEL_DATATYPE_STRUCT_S( // Vendor-data
-                // Empty for now
+                "" // Empty for now
             ),
             aFrame->mPower,   // TX Power
             -128,             // Noise Floor (Currently unused)
