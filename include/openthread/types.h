@@ -698,6 +698,16 @@ typedef struct otExternalRouteConfig
 } otExternalRouteConfig;
 
 /**
+ * Defines valid values for member mPreference in otExternalRouteConfig and otBorderRouterConfig.
+ */
+typedef enum otRoutePreference
+{
+    kRoutePreferenceLow    = -1,  ///< Routes assigned this value are used as a last resort when no other more preferred route exists.
+    kRoutePreferenceMedium =  0,  ///< Routes assigned this value should be selected only in the absence of any kRoutePreferenceHigh routes.
+    kRoutePreferenceHigh   =  1   ///< The most preferred route. Routes assigned this value should be selected over any other route.
+} otRoutePreference;
+
+/**
  * @}
  *
  */
