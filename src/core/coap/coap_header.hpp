@@ -340,6 +340,14 @@ public:
     ThreadError AppendUriQueryOption(const char *aUriQuery);
 
     /**
+     * This method returns a pointer to the first option.
+     *
+     * @returns A pointer to the first option.
+     *
+     */
+    const Option *GetFirstOption(void);
+
+    /**
      * This method returns a pointer to the current option.
      *
      * @returns A pointer to the current option.

@@ -173,7 +173,7 @@ void Server::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &a
         break;
     }
 
-    coapOption = header.GetCurrentOption();
+    coapOption = header.GetFirstOption();
 
     while (coapOption != NULL)
     {

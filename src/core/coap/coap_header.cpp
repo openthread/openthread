@@ -46,6 +46,7 @@ void Header::Init(void)
 {
     mHeaderLength = kMinHeaderLength;
     mOptionLast = 0;
+    mFirstOptionOffset = 0;
     mNextOptionOffset = 0;
     memset(&mOption, 0, sizeof(mOption));
     memset(&mHeader, 0, sizeof(mHeader));
@@ -71,6 +72,8 @@ ThreadError Header::FromMessage(const Message &aMessage, uint16_t aMetadataSize)
 
     length -= aMetadataSize;
 
+    mFirstOptionOffset = 0;
+
     VerifyOrExit(length >= kTokenOffset, error = kThreadError_Parse);
     aMessage.Read(offset, kTokenOffset, mHeader.mBytes);
     mHeaderLength = kTokenOffset;
@@ -94,6 +97,11 @@ ThreadError Header::FromMessage(const Message &aMessage, uint16_t aMetadataSize)
         {
             mHeaderLength += sizeof(uint8_t);
             ExitNow(error = kThreadError_None);
+        }
+
+        if (firstOption)
+        {
+            mFirstOptionOffset = mHeaderLength;
         }
 
         optionDelta = mHeader.mBytes[mHeaderLength] >> 4;
@@ -173,6 +181,13 @@ ThreadError Header::FromMessage(const Message &aMessage, uint16_t aMetadataSize)
     }
 
 exit:
+
+    // In case any step failed, prevent access to corrupt Option
+    if (error != kThreadError_None)
+    {
+        mFirstOptionOffset = 0;
+    }
+
     return error;
 }
 
@@ -326,6 +341,21 @@ ThreadError Header::AppendUriQueryOption(const char *aUriQuery)
     coapOption.mValue  = reinterpret_cast<const uint8_t *>(aUriQuery);
 
     return AppendOption(coapOption);
+}
+
+const Header::Option *Header::GetFirstOption(void)
+{
+    const Option *rval = NULL;
+
+    VerifyOrExit(mFirstOptionOffset > 0,);
+
+    memset(&mOption, 0, sizeof(mOption));
+    mNextOptionOffset = mFirstOptionOffset;
+
+    rval = GetNextOption();
+
+exit:
+    return rval;
 }
 
 const Header::Option *Header::GetCurrentOption(void) const
