@@ -355,16 +355,6 @@ const uint8_t *otCoapHeaderGetToken(const otCoapHeader *aHeader);
 const otCoapOption *otCoapHeaderGetFirstOption(otCoapHeader *aHeader);
 
 /**
- * This function returns a pointer to the current option.
- *
- * @param[in]  aHeader  A pointer to the CoAP header.
- *
- * @returns A pointer to the current option. If no option is present NULL pointer is returned.
- *
- */
-const otCoapOption *otCoapHeaderGetCurrentOption(const otCoapHeader *aHeader);
-
-/**
  * This function returns a pointer to the next option.
  *
  * @param[in]  aHeader  A pointer to the CoAP header.

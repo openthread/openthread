@@ -121,11 +121,6 @@ const otCoapOption *otCoapHeaderGetFirstOption(otCoapHeader *aHeader)
     return static_cast<const otCoapOption *>(static_cast<Coap::Header *>(aHeader)->GetFirstOption());
 }
 
-const otCoapOption *otCoapHeaderGetCurrentOption(const otCoapHeader *aHeader)
-{
-    return static_cast<const otCoapOption *>(static_cast<const Coap::Header *>(aHeader)->GetCurrentOption());
-}
-
 const otCoapOption *otCoapHeaderGetNextOption(otCoapHeader *aHeader)
 {
     return static_cast<const otCoapOption *>(static_cast<Coap::Header *>(aHeader)->GetNextOption());

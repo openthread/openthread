@@ -348,14 +348,6 @@ public:
     const Option *GetFirstOption(void);
 
     /**
-     * This method returns a pointer to the current option.
-     *
-     * @returns A pointer to the current option.
-     *
-     */
-    const Option *GetCurrentOption(void) const;
-
-    /**
      * This method returns a pointer to the next option.
      *
      * @returns A pointer to the next option.

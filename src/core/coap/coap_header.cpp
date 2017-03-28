@@ -358,11 +358,6 @@ exit:
     return rval;
 }
 
-const Header::Option *Header::GetCurrentOption(void) const
-{
-    return static_cast<const Header::Option *>(&mOption);
-}
-
 const Header::Option *Header::GetNextOption(void)
 {
     Option *rval = NULL;
