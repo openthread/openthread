@@ -99,6 +99,7 @@ typedef enum otCoapCode
 typedef enum otCoapOptionType
 {
     kCoapOptionObserve       = 6,    ///< Observe
+    kCoapOptionUriPort       = 7,    ///< Uri-Port
     kCoapOptionUriPath       = 11,   ///< Uri-Path
     kCoapOptionContentFormat = 12,   ///< Content-Format
     kCoapOptionMaxAge        = 14,   ///< Max-Age
