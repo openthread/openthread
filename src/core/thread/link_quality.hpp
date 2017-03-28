@@ -141,6 +141,14 @@ public:
     uint8_t GetLinkQuality(LinkQualityInfo &aNoiseFloor);
 
     /**
+     * Returns the most recent RSS value.
+     *
+     * @returns The most recent RSS
+     *
+     */
+    int8_t GetLastRss(void) const;
+
+    /**
      * This method converts a received signal strength value to a link margin value.
      *
      * @param[in]  aNoiseFloor  A reference to the noise state.
@@ -216,6 +224,7 @@ private:
     uint16_t mRssAverage  : 11;  // The encoded average signal strength value (stored as rss times precision multiple).
     uint8_t  mCount       : 3;   // Number of RSS values added to average so far (limited to kRssCountMax).
     uint8_t  mLinkQuality : 2;   // Current link quality value (0-3).
+    int8_t   mLastRss;
 };
 
 /**

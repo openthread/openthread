@@ -791,6 +791,7 @@ typedef struct
     uint32_t       mMleFrameCounter;       ///< MLE Frame Counter
     uint8_t        mLinkQualityIn;         ///< Link Quality In
     int8_t         mAverageRssi;           ///< Average RSSI
+    int8_t         mLastRssi;              ///< Last observed RSSI
     bool           mRxOnWhenIdle : 1;      ///< rx-on-when-idle
     bool           mSecureDataRequest : 1; ///< Secure Data Requests
     bool           mFullFunction : 1;      ///< Full Function Device
@@ -816,6 +817,7 @@ typedef struct
     uint8_t        mNetworkDataVersion;    ///< Network Data Version
     uint8_t        mLinkQualityIn;         ///< Link Quality In
     int8_t         mAverageRssi;           ///< Average RSSI
+    int8_t         mLastRssi;              ///< Last observed RSSI
     bool           mRxOnWhenIdle : 1;      ///< rx-on-when-idle
     bool           mSecureDataRequest : 1; ///< Secure Data Requests
     bool           mFullFunction : 1;      ///< Full Function Device
