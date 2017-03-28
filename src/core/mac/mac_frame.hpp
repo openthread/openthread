@@ -154,12 +154,28 @@ private:
  */
 struct Address
 {
+    enum
+    {
+        kAddressStringSize =  24,    ///< Max chars needed for a string representation of address (@sa ToString()).
+    };
+
     uint8_t mLength;                 ///< Length of address in bytes.
     union
     {
         ShortAddress mShortAddress;  ///< The IEEE 802.15.4 Short Address.
         ExtAddress mExtAddress;      ///< The IEEE 802.15.4 Extended Address.
     };
+
+    /**
+     * This method converts an address object to a NULL-terminated string.
+     *
+     * @param[out]  aBuf   A pointer to the buffer.
+     * @param[in]   aSize  The maximum size of the buffer.
+     *
+     * @returns A pointer to the char string buffer.
+     *
+     */
+    const char *ToString(char *aBuf, uint16_t aSize) const;
 };
 
 /**

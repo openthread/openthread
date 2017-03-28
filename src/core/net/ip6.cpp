@@ -1074,5 +1074,55 @@ otInstance *Ip6::GetInstance(void)
     return otInstanceFromIp6(this);
 }
 
+const char *Ip6::IpProtoToString(IpProto aIpProto)
+{
+    const char *retval;
+
+    switch (aIpProto)
+    {
+    case kProtoHopOpts:
+        retval = "HopOpts";
+        break;
+
+    case kProtoTcp:
+        retval = "TCP";
+        break;
+
+    case kProtoUdp:
+        retval = "UDP";
+        break;
+
+    case kProtoIp6:
+        retval = "IP6";
+        break;
+
+    case kProtoRouting:
+        retval = "Routing";
+        break;
+
+    case kProtoFragment:
+        retval = "Frag";
+        break;
+
+    case kProtoIcmp6:
+        retval = "ICMP6";
+        break;
+
+    case kProtoNone:
+        retval = "None";
+        break;
+
+    case kProtoDstOpts:
+        retval = "DstOpts";
+        break;
+
+    default:
+        retval = "Unknown";
+        break;
+    }
+
+    return retval;
+}
+
 }  // namespace Ip6
 }  // namespace Thread
