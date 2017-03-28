@@ -91,6 +91,12 @@ ThreadError otUdpBind(otUdpSocket *aSocket, otSockAddr *aSockName)
     return socket->Bind(*static_cast<const Ip6::SockAddr *>(aSockName));
 }
 
+ThreadError otUdpConnect(otUdpSocket *aSocket, otSockAddr *aSockName)
+{
+    Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
+    return socket->Connect(*static_cast<const Ip6::SockAddr *>(aSockName));
+}
+
 ThreadError otUdpSend(otUdpSocket *aSocket, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
