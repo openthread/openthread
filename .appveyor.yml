@@ -30,7 +30,6 @@ version: 0.1.{build}
 image: Visual Studio 2015
 configuration:
 - Release
-- Debug
 platform:
 - x64
 - x86
