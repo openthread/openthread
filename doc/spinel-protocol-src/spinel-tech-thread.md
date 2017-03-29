@@ -237,16 +237,16 @@ The stable leader network data.
 ### PROP 5391: PROP_THREAD_JOINERS {#prop-thread-joiners}
 
 * Type: Read-Write
-* Packed-Encoding: `A(T(DLE))`
+* Packed-Encoding: `A(t(ULE))`
 
 Data per item is:
 
-* `D`: PSKd
+* `U`: PSKd
 * `L`: Timeout in seconds
 * `E`: Extended/long address (optional)
 
-Passess Extended address and PSKd to the NCP in the commissioning process.
-
+Passess Pre-Shared Key for the Device to the NCP in the commissioning process.
+When the Extended address is ommited all Devices which provided a valid PSKd are allowed to join the Thread Network.
 
 ### PROP 5392: PROP_THREAD_COMMISSIONER_ENABLED {#prop-thread-commissioner-enabled}
 
