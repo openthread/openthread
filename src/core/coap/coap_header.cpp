@@ -72,7 +72,7 @@ ThreadError Header::FromMessage(const Message &aMessage, uint16_t aMetadataSize)
 
     length -= aMetadataSize;
 
-    mFirstOptionOffset = 0;
+    Init();
 
     VerifyOrExit(length >= kTokenOffset, error = kThreadError_Parse);
     aMessage.Read(offset, kTokenOffset, mHeader.mBytes);
