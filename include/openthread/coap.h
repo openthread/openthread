@@ -136,6 +136,7 @@ typedef struct otCoapHeader
     } mHeader;                                      ///< The CoAP header encoding
     uint8_t mHeaderLength;                          ///< The CoAP header length (bytes)
     uint16_t mOptionLast;                           ///< The last CoAP Option Number value
+    uint16_t mFirstOptionOffset;                    ///< The byte offset for the first CoAP Option
     uint16_t mNextOptionOffset;                     ///< The byte offset for the next CoAP Option
     otCoapOption mOption;                           ///< A structure representing the current CoAP Option.
 } otCoapHeader;
@@ -344,14 +345,14 @@ uint8_t otCoapHeaderGetTokenLength(const otCoapHeader *aHeader);
 const uint8_t *otCoapHeaderGetToken(const otCoapHeader *aHeader);
 
 /**
- * This function returns a pointer to the current option.
+ * This function returns a pointer to the first option.
  *
  * @param[in]  aHeader  A pointer to the CoAP header.
  *
- * @returns A pointer to the current option. If no option is present NULL pointer is returned.
+ * @returns A pointer to the first option. If no option is present NULL pointer is returned.
  *
  */
-const otCoapOption *otCoapHeaderGetCurrentOption(const otCoapHeader *aHeader);
+const otCoapOption *otCoapHeaderGetFirstOption(otCoapHeader *aHeader);
 
 /**
  * This function returns a pointer to the next option.
