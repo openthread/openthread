@@ -130,7 +130,7 @@ otLwfCmdInitialize(
             break;
         }
         if (MajorVersion != SPINEL_PROTOCOL_VERSION_THREAD_MAJOR ||
-            MinorVersion != SPINEL_PROTOCOL_VERSION_THREAD_MINOR)
+            MinorVersion < 3) // TODO - Remove this minor version check with the next major version update
         {
             Status = NDIS_STATUS_NOT_SUPPORTED;
             LogError(DRIVER_DEFAULT, "Protocol Version Mismatch! OsVer: %d.%d DeviceVer: %d.%d",
