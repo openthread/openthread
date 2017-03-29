@@ -225,6 +225,18 @@ OTAPI ThreadError OTCALL otCommissionerSendMgmtSet(otInstance *, const otCommiss
 OTAPI uint16_t OTCALL otCommissionerGetSessionId(otInstance *);
 
 /**
+ * This function returns the Commissioner State.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @retval kCommissionerStateDisabled    Commissioner disabled.
+ * @retval kCommissionerStatePetition    Becoming the commissioner.
+ * @retval kCommissionerStateActive      Commissioner enabled.
+ *
+ */
+OTAPI otCommissionerState OTCALL otCommissionerGetState(otInstance *);
+
+/**
  * This method generates PSKc.
  *
  * PSKc is used to establish the Commissioner Session.
