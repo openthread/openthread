@@ -154,7 +154,6 @@ $(ECHO) "  CONFIG   $(TargetTuple)..."
 INSTALL="$(INSTALL) $(INSTALLFLAGS)" \
 CPP="$(CPP)" CC="$(CC)" CXX="$(CXX)" OBJC="$(OBJC)" OBJCXX="$(OBJCXX)" AR="$(AR)" RANLIB="$(RANLIB)" NM="$(NM)" STRIP="$(STRIP)" CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)" \
 --host=arm-none-eabi \
---target=arm-none-eabi \
 --prefix=/ \
 --exec-prefix=/$(TargetTuple) \
 $(configure_OPTIONS))
