@@ -1366,7 +1366,7 @@ otIsDiscoverInProgress(
 OTAPI 
 ThreadError
 OTCALL
-otSendMacDataRequest(
+otLinkSendDataRequest(
     _In_ otInstance *aInstance
     )
 {

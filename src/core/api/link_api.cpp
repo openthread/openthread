@@ -124,7 +124,7 @@ void otLinkSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod)
     aInstance->mThreadNetif.GetMeshForwarder().SetAssignPollPeriod(aPollPeriod);
 }
 
-ThreadError otSendMacDataRequest(otInstance *aInstance)
+ThreadError otLinkSendDataRequest(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMeshForwarder().SendMacDataRequest();
 }
