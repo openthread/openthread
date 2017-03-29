@@ -43,7 +43,7 @@
 #ifndef _DW_GPIO_OBJ_H_
 #define _DW_GPIO_OBJ_H_
 
-#include "board/emsk/gpio/dw_gpio.h"
+#include "device/designware/gpio/dw_gpio.h"
 
 /**
  * \name	Designware GPIO Port Bank Control Macros

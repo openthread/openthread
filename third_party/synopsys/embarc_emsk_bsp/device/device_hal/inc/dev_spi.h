@@ -60,7 +60,7 @@
 #ifndef _DEVICE_HAL_SPI_H_
 #define _DEVICE_HAL_SPI_H_
 
-#include "board/emsk/common/dev_common.h"
+#include "device/device_hal/inc/dev_common.h"
 
 
 /**

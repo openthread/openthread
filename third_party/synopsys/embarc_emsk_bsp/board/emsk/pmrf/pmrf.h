@@ -45,8 +45,6 @@
 #ifndef _PMRF_H_
 #define _PMRF_H_
 
-#include "board/emsk/emsk.h"
-
 /** MRF24J40 Functions */
 
 #define mrf24j40_reset_pin(val)		pmrf_reset_pin(val)

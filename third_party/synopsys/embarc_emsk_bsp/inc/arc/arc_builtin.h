@@ -48,7 +48,6 @@
 #define _ARC_HAL_BUILTIN_H_
 
 #include "inc/embARC_toolchain.h"
-#include "inc/common_config.h"
 
 #ifdef __cplusplus
 extern "C" {

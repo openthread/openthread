@@ -61,7 +61,7 @@
 #ifndef _DEVICE_HAL_GPIO_H_
 #define _DEVICE_HAL_GPIO_H_
 
-#include "board/emsk/common/dev_common.h"
+#include "device/device_hal/inc/dev_common.h"
 
 /**
  * \defgroup	DEVICE_HAL_GPIO_DEFDIR	GPIO Port Direction Definition

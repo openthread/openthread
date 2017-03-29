@@ -49,21 +49,21 @@
  * \addtogroup	BOARD_EMSK_DRV_PMODRF
  * @{
  */
-
 #include <stddef.h>
 #include <string.h>
 
 #include "inc/arc/arc.h"
 #include "inc/arc/arc_builtin.h"
-#include "inc/arc/arc_exception.h"
 #include "inc/embARC_toolchain.h"
 #include "inc/embARC_error.h"
+#include "inc/arc/arc_exception.h"
 
-#include "board/emsk/gpio/dev_gpio.h"
-#include "board/emsk/spi/dev_spi.h"
+#include "board/board.h"
+
+#include "device/device_hal/inc/dev_gpio.h"
+#include "device/device_hal/inc/dev_spi.h"
 
 #include "board/emsk/pmrf/pmrf.h"
-#include "board/emsk/pmrf/mrf24j40.h"
 
 #define EMSK_PMRF_0_SPI_CPULOCK_ENABLE
 

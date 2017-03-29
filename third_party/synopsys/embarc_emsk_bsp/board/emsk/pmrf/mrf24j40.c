@@ -47,11 +47,9 @@
  */
 
 #include "board/emsk/pmrf/mrf24j40.h"
-#include "board/emsk/pmrf/pmrf.h"
 
 #include <stdlib.h>
-#include <stddef.h>
-
+#include "board/emsk/pmrf/pmrf.h"
 
 /* mrf24j40_read_long_ctrl_reg(), mrf24j40_read_short_ctrl_reg(),
  * mrf24j40_write_long_ctrl_reg() and mrf24j40_write_short_ctrl_reg()

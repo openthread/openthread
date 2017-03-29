@@ -37,17 +37,10 @@
  */
 #include <stdio.h>
 
-#include "board/emsk/uart/dev_uart.h"
-#include "board/emsk/emsk.h"
+#include "device/device_hal/inc/dev_uart.h"
 #include "common/console_io.h"
-
 #include "inc/arc/arc_builtin.h"
-
 #include "common/xprintf/xprintf.h"
-
-#ifdef __GNU__
-extern void gnu_printf_setup(void);
-#endif
 
 /*!< to indicate xprintf setup state(0 for not setup) */
 static int xprintf_setup_flag = 0;
@@ -164,9 +157,5 @@ void xprintf_setup(void)
 #endif
 
 	xprintf_setup_flag = 1;
-
-#ifdef __GNU__
-	gnu_printf_setup();
-#endif
 }
 

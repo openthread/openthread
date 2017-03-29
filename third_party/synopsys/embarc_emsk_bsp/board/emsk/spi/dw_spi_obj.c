@@ -57,7 +57,7 @@
 #include "inc/embARC_error.h"
 #include "inc/arc/arc_exception.h"
 
-#include "board/emsk/spi/dw_spi.h"
+#include "device/designware/spi/dw_spi.h"
 #include "board/emsk/spi/dw_spi_obj.h"
 
 #include "board/emsk/emsk.h"

@@ -1,5 +1,5 @@
 /* ------------------------------------------
- * Copyright (c) 2016, Synopsys, Inc. All rights reserved.
+ * Copyright (c) 2017, Synopsys, Inc. All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
@@ -26,64 +26,53 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * \version 2016.05
- * \date 2014-07-03
+ * \version 2017.03
+ * \date 2016-03-02
  * \author Huaqi Fang(Huaqi.Fang@synopsys.com)
 --------------------------------------------- */
-/**
- * \file
- * \ingroup	BOARD_EMSK_DRV_DW_UART_OBJ
- * \brief	header file of designware uart object instantiation on emsk
- */
+#include <stdint.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include "embARC_syscalls.h"
 
-/**
- * \addtogroup	BOARD_EMSK_DRV_DW_UART_OBJ
- * @{
- */
-#ifndef _DW_UART_OBJ_H_
-#define _DW_UART_OBJ_H_
+//////////////////////////////
+// OTHER REQUIRED FUNCTIONS //
+//////////////////////////////
 
-#include "device/device_hal/inc/dev_uart.h"
+static const char szEnglishMonth[12][4] = { \
+	"Jan","Feb","Mar","Apr", \
+	"May","Jun","Jul","Aug", \
+	"Sep","Oct","Nov","Dec"};
 
-/**
- * \name	DesignWare UART Object Number
- * @{
- */
-#define DW_UART_NUM	(2)	/*!< DesignWare UART valid number */
-/** @} end of name */
+time_t get_build_timedate(struct tm *build_tm)
+{
+	if (!build_tm) return 0;
+	char szMonth[5];
+	int tm_year, tm_mon = 0, tm_day;
+	int tm_hour, tm_min, tm_sec;
+	time_t build_time;
 
-/**
- * \name	Designware UART Object ID Macros
- * @{
- */
-#define DW_UART_0_ID	0	/*!< uart 0 id macro */
-#define DW_UART_1_ID	1	/*!< uart 1 id macro */
-/** @} end of name */
+	/** Get Build Date */
+	sscanf(__DATE__, "%s %d %d", szMonth, &tm_day, &tm_year) ;
+	for (int i = 0; i < 12; i++) {
+		if (strncmp(szMonth, szEnglishMonth[i], 3) == 0) {
+			tm_mon = i;
+			break;
+		}
+	}
+	/** Get Build Time */
+	sscanf(__TIME__, "%d:%d:%d", &tm_hour, &tm_min, &tm_sec);
+	build_tm->tm_sec = tm_sec;
+	build_tm->tm_min = tm_min;
+	build_tm->tm_hour = tm_hour;
+	build_tm->tm_mday = tm_day;
+	build_tm->tm_mon = tm_mon;
+	build_tm->tm_year = tm_year - 1900;
+	build_tm->tm_isdst = 0;
 
-/**
- * \name	Designware UART Object Control Macros
- * @{
- */
-#define USE_DW_UART_0	1     	/*!< enable use designware uart 0 */
-#define USE_DW_UART_1	1     	/*!< enable use designware uart 1 */
-/** @} end of name */
-
-/**
- * \name	Designware UART Ringbuffer Size Control Macros
- * @{
- */
-#define MAX_SNDBUF_SIZE	256	/*!< max size of uart send buffer */
-#define MAX_RCVBUF_SIZE	10	/*!< max size of uart recv buffer */
-/** @} end of name */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-extern void dw_uart_all_install(void);
-
-#ifdef __cplusplus
+	build_time = mktime(build_tm);
+	return build_time;
 }
-#endif
-
-#endif /* _DW_UART_OBJ_H_ */

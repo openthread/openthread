@@ -59,7 +59,6 @@
 #include "inc/arc/arc.h"
 #include "inc/arc/arc_builtin.h"
 
-#include "board/emsk/gpio/dw_gpio.h"
 #include "board/emsk/gpio/dw_gpio_obj.h"
 
 #include "board/emsk/emsk.h"

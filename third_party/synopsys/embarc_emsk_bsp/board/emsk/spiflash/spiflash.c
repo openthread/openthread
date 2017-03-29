@@ -53,7 +53,7 @@
 
 #include "inc/embARC_error.h"
 #include "board/emsk/emsk.h"
-#include "board/emsk/spi/dev_spi.h"
+#include "device/device_hal/inc/dev_spi.h"
 #include "inc/arc/arc_exception.h"
 
 /**

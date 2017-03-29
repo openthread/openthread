@@ -52,7 +52,7 @@
 
 #include "board/emsk/common/emsk_timer.h"
 
-#include "board/emsk/configs/emsk_hardware.h"
+#include "board/emsk/emsk_hardware.h"
 
 /* Additional hardware driver for embARC BSP */
 #include "board/emsk/spi/dw_spi_obj.h"
@@ -117,43 +117,6 @@
 #define OSP_DELAY_OS_COMPAT_ENABLE	(1)
 #define OSP_DELAY_OS_COMPAT_DISABLE	(0)
 
-#define WF_IPADDR_1			(192)
-#define WF_IPADDR_2			(168)
-#define WF_IPADDR_3			(43)
-#define WF_IPADDR_4			(102)
-
-#define WF_NETMASK_1			(255)
-#define WF_NETMASK_2			(255)
-#define WF_NETMASK_3			(255)
-#define WF_NETMASK_4			(0)
-
-#define WF_GATEWAY_1			(192)
-#define WF_GATEWAY_2			(168)
-#define WF_GATEWAY_3			(43)
-#define WF_GATEWAY_4			(1)
-
-#define WF_HOTSPOT_IS_OPEN		(0)
-
-#define WF_IPADDR_DHCP			(1)
-
-#define WF_HOTSPOT_NAME			"embARC"
-#define WF_HOTSPOT_PASSWD		"qazwsxedc"
-
-#define WF_ENABLE_MANUAL_SET_MAC	(0)
-
-#define WF_MAC_ADDR0			(EMSK_PMWIFI_0_MAC_ADDR0)
-#define WF_MAC_ADDR1			(EMSK_PMWIFI_0_MAC_ADDR1)
-#define WF_MAC_ADDR2			(EMSK_PMWIFI_0_MAC_ADDR2)
-#define WF_MAC_ADDR3			(EMSK_PMWIFI_0_MAC_ADDR3)
-#define WF_MAC_ADDR4			(EMSK_PMWIFI_0_MAC_ADDR4)
-#define WF_MAC_ADDR5			(EMSK_PMWIFI_0_MAC_ADDR5)
-
-/** Possible Pmod WiFi choices */
-#define PMWIFI_MRF24G			0
-#define PMWIFI_RW009			1
-
-#define BOARD_PMWIFI_0_ID		EMSK_PMWIFI_0_ID
-#define BOARD_PMWIFI_ID_MAX		EMSK_PMWIFI_0_ID
 
 #define OSP_GET_CUR_SYSHZ()		(gl_emsk_sys_hz_cnt)
 #define OSP_GET_CUR_MS()		(gl_emsk_ms_cnt)

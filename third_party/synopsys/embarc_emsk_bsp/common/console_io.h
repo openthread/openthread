@@ -38,7 +38,7 @@
 #ifndef _CONSOLE_IO_H_
 #define _CONSOLE_IO_H_
 #include "inc/embARC_toolchain.h"
-#include "board/emsk/emsk.h"
+#include "board/board.h"
 
 #define CONSOLE_UART_ID		BOARD_CONSOLE_UART_ID	/*!< console uart id */
 

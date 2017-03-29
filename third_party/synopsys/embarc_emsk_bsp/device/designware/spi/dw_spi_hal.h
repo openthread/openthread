@@ -41,7 +41,7 @@
 #ifndef _DEVICE_DW_SPI_HAL_H_
 #define _DEVICE_DW_SPI_HAL_H_
 
-#include "board/emsk/spi/dw_spi_hal_cfg.h"
+#include "device/designware/spi/dw_spi_hal_cfg.h"
 
 /* DW APB SPI bit definitions */
 

@@ -56,7 +56,6 @@
 #include "inc/embARC_toolchain.h"
 #include "inc/embARC_error.h"
 
-#include "board/emsk/gpio/dw_gpio.h"
 #include "board/emsk/gpio/emsk_gpio.h"
 #include "board/emsk/emsk.h"
 

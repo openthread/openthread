@@ -42,7 +42,7 @@
 #ifndef _EMSK_GPIO_H_
 #define _EMSK_GPIO_H_
 
-#include "board/emsk/gpio/dw_gpio.h"
+#include "device/designware/gpio/dw_gpio.h"
 
 /**
  * \name	EMSK LED Port Configuration

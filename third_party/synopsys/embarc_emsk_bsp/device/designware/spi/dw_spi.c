@@ -49,8 +49,8 @@
 
 #include "inc/arc/arc_exception.h"
 
-#include "board/emsk/spi/dw_spi_hal.h"
-#include "board/emsk/spi/dw_spi.h"
+#include "device/designware/spi/dw_spi_hal.h"
+#include "device/designware/spi/dw_spi.h"
 
 /**
  * \defgroup	DEVICE_DW_SPI_DEFINES	DesignWare SPI Driver Macros

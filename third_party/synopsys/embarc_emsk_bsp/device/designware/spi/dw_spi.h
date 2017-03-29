@@ -40,7 +40,7 @@
 #ifndef _DEVICE_DW_SPI_H_
 #define _DEVICE_DW_SPI_H_
 
-#include "board/emsk/spi/dev_spi.h"
+#include "device/device_hal/inc/dev_spi.h"
 
 /**
  * if this header file is included,

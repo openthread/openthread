@@ -42,7 +42,7 @@
 #include <stddef.h>	/* C99 standard lib */
 #include <stdbool.h> 	/* C99 standard lib */
 
-#include "inc/common_config.h"
+#include "embARC_BSP_config.h"
 
 /**
  * \addtogroup TOOLCHAIN
@@ -61,18 +61,25 @@ extern "C" {
  */
 #ifndef __cplusplus				/* C++ supports inline */
 #if __STDC_VERSION__ < 199901L			/* C99 supports inline */
+#ifndef inline
 #define inline	__inline__			/* inline function */
+#endif
 #endif /* __STDC_VERSION__ < 199901L */
 #endif /* __cplusplus */
 
+#ifndef Inline
 #define Inline	static __inline__		/* inline function */
+#endif
 
 #ifndef __cplusplus				/* C++ supports asm */
+#ifndef asm
 #define asm	__asm__				/* inline asm */
+#endif
 #endif /* __cplusplus */
 
+#ifndef Asm
 #define Asm	__asm__ volatile		/* inline asm (no optimization) */
-
+#endif
 
 /* compiler attributes */
 #define EMBARC_FORCEINLINE	__attribute__((always_inline))

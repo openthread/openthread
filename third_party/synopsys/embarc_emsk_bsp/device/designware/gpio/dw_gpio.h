@@ -41,7 +41,7 @@
 #ifndef _DW_GPIO_H_
 #define _DW_GPIO_H_
 
-#include "board/emsk/gpio/dev_gpio.h"
+#include "device/device_hal/inc/dev_gpio.h"
 
 #include "inc/arc/arc_exception.h"
 

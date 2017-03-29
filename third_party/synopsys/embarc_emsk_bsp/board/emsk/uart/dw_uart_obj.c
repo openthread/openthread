@@ -57,8 +57,7 @@
 #include "inc/embARC_error.h"
 
 #include "inc/arc/arc_exception.h"
-
-#include "board/emsk/uart/dw_uart.h"
+#include "device/designware/uart/dw_uart.h"
 #include "board/emsk/uart/dw_uart_obj.h"
 
 #include "board/emsk/emsk.h"

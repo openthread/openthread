@@ -1,5 +1,5 @@
 /* ------------------------------------------
- * Copyright (c) 2016, Synopsys, Inc. All rights reserved.
+ * Copyright (c) 2017, Synopsys, Inc. All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
@@ -26,64 +26,56 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * \version 2016.05
- * \date 2014-07-03
- * \author Huaqi Fang(Huaqi.Fang@synopsys.com)
+ * \version 2017.03
+ * \date 2016-01-20
+ * \author Wayne Ren(Wei.Ren@synopsys.com)
 --------------------------------------------- */
-/**
- * \file
- * \ingroup	BOARD_EMSK_DRV_DW_UART_OBJ
- * \brief	header file of designware uart object instantiation on emsk
- */
 
-/**
- * \addtogroup	BOARD_EMSK_DRV_DW_UART_OBJ
- * @{
- */
-#ifndef _DW_UART_OBJ_H_
-#define _DW_UART_OBJ_H_
+#ifndef _FATFS_DIRENT_H_
+#define _FATFS_DIRENT_H_
 
-#include "device/device_hal/inc/dev_uart.h"
+#include "board/board.h"
+#include <sys/stat.h>
 
-/**
- * \name	DesignWare UART Object Number
- * @{
- */
-#define DW_UART_NUM	(2)	/*!< DesignWare UART valid number */
-/** @} end of name */
-
-/**
- * \name	Designware UART Object ID Macros
- * @{
- */
-#define DW_UART_0_ID	0	/*!< uart 0 id macro */
-#define DW_UART_1_ID	1	/*!< uart 1 id macro */
-/** @} end of name */
-
-/**
- * \name	Designware UART Object Control Macros
- * @{
- */
-#define USE_DW_UART_0	1     	/*!< enable use designware uart 0 */
-#define USE_DW_UART_1	1     	/*!< enable use designware uart 1 */
-/** @} end of name */
-
-/**
- * \name	Designware UART Ringbuffer Size Control Macros
- * @{
- */
-#define MAX_SNDBUF_SIZE	256	/*!< max size of uart send buffer */
-#define MAX_RCVBUF_SIZE	10	/*!< max size of uart recv buffer */
-/** @} end of name */
+#ifndef MID_FATFS
+#error "FatFs should be enabled"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-extern void dw_uart_all_install(void);
+#if _USE_LFN
+#define MAXNAMLEN	_MAX_LFN
+#else
+#define MAXNAMLEN	64
+#endif
+
+struct fatfs_stat {
+	FILINFO	fatfs_filinfo;
+	unsigned char st_mode;
+};
+
+struct dirent {
+	unsigned short d_namlen;        /* length of string in d_name */
+        char d_name[MAXNAMLEN + 1]; 	/* name (up to MAXNAMLEN + 1) */
+};
+
+
+typedef struct {
+	DIR dir; /* FatFS DIR struct */
+	struct dirent d_dirent;
+} FATFS_DIR;
+
+extern FATFS_DIR *opendir(const char* path);
+extern struct dirent *readdir(FATFS_DIR* dp);
+extern int closedir(FATFS_DIR* dp);
+extern int fatfs_stat(const char* path, struct fatfs_stat *buf);
+
+#define FATFS_S_ISREG(m) (m == 0)
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _DW_UART_OBJ_H_ */
+#endif /*_FATFS_DIRENT_H_*/

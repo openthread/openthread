@@ -60,6 +60,7 @@
 /** @cond EXCEPTION_ASM */
 
 #define __ASSEMBLY__
+#include "embARC_BSP_config.h"
 #include "../inc/arc/arc.h"
 #include "../inc/arc/arc_asm_common.h"
 

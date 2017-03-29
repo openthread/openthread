@@ -41,6 +41,7 @@
 #ifndef _ARC_HAL_ASM_COMMON_H_
 #define _ARC_HAL_ASM_COMMON_H_
 
+#include "embARC_BSP_config.h"
 #include "arc_feature_config.h"
 
 /* Note on the LD/ST addr modes with addr reg wback

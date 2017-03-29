@@ -44,10 +44,10 @@
 /** @cond STARTUP_ASM */
 
 #define __ASSEMBLY__
-#include "../inc/arc/arc.h"
-#include "../inc/common_config.h"
+#include "embARC_BSP_config.h"
+#include "inc/arc/arc.h"
 
-.file "arc_startup.S"
+	.file "arc_startup.S"
 
 .weak	_f_sdata		/* start of small data, defined in link script */
 .weak	init_hardware_hook	/* app hardware init hook */

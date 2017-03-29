@@ -47,7 +47,7 @@
 #include "inc/embARC_error.h"
 #include "inc/arc/arc_exception.h"
 
-#include "board/emsk/gpio/dw_gpio.h"
+#include "device/designware/gpio/dw_gpio.h"
 
 /** check expressions used in DesignWare GPIO driver implementation */
 #define DW_GPIO_CHECK_EXP(EXPR, ERROR_CODE)		CHECK_EXP(EXPR, ercd, ERROR_CODE, error_exit)

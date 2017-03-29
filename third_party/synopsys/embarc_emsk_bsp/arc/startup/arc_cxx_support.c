@@ -46,7 +46,7 @@
  * \date 2016-03-02
  * \author Wayne Ren(wei.ren@synopsys.com)
 --------------------------------------------- */
-
+#include "embARC_BSP_config.h"
 #if defined(__GNU__)
 /* embARC's GNU C++ support takes reference from Zephyr (cpp_xxx.c) */
 
