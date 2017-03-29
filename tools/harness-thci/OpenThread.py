@@ -44,6 +44,7 @@ from GRLLibs.UtilityModules.Test import Thread_Device_Role, Device_Data_Requirem
 from GRLLibs.UtilityModules.enums import PlatformDiagnosticPacket_Direction, PlatformDiagnosticPacket_Type
 from GRLLibs.UtilityModules.ModuleHelper import ModuleHelper, ThreadRunner
 from GRLLibs.ThreadPacket.PlatformPackets import PlatformDiagnosticPacket, PlatformPackets
+from GRLLibs.UtilityModules.Plugins.AES_CMAC import Thread_PBKDF2
 
 LINESEPX = re.compile(r'\r\n|\n')
 """regex: used to split lines"""
@@ -2229,7 +2230,8 @@ class OpenThread(IThci):
 
             if sPSKc != None:
                 cmd += '0410'
-                pskc = sPSKc[::-1].encode('hex')
+                stretchedPskc = Thread_PBKDF2.get(sPSKc,ModuleHelper.Default_XpanId,ModuleHelper.Default_NwkName)
+                pskc = hex(stretchedPskc).rstrip('L').lstrip('0x')
 
                 if len(pskc) < 32:
                     pskc = pskc.zfill(32)
@@ -2538,4 +2540,8 @@ class OpenThread(IThci):
         return self.__sendCommand(cmd)[0] == 'Done'
 
     def ValidateDeviceFirmware(self):
-        pass
+        print '%s call ValidateDeviceFirmware' % self.port
+        if "OPENTHREAD" in self.getVersionNumber():
+           return True
+        else:
+           return False
