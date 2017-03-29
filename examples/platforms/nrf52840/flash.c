@@ -31,9 +31,9 @@
 #include <assert.h>
 
 #include <openthread/types.h>
-#include <common/code_utils.hpp>
 #include <openthread/platform/alarm.h>
 #include <utils/flash.h>
+#include <utils/code_utils.h>
 
 #include "hal/nrf_nvmc.h"
 #include "platform-nrf5.h"
@@ -68,7 +68,7 @@ uint32_t utilsFlashGetSize(void)
 ThreadError utilsFlashErasePage(uint32_t aAddress)
 {
     ThreadError error = kThreadError_None;
-    VerifyOrExit(aAddress < utilsFlashGetSize(), error = kThreadError_InvalidArgs);
+    otEXPECT_ACTION(aAddress < utilsFlashGetSize(), error = kThreadError_InvalidArgs);
 
     nrf_nvmc_page_erase(mapAddress(aAddress & FLASH_PAGE_ADDR_MASK));
 
@@ -108,8 +108,8 @@ ThreadError utilsFlashStatusWait(uint32_t aTimeout)
 uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
     uint32_t result = 0;
-    VerifyOrExit(aData, ;);
-    VerifyOrExit(aAddress < utilsFlashGetSize(), ;);
+    otEXPECT(aData);
+    otEXPECT(aAddress < utilsFlashGetSize());
 
     nrf_nvmc_write_bytes(mapAddress(aAddress), aData, aSize);
     result = aSize;
@@ -121,8 +121,8 @@ exit:
 uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
     uint32_t result = 0;
-    VerifyOrExit(aData, ;);
-    VerifyOrExit(aAddress < utilsFlashGetSize(), ;);
+    otEXPECT(aData);
+    otEXPECT(aAddress < utilsFlashGetSize());
 
     memcpy(aData, (uint8_t *)mapAddress(aAddress), aSize);
     result = aSize;

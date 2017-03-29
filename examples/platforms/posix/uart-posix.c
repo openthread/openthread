@@ -40,7 +40,7 @@
 
 #include "openthread/platform/uart.h"
 
-#include <common/code_utils.hpp>
+#include <utils/code_utils.h>
 
 #ifdef OPENTHREAD_TARGET_LINUX
 #include <sys/prctl.h>
@@ -103,7 +103,7 @@ ThreadError otPlatUartEnable(void)
     if (isatty(s_in_fd))
     {
         // get current configuration
-        VerifyOrExit(tcgetattr(s_in_fd, &termios) == 0, perror("tcgetattr"); error = kThreadError_Error);
+        otEXPECT_ACTION(tcgetattr(s_in_fd, &termios) == 0, perror("tcgetattr"); error = kThreadError_Error);
 
         // Set up the termios settings for raw mode. This turns
         // off input/output processing, line processing, and character processing.
@@ -119,16 +119,16 @@ ThreadError otPlatUartEnable(void)
         termios.c_cc[VTIME] = 0;
 
         // configure baud rate
-        VerifyOrExit(cfsetispeed(&termios, B115200) == 0, perror("cfsetispeed"); error = kThreadError_Error);
+        otEXPECT_ACTION(cfsetispeed(&termios, B115200) == 0, perror("cfsetispeed"); error = kThreadError_Error);
 
         // set configuration
-        VerifyOrExit(tcsetattr(s_in_fd, TCSANOW, &termios) == 0, perror("tcsetattr"); error = kThreadError_Error);
+        otEXPECT_ACTION(tcsetattr(s_in_fd, TCSANOW, &termios) == 0, perror("tcsetattr"); error = kThreadError_Error);
     }
 
     if (isatty(s_out_fd))
     {
         // get current configuration
-        VerifyOrExit(tcgetattr(s_out_fd, &termios) == 0, perror("tcgetattr"); error = kThreadError_Error);
+        otEXPECT_ACTION(tcgetattr(s_out_fd, &termios) == 0, perror("tcgetattr"); error = kThreadError_Error);
 
         // Set up the termios settings for raw mode. This turns
         // off input/output processing, line processing, and character processing.
@@ -141,10 +141,10 @@ ThreadError otPlatUartEnable(void)
         termios.c_cflag |= HUPCL | CREAD | CLOCAL;
 
         // configure baud rate
-        VerifyOrExit(cfsetospeed(&termios, B115200) == 0, perror("cfsetospeed"); error = kThreadError_Error);
+        otEXPECT_ACTION(cfsetospeed(&termios, B115200) == 0, perror("cfsetospeed"); error = kThreadError_Error);
 
         // set configuration
-        VerifyOrExit(tcsetattr(s_out_fd, TCSANOW, &termios) == 0, perror("tcsetattr"); error = kThreadError_Error);
+        otEXPECT_ACTION(tcsetattr(s_out_fd, TCSANOW, &termios) == 0, perror("tcsetattr"); error = kThreadError_Error);
     }
 
     return error;
@@ -169,7 +169,7 @@ ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(s_write_length == 0, error = kThreadError_Busy);
+    otEXPECT_ACTION(s_write_length == 0, error = kThreadError_Busy);
 
     s_write_buffer = aBuf;
     s_write_length = aBufLength;
