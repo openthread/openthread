@@ -1009,13 +1009,22 @@ otLwfEventWorkerThread(
                     if (try_spinel_datatype_unpack(
                             Event->Buffer + offset,
                             length,
-                            "ccSiCC",
+                            SPINEL_DATATYPE_INT8_S
+                            SPINEL_DATATYPE_INT8_S
+                            SPINEL_DATATYPE_UINT16_S
+                            SPINEL_DATATYPE_STRUCT_S( // PHY-data
+                                SPINEL_DATATYPE_UINT8_S // 802.15.4 channel
+                                SPINEL_DATATYPE_UINT8_S // 802.15.4 LQI
+                            )
+                            SPINEL_DATATYPE_STRUCT_S( // Vendor-data
+                                SPINEL_DATATYPE_UINT_PACKED_S
+                            ),
                             &pFilter->otReceiveFrame.mPower,
                             &noiseFloor,
                             &flags,
-                            &errorCode,
                             &pFilter->otReceiveFrame.mChannel,
-                            &pFilter->otReceiveFrame.mLqi))
+                            &pFilter->otReceiveFrame.mLqi,
+                            &errorCode))
                     {
                         otLwfRadioReceiveFrame(pFilter, errorCode);
                     }

@@ -61,6 +61,8 @@ otLwfCmdInitialize(
 {
     NDIS_STATUS Status = NDIS_STATUS_SUCCESS;
     NTSTATUS NtStatus = STATUS_SUCCESS;
+    uint32_t MajorVersion = 0;
+    uint32_t MinorVersion = 0;
     uint32_t InterfaceType = 0;
 
     NET_BUFFER_LIST_POOL_PARAMETERS PoolParams =
@@ -107,7 +109,7 @@ otLwfCmdInitialize(
         pFilter->cmdInitTryCount = 0;
         while (pFilter->cmdInitTryCount < 10)
         {
-            NtStatus = otLwfCmdGetProp(pFilter, NULL, SPINEL_PROP_INTERFACE_TYPE, SPINEL_DATATYPE_UINT_PACKED_S, &InterfaceType);
+            NtStatus = otLwfCmdGetProp(pFilter, NULL, SPINEL_PROP_PROTOCOL_VERSION, "ii", &MajorVersion, &MinorVersion);
             if (!NT_SUCCESS(NtStatus))
             {
                 pFilter->cmdInitTryCount++;
@@ -119,10 +121,27 @@ otLwfCmdInitialize(
         if (pFilter->cmdInitTryCount >= 10)
         {
 #else
-        NtStatus = otLwfCmdGetProp(pFilter, NULL, SPINEL_PROP_INTERFACE_TYPE, SPINEL_DATATYPE_UINT_PACKED_S, &InterfaceType);
+        NtStatus = otLwfCmdGetProp(pFilter, NULL, SPINEL_PROP_PROTOCOL_VERSION, "ii", &MajorVersion, &MinorVersion);
         if (!NT_SUCCESS(NtStatus))
         {
 #endif
+            Status = NDIS_STATUS_NOT_SUPPORTED;
+            LogError(DRIVER_DEFAULT, "Failed to query SPINEL_PROP_PROTOCOL_VERSION, %!STATUS!", NtStatus);
+            break;
+        }
+        if (MajorVersion != SPINEL_PROTOCOL_VERSION_THREAD_MAJOR ||
+            MinorVersion != SPINEL_PROTOCOL_VERSION_THREAD_MINOR)
+        {
+            Status = NDIS_STATUS_NOT_SUPPORTED;
+            LogError(DRIVER_DEFAULT, "Protocol Version Mismatch! OsVer: %d.%d DeviceVer: %d.%d",
+                     SPINEL_PROTOCOL_VERSION_THREAD_MAJOR, SPINEL_PROTOCOL_VERSION_THREAD_MINOR,
+                     MajorVersion, MinorVersion);
+            break;
+        }
+
+        NtStatus = otLwfCmdGetProp(pFilter, NULL, SPINEL_PROP_INTERFACE_TYPE, SPINEL_DATATYPE_UINT_PACKED_S, &InterfaceType);
+        if (!NT_SUCCESS(NtStatus))
+        {
             Status = NDIS_STATUS_NOT_SUPPORTED;
             LogError(DRIVER_DEFAULT, "Failed to query SPINEL_PROP_INTERFACE_TYPE, %!STATUS!", NtStatus);
             break;
@@ -931,7 +950,9 @@ otLwfCmdSendMacFrameAsync(
             SPINEL_CMD_PROP_VALUE_SET,
             SPINEL_PROP_STREAM_RAW,
             Packet->mLength + 20,
-            "DCc",
+            SPINEL_DATATYPE_DATA_WLEN_S
+            SPINEL_DATATYPE_UINT8_S
+            SPINEL_DATATYPE_INT8_S,
             Packet->mPsdu,
             (uint32_t)Packet->mLength,
             Packet->mChannel,
