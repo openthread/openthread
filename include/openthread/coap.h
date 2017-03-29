@@ -349,7 +349,7 @@ const uint8_t *otCoapHeaderGetToken(const otCoapHeader *aHeader);
  *
  * @param[in]  aHeader  A pointer to the CoAP header.
  *
- * @returns A pointer to the first option. If no more options are present NULL pointer is returned.
+ * @returns A pointer to the first option. If no option is present NULL pointer is returned.
  *
  */
 const otCoapOption *otCoapHeaderGetFirstOption(otCoapHeader *aHeader);
