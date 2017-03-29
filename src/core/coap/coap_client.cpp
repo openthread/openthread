@@ -87,7 +87,7 @@ ThreadError Client::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMess
     Message *storedCopy = NULL;
     uint16_t copyLength = 0;
 
-    SuccessOrExit(error = header.FromMessage(aMessage, false));
+    SuccessOrExit(error = header.FromMessage(aMessage, 0));
 
     // Set Message Id if it was not already set.
     if (header.GetMessageId() == 0)
@@ -335,7 +335,7 @@ Message *Client::FindRelatedRequest(const Header &aResponseHeader, const Ip6::Me
              aRequestMetadata.mDestinationAddress.IsAnycastRoutingLocator()) &&
             (aRequestMetadata.mDestinationPort == aMessageInfo.GetPeerPort()))
         {
-            assert(aRequestHeader.FromMessage(*message, true) == kThreadError_None);
+            assert(aRequestHeader.FromMessage(*message, sizeof(RequestMetadata)) == kThreadError_None);
 
             switch (aResponseHeader.GetType())
             {
@@ -387,7 +387,7 @@ void Client::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &a
     Message *message = NULL;
     ThreadError error;
 
-    SuccessOrExit(error = responseHeader.FromMessage(aMessage, false));
+    SuccessOrExit(error = responseHeader.FromMessage(aMessage, 0));
     aMessage.MoveOffset(responseHeader.GetLength());
 
     message = FindRelatedRequest(responseHeader, aMessageInfo, requestHeader, requestMetadata);

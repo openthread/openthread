@@ -29,13 +29,14 @@
 #pragma once
 
 #include "MainPage.g.h"
+#include "IMainPageUIElements.h"
 
 namespace Thread
 {
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public ref class MainPage sealed
+    public ref class MainPage sealed : public IMainPageUIElements
     {
     public:
         MainPage();
@@ -46,7 +47,17 @@ namespace Thread
         void ShowInterfaceDetails(otAdapter^ adapter);
         void DisconnectNetwork(otAdapter^ adapter);
 
-    protected:
+        property Windows::UI::Xaml::UIElement^ ThreadGrid
+        {
+            virtual Windows::UI::Xaml::UIElement^ get();
+        }
+        
+        property Windows::UI::Xaml::UIElement^ TalkGrid
+        {
+           virtual Windows::UI::Xaml::UIElement^ get();
+        }
+
+        protected:
         virtual void OnNavigatedTo(Windows::UI::Xaml::Navigation::NavigationEventArgs^ e) override;
 
     private:

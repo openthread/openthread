@@ -41,6 +41,7 @@
 #include <openthread-core-config.h>
 
 #include "openthread/types.h"
+#include "openthread/platform/logging.h"
 
 #include <crypto/mbedtls.hpp>
 #include <net/ip6.hpp>
@@ -87,6 +88,10 @@ typedef struct otInstance
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     Thread::Coap::Server mApplicationCoapServer;
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
+
+#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+    otLogLevel mLogLevel;
+#endif // OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
 
     // Constructor
     otInstance(void);

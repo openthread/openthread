@@ -76,11 +76,11 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mLastPartitionRouterIdSequence(0),
     mLastPartitionId(0),
     mParentRequestMode(kMleAttachAnyPartition),
-    mParentLinkQuality(0),
     mParentPriority(0),
     mParentLinkQuality3(0),
     mParentLinkQuality2(0),
     mParentLinkQuality1(0),
+    mChildUpdateAttempts(0),
     mParentIsSingleton(false),
     mSocket(aThreadNetif.GetIp6().mUdp),
     mTimeout(kMleEndDeviceTimeout),
@@ -202,7 +202,7 @@ exit:
     return error;
 }
 
-ThreadError Mle::Start(bool aEnableReattach)
+ThreadError Mle::Start(bool aEnableReattach, bool aAnnounceAttach)
 {
     ThreadError error = kThreadError_None;
 
@@ -223,7 +223,7 @@ ThreadError Mle::Start(bool aEnableReattach)
         mReattachState = kReattachStart;
     }
 
-    if (GetRloc16() == Mac::kShortAddrInvalid)
+    if (aAnnounceAttach || (GetRloc16() == Mac::kShortAddrInvalid))
     {
         BecomeChild(kMleAttachAnyPartition);
     }
@@ -476,6 +476,11 @@ ThreadError Mle::BecomeChild(otMleAttachFilter aFilter)
     if (aFilter != kMleAttachBetterPartition)
     {
         memset(&mParent, 0, sizeof(mParent));
+
+        if (mDeviceMode & ModeTlv::kModeFFD)
+        {
+            mNetif.GetMle().StopAdvertiseTimer();
+        }
     }
 
     if (aFilter == kMleAttachAnyPartition)
@@ -487,7 +492,7 @@ ThreadError Mle::BecomeChild(otMleAttachFilter aFilter)
 
     mNetif.GetMeshForwarder().SetRxOnWhenIdle(true);
 
-    mParentRequestTimer.Start(kParentRequestRouterTimeout);
+    mParentRequestTimer.Start((otPlatRandomGet() % kParentRequestRouterTimeout) + 1);
 
 exit:
     otLogFuncExitErr(error);
@@ -562,7 +567,9 @@ ThreadError Mle::SetStateChild(uint16_t aRloc16)
     mNetif.GetIp6().SetForwardingEnabled(false);
     mNetif.GetIp6().mMpl.SetTimerExpirations(kMplChildDataMessageTimerExpirations);
 
-    if (mPreviousPanId != Mac::kPanIdBroadcast && (mDeviceMode & ModeTlv::kModeFFD))
+    // Once the Thread device receives the new Active Commissioning Dataset, the device MUST
+    // transmit its own Announce messages on the channel it was on prior to the attachment.
+    if (mPreviousPanId != Mac::kPanIdBroadcast)
     {
         mPreviousPanId = Mac::kPanIdBroadcast;
         mNetif.GetAnnounceBeginServer().SendAnnounce(1 << mPreviousChannel);
@@ -2448,12 +2455,6 @@ ThreadError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInf
         mNetif.GetPendingDataset().Clear(false);
     }
 
-    if (mPreviousPanId != Mac::kPanIdBroadcast && ((mDeviceMode & ModeTlv::kModeFFD) == 0))
-    {
-        mPreviousPanId = Mac::kPanIdBroadcast;
-        mNetif.GetAnnounceBeginServer().SendAnnounce(1 << mPreviousChannel);
-    }
-
     mRetrieveNewNetworkData = false;
 
 exit:
@@ -2472,13 +2473,17 @@ exit:
     return error;
 }
 
-bool Mle::IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, ConnectivityTlv &aConnectivityTlv) const
+bool Mle::IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, ConnectivityTlv &aConnectivityTlv)
 {
     bool rval = false;
 
-    if (aLinkQuality != mParentLinkQuality)
+    uint8_t candidateLinkQualityIn = mParentCandidate.mLinkInfo.GetLinkQuality(mNetif.GetMac().GetNoiseFloor());
+    uint8_t candidateTwoWayLinkQuality = (candidateLinkQualityIn < mParentCandidate.mLinkQualityOut)
+                                         ?  candidateLinkQualityIn : mParentCandidate.mLinkQualityOut;
+
+    if (aLinkQuality != candidateTwoWayLinkQuality)
     {
-        ExitNow(rval = (aLinkQuality > mParentLinkQuality));
+        ExitNow(rval = (aLinkQuality > candidateTwoWayLinkQuality));
     }
 
     if (IsActiveRouter(aRloc16) != IsActiveRouter(mParentCandidate.mValid.mRloc16))
@@ -2639,14 +2644,15 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
     mParentCandidate.mLinkInfo.Clear();
     mParentCandidate.mLinkInfo.AddRss(mNetif.GetMac().GetNoiseFloor(), threadMessageInfo->mRss);
     mParentCandidate.mLinkFailures = 0;
+    mParentCandidate.mLinkQualityOut = LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMarginTlv.GetLinkMargin());
     mParentCandidate.mState = Neighbor::kStateValid;
     mParentCandidate.mKeySequence = aKeySequence;
 
-    mParentLinkQuality = linkQuality;
     mParentPriority = connectivity.GetParentPriority();
     mParentLinkQuality3 = connectivity.GetLinkQuality3();
     mParentLinkQuality2 = connectivity.GetLinkQuality2();
     mParentLinkQuality1 = connectivity.GetLinkQuality1();
+    mParentLeaderCost = connectivity.GetLeaderCost();
     mParentLeaderData = leaderData;
     mParentIsSingleton = connectivity.GetActiveRouters() <= 1;
 
@@ -2993,7 +2999,7 @@ ThreadError Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo 
         mPreviousPanId = mNetif.GetMac().GetPanId();
         mNetif.GetMac().SetChannel(static_cast<uint8_t>(channel.GetChannel()));
         mNetif.GetMac().SetPanId(panid.GetPanId());
-        Start(false);
+        Start(false, true);
     }
     else
     {

@@ -70,15 +70,18 @@ LinkQualityInfo::LinkQualityInfo(void)
 
 void LinkQualityInfo::Clear(void)
 {
-    mRssAverage = 0;
-    mCount = 0;
+    mRssAverage  = 0;
+    mCount       = 0;
     mLinkQuality = 0;
+    mLastRss     = 0;
 }
 
 void LinkQualityInfo::AddRss(LinkQualityInfo &aNoiseFloor, int8_t anRss)
 {
     uint16_t    newValue;
     uint16_t    oldAverage;
+
+    mLastRss = anRss;
 
     // Restrict/Cap the RSS value to the closed range [0, -128] so the value can fit in 8 bits.
 
@@ -153,20 +156,18 @@ ThreadError LinkQualityInfo::GetAverageRssAsString(char *aCharBuffer, size_t aBu
 
     if (mCount == 0)
     {
-        VerifyOrExit(aBufferLen >= sizeof(kUnknownRssString), error = kThreadError_NoBufs);
-
-        strncpy(aCharBuffer, kUnknownRssString, aBufferLen);
+        charsWritten = static_cast<int>(strlcpy(aCharBuffer, kUnknownRssString, aBufferLen));
     }
     else
     {
         charsWritten = snprintf(aCharBuffer, aBufferLen, "%d.%s dBm",
                                 -(mRssAverage >> kRssAveragePrecisionMultipleBitShift),
                                 kLinkQualityDecimalDigitsString[mRssAverage & kRssAveragePrecisionMultipleBitMask]);
-
-        VerifyOrExit(charsWritten >= 0, error = kThreadError_NoBufs);
-
-        VerifyOrExit(static_cast<size_t>(charsWritten) < aBufferLen, error = kThreadError_NoBufs);
     }
+
+    VerifyOrExit(charsWritten >= 0, error = kThreadError_NoBufs);
+
+    VerifyOrExit(charsWritten < static_cast<int>(aBufferLen), error = kThreadError_NoBufs);
 
 exit:
     return error;
@@ -182,6 +183,11 @@ uint8_t LinkQualityInfo::GetLinkQuality(LinkQualityInfo &aNoiseFloor)
     UpdateLinkQuality(aNoiseFloor);
 
     return mLinkQuality;
+}
+
+int8_t LinkQualityInfo::GetLastRss(void) const
+{
+    return mLastRss;
 }
 
 void LinkQualityInfo::UpdateLinkQuality(LinkQualityInfo &aNoiseFloor)

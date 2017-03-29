@@ -33,6 +33,12 @@
 
 #define WPP_NAME "instance_api.tmh"
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include "openthread/instance.h"
 #include "openthread/platform/misc.h"
 #include "openthread/platform/settings.h"
@@ -59,8 +65,11 @@ otInstance::otInstance(void) :
     , mLinkRaw(*this)
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
-    , mApplicationCoapServer(mIp6.mUdp, OT_DEFAULT_COAP_PORT)
+    , mApplicationCoapServer(mThreadNetif, OT_DEFAULT_COAP_PORT)
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+    , mLogLevel(static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL))
+#endif // OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
 {
 }
 
@@ -211,6 +220,35 @@ ThreadError otInstanceErasePersistentInfo(otInstance *aInstance)
     otPlatSettingsWipe(aInstance);
 
 exit:
+    return error;
+}
+
+otLogLevel otGetDynamicLogLevel(otInstance *aInstance)
+{
+    otLogLevel logLevel;
+
+#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+    logLevel =  aInstance->mLogLevel;
+#else
+    logLevel = static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL);
+    (void)aInstance;
+#endif
+
+    return logLevel;
+}
+
+ThreadError otSetDynamicLogLevel(otInstance *aInstance, otLogLevel aLogLevel)
+{
+    ThreadError error = kThreadError_None;
+
+#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+    aInstance->mLogLevel = aLogLevel;
+#else
+    error = kThreadError_NotCapable;
+    (void)aInstance;
+    (void)aLogLevel;
+#endif
+
     return error;
 }
 

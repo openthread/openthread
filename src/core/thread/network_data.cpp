@@ -300,7 +300,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
                 continue;
             }
 
-            otDumpDebgNetData("remove prefix done", mTlvs, mLength);
+            otDumpDebgNetData(GetInstance(), "remove prefix done", mTlvs, mLength);
             break;
         }
 
@@ -324,7 +324,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
         cur = cur->GetNext();
     }
 
-    otDumpDebgNetData("remove done", aData, aDataLength);
+    otDumpDebgNetData(GetInstance(), "remove done", aData, aDataLength);
 }
 
 void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, PrefixTlv &aPrefix)

@@ -289,6 +289,8 @@ ThreadError NcpSpi::PrepareNextSpiSendFrame(void)
     if (errorCode != kThreadError_None)
     {
         mTxState = kTxStateIdle;
+        mPrepareTxFrameTask.Post();
+        ExitNow();
     }
 
     // Remove the frame from tx buffer and inform the base

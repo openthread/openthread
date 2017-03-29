@@ -41,6 +41,7 @@ AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-joiner                   \
     --enable-dhcp6-client             \
     --enable-dhcp6-server             \
+    --enable-dns-client               \
     $(NULL)
 
 SUBDIRS                             = \

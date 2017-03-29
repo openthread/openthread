@@ -31,6 +31,15 @@
  *   This file implements IEEE 802.15.4 header generation and processing.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
+#include <stdio.h>
+#include <string.h>
+
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <mac/mac_frame.hpp>
@@ -43,6 +52,28 @@ void ExtAddress::Set(const Ip6::Address &aIpAddress)
 {
     memcpy(m8, aIpAddress.GetIid(), sizeof(m8));
     m8[0] ^= 0x02;
+}
+
+const char *Address::ToString(char *aBuf, uint16_t aSize) const
+{
+    switch (mLength)
+    {
+    case sizeof(ShortAddress):
+        snprintf(aBuf, aSize, "0x%04x", mShortAddress);
+        break;
+
+    case sizeof(ExtAddress):
+        snprintf(aBuf, aSize, "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
+                 mExtAddress.m8[0], mExtAddress.m8[1], mExtAddress.m8[2], mExtAddress.m8[3],
+                 mExtAddress.m8[4], mExtAddress.m8[5], mExtAddress.m8[6], mExtAddress.m8[7]);
+        break;
+
+    default:
+        snprintf(aBuf, aSize, "Unknown");
+        break;
+    }
+
+    return aBuf;
 }
 
 ThreadError Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)

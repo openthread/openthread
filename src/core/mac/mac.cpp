@@ -179,7 +179,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mKeyIdMode2FrameCounter = 0;
 }
 
-otInstance *Mac::GetInstance()
+otInstance *Mac::GetInstance(void)
 {
     return mNetif.GetInstance();
 }
@@ -255,6 +255,11 @@ bool Mac::IsActiveScanInProgress(void)
 bool Mac::IsEnergyScanInProgress(void)
 {
     return (mState == kStateEnergyScan) || (mPendingScanRequest == kScanTypeEnergy);
+}
+
+bool Mac::IsInTransmitState(void)
+{
+    return (mState == kStateTransmitData) || (mState == kStateTransmitBeacon);
 }
 
 void Mac::StartEnergyScan(void)
@@ -489,7 +494,7 @@ ThreadError Mac::SetNetworkName(const char *aNetworkName)
 
     VerifyOrExit(strlen(aNetworkName) <= OT_NETWORK_NAME_MAX_SIZE, error = kThreadError_InvalidArgs);
 
-    strncpy(mNetworkName.m8, aNetworkName, sizeof(mNetworkName) - 1);
+    (void)strlcpy(mNetworkName.m8, aNetworkName, sizeof(mNetworkName));
 
 exit:
     otLogFuncExitErr(error);
@@ -1025,6 +1030,9 @@ void Mac::SentFrame(ThreadError aError)
 {
     Frame &sendFrame(*mTxFrame);
     Sender *sender;
+    Address dstAddr;
+
+    mTransmitAttempts++;
 
     switch (aError)
     {
@@ -1033,21 +1041,41 @@ void Mac::SentFrame(ThreadError aError)
 
     case kThreadError_ChannelAccessFailure:
     case kThreadError_Abort:
-        otLogInfoMac(GetInstance(), "Tx failed with error %s (%d)", otThreadErrorToString(aError), aError);
-
-    // Intentional fall through to next case.
-
     case kThreadError_NoAck:
-        otDumpDebgMac("TX ERR", sendFrame.GetHeader(), 16);
+
+        sendFrame.GetDstAddr(dstAddr);
+
+        switch (dstAddr.mLength)
+        {
+        case sizeof(ShortAddress):
+            otLogInfoMac(GetInstance(), "Tx failed - Error: %s (%d) - SeqNum: %d - Attempt %d/%d - Dst (short): %04x",
+                         otThreadErrorToString(aError), aError, sendFrame.GetSequence(), mTransmitAttempts,
+                         sendFrame.GetMaxTxAttempts(), dstAddr.mShortAddress);
+            break;
+
+        case sizeof(ExtAddress):
+            otLogInfoMac(GetInstance(), "Tx failed - Error: %s (%d) - SeqNum: %d - Attempt %d/%d - "
+                         "Dst: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
+                         otThreadErrorToString(aError), aError, sendFrame.GetSequence(), mTransmitAttempts,
+                         sendFrame.GetMaxTxAttempts(), dstAddr.mExtAddress.m8[0], dstAddr.mExtAddress.m8[1],
+                         dstAddr.mExtAddress.m8[2], dstAddr.mExtAddress.m8[3], dstAddr.mExtAddress.m8[4],
+                         dstAddr.mExtAddress.m8[5], dstAddr.mExtAddress.m8[6], dstAddr.mExtAddress.m8[7]);
+            break;
+
+        default:
+            otLogInfoMac(GetInstance(), "Tx failed - Error: %s (%d) - SeqNum: %d - Attempt %d/%d",
+                         otThreadErrorToString(aError), aError, sendFrame.GetSequence(), mTransmitAttempts,
+                         sendFrame.GetMaxTxAttempts());
+            break;
+        }
+
+        otDumpDebgMac(GetInstance(), "TX ERR", sendFrame.GetHeader(), 16);
 
         if (!RadioSupportsRetries() &&
             mTransmitAttempts < sendFrame.GetMaxTxAttempts())
         {
-            mTransmitAttempts++;
             StartCsmaBackoff();
-
             mCounters.mTxRetry++;
-
             ExitNow();
         }
 
@@ -1112,7 +1140,7 @@ void Mac::SentFrame(ThreadError aError)
             mDataSequence++;
         }
 
-        otDumpDebgMac("TX", sendFrame.GetHeader(), sendFrame.GetLength());
+        otDumpDebgMac(GetInstance(), "TX", sendFrame.GetHeader(), sendFrame.GetLength());
         sender->HandleSentFrame(sendFrame, aError);
 
         ScheduleNextTransmission();
@@ -1479,7 +1507,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
 
         if (receive)
         {
-            otDumpDebgMac("RX", aFrame->GetHeader(), aFrame->GetLength());
+            otDumpDebgMac(GetInstance(), "RX", aFrame->GetHeader(), aFrame->GetLength());
 
             for (Receiver *receiver = mReceiveHead; receiver; receiver = receiver->mNext)
             {
@@ -1646,7 +1674,7 @@ otMacCounters &Mac::GetCounters(void)
 void Mac::EnableSrcMatch(bool aEnable)
 {
     otPlatRadioEnableSrcMatch(GetInstance(), aEnable);
-    otLogDebgMac(GetInstance(), "Enable SrcMatch -- %d(0:Dis, 1:En)", aEnable);
+    otLogDebgMac(GetInstance(), "SrcAddrMatch - %s", aEnable ? "Enabling" : "Disabling");
 }
 
 ThreadError Mac::AddSrcMatchEntry(Address &aAddr)
@@ -1656,7 +1684,9 @@ ThreadError Mac::AddSrcMatchEntry(Address &aAddr)
     if (aAddr.mLength == 2)
     {
         error = otPlatRadioAddSrcMatchShortEntry(GetInstance(), aAddr.mShortAddress);
-        otLogDebgMac(GetInstance(), "Adding short address: 0x%x -- %d (0:Ok, 3:NoBufs)", aAddr.mShortAddress, error);
+
+        otLogDebgMac(GetInstance(), "SrcAddrMatch - Adding short address: 0x%04x -- %s (%d)", aAddr.mShortAddress,
+                     otThreadErrorToString(error), error);
     }
     else
     {
@@ -1668,8 +1698,11 @@ ThreadError Mac::AddSrcMatchEntry(Address &aAddr)
         }
 
         error = otPlatRadioAddSrcMatchExtEntry(GetInstance(), buf);
-        otLogDebgMac(GetInstance(), "Adding extended address: 0x%02x%02x%02x%02x%02x%02x%02x%02x -- %d (0:OK, 3:NoBufs)",
-                     buf[7], buf[6], buf[5], buf[4], buf[3], buf[2], buf[1], buf[0], error);
+
+        otLogDebgMac(GetInstance(),
+                     "SrcAddrMatch - Adding extended address: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x -- %s (%d)",
+                     buf[7], buf[6], buf[5], buf[4], buf[3], buf[2], buf[1], buf[0], otThreadErrorToString(error),
+                     error);
     }
 
     return error;
@@ -1682,7 +1715,9 @@ ThreadError Mac::ClearSrcMatchEntry(Address &aAddr)
     if (aAddr.mLength == 2)
     {
         error = otPlatRadioClearSrcMatchShortEntry(GetInstance(), aAddr.mShortAddress);
-        otLogDebgMac(GetInstance(), "Clearing short address: 0x%x -- %d (0:OK, 10:NoAddress)", aAddr.mShortAddress, error);
+
+        otLogDebgMac(GetInstance(), "SrcAddrMatch - Clearing short address: 0x%04x -- %s (%d)", aAddr.mShortAddress,
+                     otThreadErrorToString(error), error);
     }
     else
     {
@@ -1694,8 +1729,11 @@ ThreadError Mac::ClearSrcMatchEntry(Address &aAddr)
         }
 
         error = otPlatRadioClearSrcMatchExtEntry(GetInstance(), buf);
-        otLogDebgMac(GetInstance(), "Clearing extended address: 0x%02x%02x%02x%02x%02x%02x%02x%02x -- %d (0:OK, 10:NoAddress)",
-                     buf[7], buf[6], buf[5], buf[4], buf[3], buf[2], buf[1], buf[0], error);
+
+        otLogDebgMac(GetInstance(),
+                     "SrcAddrMatch - Clearing extended address: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x -- %s (%d)",
+                     buf[7], buf[6], buf[5], buf[4], buf[3], buf[2], buf[1], buf[0], otThreadErrorToString(error),
+                     error);
     }
 
     return error;
@@ -1705,7 +1743,8 @@ void Mac::ClearSrcMatchEntries()
 {
     otPlatRadioClearSrcMatchShortEntries(GetInstance());
     otPlatRadioClearSrcMatchExtEntries(GetInstance());
-    otLogDebgMac(GetInstance(), "Clearing source match table");
+
+    otLogDebgMac(GetInstance(), "SrcAddrMatch - Cleared all entries");
 }
 
 

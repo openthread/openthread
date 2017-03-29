@@ -316,7 +316,8 @@ void Joiner::SendJoinerFinalize(void)
     uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
     VerifyOrExit(message->GetLength() <= sizeof(buf), ;);
     message->Read(header.GetLength(), message->GetLength() - header.GetLength(), buf);
-    otDumpCertMeshCoP("[THCI] direction=send | type=JOIN_FIN.req |", buf, message->GetLength() - header.GetLength());
+    otDumpCertMeshCoP(GetInstance(), "[THCI] direction=send | type=JOIN_FIN.req |", buf,
+                      message->GetLength() - header.GetLength());
 #endif
 
     mNetif.GetSecureCoapClient().SendMessage(*message, Joiner::HandleJoinerFinalizeResponse, this);
@@ -361,7 +362,13 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Header *aHeader, Message *aMessa
     mTimer.Start(kTimeout);
 
     otLogInfoMeshCoP(GetInstance(), "received joiner finalize response %d", static_cast<uint8_t>(state.GetState()));
-    otLogCertMeshCoP(GetInstance(), "[THCI] direction=recv | type=JOIN_FIN.rsp");
+#if OPENTHREAD_ENABLE_CERT_LOG
+    uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
+    VerifyOrExit(aMessage->GetLength() <= sizeof(buf), ;);
+    aMessage->Read(aHeader->GetLength(), aMessage->GetLength() - aHeader->GetLength(), buf);
+    otDumpCertMeshCoP(GetInstance(), "[THCI] direction=recv | type=JOIN_FIN.rsp |", buf,
+                      aMessage->GetLength() - aHeader->GetLength());
+#endif
 
 exit:
     Close();

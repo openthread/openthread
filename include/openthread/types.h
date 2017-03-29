@@ -185,7 +185,7 @@ typedef enum ThreadError
     kThreadError_NotCapable = 29,
 
     /**
-     * Coap response or acknowledgment not received.
+     * Coap response or acknowledgment or DNS response not received.
      */
     kThreadError_ResponseTimeout = 30,
 
@@ -791,6 +791,7 @@ typedef struct
     uint32_t       mMleFrameCounter;       ///< MLE Frame Counter
     uint8_t        mLinkQualityIn;         ///< Link Quality In
     int8_t         mAverageRssi;           ///< Average RSSI
+    int8_t         mLastRssi;              ///< Last observed RSSI
     bool           mRxOnWhenIdle : 1;      ///< rx-on-when-idle
     bool           mSecureDataRequest : 1; ///< Secure Data Requests
     bool           mFullFunction : 1;      ///< Full Function Device
@@ -816,6 +817,7 @@ typedef struct
     uint8_t        mNetworkDataVersion;    ///< Network Data Version
     uint8_t        mLinkQualityIn;         ///< Link Quality In
     int8_t         mAverageRssi;           ///< Average RSSI
+    int8_t         mLastRssi;              ///< Last observed RSSI
     bool           mRxOnWhenIdle : 1;      ///< rx-on-when-idle
     bool           mSecureDataRequest : 1; ///< Secure Data Requests
     bool           mFullFunction : 1;      ///< Full Function Device
@@ -924,6 +926,8 @@ typedef struct otBufferInfo
     uint16_t mArpBuffers;             ///< The number of buffers in the ARP send queue.
     uint16_t mCoapClientMessages;     ///< The number of messages in the CoAP client send queue.
     uint16_t mCoapClientBuffers;      ///< The number of buffers in the CoAP client send queue.
+    uint16_t mCoapServerMessages;     ///< The number of messages in the CoAP server responses queue.
+    uint16_t mCoapServerBuffers;      ///< The number of buffers in the CoAP server responses queue.
 } otBufferInfo;
 
 /**

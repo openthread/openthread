@@ -28,6 +28,7 @@
 
 #include "pch.h"
 #include "MainPage.xaml.h"
+#include "TalkGrid.xaml.h"
 
 using namespace Thread;
 
@@ -82,6 +83,15 @@ MainPage::MainPage() : _otApi(nullptr)
                 this->InterfaceDetails->Visibility = Windows::UI::Xaml::Visibility::Collapsed;
             }
     );
+    Talk->Click +=
+        ref new RoutedEventHandler(
+            [=](Platform::Object^, RoutedEventArgs^) {
+                this->ThreadGrid->Visibility = Windows::UI::Xaml::Visibility::Collapsed;
+                this->TalkGrid->Visibility = Windows::UI::Xaml::Visibility::Visible;
+            }
+    );
+
+    TlkGrid->Init(this);
 }
 
 void MainPage::OnNavigatedTo(NavigationEventArgs^ e)
@@ -151,9 +161,9 @@ void MainPage::ShowInterfaceDetails(otAdapter^ adapter)
 {
     try
     {
-        InterfaceMacAddress->Text = otApi::ToString(adapter->ExtendedAddress);
+        InterfaceMacAddress->Text = otApi::MacToString(adapter->ExtendedAddress);
         InterfaceML_EID->Text = adapter->MeshLocalEid->ToString();
-        InterfaceRLOC->Text = otApi::ToString(adapter->Rloc16);
+        InterfaceRLOC->Text = otApi::Rloc16ToString(adapter->Rloc16);
 
         if (adapter->State > otThreadState::Child)
         {
@@ -249,7 +259,7 @@ void MainPage::AddAdapterToList(otAdapter^ adapter)
             [=]() {
                 GUID interfaceGuid = adapter->InterfaceGuid;
                 auto state = adapter->State;
-                auto stateStr = otApi::ToString(adapter->State);
+                auto stateStr = otApi::ThreadStateToString(adapter->State);
 
                 WCHAR szText[256] = { 0 };
                 swprintf_s(szText, 256, GUID_FORMAT L"\r\n\t%s\r\n\t%s",
@@ -394,4 +404,16 @@ void MainPage::DisconnectNetwork(otAdapter^ adapter)
     {
 
     }
+}
+
+Windows::UI::Xaml::UIElement^
+MainPage::ThreadGrid::get()
+{
+    return ThrdGrid;
+}
+
+Windows::UI::Xaml::UIElement^
+MainPage::TalkGrid::get()
+{
+    return TlkGrid;
 }

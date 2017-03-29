@@ -112,7 +112,7 @@ class Cert_9_2_11_MasterKey(unittest.TestCase):
                                                        active_timestamp=70,
                                                        delay_timer=10000,
                                                        master_key=KEY2)
-        time.sleep(15)
+        time.sleep(310)
 
         print(self.nodes[COMMISSIONER].get_masterkey())
         print(self.nodes[LEADER].get_masterkey())
@@ -135,7 +135,7 @@ class Cert_9_2_11_MasterKey(unittest.TestCase):
                                                        active_timestamp=30,
                                                        delay_timer=10000,
                                                        master_key=KEY1)
-        time.sleep(15)
+        time.sleep(310)
 
         print(self.nodes[COMMISSIONER].get_masterkey())
         print(self.nodes[LEADER].get_masterkey())

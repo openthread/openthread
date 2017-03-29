@@ -624,7 +624,8 @@ ThreadError Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageIn
             break;
 
         case kProtoUdp:
-            if (messageInfo.GetSockAddr().IsLinkLocal())
+            if (messageInfo.GetSockAddr().IsLinkLocal() ||
+                messageInfo.GetSockAddr().IsLinkLocalMulticast())
             {
                 UdpHeader udp;
                 aMessage.Read(aMessage.GetOffset(), sizeof(udp), &udp);
@@ -837,7 +838,7 @@ ThreadError Ip6::ForwardMessage(Message &message, MessageInfo &messageInfo, uint
             break;
 
         case kThreadError_NoRoute:
-            otDumpDebgIp6("no route", &messageInfo.GetSockAddr(), 16);
+            otDumpDebgIp6(GetInstance(), "no route", &messageInfo.GetSockAddr(), 16);
             break;
 
         default:
@@ -1071,6 +1072,56 @@ exit:
 otInstance *Ip6::GetInstance(void)
 {
     return otInstanceFromIp6(this);
+}
+
+const char *Ip6::IpProtoToString(IpProto aIpProto)
+{
+    const char *retval;
+
+    switch (aIpProto)
+    {
+    case kProtoHopOpts:
+        retval = "HopOpts";
+        break;
+
+    case kProtoTcp:
+        retval = "TCP";
+        break;
+
+    case kProtoUdp:
+        retval = "UDP";
+        break;
+
+    case kProtoIp6:
+        retval = "IP6";
+        break;
+
+    case kProtoRouting:
+        retval = "Routing";
+        break;
+
+    case kProtoFragment:
+        retval = "Frag";
+        break;
+
+    case kProtoIcmp6:
+        retval = "ICMP6";
+        break;
+
+    case kProtoNone:
+        retval = "None";
+        break;
+
+    case kProtoDstOpts:
+        retval = "DstOpts";
+        break;
+
+    default:
+        retval = "Unknown";
+        break;
+    }
+
+    return retval;
 }
 
 }  // namespace Ip6

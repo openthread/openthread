@@ -227,7 +227,7 @@ public:
      * @returns The pointer to the parent otInstance structure.
      *
      */
-    otInstance *GetInstance();
+    otInstance *GetInstance(void);
 
     /**
      * This function pointer is called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
@@ -501,6 +501,16 @@ public:
      *
      */
     bool IsEnergyScanInProgress(void);
+
+    /**
+     * This method returns if the MAC layer is in transmit state.
+     *
+     * The MAC layer is in transmit state during CSMA/CA, CCA, transmission of Data, Beacon or Data Request frames and
+     * receiving of ACK frames. The MAC layer is not in transmit state during transmission of ACK frames or Beacon
+     * Requests.
+     *
+     */
+    bool IsInTransmitState(void);
 
     /**
      * This method registers a callback to provide received raw IEEE 802.15.4 frames.

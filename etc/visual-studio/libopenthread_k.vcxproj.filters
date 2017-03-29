@@ -31,6 +31,9 @@
     <Filter Include="Source Files\utils">
       <UniqueIdentifier>{A0D2E990-DC5E-4B56-A552-888F97214A17}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\missing">
+      <UniqueIdentifier>{F0DDA90-D13F-4B56-A552-328F97124A81}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Header Files">
       <UniqueIdentifier>{b4905c15-9702-4ff0-8d57-e7926337d50f}</UniqueIdentifier>
     </Filter>
@@ -63,6 +66,9 @@
     </Filter>
     <Filter Include="Header Files\openthread">
       <UniqueIdentifier>{2b66635d-fb09-421b-9942-8c43df5c8c77}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\missing">
+      <UniqueIdentifier>{971969f2-f6ec-50b4-806a-97965c934cef}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -287,6 +293,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\core\common\crc16.cpp">
       <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\missing\strlcpy\strlcpy.c">
+      <Filter>Source Files\missing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\missing\strlcat\strlcat.c">
+      <Filter>Source Files\missing</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -601,6 +613,12 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\api\link_raw.hpp">
       <Filter>Header Files\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\missing\strlcpy\strlcpy.h">
+      <Filter>Header Files\missing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\missing\strlcat\strlcat.h">
+      <Filter>Header Files\missing</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

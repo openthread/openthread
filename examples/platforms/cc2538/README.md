@@ -25,7 +25,7 @@ $ make -f examples/Makefile-cc2538
 ```
 
 After a successful build, the `elf` files are found in
-`<path-to-openthread>/output/bin`.  You can convert them to `bin`
+`<path-to-openthread>/output/cc2538/bin`.  You can convert them to `bin`
 files using `arm-none-eabi-objcopy`:
 ```bash
 $ arm-none-eabi-objcopy -O binary arm-none-eabi-ot-cli-ftd arm-none-eabi-ot-cli-ftd.bin

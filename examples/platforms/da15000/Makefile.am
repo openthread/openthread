@@ -54,7 +54,7 @@ libopenthread_da15000_a_CPPFLAGS                                                
     -fno-strict-aliasing                                                                  \
     $(NULL)
 
-libopenthread_da15000_a_SOURCES                                                         = \
+PLATFORM_SOURCES                                                                        = \
     alarm.c                                                                               \
     flash.c                                                                               \
     logging.c                                                                             \
@@ -68,6 +68,9 @@ libopenthread_da15000_a_SOURCES                                                 
     startup-gcc.c                                                                         \
     clock.c                                                                               \
     misc.c                                                                                \
+    $(NULL)
+
+DIALOG_SOURCES                                                                          = \
     @top_builddir@/third_party/dialog/DialogSDK/bsp/memory/src/qspi_automode.c            \
     @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_qspi.c             \
     @top_builddir@/third_party/dialog/DialogSDK/bsp/peripherals/src/hw_timer0.c           \
@@ -90,9 +93,18 @@ libopenthread_da15000_a_SOURCES                                                 
     @top_builddir@/third_party/dialog/DialogSDK/interfaces/ftdf/src/main.c                \
     $(NULL)
 
+libopenthread_da15000_a_SOURCES                                                         = \
+    $(PLATFORM_SOURCES)                                                                   \
+    $(DIALOG_SOURCES)                                                                     \
+    $(NULL)
+
 noinst_HEADERS                                                                          = \
     custom_config_qspi.h                                                                  \
     platform-da15000.h                                                                    \
+    $(NULL)
+
+PRETTY_FILES                                                                            = \
+    $(PLATFORM_SOURCES)                                                                   \
     $(NULL)
 
 Dash                                                                                    = -

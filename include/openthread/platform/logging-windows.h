@@ -112,7 +112,7 @@
 // USEPREFIX(LogFuncExitNDIS, "<--- %!FUNC!");
 // FUNC LogFuncExitNDIS{LEVEL=TRACE_LEVEL_VERBOSE}(FLAGS, EXP);
 // USESUFFIX(LogFuncExitNDIS, " %!NDIS_STATUS!", EXP);
-// end_wpp  
+// end_wpp
 
 // begin_wpp config
 // USEPREFIX(LogFuncExitWIN, "<--- %!FUNC!");
@@ -393,23 +393,23 @@
 // ==MEM==
 
 // begin_wpp config
-// USEPREFIX (otLogCritMem, "MEM%!SPACE!");
-// otLogCritMem{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_MEM}(MSG, ...);
+// USEPREFIX (otLogCritMem, "[%p]MEM%!SPACE!", CTX);
+// otLogCritMem{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_MEM}(CTX, MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogWarnMem, "MEM%!SPACE!");
-// otLogWarnMem{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_MEM}(MSG, ...);
+// USEPREFIX (otLogWarnMem, "[%p]MEM%!SPACE!", CTX);
+// otLogWarnMem{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_MEM}(CTX, MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogInfoMem, "MEM%!SPACE!");
-// otLogInfoMem{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MEM}(MSG, ...);
+// USEPREFIX (otLogInfoMem, "[%p]MEM%!SPACE!", CTX);
+// otLogInfoMem{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MEM}(CTX, MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogDebgMem, "MEM%!SPACE!");
-// otLogDebgMem{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MEM}(MSG, ...);
+// USEPREFIX (otLogDebgMem, "[%p]MEM%!SPACE!", CTX);
+// otLogDebgMem{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MEM}(CTX, MSG, ...);
 // end_wpp
 
 // ==DUMP==

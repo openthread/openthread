@@ -55,7 +55,7 @@ static const uint8_t kThreadMasterKey[] =
 
 ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
     Netif(aIp6, OT_NETIF_INTERFACE_ID_THREAD),
-    mCoapServer(aIp6.mUdp, kCoapUdpPort),
+    mCoapServer(*this, kCoapUdpPort),
     mCoapClient(*this),
     mAddressResolver(*this),
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
@@ -64,6 +64,9 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
     mDhcp6Server(*this),
 #endif  // OPENTHREAD_ENABLE_DHCP6_SERVER
+#if OPENTHREAD_ENABLE_DNS_CLIENT
+    mDnsClient(*this),
+#endif  // OPENTHREAD_ENABLE_DNS_CLIENT
     mActiveDataset(*this),
     mPendingDataset(*this),
     mKeyManager(*this),
@@ -109,6 +112,9 @@ ThreadError ThreadNetif::Up(void)
 #if OPENTHREAD_ENABLE_JOINER
         mSecureCoapClient.Start();
 #endif
+#if OPENTHREAD_ENABLE_DNS_CLIENT
+        mDnsClient.Start();
+#endif
         mMleRouter.Enable();
         mIsUp = true;
     }
@@ -122,6 +128,9 @@ ThreadError ThreadNetif::Down(void)
     mCoapClient.Stop();
 #if OPENTHREAD_ENABLE_JOINER
     mSecureCoapClient.Stop();
+#endif
+#if OPENTHREAD_ENABLE_DNS_CLIENT
+    mDnsClient.Stop();
 #endif
     mMleRouter.Disable();
     mMeshForwarder.Stop();

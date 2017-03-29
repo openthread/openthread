@@ -423,7 +423,7 @@ void LeaderBase::SetNetworkData(uint8_t aVersion, uint8_t aStableVersion, bool a
         RemoveTemporaryData(mTlvs, mLength);
     }
 
-    otDumpDebgNetData("set network data", mTlvs, mLength);
+    otDumpDebgNetData(GetInstance(), "set network data", mTlvs, mLength);
 
     mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
 }

@@ -95,6 +95,9 @@ const struct Command Interpreter::sCommands[] =
     { "diag", &Interpreter::ProcessDiag },
 #endif
     { "discover", &Interpreter::ProcessDiscover },
+#if OPENTHREAD_ENABLE_DNS_CLIENT
+    { "dns", &Interpreter::ProcessDns },
+#endif
     { "eidcache", &Interpreter::ProcessEidCache },
     { "eui64", &Interpreter::ProcessEui64 },
 #ifdef OPENTHREAD_EXAMPLES_POSIX
@@ -193,6 +196,9 @@ Interpreter::Interpreter(otInstance *aInstance):
     sCount(1),
     sInterval(1000),
     sPingTimer(aInstance->mIp6.mTimerScheduler, &Interpreter::s_HandlePingTimer, this),
+#if OPENTHREAD_ENABLE_DNS_CLIENT
+    mResolvingInProgress(0),
+#endif
 #endif
     mInstance(aInstance)
 {
@@ -211,6 +217,11 @@ Interpreter::Interpreter(otInstance *aInstance):
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
     memset(mDhcpAddresses, 0, sizeof(mDhcpAddresses));
 #endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
+
+#if OPENTHREAD_ENABLE_DNS_CLIENT
+    memset(mResolvingHostname, 0, sizeof(mResolvingHostname));
+#endif // OPENTHREAD_ENABLE_DNS_CLIENT
+
 #endif
 }
 
@@ -422,7 +433,8 @@ void Interpreter::ProcessBufferInfo(int argc, char *argv[])
     sServer->OutputFormat("mpl: %d %d\r\n", bufferInfo.mMplMessages, bufferInfo.mMplBuffers);
     sServer->OutputFormat("mle: %d %d\r\n", bufferInfo.mMleMessages, bufferInfo.mMleBuffers);
     sServer->OutputFormat("arp: %d %d\r\n", bufferInfo.mArpMessages, bufferInfo.mArpBuffers);
-    sServer->OutputFormat("coap: %d %d\r\n", bufferInfo.mCoapClientMessages, bufferInfo.mCoapClientBuffers);
+    sServer->OutputFormat("coap client: %d %d\r\n", bufferInfo.mCoapClientMessages, bufferInfo.mCoapClientBuffers);
+    sServer->OutputFormat("coap server: %d %d\r\n", bufferInfo.mCoapServerMessages, bufferInfo.mCoapServerBuffers);
 
     AppendResult(kThreadError_None);
 }
@@ -707,6 +719,96 @@ void Interpreter::ProcessDiscover(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
+
+#if OPENTHREAD_ENABLE_DNS_CLIENT
+void Interpreter::ProcessDns(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    long port = OT_DNS_DEFAULT_DNS_SERVER_PORT;
+    Ip6::MessageInfo messageInfo;
+    otDnsQuery query;
+
+    VerifyOrExit(argc > 0, error = kThreadError_InvalidArgs);
+
+    if (strcmp(argv[0], "resolve") == 0)
+    {
+        VerifyOrExit(!mResolvingInProgress, error = kThreadError_Busy);
+        VerifyOrExit(argc > 1, error = kThreadError_InvalidArgs);
+        VerifyOrExit(strlen(argv[1]) < OT_DNS_MAX_HOSTNAME_LENGTH, error = kThreadError_InvalidArgs);
+
+        strcpy(mResolvingHostname, argv[1]);
+
+        memset(&messageInfo, 0, sizeof(messageInfo));
+        messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
+
+        if (argc > 2)
+        {
+            SuccessOrExit(error = messageInfo.GetPeerAddr().FromString(argv[2]));
+        }
+        else
+        {
+            // Use IPv6 address of default DNS server.
+            SuccessOrExit(error = messageInfo.GetPeerAddr().FromString(OT_DNS_DEFAULT_DNS_SERVER_IP));
+        }
+
+        if (argc > 3)
+        {
+            SuccessOrExit(error = ParseLong(argv[3], port));
+        }
+
+        messageInfo.SetPeerPort(static_cast<uint16_t>(port));
+
+        query.mHostname    = mResolvingHostname;
+        query.mMessageInfo = static_cast<const otMessageInfo *>(&messageInfo);
+        query.mNoRecursion = false;
+
+        SuccessOrExit(error = otDnsClientQuery(mInstance, &query, &Interpreter::s_HandleDnsResponse, this));
+
+        mResolvingInProgress = true;
+        return;
+    }
+    else
+    {
+        ExitNow(error = kThreadError_InvalidArgs);
+    }
+
+exit:
+    AppendResult(error);
+}
+
+void Interpreter::s_HandleDnsResponse(void *aContext, const char *aHostname, otIp6Address *aAddress,
+                                      uint32_t aTtl, ThreadError aResult)
+{
+    static_cast<Interpreter *>(aContext)->HandleDnsResponse(aHostname,
+                                                            *static_cast<Ip6::Address *>(aAddress),
+                                                            aTtl, aResult);
+}
+
+void Interpreter::HandleDnsResponse(const char *aHostname, Ip6::Address &aAddress, uint32_t aTtl, ThreadError aResult)
+{
+    sServer->OutputFormat("DNS response for %s - ", aHostname);
+
+    if (aResult == kThreadError_None)
+    {
+        sServer->OutputFormat("[%x:%x:%x:%x:%x:%x:%x:%x] TTL: %d\r\n",
+                              HostSwap16(aAddress.mFields.m16[0]),
+                              HostSwap16(aAddress.mFields.m16[1]),
+                              HostSwap16(aAddress.mFields.m16[2]),
+                              HostSwap16(aAddress.mFields.m16[3]),
+                              HostSwap16(aAddress.mFields.m16[4]),
+                              HostSwap16(aAddress.mFields.m16[5]),
+                              HostSwap16(aAddress.mFields.m16[6]),
+                              HostSwap16(aAddress.mFields.m16[7]),
+                              aTtl);
+    }
+    else
+    {
+        AppendResult(aResult);
+    }
+
+    mResolvingInProgress = false;
+}
+#endif
 
 void Interpreter::ProcessEidCache(int argc, char *argv[])
 {

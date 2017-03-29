@@ -39,13 +39,16 @@
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>
         %(PreprocessorDefinitions);
+        _CRT_SECURE_NO_WARNINGS;
         OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";
+        OTBUILD;
       </PreprocessorDefinitions>
       <AdditionalIncludeDirectories>
         %(AdditionalIncludeDirectories);
         ..\..\include;
         ..\..\examples\platforms;
         ..\..\src\core;
+        ..\..\src\missing;
       </AdditionalIncludeDirectories>
       <SDLCheck>true</SDLCheck>
     </ClCompile>

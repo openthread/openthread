@@ -392,6 +392,7 @@ private:
     ThreadError GetPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_NET_REQUIRE_JOIN_EXISTING(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_DEBUG_TEST_ASSERT(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_DEBUG_NCP_LOG_LEVEL(uint8_t header, spinel_prop_key_t key);
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     ThreadError GetPropertyHandler_JAM_DETECT_ENABLE(uint8_t header, spinel_prop_key_t key);
@@ -510,6 +511,8 @@ private:
                                                              const uint8_t *value_ptr, uint16_t value_len);
     ThreadError SetPropertyHandler_CNTR_RESET(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                               uint16_t value_len);
+    ThreadError SetPropertyHandler_DEBUG_NCP_LOG_LEVEL(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                   uint16_t value_len);
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     ThreadError SetPropertyHandler_JAM_DETECT_ENABLE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,

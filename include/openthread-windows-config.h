@@ -98,8 +98,10 @@
 // Redefine rand to random for test code
 #define random rand
 
-// Temporary !!! TODO - Remove this once we figure out the strncpy issue
-#define _CRT_SECURE_NO_WARNINGS
+#ifdef OTBUILD
+#include <strlcat/strlcat.h>
+#include <strlcpy/strlcpy.h>
+#endif
 
 // Disable a few warnings that we don't care about
 #pragma warning(disable:4200)  // nonstandard extension used: zero-sized array in struct/union

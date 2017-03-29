@@ -488,13 +488,15 @@ public:
     /**
      * This method starts the MLE protocol operation.
      *
-     * @param[in]  aEnableReattach  True to enable reattach process using stored dataset, False not.
+     * @param[in]  aEnableReattach True if reattach using stored dataset, or False if not.
+     * @param[in]  aAnnounceAttach True if attach on the announced thread network with newer active timestamp,
+     *                             or False if not.
      *
      * @retval kThreadError_None     Successfully started the protocol operation.
      * @retval kThreadError_Already  The protocol operation was already started.
      *
      */
-    ThreadError Start(bool aEnableReattach);
+    ThreadError Start(bool aEnableReattach, bool aAnnounceAttach);
 
     /**
      * This method stops the MLE protocol operation.
@@ -1353,6 +1355,10 @@ protected:
 
     uint8_t mLastPartitionRouterIdSequence;
     uint32_t mLastPartitionId;
+
+protected:
+    uint8_t mParentLeaderCost;
+
 private:
     enum
     {
@@ -1389,7 +1395,7 @@ private:
     ThreadError SendChildIdRequest(void);
     void SendOrphanAnnounce(void);
 
-    bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, ConnectivityTlv &aConnectivityTlv) const;
+    bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, ConnectivityTlv &aConnectivityTlv);
     void ResetParentCandidate(void);
 
     MessageQueue mDelayedResponses;
@@ -1424,7 +1430,6 @@ private:
     } mParentRequest;
 
     otMleAttachFilter mParentRequestMode;
-    uint8_t mParentLinkQuality;
     int8_t mParentPriority;
     uint8_t mParentLinkQuality3;
     uint8_t mParentLinkQuality2;

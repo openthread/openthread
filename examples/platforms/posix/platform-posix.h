@@ -42,7 +42,6 @@
 #endif
 
 #if _WIN32
-#define _CRT_SECURE_NO_WARNINGS
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #include <windows.h>

@@ -599,7 +599,7 @@ ThreadError Leader::AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength)
         {
         case NetworkDataTlv::kTypePrefix:
             AddPrefix(*static_cast<PrefixTlv *>(cur));
-            otDumpDebgNetData("add prefix done", mTlvs, mLength);
+            otDumpDebgNetData(GetInstance(), "add prefix done", mTlvs, mLength);
             break;
 
         default:
@@ -609,7 +609,7 @@ ThreadError Leader::AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength)
         cur = cur->GetNext();
     }
 
-    otDumpDebgNetData("add done", mTlvs, mLength);
+    otDumpDebgNetData(GetInstance(), "add done", mTlvs, mLength);
 
     return kThreadError_None;
 }
@@ -814,7 +814,7 @@ ThreadError Leader::RemoveRloc(uint16_t aRloc16)
                 continue;
             }
 
-            otDumpDebgNetData("remove prefix done", mTlvs, mLength);
+            otDumpDebgNetData(GetInstance(), "remove prefix done", mTlvs, mLength);
             break;
         }
 
@@ -825,7 +825,7 @@ ThreadError Leader::RemoveRloc(uint16_t aRloc16)
         cur = cur->GetNext();
     }
 
-    otDumpDebgNetData("remove done", mTlvs, mLength);
+    otDumpDebgNetData(GetInstance(), "remove done", mTlvs, mLength);
 
     return kThreadError_None;
 }
@@ -978,7 +978,7 @@ ThreadError Leader::RemoveContext(uint8_t aContextId)
                 continue;
             }
 
-            otDumpDebgNetData("remove prefix done", mTlvs, mLength);
+            otDumpDebgNetData(GetInstance(), "remove prefix done", mTlvs, mLength);
             break;
         }
 
@@ -989,7 +989,7 @@ ThreadError Leader::RemoveContext(uint8_t aContextId)
         cur = cur->GetNext();
     }
 
-    otDumpDebgNetData("remove done", mTlvs, mLength);
+    otDumpDebgNetData(GetInstance(), "remove done", mTlvs, mLength);
 
     return kThreadError_None;
 }

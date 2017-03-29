@@ -36,6 +36,7 @@
 #define OPENTHREAD_INSTANCE_H_
 
 #include "openthread/types.h"
+#include "openthread/platform/logging.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -154,7 +155,7 @@ OTAPI uint32_t OTCALL otGetDeviceIfIndex(otInstance *aInstance);
  */
 OTAPI uint32_t OTCALL otGetCompartmentId(otInstance *aInstance);
 
-#else
+#else // OTDLL
 
 #ifdef OPENTHREAD_MULTIPLE_INSTANCE
 /**
@@ -173,7 +174,7 @@ OTAPI uint32_t OTCALL otGetCompartmentId(otInstance *aInstance);
  *
  */
 otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize);
-#else
+#else // OPENTHREAD_MULTIPLE_INSTANCE
 /**
  * This function initializes the static instance of the OpenThread library.
  *
@@ -184,7 +185,7 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize);
  *
  */
 otInstance *otInstanceInit(void);
-#endif
+#endif // OPENTHREAD_MULTIPLE_INSTANCE
 
 /**
  * This function disables the OpenThread library.
@@ -196,7 +197,7 @@ otInstance *otInstanceInit(void);
  */
 void otInstanceFinalize(otInstance *aInstance);
 
-#endif
+#endif // OTDLL
 
 /**
  * This function pointer is called to notify certain configuration or state changes within OpenThread.
@@ -260,6 +261,28 @@ OTAPI void OTCALL otInstanceFactoryReset(otInstance *aInstance);
  *
  */
 ThreadError otInstanceErasePersistentInfo(otInstance *aInstance);
+
+/**
+ * This function returns the current dynamic log level.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns the currently set dynamic log level.
+ *
+ */
+otLogLevel otGetDynamicLogLevel(otInstance *aInstance);
+
+/**
+ * This function sets the dynamic log level.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aLogLevel The dynamic log level.
+ *
+ * @retval kThreadError_None         The log level was changed successfully.
+ * @retval kThreadError_NotCapable   The dynamic log level is not supported.
+ *
+ */
+ThreadError otSetDynamicLogLevel(otInstance *aInstance, otLogLevel aLogLevel);
 
 /**
  * @}

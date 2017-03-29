@@ -41,12 +41,14 @@
         MBEDTLS_CONFIG_FILE="mbedtls-config.h";
         OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";
         OPENTHREAD_MULTIPLE_INSTANCE;
+        OTBUILD;
       </PreprocessorDefinitions>
       <AdditionalIncludeDirectories>
         %(AdditionalIncludeDirectories);
         ..\..\include;
         ..\..\src;
         ..\..\src\core;
+        ..\..\src\missing;
         ..\..\third_party\mbedtls;
         ..\..\third_party\mbedtls\repo\include;
       </AdditionalIncludeDirectories>
