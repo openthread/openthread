@@ -192,17 +192,20 @@ void otPlatRadioSetPanId(_In_ otInstance *otCtx, uint16_t panid)
 
     pFilter->otPanID = panid;
 
-    // Indicate to the miniport
-    status =
-        otLwfCmdSetProp(
-            pFilter,
-            SPINEL_PROP_MAC_15_4_PANID,
-            SPINEL_DATATYPE_UINT16_S,
-            panid
-        );
-    if (!NT_SUCCESS(status))
+    if (pFilter->otPhyState != kStateDisabled)
     {
-        LogError(DRIVER_DEFAULT, "Set SPINEL_PROP_MAC_15_4_PANID failed, %!STATUS!", status);
+        // Indicate to the miniport
+        status =
+            otLwfCmdSetProp(
+                pFilter,
+                SPINEL_PROP_MAC_15_4_PANID,
+                SPINEL_DATATYPE_UINT16_S,
+                panid
+            );
+        if (!NT_SUCCESS(status))
+        {
+            LogError(DRIVER_DEFAULT, "Set SPINEL_PROP_MAC_15_4_PANID failed, %!STATUS!", status);
+        }
     }
 }
 
@@ -246,17 +249,20 @@ void otPlatRadioSetShortAddress(_In_ otInstance *otCtx, uint16_t address)
 
     pFilter->otShortAddress = address;
 
-    // Indicate to the miniport
-    status =
-        otLwfCmdSetProp(
-            pFilter,
-            SPINEL_PROP_MAC_15_4_SADDR,
-            SPINEL_DATATYPE_UINT16_S,
-            address
-        );
-    if (!NT_SUCCESS(status))
+    if (pFilter->otPhyState != kStateDisabled)
     {
-        LogError(DRIVER_DEFAULT, "Set SPINEL_PROP_MAC_15_4_SADDR failed, %!STATUS!", status);
+        // Indicate to the miniport
+        status =
+            otLwfCmdSetProp(
+                pFilter,
+                SPINEL_PROP_MAC_15_4_SADDR,
+                SPINEL_DATATYPE_UINT16_S,
+                address
+            );
+        if (!NT_SUCCESS(status))
+        {
+            LogError(DRIVER_DEFAULT, "Set SPINEL_PROP_MAC_15_4_SADDR failed, %!STATUS!", status);
+        }
     }
 }
 
@@ -314,6 +320,32 @@ ThreadError otPlatRadioEnable(_In_ otInstance *otCtx)
     }
 
     LogInfo(DRIVER_DEFAULT, "Filter %p PhyState = kStateSleep.", pFilter);
+
+    // Indicate PANID to the miniport
+    status =
+        otLwfCmdSetProp(
+            pFilter,
+            SPINEL_PROP_MAC_15_4_PANID,
+            SPINEL_DATATYPE_UINT16_S,
+            pFilter->otPanID
+        );
+    if (!NT_SUCCESS(status))
+    {
+        LogError(DRIVER_DEFAULT, "Set SPINEL_PROP_MAC_15_4_PANID failed, %!STATUS!", status);
+    }
+
+    // Indicate Short address to the miniport
+    status =
+        otLwfCmdSetProp(
+            pFilter,
+            SPINEL_PROP_MAC_15_4_SADDR,
+            SPINEL_DATATYPE_UINT16_S,
+            pFilter->otShortAddress
+        );
+    if (!NT_SUCCESS(status))
+    {
+        LogError(DRIVER_DEFAULT, "Set SPINEL_PROP_MAC_15_4_SADDR failed, %!STATUS!", status);
+    }
 
     return NT_SUCCESS(status) ? kThreadError_None : kThreadError_Failed;
 }
