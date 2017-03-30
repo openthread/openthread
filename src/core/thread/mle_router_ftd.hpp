@@ -389,7 +389,7 @@ public:
      *
      * @param[in]  aMaxChildren  The max children allowed value.
      *
-     * @retval  kThreadErrorNone           Successfully set the max.
+     * @retval  kThreadError_None          Successfully set the max.
      * @retval  kThreadError_InvalidArgs   If @p aMaxChildren is not in the range [1, kMaxChildren].
      * @retval  kThreadError_InvalidState  If MLE has already been started.
      *
@@ -399,8 +399,9 @@ public:
     /**
      * This method restores children information from non-volatile memory.
      *
-     * @retval  kThreadErrorNone      Successfully restores children information.
-     * @retval  kThreadError_NoBufs   Insufficient available buffers to restore all children information.
+     * @retval  kThreadError_None     Successfully restored children information.
+     * @retval  kThreadError_Failed   The saved child info in non-volatile memory is invalid.
+     * @retval  kThreadError_NoBufs   More children in settings than max children.
      *
      */
     ThreadError RestoreChildren(void);
@@ -410,7 +411,7 @@ public:
      *
      * @param[in]  aChildRloc16   The child RLOC16 to remove.
      *
-     * @retval  kThreadErrorNone        Successfully remove child.
+     * @retval  kThreadError_None       Successfully remove child.
      * @retval  kThreadError_NotFound   There is no specified child stored in non-volatile memory.
      *
      */
@@ -421,11 +422,21 @@ public:
      *
      * @param[in]  aChildRloc16   The child RLOC16 to store.
      *
-     * @retval  kThreadErrorNone      Successfully store child.
+     * @retval  kThreadError_None     Successfully store child.
      * @retval  kThreadError_NoBufs   Insufficient available buffers to store child.
      *
      */
     ThreadError StoreChild(uint16_t aChildRloc16);
+
+    /**
+     * This method refreshes all the saved children information in non-volatile memory by first erasing any saved
+     * child information in non-volatile memory and then saving all children info.
+     *
+     * @retval  kThreadError_None     Successfully refreshed all children info in non-volatile memory
+     * @retval  kThreadError_NoBufs   Insufficient available buffers to store child.
+     *
+     */
+    ThreadError RefreshStoredChildren(void);
 
     /**
      * This method returns a pointer to a Neighbor object.

@@ -113,6 +113,7 @@ public:
     ThreadError RestoreChildren(void) {return kThreadError_NotImplemented; }
     ThreadError RemoveStoredChild(uint16_t) {return kThreadError_NotImplemented; }
     ThreadError StoreChild(uint16_t) {return kThreadError_NotImplemented; }
+    ThreadError RefreshStoredChildren(void) { return kThreadError_NotImplemented; }
 
     Neighbor *GetNeighbor(uint16_t aAddress) { return Mle::GetNeighbor(aAddress); }
     Neighbor *GetNeighbor(const Mac::ExtAddress &aAddress) { return Mle::GetNeighbor(aAddress); }
