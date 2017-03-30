@@ -335,6 +335,7 @@ void LinkRaw::InvokeReceiveDone(RadioPacket *aPacket, ThreadError aError)
         {
             otLogWarnPlat(&mInstance, "LinkRaw Invoke Receive Done (err=0x%x)", aError);
         }
+
         mReceiveDoneCallback(&mInstance, aPacket, aError);
     }
 }
@@ -433,6 +434,7 @@ void LinkRaw::InvokeTransmitDone(RadioPacket *aPacket, bool aFramePending, Threa
         {
             otLogWarnPlat(aInstance, "LinkRaw Invoke Transmit Failed (err=0x%x)", aError);
         }
+
         mTransmitDoneCallback(&mInstance, aPacket, aFramePending, aError);
         mTransmitDoneCallback = NULL;
     }
