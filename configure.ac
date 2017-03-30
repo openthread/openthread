@@ -219,6 +219,8 @@ AC_CHECK_TOOL(STRIP, strip)
 AC_PROG_INSTALL
 AC_PROG_LN_S
 
+AC_PATH_PROG(CMP, cmp)
+
 #
 # Checks for specific compiler characteristics
 #
