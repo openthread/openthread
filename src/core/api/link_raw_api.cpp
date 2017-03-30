@@ -127,7 +127,7 @@ ThreadError otLinkRawSleep(otInstance *aInstance)
 
     VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = kThreadError_InvalidState);
 
-    otLogDebgPlat(aInstance, "LinkRaw Sleep");
+    otLogInfoPlat(aInstance, "LinkRaw Sleep");
 
     error = otPlatRadioSleep(aInstance);
 
@@ -137,7 +137,7 @@ exit:
 
 ThreadError otLinkRawReceive(otInstance *aInstance, uint8_t aChannel, otLinkRawReceiveDone aCallback)
 {
-    otLogDebgPlat(aInstance, "LinkRaw Recv (Channel %d)", aChannel);
+    otLogInfoPlat(aInstance, "LinkRaw Recv (Channel %d)", aChannel);
     return aInstance->mLinkRaw.Receive(aChannel, aCallback);
 }
 
@@ -155,7 +155,7 @@ exit:
 
 ThreadError otLinkRawTransmit(otInstance *aInstance, RadioPacket *aPacket, otLinkRawTransmitDone aCallback)
 {
-    otLogDebgPlat(aInstance, "LinkRaw Transmit (%d bytes)", aPacket->mLength);
+    otLogInfoPlat(aInstance, "LinkRaw Transmit (%d bytes on channel %d)", aPacket->mLength, aPacket->mChannel);
     return aInstance->mLinkRaw.Transmit(aPacket, aCallback);
 }
 
@@ -268,13 +268,13 @@ namespace Thread {
 LinkRaw::LinkRaw(otInstance &aInstance):
     mInstance(aInstance),
     mEnabled(false),
+    mReceiveChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL),
     mReceiveDoneCallback(NULL),
     mTransmitDoneCallback(NULL),
     mEnergyScanDoneCallback(NULL)
 #if OPENTHREAD_LINKRAW_TIMER_REQUIRED
     , mTimer(aInstance.mIp6.mTimerScheduler, &LinkRaw::HandleTimer, this)
     , mTimerReason(kTimerReasonNone)
-    , mReceiveChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
 #endif // OPENTHREAD_LINKRAW_TIMER_REQUIRED
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
     , mEnergyScanTask(aInstance.mIp6.mTaskletScheduler, &LinkRaw::HandleEnergyScanTask, this)
@@ -315,12 +315,7 @@ ThreadError LinkRaw::Receive(uint8_t aChannel, otLinkRawReceiveDone aCallback)
 
     if (mEnabled)
     {
-#if OPENTHREAD_LINKRAW_TIMER_REQUIRED
-        // Only need to cache if we implement timer logic that might
-        // revert the channel on completion.
         mReceiveChannel = aChannel;
-#endif
-
         mReceiveDoneCallback = aCallback;
         error = otPlatRadioReceive(&mInstance, aChannel);
     }
@@ -332,7 +327,14 @@ void LinkRaw::InvokeReceiveDone(RadioPacket *aPacket, ThreadError aError)
 {
     if (mReceiveDoneCallback)
     {
-        otLogDebgPlat(&mInstance, "LinkRaw Invoke Receive Done");
+        if (aError == kThreadError_None)
+        {
+            otLogInfoPlat(&mInstance, "LinkRaw Invoke Receive Done (%d bytes)", aPacket->mLength);
+        }
+        else
+        {
+            otLogWarnPlat(&mInstance, "LinkRaw Invoke Receive Done (err=0x%x)", aError);
+        }
         mReceiveDoneCallback(&mInstance, aPacket, aError);
     }
 }
@@ -418,9 +420,19 @@ void LinkRaw::InvokeTransmitDone(RadioPacket *aPacket, bool aFramePending, Threa
 
 #endif
 
+    // Transition back to receive state on previous channel
+    otPlatRadioReceive(&mInstance, mReceiveChannel);
+
     if (mTransmitDoneCallback)
     {
-        otLogDebgPlat(aInstance, "LinkRaw Invoke Transmit Done");
+        if (aError == kThreadError_None)
+        {
+            otLogInfoPlat(aInstance, "LinkRaw Invoke Transmit Done");
+        }
+        else
+        {
+            otLogWarnPlat(aInstance, "LinkRaw Invoke Transmit Failed (err=0x%x)", aError);
+        }
         mTransmitDoneCallback(&mInstance, aPacket, aFramePending, aError);
         mTransmitDoneCallback = NULL;
     }

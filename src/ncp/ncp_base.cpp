@@ -932,10 +932,6 @@ void NcpBase::LinkRawTransmitDone(RadioPacket *, bool aFramePending, ThreadError
         // Clear cached transmit TID
         mCurTransmitTID = 0;
     }
-
-    // Make sure we are back listening on the original receive channel,
-    // since the transmit could have been on a different channel.
-    otLinkRawReceive(mInstance, mCurReceiveChannel, &NcpBase::LinkRawReceiveDone);
 }
 
 void NcpBase::LinkRawEnergyScanDone(otInstance *, int8_t aEnergyScanMaxRssi)
