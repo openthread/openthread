@@ -49,6 +49,10 @@
 #include <cli/cli_server.hpp>
 #include <common/code_utils.hpp>
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
+#include <coap/coap_header.hpp>
+#endif
+
 #ifndef OTDLL
 #include <net/icmp6.hpp>
 #include <common/timer.hpp>
@@ -165,6 +169,10 @@ private:
 #if OPENTHREAD_ENABLE_COMMISSIONER
     void ProcessCommissioner(int argc, char *argv[]);
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
+    void ProcessCoapClient(int argc, char *argv[]);
+    void ProcessCoapServer(int argc, char *argv[]);
+#endif  //OPENTHREAD_ENABLE_APPLICATION_COAP
     void ProcessContextIdReuseDelay(int argc, char *argv[]);
     void ProcessCounters(int argc, char *argv[]);
     void ProcessDataset(int argc, char *argv[]);
@@ -240,6 +248,13 @@ private:
 #ifdef OTDLL
     void ProcessInstanceList(int argc, char *argv[]);
     void ProcessInstance(int argc, char *argv[]);
+#endif
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
+    static void OTCALL s_HandleCoapServerResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage, otMessageInfo *aMessageInfo);
+    void HandleCoapServerResponse(otCoapHeader *aHeader, otMessage *aMessage, otMessageInfo *aMessageInfo);
+    static void OTCALL s_HandleCoapClientResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage, otMessageInfo *aMessageInfo, ThreadError aResult);
+    void HandleCoapClientResponse(otCoapHeader *aHeader, otMessage *aMessage, otMessageInfo *aMessageInfo, ThreadError aResult);
 #endif
 
 #ifndef OTDLL
@@ -318,6 +333,10 @@ private:
     uint16_t sCount;
     uint32_t sInterval;
     Timer sPingTimer;
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
+    otCoapResource mResource;
+#endif
 
     otNetifAddress  mSlaacAddresses[OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES];
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
