@@ -209,7 +209,7 @@ ThreadError Commissioner::AddJoiner(const Mac::ExtAddress *aExtAddress, const ch
 
     otLogFuncEntryMsg("%llX, %s", (aExtAddress ? HostSwap64(*reinterpret_cast<const uint64_t *>(aExtAddress)) : 0), aPSKd);
     VerifyOrExit(strlen(aPSKd) <= Dtls::kPskMaxLength, error = kThreadError_InvalidArgs);
-    RemoveJoiner(aExtAddress);
+    RemoveJoiner(aExtAddress, 0);  // remove imediately
 
     for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
     {
@@ -244,7 +244,7 @@ exit:
     return error;
 }
 
-ThreadError Commissioner::RemoveJoiner(const Mac::ExtAddress *aExtAddress)
+ThreadError Commissioner::RemoveJoiner(const Mac::ExtAddress *aExtAddress, uint32_t aDelay)
 {
     ThreadError error = kThreadError_NotFound;
 
@@ -269,11 +269,23 @@ ThreadError Commissioner::RemoveJoiner(const Mac::ExtAddress *aExtAddress)
             continue;
         }
 
-        mJoiners[i].mValid = false;
+        if (aDelay > 0)
+        {
+            uint32_t now = Timer::GetNow();
 
-        UpdateJoinerExpirationTimer();
-
-        SendCommissionerSet();
+            if ((static_cast<int32_t>(mJoiners[i].mExpirationTime - now) > 0) &&
+                (static_cast<uint32_t>(mJoiners[i].mExpirationTime - now) > Timer::SecToMsec(aDelay)))
+            {
+                mJoiners[i].mExpirationTime = now + Timer::SecToMsec(aDelay);
+                UpdateJoinerExpirationTimer();
+            }
+        }
+        else
+        {
+            mJoiners[i].mValid = false;
+            UpdateJoinerExpirationTimer();
+            SendCommissionerSet();
+        }
 
         ExitNow(error = kThreadError_None);
     }
@@ -329,7 +341,7 @@ void Commissioner::HandleJoinerExpirationTimer(void)
 {
     uint32_t now = Timer::GetNow();
 
-    // Remove expired Joiners.
+    // Remove Joiners.
     for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
     {
         if (!mJoiners[i].mValid)
@@ -339,8 +351,8 @@ void Commissioner::HandleJoinerExpirationTimer(void)
 
         if (static_cast<int32_t>(now - mJoiners[i].mExpirationTime) >= 0)
         {
-            otLogDebgMeshCoP(GetInstance(), "removing joiner due to timeout");
-            RemoveJoiner(&mJoiners[i].mExtAddress);
+            otLogDebgMeshCoP(GetInstance(), "removing joiner due to timeout or successfully joined");
+            RemoveJoiner(&mJoiners[i].mExtAddress, 0);  // remove imediately
         }
     }
 
@@ -926,7 +938,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, 
 
     memcpy(extAddr.m8, mJoinerIid, sizeof(extAddr.m8));
     extAddr.SetLocal(!extAddr.IsLocal());
-    RemoveJoiner(&extAddr);
+    RemoveJoiner(&extAddr, kRemoveJoinerDelay);  // remove after kRemoveJoinerDelay (seconds)
 
     otLogInfoMeshCoP(GetInstance(), "sent joiner finalize response");
 

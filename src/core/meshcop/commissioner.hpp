@@ -113,12 +113,13 @@ public:
      * This method removes a Joiner entry.
      *
      * @param[in]  aExtAddress        A pointer to the Joiner's extended address or NULL for any Joiner.
+     * @param[in]  aDelay             The delay to remove Joiner (in seconds).
      *
      * @retval kThreadError_None      Successfully added the Joiner.
      * @retval kThreadError_NotFound  The Joiner specified by @p aExtAddress was not found.
      *
      */
-    ThreadError RemoveJoiner(const Mac::ExtAddress *aExtAddress);
+    ThreadError RemoveJoiner(const Mac::ExtAddress *aExtAddress, uint32_t aDelay);
 
     /**
      * This method sets the Provisioning URL.
@@ -205,6 +206,7 @@ private:
         kPetitionRetryCount   = 2,      ///< COMM_PET_RETRY_COUNT
         kPetitionRetryDelay   = 1,      ///< COMM_PET_RETRY_DELAY (seconds)
         kKeepAliveTimeout     = 50,     ///< TIMEOUT_COMM_PET (seconds)
+        kRemoveJoinerDelay    = 20,     ///< Delay to remove successfully joined joiner
     };
 
     static void HandleTimer(void *aContext);
