@@ -1680,13 +1680,11 @@ void Mac::EnableSrcMatch(bool aEnable)
 ThreadError Mac::AddSrcMatchEntry(Address &aAddr)
 {
     ThreadError error = kThreadError_None;
+    char stringBuffer[Address::kAddressStringSize];
 
     if (aAddr.mLength == 2)
     {
         error = otPlatRadioAddSrcMatchShortEntry(GetInstance(), aAddr.mShortAddress);
-
-        otLogDebgMac(GetInstance(), "SrcAddrMatch - Adding short address: 0x%04x -- %s (%d)", aAddr.mShortAddress,
-                     otThreadErrorToString(error), error);
     }
     else
     {
@@ -1698,12 +1696,12 @@ ThreadError Mac::AddSrcMatchEntry(Address &aAddr)
         }
 
         error = otPlatRadioAddSrcMatchExtEntry(GetInstance(), buf);
-
-        otLogDebgMac(GetInstance(),
-                     "SrcAddrMatch - Adding extended address: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x -- %s (%d)",
-                     buf[7], buf[6], buf[5], buf[4], buf[3], buf[2], buf[1], buf[0], otThreadErrorToString(error),
-                     error);
     }
+
+    otLogDebgMac(GetInstance(), "SrcAddrMatch - Adding address: %s -- %s (%d)",
+                 aAddr.ToString(stringBuffer, sizeof(stringBuffer)), otThreadErrorToString(error), error);
+
+    (void)stringBuffer;
 
     return error;
 }
@@ -1711,13 +1709,11 @@ ThreadError Mac::AddSrcMatchEntry(Address &aAddr)
 ThreadError Mac::ClearSrcMatchEntry(Address &aAddr)
 {
     ThreadError error = kThreadError_None;
+    char stringBuffer[Address::kAddressStringSize];
 
     if (aAddr.mLength == 2)
     {
         error = otPlatRadioClearSrcMatchShortEntry(GetInstance(), aAddr.mShortAddress);
-
-        otLogDebgMac(GetInstance(), "SrcAddrMatch - Clearing short address: 0x%04x -- %s (%d)", aAddr.mShortAddress,
-                     otThreadErrorToString(error), error);
     }
     else
     {
@@ -1729,12 +1725,12 @@ ThreadError Mac::ClearSrcMatchEntry(Address &aAddr)
         }
 
         error = otPlatRadioClearSrcMatchExtEntry(GetInstance(), buf);
-
-        otLogDebgMac(GetInstance(),
-                     "SrcAddrMatch - Clearing extended address: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x -- %s (%d)",
-                     buf[7], buf[6], buf[5], buf[4], buf[3], buf[2], buf[1], buf[0], otThreadErrorToString(error),
-                     error);
     }
+
+    otLogDebgMac(GetInstance(), "SrcAddrMatch - Clearing address: %s -- %s (%d)",
+                 aAddr.ToString(stringBuffer, sizeof(stringBuffer)), otThreadErrorToString(error), error);
+
+    (void)stringBuffer;
 
     return error;
 }
@@ -1746,7 +1742,6 @@ void Mac::ClearSrcMatchEntries()
 
     otLogDebgMac(GetInstance(), "SrcAddrMatch - Cleared all entries");
 }
-
 
 }  // namespace Mac
 }  // namespace Thread
