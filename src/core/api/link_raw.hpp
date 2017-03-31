@@ -112,6 +112,7 @@ private:
 
     otInstance             &mInstance;
     bool                    mEnabled;
+    uint8_t                 mReceiveChannel;
     otLinkRawReceiveDone    mReceiveDoneCallback;
     otLinkRawTransmitDone   mTransmitDoneCallback;
     otLinkRawEnergyScanDone mEnergyScanDoneCallback;
@@ -130,7 +131,6 @@ private:
 
     Timer                   mTimer;
     TimerReason             mTimerReason;
-    uint8_t                 mReceiveChannel;
 
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
