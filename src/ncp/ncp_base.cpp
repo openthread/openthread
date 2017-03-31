@@ -925,7 +925,7 @@ void NcpBase::LinkRawTransmitDone(RadioPacket *, bool aFramePending, ThreadError
             SPINEL_CMD_PROP_VALUE_IS,
             SPINEL_PROP_LAST_STATUS,
             SPINEL_DATATYPE_UINT_PACKED_S SPINEL_DATATYPE_BOOL_S,
-            aError,
+            ThreadErrorToSpinelStatus(aError),
             aFramePending
         );
 
