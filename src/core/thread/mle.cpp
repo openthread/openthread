@@ -304,7 +304,23 @@ ThreadError Mle::Restore(void)
     {
         mNetif.GetMle().SetRouterId(GetRouterId(GetRloc16()));
         mNetif.GetMle().SetPreviousPartitionId(networkInfo.mPreviousPartitionId);
-        mNetif.GetMle().RestoreChildren();
+
+        switch (mNetif.GetMle().RestoreChildren())
+        {
+        // If there are more saved children in non-volatile settings
+        // than could be restored or the values in the settings are
+        // invalid, erase all the children info in the settings and
+        // refresh the info to ensure that the non-volatile settings
+        // stay in sync with the child table.
+
+        case kThreadError_Failed:
+        case kThreadError_NoBufs:
+            mNetif.GetMle().RefreshStoredChildren();
+            break;
+
+        default:
+            break;
+        }
     }
 
 exit:

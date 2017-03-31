@@ -3398,7 +3398,7 @@ ThreadError MleRouter::RestoreChildren(void)
 {
     ThreadError error = kThreadError_None;
 
-    for (uint8_t i = 0; i < kMaxChildren; i++)
+    for (uint8_t i = 0; ; i++)
     {
         Child *child;
         otChildInfo childInfo;
@@ -3407,7 +3407,7 @@ ThreadError MleRouter::RestoreChildren(void)
         length = sizeof(childInfo);
         SuccessOrExit(otPlatSettingsGet(mNetif.GetInstance(), kKeyChildInfo, i,
                                         reinterpret_cast<uint8_t *>(&childInfo), &length));
-        VerifyOrExit(length == sizeof(childInfo), ;);
+        VerifyOrExit(length == sizeof(childInfo), error = kThreadError_Failed);
 
         VerifyOrExit((child = NewChild()) != NULL, error = kThreadError_NoBufs);
         memset(child, 0, sizeof(*child));
@@ -3463,6 +3463,24 @@ ThreadError MleRouter::StoreChild(uint16_t aChildRloc16)
 
     error = otPlatSettingsAdd(mNetif.GetInstance(), kKeyChildInfo, reinterpret_cast<uint8_t *>(&childInfo),
                               sizeof(childInfo));
+
+exit:
+    return error;
+}
+
+ThreadError MleRouter::RefreshStoredChildren(void)
+{
+    ThreadError error = kThreadError_None;
+
+    SuccessOrExit(error = otPlatSettingsDelete(mNetif.GetInstance(), kKeyChildInfo, -1));
+
+    for (uint8_t i = 0; i < kMaxChildren; i++)
+    {
+        if (mChildren[i].mState != Neighbor::kStateInvalid)
+        {
+            SuccessOrExit(error = StoreChild(mChildren[i].mValid.mRloc16));
+        }
+    }
 
 exit:
     return error;
