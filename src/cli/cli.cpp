@@ -1723,15 +1723,15 @@ ThreadError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
     {
         if (strcmp(argv[argcur], "high") == 0)
         {
-            config.mPreference = 1;
+            config.mPreference = kRoutePreferenceHigh;
         }
         else if (strcmp(argv[argcur], "med") == 0)
         {
-            config.mPreference = 0;
+            config.mPreference = kRoutePreferenceMedium;
         }
         else if (strcmp(argv[argcur], "low") == 0)
         {
-            config.mPreference = -1;
+            config.mPreference = kRoutePreferenceLow;
         }
         else
         {
@@ -1865,15 +1865,15 @@ ThreadError Interpreter::ProcessPrefixList(void)
 
         switch (config.mPreference)
         {
-        case -1:
+        case kRoutePreferenceLow:
             sServer->OutputFormat(" low\r\n");
             break;
 
-        case 0:
+        case kRoutePreferenceMedium:
             sServer->OutputFormat(" med\r\n");
             break;
 
-        case 1:
+        case kRoutePreferenceHigh:
             sServer->OutputFormat(" high\r\n");
             break;
         }
@@ -1975,15 +1975,15 @@ ThreadError Interpreter::ProcessRouteAdd(int argc, char *argv[])
         }
         else if (strcmp(argv[argcur], "high") == 0)
         {
-            config.mPreference = 1;
+            config.mPreference = kRoutePreferenceHigh;
         }
         else if (strcmp(argv[argcur], "med") == 0)
         {
-            config.mPreference = 0;
+            config.mPreference = kRoutePreferenceMedium;
         }
         else if (strcmp(argv[argcur], "low") == 0)
         {
-            config.mPreference = -1;
+            config.mPreference = kRoutePreferenceLow;
         }
         else
         {

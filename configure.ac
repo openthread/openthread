@@ -88,11 +88,10 @@ AC_CONFIG_MACRO_DIR([third_party/nlbuild-autotools/repo/autoconf/m4])
 AC_CONFIG_HEADERS([include/openthread-config.h])
 
 #
-# Figure out what the canonical build, host and target tuples are.
+# Figure out what the canonical build and host tuples are.
 #
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
-AC_CANONICAL_TARGET
 
 #
 # Mac OS X / Darwin ends up putting some versioning cruft on the end of its
@@ -102,7 +101,6 @@ AC_CANONICAL_TARGET
 
 NL_FILTERED_CANONICAL_BUILD
 NL_FILTERED_CANONICAL_HOST
-NL_FILTERED_CANONICAL_TARGET
 
 #
 # Configure automake with the desired options, indicating that this is not
@@ -132,10 +130,10 @@ AM_SILENT_RULES([yes])
 AM_MAINTAINER_MODE
 
 #
-# Check for target
+# Host-os-specific checks
 #
 
-case ${target_os} in
+case ${host_os} in
 
     *darwin*)
         OPENTHREAD_TARGET=darwin
@@ -161,16 +159,22 @@ AC_SUBST(OPENTHREAD_TARGET_DEFINES)
 # Checks for build host programs
 #
 
-# If we are cross-compiling and we are on an embedded target that
-# doesn't support independent, standalone executables, then all
-# compiler tests that attempt to create an executable will fail. In
-# such circumstances, set AC_NO_EXECUTABLES (see http://sourceware.org/
-# ml/newlib/2006/msg00353.html).
-
+# This is a hack to restore some old broken behavior that was
+# removed in pull request #1527. It's use is highly discouraged,
+# you should try to fix your build environment instead.
+AC_ARG_ENABLE(no-executables-hack,
+    [AS_HELP_STRING([--enable-no-executables-hack],
+        [Enable hack that prevents link checks at configure time. Highly discouraged.])])
 AC_MSG_CHECKING([whether to disable executable checking])
-if test "$cross_compiling" = yes; then
-    AC_NO_EXECUTABLES
+if test "${enable_no_executables_hack}" = "yes"
+then
     AC_MSG_RESULT([yes])
+    AC_NO_EXECUTABLES
+    # Here we guess conservative values for tests that require link checks
+    # to test for these features. This will prevent these checks from
+    # being performed later in the configuration process.
+    ac_cv_func_strlcat=${ac_cv_func_strlcat-no}
+    ac_cv_func_strlcpy=${ac_cv_func_strlcpy-no}
 else
     AC_MSG_RESULT([no])
 fi
@@ -214,6 +218,8 @@ AC_CHECK_TOOL(STRIP, strip)
 
 AC_PROG_INSTALL
 AC_PROG_LN_S
+
+AC_PATH_PROG(CMP, cmp)
 
 #
 # Checks for specific compiler characteristics
@@ -1142,9 +1148,8 @@ AC_MSG_NOTICE([
   Interface                                 : ${LIBOPENTHREAD_VERSION_INFO//:/.}
   Build system                              : ${build}
   Host system                               : ${host}
-  Target system                             : ${target}
-  Target architecture                       : ${target_cpu}
-  Target OS                                 : ${target_os}
+  Host architecture                         : ${host_cpu}
+  Host OS                                   : ${host_os}
   Cross compiling                           : ${cross_compiling}
   Build shared libraries                    : ${enable_shared}
   Build static libraries                    : ${enable_static}

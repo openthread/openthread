@@ -110,6 +110,11 @@ uint16_t otCommissionerGetSessionId(otInstance *aInstance)
     return aInstance->mThreadNetif.GetCommissioner().GetSessionId();
 }
 
+otCommissionerState otCommissionerGetState(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetCommissioner().GetState();
+}
+
 ThreadError otCommissionerGeneratePSKc(otInstance *aInstance, const char *aPassPhrase, const char *aNetworkName,
                                        const uint8_t *aExtPanId, uint8_t *aPSKc)
 {
