@@ -46,102 +46,127 @@ override CXXFLAGS                                       := $(filter-out -Werror,
 override CFLAGS                                         := $(filter-out -Wformat,$(CFLAGS))
 override CXXFLAGS                                       := $(filter-out -Wformat,$(CXXFLAGS))
 
-libopenthread_emsk_a_CPPFLAGS                            = \
-    -I$(top_srcdir)/include                                \
-    -I$(top_srcdir)/examples/platforms                     \
-    -I$(top_srcdir)/src/core                               \
-    -I$(top_srcdir)/third_party/synopsys/embarc_emsk_bsp   \
-    -Wno-unknown-pragmas                                   \
-    -Wno-unused-function                                   \
-    -Wno-unused-parameter                                  \
-    -Wno-unused-variable                                   \
-    -Wno-implicit-function-declaration                     \
-    -Wno-unused-variable                                   \
+libopenthread_emsk_a_CPPFLAGS                                                                     = \
+    -I$(top_srcdir)/include                                                                         \
+    -I$(top_srcdir)/examples/platforms                                                              \
+    -I$(top_srcdir)/src/core                                                                        \
+    -I$(top_srcdir)/third_party/synopsys/embarc_emsk_bsp                                            \
+    -I$(top_srcdir)/examples/platforms/emsk                                                         \
+    -I$(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/library/clib                               \
+    -Wno-unknown-pragmas                                                                            \
+    -Wno-unused-function                                                                            \
+    -Wno-unused-parameter                                                                           \
+    -Wno-unused-variable                                                                            \
+    -Wno-implicit-function-declaration                                                              \
+    -Wno-unused-variable                                                                            \
+    -Wno-unused-but-set-variable                                                                    \
+    -Wno-type-limits                                                                                \
+    -Wno-sign-compare                                                                               \
+    -Wno-unused-label                                                                               \
     $(NULL)
 
-libopenthread_emsk_a_SOURCES                             = \
-    alarm.c                                                \
-    flash.c                                                \
-    misc.c                                                 \
-    platform.c                                             \
-    radio.c                                                \
-    random.c                                               \
-    uart.c                                                 \
+libopenthread_emsk_a_SOURCES                                                                      = \
+    alarm.c                                                                                         \
+    flash.c                                                                                         \
+    misc.c                                                                                          \
+    platform.c                                                                                      \
+    radio.c                                                                                         \
+    random.c                                                                                        \
+    uart.c                                                                                          \
     $(NULL)
 
 # EMSK BSP DIR
 top_emsk_bspdir = @top_builddir@/third_party/synopsys/embarc_emsk_bsp
 
-libopenthread_emsk_a_SOURCES                            += \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/arc/arc_cache.c                     \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/arc/arc_cxx_support.c               \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/arc/arc_exc_asm.S                   \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/arc/arc_exception.c                 \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/arc/arc_startup.S                   \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/arc/arc_timer.c                     \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/common/emsk_init.c       \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/common/emsk_timer.c      \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/common/mux.c             \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/gpio/dw_gpio.c           \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/gpio/dw_gpio_obj.c       \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/gpio/emsk_gpio.c         \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/pmrf/mrf24j40.c          \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/pmrf/pmrf.c              \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/spi/dw_spi.c             \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/spi/dw_spi_obj.c         \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/spiflash/spiflash.c      \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/uart/dw_uart.c           \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/uart/dw_uart_obj.c       \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/board.c                       \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/common/xprintf/xprintf.c            \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/common/console_io.c                 \
+libopenthread_emsk_a_SOURCES                                                                     += \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/arc/startup/arc_cxx_support.c               \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/arc/startup/arc_startup.S                   \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/arc/arc_cache.c                             \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/arc/arc_exc_asm.S                           \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/arc/arc_exception.c                         \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/arc/arc_timer.c                             \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/common/emsk_init.c               \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/common/emsk_timer.c              \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/common/mux.c                     \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/gpio/dw_gpio_obj.c               \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/gpio/emsk_gpio.c                 \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/pmrf/mrf24j40.c                  \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/pmrf/pmrf.c                      \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/spi/dw_spi_obj.c                 \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/spiflash/spiflash.c              \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/uart/dw_uart_obj.c               \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/board.c                               \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/common/xprintf/xprintf.c                    \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/common/console_io.c                         \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/device/designware/gpio/dw_gpio.c            \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/device/designware/spi/dw_spi.c              \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/device/designware/uart/dw_uart.c            \
     $(NULL)
 
-noinst_HEADERS                                           = \
-    platform-emsk.h                                        \
+libopenthread_emsk_a_SOURCES                                                                     += \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/library/clib/embARC_misc.c                  \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/library/clib/embARC_sbrk.c                  \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/library/clib/embARC_syscalls.c              \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/library/clib/embARC_target.c                \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/library/clib/fatfs_dirent.c                 \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/library/clib/malloc.c                       \
+    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/library/clib/ya_getopt.c                    \
     $(NULL)
 
-noinst_HEADERS                                          += \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/common/dev_common.h      \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/common/emsk_timer.h      \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/common/mux.h             \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/common/mux_hal.h         \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/configs/core_config.h    \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/configs/emsk_hardware.h  \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/gpio/dev_gpio.h          \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/gpio/dw_gpio.h           \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/gpio/dw_gpio_obj.h       \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/gpio/emsk_gpio.h         \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/pmrf/mrf24j40.h          \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/pmrf/pmrf.h              \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/spi/dev_spi.h            \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/spi/dw_spi.h             \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/spi/dw_spi_hal.h         \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/spi/dw_spi_hal_cfg.h     \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/spi/dw_spi_obj.h         \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/spiflash/spiflash.h      \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/uart/dev_uart.h          \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/uart/dw_uart.h           \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/uart/dw_uart_hal.h       \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/uart/dw_uart_obj.h       \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/board/emsk/emsk.h                   \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/common/xprintf/xprintf.h            \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/common/console_io.h                 \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/inc/arc/arc.h                       \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/inc/arc/arc_asm_common.h            \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/inc/arc/arc_builtin.h               \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/inc/arc/arc_cache.h                 \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/inc/arc/arc_em.h                    \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/inc/arc/arc_exception.h             \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/inc/arc/arc_feature_config.h        \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/inc/arc/arc_timer.h                 \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/inc/common_config.h                 \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/inc/embARC_error.h                  \
-    @top_builddir@/third_party/synopsys/embarc_emsk_bsp/inc/embARC_toolchain.h              \
+
+noinst_HEADERS                                                                                    = \
+    platform-emsk.h                                                                                 \
+    arc_core_config.h                                                                               \
+    embARC_BSP_config.h                                                                             \
     $(NULL)
 
-Dash                                                     = -
-libopenthread_emsk_a_LIBADD                              = \
+noinst_HEADERS                                                                                   += \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/board/emsk/common/emsk_timer.h               \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/board/emsk/common/mux.h                      \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/board/emsk/common/mux_hal.h                  \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/board/emsk/gpio/dw_gpio_obj.h                \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/board/emsk/gpio/emsk_gpio.h                  \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/board/emsk/pmrf/mrf24j40.h                   \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/board/emsk/pmrf/pmrf.h                       \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/board/emsk/spi/dw_spi_obj.h                  \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/board/emsk/spiflash/spiflash.h               \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/board/emsk/uart/dw_uart_obj.h                \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/board/emsk/emsk.h                            \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/board/emsk/emsk_hardware.h                   \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/common/xprintf/xprintf.h                     \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/common/console_io.h                          \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/device/designware/gpio/dw_gpio.h             \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/device/designware/spi/dw_spi.h               \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/device/designware/spi/dw_spi_hal.h           \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/device/designware/spi/dw_spi_hal_cfg.h       \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/device/designware/uart/dw_uart.h             \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/device/designware/uart/dw_uart_hal.h         \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/device/device_hal/inc/dev_common.h           \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/device/device_hal/inc/dev_gpio.h             \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/device/device_hal/inc/dev_spi.h              \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/device/device_hal/inc/dev_uart.h             \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/inc/arc/arc.h                                \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/inc/arc/arc_asm_common.h                     \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/inc/arc/arc_builtin.h                        \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/inc/arc/arc_cache.h                          \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/inc/arc/arc_em.h                             \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/inc/arc/arc_exception.h                      \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/inc/arc/arc_feature_config.h                 \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/inc/arc/arc_timer.h                          \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/inc/embARC_error.h                           \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/inc/embARC_toolchain.h                       \
+    $(NULL)
+
+noinst_HEADERS                                                                                   += \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/library/clib/dirent.h                        \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/library/clib/embARC_syscalls.h               \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/library/clib/embARC_target.h                 \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/library/clib/fatfs_dirent.h                  \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/library/clib/ya_getopt.h                     \
+    $(NULL)
+
+Dash                                                                                              = -
+libopenthread_emsk_a_LIBADD                                                                       = \
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

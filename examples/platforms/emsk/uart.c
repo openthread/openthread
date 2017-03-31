@@ -39,14 +39,8 @@
 #include "openthread/platform/uart.h"
 #include "platform-emsk.h"
 
-#ifdef DEBUG
-#include "common/xprintf/xprintf.h"
-#include "common/console_io.h"
-#define DBG(fmt, ...)   xprintf(fmt, ##__VA_ARGS__)
-#else
-#define DBG(fmt, ...)
-#endif //DEBUG
-
+#include <stdio.h>
+#define DBG(fmt, ...)   printf(fmt, ##__VA_ARGS__)
 
 enum
 {

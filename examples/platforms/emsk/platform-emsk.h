@@ -39,7 +39,7 @@
 #include <stdbool.h>
 #include "openthread/types.h"
 
-#include "board/emsk/emsk.h"
+#include "board/board.h"
 
 // Global OpenThread instance structure
 extern otInstance *sInstance;

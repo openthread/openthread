@@ -37,7 +37,8 @@
 #include "openthread/platform/uart.h"
 #include "platform-emsk.h"
 
-otInstance *sInstance;
+#include <stdio.h>
+#define DBG(fmt, ...)   printf(fmt, ##__VA_ARGS__)
 
 void PlatformInit(int argc, char *argv[])
 {
@@ -46,13 +47,15 @@ void PlatformInit(int argc, char *argv[])
     emskRandomInit();
     otPlatUartEnable();
 
+    DBG("OpenThread Init Finished\r\n");
+
     (void)argc;
     (void)argv;
 }
 
 void PlatformProcessDrivers(otInstance *aInstance)
 {
-    sInstance = aInstance;
+    // sInstance = aInstance;
 
     emskUartProcess();
     emskRadioProcess(aInstance);

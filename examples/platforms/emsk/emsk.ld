@@ -1,3 +1,6 @@
+SEARCH_DIR(.)
+GROUP(../../../examples/platforms/emsk/libopenthread-emsk.a libgcc.a libc.a libnosys.a)
+
 MEMORY
 {
  ICCM : ORIGIN = 0x00000000, LENGTH = 0x10000

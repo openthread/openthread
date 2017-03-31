@@ -29,7 +29,7 @@
 .NOTPARALLEL:
 
 AR                              = arc-elf32-ar
-CCAS                            = arc-elf32-as
+CCAS                            = arc-elf32-gcc
 CPP                             = arc-elf32-cpp
 CC                              = arc-elf32-gcc
 CXX                             = arc-elf32-g++
@@ -45,7 +45,6 @@ configure_OPTIONS               = \
     --enable-ftd                  \
     --enable-cli                  \
     --enable-ncp                  \
-    --enable-diag                 \
     --with-examples=emsk          \
     --with-platform-info=EMSK     \
     $(NULL)
@@ -109,8 +108,6 @@ CXXFLAGS                       += \
 CCASFLAGS                      += \
     $(COMMONCCASFLAGS)            \
     $(target_CCASFLAGS)           \
-        -x                             \
-    assembler-with-cpp             \
     $(NULL)
 
 LDFLAGS                        += \
@@ -118,7 +115,6 @@ LDFLAGS                        += \
     $(target_LDFLAGS)             \
     -nostartfiles                 \
     -specs=nano.specs             \
-    -specs=nosys.specs            \
     -Wl,--gc-sections             \
     -Wl,-Map=map.map              \
     -Wl,--defsym=_STACKSIZE=524288 \
@@ -252,7 +248,9 @@ MKDEP_OPT                             = -MMD -MT $@ -MF $@.d
 OPT_OLEVEL                            = -O0
 
 # Include EMSK BSP folder
-ALL_INCLUDES                          = -I$(top_srcdir)/third_party/synopsys/embarc_emsk_bsp
+ALL_INCLUDES                          = -I$(top_srcdir)/third_party/synopsys/embarc_emsk_bsp \
+                                        -I$(top_srcdir)/examples/platforms/emsk \
+                                        -I$(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/library/clib
 
 # COMMON_COMPILE_OPT                  = -mno-sdata $(OPT_OLEVEL) \
                                         $(ALL_INCLUDES) $(MKDEP_OPT)
@@ -283,15 +281,14 @@ CXX_COMPILE_OPT                      += $(CXXCORE_OPT_GNU) \
 ASM_OPT                              += $(ACORE_OPT_GNU) \
                                         $(COMMON_COMPILE_OPT) -x assembler-with-cpp
 LINK_OPT                             += $(LCORE_OPT_GNU) \
-                                        -mno-sdata -nostartfiles -lm
+                                        -mno-sdata -nostartfiles --verbose
 
 arcem11d_target_ABI                   = arcem11d
 arcem11d_target_CPPFLAGS              = $(CXX_COMPILE_OPT)
 arcem11d_target_CFLAGS                = $(COMPILE_OPT)
 arcem11d_target_CXXFLAGS              = $(CXX_COMPILE_OPT)
 arcem11d_target_CCASFLAGS             = $(ASM_OPT)
-arcem11d_target_LDFLAGS               = $(LINK_OPT) \
-                                        $(LD_SYSTEMLIBS)
+arcem11d_target_LDFLAGS               = $(LINK_OPT)
 
 # Instantiate an architecture-specific build template for each target
 # architecture.
