@@ -251,10 +251,13 @@ private:
 #endif
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
-    static void OTCALL s_HandleCoapServerResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage, otMessageInfo *aMessageInfo);
+    static void OTCALL s_HandleCoapServerResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+                                                  otMessageInfo *aMessageInfo);
     void HandleCoapServerResponse(otCoapHeader *aHeader, otMessage *aMessage, otMessageInfo *aMessageInfo);
-    static void OTCALL s_HandleCoapClientResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage, otMessageInfo *aMessageInfo, ThreadError aResult);
-    void HandleCoapClientResponse(otCoapHeader *aHeader, otMessage *aMessage, otMessageInfo *aMessageInfo, ThreadError aResult);
+    static void OTCALL s_HandleCoapClientResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+                                                  otMessageInfo *aMessageInfo, ThreadError aResult);
+    void HandleCoapClientResponse(otCoapHeader *aHeader, otMessage *aMessage, otMessageInfo *aMessageInfo,
+                                  ThreadError aResult);
 #endif
 
 #ifndef OTDLL

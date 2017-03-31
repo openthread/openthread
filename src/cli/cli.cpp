@@ -634,9 +634,10 @@ void Interpreter::ProcessCoapServer(int argc, char *argv[])
     }
     else if (strcmp(argv[0], "name") == 0)
     {
-        if (argv[1]){
+        if (argc > 1)
+        {
             mResource.mUriPath = argv[1];
-            sServer->OutputFormat("Changing server resource to '%s' ... ", argv[1]);
+            sServer->OutputFormat("Changing resource name to '%s': ", mResource.mUriPath);
         }
         else
         {
@@ -654,57 +655,65 @@ exit:
     AppendResult(error);
 }
 
-void OTCALL Interpreter::s_HandleCoapServerResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage, otMessageInfo *aMessageInfo)
+void OTCALL Interpreter::s_HandleCoapServerResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+                                                    otMessageInfo *aMessageInfo)
 {
     static_cast<Interpreter *>(aContext)->HandleCoapServerResponse(aHeader, aMessage, aMessageInfo);
 }
 
 void Interpreter::HandleCoapServerResponse(otCoapHeader *aHeader, otMessage *aMessage, otMessageInfo *aMessageInfo)
 {
+    ThreadError error = kThreadError_None;
+    otMessage *responseMessage;
+
     sServer->OutputFormat("Received CoAP request from [%x:%x:%x:%x:%x:%x:%x:%x]: ",
-							  HostSwap16(aMessageInfo->mSockAddr.mFields.m16[0]),
-							  HostSwap16(aMessageInfo->mSockAddr.mFields.m16[1]),
-							  HostSwap16(aMessageInfo->mSockAddr.mFields.m16[2]),
-							  HostSwap16(aMessageInfo->mSockAddr.mFields.m16[3]),
-							  HostSwap16(aMessageInfo->mSockAddr.mFields.m16[4]),
-							  HostSwap16(aMessageInfo->mSockAddr.mFields.m16[5]),
-							  HostSwap16(aMessageInfo->mSockAddr.mFields.m16[6]),
-							  HostSwap16(aMessageInfo->mSockAddr.mFields.m16[7]));
+                          HostSwap16(aMessageInfo->mSockAddr.mFields.m16[0]),
+                          HostSwap16(aMessageInfo->mSockAddr.mFields.m16[1]),
+                          HostSwap16(aMessageInfo->mSockAddr.mFields.m16[2]),
+                          HostSwap16(aMessageInfo->mSockAddr.mFields.m16[3]),
+                          HostSwap16(aMessageInfo->mSockAddr.mFields.m16[4]),
+                          HostSwap16(aMessageInfo->mSockAddr.mFields.m16[5]),
+                          HostSwap16(aMessageInfo->mSockAddr.mFields.m16[6]),
+                          HostSwap16(aMessageInfo->mSockAddr.mFields.m16[7]));
 
     switch (otCoapHeaderGetCode(aHeader))
     {
-        case kCoapRequestGet:
-            sServer->OutputFormat("GET");
-            break;
-        case kCoapRequestDelete:
-            sServer->OutputFormat("DELETE");
-            break;
-        case kCoapRequestPut:
-            sServer->OutputFormat("PUT");
-            break;
-        case kCoapRequestPost:
-            sServer->OutputFormat("POST");
-            break;
-        default:
-            sServer->OutputFormat("Undefined\r\n");
-            return;
+    case kCoapRequestGet:
+        sServer->OutputFormat("GET");
+        break;
+
+    case kCoapRequestDelete:
+        sServer->OutputFormat("DELETE");
+        break;
+
+    case kCoapRequestPut:
+        sServer->OutputFormat("PUT");
+        break;
+
+    case kCoapRequestPost:
+        sServer->OutputFormat("POST");
+        break;
+
+    default:
+        sServer->OutputFormat("Undefined\r\n");
+        return;
     }
 
     // Output payload of message if existent
     uint16_t payloadLength = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
+
     if (payloadLength > 0)
     {
         char payload[payloadLength] = {};
         otMessageRead(aMessage, otMessageGetOffset(aMessage), &payload, payloadLength);
         sServer->OutputFormat(", Payload = %s", payload);
     }
+
     sServer->OutputFormat("\r\n");
 
     if ((otCoapHeaderGetType(aHeader) == kCoapTypeConfirmable) || otCoapHeaderGetCode(aHeader) == kCoapRequestGet)
     {
-        ThreadError error = kThreadError_None;
         otCoapHeader responseHeader;
-        otMessage *responseMessage;
         otCoapCode responseCode = kCoapResponseValid;
         char responseContent = '0';
 
@@ -712,30 +721,37 @@ void Interpreter::HandleCoapServerResponse(otCoapHeader *aHeader, otMessage *aMe
         {
             responseCode = kCoapResponseContent;
         }
+
         otCoapHeaderInit(&responseHeader, kCoapTypeAcknowledgment, responseCode);
         otCoapHeaderSetMessageId(&responseHeader, otCoapHeaderGetMessageId(aHeader));
         otCoapHeaderSetToken(&responseHeader, otCoapHeaderGetToken(aHeader), otCoapHeaderGetTokenLength(aHeader));
+
         if (otCoapHeaderGetCode(aHeader) == kCoapRequestGet)
         {
             otCoapHeaderSetPayloadMarker(&responseHeader);
         }
+
         responseMessage = otCoapNewMessage(mInstance, &responseHeader);
+        VerifyOrExit(responseMessage != NULL, error = kThreadError_Failed);
+
         if (otCoapHeaderGetCode(aHeader) == kCoapRequestGet)
         {
-            otMessageAppend(responseMessage, &responseContent, sizeof(responseContent));
+            SuccessOrExit(error = otMessageAppend(responseMessage, &responseContent, sizeof(responseContent)));
         }
 
-        error = otCoapSendResponse(mInstance, responseMessage, aMessageInfo);
+        SuccessOrExit(error = otCoapSendResponse(mInstance, responseMessage, aMessageInfo));
+    }
 
-        if (error != kThreadError_None)
-        {
-            sServer->OutputFormat("Cannot send CoAP response message: Error %d\r\n", error);
-            otMessageFree(responseMessage);
-        }
-        else
-        {
-            sServer->OutputFormat("CoAP response sent successfully!\r\n");
-        }
+exit:
+
+    if (error != kThreadError_None && responseMessage != NULL)
+    {
+        sServer->OutputFormat("Cannot send CoAP response message: Error %d\r\n", error);
+        otMessageFree(responseMessage);
+    }
+    else
+    {
+        sServer->OutputFormat("CoAP response sent successfully!\r\n");
     }
 
     (void)aHeader;
@@ -749,15 +765,12 @@ void Interpreter::ProcessCoapClient(int argc, char *argv[])
     otMessage *message;
     otMessageInfo messageInfo;
     otCoapHeader header;
-    const otNetifAddress *address;
 
     // Default parameters
     char coapUri[] = "test";
-    char coapContent[20] = "";
     otCoapType coapType = kCoapTypeNonConfirmable;
     otCoapCode coapCode = kCoapRequestGet;
     otIp6Address coapDestinationIp;
-    otIp6AddressFromString("FF01::1", &coapDestinationIp); // Broadcast
 
     VerifyOrExit(argc > 0, error = kThreadError_InvalidArgs);
 
@@ -784,27 +797,29 @@ void Interpreter::ProcessCoapClient(int argc, char *argv[])
     }
 
     // Destination IPv6 address
-    if (argv[1])
+    if (argc > 1)
     {
         SuccessOrExit(error = otIp6AddressFromString(argv[1], &coapDestinationIp));
     }
+    else
+    {
+        ExitNow(error = kThreadError_InvalidArgs);
+    }
 
     // CoAP-URI
-    if (argv[2])
+    if (argc > 2)
     {
         strcpy(coapUri, argv[2]);
     }
-
-    // CoAP-Type
-    if (strcmp(argv[3], "Confirmable") == 0)
+    else
     {
-        coapType = kCoapTypeConfirmable;
+        ExitNow(error = kThreadError_InvalidArgs);
     }
 
-    // Content
-    if (argv[4])
+    // CoAP-Type
+    if ((argc > 3) && (strcmp(argv[3], "Confirmable") == 0))
     {
-        strcpy(coapContent, argv[4]);
+        coapType = kCoapTypeConfirmable;
     }
 
     otCoapHeaderInit(&header, coapType, coapCode);
@@ -813,16 +828,21 @@ void Interpreter::ProcessCoapClient(int argc, char *argv[])
     otCoapHeaderSetPayloadMarker(&header);
 
     message = otCoapNewMessage(mInstance, &header);
-    SuccessOrExit(error = otMessageAppend(message, &coapContent, sizeof(coapContent)));
+    VerifyOrExit(message != NULL, error = kThreadError_Failed);
+
+    // Embed content into message if given
+    if (argc > 4)
+    {
+        SuccessOrExit(error = otMessageAppend(message, &argv[4], sizeof(argv[4])));
+    }
 
     memset(&messageInfo, 0, sizeof(messageInfo));
     messageInfo.mPeerAddr = coapDestinationIp;
     messageInfo.mPeerPort = OT_DEFAULT_COAP_PORT;
     messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
-    address = otIp6GetUnicastAddresses(mInstance);
-    messageInfo.mSockAddr = address->mNext->mAddress;
 
-    error = otCoapSendRequest(mInstance, message, &messageInfo, (otCoapResponseHandler) &Interpreter::s_HandleCoapClientResponse, this);
+    error = otCoapSendRequest(mInstance, message, &messageInfo,
+                              (otCoapResponseHandler) &Interpreter::s_HandleCoapClientResponse, this);
 
     if (error != kThreadError_None)
     {
@@ -840,12 +860,14 @@ exit:
     AppendResult(error);
 }
 
-void OTCALL Interpreter::s_HandleCoapClientResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage, otMessageInfo *aMessageInfo, ThreadError aResult)
+void OTCALL Interpreter::s_HandleCoapClientResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+                                                    otMessageInfo *aMessageInfo, ThreadError aResult)
 {
     static_cast<Interpreter *>(aContext)->HandleCoapClientResponse(aHeader, aMessage, aMessageInfo, aResult);
 }
 
-void Interpreter::HandleCoapClientResponse(otCoapHeader *aHeader, otMessage *aMessage, otMessageInfo *aMessageInfo, ThreadError aResult)
+void Interpreter::HandleCoapClientResponse(otCoapHeader *aHeader, otMessage *aMessage, otMessageInfo *aMessageInfo,
+                                           ThreadError aResult)
 {
     if (aResult != kThreadError_None)
     {
