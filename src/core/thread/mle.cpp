@@ -172,7 +172,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     memset(&mAddr64, 0, sizeof(mAddr64));
 }
 
-otInstance *Mle::GetInstance()
+otInstance *Mle::GetInstance(void)
 {
     return mNetif.GetInstance();
 }
@@ -522,11 +522,6 @@ bool Mle::IsAttached(void) const
             mDeviceState == kDeviceStateLeader);
 }
 
-DeviceState Mle::GetDeviceState(void) const
-{
-    return mDeviceState;
-}
-
 ThreadError Mle::SetStateDetached(void)
 {
     if (mDeviceState != kDeviceStateDetached)
@@ -595,11 +590,6 @@ ThreadError Mle::SetStateChild(uint16_t aRloc16)
     return kThreadError_None;
 }
 
-uint32_t Mle::GetTimeout(void) const
-{
-    return mTimeout;
-}
-
 ThreadError Mle::SetTimeout(uint32_t aTimeout)
 {
     VerifyOrExit(mTimeout != aTimeout, ;);
@@ -618,11 +608,6 @@ ThreadError Mle::SetTimeout(uint32_t aTimeout)
 
 exit:
     return kThreadError_None;
-}
-
-uint8_t Mle::GetDeviceMode(void) const
-{
-    return mDeviceMode;
 }
 
 ThreadError Mle::SetDeviceMode(uint8_t aDeviceMode)
@@ -890,11 +875,6 @@ void Mle::SetAssignLinkQuality(const Mac::ExtAddress aMacAddr, uint8_t aLinkQual
     default:
         break;
     }
-}
-
-uint8_t Mle::GetRouterSelectionJitter(void) const
-{
-    return mRouterSelectionJitter;
 }
 
 ThreadError Mle::SetRouterSelectionJitter(uint8_t aRouterJitter)
@@ -3181,12 +3161,6 @@ Neighbor *Mle::GetNeighbor(const Mac::Address &aAddress)
     }
 
     return neighbor;
-}
-
-Neighbor *Mle::GetNeighbor(const Ip6::Address &aAddress)
-{
-    (void)aAddress;
-    return NULL;
 }
 
 uint16_t Mle::GetNextHop(uint16_t aDestination) const

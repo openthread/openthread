@@ -113,21 +113,6 @@ ThreadError Netif::RemoveCallback(NetifCallback &aCallback)
     return error;
 }
 
-Netif *Netif::GetNext() const
-{
-    return mNext;
-}
-
-Ip6 &Netif::GetIp6(void)
-{
-    return mIp6;
-}
-
-int8_t Netif::GetInterfaceId() const
-{
-    return mInterfaceId;
-}
-
 bool Netif::IsMulticastSubscribed(const Address &aAddress) const
 {
     bool rval = false;
@@ -152,21 +137,6 @@ bool Netif::IsMulticastSubscribed(const Address &aAddress) const
 
 exit:
     return rval;
-}
-
-void Netif::SubscribeAllRoutersMulticast()
-{
-    mAllRoutersSubscribed = true;
-}
-
-void Netif::UnsubscribeAllRoutersMulticast()
-{
-    mAllRoutersSubscribed = false;
-}
-
-const NetifMulticastAddress *Netif::GetMulticastAddresses() const
-{
-    return mMulticastAddresses;
 }
 
 ThreadError Netif::SubscribeMulticast(NetifMulticastAddress &aAddress)
@@ -303,21 +273,6 @@ void Netif::UnsubscribeAllExternalMulticastAddresses(void)
             UnsubscribeExternalMulticast(*static_cast<Address *>(&entry->mAddress));
         }
     }
-}
-
-bool Netif::IsMulticastPromiscuousEnabled(void)
-{
-    return mMulticastPromiscuous;
-}
-
-void Netif::SetMulticastPromiscuous(bool aEnabled)
-{
-    mMulticastPromiscuous = aEnabled;
-}
-
-const NetifUnicastAddress *Netif::GetUnicastAddresses() const
-{
-    return mUnicastAddresses;
 }
 
 ThreadError Netif::AddUnicastAddress(NetifUnicastAddress &aAddress)
@@ -485,11 +440,6 @@ bool Netif::IsUnicastAddress(const Address &aAddress) const
 
 exit:
     return rval;
-}
-
-bool Netif::IsStateChangedCallbackPending(void)
-{
-    return mStateChangedFlags != 0;
 }
 
 void Netif::SetStateChangedFlags(uint32_t aFlags)

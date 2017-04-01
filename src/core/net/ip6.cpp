@@ -69,16 +69,6 @@ Message *Ip6::NewMessage(uint16_t reserved)
     return mMessagePool.New(Message::kTypeIp6, sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + reserved);
 }
 
-bool Ip6::IsForwardingEnabled(void)
-{
-    return mForwardingEnabled;
-}
-
-void Ip6::SetForwardingEnabled(bool aEnable)
-{
-    mForwardingEnabled = aEnable;
-}
-
 uint16_t Ip6::UpdateChecksum(uint16_t checksum, uint16_t val)
 {
     uint16_t result = checksum + val;
@@ -118,16 +108,6 @@ void Ip6::SetReceiveDatagramCallback(otIp6ReceiveCallback aCallback, void *aCall
 {
     mReceiveIp6DatagramCallback = aCallback;
     mReceiveIp6DatagramCallbackContext = aCallbackContext;
-}
-
-bool Ip6::IsReceiveIp6FilterEnabled(void)
-{
-    return mIsReceiveIp6FilterEnabled;
-}
-
-void Ip6::SetReceiveIp6FilterEnabled(bool aEnabled)
-{
-    mIsReceiveIp6FilterEnabled = aEnabled;
 }
 
 ThreadError Ip6::AddMplOption(Message &message, Header &header)
@@ -918,11 +898,6 @@ ThreadError Ip6::RemoveNetif(Netif &aNetif)
 
 exit:
     return error;
-}
-
-Netif *Ip6::GetNetifList()
-{
-    return mNetifListHead;
 }
 
 Netif *Ip6::GetNetifById(int8_t aInterfaceId)

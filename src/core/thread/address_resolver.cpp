@@ -69,7 +69,7 @@ AddressResolver::AddressResolver(ThreadNetif &aThreadNetif) :
     mNetif.GetIp6().mIcmp.RegisterHandler(mIcmpHandler);
 }
 
-otInstance *AddressResolver::GetInstance()
+otInstance *AddressResolver::GetInstance(void)
 {
     return mNetif.GetInstance();
 }

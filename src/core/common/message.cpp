@@ -289,11 +289,6 @@ exit:
     return next;
 }
 
-uint16_t Message::GetLength(void) const
-{
-    return mInfo.mLength;
-}
-
 ThreadError Message::SetLength(uint16_t aLength)
 {
     ThreadError error = kThreadError_None;
@@ -332,11 +327,6 @@ uint8_t Message::GetBufferCount(void) const
     return rval;
 }
 
-uint16_t Message::GetOffset(void) const
-{
-    return mInfo.mOffset;
-}
-
 ThreadError Message::MoveOffset(int aDelta)
 {
     ThreadError error = kThreadError_None;
@@ -364,26 +354,6 @@ exit:
     return error;
 }
 
-uint8_t Message::GetType(void) const
-{
-    return mInfo.mType;
-}
-
-void Message::SetType(uint8_t aType)
-{
-    mInfo.mType = aType;
-}
-
-uint8_t Message::GetSubType(void) const
-{
-    return mInfo.mSubType;
-}
-
-void Message::SetSubType(uint8_t aSubType)
-{
-    mInfo.mSubType = aSubType;
-}
-
 bool Message::IsSubTypeMle(void) const
 {
     bool rval = false;
@@ -397,11 +367,6 @@ bool Message::IsSubTypeMle(void) const
     }
 
     return rval;
-}
-
-uint8_t Message::GetPriority(void) const
-{
-    return mInfo.mPriority;
 }
 
 ThreadError Message::SetPriority(uint8_t aPriority)
@@ -710,16 +675,6 @@ exit:
     return messageCopy;
 }
 
-uint16_t Message::GetDatagramTag(void) const
-{
-    return mInfo.mDatagramTag;
-}
-
-void Message::SetDatagramTag(uint16_t aTag)
-{
-    mInfo.mDatagramTag = aTag;
-}
-
 bool Message::GetChildMask(uint8_t aChildIndex) const
 {
     assert(aChildIndex < sizeof(mInfo.mChildMask) * 8);
@@ -752,71 +707,6 @@ bool Message::IsChildPending(void) const
 
 exit:
     return rval;
-}
-
-uint16_t Message::GetPanId(void) const
-{
-    return mInfo.mPanId;
-}
-
-void Message::SetPanId(uint16_t aPanId)
-{
-    mInfo.mPanId = aPanId;
-}
-
-uint8_t Message::GetChannel(void) const
-{
-    return mInfo.mChannel;
-}
-
-void Message::SetChannel(uint8_t aChannel)
-{
-    mInfo.mChannel = aChannel;
-}
-
-uint8_t Message::GetTimeout(void) const
-{
-    return mInfo.mTimeout;
-}
-
-void Message::SetTimeout(uint8_t aTimeout)
-{
-    mInfo.mTimeout = aTimeout;
-}
-
-int8_t Message::GetInterfaceId(void) const
-{
-    return mInfo.mInterfaceId;
-}
-
-void Message::SetInterfaceId(int8_t aInterfaceId)
-{
-    mInfo.mInterfaceId = aInterfaceId;
-}
-
-bool Message::GetDirectTransmission(void) const
-{
-    return mInfo.mDirectTx;
-}
-
-void Message::ClearDirectTransmission(void)
-{
-    mInfo.mDirectTx = false;
-}
-
-void Message::SetDirectTransmission(void)
-{
-    mInfo.mDirectTx = true;
-}
-
-bool Message::IsLinkSecurityEnabled(void) const
-{
-    return mInfo.mLinkSecurity;
-}
-
-void Message::SetLinkSecurityEnabled(bool aLinkSecurityEnabled)
-{
-    mInfo.mLinkSecurity = aLinkSecurityEnabled;
 }
 
 uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t aLength) const
@@ -884,16 +774,6 @@ uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t 
     }
 
     return aChecksum;
-}
-
-uint16_t Message::GetReserved(void) const
-{
-    return mInfo.mReserved;
-}
-
-void Message::SetReserved(uint16_t aReserved)
-{
-    mInfo.mReserved = aReserved;
 }
 
 void Message::SetMessageQueue(MessageQueue *aMessageQueue)

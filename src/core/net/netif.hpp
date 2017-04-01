@@ -206,9 +206,7 @@ public:
      * @returns True if the object is free, false otherwise.
      *
      */
-    bool IsFree(void) {
-        return (mCallback == NULL);
-    }
+    bool IsFree(void) { return (mCallback == NULL); }
 
     /**
      * This method frees the object.
@@ -269,14 +267,14 @@ public:
      * @returns A reference to the IPv6 network object.
      *
      */
-    Ip6 &GetIp6(void);
+    Ip6 &GetIp6(void) { return mIp6; }
 
     /**
      * This method returns the next network interface in the list.
      *
      * @returns A pointer to the next network interface.
      */
-    Netif *GetNext(void) const;
+    Netif *GetNext(void) const { return mNext; }
 
     /**
      * This method returns the network interface identifier.
@@ -284,7 +282,7 @@ public:
      * @returns The network interface identifier.
      *
      */
-    int8_t GetInterfaceId(void) const;
+    int8_t GetInterfaceId(void) const { return mInterfaceId; }
 
     /**
      * This method returns a pointer to the list of unicast addresses.
@@ -292,7 +290,7 @@ public:
      * @returns A pointer to the list of unicast addresses.
      *
      */
-    const NetifUnicastAddress *GetUnicastAddresses(void) const;
+    const NetifUnicastAddress *GetUnicastAddresses(void) const { return mUnicastAddresses; }
 
     /**
      * This method adds a unicast address to the network interface.
@@ -372,13 +370,13 @@ public:
      * This method subscribes the network interface to the link-local and realm-local all routers address.
      *
      */
-    void SubscribeAllRoutersMulticast(void);
+    void SubscribeAllRoutersMulticast(void) { mAllRoutersSubscribed = true; }
 
     /**
      * This method unsubscribes the network interface to the link-local and realm-local all routers address.
      *
      */
-    void UnsubscribeAllRoutersMulticast(void);
+    void UnsubscribeAllRoutersMulticast(void) { mAllRoutersSubscribed = false; }
 
     /**
      * This method returns a pointer to the list of multicast addresses.
@@ -386,7 +384,7 @@ public:
      * @returns A pointer to the list of multicast addresses.
      *
      */
-    const NetifMulticastAddress *GetMulticastAddresses(void) const;
+    const NetifMulticastAddress *GetMulticastAddresses(void) const { return mMulticastAddresses; }
 
     /**
      * This method subscribes the network interface to a multicast address.
@@ -447,7 +445,7 @@ public:
      * @retval TRUE   If the multicast promiscuous mode is enabled.
      * @retval FALSE  If the multicast promiscuous mode is disabled.
      */
-    bool IsMulticastPromiscuousEnabled(void);
+    bool IsMulticastPromiscuousEnabled(void) { return mMulticastPromiscuous; }
 
     /**
      * This method enables multicast promiscuous mode on the network interface.
@@ -455,7 +453,7 @@ public:
      * @param[in]  aEnabled  TRUE if Multicast Promiscuous mode is enabled, FALSE otherwise.
      *
      */
-    void SetMulticastPromiscuous(bool aEnabled);
+    void SetMulticastPromiscuous(bool aEnabled) { mMulticastPromiscuous = aEnabled; }
 
     /**
      * This method registers a network interface callback.
@@ -483,7 +481,7 @@ public:
      * @retval TRUE if a state changed callback is pending, FALSE otherwise.
      *
      */
-    bool IsStateChangedCallbackPending(void);
+    bool IsStateChangedCallbackPending(void) { return mStateChangedFlags != 0; }
 
     /**
      * This method schedules notification of @p aFlags.

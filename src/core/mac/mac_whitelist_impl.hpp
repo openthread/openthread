@@ -77,7 +77,7 @@ public:
      * @retval FALSE  If the whitelist filter is disabled.
      *
      */
-    bool IsEnabled(void) const;
+    bool IsEnabled(void) const { return mEnabled; }
 
     /**
      * This method enables the whitelist filter.
@@ -85,7 +85,7 @@ public:
      * @param[in]  aEnabled  TRUE to enable the whitelist filter, FALSE otherwise.
      *
      */
-    void SetEnabled(bool aEnabled);
+    void SetEnabled(bool aEnabled) { mEnabled = aEnabled; }
 
     /**
      * This method returns the maximum number of whitelist entries.
@@ -93,7 +93,7 @@ public:
      * @returns The maximum number of whitelist entries.
      *
      */
-    int GetMaxEntries(void) const;
+    int GetMaxEntries(void) const { return kMaxEntries; }
 
     /**
      * This method gets a whitelist entry.

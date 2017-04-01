@@ -86,7 +86,7 @@ public:
      * @returns The pointer to the parent otInstance structure.
      *
      */
-    otInstance *GetInstance();
+    otInstance *GetInstance(void);
 
     /**
      * This method enables mesh forwarding and the IEEE 802.15.4 MAC layer.

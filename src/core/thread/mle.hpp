@@ -466,7 +466,7 @@ public:
      * @returns The pointer to the parent otInstance structure.
      *
      */
-    otInstance *GetInstance();
+    otInstance *GetInstance(void);
 
     /**
      * This method enables MLE.
@@ -614,7 +614,7 @@ public:
      * @returns The current Thread interface state.
      *
      */
-    DeviceState GetDeviceState(void) const;
+    DeviceState GetDeviceState(void) const { return mDeviceState; }
 
     /**
      * This method returns the Device Mode as reported in the Mode TLV.
@@ -622,7 +622,7 @@ public:
      * @returns The Device Mode as reported in the Mode TLV.
      *
      */
-    uint8_t GetDeviceMode(void) const;
+    uint8_t GetDeviceMode(void) const { return mDeviceMode; }
 
     /**
      * This method sets the Device Mode as reported in the Mode TLV.
@@ -709,7 +709,7 @@ public:
      * @returns The MLE Timeout value.
      *
      */
-    uint32_t GetTimeout(void) const;
+    uint32_t GetTimeout(void) const { return mTimeout; }
 
     /**
      * This method sets the MLE Timeout value.
@@ -827,7 +827,7 @@ public:
      * @returns The ROUTER_SELECTION_JITTER value.
      *
      */
-    uint8_t GetRouterSelectionJitter(void) const;
+    uint8_t GetRouterSelectionJitter(void) const { return mRouterSelectionJitter; }
 
     /**
      * This method sets the ROUTER_SELECTION_JITTER value.
@@ -1195,7 +1195,7 @@ protected:
      * @returns A pointer to the neighbor object.
      *
      */
-    Neighbor *GetNeighbor(const Ip6::Address &aAddress);
+    Neighbor *GetNeighbor(const Ip6::Address &aAddress) { (void)aAddress; return NULL; }
 
     /**
      * This method returns the next hop towards an RLOC16 destination.

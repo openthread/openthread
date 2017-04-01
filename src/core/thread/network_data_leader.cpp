@@ -69,16 +69,6 @@ void LeaderBase::Reset(void)
     mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
 }
 
-uint8_t LeaderBase::GetVersion(void) const
-{
-    return mVersion;
-}
-
-uint8_t LeaderBase::GetStableVersion(void) const
-{
-    return mStableVersion;
-}
-
 ThreadError LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext)
 {
     PrefixTlv *prefix;

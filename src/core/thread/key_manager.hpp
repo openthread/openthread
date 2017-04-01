@@ -110,7 +110,7 @@ public:
      * @returns The current key sequence value.
      *
      */
-    uint32_t GetCurrentKeySequence(void) const;
+    uint32_t GetCurrentKeySequence(void) const { return mKeySequence; }
 
     /**
      * This method sets the current key sequence value.
@@ -126,7 +126,7 @@ public:
      * @returns A pointer to the current MAC key.
      *
      */
-    const uint8_t *GetCurrentMacKey(void) const;
+    const uint8_t *GetCurrentMacKey(void) const { return mKey + kMacKeyOffset; }
 
     /**
      * This method returns a pointer to the current MLE key.
@@ -134,7 +134,7 @@ public:
      * @returns A pointer to the current MLE key.
      *
      */
-    const uint8_t *GetCurrentMleKey(void) const;
+    const uint8_t *GetCurrentMleKey(void) const { return mKey; }
 
     /**
      * This method returns a pointer to a temporary MAC key computed from the given key sequence.
@@ -162,7 +162,7 @@ public:
      * @returns The current MAC Frame Counter value.
      *
      */
-    uint32_t GetMacFrameCounter(void) const;
+    uint32_t GetMacFrameCounter(void) const { return mMacFrameCounter; }
 
     /**
      * This method sets the current MAC Frame Counter value.
@@ -170,7 +170,7 @@ public:
      * @param[in]  aMacFrameCounter  The MAC Frame Counter value.
      *
      */
-    void SetMacFrameCounter(uint32_t aMacFrameCounter);
+    void SetMacFrameCounter(uint32_t aMacFrameCounter) { mMacFrameCounter = aMacFrameCounter; }
 
     /**
      * This method sets the MAC Frame Counter value which is stored in non-volatile memory.
@@ -178,7 +178,7 @@ public:
      * @param[in]  aStoredMacFrameCounter  The stored MAC Frame Counter value.
      *
      */
-    void SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter);
+    void SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter) { mStoredMacFrameCounter = aStoredMacFrameCounter; }
 
     /**
      * This method increments the current MAC Frame Counter value.
@@ -192,7 +192,7 @@ public:
      * @returns The current MLE Frame Counter value.
      *
      */
-    uint32_t GetMleFrameCounter(void) const;
+    uint32_t GetMleFrameCounter(void) const { return mMleFrameCounter; }
 
     /**
      * This method sets the current MLE Frame Counter value.
@@ -200,7 +200,7 @@ public:
      * @param[in]  aMleFrameCounter  The MLE Frame Counter value.
      *
      */
-    void SetMleFrameCounter(uint32_t aMleFrameCounter);
+    void SetMleFrameCounter(uint32_t aMleFrameCounter) { mMleFrameCounter = aMleFrameCounter; }
 
     /**
      * This method sets the MLE Frame Counter value which is stored in non-volatile memory.
@@ -208,7 +208,7 @@ public:
      * @param[in]  aStoredMleFrameCounter  The stored MLE Frame Counter value.
      *
      */
-    void SetStoredMleFrameCounter(uint32_t aStoredMleFrameCounter);
+    void SetStoredMleFrameCounter(uint32_t aStoredMleFrameCounter) { mStoredMleFrameCounter = aStoredMleFrameCounter; }
 
     /**
      * This method increments the current MLE Frame Counter value.
@@ -222,7 +222,7 @@ public:
      * @returns A pointer to the KEK.
      *
      */
-    const uint8_t *GetKek(void) const;
+    const uint8_t *GetKek(void) const { return mKek; }
 
     /**
      * This method sets the KEK.
@@ -238,13 +238,13 @@ public:
      * @returns The current KEK Frame Counter value.
      *
      */
-    uint32_t GetKekFrameCounter(void) const;
+    uint32_t GetKekFrameCounter(void) const { return mKekFrameCounter; }
 
     /**
      * This method increments the current KEK Frame Counter value.
      *
      */
-    void IncrementKekFrameCounter(void);
+    void IncrementKekFrameCounter(void) { mKekFrameCounter++; }
 
     /**
      * This method returns the KeyRotation time.
@@ -318,6 +318,7 @@ private:
         kMaxKeyRotationTime = 0xffffffff / 3600u / 1000u,
         kDefaultKeyRotationTime = 672,
         kDefaultKeySwitchGuardTime = 624,
+        kMacKeyOffset = 16,
     };
 
     ThreadError ComputeKey(uint32_t aKeySequence, uint8_t *aKey);

@@ -71,7 +71,7 @@ NetworkDiagnostic::NetworkDiagnostic(ThreadNetif &aThreadNetif) :
     mNetif.GetCoapServer().AddResource(mDiagnosticReset);
 }
 
-otInstance *NetworkDiagnostic::GetInstance()
+otInstance *NetworkDiagnostic::GetInstance(void)
 {
     return mNetif.GetInstance();
 }

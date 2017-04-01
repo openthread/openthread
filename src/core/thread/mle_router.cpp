@@ -456,36 +456,6 @@ ThreadError MleRouter::SetStateLeader(uint16_t aRloc16)
     return kThreadError_None;
 }
 
-uint8_t MleRouter::GetNetworkIdTimeout(void) const
-{
-    return mNetworkIdTimeout;
-}
-
-void MleRouter::SetNetworkIdTimeout(uint8_t aTimeout)
-{
-    mNetworkIdTimeout = aTimeout;
-}
-
-uint8_t MleRouter::GetRouterUpgradeThreshold(void) const
-{
-    return mRouterUpgradeThreshold;
-}
-
-void MleRouter::SetRouterUpgradeThreshold(uint8_t aThreshold)
-{
-    mRouterUpgradeThreshold = aThreshold;
-}
-
-uint8_t MleRouter::GetRouterDowngradeThreshold(void) const
-{
-    return mRouterDowngradeThreshold;
-}
-
-void MleRouter::SetRouterDowngradeThreshold(uint8_t aThreshold)
-{
-    mRouterDowngradeThreshold = aThreshold;
-}
-
 bool MleRouter::HandleAdvertiseTimer(void *aContext)
 {
     MleRouter *obj = static_cast<MleRouter *>(aContext);
@@ -3276,31 +3246,6 @@ exit:
     return rval;
 }
 
-uint8_t MleRouter::GetRouterIdSequence(void) const
-{
-    return mRouterIdSequence;
-}
-
-uint8_t MleRouter::GetLeaderWeight(void) const
-{
-    return mLeaderWeight;
-}
-
-void MleRouter::SetLeaderWeight(uint8_t aWeight)
-{
-    mLeaderWeight = aWeight;
-}
-
-uint32_t MleRouter::GetLeaderPartitionId(void) const
-{
-    return mFixedLeaderPartitionId;
-}
-
-void MleRouter::SetLeaderPartitionId(uint32_t aPartitionId)
-{
-    mFixedLeaderPartitionId = aPartitionId;
-}
-
 ThreadError MleRouter::SetPreferredRouterId(uint8_t aRouterId)
 {
     ThreadError error = kThreadError_None;
@@ -3314,16 +3259,6 @@ ThreadError MleRouter::SetPreferredRouterId(uint8_t aRouterId)
 
 exit:
     return error;
-}
-
-void MleRouter::SetPreviousPartitionId(uint32_t aPartitionId)
-{
-    mPreviousPartitionId = aPartitionId;
-}
-
-uint32_t MleRouter::GetPreviousPartitionId(void) const
-{
-    return mPreviousPartitionId;
 }
 
 void MleRouter::SetRouterId(uint8_t aRouterId)
