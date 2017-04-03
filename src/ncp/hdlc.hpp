@@ -190,7 +190,8 @@ public:
      * @param[in]  aContext       A pointer to arbitrary context information.
      *
      */
-    Decoder(uint8_t *aOutBuf, uint16_t aOutLength, FrameHandler aFrameHandler, ErrorHandler aErrorHandler, void *aContext);
+    Decoder(uint8_t *aOutBuf, uint16_t aOutLength, FrameHandler aFrameHandler, ErrorHandler aErrorHandler,
+            void *aContext);
 
     /**
      * This method streams bytes into the decoder.
