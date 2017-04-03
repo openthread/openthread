@@ -182,7 +182,7 @@ void TimerScheduler::FireTimers()
     }
 }
 
-Ip6::Ip6 *TimerScheduler::GetIp6()
+Ip6::Ip6 *TimerScheduler::GetIp6(void)
 {
     return Ip6::Ip6FromTimerScheduler(this);
 }

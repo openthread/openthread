@@ -124,7 +124,7 @@ public:
      * @retval FALSE  If there are no tasklets pending.
      *
      */
-    bool AreTaskletsPending(void);
+    bool AreTaskletsPending(void) { return mHead != NULL; }
 
     /**
      * This method processes all tasklets queued when this is called.
@@ -138,7 +138,7 @@ public:
      * @returns The pointer to the parent Ip6 structure.
      *
      */
-    Ip6::Ip6 *GetIp6();
+    Ip6::Ip6 *GetIp6(void);
 
 private:
     Tasklet *PopTasklet(void);

@@ -249,7 +249,7 @@ public:
      *
      * @returns The number of bytes in the message.
      */
-    uint16_t GetLength(void) const;
+    uint16_t GetLength(void) const { return mInfo.mLength; }
 
     /**
      * This method sets the number of bytes in the message.
@@ -275,7 +275,7 @@ public:
      * @returns A byte offset within the message.
      *
      */
-    uint16_t GetOffset(void) const;
+    uint16_t GetOffset(void) const { return mInfo.mOffset; }
 
     /**
      * This method moves the byte offset within the message.
@@ -305,7 +305,15 @@ public:
      * @returns The type of the message.
      *
      */
-    uint8_t GetType(void) const;
+    uint8_t GetType(void) const { return mInfo.mType; }
+
+    /**
+     * This method sets the message type.
+     *
+     * @param[in]  aType  The message type.
+     *
+     */
+    void SetType(uint8_t aType) { mInfo.mType = aType; }
 
     /**
      * This method returns the sub type of the message.
@@ -313,7 +321,7 @@ public:
      * @returns The sub type of the message.
      *
      */
-    uint8_t GetSubType(void) const;
+    uint8_t GetSubType(void) const { return mInfo.mSubType; }
 
     /**
      * This method sets the message sub type.
@@ -321,7 +329,7 @@ public:
      * @param[in]  aSubType  The message sub type.
      *
      */
-    void SetSubType(uint8_t aSubType);
+    void SetSubType(uint8_t aSubType) { mInfo.mSubType = aSubType; }
 
     /**
      * This method returns whether or not the message is of MLE subtype.
@@ -338,7 +346,7 @@ public:
      * @returns The priority level associated with this message.
      *
      */
-    uint8_t GetPriority(void) const;
+    uint8_t GetPriority(void) const { return mInfo.mPriority; }
 
     /**
      * This method sets the messages priority.
@@ -455,7 +463,7 @@ public:
      * @returns The 6LoWPAN datagram tag.
      *
      */
-    uint16_t GetDatagramTag(void) const;
+    uint16_t GetDatagramTag(void) const { return mInfo.mDatagramTag; }
 
     /**
      * This method sets the datagram tag used for 6LoWPAN fragmentation.
@@ -463,7 +471,7 @@ public:
      * @param[in]  aTag  The 6LoWPAN datagram tag.
      *
      */
-    void SetDatagramTag(uint16_t aTag);
+    void SetDatagramTag(uint16_t aTag) { mInfo.mDatagramTag = aTag; }
 
     /**
      * This method returns whether or not the message forwarding is scheduled for the child.
@@ -509,7 +517,7 @@ public:
      * @returns The IEEE 802.15.4 Destination PAN ID.
      *
      */
-    uint16_t GetPanId(void) const;
+    uint16_t GetPanId(void) const { return mInfo.mPanId; }
 
     /**
      * This method sets the IEEE 802.15.4 Destination PAN ID.
@@ -519,7 +527,7 @@ public:
      * @param[in]  aPanId  The IEEE 802.15.4 Destination PAN ID.
      *
      */
-    void SetPanId(uint16_t aPanId);
+    void SetPanId(uint16_t aPanId) { mInfo.mPanId = aPanId; }
 
     /**
      * This method returns the IEEE 802.15.4 Channel to use for transmission.
@@ -529,7 +537,7 @@ public:
      * @returns The IEEE 802.15.4 Channel to use for transmission.
      *
      */
-    uint8_t GetChannel(void) const;
+    uint8_t GetChannel(void) const { return mInfo.mChannel; }
 
     /**
      * This method sets the IEEE 802.15.4 Channel to use for transmission.
@@ -539,7 +547,7 @@ public:
      * @param[in]  aChannel  The IEEE 802.15.4 Channel to use for transmission.
      *
      */
-    void SetChannel(uint8_t aChannel);
+    void SetChannel(uint8_t aChannel) { mInfo.mChannel = aChannel; }
 
     /**
      * This method returns the timeout used for 6LoWPAN reassembly.
@@ -547,7 +555,7 @@ public:
      * @returns The time remaining in seconds.
      *
      */
-    uint8_t GetTimeout(void) const;
+    uint8_t GetTimeout(void) const { return mInfo.mTimeout; }
 
     /**
      * This method sets the timeout used for 6LoWPAN reassembly.
@@ -555,7 +563,7 @@ public:
      * @param[in]  aTimeout  The timeout value.
      *
      */
-    void SetTimeout(uint8_t aTimeout);
+    void SetTimeout(uint8_t aTimeout) { mInfo.mTimeout = aTimeout; }
 
     /**
      * This method returns the interface ID.
@@ -563,7 +571,7 @@ public:
      * @returns The interface ID.
      *
      */
-    int8_t GetInterfaceId(void) const;
+    int8_t GetInterfaceId(void) const { return mInfo.mInterfaceId; }
 
     /**
      * This method sets the interface ID.
@@ -571,7 +579,7 @@ public:
      * @param[in]  aInterfaceId  The interface ID value.
      *
      */
-    void SetInterfaceId(int8_t aInterfaceId);
+    void SetInterfaceId(int8_t aInterfaceId) { mInfo.mInterfaceId = aInterfaceId; }
 
     /**
      * This method returns whether or not message forwarding is scheduled for direct transmission.
@@ -580,19 +588,19 @@ public:
      * @retval FALSE  If message forwarding is not scheduled for direct transmission.
      *
      */
-    bool GetDirectTransmission(void) const;
+    bool GetDirectTransmission(void) const { return mInfo.mDirectTx; }
 
     /**
      * This method unschedules forwarding using direct transmission.
      *
      */
-    void ClearDirectTransmission(void);
+    void ClearDirectTransmission(void) { mInfo.mDirectTx = false; }
 
     /**
      * This method schedules forwarding using direct transmission.
      *
      */
-    void SetDirectTransmission(void);
+    void SetDirectTransmission(void) { mInfo.mDirectTx = true; }
 
     /**
      * This method indicates whether or not link security is enabled for the message.
@@ -601,7 +609,7 @@ public:
      * @retval FALSE  If link security is not enabled.
      *
      */
-    bool IsLinkSecurityEnabled(void) const;
+    bool IsLinkSecurityEnabled(void) const { return mInfo.mLinkSecurity; }
 
     /**
      * This method sets whether or not link security is enabled for the message.
@@ -609,7 +617,7 @@ public:
      * @param[in]  aLinkSecurityEnabled  TRUE if link security is enabled, FALSE otherwise.
      *
      */
-    void SetLinkSecurityEnabled(bool aLinkSecurityEnabled);
+    void SetLinkSecurityEnabled(bool aLinkSecurityEnabled) { mInfo.mLinkSecurity = aLinkSecurityEnabled; }
 
     /**
      * This method is used to update a checksum value.
@@ -717,7 +725,7 @@ private:
      * @returns The number of reserved header bytes.
      *
      */
-    uint16_t GetReserved(void) const;
+    uint16_t GetReserved(void) const { return mInfo.mReserved; }
 
     /**
      * This method sets the number of reserved header bytes.
@@ -725,15 +733,7 @@ private:
      * @pram[in]  aReservedHeader  The number of header bytes to reserve.
      *
      */
-    void SetReserved(uint16_t aReservedHeader);
-
-    /**
-     * This method sets the message type.
-     *
-     * @param[in]  aType  The message type.
-     *
-     */
-    void SetType(uint8_t aType);
+    void SetReserved(uint16_t aReservedHeader) { mInfo.mReserved = aReservedHeader; }
 
     /**
      * This method adds or frees message buffers to meet the requested length.

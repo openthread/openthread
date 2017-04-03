@@ -287,7 +287,7 @@ public:
      * @retval TRUE   If rx-on-when-idle is enabled.
      * @retval FALSE  If rx-on-when-idle is not enabled.
      */
-    bool GetRxOnWhenIdle(void) const;
+    bool GetRxOnWhenIdle(void) const { return mRxOnWhenIdle; }
 
     /**
      * This method sets the rx-on-when-idle mode.
@@ -325,7 +325,7 @@ public:
      * @returns A pointer to the IEEE 802.15.4 Extended Address.
      *
      */
-    const ExtAddress *GetExtAddress(void) const;
+    const ExtAddress *GetExtAddress(void) const { return &mExtAddress; }
 
     /**
      * This method sets the IEEE 802.15.4 Extended Address
@@ -352,7 +352,7 @@ public:
      * @returns The IEEE 802.15.4 Short Address.
      *
      */
-    ShortAddress GetShortAddress(void) const;
+    ShortAddress GetShortAddress(void) const { return mShortAddress; }
 
     /**
      * This method sets the IEEE 802.15.4 Short Address.
@@ -370,7 +370,7 @@ public:
      * @returns The IEEE 802.15.4 Channel.
      *
      */
-    uint8_t GetChannel(void) const;
+    uint8_t GetChannel(void) const { return mChannel; }
 
     /**
      * This method sets the IEEE 802.15.4 Channel.
@@ -388,7 +388,7 @@ public:
      * @returns  The maximum transmit power in dBm.
      *
      */
-    int8_t GetMaxTransmitPower(void) const;
+    int8_t GetMaxTransmitPower(void) const { return mMaxTransmitPower; }
 
     /**
      * This method sets the maximum transmit power in dBm.
@@ -396,7 +396,7 @@ public:
      * @param[in]  aPower  The maximum transmit power in dBm.
      *
      */
-    void SetMaxTransmitPower(int8_t aPower);
+    void SetMaxTransmitPower(int8_t aPower) { mMaxTransmitPower = aPower; }
 
     /**
      * This method returns the IEEE 802.15.4 Network Name.
@@ -404,7 +404,7 @@ public:
      * @returns A pointer to the IEEE 802.15.4 Network Name.
      *
      */
-    const char *GetNetworkName(void) const;
+    const char *GetNetworkName(void) const { return mNetworkName.m8; }
 
     /**
      * This method sets the IEEE 802.15.4 Network Name.
@@ -422,7 +422,7 @@ public:
      * @returns The IEEE 802.15.4 PAN ID.
      *
      */
-    uint16_t GetPanId(void) const;
+    uint16_t GetPanId(void) const { return mPanId; }
 
     /**
      * This method sets the IEEE 802.15.4 PAN ID.
@@ -440,7 +440,7 @@ public:
      * @returns A pointer to the IEEE 802.15.4 Extended PAN ID.
      *
      */
-    const uint8_t *GetExtendedPanId(void) const;
+    const uint8_t *GetExtendedPanId(void) const { return mExtendedPanId.m8; }
 
     /**
      * This method sets the IEEE 802.15.4 Extended PAN ID.
@@ -458,7 +458,7 @@ public:
      * @returns A reference to the MAC whitelist filter.
      *
      */
-    Whitelist &GetWhitelist(void);
+    Whitelist &GetWhitelist(void) { return mWhitelist; }
 
     /**
      * This method returns the MAC blacklist filter.
@@ -466,7 +466,7 @@ public:
      * @returns A reference to the MAC blacklist filter.
      *
      */
-    Blacklist &GetBlacklist(void);
+    Blacklist &GetBlacklist(void) { return mBlacklist; }
 
     /**
      * This method is called to handle receive events.
@@ -561,7 +561,7 @@ public:
      * @returns A reference to the MAC counter.
      *
      */
-    otMacCounters &GetCounters(void);
+    otMacCounters &GetCounters(void) { return mCounters; }
 
     /**
      * This method returns the noise floor state.

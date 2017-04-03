@@ -84,7 +84,7 @@ Commissioner::Commissioner(ThreadNetif &aThreadNetif):
     mNetif.GetSecureCoapServer().AddResource(mJoinerFinalize);
 }
 
-otInstance *Commissioner::GetInstance()
+otInstance *Commissioner::GetInstance(void)
 {
     return mNetif.GetInstance();
 }

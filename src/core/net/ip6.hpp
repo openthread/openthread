@@ -230,7 +230,7 @@ public:
      * @sa SetReceiveIp6FilterEnabled
      *
      */
-    bool IsReceiveIp6FilterEnabled(void);
+    bool IsReceiveIp6FilterEnabled(void) { return mIsReceiveIp6FilterEnabled; }
 
     /**
      * This method sets whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
@@ -242,7 +242,7 @@ public:
      * @sa IsReceiveIp6FilterEnabled
      *
      */
-    void SetReceiveIp6FilterEnabled(bool aEnabled);
+    void SetReceiveIp6FilterEnabled(bool aEnabled) { mIsReceiveIp6FilterEnabled = aEnabled; }
 
     /**
      * This method indicates whether or not IPv6 forwarding is enabled.
@@ -250,7 +250,7 @@ public:
      * @returns TRUE if IPv6 forwarding is enabled, FALSE otherwise.
      *
      */
-    bool IsForwardingEnabled(void);
+    bool IsForwardingEnabled(void) { return mForwardingEnabled; }
 
     /**
      * This method enables/disables IPv6 forwarding.
@@ -258,7 +258,7 @@ public:
      * @param[in]  aEnable  TRUE to enable IPv6 forwarding, FALSE otherwise.
      *
      */
-    void SetForwardingEnabled(bool aEnable);
+    void SetForwardingEnabled(bool aEnable) { mForwardingEnabled = aEnable; }
 
     /**
      * This method enables the network interface.
@@ -288,7 +288,7 @@ public:
      * @returns A pointer to the network interface list.
      *
      */
-    Netif *GetNetifList(void);
+    Netif *GetNetifList(void) { return mNetifListHead; }
 
     /**
      * This method returns the network interface identified by @p aInterfaceId.

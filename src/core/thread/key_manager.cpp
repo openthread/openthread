@@ -149,11 +149,6 @@ ThreadError KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
     return kThreadError_None;
 }
 
-uint32_t KeyManager::GetCurrentKeySequence(void) const
-{
-    return mKeySequence;
-}
-
 void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
 {
     if (aKeySequence == mKeySequence)
@@ -206,41 +201,16 @@ exit:
     return;
 }
 
-const uint8_t *KeyManager::GetCurrentMacKey(void) const
-{
-    return mKey + 16;
-}
-
-const uint8_t *KeyManager::GetCurrentMleKey(void) const
-{
-    return mKey;
-}
-
 const uint8_t *KeyManager::GetTemporaryMacKey(uint32_t aKeySequence)
 {
     ComputeKey(aKeySequence, mTemporaryKey);
-    return mTemporaryKey + 16;
+    return mTemporaryKey + kMacKeyOffset;
 }
 
 const uint8_t *KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)
 {
     ComputeKey(aKeySequence, mTemporaryKey);
     return mTemporaryKey;
-}
-
-uint32_t KeyManager::GetMacFrameCounter(void) const
-{
-    return mMacFrameCounter;
-}
-
-void KeyManager::SetMacFrameCounter(uint32_t aMacFrameCounter)
-{
-    mMacFrameCounter = aMacFrameCounter;
-}
-
-void KeyManager::SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter)
-{
-    mStoredMacFrameCounter = aStoredMacFrameCounter;
 }
 
 void KeyManager::IncrementMacFrameCounter(void)
@@ -253,21 +223,6 @@ void KeyManager::IncrementMacFrameCounter(void)
     }
 }
 
-uint32_t KeyManager::GetMleFrameCounter(void) const
-{
-    return mMleFrameCounter;
-}
-
-void KeyManager::SetMleFrameCounter(uint32_t aMleFrameCounter)
-{
-    mMleFrameCounter = aMleFrameCounter;
-}
-
-void KeyManager::SetStoredMleFrameCounter(uint32_t aStoredMleFrameCounter)
-{
-    mStoredMleFrameCounter = aStoredMleFrameCounter;
-}
-
 void KeyManager::IncrementMleFrameCounter(void)
 {
     mMleFrameCounter++;
@@ -278,25 +233,10 @@ void KeyManager::IncrementMleFrameCounter(void)
     }
 }
 
-const uint8_t *KeyManager::GetKek(void) const
-{
-    return mKek;
-}
-
 void KeyManager::SetKek(const uint8_t *aKek)
 {
     memcpy(mKek, aKek, sizeof(mKek));
     mKekFrameCounter = 0;
-}
-
-uint32_t KeyManager::GetKekFrameCounter(void) const
-{
-    return mKekFrameCounter;
-}
-
-void KeyManager::IncrementKekFrameCounter(void)
-{
-    mKekFrameCounter++;
 }
 
 ThreadError KeyManager::SetKeyRotation(uint32_t aKeyRotation)

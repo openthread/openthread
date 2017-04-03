@@ -71,7 +71,7 @@ JoinerRouter::JoinerRouter(ThreadNetif &aNetif):
     mNetif.RegisterCallback(mNetifCallback);
 }
 
-otInstance *JoinerRouter::GetInstance()
+otInstance *JoinerRouter::GetInstance(void)
 {
     return mNetif.GetInstance();
 }

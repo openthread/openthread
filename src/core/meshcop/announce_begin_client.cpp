@@ -57,7 +57,7 @@ AnnounceBeginClient::AnnounceBeginClient(ThreadNetif &aThreadNetif) :
 {
 }
 
-otInstance *AnnounceBeginClient::GetInstance()
+otInstance *AnnounceBeginClient::GetInstance(void)
 {
     return mNetif.GetInstance();
 }

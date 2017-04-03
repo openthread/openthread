@@ -112,7 +112,7 @@ public:
      * @returns The pointer to the parent Ip6 structure.
      *
      */
-    Ip6::Ip6 *GetIp6();
+    Ip6::Ip6 *GetIp6(void);
 
 private:
     void SetAlarm(void);

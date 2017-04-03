@@ -383,11 +383,6 @@ ThreadError Mac::RegisterReceiver(Receiver &aReceiver)
     return kThreadError_None;
 }
 
-bool Mac::GetRxOnWhenIdle(void) const
-{
-    return mRxOnWhenIdle;
-}
-
 void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 {
     mRxOnWhenIdle = aRxOnWhenIdle;
@@ -396,11 +391,6 @@ void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
     {
         NextOperation();
     }
-}
-
-const ExtAddress *Mac::GetExtAddress(void) const
-{
-    return &mExtAddress;
 }
 
 void Mac::SetExtAddress(const ExtAddress &aExtAddress)
@@ -438,11 +428,6 @@ void Mac::GetHashMacAddress(ExtAddress *aHashMacAddress)
     otLogFuncExitMsg("%llX", HostSwap64(*reinterpret_cast<uint64_t *>(aHashMacAddress)));
 }
 
-ShortAddress Mac::GetShortAddress(void) const
-{
-    return mShortAddress;
-}
-
 ThreadError Mac::SetShortAddress(ShortAddress aShortAddress)
 {
     otLogFuncEntryMsg("%d", aShortAddress);
@@ -450,11 +435,6 @@ ThreadError Mac::SetShortAddress(ShortAddress aShortAddress)
     otPlatRadioSetShortAddress(GetInstance(), aShortAddress);
     otLogFuncExit();
     return kThreadError_None;
-}
-
-uint8_t Mac::GetChannel(void) const
-{
-    return mChannel;
 }
 
 ThreadError Mac::SetChannel(uint8_t aChannel)
@@ -469,21 +449,6 @@ ThreadError Mac::SetChannel(uint8_t aChannel)
 
     otLogFuncExit();
     return kThreadError_None;
-}
-
-int8_t Mac::GetMaxTransmitPower(void) const
-{
-    return mMaxTransmitPower;
-}
-
-void Mac::SetMaxTransmitPower(int8_t aPower)
-{
-    mMaxTransmitPower = aPower;
-}
-
-const char *Mac::GetNetworkName(void) const
-{
-    return mNetworkName.m8;
 }
 
 ThreadError Mac::SetNetworkName(const char *aNetworkName)
@@ -501,11 +466,6 @@ exit:
     return error;
 }
 
-PanId Mac::GetPanId(void) const
-{
-    return mPanId;
-}
-
 ThreadError Mac::SetPanId(PanId aPanId)
 {
     otLogFuncEntryMsg("%d", aPanId);
@@ -513,11 +473,6 @@ ThreadError Mac::SetPanId(PanId aPanId)
     otPlatRadioSetPanId(GetInstance(), mPanId);
     otLogFuncExit();
     return kThreadError_None;
-}
-
-const uint8_t *Mac::GetExtendedPanId(void) const
-{
-    return mExtendedPanId.m8;
 }
 
 ThreadError Mac::SetExtendedPanId(const uint8_t *aExtPanId)
@@ -1637,16 +1592,6 @@ bool Mac::RadioSupportsRetries(void)
     return (otPlatRadioGetCaps(GetInstance()) & kRadioCapsTransmitRetries) != 0;
 }
 
-Whitelist &Mac::GetWhitelist(void)
-{
-    return mWhitelist;
-}
-
-Blacklist &Mac::GetBlacklist(void)
-{
-    return mBlacklist;
-}
-
 void Mac::FillMacCountersTlv(NetworkDiagnostic::MacCountersTlv &aMacCounters) const
 {
     aMacCounters.SetIfInUnknownProtos(mCounters.mRxOther);
@@ -1664,11 +1609,6 @@ void Mac::FillMacCountersTlv(NetworkDiagnostic::MacCountersTlv &aMacCounters) co
 void Mac::ResetCounters(void)
 {
     memset(&mCounters, 0, sizeof(mCounters));
-}
-
-otMacCounters &Mac::GetCounters(void)
-{
-    return mCounters;
 }
 
 void Mac::EnableSrcMatch(bool aEnable)
