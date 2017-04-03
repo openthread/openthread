@@ -166,13 +166,12 @@ private:
     void ProcessChild(int argc, char *argv[]);
     void ProcessChildTimeout(int argc, char *argv[]);
     void ProcessChildMax(int argc, char *argv[]);
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
+    void ProcessCoap(int argc, char *argv[]);
+#endif  //OPENTHREAD_ENABLE_APPLICATION_COAP
 #if OPENTHREAD_ENABLE_COMMISSIONER
     void ProcessCommissioner(int argc, char *argv[]);
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
-    void ProcessCoapClient(int argc, char *argv[]);
-    void ProcessCoapServer(int argc, char *argv[]);
-#endif  //OPENTHREAD_ENABLE_APPLICATION_COAP
     void ProcessContextIdReuseDelay(int argc, char *argv[]);
     void ProcessCounters(int argc, char *argv[]);
     void ProcessDataset(int argc, char *argv[]);
@@ -248,16 +247,6 @@ private:
 #ifdef OTDLL
     void ProcessInstanceList(int argc, char *argv[]);
     void ProcessInstance(int argc, char *argv[]);
-#endif
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
-    static void OTCALL s_HandleCoapServerResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                                                  otMessageInfo *aMessageInfo);
-    void HandleCoapServerResponse(otCoapHeader *aHeader, otMessage *aMessage, otMessageInfo *aMessageInfo);
-    static void OTCALL s_HandleCoapClientResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                                                  otMessageInfo *aMessageInfo, ThreadError aResult);
-    void HandleCoapClientResponse(otCoapHeader *aHeader, otMessage *aMessage, otMessageInfo *aMessageInfo,
-                                  ThreadError aResult);
 #endif
 
 #ifndef OTDLL
