@@ -1605,6 +1605,11 @@ ThreadError Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t
     else
     {
         SuccessOrExit(error = SendMessage(*message, aDestination));
+
+        if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
+        {
+            mNetif.GetMeshForwarder().GetDataPollManager().HandleResponseExpected();
+        }
     }
 
     otLogInfoMle(GetInstance(), "Sent Data Request");
