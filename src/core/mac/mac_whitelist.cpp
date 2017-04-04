@@ -68,7 +68,7 @@ Whitelist::Entry *Whitelist::Add(const ExtAddress &address)
 {
     Entry *rval;
 
-    VerifyOrExit((rval = Find(address)) == NULL, ;);
+    VerifyOrExit((rval = Find(address)) == NULL);
 
     for (int i = 0; i < kMaxEntries; i++)
     {
@@ -99,7 +99,7 @@ void Whitelist::Remove(const ExtAddress &address)
 {
     Entry *entry;
 
-    VerifyOrExit((entry = Find(address)) != NULL, ;);
+    VerifyOrExit((entry = Find(address)) != NULL);
     memset(entry, 0, sizeof(*entry));
 
 exit:

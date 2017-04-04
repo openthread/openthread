@@ -239,7 +239,7 @@ void Client::SendEmptyMessage(const Ip6::Address &aAddress, uint16_t aPort, uint
     header.Init(aType, kCoapCodeEmpty);
     header.SetMessageId(aMessageId);
 
-    VerifyOrExit((message = NewMessage(header)) != NULL, ;);
+    VerifyOrExit((message = NewMessage(header)) != NULL);
 
     messageInfo.SetPeerAddr(aAddress);
     messageInfo.SetPeerPort(aPort);

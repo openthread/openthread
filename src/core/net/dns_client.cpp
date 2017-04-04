@@ -138,7 +138,7 @@ Message *Client::NewMessage(const Header &aHeader)
 {
     Message *message = NULL;
 
-    VerifyOrExit((message = mSocket.NewMessage(sizeof(aHeader))) != NULL, ;);
+    VerifyOrExit((message = mSocket.NewMessage(sizeof(aHeader))) != NULL);
     message->Prepend(&aHeader, sizeof(aHeader));
     message->SetOffset(0);
 
@@ -458,15 +458,15 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     (void)aMessageInfo;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(responseHeader), &responseHeader) ==
-                 sizeof(responseHeader), ;);
+                 sizeof(responseHeader));
     VerifyOrExit(responseHeader.GetType() == Header::kTypeResponse &&
                  responseHeader.GetQuestionCount() == 1 &&
-                 responseHeader.IsTruncationFlagSet() == false, ;);
+                 responseHeader.IsTruncationFlagSet() == false);
 
     aMessage.MoveOffset(sizeof(responseHeader));
     offset = aMessage.GetOffset();
 
-    VerifyOrExit((message = FindRelatedQuery(responseHeader, queryMetadata)) != NULL,);
+    VerifyOrExit((message = FindRelatedQuery(responseHeader, queryMetadata)) != NULL);
 
     if (responseHeader.GetResponseCode() != Header::kResponseSuccess)
     {

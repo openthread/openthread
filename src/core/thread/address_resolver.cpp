@@ -287,26 +287,26 @@ void AddressResolver::HandleAddressNotification(Coap::Header &aHeader, Message &
     uint32_t lastTransactionTime;
 
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost, ;);
+                 aHeader.GetCode() == kCoapRequestPost);
 
     otLogInfoArp(GetInstance(), "Received address notification from %04x",
                  HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
 
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kTarget, sizeof(targetTlv), targetTlv));
-    VerifyOrExit(targetTlv.IsValid(), ;);
+    VerifyOrExit(targetTlv.IsValid());
 
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kMeshLocalEid, sizeof(mlIidTlv), mlIidTlv));
-    VerifyOrExit(mlIidTlv.IsValid(), ;);
+    VerifyOrExit(mlIidTlv.IsValid());
 
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rloc16Tlv), rloc16Tlv));
-    VerifyOrExit(rloc16Tlv.IsValid(), ;);
+    VerifyOrExit(rloc16Tlv.IsValid());
 
     lastTransactionTime = 0;
 
     if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kLastTransactionTime, sizeof(lastTransactionTimeTlv),
                           lastTransactionTimeTlv) == kThreadError_None)
     {
-        VerifyOrExit(lastTransactionTimeTlv.IsValid(), ;);
+        VerifyOrExit(lastTransactionTimeTlv.IsValid());
         lastTransactionTime = lastTransactionTimeTlv.GetTime();
     }
 
@@ -507,12 +507,12 @@ void AddressResolver::HandleAddressQuery(Coap::Header &aHeader, Message &aMessag
     uint8_t numChildren;
 
     VerifyOrExit(aHeader.GetType() == kCoapTypeNonConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost, ;);
+                 aHeader.GetCode() == kCoapRequestPost);
 
     otLogInfoArp(GetInstance(), "Received address query from %04x", HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
 
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kTarget, sizeof(targetTlv), targetTlv));
-    VerifyOrExit(targetTlv.IsValid(), ;);
+    VerifyOrExit(targetTlv.IsValid());
 
     mlIidTlv.Init();
 
@@ -667,9 +667,9 @@ void AddressResolver::HandleIcmpReceive(Message &aMessage, const Ip6::MessageInf
 {
     Ip6::Header ip6Header;
 
-    VerifyOrExit(aIcmpHeader.GetType() == kIcmp6TypeDstUnreach, ;);
-    VerifyOrExit(aIcmpHeader.GetCode() == kIcmp6CodeDstUnreachNoRoute, ;);
-    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(ip6Header), &ip6Header) == sizeof(ip6Header), ;);
+    VerifyOrExit(aIcmpHeader.GetType() == kIcmp6TypeDstUnreach);
+    VerifyOrExit(aIcmpHeader.GetCode() == kIcmp6CodeDstUnreachNoRoute);
+    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(ip6Header), &ip6Header) == sizeof(ip6Header));
 
     for (int i = 0; i < kCacheEntries; i++)
     {

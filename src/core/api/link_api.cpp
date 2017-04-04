@@ -312,7 +312,7 @@ void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame)
     }
 
     SuccessOrExit(aFrame->GetSrcAddr(address));
-    VerifyOrExit(address.mLength == sizeof(address.mExtAddress), ;);
+    VerifyOrExit(address.mLength == sizeof(address.mExtAddress));
     memcpy(&result.mExtAddress, &address.mExtAddress, sizeof(result.mExtAddress));
 
     aFrame->GetSrcPanId(result.mPanId);

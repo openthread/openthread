@@ -6542,7 +6542,7 @@ void NcpBase::RegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers)
     mLegacyHandlers = aHandlers;
     bool isEnabled;
 
-    VerifyOrExit(mLegacyHandlers != NULL, ;);
+    VerifyOrExit(mLegacyHandlers != NULL);
 
     isEnabled = (otThreadGetDeviceRole(mInstance) != kDeviceRoleDisabled);
 

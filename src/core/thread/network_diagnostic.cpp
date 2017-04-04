@@ -147,8 +147,8 @@ void NetworkDiagnostic::HandleDiagnosticGetResponse(Coap::Header &aHeader, Messa
                                                     const Ip6::MessageInfo &aMessageInfo,
                                                     ThreadError aResult)
 {
-    VerifyOrExit(aResult == kThreadError_None, ;);
-    VerifyOrExit(aHeader.GetCode() == kCoapResponseChanged, ;);
+    VerifyOrExit(aResult == kThreadError_None);
+    VerifyOrExit(aHeader.GetCode() == kCoapResponseChanged);
 
     otLogInfoNetDiag(GetInstance(), "Received diagnostic get response");
 
@@ -173,7 +173,7 @@ void NetworkDiagnostic::HandleDiagnosticGetAnswer(Coap::Header &aHeader, Message
                                                   const Ip6::MessageInfo &aMessageInfo)
 {
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost, ;);
+                 aHeader.GetCode() == kCoapRequestPost);
 
     otLogInfoNetDiag(GetInstance(), "Diagnostic get answer received");
 
@@ -599,20 +599,20 @@ void NetworkDiagnostic::HandleDiagnosticReset(Coap::Header &aHeader, Message &aM
     otLogInfoNetDiag(GetInstance(), "Received diagnostic reset request");
 
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost, ;);
+                 aHeader.GetCode() == kCoapRequestPost);
 
     VerifyOrExit((aMessage.Read(aMessage.GetOffset(), sizeof(NetworkDiagnosticTlv),
-                                &networkDiagnosticTlv) == sizeof(NetworkDiagnosticTlv)), ;);
+                                &networkDiagnosticTlv) == sizeof(NetworkDiagnosticTlv)));
 
-    VerifyOrExit(networkDiagnosticTlv.GetType() == NetworkDiagnosticTlv::kTypeList, ;);
+    VerifyOrExit(networkDiagnosticTlv.GetType() == NetworkDiagnosticTlv::kTypeList);
 
-    VerifyOrExit((static_cast<TypeListTlv *>(&networkDiagnosticTlv)->IsValid()), ;);
+    VerifyOrExit((static_cast<TypeListTlv *>(&networkDiagnosticTlv)->IsValid()));
 
     offset = aMessage.GetOffset() + sizeof(NetworkDiagnosticTlv);
 
     for (uint8_t i = 0; i < networkDiagnosticTlv.GetLength(); i++)
     {
-        VerifyOrExit(aMessage.Read(offset, sizeof(type), &type) == sizeof(type), ;);
+        VerifyOrExit(aMessage.Read(offset, sizeof(type), &type) == sizeof(type));
 
         switch (type)
         {

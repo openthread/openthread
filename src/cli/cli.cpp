@@ -1454,7 +1454,7 @@ void Interpreter::HandleIcmpReceive(Message &aMessage, const Ip6::MessageInfo &a
 {
     uint32_t timestamp = 0;
 
-    VerifyOrExit(aIcmpHeader.GetType() == kIcmp6TypeEchoReply, ;);
+    VerifyOrExit(aIcmpHeader.GetType() == kIcmp6TypeEchoReply);
 
     sServer->OutputFormat("%d bytes from ", aMessage.GetLength() - aMessage.GetOffset());
     sServer->OutputFormat("%x:%x:%x:%x:%x:%x:%x:%x",
@@ -2841,7 +2841,7 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
 
     sServer = &aServer;
 
-    VerifyOrExit(aBuf != NULL, ;);
+    VerifyOrExit(aBuf != NULL);
 
     for (; *aBuf == ' '; aBuf++, aBufLength--);
 
@@ -2903,7 +2903,7 @@ void Interpreter::HandleNetifStateChanged(otInstance *aInstance, uint32_t aFlags
 void Interpreter::HandleNetifStateChanged(uint32_t aFlags)
 #endif
 {
-    VerifyOrExit((aFlags & OT_THREAD_NETDATA_UPDATED) != 0, ;);
+    VerifyOrExit((aFlags & OT_THREAD_NETDATA_UPDATED) != 0);
 
 #ifndef OTDLL
     otIp6SlaacUpdate(mInstance, mSlaacAddresses, sizeof(mSlaacAddresses) / sizeof(mSlaacAddresses[0]),

@@ -257,7 +257,7 @@ ThreadError NcpSpi::PrepareNextSpiSendFrame(void)
     uint16_t frameLength;
     uint16_t readLength;
 
-    VerifyOrExit(!mTxFrameBuffer.IsEmpty(), ;);
+    VerifyOrExit(!mTxFrameBuffer.IsEmpty());
 
     SuccessOrExit(errorCode = mTxFrameBuffer.OutFrameBegin());
 

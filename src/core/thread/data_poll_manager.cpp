@@ -165,7 +165,7 @@ void DataPollManager::HandlePollSent(ThreadError aError)
 {
     bool shouldRecalculatePollPeriod = false;
 
-    VerifyOrExit(mEnabled, ;);
+    VerifyOrExit(mEnabled);
 
     switch (aError)
     {
@@ -224,7 +224,7 @@ void DataPollManager::HandlePollTimeout(void)
     // a data poll indicated that a frame was pending, but no frame
     // was received after timeout interval.
 
-    VerifyOrExit(mEnabled, ;);
+    VerifyOrExit(mEnabled);
 
     mPollTimeoutCounter++;
 
@@ -244,7 +244,7 @@ exit:
 
 void DataPollManager::HandleReceivedFrame(Mac::Frame &aFrame)
 {
-    VerifyOrExit(mEnabled, ;);
+    VerifyOrExit(mEnabled);
 
     mPollTimeoutCounter = 0;
 

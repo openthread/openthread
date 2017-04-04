@@ -136,7 +136,7 @@ void SecureServer::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     {
         // Once DTLS session is started, communicate only with a peer.
         VerifyOrExit((mPeerAddress.GetPeerAddr() == aMessageInfo.GetPeerAddr()) &&
-                     (mPeerAddress.GetPeerPort() == aMessageInfo.GetPeerPort()), ;);
+                     (mPeerAddress.GetPeerPort() == aMessageInfo.GetPeerPort()));
     }
 
     mNetif.GetDtls().SetClientId(mPeerAddress.GetPeerAddr().mFields.m8,
@@ -173,7 +173,7 @@ void SecureServer::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
 
     otLogFuncEntry();
 
-    VerifyOrExit((message = mNetif.GetIp6().mMessagePool.New(Message::kTypeIp6, 0)) != NULL, ;);
+    VerifyOrExit((message = mNetif.GetIp6().mMessagePool.New(Message::kTypeIp6, 0)) != NULL);
     SuccessOrExit(message->Append(aBuf, aLength));
 
     ProcessReceivedMessage(*message, mPeerAddress);

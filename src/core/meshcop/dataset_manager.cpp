@@ -254,9 +254,9 @@ void DatasetManager::HandleTimer(void)
                                     (mNetif.GetPendingDataset().GetNetwork().Get(Tlv::kActiveTimestamp));
     pendingActiveTimestamp = static_cast<const Timestamp *>(tlv);
 
-    VerifyOrExit(mNetif.GetMle().IsAttached(),);
+    VerifyOrExit(mNetif.GetMle().IsAttached());
 
-    VerifyOrExit(mLocal.Compare(mNetwork) < 0,);
+    VerifyOrExit(mLocal.Compare(mNetwork) < 0);
 
     Register();
 
@@ -546,7 +546,7 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
 
         borderAgentLocator = static_cast<BorderAgentLocatorTlv *>(mNetif.GetNetworkDataLeader().GetCommissioningDataSubTlv(
                                                                       Tlv::kBorderAgentLocator));
-        VerifyOrExit(borderAgentLocator != NULL,);
+        VerifyOrExit(borderAgentLocator != NULL);
 
         memset(&destination, 0, sizeof(destination));
         destination = mNetif.GetMle().GetMeshLocal16();
@@ -1073,7 +1073,7 @@ void PendingDatasetBase::UpdateDelayTimer(Dataset &aDataset, uint32_t &aStartTim
     uint32_t elapsed;
     uint32_t delay;
 
-    VerifyOrExit((delayTimer = static_cast<DelayTimerTlv *>(aDataset.Get(Tlv::kDelayTimer))) != NULL, ;);
+    VerifyOrExit((delayTimer = static_cast<DelayTimerTlv *>(aDataset.Get(Tlv::kDelayTimer))) != NULL);
 
     elapsed = now - aStartTime;
 
@@ -1122,7 +1122,7 @@ void PendingDatasetBase::ApplyActiveDataset(const Timestamp &aTimestamp, Message
     DelayTimerTlv delayTimer;
     uint8_t flags;
 
-    VerifyOrExit(mNetif.GetMle().IsAttached(), ;);
+    VerifyOrExit(mNetif.GetMle().IsAttached());
 
     while (offset < aMessage.GetLength())
     {

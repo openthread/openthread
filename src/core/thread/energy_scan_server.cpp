@@ -85,19 +85,19 @@ void EnergyScanServer::HandleRequest(Coap::Header &aHeader, Message &aMessage, c
     MeshCoP::ChannelMask0Tlv channelMask;
     Ip6::MessageInfo responseInfo(aMessageInfo);
 
-    VerifyOrExit(aHeader.GetCode() == kCoapRequestPost, ;);
+    VerifyOrExit(aHeader.GetCode() == kCoapRequestPost);
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kCount, sizeof(count), count));
-    VerifyOrExit(count.IsValid(), ;);
+    VerifyOrExit(count.IsValid());
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kPeriod, sizeof(period), period));
-    VerifyOrExit(period.IsValid(), ;);
+    VerifyOrExit(period.IsValid());
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kScanDuration, sizeof(scanDuration), scanDuration));
-    VerifyOrExit(scanDuration.IsValid(), ;);
+    VerifyOrExit(scanDuration.IsValid());
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask));
-    VerifyOrExit(channelMask.IsValid(), ;);
+    VerifyOrExit(channelMask.IsValid());
 
     mChannelMask = channelMask.GetMask();
     mChannelMaskCurrent = mChannelMask;
@@ -126,7 +126,7 @@ void EnergyScanServer::HandleTimer(void *aContext)
 
 void EnergyScanServer::HandleTimer(void)
 {
-    VerifyOrExit(mActive, ;);
+    VerifyOrExit(mActive);
 
     if (mCount)
     {
@@ -150,7 +150,7 @@ void EnergyScanServer::HandleScanResult(void *aContext, otEnergyScanResult *aRes
 
 void EnergyScanServer::HandleScanResult(otEnergyScanResult *aResult)
 {
-    VerifyOrExit(mActive, ;);
+    VerifyOrExit(mActive);
 
     if (aResult)
     {

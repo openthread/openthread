@@ -168,7 +168,7 @@ ThreadError SemanticallyOpaqueIidGenerator::CreateIid(otInstance *aInstance, otN
     for (uint32_t i = 0; i <= kMaxRetries; i++)
     {
         error = CreateIidOnce(aInstance, aAddress);
-        VerifyOrExit(error == kThreadError_Ipv6AddressCreationFailure,);
+        VerifyOrExit(error == kThreadError_Ipv6AddressCreationFailure);
 
         mDadCounter++;
     }

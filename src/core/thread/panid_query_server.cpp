@@ -75,13 +75,13 @@ void PanIdQueryServer::HandleQuery(Coap::Header &aHeader, Message &aMessage, con
     MeshCoP::ChannelMask0Tlv channelMask;
     Ip6::MessageInfo responseInfo(aMessageInfo);
 
-    VerifyOrExit(aHeader.GetCode() == kCoapRequestPost, ;);
+    VerifyOrExit(aHeader.GetCode() == kCoapRequestPost);
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask));
-    VerifyOrExit(channelMask.IsValid(),);
+    VerifyOrExit(channelMask.IsValid());
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kPanId, sizeof(panId), panId));
-    VerifyOrExit(panId.IsValid(), ;);
+    VerifyOrExit(panId.IsValid());
 
     mChannelMask = channelMask.GetMask();
     mCommissioner = aMessageInfo.GetPeerAddr();

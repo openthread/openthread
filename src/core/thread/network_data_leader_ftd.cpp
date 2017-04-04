@@ -122,7 +122,7 @@ void Leader::RemoveBorderRouter(uint16_t aRloc16)
     bool rlocStable = false;
     RlocLookup(aRloc16, rlocIn, rlocStable, mTlvs, mLength);
 
-    VerifyOrExit(rlocIn, ;);
+    VerifyOrExit(rlocIn);
 
     RemoveRloc(aRloc16);
     mVersion++;
@@ -156,7 +156,7 @@ void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
 
     if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rloc16), rloc16) == kThreadError_None)
     {
-        VerifyOrExit(rloc16.IsValid(), ;);
+        VerifyOrExit(rloc16.IsValid());
         RemoveBorderRouter(rloc16.GetRloc16());
     }
 

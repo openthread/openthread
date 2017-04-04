@@ -145,7 +145,7 @@ void JamDetector::HandleTimer(void)
     int8_t rssi;
     bool didExceedThreshold = true;
 
-    VerifyOrExit(mEnabled, ;);
+    VerifyOrExit(mEnabled);
 
     rssi = otPlatRadioGetRssi(mNetif.GetInstance());
 
