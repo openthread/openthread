@@ -50,6 +50,7 @@ openthread_headers                      = \
     cli.h                                 \
     coap.h                                \
     commissioner.h                        \
+    border_agent.h                        \
     crypto.h                              \
     dataset.h                             \
     diag.h                                \

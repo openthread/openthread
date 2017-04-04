@@ -125,6 +125,9 @@ const struct Command Interpreter::sCommands[] =
 #if OPENTHREAD_ENABLE_JOINER
     { "joiner", &Interpreter::ProcessJoiner },
 #endif
+#if OPENTHREAD_ENABLE_BORDER_AGENT
+    { "borderagent", &Interpreter::ProcessBorderAgent },
+#endif
     { "joinerport", &Interpreter::ProcessJoinerPort },
     { "keysequence", &Interpreter::ProcessKeySequence },
     { "leaderdata", &Interpreter::ProcessLeaderData },
@@ -2695,6 +2698,29 @@ void Interpreter::HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask)
 }
 
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
+
+#if OPENTHREAD_ENABLE_BORDER_AGENT
+
+void Interpreter::ProcessBorderAgent(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+
+    if (strcmp(argv[0], "start") == 0)
+    {
+        SuccessOrExit(error = otBorderAgentStart(mInstance));
+    }
+    else if (strcmp(argv[0], "stop") == 0)
+    {
+        SuccessOrExit(error = otBorderAgentStop(mInstance));
+    }
+
+exit:
+    AppendResult(error);
+}
+
+#endif
 
 #if OPENTHREAD_ENABLE_JOINER
 

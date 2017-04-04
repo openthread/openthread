@@ -205,6 +205,9 @@ private:
 #if OPENTHREAD_ENABLE_JOINER
     void ProcessJoiner(int argc, char *argv[]);
 #endif  // OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_ENABLE_BORDER_AGENT
+    void ProcessBorderAgent(int argc, char *argv[]);
+#endif  // OPENTHREAD_ENABLE_BORDER_AGENT
     void ProcessJoinerPort(int argc, char *argv[]);
     void ProcessKeySequence(int argc, char *argv[]);
     void ProcessLeaderData(int argc, char *argv[]);

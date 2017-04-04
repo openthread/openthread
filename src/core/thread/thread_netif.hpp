@@ -75,6 +75,10 @@
 #include <meshcop/commissioner.hpp>
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
+#if OPENTHREAD_ENABLE_BORDER_AGENT
+#include <meshcop/border_agent.hpp>
+#endif  // OPENTHREAD_ENABLE_BORDER_AGENT
+
 #if OPENTHREAD_ENABLE_DTLS
 #include <meshcop/dtls.hpp>
 #endif  // OPENTHREAD_ENABLE_DTLS
@@ -299,6 +303,12 @@ public:
     Coap::SecureServer &GetSecureCoapServer(void) { return mSecureCoapServer; }
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
+#if OPENTHREAD_ENABLE_BORDER_AGENT
+    MeshCoP::BorderAgent &GetBorderAgent(void) { return mBorderAgent; }
+
+    Coap::SecureServer &GetBASecureCoapServer(void) { return mBASecureCoapServer; }
+#endif  // OPENTHREAD_ENABLE_BORDER_AGENT
+
 #if OPENTHREAD_ENABLE_DTLS
     MeshCoP::Dtls &GetDtls(void) { return mDtls; }
 #endif  // OPENTHREAD_ENABLE_DTLS
@@ -357,6 +367,11 @@ private:
     Coap::SecureServer mSecureCoapServer;
     MeshCoP::Commissioner mCommissioner;
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
+
+#if OPENTHREAD_ENABLE_BORDER_AGENT
+    Coap::SecureServer mBASecureCoapServer;
+    MeshCoP::BorderAgent mBorderAgent;
+#endif  // OPENTHREAD_ENABLE_BORDER_AGENT
 
 #if OPENTHREAD_ENABLE_DTLS
     MeshCoP::Dtls mDtls;
