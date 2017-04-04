@@ -45,7 +45,7 @@
 #define OPENTHREAD_ENABLE_JOINER 1
 
 /* Define to 1 to enable the border agent role. */
-#define OPENTHREAD_ENABLE_BORDER_AGENT 1
+#define OPENTHREAD_ENABLE_BORDER_AGENT 0
 
 /* Define to 1 to enable the jam detection. */
 #define OPENTHREAD_ENABLE_JAM_DETECTION 0
