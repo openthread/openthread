@@ -203,7 +203,11 @@ ThreadError SecureServer::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, 
     {
         VerifyOrExit((mTransmitMessage = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
         mTransmitMessage->SetSubType(aMessageSubType);
+#ifdef OPENTHREAD_ENABLE_JOINER
         mTransmitMessage->SetLinkSecurityEnabled(false);
+#else
+        mTransmitMessage->SetLinkSecurityEnabled(true);
+#endif
     }
 
     VerifyOrExit(mTransmitMessage->Append(aBuf, aLength) == kThreadError_None, error = kThreadError_NoBufs);
