@@ -93,8 +93,7 @@ public:
     uint8_t         mLinkFailures;       ///< Consecutive link failure count
     LinkQualityInfo mLinkInfo;           ///< Link quality info (contains average RSS, link margin and link quality)
 
-public:
-    /*
+    /**
      * Check if the neighbor/child is in valid state or if it is being restored.
      * When in these states messages can be sent to and/or received from the neighbor/child.
      *
@@ -121,6 +120,8 @@ public:
  */
 class Child : public Neighbor
 {
+    friend class SourceMatchController;
+
 public:
     enum
     {
@@ -145,9 +146,27 @@ public:
         uint8_t mAttachChallenge[Mle::ChallengeTlv::kMaxSize]; ///< The challenge value
     };
     uint8_t      mNetworkDataVersion;                  ///< Current Network Data version
-    uint16_t     mQueuedIndirectMessageCnt;            ///< Count of queued messages
-    bool         mAddSrcMatchEntryShort : 1;           ///< Indicates whether or not to force add short address
-    bool         mAddSrcMatchEntryPending : 1;         ///< Indicates whether or not pending to add
+
+    /**
+     * This method checks if a short or extended address should be used.
+     *
+     * @returns `true` if a short address should be used, `false` for extended address.
+     *
+     */
+    bool ShouldUseShortAddress(void) const  { return mUseShortAddress; }
+
+    /**
+     * This method returns the number of queued message(s) for the child
+     *
+     * @returns Number of queues message(s).
+     *
+     */
+    uint16_t GetQueuedMessageCount(void) const { return mQueuedMessageCount; }
+
+private:
+    uint16_t     mQueuedMessageCount : 13;         ///< Number of queued indirect messages for the child.
+    bool         mUseShortAddress : 1;             ///< Indicates whether to use short or extended address.
+    bool         mSourceMatchPending : 1;          ///< Indicates whether or not pending to add to src match table.
 };
 
 /**
