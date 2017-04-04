@@ -40,14 +40,15 @@
 #endif
 
 #include "openthread/platform/logging.h"
+#include "utils/code_utils.h"
 
 // Macro to append content to end of the log string.
 
 #define LOG_PRINTF(...)                                                                     \
-    charsWritten = snprintf(&logString[offset], sizeof(logString) - offset , __VA_ARGS__);    \
-    VerifyOrExit(charsWritten >= 0, logString[offset] = 0);                                  \
-    offset += (unsigned int)charsWritten;                                    \
-    VerifyOrExit(offset < sizeof(logString), logString[sizeof(logString) -1 ] = 0)
+    charsWritten = snprintf(&logString[offset], sizeof(logString) - offset , __VA_ARGS__);  \
+    otEXPECT_ACTION(charsWritten >= 0, logString[offset] = 0);                              \
+    offset += (unsigned int)charsWritten;                                                   \
+    otEXPECT_ACTION(offset < sizeof(logString), logString[sizeof(logString) -1 ] = 0)
 
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
@@ -64,7 +65,7 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     charsWritten = vsnprintf(&logString[offset], sizeof(logString) - offset, aFormat, args);
     va_end(args);
 
-    VerifyOrExit(charsWritten >= 0, logString[offset] = 0);
+    otEXPECT_ACTION(charsWritten >= 0, logString[offset] = 0);
 
 exit:
 #ifndef _WIN32

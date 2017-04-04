@@ -37,7 +37,7 @@
 
 #include <openthread/platform/logging.h>
 #include <openthread/platform/alarm.h>
-#include <common/code_utils.hpp>
+#include <utils/code_utils.h>
 
 #include "platform-nrf5.h"
 
@@ -128,7 +128,7 @@ void nrf5LogInit()
                                         LOG_RTT_BUFFER_NAME, sLogBuffer,
                                         LOG_RTT_BUFFER_SIZE,
                                         SEGGER_RTT_MODE_NO_BLOCK_TRIM);
-    VerifyOrExit(res >= 0, ;);
+    otEXPECT(res >= 0);
 
     sLogInitialized = true;
 
@@ -146,7 +146,7 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion,
 {
     (void) aLogRegion;
 
-    VerifyOrExit(sLogInitialized == true, ;);
+    otEXPECT(sLogInitialized == true);
 
     char logString[LOG_PARSE_BUFFER_SIZE + 1];
     uint16_t length = 0;

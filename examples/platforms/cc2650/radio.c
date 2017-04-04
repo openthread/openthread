@@ -29,7 +29,7 @@
 #include <openthread/types.h>
 
 #include <assert.h>
-#include <common/code_utils.hpp>
+#include <utils/code_utils.h>
 #include "cc2650_radio.h"
 #include <openthread/platform/radio.h>
 #include <openthread/platform/random.h> /* to seed the CSMA-CA funciton */
@@ -1144,8 +1144,8 @@ ThreadError otPlatRadioEnable(otInstance *aInstance)
     }
     else if (sState == cc2650_stateDisabled)
     {
-        VerifyOrExit(rfCorePowerOn() == CMDSTA_Done, error = kThreadError_Failed);
-        VerifyOrExit(rfCoreSendEnableCmd() == DONE_OK, error = kThreadError_Failed);
+        otEXPECT_ACTION(rfCorePowerOn() == CMDSTA_Done, error = kThreadError_Failed);
+        otEXPECT_ACTION(rfCoreSendEnableCmd() == DONE_OK, error = kThreadError_Failed);
         sState = cc2650_stateSleep;
     }
 
@@ -1206,7 +1206,7 @@ ThreadError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, u
     if (sState == cc2650_stateSleep)
     {
         sState = cc2650_stateEdScan;
-        VerifyOrExit(rfCoreSendEdScanCmd(aScanChannel, aScanDuration) == CMDSTA_Done, error = kThreadError_Failed);
+        otEXPECT_ACTION(rfCoreSendEdScanCmd(aScanChannel, aScanDuration) == CMDSTA_Done, error = kThreadError_Failed);
         error = kThreadError_None;
     }
 
@@ -1238,7 +1238,7 @@ ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
          *      may have changed some values in the rx command
          */
         sReceiveCmd.channel = aChannel;
-        VerifyOrExit(rfCoreSendReceiveCmd() == CMDSTA_Done, error = kThreadError_Failed);
+        otEXPECT_ACTION(rfCoreSendReceiveCmd() == CMDSTA_Done, error = kThreadError_Failed);
         error = kThreadError_None;
     }
     else if (sState == cc2650_stateReceive)
@@ -1255,13 +1255,13 @@ ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
              * we are running on the wrong channel. Either way assume the
              * caller correctly called us and abort all running commands.
              */
-            VerifyOrExit(rfCoreExecuteAbortCmd() == CMDSTA_Done, error = kThreadError_Failed);
+            otEXPECT_ACTION(rfCoreExecuteAbortCmd() == CMDSTA_Done, error = kThreadError_Failed);
 
             /* any frames in the queue will be for the old channel */
-            VerifyOrExit(rfCoreClearReceiveQueue(&sRxDataQueue) == CMDSTA_Done, error = kThreadError_Failed);
+            otEXPECT_ACTION(rfCoreClearReceiveQueue(&sRxDataQueue) == CMDSTA_Done, error = kThreadError_Failed);
 
             sReceiveCmd.channel = aChannel;
-            VerifyOrExit(rfCoreSendReceiveCmd() == CMDSTA_Done, error = kThreadError_Failed);
+            otEXPECT_ACTION(rfCoreSendReceiveCmd() == CMDSTA_Done, error = kThreadError_Failed);
 
             sState = cc2650_stateReceive;
             error = kThreadError_None;
@@ -1328,7 +1328,8 @@ ThreadError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
             sState = cc2650_stateTransmit;
 
             /* removing 2 bytes of CRC placeholder because we generate that in hardware */
-            VerifyOrExit(rfCoreSendTransmitCmd(aPacket->mPsdu, aPacket->mLength - 2) == CMDSTA_Done, error = kThreadError_Failed);
+            otEXPECT_ACTION(rfCoreSendTransmitCmd(aPacket->mPsdu, aPacket->mLength - 2) == CMDSTA_Done,
+                            error = kThreadError_Failed);
             error = kThreadError_None;
         }
     }
@@ -1366,16 +1367,13 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
     if (sReceiveCmd.status == ACTIVE || sReceiveCmd.status == IEEE_SUSPENDED)
     {
         /* we have a running or backgrounded rx command */
-        SuccessOrExit(rfCoreModifyRxAutoPend(aEnable) == CMDSTA_Done);
+        rfCoreModifyRxAutoPend(aEnable);
     }
     else
     {
         /* if we are promiscuous, then frame filtering should be disabled */
         sReceiveCmd.frameFiltOpt.autoPendEn = aEnable ? 1 : 0;
     }
-
-exit:
-    return;
 }
 
 /**
@@ -1390,7 +1388,8 @@ ThreadError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16
     if (idx == CC2650_SRC_MATCH_NONE)
     {
         /* the entry does not exist already, add it */
-        VerifyOrExit((idx = rfCoreFindEmptyShortSrcMatchIdx()) != CC2650_SRC_MATCH_NONE, error = kThreadError_NoBufs);
+        otEXPECT_ACTION((idx = rfCoreFindEmptyShortSrcMatchIdx()) != CC2650_SRC_MATCH_NONE,
+                        error = kThreadError_NoBufs);
         sSrcMatchShortData.extAddrEnt[idx].shortAddr = aShortAddress;
         sSrcMatchShortData.extAddrEnt[idx].panId = sReceiveCmd.localPanID;
     }
@@ -1398,7 +1397,8 @@ ThreadError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16
     if (sReceiveCmd.status == ACTIVE || sReceiveCmd.status == IEEE_SUSPENDED)
     {
         /* we have a running or backgrounded rx command */
-        VerifyOrExit(rfCoreModifySourceMatchEntry(idx, SHORT_ADDRESS, true) == CMDSTA_Done, error = kThreadError_Failed);
+        otEXPECT_ACTION(rfCoreModifySourceMatchEntry(idx, SHORT_ADDRESS, true) == CMDSTA_Done,
+                        error = kThreadError_Failed);
     }
     else
     {
@@ -1419,13 +1419,14 @@ ThreadError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint
     ThreadError error = kThreadError_None;
     (void)aInstance;
     uint8_t idx;
-    VerifyOrExit((idx = rfCoreFindShortSrcMatchIdx(aShortAddress)) != CC2650_SRC_MATCH_NONE,
-                 error = kThreadError_NoAddress);
+    otEXPECT_ACTION((idx = rfCoreFindShortSrcMatchIdx(aShortAddress)) != CC2650_SRC_MATCH_NONE,
+                    error = kThreadError_NoAddress);
 
     if (sReceiveCmd.status == ACTIVE || sReceiveCmd.status == IEEE_SUSPENDED)
     {
         /* we have a running or backgrounded rx command */
-        VerifyOrExit(rfCoreModifySourceMatchEntry(idx, SHORT_ADDRESS, false) == CMDSTA_Done, error = kThreadError_Failed);
+        otEXPECT_ACTION(rfCoreModifySourceMatchEntry(idx, SHORT_ADDRESS, false) == CMDSTA_Done,
+                        error = kThreadError_Failed);
     }
     else
     {
@@ -1450,14 +1451,15 @@ ThreadError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t 
     if (idx == CC2650_SRC_MATCH_NONE)
     {
         /* the entry does not exist already, add it */
-        VerifyOrExit((idx = rfCoreFindEmptyExtSrcMatchIdx()) != CC2650_SRC_MATCH_NONE, error = kThreadError_NoBufs);
+        otEXPECT_ACTION((idx = rfCoreFindEmptyExtSrcMatchIdx()) != CC2650_SRC_MATCH_NONE, error = kThreadError_NoBufs);
         sSrcMatchExtData.extAddrEnt[idx] = *((uint64_t *)aExtAddress);
     }
 
     if (sReceiveCmd.status == ACTIVE || sReceiveCmd.status == IEEE_SUSPENDED)
     {
         /* we have a running or backgrounded rx command */
-        VerifyOrExit(rfCoreModifySourceMatchEntry(idx, EXT_ADDRESS, true) == CMDSTA_Done, error = kThreadError_Failed);
+        otEXPECT_ACTION(rfCoreModifySourceMatchEntry(idx, EXT_ADDRESS, true) == CMDSTA_Done,
+                        error = kThreadError_Failed);
     }
     else
     {
@@ -1478,13 +1480,14 @@ ThreadError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_
     ThreadError error = kThreadError_None;
     (void)aInstance;
     uint8_t idx;
-    VerifyOrExit((idx = rfCoreFindExtSrcMatchIdx((uint64_t *)aExtAddress)) != CC2650_SRC_MATCH_NONE,
-                 error = kThreadError_NoAddress);
+    otEXPECT_ACTION((idx = rfCoreFindExtSrcMatchIdx((uint64_t *)aExtAddress)) != CC2650_SRC_MATCH_NONE,
+                    error = kThreadError_NoAddress);
 
     if (sReceiveCmd.status == ACTIVE || sReceiveCmd.status == IEEE_SUSPENDED)
     {
         /* we have a running or backgrounded rx command */
-        VerifyOrExit(rfCoreModifySourceMatchEntry(idx, EXT_ADDRESS, false) == CMDSTA_Done, error = kThreadError_Failed);
+        otEXPECT_ACTION(rfCoreModifySourceMatchEntry(idx, EXT_ADDRESS, false) == CMDSTA_Done,
+                        error = kThreadError_Failed);
     }
     else
     {
@@ -1538,7 +1541,7 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
     {
         /* we have a running or backgrounded rx command */
         /* if we are promiscuous, then frame filtering should be disabled */
-        SuccessOrExit(rfCoreModifyRxFrameFilter(!aEnable) == CMDSTA_Done);
+        rfCoreModifyRxFrameFilter(!aEnable);
         /* XXX should we dump any queued messages ? */
     }
     else
@@ -1546,9 +1549,6 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
         /* if we are promiscuous, then frame filtering should be disabled */
         sReceiveCmd.frameFiltOpt.frameFiltEn = aEnable ? 0 : 1;
     }
-
-exit:
-    return;
 }
 
 /**
@@ -1612,10 +1612,10 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanid)
      */
     if (sState == cc2650_stateReceive)
     {
-        VerifyOrExit(rfCoreExecuteAbortCmd() == CMDSTA_Done, ;);
+        otEXPECT(rfCoreExecuteAbortCmd() == CMDSTA_Done);
         sReceiveCmd.localPanID = aPanid;
-        VerifyOrExit(rfCoreClearReceiveQueue(&sRxDataQueue) == CMDSTA_Done, ;);
-        VerifyOrExit(rfCoreSendReceiveCmd() == CMDSTA_Done, ;);
+        otEXPECT(rfCoreClearReceiveQueue(&sRxDataQueue) == CMDSTA_Done);
+        otEXPECT(rfCoreSendReceiveCmd() == CMDSTA_Done);
         /* the interrupt from abort changed our state to sleep */
         sState = cc2650_stateReceive;
     }
@@ -1641,10 +1641,10 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *aAddress)
     /* XXX: assuming little endian format */
     if (sState == cc2650_stateReceive)
     {
-        VerifyOrExit(rfCoreExecuteAbortCmd() == CMDSTA_Done, ;);
+        otEXPECT(rfCoreExecuteAbortCmd() == CMDSTA_Done);
         sReceiveCmd.localExtAddr = *((uint64_t *)(aAddress));
-        VerifyOrExit(rfCoreClearReceiveQueue(&sRxDataQueue) == CMDSTA_Done, ;);
-        VerifyOrExit(rfCoreSendReceiveCmd() == CMDSTA_Done, ;);
+        otEXPECT(rfCoreClearReceiveQueue(&sRxDataQueue) == CMDSTA_Done);
+        otEXPECT(rfCoreSendReceiveCmd() == CMDSTA_Done);
         /* the interrupt from abort changed our state to sleep */
         sState = cc2650_stateReceive;
     }
@@ -1669,10 +1669,10 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aAddress)
 
     if (sState == cc2650_stateReceive)
     {
-        VerifyOrExit(rfCoreExecuteAbortCmd() == CMDSTA_Done, ;);
+        otEXPECT(rfCoreExecuteAbortCmd() == CMDSTA_Done);
         sReceiveCmd.localShortAddr = aAddress;
-        VerifyOrExit(rfCoreClearReceiveQueue(&sRxDataQueue) == CMDSTA_Done, ;);
-        VerifyOrExit(rfCoreSendReceiveCmd() == CMDSTA_Done, ;);
+        otEXPECT(rfCoreClearReceiveQueue(&sRxDataQueue) == CMDSTA_Done);
+        otEXPECT(rfCoreSendReceiveCmd() == CMDSTA_Done);
         /* the interrupt from abort changed our state to sleep */
         sState = cc2650_stateReceive;
     }

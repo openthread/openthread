@@ -42,7 +42,7 @@
 #include "openthread/types.h"
 #include "openthread/platform/settings.h"
 
-#include <common/code_utils.hpp>
+#include <utils/code_utils.h>
 
 #include "flash.h"
 
@@ -149,7 +149,7 @@ static uint32_t swapSettingsBlock(otInstance *aInstance)
 
     (void)aInstance;
 
-    VerifyOrExit(pageNum > 1, ;);
+    otEXPECT(pageNum > 1);
 
     sSettingsBaseAddress = (swapAddress == SETTINGS_CONFIG_BASE_ADDRESS) ?
                            (swapAddress + settingsSize) :
@@ -244,8 +244,8 @@ static ThreadError addSetting(otInstance *aInstance, uint16_t aKey, bool aIndex0
     if ((sSettingsUsedSize + getAlignLength(addBlock.block.length) + sizeof(struct settingsBlock)) >=
         settingsSize)
     {
-        VerifyOrExit(swapSettingsBlock(aInstance) >= (getAlignLength(addBlock.block.length) + sizeof(struct settingsBlock)),
-                     error = kThreadError_NoBufs);
+        otEXPECT_ACTION(swapSettingsBlock(aInstance) >= (getAlignLength(addBlock.block.length) + sizeof(struct settingsBlock)),
+                        error = kThreadError_NoBufs);
     }
 
     utilsFlashWrite(sSettingsBaseAddress + sSettingsUsedSize,

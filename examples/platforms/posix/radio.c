@@ -31,6 +31,8 @@
 #include "openthread/platform/diag.h"
 #include "openthread/platform/radio.h"
 
+#include "utils/code_utils.h"
+
 enum
 {
     IEEE802154_MIN_LENGTH         = 5,
@@ -140,7 +142,7 @@ static inline bool isDataRequest(const uint8_t *frame)
     // FCF + DSN
     cur += 2 + 1;
 
-    VerifyOrExit(isFrameTypeMacCmd(frame), rval = false);
+    otEXPECT_ACTION(isFrameTypeMacCmd(frame), rval = false);
 
     // Destination PAN + Address
     switch (frame[1] & IEEE802154_DST_ADDR_MASK)
@@ -154,7 +156,8 @@ static inline bool isDataRequest(const uint8_t *frame)
         break;
 
     default:
-        ExitNow(rval = false);
+        rval = false;
+        goto exit;
     }
 
     // Source PAN + Address
@@ -179,7 +182,8 @@ static inline bool isDataRequest(const uint8_t *frame)
         break;
 
     default:
-        ExitNow(rval = false);
+        rval = false;
+        goto exit;
     }
 
     // Security Control + Frame Counter + Key Identifier
@@ -636,7 +640,7 @@ void radioProcessFrame(otInstance *aInstance)
     otShortAddress short_address;
     otExtAddress ext_address;
 
-    VerifyOrExit(sPromiscuous == false, error = kThreadError_None);
+    otEXPECT_ACTION(sPromiscuous == false, error = kThreadError_None);
 
     switch (sReceiveFrame.mPsdu[1] & IEEE802154_DST_ADDR_MASK)
     {
@@ -646,21 +650,22 @@ void radioProcessFrame(otInstance *aInstance)
     case IEEE802154_DST_ADDR_SHORT:
         dstpan = getDstPan(sReceiveFrame.mPsdu);
         short_address = getShortAddress(sReceiveFrame.mPsdu);
-        VerifyOrExit((dstpan == IEEE802154_BROADCAST || dstpan == sPanid) &&
-                     (short_address == IEEE802154_BROADCAST || short_address == sShortAddress),
-                     error = kThreadError_Abort);
+        otEXPECT_ACTION((dstpan == IEEE802154_BROADCAST || dstpan == sPanid) &&
+                        (short_address == IEEE802154_BROADCAST || short_address == sShortAddress),
+                        error = kThreadError_Abort);
         break;
 
     case IEEE802154_DST_ADDR_EXT:
         dstpan = getDstPan(sReceiveFrame.mPsdu);
         getExtAddress(sReceiveFrame.mPsdu, &ext_address);
-        VerifyOrExit((dstpan == IEEE802154_BROADCAST || dstpan == sPanid) &&
-                     memcmp(&ext_address, sExtendedAddress, sizeof(ext_address)) == 0,
-                     error = kThreadError_Abort);
+        otEXPECT_ACTION((dstpan == IEEE802154_BROADCAST || dstpan == sPanid) &&
+                        memcmp(&ext_address, sExtendedAddress, sizeof(ext_address)) == 0,
+                        error = kThreadError_Abort);
         break;
 
     default:
-        ExitNow(error = kThreadError_Abort);
+        error = kThreadError_Abort;
+        goto exit;
     }
 
     sReceiveFrame.mPower = -20;

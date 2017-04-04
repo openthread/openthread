@@ -34,7 +34,7 @@
 #include <driverlib/sys_ctrl.h>
 
 #include <openthread/types.h>
-#include <common/code_utils.hpp>
+#include <utils/code_utils.h>
 #include <openthread/platform/uart.h>
 
 /**
@@ -113,7 +113,7 @@ ThreadError otPlatUartDisable(void)
 ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
     ThreadError error = kThreadError_None;
-    VerifyOrExit(sSendBuffer == NULL, error = kThreadError_Busy);
+    otEXPECT_ACTION(sSendBuffer == NULL, error = kThreadError_Busy);
 
     sSendBuffer = aBuf;
     sSendLen = aBufLength;
@@ -151,7 +151,7 @@ static void processReceive(void)
  */
 static void processTransmit(void)
 {
-    VerifyOrExit(sSendBuffer != NULL, ;);
+    otEXPECT(sSendBuffer != NULL);
 
     for (; sSendLen > 0; sSendLen--)
     {

@@ -32,6 +32,7 @@ lib_LIBRARIES                           = libopenthread-platform-utils.a
 
 libopenthread_platform_utils_a_CPPFLAGS = \
     -I$(top_srcdir)/include               \
+    -I$(top_srcdir)/examples/platforms    \
     -I$(top_srcdir)/src/core              \
     $(NULL)
 
@@ -40,6 +41,7 @@ libopenthread_platform_utils_a_SOURCES  = \
     $(NULL)
 
 noinst_HEADERS                          = \
+    code_utils.h                          \
     flash.h                               \
     $(NULL)
 

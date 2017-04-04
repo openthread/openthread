@@ -37,8 +37,7 @@
 
 #include <openthread-config.h>
 #include <utils/flash.h>
-
-#include <common/code_utils.hpp>
+#include <utils/code_utils.h>
 
 static int sFlashFd;
 uint32_t sEraseAddress;
@@ -77,7 +76,7 @@ ThreadError utilsFlashInit(void)
     sFlashFd = open(fileName, O_RDWR | O_CREAT, 0666);
     lseek(sFlashFd, 0, SEEK_SET);
 
-    VerifyOrExit(sFlashFd >= 0, error = kThreadError_Failed);
+    otEXPECT_ACTION(sFlashFd >= 0, error = kThreadError_Failed);
 
     if (create)
     {
@@ -102,15 +101,15 @@ ThreadError utilsFlashErasePage(uint32_t aAddress)
     uint8_t buf = 0xff;
     uint32_t address;
 
-    VerifyOrExit(sFlashFd >= 0, error = kThreadError_Failed);
-    VerifyOrExit(aAddress < FLASH_SIZE, error = kThreadError_InvalidArgs);
+    otEXPECT_ACTION(sFlashFd >= 0, error = kThreadError_Failed);
+    otEXPECT_ACTION(aAddress < FLASH_SIZE, error = kThreadError_InvalidArgs);
 
     // Get start address of the flash page that includes aAddress
     address = aAddress & (~(uint32_t)(FLASH_PAGE_SIZE - 1));
 
     for (uint16_t offset = 0; offset < FLASH_PAGE_SIZE; offset++)
     {
-        VerifyOrExit(pwrite(sFlashFd, &buf, 1, address + offset) == 1, error = kThreadError_Failed);
+        otEXPECT_ACTION(pwrite(sFlashFd, &buf, 1, address + offset) == 1, error = kThreadError_Failed);
     }
 
 exit:
@@ -129,14 +128,14 @@ uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
     uint32_t index = 0;
     uint8_t byte;
 
-    VerifyOrExit(sFlashFd >= 0 && aAddress < FLASH_SIZE, ;);
+    otEXPECT(sFlashFd >= 0 && aAddress < FLASH_SIZE);
 
     for (index = 0; index < aSize; index++)
     {
-        VerifyOrExit((ret = utilsFlashRead(aAddress + index, &byte, 1)) == 1, ;);
+        otEXPECT((ret = utilsFlashRead(aAddress + index, &byte, 1)) == 1);
         // Use bitwise AND to emulate the behavior of flash memory
         byte &= aData[index];
-        VerifyOrExit((ret = (uint32_t)pwrite(sFlashFd, &byte, 1, aAddress + index)) == 1, ;);
+        otEXPECT((ret = (uint32_t)pwrite(sFlashFd, &byte, 1, aAddress + index)) == 1);
     }
 
 exit:
@@ -147,7 +146,7 @@ uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
     uint32_t ret = 0;
 
-    VerifyOrExit(sFlashFd >= 0 && aAddress < FLASH_SIZE, ;);
+    otEXPECT(sFlashFd >= 0 && aAddress < FLASH_SIZE);
     ret = (uint32_t)pread(sFlashFd, aData, aSize, aAddress);
 
 exit:

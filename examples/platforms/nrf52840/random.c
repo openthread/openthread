@@ -37,7 +37,7 @@
 #include <string.h>
 
 #include <openthread/platform/random.h>
-#include <common/code_utils.hpp>
+#include <utils/code_utils.h>
 
 #include "hal/nrf_rng.h"
 #include "platform-nrf5.h"
@@ -154,8 +154,8 @@ ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint1
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
-    VerifyOrExit(!bufferIsEmpty(), error = kThreadError_Failed);
+    otEXPECT_ACTION(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
+    otEXPECT_ACTION(!bufferIsEmpty(), error = kThreadError_Failed);
 
     uint16_t copyLength = (uint16_t)bufferCount();
 

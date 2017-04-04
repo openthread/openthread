@@ -39,7 +39,7 @@
 #include "openthread/platform/radio.h"
 #include "openthread/platform/diag.h"
 
-#include <common/code_utils.hpp>
+#include <utils/code_utils.h>
 #include <common/logging.hpp>
 #include "platform-cc2538.h"
 
@@ -306,9 +306,9 @@ ThreadError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
         // wait for valid rssi
         while ((HWREG(RFCORE_XREG_RSSISTAT) & RFCORE_XREG_RSSISTAT_RSSI_VALID) == 0);
 
-        VerifyOrExit(((HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_CCA) &&
-                      !((HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_SFD))),
-                     sTransmitError = kThreadError_ChannelAccessFailure);
+        otEXPECT_ACTION(((HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_CCA) &&
+                         !((HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_SFD))),
+                        sTransmitError = kThreadError_ChannelAccessFailure);
 
         // begin transmit
         HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_TXON;
@@ -368,12 +368,12 @@ void readFrame(void)
     uint8_t crcCorr;
     int i;
 
-    VerifyOrExit(sState == kStateReceive || sState == kStateTransmit, ;);
-    VerifyOrExit((HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_FIFOP) != 0, ;);
+    otEXPECT(sState == kStateReceive || sState == kStateTransmit);
+    otEXPECT((HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_FIFOP) != 0);
 
     // read length
     length = HWREG(RFCORE_SFR_RFDATA);
-    VerifyOrExit(IEEE802154_MIN_LENGTH <= length && length <= IEEE802154_MAX_LENGTH, ;);
+    otEXPECT(IEEE802154_MIN_LENGTH <= length && length <= IEEE802154_MAX_LENGTH);
 
     // read psdu
     for (i = 0; i < length - 2; i++)
@@ -532,11 +532,11 @@ int8_t findSrcMatchShortEntry(const uint16_t aShortAddress)
 
         if ((shortAddr == aShortAddress))
         {
-            ExitNow(entry = i);
+            entry = i;
+            break;
         }
     }
 
-exit:
     return entry;
 }
 
@@ -569,11 +569,11 @@ int8_t findSrcMatchExtEntry(const uint8_t *aExtAddress)
 
         if (j == sizeof(otExtAddress))
         {
-            ExitNow(entry = i);
+            entry = i;
+            break;
         }
     }
 
-exit:
     return entry;
 }
 
@@ -617,7 +617,8 @@ int8_t findSrcMatchAvailEntry(bool aShort)
             {
                 if ((shortEnableStatus & bitMask) == 0)
                 {
-                    ExitNow(entry = i);
+                    entry = i;
+                    break;
                 }
             }
 
@@ -637,7 +638,8 @@ int8_t findSrcMatchAvailEntry(bool aShort)
         {
             if (((extEnableStatus | shortEnableStatus) & bitMask) == 0)
             {
-                ExitNow(entry = i);
+                entry = i;
+                break;
             }
 
             extEnableStatus = extEnableStatus >> 2;
@@ -645,7 +647,6 @@ int8_t findSrcMatchAvailEntry(bool aShort)
         }
     }
 
-exit:
     return entry;
 }
 
@@ -677,7 +678,7 @@ ThreadError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16
 
     otLogDebgPlat(sInstance, "Add ShortAddr entry: %d", entry);
 
-    VerifyOrExit(entry >= 0, error = kThreadError_NoBufs);
+    otEXPECT_ACTION(entry >= 0, error = kThreadError_NoBufs);
 
     addr += (entry * RFCORE_XREG_SRCMATCH_SHORT_ENTRY_OFFSET);
 
@@ -701,7 +702,7 @@ ThreadError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t 
 
     otLogDebgPlat(sInstance, "Add ExtAddr entry: %d", entry);
 
-    VerifyOrExit(entry >= 0, error = kThreadError_NoBufs);
+    otEXPECT_ACTION(entry >= 0, error = kThreadError_NoBufs);
 
     addr += (entry * RFCORE_XREG_SRCMATCH_EXT_ENTRY_OFFSET);
 
@@ -724,7 +725,7 @@ ThreadError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint
 
     otLogDebgPlat(sInstance, "Clear ShortAddr entry: %d", entry);
 
-    VerifyOrExit(entry >= 0, error = kThreadError_NoAddress);
+    otEXPECT_ACTION(entry >= 0, error = kThreadError_NoAddress);
 
     setSrcMatchEntryEnableStatus(true, (uint8_t)(entry), false);
 
@@ -740,7 +741,7 @@ ThreadError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_
 
     otLogDebgPlat(sInstance, "Clear ExtAddr entry: %d", entry);
 
-    VerifyOrExit(entry >= 0, error = kThreadError_NoAddress);
+    otEXPECT_ACTION(entry >= 0, error = kThreadError_NoAddress);
 
     setSrcMatchEntryEnableStatus(false, (uint8_t)(entry), false);
 

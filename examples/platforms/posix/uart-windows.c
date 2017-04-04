@@ -29,6 +29,7 @@
 #include "platform-posix.h"
 
 #include "openthread/platform/uart.h"
+#include "utils/code_utils.h"
 
 static HANDLE s_WorkerThread;
 static HANDLE s_StopWorkerEvent;
@@ -78,10 +79,11 @@ ThreadError otPlatUartEnable(void)
     ThreadError error = kThreadError_None;
 
     // Create the worker thread stop event
-    VerifyOrExit((s_StopWorkerEvent = CreateEvent(NULL, TRUE, FALSE, NULL)) != NULL, error = kThreadError_Error);
+    otEXPECT_ACTION((s_StopWorkerEvent = CreateEvent(NULL, TRUE, FALSE, NULL)) != NULL, error = kThreadError_Error);
 
     // Start the worker thread
-    VerifyOrExit((s_WorkerThread = CreateThread(NULL, 0, windowsUartWorkerThread, NULL, 0, NULL)) != NULL, error = kThreadError_Error);
+    otEXPECT_ACTION((s_WorkerThread = CreateThread(NULL, 0, windowsUartWorkerThread, NULL, 0, NULL)) != NULL,
+		    error = kThreadError_Error);
 
     return error;
 
@@ -115,7 +117,8 @@ ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
     ThreadError error = kThreadError_None;
 
     DWORD dwNumCharsWritten = 0;
-    VerifyOrExit(WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), aBuf, aBufLength, &dwNumCharsWritten, NULL), error = kThreadError_Error);
+    otEXPECT_ACTION(WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), aBuf, aBufLength, &dwNumCharsWritten, NULL),
+		    error = kThreadError_Error);
 
     otPlatUartSendDone();
 
