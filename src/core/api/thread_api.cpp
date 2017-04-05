@@ -511,6 +511,22 @@ exit:
     return error;
 }
 
+ThreadError otThreadGetParentLastRssi(otInstance *aInstance, int8_t *aLastRssi)
+{
+    ThreadError error = kThreadError_None;
+    Router *parent;
+
+    VerifyOrExit(aLastRssi != NULL, error = kThreadError_InvalidArgs);
+
+    parent = aInstance->mThreadNetif.GetMle().GetParent();
+    *aLastRssi = parent->mLinkInfo.GetLastRss();
+
+    VerifyOrExit(*aLastRssi != LinkQualityInfo::kUnknownRss, error = kThreadError_Failed);
+
+exit:
+    return error;
+}
+
 const char *otGetVersionString(void)
 {
     /**

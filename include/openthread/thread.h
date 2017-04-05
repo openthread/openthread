@@ -834,10 +834,19 @@ OTAPI ThreadError OTCALL otThreadGetParentInfo(otInstance *aInstance, otRouterIn
  * The function retrieves the average RSSI for the Thread Parent.
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
- * @param[out]  aParentInfo  A pointer to where the parent rssi should be placed.
+ * @param[out]  aParentRssi  A pointer to where the parent rssi should be placed.
  *
  */
 OTAPI ThreadError OTCALL otThreadGetParentAverageRssi(otInstance *aInstance, int8_t *aParentRssi);
+
+/**
+ * The function retrieves the RSSI of the last packet from the Thread Parent.
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ * @param[out]  aLastRssi    A pointer to where the last rssi should be placed.
+ *
+ */
+OTAPI ThreadError OTCALL otThreadGetParentLastRssi(otInstance *aInstance, int8_t *aLastRssi);
 
 /**
  * This function pointer is called when Network Diagnostic Get response is received.
