@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -112,14 +112,7 @@ ThreadError utilsFlashStatusWait(uint32_t aTimeout)
     while (busy && ((otPlatAlarmGetNow() - start) < aTimeout))
     {
         status = flash_read_status();
-        if (status & 0x01)
-        {
-            busy = 1;
-        }
-        else
-        {
-            busy = 0;
-        }
+        busy =  status & 0x01;
     }
 
     VerifyOrExit(!busy, error = kThreadError_Busy);
