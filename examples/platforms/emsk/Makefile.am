@@ -116,8 +116,6 @@ libopenthread_emsk_a_SOURCES                                                    
 
 noinst_HEADERS                                                                                    = \
     platform-emsk.h                                                                                 \
-    arc_core_config.h                                                                               \
-    embARC_BSP_config.h                                                                             \
     $(NULL)
 
 noinst_HEADERS                                                                                   += \
@@ -155,6 +153,8 @@ noinst_HEADERS                                                                  
     $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/inc/arc/arc_timer.h                          \
     $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/inc/embARC_error.h                           \
     $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/inc/embARC_toolchain.h                       \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/arc_core_config.h                            \
+    $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/embARC_BSP_config.h                          \
     $(NULL)
 
 noinst_HEADERS                                                                                   += \
