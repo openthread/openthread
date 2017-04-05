@@ -847,6 +847,7 @@ OTAPI ThreadError OTCALL otThreadGetParentAverageRssi(otInstance *aInstance, int
  *
  * @retval kThreadError_None         Successfully retrieved the RSSI data.
  * @retval kThreadError_Failed       Unable to get RSSI data.
+ * @retval kThreadError_InvalidArgs  @p aLastRssi is NULL.
  */
 OTAPI ThreadError OTCALL otThreadGetParentLastRssi(otInstance *aInstance, int8_t *aLastRssi);
 
