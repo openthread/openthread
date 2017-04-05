@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2017, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -34,8 +34,8 @@ DIST_SUBDIRS                            = \
     cc2538                                \
     cc2650                                \
     da15000                               \
-    nrf52840                              \
     emsk                                  \
+    nrf52840                              \
     posix                                 \
     utils                                 \
     $(NULL)
