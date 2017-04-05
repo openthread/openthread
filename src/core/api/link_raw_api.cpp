@@ -47,7 +47,7 @@ ThreadError otLinkRawSetEnable(otInstance *aInstance, bool aEnabled)
 
     VerifyOrExit(!aInstance->mThreadNetif.IsUp(), error = kThreadError_InvalidState);
 
-    otLogInfoPlat("LinkRaw Enabled=%d", aEnabled ? 1 : 0);
+    otLogInfoPlat(aInstance, "LinkRaw Enabled=%d", aEnabled ? 1 : 0);
 
     aInstance->mLinkRaw.SetEnabled(aEnabled);
 
@@ -113,7 +113,7 @@ ThreadError otLinkRawSetPromiscuous(otInstance *aInstance, bool aEnable)
 
     VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = kThreadError_InvalidState);
 
-    otLogInfoPlat("LinkRaw Promiscuous=%d", aEnable ? 1 : 0);
+    otLogInfoPlat(aInstance, "LinkRaw Promiscuous=%d", aEnable ? 1 : 0);
 
     otPlatRadioSetPromiscuous(aInstance, aEnable);
 
@@ -332,6 +332,7 @@ void LinkRaw::InvokeReceiveDone(RadioPacket *aPacket, ThreadError aError)
 {
     if (mReceiveDoneCallback)
     {
+        otLogDebgPlat(&mInstance, "LinkRaw Invoke Receive Done");
         mReceiveDoneCallback(&mInstance, aPacket, aError);
     }
 }

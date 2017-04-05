@@ -115,8 +115,20 @@ void SecureServer::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     if (!mNetif.GetDtls().IsStarted())
     {
+        Ip6::SockAddr sockAddr;
+        sockAddr.mAddress = aMessageInfo.GetPeerAddr();
+        sockAddr.mPort = aMessageInfo.GetPeerPort();
+        mSocket.Connect(sockAddr);
+
         mPeerAddress.SetPeerAddr(aMessageInfo.GetPeerAddr());
         mPeerAddress.SetPeerPort(aMessageInfo.GetPeerPort());
+
+        if (mNetif.IsUnicastAddress(aMessageInfo.GetSockAddr()))
+        {
+            mPeerAddress.SetSockAddr(aMessageInfo.GetSockAddr());
+        }
+
+        mPeerAddress.SetSockPort(aMessageInfo.GetSockPort());
 
         mNetif.GetDtls().Start(false, HandleDtlsConnected, HandleDtlsReceive, HandleDtlsSend, this);
     }

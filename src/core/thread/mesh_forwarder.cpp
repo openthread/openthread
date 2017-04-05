@@ -2278,7 +2278,7 @@ void MeshForwarder::HandleDataPollTimeout(void)
     }
 }
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OPENTHREAD_LOG_LEVEL_INFO
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OPENTHREAD_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
 void MeshForwarder::LogIp6Message(MessageAction aAction, const Message &aMessage, const Mac::Address &aMacAddress,
                                   ThreadError aError)
@@ -2286,8 +2286,7 @@ void MeshForwarder::LogIp6Message(MessageAction aAction, const Message &aMessage
     uint16_t checksum = 0;
     Ip6::Header ip6Header;
     Ip6::IpProto protocol;
-    char stringBuffer[(Ip6::Address::kIp6AddressStringSize > Mac::Address::kAddressStringSize) ?
-                      Ip6::Address::kIp6AddressStringSize : Mac::Address::kAddressStringSize];
+    char stringBuffer[Ip6::Address::kIp6AddressStringSize];
 
     VerifyOrExit(aMessage.GetType() == Message::kTypeIp6, ;);
 

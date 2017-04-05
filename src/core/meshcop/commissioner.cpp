@@ -55,6 +55,7 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
+#include <openthread/types.h>
 
 using Thread::Encoding::BigEndian::HostSwap64;
 
@@ -65,7 +66,7 @@ Commissioner::Commissioner(ThreadNetif &aThreadNetif):
     mAnnounceBegin(aThreadNetif),
     mEnergyScan(aThreadNetif),
     mPanIdQuery(aThreadNetif),
-    mState(kStateDisabled),
+    mState(kCommissionerStateDisabled),
     mJoinerPort(0),
     mJoinerRloc(0),
     mJoinerExpirationTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleJoinerExpirationTimer, this),
@@ -93,11 +94,11 @@ ThreadError Commissioner::Start(void)
     ThreadError error = kThreadError_None;
 
     otLogFuncEntry();
-    VerifyOrExit(mState == kStateDisabled, error = kThreadError_InvalidState);
+    VerifyOrExit(mState == kCommissionerStateDisabled, error = kThreadError_InvalidState);
 
     SuccessOrExit(error = mNetif.GetSecureCoapServer().Start(SendRelayTransmit, this));
 
-    mState = kStatePetition;
+    mState = kCommissionerStatePetition;
     mTransmitAttempts = 0;
 
     SendPetition();
@@ -112,11 +113,11 @@ ThreadError Commissioner::Stop(void)
     ThreadError error = kThreadError_None;
 
     otLogFuncEntry();
-    VerifyOrExit(mState != kStateDisabled, error = kThreadError_InvalidState);
+    VerifyOrExit(mState != kCommissionerStateDisabled, error = kThreadError_InvalidState);
 
     mNetif.GetSecureCoapServer().Stop();
 
-    mState = kStateDisabled;
+    mState = kCommissionerStateDisabled;
     mTransmitAttempts = 0;
 
     mTimer.Stop();
@@ -137,7 +138,7 @@ ThreadError Commissioner::SendCommissionerSet(void)
     SteeringDataTlv steeringData;
 
     otLogFuncEntry();
-    VerifyOrExit(mState == kStateActive, error = kThreadError_InvalidState);
+    VerifyOrExit(mState == kCommissionerStateActive, error = kThreadError_InvalidState);
 
     memset(&dataset, 0, sizeof(dataset));
 
@@ -292,7 +293,7 @@ uint16_t Commissioner::GetSessionId(void) const
     return mSessionId;
 }
 
-uint8_t Commissioner::GetState(void) const
+otCommissionerState Commissioner::GetState(void) const
 {
     return mState;
 }
@@ -306,14 +307,14 @@ void Commissioner::HandleTimer(void)
 {
     switch (mState)
     {
-    case kStateDisabled:
+    case kCommissionerStateDisabled:
         break;
 
-    case kStatePetition:
+    case kCommissionerStatePetition:
         SendPetition();
         break;
 
-    case kStateActive:
+    case kCommissionerStateActive:
         SendKeepAlive();
         break;
     }
@@ -614,7 +615,7 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Header *aHeader, Message *
 
     otLogFuncEntry();
 
-    VerifyOrExit(mState == kStatePetition, mState = kStateDisabled);
+    VerifyOrExit(mState == kCommissionerStatePetition, mState = kCommissionerStateDisabled);
     VerifyOrExit(aResult == kThreadError_None &&
                  aHeader->GetCode() == kCoapResponseChanged, retransmit = true);
 
@@ -623,13 +624,13 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Header *aHeader, Message *
     SuccessOrExit(Tlv::GetTlv(*aMessage, Tlv::kState, sizeof(state), state));
     VerifyOrExit(state.IsValid(), ;);
 
-    VerifyOrExit(state.GetState() == StateTlv::kAccept, mState = kStateDisabled);
+    VerifyOrExit(state.GetState() == StateTlv::kAccept, mState = kCommissionerStateDisabled);
 
     SuccessOrExit(Tlv::GetTlv(*aMessage, Tlv::kCommissionerSessionId, sizeof(sessionId), sessionId));
     VerifyOrExit(sessionId.IsValid(), ;);
     mSessionId = sessionId.GetCommissionerSessionId();
 
-    mState = kStateActive;
+    mState = kCommissionerStateActive;
     mTransmitAttempts = 0;
     mTimer.Start(Timer::SecToMsec(kKeepAliveTimeout) / 2);
 
@@ -641,7 +642,7 @@ exit:
     {
         if (mTransmitAttempts >= kPetitionRetryCount)
         {
-            mState = kStateDisabled;
+            mState = kCommissionerStateDisabled;
         }
         else
         {
@@ -671,7 +672,7 @@ ThreadError Commissioner::SendKeepAlive(void)
     VerifyOrExit((message = mNetif.GetCoapClient().NewMeshCoPMessage(header)) != NULL, error = kThreadError_NoBufs);
 
     state.Init();
-    state.SetState(mState == kStateActive ? StateTlv::kAccept : StateTlv::kReject);
+    state.SetState(mState == kCommissionerStateActive ? StateTlv::kAccept : StateTlv::kReject);
     SuccessOrExit(error = message->Append(&state, sizeof(state)));
 
     sessionId.Init();
@@ -713,16 +714,16 @@ void Commissioner::HandleLeaderKeepAliveResponse(Coap::Header *aHeader, Message 
 
     otLogFuncEntry();
 
-    VerifyOrExit(mState == kStateActive, mState = kStateDisabled);
+    VerifyOrExit(mState == kCommissionerStateActive, mState = kCommissionerStateDisabled);
     VerifyOrExit(aResult == kThreadError_None &&
-                 aHeader->GetCode() == kCoapResponseChanged, mState = kStateDisabled);
+                 aHeader->GetCode() == kCoapResponseChanged, mState = kCommissionerStateDisabled);
 
     otLogInfoMeshCoP(GetInstance(), "received Leader Petition response");
 
     SuccessOrExit(Tlv::GetTlv(*aMessage, Tlv::kState, sizeof(state), state));
     VerifyOrExit(state.IsValid(), ;);
 
-    VerifyOrExit(state.GetState() == StateTlv::kAccept, mState = kStateDisabled);
+    VerifyOrExit(state.GetState() == StateTlv::kAccept, mState = kCommissionerStateDisabled);
 
     mTimer.Start(Timer::SecToMsec(kKeepAliveTimeout) / 2);
 

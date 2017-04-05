@@ -103,6 +103,15 @@ public:
     ThreadError Bind(const SockAddr &aSockAddr);
 
     /**
+     * This method connects the UDP socket.
+     *
+     * @param[in]  aSockAddr  A reference to the socket address.
+     *
+     * @retval kThreadError_None  Successfully connected the socket.
+     */
+    ThreadError Connect(const SockAddr &aSockAddr);
+
+    /**
      * This method closes the UDP socket.
      *
      * @retval kThreadError_None  Successfully closed the UDP socket.

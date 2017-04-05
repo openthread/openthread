@@ -394,6 +394,10 @@ private:
     ThreadError GetPropertyHandler_DEBUG_TEST_ASSERT(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_DEBUG_NCP_LOG_LEVEL(uint8_t header, spinel_prop_key_t key);
 
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    ThreadError GetPropertyHandler_THREAD_COMMISSIONER_ENABLED(uint8_t header, spinel_prop_key_t key);
+#endif
+
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     ThreadError GetPropertyHandler_JAM_DETECT_ENABLE(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_JAM_DETECTED(uint8_t header, spinel_prop_key_t key);
@@ -513,6 +517,10 @@ private:
                                               uint16_t value_len);
     ThreadError SetPropertyHandler_DEBUG_NCP_LOG_LEVEL(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                    uint16_t value_len);
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    ThreadError SetPropertyHandler_THREAD_COMMISSIONER_ENABLED(uint8_t header, spinel_prop_key_t key,
+                                                               const uint8_t *value_ptr, uint16_t value_len);
+#endif
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     ThreadError SetPropertyHandler_JAM_DETECT_ENABLE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -551,6 +559,10 @@ private:
                                                              const uint8_t *value_ptr, uint16_t value_len);
     ThreadError InsertPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                     uint16_t value_len);
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    ThreadError InsertPropertyHandler_THREAD_JOINERS(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+            uint16_t value_len);
+#endif
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     ThreadError RemovePropertyHandler_MAC_SRC_MATCH_SHORT_ADDRESSES(uint8_t header, spinel_prop_key_t key,

@@ -47,6 +47,10 @@
 #include "openthread/jam_detection.h"
 #endif
 
+#if OPENTHREAD_ENABLE_COMMISSIONER
+#include "meshcop/commissioner.hpp"
+#endif
+
 #include "openthread/platform/radio.h"
 #include "openthread/platform/misc.h"
 
@@ -153,6 +157,10 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::GetPropertyHandler_THREAD_ASSISTING_PORTS },
     { SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE, &NcpBase::GetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE },
     { SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED, &NcpBase::GetPropertyHandler_THREAD_ROUTER_ROLE_ENABLED },
+
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    { SPINEL_PROP_THREAD_COMMISSIONER_ENABLED, &NcpBase::GetPropertyHandler_THREAD_COMMISSIONER_ENABLED },
+#endif
 
     { SPINEL_PROP_MAC_WHITELIST, &NcpBase::GetPropertyHandler_MAC_WHITELIST },
     { SPINEL_PROP_MAC_WHITELIST_ENABLED, &NcpBase::GetPropertyHandler_MAC_WHITELIST_ENABLED },
@@ -312,6 +320,10 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
 #if OPENTHREAD_ENABLE_LEGACY
     { SPINEL_PROP_NEST_LEGACY_ULA_PREFIX, &NcpBase::SetPropertyHandler_NEST_LEGACY_ULA_PREFIX },
 #endif
+
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    { SPINEL_PROP_THREAD_COMMISSIONER_ENABLED, &NcpBase::SetPropertyHandler_THREAD_COMMISSIONER_ENABLED },
+#endif
 };
 
 const NcpBase::InsertPropertyHandlerEntry NcpBase::mInsertPropertyHandlerTable[] =
@@ -324,6 +336,10 @@ const NcpBase::InsertPropertyHandlerEntry NcpBase::mInsertPropertyHandlerTable[]
     { SPINEL_PROP_THREAD_LOCAL_ROUTES, &NcpBase::InsertPropertyHandler_THREAD_LOCAL_ROUTES },
     { SPINEL_PROP_THREAD_ON_MESH_NETS, &NcpBase::InsertPropertyHandler_THREAD_ON_MESH_NETS },
     { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::InsertPropertyHandler_THREAD_ASSISTING_PORTS },
+
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    { SPINEL_PROP_THREAD_JOINERS, &NcpBase::NcpBase::InsertPropertyHandler_THREAD_JOINERS },
+#endif
 
     { SPINEL_PROP_CNTR_RESET, &NcpBase::SetPropertyHandler_CNTR_RESET },
 
@@ -3364,6 +3380,23 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header
            );
 }
 
+#if OPENTHREAD_ENABLE_COMMISSIONER
+ThreadError NcpBase::GetPropertyHandler_THREAD_COMMISSIONER_ENABLED(uint8_t header, spinel_prop_key_t key)
+{
+    bool isEnabled = false;
+    if (otCommissionerGetState(mInstance) == kCommissionerStateActive)
+        isEnabled = true;
+
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_BOOL_S,
+               isEnabled
+           );
+}
+#endif
+
 ThreadError NcpBase::GetPropertyHandler_NET_REQUIRE_JOIN_EXISTING(uint8_t header, spinel_prop_key_t key)
 {
     return SendPropertyUpdate(
@@ -4802,6 +4835,42 @@ ThreadError NcpBase::SetPropertyHandler_CNTR_RESET(uint8_t header, spinel_prop_k
     return SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
 }
 
+#if OPENTHREAD_ENABLE_COMMISSIONER
+ThreadError NcpBase::SetPropertyHandler_THREAD_COMMISSIONER_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                                    uint16_t value_len)
+{
+    bool value = false;
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+    (void)key;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_BOOL_S,
+                       &value
+                   );
+
+    if (parsedLength > 0)
+    {
+        if (value == false)
+        {
+            errorCode = otCommissionerStop(mInstance);
+        }
+        else
+        {
+            errorCode = otCommissionerStart(mInstance);
+        }
+    }
+    else
+    {
+        errorCode = kThreadError_Parse;
+    }
+
+    return SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+}
+#endif // OPENTHREAD_ENABLE_COMMISSIONER
+
 ThreadError NcpBase::SetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                       uint16_t value_len)
 {
@@ -6047,6 +6116,72 @@ ThreadError NcpBase::InsertPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_
 
     return errorCode;
 }
+
+#if OPENTHREAD_ENABLE_COMMISSIONER
+ThreadError NcpBase::InsertPropertyHandler_THREAD_JOINERS(uint8_t header, spinel_prop_key_t key,
+                                                          const uint8_t *value_ptr, uint16_t value_len)
+{
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    otExtAddress *ot_ext_address = NULL;
+    const char *aPSKd = NULL;
+    uint32_t joiner_timeout = 0;
+
+    VerifyOrExit(
+        mAllowLocalNetworkDataChange == true,
+        errorCode = SendLastStatus(header, SPINEL_STATUS_INVALID_STATE)
+    );
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       "ULE",
+                       &aPSKd,
+                       &joiner_timeout,
+                       &ot_ext_address
+                   );
+
+    if (parsedLength <= 0)
+    {
+        parsedLength = spinel_datatype_unpack(
+                           value_ptr,
+                           value_len,
+                           "UL",
+                           &aPSKd,
+                           &joiner_timeout
+                       );
+        ot_ext_address = NULL;
+    }
+
+    if (parsedLength > 0)
+    {
+        errorCode = otCommissionerAddJoiner(mInstance, ot_ext_address, aPSKd, joiner_timeout);
+
+        if (errorCode == kThreadError_None)
+        {
+            errorCode = SendPropertyUpdate(
+                            header,
+                            SPINEL_CMD_PROP_VALUE_INSERTED,
+                            key,
+                            value_ptr,
+                            value_len
+                        );
+        }
+        else
+        {
+            errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+        }
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+exit:
+    return errorCode;
+}
+#endif // OPENTHREAD_ENABLE_COMMISSIONER
 
 // ----------------------------------------------------------------------------
 // MARK: Individual Property Removers

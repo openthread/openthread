@@ -67,14 +67,14 @@ To flash the images with [Flash Programmer 2][ti-flash-programmer-2], the files
 must have the `*.elf` extension.
 ```bash
 $ cd <path-to-openthread>/output/cc2650/bin
-$ cp arm-none-eabi-ot-cli arm-none-eabi-ot-cli.elf
+$ cp ot-cli ot-cli.elf
 ```
 
 To load the images with the [serial bootloader][ti-cc2650-bootloader], the
 images must be converted to `bin`. This is done using `arm-none-eabi-objcopy`
 ```bash
 $ cd <path-to-openthread>/output/cc2650/bin
-$ arm-none-eabi-objcopy -O binary arm-none-eabi-ot-cli arm-none-eabi-ot-cli.bin
+$ arm-none-eabi-objcopy -O binary ot-cli ot-cli.bin
 ```
 The [cc2538-bsl.py script][cc2538-bsl-tool] provides a convenient method
 for flashing a CC2650 via the UART.

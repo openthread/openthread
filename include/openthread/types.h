@@ -283,6 +283,18 @@ enum
 };
 
 /**
+* This enumeration defines the Commissioner State.
+*
+*/
+typedef enum otCommissionerState
+{
+
+    kCommissionerStateDisabled = 0,
+    kCommissionerStatePetition = 1,
+    kCommissionerStateActive = 2,
+} otCommissionerState;
+
+/**
   * This type represents Channel Mask Page 0.
   *
   */
@@ -696,6 +708,16 @@ typedef struct otExternalRouteConfig
      */
     bool mStable : 1;
 } otExternalRouteConfig;
+
+/**
+ * Defines valid values for member mPreference in otExternalRouteConfig and otBorderRouterConfig.
+ */
+typedef enum otRoutePreference
+{
+    kRoutePreferenceLow    = -1,  ///< Routes assigned this value are used as a last resort when no other more preferred route exists.
+    kRoutePreferenceMedium =  0,  ///< Routes assigned this value should be selected only in the absence of any kRoutePreferenceHigh routes.
+    kRoutePreferenceHigh   =  1   ///< The most preferred route. Routes assigned this value should be selected over any other route.
+} otRoutePreference;
 
 /**
  * @}

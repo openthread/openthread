@@ -53,6 +53,7 @@
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
 #include <meshcop/leader.hpp>
+#include <openthread/types.h>
 
 namespace Thread {
 namespace MeshCoP {
@@ -584,7 +585,7 @@ ThreadError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset,
 #if OPENTHREAD_ENABLE_COMMISSIONER
     bool isCommissioner;
 
-    isCommissioner = mNetif.GetCommissioner().GetState() != Commissioner::kStateDisabled ? true : false;
+    isCommissioner = mNetif.GetCommissioner().GetState() != kCommissionerStateDisabled ? true : false;
 
     if (isCommissioner)
     {

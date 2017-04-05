@@ -1562,15 +1562,15 @@ OTNODEAPI int32_t OTCALL otNodeAddPrefix(otNode* aNode, const char *aPrefix, con
     
     if (strcmp(aPreference, "high") == 0)
     {
-        config.mPreference = 1;
+        config.mPreference = kRoutePreferenceHigh;
     }
     else if (strcmp(aPreference, "med") == 0)
     {
-        config.mPreference = 1;
+        config.mPreference = kRoutePreferenceMedium;
     }
     else if (strcmp(aPreference, "low") == 0)
     {
-        config.mPreference = -1;
+        config.mPreference = kRoutePreferenceLow;
     }
     else
     {
@@ -1605,15 +1605,15 @@ OTNODEAPI int32_t OTCALL otNodeAddRoute(otNode* aNode, const char *aPrefix, cons
     
     if (strcmp(aPreference, "high") == 0)
     {
-        config.mPreference = 1;
+        config.mPreference = kRoutePreferenceHigh;
     }
     else if (strcmp(aPreference, "med") == 0)
     {
-        config.mPreference = 1;
+        config.mPreference = kRoutePreferenceMedium;
     }
     else if (strcmp(aPreference, "low") == 0)
     {
-        config.mPreference = -1;
+        config.mPreference = kRoutePreferenceLow;
     }
     else
     {

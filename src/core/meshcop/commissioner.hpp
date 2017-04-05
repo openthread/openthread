@@ -140,23 +140,16 @@ public:
     uint16_t GetSessionId(void) const;
 
     /**
-    * Commissioner State.
-    *
-    */
-    enum
-    {
-        kStateDisabled = 0,
-        kStatePetition = 1,
-        kStateActive = 2,
-    };
-
-    /**
-     * This method returns the Commissioner State.
+     * This function returns the Commissioner State.
      *
-     * @returns The Commissioner State.
+     * @param[in]  aInstance  A pointer to an OpenThread instance.
+     *
+     * @retval kCommissionerStateDisabled    Commissioner disabled.
+     * @retval kCommissionerStatePetition    Becoming the commissioner.
+     * @retval kCommissionerStateActive      Commissioner enabled.
      *
      */
-    uint8_t GetState(void) const;
+    otCommissionerState GetState(void) const;
 
     /**
      * This method sends MGMT_COMMISSIONER_GET.
@@ -260,7 +253,7 @@ private:
     ThreadError SendPetition(void);
     ThreadError SendKeepAlive(void);
 
-    uint8_t mState;
+    otCommissionerState mState;
 
     struct Joiner
     {
