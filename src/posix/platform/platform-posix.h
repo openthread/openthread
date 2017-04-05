@@ -315,6 +315,24 @@ void otSimRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent);
 #define otSysGetTime(aTime) gettimeofday(aTime, NULL)
 #endif
 
+/**
+ * This function performs platform UDP driver processing.
+ *
+ * @param[in]   aInstance   The OpenThread instance structure.
+ * @param[in]   aReadFdSet  A pointer to the read file descriptors.
+ *
+ */
+void platformUdpProcess(otInstance *aInstance, const fd_set *aReadSet);
+
+/**
+ * This function updates the file descriptor sets with file descriptors used by the platform UDP driver.
+ *
+ * @param[in]     aInstance    The OpenThread instance structure.
+ * @param[inout]  aReadFdSet   A pointer to the read file descriptors.
+ * @param[inout]  aMaxFd       A pointer to the max file descriptor.
+ */
+void platformUdpUpdateFdSet(otInstance *aInstance, fd_set *aReadFdSet, int *aMaxFd);
+
 #ifdef __cplusplus
 }
 #endif

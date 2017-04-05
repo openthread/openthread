@@ -40,6 +40,7 @@ ot_platform_headers                     = \
     random.h                              \
     time.h                                \
     uart.h                                \
+    udp.h                                 \
     spi-slave.h                           \
     settings.h                            \
     messagepool.h                         \
