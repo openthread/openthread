@@ -190,7 +190,7 @@ ThreadError NcpFrameBuffer::InFrameBeginSegment(void)
     uint16_t headerFlags = kSegmentHeaderNoFlag;
 
     // Verify that segment is not yet started (i.e., head and tail are the same).
-    VerifyOrExit(mWriteSegmentHead == mWriteSegmentTail, ;);
+    VerifyOrExit(mWriteSegmentHead == mWriteSegmentTail);
 
     // If this is the start of a new frame (i.e., frame start is same as segment head)
     if (mWriteFrameStart == mWriteSegmentHead)

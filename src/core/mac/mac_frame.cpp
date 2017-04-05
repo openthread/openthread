@@ -183,7 +183,7 @@ ThreadError Frame::ValidatePsdu(void)
     uint16_t fcf;
     uint8_t footerLength = kFcsSize;
 
-    VerifyOrExit((offset += kFcfSize + kDsnSize) <= GetPsduLength(),);
+    VerifyOrExit((offset += kFcfSize + kDsnSize) <= GetPsduLength());
     fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
 
     // Destinatinon PAN + Address
@@ -288,7 +288,7 @@ ThreadError Frame::ValidatePsdu(void)
         offset += kCommandIdSize;
     }
 
-    VerifyOrExit((offset + footerLength) <= GetPsduLength(),);
+    VerifyOrExit((offset + footerLength) <= GetPsduLength());
 
     error = kThreadError_None;
 
@@ -880,7 +880,7 @@ uint8_t Frame::GetFooterLength(void)
     uint8_t footerLength = 0;
     uint8_t *cur;
 
-    VerifyOrExit((cur = FindSecurityHeader()) != NULL, ;);
+    VerifyOrExit((cur = FindSecurityHeader()) != NULL);
 
     switch (cur[0] & kSecLevelMask)
     {

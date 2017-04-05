@@ -111,7 +111,7 @@ ThreadError MeshForwarder::Stop(void)
     ThreadError error = kThreadError_None;
     Message *message;
 
-    VerifyOrExit(mEnabled == true,);
+    VerifyOrExit(mEnabled == true);
 
     mDataPollManager.StopPolling();
     mReassemblyTimer.Stop();
@@ -186,7 +186,7 @@ void MeshForwarder::ClearChildIndirectMessages(Child &aChild)
 {
     Message *nextMessage;
 
-    VerifyOrExit(aChild.mQueuedIndirectMessageCnt > 0,);
+    VerifyOrExit(aChild.mQueuedIndirectMessageCnt > 0);
 
     for (Message *message = mSendQueue.GetHead(); message; message = nextMessage)
     {
@@ -325,7 +325,7 @@ ThreadError MeshForwarder::AddPendingSrcMatchEntries(void)
             children[i].mAddSrcMatchEntryPending &&
             children[i].mAddSrcMatchEntryShort)
         {
-            VerifyOrExit(((error = AddSrcMatchEntry(children[i])) == kThreadError_None), ;);
+            VerifyOrExit(((error = AddSrcMatchEntry(children[i])) == kThreadError_None));
         }
     }
 
@@ -336,7 +336,7 @@ ThreadError MeshForwarder::AddPendingSrcMatchEntries(void)
             children[i].mAddSrcMatchEntryPending &&
             !children[i].mAddSrcMatchEntryShort)
         {
-            VerifyOrExit(((error = AddSrcMatchEntry(children[i])) == kThreadError_None), ;);
+            VerifyOrExit(((error = AddSrcMatchEntry(children[i])) == kThreadError_None));
         }
     }
 
@@ -358,7 +358,7 @@ ThreadError MeshForwarder::AddSrcMatchEntry(Child &aChild)
         aChild.mAddSrcMatchEntryPending = true;
     }
 
-    VerifyOrExit(aChild.mAddSrcMatchEntryPending, ;);
+    VerifyOrExit(aChild.mAddSrcMatchEntryPending);
 
     if (aChild.mAddSrcMatchEntryShort)
     {
@@ -427,7 +427,7 @@ void MeshForwarder::ClearSrcMatchEntry(Child &aChild)
 
 void MeshForwarder::SetSrcMatchAsShort(Child &aChild, bool aShortSource)
 {
-    VerifyOrExit(aChild.mAddSrcMatchEntryShort != aShortSource, ;);
+    VerifyOrExit(aChild.mAddSrcMatchEntryShort != aShortSource);
 
     if (aChild.mQueuedIndirectMessageCnt > 0)
     {
@@ -1473,7 +1473,7 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
 
     mSendBusy = false;
 
-    VerifyOrExit(mEnabled, ;);
+    VerifyOrExit(mEnabled);
 
     if (mSendMessage != NULL)
     {
@@ -1521,7 +1521,7 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
     {
         child->mDataRequest = false;
 
-        VerifyOrExit(mSendMessage != NULL, ;);
+        VerifyOrExit(mSendMessage != NULL);
 
         if (mSendMessage == child->mIndirectSendInfo.mMessage)
         {
@@ -1603,7 +1603,7 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
         }
     }
 
-    VerifyOrExit(mSendMessage != NULL, ;);
+    VerifyOrExit(mSendMessage != NULL);
 
     if (mSendMessage->GetDirectTransmission())
     {
@@ -1863,14 +1863,14 @@ ThreadError MeshForwarder::CheckReachability(uint8_t *aFrame, uint8_t aFrameLeng
         reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader())
     {
         VerifyOrExit(sizeof(Lowpan::FragmentHeader) <= aFrameLength, error = kThreadError_Drop);
-        VerifyOrExit(reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->GetDatagramOffset() == 0,);
+        VerifyOrExit(reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->GetDatagramOffset() == 0);
 
         aFrame += reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->GetHeaderLength();
         aFrameLength -= reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->GetHeaderLength();
     }
 
     // only process IPv6 packets
-    VerifyOrExit(aFrameLength >= 1 && Lowpan::Lowpan::IsLowpanHc(aFrame),);
+    VerifyOrExit(aFrameLength >= 1 && Lowpan::Lowpan::IsLowpanHc(aFrame));
 
     VerifyOrExit(mNetif.GetLowpan().DecompressBaseHeader(ip6Header, aMeshSource, aMeshDest, aFrame, aFrameLength) > 0,
                  error = kThreadError_Drop);
@@ -2097,11 +2097,11 @@ void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const Thre
     Child *child;
 
     // Security Check: only process secure Data Poll frames.
-    VerifyOrExit(aMessageInfo.mLinkSecurity, ;);
+    VerifyOrExit(aMessageInfo.mLinkSecurity);
 
-    VerifyOrExit(mNetif.GetMle().GetDeviceState() != Mle::kDeviceStateDetached, ;);
+    VerifyOrExit(mNetif.GetMle().GetDeviceState() != Mle::kDeviceStateDetached);
 
-    VerifyOrExit((child = mNetif.GetMle().GetChild(aMacSource)) != NULL, ;);
+    VerifyOrExit((child = mNetif.GetMle().GetChild(aMacSource)) != NULL);
     child->mLastHeard = Timer::GetNow();
     child->mLinkFailures = 0;
 
@@ -2131,10 +2131,10 @@ void MeshForwarder::LogIp6Message(MessageAction aAction, const Message &aMessage
     Ip6::IpProto protocol;
     char stringBuffer[Ip6::Address::kIp6AddressStringSize];
 
-    VerifyOrExit(aMessage.GetType() == Message::kTypeIp6, ;);
+    VerifyOrExit(aMessage.GetType() == Message::kTypeIp6);
 
-    VerifyOrExit(sizeof(ip6Header) == aMessage.Read(0, sizeof(ip6Header), &ip6Header), ;);
-    VerifyOrExit(ip6Header.IsVersion6(), ;);
+    VerifyOrExit(sizeof(ip6Header) == aMessage.Read(0, sizeof(ip6Header), &ip6Header));
+    VerifyOrExit(ip6Header.IsVersion6());
 
     protocol = ip6Header.GetNextHeader();
 
@@ -2144,7 +2144,7 @@ void MeshForwarder::LogIp6Message(MessageAction aAction, const Message &aMessage
     {
         Ip6::UdpHeader udpHeader;
 
-        VerifyOrExit(sizeof(udpHeader) == aMessage.Read(sizeof(ip6Header), sizeof(udpHeader), &udpHeader), ;);
+        VerifyOrExit(sizeof(udpHeader) == aMessage.Read(sizeof(ip6Header), sizeof(udpHeader), &udpHeader));
         checksum = udpHeader.GetChecksum();
         break;
     }
@@ -2153,7 +2153,7 @@ void MeshForwarder::LogIp6Message(MessageAction aAction, const Message &aMessage
     {
         Ip6::TcpHeader tcpHeader;
 
-        VerifyOrExit(sizeof(tcpHeader) == aMessage.Read(sizeof(ip6Header), sizeof(tcpHeader), &tcpHeader), ;);
+        VerifyOrExit(sizeof(tcpHeader) == aMessage.Read(sizeof(ip6Header), sizeof(tcpHeader), &tcpHeader));
         checksum = tcpHeader.GetChecksum();
         break;
     }

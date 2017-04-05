@@ -83,9 +83,9 @@ void Leader::HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6:
     otLogInfoMeshCoP(GetInstance(), "received petition");
 
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kCommissionerId, sizeof(commissionerId), commissionerId));
-    VerifyOrExit(commissionerId.IsValid(), ;);
+    VerifyOrExit(commissionerId.IsValid());
 
-    VerifyOrExit(!mTimer.IsRunning(), ;);
+    VerifyOrExit(!mTimer.IsRunning());
 
     data.mBorderAgentLocator.Init();
     data.mBorderAgentLocator.SetBorderAgentLocator(HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
@@ -173,10 +173,10 @@ void Leader::HandleKeepAlive(Coap::Header &aHeader, Message &aMessage, const Ip6
     otLogInfoMeshCoP(GetInstance(), "received keep alive");
 
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kState, sizeof(state), state));
-    VerifyOrExit(state.IsValid(),);
+    VerifyOrExit(state.IsValid());
 
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kCommissionerSessionId, sizeof(sessionId), sessionId));
-    VerifyOrExit(sessionId.IsValid(),);
+    VerifyOrExit(sessionId.IsValid());
 
     if (sessionId.GetCommissionerSessionId() != mSessionId)
     {
@@ -285,7 +285,7 @@ void Leader::HandleTimer(void *aContext)
 
 void Leader::HandleTimer(void)
 {
-    VerifyOrExit(mNetif.GetMle().GetDeviceState() == Mle::kDeviceStateLeader, ;);
+    VerifyOrExit(mNetif.GetMle().GetDeviceState() == Mle::kDeviceStateLeader);
 
     ResignCommissioner();
 

@@ -75,7 +75,7 @@ void Udp::HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInf
     uint16_t payloadLength = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
     char buf[512];
 
-    VerifyOrExit(payloadLength <= sizeof(buf), ;);
+    VerifyOrExit(payloadLength <= sizeof(buf));
     otMessageRead(aMessage, otMessageGetOffset(aMessage), buf, payloadLength);
 
     if (buf[payloadLength - 1] == '\n')

@@ -126,15 +126,15 @@ void PanIdQueryClient::HandleConflict(Coap::Header &aHeader, Message &aMessage, 
     Ip6::MessageInfo responseInfo(aMessageInfo);
 
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost, ;);
+                 aHeader.GetCode() == kCoapRequestPost);
 
     otLogInfoMeshCoP(GetInstance(), "received panid conflict");
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kPanId, sizeof(panId), panId));
-    VerifyOrExit(panId.IsValid(), ;);
+    VerifyOrExit(panId.IsValid());
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask));
-    VerifyOrExit(channelMask.IsValid(),);
+    VerifyOrExit(channelMask.IsValid());
 
     if (mCallback != NULL)
     {

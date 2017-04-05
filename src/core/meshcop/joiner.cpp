@@ -314,7 +314,7 @@ void Joiner::SendJoinerFinalize(void)
 
 #if OPENTHREAD_ENABLE_CERT_LOG
     uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
-    VerifyOrExit(message->GetLength() <= sizeof(buf), ;);
+    VerifyOrExit(message->GetLength() <= sizeof(buf));
     message->Read(header.GetLength(), message->GetLength() - header.GetLength(), buf);
     otDumpCertMeshCoP(GetInstance(), "[THCI] direction=send | type=JOIN_FIN.req |", buf,
                       message->GetLength() - header.GetLength());
@@ -353,10 +353,10 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Header *aHeader, Message *aMessa
     VerifyOrExit(mState == kStateConnected &&
                  aResult == kThreadError_None &&
                  aHeader->GetType() == kCoapTypeAcknowledgment &&
-                 aHeader->GetCode() == kCoapResponseChanged, ;);
+                 aHeader->GetCode() == kCoapResponseChanged);
 
     SuccessOrExit(Tlv::GetTlv(*aMessage, Tlv::kState, sizeof(state), state));
-    VerifyOrExit(state.IsValid(), ;);
+    VerifyOrExit(state.IsValid());
 
     mState = kStateEntrust;
     mTimer.Start(kTimeout);
@@ -364,7 +364,7 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Header *aHeader, Message *aMessa
     otLogInfoMeshCoP(GetInstance(), "received joiner finalize response %d", static_cast<uint8_t>(state.GetState()));
 #if OPENTHREAD_ENABLE_CERT_LOG
     uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
-    VerifyOrExit(aMessage->GetLength() <= sizeof(buf), ;);
+    VerifyOrExit(aMessage->GetLength() <= sizeof(buf));
     aMessage->Read(aHeader->GetLength(), aMessage->GetLength() - aHeader->GetLength(), buf);
     otDumpCertMeshCoP(GetInstance(), "[THCI] direction=recv | type=JOIN_FIN.rsp |", buf,
                       aMessage->GetLength() - aHeader->GetLength());

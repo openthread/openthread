@@ -42,9 +42,9 @@ Message *CoapBase::NewMessage(const Header &aHeader)
     Message *message = NULL;
 
     // Ensure that header has minimum required length.
-    VerifyOrExit(aHeader.GetLength() >= Header::kMinHeaderLength, ;);
+    VerifyOrExit(aHeader.GetLength() >= Header::kMinHeaderLength);
 
-    VerifyOrExit((message = mSocket.NewMessage(aHeader.GetLength())) != NULL, ;);
+    VerifyOrExit((message = mSocket.NewMessage(aHeader.GetLength())) != NULL);
     message->Prepend(aHeader.GetBytes(), aHeader.GetLength());
     message->SetOffset(0);
 
@@ -56,7 +56,7 @@ Message *CoapBase::NewMeshCoPMessage(const Header &aHeader)
 {
     Message *message = NULL;
 
-    VerifyOrExit((message = NewMessage(aHeader)) != NULL, ;);
+    VerifyOrExit((message = NewMessage(aHeader)) != NULL);
 
     message->SetPriority(kMeshCoPMessagePriority);
 

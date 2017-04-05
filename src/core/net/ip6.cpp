@@ -171,7 +171,7 @@ ThreadError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageI
     ThreadError error = kThreadError_None;
 
     VerifyOrExit(aIp6Header.GetDestination().IsMulticast() &&
-                 aIp6Header.GetDestination().GetScope() >= Address::kRealmLocalScope, ;);
+                 aIp6Header.GetDestination().GetScope() >= Address::kRealmLocalScope);
 
     if (aIp6Header.GetDestination().IsRealmLocalMulticast())
     {
@@ -240,11 +240,11 @@ ThreadError Ip6::RemoveMplOption(Message &aMessage)
     offset = 0;
     aMessage.Read(offset, sizeof(ip6Header), &ip6Header);
     offset += sizeof(ip6Header);
-    VerifyOrExit(ip6Header.GetNextHeader() == kProtoHopOpts,);
+    VerifyOrExit(ip6Header.GetNextHeader() == kProtoHopOpts);
 
     aMessage.Read(offset, sizeof(hbh), &hbh);
     endOffset = offset + (hbh.GetLength() + 1) * 8;
-    VerifyOrExit(aMessage.GetLength() >= endOffset,);
+    VerifyOrExit(aMessage.GetLength() >= endOffset);
 
     offset += sizeof(hbh);
 
@@ -291,7 +291,7 @@ ThreadError Ip6::RemoveMplOption(Message &aMessage)
     }
 
     // verify that IPv6 Options header is properly formed
-    VerifyOrExit(offset == endOffset,);
+    VerifyOrExit(offset == endOffset);
 
     if (remove)
     {

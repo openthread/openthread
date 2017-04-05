@@ -197,7 +197,7 @@ int Uart::OutputFormatV(const char *aFmt, va_list aAp)
 
 void Uart::Send(void)
 {
-    VerifyOrExit(mSendLength == 0, ;);
+    VerifyOrExit(mSendLength == 0);
 
     if (mTxLength > kTxBufferSize - mTxHead)
     {

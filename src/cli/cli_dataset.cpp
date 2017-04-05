@@ -294,7 +294,7 @@ ThreadError Dataset::ProcessCommit(otInstance *aInstance, int argc, char *argv[]
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(argc > 0, ;);
+    VerifyOrExit(argc > 0);
 
     if (strcmp(argv[0], "active") == 0)
     {

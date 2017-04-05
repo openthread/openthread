@@ -145,7 +145,7 @@ RadioPacket *otLinkRawGetTransmitBuffer(otInstance *aInstance)
 {
     RadioPacket *buffer = NULL;
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(),);
+    VerifyOrExit(aInstance->mLinkRaw.IsEnabled());
 
     buffer = otPlatRadioGetTransmitBuffer(aInstance);
 

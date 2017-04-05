@@ -88,7 +88,7 @@ ThreadError AnnounceBeginServer::SendAnnounce(uint32_t aChannelMask, uint8_t aCo
     while ((mChannelMask & (1 << mChannel)) == 0)
     {
         mChannel++;
-        VerifyOrExit(mChannel <= kPhyMaxChannel,);
+        VerifyOrExit(mChannel <= kPhyMaxChannel);
     }
 
     mTimer.Start(mPeriod);
@@ -111,16 +111,16 @@ void AnnounceBeginServer::HandleRequest(Coap::Header &aHeader, Message &aMessage
     MeshCoP::PeriodTlv period;
     Ip6::MessageInfo responseInfo(aMessageInfo);
 
-    VerifyOrExit(aHeader.GetCode() == kCoapRequestPost, ;);
+    VerifyOrExit(aHeader.GetCode() == kCoapRequestPost);
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask));
-    VerifyOrExit(channelMask.IsValid(),);
+    VerifyOrExit(channelMask.IsValid());
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kCount, sizeof(count), count));
-    VerifyOrExit(count.IsValid(), ;);
+    VerifyOrExit(count.IsValid());
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kPeriod, sizeof(period), period));
-    VerifyOrExit(period.IsValid(), ;);
+    VerifyOrExit(period.IsValid());
 
     SendAnnounce(channelMask.GetMask(), count.GetCount(), period.GetPeriod());
 

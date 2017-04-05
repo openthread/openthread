@@ -130,7 +130,7 @@ void Mpl::UpdateBufferedSet(uint16_t aSeedId, uint8_t aSequence)
     Message *nextMessage = NULL;
 
     // Check if multicast forwarding is enabled.
-    VerifyOrExit(GetTimerExpirations() > 0, ;);
+    VerifyOrExit(GetTimerExpirations() > 0);
 
     while (message != NULL)
     {
@@ -167,7 +167,7 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
     uint32_t nextTransmissionTime;
     uint8_t hopLimit = 0;
 
-    VerifyOrExit(GetTimerExpirations() > 0,);
+    VerifyOrExit(GetTimerExpirations() > 0);
     VerifyOrExit((messageCopy = aMessage.Clone()) != NULL, error = kThreadError_NoBufs);
 
     if (!aIsOutbound)

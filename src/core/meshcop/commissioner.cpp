@@ -456,7 +456,7 @@ void Commissioner::HandleMgmtCommissisonerGetResponse(Coap::Header *aHeader, Mes
 
     otLogFuncEntry();
 
-    VerifyOrExit(aResult == kThreadError_None && aHeader->GetCode() == kCoapResponseChanged, ;);
+    VerifyOrExit(aResult == kThreadError_None && aHeader->GetCode() == kCoapResponseChanged);
     otLogInfoMeshCoP(GetInstance(), "received MGMT_COMMISSIONER_GET response");
 
 exit:
@@ -558,7 +558,7 @@ void Commissioner::HandleMgmtCommissisonerSetResponse(Coap::Header *aHeader, Mes
 
     otLogFuncEntry();
 
-    VerifyOrExit(aResult == kThreadError_None && aHeader->GetCode() == kCoapResponseChanged, ;);
+    VerifyOrExit(aResult == kThreadError_None && aHeader->GetCode() == kCoapResponseChanged);
     otLogInfoMeshCoP(GetInstance(), "received MGMT_COMMISSIONER_SET response");
 
 exit:
@@ -634,12 +634,12 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Header *aHeader, Message *
     otLogInfoMeshCoP(GetInstance(), "received Leader Petition response");
 
     SuccessOrExit(Tlv::GetTlv(*aMessage, Tlv::kState, sizeof(state), state));
-    VerifyOrExit(state.IsValid(), ;);
+    VerifyOrExit(state.IsValid());
 
     VerifyOrExit(state.GetState() == StateTlv::kAccept, mState = kCommissionerStateDisabled);
 
     SuccessOrExit(Tlv::GetTlv(*aMessage, Tlv::kCommissionerSessionId, sizeof(sessionId), sessionId));
-    VerifyOrExit(sessionId.IsValid(), ;);
+    VerifyOrExit(sessionId.IsValid());
     mSessionId = sessionId.GetCommissionerSessionId();
 
     mState = kCommissionerStateActive;
@@ -733,7 +733,7 @@ void Commissioner::HandleLeaderKeepAliveResponse(Coap::Header *aHeader, Message 
     otLogInfoMeshCoP(GetInstance(), "received Leader Petition response");
 
     SuccessOrExit(Tlv::GetTlv(*aMessage, Tlv::kState, sizeof(state), state));
-    VerifyOrExit(state.IsValid(), ;);
+    VerifyOrExit(state.IsValid());
 
     VerifyOrExit(state.GetState() == StateTlv::kAccept, mState = kCommissionerStateDisabled);
 
@@ -765,7 +765,7 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
     otLogFuncEntry();
 
     VerifyOrExit(aHeader.GetType() == kCoapTypeNonConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost, ;);
+                 aHeader.GetCode() == kCoapRequestPost);
 
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kJoinerUdpPort, sizeof(joinerPort), joinerPort));
     VerifyOrExit(joinerPort.IsValid(), error = kThreadError_Parse);
@@ -810,7 +810,7 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
         enableJoiner = (memcmp(mJoinerIid, joinerIid.GetIid(), sizeof(mJoinerIid)) == 0);
     }
 
-    VerifyOrExit(enableJoiner, ;);
+    VerifyOrExit(enableJoiner);
 
     mJoinerPort = joinerPort.GetUdpPort();
     mJoinerRloc = joinerRloc.GetJoinerRouterLocator();
@@ -843,7 +843,7 @@ void Commissioner::HandleDatasetChanged(Coap::Header &aHeader, Message &aMessage
 {
     otLogFuncEntry();
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost, ;);
+                 aHeader.GetCode() == kCoapRequestPost);
 
     otLogInfoMeshCoP(GetInstance(), "received dataset changed");
     (void)aMessage;
@@ -885,7 +885,7 @@ void Commissioner::HandleJoinerFinalize(Coap::Header &aHeader, Message &aMessage
 
 #if OPENTHREAD_ENABLE_CERT_LOG
     uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
-    VerifyOrExit(aMessage.GetLength() <= sizeof(buf), ;);
+    VerifyOrExit(aMessage.GetLength() <= sizeof(buf));
     aMessage.Read(aHeader.GetLength(), aMessage.GetLength() - aHeader.GetLength(), buf);
     otDumpCertMeshCoP(GetInstance(), "[THCI] direction=recv | type=JOIN_FIN.req |", buf,
                       aMessage.GetLength() - aHeader.GetLength());
@@ -928,7 +928,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, 
 
 #if OPENTHREAD_ENABLE_CERT_LOG
     uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
-    VerifyOrExit(message->GetLength() <= sizeof(buf), ;);
+    VerifyOrExit(message->GetLength() <= sizeof(buf));
     message->Read(responseHeader.GetLength(), message->GetLength() - responseHeader.GetLength(), buf);
     otDumpCertMeshCoP(GetInstance(), "[THCI] direction=send | type=JOIN_FIN.rsp |", buf,
                       message->GetLength() - responseHeader.GetLength());

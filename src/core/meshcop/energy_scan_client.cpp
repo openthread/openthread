@@ -147,15 +147,15 @@ void EnergyScanClient::HandleReport(Coap::Header &aHeader, Message &aMessage, co
     } OT_TOOL_PACKED_END energyList;
 
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost, ;);
+                 aHeader.GetCode() == kCoapRequestPost);
 
     otLogInfoMeshCoP(GetInstance(), "received energy scan report");
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask));
-    VerifyOrExit(channelMask.IsValid(),);
+    VerifyOrExit(channelMask.IsValid());
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kEnergyList, sizeof(energyList), energyList.tlv));
-    VerifyOrExit(energyList.tlv.IsValid(), ;);
+    VerifyOrExit(energyList.tlv.IsValid());
 
     if (mCallback != NULL)
     {
