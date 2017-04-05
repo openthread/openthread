@@ -55,7 +55,7 @@ Icmp::Icmp(Ip6 &aIp6):
 {
 }
 
-otInstance *Icmp::GetInstance()
+otInstance *Icmp::GetInstance(void)
 {
     return mIp6.GetInstance();
 }
@@ -237,16 +237,6 @@ ThreadError Icmp::UpdateChecksum(Message &aMessage, uint16_t aChecksum)
     aChecksum = HostSwap16(aChecksum);
     aMessage.Write(aMessage.GetOffset() + IcmpHeader::GetChecksumOffset(), sizeof(aChecksum), &aChecksum);
     return kThreadError_None;
-}
-
-bool Icmp::IsEchoEnabled(void)
-{
-    return mIsEchoEnabled;
-}
-
-void Icmp::SetEchoEnabled(bool aEnabled)
-{
-    mIsEchoEnabled = aEnabled;
 }
 
 }  // namespace Ip6

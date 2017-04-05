@@ -154,7 +154,7 @@ public:
      * @returns The Leader Weighting value for this Thread interface.
      *
      */
-    uint8_t GetLeaderWeight(void) const;
+    uint8_t GetLeaderWeight(void) const { return mLeaderWeight; }
 
     /**
      * This method sets the Leader Weighting value for this Thread interface.
@@ -162,7 +162,7 @@ public:
      * @param[in]  aWeight  The Leader Weighting value.
      *
      */
-    void SetLeaderWeight(uint8_t aWeight);
+    void SetLeaderWeight(uint8_t aWeight) { mLeaderWeight = aWeight; }
 
     /**
      * This method returns the fixed Partition Id of Thread network partition for certification testing.
@@ -170,7 +170,7 @@ public:
      * @returns The Partition Id for this Thread network partition.
      *
      */
-    uint32_t GetLeaderPartitionId(void) const;
+    uint32_t GetLeaderPartitionId(void) const { return mFixedLeaderPartitionId; }
 
     /**
      * This method sets the fixed Partition Id for Thread network partition for certification testing.
@@ -178,7 +178,7 @@ public:
      * @param[in]  aPartitionId  The Leader Partition Id.
      *
      */
-    void SetLeaderPartitionId(uint32_t aPartitionId);
+    void SetLeaderPartitionId(uint32_t aPartitionId) { mFixedLeaderPartitionId = aPartitionId; }
 
     /**
      * This method sets the preferred Router Id. Upon becoming a router/leader the node
@@ -198,7 +198,7 @@ public:
      * This method gets the Partition Id which the device joined successfully once.
      *
      */
-    uint32_t GetPreviousPartitionId(void) const;
+    uint32_t GetPreviousPartitionId(void) const { return mPreviousPartitionId; }
 
     /**
      * This method sets the Partition Id which the device joins successfully.
@@ -206,7 +206,7 @@ public:
      * @param[in]  aPartitionId   The Partition Id.
      *
      */
-    void SetPreviousPartitionId(uint32_t aPartitionId);
+    void SetPreviousPartitionId(uint32_t aPartitionId) { mPreviousPartitionId = aPartitionId; }
 
     /**
      * This method sets the Router Id.
@@ -232,7 +232,7 @@ public:
      * @returns The NETWORK_ID_TIMEOUT value.
      *
      */
-    uint8_t GetNetworkIdTimeout(void) const;
+    uint8_t GetNetworkIdTimeout(void) const { return mNetworkIdTimeout; }
 
     /**
      * This method sets the NETWORK_ID_TIMEOUT value.
@@ -240,7 +240,7 @@ public:
      * @param[in]  aTimeout  The NETWORK_ID_TIMEOUT value.
      *
      */
-    void SetNetworkIdTimeout(uint8_t aTimeout);
+    void SetNetworkIdTimeout(uint8_t aTimeout) { mNetworkIdTimeout = aTimeout; }
 
     /**
      * This method returns the route cost to a RLOC16.
@@ -268,7 +268,7 @@ public:
      * @returns The current Router ID Sequence value.
      *
      */
-    uint8_t GetRouterIdSequence(void) const;
+    uint8_t GetRouterIdSequence(void) const { return mRouterIdSequence; }
 
     /**
      * This method returns the ROUTER_UPGRADE_THRESHOLD value.
@@ -276,7 +276,7 @@ public:
      * @returns The ROUTER_UPGRADE_THRESHOLD value.
      *
      */
-    uint8_t GetRouterUpgradeThreshold(void) const;
+    uint8_t GetRouterUpgradeThreshold(void) const { return mRouterUpgradeThreshold; }
 
     /**
      * This method sets the ROUTER_UPGRADE_THRESHOLD value.
@@ -284,7 +284,7 @@ public:
      * @returns The ROUTER_UPGRADE_THRESHOLD value.
      *
      */
-    void SetRouterUpgradeThreshold(uint8_t aThreshold);
+    void SetRouterUpgradeThreshold(uint8_t aThreshold) { mRouterUpgradeThreshold = aThreshold; }
 
     /**
      * This method returns the ROUTER_DOWNGRADE_THRESHOLD value.
@@ -292,7 +292,7 @@ public:
      * @returns The ROUTER_DOWNGRADE_THRESHOLD value.
      *
      */
-    uint8_t GetRouterDowngradeThreshold(void) const;
+    uint8_t GetRouterDowngradeThreshold(void) const { return mRouterDowngradeThreshold; }
 
     /**
      * This method sets the ROUTER_DOWNGRADE_THRESHOLD value.
@@ -300,7 +300,7 @@ public:
      * @returns The ROUTER_DOWNGRADE_THRESHOLD value.
      *
      */
-    void SetRouterDowngradeThreshold(uint8_t aThreshold);
+    void SetRouterDowngradeThreshold(uint8_t aThreshold) { mRouterDowngradeThreshold = aThreshold; }
 
     /**
      * This method release a given Router ID.
@@ -389,7 +389,7 @@ public:
      *
      * @param[in]  aMaxChildren  The max children allowed value.
      *
-     * @retval  kThreadErrorNone           Successfully set the max.
+     * @retval  kThreadError_None          Successfully set the max.
      * @retval  kThreadError_InvalidArgs   If @p aMaxChildren is not in the range [1, kMaxChildren].
      * @retval  kThreadError_InvalidState  If MLE has already been started.
      *
@@ -399,8 +399,9 @@ public:
     /**
      * This method restores children information from non-volatile memory.
      *
-     * @retval  kThreadErrorNone      Successfully restores children information.
-     * @retval  kThreadError_NoBufs   Insufficient available buffers to restore all children information.
+     * @retval  kThreadError_None     Successfully restored children information.
+     * @retval  kThreadError_Failed   The saved child info in non-volatile memory is invalid.
+     * @retval  kThreadError_NoBufs   More children in settings than max children.
      *
      */
     ThreadError RestoreChildren(void);
@@ -410,7 +411,7 @@ public:
      *
      * @param[in]  aChildRloc16   The child RLOC16 to remove.
      *
-     * @retval  kThreadErrorNone        Successfully remove child.
+     * @retval  kThreadError_None       Successfully remove child.
      * @retval  kThreadError_NotFound   There is no specified child stored in non-volatile memory.
      *
      */
@@ -421,11 +422,21 @@ public:
      *
      * @param[in]  aChildRloc16   The child RLOC16 to store.
      *
-     * @retval  kThreadErrorNone      Successfully store child.
+     * @retval  kThreadError_None     Successfully store child.
      * @retval  kThreadError_NoBufs   Insufficient available buffers to store child.
      *
      */
     ThreadError StoreChild(uint16_t aChildRloc16);
+
+    /**
+     * This method refreshes all the saved children information in non-volatile memory by first erasing any saved
+     * child information in non-volatile memory and then saving all children info.
+     *
+     * @retval  kThreadError_None     Successfully refreshed all children info in non-volatile memory
+     * @retval  kThreadError_NoBufs   Insufficient available buffers to store child.
+     *
+     */
+    ThreadError RefreshStoredChildren(void);
 
     /**
      * This method returns a pointer to a Neighbor object.

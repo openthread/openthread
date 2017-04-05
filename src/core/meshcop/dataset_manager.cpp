@@ -69,7 +69,7 @@ DatasetManager::DatasetManager(ThreadNetif &aThreadNetif, const Tlv::Type aType,
 {
 }
 
-otInstance *DatasetManager::GetInstance()
+otInstance *DatasetManager::GetInstance(void)
 {
     return mNetif.GetInstance();
 }

@@ -63,7 +63,7 @@ public:
      * This method initializes the CRC16 computation.
      *
      */
-    void Init(void);
+    void Init(void) { mCrc = 0; }
 
     /*c*
      * This method feeds a byte value into the CRC16 computation.
@@ -79,7 +79,7 @@ public:
      * @returns The current CRC16 value.
      *
      */
-    uint16_t Get(void) const;
+    uint16_t Get(void) const { return mCrc; }
 
 private:
     uint16_t mPolynomial;

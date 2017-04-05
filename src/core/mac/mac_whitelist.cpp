@@ -49,21 +49,6 @@ Whitelist::Whitelist(void)
     }
 }
 
-bool Whitelist::IsEnabled(void) const
-{
-    return mEnabled;
-}
-
-void Whitelist::SetEnabled(bool aEnabled)
-{
-    mEnabled = aEnabled;
-}
-
-int Whitelist::GetMaxEntries(void) const
-{
-    return kMaxEntries;
-}
-
 ThreadError Whitelist::GetEntry(uint8_t aIndex, Entry &aEntry) const
 {
     ThreadError error = kThreadError_None;

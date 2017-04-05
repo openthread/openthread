@@ -208,8 +208,6 @@ exit:
     {
         messageCopy->Free();
     }
-
-    return;
 }
 
 ThreadError Mpl::ProcessOption(Message &aMessage, const Address &aAddress, bool aIsOutbound)

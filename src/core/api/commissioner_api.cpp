@@ -62,7 +62,7 @@ ThreadError otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *a
 
 ThreadError otCommissionerRemoveJoiner(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    return aInstance->mThreadNetif.GetCommissioner().RemoveJoiner(static_cast<const Mac::ExtAddress *>(aExtAddress));
+    return aInstance->mThreadNetif.GetCommissioner().RemoveJoiner(static_cast<const Mac::ExtAddress *>(aExtAddress), 0);
 }
 
 ThreadError otCommissionerSetProvisioningUrl(otInstance *aInstance, const char *aProvisioningUrl)

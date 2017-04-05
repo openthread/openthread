@@ -1,3 +1,4 @@
+
 /*
  *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
@@ -146,11 +147,6 @@ ThreadError ThreadNetif::Down(void)
     return kThreadError_None;
 }
 
-bool ThreadNetif::IsUp(void) const
-{
-    return mIsUp;
-}
-
 ThreadError ThreadNetif::GetLinkAddress(Ip6::LinkAddress &address) const
 {
     address.mType = Ip6::LinkAddress::kEui64;
@@ -175,12 +171,7 @@ exit:
     return error;
 }
 
-ThreadError ThreadNetif::SendMessage(Message &message)
-{
-    return mMeshForwarder.SendMessage(message);
-}
-
-otInstance *ThreadNetif::GetInstance()
+otInstance *ThreadNetif::GetInstance(void)
 {
     return otInstanceFromThreadNetif(this);
 }

@@ -73,7 +73,7 @@ Dtls::Dtls(ThreadNetif &aNetif):
     mProvisioningUrl.Init();
 }
 
-otInstance *Dtls::GetInstance()
+otInstance *Dtls::GetInstance(void)
 {
     return mNetif.GetInstance();
 }

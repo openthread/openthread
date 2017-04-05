@@ -66,7 +66,7 @@ AnnounceBeginServer::AnnounceBeginServer(ThreadNetif &aThreadNetif) :
     mNetif.GetCoapServer().AddResource(mAnnounceBegin);
 }
 
-otInstance *AnnounceBeginServer::GetInstance()
+otInstance *AnnounceBeginServer::GetInstance(void)
 {
     return mNetif.GetInstance();
 }

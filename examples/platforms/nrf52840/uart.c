@@ -37,7 +37,7 @@
 
 #include <openthread/types.h>
 #include <openthread/platform/uart.h>
-#include <common/code_utils.hpp>
+#include <utils/code_utils.h>
 
 #include "drivers/nrf_drv_clock.h"
 #include "hal/nrf_uart.h"
@@ -86,7 +86,7 @@ static __INLINE bool isRxBufferEmpty()
  */
 static void processReceive(void)
 {
-    VerifyOrExit(isRxBufferEmpty() == false, ;);
+    otEXPECT(isRxBufferEmpty() == false);
 
     // Set head position to not be changed during read procedure.
     uint16_t head = sReceiveHead;
@@ -117,7 +117,7 @@ exit:
  */
 static void processTransmit(void)
 {
-    VerifyOrExit(sTransmitBuffer != NULL, ;);
+    otEXPECT(sTransmitBuffer != NULL);
 
     if (sTransmitDone)
     {
@@ -220,7 +220,7 @@ ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(sTransmitBuffer == NULL, error = kThreadError_Busy);
+    otEXPECT_ACTION(sTransmitBuffer == NULL, error = kThreadError_Busy);
 
     // Set up transmit buffer and its size without counting first triggered byte.
     sTransmitBuffer = aBuf;

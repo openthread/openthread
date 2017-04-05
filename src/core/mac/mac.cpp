@@ -383,11 +383,6 @@ ThreadError Mac::RegisterReceiver(Receiver &aReceiver)
     return kThreadError_None;
 }
 
-bool Mac::GetRxOnWhenIdle(void) const
-{
-    return mRxOnWhenIdle;
-}
-
 void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 {
     mRxOnWhenIdle = aRxOnWhenIdle;
@@ -396,11 +391,6 @@ void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
     {
         NextOperation();
     }
-}
-
-const ExtAddress *Mac::GetExtAddress(void) const
-{
-    return &mExtAddress;
 }
 
 void Mac::SetExtAddress(const ExtAddress &aExtAddress)
@@ -438,11 +428,6 @@ void Mac::GetHashMacAddress(ExtAddress *aHashMacAddress)
     otLogFuncExitMsg("%llX", HostSwap64(*reinterpret_cast<uint64_t *>(aHashMacAddress)));
 }
 
-ShortAddress Mac::GetShortAddress(void) const
-{
-    return mShortAddress;
-}
-
 ThreadError Mac::SetShortAddress(ShortAddress aShortAddress)
 {
     otLogFuncEntryMsg("%d", aShortAddress);
@@ -450,11 +435,6 @@ ThreadError Mac::SetShortAddress(ShortAddress aShortAddress)
     otPlatRadioSetShortAddress(GetInstance(), aShortAddress);
     otLogFuncExit();
     return kThreadError_None;
-}
-
-uint8_t Mac::GetChannel(void) const
-{
-    return mChannel;
 }
 
 ThreadError Mac::SetChannel(uint8_t aChannel)
@@ -469,21 +449,6 @@ ThreadError Mac::SetChannel(uint8_t aChannel)
 
     otLogFuncExit();
     return kThreadError_None;
-}
-
-int8_t Mac::GetMaxTransmitPower(void) const
-{
-    return mMaxTransmitPower;
-}
-
-void Mac::SetMaxTransmitPower(int8_t aPower)
-{
-    mMaxTransmitPower = aPower;
-}
-
-const char *Mac::GetNetworkName(void) const
-{
-    return mNetworkName.m8;
 }
 
 ThreadError Mac::SetNetworkName(const char *aNetworkName)
@@ -501,11 +466,6 @@ exit:
     return error;
 }
 
-PanId Mac::GetPanId(void) const
-{
-    return mPanId;
-}
-
 ThreadError Mac::SetPanId(PanId aPanId)
 {
     otLogFuncEntryMsg("%d", aPanId);
@@ -513,11 +473,6 @@ ThreadError Mac::SetPanId(PanId aPanId)
     otPlatRadioSetPanId(GetInstance(), mPanId);
     otLogFuncExit();
     return kThreadError_None;
-}
-
-const uint8_t *Mac::GetExtendedPanId(void) const
-{
-    return mExtendedPanId.m8;
 }
 
 ThreadError Mac::SetExtendedPanId(const uint8_t *aExtPanId)
@@ -1637,16 +1592,6 @@ bool Mac::RadioSupportsRetries(void)
     return (otPlatRadioGetCaps(GetInstance()) & kRadioCapsTransmitRetries) != 0;
 }
 
-Whitelist &Mac::GetWhitelist(void)
-{
-    return mWhitelist;
-}
-
-Blacklist &Mac::GetBlacklist(void)
-{
-    return mBlacklist;
-}
-
 void Mac::FillMacCountersTlv(NetworkDiagnostic::MacCountersTlv &aMacCounters) const
 {
     aMacCounters.SetIfInUnknownProtos(mCounters.mRxOther);
@@ -1666,11 +1611,6 @@ void Mac::ResetCounters(void)
     memset(&mCounters, 0, sizeof(mCounters));
 }
 
-otMacCounters &Mac::GetCounters(void)
-{
-    return mCounters;
-}
-
 void Mac::EnableSrcMatch(bool aEnable)
 {
     otPlatRadioEnableSrcMatch(GetInstance(), aEnable);
@@ -1680,13 +1620,11 @@ void Mac::EnableSrcMatch(bool aEnable)
 ThreadError Mac::AddSrcMatchEntry(Address &aAddr)
 {
     ThreadError error = kThreadError_None;
+    char stringBuffer[Address::kAddressStringSize];
 
     if (aAddr.mLength == 2)
     {
         error = otPlatRadioAddSrcMatchShortEntry(GetInstance(), aAddr.mShortAddress);
-
-        otLogDebgMac(GetInstance(), "SrcAddrMatch - Adding short address: 0x%04x -- %s (%d)", aAddr.mShortAddress,
-                     otThreadErrorToString(error), error);
     }
     else
     {
@@ -1698,12 +1636,12 @@ ThreadError Mac::AddSrcMatchEntry(Address &aAddr)
         }
 
         error = otPlatRadioAddSrcMatchExtEntry(GetInstance(), buf);
-
-        otLogDebgMac(GetInstance(),
-                     "SrcAddrMatch - Adding extended address: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x -- %s (%d)",
-                     buf[7], buf[6], buf[5], buf[4], buf[3], buf[2], buf[1], buf[0], otThreadErrorToString(error),
-                     error);
     }
+
+    otLogDebgMac(GetInstance(), "SrcAddrMatch - Adding address: %s -- %s (%d)",
+                 aAddr.ToString(stringBuffer, sizeof(stringBuffer)), otThreadErrorToString(error), error);
+
+    (void)stringBuffer;
 
     return error;
 }
@@ -1711,13 +1649,11 @@ ThreadError Mac::AddSrcMatchEntry(Address &aAddr)
 ThreadError Mac::ClearSrcMatchEntry(Address &aAddr)
 {
     ThreadError error = kThreadError_None;
+    char stringBuffer[Address::kAddressStringSize];
 
     if (aAddr.mLength == 2)
     {
         error = otPlatRadioClearSrcMatchShortEntry(GetInstance(), aAddr.mShortAddress);
-
-        otLogDebgMac(GetInstance(), "SrcAddrMatch - Clearing short address: 0x%04x -- %s (%d)", aAddr.mShortAddress,
-                     otThreadErrorToString(error), error);
     }
     else
     {
@@ -1729,12 +1665,12 @@ ThreadError Mac::ClearSrcMatchEntry(Address &aAddr)
         }
 
         error = otPlatRadioClearSrcMatchExtEntry(GetInstance(), buf);
-
-        otLogDebgMac(GetInstance(),
-                     "SrcAddrMatch - Clearing extended address: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x -- %s (%d)",
-                     buf[7], buf[6], buf[5], buf[4], buf[3], buf[2], buf[1], buf[0], otThreadErrorToString(error),
-                     error);
     }
+
+    otLogDebgMac(GetInstance(), "SrcAddrMatch - Clearing address: %s -- %s (%d)",
+                 aAddr.ToString(stringBuffer, sizeof(stringBuffer)), otThreadErrorToString(error), error);
+
+    (void)stringBuffer;
 
     return error;
 }
@@ -1746,7 +1682,6 @@ void Mac::ClearSrcMatchEntries()
 
     otLogDebgMac(GetInstance(), "SrcAddrMatch - Cleared all entries");
 }
-
 
 }  // namespace Mac
 }  // namespace Thread

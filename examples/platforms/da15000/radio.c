@@ -31,7 +31,7 @@
 * Platform abstraction for radio communication.
 */
 
-#include <common/code_utils.hpp>
+#include <utils/code_utils.h>
 #include "openthread/openthread.h"
 #include "openthread/platform/alarm.h"
 #include "openthread/platform/radio.h"
@@ -138,7 +138,7 @@ ThreadError otPlatRadioEnable(otInstance *aInstance)
     uint8_t maxRetries;
 
     ThreadError error = kThreadError_None;
-    VerifyOrExit(sRadioState == kStateDisabled, error = kThreadError_InvalidState);
+    otEXPECT_ACTION(sRadioState == kStateDisabled, error = kThreadError_InvalidState);
 
     sThreadInstance = aInstance;
     sTransmitFrame.mPsdu = sTransmitPsdu;
@@ -194,7 +194,8 @@ ThreadError otPlatRadioSleep(otInstance *aInstance)
     }
 
     ThreadError error = kThreadError_None;
-    VerifyOrExit(((sRadioState == kStateReceive) || (sRadioState == kStateSleep)), error = kThreadError_InvalidState);
+    otEXPECT_ACTION(((sRadioState == kStateReceive) || (sRadioState == kStateSleep)),
+                    error = kThreadError_InvalidState);
 
     sGoSleep = true;
     sRadioState = kStateSleep;
@@ -208,7 +209,7 @@ ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     (void)aInstance;
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(sRadioState != kStateDisabled, error = kThreadError_InvalidState);
+    otEXPECT_ACTION(sRadioState != kStateDisabled, error = kThreadError_InvalidState);
 
     ad_ftdf_wake_up();
     sChannel = aChannel;
@@ -237,9 +238,9 @@ ThreadError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16
 
     // check if address already stored
     ThreadError error = kThreadError_None;
-    SuccessOrExit(FTDF_fpprLookupShortAddress(aShortAddress, &entry, &entryIdx));
+    otEXPECT(!FTDF_fpprLookupShortAddress(aShortAddress, &entry, &entryIdx));
 
-    VerifyOrExit(FTDF_fpprGetFreeShortAddress(&entry, &entryIdx), error = kThreadError_NoBufs);
+    otEXPECT_ACTION(FTDF_fpprGetFreeShortAddress(&entry, &entryIdx), error = kThreadError_NoBufs);
 
     FTDF_fpprSetShortAddress(entry, entryIdx, aShortAddress);
     FTDF_fpprSetShortAddressValid(entry, entryIdx, FTDF_TRUE);
@@ -264,9 +265,9 @@ ThreadError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t 
 
     // check if address already stored
     ThreadError error = kThreadError_None;
-    SuccessOrExit(FTDF_fpprLookupExtAddress(addr, &entry));
+    otEXPECT(!FTDF_fpprLookupExtAddress(addr, &entry));
 
-    VerifyOrExit(FTDF_fpprGetFreeExtAddress(&entry), error = kThreadError_NoBufs);
+    otEXPECT_ACTION(FTDF_fpprGetFreeExtAddress(&entry), error = kThreadError_NoBufs);
 
     FTDF_fpprSetExtAddress(entry, addr);
     FTDF_fpprSetExtAddressValid(entry, FTDF_TRUE);
@@ -283,7 +284,7 @@ ThreadError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint
     uint8_t entryIdx;
 
     ThreadError error = kThreadError_None;
-    VerifyOrExit(FTDF_fpprLookupShortAddress(aShortAddress, &entry, &entryIdx), error = kThreadError_NoAddress);
+    otEXPECT_ACTION(FTDF_fpprLookupShortAddress(aShortAddress, &entry, &entryIdx), error = kThreadError_NoAddress);
 
     FTDF_fpprSetShortAddress(entry, entryIdx, 0);
     FTDF_fpprSetShortAddressValid(entry, entryIdx, FTDF_FALSE);
@@ -306,7 +307,7 @@ ThreadError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_
     addr = addrL | (addrH << 32);
 
     ThreadError error = kThreadError_None;
-    VerifyOrExit(FTDF_fpprLookupExtAddress(addr, &entry), error = kThreadError_NoAddress);
+    otEXPECT_ACTION(FTDF_fpprLookupExtAddress(addr, &entry), error = kThreadError_NoAddress);
 
     FTDF_fpprSetExtAddress(entry, 0);
     FTDF_fpprSetExtAddressValid(entry, FTDF_FALSE);
@@ -362,7 +363,7 @@ ThreadError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
     uint8_t csmaSuppress;
 
     ThreadError error = kThreadError_None;
-    VerifyOrExit(sRadioState != kStateDisabled, error = kThreadError_InvalidState);
+    otEXPECT_ACTION(sRadioState != kStateDisabled, error = kThreadError_InvalidState);
 
     csmaSuppress = 0;
     ad_ftdf_send_frame_simple(aPacket->mLength, aPacket->mPsdu, aPacket->mChannel, 0, csmaSuppress); //Prio 0 for all.

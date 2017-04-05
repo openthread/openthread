@@ -81,6 +81,7 @@ SOURCES_COMMON                      = \
     net/netif.cpp                     \
     net/udp6.cpp                      \
     thread/announce_begin_server.cpp  \
+    thread/data_poll_manager.cpp      \
     thread/energy_scan_server.cpp     \
     thread/key_manager.cpp            \
     thread/link_quality.cpp           \
@@ -311,6 +312,7 @@ noinst_HEADERS                      = \
     thread/address_resolver_ftd.hpp   \
     thread/address_resolver_mtd.hpp   \
     thread/announce_begin_server.hpp  \
+    thread/data_poll_manager.hpp      \
     thread/energy_scan_server.hpp     \
     thread/key_manager.hpp            \
     thread/link_quality.hpp           \

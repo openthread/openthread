@@ -80,7 +80,7 @@ Joiner::Joiner(ThreadNetif &aNetif):
     mNetif.GetCoapServer().AddResource(mJoinerEntrust);
 }
 
-otInstance *Joiner::GetInstance()
+otInstance *Joiner::GetInstance(void)
 {
     return mNetif.GetInstance();
 }

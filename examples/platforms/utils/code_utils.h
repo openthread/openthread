@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,66 +28,47 @@
 
 /**
  * @file
- *   This file includes definitions for responding to Announce Requests.
+ *   This file includes macros for validating runtime conditions.
  */
 
-#ifndef ANNOUNCE_BEGIN_CLIENT_HPP_
-#define ANNOUNCE_BEGIN_CLIENT_HPP_
-
-#include <openthread-core-config.h>
-
-#include "openthread/commissioner.h"
-
-#include <coap/coap_client.hpp>
-#include <net/ip6_address.hpp>
-#include <net/udp6.hpp>
-
-namespace Thread {
-
-class ThreadNetif;
+#ifndef CODE_UTILS_H
+#define CODE_UTILS_H
 
 /**
- * This class implements handling Announce Begin Requests.
+ *  This checks for the specified condition, which is expected to
+ *  commonly be true, and branches to the local label 'exit' if the
+ *  condition is false.
+ *
+ *  @param[in]  aCondition  A Boolean expression to be evaluated.
  *
  */
-class AnnounceBeginClient
-{
-public:
-    /**
-     * This constructor initializes the object.
-     *
-     */
-    AnnounceBeginClient(ThreadNetif &aThreadNetif);
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    otInstance *GetInstance(void);
-
-    /**
-     * This method sends a Announce Begin message.
-     *
-     * @param[in]  aChannelMask   The channel mask value.
-     * @param[in]  aCount         The number of energy measurements per channel.
-     * @param[in]  aPeriod        The time between energy measurements (milliseconds).
-     *
-     * @retval kThreadError_None    Successfully enqueued the Announce Begin message.
-     * @retval kThreadError_NoBufs  Insufficient buffers to generate a Announce Begin message.
-     *
-     */
-    ThreadError SendRequest(uint32_t aChannelMask, uint8_t aCount, uint16_t mPeriod, const Ip6::Address &aAddress);
-
-private:
-    ThreadNetif &mNetif;
-};
+#define otEXPECT(aCondition)                    \
+    do                                          \
+    {                                           \
+        if (!(aCondition))                      \
+        {                                       \
+            goto exit;                          \
+        }                                       \
+    } while (0)
 
 /**
- * @}
+ *  This checks for the specified condition, which is expected to
+ *  commonly be true, and both executes @p anAction and branches to
+ *  the local label 'exit' if the condition is false.
+ *
+ *  @param[in]  aCondition  A Boolean expression to be evaluated.
+ *  @param[in]  aAction     An expression or block to execute when the
+ *                          assertion fails.
+ *
  */
+#define otEXPECT_ACTION(aCondition, aAction)    \
+    do                                          \
+    {                                           \
+        if (!(aCondition))                      \
+        {                                       \
+            aAction;                            \
+            goto exit;                          \
+        }                                       \
+    } while (0)
 
-}  // namespace Thread
-
-#endif  // ANNOUNCE_BEGIN_CLIENT_HPP_
+#endif  // CODE_UTILS_H

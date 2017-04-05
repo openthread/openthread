@@ -546,7 +546,7 @@ public:
      * @returns The MAC Frame Length.
      *
      */
-    uint8_t GetLength(void) const;
+    uint8_t GetLength(void) const { return GetPsduLength(); }
 
     /**
      * This method sets the MAC Frame Length.
@@ -557,7 +557,7 @@ public:
      * @retval kThreadError_InvalidArgs  The @p aLength value was invalid.
      *
      */
-    ThreadError SetLength(uint8_t aLength);
+    ThreadError SetLength(uint8_t aLength) { SetPsduLength(aLength); return kThreadError_None; }
 
     /**
      * This method returns the MAC header size.

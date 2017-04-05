@@ -35,7 +35,7 @@
 #include "openthread/platform/alarm.h"
 #include <utils/flash.h>
 
-#include <common/code_utils.hpp>
+#include <utils/code_utils.h>
 #include "platform-cc2538.h"
 #include "rom-utility.h"
 
@@ -89,7 +89,7 @@ ThreadError utilsFlashErasePage(uint32_t aAddress)
     int32_t status;
     uint32_t address;
 
-    VerifyOrExit(aAddress < utilsFlashGetSize(), error = kThreadError_InvalidArgs);
+    otEXPECT_ACTION(aAddress < utilsFlashGetSize(), error = kThreadError_InvalidArgs);
 
     address = FLASH_BASE + aAddress - (aAddress & (FLASH_PAGE_SIZE - 1));
     status = ROM_PageErase(address, FLASH_PAGE_SIZE);
@@ -110,7 +110,7 @@ ThreadError utilsFlashStatusWait(uint32_t aTimeout)
         busy = HWREG(FLASH_CTRL_FCTL) & FLASH_CTRL_FCTL_BUSY;
     }
 
-    VerifyOrExit(!busy, error = kThreadError_Busy);
+    otEXPECT_ACTION(!busy, error = kThreadError_Busy);
 
 exit:
     return error;
@@ -123,8 +123,8 @@ uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
     uint32_t *data;
     uint32_t size = 0;
 
-    VerifyOrExit(((aAddress + aSize) < utilsFlashGetSize()) &&
-                 (!(aAddress & 3)) && (!(aSize & 3)), aSize = 0);
+    otEXPECT_ACTION(((aAddress + aSize) < utilsFlashGetSize()) &&
+                    (!(aAddress & 3)) && (!(aSize & 3)), aSize = 0);
 
     data = (uint32_t *)(aData);
 
@@ -137,7 +137,7 @@ uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
             busy = HWREG(FLASH_CTRL_FCTL) & FLASH_CTRL_FCTL_BUSY;
         }
 
-        VerifyOrExit(romStatusToThread(status) == kThreadError_None, ;);
+        otEXPECT(romStatusToThread(status) == kThreadError_None);
         size += 4;
         data++;
         aAddress += 4;
@@ -151,7 +151,7 @@ uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
     uint32_t size = 0;
 
-    VerifyOrExit((aAddress + aSize) < utilsFlashGetSize(), ;);
+    otEXPECT((aAddress + aSize) < utilsFlashGetSize());
 
     while (size < aSize)
     {

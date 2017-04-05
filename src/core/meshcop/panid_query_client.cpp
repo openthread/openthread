@@ -55,7 +55,7 @@ PanIdQueryClient::PanIdQueryClient(ThreadNetif &aThreadNetif) :
     mNetif.GetCoapServer().AddResource(mPanIdQuery);
 }
 
-otInstance *PanIdQueryClient::GetInstance()
+otInstance *PanIdQueryClient::GetInstance(void)
 {
     return mNetif.GetInstance();
 }

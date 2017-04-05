@@ -870,17 +870,6 @@ exit:
     return error;
 }
 
-uint8_t Frame::GetLength() const
-{
-    return GetPsduLength();
-}
-
-ThreadError Frame::SetLength(uint8_t aLength)
-{
-    SetPsduLength(aLength);
-    return kThreadError_None;
-}
-
 uint8_t Frame::GetHeaderLength(void)
 {
     return static_cast<uint8_t>(GetPayload() - GetPsdu());

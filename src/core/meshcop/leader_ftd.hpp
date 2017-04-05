@@ -76,7 +76,7 @@ public:
      * @returns The pointer to the parent otInstance structure.
      *
      */
-    otInstance *GetInstance();
+    otInstance *GetInstance(void);
 
     /**
      * This method sends a MGMT_DATASET_CHANGED message to commissioner.

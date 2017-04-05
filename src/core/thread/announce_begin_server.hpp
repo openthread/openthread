@@ -66,7 +66,7 @@ public:
      * @returns The pointer to the parent otInstance structure.
      *
      */
-    otInstance *GetInstance();
+    otInstance *GetInstance(void);
 
     /**
      * This method begins the MLE Announce transmission process using Count=3 and Period=1s.

@@ -63,10 +63,13 @@ public:
      */
     NcpBase(otInstance *aInstance);
 
-protected:
-
-    // The pointer to the OpenThread instance
-    otInstance* mInstance;
+    /**
+     * This static method returns the pointer to the single NCP instance.
+     *
+     @returns Pointer to the single NCP instance.
+     *
+     */
+    static NcpBase *GetNcpInstance(void);
 
 protected:
 
@@ -593,6 +596,8 @@ public:
 #endif
 
 protected:
+    static NcpBase *sNcpInstance;
+    otInstance* mInstance;
     NcpFrameBuffer  mTxFrameBuffer;
 
 private:
@@ -602,17 +607,11 @@ private:
     };
 
     spinel_status_t mLastStatus;
-
     uint32_t mSupportedChannelMask;
-
     uint32_t mChannelMask;
-
     uint16_t mScanPeriod;
-
     Tasklet mUpdateChangedPropsTask;
-
     uint32_t mChangedFlags;
-
     bool mShouldSignalEndOfScan;
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
@@ -620,11 +619,8 @@ private:
 #endif
 
     spinel_tid_t mDroppedReplyTid;
-
     uint16_t mDroppedReplyTidBitSet;
-
     spinel_tid_t mNextExpectedTid;
-
     uint8_t mTxBuffer[kTxBufferSize];
 
     bool mAllowLocalNetworkDataChange;

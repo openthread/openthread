@@ -41,11 +41,6 @@ Crc16::Crc16(Polynomial aPolynomial)
     Init();
 }
 
-void Crc16::Init(void)
-{
-    mCrc = 0;
-}
-
 void Crc16::Update(uint8_t aByte)
 {
     uint8_t i;
@@ -65,11 +60,6 @@ void Crc16::Update(uint8_t aByte)
         }
     }
     while (--i);
-}
-
-uint16_t Crc16::Get(void) const
-{
-    return mCrc;
 }
 
 }  // namespace Thread
