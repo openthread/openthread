@@ -845,6 +845,8 @@ OTAPI ThreadError OTCALL otThreadGetParentAverageRssi(otInstance *aInstance, int
  * @param[in]   aInstance    A pointer to an OpenThread instance.
  * @param[out]  aLastRssi    A pointer to where the last rssi should be placed.
  *
+ * @retval kThreadError_None         Successfully retrieved the RSSI data.
+ * @retval kThreadError_Failed       Unable to get RSSI data.
  */
 OTAPI ThreadError OTCALL otThreadGetParentLastRssi(otInstance *aInstance, int8_t *aLastRssi);
 
