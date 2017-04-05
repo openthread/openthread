@@ -124,7 +124,7 @@ public:
      * @retval FALSE  If the Thread network interface is not enabled.
      *
      */
-    bool IsUp(void) const;
+    bool IsUp(void) const { return mIsUp; }
 
     /**
      * This method retrieves the link address.
@@ -142,7 +142,7 @@ public:
      * @retval kThreadError_None  Successfully submitted the message to the interface.
      *
      */
-    ThreadError SendMessage(Message &aMessage);
+    ThreadError SendMessage(Message &aMessage) { return mMeshForwarder.SendMessage(aMessage); }
 
     /**
      * This method performs a route lookup.
@@ -325,7 +325,7 @@ public:
      * @returns The pointer to the parent otInstance structure.
      *
      */
-    otInstance *GetInstance();
+    otInstance *GetInstance(void);
 
 private:
     Coap::Server mCoapServer;
@@ -376,7 +376,6 @@ private:
     AnnounceBeginServer mAnnounceBegin;
     PanIdQueryServer mPanIdQuery;
     EnergyScanServer mEnergyScan;
-
 };
 
 /**

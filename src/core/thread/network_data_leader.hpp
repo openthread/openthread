@@ -85,7 +85,7 @@ public:
      * @returns The Thread Network Data version.
      *
      */
-    uint8_t GetVersion(void) const;
+    uint8_t GetVersion(void) const { return mVersion; }
 
     /**
      * This method returns the Thread Network Data stable version.
@@ -93,7 +93,7 @@ public:
      * @returns The Thread Network Data stable version.
      *
      */
-    uint8_t GetStableVersion(void) const;
+    uint8_t GetStableVersion(void) const { return mStableVersion; }
 
     /**
      * This method retrieves the 6LoWPAN Context information based on a given IPv6 address.

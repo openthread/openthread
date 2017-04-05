@@ -100,11 +100,6 @@ Tasklet *TaskletScheduler::PopTasklet(void)
     return task;
 }
 
-bool TaskletScheduler::AreTaskletsPending(void)
-{
-    return mHead != NULL;
-}
-
 void TaskletScheduler::ProcessQueuedTasklets(void)
 {
     Tasklet *tail = mTail;
@@ -127,7 +122,7 @@ void TaskletScheduler::ProcessQueuedTasklets(void)
     }
 }
 
-Ip6::Ip6 *TaskletScheduler::GetIp6()
+Ip6::Ip6 *TaskletScheduler::GetIp6(void)
 {
     return Ip6::Ip6FromTaskletScheduler(this);
 }

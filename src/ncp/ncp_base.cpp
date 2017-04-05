@@ -64,8 +64,6 @@
 namespace Thread
 {
 
-static NcpBase *sNcpContext = NULL;
-
 #define NCP_INVALID_SCAN_CHANNEL              (-1)
 #define NCP_PLAT_RESET_REASON                 (1U<<31)
 #define NCP_ON_MESH_NETS_CHANGED_BIT_FLAG     (1U<<30)
@@ -511,6 +509,8 @@ static uint8_t BorderRouterConfigToFlagByte(const otBorderRouterConfig &config)
 // MARK: Class Boilerplate
 // ----------------------------------------------------------------------------
 
+NcpBase *NcpBase::sNcpInstance = NULL;
+
 NcpBase::NcpBase(otInstance *aInstance):
     mInstance(aInstance),
     mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer)),
@@ -550,7 +550,7 @@ NcpBase::NcpBase(otInstance *aInstance):
 {
     assert(mInstance != NULL);
 
-    sNcpContext = this;
+    sNcpInstance = this;
 
     otSetStateChangedCallback(mInstance, &NcpBase::HandleNetifStateChanged, this);
     otIp6SetReceiveCallback(mInstance, &NcpBase::HandleDatagramFromStack, this);
@@ -565,6 +565,11 @@ NcpBase::NcpBase(otInstance *aInstance):
     mLegacyHandlers = NULL;
     memset(mLegacyUlaPrefix, 0, sizeof(mLegacyUlaPrefix));
 #endif
+}
+
+NcpBase *NcpBase::GetNcpInstance(void)
+{
+    return sNcpInstance;
 }
 
 // ----------------------------------------------------------------------------
@@ -846,7 +851,7 @@ void NcpBase::HandleEnergyScanResult(otEnergyScanResult *aResult)
 
 void NcpBase::LinkRawReceiveDone(otInstance *, RadioPacket *aPacket, ThreadError aError)
 {
-    sNcpContext->LinkRawReceiveDone(aPacket, aError);
+    sNcpInstance->LinkRawReceiveDone(aPacket, aError);
 }
 
 void NcpBase::LinkRawReceiveDone(RadioPacket *aPacket, ThreadError aError)
@@ -913,7 +918,7 @@ exit:
 
 void NcpBase::LinkRawTransmitDone(otInstance *, RadioPacket *aPacket, bool aFramePending, ThreadError aError)
 {
-    sNcpContext->LinkRawTransmitDone(aPacket, aFramePending, aError);
+    sNcpInstance->LinkRawTransmitDone(aPacket, aFramePending, aError);
 }
 
 void NcpBase::LinkRawTransmitDone(RadioPacket *, bool aFramePending, ThreadError aError)
@@ -925,22 +930,18 @@ void NcpBase::LinkRawTransmitDone(RadioPacket *, bool aFramePending, ThreadError
             SPINEL_CMD_PROP_VALUE_IS,
             SPINEL_PROP_LAST_STATUS,
             SPINEL_DATATYPE_UINT_PACKED_S SPINEL_DATATYPE_BOOL_S,
-            aError,
+            ThreadErrorToSpinelStatus(aError),
             aFramePending
         );
 
         // Clear cached transmit TID
         mCurTransmitTID = 0;
     }
-
-    // Make sure we are back listening on the original receive channel,
-    // since the transmit could have been on a different channel.
-    otLinkRawReceive(mInstance, mCurReceiveChannel, &NcpBase::LinkRawReceiveDone);
 }
 
 void NcpBase::LinkRawEnergyScanDone(otInstance *, int8_t aEnergyScanMaxRssi)
 {
-    sNcpContext->LinkRawEnergyScanDone(aEnergyScanMaxRssi);
+    sNcpInstance->LinkRawEnergyScanDone(aEnergyScanMaxRssi);
 }
 
 void NcpBase::LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi)
@@ -6650,10 +6651,11 @@ ThreadError NcpBase::StreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDa
 ThreadError otNcpStreamWrite(int aStreamId, const uint8_t* aDataPtr, int aDataLen)
 {
     ThreadError errorCode  = kThreadError_InvalidState;
+    Thread::NcpBase *ncp = Thread::NcpBase::GetNcpInstance();
 
-    if (Thread::sNcpContext)
+    if (ncp != NULL)
     {
-        errorCode = Thread::sNcpContext->StreamWrite(aStreamId, aDataPtr, aDataLen);
+        errorCode = ncp->StreamWrite(aStreamId, aDataPtr, aDataLen);
     }
 
     return errorCode;
@@ -6666,7 +6668,12 @@ ThreadError otNcpStreamWrite(int aStreamId, const uint8_t* aDataPtr, int aDataLe
 void otNcpRegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers)
 {
 #if OPENTHREAD_ENABLE_LEGACY
-    Thread::sNcpContext->RegisterLegacyHandlers(aHandlers);
+    Thread::NcpBase *ncp = Thread::NcpBase::GetNcpInstance();
+
+    if (ncp != NULL)
+    {
+        ncp->RegisterLegacyHandlers(aHandlers);
+    }
 #else
     (void)aHandlers;
 #endif
@@ -6675,7 +6682,12 @@ void otNcpRegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers)
 void otNcpHandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix)
 {
 #if OPENTHREAD_ENABLE_LEGACY
-    Thread::sNcpContext->HandleDidReceiveNewLegacyUlaPrefix(aUlaPrefix);
+    Thread::NcpBase *ncp = Thread::NcpBase::GetNcpInstance();
+
+    if (ncp != NULL)
+    {
+        ncp->HandleDidReceiveNewLegacyUlaPrefix(aUlaPrefix);
+    }
 #else
     (void)aUlaPrefix;
 #endif
@@ -6684,7 +6696,12 @@ void otNcpHandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix)
 void otNcpHandleLegacyNodeDidJoin(const otExtAddress *aExtAddr)
 {
 #if OPENTHREAD_ENABLE_LEGACY
-    Thread::sNcpContext->HandleLegacyNodeDidJoin(aExtAddr);
+    Thread::NcpBase *ncp = Thread::NcpBase::GetNcpInstance();
+
+    if (ncp != NULL)
+    {
+        ncp->HandleLegacyNodeDidJoin(aExtAddr);
+    }
 #else
     (void)aExtAddr;
 #endif

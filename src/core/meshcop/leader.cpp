@@ -61,7 +61,7 @@ Leader::Leader(ThreadNetif &aThreadNetif):
     mNetif.GetCoapServer().AddResource(mKeepAlive);
 }
 
-otInstance *Leader::GetInstance()
+otInstance *Leader::GetInstance(void)
 {
     return mNetif.GetInstance();
 }

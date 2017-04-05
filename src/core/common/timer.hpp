@@ -90,15 +90,6 @@ public:
     void Remove(Timer &aTimer);
 
     /**
-     * This method returns whether or not the timer instance is already added.
-     *
-     * @retval TRUE   If the timer instance is already added.
-     * @retval FALSE  If the timer instance is not added.
-     *
-     */
-    bool IsAdded(const Timer &aTimer);
-
-    /**
      * This method processes all running timers.
      *
      * @param[in]  aContext  A pointer to arbitrary context information.
@@ -112,7 +103,7 @@ public:
      * @returns The pointer to the parent Ip6 structure.
      *
      */
-    Ip6::Ip6 *GetIp6();
+    Ip6::Ip6 *GetIp6(void);
 
 private:
     void SetAlarm(void);
@@ -162,7 +153,7 @@ public:
         mContext(aContext),
         mT0(0),
         mDt(0),
-        mNext(NULL) {
+        mNext(this) {
     }
 
     /**
@@ -187,7 +178,7 @@ public:
      * @retval TRUE   If the timer is running.
      * @retval FALSE  If the timer is not running.
      */
-    bool IsRunning(void) const { return mScheduler.IsAdded(*this); }
+    bool IsRunning(void) const { return (mNext != this); }
 
     /**
      * This method schedules the timer to fire a @p dt milliseconds from now.

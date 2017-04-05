@@ -36,8 +36,8 @@
 #include <openthread/platform/alarm.h>
 #include <openthread/platform/radio.h>
 
-#include <common/code_utils.hpp>
 #include <common/logging.hpp>
+#include <utils/code_utils.h>
 
 struct PlatformDiagCommand
 {
@@ -88,7 +88,7 @@ static void processListen(otInstance *aInstance, int argc, char *argv[], char *a
     (void) aInstance;
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(otPlatDiagModeGet(), error = kThreadError_InvalidState);
+    otEXPECT_ACTION(otPlatDiagModeGet(), error = kThreadError_InvalidState);
 
     if (argc == 0)
     {
@@ -98,7 +98,8 @@ static void processListen(otInstance *aInstance, int argc, char *argv[], char *a
     {
         long value;
 
-        SuccessOrExit(error = parseLong(argv[0], &value));
+        error = parseLong(argv[0], &value);
+        otEXPECT(error == kThreadError_None);
         sListen = (bool)(value);
         snprintf(aOutput, aOutputMaxLen, "set listen to %s\r\nstatus 0x%02x\r\n", sListen == true ? "yes" : "no", error);
     }
@@ -113,7 +114,7 @@ static void processID(otInstance *aInstance, int argc, char *argv[], char *aOutp
 
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(otPlatDiagModeGet(), error = kThreadError_InvalidState);
+    otEXPECT_ACTION(otPlatDiagModeGet(), error = kThreadError_InvalidState);
 
     if (argc == 0)
     {
@@ -123,8 +124,9 @@ static void processID(otInstance *aInstance, int argc, char *argv[], char *aOutp
     {
         long value;
 
-        SuccessOrExit(error = parseLong(argv[0], &value));
-        VerifyOrExit(value >= 0, error = kThreadError_InvalidArgs);
+        error = parseLong(argv[0], &value);
+        otEXPECT(error == kThreadError_None);
+        otEXPECT_ACTION(value >= 0, error = kThreadError_InvalidArgs);
         sID = (int16_t)(value);
         snprintf(aOutput, aOutputMaxLen, "set ID to %" PRId16 "\r\nstatus 0x%02x\r\n", sID, error);
     }
@@ -138,7 +140,7 @@ static void processTransmit(otInstance *aInstance, int argc, char *argv[], char 
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(otPlatDiagModeGet(), error = kThreadError_InvalidState);
+    otEXPECT_ACTION(otPlatDiagModeGet(), error = kThreadError_InvalidState);
 
     if (argc == 0)
     {
@@ -167,10 +169,11 @@ static void processTransmit(otInstance *aInstance, int argc, char *argv[], char 
     {
         long value;
 
-        VerifyOrExit(argc == 2, error = kThreadError_InvalidArgs);
+        otEXPECT_ACTION(argc == 2, error = kThreadError_InvalidArgs);
 
-        SuccessOrExit(error = parseLong(argv[1], &value));
-        VerifyOrExit(value > 0, error = kThreadError_InvalidArgs);
+        error = parseLong(argv[1], &value);
+        otEXPECT(error == kThreadError_None);
+        otEXPECT_ACTION(value > 0, error = kThreadError_InvalidArgs);
         sTxPeriod = (uint32_t)(value);
         snprintf(aOutput, aOutputMaxLen, "set diagnostic messages interval to %" PRIu32 " ms\r\nstatus 0x%02x\r\n", sTxPeriod,
                  error);
@@ -179,10 +182,11 @@ static void processTransmit(otInstance *aInstance, int argc, char *argv[], char 
     {
         long value;
 
-        VerifyOrExit(argc == 2, error = kThreadError_InvalidArgs);
+        otEXPECT_ACTION(argc == 2, error = kThreadError_InvalidArgs);
 
-        SuccessOrExit(error = parseLong(argv[1], &value));
-        VerifyOrExit((value > 0) || (value == -1), error = kThreadError_InvalidArgs);
+        error = parseLong(argv[1], &value);
+        otEXPECT(error == kThreadError_None);
+        otEXPECT_ACTION((value > 0) || (value == -1), error = kThreadError_InvalidArgs);
         sTxRequestedCount = (uint32_t)(value);
         snprintf(aOutput, aOutputMaxLen, "set diagnostic messages count to %" PRId32 "\r\nstatus 0x%02x\r\n", sTxRequestedCount,
                  error);

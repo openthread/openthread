@@ -186,6 +186,9 @@
     <ClCompile Include="..\..\src\core\thread\address_resolver.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\thread\data_poll_manager.cpp">
+      <Filter>Source Files\thread</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\thread\energy_scan_server.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>
@@ -411,6 +414,9 @@
       <Filter>Header Files\thread</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\thread\announce_begin_server.hpp">
+      <Filter>Header Files\thread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\thread\data_poll_manager.hpp">
       <Filter>Header Files\thread</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\thread\energy_scan_server.hpp">

@@ -70,7 +70,7 @@ Dhcp6Client::Dhcp6Client(ThreadNetif &aThreadNetif) :
     mIdentityAssociationAvail = &mIdentityAssociations[0];
 }
 
-otInstance *Dhcp6Client::GetInstance()
+otInstance *Dhcp6Client::GetInstance(void)
 {
     return mNetif.GetInstance();
 }

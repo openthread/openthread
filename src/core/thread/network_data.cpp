@@ -57,7 +57,7 @@ NetworkData::NetworkData(ThreadNetif &aThreadNetif, bool aLocal):
     mLength = 0;
 }
 
-otInstance *NetworkData::GetInstance()
+otInstance *NetworkData::GetInstance(void)
 {
     return mNetif.GetInstance();
 }

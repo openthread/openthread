@@ -55,14 +55,12 @@ using Thread::Encoding::BigEndian::HostSwap16;
 namespace Thread {
 
 MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
+    mNetif(aThreadNetif),
     mMacReceiver(&MeshForwarder::HandleReceivedFrame, &MeshForwarder::HandleDataPollTimeout, this),
     mMacSender(&MeshForwarder::HandleFrameRequest, &MeshForwarder::HandleSentFrame, this),
     mDiscoverTimer(aThreadNetif.GetIp6().mTimerScheduler, &MeshForwarder::HandleDiscoverTimer, this),
-    mPollTimer(aThreadNetif.GetIp6().mTimerScheduler, &MeshForwarder::HandlePollTimer, this),
     mReassemblyTimer(aThreadNetif.GetIp6().mTimerScheduler, &MeshForwarder::HandleReassemblyTimer, this),
     mMessageNextOffset(0),
-    mPollPeriod(0),
-    mAssignPollPeriod(0),
     mSendMessageFrameCounter(0),
     mSendMessage(NULL),
     mSendMessageIsARetransmission(false),
@@ -81,8 +79,7 @@ MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
     mRestoreChannel(0),
     mRestorePanId(Mac::kPanIdBroadcast),
     mScanning(false),
-    mBacktoBackPollTimeoutCounter(0),
-    mNetif(aThreadNetif),
+    mDataPollManager(*this),
     mSrcMatchEnabled(false)
 {
     mFragTag = static_cast<uint16_t>(otPlatRandomGet());
@@ -116,7 +113,7 @@ ThreadError MeshForwarder::Stop(void)
 
     VerifyOrExit(mEnabled == true,);
 
-    mPollTimer.Stop();
+    mDataPollManager.StopPolling();
     mReassemblyTimer.Stop();
 
     if (mScanning)
@@ -889,11 +886,7 @@ exit:
 void MeshForwarder::SetRxOff(void)
 {
     mNetif.GetMac().SetRxOnWhenIdle(false);
-
-    if (mPollTimer.IsRunning())
-    {
-        mPollTimer.Stop();
-    }
+    mDataPollManager.StopPolling();
 }
 
 bool MeshForwarder::GetRxOnWhenIdle()
@@ -907,147 +900,12 @@ void MeshForwarder::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 
     if (aRxOnWhenIdle)
     {
-        if (mPollTimer.IsRunning())
-        {
-            mPollTimer.Stop();
-        }
+        mDataPollManager.StopPolling();
     }
     else
     {
-        ScheduleNextPoll(mPollPeriod);
+        mDataPollManager.StartPolling();
     }
-}
-
-void MeshForwarder::SetAssignPollPeriod(uint32_t aPeriod)
-{
-    mAssignPollPeriod = aPeriod;
-
-    if (mPollTimer.IsRunning() && ((mNetif.GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD) == 0))
-    {
-        SetPollPeriod(mAssignPollPeriod);
-    }
-}
-
-uint32_t MeshForwarder::GetAssignPollPeriod()
-{
-    return mAssignPollPeriod;
-}
-
-void MeshForwarder::SetPollPeriod(uint32_t aPeriod)
-{
-    if (mPollPeriod != aPeriod)
-    {
-        if (mAssignPollPeriod != 0 && aPeriod != (OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD))
-        {
-            mPollPeriod = mAssignPollPeriod;
-        }
-        else
-        {
-            mPollPeriod = aPeriod;
-        }
-
-        if (mPollTimer.IsRunning() && ((mNetif.GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD) == 0))
-        {
-            ScheduleNextPoll(mPollPeriod);
-        }
-    }
-}
-
-uint32_t MeshForwarder::GetPollPeriod()
-{
-    return mPollPeriod;
-}
-
-void MeshForwarder::ScheduleNextPoll(uint32_t aDelay)
-{
-    if (aDelay)
-    {
-        mPollTimer.Start(aDelay);
-    }
-    else
-    {
-        otLogWarnMac(GetInstance(), "Cannot start poll timer with uninitialized value of poll period.");
-    }
-}
-
-void MeshForwarder::HandlePollTimer(void *aContext)
-{
-    static_cast<MeshForwarder *>(aContext)->HandlePollTimer();
-}
-
-void MeshForwarder::HandlePollTimer()
-{
-    ThreadError error;
-
-    error = SendMacDataRequest();
-
-    switch (error)
-    {
-    case kThreadError_None:
-        break;
-
-    case kThreadError_InvalidState:
-        // The poll timer should have been stopped. Hitting
-        // this might indicate a logic error.
-        otLogWarnMac(GetInstance(), "Poll timer fired while RxOnWhenIdle set!");
-        break;
-
-    case kThreadError_NoBufs:
-        // Failed to send DataRequest due to a lack of buffers.
-        // Try again following a brief pause to free buffers.
-        ScheduleNextPoll(kDataRequestRetryDelay);
-        break;
-
-    case kThreadError_Already:
-        // This is perhaps a sign of
-        // bad behavior, as it suggests that mPollPeriod was not long
-        // enough for the previously scheduled DataRequest to get out of
-        // the sendQueue.
-        otLogDebgMac(GetInstance(), "Poll timer fired with DataRequest in SendQueue.");
-
-    // Intentional fall-thru
-    default:
-        // Restart for any other error which might originate from SendMessage().
-        ScheduleNextPoll(mPollPeriod);
-        break;
-    }
-}
-
-ThreadError MeshForwarder::SendMacDataRequest(void)
-{
-    ThreadError error;
-    Message *message;
-
-    // only send MAC Data Requests in rx-off-when-idle mode
-    VerifyOrExit(!mNetif.GetMac().GetRxOnWhenIdle(), error = kThreadError_InvalidState);
-
-    // only enqueue one MAC Data Request at a time
-    for (message = mSendQueue.GetHead(); message; message = message->GetNext())
-    {
-        VerifyOrExit(message->GetType() != Message::kTypeMacDataPoll, error = kThreadError_Already);
-    }
-
-    // enqueue a MAC Data Request message
-    message = mNetif.GetIp6().mMessagePool.New(Message::kTypeMacDataPoll, 0);
-    VerifyOrExit(message != NULL, error = kThreadError_NoBufs);
-
-    error = SendMessage(*message);
-
-    if (error == kThreadError_None)
-    {
-        otLogDebgMac(GetInstance(), "Sent poll");
-
-        // restart the polling timer
-        ScheduleNextPoll(mPollPeriod);
-    }
-    else
-    {
-        message->Free();
-        message = NULL;
-    }
-
-exit:
-    return error;
 }
 
 ThreadError MeshForwarder::GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr)
@@ -1773,8 +1631,12 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
 
         if (neighbor->mState == Neighbor::kStateInvalid)
         {
-            mPollTimer.Stop();
+            mDataPollManager.StopPolling();
             mNetif.GetMle().BecomeDetached();
+        }
+        else
+        {
+            mDataPollManager.HandlePollSent(aError);
         }
     }
 
@@ -1859,8 +1721,6 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
         ExitNow(error = kThreadError_InvalidState);
     }
 
-    mBacktoBackPollTimeoutCounter = 0;
-
     SuccessOrExit(error = aFrame.GetSrcAddr(macSource));
     SuccessOrExit(aFrame.GetDstAddr(macDest));
 
@@ -1873,10 +1733,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
     payload = aFrame.GetPayload();
     payloadLength = aFrame.GetPayloadLength();
 
-    if (mPollTimer.IsRunning() && aFrame.GetFramePending())
-    {
-        HandlePollTimer();
-    }
+    mDataPollManager.HandleReceivedFrame(aFrame);
 
     switch (aFrame.GetType())
     {
@@ -2261,21 +2118,7 @@ exit:
 
 void MeshForwarder::HandleDataPollTimeout(void *aContext)
 {
-    static_cast<MeshForwarder *>(aContext)->HandleDataPollTimeout();
-}
-
-void MeshForwarder::HandleDataPollTimeout(void)
-{
-    mBacktoBackPollTimeoutCounter++;
-
-    if (mBacktoBackPollTimeoutCounter <= kQuickPollsAfterTimout)
-    {
-        SendMacDataRequest();
-    }
-    else
-    {
-        mBacktoBackPollTimeoutCounter = 0;
-    }
+    static_cast<MeshForwarder *>(aContext)->GetDataPollManager().HandlePollTimeout();
 }
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OPENTHREAD_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)

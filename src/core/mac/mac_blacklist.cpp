@@ -49,21 +49,6 @@ Blacklist::Blacklist(void)
     }
 }
 
-bool Blacklist::IsEnabled(void) const
-{
-    return mEnabled;
-}
-
-void Blacklist::SetEnabled(bool aEnabled)
-{
-    mEnabled = aEnabled;
-}
-
-int Blacklist::GetMaxEntries(void) const
-{
-    return kMaxEntries;
-}
-
 ThreadError Blacklist::GetEntry(uint8_t aIndex, Entry &aEntry) const
 {
     ThreadError error = kThreadError_None;

@@ -27,7 +27,7 @@
  */
 
 #include <openthread/types.h>
-#include <common/code_utils.hpp>
+#include <utils/code_utils.h>
 
 #include <driverlib/prcm.h>
 #include <driverlib/trng.h>
@@ -129,9 +129,9 @@ ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint1
     size_t temp_size;
     size_t length = aInputLength;
 
-    VerifyOrExit(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
+    otEXPECT_ACTION(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
 
-    VerifyOrExit(TRNGPoll((unsigned char *)aOutput, length, &temp_size) != 0, error = kThreadError_Failed);
+    otEXPECT_ACTION(TRNGPoll((unsigned char *)aOutput, length, &temp_size) != 0, error = kThreadError_Failed);
 
 exit:
     *aOutputLength = temp_size;

@@ -56,6 +56,7 @@ void TimerScheduler::Add(Timer &aTimer)
     if (mHead == NULL)
     {
         mHead = &aTimer;
+        aTimer.mNext = NULL;
         SetAlarm();
     }
     else
@@ -88,16 +89,18 @@ void TimerScheduler::Add(Timer &aTimer)
         if (cur == NULL)
         {
             prev->mNext = &aTimer;
+            aTimer.mNext = NULL;
         }
     }
 }
 
 void TimerScheduler::Remove(Timer &aTimer)
 {
+    VerifyOrExit(aTimer.mNext != &aTimer, ;);
+
     if (mHead == &aTimer)
     {
         mHead = aTimer.mNext;
-        aTimer.mNext = NULL;
         SetAlarm();
     }
     else
@@ -107,27 +110,15 @@ void TimerScheduler::Remove(Timer &aTimer)
             if (cur->mNext == &aTimer)
             {
                 cur->mNext = aTimer.mNext;
-                aTimer.mNext = NULL;
                 break;
             }
         }
     }
-}
 
-bool TimerScheduler::IsAdded(const Timer &aTimer)
-{
-    bool rval = false;
-
-    for (Timer *cur = mHead; cur; cur = cur->mNext)
-    {
-        if (cur == &aTimer)
-        {
-            ExitNow(rval = true);
-        }
-    }
+    aTimer.mNext = &aTimer;
 
 exit:
-    return rval;
+    return;
 }
 
 void TimerScheduler::SetAlarm(void)
@@ -156,7 +147,7 @@ extern "C" void otPlatAlarmFired(otInstance *aInstance)
     otLogFuncExit();
 }
 
-void TimerScheduler::FireTimers()
+void TimerScheduler::FireTimers(void)
 {
     uint32_t now = otPlatAlarmGetNow();
     uint32_t elapsed;
@@ -182,7 +173,7 @@ void TimerScheduler::FireTimers()
     }
 }
 
-Ip6::Ip6 *TimerScheduler::GetIp6()
+Ip6::Ip6 *TimerScheduler::GetIp6(void)
 {
     return Ip6::Ip6FromTimerScheduler(this);
 }

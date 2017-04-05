@@ -35,6 +35,7 @@
 
 #include <common/code_utils.hpp>
 #include <common/new.hpp>
+#include <common/debug.hpp>
 #include <net/ip6.hpp>
 #include <ncp/ncp_spi.hpp>
 #include <core/openthread-core-config.h>
@@ -48,11 +49,17 @@
 namespace Thread {
 
 static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpSpi), uint64_t);
-static NcpSpi *sNcpSpi;
 
 extern "C" void otNcpInit(otInstance *aInstance)
 {
-    sNcpSpi = new(&sNcpRaw) NcpSpi(aInstance);
+    NcpSpi *ncpSpi = NULL;
+
+    ncpSpi = new(&sNcpRaw) NcpSpi(aInstance);
+
+    if (ncpSpi == NULL || ncpSpi != NcpBase::GetNcpInstance())
+    {
+        assert(false);
+    }
 }
 
 static void spi_header_set_flag_byte(uint8_t *header, uint8_t value)
@@ -234,10 +241,9 @@ NcpSpi::SpiTransactionComplete(
 
 void NcpSpi::TxFrameBufferHasData(void *aContext, NcpFrameBuffer *aNcpFrameBuffer)
 {
-    (void)aContext;
     (void)aNcpFrameBuffer;
 
-    sNcpSpi->TxFrameBufferHasData();
+    static_cast<NcpSpi *>(aContext)->TxFrameBufferHasData();
 }
 
 void NcpSpi::TxFrameBufferHasData(void)

@@ -172,7 +172,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     memset(&mAddr64, 0, sizeof(mAddr64));
 }
 
-otInstance *Mle::GetInstance()
+otInstance *Mle::GetInstance(void)
 {
     return mNetif.GetInstance();
 }
@@ -304,7 +304,23 @@ ThreadError Mle::Restore(void)
     {
         mNetif.GetMle().SetRouterId(GetRouterId(GetRloc16()));
         mNetif.GetMle().SetPreviousPartitionId(networkInfo.mPreviousPartitionId);
-        mNetif.GetMle().RestoreChildren();
+
+        switch (mNetif.GetMle().RestoreChildren())
+        {
+        // If there are more saved children in non-volatile settings
+        // than could be restored or the values in the settings are
+        // invalid, erase all the children info in the settings and
+        // refresh the info to ensure that the non-volatile settings
+        // stay in sync with the child table.
+
+        case kThreadError_Failed:
+        case kThreadError_NoBufs:
+            mNetif.GetMle().RefreshStoredChildren();
+            break;
+
+        default:
+            break;
+        }
     }
 
 exit:
@@ -506,11 +522,6 @@ bool Mle::IsAttached(void) const
             mDeviceState == kDeviceStateLeader);
 }
 
-DeviceState Mle::GetDeviceState(void) const
-{
-    return mDeviceState;
-}
-
 ThreadError Mle::SetStateDetached(void)
 {
     if (mDeviceState != kDeviceStateDetached)
@@ -579,11 +590,6 @@ ThreadError Mle::SetStateChild(uint16_t aRloc16)
     return kThreadError_None;
 }
 
-uint32_t Mle::GetTimeout(void) const
-{
-    return mTimeout;
-}
-
 ThreadError Mle::SetTimeout(uint32_t aTimeout)
 {
     VerifyOrExit(mTimeout != aTimeout, ;);
@@ -595,6 +601,8 @@ ThreadError Mle::SetTimeout(uint32_t aTimeout)
 
     mTimeout = aTimeout;
 
+    mNetif.GetMeshForwarder().GetDataPollManager().HandleTimeoutChanged();
+
     if (mDeviceState == kDeviceStateChild)
     {
         SendChildUpdateRequest();
@@ -602,11 +610,6 @@ ThreadError Mle::SetTimeout(uint32_t aTimeout)
 
 exit:
     return kThreadError_None;
-}
-
-uint8_t Mle::GetDeviceMode(void) const
-{
-    return mDeviceMode;
 }
 
 ThreadError Mle::SetDeviceMode(uint8_t aDeviceMode)
@@ -874,11 +877,6 @@ void Mle::SetAssignLinkQuality(const Mac::ExtAddress aMacAddr, uint8_t aLinkQual
     default:
         break;
     }
-}
-
-uint8_t Mle::GetRouterSelectionJitter(void) const
-{
-    return mRouterSelectionJitter;
 }
 
 ThreadError Mle::SetRouterSelectionJitter(uint8_t aRouterJitter)
@@ -1574,7 +1572,7 @@ ThreadError Mle::SendChildIdRequest(void)
 
     if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
     {
-        mNetif.GetMeshForwarder().SetPollPeriod(kAttachDataPollPeriod);
+        mNetif.GetMeshForwarder().GetDataPollManager().SetAttachMode(true);
         mNetif.GetMeshForwarder().SetRxOnWhenIdle(false);
     }
 
@@ -1607,6 +1605,11 @@ ThreadError Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t
     else
     {
         SuccessOrExit(error = SendMessage(*message, aDestination));
+
+        if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
+        {
+            mNetif.GetMeshForwarder().GetDataPollManager().HandleResponseExpected();
+        }
     }
 
     otLogInfoMle(GetInstance(), "Sent Data Request");
@@ -1699,7 +1702,7 @@ ThreadError Mle::SendChildUpdateRequest(void)
 
     if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
     {
-        mNetif.GetMeshForwarder().SetPollPeriod(kAttachDataPollPeriod);
+        mNetif.GetMeshForwarder().GetDataPollManager().SetAttachMode(true);
         mNetif.GetMeshForwarder().SetRxOnWhenIdle(false);
     }
     else
@@ -2748,7 +2751,7 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
 
     if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
     {
-        mNetif.GetMeshForwarder().SetPollPeriod(Timer::SecToMsec(mTimeout / kMaxChildKeepAliveAttempts));
+        mNetif.GetMeshForwarder().GetDataPollManager().SetAttachMode(false);
         mNetif.GetMeshForwarder().SetRxOnWhenIdle(false);
     }
     else
@@ -2942,7 +2945,7 @@ ThreadError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::M
 
         if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
         {
-            mNetif.GetMeshForwarder().SetPollPeriod(Timer::SecToMsec(mTimeout / kMaxChildKeepAliveAttempts));
+            mNetif.GetMeshForwarder().GetDataPollManager().SetAttachMode(false);
             mNetif.GetMeshForwarder().SetRxOnWhenIdle(false);
             mParentRequestTimer.Stop();
         }
@@ -3165,12 +3168,6 @@ Neighbor *Mle::GetNeighbor(const Mac::Address &aAddress)
     }
 
     return neighbor;
-}
-
-Neighbor *Mle::GetNeighbor(const Ip6::Address &aAddress)
-{
-    (void)aAddress;
-    return NULL;
 }
 
 uint16_t Mle::GetNextHop(uint16_t aDestination) const

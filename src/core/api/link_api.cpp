@@ -116,17 +116,17 @@ exit:
 
 uint32_t otLinkGetPollPeriod(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetMeshForwarder().GetAssignPollPeriod();
+    return aInstance->mThreadNetif.GetMeshForwarder().GetDataPollManager().GetExternalPollPeriod();
 }
 
 void otLinkSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod)
 {
-    aInstance->mThreadNetif.GetMeshForwarder().SetAssignPollPeriod(aPollPeriod);
+    aInstance->mThreadNetif.GetMeshForwarder().GetDataPollManager().SetExternalPollPeriod(aPollPeriod);
 }
 
 ThreadError otLinkSendDataRequest(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetMeshForwarder().SendMacDataRequest();
+    return aInstance->mThreadNetif.GetMeshForwarder().GetDataPollManager().SendDataPoll();
 }
 
 otShortAddress otLinkGetShortAddress(otInstance *aInstance)

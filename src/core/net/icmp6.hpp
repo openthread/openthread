@@ -227,7 +227,7 @@ public:
      * @returns The pointer to the parent otInstance structure.
      *
      */
-    otInstance *GetInstance();
+    otInstance *GetInstance(void);
 
     /**
      * This method returns a new ICMP message with sufficient header space reserved.
@@ -311,7 +311,7 @@ public:
      * @retval FALSE  ICMPv6 Echo processing is disabled.
      *
      */
-    bool IsEchoEnabled(void);
+    bool IsEchoEnabled(void) { return mIsEchoEnabled; }
 
     /**
      * This method sets whether or not ICMPv6 Echo processing is enabled.
@@ -319,7 +319,7 @@ public:
      * @param[in]  aEnabled  TRUE to enable ICMPv6 Echo processing, FALSE otherwise.
      *
      */
-    void SetEchoEnabled(bool aEnabled);
+    void SetEchoEnabled(bool aEnabled) { mIsEchoEnabled = aEnabled; }
 
 private:
     ThreadError HandleEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo);

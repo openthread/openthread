@@ -64,7 +64,7 @@ EnergyScanServer::EnergyScanServer(ThreadNetif &aThreadNetif) :
     mNetif.GetCoapServer().AddResource(mEnergyScan);
 }
 
-otInstance *EnergyScanServer::GetInstance()
+otInstance *EnergyScanServer::GetInstance(void)
 {
     return mNetif.GetInstance();
 }

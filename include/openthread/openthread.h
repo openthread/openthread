@@ -94,6 +94,7 @@ extern "C" {
  * @defgroup core-ipv6 IPv6
  * @defgroup core-mac MAC
  * @defgroup core-mesh-forwarding Mesh Forwarding
+ * @defgroup core-data-poll-manager Data Poll Manager
  * @defgroup core-message Message
  * @defgroup core-mle MLE
  * @defgroup core-netdata Network Data
