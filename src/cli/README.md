@@ -14,6 +14,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [child](#child-list)
 * [childmax](#childmax)
 * [childtimeout](#childtimeout)
+* [coap] (#coap)
 * [commissioner](#commissioner-start-provisioningurl)
 * [contextreusedelay](#contextreusedelay)
 * [counter](#counter)
@@ -267,6 +268,50 @@ Set the Thread Child Timeout value.
 ```bash
 > childtimeout 300
 Done
+```
+
+### coap server \<phase\>
+
+Starts and stops the simple CoAP server.
+
+* phase: Either "start" or "stop" the server (mandatory).
+
+```bash
+> coap server start
+Server started with resource 'test': Done
+> coap server stop
+Server stopped: Done
+```
+
+### coap server name \<URI\>
+
+Outputs the current used URI String of the CoAP resource.
+
+* URI: If provided the URI String will be changed to the new value (optional).
+
+```bash
+> coap server name
+Current resource name is 'xxx': Done
+> coap server name test
+Changing resource name to 'test': Done
+```
+
+### coap client \<method\> \<IPv6address\> \<URI\> \<payload\> \<messageType\>
+
+Simple CoAP client that can send Non-/Confirmable GET/PUT/POST/DELETE messages.
+
+* method: CoAP method to be used (GET/PUT/POST/DELETE) (mandatory).
+* IPv6address: IP address of the CoAP server to query (mandatory).
+* URI: URI String of the resource on the CoAP server (mandatory).
+* payload: In case of PUT/POST/DELETE a payload can be encapsulated (optional).
+* messageType: Switch between "Confirmable" and "Non-Confirmable"(default) (optional).
+
+```bash
+> coap client GET fe80::c8bc:678e:c80c:705b test
+Sending CoAP message: Done
+Received CoAP response with payload: 1234
+> coap client PUT fe80::c8bc:678e:c80c:705b test payload
+Sending CoAP message: Done
 ```
 
 ### commissioner start \<provisioningUrl\>

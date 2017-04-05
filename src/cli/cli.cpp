@@ -220,11 +220,6 @@ Interpreter::Interpreter(otInstance *aInstance):
     mIcmpHandler.mContext         = this;
     otIcmp6RegisterHandler(mInstance, &mIcmpHandler);
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
-    mResource.mUriPath = "test";
-    mResource.mContext = this;
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
-
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
     memset(mDhcpAddresses, 0, sizeof(mDhcpAddresses));
 #endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
@@ -618,7 +613,7 @@ exit:
 void Interpreter::ProcessCoap(int argc, char *argv[])
 {
     ThreadError error;
-    error = Coap::Process(mInstance, argc, argv, *sServer, mResource);
+    error = Coap::Process(mInstance, argc, argv, *sServer);
     AppendResult(error);
 }
 

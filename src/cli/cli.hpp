@@ -326,10 +326,6 @@ private:
     uint32_t sInterval;
     Timer sPingTimer;
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
-    otCoapResource mResource;
-#endif
-
     otNetifAddress  mSlaacAddresses[OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES];
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
     otDhcpAddress  mDhcpAddresses[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];

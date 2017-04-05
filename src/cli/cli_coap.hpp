@@ -61,9 +61,14 @@ public:
      * @param[in]  argv  A pointer to an array of command line arguments.
      *
      */
-    static ThreadError Process(otInstance *aInstance, int argc, char *argv[], Server &aServer, otCoapResource &aRessource);
+    static ThreadError Process(otInstance *aInstance, int argc, char *argv[], Server &aServer);
 
 private:
+    enum
+    {
+        kMaxUriLength = 32,
+        kMaxBufferSize = 16
+    };
     static void PrintPayload(otMessage *aMessage);
 
     static ThreadError ProcessClient(int argc, char *argv[]);
@@ -79,8 +84,9 @@ private:
 
     static const CoapCommand sCommands[];
     static Server *sServer;
-    static otCoapResource *sResource;
+    static otCoapResource sResource;
     static otInstance *sInstance;
+    static char sUriPath[kMaxUriLength];
 };
 
 }  // namespace Cli
