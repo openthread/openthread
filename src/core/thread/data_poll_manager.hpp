@@ -60,6 +60,12 @@ class MeshForwarder;
 class DataPollManager
 {
 public:
+    enum
+    {
+        kDefaultFastPolls   = 8,  ///< Default number of fast poll transmissions (@sa StartFastPolls).
+        kMaxFastPolls       = 15, ///< Maximum number of fast poll transmissions allowed.
+    };
+
     /**
      * This constructor initializes the data poll manager object.
      *
@@ -147,27 +153,27 @@ public:
     void HandlePollTimeout(void);
 
     /**
-     * This method informs the data poll manager that a mac frame has been received.
-     *
-     * Data poll manager will check the "pending frame" in the received frame header and if it is set, it will send
-     * an immediate data poll to retrieve the pending frame.
-     *
-     */
-    void HandleReceivedFrame(Mac::Frame &aFrame);
-
-    /**
-     * This method informs the data poll manager that the device's timeout value is changed.
-     *
-     * The timeout is used to determine the default data poll period.
+     * This method informs the data poll manager that a mac frame has been received. It checks the "frame pending" in
+     * the received frame header and if it is set, data poll manager will send an immediate data poll to retrieve the
+     * pending frame.
      *
      */
-    void HandleTimeoutChanged(void);
+    void CheckFramePending(Mac::Frame &aFrame);
 
     /**
-     * This method sets/clears the attach mode on data poll period manager.
+     * This method asks the data poll manager to recalculate the poll period.
      *
-     * When attach mode is enabled, the data poll manager will send data polls at a faster period determined by
-     * configuration option `OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD`.
+     * This is mainly used to inform the poll manager that a parameter impacting the poll period (e.g., the child's
+     * timeout value which is used to determine the default data poll period) is modified.
+     *
+     */
+    void RecalculatePollPeriod(void);
+
+    /**
+     * This method sets/clears the attach mode on data poll manager.
+     *
+     * When attach mode is enabled, the data poll manager will send data polls at a faster rate determined by
+     * poll period configuration option `OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD`.
      *
      * @param[in]  aMode  The mode value.
      *
@@ -175,27 +181,31 @@ public:
     void SetAttachMode(bool aMode);
 
     /**
-     * This method informs the data poll manager that a response is expected from the parent/sender.
+     * This method asks data poll manager to send the next given number of polls at a faster rate (poll period defined
+     * by `kFastPollPeriod`). This is used by OpenThread stack when it expects a response from the parent/sender.
      *
-     * Data poll manager will transmit data polls more frequently (up to some fixed number of polls).
+     * If @p aNumFastPolls is zero the default value specified by `kDefaultFastPolls` is used instead. The number of
+     * fast polls is clipped by maximum value specified by `kMaxFastPolls`.
+     *
+     * @param[in] aNumFastPolls  If non-zero, number of fast polls to send, if zero, default value is used instead.
+     *
      */
-    void HandleResponseExpected(void);
+    void SendFastPolls(uint8_t aNumFastPolls);
 
 private:
     enum  // Poll period under different conditions (in milliseconds).
     {
-        kAttachDataPollPeriod   = OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD,
-        kRetxPollPeriod         = 500,
-        kNoBufferRetxPollPeriod = 200,
-        kResponseExpectedPeriod = 250,
-        kMinPollPeriod          = 10,
+        kAttachDataPollPeriod   = OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD,  ///< Poll period during attach.
+        kRetxPollPeriod         = 500,                                        ///< Poll retx period due to tx failure.
+        kNoBufferRetxPollPeriod = 200,                                        ///< Poll retx due to no buffer space.
+        kFastPollPeriod         = 188,                                        ///< Period used for fast polls.
+        kMinPollPeriod          = 10,                                         ///< Minimum allowed poll period.
     };
 
     enum
     {
         kQuickPollsAfterTimeout = 5,  ///< Maximum number of quick data poll tx in case of back-to-back poll timeouts.
         kMaxPollRetxAttempts    = 5,  ///< Maximum number of retransmit attempts of data poll (mac data request).
-        kQuickPollsForResponse  = 8,  ///< Number of quick data poll transmissions when a response is expected.
     };
 
     enum PollPeriodSelector
@@ -213,13 +223,13 @@ private:
     uint32_t  mExternalPollPeriod;
     uint32_t  mPollPeriod;
 
-    bool      mEnabled: 1;               //< Indicates if data polling is enabled/started.
-    bool      mAttachMode: 1;            //< Indicates if in attach mode (to use attach poll period).
-    bool      mRetxMode: 1;              //< Indicates if last poll tx failed at mac/radio layer(poll retx mode).
-    bool      mNoBufferRetxMode: 1;      //< Indicates if last poll tx failed due to insufficient buffer.
+    bool      mEnabled: 1;               //< Indicates whether data polling is enabled/started.
+    bool      mAttachMode: 1;            //< Indicates whether in attach mode (to use attach poll period).
+    bool      mRetxMode: 1;              //< Indicates whether last poll tx failed at mac/radio layer (poll retx mode).
+    bool      mNoBufferRetxMode: 1;      //< Indicates whether last poll tx failed due to insufficient buffer.
     uint8_t   mPollTimeoutCounter: 4;    //< Poll timeouts counter (0 to `kQuickPollsAfterTimout`).
     uint8_t   mPollTxFailureCounter: 4;  //< Poll tx failure counter (0 to `kMaxPollRetxAttempts`).
-    uint8_t   mResponseExpectedPolls: 4; //< # of remaining quick polls when "response expected".
+    uint8_t   mRemainingFastPolls: 4;    //< Number of remaining fast polls when in transient fast polling mode.
 };
 
 /**

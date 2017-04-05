@@ -1588,7 +1588,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
     payload = aFrame.GetPayload();
     payloadLength = aFrame.GetPayloadLength();
 
-    mDataPollManager.HandleReceivedFrame(aFrame);
+    mDataPollManager.CheckFramePending(aFrame);
 
     switch (aFrame.GetType())
     {
