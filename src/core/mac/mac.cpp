@@ -858,14 +858,17 @@ void Mac::TransmitDoneTask(RadioPacket *aPacket, bool aRxPending, ThreadError aE
         mCounters.mTxErrAbort++;
     }
 
+    if (aError == kThreadError_ChannelAccessFailure)
+    {
+        mCounters.mTxErrCca++;
+    }
+
     if (!RadioSupportsCsmaBackoff() &&
         aError == kThreadError_ChannelAccessFailure &&
         mCsmaAttempts < kMaxCSMABackoffs)
     {
         mCsmaAttempts++;
         StartCsmaBackoff();
-
-        mCounters.mTxErrCca++;
 
         ExitNow();
     }
