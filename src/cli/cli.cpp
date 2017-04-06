@@ -82,6 +82,9 @@ const struct Command Interpreter::sCommands[] =
     { "help", &Interpreter::ProcessHelp },
     { "autostart", &Interpreter::ProcessAutoStart },
     { "blacklist", &Interpreter::ProcessBlacklist },
+#if OPENTHREAD_ENABLE_BORDER_AGENT
+    { "borderagent", &Interpreter::ProcessBorderAgent },
+#endif
     { "bufferinfo", &Interpreter::ProcessBufferInfo },
     { "channel", &Interpreter::ProcessChannel },
     { "child", &Interpreter::ProcessChild },
@@ -124,9 +127,6 @@ const struct Command Interpreter::sCommands[] =
 #endif
 #if OPENTHREAD_ENABLE_JOINER
     { "joiner", &Interpreter::ProcessJoiner },
-#endif
-#if OPENTHREAD_ENABLE_BORDER_AGENT
-    { "borderagent", &Interpreter::ProcessBorderAgent },
 #endif
     { "joinerport", &Interpreter::ProcessJoinerPort },
     { "keysequence", &Interpreter::ProcessKeySequence },
