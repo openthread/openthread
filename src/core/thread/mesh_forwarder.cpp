@@ -74,7 +74,6 @@ MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
     mScheduleTransmissionTask(aThreadNetif.GetIp6().mTaskletScheduler, ScheduleTransmissionTask, this),
     mEnabled(false),
     mScanChannels(0),
-    mScanDuration(0),
     mScanChannel(0),
     mRestoreChannel(0),
     mRestorePanId(Mac::kPanIdBroadcast),
@@ -1620,7 +1619,7 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
         if (mSendMessage->GetSubType() == Message::kSubTypeMleDiscoverRequest)
         {
             mSendBusy = true;
-            mDiscoverTimer.Start(mScanDuration);
+            mDiscoverTimer.Start(static_cast<uint16_t>(Mac::kScanDurationDefault));
             ExitNow();
         }
     }
@@ -1661,10 +1660,9 @@ exit:
     }
 }
 
-void MeshForwarder::SetDiscoverParameters(uint32_t aScanChannels, uint16_t aScanDuration)
+void MeshForwarder::SetDiscoverParameters(uint32_t aScanChannels)
 {
     mScanChannels = (aScanChannels == 0) ? static_cast<uint32_t>(Mac::kScanChannelsAll) : aScanChannels;
-    mScanDuration = (aScanDuration == 0) ? static_cast<uint16_t>(Mac::kScanDurationDefault) : aScanDuration;
 }
 
 void MeshForwarder::HandleDiscoverTimer(void *aContext)
