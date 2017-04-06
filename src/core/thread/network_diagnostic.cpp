@@ -190,10 +190,10 @@ exit:
     return;
 }
 
-ThreadError NetworkDiagnostic::AppendIPv6AddressList(Message &aMessage)
+ThreadError NetworkDiagnostic::AppendIp6AddressList(Message &aMessage)
 {
     ThreadError error = kThreadError_None;
-    IPv6AddressListTlv tlv;
+    Ip6AddressListTlv tlv;
     uint8_t count = 0;
 
     tlv.Init();
@@ -355,9 +355,9 @@ ThreadError NetworkDiagnostic::FillRequestedTlvs(Message &aRequest, Message &aRe
             break;
         }
 
-        case NetworkDiagnosticTlv::kIPv6AddressList:
+        case NetworkDiagnosticTlv::kIp6AddressList:
         {
-            SuccessOrExit(error = AppendIPv6AddressList(aResponse));
+            SuccessOrExit(error = AppendIp6AddressList(aResponse));
             break;
         }
 

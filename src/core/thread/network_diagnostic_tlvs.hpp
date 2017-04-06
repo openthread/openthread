@@ -90,7 +90,7 @@ public:
         kRoute               = 5,    ///< Routing-Table TLV
         kLeaderData          = 6,    ///< Leader Data TLV
         kNetworkData         = 7,    ///< Network Data TLV
-        kIPv6AddressList     = 8,    ///< IPv6 Address List TLV
+        kIp6AddressList      = 8,    ///< Ip6 Address List TLV
         kMacCounters         = 9,    ///< Mac Counters TLV
         kBatteryLevel        = 14,   ///< Battery Level TLV
         kSupplyVoltage       = 15,   ///< Supply Voltage TLV
@@ -843,7 +843,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class IPv6AddressListTlv: public NetworkDiagnosticTlv
+class Ip6AddressListTlv: public NetworkDiagnosticTlv
 {
 public:
     enum
@@ -855,7 +855,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kIPv6AddressList); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv)); }
+    void Init(void) { SetType(kIp6AddressList); SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv)); }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -864,18 +864,20 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() <= 8 * kMaxSize; }
+    bool IsValid(void) const { return GetLength() <= sizeof(Ip6::Address) * kMaxSize; }
 
     /**
-     * This method returns a pointer to the Challenge value.
+     * This method returns a pointer to the IPv6 address entry.
      *
-     * @returns A pointer to the Challenge value.
+     * @param[in]  aIndex  The index into the IPv6 address list.
+     *
+     * @returns A reference to the IPv6 address.
      *
      */
-    const Ip6::Address *GetIPv6Address(uint8_t aIndex) const { return ((aIndex * 8 < GetLength()) ? &mIPv6AddressList[aIndex] : NULL); }
+    const Ip6::Address &GetIp6Address(uint8_t aIndex) const {
+        return *reinterpret_cast<const Ip6::Address *>(GetValue() + (aIndex * sizeof(Ip6::Address)));
+    }
 
-private:
-    Ip6::Address mIPv6AddressList[0];
 } OT_TOOL_PACKED_END;
 
 /**
@@ -1261,14 +1263,25 @@ public:
      */
     bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
 
+    /**
+     * This method returns the number of Child Table entries.
+     *
+     * @returns The number of Child Table entries.
+     *
+     */
     uint8_t GetNumEntries(void) const { return GetLength() / sizeof(ChildTableEntry); }
 
-    ChildTableEntry &GetEntry(uint8_t i) {
-        return mChildTableEntry[i];
+    /**
+     * This method returns the Child Table entry at @p aIndex.
+     *
+     * @param[in]  aIndex  The index into the Child Table list.
+     *
+     * @returns  A reference to the Child Table entry.
+     */
+    ChildTableEntry &GetEntry(uint8_t aIndex) {
+        return *reinterpret_cast<ChildTableEntry *>(GetValue() + (aIndex * sizeof(ChildTableEntry)));
     }
 
-private:
-    ChildTableEntry mChildTableEntry[0];
 } OT_TOOL_PACKED_END;
 
 
