@@ -54,7 +54,7 @@ Client::Client(Ip6::Netif &aNetif, SenderFunction aSender, ReceiverFunction aRec
 ThreadError Client::Start(void)
 {
     Ip6::SockAddr addr;
-    addr.mPort = static_cast<Ip6::Udp *>(mSocket.mTransport)->GetEphemeralPort();
+    addr.mPort = 0;
 
     return CoapBase::Start(addr);
 }
