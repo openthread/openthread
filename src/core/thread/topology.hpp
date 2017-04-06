@@ -216,7 +216,7 @@ public:
      * @returns The link frame counter value.
      *
      */
-    uint32_t GetLinkFrameCounter(void) const { return mValid.mLinkFrameCounter; }
+    uint32_t GetLinkFrameCounter(void) const { return mValidPending.mValid.mLinkFrameCounter; }
 
     /**
      * This method sets the link frame counter value.
@@ -224,7 +224,7 @@ public:
      * @param[in]  aFrameCounter  The link frame counter value.
      *
      */
-    void SetLinkFrameCounter(uint32_t aFrameCounter) { mValid.mLinkFrameCounter = aFrameCounter; }
+    void SetLinkFrameCounter(uint32_t aFrameCounter) { mValidPending.mValid.mLinkFrameCounter = aFrameCounter; }
 
     /**
      * This method gets the MLE frame counter value.
@@ -232,7 +232,7 @@ public:
      * @returns The MLE frame counter value.
      *
      */
-    uint32_t GetMleFrameCounter(void) const { return mValid.mMleFrameCounter; }
+    uint32_t GetMleFrameCounter(void) const { return mValidPending.mValid.mMleFrameCounter; }
 
     /**
      * This method sets the MLE frame counter value.
@@ -240,7 +240,7 @@ public:
      * @param[in]  aFrameCounter  The MLE frame counter value.
      *
      */
-    void SetMleFrameCounter(uint32_t aFrameCounter) { mValid.mMleFrameCounter = aFrameCounter; }
+    void SetMleFrameCounter(uint32_t aFrameCounter) { mValidPending.mValid.mMleFrameCounter = aFrameCounter; }
 
     /**
      * This method gets the RLOC16 value.
@@ -248,7 +248,7 @@ public:
      * @returns The RLOC16 value.
      *
      */
-    uint16_t GetRloc16(void) const { return mValid.mRloc16; }
+    uint16_t GetRloc16(void) const { return mValidPending.mValid.mRloc16; }
 
     /**
      * This method sets the RLOC16 value.
@@ -256,7 +256,7 @@ public:
      * @param[in]  aRloc16  The RLOC16 value.
      *
      */
-    void SetRloc16(uint16_t aRloc16) { mValid.mRloc16 = aRloc16; }
+    void SetRloc16(uint16_t aRloc16) { mValidPending.mValid.mRloc16 = aRloc16; }
 
     /**
      * This method indicates whether an IEEE 802.15.4 Data Request message was received.
@@ -307,8 +307,8 @@ public:
      *
      */
     void GenerateChallenge(void) {
-        for (uint8_t i = 0; i < sizeof(mPending.mChallenge); i++) {
-            mPending.mChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
+        for (uint8_t i = 0; i < sizeof(mValidPending.mPending.mChallenge); i++) {
+            mValidPending.mPending.mChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
         }
     }
 
@@ -318,7 +318,7 @@ public:
      * @returns The current challenge value.
      *
      */
-    const uint8_t *GetChallenge(void) const { return mPending.mChallenge; }
+    const uint8_t *GetChallenge(void) const { return mValidPending.mPending.mChallenge; }
 
     /**
      * This method returns the size (byets) of the challenge value for MLE Link Request/Response exchanges.
@@ -326,7 +326,7 @@ public:
      * @returns The size (byets) of the challenge value for MLE Link Request/Response exchanges.
      *
      */
-    uint8_t GetChallengeSize(void) const { return sizeof(mPending.mChallenge); }
+    uint8_t GetChallengeSize(void) const { return sizeof(mValidPending.mPending.mChallenge); }
 
 private:
     Mac::ExtAddress mMacAddr;            ///< The IEEE 802.15.4 Extended Address
@@ -344,7 +344,7 @@ private:
             uint8_t mChallenge[Mle::ChallengeTlv::kMaxSize];  ///< The challenge value
             uint8_t mChallengeLength;    ///< The challenge length
         } mPending;
-    };
+    } mValidPending;
 
     uint32_t        mKeySequence;        ///< Current key sequence
     uint8_t         mState : 3;          ///< The link state
