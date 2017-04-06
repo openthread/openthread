@@ -63,23 +63,23 @@ static DEV_UART *consoleUart;
 ThreadError otPlatUartEnable(void)
 {
     int32_t stateUart = 0;
+    ThreadError error = kThreadError_Drop;
+
     /* UART in embARC */
     consoleUart = uart_get_dev(BOARD_CONSOLE_UART_ID);
 
-    if (consoleUart == NULL)
-    {
-        DBG("Console UART is missing.\r\n");
-        return kThreadError_Drop;
-    }
+    VerifyOrExit(!(consoleUart == NULL), DBG("Console UART is missing.\r\n"));
 
     stateUart = consoleUart->uart_open(BOARD_CONSOLE_UART_BAUD);
     if (stateUart == E_OPNED)
     {
         consoleUart->uart_control(UART_CMD_SET_BAUD, (void *)(BOARD_CONSOLE_UART_BAUD));
+        error = kThreadError_None;
         DBG("Set Console UART Baudrate to 115200.\r\n");
     }
     else if (stateUart == E_OK)
     {
+        error = kThreadError_None;
         DBG("Open Console UART Successfully.\r\n");
     }
     else
@@ -87,7 +87,10 @@ ThreadError otPlatUartEnable(void)
         DBG("Open Console UART Error.\r\n");
     }
 
-    return kThreadError_None;
+exit:
+
+    return error;
+
 }
 
 ThreadError otPlatUartDisable(void)
