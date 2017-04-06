@@ -230,7 +230,7 @@ ThreadError NetworkDiagnostic::AppendChildTable(Message &aMessage)
 
     for (int i = 0; i < numChildren; i++)
     {
-        if (children[i].mState == Neighbor::kStateValid)
+        if (children[i].GetState() == Neighbor::kStateValid)
         {
             count++;
         }
@@ -242,16 +242,16 @@ ThreadError NetworkDiagnostic::AppendChildTable(Message &aMessage)
 
     for (int i = 0; i < numChildren; i++)
     {
-        if (children[i].mState == Neighbor::kStateValid)
+        if (children[i].GetState() == Neighbor::kStateValid)
         {
             timeout = 0;
 
-            while (static_cast<uint32_t>(1 << timeout) < children[i].mTimeout) { timeout++; }
+            while (static_cast<uint32_t>(1 << timeout) < children[i].GetTimeout()) { timeout++; }
 
             entry.SetReserved(0);
             entry.SetTimeout(timeout + 4);
-            entry.SetChildId(mNetif.GetMle().GetChildId(children[i].mValid.mRloc16));
-            entry.SetMode(children[i].mMode);
+            entry.SetChildId(mNetif.GetMle().GetChildId(children[i].GetRloc16()));
+            entry.SetMode(children[i].GetDeviceMode());
 
             SuccessOrExit(error = aMessage.Append(&entry, sizeof(ChildTableEntry)));
         }

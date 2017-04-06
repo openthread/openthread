@@ -56,7 +56,9 @@ otInstance *SourceMatchController::GetInstance(void)
 
 void SourceMatchController::IncrementMessageCount(Child &aChild)
 {
-    if (aChild.mQueuedMessageCount++ == 0)
+    aChild.IncrementIndirectMessageCount();
+
+    if (aChild.GetIndirectMessageCount() == 0)
     {
         AddEntry(aChild);
     }
@@ -64,14 +66,16 @@ void SourceMatchController::IncrementMessageCount(Child &aChild)
 
 void SourceMatchController::DecrementMessageCount(Child &aChild)
 {
-    if (aChild.mQueuedMessageCount == 0)
+    if (aChild.GetIndirectMessageCount() == 0)
     {
         otLogWarnMac(GetInstance(), "DecrementMessageCount(child 0x%04x) called when already at zero count.",
-                     aChild.mValid.mRloc16);
+                     aChild.GetRloc16());
         ExitNow();
     }
 
-    if (--aChild.mQueuedMessageCount == 0)
+    aChild.DecrementIndirectMessageCount();
+
+    if (aChild.GetIndirectMessageCount() == 0)
     {
         ClearEntry(aChild);
     }
@@ -82,7 +86,7 @@ exit:
 
 void SourceMatchController::ResetMessageCount(Child &aChild)
 {
-    aChild.mQueuedMessageCount = 0;
+    aChild.ResetIndirectMessageCount();
     ClearEntry(aChild);
 }
 
@@ -90,7 +94,7 @@ void SourceMatchController::SetSrcMatchAsShort(Child &aChild, bool aUseShortAddr
 {
     VerifyOrExit(aChild.mUseShortAddress != aUseShortAddress);
 
-    if (aChild.mQueuedMessageCount > 0)
+    if (aChild.GetIndirectMessageCount() > 0)
     {
         ClearEntry(aChild);
         aChild.mUseShortAddress = aUseShortAddress;
@@ -144,18 +148,18 @@ ThreadError SourceMatchController::AddAddress(const Child &aChild)
 
     if (aChild.mUseShortAddress)
     {
-        error = otPlatRadioAddSrcMatchShortEntry(GetInstance(), aChild.mValid.mRloc16);
+        error = otPlatRadioAddSrcMatchShortEntry(GetInstance(), aChild.GetRloc16());
 
         otLogDebgMac(GetInstance(), "SrcAddrMatch - Adding short addr: 0x%04x -- %s (%d)",
-                     aChild.mValid.mRloc16, otThreadErrorToString(error), error);
+                     aChild.GetRloc16(), otThreadErrorToString(error), error);
     }
     else
     {
-        uint8_t addr[sizeof(aChild.mMacAddr)];
+        uint8_t addr[sizeof(aChild.GetExtAddress())];
 
         for (uint8_t i = 0; i < sizeof(addr); i++)
         {
-            addr[i] = aChild.mMacAddr.m8[sizeof(addr) - 1 - i];
+            addr[i] = aChild.GetExtAddress().m8[sizeof(addr) - 1 - i];
         }
 
         error = otPlatRadioAddSrcMatchExtEntry(GetInstance(), addr);
@@ -174,25 +178,25 @@ void SourceMatchController::ClearEntry(Child &aChild)
 
     if (aChild.mSourceMatchPending)
     {
-        otLogDebgMac(GetInstance(), "SrcAddrMatch - Clearing pending flag for 0x%04x", aChild.mValid.mRloc16);
+        otLogDebgMac(GetInstance(), "SrcAddrMatch - Clearing pending flag for 0x%04x", aChild.GetRloc16());
         aChild.mSourceMatchPending = false;
         ExitNow();
     }
 
     if (aChild.mUseShortAddress)
     {
-        error = otPlatRadioClearSrcMatchShortEntry(GetInstance(), aChild.mValid.mRloc16);
+        error = otPlatRadioClearSrcMatchShortEntry(GetInstance(), aChild.GetRloc16());
 
         otLogDebgMac(GetInstance(), "SrcAddrMatch - Clearing short address: 0x%04x -- %s (%d)",
-                     aChild.mValid.mRloc16, otThreadErrorToString(error), error);
+                     aChild.GetRloc16(), otThreadErrorToString(error), error);
     }
     else
     {
-        uint8_t addr[sizeof(aChild.mMacAddr)];
+        uint8_t addr[sizeof(aChild.GetExtAddress())];
 
         for (uint8_t i = 0; i < sizeof(addr); i++)
         {
-            addr[i] = aChild.mMacAddr.m8[sizeof(aChild.mMacAddr) - 1 - i];
+            addr[i] = aChild.GetExtAddress().m8[sizeof(aChild.GetExtAddress()) - 1 - i];
         }
 
         error = otPlatRadioClearSrcMatchExtEntry(GetInstance(), addr);
