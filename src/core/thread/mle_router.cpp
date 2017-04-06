@@ -3322,13 +3322,13 @@ ThreadError MleRouter::RestoreChildren(void)
     for (uint8_t i = 0; ; i++)
     {
         Child *child;
-        otChildInfo childInfo;
+        ChildInfo childInfo;
         uint16_t length;
 
         length = sizeof(childInfo);
         SuccessOrExit(otPlatSettingsGet(mNetif.GetInstance(), kKeyChildInfo, i,
                                         reinterpret_cast<uint8_t *>(&childInfo), &length));
-        VerifyOrExit(length == sizeof(childInfo), error = kThreadError_Failed);
+        VerifyOrExit(length >= sizeof(childInfo), error = kThreadError_Parse);
 
         VerifyOrExit((child = NewChild()) != NULL, error = kThreadError_NoBufs);
         memset(child, 0, sizeof(*child));
@@ -3336,10 +3336,7 @@ ThreadError MleRouter::RestoreChildren(void)
         child->SetExtAddress(*static_cast<Mac::ExtAddress *>(&childInfo.mExtAddress));
         child->SetRloc16(childInfo.mRloc16);
         child->SetTimeout(childInfo.mTimeout);
-        child->SetDeviceMode((childInfo.mRxOnWhenIdle ? ModeTlv::kModeRxOnWhenIdle : 0) |
-                             (childInfo.mSecureDataRequest ? ModeTlv::kModeSecureDataRequest : 0) |
-                             (childInfo.mFullFunction ? ModeTlv::kModeFFD : 0) |
-                             (childInfo.mFullNetworkData ? ModeTlv::kModeFullNetworkData : 0));
+        child->SetDeviceMode(childInfo.mMode);
         child->SetState(Neighbor::kStateRestored);
         child->SetLastHeard(Timer::GetNow());
         mNetif.GetMeshForwarder().GetSourceMatchController().SetSrcMatchAsShort(*child, true);
@@ -3355,7 +3352,7 @@ ThreadError MleRouter::RemoveStoredChild(uint16_t aChildRloc16)
 
     for (uint8_t i = 0; i < kMaxChildren; i++)
     {
-        otChildInfo childInfo;
+        ChildInfo childInfo;
         uint16_t length = sizeof(childInfo);
 
         SuccessOrExit(otPlatSettingsGet(mNetif.GetInstance(), kKeyChildInfo, i,
@@ -3376,11 +3373,19 @@ exit:
 ThreadError MleRouter::StoreChild(uint16_t aChildRloc16)
 {
     ThreadError error = kThreadError_None;
-    otChildInfo childInfo;
+    Child *child;
+    ChildInfo childInfo;
 
-    SuccessOrExit(error = GetChildInfoById(GetChildId(aChildRloc16), childInfo));
+    VerifyOrExit((child = FindChild(GetChildId(aChildRloc16))) != NULL, error = kThreadError_NotFound);
 
     IgnoreReturnValue(RemoveStoredChild(aChildRloc16));
+
+    memset(&childInfo, 0, sizeof(childInfo));
+    memcpy(&childInfo.mExtAddress, &child->GetExtAddress(), sizeof(childInfo.mExtAddress));
+
+    childInfo.mTimeout = child->GetTimeout();
+    childInfo.mRloc16  = child->GetRloc16();
+    childInfo.mMode    = child->GetDeviceMode();
 
     error = otPlatSettingsAdd(mNetif.GetInstance(), kKeyChildInfo, reinterpret_cast<uint8_t *>(&childInfo),
                               sizeof(childInfo));
