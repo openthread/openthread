@@ -2429,9 +2429,7 @@ ThreadError MleRouter::HandleNetworkDataUpdateRouter(void)
         {
             if (child->mNetworkDataVersion != mNetif.GetNetworkDataLeader().GetStableVersion())
             {
-                static const uint8_t responseTlvs[] = {Tlv::kNetworkData, Tlv::kActiveDataset, Tlv::kPendingDataset};
-
-                SendDataResponse(destination, responseTlvs, sizeof(responseTlvs), 0);
+                SendDataResponse(destination, tlvs, sizeof(tlvs), 0);
             }
         }
     }
