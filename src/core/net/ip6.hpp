@@ -378,7 +378,7 @@ private:
     ThreadError RemoveMplOption(Message &aMessage);
     ThreadError HandleOptions(Message &message, Header &header, bool &forward);
     ThreadError HandlePayload(Message &message, MessageInfo &messageInfo, uint8_t ipproto);
-    ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo, uint8_t ipproto);
+    int8_t FindForwardInterfaceId(const MessageInfo &messageInfo);
 
     bool mForwardingEnabled;
 
