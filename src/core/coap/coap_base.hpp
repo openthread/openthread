@@ -153,21 +153,6 @@ public:
     uint16_t GetPort(void) { return mSocket.GetSockName().mPort; };
 
     /**
-     * This method sends a CoAP empty message.
-     *
-     * @param[in]  aType           The message type
-     * @param[in]  aRequestHeader  A reference to the CoAP Header that was used in CoAP request.
-     * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
-     *
-     * @retval kThreadError_None         Successfully enqueued the CoAP response message.
-     * @retval kThreadError_NoBufs       Insufficient buffers available to send the CoAP response.
-     * @retval kThreadError_InvalidArgs  The @p aRequestHeader header is not of confirmable type.
-     *
-     */
-    ThreadError SendEmptyMessage(Header::Type aType, const Header &aRequestHeader,
-                                 const Ip6::MessageInfo &aMessageInfo);
-
-    /**
      * This method sends a CoAP reset message.
      *
      * @param[in]  aRequestHeader  A reference to the CoAP Header that was used in CoAP request.
@@ -206,6 +191,22 @@ protected:
     ReceiverFunction mReceiver;
 
 private:
+
+    /**
+     * This method sends a CoAP empty message, i.e. a header-only message with code equals kCoapCodeEmpty.
+     *
+     * @param[in]  aType           The message type
+     * @param[in]  aRequestHeader  A reference to the CoAP Header that was used in CoAP request.
+     * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
+     *
+     * @retval kThreadError_None         Successfully enqueued the CoAP response message.
+     * @retval kThreadError_NoBufs       Insufficient buffers available to send the CoAP response.
+     * @retval kThreadError_InvalidArgs  The @p aRequestHeader header is not of confirmable type.
+     *
+     */
+    ThreadError SendEmptyMessage(Header::Type aType, const Header &aRequestHeader,
+                                 const Ip6::MessageInfo &aMessageInfo);
+
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 };
 
