@@ -49,7 +49,7 @@ using namespace Coap;
 
 namespace NetworkDiagnostic {
 
-class IPv6AddressListTlv;
+class Ip6AddressListTlv;
 class ChildTableTlv;
 class NetworkDiagnosticTlv;
 
@@ -116,7 +116,7 @@ public:
 
 private:
 
-    ThreadError AppendIPv6AddressList(Message &aMessage);
+    ThreadError AppendIp6AddressList(Message &aMessage);
     ThreadError AppendChildTable(Message &aMessage);
     ThreadError FillRequestedTlvs(Message &aRequest, Message &aResponse, NetworkDiagnosticTlv &aNetworkDiagnosticTlv);
 
