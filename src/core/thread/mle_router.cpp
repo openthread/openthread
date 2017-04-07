@@ -2655,12 +2655,12 @@ ThreadError MleRouter::SendChildIdResponse(Child *aChild)
         SuccessOrExit(error = AppendChildAddresses(*message, *aChild));
     }
 
+    SetChildStateToValid(aChild);
+
     if ((aChild->mMode & ModeTlv::kModeRxOnWhenIdle) == 0)
     {
-        mNetif.GetMeshForwarder().SetSrcMatchAsShort(*aChild, false);
+        mNetif.GetMeshForwarder().GetSourceMatchController().SetSrcMatchAsShort(*aChild, false);
     }
-
-    SetChildStateToValid(aChild);
 
     memset(&destination, 0, sizeof(destination));
     destination.mFields.m16[0] = HostSwap16(0xfe80);
@@ -3354,7 +3354,7 @@ ThreadError MleRouter::RestoreChildren(void)
                        (childInfo.mFullNetworkData ? ModeTlv::kModeFullNetworkData : 0);
         child->mState = Neighbor::kStateRestored;
         child->mLastHeard = Timer::GetNow();
-        mNetif.GetMeshForwarder().SetSrcMatchAsShort(*child, true);
+        mNetif.GetMeshForwarder().GetSourceMatchController().SetSrcMatchAsShort(*child, true);
     }
 
 exit:

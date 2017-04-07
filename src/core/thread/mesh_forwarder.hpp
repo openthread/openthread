@@ -43,6 +43,7 @@
 #include <net/ip6.hpp>
 #include <thread/address_resolver.hpp>
 #include <thread/data_poll_manager.hpp>
+#include <thread/src_match_controller.hpp>
 #include <thread/lowpan.hpp>
 #include <thread/network_data_leader.hpp>
 #include <thread/topology.hpp>
@@ -217,6 +218,14 @@ public:
      */
     DataPollManager &GetDataPollManager(void) { return mDataPollManager; }
 
+    /**
+     * This method returns a reference to the source match controller.
+     *
+     * @returns  A reference to the source match controller.
+     *
+     */
+    SourceMatchController &GetSourceMatchController(void) { return mSourceMatchController; }
+
 private:
     enum
     {
@@ -327,7 +336,8 @@ private:
 
     DataPollManager mDataPollManager;
 
-    bool mSrcMatchEnabled;
+
+    SourceMatchController mSourceMatchController;
 };
 
 /**

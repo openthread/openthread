@@ -572,42 +572,6 @@ public:
     LinkQualityInfo &GetNoiseFloor(void) { return mNoiseFloor; }
 
     /**
-     * This method enables/disables source match feature.
-     *
-     * @param[in]  aEnable  Enable/disable source match for automatical pending.
-     *
-     */
-    void EnableSrcMatch(bool aEnable);
-
-    /**
-     * This method adds the address into the source match table.
-     *
-     * @param[in]  aAddr  The address to be added into the source match table.
-     *
-     * @retval ::kThreadError_None  Successfully added the address into the source match table.
-     * @retval ::kThreadError_NoBufs No available entry in the source match table
-     *
-     */
-    ThreadError AddSrcMatchEntry(Address &aAddr);
-
-    /**
-     * This method removes the address from the source match table.
-     *
-     * @param[in]  aAddr  The address to be removed from the source match table.
-     *
-     * @retval ::kThreadError_None  Successfully removed the address from the source match table.
-     * @retval ::kThreadError_NoAddress  The address is not in the source match table.
-     *
-     */
-    ThreadError ClearSrcMatchEntry(Address &aAddr);
-
-    /**
-     * This method clears the source match table.
-     *
-     */
-    void ClearSrcMatchEntries(void);
-
-    /**
      * This method indicates whether or not CSMA backoff is supported by the radio layer.
      *
      * @retval true   CSMA backoff is supported by the radio.

@@ -92,6 +92,7 @@ SOURCES_COMMON                      = \
     thread/network_data_leader.cpp    \
     thread/panid_query_server.cpp     \
     thread/network_diagnostic.cpp     \
+    thread/src_match_controller.cpp   \
     thread/thread_netif.cpp           \
     utils/slaac_address.cpp           \
     $(NULL)
@@ -344,6 +345,7 @@ noinst_HEADERS                      = \
     thread/panid_query_server.hpp     \
     thread/network_diagnostic.hpp     \
     thread/network_diagnostic_tlvs.hpp \
+    thread/src_match_controller.hpp   \
     thread/thread_netif.hpp           \
     thread/thread_tlvs.hpp            \
     thread/thread_uris.hpp            \
