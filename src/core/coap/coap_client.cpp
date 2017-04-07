@@ -229,31 +229,6 @@ exit:
     return error;
 }
 
-void Client::SendEmptyMessage(const Ip6::Address &aAddress, uint16_t aPort, uint16_t aMessageId, Header::Type aType)
-{
-    Header header;
-    Ip6::MessageInfo messageInfo;
-    Message *message;
-    ThreadError error = kThreadError_None;
-
-    header.Init(aType, kCoapCodeEmpty);
-    header.SetMessageId(aMessageId);
-
-    VerifyOrExit((message = NewMessage(header)) != NULL);
-
-    messageInfo.SetPeerAddr(aAddress);
-    messageInfo.SetPeerPort(aPort);
-
-    SuccessOrExit(error = mSender(this, *message, messageInfo));
-
-exit:
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        message->Free();
-    }
-}
-
 void Client::HandleRetransmissionTimer(void *aContext)
 {
     static_cast<Client *>(aContext)->HandleRetransmissionTimer();
@@ -435,14 +410,15 @@ void Client::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &a
         break;
 
     case kCoapTypeConfirmable:
-    case kCoapTypeNonConfirmable:
-        if (responseHeader.IsConfirmable())
-        {
-            // Send empty ACK if it is a CON message.
-            SendEmptyAck(aMessageInfo.GetPeerAddr(), aMessageInfo.GetPeerPort(), responseHeader.GetMessageId());
-        }
+        // Send empty ACK if it is a CON message.
+        SendAck(responseHeader, aMessageInfo);
 
-        FinalizeCoapTransaction(*message, requestMetadata, &responseHeader, &aMessage, &aMessageInfo, kThreadError_None);
+    case kCoapTypeNonConfirmable:
+        if (responseHeader.IsResponse() && responseHeader.IsTokenEqual(requestHeader))
+        {
+            // Separate response.
+            FinalizeCoapTransaction(*message, requestMetadata, &responseHeader, &aMessage, &aMessageInfo, kThreadError_None);
+        }
 
         break;
     }
@@ -454,7 +430,7 @@ exit:
         if (responseHeader.IsConfirmable() || responseHeader.IsNonConfirmable())
         {
             // Successfully parsed a header but no matching request was found - reject the message by sending reset.
-            SendReset(aMessageInfo.GetPeerAddr(), aMessageInfo.GetPeerPort(), responseHeader.GetMessageId());
+            SendReset(responseHeader, aMessageInfo);
         }
     }
 }
