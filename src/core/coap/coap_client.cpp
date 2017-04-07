@@ -414,11 +414,8 @@ void Client::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &a
         SendAck(responseHeader, aMessageInfo);
 
     case kCoapTypeNonConfirmable:
-        if (responseHeader.IsResponse() && responseHeader.IsTokenEqual(requestHeader))
-        {
-            // Separate response.
-            FinalizeCoapTransaction(*message, requestMetadata, &responseHeader, &aMessage, &aMessageInfo, kThreadError_None);
-        }
+        // Separate response.
+        FinalizeCoapTransaction(*message, requestMetadata, &responseHeader, &aMessage, &aMessageInfo, kThreadError_None);
 
         break;
     }
