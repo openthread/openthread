@@ -77,7 +77,9 @@ $ cd <path-to-openthread>/output/cc2650/bin
 $ arm-none-eabi-objcopy -O binary ot-cli ot-cli.bin
 ```
 The [cc2538-bsl.py script][cc2538-bsl-tool] provides a convenient method
-for flashing a CC2650 via the UART.
+for flashing a CC2650 via the UART. To enter the bootloader backdoor for flashing,
+hold down BTN-1 on CC2650 LauchPad or SELECT for CC2650DK (corresponds to logic '0')
+while you press the Reset button.
 
 [ti-flash-programmer-2]: http://www.ti.com/tool/flash-programmer
 [ti-cc2650-bootloader]: http://www.ti.com/lit/an/swra466a/swra466a.pdf
