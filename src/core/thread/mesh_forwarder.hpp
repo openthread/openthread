@@ -111,7 +111,9 @@ public:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval kThreadError_None  Successfully enqueued the message.
+     * @retval kThreadError_None     Successfully enqueued the message.
+     * @retval kThreadError_Already  The message was already enqueued.
+     * @retval kThreadError_Drop     The message could not be sent and should be dropped.
      *
      */
     ThreadError SendMessage(Message &aMessage);
@@ -232,6 +234,12 @@ private:
          *
          */
         kMaxPollTriggeredTxAttempts = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_POLLS,
+
+        /**
+         * Indicates whether to set/enable 15.4 ack request in the MAC header of a supervision message.
+         *
+         */
+        kSupervisionMsgAckRequest   = (OPENTHREAD_CONFIG_SUPERVISION_MSG_NO_ACK_REQUEST == 0) ? true : false,
     };
 
     enum MessageAction                   ///< Defines the action parameter in `LogMessageInfo()` method.
@@ -263,7 +271,7 @@ private:
     ThreadError SendPoll(Message &aMessage, Mac::Frame &aFrame);
     ThreadError SendMesh(Message &aMessage, Mac::Frame &aFrame);
     ThreadError SendFragment(Message &aMessage, Mac::Frame &aFrame);
-    ThreadError SendEmptyFrame(Mac::Frame &aFrame);
+    ThreadError SendEmptyFrame(Mac::Frame &aFrame, bool aAckRequest);
     ThreadError UpdateIp6Route(Message &aMessage);
     ThreadError UpdateMeshRoute(Message &aMessage);
     ThreadError HandleDatagram(Message &aMessage, const ThreadMessageInfo &aMessageInfo,

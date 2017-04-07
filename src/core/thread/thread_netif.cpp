@@ -107,6 +107,8 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
     mLeader(*this),
     mAddressResolver(*this),
 #endif  // OPENTHREAD_FTD
+    mChildSupervisor(*this),
+    mSupervisionListener(*this),
     mAnnounceBegin(*this),
     mPanIdQuery(*this),
     mEnergyScan(*this)
@@ -130,6 +132,7 @@ ThreadError ThreadNetif::Up(void)
 #if OPENTHREAD_ENABLE_DNS_CLIENT
         mDnsClient.Start();
 #endif
+        mChildSupervisor.Start();
         mMleRouter.Enable();
         mIsUp = true;
     }
@@ -147,6 +150,7 @@ ThreadError ThreadNetif::Down(void)
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     mDnsClient.Stop();
 #endif
+    mChildSupervisor.Stop();
     mMleRouter.Disable();
     mMeshForwarder.Stop();
     mIp6.RemoveNetif(*this);

@@ -644,6 +644,15 @@ public:
      */
     void FillRouteTlv(RouteTlv &aTlv);
 
+    /**
+      * This method generates an MLE Child Update Request message to be sent to the parent.
+      *
+      * @retval kThreadError_None    Successfully generated an MLE Child Update Request message.
+      * @retval kThreadError_NoBufs  Insufficient buffers to generate the MLE Child Update Request message.
+      *
+      */
+    ThreadError SendChildUpdateRequest(void) { return Mle::SendChildUpdateRequest(); }
+
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
     /**
      * This method sets steering data out of band

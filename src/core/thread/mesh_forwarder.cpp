@@ -300,18 +300,14 @@ void MeshForwarder::ScheduleTransmissionTask(void)
             {
                 mMacSource.mLength = sizeof(mMacSource.mShortAddress);
                 mMacSource.mShortAddress = mNetif.GetMac().GetShortAddress();
-
-                mMacDest.mLength = sizeof(mMacDest.mShortAddress);
-                mMacDest.mShortAddress = child.GetRloc16();
             }
             else
             {
                 mMacSource.mLength = sizeof(mMacSource.mExtAddress);
                 memcpy(mMacSource.mExtAddress.m8, mNetif.GetMac().GetExtAddress(), sizeof(mMacDest.mExtAddress));
-
-                mMacDest.mLength = sizeof(mMacDest.mExtAddress);
-                mMacDest.mExtAddress = child.GetExtAddress();
             }
+
+            child.GetMacAddress(mMacDest);
         }
 
         // To ensure fairness in handling of data requests from sleepy
@@ -421,6 +417,15 @@ ThreadError MeshForwarder::SendMessage(Message &aMessage)
     case Message::kTypeMacDataPoll:
         aMessage.SetDirectTransmission();
         break;
+
+    case Message::kTypeSupervision:
+        child = mNetif.GetChildSupervisor().GetDestination(aMessage);
+        VerifyOrExit(child != NULL, error = kThreadError_Drop);
+        VerifyOrExit(!child->IsRxOnWhenIdle(), error = kThreadError_Drop);
+
+        aMessage.SetChildMask(mNetif.GetMle().GetChildIndex(*child));
+        mSourceMatchController.IncrementMessageCount(*child);
+        break;
     }
 
     aMessage.SetOffset(0);
@@ -493,6 +498,10 @@ Message *MeshForwarder::GetDirectTransmission(void)
 
         case Message::kTypeMacDataPoll:
             ExitNow();
+
+        case Message::kTypeSupervision:
+            error = kThreadError_Drop;
+            break;
         }
 
         switch (error)
@@ -524,12 +533,26 @@ exit:
 Message *MeshForwarder::GetIndirectTransmission(Child &aChild)
 {
     Message *message = NULL;
+    Message *next;
     uint8_t childIndex = mNetif.GetMle().GetChildIndex(aChild);
 
-    for (message = mSendQueue.GetHead(); message; message = message->GetNext())
+    for (message = mSendQueue.GetHead(); message; message = next)
     {
+        next = message->GetNext();
+
         if (message->GetChildMask(childIndex))
         {
+            // Skip and remove the supervision message if there are other messages queued for the child.
+
+            if ((message->GetType() == Message::kTypeSupervision) && (aChild.GetIndirectMessageCount() > 1))
+            {
+                message->ClearChildMask(childIndex);
+                mSourceMatchController.DecrementMessageCount(aChild);
+                mSendQueue.Dequeue(*message);
+                message->Free();
+                continue;
+            }
+
             break;
         }
     }
@@ -577,16 +600,7 @@ void MeshForwarder::PrepareIndirectTransmission(Message &aMessage, const Child &
         }
         else
         {
-            if (aChild.IsIndirectSourceMatchShort())
-            {
-                mMacDest.mLength = sizeof(mMacDest.mShortAddress);
-                mMacDest.mShortAddress = aChild.GetRloc16();
-            }
-            else
-            {
-                mMacDest.mLength = sizeof(mMacDest.mExtAddress);
-                mMacDest.mExtAddress = aChild.GetExtAddress();
-            }
+            aChild.GetMacAddress(mMacDest);
         }
 
         break;
@@ -606,6 +620,10 @@ void MeshForwarder::PrepareIndirectTransmission(Message &aMessage, const Child &
         mMacDest.mShortAddress = meshHeader.GetDestination();
         break;
     }
+
+    case Message::kTypeSupervision:
+        aChild.GetMacAddress(mMacDest);
+        break;
 
     default:
         assert(false);
@@ -825,6 +843,7 @@ void MeshForwarder::SetRxOff(void)
 {
     mNetif.GetMac().SetRxOnWhenIdle(false);
     mDataPollManager.StopPolling();
+    mNetif.GetSupervisionListener().Stop();
 }
 
 bool MeshForwarder::GetRxOnWhenIdle(void)
@@ -839,10 +858,12 @@ void MeshForwarder::SetRxOnWhenIdle(bool aRxOnWhenIdle)
     if (aRxOnWhenIdle)
     {
         mDataPollManager.StopPolling();
+        mNetif.GetSupervisionListener().Stop();
     }
     else
     {
         mDataPollManager.StartPolling();
+        mNetif.GetSupervisionListener().Start();
     }
 }
 
@@ -909,7 +930,7 @@ ThreadError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
 
     if (mSendMessage == NULL)
     {
-        SendEmptyFrame(aFrame);
+        SendEmptyFrame(aFrame, false);
         aFrame.SetIsARetransmission(false);
         aFrame.SetMaxTxAttempts(Mac::kDirectFrameMacTxAttempts);
         ExitNow();
@@ -962,6 +983,11 @@ ThreadError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
 
     case Message::kTypeMacDataPoll:
         error = SendPoll(*mSendMessage, aFrame);
+        break;
+
+    case Message::kTypeSupervision:
+        error = SendEmptyFrame(aFrame, kSupervisionMsgAckRequest);
+        mMessageNextOffset = mSendMessage->GetLength();
         break;
     }
 
@@ -1328,7 +1354,7 @@ exit:
     return error;
 }
 
-ThreadError MeshForwarder::SendEmptyFrame(Mac::Frame &aFrame)
+ThreadError MeshForwarder::SendEmptyFrame(Mac::Frame &aFrame, bool aAckRequest)
 {
     uint16_t fcf;
     uint8_t secCtl;
@@ -1350,7 +1376,10 @@ ThreadError MeshForwarder::SendEmptyFrame(Mac::Frame &aFrame)
     fcf |= (mMacDest.mLength == 2) ? Mac::Frame::kFcfDstAddrShort : Mac::Frame::kFcfDstAddrExt;
     fcf |= (macSource.mLength == 2) ? Mac::Frame::kFcfSrcAddrShort : Mac::Frame::kFcfSrcAddrExt;
 
-    // Not requesting acknowledgment for null/empty frame.
+    if (aAckRequest)
+    {
+        fcf |= Mac::Frame::kFcfAckRequest;
+    }
 
     fcf |= Mac::Frame::kFcfSecurityEnabled;
     secCtl = Mac::Frame::kKeyIdMode1;
@@ -1532,6 +1561,11 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
                 mSourceMatchController.DecrementMessageCount(*child);
             }
         }
+
+        if (aError == kThreadError_None)
+        {
+            mNetif.GetChildSupervisor().UpdateOnSend(*child);
+        }
     }
 
     VerifyOrExit(mSendMessage != NULL);
@@ -1662,6 +1696,8 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
 
     payload = aFrame.GetPayload();
     payloadLength = aFrame.GetPayloadLength();
+
+    mNetif.GetSupervisionListener().UpdateOnReceive(macSource, messageInfo.mLinkSecurity);
 
     mDataPollManager.CheckFramePending(aFrame);
 

@@ -525,7 +525,7 @@ public:
     void SetIndirectDataSequenceNumber(uint8_t aDsn) { mIndirectDsn = aDsn; }
 
     /**
-     * This method indicates whether or not to source match on the source address.
+     * This method indicates whether or not to source match on the short address.
      *
      * @returns TRUE if using the short address, FALSE if using the extended address.
      *
@@ -533,7 +533,7 @@ public:
     bool IsIndirectSourceMatchShort(void) const { return mUseShortAddress; }
 
     /**
-     * This method sets whether or not to source match on the source address.
+     * This method sets whether or not to source match on the short address.
      *
      * @param[in]  aShort  TRUE if using the short address, FALSE if using the extended address.
      *
@@ -617,6 +617,30 @@ public:
      */
     const Mac::Address &GetMacAddress(Mac::Address &aMacAddress) const;
 
+#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+
+    /**
+     * This method increments the number of seconds since last supervision of the child.
+     *
+     */
+    void IncrementSecondsSinceLastSupervision(void) { mSecondsSinceSupervision++; }
+
+    /**
+     * This method returns the number of seconds since last supervision of the child (last message to the child)
+     *
+     * @returns Number of seconds since last supervision of the child.
+     *
+     */
+    uint16_t GetSecondsSinceLastSupervision(void) const { return mSecondsSinceSupervision; }
+
+    /**
+     * This method resets the number of seconds since last supervision of the child to zero.
+     *
+     */
+    void ResetSecondsSinceLastSupervision(void) { mSecondsSinceSupervision = 0; }
+
+#endif // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+
 private:
     Ip6::Address mIp6Address[kMaxIp6AddressPerChild];  ///< Registered IPv6 addresses
     uint32_t     mTimeout;                             ///< Child timeout
@@ -637,6 +661,11 @@ private:
     uint16_t     mQueuedMessageCount : 13;             ///< Number of queued indirect messages for the child.
     bool         mUseShortAddress : 1;                 ///< Indicates whether to use short or extended address.
     bool         mSourceMatchPending : 1;              ///< Indicates whether or not pending to add to src match table.
+
+#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+    uint16_t     mSecondsSinceSupervision;             ///< Number of seconds since last supervision of the child.
+#endif // OPENTHREAD_ENABLE_CHILD_SUPERVISION
+
 };
 
 /**
