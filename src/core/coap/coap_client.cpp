@@ -413,6 +413,9 @@ void Client::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &a
         // Send empty ACK if it is a CON message.
         SendAck(responseHeader, aMessageInfo);
 
+        // fall through
+        ;
+
     case kCoapTypeNonConfirmable:
         // Separate response.
         FinalizeCoapTransaction(*message, requestMetadata, &responseHeader, &aMessage, &aMessageInfo, kThreadError_None);
