@@ -209,6 +209,9 @@ private:
         kRemoveJoinerDelay    = 20,     ///< Delay to remove successfully joined joiner
     };
 
+    void SetUpCoap();
+    void TearDownCoap();
+
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
 
