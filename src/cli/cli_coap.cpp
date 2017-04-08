@@ -52,31 +52,44 @@ char Coap::sUriPath[kMaxUriLength];
 
 void Coap::PrintPayload(otMessage *aMessage)
 {
-    uint8_t payloadLength = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
-    uint8_t bytesPrinted = 0;
+    uint8_t buf[kMaxBufferSize];
+    uint16_t bytesToPrint;
+    uint16_t bytesPrinted = 0;
+    uint16_t length = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
 
-    if (payloadLength > 0)
+    if (length > 0)
     {
-        char payload[kMaxBufferSize];
+        sServer->OutputFormat(" with payload: ");
 
-        while (bytesPrinted < payloadLength)
+        while (length > 0)
         {
-            otMessageRead(aMessage, otMessageGetOffset(aMessage) + bytesPrinted, &payload, kMaxBufferSize);
-            bytesPrinted = bytesPrinted + kMaxBufferSize;
-            sServer->OutputFormat(" with payload: %s", payload);
+            bytesToPrint = (length < sizeof(buf)) ? length : sizeof(buf);
+            otMessageRead(aMessage, otMessageGetOffset(aMessage) + bytesPrinted, buf, bytesToPrint);
+
+            OutputBytes(buf, static_cast<uint8_t>(bytesToPrint));
+
+            length       -= bytesToPrint;
+            bytesPrinted += bytesToPrint;
         }
     }
-
     sServer->OutputFormat("\r\n");
 }
 
 void Coap::ConvertToLower(char *aString)
 {
     uint8_t i = 0;
-    while( aString[i] )
+    while(aString[i])
     {
         aString[i] = tolower(aString[i]);
         i++;
+    }
+}
+
+void Coap::OutputBytes(const uint8_t *aBytes, uint8_t aLength)
+{
+    for (int i = 0; i < aLength; i++)
+    {
+        sServer->OutputFormat("%02x ", aBytes[i]);
     }
 }
 

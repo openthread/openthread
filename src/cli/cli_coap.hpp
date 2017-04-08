@@ -71,6 +71,7 @@ private:
     };
     static void PrintPayload(otMessage *aMessage);
     static void ConvertToLower(char *aString);
+    static void OutputBytes(const uint8_t *aBytes, uint8_t aLength);
 
     static ThreadError ProcessClient(int argc, char *argv[]);
     static ThreadError ProcessServer(int argc, char *argv[]);
