@@ -222,7 +222,7 @@ Interpreter::Interpreter(otInstance *aInstance):
 
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
     memset(mDhcpAddresses, 0, sizeof(mDhcpAddresses));
-#endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
+#endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
 
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     memset(mResolvingHostname, 0, sizeof(mResolvingHostname));

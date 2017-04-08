@@ -70,6 +70,7 @@ private:
         kMaxBufferSize = 16
     };
     static void PrintPayload(otMessage *aMessage);
+    static void ConvertToLower(char *aString);
 
     static ThreadError ProcessClient(int argc, char *argv[]);
     static ThreadError ProcessServer(int argc, char *argv[]);

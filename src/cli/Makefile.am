@@ -47,7 +47,7 @@ libopenthread_cli_a_SOURCES         = \
     $(NULL)
     
 if OPENTHREAD_ENABLE_APPLICATION_COAP
-libopenthread_cli_a_SOURCES	+= cli_coap.cpp
+libopenthread_cli_a_SOURCES	       += cli_coap.cpp
 endif
 
 noinst_HEADERS                      = \
@@ -60,7 +60,7 @@ noinst_HEADERS                      = \
     $(NULL)
     
 if OPENTHREAD_ENABLE_APPLICATION_COAP
-noinst_HEADERS	+= cli_coap.hpp
+noinst_HEADERS	                   += cli_coap.hpp
 endif
 
 if OPENTHREAD_BUILD_COVERAGE

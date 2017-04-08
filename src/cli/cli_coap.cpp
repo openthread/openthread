@@ -31,6 +31,7 @@
  *   This file implements a simple CLI coap server and client.
  */
 
+#include <ctype.h>
 #include <cli/cli.hpp>
 #include <cli/cli_coap.hpp>
 #include <coap/coap_header.hpp>
@@ -52,22 +53,31 @@ char Coap::sUriPath[kMaxUriLength];
 void Coap::PrintPayload(otMessage *aMessage)
 {
     uint8_t payloadLength = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
-    uint8_t outputBufferLength = kMaxBufferSize;
     uint8_t bytesPrinted = 0;
 
     if (payloadLength > 0)
     {
-        char payload[outputBufferLength] = {};
+        char payload[kMaxBufferSize];
 
         while (bytesPrinted < payloadLength)
         {
-            otMessageRead(aMessage, otMessageGetOffset(aMessage) + bytesPrinted, &payload, outputBufferLength);
-            bytesPrinted = bytesPrinted + outputBufferLength;
+            otMessageRead(aMessage, otMessageGetOffset(aMessage) + bytesPrinted, &payload, kMaxBufferSize);
+            bytesPrinted = bytesPrinted + kMaxBufferSize;
             sServer->OutputFormat(" with payload: %s", payload);
         }
     }
 
     sServer->OutputFormat("\r\n");
+}
+
+void Coap::ConvertToLower(char *aString)
+{
+    uint8_t i = 0;
+    while( aString[i] )
+    {
+        aString[i] = tolower(aString[i]);
+        i++;
+    }
 }
 
 ThreadError Coap::Process(otInstance *aInstance, int argc, char *argv[], Server &aServer)
@@ -80,11 +90,7 @@ ThreadError Coap::Process(otInstance *aInstance, int argc, char *argv[], Server 
     sResource.mContext = aInstance;
     sResource.mHandler = (otCoapRequestHandler) &Coap::s_HandleServerResponse;
 
-    if (argc == 0)
-    {
-        ExitNow(error = kThreadError_InvalidArgs);
-    }
-
+    VerifyOrExit(argc > 0, error = kThreadError_InvalidArgs);
     for (unsigned int i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
     {
         if (strcmp(argv[0], sCommands[i].mName) == 0)
@@ -104,6 +110,7 @@ ThreadError Coap::ProcessServer(int argc, char *argv[])
 
     VerifyOrExit(argc > 0, error = kThreadError_InvalidArgs);
 
+    ConvertToLower(argv[0]);
     if (strcmp(argv[0], "start") == 0)
     {
         SuccessOrExit(error = otCoapServerStart(sInstance));
@@ -207,7 +214,7 @@ void Coap::HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, otMe
         }
 
         responseMessage = otCoapNewMessage(sInstance, &responseHeader);
-        VerifyOrExit(responseMessage != NULL, error = kThreadError_Failed);
+        VerifyOrExit(responseMessage != NULL, error = kThreadError_NoBufs);
 
         if (otCoapHeaderGetCode(aHeader) == kCoapRequestGet)
         {
@@ -236,7 +243,7 @@ exit:
 ThreadError Coap::ProcessClient(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    otMessage *message;
+    otMessage *message = otCoapNewMessage(sInstance, NULL);
     otMessageInfo messageInfo;
     otCoapHeader header;
 
@@ -249,19 +256,20 @@ ThreadError Coap::ProcessClient(int argc, char *argv[])
     VerifyOrExit(argc > 0, error = kThreadError_InvalidArgs);
 
     // CoAP-Code
-    if (strcmp(argv[0], "GET") == 0)
+    ConvertToLower(argv[0]);
+    if (strcmp(argv[0], "get") == 0)
     {
         coapCode = kCoapRequestGet;
     }
-    else if (strcmp(argv[0], "POST") == 0)
+    else if (strcmp(argv[0], "post") == 0)
     {
         coapCode = kCoapRequestPost;
     }
-    else if (strcmp(argv[0], "PUT") == 0)
+    else if (strcmp(argv[0], "put") == 0)
     {
         coapCode = kCoapRequestPut;
     }
-    else if (strcmp(argv[0], "DELETE") == 0)
+    else if (strcmp(argv[0], "delete") == 0)
     {
         coapCode = kCoapRequestDelete;
     }
@@ -302,7 +310,7 @@ ThreadError Coap::ProcessClient(int argc, char *argv[])
     otCoapHeaderSetPayloadMarker(&header);
 
     message = otCoapNewMessage(sInstance, &header);
-    VerifyOrExit(message != NULL, error = kThreadError_Failed);
+    VerifyOrExit(message != NULL, error = kThreadError_NoBufs);
 
     // Embed content into message if given
     if (argc > 4)
@@ -315,17 +323,23 @@ ThreadError Coap::ProcessClient(int argc, char *argv[])
     messageInfo.mPeerPort = OT_DEFAULT_COAP_PORT;
     messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
 
-    error = otCoapSendRequest(sInstance, message, &messageInfo,
-                              (otCoapResponseHandler) &Coap::s_HandleClientResponse, NULL);
+    if ((coapType == kCoapTypeConfirmable) || coapCode == kCoapRequestGet)
+    {
+    	error = otCoapSendRequest(sInstance, message, &messageInfo,
+    	                              (otCoapResponseHandler) &Coap::s_HandleClientResponse, NULL);
+    }
+    else
+    {
+    	error = otCoapSendRequest(sInstance, message, &messageInfo, NULL, NULL);
+    }
 
     sServer->OutputFormat("Sending CoAP message: ");
 
-    if (error != kThreadError_None)
-        {
-            otMessageFree(message);
-        }
-
 exit:
+    if ((error != kThreadError_None) && (message != NULL))
+    {
+        otMessageFree(message);
+    }
     return error;
 }
 
