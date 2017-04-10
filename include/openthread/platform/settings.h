@@ -41,6 +41,10 @@
 extern "C" {
 #endif
 
+#define OT_SETTINGS_KEY_ID_MASK       0x00ff
+
+#define OT_SETTINGS_KEY_VERSION_MASK  0xff00
+
 /**
  * Performs any initialization for the settings subsystem, if necessary.
  *

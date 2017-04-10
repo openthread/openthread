@@ -385,6 +385,14 @@ ThreadError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, 
                 index++;
             }
         }
+        else if ((block.key & OT_SETTINGS_KEY_ID_MASK) == (aKey & OT_SETTINGS_KEY_ID_MASK) &&
+                 (block.flag & kBlockDeleteFlag))
+        {
+            // delete the settings which have the same key id, but have different version
+            // TODO: we could also read this kind of settings, and provide them to upper layer for version migration
+            block.flag &= (~kBlockDeleteFlag);
+            utilsFlashWrite(address, reinterpret_cast<uint8_t *>(&block), sizeof(block));
+        }
 
         address += (getAlignLength(block.length) + sizeof(struct settingsBlock));
     }
