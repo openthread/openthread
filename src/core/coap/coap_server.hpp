@@ -335,46 +335,6 @@ public:
     void RemoveResource(Resource &aResource);
 
     /**
-     * This method returns a new UDP message with sufficient header space reserved.
-     *
-     * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
-     *
-     * @returns A pointer to the message or NULL if no buffers are available.
-     *
-     */
-    Message *NewMessage(uint16_t aReserved);
-
-    /**
-     * This method returns a new MeshCoP message with sufficient header space reserved.
-     *
-     * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
-     *
-     * @returns A pointer to the MeshCoP message or NULL if no buffers are available.
-     *
-     */
-    Message *NewMeshCoPMessage(uint16_t aReserved);
-
-    /**
-     * This method creates a new message with a CoAP header.
-     *
-     * @param[in]  aHeader  A reference to a CoAP header that is used to create the message.
-     *
-     * @returns A pointer to the message or NULL if failed to allocate message.
-     *
-     */
-    Message *NewMessage(const Header &aHeader) { return CoapBase::NewMessage(aHeader); };
-
-    /**
-     * This method creates a new MeshCoP message with a CoAP header.
-     *
-     * @param[in]  aHeader  A reference to a CoAP header that is used to create the message.
-     *
-     * @returns A pointer to the MeshCoP message or NULL if failed to allocate message.
-     *
-     */
-    Message *NewMeshCoPMessage(const Header &aHeader) { return CoapBase::NewMeshCoPMessage(aHeader); };
-
-    /**
       * This method sends a CoAP response from the server.
       *
       * @param[in]  aMessage      The CoAP response to send.

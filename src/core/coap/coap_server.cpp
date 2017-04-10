@@ -99,23 +99,6 @@ exit:
     aResource.mNext = NULL;
 }
 
-Message *Server::NewMessage(uint16_t aReserved)
-{
-    return mSocket.NewMessage(aReserved);
-}
-
-Message *Server::NewMeshCoPMessage(uint16_t aReserved)
-{
-    Message *message = NULL;
-
-    VerifyOrExit((message = NewMessage(aReserved)) != NULL);
-
-    message->SetPriority(kMeshCoPMessagePriority);
-
-exit:
-    return message;
-}
-
 ThreadError Server::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     mResponsesQueue.EnqueueResponse(aMessage, aMessageInfo);

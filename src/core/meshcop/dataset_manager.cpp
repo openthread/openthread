@@ -787,12 +787,10 @@ void DatasetManager::SendSetResponse(const Coap::Header &aRequestHeader, const I
     Message *message;
     StateTlv state;
 
-    VerifyOrExit((message = mNetif.GetCoapServer().NewMeshCoPMessage(0)) != NULL, error = kThreadError_NoBufs);
-
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
 
-    SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
+    VerifyOrExit((message = mNetif.GetCoapServer().NewMeshCoPMessage(responseHeader)) != NULL, error = kThreadError_NoBufs);
 
     state.Init();
     state.SetState(aState);
@@ -819,12 +817,11 @@ void DatasetManager::SendGetResponse(const Coap::Header &aRequestHeader, const I
     Message *message;
     uint8_t index;
 
-    VerifyOrExit((message = mNetif.GetCoapServer().NewMeshCoPMessage(0)) != NULL, error = kThreadError_NoBufs);
 
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
 
-    SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
+    VerifyOrExit((message = mNetif.GetCoapServer().NewMeshCoPMessage(responseHeader)) != NULL, error = kThreadError_NoBufs);
 
     if (aLength == 0)
     {

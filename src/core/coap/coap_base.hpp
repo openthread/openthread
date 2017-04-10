@@ -132,7 +132,7 @@ public:
      * @returns A pointer to the message or NULL if failed to allocate message.
      *
      */
-    Message *NewMessage(const Header &aHeader);
+    Message *NewMessage(const Header &aHeader, uint8_t aPriority = Message::kPriorityLow);
 
     /**
      * This method creates a new MeshCoP message with a CoAP header.

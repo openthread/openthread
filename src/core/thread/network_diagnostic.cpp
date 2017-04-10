@@ -514,12 +514,10 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Header &aHeader, Messag
 
     VerifyOrExit((static_cast<TypeListTlv *>(&networkDiagnosticTlv)->IsValid()), error = kThreadError_Drop);
 
-    VerifyOrExit((message = mNetif.GetCoapServer().NewMessage(0)) != NULL, error = kThreadError_NoBufs);
-
     header.SetDefaultResponseHeader(aHeader);
     header.SetPayloadMarker();
 
-    SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
+    VerifyOrExit((message = mNetif.GetCoapServer().NewMessage(header)) != NULL, error = kThreadError_NoBufs);
 
     SuccessOrExit(error = FillRequestedTlvs(aMessage, *message, networkDiagnosticTlv));
 

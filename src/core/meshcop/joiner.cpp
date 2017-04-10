@@ -449,12 +449,10 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Header &aRequestHeader,
 
     otLogFuncEntry();
 
-    VerifyOrExit((message = mNetif.GetCoapServer().NewMeshCoPMessage(0)) != NULL, error = kThreadError_NoBufs);
-    message->SetSubType(Message::kSubTypeJoinerEntrust);
-
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
 
-    SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
+    VerifyOrExit((message = mNetif.GetCoapServer().NewMeshCoPMessage(responseHeader)) != NULL, error = kThreadError_NoBufs);
+    message->SetSubType(Message::kSubTypeJoinerEntrust);
 
     memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
     SuccessOrExit(error = mNetif.GetCoapServer().SendMessage(*message, responseInfo));

@@ -118,12 +118,10 @@ ThreadError Leader::SendPetitionResponse(const Coap::Header &aRequestHeader, con
     CommissionerSessionIdTlv sessionId;
     Message *message;
 
-    VerifyOrExit((message = mNetif.GetCoapServer().NewMeshCoPMessage(0)) != NULL, error = kThreadError_NoBufs);
-
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
 
-    SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
+    VerifyOrExit((message = mNetif.GetCoapServer().NewMeshCoPMessage(responseHeader)) != NULL, error = kThreadError_NoBufs);
 
     state.Init();
     state.SetState(aState);
@@ -208,12 +206,11 @@ ThreadError Leader::SendKeepAliveResponse(const Coap::Header &aRequestHeader, co
     StateTlv state;
     Message *message;
 
-    VerifyOrExit((message = mNetif.GetCoapServer().NewMeshCoPMessage(0)) != NULL, error = kThreadError_NoBufs);
 
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
 
-    SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
+    VerifyOrExit((message = mNetif.GetCoapServer().NewMeshCoPMessage(responseHeader)) != NULL, error = kThreadError_NoBufs);
 
     state.Init();
     state.SetState(aState);

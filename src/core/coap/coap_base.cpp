@@ -37,7 +37,7 @@
 namespace Thread {
 namespace Coap {
 
-Message *CoapBase::NewMessage(const Header &aHeader)
+Message *CoapBase::NewMessage(const Header &aHeader, uint8_t aPriority)
 {
     Message *message = NULL;
 
@@ -47,6 +47,7 @@ Message *CoapBase::NewMessage(const Header &aHeader)
     VerifyOrExit((message = mSocket.NewMessage(aHeader.GetLength())) != NULL);
     message->Prepend(aHeader.GetBytes(), aHeader.GetLength());
     message->SetOffset(0);
+    message->SetPriority(aPriority);
 
 exit:
     return message;
@@ -56,9 +57,7 @@ Message *CoapBase::NewMeshCoPMessage(const Header &aHeader)
 {
     Message *message = NULL;
 
-    VerifyOrExit((message = NewMessage(aHeader)) != NULL);
-
-    message->SetPriority(kMeshCoPMessagePriority);
+    VerifyOrExit((message = NewMessage(aHeader, kMeshCoPMessagePriority)) != NULL);
 
 exit:
     return message;
