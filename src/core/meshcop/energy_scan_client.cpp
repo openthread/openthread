@@ -84,7 +84,8 @@ ThreadError EnergyScanClient::SendQuery(uint32_t aChannelMask, uint8_t aCount, u
     header.AppendUriPathOptions(OPENTHREAD_URI_ENERGY_SCAN);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMeshCoPMessage(header)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mNetif.GetCoapClient().NewMessage(header, MeshCoP::kMeshCoPMessagePriority)) != NULL,
+                 error = kThreadError_NoBufs);
 
     sessionId.Init();
     sessionId.SetCommissionerSessionId(mNetif.GetCommissioner().GetSessionId());

@@ -77,12 +77,6 @@ enum
     kNonLifetime                = kMaxTransmitSpan + kMaxLatency
 };
 
-
-enum
-{
-    kMeshCoPMessagePriority = Message::kPriorityHigh, // The priority for MeshCoP message
-};
-
 /**
  * This class implements a common code base for CoAP client/server.
  *
@@ -127,22 +121,13 @@ public:
     /**
      * This method creates a new message with a CoAP header.
      *
-     * @param[in]  aHeader  A reference to a CoAP header that is used to create the message.
+     * @param[in]  aHeader      A reference to a CoAP header that is used to create the message.
+     * @param[in]  aPrority     The message priority level.
      *
      * @returns A pointer to the message or NULL if failed to allocate message.
      *
      */
-    Message *NewMessage(const Header &aHeader, uint8_t aPriority = Message::kPriorityLow);
-
-    /**
-     * This method creates a new MeshCoP message with a CoAP header.
-     *
-     * @param[in]  aHeader  A reference to a CoAP header that is used to create the message.
-     *
-     * @returns A pointer to the MeshCoP message or NULL if failed to allocate message.
-     *
-     */
-    Message *NewMeshCoPMessage(const Header &aHeader);
+    Message *NewMessage(const Header &aHeader, uint8_t aPriority = kDefaultCoapMessagePriority);
 
     /**
      * This method returns a port number used by CoAP client.
@@ -191,7 +176,6 @@ protected:
     ReceiverFunction mReceiver;
 
 private:
-
     /**
      * This method sends a CoAP empty message, i.e. a header-only message with code equals kCoapCodeEmpty.
      *
@@ -206,6 +190,11 @@ private:
      */
     ThreadError SendEmptyMessage(Header::Type aType, const Header &aRequestHeader,
                                  const Ip6::MessageInfo &aMessageInfo);
+
+    enum
+    {
+        kDefaultCoapMessagePriority = Message::kPriorityLow,
+    };
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 };

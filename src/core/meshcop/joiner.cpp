@@ -272,7 +272,7 @@ void Joiner::SendJoinerFinalize(void)
     header.AppendUriPathOptions(OPENTHREAD_URI_JOINER_FINALIZE);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetSecureCoapClient().NewMeshCoPMessage(header)) != NULL,
+    VerifyOrExit((message = mNetif.GetSecureCoapClient().NewMessage(header, kMeshCoPMessagePriority)) != NULL,
                  error = kThreadError_NoBufs);
 
     stateTlv.Init();
@@ -451,7 +451,8 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Header &aRequestHeader,
 
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
 
-    VerifyOrExit((message = mNetif.GetCoapServer().NewMeshCoPMessage(responseHeader)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mNetif.GetCoapServer().NewMessage(responseHeader, MeshCoP::kMeshCoPMessagePriority)) != NULL,
+                 error = kThreadError_NoBufs);
     message->SetSubType(Message::kSubTypeJoinerEntrust);
 
     memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));

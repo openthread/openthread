@@ -195,7 +195,8 @@ ThreadError EnergyScanServer::SendReport(void)
     header.AppendUriPathOptions(OPENTHREAD_URI_ENERGY_REPORT);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMeshCoPMessage(header)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mNetif.GetCoapClient().NewMessage(header, MeshCoP::kMeshCoPMessagePriority)) != NULL,
+                 error = kThreadError_NoBufs);
 
     channelMask.Init();
     channelMask.SetMask(mChannelMask);

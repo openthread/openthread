@@ -51,6 +51,11 @@ using Thread::Encoding::BigEndian::HostSwap32;
 namespace Thread {
 namespace MeshCoP {
 
+enum
+{
+    kMeshCoPMessagePriority = Message::kPriorityHigh, // The priority for MeshCoP message
+};
+
 /**
  * This class implements MeshCoP TLV generation and parsing.
  *
