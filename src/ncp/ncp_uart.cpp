@@ -176,7 +176,10 @@ exit:
 
     if (len > 0)
     {
-        otPlatUartSend(mUartBuffer.GetBuffer(), len);
+        if (otPlatUartSend(mUartBuffer.GetBuffer(), len) != kThreadError_None)
+        {
+            assert(false);
+        }
     }
 }
 
