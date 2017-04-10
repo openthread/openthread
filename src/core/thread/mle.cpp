@@ -601,7 +601,7 @@ ThreadError Mle::SetTimeout(uint32_t aTimeout)
 
     mTimeout = aTimeout;
 
-    mNetif.GetMeshForwarder().GetDataPollManager().HandleTimeoutChanged();
+    mNetif.GetMeshForwarder().GetDataPollManager().RecalculatePollPeriod();
 
     if (mDeviceState == kDeviceStateChild)
     {
@@ -1608,7 +1608,7 @@ ThreadError Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t
 
         if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
         {
-            mNetif.GetMeshForwarder().GetDataPollManager().HandleResponseExpected();
+            mNetif.GetMeshForwarder().GetDataPollManager().SendFastPolls(DataPollManager::kDefaultFastPolls);
         }
     }
 
