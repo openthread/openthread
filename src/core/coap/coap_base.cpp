@@ -86,5 +86,31 @@ void CoapBase::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMes
                                                  *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
+ThreadError CoapBase::SendEmptyMessage(Header::Type aType, const Header &aRequestHeader,
+                                       const Ip6::MessageInfo &aMessageInfo)
+{
+    ThreadError error = kThreadError_None;
+    Coap::Header responseHeader;
+    Message *message = NULL;
+
+    VerifyOrExit(aRequestHeader.GetType() == kCoapTypeConfirmable, error = kThreadError_InvalidArgs);
+
+    responseHeader.Init(aType, kCoapCodeEmpty);
+    responseHeader.SetMessageId(aRequestHeader.GetMessageId());
+
+    VerifyOrExit((message = NewMessage(responseHeader)) != NULL, error = kThreadError_NoBufs);
+
+    SuccessOrExit(error = mSender(this, *message, aMessageInfo));
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        message->Free();
+    }
+
+    return error;
+}
+
 }  // namespace Coap
 }  // namespace Thread
