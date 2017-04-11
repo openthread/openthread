@@ -575,11 +575,13 @@ exit:
     return error;
 }
 
-ThreadError Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageInfo &messageInfo, uint8_t aIpProto)
+ThreadError Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageInfo &messageInfo, uint8_t aIpProto,
+                                        bool fromLocalHost)
 {
     ThreadError error = kThreadError_None;
     Message *messageCopy = NULL;
 
+    VerifyOrExit(fromLocalHost == false, error = kThreadError_Drop);
     VerifyOrExit(mReceiveIp6DatagramCallback != NULL, error = kThreadError_NoRoute);
 
     if (mIsReceiveIp6FilterEnabled)
@@ -627,6 +629,23 @@ ThreadError Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageIn
     mReceiveIp6DatagramCallback(messageCopy, mReceiveIp6DatagramCallbackContext);
 
 exit:
+
+    switch (error)
+    {
+    case kThreadError_NoBufs:
+        otLogInfoIp6(GetInstance(), "Failed to pass up message (len: %d) to host - out of message buffer.",
+                     aMessage.GetLength());
+        break;
+
+    case kThreadError_Drop:
+        otLogInfoIp6(GetInstance(), "Dropping message (len: %d) from local host since next hop is the host.",
+                     aMessage.GetLength());
+        break;
+
+    default:
+        break;
+    }
+
     return error;
 }
 
@@ -735,16 +754,13 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
             ExitNow(tunnel = true);
         }
 
-        if (fromLocalHost == false)
-        {
-            ProcessReceiveCallback(message, messageInfo, nextHeader);
-        }
+        ProcessReceiveCallback(message, messageInfo, nextHeader, fromLocalHost);
 
         SuccessOrExit(error = HandlePayload(message, messageInfo, nextHeader));
     }
     else if (multicastPromiscuous)
     {
-        ProcessReceiveCallback(message, messageInfo, nextHeader);
+        ProcessReceiveCallback(message, messageInfo, nextHeader, fromLocalHost);
     }
 
     if (forward)
@@ -754,7 +770,7 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
         if (forwardInterfaceId == 0)
         {
             // try passing to host
-            SuccessOrExit(error = ProcessReceiveCallback(message, messageInfo, nextHeader));
+            SuccessOrExit(error = ProcessReceiveCallback(message, messageInfo, nextHeader, fromLocalHost));
 
             // the caller transfers custody in the success case, so free the message here
             message.Free();
