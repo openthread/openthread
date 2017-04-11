@@ -32,9 +32,10 @@ More information about Thread can be found on [threadgroup.org](http://threadgro
 
 # Get started with OpenThread
 
-<a href="https://codelabs.developers.google.com/codelabs/openthread-simulation/index.html#0">
+<a href="https://codelabs.developers.google.com/codelabs/openthread-simulation/index.html">
 <img src="doc/images/ot-codelab.png" alt="OpenThread Codelab" width="300px" align="right">
 </a>
+
 Want to try OpenThread? The quickest way to get started is to run through our [Simulation Codelab](https://codelabs.developers.google.com/codelabs/openthread-simulation/index.html), which covers all the basics, without the need for test hardware. Using VirtualBox and Vagrant on a Mac or Linux machine, you will learn:
 
 * How to set up the OpenThread build toolchain
