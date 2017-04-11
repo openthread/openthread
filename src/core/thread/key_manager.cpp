@@ -100,18 +100,18 @@ ThreadError KeyManager::SetMasterKey(const void *aKey, uint8_t aKeyLength)
 
     // reset parent frame counters
     routers = mNetif.GetMle().GetParent();
-    routers->mKeySequence = 0;
-    routers->mValid.mLinkFrameCounter = 0;
-    routers->mValid.mMleFrameCounter = 0;
+    routers->SetKeySequence(0);
+    routers->SetLinkFrameCounter(0);
+    routers->SetMleFrameCounter(0);
 
     // reset router frame counters
     routers = mNetif.GetMle().GetRouters(&num);
 
     for (uint8_t i = 0; i < num; i++)
     {
-        routers[i].mKeySequence = 0;
-        routers[i].mValid.mLinkFrameCounter = 0;
-        routers[i].mValid.mMleFrameCounter = 0;
+        routers[i].SetKeySequence(0);
+        routers[i].SetLinkFrameCounter(0);
+        routers[i].SetMleFrameCounter(0);
     }
 
     // reset child frame counters
@@ -119,9 +119,9 @@ ThreadError KeyManager::SetMasterKey(const void *aKey, uint8_t aKeyLength)
 
     for (uint8_t i = 0; i < num; i++)
     {
-        children[i].mKeySequence = 0;
-        children[i].mValid.mLinkFrameCounter = 0;
-        children[i].mValid.mMleFrameCounter = 0;
+        children[i].SetKeySequence(0);
+        children[i].SetLinkFrameCounter(0);
+        children[i].SetMleFrameCounter(0);
     }
 
     mNetif.SetStateChangedFlags(OT_NET_KEY_SEQUENCE_COUNTER);

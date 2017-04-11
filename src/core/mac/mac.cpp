@@ -1182,19 +1182,19 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
         // the tag/MIC. Such a frame is later filtered in `RxDoneTask` which only allows MAC
         // Data Request frames from a child being restored.
 
-        if (aNeighbor->mState == Neighbor::kStateValid)
+        if (aNeighbor->GetState() == Neighbor::kStateValid)
         {
-            if (keySequence < aNeighbor->mKeySequence)
+            if (keySequence < aNeighbor->GetKeySequence())
             {
                 ExitNow(error = kThreadError_Security);
             }
-            else if (keySequence == aNeighbor->mKeySequence)
+            else if (keySequence == aNeighbor->GetKeySequence())
             {
-                if ((frameCounter + 1) < aNeighbor->mValid.mLinkFrameCounter)
+                if ((frameCounter + 1) < aNeighbor->GetLinkFrameCounter())
                 {
                     ExitNow(error = kThreadError_Security);
                 }
-                else if ((frameCounter + 1) == aNeighbor->mValid.mLinkFrameCounter)
+                else if ((frameCounter + 1) == aNeighbor->GetLinkFrameCounter())
                 {
                     // drop duplicated packets
                     ExitNow(error = kThreadError_Duplicated);
@@ -1227,15 +1227,15 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
 
     VerifyOrExit(memcmp(tag, aFrame.GetFooter(), tagLength) == 0, error = kThreadError_Security);
 
-    if ((keyIdMode == Frame::kKeyIdMode1) && (aNeighbor->mState == Neighbor::kStateValid))
+    if ((keyIdMode == Frame::kKeyIdMode1) && (aNeighbor->GetState() == Neighbor::kStateValid))
     {
-        if (aNeighbor->mKeySequence != keySequence)
+        if (aNeighbor->GetKeySequence() != keySequence)
         {
-            aNeighbor->mKeySequence = keySequence;
-            aNeighbor->mValid.mMleFrameCounter = 0;
+            aNeighbor->SetKeySequence(keySequence);
+            aNeighbor->SetMleFrameCounter(0);
         }
 
-        aNeighbor->mValid.mLinkFrameCounter = frameCounter + 1;
+        aNeighbor->SetLinkFrameCounter(frameCounter + 1);
 
         if (keySequence > mNetif.GetKeyManager().GetCurrentKeySequence())
         {
@@ -1316,7 +1316,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
         }
 
         srcaddr.mLength = sizeof(srcaddr.mExtAddress);
-        memcpy(&srcaddr.mExtAddress, &neighbor->mMacAddr, sizeof(srcaddr.mExtAddress));
+        srcaddr.mExtAddress = neighbor->GetExtAddress();
         break;
 
     case sizeof(ExtAddress):
@@ -1390,11 +1390,11 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
 
     if (neighbor != NULL)
     {
-        neighbor->mLinkInfo.AddRss(mNoiseFloor, aFrame->mPower);
+        neighbor->GetLinkInfo().AddRss(mNoiseFloor, aFrame->mPower);
 
         if (aFrame->GetSecurityEnabled() == true)
         {
-            switch (neighbor->mState)
+            switch (neighbor->GetState())
             {
             case Neighbor::kStateValid:
                 break;
