@@ -79,14 +79,25 @@ Commissioner::Commissioner(ThreadNetif &aThreadNetif):
     mNetif(aThreadNetif)
 {
     memset(mJoiners, 0, sizeof(mJoiners));
-    mNetif.GetCoapServer().AddResource(mRelayReceive);
-    mNetif.GetCoapServer().AddResource(mDatasetChanged);
-    mNetif.GetSecureCoapServer().AddResource(mJoinerFinalize);
 }
 
 otInstance *Commissioner::GetInstance(void)
 {
     return mNetif.GetInstance();
+}
+
+void Commissioner::AddCoapResources(void)
+{
+    mNetif.GetCoapServer().AddResource(mRelayReceive);
+    mNetif.GetCoapServer().AddResource(mDatasetChanged);
+    mNetif.GetSecureCoapServer().AddResource(mJoinerFinalize);
+}
+
+void Commissioner::RemoveCoapResources(void)
+{
+    mNetif.GetCoapServer().RemoveResource(mRelayReceive);
+    mNetif.GetCoapServer().AddResource(mDatasetChanged);
+    mNetif.GetSecureCoapServer().AddResource(mJoinerFinalize);
 }
 
 ThreadError Commissioner::Start(void)
@@ -118,6 +129,7 @@ ThreadError Commissioner::Stop(void)
     mNetif.GetSecureCoapServer().Stop();
 
     mState = kCommissionerStateDisabled;
+    RemoveCoapResources();
     mTransmitAttempts = 0;
 
     mTimer.Stop();
@@ -642,7 +654,9 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Header *aHeader, Message *
     VerifyOrExit(sessionId.IsValid());
     mSessionId = sessionId.GetCommissionerSessionId();
 
+    AddCoapResources();
     mState = kCommissionerStateActive;
+
     mTransmitAttempts = 0;
     mTimer.Start(Timer::SecToMsec(kKeepAliveTimeout) / 2);
 
@@ -740,6 +754,12 @@ void Commissioner::HandleLeaderKeepAliveResponse(Coap::Header *aHeader, Message 
     mTimer.Start(Timer::SecToMsec(kKeepAliveTimeout) / 2);
 
 exit:
+
+    if (mState != kCommissionerStateActive)
+    {
+        RemoveCoapResources();
+    }
+
     otLogFuncExit();
 }
 
@@ -763,6 +783,8 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
     bool enableJoiner = false;
 
     otLogFuncEntry();
+
+    VerifyOrExit(mState == kCommissionerStateActive, error = kThreadError_InvalidState);
 
     VerifyOrExit(aHeader.GetType() == kCoapTypeNonConfirmable &&
                  aHeader.GetCode() == kCoapRequestPost);
