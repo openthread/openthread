@@ -110,7 +110,7 @@ struct MessageInfo
     };
 
     uint8_t          mType : 2;          ///< Identifies the type of message.
-    uint8_t          mSubType : 3;       ///< Identifies the message sub type.
+    uint8_t          mSubType : 4;       ///< Identifies the message sub type.
     bool             mDirectTx : 1;      ///< Used to indicate whether a direct transmission is required.
     bool             mLinkSecurity : 1;  ///< Indicates whether or not link security is enabled.
     uint8_t          mPriority : 2;      ///< Identifies the message priority level (lower value is higher priority).
@@ -218,6 +218,7 @@ public:
         kSubTypeMplRetransmission      = 5,  ///< MPL next retranmission message
         kSubTypeMleGeneral             = 6,  ///< General MLE
         kSubTypeJoinerFinalizeResponse = 7,  ///< Joiner Finalize Response
+        kSubTypeMleChildUpdateRequest  = 8,  ///< MLE Child Update Request
     };
 
     enum

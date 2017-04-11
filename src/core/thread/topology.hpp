@@ -93,7 +93,6 @@ public:
         switch (mState) {
         case kStateValid:
         case kStateRestored:
-        case kStateChildUpdateRequest:
             return true;
 
         default:
