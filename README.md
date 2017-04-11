@@ -34,7 +34,8 @@ More information about Thread can be found on [threadgroup.org](http://threadgro
 
 <a href="https://codelabs.developers.google.com/codelabs/openthread-simulation/index.html#0">
 <img src="doc/images/ot-codelab.png" alt="OpenThread Codelab" width="300px" align="right">
-</a>Want to try OpenThread? The quickest way to get started is to run through our [Simulation Codelab](https://codelabs.developers.google.com/codelabs/openthread-simulation/index.html#0), which covers all the basics, without the need for test hardware. Using VirtualBox and Vagrant on a Mac or Linux machine, you will learn:
+</a>
+Want to try OpenThread? The quickest way to get started is to run through our [Simulation Codelab](https://codelabs.developers.google.com/codelabs/openthread-simulation/index.html), which covers all the basics, without the need for test hardware. Using VirtualBox and Vagrant on a Mac or Linux machine, you will learn:
 
 * How to set up the OpenThread build toolchain
 * How to simulate a Thread network
@@ -45,16 +46,17 @@ More information about Thread can be found on [threadgroup.org](http://threadgro
 
 The Codelab shows you how easy it is use to OpenThread to simulate a Thread network.  Once complete:
 
-1. Learn more about the OpenThread architecture and features
-1. Get familiar with platforms and devices that support OpenThread
-1. What tools and support are available
-1. How to contribute to the ongoing development of OpenThread
+1. Learn more about the [OpenThread architecture and features](#openthread-features)
+1. Get familiar with [platforms and devices that support OpenThread](#who-supports-openthread)
+1. What [tools and support](#what-tools-are-available-for-testing) are available
+1. [How to contribute](#want-to-contribute) to the ongoing development of OpenThread
 
 # OpenThread Features
 
 OpenThread implements all features defined in the [Thread 1.1.1 specification](http://threadgroup.org/technology/ourtechnology#specifications), including all Thread networking layers (IPv6, 6LoWPAN, IEEE 802.15.4 with MAC security, Mesh Link Establishment, Mesh Routing) and device roles.
 
 <figure><img src="doc/images/ot-ncp.png" alt="NCP" width="200px" align="right"><figcaption>Testing</figcaption></figure>Other OpenThread-specific features and enhancements include:
+
 * Network authentication with Commissioning
 * IPv6 configuration and raw data interface
 * UDP sockets
