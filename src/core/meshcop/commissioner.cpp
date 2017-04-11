@@ -86,14 +86,14 @@ otInstance *Commissioner::GetInstance(void)
     return mNetif.GetInstance();
 }
 
-void Commissioner::SetUpCoap()
+void Commissioner::AddCoapResources()
 {
     mNetif.GetCoapServer().AddResource(mRelayReceive);
     mNetif.GetCoapServer().AddResource(mDatasetChanged);
     mNetif.GetSecureCoapServer().AddResource(mJoinerFinalize);
 }
 
-void Commissioner::TearDownCoap()
+void Commissioner::RemoveCoapResources()
 {
     mNetif.GetCoapServer().RemoveResource(mRelayReceive);
     mNetif.GetCoapServer().AddResource(mDatasetChanged);
@@ -129,7 +129,7 @@ ThreadError Commissioner::Stop(void)
     mNetif.GetSecureCoapServer().Stop();
 
     mState = kCommissionerStateDisabled;
-    TearDownCoap();
+    RemoveCoapResources();
     mTransmitAttempts = 0;
 
     mTimer.Stop();
@@ -654,7 +654,7 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Header *aHeader, Message *
     VerifyOrExit(sessionId.IsValid());
     mSessionId = sessionId.GetCommissionerSessionId();
 
-    SetUpCoap();
+    AddCoapResources();
     mState = kCommissionerStateActive;
 
     mTransmitAttempts = 0;
@@ -757,7 +757,7 @@ exit:
 
     if (mState != kCommissionerStateActive)
     {
-        TearDownCoap();
+        RemoveCoapResources();
     }
 
     otLogFuncExit();
