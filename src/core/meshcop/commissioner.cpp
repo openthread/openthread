@@ -86,14 +86,14 @@ otInstance *Commissioner::GetInstance(void)
     return mNetif.GetInstance();
 }
 
-void Commissioner::AddCoapResources()
+void Commissioner::AddCoapResources(void)
 {
     mNetif.GetCoapServer().AddResource(mRelayReceive);
     mNetif.GetCoapServer().AddResource(mDatasetChanged);
     mNetif.GetSecureCoapServer().AddResource(mJoinerFinalize);
 }
 
-void Commissioner::RemoveCoapResources()
+void Commissioner::RemoveCoapResources(void)
 {
     mNetif.GetCoapServer().RemoveResource(mRelayReceive);
     mNetif.GetCoapServer().AddResource(mDatasetChanged);
