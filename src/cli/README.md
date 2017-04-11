@@ -278,20 +278,20 @@ Starts and stops the simple CoAP server.
 
 ```bash
 > coap server start
-Server started with resource 'test': Done
+Server started with resource '': Done
 > coap server stop
 Server stopped: Done
 ```
 
 ### coap server name \<URI\>
 
-Outputs the current used URI String of the CoAP resource.
+Outputs the currently used URI String of the CoAP resource.
 
 * URI: If provided the URI String will be changed to the new value (optional).
 
 ```bash
 > coap server name
-Current resource name is 'xxx': Done
+Current resource name is '': Done
 > coap server name test
 Changing resource name to 'test': Done
 ```
@@ -307,11 +307,16 @@ Simple CoAP client that can send Non-/Confirmable GET/PUT/POST/DELETE messages.
 * messageType: Switch between "Confirmable" and "Non-Confirmable"(default) (optional).
 
 ```bash
-> coap client GET fe80::c8bc:678e:c80c:705b test
+> coap client get fdde:ad00:beef:0:dbaa:f1d0:8afb:30dc test
 Sending CoAP message: Done
-Received CoAP response with payload: 1234
-> coap client PUT fe80::c8bc:678e:c80c:705b test payload
+Received CoAP request from [fdde:ad00:beef:0:dbaa:f1d0:8afb:30dc]: GET
+CoAP response sent successfully!
+Received CoAP response with payload: 30
+> coap client put fdde:ad00:beef:0:dbaa:f1d0:8afb:30dc test Confirmable 123
 Sending CoAP message: Done
+Received CoAP request from [fdde:ad00:beef:0:dbaa:f1d0:8afb:30dc]: PUT with payload: ba 00 00 20
+CoAP response sent successfully!
+Received CoAP response
 ```
 
 ### commissioner start \<provisioningUrl\>

@@ -57,8 +57,10 @@ public:
     /**
      * This method interprets a list of CLI arguments.
      *
+     * @param[in]  aInstance  The OpenThread instance structure.
      * @param[in]  argc  The number of elements in argv.
      * @param[in]  argv  A pointer to an array of command line arguments.
+     * @param[in]  aServer  A reference to the CLI server.
      *
      */
     static ThreadError Process(otInstance *aInstance, int argc, char *argv[], Server &aServer);
