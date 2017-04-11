@@ -66,6 +66,9 @@
 #include "cli.hpp"
 #include "cli_dataset.hpp"
 #include "cli_uart.hpp"
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
+#include "cli_coap.hpp"
+#endif
 
 using Thread::Encoding::BigEndian::HostSwap16;
 using Thread::Encoding::BigEndian::HostSwap32;
@@ -84,6 +87,9 @@ const struct Command Interpreter::sCommands[] =
     { "child", &Interpreter::ProcessChild },
     { "childmax", &Interpreter::ProcessChildMax },
     { "childtimeout", &Interpreter::ProcessChildTimeout },
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
+    { "coap", &Interpreter::ProcessCoap },
+#endif
 #if OPENTHREAD_ENABLE_COMMISSIONER
     { "commissioner", &Interpreter::ProcessCommissioner },
 #endif
@@ -601,6 +607,17 @@ void Interpreter::ProcessChildTimeout(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
+
+void Interpreter::ProcessCoap(int argc, char *argv[])
+{
+    ThreadError error;
+    error = Coap::Process(mInstance, argc, argv, *sServer);
+    AppendResult(error);
+}
+
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 
 void Interpreter::ProcessContextIdReuseDelay(int argc, char *argv[])
 {

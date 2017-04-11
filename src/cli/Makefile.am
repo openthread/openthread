@@ -45,6 +45,10 @@ libopenthread_cli_a_SOURCES         = \
     cli_uart.cpp                      \
     cli_udp.cpp                       \
     $(NULL)
+    
+if OPENTHREAD_ENABLE_APPLICATION_COAP
+libopenthread_cli_a_SOURCES        += cli_coap.cpp
+endif
 
 noinst_HEADERS                      = \
     cli.hpp                           \
@@ -54,6 +58,10 @@ noinst_HEADERS                      = \
     cli_server.hpp                    \
     cli_udp.hpp                       \
     $(NULL)
+    
+if OPENTHREAD_ENABLE_APPLICATION_COAP
+noinst_HEADERS	                   += cli_coap.hpp
+endif
 
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                          = $(wildcard *.gcda *.gcno)
