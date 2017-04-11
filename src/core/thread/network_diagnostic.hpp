@@ -45,7 +45,6 @@
 namespace Thread {
 
 class ThreadNetif;
-using namespace Coap;
 
 namespace NetworkDiagnostic {
 
