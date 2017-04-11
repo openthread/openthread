@@ -377,7 +377,7 @@ ThreadError LinkRaw::DoTransmit(RadioPacket *aPacket)
     {
         otLogDebgPlat(aInstance, "LinkRaw Starting AckTimeout Timer");
         mTimerReason = kTimerReasonAckTimeout;
-        mTimer.Start(kAckTimeout);
+        mTimer.Start(Mac::kAckTimeout);
     }
 
 #endif
