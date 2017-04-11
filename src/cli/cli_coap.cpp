@@ -78,7 +78,7 @@ void Coap::PrintPayload(otMessage *aMessage)
 void Coap::ConvertToLower(char *aString)
 {
     uint8_t i = 0;
-    while(aString[i])
+    while (aString[i])
     {
         aString[i] = tolower(aString[i]);
         i++;
@@ -312,7 +312,8 @@ ThreadError Coap::ProcessClient(int argc, char *argv[])
     }
 
     // CoAP-Type
-    if ((argc > 3) && (strcmp(argv[3], "Confirmable") == 0))
+    ConvertToLower(argv[3]);
+    if ((argc > 3) && (strcmp(argv[3], "con") == 0))
     {
         coapType = kCoapTypeConfirmable;
     }

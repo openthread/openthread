@@ -14,7 +14,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [child](#child-list)
 * [childmax](#childmax)
 * [childtimeout](#childtimeout)
-* [coap] (#coap)
+* [coap](#coap)
 * [commissioner](#commissioner-start-provisioningurl)
 * [contextreusedelay](#contextreusedelay)
 * [counter](#counter)
@@ -274,7 +274,7 @@ Done
 
 Starts and stops the simple CoAP server.
 
-* phase: Either "start" or "stop" the server (mandatory).
+* phase: Either "start" or "stop" the server.
 
 ```bash
 > coap server start
@@ -283,11 +283,11 @@ Server started with resource '': Done
 Server stopped: Done
 ```
 
-### coap server name \<URI\>
+### coap server name \[URI\]
 
 Outputs the currently used URI String of the CoAP resource.
 
-* URI: If provided the URI String will be changed to the new value (optional).
+* URI: If provided the URI String will be changed to the new value.
 
 ```bash
 > coap server name
@@ -296,15 +296,15 @@ Current resource name is '': Done
 Changing resource name to 'test': Done
 ```
 
-### coap client \<method\> \<IPv6address\> \<URI\> \<payload\> \<messageType\>
+### coap client \<method\> \<IPv6address\> \<URI\> \[payload\] \[messageType\]
 
 Simple CoAP client that can send Non-/Confirmable GET/PUT/POST/DELETE messages.
 
-* method: CoAP method to be used (GET/PUT/POST/DELETE) (mandatory).
-* IPv6address: IP address of the CoAP server to query (mandatory).
-* URI: URI String of the resource on the CoAP server (mandatory).
-* payload: In case of PUT/POST/DELETE a payload can be encapsulated (optional).
-* messageType: Switch between "Confirmable" and "Non-Confirmable"(default) (optional).
+* method: CoAP method to be used (GET/PUT/POST/DELETE).
+* IPv6address: IP address of the CoAP server to query.
+* URI: URI String of the resource on the CoAP server.
+* payload: In case of PUT/POST/DELETE a payload can be encapsulated.
+* messageType: Switch between confirmable ("con") and non-confirmable (default).
 
 ```bash
 > coap client get fdde:ad00:beef:0:dbaa:f1d0:8afb:30dc test
@@ -312,7 +312,9 @@ Sending CoAP message: Done
 Received CoAP request from [fdde:ad00:beef:0:dbaa:f1d0:8afb:30dc]: GET
 CoAP response sent successfully!
 Received CoAP response with payload: 30
-> coap client put fdde:ad00:beef:0:dbaa:f1d0:8afb:30dc test Confirmable 123
+> coap client put fdde:ad00:beef:0:dbaa:f1d0:8afb:30dc test non-con somePayload
+Sending CoAP message: Done
+> coap client put fdde:ad00:beef:0:dbaa:f1d0:8afb:30dc test con 123
 Sending CoAP message: Done
 Received CoAP request from [fdde:ad00:beef:0:dbaa:f1d0:8afb:30dc]: PUT with payload: ba 00 00 20
 CoAP response sent successfully!
