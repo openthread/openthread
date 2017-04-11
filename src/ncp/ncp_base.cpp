@@ -6506,18 +6506,18 @@ ThreadError NcpBase::RemovePropertyHandler_MAC_WHITELIST(uint8_t header, spinel_
 {
     ThreadError errorCode = kThreadError_None;
     spinel_ssize_t parsedLength;
-    otExtAddress ext_addr;
+    otExtAddress *ext_addr_ptr = NULL;
 
     parsedLength = spinel_datatype_unpack(
                        value_ptr,
                        value_len,
                        SPINEL_DATATYPE_EUI64_S,
-                       &ext_addr
+                       &ext_addr_ptr
                    );
 
     if (parsedLength > 0)
     {
-        otLinkRemoveWhitelist(mInstance, ext_addr.m8);
+        otLinkRemoveWhitelist(mInstance, ext_addr_ptr->m8);
 
         errorCode = SendPropertyUpdate(
                         header,
