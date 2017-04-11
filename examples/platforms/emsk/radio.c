@@ -268,7 +268,8 @@ void emskRadioInit(void)
 
     pmrf_spi_ptr = spi_get_dev(EMSK_PMRF_0_SPI_ID);
     ercd = pmrf_spi_ptr->spi_open(DEV_MASTER_MODE, EMSK_PMRF_0_SPIFREQ);
-    if ((ercd != E_OK) && (ercd != E_OPNED)) {
+    if ((ercd != E_OK) && (ercd != E_OPNED))
+    {
         DBG("PmodRF2 SPI open error\r\n");
     }
 
@@ -277,10 +278,12 @@ void emskRadioInit(void)
     /*MRF24J40 wakepin:output, rstpin:output, INT_PIN:input, interrupt */
     pmrf_gpio_ptr = gpio_get_dev(EMSK_PMRF_0_GPIO_ID);
     ercd = pmrf_gpio_ptr->gpio_open(MRF24J40_WAKE_PIN | MRF24J40_RST_PIN);
-    if ((ercd != E_OK) && (ercd != E_OPNED)) {
+    if ((ercd != E_OK) && (ercd != E_OPNED))
+    {
         DBG("PmodRF2 CRTL port open error");
     }
-    if (ercd == E_OPNED) {
+    if (ercd == E_OPNED)
+    {
         pmrf_gpio_ptr->gpio_control(GPIO_CMD_SET_BIT_DIR_OUTPUT, (void *)(MRF24J40_WAKE_PIN | MRF24J40_RST_PIN));
         pmrf_gpio_ptr->gpio_control(GPIO_CMD_SET_BIT_DIR_INPUT, (void *)MRF24J40_INT_PIN);
     }
@@ -375,9 +378,7 @@ ThreadError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
     {
         error = kThreadError_None;
         sState = kStateTransmit;
-
     }
-
 
     return error;
 
