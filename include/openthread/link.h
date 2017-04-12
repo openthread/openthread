@@ -164,11 +164,16 @@ OTAPI uint8_t OTCALL otLinkGetChannel(otInstance *aInstance);
 /**
  * Set the IEEE 802.15.4 channel
  *
+ * This function will only succeed when Thread protocols are disabled.  A successful
+ * call to this function will also invalidate the Active and Pending Operational Datasets in
+ * non-volatile memory.
+ *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aChannel  The IEEE 802.15.4 channel.
  *
- * @retval  kThreadErrorNone         Successfully set the channel.
- * @retval  kThreadErrorInvalidArgs  If @p aChnanel is not in the range [11, 26].
+ * @retval  kThreadErrorNone           Successfully set the channel.
+ * @retval  kThreadErrorInvalidArgs    If @p aChnanel is not in the range [11, 26].
+ * @retrval kThreadError_InvalidState  Thread protocols are enabled.
  *
  * @sa otLinkGetChannel
  */
@@ -186,11 +191,14 @@ OTAPI const uint8_t *OTCALL otLinkGetExtendedAddress(otInstance *aInstance);
 /**
  * This function sets the IEEE 802.15.4 Extended Address.
  *
+ * This function will only succeed when Thread protocols are disabled.
+ *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aExtendedAddress  A pointer to the IEEE 802.15.4 Extended Address.
  *
- * @retval kThreadError_None         Successfully set the IEEE 802.15.4 Extended Address.
- * @retval kThreadError_InvalidArgs  @p aExtendedAddress was NULL.
+ * @retval kThreadError_None          Successfully set the IEEE 802.15.4 Extended Address.
+ * @retval kThreadError_InvalidArgs   @p aExtendedAddress was NULL.
+ * @retval kThraedError_InvalidState  Thread protocols are enabled.
  *
  */
 OTAPI ThreadError OTCALL otLinkSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtendedAddress);
@@ -249,11 +257,16 @@ OTAPI otPanId OTCALL otLinkGetPanId(otInstance *aInstance);
 /**
  * Set the IEEE 802.15.4 PAN ID.
  *
+ * This function will only succeed when Thread protocols are disabled.  A successful
+ * call to this function will also invalidate the Active and Pending Operational Datasets in
+ * non-volatile memory.
+ *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aPanId    The IEEE 802.15.4 PAN ID.
  *
- * @retval kThreadErrorNone         Successfully set the PAN ID.
- * @retval kThreadErrorInvalidArgs  If aPanId is not in the range [0, 65534].
+ * @retval kThreadError_None          Successfully set the PAN ID.
+ * @retval kThreadError_InvalidArgs   If aPanId is not in the range [0, 65534].
+ * @retval kThreadError_InvalidState  Thread protocols are enabled.
  *
  * @sa otLinkGetPanId
  */

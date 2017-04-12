@@ -1244,8 +1244,7 @@ otLwfIoCtl_otExtendedPanId(
 
     if (InBufferLength >= sizeof(otExtendedPanId))
     {
-        otThreadSetExtendedPanId(pFilter->otCtx, (uint8_t*)InBuffer);
-        status = STATUS_SUCCESS;
+        status = ThreadErrorToNtstatus(otThreadSetExtendedPanId(pFilter->otCtx, (uint8_t*)InBuffer));
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(otExtendedPanId))

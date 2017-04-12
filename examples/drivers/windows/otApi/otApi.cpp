@@ -1522,14 +1522,15 @@ otThreadGetExtendedPanId(
 }
 
 OTAPI 
-void 
+ThreadError 
 OTCALL
 otThreadSetExtendedPanId(
     _In_ otInstance *aInstance, 
     const uint8_t *aExtendedPanId
     )
 {
-    if (aInstance) (void)SetIOCTL(aInstance, IOCTL_OTLWF_OT_EXTENDED_PANID, (const otExtendedPanId*)aExtendedPanId);
+    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_EXTENDED_PANID, (const otExtendedPanId*)aExtendedPanId));
 }
 
 OTAPI 

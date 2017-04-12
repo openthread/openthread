@@ -205,12 +205,19 @@ OTAPI const uint8_t *OTCALL otThreadGetExtendedPanId(otInstance *aInstance);
 /**
  * Set the IEEE 802.15.4 Extended PAN ID.
  *
+ * This function may only be called while Thread protocols are disabled.  A successful
+ * call to this function will also invalidate the Active and Pending Operational Datasets in
+ * non-volatile memory.
+ *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  * @param[in]  aExtendedPanId  A pointer to the IEEE 802.15.4 Extended PAN ID.
  *
+ * @retval kThreadError_None          Successfully set the Extended PAN ID.
+ * @retval kThreadError_InvalidState  Thread protocols are enabled.
+ *
  * @sa otThreadGetExtendedPanId
  */
-OTAPI void OTCALL otThreadSetExtendedPanId(otInstance *aInstance, const uint8_t *aExtendedPanId);
+OTAPI ThreadError OTCALL otThreadSetExtendedPanId(otInstance *aInstance, const uint8_t *aExtendedPanId);
 
 /**
  * This function returns a pointer to the Leader's RLOC.
@@ -264,12 +271,17 @@ OTAPI const uint8_t *OTCALL otThreadGetMasterKey(otInstance *aInstance, uint8_t 
 /**
  * Set the thrMasterKey.
  *
+ * This function will only succeed when Thread protocols are disabled.  A successful
+ * call to this function will also invalidate the Active and Pending Operational Datasets in
+ * non-volatile memory.
+ *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aKey        A pointer to a buffer containing the thrMasterKey.
  * @param[in]  aKeyLength  Number of bytes representing the thrMasterKey stored at aKey. Valid range is [0, 16].
  *
- * @retval kThreadErrorNone         Successfully set the thrMasterKey.
- * @retval kThreadErrorInvalidArgs  If aKeyLength is larger than 16.
+ * @retval kThreadErrorNone           Successfully set the thrMasterKey.
+ * @retval kThreadErrorInvalidArgs    If aKeyLength is larger than 16.
+ * @retval kThreadError_InvalidState  Thread protocols are enabled.
  *
  * @sa otThreadGetMasterKey
  */
@@ -298,10 +310,15 @@ OTAPI const uint8_t *OTCALL otThreadGetMeshLocalPrefix(otInstance *aInstance);
 /**
  * This function sets the Mesh Local Prefix.
  *
+ * This function will only succeed when Thread protocols are disabled.  A successful
+ * call to this function will also invalidate the Active and Pending Operational Datasets in
+ * non-volatile memory.
+ *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aMeshLocalPrefix  A pointer to the Mesh Local Prefix.
  *
- * @retval kThreadError_None  Successfully set the Mesh Local Prefix.
+ * @retval kThreadError_None          Successfully set the Mesh Local Prefix.
+ * @retval kThreadError_InvalidState  Thread protocols are enabled.
  *
  */
 OTAPI ThreadError OTCALL otThreadSetMeshLocalPrefix(otInstance *aInstance, const uint8_t *aMeshLocalPrefix);
@@ -320,10 +337,15 @@ OTAPI const char *OTCALL otThreadGetNetworkName(otInstance *aInstance);
 /**
  * Set the Thread Network Name.
  *
+ * This function will only succeed when Thread protocols are disabled.  A successful
+ * call to this function will also invalidate the Active and Pending Operational Datasets in
+ * non-volatile memory.
+ *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aNetworkName  A pointer to the Thread Network Name.
  *
- * @retval kThreadErrorNone  Successfully set the Thread Network Name.
+ * @retval kThreadErrorNone           Successfully set the Thread Network Name.
+ * @retval kThreadError_InvalidState  Thread protocols are enabled.
  *
  * @sa otThreadGetNetworkName
  */
