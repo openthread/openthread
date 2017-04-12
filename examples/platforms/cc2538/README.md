@@ -16,7 +16,9 @@ Cortex-M][gnu-toolchain].
 
 [gnu-toolchain]: https://launchpad.net/gcc-arm-embedded
 
-## Build Examples
+## Building
+
+In a Bash terminal, follow these instructions to build the cc2538 examples.
 
 ```bash
 $ cd <path-to-openthread>
@@ -24,23 +26,36 @@ $ ./bootstrap
 $ make -f examples/Makefile-cc2538
 ```
 
-After a successful build, the `elf` files are found in
-`<path-to-openthread>/output/cc2538/bin`.  You can convert them to `bin`
-files using `arm-none-eabi-objcopy`:
-```bash
-$ arm-none-eabi-objcopy -O binary ot-cli-ftd ot-cli-ftd.bin
-```
-
 ## Flash Binaries
 
-Compiled binaries may be flashed onto the CC2538 using the [Serial
-Bootloader Interface][cc2538-bsl] or [JTAG interface][jtag].  The
-[cc2538-bsl.py script][cc2538-bsl-tool] provides a convenient method
-for flashing a CC2538 via the UART.
+If the build completed successfully, the `elf` files may be found in
+`<path-to-openthread>/output/cc2538/bin`.
 
-[cc2538-bsl]: http://www.ti.com/lit/an/swra466a/swra466a.pdf
+To flash the images with [Flash Programmer 2][ti-flash-programmer-2],
+the files must have the `*.elf` extension.
+
+```bash
+$ cd <path-to-openthread>/output/cc2538/bin
+$ cp ot-cli ot-cli.elf
+```
+
+To load the images with the [serial bootloader][ti-cc2538-bootloader],
+the images must be converted to `bin`. This is done using
+`arm-none-eabi-objcopy`
+
+```bash
+$ cd <path-to-openthread>/output/cc2538/bin
+$ arm-none-eabi-objcopy -O binary ot-cli ot-cli.bin
+```
+
+The [cc2538-bsl.py script][cc2538-bsl-tool] provides a convenient
+method for flashing a CC2538 via the UART. To enter the bootloader
+backdoor for flashing, hold down SELECT for CC2538DK (corresponds to
+logic '0') while you press the Reset button.
+
+[ti-flash-programmer-2]: http://www.ti.com/tool/flash-programmer
+[ti-cc2538-bootloader]: http://www.ti.com/lit/an/swra466a/swra466a.pdf
 [cc2538-bsl-tool]: https://github.com/JelmerT/cc2538-bsl
-[jtag]: https://en.wikipedia.org/wiki/JTAG
 
 ## Interact
 
