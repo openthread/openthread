@@ -14,7 +14,7 @@ OpenThread is...
 
 **...an open-source implementation of the [Thread](http://threadgroup.org/technology/ourtechnology) networking protocol.** Nest has released OpenThread to make the technology used in Nest products more broadly available to developers to accelerate the development of products for the connected home.
 
-**...OS and platform agnostic**, with a radio abstraction layer and a small memory footprint, making it highly portable.
+**...OS and platform agnostic**, with a narrow platform abstraction layer and a small memory footprint, making it highly portable.
 
 **...a Thread Certified Component**, implementing all features defined in the [Thread 1.1.1 specification](http://threadgroup.org/technology/ourtechnology#specifications). This specification defines an IPv6-based reliable, secure and low-power wireless device-to-device communication protocol for home applications.
 
@@ -56,19 +56,21 @@ The Codelab shows you how easy it is use to OpenThread to simulate a Thread netw
 
 OpenThread implements all features defined in the [Thread 1.1.1 specification](http://threadgroup.org/technology/ourtechnology#specifications), including all Thread networking layers (IPv6, 6LoWPAN, IEEE 802.15.4 with MAC security, Mesh Link Establishment, Mesh Routing) and device roles.
 
-Other OpenThread-specific features and enhancements include:
+OpenThread also supports both single-on-chip (SoC) and network co-processor (NCP) designs.
 
-* Network authentication with Commissioning
+Other features and enhancements include:
+
 * IPv6 configuration and raw data interface
 * UDP sockets
-* CoAP client and server
-* DHCPv6 client and server
-* DNSv6 client
-* Command Line Interface (CLI)
-* Network Co-Processor (NCP) support - off-loading Thread functions to a SoC
-* Spinel - general purpose NCP protocol
-* `wpantund` - user-space NCP network interface driver/daemon
-* Sniffer support via NCP Spinel nodes
+* Application support and services
+    * CoAP client and server
+    * DHCPv6 client and server
+    * DNSv6 client
+    * Command Line Interface (CLI)
+* NCP support:
+    * Spinel - general purpose NCP protocol
+    * `wpantund` - user-space NCP network interface driver/daemon
+    * Sniffer support via NCP Spinel nodes
 
 ### What's coming?
 
@@ -80,34 +82,17 @@ The development of OpenThread is ongoing to regularly provide additional feature
 
 Led by Nest, the following companies are contributing to the ongoing development of OpenThread:
 
-[![ARM][arm-logo]][arm-link][![Atmel][atmel-logo]][atmel-link][![Dialog][dialog-logo]][dialog-link][![Microsoft][ms-logo]][ms-link][![Nest][nest-logo]][nest-link][![Nordic][nordic-logo]][nordic-link][![Qualcomm][qc-logo]][qc-link][![Texas Instruments][ti-logo]][ti-link]
+<a href="https://www.arm.com/"><img src="doc/images/ot-contrib-arm.png" alt="ARM" width="200px"></a><a href="http://www.atmel.com/"><img src="doc/images/ot-contrib-atmel.png" alt="Atmel" width="200px"></a><a href="ttp://www.dialog-semiconductor.com/"><img src="doc/images/ot-contrib-dialog.png" alt="Dialog" width="200px"></a><a href="https://www.microsoft.com/en-us/"><img src="doc/images/ot-contrib-ms.png" alt="Microsoft" width="200px"></a><a href="https://nest.com/"><img src="doc/images/ot-contrib-nest.png" alt="Nest" width="200px"></a><a href="http://www.nordicsemi.com/"><img src="doc/images/ot-contrib-nordic.png" alt="Nordic" width="200px"></a><a href="https://www.qualcomm.com/"><img src="doc/images/ot-contrib-qc.png" alt="Qualcomm" width="200px"></a><a href="https://www.ti.com/"><img src="doc/images/ot-contrib-ti.png" alt="Texas Instruments" width="200px"></a>
 
 OpenThread has been ported to several devices and platforms. Build examples are included in the OpenThread library.
 
-[arm-logo]: doc/images/ot-contrib-arm.png
-[arm-link]: https://www.arm.com/
-[atmel-logo]: doc/images/ot-contrib-atmel.png
-[atmel-link]: http://www.atmel.com/
-[dialog-logo]: doc/images/ot-contrib-dialog.png
-[dialog-link]: http://www.dialog-semiconductor.com/
-[ms-logo]: doc/images/ot-contrib-ms.png
-[ms-link]: https://www.microsoft.com/en-us/
-[nest-logo]: doc/images/ot-contrib-nest.png
-[nest-link]: https://nest.com/
-[nordic-logo]: doc/images/ot-contrib-nordic.png
-[nordic-link]: http://www.nordicsemi.com/
-[qc-logo]: doc/images/ot-contrib-qc.png
-[qc-link]: https://www.qualcomm.com/
-[ti-logo]: doc/images/ot-contrib-ti.png
-[ti-link]: https://www.ti.com/
-
 ### IEEE 802.15.4 Platform Support
 
-* [POSIX Emulation](https://github.com/openthread/openthread/wiki/Platforms#posix-emulation)
 * [Dialog Semiconductor DA15000 OpenThread Sandbox Development Kit](https://github.com/openthread/openthread/wiki/Platforms#dialog-da15000)
 * [Nordic Semiconductor nRF52840 SoC](https://github.com/openthread/openthread/wiki/Platforms#nordic-semiconductor-nrf52840)
 * [Texas Instruments SimpleLink CC2538](https://github.com/openthread/openthread/wiki/Platforms#texas-instruments-cc2538)
 * [Texas Instruments SimpleLink CC2650](https://github.com/openthread/openthread/wiki/Platforms#texas-instruments-cc2650)
+* [POSIX Emulation](https://github.com/openthread/openthread/wiki/Platforms#posix-emulation)
 
 See the [Wiki Platform page](https://github.com/openthread/openthread/wiki/Platforms) for more detailed information on supported platforms.
 
@@ -120,9 +105,9 @@ Desktop platforms can also be used to control and interface with a Thread networ
 
 # What tools are available for testing?
 
-### Testing
+### Certification Testing
 
-Testing is done with the [GRL Thread Test Harness software](http://graniteriverlabs.com/thread/), available for download to Thread member companies.
+Certification testing is done with the [GRL Thread Test Harness software](http://graniteriverlabs.com/thread/), available for download to Thread member companies.
 
 Additional tools that extend the Test Harness are included in the OpenThread library:
 
