@@ -90,9 +90,24 @@ void MleRouter::SetRouterRoleEnabled(bool aEnabled)
 {
     mRouterRoleEnabled = aEnabled;
 
-    if (!mRouterRoleEnabled && (mDeviceState == kDeviceStateRouter || mDeviceState == kDeviceStateLeader))
+    switch (mDeviceState)
     {
-        BecomeDetached();
+    case kDeviceStateDisabled:
+    case kDeviceStateDetached:
+        break;
+
+    case kDeviceStateChild:
+        mNetif.GetMac().SetBeaconEnabled(mRouterRoleEnabled);
+        break;
+
+    case kDeviceStateRouter:
+    case kDeviceStateLeader:
+        if (!mRouterRoleEnabled)
+        {
+            BecomeDetached();
+        }
+
+        break;
     }
 }
 
@@ -329,6 +344,11 @@ ThreadError MleRouter::HandleChildStart(otMleAttachFilter aFilter)
     StopLeader();
     mStateUpdateTimer.Start(kStateUpdatePeriod);
 
+    if (mRouterRoleEnabled)
+    {
+        mNetif.GetMac().SetBeaconEnabled(true);
+    }
+
     mNetif.SubscribeAllRoutersMulticast();
 
     VerifyOrExit(IsRouterIdValid(mPreviousRouterId));
@@ -401,6 +421,7 @@ ThreadError MleRouter::SetStateRouter(uint16_t aRloc16)
     mStateUpdateTimer.Start(kStateUpdatePeriod);
     mNetif.GetIp6().SetForwardingEnabled(true);
     mNetif.GetIp6().mMpl.SetTimerExpirations(kMplRouterDataMessageTimerExpirations);
+    mNetif.GetMac().SetBeaconEnabled(true);
 
     for (int i = 0; i < mMaxChildrenAllowed; i++)
     {
@@ -442,6 +463,7 @@ ThreadError MleRouter::SetStateLeader(uint16_t aRloc16)
     mNetif.GetCoapServer().AddResource(mAddressRelease);
     mNetif.GetIp6().SetForwardingEnabled(true);
     mNetif.GetIp6().mMpl.SetTimerExpirations(kMplRouterDataMessageTimerExpirations);
+    mNetif.GetMac().SetBeaconEnabled(true);
 
     for (int i = 0; i < mMaxChildrenAllowed; i++)
     {

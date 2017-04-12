@@ -282,6 +282,22 @@ public:
     void EnergyScanDone(int8_t aEnergyScanMaxRssi);
 
     /**
+     * This method indicates whether or not IEEE 802.15.4 Beacon transmissions are enabled.
+     *
+     * @retval TRUE if IEEE 802.15.4 Beacon transmissions are enabled, FALSE otherwise.
+     *
+     */
+    bool IsBeaconEnabled(void) const { return mBeaconsEnabled; }
+
+    /**
+     * This method enables/disables IEEE 802.15.4 Beacon transmissions.
+     *
+     * @param[in]  aEnabled  TRUE to enable IEEE 802.15.4 Beacon transmissions, FALSE otherwise.
+     *
+     */
+    void SetBeaconEnabled(bool aEnabled) { mBeaconsEnabled = aEnabled; }
+
+    /**
      * This method indicates whether or not rx-on-when-idle is enabled.
      *
      * @retval TRUE   If rx-on-when-idle is enabled.
@@ -662,6 +678,7 @@ private:
     uint8_t mCsmaAttempts;
     uint8_t mTransmitAttempts;
     bool mTransmitBeacon;
+    bool mBeaconsEnabled;
 
     ScanType mPendingScanRequest;
     uint8_t mScanChannel;
