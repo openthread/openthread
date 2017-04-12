@@ -2389,10 +2389,6 @@ ThreadError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInf
         VerifyOrExit(diff > 0);
     }
 
-    // Network Data
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kNetworkData, sizeof(networkData), networkData));
-    VerifyOrExit(networkData.IsValid(), error = kThreadError_Parse);
-
     // Active Timestamp
     if (Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp) == kThreadError_None)
     {
@@ -2435,10 +2431,14 @@ ThreadError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInf
         pendingTimestamp.SetLength(0);
     }
 
-    // Network Data
-    mNetif.GetNetworkDataLeader().SetNetworkData(leaderData.GetDataVersion(), leaderData.GetStableDataVersion(),
-                                                 (mDeviceMode & ModeTlv::kModeFullNetworkData) == 0,
-                                                 networkData.GetNetworkData(), networkData.GetLength());
+    if (Tlv::GetTlv(aMessage, Tlv::kNetworkData, sizeof(networkData), networkData) == kThreadError_None)
+    {
+        VerifyOrExit(networkData.IsValid(), error = kThreadError_Parse);
+
+        mNetif.GetNetworkDataLeader().SetNetworkData(leaderData.GetDataVersion(), leaderData.GetStableDataVersion(),
+                                                     (mDeviceMode & ModeTlv::kModeFullNetworkData) == 0,
+                                                     networkData.GetNetworkData(), networkData.GetLength());
+    }
 
     // Active Dataset
     if (activeTimestamp.GetLength() > 0)

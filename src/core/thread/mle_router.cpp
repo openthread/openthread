@@ -2157,10 +2157,11 @@ ThreadError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const I
 
     tlvs[tlvslength++] = Tlv::kSourceAddress;
 
-    if ((child == NULL) || (child->GetState() != Neighbor::kStateValid))
+    // Not proceed if the Child Update Request is from the peer which is not the device's child or
+    // which was the device's child but becomes invalid.
+    if (child == NULL || child->GetState() == Neighbor::kStateInvalid)
     {
-        // Send Child Update Response with status TLV(error) for invalid non-sleepy child
-        // No Child Update Response for invalid sleepy child
+        // For invalid non-sleepy child, Send Child Update Response with status TLV (error)
         if (mode.GetMode() & ModeTlv::kModeRxOnWhenIdle)
         {
             tlvs[tlvslength++] = Tlv::kStatus;
