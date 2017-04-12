@@ -826,6 +826,14 @@ typedef enum
     SPINEL_PROP_THREAD_COMMISSIONER_ENABLED
                                         = SPINEL_PROP_THREAD_EXT__BEGIN + 16,
 
+    /// Thread border agent proxy enable
+    /** Format `b`
+     *
+     * Default value is `false`.
+     */
+    SPINEL_PROP_BORDER_AGENT_PROXY_ENABLE = SPINEL_PROP_THREAD_EXT__BEGIN + 17,
+    SPINEL_PROP_THREAD_EXT__END        = 0x1600,
+
     SPINEL_PROP_THREAD_EXT__END         = 0x1600,
 
     SPINEL_PROP_IPV6__BEGIN             = 0x60,
@@ -852,6 +860,7 @@ typedef enum
     SPINEL_PROP_STREAM_RAW              = SPINEL_PROP_STREAM__BEGIN + 1, ///< [dD]
     SPINEL_PROP_STREAM_NET              = SPINEL_PROP_STREAM__BEGIN + 2, ///< [dD]
     SPINEL_PROP_STREAM_NET_INSECURE     = SPINEL_PROP_STREAM__BEGIN + 3, ///< [dD]
+    SPINEL_PROP_STREAM_BA_PROXY         = SPINEL_PROP_STREAM__BEGIN + 4, ///< [dD]
     SPINEL_PROP_STREAM__END             = 0x80,
 
     /// UART Bitrate

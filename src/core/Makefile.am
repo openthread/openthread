@@ -112,6 +112,7 @@ SOURCES_COMMON                      = \
     api/thread_api.cpp                \
     api/thread_ftd_api.cpp            \
     api/udp_api.cpp                   \
+    api/border_agent_proxy_api.cpp    \
     coap/coap_base.cpp                \
     coap/coap_client.cpp              \
     coap/coap_header.cpp              \
@@ -136,6 +137,7 @@ SOURCES_COMMON                      = \
     mac/mac_frame.cpp                 \
     mac/mac_whitelist.cpp             \
     meshcop/announce_begin_client.cpp \
+    meshcop/border_agent_proxy.cpp    \
     meshcop/commissioner.cpp          \
     meshcop/dataset.cpp               \
     meshcop/dataset_manager.cpp       \

@@ -145,6 +145,13 @@ private:
     ThreadError OutboundFrameSend(void);
 
     /**
+     * Trampoline for HandleBorderAgentProxyCallback().
+     */
+    static void HandleBorderAgentProxyCallback(otMessage *aMessage, void *aContext);
+
+    void HandleBorderAgentProxyCallback(otMessage *aMessage);
+
+    /**
      * Trampoline for HandleDatagramFromStack().
      */
     static void HandleDatagramFromStack(otMessage *aMessage, void *aContext);
@@ -401,6 +408,7 @@ private:
     ThreadError GetPropertyHandler_THREAD_COMMISSIONER_ENABLED(uint8_t header, spinel_prop_key_t key);
 #endif
 
+    ThreadError GetPropertyHandler_BORDER_AGENT_PROXY_ENABLE(uint8_t header, spinel_prop_key_t key);
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     ThreadError GetPropertyHandler_JAM_DETECT_ENABLE(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_JAM_DETECTED(uint8_t header, spinel_prop_key_t key);
@@ -466,6 +474,8 @@ private:
     ThreadError SetPropertyHandler_THREAD_RLOC16_DEBUG_PASSTHRU(uint8_t header, spinel_prop_key_t key,
                                                                 const uint8_t *value_ptr, uint16_t value_len);
 
+    ThreadError SetPropertyHandler_STREAM_BORDER_AGENT_PROXY(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                              uint16_t value_len);
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     ThreadError SetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                uint16_t value_len);
@@ -525,6 +535,8 @@ private:
                                                                const uint8_t *value_ptr, uint16_t value_len);
 #endif
 
+    ThreadError SetPropertyHandler_BORDER_AGENT_PROXY_ENABLE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                     uint16_t value_len);
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     ThreadError SetPropertyHandler_JAM_DETECT_ENABLE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                      uint16_t value_len);
