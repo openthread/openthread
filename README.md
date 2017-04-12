@@ -49,14 +49,14 @@ The Codelab shows you how easy it is use to OpenThread to simulate a Thread netw
 
 1. Learn more about the [OpenThread architecture and features](#openthread-features)
 1. Get familiar with [platforms and devices that support OpenThread](#who-supports-openthread)
-1. What [tools and support](#what-tools-are-available-for-testing) are available
-1. [How to contribute](#want-to-contribute) to the ongoing development of OpenThread
+1. See what [testing tools](#what-tools-are-available-for-testing) are available
+1. Learn [where to get help](#need-help) and [how to contribute](#want-to-contribute) to the ongoing development of OpenThread
 
 # OpenThread Features
 
 OpenThread implements all features defined in the [Thread 1.1.1 specification](http://threadgroup.org/technology/ourtechnology#specifications), including all Thread networking layers (IPv6, 6LoWPAN, IEEE 802.15.4 with MAC security, Mesh Link Establishment, Mesh Routing) and device roles.
 
-<figure><img src="doc/images/ot-ncp.png" alt="NCP" width="200px" align="right"><figcaption>Testing</figcaption></figure>Other OpenThread-specific features and enhancements include:
+Other OpenThread-specific features and enhancements include:
 
 * Network authentication with Commissioning
 * IPv6 configuration and raw data interface
@@ -72,7 +72,7 @@ OpenThread implements all features defined in the [Thread 1.1.1 specification](h
 
 ### What's coming?
 
-The development of OpenThread is ongoing to keep the implementation up to spec, as well as to provide additional features not available in the standard. Currently, we are working on:
+The development of OpenThread is ongoing to regularly provide additional features not available in the standard. Currently, we are working on:
 
 * Host-side Border Agent support
 
