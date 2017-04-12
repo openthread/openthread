@@ -124,6 +124,33 @@ enum AlocAllocation
 };
 
 /**
+* This structure represents the device's own network information for persistent storage.
+*
+*/
+struct NetworkInfo
+{
+    DeviceState          mDeviceState;                                      ///< Current Thread interface state.
+
+    uint8_t              mDeviceMode;                                       ///< Device mode setting.
+    uint16_t             mRloc16;                                           ///< RLOC16
+    uint32_t             mKeySequence;                                      ///< Key Sequence
+    uint32_t             mMleFrameCounter;                                  ///< MLE Frame Counter
+    uint32_t             mMacFrameCounter;                                  ///< MAC Frame Counter
+    uint32_t             mPreviousPartitionId;                              ///< PartitionId
+    Mac::ExtAddress      mExtAddress;                                       ///< Extended Address
+    uint8_t              mMlIid[OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE];  ///< IID from ML-EID
+};
+
+/**
+* This structure represents the parent information for persistent storage.
+*
+*/
+struct ParentInfo
+{
+    Mac::ExtAddress  mExtAddress;   ///< Extended Address
+};
+
+/**
  * This class implements MLE Header generation and parsing.
  *
  */
@@ -1397,24 +1424,6 @@ private:
     void ResetParentCandidate(void);
 
     MessageQueue mDelayedResponses;
-
-    /**
-     * This struct represents the device's own network information for persistent storage.
-     *
-     */
-    typedef struct NetworkInfo
-    {
-        DeviceState          mDeviceState;                                      ///< Current Thread interface state.
-
-        uint8_t              mDeviceMode;                                       ///< Device mode setting.
-        uint16_t             mRloc16;                                           ///< RLOC16
-        uint32_t             mKeySequence;                                      ///< Key Sequence
-        uint32_t             mMleFrameCounter;                                  ///< MLE Frame Counter
-        uint32_t             mMacFrameCounter;                                  ///< MAC Frame Counter
-        uint32_t             mPreviousPartitionId;                              ///< PartitionId
-        Mac::ExtAddress      mExtAddress;                                       ///< Extended Address
-        uint8_t              mMlIid[OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE];  ///< IID from ML-EID
-    } NetworkInfo;
 
     struct
     {

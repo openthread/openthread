@@ -368,7 +368,8 @@ private:
     static void HandleSendQueue(void *aContext);
     void HandleSendQueue(void);
 
-    ThreadError ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto);
+    ThreadError ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto,
+                                       bool fromLocalHost);
     ThreadError HandleExtensionHeaders(Message &message, Header &header, uint8_t &nextHeader, bool forward,
                                        bool receive);
     ThreadError HandleFragment(Message &message);

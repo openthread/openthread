@@ -479,17 +479,17 @@ ThreadError otThreadGetParentInfo(otInstance *aInstance, otRouterInfo *aParentIn
     VerifyOrExit(aParentInfo != NULL, error = kThreadError_InvalidArgs);
 
     parent = aInstance->mThreadNetif.GetMle().GetParent();
-    memcpy(aParentInfo->mExtAddress.m8, parent->mMacAddr.m8, OT_EXT_ADDRESS_SIZE);
+    memcpy(aParentInfo->mExtAddress.m8, &parent->GetExtAddress(), sizeof(aParentInfo->mExtAddress));
 
-    aParentInfo->mRloc16          = parent->mValid.mRloc16;
-    aParentInfo->mRouterId        = Mle::Mle::GetRouterId(parent->mValid.mRloc16);
-    aParentInfo->mNextHop         = parent->mNextHop;
-    aParentInfo->mPathCost        = parent->mCost;
-    aParentInfo->mLinkQualityIn   = parent->mLinkInfo.GetLinkQuality(aInstance->mThreadNetif.GetMac().GetNoiseFloor());
-    aParentInfo->mLinkQualityOut  = parent->mLinkQualityOut;
-    aParentInfo->mAge             = static_cast<uint8_t>(Timer::MsecToSec(Timer::GetNow() - parent->mLastHeard));
-    aParentInfo->mAllocated       = parent->mAllocated;
-    aParentInfo->mLinkEstablished = parent->mState == Neighbor::kStateValid;
+    aParentInfo->mRloc16          = parent->GetRloc16();
+    aParentInfo->mRouterId        = Mle::Mle::GetRouterId(parent->GetRloc16());
+    aParentInfo->mNextHop         = parent->GetNextHop();
+    aParentInfo->mPathCost        = parent->GetCost();
+    aParentInfo->mLinkQualityIn   = parent->GetLinkInfo().GetLinkQuality(aInstance->mThreadNetif.GetMac().GetNoiseFloor());
+    aParentInfo->mLinkQualityOut  = parent->GetLinkQualityOut();
+    aParentInfo->mAge             = static_cast<uint8_t>(Timer::MsecToSec(Timer::GetNow() - parent->GetLastHeard()));
+    aParentInfo->mAllocated       = parent->IsAllocated();
+    aParentInfo->mLinkEstablished = parent->GetState() == Neighbor::kStateValid;
 
 exit:
     return error;
@@ -503,7 +503,7 @@ ThreadError otThreadGetParentAverageRssi(otInstance *aInstance, int8_t *aParentR
     VerifyOrExit(aParentRssi != NULL, error = kThreadError_InvalidArgs);
 
     parent = aInstance->mThreadNetif.GetMle().GetParent();
-    *aParentRssi = parent->mLinkInfo.GetAverageRss();
+    *aParentRssi = parent->GetLinkInfo().GetAverageRss();
 
     VerifyOrExit(*aParentRssi != LinkQualityInfo::kUnknownRss, error = kThreadError_Failed);
 
@@ -519,7 +519,7 @@ ThreadError otThreadGetParentLastRssi(otInstance *aInstance, int8_t *aLastRssi)
     VerifyOrExit(aLastRssi != NULL, error = kThreadError_InvalidArgs);
 
     parent = aInstance->mThreadNetif.GetMle().GetParent();
-    *aLastRssi = parent->mLinkInfo.GetLastRss();
+    *aLastRssi = parent->GetLinkInfo().GetLastRss();
 
     VerifyOrExit(*aLastRssi != LinkQualityInfo::kUnknownRss, error = kThreadError_Failed);
 

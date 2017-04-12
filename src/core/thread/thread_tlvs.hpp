@@ -274,10 +274,21 @@ public:
     /**
      * This method sets the ML-EID IID.
      *
-     * @param[in]  aIid  A pointer to the ML-EID IID..
+     * @param[in]  aIid  A pointer to the ML-EID IID.
      *
      */
     void SetIid(const uint8_t *aIid) { memcpy(mIid, aIid, sizeof(mIid)); }
+
+    /**
+     * This method sets the ML-EID IID.
+     *
+     * @param[in]  aExtAddress  A reference to the MAC Extended Address.
+     *
+     */
+    void SetIid(const Mac::ExtAddress &aExtAddress) {
+        memcpy(mIid, aExtAddress.m8, sizeof(mIid));
+        mIid[0] ^= 0x2;
+    }
 
 private:
     uint8_t mIid[8];
