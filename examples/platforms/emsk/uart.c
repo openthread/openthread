@@ -75,7 +75,7 @@ ThreadError otPlatUartEnable(void)
     {
         consoleUart->uart_control(UART_CMD_SET_BAUD, (void *)(BOARD_CONSOLE_UART_BAUD));
         error = kThreadError_None;
-        DBG("Set Console UART Baudrate to 115200.\r\n");
+        DBG("Set Console UART Baudrate to %d.\r\n", BOARD_CONSOLE_UART_BAUD);
     }
     else if (stateUart == E_OK)
     {
