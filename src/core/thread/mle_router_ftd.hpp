@@ -65,6 +65,18 @@ class NetworkDataLeader;
  */
 
 /**
+* This structure represents the child information for persistent storage.
+*
+*/
+struct ChildInfo
+{
+    Mac::ExtAddress  mExtAddress;    ///< Extended Address
+    uint32_t         mTimeout;       ///< Timeout
+    uint16_t         mRloc16;        ///< RLOC16
+    uint8_t          mMode;          ///< The MLE device mode
+};
+
+/**
  * This class implements MLE functionality required by the Thread Router and Leader roles.
  *
  */
