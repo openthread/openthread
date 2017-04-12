@@ -121,7 +121,7 @@ ThreadError Leader::SendPetitionResponse(const Coap::Header &aRequestHeader, con
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoapServer().NewMessage(responseHeader, MeshCoP::kMeshCoPMessagePriority)) != NULL,
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapServer(), responseHeader)) != NULL,
                  error = kThreadError_NoBufs);
 
     state.Init();
@@ -211,7 +211,7 @@ ThreadError Leader::SendKeepAliveResponse(const Coap::Header &aRequestHeader, co
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoapServer().NewMessage(responseHeader, kMeshCoPMessagePriority)) != NULL,
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapServer(), responseHeader)) != NULL,
                  error = kThreadError_NoBufs);
 
     state.Init();
@@ -243,7 +243,7 @@ ThreadError Leader::SendDatasetChanged(const Ip6::Address &aAddress)
     header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(OPENTHREAD_URI_DATASET_CHANGED);
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMessage(header, kMeshCoPMessagePriority)) != NULL,
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapClient(), header)) != NULL,
                  error = kThreadError_NoBufs);
 
     messageInfo.SetPeerAddr(aAddress);

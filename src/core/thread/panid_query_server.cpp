@@ -135,7 +135,7 @@ ThreadError PanIdQueryServer::SendConflict(void)
     header.AppendUriPathOptions(OPENTHREAD_URI_PANID_CONFLICT);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMessage(header, MeshCoP::kMeshCoPMessagePriority)) != NULL,
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(mNetif.GetCoapClient(), header)) != NULL,
                  error = kThreadError_NoBufs);
 
     channelMask.Init();

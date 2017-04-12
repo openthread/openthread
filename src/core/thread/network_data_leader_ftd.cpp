@@ -314,7 +314,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Header &aRequestHeader, co
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoapServer().NewMessage(responseHeader, MeshCoP::kMeshCoPMessagePriority)) != NULL,
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(mNetif.GetCoapServer(), responseHeader)) != NULL,
                  error = kThreadError_NoBufs);
 
     for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
@@ -381,7 +381,7 @@ void Leader::SendCommissioningSetResponse(const Coap::Header &aRequestHeader, co
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoapServer().NewMessage(responseHeader, MeshCoP::kMeshCoPMessagePriority)) != NULL,
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(mNetif.GetCoapServer(), responseHeader)) != NULL,
                  error = kThreadError_NoBufs);
 
     state.Init();

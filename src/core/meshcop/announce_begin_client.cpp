@@ -81,7 +81,7 @@ ThreadError AnnounceBeginClient::SendRequest(uint32_t aChannelMask, uint8_t aCou
     header.AppendUriPathOptions(OPENTHREAD_URI_ANNOUNCE_BEGIN);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMessage(header, MeshCoP::kMeshCoPMessagePriority)) != NULL,
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(mNetif.GetCoapClient(), header)) != NULL,
                  error = kThreadError_NoBufs);
 
     sessionId.Init();

@@ -179,7 +179,7 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
     header.AppendUriPathOptions(OPENTHREAD_URI_RELAY_RX);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMessage(header, kMeshCoPMessagePriority)) != NULL,
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapClient(), header)) != NULL,
                  error = kThreadError_NoBufs);
 
     udpPort.Init();
@@ -266,7 +266,7 @@ void JoinerRouter::HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage,
     SuccessOrExit(error = Tlv::GetValueOffset(aMessage, Tlv::kJoinerDtlsEncapsulation, offset, length));
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
-    message->SetPriority(Coap::kMeshCoPMessagePriority);
+    message->SetPriority(kMeshCoPMessagePriority);
     message->SetLinkSecurityEnabled(false);
 
     while (length)
@@ -337,7 +337,7 @@ ThreadError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMes
     header.AppendUriPathOptions(OPENTHREAD_URI_JOINER_ENTRUST);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMessage(header, kMeshCoPMessagePriority)) != NULL,
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapClient(), header)) != NULL,
                  error = kThreadError_NoBufs);
     message->SetSubType(Message::kSubTypeJoinerEntrust);
 

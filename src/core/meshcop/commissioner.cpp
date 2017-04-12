@@ -424,7 +424,7 @@ ThreadError Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs,
         header.SetPayloadMarker();
     }
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMessage(header, kMeshCoPMessagePriority)) != NULL,
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapClient(), header)) != NULL,
                  error = kThreadError_NoBufs);
 
     if (aLength > 0)
@@ -491,7 +491,7 @@ ThreadError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDa
     header.AppendUriPathOptions(OPENTHREAD_URI_COMMISSIONER_SET);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMessage(header, kMeshCoPMessagePriority)) != NULL,
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapClient(), header)) != NULL,
                  error = kThreadError_NoBufs);
 
     if (aDataset.mIsLocatorSet)
@@ -596,7 +596,7 @@ ThreadError Commissioner::SendPetition(void)
     header.AppendUriPathOptions(OPENTHREAD_URI_LEADER_PETITION);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMessage(header, kMeshCoPMessagePriority)) != NULL,
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapClient(), header)) != NULL,
                  error = kThreadError_NoBufs);
 
     commissionerId.Init();
@@ -699,7 +699,7 @@ ThreadError Commissioner::SendKeepAlive(void)
     header.AppendUriPathOptions(OPENTHREAD_URI_LEADER_KEEP_ALIVE);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMessage(header, kMeshCoPMessagePriority)) != NULL,
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapClient(), header)) != NULL,
                  error = kThreadError_NoBufs);
 
     state.Init();
@@ -940,7 +940,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, 
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetSecureCoapServer().NewMessage(responseHeader, kMeshCoPMessagePriority)) != NULL,
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetSecureCoapServer(), responseHeader)) != NULL,
                  error = kThreadError_NoBufs);
 
     message->SetSubType(Message::kSubTypeJoinerFinalizeResponse);
@@ -1003,7 +1003,7 @@ ThreadError Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::Messag
     header.AppendUriPathOptions(OPENTHREAD_URI_RELAY_TX);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMessage(header, kMeshCoPMessagePriority)) != NULL,
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapClient(), header)) != NULL,
                  error = kThreadError_NoBufs);
 
     udpPort.Init();

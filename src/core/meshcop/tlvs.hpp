@@ -42,6 +42,7 @@
 #include <common/encoding.hpp>
 #include <common/message.hpp>
 #include <common/tlvs.hpp>
+#include <coap/coap_base.hpp>
 #include <meshcop/timestamp.hpp>
 
 using Thread::Encoding::Reverse32;
@@ -55,6 +56,16 @@ enum
 {
     kMeshCoPMessagePriority = Message::kPriorityHigh, // The priority for MeshCoP message
 };
+
+/**
+ * This function create Message for MeshCoP
+ *
+ */
+inline Message* NewMeshCoPMessage(Coap::CoapBase &aCoapBase, const Coap::Header &aHeader)
+{
+    return aCoapBase.NewMessage(aHeader, kMeshCoPMessagePriority);
+}
+
 
 /**
  * This class implements MeshCoP TLV generation and parsing.

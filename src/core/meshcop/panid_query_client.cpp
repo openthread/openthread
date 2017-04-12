@@ -77,7 +77,7 @@ ThreadError PanIdQueryClient::SendQuery(uint16_t aPanId, uint32_t aChannelMask, 
     header.AppendUriPathOptions(OPENTHREAD_URI_PANID_QUERY);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMessage(header, MeshCoP::kMeshCoPMessagePriority)) != NULL,
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(mNetif.GetCoapClient(), header)) != NULL,
                  error = kThreadError_NoBufs);
 
     sessionId.Init();
