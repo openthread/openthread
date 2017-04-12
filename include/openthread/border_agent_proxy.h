@@ -29,7 +29,7 @@
 /**
  * @file
  * @brief
- *   This file includes the OenThread API for jam detection feature.
+ *   This file includes the OpenThread API for Border Agent Proxy feature.
  */
 
 #ifndef OPENTHREAD_BORDER_AGENT_PROXY_H_
@@ -47,62 +47,73 @@
 extern "C" {
 #endif
 
-#define OPENTHREAD_ENABLE_BORDER_AGENT_PROXY 1
-#if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
-
 /**
- * @addtogroup jam-det  Jamming Detection
+ * @addtogroup border-agent-proxy  Border Agent Proxy
  *
  * @brief
- *   This module includes functions for signal jamming detection feature.
+ *   This module includes functions for signal border agent proxy feature.
  *
  * @{
  *
  */
 
 /**
- * This function pointer is called if signal jam detection is enabled and a jam is detected.
+ * This function pointer is called when a CoAP packet for border agent is received.
  *
- * @param[in]  aJamState Current jam state (`true` if jam is detected, `false` otherwise).
+ * @param[in]  aMessage  A pointer to the CoAP Message.
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void (*otBorderAgentProxyCallback)(otMessage *aMessage, void *aContext);
+typedef void (*otBorderAgentProxyStreamHandler)(otMessage *aMessage, void *aContext);
 
 /**
- * Start the jamming detection.
+ * Start the border agent proxy.
  *
  * @param[in]  aInstance            A pointer to an OpenThread instance.
- * @param[in]  aCallback            A pointer to a function called to notify of jamming state change.
+ * @param[in]  aHandler             A pointer to a function called to deliver packet to border agent.
  * @param[in]  aContext             A pointer to application-specific context.
  *
- * @retval kThreadErrorNone         Successfully started the jamming detection.
- * @retval kThreadErrorAlready      Jam detection has been started before.
+ * @retval kThreadErrorNone         Successfully started the border agent proxy.
+ * @retval kThreadErrorAlready      Border agent proxy has been started before.
  *
  */
-ThreadError otBorderAgentProxyStart(otInstance *aInstance, otBorderAgentProxyCallback aBorderAgentProxyCallback, void* aContext);
+ThreadError otBorderAgentProxyStart(otInstance *aInstance, otBorderAgentProxyStreamHandler aHandler, void* aContext);
 
 /**
- * Stop the jamming detection.
+ * Stop the border agent proxy.
  *
  * @param[in]  aInstance            A pointer to an OpenThread instance.
  *
- * @retval kThreadErrorNone         Successfully stopped the jamming detection.
- * @retval kThreadErrorAlready      Jam detection is already stopped.
+ * @retval kThreadErrorNone         Successfully stopped the border agent proxy.
+ * @retval kThreadErrorAlready      Border agent proxy is already stopped.
  *
  */
 ThreadError otBorderAgentProxyStop(otInstance *aInstance);
 
+/**
+ * Send packet through border agent proxy.
+ *
+ * @param[in]  aInstance            A pointer to an OpenThread instance.
+ * @param[in]  aMessage             A pointer to the CoAP Message.
+ *
+ * @retval kThreadErrorNone         Successfully stopped the border agent proxy.
+ *
+ */
 ThreadError otBorderAgentProxySend(otInstance *aInstance, otMessage *aMessage);
 
+/**
+ * Get the border agent proxy status (enabled/disabled)
+ *
+ * @param[in]  aInstance            A pointer to an OpenThread instance.
+ *
+ * @returns The border agent proxy status (true if enabled, false otherwise).
+ */
 bool otBorderAgentProxyIsEnabled(otInstance *aInstance);
 
 /**
  * @}
  *
  */
-
-#endif  // OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
 
 #ifdef __cplusplus
 }  // extern "C"

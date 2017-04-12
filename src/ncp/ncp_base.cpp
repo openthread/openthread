@@ -192,7 +192,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_JAM_DETECT_BUSY, &NcpBase::GetPropertyHandler_JAM_DETECT_BUSY },
     { SPINEL_PROP_JAM_DETECT_HISTORY_BITMAP, &NcpBase::GetPropertyHandler_JAM_DETECT_HISTORY_BITMAP },
 #endif
-    { SPINEL_PROP_BORDER_AGENT_PROXY_ENABLE, &NcpBase::GetPropertyHandler_BORDER_AGENT_PROXY_ENABLE },
+    { SPINEL_PROP_THREAD_BA_PROXY_ENABLE, &NcpBase::GetPropertyHandler_BA_PROXY_ENABLE },
 
     { SPINEL_PROP_CNTR_TX_PKT_TOTAL, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_TX_PKT_ACK_REQ, &NcpBase::GetPropertyHandler_MAC_CNTR },
@@ -282,7 +282,7 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
 
     { SPINEL_PROP_STREAM_NET_INSECURE, &NcpBase::SetPropertyHandler_STREAM_NET_INSECURE },
     { SPINEL_PROP_STREAM_NET, &NcpBase::SetPropertyHandler_STREAM_NET },
-    { SPINEL_PROP_STREAM_BORDER_AGENT_PROXY, &NcpBase::SetPropertyHandler_STREAM_BORDER_AGENT_PROXY },
+    { SPINEL_PROP_STREAM_BA_PROXY, &NcpBase::SetPropertyHandler_STREAM_BA_PROXY },
 
     { SPINEL_PROP_IPV6_ML_PREFIX, &NcpBase::SetPropertyHandler_IPV6_ML_PREFIX },
     { SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD, &NcpBase::SetPropertyHandler_IPV6_ICMP_PING_OFFLOAD },
@@ -313,7 +313,7 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_JAM_DETECT_BUSY, &NcpBase::SetPropertyHandler_JAM_DETECT_BUSY },
 #endif
 
-    { SPINEL_PROP_BORDER_AGENT_PROXY_ENABLE, &NcpBase::SetPropertyHandler_BORDER_AGENT_PROXY_ENABLE },
+    { SPINEL_PROP_THREAD_BA_PROXY_ENABLE, &NcpBase::SetPropertyHandler_BA_PROXY_ENABLE },
 
 #if OPENTHREAD_ENABLE_DIAG
     { SPINEL_PROP_NEST_STREAM_MFG, &NcpBase::SetPropertyHandler_NEST_STREAM_MFG },
@@ -604,12 +604,12 @@ ThreadError NcpBase::OutboundFrameEnd(void)
 // MARK: Outbound Datagram Handling
 // ----------------------------------------------------------------------------
 
-void NcpBase::HandleBorderAgentProxyCallback(otMessage *aMessage, void *aContext)
+void NcpBase::HandleBorderAgentProxyStream(otMessage *aMessage, void *aContext)
 {
-    static_cast<NcpBase *>(aContext)->HandleBorderAgentProxyCallback(aMessage);
+    static_cast<NcpBase *>(aContext)->HandleBorderAgentProxyStream(aMessage);
 }
 
-void NcpBase::HandleBorderAgentProxyCallback(otMessage *aMessage)
+void NcpBase::HandleBorderAgentProxyStream(otMessage *aMessage)
 {
     ThreadError errorCode = kThreadError_None;
     uint16_t length = otMessageGetLength(aMessage);
@@ -621,7 +621,7 @@ void NcpBase::HandleBorderAgentProxyCallback(otMessage *aMessage)
             SPINEL_DATATYPE_COMMAND_PROP_S SPINEL_DATATYPE_UINT16_S,
             SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
             SPINEL_CMD_PROP_VALUE_IS,
-            SPINEL_PROP_STREAM_BORDER_AGENT_PROXY,
+            SPINEL_PROP_STREAM_BA_PROXY,
             length
     ));
 
@@ -631,8 +631,6 @@ void NcpBase::HandleBorderAgentProxyCallback(otMessage *aMessage)
     // The aMessage is now owned by the OutboundFrame and will be freed when the frame is either successfully sent and
     // then removed, or if the frame gets discarded.
     aMessage = NULL;
-
-    // Append any metadata (rssi, lqi, channel, etc) here!
 
     SuccessOrExit(errorCode = OutboundFrameSend());
 
@@ -646,11 +644,6 @@ exit:
     if (errorCode != kThreadError_None)
     {
         SendLastStatus(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_STATUS_DROPPED);
-        //mDroppedOutboundIpFrameCounter++;
-    }
-    else
-    {
-        //mOutboundSecureIpFrameCounter++;
     }
 }
 
@@ -2886,7 +2879,7 @@ ThreadError NcpBase::GetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_k
     return SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
 }
 
-ThreadError NcpBase::GetPropertyHandler_BORDER_AGENT_PROXY_ENABLE(uint8_t header, spinel_prop_key_t key)
+ThreadError NcpBase::GetPropertyHandler_BA_PROXY_ENABLE(uint8_t header, spinel_prop_key_t key)
 {
    return SendPropertyUpdate(
                header,
@@ -4558,17 +4551,15 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spin
     return errorCode;
 }
 
-ThreadError NcpBase::SetPropertyHandler_STREAM_BORDER_AGENT_PROXY(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+ThreadError NcpBase::SetPropertyHandler_STREAM_BA_PROXY(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                    uint16_t value_len)
 {
     spinel_ssize_t parsedLength;
     ThreadError errorCode = kThreadError_None;
     const uint8_t *frame_ptr(NULL);
     unsigned int frame_len(0);
-    const uint8_t *meta_ptr(NULL);
-    unsigned int meta_len(0);
 
-    // STREAM_BORDER_AGENT_PROXY requires layer 2 security.
+    // STREAM_BA_PROXY requires layer 2 security.
     otMessage *message = otIp6NewMessage(mInstance, true);
 
     if (message == NULL)
@@ -4580,20 +4571,19 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_BORDER_AGENT_PROXY(uint8_t header
         parsedLength = spinel_datatype_unpack(
                            value_ptr,
                            value_len,
-                           SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_DATA_S,
+                           SPINEL_DATATYPE_DATA_WLEN_S,
                            &frame_ptr,
-                           &frame_len,
-                           &meta_ptr,
-                           &meta_len
+                           &frame_len
                        );
 
-        // We ignore metadata for now.
-        // May later include TX power, allow retransmits, etc...
-        (void)meta_ptr;
-        (void)meta_len;
-        (void)parsedLength;
-
-        errorCode = otMessageAppend(message, frame_ptr, static_cast<uint16_t>(frame_len));
+        if (parsedLength > 0)
+        {
+            errorCode = otMessageAppend(message, frame_ptr, static_cast<uint16_t>(frame_len));
+        }
+        else
+        {
+            errorCode = kThreadError_Parse;
+        }
     }
 
     if (errorCode == kThreadError_None)
@@ -4607,8 +4597,6 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_BORDER_AGENT_PROXY(uint8_t header
 
     if (errorCode == kThreadError_None)
     {
-        //mInboundSecureIpFrameCounter++;
-
         if (SPINEL_HEADER_GET_TID(header) != 0)
         {
             // Only send a successful status update if
@@ -4618,10 +4606,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_BORDER_AGENT_PROXY(uint8_t header
     }
     else
     {
-        //mDroppedInboundIpFrameCounter++;
-
         errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
-
     }
 
     (void)key;
@@ -5620,7 +5605,7 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header
     return errorCode;
 }
 
-ThreadError NcpBase::SetPropertyHandler_BORDER_AGENT_PROXY_ENABLE(uint8_t header, spinel_prop_key_t key,
+ThreadError NcpBase::SetPropertyHandler_BA_PROXY_ENABLE(uint8_t header, spinel_prop_key_t key,
                                                           const uint8_t *value_ptr, uint16_t value_len)
 {
     bool isEnabled;
@@ -5638,7 +5623,7 @@ ThreadError NcpBase::SetPropertyHandler_BORDER_AGENT_PROXY_ENABLE(uint8_t header
     {
         if (isEnabled)
         {
-            otBorderAgentProxyStart(mInstance, &NcpBase::HandleBorderAgentProxyCallback, this);
+            otBorderAgentProxyStart(mInstance, &NcpBase::HandleBorderAgentProxyStream, this);
         }
         else
         {

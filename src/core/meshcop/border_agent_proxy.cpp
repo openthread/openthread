@@ -31,7 +31,7 @@
  *   This file implements a BorderAgentProxy role.
  */
 
-#define WPP_NAME "commissioner.tmh"
+#define WPP_NAME "border_agent_proxy.tmh"
 
 #ifdef OPENTHREAD_CONFIG_FILE
 #include OPENTHREAD_CONFIG_FILE
@@ -39,23 +39,18 @@
 #include <openthread-config.h>
 #endif
 
-#include <stdio.h>
-#include <string.h>
-
-#include "openthread/platform/random.h"
-
-#include <common/logging.hpp>
-#include <coap/coap_header.hpp>
-#include <thread/thread_netif.hpp>
-#include <thread/thread_tlvs.hpp>
-#include <thread/thread_uris.hpp>
 #include <openthread/types.h>
+#include <coap/coap_header.hpp>
+#include <thread/thread_uris.hpp>
+#include <thread/thread_tlvs.hpp>
+#include <net/ip6_address.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap64;
+#include "border_agent_proxy.hpp"
 
 namespace Thread {
 namespace MeshCoP {
 
+OT_TOOL_PACKED_BEGIN
 class BorderAgentProxyMeta
 {
 public:
@@ -65,12 +60,11 @@ public:
     }
 
     BorderAgentProxyMeta(const Message &aMessage) {
-        aMessage.Read(aMessage.GetLength() - sizeof(mAddress) - sizeof(mPort), sizeof(mAddress), mAddress.mFields.m8);
-        aMessage.Read(aMessage.GetLength() - sizeof(mPort), sizeof(mPort), &mPort);
+        aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
     }
 
     const Ip6::Address &GetAddress() {
-        return *static_cast<Ip6::Address *>(&mAddress);
+        return *static_cast<const Ip6::Address *>(&mAddress);
     }
 
     uint16_t GetPort() {
@@ -84,28 +78,26 @@ public:
 private:
     otIp6Address mAddress;
     uint16_t     mPort;
-};
+} OT_TOOL_PACKED_END;
 
-BorderAgentProxy::BorderAgentProxy(otInstance *aInstance, Coap::Server &aCoapServer, Coap::Client &aCoapClient):
+BorderAgentProxy::BorderAgentProxy(Coap::Server &aCoapServer, Coap::Client &aCoapClient):
     mRelayReceive(OPENTHREAD_URI_RELAY_RX, &BorderAgentProxy::HandleRelayReceive, this),
-    mBorderAgentProxyCallback(NULL), mContext(NULL),
-    mInstance(aInstance),
+    mBorderAgentProxyStreamHandler(NULL), mContext(NULL),
     mCoapServer(aCoapServer), mCoapClient(aCoapClient)
 {
 }
 
-ThreadError BorderAgentProxy::Start(otBorderAgentProxyCallback aBorderAgentProxyCallback, void *aContext)
+ThreadError BorderAgentProxy::Start(otBorderAgentProxyStreamHandler aBorderAgentProxyStreamHandler, void *aContext)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(!mBorderAgentProxyCallback, error = kThreadError_InvalidState);
+    VerifyOrExit(!mBorderAgentProxyStreamHandler, error = kThreadError_InvalidState);
 
     mCoapServer.AddResource(mRelayReceive);
-    mBorderAgentProxyCallback = aBorderAgentProxyCallback;
+    mBorderAgentProxyStreamHandler = aBorderAgentProxyStreamHandler;
     mContext = aContext;
 
 exit:
-    otLogInfoMle(mInstance, "border agent proxy started. error=%d", error);
     return error;
 }
 
@@ -113,11 +105,11 @@ ThreadError BorderAgentProxy::Stop(void)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(mBorderAgentProxyCallback != NULL, error = kThreadError_InvalidState);
+    VerifyOrExit(mBorderAgentProxyStreamHandler != NULL, error = kThreadError_InvalidState);
 
     mCoapServer.RemoveResource(mRelayReceive);
 
-    mBorderAgentProxyCallback = NULL;
+    mBorderAgentProxyStreamHandler = NULL;
 
 exit:
     return error;
@@ -125,62 +117,52 @@ exit:
 
 bool BorderAgentProxy::IsEnabled(void) const
 {
-    return mBorderAgentProxyCallback != NULL;
+    return mBorderAgentProxyStreamHandler != NULL;
 }
 
 void BorderAgentProxy::HandleRelayReceive(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                           const otMessageInfo *aMessageInfo)
 {
-    static_cast<BorderAgentProxy *>(aContext)->HandleRelayReceive(
+    static_cast<BorderAgentProxy *>(aContext)->DelieverMessage(
         *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
         *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
-}
-
-void BorderAgentProxy::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage,
-                                          const Ip6::MessageInfo &aMessageInfo)
-{
-    ThreadError error;
-    Message *message;
-
-    VerifyOrExit(mBorderAgentProxyCallback != NULL, error = kThreadError_InvalidState);
-
-    VerifyOrExit((message = aMessage.Clone()) != NULL, error = kThreadError_NoBufs);
-
-    {
-        message->RemoveHeader(message->GetOffset() - aHeader.GetLength());
-        BorderAgentProxyMeta meta(aMessageInfo.GetPeerAddr(), aMessageInfo.GetPeerPort());
-        SuccessOrExit(error = message->Append(meta.GetBytes(), sizeof(meta)));
-        mBorderAgentProxyCallback(message, mContext);
-    }
-
-exit:
-
-    (void)aHeader;
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        message->Free();
-    }
-
-    otLogInfoMle(mInstance, "deliver to host error=%d", error);
-    return;
 }
 
 void BorderAgentProxy::HandleResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                       const otMessageInfo *aMessageInfo, ThreadError aResult)
 {
-    static_cast<BorderAgentProxy *>(aContext)->HandleResponse(*static_cast<Coap::Header *>(aHeader),
-                                                              *static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
+    if (aResult != kThreadError_None)
+    {
+        return;
+    }
+
+    static_cast<BorderAgentProxy *>(aContext)->DelieverMessage(*static_cast<Coap::Header *>(aHeader),
+                                                               *static_cast<Message *>(aMessage),
+                                                               *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-void BorderAgentProxy::HandleResponse(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
-                                      ThreadError aResult)
+void BorderAgentProxy::DelieverMessage(Coap::Header &aHeader, Message &aMessage,
+                                       const Ip6::MessageInfo &aMessageInfo)
 {
-    otLogInfoMle(mInstance, "response wrong error=%d", aResult);
+    ThreadError error;
+    Message *message = NULL;
 
-    if (aResult == kThreadError_None)
+    VerifyOrExit(mBorderAgentProxyStreamHandler != NULL, error = kThreadError_InvalidState);
+
+    VerifyOrExit((message = aMessage.Clone()) != NULL, error = kThreadError_NoBufs);
+    message->RemoveHeader(message->GetOffset() - aHeader.GetLength());
+
     {
-        HandleRelayReceive(aHeader, aMessage, aMessageInfo);
+        BorderAgentProxyMeta meta(aMessageInfo.GetPeerAddr(), aMessageInfo.GetPeerPort());
+        SuccessOrExit(error = message->Append(meta.GetBytes(), sizeof(meta)));
+        mBorderAgentProxyStreamHandler(message, mContext);
+    }
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        message->Free();
     }
 }
 
@@ -188,9 +170,6 @@ ThreadError BorderAgentProxy::Send(Message &aMessage)
 {
     ThreadError error = kThreadError_None;
     Ip6::MessageInfo messageInfo;
-
-    (void)mInstance;
-    otLogInfoMle(mInstance, "-------------%s", __func__);
 
     BorderAgentProxyMeta meta(aMessage);
     aMessage.SetLength(aMessage.GetLength() - sizeof(meta));
@@ -206,6 +185,11 @@ ThreadError BorderAgentProxy::Send(Message &aMessage)
     else
     {
         error = mCoapServer.SendMessage(aMessage, messageInfo);
+    }
+
+    if (error != kThreadError_None)
+    {
+        aMessage.Free();
     }
 
     return error;

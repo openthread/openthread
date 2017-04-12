@@ -29,7 +29,7 @@
 /**
  * @file
  * @brief
- *   This file includes the OenThread API for jam detection feature.
+ *   This file includes the OpenThread API for jam detection feature.
  */
 
 #ifndef OPENTHREAD_JAM_DETECTION_H_

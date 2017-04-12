@@ -28,10 +28,8 @@
 
 /**
  * @file
- *   This file implements the OpenThread UDP API.
+ *   This file implements the OpenThread Border Agent Proxy API.
  */
-
-#include "openthread/commissioner.h"
 
 #include "openthread-instance.h"
 
@@ -41,9 +39,7 @@ using namespace Thread;
 extern "C" {
 #endif
 
-#if OPENTHREAD_ENABLE_COMMISSIONER
-
-ThreadError otBorderAgentProxyStart(otInstance *aInstance, otBorderAgentProxyCallback aBorderAgentProxyCallback,
+ThreadError otBorderAgentProxyStart(otInstance *aInstance, otBorderAgentProxyStreamHandler aBorderAgentProxyCallback,
                                     void *aContext)
 {
     return aInstance->mThreadNetif.GetBorderAgentProxy().Start(aBorderAgentProxyCallback, aContext);
@@ -63,8 +59,6 @@ bool otBorderAgentProxyIsEnabled(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetBorderAgentProxy().IsEnabled();
 }
-
-#endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
 #ifdef __cplusplus
 }  // extern "C"

@@ -53,15 +53,7 @@ public:
      * @param[in]  aThreadNetif  A reference to the Thread network interface.
      *
      */
-    BorderAgentProxy(otInstance *aInstance, Coap::Server &aCoapServer, Coap::Client &aCoapClient);
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    //otInstance *GetInstance(void);
+    BorderAgentProxy(Coap::Server &aCoapServer, Coap::Client &aCoapClient);
 
     /**
      * This method starts the BorderAgentProxy service.
@@ -69,7 +61,7 @@ public:
      * @retval kThreadError_None  Successfully started the BorderAgentProxy service.
      *
      */
-    ThreadError Start(otBorderAgentProxyCallback aBorderAgentProxyCallback, void* aContext);
+    ThreadError Start(otBorderAgentProxyStreamHandler aBorderAgentProxyStreamHandler, void* aContext);
 
     /**
      * This method stops the BorderAgentProxy service.
@@ -88,18 +80,15 @@ private:
     static void HandleRelayReceive(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                    const otMessageInfo *aMessageInfo);
 
-    void HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
     static void HandleResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                    const otMessageInfo *aMessageInfo, ThreadError aResult);
 
-    void HandleResponse(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo, ThreadError aResult);
+    void DelieverMessage(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
 
     Coap::Resource mRelayReceive;
-    otBorderAgentProxyCallback mBorderAgentProxyCallback;
+    otBorderAgentProxyStreamHandler mBorderAgentProxyStreamHandler;
     void* mContext;
-
-    otInstance *mInstance;
 
     Coap::Server &mCoapServer;
     Coap::Client &mCoapClient;

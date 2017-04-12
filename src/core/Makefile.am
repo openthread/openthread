@@ -270,6 +270,7 @@ HEADERS_COMMON                      = \
     mac/mac_whitelist_impl.hpp        \
     mac/mac_whitelist_stub.hpp        \
     meshcop/announce_begin_client.hpp \
+    meshcop/border_agent_proxy.hpp    \
     meshcop/commissioner.hpp          \
     meshcop/dataset.hpp               \
     meshcop/dataset_manager.hpp       \

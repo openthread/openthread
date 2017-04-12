@@ -48,6 +48,7 @@ PRETTY_SUBDIRS                          = \
 
 openthread_headers                      = \
     cli.h                                 \
+    border_agent_proxy.h                  \
     coap.h                                \
     commissioner.h                        \
     crypto.h                              \
