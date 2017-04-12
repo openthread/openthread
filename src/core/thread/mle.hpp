@@ -142,6 +142,15 @@ struct NetworkInfo
 };
 
 /**
+* This structure represents the parent information for persistent storage.
+*
+*/
+struct ParentInfo
+{
+    Mac::ExtAddress  mExtAddress;   ///< Extended Address
+};
+
+/**
  * This class implements MLE Header generation and parsing.
  *
  */
