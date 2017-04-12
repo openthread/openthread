@@ -45,7 +45,7 @@ Want to try OpenThread? The quickest way to get started is to run through our [S
 
 ### Next Steps
 
-The Codelab shows you how easy it is use to OpenThread to simulate a Thread network.  Once complete:
+The Codelab shows you how easy it is use to OpenThread to simulate a Thread network. Once complete:
 
 1. Learn more about the [OpenThread architecture and features](#openthread-features)
 1. Get familiar with [platforms and devices that support OpenThread](#who-supports-openthread)
@@ -56,18 +56,16 @@ The Codelab shows you how easy it is use to OpenThread to simulate a Thread netw
 
 OpenThread implements all features defined in the [Thread 1.1.1 specification](http://threadgroup.org/technology/ourtechnology#specifications), including all Thread networking layers (IPv6, 6LoWPAN, IEEE 802.15.4 with MAC security, Mesh Link Establishment, Mesh Routing) and device roles.
 
-OpenThread also supports both single-on-chip (SoC) and network co-processor (NCP) designs.
+OpenThread supports both single-on-chip (SoC) and network co-processor (NCP) designs. Other features and enhancements include:
 
-Other features and enhancements include:
-
-* IPv6 configuration and raw data interface
-* UDP sockets
 * Application support and services
+    * IPv6 configuration and raw data interface
+    * UDP sockets
     * CoAP client and server
     * DHCPv6 client and server
     * DNSv6 client
     * Command Line Interface (CLI)
-* NCP support:
+* NCP support
     * Spinel - general purpose NCP protocol
     * `wpantund` - user-space NCP network interface driver/daemon
     * Sniffer support via NCP Spinel nodes
@@ -88,10 +86,10 @@ OpenThread has been ported to several devices and platforms. Build examples are 
 
 ### IEEE 802.15.4 Platform Support
 
-* [Dialog Semiconductor DA15000 OpenThread Sandbox Development Kit](https://github.com/openthread/openthread/wiki/Platforms#dialog-da15000)
-* [Nordic Semiconductor nRF52840 SoC](https://github.com/openthread/openthread/wiki/Platforms#nordic-semiconductor-nrf52840)
-* [Texas Instruments SimpleLink CC2538](https://github.com/openthread/openthread/wiki/Platforms#texas-instruments-cc2538)
-* [Texas Instruments SimpleLink CC2650](https://github.com/openthread/openthread/wiki/Platforms#texas-instruments-cc2650)
+* [Dialog Semiconductor DA15000](https://github.com/openthread/openthread/wiki/Platforms#dialog-da15000)
+* [Nordic Semiconductor nRF52840](https://github.com/openthread/openthread/wiki/Platforms#nordic-semiconductor-nrf52840)
+* [Texas Instruments CC2538](https://github.com/openthread/openthread/wiki/Platforms#texas-instruments-cc2538)
+* [Texas Instruments CC2650](https://github.com/openthread/openthread/wiki/Platforms#texas-instruments-cc2650)
 * [POSIX Emulation](https://github.com/openthread/openthread/wiki/Platforms#posix-emulation)
 
 See the [Wiki Platform page](https://github.com/openthread/openthread/wiki/Platforms) for more detailed information on supported platforms.
