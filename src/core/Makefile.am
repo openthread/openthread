@@ -299,6 +299,7 @@ noinst_HEADERS                      = \
     meshcop/leader.hpp                \
     meshcop/leader_ftd.hpp            \
     meshcop/leader_mtd.hpp            \
+    meshcop/meshcop.hpp               \
     meshcop/panid_query_client.hpp    \
     meshcop/timestamp.hpp             \
     meshcop/tlvs.hpp                  \
