@@ -50,40 +50,11 @@
 namespace Thread {
 namespace MeshCoP {
 
-OT_TOOL_PACKED_BEGIN
-class BorderAgentProxyMeta
-{
-public:
-    BorderAgentProxyMeta(const otIp6Address &aAddress, uint16_t aPort) {
-        mAddress = aAddress;
-        mPort = HostSwap16(aPort);
-    }
-
-    BorderAgentProxyMeta(const Message &aMessage) {
-        aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
-    }
-
-    const Ip6::Address &GetAddress() {
-        return *static_cast<const Ip6::Address *>(&mAddress);
-    }
-
-    uint16_t GetPort() {
-        return HostSwap16(mPort);
-    }
-
-    const uint8_t *GetBytes() {
-        return (uint8_t *)this;
-    }
-
-private:
-    otIp6Address mAddress;
-    uint16_t     mPort;
-} OT_TOOL_PACKED_END;
-
-BorderAgentProxy::BorderAgentProxy(Coap::Server &aCoapServer, Coap::Client &aCoapClient):
+BorderAgentProxy::BorderAgentProxy(const Ip6::Address &aMeshLocal16, Coap::Server &aCoapServer,
+                                   Coap::Client &aCoapClient):
     mRelayReceive(OPENTHREAD_URI_RELAY_RX, &BorderAgentProxy::HandleRelayReceive, this),
     mBorderAgentProxyStreamHandler(NULL), mContext(NULL),
-    mCoapServer(aCoapServer), mCoapClient(aCoapClient)
+    mMeshLocal16(aMeshLocal16), mCoapServer(aCoapServer), mCoapClient(aCoapClient)
 {
 }
 
@@ -144,7 +115,9 @@ void BorderAgentProxy::HandleResponse(void *aContext, otCoapHeader *aHeader, otM
 void BorderAgentProxy::DelieverMessage(Coap::Header &aHeader, Message &aMessage,
                                        const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadError error;
+    ThreadError error = kThreadError_None;
+    uint16_t rloc;
+    uint16_t port;
     Message *message = NULL;
 
     VerifyOrExit(mBorderAgentProxyStreamHandler != NULL, error = kThreadError_InvalidState);
@@ -152,11 +125,9 @@ void BorderAgentProxy::DelieverMessage(Coap::Header &aHeader, Message &aMessage,
     VerifyOrExit((message = aMessage.Clone()) != NULL, error = kThreadError_NoBufs);
     message->RemoveHeader(message->GetOffset() - aHeader.GetLength());
 
-    {
-        BorderAgentProxyMeta meta(aMessageInfo.GetPeerAddr(), aMessageInfo.GetPeerPort());
-        SuccessOrExit(error = message->Append(meta.GetBytes(), sizeof(meta)));
-        mBorderAgentProxyStreamHandler(message, mContext);
-    }
+    rloc = HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]);
+    port = aMessageInfo.GetPeerPort();
+    mBorderAgentProxyStreamHandler(message, rloc, port, mContext);
 
 exit:
 
@@ -166,18 +137,16 @@ exit:
     }
 }
 
-ThreadError BorderAgentProxy::Send(Message &aMessage)
+ThreadError BorderAgentProxy::Send(Message &aMessage, uint16_t aRloc, uint16_t aPort)
 {
     ThreadError error = kThreadError_None;
     Ip6::MessageInfo messageInfo;
 
-    BorderAgentProxyMeta meta(aMessage);
-    aMessage.SetLength(aMessage.GetLength() - sizeof(meta));
+    messageInfo.SetPeerAddr(mMeshLocal16);
+    messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(aRloc);
+    messageInfo.SetPeerPort(aPort);
 
-    messageInfo.SetPeerAddr(meta.GetAddress());
-    messageInfo.SetPeerPort(meta.GetPort());
-
-    if (meta.GetPort() == kCoapUdpPort)
+    if (aPort == kCoapUdpPort)
     {
         // this is request to server, send with client
         error = mCoapClient.SendMessage(aMessage, messageInfo, BorderAgentProxy::HandleResponse, this);

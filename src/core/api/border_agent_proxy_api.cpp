@@ -50,9 +50,9 @@ ThreadError otBorderAgentProxyStop(otInstance *aInstance)
     return aInstance->mThreadNetif.GetBorderAgentProxy().Stop();
 }
 
-ThreadError otBorderAgentProxySend(otInstance *aInstance, otMessage *aMessage)
+ThreadError otBorderAgentProxySend(otInstance *aInstance, otMessage *aMessage, uint16_t aRloc, uint16_t aPort)
 {
-    return aInstance->mThreadNetif.GetBorderAgentProxy().Send(*static_cast<Message *>(aMessage));
+    return aInstance->mThreadNetif.GetBorderAgentProxy().Send(*static_cast<Message *>(aMessage), aRloc, aPort);
 }
 
 bool otBorderAgentProxyIsEnabled(otInstance *aInstance)

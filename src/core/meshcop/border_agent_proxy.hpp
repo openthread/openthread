@@ -53,7 +53,7 @@ public:
      * @param[in]  aThreadNetif  A reference to the Thread network interface.
      *
      */
-    BorderAgentProxy(Coap::Server &aCoapServer, Coap::Client &aCoapClient);
+    BorderAgentProxy(const Ip6::Address &aMeshLocal16, Coap::Server &aCoapServer, Coap::Client &aCoapClient);
 
     /**
      * This method starts the BorderAgentProxy service.
@@ -71,7 +71,7 @@ public:
      */
     ThreadError Stop(void);
 
-    ThreadError Send(Message &aMessage);
+    ThreadError Send(Message &aMessage, uint16_t aRloc, uint16_t aPort);
 
     bool IsEnabled(void) const;
 
@@ -90,6 +90,7 @@ private:
     otBorderAgentProxyStreamHandler mBorderAgentProxyStreamHandler;
     void *mContext;
 
+    const Ip6::Address &mMeshLocal16;
     Coap::Server &mCoapServer;
     Coap::Client &mCoapClient;
 };

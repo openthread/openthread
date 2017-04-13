@@ -147,9 +147,9 @@ private:
     /**
      * Trampoline for HandleBorderAgentProxyStream().
      */
-    static void HandleBorderAgentProxyStream(otMessage *aMessage, void *aContext);
+    static void HandleBorderAgentProxyStream(otMessage *aMessage, uint16_t aRloc, uint16_t aPort, void *aContext);
 
-    void HandleBorderAgentProxyStream(otMessage *aMessage);
+    void HandleBorderAgentProxyStream(otMessage *aMessage, uint16_t aRloc, uint16_t aPort);
 
     /**
      * Trampoline for HandleDatagramFromStack().

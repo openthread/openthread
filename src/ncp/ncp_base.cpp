@@ -604,12 +604,12 @@ ThreadError NcpBase::OutboundFrameEnd(void)
 // MARK: Outbound Datagram Handling
 // ----------------------------------------------------------------------------
 
-void NcpBase::HandleBorderAgentProxyStream(otMessage *aMessage, void *aContext)
+void NcpBase::HandleBorderAgentProxyStream(otMessage *aMessage, uint16_t aRloc, uint16_t aPort, void *aContext)
 {
-    static_cast<NcpBase *>(aContext)->HandleBorderAgentProxyStream(aMessage);
+    static_cast<NcpBase *>(aContext)->HandleBorderAgentProxyStream(aMessage, aRloc, aPort);
 }
 
-void NcpBase::HandleBorderAgentProxyStream(otMessage *aMessage)
+void NcpBase::HandleBorderAgentProxyStream(otMessage *aMessage, uint16_t aRloc, uint16_t aPort)
 {
     ThreadError errorCode = kThreadError_None;
     uint16_t length = otMessageGetLength(aMessage);
@@ -626,6 +626,8 @@ void NcpBase::HandleBorderAgentProxyStream(otMessage *aMessage)
     ));
 
     SuccessOrExit(errorCode = OutboundFrameFeedMessage(aMessage));
+
+    SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT16_S SPINEL_DATATYPE_UINT16_S, aRloc, aPort));
 
     // Set the aMessage pointer to NULL, to indicate that it does not need to be freed at the exit.
     // The aMessage is now owned by the OutboundFrame and will be freed when the frame is either successfully sent and
@@ -4558,6 +4560,8 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_BA_PROXY(uint8_t header, spinel_p
     ThreadError errorCode = kThreadError_None;
     const uint8_t *frame_ptr(NULL);
     unsigned int frame_len(0);
+    uint16_t rloc;
+    uint16_t port;
 
     // STREAM_BA_PROXY requires layer 2 security.
     otMessage *message = otIp6NewMessage(mInstance, true);
@@ -4571,9 +4575,11 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_BA_PROXY(uint8_t header, spinel_p
         parsedLength = spinel_datatype_unpack(
                            value_ptr,
                            value_len,
-                           SPINEL_DATATYPE_DATA_WLEN_S,
+                           SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_UINT16_S SPINEL_DATATYPE_UINT16_S,
                            &frame_ptr,
-                           &frame_len
+                           &frame_len,
+                           &rloc,
+                           &port
                        );
 
         if (parsedLength > 0)
@@ -4588,7 +4594,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_BA_PROXY(uint8_t header, spinel_p
 
     if (errorCode == kThreadError_None)
     {
-        errorCode = otBorderAgentProxySend(mInstance, message);
+        errorCode = otBorderAgentProxySend(mInstance, message, rloc, port);
     }
     else if (message)
     {
