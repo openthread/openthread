@@ -77,7 +77,7 @@ typedef void (*otBorderAgentProxyStreamHandler)(otMessage *aMessage, void *aCont
  * @retval kThreadErrorAlready      Border agent proxy has been started before.
  *
  */
-ThreadError otBorderAgentProxyStart(otInstance *aInstance, otBorderAgentProxyStreamHandler aHandler, void* aContext);
+ThreadError otBorderAgentProxyStart(otInstance *aInstance, otBorderAgentProxyStreamHandler aHandler, void *aContext);
 
 /**
  * Stop the border agent proxy.

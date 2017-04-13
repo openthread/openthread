@@ -61,7 +61,7 @@ public:
      * @retval kThreadError_None  Successfully started the BorderAgentProxy service.
      *
      */
-    ThreadError Start(otBorderAgentProxyStreamHandler aBorderAgentProxyStreamHandler, void* aContext);
+    ThreadError Start(otBorderAgentProxyStreamHandler aBorderAgentProxyStreamHandler, void *aContext);
 
     /**
      * This method stops the BorderAgentProxy service.
@@ -81,14 +81,14 @@ private:
                                    const otMessageInfo *aMessageInfo);
 
     static void HandleResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                                   const otMessageInfo *aMessageInfo, ThreadError aResult);
+                               const otMessageInfo *aMessageInfo, ThreadError aResult);
 
     void DelieverMessage(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 
     Coap::Resource mRelayReceive;
     otBorderAgentProxyStreamHandler mBorderAgentProxyStreamHandler;
-    void* mContext;
+    void *mContext;
 
     Coap::Server &mCoapServer;
     Coap::Client &mCoapClient;
