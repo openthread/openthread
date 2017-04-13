@@ -56,7 +56,6 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     Mle(aThreadNetif),
     mAdvertiseTimer(aThreadNetif.GetIp6().mTimerScheduler, &MleRouter::HandleAdvertiseTimer, NULL, this),
     mStateUpdateTimer(aThreadNetif.GetIp6().mTimerScheduler, &MleRouter::HandleStateUpdateTimer, this),
-    mChildUpdateRequestTimer(aThreadNetif.GetIp6().mTimerScheduler, &MleRouter::HandleChildUpdateRequestTimer, this),
     mAddressSolicit(OPENTHREAD_URI_ADDRESS_SOLICIT, &MleRouter::HandleAddressSolicit, this),
     mAddressRelease(OPENTHREAD_URI_ADDRESS_RELEASE, &MleRouter::HandleAddressRelease, this)
 {
@@ -74,6 +73,7 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     mLeaderWeight = kLeaderWeight;
     mFixedLeaderPartitionId = 0;
     mMaxChildrenAllowed = kMaxChildren;
+    mIsRouterRestoringChildren = false;
 
     SetRouterId(kInvalidRouterId);
     mPreviousPartitionId = 0;
@@ -406,7 +406,7 @@ ThreadError MleRouter::SetStateRouter(uint16_t aRloc16)
     {
         if (mChildren[i].GetState() == Neighbor::kStateRestored)
         {
-            mChildUpdateRequestTimer.Start(kChildUpdateRequestPeriod);
+            mIsRouterRestoringChildren = true;
             break;
         }
     }
@@ -447,7 +447,7 @@ ThreadError MleRouter::SetStateLeader(uint16_t aRloc16)
     {
         if (mChildren[i].GetState() == Neighbor::kStateRestored)
         {
-            mChildUpdateRequestTimer.Start(kChildUpdateRequestPeriod);
+            mIsRouterRestoringChildren = true;
             break;
         }
     }
@@ -1766,6 +1766,26 @@ void MleRouter::HandleStateUpdateTimer(void)
         break;
     }
 
+    if (mIsRouterRestoringChildren)
+    {
+        bool hasRestoringChildren = false;
+
+        for (uint8_t i = 0; i < mMaxChildrenAllowed; i++)
+        {
+            if (mChildren[i].GetState() == Neighbor::kStateRestored)
+            {
+                SendChildUpdateRequest(&mChildren[i]);
+                hasRestoringChildren = true;
+            }
+        }
+
+        // no child to restore
+        if (!hasRestoringChildren)
+        {
+            mIsRouterRestoringChildren = false;
+        }
+    }
+
     // update children state
     for (int i = 0; i < mMaxChildrenAllowed; i++)
     {
@@ -1829,36 +1849,6 @@ void MleRouter::HandleStateUpdateTimer(void)
     }
 
     mStateUpdateTimer.Start(kStateUpdatePeriod);
-
-exit:
-    return;
-}
-
-void MleRouter::HandleChildUpdateRequestTimer(void *aContext)
-{
-    static_cast<MleRouter *>(aContext)->HandleChildUpdateRequestTimer();
-}
-
-void MleRouter::HandleChildUpdateRequestTimer(void)
-{
-    VerifyOrExit(GetDeviceState() == kDeviceStateRouter || GetDeviceState() == kDeviceStateLeader);
-
-    for (int i = 0; i < mMaxChildrenAllowed; i++)
-    {
-        if (mChildren[i].GetState() == Neighbor::kStateRestored)
-        {
-            SendChildUpdateRequest(&mChildren[i]);
-            mChildren[i].SetState(Neighbor::kStateChildUpdateRequest);
-
-            if (mChildren[i].IsRxOnWhenIdle())
-            {
-                mChildren[i].SetTimeout(Timer::MsecToSec(kMaxChildUpdateResponseTimeout));
-            }
-
-            mChildUpdateRequestTimer.Start(kChildUpdateRequestPeriod);
-            break;
-        }
-    }
 
 exit:
     return;
@@ -2679,7 +2669,22 @@ ThreadError MleRouter::SendChildUpdateRequest(Child *aChild)
     Ip6::Address destination;
     Message *message;
 
+    if (!aChild->IsRxOnWhenIdle())
+    {
+        uint8_t childIndex = mNetif.GetMle().GetChildIndex(*aChild);
+
+        // No need to send "Child Update Request" to the sleepy child if there is one already queued for it.
+        for (message = mNetif.GetMeshForwarder().GetSendQueue().GetHead(); message; message = message->GetNext())
+        {
+            if (message->GetChildMask(childIndex) && message->GetSubType() == Message::kSubTypeMleChildUpdateRequest)
+            {
+                ExitNow();
+            }
+        }
+    }
+
     VerifyOrExit((message = NewMleMessage()) != NULL);
+    message->SetSubType(Message::kSubTypeMleChildUpdateRequest);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildUpdateRequest));
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));

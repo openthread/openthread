@@ -718,12 +718,9 @@ private:
     bool HandleAdvertiseTimer(void);
     static void HandleStateUpdateTimer(void *aContext);
     void HandleStateUpdateTimer(void);
-    static void HandleChildUpdateRequestTimer(void *aContext);
-    void HandleChildUpdateRequestTimer(void);
 
     TrickleTimer mAdvertiseTimer;
     Timer mStateUpdateTimer;
-    Timer mChildUpdateRequestTimer;
 
     Coap::Resource mAddressSolicit;
     Coap::Resource mAddressRelease;
@@ -743,6 +740,7 @@ private:
     uint8_t mLeaderWeight;
     uint32_t mFixedLeaderPartitionId;  ///< only for certification testing
     bool mRouterRoleEnabled;
+    bool mIsRouterRestoringChildren;
 
     uint8_t mRouterId;
     uint8_t mPreviousRouterId;

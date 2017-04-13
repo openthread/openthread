@@ -1672,6 +1672,7 @@ ThreadError Mle::SendChildUpdateRequest(void)
     mChildUpdateAttempts++;
 
     VerifyOrExit((message = NewMleMessage()) != NULL);
+    message->SetSubType(Message::kSubTypeMleChildUpdateRequest);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildUpdateRequest));
     SuccessOrExit(error = AppendMode(*message, mDeviceMode));
 

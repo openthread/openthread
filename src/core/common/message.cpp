@@ -361,6 +361,7 @@ bool Message::IsSubTypeMle(void) const
     if (mInfo.mSubType == kSubTypeMleAnnounce ||
         mInfo.mSubType == kSubTypeMleDiscoverRequest ||
         mInfo.mSubType == kSubTypeMleDiscoverResponse ||
+        mInfo.mSubType == kSubTypeMleChildUpdateRequest ||
         mInfo.mSubType == kSubTypeMleGeneral)
     {
         rval = true;
