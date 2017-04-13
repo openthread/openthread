@@ -5,19 +5,20 @@
 
 ---
 
+# What is OpenThread?  
+
+OpenThread is...
 <a href="http://threadgroup.org/technology/ourtechnology#certifiedproducts">
 <img src="https://cdn.rawgit.com/openthread/openthread/ab4c4e1e/doc/images/certified.svg" alt="Thread Certified Component" width="150px" align="right">
 </a>
 
-OpenThread is an open-source implementation of the [Thread][thread]
-networking protocol. Nest has released OpenThread to make the technology
-used in Nest products more broadly available to developers to accelerate
-the development of products for the connected home.
+**...an open-source implementation of the [Thread](http://threadgroup.org/technology/ourtechnology) networking protocol.** Nest has released OpenThread to make the technology used in Nest products more broadly available to developers to accelerate the development of products for the connected home.
 
-The Thread specification defines an IPv6-based reliable, secure and
-low-power wireless device-to-device communication protocol for home
-applications. More information about Thread can be found on
-[threadgroup.org](http://threadgroup.org/).
+**...OS and platform agnostic**, with a narrow platform abstraction layer and a small memory footprint, making it highly portable.
+
+**...a Thread Certified Component**, implementing all features defined in the [Thread 1.1.1 specification](http://threadgroup.org/technology/ourtechnology#specifications). This specification defines an IPv6-based reliable, secure and low-power wireless device-to-device communication protocol for home applications.
+
+More information about Thread can be found on [threadgroup.org](http://threadgroup.org/).
 
 [thread]: http://threadgroup.org/technology/ourtechnology
 [ot-repo]: https://github.com/openthread/openthread
@@ -29,45 +30,122 @@ applications. More information about Thread can be found on
 [ot-codecov]: https://codecov.io/gh/openthread/openthread
 [ot-codecov-svg]: https://codecov.io/gh/openthread/openthread/branch/master/graph/badge.svg
 
-## Features ##
+# Get started with OpenThread
 
- *  Highly portable: OS and platform agnostic with a radio
-    abstraction layer
- *  Certified Thread Component: Implements all features defined in the Thread 1.1.1 specification
- *  Tools: Provides tools used for development, such as an integration into the Thread Test Harness and a Sniffer
- *  Small memory footprint
+<a href="https://codelabs.developers.google.com/codelabs/openthread-simulation/index.html">
+<img src="doc/images/ot-codelab.png" alt="OpenThread Codelab" width="300px" align="right">
+</a>
 
-OpenThread implements all Thread networking layers including IPv6,
-6LoWPAN, IEEE 802.15.4 with MAC security, Mesh Link Establishment, and
-Mesh Routing.
+Want to try OpenThread? The quickest way to get started is to run through our [Simulation Codelab](https://codelabs.developers.google.com/codelabs/openthread-simulation/index.html), which covers all the basics, without the need for test hardware. Using VirtualBox and Vagrant on a Mac or Linux machine, you will learn:
 
+* How to set up the OpenThread build toolchain
+* How to simulate a Thread network
+* How to authenticate Thread nodes with Commissioning
+* How to use `wpantund` to manage a simulated Thread network featuring an NCP
 
-# Who is supporting OpenThread #
+### Next Steps
 
-![OpenThread Contributor Logos](doc/images/openthread_contrib.png)
+The Codelab shows you how easy it is use to OpenThread to simulate a Thread network. Once complete:
 
-Nest, along with ARM, Atmel, a subsidiary of Microchip Technology,
-Dialog Semiconductor, Microsoft Corporation, Nordic Semiconductor,
-Qualcomm Technologies, Inc. (a subsidiary of Qualcomm Incorporated),
-and Texas Instruments Incorporated are contributing to the ongoing
-development of OpenThread.
+1. Learn more about the [OpenThread architecture and features](#openthread-features)
+1. Get familiar with [platforms and devices that support OpenThread](#who-supports-openthread)
+1. See what [testing tools](#what-tools-are-available-for-testing) are available
+1. Learn [where to get help](#need-help) and [how to contribute](#want-to-contribute) to the ongoing development of OpenThread
 
+# OpenThread Features
 
-# Getting started #
+OpenThread implements all features defined in the [Thread 1.1.1 specification](http://threadgroup.org/technology/ourtechnology#specifications), including all Thread networking layers (IPv6, 6LoWPAN, IEEE 802.15.4 with MAC security, Mesh Link Establishment, Mesh Routing) and device roles.
 
-The easiest way to get started is to run the CLI example in
-`/examples/apps/cli`. See the
-[CLI example README](examples/apps/cli/README.md)
-for more details.
+OpenThread supports both system-on-chip (SoC) and network co-processor (NCP) designs. Other features and enhancements include:
 
+* Application support and services
+    * IPv6 configuration and raw data interface
+    * UDP sockets
+    * CoAP client and server
+    * DHCPv6 client and server
+    * DNSv6 client
+    * Command Line Interface (CLI)
+* NCP support
+    * Spinel - general purpose NCP protocol
+    * `wpantund` - user-space NCP network interface driver/daemon
+    * Sniffer support via NCP Spinel nodes
 
-## What's included ##
+### What's coming?
 
-In the repo you'll find the following directories and files:
+The development of OpenThread is ongoing to regularly provide additional features not available in the standard. Currently, we are working on:
 
-File/Folder   | Provides
+* Host-side Border Agent support
+
+# Who supports OpenThread?
+
+Led by Nest, the following companies are contributing to the ongoing development of OpenThread:
+
+<a href="https://www.arm.com/"><img src="doc/images/ot-contrib-arm.png" alt="ARM" width="200px"></a><a href="http://www.atmel.com/"><img src="doc/images/ot-contrib-atmel.png" alt="Atmel" width="200px"></a><a href="ttp://www.dialog-semiconductor.com/"><img src="doc/images/ot-contrib-dialog.png" alt="Dialog" width="200px"></a><a href="https://www.microsoft.com/en-us/"><img src="doc/images/ot-contrib-ms.png" alt="Microsoft" width="200px"></a><a href="https://nest.com/"><img src="doc/images/ot-contrib-nest.png" alt="Nest" width="200px"></a><a href="http://www.nordicsemi.com/"><img src="doc/images/ot-contrib-nordic.png" alt="Nordic" width="200px"></a><a href="https://www.qualcomm.com/"><img src="doc/images/ot-contrib-qc.png" alt="Qualcomm" width="200px"></a><a href="https://www.ti.com/"><img src="doc/images/ot-contrib-ti.png" alt="Texas Instruments" width="200px"></a>
+
+OpenThread has been ported to several devices and platforms. Build examples are included in the OpenThread project.
+
+### IEEE 802.15.4 Platform Support
+
+* [Dialog Semiconductor DA15000](https://github.com/openthread/openthread/wiki/Platforms#dialog-da15000)
+* [Nordic Semiconductor nRF52840](https://github.com/openthread/openthread/wiki/Platforms#nordic-semiconductor-nrf52840)
+* [Texas Instruments CC2538](https://github.com/openthread/openthread/wiki/Platforms#texas-instruments-cc2538)
+* [Texas Instruments CC2650](https://github.com/openthread/openthread/wiki/Platforms#texas-instruments-cc2650)
+* [POSIX Emulation](https://github.com/openthread/openthread/wiki/Platforms#posix-emulation)
+
+See the [Wiki Platform page](https://github.com/openthread/openthread/wiki/Platforms) for more detailed information on supported platforms.
+
+### Desktop Support
+
+Desktop platforms can also be used to control and interface with a Thread network using OpenThread:
+
+* **Unix** — [`wpantund`](https://github.com/openthread/wpantund) provides an interface to an NCP
+* **Windows 10** — [universal drivers](https://github.com/openthread/openthread/wiki/OpenThread-on%C2%A0Windows) to interface with devices running OpenThread
+
+# What tools are available for testing?
+
+### Certification Testing
+
+Certification testing is done with the [GRL Thread Test Harness software](http://graniteriverlabs.com/thread/), available for download to Thread member companies.
+
+Additional tools that extend the Test Harness are included in the OpenThread project:
+
+* [Thread Harness Automation](https://github.com/openthread/openthread/tree/master/tools/harness-automation) — automates the Thread Test Harness software
+* [Thread Harness THCI for OpenThread](https://github.com/openthread/openthread/tree/master/tools/harness-thci) — allows the Thread Test Harness to control OpenThread-based reference devices directly
+    * CC2538 example included in the GRL Thread Test Hardness software
+    * Library version can be modified by developers for use on other platforms
+
+### Sniffer
+
+OpenThread also provides a [sniffer](https://github.com/openthread/openthread/blob/master/tools/spinel-cli/SNIFFER.md) on the NCP build. The sniffer is exposed by the Spinel protocol and features:
+
+* Monitor mode — capture packets during operation
+* Promiscuous mode — dedicated sniffer
+* Host-side support — `wpantund`
+* pcap stream output
+
+# Need help?
+
+### Wiki
+
+Explore the [OpenThread Wiki](https://github.com/openthread/openthread/wiki) for more in-depth documentation on building, testing, automation and tools.
+
+### Interact
+
+There are numerous avenues for OpenThread support:
+
+* Bugs and feature requests — [submit to the Issue Tracker](https://github.com/openthread/openthread/issues)
+* Stack Overflow — [post questions using the `openthread` tag](http://stackoverflow.com/questions/tagged/openthread)
+* Google Groups — discussion and announcements
+    * [openthread-announce](https://groups.google.com/forum/#!forum/openthread-announce) — release notes and new updates on OpenThread
+    *  [openthread-users](https://groups.google.com/forum/#!forum/openthread-users) — the best place for users to discuss OpenThread and interact with the OpenThread team
+
+### Directory Structure
+
+The OpenThread repository is structured as follows:
+
+Folder   | Contents
 --------------|----------------------------------------------------------------
-`doc`         | Code and protocol docs
+`doc`         | Spinel docs and Doxygen build file
 `etc`         | Configuration files for other build systems (e.g. Visual Studio)
 `examples`    | Sample applications and platforms demonstrating OpenThread
 `include`     | Public API header files
@@ -77,56 +155,16 @@ File/Folder   | Provides
 `tools`       | Helpful utilities related to the OpenThread project
 
 
-## Documentation ##
+# Want to contribute?
 
-The Doxygen reference docs are [hosted online][ot-docs] and generated
-as part of the build.
+We would love for you to contribute to OpenThread and help make it even better than it is today! See the [`CONTRIBUTING.md`](https://github.com/openthread/openthread/blob/master/CONTRIBUTING.md) file for more information.
 
-[ot-docs]: http://openthread.github.io/openthread/
+# Versioning
 
+OpenThread follows the [Semantic Versioning guidelines](http://semver.org/) for release cycle transparency and to maintain backwards compatibility. OpenThread's versioning is independent of the Thread protocol specification version but will clearly indicate which version of the specification it currently supports.
 
-# Getting help #
+# License
 
-Submit bugs and feature requests to [issue tracker][ot-issues]. Usage
-questions? Post your questions to [Stack Overflow][stackoverflow] using the
-[`openthread` tag][ot-tag]. We also use Google Groups for discussion
-and announcements:
-
- *  [openthread-announce](https://groups.google.com/forum/#!forum/openthread-announce)
-    \- subscribe for release notes and new updates on OpenThread
- *  [openthread-users](https://groups.google.com/forum/#!forum/openthread-users)
-    \- the best place for users to discuss OpenThread and interact with
-    the OpenThread team
- *  [openthread-devel](https://groups.google.com/forum/#!forum/openthread-devel)
-    \- team members discuss the on-going development of OpenThread
-
-[ot-issues]: https://github.com/openthread/openthread/issues
-[stackoverflow]: http://stackoverflow.com/
-[ot-tag]: http://stackoverflow.com/questions/tagged/openthread
-
-
-# Versioning #
-
-OpenThread follows [the Semantic Versioning guidelines][semver] for
-release cycle transparency and to maintain backwards compatibility.
-OpenThread's versioning is independent of the Thread protocol
-specification version but will clearly indicate which version of the
-specification it currently supports.
-
-[semver]: http://semver.org/
-
-
-# Contributing #
-
-See the [`CONTRIBUTING.md`](CONTRIBUTING.md) file for more information.
-
-
-# License #
-
-OpenThread is released under the [BSD 3-Clause license](LICENSE). See
-the [`LICENSE`](LICENSE) file for more information.
-
-Please only use the OpenThread name and marks when accurately
-referencing this software distribution. Do not use the marks in
-a way that suggests you are endorsed by or otherwise affiliated with
-Nest, Google, or The Thread Group.
+OpenThread is released under the [BSD 3-Clause license](https://github.com/openthread/openthread/blob/master/LICENSE). See the [`LICENSE`](https://github.com/openthread/openthread/blob/master/LICENSE) file for more information.  
+  
+Please only use the OpenThread name and marks when accurately referencing this software distribution. Do not use the marks in a way that suggests you are endorsed by or otherwise affiliated with Nest, Google, or The Thread Group.
