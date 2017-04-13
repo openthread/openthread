@@ -56,7 +56,7 @@ The Codelab shows you how easy it is use to OpenThread to simulate a Thread netw
 
 OpenThread implements all features defined in the [Thread 1.1.1 specification](http://threadgroup.org/technology/ourtechnology#specifications), including all Thread networking layers (IPv6, 6LoWPAN, IEEE 802.15.4 with MAC security, Mesh Link Establishment, Mesh Routing) and device roles.
 
-OpenThread supports both single-on-chip (SoC) and network co-processor (NCP) designs. Other features and enhancements include:
+OpenThread supports both system-on-chip (SoC) and network co-processor (NCP) designs. Other features and enhancements include:
 
 * Application support and services
     * IPv6 configuration and raw data interface
@@ -82,7 +82,7 @@ Led by Nest, the following companies are contributing to the ongoing development
 
 <a href="https://www.arm.com/"><img src="doc/images/ot-contrib-arm.png" alt="ARM" width="200px"></a><a href="http://www.atmel.com/"><img src="doc/images/ot-contrib-atmel.png" alt="Atmel" width="200px"></a><a href="ttp://www.dialog-semiconductor.com/"><img src="doc/images/ot-contrib-dialog.png" alt="Dialog" width="200px"></a><a href="https://www.microsoft.com/en-us/"><img src="doc/images/ot-contrib-ms.png" alt="Microsoft" width="200px"></a><a href="https://nest.com/"><img src="doc/images/ot-contrib-nest.png" alt="Nest" width="200px"></a><a href="http://www.nordicsemi.com/"><img src="doc/images/ot-contrib-nordic.png" alt="Nordic" width="200px"></a><a href="https://www.qualcomm.com/"><img src="doc/images/ot-contrib-qc.png" alt="Qualcomm" width="200px"></a><a href="https://www.ti.com/"><img src="doc/images/ot-contrib-ti.png" alt="Texas Instruments" width="200px"></a>
 
-OpenThread has been ported to several devices and platforms. Build examples are included in the OpenThread library.
+OpenThread has been ported to several devices and platforms. Build examples are included in the OpenThread project.
 
 ### IEEE 802.15.4 Platform Support
 
@@ -107,7 +107,7 @@ Desktop platforms can also be used to control and interface with a Thread networ
 
 Certification testing is done with the [GRL Thread Test Harness software](http://graniteriverlabs.com/thread/), available for download to Thread member companies.
 
-Additional tools that extend the Test Harness are included in the OpenThread library:
+Additional tools that extend the Test Harness are included in the OpenThread project:
 
 * [Thread Harness Automation](https://github.com/openthread/openthread/tree/master/tools/harness-automation) — automates the Thread Test Harness software
 * [Thread Harness THCI for OpenThread](https://github.com/openthread/openthread/tree/master/tools/harness-thci) — allows the Thread Test Harness to control OpenThread-based reference devices directly
