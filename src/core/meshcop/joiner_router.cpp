@@ -45,6 +45,7 @@
 #include <common/encoding.hpp>
 #include <common/logging.hpp>
 #include <meshcop/joiner_router.hpp>
+#include <meshcop/meshcop.hpp>
 #include <meshcop/tlvs.hpp>
 #include <thread/mle.hpp>
 #include <thread/thread_netif.hpp>

@@ -48,6 +48,7 @@
 #include <common/timer.hpp>
 #include <meshcop/dataset.hpp>
 #include <meshcop/dataset_manager.hpp>
+#include <meshcop/meshcop.hpp>
 #include <meshcop/tlvs.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>

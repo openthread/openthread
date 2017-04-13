@@ -41,6 +41,7 @@
 #include <common/encoding.hpp>
 #include <common/logging.hpp>
 #include <meshcop/energy_scan_client.hpp>
+#include <meshcop/meshcop.hpp>
 #include <meshcop/tlvs.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>

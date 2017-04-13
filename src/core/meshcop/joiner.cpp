@@ -51,6 +51,7 @@
 #include <common/logging.hpp>
 #include <mac/mac_frame.hpp>
 #include <meshcop/joiner.hpp>
+#include <meshcop/meshcop.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
 

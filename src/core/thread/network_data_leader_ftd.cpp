@@ -43,6 +43,7 @@
 #include <common/message.hpp>
 #include <common/timer.hpp>
 #include <mac/mac_frame.hpp>
+#include <meshcop/meshcop.hpp>
 #include <thread/mle_router.hpp>
 #include <thread/network_data_leader.hpp>
 #include <thread/thread_netif.hpp>

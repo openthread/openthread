@@ -51,6 +51,7 @@
 #include <crypto/pbkdf2_cmac.h>
 #include <meshcop/commissioner.hpp>
 #include <meshcop/joiner_router.hpp>
+#include <meshcop/meshcop.hpp>
 #include <meshcop/tlvs.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
