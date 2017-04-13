@@ -28,16 +28,16 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-lib_LIBRARIES                             = libopenthread-posix.a
+lib_LTLIBRARIES                           = libopenthread-posix.la
 
-libopenthread_posix_a_CPPFLAGS            = \
+libopenthread_posix_la_CPPFLAGS           = \
     -I$(top_srcdir)/include                 \
     -I$(top_srcdir)/examples/platforms      \
     -I$(top_srcdir)/src/core                \
     -D_GNU_SOURCE                           \
     $(NULL)
 
-libopenthread_posix_a_SOURCES             = \
+libopenthread_posix_la_SOURCES            = \
     alarm.c                                 \
     misc.c                                  \
     logging.c                               \
@@ -49,13 +49,13 @@ libopenthread_posix_a_SOURCES             = \
     $(NULL)
 
 if OPENTHREAD_ENABLE_DIAG
-libopenthread_posix_a_SOURCES            += \
+libopenthread_posix_la_SOURCES           += \
     diag.c                                  \
     $(NULL)
 endif
 
 if OPENTHREAD_ENABLE_NCP_SPI
-libopenthread_posix_a_SOURCES            += \
+libopenthread_posix_la_SOURCES           += \
     spi-stubs.c                             \
     $(NULL)
 endif
@@ -65,8 +65,8 @@ noinst_HEADERS                            = \
     $(NULL)
 
 Dash                                      = -
-libopenthread_posix_a_LIBADD              = \
-    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
+libopenthread_posix_la_LIBADD             = \
+    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.lo")
 
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                                = $(wildcard *.gcda *.gcno)
