@@ -56,12 +56,12 @@ otInstance *SourceMatchController::GetInstance(void)
 
 void SourceMatchController::IncrementMessageCount(Child &aChild)
 {
-    aChild.IncrementIndirectMessageCount();
-
     if (aChild.GetIndirectMessageCount() == 0)
     {
         AddEntry(aChild);
     }
+
+    aChild.IncrementIndirectMessageCount();
 }
 
 void SourceMatchController::DecrementMessageCount(Child &aChild)
