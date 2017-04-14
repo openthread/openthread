@@ -123,7 +123,7 @@ minus 9. (9 is the number of bytes taken up by a byte and two longs)
 The datatype signature `CLLDU` is illegal because we can't determine
 where the last field (a zero-terminated UTF8 string) starts. But the
 datatype `CLLdU` *is* legal, because the parser can determine the
-exact length of the data blob—allowing it to know where the start
+exact length of the data blob-- allowing it to know where the start
 of the next field would be.
 
 ## Structured Data
