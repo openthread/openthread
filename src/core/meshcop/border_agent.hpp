@@ -86,10 +86,6 @@ public:
     ThreadError Stop(void);
 
 private:
-    enum
-    {
-        kWaitChildIDResponseTime = 2000,
-    };
 
     static void HandleCommissionerPetition(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                            const otMessageInfo *aMessageInfo);
@@ -126,13 +122,12 @@ private:
                                    const otMessageInfo *aMessageInfo);
     void HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleTimer(void *aContext);
-    void HandleTimer(void);
-
     ThreadError SendLeaderPetition(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError SendLeaderKeepAlive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError SendLeaderMgmtCommissionerSet(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError SendCommissionerRelayReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    PSKcTlv *GetPSKc();
 
     Coap::Resource mRelayReceive;
     Coap::Resource mRelayTransmit;
@@ -140,7 +135,6 @@ private:
     Coap::Resource mCommissionerKeepAlive;
     Coap::Resource mMgmtCommissionerSet;
 
-    Timer mTimer;
     ThreadNetif &mNetif;
     Ip6::Address mCommissionerAddr;
     uint16_t mCommissionerUdpPort;

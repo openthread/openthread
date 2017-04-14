@@ -52,9 +52,10 @@ extern "C" {
 /**
  * This function enables the Thread Border Agent role.
  *
- * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[in]  aInstance             A pointer to an OpenThread instance.
  *
- * @retval kThreadError_None     Successfully started the Border Agent role.
+ * @retval kThreadError_None         Successfully started the Border Agent role.
+ * @retval kThreadError_InvalidArgs  PSKc is invalid
  *
  */
 OTAPI ThreadError OTCALL otBorderAgentStart(otInstance *aInstance);
@@ -62,9 +63,9 @@ OTAPI ThreadError OTCALL otBorderAgentStart(otInstance *aInstance);
 /**
  * This function disables the Thread Border Agent role.
  *
- * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[in]  aInstance             A pointer to an OpenThread instance.
  *
- * @retval kThreadError_None     Successfully started the Border Agent role.
+ * @retval kThreadError_None         Successfully started the Border Agent role.
  *
  */
 OTAPI ThreadError OTCALL otBorderAgentStop(otInstance *aInstance);

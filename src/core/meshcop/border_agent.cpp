@@ -66,7 +66,6 @@ BorderAgent::BorderAgent(ThreadNetif &aThreadNetif):
     mCommissionerPetition(OPENTHREAD_URI_COMMISSIONER_PETITION, &BorderAgent::HandleCommissionerPetition, this),
     mCommissionerKeepAlive(OPENTHREAD_URI_COMMISSIONER_KEEP_ALIVE, &BorderAgent::HandleCommisionerKeepAlive, this),
     mMgmtCommissionerSet(OPENTHREAD_URI_COMMISSIONER_SET, &BorderAgent::HandleMgmtCommissionerSet, this),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &BorderAgent::HandleTimer, this),
     mNetif(aThreadNetif)
 {
     mNetif.GetCoapServer().AddResource(mRelayReceive);
@@ -84,13 +83,24 @@ otInstance *BorderAgent::GetInstance()
 ThreadError BorderAgent::Start(void)
 {
     ThreadError error = kThreadError_None;
+    PSKcTlv *pskc;
+
+    otLogFuncEntry();
+
     if (mNetif.GetDtls().IsStarted())
     {
         SuccessOrExit(error = mNetif.GetBASecureCoapServer().Stop());
         mNetif.GetDtls().Stop();
     }
-    mTimer.Start(kWaitChildIDResponseTime);
+
+    VerifyOrExit((pskc = GetPSKc()) != NULL, error = kThreadError_InvalidArgs);
+
+    SuccessOrExit(error = mNetif.GetBASecureCoapServer().SetPsk(reinterpret_cast<const uint8_t *>(pskc->GetPSKc()),
+                          static_cast<uint8_t>(Dtls::kPskMaxLength / 2)));
+    SuccessOrExit(error = mNetif.GetBASecureCoapServer().Start(NULL, this));
+
 exit:
+    otLogFuncExitErr(error);
     return error;
 }
 
@@ -132,8 +142,8 @@ exit:
     return error;
 }
 
-PSKcTlv *GetPSKc(ThreadNetif &aNetif){
-    return static_cast<PSKcTlv *>(aNetif.GetActiveDataset().GetNetwork().Get(Tlv::kPSKc));
+PSKcTlv *BorderAgent::GetPSKc(){
+    return static_cast<PSKcTlv *>(mNetif.GetActiveDataset().GetNetwork().Get(Tlv::kPSKc));
 }
 
 void BorderAgent::HandleCommissionerPetition(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
@@ -399,7 +409,7 @@ void BorderAgent::HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage,
 
     otLogInfoMeshCoP(GetInstance(), "send relay transmit to joiner router");
 
-    SuccessOrExit(error = mNetif.GetCoapServer().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP(GetInstance(), "sent relay transmit to joiner router %d", error);
 
@@ -586,27 +596,6 @@ exit:
     (void) aMessageInfo;
     otLogFuncExitErr(error);
     return error;
-}
-
-void BorderAgent::HandleTimer(void *aContext)
-{
-    static_cast<BorderAgent *>(aContext)->HandleTimer();
-}
-
-void BorderAgent::HandleTimer(void)
-{
-    ThreadError error = kThreadError_Error;
-    PSKcTlv *pskc;
-    otLogFuncEntry();
-
-    VerifyOrExit((pskc = GetPSKc(mNetif)) != NULL, error = kThreadError_InvalidArgs);
-
-    SuccessOrExit(error = mNetif.GetBASecureCoapServer().SetPsk(reinterpret_cast<const uint8_t *>(pskc->GetPSKc()),
-                          static_cast<uint8_t>(Dtls::kPskMaxLength / 2)));
-    SuccessOrExit(error = mNetif.GetBASecureCoapServer().Start(NULL, this));
-
-exit:
-    otLogFuncExitErr(error);
 }
 
 }  // namespace MeshCoP
