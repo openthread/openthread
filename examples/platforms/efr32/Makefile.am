@@ -83,7 +83,7 @@ PLATFORM_SOURCES                                                             += 
     $(NULL)
 endif
 
-EFR32MG12P_SOURCES                                                                                                             =  \
+nodist_libopenthread_efr32_a_SOURCES                                                                                           =  \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.0/hardware/kit/common/bsp/bsp_bcc.c                                      \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.0/hardware/kit/common/bsp/bsp_stk.c                                      \
     @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.0/platform/Device/SiliconLabs/EFR32MG12P/Source/system_efr32mg12p.c      \
@@ -110,7 +110,6 @@ noinst_HEADERS                                                                = 
 
 libopenthread_efr32_a_SOURCES                                                 = \
     $(PLATFORM_SOURCES)                                                         \
-    $(EFR32MG12P_SOURCES)                                                       \
     $(NULL)
 
 PRETTY_FILES                                                                  = \
