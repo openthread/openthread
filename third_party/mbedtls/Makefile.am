@@ -42,13 +42,22 @@ libmbedcrypto_a_CPPFLAGS                      = \
 
 libmbedcrypto_a_SOURCES                       = \
     hardware_entropy.c                          \
-    repo/library/aes.c                          \
     repo/library/md.c                           \
     repo/library/md_wrap.c                      \
     repo/library/memory_buffer_alloc.c          \
     repo/library/platform.c                     \
     repo/library/sha256.c                       \
     $(NULL)
+
+if OPENTHREAD_EXAMPLES_EFR32
+libmbedcrypto_a_SOURCES                      += \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.0/util/third_party/mbedtls/sl_crypto/src/sl_aes.c \
+    $(NULL)
+else
+libmbedcrypto_a_SOURCES                      += \
+    repo/library/aes.c                          \
+    $(NULL)
+endif  # OPENTHREAD_EXAMPLES_EFR32
 
 if OPENTHREAD_ENABLE_DTLS
 libmbedcrypto_a_SOURCES                      += \
@@ -60,7 +69,6 @@ libmbedcrypto_a_SOURCES                      += \
     repo/library/ctr_drbg.c                     \
     repo/library/debug.c                        \
     repo/library/ecjpake.c                      \
-    repo/library/ecp.c                          \
     repo/library/ecp_curves.c                   \
     repo/library/entropy.c                      \
     repo/library/entropy_poll.c                 \
@@ -71,6 +79,17 @@ libmbedcrypto_a_SOURCES                      += \
     repo/library/ssl_ticket.c                   \
     repo/library/ssl_tls.c                      \
     $(NULL)
+
+if OPENTHREAD_EXAMPLES_EFR32
+libmbedcrypto_a_SOURCES                      += \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.0/util/third_party/mbedtls/library/ecp.c \
+    @top_builddir@/third_party/silabs/gecko_sdk_suite/v1.0/util/third_party/mbedtls/sl_crypto/src/sl_ecp.c \
+    $(NULL)
+else
+libmbedcrypto_a_SOURCES                      += \
+    repo/library/ecp.c                          \
+    $(NULL)
+endif  # OPENTHREAD_EXAMPLES_EFR32
 
 #
 # mbedtls patches
