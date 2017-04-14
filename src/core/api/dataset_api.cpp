@@ -37,10 +37,6 @@
 
 using namespace Thread;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 bool otDatasetIsCommissioned(otInstance *aInstance)
 {
     otOperationalDataset dataset;
@@ -137,7 +133,3 @@ ThreadError otDatasetSetDelayTimerMinimal(otInstance *aInstance, uint32_t aDelay
 {
     return aInstance->mThreadNetif.GetLeader().SetDelayTimerMinimal(aDelayTimerMinimal);
 }
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif

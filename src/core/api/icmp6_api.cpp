@@ -37,10 +37,6 @@
 
 using namespace Thread;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 bool otIcmp6IsEchoEnabled(otInstance *aInstance)
 {
     return aInstance->mIp6.mIcmp.IsEchoEnabled();
@@ -63,7 +59,3 @@ ThreadError otIcmp6SendEchoRequest(otInstance *aInstance, otMessage *aMessage,
                                                  *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
                                                  aIdentifier);
 }
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif
