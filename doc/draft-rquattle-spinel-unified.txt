@@ -9,7 +9,7 @@ Expires: December 24, 2017                                 June 22, 2017
 
 
                     Spinel Host-Controller Protocol
-                 draft-rquattle-spinel-unified-ab5628a5
+              draft-rquattle-spinel-unified-2cb23088-dirty
 
 Abstract
 
@@ -4464,7 +4464,7 @@ Appendix D.  Glossary
    [CREF18]
 
    FCS
-      Final Checksum.  Bytes added to the end of a packet to help
+      Final Checksum.  Octets added to the end of a packet to help
       determine if the packet was received without corruption.
    NCP
       Network Control Processor.
@@ -4488,7 +4488,7 @@ Internet-Draft          Spinel Protocol (Unified)              June 2017
       medium.
    PUI
       Packed Unsigned Integer.  A way to serialize an unsigned integer
-      using one, two, or three bytes.  Used throughout the Spinel
+      using one, two, or three octets.  Used throughout the Spinel
       protocol.  See Section 3.2 for more information.
    TID
       Transaction Identifier.  May be a value between zero and fifteen.

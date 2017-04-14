@@ -73,23 +73,26 @@ $(XML2RFC_CACHE_DIR):
 
 draft-rquattle-spinel-basis.xml: \
 	draft-rquattle-spinel-basis.md \
-	spinel-commands.md \
-	spinel-data-packing.md \
-	spinel-example-sessions.md \
-	spinel-feature-host-buffer-offload.md \
-	spinel-feature-network-save.md \
-	spinel-frame-format.md \
-	spinel-framing.md \
-	spinel-prop-core.md \
-	spinel-prop-debug.md \
-	spinel-prop-ipv6.md \
-	spinel-prop-mac.md \
-	spinel-prop-net.md \
-	spinel-prop-phy.md \
-	spinel-prop.md \
-	spinel-status-codes.md \
-	spinel-tech-thread.md \
-	spinel-test-vectors.md \
+	spinel-basis-appendix-examples.md \
+	spinel-basis-appendix-framing.md \
+	spinel-basis-appendix-test-vectors.md \
+	spinel-basis-detail-commands.md \
+	spinel-basis-detail-properties.md \
+	spinel-basis-detail-properties-core.md \
+	spinel-basis-detail-properties-debug.md \
+	spinel-basis-detail-properties-ipv6.md \
+	spinel-basis-detail-properties-net.md \
+	spinel-basis-detail-status.md \
+	spinel-basis-feature-gpio.md \
+	spinel-basis-feature-host-buffer-offload.md \
+	spinel-basis-feature-network-save.md \
+	spinel-basis-feature-trng.md \
+	spinel-basis-glossary.md \
+	spinel-basis-iana-considerations.md \
+	spinel-basis-intro-encoding.md \
+	spinel-basis-intro-frames.md \
+	spinel-basis-intro-properties.md \
+	spinel-basis-security-considerations.md \
 	$(NULL)
 
 draft-rquattle-spinel-unified.xml: \
@@ -99,8 +102,12 @@ draft-rquattle-spinel-unified.xml: \
 	spinel-example-sessions.md \
 	spinel-feature-host-buffer-offload.md \
 	spinel-feature-network-save.md \
+	spinel-feature-jam-detect.md \
+	spinel-feature-gpio.md \
+	spinel-feature-trng.md \
 	spinel-frame-format.md \
 	spinel-framing.md \
+	spinel-prop-overview.md \
 	spinel-prop-core.md \
 	spinel-prop-debug.md \
 	spinel-prop-ipv6.md \

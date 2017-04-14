@@ -3,7 +3,7 @@
 <!-- RQ -- Alphabetize before finalization. -->
 
 FCS
-: Final Checksum. Bytes added to the end of a packet to help determine if the packet was received without corruption.
+: Final Checksum. Octets added to the end of a packet to help determine if the packet was received without corruption.
 
 NCP
 : Network Control Processor.
@@ -18,7 +18,7 @@ PHY
 : Physical layer. Refers to characteristics and parameters related to the physical implementation and operation of a networking medium.
 
 PUI
-: Packed Unsigned Integer. A way to serialize an unsigned integer using one, two, or three bytes. Used throughout the Spinel protocol. See (#packed-unsigned-integer) for more information.
+: Packed Unsigned Integer. A way to serialize an unsigned integer using one, two, or three octets. Used throughout the Spinel protocol. See (#packed-unsigned-integer) for more information.
 
 TID
 : Transaction Identifier. May be a value between zero and fifteen. See (#tid-transaction-identifier) for more information.

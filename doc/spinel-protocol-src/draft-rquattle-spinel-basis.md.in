@@ -49,7 +49,7 @@
 
 .# Abstract
 
-This document specifies the basis of the Spinel protocol, which facilitates the control and management of IPv6 network interfaces on devices where general purpose application processors offload network functions at their interfaces to network co-processors (NCP) connected by simple communication links like serial data channels. Spinel was initially designed for use with Thread network co-processors, but its basis is general purpose and intended to be easily adapted to other types of IPv6 network interface.
+This document specifies the basis of the Spinel protocol, which facilitates the control and management of IPv6 network interfaces on devices where general purpose application processors offload network functions at their interfaces to network co-processors (NCP) connected by simple communication links like serial data channels. Spinel was initially designed for use with Thread(R) network co-processors, but its basis is general purpose and intended to be easily adapted to other types of IPv6 network interface.
 
 {mainmatter}
 
@@ -64,39 +64,45 @@ Spinel is a host-controller protocol designed to enable interoperation over simp
 *   Gracefully handle the addition of new features and capabilities without necessarily breaking backward compatibility.
 *   Be as minimal and light-weight as possible without unnecessarily sacrificing flexibility.
 
-On top of this core framework, properties and commands enable various common features of IPv6. In related and forthcoming documents, the Spinel protocol is extended to support NCP implementations for specific IPv6 link types, e.g. Thread.
+Beyond this core framework, properties and commands enable various common features of IPv6. In related and forthcoming documents, the Spinel protocol is extended to support NCP implementations for specific IPv6 link types, e.g. Thread(R).
 
-{{spinel-frame-format.md}}
+## Requirements Language and Conventions
 
-{{spinel-data-packing.md}}
+(EDITOR: Insert boilerplate about RFC 2119 here.)
 
-{{spinel-commands.md}}
+The layout diagrams in this document that show encodings of data in octet sequences use the convention described in Guide for Internet Standards Writers [@?RFC2360] section 3.1, Packet Diagrams. Specifically, bits in octets are indexed from most significant to least significant, and the least significant bit in a field representing an integer value more than one bit in length is the least significant bit of a the signed or unsigned number, as the case requires.
 
-{{spinel-prop.md}}
+{{spinel-basis-intro-properties.md}}
 
-{{spinel-status-codes.md}}
+{{spinel-basis-intro-frames.md}}
 
-{{spinel-tech-thread.md}}
+{{spinel-basis-intro-encoding.md}}
 
-{{spinel-feature-network-save.md}}
+{{spinel-basis-detail-commands.md}}
 
-{{spinel-feature-host-buffer-offload.md}}
+{{spinel-basis-detail-status.md}}
 
-{{spinel-feature-jam-detect.md}}
+{{spinel-basis-detail-properties.md}}
 
-{{spinel-feature-gpio.md}}
+{{spinel-basis-feature-gpio.md}}
 
-{{spinel-feature-trng.md}}
+{{spinel-basis-feature-network-save.md}}
 
-{{spinel-security-considerations.md}}
+{{spinel-basis-feature-host-buffer-offload.md}}
+
+{{spinel-basis-feature-trng.md}}
+
+{{spinel-basis-security-considerations.md}}
+
+{{spinel-basis-iana-considerations.md}}
 
 {backmatter}
 
-{{spinel-framing.md}}
+{{spinel-basis-appendix-examples.md}}
 
-{{spinel-test-vectors.md}}
+{{spinel-basis-appendix-framing.md}}
 
-{{spinel-example-sessions.md}}
+{{spinel-basis-appendix-test-vectors.md}}
 
 {{spinel-basis-glossary.md}}
 
@@ -104,6 +110,6 @@ On top of this core framework, properties and commands enable various common fea
 
 Thread is a registered trademark of The Thread Group, Inc.
 
-Special thanks to Nick Banks, Jonathan Hui, Abtin Keshavarzian, Piotr Szkotak, Arjuna Sivasithambaresan and Martin Turon for their substantial contributions and feedback related to this document.
+Special thanks to Nick Banks, Jonathan Hui, Abtin Keshavarzian, Yakun Xu, Piotr Szkotak, Arjuna Sivasithambaresan and Martin Turon for their substantial contributions and feedback related to this document.
 
 This document was prepared using [mmark](https://github.com/miekg/mmark) by (Miek Gieben) and [xml2rfc (version 2)](http://xml2rfc.ietf.org/).
