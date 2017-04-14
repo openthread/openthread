@@ -76,23 +76,25 @@ void LinkQualityInfo::Clear(void)
     mLastRss     = 0;
 }
 
-void LinkQualityInfo::AddRss(LinkQualityInfo &aNoiseFloor, int8_t anRss)
+void LinkQualityInfo::AddRss(LinkQualityInfo &aNoiseFloor, int8_t aRss)
 {
     uint16_t    newValue;
     uint16_t    oldAverage;
 
-    mLastRss = anRss;
+    VerifyOrExit(aRss != kUnknownRss);
+
+    mLastRss = aRss;
 
     // Restrict/Cap the RSS value to the closed range [0, -128] so the value can fit in 8 bits.
 
-    if (anRss > 0)
+    if (aRss > 0)
     {
-        anRss = 0;
+        aRss = 0;
     }
 
     // Multiply the the RSS value by a precision multiple (currently -8).
 
-    newValue = static_cast<uint16_t>(-anRss);
+    newValue = static_cast<uint16_t>(-aRss);
     newValue <<= kRssAveragePrecisionMultipleBitShift;
 
     oldAverage = mRssAverage;
@@ -123,6 +125,9 @@ void LinkQualityInfo::AddRss(LinkQualityInfo &aNoiseFloor, int8_t anRss)
     }
 
     UpdateLinkQuality(aNoiseFloor);
+
+exit:
+    return;
 }
 
 int8_t LinkQualityInfo::GetAverageRss(void) const
@@ -202,11 +207,11 @@ void LinkQualityInfo::UpdateLinkQuality(LinkQualityInfo &aNoiseFloor)
     }
 }
 
-uint8_t LinkQualityInfo::ConvertRssToLinkMargin(LinkQualityInfo &aNoiseFloor, int8_t anRss)
+uint8_t LinkQualityInfo::ConvertRssToLinkMargin(LinkQualityInfo &aNoiseFloor, int8_t aRss)
 {
-    int8_t linkMargin = anRss - GetAverageNoiseFloor(aNoiseFloor);
+    int8_t linkMargin = aRss - GetAverageNoiseFloor(aNoiseFloor);
 
-    if (linkMargin < 0 || anRss == kUnknownRss)
+    if (linkMargin < 0 || aRss == kUnknownRss)
     {
         linkMargin = 0;
     }
@@ -219,9 +224,9 @@ uint8_t LinkQualityInfo::ConvertLinkMarginToLinkQuality(uint8_t aLinkMargin)
     return CalculateLinkQuality(aLinkMargin, kNoLastLinkQualityValue);
 }
 
-uint8_t LinkQualityInfo::ConvertRssToLinkQuality(LinkQualityInfo &aNoiseFloor, int8_t anRss)
+uint8_t LinkQualityInfo::ConvertRssToLinkQuality(LinkQualityInfo &aNoiseFloor, int8_t aRss)
 {
-    return ConvertLinkMarginToLinkQuality(ConvertRssToLinkMargin(aNoiseFloor, anRss));
+    return ConvertLinkMarginToLinkQuality(ConvertRssToLinkMargin(aNoiseFloor, aRss));
 }
 
 uint8_t LinkQualityInfo::CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLastLinkQuality)
