@@ -2710,6 +2710,7 @@ void Interpreter::ProcessBorderAgent(int argc, char *argv[])
     if (strcmp(argv[0], "start") == 0)
     {
         error = otBorderAgentStart(mInstance);
+
         if (error == kThreadError_None)
         {
             sServer->OutputFormat("start success\r\n");

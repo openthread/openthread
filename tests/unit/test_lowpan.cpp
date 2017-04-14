@@ -199,7 +199,7 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
         }
         else
         {
-            VerifyOrQuit(compressBytes < 0 , "6lo: Lowpan::Compress failed");
+            VerifyOrQuit(compressBytes < 0, "6lo: Lowpan::Compress failed");
         }
 
         message->Free();
@@ -226,14 +226,14 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
             otTestPrintHex(result, message->GetLength() + iphcLength - decompressedBytes);
             printf("\n");
 
-            VerifyOrQuit(decompressedBytes == aVector.mIphcHeader.mLength , "6lo: Lowpan::Decompress failed");
+            VerifyOrQuit(decompressedBytes == aVector.mIphcHeader.mLength, "6lo: Lowpan::Decompress failed");
             VerifyOrQuit(message->GetOffset() == aVector.mPayloadOffset, "6lo: Lowpan::Decompress failed");
             VerifyOrQuit(message->GetOffset() == message->GetLength(), "6lo: Lowpan::Decompress failed");
             VerifyOrQuit(memcmp(ip6, result, ip6Length) == 0, "6lo: Lowpan::Decompress failed");
         }
         else
         {
-            VerifyOrQuit(decompressedBytes < 0 , "6lo: Lowpan::Decompress failed");
+            VerifyOrQuit(decompressedBytes < 0, "6lo: Lowpan::Decompress failed");
         }
 
         message->Free();

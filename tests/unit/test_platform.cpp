@@ -415,7 +415,7 @@ exit:
         return kPlatResetReason_PowerOn;
     }
 
-    void otPlatLog(otLogLevel , otLogRegion , const char *, ...)
+    void otPlatLog(otLogLevel, otLogRegion, const char *, ...)
     {
     }
 
