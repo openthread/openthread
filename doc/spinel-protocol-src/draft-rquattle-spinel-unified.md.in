@@ -70,6 +70,11 @@ All rights reserved.
   -- We may want to consider a license more appropriate for documentation.
   -->
 
+<!-- jhw
+  -- I have set the IPR field in the preamble to 'noDerivativesTrust200902'
+     while we are not ready to give change control of Spinel to IETF.
+  -->
+
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 
