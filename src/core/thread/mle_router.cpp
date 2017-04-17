@@ -2132,6 +2132,7 @@ ThreadError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const I
     LeaderDataTlv leaderData;
     TimeoutTlv timeout;
     Child *child;
+    TlvRequestTlv tlvRequest;
     uint8_t tlvs[kMaxResponseTlvs];
     uint8_t tlvslength = 0;
 
@@ -2164,6 +2165,7 @@ ThreadError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const I
     child->SetDeviceMode(mode.GetMode());
     tlvs[tlvslength++] = Tlv::kMode;
 
+    // Parent MUST include Leader Data TLV in Child Update Response
     tlvs[tlvslength++] = Tlv::kLeaderData;
 
     // Challenge
@@ -2187,31 +2189,6 @@ ThreadError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const I
     if (Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData) == kThreadError_None)
     {
         VerifyOrExit(leaderData.IsValid(), error = kThreadError_Parse);
-
-        if (child->IsFullNetworkData())
-        {
-            // full network data
-            child->SetNetworkDataVersion(leaderData.GetDataVersion());
-
-            if (leaderData.GetDataVersion() != mNetif.GetNetworkDataLeader().GetVersion())
-            {
-                tlvs[tlvslength++] = Tlv::kNetworkData;
-            }
-        }
-        else
-        {
-            // stable network data
-            child->SetNetworkDataVersion(leaderData.GetStableDataVersion());
-
-            if (leaderData.GetStableDataVersion() != mNetif.GetNetworkDataLeader().GetStableVersion())
-            {
-                tlvs[tlvslength++] = Tlv::kNetworkData;
-            }
-        }
-    }
-    else
-    {
-        tlvs[tlvslength++] = Tlv::kNetworkData;
     }
 
     // Timeout
@@ -2220,6 +2197,25 @@ ThreadError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const I
         VerifyOrExit(timeout.IsValid(), error = kThreadError_Parse);
         child->SetTimeout(timeout.GetTimeout());
         tlvs[tlvslength++] = Tlv::kTimeout;
+    }
+
+    // TLV Request
+    if (Tlv::GetTlv(aMessage, Tlv::kTlvRequest, sizeof(tlvRequest), tlvRequest) == kThreadError_None)
+    {
+        uint8_t tlv;
+        TlvRequestIterator iterator =  TLVREQUESTTLV_ITERATOR_INIT;
+
+        VerifyOrExit(tlvRequest.IsValid() && tlvRequest.GetLength() <= (Child::kMaxRequestTlvs - tlvslength),
+                     error = kThreadError_Parse);
+
+        while (tlvRequest.GetNextTlv(iterator, tlv) == kThreadError_None)
+        {
+            // Here skips Tlv::kLeaderData because it has already been included by default
+            if (tlv != Tlv::kLeaderData)
+            {
+                tlvs[tlvslength++] = tlv;
+            }
+        }
     }
 
     child->SetLastHeard(Timer::GetNow());

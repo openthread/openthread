@@ -52,6 +52,10 @@ namespace Thread {
 
 namespace Mle {
 
+#define TLVREQUESTTLV_ITERATOR_INIT  0  ///< Initializer for TlvRequestTlvIterator.
+
+typedef uint8_t TlvRequestIterator;      ///< Used to iterate through TlvRequestTlv.
+
 /**
  * @addtogroup core-mle-tlvs
  *
@@ -870,6 +874,27 @@ public:
      *
      */
     const uint8_t *GetTlvs(void) const { return mTlvs; }
+
+    /**
+     * This method provides the next Tlv in the TlvRequestTlv.
+     *
+     * @retval kThreadError_None       Successfully found the next Tlv.
+     * @retval kThreadError_NotFound   No subsequent Tlv exists in TlvRequestTlv.
+     *
+     */
+    ThreadError GetNextTlv(TlvRequestIterator &aIterator, uint8_t &aTlv)
+    {
+        ThreadError error = kThreadError_NotFound;
+
+        if (aIterator < GetLength())
+        {
+            aTlv = mTlvs[aIterator];
+            aIterator = static_cast<TlvRequestIterator>(aIterator + sizeof(uint8_t));
+            error = kThreadError_None;
+        }
+
+	return error;
+    }
 
     /**
      * This method sets the list of TLVs.
