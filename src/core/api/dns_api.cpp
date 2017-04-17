@@ -37,10 +37,6 @@
 
 using namespace Thread;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #if OPENTHREAD_ENABLE_DNS_CLIENT
 ThreadError otDnsClientQuery(otInstance *aInstance, const otDnsQuery *aQuery, otDnsResponseHandler aHandler,
                              void *aContext)
@@ -48,7 +44,3 @@ ThreadError otDnsClientQuery(otInstance *aInstance, const otDnsQuery *aQuery, ot
     return aInstance->mThreadNetif.GetDnsClient().Query(aQuery, aHandler, aContext);
 }
 #endif  // OPENTHREAD_ENABLE_DNS_CLIENT
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif

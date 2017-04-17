@@ -40,10 +40,6 @@
 
 using namespace Thread::Diagnostics;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void otDiagInit(otInstance *aInstance)
 {
     Diag::Init(aInstance);
@@ -83,7 +79,3 @@ bool otDiagIsEnabled()
 {
     return Diag::isEnabled();
 }
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif

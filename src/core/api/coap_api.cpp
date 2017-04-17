@@ -38,8 +38,6 @@
 
 using namespace Thread;
 
-extern "C" {
-
 void otCoapHeaderInit(otCoapHeader *aHeader, otCoapType aType, otCoapCode aCode)
 {
     Coap::Header *header = static_cast<Coap::Header *>(aHeader);
@@ -170,5 +168,3 @@ ThreadError otCoapSendResponse(otInstance *aInstance, otMessage *aMessage, const
     return aInstance->mApplicationCoapServer.SendMessage(
                *static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
-
-}  // extern "C"
