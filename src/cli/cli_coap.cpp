@@ -256,7 +256,7 @@ exit:
 ThreadError Coap::ProcessClient(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    otMessage *message = otCoapNewMessage(sInstance, NULL);
+    otMessage *message = NULL;
     otMessageInfo messageInfo;
     otCoapHeader header;
 
