@@ -193,6 +193,7 @@ typedef enum ThreadError
      * Received a duplicated frame.
      */
     kThreadError_Duplicated = 31,
+
     kThreadError_Error = 255,
 } ThreadError;
 

@@ -308,7 +308,7 @@ void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame)
     otActiveScanResult result;
 
     VerifyOrExit(aFrame != NULL, aInstance->mActiveScanCallback(NULL, aInstance->mActiveScanCallbackContext));
-    Mac::Mac::ConvertBeaconToActiveScanResult(aFrame, result);
+    aInstance->mThreadNetif.GetMac().ConvertBeaconToActiveScanResult(aFrame, result);
     aInstance->mActiveScanCallback(&result, aInstance->mActiveScanCallbackContext);
 
 exit:
