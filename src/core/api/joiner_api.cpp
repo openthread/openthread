@@ -37,10 +37,6 @@
 
 using namespace Thread;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #if OPENTHREAD_ENABLE_JOINER
 
 ThreadError otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl,
@@ -59,7 +55,3 @@ ThreadError otJoinerStop(otInstance *aInstance)
 }
 
 #endif  // OPENTHREAD_ENABLE_JOINER
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif

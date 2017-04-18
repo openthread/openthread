@@ -37,10 +37,6 @@
 
 using namespace Thread;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 ThreadError otMessageFree(otMessage *aMessage)
 {
     return static_cast<Message *>(aMessage)->Free();
@@ -177,7 +173,3 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
     aInstance->mThreadNetif.GetCoapServer().GetCachedResponses().GetInfo(aBufferInfo->mCoapServerMessages,
                                                                          aBufferInfo->mCoapServerBuffers);
 }
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif

@@ -40,10 +40,6 @@
 
 using namespace Thread;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void otTaskletsProcess(otInstance *aInstance)
 {
     otLogFuncEntry();
@@ -55,7 +51,3 @@ bool otTaskletsArePending(otInstance *aInstance)
 {
     return aInstance->mIp6.mTaskletScheduler.AreTaskletsPending();
 }
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif

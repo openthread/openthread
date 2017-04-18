@@ -42,10 +42,6 @@
 
 using namespace Thread;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 uint8_t otThreadGetMaxAllowedChildren(otInstance *aInstance)
 {
     uint8_t aNumChildren;
@@ -702,7 +698,3 @@ bool otThreadIsDiscoverInProgress(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMle().IsDiscoverInProgress();
 }
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif

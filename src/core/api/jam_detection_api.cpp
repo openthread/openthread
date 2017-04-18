@@ -37,10 +37,6 @@
 
 using namespace Thread;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #if OPENTHREAD_ENABLE_JAM_DETECTION
 
 ThreadError otJamDetectionSetRssiThreshold(otInstance *aInstance, int8_t aRssiThreshold)
@@ -99,7 +95,3 @@ uint64_t otJamDetectionGetHistoryBitmap(otInstance *aInstance)
 }
 
 #endif  // OPENTHREAD_ENABLE_JAM_DETECTION
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif

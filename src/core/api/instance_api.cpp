@@ -75,10 +75,6 @@ otInstance::otInstance(void) :
 
 using namespace Thread;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void otInstancePostConstructor(otInstance *aInstance)
 {
     // restore datasets and network information
@@ -251,7 +247,3 @@ ThreadError otSetDynamicLogLevel(otInstance *aInstance, otLogLevel aLogLevel)
 
     return error;
 }
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif

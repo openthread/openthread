@@ -351,9 +351,10 @@ void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance);
  * The radio driver calls this method to notify OpenThread of a received packet.
  *
  * @param[in]  aInstance The OpenThread instance structure.
- * @param[in]  aPacket   A pointer to the received packet or NULL if the receive operation was aborted.
+ * @param[in]  aPacket   A pointer to the received packet or NULL if the receive operation failed.
  * @param[in]  aError    ::kThreadError_None when successfully received a frame, ::kThreadError_Abort when reception
- *                       was aborted and a frame was not received.
+ *                       was aborted and a frame was not received, ::kThreadError_NoBufs when a frame could not be
+ *                       received due to lack of rx buffer space.
  *
  */
 extern void otPlatRadioReceiveDone(otInstance *aInstance, RadioPacket *aPacket, ThreadError aError);
@@ -468,9 +469,10 @@ extern void otPlatDiagRadioTransmitDone(otInstance *aInstance, RadioPacket *aPac
  * The radio driver calls this method to notify OpenThread diagnostics module of a received packet.
  *
  * @param[in]  aInstance The OpenThread instance structure.
- * @param[in]  aPacket   A pointer to the received packet or NULL if the receive operation was aborted.
+ * @param[in]  aPacket   A pointer to the received packet or NULL if the receive operation failed.
  * @param[in]  aError    ::kThreadError_None when successfully received a frame, ::kThreadError_Abort when reception
- *                       was aborted and a frame was not received.
+ *                       was aborted and a frame was not received, ::kThreadError_NoBufs when a frame could not be
+ *                       received due to lack of rx buffer space.
  *
  */
 extern void otPlatDiagRadioReceiveDone(otInstance *aInstance, RadioPacket *aPacket, ThreadError aError);
