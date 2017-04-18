@@ -41,10 +41,6 @@
 
 using namespace Thread;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 ThreadError otIp6SetEnabled(otInstance *aInstance, bool aEnabled)
 {
     ThreadError error = kThreadError_None;
@@ -220,7 +216,3 @@ uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond
 exit:
     return rval;
 }
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif

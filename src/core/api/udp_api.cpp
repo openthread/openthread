@@ -37,10 +37,6 @@
 
 using namespace Thread;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 otMessage *otUdpNewMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
 {
     Message *message = aInstance->mIp6.mUdp.NewMessage(0);
@@ -103,7 +99,3 @@ ThreadError otUdpSend(otUdpSocket *aSocket, otMessage *aMessage, const otMessage
     return socket->SendTo(*static_cast<Message *>(aMessage),
                           *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif

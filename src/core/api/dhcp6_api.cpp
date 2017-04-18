@@ -38,10 +38,6 @@
 
 using namespace Thread;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
 void otDhcp6ClientUpdate(otInstance *aInstance, otDhcpAddress *aAddresses, uint32_t aNumAddresses, void *aContext)
 {
@@ -55,7 +51,3 @@ void otDhcp6ServerUpdate(otInstance *aInstance)
     aInstance->mThreadNetif.GetDhcp6Server().UpdateService();
 }
 #endif  // OPENTHREAD_ENABLE_DHCP6_SERVER
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif
