@@ -50,18 +50,17 @@
 
 enum
 {
-    IEEE802154_MIN_LENGTH = 5,
-    IEEE802154_MAX_LENGTH = 127,
-    IEEE802154_ACK_LENGTH = 5,
+    IEEE802154_MIN_LENGTH      = 5,
+    IEEE802154_MAX_LENGTH      = 127,
+    IEEE802154_ACK_LENGTH      = 5,
     IEEE802154_FRAME_TYPE_MASK = 0x7,
-    IEEE802154_FRAME_TYPE_ACK = 0x2,
-    IEEE802154_FRAME_PENDING = 1 << 4,
-    IEEE802154_ACK_REQUEST = 1 << 5,
-    IEEE802154_DSN_OFFSET = 2,
+    IEEE802154_FRAME_TYPE_ACK  = 0x2,
+    IEEE802154_FRAME_PENDING   = 1 << 4,
+    IEEE802154_ACK_REQUEST     = 1 << 5,
+    IEEE802154_DSN_OFFSET      = 2,
 };
 
-static PhyState sState = kStateDisabled;
-
+static PhyState sState         = kStateDisabled;
 static uint8_t sReceiveBuffer[IEEE802154_MAX_LENGTH + 1 + sizeof(RAIL_RxPacketInfo_t)];
 static RadioPacket sReceiveFrame;
 static uint8_t sReceivePsdu[IEEE802154_MAX_LENGTH];
@@ -70,12 +69,12 @@ static ThreadError sReceiveError;
 static RadioPacket sTransmitFrame;
 static uint8_t sTransmitPsdu[IEEE802154_MAX_LENGTH];
 static ThreadError sTransmitError;
-static bool sTransmitBusy = false;
 
-static bool sPromiscuous = false;
-static uint8_t sChannel = 0;
+static bool sTransmitBusy      = false;
+static bool sPromiscuous       = false;
+static uint8_t sChannel        = 0;
 static bool sIsReceiverEnabled = false;
-static uint16_t sPanId = 0;
+static uint16_t sPanId         = 0;
 
 typedef struct srcMatchEntry
 {
@@ -112,10 +111,10 @@ void efr32RadioInit(void)
         NULL                                     // addresses
     };
 
-    sReceiveFrame.mLength = 0;
-    sReceiveFrame.mPsdu = sReceivePsdu;
+    sReceiveFrame.mLength  = 0;
+    sReceiveFrame.mPsdu    = sReceivePsdu;
     sTransmitFrame.mLength = 0;
-    sTransmitFrame.mPsdu = sTransmitPsdu;
+    sTransmitFrame.mPsdu   = sTransmitPsdu;
 
     if (RAIL_IEEE802154_2p4GHzRadioConfig())
     {
@@ -215,7 +214,7 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aAddress)
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
     (void)aInstance;
-    return (sState != kStateDisabled) ? true : false;;
+    return (sState != kStateDisabled);
 }
 
 ThreadError otPlatRadioEnable(otInstance *aInstance)
@@ -373,8 +372,6 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
     (void)aInstance;
 
-    otLogInfoPlat(sInstance, "PromiscuousMode=%d", aEnable ? 1 : 0);
-
     sPromiscuous = aEnable;
     RAIL_IEEE802154_SetPromiscuousMode(aEnable);
 }
@@ -489,17 +486,8 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
     CORE_DECLARE_IRQ_STATE;
     CORE_ENTER_CRITICAL();
 
-    otLogInfoPlat(sInstance, "EnableSrcMatch=%d", aEnable ? 1 : 0);
-
-    if (aEnable)
-    {
-        sIsSrcMatchEnabled = true;
-    }
-    else
-    {
-        // set Frame Pending bit for all outgoing ack
-        sIsSrcMatchEnabled = false;
-    }
+    // set Frame Pending bit for all outgoing ACKs if aEnable is false
+    sIsSrcMatchEnabled = aEnable;
 
     CORE_EXIT_CRITICAL();
 }
@@ -614,19 +602,12 @@ void RAILCb_IEEE802154_DataRequestCommand(RAIL_IEEE802154_Address_t *aAddress)
 {
     if (sIsSrcMatchEnabled)
     {
-        if (aAddress->length == RAIL_IEEE802154_LongAddress)
+        if ((aAddress->length == RAIL_IEEE802154_LongAddress &&
+             findSrcMatchExtEntry(aAddress->longAddress) >= 0) ||
+            (aAddress->length == RAIL_IEEE802154_ShortAddress &&
+             findSrcMatchShortEntry(aAddress->shortAddress) >= 0))
         {
-            if (findSrcMatchExtEntry(aAddress->longAddress) >= 0)
-            {
-                RAIL_IEEE802154_SetFramePending();
-            }
-        }
-        else
-        {
-            if (findSrcMatchShortEntry(aAddress->shortAddress) >= 0)
-            {
-                RAIL_IEEE802154_SetFramePending();
-            }
+            RAIL_IEEE802154_SetFramePending();
         }
     }
     else
@@ -678,26 +659,25 @@ void RAILCb_RxPacketReceived(void *aRxPacketHandle)
         rxPacketInfo->appendedInfo.crcStatus == false ||
         rxPacketInfo->appendedInfo.frameCodingStatus == false)
     {
-        return;
+        ExitNow();
     }
 
     length = rxPacketInfo->dataLength + 1;
 
-    if (length != rxPacketInfo->dataPtr[0])
-    {
-        return;
-    }
+    // check the length in recv packet info structure
+    VerifyOrExit(length == rxPacketInfo->dataPtr[0]);
 
-    if (length < IEEE802154_MIN_LENGTH || IEEE802154_MAX_LENGTH < length)
-    {
-        return;
-    }
+    // check the lenght validity of recv packet
+    VerifyOrExit(length >= IEEE802154_MIN_LENGTH && length <= IEEE802154_MAX_LENGTH);
 
     memcpy(sReceiveFrame.mPsdu, rxPacketInfo->dataPtr + 1, rxPacketInfo->dataLength);
     sReceiveFrame.mPower = rxPacketInfo->appendedInfo.rssiLatch;
     sReceiveFrame.mLqi = rxPacketInfo->appendedInfo.lqi;
     sReceiveFrame.mLength = length;
     sReceiveError = kThreadError_None;
+
+exit:
+    return;
 }
 
 void efr32RadioProcess(otInstance *aInstance)

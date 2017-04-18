@@ -36,6 +36,7 @@
 #include <stdint.h>
 
 #include <openthread-config.h>
+#include <common/code_utils.hpp>
 #include <openthread/platform/platform.h>
 #include <openthread/platform/alarm.h>
 #include <openthread/platform/diag.h>
@@ -46,7 +47,7 @@ static uint32_t sTimerHi = 0;
 static uint32_t sTimerLo = 0;
 static uint32_t sAlarmT0 = 0;
 static uint32_t sAlarmDt = 0;
-static bool sIsRunning = false;
+static bool sIsRunning   = false;
 
 void efr32AlarmInit(void)
 {
@@ -88,42 +89,38 @@ void efr32AlarmProcess(otInstance *aInstance)
     uint32_t expires;
     bool fire = false;
 
-    if (sIsRunning)
+    VerifyOrExit(sIsRunning);
+
+    expires = sAlarmT0 + sAlarmDt;
+
+    if (sAlarmT0 <= now)
     {
-        expires = sAlarmT0 + sAlarmDt;
+        fire = (expires >= sAlarmT0 && expires <= now);
+    }
+    else
+    {
+        fire = (expires >= sAlarmT0 || expires <= now);
+    }
 
-        if (sAlarmT0 <= now)
-        {
-            if (expires >= sAlarmT0 && expires <= now)
-            {
-                fire = true;
-            }
-        }
-        else
-        {
-            if (expires >= sAlarmT0 || expires <= now)
-            {
-                fire = true;
-            }
-        }
-
-        if (fire)
-        {
-            sIsRunning = false;
+    if (fire)
+    {
+        sIsRunning = false;
 
 #if OPENTHREAD_ENABLE_DIAG
 
-            if (otPlatDiagModeGet())
-            {
-                otPlatDiagAlarmFired(aInstance);
-            }
-            else
+        if (otPlatDiagModeGet())
+        {
+            otPlatDiagAlarmFired(aInstance);
+        }
+        else
 #endif
-            {
-                otPlatAlarmFired(aInstance);
-            }
+        {
+            otPlatAlarmFired(aInstance);
         }
     }
+
+exit:
+    return;
 }
 
 void RAILCb_TimerExpired(void)
