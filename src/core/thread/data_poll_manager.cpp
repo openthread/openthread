@@ -125,7 +125,17 @@ exit:
     {
     case kThreadError_None:
         otLogDebgMac(GetInstance(), "Sent poll");
-        ScheduleNextPoll(kUsePreviousPollPeriod);
+
+        if (mNoBufferRetxMode == true)
+        {
+            mNoBufferRetxMode = false;
+            ScheduleNextPoll(kRecalculatePollPeriod);
+        }
+        else
+        {
+            ScheduleNextPoll(kUsePreviousPollPeriod);
+        }
+
         break;
 
     case kThreadError_InvalidState:
@@ -335,10 +345,7 @@ uint32_t DataPollManager::CalculatePollPeriod(void) const
 
     if (mAttachMode == true)
     {
-        if ((period == 0) || (period > kAttachDataPollPeriod))
-        {
-            period = kAttachDataPollPeriod;
-        }
+        period = kAttachDataPollPeriod;
     }
 
     if (mRetxMode == true)
