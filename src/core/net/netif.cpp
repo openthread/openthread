@@ -191,15 +191,9 @@ ThreadError Netif::SubscribeExternalMulticast(const Address &aAddress)
     NetifMulticastAddress *entry;
     size_t num = sizeof(mExtMulticastAddresses) / sizeof(mExtMulticastAddresses[0]);
 
-    for (entry = mMulticastAddresses; entry; entry = entry->GetNext())
+    if (IsMulticastSubscribed(aAddress))
     {
-        if (memcmp(&entry->mAddress, &aAddress, sizeof(otIp6Address)) == 0)
-        {
-            VerifyOrExit((entry >= &mExtMulticastAddresses[0]) && (entry < &mExtMulticastAddresses[num]),
-                         error = kThreadError_InvalidArgs);
-
-            ExitNow(error = kThreadError_Already);
-        }
+        ExitNow(error = kThreadError_Already);
     }
 
     // Find an available entry in the `mExtMulticastAddresses` array.
