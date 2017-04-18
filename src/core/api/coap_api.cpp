@@ -129,10 +129,8 @@ const otCoapOption *otCoapHeaderGetNextOption(otCoapHeader *aHeader)
 otMessage *otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader)
 {
     Message *message;
-    
     VerifyOrExit(aHeader != NULL, message = NULL);
     message = aInstance->mThreadNetif.GetCoapClient().NewMessage(*(static_cast<const Coap::Header *>(aHeader)));
-    
 exit:
     return message;
 }
