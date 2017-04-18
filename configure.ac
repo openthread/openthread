@@ -350,12 +350,6 @@ NL_ENABLE_TESTS([yes])
 AM_CONDITIONAL([OPENTHREAD_BUILD_TESTS], [test "${nl_cv_build_tests}" = "yes"])
 
 #
-#  Full Thread Device
-#
-
-
-
-#
 # CLI Library
 #
 AC_ARG_ENABLE(cli-app,
@@ -393,7 +387,7 @@ AC_ARG_ENABLE(cli-app,
      enable_cli_app_ftd=no])
 
 
-AC_MSG_CHECKING([CLI Support])
+AC_MSG_CHECKING([cli-app modes])
 AC_MSG_RESULT(${enable_cli_app})
 AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI],     [test "${enable_cli_app}" == "yes"])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI_MTD], [test "${enable_cli_app_mtd}" == "yes"])
@@ -453,11 +447,11 @@ AC_ARG_ENABLE(ncp-app,
     )
 
 
-AC_MSG_CHECKING([NCP support])
+AC_MSG_CHECKING([ncp-app modes])
 AC_MSG_RESULT(${enable_ncp_app})
-AC_MSG_CHECKING([NCP support ftd])
+AC_MSG_CHECKING([should NCP support ftd])
 AC_MSG_RESULT(${enable_ncp_app_ftd})
-AC_MSG_CHECKING([NCP support mtd])
+AC_MSG_CHECKING([should NCP support mtd])
 AC_MSG_RESULT(${enable_ncp_app_mtd})
 
 AC_SUBST(OPENTHREAD_ENABLE_NCP)
@@ -467,8 +461,6 @@ AC_SUBST(OPENTHREAD_ENABLE_NCP_FTD)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP],      [test "${enable_ncp_app}" == "yes"])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_MTD],  [test "${enable_ncp_app_mtd}" == "yes"])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_FTD],  [test "${enable_ncp_app_ftd}" == "yes"])
-
-
 
 #
 # NCP BUS - how does the NCP talk to the host?
@@ -504,13 +496,13 @@ AC_ARG_WITH(
 AC_SUBST(OPENTHREAD_ENABLE_NCP_SPI)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_SPI],  [test "${with_ncp_bus}"  = "spi"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_NCP_SPI],[${OPENTHREAD_ENABLE_NCP_SPI}],[Define to 1 to enable the NCP SPI interface.])
-AC_MSG_CHECKING([NCP Support SPI])
+AC_MSG_CHECKING([should NCP support SPI])
 AC_MSG_RESULT([${OPENTHREAD_ENABLE_SPI}])
 
 AC_SUBST(OPENTHREAD_ENABLE_NCP_UART)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_UART], [test "${with_ncp_bus}"  = "uart"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_NCP_UART],[${OPENTHREAD_ENABLE_NCP_UART}],[Define to 1 to enable the NCP UART interface.])
-AC_MSG_CHECKING([NCP Support UART])
+AC_MSG_CHECKING([sould NCP support UART])
 AC_MSG_RESULT([${OPENTHREAD_ENABLE_UART}])
 
 #
@@ -539,7 +531,7 @@ if test "$enable_builtin_mbedtls" = "yes" -a ! "${MBEDTLS_CPPFLAGS}"; then
     MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include/mbedtls"
     MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -DMBEDTLS_CONFIG_FILE=\\\"mbedtls-config.h\\\""
 fi
-AC_MSG_CHECKING([Enable Builtin MBEDDTLS])
+AC_MSG_CHECKING([whether mbed TLS should be enabled])
 AC_MSG_RESULT(${enable_builtin_mbedtls})
 AM_CONDITIONAL([OPENTHREAD_ENABLE_BUILTIN_MBEDTLS], [test "${enable_builtin_mbedtls}" = "yes"])
 
@@ -569,7 +561,7 @@ else
     OPENTHREAD_ENABLE_COMMISSIONER=0
 fi
 
-AC_MSG_CHECKING([Enable COMMISSIONER])
+AC_MSG_CHECKING([whether to enable the commissioner])
 AC_MSG_RESULT(${enable_commissioner})
 AC_SUBST(OPENTHREAD_ENABLE_COMMISSIONER)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_COMMISSIONER], [test "${enable_commissioner}" = "yes"])
@@ -601,7 +593,7 @@ else
     OPENTHREAD_ENABLE_JOINER=0
 fi
 
-AC_MSG_CHECKING([Enable JOINER])
+AC_MSG_CHECKING([whether to enable the joiner feature])
 AC_MSG_RESULT(${enable_joiner})
 AC_SUBST(OPENTHREAD_ENABLE_JOINER)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_JOINER], [test "${enable_joiner}" = "yes"])
@@ -615,7 +607,7 @@ else
     OPENTHREAD_ENABLE_DTLS=0
 fi
 
-AC_MSG_CHECKING([Enable DTLS due to joiner/commissioner])
+AC_MSG_CHECKING([whether to enable DTLS due to joiner/commissioner])
 AC_MSG_RESULT(${enable_dtls})
 AC_SUBST(OPENTHREAD_ENABLE_DTLS)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_DTLS], [test "${enable_dtls}" = "yes"])
@@ -647,7 +639,7 @@ else
     OPENTHREAD_ENABLE_JAM_DETECTION=0
 fi
 
-AC_MSG_CHECKING([Enable JAM_DETECTION])
+AC_MSG_CHECKING([whether to enable jam detection])
 AC_MSG_RESULT(${enable_jam_detection})
 AC_SUBST(OPENTHREAD_ENABLE_JAM_DETECTION)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_JAM_DETECTION], [test "${enable_jam_detection}" = "yes"])
@@ -679,7 +671,7 @@ else
     OPENTHREAD_ENABLE_MAC_WHITELIST=0
 fi
 
-AC_MSG_CHECKING([Enable MAC_WHITELIST])
+AC_MSG_CHECKING([whether to enable mac whitelist])
 AC_MSG_RESULT(${enable_mac_whitelist})
 AC_SUBST(OPENTHREAD_ENABLE_MAC_WHITELIST)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_MAC_WHITELIST], [test "${enable_mac_whitelist}" = "yes"])
@@ -711,7 +703,7 @@ else
     OPENTHREAD_ENABLE_DIAG=0
 fi
 
-AC_MSG_CHECKING([Enable DIAG])
+AC_MSG_CHECKING([whether to enable diag])
 AC_MSG_RESULT(${enable_diag})
 AC_SUBST(OPENTHREAD_ENABLE_DIAG)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_DIAG], [test "${enable_diag}" = "yes"])
@@ -743,7 +735,7 @@ else
     OPENTHREAD_ENABLE_LEGACY=0
 fi
 
-AC_MSG_CHECKING([Enable LEGACY])
+AC_MSG_CHECKING([whether to enable legacy])
 AC_MSG_RESULT(${enable_legacy})
 AC_SUBST(OPENTHREAD_ENABLE_LEGACY)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_LEGACY], [test "${enable_legacy}" = "yes"])
@@ -1009,7 +1001,7 @@ case ${with_examples} in
 
 esac
 
-AC_MSG_CHECKING([Enable EXAMPLES])
+AC_MSG_CHECKING([whether to enable examples])
 AC_MSG_RESULT(${OPENTHREAD_EXAMPLES})
 
 AC_SUBST(OPENTHREAD_EXAMPLES)
@@ -1043,7 +1035,7 @@ AC_ARG_WITH(platform-info,
 
 PLATFORM_INFO=${with_platform_info}
 
-AC_MSG_CHECKING([Platform info])
+AC_MSG_CHECKING([with platform info])
 AC_MSG_RESULT(${PLATFORM_INFO})
 
 AC_SUBST(PLATFORM_INFO)
