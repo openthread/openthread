@@ -594,7 +594,7 @@ void Mac::SendBeaconRequest(Frame &aFrame)
     aFrame.SetDstAddr(kShortAddrBroadcast);
     aFrame.SetCommandId(Frame::kMacCmdBeaconRequest);
 
-    otLogDebgMac(GetInstance(), "Sent Beacon Request");
+    otLogInfoMac(GetInstance(), "Sending Beacon Request");
 }
 
 void Mac::SendBeacon(Frame &aFrame)
@@ -604,6 +604,7 @@ void Mac::SendBeacon(Frame &aFrame)
     uint16_t fcf;
     Beacon *beacon = NULL;
     BeaconPayload *beaconPayload = NULL;
+    char stringBuffer[BeaconPayload::kInfoStringSize];
 
     // initialize MAC header
     fcf = Frame::kFcfFrameBeacon | Frame::kFcfDstAddrNone | Frame::kFcfSrcAddrExt;
@@ -642,7 +643,9 @@ void Mac::SendBeacon(Frame &aFrame)
 
     aFrame.SetPayloadLength(beaconLength);
 
-    otLogDebgMac(GetInstance(), "Sent Beacon");
+    otLogInfoMac(GetInstance(), "Sending Beacon, %s", beaconPayload->ToInfoString(stringBuffer, sizeof(stringBuffer)));
+
+    (void)stringBuffer;
 }
 
 ThreadError Mac::HandleBeacon(Frame &aFrame)
@@ -653,6 +656,7 @@ ThreadError Mac::HandleBeacon(Frame &aFrame)
     Beacon *beacon = NULL;
     BeaconPayload *beaconPayload = NULL;
     uint8_t payloadLength;
+    char stringBuffer[BeaconPayload::kInfoStringSize];
 
     memset(&result, 0, sizeof(otActiveScanResult));
 
@@ -680,6 +684,10 @@ ThreadError Mac::HandleBeacon(Frame &aFrame)
     }
 
     mActiveScanHandler(mScanContext, &result);
+
+    otLogInfoMac(GetInstance(), "Received Beacon, %s", beaconPayload->ToInfoString(stringBuffer, sizeof(stringBuffer)));
+
+    (void)stringBuffer;
 
 exit:
     return error;
@@ -836,7 +844,7 @@ void Mac::HandleBeginTransmit(void)
     if (sendFrame.GetAckRequest() && !(otPlatRadioGetCaps(GetInstance()) & kRadioCapsAckTimeout))
     {
         mMacTimer.Start(kAckTimeout);
-        otLogDebgMac(GetInstance(), "ack timer start");
+        otLogDebgMac(GetInstance(), "Ack timer start");
     }
 
     if (mPcapCallback)
@@ -976,7 +984,7 @@ void Mac::HandleMacTimer(void)
         break;
 
     case kStateTransmitData:
-        otLogDebgMac(GetInstance(), "ack timer fired");
+        otLogDebgMac(GetInstance(), "Ack timer fired");
         otPlatRadioReceive(GetInstance(), mChannel);
         mCounters.mTxTotal++;
 
@@ -1012,7 +1020,7 @@ void Mac::HandleReceiveTimer(void *aContext)
 
 void Mac::HandleReceiveTimer(void)
 {
-    otLogDebgMac(GetInstance(), "data poll timeout!");
+    otLogDebgMac(GetInstance(), "Data poll timeout");
 
     for (Receiver *receiver = mReceiveHead; receiver; receiver = receiver->mNext)
     {
@@ -1029,7 +1037,6 @@ void Mac::SentFrame(ThreadError aError)
 {
     Frame &sendFrame(*mTxFrame);
     Sender *sender;
-    Address dstAddr;
 
     mTransmitAttempts++;
 
@@ -1041,33 +1048,12 @@ void Mac::SentFrame(ThreadError aError)
     case kThreadError_ChannelAccessFailure:
     case kThreadError_Abort:
     case kThreadError_NoAck:
+    {
+        char stringBuffer[Frame::kInfoStringSize];
 
-        sendFrame.GetDstAddr(dstAddr);
-
-        switch (dstAddr.mLength)
-        {
-        case sizeof(ShortAddress):
-            otLogInfoMac(GetInstance(), "Tx failed - Error: %s (%d) - SeqNum: %d - Attempt %d/%d - Dst (short): %04x",
-                         otThreadErrorToString(aError), aError, sendFrame.GetSequence(), mTransmitAttempts,
-                         sendFrame.GetMaxTxAttempts(), dstAddr.mShortAddress);
-            break;
-
-        case sizeof(ExtAddress):
-            otLogInfoMac(GetInstance(), "Tx failed - Error: %s (%d) - SeqNum: %d - Attempt %d/%d - "
-                         "Dst: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
-                         otThreadErrorToString(aError), aError, sendFrame.GetSequence(), mTransmitAttempts,
-                         sendFrame.GetMaxTxAttempts(), dstAddr.mExtAddress.m8[0], dstAddr.mExtAddress.m8[1],
-                         dstAddr.mExtAddress.m8[2], dstAddr.mExtAddress.m8[3], dstAddr.mExtAddress.m8[4],
-                         dstAddr.mExtAddress.m8[5], dstAddr.mExtAddress.m8[6], dstAddr.mExtAddress.m8[7]);
-            break;
-
-        default:
-            otLogInfoMac(GetInstance(), "Tx failed - Error: %s (%d) - SeqNum: %d - Attempt %d/%d",
-                         otThreadErrorToString(aError), aError, sendFrame.GetSequence(), mTransmitAttempts,
-                         sendFrame.GetMaxTxAttempts());
-            break;
-        }
-
+        otLogInfoMac(GetInstance(), "Frame tx failed, error:%s, attempt:%d/%d, %s", otThreadErrorToString(aError),
+                     mTransmitAttempts, sendFrame.GetMaxTxAttempts(),
+                     sendFrame.ToInfoString(stringBuffer, sizeof(stringBuffer)));
         otDumpDebgMac(GetInstance(), "TX ERR", sendFrame.GetHeader(), 16);
 
         if (!RadioSupportsRetries() &&
@@ -1078,7 +1064,9 @@ void Mac::SentFrame(ThreadError aError)
             ExitNow();
         }
 
+        (void)stringBuffer;
         break;
+    }
 
     default:
         assert(false);
@@ -1348,11 +1336,10 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
         break;
 
     case sizeof(ShortAddress):
-        otLogDebgMac(GetInstance(), "Received from short address %x", srcaddr.mShortAddress);
+        otLogDebgMac(GetInstance(), "Received frame from short address 0x%04x", srcaddr.mShortAddress);
 
         if (neighbor == NULL)
         {
-            otLogDebgMac(GetInstance(), "drop not neighbor");
             ExitNow(error = kThreadError_UnknownNeighbor);
         }
 
@@ -1370,7 +1357,6 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
     // Duplicate Address Protection
     if (memcmp(&srcaddr.mExtAddress, &mExtAddress, sizeof(srcaddr.mExtAddress)) == 0)
     {
-        otLogDebgMac(GetInstance(), "duplicate address received");
         ExitNow(error = kThreadError_InvalidSourceAddress);
     }
 
@@ -1521,7 +1507,19 @@ exit:
 
     if (error != kThreadError_None)
     {
-        otLogDebgMacErr(GetInstance(), error, "Dropping received frame");
+        if (aFrame == NULL)
+        {
+            otLogInfoMac(GetInstance(), "Frame rx failed, error:%s", otThreadErrorToString(error));
+        }
+        else
+        {
+            char stringBuffer[Frame::kInfoStringSize];
+
+            otLogInfoMac(GetInstance(), "Frame rx failed, error:%s, %s", otThreadErrorToString(error),
+                         aFrame->ToInfoString(stringBuffer, sizeof(stringBuffer)));
+
+            (void)stringBuffer;
+        }
 
         switch (error)
         {
@@ -1575,7 +1573,7 @@ ThreadError Mac::HandleMacCommand(Frame &aFrame)
     {
     case Frame::kMacCmdBeaconRequest:
         mCounters.mRxBeaconRequest++;
-        otLogDebgMac(GetInstance(), "Received Beacon Request");
+        otLogInfoMac(GetInstance(), "Received Beacon Request");
 
         if (mBeaconsEnabled)
         {

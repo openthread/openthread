@@ -63,13 +63,13 @@ const char *Address::ToString(char *aBuf, uint16_t aSize) const
         break;
 
     case sizeof(ExtAddress):
-        snprintf(aBuf, aSize, "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
+        snprintf(aBuf, aSize, "%02x%02x%02x%02x%02x%02x%02x%02x",
                  mExtAddress.m8[0], mExtAddress.m8[1], mExtAddress.m8[2], mExtAddress.m8[3],
                  mExtAddress.m8[4], mExtAddress.m8[5], mExtAddress.m8[6], mExtAddress.m8[7]);
         break;
 
     default:
-        snprintf(aBuf, aSize, "Unknown");
+        snprintf(aBuf, aSize, "None");
         break;
     }
 
@@ -1030,6 +1030,90 @@ exit:
 uint8_t *Frame::GetFooter(void)
 {
     return GetPsdu() + GetPsduLength() - GetFooterLength();
+}
+
+const char *Frame::ToInfoString(char *aBuf, uint16_t aSize)
+{
+    uint8_t type, commandId;
+    Address src, dst;
+    const char *typeStr;
+    char stringBuffer[10];
+    char srcStringBuffer[Address::kAddressStringSize];
+    char dstStringBuffer[Address::kAddressStringSize];
+
+    type = GetType();
+
+    switch (type)
+    {
+    case kFcfFrameBeacon:
+        typeStr = "Beacon";
+        break;
+
+    case kFcfFrameData:
+        typeStr = "Data";
+        break;
+
+    case kFcfFrameAck:
+        typeStr = "Ack";
+        break;
+
+    case kFcfFrameMacCmd:
+        if (GetCommandId(commandId) != kThreadError_None)
+        {
+            commandId = 0xff;
+        }
+
+        switch (commandId)
+        {
+        case kMacCmdDataRequest:
+            typeStr = "Cmd(DataReq)";
+            break;
+
+        case kMacCmdBeaconRequest:
+            typeStr = "Cmd(BeaconReq)";
+            break;
+
+        default:
+            snprintf(stringBuffer, sizeof(stringBuffer), "Cmd(%d)", commandId);
+            typeStr = stringBuffer;
+            break;
+        }
+
+        break;
+
+    default:
+        snprintf(stringBuffer, sizeof(stringBuffer), "%d", type);
+        typeStr = stringBuffer;
+        break;
+    }
+
+    if (GetSrcAddr(src) == kThreadError_None)
+    {
+        src.mLength = 0;
+    }
+
+    if (GetDstAddr(dst) == kThreadError_None)
+    {
+        dst.mLength = 0;
+    }
+
+    snprintf(aBuf, aSize, "len:%d, seqnum:%d, type:%s, src:%s, dst:%s, sec:%s, ackreq:%s", GetLength(), GetSequence(),
+             typeStr, src.ToString(srcStringBuffer, sizeof(srcStringBuffer)),
+             dst.ToString(dstStringBuffer, sizeof(dstStringBuffer)), GetSecurityEnabled() ? "yes" : "no",
+             GetAckRequest() ? "yes" : "no");
+
+    return aBuf;
+}
+
+const char *BeaconPayload::ToInfoString(char *aBuf, uint16_t aSize)
+{
+    const uint8_t *xpanid = GetExtendedPanId();
+
+    snprintf(aBuf, aSize, "name:%s, xpanid:%02x%02x%02x%02x%02x%02x%02x%02x, id:%d ver:%d, joinable:%s, native:%s",
+             GetNetworkName(), xpanid[0], xpanid[1], xpanid[2], xpanid[3], xpanid[4], xpanid[5], xpanid[6], xpanid[7],
+             GetProtocolId(), GetProtocolVersion(), IsJoiningPermitted() ? "yes" : "no", IsNative() ? "yes" : "no");
+
+    return aBuf;
 }
 
 }  // namespace Mac
