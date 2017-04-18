@@ -100,7 +100,7 @@ ThreadError utilsFlashErasePage(uint32_t aAddress)
 {
     ThreadError error = kThreadError_None;
     uint32_t address;
-    uint8_t dummy_page[ FLASH_SIZE ];
+    uint8_t dummyPage[ FLASH_SIZE ];
 
     otEXPECT_ACTION(sFlashFd >= 0, error = kThreadError_Failed);
     otEXPECT_ACTION(aAddress < FLASH_SIZE, error = kThreadError_InvalidArgs);
@@ -108,61 +108,13 @@ ThreadError utilsFlashErasePage(uint32_t aAddress)
     // Get start address of the flash page that includes aAddress
     address = aAddress & (~(uint32_t)(FLASH_PAGE_SIZE - 1));
 
-    // Some notes:
-    //
-    // a)  Do not change this to a for(;;) loop that writes bytes
-    //     This takes forever and causes timeouts to occur.
-    //
-    // The math:
-    //     With pagesize = 8K pages, and n-pages=128
-    //     This turns into 1 million calls to "pwrite()"
-    //     Those 1million calls occur during startup.
-    //     the "Thread Cert" tests, in some cases start
-    //     over 30+ instances of the simulated app...
-    //
-    //     Tests actually run in parallel, in some cases there are
-    //     70 to 80 instances of the CLI app starting up. Each one
-    //     calling write - 1 million times, writing exactly 1 byte
-    //
-    //     That becomes super slow. Thus we write full pages
-    //     On a powerful platform this is fast, very fast.
-    //     On a virtual machine (ie: test-build-farm) it is slow
-    //     Result is: The Thread Cert tests fail/timeout
-    //
-    // b)  Do not allocate memory for the page via malloc/free.
-    //
-    //     Reason: this causes false failures in some test modes
-    //
-    //     Specifically when enabling the address sanitizer ...
-    //     And running thread certification tests *in*parallel*
-    //     The memory requirements become huge.
-    //
-    // Background:
-    //     The way "asan" works is this: When you free a page
-    //     the "libasan" does not actually free the page instead
-    //     libasan poisons the page but does not actually free the
-    //     page, why? Because the goal to detect using the memory
-    //     Thus ASAN is like a giant memory leak, it must hold onto
-    //     the page so that it can detect "use-after-free"
-    //
-    //     Next (part 2)... the CERT tests, and run in parallel there
-    //     are cases where 70 to 80 instances of the CLI app run
-    //     in parallel - its a huge pseudo-memory leak times 70
-    //     Depending upon your machine you need 8 to 16gig of ram
-    //     Virtual test boxes are often configured with much less
-    //
-    // The solution is to use a full page on the stack
-    // it could be a static, variable however, we are
-    // running on Linux, we have plenty of RAM..
-
     // set the page to the erased state.
-    memset((void *)(&dummy_page[0]), 0xff, FLASH_PAGE_SIZE);
+    memset((void *)(&dummyPage[0]), 0xff, FLASH_PAGE_SIZE);
 
     // Write the page
     ssize_t r;
-    r =  pwrite(sFlashFd, &(dummy_page[0]), FLASH_PAGE_SIZE, address);
+    r =  pwrite(sFlashFd, &(dummyPage[0]), FLASH_PAGE_SIZE, address);
     VerifyOrExit(((int)r) == ((int)(FLASH_PAGE_SIZE)), error = kThreadError_Failed);
-
 
 exit:
     return error;

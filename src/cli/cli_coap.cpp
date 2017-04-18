@@ -84,7 +84,7 @@ void Coap::ConvertToLower(char *aString)
 
     while (aString[i])
     {
-        aString[i] = tolower(aString[i]);
+        aString[i] = (char)tolower(aString[i]);
         i++;
     }
 }
@@ -262,7 +262,7 @@ exit:
 ThreadError Coap::ProcessClient(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    otMessage *message = otCoapNewMessage(sInstance, NULL);
+    otMessage *message = NULL;
     otMessageInfo messageInfo;
     otCoapHeader header;
 

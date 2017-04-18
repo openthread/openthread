@@ -132,6 +132,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mCsmaAttempts = 0;
     mTransmitAttempts = 0;
     mTransmitBeacon = false;
+    mBeaconsEnabled = false;
 
     mPendingScanRequest = kScanTypeNone;
     mScanChannel = kPhyMinChannel;
@@ -758,7 +759,7 @@ void Mac::HandleBeginTransmit(void)
             sendFrame.SetChannel(mChannel);
             SendBeacon(sendFrame);
             sendFrame.SetSequence(mBeaconSequence++);
-            sendFrame.SetMaxTxAttempts(kIndirectFrameMacTxAttempts);
+            sendFrame.SetMaxTxAttempts(kDirectFrameMacTxAttempts);
             break;
 
         case kStateTransmitData:
@@ -1536,13 +1537,16 @@ ThreadError Mac::HandleMacCommand(Frame &aFrame)
         mCounters.mRxBeaconRequest++;
         otLogDebgMac(GetInstance(), "Received Beacon Request");
 
-        mTransmitBeacon = true;
-
-        if (mState == kStateIdle)
+        if (mBeaconsEnabled)
         {
-            mState = kStateTransmitBeacon;
-            mTransmitBeacon = false;
-            StartCsmaBackoff();
+            mTransmitBeacon = true;
+
+            if (mState == kStateIdle)
+            {
+                mState = kStateTransmitBeacon;
+                mTransmitBeacon = false;
+                StartCsmaBackoff();
+            }
         }
 
         ExitNow(error = kThreadError_Drop);

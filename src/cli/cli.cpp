@@ -281,15 +281,15 @@ int Interpreter::Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength)
     return static_cast<int>(cur - aBin);
 }
 
-void Interpreter::AppendResult(ThreadError error)
+void Interpreter::AppendResult(ThreadError aError)
 {
-    if (error == kThreadError_None)
+    if (aError == kThreadError_None)
     {
         sServer->OutputFormat("Done\r\n");
     }
     else
     {
-        sServer->OutputFormat("Error %d\r\n", error);
+        sServer->OutputFormat("Error %d: %s\r\n", aError, otThreadErrorToString(aError));
     }
 }
 

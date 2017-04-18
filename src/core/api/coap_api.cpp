@@ -38,14 +38,6 @@
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 
-/*
- * Note: no 'extern "C"' here.
- * Reason: This was done in the header.
- * And if we have 'extern "C"' then
- * astyle forces an indent to occur
- * and that makes it look ugly.
- */
-
 using namespace Thread;
 
 void otCoapHeaderInit(otCoapHeader *aHeader, otCoapType aType, otCoapCode aCode)
@@ -136,7 +128,11 @@ const otCoapOption *otCoapHeaderGetNextOption(otCoapHeader *aHeader)
 
 otMessage *otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader)
 {
-    return aInstance->mThreadNetif.GetCoapClient().NewMessage(*(static_cast<const Coap::Header *>(aHeader)));
+    Message *message;
+    VerifyOrExit(aHeader != NULL, message = NULL);
+    message = aInstance->mThreadNetif.GetCoapClient().NewMessage(*(static_cast<const Coap::Header *>(aHeader)));
+exit:
+    return message;
 }
 
 ThreadError otCoapSendRequest(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo,
@@ -179,6 +175,4 @@ ThreadError otCoapSendResponse(otInstance *aInstance, otMessage *aMessage, const
                *static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-
-#endif
-
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP

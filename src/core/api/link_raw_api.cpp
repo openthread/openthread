@@ -39,10 +39,6 @@
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 ThreadError otLinkRawSetEnable(otInstance *aInstance, bool aEnabled)
 {
     ThreadError error = kThreadError_None;
@@ -260,10 +256,6 @@ ThreadError otLinkRawSrcMatchClearExtEntries(otInstance *aInstance)
 exit:
     return error;
 }
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif
 
 namespace Thread {
 
