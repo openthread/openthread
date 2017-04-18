@@ -192,7 +192,10 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_JAM_DETECT_BUSY, &NcpBase::GetPropertyHandler_JAM_DETECT_BUSY },
     { SPINEL_PROP_JAM_DETECT_HISTORY_BITMAP, &NcpBase::GetPropertyHandler_JAM_DETECT_HISTORY_BITMAP },
 #endif
+
+#if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
     { SPINEL_PROP_THREAD_BA_PROXY_ENABLE, &NcpBase::GetPropertyHandler_BA_PROXY_ENABLE },
+#endif
 
     { SPINEL_PROP_CNTR_TX_PKT_TOTAL, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_TX_PKT_ACK_REQ, &NcpBase::GetPropertyHandler_MAC_CNTR },
@@ -282,7 +285,6 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
 
     { SPINEL_PROP_STREAM_NET_INSECURE, &NcpBase::SetPropertyHandler_STREAM_NET_INSECURE },
     { SPINEL_PROP_STREAM_NET, &NcpBase::SetPropertyHandler_STREAM_NET },
-    { SPINEL_PROP_STREAM_BA_PROXY, &NcpBase::SetPropertyHandler_STREAM_BA_PROXY },
 
     { SPINEL_PROP_IPV6_ML_PREFIX, &NcpBase::SetPropertyHandler_IPV6_ML_PREFIX },
     { SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD, &NcpBase::SetPropertyHandler_IPV6_ICMP_PING_OFFLOAD },
@@ -313,7 +315,10 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_JAM_DETECT_BUSY, &NcpBase::SetPropertyHandler_JAM_DETECT_BUSY },
 #endif
 
+#if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
     { SPINEL_PROP_THREAD_BA_PROXY_ENABLE, &NcpBase::SetPropertyHandler_BA_PROXY_ENABLE },
+    { SPINEL_PROP_STREAM_BA_PROXY, &NcpBase::SetPropertyHandler_STREAM_BA_PROXY },
+#endif // OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
 
 #if OPENTHREAD_ENABLE_DIAG
     { SPINEL_PROP_NEST_STREAM_MFG, &NcpBase::SetPropertyHandler_NEST_STREAM_MFG },
@@ -600,10 +605,7 @@ ThreadError NcpBase::OutboundFrameEnd(void)
     return mTxFrameBuffer.InFrameEnd();
 }
 
-// ----------------------------------------------------------------------------
-// MARK: Outbound Datagram Handling
-// ----------------------------------------------------------------------------
-
+#if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
 void NcpBase::HandleBorderAgentProxyStream(otMessage *aMessage, uint16_t aRloc, uint16_t aPort, void *aContext)
 {
     static_cast<NcpBase *>(aContext)->HandleBorderAgentProxyStream(aMessage, aRloc, aPort);
@@ -648,6 +650,11 @@ exit:
         SendLastStatus(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_STATUS_DROPPED);
     }
 }
+#endif // OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
+
+// ----------------------------------------------------------------------------
+// MARK: Outbound Datagram Handling
+// ----------------------------------------------------------------------------
 
 void NcpBase::HandleDatagramFromStack(otMessage *aMessage, void *aContext)
 {
@@ -2881,6 +2888,7 @@ ThreadError NcpBase::GetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_k
     return SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
 }
 
+#if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
 ThreadError NcpBase::GetPropertyHandler_BA_PROXY_ENABLE(uint8_t header, spinel_prop_key_t key)
 {
    return SendPropertyUpdate(
@@ -2891,6 +2899,7 @@ ThreadError NcpBase::GetPropertyHandler_BA_PROXY_ENABLE(uint8_t header, spinel_p
                otBorderAgentProxyIsEnabled(mInstance)
            );
 }
+#endif // OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
 
@@ -4553,6 +4562,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spin
     return errorCode;
 }
 
+#if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
 ThreadError NcpBase::SetPropertyHandler_STREAM_BA_PROXY(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                    uint16_t value_len)
 {
@@ -4619,6 +4629,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_BA_PROXY(uint8_t header, spinel_p
 
     return errorCode;
 }
+#endif // OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
 
 ThreadError NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                    uint16_t value_len)
@@ -5611,6 +5622,7 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header
     return errorCode;
 }
 
+#if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
 ThreadError NcpBase::SetPropertyHandler_BA_PROXY_ENABLE(uint8_t header, spinel_prop_key_t key,
                                                           const uint8_t *value_ptr, uint16_t value_len)
 {
@@ -5645,6 +5657,8 @@ ThreadError NcpBase::SetPropertyHandler_BA_PROXY_ENABLE(uint8_t header, spinel_p
 
     return errorCode;
 }
+#endif // OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
+
 #if OPENTHREAD_ENABLE_JAM_DETECTION
 
 ThreadError NcpBase::SetPropertyHandler_JAM_DETECT_ENABLE(uint8_t header, spinel_prop_key_t key,

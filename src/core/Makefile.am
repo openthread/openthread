@@ -91,6 +91,7 @@ libopenthread_mtd_a_CPPFLAGS        = \
 #
 
 SOURCES_COMMON                      = \
+    api/border_agent_proxy_api.cpp    \
     api/coap_api.cpp                  \
     api/commissioner_api.cpp          \
     api/crypto_api.cpp                \
@@ -112,7 +113,6 @@ SOURCES_COMMON                      = \
     api/thread_api.cpp                \
     api/thread_ftd_api.cpp            \
     api/udp_api.cpp                   \
-    api/border_agent_proxy_api.cpp    \
     coap/coap_base.cpp                \
     coap/coap_client.cpp              \
     coap/coap_header.cpp              \
