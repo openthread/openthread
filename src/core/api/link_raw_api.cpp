@@ -37,10 +37,6 @@
 #include "openthread/platform/usec-alarm.h"
 #include "openthread-instance.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 ThreadError otLinkRawSetEnable(otInstance *aInstance, bool aEnabled)
 {
     ThreadError error = kThreadError_None;
@@ -258,10 +254,6 @@ ThreadError otLinkRawSrcMatchClearExtEntries(otInstance *aInstance)
 exit:
     return error;
 }
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif
 
 namespace Thread {
 

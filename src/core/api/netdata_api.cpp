@@ -37,10 +37,6 @@
 
 using namespace Thread;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 ThreadError otNetDataGetLeader(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength)
 {
     ThreadError error = kThreadError_None;
@@ -156,7 +152,3 @@ uint8_t otNetDataGetStableVersion(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMle().GetLeaderDataTlv().GetStableDataVersion();
 }
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif

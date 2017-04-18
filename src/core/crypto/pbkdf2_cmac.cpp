@@ -35,13 +35,6 @@
 #include <crypto/pbkdf2_cmac.h>
 #include <mbedtls/cmac.h>
 
-namespace Thread {
-namespace Crypto {
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void otPbkdf2Cmac(
     const uint8_t *aPassword, uint16_t aPasswordLen,
     const uint8_t *aSalt, uint16_t aSaltLen,
@@ -91,10 +84,3 @@ void otPbkdf2Cmac(
         keyLen -= useLen;
     }
 }
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif
-
-}  // namespace Crypto
-}  // namespace Thread

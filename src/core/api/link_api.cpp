@@ -37,10 +37,6 @@
 
 using namespace Thread;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 static void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame);
 static void HandleEnergyScanResult(void *aContext, otEnergyScanResult *aResult);
 
@@ -376,8 +372,3 @@ bool otLinkIsInTransmitState(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMac().IsInTransmitState();
 }
-
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif

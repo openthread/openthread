@@ -102,6 +102,7 @@ class OpenThread(IThci):
         """close the serial port connection"""
         try:
             self.closeConnection()
+            self.deviceConnected = False
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("delete() Error: " + str(e))
 
@@ -671,7 +672,10 @@ class OpenThread(IThci):
     def _connect(self):
         print 'My port is %s' % self.port
         if self.port.startswith('COM'):
-            self.handle = serial.Serial(self.port, 115200, timeout=0, xonxoff=True)
+            self.handle = serial.Serial(self.port, 115200, timeout=0)
+            time.sleep(1)
+            self.handle.write('\r\n')
+            time.sleep(0.1)
             self._is_net = False
         elif ':' in self.port:
             host, port = self.port.split(':')
@@ -698,8 +702,6 @@ class OpenThread(IThci):
         try:
             # init serial port
             self._connect()
-            time.sleep(3)
-
             self.deviceConnected = True
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("intialize() Error: " + str(e))
@@ -2541,7 +2543,7 @@ class OpenThread(IThci):
 
     def ValidateDeviceFirmware(self):
         print '%s call ValidateDeviceFirmware' % self.port
-        if "OPENTHREAD" in self.getVersionNumber():
+        if "OPENTHREAD" in self.UIStatusMsg:
            return True
         else:
            return False
