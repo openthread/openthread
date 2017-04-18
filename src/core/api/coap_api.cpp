@@ -126,7 +126,11 @@ const otCoapOption *otCoapHeaderGetNextOption(otCoapHeader *aHeader)
 
 otMessage *otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader)
 {
-    return aInstance->mThreadNetif.GetCoapClient().NewMessage(*(static_cast<const Coap::Header *>(aHeader)));
+    Message *message;
+    VerifyOrExit(aHeader != NULL, message = NULL);
+    message = aInstance->mThreadNetif.GetCoapClient().NewMessage(*(static_cast<const Coap::Header *>(aHeader)));
+exit:
+    return message;
 }
 
 ThreadError otCoapSendRequest(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo,
