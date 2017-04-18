@@ -353,7 +353,7 @@ AM_CONDITIONAL([OPENTHREAD_BUILD_TESTS], [test "${nl_cv_build_tests}" = "yes"])
 #  Full Thread Device
 #
 
-AC_MSG_CHECKING([Enable FTD])
+AC_MSG_CHECKING([whether to enable FTD])
 AC_ARG_ENABLE(ftd,
     [AS_HELP_STRING([--enable-ftd],[Enable Full Thread Device features @<:@default=no@:>@.])],
     [
@@ -376,7 +376,7 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_FTD], [test "${enable_ftd}" = "yes"])
 # CLI Library
 #
 
-AC_MSG_CHECKING([Enable CLI])
+AC_MSG_CHECKING([whether to enable the CLI app])
 AC_ARG_ENABLE(cli,
     [AS_HELP_STRING([--enable-cli],[Enable CLI support @<:@default=no@:>@.])],
     [
@@ -399,7 +399,7 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI], [test "${enable_cli}" != "no"])
 # NCP Library
 #
 
-AC_MSG_CHECKING([Enable NCP])
+AC_MSG_CHECKING([whether to enable the NCP app, and the bus it uses])
 AC_ARG_ENABLE(ncp,
     [AS_HELP_STRING([--enable-ncp[[=spi|uart]]],[Enable NCP support @<:@default=no@:>@.])],
     [
@@ -420,7 +420,7 @@ AC_ARG_ENABLE(ncp,
     ],
     [enable_ncp=no])
 AC_MSG_RESULT(${enable_ncp})
-AC_MSG_CHECKING([Enable NCP BUS])
+AC_MSG_CHECKING([determine ncp bus])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP],      [test "${enable_ncp}" != "no"])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_SPI],  [test "${enable_ncp}"  = "spi"])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_UART], [test "${enable_ncp}"  = "uart"])
@@ -451,7 +451,7 @@ if test "$enable_builtin_mbedtls" = "yes" -a ! "${MBEDTLS_CPPFLAGS}"; then
     MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include/mbedtls"
     MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -DMBEDTLS_CONFIG_FILE=\\\"mbedtls-config.h\\\""
 fi
-AC_MSG_CHECKING([Enable Builtin MBEDDTLS])
+AC_MSG_CHECKING([whether MBED DTLS should be enabled])
 AC_MSG_RESULT(${enable_builtin_mbedtls})
 AM_CONDITIONAL([OPENTHREAD_ENABLE_BUILTIN_MBEDTLS], [test "${enable_builtin_mbedtls}" = "yes"])
 
@@ -481,7 +481,7 @@ else
     OPENTHREAD_ENABLE_COMMISSIONER=0
 fi
 
-AC_MSG_CHECKING([Enable COMMISSIONER])
+AC_MSG_CHECKING([whether to enable the commissioner])
 AC_MSG_RESULT(${enable_commissioner})
 AC_SUBST(OPENTHREAD_ENABLE_COMMISSIONER)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_COMMISSIONER], [test "${enable_commissioner}" = "yes"])
@@ -513,7 +513,7 @@ else
     OPENTHREAD_ENABLE_JOINER=0
 fi
 
-AC_MSG_CHECKING([Enable JOINER])
+AC_MSG_CHECKING([whether to enable the joiner feature])
 AC_MSG_RESULT(${enable_joiner})
 AC_SUBST(OPENTHREAD_ENABLE_JOINER)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_JOINER], [test "${enable_joiner}" = "yes"])
@@ -527,7 +527,7 @@ else
     OPENTHREAD_ENABLE_DTLS=0
 fi
 
-AC_MSG_CHECKING([Enable DTLS due to joiner/commissioner])
+AC_MSG_CHECKING([whether to enable DTLS due to joiner/commissioner])
 AC_MSG_RESULT(${enable_dtls})
 AC_SUBST(OPENTHREAD_ENABLE_DTLS)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_DTLS], [test "${enable_dtls}" = "yes"])
@@ -559,7 +559,7 @@ else
     OPENTHREAD_ENABLE_JAM_DETECTION=0
 fi
 
-AC_MSG_CHECKING([Enable JAM_DETECTION])
+AC_MSG_CHECKING([whether to enable jam detection])
 AC_MSG_RESULT(${enable_jam_detection})
 AC_SUBST(OPENTHREAD_ENABLE_JAM_DETECTION)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_JAM_DETECTION], [test "${enable_jam_detection}" = "yes"])
@@ -591,7 +591,7 @@ else
     OPENTHREAD_ENABLE_MAC_WHITELIST=0
 fi
 
-AC_MSG_CHECKING([Enable MAC_WHITELIST])
+AC_MSG_CHECKING([whether to enable mac whitelist])
 AC_MSG_RESULT(${enable_mac_whitelist})
 AC_SUBST(OPENTHREAD_ENABLE_MAC_WHITELIST)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_MAC_WHITELIST], [test "${enable_mac_whitelist}" = "yes"])
@@ -623,7 +623,7 @@ else
     OPENTHREAD_ENABLE_DIAG=0
 fi
 
-AC_MSG_CHECKING([Enable DIAG])
+AC_MSG_CHECKING([whether to enable diag])
 AC_MSG_RESULT(${enable_diag})
 AC_SUBST(OPENTHREAD_ENABLE_DIAG)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_DIAG], [test "${enable_diag}" = "yes"])
@@ -655,7 +655,7 @@ else
     OPENTHREAD_ENABLE_LEGACY=0
 fi
 
-AC_MSG_CHECKING([Enable LEGACY])
+AC_MSG_CHECKING([whether to enable legacy])
 AC_MSG_RESULT(${enable_legacy})
 AC_SUBST(OPENTHREAD_ENABLE_LEGACY)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_LEGACY], [test "${enable_legacy}" = "yes"])
@@ -921,7 +921,7 @@ case ${with_examples} in
 
 esac
 
-AC_MSG_CHECKING([Enable EXAMPLES])
+AC_MSG_CHECKING([whether to enable examples])
 AC_MSG_RESULT(${OPENTHREAD_EXAMPLES})
 
 AC_SUBST(OPENTHREAD_EXAMPLES)
@@ -955,7 +955,7 @@ AC_ARG_WITH(platform-info,
 
 PLATFORM_INFO=${with_platform_info}
 
-AC_MSG_CHECKING([Platform info])
+AC_MSG_CHECKING([with platform info])
 AC_MSG_RESULT(${PLATFORM_INFO})
 
 AC_SUBST(PLATFORM_INFO)
