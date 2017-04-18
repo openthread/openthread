@@ -34,50 +34,65 @@ EXTRA_DIST                          = \
 
 # Pull in the sources that comprise the OpenThread NCP library.
 
-lib_LIBRARIES                       = libopenthread-ncp.a
+lib_LIBRARIES                       = \
+    libopenthread-ncp-mtd.a           \
+    libopenthread-ncp-ftd.a           \
+    $(NULL)
 
-libopenthread_ncp_a_CPPFLAGS        = \
+
+COMMON_CPPFLAGS        = \
+    -I$(top_srcdir)/include             \
+    -I$(top_srcdir)/src                 \
+    -I$(top_srcdir)/src/core            \
+    -I$(top_srcdir)/third_party         \
+    -D_GNU_SOURCE                       \
+    $(OPENTHREAD_TARGET_DEFINES)        \
+    $(MISSING_CPPFLAGS)                 \
+    $(NULL)
+
+
+COMMON_CXXFLAGS                     = \
     -I$(top_srcdir)/include           \
     -I$(top_srcdir)/src               \
     -I$(top_srcdir)/src/core          \
     -I$(top_srcdir)/third_party       \
     -D_GNU_SOURCE                     \
-    $(OPENTHREAD_TARGET_DEFINES)      \
     $(MISSING_CPPFLAGS)               \
-    $(NULL)
-
-libopenthread_ncp_a_CXXFLAGS        = \
-    -I$(top_srcdir)/include           \
-    -I$(top_srcdir)/src               \
-    -I$(top_srcdir)/src/core          \
-    -I$(top_srcdir)/third_party       \
     $(OPENTHREAD_TARGET_DEFINES)      \
     $(NULL)
 
-libopenthread_ncp_a_SOURCES         = \
+libopenthread_ncp_mtd_a_CPPFLAGS    = \
+    -DOPENTHREAD_MTD=1                \
+    $(COMMON_CXXFLAGS)                \
+    $(NULL)
+
+libopenthread_ncp_ftd_a_CPPFLAGS    = \
+    -DOPENTHREAD_FTD=1                \
+    $(COMMON_CXXFLAGS)                \
+    $(NULL)
+
+COMMON_SOURCES                      = \
     ncp_base.cpp                      \
     ncp_base.hpp                      \
     ncp_buffer.cpp                    \
     ncp_buffer.hpp                    \
     spinel.c                          \
     spinel.h                          \
-    $(NULL)
-
-if OPENTHREAD_ENABLE_NCP_SPI
-libopenthread_ncp_a_SOURCES        += \
     ncp_spi.cpp                       \
     ncp_spi.hpp                       \
-    $(NULL)
-endif
-
-if OPENTHREAD_ENABLE_NCP_UART
-libopenthread_ncp_a_SOURCES        += \
     hdlc.cpp                          \
     hdlc.hpp                          \
     ncp_uart.cpp                      \
     ncp_uart.hpp                      \
     $(NULL)
-endif
+
+libopenthread_ncp_mtd_a_SOURCES     = \
+   $(COMMON_SOURCES)                  \
+   $(NULL)
+
+libopenthread_ncp_ftd_a_SOURCES     = \
+   $(COMMON_SOURCES)                  \
+   $(NULL)
 
 include_HEADERS                     = \
     $(NULL)

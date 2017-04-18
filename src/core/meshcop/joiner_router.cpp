@@ -39,6 +39,8 @@
 #include <openthread-config.h>
 #endif
 
+#if OPENTHREAD_FTD
+
 #include <stdio.h>
 
 #include <common/code_utils.hpp>
@@ -533,3 +535,6 @@ exit:
 
 }  // namespace Dtls
 }  // namespace Thread
+
+#endif // OPENTHREAD_FTD
+

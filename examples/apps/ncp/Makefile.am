@@ -112,17 +112,20 @@ LDFLAGS_COMMON                                                        += \
     $(NULL)
 endif
 
-if OPENTHREAD_ENABLE_FTD
+
+
+if OPENTHREAD_ENABLE_NCP_FTD
 bin_PROGRAMS                                                          += \
     ot-ncp-ftd                                                           \
     $(NULL)
+endif
 
 ot_ncp_ftd_CPPFLAGS                                                    = \
     $(CPPFLAGS_COMMON)                                                   \
     $(NULL)
 
 ot_ncp_ftd_LDADD                                                       = \
-    $(top_builddir)/src/ncp/libopenthread-ncp.a                          \
+    $(top_builddir)/src/ncp/libopenthread-ncp-ftd.a                      \
     $(top_builddir)/src/core/libopenthread-ftd.a                         \
     $(LDADD_COMMON)                                                      \
     $(NULL)
@@ -134,18 +137,19 @@ ot_ncp_ftd_LDFLAGS                                                     = \
 ot_ncp_ftd_SOURCES                                                     = \
     $(SOURCES_COMMON)                                                    \
     $(NULL)
-endif # OPENTHREAD_ENABLE_FTD
 
+if  OPENTHREAD_ENABLE_NCP_MTD
 bin_PROGRAMS                                                          += \
     ot-ncp-mtd                                                           \
     $(NULL)
+endif
 
 ot_ncp_mtd_CPPFLAGS                                                    = \
     $(CPPFLAGS_COMMON)                                                   \
     $(NULL)
 
 ot_ncp_mtd_LDADD                                                       = \
-    $(top_builddir)/src/ncp/libopenthread-ncp.a                          \
+    $(top_builddir)/src/ncp/libopenthread-ncp-mtd.a                      \
     $(top_builddir)/src/core/libopenthread-mtd.a                         \
     $(LDADD_COMMON)                                                      \
     $(NULL)

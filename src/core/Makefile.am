@@ -29,6 +29,8 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 lib_LIBRARIES                       = \
+    libopenthread-ftd.a               \
+    libopenthread-mtd.a               \
     $(NULL)
 
 CPPFLAGS_COMMON                     = \
@@ -39,13 +41,70 @@ CPPFLAGS_COMMON                     = \
     $(OPENTHREAD_TARGET_DEFINES)      \
     $(NULL)
 
+
+libopenthread_ftd_a_CPPFLAGS        = \
+    $(CPPFLAGS_COMMON)                \
+    -DOPENTHREAD_FTD=1                \
+    $(NULL)
+
+libopenthread_mtd_a_CPPFLAGS        = \
+    $(CPPFLAGS_COMMON)                \
+    -DOPENTHREAD_MTD=1                \
+    $(NULL)
+
+#----------------------------------------
+# Note to maintainer/developers about "SOURCES_COMMON"
+#
+# The traditional method for GNU style Makefile.am files
+# is to have IF statements within the Makefile
+#
+# These IF statements would add (or not add) certain
+# source files from the build/library being built.
+#
+# In general, IDEs do not easily support this.
+# Some do, some do not, those that do support it
+# often do so in a very different or complex way.
+# Bottom line: It is a very mixed bag of results.
+#
+# Thus we bend to the IDEs, and impose these rules:
+#
+# Rule #1
+#     All code(files) should be compiled
+#     Even if it is not used or required
+#
+#     For example: In the MTD build, some features 
+#     are disabled and thus in the traditional scheme
+#     source files could be excluded SOURCES_COMMON
+#     via makefile IF/ELSE/ENDIF constructs.
+#
+#     This makes it impossibly hard for IDEs.
+#     Thus we compile everything.
+#
+#     And then rely upon Rule #2.
+#
+# Rule #2
+#     Files that are not required, in certain
+#     configurations require appropriate wrappers
+#     Such as #if/#else/#endif
+#
+#     The net result is sort of an "empty translation unit"
+#
+
 SOURCES_COMMON                      = \
+    api/coap_api.cpp                  \
+    api/commissioner_api.cpp          \
     api/crypto_api.cpp                \
     api/dataset_api.cpp               \
+    api/dhcp6_api.cpp                 \
+    api/dhcp6_api.cpp                 \
+    api/dns_api.cpp                   \
     api/icmp6_api.cpp                 \
     api/instance_api.cpp              \
     api/ip6_api.cpp                   \
+    api/jam_detection_api.cpp         \
+    api/joiner_api.cpp                \
     api/link_api.cpp                  \
+    api/link_raw_api.cpp              \
     api/message_api.cpp               \
     api/netdata_api.cpp               \
     api/tasklet_api.cpp               \
@@ -55,6 +114,8 @@ SOURCES_COMMON                      = \
     coap/coap_client.cpp              \
     coap/coap_header.cpp              \
     coap/coap_server.cpp              \
+    coap/secure_coap_client.cpp       \
+    coap/secure_coap_server.cpp       \
     common/crc16.cpp                  \
     common/logging.cpp                \
     common/message.cpp                \
@@ -66,12 +127,27 @@ SOURCES_COMMON                      = \
     crypto/aes_ecb.cpp                \
     crypto/hmac_sha256.cpp            \
     crypto/mbedtls.cpp                \
+    crypto/pbkdf2_cmac.cpp            \
     crypto/sha256.cpp                 \
     mac/mac.cpp                       \
+    mac/mac_blacklist.cpp             \
     mac/mac_frame.cpp                 \
+    mac/mac_whitelist.cpp             \
+    meshcop/announce_begin_client.cpp \
+    meshcop/commissioner.cpp          \
     meshcop/dataset.cpp               \
     meshcop/dataset_manager.cpp       \
+    meshcop/dataset_manager_ftd.cpp   \
+    meshcop/dtls.cpp                  \
+    meshcop/energy_scan_client.cpp    \
+    meshcop/joiner.cpp                \
+    meshcop/joiner_router.cpp         \
+    meshcop/leader.cpp                \
+    meshcop/panid_query_client.cpp    \
     meshcop/timestamp.cpp             \
+    net/dhcp6_client.cpp              \
+    net/dhcp6_server.cpp              \
+    net/dns_client.cpp                \
     net/icmp6.cpp                     \
     net/ip6.cpp                       \
     net/ip6_address.cpp               \
@@ -80,6 +156,7 @@ SOURCES_COMMON                      = \
     net/ip6_routes.cpp                \
     net/netif.cpp                     \
     net/udp6.cpp                      \
+    thread/address_resolver.cpp       \
     thread/announce_begin_server.cpp  \
     thread/data_poll_manager.cpp      \
     thread/energy_scan_server.cpp     \
@@ -88,24 +165,19 @@ SOURCES_COMMON                      = \
     thread/lowpan.cpp                 \
     thread/mesh_forwarder.cpp         \
     thread/mle.cpp                    \
+    thread/mle_router.cpp             \
     thread/network_data.cpp           \
     thread/network_data_leader.cpp    \
-    thread/panid_query_server.cpp     \
+    thread/network_data_leader_ftd.cpp \
+    thread/network_data_local.cpp     \
     thread/network_diagnostic.cpp     \
+    thread/panid_query_server.cpp     \
     thread/src_match_controller.cpp   \
     thread/thread_netif.cpp           \
+    utils/jam_detector.cpp            \
     utils/slaac_address.cpp           \
     $(NULL)
 
-SOURCES_FTD                         = \
-    meshcop/dataset_manager_ftd.cpp   \
-    meshcop/joiner_router.cpp         \
-    meshcop/leader.cpp                \
-    thread/address_resolver.cpp       \
-    thread/mle_router.cpp             \
-    thread/network_data_leader_ftd.cpp \
-    thread/network_data_local.cpp     \
-    $(NULL)
 
 SOURCES_MISSING                     = \
     $(NULL)
@@ -144,105 +216,14 @@ CPPFLAGS_COMMON += -I$(top_srcdir)/src/missing/strlcat
 SOURCES_MISSING += strlcat.c
 endif
 
-if OPENTHREAD_ENABLE_APPLICATION_COAP
-SOURCES_COMMON                     += \
-    api/coap_api.cpp                  \
-    $(NULL)
-endif  # OPENTHREAD_ENABLE_APPLICATION_COAP
 
-if OPENTHREAD_ENABLE_MAC_WHITELIST
-SOURCES_COMMON                     += \
-    mac/mac_blacklist.cpp             \
-    mac/mac_whitelist.cpp             \
-    $(NULL)
-endif  # OPENTHREAD_ENABLE_MAC_WHITELIST
 
-if OPENTHREAD_ENABLE_COMMISSIONER
-SOURCES_COMMON                     += \
-    api/commissioner_api.cpp          \
-    coap/secure_coap_server.cpp       \
-    crypto/pbkdf2_cmac.cpp            \
-    meshcop/announce_begin_client.cpp \
-    meshcop/commissioner.cpp          \
-    meshcop/energy_scan_client.cpp    \
-    meshcop/panid_query_client.cpp    \
-    $(NULL)
-endif  # OPENTHREAD_ENABLE_COMMISSIONER
-
-if OPENTHREAD_ENABLE_JOINER
-SOURCES_COMMON                     += \
-    api/joiner_api.cpp                \
-    coap/secure_coap_client.cpp       \
-    meshcop/joiner.cpp                \
-    $(NULL)
-endif  # OPENTHREAD_ENABLE_JOINER
-
-if OPENTHREAD_ENABLE_DTLS
-SOURCES_COMMON                     += \
-    meshcop/dtls.cpp                  \
-    $(NULL)
-endif  # OPENTHREAD_ENABLE_DTLS
-
-if OPENTHREAD_ENABLE_DHCP6_CLIENT
-SOURCES_COMMON                     += \
-    api/dhcp6_api.cpp                 \
-    net/dhcp6_client.cpp              \
-    $(NULL)
-endif  # OPENTHREAD_ENABLE_DHCP6_CLIENT
-
-if OPENTHREAD_ENABLE_DHCP6_SERVER
-SOURCES_COMMON                     += \
-    api/dhcp6_api.cpp                 \
-    net/dhcp6_server.cpp              \
-    $(NULL)
-endif  # OPENTHREAD_ENABLE_DHCP6_SERVER
-
-if OPENTHREAD_ENABLE_DNS_CLIENT
-SOURCES_COMMON                     += \
-    api/dns_api.cpp                   \
-    net/dns_client.cpp                \
-    $(NULL)
-endif  # OPENTHREAD_ENABLE_DNS_CLIENT
-
-if OPENTHREAD_ENABLE_JAM_DETECTION
-SOURCES_COMMON                     += \
-    api/jam_detection_api.cpp         \
-    utils/jam_detector.cpp            \
-    $(NULL)
-endif  # OPENTHREAD_ENABLE_JAM_DETECTION
-
-if OPENTHREAD_ENABLE_RAW_LINK_API
-SOURCES_COMMON                     += \
-    api/link_raw_api.cpp              \
-    $(NULL)
-endif  # OPENTHREAD_ENABLE_RAW_LINK_API
-
-if OPENTHREAD_ENABLE_FTD
-lib_LIBRARIES                      += \
-    libopenthread-ftd.a               \
-    $(NULL)
-
-libopenthread_ftd_a_CPPFLAGS        = \
-    $(CPPFLAGS_COMMON)                \
+libopenthread_mtd_a_SOURCES         = \
+    $(SOURCES_COMMON)                 \
+    $(SOURCES_MISSING)                \
     $(NULL)
 
 libopenthread_ftd_a_SOURCES         = \
-    $(SOURCES_COMMON)                 \
-    $(SOURCES_FTD)                    \
-    $(SOURCES_MISSING)                \
-    $(NULL)
-endif # OPENTHREAD_ENABLE_FTD
-
-lib_LIBRARIES                      += \
-    libopenthread-mtd.a               \
-    $(NULL)
-
-libopenthread_mtd_a_CPPFLAGS        = \
-    $(CPPFLAGS_COMMON)                \
-    -DOPENTHREAD_MTD                  \
-    $(NULL)
-
-libopenthread_mtd_a_SOURCES         = \
     $(SOURCES_COMMON)                 \
     $(SOURCES_MISSING)                \
     $(NULL)

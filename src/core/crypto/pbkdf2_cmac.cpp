@@ -31,9 +31,17 @@
  *   This file implements PBKDF2 using AES-CMAC-PRF-128
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <string.h>
 #include <crypto/pbkdf2_cmac.h>
 #include <mbedtls/cmac.h>
+
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
 namespace Thread {
 namespace Crypto {
@@ -98,3 +106,5 @@ void otPbkdf2Cmac(
 
 }  // namespace Crypto
 }  // namespace Thread
+
+#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD

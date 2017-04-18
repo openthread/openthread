@@ -33,6 +33,8 @@
 #include <meshcop/dtls.hpp>
 #include <thread/thread_netif.hpp>
 
+#if OPENTHREAD_ENABLE_JOINER
+
 /**
  * @file
  *   This file implements the secure CoAP client.
@@ -243,3 +245,5 @@ exit:
 
 }  // namespace Coap
 }  // namespace Thread
+
+#endif // OPENTHREAD_ENABLE_JOINER

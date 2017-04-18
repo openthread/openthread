@@ -78,10 +78,10 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
     mNetworkDataLocal(*this),
     mNetworkDataLeader(*this),
     mNetworkDiagnostic(*this),
-#if OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     mSecureCoapServer(*this, OPENTHREAD_CONFIG_JOINER_UDP_PORT),
     mCommissioner(*this),
-#endif  // OPENTHREAD_ENABLE_COMMISSIONER
+#endif  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 #if OPENTHREAD_ENABLE_DTLS
     mDtls(*this),
 #endif

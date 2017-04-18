@@ -31,6 +31,13 @@
  *   This file implements the PAN ID Query Client.
  */
 
+
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #define WPP_NAME "panid_query_client.tmh"
 
 #include "openthread/platform/random.h"
@@ -44,6 +51,8 @@
 #include <meshcop/tlvs.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
+
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
 namespace Thread {
 
@@ -153,3 +162,6 @@ exit:
 }
 
 }  // namespace Thread
+
+#endif //  OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+

@@ -34,6 +34,12 @@
 
 #define WPP_NAME "dataset_manager.tmh"
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <stdio.h>
 
 #include "openthread/platform/random.h"
@@ -53,6 +59,8 @@
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
 #include <meshcop/leader.hpp>
+
+#if OPENTHREAD_FTD
 
 namespace Thread {
 namespace MeshCoP {
@@ -246,3 +254,5 @@ exit:
 
 }  // namespace MeshCoP
 }  // namespace Thread
+
+#endif // OPENTHREAD_FTD

@@ -50,6 +50,7 @@ if OPENTHREAD_BUILD_TESTS
 # makefile.
 
 AM_CPPFLAGS                                                         = \
+    -DOPENTHREAD_FTD=1                                                \
     -I$(top_srcdir)/include                                           \
     -I$(top_srcdir)/src                                               \
     -I$(top_srcdir)/src/core                                          \
@@ -58,7 +59,7 @@ AM_CPPFLAGS                                                         = \
 if OPENTHREAD_ENABLE_NCP
 
 COMMON_LDADD                                                        = \
-    $(top_builddir)/src/ncp/libopenthread-ncp.a                       \
+    $(top_builddir)/src/ncp/libopenthread-ncp-ftd.a                   \
     $(top_builddir)/src/core/libopenthread-ftd.a                      \
     -lpthread                                                         \
     $(NULL)

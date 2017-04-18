@@ -33,6 +33,8 @@
 #include <meshcop/dtls.hpp>
 #include <thread/thread_netif.hpp>
 
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+
 /**
  * @file
  *   This file implements the secure CoAP server.
@@ -258,3 +260,5 @@ exit:
 
 }  // namespace Coap
 }  // namespace Thread
+
+#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD

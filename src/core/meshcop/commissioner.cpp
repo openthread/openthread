@@ -58,6 +58,8 @@
 #include <thread/thread_uris.hpp>
 #include <openthread/types.h>
 
+#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+
 using Thread::Encoding::BigEndian::HostSwap64;
 
 namespace Thread {
@@ -1084,3 +1086,5 @@ exit:
 
 }  // namespace MeshCoP
 }  // namespace Thread
+
+#endif // OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER

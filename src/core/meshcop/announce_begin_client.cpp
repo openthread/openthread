@@ -51,6 +51,8 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
 
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+
 namespace Thread {
 
 AnnounceBeginClient::AnnounceBeginClient(ThreadNetif &aThreadNetif) :
@@ -120,3 +122,6 @@ exit:
 }
 
 }  // namespace Thread
+
+#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+

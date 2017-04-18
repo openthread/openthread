@@ -31,7 +31,15 @@
  *   This file implements Thread's EID-to-RLOC mapping and caching.
  */
 
+#if OPENTHREAD_FTD
+
 #define WPP_NAME "address_resolver.tmh"
+
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
 
 #include "openthread/platform/random.h"
 
@@ -684,3 +692,5 @@ exit:
 }
 
 }  // namespace Thread
+
+#endif // OPENTHREAD_FTD

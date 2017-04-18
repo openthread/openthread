@@ -44,6 +44,8 @@
 #include <common/code_utils.hpp>
 #include <utils/jam_detector.hpp>
 
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+
 namespace Thread {
 namespace Utils {
 
@@ -241,3 +243,5 @@ void JamDetector::UpdateJamState(void)
 
 }  // namespace Utils
 }  // namespace Thread
+
+#endif // OPENTHREAD_ENABLE_JAM_DETECTION

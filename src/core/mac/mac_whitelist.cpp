@@ -36,6 +36,8 @@
 #include <common/code_utils.hpp>
 #include <mac/mac_whitelist.hpp>
 
+#if OPENTHREAD_ENABLE_MAC_WHITELIST
+
 namespace Thread {
 namespace Mac {
 
@@ -151,3 +153,5 @@ void Whitelist::SetFixedRssi(Entry &aEntry, int8_t aRssi)
 
 }  // namespace Mac
 }  // namespace Thread
+
+#endif // OPENTHREAD_ENABLE_MAC_WHITELIST

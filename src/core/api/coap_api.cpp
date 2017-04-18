@@ -36,9 +36,17 @@
 #include "openthread-instance.h"
 #include "coap/coap_header.hpp"
 
-using namespace Thread;
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
 
-extern "C" {
+/*
+ * Note: no 'extern "C"' here.
+ * Reason: This was done in the header.
+ * And if we have 'extern "C"' then
+ * astyle forces an indent to occur
+ * and that makes it look ugly.
+ */
+
+using namespace Thread;
 
 void otCoapHeaderInit(otCoapHeader *aHeader, otCoapType aType, otCoapCode aCode)
 {
@@ -171,4 +179,6 @@ ThreadError otCoapSendResponse(otInstance *aInstance, otMessage *aMessage, const
                *static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-}  // extern "C"
+
+#endif
+

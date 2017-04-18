@@ -26,8 +26,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef OPENTHREAD_MTD
+#if OPENTHREAD_MTD
 #include "address_resolver_mtd.hpp"
-#else
+#elif OPENTHREAD_FTD
 #include "address_resolver_ftd.hpp"
+#else
+#error "Please define OPENTHREAD_MTD=1 or OPENTHREAD_FTD=1"
 #endif
+
+

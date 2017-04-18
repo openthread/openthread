@@ -33,6 +33,14 @@
 
 #define WPP_NAME "leader.tmh"
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
+#if OPENTHREAD_FTD
+
 #include <stdio.h>
 
 #include "openthread/platform/random.h"
@@ -309,3 +317,6 @@ void Leader::ResignCommissioner(void)
 
 }  // namespace MeshCoP
 }  // namespace Thread
+
+#endif // OPENTHREAD_FTD
+

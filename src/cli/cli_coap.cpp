@@ -33,8 +33,10 @@
 
 #include <ctype.h>
 #include <cli/cli.hpp>
-#include <cli/cli_coap.hpp>
 #include <coap/coap_header.hpp>
+#include <cli/cli_coap.hpp>
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
 
 namespace Thread {
 namespace Cli {
@@ -72,12 +74,14 @@ void Coap::PrintPayload(otMessage *aMessage)
             bytesPrinted += bytesToPrint;
         }
     }
+
     sServer->OutputFormat("\r\n");
 }
 
 void Coap::ConvertToLower(char *aString)
 {
     uint8_t i = 0;
+
     while (aString[i])
     {
         aString[i] = tolower(aString[i]);
@@ -104,6 +108,7 @@ ThreadError Coap::Process(otInstance *aInstance, int argc, char *argv[], Server 
     sResource.mHandler = (otCoapRequestHandler) &Coap::s_HandleServerResponse;
 
     VerifyOrExit(argc > 0, error = kThreadError_InvalidArgs);
+
     for (unsigned int i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
     {
         if (strcmp(argv[0], sCommands[i].mName) == 0)
@@ -124,6 +129,7 @@ ThreadError Coap::ProcessServer(int argc, char *argv[])
     VerifyOrExit(argc > 0, error = kThreadError_InvalidArgs);
 
     ConvertToLower(argv[0]);
+
     if (strcmp(argv[0], "start") == 0)
     {
         SuccessOrExit(error = otCoapServerStart(sInstance));
@@ -270,6 +276,7 @@ ThreadError Coap::ProcessClient(int argc, char *argv[])
 
     // CoAP-Code
     ConvertToLower(argv[0]);
+
     if (strcmp(argv[0], "get") == 0)
     {
         coapCode = kCoapRequestGet;
@@ -313,6 +320,7 @@ ThreadError Coap::ProcessClient(int argc, char *argv[])
 
     // CoAP-Type
     ConvertToLower(argv[3]);
+
     if ((argc > 3) && (strcmp(argv[3], "con") == 0))
     {
         coapType = kCoapTypeConfirmable;
@@ -339,21 +347,23 @@ ThreadError Coap::ProcessClient(int argc, char *argv[])
 
     if ((coapType == kCoapTypeConfirmable) || coapCode == kCoapRequestGet)
     {
-    	error = otCoapSendRequest(sInstance, message, &messageInfo,
-    	                              (otCoapResponseHandler) &Coap::s_HandleClientResponse, NULL);
+        error = otCoapSendRequest(sInstance, message, &messageInfo,
+                                  (otCoapResponseHandler) &Coap::s_HandleClientResponse, NULL);
     }
     else
     {
-    	error = otCoapSendRequest(sInstance, message, &messageInfo, NULL, NULL);
+        error = otCoapSendRequest(sInstance, message, &messageInfo, NULL, NULL);
     }
 
     sServer->OutputFormat("Sending CoAP message: ");
 
 exit:
+
     if ((error != kThreadError_None) && (message != NULL))
     {
         otMessageFree(message);
     }
+
     return error;
 }
 
@@ -382,3 +392,5 @@ void Coap::HandleClientResponse(otCoapHeader *aHeader, otMessage *aMessage, otMe
 
 }  // namespace Cli
 }  // namespace Thread
+
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP

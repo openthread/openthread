@@ -37,13 +37,13 @@ set -x
 [ $BUILD_TARGET != pretty-check ] || {
     export PATH=/tmp/astyle/build/gcc/bin:$PATH || die
     ./bootstrap || die
-    ./configure --enable-ftd --enable-cli --enable-diag --enable-dhcp6-client --enable-dhcp6-server --enable-dns-client --enable-commissioner --enable-joiner --with-examples=posix || die
+    ./configure --enable-cli-app=all --enable-ncp-app=all --enable-diag --enable-dhcp6-client --enable-dhcp6-server --enable-dns-client --enable-commissioner --enable-joiner --with-examples=posix || die
     make pretty-check || die
 }
 
 [ $BUILD_TARGET != scan-build ] || {
     ./bootstrap || die
-    scan-build ./configure --with-examples=posix --enable-ftd --enable-cli --enable-ncp || die
+    scan-build ./configure --with-examples=posix --enable-cli-app=all --enable-ncp-app=all --with-ncp-bus=uart || die
     scan-build --status-bugs -analyze-headers -v make || die
 }
 
@@ -144,7 +144,7 @@ set -x
 
 [ $BUILD_TARGET != posix-ncp-spi ] || {
     ./bootstrap || die
-    make -f examples/Makefile-posix check configure_OPTIONS="--enable-ftd --enable-ncp=spi --with-examples=posix --with-platform-info=POSIX" || die
+    make -f examples/Makefile-posix check configure_OPTIONS="--enable-ftd --enable-ncp-app=all --enable-cli-app=all --with-ncp-bus=spi --with-examples=posix --with-platform-info=POSIX" || die
 }
 
 [ $BUILD_TARGET != posix-ncp ] || {
