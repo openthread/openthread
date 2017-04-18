@@ -206,6 +206,12 @@ ThreadError SecureServer::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, 
         mTransmitMessage->SetLinkSecurityEnabled(false);
     }
 
+    // Set message sub type in case Joiner Finalize Response is appended to the message.
+    if (aMessageSubType != Message::kSubTypeNone)
+    {
+        mTransmitMessage->SetSubType(aMessageSubType);
+    }
+
     VerifyOrExit(mTransmitMessage->Append(aBuf, aLength) == kThreadError_None, error = kThreadError_NoBufs);
 
     mTransmitTask.Post();
