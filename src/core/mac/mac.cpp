@@ -759,7 +759,7 @@ void Mac::HandleBeginTransmit(void)
             sendFrame.SetChannel(mChannel);
             SendBeacon(sendFrame);
             sendFrame.SetSequence(mBeaconSequence++);
-            sendFrame.SetMaxTxAttempts(kIndirectFrameMacTxAttempts);
+            sendFrame.SetMaxTxAttempts(kDirectFrameMacTxAttempts);
             break;
 
         case kStateTransmitData:
