@@ -303,6 +303,7 @@ ThreadError MleRouter::BecomeLeader(void)
     mRouterIdSequence = static_cast<uint8_t>(otPlatRandomGet());
 
     mNetif.GetNetworkDataLeader().Reset();
+    mNetif.GetLeader().SetEmptyCommissionerData();
 
     SuccessOrExit(error = SetStateLeader(GetRloc16(mRouterId)));
 
