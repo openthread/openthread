@@ -31,6 +31,13 @@
  *   This file implements Thread security material generation.
  */
 
+
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <common/code_utils.hpp>
 #include <common/timer.hpp>
 #include <crypto/hmac_sha256.hpp>
