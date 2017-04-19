@@ -26,6 +26,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+ /* Windows only builds/uses FTD mode */
+#define OPENTHREAD_FTD 1
+
 /* Define to 1 if you want to enable default logging */
 #define OPENTHREAD_ENABLE_DEFAULT_LOGGING 1
 
