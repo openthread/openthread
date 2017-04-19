@@ -144,7 +144,7 @@ set -x
 
 [ $BUILD_TARGET != posix-ncp-spi ] || {
     ./bootstrap || die
-    make -f examples/Makefile-posix check configure_OPTIONS="--enable-ftd --enable-ncp-app=all --enable-cli-app=all --with-ncp-bus=spi --with-examples=posix --with-platform-info=POSIX" || die
+    make -f examples/Makefile-posix check configure_OPTIONS="--enable-ncp-app=ftd --with-ncp-bus=spi --with-examples=posix --with-platform-info=POSIX" || die
 }
 
 [ $BUILD_TARGET != posix-ncp ] || {
