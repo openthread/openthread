@@ -38,7 +38,7 @@
     <ClCompile>
       <PreprocessorDefinitions>
         %(PreprocessorDefinitions);
-	OPENTHREAD_FTD=1;
+        OPENTHREAD_FTD=1;
         OTDLL;
       </PreprocessorDefinitions>
       <AdditionalIncludeDirectories>

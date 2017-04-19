@@ -39,7 +39,7 @@
       <PreprocessorDefinitions>
         %(PreprocessorDefinitions);
         HAVE_STRNLEN=1;
-	OPENTHREAD_FTD=1;
+        OPENTHREAD_FTD=1;
         SPINEL_PLATFORM_DOESNT_IMPLEMENT_ERRNO_VAR=1;
       </PreprocessorDefinitions>
       <AdditionalIncludeDirectories>

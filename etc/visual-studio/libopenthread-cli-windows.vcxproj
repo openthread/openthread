@@ -42,7 +42,7 @@
         OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";
         OTDLL;
         OTBUILD;
-	OPENTHREAD_FTD=1;
+        OPENTHREAD_FTD=1;
       </PreprocessorDefinitions>
       <AdditionalIncludeDirectories>
         %(AdditionalIncludeDirectories);
