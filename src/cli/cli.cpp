@@ -490,14 +490,14 @@ void Interpreter::ProcessChild(int argc, char *argv[])
             switch (otThreadGetChildInfoByIndex(mInstance, i, &childInfo))
             {
             case kThreadError_None:
-            	break;
+                break;
 
             case kThreadError_NotFound:
-            	continue;
+                continue;
 
             default:
-            	sServer->OutputFormat("\r\n");
-				ExitNow();
+                sServer->OutputFormat("\r\n");
+                ExitNow();
             }
 
             if (childInfo.mTimeout > 0)
