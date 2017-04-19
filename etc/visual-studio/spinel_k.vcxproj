@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="openthread.configuration.props" /> 
   <PropertyGroup Label="Globals">
@@ -39,6 +39,7 @@
       <PreprocessorDefinitions>
         %(PreprocessorDefinitions);
         HAVE_STRNLEN=1;
+	OPENTHREAD_FTD=1;
         SPINEL_PLATFORM_DOESNT_IMPLEMENT_ERRNO_VAR=1;
       </PreprocessorDefinitions>
       <AdditionalIncludeDirectories>

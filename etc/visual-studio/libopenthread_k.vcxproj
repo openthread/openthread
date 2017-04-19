@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="openthread.configuration.props" />
   <PropertyGroup Label="Globals">
@@ -43,6 +43,7 @@
         OPENTHREAD_PROJECT_CORE_CONFIG_FILE="openthread-core-windows-config.h";
         WINDOWS_LOGGING;
         OPENTHREAD_MULTIPLE_INSTANCE;
+	OPENTHREAD_FTD=1;
         OTBUILD;
       </PreprocessorDefinitions>
       <AdditionalIncludeDirectories>
