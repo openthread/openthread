@@ -87,15 +87,23 @@ configure_OPTIONS               = \
     --with-ncp-bus=uart           \
     --enable-diag                 \
     --enable-default-logging      \
-    --enable-raw-link-api=no      \
+    --enable-raw-link-api=yes     \
     --with-examples=posix         \
     --with-platform-info=POSIX    \
+    --enable-cert-log             \
+    --enable-application-coap     \
     --enable-commissioner         \
-    --enable-joiner
+    --enable-dhcp6-client         \
+    --enable-dhcp6-server         \
+    --enable-dns-client           \
+    --enable-jam-detection        \
+    --enable-joiner               \
+    --enable-legacy               \
+    --enable-mac-whitelist        \
     $(NULL)
 
 ifeq ($(COVERAGE),1)
-configure_OPTIONS              += --enable-coverage --enable-commissioner --enable-joiner --enable-dhcp6-client --enable-dhcp6-server --enable-dns-client
+configure_OPTIONS              += --enable-coverage
 else
 configure_OPTIONS              +=
 endif
