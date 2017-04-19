@@ -33,8 +33,8 @@
 
 #include <ctype.h>
 #include <cli/cli.hpp>
-#include <coap/coap_header.hpp>
 #include <cli/cli_coap.hpp>
+#include <coap/coap_header.hpp>
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 
@@ -337,7 +337,7 @@ ThreadError Coap::ProcessClient(int argc, char *argv[])
     // Embed content into message if given
     if (argc > 4)
     {
-        SuccessOrExit(error = otMessageAppend(message, &argv[4], sizeof(argv[4])));
+        SuccessOrExit(error = otMessageAppend(message, argv[4], static_cast<uint16_t>(strlen(argv[4]))));
     }
 
     memset(&messageInfo, 0, sizeof(messageInfo));

@@ -349,7 +349,8 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
+    bool IsValid(void) const { return (GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv) ||
+                                       GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv) - sizeof(mSedBufferSize) - sizeof(mSedDatagramCount)); }
 
     /**
      * This method returns the Parent Priority value.

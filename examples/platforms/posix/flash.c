@@ -34,7 +34,6 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <string.h>
-#include <malloc.h>
 
 #include <openthread-config.h>
 #include <utils/flash.h>
@@ -115,6 +114,7 @@ ThreadError utilsFlashErasePage(uint32_t aAddress)
     ssize_t r;
     r =  pwrite(sFlashFd, &(dummyPage[0]), FLASH_PAGE_SIZE, address);
     VerifyOrExit(((int)r) == ((int)(FLASH_PAGE_SIZE)), error = kThreadError_Failed);
+
 
 exit:
     return error;

@@ -33,8 +33,8 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 # This library on the face of it, appears to be identical
 # for both the MTD and FTD varients, however ...
 #
-# The source code here includes numerous OpenThread headers.
-# Due to the "domino-effect" other headers are included.
+# The source code here includes numerous OpenThread internal headers.
+# Due to the "domino-effect" other internal headers are included.
 #
 # For example:
 #     cli.cpp includes: 
@@ -46,7 +46,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 # Which Includes:
 #            src/core/threadnetwork_data_leader.hpp
 #
-# That header (and others) thus is either an MTD or FTD class flavor.
+# That header (and others) is either an MTD or FTD class flavor.
 #
 # The FTD flavor has many private components (class variables).
 # The MTD flavor has no private components.

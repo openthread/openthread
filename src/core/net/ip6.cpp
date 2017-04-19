@@ -357,7 +357,6 @@ ThreadError Ip6::SendDatagram(Message &message, MessageInfo &messageInfo, IpProt
     header.SetHopLimit(messageInfo.mHopLimit ? messageInfo.mHopLimit : static_cast<uint8_t>(kDefaultHopLimit));
 
     if (messageInfo.GetSockAddr().IsUnspecified() ||
-        messageInfo.GetSockAddr().IsAnycastRoutingLocator() ||
         messageInfo.GetSockAddr().IsMulticast())
     {
         VerifyOrExit((source = SelectSourceAddress(messageInfo)) != NULL,
