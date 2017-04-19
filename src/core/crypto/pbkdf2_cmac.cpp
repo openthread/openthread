@@ -38,7 +38,7 @@
 void otPbkdf2Cmac(
     const uint8_t *aPassword, uint16_t aPasswordLen,
     const uint8_t *aSalt, uint16_t aSaltLen,
-    uint32_t aIterationCounter , uint16_t aKeyLen,
+    uint32_t aIterationCounter, uint16_t aKeyLen,
     uint8_t *aKey)
 {
     uint32_t blockCounter = 0;
