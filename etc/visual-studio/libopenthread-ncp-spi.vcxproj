@@ -42,6 +42,8 @@
         OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";
         OPENTHREAD_MULTIPLE_INSTANCE;
 	OPENTHREAD_FTD=1;
+	OPENTHREAD_ENABLE_NCP_SPI=1;
+	OPENTHREAD_ENABLE_NCP_UART=0;
         OTBUILD;
       </PreprocessorDefinitions>
       <AdditionalIncludeDirectories>

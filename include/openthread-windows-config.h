@@ -27,10 +27,10 @@
  */
 
 /* Define to 1 to enable the NCP UART interface. */
-#define OPENTHREAD_ENABLE_NCP_UART 0
+// On the command line: #define OPENTHREAD_ENABLE_NCP_UART 0
 
 /* Define to 1 to enable the NCP SPI interface. */
-#define OPENTHREAD_ENABLE_NCP_SPI  1
+// On the command line: #define OPENTHREAD_ENABLE_NCP_SPI  1
 
 /* Define to 1 if you want to enable default logging */
 #define OPENTHREAD_ENABLE_DEFAULT_LOGGING 1
