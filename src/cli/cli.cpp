@@ -486,8 +486,16 @@ void Interpreter::ProcessChild(int argc, char *argv[])
 
         for (uint8_t i = 0; i < maxChildren ; i++)
         {
-            if (otThreadGetChildInfoByIndex(mInstance, i, &childInfo) != kThreadError_None)
+
+            switch (otThreadGetChildInfoByIndex(mInstance, i, &childInfo))
             {
+            case kThreadError_None:
+                break;
+
+            case kThreadError_NotFound:
+                continue;
+
+            default:
                 sServer->OutputFormat("\r\n");
                 ExitNow();
             }
@@ -521,6 +529,8 @@ void Interpreter::ProcessChild(int argc, char *argv[])
                 }
             }
         }
+
+        ExitNow();
     }
 
     SuccessOrExit(error = ParseLong(argv[0], value));
