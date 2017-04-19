@@ -529,6 +529,8 @@ void Interpreter::ProcessChild(int argc, char *argv[])
                 }
             }
         }
+
+        ExitNow();
     }
 
     SuccessOrExit(error = ParseLong(argv[0], value));
