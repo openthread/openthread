@@ -232,11 +232,12 @@ public:
     /**
      * This function pointer is called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
      *
-     * @param[in]  aContext       A pointer to arbitrary context information.
-     * @param[in]  aBeaconFrame   A pointer to the Beacon frame.
+     * @param[in]  aContext  A pointer to arbitrary context information.
+     * @param[in]  aResult   A pointer to the active scan result (corresponding to the received beacon), or NULL to
+     *                       indicate end of active scan.
      *
      */
-    typedef void (*ActiveScanHandler)(void *aContext, Frame *aBeaconFrame);
+    typedef void (*ActiveScanHandler)(void *aContext, otActiveScanResult *aResult);
 
     /**
      * This method starts an IEEE 802.15.4 Active Scan.
@@ -253,8 +254,8 @@ public:
      * This function pointer is called during an "Energy Scan" when the result for a channel is ready or the scan
      * completes.
      *
-     * @param[in]  aResult   A valid pointer to the energy scan result information or NULL when the energy scan completes.
      * @param[in]  aContext  A pointer to arbitrary context information.
+     * @param[in]  aResult   A pointer to the energy scan result information or NULL to indicate end of scan.
      *
      */
     typedef void (*EnergyScanHandler)(void *aContext, otEnergyScanResult *aResult);
@@ -629,6 +630,7 @@ private:
     void StartBackoff(void);
     void StartEnergyScan(void);
     ThreadError HandleMacCommand(Frame &aFrame);
+    ThreadError HandleBeacon(Frame &aFrame);
 
     static void HandleMacTimer(void *aContext);
     void HandleMacTimer(void);

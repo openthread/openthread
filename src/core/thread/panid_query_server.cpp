@@ -98,22 +98,18 @@ exit:
     return;
 }
 
-void PanIdQueryServer::HandleScanResult(void *aContext, Mac::Frame *aFrame)
+void PanIdQueryServer::HandleScanResult(void *aContext, otActiveScanResult *aResult)
 {
-    static_cast<PanIdQueryServer *>(aContext)->HandleScanResult(aFrame);
+    static_cast<PanIdQueryServer *>(aContext)->HandleScanResult(aResult);
 }
 
-void PanIdQueryServer::HandleScanResult(Mac::Frame *aFrame)
+void PanIdQueryServer::HandleScanResult(otActiveScanResult *aResult)
 {
-    uint16_t panId;
-
-    if (aFrame != NULL)
+    if (aResult != NULL)
     {
-        aFrame->GetSrcPanId(panId);
-
-        if (panId == mPanId)
+        if (aResult->mPanId == mPanId)
         {
-            mChannelMask |= 1 << aFrame->GetChannel();
+            mChannelMask |= 1 << aResult->mChannel;
         }
     }
     else if (mChannelMask != 0)

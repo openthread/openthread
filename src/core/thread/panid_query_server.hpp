@@ -82,8 +82,8 @@ private:
     static void HandleQuery(void *aContext, otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void HandleQuery(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleScanResult(void *aContext, Mac::Frame *aFrame);
-    void HandleScanResult(Mac::Frame *aFrame);
+    static void HandleScanResult(void *aContext, otActiveScanResult *aResult);
+    void HandleScanResult(otActiveScanResult *aResult);
 
     static void HandleTimer(void *aContext);
     void HandleTimer(void);

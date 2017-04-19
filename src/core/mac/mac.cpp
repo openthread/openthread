@@ -645,6 +645,46 @@ void Mac::SendBeacon(Frame &aFrame)
     otLogDebgMac(GetInstance(), "Sent Beacon");
 }
 
+ThreadError Mac::HandleBeacon(Frame &aFrame)
+{
+    ThreadError error = kThreadError_None;
+    otActiveScanResult result;
+    Address address;
+    Beacon *beacon = NULL;
+    BeaconPayload *beaconPayload = NULL;
+    uint8_t payloadLength;
+
+    memset(&result, 0, sizeof(otActiveScanResult));
+
+    SuccessOrExit(error = aFrame.GetSrcAddr(address));
+    VerifyOrExit(address.mLength == sizeof(address.mExtAddress), error = kThreadError_Parse);
+    memcpy(&result.mExtAddress, &address.mExtAddress, sizeof(result.mExtAddress));
+
+    aFrame.GetSrcPanId(result.mPanId);
+    result.mChannel = aFrame.GetChannel();
+    result.mRssi = aFrame.GetPower();
+    result.mLqi = aFrame.GetLqi();
+
+    payloadLength = aFrame.GetPayloadLength();
+
+    beacon = reinterpret_cast<Beacon *>(aFrame.GetPayload());
+    beaconPayload = reinterpret_cast<BeaconPayload *>(beacon->GetPayload());
+
+    if ((payloadLength >= (sizeof(*beacon) + sizeof(*beaconPayload))) && beacon->IsValid() && beaconPayload->IsValid())
+    {
+        result.mVersion = beaconPayload->GetProtocolVersion();
+        result.mIsJoinable = beaconPayload->IsJoiningPermitted();
+        result.mIsNative = beaconPayload->IsNative();
+        memcpy(&result.mNetworkName, beaconPayload->GetNetworkName(), sizeof(result.mNetworkName));
+        memcpy(&result.mExtendedPanId, beaconPayload->GetExtendedPanId(), sizeof(result.mExtendedPanId));
+    }
+
+    mActiveScanHandler(mScanContext, &result);
+
+exit:
+    return error;
+}
+
 void Mac::ProcessTransmitSecurity(Frame &aFrame)
 {
     uint32_t frameCounter = 0;
@@ -1422,7 +1462,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
         if (aFrame->GetType() == Frame::kFcfFrameBeacon)
         {
             mCounters.mRxBeacon++;
-            mActiveScanHandler(mScanContext, aFrame);
+            HandleBeacon(*aFrame);
         }
         else
         {
