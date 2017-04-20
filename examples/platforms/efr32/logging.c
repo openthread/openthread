@@ -48,7 +48,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <common/code_utils.hpp>
+#include <utils/code_utils.h>
 #include <cli.h>
 #endif
 

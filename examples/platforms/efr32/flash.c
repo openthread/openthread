@@ -34,7 +34,7 @@
 #include <openthread-config.h>
 #include <openthread/platform/alarm.h>
 #include <utils/flash.h>
-#include <common/code_utils.hpp>
+#include <utils/code_utils.h>
 
 #include "em_msc.h"
 
@@ -91,30 +91,19 @@ ThreadError utilsFlashErasePage(uint32_t aAddress)
 
 ThreadError utilsFlashStatusWait(uint32_t aTimeout)
 {
-    ThreadError error = kThreadError_None;
+    ThreadError error = kThreadError_Busy;
     uint32_t start = otPlatAlarmGetNow();
-    bool busy = true;
 
-    if (aTimeout == 0)
+    do
     {
         if (MSC->STATUS & MSC_STATUS_WDATAREADY)
         {
-            ExitNow(error = kThreadError_None);
-        }
-        else
-        {
-            ExitNow(error = kThreadError_Busy);
+            error = kThreadError_None;
+            break;
         }
     }
+    while (aTimeout && ((otPlatAlarmGetNow() - start) < aTimeout));
 
-    while (busy && ((otPlatAlarmGetNow() - start) < aTimeout))
-    {
-        busy = !(MSC->STATUS & MSC_STATUS_WDATAREADY);
-    }
-
-    VerifyOrExit(!busy, error = kThreadError_Busy);
-
-exit:
     return error;
 }
 
@@ -123,12 +112,12 @@ uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
     uint32_t rval = aSize;
     int32_t status;
 
-    VerifyOrExit(aData, rval = 0);
-    VerifyOrExit(((aAddress + aSize) < utilsFlashGetSize()) &&
-                 (!(aAddress & 3)) && (!(aSize & 3)), rval = 0);
+    otEXPECT_ACTION(aData, rval = 0);
+    otEXPECT_ACTION(((aAddress + aSize) < utilsFlashGetSize()) &&
+                    (!(aAddress & 3)) && (!(aSize & 3)), rval = 0);
 
     status = MSC_WriteWord((uint32_t *)mapAddress(aAddress), aData, aSize);
-    VerifyOrExit(returnTypeConvert(status) == kThreadError_None, rval = 0);
+    otEXPECT_ACTION(returnTypeConvert(status) == kThreadError_None, rval = 0);
 
 exit:
     return rval;
@@ -140,8 +129,8 @@ uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
     uint32_t pAddress = mapAddress(aAddress);
     uint8_t *byte = aData;
 
-    VerifyOrExit(aData, rval = 0);
-    VerifyOrExit((aAddress + aSize) < utilsFlashGetSize(), rval = 0);
+    otEXPECT_ACTION(aData, rval = 0);
+    otEXPECT_ACTION((aAddress + aSize) < utilsFlashGetSize(), rval = 0);
 
     while (aSize--)
     {

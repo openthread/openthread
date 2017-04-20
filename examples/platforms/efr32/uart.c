@@ -34,7 +34,7 @@
 
 #include <stddef.h>
 
-#include <common/code_utils.hpp>
+#include <utils/code_utils.h>
 #include <openthread/types.h>
 #include <openthread/platform/uart.h>
 
@@ -140,7 +140,7 @@ ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(sTransmitBuffer == NULL, error = kThreadError_Busy);
+    otEXPECT_ACTION(sTransmitBuffer == NULL, error = kThreadError_Busy);
 
     sTransmitBuffer = aBuf;
     sTransmitLength = aBufLength;
@@ -175,7 +175,7 @@ void processReceive(void)
 
 void processTransmit(void)
 {
-    VerifyOrExit(sTransmitBuffer != NULL, ;);
+    otEXPECT(sTransmitBuffer != NULL);
 
     for (; sTransmitLength > 0; sTransmitLength--)
     {

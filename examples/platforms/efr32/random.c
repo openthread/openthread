@@ -32,7 +32,7 @@
  *
  */
 
-#include <common/code_utils.hpp>
+#include <utils/code_utils.h>
 #include <openthread/types.h>
 #include <openthread/platform/random.h>
 
@@ -94,7 +94,7 @@ ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint1
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
+    otEXPECT_ACTION(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
 
     for (uint16_t length = 0; length < aInputLength; length++)
     {

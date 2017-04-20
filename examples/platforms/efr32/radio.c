@@ -36,7 +36,7 @@
 #include <openthread/types.h>
 #include <openthread-config.h>
 
-#include <common/code_utils.hpp>
+#include <utils/code_utils.h>
 #include <common/logging.hpp>
 #include <openthread/platform/platform.h>
 #include <openthread/platform/radio.h>
@@ -50,40 +50,41 @@
 
 enum
 {
-    IEEE802154_MIN_LENGTH      = 5,
-    IEEE802154_MAX_LENGTH      = 127,
-    IEEE802154_ACK_LENGTH      = 5,
-    IEEE802154_FRAME_TYPE_MASK = 0x7,
-    IEEE802154_FRAME_TYPE_ACK  = 0x2,
-    IEEE802154_FRAME_PENDING   = 1 << 4,
-    IEEE802154_ACK_REQUEST     = 1 << 5,
-    IEEE802154_DSN_OFFSET      = 2,
+    IEEE802154_MIN_LENGTH             = 5,
+    IEEE802154_MAX_LENGTH             = 127,
+    IEEE802154_ACK_LENGTH             = 5,
+    IEEE802154_FRAME_TYPE_MASK        = 0x7,
+    IEEE802154_FRAME_TYPE_ACK         = 0x2,
+    IEEE802154_FRAME_PENDING          = 1 << 4,
+    IEEE802154_ACK_REQUEST            = 1 << 5,
+    IEEE802154_DSN_OFFSET             = 2,
 };
 
-static PhyState sState         = kStateDisabled;
-static uint8_t sReceiveBuffer[IEEE802154_MAX_LENGTH + 1 + sizeof(RAIL_RxPacketInfo_t)];
+static PhyState    sState             = kStateDisabled;
+static uint8_t     sReceiveBuffer[IEEE802154_MAX_LENGTH + 1 + sizeof(RAIL_RxPacketInfo_t)];
+static uint8_t     sReceivePsdu[IEEE802154_MAX_LENGTH];
 static RadioPacket sReceiveFrame;
-static uint8_t sReceivePsdu[IEEE802154_MAX_LENGTH];
 static ThreadError sReceiveError;
 
 static RadioPacket sTransmitFrame;
-static uint8_t sTransmitPsdu[IEEE802154_MAX_LENGTH];
+static uint8_t     sTransmitPsdu[IEEE802154_MAX_LENGTH];
 static ThreadError sTransmitError;
 
-static bool sTransmitBusy      = false;
-static bool sPromiscuous       = false;
-static uint8_t sChannel        = 0;
-static bool sIsReceiverEnabled = false;
-static uint16_t sPanId         = 0;
+static uint16_t    sPanId             = 0;
+static uint8_t     sChannel           = 0;
+static bool        sTransmitBusy      = false;
+static bool        sPromiscuous       = false;
+static bool        sIsReceiverEnabled = false;
+static bool        sIsSrcMatchEnabled = false;
 
-typedef struct srcMatchEntry
+typedef struct     srcMatchEntry
 {
     uint16_t checksum;
     bool allocated;
 } sSrcMatchEntry;
+
 static sSrcMatchEntry srcMatchShortEntry[RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM];
 static sSrcMatchEntry srcMatchExtEntry[RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM];
-static bool sIsSrcMatchEnabled = false;
 
 void efr32RadioInit(void)
 {
@@ -353,7 +354,7 @@ RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
     (void)aInstance;
-    return (uint8_t)(RAIL_RxGetRSSI() / 4);
+    return (uint8_t)(RAIL_RxGetRSSI() >> 2);
 }
 
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
@@ -386,7 +387,8 @@ int8_t findSrcMatchAvailEntry(bool aShortAddress)
         {
             if (!srcMatchShortEntry[i].allocated)
             {
-                ExitNow(entry = i);
+                entry = i;
+                break;
             }
         }
     }
@@ -396,12 +398,12 @@ int8_t findSrcMatchAvailEntry(bool aShortAddress)
         {
             if (!srcMatchExtEntry[i].allocated)
             {
-                ExitNow(entry = i);
+                entry = i;
+                break;
             }
         }
     }
 
-exit:
     return entry;
 }
 
@@ -415,11 +417,11 @@ int8_t findSrcMatchShortEntry(const uint16_t aShortAddress)
         if (checksum == srcMatchShortEntry[i].checksum &&
             srcMatchShortEntry[i].allocated)
         {
-            ExitNow(entry = i);
+            entry = i;
+            break;
         }
     }
 
-exit:
     return entry;
 }
 
@@ -438,11 +440,11 @@ int8_t findSrcMatchExtEntry(const uint8_t *aExtAddress)
         if (checksum == srcMatchExtEntry[i].checksum &&
             srcMatchExtEntry[i].allocated)
         {
-            ExitNow(entry = i);
+            entry = i;
+            break;
         }
     }
 
-exit:
     return entry;
 }
 
@@ -504,8 +506,8 @@ ThreadError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16
     entry = findSrcMatchAvailEntry(true);
     otLogDebgPlat(sInstance, "Add ShortAddr entry: %d", entry);
 
-    VerifyOrExit(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM,
-                 error = kThreadError_NoBufs);
+    otEXPECT_ACTION(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM,
+                    error = kThreadError_NoBufs);
 
     addToSrcMatchShortIndirect(entry, aShortAddress);
 
@@ -526,8 +528,8 @@ ThreadError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t 
     entry = findSrcMatchAvailEntry(false);
     otLogDebgPlat(sInstance, "Add ExtAddr entry: %d", entry);
 
-    VerifyOrExit(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM,
-                 error = kThreadError_NoBufs);
+    otEXPECT_ACTION(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM,
+                    error = kThreadError_NoBufs);
 
     addToSrcMatchExtIndirect(entry, aExtAddress);
 
@@ -548,8 +550,8 @@ ThreadError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint
     entry = findSrcMatchShortEntry(aShortAddress);
     otLogDebgPlat(sInstance, "Clear ShortAddr entry: %d", entry);
 
-    VerifyOrExit(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM,
-                 error = kThreadError_NoAddress);
+    otEXPECT_ACTION(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM,
+                    error = kThreadError_NoAddress);
 
     removeFromSrcMatchShortIndirect(entry);
 
@@ -570,8 +572,8 @@ ThreadError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_
     entry = findSrcMatchExtEntry(aExtAddress);
     otLogDebgPlat(sInstance, "Clear ExtAddr entry: %d", entry);
 
-    VerifyOrExit(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM,
-                 error = kThreadError_NoAddress);
+    otEXPECT_ACTION(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM,
+                    error = kThreadError_NoAddress);
 
     removeFromSrcMatchExtIndirect(entry);
 
@@ -638,6 +640,9 @@ void RAILCb_TxRadioStatus(uint8_t aStatus)
         sTransmitError = kThreadError_Abort;
         sTransmitBusy = false;
         break;
+
+    default:
+        break;
     }
 }
 
@@ -655,20 +660,18 @@ void RAILCb_RxPacketReceived(void *aRxPacketHandle)
 
     rxPacketInfo = (RAIL_RxPacketInfo_t *)aRxPacketHandle;
 
-    if (rxPacketInfo == NULL ||
-        rxPacketInfo->appendedInfo.crcStatus == false ||
-        rxPacketInfo->appendedInfo.frameCodingStatus == false)
-    {
-        ExitNow();
-    }
+    // check recv packet appended info
+    otEXPECT(rxPacketInfo != NULL &&
+             rxPacketInfo->appendedInfo.crcStatus &&
+             rxPacketInfo->appendedInfo.frameCodingStatus);
 
     length = rxPacketInfo->dataLength + 1;
 
     // check the length in recv packet info structure
-    VerifyOrExit(length == rxPacketInfo->dataPtr[0]);
+    otEXPECT(length == rxPacketInfo->dataPtr[0]);
 
     // check the lenght validity of recv packet
-    VerifyOrExit(length >= IEEE802154_MIN_LENGTH && length <= IEEE802154_MAX_LENGTH);
+    otEXPECT(length >= IEEE802154_MIN_LENGTH && length <= IEEE802154_MAX_LENGTH);
 
     memcpy(sReceiveFrame.mPsdu, rxPacketInfo->dataPtr + 1, rxPacketInfo->dataLength);
     sReceiveFrame.mPower = rxPacketInfo->appendedInfo.rssiLatch;
@@ -805,11 +808,7 @@ void *RAILCb_AllocateMemory(uint32_t size)
 
     CORE_ENTER_CRITICAL();
 
-    if (size > (IEEE802154_MAX_LENGTH + 1 + sizeof(RAIL_RxPacketInfo_t)))
-    {
-        otLogInfoPlat(sInstance, "No enough memory for allocation", NULL);
-        ExitNow();
-    }
+    otEXPECT(size <= (IEEE802154_MAX_LENGTH + 1 + sizeof(RAIL_RxPacketInfo_t)));
 
     pointer = sReceiveBuffer;
 

@@ -36,7 +36,7 @@
 #include <stdint.h>
 
 #include <openthread-config.h>
-#include <common/code_utils.hpp>
+#include <utils/code_utils.h>
 #include <openthread/platform/platform.h>
 #include <openthread/platform/alarm.h>
 #include <openthread/platform/diag.h>
@@ -89,7 +89,7 @@ void efr32AlarmProcess(otInstance *aInstance)
     uint32_t expires;
     bool fire = false;
 
-    VerifyOrExit(sIsRunning);
+    otEXPECT(sIsRunning);
 
     expires = sAlarmT0 + sAlarmDt;
 
