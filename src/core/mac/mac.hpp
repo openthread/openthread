@@ -250,11 +250,24 @@ public:
     ThreadError ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext);
 
     /**
+     * This static method converts a beacon frame to an active scan result of type `otActiveScanResult`.
+     *
+     * @param[in]  aBeaconFrame             A pointer to a beacon frame.
+     * @param[out] aResult                  A reference to `otActiveScanResult` where the result is stored.
+     *
+     * @retval kThreadError_None            Successfully converted the beacon into active scan result.
+     * @retavl kThreadError_InvalidArgs     The @a aBeaconFrame was NULL.
+     * @retval kThreadError_Parse           Failed parsing the beacon frame.
+     *
+     */
+    static ThreadError ConvertBeaconToActiveScanResult(Frame *aBeaconFrame, otActiveScanResult &aResult);
+
+    /**
      * This function pointer is called during an "Energy Scan" when the result for a channel is ready or the scan
      * completes.
      *
-     * @param[in]  aResult   A valid pointer to the energy scan result information or NULL when the energy scan completes.
      * @param[in]  aContext  A pointer to arbitrary context information.
+     * @param[in]  aResult   A valid pointer to the energy scan result information or NULL when the energy scan completes.
      *
      */
     typedef void (*EnergyScanHandler)(void *aContext, otEnergyScanResult *aResult);

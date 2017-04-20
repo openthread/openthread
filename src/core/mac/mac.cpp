@@ -263,6 +263,46 @@ bool Mac::IsInTransmitState(void)
     return (mState == kStateTransmitData) || (mState == kStateTransmitBeacon);
 }
 
+ThreadError Mac::ConvertBeaconToActiveScanResult(Frame *aBeaconFrame, otActiveScanResult &aResult)
+{
+    ThreadError error = kThreadError_None;
+    Address address;
+    Beacon *beacon = NULL;
+    BeaconPayload *beaconPayload = NULL;
+    uint8_t payloadLength;
+
+    memset(&aResult, 0, sizeof(otActiveScanResult));
+
+    VerifyOrExit(aBeaconFrame != NULL, error = kThreadError_InvalidArgs);
+
+    VerifyOrExit(aBeaconFrame->GetType() == Frame::kFcfFrameBeacon, error = kThreadError_Parse);
+    SuccessOrExit(error = aBeaconFrame->GetSrcAddr(address));
+    VerifyOrExit(address.mLength == sizeof(address.mExtAddress), error = kThreadError_Parse);
+    memcpy(&aResult.mExtAddress, &address.mExtAddress, sizeof(aResult.mExtAddress));
+
+    aBeaconFrame->GetSrcPanId(aResult.mPanId);
+    aResult.mChannel = aBeaconFrame->GetChannel();
+    aResult.mRssi = aBeaconFrame->GetPower();
+    aResult.mLqi = aBeaconFrame->GetLqi();
+
+    payloadLength = aBeaconFrame->GetPayloadLength();
+
+    beacon = reinterpret_cast<Beacon *>(aBeaconFrame->GetPayload());
+    beaconPayload = reinterpret_cast<BeaconPayload *>(beacon->GetPayload());
+
+    if ((payloadLength >= (sizeof(*beacon) + sizeof(*beaconPayload))) && beacon->IsValid() && beaconPayload->IsValid())
+    {
+        aResult.mVersion = beaconPayload->GetProtocolVersion();
+        aResult.mIsJoinable = beaconPayload->IsJoiningPermitted();
+        aResult.mIsNative = beaconPayload->IsNative();
+        memcpy(&aResult.mNetworkName, beaconPayload->GetNetworkName(), sizeof(aResult.mNetworkName));
+        memcpy(&aResult.mExtendedPanId, beaconPayload->GetExtendedPanId(), sizeof(aResult.mExtendedPanId));
+    }
+
+exit:
+    return error;
+}
+
 void Mac::StartEnergyScan(void)
 {
     mState = kStateEnergyScan;
