@@ -37,7 +37,7 @@
 
 using namespace Thread;
 
-static void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame);
+static void HandleActiveScanResult(void *aContext, otActiveScanResult *aResult);
 static void HandleEnergyScanResult(void *aContext, otEnergyScanResult *aResult);
 
 uint8_t otLinkGetChannel(otInstance *aInstance)
@@ -302,50 +302,11 @@ bool otLinkIsActiveScanInProgress(otInstance *aInstance)
     return aInstance->mThreadNetif.GetMac().IsActiveScanInProgress();
 }
 
-void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame)
+void HandleActiveScanResult(void *aContext, otActiveScanResult *aResult)
 {
     otInstance *aInstance = static_cast<otInstance *>(aContext);
-    otActiveScanResult result;
-    Mac::Address address;
-    Mac::Beacon *beacon = NULL;
-    Mac::BeaconPayload *beaconPayload = NULL;
-    uint8_t payloadLength;
 
-    memset(&result, 0, sizeof(otActiveScanResult));
-
-    if (aFrame == NULL)
-    {
-        aInstance->mActiveScanCallback(NULL, aInstance->mActiveScanCallbackContext);
-        ExitNow();
-    }
-
-    SuccessOrExit(aFrame->GetSrcAddr(address));
-    VerifyOrExit(address.mLength == sizeof(address.mExtAddress));
-    memcpy(&result.mExtAddress, &address.mExtAddress, sizeof(result.mExtAddress));
-
-    aFrame->GetSrcPanId(result.mPanId);
-    result.mChannel = aFrame->GetChannel();
-    result.mRssi = aFrame->GetPower();
-    result.mLqi = aFrame->GetLqi();
-
-    payloadLength = aFrame->GetPayloadLength();
-
-    beacon = reinterpret_cast<Mac::Beacon *>(aFrame->GetPayload());
-    beaconPayload = reinterpret_cast<Mac::BeaconPayload *>(beacon->GetPayload());
-
-    if ((payloadLength >= (sizeof(*beacon) + sizeof(*beaconPayload))) && beacon->IsValid() && beaconPayload->IsValid())
-    {
-        result.mVersion = beaconPayload->GetProtocolVersion();
-        result.mIsJoinable = beaconPayload->IsJoiningPermitted();
-        result.mIsNative = beaconPayload->IsNative();
-        memcpy(&result.mNetworkName, beaconPayload->GetNetworkName(), sizeof(result.mNetworkName));
-        memcpy(&result.mExtendedPanId, beaconPayload->GetExtendedPanId(), sizeof(result.mExtendedPanId));
-    }
-
-    aInstance->mActiveScanCallback(&result, aInstance->mActiveScanCallbackContext);
-
-exit:
-    return;
+    aInstance->mActiveScanCallback(aResult, aInstance->mActiveScanCallbackContext);
 }
 
 ThreadError otLinkEnergyScan(otInstance *aInstance, uint32_t aScanChannels, uint16_t aScanDuration,
