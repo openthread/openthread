@@ -138,7 +138,7 @@ ot_ncp_ftd_SOURCES                                                     = \
     $(SOURCES_COMMON)                                                    \
     $(NULL)
 
-if  OPENTHREAD_ENABLE_NCP_MTD
+if OPENTHREAD_ENABLE_NCP_MTD
 bin_PROGRAMS                                                          += \
     ot-ncp-mtd                                                           \
     $(NULL)
