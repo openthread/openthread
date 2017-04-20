@@ -31,7 +31,6 @@
  *   This file implements a simple CLI coap server and client.
  */
 
-
 #include <ctype.h>
 #include <cli/cli.hpp>
 
@@ -39,7 +38,6 @@
 
 #include <cli/cli_coap.hpp>
 #include <coap/coap_header.hpp>
-
 
 namespace Thread {
 namespace Cli {

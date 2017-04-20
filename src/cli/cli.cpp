@@ -2704,7 +2704,7 @@ void Interpreter::HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask)
     sServer->OutputFormat("Conflict: %04x, %08x\r\n", aPanId, aChannelMask);
 }
 
-#endif  //  OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif //  OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
 #if OPENTHREAD_ENABLE_JOINER
 
