@@ -113,12 +113,12 @@ lib_LIBRARIES =                       \
     libopenthread-cli-ftd.a           \
     $(NULL)
 
-CPPFLAGS_COMMON =                       \
-    -I$(top_srcdir)/include             \
-    -I$(top_srcdir)/src                 \
-    -I$(top_srcdir)/src/core            \
-    $(OPENTHREAD_TARGET_DEFINES)        \
-    $(MISSING_CPPFLAGS)                 \
+CPPFLAGS_COMMON =                     \
+    -I$(top_srcdir)/include           \
+    -I$(top_srcdir)/src               \
+    -I$(top_srcdir)/src/core          \
+    $(OPENTHREAD_TARGET_DEFINES)      \
+    $(MISSING_CPPFLAGS)               \
     $(NULL)
 
 
