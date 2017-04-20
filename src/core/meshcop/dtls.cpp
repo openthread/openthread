@@ -482,7 +482,7 @@ ThreadError Dtls::MapError(int rval)
     return error;
 }
 
-void Dtls::HandleMbedtlsDebug(void *ctx, int level, const char *, int , const char *str)
+void Dtls::HandleMbedtlsDebug(void *ctx, int level, const char *, int, const char *str)
 {
     Dtls *pThis = static_cast<Dtls *>(ctx);
     (void)pThis;
