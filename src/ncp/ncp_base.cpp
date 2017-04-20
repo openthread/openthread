@@ -1505,7 +1505,7 @@ exit:
 
 ThreadError NcpBase::OutboundFrameFeedVPacked(const char *pack_format, va_list args)
 {
-    uint8_t buf[64];
+    uint8_t buf[96];
     ThreadError errorCode = kThreadError_NoBufs;
     spinel_ssize_t packed_len;
 
