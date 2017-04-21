@@ -50,6 +50,7 @@
         MBEDTLS_CONFIG_FILE="mbedtls-config.h";
         OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";
         OPENTHREAD_MULTIPLE_INSTANCE;
+        OPENTHREAD_FTD=1;
       </PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
       <UseFullPaths>true</UseFullPaths>

@@ -37,6 +37,8 @@
 #include "openthread/platform/usec-alarm.h"
 #include "openthread-instance.h"
 
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+
 ThreadError otLinkRawSetEnable(otInstance *aInstance, bool aEnabled)
 {
     ThreadError error = kThreadError_None;
@@ -604,3 +606,5 @@ void LinkRaw::HandleEnergyScanTask(void)
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 
 } // namespace Thread
+
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API

@@ -42,9 +42,9 @@ OBJCOPY                         = arm-none-eabi-objcopy
 BuildJobs                      ?= 10
 
 configure_OPTIONS               = \
-    --enable-ftd                  \
-    --enable-cli                  \
-    --enable-ncp                  \
+    --enable-cli-app=all          \
+    --enable-ncp-app=all          \
+    --with-ncp-bus=uart           \
     --enable-default-logging      \
     --with-examples=da15000       \
     --with-platform-info=DA15000  \

@@ -36,6 +36,8 @@
 #include <common/code_utils.hpp>
 #include <mac/mac_blacklist.hpp>
 
+#if OPENTHREAD_ENABLE_MAC_WHITELIST
+
 namespace Thread {
 namespace Mac {
 
@@ -126,3 +128,5 @@ exit:
 
 }  // namespace Mac
 }  // namespace Thread
+
+#endif // OPENTHREAD_ENABLE_MAC_WHITELIST

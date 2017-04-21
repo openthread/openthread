@@ -55,6 +55,8 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
 
+#if OPENTHREAD_ENABLE_JOINER
+
 using Thread::Encoding::BigEndian::HostSwap16;
 using Thread::Encoding::BigEndian::HostSwap64;
 
@@ -519,3 +521,5 @@ void Joiner::HandleTimer(void)
 
 }  // namespace MeshCoP
 }  // namespace Thread
+
+#endif // OPENTHREAD_ENABLE_JOINER

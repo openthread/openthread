@@ -30,6 +30,12 @@
  *   This file implements NCP frame buffer class.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <string.h>
 #include <common/code_utils.hpp>
 #include <ncp/ncp_buffer.hpp>

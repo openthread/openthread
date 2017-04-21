@@ -37,7 +37,7 @@
 
 using namespace Thread;
 
-#if OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
 
 ThreadError otCommissionerStart(otInstance *aInstance)
 {
@@ -117,4 +117,4 @@ ThreadError otCommissionerGeneratePSKc(otInstance *aInstance, const char *aPassP
     return aInstance->mThreadNetif.GetCommissioner().GeneratePSKc(aPassPhrase, aNetworkName, aExtPanId, aPSKc);
 }
 
-#endif  // OPENTHREAD_ENABLE_COMMISSIONER
+#endif  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD

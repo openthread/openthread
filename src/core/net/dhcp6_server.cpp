@@ -33,6 +33,12 @@
 
 #define WPP_NAME "dhcp6_server.tmh"
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include "openthread/types.h"
 
 #include <common/code_utils.hpp>
@@ -41,6 +47,8 @@
 #include <net/dhcp6_server.hpp>
 #include <thread/mle.hpp>
 #include <thread/thread_netif.hpp>
+
+#if OPENTHREAD_ENABLE_DHCP6_SERVER
 
 using Thread::Encoding::BigEndian::HostSwap16;
 using Thread::Encoding::BigEndian::HostSwap32;
@@ -569,3 +577,5 @@ ThreadError Dhcp6Server::AppendRapidCommit(Message &aMessage)
 
 }  // namespace Dhcp6
 }  // namespace Thread
+
+#endif //  OPENTHREAD_ENABLE_DHCP6_SERVER

@@ -31,6 +31,12 @@
  *   This file implements the necessary hooks for mbedTLS.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #define WPP_NAME "dtls.tmh"
 
 #include <common/code_utils.hpp>
@@ -43,6 +49,8 @@
 #include <thread/thread_netif.hpp>
 
 #include <mbedtls/debug.h>
+
+#if OPENTHREAD_ENABLE_DTLS
 
 namespace Thread {
 namespace MeshCoP {
@@ -510,3 +518,5 @@ void Dtls::HandleMbedtlsDebug(void *ctx, int level, const char *, int, const cha
 
 }  // namespace MeshCoP
 }  // namespace Thread
+
+#endif // OPENTHREAD_ENABLE_DTLS

@@ -39,6 +39,7 @@
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>
         %(PreprocessorDefinitions);
+        OPENTHREAD_FTD=1;
         OTAPI_EXPORTS;
       </PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>

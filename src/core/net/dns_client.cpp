@@ -26,12 +26,20 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <string.h>
 
 #include <common/debug.hpp>
 #include <common/code_utils.hpp>
 #include <net/dns_client.hpp>
 #include <net/udp6.hpp>
+
+#if OPENTHREAD_ENABLE_DNS_CLIENT
 
 /**
  * @file
@@ -515,3 +523,5 @@ exit:
 
 }  // namespace Coap
 }  // namespace Thread
+
+#endif // OPENTHREAD_ENABLE_DNS_CLIENT

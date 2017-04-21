@@ -36,6 +36,8 @@
 #include "openthread-instance.h"
 #include "coap/coap_header.hpp"
 
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
+
 using namespace Thread;
 
 void otCoapHeaderInit(otCoapHeader *aHeader, otCoapType aType, otCoapCode aCode)
@@ -172,3 +174,5 @@ ThreadError otCoapSendResponse(otInstance *aInstance, otMessage *aMessage, const
     return aInstance->mApplicationCoapServer.SendMessage(
                *static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
+
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP

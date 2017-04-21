@@ -30,7 +30,15 @@
  *   This file implements MLE functionality required for the Thread Router and Leader roles.
  */
 
+#if OPENTHREAD_FTD
+
 #define WPP_NAME "mle_router.tmh"
+
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
 
 #include "openthread/platform/random.h"
 #include "openthread/platform/settings.h"
@@ -4502,3 +4510,6 @@ uint8_t MleRouter::GetMinDowngradeNeighborRouters(void)
 
 }  // namespace Mle
 }  // namespace Thread
+
+#endif // OPENTHREAD_FTD
+

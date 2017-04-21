@@ -46,6 +46,8 @@
 #define SPI_PATTERN_VALUE       0x02
 #define SPI_PATTERN_MASK        0x03
 
+#if OPENTHREAD_ENABLE_NCP_SPI
+
 namespace Thread {
 
 static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpSpi), uint64_t);
@@ -348,3 +350,4 @@ void NcpSpi::HandleRxFrame(void)
 
 }  // namespace Thread
 
+#endif // OPENTHREAD_ENABLE_NCP_SPI

@@ -90,7 +90,7 @@ const struct Command Interpreter::sCommands[] =
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     { "coap", &Interpreter::ProcessCoap },
 #endif
-#if OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     { "commissioner", &Interpreter::ProcessCommissioner },
 #endif
     { "contextreusedelay", &Interpreter::ProcessContextIdReuseDelay },
@@ -2420,7 +2420,7 @@ void Interpreter::ProcessVersion(int argc, char *argv[])
     (void)argv;
 }
 
-#if OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
 void Interpreter::ProcessCommissioner(int argc, char *argv[])
 {
@@ -2704,7 +2704,7 @@ void Interpreter::HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask)
     sServer->OutputFormat("Conflict: %04x, %08x\r\n", aPanId, aChannelMask);
 }
 
-#endif  // OPENTHREAD_ENABLE_COMMISSIONER
+#endif //  OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
 #if OPENTHREAD_ENABLE_JOINER
 

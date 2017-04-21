@@ -169,9 +169,9 @@ private:
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     void ProcessCoap(int argc, char *argv[]);
 #endif  //OPENTHREAD_ENABLE_APPLICATION_COAP
-#if OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     void ProcessCommissioner(int argc, char *argv[]);
-#endif  // OPENTHREAD_ENABLE_COMMISSIONER
+#endif  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     void ProcessContextIdReuseDelay(int argc, char *argv[]);
     void ProcessCounters(int argc, char *argv[]);
     void ProcessDataset(int argc, char *argv[]);

@@ -31,6 +31,14 @@
  *   This file implements the Thread Network Data managed by the Thread Leader.
  */
 
+#if OPENTHREAD_FTD
+
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #define WPP_NAME "network_data_leader_ftd.tmh"
 
 #include "openthread/platform/random.h"
@@ -1072,3 +1080,6 @@ void Leader::HandleTimer(void)
 
 }  // namespace NetworkData
 }  // namespace Thread
+
+#endif // OPENTHREAD_FTD
+

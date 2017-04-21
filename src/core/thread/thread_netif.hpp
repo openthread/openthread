@@ -71,9 +71,9 @@
 #include <utils/jam_detector.hpp>
 #endif // OPENTHREAD_ENABLE_JAM_DETECTION
 
-#if OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 #include <meshcop/commissioner.hpp>
-#endif  // OPENTHREAD_ENABLE_COMMISSIONER
+#endif  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
 #if OPENTHREAD_ENABLE_DTLS
 #include <meshcop/dtls.hpp>
@@ -293,11 +293,11 @@ public:
 
     AnnounceBeginServer &GetAnnounceBeginServer(void) { return mAnnounceBegin; }
 
-#if OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     MeshCoP::Commissioner &GetCommissioner(void) { return mCommissioner; }
 
     Coap::SecureServer &GetSecureCoapServer(void) { return mSecureCoapServer; }
-#endif  // OPENTHREAD_ENABLE_COMMISSIONER
+#endif  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
 #if OPENTHREAD_ENABLE_DTLS
     MeshCoP::Dtls &GetDtls(void) { return mDtls; }
@@ -353,7 +353,7 @@ private:
     NetworkDiagnostic::NetworkDiagnostic mNetworkDiagnostic;
     bool mIsUp;
 
-#if OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     Coap::SecureServer mSecureCoapServer;
     MeshCoP::Commissioner mCommissioner;
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER

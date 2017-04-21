@@ -31,6 +31,12 @@
  *   This file implements the Energy Scan Client.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #define WPP_NAME "energy_scan_client.tmh"
 
 #include "openthread/platform/random.h"
@@ -45,6 +51,8 @@
 #include <meshcop/tlvs.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
+
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
 using Thread::Encoding::BigEndian::HostSwap16;
 using Thread::Encoding::BigEndian::HostSwap32;
@@ -174,3 +182,6 @@ exit:
 }
 
 }  // namespace Thread
+
+#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+
