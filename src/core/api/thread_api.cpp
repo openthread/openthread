@@ -169,9 +169,16 @@ const uint8_t *otThreadGetPSKc(otInstance *aInstance)
     return aInstance->mThreadNetif.GetKeyManager().GetPSKc();
 }
 
-void otThreadSetPSKc(otInstance *aInstance, uint8_t *aPSKc)
+ThreadError otThreadSetPSKc(otInstance *aInstance, const uint8_t *aPSKc)
 {
-    return aInstance->mThreadNetif.GetKeyManager().SetPSKc(aPSKc);
+    ThreadError error = kThreadError_None;
+    VerifyOrExit(aInstance->mThreadNetif.GetMle().GetDeviceState() == Mle::kDeviceStateDisabled,
+                 error = kThreadError_InvalidState);
+
+    aInstance->mThreadNetif.GetKeyManager().SetPSKc(aPSKc);
+
+exit:
+    return error;
 }
 #endif
 

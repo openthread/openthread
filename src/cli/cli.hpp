@@ -226,6 +226,9 @@ private:
     ThreadError ProcessPrefixRemove(int argc, char *argv[]);
     ThreadError ProcessPrefixList(void);
     void ProcessPromiscuous(int argc, char *argv[]);
+#if OPENTHREAD_FTD
+    void ProcessPSKc(int argc, char *argv[]);
+#endif
     void ProcessReleaseRouterId(int argc, char *argv[]);
     void ProcessReset(int argc, char *argv[]);
     void ProcessRoute(int argc, char *argv[]);

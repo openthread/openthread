@@ -86,9 +86,9 @@ const uint8_t *KeyManager::GetPSKc(void) const
     return mPSKc;
 }
 
-const void KeyManager::SetPSKc(uint8_t *aPSKc)
+void KeyManager::SetPSKc(const uint8_t *aPSKc)
 {
-    memcpy(mPSKc, aPSKc, sizeof(mPSKc.m8));
+    memcpy(mPSKc, aPSKc, sizeof(mPSKc));
 }
 
 #endif
