@@ -203,7 +203,11 @@ ThreadError SecureServer::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, 
     {
         VerifyOrExit((mTransmitMessage = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
         mTransmitMessage->SetSubType(aMessageSubType);
+#if OPENTHREAD_ENABLE_JOINER
         mTransmitMessage->SetLinkSecurityEnabled(false);
+#else
+        mTransmitMessage->SetLinkSecurityEnabled(true);
+#endif
     }
 
     // Set message sub type in case Joiner Finalize Response is appended to the message.
