@@ -37,7 +37,6 @@ CPPFLAGS_COMMON                     = \
     -I$(top_srcdir)/include           \
     -I${abs_top_srcdir}/third_party/mbedtls/repo/include \
     $(MBEDTLS_CPPFLAGS)               \
-    $(MISSING_CPPFLAGS)               \
     $(OPENTHREAD_TARGET_DEFINES)      \
     $(NULL)
 

@@ -47,7 +47,6 @@ COMMON_CPPFLAGS        = \
     -I$(top_srcdir)/third_party         \
     -D_GNU_SOURCE                       \
     $(OPENTHREAD_TARGET_DEFINES)        \
-    $(MISSING_CPPFLAGS)                 \
     $(NULL)
 
 
@@ -57,7 +56,6 @@ COMMON_CXXFLAGS                     = \
     -I$(top_srcdir)/src/core          \
     -I$(top_srcdir)/third_party       \
     -D_GNU_SOURCE                     \
-    $(MISSING_CPPFLAGS)               \
     $(OPENTHREAD_TARGET_DEFINES)      \
     $(NULL)
 
