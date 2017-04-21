@@ -28,21 +28,21 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-lib_LIBRARIES                           = libopenthread-platform-utils.a
+lib_LTLIBRARIES                          = libopenthread-platform-utils.la
 
-libopenthread_platform_utils_a_CPPFLAGS = \
-    -I$(top_srcdir)/include               \
-    -I$(top_srcdir)/examples/platforms    \
-    -I$(top_srcdir)/src/core              \
+libopenthread_platform_utils_la_CPPFLAGS = \
+    -I$(top_srcdir)/include                \
+    -I$(top_srcdir)/examples/platforms     \
+    -I$(top_srcdir)/src/core               \
     $(NULL)
 
-libopenthread_platform_utils_a_SOURCES  = \
-    settings.cpp                          \
+libopenthread_platform_utils_la_SOURCES  = \
+    settings.cpp                           \
     $(NULL)
 
-noinst_HEADERS                          = \
-    code_utils.h                          \
-    flash.h                               \
+noinst_HEADERS                           = \
+    code_utils.h                           \
+    flash.h                                \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

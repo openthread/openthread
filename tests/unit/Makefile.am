@@ -59,14 +59,14 @@ if OPENTHREAD_ENABLE_NCP
 
 COMMON_LDADD                                                        = \
     $(top_builddir)/src/ncp/libopenthread-ncp.a                       \
-    $(top_builddir)/src/core/libopenthread-ftd.a                      \
+    $(top_builddir)/src/core/.libs/libopenthread-ftd.a                \
     -lpthread                                                         \
     $(NULL)
 
 else
 
 COMMON_LDADD                                                        = \
-    $(top_builddir)/src/core/libopenthread-ftd.a                      \
+    $(top_builddir)/src/core/.libs/libopenthread-ftd.a                \
     -lpthread                                                         \
     $(NULL)
 
@@ -172,8 +172,8 @@ test_toolchain_LDADD         = $(COMMON_LDADD)
 test_toolchain_SOURCES       = test_platform.cpp test_toolchain.cpp test_toolchain_c.c
 
 if OPENTHREAD_ENABLE_DIAG
-test_diag_LDADD              = $(top_builddir)/src/diag/libopenthread-diag.a                  \
-                               $(top_builddir)/examples/platforms/posix/libopenthread-posix.a \
+test_diag_LDADD              = $(top_builddir)/src/diag/libopenthread-diag.a                        \
+                               $(top_builddir)/examples/platforms/posix/.libs/libopenthread-posix.a \
                                $(NULL)
 test_diag_SOURCES            = test_diag.cpp
 endif

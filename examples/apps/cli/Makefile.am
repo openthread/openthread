@@ -61,7 +61,7 @@ endif # OPENTHREAD_ENABLE_DIAG
 
 if OPENTHREAD_EXAMPLES_POSIX
 LDADD_COMMON                                                          += \
-    $(top_builddir)/examples/platforms/posix/libopenthread-posix.a       \
+    $(top_builddir)/examples/platforms/posix/.libs/libopenthread-posix.a \
     -lstdc++                                                             \
     $(NULL)
 endif # OPENTHREAD_EXAMPLES_POSIX
@@ -123,7 +123,7 @@ ot_cli_ftd_CPPFLAGS                                                    = \
 
 ot_cli_ftd_LDADD                                                       = \
     $(top_builddir)/src/cli/libopenthread-cli.a                          \
-    $(top_builddir)/src/core/libopenthread-ftd.a                         \
+    $(top_builddir)/src/core/.libs/libopenthread-ftd.a                   \
     $(LDADD_COMMON)                                                      \
     $(NULL)
 
@@ -146,7 +146,7 @@ ot_cli_mtd_CPPFLAGS                                                    = \
 
 ot_cli_mtd_LDADD                                                       = \
     $(top_builddir)/src/cli/libopenthread-cli.a                          \
-    $(top_builddir)/src/core/libopenthread-mtd.a                         \
+    $(top_builddir)/src/core/.libs/libopenthread-mtd.a                   \
     $(LDADD_COMMON)                                                      \
     $(NULL)
 

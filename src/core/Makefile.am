@@ -28,7 +28,7 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-lib_LIBRARIES                       = \
+lib_LTLIBRARIES                     = \
     $(NULL)
 
 CPPFLAGS_COMMON                     = \
@@ -218,31 +218,31 @@ SOURCES_COMMON                     += \
 endif  # OPENTHREAD_ENABLE_RAW_LINK_API
 
 if OPENTHREAD_ENABLE_FTD
-lib_LIBRARIES                      += \
-    libopenthread-ftd.a               \
+lib_LTLIBRARIES                    += \
+    libopenthread-ftd.la              \
     $(NULL)
 
-libopenthread_ftd_a_CPPFLAGS        = \
+libopenthread_ftd_la_CPPFLAGS       = \
     $(CPPFLAGS_COMMON)                \
     $(NULL)
 
-libopenthread_ftd_a_SOURCES         = \
+libopenthread_ftd_la_SOURCES        = \
     $(SOURCES_COMMON)                 \
     $(SOURCES_FTD)                    \
     $(SOURCES_MISSING)                \
     $(NULL)
 endif # OPENTHREAD_ENABLE_FTD
 
-lib_LIBRARIES                      += \
-    libopenthread-mtd.a               \
+lib_LTLIBRARIES                    += \
+    libopenthread-mtd.la              \
     $(NULL)
 
-libopenthread_mtd_a_CPPFLAGS        = \
+libopenthread_mtd_la_CPPFLAGS       = \
     $(CPPFLAGS_COMMON)                \
     -DOPENTHREAD_MTD                  \
     $(NULL)
 
-libopenthread_mtd_a_SOURCES         = \
+libopenthread_mtd_la_SOURCES        = \
     $(SOURCES_COMMON)                 \
     $(SOURCES_MISSING)                \
     $(NULL)
