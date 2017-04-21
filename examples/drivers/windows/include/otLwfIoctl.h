@@ -689,8 +689,13 @@ typedef struct otCommissionConfig
     // GUID - InterfaceGuid
     // uint8_t - aRouterId
 
+#define IOCTL_OTLWF_OT_PSKC \
+    OTLWF_CTL_CODE(195, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA)
+    // GUID - InterfaceGuid
+    // otPSKc - aPSKc
+
 // OpenThread function IOCTL codes
 #define MIN_OTLWF_IOCTL_FUNC_CODE 100
-#define MAX_OTLWF_IOCTL_FUNC_CODE 194
+#define MAX_OTLWF_IOCTL_FUNC_CODE 195
 
 #endif //__OTLWFIOCTL_H__
