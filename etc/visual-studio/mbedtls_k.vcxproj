@@ -39,8 +39,6 @@
       <AdditionalIncludeDirectories>
         ..\..\include;
         ..\..\src\core;
-        ..\..\src\missing\stdint;
-        ..\..\src\missing\stdbool;
         ..\..\third_party\mbedtls;
         ..\..\third_party\mbedtls\repo\include;
         ..\..\third_party\mbedtls\repo\include\mbedtls

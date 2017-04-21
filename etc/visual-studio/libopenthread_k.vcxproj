@@ -51,9 +51,6 @@
         ..\..\include;
         ..\..\examples\drivers\windows\include;
         ..\..\src\core;
-        ..\..\src\missing;
-        ..\..\src\missing\stdint;
-        ..\..\src\missing\stdbool;
         ..\..\third_party\mbedtls;
         ..\..\third_party\mbedtls\repo\include;
       </AdditionalIncludeDirectories>
@@ -143,8 +140,9 @@
     <ClCompile Include="..\..\src\core\thread\thread_netif.cpp" />
     <ClCompile Include="..\..\src\core\utils\slaac_address.cpp" />
     <ClCompile Include="..\..\src\core\utils\jam_detector.cpp" />
-    <ClCompile Include="..\..\src\missing\strlcat\strlcat.c" />
-    <ClCompile Include="..\..\src\missing\strlcpy\strlcpy.c" />
+    <ClCompile Include="..\..\src\core\utils\missing_strlcat.c" />
+    <ClCompile Include="..\..\src\core\utils\missing_strlcpy.c" />
+    <ClCompile Include="..\..\src\core\utils\missing_strnlen.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\examples\drivers\windows\include\openthread-core-windows-config.h" />
@@ -253,8 +251,9 @@
     <ClInclude Include="..\..\src\core\thread\topology.hpp" />
     <ClInclude Include="..\..\src\core\utils\slaac_address.hpp" />
     <ClInclude Include="..\..\src\core\utils\jam_detector.hpp" />
-    <ClInclude Include="..\..\src\missing\strlcpy\strlcpy.h" />
-    <ClInclude Include="..\..\src\missing\strlcat\strlcat.h" />
+    <ClInclude Include="..\..\src\core\utils\wrap_string.h"" />
+    <ClInclude Include="..\..\src\core\utils\wrap_stdbool.h"" />
+    <ClInclude Include="..\..\src\core\utils\wrap_stdint.h"" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

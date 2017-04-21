@@ -45,8 +45,6 @@
       <AdditionalIncludeDirectories>
         %(AdditionalIncludeDirectories);
         ..\..\include;
-        ..\..\src\missing\stdint;
-        ..\..\src\missing\stdbool;
       </AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4100;4706;4748;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <TreatWarningAsError>true</TreatWarningAsError>
