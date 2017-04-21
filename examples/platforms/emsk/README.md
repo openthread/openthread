@@ -10,6 +10,10 @@ This directory contains example platform drivers for Synopsys [DesignWareÂ® ARCÂ
 
 [mrf24j40]: http://www.microchip.com/wwwproducts/en/en027752
 
+## Note
+
+The current EMSK platform does not support a True Random Number Generator (TRNG) as required by the Thread Specification.
+
 ## Toolchain
 
 Download and install [GNU toolchain for ARC EM][gnu-toolchain].
