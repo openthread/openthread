@@ -57,42 +57,18 @@ WRAP_EXTERN_C size_t missing_strnlen(const char *s, size_t maxlen);
 
 #undef WRAP_EXTERN_C
 
-/* undefine any compiler supplied macro for these functions */
-#undef strlcat
-#undef strlcpy
-#undef strnlen
 
-/* Goal: By default it just works...
- * so define our replacements */
-#define strlcat missing_strlcat
-#define strlcpy missing_strlcpy
-#define strnlen missing_strnlen
-/* Note: Add more here as needed */
 
-/*
- * Given the above "just works"
- * The next step is to "undef" things that do exist.
- * Thus, 'undef' is a platform specific optimization.
- */
-#if defined(_MSV_VER)
-#undef strnlen /* provided by visual studio */
-/* Others are not provided by visual studio */
+#if (!HAVE_STRNLEN)
+#define strnlen( S, N )     missing_strnlen( S, N )
 #endif
 
-#if defined(__TI_ARM__)
-/* TI_ARM compiler is missing all */
+#if (!HAVE_STRLCPY)
+#define strlcpy( D, S, N )  missing_strlcpy( D, S, N )
 #endif
 
-#if __linux__ || __APPLE__
-/* present on Linux & MAC  */
-#undef strnlen
-/* strlcat is missing */
-/* strlcpy is missing */
-#endif
-
-#if defined(__IAR_SYSTEMS_ICC__)
-#undef strnlen /* provided by IAR work bench */
-/* Others are not provided by IAR */
+#if (!HAVE_STRLCAT)
+#define strlcat( D, S, N )  missing_strlcat( D, S, N )
 #endif
 
 #endif  // WRAP_STRING_H

@@ -1093,11 +1093,22 @@ AC_MSG_NOTICE([checking required package dependencies])
 # Check for headers
 #
 
+
+OLD_CFLAGS="${CFLAGS}"
+CFLAGS="${CFLAGS} -Wno-error=address"
 AC_HEADER_STDBOOL
+CFLAGS="${OLD_CFLAGS}"
 AC_HEADER_STDC
 
 AC_CHECK_HEADERS([stdint.h])
 AC_CHECK_HEADERS([string.h])
+
+#
+# Missing Functions
+#
+AC_CHECK_FUNC([strlcpy], [AC_DEFINE([HAVE_STRLCPY], [1], [Define if strlcpy exists.])])
+AC_CHECK_FUNC([strlcat], [AC_DEFINE([HAVE_STRLCAT], [1], [Define if strlcpy exists.])])
+AC_CHECK_FUNC([strnlen], [AC_DEFINE([HAVE_STRNLEN], [1], [Define if strlcpy exists.])])
 
 #
 # Check for types and structures
