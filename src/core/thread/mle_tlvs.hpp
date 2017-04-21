@@ -882,18 +882,16 @@ public:
      * @retval kThreadError_NotFound   No subsequent Tlv exists in TlvRequestTlv.
      *
      */
-    ThreadError GetNextTlv(TlvRequestIterator &aIterator, uint8_t &aTlv)
-    {
+    ThreadError GetNextTlv(TlvRequestIterator &aIterator, uint8_t &aTlv) {
         ThreadError error = kThreadError_NotFound;
 
-        if (aIterator < GetLength())
-        {
+        if (aIterator < GetLength()) {
             aTlv = mTlvs[aIterator];
             aIterator = static_cast<TlvRequestIterator>(aIterator + sizeof(uint8_t));
             error = kThreadError_None;
         }
 
-	return error;
+        return error;
     }
 
     /**
@@ -1014,8 +1012,10 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return (GetLength() == sizeof(*this) - sizeof(Tlv) ||
-                                       GetLength() == sizeof(*this) - sizeof(Tlv) - sizeof(mSedBufferSize) - sizeof(mSedDatagramCount)); }
+    bool IsValid(void) const {
+        return (GetLength() == sizeof(*this) - sizeof(Tlv) ||
+                GetLength() == sizeof(*this) - sizeof(Tlv) - sizeof(mSedBufferSize) - sizeof(mSedDatagramCount));
+    }
 
     /**
      * This method returns the Parent Priority value.
