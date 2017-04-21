@@ -1090,24 +1090,6 @@ AC_MSG_NOTICE([checking required package dependencies])
 # NL_WITH_PACKAGE(...)
 
 #
-# Checks for missing functions
-#
-
-AC_DEFUN([CHECK_MISSING_FUNC], [
-    AC_CHECK_FUNC($1, [], [
-        nl_cv_missing_$1=yes
-        MISSING_CPPFLAGS="${MISSING_CPPFLAGS} "'-include $(top_srcdir)/src/missing/$1/$1.h'
-        MISSING_LIBADD="${MISSING_LIBADD} "'$(top_builddir)/src/missing/$1/lib$1.la'
-    ])
-    AM_CONDITIONAL(m4_toupper(MISSING_$1), [test "${nl_cv_missing_$1}" = "yes"])
-])
-AC_SUBST(MISSING_CPPFLAGS)
-AC_SUBST(MISSING_LIBADD)
-
-CHECK_MISSING_FUNC([strlcpy])
-CHECK_MISSING_FUNC([strlcat])
-
-#
 # Check for headers
 #
 
