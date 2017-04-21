@@ -29,7 +29,7 @@
 /**
  * @file
  * @brief
- *   This file includes the platform abstraction for true random number generation.
+ *   This file includes the platform abstraction for random number generation.
  */
 
 #ifndef RANDOM_H_
@@ -48,7 +48,7 @@ extern "C" {
  * @ingroup platform
  *
  * @brief
- *   This module includes the platform abstraction to support critical sections.
+ *   This module includes the platform abstraction for random number generation.
  *
  * @{
  *
@@ -57,25 +57,27 @@ extern "C" {
 /**
  * Get a 32-bit random value.
  *
+ * This function may be implemented using a psuedo-random number generator.
+ *
  * @returns A 32-bit random value.
  *
  */
 uint32_t otPlatRandomGet(void);
 
 /**
- * Get true random stream.
+ * Get true random value sequence.
  *
- * @param[in]   aInputLength      The expected size of random values.
- * @param[out]  aOutput           A pointer to the buffer for the generated random stream. The pointer should never be NULL.
- * @param[out]  aOutputLength     A pointer to the generated size of random stream.
- *                                It is supposed to be the same as aInputLength, but maybe less than aInputLength.
- *                                The pointer should never be NULL.
+ * This function MUST be implemented using a true random number generator (TRNG).
  *
- * @retval kThreadError_None         Generate random successfully.
- * @retval kThreadError_Fail         Generate random fail.
- * @retval kThreadError_InvalidArgs  Invalid args.
+ * @param[out]  aOutput              A pointer to where the true random values are placed.  Must not be NULL.
+ * @param[in]   aOutputLength        Size of @p aBuffer.
+ *
+ * @retval kThreadError_None         Successfully filled @p aBuffer with true random values.
+ * @retval kThreadError_Fail         Failed to fill @p aBuffer with true random values.
+ * @retval kThreadError_InvalidArgs  @p aBuffer was set to NULL.
+ *
  */
-ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength);
+ThreadError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength);
 
 /**
  * @}

@@ -49,9 +49,8 @@ void platformRandomInit(void)
 #if __SANITIZE_ADDRESS__ == 0
 
     ThreadError error;
-    uint16_t length;
 
-    error = otPlatRandomSecureGet(sizeof(sState), (uint8_t *)&sState, &length);
+    error = otPlatRandomGetTrue((uint8_t *)&sState, sizeof(sState));
     assert(error == kThreadError_None);
 
 #else  // __SANITIZE_ADDRESS__
@@ -84,7 +83,7 @@ uint32_t otPlatRandomGet(void)
     return mlcg;
 }
 
-ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
+ThreadError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 {
     ThreadError error = kThreadError_None;
 
@@ -93,17 +92,13 @@ ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint1
     FILE *file = NULL;
     size_t readLength;
 
-    *aOutputLength = 0;
-
     otEXPECT_ACTION(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
 
     file = fopen("/dev/urandom", "rb");
     otEXPECT_ACTION(file != NULL, error = kThreadError_Failed);
 
-    readLength = fread(aOutput, 1, aInputLength, file);
-    otEXPECT_ACTION(readLength == aInputLength, error = kThreadError_Failed);
-
-    *aOutputLength = aInputLength;
+    readLength = fread(aOutput, 1, aOutputLength, file);
+    otEXPECT_ACTION(readLength == aOutputLength, error = kThreadError_Failed);
 
 exit:
 
@@ -124,12 +119,10 @@ exit:
      */
     otEXPECT_ACTION(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
 
-    for (uint16_t length = 0; length < aInputLength; length++)
+    for (uint16_t length = 0; length < aOutputLength; length++)
     {
         aOutput[length] = (uint8_t)otPlatRandomGet();
     }
-
-    *aOutputLength = aInputLength;
 
 exit:
 
