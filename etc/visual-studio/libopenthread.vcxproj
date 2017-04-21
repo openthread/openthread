@@ -135,6 +135,7 @@
     <ClCompile Include="..\..\src\core\thread\thread_netif.cpp" />
     <ClCompile Include="..\..\src\core\utils\slaac_address.cpp" />
     <ClCompile Include="..\..\src\core\utils\jam_detector.cpp" />
+    <ClCompile Include="..\..\src\core\utils\missing_strnlen.c" />
     <ClCompile Include="..\..\src\core\utils\missing_strlcat.c" />
     <ClCompile Include="..\..\src\core\utils\missing_strlcpy.c" />
   </ItemGroup>
