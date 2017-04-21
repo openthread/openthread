@@ -1158,11 +1158,6 @@ src/cli/Makefile
 src/ncp/Makefile
 src/core/Makefile
 src/diag/Makefile
-src/missing/Makefile
-src/missing/stdbool/Makefile
-src/missing/stdint/Makefile
-src/missing/strlcat/Makefile
-src/missing/strlcpy/Makefile
 third_party/Makefile
 third_party/mbedtls/Makefile
 examples/Makefile
