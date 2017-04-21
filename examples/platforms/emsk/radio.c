@@ -215,9 +215,9 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
     (void)aInstance;
     /* should set it manually or preset it in memory */
-    aIeeeEui64[0] = 0x18;
-    aIeeeEui64[1] = 0xb4;
-    aIeeeEui64[2] = 0x30;
+    aIeeeEui64[0] = 0x00;
+    aIeeeEui64[1] = 0x50;
+    aIeeeEui64[2] = 0xC2;
     aIeeeEui64[3] = 0x00;
     aIeeeEui64[4] = (NODE_ID >> 24) & 0xff;
     aIeeeEui64[5] = (NODE_ID >> 16) & 0xff;
