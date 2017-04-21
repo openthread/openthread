@@ -36,8 +36,8 @@
 #include <openthread/types.h>
 #include <openthread-config.h>
 
-#include <utils/code_utils.h>
 #include <common/logging.hpp>
+#include <utils/code_utils.h>
 #include <openthread/platform/platform.h>
 #include <openthread/platform/radio.h>
 #include <openthread/platform/diag.h>
