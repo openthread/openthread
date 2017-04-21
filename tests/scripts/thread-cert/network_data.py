@@ -47,6 +47,13 @@ class TlvType(IntEnum):
     SERVER = 6
 
 
+class MeshcopTlvType(IntEnum):
+    STEERING_DATA = 8
+    BORDER_AGENT_LOCATOR = 9
+    COMMISSIONER_SESSION_ID = 11
+    COMMISSIONER_UDP_PORT = 15
+
+
 class NetworkData(object):
 
     def __init__(self, stable):
@@ -67,6 +74,27 @@ class SubTlvsFactory(object):
             return self._sub_tlvs_factories[_type]
         except KeyError:
             raise RuntimeError("Could not find factory. Factory type = {}.".format(_type))
+
+    def parse(self, data, message_info):
+        sub_tlvs = []
+
+        while data.tell() < len(data.getvalue()):
+            _type = ord(data.read(1))
+
+            length = ord(data.read(1))
+            value = data.read(length)
+
+            factory = self._get_factory(_type)
+
+            message_info.length = length
+            tlv = factory.parse(io.BytesIO(value), message_info)
+
+            sub_tlvs.append(tlv)
+
+        return sub_tlvs
+
+
+class NetworkDataSubTlvsFactory(SubTlvsFactory):
 
     def parse(self, data, message_info):
         sub_tlvs = []
@@ -210,7 +238,7 @@ class Prefix(NetworkData):
             self.stable, self.domain_id, self.prefix_length, hexlify(self.prefix), sub_tlvs_str)
 
 
-class PrefixSubTlvsFactory(SubTlvsFactory):
+class PrefixSubTlvsFactory(NetworkDataSubTlvsFactory):
 
     def __init__(self, sub_tlvs_factories):
         super(PrefixSubTlvsFactory, self).__init__(sub_tlvs_factories)
@@ -369,18 +397,142 @@ class LowpanIdFactory(object):
         return LowpanId(c, cid, context_length, message_info.stable)
 
 
-class CommissioningData(object):
+class CommissioningData(NetworkData):
 
-    def __init__(self):
-        # TODO: Not implemented yet
-        raise NotImplementedError
+    def __init__(self, sub_tlvs, stable):
+        super(CommissioningData, self).__init__(stable)
+        self._sub_tlvs = sub_tlvs
+
+    @property
+    def sub_tlvs(self):
+        return self._sub_tlvs
+
+    def __eq__(self, other):
+        common.expect_the_same_class(self, other)
+
+        return  self.sub_tlvs == other.sub_tlvs
+
+    def __repr__(self):
+        sub_tlvs_str = ", ".format(["{}".format(tlv) for tlv in self._sub_tlvs])
+        return "CommissioningData(stable={}, sub_tlvs=[{}])".format(
+            self._stable, sub_tlvs_str)
+
+
+class CommissioningDataSubTlvsFactory(SubTlvsFactory):
+
+    def __init__(self, sub_tlvs_factories):
+        super(CommissioningDataSubTlvsFactory, self).__init__(sub_tlvs_factories)
 
 
 class CommissioningDataFactory(object):
 
-    def __init__(self):
-        # TODO: Not implemented yet
-        raise NotImplementedError
+    def __init__(self, sub_tlvs_factory):
+        self._sub_tlvs_factory = sub_tlvs_factory
+
+    def parse(self, data, message_info):
+        sub_tlvs = self._sub_tlvs_factory.parse(io.BytesIO(data.read()), message_info)
+
+        return CommissioningData(sub_tlvs, message_info.stable)
+
+
+class SteeringData(object):
+
+    def __init__(self, bloom_filter):
+        self._bloom_filter = bloom_filter
+
+    @property
+    def bloom_filter(self):
+        return self._bloom_filter
+
+    def __eq__(self, other):
+        common.expect_the_same_class(self, other)
+
+        return self._bloom_filter == other._bloom_filter
+
+    def __repr__(self):
+        return "SteeringData(bloom_filter={})".format(hexlify(self._bloom_filter))
+
+
+class SteeringDataFactory:
+
+    def parse(self, data, message_info):
+        bloom_filter = data.read(message_info.length)
+        return SteeringData(bloom_filter)
+
+
+class BorderAgentLocator(object):
+
+    def __init__(self, address):
+        self._udp_port = address
+
+    @property
+    def udp_port(self):
+        return self._udp_port
+
+    def __eq__(self, other):
+        common.expect_the_same_class(self, other)
+
+        return self._udp_port == other._udp_port
+
+    def __repr__(self):
+        return "BorderAgentLocator(rloc16={})".format(hex(self._udp_port))
+
+
+class BorderAgentLocatorFactory:
+
+    def parse(self, data, message_info):
+        border_agent_locator = struct.unpack(">H", data.read(2))[0]
+        return BorderAgentLocator(border_agent_locator)
+
+
+class CommissionerSessionId(object):
+
+    def __init__(self, commissioner_session_id):
+        self._udp_port = commissioner_session_id
+
+    @property
+    def udp_port(self):
+        return self._udp_port
+
+    def __eq__(self, other):
+        common.expect_the_same_class(self, other)
+
+        return self._udp_port == other._udp_port
+
+    def __repr__(self):
+        return "CommissionerSessionId(id={})".format(hex(self._udp_port))
+
+
+class CommissionerSessionIdFactory:
+
+    def parse(self, data, message_info):
+        session_id = struct.unpack(">H", data.read(2))[0]
+        return CommissionerSessionId(session_id)
+
+
+class CommissionerUdpPort(object):
+
+    def __init__(self, udp_port):
+        self._udp_port = udp_port
+
+    @property
+    def udp_port(self):
+        return self._udp_port
+
+    def __eq__(self, other):
+        common.expect_the_same_class(self, other)
+
+        return self._udp_port == other._udp_port
+
+    def __repr__(self):
+        return "CommissionerUdpPort(udp_port={})".format(self._udp_port)
+
+
+class CommissionerUdpPortFactory:
+
+    def parse(self, data, message_info):
+        udp_port = struct.unpack(">H", data.read(2))[0]
+        return CommissionerUdpPort(udp_port)
 
 
 class Service(NetworkData):
@@ -434,7 +586,7 @@ class Service(NetworkData):
             self.stable, self.t, self.id, self.enterprise_number, self.service_data_length, self.service_data, sub_tlvs_str)
 
 
-class ServiceSubTlvsFactory(SubTlvsFactory):
+class ServiceSubTlvsFactory(NetworkDataSubTlvsFactory):
 
     def __init__(self, sub_tlvs_factories):
         super(ServiceSubTlvsFactory, self).__init__(sub_tlvs_factories)
@@ -494,7 +646,7 @@ class ServerFactory(object):
         return Server(server_16, server_data, message_info.stable)
 
 
-class NetworkDataTlvsFactory(SubTlvsFactory):
+class NetworkDataTlvsFactory(NetworkDataSubTlvsFactory):
 
     def __init__(self, sub_tlvs_factories):
         super(NetworkDataTlvsFactory, self).__init__(sub_tlvs_factories)

@@ -302,7 +302,7 @@ exit:
     return;
 }
 
-void Leader::ResignCommissioner(void)
+void Leader::SetEmptyCommissionerData(void)
 {
     CommissionerSessionIdTlv mCommissionerSessionId;
 
@@ -311,6 +311,11 @@ void Leader::ResignCommissioner(void)
 
     mNetif.GetNetworkDataLeader().SetCommissioningData(reinterpret_cast<uint8_t *>(&mCommissionerSessionId),
                                                        sizeof(Tlv) + mCommissionerSessionId.GetLength());
+}
+
+void Leader::ResignCommissioner(void)
+{
+    SetEmptyCommissionerData();
 
     otLogInfoMeshCoP(GetInstance(), "commissioner inactive");
 }

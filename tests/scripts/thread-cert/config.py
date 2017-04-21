@@ -68,6 +68,20 @@ def create_default_network_data_service_sub_tlvs_factory():
         sub_tlvs_factories=create_default_network_data_service_sub_tlvs_factories())
 
 
+def create_default_network_data_commissioning_data_sub_tlvs_factories():
+    return {
+        network_data.MeshcopTlvType.STEERING_DATA: network_data.SteeringDataFactory(),
+        network_data.MeshcopTlvType.BORDER_AGENT_LOCATOR: network_data.BorderAgentLocatorFactory(),
+        network_data.MeshcopTlvType.COMMISSIONER_SESSION_ID: network_data.CommissionerSessionIdFactory(),
+        network_data.MeshcopTlvType.COMMISSIONER_UDP_PORT: network_data.CommissionerUdpPortFactory(),
+    }
+
+
+def create_default_network_data_commissioning_data_sub_tlvs_factory():
+    return network_data.CommissioningDataSubTlvsFactory(
+        sub_tlvs_factories=create_default_network_data_commissioning_data_sub_tlvs_factories())
+
+
 def create_default_network_data_tlvs_factories():
     return {
         network_data.TlvType.PREFIX: network_data.PrefixFactory(
@@ -75,7 +89,10 @@ def create_default_network_data_tlvs_factories():
         ),
         network_data.TlvType.SERVICE: network_data.ServiceFactory(
             sub_tlvs_factory=create_default_network_data_service_sub_tlvs_factory()
-        )
+        ),
+        network_data.TlvType.COMMISSIONING: network_data.CommissioningDataFactory(
+            sub_tlvs_factory=create_default_network_data_commissioning_data_sub_tlvs_factory()
+        ),
     }
 
 
