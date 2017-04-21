@@ -47,6 +47,8 @@
 
 #include "border_agent_proxy.hpp"
 
+#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
+
 namespace Thread {
 namespace MeshCoP {
 
@@ -166,3 +168,5 @@ ThreadError BorderAgentProxy::Send(Message &aMessage, uint16_t aRloc, uint16_t a
 
 }  // namespace MeshCoP
 }  // namespace Thread
+
+#endif // OPENTHREAD_FTD && OPENTHREAD_ENABLE_BORDER_AGENT_PROXY

@@ -31,13 +31,13 @@
  *   This file implements the OpenThread Border Agent Proxy API.
  */
 
+#include "openthread/border_agent_proxy.h"
+
 #include "openthread-instance.h"
 
 using namespace Thread;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
 
 ThreadError otBorderAgentProxyStart(otInstance *aInstance, otBorderAgentProxyStreamHandler aBorderAgentProxyCallback,
                                     void *aContext)
@@ -60,6 +60,4 @@ bool otBorderAgentProxyIsEnabled(otInstance *aInstance)
     return aInstance->mThreadNetif.GetBorderAgentProxy().IsEnabled();
 }
 
-#ifdef __cplusplus
-}  // extern "C"
-#endif
+#endif // OPENTHREAD_FTD && OPENTHREAD_ENABLE_BORDER_AGENT_PROXY

@@ -45,9 +45,6 @@
 #include "openthread/ncp.h"
 
 #include <common/tasklet.hpp>
-#if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
-#include "openthread/border_agent_proxy.h"
-#endif
 #include <ncp/ncp_buffer.hpp>
 
 #include "spinel.h"
@@ -147,14 +144,14 @@ private:
 
     ThreadError OutboundFrameSend(void);
 
-#if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
+#if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
     /**
      * Trampoline for HandleBorderAgentProxyStream().
      */
     static void HandleBorderAgentProxyStream(otMessage *aMessage, uint16_t aRloc, uint16_t aPort, void *aContext);
 
     void HandleBorderAgentProxyStream(otMessage *aMessage, uint16_t aRloc, uint16_t aPort);
-#endif // OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
+#endif // OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
 
     /**
      * Trampoline for HandleDatagramFromStack().
