@@ -228,7 +228,7 @@ libopenthread_ftd_a_SOURCES         = \
     $(SOURCES_MISSING)                \
     $(NULL)
 
-noinst_HEADERS                      = \
+HEADERS_COMMON                      = \
     openthread-core-config.h          \
     openthread-core-default-config.h  \
     openthread-instance.h             \
@@ -336,9 +336,13 @@ noinst_HEADERS                      = \
     utils/jam_detector.hpp            \
     $(NULL)
 
+noinst_HEADERS                      = \
+    $(HEADERS_COMMON)                 \
+    $(NULL)
+
 PRETTY_FILES                        = \
     $(SOURCES_COMMON)                 \
-    $(SOURCES_FTD)                    \
+    $(HEADERS_COMMON)                 \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE
