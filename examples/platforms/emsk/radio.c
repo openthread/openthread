@@ -39,6 +39,7 @@
 #include "platform-emsk.h"
 
 #include "device/device_hal/inc/dev_gpio.h"
+#include <string.h>
 
 #include <stdio.h>
 #define DBG(fmt, ...)   printf(fmt, ##__VA_ARGS__)
@@ -429,10 +430,7 @@ void readFrame(void)
     uint16_t length;
     int16_t i;
 
-    for (i = 0; i < MRF24J40_RXFIFO_SIZE; i++)
-    {
-        readBuffer[i] = 0;
-    }
+    memset(readBuffer, 0, MRF24J40_RXFIFO_SIZE);
 
     VerifyOrExit(sState == kStateReceive || sState == kStateTransmit, ;);
     VerifyOrExit(Mrf24StatusRx, ;);
@@ -451,10 +449,7 @@ void readFrame(void)
     VerifyOrExit(IEEE802154_MIN_LENGTH <= length && length <= IEEE802154_MAX_LENGTH, ;);
 
     /* Read PSDU */
-    for (i = 0; i < length - 2; i++)
-    {
-        sReceiveFrame.mPsdu[i] = readBuffer[i];
-    }
+    memcpy(sReceiveFrame.mPsdu, readBuffer, length - 2);
 
     sReceiveFrame.mPower = (int8_t)(readRssi/MRF24J40_RSSI_SLOPE) - MRF24J40_RSSI_OFFSET;
     sReceiveFrame.mLength = (uint8_t) length;
@@ -502,7 +497,7 @@ void radioTransmitMessage(otInstance *aInstance)
 
     int16_t tx_timeout = 500;
     Mrf24StatusTx = 0;
-    while (!((tx_timeout <= 0) || (Mrf24StatusTx == 1)))
+    while ((tx_timeout > 0) && (Mrf24StatusTx != 1))
     {
         mrf24j40_delay_ms(1);
         tx_timeout--;
