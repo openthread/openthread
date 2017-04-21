@@ -24,19 +24,28 @@
  *    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#if !defined(WRAP_STDINT_H)
+#define WRAP_STDINT_H
 
-#include "strlcat.h"
-#include "../strlcpy/strlcpy.h"
+/* generally all compilers support this */
+/* Visual Studio only after VS2015 (aka: 19.00) */
 
-size_t strlcat(char *dest, const char *src, size_t size)
-{
-    size_t len = strlen(dest);
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
+/* types from this page: https://msdn.microsoft.com/en-us/library/29dh1w7z.aspx */
 
-    if (len < size - 1)
-    {
-        return (len + strlcpy(dest + len, src, size - len));
-    }
+typedef unsigned __int8  uint8_t;
+typedef unsigned __int16 uint16_t;
+typedef unsigned __int32 uint32_t;
+typedef unsigned __int64 uint64_t;
 
-    return len + strlen(src);
-}
+typedef __int8  int8_t;
+typedef __int16 int16_t;
+typedef __int32 int32_t;
+typedef __int64 int64_t;
 
+#else
+/* use the compiler supplied solution */
+#include <stdint.h>
+#endif
+
+#endif // WRAP_STDINT_H

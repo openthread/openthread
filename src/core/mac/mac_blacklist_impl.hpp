@@ -34,7 +34,7 @@
 #ifndef MAC_BLACKLIST_HPP_
 #define MAC_BLACKLIST_HPP_
 
-#include <stdint.h>
+#include "utils/wrap_stdint.h"
 
 #include "openthread/types.h"
 

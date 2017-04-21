@@ -34,7 +34,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include "utils/wrap_string.h"
 
 #include "openthread/cli.h"
 #include "openthread/platform/logging.h"

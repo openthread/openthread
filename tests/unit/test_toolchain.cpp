@@ -27,7 +27,7 @@
  */
 
 #include <stdio.h>
-#include <stdint.h>
+#include "utils/wrap_stdint.h"
 
 #include "openthread/platform/toolchain.h"
 

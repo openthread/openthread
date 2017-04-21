@@ -32,7 +32,7 @@
 #include <openthread-config.h>
 #endif
 
-#include <string.h>
+#include "utils/wrap_string.h"
 
 #include <common/debug.hpp>
 #include <common/code_utils.hpp>

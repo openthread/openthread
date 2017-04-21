@@ -33,7 +33,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include "utils/wrap_string.h"
 #include <common/code_utils.hpp>
 
 #include "diag_process.hpp"

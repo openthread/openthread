@@ -35,7 +35,7 @@
 #ifndef MESHCOP_TLVS_HPP_
 #define MESHCOP_TLVS_HPP_
 
-#include <string.h>
+#include "utils/wrap_string.h"
 
 #include "openthread/types.h"
 

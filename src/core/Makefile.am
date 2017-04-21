@@ -175,57 +175,19 @@ SOURCES_COMMON                      = \
     thread/src_match_controller.cpp   \
     thread/thread_netif.cpp           \
     utils/jam_detector.cpp            \
+    utils/missing_strlcpy.c           \
+    utils/missing_strlcat.c           \
+    utils/missing_strnlen.c           \
     utils/slaac_address.cpp           \
     $(NULL)
 
 
-SOURCES_MISSING                     = \
-    $(NULL)
-
-if MISSING_STRLCPY
-###############################################################
-# You'll see something similar to the next four lines in all
-# of these `MISSING_*` blocks. These makefile gynmastics are
-# to work around some unfortunate bugs in automake which
-# prevent a more elegant solution. We can't just pull in the
-# convenience libraries in `$(MISSING_LIBADD)` because that
-# doesn't seem to work on some platforms. Also, we can't
-# just include `$(top_srcdir)/src/missing/X/X.c` directly
-# because a bug in automake causes the `clean` target to
-# break. The following code may look ugly, but it gets the
-# job done. It does this by copying the source file to the
-# local build directory as an intermediate target. We then
-# compile that file. We have to add the path in CPPFLAGS
-# because the file might include headers from that directory.
-# Because the copied source file is explicitly labeled as
-# an intermediate target, it will always get deleted (unless
-# it already existed in the first place). -- RQ 2017-03-22
-strlcpy.c: $(top_srcdir)/src/missing/strlcpy/strlcpy.c
-	$(AM_V_GEN)cp $< $@
-.INTERMEDIATE: strlcpy.c
-CPPFLAGS_COMMON += -I$(top_srcdir)/src/missing/strlcpy
-SOURCES_MISSING += strlcpy.c
-endif
-
-if MISSING_STRLCAT
-# See comment above for explanation.
-strlcat.c: $(top_srcdir)/src/missing/strlcat/strlcat.c
-	$(AM_V_GEN)cp $< $@
-.INTERMEDIATE: strlcat.c
-CPPFLAGS_COMMON += -I$(top_srcdir)/src/missing/strlcat
-SOURCES_MISSING += strlcat.c
-endif
-
-
-
 libopenthread_mtd_a_SOURCES         = \
     $(SOURCES_COMMON)                 \
-    $(SOURCES_MISSING)                \
     $(NULL)
 
 libopenthread_ftd_a_SOURCES         = \
     $(SOURCES_COMMON)                 \
-    $(SOURCES_MISSING)                \
     $(NULL)
 
 HEADERS_COMMON                      = \
@@ -334,6 +296,9 @@ HEADERS_COMMON                      = \
     thread/topology.hpp               \
     utils/slaac_address.hpp           \
     utils/jam_detector.hpp            \
+    utils/wrap_stdbool.h              \
+    utils/wrap_stdint.h               \
+    utils/wrap_string.h               \
     $(NULL)
 
 noinst_HEADERS                      = \

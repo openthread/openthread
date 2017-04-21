@@ -27,7 +27,7 @@
  */
 
 #include "test_util.h"
-#include <string.h>
+#include "utils/wrap_string.h"
 
 #include "openthread/diag.h"
 #include "openthread/platform/platform.h"

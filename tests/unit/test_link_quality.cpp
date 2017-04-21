@@ -30,7 +30,7 @@
 #include "openthread/openthread.h"
 #include <thread/link_quality.hpp>
 
-#include <string.h>
+#include "utils/wrap_string.h"
 
 namespace Thread {
 

@@ -95,6 +95,9 @@ check_PROGRAMS                                                      = \
     test-message                                                      \
     test-message-queue                                                \
     test-priority-queue                                               \
+    test-strlcat                                                      \
+    test-strlcpy                                                      \
+    test-strnlen                                                      \
     test-timer                                                        \
     test-toolchain                                                    \
     $(NULL)
@@ -165,6 +168,15 @@ test_ncp_buffer_SOURCES      = test_platform.cpp test_ncp_buffer.cpp
 
 test_priority_queue_LDADD    = $(COMMON_LDADD)
 test_priority_queue_SOURCES  = test_platform.cpp test_priority_queue.cpp
+
+test_strlcat_LDADD           = $(COMMON_LDADD)
+test_strlcat_SOURCES         = test_strlcat.c
+
+test_strlcpy_LDADD           = $(COMMON_LDADD)
+test_strlcpy_SOURCES         = test_strlcpy.c
+
+test_strnlen_LDADD           = $(COMMON_LDADD)
+test_strnlen_SOURCES         = test_strnlen.c
 
 test_timer_LDADD             = $(COMMON_LDADD)
 test_timer_SOURCES           = test_platform.cpp test_timer.cpp

@@ -25,29 +25,74 @@
  *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "strlcpy.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include "utils/wrap_string.h"
 
-size_t strlcpy(char *dest, const char *src, size_t size)
+static void fail(const char *msg)
 {
-    const size_t slen = strlen(src);
-
-    if (size != 0)
-    {
-        size--;
-
-        if (slen < size)
-        {
-            size = slen;
-        }
-
-        if (size != 0)
-        {
-            memcpy(dest, src, size);
-        }
-
-        dest[size] = 0;
-    }
-
-    return slen;
+    fprintf(stderr, "%s\n", msg);
+    exit(EXIT_FAILURE);
 }
 
+int main(int argc, char **argv)
+{
+    char string_a[5] = "\0foo";
+    char string_b[8] = "foo\0bar";
+
+    (void)argc;
+    (void)argv;
+
+    if (0 != missing_strnlen(string_a, 0))
+    {
+        fail("0len 0 fails");
+    }
+
+    if (0 != missing_strnlen(string_a, 1))
+    {
+        fail("0len 1 fails");
+    }
+
+    if (0 != missing_strnlen(string_a, 2))
+    {
+        fail("0len 2 fails");
+    }
+
+    if (0 != missing_strnlen(string_b, 0))
+    {
+        fail("3len 0 fails");
+    }
+
+    if (1 != missing_strnlen(string_b, 1))
+    {
+        fail("3len 1 fails");
+    }
+
+    if (2 != missing_strnlen(string_b, 2))
+    {
+        fail("3len 2 fails");
+    }
+
+    if (3 != missing_strnlen(string_b, 3))
+    {
+        fail("3len 3 fails");
+    }
+
+    if (3 != missing_strnlen(string_b, 4))
+    {
+        fail("3len 4 fails");
+    }
+
+    if (3 != missing_strnlen(string_b, 5))
+    {
+        fail("3len 5 fails");
+    }
+
+    if (3 != missing_strnlen(string_b, 6))
+    {
+        fail("3len 6 fails");
+    }
+
+    printf("OK\n");
+    return EXIT_SUCCESS;
+}

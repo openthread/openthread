@@ -36,7 +36,7 @@
 #include <openthread-config.h>
 #endif
 
-#include <string.h>
+#include "utils/wrap_string.h"
 #include <common/code_utils.hpp>
 #include <ncp/ncp_buffer.hpp>
 

@@ -30,7 +30,7 @@
 #include "openthread/openthread.h"
 #include <common/debug.hpp>
 #include <mac/mac_frame.hpp>
-#include <string.h>
+#include "utils/wrap_string.h"
 
 namespace Thread {
 

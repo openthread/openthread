@@ -40,8 +40,8 @@
 #include <openthread-config.h>
 #endif
 
-#include <stdint.h>
-#include <string.h>
+#include "utils/wrap_stdint.h"
+#include "utils/wrap_string.h"
 
 #include "openthread/message.h"
 #include "openthread/platform/messagepool.h"

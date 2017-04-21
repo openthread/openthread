@@ -34,7 +34,7 @@
 #ifndef CRC16_HPP_
 #define CRC16_HPP_
 
-#include <stdint.h>
+#include "utils/wrap_stdint.h"
 
 namespace Thread {
 

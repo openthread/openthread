@@ -25,37 +25,38 @@
  *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "string.h"
+/**
+ * @file
+ *   This file is a wrapper for the standard "string.h" file
+ *   The purpose is add any missing function prototypes not
+ *   provided by a specific compiler.
+ */
 
-int main(void)
-{
-    char string_a[8] = "foo";
-    char string_b[] = "barbarbar";
-    size_t ret = 0;
-    int errors = 0;
+#if !defined(WRAP_STDBOOL_H)
+#define WRAP_STDBOOL_H
 
-    ret = strlcpy(string_a, string_b, sizeof(string_a));
+/* assume we have stdbool */
+#define _thread_have_stdbool 1
 
-    if (0 != strcmp(string_a, "barbarb"))
-    {
-        printf("strcmp failed\n");
-        errors++;
-    }
+/* handle exceptions here */
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
+/* Prior to Visual Studio 2015 - this did not exist. */
+#undef   _thread_have_stdbool
+#define  _thread_have_stdbool 0
 
-    if (ret != 9)
-    {
-        printf("strlcpy return value is wrong (%d)\n", (int)ret);
-        errors++;
-    }
+/* Supply our own */
+#ifndef __cplusplus
+typedef _Bool bool;
+#define false 0
+#define true 1
+#endif // __cplusplus
 
-    if (errors != 0)
-    {
-        printf("FAIL\n");
-        return EXIT_FAILURE;
-    }
+#endif // (visual studio)
 
-    printf("OK\n");
-    return EXIT_SUCCESS;
-}
+/* if we have stdbool, then just include it */
+#if _thread_have_stdbool
+#include <stdbool.h>
+#endif
+#undef _thread_have_stdbool
+
+#endif // WRAP_STDBOOL_H

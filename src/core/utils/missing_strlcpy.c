@@ -25,37 +25,28 @@
  *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "string.h"
+#include "utils/wrap_string.h"
 
-int main(void)
+size_t missing_strlcpy(char *dest, const char *src, size_t size)
 {
-    char string_a[8] = "foo";
-    char string_b[8] = "barbar";
-    size_t ret = 0;
-    int errors = 0;
+    const size_t slen = strlen(src);
 
-    ret = strlcat(string_a, string_b, sizeof(string_a));
-
-    if (0 != strcmp(string_a, "foobarb"))
+    if (size != 0)
     {
-        printf("strcmp failed\n");
-        errors++;
+        size--;
+
+        if (slen < size)
+        {
+            size = slen;
+        }
+
+        if (size != 0)
+        {
+            memcpy(dest, src, size);
+        }
+
+        dest[size] = 0;
     }
 
-    if (ret != 9)
-    {
-        printf("strlcat return value is wrong (%d)\n", (int)ret);
-        errors++;
-    }
-
-    if (errors != 0)
-    {
-        printf("FAIL\n");
-        return EXIT_FAILURE;
-    }
-
-    printf("OK\n");
-    return EXIT_SUCCESS;
+    return slen;
 }

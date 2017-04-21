@@ -34,7 +34,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include "utils/wrap_string.h"
 
 #include <cli/cli.hpp>
 #include <cli/cli_console.hpp>

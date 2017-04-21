@@ -25,25 +25,40 @@
  *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MISSING_STRLCPY_HEADER_INCLUDED
-#define MISSING_STRLCPY_HEADER_INCLUDED 1
+#include <stdio.h>
+#include <stdlib.h>
+#include "utils/wrap_string.h"
 
-#include <string.h>
+int main(int argc, char **argv)
+{
+    char string_a[8] = "foo";
+    char string_b[8] = "barbar";
+    size_t ret = 0;
+    int errors = 0;
 
-#ifdef strlcpy
-#undef strlcpy
-#endif
+    (void)argc;
+    (void)argv;
 
-#define strlcpy ___missing_strlcpy
+    ret = missing_strlcat(string_a, string_b, sizeof(string_a));
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+    if (0 != strcmp(string_a, "foobarb"))
+    {
+        printf("strcmp failed\n");
+        errors++;
+    }
 
-extern size_t strlcpy(char *dest, const char *src, size_t size);
+    if (ret != 9)
+    {
+        printf("strlcat return value is wrong (%d)\n", (int)ret);
+        errors++;
+    }
 
-#ifdef __cplusplus
-}  // extern "C"
-#endif
+    if (errors != 0)
+    {
+        printf("FAIL\n");
+        return EXIT_FAILURE;
+    }
 
-#endif // MISSING_STRLCPY_HEADER_INCLUDED
+    printf("OK\n");
+    return EXIT_SUCCESS;
+}

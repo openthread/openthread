@@ -26,7 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <string.h>
+#include "utils/wrap_string.h"
 
 #include "openthread/platform/random.h"
 
