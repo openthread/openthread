@@ -1087,12 +1087,12 @@ const char *Frame::ToInfoString(char *aBuf, uint16_t aSize)
         break;
     }
 
-    if (GetSrcAddr(src) == kThreadError_None)
+    if (GetSrcAddr(src) != kThreadError_None)
     {
         src.mLength = 0;
     }
 
-    if (GetDstAddr(dst) == kThreadError_None)
+    if (GetDstAddr(dst) != kThreadError_None)
     {
         dst.mLength = 0;
     }
