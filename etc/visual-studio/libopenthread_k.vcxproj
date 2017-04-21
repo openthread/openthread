@@ -251,9 +251,9 @@
     <ClInclude Include="..\..\src\core\thread\topology.hpp" />
     <ClInclude Include="..\..\src\core\utils\slaac_address.hpp" />
     <ClInclude Include="..\..\src\core\utils\jam_detector.hpp" />
-    <ClInclude Include="..\..\src\core\utils\wrap_string.h"" />
-    <ClInclude Include="..\..\src\core\utils\wrap_stdbool.h"" />
-    <ClInclude Include="..\..\src\core\utils\wrap_stdint.h"" />
+    <ClInclude Include="..\..\src\core\utils\wrap_string.h" />
+    <ClInclude Include="..\..\src\core\utils\wrap_stdbool.h" />
+    <ClInclude Include="..\..\src\core\utils\wrap_stdint.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
