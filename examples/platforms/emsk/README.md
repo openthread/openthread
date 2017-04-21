@@ -30,10 +30,10 @@ $ make -f examples/Makefile-emsk
 ```
 
 After a successful build, the `elf` files can be found in
-`<path-to-openthread>/output/bin`.  You can convert them to `bin`
+`<path-to-openthread>/output/arc-elf32/bin`.  You can convert them to `bin`
 files using `arc-elf32-objcopy`:
 ```bash
-$ arc-elf32-objcopy -O binary arc-elf32-ot-cli-ftd arc-elf32-ot-cli-ftd.bin
+$ arc-elf32-objcopy -O binary ot-cli-ftd ot-cli-ftd.bin
 ```
 
 ## Booting the binaries from SD card
