@@ -163,6 +163,18 @@ ThreadError otThreadSetLinkMode(otInstance *aInstance, otLinkModeConfig aConfig)
     return aInstance->mThreadNetif.GetMle().SetDeviceMode(mode);
 }
 
+#if OPENTHREAD_FTD
+const uint8_t *otThreadGetPSKc(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetKeyManager().GetPSKc();
+}
+
+void otThreadSetPSKc(otInstance *aInstance, uint8_t *aPSKc)
+{
+    return aInstance->mThreadNetif.GetKeyManager().SetPSKc(aPSKc);
+}
+#endif
+
 const uint8_t *otThreadGetMasterKey(otInstance *aInstance, uint8_t *aKeyLength)
 {
     return aInstance->mThreadNetif.GetKeyManager().GetMasterKey(aKeyLength);

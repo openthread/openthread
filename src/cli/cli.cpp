@@ -147,6 +147,9 @@ const struct Command Interpreter::sCommands[] =
     { "promiscuous", &Interpreter::ProcessPromiscuous },
 #endif
     { "prefix", &Interpreter::ProcessPrefix },
+#if OPENTHREAD_FTD
+    { "pskc", &Interpreter::ProcessPSKc },
+#endif
     { "releaserouterid", &Interpreter::ProcessReleaseRouterId },
     { "reset", &Interpreter::ProcessReset },
     { "rloc16", &Interpreter::ProcessRloc16 },
@@ -1280,6 +1283,35 @@ void Interpreter::ProcessLinkQuality(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
+
+#if OPENTHREAD_FTD
+void Interpreter::ProcessPSKc(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+
+    if (argc == 0)
+    {
+        const uint8_t *pskc = otThreadGetPSKc(mInstance);
+
+        for (int i = 0; i < OT_PSKC_MAX_SIZE; i++)
+        {
+            sServer->OutputFormat("%02x", pskc[i]);
+        }
+
+        sServer->OutputFormat("\r\n");
+    }
+    else
+    {
+        uint8_t pskc[OT_MASTER_KEY_SIZE];
+
+        VerifyOrExit((OT_PSKC_MAX_SIZE = Hex2Bin(argv[0], pskc, sizeof(pskc))) == OT_PSKC_MAX_SIZE, error = kThreadError_Parse);
+        SuccessOrExit(error = otThreadSetPSKc(mInstance, pskc));
+    }
+
+exit:
+    AppendResult(error);
+}
+#endif
 
 void Interpreter::ProcessMasterKey(int argc, char *argv[])
 {

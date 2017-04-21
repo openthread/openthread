@@ -80,6 +80,18 @@ void KeyManager::Stop(void)
     mKeyRotationTimer.Stop();
 }
 
+#if OPENTHREAD_FTD
+const uint8_t *KeyManager::GetPSKc(void) const
+{
+    return mPSKc;
+}
+
+const void KeyManager::SetPSKc(uint8_t *aPSKc)
+{
+    memcpy(mPSKc, aPSKc, sizeof(mPSKc.m8));
+}
+
+#endif
 const uint8_t *KeyManager::GetMasterKey(uint8_t *aKeyLength) const
 {
     if (aKeyLength)
