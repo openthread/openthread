@@ -384,6 +384,9 @@ private:
     ThreadError GetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_WHITELIST_ENABLED(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_MODE(uint8_t header, spinel_prop_key_t key);
+#if OPENTHREAD_FTD
+    ThreadError GetPropertyHandler_NET_PSKC(uint8_t header, spinel_prop_key_t key);
+#endif
     ThreadError GetPropertyHandler_THREAD_CHILD_COUNT_MAX(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_CHILD_TIMEOUT(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_RLOC16(uint8_t header, spinel_prop_key_t key);
@@ -488,6 +491,10 @@ private:
                                                                  const uint8_t *value_ptr, uint16_t value_len);
     ThreadError SetPropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES(uint8_t header, spinel_prop_key_t key,
                                                                     const uint8_t *value_ptr, uint16_t value_len);
+#endif
+#if OPENTHREAD_FTD
+    ThreadError SetPropertyHandler_NET_PSKC(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                               uint16_t value_len);
 #endif
     ThreadError SetPropertyHandler_THREAD_MODE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                uint16_t value_len);

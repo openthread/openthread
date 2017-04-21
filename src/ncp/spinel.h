@@ -253,6 +253,11 @@ typedef struct
 
 typedef struct
 {
+    uint8_t bytes[16];
+} spinel_thread_pskc_t;
+
+typedef struct
+{
     uint8_t bytes[6];
 } spinel_eui48_t;
 
@@ -682,6 +687,8 @@ typedef enum
 
     SPINEL_PROP_NET_KEY_SWITCH_GUARDTIME
                                         = SPINEL_PROP_NET__BEGIN + 10, ///< [L]
+
+    SPINEL_PROP_NET_PSKC                = SPINEL_PROP_NET__BEGIN + 11, ///< [D]
 
     SPINEL_PROP_NET__END                = 0x50,
 

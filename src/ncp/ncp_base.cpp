@@ -137,6 +137,9 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER, &NcpBase::GetPropertyHandler_NET_KEY_SEQUENCE_COUNTER },
     { SPINEL_PROP_NET_PARTITION_ID, &NcpBase::GetPropertyHandler_NET_PARTITION_ID },
     { SPINEL_PROP_NET_KEY_SWITCH_GUARDTIME, &NcpBase::GetPropertyHandler_NET_KEY_SWITCH_GUARDTIME},
+#if OPENTHREAD_FTD
+    { SPINEL_PROP_NET_PSKC, &NcpBase::GetPropertyHandler_NET_PSKC },
+#endif
 
     { SPINEL_PROP_THREAD_LEADER_ADDR, &NcpBase::GetPropertyHandler_THREAD_LEADER_ADDR },
     { SPINEL_PROP_THREAD_PARENT, &NcpBase::GetPropertyHandler_THREAD_PARENT },
@@ -272,6 +275,9 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_NET_MASTER_KEY, &NcpBase::SetPropertyHandler_NET_MASTER_KEY },
     { SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER, &NcpBase::SetPropertyHandler_NET_KEY_SEQUENCE_COUNTER },
     { SPINEL_PROP_NET_KEY_SWITCH_GUARDTIME, &NcpBase::SetPropertyHandler_NET_KEY_SWITCH_GUARDTIME},
+#if OPENTHREAD_FTD
+    { SPINEL_PROP_NET_PSKC, &NcpBase::SetPropertyHandler_NET_PSKC },
+#endif
 
     { SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT, &NcpBase::SetPropertyHandler_THREAD_LOCAL_LEADER_WEIGHT },
     { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::SetPropertyHandler_THREAD_ASSISTING_PORTS },
@@ -3259,6 +3265,20 @@ ThreadError NcpBase::GetPropertyHandler_MAC_WHITELIST_ENABLED(uint8_t header, sp
            );
 }
 
+#if OPENTHREAD_FTD
+ThreadError NcpBase::GetPropertyHandler_NET_PSKC(uint8_t header, spinel_prop_key_t key)
+{
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_DATA_S,
+               otThreadGetPSKc(mInstance),
+               sizeof(spinel_thread_pskc_t)
+           );
+}
+#endif // OPENTHREAD_FTD
+
 ThreadError NcpBase::GetPropertyHandler_THREAD_MODE(uint8_t header, spinel_prop_key_t key)
 {
     uint8_t numeric_mode(0);
@@ -5128,6 +5148,45 @@ exit:
 }
 
 #endif
+
+#if OPENTHREAD_FTD
+ThreadError NcpBase::SetPropertyHandler_NET_PSKC(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                    uint16_t value_len)
+{
+    const uint8_t *ptr = NULL;
+    spinel_size_t len;
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_DATA_S,
+                       &ptr,
+                       &len
+                   );
+
+    if ((parsedLength > 0) && (len == sizeof(spinel_thread_pskc_t)))
+    {
+        errorCode = otThreadSetPSKc(mInstance, ptr);
+        if (errorCode == kThreadError_None)
+        {
+            errorCode = HandleCommandPropertyGet(header, key);
+        }
+
+        if (errorCode)
+        {
+            errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+        }
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+#endif // OPENTHREAD_FTD
 
 ThreadError NcpBase::SetPropertyHandler_THREAD_MODE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                     uint16_t value_len)
