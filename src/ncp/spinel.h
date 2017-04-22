@@ -29,8 +29,8 @@
 #define SPINEL_HEADER_INCLUDED 1
 
 #include <stdarg.h>
-#include <stdbool.h>
-#include <stdint.h>
+#include "utils/wrap_stdbool.h"
+#include "utils/wrap_stdint.h"
 
 // ----------------------------------------------------------------------------
 
