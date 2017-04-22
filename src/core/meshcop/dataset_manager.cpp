@@ -188,7 +188,7 @@ exit:
 
 ThreadError DatasetManager::Clear(uint8_t &aFlags, bool aOnlyClearNetwork)
 {
-    if (!aOnlyClearNetwork && mLocal.Compare(mNetwork) == 0)
+    if (!aOnlyClearNetwork)
     {
         mLocal.Clear(true);
     }
