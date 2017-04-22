@@ -90,8 +90,8 @@ void KeyManager::SetPSKc(const uint8_t *aPSKc)
 {
     memcpy(mPSKc, aPSKc, sizeof(mPSKc));
 }
-
 #endif
+
 const uint8_t *KeyManager::GetMasterKey(uint8_t *aKeyLength) const
 {
     if (aKeyLength)

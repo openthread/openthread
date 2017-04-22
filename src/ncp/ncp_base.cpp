@@ -5151,7 +5151,7 @@ exit:
 
 #if OPENTHREAD_FTD
 ThreadError NcpBase::SetPropertyHandler_NET_PSKC(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
-                                                    uint16_t value_len)
+                                                 uint16_t value_len)
 {
     const uint8_t *ptr = NULL;
     spinel_size_t len;
