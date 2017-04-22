@@ -71,7 +71,7 @@ public:
      */
     ThreadError Stop(void);
 
-    ThreadError Send(Message &aMessage, uint16_t aRloc, uint16_t aPort);
+    ThreadError Send(Message &aMessage, uint16_t aLocator, uint16_t aPort);
 
     bool IsEnabled(void) const;
 

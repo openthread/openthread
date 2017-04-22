@@ -148,9 +148,9 @@ private:
     /**
      * Trampoline for HandleBorderAgentProxyStream().
      */
-    static void HandleBorderAgentProxyStream(otMessage *aMessage, uint16_t aRloc, uint16_t aPort, void *aContext);
+    static void HandleBorderAgentProxyStream(otMessage *aMessage, uint16_t aLocator, uint16_t aPort, void *aContext);
 
-    void HandleBorderAgentProxyStream(otMessage *aMessage, uint16_t aRloc, uint16_t aPort);
+    void HandleBorderAgentProxyStream(otMessage *aMessage, uint16_t aLocator, uint16_t aPort);
 #endif // OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
 
     /**

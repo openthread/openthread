@@ -610,12 +610,12 @@ ThreadError NcpBase::OutboundFrameEnd(void)
 }
 
 #if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
-void NcpBase::HandleBorderAgentProxyStream(otMessage *aMessage, uint16_t aRloc, uint16_t aPort, void *aContext)
+void NcpBase::HandleBorderAgentProxyStream(otMessage *aMessage, uint16_t aLocator, uint16_t aPort, void *aContext)
 {
-    static_cast<NcpBase *>(aContext)->HandleBorderAgentProxyStream(aMessage, aRloc, aPort);
+    static_cast<NcpBase *>(aContext)->HandleBorderAgentProxyStream(aMessage, aLocator, aPort);
 }
 
-void NcpBase::HandleBorderAgentProxyStream(otMessage *aMessage, uint16_t aRloc, uint16_t aPort)
+void NcpBase::HandleBorderAgentProxyStream(otMessage *aMessage, uint16_t aLocator, uint16_t aPort)
 {
     ThreadError errorCode = kThreadError_None;
     uint16_t length = otMessageGetLength(aMessage);
@@ -633,7 +633,7 @@ void NcpBase::HandleBorderAgentProxyStream(otMessage *aMessage, uint16_t aRloc, 
 
     SuccessOrExit(errorCode = OutboundFrameFeedMessage(aMessage));
 
-    SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT16_S SPINEL_DATATYPE_UINT16_S, aRloc, aPort));
+    SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT16_S SPINEL_DATATYPE_UINT16_S, aLocator, aPort));
 
     // Set the aMessage pointer to NULL, to indicate that it does not need to be freed at the exit.
     // The aMessage is now owned by the OutboundFrame and will be freed when the frame is either successfully sent and
@@ -4574,7 +4574,7 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_BA_PROXY_STREAM(uint8_t header, s
     ThreadError errorCode = kThreadError_None;
     const uint8_t *frame_ptr(NULL);
     unsigned int frame_len(0);
-    uint16_t rloc;
+    uint16_t locator;
     uint16_t port;
 
     // THREAD_BA_PROXY_STREAM requires layer 2 security.
@@ -4592,7 +4592,7 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_BA_PROXY_STREAM(uint8_t header, s
                            SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_UINT16_S SPINEL_DATATYPE_UINT16_S,
                            &frame_ptr,
                            &frame_len,
-                           &rloc,
+                           &locator,
                            &port
                        );
 
@@ -4608,7 +4608,7 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_BA_PROXY_STREAM(uint8_t header, s
 
     if (errorCode == kThreadError_None)
     {
-        errorCode = otBorderAgentProxySend(mInstance, message, rloc, port);
+        errorCode = otBorderAgentProxySend(mInstance, message, locator, port);
     }
     else if (message)
     {

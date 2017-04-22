@@ -139,13 +139,13 @@ exit:
     }
 }
 
-ThreadError BorderAgentProxy::Send(Message &aMessage, uint16_t aRloc, uint16_t aPort)
+ThreadError BorderAgentProxy::Send(Message &aMessage, uint16_t aLocator, uint16_t aPort)
 {
     ThreadError error = kThreadError_None;
     Ip6::MessageInfo messageInfo;
 
     messageInfo.SetPeerAddr(mMeshLocal16);
-    messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(aRloc);
+    messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(aLocator);
     messageInfo.SetPeerPort(aPort);
 
     if (aPort == kCoapUdpPort)

@@ -64,7 +64,7 @@ extern "C" {
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void (*otBorderAgentProxyStreamHandler)(otMessage *aMessage, uint16_t aRloc, uint16_t aPort, void *aContext);
+typedef void (*otBorderAgentProxyStreamHandler)(otMessage *aMessage, uint16_t aLocator, uint16_t aPort, void *aContext);
 
 /**
  * Start the border agent proxy.
@@ -95,14 +95,14 @@ ThreadError otBorderAgentProxyStop(otInstance *aInstance);
  *
  * @param[in]  aInstance            A pointer to an OpenThread instance.
  * @param[in]  aMessage             A pointer to the CoAP Message.
- * @param[in]  aRloc                Rloc of destination.
+ * @param[in]  aLocator             Rloc of destination.
  * @param[in]  aPort                Port of destination.
  *
  * @retval kThreadErrorNone         Successfully stopped the border agent proxy.
  *
  */
 ThreadError otBorderAgentProxySend(otInstance *aInstance, otMessage *aMessage,
-                                   uint16_t aRloc, uint16_t aPort);
+                                   uint16_t aLocator, uint16_t aPort);
 
 /**
  * Get the border agent proxy status (enabled/disabled)
