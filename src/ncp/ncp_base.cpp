@@ -198,7 +198,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
 #endif
 
 #if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
-    { SPINEL_PROP_THREAD_BA_PROXY_ENABLE, &NcpBase::GetPropertyHandler_BA_PROXY_ENABLE },
+    { SPINEL_PROP_THREAD_BA_PROXY_ENABLED, &NcpBase::GetPropertyHandler_BA_PROXY_ENABLED },
 #endif
 
     { SPINEL_PROP_CNTR_TX_PKT_TOTAL, &NcpBase::GetPropertyHandler_MAC_CNTR },
@@ -320,8 +320,8 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
 #endif
 
 #if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
-    { SPINEL_PROP_THREAD_BA_PROXY_ENABLE, &NcpBase::SetPropertyHandler_BA_PROXY_ENABLE },
-    { SPINEL_PROP_STREAM_BA_PROXY, &NcpBase::SetPropertyHandler_STREAM_BA_PROXY },
+    { SPINEL_PROP_THREAD_BA_PROXY_ENABLED, &NcpBase::SetPropertyHandler_BA_PROXY_ENABLED },
+    { SPINEL_PROP_THREAD_BA_PROXY_STREAM, &NcpBase::SetPropertyHandler_THREAD_BA_PROXY_STREAM },
 #endif // OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
 
 #if OPENTHREAD_ENABLE_DIAG
@@ -627,7 +627,7 @@ void NcpBase::HandleBorderAgentProxyStream(otMessage *aMessage, uint16_t aRloc, 
             SPINEL_DATATYPE_COMMAND_PROP_S SPINEL_DATATYPE_UINT16_S,
             SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
             SPINEL_CMD_PROP_VALUE_IS,
-            SPINEL_PROP_STREAM_BA_PROXY,
+            SPINEL_PROP_THREAD_BA_PROXY_STREAM,
             length
     ));
 
@@ -2893,7 +2893,7 @@ ThreadError NcpBase::GetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_k
 }
 
 #if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
-ThreadError NcpBase::GetPropertyHandler_BA_PROXY_ENABLE(uint8_t header, spinel_prop_key_t key)
+ThreadError NcpBase::GetPropertyHandler_BA_PROXY_ENABLED(uint8_t header, spinel_prop_key_t key)
 {
    return SendPropertyUpdate(
                header,
@@ -4567,8 +4567,8 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spin
 }
 
 #if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
-ThreadError NcpBase::SetPropertyHandler_STREAM_BA_PROXY(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
-                                                   uint16_t value_len)
+ThreadError NcpBase::SetPropertyHandler_THREAD_BA_PROXY_STREAM(uint8_t header, spinel_prop_key_t key,
+                                                               const uint8_t *value_ptr, uint16_t value_len)
 {
     spinel_ssize_t parsedLength;
     ThreadError errorCode = kThreadError_None;
@@ -4577,7 +4577,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_BA_PROXY(uint8_t header, spinel_p
     uint16_t rloc;
     uint16_t port;
 
-    // STREAM_BA_PROXY requires layer 2 security.
+    // THREAD_BA_PROXY_STREAM requires layer 2 security.
     otMessage *message = otIp6NewMessage(mInstance, true);
 
     if (message == NULL)
@@ -5627,8 +5627,8 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header
 }
 
 #if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
-ThreadError NcpBase::SetPropertyHandler_BA_PROXY_ENABLE(uint8_t header, spinel_prop_key_t key,
-                                                          const uint8_t *value_ptr, uint16_t value_len)
+ThreadError NcpBase::SetPropertyHandler_BA_PROXY_ENABLED(uint8_t header, spinel_prop_key_t key,
+                                                         const uint8_t *value_ptr, uint16_t value_len)
 {
     bool isEnabled;
     spinel_ssize_t parsedLength;
@@ -5645,18 +5645,25 @@ ThreadError NcpBase::SetPropertyHandler_BA_PROXY_ENABLE(uint8_t header, spinel_p
     {
         if (isEnabled)
         {
-            otBorderAgentProxyStart(mInstance, &NcpBase::HandleBorderAgentProxyStream, this);
+            SuccessOrExit(errorCode = otBorderAgentProxyStart(mInstance, &NcpBase::HandleBorderAgentProxyStream, this));
         }
         else
         {
-            otBorderAgentProxyStop(mInstance);
+            SuccessOrExit(errorCode = otBorderAgentProxyStop(mInstance));
         }
 
-        errorCode = HandleCommandPropertyGet(header, key);
+        SuccessOrExit(errorCode = HandleCommandPropertyGet(header, key));
     }
     else
     {
-        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+        errorCode = kThreadError_Parse;
+    }
+
+exit:
+
+    if (errorCode != kThreadError_None)
+    {
+        errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
     }
 
     return errorCode;
