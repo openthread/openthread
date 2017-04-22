@@ -1075,6 +1075,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_NET_KEY_SWITCH_GUARDTIME";
         break;
 
+    case SPINEL_PROP_NET_PSKC:
+        ret = "PROP_NET_PSKC";
+        break;
+
     case SPINEL_PROP_THREAD_LEADER_ADDR:
         ret = "PROP_THREAD_LEADER_ADDR";
         break;
