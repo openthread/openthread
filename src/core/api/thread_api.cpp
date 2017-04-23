@@ -176,6 +176,8 @@ ThreadError otThreadSetPSKc(otInstance *aInstance, const uint8_t *aPSKc)
                  error = kThreadError_InvalidState);
 
     aInstance->mThreadNetif.GetKeyManager().SetPSKc(aPSKc);
+    aInstance->mThreadNetif.GetActiveDataset().Clear(false);
+    aInstance->mThreadNetif.GetPendingDataset().Clear(false);
 
 exit:
     return error;
