@@ -1302,7 +1302,7 @@ void Interpreter::ProcessPSKc(int argc, char *argv[])
     }
     else
     {
-        uint8_t pskc[OT_MASTER_KEY_SIZE];
+        uint8_t pskc[OT_PSKC_MAX_SIZE];
 
         VerifyOrExit(Hex2Bin(argv[0], pskc, sizeof(pskc)) == OT_PSKC_MAX_SIZE, error = kThreadError_Parse);
         SuccessOrExit(error = otThreadSetPSKc(mInstance, pskc));

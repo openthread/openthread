@@ -3274,7 +3274,7 @@ ThreadError NcpBase::GetPropertyHandler_NET_PSKC(uint8_t header, spinel_prop_key
                key,
                SPINEL_DATATYPE_DATA_S,
                otThreadGetPSKc(mInstance),
-               sizeof(spinel_thread_pskc_t)
+               sizeof(spinel_net_pskc_t)
            );
 }
 #endif // OPENTHREAD_FTD
@@ -5166,7 +5166,7 @@ ThreadError NcpBase::SetPropertyHandler_NET_PSKC(uint8_t header, spinel_prop_key
                        &len
                    );
 
-    if ((parsedLength > 0) && (len == sizeof(spinel_thread_pskc_t)))
+    if ((parsedLength > 0) && (len == sizeof(spinel_net_pskc_t)))
     {
         errorCode = otThreadSetPSKc(mInstance, ptr);
         if (errorCode == kThreadError_None)

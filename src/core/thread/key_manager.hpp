@@ -115,7 +115,7 @@ public:
     /**
      * This method sets the PSKc.
      *
-     * @param[in]  aPSKc    A pointer to the Thread Master Key.
+     * @param[in]  aPSKc    A pointer to the PSKc.
      *
      */
     void SetPSKc(const uint8_t *aPSKc);

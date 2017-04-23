@@ -254,7 +254,7 @@ typedef struct
 typedef struct
 {
     uint8_t bytes[16];
-} spinel_thread_pskc_t;
+} spinel_net_pskc_t;
 
 typedef struct
 {
