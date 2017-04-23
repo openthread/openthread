@@ -316,6 +316,7 @@ private:
     uint8_t  mSendMessageMaxMacTxAttempts;
     uint8_t  mSendMessageKeyId;
     uint8_t  mSendMessageDataSequenceNumber;
+    uint8_t  mStartChildIndex;
 
     Mac::Address mMacSource;
     Mac::Address mMacDest;
@@ -335,8 +336,6 @@ private:
     bool mScanning;
 
     DataPollManager mDataPollManager;
-
-
     SourceMatchController mSourceMatchController;
 };
 
