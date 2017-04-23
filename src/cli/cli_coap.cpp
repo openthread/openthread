@@ -335,6 +335,7 @@ ThreadError Coap::ProcessClient(int argc, char *argv[])
     if (argc > 4)
     {
         payloadLength = static_cast<uint16_t>(strlen(argv[4]));
+
         if (payloadLength > 0)
         {
             otCoapHeaderSetPayloadMarker(&header);
@@ -347,7 +348,7 @@ ThreadError Coap::ProcessClient(int argc, char *argv[])
     // Embed content into message if given
     if (payloadLength > 0)
     {
-        SuccessOrExit(error = otMessageAppend(message, argv[4], payloadLength);
+        SuccessOrExit(error = otMessageAppend(message, argv[4], payloadLength));
     }
 
     memset(&messageInfo, 0, sizeof(messageInfo));
