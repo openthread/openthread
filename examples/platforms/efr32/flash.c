@@ -134,7 +134,7 @@ uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 
     while (aSize--)
     {
-        *byte++ = (uint8_t)(*(uint8_t *)(pAddress++));
+        *byte++ = (*(uint8_t *)(pAddress++));
     }
 
 exit:

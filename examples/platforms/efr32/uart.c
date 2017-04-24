@@ -45,8 +45,8 @@
 
 enum
 {
-    kPlatformClock = 32000000,
-    kBaudRate = 115200,
+    kPlatformClock     = 32000000,
+    kBaudRate          = 115200,
     kReceiveBufferSize = 128,
 };
 
@@ -54,7 +54,7 @@ static void processReceive(void);
 static void processTransmit(void);
 
 static const uint8_t *sTransmitBuffer = NULL;
-static uint16_t sTransmitLength = 0;
+static uint16_t       sTransmitLength = 0;
 
 typedef struct RecvBuffer
 {
@@ -66,7 +66,7 @@ typedef struct RecvBuffer
     uint16_t mTail;
 } RecvBuffer;
 
-static RecvBuffer sReceive;
+static RecvBuffer     sReceive;
 
 ThreadError otPlatUartEnable(void)
 {

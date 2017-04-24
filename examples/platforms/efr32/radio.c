@@ -50,37 +50,37 @@
 
 enum
 {
-    IEEE802154_MIN_LENGTH             = 5,
-    IEEE802154_MAX_LENGTH             = 127,
-    IEEE802154_ACK_LENGTH             = 5,
-    IEEE802154_FRAME_TYPE_MASK        = 0x7,
-    IEEE802154_FRAME_TYPE_ACK         = 0x2,
-    IEEE802154_FRAME_PENDING          = 1 << 4,
-    IEEE802154_ACK_REQUEST            = 1 << 5,
-    IEEE802154_DSN_OFFSET             = 2,
+    IEEE802154_MIN_LENGTH                = 5,
+    IEEE802154_MAX_LENGTH                = 127,
+    IEEE802154_ACK_LENGTH                = 5,
+    IEEE802154_FRAME_TYPE_MASK           = 0x7,
+    IEEE802154_FRAME_TYPE_ACK            = 0x2,
+    IEEE802154_FRAME_PENDING             = 1 << 4,
+    IEEE802154_ACK_REQUEST               = 1 << 5,
+    IEEE802154_DSN_OFFSET                = 2,
 };
 
-static PhyState    sState             = kStateDisabled;
-static uint8_t     sReceiveBuffer[IEEE802154_MAX_LENGTH + 1 + sizeof(RAIL_RxPacketInfo_t)];
-static uint8_t     sReceivePsdu[IEEE802154_MAX_LENGTH];
-static RadioPacket sReceiveFrame;
-static ThreadError sReceiveError;
+static uint16_t       sPanId             = 0;
+static uint8_t        sChannel           = 0;
+static bool           sTransmitBusy      = false;
+static bool           sPromiscuous       = false;
+static bool           sIsReceiverEnabled = false;
+static bool           sIsSrcMatchEnabled = false;
+static PhyState       sState             = kStateDisabled;
 
-static RadioPacket sTransmitFrame;
-static uint8_t     sTransmitPsdu[IEEE802154_MAX_LENGTH];
-static ThreadError sTransmitError;
+static uint8_t        sReceiveBuffer[IEEE802154_MAX_LENGTH + 1 + sizeof(RAIL_RxPacketInfo_t)];
+static uint8_t        sReceivePsdu[IEEE802154_MAX_LENGTH];
+static RadioPacket    sReceiveFrame;
+static ThreadError    sReceiveError;
 
-static uint16_t    sPanId             = 0;
-static uint8_t     sChannel           = 0;
-static bool        sTransmitBusy      = false;
-static bool        sPromiscuous       = false;
-static bool        sIsReceiverEnabled = false;
-static bool        sIsSrcMatchEnabled = false;
+static RadioPacket    sTransmitFrame;
+static uint8_t        sTransmitPsdu[IEEE802154_MAX_LENGTH];
+static ThreadError    sTransmitError;
 
-typedef struct     srcMatchEntry
+typedef struct        srcMatchEntry
 {
     uint16_t checksum;
-    bool allocated;
+    bool     allocated;
 } sSrcMatchEntry;
 
 static sSrcMatchEntry srcMatchShortEntry[RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM];
@@ -140,31 +140,33 @@ void efr32RadioDeinit(void)
 
 void setChannel(uint8_t channel)
 {
-    if (sChannel != channel)
+    bool enabled = false;
+
+    otEXPECT(sChannel != channel);
+
+    if (sIsReceiverEnabled)
     {
-        bool enabled = false;
-
-        if (sIsReceiverEnabled)
-        {
-            RAIL_RfIdle();
-            enabled = true;
-            sIsReceiverEnabled = false;
-        }
-
-        otLogInfoPlat(sInstance, "Channel=%d", channel);
-
-        sChannel = channel;
-
-        if (enabled)
-        {
-            if (RAIL_RxStart(channel))
-            {
-                assert(false);
-            }
-
-            sIsReceiverEnabled = true;
-        }
+        RAIL_RfIdle();
+        enabled = true;
+        sIsReceiverEnabled = false;
     }
+
+    otLogInfoPlat(sInstance, "Channel=%d", channel);
+
+    sChannel = channel;
+
+    if (enabled)
+    {
+        if (RAIL_RxStart(channel))
+        {
+            assert(false);
+        }
+
+        sIsReceiverEnabled = true;
+    }
+
+exit:
+    return;
 }
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
@@ -223,12 +225,12 @@ ThreadError otPlatRadioEnable(otInstance *aInstance)
     CORE_DECLARE_IRQ_STATE;
     CORE_ENTER_CRITICAL();
 
-    if (!otPlatRadioIsEnabled(aInstance))
-    {
-        otLogInfoPlat(sInstance, "State=kStateSleep", NULL);
-        sState = kStateSleep;
-    }
+    otEXPECT(!otPlatRadioIsEnabled(aInstance));
 
+    otLogInfoPlat(sInstance, "State=kStateSleep", NULL);
+    sState = kStateSleep;
+
+exit:
     CORE_EXIT_CRITICAL();
     return kThreadError_None;
 }
@@ -238,109 +240,108 @@ ThreadError otPlatRadioDisable(otInstance *aInstance)
     CORE_DECLARE_IRQ_STATE;
     CORE_ENTER_CRITICAL();
 
-    if (otPlatRadioIsEnabled(aInstance))
-    {
-        otLogInfoPlat(sInstance, "State=kStateDisabled", NULL);
-        sState = kStateDisabled;
-    }
+    otEXPECT(otPlatRadioIsEnabled(aInstance));
 
+    otLogInfoPlat(sInstance, "State=kStateDisabled", NULL);
+    sState = kStateDisabled;
+
+exit:
     CORE_EXIT_CRITICAL();
     return kThreadError_None;
 }
 
 ThreadError otPlatRadioSleep(otInstance *aInstance)
 {
-    ThreadError error = kThreadError_InvalidState;
+    ThreadError error = kThreadError_None;
     (void)aInstance;
 
     CORE_DECLARE_IRQ_STATE;
     CORE_ENTER_CRITICAL();
 
-    if (sState == kStateSleep || sState == kStateReceive)
-    {
-        otLogInfoPlat(sInstance, "State=kStateSleep", NULL);
-        error = kThreadError_None;
-        sState = kStateSleep;
+    otEXPECT_ACTION((sState != kStateTransmit) && (sState != kStateDisabled),
+                    error = kThreadError_InvalidState);
 
-        if (sIsReceiverEnabled)
-        {
-            RAIL_RfIdleExt(RAIL_IDLE, true);
-            sIsReceiverEnabled = false;
-        }
+    otLogInfoPlat(sInstance, "State=kStateSleep", NULL);
+    sState = kStateSleep;
+
+    if (sIsReceiverEnabled)
+    {
+        RAIL_RfIdleExt(RAIL_IDLE, true);
+        sIsReceiverEnabled = false;
     }
 
+exit:
     CORE_EXIT_CRITICAL();
     return error;
 }
 
 ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
-    ThreadError error = kThreadError_InvalidState;
+    ThreadError error = kThreadError_None;
     (void)aInstance;
 
     CORE_DECLARE_IRQ_STATE;
     CORE_ENTER_CRITICAL();
 
-    if (sState != kStateDisabled)
+    otEXPECT_ACTION(sState != kStateDisabled, error = kThreadError_InvalidState);
+
+    otLogInfoPlat(sInstance, "State=kStateReceive", NULL);
+    sState = kStateReceive;
+    setChannel(aChannel);
+    sReceiveFrame.mChannel = aChannel;
+
+    if (!sIsReceiverEnabled)
     {
-        otLogInfoPlat(sInstance, "State=kStateReceive", NULL);
-        error = kThreadError_None;
-        sState = kStateReceive;
-        setChannel(aChannel);
-        sReceiveFrame.mChannel = aChannel;
-
-        if (!sIsReceiverEnabled)
+        if (RAIL_RxStart(aChannel))
         {
-            if (RAIL_RxStart(aChannel))
-            {
-                assert(false);
-            }
-
-            sIsReceiverEnabled = true;
+            assert(false);
         }
+
+        sIsReceiverEnabled = true;
     }
 
+exit:
     CORE_EXIT_CRITICAL();
     return error;
 }
 
 ThreadError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
 {
-    ThreadError error = kThreadError_InvalidState;
+    ThreadError error = kThreadError_None;
     RAIL_CsmaConfig_t csmaConfig = RAIL_CSMA_CONFIG_802_15_4_2003_2p4_GHz_OQPSK_CSMA;
     RAIL_TxData_t tx_data;
+    uint8_t frame[IEEE802154_MAX_LENGTH + 1];
     (void)aInstance;
 
     CORE_DECLARE_IRQ_STATE;
     CORE_ENTER_CRITICAL();
 
-    if (sState == kStateReceive)
+    otEXPECT_ACTION((sState != kStateDisabled) && (sState != kStateTransmit),
+                    error = kThreadError_InvalidState);
+
+    sState = kStateTransmit;
+    sTransmitError = kThreadError_None;
+    sTransmitBusy = true;
+
+    frame[0] = aPacket->mLength;
+    memcpy(frame + 1, aPacket->mPsdu, aPacket->mLength);
+
+    tx_data.dataPtr = frame;
+    tx_data.dataLength = aPacket->mLength - 1;
+    setChannel(aPacket->mChannel);
+    RAIL_RfIdleExt(RAIL_IDLE, true);
+
+    if (RAIL_TxDataLoad(&tx_data))
     {
-        error = kThreadError_None;
-        sState = kStateTransmit;
-        sTransmitError = kThreadError_None;
-        sTransmitBusy = true;
-
-        uint8_t frame[IEEE802154_MAX_LENGTH + 1];
-        frame[0] = aPacket->mLength;
-        memcpy(frame + 1, aPacket->mPsdu, aPacket->mLength);
-
-        tx_data.dataPtr = frame;
-        tx_data.dataLength = aPacket->mLength - 1;
-        setChannel(aPacket->mChannel);
-        RAIL_RfIdleExt(RAIL_IDLE, true);
-
-        if (RAIL_TxDataLoad(&tx_data))
-        {
-            assert(false);
-        }
-
-        if (RAIL_TxStart(aPacket->mChannel, RAIL_CcaCsma, &csmaConfig))
-        {
-            assert(false);
-        }
+        assert(false);
     }
 
+    if (RAIL_TxStart(aPacket->mChannel, RAIL_CcaCsma, &csmaConfig))
+    {
+        assert(false);
+    }
+
+exit:
     CORE_EXIT_CRITICAL();
     return error;
 }
