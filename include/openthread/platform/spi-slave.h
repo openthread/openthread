@@ -55,62 +55,45 @@ extern "C" {
  */
 
 /**
- * Indicates that a SPI transaction has completed with
- * the given length. The data written to the slave has been
- * written to the pointer indicated by the `anInputBuf` argument
- * to the previous call to otPlatSpiSlavePrepareTransaction().
+ * Indicates that a SPI transaction has completed with the given length. The data written to the slave has been written
+ * to the pointer indicated by the `aInputBuf` argument to the previous call to `otPlatSpiSlavePrepareTransaction()`.
  *
- * Once this function is called, otPlatSpiSlavePrepareTransaction()
- * is invalid and must be called again for the next transaction to be
- * valid.
+ * Once this function is called, `otPlatSpiSlavePrepareTransaction()` is invalid and must be called again for the next
+ * transaction to be valid.
  *
- * Note that this function is always called at the end of a transaction,
- * even if otPlatSpiSlavePrepareTransaction() has not yet been called.
- * In such cases, anOutputBufLen and anInputBufLen will be zero.
+ * Note that this function is always called at the end of a transaction, even if `otPlatSpiSlavePrepareTransaction()`
+ *  has not yet been called. In such cases, `aOutputBufLen` and `aInputBufLen` will be zero.
  *
- * @param[in] aContext           Context pointer passed into
- *                               otPlatSpiSlaveEnable()
- * @param[in] anOutputBuf        Value of anOutputBuf from last call to
- *                               otPlatSpiSlavePrepareTransaction()
- * @param[in] anOutputBufLen     Value of anOutputBufLen from last call to
- *                               otPlatSpiSlavePrepareTransaction()
- * @param[in] anInputBuf         Value of anInputBuf from last call to
- *                               otPlatSpiSlavePrepareTransaction()
- * @param[in] anInputBufLen      Value of anInputBufLen from last call to
- *                               otPlatSpiSlavePrepareTransaction()
- * @param[in] aTransactionLength Length of the completed transaction, in bytes
+ * @param[in] aContext           Context pointer passed into `otPlatSpiSlaveEnable()`.
+ * @param[in] aOutputBuf         Value of `aOutputBuf` from last call to `otPlatSpiSlavePrepareTransaction()`.
+ * @param[in] aOutputBufLen      Value of `aOutputBufLen` from last call to `otPlatSpiSlavePrepareTransaction()`.
+ * @param[in] aInputBuf          Value of aInputBuf from last call to `otPlatSpiSlavePrepareTransaction()`.
+ * @param[in] aInputBufLen       Value of aInputBufLen from last call to `otPlatSpiSlavePrepareTransaction()`
+ * @param[in] aTransactionLength Length of the completed transaction, in bytes.
+ *
  */
-typedef void (*otPlatSpiSlaveTransactionCompleteCallback)(
-    void *aContext,
-    uint8_t *anOutputBuf,
-    uint16_t anOutputBufLen,
-    uint8_t *anInputBuf,
-    uint16_t anInputBufLen,
-    uint16_t aTransactionLength
-);
+typedef void (*otPlatSpiSlaveTransactionCompleteCallback)(void *aContext, uint8_t *aOutputBuf, uint16_t aOutputBufLen,
+                                                          uint8_t *aInputBuf, uint16_t aInputBufLen,
+                                                          uint16_t aTransactionLength);
+
 
 /**
  * Initialize the SPI slave interface.
 
- * Note that the SPI slave is not fully ready until a transaction is
- * prepared using otPlatSPISlavePrepareTransaction().
+ * Note that SPI slave is not fully ready until a transaction is prepared using `otPlatSPISlavePrepareTransaction()`.
  *
- * If otPlatSPISlavePrepareTransaction() is not called before
- * the master begins a transaction, the resulting SPI transaction
- * will send all `0xFF` bytes and discard all received bytes.
+ * If `otPlatSPISlavePrepareTransaction() is not called before the master begins a transaction, the resulting SPI
+ * transaction will send all `0xFF` bytes and discard all received bytes.
  *
- * @param[in] aCallback Pointer to transaction complete callback
- * @param[in] aContext  Context pointer to be passed to transaction
- *                      complete callback
+ * @param[in] aCallback          Pointer to transaction complete callback.
+ * @param[in] aContext           Context pointer to be passed to transaction complete callback.
  *
- * @retval ::kThreadError_None    Successfully enabled the SPI Slave interface.
- * @retval ::kThreadError_Already SPI Slave interface is already enabled.
- * @retval ::kThreadError_Failed  Failed to enable the SPI Slave interface.
+ * @retval kThreadError_None     Successfully enabled the SPI Slave interface.
+ * @retval kThreadError_Already  SPI Slave interface is already enabled.
+ * @retval kThreadError_Failed   Failed to enable the SPI Slave interface.
+ *
  */
-ThreadError otPlatSpiSlaveEnable(
-    otPlatSpiSlaveTransactionCompleteCallback aCallback,
-    void *aContext
-);
+ThreadError otPlatSpiSlaveEnable(otPlatSpiSlaveTransactionCompleteCallback aCallback, void *aContext);
 
 /**
  * Shutdown and disable the SPI slave interface.
@@ -118,58 +101,43 @@ ThreadError otPlatSpiSlaveEnable(
 void otPlatSpiSlaveDisable(void);
 
 /**
- * Prepare data for the next SPI transaction. Data pointers
- * MUST remain valid until the transaction complete callback
- * is called by the SPI slave driver, or until after the
- * next call to otPlatSpiSlavePrepareTransaction().
+ * Prepare data for the next SPI transaction. Data pointers MUST remain valid until the transaction complete callback
+ * is called by the SPI slave driver, or until after the next call to `otPlatSpiSlavePrepareTransaction()`.
  *
- * This function may be called more than once before the SPI
- * master initiates the transaction. Each *successful* call to this
- * function will cause the previous values from earlier calls to
- * be discarded.
+ * This function may be called more than once before the SPI master initiates the transaction. Each *successful* call
+ * to this function will cause the previous values from earlier calls to be discarded.
  *
- * Not calling this function after a completed transaction is the
- * same as if this function was previously called with both buffer
- * lengths set to zero and aRequestTransactionFlag set to `false`.
+ * Not calling this function after a completed transaction is the same as if this function was previously called with
+ * both buffer lengths set to zero and `aRequestTransactionFlag` set to `false`.
  *
- * Once anOutputBufLen bytes of anOutputBuf has been clocked out, the
- * MISO pin shall be set high until the master finishes the SPI
- * transaction. This is the functional equivalent of padding the end
- * of anOutputBuf with 0xFF bytes out to the length of the transaction.
+ * Once `aOutputBufLen` bytes of `aOutputBuf` has been clocked out, the MISO pin shall be set high until the master
+ * finishes the SPI transaction. This is the functional equivalent of padding the end of `aOutputBuf` with `0xFF` bytes
+ * out to the length of the transaction.
  *
- * Once anInputBufLen bytes of anInputBuf have been clocked in from
- * MOSI, all subsequent values from the MOSI pin are ignored until the
- * SPI master finishes the transaction.
+ * Once `aInputBufLen` bytes of aInputBuf have been clocked in from MOSI, all subsequent values from the MOSI pin are
+ * ignored until the SPI master finishes the transaction.
  *
- * Note that even if `anInputBufLen` or `anOutputBufLen` (or both) are
- * exhausted before the SPI master finishes a transaction, the ongoing
- * size of the transaction must still be kept track of to be passed
- * to the transaction complete callback. For example, if `anInputBufLen`
- * is equal to 10 and `anOutputBufLen` equal to 20 and the SPI master
- * clocks out 30 bytes, the value 30 is passed to the transaction
- * complete callback.
+ * Note that even if `aInputBufLen` or `aOutputBufLen` (or both) are exhausted before the SPI master finishes a
+* transaction, the ongoing size of the transaction must still be kept track of to be passed to the transaction complete
+* callback. For example, if `aInputBufLen` is equal to 10 and `aOutputBufLen` equal to 20 and the SPI master clocks out
+* 30 bytes, the value 30 is passed to the transaction complete callback.
  *
- * Any call to this function while a transaction is in progress will
- * cause all of the arguments to be ignored and the return value to
- * be ::kThreadError_Busy.
+ * Any call to this function while a transaction is in progress will cause all of the arguments to be ignored and the
+ * return value to be `kThreadError_Busy`.
  *
- * @param[in] anOutputBuf    Data to be written to MISO pin
- * @param[in] anOutputBufLen Size of the output buffer, in bytes
- * @param[in] anInputBuf     Data to be read from MOSI pin
- * @param[in] anInputBufLen  Size of the input buffer, in bytes
+ * @param[in] aOutputBuf              Data to be written to MISO pin
+ * @param[in] aOutputBufLen           Size of the output buffer, in bytes
+ * @param[in] aInputBuf               Data to be read from MOSI pin
+ * @param[in] aInputBufLen            Size of the input buffer, in bytes
  * @param[in] aRequestTransactionFlag Set to true if host interrupt should be set
  *
- * @retval ::kThreadError_None         Transaction was successfully prepared.
- * @retval ::kThreadError_Busy         A transaction is currently in progress.
- * @retval ::kThreadError_InvalidState otPlatSpiSlaveEnable() hasn't been called.
+ * @retval kThreadError_None          Transaction was successfully prepared.
+ * @retval kThreadError_Busy          A transaction is currently in progress.
+ * @retval kThreadError_InvalidState  otPlatSpiSlaveEnable() hasn't been called.
+ *
  */
-ThreadError otPlatSpiSlavePrepareTransaction(
-    uint8_t *anOutputBuf,
-    uint16_t anOutputBufLen,
-    uint8_t *anInputBuf,
-    uint16_t anInputBufLen,
-    bool aRequestTransactionFlag
-);
+ThreadError otPlatSpiSlavePrepareTransaction(uint8_t *aOutputBuf, uint16_t aOutputBufLen, uint8_t *aInputBuf,
+                                             uint16_t aInputBufLen, bool aRequestTransactionFlag);
 
 /**
  * @}
