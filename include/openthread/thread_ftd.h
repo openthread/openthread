@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2016-2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,24 +28,61 @@
 
 /**
  * @file
- *  This file includes definitions for the Joiner Router role.
+ * @brief
+ *  This file defines the OpenThread Thread API (FTD only).
  */
 
-#ifndef JOINER_ROUTER_HPP_
-#define JOINER_ROUTER_HPP_
+#ifndef OPENTHREAD_THREAD_FTD_H_
+#define OPENTHREAD_THREAD_FTD_H_
 
-namespace Thread {
-namespace MeshCoP {
+#include "openthread/types.h"
+#include "openthread/link.h"
+#include "openthread/message.h"
 
-class JoinerRouter
-{
-public:
-    JoinerRouter(ThreadNetif &) { }
-    uint16_t GetJoinerUdpPort(void) { return 0; }
-    ThreadError SetJoinerUdpPort(uint16_t) { return kThreadError_NotImplemented; }
-};
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-}  // namespace MeshCoP
-}  // namespace Thread
+/**
+ * @addtogroup thread  Thread
+ *
+ * @brief
+ *   This module includes functions that control Thread-specific functions.
+ *
+ * @{
+ *
+ */
 
-#endif  // JOINER_ROUTER_HPP_
+/**
+ * Get the Joiner UDP Port.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The Joiner UDP Port number.
+ *
+ * @sa otThreadSetJoinerUdpPort
+ */
+OTAPI uint16_t OTCALL otThreadGetJoinerUdpPort(otInstance *aInstance);
+
+/**
+ * Set the Joiner UDP Port
+ *
+ * @param[in]  aInstance       A pointer to an OpenThread instance.
+ * @param[in]  aJoinerUdpPort  The Joiner UDP Port number.
+ *
+ * @retval  kThreadErrorNone   Successfully set the Joiner UDP Port.
+ *
+ * @sa otThreadGetJoinerUdpPort
+ */
+OTAPI ThreadError OTCALL otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort);
+
+/**
+ * @}
+ *
+ */
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
+
+#endif  // OPENTHREAD_THREAD_FTD_H_

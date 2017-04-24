@@ -92,8 +92,10 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     mJamDetector(*this),
 #endif // OPENTHREAD_ENABLE_JAM_DETECTTION
+#if OPENTHREAD_FTD
     mJoinerRouter(*this),
     mLeader(*this),
+#endif  // OPENTHREAD_FTD
     mAnnounceBegin(*this),
     mPanIdQuery(*this),
     mEnergyScan(*this)

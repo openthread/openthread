@@ -443,29 +443,6 @@ OTAPI uint32_t OTCALL otThreadGetLocalLeaderPartitionId(otInstance *aInstance);
 OTAPI void OTCALL otThreadSetLocalLeaderPartitionId(otInstance *aInstance, uint32_t aPartitionId);
 
 /**
- * Get the Joiner UDP Port.
- *
- * @param[in] aInstance A pointer to an OpenThread instance.
- *
- * @returns The Joiner UDP Port number.
- *
- * @sa otThreadSetJoinerUdpPort
- */
-OTAPI uint16_t OTCALL otThreadGetJoinerUdpPort(otInstance *aInstance);
-
-/**
- * Set the Joiner UDP Port
- *
- * @param[in]  aInstance       A pointer to an OpenThread instance.
- * @param[in]  aJoinerUdpPort  The Joiner UDP Port number.
- *
- * @retval  kThreadErrorNone   Successfully set the Joiner UDP Port.
- *
- * @sa otThreadGetJoinerUdpPort
- */
-OTAPI ThreadError OTCALL otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort);
-
-/**
  * @}
  */
 

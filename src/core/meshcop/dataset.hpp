@@ -164,7 +164,9 @@ public:
 
     ThreadError Set(const Dataset &aDataset);
 
+#if OPENTHREAD_FTD
     ThreadError Set(const otOperationalDataset &aDataset);
+#endif
 
     /**
      * This method removes a TLV from the Dataset.

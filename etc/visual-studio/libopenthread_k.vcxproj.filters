@@ -78,6 +78,9 @@
     <ClCompile Include="..\..\src\core\api\dataset_api.cpp">
       <Filter>Source Files\api</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\api\dataset_ftd_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\api\dhcp6_api.cpp">
       <Filter>Source Files\api</Filter>
     </ClCompile>
@@ -106,6 +109,9 @@
       <Filter>Source Files\api</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\api\thread_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\api\thread_ftd_api.cpp">
       <Filter>Source Files\api</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\coap\coap_base.cpp">
@@ -581,6 +587,9 @@
     <ClInclude Include="..\..\include\openthread\dataset.h">
       <Filter>Header Files\openthread</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\openthread\dataset_ftd.h">
+      <Filter>Header Files\openthread</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\include\openthread\dhcp6_client.h">
       <Filter>Header Files\openthread</Filter>
     </ClInclude>
@@ -618,6 +627,9 @@
       <Filter>Header Files\openthread</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\openthread\thread.h">
+      <Filter>Header Files\openthread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread\thread_ftd.h">
       <Filter>Header Files\openthread</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\openthread\udp.h">
