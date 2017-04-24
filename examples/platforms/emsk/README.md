@@ -12,7 +12,7 @@ This directory contains example platform drivers for Synopsys [DesignWareÂ® ARCÂ
 
 ## Note
 
-The current EMSK platform does not support a True Random Number Generator (TRNG) as required by the Thread Specification.
+The EMSK platform is a configurable, FPGA-based software development platform for the ARC EM Processor Family.  The platform does not currently feature a True Random Number Generator (TRNG), which is required for certification to the Thread Specification.  Users looking to certify the OpenThread implementation for their own ARC-based platforms will need to add a TRNG to their platform and modify our reference implementation based on EMSK accordingly in order to achieve certification for their platform.
 
 ## Toolchain
 
