@@ -834,7 +834,7 @@ typedef enum
     SPINEL_PROP_THREAD_BA_PROXY_ENABLED = SPINEL_PROP_THREAD_EXT__BEGIN + 17,
 
     /// Thread border agent proxy stream
-    /** Format `dDSS`
+    /** Format `dSS`
      */
     SPINEL_PROP_THREAD_BA_PROXY_STREAM  = SPINEL_PROP_THREAD_EXT__BEGIN + 18,
 
