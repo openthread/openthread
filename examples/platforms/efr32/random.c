@@ -90,7 +90,7 @@ uint32_t otPlatRandomGet(void)
     return random;
 }
 
-ThreadError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t *aOutputLength)
+ThreadError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 {
     ThreadError error = kThreadError_None;
 
