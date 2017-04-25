@@ -1291,21 +1291,21 @@ void Interpreter::ProcessPSKc(int argc, char *argv[])
 
     if (argc == 0)
     {
-        const uint8_t *pskc = otThreadGetPSKc(mInstance);
+        const uint8_t *currentPSKc = otThreadGetPSKc(mInstance);
 
         for (int i = 0; i < OT_PSKC_MAX_SIZE; i++)
         {
-            sServer->OutputFormat("%02x", pskc[i]);
+            sServer->OutputFormat("%02x", currentPSKc[i]);
         }
 
         sServer->OutputFormat("\r\n");
     }
     else
     {
-        uint8_t pskc[OT_PSKC_MAX_SIZE];
+        uint8_t newPSKc[OT_PSKC_MAX_SIZE];
 
-        VerifyOrExit(Hex2Bin(argv[0], pskc, sizeof(pskc)) == OT_PSKC_MAX_SIZE, error = kThreadError_Parse);
-        SuccessOrExit(error = otThreadSetPSKc(mInstance, pskc));
+        VerifyOrExit(Hex2Bin(argv[0], newPSKc, sizeof(newPSKc)) == OT_PSKC_MAX_SIZE, error = kThreadError_Parse);
+        SuccessOrExit(error = otThreadSetPSKc(mInstance, newPSKc));
     }
 
 exit:
