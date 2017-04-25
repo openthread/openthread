@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2016-2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,27 +28,27 @@
 
 /**
  * @file
- *   This file includes definitions for a MeshCoP Leader.
+ *   This file implements the OpenThread Thread API (FTD only).
  */
 
-#ifndef MESHCOP_LEADER_HPP_
-#define MESHCOP_LEADER_HPP_
+#define WPP_NAME "thread_ftd_api.tmh"
 
-#include <net/ip6_address.hpp>
+#include "openthread/thread_ftd.h"
 
-namespace Thread {
-namespace MeshCoP {
+#include "openthread-instance.h"
 
-class Leader
+using namespace Thread;
+
+#if OPENTHREAD_FTD
+
+uint16_t otThreadGetJoinerUdpPort(otInstance *aInstance)
 {
-public:
-    Leader(ThreadNetif &) { }
-    ThreadError SendDatasetChanged(const Ip6::Address &) { return kThreadError_NotImplemented; }
-    ThreadError SetDelayTimerMinimal(uint32_t) { return kThreadError_NotImplemented; }
-    uint32_t GetDelayTimerMinimal(void) { return 0; }
-};
+    return aInstance->mThreadNetif.GetJoinerRouter().GetJoinerUdpPort();
+}
 
-}  // namespace MeshCoP
-}  // namespace Thread
+ThreadError otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort)
+{
+    return aInstance->mThreadNetif.GetJoinerRouter().SetJoinerUdpPort(aJoinerUdpPort);
+}
 
-#endif  // MESHCOP_LEADER_HPP_
+#endif // OPENTHREAD_FTD

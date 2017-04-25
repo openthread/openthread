@@ -95,6 +95,7 @@ SOURCES_COMMON                      = \
     api/commissioner_api.cpp          \
     api/crypto_api.cpp                \
     api/dataset_api.cpp               \
+    api/dataset_ftd_api.cpp           \
     api/dhcp6_api.cpp                 \
     api/dhcp6_api.cpp                 \
     api/dns_api.cpp                   \
@@ -109,6 +110,7 @@ SOURCES_COMMON                      = \
     api/netdata_api.cpp               \
     api/tasklet_api.cpp               \
     api/thread_api.cpp                \
+    api/thread_ftd_api.cpp            \
     api/udp_api.cpp                   \
     coap/coap_base.cpp                \
     coap/coap_client.cpp              \
@@ -275,11 +277,7 @@ HEADERS_COMMON                      = \
     meshcop/energy_scan_client.hpp    \
     meshcop/joiner.hpp                \
     meshcop/joiner_router.hpp         \
-    meshcop/joiner_router_ftd.hpp     \
-    meshcop/joiner_router_mtd.hpp     \
     meshcop/leader.hpp                \
-    meshcop/leader_ftd.hpp            \
-    meshcop/leader_mtd.hpp            \
     meshcop/meshcop.hpp               \
     meshcop/panid_query_client.hpp    \
     meshcop/timestamp.hpp             \

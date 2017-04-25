@@ -49,6 +49,11 @@
 #include "openthread/commissioner.h"
 #include "openthread/joiner.h"
 
+#if OPENTHREAD_FTD
+#include "openthread/dataset_ftd.h"
+#include "openthread/thread_ftd.h"
+#endif
+
 #ifndef OTDLL
 #include <openthread-instance.h>
 #include "openthread/diag.h"
@@ -96,7 +101,9 @@ const struct Command Interpreter::sCommands[] =
     { "contextreusedelay", &Interpreter::ProcessContextIdReuseDelay },
     { "counter", &Interpreter::ProcessCounters },
     { "dataset", &Interpreter::ProcessDataset },
+#if OPENTHREAD_FTD
     { "delaytimermin", &Interpreter::ProcessDelayTimerMin},
+#endif
 #if OPENTHREAD_ENABLE_DIAG
     { "diag", &Interpreter::ProcessDiag },
 #endif
@@ -125,7 +132,9 @@ const struct Command Interpreter::sCommands[] =
 #if OPENTHREAD_ENABLE_JOINER
     { "joiner", &Interpreter::ProcessJoiner },
 #endif
+#if OPENTHREAD_FTD
     { "joinerport", &Interpreter::ProcessJoinerPort },
+#endif
     { "keysequence", &Interpreter::ProcessKeySequence },
     { "leaderdata", &Interpreter::ProcessLeaderData },
     { "leaderpartitionid", &Interpreter::ProcessLeaderPartitionId },
@@ -701,6 +710,7 @@ void Interpreter::ProcessDataset(int argc, char *argv[])
     AppendResult(error);
 }
 
+#if OPENTHREAD_FTD
 void Interpreter::ProcessDelayTimerMin(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
@@ -723,6 +733,7 @@ void Interpreter::ProcessDelayTimerMin(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
+#endif
 
 void Interpreter::ProcessDiscover(int argc, char *argv[])
 {
@@ -2753,6 +2764,7 @@ void Interpreter::HandleJoinerCallback(ThreadError aError)
     }
 }
 
+#if OPENTHREAD_FTD
 void Interpreter::ProcessJoinerPort(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
@@ -2771,6 +2783,7 @@ void Interpreter::ProcessJoinerPort(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
+#endif
 
 void Interpreter::ProcessWhitelist(int argc, char *argv[])
 {

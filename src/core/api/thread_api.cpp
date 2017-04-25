@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file implements the OpenThread Thread API.
+ *   This file implements the OpenThread Thread API (for both FTD and MTD).
  */
 
 #define WPP_NAME "thread_api.tmh"
@@ -256,16 +256,6 @@ uint32_t otThreadGetLocalLeaderPartitionId(otInstance *aInstance)
 void otThreadSetLocalLeaderPartitionId(otInstance *aInstance, uint32_t aPartitionId)
 {
     return aInstance->mThreadNetif.GetMle().SetLeaderPartitionId(aPartitionId);
-}
-
-uint16_t otThreadGetJoinerUdpPort(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetJoinerRouter().GetJoinerUdpPort();
-}
-
-ThreadError otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort)
-{
-    return aInstance->mThreadNetif.GetJoinerRouter().SetJoinerUdpPort(aJoinerUdpPort);
 }
 
 uint32_t otThreadGetContextIdReuseDelay(otInstance *aInstance)

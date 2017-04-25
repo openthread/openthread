@@ -287,9 +287,11 @@ public:
 
     MeshCoP::PendingDataset &GetPendingDataset(void) { return mPendingDataset; }
 
+#if OPENTHREAD_FTD
     MeshCoP::JoinerRouter &GetJoinerRouter(void) { return mJoinerRouter; }
 
     MeshCoP::Leader &GetLeader(void) { return mLeader; }
+#endif  // OPENTHREAD_FTD
 
     AnnounceBeginServer &GetAnnounceBeginServer(void) { return mAnnounceBegin; }
 
@@ -371,8 +373,11 @@ private:
     Utils::JamDetector mJamDetector;
 #endif // OPENTHREAD_ENABLE_JAM_DETECTION
 
+#if OPENTHREAD_FTD
     MeshCoP::JoinerRouter mJoinerRouter;
     MeshCoP::Leader mLeader;
+#endif  // OPENTHREAD_FTD
+
     AnnounceBeginServer mAnnounceBegin;
     PanIdQueryServer mPanIdQuery;
     EnergyScanServer mEnergyScan;
