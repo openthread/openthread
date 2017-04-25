@@ -393,6 +393,10 @@ const char *otThreadErrorToString(ThreadError aError)
         retval = "Duplicated";
         break;
 
+    case kThreadError_ReassemblyTimeout:
+        retval = "ReassemblyTimeout";
+        break;
+
     case kThreadError_Error:
         retval = "GenericError";
         break;

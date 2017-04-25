@@ -626,6 +626,27 @@ public:
      */
     void SetRequestTlv(uint8_t aIndex, uint8_t aType) { mRequestTlvs[aIndex] = aType; }
 
+    /**
+     * This method gets the mac address of child (either rloc16 or extended address depending on `UseShortAddress` flag).
+     *
+     * @param[out] aMacAddress A reference to a mac address object to which the child's address is copied.
+     *
+     * @returns A (const) reference to the mac address @a aMacAddress.
+     *
+     */
+    const Mac::Address &GetMacAddress(Mac::Address &aMacAddress) const {
+        if (mUseShortAddress) {
+            aMacAddress.mShortAddress = GetRloc16();
+            aMacAddress.mLength = sizeof(aMacAddress.mShortAddress);
+        }
+        else {
+            aMacAddress.mExtAddress = GetExtAddress();
+            aMacAddress.mLength = sizeof(aMacAddress.mExtAddress);
+        }
+
+        return aMacAddress;
+    }
+
 private:
     Ip6::Address mIp6Address[kMaxIp6AddressPerChild];  ///< Registered IPv6 addresses
     uint32_t     mTimeout;                             ///< Child timeout
