@@ -147,7 +147,7 @@ private:
      * @returns A pointer to the first data byte.
      *
      */
-    uint8_t *GetFirstData(void) { return mHeadData; }
+    uint8_t *GetFirstData(void) { return mBuffer.mHead.mData; }
 
     /**
      * This method returns a pointer to the first byte of data in the first message buffer.
@@ -155,7 +155,7 @@ private:
      * @returns A pointer to the first data byte.
      *
      */
-    const uint8_t *GetFirstData(void) const { return mHeadData; }
+    const uint8_t *GetFirstData(void) const { return mBuffer.mHead.mData; }
 
     /**
      * This method returns a pointer to the first data byte of a subsequent message buffer.
@@ -163,7 +163,7 @@ private:
      * @returns A pointer to the first data byte.
      *
      */
-    uint8_t *GetData(void) { return mData; }
+    uint8_t *GetData(void) { return mBuffer.mData; }
 
     /**
      * This method returns a pointer to the first data byte of a subsequent message buffer.
@@ -171,7 +171,7 @@ private:
      * @returns A pointer to the first data byte.
      *
      */
-    const uint8_t *GetData(void) const { return mData; }
+    const uint8_t *GetData(void) const { return mBuffer.mData; }
 
     enum
     {
@@ -184,10 +184,10 @@ private:
         struct
         {
             MessageInfo mInfo;
-            uint8_t mHeadData[kHeadBufferDataSize];
-        };
+            uint8_t mData[kHeadBufferDataSize];
+        } mHead;
         uint8_t mData[kBufferDataSize];
-    };
+    } mBuffer;
 };
 
 /**
@@ -250,7 +250,7 @@ public:
      *
      * @returns The number of bytes in the message.
      */
-    uint16_t GetLength(void) const { return mInfo.mLength; }
+    uint16_t GetLength(void) const { return mBuffer.mHead.mInfo.mLength; }
 
     /**
      * This method sets the number of bytes in the message.
@@ -276,7 +276,7 @@ public:
      * @returns A byte offset within the message.
      *
      */
-    uint16_t GetOffset(void) const { return mInfo.mOffset; }
+    uint16_t GetOffset(void) const { return mBuffer.mHead.mInfo.mOffset; }
 
     /**
      * This method moves the byte offset within the message.
@@ -306,7 +306,7 @@ public:
      * @returns The type of the message.
      *
      */
-    uint8_t GetType(void) const { return mInfo.mType; }
+    uint8_t GetType(void) const { return mBuffer.mHead.mInfo.mType; }
 
     /**
      * This method sets the message type.
@@ -314,7 +314,7 @@ public:
      * @param[in]  aType  The message type.
      *
      */
-    void SetType(uint8_t aType) { mInfo.mType = aType; }
+    void SetType(uint8_t aType) { mBuffer.mHead.mInfo.mType = aType; }
 
     /**
      * This method returns the sub type of the message.
@@ -322,7 +322,7 @@ public:
      * @returns The sub type of the message.
      *
      */
-    uint8_t GetSubType(void) const { return mInfo.mSubType; }
+    uint8_t GetSubType(void) const { return mBuffer.mHead.mInfo.mSubType; }
 
     /**
      * This method sets the message sub type.
@@ -330,7 +330,7 @@ public:
      * @param[in]  aSubType  The message sub type.
      *
      */
-    void SetSubType(uint8_t aSubType) { mInfo.mSubType = aSubType; }
+    void SetSubType(uint8_t aSubType) { mBuffer.mHead.mInfo.mSubType = aSubType; }
 
     /**
      * This method returns whether or not the message is of MLE subtype.
@@ -347,7 +347,7 @@ public:
      * @returns The priority level associated with this message.
      *
      */
-    uint8_t GetPriority(void) const { return mInfo.mPriority; }
+    uint8_t GetPriority(void) const { return mBuffer.mHead.mInfo.mPriority; }
 
     /**
      * This method sets the messages priority.
@@ -464,7 +464,7 @@ public:
      * @returns The 6LoWPAN datagram tag.
      *
      */
-    uint16_t GetDatagramTag(void) const { return mInfo.mDatagramTag; }
+    uint16_t GetDatagramTag(void) const { return mBuffer.mHead.mInfo.mDatagramTag; }
 
     /**
      * This method sets the datagram tag used for 6LoWPAN fragmentation.
@@ -472,7 +472,7 @@ public:
      * @param[in]  aTag  The 6LoWPAN datagram tag.
      *
      */
-    void SetDatagramTag(uint16_t aTag) { mInfo.mDatagramTag = aTag; }
+    void SetDatagramTag(uint16_t aTag) { mBuffer.mHead.mInfo.mDatagramTag = aTag; }
 
     /**
      * This method returns whether or not the message forwarding is scheduled for the child.
@@ -518,7 +518,7 @@ public:
      * @returns The IEEE 802.15.4 Destination PAN ID.
      *
      */
-    uint16_t GetPanId(void) const { return mInfo.mPanId; }
+    uint16_t GetPanId(void) const { return mBuffer.mHead.mInfo.mPanId; }
 
     /**
      * This method sets the IEEE 802.15.4 Destination PAN ID.
@@ -528,7 +528,7 @@ public:
      * @param[in]  aPanId  The IEEE 802.15.4 Destination PAN ID.
      *
      */
-    void SetPanId(uint16_t aPanId) { mInfo.mPanId = aPanId; }
+    void SetPanId(uint16_t aPanId) { mBuffer.mHead.mInfo.mPanId = aPanId; }
 
     /**
      * This method returns the IEEE 802.15.4 Channel to use for transmission.
@@ -538,7 +538,7 @@ public:
      * @returns The IEEE 802.15.4 Channel to use for transmission.
      *
      */
-    uint8_t GetChannel(void) const { return mInfo.mChannel; }
+    uint8_t GetChannel(void) const { return mBuffer.mHead.mInfo.mChannel; }
 
     /**
      * This method sets the IEEE 802.15.4 Channel to use for transmission.
@@ -548,7 +548,7 @@ public:
      * @param[in]  aChannel  The IEEE 802.15.4 Channel to use for transmission.
      *
      */
-    void SetChannel(uint8_t aChannel) { mInfo.mChannel = aChannel; }
+    void SetChannel(uint8_t aChannel) { mBuffer.mHead.mInfo.mChannel = aChannel; }
 
     /**
      * This method returns the timeout used for 6LoWPAN reassembly.
@@ -556,7 +556,7 @@ public:
      * @returns The time remaining in seconds.
      *
      */
-    uint8_t GetTimeout(void) const { return mInfo.mTimeout; }
+    uint8_t GetTimeout(void) const { return mBuffer.mHead.mInfo.mTimeout; }
 
     /**
      * This method sets the timeout used for 6LoWPAN reassembly.
@@ -564,7 +564,7 @@ public:
      * @param[in]  aTimeout  The timeout value.
      *
      */
-    void SetTimeout(uint8_t aTimeout) { mInfo.mTimeout = aTimeout; }
+    void SetTimeout(uint8_t aTimeout) { mBuffer.mHead.mInfo.mTimeout = aTimeout; }
 
     /**
      * This method returns the interface ID.
@@ -572,7 +572,7 @@ public:
      * @returns The interface ID.
      *
      */
-    int8_t GetInterfaceId(void) const { return mInfo.mInterfaceId; }
+    int8_t GetInterfaceId(void) const { return mBuffer.mHead.mInfo.mInterfaceId; }
 
     /**
      * This method sets the interface ID.
@@ -580,7 +580,7 @@ public:
      * @param[in]  aInterfaceId  The interface ID value.
      *
      */
-    void SetInterfaceId(int8_t aInterfaceId) { mInfo.mInterfaceId = aInterfaceId; }
+    void SetInterfaceId(int8_t aInterfaceId) { mBuffer.mHead.mInfo.mInterfaceId = aInterfaceId; }
 
     /**
      * This method returns whether or not message forwarding is scheduled for direct transmission.
@@ -589,19 +589,19 @@ public:
      * @retval FALSE  If message forwarding is not scheduled for direct transmission.
      *
      */
-    bool GetDirectTransmission(void) const { return mInfo.mDirectTx; }
+    bool GetDirectTransmission(void) const { return mBuffer.mHead.mInfo.mDirectTx; }
 
     /**
      * This method unschedules forwarding using direct transmission.
      *
      */
-    void ClearDirectTransmission(void) { mInfo.mDirectTx = false; }
+    void ClearDirectTransmission(void) { mBuffer.mHead.mInfo.mDirectTx = false; }
 
     /**
      * This method schedules forwarding using direct transmission.
      *
      */
-    void SetDirectTransmission(void) { mInfo.mDirectTx = true; }
+    void SetDirectTransmission(void) { mBuffer.mHead.mInfo.mDirectTx = true; }
 
     /**
      * This method indicates whether or not link security is enabled for the message.
@@ -610,15 +610,15 @@ public:
      * @retval FALSE  If link security is not enabled.
      *
      */
-    bool IsLinkSecurityEnabled(void) const { return mInfo.mLinkSecurity; }
+    bool IsLinkSecurityEnabled(void) const { return mBuffer.mHead.mInfo.mLinkSecurity; }
 
     /**
      * This method sets whether or not link security is enabled for the message.
      *
-     * @param[in]  aLinkSecurityEnabled  TRUE if link security is enabled, FALSE otherwise.
+     * @param[in]  aEnabled  TRUE if link security is enabled, FALSE otherwise.
      *
      */
-    void SetLinkSecurityEnabled(bool aLinkSecurityEnabled) { mInfo.mLinkSecurity = aLinkSecurityEnabled; }
+    void SetLinkSecurityEnabled(bool aEnabled) { mBuffer.mHead.mInfo.mLinkSecurity = aEnabled; }
 
     /**
      * This method is used to update a checksum value.
@@ -638,7 +638,9 @@ public:
      * @returns A pointer to the message queue or NULL if not in any message queue.
      *
      */
-    MessageQueue *GetMessageQueue(void) const { return (!mInfo.mInPriorityQ) ? mInfo.mMessageQueue : NULL; }
+    MessageQueue *GetMessageQueue(void) const {
+        return (!mBuffer.mHead.mInfo.mInPriorityQ) ? mBuffer.mHead.mInfo.mMessageQueue : NULL;
+    }
 
 private:
 
@@ -648,7 +650,7 @@ private:
      * @returns A pointer to the message pool.
      *
      */
-    MessagePool *GetMessagePool(void) const { return mInfo.mMessagePool; }
+    MessagePool *GetMessagePool(void) const { return mBuffer.mHead.mInfo.mMessagePool; }
 
     /**
      * This method sets the message pool this message to which this message belongs.
@@ -656,7 +658,7 @@ private:
      * @param[in] aMessagePool  A pointer to the message pool
      *
      */
-    void SetMessagePool(MessagePool *aMessagePool) { mInfo.mMessagePool = aMessagePool; }
+    void SetMessagePool(MessagePool *aMessagePool) { mBuffer.mHead.mInfo.mMessagePool = aMessagePool; }
 
     /**
      * This method returns `true` if the message is enqueued in any queue (`MessageQueue` or `PriorityQueue`).
@@ -664,7 +666,7 @@ private:
      * @returns `true` if the message is in any queue, `false` otherwise.
      *
      */
-    bool IsInAQueue(void) const { return (mInfo.mMessageQueue != NULL); }
+    bool IsInAQueue(void) const { return (mBuffer.mHead.mInfo.mMessageQueue != NULL); }
 
     /**
      * This method sets the message queue information for the message.
@@ -680,7 +682,9 @@ private:
      * @returns A pointer to the priority queue or NULL if not in any priority queue.
      *
      */
-    PriorityQueue *GetPriorityQueue(void) const { return (mInfo.mInPriorityQ) ? mInfo.mPriorityQueue : NULL; }
+    PriorityQueue *GetPriorityQueue(void) const {
+        return (mBuffer.mHead.mInfo.mInPriorityQ) ? mBuffer.mHead.mInfo.mPriorityQueue : NULL;
+    }
 
     /**
      * This method sets the message queue information for the message.
@@ -698,7 +702,7 @@ private:
      * @returns A reference to the mNext pointer for the specified list.
      *
      */
-    Message *&Next(uint8_t aList) { return mInfo.mNext[aList]; }
+    Message *&Next(uint8_t aList) { return mBuffer.mHead.mInfo.mNext[aList]; }
 
     /**
      * This method returns a const reference to the `mNext` pointer for a given list.
@@ -708,7 +712,7 @@ private:
      * @returns A const reference to the mNext pointer for the specified list.
      *
      */
-    Message *const &Next(uint8_t aList) const { return mInfo.mNext[aList]; }
+    Message *const &Next(uint8_t aList) const { return mBuffer.mHead.mInfo.mNext[aList]; }
 
     /**
      * This method returns a reference to the `mPrev` pointer for a given list.
@@ -718,7 +722,7 @@ private:
      * @returns A reference to the mPrev pointer for the specified list.
      *
      */
-    Message *&Prev(uint8_t aList) { return mInfo.mPrev[aList]; }
+    Message *&Prev(uint8_t aList) { return mBuffer.mHead.mInfo.mPrev[aList]; }
 
     /**
      * This method returns the number of reserved header bytes.
@@ -726,7 +730,7 @@ private:
      * @returns The number of reserved header bytes.
      *
      */
-    uint16_t GetReserved(void) const { return mInfo.mReserved; }
+    uint16_t GetReserved(void) const { return mBuffer.mHead.mInfo.mReserved; }
 
     /**
      * This method sets the number of reserved header bytes.
@@ -734,7 +738,7 @@ private:
      * @pram[in]  aReservedHeader  The number of header bytes to reserve.
      *
      */
-    void SetReserved(uint16_t aReservedHeader) { mInfo.mReserved = aReservedHeader; }
+    void SetReserved(uint16_t aReservedHeader) { mBuffer.mHead.mInfo.mReserved = aReservedHeader; }
 
     /**
      * This method adds or frees message buffers to meet the requested length.
