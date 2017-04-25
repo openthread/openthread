@@ -1845,6 +1845,10 @@ ThreadError NcpBase::GetPropertyHandler_CAPS(uint8_t header, spinel_prop_key_t k
     SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_NEST_LEGACY_INTERFACE));
 #endif
 
+#if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
+    SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_THREAD_BA_PROXY));
+#endif
+
     // End adding capabilities /////////////////////////////////////////////////
 
     SuccessOrExit(errorCode = OutboundFrameSend());

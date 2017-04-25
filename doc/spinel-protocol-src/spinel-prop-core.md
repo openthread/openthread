@@ -149,6 +149,8 @@ Currently defined values are:
  * 49: `CAP_ROLE_SLEEPY`
  * 52: `CAP_NET_THREAD_1_0`
  * 512: `CAP_MAC_WHITELIST`
+ * 1024: `CAP_THREAD_COMMISSIONER`
+ * 1025: `CAP_THREAD_BA_PROXY`
 
 Additionally, future capability allocations SHALL be made from the
 following allocation plan:
