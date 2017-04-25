@@ -644,6 +644,8 @@
  *
  * Define to 1 if you want to enable software ACK timeout logic.
  *
+ * Applicable only if raw link layer API is enabled (i.e., `OPENTHREAD_ENABLE_RAW_LINK_API` is set).
+ *
  */
 #ifndef OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
 #define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT           0
@@ -654,9 +656,23 @@
  *
  * Define to 1 if you want to enable software retransmission logic.
  *
+ * Applicable only if raw link layer API is enabled (i.e., `OPENTHREAD_ENABLE_RAW_LINK_API` is set).
+ *
  */
 #ifndef OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 #define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT            0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
+ *
+ * Define to 1 if you want to enable software energy scanning logic.
+ *
+ * Applicable only if raw link layer API is enabled (i.e., `OPENTHREAD_ENABLE_RAW_LINK_API` is set).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
+#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN           0
 #endif
 
 /**
@@ -666,17 +682,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
-#define OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER     0
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
- *
- * Define to 1 if you want to enable software energy scanning logic.
- *
- */
-#ifndef OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN           0
+#define OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER    0
 #endif
 
 /**
