@@ -117,42 +117,19 @@ NcpSpi::NcpSpi(otInstance *aInstance):
     // We signal an interrupt on this first transaction to
     // make sure that the host processor knows that our
     // reset flag was set.
-    otPlatSpiSlavePrepareTransaction(
-        mEmptySendFrame,
-        kSpiHeaderLength,
-        mEmptyReceiveFrame,
-        kSpiHeaderLength,
-        true
-    );
+    otPlatSpiSlavePrepareTransaction(mEmptySendFrame, kSpiHeaderLength, mEmptyReceiveFrame, kSpiHeaderLength, true);
 }
 
-void
-NcpSpi::SpiTransactionComplete(
-    void *aContext,
-    uint8_t *anOutputBuf,
-    uint16_t anOutputBufLen,
-    uint8_t *anInputBuf,
-    uint16_t anInputBufLen,
-    uint16_t aTransactionLength
-)
+void NcpSpi::SpiTransactionComplete(void *aContext, uint8_t *anOutputBuf, uint16_t aOutputBufLen, uint8_t *aInputBuf,
+                                    uint16_t aInputBufLen, uint16_t aTransactionLength)
 {
-    static_cast<NcpSpi*>(aContext)->SpiTransactionComplete(
-        anOutputBuf,
-        anOutputBufLen,
-        anInputBuf,
-        anInputBufLen,
-        aTransactionLength
-    );
+    static_cast<NcpSpi*>(aContext)->SpiTransactionComplete(anOutputBuf, aOutputBufLen, aInputBuf, aInputBufLen,
+                                                           aTransactionLength);
 }
 
-void
-NcpSpi::SpiTransactionComplete(
-    uint8_t *aMISOBuf,
-    uint16_t aMISOBufLen,
-    uint8_t *aMOSIBuf,
-    uint16_t aMOSIBufLen,
-    uint16_t aTransactionLength
-) {
+void NcpSpi::SpiTransactionComplete(uint8_t *aMISOBuf, uint16_t aMISOBufLen, uint8_t *aMOSIBuf, uint16_t aMOSIBufLen,
+                                    uint16_t aTransactionLength)
+{
     // This may be executed from an interrupt context.
     // Must return as quickly as possible.
 
@@ -232,13 +209,7 @@ NcpSpi::SpiTransactionComplete(
         spi_header_set_accept_len(aMISOBuf, sizeof(mReceiveFrame) - kSpiHeaderLength);
     }
 
-    otPlatSpiSlavePrepareTransaction(
-        aMISOBuf,
-        aMISOBufLen,
-        aMOSIBuf,
-        aMOSIBufLen,
-        (mTxState == kTxStateSending)
-    );
+    otPlatSpiSlavePrepareTransaction(aMISOBuf, aMISOBufLen, aMOSIBuf, aMOSIBufLen, (mTxState == kTxStateSending));
 }
 
 void NcpSpi::TxFrameBufferHasData(void *aContext, NcpFrameBuffer *aNcpFrameBuffer)
@@ -278,13 +249,8 @@ ThreadError NcpSpi::PrepareNextSpiSendFrame(void)
 
     mTxState = kTxStateSending;
 
-    errorCode = otPlatSpiSlavePrepareTransaction(
-        mSendFrame,
-        mSendFrameLen,
-        mEmptyReceiveFrame,
-        sizeof(mEmptyReceiveFrame),
-        true
-    );
+    errorCode = otPlatSpiSlavePrepareTransaction(mSendFrame, mSendFrameLen, mEmptyReceiveFrame,
+                                                 sizeof(mEmptyReceiveFrame), true);
 
     if (errorCode == kThreadError_Busy)
     {

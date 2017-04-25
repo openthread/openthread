@@ -36,10 +36,7 @@
 
 // Spi-slave stubs
 
-ThreadError otPlatSpiSlaveEnable(
-    otPlatSpiSlaveTransactionCompleteCallback aCallback,
-    void *aContext
-)
+ThreadError otPlatSpiSlaveEnable(otPlatSpiSlaveTransactionCompleteCallback aCallback, void *aContext)
 {
     (void)aCallback;
     (void)aContext;
@@ -54,18 +51,13 @@ void otPlatSpiSlaveDisable(void)
 {
 }
 
-ThreadError otPlatSpiSlavePrepareTransaction(
-    uint8_t *anOutputBuf,
-    uint16_t anOutputBufLen,
-    uint8_t *anInputBuf,
-    uint16_t anInputBufLen,
-    bool aRequestTransactionFlag
-)
+ThreadError otPlatSpiSlavePrepareTransaction(uint8_t *aOutputBuf, uint16_t aOutputBufLen, uint8_t *aInputBuf,
+                                             uint16_t aInputBufLen, bool aRequestTransactionFlag)
 {
-    (void)anOutputBuf;
-    (void)anOutputBufLen;
-    (void)anInputBuf;
-    (void)anInputBufLen;
+    (void)aOutputBuf;
+    (void)aOutputBufLen;
+    (void)aInputBuf;
+    (void)aInputBufLen;
     (void)aRequestTransactionFlag;
 
     return kThreadError_NotImplemented;
