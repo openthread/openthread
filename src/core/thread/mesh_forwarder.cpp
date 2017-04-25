@@ -67,6 +67,7 @@ MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
     mSendMessageMaxMacTxAttempts(Mac::kDirectFrameMacTxAttempts),
     mSendMessageKeyId(0),
     mSendMessageDataSequenceNumber(0),
+    mStartChildIndex(0),
     mMeshSource(Mac::kShortAddrInvalid),
     mMeshDest(Mac::kShortAddrInvalid),
     mAddMeshHeader(false),
@@ -240,6 +241,8 @@ void MeshForwarder::ScheduleTransmissionTask(void)
 {
     ThreadError error = kThreadError_None;
     uint8_t numChildren;
+    uint8_t childIndex;
+    uint8_t nextIndex;
     Child *children;
 
     VerifyOrExit(mSendBusy == false, error = kThreadError_Busy);
@@ -250,9 +253,21 @@ void MeshForwarder::ScheduleTransmissionTask(void)
 
     children = mNetif.GetMle().GetChildren(&numChildren);
 
-    for (int i = 0; i < numChildren; i++)
+    if (mStartChildIndex >= numChildren)
     {
-        Child &child = children[i];
+        mStartChildIndex = 0;
+    }
+
+    childIndex = mStartChildIndex;
+
+    for (uint8_t iterations = numChildren; iterations > 0; iterations--, childIndex = nextIndex)
+    {
+        Child &child = children[childIndex];
+
+        if ((nextIndex = childIndex + 1) == numChildren)
+        {
+            nextIndex = 0;
+        }
 
         if (!child.IsStateValidOrRestoring() || !child.IsDataRequestPending())
         {
@@ -292,6 +307,15 @@ void MeshForwarder::ScheduleTransmissionTask(void)
                 mMacDest.mExtAddress = child.GetExtAddress();
             }
         }
+
+        // To ensure fairness in handling of data requests from sleepy
+        // children, once a message is scheduled and prepared for indirect
+        // transmission to a child, the `mStartChildIndex` is updated to
+        // the next index after the current child. Subsequent call to
+        // `ScheduleTransmissionTask()` will begin the iteration through
+        // the children list from this index.
+
+        mStartChildIndex = nextIndex;
 
         mNetif.GetMac().SendFrameRequest(mMacSender);
         ExitNow();
