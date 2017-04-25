@@ -957,11 +957,11 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_RAW_LINK_API],[${OPENTHREAD_ENABLE_RAW_LIN
 
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
-        [Specify the examples from one of: none, posix, cc2538, cc2650, da15000, efr32, nrf52840 @<:@default=none@:>@.])],
+        [Specify the examples from one of: none, posix, cc2538, cc2650, da15000, efr32, emsk, nrf52840 @<:@default=none@:>@.])],
     [
         case "${with_examples}" in
 
-        none|posix|cc2538|cc2650|da15000|efr32|nrf52840)
+        none|posix|cc2538|cc2650|da15000|efr32|emsk|nrf52840)
             ;;
         *)
             AC_MSG_ERROR([Invalid value ${with_examples} for --with-examples])
@@ -999,6 +999,11 @@ case ${with_examples} in
         AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_EFR32],[${OPENTHREAD_EXAMPLES_EFR32}],[Define to 1 if you want to use efr32 examples])
         ;;
 
+    emsk)
+        OPENTHREAD_EXAMPLES_EMSK=1
+        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_EMSK],[${OPENTHREAD_EXAMPLES_EMSK}],[Define to 1 if you want to use emsk examples])
+        ;;
+
     nrf52840)
         OPENTHREAD_EXAMPLES_NRF52840=1
         AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_NRF52840],[${OPENTHREAD_EXAMPLES_NRF52840}],[Define to 1 if you want to use nrf52840 examples])
@@ -1027,6 +1032,9 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_DA15000], [test "${OPENTHREAD_EXAMPLES}" = "
 
 AC_SUBST(OPENTHREAD_EXAMPLES_EFR32)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EFR32], [test "${OPENTHREAD_EXAMPLES}" = "efr32"])
+
+AC_SUBST(OPENTHREAD_EXAMPLES_EMSK)
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EMSK], [test "${OPENTHREAD_EXAMPLES}" = "emsk"])
 
 AC_SUBST(OPENTHREAD_EXAMPLES_NRF52840)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52840], [test "${OPENTHREAD_EXAMPLES}" = "nrf52840"])
@@ -1189,6 +1197,7 @@ examples/platforms/cc2538/Makefile
 examples/platforms/cc2650/Makefile
 examples/platforms/da15000/Makefile
 examples/platforms/efr32/Makefile
+examples/platforms/emsk/Makefile
 examples/platforms/nrf52840/Makefile
 examples/platforms/posix/Makefile
 examples/platforms/utils/Makefile
