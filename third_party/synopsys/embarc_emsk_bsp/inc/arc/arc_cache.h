@@ -33,7 +33,7 @@
 
 /**
  * \file
- * \ingroup	ARC_HAL_MISC_CACHE
+ * \ingroup ARC_HAL_MISC_CACHE
  * \brief header file of cache module
  */
 
@@ -50,11 +50,11 @@
  * \todo this definitions will be reviewed.
  * @{
  */
-#define IC_CTRL_IC_ENABLE			0x0	/*!< enable instruction cache */
-#define IC_CTRL_IC_DISABLE			0x1	/*!< disable instruction cache */
-#define IC_CTRL_DIRECT_ACCESS			0x0	/*!< direct access mode */
-#define IC_CTRL_INDIRECT_ACCESS			0x20	/*!< indirect access mode */
-#define IC_CTRL_OP_SUCCEEDED			0x8	/*!< instruction cache operation succeeded */
+#define IC_CTRL_IC_ENABLE           0x0 /*!< enable instruction cache */
+#define IC_CTRL_IC_DISABLE          0x1 /*!< disable instruction cache */
+#define IC_CTRL_DIRECT_ACCESS           0x0 /*!< direct access mode */
+#define IC_CTRL_INDIRECT_ACCESS         0x20    /*!< indirect access mode */
+#define IC_CTRL_OP_SUCCEEDED            0x8 /*!< instruction cache operation succeeded */
 /** @} */
 
 /**
@@ -63,16 +63,16 @@
  * @{
  */
 #define IC_CTRL_I
-#define DC_CTRL_DC_ENABLE			0x0	/*!< enable data cache */
-#define DC_CTRL_DC_DISABLE			0x1	/*!< disable data cache */
-#define DC_CTRL_INVALID_ONLY			0x0	/*!< invalid data cache only */
-#define DC_CTRL_INVALID_FLUSH			0x40	/*!< invalid and flush data cache */
-#define DC_CTRL_ENABLE_FLUSH_LOCKED		0x80	/*!< the locked data cache can be flushed */
-#define DC_CTRL_DISABLE_FLUSH_LOCKED		0x0	/*!< the locked data cache cannot be flushed */
-#define DC_CTRL_FLUSH_STATUS			0x100	/*!< flush status */
-#define DC_CTRL_DIRECT_ACCESS			0x0	/*!< direct access mode  */
-#define DC_CTRL_INDIRECT_ACCESS			0x20	/*!< indirect access mode */
-#define DC_CTRL_OP_SUCCEEDED			0x4	/*!< data cache operation succeeded */
+#define DC_CTRL_DC_ENABLE           0x0 /*!< enable data cache */
+#define DC_CTRL_DC_DISABLE          0x1 /*!< disable data cache */
+#define DC_CTRL_INVALID_ONLY            0x0 /*!< invalid data cache only */
+#define DC_CTRL_INVALID_FLUSH           0x40    /*!< invalid and flush data cache */
+#define DC_CTRL_ENABLE_FLUSH_LOCKED     0x80    /*!< the locked data cache can be flushed */
+#define DC_CTRL_DISABLE_FLUSH_LOCKED        0x0 /*!< the locked data cache cannot be flushed */
+#define DC_CTRL_FLUSH_STATUS            0x100   /*!< flush status */
+#define DC_CTRL_DIRECT_ACCESS           0x0 /*!< direct access mode  */
+#define DC_CTRL_INDIRECT_ACCESS         0x20    /*!< indirect access mode */
+#define DC_CTRL_OP_SUCCEEDED            0x4 /*!< data cache operation succeeded */
 /** @} */
 
 /**
@@ -86,7 +86,7 @@
  */
 Inline uint8_t icache_available(void)
 {
-	return (_arc_aux_read(AUX_BCR_I_CACHE) & 0xF);
+    return (_arc_aux_read(AUX_BCR_I_CACHE) & 0xF);
 }
 
 /**
@@ -95,8 +95,9 @@ Inline uint8_t icache_available(void)
  */
 Inline void icache_enable(uint32_t icache_en_mask)
 {
-	if (!icache_available()) return;
-	_arc_aux_write(AUX_IC_CTRL, icache_en_mask);
+    if (!icache_available()) { return; }
+
+    _arc_aux_write(AUX_IC_CTRL, icache_en_mask);
 }
 
 /**
@@ -104,8 +105,9 @@ Inline void icache_enable(uint32_t icache_en_mask)
  */
 Inline void icache_disable(void)
 {
-	if (!icache_available()) return;
-	_arc_aux_write(AUX_IC_CTRL, IC_CTRL_IC_DISABLE);
+    if (!icache_available()) { return; }
+
+    _arc_aux_write(AUX_IC_CTRL, IC_CTRL_IC_DISABLE);
 }
 
 /**
@@ -113,12 +115,13 @@ Inline void icache_disable(void)
  */
 Inline void icache_invalidate(void)
 {
-	if (!icache_available()) return;
-	/* invalidate the entire icache */
-	_arc_aux_write(AUX_IC_IVIC, 0);
-	Asm("nop_s");
-	Asm("nop_s");
-	Asm("nop_s");
+    if (!icache_available()) { return; }
+
+    /* invalidate the entire icache */
+    _arc_aux_write(AUX_IC_IVIC, 0);
+    Asm("nop_s");
+    Asm("nop_s");
+    Asm("nop_s");
 }
 
 /**
@@ -127,12 +130,13 @@ Inline void icache_invalidate(void)
  */
 Inline void icache_invalidate_line(uint32_t address)
 {
-	if (!icache_available()) return;
-	_arc_aux_write(AUX_IC_IVIL, address);
-	/* the 3 nops are required by ARCv2 ISA */
-	Asm("nop_s");
-	Asm("nop_s");
-	Asm("nop_s");
+    if (!icache_available()) { return; }
+
+    _arc_aux_write(AUX_IC_IVIL, address);
+    /* the 3 nops are required by ARCv2 ISA */
+    Asm("nop_s");
+    Asm("nop_s");
+    Asm("nop_s");
 }
 
 /**
@@ -142,13 +146,18 @@ Inline void icache_invalidate_line(uint32_t address)
  */
 Inline int32_t icache_lock_line(uint32_t address)
 {
-	if (!icache_available()) return -1;
-	_arc_aux_write(AUX_IC_LIL, address);
-	if(_arc_aux_read(AUX_IC_CTRL) & IC_CTRL_OP_SUCCEEDED) {
-		return 0;
-	} else {
-		return -1;
-	}
+    if (!icache_available()) { return -1; }
+
+    _arc_aux_write(AUX_IC_LIL, address);
+
+    if (_arc_aux_read(AUX_IC_CTRL) & IC_CTRL_OP_SUCCEEDED)
+    {
+        return 0;
+    }
+    else
+    {
+        return -1;
+    }
 }
 
 /**
@@ -157,12 +166,16 @@ Inline int32_t icache_lock_line(uint32_t address)
  */
 Inline void icache_access_mode(uint32_t mode)
 {
-	if (!icache_available()) return;
-	if (mode) {
-		_arc_aux_write(AUX_IC_CTRL, _arc_aux_read(AUX_IC_CTRL) | IC_CTRL_INDIRECT_ACCESS);
-	} else {
-		_arc_aux_write(AUX_IC_CTRL, _arc_aux_read(AUX_IC_CTRL) & (~IC_CTRL_INDIRECT_ACCESS));
-	}
+    if (!icache_available()) { return; }
+
+    if (mode)
+    {
+        _arc_aux_write(AUX_IC_CTRL, _arc_aux_read(AUX_IC_CTRL) | IC_CTRL_INDIRECT_ACCESS);
+    }
+    else
+    {
+        _arc_aux_write(AUX_IC_CTRL, _arc_aux_read(AUX_IC_CTRL) & (~IC_CTRL_INDIRECT_ACCESS));
+    }
 }
 
 
@@ -179,22 +192,25 @@ Inline void icache_access_mode(uint32_t mode)
  */
 Inline uint8_t dcache_available(void)
 {
-	return (_arc_aux_read(AUX_BCR_D_CACHE) & 0xF);
+    return (_arc_aux_read(AUX_BCR_D_CACHE) & 0xF);
 }
 
 /**
- * \brief 	invalidate the entire data cache
+ * \brief   invalidate the entire data cache
  */
 Inline void dcache_invalidate(void)
 {
-	if (!dcache_available()) return;
-	uint32_t status;
+    if (!dcache_available()) { return; }
 
-	status = cpu_lock_save();
-	_arc_aux_write(AUX_DC_IVDC, 1);
-	/* wait for flush completion */
-	while (_arc_aux_read(AUX_DC_CTRL) & DC_CTRL_FLUSH_STATUS);
-	cpu_unlock_restore(status);
+    uint32_t status;
+
+    status = cpu_lock_save();
+    _arc_aux_write(AUX_DC_IVDC, 1);
+
+    /* wait for flush completion */
+    while (_arc_aux_read(AUX_DC_CTRL) & DC_CTRL_FLUSH_STATUS);
+
+    cpu_unlock_restore(status);
 }
 
 /**
@@ -203,11 +219,12 @@ Inline void dcache_invalidate(void)
  */
 Inline void dcache_invalidate_line(uint32_t address)
 {
-	if (!dcache_available()) return;
-	_arc_aux_write(AUX_DC_IVDL, address);
-	Asm("nop_s");
-	Asm("nop_s");
-	Asm("nop_s");
+    if (!dcache_available()) { return; }
+
+    _arc_aux_write(AUX_DC_IVDL, address);
+    Asm("nop_s");
+    Asm("nop_s");
+    Asm("nop_s");
 }
 
 /**
@@ -216,8 +233,9 @@ Inline void dcache_invalidate_line(uint32_t address)
  */
 Inline void dcache_enable(uint32_t dcache_en_mask)
 {
-	if (!dcache_available()) return;
-	_arc_aux_write(AUX_DC_CTRL, dcache_en_mask);
+    if (!dcache_available()) { return; }
+
+    _arc_aux_write(AUX_DC_CTRL, dcache_en_mask);
 }
 
 /**
@@ -225,8 +243,9 @@ Inline void dcache_enable(uint32_t dcache_en_mask)
  */
 Inline void dcache_disable(void)
 {
-	if (!dcache_available()) return;
-	_arc_aux_write(AUX_DC_CTRL, DC_CTRL_DC_DISABLE);
+    if (!dcache_available()) { return; }
+
+    _arc_aux_write(AUX_DC_CTRL, DC_CTRL_DC_DISABLE);
 }
 
 /**
@@ -234,14 +253,17 @@ Inline void dcache_disable(void)
  */
 Inline void dcache_flush(void)
 {
-	if (!dcache_available()) return;
-	uint32_t status;
+    if (!dcache_available()) { return; }
 
-	status = cpu_lock_save();
-	_arc_aux_write(AUX_DC_FLSH, 1);
-	/* wait for flush completion */
-	while (_arc_aux_read(AUX_DC_CTRL) & DC_CTRL_FLUSH_STATUS);
-	cpu_unlock_restore(status);
+    uint32_t status;
+
+    status = cpu_lock_save();
+    _arc_aux_write(AUX_DC_FLSH, 1);
+
+    /* wait for flush completion */
+    while (_arc_aux_read(AUX_DC_CTRL) & DC_CTRL_FLUSH_STATUS);
+
+    cpu_unlock_restore(status);
 }
 
 /**
@@ -250,14 +272,16 @@ Inline void dcache_flush(void)
  */
 Inline void dcache_flush_line(uint32_t address)
 {
-	if (!dcache_available()) return;
+    if (!dcache_available()) { return; }
 
-	uint32_t status;
+    uint32_t status;
 
-	status = cpu_lock_save();
-	_arc_aux_write(AUX_DC_FLDL, address);
-	while (_arc_aux_read(AUX_DC_CTRL) & DC_CTRL_FLUSH_STATUS);
-	cpu_unlock_restore(status);
+    status = cpu_lock_save();
+    _arc_aux_write(AUX_DC_FLDL, address);
+
+    while (_arc_aux_read(AUX_DC_CTRL) & DC_CTRL_FLUSH_STATUS);
+
+    cpu_unlock_restore(status);
 }
 
 /**
@@ -267,13 +291,18 @@ Inline void dcache_flush_line(uint32_t address)
  */
 Inline int dcache_lock_line(uint32_t address)
 {
-	if (!dcache_available()) return -1;
-	_arc_aux_write(AUX_DC_LDL, address);
-	if(_arc_aux_read(AUX_DC_CTRL) & DC_CTRL_OP_SUCCEEDED) {
-		return 0;
-	} else {
-		return -1;
-	}
+    if (!dcache_available()) { return -1; }
+
+    _arc_aux_write(AUX_DC_LDL, address);
+
+    if (_arc_aux_read(AUX_DC_CTRL) & DC_CTRL_OP_SUCCEEDED)
+    {
+        return 0;
+    }
+    else
+    {
+        return -1;
+    }
 }
 
 /**
@@ -282,12 +311,16 @@ Inline int dcache_lock_line(uint32_t address)
  */
 Inline void dcache_access_mode(uint32_t mode)
 {
-	if (!dcache_available()) return;
-	if (mode) {
-		_arc_aux_write(AUX_DC_CTRL, _arc_aux_read(AUX_DC_CTRL) | DC_CTRL_INDIRECT_ACCESS);
-	} else {
-		_arc_aux_write(AUX_DC_CTRL, _arc_aux_read(AUX_DC_CTRL) & (~DC_CTRL_INDIRECT_ACCESS));
-	}
+    if (!dcache_available()) { return; }
+
+    if (mode)
+    {
+        _arc_aux_write(AUX_DC_CTRL, _arc_aux_read(AUX_DC_CTRL) | DC_CTRL_INDIRECT_ACCESS);
+    }
+    else
+    {
+        _arc_aux_write(AUX_DC_CTRL, _arc_aux_read(AUX_DC_CTRL) & (~DC_CTRL_INDIRECT_ACCESS));
+    }
 }
 
 /** @} */
@@ -318,4 +351,4 @@ extern void arc_cache_init(void);
 #endif
 
 /** @} */
-#endif	/* _ARC_HAL_CACHE_H_ */
+#endif  /* _ARC_HAL_CACHE_H_ */

@@ -146,40 +146,40 @@ static inline uint8_t getHeadLength(const uint8_t *frame)
     /* Destination PAN + Address */
     switch (frame[1] & IEEE802154_DST_ADDR_MASK)
     {
-        case IEEE802154_DST_ADDR_SHORT:
-            length += sizeof(otPanId) + sizeof(otShortAddress);
-            break;
+    case IEEE802154_DST_ADDR_SHORT:
+        length += sizeof(otPanId) + sizeof(otShortAddress);
+        break;
 
-        case IEEE802154_DST_ADDR_EXT:
-            length += sizeof(otPanId) + sizeof(otExtAddress);
-            break;
+    case IEEE802154_DST_ADDR_EXT:
+        length += sizeof(otPanId) + sizeof(otExtAddress);
+        break;
 
-        default:
-            ExitNow(length = 0);
+    default:
+        ExitNow(length = 0);
     }
 
     /* Source PAN + Address */
     switch (frame[1] & IEEE802154_SRC_ADDR_MASK)
     {
-        case IEEE802154_SRC_ADDR_SHORT:
-            if (!isPanIdCompressed(frame))
-            {
-                length += sizeof(otPanId);
-            }
+    case IEEE802154_SRC_ADDR_SHORT:
+        if (!isPanIdCompressed(frame))
+        {
+            length += sizeof(otPanId);
+        }
 
-            length += sizeof(otShortAddress);
-            break;
+        length += sizeof(otShortAddress);
+        break;
 
-        case IEEE802154_SRC_ADDR_EXT:
-            if (!isPanIdCompressed(frame))
-            {
-                length += sizeof(otPanId);
-            }
+    case IEEE802154_SRC_ADDR_EXT:
+        if (!isPanIdCompressed(frame))
+        {
+            length += sizeof(otPanId);
+        }
 
-            length += sizeof(otExtAddress);
-            break;
+        length += sizeof(otExtAddress);
+        break;
 
-        default:
+    default:
         ExitNow(length = 0);
     }
 
@@ -269,6 +269,7 @@ void emskRadioInit(void)
 
     pmrf_spi_ptr = spi_get_dev(EMSK_PMRF_0_SPI_ID);
     ercd = pmrf_spi_ptr->spi_open(DEV_MASTER_MODE, EMSK_PMRF_0_SPIFREQ);
+
     if ((ercd != E_OK) && (ercd != E_OPNED))
     {
         DBG("PmodRF2 SPI open error\r\n");
@@ -279,10 +280,12 @@ void emskRadioInit(void)
     /*MRF24J40 wakepin:output, rstpin:output, INT_PIN:input, interrupt */
     pmrf_gpio_ptr = gpio_get_dev(EMSK_PMRF_0_GPIO_ID);
     ercd = pmrf_gpio_ptr->gpio_open(MRF24J40_WAKE_PIN | MRF24J40_RST_PIN);
+
     if ((ercd != E_OK) && (ercd != E_OPNED))
     {
         DBG("PmodRF2 CRTL port open error");
     }
+
     if (ercd == E_OPNED)
     {
         pmrf_gpio_ptr->gpio_control(GPIO_CMD_SET_BIT_DIR_OUTPUT, (void *)(MRF24J40_WAKE_PIN | MRF24J40_RST_PIN));
@@ -419,10 +422,10 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 void readFrame(void)
 {
 
-/* readBuffer
- * 1 bit -- 5 to 127 bits -- 1 bit -- 1bit
- * Frame Length -- PSDU (Header + Data Payload + FCS) -- LQI -- RSSI
- */
+    /* readBuffer
+     * 1 bit -- 5 to 127 bits -- 1 bit -- 1bit
+     * Frame Length -- PSDU (Header + Data Payload + FCS) -- LQI -- RSSI
+     */
     uint8_t readBuffer[MRF24J40_RXFIFO_SIZE];
     uint8_t readPlqi = 0;
     uint8_t readRssi = 0;
@@ -434,10 +437,12 @@ void readFrame(void)
 
     VerifyOrExit(sState == kStateReceive || sState == kStateTransmit, ;);
     VerifyOrExit(Mrf24StatusRx, ;);
+
     if (Mrf24StatusRx == 1)
     {
         Mrf24StatusRx = 0;
     }
+
     if (Mrf24StatusSec == 1)
     {
         Mrf24StatusSec = 0;
@@ -451,7 +456,7 @@ void readFrame(void)
     /* Read PSDU */
     memcpy(sReceiveFrame.mPsdu, readBuffer, length - 2);
 
-    sReceiveFrame.mPower = (int8_t)(readRssi/MRF24J40_RSSI_SLOPE) - MRF24J40_RSSI_OFFSET;
+    sReceiveFrame.mPower = (int8_t)(readRssi / MRF24J40_RSSI_SLOPE) - MRF24J40_RSSI_OFFSET;
     sReceiveFrame.mLength = (uint8_t) length;
     sReceiveFrame.mLqi = readPlqi;
 
@@ -497,10 +502,12 @@ void radioTransmitMessage(otInstance *aInstance)
 
     int16_t tx_timeout = 500;
     Mrf24StatusTx = 0;
+
     while ((tx_timeout > 0) && (Mrf24StatusTx != 1))
     {
         mrf24j40_delay_ms(1);
         tx_timeout--;
+
         if (tx_timeout <= 0)
         {
             DBG("Radio Transmit Timeout!!!!!!!!!!!!\r\n");
@@ -514,9 +521,11 @@ void emskRadioProcess(otInstance *aInstance)
 
     readFrame();
     uint8_t reg = mrf24j40_read_short_ctrl_reg(MRF24J40_TXSTAT);
+
     if (reg & MRF24J40_TXNSTAT)
     {
         DBG("TX MAC Timeout!!!!!!\r\n");
+
         if (reg & MRF24J40_CCAFAIL)
         {
             DBG("Channel busy!!!!!!\r\n");
@@ -531,6 +540,7 @@ void emskRadioProcess(otInstance *aInstance)
     if (sState == kStateTransmit)
     {
         radioTransmitMessage(aInstance);
+
         if (sTransmitError != kThreadError_None || (sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0)
         {
             sState = kStateReceive;
@@ -541,8 +551,8 @@ void emskRadioProcess(otInstance *aInstance)
             Mrf24StatusTx = 0;
             sState = kStateReceive;
             otPlatRadioTransmitDone(aInstance, &sTransmitFrame,
-                        (mrf24j40_read_short_ctrl_reg(MRF24J40_TXNCON) & MRF24J40_FPSTAT) != 0,
-                        sTransmitError);
+                                    (mrf24j40_read_short_ctrl_reg(MRF24J40_TXNCON) & MRF24J40_FPSTAT) != 0,
+                                    sTransmitError);
         }
     }
 
@@ -572,16 +582,18 @@ static void RadioIsr(void *ptr)
     {
         switch (mrf24j40_txpkt_intcb())
         {
-            case MRF24J40_EBUSY:
-                /* Channel busy */
-                break;
-            case MRF24J40_EIO:
-                /* Channel idle */
-                break;
-            case 0:
-                numInterruptTrans++;
-                Mrf24StatusTx = 1;
-                break;
+        case MRF24J40_EBUSY:
+            /* Channel busy */
+            break;
+
+        case MRF24J40_EIO:
+            /* Channel idle */
+            break;
+
+        case 0:
+            numInterruptTrans++;
+            Mrf24StatusTx = 1;
+            break;
         }
     }
 

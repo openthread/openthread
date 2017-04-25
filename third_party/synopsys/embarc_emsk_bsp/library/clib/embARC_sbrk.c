@@ -57,27 +57,32 @@ extern char _e_heap[];
 /** Allocating Memory */
 void *SYSCALL_PREFIX(_sbrk)(unsigned int size)
 {
-	char *new_cur;
-	if (__heap_init == 0) {
-		__heap_cur = _f_heap;
-		__heap_end = _e_heap;
-		__heap_init = 1;
-	}
-	new_cur = __heap_cur + size;
-	if (__heap_cur <= new_cur && new_cur <= __heap_end) {
-		void *p = (void *)__heap_cur;
-		__heap_cur = new_cur;
-		return (void *)p; /** return old __heap_cur */
-	}
+    char *new_cur;
 
-	return NULL;
+    if (__heap_init == 0)
+    {
+        __heap_cur = _f_heap;
+        __heap_end = _e_heap;
+        __heap_init = 1;
+    }
+
+    new_cur = __heap_cur + size;
+
+    if (__heap_cur <= new_cur && new_cur <= __heap_end)
+    {
+        void *p = (void *)__heap_cur;
+        __heap_cur = new_cur;
+        return (void *)p; /** return old __heap_cur */
+    }
+
+    return NULL;
 }
 
 /** Freeing Memory */
 void *SYSCALL_PREFIX(_brk)(void *p)
 {
-	__heap_cur = p;
-	return NULL;
+    __heap_cur = p;
+    return NULL;
 }
 
 #pragma weak sbrk = _sbrk
@@ -90,24 +95,27 @@ extern char __end_heap;
 
 caddr_t *SYSCALL_PREFIX(_sbrk)(size_t nbytes)
 {
-	static char* heap_ptr = NULL;
-	char* prev_heap_ptr;
+    static char *heap_ptr = NULL;
+    char *prev_heap_ptr;
 
-	if (heap_ptr == NULL) {
-		heap_ptr = &__start_heap;
-	}
+    if (heap_ptr == NULL)
+    {
+        heap_ptr = &__start_heap;
+    }
 
-	/* Align the 'heap_ptr' so that memory will always be allocated at word
-	boundaries. */
-	heap_ptr = (char *) ((((unsigned long) heap_ptr) + 7) & ~7);
-	prev_heap_ptr = heap_ptr;
+    /* Align the 'heap_ptr' so that memory will always be allocated at word
+    boundaries. */
+    heap_ptr = (char *)((((unsigned long) heap_ptr) + 7) & ~7);
+    prev_heap_ptr = heap_ptr;
 
-	if ((heap_ptr + nbytes) < &__end_heap) {
-		heap_ptr += nbytes;
-		return (caddr_t *) prev_heap_ptr;
-	}
-	errno = ENOMEM;
-	return (caddr_t *) -1;
+    if ((heap_ptr + nbytes) < &__end_heap)
+    {
+        heap_ptr += nbytes;
+        return (caddr_t *) prev_heap_ptr;
+    }
+
+    errno = ENOMEM;
+    return (caddr_t *) - 1;
 }
 #endif
 

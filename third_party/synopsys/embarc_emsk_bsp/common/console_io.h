@@ -40,7 +40,7 @@
 #include "inc/embARC_toolchain.h"
 #include "board/board.h"
 
-#define CONSOLE_UART_ID		BOARD_CONSOLE_UART_ID	/*!< console uart id */
+#define CONSOLE_UART_ID     BOARD_CONSOLE_UART_ID   /*!< console uart id */
 
 #ifdef __cplusplus
 extern "C" {

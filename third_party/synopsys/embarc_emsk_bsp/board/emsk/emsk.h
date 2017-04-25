@@ -33,8 +33,8 @@
 /**
  *
  * \file
- * \ingroup	BOARD_EMSK_COMMON_INIT
- * \brief	emsk resource definitions
+ * \ingroup BOARD_EMSK_COMMON_INIT
+ * \brief   emsk resource definitions
  */
 
 /**
@@ -60,68 +60,68 @@
 #include "board/emsk/pmrf/pmrf.h"
 #include "board/emsk/spiflash/spiflash.h"
 
-#define EMSK_GPIO_PORT_A		DW_GPIO_PORT_A
-#define EMSK_GPIO_PORT_B		DW_GPIO_PORT_B
-#define EMSK_GPIO_PORT_C		DW_GPIO_PORT_C
-#define EMSK_GPIO_PORT_D		DW_GPIO_PORT_D
+#define EMSK_GPIO_PORT_A        DW_GPIO_PORT_A
+#define EMSK_GPIO_PORT_B        DW_GPIO_PORT_B
+#define EMSK_GPIO_PORT_C        DW_GPIO_PORT_C
+#define EMSK_GPIO_PORT_D        DW_GPIO_PORT_D
 
 /* common macros must be defined by all boards */
 
-#define BOARD_CONSOLE_UART_ID		DW_UART_1_ID
-#define BOARD_CONSOLE_UART_BAUD		UART_BAUDRATE_115200
-#define BOARD_ADC_IIC_ID		DW_IIC_0_ID
-#define BOARD_TEMP_SENSOR_IIC_ID	DW_IIC_0_ID
+#define BOARD_CONSOLE_UART_ID       DW_UART_1_ID
+#define BOARD_CONSOLE_UART_BAUD     UART_BAUDRATE_115200
+#define BOARD_ADC_IIC_ID        DW_IIC_0_ID
+#define BOARD_TEMP_SENSOR_IIC_ID    DW_IIC_0_ID
 
-#define BOARD_TEMP_IIC_SLVADDR		TEMP_I2C_SLAVE_ADDRESS
+#define BOARD_TEMP_IIC_SLVADDR      TEMP_I2C_SLAVE_ADDRESS
 
-#define BOARD_SDCARD_SPI_ID		DW_SPI_0_ID
-#define BOARD_WIFI_SPI_ID		DW_SPI_0_ID
-#define BOARD_SFLASH_SPI_ID		DW_SPI_0_ID
+#define BOARD_SDCARD_SPI_ID     DW_SPI_0_ID
+#define BOARD_WIFI_SPI_ID       DW_SPI_0_ID
+#define BOARD_SFLASH_SPI_ID     DW_SPI_0_ID
 
-#define BOARD_SDCARD_SPI_LINE		EMSK_SPI_LINE_SDCARD
-#define BOARD_WIFI_SPI_LINE		EMSK_SPI_LINE_1
-#define BOARD_SFLASH_SPI_LINE		EMSK_SPI_LINE_SFLASH
+#define BOARD_SDCARD_SPI_LINE       EMSK_SPI_LINE_SDCARD
+#define BOARD_WIFI_SPI_LINE     EMSK_SPI_LINE_1
+#define BOARD_SFLASH_SPI_LINE       EMSK_SPI_LINE_SFLASH
 
 #ifndef BOARD_SPI_FREQ
-#define BOARD_SPI_FREQ			(1000000)
+#define BOARD_SPI_FREQ          (1000000)
 #endif
 
 #ifndef BOARD_SPI_CLKMODE
-#define BOARD_SPI_CLKMODE		(SPI_CLK_MODE_0)
+#define BOARD_SPI_CLKMODE       (SPI_CLK_MODE_0)
 #endif
 
-#define BOARD_SYS_TIMER_ID		TIMER_0
-#define BOARD_SYS_TIMER_INTNO		INTNO_TIMER0
-#define BOARD_SYS_TIMER_HZ		(1000)
+#define BOARD_SYS_TIMER_ID      TIMER_0
+#define BOARD_SYS_TIMER_INTNO       INTNO_TIMER0
+#define BOARD_SYS_TIMER_HZ      (1000)
 
 /** board timer count frequency (HZ) */
-#define BOARD_SYS_TIMER_MS_HZ		(1000)
+#define BOARD_SYS_TIMER_MS_HZ       (1000)
 /** board timer count frequency convention based on the global timer counter */
-#define BOARD_SYS_TIMER_MS_CONV		(BOARD_SYS_TIMER_MS_HZ/BOARD_SYS_TIMER_HZ)
+#define BOARD_SYS_TIMER_MS_CONV     (BOARD_SYS_TIMER_MS_HZ/BOARD_SYS_TIMER_HZ)
 
-#define BOARD_OS_TIMER_ID		TIMER_0
-#define BOARD_OS_TIMER_INTNO		INTNO_TIMER0
+#define BOARD_OS_TIMER_ID       TIMER_0
+#define BOARD_OS_TIMER_INTNO        INTNO_TIMER0
 
-#define BOARD_CPU_CLOCK			CLK_CPU
-#define BOARD_DEV_CLOCK			CLK_BUS_APB
+#define BOARD_CPU_CLOCK         CLK_CPU
+#define BOARD_DEV_CLOCK         CLK_BUS_APB
 
-#define BOARD_LED_MASK			(0x1ff)
-#define BOARD_LED_CNT			(9)
-#define BOARD_BTN_MASK			(0x7)
-#define BOARD_BTN_CNT			(3)
-#define BOARD_SWT_MASK			(0xf)
-#define BOARD_SWT_CNT			(4)
+#define BOARD_LED_MASK          (0x1ff)
+#define BOARD_LED_CNT           (9)
+#define BOARD_BTN_MASK          (0x7)
+#define BOARD_BTN_CNT           (3)
+#define BOARD_SWT_MASK          (0xf)
+#define BOARD_SWT_CNT           (4)
 
-#define BOARD_ONBOARD_NTSHELL_ID	(EMSK_NTSHELL_0_ID)
+#define BOARD_ONBOARD_NTSHELL_ID    (EMSK_NTSHELL_0_ID)
 
-#define OSP_DELAY_OS_COMPAT_ENABLE	(1)
-#define OSP_DELAY_OS_COMPAT_DISABLE	(0)
+#define OSP_DELAY_OS_COMPAT_ENABLE  (1)
+#define OSP_DELAY_OS_COMPAT_DISABLE (0)
 
 
-#define OSP_GET_CUR_SYSHZ()		(gl_emsk_sys_hz_cnt)
-#define OSP_GET_CUR_MS()		(gl_emsk_ms_cnt)
-#define OSP_GET_CUR_US()		board_get_cur_us()
-#define OSP_GET_CUR_HWTICKS()		board_get_hwticks()
+#define OSP_GET_CUR_SYSHZ()     (gl_emsk_sys_hz_cnt)
+#define OSP_GET_CUR_MS()        (gl_emsk_ms_cnt)
+#define OSP_GET_CUR_US()        board_get_cur_us()
+#define OSP_GET_CUR_HWTICKS()       board_get_hwticks()
 
 #ifdef __cplusplus
 extern "C" {
@@ -137,6 +137,6 @@ extern uint64_t board_get_cur_us(void);
 }
 #endif
 
-#endif	/* _EMSK_H_ */
+#endif  /* _EMSK_H_ */
 
 /** @} end of group BOARD_EMSK_COMMON_INIT */

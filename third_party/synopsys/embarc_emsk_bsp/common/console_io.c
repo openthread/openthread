@@ -44,59 +44,68 @@
 
 /*!< to indicate xprintf setup state(0 for not setup) */
 static int xprintf_setup_flag = 0;
-static DEV_UART *console_uart;		/*!< console uart device pointer */
+static DEV_UART *console_uart;      /*!< console uart device pointer */
 
 /** put one char */
 int console_putchar(unsigned char chr)
 {
-	if (console_uart == NULL) {
-		return -1;
-	}
-	console_uart->uart_write((const void *)(&chr), 1);
-	return 0;
+    if (console_uart == NULL)
+    {
+        return -1;
+    }
+
+    console_uart->uart_write((const void *)(&chr), 1);
+    return 0;
 }
 
 /** put string */
 int console_putstr(const char *str, unsigned int len)
 {
-	if (console_uart == NULL) {
-		return -1;
-	}
-	return (int)console_uart->uart_write((const void *)(str), len);
+    if (console_uart == NULL)
+    {
+        return -1;
+    }
+
+    return (int)console_uart->uart_write((const void *)(str), len);
 }
 
 /** get one char*/
 int console_getchar(void)
 {
-	unsigned char data;
-	if (console_uart == NULL) {
-		return -1;
-	}
-	while (!console_uart->uart_read((void *)(&data), 1));
+    unsigned char data;
 
-	return (int)data;
+    if (console_uart == NULL)
+    {
+        return -1;
+    }
+
+    while (!console_uart->uart_read((void *)(&data), 1));
+
+    return (int)data;
 }
 
 /** get string */
 int console_getstr(char *str, unsigned int len)
 {
-	if (console_uart == NULL) {
-		return -1;
-	}
-	return (int)console_uart->uart_read((void *)(str), len);
+    if (console_uart == NULL)
+    {
+        return -1;
+    }
+
+    return (int)console_uart->uart_read((void *)(str), len);
 }
 
 #ifndef ENABLE_BANNER
-#define ENABLE_BANNER		1
+#define ENABLE_BANNER       1
 #endif
 
 #ifndef EMBARC_BANNER_TYPE
-#define EMBARC_BANNER_TYPE	1
+#define EMBARC_BANNER_TYPE  1
 #endif
 
 static const char *embarc_banner =
 #if EMBARC_BANNER_TYPE == 1
-"-----------------------------------------------------------	\r\n\
+    "-----------------------------------------------------------	\r\n\
  ____                                _ ____			\r\n\
 |  _ \\ _____      _____ _ __ ___  __| | __ ) _   _		\r\n\
 | |_) / _ \\ \\ /\\ / / _ \\ '__/ _ \\/ _` |  _ \\| | | |	\r\n\
@@ -111,7 +120,7 @@ static const char *embarc_banner =
 ------------------------------------------------------------	\r\n\
 ";
 #else
-"-----------------------------------------------------------------------------------------------\r\n\
+    "-----------------------------------------------------------------------------------------------\r\n\
       _/_/_/                                                                _/ _/_/_/		\r\n\
      _/    _/   _/_/   _/      _/      _/   _/_/   _/  _/_/   _/_/     _/_/_/ _/    _/ _/    _/	\r\n\
     _/_/_/   _/    _/ _/      _/      _/ _/_/_/_/ _/_/     _/_/_/_/ _/    _/ _/_/_/   _/    _/	\r\n\
@@ -130,32 +139,34 @@ static const char *embarc_banner =
 
 static void embarc_print_banner(void)
 {
-	xprintf("%s\r\n", embarc_banner);
+    xprintf("%s\r\n", embarc_banner);
 }
 
 /** xprintf need functions api setup */
 void xprintf_setup(void)
 {
-	if (xprintf_setup_flag) {
-		return;
-	}
-	console_uart = uart_get_dev(CONSOLE_UART_ID);
-	console_uart->uart_open(BOARD_CONSOLE_UART_BAUD);
+    if (xprintf_setup_flag)
+    {
+        return;
+    }
 
-	xdev_in(console_getchar);
-	xdev_out(console_putchar);
+    console_uart = uart_get_dev(CONSOLE_UART_ID);
+    console_uart->uart_open(BOARD_CONSOLE_UART_BAUD);
+
+    xdev_in(console_getchar);
+    xdev_out(console_putchar);
 
 #if ENABLE_BANNER == 1
-	embarc_print_banner();
+    embarc_print_banner();
 #endif
 
-	xprintf("embARC Build Time: %s, %s\r\n", __DATE__, __TIME__);
+    xprintf("embARC Build Time: %s, %s\r\n", __DATE__, __TIME__);
 #if defined(__GNU__)
-	xprintf("Compiler Version: ARC GNU, %s\r\n", __VERSION__);
+    xprintf("Compiler Version: ARC GNU, %s\r\n", __VERSION__);
 #else
-	xprintf("Compiler Version: Metaware, %s\r\n", __VERSION__);
+    xprintf("Compiler Version: Metaware, %s\r\n", __VERSION__);
 #endif
 
-	xprintf_setup_flag = 1;
+    xprintf_setup_flag = 1;
 }
 

@@ -41,18 +41,19 @@ extern "C" {
 #define ya_required_argument  1
 #define ya_optional_argument  2
 
-struct option {
-	const char *name;
-	int has_arg;
-	int *flag;
-	int val;
+struct option
+{
+    const char *name;
+    int has_arg;
+    int *flag;
+    int val;
 };
 
-int ya_getopt(int argc, char * const argv[], const char *optstring);
-int ya_getopt_long(int argc, char * const argv[], const char *optstring,
-		const struct option *longopts, int *longindex);
-int ya_getopt_long_only(int argc, char * const argv[], const char *optstring,
-		const struct option *longopts, int *longindex);
+int ya_getopt(int argc, char *const argv[], const char *optstring);
+int ya_getopt_long(int argc, char *const argv[], const char *optstring,
+                   const struct option *longopts, int *longindex);
+int ya_getopt_long_only(int argc, char *const argv[], const char *optstring,
+                        const struct option *longopts, int *longindex);
 
 extern char *ya_optarg;
 extern int ya_optind, ya_opterr, ya_optopt;

@@ -34,9 +34,10 @@
 #include "board/board.h"
 #include "common/console_io.h"
 
-typedef struct main_args {
-	int argc;
-	char *argv[];
+typedef struct main_args
+{
+    int argc;
+    char *argv[];
 } MAIN_ARGS;
 
 /** Change this to pass your own arguments to main functions */
@@ -44,19 +45,22 @@ MAIN_ARGS s_main_args = {1, {"main"}};
 
 static void enter_to_main(MAIN_ARGS *main_arg)
 {
-	if (main_arg == NULL) {
-	/* null or aligned not to 4 bytes */
-		_arc_goto_main(0, NULL);
-	} else {
-		_arc_goto_main(main_arg->argc, main_arg->argv);
-	}
+    if (main_arg == NULL)
+    {
+        /* null or aligned not to 4 bytes */
+        _arc_goto_main(0, NULL);
+    }
+    else
+    {
+        _arc_goto_main(main_arg->argc, main_arg->argv);
+    }
 }
 
 void board_main(void)
 {
-/* board level hardware init */
-	board_init();
-	xprintf_setup();
-	cpu_unlock();	/* unlock cpu to let interrupt work */
-	enter_to_main(&s_main_args);
+    /* board level hardware init */
+    board_init();
+    xprintf_setup();
+    cpu_unlock();   /* unlock cpu to let interrupt work */
+    enter_to_main(&s_main_args);
 }

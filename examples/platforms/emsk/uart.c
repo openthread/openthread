@@ -71,6 +71,7 @@ ThreadError otPlatUartEnable(void)
     VerifyOrExit(!(consoleUart == NULL), DBG("Console UART is missing.\r\n"));
 
     stateUart = consoleUart->uart_open(BOARD_CONSOLE_UART_BAUD);
+
     if (stateUart == E_OPNED)
     {
         consoleUart->uart_control(UART_CMD_SET_BAUD, (void *)(BOARD_CONSOLE_UART_BAUD));
@@ -137,7 +138,7 @@ void processReceive(void)
         rdAvail -= kReceiveBufferSize;
     }
 
-    if (rdAvail >0)
+    if (rdAvail > 0)
     {
         consoleUart->uart_read((void *)(sReceiveBuffer + sReceiveHead), (uint32_t)rdAvail);
         otPlatUartReceived(sReceiveBuffer + sReceiveHead, rdAvail);

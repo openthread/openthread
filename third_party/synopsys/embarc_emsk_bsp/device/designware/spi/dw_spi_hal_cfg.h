@@ -33,25 +33,25 @@
 
 /**
  * \file
- * \ingroup	DEVICE_DW_SPI
- * \brief	DesignWare SPI driver hardware description
- * 	related header file configuration file
- * \details	configuration file to enable or disable some function of spi
+ * \ingroup DEVICE_DW_SPI
+ * \brief   DesignWare SPI driver hardware description
+ *  related header file configuration file
+ * \details configuration file to enable or disable some function of spi
  */
 
 #ifndef _DEVICE_DW_SPI_HAL_CFG_H_
 #define _DEVICE_DW_SPI_HAL_CFG_H_
 
 #ifndef DW_SPI_CALC_FIFO_LEN_ENABLE
-#define DW_SPI_CALC_FIFO_LEN_ENABLE		(1)	/*!< Defaultly enable calculate fifo length */
+#define DW_SPI_CALC_FIFO_LEN_ENABLE     (1) /*!< Defaultly enable calculate fifo length */
 #endif
 
 #ifndef DW_SPI_MAX_FIFO_LENGTH
-#define DW_SPI_MAX_FIFO_LENGTH			(256)	/*!< Max FIFO depth for designware SPI device */
+#define DW_SPI_MAX_FIFO_LENGTH          (256)   /*!< Max FIFO depth for designware SPI device */
 #endif
 
 #ifndef DW_SPI_MIN_FIFO_LENGTH
-#define DW_SPI_MIN_FIFO_LENGTH			(2)	/*!< Min FIFO depth for designware SPI device */
+#define DW_SPI_MIN_FIFO_LENGTH          (2) /*!< Min FIFO depth for designware SPI device */
 #endif
 
 #endif /* _DEVICE_DW_SPI_HAL_CFG_H_ */

@@ -32,8 +32,8 @@
 --------------------------------------------- */
 /**
  * \file
- * \ingroup	BOARD_EMSK_COMMON_TIMER
- * \brief	emsk timer functions header
+ * \ingroup BOARD_EMSK_COMMON_TIMER
+ * \brief   emsk timer functions header
  */
 
 /**

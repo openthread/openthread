@@ -47,75 +47,75 @@
 #include "embARC_BSP_config.h"
 #include "inc/arc/arc.h"
 
-	.file "arc_startup.S"
+.file "arc_startup.S"
 
-.weak	_f_sdata		/* start of small data, defined in link script */
-.weak	init_hardware_hook	/* app hardware init hook */
-.weak	init_software_hook	/* app software init hook */
+.weak   _f_sdata        /* start of small data, defined in link script */
+.weak   init_hardware_hook  /* app hardware init hook */
+.weak   init_software_hook  /* app software init hook */
 
-.extern	board_main
+.extern board_main
 .extern exc_entry_table
 
 /* initial vector table */
-	.section .init_vector, "a"
-	.long _arc_reset
-	.section .init_bootstrap, "ax"
-	.global _arc_reset
-	.global _start
-	.align 4
+.section .init_vector, "a"
+.long _arc_reset
+.section .init_bootstrap, "ax"
+.global _arc_reset
+.global _start
+.align 4
 _start:
 _arc_reset:
 _arc_reset_stage1:
-	kflag	STATUS32_RESET_VALUE
+kflag   STATUS32_RESET_VALUE
 
 /* STAGE 1 */
 
 /* necessary hardware should be done first to speed up initialization
-	1. system clk
-	2. mem controller must be initialized before any access to external
-	mem.
-	3. others
+    1. system clk
+    2. mem controller must be initialized before any access to external
+    mem.
+    3. others
 */
 _arc_cache_init_start:
-	lr	r0, [AUX_BCR_D_CACHE]
-	cmp	r0, 2
-	/* invalidate dcache */
-	jle	_arc_icache_init
-	mov	r0, 1
-	sr	r0, [AUX_DC_IVDC]
-	sr	r0, [AUX_DC_CTRL]
+lr  r0, [AUX_BCR_D_CACHE]
+cmp r0, 2
+/* invalidate dcache */
+jle _arc_icache_init
+mov r0, 1
+sr  r0, [AUX_DC_IVDC]
+sr  r0, [AUX_DC_CTRL]
 _arc_icache_init:
-	lr	r0, [AUX_BCR_I_CACHE]
-	cmp	r0, 2
-	jle	_arc_cache_init_end
-	/* invalidate icache */
-	mov	r0, 1
-	sr	r0, [AUX_IC_IVIC]
-	nop_s
-	nop_s
-	nop_s
-	sr	r0, [AUX_IC_CTRL]
+lr  r0, [AUX_BCR_I_CACHE]
+cmp r0, 2
+jle _arc_cache_init_end
+/* invalidate icache */
+mov r0, 1
+sr  r0, [AUX_IC_IVIC]
+nop_s
+nop_s
+nop_s
+sr  r0, [AUX_IC_CTRL]
 
 _arc_cache_init_end:
-	mov	r0, init_hardware_hook
-	cmp	r0, 0
-	jlne	[r0]
+mov r0, init_hardware_hook
+cmp r0, 0
+jlne    [r0]
 
 /* STAGE 2: init necessary registers */
 
 _arc_reset_stage2:
-	mov	r0, 0
+mov r0, 0
 
 /* interrupt related init */
-	sr	r0, [AUX_IRQ_ACT]
-	sr	r0, [AUX_IRQ_CTRL]
-	sr	r0, [AUX_IRQ_HINT]
+sr  r0, [AUX_IRQ_ACT]
+sr  r0, [AUX_IRQ_CTRL]
+sr  r0, [AUX_IRQ_HINT]
 
 /* use the new vector table to replace the old one */
 #if defined(ARC_FEATURE_SEC_PRESENT) && (SECURESHIELD_VERSION < 2)
-	sr	exc_entry_table, [AUX_INT_VECT_BASE_S]
+sr  exc_entry_table, [AUX_INT_VECT_BASE_S]
 #else
-	sr	exc_entry_table, [AUX_INT_VECT_BASE]
+sr  exc_entry_table, [AUX_INT_VECT_BASE]
 #endif
 
 /* init stack */
@@ -125,142 +125,142 @@ _arc_reset_stage2:
 #endif
 
 /* switch to register bank1 */
-	lr      r0, [AUX_STATUS32]
-	bic     r0, r0, 0x70000
-	or      r0, r0, 0x10000
-	kflag   r0
+lr      r0, [AUX_STATUS32]
+bic     r0, r0, 0x70000
+or      r0, r0, 0x10000
+kflag   r0
 /* set sp, gp, fp in bank1 */
-	mov     sp, _e_stack
-	mov     gp, _f_sdata
-	mov     fp, 0
+mov     sp, _e_stack
+mov     gp, _f_sdata
+mov     fp, 0
 /* come back to bank0 */
-	lr      r0, [AUX_STATUS32]
-	bic     r0, r0, 0x70000
-	kflag   r0
-	mov	sp, _e_stack-256
+lr      r0, [AUX_STATUS32]
+bic     r0, r0, 0x70000
+kflag   r0
+mov sp, _e_stack - 256
 #else
-	mov	sp, _e_stack	/* init stack pointer */
+mov sp, _e_stack    /* init stack pointer */
 #endif
-	mov	gp, _f_sdata	/* init small-data base register */
-	mov	fp, 0		/* init fp register */
+mov gp, _f_sdata    /* init small-data base register */
+mov fp, 0       /* init fp register */
 
 _arc_reset_stage3:
 _s3_copy_text:
-	mov	r0, _f_text
-	mov	r1, _load_addr_text
-	cmp	r0, r1
+mov r0, _f_text
+mov r1, _load_addr_text
+cmp r0, r1
 
 /* if load addr == run addr, no need to copy */
-	jeq	_s3_copy_rodata
-	mov	r3, _e_text
+jeq _s3_copy_rodata
+mov r3, _e_text
 _s3_copy_text_loop:
-	ld.ab	r2, [r1, 4]
-	st.ab	r2, [r0, 4]
-	cmp	r0, r3
-	jlt	_s3_copy_text_loop
+ld.ab   r2, [r1, 4]
+st.ab   r2, [r0, 4]
+cmp r0, r3
+jlt _s3_copy_text_loop
 _s3_copy_rodata:
-	mov	r0, _f_rodata
-	mov	r1, _load_addr_rodata
-	cmp	r0, r1
+mov r0, _f_rodata
+mov r1, _load_addr_rodata
+cmp r0, r1
 
 /* if load addr == run addr, no need to copy */
-	jeq	_s3_copy_data
-	mov	r3, _e_rodata
+jeq _s3_copy_data
+mov r3, _e_rodata
 _s3_copy_rodata_loop:
-	ld.ab	r2, [r1, 4]
-	st.ab	r2, [r0, 4]
-	cmp	r0, r3
-	jlt	_s3_copy_rodata_loop
+ld.ab   r2, [r1, 4]
+st.ab   r2, [r0, 4]
+cmp r0, r3
+jlt _s3_copy_rodata_loop
 _s3_copy_data:
-	mov	r0, _f_data
-	mov	r1, _load_addr_data
-	cmp	r0, r1
-	jeq	_s3_clear_bss
+mov r0, _f_data
+mov r1, _load_addr_data
+cmp r0, r1
+jeq _s3_clear_bss
 
 /* if load addr == run addr, no need to copy */
-	mov	r3, _e_data
+mov r3, _e_data
 _s3_copy_data_loop:
-	ld.ab	r2, [r1, 4]
-	st.ab	r2, [r0, 4]
-	cmp	r0, r3
-	jlt	_s3_copy_data_loop
+ld.ab   r2, [r1, 4]
+st.ab   r2, [r0, 4]
+cmp r0, r3
+jlt _s3_copy_data_loop
 _s3_clear_bss:
-	mov	r0, _f_bss
-	mov	r1, _e_bss
-	cmp	r0, r1
-	jge	_arc_reset_call_main
-	mov	r2, 0
+mov r0, _f_bss
+mov r1, _e_bss
+cmp r0, r1
+jge _arc_reset_call_main
+mov r2, 0
 _s3_clear_bss_loop:
-	st.ab	r2, [r0, 4]
-	cmp	r0, r1
-	jlt	_s3_clear_bss_loop
+st.ab   r2, [r0, 4]
+cmp r0, r1
+jlt _s3_clear_bss_loop
 
 /* STAGE 3: go to main */
 
 _arc_reset_call_main:
 
 /* \todo add cpp init here */
-	mov	r0, init_software_hook
-	cmp	r0, 0
-	jlne	[r0]
+mov r0, init_software_hook
+cmp r0, 0
+jlne    [r0]
 /* board level library init */
-#ifdef	LIB_SECURESHIELD
-	jl 	secureshield_start
+#ifdef  LIB_SECURESHIELD
+jl  secureshield_start
 #else
 /* early init of interrupt and exception */
-	jl	exc_int_init
+jl  exc_int_init
 #endif
 /* init cache */
-	jl	arc_cache_init
+jl  arc_cache_init
 #if defined(__MW__)
-	jl	_init
+jl  _init
 #elif defined(__GNU__)
-	jl	__do_global_ctors_aux
-	jl	__do_init_array_aux
+jl  __do_global_ctors_aux
+jl  __do_init_array_aux
 #endif
-	jl	board_main	/* board-level main */
+jl  board_main  /* board-level main */
 #if defined(__MW__)
-	jl	_fini
+jl  _fini
 #elif defined(__GNU__)
-	jl	__do_global_dtors_aux
+jl  __do_global_dtors_aux
 #endif
-	.global _exit_loop
-	.global _exit_halt
-	.align 4
+.global _exit_loop
+.global _exit_halt
+.align 4
 _exit_halt:
 _exit_loop:
-	flag	0x1
-	nop
-	nop
-	nop
-	b	_exit_loop
+flag    0x1
+nop
+nop
+nop
+b   _exit_loop
 
 #if defined(__MW__)
-	.global _init, _fini
-	.section ".init",text
+.global _init, _fini
+.section ".init", text
 _init:
-	.cfa_bf	_init
-	push	%blink
-	.cfa_push	{%blink}
+.cfa_bf _init
+push    % blink
+.cfa_push   { % blink}
 
-	.section ".init$999999", text, 1, 2, check_text_align=0
-	pop	%blink
-	.cfa_pop	{%blink}
-	j	[%blink]
-	.cfa_ef
+.section ".init$999999", text, 1, 2, check_text_align = 0
+                                                        pop % blink
+                                                        .cfa_pop    { % blink}
+                                                        j   [ % blink]
+                                                        .cfa_ef
 
-	.section ".fini", text
-_fini:
-	.cfa_bf	_fini
-	push	%blink
-	.cfa_push	{%blink}
+                                                        .section ".fini", text
+                                                        _fini:
+                                                        .cfa_bf _fini
+                                                        push    % blink
+                                                        .cfa_push   { % blink}
 
-	.section ".fini$999999", text, 1, 2, check_text_align=0
-	pop	%blink
-	.cfa_pop	{%blink}
-	j	[%blink]
-	.cfa_ef
+                                                        .section ".fini$999999", text, 1, 2, check_text_align = 0
+                                                                pop % blink
+                                                                .cfa_pop    { % blink}
+                                                                j   [ % blink]
+                                                                .cfa_ef
 #endif
-/** @endcond */
+                                                                /** @endcond */
 
-/** }@*/
+                                                                /** }@*/

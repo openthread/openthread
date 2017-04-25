@@ -32,31 +32,32 @@
 --------------------------------------------- */
 /**
  * \file
- * \ingroup	BOARD_EMSK_DRV_SPIFLASH
- * \brief	header file of emsk onbard W25Q128BV spi flash driver
+ * \ingroup BOARD_EMSK_DRV_SPIFLASH
+ * \brief   header file of emsk onbard W25Q128BV spi flash driver
  */
 
 /**
- * \addtogroup	BOARD_EMSK_DRV_SPIFLASH
+ * \addtogroup  BOARD_EMSK_DRV_SPIFLASH
  * @{
  */
 #ifndef _EMSK_SPIFLASH_H_
 #define _EMSK_SPIFLASH_H_
 
-#define FLASH_PAGE_SIZE		0x100
-#define FLASH_SECTOR_SIZE	0x1000
+#define FLASH_PAGE_SIZE     0x100
+#define FLASH_SECTOR_SIZE   0x1000
 
 #include "inc/embARC_toolchain.h"
 #include "inc/embARC_error.h"
 
-typedef struct {
-	uint32_t head;		/*!< 0x68656164 ='head' */
-	uint32_t cpu_type;	/*!< = 0 - all images, reserved for future */
-	uint32_t start;		/*!< start address of application image in spi flash */
-	uint32_t size;		/*!< size of image in bytes */
-	uint32_t ramaddr;	/*!< address of ram for loading image */
-	uint32_t ramstart;	/*!< start address of application in RAM !!!! */
-	uint32_t checksum;	/*!< checksum of all bytes in image */
+typedef struct
+{
+    uint32_t head;      /*!< 0x68656164 ='head' */
+    uint32_t cpu_type;  /*!< = 0 - all images, reserved for future */
+    uint32_t start;     /*!< start address of application image in spi flash */
+    uint32_t size;      /*!< size of image in bytes */
+    uint32_t ramaddr;   /*!< address of ram for loading image */
+    uint32_t ramstart;  /*!< start address of application in RAM !!!! */
+    uint32_t checksum;  /*!< checksum of all bytes in image */
 } image_t;
 
 #ifdef __cplusplus

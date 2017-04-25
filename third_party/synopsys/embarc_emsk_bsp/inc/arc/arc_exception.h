@@ -56,103 +56,107 @@ extern "C" {
  * density and FIQ.
  */
 #ifndef NUM_EXC_CPU
-#define NUM_EXC_CPU	16	/*!< number of CPU exceptions */
+#define NUM_EXC_CPU 16  /*!< number of CPU exceptions */
 #endif
 
 #ifndef NUM_EXC_INT
-#define NUM_EXC_INT	9	/*!< number of interrupt exceptions, defined by users*/
+#define NUM_EXC_INT 9   /*!< number of interrupt exceptions, defined by users*/
 #endif
 
-#define NUM_EXC_ALL	(NUM_EXC_CPU + NUM_EXC_INT) /*!< total number of exceptions */
+#define NUM_EXC_ALL (NUM_EXC_CPU + NUM_EXC_INT) /*!< total number of exceptions */
 
 
 
 #ifdef ARC_FEATURE_SEC_PRESENT
-typedef struct int_exc_frame {
-	uint32_t erbta;
+typedef struct int_exc_frame
+{
+    uint32_t erbta;
 
-	uint32_t r30;	/* r30 is useless, skipped? */
-	uint32_t ilink;	/* r29 is useless, skipped?*/
-	/* r28 is sp, saved other place */
-	uint32_t fp;	/* r27 */
-	uint32_t gp;	/* r26 */
+    uint32_t r30;   /* r30 is useless, skipped? */
+    uint32_t ilink; /* r29 is useless, skipped?*/
+    /* r28 is sp, saved other place */
+    uint32_t fp;    /* r27 */
+    uint32_t gp;    /* r26 */
 
-	uint32_t r12;
+    uint32_t r12;
 
-	uint32_t lp_end, lp_start, lp_count;
+    uint32_t lp_end, lp_start, lp_count;
 
 #ifdef ARC_FEATURE_CODE_DENSITY
-	uint32_t ei, ldi, jli;
+    uint32_t ei, ldi, jli;
 #endif
 
-	uint32_t r0, r1, r2, r3;
+    uint32_t r0, r1, r2, r3;
 #ifndef ARC_FEATURE_RF16
-	uint32_t r4, r5, r6, r7, r8, r9;
+    uint32_t r4, r5, r6, r7, r8, r9;
 #endif
-	uint32_t r10, r11;
+    uint32_t r10, r11;
 
-	uint32_t blink;	/* r31 */
-	uint32_t ret;
-	uint32_t sec_stat;
-	uint32_t status32;
+    uint32_t blink; /* r31 */
+    uint32_t ret;
+    uint32_t sec_stat;
+    uint32_t status32;
 } EMBARC_PACKED INT_EXC_FRAME;
 #else
-typedef struct int_exc_frame {
-	uint32_t erbta;
+typedef struct int_exc_frame
+{
+    uint32_t erbta;
 
-	uint32_t r30;	/* r30 is useless, skipped? */
-	uint32_t ilink;	/* r29 is useless, skipped?*/
-	/* r28 is sp, saved other place */
-	uint32_t fp;	/* r27 */
-	uint32_t gp;	/* r26 */
+    uint32_t r30;   /* r30 is useless, skipped? */
+    uint32_t ilink; /* r29 is useless, skipped?*/
+    /* r28 is sp, saved other place */
+    uint32_t fp;    /* r27 */
+    uint32_t gp;    /* r26 */
 
-	uint32_t r12;
+    uint32_t r12;
 
-	uint32_t r0, r1, r2, r3;
+    uint32_t r0, r1, r2, r3;
 #ifndef ARC_FEATURE_RF16
-	uint32_t r4, r5, r6, r7, r8, r9;
+    uint32_t r4, r5, r6, r7, r8, r9;
 #endif
-	uint32_t r10, r11;
+    uint32_t r10, r11;
 
-	uint32_t blink;	/* r31 */
+    uint32_t blink; /* r31 */
 
-	uint32_t lp_end, lp_start, lp_count;
+    uint32_t lp_end, lp_start, lp_count;
 
 #ifdef ARC_FEATURE_CODE_DENSITY
-	uint32_t ei, ldi, jli;
+    uint32_t ei, ldi, jli;
 #endif
 
-	uint32_t ret;
-	uint32_t status32;
+    uint32_t ret;
+    uint32_t status32;
 } EMBARC_PACKED INT_EXC_FRAME;
 #endif
 
-typedef struct callee_frame {
+typedef struct callee_frame
+{
 #ifndef ARC_FEATURE_RF16
-	uint32_t r25;
-	uint32_t r24;
-	uint32_t r23;
-	uint32_t r22;
-	uint32_t r21;
-	uint32_t r20;
-	uint32_t r19;
-	uint32_t r18;
-	uint32_t r17;
-	uint32_t r16;
+    uint32_t r25;
+    uint32_t r24;
+    uint32_t r23;
+    uint32_t r22;
+    uint32_t r21;
+    uint32_t r20;
+    uint32_t r19;
+    uint32_t r18;
+    uint32_t r17;
+    uint32_t r16;
 #endif
-	uint32_t r15;
-	uint32_t r14;
-	uint32_t r13;
+    uint32_t r15;
+    uint32_t r14;
+    uint32_t r13;
 } EMBARC_PACKED CALLEE_FRAME;
 
-typedef struct processor_frame {
-	CALLEE_FRAME callee_regs;
-	INT_EXC_FRAME exc_frame;
+typedef struct processor_frame
+{
+    CALLEE_FRAME callee_regs;
+    INT_EXC_FRAME exc_frame;
 } EMBARC_PACKED PROCESSOR_FRAME;
 
-#define ARC_PROCESSOR_FRAME_SIZE	(sizeof(PROCESSOR_FRAME) / sizeof(uint32_t))
-#define ARC_EXC_FRAME_SIZE		(sizeof(INT_EXC_FRAME) / sizeof(uint32_t))
-#define ARC_CALLEE_FRAME_SIZE		(sizeof(CALLEE_FRAME) / sizeof(uint32_t))
+#define ARC_PROCESSOR_FRAME_SIZE    (sizeof(PROCESSOR_FRAME) / sizeof(uint32_t))
+#define ARC_EXC_FRAME_SIZE      (sizeof(INT_EXC_FRAME) / sizeof(uint32_t))
+#define ARC_CALLEE_FRAME_SIZE       (sizeof(CALLEE_FRAME) / sizeof(uint32_t))
 
 
 extern uint32_t exc_nest_count;
@@ -162,9 +166,9 @@ extern uint32_t exc_nest_count;
  *
  * \param[in] vec_base the target vector base
  */
-Inline void arc_vector_base_write(const void * vec_base)
+Inline void arc_vector_base_write(const void *vec_base)
 {
-	_arc_aux_write(AUX_INT_VECT_BASE, (uint32_t)vec_base);
+    _arc_aux_write(AUX_INT_VECT_BASE, (uint32_t)vec_base);
 }
 
 /**
@@ -174,18 +178,18 @@ Inline void arc_vector_base_write(const void * vec_base)
  */
 Inline uint32_t arc_vector_base_read(void)
 {
-	return _arc_aux_read(AUX_INT_VECT_BASE);
+    return _arc_aux_read(AUX_INT_VECT_BASE);
 }
 
 /**
  * \brief  sense whether in exc/interrupt processing
  *
- * \retval 0	not in exc/interrupt processing
- * \retval 1	in exc/interrupt processing
+ * \retval 0    not in exc/interrupt processing
+ * \retval 1    in exc/interrupt processing
  */
 Inline uint32_t exc_sense(void)
 {
-	return (exc_nest_count > 0U);
+    return (exc_nest_count > 0U);
 }
 
 /** @}*/
@@ -195,10 +199,10 @@ Inline uint32_t exc_sense(void)
  * @{
  */
 #ifndef INT_PRI_MIN
-#define INT_PRI_MIN	(-2)		/*!< the minimum interrupt priority */
+#define INT_PRI_MIN (-2)        /*!< the minimum interrupt priority */
 #endif
 
-#define INT_PRI_MAX (-1)		/*!< the maximum interrupt priority */
+#define INT_PRI_MAX (-1)        /*!< the maximum interrupt priority */
 /**
  * \brief disable the specific interrupt
  *
@@ -206,8 +210,8 @@ Inline uint32_t exc_sense(void)
  */
 Inline void arc_int_disable(const uint32_t intno)
 {
-	_arc_aux_write(AUX_IRQ_SELECT, intno);
-	_arc_aux_write(AUX_IRQ_ENABLE, 0);
+    _arc_aux_write(AUX_IRQ_SELECT, intno);
+    _arc_aux_write(AUX_IRQ_ENABLE, 0);
 }
 
 /**
@@ -217,8 +221,8 @@ Inline void arc_int_disable(const uint32_t intno)
  */
 Inline void arc_int_enable(const uint32_t intno)
 {
-	_arc_aux_write(AUX_IRQ_SELECT, intno);
-	_arc_aux_write(AUX_IRQ_ENABLE, 1);
+    _arc_aux_write(AUX_IRQ_SELECT, intno);
+    _arc_aux_write(AUX_IRQ_ENABLE, 1);
 }
 
 /**
@@ -229,8 +233,8 @@ Inline void arc_int_enable(const uint32_t intno)
  */
 Inline uint32_t arc_int_enabled(const uint32_t intno)
 {
-	_arc_aux_write(AUX_IRQ_SELECT, intno);
-	return _arc_aux_read(AUX_IRQ_ENABLE);
+    _arc_aux_write(AUX_IRQ_SELECT, intno);
+    return _arc_aux_read(AUX_IRQ_ENABLE);
 }
 
 /**
@@ -240,7 +244,7 @@ Inline uint32_t arc_int_enabled(const uint32_t intno)
  */
 Inline uint32_t arc_int_ipm_get(void)
 {
-	return ((_arc_aux_read(AUX_STATUS32) >> 1) & 0x0f);
+    return ((_arc_aux_read(AUX_STATUS32) >> 1) & 0x0f);
 }
 
 /**
@@ -250,12 +254,12 @@ Inline uint32_t arc_int_ipm_get(void)
  */
 Inline void arc_int_ipm_set(uint32_t intpri)
 {
-	volatile uint32_t status;
-	status = _arc_aux_read(AUX_STATUS32) & ~0x1e;
+    volatile uint32_t status;
+    status = _arc_aux_read(AUX_STATUS32) & ~0x1e;
 
-	status = status | ((intpri << 1) & 0x1e);
-	/* sr cannot write AUX_STATUS32 */
-	Asm("kflag %0"::"ir"(status));
+    status = status | ((intpri << 1) & 0x1e);
+    /* sr cannot write AUX_STATUS32 */
+    Asm("kflag %0"::"ir"(status));
 }
 
 /**
@@ -265,8 +269,8 @@ Inline void arc_int_ipm_set(uint32_t intpri)
  */
 Inline uint32_t arc_int_pri_get(const uint32_t intno)
 {
-	_arc_aux_write(AUX_IRQ_SELECT, intno);
-	return _arc_aux_read(AUX_IRQ_PRIORITY);
+    _arc_aux_write(AUX_IRQ_SELECT, intno);
+    return _arc_aux_read(AUX_IRQ_PRIORITY);
 }
 
 /**
@@ -277,8 +281,8 @@ Inline uint32_t arc_int_pri_get(const uint32_t intno)
  */
 Inline void arc_int_pri_set(const uint32_t intno, uint32_t intpri)
 {
-	_arc_aux_write(AUX_IRQ_SELECT, intno);
-	_arc_aux_write(AUX_IRQ_PRIORITY, intpri | (_arc_aux_read(AUX_IRQ_PRIORITY) & 0xfffffff0));
+    _arc_aux_write(AUX_IRQ_SELECT, intno);
+    _arc_aux_write(AUX_IRQ_PRIORITY, intpri | (_arc_aux_read(AUX_IRQ_PRIORITY) & 0xfffffff0));
 }
 
 /**
@@ -290,14 +294,17 @@ Inline void arc_int_pri_set(const uint32_t intno, uint32_t intpri)
 Inline void arc_int_secure_set(const uint32_t intno, uint32_t secure)
 {
 
-	_arc_aux_write(AUX_IRQ_SELECT, intno);
+    _arc_aux_write(AUX_IRQ_SELECT, intno);
 
-	if (secure) {
-		_arc_aux_write(AUX_IRQ_PRIORITY, _arc_aux_read(AUX_IRQ_PRIORITY) |
-			(1 << AUX_IRQ_PRIORITY_BIT_S));
-	} else {
-		_arc_aux_write(AUX_IRQ_PRIORITY, _arc_aux_read(AUX_IRQ_PRIORITY) & 0xf);
-	}
+    if (secure)
+    {
+        _arc_aux_write(AUX_IRQ_PRIORITY, _arc_aux_read(AUX_IRQ_PRIORITY) |
+                       (1 << AUX_IRQ_PRIORITY_BIT_S));
+    }
+    else
+    {
+        _arc_aux_write(AUX_IRQ_PRIORITY, _arc_aux_read(AUX_IRQ_PRIORITY) & 0xf);
+    }
 
 }
 
@@ -310,8 +317,8 @@ Inline void arc_int_secure_set(const uint32_t intno, uint32_t secure)
  */
 Inline uint32_t arc_int_probe(const uint32_t intno)
 {
-	_arc_aux_write(AUX_IRQ_SELECT, intno);
-	return _arc_aux_read(AUX_IRQ_PENDING);
+    _arc_aux_write(AUX_IRQ_SELECT, intno);
+    return _arc_aux_read(AUX_IRQ_PENDING);
 }
 
 /**
@@ -321,7 +328,7 @@ Inline uint32_t arc_int_probe(const uint32_t intno)
  */
 Inline void arc_int_sw_trigger(const uint32_t intno)
 {
-	_arc_aux_write(AUX_IRQ_HINT, intno);
+    _arc_aux_write(AUX_IRQ_HINT, intno);
 }
 
 /**
@@ -332,8 +339,8 @@ Inline void arc_int_sw_trigger(const uint32_t intno)
  */
 Inline void arc_int_level_config(const uint32_t intno, const uint32_t level)
 {
-	_arc_aux_write(AUX_IRQ_SELECT, intno);
-	_arc_aux_write(AUX_IRQ_TRIGGER, level);
+    _arc_aux_write(AUX_IRQ_SELECT, intno);
+    _arc_aux_write(AUX_IRQ_TRIGGER, level);
 }
 
 /**
@@ -341,8 +348,8 @@ Inline void arc_int_level_config(const uint32_t intno, const uint32_t level)
  */
 Inline void arc_lock(void)
 {
-	Asm("clri");
-	Asm("":::"memory");
+    Asm("clri");
+    Asm(""::: "memory");
 }
 
 /**
@@ -350,8 +357,8 @@ Inline void arc_lock(void)
  */
 Inline void arc_unlock(void)
 {
-	Asm("":::"memory");
-	Asm("seti");
+    Asm(""::: "memory");
+    Asm("seti");
 }
 
 /**
@@ -361,7 +368,7 @@ Inline void arc_unlock(void)
  */
 Inline uint32_t arc_lock_save(void)
 {
-	return _arc_clri();
+    return _arc_clri();
 }
 
 /**
@@ -371,7 +378,7 @@ Inline uint32_t arc_lock_save(void)
  */
 Inline void arc_unlock_restore(const uint32_t status)
 {
-	_arc_seti(status);
+    _arc_seti(status);
 }
 /** @}*/
 
@@ -383,12 +390,12 @@ Inline void arc_unlock_restore(const uint32_t status)
  * \typedef EXC_ENTRY
  * \brief  the data type for exception entry
  */
-typedef void (*EXC_ENTRY) (void);
+typedef void (*EXC_ENTRY)(void);
 /**
  * \typedef EXC_HANDLER
  * \brief  the data type for exception handler
  */
-typedef	void (*EXC_HANDLER) (void *exc_frame);
+typedef void (*EXC_HANDLER)(void *exc_frame);
 /** @}*/
 
 
@@ -397,7 +404,7 @@ typedef	void (*EXC_HANDLER) (void *exc_frame);
  * \typedef INT_HANDLER
  * \brief  the data type for interrupt handler
  */
-typedef void (*INT_HANDLER) (void *ptr);
+typedef void (*INT_HANDLER)(void *ptr);
 
 extern EXC_ENTRY exc_entry_table[NUM_EXC_ALL];
 extern EXC_HANDLER exc_int_handler_table[NUM_EXC_ALL];
@@ -452,7 +459,7 @@ extern uint32_t cpu_lock_save(void);
 extern void cpu_unlock_restore(const uint32_t status);
 extern int32_t int_handler_install(const uint32_t intno, INT_HANDLER handler);
 extern INT_HANDLER int_handler_get(const uint32_t intno);
-extern int32_t int_secure_set(const uint32_t intno, uint32_t secure); 
+extern int32_t int_secure_set(const uint32_t intno, uint32_t secure);
 
 #ifdef __cplusplus
 }

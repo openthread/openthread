@@ -32,12 +32,12 @@
 --------------------------------------------- */
 /**
  * \file
- * \ingroup	BOARD_EMSK_DRV_DW_SPI_OBJ
- * \brief	header file of designware spi object instantiation on emsk
+ * \ingroup BOARD_EMSK_DRV_DW_SPI_OBJ
+ * \brief   header file of designware spi object instantiation on emsk
  */
 
 /**
- * \addtogroup	BOARD_EMSK_DRV_DW_SPI_OBJ
+ * \addtogroup  BOARD_EMSK_DRV_DW_SPI_OBJ
  * @{
  */
 #ifndef _DW_SPI_OBJ_H_
@@ -46,26 +46,26 @@
 #include "device/device_hal/inc/dev_spi.h"
 
 /**
- * \name	DesignWare SPI Object Number
+ * \name    DesignWare SPI Object Number
  * @{
  */
-#define DW_SPI_NUM		(2)	/*!< DesignWare SPI valid number */
+#define DW_SPI_NUM      (2) /*!< DesignWare SPI valid number */
 /** @} end of name */
 
 /**
- * \name	Designware SPI Object ID Macros
+ * \name    Designware SPI Object ID Macros
  * @{
  */
-#define DW_SPI_0_ID		0	/*!< SPI 0 id macro (master node) */
-#define DW_SPI_1_ID		1	/*!< SPI 1 id macro (slave node) */
+#define DW_SPI_0_ID     0   /*!< SPI 0 id macro (master node) */
+#define DW_SPI_1_ID     1   /*!< SPI 1 id macro (slave node) */
 /** @} end of name */
 
 /**
- * \name	Designware SPI Object Control Macros
+ * \name    Designware SPI Object Control Macros
  * @{
  */
-#define USE_DW_SPI_0		1	/*!< enable use designware SPI 0 */
-#define USE_DW_SPI_1		1	/*!< enable use designware SPI 1 */
+#define USE_DW_SPI_0        1   /*!< enable use designware SPI 0 */
+#define USE_DW_SPI_1        1   /*!< enable use designware SPI 1 */
 /** @} end of name */
 
 #ifdef __cplusplus

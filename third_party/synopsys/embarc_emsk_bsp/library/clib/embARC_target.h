@@ -33,7 +33,7 @@
 
 /**
  * \file
- * \ingroup	EMBARC_SYSCALL
+ * \ingroup EMBARC_SYSCALL
  * \brief Common functions provided for embARC target platform
  */
 #ifndef _EMBARC_TARGET_H_
@@ -47,7 +47,7 @@ extern "C" {
 #endif
 
 #ifndef PATH_MAX
-#define PATH_MAX	4096
+#define PATH_MAX    4096
 #endif
 
 #if defined(__MW__)
@@ -61,4 +61,4 @@ extern void gnu_printf_setup(void);
 }
 #endif
 
-#endif	/* _EMBARC_TARGET_H_ */
+#endif  /* _EMBARC_TARGET_H_ */

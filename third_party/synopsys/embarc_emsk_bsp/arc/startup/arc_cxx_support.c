@@ -79,13 +79,14 @@ extern CtorFuncPtr __CTOR_END__[];
  */
 void __do_global_ctors_aux(void)
 {
-	unsigned int nCtors;
+    unsigned int nCtors;
 
-	nCtors = (unsigned int)__CTOR_LIST__[0];
+    nCtors = (unsigned int)__CTOR_LIST__[0];
 
-	while (nCtors >= 1) {
-		__CTOR_LIST__[nCtors--]();
-	}
+    while (nCtors >= 1)
+    {
+        __CTOR_LIST__[nCtors--]();
+    }
 }
 
 typedef void (*DtorFuncPtr)(void);
@@ -102,15 +103,16 @@ extern DtorFuncPtr __DTOR_END__[];
  */
 void __do_global_dtors_aux(void)
 {
-	unsigned int nDtors;
-	unsigned int i;
+    unsigned int nDtors;
+    unsigned int i;
 
-	nDtors = (unsigned int)__DTOR_LIST__[0];
-	i = 0;
+    nDtors = (unsigned int)__DTOR_LIST__[0];
+    i = 0;
 
-	while (i <= nDtors) {
-		__DTOR_LIST__[i++]();
-	}
+    while (i <= nDtors)
+    {
+        __DTOR_LIST__[i++]();
+    }
 }
 
 void *__dso_handle = 0;
@@ -129,7 +131,7 @@ void *__dso_handle = 0;
  */
 int __cxa_atexit(void (*destructor)(void *), void *objptr, void *dso)
 {
-	return 0;
+    return 0;
 }
 
 typedef void (*func_ptr)(void);
@@ -144,11 +146,12 @@ extern func_ptr __init_array_end[0];
  */
 void __do_init_array_aux(void)
 {
-	for (func_ptr *func = __init_array_start;
-		func < __init_array_end;
-		func++) {
-		(*func)();
-	}
+    for (func_ptr *func = __init_array_start;
+         func < __init_array_end;
+         func++)
+    {
+        (*func)();
+    }
 }
 
 /**
@@ -161,8 +164,9 @@ void __do_init_array_aux(void)
  */
 void __cxa_pure_virtual(void)
 {
-	while (1) {
-		;
-	}
+    while (1)
+    {
+        ;
+    }
 }
 #endif

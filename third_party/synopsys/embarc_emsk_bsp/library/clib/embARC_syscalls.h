@@ -33,7 +33,7 @@
 
 /**
  * \file
- * \ingroup	EMBARC_SYSCALL
+ * \ingroup EMBARC_SYSCALL
  * \brief Syscall support header file
  */
 #ifndef _EMBARC_SYSCALLS_
@@ -49,12 +49,12 @@ extern "C" {
 #if defined(__GNU__) && !defined(_HAVE_LIBGLOSS_)
 /* _HAVE_LIBGLOSS_ is defined in options/toolchain/toolchain_gnu.mk */
 #include <sys/syscall.h>
-#define SYSCALL_PREFIX(x)		syscall##x
+#define SYSCALL_PREFIX(x)       syscall##x
 
 #endif /* __GNU__ && !_HAVE_LIBGLOSS_ */
 
 #ifndef SYSCALL_PREFIX
-#define SYSCALL_PREFIX(x)		x
+#define SYSCALL_PREFIX(x)       x
 #endif
 
 #if defined(__GNU__) && !defined(_HAVE_LIBGLOSS_) && !defined(_HOSTLINK_)
@@ -67,4 +67,4 @@ extern void syscall_swi(void *ptr);
 }
 #endif
 
-#endif	/* _EMBARC_SYSCALLS_ */
+#endif  /* _EMBARC_SYSCALLS_ */

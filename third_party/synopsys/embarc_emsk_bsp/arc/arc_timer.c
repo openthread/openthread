@@ -33,7 +33,7 @@
 
 /**
  * \file
- * \ingroup	ARC_HAL_MISC_TIMER
+ * \ingroup ARC_HAL_MISC_TIMER
  * \brief  implementation of internal timer related functions
  * \todo RTC support should be improved if RTC is enabled
  */
@@ -49,60 +49,70 @@
  */
 int32_t timer_present(const uint32_t no)
 {
-	uint32_t bcr = _arc_aux_read(AUX_BCR_TIMERS);
-	switch (no) {
-		case TIMER_0:
-			bcr = (bcr >> 8) & 1;
-			break;
-		case TIMER_1:
-			bcr = (bcr >> 9) & 1;
-			break;
-		case TIMER_RTC:
-			bcr = (bcr >> 10) & 1;
-			break;
-		default:
-			bcr = 0;
-			/* illegal argument so return false */
-			break;
-		}
+    uint32_t bcr = _arc_aux_read(AUX_BCR_TIMERS);
 
-	return (int)bcr;
+    switch (no)
+    {
+    case TIMER_0:
+        bcr = (bcr >> 8) & 1;
+        break;
+
+    case TIMER_1:
+        bcr = (bcr >> 9) & 1;
+        break;
+
+    case TIMER_RTC:
+        bcr = (bcr >> 10) & 1;
+        break;
+
+    default:
+        bcr = 0;
+        /* illegal argument so return false */
+        break;
+    }
+
+    return (int)bcr;
 }
 
 /**
  * \brief  start the specific timer
- * \param[in] no	timer number
- * \param[in] mode	timer mode
- * \param[in] val	timer limit value (not for RTC)
+ * \param[in] no    timer number
+ * \param[in] mode  timer mode
+ * \param[in] val   timer limit value (not for RTC)
  * \return 0 success, -1 failure
  */
 int32_t timer_start(const uint32_t no, const uint32_t mode, const uint32_t val)
 {
-	if (timer_present(no) == 0) {
-		return -1;
-	}
+    if (timer_present(no) == 0)
+    {
+        return -1;
+    }
 
-	switch (no) {
-		case TIMER_0:
-			_arc_aux_write(AUX_TIMER0_CTRL, 0);
-			_arc_aux_write(AUX_TIMER0_LIMIT, val);
-			_arc_aux_write(AUX_TIMER0_CTRL, mode);
-			_arc_aux_write(AUX_TIMER0_CNT, 0);
-			break;
-		case TIMER_1:
-			_arc_aux_write(AUX_TIMER1_CTRL, 0);
-			_arc_aux_write(AUX_TIMER1_LIMIT, val);
-			_arc_aux_write(AUX_TIMER1_CTRL, mode);
-			_arc_aux_write(AUX_TIMER1_CNT, 0);
-			break;
-		case TIMER_RTC:
-			_arc_aux_write(AUX_RTC_CTRL, mode);
-			break;
-		default:
-			return -1;
-	}
+    switch (no)
+    {
+    case TIMER_0:
+        _arc_aux_write(AUX_TIMER0_CTRL, 0);
+        _arc_aux_write(AUX_TIMER0_LIMIT, val);
+        _arc_aux_write(AUX_TIMER0_CTRL, mode);
+        _arc_aux_write(AUX_TIMER0_CNT, 0);
+        break;
 
-	return 0;
+    case TIMER_1:
+        _arc_aux_write(AUX_TIMER1_CTRL, 0);
+        _arc_aux_write(AUX_TIMER1_LIMIT, val);
+        _arc_aux_write(AUX_TIMER1_CTRL, mode);
+        _arc_aux_write(AUX_TIMER1_CNT, 0);
+        break;
+
+    case TIMER_RTC:
+        _arc_aux_write(AUX_RTC_CTRL, mode);
+        break;
+
+    default:
+        return -1;
+    }
+
+    return 0;
 }
 
 /**
@@ -113,29 +123,34 @@ int32_t timer_start(const uint32_t no, const uint32_t mode, const uint32_t val)
  */
 int32_t timer_stop(const uint32_t no)
 {
-	if (timer_present(no) == 0) {
-		return -1;
-	}
+    if (timer_present(no) == 0)
+    {
+        return -1;
+    }
 
-	switch (no) {
-		case TIMER_0 :
-			_arc_aux_write(AUX_TIMER0_CTRL, 0);
-			_arc_aux_write(AUX_TIMER0_LIMIT,0);
-			_arc_aux_write(AUX_TIMER0_CNT, 0);
-			break;
-		case TIMER_1:
-			_arc_aux_write(AUX_TIMER1_CTRL, 0);
-			_arc_aux_write(AUX_TIMER1_LIMIT,0);
-			_arc_aux_write(AUX_TIMER1_CNT, 0);
-			break;
-		case TIMER_RTC:
-			_arc_aux_write(AUX_RTC_CTRL, TIMER_RTC_CLEAR);
-			break;
-		default:
-			return -1;
-	}
+    switch (no)
+    {
+    case TIMER_0 :
+        _arc_aux_write(AUX_TIMER0_CTRL, 0);
+        _arc_aux_write(AUX_TIMER0_LIMIT, 0);
+        _arc_aux_write(AUX_TIMER0_CNT, 0);
+        break;
 
-	return 0;
+    case TIMER_1:
+        _arc_aux_write(AUX_TIMER1_CTRL, 0);
+        _arc_aux_write(AUX_TIMER1_LIMIT, 0);
+        _arc_aux_write(AUX_TIMER1_CNT, 0);
+        break;
+
+    case TIMER_RTC:
+        _arc_aux_write(AUX_RTC_CTRL, TIMER_RTC_CLEAR);
+        break;
+
+    default:
+        return -1;
+    }
+
+    return 0;
 }
 
 /**
@@ -147,25 +162,30 @@ int32_t timer_stop(const uint32_t no)
  */
 int32_t timer_current(const uint32_t no, void *val)
 {
-	if (timer_present(no) == 0) {
-		return -1;
-	}
+    if (timer_present(no) == 0)
+    {
+        return -1;
+    }
 
-	switch (no) {
-		case TIMER_0 :
-			*((uint32_t *)val) = _arc_aux_read(AUX_TIMER0_CNT);
-			break;
-		case TIMER_1 :
-			*((uint32_t *)val) = _arc_aux_read(AUX_TIMER1_CNT);
-			break;
-		case TIMER_RTC:
-			*((uint64_t *)val) = _arc_aux_read(AUX_RTC_LOW);
-			break;
-		default :
-			return -1;
-	}
+    switch (no)
+    {
+    case TIMER_0 :
+        *((uint32_t *)val) = _arc_aux_read(AUX_TIMER0_CNT);
+        break;
 
-	return 0;
+    case TIMER_1 :
+        *((uint32_t *)val) = _arc_aux_read(AUX_TIMER1_CNT);
+        break;
+
+    case TIMER_RTC:
+        *((uint64_t *)val) = _arc_aux_read(AUX_RTC_LOW);
+        break;
+
+    default :
+        return -1;
+    }
+
+    return 0;
 }
 
 /**
@@ -176,28 +196,32 @@ int32_t timer_current(const uint32_t no, void *val)
  */
 int32_t timer_int_clear(const uint32_t no)
 {
-	uint32_t val;
+    uint32_t val;
 
-	if (timer_present(no) == 0) {
-		return -1;
-	}
+    if (timer_present(no) == 0)
+    {
+        return -1;
+    }
 
-	switch (no) {
-		case TIMER_0 :
-			val = _arc_aux_read(AUX_TIMER0_CTRL);
-			val &= ~TIMER_CTRL_IP;
-			_arc_aux_write(AUX_TIMER0_CTRL, val);
-			break;
-		case TIMER_1 :
-			val = _arc_aux_read(AUX_TIMER1_CTRL);
-			val &= ~TIMER_CTRL_IP;
-			_arc_aux_write(AUX_TIMER1_CTRL, val);
-			break;
-		default :
-			return -1;
-	}
+    switch (no)
+    {
+    case TIMER_0 :
+        val = _arc_aux_read(AUX_TIMER0_CTRL);
+        val &= ~TIMER_CTRL_IP;
+        _arc_aux_write(AUX_TIMER0_CTRL, val);
+        break;
 
-	return 0;
+    case TIMER_1 :
+        val = _arc_aux_read(AUX_TIMER1_CTRL);
+        val &= ~TIMER_CTRL_IP;
+        _arc_aux_write(AUX_TIMER1_CTRL, val);
+        break;
+
+    default :
+        return -1;
+    }
+
+    return 0;
 }
 
 /**
@@ -205,7 +229,7 @@ int32_t timer_int_clear(const uint32_t no)
  */
 void timer_init(void)
 {
-	timer_stop(TIMER_0);
-	timer_stop(TIMER_1);
-	timer_stop(TIMER_RTC);
+    timer_stop(TIMER_0);
+    timer_stop(TIMER_1);
+    timer_stop(TIMER_RTC);
 }

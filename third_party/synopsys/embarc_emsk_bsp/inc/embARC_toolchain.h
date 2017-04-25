@@ -33,14 +33,14 @@
 
 /**
  * \file
- * \ingroup	TOOLCHAIN
+ * \ingroup TOOLCHAIN
  * \brief toolchain dependent definitions
  */
 
-#include <stdint.h>	/* C99 standard lib */
-#include <limits.h>	/* C99 standard lib */
-#include <stddef.h>	/* C99 standard lib */
-#include <stdbool.h> 	/* C99 standard lib */
+#include <stdint.h> /* C99 standard lib */
+#include <limits.h> /* C99 standard lib */
+#include <stddef.h> /* C99 standard lib */
+#include <stdbool.h>    /* C99 standard lib */
 
 #include "embARC_BSP_config.h"
 
@@ -59,38 +59,38 @@ extern "C" {
 /*
  *  macro definitions of compiler extend function
  */
-#ifndef __cplusplus				/* C++ supports inline */
-#if __STDC_VERSION__ < 199901L			/* C99 supports inline */
+#ifndef __cplusplus             /* C++ supports inline */
+#if __STDC_VERSION__ < 199901L          /* C99 supports inline */
 #ifndef inline
-#define inline	__inline__			/* inline function */
+#define inline  __inline__          /* inline function */
 #endif
 #endif /* __STDC_VERSION__ < 199901L */
 #endif /* __cplusplus */
 
 #ifndef Inline
-#define Inline	static __inline__		/* inline function */
+#define Inline  static __inline__       /* inline function */
 #endif
 
-#ifndef __cplusplus				/* C++ supports asm */
+#ifndef __cplusplus             /* C++ supports asm */
 #ifndef asm
-#define asm	__asm__				/* inline asm */
+#define asm __asm__             /* inline asm */
 #endif
 #endif /* __cplusplus */
 
 #ifndef Asm
-#define Asm	__asm__ volatile		/* inline asm (no optimization) */
+#define Asm __asm__ volatile        /* inline asm (no optimization) */
 #endif
 
 /* compiler attributes */
-#define EMBARC_FORCEINLINE	__attribute__((always_inline))
-#define EMBARC_NOINLINE		__attribute__((noinline))
-#define EMBARC_PACKED		__attribute__((packed))
-#define EMBARC_WEAK		__attribute__((weak))
-#define EMBARC_ALIAS(f)		__attribute__((weak, alias (#f)))
-#define EMBARC_LINKTO(f)	__attribute__((alias (#f)))
-#define EMBARC_NORETURN		__attribute__((noreturn))
-#define EMBARC_NAKED		__attribute__((naked))	/* function without return */
-#define EMBARC_ALIGNED(x)	__attribute__((aligned(x)))
+#define EMBARC_FORCEINLINE  __attribute__((always_inline))
+#define EMBARC_NOINLINE     __attribute__((noinline))
+#define EMBARC_PACKED       __attribute__((packed))
+#define EMBARC_WEAK     __attribute__((weak))
+#define EMBARC_ALIAS(f)     __attribute__((weak, alias (#f)))
+#define EMBARC_LINKTO(f)    __attribute__((alias (#f)))
+#define EMBARC_NORETURN     __attribute__((noreturn))
+#define EMBARC_NAKED        __attribute__((naked))  /* function without return */
+#define EMBARC_ALIGNED(x)   __attribute__((aligned(x)))
 
 
 /* array count macro */

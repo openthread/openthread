@@ -91,7 +91,7 @@ ThreadError utilsFlashErasePage(uint32_t aAddress)
     int32_t status;
 
     VerifyOrExit((aAddress >= OPENTHREAD_FLASH_BASE) && (aAddress < (OPENTHREAD_FLASH_BASE + OPENTHREAD_FLASH_SIZE - 1)),
-            error = kThreadError_InvalidArgs);
+                 error = kThreadError_InvalidArgs);
 
     /* Use 2 sectors in the implementation, cannot erase the address over the boundry */
     status = flash_erase(aAddress, FLASH_SECTOR_SIZE);
@@ -127,10 +127,11 @@ uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
     uint32_t size = 0;
 
     VerifyOrExit((aAddress >= OPENTHREAD_FLASH_BASE) &&
-            ((aAddress + aSize) <= OPENTHREAD_FLASH_BASE + OPENTHREAD_FLASH_SIZE) &&
-            (!(aAddress & 3)) && (!(aSize & 3)), ;);
+                 ((aAddress + aSize) <= OPENTHREAD_FLASH_BASE + OPENTHREAD_FLASH_SIZE) &&
+                 (!(aAddress & 3)) && (!(aSize & 3)), ;);
 
     written_size = flash_write(aAddress, aSize, aData);
+
     if (written_size < 0)
     {
         size = 0;
@@ -150,9 +151,10 @@ uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
     uint32_t size = 0;
 
     VerifyOrExit((aAddress >= OPENTHREAD_FLASH_BASE) &&
-            ((aAddress + aSize) <= OPENTHREAD_FLASH_BASE + OPENTHREAD_FLASH_SIZE), ;);
+                 ((aAddress + aSize) <= OPENTHREAD_FLASH_BASE + OPENTHREAD_FLASH_SIZE), ;);
 
     read_size = flash_read(aAddress, aSize, aData);
+
     if (read_size < 0)
     {
         size = 0;

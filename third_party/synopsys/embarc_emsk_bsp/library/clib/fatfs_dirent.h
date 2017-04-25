@@ -46,31 +46,34 @@ extern "C" {
 #endif
 
 #if _USE_LFN
-#define MAXNAMLEN	_MAX_LFN
+#define MAXNAMLEN   _MAX_LFN
 #else
-#define MAXNAMLEN	64
+#define MAXNAMLEN   64
 #endif
 
-struct fatfs_stat {
-	FILINFO	fatfs_filinfo;
-	unsigned char st_mode;
+struct fatfs_stat
+{
+    FILINFO fatfs_filinfo;
+    unsigned char st_mode;
 };
 
-struct dirent {
-	unsigned short d_namlen;        /* length of string in d_name */
-        char d_name[MAXNAMLEN + 1]; 	/* name (up to MAXNAMLEN + 1) */
+struct dirent
+{
+    unsigned short d_namlen;        /* length of string in d_name */
+    char d_name[MAXNAMLEN + 1];     /* name (up to MAXNAMLEN + 1) */
 };
 
 
-typedef struct {
-	DIR dir; /* FatFS DIR struct */
-	struct dirent d_dirent;
+typedef struct
+{
+    DIR dir; /* FatFS DIR struct */
+    struct dirent d_dirent;
 } FATFS_DIR;
 
-extern FATFS_DIR *opendir(const char* path);
-extern struct dirent *readdir(FATFS_DIR* dp);
-extern int closedir(FATFS_DIR* dp);
-extern int fatfs_stat(const char* path, struct fatfs_stat *buf);
+extern FATFS_DIR *opendir(const char *path);
+extern struct dirent *readdir(FATFS_DIR *dp);
+extern int closedir(FATFS_DIR *dp);
+extern int fatfs_stat(const char *path, struct fatfs_stat *buf);
 
 #define FATFS_S_ISREG(m) (m == 0)
 

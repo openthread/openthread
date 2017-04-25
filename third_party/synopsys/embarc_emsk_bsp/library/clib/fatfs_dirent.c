@@ -37,85 +37,94 @@
 #include <string.h>
 #include "fatfs_dirent.h"
 
-FATFS_DIR *opendir(const char* path)
+FATFS_DIR *opendir(const char *path)
 {
-	FRESULT res;
-	FATFS_DIR* dp;
+    FRESULT res;
+    FATFS_DIR *dp;
 
-	/* Malloc memory for dir object */
-	dp = (FATFS_DIR *)malloc(sizeof(FATFS_DIR));
-	if (!dp) { /* No more memory */
-		return NULL;
-	}
+    /* Malloc memory for dir object */
+    dp = (FATFS_DIR *)malloc(sizeof(FATFS_DIR));
 
-	res = f_opendir(&dp->dir, path);
+    if (!dp)   /* No more memory */
+    {
+        return NULL;
+    }
 
-	if (res != FR_OK) {
-		free(dp);
-		return NULL;
-	}
+    res = f_opendir(&dp->dir, path);
 
-	return dp;
+    if (res != FR_OK)
+    {
+        free(dp);
+        return NULL;
+    }
+
+    return dp;
 }
 
-extern struct dirent *readdir(FATFS_DIR* dp)
+extern struct dirent *readdir(FATFS_DIR *dp)
 {
-	if (!dp) return NULL;
+    if (!dp) { return NULL; }
 
-	FRESULT res;
-	FILINFO	info;
+    FRESULT res;
+    FILINFO info;
 
 #if _USE_LFN
-	info.lfname = dp->d_dirent.d_name;
-	info.lfsize = sizeof(dp->d_dirent.d_name);
+    info.lfname = dp->d_dirent.d_name;
+    info.lfsize = sizeof(dp->d_dirent.d_name);
 #endif
-	res = f_readdir(&dp->dir, &info);
+    res = f_readdir(&dp->dir, &info);
 
-	if (res != FR_OK || info.fname[0] == 0) {
-		return  NULL;
-	}
+    if (res != FR_OK || info.fname[0] == 0)
+    {
+        return  NULL;
+    }
 
 #if _USE_LFN
-	if (*(info.lfname) == 0) {
-		dp->d_dirent.d_namlen = 13; /* 8.3 format */
-		memcpy(dp->d_dirent.d_name, info.fname, 13);
-	}
+
+    if (*(info.lfname) == 0)
+    {
+        dp->d_dirent.d_namlen = 13; /* 8.3 format */
+        memcpy(dp->d_dirent.d_name, info.fname, 13);
+    }
+
 #else
-	dp->d_dirent.d_namlen = 13; /* 8.3 format */
-	memcpy(dp->d_dirent.d_name, info.fname, 13);
+    dp->d_dirent.d_namlen = 13; /* 8.3 format */
+    memcpy(dp->d_dirent.d_name, info.fname, 13);
 #endif
 
-	return &(dp->d_dirent);
+    return &(dp->d_dirent);
 }
 
-extern int closedir(FATFS_DIR* dp)
+extern int closedir(FATFS_DIR *dp)
 {
-	FRESULT res;
+    FRESULT res;
 
-	if (!dp) return -1;
+    if (!dp) { return -1; }
 
-	res = f_closedir(&dp->dir);
-	free(dp);
+    res = f_closedir(&dp->dir);
+    free(dp);
 
-	if (res != FR_OK) {
-		return -1;
-	}
+    if (res != FR_OK)
+    {
+        return -1;
+    }
 
-	return 0;
+    return 0;
 }
 
 
-extern int fatfs_stat(const char* path, struct fatfs_stat *buf)
+extern int fatfs_stat(const char *path, struct fatfs_stat *buf)
 {
-	FRESULT res;
+    FRESULT res;
 
-	res = f_stat(path, &(buf->fatfs_filinfo));
+    res = f_stat(path, &(buf->fatfs_filinfo));
 
-	if (res != FR_OK) {
-		return -1;
-	}
+    if (res != FR_OK)
+    {
+        return -1;
+    }
 
-	buf->st_mode = buf->fatfs_filinfo.fattrib;
-	return 0;
+    buf->st_mode = buf->fatfs_filinfo.fattrib;
+    return 0;
 }
 #endif

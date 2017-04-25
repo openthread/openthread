@@ -43,36 +43,42 @@
 //////////////////////////////
 
 static const char szEnglishMonth[12][4] = { \
-	"Jan","Feb","Mar","Apr", \
-	"May","Jun","Jul","Aug", \
-	"Sep","Oct","Nov","Dec"};
+                                            "Jan", "Feb", "Mar", "Apr", \
+                                            "May", "Jun", "Jul", "Aug", \
+                                            "Sep", "Oct", "Nov", "Dec"
+                                          };
 
 time_t get_build_timedate(struct tm *build_tm)
 {
-	if (!build_tm) return 0;
-	char szMonth[5];
-	int tm_year, tm_mon = 0, tm_day;
-	int tm_hour, tm_min, tm_sec;
-	time_t build_time;
+    if (!build_tm) { return 0; }
 
-	/** Get Build Date */
-	sscanf(__DATE__, "%s %d %d", szMonth, &tm_day, &tm_year) ;
-	for (int i = 0; i < 12; i++) {
-		if (strncmp(szMonth, szEnglishMonth[i], 3) == 0) {
-			tm_mon = i;
-			break;
-		}
-	}
-	/** Get Build Time */
-	sscanf(__TIME__, "%d:%d:%d", &tm_hour, &tm_min, &tm_sec);
-	build_tm->tm_sec = tm_sec;
-	build_tm->tm_min = tm_min;
-	build_tm->tm_hour = tm_hour;
-	build_tm->tm_mday = tm_day;
-	build_tm->tm_mon = tm_mon;
-	build_tm->tm_year = tm_year - 1900;
-	build_tm->tm_isdst = 0;
+    char szMonth[5];
+    int tm_year, tm_mon = 0, tm_day;
+    int tm_hour, tm_min, tm_sec;
+    time_t build_time;
 
-	build_time = mktime(build_tm);
-	return build_time;
+    /** Get Build Date */
+    sscanf(__DATE__, "%s %d %d", szMonth, &tm_day, &tm_year) ;
+
+    for (int i = 0; i < 12; i++)
+    {
+        if (strncmp(szMonth, szEnglishMonth[i], 3) == 0)
+        {
+            tm_mon = i;
+            break;
+        }
+    }
+
+    /** Get Build Time */
+    sscanf(__TIME__, "%d:%d:%d", &tm_hour, &tm_min, &tm_sec);
+    build_tm->tm_sec = tm_sec;
+    build_tm->tm_min = tm_min;
+    build_tm->tm_hour = tm_hour;
+    build_tm->tm_mday = tm_day;
+    build_tm->tm_mon = tm_mon;
+    build_tm->tm_year = tm_year - 1900;
+    build_tm->tm_isdst = 0;
+
+    build_time = mktime(build_tm);
+    return build_time;
 }

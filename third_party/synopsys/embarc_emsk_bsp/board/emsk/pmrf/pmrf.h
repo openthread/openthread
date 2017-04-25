@@ -33,12 +33,12 @@
 
 /**
  * \file
- * \ingroup	BOARD_EMSK_DRV_PMODRF
- * \brief	header file of Pmod MRF24J40MA driver for EMSK board
+ * \ingroup BOARD_EMSK_DRV_PMODRF
+ * \brief   header file of Pmod MRF24J40MA driver for EMSK board
  */
 
 /**
- * \addtogroup	BOARD_EMSK_DRV_PMODRF
+ * \addtogroup  BOARD_EMSK_DRV_PMODRF
  * @{
  */
 
@@ -47,35 +47,35 @@
 
 /** MRF24J40 Functions */
 
-#define mrf24j40_reset_pin(val)		pmrf_reset_pin(val)
-#define mrf24j40_wake_pin(val)		pmrf_wake_pin(val)
-#define mrf24j40_cs_pin(val)		pmrf_cs_pin(val)
+#define mrf24j40_reset_pin(val)     pmrf_reset_pin(val)
+#define mrf24j40_wake_pin(val)      pmrf_wake_pin(val)
+#define mrf24j40_cs_pin(val)        pmrf_cs_pin(val)
 
-#define mrf24j40_delay_us(val)		pmrf_delay_us(val)
-#define mrf24j40_delay_ms(val)		pmrf_delay_ms(val)
+#define mrf24j40_delay_us(val)      pmrf_delay_us(val)
+#define mrf24j40_delay_ms(val)      pmrf_delay_ms(val)
 
 
 /** PMOD RF SPI FREQ & CLK MODE SETTINGS */
-#define EMSK_PMRF_0_SPIFREQ		BOARD_SPI_FREQ
-#define EMSK_PMRF_0_SPICLKMODE		BOARD_SPI_CLKMODE
+#define EMSK_PMRF_0_SPIFREQ     BOARD_SPI_FREQ
+#define EMSK_PMRF_0_SPICLKMODE      BOARD_SPI_CLKMODE
 
 /** PMOD RF SPI ID */
-#define EMSK_PMRF_0_SPI_ID		DW_SPI_0_ID
+#define EMSK_PMRF_0_SPI_ID      DW_SPI_0_ID
 
 /** Use J6 by default, MRF24J40 PIN */
-#define EMSK_PMRF_0_SPI_LINE		EMSK_SPI_LINE_0
-#define EMSK_PMRF_0_GPIO_ID		EMSK_GPIO_PORT_A
-#define MRF24J40_WAKE_PIN		(1 << 30)
-#define MRF24J40_RST_PIN		(1 << 29)
-#define MRF24J40_INT_PIN		(1 << 28)
+#define EMSK_PMRF_0_SPI_LINE        EMSK_SPI_LINE_0
+#define EMSK_PMRF_0_GPIO_ID     EMSK_GPIO_PORT_A
+#define MRF24J40_WAKE_PIN       (1 << 30)
+#define MRF24J40_RST_PIN        (1 << 29)
+#define MRF24J40_INT_PIN        (1 << 28)
 
-#define MRF24J40_WAKE_OFF		(0 << 30)
-#define MRF24J40_WAKE_ON		(1 << 30)
+#define MRF24J40_WAKE_OFF       (0 << 30)
+#define MRF24J40_WAKE_ON        (1 << 30)
 
-#define MRF24J40_RST_LOW		(0 << 29)
-#define MRF24J40_RST_HIGH		(1 << 29)
+#define MRF24J40_RST_LOW        (0 << 29)
+#define MRF24J40_RST_HIGH       (1 << 29)
 
-#define MRF24J40_INT_PIN_OFS		(28)
+#define MRF24J40_INT_PIN_OFS        (28)
 
 #ifdef __cplusplus
 extern "C" {
