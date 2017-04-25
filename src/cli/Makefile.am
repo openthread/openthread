@@ -28,9 +28,92 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-lib_LIBRARIES                       = libopenthread-cli.a
+#----------------------------------------
+#
+# This library on the face of it, appears to be identical
+# for both the MTD and FTD varients, however ...
+#
+# The source code here includes numerous OpenThread internal headers.
+# Due to the "domino-effect" other internal headers are included.
+#
+# For example:
+#     cli.cpp includes: 
+#            src/core/openthread-instance.h
+# Which Includes:
+#            src/core/therad/thread_netif.hpp
+# Which Includes:
+#            src/core/meshcop/dataset_manager.hpp
+# Which Includes:
+#            src/core/threadnetwork_data_leader.hpp
+#
+# That header (and others) is either an MTD or FTD class flavor.
+#
+# The FTD flavor has many private components (class variables).
+# The MTD flavor has no private components.
+#
+# Bottom line: The Class(structs) are thus different in the downstream 
+# libs. At this level (in the CLI, and likewise in the NCP) they are 
+# functionally identical.
+#
+# ORIGINALLY (historical note about how things are/where built):
+#
+#     The difference between MTD and FTD was a define..  -DOPENTHREAD_MTD
+#     There was no "FTD" define, it is/was assumed that FTD is the default.
+#
+#     Historically this library -DOPENTHREAD_MTD was not defined/set.
+#     (it is set via a commandline define in 'lib-openthread')
+#
+#     Thus, the existing(previous) way *THIS* library was compiled is
+#     exactly the FTD path. Meaning the "cli" library always sees
+#     the FTD varients of various headers/classes.
+#
+#     The same is true of the "ncp" library.
+#
+# HOWEVER there are two varients of the CLI application, CLI-MTD
+# and CLI-FTD (and likewise, two varients of the ncp application)
+# These applications link against two different OpenThread libraries.
+#
+# Which flavor, you get depends upon which library: "mtd" or "ftd" is linked.
+#
+# Which on the surface appear to link fine against the MTD/FTD library.
+#
+# In this description/example we focus on the  "nework_data_leader"
+# header file. The FTD varient has many private variables, functions
+# and other things of "FTD" (ie: full) implementation items.
+#
+# In contrast the MTD is generaly stubbed out with stub-functions
+# inlined in the header that return "error not implemented" or similar.
+#
+# Thus it works... here ... With this file and this example.
+#
+# The unknown:
+#    What about the other files?
+#    What about the other c++ classes?
+#    Is this true always? Is this robust?
+#    Or is there a hidden "got-ya" that will snag the next person?
+#
+# This also fails static analisys, checks.
+#    Application - with MTD vrs FTD class.
+#    Library #1  (cli-lib) with FTD selected.
+#    Library #2  (openthread) with two different class flavors.
+#
+# The static analisys tools will say: "NOPE" different classes!
+# Perhaps this will change if/when nothing is implemented in the 'mtd-header'
+#
+# Additionally, tools that perform "whole program optimization" will
+# throw errors becuase the data structures differ greatly.
+#
+# Hence, CLI library (and NCP) must exist in two flavors.
+#
+# Unless and until these libraries do not "accidently" suck in
+# a "flavored" header file somewhere.
 
-libopenthread_cli_a_CPPFLAGS =        \
+lib_LIBRARIES =                       \
+    libopenthread-cli-mtd.a           \
+    libopenthread-cli-ftd.a           \
+    $(NULL)
+
+CPPFLAGS_COMMON =                     \
     -I$(top_srcdir)/include           \
     -I$(top_srcdir)/src               \
     -I$(top_srcdir)/src/core          \
@@ -38,12 +121,32 @@ libopenthread_cli_a_CPPFLAGS =        \
     $(MISSING_CPPFLAGS)               \
     $(NULL)
 
-libopenthread_cli_a_SOURCES         = \
+
+libopenthread_cli_mtd_a_CPPFLAGS =    \
+    -DOPENTHREAD_MTD=1                \
+    $(CPPFLAGS_COMMON)                \
+    $(NULL)
+
+libopenthread_cli_ftd_a_CPPFLAGS =    \
+    -DOPENTHREAD_FTD=1                \
+    $(CPPFLAGS_COMMON)                \
+    $(NULL)
+
+SOURCES_COMMON =                      \
     cli.cpp                           \
     cli_console.cpp                   \
     cli_dataset.cpp                   \
     cli_uart.cpp                      \
+    cli_coap.cpp                      \
     cli_udp.cpp                       \
+    $(NULL)
+
+libopenthread_cli_ftd_a_SOURCES =     \
+    $(SOURCES_COMMON)                 \
+    $(NULL)
+
+libopenthread_cli_mtd_a_SOURCES =     \
+    $(SOURCES_COMMON)                 \
     $(NULL)
 
 noinst_HEADERS                      = \
@@ -52,6 +155,7 @@ noinst_HEADERS                      = \
     cli_dataset.hpp                   \
     cli_uart.hpp                      \
     cli_server.hpp                    \
+    cli_coap.hpp                      \
     cli_udp.hpp                       \
     $(NULL)
 

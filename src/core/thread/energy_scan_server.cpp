@@ -39,6 +39,7 @@
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
+#include <meshcop/meshcop.hpp>
 #include <meshcop/tlvs.hpp>
 #include <thread/energy_scan_server.hpp>
 #include <thread/thread_netif.hpp>
@@ -85,19 +86,19 @@ void EnergyScanServer::HandleRequest(Coap::Header &aHeader, Message &aMessage, c
     MeshCoP::ChannelMask0Tlv channelMask;
     Ip6::MessageInfo responseInfo(aMessageInfo);
 
-    VerifyOrExit(aHeader.GetCode() == kCoapRequestPost, ;);
+    VerifyOrExit(aHeader.GetCode() == kCoapRequestPost);
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kCount, sizeof(count), count));
-    VerifyOrExit(count.IsValid(), ;);
+    VerifyOrExit(count.IsValid());
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kPeriod, sizeof(period), period));
-    VerifyOrExit(period.IsValid(), ;);
+    VerifyOrExit(period.IsValid());
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kScanDuration, sizeof(scanDuration), scanDuration));
-    VerifyOrExit(scanDuration.IsValid(), ;);
+    VerifyOrExit(scanDuration.IsValid());
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask));
-    VerifyOrExit(channelMask.IsValid(), ;);
+    VerifyOrExit(channelMask.IsValid());
 
     mChannelMask = channelMask.GetMask();
     mChannelMaskCurrent = mChannelMask;
@@ -126,7 +127,7 @@ void EnergyScanServer::HandleTimer(void *aContext)
 
 void EnergyScanServer::HandleTimer(void)
 {
-    VerifyOrExit(mActive, ;);
+    VerifyOrExit(mActive);
 
     if (mCount)
     {
@@ -150,7 +151,7 @@ void EnergyScanServer::HandleScanResult(void *aContext, otEnergyScanResult *aRes
 
 void EnergyScanServer::HandleScanResult(otEnergyScanResult *aResult)
 {
-    VerifyOrExit(mActive, ;);
+    VerifyOrExit(mActive);
 
     if (aResult)
     {
@@ -195,7 +196,8 @@ ThreadError EnergyScanServer::SendReport(void)
     header.AppendUriPathOptions(OPENTHREAD_URI_ENERGY_REPORT);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMeshCoPMessage(header)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(mNetif.GetCoapClient(), header)) != NULL,
+                 error = kThreadError_NoBufs);
 
     channelMask.Init();
     channelMask.SetMask(mChannelMask);

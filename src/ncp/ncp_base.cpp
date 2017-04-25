@@ -47,7 +47,7 @@
 #include "openthread/jam_detection.h"
 #endif
 
-#if OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 #include "meshcop/commissioner.hpp"
 #endif
 
@@ -156,7 +156,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE, &NcpBase::GetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE },
     { SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED, &NcpBase::GetPropertyHandler_THREAD_ROUTER_ROLE_ENABLED },
 
-#if OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     { SPINEL_PROP_THREAD_COMMISSIONER_ENABLED, &NcpBase::GetPropertyHandler_THREAD_COMMISSIONER_ENABLED },
 #endif
 
@@ -319,7 +319,7 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_NEST_LEGACY_ULA_PREFIX, &NcpBase::SetPropertyHandler_NEST_LEGACY_ULA_PREFIX },
 #endif
 
-#if OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     { SPINEL_PROP_THREAD_COMMISSIONER_ENABLED, &NcpBase::SetPropertyHandler_THREAD_COMMISSIONER_ENABLED },
 #endif
 };
@@ -335,7 +335,7 @@ const NcpBase::InsertPropertyHandlerEntry NcpBase::mInsertPropertyHandlerTable[]
     { SPINEL_PROP_THREAD_ON_MESH_NETS, &NcpBase::InsertPropertyHandler_THREAD_ON_MESH_NETS },
     { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::InsertPropertyHandler_THREAD_ASSISTING_PORTS },
 
-#if OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     { SPINEL_PROP_THREAD_JOINERS, &NcpBase::NcpBase::InsertPropertyHandler_THREAD_JOINERS },
 #endif
 
@@ -1505,7 +1505,7 @@ exit:
 
 ThreadError NcpBase::OutboundFrameFeedVPacked(const char *pack_format, va_list args)
 {
-    uint8_t buf[64];
+    uint8_t buf[96];
     ThreadError errorCode = kThreadError_NoBufs;
     spinel_ssize_t packed_len;
 
@@ -3381,7 +3381,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header
            );
 }
 
-#if OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 ThreadError NcpBase::GetPropertyHandler_THREAD_COMMISSIONER_ENABLED(uint8_t header, spinel_prop_key_t key)
 {
     bool isEnabled = false;
@@ -4836,7 +4836,7 @@ ThreadError NcpBase::SetPropertyHandler_CNTR_RESET(uint8_t header, spinel_prop_k
     return SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
 }
 
-#if OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 ThreadError NcpBase::SetPropertyHandler_THREAD_COMMISSIONER_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                                     uint16_t value_len)
 {
@@ -4870,7 +4870,7 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_COMMISSIONER_ENABLED(uint8_t head
 
     return SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
 }
-#endif // OPENTHREAD_ENABLE_COMMISSIONER
+#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
 ThreadError NcpBase::SetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                       uint16_t value_len)
@@ -6118,7 +6118,7 @@ ThreadError NcpBase::InsertPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_
     return errorCode;
 }
 
-#if OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 ThreadError NcpBase::InsertPropertyHandler_THREAD_JOINERS(uint8_t header, spinel_prop_key_t key,
                                                           const uint8_t *value_ptr, uint16_t value_len)
 {
@@ -6182,7 +6182,7 @@ ThreadError NcpBase::InsertPropertyHandler_THREAD_JOINERS(uint8_t header, spinel
 exit:
     return errorCode;
 }
-#endif // OPENTHREAD_ENABLE_COMMISSIONER
+#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
 // ----------------------------------------------------------------------------
 // MARK: Individual Property Removers
@@ -6506,18 +6506,18 @@ ThreadError NcpBase::RemovePropertyHandler_MAC_WHITELIST(uint8_t header, spinel_
 {
     ThreadError errorCode = kThreadError_None;
     spinel_ssize_t parsedLength;
-    otExtAddress ext_addr;
+    otExtAddress *ext_addr_ptr = NULL;
 
     parsedLength = spinel_datatype_unpack(
                        value_ptr,
                        value_len,
                        SPINEL_DATATYPE_EUI64_S,
-                       &ext_addr
+                       &ext_addr_ptr
                    );
 
     if (parsedLength > 0)
     {
-        otLinkRemoveWhitelist(mInstance, ext_addr.m8);
+        otLinkRemoveWhitelist(mInstance, ext_addr_ptr->m8);
 
         errorCode = SendPropertyUpdate(
                         header,
@@ -6542,7 +6542,7 @@ void NcpBase::RegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers)
     mLegacyHandlers = aHandlers;
     bool isEnabled;
 
-    VerifyOrExit(mLegacyHandlers != NULL, ;);
+    VerifyOrExit(mLegacyHandlers != NULL);
 
     isEnabled = (otThreadGetDeviceRole(mInstance) != kDeviceRoleDisabled);
 

@@ -37,10 +37,6 @@
 
 using namespace Thread;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 static void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame);
 static void HandleEnergyScanResult(void *aContext, otEnergyScanResult *aResult);
 
@@ -51,7 +47,17 @@ uint8_t otLinkGetChannel(otInstance *aInstance)
 
 ThreadError otLinkSetChannel(otInstance *aInstance, uint8_t aChannel)
 {
-    return aInstance->mThreadNetif.GetMac().SetChannel(aChannel);
+    ThreadError error;
+
+    VerifyOrExit(aInstance->mThreadNetif.GetMle().GetDeviceState() == Mle::kDeviceStateDisabled,
+                 error = kThreadError_InvalidState);
+
+    error = aInstance->mThreadNetif.GetMac().SetChannel(aChannel);
+    aInstance->mThreadNetif.GetActiveDataset().Clear(false);
+    aInstance->mThreadNetif.GetPendingDataset().Clear(false);
+
+exit:
+    return error;
 }
 
 const uint8_t *otLinkGetExtendedAddress(otInstance *aInstance)
@@ -64,6 +70,8 @@ ThreadError otLinkSetExtendedAddress(otInstance *aInstance, const otExtAddress *
     ThreadError error = kThreadError_None;
 
     VerifyOrExit(aExtAddress != NULL, error = kThreadError_InvalidArgs);
+    VerifyOrExit(aInstance->mThreadNetif.GetMle().GetDeviceState() == Mle::kDeviceStateDisabled,
+                 error = kThreadError_InvalidState);
 
     aInstance->mThreadNetif.GetMac().SetExtAddress(*static_cast<const Mac::ExtAddress *>(aExtAddress));
 
@@ -103,12 +111,12 @@ ThreadError otLinkSetPanId(otInstance *aInstance, otPanId aPanId)
 {
     ThreadError error = kThreadError_None;
 
-    // do not allow setting PAN ID to broadcast if Thread is running
-    VerifyOrExit(aPanId != Mac::kPanIdBroadcast ||
-                 aInstance->mThreadNetif.GetMle().GetDeviceState() != Mle::kDeviceStateDisabled,
+    VerifyOrExit(aInstance->mThreadNetif.GetMle().GetDeviceState() == Mle::kDeviceStateDisabled,
                  error = kThreadError_InvalidState);
 
     error = aInstance->mThreadNetif.GetMac().SetPanId(aPanId);
+    aInstance->mThreadNetif.GetActiveDataset().Clear(false);
+    aInstance->mThreadNetif.GetPendingDataset().Clear(false);
 
 exit:
     return error;
@@ -298,42 +306,9 @@ void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame)
 {
     otInstance *aInstance = static_cast<otInstance *>(aContext);
     otActiveScanResult result;
-    Mac::Address address;
-    Mac::Beacon *beacon = NULL;
-    Mac::BeaconPayload *beaconPayload = NULL;
-    uint8_t payloadLength;
 
-    memset(&result, 0, sizeof(otActiveScanResult));
-
-    if (aFrame == NULL)
-    {
-        aInstance->mActiveScanCallback(NULL, aInstance->mActiveScanCallbackContext);
-        ExitNow();
-    }
-
-    SuccessOrExit(aFrame->GetSrcAddr(address));
-    VerifyOrExit(address.mLength == sizeof(address.mExtAddress), ;);
-    memcpy(&result.mExtAddress, &address.mExtAddress, sizeof(result.mExtAddress));
-
-    aFrame->GetSrcPanId(result.mPanId);
-    result.mChannel = aFrame->GetChannel();
-    result.mRssi = aFrame->GetPower();
-    result.mLqi = aFrame->GetLqi();
-
-    payloadLength = aFrame->GetPayloadLength();
-
-    beacon = reinterpret_cast<Mac::Beacon *>(aFrame->GetPayload());
-    beaconPayload = reinterpret_cast<Mac::BeaconPayload *>(beacon->GetPayload());
-
-    if ((payloadLength >= (sizeof(*beacon) + sizeof(*beaconPayload))) && beacon->IsValid() && beaconPayload->IsValid())
-    {
-        result.mVersion = beaconPayload->GetProtocolVersion();
-        result.mIsJoinable = beaconPayload->IsJoiningPermitted();
-        result.mIsNative = beaconPayload->IsNative();
-        memcpy(&result.mNetworkName, beaconPayload->GetNetworkName(), sizeof(result.mNetworkName));
-        memcpy(&result.mExtendedPanId, beaconPayload->GetExtendedPanId(), sizeof(result.mExtendedPanId));
-    }
-
+    VerifyOrExit(aFrame != NULL, aInstance->mActiveScanCallback(NULL, aInstance->mActiveScanCallbackContext));
+    aInstance->mThreadNetif.GetMac().ConvertBeaconToActiveScanResult(aFrame, result);
     aInstance->mActiveScanCallback(&result, aInstance->mActiveScanCallbackContext);
 
 exit:
@@ -364,8 +339,3 @@ bool otLinkIsInTransmitState(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMac().IsInTransmitState();
 }
-
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif

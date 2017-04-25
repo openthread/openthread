@@ -171,7 +171,7 @@ ThreadError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageI
     ThreadError error = kThreadError_None;
 
     VerifyOrExit(aIp6Header.GetDestination().IsMulticast() &&
-                 aIp6Header.GetDestination().GetScope() >= Address::kRealmLocalScope, ;);
+                 aIp6Header.GetDestination().GetScope() >= Address::kRealmLocalScope);
 
     if (aIp6Header.GetDestination().IsRealmLocalMulticast())
     {
@@ -240,11 +240,11 @@ ThreadError Ip6::RemoveMplOption(Message &aMessage)
     offset = 0;
     aMessage.Read(offset, sizeof(ip6Header), &ip6Header);
     offset += sizeof(ip6Header);
-    VerifyOrExit(ip6Header.GetNextHeader() == kProtoHopOpts,);
+    VerifyOrExit(ip6Header.GetNextHeader() == kProtoHopOpts);
 
     aMessage.Read(offset, sizeof(hbh), &hbh);
     endOffset = offset + (hbh.GetLength() + 1) * 8;
-    VerifyOrExit(aMessage.GetLength() >= endOffset,);
+    VerifyOrExit(aMessage.GetLength() >= endOffset);
 
     offset += sizeof(hbh);
 
@@ -291,7 +291,7 @@ ThreadError Ip6::RemoveMplOption(Message &aMessage)
     }
 
     // verify that IPv6 Options header is properly formed
-    VerifyOrExit(offset == endOffset,);
+    VerifyOrExit(offset == endOffset);
 
     if (remove)
     {
@@ -357,7 +357,6 @@ ThreadError Ip6::SendDatagram(Message &message, MessageInfo &messageInfo, IpProt
     header.SetHopLimit(messageInfo.mHopLimit ? messageInfo.mHopLimit : static_cast<uint8_t>(kDefaultHopLimit));
 
     if (messageInfo.GetSockAddr().IsUnspecified() ||
-        messageInfo.GetSockAddr().IsAnycastRoutingLocator() ||
         messageInfo.GetSockAddr().IsMulticast())
     {
         VerifyOrExit((source = SelectSourceAddress(messageInfo)) != NULL,
@@ -575,11 +574,13 @@ exit:
     return error;
 }
 
-ThreadError Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageInfo &messageInfo, uint8_t aIpProto)
+ThreadError Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageInfo &messageInfo, uint8_t aIpProto,
+                                        bool fromLocalHost)
 {
     ThreadError error = kThreadError_None;
     Message *messageCopy = NULL;
 
+    VerifyOrExit(fromLocalHost == false, error = kThreadError_Drop);
     VerifyOrExit(mReceiveIp6DatagramCallback != NULL, error = kThreadError_NoRoute);
 
     if (mIsReceiveIp6FilterEnabled)
@@ -627,6 +628,23 @@ ThreadError Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageIn
     mReceiveIp6DatagramCallback(messageCopy, mReceiveIp6DatagramCallbackContext);
 
 exit:
+
+    switch (error)
+    {
+    case kThreadError_NoBufs:
+        otLogInfoIp6(GetInstance(), "Failed to pass up message (len: %d) to host - out of message buffer.",
+                     aMessage.GetLength());
+        break;
+
+    case kThreadError_Drop:
+        otLogInfoIp6(GetInstance(), "Dropping message (len: %d) from local host since next hop is the host.",
+                     aMessage.GetLength());
+        break;
+
+    default:
+        break;
+    }
+
     return error;
 }
 
@@ -643,6 +661,7 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
     bool multicastPromiscuous = false;
     uint8_t nextHeader;
     uint8_t hopLimit;
+    int8_t forwardInterfaceId;
 
     otLogFuncEntry();
 
@@ -734,20 +753,30 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
             ExitNow(tunnel = true);
         }
 
-        if (fromLocalHost == false)
-        {
-            ProcessReceiveCallback(message, messageInfo, nextHeader);
-        }
+        ProcessReceiveCallback(message, messageInfo, nextHeader, fromLocalHost);
 
         SuccessOrExit(error = HandlePayload(message, messageInfo, nextHeader));
     }
     else if (multicastPromiscuous)
     {
-        ProcessReceiveCallback(message, messageInfo, nextHeader);
+        ProcessReceiveCallback(message, messageInfo, nextHeader, fromLocalHost);
     }
 
     if (forward)
     {
+        forwardInterfaceId = FindForwardInterfaceId(messageInfo);
+
+        if (forwardInterfaceId == 0)
+        {
+            // try passing to host
+            SuccessOrExit(error = ProcessReceiveCallback(message, messageInfo, nextHeader, fromLocalHost));
+
+            // the caller transfers custody in the success case, so free the message here
+            message.Free();
+
+            ExitNow();
+        }
+
         if (netif != NULL)
         {
             header.SetHopLimit(header.GetHopLimit() - 1);
@@ -762,7 +791,10 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
         {
             hopLimit = header.GetHopLimit();
             message.Write(Header::GetHopLimitOffset(), Header::GetHopLimitSize(), &hopLimit);
-            SuccessOrExit(error = ForwardMessage(message, messageInfo, nextHeader));
+
+            // submit message to interface
+            VerifyOrExit((netif = GetNetifById(forwardInterfaceId)) != NULL, error = kThreadError_NoRoute);
+            SuccessOrExit(error = netif->SendMessage(message));
         }
     }
 
@@ -777,11 +809,9 @@ exit:
     return error;
 }
 
-ThreadError Ip6::ForwardMessage(Message &message, MessageInfo &messageInfo, uint8_t ipproto)
+int8_t Ip6::FindForwardInterfaceId(const MessageInfo &messageInfo)
 {
-    ThreadError error = kThreadError_None;
     int8_t interfaceId;
-    Netif *netif;
 
     otLogFuncEntry();
 
@@ -807,35 +837,12 @@ ThreadError Ip6::ForwardMessage(Message &message, MessageInfo &messageInfo, uint
     }
     else
     {
-        // try passing to host
-        error = ProcessReceiveCallback(message, messageInfo, ipproto);
-
-        switch (error)
-        {
-        case kThreadError_None:
-            // the caller transfers custody in the success case, so free the message here
-            message.Free();
-            break;
-
-        case kThreadError_NoRoute:
-            otDumpDebgIp6(GetInstance(), "no route", &messageInfo.GetSockAddr(), 16);
-            break;
-
-        default:
-            break;
-        }
-
-        ExitNow();
+        interfaceId = 0;
     }
 
-    // submit message to interface
-    VerifyOrExit((netif = GetNetifById(interfaceId)) != NULL, error = kThreadError_NoRoute);
-    SuccessOrExit(error = netif->SendMessage(message));
+    otLogFuncExit();
 
-exit:
-
-    otLogFuncExitErr(error);
-    return error;
+    return interfaceId;
 }
 
 ThreadError Ip6::AddNetif(Netif &aNetif)

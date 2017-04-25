@@ -41,6 +41,7 @@
         MBEDTLS_CONFIG_FILE="mbedtls-config.h";
         OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";
         OPENTHREAD_MULTIPLE_INSTANCE;
+        OPENTHREAD_FTD=1;
         OTBUILD;
       </PreprocessorDefinitions>
       <AdditionalIncludeDirectories>
@@ -133,6 +134,7 @@
     <ClCompile Include="..\..\src\core\thread\network_data_local.cpp" />
     <ClCompile Include="..\..\src\core\thread\network_diagnostic.cpp" />
     <ClCompile Include="..\..\src\core\thread\panid_query_server.cpp" />
+    <ClCompile Include="..\..\src\core\thread\src_match_controller.cpp" />
     <ClCompile Include="..\..\src\core\thread\thread_netif.cpp" />
     <ClCompile Include="..\..\src\core\utils\slaac_address.cpp" />
     <ClCompile Include="..\..\src\core\utils\jam_detector.cpp" />
@@ -215,6 +217,7 @@
     <ClInclude Include="..\..\src\core\thread\network_diagnostic.hpp" />
     <ClInclude Include="..\..\src\core\thread\network_diagnostic_tlvs.hpp" />
     <ClInclude Include="..\..\src\core\thread\panid_query_server.hpp" />
+    <ClInclude Include="..\..\src\core\thread\src_match_controller.hpp" />
     <ClInclude Include="..\..\src\core\thread\thread_netif.hpp" />
     <ClInclude Include="..\..\src\core\thread\thread_tlvs.hpp" />
     <ClInclude Include="..\..\src\core\thread\thread_uris.hpp" />

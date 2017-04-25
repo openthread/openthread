@@ -54,7 +54,7 @@ Client::Client(Ip6::Netif &aNetif, SenderFunction aSender, ReceiverFunction aRec
 ThreadError Client::Start(void)
 {
     Ip6::SockAddr addr;
-    addr.mPort = static_cast<Ip6::Udp *>(mSocket.mTransport)->GetEphemeralPort();
+    addr.mPort = 0;
 
     return CoapBase::Start(addr);
 }
@@ -227,31 +227,6 @@ exit:
     }
 
     return error;
-}
-
-void Client::SendEmptyMessage(const Ip6::Address &aAddress, uint16_t aPort, uint16_t aMessageId, Header::Type aType)
-{
-    Header header;
-    Ip6::MessageInfo messageInfo;
-    Message *message;
-    ThreadError error = kThreadError_None;
-
-    header.Init(aType, kCoapCodeEmpty);
-    header.SetMessageId(aMessageId);
-
-    VerifyOrExit((message = NewMessage(header)) != NULL, ;);
-
-    messageInfo.SetPeerAddr(aAddress);
-    messageInfo.SetPeerPort(aPort);
-
-    SuccessOrExit(error = mSender(this, *message, messageInfo));
-
-exit:
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        message->Free();
-    }
 }
 
 void Client::HandleRetransmissionTimer(void *aContext)
@@ -435,13 +410,14 @@ void Client::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &a
         break;
 
     case kCoapTypeConfirmable:
-    case kCoapTypeNonConfirmable:
-        if (responseHeader.IsConfirmable())
-        {
-            // Send empty ACK if it is a CON message.
-            SendEmptyAck(aMessageInfo.GetPeerAddr(), aMessageInfo.GetPeerPort(), responseHeader.GetMessageId());
-        }
+        // Send empty ACK if it is a CON message.
+        SendAck(responseHeader, aMessageInfo);
 
+        // fall through
+        ;
+
+    case kCoapTypeNonConfirmable:
+        // Separate response.
         FinalizeCoapTransaction(*message, requestMetadata, &responseHeader, &aMessage, &aMessageInfo, kThreadError_None);
 
         break;
@@ -454,7 +430,7 @@ exit:
         if (responseHeader.IsConfirmable() || responseHeader.IsNonConfirmable())
         {
             // Successfully parsed a header but no matching request was found - reject the message by sending reset.
-            SendReset(aMessageInfo.GetPeerAddr(), aMessageInfo.GetPeerPort(), responseHeader.GetMessageId());
+            SendReset(responseHeader, aMessageInfo);
         }
     }
 }

@@ -30,6 +30,12 @@
  *   This file implements NCP frame buffer class.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <string.h>
 #include <common/code_utils.hpp>
 #include <ncp/ncp_buffer.hpp>
@@ -115,7 +121,7 @@ uint8_t *NcpFrameBuffer::Next(uint8_t *aBufPtr) const
 }
 
 // Returns an advanced (moved forward) version of the given buffer pointer by the given offset.
-uint8_t *NcpFrameBuffer::Advance(uint8_t *aBufPtr, uint8_t aOffset) const
+uint8_t *NcpFrameBuffer::Advance(uint8_t *aBufPtr, uint16_t aOffset) const
 {
     aBufPtr += aOffset;
 
@@ -190,7 +196,7 @@ ThreadError NcpFrameBuffer::InFrameBeginSegment(void)
     uint16_t headerFlags = kSegmentHeaderNoFlag;
 
     // Verify that segment is not yet started (i.e., head and tail are the same).
-    VerifyOrExit(mWriteSegmentHead == mWriteSegmentTail, ;);
+    VerifyOrExit(mWriteSegmentHead == mWriteSegmentTail);
 
     // If this is the start of a new frame (i.e., frame start is same as segment head)
     if (mWriteFrameStart == mWriteSegmentHead)
@@ -359,7 +365,7 @@ ThreadError NcpFrameBuffer::OutFramePrepareSegment(void)
 
         // Find tail/end of current segment.
         mReadSegmentTail = Advance(mReadSegmentHead,
-				   kSegmentHeaderSize + static_cast<uint8_t>(header & kSegmentHeaderLengthMask));
+				   kSegmentHeaderSize + (header & kSegmentHeaderLengthMask));
 
         // Update the current read pointer to skip the segment header.
         mReadPointer = Advance(mReadSegmentHead, kSegmentHeaderSize);
@@ -582,7 +588,7 @@ ThreadError NcpFrameBuffer::OutFrameRemove(void)
         }
 
         // Move the pointer to next segment.
-        bufPtr = Advance(bufPtr, kSegmentHeaderSize + static_cast<uint8_t>(header & kSegmentHeaderLengthMask));
+        bufPtr = Advance(bufPtr, kSegmentHeaderSize + (header & kSegmentHeaderLengthMask));
     }
 
     mReadFrameStart = bufPtr;
@@ -652,7 +658,7 @@ uint16_t NcpFrameBuffer::OutFrameGetLength(void)
         frameLength += (header & kSegmentHeaderLengthMask);
 
         // Move the pointer to next segment.
-        bufPtr = Advance(bufPtr, kSegmentHeaderSize + static_cast<uint8_t>(header & kSegmentHeaderLengthMask));
+        bufPtr = Advance(bufPtr, kSegmentHeaderSize + (header & kSegmentHeaderLengthMask));
     }
 
     // Remember the calculated frame length for current frame.

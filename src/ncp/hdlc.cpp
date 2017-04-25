@@ -30,9 +30,17 @@
  *   This file implements an HDLC-lite encoder and decoder.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <stdlib.h>
 #include <common/code_utils.hpp>
 #include <ncp/hdlc.hpp>
+
+#if OPENTHREAD_ENABLE_NCP_UART
 
 namespace Thread {
 namespace Hdlc {
@@ -330,3 +338,5 @@ void Decoder::Decode(const uint8_t *aInBuf, uint16_t aInLength)
 
 }  // namespace Hdlc
 }  // namespace Thread
+
+#endif // OPENTHREAD_ENABLE_NCP_UART

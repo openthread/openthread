@@ -156,7 +156,7 @@ struct Address
 {
     enum
     {
-        kAddressStringSize =  24,    ///< Max chars needed for a string representation of address (@sa ToString()).
+        kAddressStringSize = 18,     ///< Max chars needed for a string representation of address (@sa ToString()).
     };
 
     uint8_t mLength;                 ///< Length of address in bytes.
@@ -254,6 +254,8 @@ public:
         kMacCmdBeaconRequest               = 7,
         kMacCmdCoordinatorRealignment      = 8,
         kMacCmdGtsRequest                  = 9,
+
+        kInfoStringSize =  110,   ///< Max chars needed for the info string representation (@sa ToInfoString()).
     };
 
     /**
@@ -747,6 +749,17 @@ public:
      */
     uint8_t *GetFooter(void);
 
+    /**
+     * This method returns information about the frame object as a NULL-terminated string.
+     *
+     * @param[out]  aBuf   A pointer to the string buffer
+     * @param[in]   aSize  The maximum size of the string buffer.
+     *
+     * @returns A pointer to the char string buffer.
+     *
+     */
+    const char *ToInfoString(char *aBuf, uint16_t aSize);
+
 private:
     uint8_t *FindSequence(void);
     uint8_t *FindDstPanId(void);
@@ -815,6 +828,7 @@ public:
         kProtocolId       = 3,                      ///< Thread Protocol ID.
         kNetworkNameSize  = 16,                     ///< Size of Thread Network Name (bytes).
         kExtPanIdSize     = 8,                      ///< Size of Thread Extended PAN ID.
+        kInfoStringSize   = 92,                     ///< Max chars for the info string (@sa ToInfoString()).
     };
 
     enum
@@ -946,6 +960,17 @@ public:
      *
      */
     void SetExtendedPanId(const uint8_t *aExtPanId) { memcpy(mExtendedPanId, aExtPanId, sizeof(mExtendedPanId)); }
+
+    /**
+     * This method returns information about the Beacon as a NULL-terminated string.
+     *
+     * @param[out]  aBuf   A pointer to the string buffer
+     * @param[in]   aSize  The maximum size of the string buffer.
+     *
+     * @returns A pointer to the char string buffer.
+     *
+     */
+    const char *ToInfoString(char *aBuf, uint16_t aSize);
 
 private:
     uint8_t  mProtocolId;

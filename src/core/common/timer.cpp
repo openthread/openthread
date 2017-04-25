@@ -96,7 +96,7 @@ void TimerScheduler::Add(Timer &aTimer)
 
 void TimerScheduler::Remove(Timer &aTimer)
 {
-    VerifyOrExit(aTimer.mNext != &aTimer, ;);
+    VerifyOrExit(aTimer.mNext != &aTimer);
 
     if (mHead == &aTimer)
     {

@@ -58,7 +58,7 @@ DataPollManager::DataPollManager(MeshForwarder &aMeshForwarder):
     mNoBufferRetxMode(false),
     mPollTimeoutCounter(0),
     mPollTxFailureCounter(0),
-    mResponseExpectedPolls(0)
+    mRemainingFastPolls(0)
 {
 }
 
@@ -90,7 +90,7 @@ void DataPollManager::StopPolling(void)
     mNoBufferRetxMode = false;
     mPollTimeoutCounter = 0;
     mPollTxFailureCounter = 0;
-    mResponseExpectedPolls = 0;
+    mRemainingFastPolls = 0;
     mEnabled = false;
 }
 
@@ -125,7 +125,17 @@ exit:
     {
     case kThreadError_None:
         otLogDebgMac(GetInstance(), "Sent poll");
-        ScheduleNextPoll(kUsePreviousPollPeriod);
+
+        if (mNoBufferRetxMode == true)
+        {
+            mNoBufferRetxMode = false;
+            ScheduleNextPoll(kRecalculatePollPeriod);
+        }
+        else
+        {
+            ScheduleNextPoll(kUsePreviousPollPeriod);
+        }
+
         break;
 
     case kThreadError_InvalidState:
@@ -165,16 +175,16 @@ void DataPollManager::HandlePollSent(ThreadError aError)
 {
     bool shouldRecalculatePollPeriod = false;
 
-    VerifyOrExit(mEnabled, ;);
+    VerifyOrExit(mEnabled);
 
     switch (aError)
     {
     case kThreadError_None:
 
-        if (mResponseExpectedPolls != 0)
+        if (mRemainingFastPolls != 0)
         {
-            mResponseExpectedPolls--;
-            shouldRecalculatePollPeriod = (mResponseExpectedPolls == 0);
+            mRemainingFastPolls--;
+            shouldRecalculatePollPeriod = (mRemainingFastPolls == 0);
         }
 
         if (mRetxMode == true)
@@ -224,7 +234,7 @@ void DataPollManager::HandlePollTimeout(void)
     // a data poll indicated that a frame was pending, but no frame
     // was received after timeout interval.
 
-    VerifyOrExit(mEnabled, ;);
+    VerifyOrExit(mEnabled);
 
     mPollTimeoutCounter++;
 
@@ -242,9 +252,9 @@ exit:
     return;
 }
 
-void DataPollManager::HandleReceivedFrame(Mac::Frame &aFrame)
+void DataPollManager::CheckFramePending(Mac::Frame &aFrame)
 {
-    VerifyOrExit(mEnabled, ;);
+    VerifyOrExit(mEnabled);
 
     mPollTimeoutCounter = 0;
 
@@ -257,7 +267,7 @@ exit:
     return;
 }
 
-void DataPollManager::HandleTimeoutChanged(void)
+void DataPollManager::RecalculatePollPeriod(void)
 {
     if (mEnabled)
     {
@@ -278,11 +288,24 @@ void DataPollManager::SetAttachMode(bool aMode)
     }
 }
 
-void DataPollManager::HandleResponseExpected(void)
+void DataPollManager::SendFastPolls(uint8_t aNumFastPolls)
 {
-    bool shouldRecalculatePollPeriod = (mResponseExpectedPolls == 0);
+    bool shouldRecalculatePollPeriod = (mRemainingFastPolls == 0);
 
-    mResponseExpectedPolls = kQuickPollsForResponse;
+    if (aNumFastPolls == 0)
+    {
+        aNumFastPolls = kDefaultFastPolls;
+    }
+
+    if (aNumFastPolls > kMaxFastPolls)
+    {
+        aNumFastPolls = kMaxFastPolls;
+    }
+
+    if (mRemainingFastPolls < aNumFastPolls)
+    {
+        mRemainingFastPolls = aNumFastPolls;
+    }
 
     if (mEnabled && shouldRecalculatePollPeriod)
     {
@@ -322,10 +345,7 @@ uint32_t DataPollManager::CalculatePollPeriod(void) const
 
     if (mAttachMode == true)
     {
-        if ((period == 0) || (period > kAttachDataPollPeriod))
-        {
-            period = kAttachDataPollPeriod;
-        }
+        period = kAttachDataPollPeriod;
     }
 
     if (mRetxMode == true)
@@ -344,11 +364,11 @@ uint32_t DataPollManager::CalculatePollPeriod(void) const
         }
     }
 
-    if (mResponseExpectedPolls != 0)
+    if (mRemainingFastPolls != 0)
     {
-        if ((period == 0) || (period > kResponseExpectedPeriod))
+        if ((period == 0) || (period > kFastPollPeriod))
         {
-            period = kResponseExpectedPeriod;
+            period = kFastPollPeriod;
         }
     }
 

@@ -31,6 +31,12 @@
  *   This file implements the necessary hooks for mbedTLS.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #define WPP_NAME "dtls.tmh"
 
 #include <common/code_utils.hpp>
@@ -43,6 +49,8 @@
 #include <thread/thread_netif.hpp>
 
 #include <mbedtls/debug.h>
+
+#if OPENTHREAD_ENABLE_DTLS
 
 namespace Thread {
 namespace MeshCoP {
@@ -101,11 +109,11 @@ ThreadError Dtls::Start(bool aClient, ConnectedHandler aConnectedHandler, Receiv
 
     // XXX: should set personalization data to hardware address
     rval = mbedtls_ctr_drbg_seed(&mCtrDrbg, mbedtls_entropy_func, &mEntropy, NULL, 0);
-    VerifyOrExit(rval == 0, ;);
+    VerifyOrExit(rval == 0);
 
     rval = mbedtls_ssl_config_defaults(&mConf, mClient ? MBEDTLS_SSL_IS_CLIENT : MBEDTLS_SSL_IS_SERVER,
                                        MBEDTLS_SSL_TRANSPORT_DATAGRAM, MBEDTLS_SSL_PRESET_DEFAULT);
-    VerifyOrExit(rval == 0, ;);
+    VerifyOrExit(rval == 0);
 
     mbedtls_ssl_conf_rng(&mConf, mbedtls_ctr_drbg_random, &mCtrDrbg);
     mbedtls_ssl_conf_min_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
@@ -120,19 +128,19 @@ ThreadError Dtls::Start(bool aClient, ConnectedHandler aConnectedHandler, Receiv
         mbedtls_ssl_cookie_init(&mCookieCtx);
 
         rval = mbedtls_ssl_cookie_setup(&mCookieCtx, mbedtls_ctr_drbg_random, &mCtrDrbg);
-        VerifyOrExit(rval == 0, ;);
+        VerifyOrExit(rval == 0);
 
         mbedtls_ssl_conf_dtls_cookies(&mConf, mbedtls_ssl_cookie_write, mbedtls_ssl_cookie_check, &mCookieCtx);
     }
 
     rval = mbedtls_ssl_setup(&mSsl, &mConf);
-    VerifyOrExit(rval == 0, ;);
+    VerifyOrExit(rval == 0);
 
     mbedtls_ssl_set_bio(&mSsl, this, &Dtls::HandleMbedtlsTransmit, HandleMbedtlsReceive, NULL);
     mbedtls_ssl_set_timer_cb(&mSsl, this, &Dtls::HandleMbedtlsSetTimer, HandleMbedtlsGetTimer);
 
     rval = mbedtls_ssl_set_hs_ecjpake_password(&mSsl, mPsk, mPskLength);
-    VerifyOrExit(rval == 0, ;);
+    VerifyOrExit(rval == 0);
 
     mStarted = true;
     Process();
@@ -152,7 +160,7 @@ ThreadError Dtls::Stop(void)
 
 void Dtls::Close(void)
 {
-    VerifyOrExit(mStarted,);
+    VerifyOrExit(mStarted);
 
     mStarted = false;
     mbedtls_ssl_free(&mSsl);
@@ -482,7 +490,7 @@ ThreadError Dtls::MapError(int rval)
     return error;
 }
 
-void Dtls::HandleMbedtlsDebug(void *ctx, int level, const char *, int , const char *str)
+void Dtls::HandleMbedtlsDebug(void *ctx, int level, const char *, int, const char *str)
 {
     Dtls *pThis = static_cast<Dtls *>(ctx);
     (void)pThis;
@@ -510,3 +518,5 @@ void Dtls::HandleMbedtlsDebug(void *ctx, int level, const char *, int , const ch
 
 }  // namespace MeshCoP
 }  // namespace Thread
+
+#endif // OPENTHREAD_ENABLE_DTLS

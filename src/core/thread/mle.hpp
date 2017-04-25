@@ -124,6 +124,33 @@ enum AlocAllocation
 };
 
 /**
+* This structure represents the device's own network information for persistent storage.
+*
+*/
+struct NetworkInfo
+{
+    DeviceState          mDeviceState;                                      ///< Current Thread interface state.
+
+    uint8_t              mDeviceMode;                                       ///< Device mode setting.
+    uint16_t             mRloc16;                                           ///< RLOC16
+    uint32_t             mKeySequence;                                      ///< Key Sequence
+    uint32_t             mMleFrameCounter;                                  ///< MLE Frame Counter
+    uint32_t             mMacFrameCounter;                                  ///< MAC Frame Counter
+    uint32_t             mPreviousPartitionId;                              ///< PartitionId
+    Mac::ExtAddress      mExtAddress;                                       ///< Extended Address
+    uint8_t              mMlIid[OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE];  ///< IID from ML-EID
+};
+
+/**
+* This structure represents the parent information for persistent storage.
+*
+*/
+struct ParentInfo
+{
+    Mac::ExtAddress  mExtAddress;   ///< Extended Address
+};
+
+/**
  * This class implements MLE Header generation and parsing.
  *
  */
@@ -539,7 +566,6 @@ public:
      * This method initiates a Thread Discovery.
      *
      * @param[in]  aScanChannels  A bit vector indicating which channels to scan.
-     * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel.
      * @param[in]  aPanId         The PAN ID filter (set to Broadcast PAN to disable filter).
      * @param[in]  aJoiner        Value of the Joiner Flag in the Discovery Request TLV.
      * @param[in]  aHandler       A pointer to a function that is called on receiving an MLE Discovery Response.
@@ -549,8 +575,8 @@ public:
      * @retval kThreadError_Busy  Thread Discovery is already in progress.
      *
      */
-    ThreadError Discover(uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanId, bool aJoiner,
-                         DiscoverHandler aCallback, void *aContext);
+    ThreadError Discover(uint32_t aScanChannels, uint16_t aPanId, bool aJoiner, DiscoverHandler aCallback,
+                         void *aContext);
 
     /**
      * This method indicates whether or not an MLE Thread Discovery is currently in progress.
@@ -1398,24 +1424,6 @@ private:
     void ResetParentCandidate(void);
 
     MessageQueue mDelayedResponses;
-
-    /**
-     * This struct represents the device's own network information for persistent storage.
-     *
-     */
-    typedef struct NetworkInfo
-    {
-        DeviceState          mDeviceState;                                      ///< Current Thread interface state.
-
-        uint8_t              mDeviceMode;                                       ///< Device mode setting.
-        uint16_t             mRloc16;                                           ///< RLOC16
-        uint32_t             mKeySequence;                                      ///< Key Sequence
-        uint32_t             mMleFrameCounter;                                  ///< MLE Frame Counter
-        uint32_t             mMacFrameCounter;                                  ///< MAC Frame Counter
-        uint32_t             mPreviousPartitionId;                              ///< PartitionId
-        Mac::ExtAddress      mExtAddress;                                       ///< Extended Address
-        uint8_t              mMlIid[OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE];  ///< IID from ML-EID
-    } NetworkInfo;
 
     struct
     {

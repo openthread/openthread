@@ -36,6 +36,12 @@ EXTRA_DIST                              = \
     synopsys                              \
     $(NULL)
 
+if OPENTHREAD_EXAMPLES_EFR32
+EXTRA_DIST                             += \
+    silabs                                \
+    $(NULL)
+endif
+
 # Always package (e.g. for 'make dist') these subdirectories.
 
 DIST_SUBDIRS                            = \

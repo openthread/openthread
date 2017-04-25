@@ -42,8 +42,9 @@ OBJCOPY                         = arm-none-eabi-objcopy
 BuildJobs                      ?= 10
 
 configure_OPTIONS               = \
-    --enable-cli                  \
-    --enable-ncp                  \
+    --enable-cli-app=mtd          \
+    --enable-ncp-app=mtd          \
+    --with-ncp-bus=uart           \
     --with-examples=cc2650        \
     --with-platform-info=cc2650   \
     MBEDTLS_CPPFLAGS="$(CC2650_MBEDTLS_CPPFLAGS)" \

@@ -241,14 +241,6 @@ private:
                                  Message *aResponse, const Ip6::MessageInfo *aMessageInfo, ThreadError aResult);
 
     ThreadError SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void SendEmptyMessage(const Ip6::Address &aAddress, uint16_t aPort, uint16_t aMessageId, Header::Type aType);
-    void SendReset(const Ip6::Address &aAddress, uint16_t aPort, uint16_t aMessageId) {
-        SendEmptyMessage(aAddress, aPort, aMessageId, kCoapTypeReset);
-    };
-    void SendEmptyAck(const Ip6::Address &aAddress, uint16_t aPort, uint16_t aMessageId) {
-        SendEmptyMessage(aAddress, aPort, aMessageId, kCoapTypeAcknowledgment);
-    };
-
     static void HandleRetransmissionTimer(void *aContext);
     void HandleRetransmissionTimer(void);
 

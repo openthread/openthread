@@ -95,10 +95,10 @@ void test_packed_union()
 void test_packed_enum()
 {
     Thread::Neighbor neighbor;
-    neighbor.mState = Thread::Neighbor::kStateValid;
+    neighbor.SetState(Thread::Neighbor::kStateValid);
 
     // Make sure that when we read the 3 bit field it is read as unsigned, so it return '4'
-    VerifyOrQuit(neighbor.mState == Thread::Neighbor::kStateValid, "Toolchain::OT_TOOL_PACKED failed 4\n");
+    VerifyOrQuit(neighbor.GetState() == Thread::Neighbor::kStateValid, "Toolchain::OT_TOOL_PACKED failed 4\n");
 }
 
 void test_addr_sizes()

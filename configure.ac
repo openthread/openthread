@@ -350,76 +350,160 @@ NL_ENABLE_TESTS([yes])
 AM_CONDITIONAL([OPENTHREAD_BUILD_TESTS], [test "${nl_cv_build_tests}" = "yes"])
 
 #
-#  Full Thread Device
-#
-
-AC_ARG_ENABLE(ftd,
-    [AS_HELP_STRING([--enable-ftd],[Enable Full Thread Device features @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_ftd=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_ftd} for --enable-ftd])
-            ;;
-        esac
-    ],
-    [enable_ftd=no])
-AC_MSG_RESULT(${enable_ftd})
-AM_CONDITIONAL([OPENTHREAD_ENABLE_FTD], [test "${enable_ftd}" = "yes"])
-
-#
 # CLI Library
 #
-
-AC_ARG_ENABLE(cli,
-    [AS_HELP_STRING([--enable-cli],[Enable CLI support @<:@default=no@:>@.])],
+AC_ARG_ENABLE(cli-app,
+    [AS_HELP_STRING([--enable-cli-app],[Enable CLI support (no|mtd|ftd|all) @<:@default=no@:>@.])],
     [
+        case "${enableval}" in
+        all|both)
+            enable_cli_app=yes
+            enable_cli_app_mtd=yes
+            enable_cli_app_ftd=yes
+            ;;
+        no|yes)
+            enable_cli_app=${enableval}
+            enable_cli_app_mtd=${enableval}
+            enable_cli_app_ftd=${enableval}
+            ;;
+        mtd)
+            enable_cli_app=yes
+            enable_cli_app_mtd=yes
+            enable_cli_app_ftd=no
+            ;;
+        ftd)
+            enable_cli_app=yes
+            enable_cli_app_mtd=no
+            enable_cli_app_ftd=yes
+            ;;
+        *)
+            AC_MSG_ERROR([Invalid value ${enableval} for --enable-cli-app])
+            ;;
+        esac
+    ],
+    [
+     enable_cli_app=no
+     enable_cli_app_mtd=no
+     enable_cli_app_ftd=no])
+
+
+AC_MSG_CHECKING([cli-app modes])
+AC_MSG_RESULT(${enable_cli_app})
+AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI],     [test "${enable_cli_app}" == "yes"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI_MTD], [test "${enable_cli_app_mtd}" == "yes"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI_FTD], [test "${enable_cli_app_ftd}" == "yes"])
+AC_SUBST(OPENTHREAD_ENABLE_CLI)
+AC_SUBST(OPENTHREAD_ENABLE_CLI_FTD)
+AC_SUBST(OPENTHREAD_ENABLE_CLI_MTD)
+
+
+#
+# NCP app
+#
+AC_ARG_ENABLE(ncp-app,
+    [AS_HELP_STRING([--enable-ncp-app],[Enable NCP support (no|mtd|ftd|all) @<:@default=no@:>@.])],
+    [
+        # Map all & both to yes
+        case "${enableval}" in
+        all|both)
+            enableval=yes
+            ;;
+
+        *)
+            ;;
+
+        esac
+
         case "${enableval}" in
 
         no|yes)
-            enable_cli=${enableval}
+            enable_ncp_app=${enableval}
+            enable_ncp_app_mtd=${enableval}
+            enable_ncp_app_ftd=${enableval}
+            ;;
+
+        mtd)
+            enable_ncp_app=yes
+            enable_ncp_app_mtd=yes
+            enable_ncp_app_ftd=no
+            ;;
+
+        ftd)
+            enable_ncp_app=yes
+            enable_ncp_app_mtd=no
+            enable_ncp_app_ftd=yes
             ;;
 
         *)
-            AC_MSG_ERROR([Invalid value ${with_cli} for --enable-cli])
+            AC_MSG_ERROR([Invalid value ${enableval} for --enable-ncp-app])
             ;;
         esac
     ],
-    [enable_cli=no])
-AC_MSG_RESULT(${enable_cli})
-AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI], [test "${enable_cli}" != "no"])
-
-#
-# NCP Library
-#
-
-AC_ARG_ENABLE(ncp,
-    [AS_HELP_STRING([--enable-ncp[[=spi|uart]]],[Enable NCP support @<:@default=no@:>@.])],
     [
-        case "${enableval}" in
+     enable_ncp_app=no
+     enable_ncp_app_ftd=no
+     enable_ncp_app_mtd=no
+    ]
+    )
 
-        no|spi|uart)
-            enable_ncp=${enableval}
+
+AC_MSG_CHECKING([ncp-app modes])
+AC_MSG_RESULT(${enable_ncp_app})
+AC_MSG_CHECKING([should NCP support ftd])
+AC_MSG_RESULT(${enable_ncp_app_ftd})
+AC_MSG_CHECKING([should NCP support mtd])
+AC_MSG_RESULT(${enable_ncp_app_mtd})
+
+AC_SUBST(OPENTHREAD_ENABLE_NCP)
+AC_SUBST(OPENTHREAD_ENABLE_NCP_MTD)
+AC_SUBST(OPENTHREAD_ENABLE_NCP_FTD)
+
+AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP],      [test "${enable_ncp_app}" == "yes"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_MTD],  [test "${enable_ncp_app_mtd}" == "yes"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_FTD],  [test "${enable_ncp_app_ftd}" == "yes"])
+
+#
+# NCP BUS - how does the NCP talk to the host?
+#
+
+AC_ARG_WITH(
+    [ncp-bus],
+    [AS_HELP_STRING([--with-ncp-bus],[Specify the NCP bus (none|spi|uart) @<:@default=none@:>@.])],
+    [
+        case "${with_ncp_bus}" in
+        "none")
+            OPENTHREAD_ENABLE_NCP_SPI=0
+            OPENTHREAD_ENABLE_NCP_UART=0
             ;;
-
-        yes)
-            enable_ncp=uart
+        "spi")
+            OPENTHREAD_ENABLE_NCP_SPI=1
+            OPENTHREAD_ENABLE_NCP_UART=0
             ;;
-
+        "uart")
+            OPENTHREAD_ENABLE_NCP_SPI=0
+            OPENTHREAD_ENABLE_NCP_UART=1
+            ;;
         *)
-            AC_MSG_ERROR([Invalid value ${with_ncp} for --enable-ncp])
+            AC_MSG_ERROR([unexpected --with-ncp-bus=${with_ncp_bus}])
             ;;
         esac
     ],
-    [enable_ncp=no])
-AC_MSG_RESULT(${enable_ncp})
-AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP],      [test "${enable_ncp}" != "no"])
-AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_SPI],  [test "${enable_ncp}"  = "spi"])
-AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_UART], [test "${enable_ncp}"  = "uart"])
+    [
+       OPENTHREAD_ENABLE_NCP_SPI=0
+       OPENTHREAD_ENABLE_NCP_UART=0
+    ])
+
+AC_SUBST(OPENTHREAD_ENABLE_NCP_SPI)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_SPI],  [test "${with_ncp_bus}"  = "spi"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_NCP_SPI],[${OPENTHREAD_ENABLE_NCP_SPI}],[Define to 1 to enable the NCP SPI interface.])
+AC_MSG_CHECKING([should NCP support SPI])
+AC_MSG_RESULT([${OPENTHREAD_ENABLE_SPI}])
+
+AC_SUBST(OPENTHREAD_ENABLE_NCP_UART)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_UART], [test "${with_ncp_bus}"  = "uart"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_NCP_UART],[${OPENTHREAD_ENABLE_NCP_UART}],[Define to 1 to enable the NCP UART interface.])
+AC_MSG_CHECKING([sould NCP support UART])
+AC_MSG_RESULT([${OPENTHREAD_ENABLE_UART}])
 
 #
 # Builtin mbedtls
@@ -447,6 +531,7 @@ if test "$enable_builtin_mbedtls" = "yes" -a ! "${MBEDTLS_CPPFLAGS}"; then
     MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include/mbedtls"
     MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -DMBEDTLS_CONFIG_FILE=\\\"mbedtls-config.h\\\""
 fi
+AC_MSG_CHECKING([whether mbed TLS should be enabled])
 AC_MSG_RESULT(${enable_builtin_mbedtls})
 AM_CONDITIONAL([OPENTHREAD_ENABLE_BUILTIN_MBEDTLS], [test "${enable_builtin_mbedtls}" = "yes"])
 
@@ -476,6 +561,7 @@ else
     OPENTHREAD_ENABLE_COMMISSIONER=0
 fi
 
+AC_MSG_CHECKING([whether to enable the commissioner])
 AC_MSG_RESULT(${enable_commissioner})
 AC_SUBST(OPENTHREAD_ENABLE_COMMISSIONER)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_COMMISSIONER], [test "${enable_commissioner}" = "yes"])
@@ -507,6 +593,7 @@ else
     OPENTHREAD_ENABLE_JOINER=0
 fi
 
+AC_MSG_CHECKING([whether to enable the joiner feature])
 AC_MSG_RESULT(${enable_joiner})
 AC_SUBST(OPENTHREAD_ENABLE_JOINER)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_JOINER], [test "${enable_joiner}" = "yes"])
@@ -520,6 +607,7 @@ else
     OPENTHREAD_ENABLE_DTLS=0
 fi
 
+AC_MSG_CHECKING([whether to enable DTLS due to joiner/commissioner])
 AC_MSG_RESULT(${enable_dtls})
 AC_SUBST(OPENTHREAD_ENABLE_DTLS)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_DTLS], [test "${enable_dtls}" = "yes"])
@@ -551,6 +639,7 @@ else
     OPENTHREAD_ENABLE_JAM_DETECTION=0
 fi
 
+AC_MSG_CHECKING([whether to enable jam detection])
 AC_MSG_RESULT(${enable_jam_detection})
 AC_SUBST(OPENTHREAD_ENABLE_JAM_DETECTION)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_JAM_DETECTION], [test "${enable_jam_detection}" = "yes"])
@@ -582,6 +671,7 @@ else
     OPENTHREAD_ENABLE_MAC_WHITELIST=0
 fi
 
+AC_MSG_CHECKING([whether to enable mac whitelist])
 AC_MSG_RESULT(${enable_mac_whitelist})
 AC_SUBST(OPENTHREAD_ENABLE_MAC_WHITELIST)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_MAC_WHITELIST], [test "${enable_mac_whitelist}" = "yes"])
@@ -613,6 +703,7 @@ else
     OPENTHREAD_ENABLE_DIAG=0
 fi
 
+AC_MSG_CHECKING([whether to enable diag])
 AC_MSG_RESULT(${enable_diag})
 AC_SUBST(OPENTHREAD_ENABLE_DIAG)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_DIAG], [test "${enable_diag}" = "yes"])
@@ -644,6 +735,7 @@ else
     OPENTHREAD_ENABLE_LEGACY=0
 fi
 
+AC_MSG_CHECKING([whether to enable legacy])
 AC_MSG_RESULT(${enable_legacy})
 AC_SUBST(OPENTHREAD_ENABLE_LEGACY)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_LEGACY], [test "${enable_legacy}" = "yes"])
@@ -865,11 +957,11 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_RAW_LINK_API],[${OPENTHREAD_ENABLE_RAW_LIN
 
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
-        [Specify the examples from one of: none, posix, cc2538, cc2650, da15000, emsk, nrf52840 @<:@default=none@:>@.])],
+        [Specify the examples from one of: none, posix, cc2538, cc2650, da15000, efr32, nrf52840 @<:@default=none@:>@.])],
     [
         case "${with_examples}" in
 
-        none|posix|cc2538|cc2650|da15000|emsk|nrf52840)
+        none|posix|cc2538|cc2650|da15000|efr32|nrf52840)
             ;;
         *)
             AC_MSG_ERROR([Invalid value ${with_examples} for --with-examples])
@@ -902,9 +994,9 @@ case ${with_examples} in
         AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_DA15000],[${OPENTHREAD_EXAMPLES_DA15000}],[Define to 1 if you want to use da15000 examples])
         ;;
 
-    emsk)
-        OPENTHREAD_EXAMPLES_EMSK=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_EMSK],[${OPENTHREAD_EXAMPLES_EMSK}],[Define to 1 if you want to use emsk examples])
+    efr32)
+        OPENTHREAD_EXAMPLES_EFR32=1
+        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_EFR32],[${OPENTHREAD_EXAMPLES_EFR32}],[Define to 1 if you want to use efr32 examples])
         ;;
 
     nrf52840)
@@ -914,6 +1006,7 @@ case ${with_examples} in
 
 esac
 
+AC_MSG_CHECKING([whether to enable examples])
 AC_MSG_RESULT(${OPENTHREAD_EXAMPLES})
 
 AC_SUBST(OPENTHREAD_EXAMPLES)
@@ -932,8 +1025,8 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2650], [test "${OPENTHREAD_EXAMPLES}" = "c
 AC_SUBST(OPENTHREAD_EXAMPLES_DA15000)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_DA15000], [test "${OPENTHREAD_EXAMPLES}" = "da15000"])
 
-AC_SUBST(OPENTHREAD_EXAMPLES_EMSK)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EMSK], [test "${OPENTHREAD_EXAMPLES}" = "emsk"])
+AC_SUBST(OPENTHREAD_EXAMPLES_EFR32)
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EFR32], [test "${OPENTHREAD_EXAMPLES}" = "efr32"])
 
 AC_SUBST(OPENTHREAD_EXAMPLES_NRF52840)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52840], [test "${OPENTHREAD_EXAMPLES}" = "nrf52840"])
@@ -950,6 +1043,7 @@ AC_ARG_WITH(platform-info,
 
 PLATFORM_INFO=${with_platform_info}
 
+AC_MSG_CHECKING([with platform info])
 AC_MSG_RESULT(${PLATFORM_INFO})
 
 AC_SUBST(PLATFORM_INFO)
@@ -1094,7 +1188,7 @@ examples/platforms/Makefile
 examples/platforms/cc2538/Makefile
 examples/platforms/cc2650/Makefile
 examples/platforms/da15000/Makefile
-examples/platforms/emsk/Makefile
+examples/platforms/efr32/Makefile
 examples/platforms/nrf52840/Makefile
 examples/platforms/posix/Makefile
 examples/platforms/utils/Makefile
@@ -1167,9 +1261,13 @@ AC_MSG_NOTICE([
   Pretty args                               : ${PRETTY_ARGS:--}
   Pretty check                              : ${PRETTY_CHECK:--}
   Pretty check args                         : ${PRETTY_CHECK_ARGS:--}
-  OpenThread Full Thread Device support     : ${enable_ftd}
-  OpenThread CLI support                    : ${enable_cli}
-  OpenThread NCP support                    : ${enable_ncp}
+  OpenThread CLI support                    : ${enable_cli_app}
+  OpenThread CLI-MTD support                : ${enable_cli_app_mtd}
+  OpenThread CLI-FTD support                : ${enable_cli_app_ftd}
+  OpenThread NCP support                    : ${enable_ncp_app}
+  OpenThread NCP-MTD support                : ${enable_ncp_app_mtd}
+  OpenThread NCP-FTD support                : ${enable_ncp_app_ftd}
+  OpenThread NCP-BUS Configuration          : ${with_ncp_bus}
   OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}
   OpenThread Commissioner support           : ${enable_commissioner}
   OpenThread Joiner support                 : ${enable_joiner}

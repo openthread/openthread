@@ -71,9 +71,9 @@
 #include <utils/jam_detector.hpp>
 #endif // OPENTHREAD_ENABLE_JAM_DETECTION
 
-#if OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 #include <meshcop/commissioner.hpp>
-#endif  // OPENTHREAD_ENABLE_COMMISSIONER
+#endif  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
 #if OPENTHREAD_ENABLE_DTLS
 #include <meshcop/dtls.hpp>
@@ -132,7 +132,7 @@ public:
      * @param[out]  aAddress  A reference to the link address.
      *
      */
-    ThreadError GetLinkAddress(Ip6::LinkAddress &aAddress) const;
+    virtual ThreadError GetLinkAddress(Ip6::LinkAddress &aAddress) const;
 
     /**
      * This method submits a message to the network interface.
@@ -142,7 +142,7 @@ public:
      * @retval kThreadError_None  Successfully submitted the message to the interface.
      *
      */
-    ThreadError SendMessage(Message &aMessage) { return mMeshForwarder.SendMessage(aMessage); }
+    virtual ThreadError SendMessage(Message &aMessage) { return mMeshForwarder.SendMessage(aMessage); }
 
     /**
      * This method performs a route lookup.
@@ -155,7 +155,7 @@ public:
      * @retval kThreadError_NoRoute  Could not find a valid route.
      *
      */
-    ThreadError RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch);
+    virtual ThreadError RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch);
 
     /**
      * This method returns a reference to the address resolver object.
@@ -293,11 +293,11 @@ public:
 
     AnnounceBeginServer &GetAnnounceBeginServer(void) { return mAnnounceBegin; }
 
-#if OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     MeshCoP::Commissioner &GetCommissioner(void) { return mCommissioner; }
 
     Coap::SecureServer &GetSecureCoapServer(void) { return mSecureCoapServer; }
-#endif  // OPENTHREAD_ENABLE_COMMISSIONER
+#endif  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
 #if OPENTHREAD_ENABLE_DTLS
     MeshCoP::Dtls &GetDtls(void) { return mDtls; }
@@ -353,7 +353,7 @@ private:
     NetworkDiagnostic::NetworkDiagnostic mNetworkDiagnostic;
     bool mIsUp;
 
-#if OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     Coap::SecureServer mSecureCoapServer;
     MeshCoP::Commissioner mCommissioner;
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER

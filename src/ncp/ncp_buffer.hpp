@@ -306,7 +306,7 @@ private:
     // Private methods
 
     uint8_t *       Next(uint8_t *aBufferPtr) const;
-    uint8_t *       Advance(uint8_t *aBufPtr, uint8_t aOffset) const;
+    uint8_t *       Advance(uint8_t *aBufPtr, uint16_t aOffset) const;
     uint16_t        GetDistance(uint8_t *aStartPtr, uint8_t *aEndPtr) const;
 
     uint16_t        ReadUint16At(uint8_t *aBufPtr);

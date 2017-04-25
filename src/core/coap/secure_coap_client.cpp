@@ -33,6 +33,8 @@
 #include <meshcop/dtls.hpp>
 #include <thread/thread_netif.hpp>
 
+#if OPENTHREAD_ENABLE_JOINER
+
 /**
  * @file
  *   This file implements the secure CoAP client.
@@ -133,7 +135,7 @@ void SecureClient::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     otLogFuncEntry();
 
     VerifyOrExit((mPeerAddress.GetPeerAddr() == aMessageInfo.GetPeerAddr()) &&
-                 (mPeerAddress.GetPeerPort() == aMessageInfo.GetPeerPort()), ;);
+                 (mPeerAddress.GetPeerPort() == aMessageInfo.GetPeerPort()));
 
     mNetif.GetDtls().Receive(aMessage, aMessage.GetOffset(), aMessage.GetLength() - aMessage.GetOffset());
 
@@ -165,7 +167,7 @@ void SecureClient::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
 
     otLogFuncEntry();
 
-    VerifyOrExit((message = mNetif.GetIp6().mMessagePool.New(Message::kTypeIp6, 0)) != NULL, ;);
+    VerifyOrExit((message = mNetif.GetIp6().mMessagePool.New(Message::kTypeIp6, 0)) != NULL);
     SuccessOrExit(message->Append(aBuf, aLength));
 
     ProcessReceivedMessage(*message, mPeerAddress);
@@ -243,3 +245,5 @@ exit:
 
 }  // namespace Coap
 }  // namespace Thread
+
+#endif // OPENTHREAD_ENABLE_JOINER

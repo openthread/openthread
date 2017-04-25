@@ -183,10 +183,12 @@ private:
 }  // namespace MeshCoP
 }  // namespace Thread
 
-#ifdef OPENTHREAD_MTD
+#if OPENTHREAD_MTD
 #include "dataset_manager_mtd.hpp"
-#else
+#elif OPENTHREAD_FTD
 #include "dataset_manager_ftd.hpp"
+#else
+#error Must define OPENTHREAD_MTD or OPENTHREAD_FTD
 #endif
 
 #endif  // MESHCOP_DATASET_MANAGER_HPP_

@@ -31,6 +31,14 @@
  *   This file implements the Thread Network Data managed by the Thread Leader.
  */
 
+#if OPENTHREAD_FTD
+
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #define WPP_NAME "network_data_leader_ftd.tmh"
 
 #include "openthread/platform/random.h"
@@ -43,6 +51,7 @@
 #include <common/message.hpp>
 #include <common/timer.hpp>
 #include <mac/mac_frame.hpp>
+#include <meshcop/meshcop.hpp>
 #include <thread/mle_router.hpp>
 #include <thread/network_data_leader.hpp>
 #include <thread/thread_netif.hpp>
@@ -122,7 +131,7 @@ void Leader::RemoveBorderRouter(uint16_t aRloc16)
     bool rlocStable = false;
     RlocLookup(aRloc16, rlocIn, rlocStable, mTlvs, mLength);
 
-    VerifyOrExit(rlocIn, ;);
+    VerifyOrExit(rlocIn);
 
     RemoveRloc(aRloc16);
     mVersion++;
@@ -156,7 +165,7 @@ void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
 
     if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rloc16), rloc16) == kThreadError_None)
     {
-        VerifyOrExit(rloc16.IsValid(), ;);
+        VerifyOrExit(rloc16.IsValid());
         RemoveBorderRouter(rloc16.GetRloc16());
     }
 
@@ -311,12 +320,11 @@ void Leader::SendCommissioningGetResponse(const Coap::Header &aRequestHeader, co
     uint8_t *data = NULL;
     uint8_t length = 0;
 
-    VerifyOrExit((message = mNetif.GetCoapServer().NewMeshCoPMessage(0)) != NULL, error = kThreadError_NoBufs);
-
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
 
-    SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(mNetif.GetCoapServer(), responseHeader)) != NULL,
+                 error = kThreadError_NoBufs);
 
     for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
          cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
@@ -379,12 +387,11 @@ void Leader::SendCommissioningSetResponse(const Coap::Header &aRequestHeader, co
     Message *message;
     MeshCoP::StateTlv state;
 
-    VerifyOrExit((message = mNetif.GetCoapServer().NewMeshCoPMessage(0)) != NULL, error = kThreadError_NoBufs);
-
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
 
-    SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(mNetif.GetCoapServer(), responseHeader)) != NULL,
+                 error = kThreadError_NoBufs);
 
     state.Init();
     state.SetState(aState);
@@ -1073,3 +1080,6 @@ void Leader::HandleTimer(void)
 
 }  // namespace NetworkData
 }  // namespace Thread
+
+#endif // OPENTHREAD_FTD
+

@@ -51,8 +51,11 @@
 #include <common/logging.hpp>
 #include <mac/mac_frame.hpp>
 #include <meshcop/joiner.hpp>
+#include <meshcop/meshcop.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
+
+#if OPENTHREAD_ENABLE_JOINER
 
 using Thread::Encoding::BigEndian::HostSwap16;
 using Thread::Encoding::BigEndian::HostSwap64;
@@ -114,7 +117,7 @@ ThreadError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl,
     SuccessOrExit(error);
 
     mJoinerRouterPanId = Mac::kPanIdBroadcast;
-    SuccessOrExit(error = mNetif.GetMle().Discover(0, 0, mNetif.GetMac().GetPanId(), true, HandleDiscoverResult, this));
+    SuccessOrExit(error = mNetif.GetMle().Discover(0, mNetif.GetMac().GetPanId(), true, HandleDiscoverResult, this));
 
     mVendorName = aVendorName;
     mVendorModel = aVendorModel;
@@ -272,7 +275,7 @@ void Joiner::SendJoinerFinalize(void)
     header.AppendUriPathOptions(OPENTHREAD_URI_JOINER_FINALIZE);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetSecureCoapClient().NewMeshCoPMessage(header)) != NULL,
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetSecureCoapClient(), header)) != NULL,
                  error = kThreadError_NoBufs);
 
     stateTlv.Init();
@@ -314,7 +317,7 @@ void Joiner::SendJoinerFinalize(void)
 
 #if OPENTHREAD_ENABLE_CERT_LOG
     uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
-    VerifyOrExit(message->GetLength() <= sizeof(buf), ;);
+    VerifyOrExit(message->GetLength() <= sizeof(buf));
     message->Read(header.GetLength(), message->GetLength() - header.GetLength(), buf);
     otDumpCertMeshCoP(GetInstance(), "[THCI] direction=send | type=JOIN_FIN.req |", buf,
                       message->GetLength() - header.GetLength());
@@ -353,10 +356,10 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Header *aHeader, Message *aMessa
     VerifyOrExit(mState == kStateConnected &&
                  aResult == kThreadError_None &&
                  aHeader->GetType() == kCoapTypeAcknowledgment &&
-                 aHeader->GetCode() == kCoapResponseChanged, ;);
+                 aHeader->GetCode() == kCoapResponseChanged);
 
     SuccessOrExit(Tlv::GetTlv(*aMessage, Tlv::kState, sizeof(state), state));
-    VerifyOrExit(state.IsValid(), ;);
+    VerifyOrExit(state.IsValid());
 
     mState = kStateEntrust;
     mTimer.Start(kTimeout);
@@ -364,7 +367,7 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Header *aHeader, Message *aMessa
     otLogInfoMeshCoP(GetInstance(), "received joiner finalize response %d", static_cast<uint8_t>(state.GetState()));
 #if OPENTHREAD_ENABLE_CERT_LOG
     uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
-    VerifyOrExit(aMessage->GetLength() <= sizeof(buf), ;);
+    VerifyOrExit(aMessage->GetLength() <= sizeof(buf));
     aMessage->Read(aHeader->GetLength(), aMessage->GetLength() - aHeader->GetLength(), buf);
     otDumpCertMeshCoP(GetInstance(), "[THCI] direction=recv | type=JOIN_FIN.rsp |", buf,
                       aMessage->GetLength() - aHeader->GetLength());
@@ -449,12 +452,11 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Header &aRequestHeader,
 
     otLogFuncEntry();
 
-    VerifyOrExit((message = mNetif.GetCoapServer().NewMeshCoPMessage(0)) != NULL, error = kThreadError_NoBufs);
-    message->SetSubType(Message::kSubTypeJoinerEntrust);
-
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
 
-    SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapServer(), responseHeader)) != NULL,
+                 error = kThreadError_NoBufs);
+    message->SetSubType(Message::kSubTypeJoinerEntrust);
 
     memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
     SuccessOrExit(error = mNetif.GetCoapServer().SendMessage(*message, responseInfo));
@@ -519,3 +521,5 @@ void Joiner::HandleTimer(void)
 
 }  // namespace MeshCoP
 }  // namespace Thread
+
+#endif // OPENTHREAD_ENABLE_JOINER

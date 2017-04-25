@@ -32,9 +32,9 @@ AM_MAKEFLAGS                        = --no-print-directory
 
 AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-address-sanitizer        \
-    --enable-ftd                      \
-    --enable-cli                      \
-    --enable-ncp                      \
+    --enable-cli-app=all              \
+    --enable-ncp-app=all              \
+    --with-ncp-bus=uart               \
     --enable-diag                     \
     --with-examples=posix             \
     --enable-commissioner             \
@@ -42,6 +42,7 @@ AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-dhcp6-client             \
     --enable-dhcp6-server             \
     --enable-dns-client               \
+    --enable-application-coap         \
     $(NULL)
 
 SUBDIRS                             = \

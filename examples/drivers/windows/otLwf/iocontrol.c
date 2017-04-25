@@ -904,16 +904,14 @@ otLwfIoCtl_otDiscover(
 {
     NTSTATUS status = STATUS_INVALID_PARAMETER;
 
-    if (InBufferLength >= sizeof(uint32_t) + sizeof(uint16_t) + sizeof(uint16_t))
+    if (InBufferLength >= sizeof(uint32_t) + sizeof(uint16_t))
     {
         uint32_t aScanChannels = *(uint32_t*)InBuffer;
-        uint16_t aScanDuration = *(uint16_t*)(InBuffer + sizeof(uint32_t));
-        uint16_t aPanid = *(uint16_t*)(InBuffer + sizeof(uint32_t) + sizeof(uint16_t));
+        uint16_t aPanid = *(uint16_t*)(InBuffer + sizeof(uint32_t));
         status = ThreadErrorToNtstatus(
             otThreadDiscover(
                 pFilter->otCtx, 
                 aScanChannels, 
-                aScanDuration, 
                 aPanid,
                 otLwfDiscoverCallback,
                 pFilter)
@@ -1246,8 +1244,7 @@ otLwfIoCtl_otExtendedPanId(
 
     if (InBufferLength >= sizeof(otExtendedPanId))
     {
-        otThreadSetExtendedPanId(pFilter->otCtx, (uint8_t*)InBuffer);
-        status = STATUS_SUCCESS;
+        status = ThreadErrorToNtstatus(otThreadSetExtendedPanId(pFilter->otCtx, (uint8_t*)InBuffer));
         *OutBufferLength = 0;
     }
     else if (*OutBufferLength >= sizeof(otExtendedPanId))

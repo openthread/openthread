@@ -8,17 +8,14 @@ The diagnostics module supports common diagnostics features that are listed belo
 ## Common Diagnostics Command List
 
 * [diag](#diag)
-* [diag start](#diag start)
-* [diag channel](#diag channel)
-* [diag channel \<channel\>](#diag channel \<channel\>)
-* [diag power](#diag power)
-* [diag power \<power\>](#diag power \<power\>)
-* [diag send \<packets\> \<length\>](#diag send \<packets\> \<length\>)
-* [diag repeat \<delay\> \<length\>](#diag repeat \<delay\> \<length\>)
-* [diag repeat stop](#diag repeat stop)
-* [diag sleep](#diag sleep)
-* [diag stats](#diag stats)
-* [diag stop](#diag stop)
+* [diag start](#diag-start)
+* [diag channel](#diag-channel)
+* [diag power](#diag-power)
+* [diag send](#diag-send-packets-length)
+* [diag repeat](#diag-repeat-delay-length)
+* [diag sleep](#diag-sleep)
+* [diag stats](#diag-stats)
+* [diag stop](#diag-stop)
 
 
 ### diag
@@ -141,3 +138,4 @@ first received packet: rssi=-65, lqi=101
 stop diagnostics mode
 status 0x00
 ```
+

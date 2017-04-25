@@ -70,7 +70,7 @@ Message *MessagePool::New(uint8_t aType, uint16_t aReserved)
 {
     Message *message = NULL;
 
-    VerifyOrExit((message = static_cast<Message *>(NewBuffer())) != NULL, ;);
+    VerifyOrExit((message = static_cast<Message *>(NewBuffer())) != NULL);
 
     memset(message, 0, sizeof(*message));
     message->SetMessagePool(this);
@@ -361,6 +361,7 @@ bool Message::IsSubTypeMle(void) const
     if (mInfo.mSubType == kSubTypeMleAnnounce ||
         mInfo.mSubType == kSubTypeMleDiscoverRequest ||
         mInfo.mSubType == kSubTypeMleDiscoverResponse ||
+        mInfo.mSubType == kSubTypeMleChildUpdateRequest ||
         mInfo.mSubType == kSubTypeMleGeneral)
     {
         rval = true;
@@ -377,7 +378,7 @@ ThreadError Message::SetPriority(uint8_t aPriority)
     VerifyOrExit(aPriority < kNumPriorities, error = kThreadError_InvalidArgs);
 
     VerifyOrExit(IsInAQueue(), mInfo.mPriority = aPriority);
-    VerifyOrExit(mInfo.mPriority != aPriority, ;);
+    VerifyOrExit(mInfo.mPriority != aPriority);
 
     if (mInfo.mInPriorityQ)
     {

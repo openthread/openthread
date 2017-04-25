@@ -368,7 +368,8 @@ private:
     static void HandleSendQueue(void *aContext);
     void HandleSendQueue(void);
 
-    ThreadError ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto);
+    ThreadError ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto,
+                                       bool fromLocalHost);
     ThreadError HandleExtensionHeaders(Message &message, Header &header, uint8_t &nextHeader, bool forward,
                                        bool receive);
     ThreadError HandleFragment(Message &message);
@@ -378,7 +379,7 @@ private:
     ThreadError RemoveMplOption(Message &aMessage);
     ThreadError HandleOptions(Message &message, Header &header, bool &forward);
     ThreadError HandlePayload(Message &message, MessageInfo &messageInfo, uint8_t ipproto);
-    ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo, uint8_t ipproto);
+    int8_t FindForwardInterfaceId(const MessageInfo &messageInfo);
 
     bool mForwardingEnabled;
 

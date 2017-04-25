@@ -232,10 +232,12 @@ private:
 }  // namespace NetworkData
 }  // namespace Thread
 
-#ifdef OPENTHREAD_MTD
+#if OPENTHREAD_MTD
 #include "network_data_leader_mtd.hpp"
-#else
+#elif OPENTHREAD_FTD
 #include "network_data_leader_ftd.hpp"
+#else
+#error "Please define OPENTHREAD_MTD=1 or OPENTHREAD_FTD=1"
 #endif
 
 #endif  // NETWORK_DATA_LEADER_HPP_

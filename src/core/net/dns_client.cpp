@@ -26,12 +26,20 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <string.h>
 
 #include <common/debug.hpp>
 #include <common/code_utils.hpp>
 #include <net/dns_client.hpp>
 #include <net/udp6.hpp>
+
+#if OPENTHREAD_ENABLE_DNS_CLIENT
 
 /**
  * @file
@@ -138,7 +146,7 @@ Message *Client::NewMessage(const Header &aHeader)
 {
     Message *message = NULL;
 
-    VerifyOrExit((message = mSocket.NewMessage(sizeof(aHeader))) != NULL, ;);
+    VerifyOrExit((message = mSocket.NewMessage(sizeof(aHeader))) != NULL);
     message->Prepend(&aHeader, sizeof(aHeader));
     message->SetOffset(0);
 
@@ -458,15 +466,15 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     (void)aMessageInfo;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(responseHeader), &responseHeader) ==
-                 sizeof(responseHeader), ;);
+                 sizeof(responseHeader));
     VerifyOrExit(responseHeader.GetType() == Header::kTypeResponse &&
                  responseHeader.GetQuestionCount() == 1 &&
-                 responseHeader.IsTruncationFlagSet() == false, ;);
+                 responseHeader.IsTruncationFlagSet() == false);
 
     aMessage.MoveOffset(sizeof(responseHeader));
     offset = aMessage.GetOffset();
 
-    VerifyOrExit((message = FindRelatedQuery(responseHeader, queryMetadata)) != NULL,);
+    VerifyOrExit((message = FindRelatedQuery(responseHeader, queryMetadata)) != NULL);
 
     if (responseHeader.GetResponseCode() != Header::kResponseSuccess)
     {
@@ -515,3 +523,5 @@ exit:
 
 }  // namespace Coap
 }  // namespace Thread
+
+#endif // OPENTHREAD_ENABLE_DNS_CLIENT

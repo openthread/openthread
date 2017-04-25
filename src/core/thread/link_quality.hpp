@@ -77,10 +77,10 @@ public:
      * This method adds a new received signal strength (RSS) value to the average.
      *
      * @param[in] aNoiseFloor  A reference to the noise floor state.
-     * @param[in] anRss        A new received signal strength value (in dBm) to be added to the average.
+     * @param[in] aRss         A new received signal strength value (in dBm) to be added to the average.
      *
      */
-    void AddRss(LinkQualityInfo &aNoiseFloor, int8_t anRss);
+    void AddRss(LinkQualityInfo &aNoiseFloor, int8_t aRss);
 
     /**
      * This method returns the current average signal strength value.
@@ -152,12 +152,12 @@ public:
      * This method converts a received signal strength value to a link margin value.
      *
      * @param[in]  aNoiseFloor  A reference to the noise state.
-     * @param[in]  anRss        The received signal strength value (in dBm).
+     * @param[in]  aRss         The received signal strength value (in dBm).
      *
      * @returns The link margin value.
      *
      */
-    static uint8_t ConvertRssToLinkMargin(LinkQualityInfo &aNoiseFloor, int8_t anRss);
+    static uint8_t ConvertRssToLinkMargin(LinkQualityInfo &aNoiseFloor, int8_t aRss);
 
     /**
      * This method converts a link margin value to a link quality value.
@@ -173,12 +173,12 @@ public:
      * This method converts a received signal strength value to a link quality value.
      *
      * @param[in]  aNoiseFloor  A reference to the noise state.
-     * @param[in]  anRss        The received signal strength value (in dBm).
+     * @param[in]  aRss         The received signal strength value (in dBm).
      *
      * @returns The link quality value (0-3).
      *
      */
-    static uint8_t ConvertRssToLinkQuality(LinkQualityInfo &aNoiseFloor, int8_t anRss);
+    static uint8_t ConvertRssToLinkQuality(LinkQualityInfo &aNoiseFloor, int8_t aRss);
 
 private:
     enum

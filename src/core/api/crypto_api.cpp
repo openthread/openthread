@@ -40,10 +40,6 @@
 
 using namespace Thread::Crypto;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void otCryptoHmacSha256(
     const uint8_t *aKey, uint16_t aKeyLength,
     const uint8_t *aBuf, uint16_t aBufLength,
@@ -88,7 +84,3 @@ void otCryptoAesCcm(
 exit:
     return;
 }
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif

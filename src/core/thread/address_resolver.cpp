@@ -31,7 +31,15 @@
  *   This file implements Thread's EID-to-RLOC mapping and caching.
  */
 
+#if OPENTHREAD_FTD
+
 #define WPP_NAME "address_resolver.tmh"
+
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
 
 #include "openthread/platform/random.h"
 
@@ -287,26 +295,26 @@ void AddressResolver::HandleAddressNotification(Coap::Header &aHeader, Message &
     uint32_t lastTransactionTime;
 
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost, ;);
+                 aHeader.GetCode() == kCoapRequestPost);
 
     otLogInfoArp(GetInstance(), "Received address notification from %04x",
                  HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
 
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kTarget, sizeof(targetTlv), targetTlv));
-    VerifyOrExit(targetTlv.IsValid(), ;);
+    VerifyOrExit(targetTlv.IsValid());
 
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kMeshLocalEid, sizeof(mlIidTlv), mlIidTlv));
-    VerifyOrExit(mlIidTlv.IsValid(), ;);
+    VerifyOrExit(mlIidTlv.IsValid());
 
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rloc16Tlv), rloc16Tlv));
-    VerifyOrExit(rloc16Tlv.IsValid(), ;);
+    VerifyOrExit(rloc16Tlv.IsValid());
 
     lastTransactionTime = 0;
 
     if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kLastTransactionTime, sizeof(lastTransactionTimeTlv),
                           lastTransactionTimeTlv) == kThreadError_None)
     {
-        VerifyOrExit(lastTransactionTimeTlv.IsValid(), ;);
+        VerifyOrExit(lastTransactionTimeTlv.IsValid());
         lastTransactionTime = lastTransactionTimeTlv.GetTime();
     }
 
@@ -462,22 +470,22 @@ void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessag
 
     for (int i = 0; i < numChildren; i++)
     {
-        if (children[i].mState != Neighbor::kStateValid || (children[i].mMode & Mle::ModeTlv::kModeFFD) != 0)
+        if (children[i].GetState() != Neighbor::kStateValid || children[i].IsFullThreadDevice())
         {
             continue;
         }
 
-        for (int j = 0; j < Child::kMaxIp6AddressPerChild; j++)
+        for (uint8_t j = 0; j < Child::kMaxIp6AddressPerChild; j++)
         {
-            if (memcmp(&children[i].mIp6Address[j], targetTlv.GetTarget(), sizeof(children[i].mIp6Address[j])) == 0 &&
-                memcmp(&children[i].mMacAddr, &macAddr, sizeof(children[i].mMacAddr)))
+            if (children[i].GetIp6Address(j) == *targetTlv.GetTarget() &&
+                memcmp(&children[i].GetExtAddress(), &macAddr, sizeof(macAddr)))
             {
                 // Target EID matches child address and Mesh Local EID differs on child
-                memset(&children[i].mIp6Address[j], 0, sizeof(children[i].mIp6Address[j]));
+                memset(&children[i].GetIp6Address(j), 0, sizeof(children[i].GetIp6Address(j)));
 
                 memset(&destination, 0, sizeof(destination));
                 destination.mFields.m16[0] = HostSwap16(0xfe80);
-                destination.SetIid(children[i].mMacAddr);
+                destination.SetIid(children[i].GetExtAddress());
 
                 SendAddressError(targetTlv, mlIidTlv, &destination);
                 ExitNow();
@@ -507,12 +515,12 @@ void AddressResolver::HandleAddressQuery(Coap::Header &aHeader, Message &aMessag
     uint8_t numChildren;
 
     VerifyOrExit(aHeader.GetType() == kCoapTypeNonConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost, ;);
+                 aHeader.GetCode() == kCoapRequestPost);
 
     otLogInfoArp(GetInstance(), "Received address query from %04x", HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
 
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kTarget, sizeof(targetTlv), targetTlv));
-    VerifyOrExit(targetTlv.IsValid(), ;);
+    VerifyOrExit(targetTlv.IsValid());
 
     mlIidTlv.Init();
 
@@ -529,24 +537,22 @@ void AddressResolver::HandleAddressQuery(Coap::Header &aHeader, Message &aMessag
 
     for (int i = 0; i < numChildren; i++)
     {
-        if (children[i].mState != Neighbor::kStateValid ||
-            (children[i].mMode & Mle::ModeTlv::kModeFFD) != 0 ||
-            children[i].mLinkFailures >= Mle::kFailedChildTransmissions)
+        if (children[i].GetState() != Neighbor::kStateValid ||
+            children[i].IsFullThreadDevice() ||
+            children[i].GetLinkFailures() >= Mle::kFailedChildTransmissions)
         {
             continue;
         }
 
-        for (int j = 0; j < Child::kMaxIp6AddressPerChild; j++)
+        for (uint8_t j = 0; j < Child::kMaxIp6AddressPerChild; j++)
         {
-            if (memcmp(&children[i].mIp6Address[j], targetTlv.GetTarget(), sizeof(children[i].mIp6Address[j])))
+            if (children[i].GetIp6Address(j) != *targetTlv.GetTarget())
             {
                 continue;
             }
 
-            children[i].mMacAddr.m8[0] ^= 0x2;
-            mlIidTlv.SetIid(children[i].mMacAddr.m8);
-            children[i].mMacAddr.m8[0] ^= 0x2;
-            lastTransactionTimeTlv.SetTime(Timer::GetNow() - children[i].mLastHeard);
+            mlIidTlv.SetIid(children[i].GetExtAddress());
+            lastTransactionTimeTlv.SetTime(Timer::GetNow() - children[i].GetLastHeard());
             SendAddressQueryResponse(targetTlv, mlIidTlv, &lastTransactionTimeTlv, aMessageInfo.GetPeerAddr());
             ExitNow();
         }
@@ -667,9 +673,9 @@ void AddressResolver::HandleIcmpReceive(Message &aMessage, const Ip6::MessageInf
 {
     Ip6::Header ip6Header;
 
-    VerifyOrExit(aIcmpHeader.GetType() == kIcmp6TypeDstUnreach, ;);
-    VerifyOrExit(aIcmpHeader.GetCode() == kIcmp6CodeDstUnreachNoRoute, ;);
-    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(ip6Header), &ip6Header) == sizeof(ip6Header), ;);
+    VerifyOrExit(aIcmpHeader.GetType() == kIcmp6TypeDstUnreach);
+    VerifyOrExit(aIcmpHeader.GetCode() == kIcmp6CodeDstUnreachNoRoute);
+    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(ip6Header), &ip6Header) == sizeof(ip6Header));
 
     for (int i = 0; i < kCacheEntries; i++)
     {
@@ -686,3 +692,5 @@ exit:
 }
 
 }  // namespace Thread
+
+#endif // OPENTHREAD_FTD

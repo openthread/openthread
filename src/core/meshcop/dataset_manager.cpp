@@ -48,6 +48,7 @@
 #include <common/timer.hpp>
 #include <meshcop/dataset.hpp>
 #include <meshcop/dataset_manager.hpp>
+#include <meshcop/meshcop.hpp>
 #include <meshcop/tlvs.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
@@ -187,7 +188,7 @@ exit:
 
 ThreadError DatasetManager::Clear(uint8_t &aFlags, bool aOnlyClearNetwork)
 {
-    if (!aOnlyClearNetwork && mLocal.Compare(mNetwork) == 0)
+    if (!aOnlyClearNetwork)
     {
         mLocal.Clear(true);
     }
@@ -254,9 +255,9 @@ void DatasetManager::HandleTimer(void)
                                     (mNetif.GetPendingDataset().GetNetwork().Get(Tlv::kActiveTimestamp));
     pendingActiveTimestamp = static_cast<const Timestamp *>(tlv);
 
-    VerifyOrExit(mNetif.GetMle().IsAttached(),);
+    VerifyOrExit(mNetif.GetMle().IsAttached());
 
-    VerifyOrExit(mLocal.Compare(mNetwork) < 0,);
+    VerifyOrExit(mLocal.Compare(mNetwork) < 0);
 
     Register();
 
@@ -294,7 +295,8 @@ ThreadError DatasetManager::Register(void)
         pending->UpdateDelayTimer();
     }
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMeshCoPMessage(header)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapClient(), header)) != NULL,
+                 error = kThreadError_NoBufs);
 
     SuccessOrExit(error = message->Append(mLocal.GetBytes(), mLocal.GetSize()));
 
@@ -546,7 +548,7 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
 
         borderAgentLocator = static_cast<BorderAgentLocatorTlv *>(mNetif.GetNetworkDataLeader().GetCommissioningDataSubTlv(
                                                                       Tlv::kBorderAgentLocator));
-        VerifyOrExit(borderAgentLocator != NULL,);
+        VerifyOrExit(borderAgentLocator != NULL);
 
         memset(&destination, 0, sizeof(destination));
         destination = mNetif.GetMle().GetMeshLocal16();
@@ -580,9 +582,10 @@ ThreadError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset,
     header.AppendUriPathOptions(mUriSet);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMeshCoPMessage(header)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapClient(), header)) != NULL,
+                 error = kThreadError_NoBufs);
 
-#if OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     bool isCommissioner;
 
     isCommissioner = mNetif.GetCommissioner().GetState() != kCommissionerStateDisabled ? true : false;
@@ -615,7 +618,7 @@ ThreadError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset,
         }
     }
 
-#endif
+#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
     if (aDataset.mIsActiveTimestampSet)
     {
@@ -745,7 +748,9 @@ ThreadError DatasetManager::SendGetRequest(const uint8_t *aTlvTypes, const uint8
         header.SetPayloadMarker();
     }
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMeshCoPMessage(header)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapClient(), header)) != NULL,
+                 error = kThreadError_NoBufs);
+
 
     if (aLength > 0)
     {
@@ -787,12 +792,11 @@ void DatasetManager::SendSetResponse(const Coap::Header &aRequestHeader, const I
     Message *message;
     StateTlv state;
 
-    VerifyOrExit((message = mNetif.GetCoapServer().NewMeshCoPMessage(0)) != NULL, error = kThreadError_NoBufs);
-
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
 
-    SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapServer(), responseHeader)) != NULL,
+                 error = kThreadError_NoBufs);
 
     state.Init();
     state.SetState(aState);
@@ -819,12 +823,12 @@ void DatasetManager::SendGetResponse(const Coap::Header &aRequestHeader, const I
     Message *message;
     uint8_t index;
 
-    VerifyOrExit((message = mNetif.GetCoapServer().NewMeshCoPMessage(0)) != NULL, error = kThreadError_NoBufs);
 
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
 
-    SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapServer(), responseHeader)) != NULL,
+                 error = kThreadError_NoBufs);
 
     if (aLength == 0)
     {
@@ -1073,7 +1077,7 @@ void PendingDatasetBase::UpdateDelayTimer(Dataset &aDataset, uint32_t &aStartTim
     uint32_t elapsed;
     uint32_t delay;
 
-    VerifyOrExit((delayTimer = static_cast<DelayTimerTlv *>(aDataset.Get(Tlv::kDelayTimer))) != NULL, ;);
+    VerifyOrExit((delayTimer = static_cast<DelayTimerTlv *>(aDataset.Get(Tlv::kDelayTimer))) != NULL);
 
     elapsed = now - aStartTime;
 
@@ -1122,7 +1126,7 @@ void PendingDatasetBase::ApplyActiveDataset(const Timestamp &aTimestamp, Message
     DelayTimerTlv delayTimer;
     uint8_t flags;
 
-    VerifyOrExit(mNetif.GetMle().IsAttached(), ;);
+    VerifyOrExit(mNetif.GetMle().IsAttached());
 
     while (offset < aMessage.GetLength())
     {

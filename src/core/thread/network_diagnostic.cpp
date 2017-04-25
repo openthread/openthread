@@ -147,8 +147,8 @@ void NetworkDiagnostic::HandleDiagnosticGetResponse(Coap::Header &aHeader, Messa
                                                     const Ip6::MessageInfo &aMessageInfo,
                                                     ThreadError aResult)
 {
-    VerifyOrExit(aResult == kThreadError_None, ;);
-    VerifyOrExit(aHeader.GetCode() == kCoapResponseChanged, ;);
+    VerifyOrExit(aResult == kThreadError_None);
+    VerifyOrExit(aHeader.GetCode() == kCoapResponseChanged);
 
     otLogInfoNetDiag(GetInstance(), "Received diagnostic get response");
 
@@ -173,7 +173,7 @@ void NetworkDiagnostic::HandleDiagnosticGetAnswer(Coap::Header &aHeader, Message
                                                   const Ip6::MessageInfo &aMessageInfo)
 {
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost, ;);
+                 aHeader.GetCode() == kCoapRequestPost);
 
     otLogInfoNetDiag(GetInstance(), "Diagnostic get answer received");
 
@@ -190,10 +190,10 @@ exit:
     return;
 }
 
-ThreadError NetworkDiagnostic::AppendIPv6AddressList(Message &aMessage)
+ThreadError NetworkDiagnostic::AppendIp6AddressList(Message &aMessage)
 {
     ThreadError error = kThreadError_None;
-    IPv6AddressListTlv tlv;
+    Ip6AddressListTlv tlv;
     uint8_t count = 0;
 
     tlv.Init();
@@ -230,7 +230,7 @@ ThreadError NetworkDiagnostic::AppendChildTable(Message &aMessage)
 
     for (int i = 0; i < numChildren; i++)
     {
-        if (children[i].mState == Neighbor::kStateValid)
+        if (children[i].GetState() == Neighbor::kStateValid)
         {
             count++;
         }
@@ -242,16 +242,16 @@ ThreadError NetworkDiagnostic::AppendChildTable(Message &aMessage)
 
     for (int i = 0; i < numChildren; i++)
     {
-        if (children[i].mState == Neighbor::kStateValid)
+        if (children[i].GetState() == Neighbor::kStateValid)
         {
             timeout = 0;
 
-            while (static_cast<uint32_t>(1 << timeout) < children[i].mTimeout) { timeout++; }
+            while (static_cast<uint32_t>(1 << timeout) < children[i].GetTimeout()) { timeout++; }
 
             entry.SetReserved(0);
             entry.SetTimeout(timeout + 4);
-            entry.SetChildId(mNetif.GetMle().GetChildId(children[i].mValid.mRloc16));
-            entry.SetMode(children[i].mMode);
+            entry.SetChildId(mNetif.GetMle().GetChildId(children[i].GetRloc16()));
+            entry.SetMode(children[i].GetDeviceMode());
 
             SuccessOrExit(error = aMessage.Append(&entry, sizeof(ChildTableEntry)));
         }
@@ -355,9 +355,9 @@ ThreadError NetworkDiagnostic::FillRequestedTlvs(Message &aRequest, Message &aRe
             break;
         }
 
-        case NetworkDiagnosticTlv::kIPv6AddressList:
+        case NetworkDiagnosticTlv::kIp6AddressList:
         {
-            SuccessOrExit(error = AppendIPv6AddressList(aResponse));
+            SuccessOrExit(error = AppendIp6AddressList(aResponse));
             break;
         }
 
@@ -514,12 +514,10 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Header &aHeader, Messag
 
     VerifyOrExit((static_cast<TypeListTlv *>(&networkDiagnosticTlv)->IsValid()), error = kThreadError_Drop);
 
-    VerifyOrExit((message = mNetif.GetCoapServer().NewMessage(0)) != NULL, error = kThreadError_NoBufs);
-
     header.SetDefaultResponseHeader(aHeader);
     header.SetPayloadMarker();
 
-    SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
+    VerifyOrExit((message = mNetif.GetCoapServer().NewMessage(header)) != NULL, error = kThreadError_NoBufs);
 
     SuccessOrExit(error = FillRequestedTlvs(aMessage, *message, networkDiagnosticTlv));
 
@@ -599,20 +597,20 @@ void NetworkDiagnostic::HandleDiagnosticReset(Coap::Header &aHeader, Message &aM
     otLogInfoNetDiag(GetInstance(), "Received diagnostic reset request");
 
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost, ;);
+                 aHeader.GetCode() == kCoapRequestPost);
 
     VerifyOrExit((aMessage.Read(aMessage.GetOffset(), sizeof(NetworkDiagnosticTlv),
-                                &networkDiagnosticTlv) == sizeof(NetworkDiagnosticTlv)), ;);
+                                &networkDiagnosticTlv) == sizeof(NetworkDiagnosticTlv)));
 
-    VerifyOrExit(networkDiagnosticTlv.GetType() == NetworkDiagnosticTlv::kTypeList, ;);
+    VerifyOrExit(networkDiagnosticTlv.GetType() == NetworkDiagnosticTlv::kTypeList);
 
-    VerifyOrExit((static_cast<TypeListTlv *>(&networkDiagnosticTlv)->IsValid()), ;);
+    VerifyOrExit((static_cast<TypeListTlv *>(&networkDiagnosticTlv)->IsValid()));
 
     offset = aMessage.GetOffset() + sizeof(NetworkDiagnosticTlv);
 
     for (uint8_t i = 0; i < networkDiagnosticTlv.GetLength(); i++)
     {
-        VerifyOrExit(aMessage.Read(offset, sizeof(type), &type) == sizeof(type), ;);
+        VerifyOrExit(aMessage.Read(offset, sizeof(type), &type) == sizeof(type));
 
         switch (type)
         {

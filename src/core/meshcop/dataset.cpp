@@ -369,13 +369,13 @@ const Timestamp *Dataset::GetTimestamp(void) const
     if (mType == Tlv::kActiveTimestamp)
     {
         const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>(Get(mType));
-        VerifyOrExit(tlv != NULL, ;);
+        VerifyOrExit(tlv != NULL);
         timestamp = static_cast<const Timestamp *>(tlv);
     }
     else
     {
         const PendingTimestampTlv *tlv = static_cast<const PendingTimestampTlv *>(Get(mType));
-        VerifyOrExit(tlv != NULL, ;);
+        VerifyOrExit(tlv != NULL);
         timestamp = static_cast<const Timestamp *>(tlv);
     }
 
@@ -494,7 +494,7 @@ void Dataset::Remove(Tlv::Type aType)
 {
     Tlv *tlv;
 
-    VerifyOrExit((tlv = Get(aType)) != NULL, ;);
+    VerifyOrExit((tlv = Get(aType)) != NULL);
     Remove(reinterpret_cast<uint8_t *>(tlv), sizeof(Tlv) + tlv->GetLength());
 
 exit:

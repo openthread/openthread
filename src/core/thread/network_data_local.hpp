@@ -26,8 +26,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef OPENTHREAD_MTD
+#if OPENTHREAD_MTD
 #include "network_data_local_mtd.hpp"
-#else
+#elif OPENTHREAD_FTD
 #include "network_data_local_ftd.hpp"
+#else
+#error "Please define OPENTHREAD_MTD=1 or OPENTHREAD_FTD=1"
 #endif
+

@@ -37,28 +37,17 @@
 namespace Thread {
 namespace Coap {
 
-Message *CoapBase::NewMessage(const Header &aHeader)
+Message *CoapBase::NewMessage(const Header &aHeader, uint8_t aPriority)
 {
     Message *message = NULL;
 
     // Ensure that header has minimum required length.
-    VerifyOrExit(aHeader.GetLength() >= Header::kMinHeaderLength, ;);
+    VerifyOrExit(aHeader.GetLength() >= Header::kMinHeaderLength);
 
-    VerifyOrExit((message = mSocket.NewMessage(aHeader.GetLength())) != NULL, ;);
+    VerifyOrExit((message = mSocket.NewMessage(aHeader.GetLength())) != NULL);
     message->Prepend(aHeader.GetBytes(), aHeader.GetLength());
     message->SetOffset(0);
-
-exit:
-    return message;
-}
-
-Message *CoapBase::NewMeshCoPMessage(const Header &aHeader)
-{
-    Message *message = NULL;
-
-    VerifyOrExit((message = NewMessage(aHeader)) != NULL, ;);
-
-    message->SetPriority(kMeshCoPMessagePriority);
+    message->SetPriority(aPriority);
 
 exit:
     return message;
@@ -84,6 +73,32 @@ void CoapBase::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMes
 {
     static_cast<CoapBase *>(aContext)->mReceiver(aContext, *static_cast<Message *>(aMessage),
                                                  *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+}
+
+ThreadError CoapBase::SendEmptyMessage(Header::Type aType, const Header &aRequestHeader,
+                                       const Ip6::MessageInfo &aMessageInfo)
+{
+    ThreadError error = kThreadError_None;
+    Coap::Header responseHeader;
+    Message *message = NULL;
+
+    VerifyOrExit(aRequestHeader.GetType() == kCoapTypeConfirmable, error = kThreadError_InvalidArgs);
+
+    responseHeader.Init(aType, kCoapCodeEmpty);
+    responseHeader.SetMessageId(aRequestHeader.GetMessageId());
+
+    VerifyOrExit((message = NewMessage(responseHeader)) != NULL, error = kThreadError_NoBufs);
+
+    SuccessOrExit(error = mSender(this, *message, aMessageInfo));
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        message->Free();
+    }
+
+    return error;
 }
 
 }  // namespace Coap

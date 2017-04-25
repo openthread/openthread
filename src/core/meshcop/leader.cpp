@@ -33,6 +33,14 @@
 
 #define WPP_NAME "leader.tmh"
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
+#if OPENTHREAD_FTD
+
 #include <stdio.h>
 
 #include "openthread/platform/random.h"
@@ -41,6 +49,7 @@
 #include <common/code_utils.hpp>
 #include <common/logging.hpp>
 #include <meshcop/leader.hpp>
+#include <meshcop/meshcop.hpp>
 #include <meshcop/tlvs.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
@@ -83,9 +92,9 @@ void Leader::HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6:
     otLogInfoMeshCoP(GetInstance(), "received petition");
 
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kCommissionerId, sizeof(commissionerId), commissionerId));
-    VerifyOrExit(commissionerId.IsValid(), ;);
+    VerifyOrExit(commissionerId.IsValid());
 
-    VerifyOrExit(!mTimer.IsRunning(), ;);
+    VerifyOrExit(!mTimer.IsRunning());
 
     data.mBorderAgentLocator.Init();
     data.mBorderAgentLocator.SetBorderAgentLocator(HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
@@ -118,12 +127,11 @@ ThreadError Leader::SendPetitionResponse(const Coap::Header &aRequestHeader, con
     CommissionerSessionIdTlv sessionId;
     Message *message;
 
-    VerifyOrExit((message = mNetif.GetCoapServer().NewMeshCoPMessage(0)) != NULL, error = kThreadError_NoBufs);
-
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
 
-    SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapServer(), responseHeader)) != NULL,
+                 error = kThreadError_NoBufs);
 
     state.Init();
     state.SetState(aState);
@@ -173,10 +181,10 @@ void Leader::HandleKeepAlive(Coap::Header &aHeader, Message &aMessage, const Ip6
     otLogInfoMeshCoP(GetInstance(), "received keep alive");
 
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kState, sizeof(state), state));
-    VerifyOrExit(state.IsValid(),);
+    VerifyOrExit(state.IsValid());
 
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kCommissionerSessionId, sizeof(sessionId), sessionId));
-    VerifyOrExit(sessionId.IsValid(),);
+    VerifyOrExit(sessionId.IsValid());
 
     if (sessionId.GetCommissionerSessionId() != mSessionId)
     {
@@ -208,12 +216,12 @@ ThreadError Leader::SendKeepAliveResponse(const Coap::Header &aRequestHeader, co
     StateTlv state;
     Message *message;
 
-    VerifyOrExit((message = mNetif.GetCoapServer().NewMeshCoPMessage(0)) != NULL, error = kThreadError_NoBufs);
 
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
 
-    SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapServer(), responseHeader)) != NULL,
+                 error = kThreadError_NoBufs);
 
     state.Init();
     state.SetState(aState);
@@ -244,7 +252,8 @@ ThreadError Leader::SendDatasetChanged(const Ip6::Address &aAddress)
     header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(OPENTHREAD_URI_DATASET_CHANGED);
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMeshCoPMessage(header)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapClient(), header)) != NULL,
+                 error = kThreadError_NoBufs);
 
     messageInfo.SetPeerAddr(aAddress);
     messageInfo.SetPeerPort(kCoapUdpPort);
@@ -285,7 +294,7 @@ void Leader::HandleTimer(void *aContext)
 
 void Leader::HandleTimer(void)
 {
-    VerifyOrExit(mNetif.GetMle().GetDeviceState() == Mle::kDeviceStateLeader, ;);
+    VerifyOrExit(mNetif.GetMle().GetDeviceState() == Mle::kDeviceStateLeader);
 
     ResignCommissioner();
 
@@ -293,7 +302,7 @@ exit:
     return;
 }
 
-void Leader::ResignCommissioner(void)
+void Leader::SetEmptyCommissionerData(void)
 {
     CommissionerSessionIdTlv mCommissionerSessionId;
 
@@ -302,9 +311,17 @@ void Leader::ResignCommissioner(void)
 
     mNetif.GetNetworkDataLeader().SetCommissioningData(reinterpret_cast<uint8_t *>(&mCommissionerSessionId),
                                                        sizeof(Tlv) + mCommissionerSessionId.GetLength());
+}
+
+void Leader::ResignCommissioner(void)
+{
+    SetEmptyCommissionerData();
 
     otLogInfoMeshCoP(GetInstance(), "commissioner inactive");
 }
 
 }  // namespace MeshCoP
 }  // namespace Thread
+
+#endif // OPENTHREAD_FTD
+

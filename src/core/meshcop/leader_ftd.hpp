@@ -108,6 +108,12 @@ public:
      */
     uint32_t GetDelayTimerMinimal(void) const;
 
+    /**
+     * This method sets empty Commissioner Data TLV in the Thread Network Data.
+     *
+     */
+    void SetEmptyCommissionerData(void);
+
 private:
     enum
     {

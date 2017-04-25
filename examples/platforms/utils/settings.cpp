@@ -378,7 +378,7 @@ ThreadError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, 
                         utilsFlashRead(address + sizeof(struct settingsBlock), aValue, readLength);
                     }
 
-                    valueLength = readLength;
+                    valueLength = block.length;
                     error = kThreadError_None;
                 }
 

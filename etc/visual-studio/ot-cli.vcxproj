@@ -39,6 +39,7 @@
       <PreprocessorDefinitions>
         %(PreprocessorDefinitions);
         OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";
+        OPENTHREAD_FTD=1;
         OPENTHREAD_MULTIPLE_INSTANCE;
       </PreprocessorDefinitions>
       <AdditionalIncludeDirectories>

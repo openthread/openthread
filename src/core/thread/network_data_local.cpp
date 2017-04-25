@@ -31,12 +31,20 @@
  *   This file implements the local Thread Network Data.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <common/debug.hpp>
 #include <common/logging.hpp>
 #include <common/code_utils.hpp>
 #include <mac/mac_frame.hpp>
 #include <thread/network_data_local.hpp>
 #include <thread/thread_netif.hpp>
+
+#if OPENTHREAD_FTD
 
 namespace Thread {
 namespace NetworkData {
@@ -245,3 +253,4 @@ exit:
 }  // namespace NetworkData
 }  // namespace Thread
 
+#endif // OPENTHREAD_FTD

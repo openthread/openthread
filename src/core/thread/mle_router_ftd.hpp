@@ -65,6 +65,18 @@ class NetworkDataLeader;
  */
 
 /**
+* This structure represents the child information for persistent storage.
+*
+*/
+struct ChildInfo
+{
+    Mac::ExtAddress  mExtAddress;    ///< Extended Address
+    uint32_t         mTimeout;       ///< Timeout
+    uint16_t         mRloc16;        ///< RLOC16
+    uint8_t          mMode;          ///< The MLE device mode
+};
+
+/**
  * This class implements MLE functionality required by the Thread Router and Leader roles.
  *
  */
@@ -706,12 +718,9 @@ private:
     bool HandleAdvertiseTimer(void);
     static void HandleStateUpdateTimer(void *aContext);
     void HandleStateUpdateTimer(void);
-    static void HandleChildUpdateRequestTimer(void *aContext);
-    void HandleChildUpdateRequestTimer(void);
 
     TrickleTimer mAdvertiseTimer;
     Timer mStateUpdateTimer;
-    Timer mChildUpdateRequestTimer;
 
     Coap::Resource mAddressSolicit;
     Coap::Resource mAddressRelease;
@@ -731,6 +740,7 @@ private:
     uint8_t mLeaderWeight;
     uint32_t mFixedLeaderPartitionId;  ///< only for certification testing
     bool mRouterRoleEnabled;
+    bool mIsRouterRestoringChildren;
 
     uint8_t mRouterId;
     uint8_t mPreviousRouterId;

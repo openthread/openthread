@@ -75,10 +75,6 @@ otInstance::otInstance(void) :
 
 using namespace Thread;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void otInstancePostConstructor(otInstance *aInstance)
 {
     // restore datasets and network information
@@ -112,12 +108,12 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
 
     otLogFuncEntry();
 
-    VerifyOrExit(aInstanceBufferSize != NULL, ;);
+    VerifyOrExit(aInstanceBufferSize != NULL);
 
     // Make sure the input buffer is big enough
     VerifyOrExit(sizeof(otInstance) <= *aInstanceBufferSize, *aInstanceBufferSize = sizeof(otInstance));
 
-    VerifyOrExit(aInstanceBuffer != NULL, ;);
+    VerifyOrExit(aInstanceBuffer != NULL);
 
     // Construct the context
     aInstance = new(aInstanceBuffer)otInstance();
@@ -139,7 +135,7 @@ otInstance *otInstanceInit()
 {
     otLogFuncEntry();
 
-    VerifyOrExit(sInstance == NULL, ;);
+    VerifyOrExit(sInstance == NULL);
 
     // Construct the context
     sInstance = new(&sInstanceRaw)otInstance();
@@ -251,7 +247,3 @@ ThreadError otSetDynamicLogLevel(otInstance *aInstance, otLogLevel aLogLevel)
 
     return error;
 }
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif

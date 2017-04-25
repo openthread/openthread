@@ -105,6 +105,7 @@ noinst_HEADERS                                                                  
 
 PRETTY_FILES                                                                            = \
     $(PLATFORM_SOURCES)                                                                   \
+    $(noinst_HEADERS)                                                                     \
     $(NULL)
 
 Dash                                                                                    = -

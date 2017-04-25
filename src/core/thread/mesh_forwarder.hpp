@@ -43,6 +43,7 @@
 #include <net/ip6.hpp>
 #include <thread/address_resolver.hpp>
 #include <thread/data_poll_manager.hpp>
+#include <thread/src_match_controller.hpp>
 #include <thread/lowpan.hpp>
 #include <thread/network_data_leader.hpp>
 #include <thread/topology.hpp>
@@ -151,10 +152,9 @@ public:
      * This method sets the scan parameters for MLE Discovery Request messages.
      *
      * @param[in]  aScanChannels  A bit vector indicating which channels to scan.
-     * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel.
      *
      */
-    void SetDiscoverParameters(uint32_t aScanChannels, uint16_t aScanDuration);
+    void SetDiscoverParameters(uint32_t aScanChannels);
 
     /**
      * This method frees any indirect messages queued for a specific child.
@@ -217,6 +217,14 @@ public:
      *
      */
     DataPollManager &GetDataPollManager(void) { return mDataPollManager; }
+
+    /**
+     * This method returns a reference to the source match controller.
+     *
+     * @returns  A reference to the source match controller.
+     *
+     */
+    SourceMatchController &GetSourceMatchController(void) { return mSourceMatchController; }
 
 private:
     enum
@@ -308,6 +316,7 @@ private:
     uint8_t  mSendMessageMaxMacTxAttempts;
     uint8_t  mSendMessageKeyId;
     uint8_t  mSendMessageDataSequenceNumber;
+    uint8_t  mStartChildIndex;
 
     Mac::Address mMacSource;
     Mac::Address mMacDest;
@@ -321,15 +330,13 @@ private:
     bool mEnabled;
 
     uint32_t mScanChannels;
-    uint16_t mScanDuration;
     uint8_t mScanChannel;
     uint8_t mRestoreChannel;
     uint16_t mRestorePanId;
     bool mScanning;
 
     DataPollManager mDataPollManager;
-
-    bool mSrcMatchEnabled;
+    SourceMatchController mSourceMatchController;
 };
 
 /**

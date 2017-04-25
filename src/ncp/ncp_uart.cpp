@@ -49,6 +49,8 @@
 #include <core/openthread-core-config.h>
 #include <openthread-instance.h>
 
+#if OPENTHREAD_ENABLE_NCP_UART
+
 namespace Thread {
 
 static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpUart), uint64_t);
@@ -176,7 +178,10 @@ exit:
 
     if (len > 0)
     {
-        otPlatUartSend(mUartBuffer.GetBuffer(), len);
+        if (otPlatUartSend(mUartBuffer.GetBuffer(), len) != kThreadError_None)
+        {
+            assert(false);
+        }
     }
 }
 
@@ -291,3 +296,5 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
 #endif // OPENTHREAD_ENABLE_CLI_LOGGING
 
 }  // namespace Thread
+
+#endif // OPENTHREAD_ENABLE_NCP_UART

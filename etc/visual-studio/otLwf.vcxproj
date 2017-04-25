@@ -40,6 +40,7 @@
         %(PreProcessorDefinitions);
         NDIS_WDM=1;
         NDIS630=1;
+        OPENTHREAD_FTD=1;
         OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";
         OPENTHREAD_PROJECT_CORE_CONFIG_FILE="openthread-core-windows-config.h";
         OPENTHREAD_MULTIPLE_INSTANCE;

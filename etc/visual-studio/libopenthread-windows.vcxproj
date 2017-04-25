@@ -41,6 +41,7 @@
         %(PreprocessorDefinitions);
         _CRT_SECURE_NO_WARNINGS;
         OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";
+        OPENTHREAD_FTD=1;
         OTBUILD;
       </PreprocessorDefinitions>
       <AdditionalIncludeDirectories>

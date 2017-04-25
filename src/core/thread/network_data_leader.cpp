@@ -33,6 +33,12 @@
 
 #define WPP_NAME "network_data_leader.tmh"
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include "openthread/platform/random.h"
 
 #include <coap/coap_header.hpp>
@@ -471,7 +477,7 @@ MeshCoP::Tlv *LeaderBase::GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aType)
     MeshCoP::Tlv *end;
 
     commissioningDataTlv = GetCommissioningData();
-    VerifyOrExit(commissioningDataTlv != NULL,);
+    VerifyOrExit(commissioningDataTlv != NULL);
 
     cur = reinterpret_cast<MeshCoP::Tlv *>(commissioningDataTlv->GetValue());
     end = reinterpret_cast<MeshCoP::Tlv *>(commissioningDataTlv->GetValue() + commissioningDataTlv->GetLength());

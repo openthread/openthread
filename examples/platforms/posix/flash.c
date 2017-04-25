@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -98,8 +98,8 @@ uint32_t utilsFlashGetSize(void)
 ThreadError utilsFlashErasePage(uint32_t aAddress)
 {
     ThreadError error = kThreadError_None;
-    uint8_t buf = 0xff;
     uint32_t address;
+    uint8_t dummyPage[ FLASH_SIZE ];
 
     otEXPECT_ACTION(sFlashFd >= 0, error = kThreadError_Failed);
     otEXPECT_ACTION(aAddress < FLASH_SIZE, error = kThreadError_InvalidArgs);
@@ -107,10 +107,14 @@ ThreadError utilsFlashErasePage(uint32_t aAddress)
     // Get start address of the flash page that includes aAddress
     address = aAddress & (~(uint32_t)(FLASH_PAGE_SIZE - 1));
 
-    for (uint16_t offset = 0; offset < FLASH_PAGE_SIZE; offset++)
-    {
-        otEXPECT_ACTION(pwrite(sFlashFd, &buf, 1, address + offset) == 1, error = kThreadError_Failed);
-    }
+    // set the page to the erased state.
+    memset((void *)(&dummyPage[0]), 0xff, FLASH_PAGE_SIZE);
+
+    // Write the page
+    ssize_t r;
+    r =  pwrite(sFlashFd, &(dummyPage[0]), FLASH_PAGE_SIZE, address);
+    VerifyOrExit(((int)r) == ((int)(FLASH_PAGE_SIZE)), error = kThreadError_Failed);
+
 
 exit:
     return error;

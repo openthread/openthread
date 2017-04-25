@@ -37,9 +37,7 @@
 #include "openthread/platform/usec-alarm.h"
 #include "openthread-instance.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#if OPENTHREAD_ENABLE_RAW_LINK_API
 
 ThreadError otLinkRawSetEnable(otInstance *aInstance, bool aEnabled)
 {
@@ -145,7 +143,7 @@ RadioPacket *otLinkRawGetTransmitBuffer(otInstance *aInstance)
 {
     RadioPacket *buffer = NULL;
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(),);
+    VerifyOrExit(aInstance->mLinkRaw.IsEnabled());
 
     buffer = otPlatRadioGetTransmitBuffer(aInstance);
 
@@ -258,10 +256,6 @@ ThreadError otLinkRawSrcMatchClearExtEntries(otInstance *aInstance)
 exit:
     return error;
 }
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif
 
 namespace Thread {
 
@@ -377,7 +371,7 @@ ThreadError LinkRaw::DoTransmit(RadioPacket *aPacket)
     {
         otLogDebgPlat(aInstance, "LinkRaw Starting AckTimeout Timer");
         mTimerReason = kTimerReasonAckTimeout;
-        mTimer.Start(kAckTimeout);
+        mTimer.Start(Mac::kAckTimeout);
     }
 
 #endif
@@ -612,3 +606,5 @@ void LinkRaw::HandleEnergyScanTask(void)
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 
 } // namespace Thread
+
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API

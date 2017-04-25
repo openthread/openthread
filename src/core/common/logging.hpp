@@ -77,7 +77,7 @@ extern "C" {
  */
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OPENTHREAD_LOG_LEVEL_CRIT
 #define otLogCrit(aInstance, aRegion, aFormat, ...)                         \
-    _otLogFormatter(aInstane, kLogLevelCrit, aRegion, aFormat, ## __VA_ARGS__)
+    _otLogFormatter(aInstance, kLogLevelCrit, aRegion, aFormat, ## __VA_ARGS__)
 #else
 #define otLogCrit(aInstance, aRegion, aFormat, ...)
 #endif

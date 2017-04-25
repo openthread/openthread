@@ -66,6 +66,9 @@
 #include "cli.hpp"
 #include "cli_dataset.hpp"
 #include "cli_uart.hpp"
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
+#include "cli_coap.hpp"
+#endif
 
 using Thread::Encoding::BigEndian::HostSwap16;
 using Thread::Encoding::BigEndian::HostSwap32;
@@ -84,7 +87,10 @@ const struct Command Interpreter::sCommands[] =
     { "child", &Interpreter::ProcessChild },
     { "childmax", &Interpreter::ProcessChildMax },
     { "childtimeout", &Interpreter::ProcessChildTimeout },
-#if OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
+    { "coap", &Interpreter::ProcessCoap },
+#endif
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     { "commissioner", &Interpreter::ProcessCommissioner },
 #endif
     { "contextreusedelay", &Interpreter::ProcessContextIdReuseDelay },
@@ -275,15 +281,15 @@ int Interpreter::Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength)
     return static_cast<int>(cur - aBin);
 }
 
-void Interpreter::AppendResult(ThreadError error)
+void Interpreter::AppendResult(ThreadError aError)
 {
-    if (error == kThreadError_None)
+    if (aError == kThreadError_None)
     {
         sServer->OutputFormat("Done\r\n");
     }
     else
     {
-        sServer->OutputFormat("Error %d\r\n", error);
+        sServer->OutputFormat("Error %d: %s\r\n", aError, otThreadErrorToString(aError));
     }
 }
 
@@ -451,7 +457,7 @@ void Interpreter::ProcessChannel(int argc, char *argv[])
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        otLinkSetChannel(mInstance, static_cast<uint8_t>(value));
+        error = otLinkSetChannel(mInstance, static_cast<uint8_t>(value));
     }
 
 exit:
@@ -480,8 +486,16 @@ void Interpreter::ProcessChild(int argc, char *argv[])
 
         for (uint8_t i = 0; i < maxChildren ; i++)
         {
-            if (otThreadGetChildInfoByIndex(mInstance, i, &childInfo) != kThreadError_None)
+
+            switch (otThreadGetChildInfoByIndex(mInstance, i, &childInfo))
             {
+            case kThreadError_None:
+                break;
+
+            case kThreadError_NotFound:
+                continue;
+
+            default:
                 sServer->OutputFormat("\r\n");
                 ExitNow();
             }
@@ -515,6 +529,8 @@ void Interpreter::ProcessChild(int argc, char *argv[])
                 }
             }
         }
+
+        ExitNow();
     }
 
     SuccessOrExit(error = ParseLong(argv[0], value));
@@ -601,6 +617,17 @@ void Interpreter::ProcessChildTimeout(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
+
+void Interpreter::ProcessCoap(int argc, char *argv[])
+{
+    ThreadError error;
+    error = Coap::Process(mInstance, argc, argv, *sServer);
+    AppendResult(error);
+}
+
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 
 void Interpreter::ProcessContextIdReuseDelay(int argc, char *argv[])
 {
@@ -709,7 +736,7 @@ void Interpreter::ProcessDiscover(int argc, char *argv[])
         scanChannels = 1 << value;
     }
 
-    SuccessOrExit(error = otThreadDiscover(mInstance, scanChannels, 0, OT_PANID_BROADCAST,
+    SuccessOrExit(error = otThreadDiscover(mInstance, scanChannels, OT_PANID_BROADCAST,
                                            &Interpreter::s_HandleActiveScanResult, this));
     sServer->OutputFormat("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |\r\n");
     sServer->OutputFormat("+---+------------------+------------------+------+------------------+----+-----+-----+\r\n");
@@ -873,7 +900,7 @@ void Interpreter::ProcessExtAddress(int argc, char *argv[])
 
         VerifyOrExit(Hex2Bin(argv[0], extAddress.m8, sizeof(otExtAddress)) >= 0, error = kThreadError_Parse);
 
-        otLinkSetExtendedAddress(mInstance, &extAddress);
+        error = otLinkSetExtendedAddress(mInstance, &extAddress);
     }
 
 exit:
@@ -905,7 +932,7 @@ void Interpreter::ProcessExtPanId(int argc, char *argv[])
 
         VerifyOrExit(Hex2Bin(argv[0], extPanId, sizeof(extPanId)) >= 0, error = kThreadError_Parse);
 
-        otThreadSetExtendedPanId(mInstance, extPanId);
+        error = otThreadSetExtendedPanId(mInstance, extPanId);
     }
 
 exit:
@@ -1410,7 +1437,7 @@ void Interpreter::ProcessPanId(int argc, char *argv[])
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        otLinkSetPanId(mInstance, static_cast<otPanId>(value));
+        error = otLinkSetPanId(mInstance, static_cast<otPanId>(value));
     }
 
 exit:
@@ -1454,7 +1481,7 @@ void Interpreter::HandleIcmpReceive(Message &aMessage, const Ip6::MessageInfo &a
 {
     uint32_t timestamp = 0;
 
-    VerifyOrExit(aIcmpHeader.GetType() == kIcmp6TypeEchoReply, ;);
+    VerifyOrExit(aIcmpHeader.GetType() == kIcmp6TypeEchoReply);
 
     sServer->OutputFormat("%d bytes from ", aMessage.GetLength() - aMessage.GetOffset());
     sServer->OutputFormat("%x:%x:%x:%x:%x:%x:%x:%x",
@@ -2393,7 +2420,7 @@ void Interpreter::ProcessVersion(int argc, char *argv[])
     (void)argv;
 }
 
-#if OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
 void Interpreter::ProcessCommissioner(int argc, char *argv[])
 {
@@ -2677,7 +2704,7 @@ void Interpreter::HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask)
     sServer->OutputFormat("Conflict: %04x, %08x\r\n", aPanId, aChannelMask);
 }
 
-#endif  // OPENTHREAD_ENABLE_COMMISSIONER
+#endif //  OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
 #if OPENTHREAD_ENABLE_JOINER
 
@@ -2841,7 +2868,7 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
 
     sServer = &aServer;
 
-    VerifyOrExit(aBuf != NULL, ;);
+    VerifyOrExit(aBuf != NULL);
 
     for (; *aBuf == ' '; aBuf++, aBufLength--);
 
@@ -2903,7 +2930,7 @@ void Interpreter::HandleNetifStateChanged(otInstance *aInstance, uint32_t aFlags
 void Interpreter::HandleNetifStateChanged(uint32_t aFlags)
 #endif
 {
-    VerifyOrExit((aFlags & OT_THREAD_NETDATA_UPDATED) != 0, ;);
+    VerifyOrExit((aFlags & OT_THREAD_NETDATA_UPDATED) != 0);
 
 #ifndef OTDLL
     otIp6SlaacUpdate(mInstance, mSlaacAddresses, sizeof(mSlaacAddresses) / sizeof(mSlaacAddresses[0]),
