@@ -100,6 +100,7 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
 
 {
     mKeyManager.SetMasterKey(kThreadMasterKey, sizeof(kThreadMasterKey));
+    mCoapServer.SetInterceptor(&ThreadNetif::TmfFilter);
 }
 
 ThreadError ThreadNetif::Up(void)
@@ -168,6 +169,23 @@ ThreadError ThreadNetif::RouteLookup(const Ip6::Address &source, const Ip6::Addr
     }
 
 exit:
+    return error;
+}
+
+ThreadError ThreadNetif::TmfFilter(const otMessage *aMessage, const otMessageInfo *aMessageInfo)
+{
+    const Ip6::MessageInfo &messageInfo = *static_cast<const Ip6::MessageInfo *>(aMessageInfo);
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(messageInfo.GetSockAddr().IsRoutingLocator() ||
+                 messageInfo.GetPeerAddr().IsRoutingLocator() ||
+                 messageInfo.GetSockAddr().IsLinkLocal() ||
+                 messageInfo.GetSockAddr().IsAnycastRoutingLocator() ||
+                 messageInfo.GetPeerAddr().IsAnycastRoutingLocator(),
+                 error = kThreadError_Security);
+
+exit:
+    (void)aMessage;
     return error;
 }
 

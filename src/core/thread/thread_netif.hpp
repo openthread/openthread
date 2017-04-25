@@ -328,6 +328,8 @@ public:
     otInstance *GetInstance(void);
 
 private:
+    static ThreadError TmfFilter(const otMessage *aMessage, const otMessageInfo *aMessageInfo);
+
     Coap::Server mCoapServer;
     Coap::Client mCoapClient;
     AddressResolver mAddressResolver;

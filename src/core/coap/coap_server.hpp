@@ -288,6 +288,17 @@ class Server : public CoapBase
 {
 public:
     /**
+     * This function pointer is called before CoAP server processing a CoAP packets.
+     * @param[in]   aMessage        A pointer to the message.
+     @ @param[in]   aMessageInfo    A pointer to the message info associated with @p aMessage.
+     *
+     * @retval  kThreadError_None   allow server to continue processing, otherwise the message
+     *                              should be dropped.
+     *
+     */
+    typedef ThreadError(* Interceptor)(const otMessage *aMessage, const otMessageInfo *aMessageInfo);
+
+    /**
      * This constructor initializes the object.
      *
      * @param[in]  aNetif    A reference to the network interface that CoAP server should be assigned to.
@@ -371,6 +382,16 @@ public:
 
     const MessageQueue &GetCachedResponses(void) const { return mResponsesQueue.GetResponses(); }
 
+    /**
+     * This method sets interceptor to be called before processing a CoAP packet.
+     *
+     * @param[in]   aInterceptor    A pointer to the interceptor.
+     *
+     */
+    void SetInterceptor(Interceptor aInterpreter) {
+        mInterceptor = aInterpreter;
+    }
+
 protected:
     void ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -386,6 +407,7 @@ private:
     uint16_t mPort;
     Resource *mResources;
 
+    Interceptor    mInterceptor;
     ResponsesQueue mResponsesQueue;
 };
 
