@@ -678,10 +678,10 @@ bool otThreadIsSingleton(otInstance *aInstance)
     return aInstance->mThreadNetif.GetMle().IsSingleton();
 }
 
-ThreadError otThreadDiscover(otInstance *aInstance, uint32_t aScanChannels, uint16_t aPanId,
+ThreadError otThreadDiscover(otInstance *aInstance, uint32_t aScanChannels, uint16_t aPanId, bool aJoiner,
                              otHandleActiveScanResult aCallback, void *aCallbackContext)
 {
-    return aInstance->mThreadNetif.GetMle().Discover(aScanChannels, aPanId, false, aCallback, aCallbackContext);
+    return aInstance->mThreadNetif.GetMle().Discover(aScanChannels, aPanId, aJoiner, aCallback, aCallbackContext);
 }
 
 bool otThreadIsDiscoverInProgress(otInstance *aInstance)
