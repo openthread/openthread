@@ -85,7 +85,7 @@ uint32_t otPlatRandomGet(void)
  * @return indication of error
  * @retval 0 no error occured
  */
-static int TRNGPoll(unsigned char *aOutput, size_t aLen, size_t *oLen)
+static int TRNGPoll(unsigned char *aOutput, size_t aLen)
 {
     size_t length = 0;
     union
@@ -113,7 +113,6 @@ static int TRNGPoll(unsigned char *aOutput, size_t aLen, size_t *oLen)
         aOutput[length] = buffer.u8[length % 8];
 
         length++;
-        *oLen = length;
     }
 
     return 0;
@@ -123,18 +122,16 @@ static int TRNGPoll(unsigned char *aOutput, size_t aLen, size_t *oLen)
 /**
  * Function documented in platform/random.h
  */
-ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
+ThreadError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 {
     ThreadError error = kThreadError_None;
-    size_t temp_size;
-    size_t length = aInputLength;
+    size_t length = aOutputLength;
 
-    otEXPECT_ACTION(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
+    otEXPECT_ACTION(aOutput, error = kThreadError_InvalidArgs);
 
-    otEXPECT_ACTION(TRNGPoll((unsigned char *)aOutput, length, &temp_size) != 0, error = kThreadError_Failed);
+    otEXPECT_ACTION(TRNGPoll((unsigned char *)aOutput, length) != 0, error = kThreadError_Failed);
 
 exit:
-    *aOutputLength = temp_size;
     return error;
 }
 
@@ -145,6 +142,11 @@ exit:
  */
 int mbedtls_hardware_poll(void *data, unsigned char *aOutput, size_t aLen, size_t *oLen)
 {
+    ThreadError error;
+
     (void)data;
-    return TRNGPoll(aOutput, aLen, oLen);
+    error = TRNGPoll(aOutput, aLen);
+    *oLen = aLen;
+
+    return error;
 }

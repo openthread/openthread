@@ -430,14 +430,14 @@ uint32_t otPlatRandomGet()
     return (uint32_t)RtlRandomEx(&Counter.LowPart);
 }
 
-ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
+ThreadError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 {
     // Just use the system-preferred random number generator algorithm
     NTSTATUS status = 
         BCryptGenRandom(
             NULL, 
             aOutput, 
-            (ULONG)aInputLength, 
+            (ULONG)aOutputLength, 
             BCRYPT_USE_SYSTEM_PREFERRED_RNG
             );
     NT_ASSERT(NT_SUCCESS(status));
@@ -446,8 +446,6 @@ ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint1
         LogError(DRIVER_DEFAULT, "BCryptGenRandom failed, %!STATUS!", status);
         return kThreadError_Failed;
     }
-
-    *aOutputLength = aInputLength;
 
     return kThreadError_None;
 }
