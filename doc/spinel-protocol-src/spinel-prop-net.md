@@ -55,8 +55,16 @@ Values:
 
 The partition ID of the partition that this node is a member of.
 
-### PROP 73: PROP_NET_KEY_SWITCH_GUARDTIME   {#prop-net-key-swtich-guardtime}
+### PROP 73: PROP_NET_REQUIRE_JOIN_EXISTING   {#prop-net-require-join-existing}
+* Type: Read-Write
+* Packed-Encoding: `b`
+
+### PROP 74: PROP_NET_KEY_SWITCH_GUARDTIME   {#prop-net-key-swtich-guardtime}
 * Type: Read-Write
 * Packed-Encoding: `L`
+
+### PROP 75: PROP_NET_PSKC   {#prop-net-pskc}
+* Type: Read-Write
+* Packed-Encoding: `D`
 
 
