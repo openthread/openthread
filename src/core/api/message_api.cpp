@@ -35,7 +35,7 @@
 
 #include "openthread-instance.h"
 
-using namespace Thread;
+using namespace ot;
 
 ThreadError otMessageFree(otMessage *aMessage)
 {

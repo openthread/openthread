@@ -38,7 +38,7 @@
 
 #include "openthread/types.h"
 
-namespace Thread {
+namespace ot {
 namespace Ip6 {
 
 /**
@@ -351,6 +351,6 @@ private:
  */
 
 }  // namespace Ip6
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // NET_IP6_ADDRESS_HPP_

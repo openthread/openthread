@@ -26,10 +26,10 @@
   POSSIBILITY OF SUCH DAMAGE.
 -->
 <Application
-    x:Class="Thread.App"
+    x:Class="ot.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:Thread"
+    xmlns:local="using:ot"
     RequestedTheme="Dark">
 
 </Application>

@@ -51,7 +51,7 @@
 #include <thread/mle.hpp>
 #include <thread/thread_netif.hpp>
 
-namespace Thread {
+namespace ot {
 
 DataPollManager::DataPollManager(MeshForwarder &aMeshForwarder):
     mMeshForwarder(aMeshForwarder),
@@ -404,4 +404,4 @@ void DataPollManager::HandlePollTimer(void *aContext)
     static_cast<DataPollManager *>(aContext)->SendDataPoll();
 }
 
-}  // namespace Thread
+}  // namespace ot

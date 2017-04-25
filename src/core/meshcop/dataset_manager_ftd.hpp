@@ -39,7 +39,7 @@
 
 #include <coap/coap_server.hpp>
 
-namespace Thread {
+namespace ot {
 
 class ThreadNetif;
 
@@ -86,6 +86,6 @@ private:
 };
 
 }  // namespace MeshCoP
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // MESHCOP_DATASET_MANAGER_HPP_

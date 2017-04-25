@@ -46,7 +46,7 @@
 #include <cli/cli_console.hpp>
 #include <common/new.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Cli {
 
 static Console *sServer;
@@ -106,4 +106,4 @@ int Console::OutputFormat(const char *fmt, ...)
 }
 
 }  // namespace Cli
-}  // namespace Thread
+}  // namespace ot

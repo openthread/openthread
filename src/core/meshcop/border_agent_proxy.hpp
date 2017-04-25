@@ -40,8 +40,7 @@
 #include <coap/coap_client.hpp>
 #include <coap/coap_server.hpp>
 
-namespace Thread {
-
+namespace ot {
 namespace MeshCoP {
 
 class BorderAgentProxy
@@ -120,6 +119,6 @@ private:
 };
 
 }  // namespace MeshCoP
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // BORDER_AGENT_PROXY_HPP_

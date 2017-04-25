@@ -53,7 +53,7 @@
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
-namespace Thread {
+namespace ot {
 
 AnnounceBeginClient::AnnounceBeginClient(ThreadNetif &aThreadNetif) :
     mNetif(aThreadNetif)
@@ -121,7 +121,7 @@ exit:
     return error;
 }
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 

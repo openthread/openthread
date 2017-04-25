@@ -56,9 +56,9 @@
 #include <thread/thread_uris.hpp>
 #include <thread/lowpan.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap16;
 
-namespace Thread {
+namespace ot {
 namespace NetworkData {
 
 LeaderBase::LeaderBase(ThreadNetif &aThreadNetif):
@@ -536,4 +536,4 @@ exit:
 }
 
 }  // namespace NetworkData
-}  // namespace Thread
+}  // namespace ot

@@ -44,7 +44,7 @@
 
 #include "diag_process.hpp"
 
-namespace Thread {
+namespace ot {
 namespace Diagnostics {
 
 const struct Command Diag::sCommands[] =
@@ -409,4 +409,4 @@ extern "C" void otPlatDiagRadioReceiveDone(otInstance *aInstance, RadioPacket *a
 }
 
 }  // namespace Diagnostics
-}  // namespace Thread
+}  // namespace ot

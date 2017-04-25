@@ -36,7 +36,7 @@
 
 #include "openthread/openthread.h"
 
-namespace Thread {
+namespace ot {
 namespace Ip6 {
 
 /**
@@ -116,6 +116,6 @@ private:
 };
 
 }  // namespace Ip6
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // IP6_FILTER_HPP_

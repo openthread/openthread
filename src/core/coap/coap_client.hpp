@@ -43,7 +43,7 @@
  *   This file includes definitions for the CoAP client.
  */
 
-namespace Thread {
+namespace ot {
 namespace Coap {
 
 class Client;
@@ -258,6 +258,6 @@ private:
 };
 
 }  // namespace Coap
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // COAP_CLIENT_HPP_

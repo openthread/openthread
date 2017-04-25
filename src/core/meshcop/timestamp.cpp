@@ -43,7 +43,7 @@
 
 #include <meshcop/timestamp.hpp>
 
-namespace Thread {
+namespace ot {
 namespace MeshCoP {
 
 int Timestamp::Compare(const Timestamp &aCompare) const
@@ -79,4 +79,4 @@ int Timestamp::Compare(const Timestamp &aCompare) const
 }
 
 }  // namespace MeshCoP
-}  // namespace Thread
+}  // namespace ot

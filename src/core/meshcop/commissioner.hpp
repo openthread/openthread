@@ -49,7 +49,7 @@
 #include <net/udp6.hpp>
 #include <thread/mle.hpp>
 
-namespace Thread {
+namespace ot {
 
 class ThreadNetif;
 
@@ -291,6 +291,6 @@ private:
 };
 
 }  // namespace MeshCoP
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // COMMISSIONER_HPP_

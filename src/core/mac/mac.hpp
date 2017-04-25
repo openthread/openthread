@@ -47,7 +47,7 @@
 #include <thread/topology.hpp>
 #include <thread/network_diagnostic_tlvs.hpp>
 
-namespace Thread {
+namespace ot {
 
 namespace Mle { class MleRouter; }
 
@@ -726,6 +726,6 @@ private:
  */
 
 }  // namespace Mac
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // MAC_HPP_

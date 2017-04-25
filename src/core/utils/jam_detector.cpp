@@ -46,7 +46,7 @@
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
 
-namespace Thread {
+namespace ot {
 namespace Utils {
 
 JamDetector::JamDetector(ThreadNetif &aNetif) :
@@ -242,6 +242,6 @@ void JamDetector::UpdateJamState(void)
 }
 
 }  // namespace Utils
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_ENABLE_JAM_DETECTION

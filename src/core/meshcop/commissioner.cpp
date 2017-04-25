@@ -60,9 +60,9 @@
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
 
-using Thread::Encoding::BigEndian::HostSwap64;
+using ot::Encoding::BigEndian::HostSwap64;
 
-namespace Thread {
+namespace ot {
 namespace MeshCoP {
 
 Commissioner::Commissioner(ThreadNetif &aThreadNetif):
@@ -1085,6 +1085,6 @@ exit:
 }
 
 }  // namespace MeshCoP
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER

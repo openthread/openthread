@@ -44,7 +44,7 @@
 
 #if OPENTHREAD_ENABLE_MAC_WHITELIST
 
-namespace Thread {
+namespace ot {
 namespace Mac {
 
 Whitelist::Whitelist(void)
@@ -158,6 +158,6 @@ void Whitelist::SetFixedRssi(Entry &aEntry, int8_t aRssi)
 }
 
 }  // namespace Mac
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_ENABLE_MAC_WHITELIST

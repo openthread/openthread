@@ -28,7 +28,7 @@
 
 #pragma once
 
-namespace Thread
+namespace ot
 {
 
 public interface struct IMainPageUIElements
@@ -44,4 +44,4 @@ public interface struct IMainPageUIElements
     }
 };
 
-} // namespace Thread
+} // namespace ot

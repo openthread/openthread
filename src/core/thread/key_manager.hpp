@@ -41,7 +41,7 @@
 #include <common/timer.hpp>
 #include <crypto/hmac_sha256.hpp>
 
-namespace Thread {
+namespace ot {
 
 class ThreadNetif;
 
@@ -375,6 +375,6 @@ private:
  * @}
  */
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // KEY_MANAGER_HPP_

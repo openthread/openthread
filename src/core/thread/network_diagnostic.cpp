@@ -56,9 +56,9 @@
 #include <thread/network_diagnostic.hpp>
 #include <thread/network_diagnostic_tlvs.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap16;
 
-namespace Thread {
+namespace ot {
 
 namespace NetworkDiagnostic {
 
@@ -641,4 +641,4 @@ exit:
 
 }  // namespace NetworkDiagnostic
 
-}  // namespace Thread
+}  // namespace ot

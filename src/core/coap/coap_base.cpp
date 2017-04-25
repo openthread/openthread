@@ -40,7 +40,7 @@
  *   This file contains common code base for CoAP client and server.
  */
 
-namespace Thread {
+namespace ot {
 namespace Coap {
 
 Message *CoapBase::NewMessage(const Header &aHeader, uint8_t aPriority)
@@ -108,4 +108,4 @@ exit:
 }
 
 }  // namespace Coap
-}  // namespace Thread
+}  // namespace ot

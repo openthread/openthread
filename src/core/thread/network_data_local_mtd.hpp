@@ -36,7 +36,7 @@
 
 #include <thread/network_data.hpp>
 
-namespace Thread {
+namespace ot {
 
 class ThreadNetif;
 
@@ -64,6 +64,6 @@ public:
 };
 
 }  // namespace NetworkData
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // NETWORK_DATA_LOCAL_HPP_

@@ -59,9 +59,9 @@
 #include <thread/thread_uris.hpp>
 #include <thread/lowpan.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap16;
 
-namespace Thread {
+namespace ot {
 namespace NetworkData {
 
 Leader::Leader(ThreadNetif &aThreadNetif):
@@ -1079,7 +1079,7 @@ void Leader::HandleTimer(void)
 }
 
 }  // namespace NetworkData
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_FTD
 

@@ -45,7 +45,7 @@
 #include "openthread/openthread.h"
 #include "cli.hpp"
 
-namespace Thread {
+namespace ot {
 
 namespace Cli {
 
@@ -123,4 +123,4 @@ exit:
 }
 
 }  // namespace Cli
-}  // namespace Thread
+}  // namespace ot

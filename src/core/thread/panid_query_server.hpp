@@ -44,7 +44,7 @@
 #include <net/ip6_address.hpp>
 #include <net/udp6.hpp>
 
-namespace Thread {
+namespace ot {
 
 class MeshForwarder;
 class ThreadLastTransactionTimeTlv;
@@ -107,6 +107,6 @@ private:
  * @}
  */
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // PANID_QUERY_SERVER_HPP_

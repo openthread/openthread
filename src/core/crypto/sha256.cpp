@@ -39,7 +39,7 @@
 
 #include <crypto/sha256.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Crypto {
 
 Sha256::Sha256()
@@ -68,4 +68,4 @@ void Sha256::Finish(uint8_t aHash[kHashSize])
 }
 
 }  // namespace Crypto
-}  // namespace Thread
+}  // namespace ot

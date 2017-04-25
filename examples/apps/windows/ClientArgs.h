@@ -28,7 +28,7 @@
 
 #pragma once
 
-namespace Thread
+namespace ot
 {
 
 public ref class ClientArgs sealed
@@ -40,4 +40,4 @@ public:
     property Platform::String^              ClientPort;
 };
 
-} // namespace Thread
+} // namespace ot

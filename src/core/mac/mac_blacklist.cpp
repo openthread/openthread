@@ -44,7 +44,7 @@
 
 #if OPENTHREAD_ENABLE_MAC_WHITELIST
 
-namespace Thread {
+namespace ot {
 namespace Mac {
 
 Blacklist::Blacklist(void)
@@ -133,6 +133,6 @@ exit:
 }
 
 }  // namespace Mac
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_ENABLE_MAC_WHITELIST

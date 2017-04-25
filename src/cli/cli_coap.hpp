@@ -34,7 +34,7 @@
 #ifndef CLI_COAP_HPP_
 #define CLI_COAP_HPP_
 
-namespace Thread {
+namespace ot {
 namespace Cli {
 
 /**
@@ -94,6 +94,6 @@ private:
 };
 
 }  // namespace Cli
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // CLI_COAP_HPP_

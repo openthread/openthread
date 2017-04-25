@@ -59,9 +59,9 @@
 #include <thread/mle_router.hpp>
 #include <thread/thread_netif.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap16;
 
-namespace Thread {
+namespace ot {
 namespace Mle {
 
 Mle::Mle(ThreadNetif &aThreadNetif) :
@@ -3250,4 +3250,4 @@ exit:
 }
 
 }  // namespace Mle
-}  // namespace Thread
+}  // namespace ot

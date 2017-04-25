@@ -41,12 +41,12 @@
 #include <common/encoding.hpp>
 #include <common/message.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap16;
 
-namespace Thread {
+namespace ot {
 
 /**
- * @namespace Thread::Coap
+ * @namespace ot::Coap
  * @brief
  *   This namespace includes definitions for CoAP.
  *
@@ -484,6 +484,6 @@ private:
  */
 
 }  // namespace Coap
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // COAP_HEADER_HPP_

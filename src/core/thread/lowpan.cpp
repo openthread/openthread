@@ -46,9 +46,9 @@
 #include <thread/network_data_leader.hpp>
 #include <thread/thread_netif.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap16;
 
-namespace Thread {
+namespace ot {
 namespace Lowpan {
 
 Lowpan::Lowpan(ThreadNetif &aThreadNetif):
@@ -1176,4 +1176,4 @@ exit:
 }
 
 }  // namespace Lowpan
-}  // namespace Thread
+}  // namespace ot

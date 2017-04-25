@@ -52,7 +52,7 @@
 #include <thread/mle.hpp>
 #include <openthread-instance.h>
 
-namespace Thread {
+namespace ot {
 namespace Ip6 {
 
 Ip6::Ip6(void):
@@ -1115,4 +1115,4 @@ const char *Ip6::IpProtoToString(IpProto aIpProto)
 }
 
 }  // namespace Ip6
-}  // namespace Thread
+}  // namespace ot

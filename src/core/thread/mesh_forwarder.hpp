@@ -48,7 +48,7 @@
 #include <thread/network_data_leader.hpp>
 #include <thread/topology.hpp>
 
-namespace Thread {
+namespace ot {
 
 enum
 {
@@ -346,6 +346,6 @@ private:
  *
  */
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // MESH_FORWARDER_HPP_

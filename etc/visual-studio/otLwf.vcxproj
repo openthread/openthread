@@ -6,7 +6,7 @@
     <TemplateGuid>{8b1800b9-d017-4029-9785-13ef5e5b328e}</TemplateGuid>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
-    <RootNamespace>Thread</RootNamespace>
+    <RootNamespace>ot</RootNamespace>
     <DriverType>KMDF</DriverType>
     <DriverTargetPlatform>Universal</DriverTargetPlatform>
   </PropertyGroup>

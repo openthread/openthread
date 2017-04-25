@@ -46,7 +46,7 @@
  *   This file implements the secure CoAP server.
  */
 
-namespace Thread {
+namespace ot {
 namespace Coap {
 
 SecureServer::SecureServer(ThreadNetif &aNetif, uint16_t aPort):
@@ -271,6 +271,6 @@ exit:
 }
 
 }  // namespace Coap
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD

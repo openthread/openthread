@@ -48,7 +48,7 @@
 
 #include "utils/wrap_string.h"
 
-namespace Thread {
+namespace ot {
 namespace Utils {
 
 void Slaac::UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddresses, uint32_t aNumAddresses,
@@ -236,4 +236,4 @@ exit:
 
 
 }  // namespace Slaac
-}  // namespace Thread
+}  // namespace ot

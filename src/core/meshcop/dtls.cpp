@@ -52,7 +52,7 @@
 
 #if OPENTHREAD_ENABLE_DTLS
 
-namespace Thread {
+namespace ot {
 namespace MeshCoP {
 
 Dtls::Dtls(ThreadNetif &aNetif):
@@ -517,6 +517,6 @@ void Dtls::HandleMbedtlsDebug(void *ctx, int level, const char *, int, const cha
 }
 
 }  // namespace MeshCoP
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_ENABLE_DTLS

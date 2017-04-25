@@ -65,7 +65,7 @@
 #include <openthread-instance.h>
 #include <stdarg.h>
 
-namespace Thread
+namespace ot
 {
 
 #define NCP_INVALID_SCAN_CHANNEL              (-1)
@@ -6890,7 +6890,7 @@ ThreadError NcpBase::StreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDa
     return errorCode;
 }
 
-}  // namespace Thread
+}  // namespace ot
 
 
 // ----------------------------------------------------------------------------
@@ -6900,7 +6900,7 @@ ThreadError NcpBase::StreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDa
 ThreadError otNcpStreamWrite(int aStreamId, const uint8_t* aDataPtr, int aDataLen)
 {
     ThreadError errorCode  = kThreadError_InvalidState;
-    Thread::NcpBase *ncp = Thread::NcpBase::GetNcpInstance();
+    ot::NcpBase *ncp = ot::NcpBase::GetNcpInstance();
 
     if (ncp != NULL)
     {
@@ -6917,7 +6917,7 @@ ThreadError otNcpStreamWrite(int aStreamId, const uint8_t* aDataPtr, int aDataLe
 void otNcpRegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers)
 {
 #if OPENTHREAD_ENABLE_LEGACY
-    Thread::NcpBase *ncp = Thread::NcpBase::GetNcpInstance();
+    ot::NcpBase *ncp = ot::NcpBase::GetNcpInstance();
 
     if (ncp != NULL)
     {
@@ -6931,7 +6931,7 @@ void otNcpRegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers)
 void otNcpHandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix)
 {
 #if OPENTHREAD_ENABLE_LEGACY
-    Thread::NcpBase *ncp = Thread::NcpBase::GetNcpInstance();
+    ot::NcpBase *ncp = ot::NcpBase::GetNcpInstance();
 
     if (ncp != NULL)
     {
@@ -6945,7 +6945,7 @@ void otNcpHandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix)
 void otNcpHandleLegacyNodeDidJoin(const otExtAddress *aExtAddr)
 {
 #if OPENTHREAD_ENABLE_LEGACY
-    Thread::NcpBase *ncp = Thread::NcpBase::GetNcpInstance();
+    ot::NcpBase *ncp = ot::NcpBase::GetNcpInstance();
 
     if (ncp != NULL)
     {

@@ -39,7 +39,7 @@
 #include <common/message.hpp>
 #include <net/ip6_address.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Ip6 {
 
 /**
@@ -120,6 +120,6 @@ private:
  */
 
 }  // namespace Ip6
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // NET_IP6_ROUTES_HPP_

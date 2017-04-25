@@ -35,7 +35,7 @@
 
 #include "openthread-instance.h"
 
-using namespace Thread;
+using namespace ot;
 
 ThreadError otNetDataGetLeader(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength)
 {

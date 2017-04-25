@@ -37,7 +37,7 @@
 
 #include "openthread/types.h"
 
-namespace Thread {
+namespace ot {
 
 class ThreadNetif;
 
@@ -58,6 +58,6 @@ public:
 };
 
 }  // namespace MeshCoP
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // MESHCOP_DATASET_MANAGER_HPP_

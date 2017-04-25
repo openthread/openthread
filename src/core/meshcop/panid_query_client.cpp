@@ -54,7 +54,7 @@
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
-namespace Thread {
+namespace ot {
 
 PanIdQueryClient::PanIdQueryClient(ThreadNetif &aThreadNetif) :
     mCallback(NULL),
@@ -161,7 +161,7 @@ exit:
     return;
 }
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif //  OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 

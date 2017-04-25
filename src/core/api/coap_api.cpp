@@ -38,7 +38,7 @@
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 
-using namespace Thread;
+using namespace ot;
 
 void otCoapHeaderInit(otCoapHeader *aHeader, otCoapType aType, otCoapCode aCode)
 {

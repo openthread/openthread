@@ -47,7 +47,7 @@
  *   This file implements the CoAP client.
  */
 
-namespace Thread {
+namespace ot {
 namespace Coap {
 
 Client::Client(Ip6::Netif &aNetif, SenderFunction aSender, ReceiverFunction aReceiver):
@@ -471,4 +471,4 @@ RequestMetadata::RequestMetadata(bool aConfirmable, const Ip6::MessageInfo &aMes
 }
 
 }  // namespace Coap
-}  // namespace Thread
+}  // namespace ot

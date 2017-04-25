@@ -41,7 +41,7 @@
 #include <net/udp6.hpp>
 #include <thread/mle.hpp>
 
-namespace Thread {
+namespace ot {
 namespace MeshCoP {
 
 OT_TOOL_PACKED_BEGIN
@@ -151,6 +151,6 @@ private:
 };
 
 }  // namespace MeshCoP
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // MESHCOP_LEADER_HPP_

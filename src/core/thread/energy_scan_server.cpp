@@ -51,7 +51,7 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
 
-namespace Thread {
+namespace ot {
 
 EnergyScanServer::EnergyScanServer(ThreadNetif &aThreadNetif) :
     mChannelMask(0),
@@ -248,4 +248,4 @@ void EnergyScanServer::HandleNetifStateChanged(uint32_t aFlags)
     }
 }
 
-}  // namespace Thread
+}  // namespace ot

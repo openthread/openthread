@@ -38,7 +38,7 @@
 
 #include <net/ip6_headers.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Ip6 {
 
 /**
@@ -144,6 +144,6 @@ public:
  */
 
 }  // namespace Ip6
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // TCP_HPP_

@@ -43,7 +43,7 @@
 #include "utils/wrap_stdint.h"
 #include <common/timer.hpp>
 
-namespace Thread {
+namespace ot {
 
 class ThreadNetif;
 
@@ -216,6 +216,6 @@ private:
  */
 
 }  // namespace Utils
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // JAM_DETECTOR_HPP_

@@ -38,7 +38,7 @@
 
 #include <mbedtls/md.h>
 
-namespace Thread {
+namespace ot {
 namespace Crypto {
 
 /**
@@ -108,6 +108,6 @@ private:
  */
 
 }  // namespace Crypto
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // HMAC_SHA256_HPP_

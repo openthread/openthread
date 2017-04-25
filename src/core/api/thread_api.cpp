@@ -40,7 +40,7 @@
 #include "common/settings.hpp"
 #include "openthread/platform/settings.h"
 
-using namespace Thread;
+using namespace ot;
 
 uint8_t otThreadGetMaxAllowedChildren(otInstance *aInstance)
 {

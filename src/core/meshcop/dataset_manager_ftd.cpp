@@ -62,7 +62,7 @@
 
 #if OPENTHREAD_FTD
 
-namespace Thread {
+namespace ot {
 namespace MeshCoP {
 
 ActiveDataset::ActiveDataset(ThreadNetif &aThreadNetif):
@@ -291,6 +291,6 @@ exit:
 }
 
 }  // namespace MeshCoP
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_FTD

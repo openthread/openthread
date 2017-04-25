@@ -62,7 +62,7 @@
 #include <meshcop/leader.hpp>
 #include <openthread/types.h>
 
-namespace Thread {
+namespace ot {
 namespace MeshCoP {
 
 DatasetManager::DatasetManager(ThreadNetif &aThreadNetif, const Tlv::Type aType, const char *aUriSet,
@@ -1164,4 +1164,4 @@ void PendingDatasetBase::HandleGet(Coap::Header &aHeader, Message &aMessage, con
 }
 
 }  // namespace MeshCoP
-}  // namespace Thread
+}  // namespace ot

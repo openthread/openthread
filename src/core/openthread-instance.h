@@ -60,7 +60,7 @@ typedef struct otInstance
     // Callbacks
     //
 
-    Thread::Ip6::NetifCallback mNetifCallback[OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS];
+    ot::Ip6::NetifCallback mNetifCallback[OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS];
 
     otIp6ReceiveCallback mReceiveIp6DatagramCallback;
     void *mReceiveIp6DatagramCallbackContext;
@@ -76,17 +76,17 @@ typedef struct otInstance
     //
 
 #ifndef OPENTHREAD_MULTIPLE_INSTANCE
-    Thread::Crypto::MbedTls mMbedTls;
+    ot::Crypto::MbedTls mMbedTls;
 #endif
-    Thread::Ip6::Ip6 mIp6;
-    Thread::ThreadNetif mThreadNetif;
+    ot::Ip6::Ip6 mIp6;
+    ot::ThreadNetif mThreadNetif;
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-    Thread::LinkRaw mLinkRaw;
+    ot::LinkRaw mLinkRaw;
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
-    Thread::Coap::Server mApplicationCoapServer;
+    ot::Coap::Server mApplicationCoapServer;
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
@@ -98,12 +98,12 @@ typedef struct otInstance
 
 } otInstance;
 
-static inline otInstance *otInstanceFromIp6(Thread::Ip6::Ip6 *aIp6)
+static inline otInstance *otInstanceFromIp6(ot::Ip6::Ip6 *aIp6)
 {
     return (otInstance *)CONTAINING_RECORD(aIp6, otInstance, mIp6);
 }
 
-static inline otInstance *otInstanceFromThreadNetif(Thread::ThreadNetif *aThreadNetif)
+static inline otInstance *otInstanceFromThreadNetif(ot::ThreadNetif *aThreadNetif)
 {
     return (otInstance *)CONTAINING_RECORD(aThreadNetif, otInstance, mThreadNetif);
 }

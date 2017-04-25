@@ -39,7 +39,7 @@
 #include "openthread/types.h"
 #include <common/code_utils.hpp>
 
-namespace Thread {
+namespace ot {
 
 class MeshForwarder;
 
@@ -237,6 +237,6 @@ private:
  *
  */
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // DATA_POLL_MANAGER_HPP_

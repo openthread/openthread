@@ -53,10 +53,10 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
-using Thread::Encoding::BigEndian::HostSwap64;
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap64;
 
-namespace Thread {
+namespace ot {
 namespace MeshCoP {
 
 JoinerRouter::JoinerRouter(ThreadNetif &aNetif):
@@ -534,7 +534,7 @@ exit:
 }
 
 }  // namespace Dtls
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_FTD
 

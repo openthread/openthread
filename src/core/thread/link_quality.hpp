@@ -36,7 +36,7 @@
 
 #include "openthread/types.h"
 
-namespace Thread {
+namespace ot {
 
 /**
  * @addtogroup core-link-quality
@@ -258,6 +258,6 @@ void ClearNoiseFloorAverage(LinkQualityInfo &aNoiseFloor);
  * @}
  */
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif // LINK_QUALITY_HPP_

@@ -44,7 +44,7 @@
 #include <net/dhcp6.hpp>
 #include <net/udp6.hpp>
 
-namespace Thread {
+namespace ot {
 
 class ThreadNetif;
 namespace Mle { class MleRouter; }
@@ -245,6 +245,6 @@ private:
 };
 
 }  // namespace Dhcp6
-}  // namespace Thread
+}  // namespace ot
 
 # endif  // DHCP6_CLIENT_HPP_

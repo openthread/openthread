@@ -32,7 +32,7 @@
 #include "IAsyncThreadNotify.h"
 #include "ListenerArgs.h"
 
-namespace Thread
+namespace ot
 {
 
 [Windows::Foundation::Metadata::WebHostHidden]
@@ -68,4 +68,4 @@ private:
     Args^               _args;
 };
 
-} // namespace Thread
+} // namespace ot

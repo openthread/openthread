@@ -46,9 +46,9 @@
  *   This file implements the DNS client.
  */
 
-using Thread::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap16;
 
-namespace Thread {
+namespace ot {
 namespace Dns {
 
 ThreadError Client::Start(void)
@@ -522,6 +522,6 @@ exit:
 }
 
 }  // namespace Coap
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_ENABLE_DNS_CLIENT

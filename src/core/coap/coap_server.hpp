@@ -44,7 +44,7 @@
 #include <net/ip6.hpp>
 #include <net/udp6.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Coap {
 
 /**
@@ -396,6 +396,6 @@ private:
  */
 
 }  // namespace Coap
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // COAP_SERVER_HPP_

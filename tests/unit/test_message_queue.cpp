@@ -40,11 +40,11 @@
 #define kNumTestMessages      5
 
 // This function verifies the content of the message queue to match the passed in messages
-void VerifyMessageQueueContent(Thread::MessageQueue &aMessageQueue, int aExpectedLength, ...)
+void VerifyMessageQueueContent(ot::MessageQueue &aMessageQueue, int aExpectedLength, ...)
 {
     va_list args;
-    Thread::Message *message;
-    Thread::Message *msgArg;
+    ot::Message *message;
+    ot::Message *msgArg;
 
     va_start(args, aExpectedLength);
 
@@ -59,7 +59,7 @@ void VerifyMessageQueueContent(Thread::MessageQueue &aMessageQueue, int aExpecte
         {
             VerifyOrQuit(aExpectedLength != 0, "MessageQueue contains more entries than expected\n");
 
-            msgArg = va_arg(args, Thread::Message *);
+            msgArg = va_arg(args, ot::Message *);
             VerifyOrQuit(msgArg == message, "MessageQueue content does not match what is expected.\n");
 
             aExpectedLength--;
@@ -74,15 +74,15 @@ void VerifyMessageQueueContent(Thread::MessageQueue &aMessageQueue, int aExpecte
 void TestMessageQueue(void)
 {
     otInstance instance;
-    Thread::MessagePool messagePool(&instance);
-    Thread::MessageQueue messageQueue;
-    Thread::Message *msg[kNumTestMessages];
+    ot::MessagePool messagePool(&instance);
+    ot::MessageQueue messageQueue;
+    ot::Message *msg[kNumTestMessages];
     ThreadError error;
     uint16_t msgCount, bufferCount;
 
     for (int i = 0; i < kNumTestMessages; i++)
     {
-        msg[i] = messagePool.New(Thread::Message::kTypeIp6, 0);
+        msg[i] = messagePool.New(ot::Message::kTypeIp6, 0);
         VerifyOrQuit(msg[i] != NULL, "Message::New failed\n");
     }
 

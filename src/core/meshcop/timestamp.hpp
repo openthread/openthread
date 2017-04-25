@@ -37,9 +37,9 @@
 
 #include <common/encoding.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap16;
 
-namespace Thread {
+namespace ot {
 namespace MeshCoP {
 
 /**
@@ -147,6 +147,6 @@ private:
 } OT_TOOL_PACKED_END;
 
 }  // namespace MeshCoP
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // MESHCOP_TIMESTAMP_HPP_

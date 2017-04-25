@@ -36,7 +36,7 @@
 #include "openthread/types.h"
 #include "openthread/message.h"
 
-namespace Thread {
+namespace ot {
 
 class NcpFrameBuffer
 {
@@ -354,6 +354,6 @@ private:
     uint8_t *       mReadMessageTail;           // Pointer to end of current part in mMessageBuffer.
 };
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // NCP_FRAME_BUFFER_HPP_

@@ -42,7 +42,7 @@
 #include <net/ip6.hpp>
 #include <net/netif.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Ip6 {
 
 Netif::Netif(Ip6 &aIp6, int8_t aInterfaceId):
@@ -465,4 +465,4 @@ void Netif::HandleStateChangedTask(void)
 }
 
 }  // namespace Ip6
-}  // namespace Thread
+}  // namespace ot

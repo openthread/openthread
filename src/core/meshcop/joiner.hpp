@@ -45,7 +45,7 @@
 #include <meshcop/dtls.hpp>
 #include <meshcop/tlvs.hpp>
 
-namespace Thread {
+namespace ot {
 
 class ThreadNetif;
 
@@ -161,6 +161,6 @@ private:
 };
 
 }  // namespace MeshCoP
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // JOINER_HPP_

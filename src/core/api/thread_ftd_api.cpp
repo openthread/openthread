@@ -37,7 +37,7 @@
 
 #include "openthread-instance.h"
 
-using namespace Thread;
+using namespace ot;
 
 #if OPENTHREAD_FTD
 

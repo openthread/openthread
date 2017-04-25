@@ -42,7 +42,7 @@
 #include <thread/link_quality.hpp>
 #include <common/message.hpp>
 
-namespace Thread {
+namespace ot {
 
 /**
  * This class represents a Thread neighbor.
@@ -736,6 +736,6 @@ private:
     bool    mReclaimDelay : 1;    ///< Indicates whether or not this entry is waiting to be reclaimed
 };
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // TOPOLOGY_HPP_

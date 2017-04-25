@@ -55,9 +55,9 @@
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap16;
 
-namespace Thread {
+namespace ot {
 namespace Mle {
 
 MleRouter::MleRouter(ThreadNetif &aThreadNetif):
@@ -4516,7 +4516,7 @@ uint8_t MleRouter::GetMinDowngradeNeighborRouters(void)
 }
 
 }  // namespace Mle
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_FTD
 

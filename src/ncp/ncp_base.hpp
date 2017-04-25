@@ -49,7 +49,7 @@
 
 #include "spinel.h"
 
-namespace Thread {
+namespace ot {
 
 class NcpBase
 {
@@ -674,6 +674,6 @@ private:
 
 };
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // NCP_BASE_HPP_

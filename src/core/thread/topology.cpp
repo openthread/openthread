@@ -44,7 +44,7 @@
 #include <common/logging.hpp>
 #include <thread/topology.hpp>
 
-namespace Thread {
+namespace ot {
 
 void Neighbor::GenerateChallenge(void)
 {
@@ -78,4 +78,4 @@ const Mac::Address &Child::GetMacAddress(Mac::Address &aMacAddress) const
     return aMacAddress;
 }
 
-}  // namespace Thread
+}  // namespace ot

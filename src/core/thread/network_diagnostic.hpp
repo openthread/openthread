@@ -42,7 +42,7 @@
 #include <coap/coap_server.hpp>
 #include <net/udp6.hpp>
 
-namespace Thread {
+namespace ot {
 
 class ThreadNetif;
 
@@ -156,6 +156,6 @@ private:
  */
 } // namespace NetworkDiagnostic
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // NETWORK_DIAGNOSTIC_HPP_

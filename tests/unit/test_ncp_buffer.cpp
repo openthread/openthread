@@ -34,7 +34,7 @@
 #include <common/message.hpp>
 #include <ncp/ncp_buffer.hpp>
 
-namespace Thread {
+namespace ot {
 
 // This module implements unit-test for NcpFrameBuffer class.
 
@@ -461,12 +461,12 @@ void TestNcpFrameBuffer(void)
     printf("\n -- PASS\n");
 }
 
-}  // namespace Thread
+}  // namespace ot
 
 #ifdef ENABLE_TEST_MAIN
 int main(void)
 {
-    Thread::TestNcpFrameBuffer();
+    ot::TestNcpFrameBuffer();
     printf("\nAll tests passed.\n");
     return 0;
 }

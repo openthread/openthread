@@ -50,13 +50,13 @@
 #include <net/socket.hpp>
 #include <net/udp6.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
-using Thread::Encoding::BigEndian::HostSwap32;
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
-namespace Thread {
+namespace ot {
 
 /**
- * @namespace Thread::Ip6
+ * @namespace ot::Ip6
  *
  * @brief
  *   This namespace includes definitions for IPv6 networking.
@@ -409,6 +409,6 @@ static inline Ip6 *Ip6FromTimerScheduler(TimerScheduler *aTimerScheduler)
  */
 
 }  // namespace Ip6
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // NET_IP6_HPP_

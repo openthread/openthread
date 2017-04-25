@@ -51,7 +51,7 @@
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
 
-namespace Thread {
+namespace ot {
 namespace NetworkData {
 
 NetworkData::NetworkData(ThreadNetif &aThreadNetif, bool aLocal):
@@ -669,4 +669,4 @@ void NetworkData::ClearResubmitDelayTimer(void)
 }
 
 }  // namespace NetworkData
-}  // namespace Thread
+}  // namespace ot

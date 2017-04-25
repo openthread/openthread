@@ -41,7 +41,7 @@
  *   This file contains common code base for CoAP client and server.
  */
 
-namespace Thread {
+namespace ot {
 namespace Coap {
 
 /**
@@ -200,6 +200,6 @@ private:
 };
 
 }  // namespace Coap
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // COAP_BASE_HPP_

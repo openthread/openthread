@@ -43,7 +43,7 @@
 #include <net/ip6_address.hpp>
 #include <net/udp6.hpp>
 
-namespace Thread {
+namespace ot {
 
 class ThreadNetif;
 
@@ -103,6 +103,6 @@ private:
  * @}
  */
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // ENERGY_SCAN_CLIENT_HPP_
