@@ -566,8 +566,18 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_LOG_SUFFIX
-#define OPENTHREAD_CONFIG_LOG_SUFFIX                           ""
+#define OPENTHREAD_CONFIG_LOG_SUFFIX                            ""
 #endif  // OPENTHREAD_CONFIG_LOG_SUFFIX
+
+/**
+ * @def OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION
+ *
+ * Defines the name of function/marco used for logging inside Openthread, by default is set to `otPlatLog()`.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION
+#define OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION                     otPlatLog
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES
