@@ -42,16 +42,13 @@ OBJCOPY                         = arc-elf32-objcopy
 BuildJobs                      ?= 99
 
 configure_OPTIONS               = \
-    --enable-ftd                  \
-    --enable-cli                  \
-    --enable-ncp                  \
+    --enable-cli-app=all          \
+    --enable-ncp-app=all          \
+    --with-ncp-bus=uart           \
+    --enable-default-logging      \
     --with-examples=emsk          \
     --with-platform-info=EMSK     \
     $(NULL)
-
-ifeq ($(CLI_LOGGING),1)
-configure_OPTIONS              += --enable-cli-logging
-endif
 
 ifeq ($(CERT_LOG),1)
 configure_OPTIONS              += --enable-cert-log
