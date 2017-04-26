@@ -42,6 +42,7 @@
         ..\..\third_party\mbedtls;
         ..\..\third_party\mbedtls\repo\include;
         ..\..\third_party\mbedtls\repo\include\mbedtls
+	.\win_include;
       </AdditionalIncludeDirectories>
       <PreprocessorDefinitions>
         %(PreprocessorDefinitions);
