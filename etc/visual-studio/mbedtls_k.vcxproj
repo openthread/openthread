@@ -47,6 +47,7 @@
       <PreprocessorDefinitions>
         %(PreprocessorDefinitions);
         MBEDTLS_CONFIG_FILE="mbedtls-config.h";
+        OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";
         HAVE_STDBOOL_H=1;
         HAVE_STDINT_H=1;
         OPENTHREAD_MULTIPLE_INSTANCE;
