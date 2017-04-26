@@ -1482,7 +1482,7 @@ const char *spinel_status_to_cstr(spinel_status_t status)
 #if SPINEL_SELF_TEST
 
 #include <stdlib.h>
-#include <string.h>
+#include "wrap_string.h"
 
 
 int
