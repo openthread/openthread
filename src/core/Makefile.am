@@ -72,7 +72,7 @@ libopenthread_mtd_a_CPPFLAGS        = \
 #     All code(files) should be compiled
 #     Even if it is not used or required
 #
-#     For example: In the MTD build, some features 
+#     For example: In the MTD build, some features
 #     are disabled and thus in the traditional scheme
 #     source files could be excluded SOURCES_COMMON
 #     via makefile IF/ELSE/ENDIF constructs.
@@ -176,6 +176,7 @@ SOURCES_COMMON                      = \
     thread/panid_query_server.cpp     \
     thread/src_match_controller.cpp   \
     thread/thread_netif.cpp           \
+    thread/topology.cpp               \
     utils/jam_detector.cpp            \
     utils/slaac_address.cpp           \
     $(NULL)
