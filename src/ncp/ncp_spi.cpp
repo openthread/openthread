@@ -30,6 +30,12 @@
  *   This file implements a SPI interface to the OpenThread stack.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include "openthread/ncp.h"
 #include "openthread/platform/spi-slave.h"
 
