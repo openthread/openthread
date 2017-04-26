@@ -177,11 +177,13 @@ ThreadError ThreadNetif::TmfFilter(const otMessage *aMessage, const otMessageInf
     const Ip6::MessageInfo &messageInfo = *static_cast<const Ip6::MessageInfo *>(aMessageInfo);
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(messageInfo.GetSockAddr().IsRoutingLocator() ||
-                 messageInfo.GetPeerAddr().IsRoutingLocator() ||
-                 messageInfo.GetSockAddr().IsLinkLocal() ||
-                 messageInfo.GetSockAddr().IsAnycastRoutingLocator() ||
-                 messageInfo.GetPeerAddr().IsAnycastRoutingLocator(),
+    VerifyOrExit(((messageInfo.GetPeerAddr().IsRoutingLocator() ||
+                   messageInfo.GetPeerAddr().IsAnycastRoutingLocator()) &&
+                  (messageInfo.GetSockAddr().IsRoutingLocator() ||
+                   messageInfo.GetSockAddr().IsAnycastRoutingLocator() ||
+                   messageInfo.GetSockAddr().IsRealmLocalMulticast())) ||
+                 (messageInfo.GetPeerAddr().IsLinkLocal() &&
+                  messageInfo.GetSockAddr().IsLinkLocal()),
                  error = kThreadError_Security);
 
 exit:
