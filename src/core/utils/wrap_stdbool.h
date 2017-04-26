@@ -40,9 +40,13 @@
 #else
 
 /* Supply our own */
+#if __cplusplus
+/* c++ has a built in bool */
+#else
 #if !defined(_MSC_VER)
 typedef _Bool bool;
 #endif // visual studio has a bool
+#endif
 
 #if !defined(__bool_true_false_are_defined)
 #define __bool_true_false_are_defined 1
