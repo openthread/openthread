@@ -38,6 +38,7 @@ DIST_SUBDIRS                            = \
     emsk                                  \
     kw41z                                 \
     nrf52840                              \
+    rpi_qorvo                             \
     posix                                 \
     utils                                 \
     $(NULL)
@@ -76,6 +77,10 @@ if OPENTHREAD_EXAMPLES_NRF52840
 SUBDIRS                                += nrf52840
 endif
 
+if OPENTHREAD_EXAMPLES_RPI_QORVO
+SUBDIRS                                += rpi_qorvo
+endif
+
 if OPENTHREAD_EXAMPLES_POSIX
 SUBDIRS                                += posix
 endif
@@ -90,6 +95,7 @@ PRETTY_SUBDIRS                          = \
     emsk                                  \
     kw41z                                 \
     nrf52840                              \
+    rpi_qorvo                             \
     posix                                 \
     utils                                 \
     $(NULL)

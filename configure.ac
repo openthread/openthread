@@ -1110,6 +1110,10 @@ case ${with_examples} in
         AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_NRF52840],[${OPENTHREAD_EXAMPLES_NRF52840}],[Define to 1 if you want to use nrf52840 examples])
         ;;
 
+    rpi_qorvo)
+        OPENTHREAD_EXAMPLES_RPI_QORVO=1
+        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_RPI_QORVO],[${OPENTHREAD_EXAMPLES_RPI_QORVO}],[Define to 1 if you want to use rpi_qorvo examples])
+        ;;
 esac
 
 AC_MSG_CHECKING([whether to enable examples])
@@ -1142,6 +1146,9 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_KW41Z], [test "${OPENTHREAD_EXAMPLES}" = "kw
 
 AC_SUBST(OPENTHREAD_EXAMPLES_NRF52840)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52840], [test "${OPENTHREAD_EXAMPLES}" = "nrf52840"])
+
+AC_SUBST(OPENTHREAD_EXAMPLES_RPI_QORVO)
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_RPI_QORVO], [test "${OPENTHREAD_EXAMPLES}" = "rpi_qorvo"])
 
 #
 # Platform Information
@@ -1306,6 +1313,7 @@ examples/platforms/efr32/Makefile
 examples/platforms/emsk/Makefile
 examples/platforms/kw41z/Makefile
 examples/platforms/nrf52840/Makefile
+examples/platforms/rpi_qorvo/Makefile
 examples/platforms/posix/Makefile
 examples/platforms/utils/Makefile
 tools/Makefile
