@@ -1336,6 +1336,7 @@ otThreadDiscover(
     uint32_t aScanChannels, 
     uint16_t aPanid,
     bool aJoiner,
+    bool aEnableEui64Filtering,
     otHandleActiveScanResult aCallback,
     void *aCallbackContext
     )
@@ -1347,7 +1348,7 @@ otThreadDiscover(
         aInstance->InterfaceGuid, aCallback, aCallbackContext
         );
 
-    PackedBuffer4<GUID,uint32_t,uint16_t, bool> Buffer(aInstance->InterfaceGuid, aScanChannels, aPanid, aJoiner);
+    PackedBuffer5<GUID,uint32_t,uint16_t, uint8_t, uint8_t> Buffer(aInstance->InterfaceGuid, aScanChannels, aPanid, aJoiner, aEnableEui64Filtering);
     return DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_DISCOVER, &Buffer, sizeof(Buffer), nullptr, 0));
 }
 

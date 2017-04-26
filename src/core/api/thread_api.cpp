@@ -516,9 +516,10 @@ bool otThreadIsSingleton(otInstance *aInstance)
 }
 
 ThreadError otThreadDiscover(otInstance *aInstance, uint32_t aScanChannels, uint16_t aPanId, bool aJoiner,
-                             otHandleActiveScanResult aCallback, void *aCallbackContext)
+                             bool aEnableEui64Filtering, otHandleActiveScanResult aCallback, void *aCallbackContext)
 {
-    return aInstance->mThreadNetif.GetMle().Discover(aScanChannels, aPanId, aJoiner, aCallback, aCallbackContext);
+    return aInstance->mThreadNetif.GetMle().Discover(aScanChannels, aPanId, aJoiner, aEnableEui64Filtering, aCallback,
+                                                     aCallbackContext);
 }
 
 bool otThreadIsDiscoverInProgress(otInstance *aInstance)

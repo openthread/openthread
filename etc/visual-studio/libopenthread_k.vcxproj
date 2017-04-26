@@ -115,6 +115,7 @@
     <ClCompile Include="..\..\src\core\meshcop\leader.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\panid_query_client.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\timestamp.cpp" />
+    <ClCompile Include="..\..\src\core\meshcop\meshcop_tlvs.cpp" />
     <ClCompile Include="..\..\src\core\net\dhcp6_client.cpp" />
     <ClCompile Include="..\..\src\core\net\dhcp6_server.cpp" />
     <ClCompile Include="..\..\src\core\net\icmp6.cpp" />

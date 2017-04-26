@@ -43,7 +43,7 @@
 #include <common/message.hpp>
 #include <common/timer.hpp>
 #include <mac/mac_frame.hpp>
-#include <meshcop/tlvs.hpp>
+#include <meshcop/meshcop_tlvs.hpp>
 #include <net/udp6.hpp>
 #include <thread/key_manager.hpp>
 

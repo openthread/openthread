@@ -51,7 +51,7 @@
 #include <common/settings.hpp>
 #include <crypto/aes_ccm.hpp>
 #include <mac/mac_frame.hpp>
-#include <meshcop/tlvs.hpp>
+#include <meshcop/meshcop_tlvs.hpp>
 #include <net/netif.hpp>
 #include <net/udp6.hpp>
 #include <thread/address_resolver.hpp>
@@ -92,6 +92,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mDiscoverHandler(NULL),
     mDiscoverContext(NULL),
     mIsDiscoverInProgress(false),
+    mEnableEui64Filtering(false),
     mAnnounceChannel(kPhyMinChannel),
     mPreviousChannel(0),
     mPreviousPanId(Mac::kPanIdBroadcast)
@@ -391,8 +392,8 @@ exit:
     return error;
 }
 
-ThreadError Mle::Discover(uint32_t aScanChannels, uint16_t aPanId, bool aJoiner, DiscoverHandler aCallback,
-                          void *aContext)
+ThreadError Mle::Discover(uint32_t aScanChannels, uint16_t aPanId, bool aJoiner, bool aEnableEui64Filtering,
+                          DiscoverHandler aCallback, void *aContext)
 {
     ThreadError error = kThreadError_None;
     Message *message = NULL;
@@ -402,6 +403,8 @@ ThreadError Mle::Discover(uint32_t aScanChannels, uint16_t aPanId, bool aJoiner,
     uint16_t startOffset;
 
     VerifyOrExit(!mIsDiscoverInProgress, error = kThreadError_Busy);
+
+    mEnableEui64Filtering = aEnableEui64Filtering;
 
     mDiscoverHandler = aCallback;
     mDiscoverContext = aContext;
@@ -454,6 +457,7 @@ bool Mle::IsDiscoverInProgress(void)
 void Mle::HandleDiscoverComplete(void)
 {
     mIsDiscoverInProgress = false;
+    mEnableEui64Filtering = false;
     mDiscoverHandler(NULL, mDiscoverContext);
 }
 
@@ -3102,8 +3106,36 @@ ThreadError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Mes
         case MeshCoP::Tlv::kSteeringData:
             aMessage.Read(offset, sizeof(steeringData), &steeringData);
             VerifyOrExit(steeringData.IsValid(), error = kThreadError_Parse);
+
+            // Pass up MLE discovery responses only if the steering data is set to all 0xFFs,
+            // or if it matches the factory set EUI64.
+            if (mEnableEui64Filtering)
+            {
+                otExtAddress mfgEUI64;
+                Crc16 ccitt(Crc16::kCcitt);
+                Crc16 ansi(Crc16::kAnsi);
+
+                // Get Factory set EUI64
+                otPlatRadioGetIeeeEui64(GetInstance(), mfgEUI64.m8);
+
+                // Compute bloom filter
+                for (size_t i = 0; i < sizeof(mfgEUI64.m8); i++)
+                {
+                    ccitt.Update(mfgEUI64.m8[i]);
+                    ansi.Update(mfgEUI64.m8[i]);
+                }
+
+                // Drop responses that don't match the bloom filter
+                if (!steeringData.GetBit(ccitt.Get() % steeringData.GetNumBits()) ||
+                    !steeringData.GetBit(ansi.Get() % steeringData.GetNumBits()))
+                {
+                    ExitNow(error = kThreadError_None);
+                }
+            }
+
             result.mSteeringData.mLength = steeringData.GetLength();
             memcpy(result.mSteeringData.m8, steeringData.GetValue(), result.mSteeringData.mLength);
+
             break;
 
         case MeshCoP::Tlv::kJoinerUdpPort:

@@ -39,6 +39,7 @@
 
 #include "openthread/types.h"
 
+#include <common/crc16.hpp>
 #include <common/encoding.hpp>
 #include <common/message.hpp>
 #include <common/tlvs.hpp>
@@ -629,6 +630,23 @@ public:
      *
      */
     void SetBit(uint8_t aBit) { mSteeringData[GetLength() - 1 - (aBit / 8)] |= 1 << (aBit % 8); }
+
+    /**
+     * Ths method indicates whether or not the SteeringData is all zeros.
+     *
+     * @retval TRUE   If the SteeringData is all zeros.
+     * @retval FALSE  If the SteeringData isn't all zeros.
+     *
+     */
+    bool IsCleared(void) const;
+
+    /**
+     * This method computes the Bloom Filter.
+     *
+     * @param[in]  aExtAddress  Extended address
+     *
+     */
+    void ComputeBloomFilter(otExtAddress *aExtAddress);
 
 private:
     uint8_t mSteeringData[OT_STEERING_DATA_MAX_LENGTH];

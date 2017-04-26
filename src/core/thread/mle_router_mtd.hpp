@@ -122,6 +122,10 @@ public:
     void FillConnectivityTlv(ConnectivityTlv &) { }
     void FillRouteTlv(RouteTlv &) { }
 
+#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+    ThreadError SetSteeringData(otExtAddress *) { return kThreadError_NotImplemented; };
+#endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+
 private:
     ThreadError HandleDetachStart(void) { return kThreadError_None; }
     ThreadError HandleChildStart(otMleAttachFilter) { return kThreadError_None; }

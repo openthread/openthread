@@ -117,7 +117,7 @@ ThreadError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl,
     SuccessOrExit(error);
 
     mJoinerRouterPanId = Mac::kPanIdBroadcast;
-    SuccessOrExit(error = mNetif.GetMle().Discover(0, mNetif.GetMac().GetPanId(), true, HandleDiscoverResult, this));
+    SuccessOrExit(error = mNetif.GetMle().Discover(0, mNetif.GetMac().GetPanId(), true, false, HandleDiscoverResult, this));
 
     mVendorName = aVendorName;
     mVendorModel = aVendorModel;

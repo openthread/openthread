@@ -39,7 +39,7 @@
 #include <common/message.hpp>
 #include <common/timer.hpp>
 #include <crypto/sha256.hpp>
-#include <meshcop/tlvs.hpp>
+#include <meshcop/meshcop_tlvs.hpp>
 
 #include <mbedtls/ssl.h>
 #include <mbedtls/entropy.h>

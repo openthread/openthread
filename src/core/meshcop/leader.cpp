@@ -50,7 +50,7 @@
 #include <common/logging.hpp>
 #include <meshcop/leader.hpp>
 #include <meshcop/meshcop.hpp>
-#include <meshcop/tlvs.hpp>
+#include <meshcop/meshcop_tlvs.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>

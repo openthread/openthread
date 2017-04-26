@@ -42,6 +42,7 @@
 #include <common/timer.hpp>
 #include <common/trickle_timer.hpp>
 #include <mac/mac_frame.hpp>
+#include <meshcop/meshcop_tlvs.hpp>
 #include <net/icmp6.hpp>
 #include <net/udp6.hpp>
 #include <thread/mle.hpp>
@@ -643,6 +644,21 @@ public:
      */
     void FillRouteTlv(RouteTlv &aTlv);
 
+#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+    /**
+     * This method sets steering data out of band
+     *
+     * @param[in]  aExtAddress  Value used to set steering data
+     *                          All zeros clears steering data
+     *                          All 0xFFs sets steering data to 0xFF
+     *                          Anything else is used to compute the bloom filter
+     *
+     * @retval kThreadError_None  Steering data was set
+     *
+     */
+    ThreadError SetSteeringData(otExtAddress *aExtAddress);
+#endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+
 private:
     enum
     {
@@ -765,6 +781,11 @@ private:
 
     uint8_t mRouterSelectionJitter;         ///< The variable to save the assigned jitter value.
     uint8_t mRouterSelectionJitterTimeout;  ///< The Timeout prior to request/release Router ID.
+
+#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+    MeshCoP::SteeringDataTlv mSteeringData;
+#endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+
 };
 
 }  // namespace Mle
