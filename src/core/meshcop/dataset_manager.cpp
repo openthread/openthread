@@ -34,6 +34,12 @@
 
 #define WPP_NAME "dataset_manager.tmh"
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <stdio.h>
 
 #include "openthread/platform/random.h"

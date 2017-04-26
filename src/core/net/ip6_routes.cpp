@@ -31,6 +31,12 @@
  *   This file implements IPv6 route tables.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <net/ip6.hpp>
 #include <net/ip6_routes.hpp>
 #include <net/netif.hpp>
