@@ -49,6 +49,7 @@
         %(AdditionalIncludeDirectories);
         ..\..\include;
         ..\..\examples\drivers\windows\include;
+        ..\..\examples\drivers\windows\include_c99;
         ..\..\examples\drivers\windows\otLwf;
         ..\..\src;
         ..\..\src\core;
