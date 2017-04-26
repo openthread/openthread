@@ -31,6 +31,12 @@
  *   This file implements whitelist IEEE 802.15.4 frame filtering based on MAC address.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include "utils/wrap_string.h"
 
 #include <common/code_utils.hpp>
