@@ -41,8 +41,7 @@
         ..\..\src\core;
         ..\..\third_party\mbedtls;
         ..\..\third_party\mbedtls\repo\include;
-        ..\..\third_party\mbedtls\repo\include\mbedtls
-        ..\..\etc\visual-studio\win_include;
+        ..\..\third_party\mbedtls\repo\include\mbedtls;
       </AdditionalIncludeDirectories>
       <PreprocessorDefinitions>
         %(PreprocessorDefinitions);
