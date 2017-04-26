@@ -904,15 +904,17 @@ otLwfIoCtl_otDiscover(
 {
     NTSTATUS status = STATUS_INVALID_PARAMETER;
 
-    if (InBufferLength >= sizeof(uint32_t) + sizeof(uint16_t))
+    if (InBufferLength >= sizeof(uint32_t) + sizeof(uint16_t) + sizeof(bool))
     {
         uint32_t aScanChannels = *(uint32_t*)InBuffer;
         uint16_t aPanid = *(uint16_t*)(InBuffer + sizeof(uint32_t));
+        bool aJoiner = *(bool*)(InBuffer + sizeof(uint32_t) + sizeof(uint16_t));
         status = ThreadErrorToNtstatus(
             otThreadDiscover(
                 pFilter->otCtx, 
                 aScanChannels, 
                 aPanid,
+                aJoiner,
                 otLwfDiscoverCallback,
                 pFilter)
             );
