@@ -40,11 +40,15 @@
 #else
 
 /* Supply our own */
-#ifndef __cplusplus
+#if !defined(_MSC_VER)
 typedef _Bool bool;
+#endif // visual studio has a bool
+
+#if !defined(__bool_true_false_are_defined)
+#define __bool_true_false_are_defined 1
 #define false 0
 #define true 1
-#endif // __cplusplus
+#endif // bool defined
 
 #endif // HAVE_STDBOOL_H
 
