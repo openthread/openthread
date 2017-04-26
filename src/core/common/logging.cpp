@@ -45,7 +45,7 @@
 
 #ifndef WINDOWS_LOGGING
 #define otLogDump(aFormat, ...)                                             \
-    _otPlatLog(aInstance, aLogLevel, aLogRegion, aFormat OPENTHREAD_CONFIG_LOG_SUFFIX, ## __VA_ARGS__)
+    _otDynamicLog(aInstance, aLogLevel, aLogRegion, aFormat OPENTHREAD_CONFIG_LOG_SUFFIX, ## __VA_ARGS__)
 #endif
 
 #ifdef __cplusplus
