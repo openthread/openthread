@@ -31,7 +31,7 @@
 TARGET        = arm-bcm2708hardfp-linux-gnueabi
 PPREFIX       = rpi_qorvo
 INFO          = RPI_QORVO
-CROSS_COMPILE = $(TARGET)-
+#CROSS_COMPILE = $(TARGET)-
 
 AR                              = $(CROSS_COMPILE)ar
 AS                              = $(CROSS_COMPILE)as
