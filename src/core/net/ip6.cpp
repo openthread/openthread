@@ -587,7 +587,9 @@ ThreadError Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageIn
     {
         // do not pass messages sent to/from an RLOC
         VerifyOrExit(!messageInfo.GetSockAddr().IsRoutingLocator() &&
-                     !messageInfo.GetPeerAddr().IsRoutingLocator(),
+                     !messageInfo.GetPeerAddr().IsRoutingLocator() &&
+                     !messageInfo.GetSockAddr().IsAnycastRoutingLocator() &&
+                     !messageInfo.GetPeerAddr().IsAnycastRoutingLocator(),
                      error = kThreadError_NoRoute);
 
         switch (aIpProto)
