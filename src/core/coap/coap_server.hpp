@@ -292,8 +292,10 @@ public:
      * @param[in]   aMessage        A pointer to the message.
      @ @param[in]   aMessageInfo    A pointer to the message info associated with @p aMessage.
      *
-     * @retval  kThreadError_None   allow server to continue processing, otherwise the message
-     *                              should be dropped.
+     * @retval  kThreadError_None       Server should continue processing this message, other
+     *                                  return values indicates the server should stop processing
+     *                                  this message.
+     * @retval  kThreadError_Security   The message does not comply with security rules.
      *
      */
     typedef ThreadError(* Interceptor)(const otMessage *aMessage, const otMessageInfo *aMessageInfo);
