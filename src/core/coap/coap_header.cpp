@@ -102,6 +102,10 @@ ThreadError Header::FromMessage(const Message &aMessage, uint16_t aMetadataSize)
         if (mHeader.mBytes[mHeaderLength] == 0xff)
         {
             mHeaderLength += sizeof(uint8_t);
+            length -= sizeof(uint8_t);
+            // RFC7252: The presence of a marker followed by a zero-length payload MUST be processed
+            // as a message format error.
+            VerifyOrExit(length > 0, error = kThreadError_Parse);
             ExitNow(error = kThreadError_None);
         }
 

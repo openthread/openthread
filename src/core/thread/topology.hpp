@@ -89,16 +89,7 @@ public:
      * @returns `true` if the neighbor is in valid, restored, or being restored states, `false` otherwise.
      *
      */
-    bool IsStateValidOrRestoring(void) const {
-        switch (mState) {
-        case kStateValid:
-        case kStateRestored:
-            return true;
-
-        default:
-            return false;
-        }
-    }
+    bool IsStateValidOrRestoring(void) const { return (mState == kStateValid) || (mState == kStateRestored); }
 
     /**
      * This method gets the device mode flags.
@@ -216,7 +207,7 @@ public:
      * @returns The link frame counter value.
      *
      */
-    uint32_t GetLinkFrameCounter(void) const { return mValid.mLinkFrameCounter; }
+    uint32_t GetLinkFrameCounter(void) const { return mValidPending.mValid.mLinkFrameCounter; }
 
     /**
      * This method sets the link frame counter value.
@@ -224,7 +215,7 @@ public:
      * @param[in]  aFrameCounter  The link frame counter value.
      *
      */
-    void SetLinkFrameCounter(uint32_t aFrameCounter) { mValid.mLinkFrameCounter = aFrameCounter; }
+    void SetLinkFrameCounter(uint32_t aFrameCounter) { mValidPending.mValid.mLinkFrameCounter = aFrameCounter; }
 
     /**
      * This method gets the MLE frame counter value.
@@ -232,7 +223,7 @@ public:
      * @returns The MLE frame counter value.
      *
      */
-    uint32_t GetMleFrameCounter(void) const { return mValid.mMleFrameCounter; }
+    uint32_t GetMleFrameCounter(void) const { return mValidPending.mValid.mMleFrameCounter; }
 
     /**
      * This method sets the MLE frame counter value.
@@ -240,7 +231,7 @@ public:
      * @param[in]  aFrameCounter  The MLE frame counter value.
      *
      */
-    void SetMleFrameCounter(uint32_t aFrameCounter) { mValid.mMleFrameCounter = aFrameCounter; }
+    void SetMleFrameCounter(uint32_t aFrameCounter) { mValidPending.mValid.mMleFrameCounter = aFrameCounter; }
 
     /**
      * This method gets the RLOC16 value.
@@ -248,7 +239,7 @@ public:
      * @returns The RLOC16 value.
      *
      */
-    uint16_t GetRloc16(void) const { return mValid.mRloc16; }
+    uint16_t GetRloc16(void) const { return mValidPending.mValid.mRloc16; }
 
     /**
      * This method sets the RLOC16 value.
@@ -256,7 +247,7 @@ public:
      * @param[in]  aRloc16  The RLOC16 value.
      *
      */
-    void SetRloc16(uint16_t aRloc16) { mValid.mRloc16 = aRloc16; }
+    void SetRloc16(uint16_t aRloc16) { mValidPending.mValid.mRloc16 = aRloc16; }
 
     /**
      * This method indicates whether an IEEE 802.15.4 Data Request message was received.
@@ -306,11 +297,7 @@ public:
      * This method generates a new challenge value for MLE Link Request/Response exchanges.
      *
      */
-    void GenerateChallenge(void) {
-        for (uint8_t i = 0; i < sizeof(mPending.mChallenge); i++) {
-            mPending.mChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
-        }
-    }
+    void GenerateChallenge(void);
 
     /**
      * This method returns the current challenge value for MLE Link Request/Response exchanges.
@@ -318,7 +305,7 @@ public:
      * @returns The current challenge value.
      *
      */
-    const uint8_t *GetChallenge(void) const { return mPending.mChallenge; }
+    const uint8_t *GetChallenge(void) const { return mValidPending.mPending.mChallenge; }
 
     /**
      * This method returns the size (byets) of the challenge value for MLE Link Request/Response exchanges.
@@ -326,7 +313,7 @@ public:
      * @returns The size (byets) of the challenge value for MLE Link Request/Response exchanges.
      *
      */
-    uint8_t GetChallengeSize(void) const { return sizeof(mPending.mChallenge); }
+    uint8_t GetChallengeSize(void) const { return sizeof(mValidPending.mPending.mChallenge); }
 
 private:
     Mac::ExtAddress mMacAddr;            ///< The IEEE 802.15.4 Extended Address
@@ -344,7 +331,7 @@ private:
             uint8_t mChallenge[Mle::ChallengeTlv::kMaxSize];  ///< The challenge value
             uint8_t mChallengeLength;    ///< The challenge length
         } mPending;
-    };
+    } mValidPending;
 
     uint32_t        mKeySequence;        ///< Current key sequence
     uint8_t         mState : 3;          ///< The link state
@@ -421,11 +408,7 @@ public:
      * This method generates a new challenge value to use during a child attach.
      *
      */
-    void GenerateChallenge(void) {
-        for (uint8_t i = 0; i < sizeof(mAttachChallenge); i++) {
-            mAttachChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
-        }
-    }
+    void GenerateChallenge(void);
 
     /**
      * This method gets the current challenge value used during attach.
@@ -625,6 +608,16 @@ public:
      *
      */
     void SetRequestTlv(uint8_t aIndex, uint8_t aType) { mRequestTlvs[aIndex] = aType; }
+
+    /**
+     * This method gets the mac address of child (either rloc16 or extended address depending on `UseShortAddress` flag).
+     *
+     * @param[out] aMacAddress A reference to a mac address object to which the child's address is copied.
+     *
+     * @returns A (const) reference to the mac address @a aMacAddress.
+     *
+     */
+    const Mac::Address &GetMacAddress(Mac::Address &aMacAddress) const;
 
 private:
     Ip6::Address mIp6Address[kMaxIp6AddressPerChild];  ///< Registered IPv6 addresses

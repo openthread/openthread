@@ -49,20 +49,12 @@ public:
     ActiveDataset(ThreadNetif &aThreadNetif) : ActiveDatasetBase(aThreadNetif) { }
 
     ThreadError GenerateLocal(void) { return kThreadError_NotImplemented; }
-
-    void StartLeader(void) { }
-
-    void StopLeader(void) { }
 };
 
 class PendingDataset: public PendingDatasetBase
 {
 public:
     PendingDataset(ThreadNetif &aThreadNetif) : PendingDatasetBase(aThreadNetif) { }
-
-    void StartLeader(void) { }
-
-    void StopLeader(void) { }
 };
 
 }  // namespace MeshCoP

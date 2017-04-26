@@ -115,6 +115,7 @@ OTAPI bool OTCALL otThreadIsSingleton(otInstance *aInstance);
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aScanChannels     A bit vector indicating which channels to scan (e.g. OT_CHANNEL_11_MASK).
  * @param[in]  aPanId            The PAN ID filter (set to Broadcast PAN to disable filter).
+ * @param[in]  aJoiner           Value of the Joiner Flag in the Discovery Request TLV.
  * @param[in]  aCallback         A pointer to a function called on receiving an MLE Discovery Response or scan completes.
  * @param[in]  aCallbackContext  A pointer to application-specific context.
  *
@@ -122,7 +123,7 @@ OTAPI bool OTCALL otThreadIsSingleton(otInstance *aInstance);
  * @retval kThreadError_Busy  Already performing an Thread Discovery.
  *
  */
-OTAPI ThreadError OTCALL otThreadDiscover(otInstance *aInstance, uint32_t aScanChannels, uint16_t aPanid,
+OTAPI ThreadError OTCALL otThreadDiscover(otInstance *aInstance, uint32_t aScanChannels, uint16_t aPanid, bool aJoiner,
                                           otHandleActiveScanResult aCallback, void *aCallbackContext);
 
 /**
@@ -441,29 +442,6 @@ OTAPI uint32_t OTCALL otThreadGetLocalLeaderPartitionId(otInstance *aInstance);
  *
  */
 OTAPI void OTCALL otThreadSetLocalLeaderPartitionId(otInstance *aInstance, uint32_t aPartitionId);
-
-/**
- * Get the Joiner UDP Port.
- *
- * @param[in] aInstance A pointer to an OpenThread instance.
- *
- * @returns The Joiner UDP Port number.
- *
- * @sa otThreadSetJoinerUdpPort
- */
-OTAPI uint16_t OTCALL otThreadGetJoinerUdpPort(otInstance *aInstance);
-
-/**
- * Set the Joiner UDP Port
- *
- * @param[in]  aInstance       A pointer to an OpenThread instance.
- * @param[in]  aJoinerUdpPort  The Joiner UDP Port number.
- *
- * @retval  kThreadErrorNone   Successfully set the Joiner UDP Port.
- *
- * @sa otThreadGetJoinerUdpPort
- */
-OTAPI ThreadError OTCALL otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort);
 
 /**
  * @}

@@ -75,6 +75,8 @@ public:
 
     void StopLeader(void);
 
+    void ApplyActiveDataset(const Timestamp &aTimestamp, Message &aMessage);
+
 private:
     static void HandleSet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                           const otMessageInfo *aMessageInfo);

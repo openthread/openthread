@@ -150,26 +150,24 @@ uint32_t otPlatRandomGet(void)
     return (uint32_t)rand();
 }
 
-ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
+ThreadError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 {
     ThreadError error = kThreadError_None;
 
-    otEXPECT_ACTION(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
+    otEXPECT_ACTION(aOutput, error = kThreadError_InvalidArgs);
     otEXPECT_ACTION(!bufferIsEmpty(), error = kThreadError_Failed);
 
     uint16_t copyLength = (uint16_t)bufferCount();
 
-    if (copyLength > aInputLength)
+    if (copyLength > aOutputLength)
     {
-        copyLength = aInputLength;
+        copyLength = aOutputLength;
     }
 
     for (uint32_t i = 0; i < copyLength; i++)
     {
         aOutput[i] = bufferGet();
     }
-
-    *aOutputLength = copyLength;
 
     generatorStart();
 

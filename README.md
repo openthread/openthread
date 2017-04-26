@@ -88,6 +88,7 @@ OpenThread has been ported to several devices and platforms. Build examples are 
 
 * [Dialog Semiconductor DA15000](https://github.com/openthread/openthread/wiki/Platforms#dialog-da15000)
 * [Nordic Semiconductor nRF52840](https://github.com/openthread/openthread/wiki/Platforms#nordic-semiconductor-nrf52840)
+* [Silicon Labs EFR32](https://github.com/openthread/openthread/wiki/Platforms#silicon-labs-efr32)
 * [Texas Instruments CC2538](https://github.com/openthread/openthread/wiki/Platforms#texas-instruments-cc2538)
 * [Texas Instruments CC2650](https://github.com/openthread/openthread/wiki/Platforms#texas-instruments-cc2650)
 * [POSIX Emulation](https://github.com/openthread/openthread/wiki/Platforms#posix-emulation)

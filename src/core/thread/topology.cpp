@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2016-2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,24 +28,48 @@
 
 /**
  * @file
- *  This file includes definitions for the Joiner Router role.
+ *   This file includes definitions for maintaining Thread network topologies.
  */
 
-#ifndef JOINER_ROUTER_HPP_
-#define JOINER_ROUTER_HPP_
+#define WPP_NAME "topology.tmh"
+
+#include <common/code_utils.hpp>
+#include <common/debug.hpp>
+#include <common/logging.hpp>
+#include <thread/topology.hpp>
 
 namespace Thread {
-namespace MeshCoP {
 
-class JoinerRouter
+void Neighbor::GenerateChallenge(void)
 {
-public:
-    JoinerRouter(ThreadNetif &) { }
-    uint16_t GetJoinerUdpPort(void) { return 0; }
-    ThreadError SetJoinerUdpPort(uint16_t) { return kThreadError_NotImplemented; }
-};
+    for (uint8_t i = 0; i < sizeof(mValidPending.mPending.mChallenge); i++)
+    {
+        mValidPending.mPending.mChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
+    }
+}
 
-}  // namespace MeshCoP
+void Child::GenerateChallenge(void)
+{
+    for (uint8_t i = 0; i < sizeof(mAttachChallenge); i++)
+    {
+        mAttachChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
+    }
+}
+
+const Mac::Address &Child::GetMacAddress(Mac::Address &aMacAddress) const
+{
+    if (mUseShortAddress)
+    {
+        aMacAddress.mShortAddress = GetRloc16();
+        aMacAddress.mLength = sizeof(aMacAddress.mShortAddress);
+    }
+    else
+    {
+        aMacAddress.mExtAddress = GetExtAddress();
+        aMacAddress.mLength = sizeof(aMacAddress.mExtAddress);
+    }
+
+    return aMacAddress;
+}
+
 }  // namespace Thread
-
-#endif  // JOINER_ROUTER_HPP_

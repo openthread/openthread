@@ -252,6 +252,7 @@ ThreadError Dataset::Set(const Dataset &aDataset)
     return kThreadError_None;
 }
 
+#if OPENTHREAD_FTD
 ThreadError Dataset::Set(const otOperationalDataset &aDataset)
 {
     ThreadError error = kThreadError_None;
@@ -361,6 +362,7 @@ ThreadError Dataset::Set(const otOperationalDataset &aDataset)
 exit:
     return error;
 }
+#endif  // OPENTHREAD_FTD
 
 const Timestamp *Dataset::GetTimestamp(void) const
 {

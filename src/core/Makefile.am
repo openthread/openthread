@@ -71,7 +71,7 @@ libopenthread_mtd_a_CPPFLAGS        = \
 #     All code(files) should be compiled
 #     Even if it is not used or required
 #
-#     For example: In the MTD build, some features 
+#     For example: In the MTD build, some features
 #     are disabled and thus in the traditional scheme
 #     source files could be excluded SOURCES_COMMON
 #     via makefile IF/ELSE/ENDIF constructs.
@@ -94,6 +94,7 @@ SOURCES_COMMON                      = \
     api/commissioner_api.cpp          \
     api/crypto_api.cpp                \
     api/dataset_api.cpp               \
+    api/dataset_ftd_api.cpp           \
     api/dhcp6_api.cpp                 \
     api/dhcp6_api.cpp                 \
     api/dns_api.cpp                   \
@@ -108,6 +109,7 @@ SOURCES_COMMON                      = \
     api/netdata_api.cpp               \
     api/tasklet_api.cpp               \
     api/thread_api.cpp                \
+    api/thread_ftd_api.cpp            \
     api/udp_api.cpp                   \
     coap/coap_base.cpp                \
     coap/coap_client.cpp              \
@@ -173,6 +175,7 @@ SOURCES_COMMON                      = \
     thread/panid_query_server.cpp     \
     thread/src_match_controller.cpp   \
     thread/thread_netif.cpp           \
+    thread/topology.cpp               \
     utils/jam_detector.cpp            \
     utils/missing_strlcpy.c           \
     utils/missing_strlcat.c           \
@@ -236,11 +239,7 @@ HEADERS_COMMON                      = \
     meshcop/energy_scan_client.hpp    \
     meshcop/joiner.hpp                \
     meshcop/joiner_router.hpp         \
-    meshcop/joiner_router_ftd.hpp     \
-    meshcop/joiner_router_mtd.hpp     \
     meshcop/leader.hpp                \
-    meshcop/leader_ftd.hpp            \
-    meshcop/leader_mtd.hpp            \
     meshcop/meshcop.hpp               \
     meshcop/panid_query_client.hpp    \
     meshcop/timestamp.hpp             \

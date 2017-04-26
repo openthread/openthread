@@ -1,5 +1,5 @@
 /*
- *    Copyright 2016 Nest Labs Inc. All Rights Reserved.
+ *    Copyright 2016 The OpenThread Authors. All Rights Reserved.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -33,11 +33,16 @@ int mbedtls_hardware_poll(void *data, unsigned char *output, size_t len, size_t 
 
     (void)data;
 
-    error = otPlatRandomSecureGet((uint16_t)len, (uint8_t *)output, (uint16_t *)olen);
+    error = otPlatRandomGetTrue((uint8_t *)output, (uint16_t)len);
 
     if (error != kThreadError_None)
     {
         return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
+    }
+
+    if (olen != NULL)
+    {
+        *olen = len;
     }
 
     return 0;

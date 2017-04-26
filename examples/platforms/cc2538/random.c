@@ -39,7 +39,7 @@
 #include <utils/code_utils.h>
 #include "platform-cc2538.h"
 
-static void generateRandom(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
+static void generateRandom(uint8_t *aOutput, uint16_t aOutputLength)
 {
     HWREG(SOC_ADC_ADCCON1) &= ~(SOC_ADC_ADCCON1_RCTRL1 | SOC_ADC_ADCCON1_RCTRL0);
     HWREG(SYS_CTRL_RCGCRFC) = SYS_CTRL_RCGCRFC_RFC0;
@@ -51,7 +51,7 @@ static void generateRandom(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aO
 
     while (!HWREG(RFCORE_XREG_RSSISTAT) & RFCORE_XREG_RSSISTAT_RSSI_VALID);
 
-    for (uint16_t index = 0; index < aInputLength; index++)
+    for (uint16_t index = 0; index < aOutputLength; index++)
     {
         aOutput[index] = 0;
 
@@ -63,11 +63,6 @@ static void generateRandom(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aO
     }
 
     HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_RFOFF;
-
-    if (aOutputLength)
-    {
-        *aOutputLength = aInputLength;
-    }
 }
 
 void cc2538RandomInit(void)
@@ -76,7 +71,7 @@ void cc2538RandomInit(void)
 
     while (seed == 0x0000 || seed == 0x8003)
     {
-        generateRandom(sizeof(seed), (uint8_t *)&seed, 0);
+        generateRandom((uint8_t *)&seed, sizeof(seed));
     }
 
     HWREG(SOC_ADC_RNDL) = (seed >> 8) & 0xff;
@@ -96,12 +91,12 @@ uint32_t otPlatRandomGet(void)
     return random;
 }
 
-ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
+ThreadError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 {
     ThreadError error = kThreadError_None;
     uint8_t channel = 0;
 
-    otEXPECT_ACTION(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
+    otEXPECT_ACTION(aOutput, error = kThreadError_InvalidArgs);
 
     if (otPlatRadioIsEnabled(sInstance))
     {
@@ -110,7 +105,7 @@ ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint1
         otPlatRadioDisable(sInstance);
     }
 
-    generateRandom(aInputLength, aOutput, aOutputLength);
+    generateRandom(aOutput, aOutputLength);
 
     if (channel)
     {
