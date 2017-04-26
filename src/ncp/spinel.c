@@ -54,9 +54,9 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include "wrap_string.h"
 #include <errno.h>
-
+#include "wrap_stdbool.h"
 // ----------------------------------------------------------------------------
 // MARK: -
 
