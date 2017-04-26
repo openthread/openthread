@@ -35,14 +35,9 @@
 #if !defined(WRAP_STDBOOL_H)
 #define WRAP_STDBOOL_H
 
-/* assume we have stdbool */
-#define _thread_have_stdbool 1
-
-/* handle exceptions here */
-#if defined(_MSC_VER) && (_MSC_VER < 1900)
-/* Prior to Visual Studio 2015 - this did not exist. */
-#undef   _thread_have_stdbool
-#define  _thread_have_stdbool 0
+#if HAVE_STDBOOL_H
+#include <stdbool.h>
+#else
 
 /* Supply our own */
 #ifndef __cplusplus
@@ -51,12 +46,7 @@ typedef _Bool bool;
 #define true 1
 #endif // __cplusplus
 
-#endif // (visual studio)
+#endif // HAVE_STDBOOL_H
 
-/* if we have stdbool, then just include it */
-#if _thread_have_stdbool
-#include <stdbool.h>
-#endif
-#undef _thread_have_stdbool
 
 #endif // WRAP_STDBOOL_H
