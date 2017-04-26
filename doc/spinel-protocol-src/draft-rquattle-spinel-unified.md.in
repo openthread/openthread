@@ -1,34 +1,51 @@
 %%%
-	title = "Spinel Host-Controller Protocol"
-   	abbrev = "Spinel Protocol (@SOURCE_VERSION@)"
-	category = "std"
-	docName = "draft-spinel-protocol-@SOURCE_VERSION@"
-	ipr = "none"
-	keyword = ["Spinel", "OpenThread", "Thread", "NCP"]
-
-	date = @SOURCE_DATE@
-
+    title       = "Spinel Host-Controller Protocol"
+    abbrev      = "Spinel Protocol (@SOURCE_VERSION@)"
+    category    = "info"
+    docName     = "draft-rquattle-spinel-unified-@SOURCE_VERSION@"
+    ipr         = "noDerivativesTrust200902"
+    keyword     = ["Spinel", "IPv6", "NCP"]
+    date        = @SOURCE_DATE@
+    
     [pi]
-    editing = "yes"
-    private = "OpenThread"
-    compact = "yes"
-    subcompact = "yes"
-    comments = "yes"
-
-	[[author]]
-	initials = "R."
-	surname = "Quattlebaum"
-	fullname = "Robert S. Quattlebaum"
-	role = "editor"
-	organization = "Nest Labs"
-	  [author.address]
-	  email = "rquattle@nestlabs.com"
-	  [author.address.postal]
-	  street = "3400 Hillview Ave."
-	  city = "Palo Alto"
-	  region = "California"
-	  code = "94304"
-	  country = "USA"
+    editing     = "yes"
+    private     = "OpenThread"
+    compact     = "yes"
+    subcompact  = "yes"
+    comments    = "yes"
+    
+    [[author]]
+    initials        = "R."
+    surname         = "Quattlebaum"
+    fullname        = "Robert S. Quattlebaum"
+    organization    = "Nest Labs"
+    
+        [author.address]
+        email       = "rquattle@nestlabs.com"
+        
+        [author.address.postal]
+        street      = "3400 Hillview Ave."
+        city        = "Palo Alto"
+        region      = "California"
+        code        = "94304"
+        country     = "USA"
+    
+    [[author]]
+    initials        = "j.h."
+    surname         = "woodyatt"
+    fullname        = "james woodyatt"
+    organization    = "Google, Inc."
+    role            = "editor"
+    
+        [author.address]
+        email       = "jhw@google.com"
+        
+        [author.address.postal]
+        street      = "3400 Hillview Ave."
+        city        = "Palo Alto"
+        region      = "California"
+        code        = "94304"
+        country     = "USA"
 %%%
 
 .# Abstract
@@ -46,11 +63,16 @@ This document is a work in progress and subject to change.
 
 .# Copyright Notice
 
-Copyright (c) 2016, Nest Labs, Inc.
+Copyright (c) 2016-2017, Nest Labs, Inc.
 All rights reserved.
 
 <!-- RQ
   -- We may want to consider a license more appropriate for documentation.
+  -->
+
+<!-- jhw
+  -- I have set the IPR field in the preamble to 'noDerivativesTrust200902'
+     while we are not ready to give change control of Spinel to IETF.
   -->
 
 Redistribution and use in source and binary forms, with or without
@@ -334,6 +356,8 @@ is meaningless.
 
 {{spinel-example-sessions.md}}
 
+{{spinel-basis-glossary.md}}
+
 # Acknowledgments #
 
 Special thanks to Abtin Keshavarzian, Martin Turon, Arjuna Sivasithambaresan
@@ -347,34 +371,3 @@ to this document.
 
 This document was prepared using [mmark](https://github.com/miekg/mmark)
 by (Miek Gieben) and [xml2rfc (version 2)](http://xml2rfc.ietf.org/).
-
-# Glossary #
-
-<!-- RQ -- Alphabetize before finalization. -->
-
-NCP
-: Acronym for Network Control Processor.
-
-Host
-: Computer or Micro-controller which controls the NCP.
-
-TID
-: Transaction Identifier. May be a value between zero and fifteen.
-  See (#tid-transaction-identifier) for more information.
-
-IID
-: Interface Identifier. May be a value between zero and three.
-  See (#iid-interface-identifier) for more information.
-
-PUI
-: Packed Unsigned Integer. A way to serialize an unsigned integer
-  using one, two, or three bytes. Used throughout the Spinel protocol.
-  See (#packed-unsigned-integer) for more information.
-
-FCS
-: Final Checksum. Bytes added to the end of a packet to help determine
-  if the packet was received without corruption.
-
-PHY
-: Physical layer. Refers to characteristics and parameters related to
-  the physical implementation and operation of a networking medium.
