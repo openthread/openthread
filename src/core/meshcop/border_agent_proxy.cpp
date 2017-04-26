@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file implements a BorderAgentProxy role.
+ *   This file implements the border agent proxy.
  */
 
 #define WPP_NAME "border_agent_proxy.tmh"
@@ -55,8 +55,11 @@ namespace MeshCoP {
 BorderAgentProxy::BorderAgentProxy(const Ip6::Address &aMeshLocal16, Coap::Server &aCoapServer,
                                    Coap::Client &aCoapClient):
     mRelayReceive(OPENTHREAD_URI_RELAY_RX, &BorderAgentProxy::HandleRelayReceive, this),
-    mBorderAgentProxyStreamHandler(NULL), mContext(NULL),
-    mMeshLocal16(aMeshLocal16), mCoapServer(aCoapServer), mCoapClient(aCoapClient)
+    mBorderAgentProxyStreamHandler(NULL),
+    mContext(NULL),
+    mMeshLocal16(aMeshLocal16),
+    mCoapServer(aCoapServer),
+    mCoapClient(aCoapClient)
 {
 }
 
@@ -96,7 +99,7 @@ bool BorderAgentProxy::IsEnabled(void) const
 void BorderAgentProxy::HandleRelayReceive(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                           const otMessageInfo *aMessageInfo)
 {
-    static_cast<BorderAgentProxy *>(aContext)->DelieverMessage(
+    static_cast<BorderAgentProxy *>(aContext)->DeliverMessage(
         *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
         *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
@@ -104,18 +107,17 @@ void BorderAgentProxy::HandleRelayReceive(void *aContext, otCoapHeader *aHeader,
 void BorderAgentProxy::HandleResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                       const otMessageInfo *aMessageInfo, ThreadError aResult)
 {
-    if (aResult != kThreadError_None)
-    {
-        return;
-    }
+    VerifyOrExit(aResult == kThreadError_None);
 
-    static_cast<BorderAgentProxy *>(aContext)->DelieverMessage(*static_cast<Coap::Header *>(aHeader),
-                                                               *static_cast<Message *>(aMessage),
-                                                               *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<BorderAgentProxy *>(aContext)->DeliverMessage(*static_cast<Coap::Header *>(aHeader),
+                                                              *static_cast<Message *>(aMessage),
+                                                              *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+exit:
+    return;
 }
 
-void BorderAgentProxy::DelieverMessage(Coap::Header &aHeader, Message &aMessage,
-                                       const Ip6::MessageInfo &aMessageInfo)
+void BorderAgentProxy::DeliverMessage(Coap::Header &aHeader, Message &aMessage,
+                                      const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadError error = kThreadError_None;
     uint16_t rloc;

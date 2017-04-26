@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes definitions for the BorderAgentProxy role.
+ *   This file includes definitions for border agent proxy.
  */
 
 #ifndef BORDER_AGENT_PROXY_HPP_
@@ -48,31 +48,55 @@ class BorderAgentProxy
 {
 public:
     /**
-     * This constructor initializes the BorderAgentProxy object.
+     * This constructor initializes the border agent proxy.
      *
-     * @param[in]  aThreadNetif  A reference to the Thread network interface.
+     * @param[in]   aMeshLocal16    A reference to the Mesh Local Routing Locator.
+     * @param[in]   aCoapServer     A reference to the Management CoAP Server.
+     * @param[in]   aCoapClient     A reference to the CoAP Client.
      *
      */
     BorderAgentProxy(const Ip6::Address &aMeshLocal16, Coap::Server &aCoapServer, Coap::Client &aCoapClient);
 
     /**
-     * This method starts the BorderAgentProxy service.
+     * This method enables the border agent proxy service.
      *
-     * @retval kThreadError_None  Successfully started the BorderAgentProxy service.
+     * @retval kThreadError_None            Successfully started the service.
+     * @retval kThreadError_InvalidState    The service already started.
      *
      */
     ThreadError Start(otBorderAgentProxyStreamHandler aBorderAgentProxyStreamHandler, void *aContext);
 
     /**
-     * This method stops the BorderAgentProxy service.
+     * This method disables the border agent proxy service.
      *
-     * @retval kThreadError_None  Successfully stopped the BorderAgentProxy service.
+     * @retval kThreadError_None            Successfully stopped the BorderAgentProxy service.
+     * @retval kThreadError_InvalidState    The service already stopped.
      *
      */
     ThreadError Stop(void);
 
+    /**
+     * This method sends the message into the thread network.
+     *
+     * @param[in]   aMessage    A reference to the message to send.
+     * @param[in]   aLocator    The destination's RLOC16 or ALOC16.
+     * @param[in]   aPort       The destination port.
+     *
+     * @returns Error code from CoAP's SendMessage().
+     *
+     * @sa Coap::Client::SendMessage
+     * @sa Coap::Server::SendMessage
+     *
+     */
     ThreadError Send(Message &aMessage, uint16_t aLocator, uint16_t aPort);
 
+    /**
+     * This method indicates whether or not the border agent proxy service is enabled.
+     *
+     * @retval  TRUE    If the service is enabled.
+     * @retval  FALSE   If the service is disabled.
+     *
+     */
     bool IsEnabled(void) const;
 
 private:
@@ -83,7 +107,7 @@ private:
     static void HandleResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                const otMessageInfo *aMessageInfo, ThreadError aResult);
 
-    void DelieverMessage(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void DeliverMessage(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 
     Coap::Resource mRelayReceive;
