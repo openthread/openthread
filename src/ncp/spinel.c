@@ -43,6 +43,12 @@
 // MARK: -
 // MARK: Headers
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include "spinel.h"
 
 #include <assert.h>
