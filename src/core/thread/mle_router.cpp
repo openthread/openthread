@@ -2493,6 +2493,12 @@ ThreadError MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6
         case MeshCoP::Tlv::kDiscoveryRequest:
             aMessage.Read(offset, sizeof(discoveryRequest), &discoveryRequest);
             VerifyOrExit(discoveryRequest.IsValid(), error = kThreadError_Parse);
+
+            if (discoveryRequest.IsJoiner())
+            {
+                VerifyOrExit(mNetif.GetNetworkDataLeader().IsJoiningEnabled());
+            }
+
             break;
 
         case MeshCoP::Tlv::kExtendedPanId:

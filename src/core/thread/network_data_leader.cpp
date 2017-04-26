@@ -494,6 +494,28 @@ exit:
     return rval;
 }
 
+bool LeaderBase::IsJoiningEnabled(void)
+{
+    MeshCoP::Tlv *steeringData;
+    bool rval = false;
+
+    VerifyOrExit(GetCommissioningDataSubTlv(MeshCoP::Tlv::kBorderAgentLocator) != NULL);
+
+    steeringData = GetCommissioningDataSubTlv(MeshCoP::Tlv::kSteeringData);
+    VerifyOrExit(steeringData != NULL);
+
+    for (int i = 0; i < steeringData->GetLength(); i++)
+    {
+        if (steeringData->GetValue()[i] != 0)
+        {
+            ExitNow(rval = true);
+        }
+    }
+
+exit:
+    return rval;
+}
+
 ThreadError LeaderBase::RemoveCommissioningData(void)
 {
     ThreadError error = kThreadError_NotFound;
