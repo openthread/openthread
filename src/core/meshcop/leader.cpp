@@ -103,8 +103,7 @@ void Leader::HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6:
     data.mCommissionerSessionId.SetCommissionerSessionId(++mSessionId);
 
     data.mSteeringData.Init();
-    data.mSteeringData.SetLength(1);
-    data.mSteeringData.Clear();
+    data.mSteeringData.SetLength(0);
 
     SuccessOrExit(mNetif.GetNetworkDataLeader().SetCommissioningData(reinterpret_cast<uint8_t *>(&data), data.GetLength()));
 
