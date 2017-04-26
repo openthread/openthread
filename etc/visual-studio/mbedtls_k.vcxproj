@@ -47,6 +47,8 @@
       <PreprocessorDefinitions>
         %(PreprocessorDefinitions);
         MBEDTLS_CONFIG_FILE="mbedtls-config.h";
+        HAVE_STDBOOL_H=1;
+        HAVE_STDINT_H=1;
         OPENTHREAD_MULTIPLE_INSTANCE;
       </PreprocessorDefinitions>
       <DisableSpecificWarnings>4132;4242;4245;4603;4627;4986;4987;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>

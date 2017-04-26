@@ -44,6 +44,8 @@
         WINDOWS_LOGGING;
         OPENTHREAD_MULTIPLE_INSTANCE;
         OPENTHREAD_FTD=1;
+        HAVE_STDBOOL_H=1;
+        HAVE_STDINT_H=1;
         OTBUILD;
       </PreprocessorDefinitions>
       <AdditionalIncludeDirectories>
