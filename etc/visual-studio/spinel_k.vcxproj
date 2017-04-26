@@ -45,7 +45,7 @@
       <AdditionalIncludeDirectories>
         %(AdditionalIncludeDirectories);
         ..\..\include;
-	.\win_include;
+        ..\..\etc\visual-studio\win_include;
       </AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4100;4706;4748;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <TreatWarningAsError>true</TreatWarningAsError>
