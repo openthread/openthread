@@ -62,6 +62,12 @@ public:
      */
     otInstance *GetInstance(void);
 
+    /**
+     * This method stops DatasetManager timer.
+     *
+     */
+    void Stop(void);
+
     Dataset &GetLocal(void) { return mLocal; }
     Dataset &GetNetwork(void) { return mNetwork; }
 

@@ -161,6 +161,10 @@ void otInstanceFinalize(otInstance *aInstance)
     (void)otThreadSetEnabled(aInstance, false);
     (void)otIp6SetEnabled(aInstance, false);
 
+    // Ensure that MeshCoP Datasets timers are switched off.
+    aInstance->mThreadNetif.GetActiveDataset().Stop();
+    aInstance->mThreadNetif.GetPendingDataset().Stop();
+
 #ifndef OPENTHREAD_MULTIPLE_INSTANCE
     sInstance = NULL;
 #endif
