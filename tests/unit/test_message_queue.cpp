@@ -203,7 +203,7 @@ void TestMessageQueueOtApis(void)
     otInstanceBuffer = (uint8_t *)malloc(otInstanceBufferLength);
     assert(otInstanceBuffer);
 
-    // Initialize Openthread with the buffer
+    // Initialize OpenThread with the buffer
     instance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
 #else
     instance = otInstanceInit();

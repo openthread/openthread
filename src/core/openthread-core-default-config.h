@@ -572,7 +572,7 @@
 /**
  * @def OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION
  *
- * Defines the name of function/marco used for logging inside Openthread, by default is set to `otPlatLog()`.
+ * Defines the name of function/macro used for logging inside OpenThread, by default is set to `otPlatLog()`.
  *
  */
 #ifndef OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION
@@ -592,7 +592,7 @@
 /**
  * @def OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES
  *
- * The number of autoconfigured SLAAC addresses.
+ * The number of auto-configured SLAAC addresses.
  *
  */
 #ifndef OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES

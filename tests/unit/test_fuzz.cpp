@@ -121,7 +121,7 @@ void TestFuzz(uint32_t aSeconds)
     VerifyOrQuit(otInstanceBuffer != NULL, "Failed to allocate otInstance");
     memset(otInstanceBuffer, 0, otInstanceBufferLength);
 
-    // Initialize Openthread with the buffer
+    // Initialize OpenThread with the buffer
     aInstance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
 #else
     aInstance = otInstanceInit();
