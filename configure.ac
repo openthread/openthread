@@ -349,7 +349,7 @@ NL_ENABLE_TESTS([yes])
 
 AM_CONDITIONAL([OPENTHREAD_BUILD_TESTS], [test "${nl_cv_build_tests}" = "yes"])
 
-#
+# 
 # CLI Library
 #
 AC_ARG_ENABLE(cli-app,
