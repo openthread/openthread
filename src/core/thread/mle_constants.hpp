@@ -65,6 +65,7 @@ enum
     kMaxResponseDelay              = 1000,  ///< Maximum delay before responding to a multicast request
     kMaxChildIdRequestTimeout      = 5000,  ///< Maximum delay for receiving a Child ID Request
     kMaxChildUpdateResponseTimeout = 2000,  ///< Maximum delay for receiving a Child Update Response
+    kMinTimeout                    = 5,     ///< Minimum timeout (((kMaxChildKeepAliveAttempts + 1) * kUnicastRetransmissionDelay) / 1000) (s)
 };
 
 enum

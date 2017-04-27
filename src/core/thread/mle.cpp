@@ -580,7 +580,7 @@ ThreadError Mle::SetStateChild(uint16_t aRloc16)
 
     if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) != 0)
     {
-        mParentRequestTimer.Start(Timer::SecToMsec(mTimeout / kMaxChildKeepAliveAttempts));
+        mParentRequestTimer.Start(Timer::SecToMsec(mTimeout) - kUnicastRetransmissionDelay * kMaxChildKeepAliveAttempts);
     }
 
     if ((mDeviceMode & ModeTlv::kModeFFD) != 0)
@@ -608,9 +608,9 @@ ThreadError Mle::SetTimeout(uint32_t aTimeout)
 {
     VerifyOrExit(mTimeout != aTimeout);
 
-    if (aTimeout < 4)
+    if (aTimeout < kMinTimeout)
     {
-        aTimeout = 4;
+        aTimeout = kMinTimeout;
     }
 
     mTimeout = aTimeout;
@@ -2968,7 +2968,7 @@ ThreadError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::M
         }
         else
         {
-            mParentRequestTimer.Start(Timer::SecToMsec(mTimeout / kMaxChildKeepAliveAttempts));
+            mParentRequestTimer.Start(Timer::SecToMsec(mTimeout) - kUnicastRetransmissionDelay * kMaxChildKeepAliveAttempts);
             mNetif.GetMeshForwarder().SetRxOnWhenIdle(true);
         }
 

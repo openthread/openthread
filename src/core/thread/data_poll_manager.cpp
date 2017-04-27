@@ -382,7 +382,7 @@ uint32_t DataPollManager::CalculatePollPeriod(void) const
 
     if (period == 0)
     {
-        period = Timer::SecToMsec(mMeshForwarder.GetNetif().GetMle().GetTimeout() / Mle::kMaxChildKeepAliveAttempts);
+        period = Timer::SecToMsec(mMeshForwarder.GetNetif().GetMle().GetTimeout()) -  kRetxPollPeriod * kMaxPollRetxAttempts;
 
         if (period == 0)
         {
