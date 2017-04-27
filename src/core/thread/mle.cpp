@@ -3196,13 +3196,14 @@ uint16_t Mle::GetNextHop(uint16_t aDestination) const
 
 bool Mle::IsRoutingLocator(const Ip6::Address &aAddress) const
 {
-    return memcmp(&mMeshLocal16, &aAddress, kRlocPrefixLength) == 0 && aAddress.mFields.m8[14] < kAloc16Mask &&
-           (aAddress.mFields.m8[14] & 0x02) == 0;
+    return memcmp(&mMeshLocal16, &aAddress, kRlocPrefixLength) == 0 &&
+           aAddress.mFields.m8[14] < Ip6::Address::kAloc16Mask &&
+           (aAddress.mFields.m8[14] & Ip6::Address::kRloc16ReservedBitMask) == 0;
 }
 
 bool Mle::IsAnycastLocator(const Ip6::Address &aAddress) const
 {
-    return memcmp(&mMeshLocal16, &aAddress, kRlocPrefixLength) == 0 && aAddress.mFields.m8[14] == kAloc16Mask;
+    return memcmp(&mMeshLocal16, &aAddress, kRlocPrefixLength) == 0 && aAddress.mFields.m8[14] == Ip6::Address::kAloc16Mask;
 }
 
 Router *Mle::GetParent()

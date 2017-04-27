@@ -57,6 +57,16 @@ class Address: public otIp6Address
 {
 public:
     /**
+     * Masks
+     *
+     */
+    enum
+    {
+        kAloc16Mask                 = 0xfc, ///< The mask for Aloc16.
+        kRloc16ReservedBitMask      = 0x02, ///< The mask for the reserved bit of Rloc16.
+    };
+
+    /**
      * Constants
      *
      */
@@ -332,12 +342,6 @@ private:
     enum
     {
         kInterfaceIdentifierOffset = 8,  ///< Interface Identifier offset in bytes.
-    };
-
-    enum
-    {
-        kAloc16Mask             = 0xfc, ///< The mask for Aloc16.
-        kRloc16ReservedBitMask  = 0x02, ///< The mask for the reserved bit of Rloc16.
     };
 } OT_TOOL_PACKED_END;
 
