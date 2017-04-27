@@ -222,6 +222,8 @@ ThreadError Commissioner::AddJoiner(const Mac::ExtAddress *aExtAddress, const ch
 {
     ThreadError error = kThreadError_NoBufs;
 
+    VerifyOrExit(mState == kCommissionerStateActive, error = kThreadError_InvalidState);
+
     otLogFuncEntryMsg("%llX, %s", (aExtAddress ? HostSwap64(*reinterpret_cast<const uint64_t *>(aExtAddress)) : 0), aPSKd);
     VerifyOrExit(strlen(aPSKd) <= Dtls::kPskMaxLength, error = kThreadError_InvalidArgs);
     RemoveJoiner(aExtAddress, 0);  // remove imediately
@@ -262,6 +264,8 @@ exit:
 ThreadError Commissioner::RemoveJoiner(const Mac::ExtAddress *aExtAddress, uint32_t aDelay)
 {
     ThreadError error = kThreadError_NotFound;
+
+    VerifyOrExit(mState == kCommissionerStateActive, error = kThreadError_InvalidState);
 
     otLogFuncEntryMsg("%llX", (aExtAddress ? HostSwap64(*reinterpret_cast<const uint64_t *>(aExtAddress)) : 0));
 
@@ -666,8 +670,6 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Header *aHeader, Message *
 
     mTransmitAttempts = 0;
     mTimer.Start(Timer::SecToMsec(kKeepAliveTimeout) / 2);
-
-    SendCommissionerSet();
 
 exit:
 
