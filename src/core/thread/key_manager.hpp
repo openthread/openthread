@@ -105,6 +105,22 @@ public:
     ThreadError SetMasterKey(const void *aKey, uint8_t aKeyLength);
 
     /**
+     * This method returns a pointer to the PSKc.
+     *
+     * @returns A pointer to the PSKc.
+     *
+     */
+    const uint8_t *GetPSKc(void) const;
+
+    /**
+     * This method sets the PSKc.
+     *
+     * @param[in]  aPSKc    A pointer to the PSKc.
+     *
+     */
+    void SetPSKc(const uint8_t *aPSKc);
+
+    /**
      * This method returns the current key sequence value.
      *
      * @returns The current key sequence value.
@@ -346,6 +362,9 @@ private:
     bool     mKeySwitchGuardEnabled;
     Timer    mKeyRotationTimer;
 
+#if OPENTHREAD_FTD
+    uint8_t mPSKc[kMaxKeyLength];
+#endif
     uint8_t mKek[kMaxKeyLength];
     uint32_t mKekFrameCounter;
 

@@ -135,6 +135,17 @@ ThreadError DatasetManager::ApplyConfiguration(void)
             break;
         }
 
+#if OPENTHREAD_FTD
+
+        case Tlv::kPSKc:
+        {
+            const PSKcTlv *pskc = static_cast<const PSKcTlv *>(cur);
+            mNetif.GetKeyManager().SetPSKc(pskc->GetPSKc());
+            break;
+        }
+
+#endif
+
         case Tlv::kMeshLocalPrefix:
         {
             const MeshLocalPrefixTlv *prefix = static_cast<const MeshLocalPrefixTlv *>(cur);

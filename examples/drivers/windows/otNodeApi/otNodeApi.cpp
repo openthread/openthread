@@ -1231,6 +1231,41 @@ OTNODEAPI const char* OTCALL otNodeGetMasterkey(otNode* aNode)
     return str;
 }
 
+OTNODEAPI int32_t OTCALL otNodeSetPSKc(otNode* aNode, const char *aPSKc)
+{
+    otLogFuncEntryMsg("[%d] %s", aNode->mId, aPSKc);
+    printf("%d: pskc %s\r\n", aNode->mId, aPSKc);
+
+    uint8_t pskc[OT_PSKC_MAX_SIZE];
+    if (Hex2Bin(aPSKc, pskc, sizeof(pskc)) != OT_PSKC_MAX_SIZE)
+    {
+        printf("invalid pskc %s\r\n", aPSKc);
+        return kThreadError_Parse;
+    }
+
+    auto error = otThreadSetPSKc(aNode->mInstance, pskc);
+    otLogFuncExit();
+    return error;
+}
+
+OTNODEAPI const char* OTCALL otNodeGetPSKc(otNode* aNode)
+{
+    otLogFuncEntryMsg("[%d]", aNode->mId);
+    auto aPSKc = otThreadGetPSKc(aNode->mInstance);
+    uint8_t strLength = 2 * OT_PSKC_MAX_SIZE + 1;
+    char* str = (char*)malloc(strLength);
+    if (str != nullptr)
+    {
+        aNode->mMemoryToFree.push_back(str);
+        for (int i = 0; i < OT_PSKC_MAX_SIZE; i++)
+            sprintf_s(str + i * 2, strLength - (2 * i), "%02x", aPSKc[i]);
+        printf("%d: pskc\r\n%s\r\n", aNode->mId, str);
+    }
+    otFreeMemory(aPSKc);
+    otLogFuncExit();
+    return str;
+}
+
 OTNODEAPI uint32_t OTCALL otNodeGetKeySequenceCounter(otNode* aNode)
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);

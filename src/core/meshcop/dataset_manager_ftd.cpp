@@ -162,10 +162,9 @@ ThreadError ActiveDataset::GenerateLocal(void)
     // PSKc
     if (!IsTlvInitialized(Tlv::kPSKc))
     {
-        const uint8_t pskc[OT_PSKC_MAX_SIZE] = {0};
         PSKcTlv tlv;
         tlv.Init();
-        tlv.SetPSKc(pskc);
+        tlv.SetPSKc(mNetif.GetKeyManager().GetPSKc());
         mLocal.Set(tlv);
     }
 

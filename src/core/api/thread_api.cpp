@@ -163,6 +163,27 @@ ThreadError otThreadSetLinkMode(otInstance *aInstance, otLinkModeConfig aConfig)
     return aInstance->mThreadNetif.GetMle().SetDeviceMode(mode);
 }
 
+#if OPENTHREAD_FTD
+const uint8_t *otThreadGetPSKc(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetKeyManager().GetPSKc();
+}
+
+ThreadError otThreadSetPSKc(otInstance *aInstance, const uint8_t *aPSKc)
+{
+    ThreadError error = kThreadError_None;
+    VerifyOrExit(aInstance->mThreadNetif.GetMle().GetDeviceState() == Mle::kDeviceStateDisabled,
+                 error = kThreadError_InvalidState);
+
+    aInstance->mThreadNetif.GetKeyManager().SetPSKc(aPSKc);
+    aInstance->mThreadNetif.GetActiveDataset().Clear(false);
+    aInstance->mThreadNetif.GetPendingDataset().Clear(false);
+
+exit:
+    return error;
+}
+#endif
+
 const uint8_t *otThreadGetMasterKey(otInstance *aInstance, uint8_t *aKeyLength)
 {
     return aInstance->mThreadNetif.GetKeyManager().GetMasterKey(aKeyLength);

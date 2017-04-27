@@ -1647,6 +1647,42 @@ otThreadSetMasterKey(
 }
 
 OTAPI 
+const uint8_t *
+OTCALL
+otThreadGetPSKc(
+    _In_ otInstance *aInstance 
+    )
+{
+    if (aInstance == nullptr) return nullptr;
+
+    uint8_t *Result = (uint8_t*)malloc(sizeof(otPSKc));
+    if (Result == nullptr) return nullptr;
+    if (QueryIOCTL(aInstance, IOCTL_OTLWF_OT_PSKC, Result) != ERROR_SUCCESS)
+    {
+        free(Result);
+        return nullptr;
+    }
+    return Result;
+}
+
+OTAPI
+ThreadError
+OTCALL
+otThreadSetPSKc(
+    _In_ otInstance *aInstance, 
+    const uint8_t *aPSKc 
+    )
+{
+    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    
+    BYTE Buffer[sizeof(GUID) + sizeof(otPSKc)];
+    memcpy_s(Buffer, sizeof(Buffer), &aInstance->InterfaceGuid, sizeof(GUID));
+    memcpy_s(Buffer + sizeof(GUID), sizeof(Buffer) - sizeof(GUID), aPSKc, sizeof(otPSKc));
+    
+    return DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_PSKC, Buffer, sizeof(Buffer), nullptr, 0));
+}
+
+OTAPI 
 int8_t 
 OTCALL
 otLinkGetMaxTransmitPower(
