@@ -31,6 +31,12 @@
  *   This file implements the OpenThread platform abstraction for miscellaneous behaviors.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <openthread/types.h>
 #include <openthread/platform/misc.h>
 

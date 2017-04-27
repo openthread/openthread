@@ -31,6 +31,12 @@
  *   This file implements the OpenThread Operational Dataset API (for both FTD and MTD).
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include "openthread/dataset.h"
 
 #include "openthread-instance.h"

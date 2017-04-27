@@ -31,6 +31,12 @@
  *   This file implements the OpenThread Network Data API.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include "openthread/netdata.h"
 
 #include "openthread-instance.h"

@@ -34,6 +34,10 @@
 #ifndef JOINER_HPP_
 #define JOINER_HPP_
 
+#if !defined(_openthread_config_h_sentinel_)
+#error "Please include <openthread-config.h> first"
+#endif
+
 #include "openthread/joiner.h"
 
 #include <coap/coap_header.hpp>

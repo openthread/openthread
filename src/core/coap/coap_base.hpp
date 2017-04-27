@@ -29,6 +29,10 @@
 #ifndef COAP_BASE_HPP_
 #define COAP_BASE_HPP_
 
+#if !defined(_openthread_config_h_sentinel_)
+#error "Please include <openthread-config.h> first"
+#endif
+
 #include "openthread/coap.h"
 
 #include <coap/coap_header.hpp>

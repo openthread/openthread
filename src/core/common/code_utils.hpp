@@ -34,6 +34,10 @@
 #ifndef CODE_UTILS_HPP_
 #define CODE_UTILS_HPP_
 
+#if !defined(_openthread_config_h_sentinel_)
+#error "Please include <openthread-config.h> first"
+#endif
+
 #include "utils/wrap_stdbool.h"
 
 // Calculates the aligned variable size.

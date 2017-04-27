@@ -34,6 +34,10 @@
 #ifndef NET_NETIF_HPP_
 #define NET_NETIF_HPP_
 
+#if !defined(_openthread_config_h_sentinel_)
+#error "Please include <openthread-config.h> first"
+#endif
+
 #include <common/message.hpp>
 #include <common/tasklet.hpp>
 #include <mac/mac_frame.hpp>

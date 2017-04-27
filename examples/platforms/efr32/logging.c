@@ -38,7 +38,6 @@
 #include <openthread-config.h>
 #endif
 
-
 #include <openthread/platform/logging.h>
 #if OPENTHREAD_ENABLE_CLI_LOGGING
 #include <ctype.h>

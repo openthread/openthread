@@ -33,10 +33,8 @@
 #ifndef NCP_BASE_HPP_
 #define NCP_BASE_HPP_
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
+#if !defined(_openthread_config_h_sentinel_)
+#error "Please include <openthread-config.h> first"
 #endif
 
 #include "openthread/types.h"

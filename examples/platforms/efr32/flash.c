@@ -31,7 +31,12 @@
  *   This file implements the OpenThread platform abstraction for the non-volatile storage.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
 #include <openthread-config.h>
+#endif
+
 #include <openthread/platform/alarm.h>
 #include <utils/flash.h>
 #include <utils/code_utils.h>

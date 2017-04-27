@@ -43,6 +43,8 @@ AC_INIT([OPENTHREAD],
         [openthread],
         [http://github.com/openthread/openthread])
 
+AC_DEFINE_UNQUOTED([_openthread_config_h_sentinel_],[1493316498],[This is sentinel to ensure this header is included])
+
 # Tell the rest of the build system the absolute path where the
 # nlbuild-autotools repository is rooted at.
 

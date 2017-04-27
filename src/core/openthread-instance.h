@@ -35,6 +35,10 @@
 #ifndef OPENTHREADINSTANCE_H_
 #define OPENTHREADINSTANCE_H_
 
+#if !defined(_openthread_config_h_sentinel_)
+#error "Please include <openthread-config.h> first"
+#endif
+
 #include "utils/wrap_stdint.h"
 #include "utils/wrap_stdbool.h"
 
