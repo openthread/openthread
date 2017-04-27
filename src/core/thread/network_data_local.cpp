@@ -31,6 +31,8 @@
  *   This file implements the local Thread Network Data.
  */
 
+#if OPENTHREAD_FTD
+
 #ifdef OPENTHREAD_CONFIG_FILE
 #include OPENTHREAD_CONFIG_FILE
 #else
@@ -43,8 +45,6 @@
 #include <mac/mac_frame.hpp>
 #include <thread/network_data_local.hpp>
 #include <thread/thread_netif.hpp>
-
-#if OPENTHREAD_FTD
 
 namespace ot {
 namespace NetworkData {

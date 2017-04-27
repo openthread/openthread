@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file implements blacklist IEEE 802.15.4 frame filtering based on MAC address.
+ *   This file implements the OpenThread Link Raw API.
  */
 
 #include <common/debug.hpp>

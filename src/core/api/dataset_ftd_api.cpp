@@ -31,13 +31,13 @@
  *   This file implements the OpenThread Operational Dataset API (FTD only).
  */
 
+#if OPENTHREAD_FTD
+
 #include "openthread/dataset_ftd.h"
 
 #include "openthread-instance.h"
 
 using namespace ot;
-
-#if OPENTHREAD_FTD
 
 ThreadError otDatasetSetActive(otInstance *aInstance, const otOperationalDataset *aDataset)
 {

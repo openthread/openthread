@@ -32,6 +32,8 @@
  *
  */
 
+#if OPENTHREAD_FTD
+
 #define WPP_NAME "dataset_manager.tmh"
 
 #ifdef OPENTHREAD_CONFIG_FILE

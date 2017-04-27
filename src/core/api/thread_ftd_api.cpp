@@ -31,6 +31,8 @@
  *   This file implements the OpenThread Thread API (FTD only).
  */
 
+#if OPENTHREAD_FTD
+
 #define WPP_NAME "thread_ftd_api.tmh"
 
 #include "openthread/thread_ftd.h"
@@ -38,8 +40,6 @@
 #include "openthread-instance.h"
 
 using namespace ot;
-
-#if OPENTHREAD_FTD
 
 uint16_t otThreadGetJoinerUdpPort(otInstance *aInstance)
 {

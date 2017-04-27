@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file implements the OpenThread UDP API.
+ *   This file implements the OpenThread Commissioner API.
  */
 
 #include "openthread/commissioner.h"

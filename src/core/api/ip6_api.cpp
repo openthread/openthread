@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file implements the OpenThread UDP API.
+ *   This file implements the OpenThread IPv6 API.
  */
 
 #define WPP_NAME "ip6_api.tmh"
