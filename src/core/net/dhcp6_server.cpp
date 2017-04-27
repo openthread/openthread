@@ -162,7 +162,7 @@ ThreadError Dhcp6Server::UpdateService(void)
                 address->mFields.m16[4] = HostSwap16(0x0000);
                 address->mFields.m16[5] = HostSwap16(0x00ff);
                 address->mFields.m16[6] = HostSwap16(0xfe00);
-                address->mFields.m8[14] = Mle::kAloc16Mask;
+                address->mFields.m8[14] = Ip6::Address::kAloc16Mask;
                 address->mFields.m8[15] = lowpanContext.mContextId;
                 mAgentsAloc[i].mPrefixLength = 128;
                 mAgentsAloc[i].mPreferred = true;

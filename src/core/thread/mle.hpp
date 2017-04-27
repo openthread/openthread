@@ -110,7 +110,6 @@ enum DeviceState
  */
 enum AlocAllocation
 {
-    kAloc16Mask                         = 0xfc,
     kAloc16Leader                       = 0xfc00,
     kAloc16DhcpAgentStart               = 0xfc01,
     kAloc16DhcpAgentEnd                 = 0xfc0f,
