@@ -91,7 +91,7 @@ void JoinerRouter::HandleNetifStateChanged(uint32_t aFlags)
 
     mNetif.GetIp6Filter().RemoveUnsecurePort(mSocket.GetSockName().mPort);
 
-    if (mNetif.GetNetworkDataLeader().GetCommissioningData() != NULL)
+    if (mNetif.GetNetworkDataLeader().IsJoiningEnabled())
     {
         Ip6::SockAddr sockaddr;
 
