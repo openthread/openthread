@@ -767,19 +767,6 @@ OTAPI ThreadError OTCALL otThreadGetNextNeighborInfo(otInstance *aInstance, otNe
 OTAPI otDeviceRole OTCALL otThreadGetDeviceRole(otInstance *aInstance);
 
 /**
- * This function gets an EID cache entry.
- *
- * @param[in]   aInstance A pointer to an OpenThread instance.
- * @param[in]   aIndex    An index into the EID cache table.
- * @param[out]  aEntry    A pointer to where the EID information is placed.
- *
- * @retval kThreadError_None         Successfully retrieved the EID cache entry.
- * @retval kThreadError_InvalidArgs  @p aIndex was out of bounds or @p aEntry was NULL.
- *
- */
-OTAPI ThreadError OTCALL otThreadGetEidCacheEntry(otInstance *aInstance, uint8_t aIndex, otEidCacheEntry *aEntry);
-
-/**
  * This function get the Thread Leader Data.
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.

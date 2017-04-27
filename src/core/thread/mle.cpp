@@ -552,7 +552,6 @@ ThreadError Mle::SetStateDetached(void)
         mNetif.RemoveUnicastAddress(mLeaderAloc);
     }
 
-    mNetif.GetAddressResolver().Clear();
     mDeviceState = kDeviceStateDetached;
     mParentRequestState = kParentIdle;
     mParentRequestTimer.Stop();

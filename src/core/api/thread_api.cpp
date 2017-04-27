@@ -458,17 +458,6 @@ otDeviceRole otThreadGetDeviceRole(otInstance *aInstance)
     return rval;
 }
 
-ThreadError otThreadGetEidCacheEntry(otInstance *aInstance, uint8_t aIndex, otEidCacheEntry *aEntry)
-{
-    ThreadError error;
-
-    VerifyOrExit(aEntry != NULL, error = kThreadError_InvalidArgs);
-    error = aInstance->mThreadNetif.GetAddressResolver().GetEntry(aIndex, *aEntry);
-
-exit:
-    return error;
-}
-
 ThreadError otThreadGetLeaderData(otInstance *aInstance, otLeaderData *aLeaderData)
 {
     ThreadError error;

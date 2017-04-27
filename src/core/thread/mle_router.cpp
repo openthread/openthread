@@ -334,6 +334,8 @@ ThreadError MleRouter::HandleDetachStart(void)
 {
     ThreadError error = kThreadError_None;
 
+    mNetif.GetAddressResolver().Clear();
+
     for (int i = 0; i <= kMaxRouterId; i++)
     {
         mRouters[i].SetState(Neighbor::kStateInvalid);

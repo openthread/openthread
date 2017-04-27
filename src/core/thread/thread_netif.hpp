@@ -162,14 +162,6 @@ public:
     virtual ThreadError RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch);
 
     /**
-     * This method returns a reference to the address resolver object.
-     *
-     * @returns A reference to the address resolver object.
-     *
-     */
-    AddressResolver &GetAddressResolver(void) { return mAddressResolver; }
-
-    /**
      * This method returns a reference to the network diagnostic object.
      *
      * @returns A reference to the address resolver object.
@@ -287,31 +279,99 @@ public:
      */
     NetworkData::Leader &GetNetworkDataLeader(void) { return mNetworkDataLeader; }
 
+    /**
+     * This method returns a reference to the active dataset object.
+     *
+     * @returns A reference to the active dataset object.
+     *
+     */
     MeshCoP::ActiveDataset &GetActiveDataset(void) { return mActiveDataset; }
 
+    /**
+     * This method returns a reference to the pending dataset object.
+     *
+     * @returns A reference to the pending dataset object.
+     *
+     */
     MeshCoP::PendingDataset &GetPendingDataset(void) { return mPendingDataset; }
 
 #if OPENTHREAD_FTD
+    /**
+     * This method returns a reference to the joiner router object.
+     *
+     * @returns A reference to the joiner router object.
+     *
+     */
     MeshCoP::JoinerRouter &GetJoinerRouter(void) { return mJoinerRouter; }
 
+    /**
+     * This method returns a reference to the MeshCoP leader object.
+     *
+     * @returns A reference to the MeshCoP leader object.
+     *
+     */
     MeshCoP::Leader &GetLeader(void) { return mLeader; }
+
+    /**
+     * This method returns a reference to the address resolver object.
+     *
+     * @returns A reference to the address resolver object.
+     *
+     */
+    AddressResolver &GetAddressResolver(void) { return mAddressResolver; }
 #endif  // OPENTHREAD_FTD
 
+    /**
+     * This method returns a reference to the announce begin server object.
+     *
+     * @returns A reference to the announce begin server object.
+     *
+     */
     AnnounceBeginServer &GetAnnounceBeginServer(void) { return mAnnounceBegin; }
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+    /**
+     * This method returns a reference to the commissioner object.
+     *
+     * @returns A reference to the commissioenr object.
+     *
+     */
     MeshCoP::Commissioner &GetCommissioner(void) { return mCommissioner; }
 
+    /**
+     * This method returns a reference to the secure CoAP server object.
+     *
+     * @returns A reference to the secure CoAP server object.
+     *
+     */
     Coap::SecureServer &GetSecureCoapServer(void) { return mSecureCoapServer; }
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
 #if OPENTHREAD_ENABLE_DTLS
+    /**
+     * This method returns a reference to the Dtls object.
+     *
+     * @returns A reference to the Dtls object.
+     *
+     */
     MeshCoP::Dtls &GetDtls(void) { return mDtls; }
 #endif  // OPENTHREAD_ENABLE_DTLS
 
 #if OPENTHREAD_ENABLE_JOINER
+    /**
+     * This method returns a reference to the joiner object.
+     *
+     * @returns A reference to the joiner object.
+     *
+     */
     MeshCoP::Joiner &GetJoiner(void) { return mJoiner; }
 
+    /**
+     * This method returns a reference to the secure CoAP client object.
+     *
+     * @returns A reference to the secure CoAP client object.
+     *
+     */
     Coap::SecureClient &GetSecureCoapClient(void) { return mSecureCoapClient; }
 #endif  // OPENTHREAD_ENABLE_JOINER
 
@@ -340,7 +400,6 @@ public:
 private:
     Coap::Server mCoapServer;
     Coap::Client mCoapClient;
-    AddressResolver mAddressResolver;
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
     Dhcp6::Dhcp6Client mDhcp6Client;
 #endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
@@ -387,6 +446,7 @@ private:
 #endif // OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
     MeshCoP::JoinerRouter mJoinerRouter;
     MeshCoP::Leader mLeader;
+    AddressResolver mAddressResolver;
 #endif  // OPENTHREAD_FTD
 
     AnnounceBeginServer mAnnounceBegin;

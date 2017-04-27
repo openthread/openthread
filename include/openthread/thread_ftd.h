@@ -54,6 +54,16 @@ extern "C" {
  */
 
 /**
+  * @defgroup config-router  Router/Leader
+  *
+  * @brief
+  *   This module includes functions that manage configuration parameters for the Thread Router and Leader roles.
+  *
+  * @{
+  *
+  */
+
+/**
  * Get the Joiner UDP Port.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
@@ -75,6 +85,29 @@ OTAPI uint16_t OTCALL otThreadGetJoinerUdpPort(otInstance *aInstance);
  * @sa otThreadGetJoinerUdpPort
  */
 OTAPI ThreadError OTCALL otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort);
+
+/**
+ * @addtogroup diags  Diagnostics
+ *
+ * @brief
+ *   This module includes functions that expose internal state.
+ *
+ * @{
+ *
+ */
+
+/**
+ * This function gets an EID cache entry.
+ *
+ * @param[in]   aInstance A pointer to an OpenThread instance.
+ * @param[in]   aIndex    An index into the EID cache table.
+ * @param[out]  aEntry    A pointer to where the EID information is placed.
+ *
+ * @retval kThreadError_None         Successfully retrieved the EID cache entry.
+ * @retval kThreadError_InvalidArgs  @p aIndex was out of bounds or @p aEntry was NULL.
+ *
+ */
+OTAPI ThreadError OTCALL otThreadGetEidCacheEntry(otInstance *aInstance, uint8_t aIndex, otEidCacheEntry *aEntry);
 
 /**
  * @}

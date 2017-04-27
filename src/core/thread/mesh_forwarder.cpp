@@ -620,9 +620,6 @@ ThreadError MeshForwarder::UpdateIp6Route(Message &aMessage)
 {
     ThreadError error = kThreadError_None;
     Ip6::Header ip6Header;
-    uint16_t rloc16;
-    uint16_t aloc16;
-    Neighbor *neighbor;
 
     mAddMeshHeader = false;
 
@@ -671,6 +668,11 @@ ThreadError MeshForwarder::UpdateIp6Route(Message &aMessage)
         }
 
         break;
+
+#if OPENTHREAD_FTD
+    uint16_t rloc16;
+    uint16_t aloc16;
+    Neighbor *neighbor;
 
     case Mle::kDeviceStateRouter:
     case Mle::kDeviceStateLeader:
@@ -772,6 +774,10 @@ ThreadError MeshForwarder::UpdateIp6Route(Message &aMessage)
             }
         }
 
+        break;
+#endif  // OPENTHREAD_FTD
+
+    default:
         break;
     }
 

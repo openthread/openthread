@@ -111,7 +111,9 @@ const struct Command Interpreter::sCommands[] =
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     { "dns", &Interpreter::ProcessDns },
 #endif
+#if OPENTHREAD_FTD
     { "eidcache", &Interpreter::ProcessEidCache },
+#endif
     { "eui64", &Interpreter::ProcessEui64 },
 #ifdef OPENTHREAD_EXAMPLES_POSIX
     { "exit", &Interpreter::ProcessExit },
@@ -851,6 +853,7 @@ void Interpreter::HandleDnsResponse(const char *aHostname, Ip6::Address &aAddres
 }
 #endif
 
+#if OPENTHREAD_FTD
 void Interpreter::ProcessEidCache(int argc, char *argv[])
 {
     otEidCacheEntry entry;
@@ -881,6 +884,7 @@ exit:
     (void)argv;
     AppendResult(kThreadError_None);
 }
+#endif
 
 void Interpreter::ProcessEui64(int argc, char *argv[])
 {

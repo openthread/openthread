@@ -51,4 +51,15 @@ ThreadError otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpP
     return aInstance->mThreadNetif.GetJoinerRouter().SetJoinerUdpPort(aJoinerUdpPort);
 }
 
+ThreadError otThreadGetEidCacheEntry(otInstance *aInstance, uint8_t aIndex, otEidCacheEntry *aEntry)
+{
+    ThreadError error;
+
+    VerifyOrExit(aEntry != NULL, error = kThreadError_InvalidArgs);
+    error = aInstance->mThreadNetif.GetAddressResolver().GetEntry(aIndex, *aEntry);
+
+exit:
+    return error;
+}
+
 #endif // OPENTHREAD_FTD

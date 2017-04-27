@@ -48,7 +48,6 @@
 namespace ot {
 
 class ThreadNetif;
-class AddressResolver;
 class KeyManager;
 class MeshForwarder;
 
