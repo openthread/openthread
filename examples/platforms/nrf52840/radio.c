@@ -32,6 +32,16 @@
  *
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+// NRF tools use #define PACKAGE - for other purposes
+// ie: the physical package the chip comes in
+// This conflicts with the GNU Autoconf "PACAKGE" define
+#undef PACKAGE
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
