@@ -29,7 +29,7 @@
 #ifndef TEST_LOWPAN_HPP
 #define TEST_LOWPAN_HPP
 
-#include <stdint.h>
+#include "utils/wrap_stdint.h"
 
 #include "openthread/openthread.h"
 

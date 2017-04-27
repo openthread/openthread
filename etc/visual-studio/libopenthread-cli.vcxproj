@@ -49,7 +49,6 @@
         ..\..\include;
         ..\..\src;
         ..\..\src\core;
-        ..\..\src\missing;
         ..\..\third_party\mbedtls;
         ..\..\third_party\mbedtls\repo\include;
       </AdditionalIncludeDirectories>

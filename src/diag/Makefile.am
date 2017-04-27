@@ -35,7 +35,6 @@ libopenthread_diag_a_CPPFLAGS =        \
     -I$(top_srcdir)/src                \
     -I$(top_srcdir)/src/core           \
     $(OPENTHREAD_TARGET_DEFINES)       \
-    $(MISSING_CPPFLAGS)                \
     $(NULL)
 
 libopenthread_diag_a_SOURCES         = \

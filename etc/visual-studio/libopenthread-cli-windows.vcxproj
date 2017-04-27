@@ -49,7 +49,6 @@
         ..\..\include;
         ..\..\src;
         ..\..\src\core;
-        ..\..\src\missing;
       </AdditionalIncludeDirectories>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>

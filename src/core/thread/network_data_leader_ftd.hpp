@@ -34,7 +34,7 @@
 #ifndef NETWORK_DATA_LEADER_FTD_HPP_
 #define NETWORK_DATA_LEADER_FTD_HPP_
 
-#include <stdint.h>
+#include "utils/wrap_stdint.h"
 
 #include <coap/coap_server.hpp>
 #include <common/timer.hpp>

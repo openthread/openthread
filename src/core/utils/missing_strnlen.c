@@ -25,18 +25,16 @@
  *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "strlcat.h"
-#include "../strlcpy/strlcpy.h"
+#include "utils/wrap_string.h"
 
-size_t strlcat(char *dest, const char *src, size_t size)
+size_t missing_strnlen(const char *s, size_t maxlen)
 {
-    size_t len = strlen(dest);
+    size_t ret;
 
-    if (len < size - 1)
+    for (ret = 0; (ret < maxlen) && (s[ret] != 0); ret++)
     {
-        return (len + strlcpy(dest + len, src, size - len));
+        // Empty loop.
     }
 
-    return len + strlen(src);
+    return ret;
 }
-

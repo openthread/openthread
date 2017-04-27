@@ -35,7 +35,7 @@
 #define ENCODING_HPP_
 
 #include <limits.h>
-#include <stdint.h>
+#include "utils/wrap_stdint.h"
 
 namespace Thread {
 namespace Encoding {

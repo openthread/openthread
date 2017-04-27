@@ -29,7 +29,7 @@
 #include "test_util.h"
 #include "openthread/openthread.h"
 #include <common/debug.hpp>
-#include <string.h>
+#include "utils/wrap_string.h"
 
 #include <crypto/hmac_sha256.hpp>
 #include <crypto/mbedtls.hpp>

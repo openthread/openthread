@@ -34,7 +34,7 @@
 #ifndef NETWORK_DATA_TLVS_HPP_
 #define NETWORK_DATA_TLVS_HPP_
 
-#include <string.h>
+#include "utils/wrap_string.h"
 
 #include <common/encoding.hpp>
 #include <net/ip6_address.hpp>

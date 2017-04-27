@@ -26,7 +26,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <string.h>
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
+#include "utils/wrap_string.h"
 
 #include "openthread/platform/random.h"
 

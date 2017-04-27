@@ -31,6 +31,12 @@
  *   This file implements AES-CCM.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <crypto/aes_ccm.hpp>

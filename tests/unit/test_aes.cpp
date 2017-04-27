@@ -31,7 +31,7 @@
 #include <common/debug.hpp>
 #include <crypto/aes_ccm.hpp>
 #include <crypto/mbedtls.hpp>
-#include <string.h>
+#include "utils/wrap_string.h"
 
 #ifndef OPENTHREAD_MULTIPLE_INSTANCE
 static Thread::Crypto::MbedTls mbedtls;

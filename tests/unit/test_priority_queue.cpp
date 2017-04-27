@@ -31,7 +31,7 @@
 #include <openthread-instance.h>
 #include <common/debug.hpp>
 #include <common/message.hpp>
-#include <string.h>
+#include "utils/wrap_string.h"
 #include <stdarg.h>
 
 #define kNumTestMessages      3

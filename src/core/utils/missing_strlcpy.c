@@ -25,25 +25,28 @@
  *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MISSING_STRLCAT_HEADER_INCLUDED
-#define MISSING_STRLCAT_HEADER_INCLUDED 1
+#include "utils/wrap_string.h"
 
-#include <string.h>
+size_t missing_strlcpy(char *dest, const char *src, size_t size)
+{
+    const size_t slen = strlen(src);
 
-#ifdef strlcat
-#undef strlcat
-#endif
+    if (size != 0)
+    {
+        size--;
 
-#define strlcat ___missing_strlcat
+        if (slen < size)
+        {
+            size = slen;
+        }
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+        if (size != 0)
+        {
+            memcpy(dest, src, size);
+        }
 
-size_t strlcat(char *dest, const char *src, size_t size);
+        dest[size] = 0;
+    }
 
-#ifdef __cplusplus
-}  // extern "C"
-#endif
-
-#endif // MISSING_STRLCPY_HEADER_INCLUDED
+    return slen;
+}

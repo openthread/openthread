@@ -34,7 +34,7 @@
 
 #include <stdlib.h>
 #include <stddef.h>
-#include <string.h>
+#include "utils/wrap_string.h"
 #include <assert.h>
 
 #include <openthread-core-config.h>

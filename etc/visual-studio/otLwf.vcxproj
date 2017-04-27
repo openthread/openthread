@@ -49,11 +49,10 @@
         %(AdditionalIncludeDirectories);
         ..\..\include;
         ..\..\examples\drivers\windows\include;
+        ..\..\examples\drivers\windows\include_c99;
         ..\..\examples\drivers\windows\otLwf;
         ..\..\src;
         ..\..\src\core;
-        ..\..\src\missing\stdint;
-        ..\..\src\missing\stdbool;
       </AdditionalIncludeDirectories>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>

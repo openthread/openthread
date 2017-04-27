@@ -34,7 +34,7 @@
 #ifndef MLE_ROUTER_HPP_
 #define MLE_ROUTER_HPP_
 
-#include <string.h>
+#include "utils/wrap_string.h"
 
 #include <coap/coap_header.hpp>
 #include <coap/coap_server.hpp>

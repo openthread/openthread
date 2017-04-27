@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2016, The OpenThread Authors.
+ *    Copyright (c) 2016-2017, The OpenThread Authors.
  *    All rights reserved.
  *
  *    Redistribution and use in source and binary forms, with or without
@@ -27,16 +27,19 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "string.h"
+#include "utils/wrap_string.h"
 
-int main(void)
+int main(int argc, char **argv)
 {
     char string_a[8] = "foo";
     char string_b[8] = "barbar";
     size_t ret = 0;
     int errors = 0;
 
-    ret = strlcat(string_a, string_b, sizeof(string_a));
+    (void)argc;
+    (void)argv;
+
+    ret = missing_strlcat(string_a, string_b, sizeof(string_a));
 
     if (0 != strcmp(string_a, "foobarb"))
     {

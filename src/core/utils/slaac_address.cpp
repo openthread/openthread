@@ -46,7 +46,7 @@
 #include <net/ip6_address.hpp>
 #include <utils/slaac_address.hpp>
 
-#include <string.h>
+#include "utils/wrap_string.h"
 
 namespace Thread {
 namespace Utils {

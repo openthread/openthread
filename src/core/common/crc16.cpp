@@ -31,6 +31,12 @@
  *   This file implements CRC16 computations.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <common/crc16.hpp>
 
 namespace Thread {

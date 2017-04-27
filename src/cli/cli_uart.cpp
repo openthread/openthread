@@ -31,10 +31,16 @@
  *   This file implements the CLI server on the UART service.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include "utils/wrap_string.h"
 
 #include "openthread/cli.h"
 #include "openthread/platform/logging.h"

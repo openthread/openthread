@@ -24,26 +24,28 @@
  *    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#if !defined(WRAP_STDINT_H)
+#define WRAP_STDINT_H
 
-#ifndef MISSING_STRLCPY_HEADER_INCLUDED
-#define MISSING_STRLCPY_HEADER_INCLUDED 1
+/* generally all compilers support this */
+/* Visual Studio only after VS2015 (aka: 19.00) */
 
-#include <string.h>
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
+/* types from this page: https://msdn.microsoft.com/en-us/library/29dh1w7z.aspx */
 
-#ifdef strlcpy
-#undef strlcpy
+typedef unsigned __int8  uint8_t;
+typedef unsigned __int16 uint16_t;
+typedef unsigned __int32 uint32_t;
+typedef unsigned __int64 uint64_t;
+
+typedef __int8  int8_t;
+typedef __int16 int16_t;
+typedef __int32 int32_t;
+typedef __int64 int64_t;
+
+#else
+/* use the compiler supplied solution */
+#include <stdint.h>
 #endif
 
-#define strlcpy ___missing_strlcpy
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-extern size_t strlcpy(char *dest, const char *src, size_t size);
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif
-
-#endif // MISSING_STRLCPY_HEADER_INCLUDED
+#endif // WRAP_STDINT_H

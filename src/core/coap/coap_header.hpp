@@ -34,7 +34,7 @@
 #ifndef COAP_HEADER_HPP_
 #define COAP_HEADER_HPP_
 
-#include <string.h>
+#include "utils/wrap_string.h"
 
 #include "openthread/coap.h"
 

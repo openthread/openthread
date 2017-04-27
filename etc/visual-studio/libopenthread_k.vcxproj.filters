@@ -309,10 +309,13 @@
     <ClCompile Include="..\..\src\core\common\crc16.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\missing\strlcpy\strlcpy.c">
+    <ClCompile Include="..\..\src\core\utils\missing_strlcpy.c">
       <Filter>Source Files\missing</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\missing\strlcat\strlcat.c">
+    <ClCompile Include="..\..\src\core\utils\missing_strlcat.c">
+      <Filter>Source Files\missing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\utils\missing_strnlen.c">
       <Filter>Source Files\missing</Filter>
     </ClCompile>
   </ItemGroup>
@@ -641,10 +644,13 @@
     <ClInclude Include="..\..\src\core\api\link_raw.hpp">
       <Filter>Header Files\api</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\missing\strlcpy\strlcpy.h">
+    <ClInclude Include="..\..\src\core\utils\wrapper_string.h">
       <Filter>Header Files\missing</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\missing\strlcat\strlcat.h">
+    <ClInclude Include="..\..\src\core\utils\wrapper_stdbool.h">
+      <Filter>Header Files\missing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\utils\wrapper_stdint.h">
       <Filter>Header Files\missing</Filter>
     </ClInclude>
   </ItemGroup>

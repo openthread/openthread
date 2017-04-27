@@ -31,7 +31,6 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 # Always package (e.g. for 'make dist') these subdirectories.
 
 DIST_SUBDIRS                            = \
-    missing                               \
     core                                  \
     cli                                   \
     ncp                                   \
@@ -41,7 +40,6 @@ DIST_SUBDIRS                            = \
 # Always build (e.g. for 'make all') these subdirectories.
 
 SUBDIRS                                 = \
-    missing                               \
     core                                  \
     $(NULL)
 
@@ -62,7 +60,6 @@ endif
 PRETTY_SUBDIRS                          = \
     cli                                   \
     core                                  \
-    missing                               \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

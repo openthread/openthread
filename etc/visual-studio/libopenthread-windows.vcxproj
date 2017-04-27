@@ -49,7 +49,6 @@
         ..\..\include;
         ..\..\examples\platforms;
         ..\..\src\core;
-        ..\..\src\missing;
       </AdditionalIncludeDirectories>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
