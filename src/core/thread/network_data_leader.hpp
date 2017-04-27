@@ -188,6 +188,16 @@ public:
     MeshCoP::Tlv *GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aType);
 
     /**
+     * This method indicates whether or not the Commissioning Data TLV indicates Joining is enabled.
+     *
+     * Joining is enabled if a Border Agent Locator TLV exist and the Steering Data TLV is non-zero.
+     *
+     * @returns TRUE if the Commissioning Data TLV says Joining is enabled, FALSE otherwise.
+     *
+     */
+    bool IsJoiningEnabled(void);
+
+    /**
      * This method adds Commissioning Data to the Thread Network Data.
      *
      * @param[in]  aValue        A pointer to the Commissioning Data value.
