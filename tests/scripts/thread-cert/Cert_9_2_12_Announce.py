@@ -92,6 +92,8 @@ class Cert_9_2_12_Announce(unittest.TestCase):
         self.nodes[LEADER1].start()
         self.nodes[LEADER1].set_state('leader')
         self.assertEqual(self.nodes[LEADER1].get_state(), 'leader')
+        self.nodes[LEADER1].commissioner_start()
+        time.sleep(3)
 
         self.nodes[ROUTER1].start()
         time.sleep(5)
