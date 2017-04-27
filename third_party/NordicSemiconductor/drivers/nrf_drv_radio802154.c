@@ -1037,6 +1037,7 @@ void nrf_drv_radio802154_receive(uint8_t channel)
         }
         break;
 
+    case RADIO_STATE_CCA:
     case RADIO_STATE_TX_FRAME:
     case RADIO_STATE_RX_ACK:
         tx_procedure_abort();
