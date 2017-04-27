@@ -131,7 +131,7 @@ node types by passing the NODE_TYPE environment variable:
 ```
 # From top-level of openthread tree
 ./bootstrap
-./configure --with-examples=posix --enable-cli --enable-ncp=uart
+./configure --with-examples=posix --enable-cli-app=all --enable-ncp-app=all --with-ncp-bus=uart
 make
 cd tests/scripts/thread-cert
 NODE_TYPE=ncp-sim top_builddir=../../.. python Cert_5_1_02_ChildAddressTimeout.py VERBOSE=1
@@ -143,7 +143,7 @@ NODE_TYPE=ncp-sim top_builddir=../../.. python Cert_5_1_02_ChildAddressTimeout.p
 # From top-level of openthread tree
 make distclean
 ./bootstrap
-NODE_TYPE=ncp-sim BUILD_TARGET=posix-distcheck DISTCHECK_CONFIGURE_FLAGS="--with-examples=posix --enable-cli --enable-ncp=uart --with-tests=all" make -f examples/Makefile-posix distcheck BuildJobs=10 VERBOSE=1
+NODE_TYPE=ncp-sim BUILD_TARGET=posix-distcheck DISTCHECK_CONFIGURE_FLAGS="--with-examples=posix --enable-cli-app --enable-ncp-app=all --with-ncp-bus=uart --with-tests=all" make -f examples/Makefile-posix distcheck BuildJobs=10 VERBOSE=1
 ```
 
 ## Command Reference
