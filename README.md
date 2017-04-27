@@ -93,7 +93,7 @@ OpenThread has been ported to several devices and platforms by both the OpenThre
 * [Texas Instruments CC2650](https://github.com/openthread/openthread/wiki/Platforms#texas-instruments-cc2650)
 * [POSIX Emulation](https://github.com/openthread/openthread/wiki/Platforms#posix-emulation)
 
-See the [Wiki Platform page](https://github.com/openthread/openthread/wiki/Platforms) for more detailed information on supported platforms.
+See the [Wiki Platform page](https://github.com/openthread/openthread/wiki/Platforms) for more detailed information on supported platforms. 
 
 ### Desktop Support
 
@@ -101,6 +101,10 @@ Desktop platforms can also be used to control and interface with a Thread networ
 
 * **Unix** — [`wpantund`](https://github.com/openthread/wpantund) provides an interface to an NCP
 * **Windows 10** — [universal drivers](https://github.com/openthread/openthread/wiki/OpenThread-on%C2%A0Windows) to interface with devices running OpenThread
+
+### Porting
+
+If you are interested in porting OpenThread to a new platform, see the [Porting Guide](https://github.com/openthread/openthread/wiki/Porting-Guide) for hardware requirements and detailed porting instructions.
 
 # What tools are available for testing?
 
