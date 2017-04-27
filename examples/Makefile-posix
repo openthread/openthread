@@ -90,8 +90,9 @@ configure_OPTIONS               = \
     --enable-raw-link-api=yes     \
     --with-examples=posix         \
     --with-platform-info=POSIX    \
-    --enable-cert-log             \
     --enable-application-coap     \
+    --enable-border-agent-proxy   \
+    --enable-cert-log             \
     --enable-commissioner         \
     --enable-dhcp6-client         \
     --enable-dhcp6-server         \

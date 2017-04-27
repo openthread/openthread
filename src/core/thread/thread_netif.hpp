@@ -71,6 +71,10 @@
 #include <utils/jam_detector.hpp>
 #endif // OPENTHREAD_ENABLE_JAM_DETECTION
 
+#if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
+#include <meshcop/border_agent_proxy.hpp>
+#endif // OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
+
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 #include <meshcop/commissioner.hpp>
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
@@ -321,6 +325,10 @@ public:
     Utils::JamDetector &GetJamDetector(void) { return mJamDetector; }
 #endif // OPENTHREAD_ENABLE_JAM_DETECTION
 
+#if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
+    MeshCoP::BorderAgentProxy &GetBorderAgentProxy(void) { return mBorderAgentProxy; }
+#endif // OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
+
     /**
      * This method returns the pointer to the parent otInstance structure.
      *
@@ -374,6 +382,9 @@ private:
 #endif // OPENTHREAD_ENABLE_JAM_DETECTION
 
 #if OPENTHREAD_FTD
+#if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
+    MeshCoP::BorderAgentProxy mBorderAgentProxy;
+#endif // OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
     MeshCoP::JoinerRouter mJoinerRouter;
     MeshCoP::Leader mLeader;
 #endif  // OPENTHREAD_FTD

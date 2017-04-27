@@ -254,3 +254,19 @@ When the Extended address is ommited all Devices which provided a valid PSKd are
 * Packed-Encoding: `b`
 
 Set to true to enable the native commissioner. It is mandatory before adding the joiner to the network.
+
+### PROP 5393: PROP_THREAD_BA_PROXY_ENABLED {#prop-thread-ba-proxy-enabled}
+
+* Type: Read-Write
+* Packed-Encoding: `b`
+
+Set to true to enable the border agent proxy.
+
+### PROP 5394: PROP_THREAD_BA_PROXY_STREAM {#prop-thread-ba-proxy-stream}
+
+* Type: Read-Write-Stream
+* Packed-Encoding: `dSS`
+
+Octects: | *n*  |    2    |  2
+---------|------|---------|------
+Fields:  | CoAP | locator | port

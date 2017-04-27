@@ -91,6 +91,7 @@ libopenthread_mtd_a_CPPFLAGS        = \
 #
 
 SOURCES_COMMON                      = \
+    api/border_agent_proxy_api.cpp    \
     api/coap_api.cpp                  \
     api/commissioner_api.cpp          \
     api/crypto_api.cpp                \
@@ -136,6 +137,7 @@ SOURCES_COMMON                      = \
     mac/mac_frame.cpp                 \
     mac/mac_whitelist.cpp             \
     meshcop/announce_begin_client.cpp \
+    meshcop/border_agent_proxy.cpp    \
     meshcop/commissioner.cpp          \
     meshcop/dataset.cpp               \
     meshcop/dataset_manager.cpp       \
@@ -269,6 +271,7 @@ HEADERS_COMMON                      = \
     mac/mac_whitelist_impl.hpp        \
     mac/mac_whitelist_stub.hpp        \
     meshcop/announce_begin_client.hpp \
+    meshcop/border_agent_proxy.hpp    \
     meshcop/commissioner.hpp          \
     meshcop/dataset.hpp               \
     meshcop/dataset_manager.hpp       \

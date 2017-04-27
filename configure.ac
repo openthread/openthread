@@ -536,6 +536,37 @@ AC_MSG_RESULT(${enable_builtin_mbedtls})
 AM_CONDITIONAL([OPENTHREAD_ENABLE_BUILTIN_MBEDTLS], [test "${enable_builtin_mbedtls}" = "yes"])
 
 #
+# Thread Border Agent Proxy
+#
+
+AC_ARG_ENABLE(border_agent_proxy,
+    [AS_HELP_STRING([--enable-border-agent-proxy],[Enable border agent proxy support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_border_agent_proxy=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_border_agent_proxy} for --enable-border-agent-proxy])
+            ;;
+        esac
+    ],
+    [enable_border_agent_proxy=no])
+
+if test "$enable_border_agent_proxy" = "yes"; then
+    OPENTHREAD_ENABLE_BORDER_AGENT_PROXY=1
+else
+    OPENTHREAD_ENABLE_BORDER_AGENT_PROXY=0
+fi
+
+AC_MSG_RESULT(${enable_border_agent_proxy})
+AC_SUBST(OPENTHREAD_ENABLE_BORDER_AGENT_PROXY)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_BORDER_AGENT_PROXY], [test "${enable_border_agent_proxy}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_BORDER_AGENT_PROXY],[${OPENTHREAD_ENABLE_BORDER_AGENT_PROXY}],[Define to 1 to enable the border agent proxy feature.])
+
+#
 # Thread Commissioner
 #
 
@@ -1269,6 +1300,7 @@ AC_MSG_NOTICE([
   OpenThread NCP-FTD support                : ${enable_ncp_app_ftd}
   OpenThread NCP-BUS Configuration          : ${with_ncp_bus}
   OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}
+  OpenThread Border Agent Proxy support     : ${enable_border_agent_proxy}
   OpenThread Commissioner support           : ${enable_commissioner}
   OpenThread Joiner support                 : ${enable_joiner}
   OpenThread DTLS support                   : ${enable_dtls}

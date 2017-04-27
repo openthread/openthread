@@ -93,6 +93,9 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
     mJamDetector(*this),
 #endif // OPENTHREAD_ENABLE_JAM_DETECTTION
 #if OPENTHREAD_FTD
+#if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
+    mBorderAgentProxy(mMleRouter.GetMeshLocal16(), mCoapServer, mCoapClient),
+#endif // OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
     mJoinerRouter(*this),
     mLeader(*this),
 #endif  // OPENTHREAD_FTD
