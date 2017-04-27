@@ -34,7 +34,7 @@ import node
 
 LEADER = 1
 ROUTER = 2
-SED1 = 6
+SED1 = 7
 
 class Cert_5_1_07_MaxChildCount(unittest.TestCase):
     def setUp(self):
