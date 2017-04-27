@@ -90,7 +90,7 @@ SECTIONS
 
     __etext = .;
 
-    nrf_radio_buffer :
+    nrf_radio_buffer (NOLOAD):
     {
         __nrf_radio_buffer_start__ = .;
         *(nrf_radio_buffer*)
@@ -162,7 +162,7 @@ SECTIONS
     __flash_data_start = (__flash_data_end - (FLASH_PAGE_SIZE * FLASH_DATA_PAGES_USED));
 
     /* Assure that code does not overlap flash data area.*/
-    ASSERT((__flash_data_start >= __etext), "Error: Code overlaps flash data area.")
+    ASSERT((__flash_data_start >= __etext + SIZEOF(.data)), "Error: Code overlaps flash data area.")
 
     /* Set stack top to end of RAM, and stack limit move down by
      * size of stack_dummy section */
