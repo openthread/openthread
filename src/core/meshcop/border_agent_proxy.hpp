@@ -61,16 +61,16 @@ public:
      * This method enables the border agent proxy service.
      *
      * @retval kThreadError_None            Successfully started the service.
-     * @retval kThreadError_InvalidState    The service already started.
+     * @retval kThreadError_Already         The service already started.
      *
      */
-    ThreadError Start(otBorderAgentProxyStreamHandler aBorderAgentProxyStreamHandler, void *aContext);
+    ThreadError Start(otBorderAgentProxyStreamHandler aStreamHandler, void *aContext);
 
     /**
      * This method disables the border agent proxy service.
      *
-     * @retval kThreadError_None            Successfully stopped the BorderAgentProxy service.
-     * @retval kThreadError_InvalidState    The service already stopped.
+     * @retval kThreadError_None            Successfully stopped the border agent proxy service.
+     * @retval kThreadError_Already         The service already stopped.
      *
      */
     ThreadError Stop(void);
@@ -82,10 +82,10 @@ public:
      * @param[in]   aLocator    The destination's RLOC16 or ALOC16.
      * @param[in]   aPort       The destination port.
      *
-     * @returns Error code from CoAP's SendMessage().
+     * @retval kThreadError_None            Successfully send the message.
+     * @retval kThreadError_InvalidState    Border agent proxy is not started.
      *
-     * @sa Coap::Client::SendMessage
-     * @sa Coap::Server::SendMessage
+     * @warning No matter the call success or fail, the message is freed.
      *
      */
     ThreadError Send(Message &aMessage, uint16_t aLocator, uint16_t aPort);
@@ -111,7 +111,7 @@ private:
 
 
     Coap::Resource mRelayReceive;
-    otBorderAgentProxyStreamHandler mBorderAgentProxyStreamHandler;
+    otBorderAgentProxyStreamHandler mStreamHandler;
     void *mContext;
 
     const Ip6::Address &mMeshLocal16;

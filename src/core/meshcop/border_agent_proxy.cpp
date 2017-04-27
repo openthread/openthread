@@ -55,7 +55,7 @@ namespace MeshCoP {
 BorderAgentProxy::BorderAgentProxy(const Ip6::Address &aMeshLocal16, Coap::Server &aCoapServer,
                                    Coap::Client &aCoapClient):
     mRelayReceive(OPENTHREAD_URI_RELAY_RX, &BorderAgentProxy::HandleRelayReceive, this),
-    mBorderAgentProxyStreamHandler(NULL),
+    mStreamHandler(NULL),
     mContext(NULL),
     mMeshLocal16(aMeshLocal16),
     mCoapServer(aCoapServer),
@@ -63,14 +63,14 @@ BorderAgentProxy::BorderAgentProxy(const Ip6::Address &aMeshLocal16, Coap::Serve
 {
 }
 
-ThreadError BorderAgentProxy::Start(otBorderAgentProxyStreamHandler aBorderAgentProxyStreamHandler, void *aContext)
+ThreadError BorderAgentProxy::Start(otBorderAgentProxyStreamHandler aStreamHandler, void *aContext)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(!mBorderAgentProxyStreamHandler, error = kThreadError_InvalidState);
+    VerifyOrExit(!mStreamHandler, error = kThreadError_Already);
 
     mCoapServer.AddResource(mRelayReceive);
-    mBorderAgentProxyStreamHandler = aBorderAgentProxyStreamHandler;
+    mStreamHandler = aStreamHandler;
     mContext = aContext;
 
 exit:
@@ -81,11 +81,11 @@ ThreadError BorderAgentProxy::Stop(void)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(mBorderAgentProxyStreamHandler != NULL, error = kThreadError_InvalidState);
+    VerifyOrExit(mStreamHandler != NULL, error = kThreadError_Already);
 
     mCoapServer.RemoveResource(mRelayReceive);
 
-    mBorderAgentProxyStreamHandler = NULL;
+    mStreamHandler = NULL;
 
 exit:
     return error;
@@ -93,7 +93,7 @@ exit:
 
 bool BorderAgentProxy::IsEnabled(void) const
 {
-    return mBorderAgentProxyStreamHandler != NULL;
+    return mStreamHandler != NULL;
 }
 
 void BorderAgentProxy::HandleRelayReceive(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
@@ -124,14 +124,14 @@ void BorderAgentProxy::DeliverMessage(Coap::Header &aHeader, Message &aMessage,
     uint16_t port;
     Message *message = NULL;
 
-    VerifyOrExit(mBorderAgentProxyStreamHandler != NULL, error = kThreadError_InvalidState);
+    VerifyOrExit(mStreamHandler != NULL, error = kThreadError_InvalidState);
 
     VerifyOrExit((message = aMessage.Clone()) != NULL, error = kThreadError_NoBufs);
     message->RemoveHeader(message->GetOffset() - aHeader.GetLength());
 
     rloc = HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]);
     port = aMessageInfo.GetPeerPort();
-    mBorderAgentProxyStreamHandler(message, rloc, port, mContext);
+    mStreamHandler(message, rloc, port, mContext);
 
 exit:
 
@@ -146,6 +146,8 @@ ThreadError BorderAgentProxy::Send(Message &aMessage, uint16_t aLocator, uint16_
     ThreadError error = kThreadError_None;
     Ip6::MessageInfo messageInfo;
 
+    VerifyOrExit(mStreamHandler != NULL, error = kThreadError_InvalidState);
+
     messageInfo.SetPeerAddr(mMeshLocal16);
     messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(aLocator);
     messageInfo.SetPeerPort(aPort);
@@ -159,6 +161,8 @@ ThreadError BorderAgentProxy::Send(Message &aMessage, uint16_t aLocator, uint16_
     {
         error = mCoapServer.SendMessage(aMessage, messageInfo);
     }
+
+exit:
 
     if (error != kThreadError_None)
     {

@@ -73,8 +73,8 @@ typedef void (*otBorderAgentProxyStreamHandler)(otMessage *aMessage, uint16_t aL
  * @param[in]  aHandler             A pointer to a function called to deliver packet to border agent.
  * @param[in]  aContext             A pointer to application-specific context.
  *
- * @retval kThreadErrorNone         Successfully started the border agent proxy.
- * @retval kThreadErrorAlready      Border agent proxy has been started before.
+ * @retval kThreadError_None        Successfully started the border agent proxy.
+ * @retval kThreadError_Already     Border agent proxy has been started before.
  *
  */
 ThreadError otBorderAgentProxyStart(otInstance *aInstance, otBorderAgentProxyStreamHandler aHandler, void *aContext);
@@ -84,8 +84,8 @@ ThreadError otBorderAgentProxyStart(otInstance *aInstance, otBorderAgentProxyStr
  *
  * @param[in]  aInstance            A pointer to an OpenThread instance.
  *
- * @retval kThreadErrorNone         Successfully stopped the border agent proxy.
- * @retval kThreadErrorAlready      Border agent proxy is already stopped.
+ * @retval kThreadError_None        Successfully stopped the border agent proxy.
+ * @retval kThreadError_Already     Border agent proxy is already stopped.
  *
  */
 ThreadError otBorderAgentProxyStop(otInstance *aInstance);
@@ -98,7 +98,10 @@ ThreadError otBorderAgentProxyStop(otInstance *aInstance);
  * @param[in]  aLocator             Rloc of destination.
  * @param[in]  aPort                Port of destination.
  *
- * @retval kThreadErrorNone         Successfully stopped the border agent proxy.
+ * @retval kThreadError_None            Successfully send the message.
+ * @retval kThreadError_InvalidState    Border agent proxy is not started.
+ *
+ * @warning No matter the call success or fail, the message is freed.
  *
  */
 ThreadError otBorderAgentProxySend(otInstance *aInstance, otMessage *aMessage,
