@@ -539,6 +539,7 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_BUILTIN_MBEDTLS], [test "${enable_builtin_mbed
 # Thread Border Agent Proxy
 #
 
+AC_MSG_CHECKING([whether to enable border router proxy])
 AC_ARG_ENABLE(border_agent_proxy,
     [AS_HELP_STRING([--enable-border-agent-proxy],[Enable border agent proxy support @<:@default=no@:>@.])],
     [
@@ -1132,6 +1133,20 @@ AC_MSG_NOTICE([checking required package dependencies])
 # Check for headers
 #
 
+#---------------------------------------------------
+# Enable BSD Security Features
+# This enables strlcpy() and other friends in GNU land.
+# While the references below generally speak of: "glibc"
+# The ARM Embedded platform uses the nano instance of NEWLIB
+# Which greatly follows and mirrors glibc.
+# --------------------------------------------------
+#
+# References:
+# 1) http://stackoverflow.com/questions/29201515/what-does-d-default-source-do
+# 2) http://man7.org/linux/man-pages/man7/feature_test_macros.7.html
+#
+CFLAGS="${CFLAGS} -D_BSD_SOURCE=1 -D_DEFAULT_SOURCE=1"
+CXXFLAGS="${CXXFLAGS} -D_BSD_SOURCE=1 -D_DEFAULT_SOURCE=1"
 
 OLD_CFLAGS="${CFLAGS}"
 CFLAGS="${CFLAGS} -Wno-error=address"
