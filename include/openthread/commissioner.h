@@ -64,7 +64,7 @@ OTAPI ThreadError OTCALL otCommissionerStart(otInstance *aInstance);
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  *
- * @retval kThreadError_None     Successfully started the Commissioner role.
+ * @retval kThreadError_None     Successfully stopped the Commissioner role.
  *
  */
 OTAPI ThreadError OTCALL otCommissionerStop(otInstance *aInstance);
@@ -80,6 +80,9 @@ OTAPI ThreadError OTCALL otCommissionerStop(otInstance *aInstance);
  * @retval kThreadError_None         Successfully added the Joiner.
  * @retval kThreadError_NoBufs       No buffers available to add the Joiner.
  * @retval kThreadError_InvalidArgs  @p aExtAddress or @p aPSKd is invalid.
+ * @retval kThreadError_InvalidState The commissioner is not active
+ *
+ * @note Only use this after successfully started the Commissioner role by otCommissionerStart()
  *
  */
 OTAPI ThreadError OTCALL otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aExtAddress,
@@ -91,9 +94,12 @@ OTAPI ThreadError OTCALL otCommissionerAddJoiner(otInstance *aInstance, const ot
  * @param[in]  aInstance             A pointer to an OpenThread instance.
  * @param[in]  aExtAddress           A pointer to the Joiner's extended address or NULL for any Joiner.
  *
- * @retval kThreadError_None         Successfully added the Joiner.
+ * @retval kThreadError_None         Successfully removed the Joiner.
  * @retval kThreadError_NotFound     The Joiner specified by @p aExtAddress was not found.
  * @retval kThreadError_InvalidArgs  @p aExtAddress is invalid.
+ * @retval kThreadError_InvalidState The commissioner is not active
+ *
+ * @note Only use this after successfully started the Commissioner role by otCommissionerStart()
  *
  */
 OTAPI ThreadError OTCALL otCommissionerRemoveJoiner(otInstance *aIntsance, const otExtAddress *aExtAddress);
@@ -101,9 +107,10 @@ OTAPI ThreadError OTCALL otCommissionerRemoveJoiner(otInstance *aIntsance, const
 /**
  * This function sets the Provisioning URL.
  *
- * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
+ * @param[in]  aInstance             A pointer to an OpenThread instance.
+ * @param[in]  aProvisioningUrl      A pointer to the Provisioning URL (may be NULL).
  *
- * @retval kThreadError_None         Successfully added the Joiner.
+ * @retval kThreadError_None         Successfully set the Provisioning URL.
  * @retval kThreadError_InvalidArgs  @p aProvisioningUrl is invalid.
  *
  */
@@ -112,14 +119,17 @@ OTAPI ThreadError OTCALL otCommissionerSetProvisioningUrl(otInstance *aInstance,
 /**
  * This function sends an Announce Begin message.
  *
- * @param[in]  aInstance      A pointer to an OpenThread instance.
- * @param[in]  aChannelMask   The channel mask value.
- * @param[in]  aCount         The number of energy measurements per channel.
- * @param[in]  aPeriod        The time between energy measurements (milliseconds).
- * @param[in]  aAddress       A pointer to the IPv6 destination.
+ * @param[in]  aInstance             A pointer to an OpenThread instance.
+ * @param[in]  aChannelMask          The channel mask value.
+ * @param[in]  aCount                The number of energy measurements per channel.
+ * @param[in]  aPeriod               The time between energy measurements (milliseconds).
+ * @param[in]  aAddress              A pointer to the IPv6 destination.
  *
- * @retval kThreadError_None    Successfully enqueued the Announce Begin message.
- * @retval kThreadError_NoBufs  Insufficient buffers to generate an Announce Begin message.
+ * @retval kThreadError_None         Successfully enqueued the Announce Begin message.
+ * @retval kThreadError_NoBufs       Insufficient buffers to generate an Announce Begin message.
+ * @retval kThreadError_InvalidState The commissioner is not active
+ *
+ * @note Only use this after successfully started the Commissioner role by otCommissionerStart()
  *
  */
 OTAPI ThreadError OTCALL otCommissionerAnnounceBegin(otInstance *aInstance, uint32_t aChannelMask, uint8_t aCount,
@@ -141,17 +151,20 @@ typedef void (OTCALL *otCommissionerEnergyReportCallback)(uint32_t aChannelMask,
 /**
  * This function sends an Energy Scan Query message.
  *
- * @param[in]  aInstance      A pointer to an OpenThread instance.
- * @param[in]  aChannelMask   The channel mask value.
- * @param[in]  aCount         The number of energy measurements per channel.
- * @param[in]  aPeriod        The time between energy measurements (milliseconds).
- * @param[in]  aScanDuration  The scan duration for each energy measurement (milliseconds).
- * @param[in]  aAddress       A pointer to the IPv6 destination.
- * @param[in]  aCallback      A pointer to a function called on receiving an Energy Report message.
- * @param[in]  aContext       A pointer to application-specific context.
+ * @param[in]  aInstance             A pointer to an OpenThread instance.
+ * @param[in]  aChannelMask          The channel mask value.
+ * @param[in]  aCount                The number of energy measurements per channel.
+ * @param[in]  aPeriod               The time between energy measurements (milliseconds).
+ * @param[in]  aScanDuration         The scan duration for each energy measurement (milliseconds).
+ * @param[in]  aAddress              A pointer to the IPv6 destination.
+ * @param[in]  aCallback             A pointer to a function called on receiving an Energy Report message.
+ * @param[in]  aContext              A pointer to application-specific context.
  *
- * @retval kThreadError_None    Successfully enqueued the Energy Scan Query message.
- * @retval kThreadError_NoBufs  Insufficient buffers to generate an Energy Scan Query message.
+ * @retval kThreadError_None         Successfully enqueued the Energy Scan Query message.
+ * @retval kThreadError_NoBufs       Insufficient buffers to generate an Energy Scan Query message.
+ * @retval kThreadError_InvalidState The commissioner is not active
+ *
+ * @note Only use this after successfully started the Commissioner role by otCommissionerStart()
  *
  */
 OTAPI ThreadError OTCALL otCommissionerEnergyScan(otInstance *aInstance, uint32_t aChannelMask, uint8_t aCount,
@@ -171,15 +184,18 @@ typedef void (OTCALL *otCommissionerPanIdConflictCallback)(uint16_t aPanId, uint
 /**
  * This function sends a PAN ID Query message.
  *
- * @param[in]  aInstance      A pointer to an OpenThread instance.
- * @param[in]  aPanId         The PAN ID to query.
- * @param[in]  aChannelMask   The channel mask value.
- * @param[in]  aAddress       A pointer to the IPv6 destination.
- * @param[in]  aCallback      A pointer to a function called on receiving an Energy Report message.
- * @param[in]  aContext       A pointer to application-specific context.
+ * @param[in]  aInstance             A pointer to an OpenThread instance.
+ * @param[in]  aPanId                The PAN ID to query.
+ * @param[in]  aChannelMask          The channel mask value.
+ * @param[in]  aAddress              A pointer to the IPv6 destination.
+ * @param[in]  aCallback             A pointer to a function called on receiving an Energy Report message.
+ * @param[in]  aContext              A pointer to application-specific context.
  *
- * @retval kThreadError_None    Successfully enqueued the PAN ID Query message.
- * @retval kThreadError_NoBufs  Insufficient buffers to generate a PAN ID Query message.
+ * @retval kThreadError_None         Successfully enqueued the PAN ID Query message.
+ * @retval kThreadError_NoBufs       Insufficient buffers to generate a PAN ID Query message.
+ * @retval kThreadError_InvalidState The commissioner is not active
+ *
+ * @note Only use this after successfully started the Commissioner role by otCommissionerStart()
  *
  */
 OTAPI ThreadError OTCALL otCommissionerPanIdQuery(otInstance *aInstance, uint16_t aPanId, uint32_t aChannelMask,
