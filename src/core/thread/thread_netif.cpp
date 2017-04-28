@@ -82,7 +82,9 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
     mMleRouter(*this),
     mNetworkDataLocal(*this),
     mNetworkDataLeader(*this),
+#if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     mNetworkDiagnostic(*this),
+#endif
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     mSecureCoapServer(*this, OPENTHREAD_CONFIG_JOINER_UDP_PORT),
     mCommissioner(*this),

@@ -101,6 +101,7 @@ configure_OPTIONS               = \
     --enable-joiner               \
     --enable-legacy               \
     --enable-mac-whitelist        \
+    --enable-mtd-network-diagnostic=no \
     $(NULL)
 
 ifeq ($(COVERAGE),1)

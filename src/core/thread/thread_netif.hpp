@@ -162,12 +162,22 @@ public:
     virtual ThreadError RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch);
 
     /**
+     * This method returns a reference to the address resolver object.
+     *
+     * @returns A reference to the address resolver object.
+     *
+     */
+    AddressResolver &GetAddressResolver(void) { return mAddressResolver; }
+
+#if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
+    /**
      * This method returns a reference to the network diagnostic object.
      *
      * @returns A reference to the address resolver object.
      *
      */
     NetworkDiagnostic::NetworkDiagnostic &GetNetworkDiagnostic(void) { return mNetworkDiagnostic; }
+#endif // OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
 
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
     /**
@@ -427,7 +437,9 @@ private:
     Mle::MleRouter mMleRouter;
     NetworkData::Local mNetworkDataLocal;
     NetworkData::Leader mNetworkDataLeader;
+#if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     NetworkDiagnostic::NetworkDiagnostic mNetworkDiagnostic;
+#endif // OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     bool mIsUp;
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD

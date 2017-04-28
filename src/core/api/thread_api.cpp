@@ -434,6 +434,12 @@ const char *otGetVersionString(void)
     return sVersion;
 }
 
+ThreadError otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId)
+{
+    return aInstance->mThreadNetif.GetMle().SetPreferredRouterId(aRouterId);
+}
+
+#if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
 void otThreadSetReceiveDiagnosticGetCallback(otInstance *aInstance, otReceiveDiagnosticGetCallback aCallback,
                                              void *aCallbackContext)
 {
@@ -457,6 +463,7 @@ ThreadError otThreadSendDiagnosticReset(otInstance *aInstance, const otIp6Addres
                                                                               aTlvTypes,
                                                                               aCount);
 }
+#endif // OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
 
 ThreadError otThreadSetEnabled(otInstance *aInstance, bool aEnabled)
 {

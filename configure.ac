@@ -569,6 +569,38 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_BORDER_AGENT_PROXY], [test "${enable_border_ag
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_BORDER_AGENT_PROXY],[${OPENTHREAD_ENABLE_BORDER_AGENT_PROXY}],[Define to 1 to enable the border agent proxy feature.])
 
 #
+# Thread Network Diagnostic for MTD
+#
+
+AC_ARG_ENABLE(mtd_network_diagnostic,
+    [AS_HELP_STRING([--enable-mtd-network-diagnostic],[Enable network diagnostic support for MTD @<:@default=yes@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_mtd_network_diagnostic=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_mtd_network_diagnostic} for --enable-mtd-network-diagnostic])
+            ;;
+        esac
+    ],
+    [enable_mtd_network_diagnostic=yes])
+
+if test "$enable_mtd_network_diagnostic" = "yes"; then
+    OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC=1
+else
+    OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC=0
+fi
+
+AC_MSG_CHECKING([whether to enable the network diagnostic for MTD])
+AC_MSG_RESULT(${enable_mtd_network_diagnostic})
+AC_SUBST(OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC], [test "${enable_mtd_network_diagnostic}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC],[${OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC}],[Define to 1 to enable network diagnostic for MTD.])
+
+#
 # Thread Commissioner
 #
 
@@ -1303,6 +1335,7 @@ AC_MSG_NOTICE([
   OpenThread NCP-MTD support                : ${enable_ncp_app_mtd}
   OpenThread NCP-FTD support                : ${enable_ncp_app_ftd}
   OpenThread NCP-BUS Configuration          : ${with_ncp_bus}
+  OpenThread MTD Network Diagnostic support : ${enable_mtd_network_diagnostic}
   OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}
   OpenThread Border Agent Proxy support     : ${enable_border_agent_proxy}
   OpenThread Commissioner support           : ${enable_commissioner}
