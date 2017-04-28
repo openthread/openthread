@@ -2448,6 +2448,10 @@ ThreadError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInf
                                                      (mDeviceMode & ModeTlv::kModeFullNetworkData) == 0,
                                                      networkData.GetNetworkData(), networkData.GetLength());
     }
+    else
+    {
+        ExitNow(dataRequest = true);
+    }
 
     // Active Dataset
     if (activeTimestamp.GetLength() > 0)
