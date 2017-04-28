@@ -47,7 +47,7 @@
 #include <net/udp6.hpp>
 #include <thread/key_manager.hpp>
 
-namespace Thread {
+namespace ot {
 
 class ThreadNetif;
 
@@ -250,6 +250,6 @@ private:
 
 
 }  // namespace MeshCoP
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // JOINER_ROUTER_HPP_

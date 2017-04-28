@@ -44,7 +44,7 @@
 
 #include <mbedtls/memory_buffer_alloc.h>
 
-namespace Thread {
+namespace ot {
 namespace Crypto {
 
 /**
@@ -86,6 +86,6 @@ private:
  */
 
 }  // namespace Crypto
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // OT_MBEDTLS_HPP_

@@ -53,7 +53,7 @@
 #include <common/new.hpp>
 #include <common/tasklet.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Cli {
 
 static const char sCommandPrompt[] = {'>', ' '};
@@ -263,4 +263,4 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
 #endif // OPENTHREAD_ENABLE_DEFAULT_LOGGING
 
 }  // namespace Cli
-}  // namespace Thread
+}  // namespace ot

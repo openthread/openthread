@@ -38,7 +38,7 @@
 #include <common/message.hpp>
 #include <meshcop/tlvs.hpp>
 
-namespace Thread {
+namespace ot {
 namespace MeshCoP {
 
 class Dataset
@@ -195,6 +195,6 @@ private:
 };
 
 }  // namespace MeshCoP
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // MESHCOP_DATASET_HPP_

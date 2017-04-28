@@ -38,9 +38,9 @@
 #include <common/encoding.hpp>
 #include <net/ip6_headers.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap16;
 
-namespace Thread {
+namespace ot {
 namespace Ip6 {
 
 /**
@@ -338,6 +338,6 @@ private:
  */
 
 }  // namespace Ip6
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // NET_ICMP6_HPP_

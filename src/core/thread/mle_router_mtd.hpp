@@ -40,7 +40,7 @@
 #include <thread/mle_tlvs.hpp>
 #include <thread/thread_tlvs.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Mle {
 
 class MleRouter: public Mle
@@ -169,6 +169,6 @@ private:
 };
 
 }  // namespace Mle
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // MLE_ROUTER_HPP_

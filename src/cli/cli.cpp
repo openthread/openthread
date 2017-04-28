@@ -75,10 +75,10 @@
 #include "cli_coap.hpp"
 #endif
 
-using Thread::Encoding::BigEndian::HostSwap16;
-using Thread::Encoding::BigEndian::HostSwap32;
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
-namespace Thread {
+namespace ot {
 
 namespace Cli {
 
@@ -3065,4 +3065,4 @@ void Interpreter::HandleDiagnosticGetResponse(Message &aMessage, const Ip6::Mess
 #endif
 
 }  // namespace Cli
-}  // namespace Thread
+}  // namespace ot

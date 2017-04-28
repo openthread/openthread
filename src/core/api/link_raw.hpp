@@ -43,7 +43,7 @@
 #define OPENTHREAD_LINKRAW_TIMER_REQUIRED 0
 #endif
 
-namespace Thread {
+namespace ot {
 
 class LinkRaw
 {
@@ -162,6 +162,6 @@ private:
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 };
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // LINK_RAW_HPP_

@@ -38,7 +38,7 @@
 
 #include <net/ip6_address.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Ip6 {
 
 /**
@@ -217,6 +217,6 @@ public:
  */
 
 }  // namespace Ip6
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // NET_SOCKET_HPP_

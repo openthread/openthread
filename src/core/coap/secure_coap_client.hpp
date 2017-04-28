@@ -37,7 +37,7 @@
  *   This file includes definitions for the secure CoAP client.
  */
 
-namespace Thread {
+namespace ot {
 
 class ThreadNetif;
 
@@ -162,6 +162,6 @@ private:
 };
 
 }  // namespace Coap
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // SECURE_COAP_CLIENT_HPP_

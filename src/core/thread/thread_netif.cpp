@@ -50,9 +50,9 @@
 #include <thread/thread_uris.hpp>
 #include <openthread-instance.h>
 
-using Thread::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap16;
 
-namespace Thread {
+namespace ot {
 
 static const uint8_t kThreadMasterKey[] =
 {
@@ -187,4 +187,4 @@ otInstance *ThreadNetif::GetInstance(void)
     return otInstanceFromThreadNetif(this);
 }
 
-}  // namespace Thread
+}  // namespace ot

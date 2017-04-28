@@ -87,7 +87,7 @@
 #include <meshcop/joiner.hpp>
 #endif  // OPENTHREAD_ENABLE_JOINER
 
-namespace Thread {
+namespace ot {
 
 /**
  * @addtogroup core-netif
@@ -411,6 +411,6 @@ struct ThreadMessageInfo
  * @}
  */
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // THREAD_NETIF_HPP_

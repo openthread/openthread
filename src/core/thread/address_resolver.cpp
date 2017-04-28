@@ -56,9 +56,9 @@
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap16;
 
-namespace Thread {
+namespace ot {
 
 AddressResolver::AddressResolver(ThreadNetif &aThreadNetif) :
     mAddressError(OPENTHREAD_URI_ADDRESS_ERROR, &AddressResolver::HandleAddressError, this),
@@ -691,6 +691,6 @@ exit:
     (void)aMessageInfo;
 }
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_FTD

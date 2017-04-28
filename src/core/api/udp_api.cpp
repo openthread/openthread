@@ -35,7 +35,7 @@
 
 #include "openthread-instance.h"
 
-using namespace Thread;
+using namespace ot;
 
 otMessage *otUdpNewMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
 {

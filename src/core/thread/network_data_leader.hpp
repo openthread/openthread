@@ -42,7 +42,7 @@
 #include <thread/mle_router.hpp>
 #include <thread/network_data.hpp>
 
-namespace Thread {
+namespace ot {
 
 class ThreadNetif;
 
@@ -240,7 +240,7 @@ private:
  */
 
 }  // namespace NetworkData
-}  // namespace Thread
+}  // namespace ot
 
 #if OPENTHREAD_MTD
 #include "network_data_leader_mtd.hpp"

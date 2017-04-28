@@ -34,7 +34,7 @@
 #include "utils/wrap_string.h"
 
 #ifndef OPENTHREAD_MULTIPLE_INSTANCE
-static Thread::Crypto::MbedTls mbedtls;
+static ot::Crypto::MbedTls mbedtls;
 #endif
 
 /**
@@ -75,7 +75,7 @@ void TestMacBeaconFrame(void)
         0xB5, 0x53
     };
 
-    Thread::Crypto::AesCcm aesCcm;
+    ot::Crypto::AesCcm aesCcm;
     uint32_t headerLength = sizeof(test) - 8;
     uint32_t payloadLength = 0;
     uint8_t tagLength = 8;
@@ -137,7 +137,7 @@ void TestMacDataFrame()
         0x00, 0x00, 0x61, 0x62, 0x63, 0x64
     };
 
-    Thread::Crypto::AesCcm aesCcm;
+    ot::Crypto::AesCcm aesCcm;
     uint32_t headerLength = sizeof(test) - 4;
     uint32_t payloadLength = 4;
     uint8_t tagLength = 0;
@@ -213,7 +213,7 @@ void TestMacCommandFrame()
         0x00, 0x00, 0x00, 0x05, 0x06,
     };
 
-    Thread::Crypto::AesCcm aesCcm;
+    ot::Crypto::AesCcm aesCcm;
     aesCcm.SetKey(key, sizeof(key));
     aesCcm.Init(headerLength, payloadLength, tagLength, nonce, sizeof(nonce));
     aesCcm.Header(test, headerLength);

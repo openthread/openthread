@@ -41,7 +41,7 @@
 #include <common/message.hpp>
 #include <thread/mle_tlvs.hpp>
 
-namespace Thread {
+namespace ot {
 
 ThreadError Tlv::Get(const Message &aMessage, uint8_t aType, uint16_t aMaxLength, Tlv &aTlv)
 {
@@ -134,4 +134,4 @@ exit:
     return error;
 }
 
-}  // namespace Thread
+}  // namespace ot

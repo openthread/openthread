@@ -45,10 +45,10 @@
 #include <mac/mac_frame.hpp>
 #include <net/ip6_address.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
-using Thread::Encoding::BigEndian::HostSwap32;
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
-namespace Thread {
+namespace ot {
 namespace Ip6 {
 
 bool Address::IsUnspecified(void) const
@@ -303,4 +303,4 @@ const char *Address::ToString(char *aBuf, uint16_t aSize) const
 }
 
 }  // namespace Ip6
-}  // namespace Thread
+}  // namespace ot

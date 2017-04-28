@@ -45,7 +45,7 @@
 #include <cli/cli_udp.hpp>
 #include <common/code_utils.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Cli {
 
 Udp::Udp(otInstance *aInstance, Interpreter *aInterpreter):
@@ -136,4 +136,4 @@ int Udp::OutputFormat(const char *fmt, ...)
 }
 
 }  // namespace Cli
-}  // namespace Thread
+}  // namespace ot

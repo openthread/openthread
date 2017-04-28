@@ -35,7 +35,7 @@
 #include "IClientContext.h"
 #include "Protocol.h"
 
-namespace Thread
+namespace ot
 {
 
 class Factory
@@ -46,4 +46,4 @@ public:
     static IClientContext^ CreateClientContext(IAsyncThreadNotify^, ClientArgs^, Protocol);
 };
 
-} // namespace Thread
+} // namespace ot

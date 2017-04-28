@@ -4,7 +4,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{91D3ADEA-F1FE-4433-95B6-F8F6A7CF7BAF}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>Thread</RootNamespace>
+    <RootNamespace>ot</RootNamespace>
     <ApplicationType>Windows Store</ApplicationType>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <WindowsTargetPlatformVersion>10.0.10586.0</WindowsTargetPlatformVersion>

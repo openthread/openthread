@@ -49,7 +49,7 @@
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
 
-namespace Thread {
+namespace ot {
 namespace MeshCoP {
 
 BorderAgentProxy::BorderAgentProxy(const Ip6::Address &aMeshLocal16, Coap::Server &aCoapServer,
@@ -173,6 +173,6 @@ exit:
 }
 
 }  // namespace MeshCoP
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_FTD && OPENTHREAD_ENABLE_BORDER_AGENT_PROXY

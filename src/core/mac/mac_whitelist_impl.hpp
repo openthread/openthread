@@ -40,7 +40,7 @@
 
 #include <mac/mac_frame.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Mac {
 
 /**
@@ -182,6 +182,6 @@ private:
  */
 
 }  // namespace Mac
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // MAC_WHITELIST_HPP_

@@ -30,7 +30,7 @@
 #include <utility>
 #include "StreamClientContext.h"
 
-using namespace Thread;
+using namespace ot;
 
 using namespace Concurrency;
 using namespace Platform;
@@ -157,7 +157,7 @@ StreamClientContext::Connect_Click(
 }
 
 void
-Thread::StreamClientContext::Send_Click(
+ot::StreamClientContext::Send_Click(
     Platform::Object^                   sender,
     Windows::UI::Xaml::RoutedEventArgs^ e,
     Platform::String^                   input)
@@ -166,7 +166,7 @@ Thread::StreamClientContext::Send_Click(
 }
 
 IAsyncAction^
-Thread::StreamClientContext::CancelIO()
+ot::StreamClientContext::CancelIO()
 {
     return _client->CancelIOAsync();
 }

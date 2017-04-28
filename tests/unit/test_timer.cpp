@@ -95,7 +95,7 @@ int TestOneTimer(void)
     const uint32_t kTimeT0 = 1000;
     const uint32_t kTimerInterval = 10;
     otInstance aInstance;
-    Thread::Timer timer(aInstance.mIp6.mTimerScheduler, TestTimerHandler, NULL);
+    ot::Timer timer(aInstance.mIp6.mTimerScheduler, TestTimerHandler, NULL);
 
     // Test one Timer basic operation.
 
@@ -330,17 +330,17 @@ int TestTenTimers(void)
     otInstance aInstance;
 
     uint32_t timerContextHandleCounter[kNumTimers] = {0};
-    Thread::Timer timer0(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[0]);
-    Thread::Timer timer1(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[1]);
-    Thread::Timer timer2(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[2]);
-    Thread::Timer timer3(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[3]);
-    Thread::Timer timer4(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[4]);
-    Thread::Timer timer5(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[5]);
-    Thread::Timer timer6(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[6]);
-    Thread::Timer timer7(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[7]);
-    Thread::Timer timer8(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[8]);
-    Thread::Timer timer9(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[9]);
-    Thread::Timer *timers[kNumTimers] = {&timer0, &timer1, &timer2, &timer3, &timer4, &timer5, &timer6, &timer7, &timer8, &timer9};
+    ot::Timer timer0(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[0]);
+    ot::Timer timer1(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[1]);
+    ot::Timer timer2(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[2]);
+    ot::Timer timer3(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[3]);
+    ot::Timer timer4(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[4]);
+    ot::Timer timer5(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[5]);
+    ot::Timer timer6(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[6]);
+    ot::Timer timer7(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[7]);
+    ot::Timer timer8(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[8]);
+    ot::Timer timer9(aInstance.mIp6.mTimerScheduler, TestTimerHandler, &timerContextHandleCounter[9]);
+    ot::Timer *timers[kNumTimers] = {&timer0, &timer1, &timer2, &timer3, &timer4, &timer5, &timer6, &timer7, &timer8, &timer9};
     size_t i;
 
     // Start the Ten timers.

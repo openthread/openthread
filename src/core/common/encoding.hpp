@@ -37,7 +37,7 @@
 #include <limits.h>
 #include "utils/wrap_stdint.h"
 
-namespace Thread {
+namespace ot {
 namespace Encoding {
 
 inline uint16_t Swap16(uint16_t v)
@@ -119,6 +119,6 @@ inline uint64_t HostSwap64(uint64_t v) { return v; }
 
 }  // namespace LittleEndian
 }  // namespace Encoding
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // ENCODING_HPP_

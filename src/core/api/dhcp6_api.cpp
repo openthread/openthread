@@ -36,7 +36,7 @@
 
 #include "openthread-instance.h"
 
-using namespace Thread;
+using namespace ot;
 
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
 void otDhcp6ClientUpdate(otInstance *aInstance, otDhcpAddress *aAddresses, uint32_t aNumAddresses, void *aContext)

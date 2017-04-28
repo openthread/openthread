@@ -32,7 +32,7 @@
 #include "IAsyncThreadNotify.h"
 #include "ClientArgs.h"
 
-namespace Thread
+namespace ot
 {
 
 [Windows::Foundation::Metadata::WebHostHidden]
@@ -76,4 +76,4 @@ private:
     DataWriter^         _dataWriter;
 };
 
-} // namespace Thread
+} // namespace ot

@@ -56,9 +56,9 @@
 #include <thread/thread_netif.hpp>
 #include <openthread-instance.h>
 
-using Thread::Encoding::BigEndian::HostSwap64;
+using ot::Encoding::BigEndian::HostSwap64;
 
-namespace Thread {
+namespace ot {
 namespace Mac {
 
 static const uint8_t sMode2Key[] =
@@ -1657,4 +1657,4 @@ void Mac::ResetCounters(void)
 }
 
 }  // namespace Mac
-}  // namespace Thread
+}  // namespace ot

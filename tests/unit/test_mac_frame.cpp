@@ -32,7 +32,7 @@
 #include <mac/mac_frame.hpp>
 #include "utils/wrap_string.h"
 
-namespace Thread {
+namespace ot {
 
 void TestMacHeader(void)
 {
@@ -82,12 +82,12 @@ void TestMacHeader(void)
     }
 }
 
-}  // namespace Thread
+}  // namespace ot
 
 #ifdef ENABLE_TEST_MAIN
 int main(void)
 {
-    Thread::TestMacHeader();
+    ot::TestMacHeader();
     printf("All tests passed\n");
     return 0;
 }

@@ -35,10 +35,10 @@
 
 #include "openthread/types.h"
 
-namespace Thread {
+namespace ot {
 
 /**
- * @namespace Thread::Hdlc
+ * @namespace ot::Hdlc
  *
  * @brief
  *   This namespace includes definitions for the HDLC-lite encoder and decoder.
@@ -223,6 +223,6 @@ private:
 };
 
 }  // namespace Hdlc
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // HDLC_HPP_

@@ -43,7 +43,7 @@
  *   This file includes definitions for the DNS client.
  */
 
-namespace Thread {
+namespace ot {
 namespace Dns {
 
 
@@ -259,6 +259,6 @@ private:
 };
 
 }  // namespace Dns
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // DNS_CLIENT_HPP_

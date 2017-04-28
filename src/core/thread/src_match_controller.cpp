@@ -46,7 +46,7 @@
 #include <thread/src_match_controller.hpp>
 #include <thread/thread_netif.hpp>
 
-namespace Thread {
+namespace ot {
 
 SourceMatchController::SourceMatchController(MeshForwarder &aMeshForwarder) :
     mMeshForwarder(aMeshForwarder),
@@ -245,4 +245,4 @@ exit:
     return error;
 }
 
-}  // namespace Thread
+}  // namespace ot

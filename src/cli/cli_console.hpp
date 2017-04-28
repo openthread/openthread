@@ -38,7 +38,7 @@
 
 #include <cli/cli_server.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Cli {
 
 /**
@@ -110,6 +110,6 @@ private:
 };
 
 }  // namespace Cli
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // CLI_CONSOLE_HPP_

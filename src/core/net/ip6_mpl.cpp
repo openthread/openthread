@@ -44,7 +44,7 @@
 #include <net/ip6.hpp>
 #include <net/ip6_mpl.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Ip6 {
 
 void MplBufferedMessageMetadata::GenerateNextTransmissionTime(uint32_t aCurrentTime, uint8_t aInterval)
@@ -365,4 +365,4 @@ void Mpl::HandleSeedSetTimer()
 }
 
 }  // namespace Ip6
-}  // namespace Thread
+}  // namespace ot

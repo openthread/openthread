@@ -38,7 +38,7 @@
 #include <common/message.hpp>
 #include <coap/coap_base.hpp>
 
-namespace Thread {
+namespace ot {
 namespace MeshCoP {
 
 enum
@@ -58,6 +58,6 @@ inline Message *NewMeshCoPMessage(Coap::CoapBase &aCoapBase, const Coap::Header 
 
 }  // namespace MeshCoP
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // MESHCOP_HPP_

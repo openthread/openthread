@@ -30,7 +30,7 @@
 #include "MainPage.xaml.h"
 #include "TalkGrid.xaml.h"
 
-using namespace Thread;
+using namespace ot;
 
 using namespace Platform;
 using namespace Windows::Foundation;

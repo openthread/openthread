@@ -46,7 +46,7 @@
  *   This file implements the secure CoAP client.
  */
 
-namespace Thread {
+namespace ot {
 namespace Coap {
 
 SecureClient::SecureClient(ThreadNetif &aNetif):
@@ -250,6 +250,6 @@ exit:
 }
 
 }  // namespace Coap
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_ENABLE_JOINER

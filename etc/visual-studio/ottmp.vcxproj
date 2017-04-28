@@ -6,7 +6,7 @@
     <TemplateGuid>{497e31cb-056b-4f31-abb8-447fd55ee5a5}</TemplateGuid>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
-    <RootNamespace>Thread</RootNamespace>
+    <RootNamespace>ot</RootNamespace>
     <TargetVersion>Windows10</TargetVersion>
     <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
     <ConfigurationType>Driver</ConfigurationType>

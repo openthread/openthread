@@ -45,7 +45,7 @@
 #include <thread/mle_router.hpp>
 #include <thread/thread_netif.hpp>
 
-namespace Thread {
+namespace ot {
 
 static const uint8_t kThreadString[] =
 {
@@ -281,4 +281,4 @@ void KeyManager::HandleKeyRotationTimer(void)
     SetCurrentKeySequence(mKeySequence + 1);
 }
 
-}  // namespace Thread
+}  // namespace ot

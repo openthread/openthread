@@ -48,7 +48,7 @@
 #include <meshcop/tlvs.hpp>
 #include <thread/mle_tlvs.hpp>
 
-namespace Thread {
+namespace ot {
 namespace MeshCoP {
 
 Dataset::Dataset(otInstance *aInstance, const Tlv::Type aType) :
@@ -544,4 +544,4 @@ void Dataset::Remove(uint8_t *aStart, uint8_t aLength)
 }
 
 }  // namespace MeshCoP
-}  // namespace Thread
+}  // namespace ot

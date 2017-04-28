@@ -44,11 +44,11 @@
 #include <common/tlvs.hpp>
 #include <meshcop/timestamp.hpp>
 
-using Thread::Encoding::Reverse32;
-using Thread::Encoding::BigEndian::HostSwap16;
-using Thread::Encoding::BigEndian::HostSwap32;
+using ot::Encoding::Reverse32;
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
-namespace Thread {
+namespace ot {
 namespace MeshCoP {
 
 /**
@@ -56,7 +56,7 @@ namespace MeshCoP {
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Tlv : public Thread::Tlv
+class Tlv : public ot::Tlv
 {
 public:
     /**
@@ -109,7 +109,7 @@ public:
      * @returns The Type value.
      *
      */
-    Type GetType(void) const { return static_cast<Type>(Thread::Tlv::GetType()); }
+    Type GetType(void) const { return static_cast<Type>(ot::Tlv::GetType()); }
 
     /**
      * This method sets the Type value.
@@ -117,7 +117,7 @@ public:
      * @param[in]  aType  The Type value.
      *
      */
-    void SetType(Type aType) { Thread::Tlv::SetType(static_cast<uint8_t>(aType)); }
+    void SetType(Type aType) { ot::Tlv::SetType(static_cast<uint8_t>(aType)); }
 
     /**
      * This method returns a pointer to the next TLV.
@@ -126,11 +126,11 @@ public:
      *
      */
     Tlv *GetNext(void) {
-        return static_cast<Tlv *>(Thread::Tlv::GetNext());
+        return static_cast<Tlv *>(ot::Tlv::GetNext());
     }
 
     const Tlv *GetNext(void) const {
-        return static_cast<const Tlv *>(Thread::Tlv::GetNext());
+        return static_cast<const Tlv *>(ot::Tlv::GetNext());
     }
 
     /**
@@ -146,7 +146,7 @@ public:
      *
      */
     static ThreadError GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv) {
-        return Thread::Tlv::Get(aMessage, static_cast<uint8_t>(aType), aMaxLength, aTlv);
+        return ot::Tlv::Get(aMessage, static_cast<uint8_t>(aType), aMaxLength, aTlv);
     }
 
     /**
@@ -162,7 +162,7 @@ public:
      *
      */
     static ThreadError GetValueOffset(const Message &aMessage, Type aType, uint16_t &aOffset, uint16_t &aLength) {
-        return Thread::Tlv::GetValueOffset(aMessage, static_cast<uint8_t>(aType), aOffset, aLength);
+        return ot::Tlv::GetValueOffset(aMessage, static_cast<uint8_t>(aType), aOffset, aLength);
     }
 
 } OT_TOOL_PACKED_END;
@@ -2074,6 +2074,6 @@ private:
 
 }  // namespace MeshCoP
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // MESHCOP_TLVS_HPP_

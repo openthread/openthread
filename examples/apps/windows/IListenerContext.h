@@ -28,7 +28,7 @@
 
 #pragma once
 
-namespace Thread
+namespace ot
 {
 
 public interface struct IListenerContext
@@ -38,4 +38,4 @@ public interface struct IListenerContext
     Windows::Foundation::IAsyncAction^ CancelIO();
 };
 
-} // namespace Thread
+} // namespace ot

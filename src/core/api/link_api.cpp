@@ -35,7 +35,7 @@
 
 #include "openthread-instance.h"
 
-using namespace Thread;
+using namespace ot;
 
 static void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame);
 static void HandleEnergyScanResult(void *aContext, otEnergyScanResult *aResult);

@@ -54,7 +54,7 @@
 
 #if OPENTHREAD_ENABLE_NCP_SPI
 
-namespace Thread {
+namespace ot {
 
 static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpSpi), uint64_t);
 
@@ -320,6 +320,6 @@ void NcpSpi::HandleRxFrame(void)
     mHandlingRxFrame = false;
 }
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_ENABLE_NCP_SPI

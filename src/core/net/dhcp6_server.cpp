@@ -50,10 +50,10 @@
 
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
 
-using Thread::Encoding::BigEndian::HostSwap16;
-using Thread::Encoding::BigEndian::HostSwap32;
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
-namespace Thread {
+namespace ot {
 namespace Dhcp6 {
 
 Dhcp6Server::Dhcp6Server(ThreadNetif &aThreadNetif):
@@ -576,6 +576,6 @@ ThreadError Dhcp6Server::AppendRapidCommit(Message &aMessage)
 }
 
 }  // namespace Dhcp6
-}  // namespace Thread
+}  // namespace ot
 
 #endif //  OPENTHREAD_ENABLE_DHCP6_SERVER

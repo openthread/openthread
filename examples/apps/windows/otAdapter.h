@@ -42,7 +42,7 @@ using namespace Platform::Metadata;
 using namespace Windows::Foundation::Collections;
 using namespace Windows::Networking;
 
-namespace Thread
+namespace ot
 {
 
 ref class otAdapter;
@@ -609,5 +609,5 @@ private:
     }
 };
 
-} // namespace Thread
+} // namespace ot
 

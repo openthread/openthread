@@ -51,7 +51,7 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
 
-namespace Thread {
+namespace ot {
 
 PanIdQueryServer::PanIdQueryServer(ThreadNetif &aThreadNetif) :
     mChannelMask(0),
@@ -180,4 +180,4 @@ void PanIdQueryServer::HandleTimer(void)
     mChannelMask = 0;
 }
 
-}  // namespace Thread
+}  // namespace ot

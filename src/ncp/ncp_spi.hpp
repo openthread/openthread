@@ -41,7 +41,7 @@
 
 #include <ncp/ncp_base.hpp>
 
-namespace Thread {
+namespace ot {
 
 class NcpSpi : public NcpBase
 {
@@ -105,6 +105,6 @@ private:
     uint8_t mEmptyReceiveFrame[kSpiHeaderLength];
 };
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // NCP_SPI_HPP_

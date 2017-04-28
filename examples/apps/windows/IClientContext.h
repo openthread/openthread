@@ -28,7 +28,7 @@
 
 #pragma once
 
-namespace Thread
+namespace ot
 {
     
 public interface struct IClientContext
@@ -40,4 +40,4 @@ public interface struct IClientContext
     Windows::Foundation::IAsyncAction^ CancelIO();
 };
 
-} // namespace Thread
+} // namespace ot

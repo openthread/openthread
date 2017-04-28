@@ -45,7 +45,7 @@
 #include <net/icmp6.hpp>
 #include <net/udp6.hpp>
 
-namespace Thread {
+namespace ot {
 
 class MeshForwarder;
 class ThreadLastTransactionTimeTlv;
@@ -205,6 +205,6 @@ private:
  * @}
  */
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // ADDRESS_RESOLVER_HPP_

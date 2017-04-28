@@ -45,7 +45,7 @@
 #include <common/code_utils.hpp>
 #include <common/encoding.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Coap {
 
 void Header::Init(void)
@@ -463,4 +463,4 @@ void Header::SetDefaultResponseHeader(const Header &aRequestHeader)
 }
 
 }  // namespace Coap
-}  // namespace Thread
+}  // namespace ot

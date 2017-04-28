@@ -40,7 +40,7 @@
 
 #include <crypto/aes_ecb.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Crypto {
 
 /**
@@ -129,6 +129,6 @@ private:
  */
 
 }  // namespace Crypto
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // AES_CCM_HPP_

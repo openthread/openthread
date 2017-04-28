@@ -50,7 +50,7 @@
 #include <common/code_utils.hpp>
 #include <mac/mac_frame.hpp>
 
-namespace Thread {
+namespace ot {
 
 /**
  * @addtogroup core-message
@@ -1140,6 +1140,6 @@ private:
  *
  */
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // MESSAGE_HPP_

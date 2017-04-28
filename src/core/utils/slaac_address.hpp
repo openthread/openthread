@@ -37,7 +37,7 @@
 #include "openthread/types.h"
 #include "openthread/platform/random.h"
 
-namespace Thread {
+namespace ot {
 namespace Utils {
 
 /**
@@ -156,7 +156,7 @@ private:
  */
 
 }  // namespace Slaac
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // SLAAC_ADDRESS_HPP_
 

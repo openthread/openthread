@@ -38,7 +38,7 @@
 #include "crypto/hmac_sha256.hpp"
 #include "crypto/aes_ccm.hpp"
 
-using namespace Thread::Crypto;
+using namespace ot::Crypto;
 
 void otCryptoHmacSha256(
     const uint8_t *aKey, uint16_t aKeyLength,

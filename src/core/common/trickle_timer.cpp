@@ -43,7 +43,7 @@
 #include <common/debug.hpp>
 #include <common/trickle_timer.hpp>
 
-namespace Thread {
+namespace ot {
 
 TrickleTimer::TrickleTimer(
     TimerScheduler &aScheduler,
@@ -242,4 +242,4 @@ void TrickleTimer::HandleTimerFired(void)
     }
 }
 
-}  // namespace Thread
+}  // namespace ot

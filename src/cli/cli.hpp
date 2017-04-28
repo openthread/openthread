@@ -64,10 +64,10 @@
 #define MAX_CLI_OT_INSTANCES 64
 #endif
 
-namespace Thread {
+namespace ot {
 
 /**
- * @namespace Thread::Cli
+ * @namespace ot::Cli
  *
  * @brief
  *   This namespace contains definitions for the CLI interpreter.
@@ -346,6 +346,6 @@ private:
 };
 
 }  // namespace Cli
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // CLI_HPP_

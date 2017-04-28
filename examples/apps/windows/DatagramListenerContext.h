@@ -33,7 +33,7 @@
 #include "IAsyncThreadNotify.h"
 #include "ListenerArgs.h"
 
-namespace Thread
+namespace ot
 {
 
 [Windows::Foundation::Metadata::WebHostHidden]
@@ -76,4 +76,4 @@ private:
     IOutputStream^  _outputStream;
 };
 
-} // namespace Thread
+} // namespace ot

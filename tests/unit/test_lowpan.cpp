@@ -29,10 +29,10 @@
 #include "test_util.hpp"
 #include "test_lowpan.hpp"
 
-using namespace Thread;
-using Thread::Encoding::BigEndian::HostSwap16;
+using namespace ot;
+using ot::Encoding::BigEndian::HostSwap16;
 
-namespace Thread {
+namespace ot {
 
 Ip6::Ip6 sIp6;
 ThreadNetif sMockThreadNetif(sIp6);
@@ -1940,7 +1940,7 @@ void TestLowpanIphc(void)
     TestErrorReservedNhc6();
 }
 
-}  // namespace Thread
+}  // namespace ot
 
 #ifdef ENABLE_TEST_MAIN
 int main(void)

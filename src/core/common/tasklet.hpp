@@ -36,7 +36,7 @@
 
 #include "openthread/tasklet.h"
 
-namespace Thread {
+namespace ot {
 
 namespace Ip6 { class Ip6; }
 
@@ -151,6 +151,6 @@ private:
  *
  */
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // TASKLET_HPP_

@@ -55,7 +55,7 @@
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
 
-namespace Thread {
+namespace ot {
 namespace MeshCoP {
 
 Leader::Leader(ThreadNetif &aThreadNetif):
@@ -321,7 +321,7 @@ void Leader::ResignCommissioner(void)
 }
 
 }  // namespace MeshCoP
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_FTD
 

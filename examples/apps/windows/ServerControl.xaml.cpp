@@ -33,7 +33,7 @@
 #include "Factory.h"
 #include "TalkHelper.h"
 
-using namespace Thread;
+using namespace ot;
 
 using namespace Platform;
 using namespace Windows::Foundation;

@@ -4,7 +4,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{DD5018BE-54C6-4FD4-9F8D-08D52FC0CD40}</ProjectGuid>
     <Keyword>StaticLibrary</Keyword>
-    <RootNamespace>Thread</RootNamespace>
+    <RootNamespace>ot</RootNamespace>
     <ApplicationType>Windows Store</ApplicationType>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <WindowsTargetPlatformVersion>10.0.10586.0</WindowsTargetPlatformVersion>

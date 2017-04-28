@@ -38,7 +38,7 @@
 
 #include <mbedtls/sha256.h>
 
-namespace Thread {
+namespace ot {
 namespace Crypto {
 
 /**
@@ -105,6 +105,6 @@ private:
  */
 
 }  // namespace Crypto
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // SHA256_HPP_

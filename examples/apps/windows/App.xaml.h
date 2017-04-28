@@ -30,7 +30,7 @@
 
 #include "App.g.h"
 
-namespace Thread
+namespace ot
 {
     /// <summary>
     /// Provides application-specific behavior to supplement the default Application class.

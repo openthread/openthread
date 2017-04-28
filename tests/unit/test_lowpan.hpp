@@ -38,7 +38,7 @@
 #include <thread/thread_netif.hpp>
 #include <thread/lowpan.hpp>
 
-namespace Thread {
+namespace ot {
 
 class TestIphcVector
 {
@@ -278,6 +278,6 @@ public:
     const char       *mTestName;
 };
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif // TEST_LOWPAN_HPP

@@ -34,7 +34,7 @@
 #ifndef THREAD_URIS_HPP_
 #define THREAD_URIS_HPP_
 
-namespace Thread {
+namespace ot {
 
 /**
  * The URI Path for Address Query.
@@ -258,6 +258,6 @@ namespace Thread {
  */
 #define OPENTHREAD_URI_DIAGNOSTIC_RESET       "d/dr"
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // THREAD_URIS_HPP_

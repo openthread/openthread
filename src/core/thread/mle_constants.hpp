@@ -34,7 +34,7 @@
 #ifndef MLE_CONSTANTS_HPP_
 #define MLE_CONSTANTS_HPP_
 
-namespace Thread {
+namespace ot {
 namespace Mle {
 
 /**
@@ -138,6 +138,6 @@ enum
  *
  */
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // MLE_CONSTANTS_HPP_

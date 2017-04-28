@@ -39,7 +39,7 @@
 
 #include <crypto/hmac_sha256.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Crypto {
 
 HmacSha256::HmacSha256()
@@ -71,4 +71,4 @@ void HmacSha256::Finish(uint8_t aHash[kHashSize])
 }
 
 }  // namespace Crypto
-}  // namespace Thread
+}  // namespace ot

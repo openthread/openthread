@@ -44,7 +44,7 @@
 #include <thread/mle.hpp>
 #include <thread/network_data_leader.hpp>
 
-namespace Thread {
+namespace ot {
 
 class ThreadNetif;
 
@@ -188,7 +188,7 @@ private:
 };
 
 }  // namespace MeshCoP
-}  // namespace Thread
+}  // namespace ot
 
 #if OPENTHREAD_MTD
 #include "dataset_manager_mtd.hpp"

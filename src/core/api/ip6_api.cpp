@@ -39,7 +39,7 @@
 #include "common/logging.hpp"
 #include "utils/slaac_address.hpp"
 
-using namespace Thread;
+using namespace ot;
 
 ThreadError otIp6SetEnabled(otInstance *aInstance, bool aEnabled)
 {

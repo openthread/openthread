@@ -36,7 +36,7 @@
 
 #include "openthread/types.h"
 
-namespace Thread {
+namespace ot {
 
 class AddressResolver
 {
@@ -48,6 +48,6 @@ public:
     ThreadError Resolve(const Ip6::Address &, Mac::ShortAddress &) { return kThreadError_NotImplemented; }
 };
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // ADDRESS_RESOLVER_HPP_

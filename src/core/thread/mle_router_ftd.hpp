@@ -49,7 +49,7 @@
 #include <thread/thread_tlvs.hpp>
 #include <thread/topology.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Mle {
 
 class MeshForwarder;
@@ -753,6 +753,6 @@ private:
  * @}
  */
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // MLE_ROUTER_HPP_

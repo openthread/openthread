@@ -33,7 +33,7 @@
 #include "StreamClientContext.h"
 #include "DatagramClientContext.h"
 
-using namespace Thread;
+using namespace ot;
 
 using namespace Concurrency;
 using namespace Platform;
