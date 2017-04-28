@@ -289,6 +289,7 @@ class Server : public CoapBase
 public:
     /**
      * This function pointer is called before CoAP server processing a CoAP packets.
+     *
      * @param[in]   aMessage        A pointer to the message.
      @ @param[in]   aMessageInfo    A pointer to the message info associated with @p aMessage.
      *
