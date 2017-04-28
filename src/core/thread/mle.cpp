@@ -77,8 +77,6 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mReattachState(kReattachStop),
     mParentRequestTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mle::HandleParentRequestTimer, this),
     mDelayedResponseTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mle::HandleDelayedResponseTimer, this),
-    mRouterSelectionJitter(kRouterSelectionJitter),
-    mRouterSelectionJitterTimeout(0),
     mLastPartitionRouterIdSequence(0),
     mLastPartitionId(0),
     mParentRequestMode(kMleAttachAnyPartition),
@@ -896,18 +894,6 @@ void Mle::SetAssignLinkQuality(const Mac::ExtAddress aMacAddr, uint8_t aLinkQual
     default:
         break;
     }
-}
-
-ThreadError Mle::SetRouterSelectionJitter(uint8_t aRouterJitter)
-{
-    ThreadError error = kThreadError_None;
-
-    VerifyOrExit(aRouterJitter > 0, error = kThreadError_InvalidArgs);
-
-    mRouterSelectionJitter = aRouterJitter;
-
-exit:
-    return error;
 }
 
 void Mle::GenerateNonce(const Mac::ExtAddress &aMacAddr, uint32_t aFrameCounter, uint8_t aSecurityLevel,

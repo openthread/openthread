@@ -53,11 +53,6 @@ public:
     void IncrementVersion(void) { }
     void IncrementStableVersion(void) { }
 
-    uint32_t GetContextIdReuseDelay(void) const { return 0; }
-    ThreadError SetContextIdReuseDelay(uint32_t) { return kThreadError_NotImplemented; }
-
-    void RemoveBorderRouter(uint16_t) { }
-
     ThreadError SendServerDataNotification(uint16_t) { return kThreadError_NotImplemented; }
 };
 

@@ -50,9 +50,6 @@ class MleRouter: public Mle
 public:
     explicit MleRouter(ThreadNetif &aThreadNetif) : Mle(aThreadNetif) { }
 
-    bool IsRouterRoleEnabled(void) const { return false; }
-    void SetRouterRoleEnabled(bool) { }
-
     bool IsSingleton(void) { return false; }
 
     ThreadError BecomeRouter(ThreadStatusTlv::Status) { return kThreadError_NotCapable; }
@@ -62,13 +59,6 @@ public:
 
     uint32_t GetLeaderAge(void) const { return 0; }
 
-    uint8_t GetLeaderWeight(void) const { return 0; }
-    void SetLeaderWeight(uint8_t) { }
-
-    uint32_t GetLeaderPartitionId(void) const { return 0; }
-    void SetLeaderPartitionId(uint32_t) { }
-
-    ThreadError SetPreferredRouterId(uint8_t) { return kThreadError_NotImplemented; }
     uint32_t GetPreviousPartitionId(void) const { return 0; }
     void SetPreviousPartitionId(uint32_t) { }
     void SetRouterId(uint8_t) { }
@@ -76,20 +66,11 @@ public:
     uint16_t GetNextHop(uint16_t aDestination) const { return Mle::GetNextHop(aDestination); }
 
     uint8_t GetNetworkIdTimeout(void) const { return 0; }
-    void SetNetworkIdTimeout(uint8_t) { }
 
     uint8_t GetRouteCost(uint16_t) const { return 0; }
     uint8_t GetLinkCost(uint16_t) { return 0; }
 
     uint8_t GetRouterIdSequence(void) const { return 0; }
-
-    uint8_t GetRouterUpgradeThreshold(void) const { return 0; }
-    void SetRouterUpgradeThreshold(uint8_t) { }
-
-    uint8_t GetRouterDowngradeThreshold(void) const { return 0; }
-    void SetRouterDowngradeThreshold(uint8_t) { }
-
-    ThreadError ReleaseRouterId(uint8_t) { return kThreadError_NotImplemented; }
 
     ThreadError RemoveNeighbor(const Mac::Address &) { return BecomeDetached(); }
     ThreadError RemoveNeighbor(Neighbor &) { return BecomeDetached(); }
@@ -108,8 +89,6 @@ public:
         return NULL;
     }
 
-    ThreadError SetMaxAllowedChildren(uint8_t) { return kThreadError_NotImplemented; }
-
     ThreadError RestoreChildren(void) {return kThreadError_NotImplemented; }
     ThreadError RemoveStoredChild(uint16_t) {return kThreadError_NotImplemented; }
     ThreadError StoreChild(uint16_t) {return kThreadError_NotImplemented; }
@@ -120,9 +99,6 @@ public:
     Neighbor *GetNeighbor(const Mac::Address &aAddress) { return Mle::GetNeighbor(aAddress); }
     Neighbor *GetNeighbor(const Ip6::Address &aAddress) { return Mle::GetNeighbor(aAddress); }
 
-    ThreadError GetChildInfoById(uint16_t, otChildInfo &) { return kThreadError_NotImplemented; }
-    ThreadError GetChildInfoByIndex(uint8_t, otChildInfo &) { return kThreadError_NotImplemented; }
-
     ThreadError GetNextNeighborInfo(otNeighborInfoIterator &, otNeighborInfo &) { return kThreadError_NotImplemented; }
 
     Router *GetRouters(uint8_t *aNumRouters) {
@@ -132,8 +108,6 @@ public:
 
         return NULL;
     }
-
-    ThreadError GetRouterInfo(uint16_t, otRouterInfo &) { return kThreadError_NotImplemented; }
 
     static int ComparePartitions(bool, const LeaderDataTlv &, bool, const LeaderDataTlv &) { return 0; }
 

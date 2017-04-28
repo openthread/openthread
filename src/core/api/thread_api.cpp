@@ -42,20 +42,6 @@
 
 using namespace ot;
 
-uint8_t otThreadGetMaxAllowedChildren(otInstance *aInstance)
-{
-    uint8_t aNumChildren;
-
-    (void)aInstance->mThreadNetif.GetMle().GetChildren(&aNumChildren);
-
-    return aNumChildren;
-}
-
-ThreadError otThreadSetMaxAllowedChildren(otInstance *aInstance, uint8_t aMaxChildren)
-{
-    return aInstance->mThreadNetif.GetMle().SetMaxAllowedChildren(aMaxChildren);
-}
-
 uint32_t otThreadGetChildTimeout(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMle().GetTimeout();
@@ -249,46 +235,6 @@ exit:
     return error;
 }
 
-bool otThreadIsRouterRoleEnabled(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetMle().IsRouterRoleEnabled();
-}
-
-void otThreadSetRouterRoleEnabled(otInstance *aInstance, bool aEnabled)
-{
-    aInstance->mThreadNetif.GetMle().SetRouterRoleEnabled(aEnabled);
-}
-
-uint8_t otThreadGetLocalLeaderWeight(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetMle().GetLeaderWeight();
-}
-
-void otThreadSetLocalLeaderWeight(otInstance *aInstance, uint8_t aWeight)
-{
-    aInstance->mThreadNetif.GetMle().SetLeaderWeight(aWeight);
-}
-
-uint32_t otThreadGetLocalLeaderPartitionId(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetMle().GetLeaderPartitionId();
-}
-
-void otThreadSetLocalLeaderPartitionId(otInstance *aInstance, uint32_t aPartitionId)
-{
-    return aInstance->mThreadNetif.GetMle().SetLeaderPartitionId(aPartitionId);
-}
-
-uint32_t otThreadGetContextIdReuseDelay(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetNetworkDataLeader().GetContextIdReuseDelay();
-}
-
-void otThreadSetContextIdReuseDelay(otInstance *aInstance, uint32_t aDelay)
-{
-    aInstance->mThreadNetif.GetNetworkDataLeader().SetContextIdReuseDelay(aDelay);
-}
-
 uint32_t otThreadGetKeySequenceCounter(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetKeyManager().GetCurrentKeySequence();
@@ -309,31 +255,6 @@ void otThreadSetKeySwitchGuardTime(otInstance *aInstance, uint32_t aKeySwitchGua
     aInstance->mThreadNetif.GetKeyManager().SetKeySwitchGuardTime(aKeySwitchGuardTime);
 }
 
-uint8_t otThreadGetNetworkIdTimeout(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetMle().GetNetworkIdTimeout();
-}
-
-void otThreadSetNetworkIdTimeout(otInstance *aInstance, uint8_t aTimeout)
-{
-    aInstance->mThreadNetif.GetMle().SetNetworkIdTimeout((uint8_t)aTimeout);
-}
-
-uint8_t otThreadGetRouterUpgradeThreshold(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetMle().GetRouterUpgradeThreshold();
-}
-
-void otThreadSetRouterUpgradeThreshold(otInstance *aInstance, uint8_t aThreshold)
-{
-    aInstance->mThreadNetif.GetMle().SetRouterUpgradeThreshold(aThreshold);
-}
-
-ThreadError otThreadReleaseRouterId(otInstance *aInstance, uint8_t aRouterId)
-{
-    return aInstance->mThreadNetif.GetMle().ReleaseRouterId(aRouterId);
-}
-
 ThreadError otThreadBecomeDetached(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMle().BecomeDetached();
@@ -342,78 +263,6 @@ ThreadError otThreadBecomeDetached(otInstance *aInstance)
 ThreadError otThreadBecomeChild(otInstance *aInstance, otMleAttachFilter aFilter)
 {
     return aInstance->mThreadNetif.GetMle().BecomeChild(aFilter);
-}
-
-ThreadError otThreadBecomeRouter(otInstance *aInstance)
-{
-    ThreadError error = kThreadError_InvalidState;
-
-    switch (aInstance->mThreadNetif.GetMle().GetDeviceState())
-    {
-    case Mle::kDeviceStateDisabled:
-    case Mle::kDeviceStateDetached:
-        break;
-
-    case Mle::kDeviceStateChild:
-        error = aInstance->mThreadNetif.GetMle().BecomeRouter(ThreadStatusTlv::kHaveChildIdRequest);
-        break;
-
-    case Mle::kDeviceStateRouter:
-    case Mle::kDeviceStateLeader:
-        error = kThreadError_None;
-        break;
-    }
-
-    return error;
-}
-
-ThreadError otThreadBecomeLeader(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetMle().BecomeLeader();
-}
-
-uint8_t otThreadGetRouterDowngradeThreshold(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetMle().GetRouterDowngradeThreshold();
-}
-
-void otThreadSetRouterDowngradeThreshold(otInstance *aInstance, uint8_t aThreshold)
-{
-    aInstance->mThreadNetif.GetMle().SetRouterDowngradeThreshold(aThreshold);
-}
-
-uint8_t otThreadGetRouterSelectionJitter(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetMle().GetRouterSelectionJitter();
-}
-
-void otThreadSetRouterSelectionJitter(otInstance *aInstance, uint8_t aRouterJitter)
-{
-    aInstance->mThreadNetif.GetMle().SetRouterSelectionJitter(aRouterJitter);
-}
-
-ThreadError otThreadGetChildInfoById(otInstance *aInstance, uint16_t aChildId, otChildInfo *aChildInfo)
-{
-    ThreadError error = kThreadError_None;
-
-    VerifyOrExit(aChildInfo != NULL, error = kThreadError_InvalidArgs);
-
-    error = aInstance->mThreadNetif.GetMle().GetChildInfoById(aChildId, *aChildInfo);
-
-exit:
-    return error;
-}
-
-ThreadError otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex, otChildInfo *aChildInfo)
-{
-    ThreadError error = kThreadError_None;
-
-    VerifyOrExit(aChildInfo != NULL, error = kThreadError_InvalidArgs);
-
-    error = aInstance->mThreadNetif.GetMle().GetChildInfoByIndex(aChildIndex, *aChildInfo);
-
-exit:
-    return error;
 }
 
 ThreadError otThreadGetNextNeighborInfo(otInstance *aInstance, otNeighborInfoIterator *aIterator, otNeighborInfo *aInfo)
@@ -488,23 +337,6 @@ uint32_t otThreadGetPartitionId(otInstance *aInstance)
 uint16_t otThreadGetRloc16(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMle().GetRloc16();
-}
-
-uint8_t otThreadGetRouterIdSequence(otInstance *aInstance)
-{
-    return aInstance->mThreadNetif.GetMle().GetRouterIdSequence();
-}
-
-ThreadError otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRouterInfo *aRouterInfo)
-{
-    ThreadError error = kThreadError_None;
-
-    VerifyOrExit(aRouterInfo != NULL, error = kThreadError_InvalidArgs);
-
-    error = aInstance->mThreadNetif.GetMle().GetRouterInfo(aRouterId, *aRouterInfo);
-
-exit:
-    return error;
 }
 
 ThreadError otThreadGetParentInfo(otInstance *aInstance, otRouterInfo *aParentInfo)
@@ -600,11 +432,6 @@ const char *otGetVersionString(void)
         ; // Trailing semicolon to end statement.
 
     return sVersion;
-}
-
-ThreadError otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId)
-{
-    return aInstance->mThreadNetif.GetMle().SetPreferredRouterId(aRouterId);
 }
 
 void otThreadSetReceiveDiagnosticGetCallback(otInstance *aInstance, otReceiveDiagnosticGetCallback aCallback,

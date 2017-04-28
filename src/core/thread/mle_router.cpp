@@ -65,7 +65,9 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     mAdvertiseTimer(aThreadNetif.GetIp6().mTimerScheduler, &MleRouter::HandleAdvertiseTimer, NULL, this),
     mStateUpdateTimer(aThreadNetif.GetIp6().mTimerScheduler, &MleRouter::HandleStateUpdateTimer, this),
     mAddressSolicit(OPENTHREAD_URI_ADDRESS_SOLICIT, &MleRouter::HandleAddressSolicit, this),
-    mAddressRelease(OPENTHREAD_URI_ADDRESS_RELEASE, &MleRouter::HandleAddressRelease, this)
+    mAddressRelease(OPENTHREAD_URI_ADDRESS_RELEASE, &MleRouter::HandleAddressRelease, this),
+    mRouterSelectionJitter(kRouterSelectionJitter),
+    mRouterSelectionJitterTimeout(0)
 {
     mDeviceMode |= ModeTlv::kModeFFD | ModeTlv::kModeFullNetworkData;
 
@@ -1131,6 +1133,18 @@ uint8_t MleRouter::GetLinkCost(uint8_t aRouterId)
 
 exit:
     return rval;
+}
+
+ThreadError MleRouter::SetRouterSelectionJitter(uint8_t aRouterJitter)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aRouterJitter > 0, error = kThreadError_InvalidArgs);
+
+    mRouterSelectionJitter = aRouterJitter;
+
+exit:
+    return error;
 }
 
 ThreadError MleRouter::ProcessRouteTlv(const RouteTlv &aRoute)

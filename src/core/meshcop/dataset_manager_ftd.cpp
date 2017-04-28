@@ -62,8 +62,6 @@
 #include <thread/thread_uris.hpp>
 #include <meshcop/leader.hpp>
 
-#if OPENTHREAD_FTD
-
 namespace ot {
 namespace MeshCoP {
 

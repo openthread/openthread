@@ -54,14 +54,130 @@ extern "C" {
  */
 
 /**
-  * @defgroup config-router  Router/Leader
-  *
-  * @brief
-  *   This module includes functions that manage configuration parameters for the Thread Router and Leader roles.
-  *
-  * @{
-  *
-  */
+ * @defgroup config-general  General
+ *
+ * @brief
+ *   This module includes functions that manage configuration parameters for the Thread Router, and Leader roles.
+ *
+ * @{
+ *
+ */
+
+/**
+ * Get the maximum number of children currently allowed.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The maximum number of children currently allowed.
+ *
+ * @sa otThreadSetMaxAllowedChildren
+ */
+OTAPI uint8_t OTCALL otThreadGetMaxAllowedChildren(otInstance *aInstance);
+
+/**
+ * Set the maximum number of children currently allowed.
+ *
+ * This parameter can only be set when Thread protocol operation
+ * has been stopped.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aMaxChildren  The maximum allowed children.
+ *
+ * @retval  kThreadErrorNone           Successfully set the max.
+ * @retval  kThreadError_InvalidArgs   If @p aMaxChildren is not in the range [1, OPENTHREAD_CONFIG_MAX_CHILDREN].
+ * @retval  kThreadError_InvalidState  If Thread isn't stopped.
+ *
+ * @sa otThreadGetMaxAllowedChildren, otThreadStop
+ */
+OTAPI ThreadError OTCALL otThreadSetMaxAllowedChildren(otInstance *aInstance, uint8_t aMaxChildren);
+
+/**
+ * This function indicates whether or not the Router Role is enabled.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @retval TRUE   If the Router Role is enabled.
+ * @retval FALSE  If the Router Role is not enabled.
+ *
+ */
+OTAPI bool OTCALL otThreadIsRouterRoleEnabled(otInstance *aInstance);
+
+/**
+ * This function sets whether or not the Router Role is enabled.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aEnabled  TRUE if the Router Role is enabled, FALSE otherwise.
+ *
+ */
+OTAPI void OTCALL otThreadSetRouterRoleEnabled(otInstance *aInstance, bool aEnabled);
+
+/**
+ * Set the preferred Router Id.
+ *
+ * Upon becoming a router/leader the node attempts to use this Router Id. If the
+ * preferred Router Id is not set or if it can not be used, a randomly generated
+ * router id is picked. This property can be set only when the device role is
+ * either detached or disabled.
+ *
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ * @param[in]  aRouterId    The preferred Router Id.
+ *
+ * @retval kThreadError_None         Successfully set the preferred Router Id.
+ * @retval kThreadError_InvalidState Could not set (role is not detached or disabled)
+ *
+ */
+OTAPI ThreadError OTCALL otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId);
+
+
+/**
+ * @defgroup config-router  Router/Leader
+ *
+ * @brief
+ *   This module includes functions that manage configuration parameters for the Thread Router and Leader roles.
+ *
+ * @{
+ *
+ */
+
+/**
+ * Get the Thread Leader Weight used when operating in the Leader role.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The Thread Leader Weight value.
+ *
+ * @sa otThreadSetLeaderWeight
+ */
+OTAPI uint8_t OTCALL otThreadGetLocalLeaderWeight(otInstance *aInstance);
+
+/**
+ * Set the Thread Leader Weight used when operating in the Leader role.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aWeight   The Thread Leader Weight value.
+ *
+ * @sa otThreadGetLeaderWeight
+ */
+OTAPI void OTCALL otThreadSetLocalLeaderWeight(otInstance *aInstance, uint8_t aWeight);
+
+/**
+ * Get the Thread Leader Partition Id used when operating in the Leader role.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The Thread Leader Partition Id value.
+ *
+ */
+OTAPI uint32_t OTCALL otThreadGetLocalLeaderPartitionId(otInstance *aInstance);
+
+/**
+ * Set the Thread Leader Partition Id used when operating in the Leader role.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aPartitionId  The Thread Leader Partition Id value.
+ *
+ */
+OTAPI void OTCALL otThreadSetLocalLeaderPartitionId(otInstance *aInstance, uint32_t aPartitionId);
 
 /**
  * Get the Joiner UDP Port.
@@ -87,6 +203,151 @@ OTAPI uint16_t OTCALL otThreadGetJoinerUdpPort(otInstance *aInstance);
 OTAPI ThreadError OTCALL otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort);
 
 /**
+ * @defgroup config-test  Test
+ *
+ * @brief
+ *   This module includes functions that manage configuration parameters required for Thread Certification testing.
+ *
+ * @{
+ *
+ */
+
+/**
+ * Get the CONTEXT_ID_REUSE_DELAY parameter used in the Leader role.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The CONTEXT_ID_REUSE_DELAY value.
+ *
+ * @sa otThreadSetContextIdReuseDelay
+ */
+OTAPI uint32_t OTCALL otThreadGetContextIdReuseDelay(otInstance *aInstance);
+
+/**
+ * Set the CONTEXT_ID_REUSE_DELAY parameter used in the Leader role.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aDelay    The CONTEXT_ID_REUSE_DELAY value.
+ *
+ * @sa otThreadGetContextIdReuseDelay
+ */
+OTAPI void OTCALL otThreadSetContextIdReuseDelay(otInstance *aInstance, uint32_t aDelay);
+
+/**
+ * Get the NETWORK_ID_TIMEOUT parameter used in the Router role.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The NETWORK_ID_TIMEOUT value.
+ *
+ * @sa otThreadSetNetworkIdTimeout
+ */
+OTAPI uint8_t OTCALL otThreadGetNetworkIdTimeout(otInstance *aInstance);
+
+/**
+ * Set the NETWORK_ID_TIMEOUT parameter used in the Leader role.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aTimeout  The NETWORK_ID_TIMEOUT value.
+ *
+ * @sa otThreadGetNetworkIdTimeout
+ */
+OTAPI void OTCALL otThreadSetNetworkIdTimeout(otInstance *aInstance, uint8_t aTimeout);
+
+/**
+ * Get the ROUTER_UPGRADE_THRESHOLD parameter used in the REED role.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The ROUTER_UPGRADE_THRESHOLD value.
+ *
+ * @sa otThreadSetRouterUpgradeThreshold
+ */
+OTAPI uint8_t OTCALL otThreadGetRouterUpgradeThreshold(otInstance *aInstance);
+
+/**
+ * Set the ROUTER_UPGRADE_THRESHOLD parameter used in the Leader role.
+ *
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[in]  aThreshold  The ROUTER_UPGRADE_THRESHOLD value.
+ *
+ * @sa otThreadGetRouterUpgradeThreshold
+ */
+OTAPI void OTCALL otThreadSetRouterUpgradeThreshold(otInstance *aInstance, uint8_t aThreshold);
+
+/**
+ * Release a Router ID that has been allocated by the device in the Leader role.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aRouterId  The Router ID to release. Valid range is [0, 62].
+ *
+ * @retval kThreadErrorNone  Successfully released the Router ID specified by aRouterId.
+ */
+OTAPI ThreadError OTCALL otThreadReleaseRouterId(otInstance *aInstance, uint8_t aRouterId);
+
+/**
+ * Attempt to become a router.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @retval kThreadErrorNone         Successfully begin attempt to become a router.
+ * @retval kThreadErrorInvalidState Thread is disabled.
+ */
+OTAPI ThreadError OTCALL otThreadBecomeRouter(otInstance *aInstance);
+
+/**
+ * Become a leader and start a new partition.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @retval kThreadErrorNone          Successfully became a leader and started a new partition.
+ * @retval kThreadErrorInvalidState  Thread is disabled.
+ */
+OTAPI ThreadError OTCALL otThreadBecomeLeader(otInstance *aInstance);
+
+/**
+ * Get the ROUTER_DOWNGRADE_THRESHOLD parameter used in the Router role.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns The ROUTER_DOWNGRADE_THRESHOLD value.
+ *
+ * @sa otThreadSetRouterDowngradeThreshold
+ */
+OTAPI uint8_t OTCALL otThreadGetRouterDowngradeThreshold(otInstance *aInstance);
+
+/**
+ * Set the ROUTER_DOWNGRADE_THRESHOLD parameter used in the Leader role.
+ *
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[in]  aThreshold  The ROUTER_DOWNGRADE_THRESHOLD value.
+ *
+ * @sa otThreadGetRouterDowngradeThreshold
+ */
+OTAPI void OTCALL otThreadSetRouterDowngradeThreshold(otInstance *aInstance, uint8_t aThreshold);
+
+/**
+ * Get the ROUTER_SELECTION_JITTER parameter used in the REED/Router role.
+ *
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ *
+ * @returns The ROUTER_SELECTION_JITTER value.
+ *
+ * @sa otThreadSetRouterSelectionJitter
+ */
+OTAPI uint8_t OTCALL otThreadGetRouterSelectionJitter(otInstance *aInstance);
+
+/**
+ * Set the ROUTER_SELECTION_JITTER parameter used in the REED/Router role.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ * @param[in]  aRouterJitter  The ROUTER_SELECTION_JITTER value.
+ *
+ * @sa otThreadGetRouterSelectionJitter
+ */
+OTAPI void OTCALL otThreadSetRouterSelectionJitter(otInstance *aInstance, uint8_t aRouterJitter);
+
+/**
  * @addtogroup diags  Diagnostics
  *
  * @brief
@@ -95,6 +356,57 @@ OTAPI ThreadError OTCALL otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_
  * @{
  *
  */
+
+/**
+ * The function retains diagnostic information for an attached Child by its Child ID or RLOC16.
+ *
+ * @param[in]   aInstance   A pointer to an OpenThread instance.
+ * @param[in]   aChildId    The Child ID or RLOC16 for the attached child.
+ * @param[out]  aChildInfo  A pointer to where the child information is placed.
+ *
+ * @retavl kThreadError_None         @p aChildInfo was successfully updated with the info for the given ID.
+ * @retval kThreadError_NotFound     No valid child with this Child ID.
+ * @retavl kThreadError_InvalidArgs  If @p aChildInfo is NULL.
+ *
+ */
+OTAPI ThreadError OTCALL otThreadGetChildInfoById(otInstance *aInstance, uint16_t aChildId, otChildInfo *aChildInfo);
+
+/**
+ * The function retains diagnostic information for an attached Child by the internal table index.
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ * @param[in]   aChildIndex  The table index.
+ * @param[out]  aChildInfo   A pointer to where the child information is placed.
+ *
+ * @retavl kThreadError_None            @p aChildInfo was successfully updated with the info for the given index.
+ * @retval kThreadError_NotFound        No valid child at this index.
+ * @retavl kThreadError_InvalidArgs     Either @p aChildInfo is NULL, or @p aChildIndex is out of range (higher
+ *                                      than max table index).
+ *
+ * @sa otGetMaxAllowedChildren
+ *
+ */
+OTAPI ThreadError OTCALL otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex,
+                                                     otChildInfo *aChildInfo);
+
+/**
+ * Get the current Router ID Sequence.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The Router ID Sequence.
+ */
+OTAPI uint8_t OTCALL otThreadGetRouterIdSequence(otInstance *aInstance);
+
+/**
+ * The function retains diagnostic information for a given Thread Router.
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ * @param[in]   aRouterId    The router ID or RLOC16 for a given router.
+ * @param[out]  aRouterInfo  A pointer to where the router information is placed.
+ *
+ */
+OTAPI ThreadError OTCALL otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRouterInfo *aRouterInfo);
 
 /**
  * This function gets an EID cache entry.

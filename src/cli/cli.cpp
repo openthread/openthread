@@ -89,8 +89,10 @@ const struct Command Interpreter::sCommands[] =
     { "blacklist", &Interpreter::ProcessBlacklist },
     { "bufferinfo", &Interpreter::ProcessBufferInfo },
     { "channel", &Interpreter::ProcessChannel },
+#if OPENTHREAD_FTD
     { "child", &Interpreter::ProcessChild },
     { "childmax", &Interpreter::ProcessChildMax },
+#endif
     { "childtimeout", &Interpreter::ProcessChildTimeout },
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     { "coap", &Interpreter::ProcessCoap },
@@ -98,7 +100,9 @@ const struct Command Interpreter::sCommands[] =
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     { "commissioner", &Interpreter::ProcessCommissioner },
 #endif
+#if OPENTHREAD_FTD
     { "contextreusedelay", &Interpreter::ProcessContextIdReuseDelay },
+#endif
     { "counter", &Interpreter::ProcessCounters },
     { "dataset", &Interpreter::ProcessDataset },
 #if OPENTHREAD_FTD
@@ -139,14 +143,18 @@ const struct Command Interpreter::sCommands[] =
 #endif
     { "keysequence", &Interpreter::ProcessKeySequence },
     { "leaderdata", &Interpreter::ProcessLeaderData },
+#if OPENTHREAD_FTD
     { "leaderpartitionid", &Interpreter::ProcessLeaderPartitionId },
     { "leaderweight", &Interpreter::ProcessLeaderWeight },
+#endif
     { "linkquality", &Interpreter::ProcessLinkQuality },
     { "masterkey", &Interpreter::ProcessMasterKey },
     { "mode", &Interpreter::ProcessMode },
     { "netdataregister", &Interpreter::ProcessNetworkDataRegister },
     { "networkdiagnostic", &Interpreter::ProcessNetworkDiagnostic },
+#if OPENTHREAD_FTD
     { "networkidtimeout", &Interpreter::ProcessNetworkIdTimeout },
+#endif
     { "networkname", &Interpreter::ProcessNetworkName },
     { "panid", &Interpreter::ProcessPanId },
     { "parent", &Interpreter::ProcessParent },
@@ -160,16 +168,18 @@ const struct Command Interpreter::sCommands[] =
     { "prefix", &Interpreter::ProcessPrefix },
 #if OPENTHREAD_FTD
     { "pskc", &Interpreter::ProcessPSKc },
-#endif
     { "releaserouterid", &Interpreter::ProcessReleaseRouterId },
+#endif
     { "reset", &Interpreter::ProcessReset },
     { "rloc16", &Interpreter::ProcessRloc16 },
     { "route", &Interpreter::ProcessRoute },
+#if OPENTHREAD_FTD
     { "router", &Interpreter::ProcessRouter },
     { "routerdowngradethreshold", &Interpreter::ProcessRouterDowngradeThreshold },
     { "routerrole", &Interpreter::ProcessRouterRole },
     { "routerselectionjitter", &Interpreter::ProcessRouterSelectionJitter },
     { "routerupgradethreshold", &Interpreter::ProcessRouterUpgradeThreshold },
+#endif
     { "scan", &Interpreter::ProcessScan },
     { "singleton", &Interpreter::ProcessSingleton },
     { "state", &Interpreter::ProcessState },
@@ -478,6 +488,7 @@ exit:
     AppendResult(error);
 }
 
+#if OPENTHREAD_FTD
 void Interpreter::ProcessChild(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
@@ -612,6 +623,7 @@ void Interpreter::ProcessChildMax(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
+#endif  // OPENTHREAD_FTD
 
 void Interpreter::ProcessChildTimeout(int argc, char *argv[])
 {
@@ -643,6 +655,7 @@ void Interpreter::ProcessCoap(int argc, char *argv[])
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 
+#if OPENTHREAD_FTD
 void Interpreter::ProcessContextIdReuseDelay(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
@@ -661,6 +674,7 @@ void Interpreter::ProcessContextIdReuseDelay(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
+#endif  // OPENTHREAD_FTD
 
 void Interpreter::ProcessCounters(int argc, char *argv[])
 {
@@ -884,7 +898,7 @@ exit:
     (void)argv;
     AppendResult(kThreadError_None);
 }
-#endif
+#endif  // OPENTHREAD_FTD
 
 void Interpreter::ProcessEui64(int argc, char *argv[])
 {
@@ -1235,6 +1249,7 @@ exit:
     AppendResult(error);
 }
 
+#if OPENTHREAD_FTD
 void Interpreter::ProcessLeaderPartitionId(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
@@ -1272,6 +1287,7 @@ void Interpreter::ProcessLeaderWeight(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
+#endif  // OPENTHREAD_FTD
 
 void Interpreter::ProcessLinkQuality(int argc, char *argv[])
 {
@@ -1435,6 +1451,7 @@ exit:
     AppendResult(error);
 }
 
+#if OPENTHREAD_FTD
 void Interpreter::ProcessNetworkIdTimeout(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
@@ -1453,6 +1470,7 @@ void Interpreter::ProcessNetworkIdTimeout(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
+#endif  // OPENTHREAD_FTD
 
 void Interpreter::ProcessNetworkName(int argc, char *argv[])
 {
@@ -1981,6 +1999,7 @@ exit:
     AppendResult(error);
 }
 
+#if OPENTHREAD_FTD
 void Interpreter::ProcessReleaseRouterId(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
@@ -1994,6 +2013,7 @@ void Interpreter::ProcessReleaseRouterId(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
+#endif  // OPENTHREAD_FTD
 
 void Interpreter::ProcessReset(int argc, char *argv[])
 {
@@ -2128,6 +2148,7 @@ exit:
     AppendResult(error);
 }
 
+#if OPENTHREAD_FTD
 void Interpreter::ProcessRouter(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
@@ -2303,6 +2324,7 @@ void Interpreter::ProcessRouterUpgradeThreshold(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
+#endif  // OPENTHREAD_FTD
 
 void Interpreter::ProcessScan(int argc, char *argv[])
 {
@@ -2400,12 +2422,19 @@ void Interpreter::ProcessState(int argc, char *argv[])
             sServer->OutputFormat("child\r\n");
             break;
 
+#if OPENTHREAD_FTD
+
         case kDeviceRoleRouter:
             sServer->OutputFormat("router\r\n");
             break;
 
         case kDeviceRoleLeader:
             sServer->OutputFormat("leader\r\n");
+            break;
+#endif  // OPENTHREAD_FTD
+
+        default:
+            sServer->OutputFormat("invalid state\r\n");
             break;
         }
     }
@@ -2419,6 +2448,8 @@ void Interpreter::ProcessState(int argc, char *argv[])
         {
             SuccessOrExit(error = otThreadBecomeChild(mInstance, kMleAttachSamePartition1));
         }
+
+#if OPENTHREAD_FTD
         else if (strcmp(argv[0], "router") == 0)
         {
             SuccessOrExit(error = otThreadBecomeRouter(mInstance));
@@ -2427,6 +2458,8 @@ void Interpreter::ProcessState(int argc, char *argv[])
         {
             SuccessOrExit(error = otThreadBecomeLeader(mInstance));
         }
+
+#endif  // OPENTHREAD_FTD
         else
         {
             ExitNow(error = kThreadError_Parse);

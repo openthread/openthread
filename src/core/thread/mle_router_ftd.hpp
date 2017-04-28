@@ -276,6 +276,22 @@ public:
     uint8_t GetLinkCost(uint8_t aRouterId);
 
     /**
+     * This method returns the ROUTER_SELECTION_JITTER value.
+     *
+     * @returns The ROUTER_SELECTION_JITTER value.
+     *
+     */
+    uint8_t GetRouterSelectionJitter(void) const { return mRouterSelectionJitter; }
+
+    /**
+     * This method sets the ROUTER_SELECTION_JITTER value.
+     *
+     * @returns The ROUTER_SELECTION_JITTER value.
+     *
+     */
+    ThreadError SetRouterSelectionJitter(uint8_t aRouterJitter);
+
+    /**
      * This method returns the current Router ID Sequence value.
      *
      * @returns The current Router ID Sequence value.
@@ -746,6 +762,9 @@ private:
     uint8_t mRouterId;
     uint8_t mPreviousRouterId;
     uint32_t mPreviousPartitionId;
+
+    uint8_t mRouterSelectionJitter;         ///< The variable to save the assigned jitter value.
+    uint8_t mRouterSelectionJitterTimeout;  ///< The Timeout prior to request/release Router ID.
 };
 
 }  // namespace Mle

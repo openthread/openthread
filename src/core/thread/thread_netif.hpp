@@ -386,6 +386,12 @@ public:
 #endif // OPENTHREAD_ENABLE_JAM_DETECTION
 
 #if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
+    /**
+     * This method returns the border agent proxy object.
+     *
+     * @returns Reference to the border agent proxy object.
+     *
+     */
     MeshCoP::BorderAgentProxy &GetBorderAgentProxy(void) { return mBorderAgentProxy; }
 #endif // OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
 
@@ -440,10 +446,11 @@ private:
     Utils::JamDetector mJamDetector;
 #endif // OPENTHREAD_ENABLE_JAM_DETECTION
 
-#if OPENTHREAD_FTD
-#if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
+#if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
     MeshCoP::BorderAgentProxy mBorderAgentProxy;
-#endif // OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
+#endif // OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
+
+#if OPENTHREAD_FTD
     MeshCoP::JoinerRouter mJoinerRouter;
     MeshCoP::Leader mLeader;
     AddressResolver mAddressResolver;
