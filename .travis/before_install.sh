@@ -49,9 +49,11 @@ cd /tmp || die
     sudo -H pip install ipaddress || die
     sudo -H pip install scapy==2.3.2 || die
     sudo -H pip install pyserial || die
+    sudo -H pip install git+https://github.com/openthread/pyspinel || die
     pip install ipaddress || die
     pip install scapy==2.3.2 || die
     pip install pyserial || die
+    pip install git+https://github.com/openthread/pyspinel || die
 
     [ $BUILD_TARGET != pretty-check ] || {
         wget http://jaist.dl.sourceforge.net/project/astyle/astyle/astyle%202.05.1/astyle_2.05.1_linux.tar.gz || die
