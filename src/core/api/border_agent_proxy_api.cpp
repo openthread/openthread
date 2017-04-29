@@ -31,6 +31,12 @@
  *   This file implements the OpenThread Border Agent Proxy API.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include "openthread/border_agent_proxy.h"
 
 #include "openthread-instance.h"

@@ -34,6 +34,10 @@
 #ifndef LINK_RAW_HPP_
 #define LINK_RAW_HPP_
 
+#if !defined(_openthread_config_h_sentinel_)
+#error "Please include <openthread-config.h> first"
+#endif
+
 #include <openthread-core-config.h>
 #include "openthread/link_raw.h"
 

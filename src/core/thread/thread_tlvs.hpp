@@ -34,6 +34,10 @@
 #ifndef THREAD_TLVS_HPP_
 #define THREAD_TLVS_HPP_
 
+#if !defined(_openthread_config_h_sentinel_)
+#error "Please include <openthread-config.h> first"
+#endif
+
 #include "openthread/types.h"
 
 #include <common/encoding.hpp>

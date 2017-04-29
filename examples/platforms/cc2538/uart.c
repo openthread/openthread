@@ -32,6 +32,12 @@
  *
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <stddef.h>
 
 #include "openthread/types.h"

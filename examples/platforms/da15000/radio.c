@@ -31,6 +31,12 @@
 * Platform abstraction for radio communication.
 */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <utils/code_utils.h>
 #include "openthread/openthread.h"
 #include "openthread/platform/alarm.h"

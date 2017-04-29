@@ -31,6 +31,12 @@
  * This file includes the platform-specific initializers.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <assert.h>
 #include <stdint.h>
 

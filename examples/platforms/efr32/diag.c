@@ -32,12 +32,17 @@
  *
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/time.h>
 
-#include <openthread-config.h>
 #include <openthread/platform/alarm.h>
 #include <openthread/platform/radio.h>
 #include "platform-efr32.h"

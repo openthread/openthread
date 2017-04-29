@@ -26,6 +26,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* This is sentinel to ensure this header is included */
+#define _openthread_config_h_sentinel_ 1493316498
+
 /* Define to 1 to enable the NCP UART interface. */
 // On the command line: #define OPENTHREAD_ENABLE_NCP_UART 0
 

@@ -28,6 +28,14 @@
 
 #include <SDKDDKVer.h>
 #include "CppUnitTest.h"
+
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
+
 #include "test_util.h"
 #include "test_platform.h"
 

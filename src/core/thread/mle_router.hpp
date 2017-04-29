@@ -26,6 +26,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#if !defined(_openthread_config_h_sentinel_)
+#error "Please include <openthread-config.h> first"
+#endif
+
 #if OPENTHREAD_MTD
 #include "mle_router_mtd.hpp"
 #elif OPENTHREAD_FTD

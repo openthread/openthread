@@ -31,6 +31,12 @@
  *   This file implements the OpenThread UDP API.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include "openthread/dhcp6_client.h"
 #include "openthread/dhcp6_server.h"
 

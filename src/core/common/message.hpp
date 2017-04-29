@@ -34,10 +34,8 @@
 #ifndef MESSAGE_HPP_
 #define MESSAGE_HPP_
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
+#if !defined(_openthread_config_h_sentinel_)
+#error "Please include <openthread-config.h> first"
 #endif
 
 #include "utils/wrap_stdint.h"

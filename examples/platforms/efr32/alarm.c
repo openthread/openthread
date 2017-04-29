@@ -32,10 +32,15 @@
  *
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <openthread-config.h>
 #include <utils/code_utils.h>
 #include <openthread/platform/platform.h>
 #include <openthread/platform/alarm.h>

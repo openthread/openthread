@@ -31,6 +31,12 @@
  *   This file implements the OpenThread Operational Dataset API (FTD only).
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include "openthread/dataset_ftd.h"
 
 #include "openthread-instance.h"
