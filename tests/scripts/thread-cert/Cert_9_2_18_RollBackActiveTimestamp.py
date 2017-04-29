@@ -104,6 +104,8 @@ class Cert_9_2_18_RollBackActiveTimestamp(unittest.TestCase):
         self.nodes[COMMISSIONER].start()
         time.sleep(5)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
+        self.nodes[COMMISSIONER].commissioner_start()
+        time.sleep(3)
 
         self.nodes[ROUTER1].start()
         time.sleep(5)

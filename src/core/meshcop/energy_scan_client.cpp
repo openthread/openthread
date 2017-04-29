@@ -85,7 +85,9 @@ ThreadError EnergyScanClient::SendQuery(uint32_t aChannelMask, uint8_t aCount, u
     MeshCoP::PeriodTlv period;
     MeshCoP::ScanDurationTlv scanDuration;
     Ip6::MessageInfo messageInfo;
-    Message *message;
+    Message *message = NULL;
+
+    VerifyOrExit(mNetif.GetCommissioner().GetState() == kCommissionerStateActive, error = kThreadError_InvalidState);
 
     header.Init(aAddress.IsMulticast() ? kCoapTypeNonConfirmable : kCoapTypeConfirmable,
                 kCoapRequestPost);
