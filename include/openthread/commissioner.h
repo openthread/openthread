@@ -80,9 +80,9 @@ OTAPI ThreadError OTCALL otCommissionerStop(otInstance *aInstance);
  * @retval kThreadError_None         Successfully added the Joiner.
  * @retval kThreadError_NoBufs       No buffers available to add the Joiner.
  * @retval kThreadError_InvalidArgs  @p aExtAddress or @p aPSKd is invalid.
- * @retval kThreadError_InvalidState The commissioner is not active
+ * @retval kThreadError_InvalidState The commissioner is not active.
  *
- * @note Only use this after successfully started the Commissioner role by otCommissionerStart()
+ * @note Only use this after successfully started the Commissioner role by otCommissionerStart().
  *
  */
 OTAPI ThreadError OTCALL otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aExtAddress,
@@ -97,9 +97,9 @@ OTAPI ThreadError OTCALL otCommissionerAddJoiner(otInstance *aInstance, const ot
  * @retval kThreadError_None         Successfully removed the Joiner.
  * @retval kThreadError_NotFound     The Joiner specified by @p aExtAddress was not found.
  * @retval kThreadError_InvalidArgs  @p aExtAddress is invalid.
- * @retval kThreadError_InvalidState The commissioner is not active
+ * @retval kThreadError_InvalidState The commissioner is not active.
  *
- * @note Only use this after successfully started the Commissioner role by otCommissionerStart()
+ * @note Only use this after successfully started the Commissioner role by otCommissionerStart().
  *
  */
 OTAPI ThreadError OTCALL otCommissionerRemoveJoiner(otInstance *aIntsance, const otExtAddress *aExtAddress);
@@ -127,9 +127,9 @@ OTAPI ThreadError OTCALL otCommissionerSetProvisioningUrl(otInstance *aInstance,
  *
  * @retval kThreadError_None         Successfully enqueued the Announce Begin message.
  * @retval kThreadError_NoBufs       Insufficient buffers to generate an Announce Begin message.
- * @retval kThreadError_InvalidState The commissioner is not active
+ * @retval kThreadError_InvalidState The commissioner is not active.
  *
- * @note Only use this after successfully started the Commissioner role by otCommissionerStart()
+ * @note Only use this after successfully started the Commissioner role by otCommissionerStart().
  *
  */
 OTAPI ThreadError OTCALL otCommissionerAnnounceBegin(otInstance *aInstance, uint32_t aChannelMask, uint8_t aCount,
@@ -162,9 +162,9 @@ typedef void (OTCALL *otCommissionerEnergyReportCallback)(uint32_t aChannelMask,
  *
  * @retval kThreadError_None         Successfully enqueued the Energy Scan Query message.
  * @retval kThreadError_NoBufs       Insufficient buffers to generate an Energy Scan Query message.
- * @retval kThreadError_InvalidState The commissioner is not active
+ * @retval kThreadError_InvalidState The commissioner is not active.
  *
- * @note Only use this after successfully started the Commissioner role by otCommissionerStart()
+ * @note Only use this after successfully started the Commissioner role by otCommissionerStart().
  *
  */
 OTAPI ThreadError OTCALL otCommissionerEnergyScan(otInstance *aInstance, uint32_t aChannelMask, uint8_t aCount,
@@ -193,9 +193,9 @@ typedef void (OTCALL *otCommissionerPanIdConflictCallback)(uint16_t aPanId, uint
  *
  * @retval kThreadError_None         Successfully enqueued the PAN ID Query message.
  * @retval kThreadError_NoBufs       Insufficient buffers to generate a PAN ID Query message.
- * @retval kThreadError_InvalidState The commissioner is not active
+ * @retval kThreadError_InvalidState The commissioner is not active.
  *
- * @note Only use this after successfully started the Commissioner role by otCommissionerStart()
+ * @note Only use this after successfully started the Commissioner role by otCommissionerStart().
  *
  */
 OTAPI ThreadError OTCALL otCommissionerPanIdQuery(otInstance *aInstance, uint16_t aPanId, uint32_t aChannelMask,
