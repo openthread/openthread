@@ -141,7 +141,7 @@ void Server::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &a
 
     if (mInterceptor != NULL)
     {
-        SuccessOrExit(mInterceptor(&aMessage, &aMessageInfo));
+        SuccessOrExit(mInterceptor(aMessage, aMessageInfo));
     }
 
     SuccessOrExit(header.FromMessage(aMessage, 0));

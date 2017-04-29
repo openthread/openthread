@@ -290,8 +290,8 @@ public:
     /**
      * This function pointer is called before CoAP server processing a CoAP packets.
      *
-     * @param[in]   aMessage        A pointer to the message.
-     @ @param[in]   aMessageInfo    A pointer to the message info associated with @p aMessage.
+     * @param[in]   aMessage        A reference to the message.
+     @ @param[in]   aMessageInfo    A reference to the message info associated with @p aMessage.
      *
      * @retval  kThreadError_None       Server should continue processing this message, other
      *                                  return values indicates the server should stop processing
@@ -299,7 +299,7 @@ public:
      * @retval  kThreadError_Security   The message does not comply with security rules.
      *
      */
-    typedef ThreadError(* Interceptor)(const otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    typedef ThreadError(* Interceptor)(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * This constructor initializes the object.
