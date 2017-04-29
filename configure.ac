@@ -573,7 +573,7 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_BORDER_AGENT_PROXY],[${OPENTHREAD_ENABLE_B
 #
 
 AC_ARG_ENABLE(mtd_network_diagnostic,
-    [AS_HELP_STRING([--enable-mtd-network-diagnostic],[Enable network diagnostic support for MTD @<:@default=yes@:>@.])],
+    [AS_HELP_STRING([--enable-mtd-network-diagnostic],[Enable network diagnostic support for MTD @<:@default=no@:>@.])],
     [
         case "${enableval}" in
 
@@ -586,7 +586,7 @@ AC_ARG_ENABLE(mtd_network_diagnostic,
             ;;
         esac
     ],
-    [enable_mtd_network_diagnostic=yes])
+    [enable_mtd_network_diagnostic=no])
 
 if test "$enable_mtd_network_diagnostic" = "yes"; then
     OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC=1
