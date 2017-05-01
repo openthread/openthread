@@ -6862,7 +6862,7 @@ void NcpBase::HandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix)
             aUlaPrefix, OT_NCP_LEGACY_ULA_PREFIX_LENGTH
     ));
 
-    OutboundFrameSend();
+    SuccessOrExit(OutboundFrameSend());
 
 exit:
     return;
@@ -6883,7 +6883,7 @@ void NcpBase::HandleLegacyNodeDidJoin(const otExtAddress *aExtAddr)
             aExtAddr->m8
     ));
 
-    OutboundFrameSend();
+    SuccessOrExit(OutboundFrameSend());
 
 exit:
     return;
