@@ -1317,8 +1317,8 @@ AC_MSG_NOTICE([
   OpenThread DHCPv6 Server support          : ${enable_dhcp6_server}
   OpenThread DHCPv6 Client support          : ${enable_dhcp6_client}
   OpenThread DNS Client support             : ${enable_dns_client}
-  Openthread Application CoAP support       : ${enable_application_coap}
-  Openthread Raw Link-Layer support         : ${enable_raw_link_api}
+  OpenThread Application CoAP support       : ${enable_application_coap}
+  OpenThread Raw Link-Layer support         : ${enable_raw_link_api}
   OpenThread examples                       : ${OPENTHREAD_EXAMPLES}
   OpenThread platform information           : ${PLATFORM_INFO}
 
