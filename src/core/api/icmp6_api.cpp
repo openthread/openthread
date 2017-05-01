@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file implements the OpenThread UDP API.
+ *   This file implements the OpenThread ICMPv6 API.
  */
 
 #include "openthread/icmp6.h"

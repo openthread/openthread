@@ -64,7 +64,6 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
     Netif(aIp6, OT_NETIF_INTERFACE_ID_THREAD),
     mCoapServer(*this, kCoapUdpPort),
     mCoapClient(*this),
-    mAddressResolver(*this),
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
     mDhcp6Client(*this),
 #endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
@@ -104,6 +103,7 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
 #endif // OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
     mJoinerRouter(*this),
     mLeader(*this),
+    mAddressResolver(*this),
 #endif  // OPENTHREAD_FTD
     mAnnounceBegin(*this),
     mPanIdQuery(*this),

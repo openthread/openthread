@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file implements the OpenThread UDP API.
+ *   This file implements the OpenThread DHCPv6 API.
  */
 
 #include "openthread/dhcp6_client.h"

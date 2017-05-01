@@ -264,8 +264,6 @@ HEADERS_COMMON                      = \
     net/tcp.hpp                       \
     net/udp6.hpp                      \
     thread/address_resolver.hpp       \
-    thread/address_resolver_ftd.hpp   \
-    thread/address_resolver_mtd.hpp   \
     thread/announce_begin_server.hpp  \
     thread/data_poll_manager.hpp      \
     thread/energy_scan_server.hpp     \

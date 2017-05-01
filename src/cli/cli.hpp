@@ -163,19 +163,25 @@ private:
     void ProcessBufferInfo(int argc, char *argv[]);
     void ProcessBlacklist(int argc, char *argv[]);
     void ProcessChannel(int argc, char *argv[]);
+#if OPENTHREAD_FTD
     void ProcessChild(int argc, char *argv[]);
-    void ProcessChildTimeout(int argc, char *argv[]);
     void ProcessChildMax(int argc, char *argv[]);
+#endif
+    void ProcessChildTimeout(int argc, char *argv[]);
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
     void ProcessCoap(int argc, char *argv[]);
 #endif  //OPENTHREAD_ENABLE_APPLICATION_COAP
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     void ProcessCommissioner(int argc, char *argv[]);
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#if OPENTHREAD_FTD
     void ProcessContextIdReuseDelay(int argc, char *argv[]);
+#endif
     void ProcessCounters(int argc, char *argv[]);
     void ProcessDataset(int argc, char *argv[]);
+#if OPENTHREAD_FTD
     void ProcessDelayTimerMin(int argc, char *argv[]);
+#endif
 #if OPENTHREAD_ENABLE_DIAG
     void ProcessDiag(int argc, char *argv[]);
 #endif  // OPENTHREAD_ENABLE_DIAG
@@ -183,7 +189,9 @@ private:
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     void ProcessDns(int argc, char *argv[]);
 #endif
+#if OPENTHREAD_FTD
     void ProcessEidCache(int argc, char *argv[]);
+#endif
     void ProcessEui64(int argc, char *argv[]);
 #ifdef OPENTHREAD_EXAMPLES_POSIX
     void ProcessExit(int argc, char *argv[]);
@@ -205,17 +213,23 @@ private:
 #if OPENTHREAD_ENABLE_JOINER
     void ProcessJoiner(int argc, char *argv[]);
 #endif  // OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_FTD
     void ProcessJoinerPort(int argc, char *argv[]);
+#endif
     void ProcessKeySequence(int argc, char *argv[]);
     void ProcessLeaderData(int argc, char *argv[]);
+#if OPENTHREAD_FTD
     void ProcessLeaderPartitionId(int argc, char *argv[]);
     void ProcessLeaderWeight(int argc, char *argv[]);
+#endif
     void ProcessLinkQuality(int argc, char *argv[]);
     void ProcessMasterKey(int argc, char *argv[]);
     void ProcessMode(int argc, char *argv[]);
     void ProcessNetworkDataRegister(int argc, char *argv[]);
     void ProcessNetworkDiagnostic(int argc, char *argv[]);
+#if OPENTHREAD_FTD
     void ProcessNetworkIdTimeout(int argc, char *argv[]);
+#endif
     void ProcessNetworkName(int argc, char *argv[]);
     void ProcessPanId(int argc, char *argv[]);
     void ProcessParent(int argc, char *argv[]);
@@ -228,17 +242,19 @@ private:
     void ProcessPromiscuous(int argc, char *argv[]);
 #if OPENTHREAD_FTD
     void ProcessPSKc(int argc, char *argv[]);
-#endif
     void ProcessReleaseRouterId(int argc, char *argv[]);
+#endif
     void ProcessReset(int argc, char *argv[]);
     void ProcessRoute(int argc, char *argv[]);
+    ThreadError ProcessRouteAdd(int argc, char *argv[]);
+    ThreadError ProcessRouteRemove(int argc, char *argv[]);
+#if OPENTHREAD_FTD
     void ProcessRouter(int argc, char *argv[]);
     void ProcessRouterDowngradeThreshold(int argc, char *argv[]);
     void ProcessRouterRole(int argc, char *argv[]);
     void ProcessRouterSelectionJitter(int argc, char *argv[]);
-    ThreadError ProcessRouteAdd(int argc, char *argv[]);
-    ThreadError ProcessRouteRemove(int argc, char *argv[]);
     void ProcessRouterUpgradeThreshold(int argc, char *argv[]);
+#endif
     void ProcessRloc16(int argc, char *argv[]);
     void ProcessScan(int argc, char *argv[]);
     void ProcessSingleton(int argc, char *argv[]);

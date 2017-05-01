@@ -31,6 +31,8 @@
  *   This file implements the Joiner Router role.
  */
 
+#if OPENTHREAD_FTD
+
 #define WPP_NAME "joiner_router.tmh"
 
 #ifdef OPENTHREAD_CONFIG_FILE
@@ -38,8 +40,6 @@
 #else
 #include <openthread-config.h>
 #endif
-
-#if OPENTHREAD_FTD
 
 #include <stdio.h>
 

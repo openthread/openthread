@@ -32,6 +32,8 @@
  *
  */
 
+#if OPENTHREAD_FTD
+
 #define WPP_NAME "dataset_manager.tmh"
 
 #ifdef OPENTHREAD_CONFIG_FILE
@@ -59,8 +61,6 @@
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
 #include <meshcop/leader.hpp>
-
-#if OPENTHREAD_FTD
 
 namespace ot {
 namespace MeshCoP {
