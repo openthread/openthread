@@ -161,14 +161,6 @@ public:
      */
     virtual ThreadError RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch);
 
-    /**
-     * This method returns a reference to the address resolver object.
-     *
-     * @returns A reference to the address resolver object.
-     *
-     */
-    AddressResolver &GetAddressResolver(void) { return mAddressResolver; }
-
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     /**
      * This method returns a reference to the network diagnostic object.
