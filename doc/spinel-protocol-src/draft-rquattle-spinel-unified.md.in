@@ -1,24 +1,25 @@
 %%%
-    title       = "Spinel Host-Controller Protocol"
-    abbrev      = "Spinel Protocol (@SOURCE_VERSION@)"
-    category    = "info"
-    docName     = "draft-rquattle-spinel-unified-@SOURCE_VERSION@"
-    ipr         = "noDerivativesTrust200902"
-    keyword     = ["Spinel", "IPv6", "NCP"]
-    date        = @SOURCE_DATE@
+    title           = "Spinel Host-Controller Protocol"
+    abbrev          = "Spinel Protocol (@SOURCE_VERSION@)"
+    category        = "info"
+    docName         = "draft-rquattle-spinel-unified-@SOURCE_VERSION@"
+    ipr             = "noDerivativesTrust200902"
+    keyword         = ["Spinel", "IPv6", "NCP"]
+    date            = @SOURCE_DATE@
+    submissionType  = "independent"
     
     [pi]
-    editing     = "yes"
-    private     = "OpenThread"
-    compact     = "yes"
-    subcompact  = "yes"
-    comments    = "yes"
+    editing         = "yes"
+    private         = "OpenThread"
+    compact         = "yes"
+    subcompact      = "yes"
+    comments        = "yes"
     
     [[author]]
     initials        = "R."
     surname         = "Quattlebaum"
     fullname        = "Robert S. Quattlebaum"
-    organization    = "Nest Labs"
+    organization    = "Nest Labs, Inc."
     
         [author.address]
         email       = "rquattle@nestlabs.com"
@@ -31,14 +32,14 @@
         country     = "USA"
     
     [[author]]
+    role            = "editor"
     initials        = "j.h."
     surname         = "woodyatt"
     fullname        = "james woodyatt"
-    organization    = "Google, Inc."
-    role            = "editor"
+    organization    = "Nest Labs, Inc."
     
         [author.address]
-        email       = "jhw@google.com"
+        email       = "jhw@nestlabs.com"
         
         [author.address.postal]
         street      = "3400 Hillview Ave."
@@ -57,47 +58,27 @@ While initially designed to support Thread-based NCPs, the NCP protocol
 has been designed with a layered approach that allows it to be easily
 adapted to other network technologies in the future.
 
-.# Status of This Document
+.# Status of This Memo
 
-This document is a work in progress and subject to change.
+This Internet-Draft is submitted in full conformance with the provisions
+of BCP 78 and BCP 79.
+
+This document is not an Internet Standards Track specification; it is
+published for informational purposes.
+
+This document may not be modified, and derivative works of it may not be
+created, and it may not be published except as an Internet-Draft.
 
 .# Copyright Notice
 
-Copyright (c) 2016-2017, Nest Labs, Inc.
-All rights reserved.
+Copyright (c) 2017 IETF Trust and the persons identified as the document
+authors. All rights reserved.
 
-<!-- RQ
-  -- We may want to consider a license more appropriate for documentation.
-  -->
-
-<!-- jhw
-  -- I have set the IPR field in the preamble to 'noDerivativesTrust200902'
-     while we are not ready to give change control of Spinel to IETF.
-  -->
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright
-   notice, this list of conditions and the following disclaimer.
-2. Redistributions in binary form must reproduce the above copyright
-   notice, this list of conditions and the following disclaimer in the
-   documentation and/or other materials provided with the distribution.
-3. Neither the name of the copyright holder nor the
-   names of its contributors may be used to endorse or promote products
-   derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
+This document is subject to BCP 78 and the IETF Trust’s Legal Provisions
+Relating to IETF Documents (http://trustee.ietf.org/license-info) in effect
+on the date of publication of this document. Please review these documents
+carefully, as they describe your rights and restrictions with respect to
+this document.
 
 {mainmatter}
 
@@ -360,14 +341,9 @@ is meaningless.
 
 # Acknowledgments #
 
-Special thanks to Abtin Keshavarzian, Martin Turon, Arjuna Sivasithambaresan
-and Jonathan Hui for their substantial contributions and feedback related
-to this document.
-
-<!-- RQ
-  -- If I have missed anyone who has contributed to this document,
-     please let me know ASAP.
-  -->
+Special thanks to Nick Banks, Jonathan Hui, Abtin Keshavarzian, Piotr
+Szkotak, Arjuna Sivasithambaresan and Martin Turon for their substantial
+contributions and feedback related to this document.
 
 This document was prepared using [mmark](https://github.com/miekg/mmark)
 by (Miek Gieben) and [xml2rfc (version 2)](http://xml2rfc.ietf.org/).
