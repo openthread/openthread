@@ -127,7 +127,7 @@ void efr32RadioInit(void)
         assert(false);
     }
 
-    RAIL_TxPowerSet(0);
+    RAIL_TxPowerSet(OPENTHREAD_CONFIG_DEFAULT_MAX_TRANSMIT_POWER);
 
     otLogInfoPlat(sInstance, "Initialized", NULL);
 }
