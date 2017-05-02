@@ -69,7 +69,7 @@ ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint1
     ThreadError error = kThreadError_None;
     uint8_t channel = 0;
 
-    VerifyOrExit(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
+    otEXPECT_ACTION(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
 
     /* disable radio*/
     if (otPlatRadioIsEnabled(sInstance))

@@ -68,7 +68,7 @@ ThreadError otPlatUartEnable(void)
     /* UART in embARC */
     consoleUart = uart_get_dev(BOARD_CONSOLE_UART_ID);
 
-    VerifyOrExit(!(consoleUart == NULL), DBG("Console UART is missing.\r\n"));
+    otEXPECT_ACTION(!(consoleUart == NULL), DBG("Console UART is missing.\r\n"));
 
     stateUart = consoleUart->uart_open(BOARD_CONSOLE_UART_BAUD);
 
@@ -103,7 +103,7 @@ ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(sTransmitBuffer == NULL, error = kThreadError_Busy);
+    otEXPECT_ACTION(sTransmitBuffer == NULL, error = kThreadError_Busy);
 
     sTransmitBuffer = aBuf;
     sTransmitLength = aBufLength;
@@ -119,7 +119,7 @@ void processReceive(void)
     uint16_t remaining;
 
     consoleUart->uart_control(UART_CMD_GET_RXAVAIL, (void *)(&rdAvail));
-    VerifyOrExit(rdAvail > 0, ;);
+    otEXPECT_ACTION(rdAvail > 0, ;);
 
     remaining = kReceiveBufferSize - sReceiveHead;
 
@@ -151,7 +151,7 @@ exit:
 
 void processTransmit(void)
 {
-    VerifyOrExit(sTransmitBuffer != NULL, ;);
+    otEXPECT_ACTION(sTransmitBuffer != NULL, ;);
 
     consoleUart->uart_write((void *)sTransmitBuffer, (int32_t)sTransmitLength);
 

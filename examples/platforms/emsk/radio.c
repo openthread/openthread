@@ -435,8 +435,8 @@ void readFrame(void)
 
     memset(readBuffer, 0, MRF24J40_RXFIFO_SIZE);
 
-    VerifyOrExit(sState == kStateReceive || sState == kStateTransmit, ;);
-    VerifyOrExit(Mrf24StatusRx, ;);
+    otEXPECT_ACTION(sState == kStateReceive || sState == kStateTransmit, ;);
+    otEXPECT_ACTION(Mrf24StatusRx, ;);
 
     if (Mrf24StatusRx == 1)
     {
@@ -451,7 +451,7 @@ void readFrame(void)
     /* Read length */
     length = (uint16_t)mrf24j40_rxpkt_intcb(readBuffer, &readPlqi, &readRssi);
 
-    VerifyOrExit(IEEE802154_MIN_LENGTH <= length && length <= IEEE802154_MAX_LENGTH, ;);
+    otEXPECT_ACTION(IEEE802154_MIN_LENGTH <= length && length <= IEEE802154_MAX_LENGTH, ;);
 
     /* Read PSDU */
     memcpy(sReceiveFrame.mPsdu, readBuffer, length - 2);
