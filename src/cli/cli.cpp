@@ -151,7 +151,9 @@ const struct Command Interpreter::sCommands[] =
     { "masterkey", &Interpreter::ProcessMasterKey },
     { "mode", &Interpreter::ProcessMode },
     { "netdataregister", &Interpreter::ProcessNetworkDataRegister },
+#if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     { "networkdiagnostic", &Interpreter::ProcessNetworkDiagnostic },
+#endif // OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
 #if OPENTHREAD_FTD
     { "networkidtimeout", &Interpreter::ProcessNetworkIdTimeout },
 #endif
@@ -238,7 +240,9 @@ Interpreter::Interpreter(otInstance *aInstance):
 #else
     memset(mSlaacAddresses, 0, sizeof(mSlaacAddresses));
     otSetStateChangedCallback(mInstance, &Interpreter::s_HandleNetifStateChanged, this);
+#if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     otThreadSetReceiveDiagnosticGetCallback(mInstance, &Interpreter::s_HandleDiagnosticGetResponse, this);
+#endif
 
     mIcmpHandler.mReceiveCallback = Interpreter::s_HandleIcmpReceive;
     mIcmpHandler.mContext         = this;
@@ -3030,6 +3034,7 @@ exit:
     return;
 }
 
+#if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
 void Interpreter::ProcessNetworkDiagnostic(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
@@ -3068,6 +3073,7 @@ void Interpreter::ProcessNetworkDiagnostic(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
+#endif // OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
 
 #ifndef OTDLL
 void Interpreter::s_HandleDiagnosticGetResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo,

@@ -226,7 +226,9 @@ private:
     void ProcessMasterKey(int argc, char *argv[]);
     void ProcessMode(int argc, char *argv[]);
     void ProcessNetworkDataRegister(int argc, char *argv[]);
+#if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     void ProcessNetworkDiagnostic(int argc, char *argv[]);
+#endif // OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
 #if OPENTHREAD_FTD
     void ProcessNetworkIdTimeout(int argc, char *argv[]);
 #endif

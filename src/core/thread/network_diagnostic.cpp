@@ -58,6 +58,8 @@
 
 using ot::Encoding::BigEndian::HostSwap16;
 
+#if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
+
 namespace ot {
 
 namespace NetworkDiagnostic {
@@ -642,3 +644,5 @@ exit:
 }  // namespace NetworkDiagnostic
 
 }  // namespace ot
+
+#endif // OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
