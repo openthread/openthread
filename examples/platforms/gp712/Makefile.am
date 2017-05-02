@@ -28,9 +28,9 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-lib_LIBRARIES                             = libopenthread-rpi_qorvo.a
+lib_LIBRARIES                             = libopenthread-gp712.a
 
-libopenthread_rpi_qorvo_a_CPPFLAGS       =  \
+libopenthread_gp712_a_CPPFLAGS       =  \
     -I$(top_srcdir)/include                 \
     -I$(top_srcdir)/examples/platforms      \
     -I$(top_srcdir)/examples/platforms/utils\
@@ -39,13 +39,13 @@ libopenthread_rpi_qorvo_a_CPPFLAGS       =  \
     -lpthread   \
     $(NULL)
 
-libopenthread_rpi_qorvo_settings.cpp: $(srcdir)/../utils/settings.cpp
+libopenthread_gp712_settings.cpp: $(srcdir)/../utils/settings.cpp
 	cp $? $@
 
-CLEANFILES = libopenthread_rpi_qorvo_settings.cpp
+CLEANFILES = libopenthread_gp712_settings.cpp
 
-libopenthread_rpi_qorvo_a_SOURCES        = \
-    libopenthread_rpi_qorvo_settings.cpp   \
+libopenthread_gp712_a_SOURCES        = \
+    libopenthread_gp712_settings.cpp   \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE

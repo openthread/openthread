@@ -1,6 +1,6 @@
-# OpenThread on Qorvo RPi Example
+# OpenThread on Qorvo gp712 Example
 
-This directory contains example platform drivers for Qorvo RPi.
+This directory contains example platform drivers for Qorvo gp712 on RPi.
 
 ## Toolchain
 
@@ -19,11 +19,11 @@ The build process will complain if additional packages are required.
 ```bash
 $ cd <path-to-openthread>
 $ ./bootstrap
-$ COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-RPi-Qorvo
+$ COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-gp712
 ```
 
 After a successful build, the `elf` files are found in
-`<path-to-openthread>/output/<platform>/bin`.
+`<path-to-openthread>/output/gp712/bin`.
 
 ## 
 

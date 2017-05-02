@@ -1053,11 +1053,11 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_BORDER_ROUTER],[${OPENTHREAD_ENABLE_BORDER
 
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
-        [Specify the examples from one of: none, posix, cc2538, cc2650, da15000, efr32, emsk, kw41z, nrf52840 @<:@default=none@:>@.])],
+        [Specify the examples from one of: none, posix, cc2538, cc2650, da15000, efr32, emsk, kw41z, nrf52840, gp712 @<:@default=none@:>@.])],
     [
         case "${with_examples}" in
 
-        none|posix|cc2538|cc2650|da15000|efr32|emsk|kw41z|nrf52840)
+        none|posix|cc2538|cc2650|da15000|efr32|emsk|kw41z|nrf52840|gp712)
             ;;
         *)
             AC_MSG_ERROR([Invalid value ${with_examples} for --with-examples])
@@ -1110,9 +1110,9 @@ case ${with_examples} in
         AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_NRF52840],[${OPENTHREAD_EXAMPLES_NRF52840}],[Define to 1 if you want to use nrf52840 examples])
         ;;
 
-    rpi_qorvo)
-        OPENTHREAD_EXAMPLES_RPI_QORVO=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_RPI_QORVO],[${OPENTHREAD_EXAMPLES_RPI_QORVO}],[Define to 1 if you want to use rpi_qorvo examples])
+    gp712)
+        OPENTHREAD_EXAMPLES_GP712=1
+        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_GP712],[${OPENTHREAD_EXAMPLES_GP712}],[Define to 1 if you want to use gp712 examples])
         ;;
 esac
 
@@ -1147,8 +1147,8 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_KW41Z], [test "${OPENTHREAD_EXAMPLES}" = "kw
 AC_SUBST(OPENTHREAD_EXAMPLES_NRF52840)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52840], [test "${OPENTHREAD_EXAMPLES}" = "nrf52840"])
 
-AC_SUBST(OPENTHREAD_EXAMPLES_RPI_QORVO)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_RPI_QORVO], [test "${OPENTHREAD_EXAMPLES}" = "rpi_qorvo"])
+AC_SUBST(OPENTHREAD_EXAMPLES_GP712)
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_GP712], [test "${OPENTHREAD_EXAMPLES}" = "gp712"])
 
 #
 # Platform Information
@@ -1313,7 +1313,7 @@ examples/platforms/efr32/Makefile
 examples/platforms/emsk/Makefile
 examples/platforms/kw41z/Makefile
 examples/platforms/nrf52840/Makefile
-examples/platforms/rpi_qorvo/Makefile
+examples/platforms/gp712/Makefile
 examples/platforms/posix/Makefile
 examples/platforms/utils/Makefile
 tools/Makefile

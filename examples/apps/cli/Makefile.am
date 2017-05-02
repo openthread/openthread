@@ -143,6 +143,14 @@ LDFLAGS_COMMON                                                        += \
     $(NULL)
 endif # OPENTHREAD_EXAMPLES_KW41Z
 
+if OPENTHREAD_EXAMPLES_GP712
+LDADD_COMMON                                                          += \
+    $(top_builddir)/examples/platforms/gp712/libopenthread-gp712.a       \
+    $(top_srcdir)/third_party/Qorvo/gp712/libQorvoRPi.a                  \
+    $(NULL)
+
+endif # OPENTHREAD_EXAMPLES_GP712
+
 if OPENTHREAD_ENABLE_CLI_FTD
 bin_PROGRAMS                                                          += \
     ot-cli-ftd                                                           \

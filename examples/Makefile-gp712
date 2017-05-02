@@ -29,8 +29,8 @@
 .NOTPARALLEL:
 
 TARGET        = arm-bcm2708hardfp-linux-gnueabi
-PPREFIX       = rpi_qorvo
-INFO          = RPI_QORVO
+PPREFIX       = gp712
+INFO          = GP712
 #CROSS_COMPILE = $(TARGET)-
 
 AR                              = $(CROSS_COMPILE)ar
