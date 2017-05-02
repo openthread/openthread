@@ -58,8 +58,12 @@ Local::Local(ThreadNetif &aThreadNetif):
 ThreadError Local::AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, int8_t aPrf,
                                    uint8_t aFlags, bool aStable)
 {
+    ThreadError error = kThreadError_None;
     PrefixTlv *prefixTlv;
     BorderRouterTlv *brTlv;
+
+    VerifyOrExit(memcmp(aPrefix, mNetif.GetMle().GetMeshLocalPrefix(), aPrefixLength / 8),
+                 error = kThreadError_InvalidArgs);
 
     RemoveOnMeshPrefix(aPrefix, aPrefixLength);
 
@@ -85,7 +89,9 @@ ThreadError Local::AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength
     ClearResubmitDelayTimer();
 
     otDumpDebgNetData(GetInstance(), "add prefix done", mTlvs, mLength);
-    return kThreadError_None;
+
+exit:
+    return error;
 }
 
 ThreadError Local::RemoveOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
