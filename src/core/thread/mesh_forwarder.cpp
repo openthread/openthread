@@ -1491,12 +1491,16 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
                 child->SetIndirectFragmentOffset(0);
                 child->SetIndirectMessage(NULL);
 
-                // add short address for subsequent indirect messages after
-                // one indirect message to valid sleepy devices is sent out successfully
-                if (aError == kThreadError_None)
-                {
-                    mSourceMatchController.SetSrcMatchAsShort(*child, true);
-                }
+                // Enable short source address matching after the first indirect
+                // message transmission attempt to the child. We intentionally do
+                // not check for successful tx here to address the scenario where
+                // the child does receive "Child ID Response" but parent misses the
+                // 15.4 ack from child. If the "Child ID Response" does not make it
+                // to the child, then the child will need to send a new "Child ID
+                // Request" which will cause the parent to switch to using long
+                // address mode for source address matching.
+
+                mSourceMatchController.SetSrcMatchAsShort(*child, true);
             }
 
             childIndex = mNetif.GetMle().GetChildIndex(*child);
