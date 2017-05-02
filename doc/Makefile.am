@@ -34,8 +34,8 @@ EXTRA_DIST                                      = \
     $(srcdir)/images/Open-Thread-Logo-200x42.png  \
     $(srcdir)/images/openthread_contrib.png       \
     $(srcdir)/images/openthread_logo.png          \
-    draft-spinel-protocol.txt                     \
-    draft-spinel-protocol.html                    \
+    draft-rquattle-spinel-unified.html            \
+    draft-rquattle-spinel-unified.txt             \
     $(NULL)
 
 #
