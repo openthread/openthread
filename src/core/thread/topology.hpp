@@ -347,8 +347,6 @@ private:
  */
 class Child : public Neighbor
 {
-    friend class SourceMatchController;
-
 public:
     enum
     {
