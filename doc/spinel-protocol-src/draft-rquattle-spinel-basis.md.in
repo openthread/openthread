@@ -1,24 +1,24 @@
 %%%
-    title       = "Spinel: A basis for control and management of network interface co-processors"
-    abbrev      = "Spinel Basis (@SOURCE_VERSION@)"
-    category    = "std"
-    docName     = "draft-rquattle-spinel-basis-@SOURCE_VERSION@"
-    ipr         = "trust200902"
-    keyword     = ["Spinel", "IPv6", "NCP"]
-    date        = @SOURCE_DATE@
+    title           = "Spinel: A protocol basis for control and management of IPv6 network interface co-processors"
+    abbrev          = "Spinel Basis"
+    category        = "std"
+    docName         = "draft-rquattle-spinel-basis"
+    ipr             = "trust200902"
+    keyword         = ["Spinel", "IPv6", "NCP"]
+    date            = @SOURCE_DATE@
     
     [pi]
-    editing     = "yes"
-    private     = "OpenThread"
-    compact     = "yes"
-    subcompact  = "yes"
-    comments    = "yes"
+    editing         = "yes"
+    private         = "OpenThread"
+    compact         = "yes"
+    subcompact      = "yes"
+    comments        = "yes"
     
     [[author]]
     initials        = "R."
     surname         = "Quattlebaum"
     fullname        = "Robert S. Quattlebaum"
-    organization    = "Nest Labs"
+    organization    = "Nest Labs, Inc."
     
         [author.address]
         email       = "rquattle@nestlabs.com"
@@ -34,11 +34,11 @@
     initials        = "j.h."
     surname         = "woodyatt"
     fullname        = "james woodyatt"
-    organization    = "Google, Inc."
+    organization    = "Nest Labs, Inc."
     role            = "editor"
     
         [author.address]
-        email       = "jhw@google.com"
+        email       = "jhw@nestlabs.com"
         
         [author.address.postal]
         street      = "3400 Hillview Ave."
@@ -51,6 +51,16 @@
 .# Abstract
 
 This document specifies the basis of the Spinel protocol, which facilitates the control and management of IPv6 network interfaces in nodes where general purpose application processors offload network functions at their interfaces to network co-processors (NCP) connected by simple communication links like serial data channels. Spinel was initially designed for use with Thread network co-processors, but its basis is general purpose and intended to be easily adapted to other types of IPv6 network interface.
+
+.# Status of This Memo
+
+This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.
+
+.# Copyright Notice
+
+Copyright (c) 2017 IETF Trust and the persons identified as the document authors. All rights reserved.
+
+This document is subject to BCP 78 and the IETF Trust’s Legal Provisions Relating to IETF Documents (http://trustee.ietf.org/license-info) in effect on the date of publication of this document. Please review these documents carefully, as they describe your rights and restrictions with respect to this document. Code Components extracted from this document must include Simplified BSD License text as described in Section 4.e of the Trust Legal Provisions and are provided without warranty as described in the Simplified BSD License.
 
 {mainmatter}
 
@@ -175,10 +185,6 @@ These types of properties generally do not support `VALUE_GET`, as it is meaning
 
 # Acknowledgments #
 
-Special thanks to Abtin Keshavarzian, Martin Turon, Arjuna Sivasithambaresan and Jonathan Hui for their substantial contributions and feedback related to this document.
-
-<!-- Editor
-  -- If we have missed anyone who has contributed to this document, please let the editor know ASAP.
-  -->
+Special thanks to Nick Banks, Jonathan Hui, Abtin Keshavarzian, Piotr Szkotak, Arjuna Sivasithambaresan and Martin Turon for their substantial contributions and feedback related to this document.
 
 This document was prepared using [mmark](https://github.com/miekg/mmark) by (Miek Gieben) and [xml2rfc (version 2)](http://xml2rfc.ietf.org/).

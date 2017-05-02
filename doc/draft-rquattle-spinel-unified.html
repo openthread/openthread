@@ -385,7 +385,7 @@
 <link href="#rfc.section.2" rel="Chapter" title="2 Frame Format"/>
 <link href="#rfc.section.2.1" rel="Chapter" title="2.1 Header Format"/>
 <link href="#rfc.section.2.1.1" rel="Chapter" title="2.1.1 FLG: Flag"/>
-<link href="#rfc.section.2.1.2" rel="Chapter" title="2.1.2 IID: Interface Identifier"/>
+<link href="#rfc.section.2.1.2" rel="Chapter" title="2.1.2 NLI: Network Link Identifier"/>
 <link href="#rfc.section.2.1.3" rel="Chapter" title="2.1.3 TID: Transaction Identifier"/>
 <link href="#rfc.section.2.1.4" rel="Chapter" title="2.1.4 Command Identifier (CMD)"/>
 <link href="#rfc.section.2.1.5" rel="Chapter" title="2.1.5 Command Payload (Optional)"/>
@@ -462,7 +462,9 @@
 <link href="#rfc.section.5.6.7" rel="Chapter" title="5.6.7 PROP 70: PROP_NET_MASTER_KEY"/>
 <link href="#rfc.section.5.6.8" rel="Chapter" title="5.6.8 PROP 71: PROP_NET_KEY_SEQUENCE_COUNTER"/>
 <link href="#rfc.section.5.6.9" rel="Chapter" title="5.6.9 PROP 72: PROP_NET_PARTITION_ID"/>
-<link href="#rfc.section.5.6.10" rel="Chapter" title="5.6.10 PROP 73: PROP_NET_KEY_SWITCH_GUARDTIME"/>
+<link href="#rfc.section.5.6.10" rel="Chapter" title="5.6.10 PROP 73: PROP_NET_REQUIRE_JOIN_EXISTING"/>
+<link href="#rfc.section.5.6.11" rel="Chapter" title="5.6.11 PROP 74: PROP_NET_KEY_SWITCH_GUARDTIME"/>
+<link href="#rfc.section.5.6.12" rel="Chapter" title="5.6.12 PROP 75: PROP_NET_PSKC"/>
 <link href="#rfc.section.5.7" rel="Chapter" title="5.7 IPv6 Properties"/>
 <link href="#rfc.section.5.7.1" rel="Chapter" title="5.7.1 PROP 96: PROP_IPV6_LL_ADDR"/>
 <link href="#rfc.section.5.7.2" rel="Chapter" title="5.7.2 PROP 97: PROP_IPV6_ML_ADDR"/>
@@ -471,6 +473,7 @@
 <link href="#rfc.section.5.7.5" rel="Chapter" title="5.7.5 PROP 101: PROP_IPv6_ICMP_PING_OFFLOAD"/>
 <link href="#rfc.section.5.8" rel="Chapter" title="5.8 Debug Properties"/>
 <link href="#rfc.section.5.8.1" rel="Chapter" title="5.8.1 PROP 16384: SPINEL_PROP_DEBUG_TEST_ASSERT"/>
+<link href="#rfc.section.5.8.2" rel="Chapter" title="5.8.2 PROP 16385: SPINEL_PROP_DEBUG_NCP_LOG_LEVEL"/>
 <link href="#rfc.section.6" rel="Chapter" title="6 Status Codes"/>
 <link href="#rfc.section.7" rel="Chapter" title="7 Technology: Thread"/>
 <link href="#rfc.section.7.1" rel="Chapter" title="7.1 Thread Capabilities"/>
@@ -505,6 +508,10 @@
 <link href="#rfc.section.7.2.28" rel="Chapter" title="7.2.28 PROP 5388: PROP_THREAD_CHILD_COUNT_MAX"/>
 <link href="#rfc.section.7.2.29" rel="Chapter" title="7.2.29 PROP 5389: PROP_THREAD_LEADER_NETWORK_DATA"/>
 <link href="#rfc.section.7.2.30" rel="Chapter" title="7.2.30 PROP 5390: PROP_THREAD_STABLE_LEADER_NETWORK_DATA"/>
+<link href="#rfc.section.7.2.31" rel="Chapter" title="7.2.31 PROP 5391: PROP_THREAD_JOINERS"/>
+<link href="#rfc.section.7.2.32" rel="Chapter" title="7.2.32 PROP 5392: PROP_THREAD_COMMISSIONER_ENABLED"/>
+<link href="#rfc.section.7.2.33" rel="Chapter" title="7.2.33 PROP 5393: PROP_THREAD_BA_PROXY_ENABLED"/>
+<link href="#rfc.section.7.2.34" rel="Chapter" title="7.2.34 PROP 5394: PROP_THREAD_BA_PROXY_STREAM"/>
 <link href="#rfc.section.8" rel="Chapter" title="8 Feature: Network Save"/>
 <link href="#rfc.section.8.1" rel="Chapter" title="8.1 Commands"/>
 <link href="#rfc.section.8.1.1" rel="Chapter" title="8.1.1 CMD 9: (Host-&gt;NCP) CMD_NET_SAVE"/>
@@ -574,17 +581,17 @@
 <link href="#rfc.appendix.C.8" rel="Chapter" title="C.8 Adding an on-mesh prefix"/>
 <link href="#rfc.appendix.C.9" rel="Chapter" title="C.9 Entering low-power modes"/>
 <link href="#rfc.appendix.C.10" rel="Chapter" title="C.10 Sniffing raw packets"/>
-<link href="#rfc.appendix.D" rel="Chapter" title="D Acknowledgments"/>
-<link href="#rfc.appendix.E" rel="Chapter" title="E Glossary"/>
+<link href="#rfc.appendix.D" rel="Chapter" title="D Glossary"/>
+<link href="#rfc.appendix.E" rel="Chapter" title="E Acknowledgments"/>
 <link href="#rfc.authors" rel="Chapter"/>
 
 
-  <meta name="generator" content="xml2rfc version 2.5.1 - http://tools.ietf.org/tools/xml2rfc" />
+  <meta name="generator" content="xml2rfc version 2.5.2 - http://tools.ietf.org/tools/xml2rfc" />
   <link rel="schema.dct" href="http://purl.org/dc/terms/" />
 
-  <meta name="dct.creator" content="Quattlebaum, R." />
-  <meta name="dct.identifier" content="urn:ietf:id:draft-spinel-protocol-6d981f72" />
-  <meta name="dct.issued" scheme="ISO8601" content="2017-3-20" />
+  <meta name="dct.creator" content="Quattlebaum, R. and j. woodyatt" />
+  <meta name="dct.identifier" content="urn:ietf:id:draft-rquattle-spinel-unified-86157e99-dirty" />
+  <meta name="dct.issued" scheme="ISO8601" content="2017-5-1" />
   <meta name="dct.abstract" content="This document describes a general management protocol for enabling a host device to communicate with and manage a Network Control Processor (NCP).  " />
   <meta name="description" content="This document describes a general management protocol for enabling a host device to communicate with and manage a Network Control Processor (NCP).  " />
 
@@ -601,11 +608,15 @@
 </tr>
 <tr>
   <td class="left"></td>
-  <td class="right">Nest Labs</td>
+  <td class="right">j. woodyatt</td>
 </tr>
 <tr>
   <td class="left"></td>
-  <td class="right">March 20, 2017</td>
+  <td class="right">Nest Labs, Inc.</td>
+</tr>
+<tr>
+  <td class="left"></td>
+  <td class="right">May 1, 2017</td>
 </tr>
 
     	
@@ -613,7 +624,7 @@
   </table>
 
   <p class="title">Spinel Host-Controller Protocol<br />
-  <span class="filename">draft-spinel-protocol-6d981f72</span></p>
+  <span class="filename">draft-rquattle-spinel-unified-86157e99-dirty</span></p>
   
   <h1 id="rfc.abstract">
   <a href="#rfc.abstract">Abstract</a>
@@ -621,27 +632,16 @@
 <p>This document describes a general management protocol for enabling a host device to communicate with and manage a Network Control Processor (NCP).  </p>
 <p>While initially designed to support Thread-based NCPs, the NCP protocol has been designed with a layered approach that allows it to be easily adapted to other network technologies in the future.  </p>
 <h1>
-  <a>Status of This Document</a>
+  <a>Status of This Memo</a>
 </h1>
-<p>This document is a work in progress and subject to change.  </p>
+<p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.  </p>
+<p>This document is not an Internet Standards Track specification; it is published for informational purposes.  </p>
+<p>This document may not be modified, and derivative works of it may not be created, and it may not be published except as an Internet-Draft.  </p>
 <h1>
   <a>Copyright Notice</a>
 </h1>
-<p>Copyright (c) 2016, Nest Labs, Inc.  All rights reserved.  </p>
-<p>
-  <a id="CREF1" class="info">[CREF1]<span class="info">RQ: We may want to consider a license more appropriate for documentation.</span></a>
-</p>
-<p>Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met: </p>
-<p/>
-
-<ol>
-  <li>Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.</li>
-  <li>Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.</li>
-  <li>Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.</li>
-</ol>
-
-<p> </p>
-<p>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  </p>
+<p>Copyright (c) 2017 IETF Trust and the persons identified as the document authors. All rights reserved.  </p>
+<p>This document is subject to BCP 78 and the IETF Trust&#8217;s Legal Provisions Relating to IETF Documents (<span>&lt;</span><a href="http://trustee.ietf.org/license-info">http://trustee.ietf.org/license-info</a><span>&gt;</span>) in effect on the date of publication of this document. Please review these documents carefully, as they describe your rights and restrictions with respect to this document.  </p>
 
   
   <hr class="noprint" />
@@ -659,7 +659,7 @@
 </ul></ul><li>2.   <a href="#rfc.section.2">Frame Format</a></li>
 <ul><li>2.1.   <a href="#rfc.section.2.1">Header Format</a></li>
 <ul><li>2.1.1.   <a href="#rfc.section.2.1.1">FLG: Flag</a></li>
-<li>2.1.2.   <a href="#rfc.section.2.1.2">IID: Interface Identifier</a></li>
+<li>2.1.2.   <a href="#rfc.section.2.1.2">NLI: Network Link Identifier</a></li>
 <li>2.1.3.   <a href="#rfc.section.2.1.3">TID: Transaction Identifier</a></li>
 <li>2.1.4.   <a href="#rfc.section.2.1.4">Command Identifier (CMD)</a></li>
 <li>2.1.5.   <a href="#rfc.section.2.1.5">Command Payload (Optional)</a></li>
@@ -736,7 +736,9 @@
 <li>5.6.7.   <a href="#rfc.section.5.6.7">PROP 70: PROP_NET_MASTER_KEY</a></li>
 <li>5.6.8.   <a href="#rfc.section.5.6.8">PROP 71: PROP_NET_KEY_SEQUENCE_COUNTER</a></li>
 <li>5.6.9.   <a href="#rfc.section.5.6.9">PROP 72: PROP_NET_PARTITION_ID</a></li>
-<li>5.6.10.   <a href="#rfc.section.5.6.10">PROP 73: PROP_NET_KEY_SWITCH_GUARDTIME</a></li>
+<li>5.6.10.   <a href="#rfc.section.5.6.10">PROP 73: PROP_NET_REQUIRE_JOIN_EXISTING</a></li>
+<li>5.6.11.   <a href="#rfc.section.5.6.11">PROP 74: PROP_NET_KEY_SWITCH_GUARDTIME</a></li>
+<li>5.6.12.   <a href="#rfc.section.5.6.12">PROP 75: PROP_NET_PSKC</a></li>
 </ul><li>5.7.   <a href="#rfc.section.5.7">IPv6 Properties</a></li>
 <ul><li>5.7.1.   <a href="#rfc.section.5.7.1">PROP 96: PROP_IPV6_LL_ADDR</a></li>
 <li>5.7.2.   <a href="#rfc.section.5.7.2">PROP 97: PROP_IPV6_ML_ADDR</a></li>
@@ -745,6 +747,7 @@
 <li>5.7.5.   <a href="#rfc.section.5.7.5">PROP 101: PROP_IPv6_ICMP_PING_OFFLOAD</a></li>
 </ul><li>5.8.   <a href="#rfc.section.5.8">Debug Properties</a></li>
 <ul><li>5.8.1.   <a href="#rfc.section.5.8.1">PROP 16384: SPINEL_PROP_DEBUG_TEST_ASSERT</a></li>
+<li>5.8.2.   <a href="#rfc.section.5.8.2">PROP 16385: SPINEL_PROP_DEBUG_NCP_LOG_LEVEL</a></li>
 </ul></ul><li>6.   <a href="#rfc.section.6">Status Codes</a></li>
 <li>7.   <a href="#rfc.section.7">Technology: Thread</a></li>
 <ul><li>7.1.   <a href="#rfc.section.7.1">Thread Capabilities</a></li>
@@ -779,6 +782,10 @@
 <li>7.2.28.   <a href="#rfc.section.7.2.28">PROP 5388: PROP_THREAD_CHILD_COUNT_MAX</a></li>
 <li>7.2.29.   <a href="#rfc.section.7.2.29">PROP 5389: PROP_THREAD_LEADER_NETWORK_DATA</a></li>
 <li>7.2.30.   <a href="#rfc.section.7.2.30">PROP 5390: PROP_THREAD_STABLE_LEADER_NETWORK_DATA</a></li>
+<li>7.2.31.   <a href="#rfc.section.7.2.31">PROP 5391: PROP_THREAD_JOINERS</a></li>
+<li>7.2.32.   <a href="#rfc.section.7.2.32">PROP 5392: PROP_THREAD_COMMISSIONER_ENABLED</a></li>
+<li>7.2.33.   <a href="#rfc.section.7.2.33">PROP 5393: PROP_THREAD_BA_PROXY_ENABLED</a></li>
+<li>7.2.34.   <a href="#rfc.section.7.2.34">PROP 5394: PROP_THREAD_BA_PROXY_STREAM</a></li>
 </ul></ul><li>8.   <a href="#rfc.section.8">Feature: Network Save</a></li>
 <ul><li>8.1.   <a href="#rfc.section.8.1">Commands</a></li>
 <ul><li>8.1.1.   <a href="#rfc.section.8.1.1">CMD 9: (Host-&gt;NCP) CMD_NET_SAVE</a></li>
@@ -848,9 +855,9 @@
 <li>C.8.   <a href="#rfc.appendix.C.8">Adding an on-mesh prefix</a></li>
 <li>C.9.   <a href="#rfc.appendix.C.9">Entering low-power modes</a></li>
 <li>C.10.   <a href="#rfc.appendix.C.10">Sniffing raw packets</a></li>
-</ul><li>Appendix D.   <a href="#rfc.appendix.D">Acknowledgments</a></li>
-<li>Appendix E.   <a href="#rfc.appendix.E">Glossary</a></li>
-<li><a href="#rfc.authors">Author's Address</a></li>
+</ul><li>Appendix D.   <a href="#rfc.appendix.D">Glossary</a></li>
+<li>Appendix E.   <a href="#rfc.appendix.E">Acknowledgments</a></li>
+<li><a href="#rfc.authors">Authors' Addresses</a></li>
 
 
   </ul>
@@ -1023,17 +1030,17 @@
 <pre>
   0   1   2   3   4   5   6   7
 +---+---+---+---+---+---+---+---+
-|  FLG  |  IID  |      TID      |
+|  FLG  |  NLI  |      TID      |
 +---+---+---+---+---+---+---+---+
 </pre>
 <p>
-  <a id="CREF2" class="info">[CREF2]<span class="info">RQ: Eventually, when https://github.com/miekg/mmark/issues/95 is addressed, the above table should be swapped out with this: | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | |---|---|---|---|---|---|---|---| |  FLG ||  IID ||      TID   ||||</span></a>
+  <a id="CREF1" class="info">[CREF1]<span class="info">RQ: Eventually, when https://github.com/miekg/mmark/issues/95 is addressed, the above table should be swapped out with this: | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | |---|---|---|---|---|---|---|---| |  FLG ||  NLI ||      TID   ||||</span></a>
 </p>
 <h1 id="rfc.section.2.1.1"><a href="#rfc.section.2.1.1">2.1.1.</a> <a href="#flg-flag" id="flg-flag">FLG: Flag</a></h1>
 <p id="rfc.section.2.1.1.p.1">The flag field of the header byte (<samp>FLG</samp>) is always set to the value two (or <samp>10</samp> in binary). Any frame received with these bits set to any other value else MUST NOT be considered a Spinel frame.  </p>
 <p id="rfc.section.2.1.1.p.2">This convention allows Spinel to be line compatible with BTLE HCI. By defining the first two bit in this way we can disambiguate between Spinel frames and HCI frames (which always start with either <samp>0x01</samp> or <samp>0x04</samp>) without any additional framing overhead.  </p>
-<h1 id="rfc.section.2.1.2"><a href="#rfc.section.2.1.2">2.1.2.</a> <a href="#iid-interface-identifier" id="iid-interface-identifier">IID: Interface Identifier</a></h1>
-<p id="rfc.section.2.1.2.p.1">The Interface Identifier (IID) is a number between 0 and 3 which identifies which subinterface the frame is intended for. This allows the protocol to support connecting to more than one network at once.  The first subinterface (0) is considered the primary subinterface and MUST be supported. Support for all other subinterfaces is OPTIONAL.  </p>
+<h1 id="rfc.section.2.1.2"><a href="#rfc.section.2.1.2">2.1.2.</a> <a href="#nli-network-link-identifier" id="nli-network-link-identifier">NLI: Network Link Identifier</a></h1>
+<p id="rfc.section.2.1.2.p.1">The Network Link Identifier (NLI) is a number between 0 and 3, which is associated by the OS with one of up to four IPv6 zone indices corresponding to conceptual IPv6 interfaces on the NCP. This allows the protocol to support IPv6 nodes connecting simultaneously to more than one IPv6 network link using a single NCP instance. The first Network Link Identifier (0) MUST refer to a distinguished conceptual interface provided by the NCP for its IPv6 link type. The other three Network Link Identifiers (1, 2 and 3) MAY be dissociated from any conceptual interface.  </p>
 <h1 id="rfc.section.2.1.3"><a href="#rfc.section.2.1.3">2.1.3.</a> <a href="#tid-transaction-identifier" id="tid-transaction-identifier">TID: Transaction Identifier</a></h1>
 <p id="rfc.section.2.1.3.p.1">The least significant bits of the header represent the Transaction Identifier(TID). The TID is used for correlating responses to the commands which generated them.  </p>
 <p id="rfc.section.2.1.3.p.2">When a command is sent from the host, any reply to that command sent by the NCP will use the same value for the TID. When the host receives a frame that matches the TID of the command it sent, it can easily recognize that frame as the actual response to that command.  </p>
@@ -1267,7 +1274,7 @@
 <p id="rfc.section.3.3.p.3">This dichotomy allows for more efficient encoding by eliminating redundency. If the rest of the buffer is a data blob, encoding the length would be redundant because we already know how many bytes are in the rest of the buffer.  </p>
 <p id="rfc.section.3.3.p.4">In some cases we use <samp>d</samp> even if it is the last field in a type signature.  We do this to allow for us to be able to append additional fields to the type signature if necessary in the future. This is usually the case with embedded structs, like in the scan results.  </p>
 <p id="rfc.section.3.3.p.5">For example, let's say we have a buffer that is encoded with the datatype signature of <samp>CLLD</samp>. In this case, it is pretty easy to tell where the start and end of the data blob is: the start is 9 bytes from the start of the buffer, and its length is the length of the buffer minus 9. (9 is the number of bytes taken up by a byte and two longs) </p>
-<p id="rfc.section.3.3.p.6">The datatype signature <samp>CLLDU</samp> is illegal because we can't determine where the last field (a zero-terminated UTF8 string) starts. But the datatype <samp>CLLdU</samp> <em>is</em> legal, because the parser can determine the exact length of the data blob&#8212;allowing it to know where the start of the next field would be.  </p>
+<p id="rfc.section.3.3.p.6">The datatype signature <samp>CLLDU</samp> is illegal because we can't determine where the last field (a zero-terminated UTF8 string) starts. But the datatype <samp>CLLdU</samp> <em>is</em> legal, because the parser can determine the exact length of the data blob-- allowing it to know where the start of the next field would be.  </p>
 <h1 id="rfc.section.3.4"><a href="#rfc.section.3.4">3.4.</a> <a href="#structured-data" id="structured-data">Structured Data</a></h1>
 <p id="rfc.section.3.4.p.1">The structure data type (<samp>t(...)</samp>) is a way of bundling together several fields into a single structure. It can be thought of as a <samp>d</samp> type except that instead of being opaque, the fields in the content are known. This is useful for things like scan results where you have substructures which are defined by different layers.  </p>
 <p id="rfc.section.3.4.p.2">For example, consider the type signature <samp>Lt(ES)t(6C)</samp>. In this hypothetical case, the first struct is defined by the MAC layer, and the second struct is defined by the PHY layer. Because of the use of structures, we know exactly what part comes from that layer.  Additionally, we can add fields to each structure without introducing backward compatability problems: Data encoded as <samp>Lt(ESU)t(6C)</samp> (Notice the extra <samp>U</samp>) will decode just fine as <samp>Lt(ES)t(6C)</samp>. Additionally, if we don't care about the MAC layer and only care about the network layer, we could parse as <samp>Lt()t(6C)</samp>.  </p>
@@ -2005,6 +2012,8 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
   <li>49: <samp>CAP_ROLE_SLEEPY</samp></li>
   <li>52: <samp>CAP_NET_THREAD_1_0</samp></li>
   <li>512: <samp>CAP_MAC_WHITELIST</samp></li>
+  <li>1024: <samp>CAP_THREAD_COMMISSIONER</samp></li>
+  <li>1025: <samp>CAP_THREAD_BA_PROXY</samp></li>
 </ul>
 
 <p> </p>
@@ -2802,12 +2811,30 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 
 <p> </p>
 <p id="rfc.section.5.6.9.p.2">The partition ID of the partition that this node is a member of.  </p>
-<h1 id="rfc.section.5.6.10"><a href="#rfc.section.5.6.10">5.6.10.</a> <a href="#prop-net-key-swtich-guardtime" id="prop-net-key-swtich-guardtime">PROP 73: PROP_NET_KEY_SWITCH_GUARDTIME</a></h1>
+<h1 id="rfc.section.5.6.10"><a href="#rfc.section.5.6.10">5.6.10.</a> <a href="#prop-net-require-join-existing" id="prop-net-require-join-existing">PROP 73: PROP_NET_REQUIRE_JOIN_EXISTING</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>b</samp></li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.section.5.6.11"><a href="#rfc.section.5.6.11">5.6.11.</a> <a href="#prop-net-key-swtich-guardtime" id="prop-net-key-swtich-guardtime">PROP 74: PROP_NET_KEY_SWITCH_GUARDTIME</a></h1>
 <p/>
 
 <ul>
   <li>Type: Read-Write</li>
   <li>Packed-Encoding: <samp>L</samp></li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.section.5.6.12"><a href="#rfc.section.5.6.12">5.6.12.</a> <a href="#prop-net-pskc" id="prop-net-pskc">PROP 75: PROP_NET_PSKC</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>D</samp></li>
 </ul>
 
 <p> </p>
@@ -2885,6 +2912,31 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 
 <p> </p>
 <p id="rfc.section.5.8.1.p.2">Reading this property will cause an assert on the NCP. This is intended for testing the assert functionality of underlying platform/NCP. Assert should ideally cause the NCP to reset, but if <samp>assert</samp> is not supported or disabled boolean value of <samp>false</samp> is returned in response.  </p>
+<h1 id="rfc.section.5.8.2"><a href="#rfc.section.5.8.2">5.8.2.</a> <a href="#prop-debug-ncp-log-level" id="prop-debug-ncp-log-level">PROP 16385: SPINEL_PROP_DEBUG_NCP_LOG_LEVEL</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>C</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.5.8.2.p.2">Provides access to the NCP log level. Currently defined values are (which follows the RFC 5424): </p>
+<p/>
+
+<ul>
+  <li>0: Emergency (emerg).</li>
+  <li>1: Alert (alert).</li>
+  <li>2: Critical (crit).</li>
+  <li>3: Error (err).</li>
+  <li>4: Warning (warn).</li>
+  <li>5: Notice (notice).</li>
+  <li>6: Information (info).</li>
+  <li>7: Debug (debug).</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.5.8.2.p.4">If the NCP supports dynamic log level control, setting this property changes the log level accordingly. Getting the value returns the current log level.  If the dynamic log level control is not supported, setting this property returns a LAST_STATUS with SPINEL_STATUS_INVALID_COMMAND_FOR_PROP status.  </p>
 <h1 id="rfc.section.6"><a href="#rfc.section.6">6.</a> <a href="#status-codes" id="status-codes">Status Codes</a></h1>
 <p id="rfc.section.6.p.1">Status codes are sent from the NCP to the host via <samp>PROP_LAST_STATUS</samp> using the <samp>CMD_VALUE_IS</samp> command to indicate the return status of a previous command. As with any response, the TID field of the FLAG byte is used to correlate the response with the request.  </p>
 <p id="rfc.section.6.p.2">Note that most successfully executed commands do not indicate a last status of <samp>STATUS_OK</samp>. The usual way the NCP indicates a successful command is to mirror the property change back to the host. For example, if you do a <samp>CMD_VALUE_SET</samp> on <samp>PROP_PHY_ENABLED</samp>, the NCP would indicate success by responding with a <samp>CMD_VALUE_IS</samp> for <samp>PROP_PHY_ENABLED</samp>. If the command failed, <samp>PROP_LAST_STATUS</samp> would be emitted instead.  </p>
@@ -3278,6 +3330,90 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 
 <p> </p>
 <p id="rfc.section.7.2.30.p.2">The stable leader network data.  </p>
+<h1 id="rfc.section.7.2.31"><a href="#rfc.section.7.2.31">7.2.31.</a> <a href="#prop-thread-joiners" id="prop-thread-joiners">PROP 5391: PROP_THREAD_JOINERS</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Insert/Remove Only (optionally Read-Write)</li>
+  <li>Packed-Encoding: <samp>A(t(ULE))</samp></li>
+  <li>Required capability: <samp>CAP_THREAD_COMMISSIONER</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.2.31.p.2">Data per item is: </p>
+<p/>
+
+<ul>
+  <li><samp>U</samp>: PSKd</li>
+  <li><samp>L</samp>: Timeout in seconds</li>
+  <li><samp>E</samp>: Extended/long address (optional)</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.2.31.p.4">Passess Pre-Shared Key for the Device to the NCP in the commissioning process.  When the Extended address is ommited all Devices which provided a valid PSKd are allowed to join the Thread Network.  </p>
+<h1 id="rfc.section.7.2.32"><a href="#rfc.section.7.2.32">7.2.32.</a> <a href="#prop-thread-commissioner-enabled" id="prop-thread-commissioner-enabled">PROP 5392: PROP_THREAD_COMMISSIONER_ENABLED</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Write only (optionally Read-Write)</li>
+  <li>Packed-Encoding: <samp>b</samp></li>
+  <li>Required capability: <samp>CAP_THREAD_COMMISSIONER</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.2.32.p.2">Set to true to enable the native commissioner. It is mandatory before adding the joiner to the network.  </p>
+<h1 id="rfc.section.7.2.33"><a href="#rfc.section.7.2.33">7.2.33.</a> <a href="#prop-thread-ba-proxy-enabled" id="prop-thread-ba-proxy-enabled">PROP 5393: PROP_THREAD_BA_PROXY_ENABLED</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>b</samp></li>
+  <li>Required capability: <samp>CAP_THREAD_BA_PROXY</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.2.33.p.2">Set to true to enable the border agent proxy.  </p>
+<h1 id="rfc.section.7.2.34"><a href="#rfc.section.7.2.34">7.2.34.</a> <a href="#prop-thread-ba-proxy-stream" id="prop-thread-ba-proxy-stream">PROP 5394: PROP_THREAD_BA_PROXY_STREAM</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write-Stream</li>
+  <li>Packed-Encoding: <samp>dSS</samp></li>
+  <li>Required capability: <samp>CAP_THREAD_BA_PROXY</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.7.2.34.p.2">Data per item is: </p>
+<p/>
+
+<ul>
+  <li><samp>d</samp>: CoAP frame</li>
+  <li><samp>S</samp>: source/destination RLOC/ALOC</li>
+  <li><samp>S</samp>: source/destination port</li>
+</ul>
+
+<p> </p>
+<table cellpadding="3" cellspacing="0" class="tt full center">
+  <thead>
+    <tr>
+      <th class="center">Octects:</th>
+      <th class="center">2</th>
+      <th class="center">n</th>
+      <th class="center">2</th>
+      <th class="center">2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="center">Fields:</td>
+      <td class="center">Length</td>
+      <td class="center">CoAP</td>
+      <td class="center">locator</td>
+      <td class="center">port</td>
+    </tr>
+  </tbody>
+</table>
+<p id="rfc.section.7.2.34.p.4">This property allows the host to send and receive border-agent-related CoAP requests/responses from the NCP's RLOC address. This allows the host driver to implement a Thread border agent.  </p>
 <h1 id="rfc.section.8"><a href="#rfc.section.8">8.</a> <a href="#feature-network-save" id="feature-network-save">Feature: Network Save</a></h1>
 <p id="rfc.section.8.p.1">The network save/recall feature is an optional NCP capability that, when present, allows the host to save and recall network credentials and state to and from nonvolatile storage.  </p>
 <p id="rfc.section.8.p.2">The presence of the save/recall feature can be detected by checking for the presence of the <samp>CAP_NET_SAVE</samp> capability in <samp>PROP_CAPS</samp>.  </p>
@@ -3886,12 +4022,12 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 <h1 id="rfc.appendix.A.3"><a href="#rfc.appendix.A.3">A.3.</a> <a href="#i2c-recommendations" id="i2c-recommendations">I&#178;C Recommendations</a></h1>
 <p id="rfc.section.A.3.p.1">TBD </p>
 <p>
-  <a id="CREF3" class="info">[CREF3]<span class="info">RQ: It may make sense to have a look at what Bluetooth HCI is doing for native I&#178;C framing and go with that.</span></a>
+  <a id="CREF2" class="info">[CREF2]<span class="info">RQ: It may make sense to have a look at what Bluetooth HCI is doing for native I&#178;C framing and go with that.</span></a>
 </p>
 <h1 id="rfc.appendix.A.4"><a href="#rfc.appendix.A.4">A.4.</a> <a href="#native-usb-recommendations" id="native-usb-recommendations">Native USB Recommendations</a></h1>
 <p id="rfc.section.A.4.p.1">TBD </p>
 <p>
-  <a id="CREF4" class="info">[CREF4]<span class="info">RQ: It may make sense to have a look at what Bluetooth HCI is doing for native USB framing and go with that.</span></a>
+  <a id="CREF3" class="info">[CREF3]<span class="info">RQ: It may make sense to have a look at what Bluetooth HCI is doing for native USB framing and go with that.</span></a>
 </p>
 <h1 id="rfc.appendix.B"><a href="#rfc.appendix.B">Appendix B.</a> <a href="#test-vectors" id="test-vectors">Test Vectors</a></h1>
 <h1 id="rfc.appendix.B.1"><a href="#rfc.appendix.B.1">B.1.</a> <a href="#test-vector-packed-unsigned-integer" id="test-vector-packed-unsigned-integer">Test Vector: Packed Unsigned Integer</a></h1>
@@ -3966,13 +4102,13 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
   </tbody>
 </table>
 <p>
-  <a id="CREF5" class="info">[CREF5]<span class="info">RQ: The PUI test-vector encodings need to be verified.</span></a>
+  <a id="CREF4" class="info">[CREF4]<span class="info">RQ: The PUI test-vector encodings need to be verified.</span></a>
 </p>
 <h1 id="rfc.appendix.B.2"><a href="#rfc.appendix.B.2">B.2.</a> <a href="#test-vector-reset-command" id="test-vector-reset-command">Test Vector: Reset Command</a></h1>
 <p/>
 
 <ul>
-  <li>IID: 0</li>
+  <li>NLI: 0</li>
   <li>TID: 0</li>
   <li>CMD: 1 (<samp>CMD_RESET</samp>)</li>
 </ul>
@@ -3986,7 +4122,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 <p/>
 
 <ul>
-  <li>IID: 0</li>
+  <li>NLI: 0</li>
   <li>TID: 0</li>
   <li>CMD: 6 (<samp>CMD_VALUE_IS</samp>)</li>
   <li>PROP: 0 (<samp>PROP_LAST_STATUS</samp>)</li>
@@ -4002,7 +4138,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 <p/>
 
 <ul>
-  <li>IID: 0</li>
+  <li>NLI: 0</li>
   <li>TID: 0</li>
   <li>CMD: 7 (<samp>CMD_VALUE_INSERTED</samp>)</li>
   <li>PROP: 51 (<samp>PROP_MAC_SCAN_BEACON</samp>)</li>
@@ -4019,18 +4155,18 @@ FE
 <h1 id="rfc.appendix.B.5"><a href="#rfc.appendix.B.5">B.5.</a> <a href="#test-vector-inbound-ipv6-packet" id="test-vector-inbound-ipv6-packet">Test Vector: Inbound IPv6 Packet</a></h1>
 <p id="rfc.section.B.5.p.1">CMD_VALUE_IS(PROP_STREAM_NET) </p>
 <p>
-  <a id="CREF6" class="info">[CREF6]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
+  <a id="CREF5" class="info">[CREF5]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
 </p>
 <h1 id="rfc.appendix.B.6"><a href="#rfc.appendix.B.6">B.6.</a> <a href="#test-vector-outbound-ipv6-packet" id="test-vector-outbound-ipv6-packet">Test Vector: Outbound IPv6 Packet</a></h1>
 <p id="rfc.section.B.6.p.1">CMD_VALUE_SET(PROP_STREAM_NET) </p>
 <p>
-  <a id="CREF7" class="info">[CREF7]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
+  <a id="CREF6" class="info">[CREF6]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
 </p>
 <h1 id="rfc.appendix.B.7"><a href="#rfc.appendix.B.7">B.7.</a> <a href="#test-vector-fetch-list-of-onmesh-networks" id="test-vector-fetch-list-of-onmesh-networks">Test Vector: Fetch list of on-mesh networks</a></h1>
 <p/>
 
 <ul>
-  <li>IID: 0</li>
+  <li>NLI: 0</li>
   <li>TID: 4</li>
   <li>CMD: 2 (<samp>CMD_VALUE_GET</samp>)</li>
   <li>PROP: 90 (<samp>PROP_THREAD_ON_MESH_NETS</samp>)</li>
@@ -4045,7 +4181,7 @@ FE
 <p/>
 
 <ul>
-  <li>IID: 0</li>
+  <li>NLI: 0</li>
   <li>TID: 4</li>
   <li>CMD: 6 (<samp>CMD_VALUE_IS</samp>)</li>
   <li>PROP: 90 (<samp>PROP_THREAD_ON_MESH_NETS</samp>)</li>
@@ -4087,7 +4223,7 @@ FE
 <p/>
 
 <ul>
-  <li>IID: 0</li>
+  <li>NLI: 0</li>
   <li>TID: 5</li>
   <li>CMD: 4 (<samp>CMD_VALUE_INSERT</samp>)</li>
   <li>PROP: 90 (<samp>PROP_THREAD_ON_MESH_NETS</samp>)</li>
@@ -4119,13 +4255,13 @@ FE
 01 ?? 01
 </pre>
 <p>
-  <a id="CREF8" class="info">[CREF8]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
+  <a id="CREF7" class="info">[CREF7]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
 </p>
 <h1 id="rfc.appendix.B.10"><a href="#rfc.appendix.B.10">B.10.</a> <a href="#test-vector-insertion-notification-of-an-onmesh-network" id="test-vector-insertion-notification-of-an-onmesh-network">Test Vector: Insertion notification of an on-mesh network</a></h1>
 <p/>
 
 <ul>
-  <li>IID: 0</li>
+  <li>NLI: 0</li>
   <li>TID: 5</li>
   <li>CMD: 7 (<samp>CMD_VALUE_INSERTED</samp>)</li>
   <li>PROP: 90 (<samp>PROP_THREAD_ON_MESH_NETS</samp>)</li>
@@ -4157,13 +4293,13 @@ FE
 01 ?? 01
 </pre>
 <p>
-  <a id="CREF9" class="info">[CREF9]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
+  <a id="CREF8" class="info">[CREF8]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
 </p>
 <h1 id="rfc.appendix.B.11"><a href="#rfc.appendix.B.11">B.11.</a> <a href="#test-vector-removing-a-local-onmesh-network" id="test-vector-removing-a-local-onmesh-network">Test Vector: Removing a local on-mesh network</a></h1>
 <p/>
 
 <ul>
-  <li>IID: 0</li>
+  <li>NLI: 0</li>
   <li>TID: 6</li>
   <li>CMD: 5 (<samp>CMD_VALUE_REMOVE</samp>)</li>
   <li>PROP: 90 (<samp>PROP_THREAD_ON_MESH_NETS</samp>)</li>
@@ -4179,7 +4315,7 @@ FE
 <p/>
 
 <ul>
-  <li>IID: 0</li>
+  <li>NLI: 0</li>
   <li>TID: 6</li>
   <li>CMD: 8 (<samp>CMD_VALUE_REMOVED</samp>)</li>
   <li>PROP: 90 (<samp>PROP_THREAD_ON_MESH_NETS</samp>)</li>
@@ -4194,7 +4330,7 @@ FE
 <h1 id="rfc.appendix.C"><a href="#rfc.appendix.C">Appendix C.</a> <a href="#example-sessions" id="example-sessions">Example Sessions</a></h1>
 <h1 id="rfc.appendix.C.1"><a href="#rfc.appendix.C.1">C.1.</a> <a href="#ncp-initialization" id="ncp-initialization">NCP Initialization</a></h1>
 <p>
-  <a id="CREF10" class="info">[CREF10]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
+  <a id="CREF9" class="info">[CREF9]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
 </p>
 <p id="rfc.section.C.1.p.2">Check the protocol version to see if it is supported: </p>
 <p/>
@@ -4251,7 +4387,7 @@ FE
 <p> </p>
 <h1 id="rfc.appendix.C.2"><a href="#rfc.appendix.C.2">C.2.</a> <a href="#attaching-to-a-network" id="attaching-to-a-network">Attaching to a network</a></h1>
 <p>
-  <a id="CREF11" class="info">[CREF11]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
+  <a id="CREF10" class="info">[CREF10]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
 </p>
 <p id="rfc.section.C.2.p.2">We make the assumption that the NCP is not currently associated with a network.  </p>
 <p id="rfc.section.C.2.p.3">Set the network properties, if they were not already set: </p>
@@ -4305,7 +4441,7 @@ FE
 <p> </p>
 <h1 id="rfc.appendix.C.3"><a href="#rfc.appendix.C.3">C.3.</a> <a href="#successfully-joining-a-preexisting-network" id="successfully-joining-a-preexisting-network">Successfully joining a pre-existing network</a></h1>
 <p>
-  <a id="CREF12" class="info">[CREF12]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
+  <a id="CREF11" class="info">[CREF11]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
 </p>
 <p id="rfc.section.C.3.p.2">This example session is identical to the above session up to the point where we set PROP_NET_IF_UP to true. From there, the behavior changes.  </p>
 <p/>
@@ -4375,7 +4511,7 @@ FE
 <p id="rfc.section.C.5.p.1">TBD </p>
 <h1 id="rfc.appendix.C.6"><a href="#rfc.appendix.C.6">C.6.</a> <a href="#attaching-to-a-saved-network" id="attaching-to-a-saved-network">Attaching to a saved network</a></h1>
 <p>
-  <a id="CREF13" class="info">[CREF13]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
+  <a id="CREF12" class="info">[CREF12]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
 </p>
 <p id="rfc.section.C.6.p.2">Recall the saved network if you haven't already done so: </p>
 <p/>
@@ -4415,7 +4551,7 @@ FE
 <p> </p>
 <h1 id="rfc.appendix.C.7"><a href="#rfc.appendix.C.7">C.7.</a> <a href="#ncp-software-reset" id="ncp-software-reset">NCP Software Reset</a></h1>
 <p>
-  <a id="CREF14" class="info">[CREF14]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
+  <a id="CREF13" class="info">[CREF13]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
 </p>
 <p/>
 
@@ -4432,7 +4568,7 @@ FE
 <p id="rfc.section.C.9.p.1">TBD </p>
 <h1 id="rfc.appendix.C.10"><a href="#rfc.appendix.C.10">C.10.</a> <a href="#sniffing-raw-packets" id="sniffing-raw-packets">Sniffing raw packets</a></h1>
 <p>
-  <a id="CREF15" class="info">[CREF15]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
+  <a id="CREF14" class="info">[CREF14]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
 </p>
 <p id="rfc.section.C.10.p.2">This assumes that the NCP has been initialized.  </p>
 <p id="rfc.section.C.10.p.3">Optionally set the channel: </p>
@@ -4482,29 +4618,23 @@ FE
 
 <p> </p>
 <p id="rfc.section.C.10.p.13">This mode may be entered even when associated with a network.  In that case, you should set <samp>PROP_MAC_PROMISCUOUS_MODE</samp> to <samp>MAC_PROMISCUOUS_MODE_PROMISCUOUS</samp> or <samp>MAC_PROMISCUOUS_MODE_NORMAL</samp>, so that you can avoid receiving packets from other networks or that are destined for other nodes.  </p>
-<h1 id="rfc.appendix.D"><a href="#rfc.appendix.D">Appendix D.</a> <a href="#acknowledgments" id="acknowledgments">Acknowledgments</a></h1>
-<p id="rfc.section.D.p.1">Special thanks to Abtin Keshavarzian, Martin Turon, Arjuna Sivasithambaresan and Jonathan Hui for their substantial contributions and feedback related to this document.  </p>
+<h1 id="rfc.appendix.D"><a href="#rfc.appendix.D">Appendix D.</a> <a href="#glossary" id="glossary">Glossary</a></h1>
 <p>
-  <a id="CREF16" class="info">[CREF16]<span class="info">RQ: If I have missed anyone who has contributed to this document, please let me know ASAP.</span></a>
-</p>
-<p id="rfc.section.D.p.3">This document was prepared using <a href="https://github.com/miekg/mmark">mmark</a> by (Miek Gieben) and <a href="http://xml2rfc.ietf.org/">xml2rfc (version 2)</a>.  </p>
-<h1 id="rfc.appendix.E"><a href="#rfc.appendix.E">Appendix E.</a> <a href="#glossary" id="glossary">Glossary</a></h1>
-<p>
-  <a id="CREF17" class="info">[CREF17]<span class="info">RQ: Alphabetize before finalization.</span></a>
+  <a id="CREF15" class="info">[CREF15]<span class="info">RQ: Alphabetize before finalization.</span></a>
 </p>
 <p/>
 
 <dl>
   <dt>NCP</dt>
-  <dd style="margin-left: 8"><br/> Acronym for Network Control Processor.</dd>
-  <dt>Host</dt>
-  <dd style="margin-left: 8"><br/> Computer or Micro-controller which controls the NCP.</dd>
+  <dd style="margin-left: 8"><br/> Network Control Processor.</dd>
+  <dt>OS</dt>
+  <dd style="margin-left: 8"><br/> Operating System, i.e. the IPv6 node using Spinel to control and manage one or more of its IPv6 network interfaces.</dd>
   <dt>TID</dt>
-  <dd style="margin-left: 8"><br/> Transaction Identifier. May be a value between zero and fifteen.  See <a href="#tid-transaction-identifier">Section 2.1.3</a> for more information.</dd>
-  <dt>IID</dt>
-  <dd style="margin-left: 8"><br/> Interface Identifier. May be a value between zero and three.  See <a href="#iid-interface-identifier">Section 2.1.2</a> for more information.</dd>
+  <dd style="margin-left: 8"><br/> Transaction Identifier. May be a value between zero and fifteen. See <a href="#tid-transaction-identifier">Section 2.1.3</a> for more information.</dd>
+  <dt>NLI</dt>
+  <dd style="margin-left: 8"><br/> Network Link Identifier. May be a value between zero and three. See <a href="#nli-network-link-identifier">Section 2.1.2</a> for more information.</dd>
   <dt>PUI</dt>
-  <dd style="margin-left: 8"><br/> Packed Unsigned Integer. A way to serialize an unsigned integer using one, two, or three bytes. Used throughout the Spinel protocol.  See <a href="#packed-unsigned-integer">Section 3.2</a> for more information.</dd>
+  <dd style="margin-left: 8"><br/> Packed Unsigned Integer. A way to serialize an unsigned integer using one, two, or three bytes. Used throughout the Spinel protocol. See <a href="#packed-unsigned-integer">Section 3.2</a> for more information.</dd>
   <dt>FCS</dt>
   <dd style="margin-left: 8"><br/> Final Checksum. Bytes added to the end of a packet to help determine if the packet was received without corruption.</dd>
   <dt>PHY</dt>
@@ -4512,8 +4642,11 @@ FE
 </dl>
 
 <p> </p>
+<h1 id="rfc.appendix.E"><a href="#rfc.appendix.E">Appendix E.</a> <a href="#acknowledgments" id="acknowledgments">Acknowledgments</a></h1>
+<p id="rfc.section.E.p.1">Special thanks to Nick Banks, Jonathan Hui, Abtin Keshavarzian, Piotr Szkotak, Arjuna Sivasithambaresan and Martin Turon for their substantial contributions and feedback related to this document.  </p>
+<p id="rfc.section.E.p.2">This document was prepared using <a href="https://github.com/miekg/mmark">mmark</a> by (Miek Gieben) and <a href="http://xml2rfc.ietf.org/">xml2rfc (version 2)</a>.  </p>
 <h1 id="rfc.authors">
-  <a href="#rfc.authors">Author's Address</a>
+  <a href="#rfc.authors">Authors' Addresses</a>
 </h1>
 <div class="avoidbreak">
   <address class="vcard">
@@ -4523,7 +4656,7 @@ FE
 		<span class="family-name">Quattlebaum</span>
 	  </span>
 	</span>
-	<span class="org vcardline">Nest Labs</span>
+	<span class="org vcardline">Nest Labs, Inc.</span>
 	<span class="adr">
 	  <span class="vcardline">3400 Hillview Ave.</span>
 
@@ -4535,6 +4668,28 @@ FE
 	  <span class="country-name vcardline">USA</span>
 	</span>
 	<span class="vcardline">EMail: <a href="mailto:rquattle@nestlabs.com">rquattle@nestlabs.com</a></span>
+
+  </address>
+</div><div class="avoidbreak">
+  <address class="vcard">
+	<span class="vcardline">
+	  <span class="fn">james woodyatt</span> 
+	  <span class="n hidden">
+		<span class="family-name">woodyatt</span>
+	  </span>
+	</span>
+	<span class="org vcardline">Nest Labs, Inc.</span>
+	<span class="adr">
+	  <span class="vcardline">3400 Hillview Ave.</span>
+
+	  <span class="vcardline">
+		<span class="locality">Palo Alto</span>,  
+		<span class="region">California</span> 
+		<span class="code">94304</span>
+	  </span>
+	  <span class="country-name vcardline">USA</span>
+	</span>
+	<span class="vcardline">EMail: <a href="mailto:jhw@nestlabs.com">jhw@nestlabs.com</a></span>
 
   </address>
 </div>
