@@ -76,7 +76,7 @@ ThreadError Client::Stop(void)
         message = message->GetNext();
 
         queryMetadata.ReadFrom(*messageToRemove);
-        FinalizeDnsTransaction(*message, queryMetadata, NULL, 0, kThreadError_Abort);
+        FinalizeDnsTransaction(*messageToRemove, queryMetadata, NULL, 0, kThreadError_Abort);
     }
 
     return mSocket.Close();
