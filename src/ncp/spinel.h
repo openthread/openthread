@@ -178,6 +178,7 @@ typedef enum
     SPINEL_SCAN_STATE_IDLE              = 0,
     SPINEL_SCAN_STATE_BEACON            = 1,
     SPINEL_SCAN_STATE_ENERGY            = 2,
+    SPINEL_SCAN_STATE_DISCOVER          = 3,
 } spinel_scan_state_t;
 
 typedef enum
@@ -363,6 +364,7 @@ enum
     SPINEL_CAP_OPENTHREAD__BEGIN        = 512,
     SPINEL_CAP_MAC_WHITELIST            = (SPINEL_CAP_OPENTHREAD__BEGIN + 0),
     SPINEL_CAP_MAC_RAW                  = (SPINEL_CAP_OPENTHREAD__BEGIN + 1),
+    SPINEL_CAP_OOB_STEERING_DATA        = (SPINEL_CAP_OPENTHREAD__BEGIN + 2),
     SPINEL_CAP_OPENTHREAD__END          = 640,
 
     SPINEL_CAP_THREAD__BEGIN            = 1024,
@@ -849,6 +851,47 @@ typedef enum
     /** Format `dSS`
      */
     SPINEL_PROP_THREAD_BA_PROXY_STREAM  = SPINEL_PROP_THREAD_EXT__BEGIN + 18,
+
+    /// Thread "joiner" flag used during discovery scan operation
+    /** Format `b`
+     *
+     * This property defines the Joiner Flag value in the Discovery Request TLV.
+     *
+     * Default value is `false`.
+     */
+    SPINEL_PROP_THREAD_DISCOVERY_SCAN_JOINER_FLAG
+                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 19,
+
+    /// Enable EUI64 filtering for discovery scan operation.
+    /** Format `b`
+     *
+     * Default value is `false`
+     */
+    SPINEL_PROP_THREAD_DISCOVERY_SCAN_ENABLE_FILTERING
+                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 20,
+
+    /// PANID used for Discovery scan operation (used for PANID filtering).
+    /** Format: `S`
+     *
+     * Default value is 0xffff (Broadcast PAN) to disable PANID filtering
+     *
+     */
+    SPINEL_PROP_THREAD_DISCOVERY_SCAN_PANID
+                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 21,
+
+    /// Thread (out of band) steering data for MLE Discovery Response.
+    /** Format `E` - Write only
+     *
+     * Required capability: SPINEL_CAP_OOB_STEERING_DATA.
+     *
+     * Writing to this property allows to set/update the the MLE Discovery Response steering data out of band.
+     *
+     *  - All zeros to clear the steering data (indicating that there is no steering data).
+     *  - All 0xFFs to set steering data/bloom filter to accept/allow all.
+     *  - A specific EUI64 which is then added to current steering data/bloom filter.
+     *
+     */
+    SPINEL_PROP_THREAD_STEERING_DATA    = SPINEL_PROP_THREAD_EXT__BEGIN + 22,
 
     SPINEL_PROP_THREAD_EXT__END         = 0x1600,
 

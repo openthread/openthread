@@ -1192,6 +1192,22 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_THREAD_CONTEXT_REUSE_DELAY";
         break;
 
+    case SPINEL_PROP_THREAD_DISCOVERY_SCAN_JOINER_FLAG:
+        ret = "SPINEL_PROP_THREAD_DISCOVERY_SCAN_JOINER_FLAG";
+        break;
+
+    case SPINEL_PROP_THREAD_DISCOVERY_SCAN_ENABLE_FILTERING:
+        ret = "SPINEL_PROP_THREAD_DISCOVERY_SCAN_ENABLE_FILTERING";
+        break;
+
+    case SPINEL_PROP_THREAD_DISCOVERY_SCAN_PANID:
+        ret = "SPINEL_PROP_THREAD_DISCOVERY_SCAN_PANID";
+        break;
+
+    case SPINEL_PROP_THREAD_STEERING_DATA:
+        ret = "SPINEL_PROP_THREAD_STEERING_DATA";
+        break;
+
     case SPINEL_PROP_MAC_WHITELIST:
         ret = "PROP_MAC_WHITELIST";
         break;
@@ -1207,7 +1223,6 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
     case SPINEL_PROP_THREAD_CHILD_TIMEOUT:
         ret = "PROP_THREAD_CHILD_TIMEOUT";
         break;
-
 
     case SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING:
         ret = "PROP_NET_REQUIRE_JOIN_EXISTING";
