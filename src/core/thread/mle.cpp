@@ -79,6 +79,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mDelayedResponseTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mle::HandleDelayedResponseTimer, this),
     mLastPartitionRouterIdSequence(0),
     mLastPartitionId(0),
+    mParentLeaderCost(0),
     mParentRequestMode(kMleAttachAnyPartition),
     mParentPriority(0),
     mParentLinkQuality3(0),
