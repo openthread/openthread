@@ -680,6 +680,52 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_DEFAULT_LOGGING], [test "${enable_default_logg
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DEFAULT_LOGGING],[${OPENTHREAD_ENABLE_DEFAULT_LOGGING}],[Define to 1 if you want to enable default logging])
 
 #
+# Logging level
+#
+
+AC_MSG_CHECKING([which log level to use])
+AC_ARG_WITH(log-level,
+    [AS_HELP_STRING([--with-log-level=LEVEL],
+        [Specify the logging level @<:@default=none@:>@.])],
+    [
+        case "${with_log_level}" in
+
+        0|none)
+            AM_CFLAGS="$AM_CFLAGS -DOPENTHREAD_CONFIG_LOG_LEVEL=0"
+            AM_CXXFLAGS="$AM_CXXFLAGS -DOPENTHREAD_CONFIG_LOG_LEVEL=0"
+            ;;
+
+        1|crit|critical)
+            AM_CFLAGS="$AM_CFLAGS -DOPENTHREAD_CONFIG_LOG_LEVEL=1"
+            AM_CXXFLAGS="$AM_CXXFLAGS -DOPENTHREAD_CONFIG_LOG_LEVEL=1"
+            ;;
+
+        2|warn|warning)
+            AM_CFLAGS="$AM_CFLAGS -DOPENTHREAD_CONFIG_LOG_LEVEL=2"
+            AM_CXXFLAGS="$AM_CXXFLAGS -DOPENTHREAD_CONFIG_LOG_LEVEL=2"
+            ;;
+
+        3|info)
+            AM_CFLAGS="$AM_CFLAGS -DOPENTHREAD_CONFIG_LOG_LEVEL=3"
+            AM_CXXFLAGS="$AM_CXXFLAGS -DOPENTHREAD_CONFIG_LOG_LEVEL=3"
+            ;;
+
+        4|debg|debug)
+            AM_CFLAGS="$AM_CFLAGS -DOPENTHREAD_CONFIG_LOG_LEVEL=4"
+            AM_CXXFLAGS="$AM_CXXFLAGS -DOPENTHREAD_CONFIG_LOG_LEVEL=4"
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${with_log_level} for --with-log-level])
+            ;;
+        esac
+    ],
+    [with_log_level=none])
+
+AC_SUBST(AM_CFLAGS)
+AC_SUBST(AM_CXXFLAGS)
+
+#
 # Log for certification test
 #
 
