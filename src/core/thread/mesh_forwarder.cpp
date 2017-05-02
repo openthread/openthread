@@ -432,6 +432,35 @@ exit:
     return error;
 }
 
+ThreadError MeshForwarder::PrepareDiscoverRequest(void)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(!mScanning);
+
+    mScanChannel = kPhyMinChannel;
+    mScanChannels >>= kPhyMinChannel;
+    mRestoreChannel = mNetif.GetMac().GetChannel();
+    mRestorePanId = mNetif.GetMac().GetPanId();
+
+    while ((mScanChannels & 1) == 0)
+    {
+        mScanChannels >>= 1;
+        mScanChannel++;
+
+        if (mScanChannel > kPhyMaxChannel)
+        {
+            mNetif.GetMle().HandleDiscoverComplete();
+            ExitNow(error = kThreadError_Drop);
+        }
+    }
+
+    mScanning = true;
+
+exit:
+    return error;
+}
+
 Message *MeshForwarder::GetDirectTransmission(void)
 {
     Message *curMessage, *nextMessage;
@@ -450,6 +479,12 @@ Message *MeshForwarder::GetDirectTransmission(void)
         {
         case Message::kTypeIp6:
             error = UpdateIp6Route(*curMessage);
+
+            if (curMessage->GetSubType() == Message::kSubTypeMleDiscoverRequest)
+            {
+                error = PrepareDiscoverRequest();
+            }
+
             break;
 
         case Message::kType6lowpan:
@@ -885,20 +920,6 @@ ThreadError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
     case Message::kTypeIp6:
         if (mSendMessage->GetSubType() == Message::kSubTypeMleDiscoverRequest)
         {
-            if (!mScanning)
-            {
-                mScanChannel = kPhyMinChannel;
-                mRestoreChannel = mNetif.GetMac().GetChannel();
-                mRestorePanId = mNetif.GetMac().GetPanId();
-                mScanning = true;
-            }
-
-            while ((mScanChannels & 1) == 0)
-            {
-                mScanChannels >>= 1;
-                mScanChannel++;
-            }
-
             mNetif.GetMac().SetChannel(mScanChannel);
             aFrame.SetChannel(mScanChannel);
 
