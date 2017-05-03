@@ -35,7 +35,7 @@
 #include <stddef.h>
 
 #include "openthread/types.h"
-#include <common/code_utils.hpp>
+#include <utils/code_utils.h>
 #include "openthread/platform/uart.h"
 #include "platform-emsk.h"
 

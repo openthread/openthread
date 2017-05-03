@@ -35,7 +35,7 @@
 #include <openthread-config.h>
 #include "openthread/platform/alarm.h"
 #include <utils/flash.h>
-#include <common/code_utils.hpp>
+#include <utils/code_utils.h>
 #include "platform-emsk.h"
 
 /**

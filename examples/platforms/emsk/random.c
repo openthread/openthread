@@ -35,7 +35,7 @@
  *
  */
 
-#include <common/code_utils.hpp>
+#include <utils/code_utils.h>
 
 #include "openthread/platform/random.h"
 #include "openthread/platform/radio.h"

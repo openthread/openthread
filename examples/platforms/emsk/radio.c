@@ -34,7 +34,7 @@
 
 #include "openthread/types.h"
 
-#include <common/code_utils.hpp>
+#include <utils/code_utils.h>
 #include "openthread/platform/radio.h"
 #include "platform-emsk.h"
 
@@ -155,7 +155,8 @@ static inline uint8_t getHeadLength(const uint8_t *frame)
         break;
 
     default:
-        ExitNow(length = 0);
+        length = 0;
+        goto exit;
     }
 
     /* Source PAN + Address */
@@ -180,7 +181,8 @@ static inline uint8_t getHeadLength(const uint8_t *frame)
         break;
 
     default:
-        ExitNow(length = 0);
+        length = 0;
+        goto exit;
     }
 
 exit:
