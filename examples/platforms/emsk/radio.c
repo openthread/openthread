@@ -120,7 +120,6 @@ static void RadioIsr(void *ptr);
 static uint32_t numInterruptRev = 0;
 static uint32_t numInterruptTrans = 0;
 static uint32_t numRadioProcess = 0;
-static uint32_t NODE_ID = 1;
 
 static inline bool isSecurityEnabled(const uint8_t *frame)
 {
@@ -221,11 +220,11 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
     aIeeeEui64[0] = 0x00;
     aIeeeEui64[1] = 0x50;
     aIeeeEui64[2] = 0xC2;
-    aIeeeEui64[3] = 0x00;
-    aIeeeEui64[4] = (NODE_ID >> 24) & 0xff;
-    aIeeeEui64[5] = (NODE_ID >> 16) & 0xff;
-    aIeeeEui64[6] = (NODE_ID >> 8) & 0xff;
-    aIeeeEui64[7] = NODE_ID & 0xff;
+    aIeeeEui64[3] = 0xFF;
+    aIeeeEui64[4] = 0XFE;
+    aIeeeEui64[5] = 0X1D;
+    aIeeeEui64[6] = 0X30;
+    aIeeeEui64[7] = 0x00;
 }
 
 void otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
