@@ -34,14 +34,14 @@
 #ifndef KEY_MANAGER_HPP_
 #define KEY_MANAGER_HPP_
 
-#include <stdint.h>
+#include "utils/wrap_stdint.h"
 
 #include "openthread/types.h"
 
 #include <common/timer.hpp>
 #include <crypto/hmac_sha256.hpp>
 
-namespace Thread {
+namespace ot {
 
 class ThreadNetif;
 
@@ -103,6 +103,22 @@ public:
      *
      */
     ThreadError SetMasterKey(const void *aKey, uint8_t aKeyLength);
+
+    /**
+     * This method returns a pointer to the PSKc.
+     *
+     * @returns A pointer to the PSKc.
+     *
+     */
+    const uint8_t *GetPSKc(void) const;
+
+    /**
+     * This method sets the PSKc.
+     *
+     * @param[in]  aPSKc    A pointer to the PSKc.
+     *
+     */
+    void SetPSKc(const uint8_t *aPSKc);
 
     /**
      * This method returns the current key sequence value.
@@ -346,6 +362,9 @@ private:
     bool     mKeySwitchGuardEnabled;
     Timer    mKeyRotationTimer;
 
+#if OPENTHREAD_FTD
+    uint8_t mPSKc[kMaxKeyLength];
+#endif
     uint8_t mKek[kMaxKeyLength];
     uint32_t mKekFrameCounter;
 
@@ -356,6 +375,6 @@ private:
  * @}
  */
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // KEY_MANAGER_HPP_

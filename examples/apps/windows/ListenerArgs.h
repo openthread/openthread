@@ -28,7 +28,7 @@
 
 #pragma once
 
-namespace Thread
+namespace ot
 {
 
 public ref class ListenerArgs sealed
@@ -39,4 +39,4 @@ public:
     property Platform::String^              ServerPort;
 };
 
-} // namespace Thread
+} // namespace ot

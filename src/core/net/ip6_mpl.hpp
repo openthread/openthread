@@ -40,7 +40,7 @@
 #include <common/timer.hpp>
 #include <net/ip6_headers.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Ip6 {
 
 /**
@@ -553,6 +553,6 @@ private:
  */
 
 }  // namespace Ip6
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // NET_IP6_MPL_HPP_

@@ -27,7 +27,7 @@
  */
 
 #include <stdio.h>
-#include <stdint.h>
+#include "utils/wrap_stdint.h"
 
 #include "openthread/platform/toolchain.h"
 
@@ -94,11 +94,11 @@ void test_packed_union()
 
 void test_packed_enum()
 {
-    Thread::Neighbor neighbor;
-    neighbor.SetState(Thread::Neighbor::kStateValid);
+    ot::Neighbor neighbor;
+    neighbor.SetState(ot::Neighbor::kStateValid);
 
     // Make sure that when we read the 3 bit field it is read as unsigned, so it return '4'
-    VerifyOrQuit(neighbor.GetState() == Thread::Neighbor::kStateValid, "Toolchain::OT_TOOL_PACKED failed 4\n");
+    VerifyOrQuit(neighbor.GetState() == ot::Neighbor::kStateValid, "Toolchain::OT_TOOL_PACKED failed 4\n");
 }
 
 void test_addr_sizes()

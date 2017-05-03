@@ -28,6 +28,12 @@
 
 #define WPP_NAME "secure_coap_client.tmh"
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <coap/secure_coap_client.hpp>
 #include <common/logging.hpp>
 #include <meshcop/dtls.hpp>
@@ -40,7 +46,7 @@
  *   This file implements the secure CoAP client.
  */
 
-namespace Thread {
+namespace ot {
 namespace Coap {
 
 SecureClient::SecureClient(ThreadNetif &aNetif):
@@ -244,6 +250,6 @@ exit:
 }
 
 }  // namespace Coap
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_ENABLE_JOINER

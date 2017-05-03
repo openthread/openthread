@@ -31,6 +31,12 @@
  *   This file implements 6LoWPAN header compression.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/encoding.hpp>
@@ -40,9 +46,9 @@
 #include <thread/network_data_leader.hpp>
 #include <thread/thread_netif.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap16;
 
-namespace Thread {
+namespace ot {
 namespace Lowpan {
 
 Lowpan::Lowpan(ThreadNetif &aThreadNetif):
@@ -1170,4 +1176,4 @@ exit:
 }
 
 }  // namespace Lowpan
-}  // namespace Thread
+}  // namespace ot

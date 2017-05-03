@@ -34,11 +34,11 @@
 #ifndef IP6_ADDRESS_HPP_
 #define IP6_ADDRESS_HPP_
 
-#include <stdint.h>
+#include "utils/wrap_stdint.h"
 
 #include "openthread/types.h"
 
-namespace Thread {
+namespace ot {
 namespace Ip6 {
 
 /**
@@ -56,6 +56,16 @@ OT_TOOL_PACKED_BEGIN
 class Address: public otIp6Address
 {
 public:
+    /**
+     * Masks
+     *
+     */
+    enum
+    {
+        kAloc16Mask                 = 0xfc, ///< The mask for Aloc16.
+        kRloc16ReservedBitMask      = 0x02, ///< The mask for the reserved bit of Rloc16.
+    };
+
     /**
      * Constants
      *
@@ -341,6 +351,6 @@ private:
  */
 
 }  // namespace Ip6
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // NET_IP6_ADDRESS_HPP_

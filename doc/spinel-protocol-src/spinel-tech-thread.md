@@ -236,8 +236,9 @@ The stable leader network data.
 
 ### PROP 5391: PROP_THREAD_JOINERS {#prop-thread-joiners}
 
-* Type: Read-Write
+* Type: Insert/Remove Only (optionally Read-Write)
 * Packed-Encoding: `A(t(ULE))`
+* Required capability: `CAP_THREAD_COMMISSIONER`
 
 Data per item is:
 
@@ -246,11 +247,45 @@ Data per item is:
 * `E`: Extended/long address (optional)
 
 Passess Pre-Shared Key for the Device to the NCP in the commissioning process.
-When the Extended address is ommited all Devices which provided a valid PSKd are allowed to join the Thread Network.
+When the Extended address is ommited all Devices which provided a valid PSKd
+are allowed to join the Thread Network.
 
 ### PROP 5392: PROP_THREAD_COMMISSIONER_ENABLED {#prop-thread-commissioner-enabled}
 
-* Type: Read-Write
+* Type: Write only (optionally Read-Write)
 * Packed-Encoding: `b`
+* Required capability: `CAP_THREAD_COMMISSIONER`
 
 Set to true to enable the native commissioner. It is mandatory before adding the joiner to the network.
+
+### PROP 5393: PROP_THREAD_BA_PROXY_ENABLED {#prop-thread-ba-proxy-enabled}
+
+* Type: Read-Write
+* Packed-Encoding: `b`
+* Required capability: `CAP_THREAD_BA_PROXY`
+
+Set to true to enable the border agent proxy.
+
+### PROP 5394: PROP_THREAD_BA_PROXY_STREAM {#prop-thread-ba-proxy-stream}
+
+* Type: Read-Write-Stream
+* Packed-Encoding: `dSS`
+* Required capability: `CAP_THREAD_BA_PROXY`
+
+Data per item is:
+
+* `d`: CoAP frame
+* `S`: source/destination RLOC/ALOC
+* `S`: source/destination port
+
+Octects: | 2      | *n*  |    2    |  2
+---------|--------|------|---------|-------
+Fields:  | Length | CoAP | locator | port
+
+This property allows the host to send and receive border-agent-related
+CoAP requests/responses from the NCP's RLOC address. This allows the
+host driver to implement a Thread border agent.
+
+
+
+

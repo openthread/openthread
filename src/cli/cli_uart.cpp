@@ -31,10 +31,16 @@
  *   This file implements the CLI server on the UART service.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include "utils/wrap_string.h"
 
 #include "openthread/cli.h"
 #include "openthread/platform/logging.h"
@@ -47,7 +53,7 @@
 #include <common/new.hpp>
 #include <common/tasklet.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Cli {
 
 static const char sCommandPrompt[] = {'>', ' '};
@@ -257,4 +263,4 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
 #endif // OPENTHREAD_ENABLE_DEFAULT_LOGGING
 
 }  // namespace Cli
-}  // namespace Thread
+}  // namespace ot

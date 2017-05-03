@@ -31,6 +31,12 @@
  *   This file implements MLE functionality required for the Thread Child, Router and Leader roles.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #define WPP_NAME "mle.tmh"
 
 #include "openthread/platform/radio.h"
@@ -53,9 +59,9 @@
 #include <thread/mle_router.hpp>
 #include <thread/thread_netif.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap16;
 
-namespace Thread {
+namespace ot {
 namespace Mle {
 
 Mle::Mle(ThreadNetif &aThreadNetif) :
@@ -71,10 +77,9 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mReattachState(kReattachStop),
     mParentRequestTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mle::HandleParentRequestTimer, this),
     mDelayedResponseTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mle::HandleDelayedResponseTimer, this),
-    mRouterSelectionJitter(kRouterSelectionJitter),
-    mRouterSelectionJitterTimeout(0),
     mLastPartitionRouterIdSequence(0),
     mLastPartitionId(0),
+    mParentLeaderCost(0),
     mParentRequestMode(kMleAttachAnyPartition),
     mParentPriority(0),
     mParentLinkQuality3(0),
@@ -546,7 +551,6 @@ ThreadError Mle::SetStateDetached(void)
         mNetif.RemoveUnicastAddress(mLeaderAloc);
     }
 
-    mNetif.GetAddressResolver().Clear();
     mDeviceState = kDeviceStateDetached;
     mParentRequestState = kParentIdle;
     mParentRequestTimer.Stop();
@@ -891,18 +895,6 @@ void Mle::SetAssignLinkQuality(const Mac::ExtAddress aMacAddr, uint8_t aLinkQual
     default:
         break;
     }
-}
-
-ThreadError Mle::SetRouterSelectionJitter(uint8_t aRouterJitter)
-{
-    ThreadError error = kThreadError_None;
-
-    VerifyOrExit(aRouterJitter > 0, error = kThreadError_InvalidArgs);
-
-    mRouterSelectionJitter = aRouterJitter;
-
-exit:
-    return error;
 }
 
 void Mle::GenerateNonce(const Mac::ExtAddress &aMacAddr, uint32_t aFrameCounter, uint8_t aSecurityLevel,
@@ -2442,6 +2434,10 @@ ThreadError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInf
                                                      (mDeviceMode & ModeTlv::kModeFullNetworkData) == 0,
                                                      networkData.GetNetworkData(), networkData.GetLength());
     }
+    else
+    {
+        ExitNow(dataRequest = true);
+    }
 
     // Active Dataset
     if (activeTimestamp.GetLength() > 0)
@@ -3196,12 +3192,14 @@ uint16_t Mle::GetNextHop(uint16_t aDestination) const
 
 bool Mle::IsRoutingLocator(const Ip6::Address &aAddress) const
 {
-    return memcmp(&mMeshLocal16, &aAddress, kRlocPrefixLength) == 0 && aAddress.mFields.m8[14] != kAloc16Mask;
+    return memcmp(&mMeshLocal16, &aAddress, kRlocPrefixLength) == 0 &&
+           aAddress.mFields.m8[14] < Ip6::Address::kAloc16Mask &&
+           (aAddress.mFields.m8[14] & Ip6::Address::kRloc16ReservedBitMask) == 0;
 }
 
 bool Mle::IsAnycastLocator(const Ip6::Address &aAddress) const
 {
-    return memcmp(&mMeshLocal16, &aAddress, kRlocPrefixLength) == 0 && aAddress.mFields.m8[14] == kAloc16Mask;
+    return memcmp(&mMeshLocal16, &aAddress, kRlocPrefixLength) == 0 && aAddress.mFields.m8[14] == Ip6::Address::kAloc16Mask;
 }
 
 Router *Mle::GetParent()
@@ -3242,4 +3240,4 @@ exit:
 }
 
 }  // namespace Mle
-}  // namespace Thread
+}  // namespace ot

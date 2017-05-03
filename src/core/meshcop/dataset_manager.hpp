@@ -44,7 +44,7 @@
 #include <thread/mle.hpp>
 #include <thread/network_data_leader.hpp>
 
-namespace Thread {
+namespace ot {
 
 class ThreadNetif;
 
@@ -67,9 +67,6 @@ public:
 
     ThreadError ApplyConfiguration(void);
 
-    ThreadError SendSetRequest(const otOperationalDataset &aDataset, const uint8_t *aTlvs, uint8_t aLength);
-    ThreadError SendGetRequest(const uint8_t *aTlvTypes, uint8_t aLength, const otIp6Address *aAddress);
-
 protected:
     enum
     {
@@ -81,8 +78,6 @@ protected:
 
     ThreadError Clear(uint8_t &aFlags, bool aOnlyClearNetwork);
 
-    ThreadError Set(const otOperationalDataset &aDataset, uint8_t &aFlags);
-
     ThreadError Set(const Dataset &aDataset);
 
     ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength,
@@ -91,8 +86,6 @@ protected:
     void Get(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     void HandleNetworkUpdate(uint8_t &aFlags);
-
-    ThreadError Set(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     Dataset mLocal;
     Dataset mNetwork;
@@ -107,7 +100,6 @@ private:
     void HandleTimer(void);
 
     ThreadError Register(void);
-    void SendSetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo, StateTlv::State aState);
     void SendGetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
                          uint8_t *aTlvs, uint8_t aLength);
 
@@ -115,6 +107,19 @@ private:
 
     const char *mUriSet;
     const char *mUriGet;
+
+#if OPENTHREAD_FTD
+public:
+    ThreadError SendSetRequest(const otOperationalDataset &aDataset, const uint8_t *aTlvs, uint8_t aLength);
+    ThreadError SendGetRequest(const uint8_t *aTlvTypes, uint8_t aLength, const otIp6Address *aAddress);
+
+protected:
+    ThreadError Set(const otOperationalDataset &aDataset, uint8_t &aFlags);
+    ThreadError Set(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+private:
+    void SendSetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo, StateTlv::State aState);
+#endif
 };
 
 class ActiveDatasetBase: public DatasetManager
@@ -126,7 +131,9 @@ public:
 
     ThreadError Clear(bool aOnlyClearNetwork);
 
+#if OPENTHREAD_FTD
     ThreadError Set(const otOperationalDataset &aDataset);
+#endif
 
     ThreadError Set(const Dataset &aDataset);
 
@@ -149,15 +156,15 @@ public:
 
     ThreadError Clear(bool aOnlyClearNetwork);
 
+#if OPENTHREAD_FTD
     ThreadError Set(const otOperationalDataset &aDataset);
+#endif
 
     ThreadError Set(const Dataset &aDataset);
 
     ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
     void UpdateDelayTimer(void);
-
-    void ApplyActiveDataset(const Timestamp &aTimestamp, Message &aMessage);
 
 protected:
     static void HandleTimer(void *aContext);
@@ -181,7 +188,7 @@ private:
 };
 
 }  // namespace MeshCoP
-}  // namespace Thread
+}  // namespace ot
 
 #if OPENTHREAD_MTD
 #include "dataset_manager_mtd.hpp"

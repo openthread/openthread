@@ -31,9 +31,15 @@
  *   This file implements CRC16 computations.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <common/crc16.hpp>
 
-namespace Thread {
+namespace ot {
 
 Crc16::Crc16(Polynomial aPolynomial)
 {
@@ -62,4 +68,4 @@ void Crc16::Update(uint8_t aByte)
     while (--i);
 }
 
-}  // namespace Thread
+}  // namespace ot

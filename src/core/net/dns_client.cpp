@@ -32,7 +32,7 @@
 #include <openthread-config.h>
 #endif
 
-#include <string.h>
+#include "utils/wrap_string.h"
 
 #include <common/debug.hpp>
 #include <common/code_utils.hpp>
@@ -46,9 +46,9 @@
  *   This file implements the DNS client.
  */
 
-using Thread::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap16;
 
-namespace Thread {
+namespace ot {
 namespace Dns {
 
 ThreadError Client::Start(void)
@@ -76,7 +76,7 @@ ThreadError Client::Stop(void)
         message = message->GetNext();
 
         queryMetadata.ReadFrom(*messageToRemove);
-        FinalizeDnsTransaction(*message, queryMetadata, NULL, 0, kThreadError_Abort);
+        FinalizeDnsTransaction(*messageToRemove, queryMetadata, NULL, 0, kThreadError_Abort);
     }
 
     return mSocket.Close();
@@ -522,6 +522,6 @@ exit:
 }
 
 }  // namespace Coap
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_ENABLE_DNS_CLIENT

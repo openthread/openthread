@@ -35,7 +35,7 @@
 #include "IMainPageUIElements.h"
 #include "Protocol.h"
 
-namespace Thread
+namespace ot
 {
 
 [Windows::Foundation::Metadata::WebHostHidden]
@@ -63,4 +63,4 @@ private:
     static std::atomic<int> _clientPort;
 };
 
-} // namespace Thread
+} // namespace ot

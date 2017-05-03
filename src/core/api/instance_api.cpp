@@ -73,7 +73,7 @@ otInstance::otInstance(void) :
 {
 }
 
-using namespace Thread;
+using namespace ot;
 
 void otInstancePostConstructor(otInstance *aInstance)
 {

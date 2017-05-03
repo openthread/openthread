@@ -34,14 +34,14 @@
 #ifndef NETWORK_DATA_TLVS_HPP_
 #define NETWORK_DATA_TLVS_HPP_
 
-#include <string.h>
+#include "utils/wrap_string.h"
 
 #include <common/encoding.hpp>
 #include <net/ip6_address.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap16;
 
-namespace Thread {
+namespace ot {
 namespace NetworkData {
 
 /**
@@ -686,6 +686,6 @@ public:
  */
 
 }  // namespace NetworkData
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // NETWORK_DATA_TLVS_HPP_

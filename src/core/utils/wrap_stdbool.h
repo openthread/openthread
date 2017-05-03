@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2016, The OpenThread Authors.
+ *    Copyright (c) 2017, The OpenThread Authors.
  *    All rights reserved.
  *
  *    Redistribution and use in source and binary forms, with or without
@@ -25,18 +25,40 @@
  *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "strlcat.h"
-#include "../strlcpy/strlcpy.h"
+/**
+ * @file
+ *   This file is a wrapper for the standard "string.h" file
+ *   The purpose is add any missing function prototypes not
+ *   provided by a specific compiler.
+ */
 
-size_t strlcat(char *dest, const char *src, size_t size)
-{
-    size_t len = strlen(dest);
+#if !defined(WRAP_STDBOOL_H)
+#define WRAP_STDBOOL_H
 
-    if (len < size - 1)
-    {
-        return (len + strlcpy(dest + len, src, size - len));
-    }
+#if HAVE_STDBOOL_H
+#include <stdbool.h>
+#else
 
-    return len + strlen(src);
-}
+/* Supply our own */
+#if __cplusplus
+/* c++ has a built in bool */
+#else
 
+#if defined(_MSC_VER)
+#define bool _Bool
+#else
+typedef _Bool bool;
+#endif // visual studio has a bool
+
+#if !defined(__bool_true_false_are_defined)
+#define __bool_true_false_are_defined 1
+#define false 0
+#define true 1
+#endif // bool defined
+
+#endif // __cplusplus
+
+#endif // HAVE_STDBOOL_H
+
+
+#endif // WRAP_STDBOOL_H

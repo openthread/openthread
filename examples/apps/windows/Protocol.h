@@ -28,7 +28,7 @@
 
 #pragma once
 
-namespace Thread
+namespace ot
 {
 
 public enum class Protocol
@@ -37,4 +37,4 @@ public enum class Protocol
     UDP,
 };
 
-} // namespace Thread
+} // namespace ot

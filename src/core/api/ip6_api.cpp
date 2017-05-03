@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file implements the OpenThread UDP API.
+ *   This file implements the OpenThread IPv6 API.
  */
 
 #define WPP_NAME "ip6_api.tmh"
@@ -39,7 +39,7 @@
 #include "common/logging.hpp"
 #include "utils/slaac_address.hpp"
 
-using namespace Thread;
+using namespace ot;
 
 ThreadError otIp6SetEnabled(otInstance *aInstance, bool aEnabled)
 {

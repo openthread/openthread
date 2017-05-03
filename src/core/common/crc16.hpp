@@ -34,9 +34,9 @@
 #ifndef CRC16_HPP_
 #define CRC16_HPP_
 
-#include <stdint.h>
+#include "utils/wrap_stdint.h"
 
-namespace Thread {
+namespace ot {
 
 /**
  * This class implements CRC16 computations.
@@ -86,6 +86,6 @@ private:
     uint16_t mCrc;
 };
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // CRC16_HPP_

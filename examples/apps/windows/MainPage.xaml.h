@@ -31,7 +31,7 @@
 #include "MainPage.g.h"
 #include "IMainPageUIElements.h"
 
-namespace Thread
+namespace ot
 {
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.

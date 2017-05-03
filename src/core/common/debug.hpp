@@ -37,7 +37,7 @@
 #include <openthread-core-config.h>
 #include <ctype.h>
 #include <stdio.h>
-#include <string.h>
+#include "utils/wrap_string.h"
 
 #if defined(OPENTHREAD_TARGET_DARWIN) || defined(OPENTHREAD_TARGET_LINUX)
 

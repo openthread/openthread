@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,27 +28,36 @@
 
 /**
  * @file
- *   This file includes definitions for a MeshCoP Leader.
+ *   This file implements the OpenThread Border Agent Proxy API.
  */
 
-#ifndef MESHCOP_LEADER_HPP_
-#define MESHCOP_LEADER_HPP_
+#include "openthread/border_agent_proxy.h"
 
-#include <net/ip6_address.hpp>
+#include "openthread-instance.h"
 
-namespace Thread {
-namespace MeshCoP {
+using namespace ot;
 
-class Leader
+#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
+
+ThreadError otBorderAgentProxyStart(otInstance *aInstance, otBorderAgentProxyStreamHandler aBorderAgentProxyCallback,
+                                    void *aContext)
 {
-public:
-    Leader(ThreadNetif &) { }
-    ThreadError SendDatasetChanged(const Ip6::Address &) { return kThreadError_NotImplemented; }
-    ThreadError SetDelayTimerMinimal(uint32_t) { return kThreadError_NotImplemented; }
-    uint32_t GetDelayTimerMinimal(void) { return 0; }
-};
+    return aInstance->mThreadNetif.GetBorderAgentProxy().Start(aBorderAgentProxyCallback, aContext);
+}
 
-}  // namespace MeshCoP
-}  // namespace Thread
+ThreadError otBorderAgentProxyStop(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetBorderAgentProxy().Stop();
+}
 
-#endif  // MESHCOP_LEADER_HPP_
+ThreadError otBorderAgentProxySend(otInstance *aInstance, otMessage *aMessage, uint16_t aLocator, uint16_t aPort)
+{
+    return aInstance->mThreadNetif.GetBorderAgentProxy().Send(*static_cast<Message *>(aMessage), aLocator, aPort);
+}
+
+bool otBorderAgentProxyIsEnabled(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetBorderAgentProxy().IsEnabled();
+}
+
+#endif // OPENTHREAD_FTD && OPENTHREAD_ENABLE_BORDER_AGENT_PROXY

@@ -57,10 +57,10 @@
 
 #if OPENTHREAD_ENABLE_JOINER
 
-using Thread::Encoding::BigEndian::HostSwap16;
-using Thread::Encoding::BigEndian::HostSwap64;
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap64;
 
-namespace Thread {
+namespace ot {
 namespace MeshCoP {
 
 Joiner::Joiner(ThreadNetif &aNetif):
@@ -520,6 +520,6 @@ void Joiner::HandleTimer(void)
 }
 
 }  // namespace MeshCoP
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_ENABLE_JOINER

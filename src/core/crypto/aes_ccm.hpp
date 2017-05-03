@@ -34,13 +34,13 @@
 #ifndef AES_CCM_HPP_
 #define AES_CCM_HPP_
 
-#include <stdint.h>
+#include "utils/wrap_stdint.h"
 
 #include "openthread/types.h"
 
 #include <crypto/aes_ecb.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Crypto {
 
 /**
@@ -129,6 +129,6 @@ private:
  */
 
 }  // namespace Crypto
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // AES_CCM_HPP_

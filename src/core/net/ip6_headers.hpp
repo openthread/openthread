@@ -44,13 +44,13 @@
 #include <net/netif.hpp>
 #include <net/socket.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
-using Thread::Encoding::BigEndian::HostSwap32;
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
-namespace Thread {
+namespace ot {
 
 /**
- * @namespace Thread::Ip6
+ * @namespace ot::Ip6
  *
  * @brief
  *   This namespace includes definitions for IPv6 networking.
@@ -550,6 +550,6 @@ private:
  */
 
 }  // namespace Ip6
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // NET_IP6_HEADERS_HPP_

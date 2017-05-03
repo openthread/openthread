@@ -31,7 +31,7 @@
 #include "ClientControl.xaml.h"
 #include "ServerControl.xaml.h"
 
-using namespace Thread;
+using namespace ot;
 
 using namespace Platform;
 using namespace Windows::Foundation;

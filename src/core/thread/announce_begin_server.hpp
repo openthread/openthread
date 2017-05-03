@@ -43,7 +43,7 @@
 #include <common/timer.hpp>
 #include <net/ip6_address.hpp>
 
-namespace Thread {
+namespace ot {
 
 class ThreadNetif;
 
@@ -119,6 +119,6 @@ private:
  * @}
  */
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // ANNOUNCE_BEGIN_SERVER_HPP_

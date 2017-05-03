@@ -30,6 +30,12 @@
  *   This file implements a SPI interface to the OpenThread stack.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include "openthread/ncp.h"
 #include "openthread/platform/spi-slave.h"
 
@@ -48,7 +54,7 @@
 
 #if OPENTHREAD_ENABLE_NCP_SPI
 
-namespace Thread {
+namespace ot {
 
 static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpSpi), uint64_t);
 
@@ -314,6 +320,6 @@ void NcpSpi::HandleRxFrame(void)
     mHandlingRxFrame = false;
 }
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_ENABLE_NCP_SPI

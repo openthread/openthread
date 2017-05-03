@@ -39,7 +39,7 @@
 #include <cli/cli_server.hpp>
 #include <common/tasklet.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Cli {
 
 /**
@@ -121,6 +121,6 @@ private:
 };
 
 }  // namespace Cli
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // CLI_UART_HPP_

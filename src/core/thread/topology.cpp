@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2016-2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,26 +28,54 @@
 
 /**
  * @file
- *   This file includes definitions for Thread EID-to-RLOC mapping and caching.
+ *   This file includes definitions for maintaining Thread network topologies.
  */
 
-#ifndef ADDRESS_RESOLVER_HPP_
-#define ADDRESS_RESOLVER_HPP_
+#define WPP_NAME "topology.tmh"
 
-#include "openthread/types.h"
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
 
-namespace Thread {
+#include <common/code_utils.hpp>
+#include <common/debug.hpp>
+#include <common/logging.hpp>
+#include <thread/topology.hpp>
 
-class AddressResolver
+namespace ot {
+
+void Neighbor::GenerateChallenge(void)
 {
-public:
-    explicit AddressResolver(ThreadNetif &) { }
-    void Clear(void) { }
-    ThreadError GetEntry(uint8_t, otEidCacheEntry &) const { return kThreadError_NotImplemented; }
-    void Remove(uint8_t) { }
-    ThreadError Resolve(const Ip6::Address &, Mac::ShortAddress &) { return kThreadError_NotImplemented; }
-};
+    for (uint8_t i = 0; i < sizeof(mValidPending.mPending.mChallenge); i++)
+    {
+        mValidPending.mPending.mChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
+    }
+}
 
-}  // namespace Thread
+void Child::GenerateChallenge(void)
+{
+    for (uint8_t i = 0; i < sizeof(mAttachChallenge); i++)
+    {
+        mAttachChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
+    }
+}
 
-#endif  // ADDRESS_RESOLVER_HPP_
+const Mac::Address &Child::GetMacAddress(Mac::Address &aMacAddress) const
+{
+    if (mUseShortAddress)
+    {
+        aMacAddress.mShortAddress = GetRloc16();
+        aMacAddress.mLength = sizeof(aMacAddress.mShortAddress);
+    }
+    else
+    {
+        aMacAddress.mExtAddress = GetExtAddress();
+        aMacAddress.mLength = sizeof(aMacAddress.mExtAddress);
+    }
+
+    return aMacAddress;
+}
+
+}  // namespace ot

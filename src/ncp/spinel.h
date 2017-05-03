@@ -29,8 +29,8 @@
 #define SPINEL_HEADER_INCLUDED 1
 
 #include <stdarg.h>
-#include <stdbool.h>
-#include <stdint.h>
+#include "utils/wrap_stdbool.h"
+#include "utils/wrap_stdint.h"
 
 // ----------------------------------------------------------------------------
 
@@ -253,6 +253,11 @@ typedef struct
 
 typedef struct
 {
+    uint8_t bytes[16];
+} spinel_net_pskc_t;
+
+typedef struct
+{
     uint8_t bytes[6];
 } spinel_eui48_t;
 
@@ -359,6 +364,11 @@ enum
     SPINEL_CAP_MAC_WHITELIST            = (SPINEL_CAP_OPENTHREAD__BEGIN + 0),
     SPINEL_CAP_MAC_RAW                  = (SPINEL_CAP_OPENTHREAD__BEGIN + 1),
     SPINEL_CAP_OPENTHREAD__END          = 640,
+
+    SPINEL_CAP_THREAD__BEGIN            = 1024,
+    SPINEL_CAP_THREAD_COMMISSIONER      = (SPINEL_CAP_THREAD__BEGIN + 0),
+    SPINEL_CAP_THREAD_BA_PROXY          = (SPINEL_CAP_THREAD__BEGIN + 1),
+    SPINEL_CAP_THREAD__END              = 1152,
 
     SPINEL_CAP_NEST__BEGIN              = 15296,
     SPINEL_CAP_NEST_LEGACY_INTERFACE    = (SPINEL_CAP_NEST__BEGIN + 0),
@@ -683,6 +693,8 @@ typedef enum
     SPINEL_PROP_NET_KEY_SWITCH_GUARDTIME
                                         = SPINEL_PROP_NET__BEGIN + 10, ///< [L]
 
+    SPINEL_PROP_NET_PSKC                = SPINEL_PROP_NET__BEGIN + 11, ///< [D]
+
     SPINEL_PROP_NET__END                = 0x50,
 
     SPINEL_PROP_THREAD__BEGIN           = 0x50,
@@ -825,6 +837,18 @@ typedef enum
      */
     SPINEL_PROP_THREAD_COMMISSIONER_ENABLED
                                         = SPINEL_PROP_THREAD_EXT__BEGIN + 16,
+
+    /// Thread border agent proxy enable
+    /** Format `b`
+     *
+     * Default value is `false`.
+     */
+    SPINEL_PROP_THREAD_BA_PROXY_ENABLED = SPINEL_PROP_THREAD_EXT__BEGIN + 17,
+
+    /// Thread border agent proxy stream
+    /** Format `dSS`
+     */
+    SPINEL_PROP_THREAD_BA_PROXY_STREAM  = SPINEL_PROP_THREAD_EXT__BEGIN + 18,
 
     SPINEL_PROP_THREAD_EXT__END         = 0x1600,
 

@@ -34,7 +34,7 @@
 #ifndef NETWORK_DIAGNOSTIC_TLVS_HPP_
 #define NETWORK_DIAGNOSTIC_TLVS_HPP_
 
-#include <string.h>
+#include "utils/wrap_string.h"
 
 #include "openthread/types.h"
 
@@ -45,10 +45,10 @@
 #include <net/ip6_address.hpp>
 #include <thread/mle_constants.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
-using Thread::Encoding::BigEndian::HostSwap32;
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
-namespace Thread {
+namespace ot {
 
 namespace NetworkDiagnostic {
 
@@ -73,7 +73,7 @@ enum
  *
  */
 OT_TOOL_PACKED_BEGIN
-class NetworkDiagnosticTlv : public Thread::Tlv
+class NetworkDiagnosticTlv : public ot::Tlv
 {
 public:
     /**
@@ -106,7 +106,7 @@ public:
      * @returns The Type value.
      *
      */
-    Type GetType(void) const { return static_cast<Type>(Thread::Tlv::GetType()); }
+    Type GetType(void) const { return static_cast<Type>(ot::Tlv::GetType()); }
 
     /**
      * This method sets the Type value.
@@ -114,7 +114,7 @@ public:
      * @param[in]  aType  The Type value.
      *
      */
-    void SetType(Type aType) { Thread::Tlv::SetType(static_cast<uint8_t>(aType)); }
+    void SetType(Type aType) { ot::Tlv::SetType(static_cast<uint8_t>(aType)); }
 
     /**
      * This static method reads the requested TLV out of @p aMessage.
@@ -129,7 +129,7 @@ public:
      *
      */
     static ThreadError GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv) {
-        return Thread::Tlv::Get(aMessage, static_cast<uint8_t>(aType), aMaxLength, aTlv);
+        return ot::Tlv::Get(aMessage, static_cast<uint8_t>(aType), aMaxLength, aTlv);
     }
 
     /**
@@ -144,7 +144,7 @@ public:
      *
      */
     static ThreadError GetOffset(const Message &aMessage, Type aType, uint16_t &aOffset) {
-        return Thread::Tlv::GetOffset(aMessage, static_cast<uint8_t>(aType), aOffset);
+        return ot::Tlv::GetOffset(aMessage, static_cast<uint8_t>(aType), aOffset);
     }
 
 } OT_TOOL_PACKED_END;
@@ -1356,6 +1356,6 @@ public:
 }  // namespace NetworkDiagnostic
 
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // NETWORK_DIAGNOSTIC_TLVS_HPP_

@@ -31,9 +31,15 @@
  *   This file implements the use of mbedTLS.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <crypto/mbedtls.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Crypto {
 
 MbedTls::MbedTls(void)
@@ -42,4 +48,4 @@ MbedTls::MbedTls(void)
 }
 
 }  // namespace Crypto
-}  // namespace Thread
+}  // namespace ot

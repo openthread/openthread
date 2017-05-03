@@ -50,10 +50,10 @@
 
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
 
-using Thread::Encoding::BigEndian::HostSwap16;
-using Thread::Encoding::BigEndian::HostSwap32;
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
-namespace Thread {
+namespace ot {
 namespace Dhcp6 {
 
 Dhcp6Server::Dhcp6Server(ThreadNetif &aThreadNetif):
@@ -162,7 +162,7 @@ ThreadError Dhcp6Server::UpdateService(void)
                 address->mFields.m16[4] = HostSwap16(0x0000);
                 address->mFields.m16[5] = HostSwap16(0x00ff);
                 address->mFields.m16[6] = HostSwap16(0xfe00);
-                address->mFields.m8[14] = Mle::kAloc16Mask;
+                address->mFields.m8[14] = Ip6::Address::kAloc16Mask;
                 address->mFields.m8[15] = lowpanContext.mContextId;
                 mAgentsAloc[i].mPrefixLength = 128;
                 mAgentsAloc[i].mPreferred = true;
@@ -576,6 +576,6 @@ ThreadError Dhcp6Server::AppendRapidCommit(Message &aMessage)
 }
 
 }  // namespace Dhcp6
-}  // namespace Thread
+}  // namespace ot
 
 #endif //  OPENTHREAD_ENABLE_DHCP6_SERVER

@@ -41,7 +41,7 @@
 #include "openthread/platform/alarm.h"
 #include "openthread/platform/diag.h"
 
-namespace Thread {
+namespace ot {
 
 namespace Diagnostics {
 
@@ -99,6 +99,6 @@ private:
 };
 
 }  // namespace Diagnostics
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // CLI_HPP_

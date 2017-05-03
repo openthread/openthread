@@ -30,7 +30,7 @@
 #include <utility>
 #include "DatagramClientContext.h"
 
-using namespace Thread;
+using namespace ot;
 
 using namespace Concurrency;
 using namespace Platform;
@@ -182,13 +182,13 @@ DatagramClientContext::SetConnected(
 }
 
 bool
-Thread::DatagramClientContext::IsConnected() const
+ot::DatagramClientContext::IsConnected() const
 {
     return _connected;
 }
 
 void
-Thread::DatagramClientContext::OnMessage(
+ot::DatagramClientContext::OnMessage(
     DatagramSocket^           socket,
     MessageReceivedEventArgs^ eventArgs)
 {

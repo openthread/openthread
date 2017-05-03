@@ -17,7 +17,7 @@ The header byte is broken down as follows:
 
       0   1   2   3   4   5   6   7
     +---+---+---+---+---+---+---+---+
-    |  FLG  |  IID  |      TID      |
+    |  FLG  |  NLI  |      TID      |
     +---+---+---+---+---+---+---+---+
 
 <!-- RQ -- Eventually, when https://github.com/miekg/mmark/issues/95
@@ -25,7 +25,7 @@ is addressed, the above table should be swapped out with this:
 
 | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
 |---|---|---|---|---|---|---|---|
-|  FLG ||  IID ||      TID   ||||
+|  FLG ||  NLI ||      TID   ||||
 -->
 
 ### FLG: Flag
@@ -39,13 +39,9 @@ defining the first two bit in this way we can disambiguate between
 Spinel frames and HCI frames (which always start with either `0x01`
 or `0x04`) without any additional framing overhead.
 
-### IID: Interface Identifier
+### NLI: Network Link Identifier
 
-The Interface Identifier (IID) is a number between 0 and 3 which
-identifies which subinterface the frame is intended for. This allows
-the protocol to support connecting to more than one network at once.
-The first subinterface (0) is considered the primary subinterface and
-MUST be supported. Support for all other subinterfaces is OPTIONAL.
+The Network Link Identifier (NLI) is a number between 0 and 3, which is associated by the OS with one of up to four IPv6 zone indices corresponding to conceptual IPv6 interfaces on the NCP. This allows the protocol to support IPv6 nodes connecting simultaneously to more than one IPv6 network link using a single NCP instance. The first Network Link Identifier (0) MUST refer to a distinguished conceptual interface provided by the NCP for its IPv6 link type. The other three Network Link Identifiers (1, 2 and 3) MAY be dissociated from any conceptual interface.
 
 ### TID: Transaction Identifier
 

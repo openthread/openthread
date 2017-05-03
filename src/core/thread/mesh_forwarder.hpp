@@ -48,7 +48,7 @@
 #include <thread/network_data_leader.hpp>
 #include <thread/topology.hpp>
 
-namespace Thread {
+namespace ot {
 
 enum
 {
@@ -243,10 +243,12 @@ private:
         kMaxPollTriggeredTxAttempts = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_POLLS,
     };
 
-    enum MessageAction              ///< Defines the action parameter in `LogMessageInfo()` method.
+    enum MessageAction                   ///< Defines the action parameter in `LogMessageInfo()` method.
     {
-        kMessageReceive,            ///< Indicates that the message was received.
-        kMessageTransmit,           ///< Indicates that the message was sent.
+        kMessageReceive,                 ///< Indicates that the message was received.
+        kMessageTransmit,                ///< Indicates that the message was sent.
+        kMessagePrepareIndirect,         ///< Indicates that the message is being prepared for indirect tx.
+        kMessageDrop,                    ///< Indicates that the message is being dropped from reassembly list.
     };
 
     ThreadError CheckReachability(uint8_t *aFrame, uint8_t aFrameLength,
@@ -294,7 +296,7 @@ private:
     ThreadError AddSrcMatchEntry(Child &aChild);
     void ClearSrcMatchEntry(Child &aChild);
 
-    void LogIp6Message(MessageAction aAction, const Message &aMessage, const Mac::Address &aMacAddress,
+    void LogIp6Message(MessageAction aAction, const Message &aMessage, const Mac::Address *aMacAddress,
                        ThreadError aError);
 
     ThreadNetif &mNetif;
@@ -344,6 +346,6 @@ private:
  *
  */
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // MESH_FORWARDER_HPP_

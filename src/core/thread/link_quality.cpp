@@ -38,14 +38,14 @@
 #endif
 
 #include <stdio.h>
-#include <string.h>
+#include "utils/wrap_string.h"
 
 #include "openthread/types.h"
 
 #include <common/code_utils.hpp>
 #include <thread/link_quality.hpp>
 
-namespace Thread {
+namespace ot {
 
 enum
 {
@@ -299,4 +299,4 @@ void ClearNoiseFloorAverage(LinkQualityInfo &aNoiseFloor)
     aNoiseFloor.Clear();
 }
 
-}  // namespace Thread
+}  // namespace ot

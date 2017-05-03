@@ -4,7 +4,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{30723C38-BA3B-44C9-8D64-C5861A26934F}</ProjectGuid>
     <Keyword>StaticLibrary</Keyword>
-    <RootNamespace>Thread</RootNamespace>
+    <RootNamespace>ot</RootNamespace>
     <ApplicationType>Windows Store</ApplicationType>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <WindowsTargetPlatformVersion>10.0.10586.0</WindowsTargetPlatformVersion>
@@ -49,7 +49,6 @@
         ..\..\include;
         ..\..\examples\platforms;
         ..\..\src\core;
-        ..\..\src\missing;
       </AdditionalIncludeDirectories>
       <SDLCheck>true</SDLCheck>
     </ClCompile>

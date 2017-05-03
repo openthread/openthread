@@ -33,6 +33,12 @@
 
 #define WPP_NAME "dhcp6_client.tmh"
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include "openthread/types.h"
 #include "openthread/platform/random.h"
 
@@ -44,10 +50,10 @@
 #include <net/dhcp6_client.hpp>
 #include <thread/thread_netif.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
-using Thread::Encoding::BigEndian::HostSwap32;
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
-namespace Thread {
+namespace ot {
 
 namespace Dhcp6 {
 
@@ -717,4 +723,4 @@ exit:
 }
 
 }  // namespace Dhcp6
-}  // namespace Thread
+}  // namespace ot

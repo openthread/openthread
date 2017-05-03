@@ -39,19 +39,15 @@ cd /tmp || die
 [ $TRAVIS_OS_NAME != linux ] || {    
     sudo apt-get update || die
 
-    sudo -H pip install --upgrade pip || die
     pip install --upgrade pip || die
 
-    sudo -H pip install pexpect || die
-    pip install pexpect || die
+    pip install --user pexpect || die
 
     # Packages used by ncp tools.
-    sudo -H pip install ipaddress || die
-    sudo -H pip install scapy==2.3.2 || die
-    sudo -H pip install pyserial || die
-    pip install ipaddress || die
-    pip install scapy==2.3.2 || die
-    pip install pyserial || die
+    pip install --user ipaddress || die
+    pip install --user scapy==2.3.2 || die
+    pip install --user pyserial || die
+    pip install --user git+https://github.com/openthread/pyspinel || die
 
     [ $BUILD_TARGET != pretty-check ] || {
         wget http://jaist.dl.sourceforge.net/project/astyle/astyle/astyle%202.05.1/astyle_2.05.1_linux.tar.gz || die
@@ -97,10 +93,8 @@ cd /tmp || die
     }
 
     # Packages used by sniffer
-    sudo -H pip install pycryptodome==3.4.3 || die
-    sudo -H pip install enum34 || die
-    pip install pycryptodome==3.4.3 || die
-    pip install enum34 || die
+    pip install --user pycryptodome==3.4.3 || die
+    pip install --user enum34 || die
 }
 
 [ $TRAVIS_OS_NAME != osx ] || {

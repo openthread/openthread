@@ -34,6 +34,12 @@
 
 #define WPP_NAME "dataset_manager.tmh"
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <stdio.h>
 
 #include "openthread/platform/random.h"
@@ -56,7 +62,7 @@
 #include <meshcop/leader.hpp>
 #include <openthread/types.h>
 
-namespace Thread {
+namespace ot {
 namespace MeshCoP {
 
 DatasetManager::DatasetManager(ThreadNetif &aThreadNetif, const Tlv::Type aType, const char *aUriSet,
@@ -129,6 +135,17 @@ ThreadError DatasetManager::ApplyConfiguration(void)
             break;
         }
 
+#if OPENTHREAD_FTD
+
+        case Tlv::kPSKc:
+        {
+            const PSKcTlv *pskc = static_cast<const PSKcTlv *>(cur);
+            mNetif.GetKeyManager().SetPSKc(pskc->GetPSKc());
+            break;
+        }
+
+#endif
+
         case Tlv::kMeshLocalPrefix:
         {
             const MeshLocalPrefixTlv *prefix = static_cast<const MeshLocalPrefixTlv *>(cur);
@@ -156,6 +173,7 @@ ThreadError DatasetManager::ApplyConfiguration(void)
     return error;
 }
 
+#if OPENTHREAD_FTD
 ThreadError DatasetManager::Set(const otOperationalDataset &aDataset, uint8_t &aFlags)
 {
     ThreadError error = kThreadError_None;
@@ -185,6 +203,7 @@ ThreadError DatasetManager::Set(const otOperationalDataset &aDataset, uint8_t &a
 exit:
     return error;
 }
+#endif // OPENTHREAD_FTD
 
 ThreadError DatasetManager::Clear(uint8_t &aFlags, bool aOnlyClearNetwork)
 {
@@ -249,17 +268,21 @@ void DatasetManager::HandleTimer(void *aContext)
 
 void DatasetManager::HandleTimer(void)
 {
-    const Timestamp *pendingActiveTimestamp = NULL;
-    const Timestamp *localActiveTimestamp = mNetif.GetActiveDataset().GetLocal().GetTimestamp();
-    const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>
-                                    (mNetif.GetPendingDataset().GetNetwork().Get(Tlv::kActiveTimestamp));
-    pendingActiveTimestamp = static_cast<const Timestamp *>(tlv);
+    const Timestamp *localActiveTimestamp;
+    const Timestamp *pendingActiveTimestamp;
+    const ActiveTimestampTlv *tlv;
+
+    localActiveTimestamp = mNetif.GetActiveDataset().GetLocal().GetTimestamp();
+    VerifyOrExit(localActiveTimestamp != NULL);
 
     VerifyOrExit(mNetif.GetMle().IsAttached());
 
     VerifyOrExit(mLocal.Compare(mNetwork) < 0);
 
     Register();
+
+    tlv = static_cast<const ActiveTimestampTlv *>(mNetif.GetPendingDataset().GetNetwork().Get(Tlv::kActiveTimestamp));
+    pendingActiveTimestamp = static_cast<const Timestamp *>(tlv);
 
     if (pendingActiveTimestamp != NULL &&
         localActiveTimestamp->Compare(*pendingActiveTimestamp) >= 0)
@@ -342,6 +365,7 @@ void DatasetManager::Get(Coap::Header &aHeader, Message &aMessage, const Ip6::Me
     SendGetResponse(aHeader, aMessageInfo, tlvs, length);
 }
 
+#if OPENTHREAD_FTD
 ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Tlv tlv;
@@ -813,6 +837,7 @@ exit:
         message->Free();
     }
 }
+#endif // OPENTHREAD_FTD
 
 void DatasetManager::SendGetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
                                      uint8_t *aTlvs, uint8_t aLength)
@@ -910,6 +935,7 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_FTD
 ThreadError ActiveDatasetBase::Set(const otOperationalDataset &aDataset)
 {
     ThreadError error = kThreadError_None;
@@ -921,6 +947,7 @@ ThreadError ActiveDatasetBase::Set(const otOperationalDataset &aDataset)
 exit:
     return error;
 }
+#endif // OPENTHREAD_FTD
 
 ThreadError ActiveDatasetBase::Set(const Dataset &aDataset)
 {
@@ -999,6 +1026,7 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_FTD
 ThreadError PendingDatasetBase::Set(const otOperationalDataset &aDataset)
 {
     ThreadError error = kThreadError_None;
@@ -1010,6 +1038,7 @@ ThreadError PendingDatasetBase::Set(const otOperationalDataset &aDataset)
 exit:
     return error;
 }
+#endif // OPENTHREAD_FTD
 
 ThreadError PendingDatasetBase::Set(const Dataset &aDataset)
 {
@@ -1120,45 +1149,6 @@ void PendingDatasetBase::HandleTimer(void)
     Clear(false);
 }
 
-void PendingDatasetBase::ApplyActiveDataset(const Timestamp &aTimestamp, Message &aMessage)
-{
-    uint16_t offset = aMessage.GetOffset();
-    DelayTimerTlv delayTimer;
-    uint8_t flags;
-
-    VerifyOrExit(mNetif.GetMle().IsAttached());
-
-    while (offset < aMessage.GetLength())
-    {
-        OT_TOOL_PACKED_BEGIN
-        struct
-        {
-            Tlv tlv;
-            uint8_t value[Dataset::kMaxValueSize];
-        } OT_TOOL_PACKED_END data;
-
-        aMessage.Read(offset, sizeof(Tlv), &data.tlv);
-        aMessage.Read(offset + sizeof(Tlv), data.tlv.GetLength(), data.value);
-        mNetwork.Set(data.tlv);
-        offset += sizeof(Tlv) + data.tlv.GetLength();
-    }
-
-    // add delay timer tlv
-    delayTimer.Init();
-    delayTimer.SetDelayTimer(mNetif.GetLeader().GetDelayTimerMinimal());
-    mNetwork.Set(delayTimer);
-
-    // add pending timestamp tlv
-    mNetwork.SetTimestamp(aTimestamp);
-    HandleNetworkUpdate(flags);
-
-    // reset delay timer
-    ResetDelayTimer(kFlagNetworkUpdated);
-
-exit:
-    return;
-}
-
 void PendingDatasetBase::HandleNetworkUpdate(uint8_t &aFlags)
 {
     DatasetManager::HandleNetworkUpdate(aFlags);
@@ -1178,4 +1168,4 @@ void PendingDatasetBase::HandleGet(Coap::Header &aHeader, Message &aMessage, con
 }
 
 }  // namespace MeshCoP
-}  // namespace Thread
+}  // namespace ot

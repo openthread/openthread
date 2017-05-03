@@ -38,14 +38,14 @@
 #endif
 
 #include <stdio.h>
-#include <string.h>
+#include "utils/wrap_string.h"
 
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <mac/mac_frame.hpp>
 #include <net/ip6_address.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Mac {
 
 void ExtAddress::Set(const Ip6::Address &aIpAddress)
@@ -1117,5 +1117,5 @@ const char *BeaconPayload::ToInfoString(char *aBuf, uint16_t aSize)
 }
 
 }  // namespace Mac
-}  // namespace Thread
+}  // namespace ot
 

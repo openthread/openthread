@@ -24,38 +24,28 @@
  *    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#if !defined(WRAP_STDINT_H)
+#define WRAP_STDINT_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "string.h"
+/* generally all compilers support this */
+/* Visual Studio only after VS2015 (aka: 19.00) */
 
-int main(void)
-{
-    char string_a[8] = "foo";
-    char string_b[] = "barbarbar";
-    size_t ret = 0;
-    int errors = 0;
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
+/* types from this page: https://msdn.microsoft.com/en-us/library/29dh1w7z.aspx */
 
-    ret = strlcpy(string_a, string_b, sizeof(string_a));
+typedef unsigned __int8  uint8_t;
+typedef unsigned __int16 uint16_t;
+typedef unsigned __int32 uint32_t;
+typedef unsigned __int64 uint64_t;
 
-    if (0 != strcmp(string_a, "barbarb"))
-    {
-        printf("strcmp failed\n");
-        errors++;
-    }
+typedef __int8  int8_t;
+typedef __int16 int16_t;
+typedef __int32 int32_t;
+typedef __int64 int64_t;
 
-    if (ret != 9)
-    {
-        printf("strlcpy return value is wrong (%d)\n", (int)ret);
-        errors++;
-    }
+#else
+/* use the compiler supplied solution */
+#include <stdint.h>
+#endif
 
-    if (errors != 0)
-    {
-        printf("FAIL\n");
-        return EXIT_FAILURE;
-    }
-
-    printf("OK\n");
-    return EXIT_SUCCESS;
-}
+#endif // WRAP_STDINT_H

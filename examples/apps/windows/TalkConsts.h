@@ -28,7 +28,7 @@
 
 #pragma once
 
-namespace Thread
+namespace ot
 {
 
 struct TalkConsts
@@ -37,4 +37,4 @@ struct TalkConsts
     static constexpr unsigned short DEF_CLIENT_PORT_INIT = 51100;
 };
 
-} // namespace Thread
+} // namespace ot

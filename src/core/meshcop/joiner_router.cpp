@@ -31,6 +31,8 @@
  *   This file implements the Joiner Router role.
  */
 
+#if OPENTHREAD_FTD
+
 #define WPP_NAME "joiner_router.tmh"
 
 #ifdef OPENTHREAD_CONFIG_FILE
@@ -38,8 +40,6 @@
 #else
 #include <openthread-config.h>
 #endif
-
-#if OPENTHREAD_FTD
 
 #include <stdio.h>
 
@@ -53,10 +53,10 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
-using Thread::Encoding::BigEndian::HostSwap64;
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap64;
 
-namespace Thread {
+namespace ot {
 namespace MeshCoP {
 
 JoinerRouter::JoinerRouter(ThreadNetif &aNetif):
@@ -91,7 +91,7 @@ void JoinerRouter::HandleNetifStateChanged(uint32_t aFlags)
 
     mNetif.GetIp6Filter().RemoveUnsecurePort(mSocket.GetSockName().mPort);
 
-    if (mNetif.GetNetworkDataLeader().GetCommissioningData() != NULL)
+    if (mNetif.GetNetworkDataLeader().IsJoiningEnabled())
     {
         Ip6::SockAddr sockaddr;
 
@@ -534,7 +534,7 @@ exit:
 }
 
 }  // namespace Dtls
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_FTD
 

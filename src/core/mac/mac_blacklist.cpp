@@ -31,14 +31,20 @@
  *   This file implements blacklist IEEE 802.15.4 frame filtering based on MAC address.
  */
 
-#include <string.h>
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
+#include "utils/wrap_string.h"
 
 #include <common/code_utils.hpp>
 #include <mac/mac_blacklist.hpp>
 
 #if OPENTHREAD_ENABLE_MAC_WHITELIST
 
-namespace Thread {
+namespace ot {
 namespace Mac {
 
 Blacklist::Blacklist(void)
@@ -127,6 +133,6 @@ exit:
 }
 
 }  // namespace Mac
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_ENABLE_MAC_WHITELIST

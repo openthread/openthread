@@ -29,7 +29,7 @@
 #include "pch.h"
 #include "MainPage.xaml.h"
 
-using namespace Thread;
+using namespace ot;
 
 using namespace Platform;
 using namespace Windows::ApplicationModel;

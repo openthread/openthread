@@ -26,7 +26,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <string.h>
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
+#include "utils/wrap_string.h"
 
 #include "openthread/platform/random.h"
 
@@ -41,7 +47,7 @@
  *   This file implements the CoAP client.
  */
 
-namespace Thread {
+namespace ot {
 namespace Coap {
 
 Client::Client(Ip6::Netif &aNetif, SenderFunction aSender, ReceiverFunction aReceiver):
@@ -465,4 +471,4 @@ RequestMetadata::RequestMetadata(bool aConfirmable, const Ip6::MessageInfo &aMes
 }
 
 }  // namespace Coap
-}  // namespace Thread
+}  // namespace ot

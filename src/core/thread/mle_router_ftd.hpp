@@ -34,7 +34,7 @@
 #ifndef MLE_ROUTER_HPP_
 #define MLE_ROUTER_HPP_
 
-#include <string.h>
+#include "utils/wrap_string.h"
 
 #include <coap/coap_header.hpp>
 #include <coap/coap_server.hpp>
@@ -49,9 +49,10 @@
 #include <thread/thread_tlvs.hpp>
 #include <thread/topology.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Mle {
 
+class AddressResolver;
 class MeshForwarder;
 class NetworkDataLeader;
 
@@ -273,6 +274,22 @@ public:
      *
      */
     uint8_t GetLinkCost(uint8_t aRouterId);
+
+    /**
+     * This method returns the ROUTER_SELECTION_JITTER value.
+     *
+     * @returns The ROUTER_SELECTION_JITTER value.
+     *
+     */
+    uint8_t GetRouterSelectionJitter(void) const { return mRouterSelectionJitter; }
+
+    /**
+     * This method sets the ROUTER_SELECTION_JITTER value.
+     *
+     * @returns The ROUTER_SELECTION_JITTER value.
+     *
+     */
+    ThreadError SetRouterSelectionJitter(uint8_t aRouterJitter);
 
     /**
      * This method returns the current Router ID Sequence value.
@@ -745,6 +762,9 @@ private:
     uint8_t mRouterId;
     uint8_t mPreviousRouterId;
     uint32_t mPreviousPartitionId;
+
+    uint8_t mRouterSelectionJitter;         ///< The variable to save the assigned jitter value.
+    uint8_t mRouterSelectionJitterTimeout;  ///< The Timeout prior to request/release Router ID.
 };
 
 }  // namespace Mle
@@ -753,6 +773,6 @@ private:
  * @}
  */
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // MLE_ROUTER_HPP_

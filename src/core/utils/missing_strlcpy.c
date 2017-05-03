@@ -25,25 +25,34 @@
  *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MISSING_STRLCPY_HEADER_INCLUDED
-#define MISSING_STRLCPY_HEADER_INCLUDED 1
-
-#include <string.h>
-
-#ifdef strlcpy
-#undef strlcpy
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
 #endif
 
-#define strlcpy ___missing_strlcpy
+#include "utils/wrap_string.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+size_t missing_strlcpy(char *dest, const char *src, size_t size)
+{
+    const size_t slen = strlen(src);
 
-extern size_t strlcpy(char *dest, const char *src, size_t size);
+    if (size != 0)
+    {
+        size--;
 
-#ifdef __cplusplus
-}  // extern "C"
-#endif
+        if (slen < size)
+        {
+            size = slen;
+        }
 
-#endif // MISSING_STRLCPY_HEADER_INCLUDED
+        if (size != 0)
+        {
+            memcpy(dest, src, size);
+        }
+
+        dest[size] = 0;
+    }
+
+    return slen;
+}

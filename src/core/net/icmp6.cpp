@@ -39,7 +39,7 @@
 #include <openthread-config.h>
 #endif
 
-#include <string.h>
+#include "utils/wrap_string.h"
 
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
@@ -48,9 +48,9 @@
 #include <net/icmp6.hpp>
 #include <net/ip6.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap16;
 
-namespace Thread {
+namespace ot {
 namespace Ip6 {
 
 Icmp::Icmp(Ip6 &aIp6):
@@ -246,4 +246,4 @@ ThreadError Icmp::UpdateChecksum(Message &aMessage, uint16_t aChecksum)
 }
 
 }  // namespace Ip6
-}  // namespace Thread
+}  // namespace ot

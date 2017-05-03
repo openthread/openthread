@@ -28,7 +28,7 @@
 
 #pragma once
 
-namespace Thread
+namespace ot
 {
 
 public enum class NotifyType
@@ -42,4 +42,4 @@ public interface struct IAsyncThreadNotify
     void NotifyFromAsyncThread(Platform::String^ message, NotifyType type);
 };
 
-} // namespace Thread
+} // namespace ot

@@ -28,6 +28,12 @@
 
 #define WPP_NAME "secure_coap_server.tmh"
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <coap/secure_coap_server.hpp>
 #include <common/logging.hpp>
 #include <meshcop/dtls.hpp>
@@ -40,7 +46,7 @@
  *   This file implements the secure CoAP server.
  */
 
-namespace Thread {
+namespace ot {
 namespace Coap {
 
 SecureServer::SecureServer(ThreadNetif &aNetif, uint16_t aPort):
@@ -265,6 +271,6 @@ exit:
 }
 
 }  // namespace Coap
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD

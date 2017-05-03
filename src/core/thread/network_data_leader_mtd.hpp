@@ -34,9 +34,9 @@
 #ifndef NETWORK_DATA_LEADER_MTD_HPP_
 #define NETWORK_DATA_LEADER_MTD_HPP_
 
-#include <stdint.h>
+#include "utils/wrap_stdint.h"
 
-namespace Thread {
+namespace ot {
 
 class ThreadNetif;
 
@@ -53,15 +53,10 @@ public:
     void IncrementVersion(void) { }
     void IncrementStableVersion(void) { }
 
-    uint32_t GetContextIdReuseDelay(void) const { return 0; }
-    ThreadError SetContextIdReuseDelay(uint32_t) { return kThreadError_NotImplemented; }
-
-    void RemoveBorderRouter(uint16_t) { }
-
     ThreadError SendServerDataNotification(uint16_t) { return kThreadError_NotImplemented; }
 };
 
 }  // namespace NetworkData
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // NETWORK_DATA_LEADER_MTD_HPP_

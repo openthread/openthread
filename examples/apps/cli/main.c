@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
     otInstanceBuffer = (uint8_t *)malloc(otInstanceBufferLength);
     assert(otInstanceBuffer);
 
-    // Initialize Openthread with the buffer
+    // Initialize OpenThread with the buffer
     sInstance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
 #else
     sInstance = otInstanceInit();

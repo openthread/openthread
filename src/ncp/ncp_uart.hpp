@@ -42,7 +42,7 @@
 #include <ncp/ncp_base.hpp>
 #include <ncp/hdlc.hpp>
 
-namespace Thread {
+namespace ot {
 
 class NcpUart : public NcpBase
 {
@@ -118,6 +118,6 @@ private:
     Tasklet         mUartSendTask;
 };
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // NCP_UART_HPP_

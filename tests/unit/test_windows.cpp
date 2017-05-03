@@ -44,20 +44,20 @@ void TestMacCommandFrame();
 void TestHmacSha256();
 
 // test_link_quality.cpp
-namespace Thread
+namespace ot
 {
     void TestRssAveraging();
     void TestLinkQualityCalculations();
 }
 
 // test_lowpan.cpp
-namespace Thread
+namespace ot
 {
     void TestLowpanIphc();
 }
 
 // test_mac_frame.cpp
-namespace Thread
+namespace ot
 {
     void TestMacHeader();
 }
@@ -72,7 +72,7 @@ void TestMessageQueue();
 void TestPriorityQueue();
 
 // test_ncp_buffer.cpp
-namespace Thread
+namespace ot
 {
     void TestNcpFrameBuffer(void);
 }
@@ -97,7 +97,7 @@ void TestFuzz(uint32_t aSeconds);
 utAssertTrue s_AssertTrue;
 utLogMessage s_LogMessage;
 
-namespace Thread
+namespace ot
 {
     TEST_CLASS(UnitTests)
     {
@@ -139,14 +139,14 @@ namespace Thread
         TEST_METHOD(TestHmacSha256) { ::TestHmacSha256(); }
 
         // test_link_quality.cpp
-        TEST_METHOD(TestRssAveraging) { Thread::TestRssAveraging(); }
-        TEST_METHOD(TestLinkQualityCalculations) { Thread::TestLinkQualityCalculations(); }
+        TEST_METHOD(TestRssAveraging) { ot::TestRssAveraging(); }
+        TEST_METHOD(TestLinkQualityCalculations) { ot::TestLinkQualityCalculations(); }
 
         // test_lowpan.cpp
-        TEST_METHOD(TestLowpanIphc) { Thread::TestLowpanIphc(); }
+        TEST_METHOD(TestLowpanIphc) { ot::TestLowpanIphc(); }
 
         // test_mac_frame.cpp
-        TEST_METHOD(TestMacHeader) { Thread::TestMacHeader(); }
+        TEST_METHOD(TestMacHeader) { ot::TestMacHeader(); }
 
         // test_message.cpp
         TEST_METHOD(TestMessage) { ::TestMessage(); }
@@ -162,7 +162,7 @@ namespace Thread
         TEST_METHOD(TestTenTimers) { ::TestTenTimers(); }
 
         // test_ncp_buffer.cpp
-        TEST_METHOD(TestNcpFrameBuffer) { Thread::TestNcpFrameBuffer(); }
+        TEST_METHOD(TestNcpFrameBuffer) { ot::TestNcpFrameBuffer(); }
 
         // test_toolchain.cpp
         TEST_METHOD(test_packed1) { ::test_packed1(); }

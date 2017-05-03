@@ -38,17 +38,17 @@
 #endif
 
 #include <stdio.h>
-#include <string.h>
+#include "utils/wrap_string.h"
 
 #include <common/code_utils.hpp>
 #include <common/encoding.hpp>
 #include <mac/mac_frame.hpp>
 #include <net/ip6_address.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
-using Thread::Encoding::BigEndian::HostSwap32;
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
-namespace Thread {
+namespace ot {
 namespace Ip6 {
 
 bool Address::IsUnspecified(void) const
@@ -114,13 +114,14 @@ bool Address::IsRealmLocalAllMplForwarders(void) const
 bool Address::IsRoutingLocator(void) const
 {
     return (mFields.m16[4] == HostSwap16(0x0000) && mFields.m16[5] == HostSwap16(0x00ff) &&
-            mFields.m16[6] == HostSwap16(0xfe00));
+            mFields.m16[6] == HostSwap16(0xfe00) && mFields.m8[14] < kAloc16Mask &&
+            (mFields.m8[14] & kRloc16ReservedBitMask) == 0);
 }
 
 bool Address::IsAnycastRoutingLocator(void) const
 {
     return (mFields.m16[4] == HostSwap16(0x0000) && mFields.m16[5] == HostSwap16(0x00ff) &&
-            mFields.m16[6] == HostSwap16(0xfe00) && mFields.m8[14] == 0xfc);
+            mFields.m16[6] == HostSwap16(0xfe00) && mFields.m8[14] == kAloc16Mask);
 }
 
 bool Address::IsSubnetRouterAnycast(void) const
@@ -302,4 +303,4 @@ const char *Address::ToString(char *aBuf, uint16_t aSize) const
 }
 
 }  // namespace Ip6
-}  // namespace Thread
+}  // namespace ot

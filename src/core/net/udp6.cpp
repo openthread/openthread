@@ -31,6 +31,12 @@
  *   This file implements UDP/IPv6 sockets.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <stdio.h>
 
 #include <common/code_utils.hpp>
@@ -38,9 +44,9 @@
 #include <net/ip6.hpp>
 #include <net/udp6.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap16;
 
-namespace Thread {
+namespace ot {
 namespace Ip6 {
 
 UdpSocket::UdpSocket(Udp &aUdp)
@@ -278,4 +284,4 @@ ThreadError Udp::UpdateChecksum(Message &aMessage, uint16_t aChecksum)
 }
 
 }  // namespace Ip6
-}  // namespace Thread
+}  // namespace ot

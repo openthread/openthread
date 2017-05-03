@@ -40,7 +40,7 @@
 #include <net/ip6_address.hpp>
 #include <net/socket.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Ip6 {
 
 class Ip6;
@@ -555,6 +555,6 @@ private:
  */
 
 }  // namespace Ip6
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // NET_NETIF_HPP_

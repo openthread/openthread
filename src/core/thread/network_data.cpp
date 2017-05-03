@@ -33,6 +33,12 @@
 
 #define WPP_NAME "network_data.tmh"
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include "openthread/platform/random.h"
 
 #include <coap/coap_header.hpp>
@@ -45,7 +51,7 @@
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
 
-namespace Thread {
+namespace ot {
 namespace NetworkData {
 
 NetworkData::NetworkData(ThreadNetif &aThreadNetif, bool aLocal):
@@ -663,4 +669,4 @@ void NetworkData::ClearResubmitDelayTimer(void)
 }
 
 }  // namespace NetworkData
-}  // namespace Thread
+}  // namespace ot

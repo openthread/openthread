@@ -30,9 +30,9 @@
 #include "openthread/openthread.h"
 #include <thread/link_quality.hpp>
 
-#include <string.h>
+#include "utils/wrap_string.h"
 
-namespace Thread {
+namespace ot {
 
 enum
 {
@@ -336,13 +336,13 @@ void TestLinkQualityCalculations(void)
     TestLinkQualityData(rssData4);
 }
 
-}  // namespace Thread
+}  // namespace ot
 
 #ifdef ENABLE_TEST_MAIN
 int main(void)
 {
-    Thread::TestRssAveraging();
-    Thread::TestLinkQualityCalculations();
+    ot::TestRssAveraging();
+    ot::TestLinkQualityCalculations();
     printf("All tests passed\n");
     return 0;
 }

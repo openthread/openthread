@@ -8,7 +8,7 @@
     <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
     <Configuration>Debug</Configuration>
     <Platform Condition="'$(Platform)' == ''">Win32</Platform>
-    <RootNamespace>Thread</RootNamespace>
+    <RootNamespace>ot</RootNamespace>
     <DriverType>KMDF</DriverType>
     <DriverTargetPlatform>Universal</DriverTargetPlatform>
   </PropertyGroup>
@@ -40,13 +40,17 @@
         %(PreprocessorDefinitions);
         HAVE_STRNLEN=1;
         OPENTHREAD_FTD=1;
+        HAVE_STDBOOL_H=1;
+        HAVE_STDINT_H=1;
         SPINEL_PLATFORM_DOESNT_IMPLEMENT_ERRNO_VAR=1;
+        OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";
+        OPENTHREAD_PROJECT_CORE_CONFIG_FILE="openthread-core-windows-config.h";
       </PreprocessorDefinitions>
       <AdditionalIncludeDirectories>
         %(AdditionalIncludeDirectories);
         ..\..\include;
-        ..\..\src\missing\stdint;
-        ..\..\src\missing\stdbool;
+        ..\..\src\core;
+        ..\..\examples\drivers\windows\include_c99;
       </AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4100;4706;4748;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <TreatWarningAsError>true</TreatWarningAsError>

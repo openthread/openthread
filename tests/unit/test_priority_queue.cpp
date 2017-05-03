@@ -31,17 +31,17 @@
 #include <openthread-instance.h>
 #include <common/debug.hpp>
 #include <common/message.hpp>
-#include <string.h>
+#include "utils/wrap_string.h"
 #include <stdarg.h>
 
 #define kNumTestMessages      3
 
 // This function verifies the content of the priority queue to match the passed in messages
-void VerifyPriorityQueueContent(Thread::PriorityQueue &aPriorityQueue, int aExpectedLength, ...)
+void VerifyPriorityQueueContent(ot::PriorityQueue &aPriorityQueue, int aExpectedLength, ...)
 {
     va_list args;
-    Thread::Message *message;
-    Thread::Message *msgArg;
+    ot::Message *message;
+    ot::Message *msgArg;
     uint8_t curPriority = 0xff;
     uint16_t msgCount, bufCount;
 
@@ -68,7 +68,7 @@ void VerifyPriorityQueueContent(Thread::PriorityQueue &aPriorityQueue, int aExpe
         {
             VerifyOrQuit(aExpectedLength != 0, "PriorityQueue contains more entries than expected.\n");
 
-            msgArg = va_arg(args, Thread::Message *);
+            msgArg = va_arg(args, ot::Message *);
 
             if (msgArg->GetPriority() != curPriority)
             {
@@ -110,11 +110,11 @@ void VerifyPriorityQueueContent(Thread::PriorityQueue &aPriorityQueue, int aExpe
 }
 
 // This function verifies the content of the all message queue to match the passed in messages
-void VerifyAllMessagesContent(Thread::MessagePool &aMessagePool, int aExpectedLength, ...)
+void VerifyAllMessagesContent(ot::MessagePool &aMessagePool, int aExpectedLength, ...)
 {
     va_list args;
-    Thread::MessagePool::Iterator it;
-    Thread::Message *msgArg;
+    ot::MessagePool::Iterator it;
+    ot::Message *msgArg;
 
     va_start(args, aExpectedLength);
 
@@ -128,7 +128,7 @@ void VerifyAllMessagesContent(Thread::MessagePool &aMessagePool, int aExpectedLe
         for (it = aMessagePool.GetAllMessagesHead(); !it.HasEnded() ; it.GoToNext())
         {
             VerifyOrQuit(aExpectedLength != 0, "AllMessagesQueue contains more entries than expected.\n");
-            msgArg = va_arg(args, Thread::Message *);
+            msgArg = va_arg(args, ot::Message *);
             VerifyOrQuit(msgArg == it.GetMessage(), "AllMessagesQueue content does not match what is expected.\n");
             aExpectedLength--;
         }
@@ -141,11 +141,11 @@ void VerifyAllMessagesContent(Thread::MessagePool &aMessagePool, int aExpectedLe
 
 // This function verifies the content of the all message queue to match the passed in messages. It goes
 // through the AllMessages list in reverse.
-void VerifyAllMessagesContentInReverse(Thread::MessagePool &aMessagePool, int aExpectedLength, ...)
+void VerifyAllMessagesContentInReverse(ot::MessagePool &aMessagePool, int aExpectedLength, ...)
 {
     va_list args;
-    Thread::MessagePool::Iterator it;
-    Thread::Message *msgArg;
+    ot::MessagePool::Iterator it;
+    ot::Message *msgArg;
 
     va_start(args, aExpectedLength);
 
@@ -159,7 +159,7 @@ void VerifyAllMessagesContentInReverse(Thread::MessagePool &aMessagePool, int aE
         for (it = aMessagePool.GetAllMessagesTail(); !it.HasEnded() ; it.GoToPrev())
         {
             VerifyOrQuit(aExpectedLength != 0, "AllMessagesQueue contains more entries than expected.\n");
-            msgArg = va_arg(args, Thread::Message *);
+            msgArg = va_arg(args, ot::Message *);
             VerifyOrQuit(msgArg == it.GetMessage(), "AllMessagesQueue content does not match what is expected.\n");
             aExpectedLength--;
         }
@@ -171,11 +171,11 @@ void VerifyAllMessagesContentInReverse(Thread::MessagePool &aMessagePool, int aE
 }
 
 // This function verifies the content of the message queue to match the passed in messages
-void VerifyMsgQueueContent(Thread::MessageQueue &aMessageQueue, int aExpectedLength, ...)
+void VerifyMsgQueueContent(ot::MessageQueue &aMessageQueue, int aExpectedLength, ...)
 {
     va_list args;
-    Thread::Message *message;
-    Thread::Message *msgArg;
+    ot::Message *message;
+    ot::Message *msgArg;
 
     va_start(args, aExpectedLength);
 
@@ -190,7 +190,7 @@ void VerifyMsgQueueContent(Thread::MessageQueue &aMessageQueue, int aExpectedLen
         {
             VerifyOrQuit(aExpectedLength != 0, "MessageQueue contains more entries than expected\n");
 
-            msgArg = va_arg(args, Thread::Message *);
+            msgArg = va_arg(args, ot::Message *);
             VerifyOrQuit(msgArg == message, "MessageQueue content does not match what is expected.\n");
 
             aExpectedLength--;
@@ -205,35 +205,35 @@ void VerifyMsgQueueContent(Thread::MessageQueue &aMessageQueue, int aExpectedLen
 void TestPriorityQueue(void)
 {
     otInstance instance;
-    Thread::MessagePool messagePool(&instance);
-    Thread::PriorityQueue queue;
-    Thread::MessageQueue messageQueue;
-    Thread::Message *msgHigh    [kNumTestMessages];
-    Thread::Message *msgMed     [kNumTestMessages];
-    Thread::Message *msgLow     [kNumTestMessages];
-    Thread::Message *msgVeryLow [kNumTestMessages];
-    Thread::MessagePool::Iterator it;
+    ot::MessagePool messagePool(&instance);
+    ot::PriorityQueue queue;
+    ot::MessageQueue messageQueue;
+    ot::Message *msgHigh    [kNumTestMessages];
+    ot::Message *msgMed     [kNumTestMessages];
+    ot::Message *msgLow     [kNumTestMessages];
+    ot::Message *msgVeryLow [kNumTestMessages];
+    ot::MessagePool::Iterator it;
 
     // Allocate messages with different priorities.
     for (int i = 0; i < kNumTestMessages; i++)
     {
-        msgHigh[i] = messagePool.New(Thread::Message::kTypeIp6, 0);
+        msgHigh[i] = messagePool.New(ot::Message::kTypeIp6, 0);
         VerifyOrQuit(msgHigh[i] != NULL, "Message::New failed\n");
         SuccessOrQuit(msgHigh[i]->SetPriority(0), "Message:SetPriority failed\n");
-        msgMed[i] = messagePool.New(Thread::Message::kTypeIp6, 0);
+        msgMed[i] = messagePool.New(ot::Message::kTypeIp6, 0);
         VerifyOrQuit(msgMed[i] != NULL, "Message::New failed\n");
         SuccessOrQuit(msgMed[i]->SetPriority(1), "Message:SetPriority failed\n");
-        msgLow[i] = messagePool.New(Thread::Message::kTypeIp6, 0);
+        msgLow[i] = messagePool.New(ot::Message::kTypeIp6, 0);
         VerifyOrQuit(msgLow[i] != NULL, "Message::New failed\n");
         SuccessOrQuit(msgLow[i]->SetPriority(2), "Message:SetPriority failed\n");
-        msgVeryLow[i] = messagePool.New(Thread::Message::kTypeIp6, 0);
+        msgVeryLow[i] = messagePool.New(ot::Message::kTypeIp6, 0);
         VerifyOrQuit(msgVeryLow[i] != NULL, "Message::New failed\n");
         SuccessOrQuit(msgVeryLow[i]->SetPriority(3), "Message:SetPriority failed\n");
     }
 
     // Check the failure case for `SetPriority` for invalid argument.
     VerifyOrQuit(
-        msgHigh[2]->SetPriority(Thread::Message::kNumPriorities) == kThreadError_InvalidArgs,
+        msgHigh[2]->SetPriority(ot::Message::kNumPriorities) == kThreadError_InvalidArgs,
         "Message::SetPriority() with out of range value did not fail as expected.\n"
     );
 

@@ -39,20 +39,25 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include "utils/wrap_string.h"
 
 #include "openthread/openthread.h"
+
+#if OPENTHREAD_FTD
+#include "openthread/dataset_ftd.h"
+#endif
 
 #include "cli.hpp"
 #include "cli_dataset.hpp"
 
-namespace Thread {
+namespace ot {
 namespace Cli {
 
 const DatasetCommand Dataset::sCommands[] =
 {
     { "help", &ProcessHelp },
     { "active", &ProcessActive },
+#if OPENTHREAD_FTD
     { "activetimestamp", &ProcessActiveTimestamp },
     { "channel", &ProcessChannel },
     { "channelmask", &ProcessChannelMask },
@@ -66,10 +71,13 @@ const DatasetCommand Dataset::sCommands[] =
     { "mgmtsetcommand", &ProcessMgmtSetCommand },
     { "networkname", &ProcessNetworkName },
     { "panid", &ProcessPanId },
+#endif
     { "pending", &ProcessPending },
+#if OPENTHREAD_FTD
     { "pendingtimestamp", &ProcessPendingTimestamp },
     { "pskc", &ProcessPSKc },
     { "securitypolicy", &ProcessSecurityPolicy },
+#endif
 };
 
 Server *Dataset::sServer;
@@ -234,6 +242,17 @@ ThreadError Dataset::ProcessActive(otInstance *aInstance, int argc, char *argv[]
     return Print(dataset);
 }
 
+ThreadError Dataset::ProcessPending(otInstance *aInstance, int argc, char *argv[])
+{
+    otOperationalDataset dataset;
+    otDatasetGetPending(aInstance, &dataset);
+
+    (void)argc;
+    (void)argv;
+    return Print(dataset);
+}
+
+#if OPENTHREAD_FTD
 ThreadError Dataset::ProcessActiveTimestamp(otInstance *aInstance, int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
@@ -416,16 +435,6 @@ ThreadError Dataset::ProcessPanId(otInstance *aInstance, int argc, char *argv[])
 
 exit:
     return error;
-}
-
-ThreadError Dataset::ProcessPending(otInstance *aInstance, int argc, char *argv[])
-{
-    otOperationalDataset dataset;
-    otDatasetGetPending(aInstance, &dataset);
-
-    (void)argc;
-    (void)argv;
-    return Print(dataset);
 }
 
 ThreadError Dataset::ProcessPendingTimestamp(otInstance *aInstance, int argc, char *argv[])
@@ -729,6 +738,7 @@ ThreadError Dataset::ProcessSecurityPolicy(otInstance *aInstance, int argc, char
 exit:
     return error;
 }
+#endif  // OPENTHREAD_FTD
 
 }  // namespace Cli
-}  // namespace Thread
+}  // namespace ot

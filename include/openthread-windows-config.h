@@ -62,6 +62,9 @@
 /* Define to 1 to enable MAC whitelist/blacklist feature. */
 #define OPENTHREAD_ENABLE_MAC_WHITELIST 1
 
+/* Define to 1 to enable border agent proxy feature. */
+#define OPENTHREAD_ENABLE_BORDER_AGENT_PROXY 0
+
 /* Define to 1 to enable raw link-layer API. */
 #ifdef _KERNEL_MODE
 #define OPENTHREAD_ENABLE_RAW_LINK_API 0
@@ -103,11 +106,6 @@
 
 // Redefine rand to random for test code
 #define random rand
-
-#ifdef OTBUILD
-#include <strlcat/strlcat.h>
-#include <strlcpy/strlcpy.h>
-#endif
 
 // Disable a few warnings that we don't care about
 #pragma warning(disable:4200)  // nonstandard extension used: zero-sized array in struct/union

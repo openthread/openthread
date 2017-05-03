@@ -31,6 +31,12 @@
  *   This file implements a simple CLI coap server and client.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <ctype.h>
 #include <cli/cli.hpp>
 
@@ -39,7 +45,7 @@
 #include <cli/cli_coap.hpp>
 #include <coap/coap_header.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Cli {
 
 const CoapCommand Coap::sCommands[] =
@@ -329,7 +335,7 @@ ThreadError Coap::ProcessClient(int argc, char *argv[])
     }
 
     otCoapHeaderInit(&header, coapType, coapCode);
-    otCoapHeaderGenerateToken(&header, Thread::Coap::Header::kDefaultTokenLength);
+    otCoapHeaderGenerateToken(&header, ot::Coap::Header::kDefaultTokenLength);
     SuccessOrExit(error = otCoapHeaderAppendUriPathOptions(&header, coapUri));
 
     if (argc > 4)
@@ -402,6 +408,6 @@ void Coap::HandleClientResponse(otCoapHeader *aHeader, otMessage *aMessage, otMe
 }
 
 }  // namespace Cli
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP

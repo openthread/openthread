@@ -38,7 +38,7 @@
 #include "openthread-instance.h"
 #include "common/logging.hpp"
 
-using namespace Thread;
+using namespace ot;
 
 void otTaskletsProcess(otInstance *aInstance)
 {

@@ -45,7 +45,7 @@
 
 #ifndef WINDOWS_LOGGING
 #define otLogDump(aFormat, ...)                                             \
-    _otPlatLog(aInstance, aLogLevel, aLogRegion, aFormat OPENTHREAD_CONFIG_LOG_SUFFIX, ## __VA_ARGS__)
+    _otDynamicLog(aInstance, aLogLevel, aLogRegion, aFormat OPENTHREAD_CONFIG_LOG_SUFFIX, ## __VA_ARGS__)
 #endif
 
 #ifdef __cplusplus
@@ -391,6 +391,10 @@ const char *otThreadErrorToString(ThreadError aError)
 
     case kThreadError_Duplicated:
         retval = "Duplicated";
+        break;
+
+    case kThreadError_ReassemblyTimeout:
+        retval = "ReassemblyTimeout";
         break;
 
     case kThreadError_Error:

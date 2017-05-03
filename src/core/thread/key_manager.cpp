@@ -45,7 +45,7 @@
 #include <thread/mle_router.hpp>
 #include <thread/thread_netif.hpp>
 
-namespace Thread {
+namespace ot {
 
 static const uint8_t kThreadString[] =
 {
@@ -79,6 +79,18 @@ void KeyManager::Stop(void)
 {
     mKeyRotationTimer.Stop();
 }
+
+#if OPENTHREAD_FTD
+const uint8_t *KeyManager::GetPSKc(void) const
+{
+    return mPSKc;
+}
+
+void KeyManager::SetPSKc(const uint8_t *aPSKc)
+{
+    memcpy(mPSKc, aPSKc, sizeof(mPSKc));
+}
+#endif
 
 const uint8_t *KeyManager::GetMasterKey(uint8_t *aKeyLength) const
 {
@@ -269,4 +281,4 @@ void KeyManager::HandleKeyRotationTimer(void)
     SetCurrentKeySequence(mKeySequence + 1);
 }
 
-}  // namespace Thread
+}  // namespace ot

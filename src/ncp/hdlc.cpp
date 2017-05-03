@@ -42,7 +42,7 @@
 
 #if OPENTHREAD_ENABLE_NCP_UART
 
-namespace Thread {
+namespace ot {
 namespace Hdlc {
 
 /**
@@ -337,6 +337,6 @@ void Decoder::Decode(const uint8_t *aInBuf, uint16_t aInLength)
 }
 
 }  // namespace Hdlc
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_ENABLE_NCP_UART

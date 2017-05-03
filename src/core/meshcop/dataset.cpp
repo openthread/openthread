@@ -32,6 +32,12 @@
  *
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <stdio.h>
 
 #include "openthread/platform/settings.h"
@@ -42,7 +48,7 @@
 #include <meshcop/tlvs.hpp>
 #include <thread/mle_tlvs.hpp>
 
-namespace Thread {
+namespace ot {
 namespace MeshCoP {
 
 Dataset::Dataset(otInstance *aInstance, const Tlv::Type aType) :
@@ -252,6 +258,7 @@ ThreadError Dataset::Set(const Dataset &aDataset)
     return kThreadError_None;
 }
 
+#if OPENTHREAD_FTD
 ThreadError Dataset::Set(const otOperationalDataset &aDataset)
 {
     ThreadError error = kThreadError_None;
@@ -361,6 +368,7 @@ ThreadError Dataset::Set(const otOperationalDataset &aDataset)
 exit:
     return error;
 }
+#endif  // OPENTHREAD_FTD
 
 const Timestamp *Dataset::GetTimestamp(void) const
 {
@@ -536,4 +544,4 @@ void Dataset::Remove(uint8_t *aStart, uint8_t aLength)
 }
 
 }  // namespace MeshCoP
-}  // namespace Thread
+}  // namespace ot

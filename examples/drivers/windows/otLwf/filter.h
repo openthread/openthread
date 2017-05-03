@@ -127,7 +127,7 @@ enum
     kMaxPagesForBufferPools  = 64,
     kMaxBytesForBufferPools  = kPageSize * kMaxPagesForBufferPools,
 
-    kEstimatedBufferSize     = 128,         // sizeof(Thread::Buffer)
+    kEstimatedBufferSize     = 128,         // sizeof(ot::Buffer)
     kEstimatedBufferPoolSize = ((kPageSize * kPagesPerBufferPool) - sizeof(BufferPool)) / kEstimatedBufferSize,
     kEstimatedMaxBuffers     = kMaxPagesForBufferPools * kEstimatedBufferPoolSize
 };

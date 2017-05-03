@@ -31,6 +31,12 @@
  *   This file implements the tasklet scheduler.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include "openthread/openthread.h"
 
 #include <common/code_utils.hpp>
@@ -38,7 +44,7 @@
 #include <common/tasklet.hpp>
 #include <net/ip6.hpp>
 
-namespace Thread {
+namespace ot {
 
 Tasklet::Tasklet(TaskletScheduler &aScheduler, Handler aHandler, void *aContext):
     mScheduler(aScheduler),
@@ -127,4 +133,4 @@ Ip6::Ip6 *TaskletScheduler::GetIp6(void)
     return Ip6::Ip6FromTaskletScheduler(this);
 }
 
-}  // namespace Thread
+}  // namespace ot

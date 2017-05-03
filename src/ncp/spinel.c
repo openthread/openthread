@@ -43,14 +43,20 @@
 // MARK: -
 // MARK: Headers
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include "spinel.h"
 
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include "utils/wrap_string.h"
 #include <errno.h>
-
+#include "utils/wrap_stdbool.h"
 // ----------------------------------------------------------------------------
 // MARK: -
 
@@ -96,19 +102,6 @@ static int spinel_errno_workaround_;
 #endif // else SPINEL_PLATFORM_DOESNT_IMPLEMENT_FPRINTF
 #endif
 
-#if !HAVE_STRNLEN
-// Provide a working strnlen if the platform doesn't have one.
-static size_t spinel_strnlen_(const char *s, size_t maxlen)
-{
-    size_t ret;
-    for (ret = 0; (ret < maxlen) && (s[ret] != 0); ret++)
-    {
-        // Empty loop.
-    }
-    return ret;
-}
-#define strnlen spinel_strnlen_
-#endif
 
 #ifndef require_action
 #if SPINEL_PLATFORM_SHOULD_LOG_ASSERTS
@@ -1075,6 +1068,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_NET_KEY_SWITCH_GUARDTIME";
         break;
 
+    case SPINEL_PROP_NET_PSKC:
+        ret = "PROP_NET_PSKC";
+        break;
+
     case SPINEL_PROP_THREAD_LEADER_ADDR:
         ret = "PROP_THREAD_LEADER_ADDR";
         break;
@@ -1169,6 +1166,14 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
 
     case SPINEL_PROP_THREAD_COMMISSIONER_ENABLED:
         ret = "SPINEL_PROP_THREAD_COMMISSIONER_ENABLED";
+        break;
+
+    case SPINEL_PROP_THREAD_BA_PROXY_ENABLED:
+        ret = "SPINEL_PROP_THREAD_BA_PROXY_ENABLED";
+        break;
+
+    case SPINEL_PROP_THREAD_BA_PROXY_STREAM:
+        ret = "SPINEL_PROP_THREAD_BA_PROXY_STREAM";
         break;
 
     case SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU:
@@ -1476,7 +1481,7 @@ const char *spinel_status_to_cstr(spinel_status_t status)
 #if SPINEL_SELF_TEST
 
 #include <stdlib.h>
-#include <string.h>
+#include "utils/wrap_string.h"
 
 
 int

@@ -51,7 +51,7 @@
 
 #if OPENTHREAD_ENABLE_NCP_UART
 
-namespace Thread {
+namespace ot {
 
 static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpUart), uint64_t);
 
@@ -295,6 +295,6 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
 #endif
 #endif // OPENTHREAD_ENABLE_CLI_LOGGING
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif // OPENTHREAD_ENABLE_NCP_UART

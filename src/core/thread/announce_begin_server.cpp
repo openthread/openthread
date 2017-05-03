@@ -50,9 +50,9 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap32;
+using ot::Encoding::BigEndian::HostSwap32;
 
-namespace Thread {
+namespace ot {
 
 AnnounceBeginServer::AnnounceBeginServer(ThreadNetif &aThreadNetif) :
     mChannelMask(0),
@@ -160,4 +160,4 @@ void AnnounceBeginServer::HandleTimer(void)
     }
 }
 
-}  // namespace Thread
+}  // namespace ot

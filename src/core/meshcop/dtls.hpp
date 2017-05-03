@@ -48,7 +48,7 @@
 #include <mbedtls/certs.h>
 #include <mbedtls/ssl_cookie.h>
 
-namespace Thread {
+namespace ot {
 
 class ThreadNetif;
 
@@ -260,6 +260,6 @@ private:
 };
 
 }  // namespace MeshCoP
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // DTLS_HPP_

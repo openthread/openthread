@@ -28,7 +28,7 @@
 
 #pragma once
 
-namespace Thread
+namespace ot
 {
 ref class ClientControl;
 ref class ServerControl;

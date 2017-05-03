@@ -34,11 +34,11 @@
 #ifndef SHA256_HPP_
 #define SHA256_HPP_
 
-#include <stdint.h>
+#include "utils/wrap_stdint.h"
 
 #include <mbedtls/sha256.h>
 
-namespace Thread {
+namespace ot {
 namespace Crypto {
 
 /**
@@ -105,6 +105,6 @@ private:
  */
 
 }  // namespace Crypto
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // SHA256_HPP_

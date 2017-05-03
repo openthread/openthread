@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2016, The OpenThread Authors.
+ *    Copyright (c) 2016-2017, The OpenThread Authors.
  *    All rights reserved.
  *
  *    Redistribution and use in source and binary forms, with or without
@@ -25,29 +25,39 @@
  *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "strlcpy.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include "utils/wrap_string.h"
 
-size_t strlcpy(char *dest, const char *src, size_t size)
+int main(int argc, char **argv)
 {
-    const size_t slen = strlen(src);
+    char string_a[8] = "foo";
+    char string_b[] = "barbarbar";
+    size_t ret = 0;
+    int errors = 0;
 
-    if (size != 0)
+    (void)argc;
+    (void)argv;
+    ret = strlcpy(string_a, string_b, sizeof(string_a));
+
+    if (0 != strcmp(string_a, "barbarb"))
     {
-        size--;
-
-        if (slen < size)
-        {
-            size = slen;
-        }
-
-        if (size != 0)
-        {
-            memcpy(dest, src, size);
-        }
-
-        dest[size] = 0;
+        printf("strcmp failed\n");
+        errors++;
     }
 
-    return slen;
-}
+    if (ret != 9)
+    {
+        printf("strlcpy return value is wrong (%d)\n", (int)ret);
+        errors++;
+    }
 
+    if (errors != 0)
+    {
+        printf("FAIL\n");
+        return EXIT_FAILURE;
+    }
+
+    printf("OK\n");
+    return EXIT_SUCCESS;
+}

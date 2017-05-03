@@ -37,7 +37,6 @@ CPPFLAGS_COMMON                     = \
     -I$(top_srcdir)/include           \
     -I${abs_top_srcdir}/third_party/mbedtls/repo/include \
     $(MBEDTLS_CPPFLAGS)               \
-    $(MISSING_CPPFLAGS)               \
     $(OPENTHREAD_TARGET_DEFINES)      \
     $(NULL)
 
@@ -72,7 +71,7 @@ libopenthread_mtd_a_CPPFLAGS        = \
 #     All code(files) should be compiled
 #     Even if it is not used or required
 #
-#     For example: In the MTD build, some features 
+#     For example: In the MTD build, some features
 #     are disabled and thus in the traditional scheme
 #     source files could be excluded SOURCES_COMMON
 #     via makefile IF/ELSE/ENDIF constructs.
@@ -91,10 +90,12 @@ libopenthread_mtd_a_CPPFLAGS        = \
 #
 
 SOURCES_COMMON                      = \
+    api/border_agent_proxy_api.cpp    \
     api/coap_api.cpp                  \
     api/commissioner_api.cpp          \
     api/crypto_api.cpp                \
     api/dataset_api.cpp               \
+    api/dataset_ftd_api.cpp           \
     api/dhcp6_api.cpp                 \
     api/dhcp6_api.cpp                 \
     api/dns_api.cpp                   \
@@ -109,6 +110,7 @@ SOURCES_COMMON                      = \
     api/netdata_api.cpp               \
     api/tasklet_api.cpp               \
     api/thread_api.cpp                \
+    api/thread_ftd_api.cpp            \
     api/udp_api.cpp                   \
     coap/coap_base.cpp                \
     coap/coap_client.cpp              \
@@ -134,6 +136,7 @@ SOURCES_COMMON                      = \
     mac/mac_frame.cpp                 \
     mac/mac_whitelist.cpp             \
     meshcop/announce_begin_client.cpp \
+    meshcop/border_agent_proxy.cpp    \
     meshcop/commissioner.cpp          \
     meshcop/dataset.cpp               \
     meshcop/dataset_manager.cpp       \
@@ -174,58 +177,21 @@ SOURCES_COMMON                      = \
     thread/panid_query_server.cpp     \
     thread/src_match_controller.cpp   \
     thread/thread_netif.cpp           \
+    thread/topology.cpp               \
     utils/jam_detector.cpp            \
+    utils/missing_strlcpy.c           \
+    utils/missing_strlcat.c           \
+    utils/missing_strnlen.c           \
     utils/slaac_address.cpp           \
     $(NULL)
 
 
-SOURCES_MISSING                     = \
-    $(NULL)
-
-if MISSING_STRLCPY
-###############################################################
-# You'll see something similar to the next four lines in all
-# of these `MISSING_*` blocks. These makefile gynmastics are
-# to work around some unfortunate bugs in automake which
-# prevent a more elegant solution. We can't just pull in the
-# convenience libraries in `$(MISSING_LIBADD)` because that
-# doesn't seem to work on some platforms. Also, we can't
-# just include `$(top_srcdir)/src/missing/X/X.c` directly
-# because a bug in automake causes the `clean` target to
-# break. The following code may look ugly, but it gets the
-# job done. It does this by copying the source file to the
-# local build directory as an intermediate target. We then
-# compile that file. We have to add the path in CPPFLAGS
-# because the file might include headers from that directory.
-# Because the copied source file is explicitly labeled as
-# an intermediate target, it will always get deleted (unless
-# it already existed in the first place). -- RQ 2017-03-22
-strlcpy.c: $(top_srcdir)/src/missing/strlcpy/strlcpy.c
-	$(AM_V_GEN)cp $< $@
-.INTERMEDIATE: strlcpy.c
-CPPFLAGS_COMMON += -I$(top_srcdir)/src/missing/strlcpy
-SOURCES_MISSING += strlcpy.c
-endif
-
-if MISSING_STRLCAT
-# See comment above for explanation.
-strlcat.c: $(top_srcdir)/src/missing/strlcat/strlcat.c
-	$(AM_V_GEN)cp $< $@
-.INTERMEDIATE: strlcat.c
-CPPFLAGS_COMMON += -I$(top_srcdir)/src/missing/strlcat
-SOURCES_MISSING += strlcat.c
-endif
-
-
-
 libopenthread_mtd_a_SOURCES         = \
     $(SOURCES_COMMON)                 \
-    $(SOURCES_MISSING)                \
     $(NULL)
 
 libopenthread_ftd_a_SOURCES         = \
     $(SOURCES_COMMON)                 \
-    $(SOURCES_MISSING)                \
     $(NULL)
 
 HEADERS_COMMON                      = \
@@ -266,6 +232,7 @@ HEADERS_COMMON                      = \
     mac/mac_whitelist_impl.hpp        \
     mac/mac_whitelist_stub.hpp        \
     meshcop/announce_begin_client.hpp \
+    meshcop/border_agent_proxy.hpp    \
     meshcop/commissioner.hpp          \
     meshcop/dataset.hpp               \
     meshcop/dataset_manager.hpp       \
@@ -275,11 +242,7 @@ HEADERS_COMMON                      = \
     meshcop/energy_scan_client.hpp    \
     meshcop/joiner.hpp                \
     meshcop/joiner_router.hpp         \
-    meshcop/joiner_router_ftd.hpp     \
-    meshcop/joiner_router_mtd.hpp     \
     meshcop/leader.hpp                \
-    meshcop/leader_ftd.hpp            \
-    meshcop/leader_mtd.hpp            \
     meshcop/meshcop.hpp               \
     meshcop/panid_query_client.hpp    \
     meshcop/timestamp.hpp             \
@@ -301,8 +264,6 @@ HEADERS_COMMON                      = \
     net/tcp.hpp                       \
     net/udp6.hpp                      \
     thread/address_resolver.hpp       \
-    thread/address_resolver_ftd.hpp   \
-    thread/address_resolver_mtd.hpp   \
     thread/announce_begin_server.hpp  \
     thread/data_poll_manager.hpp      \
     thread/energy_scan_server.hpp     \
@@ -334,6 +295,9 @@ HEADERS_COMMON                      = \
     thread/topology.hpp               \
     utils/slaac_address.hpp           \
     utils/jam_detector.hpp            \
+    utils/wrap_stdbool.h              \
+    utils/wrap_stdint.h               \
+    utils/wrap_string.h               \
     $(NULL)
 
 noinst_HEADERS                      = \

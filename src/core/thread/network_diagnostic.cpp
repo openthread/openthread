@@ -33,6 +33,12 @@
 
 #define WPP_NAME "network_diagnostic.tmh"
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include "openthread/platform/random.h"
 
 #include <coap/coap_header.hpp>
@@ -50,9 +56,11 @@
 #include <thread/network_diagnostic.hpp>
 #include <thread/network_diagnostic_tlvs.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap16;
 
-namespace Thread {
+#if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
+
+namespace ot {
 
 namespace NetworkDiagnostic {
 
@@ -635,4 +643,6 @@ exit:
 
 }  // namespace NetworkDiagnostic
 
-}  // namespace Thread
+}  // namespace ot
+
+#endif // OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC

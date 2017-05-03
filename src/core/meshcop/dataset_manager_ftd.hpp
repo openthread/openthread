@@ -39,7 +39,7 @@
 
 #include <coap/coap_server.hpp>
 
-namespace Thread {
+namespace ot {
 
 class ThreadNetif;
 
@@ -75,6 +75,8 @@ public:
 
     void StopLeader(void);
 
+    void ApplyActiveDataset(const Timestamp &aTimestamp, Message &aMessage);
+
 private:
     static void HandleSet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                           const otMessageInfo *aMessageInfo);
@@ -84,6 +86,6 @@ private:
 };
 
 }  // namespace MeshCoP
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // MESHCOP_DATASET_MANAGER_HPP_

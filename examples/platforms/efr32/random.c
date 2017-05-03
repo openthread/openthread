@@ -90,18 +90,16 @@ uint32_t otPlatRandomGet(void)
     return random;
 }
 
-ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
+ThreadError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 {
     ThreadError error = kThreadError_None;
 
-    otEXPECT_ACTION(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
+    otEXPECT_ACTION(aOutput, error = kThreadError_InvalidArgs);
 
-    for (uint16_t length = 0; length < aInputLength; length++)
+    for (uint16_t length = 0; length < aOutputLength; length++)
     {
         aOutput[length] = (uint8_t)otPlatRandomGet();
     }
-
-    *aOutputLength = aInputLength;
 
 exit:
     return error;

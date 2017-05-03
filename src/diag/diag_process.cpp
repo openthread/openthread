@@ -31,14 +31,20 @@
  *   This file implements the diagnostics module.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include "utils/wrap_string.h"
 #include <common/code_utils.hpp>
 
 #include "diag_process.hpp"
 
-namespace Thread {
+namespace ot {
 namespace Diagnostics {
 
 const struct Command Diag::sCommands[] =
@@ -403,4 +409,4 @@ extern "C" void otPlatDiagRadioReceiveDone(otInstance *aInstance, RadioPacket *a
 }
 
 }  // namespace Diagnostics
-}  // namespace Thread
+}  // namespace ot

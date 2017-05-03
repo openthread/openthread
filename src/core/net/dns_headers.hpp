@@ -34,20 +34,20 @@
 #ifndef DNS_HEADER_HPP_
 #define DNS_HEADER_HPP_
 
-#include <string.h>
+#include "utils/wrap_string.h"
 
 #include <openthread/types.h>
 
 #include <common/encoding.hpp>
 #include <common/message.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
-using Thread::Encoding::BigEndian::HostSwap32;
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
-namespace Thread {
+namespace ot {
 
 /**
- * @namespace Thread::Dns
+ * @namespace ot::Dns
  * @brief
  *   This namespace includes definitions for DNS.
  *
@@ -583,6 +583,6 @@ public:
  */
 
 }  // namespace Dns
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // DNS_HEADER_HPP_

@@ -36,7 +36,7 @@
 
 #include <ctype.h>
 #include <stdio.h>
-#include <string.h>
+#include "utils/wrap_string.h"
 
 #include <openthread-core-config.h>
 #include "openthread/types.h"
@@ -1244,7 +1244,7 @@ const char *otLogRegionToString(otLogRegion aRegion);
  * Local/private macro to format the log message
  */
 #define _otLogFormatter(aInstance, aLogLevel, aRegion, aFormat, ...)        \
-    _otPlatLog(                                                             \
+    _otDynamicLog(                                                          \
         aInstance,                                                          \
         aLogLevel,                                                          \
         aRegion,                                                            \
@@ -1260,7 +1260,7 @@ const char *otLogRegionToString(otLogRegion aRegion);
 * Local/private macro to format the log message
 */
 #define _otLogFormatter(aInstanc, aLogLevel, aRegion, aFormat, ...)         \
-    _otPlatLog(                                                             \
+    _otDynamicLog(                                                          \
         aInstance,                                                          \
         aLogLevel,                                                          \
         aRegion,                                                            \
@@ -1279,7 +1279,7 @@ const char *otLogRegionToString(otLogRegion aRegion);
 * Local/private macro to format the log message
 */
 #define _otLogFormatter(aInstance, aLogLevel, aRegion, aFormat, ...)        \
-    _otPlatLog(                                                             \
+    _otDynamicLog(                                                          \
         aInstance,                                                          \
         aLogLevel,                                                          \
         aRegion,                                                            \
@@ -1294,7 +1294,7 @@ const char *otLogRegionToString(otLogRegion aRegion);
 * Local/private macro to format the log message
 */
 #define _otLogFormatter(aInstace, aLogLevel, aRegion, aFormat, ...)         \
-    _otPlatLog(                                                             \
+    _otDynamicLog(                                                          \
         aInstance,                                                          \
         aLogLevel,                                                          \
         aRegion,                                                            \
@@ -1306,23 +1306,30 @@ const char *otLogRegionToString(otLogRegion aRegion);
 
 #endif // OPENTHREAD_CONFIG_LOG_PREPEND_REGION
 
-
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL == 1
 
 /**
 * Local/private macro to dynamically filter log level.
 */
-#define _otPlatLog(aInstance, aLogLevel, aRegion, aFormat, ...)             \
+#define _otDynamicLog(aInstance, aLogLevel, aRegion, aFormat, ...)          \
     do {                                                                    \
         if (otGetDynamicLogLevel(aInstance) >= aLogLevel)                   \
-            otPlatLog(aLogLevel, aRegion, aFormat, ## __VA_ARGS__);         \
+            _otPlatLog(aLogLevel, aRegion, aFormat, ## __VA_ARGS__);        \
     } while (false)
 
 #else // OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
 
-#define _otPlatLog(aInstance, aLogLevel, aRegion, aFormat, ...) otPlatLog(aLogLevel, aRegion, aFormat, ## __VA_ARGS__)
+#define _otDynamicLog(aInstance, aLogLevel, aRegion, aFormat, ...)          \
+    _otPlatLog(aLogLevel, aRegion, aFormat, ## __VA_ARGS__)
 
 #endif // OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+
+/**
+ * `OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION` is a configuration parameter (see `openthread-core-default-config.h`) which
+ * specifies the function/macro to be used for logging in OpenThread. By default it is set to `otPlatLog()`.
+ */
+#define _otPlatLog(aLogLevel, aRegion, aFormat, ...)                        \
+    OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION(aLogLevel, aRegion, aFormat, ## __VA_ARGS__)
 
 #ifdef __cplusplus
 };

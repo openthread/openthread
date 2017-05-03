@@ -39,7 +39,7 @@
 #include "openthread/types.h"
 #include <thread/topology.hpp>
 
-namespace Thread {
+namespace ot {
 
 class MeshForwarder;
 
@@ -200,6 +200,6 @@ private:
  *
  */
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // SOURCE_MATCH_CONTROLLER_HPP_

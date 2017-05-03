@@ -34,13 +34,13 @@
 #ifndef MAC_WHITELIST_HPP_
 #define MAC_WHITELIST_HPP_
 
-#include <stdint.h>
+#include "utils/wrap_stdint.h"
 
 #include "openthread/types.h"
 
 #include <mac/mac_frame.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Mac {
 
 /**
@@ -182,6 +182,6 @@ private:
  */
 
 }  // namespace Mac
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // MAC_WHITELIST_HPP_

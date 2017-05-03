@@ -31,11 +31,17 @@
  *   This file implements common methods for manipulating MLE TLVs.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <common/code_utils.hpp>
 #include <common/message.hpp>
 #include <thread/mle_tlvs.hpp>
 
-namespace Thread {
+namespace ot {
 
 ThreadError Tlv::Get(const Message &aMessage, uint8_t aType, uint16_t aMaxLength, Tlv &aTlv)
 {
@@ -128,4 +134,4 @@ exit:
     return error;
 }
 
-}  // namespace Thread
+}  // namespace ot

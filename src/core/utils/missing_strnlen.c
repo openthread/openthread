@@ -25,25 +25,22 @@
  *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MISSING_STRLCAT_HEADER_INCLUDED
-#define MISSING_STRLCAT_HEADER_INCLUDED 1
-
-#include <string.h>
-
-#ifdef strlcat
-#undef strlcat
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
 #endif
 
-#define strlcat ___missing_strlcat
+#include "utils/wrap_string.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+size_t missing_strnlen(const char *s, size_t maxlen)
+{
+    size_t ret;
 
-size_t strlcat(char *dest, const char *src, size_t size);
+    for (ret = 0; (ret < maxlen) && (s[ret] != 0); ret++)
+    {
+        // Empty loop.
+    }
 
-#ifdef __cplusplus
-}  // extern "C"
-#endif
-
-#endif // MISSING_STRLCPY_HEADER_INCLUDED
+    return ret;
+}

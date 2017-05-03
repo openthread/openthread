@@ -42,10 +42,10 @@
 #include <net/ip6_address.hpp>
 #include <thread/mle.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
-using Thread::Encoding::BigEndian::HostSwap32;
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
-namespace Thread {
+namespace ot {
 
 enum
 {
@@ -57,7 +57,7 @@ enum
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ThreadTlv : public Thread::Tlv
+class ThreadTlv : public ot::Tlv
 {
 public:
     /**
@@ -84,7 +84,7 @@ public:
      * @returns The Type value.
      *
      */
-    Type GetType(void) const { return static_cast<Type>(Thread::Tlv::GetType()); }
+    Type GetType(void) const { return static_cast<Type>(ot::Tlv::GetType()); }
 
     /**
      * This method sets the Type value.
@@ -92,7 +92,7 @@ public:
      * @param[in]  aType  The Type value.
      *
      */
-    void SetType(Type aType) { Thread::Tlv::SetType(static_cast<uint8_t>(aType)); }
+    void SetType(Type aType) { ot::Tlv::SetType(static_cast<uint8_t>(aType)); }
 
     /**
      * This static method reads the requested TLV out of @p aMessage.
@@ -107,7 +107,7 @@ public:
      *
      */
     static ThreadError GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv) {
-        return Thread::Tlv::Get(aMessage, static_cast<uint8_t>(aType), aMaxLength, aTlv);
+        return ot::Tlv::Get(aMessage, static_cast<uint8_t>(aType), aMaxLength, aTlv);
     }
 
 } OT_TOOL_PACKED_END;
@@ -503,6 +503,6 @@ private:
     uint8_t mTlvs[kMaxSize];
 } OT_TOOL_PACKED_END;
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // THREAD_TLVS_HPP_

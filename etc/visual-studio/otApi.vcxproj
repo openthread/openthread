@@ -4,7 +4,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{ED0EA262-C222-42C7-98D3-E70C72978ED2}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>Thread</RootNamespace>
+    <RootNamespace>ot</RootNamespace>
     <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
     <DriverTargetPlatform>Universal</DriverTargetPlatform>
   </PropertyGroup>

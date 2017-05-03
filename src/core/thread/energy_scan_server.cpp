@@ -31,6 +31,12 @@
  *   This file implements the Energy Scan Server.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #define WPP_NAME "energy_scan_server.tmh"
 
 #include "openthread/platform/random.h"
@@ -45,7 +51,7 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
 
-namespace Thread {
+namespace ot {
 
 EnergyScanServer::EnergyScanServer(ThreadNetif &aThreadNetif) :
     mChannelMask(0),
@@ -242,4 +248,4 @@ void EnergyScanServer::HandleNetifStateChanged(uint32_t aFlags)
     }
 }
 
-}  // namespace Thread
+}  // namespace ot

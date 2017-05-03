@@ -33,7 +33,7 @@
 #include "IMainPageUIElements.h"
 #include "Protocol.h"
 
-namespace Thread
+namespace ot
 {
 
 [Windows::Foundation::Metadata::WebHostHidden]
@@ -58,4 +58,4 @@ private:
     void Role_Changed(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 };
 
-} // namespace Thread
+} // namespace ot

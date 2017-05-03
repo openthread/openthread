@@ -45,10 +45,9 @@
 #include <thread/topology.hpp>
 #include <meshcop/joiner_router.hpp>
 
-namespace Thread {
+namespace ot {
 
 class ThreadNetif;
-class AddressResolver;
 class KeyManager;
 class MeshForwarder;
 
@@ -71,7 +70,7 @@ namespace NetworkData { class Leader; }
  */
 
 /**
- * @namespace Thread::Mle
+ * @namespace ot::Mle
  *
  * @brief
  *   This namespace includes definitions for the MLE protocol.
@@ -110,7 +109,6 @@ enum DeviceState
  */
 enum AlocAllocation
 {
-    kAloc16Mask                         = 0xfc,
     kAloc16Leader                       = 0xfc00,
     kAloc16DhcpAgentStart               = 0xfc01,
     kAloc16DhcpAgentEnd                 = 0xfc0f,
@@ -848,22 +846,6 @@ public:
     void SetAssignLinkQuality(const Mac::ExtAddress aMacAddr, uint8_t aLinkQuality);
 
     /**
-     * This method returns the ROUTER_SELECTION_JITTER value.
-     *
-     * @returns The ROUTER_SELECTION_JITTER value.
-     *
-     */
-    uint8_t GetRouterSelectionJitter(void) const { return mRouterSelectionJitter; }
-
-    /**
-     * This method sets the ROUTER_SELECTION_JITTER value.
-     *
-     * @returns The ROUTER_SELECTION_JITTER value.
-     *
-     */
-    ThreadError SetRouterSelectionJitter(uint8_t aRouterJitter);
-
-    /**
      * This method returns the Child ID portion of an RLOC16.
      *
      * @param[in]  aRloc16  The RLOC16 value.
@@ -1375,10 +1357,6 @@ protected:
 
     Timer mParentRequestTimer;    ///< The timer for driving the Parent Request process.
     Timer mDelayedResponseTimer;  ///< The timer to delay MLE responses.
-
-    uint8_t mRouterSelectionJitter;         ///< The variable to save the assigned jitter value.
-    uint8_t mRouterSelectionJitterTimeout;  ///< The Timeout prior to request/release Router ID.
-
     uint8_t mLastPartitionRouterIdSequence;
     uint32_t mLastPartitionId;
 
@@ -1478,6 +1456,6 @@ private:
  *
  */
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // MLE_HPP_

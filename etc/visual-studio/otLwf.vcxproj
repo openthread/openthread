@@ -6,7 +6,7 @@
     <TemplateGuid>{8b1800b9-d017-4029-9785-13ef5e5b328e}</TemplateGuid>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
-    <RootNamespace>Thread</RootNamespace>
+    <RootNamespace>ot</RootNamespace>
     <DriverType>KMDF</DriverType>
     <DriverTargetPlatform>Universal</DriverTargetPlatform>
   </PropertyGroup>
@@ -49,11 +49,10 @@
         %(AdditionalIncludeDirectories);
         ..\..\include;
         ..\..\examples\drivers\windows\include;
+        ..\..\examples\drivers\windows\include_c99;
         ..\..\examples\drivers\windows\otLwf;
         ..\..\src;
         ..\..\src\core;
-        ..\..\src\missing\stdint;
-        ..\..\src\missing\stdbool;
       </AdditionalIncludeDirectories>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>

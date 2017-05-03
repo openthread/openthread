@@ -37,7 +37,7 @@
 
 #include "openthread/types.h"
 
-namespace Thread {
+namespace ot {
 
 class ThreadNetif;
 
@@ -49,23 +49,15 @@ public:
     ActiveDataset(ThreadNetif &aThreadNetif) : ActiveDatasetBase(aThreadNetif) { }
 
     ThreadError GenerateLocal(void) { return kThreadError_NotImplemented; }
-
-    void StartLeader(void) { }
-
-    void StopLeader(void) { }
 };
 
 class PendingDataset: public PendingDatasetBase
 {
 public:
     PendingDataset(ThreadNetif &aThreadNetif) : PendingDatasetBase(aThreadNetif) { }
-
-    void StartLeader(void) { }
-
-    void StopLeader(void) { }
 };
 
 }  // namespace MeshCoP
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // MESHCOP_DATASET_MANAGER_HPP_

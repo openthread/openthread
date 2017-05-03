@@ -8,7 +8,7 @@
     <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
     <Configuration>Debug</Configuration>
     <Platform Condition="'$(Platform)' == ''">Win32</Platform>
-    <RootNamespace>Thread</RootNamespace>
+    <RootNamespace>ot</RootNamespace>
     <DriverType>KMDF</DriverType>
     <DriverTargetPlatform>Universal</DriverTargetPlatform>
   </PropertyGroup>
@@ -39,15 +39,17 @@
       <AdditionalIncludeDirectories>
         ..\..\include;
         ..\..\src\core;
-        ..\..\src\missing\stdint;
-        ..\..\src\missing\stdbool;
         ..\..\third_party\mbedtls;
         ..\..\third_party\mbedtls\repo\include;
-        ..\..\third_party\mbedtls\repo\include\mbedtls
+        ..\..\third_party\mbedtls\repo\include\mbedtls;
+        ..\..\examples\drivers\windows\include_c99;
       </AdditionalIncludeDirectories>
       <PreprocessorDefinitions>
         %(PreprocessorDefinitions);
         MBEDTLS_CONFIG_FILE="mbedtls-config.h";
+        OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";
+        HAVE_STDBOOL_H=1;
+        HAVE_STDINT_H=1;
         OPENTHREAD_MULTIPLE_INSTANCE;
       </PreprocessorDefinitions>
       <DisableSpecificWarnings>4132;4242;4245;4603;4627;4986;4987;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>

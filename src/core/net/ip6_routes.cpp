@@ -31,13 +31,19 @@
  *   This file implements IPv6 route tables.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <net/ip6.hpp>
 #include <net/ip6_routes.hpp>
 #include <net/netif.hpp>
 #include <common/code_utils.hpp>
 #include <common/message.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Ip6 {
 
 Routes::Routes(Ip6 &aIp6):
@@ -128,4 +134,4 @@ int8_t Routes::Lookup(const Address &aSource, const Address &aDestination)
 }
 
 }  // namespace Ip6
-}  // namespace Thread
+}  // namespace ot

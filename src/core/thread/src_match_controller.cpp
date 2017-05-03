@@ -33,6 +33,12 @@
 
 #define WPP_NAME "src_match_controller.tmh"
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
@@ -40,7 +46,7 @@
 #include <thread/src_match_controller.hpp>
 #include <thread/thread_netif.hpp>
 
-namespace Thread {
+namespace ot {
 
 SourceMatchController::SourceMatchController(MeshForwarder &aMeshForwarder) :
     mMeshForwarder(aMeshForwarder),
@@ -92,17 +98,17 @@ void SourceMatchController::ResetMessageCount(Child &aChild)
 
 void SourceMatchController::SetSrcMatchAsShort(Child &aChild, bool aUseShortAddress)
 {
-    VerifyOrExit(aChild.mUseShortAddress != aUseShortAddress);
+    VerifyOrExit(aChild.IsIndirectSourceMatchShort() != aUseShortAddress);
 
     if (aChild.GetIndirectMessageCount() > 0)
     {
         ClearEntry(aChild);
-        aChild.mUseShortAddress = aUseShortAddress;
+        aChild.SetIndirectSourceMatchShort(aUseShortAddress);
         AddEntry(aChild);
     }
     else
     {
-        aChild.mUseShortAddress = aUseShortAddress;
+        aChild.SetIndirectSourceMatchShort(aUseShortAddress);
     }
 
 exit:
@@ -125,7 +131,7 @@ void SourceMatchController::Enable(bool aEnable)
 
 void SourceMatchController::AddEntry(Child &aChild)
 {
-    aChild.mSourceMatchPending = true;
+    aChild.SetIndirectSourceMatchPending(true);
 
     if (!IsEnabled())
     {
@@ -135,7 +141,7 @@ void SourceMatchController::AddEntry(Child &aChild)
     else
     {
         VerifyOrExit(AddAddress(aChild) == kThreadError_None, Enable(false));
-        aChild.mSourceMatchPending = false;
+        aChild.SetIndirectSourceMatchPending(false);
     }
 
 exit:
@@ -146,7 +152,7 @@ ThreadError SourceMatchController::AddAddress(const Child &aChild)
 {
     ThreadError error = kThreadError_None;
 
-    if (aChild.mUseShortAddress)
+    if (aChild.IsIndirectSourceMatchShort())
     {
         error = otPlatRadioAddSrcMatchShortEntry(GetInstance(), aChild.GetRloc16());
 
@@ -176,14 +182,14 @@ void SourceMatchController::ClearEntry(Child &aChild)
 {
     ThreadError error = kThreadError_None;
 
-    if (aChild.mSourceMatchPending)
+    if (aChild.IsIndirectSourceMatchPending())
     {
         otLogDebgMac(GetInstance(), "SrcAddrMatch - Clearing pending flag for 0x%04x", aChild.GetRloc16());
-        aChild.mSourceMatchPending = false;
+        aChild.SetIndirectSourceMatchPending(false);
         ExitNow();
     }
 
-    if (aChild.mUseShortAddress)
+    if (aChild.IsIndirectSourceMatchShort())
     {
         error = otPlatRadioClearSrcMatchShortEntry(GetInstance(), aChild.GetRloc16());
 
@@ -228,10 +234,10 @@ ThreadError SourceMatchController::AddPendingEntries(void)
 
     for (uint8_t i = 0; i < numChildren; i++, child++)
     {
-        if (child->IsStateValidOrRestoring() && child->mSourceMatchPending)
+        if (child->IsStateValidOrRestoring() && child->IsIndirectSourceMatchPending())
         {
             SuccessOrExit(AddAddress(*child));
-            child->mSourceMatchPending = false;
+            child->SetIndirectSourceMatchPending(false);
         }
     }
 
@@ -239,4 +245,4 @@ exit:
     return error;
 }
 
-}  // namespace Thread
+}  // namespace ot

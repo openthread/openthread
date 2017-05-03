@@ -30,6 +30,7 @@
 
 #define OTDLL 1
 #include <openthread/openthread.h>
+#include <openthread/thread_ftd.h>
 #include <openthread/commissioner.h>
 #include <openthread/joiner.h>
 
@@ -42,7 +43,7 @@ using namespace Platform::Metadata;
 using namespace Windows::Foundation::Collections;
 using namespace Windows::Networking;
 
-namespace Thread
+namespace ot
 {
 
 ref class otAdapter;
@@ -609,5 +610,5 @@ private:
     }
 };
 
-} // namespace Thread
+} // namespace ot
 

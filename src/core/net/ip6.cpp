@@ -33,6 +33,12 @@
 
 #define WPP_NAME "ip6.tmh"
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
@@ -46,7 +52,7 @@
 #include <thread/mle.hpp>
 #include <openthread-instance.h>
 
-namespace Thread {
+namespace ot {
 namespace Ip6 {
 
 Ip6::Ip6(void):
@@ -587,7 +593,9 @@ ThreadError Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageIn
     {
         // do not pass messages sent to/from an RLOC
         VerifyOrExit(!messageInfo.GetSockAddr().IsRoutingLocator() &&
-                     !messageInfo.GetPeerAddr().IsRoutingLocator(),
+                     !messageInfo.GetPeerAddr().IsRoutingLocator() &&
+                     !messageInfo.GetSockAddr().IsAnycastRoutingLocator() &&
+                     !messageInfo.GetPeerAddr().IsAnycastRoutingLocator(),
                      error = kThreadError_NoRoute);
 
         switch (aIpProto)
@@ -1107,4 +1115,4 @@ const char *Ip6::IpProtoToString(IpProto aIpProto)
 }
 
 }  // namespace Ip6
-}  // namespace Thread
+}  // namespace ot

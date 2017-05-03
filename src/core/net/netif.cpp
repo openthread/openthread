@@ -30,6 +30,11 @@
  * @file
  *   This file implements IPv6 network interfaces.
  */
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
 
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
@@ -37,7 +42,7 @@
 #include <net/ip6.hpp>
 #include <net/netif.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Ip6 {
 
 Netif::Netif(Ip6 &aIp6, int8_t aInterfaceId):
@@ -460,4 +465,4 @@ void Netif::HandleStateChangedTask(void)
 }
 
 }  // namespace Ip6
-}  // namespace Thread
+}  // namespace ot

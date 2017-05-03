@@ -35,14 +35,14 @@
 #define TIMER_HPP_
 
 #include <stddef.h>
-#include <stdint.h>
+#include "utils/wrap_stdint.h"
 
 #include "openthread/types.h"
 #include "openthread/platform/alarm.h"
 
 #include <common/tasklet.hpp>
 
-namespace Thread {
+namespace ot {
 
 namespace Ip6 { class Ip6; }
 
@@ -257,6 +257,6 @@ private:
  *
  */
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // TIMER_HPP_

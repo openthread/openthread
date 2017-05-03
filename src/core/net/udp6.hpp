@@ -38,7 +38,7 @@
 
 #include <net/ip6_headers.hpp>
 
-namespace Thread {
+namespace ot {
 namespace Ip6 {
 
 class Udp;
@@ -366,6 +366,6 @@ public:
  */
 
 }  // namespace Ip6
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // NET_UDP6_HPP_

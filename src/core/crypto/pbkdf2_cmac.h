@@ -35,8 +35,8 @@
 #ifndef PBKDF2_CMAC_H_
 #define PBKDF2_CMAC_H_
 
-#include <stdint.h>
-#include <stdbool.h>
+#include "utils/wrap_stdint.h"
+#include "utils/wrap_stdbool.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,7 +59,7 @@ extern "C" {
 void otPbkdf2Cmac(
     const uint8_t *aPassword, uint16_t aPasswordLen,
     const uint8_t *aSalt, uint16_t aSaltLen,
-    uint32_t aIterationCounter , uint16_t aKeyLen,
+    uint32_t aIterationCounter, uint16_t aKeyLen,
     uint8_t *aKey);
 
 #ifdef __cplusplus

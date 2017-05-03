@@ -19,7 +19,7 @@ Decimal Value | Packet Octet Encoding
 
 ## Test Vector: Reset Command
 
-* IID: 0
+* NLI: 0
 * TID: 0
 * CMD: 1 (`CMD_RESET`)
 
@@ -29,7 +29,7 @@ Frame:
 
 ## Test Vector: Reset Notification
 
-* IID: 0
+* NLI: 0
 * TID: 0
 * CMD: 6 (`CMD_VALUE_IS`)
 * PROP: 0 (`PROP_LAST_STATUS`)
@@ -41,7 +41,7 @@ Frame:
 
 ## Test Vector: Scan Beacon
 
-* IID: 0
+* NLI: 0
 * TID: 0
 * CMD: 7 (`CMD_VALUE_INSERTED`)
 * PROP: 51 (`PROP_MAC_SCAN_BEACON`)
@@ -79,7 +79,7 @@ CMD_VALUE_SET(PROP_STREAM_NET)
 
 ## Test Vector: Fetch list of on-mesh networks
 
-* IID: 0
+* NLI: 0
 * TID: 4
 * CMD: 2 (`CMD_VALUE_GET`)
 * PROP: 90 (`PROP_THREAD_ON_MESH_NETS`)
@@ -90,7 +90,7 @@ Frame:
 
 ## Test Vector: Returned list of on-mesh networks
 
-* IID: 0
+* NLI: 0
 * TID: 4
 * CMD: 6 (`CMD_VALUE_IS`)
 * PROP: 90 (`PROP_THREAD_ON_MESH_NETS`)
@@ -111,7 +111,7 @@ Frame:
 
 ## Test Vector: Adding an on-mesh network
 
-* IID: 0
+* NLI: 0
 * TID: 5
 * CMD: 4 (`CMD_VALUE_INSERT`)
 * PROP: 90 (`PROP_THREAD_ON_MESH_NETS`)
@@ -130,7 +130,7 @@ Frame:
 
 ## Test Vector: Insertion notification of an on-mesh network
 
-* IID: 0
+* NLI: 0
 * TID: 5
 * CMD: 7 (`CMD_VALUE_INSERTED`)
 * PROP: 90 (`PROP_THREAD_ON_MESH_NETS`)
@@ -149,7 +149,7 @@ Frame:
 
 ## Test Vector: Removing a local on-mesh network
 
-* IID: 0
+* NLI: 0
 * TID: 6
 * CMD: 5 (`CMD_VALUE_REMOVE`)
 * PROP: 90 (`PROP_THREAD_ON_MESH_NETS`)
@@ -161,7 +161,7 @@ Frame:
 
 ## Test Vector: Removal notification of an on-mesh network
 
-* IID: 0
+* NLI: 0
 * TID: 6
 * CMD: 8 (`CMD_VALUE_REMOVED`)
 * PROP: 90 (`PROP_THREAD_ON_MESH_NETS`)

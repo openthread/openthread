@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -70,12 +70,7 @@ class otCli:
         """ Initialize an NCP simulation node. """
         if "top_builddir" in os.environ.keys():
             builddir = os.environ['top_builddir']
-            if "top_srcdir" in os.environ.keys():
-                srcdir = os.environ['top_srcdir']
-            else:
-                srcdir = os.path.dirname(os.path.realpath(__file__))
-                srcdir += "/../../.."
-            cmd = 'python %s/tools/spinel-cli/spinel-cli.py -p %s/examples/apps/ncp/ot-ncp-ftd -n' % (srcdir, builddir)
+            cmd = 'spinel-cli.py -p %s/examples/apps/ncp/ot-ncp-ftd -n' % (builddir)
         else:
             cmd = './ot-ncp-ftd'
         cmd += ' %d' % nodeid

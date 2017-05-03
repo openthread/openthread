@@ -37,7 +37,7 @@
 #include <openthread-config.h>
 #endif
 
-#include <string.h>
+#include "utils/wrap_string.h"
 #include <crypto/pbkdf2_cmac.h>
 #include <mbedtls/cmac.h>
 

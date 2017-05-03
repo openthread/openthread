@@ -31,6 +31,12 @@
  *   This file implements the PAN ID Query Server.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #define WPP_NAME "panid_query_server.tmh"
 
 #include "openthread/platform/random.h"
@@ -45,7 +51,7 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
 
-namespace Thread {
+namespace ot {
 
 PanIdQueryServer::PanIdQueryServer(ThreadNetif &aThreadNetif) :
     mChannelMask(0),
@@ -174,4 +180,4 @@ void PanIdQueryServer::HandleTimer(void)
     mChannelMask = 0;
 }
 
-}  // namespace Thread
+}  // namespace ot

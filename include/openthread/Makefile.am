@@ -48,10 +48,12 @@ PRETTY_SUBDIRS                          = \
 
 openthread_headers                      = \
     cli.h                                 \
+    border_agent_proxy.h                  \
     coap.h                                \
     commissioner.h                        \
     crypto.h                              \
     dataset.h                             \
+    dataset_ftd.h                         \
     diag.h                                \
     dhcp6_client.h                        \
     dhcp6_server.h                        \
@@ -69,6 +71,7 @@ openthread_headers                      = \
     openthread.h                          \
     tasklet.h                             \
     thread.h                              \
+    thread_ftd.h                          \
     types.h                               \
     udp.h                                 \
     $(NULL)

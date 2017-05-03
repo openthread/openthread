@@ -34,17 +34,17 @@
 #ifndef TLVS_HPP_
 #define TLVS_HPP_
 
-#include <string.h>
+#include "utils/wrap_string.h"
 
 #include "openthread/types.h"
 
 #include <common/encoding.hpp>
 #include <common/message.hpp>
 
-using Thread::Encoding::BigEndian::HostSwap16;
-using Thread::Encoding::BigEndian::HostSwap32;
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
-namespace Thread {
+namespace ot {
 
 /**
  * This class implements TLV generation and parsing.
@@ -208,6 +208,6 @@ private:
     uint16_t mLength;
 } OT_TOOL_PACKED_END;
 
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // TLVS_HPP_

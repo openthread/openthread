@@ -42,7 +42,7 @@
 #include <net/udp6.hpp>
 #include <thread/network_data_leader.hpp>
 
-namespace Thread {
+namespace ot {
 
 class ThreadNetif;
 namespace NetworkData { class Leader; }
@@ -158,6 +158,6 @@ private:
 };
 
 }  // namespace Dhcp6
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // DHCP6_SERVER_HPP_

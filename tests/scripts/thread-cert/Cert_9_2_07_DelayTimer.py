@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -87,6 +87,8 @@ class Cert_9_2_7_DelayTimer(unittest.TestCase):
         self.nodes[COMMISSIONER].start()
         time.sleep(5)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
+        self.nodes[COMMISSIONER].commissioner_start()
+        time.sleep(3)
 
         self.nodes[ROUTER].start()
         time.sleep(10)

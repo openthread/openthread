@@ -34,7 +34,7 @@
 #ifndef NETWORK_DATA_LEADER_FTD_HPP_
 #define NETWORK_DATA_LEADER_FTD_HPP_
 
-#include <stdint.h>
+#include "utils/wrap_stdint.h"
 
 #include <coap/coap_server.hpp>
 #include <common/timer.hpp>
@@ -42,7 +42,7 @@
 #include <thread/mle_router.hpp>
 #include <thread/network_data.hpp>
 
-namespace Thread {
+namespace ot {
 
 class ThreadNetif;
 
@@ -212,6 +212,6 @@ private:
  */
 
 }  // namespace NetworkData
-}  // namespace Thread
+}  // namespace ot
 
 #endif  // NETWORK_DATA_LEADER_FTD_HPP_
