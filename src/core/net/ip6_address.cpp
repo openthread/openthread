@@ -180,14 +180,19 @@ uint8_t Address::GetScope(void) const
     return kGlobalScope;
 }
 
-uint8_t Address::PrefixMatch(const Address &aOther) const
+uint8_t Address::PrefixMatch(const uint8_t *aPrefixA, const uint8_t *aPrefixB, uint8_t aMaxLength)
 {
     uint8_t rval = 0;
     uint8_t diff;
 
-    for (uint8_t i = 0; i < sizeof(Address); i++)
+    if (aMaxLength > sizeof(Address))
     {
-        diff = mFields.m8[i] ^ aOther.mFields.m8[i];
+        aMaxLength = sizeof(Address);
+    }
+
+    for (uint8_t i = 0; i < aMaxLength; i++)
+    {
+        diff = aPrefixA[i] ^ aPrefixB[i];
 
         if (diff == 0)
         {
@@ -206,6 +211,11 @@ uint8_t Address::PrefixMatch(const Address &aOther) const
     }
 
     return rval;
+}
+
+uint8_t Address::PrefixMatch(const Address &aOther) const
+{
+    return PrefixMatch(mFields.m8, aOther.mFields.m8, sizeof(Address));
 }
 
 bool Address::operator==(const Address &aOther) const

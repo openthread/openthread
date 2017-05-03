@@ -62,7 +62,8 @@ ThreadError Local::AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength
     PrefixTlv *prefixTlv;
     BorderRouterTlv *brTlv;
 
-    VerifyOrExit(memcmp(aPrefix, mNetif.GetMle().GetMeshLocalPrefix(), aPrefixLength / 8),
+    VerifyOrExit(Ip6::Address::PrefixMatch(aPrefix, mNetif.GetMle().GetMeshLocalPrefix(),
+                                           (aPrefixLength + 7) / 8) < Ip6::Address::kMeshLocalPrefixLength,
                  error = kThreadError_InvalidArgs);
 
     RemoveOnMeshPrefix(aPrefix, aPrefixLength);
