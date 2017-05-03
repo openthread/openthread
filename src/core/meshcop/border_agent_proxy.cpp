@@ -148,6 +148,7 @@ ThreadError BorderAgentProxy::Send(Message &aMessage, uint16_t aLocator, uint16_
 
     VerifyOrExit(mStreamHandler != NULL, error = kThreadError_InvalidState);
 
+    messageInfo.SetSockAddr(mMeshLocal16);
     messageInfo.SetPeerAddr(mMeshLocal16);
     messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(aLocator);
     messageInfo.SetPeerPort(aPort);
