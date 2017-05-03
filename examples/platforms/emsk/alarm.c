@@ -68,10 +68,7 @@ void emskAlarmUpdateTimeout(int32_t *aTimeout)
 {
     int32_t remaining;
 
-    if (aTimeout == NULL)
-    {
-        return;
-    }
+    otEXPECT(aTimeout != NULL);
 
     if (sIsRunning)
     {
@@ -90,6 +87,10 @@ void emskAlarmUpdateTimeout(int32_t *aTimeout)
     {
         *aTimeout = 10000;
     }
+
+exit:
+    return;
+
 }
 
 void emskAlarmProcess(otInstance *aInstance)
