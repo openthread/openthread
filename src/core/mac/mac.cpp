@@ -154,13 +154,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mTxFrame(static_cast<Frame *>(otPlatRadioGetTransmitBuffer(aThreadNetif.GetInstance()))),
     mKeyIdMode2FrameCounter(0)
 {
-    for (size_t i = 0; i < sizeof(mExtAddress); i++)
-    {
-        mExtAddress.m8[i] = static_cast<uint8_t>(otPlatRandomGet());
-    }
-
-    mExtAddress.SetGroup(false);
-    mExtAddress.SetLocal(true);
+    GenerateExtAddress(&mExtAddress);
 
     ClearNoiseFloorAverage(mNoiseFloor);
 
@@ -432,6 +426,17 @@ void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
     {
         NextOperation();
     }
+}
+
+void Mac::GenerateExtAddress(ExtAddress *aExtAddress)
+{
+    for (size_t i = 0; i < sizeof(ExtAddress); i++)
+    {
+        aExtAddress->m8[i] = static_cast<uint8_t>(otPlatRandomGet());
+    }
+
+    aExtAddress->SetGroup(false);
+    aExtAddress->SetLocal(true);
 }
 
 void Mac::SetExtAddress(const ExtAddress &aExtAddress)
