@@ -52,6 +52,7 @@
 #include <crypto/sha256.hpp>
 #include <mac/mac.hpp>
 #include <mac/mac_frame.hpp>
+#include <thread/link_quality.hpp>
 #include <thread/mle_router.hpp>
 #include <thread/thread_netif.hpp>
 #include <openthread-instance.h>
@@ -122,36 +123,37 @@ Mac::Mac(ThreadNetif &aThreadNetif):
 #endif
     mReceiveTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleReceiveTimer, this),
     mNetif(aThreadNetif),
+    mShortAddress(kShortAddrInvalid),
+    mPanId(kPanIdBroadcast),
+    mChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL),
+    mMaxTransmitPower(OPENTHREAD_CONFIG_DEFAULT_MAX_TRANSMIT_POWER),
+    mSendHead(NULL),
+    mSendTail(NULL),
+    mReceiveHead(NULL),
+    mReceiveTail(NULL),
+    mState(kStateIdle),
+    mBeaconSequence(static_cast<uint8_t>(otPlatRandomGet())),
+    mDataSequence(static_cast<uint8_t>(otPlatRandomGet())),
+    mRxOnWhenIdle(false),
+    mCsmaAttempts(0),
+    mTransmitAttempts(0),
+    mTransmitBeacon(false),
+    mBeaconsEnabled(false),
+    mPendingScanRequest(kScanTypeNone),
+    mScanChannel(kPhyMinChannel),
+    mScanChannels(0xff),
+    mScanDuration(0),
+    mScanContext(NULL),
+    mActiveScanHandler(NULL), // initialize mActiveScanHandler and mEnergyScanHandler union
+    mEnergyScanCurrentMaxRssi(kInvalidRssiValue),
     mEnergyScanSampleRssiTask(aThreadNetif.GetIp6().mTaskletScheduler, &Mac::HandleEnergyScanSampleRssi, this),
+    mPcapCallback(NULL),
+    mPcapCallbackContext(NULL),
     mWhitelist(),
-    mBlacklist()
+    mBlacklist(),
+    mTxFrame(static_cast<Frame *>(otPlatRadioGetTransmitBuffer(aThreadNetif.GetInstance()))),
+    mKeyIdMode2FrameCounter(0)
 {
-    mState = kStateIdle;
-
-    mRxOnWhenIdle = false;
-    mCsmaAttempts = 0;
-    mTransmitAttempts = 0;
-    mTransmitBeacon = false;
-    mBeaconsEnabled = false;
-
-    mPendingScanRequest = kScanTypeNone;
-    mScanChannel = kPhyMinChannel;
-    mScanChannels = 0xff;
-    mScanDuration = 0;
-    mScanContext = NULL;
-    mActiveScanHandler = NULL;
-    mEnergyScanHandler = NULL;
-    mEnergyScanCurrentMaxRssi = kInvalidRssiValue;
-
-    mSendHead = NULL;
-    mSendTail = NULL;
-    mReceiveHead = NULL;
-    mReceiveTail = NULL;
-    mChannel = OPENTHREAD_CONFIG_DEFAULT_CHANNEL;
-    mMaxTransmitPower = OPENTHREAD_CONFIG_DEFAULT_MAX_TRANSMIT_POWER;
-    mPanId = kPanIdBroadcast;
-    mShortAddress = kShortAddrInvalid;
-
     for (size_t i = 0; i < sizeof(mExtAddress); i++)
     {
         mExtAddress.m8[i] = static_cast<uint8_t>(otPlatRandomGet());
@@ -160,24 +162,17 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mExtAddress.SetGroup(false);
     mExtAddress.SetLocal(true);
 
+    ClearNoiseFloorAverage(mNoiseFloor);
+
     memset(&mCounters, 0, sizeof(otMacCounters));
 
     SetExtendedPanId(sExtendedPanidInit);
     SetNetworkName(sNetworkNameInit);
     SetPanId(mPanId);
     SetExtAddress(mExtAddress);
-    SetShortAddress(kShortAddrInvalid);
-
-    mBeaconSequence = static_cast<uint8_t>(otPlatRandomGet());
-    mDataSequence = static_cast<uint8_t>(otPlatRandomGet());
-
-    mPcapCallback = NULL;
-    mPcapCallbackContext = NULL;
+    SetShortAddress(mShortAddress);
 
     otPlatRadioEnable(GetInstance());
-    mTxFrame = static_cast<Frame *>(otPlatRadioGetTransmitBuffer(GetInstance()));
-
-    mKeyIdMode2FrameCounter = 0;
 }
 
 otInstance *Mac::GetInstance(void)
