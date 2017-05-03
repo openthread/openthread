@@ -37,13 +37,14 @@
 #include <openthread-config.h>
 #endif
 
+#include "ip6_address.hpp"
+
 #include <stdio.h>
 #include "utils/wrap_string.h"
 
-#include <common/code_utils.hpp>
-#include <common/encoding.hpp>
-#include <mac/mac_frame.hpp>
-#include <net/ip6_address.hpp>
+#include "common/code_utils.hpp"
+#include "common/encoding.hpp"
+#include "mac/mac_frame.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;

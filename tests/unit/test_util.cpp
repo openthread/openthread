@@ -28,10 +28,10 @@
 
 #include "test_util.h"
 
-#include <vector>
-#include <string>
-#include <sstream>
 #include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
 
 void otTestHexToVector(std::string &aHex, std::vector<uint8_t> &aOutBytes)
 {

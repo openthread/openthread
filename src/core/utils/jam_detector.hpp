@@ -41,7 +41,8 @@
 #endif
 
 #include "utils/wrap_stdint.h"
-#include <common/timer.hpp>
+
+#include "common/timer.hpp"
 
 namespace ot {
 

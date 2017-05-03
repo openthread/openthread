@@ -36,12 +36,13 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <hw_uart.h>
 
-#include "openthread/platform/uart.h"
+#include <openthread/platform/uart.h>
 
-#include <common/code_utils.hpp>
+#include "common/code_utils.hpp"
+
 #include "hw_gpio.h"
+#include "hw_uart.h"
 #include "platform-da15000.h"
 
 static int sInFd;

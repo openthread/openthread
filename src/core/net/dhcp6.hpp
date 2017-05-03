@@ -34,8 +34,8 @@
 #ifndef DHCP6_HPP_
 #define DHCP6_HPP_
 
-#include <common/message.hpp>
-#include <net/udp6.hpp>
+#include "common/message.hpp"
+#include "net/udp6.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;

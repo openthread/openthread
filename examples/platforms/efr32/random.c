@@ -32,9 +32,10 @@
  *
  */
 
-#include <utils/code_utils.h>
 #include <openthread/types.h>
 #include <openthread/platform/random.h>
+
+#include "utils/code_utils.h"
 
 #include "em_adc.h"
 #include "em_cmu.h"

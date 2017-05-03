@@ -37,9 +37,10 @@
 #include <openthread-config.h>
 #endif
 
-#include <coap/coap_server.hpp>
-#include <common/code_utils.hpp>
-#include <net/ip6.hpp>
+#include "coap_server.hpp"
+
+#include "common/code_utils.hpp"
+#include "net/ip6.hpp"
 
 namespace ot {
 namespace Coap {

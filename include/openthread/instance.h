@@ -35,8 +35,8 @@
 #ifndef OPENTHREAD_INSTANCE_H_
 #define OPENTHREAD_INSTANCE_H_
 
-#include "openthread/types.h"
-#include "openthread/platform/logging.h"
+#include <openthread/types.h>
+#include <openthread/platform/logging.h>
 
 #ifdef __cplusplus
 extern "C" {

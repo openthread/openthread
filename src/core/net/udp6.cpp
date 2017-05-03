@@ -37,12 +37,13 @@
 #include <openthread-config.h>
 #endif
 
+#include "udp6.hpp"
+
 #include <stdio.h>
 
-#include <common/code_utils.hpp>
-#include <common/encoding.hpp>
-#include <net/ip6.hpp>
-#include <net/udp6.hpp>
+#include "common/code_utils.hpp"
+#include "common/encoding.hpp"
+#include "net/ip6.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 

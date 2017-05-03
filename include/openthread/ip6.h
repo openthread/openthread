@@ -35,8 +35,8 @@
 #ifndef OPENTHREAD_IP6_H_
 #define OPENTHREAD_IP6_H_
 
-#include "openthread/message.h"
-#include "platform/radio.h"
+#include <openthread/message.h>
+#include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
 extern "C" {

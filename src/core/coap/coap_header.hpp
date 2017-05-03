@@ -36,10 +36,10 @@
 
 #include "utils/wrap_string.h"
 
-#include "openthread/coap.h"
+#include <openthread/coap.h>
 
-#include <common/encoding.hpp>
-#include <common/message.hpp>
+#include "common/encoding.hpp"
+#include "common/message.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 

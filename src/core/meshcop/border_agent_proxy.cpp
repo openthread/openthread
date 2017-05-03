@@ -39,13 +39,14 @@
 #include <openthread-config.h>
 #endif
 
-#include <openthread/types.h>
-#include <coap/coap_header.hpp>
-#include <thread/thread_uris.hpp>
-#include <thread/thread_tlvs.hpp>
-#include <net/ip6_address.hpp>
-
 #include "border_agent_proxy.hpp"
+
+#include <openthread/types.h>
+
+#include "coap/coap_header.hpp"
+#include "net/ip6_address.hpp"
+#include "thread/thread_tlvs.hpp"
+#include "thread/thread_uris.hpp"
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
 

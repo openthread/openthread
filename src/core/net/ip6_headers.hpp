@@ -36,13 +36,13 @@
 
 #include <stddef.h>
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <common/encoding.hpp>
-#include <common/message.hpp>
-#include <net/ip6_address.hpp>
-#include <net/netif.hpp>
-#include <net/socket.hpp>
+#include "common/encoding.hpp"
+#include "common/message.hpp"
+#include "net/ip6_address.hpp"
+#include "net/netif.hpp"
+#include "net/socket.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;

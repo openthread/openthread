@@ -37,9 +37,10 @@
 #include <openthread-config.h>
 #endif
 
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <crypto/aes_ccm.hpp>
+#include "aes_ccm.hpp"
+
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
 
 namespace ot {
 namespace Crypto {

@@ -34,11 +34,11 @@
  *   This file includes definitions for MPL.
  */
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <common/message.hpp>
-#include <common/timer.hpp>
-#include <net/ip6_headers.hpp>
+#include "common/message.hpp"
+#include "common/timer.hpp"
+#include "net/ip6_headers.hpp"
 
 namespace ot {
 namespace Ip6 {

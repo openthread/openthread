@@ -34,7 +34,9 @@
 #ifndef TASKLET_HPP_
 #define TASKLET_HPP_
 
-#include "openthread/tasklet.h"
+#include <stdio.h>
+
+#include <openthread/tasklet.h>
 
 namespace ot {
 

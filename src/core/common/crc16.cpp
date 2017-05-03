@@ -37,7 +37,7 @@
 #include <openthread-config.h>
 #endif
 
-#include <common/crc16.hpp>
+#include "crc16.hpp"
 
 namespace ot {
 

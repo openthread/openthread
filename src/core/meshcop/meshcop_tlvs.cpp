@@ -31,7 +31,7 @@
  *   This file implements MechCop TLV helper functions.
  */
 
-#include <meshcop/meshcop_tlvs.hpp>
+#include "meshcop_tlvs.hpp"
 
 namespace ot {
 namespace MeshCoP {

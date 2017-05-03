@@ -42,22 +42,23 @@
 
 #include <stdarg.h>
 
-#include "openthread/openthread.h"
-#include "openthread/ip6.h"
-#include "openthread/udp.h"
+#include <openthread/openthread.h>
+#include <openthread/ip6.h>
+#include <openthread/udp.h>
 
-#include <cli/cli_server.hpp>
-#include <common/code_utils.hpp>
+#include "cli/cli_server.hpp"
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 #include <coap/coap_header.hpp>
 #endif
 
+#include "common/code_utils.hpp"
+
 #ifndef OTDLL
-#include <net/icmp6.hpp>
-#include <common/timer.hpp>
-#include "openthread/dhcp6_client.h"
-#include "openthread/dns.h"
+#include <openthread/dhcp6_client.h>
+#include <openthread/dns.h>
+#include "common/timer.hpp"
+#include "net/icmp6.hpp"
 #endif
 
 #ifdef OTDLL

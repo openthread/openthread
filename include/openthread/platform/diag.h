@@ -39,9 +39,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include <openthread/platform/radio.h>
-
 #include <openthread/types.h>
+#include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
 extern "C" {

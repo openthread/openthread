@@ -36,9 +36,11 @@
 #include <openthread-config.h>
 #endif
 
+#include "hdlc.hpp"
+
 #include <stdlib.h>
-#include <common/code_utils.hpp>
-#include <ncp/hdlc.hpp>
+
+#include "common/code_utils.hpp"
 
 #if OPENTHREAD_ENABLE_NCP_UART
 

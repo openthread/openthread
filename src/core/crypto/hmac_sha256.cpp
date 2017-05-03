@@ -37,7 +37,7 @@
 #include <openthread-config.h>
 #endif
 
-#include <crypto/hmac_sha256.hpp>
+#include "hmac_sha256.hpp"
 
 namespace ot {
 namespace Crypto {

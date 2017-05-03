@@ -35,17 +35,16 @@
 #ifndef OPENTHREAD_H_
 #define OPENTHREAD_H_
 
-#include "openthread/types.h"
-
-#include "openthread/crypto.h"
-#include "openthread/dataset.h"
-#include "openthread/instance.h"
-#include "openthread/ip6.h"
-#include "openthread/link.h"
-#include "openthread/message.h"
-#include "openthread/netdata.h"
-#include "openthread/tasklet.h"
-#include "openthread/thread.h"
+#include <openthread/crypto.h>
+#include <openthread/dataset.h>
+#include <openthread/instance.h>
+#include <openthread/ip6.h>
+#include <openthread/link.h>
+#include <openthread/message.h>
+#include <openthread/netdata.h>
+#include <openthread/tasklet.h>
+#include <openthread/thread.h>
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {

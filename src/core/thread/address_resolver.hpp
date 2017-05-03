@@ -34,16 +34,15 @@
 #ifndef ADDRESS_RESOLVER_HPP_
 #define ADDRESS_RESOLVER_HPP_
 
-#include <openthread-core-config.h>
+#include <openthread/types.h>
 
-#include "openthread/types.h"
-
-#include <coap/coap_client.hpp>
-#include <coap/coap_server.hpp>
-#include <common/timer.hpp>
-#include <mac/mac.hpp>
-#include <net/icmp6.hpp>
-#include <net/udp6.hpp>
+#include "openthread-core-config.h"
+#include "coap/coap_client.hpp"
+#include "coap/coap_server.hpp"
+#include "common/timer.hpp"
+#include "mac/mac.hpp"
+#include "net/icmp6.hpp"
+#include "net/udp6.hpp"
 
 namespace ot {
 

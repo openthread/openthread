@@ -31,7 +31,7 @@
  *   This file implements the OpenThread ICMPv6 API.
  */
 
-#include "openthread/icmp6.h"
+#include <openthread/icmp6.h>
 
 #include "openthread-instance.h"
 

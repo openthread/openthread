@@ -34,11 +34,11 @@
 #ifndef BORDER_AGENT_PROXY_HPP_
 #define BORDER_AGENT_PROXY_HPP_
 
-#include <openthread-core-config.h>
 #include <openthread/border_agent_proxy.h>
 
-#include <coap/coap_client.hpp>
-#include <coap/coap_server.hpp>
+#include "openthread-core-config.h"
+#include "coap/coap_client.hpp"
+#include "coap/coap_server.hpp"
 
 namespace ot {
 namespace MeshCoP {

@@ -37,7 +37,7 @@
 #include <openthread-config.h>
 #endif
 
-#include <crypto/aes_ecb.hpp>
+#include "aes_ecb.hpp"
 
 namespace ot {
 namespace Crypto {

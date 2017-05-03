@@ -34,10 +34,10 @@
 #ifndef SOURCE_MATCH_CONTROLLER_HPP_
 #define SOURCE_MATCH_CONTROLLER_HPP_
 
-#include <openthread-core-config.h>
+#include <openthread/types.h>
 
-#include "openthread/types.h"
-#include <thread/topology.hpp>
+#include "openthread-core-config.h"
+#include "thread/topology.hpp"
 
 namespace ot {
 

@@ -37,13 +37,14 @@
 #include <openthread-config.h>
 #endif
 
+#include "mac_frame.hpp"
+
 #include <stdio.h>
 #include "utils/wrap_string.h"
 
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <mac/mac_frame.hpp>
-#include <net/ip6_address.hpp>
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "net/ip6_address.hpp"
 
 namespace ot {
 namespace Mac {

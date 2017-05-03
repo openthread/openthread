@@ -36,19 +36,19 @@
 
 #include "utils/wrap_string.h"
 
-#include <coap/coap_header.hpp>
-#include <coap/coap_server.hpp>
-#include <coap/coap_client.hpp>
-#include <common/timer.hpp>
-#include <common/trickle_timer.hpp>
-#include <mac/mac_frame.hpp>
-#include <meshcop/meshcop_tlvs.hpp>
-#include <net/icmp6.hpp>
-#include <net/udp6.hpp>
-#include <thread/mle.hpp>
-#include <thread/mle_tlvs.hpp>
-#include <thread/thread_tlvs.hpp>
-#include <thread/topology.hpp>
+#include "coap/coap_client.hpp"
+#include "coap/coap_header.hpp"
+#include "coap/coap_server.hpp"
+#include "common/timer.hpp"
+#include "common/trickle_timer.hpp"
+#include "mac/mac_frame.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
+#include "net/icmp6.hpp"
+#include "net/udp6.hpp"
+#include "thread/mle.hpp"
+#include "thread/mle_tlvs.hpp"
+#include "thread/thread_tlvs.hpp"
+#include "thread/topology.hpp"
 
 namespace ot {
 namespace Mle {

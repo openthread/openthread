@@ -35,8 +35,8 @@
 #ifndef LINK_RAW_H_
 #define LINK_RAW_H_
 
-#include "openthread/types.h"
-#include "platform/radio.h"
+#include <openthread/types.h>
+#include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
 extern "C" {

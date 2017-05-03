@@ -39,12 +39,13 @@
 #include <openthread-config.h>
 #endif
 
-#include <common/debug.hpp>
-#include <common/logging.hpp>
-#include <common/code_utils.hpp>
-#include <mac/mac_frame.hpp>
-#include <thread/network_data_local.hpp>
-#include <thread/thread_netif.hpp>
+#include "network_data_local.hpp"
+
+#include "common/debug.hpp"
+#include "common/logging.hpp"
+#include "common/code_utils.hpp"
+#include "mac/mac_frame.hpp"
+#include "thread/thread_netif.hpp"
 
 namespace ot {
 namespace NetworkData {

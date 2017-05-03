@@ -26,18 +26,18 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <fcntl.h>
 
 #include <openthread-config.h>
-#include "openthread/platform/alarm.h"
-#include <utils/flash.h>
+#include <openthread/platform/alarm.h>
 
-#include <utils/code_utils.h>
 #include "platform-cc2538.h"
 #include "rom-utility.h"
+#include "utils/code_utils.h"
+#include "utils/flash.h"
 
 #define FLASH_CTRL_FCTL_BUSY   0x00000080
 

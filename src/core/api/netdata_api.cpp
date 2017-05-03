@@ -31,7 +31,7 @@
  *   This file implements the OpenThread Network Data API.
  */
 
-#include "openthread/netdata.h"
+#include <openthread/netdata.h>
 
 #include "openthread-instance.h"
 

@@ -36,11 +36,12 @@
 #include <openthread-config.h>
 #endif
 
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <common/message.hpp>
-#include <net/ip6.hpp>
-#include <net/netif.hpp>
+#include "netif.hpp"
+
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/message.hpp"
+#include "net/ip6.hpp"
 
 namespace ot {
 namespace Ip6 {

@@ -43,12 +43,12 @@
 #include "utils/wrap_stdint.h"
 #include "utils/wrap_string.h"
 
-#include "openthread/message.h"
-#include "openthread/platform/messagepool.h"
+#include <openthread/message.h>
+#include <openthread/platform/messagepool.h>
 
-#include <openthread-core-config.h>
-#include <common/code_utils.hpp>
-#include <mac/mac_frame.hpp>
+#include "openthread-core-config.h"
+#include "common/code_utils.hpp"
+#include "mac/mac_frame.hpp"
 
 namespace ot {
 

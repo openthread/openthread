@@ -26,12 +26,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "openthread/types.h"
-#include "openthread/platform/alarm.h"
+#include <openthread-config.h>
+#include <openthread/types.h>
+#include <openthread/platform/alarm.h>
 
 #include "hw_qspi.h"
 #include "qspi_automode.h"
-#include "openthread-config.h"
 
 #define FLASH_SECTOR_SIZE             0x1000
 #define FLASH_BUFFER_SIZE             0x2000

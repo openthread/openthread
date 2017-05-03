@@ -29,14 +29,14 @@
 #ifndef COAP_CLIENT_HPP_
 #define COAP_CLIENT_HPP_
 
-#include "openthread/coap.h"
+#include <openthread/coap.h>
 
-#include <coap/coap_base.hpp>
-#include <coap/coap_header.hpp>
-#include <common/message.hpp>
-#include <common/timer.hpp>
-#include <net/netif.hpp>
-#include <net/udp6.hpp>
+#include "coap/coap_base.hpp"
+#include "coap/coap_header.hpp"
+#include "common/message.hpp"
+#include "common/timer.hpp"
+#include "net/netif.hpp"
+#include "net/udp6.hpp"
 
 /**
  * @file

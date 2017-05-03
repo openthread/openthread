@@ -39,14 +39,15 @@
 #include <openthread-config.h>
 #endif
 
+#include "icmp6.hpp"
+
 #include "utils/wrap_string.h"
 
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <common/logging.hpp>
-#include <common/message.hpp>
-#include <net/icmp6.hpp>
-#include <net/ip6.hpp>
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/logging.hpp"
+#include "common/message.hpp"
+#include "net/ip6.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 

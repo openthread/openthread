@@ -37,12 +37,13 @@
 #include <openthread-config.h>
 #endif
 
-#include "openthread/platform/random.h"
+#include "ip6_mpl.hpp"
 
-#include <common/code_utils.hpp>
-#include <common/message.hpp>
-#include <net/ip6.hpp>
-#include <net/ip6_mpl.hpp>
+#include <openthread/platform/random.h>
+
+#include "common/code_utils.hpp"
+#include "common/message.hpp"
+#include "net/ip6.hpp"
 
 namespace ot {
 namespace Ip6 {

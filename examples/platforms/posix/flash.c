@@ -28,16 +28,17 @@
 
 #include "platform-posix.h"
 
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/stat.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include <openthread-config.h>
-#include <utils/flash.h>
-#include <utils/code_utils.h>
+
+#include "utils/code_utils.h"
+#include "utils/flash.h"
 
 static int sFlashFd;
 uint32_t sEraseAddress;
@@ -82,7 +83,8 @@ ThreadError utilsFlashInit(void)
     {
         for (uint16_t index = 0; index < FLASH_PAGE_NUM; index++)
         {
-            SuccessOrExit(error = utilsFlashErasePage(index * FLASH_PAGE_SIZE));
+            error = utilsFlashErasePage(index * FLASH_PAGE_SIZE);
+            otEXPECT(error == kThreadError_None);
         }
     }
 
@@ -113,7 +115,7 @@ ThreadError utilsFlashErasePage(uint32_t aAddress)
     // Write the page
     ssize_t r;
     r =  pwrite(sFlashFd, &(dummyPage[0]), FLASH_PAGE_SIZE, address);
-    VerifyOrExit(((int)r) == ((int)(FLASH_PAGE_SIZE)), error = kThreadError_Failed);
+    otEXPECT_ACTION(((int)r) == ((int)(FLASH_PAGE_SIZE)), error = kThreadError_Failed);
 
 
 exit:

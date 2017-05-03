@@ -38,10 +38,11 @@
 #include <stdio.h>
 #include "utils/wrap_string.h"
 
-#include <openthread-core-config.h>
-#include "openthread/types.h"
-#include "openthread/instance.h"
-#include "openthread/platform/logging.h"
+#include <openthread/instance.h>
+#include <openthread/types.h>
+#include <openthread/platform/logging.h>
+
+#include "openthread-core-config.h"
 
 #ifdef WINDOWS_LOGGING
 #ifdef _KERNEL_MODE

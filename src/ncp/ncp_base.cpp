@@ -36,38 +36,40 @@
 #include <openthread-config.h>
 #endif
 
+#include "ncp_base.hpp"
+
+#include <stdarg.h>
 #include <stdlib.h>
 
-#include "openthread/openthread.h"
-#include "openthread/ncp.h"
-#include "openthread/diag.h"
-#include "openthread/icmp6.h"
-
 #if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
-#include "openthread/border_agent_proxy.h"
-#endif
-
-#if OPENTHREAD_FTD
-#include "openthread/thread_ftd.h"
-#endif
-
-#if OPENTHREAD_ENABLE_JAM_DETECTION
-#include "openthread/jam_detection.h"
+#include <openthread/border_agent_proxy.h>
 #endif
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
-#include "meshcop/commissioner.hpp"
+#include <meshcop/commissioner.hpp>
 #endif
 
-#include "openthread/platform/radio.h"
-#include "openthread/platform/misc.h"
+#include <openthread/diag.h>
+#include <openthread/icmp6.h>
 
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <ncp/ncp_base.hpp>
-#include <net/ip6.hpp>
-#include <openthread-instance.h>
-#include <stdarg.h>
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+#include <openthread/jam_detection.h>
+#endif
+
+#include <openthread/ncp.h>
+#include <openthread/openthread.h>
+
+#if OPENTHREAD_FTD
+#include <openthread/thread_ftd.h>
+#endif
+
+#include <openthread/platform/misc.h>
+#include <openthread/platform/radio.h>
+
+#include "openthread-instance.h"
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "net/ip6.hpp"
 
 namespace ot
 {

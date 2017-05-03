@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "test_util.hpp"
 #include "test_lowpan.hpp"
+#include "test_util.hpp"
 
 using namespace ot;
 using ot::Encoding::BigEndian::HostSwap16;

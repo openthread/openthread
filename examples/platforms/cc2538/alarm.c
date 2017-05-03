@@ -36,10 +36,11 @@
 #include <stdint.h>
 
 #include <openthread-config.h>
-#include "openthread/openthread.h"
-#include "openthread/platform/platform.h"
-#include "openthread/platform/alarm.h"
-#include "openthread/platform/diag.h"
+#include <openthread/openthread.h>
+#include <openthread/platform/alarm.h>
+#include <openthread/platform/diag.h>
+#include <openthread/platform/platform.h>
+
 #include "platform-cc2538.h"
 
 enum

@@ -31,7 +31,7 @@
  *   This file implements the OpenThread Message API.
  */
 
-#include "openthread/message.h"
+#include <openthread/message.h>
 
 #include "openthread-instance.h"
 

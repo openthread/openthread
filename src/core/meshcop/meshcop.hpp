@@ -35,8 +35,8 @@
 #ifndef MESHCOP_HPP_
 #define MESHCOP_HPP_
 
-#include <common/message.hpp>
-#include <coap/coap_base.hpp>
+#include "coap/coap_base.hpp"
+#include "common/message.hpp"
 
 namespace ot {
 namespace MeshCoP {

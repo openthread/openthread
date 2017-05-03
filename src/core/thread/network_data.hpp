@@ -34,13 +34,13 @@
 #ifndef NETWORK_DATA_HPP_
 #define NETWORK_DATA_HPP_
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <coap/coap_client.hpp>
-#include <net/udp6.hpp>
-#include <thread/lowpan.hpp>
-#include <thread/mle_router.hpp>
-#include <thread/network_data_tlvs.hpp>
+#include "coap/coap_client.hpp"
+#include "net/udp6.hpp"
+#include "thread/lowpan.hpp"
+#include "thread/mle_router.hpp"
+#include "thread/network_data_tlvs.hpp"
 
 namespace ot {
 

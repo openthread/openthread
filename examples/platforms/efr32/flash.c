@@ -33,8 +33,9 @@
 
 #include <openthread-config.h>
 #include <openthread/platform/alarm.h>
-#include <utils/flash.h>
-#include <utils/code_utils.h>
+
+#include "utils/code_utils.h"
+#include "utils/flash.h"
 
 #include "em_msc.h"
 

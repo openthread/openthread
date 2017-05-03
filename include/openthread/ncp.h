@@ -35,7 +35,7 @@
 #ifndef NCP_H_
 #define NCP_H_
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {

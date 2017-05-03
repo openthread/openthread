@@ -35,7 +35,7 @@
 
 #define WPP_NAME "thread_ftd_api.tmh"
 
-#include "openthread/thread_ftd.h"
+#include <openthread/thread_ftd.h>
 
 #include "openthread-instance.h"
 

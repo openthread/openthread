@@ -34,13 +34,16 @@
  *   This file includes definitions for manipulating IPv6 routing tables.
  */
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <common/message.hpp>
-#include <net/ip6_address.hpp>
+#include "common/message.hpp"
+#include "net/ip6_address.hpp"
+#include "net/ip6_routes.hpp"
 
 namespace ot {
 namespace Ip6 {
+
+class Ip6;
 
 /**
  * @addtogroup core-ip6-ip6

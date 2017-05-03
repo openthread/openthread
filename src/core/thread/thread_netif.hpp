@@ -40,53 +40,55 @@
 #include <openthread-config.h>
 #endif
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <coap/coap_server.hpp>
-#include <coap/coap_client.hpp>
-#include <coap/secure_coap_client.hpp>
-#include <coap/secure_coap_server.hpp>
-#include <mac/mac.hpp>
-#include <meshcop/dataset_manager.hpp>
-#include <meshcop/joiner_router.hpp>
-#include <meshcop/leader.hpp>
-#include <net/dhcp6.hpp>
-#include <net/dhcp6_client.hpp>
-#include <net/dhcp6_server.hpp>
-#include <net/dns_client.hpp>
-#include <net/ip6_filter.hpp>
-#include <net/netif.hpp>
-#include <thread/address_resolver.hpp>
-#include <thread/announce_begin_server.hpp>
-#include <thread/energy_scan_server.hpp>
-#include <thread/network_diagnostic.hpp>
-#include <thread/key_manager.hpp>
-#include <thread/mesh_forwarder.hpp>
-#include <thread/mle.hpp>
-#include <thread/mle_router.hpp>
-#include <thread/network_data_local.hpp>
-#include <thread/panid_query_server.hpp>
-#include <utils/child_supervision.hpp>
-
-#if OPENTHREAD_ENABLE_JAM_DETECTION
-#include <utils/jam_detector.hpp>
-#endif // OPENTHREAD_ENABLE_JAM_DETECTION
+#include "coap/coap_client.hpp"
+#include "coap/coap_server.hpp"
+#include "coap/secure_coap_client.hpp"
+#include "coap/secure_coap_server.hpp"
+#include "mac/mac.hpp"
 
 #if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
-#include <meshcop/border_agent_proxy.hpp>
+#include "meshcop/border_agent_proxy.hpp"
 #endif // OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
-#include <meshcop/commissioner.hpp>
+#include "meshcop/commissioner.hpp"
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
+#include "meshcop/dataset_manager.hpp"
+
 #if OPENTHREAD_ENABLE_DTLS
-#include <meshcop/dtls.hpp>
+#include "meshcop/dtls.hpp"
 #endif  // OPENTHREAD_ENABLE_DTLS
 
 #if OPENTHREAD_ENABLE_JOINER
-#include <meshcop/joiner.hpp>
+#include "meshcop/joiner.hpp"
 #endif  // OPENTHREAD_ENABLE_JOINER
+
+#include "meshcop/joiner_router.hpp"
+#include "meshcop/leader.hpp"
+#include "net/dhcp6.hpp"
+#include "net/dhcp6_client.hpp"
+#include "net/dhcp6_server.hpp"
+#include "net/dns_client.hpp"
+#include "net/ip6_filter.hpp"
+#include "net/netif.hpp"
+#include "thread/address_resolver.hpp"
+#include "thread/announce_begin_server.hpp"
+#include "thread/energy_scan_server.hpp"
+#include "thread/network_diagnostic.hpp"
+#include "thread/key_manager.hpp"
+#include "thread/mesh_forwarder.hpp"
+#include "thread/mle.hpp"
+#include "thread/mle_router.hpp"
+#include "thread/network_data_local.hpp"
+#include "thread/panid_query_server.hpp"
+#include "utils/child_supervision.hpp"
+
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+#include "utils/jam_detector.hpp"
+#endif // OPENTHREAD_ENABLE_JAM_DETECTION
 
 namespace ot {
 

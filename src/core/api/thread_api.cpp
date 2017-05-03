@@ -33,12 +33,12 @@
 
 #define WPP_NAME "thread_api.tmh"
 
-#include "openthread/thread.h"
+#include <openthread/thread.h>
+#include <openthread/platform/settings.h>
 
 #include "openthread-instance.h"
 #include "common/logging.hpp"
 #include "common/settings.hpp"
-#include "openthread/platform/settings.h"
 
 using namespace ot;
 

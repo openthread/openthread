@@ -37,13 +37,13 @@
 
 #include "utils/wrap_string.h"
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <common/crc16.hpp>
-#include <common/encoding.hpp>
-#include <common/message.hpp>
-#include <common/tlvs.hpp>
-#include <meshcop/timestamp.hpp>
+#include "common/crc16.hpp"
+#include "common/encoding.hpp"
+#include "common/message.hpp"
+#include "common/tlvs.hpp"
+#include "meshcop/timestamp.hpp"
 
 using ot::Encoding::Reverse32;
 using ot::Encoding::BigEndian::HostSwap16;

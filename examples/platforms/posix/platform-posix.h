@@ -41,6 +41,12 @@
 #include <openthread-config.h>
 #endif
 
+#include <assert.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+
 #if _WIN32
 #include <WinSock2.h>
 #include <WS2tcpip.h>
@@ -75,14 +81,7 @@ __forceinline void timersub(struct timeval *a, struct timeval *b, struct timeval
 #define POLL poll
 #endif
 
-#include "openthread/openthread.h"
-#include <common/code_utils.hpp>
-
-#include <assert.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
+#include <openthread/openthread.h>
 
 /**
  * Unique node ID.

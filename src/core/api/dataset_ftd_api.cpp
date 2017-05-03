@@ -33,7 +33,7 @@
 
 #if OPENTHREAD_FTD
 
-#include "openthread/dataset_ftd.h"
+#include <openthread/dataset_ftd.h>
 
 #include "openthread-instance.h"
 

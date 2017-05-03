@@ -36,16 +36,17 @@
 #include <openthread-config.h>
 #endif
 
-#include "openthread/ncp.h"
-#include "openthread/platform/spi-slave.h"
+#include "ncp_spi.hpp"
 
-#include <common/code_utils.hpp>
-#include <common/new.hpp>
-#include <common/debug.hpp>
-#include <net/ip6.hpp>
-#include <ncp/ncp_spi.hpp>
-#include <core/openthread-core-config.h>
-#include <openthread-instance.h>
+#include <openthread/ncp.h>
+#include <openthread/platform/spi-slave.h>
+
+#include "openthread-core-config.h"
+#include "openthread-instance.h"
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/new.hpp"
+#include "net/ip6.hpp"
 
 #define SPI_RESET_FLAG          0x80
 #define SPI_CRC_FLAG            0x40

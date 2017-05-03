@@ -34,18 +34,18 @@
 #ifndef JOINER_ROUTER_HPP_
 #define JOINER_ROUTER_HPP_
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <coap/coap_header.hpp>
-#include <coap/coap_client.hpp>
-#include <coap/coap_server.hpp>
-#include <coap/coap_base.hpp>
-#include <common/message.hpp>
-#include <common/timer.hpp>
-#include <mac/mac_frame.hpp>
-#include <meshcop/meshcop_tlvs.hpp>
-#include <net/udp6.hpp>
-#include <thread/key_manager.hpp>
+#include "coap/coap_base.hpp"
+#include "coap/coap_client.hpp"
+#include "coap/coap_header.hpp"
+#include "coap/coap_server.hpp"
+#include "common/message.hpp"
+#include "common/timer.hpp"
+#include "mac/mac_frame.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
+#include "net/udp6.hpp"
+#include "thread/key_manager.hpp"
 
 namespace ot {
 

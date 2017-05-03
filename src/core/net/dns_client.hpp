@@ -32,11 +32,11 @@
 #include <openthread/dns.h>
 #include <openthread/types.h>
 
-#include <common/message.hpp>
-#include <common/timer.hpp>
-#include <net/dns_headers.hpp>
-#include <net/ip6.hpp>
-#include <net/netif.hpp>
+#include "common/message.hpp"
+#include "common/timer.hpp"
+#include "net/dns_headers.hpp"
+#include "net/ip6.hpp"
+#include "net/netif.hpp"
 
 /**
  * @file
