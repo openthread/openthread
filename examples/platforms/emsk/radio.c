@@ -318,7 +318,7 @@ void emskRadioInit(void)
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
     (void)aInstance;
-    return (sState != kStateDisabled) ? true : false;
+    return (sState != kStateDisabled);
 }
 
 ThreadError otPlatRadioEnable(otInstance *aInstance)

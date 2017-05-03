@@ -106,7 +106,7 @@ ThreadError utilsFlashStatusWait(uint32_t aTimeout)
 {
     ThreadError error = kThreadError_None;
     uint32_t start = otPlatAlarmGetNow();
-    uint32_t busy = 1;
+    bool busy = true;
     uint32_t status = 0x01;
 
     while (busy && ((otPlatAlarmGetNow() - start) < aTimeout))
