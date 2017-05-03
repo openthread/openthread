@@ -43,7 +43,7 @@
 #include <common/crc16.hpp>
 #include <net/udp6.hpp>
 #include <meshcop/dtls.hpp>
-#include <meshcop/tlvs.hpp>
+#include <meshcop/meshcop_tlvs.hpp>
 
 namespace ot {
 

@@ -237,4 +237,11 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+ThreadError otThreadSetSteeringData(otInstance *aInstance, otExtAddress *aExtAddress)
+{
+    return aInstance->mThreadNetif.GetMle().SetSteeringData(aExtAddress);
+}
+#endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+
 #endif // OPENTHREAD_FTD

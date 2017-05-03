@@ -715,4 +715,14 @@
 #define OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE                     (2048 * sizeof(void *))
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+ *
+ * Enable setting steering data out of band.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#define OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB          0
+#endif
+
 #endif  // OPENTHREAD_CORE_DEFAULT_CONFIG_H_

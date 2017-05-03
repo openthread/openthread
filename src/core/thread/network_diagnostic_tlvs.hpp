@@ -41,7 +41,7 @@
 #include <common/encoding.hpp>
 #include <common/message.hpp>
 #include <common/tlvs.hpp>
-#include <meshcop/tlvs.hpp>
+#include <meshcop/meshcop_tlvs.hpp>
 #include <net/ip6_address.hpp>
 #include <thread/mle_constants.hpp>
 

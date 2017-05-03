@@ -770,7 +770,7 @@ void Interpreter::ProcessDiscover(int argc, char *argv[])
         scanChannels = 1 << value;
     }
 
-    SuccessOrExit(error = otThreadDiscover(mInstance, scanChannels, OT_PANID_BROADCAST, false,
+    SuccessOrExit(error = otThreadDiscover(mInstance, scanChannels, OT_PANID_BROADCAST, false, false,
                                            &Interpreter::s_HandleActiveScanResult, this));
     sServer->OutputFormat("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |\r\n");
     sServer->OutputFormat("+---+------------------+------------------+------+------------------+----+-----+-----+\r\n");

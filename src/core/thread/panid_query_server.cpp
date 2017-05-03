@@ -46,7 +46,7 @@
 #include <common/debug.hpp>
 #include <common/logging.hpp>
 #include <meshcop/meshcop.hpp>
-#include <meshcop/tlvs.hpp>
+#include <meshcop/meshcop_tlvs.hpp>
 #include <thread/panid_query_server.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>

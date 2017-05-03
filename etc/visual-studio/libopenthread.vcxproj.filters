@@ -279,6 +279,9 @@
     <ClCompile Include="..\..\src\core\meshcop\timestamp.cpp">
       <Filter>Source Files\meshcop</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\meshcop\meshcop_tlvs.cpp">
+      <Filter>Source Files\meshcop</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\crypto\aes_ecb.cpp">
       <Filter>Source Files\crypto</Filter>
     </ClCompile>

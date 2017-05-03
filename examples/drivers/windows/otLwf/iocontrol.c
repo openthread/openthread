@@ -909,13 +909,15 @@ otLwfIoCtl_otDiscover(
     {
         uint32_t aScanChannels = *(uint32_t*)InBuffer;
         uint16_t aPanid = *(uint16_t*)(InBuffer + sizeof(uint32_t));
-        bool aJoiner = *(bool*)(InBuffer + sizeof(uint32_t) + sizeof(uint16_t));
+        bool aJoiner = *(uint8_t*)(InBuffer + sizeof(uint32_t) + sizeof(uint16_t));
+        bool aEnableEui64Filtering = *(uint8_t*)(InBuffer + sizeof(uint32_t) + sizeof(uint16_t) + sizeof(uint8_t));
         status = ThreadErrorToNtstatus(
             otThreadDiscover(
                 pFilter->otCtx, 
                 aScanChannels, 
                 aPanid,
                 aJoiner,
+                aEnableEui64Filtering,
                 otLwfDiscoverCallback,
                 pFilter)
             );

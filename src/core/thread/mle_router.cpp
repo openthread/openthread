@@ -2464,6 +2464,39 @@ exit:
     return kThreadError_None;
 }
 
+#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+ThreadError MleRouter::SetSteeringData(otExtAddress *aExtAddress)
+{
+    ThreadError error = kThreadError_None;
+    uint8_t nullExtAddr[OT_EXT_ADDRESS_SIZE];
+    uint8_t allowAnyExtAddr[OT_EXT_ADDRESS_SIZE];
+
+    memset(nullExtAddr, 0, sizeof(nullExtAddr));
+    memset(allowAnyExtAddr, 0xFF, sizeof(allowAnyExtAddr));
+
+    mSteeringData.Init();
+
+    if ((aExtAddress == NULL) || (memcmp(aExtAddress, &nullExtAddr, sizeof(nullExtAddr)) == 0))
+    {
+        // Clear steering data
+        mSteeringData.Clear();
+    }
+    else if (memcmp(aExtAddress, &allowAnyExtAddr, sizeof(allowAnyExtAddr)) == 0)
+    {
+        // Set steering data to 0xFF
+        mSteeringData.SetLength(1);
+        mSteeringData.Set();
+    }
+    else
+    {
+        // Set bloom filter with the extended address passed in
+        mSteeringData.ComputeBloomFilter(aExtAddress);
+    }
+
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+
 ThreadError MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadError error = kThreadError_None;
@@ -2512,7 +2545,17 @@ ThreadError MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6
 
             if (discoveryRequest.IsJoiner())
             {
-                VerifyOrExit(mNetif.GetNetworkDataLeader().IsJoiningEnabled());
+#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+
+                if (!mSteeringData.IsCleared())
+                {
+                    break;
+                }
+                else // if steering data is not set out of band, fall back to network data
+#endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+                {
+                    VerifyOrExit(mNetif.GetNetworkDataLeader().IsJoiningEnabled());
+                }
             }
 
             break;
@@ -2592,12 +2635,24 @@ ThreadError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, u
     networkName.SetNetworkName(mNetif.GetMac().GetNetworkName());
     SuccessOrExit(error = message->Append(&networkName, sizeof(tlv) + networkName.GetLength()));
 
-    // Steering Data TLV
-    steeringData = mNetif.GetNetworkDataLeader().GetCommissioningDataSubTlv(MeshCoP::Tlv::kSteeringData);
+#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
 
-    if (steeringData != NULL)
+    // If steering data is set out of band, use that value.
+    // Otherwise use the one from commissioning data.
+    if (!mSteeringData.IsCleared())
     {
-        SuccessOrExit(message->Append(steeringData, sizeof(*steeringData) + steeringData->GetLength()));
+        SuccessOrExit(message->Append(&mSteeringData, sizeof(mSteeringData) + mSteeringData.GetLength()));
+    }
+    else
+#endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+    {
+        // Steering Data TLV
+        steeringData = mNetif.GetNetworkDataLeader().GetCommissioningDataSubTlv(MeshCoP::Tlv::kSteeringData);
+
+        if (steeringData != NULL)
+        {
+            SuccessOrExit(message->Append(steeringData, sizeof(*steeringData) + steeringData->GetLength()));
+        }
     }
 
     // Joiner UDP Port TLV

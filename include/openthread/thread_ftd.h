@@ -202,6 +202,22 @@ OTAPI uint16_t OTCALL otThreadGetJoinerUdpPort(otInstance *aInstance);
  */
 OTAPI ThreadError OTCALL otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort);
 
+#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+/**
+ * Set Steering data out of band
+ *
+ * @param[in]  aInstance       A pointer to an OpenThread instance.
+ * @param[in]  aExtAddress     Address to indicate steering data.
+ *                             All zeros indicate that there is no steering data
+ *                             All 0xFFs indicate that there is no filtering
+ *                             Specific MAC address
+ *
+ * @retval  kThreadErrorNone   Successfully set steering data
+ *
+ */
+ThreadError otThreadSetSteeringData(otInstance *aInstance, otExtAddress *aExtAddress);
+#endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+
 /**
  * @defgroup config-test  Test
  *

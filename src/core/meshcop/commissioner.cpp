@@ -45,14 +45,13 @@
 #include "openthread/platform/random.h"
 
 #include <coap/coap_header.hpp>
-#include <common/crc16.hpp>
 #include <common/encoding.hpp>
 #include <common/logging.hpp>
 #include <crypto/pbkdf2_cmac.h>
 #include <meshcop/commissioner.hpp>
 #include <meshcop/joiner_router.hpp>
 #include <meshcop/meshcop.hpp>
-#include <meshcop/tlvs.hpp>
+#include <meshcop/meshcop_tlvs.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
@@ -167,9 +166,6 @@ ThreadError Commissioner::SendCommissionerSet(void)
 
     for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
     {
-        Crc16 ccitt(Crc16::kCcitt);
-        Crc16 ansi(Crc16::kAnsi);
-
         if (!mJoiners[i].mValid)
         {
             continue;
@@ -182,15 +178,7 @@ ThreadError Commissioner::SendCommissionerSet(void)
             break;
         }
 
-        for (size_t j = 0; j < sizeof(mJoiners[i].mExtAddress.m8); j++)
-        {
-            uint8_t byte = mJoiners[i].mExtAddress.m8[j];
-            ccitt.Update(byte);
-            ansi.Update(byte);
-        }
-
-        steeringData.SetBit(ccitt.Get() % steeringData.GetNumBits());
-        steeringData.SetBit(ansi.Get() % steeringData.GetNumBits());
+        steeringData.ComputeBloomFilter(&mJoiners[i].mExtAddress);
     }
 
     // set bloom filter

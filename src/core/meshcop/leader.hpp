@@ -37,7 +37,7 @@
 #include <coap/coap_client.hpp>
 #include <coap/coap_server.hpp>
 #include <common/timer.hpp>
-#include <meshcop/tlvs.hpp>
+#include <meshcop/meshcop_tlvs.hpp>
 #include <net/udp6.hpp>
 #include <thread/mle.hpp>
 
