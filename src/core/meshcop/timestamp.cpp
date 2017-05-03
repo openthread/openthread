@@ -31,11 +31,7 @@
  *   This file implements common MeshCoP timestamp processing.
  */
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread-enable-defines.h>
 
 #include "utils/wrap_string.h"
 

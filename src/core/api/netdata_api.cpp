@@ -30,6 +30,7 @@
  * @file
  *   This file implements the OpenThread Network Data API.
  */
+#include <openthread-enable-defines.h>
 
 #include "openthread/netdata.h"
 

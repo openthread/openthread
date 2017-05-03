@@ -34,6 +34,8 @@
 #ifndef NETWORK_DATA_LEADER_HPP_
 #define NETWORK_DATA_LEADER_HPP_
 
+#include <openthread-enable-defines.h>
+
 #include "utils/wrap_stdint.h"
 
 #include <coap/coap_server.hpp>

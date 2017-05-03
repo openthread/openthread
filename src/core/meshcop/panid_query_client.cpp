@@ -32,13 +32,9 @@
  */
 
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
-
 #define WPP_NAME "panid_query_client.tmh"
+
+#include <openthread-enable-defines.h>
 
 #include "openthread/platform/random.h"
 

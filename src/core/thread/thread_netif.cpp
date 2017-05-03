@@ -32,11 +32,7 @@
  *   This file implements the Thread network interface.
  */
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread-enable-defines.h>
 
 #include <common/code_utils.hpp>
 #include <common/encoding.hpp>

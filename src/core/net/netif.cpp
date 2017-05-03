@@ -30,11 +30,7 @@
  * @file
  *   This file implements IPv6 network interfaces.
  */
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread-enable-defines.h>
 
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>

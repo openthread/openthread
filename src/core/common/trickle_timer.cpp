@@ -31,11 +31,7 @@
  *   This file implements the trickle timer logic.
  */
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread-enable-defines.h>
 
 #include "openthread/platform/random.h"
 

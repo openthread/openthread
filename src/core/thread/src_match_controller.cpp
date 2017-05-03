@@ -33,11 +33,7 @@
 
 #define WPP_NAME "src_match_controller.tmh"
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread-enable-defines.h>
 
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>

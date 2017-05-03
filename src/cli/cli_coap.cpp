@@ -31,11 +31,7 @@
  *   This file implements a simple CLI coap server and client.
  */
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread-enable-defines.h>
 
 #include <ctype.h>
 #include <cli/cli.hpp>

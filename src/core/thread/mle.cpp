@@ -31,13 +31,9 @@
  *   This file implements MLE functionality required for the Thread Child, Router and Leader roles.
  */
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
-
 #define WPP_NAME "mle.tmh"
+
+#include <openthread-enable-defines.h>
 
 #include "openthread/platform/radio.h"
 #include "openthread/platform/random.h"

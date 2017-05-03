@@ -33,11 +33,7 @@
 
 #define WPP_NAME "announce_begin_server.tmh"
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread-enable-defines.h>
 
 #include "openthread/platform/radio.h"
 

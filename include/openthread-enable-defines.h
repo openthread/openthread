@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,43 +28,21 @@
 
 /**
  * @file
- *   This file implements HMAC SHA-256.
+ * @brief
+ *  This file includes required enable defines header.
  */
 
-#include <openthread-enable-defines.h>
+#ifndef OPENTHREAD_ENABLE_DEFINES_H_
+#define OPENTHREAD_ENABLE_DEFINES_H_
 
-#include <crypto/hmac_sha256.hpp>
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
 
-namespace ot {
-namespace Crypto {
 
-HmacSha256::HmacSha256()
-{
-    const mbedtls_md_info_t *mdInfo = NULL;
-    mbedtls_md_init(&mContext);
-    mdInfo = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
-    mbedtls_md_setup(&mContext, mdInfo, 1);
-}
+#endif //OPENTHREAD_ENABLE_DEFINES_H_
 
-HmacSha256::~HmacSha256()
-{
-    mbedtls_md_free(&mContext);
-}
 
-void HmacSha256::Start(const uint8_t *aKey, uint16_t aKeyLength)
-{
-    mbedtls_md_hmac_starts(&mContext, aKey, aKeyLength);
-}
 
-void HmacSha256::Update(const uint8_t *aBuf, uint16_t aBufLength)
-{
-    mbedtls_md_hmac_update(&mContext, aBuf, aBufLength);
-}
-
-void HmacSha256::Finish(uint8_t aHash[kHashSize])
-{
-    mbedtls_md_hmac_finish(&mContext, aHash);
-}
-
-}  // namespace Crypto
-}  // namespace ot

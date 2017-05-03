@@ -31,13 +31,11 @@
  *   This file implements data poll (mac data request command) manager class.
  */
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+
 
 #define WPP_NAME "data_poll_manager.tmh"
+
+#include <openthread-enable-defines.h>
 
 #include "openthread/platform/random.h"
 

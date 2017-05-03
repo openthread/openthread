@@ -31,11 +31,7 @@
  *   This file implements link quality information processing and storage.
  */
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread-enable-defines.h>
 
 #include <stdio.h>
 #include "utils/wrap_string.h"
