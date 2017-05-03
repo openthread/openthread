@@ -142,8 +142,8 @@ private:
     otJoinerCallback mCallback;
     void *mContext;
 
-    Crc16 mCcitt;
-    Crc16 mAnsi;
+    uint16_t mCcitt;
+    uint16_t mAnsi;
 
     uint8_t mJoinerRouterChannel;
     uint16_t mJoinerRouterPanId;
