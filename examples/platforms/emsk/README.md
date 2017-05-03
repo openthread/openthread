@@ -152,4 +152,4 @@ The following toolchains and software have been used for testing and verificatio
   - arc-2016.09-release
   - embARC 2016.05
 
-The EMSK example has been verified by Synopsys with commit `97b8eb5`.
+The EMSK example has been verified by Synopsys with commit `0b911c3`.
