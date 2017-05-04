@@ -78,19 +78,40 @@ typedef enum otCoapType
  * CoAP Code values.
  *
  */
+#define COAP_CODE(c, d) ((((c) & 0x7) << 5) | ((d) & 0x1f))
+
 typedef enum otCoapCode
 {
-    kCoapCodeEmpty       = 0x00,  ///< Empty message code
-    kCoapRequestGet      = 0x01,  ///< Get
-    kCoapRequestPost     = 0x02,  ///< Post
-    kCoapRequestPut      = 0x03,  ///< Put
-    kCoapRequestDelete   = 0x04,  ///< Delete
-    kCoapResponseCodeMin = 0x40,  ///< 2.00
-    kCoapResponseCreated = 0x41,  ///< Created
-    kCoapResponseDeleted = 0x42,  ///< Deleted
-    kCoapResponseValid   = 0x43,  ///< Valid
-    kCoapResponseChanged = 0x44,  ///< Changed
-    kCoapResponseContent = 0x45,  ///< Content
+    kCoapCodeEmpty                  = COAP_CODE(0, 0),  ///< Empty message code
+    kCoapRequestGet                 = COAP_CODE(0, 1),  ///< Get
+    kCoapRequestPost                = COAP_CODE(0, 2),  ///< Post
+    kCoapRequestPut                 = COAP_CODE(0, 3),  ///< Put
+    kCoapRequestDelete              = COAP_CODE(0, 4),  ///< Delete
+
+    kCoapResponseCodeMin            = COAP_CODE(2, 0),  ///< 2.00
+    kCoapResponseCreated            = COAP_CODE(2, 1),  ///< Created
+    kCoapResponseDeleted            = COAP_CODE(2, 2),  ///< Deleted
+    kCoapResponseValid              = COAP_CODE(2, 3),  ///< Valid
+    kCoapResponseChanged            = COAP_CODE(2, 4),  ///< Changed
+    kCoapResponseContent            = COAP_CODE(2, 5),  ///< Content
+
+    kCoapResponseBadRequest         = COAP_CODE(4, 0),  ///< Bad Request
+    kCoapResponseUnauthorized       = COAP_CODE(4, 1),  ///< Unauthorized
+    kCoapResponseBadOption          = COAP_CODE(4, 2),  ///< Bad Option
+    kCoapResponseForbidden          = COAP_CODE(4, 3),  ///< Forbidden
+    kCoapResponseNotFound           = COAP_CODE(4, 4),  ///< Not Found
+    kCoapResponseMethodNotAllowed   = COAP_CODE(4, 5),  ///< Method Not Allowed
+    kCoapResponseNotAcceptable      = COAP_CODE(4, 6),  ///< Not Acceptable
+    kCoapResponsePreconditionFailed = COAP_CODE(4, 12), ///< Precondition Failed
+    kCoapResponseRequestTooLarge    = COAP_CODE(4, 13), ///< Request Entity Too Large
+    kCoapResponseUnsupportedFormat  = COAP_CODE(4, 15), ///< Unsupported Content-Format
+
+    kCoapResponseInternalError      = COAP_CODE(5, 0),  ///< Internal Server Error
+    kCoapResponseNotImplemented     = COAP_CODE(5, 1),  ///< Not Implemented
+    kCoapResponseBadGateway         = COAP_CODE(5, 2),  ///< Bad Gateway
+    kCoapResponseServiceUnavailable = COAP_CODE(5, 3),  ///< Service Unavailable
+    kCoapResponseGatewayTimeout     = COAP_CODE(5, 4),  ///< Gateway Timeout
+    kCoapResponseProxyNotSupported  = COAP_CODE(5, 5),  ///< Proxying Not Supported
 } otCoapCode;
 
 /**
@@ -98,11 +119,22 @@ typedef enum otCoapCode
  */
 typedef enum otCoapOptionType
 {
+    kCoapOptionIfMatch       = 1,    ///< If-Match
+    kCoapOptionUriHost       = 3,    ///< Uri-Host
+    kCoapOptionETag          = 4,    ///< ETag
+    kCoapOptionIfNoneMatch   = 5,    ///< If-None-Match
     kCoapOptionObserve       = 6,    ///< Observe
+    kCoapOptionUriPort       = 7,    ///< Uri-Port
+    kCoapOptionLocationPath  = 8,    ///< Location-Path
     kCoapOptionUriPath       = 11,   ///< Uri-Path
     kCoapOptionContentFormat = 12,   ///< Content-Format
     kCoapOptionMaxAge        = 14,   ///< Max-Age
     kCoapOptionUriQuery      = 15,   ///< Uri-Query
+    kCoapOptionAccept        = 17,   ///< Accept
+    kCoapOptionLocationQuery = 20,   ///< Location-Query
+    kCoapOptionProxyUri      = 35,   ///< Proxy-Uri
+    kCoapOptionProxyScheme   = 39,   ///< Proxy-Scheme
+    kCoapOptionSize1         = 60,   ///< Size1
 } otCoapOptionType;
 
 /**
