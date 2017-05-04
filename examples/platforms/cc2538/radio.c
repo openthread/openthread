@@ -62,6 +62,11 @@ enum
     CC2538_LQI_BIT_MASK = 0x7f,
 };
 
+enum
+{
+    CC2538_RECEIVE_SENSITIVITY = -100, // dBm
+};
+
 static RadioPacket sTransmitFrame;
 static RadioPacket sReceiveFrame;
 static ThreadError sTransmitError;
@@ -792,4 +797,10 @@ void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
     // TODO: Create a proper implementation for this driver.
     (void)aInstance;
     (void)aPower;
+}
+
+int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
+{
+    (void)aInstance;
+    return CC2538_RECEIVE_SENSITIVITY;
 }

@@ -64,6 +64,11 @@
 #define SHORT_ADDRESS_SIZE    2
 #define EXTENDED_ADDRESS_SIZE 8
 
+enum
+{
+    NRF52840_RECEIVE_SENSITIVITY = -100,  // dBm
+};
+
 static bool sDisabled;
 
 static RadioPacket sReceivedFrames[RADIO_RX_BUFFERS];
@@ -607,4 +612,10 @@ void nrf_drv_radio802154_energy_detected(int8_t result)
     sEnergyDetected = result;
 
     setPendingEvent(kPendingEventEnergyDetected);
+}
+
+int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
+{
+    (void)aInstance;
+    return NRF52840_RECEIVE_SENSITIVITY;
 }

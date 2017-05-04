@@ -814,6 +814,14 @@ void otPlatRadioSetDefaultTxPower(_In_ otInstance *otCtx, int8_t aPower)
     }
 }
 
+int8_t otPlatRadioGetReceiveSensitivity(_In_ otInstance *otCtx)
+{
+    NT_ASSERT(otCtx);
+    PMS_FILTER pFilter = otCtxToFilter(otCtx);
+    UNREFERENCED_PARAMETER(pFilter);
+    return -100;
+}
+
 inline USHORT getDstShortAddress(const UCHAR *frame)
 {
     return (((USHORT)frame[IEEE802154_DSTADDR_OFFSET + 1]) << 8) | frame[IEEE802154_DSTADDR_OFFSET];

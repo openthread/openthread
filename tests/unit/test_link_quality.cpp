@@ -61,7 +61,7 @@ struct RssTestData
     uint8_t       mExpectedLinkQuality;     // Expected final link quality value.
 };
 
-static LinkQualityInfo sNoiseFloor;
+int8_t sNoiseFloor = -100;  // dBm
 
 // Checks the encoded average RSS value to match the value from GetAverageRss().
 void VerifyEncodedRssValue(LinkQualityInfo &aLinkInfo)

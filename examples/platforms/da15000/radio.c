@@ -57,6 +57,11 @@
 #define IEEE802154_ACK_REQUEST          1 << 5
 #define IEEE802154_DSN_OFFSET           2
 
+enum
+{
+    DA15000_RECEIVE_SENSITIVITY = -100,  // dBm
+};
+
 static otInstance *sThreadInstance;
 
 static PhyState    sRadioState = kStateDisabled;
@@ -500,3 +505,8 @@ void FTDF_rcvFrameTransparent(FTDF_DataLength frameLength,
     }
 }
 
+int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
+{
+    (void)aInstance;
+    return DA15000_RECEIVE_SENSITIVITY;
+}

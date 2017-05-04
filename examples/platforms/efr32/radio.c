@@ -60,6 +60,11 @@ enum
     IEEE802154_DSN_OFFSET                = 2,
 };
 
+enum
+{
+    EFR32_RECEIVE_SENSITIVITY = -100,  // dBm
+};
+
 static uint16_t       sPanId             = 0;
 static uint8_t        sChannel           = 0;
 static bool           sTransmitBusy      = false;
@@ -841,4 +846,10 @@ void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
 {
     (void)aInstance;
     RAIL_TxPowerSet(aPower);
+}
+
+int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
+{
+    (void)aInstance;
+    return EFR32_RECEIVE_SENSITIVITY;
 }
