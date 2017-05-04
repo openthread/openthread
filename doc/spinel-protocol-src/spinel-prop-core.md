@@ -206,9 +206,15 @@ Defined values are:
  *  4: `POWER_STATE_ONLINE`: NCP is fully powered. (e.g. "Parent"
     node)
 
+<!-- RQ
+  -- We should consider reversing the numbering here so that 0 is
+     `POWER_STATE_ONLINE`. We may also want to include some extra
+     values between the defined values for future expansion, so
+     that we can preserve the ordered relationship. -- -->
+
 ### PROP 8: PROP_HWADDR {#prop-hwaddr}
 
-* Type: Read-Only*
+* Type: Read-Only\*
 * Packed-Encoding: `E`
 
 Octets: |    8
@@ -238,6 +244,65 @@ This property is only supported if the `CAP_LOCK` capability is present.
 Unlike most other properties, setting this property to true when the
 value of the property is already true **MUST** fail with a last status
 of `STATUS_ALREADY`.
+
+### PROP 10: PROP_HOST_POWER_STATE {#prop-host-power-state}
+
+* Type: Read-Write
+* Packed-Encoding: `C`
+* Default value: 4
+
+Octets: |        1
+--------|------------------
+Fields: | `HOST_POWER_STATE`
+
+Describes the current power state of the *host*. This property is used
+by the host to inform the NCP when it has changed power states. The
+NCP can then use this state to determine which properties need
+asynchronous updates. Enumeration is encoded as a single unsigned
+byte. These states are defined in similar terms to `PROP_POWER_STATE`
+((#prop-power-state)).
+
+Defined values are:
+
+*   0: `HOST_POWER_STATE_OFFLINE`: Host is physically powered off and
+    cannot be woken by the NCP. All asynchronous commands are
+    squelched.
+*   1: `HOST_POWER_STATE_DEEP_SLEEP`: The host is in a low power state
+    where it can be woken by the NCP but will potentially require more
+    than two seconds to become fully responsive. The NCP **MUST**
+    avoid sending unnecessary property updates, such as child table
+    updates or non-critical messages on the debug stream. If the NCP
+    needs to wake the host for traffic, the NCP **MUST** first take
+    action to wake the host. Once the NCP signals to the host that it
+    should wake up, the NCP **MUST** wait for some activity from the
+    host (indicating that it is fully awake) before sending frames.
+*   2: **RESERVED**. This value **MUST NOT** be set by the host. If
+    received by the NCP, the NCP **SHOULD** consider this as a synonym
+    of `HOST_POWER_STATE_DEEP_SLEEP`.
+*   3: `HOST_POWER_STATE_LOW_POWER`: The host is in a low power state
+    where it can be immediately woken by the NCP. The NCP **SHOULD**
+    avoid sending unnecessary property updates, such as child table
+    updates or non-critical messages on the debug stream.
+*   4: `HOST_POWER_STATE_ONLINE`: The host is awake and responsive. No
+    special filtering is performed by the NCP on asynchronous updates.
+*   All other values are **RESERVED**. They MUST NOT be set by the
+    host. If received by the NCP, the NCP **SHOULD** consider the value as
+    a synonym of `HOST_POWER_STATE_LOW_POWER`.
+
+<!-- RQ
+  -- We should consider reversing the numbering here so that 0 is
+     `POWER_STATE_ONLINE`. We may also want to include some extra
+     values between the defined values for future expansion, so
+     that we can preserve the ordered relationship. -- -->
+
+After setting this power state, any further commands from the host to
+the NCP will cause `HOST_POWER_STATE` to automatically revert to
+`HOST_POWER_STATE_ONLINE`.
+
+When the host is entering a low-power state, it should wait for the
+response from the NCP acknowledging the command (with `CMD_VALUE_IS`).
+Once that acknowledgement is received the host may enter the low-power
+state.
 
 ## Stream Properties {#prop-stream}
 
