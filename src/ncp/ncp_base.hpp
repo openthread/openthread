@@ -342,6 +342,7 @@ private:
     ThreadError GetPropertyHandler_PHY_CHAN(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_PHY_RSSI(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_PHY_TX_POWER(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_PHY_RX_SENSITIVITY(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_15_4_PANID(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_15_4_LADDR(uint8_t header, spinel_prop_key_t key);

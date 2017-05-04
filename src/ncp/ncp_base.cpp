@@ -124,6 +124,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_PHY_CHAN, &NcpBase::GetPropertyHandler_PHY_CHAN },
     { SPINEL_PROP_PHY_RSSI, &NcpBase::GetPropertyHandler_PHY_RSSI },
     { SPINEL_PROP_PHY_TX_POWER, &NcpBase::GetPropertyHandler_PHY_TX_POWER },
+    { SPINEL_PROP_PHY_RX_SENSITIVITY, &NcpBase::GetPropertyHandler_PHY_RX_SENSITIVITY },
 
     { SPINEL_PROP_MAC_SCAN_STATE, &NcpBase::GetPropertyHandler_MAC_SCAN_STATE },
     { SPINEL_PROP_MAC_SCAN_MASK, &NcpBase::GetPropertyHandler_MAC_SCAN_MASK },
@@ -2004,6 +2005,17 @@ ThreadError NcpBase::GetPropertyHandler_PHY_TX_POWER(uint8_t header, spinel_prop
                key,
                SPINEL_DATATYPE_INT8_S,
                otLinkGetMaxTransmitPower(mInstance)
+           );
+}
+
+ThreadError NcpBase::GetPropertyHandler_PHY_RX_SENSITIVITY(uint8_t header, spinel_prop_key_t key)
+{
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_INT8_S,
+               otPlatRadioGetReceiveSensitivity(mInstance)
            );
 }
 

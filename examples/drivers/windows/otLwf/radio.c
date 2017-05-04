@@ -818,8 +818,25 @@ int8_t otPlatRadioGetReceiveSensitivity(_In_ otInstance *otCtx)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
-    UNREFERENCED_PARAMETER(pFilter);
-    return -100;
+    NTSTATUS status;
+    int8_t receiveSensitivity;
+
+    status =
+        otLwfCmdGetProp(
+            pFilter,
+            NULL,
+            SPINEL_PROP_PHY_RX_SENSITIVITY,
+            SPINEL_DATATYPE_INT8_S,
+            &receiveSensitivity
+        );
+
+    if (!NT_SUCCESS(status))
+    {
+        LogError(DRIVER_DEFAULT, "Get SPINEL_PROP_PHY_RX_SENSITIVITY, failed, %!STATUS!", status);
+        return -100;  // return default value -100dBm
+    }
+
+    return receiveSensitivity;
 }
 
 inline USHORT getDstShortAddress(const UCHAR *frame)
