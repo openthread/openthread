@@ -65,7 +65,7 @@ EFR32 Starter kit mainboard integrates an on-board SEGGER J-Link debugger.
 
 ```bash
 $ cd <path-to-JLinkGDBServer>
-$ sudo ./JLinkGDBServer -if swd -device EFR32MG1PxxxF256
+$ sudo ./JLinkGDBServer -if swd -device EFR32MG12PxxxF1024
 $ cd <path-to-openthread>/output/efr32/bin
 $ arm-none-eabi-gdb ot-cli-ftd
 $ (gdb) target remote 127.0.0.1:2331
@@ -73,6 +73,8 @@ $ (gdb) load
 $ (gdb) monitor reset
 $ (gdb) c
 ```
+
+Note: Support for the "EFR32MG12PxxxF1024" device was added to JLinkGDBServer V6.14d.
 
 ## Run the example with EFR32 boards
 1. Flash two EFR32 boards with the `CLI example` firmware (as shown above).
