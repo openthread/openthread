@@ -67,6 +67,8 @@ Joiner::Joiner(ThreadNetif &aNetif):
     mState(kStateIdle),
     mCallback(NULL),
     mContext(NULL),
+    mCcitt(0),
+    mAnsi(0),
     mJoinerRouterChannel(0),
     mJoinerRouterPanId(0),
     mJoinerUdpPort(0),
