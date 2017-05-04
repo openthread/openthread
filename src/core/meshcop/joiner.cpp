@@ -67,8 +67,8 @@ Joiner::Joiner(ThreadNetif &aNetif):
     mState(kStateIdle),
     mCallback(NULL),
     mContext(NULL),
-    mCcitt(Crc16::kCcitt),
-    mAnsi(Crc16::kAnsi),
+    mCcitt(0),
+    mAnsi(0),
     mJoinerRouterChannel(0),
     mJoinerRouterPanId(0),
     mJoinerUdpPort(0),
@@ -94,6 +94,8 @@ ThreadError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl,
 {
     ThreadError error;
     Mac::ExtAddress extAddress;
+    Crc16 ccitt(Crc16::kCcitt);
+    Crc16 ansi(Crc16::kAnsi);
 
     otLogFuncEntry();
 
@@ -106,9 +108,12 @@ ThreadError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl,
 
     for (size_t i = 0; i < sizeof(extAddress); i++)
     {
-        mCcitt.Update(extAddress.m8[i]);
-        mAnsi.Update(extAddress.m8[i]);
+        ccitt.Update(extAddress.m8[i]);
+        ansi.Update(extAddress.m8[i]);
     }
+
+    mCcitt = ccitt.Get();
+    mAnsi = ansi.Get();
 
     error = mNetif.GetSecureCoapClient().GetDtls().SetPsk(reinterpret_cast<const uint8_t *>(aPSKd),
                                                           static_cast<uint8_t>(strlen(aPSKd)));
@@ -191,8 +196,8 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
         memcpy(steeringData.GetValue(), aResult->mSteeringData.m8, steeringData.GetLength());
 
         if (steeringData.DoesAllowAny() ||
-            (steeringData.GetBit(mCcitt.Get() % steeringData.GetNumBits()) &&
-             steeringData.GetBit(mAnsi.Get() % steeringData.GetNumBits())))
+            (steeringData.GetBit(mCcitt % steeringData.GetNumBits()) &&
+             steeringData.GetBit(mAnsi % steeringData.GetNumBits())))
         {
             mJoinerUdpPort = aResult->mJoinerUdpPort;
             mJoinerRouterPanId = aResult->mPanId;
