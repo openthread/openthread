@@ -180,6 +180,16 @@
 #endif  // OPENTHREAD_CONFIG_MAX_CHILDREN
 
 /**
+ * @def OPENTHREAD_CONFIG_DEFAULT_CHILD_TIMEOUT
+ *
+ * The default child timeout value (in seconds).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DEFAULT_CHILD_TIMEOUT
+#define OPENTHREAD_CONFIG_DEFAULT_CHILD_TIMEOUT                 240
+#endif // OPENTHREAD_CONFIG_DEFAULT_CHILD_TIMEOUT
+
+/**
  * @def OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD
  *
  * The minimum number of supported IPv6 address registrations per child.
