@@ -54,10 +54,12 @@ using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
 
-static const uint8_t kThreadMasterKey[] =
+static const otMasterKey kThreadMasterKey =
 {
-    0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-    0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff,
+    {
+        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+        0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff,
+    }
 };
 
 ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
@@ -112,7 +114,7 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
     mEnergyScan(*this)
 
 {
-    mKeyManager.SetMasterKey(kThreadMasterKey, sizeof(kThreadMasterKey));
+    mKeyManager.SetMasterKey(kThreadMasterKey);
     mCoapServer.SetInterceptor(&ThreadNetif::TmfFilter);
 }
 

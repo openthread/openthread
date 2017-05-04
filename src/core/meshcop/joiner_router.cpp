@@ -345,7 +345,7 @@ ThreadError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMes
     message->SetSubType(Message::kSubTypeJoinerEntrust);
 
     masterKey.Init();
-    masterKey.SetNetworkMasterKey(mNetif.GetKeyManager().GetMasterKey(NULL));
+    masterKey.SetNetworkMasterKey(mNetif.GetKeyManager().GetMasterKey());
     SuccessOrExit(error = message->Append(&masterKey, sizeof(masterKey)));
 
     meshLocalPrefix.Init();

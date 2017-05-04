@@ -213,10 +213,13 @@ typedef enum ThreadError
  * This structure represents a Thread Master Key.
  *
  */
-typedef struct otMasterKey
+OT_TOOL_PACKED_BEGIN
+struct otMasterKey
 {
     uint8_t m8[OT_MASTER_KEY_SIZE];
-} otMasterKey;
+} OT_TOOL_PACKED_END;
+
+typedef struct otMasterKey otMasterKey;
 
 #define OT_NETWORK_NAME_MAX_SIZE   16  ///< Maximum size of the Thread Network Name field (bytes)
 

@@ -2257,18 +2257,13 @@ ThreadError NcpBase::GetPropertyHandler_NET_XPANID(uint8_t header, spinel_prop_k
 
 ThreadError NcpBase::GetPropertyHandler_NET_MASTER_KEY(uint8_t header, spinel_prop_key_t key)
 {
-    const uint8_t *ptr(NULL);
-    uint8_t len(0);
-
-    ptr = otThreadGetMasterKey(mInstance, &len);
-
     return SendPropertyUpdate(
                header,
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_DATA_S,
-               ptr,
-               len
+               otThreadGetMasterKey(mInstance)->m8,
+               OT_MASTER_KEY_SIZE
            );
 }
 
@@ -4423,9 +4418,9 @@ ThreadError NcpBase::SetPropertyHandler_NET_MASTER_KEY(uint8_t header, spinel_pr
                        &len
                    );
 
-    if ((parsedLength > 0) && (len < 100))
+    if ((parsedLength > 0) && (len == OT_MASTER_KEY_SIZE))
     {
-        errorCode = otThreadSetMasterKey(mInstance, ptr, static_cast<uint8_t>(len));
+        errorCode = otThreadSetMasterKey(mInstance, reinterpret_cast<const otMasterKey *>(ptr));
 
         if (errorCode == kThreadError_None)
         {

@@ -137,7 +137,7 @@ ThreadError ActiveDataset::GenerateLocal(void)
     {
         NetworkMasterKeyTlv tlv;
         tlv.Init();
-        tlv.SetNetworkMasterKey(mNetif.GetKeyManager().GetMasterKey(NULL));
+        tlv.SetNetworkMasterKey(mNetif.GetKeyManager().GetMasterKey());
         mLocal.Set(tlv);
     }
 

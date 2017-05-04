@@ -188,7 +188,7 @@ void Dataset::Get(otOperationalDataset &aDataset) const
         case Tlv::kNetworkMasterKey:
         {
             const NetworkMasterKeyTlv *tlv = static_cast<const NetworkMasterKeyTlv *>(cur);
-            memcpy(aDataset.mMasterKey.m8, tlv->GetNetworkMasterKey(), sizeof(aDataset.mMasterKey));
+            aDataset.mMasterKey = tlv->GetNetworkMasterKey();
             aDataset.mIsMasterKeySet = true;
             break;
         }
@@ -328,7 +328,7 @@ ThreadError Dataset::Set(const otOperationalDataset &aDataset)
     {
         MeshCoP::NetworkMasterKeyTlv tlv;
         tlv.Init();
-        tlv.SetNetworkMasterKey(aDataset.mMasterKey.m8);
+        tlv.SetNetworkMasterKey(aDataset.mMasterKey);
         Set(tlv);
     }
 

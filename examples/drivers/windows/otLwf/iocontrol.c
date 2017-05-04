@@ -1632,19 +1632,16 @@ otLwfIoCtl_otMasterKey(
 {
     NTSTATUS status = STATUS_INVALID_PARAMETER;
 
-    if (InBufferLength >= sizeof(otMasterKey) + sizeof(uint8_t))
+    if (InBufferLength >= sizeof(otMasterKey))
     {
-        uint8_t aKeyLength = *(uint8_t*)(InBuffer + sizeof(otMasterKey));
-        status = ThreadErrorToNtstatus(otThreadSetMasterKey(pFilter->otCtx, InBuffer, aKeyLength));
+        status = ThreadErrorToNtstatus(otThreadSetMasterKey(pFilter->otCtx, (otMasterKey*)InBuffer));
         *OutBufferLength = 0;
     }
-    else if (*OutBufferLength >= sizeof(otMasterKey) + sizeof(uint8_t))
+    else if (*OutBufferLength >= sizeof(otMasterKey))
     {
-        uint8_t aKeyLength = 0;
-        const uint8_t* aMasterKey = otThreadGetMasterKey(pFilter->otCtx, &aKeyLength);
-        memcpy(OutBuffer, aMasterKey, aKeyLength);
-        memcpy((PUCHAR)OutBuffer + sizeof(otMasterKey), &aKeyLength, sizeof(uint8_t));
-        *OutBufferLength = sizeof(otMasterKey) + sizeof(uint8_t);
+        const otMasterKey* aMasterKey = otThreadGetMasterKey(pFilter->otCtx);
+        memcpy(OutBuffer, aMasterKey, sizeof(otMasterKey));
+        *OutBufferLength = sizeof(otMasterKey);
         status = STATUS_SUCCESS;
     }
     else
@@ -1668,10 +1665,8 @@ otLwfTunIoCtl_otMasterKey(
 {
     NTSTATUS status = STATUS_INVALID_PARAMETER;
 
-    if (InBufferLength >= sizeof(otMasterKey) + sizeof(uint8_t))
+    if (InBufferLength >= sizeof(otMasterKey))
     {
-        spinel_size_t aKeyLength = *(uint8_t*)(InBuffer + sizeof(otMasterKey));
-
         status = 
             otLwfTunSendCommandForIrp(
                 pFilter,
@@ -1682,9 +1677,9 @@ otLwfTunIoCtl_otMasterKey(
                 sizeof(otMasterKey) + sizeof(uint16_t),
                 SPINEL_DATATYPE_DATA_S,
                 (otMasterKey*)InBuffer,
-                aKeyLength);
+                sizeof(otMasterKey));
     }
-    else if (OutBufferLength >= sizeof(otMasterKey) + sizeof(uint8_t))
+    else if (OutBufferLength >= sizeof(otMasterKey))
     {
         status = 
             otLwfTunSendCommandForIrp(
@@ -1717,11 +1712,10 @@ otLwfTunIoCtl_otMasterKey_Handler(
         uint8_t *data = NULL;
         spinel_size_t aKeyLength; 
         if (try_spinel_datatype_unpack(Data, DataLength, SPINEL_DATATYPE_DATA_S, &data, &aKeyLength) && data != NULL && 
-            aKeyLength <= sizeof(otMasterKey))
+            aKeyLength == sizeof(otMasterKey))
         {
-            memcpy(OutBuffer, data, aKeyLength);
-            *(uint8_t*)((PUCHAR)OutBuffer + sizeof(otMasterKey)) = (uint8_t)aKeyLength;
-            *OutBufferLength = sizeof(otMasterKey) + sizeof(uint8_t);
+            memcpy(OutBuffer, data, sizeof(otMasterKey));
+            *OutBufferLength = sizeof(otMasterKey);
             status = STATUS_SUCCESS;
         }
     }
