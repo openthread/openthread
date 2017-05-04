@@ -508,11 +508,7 @@ void Joiner::HandleTimer(void)
     case kStateJoined:
         Mac::ExtAddress extAddress;
 
-        for (size_t i = 0; i < sizeof(extAddress); i++)
-        {
-            extAddress.m8[i] = static_cast<uint8_t>(otPlatRandomGet());
-        }
-
+        mNetif.GetMac().GenerateExtAddress(&extAddress);
         mNetif.GetMac().SetExtAddress(extAddress);
         mNetif.GetMle().UpdateLinkLocalAddress();
 
