@@ -104,21 +104,6 @@ configure_OPTIONS                   = \
     --enable-mtd-network-diagnostic   \
     $(NULL)
 
-ifeq ($(COVERAGE),1)
-configure_OPTIONS              += --enable-coverage
-else
-configure_OPTIONS              +=
-endif
-
-# If the user has asserted DEBUG, alter the configuration options
-# accordingly.
-
-ifeq ($(DEBUG),1)
-configure_OPTIONS              += --enable-debug --enable-optimization=no
-else
-configure_OPTIONS              +=
-endif
-
 ifndef BuildJobs
 BuildJobs := $(shell getconf _NPROCESSORS_ONLN)
 endif
