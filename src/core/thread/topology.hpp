@@ -86,7 +86,7 @@ public:
      * Check if the neighbor/child is in valid state or if it is being restored.
      * When in these states messages can be sent to and/or received from the neighbor/child.
      *
-     * @returns `true` if the neighbor is in valid, restored, or being restored states, `false` otherwise.
+     * @returns TRUE if the neighbor is in valid, restored, or being restored states, FALSE otherwise.
      *
      */
     bool IsStateValidOrRestoring(void) const { return (mState == kStateValid) || (mState == kStateRestored); }
@@ -369,6 +369,28 @@ public:
      *
      */
     Ip6::Address &GetIp6Address(uint8_t aIndex) { return mIp6Address[aIndex]; }
+
+    /**
+     * This method searches for a given IPv6 address in the child's IPv6 address list and provides the index of the
+     * address in the list if it is found.
+     *
+     * @param[in]  aAddress           The IPv6 address to search for in the IPv6 address list.
+     * @param[out] aIndex             Pointer to variable where the index of address is provided if address is found in
+     *                                the list. @p aIndex can be set NULL if index is not required.
+     *
+     * @retval kThreadError_None      Successfully found the address in IPv6 address list and updated @p aIndex.
+     * @retval kThreadError_NotFound  Could not find the address in the list.
+     *
+     */
+    ThreadError FindIp6Address(const Ip6::Address &aAddress, uint8_t *aIndex) const;
+
+    /**
+     * This method removes the address at index @p aIndex.
+     *
+     * @param[in] aIndex   The index into the IPv6 address list.
+     *
+     */
+    void RemoveIp6Address(uint8_t aIndex);
 
     /**
      * This method gets the child timeout.

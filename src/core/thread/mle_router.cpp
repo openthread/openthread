@@ -1965,7 +1965,10 @@ exit:
 ThreadError MleRouter::UpdateChildAddresses(const AddressRegistrationTlv &aTlv, Child &aChild)
 {
     const AddressRegistrationEntry *entry;
+    Ip6::Address address;
     Lowpan::Context context;
+    Child *child;
+    uint8_t index;
 
     aChild.ClearIp6Addresses();
 
@@ -1980,12 +1983,39 @@ ThreadError MleRouter::UpdateChildAddresses(const AddressRegistrationTlv &aTlv, 
         {
             // xxx check if context id exists
             mNetif.GetNetworkDataLeader().GetContext(entry->GetContextId(), context);
-            memcpy(&aChild.GetIp6Address(count), context.mPrefix, BitVectorBytes(context.mPrefixLength));
-            aChild.GetIp6Address(count).SetIid(entry->GetIid());
+            memcpy(&address, context.mPrefix, BitVectorBytes(context.mPrefixLength));
+            address.SetIid(entry->GetIid());
         }
         else
         {
-            aChild.GetIp6Address(count) = *entry->GetIp6Address();
+            address = *entry->GetIp6Address();
+        }
+
+        aChild.GetIp6Address(count) = address;
+
+        // We check if the same address is in-use by another child, if so
+        // remove it. This implements "last-in wins" duplicate address
+        // resolution policy.
+        //
+        // Duplicate addresses can occur if a previously attached child
+        // attaches to same parent again (after a reset, memory wipe) using
+        // a new random extended address before the old entry in the child
+        // table is timed out and then trying to register its globally unique
+        // IPv6 address as the new child.
+
+        for (int i = 0; i < mMaxChildrenAllowed; i++)
+        {
+            child = &mChildren[i];
+
+            if (!child->IsStateValidOrRestoring() || (child == &aChild))
+            {
+                continue;
+            }
+
+            if (child->FindIp6Address(address, &index) == kThreadError_None)
+            {
+                child->RemoveIp6Address(index);
+            }
         }
     }
 
@@ -3253,12 +3283,9 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
             ExitNow(rval = child);
         }
 
-        for (uint8_t j = 0; j < Child::kMaxIp6AddressPerChild; j++)
+        if (child->FindIp6Address(aAddress, NULL) == kThreadError_None)
         {
-            if (child->GetIp6Address(j) == aAddress)
-            {
-                ExitNow(rval = child);
-            }
+            ExitNow(rval = child);
         }
     }
 
