@@ -973,9 +973,11 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
         for (const NetifUnicastAddress *addr = netif->mUnicastAddresses; addr; addr = addr->GetNext())
         {
             uint8_t destinationScope;
+            uint8_t candidateMatchedLength;
 
             candidateAddr = &addr->GetAddress();
-            destinationScope = (destination->PrefixMatch(*candidateAddr) >= addr->mPrefixLength) ?
+            candidateMatchedLength = destination->PrefixMatch(*candidateAddr);
+            destinationScope = (candidateMatchedLength >= addr->mPrefixLength) ?
                                addr->GetScope() : destination->GetScope();
 
             if (candidateAddr->IsAnycastRoutingLocator())
@@ -1028,7 +1030,7 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
                 rvalAddr = addr;
                 rvalIface = candidateId;
             }
-            else if (destination->PrefixMatch(*candidateAddr) > destination->PrefixMatch(rvalAddr->GetAddress()))
+            else if (candidateMatchedLength > destination->PrefixMatch(rvalAddr->GetAddress()))
             {
                 // Rule 6: Prefer matching label
                 // Rule 7: Prefer public address
