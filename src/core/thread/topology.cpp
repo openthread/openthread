@@ -54,6 +54,42 @@ void Neighbor::GenerateChallenge(void)
     }
 }
 
+ThreadError Child::FindIp6Address(const Ip6::Address &aAddress, uint8_t *aIndex) const
+{
+    ThreadError error = kThreadError_NotFound;
+
+    for (uint8_t index = 0; index < kMaxIp6AddressPerChild; index++)
+    {
+        if (mIp6Address[index] == aAddress)
+        {
+            if (aIndex != NULL)
+            {
+                *aIndex = index;
+            }
+
+            error = kThreadError_None;
+            break;
+        }
+    }
+
+    return error;
+}
+
+void Child::RemoveIp6Address(uint8_t aIndex)
+{
+    VerifyOrExit(aIndex < kMaxIp6AddressPerChild);
+
+    for (uint8_t i = aIndex; i < kMaxIp6AddressPerChild - 1; i++)
+    {
+        mIp6Address[i] = mIp6Address[i + 1];
+    }
+
+    memset(&mIp6Address[kMaxIp6AddressPerChild - 1], 0, sizeof(Ip6::Address));
+
+exit:
+    return;
+}
+
 void Child::GenerateChallenge(void)
 {
     for (uint8_t i = 0; i < sizeof(mAttachChallenge); i++)
