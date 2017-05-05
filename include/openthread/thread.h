@@ -232,14 +232,12 @@ OTAPI ThreadError OTCALL otThreadSetLinkMode(otInstance *aInstance, otLinkModeCo
  * Get the thrMasterKey.
  *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
- * @param[out]  aKeyLength  A pointer to an unsigned 8-bit value that the function will set to the number of bytes that
- *                          represent the thrMasterKey. Caller may set to NULL.
  *
  * @returns A pointer to a buffer containing the thrMasterKey.
  *
  * @sa otThreadSetMasterKey
  */
-OTAPI const uint8_t *OTCALL otThreadGetMasterKey(otInstance *aInstance, uint8_t *aKeyLength);
+OTAPI const otMasterKey *OTCALL otThreadGetMasterKey(otInstance *aInstance);
 
 /**
  * Set the thrMasterKey.
@@ -250,7 +248,6 @@ OTAPI const uint8_t *OTCALL otThreadGetMasterKey(otInstance *aInstance, uint8_t 
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aKey        A pointer to a buffer containing the thrMasterKey.
- * @param[in]  aKeyLength  Number of bytes representing the thrMasterKey stored at aKey. Valid range is [0, 16].
  *
  * @retval kThreadErrorNone           Successfully set the thrMasterKey.
  * @retval kThreadErrorInvalidArgs    If aKeyLength is larger than 16.
@@ -258,7 +255,7 @@ OTAPI const uint8_t *OTCALL otThreadGetMasterKey(otInstance *aInstance, uint8_t 
  *
  * @sa otThreadGetMasterKey
  */
-OTAPI ThreadError OTCALL otThreadSetMasterKey(otInstance *aInstance, const uint8_t *aKey, uint8_t aKeyLength);
+OTAPI ThreadError OTCALL otThreadSetMasterKey(otInstance *aInstance, const otMasterKey *aKey);
 
 /**
  * Get the thrPSKc.

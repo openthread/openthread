@@ -1354,10 +1354,9 @@ void Interpreter::ProcessMasterKey(int argc, char *argv[])
 
     if (argc == 0)
     {
-        uint8_t keyLength;
-        otBufferPtr key(otThreadGetMasterKey(mInstance, &keyLength));
+        otBufferPtr key(reinterpret_cast<const uint8_t *>(otThreadGetMasterKey(mInstance)));
 
-        for (int i = 0; i < keyLength; i++)
+        for (int i = 0; i < OT_MASTER_KEY_SIZE; i++)
         {
             sServer->OutputFormat("%02x", key[i]);
         }
@@ -1366,11 +1365,10 @@ void Interpreter::ProcessMasterKey(int argc, char *argv[])
     }
     else
     {
-        int keyLength;
-        uint8_t key[OT_MASTER_KEY_SIZE];
+        otMasterKey key;
 
-        VerifyOrExit((keyLength = Hex2Bin(argv[0], key, sizeof(key))) == OT_MASTER_KEY_SIZE, error = kThreadError_Parse);
-        SuccessOrExit(error = otThreadSetMasterKey(mInstance, key, static_cast<uint8_t>(keyLength)));
+        VerifyOrExit(Hex2Bin(argv[0], key.m8, sizeof(key.m8)) == OT_MASTER_KEY_SIZE, error = kThreadError_Parse);
+        SuccessOrExit(error = otThreadSetMasterKey(mInstance, &key));
     }
 
 exit:

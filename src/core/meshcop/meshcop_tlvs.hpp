@@ -437,7 +437,7 @@ public:
      * @returns The Network Master Key value.
      *
      */
-    const uint8_t *GetNetworkMasterKey(void) const { return mNetworkMasterKey; }
+    const otMasterKey &GetNetworkMasterKey(void) const { return mNetworkMasterKey; }
 
     /**
      * This method sets the Network Master Key value.
@@ -445,12 +445,12 @@ public:
      * @param[in]  aNetworkMasterKey  A pointer to the Network Master Key value.
      *
      */
-    void SetNetworkMasterKey(const uint8_t *aNetworkMasterKey) {
-        memcpy(mNetworkMasterKey, aNetworkMasterKey, sizeof(mNetworkMasterKey));
+    void SetNetworkMasterKey(const otMasterKey &aNetworkMasterKey) {
+        mNetworkMasterKey = aNetworkMasterKey;
     }
 
 private:
-    uint8_t mNetworkMasterKey[16];
+    otMasterKey mNetworkMasterKey;
 } OT_TOOL_PACKED_END;
 
 /**

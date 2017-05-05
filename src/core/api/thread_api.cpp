@@ -170,19 +170,20 @@ exit:
 }
 #endif
 
-const uint8_t *otThreadGetMasterKey(otInstance *aInstance, uint8_t *aKeyLength)
+const otMasterKey *otThreadGetMasterKey(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetKeyManager().GetMasterKey(aKeyLength);
+    return &aInstance->mThreadNetif.GetKeyManager().GetMasterKey();
 }
 
-ThreadError otThreadSetMasterKey(otInstance *aInstance, const uint8_t *aKey, uint8_t aKeyLength)
+ThreadError otThreadSetMasterKey(otInstance *aInstance, const otMasterKey *aKey)
 {
     ThreadError error = kThreadError_None;
 
+    VerifyOrExit(aKey != NULL, error = kThreadError_InvalidArgs);
     VerifyOrExit(aInstance->mThreadNetif.GetMle().GetDeviceState() == Mle::kDeviceStateDisabled,
                  error = kThreadError_InvalidState);
 
-    error = aInstance->mThreadNetif.GetKeyManager().SetMasterKey(aKey, aKeyLength);
+    error = aInstance->mThreadNetif.GetKeyManager().SetMasterKey(*aKey);
     aInstance->mThreadNetif.GetActiveDataset().Clear(false);
     aInstance->mThreadNetif.GetPendingDataset().Clear(false);
 
