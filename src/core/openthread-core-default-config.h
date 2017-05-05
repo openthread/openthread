@@ -550,6 +550,16 @@
 #endif  // OPENTHREAD_CONFIG_LOG_PLATFORM
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_COAP
+ *
+ * Define to enable COAP logging.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_COAP
+#define OPENTHREAD_CONFIG_LOG_COAP                              1
+#endif  // OPENTHREAD_CONFIG_LOG_COAP
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
  *
  * Define to prepend the log level to all log messages

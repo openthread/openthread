@@ -113,12 +113,9 @@ SOURCES_COMMON                      = \
     api/thread_api.cpp                \
     api/thread_ftd_api.cpp            \
     api/udp_api.cpp                   \
-    coap/coap_base.cpp                \
-    coap/coap_client.cpp              \
+    coap/coap.cpp                     \
     coap/coap_header.cpp              \
-    coap/coap_server.cpp              \
-    coap/secure_coap_client.cpp       \
-    coap/secure_coap_server.cpp       \
+    coap/coap_secure.cpp              \
     common/crc16.cpp                  \
     common/logging.cpp                \
     common/message.cpp                \
@@ -202,12 +199,9 @@ HEADERS_COMMON                      = \
     openthread-core-default-config.h  \
     openthread-instance.h             \
     api/link_raw.hpp                  \
-    coap/coap_base.hpp                \
-    coap/coap_client.hpp              \
+    coap/coap.hpp                     \
     coap/coap_header.hpp              \
-    coap/coap_server.hpp              \
-    coap/secure_coap_client.hpp       \
-    coap/secure_coap_server.hpp       \
+    coap/coap_secure.hpp              \
     common/code_utils.hpp             \
     common/crc16.hpp                  \
     common/debug.hpp                  \

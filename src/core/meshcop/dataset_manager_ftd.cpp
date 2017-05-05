@@ -188,12 +188,12 @@ void ActiveDataset::StartLeader(void)
 
     mLocal.Store();
     mNetwork = mLocal;
-    mNetif.GetCoapServer().AddResource(mResourceSet);
+    mNetif.GetCoap().AddResource(mResourceSet);
 }
 
 void ActiveDataset::StopLeader(void)
 {
-    mNetif.GetCoapServer().RemoveResource(mResourceSet);
+    mNetif.GetCoap().RemoveResource(mResourceSet);
 }
 
 void ActiveDataset::HandleSet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
@@ -226,12 +226,12 @@ void PendingDataset::StartLeader(void)
     mNetwork = mLocal;
     ResetDelayTimer(kFlagNetworkUpdated);
 
-    mNetif.GetCoapServer().AddResource(mResourceSet);
+    mNetif.GetCoap().AddResource(mResourceSet);
 }
 
 void PendingDataset::StopLeader(void)
 {
-    mNetif.GetCoapServer().RemoveResource(mResourceSet);
+    mNetif.GetCoap().RemoveResource(mResourceSet);
 }
 
 void PendingDataset::HandleSet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,

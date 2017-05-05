@@ -3318,8 +3318,8 @@ ThreadError NcpBase::GetPropertyHandler_MSG_BUFFER_COUNTERS(uint8_t header, spin
         bufferInfo.mMleBuffers,
         bufferInfo.mArpMessages,
         bufferInfo.mArpBuffers,
-        bufferInfo.mCoapClientMessages,
-        bufferInfo.mCoapClientBuffers
+        bufferInfo.mCoapMessages,
+        bufferInfo.mCoapBuffers
     ));
     SuccessOrExit(errorCode = OutboundFrameSend());
 

@@ -41,7 +41,7 @@
 
 #include <openthread/platform/random.h>
 
-#include "coap/coap_client.hpp"
+#include "coap/coap.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"

@@ -37,7 +37,7 @@
 
 #include <openthread/types.h>
 
-#include "coap/coap_server.hpp"
+#include "coap/coap.hpp"
 
 namespace ot {
 

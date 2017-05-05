@@ -36,10 +36,8 @@
 
 #include <openthread/types.h>
 
-#include "coap/coap_base.hpp"
-#include "coap/coap_client.hpp"
+#include "coap/coap.hpp"
 #include "coap/coap_header.hpp"
-#include "coap/coap_server.hpp"
 #include "common/message.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"

@@ -36,9 +36,9 @@
 
 #include <openthread/joiner.h>
 
+#include "coap/coap.hpp"
 #include "coap/coap_header.hpp"
-#include "coap/coap_server.hpp"
-#include "coap/secure_coap_client.hpp"
+#include "coap/coap_secure.hpp"
 #include "common/crc16.hpp"
 #include "common/message.hpp"
 #include "meshcop/dtls.hpp"

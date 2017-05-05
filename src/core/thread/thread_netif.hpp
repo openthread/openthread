@@ -42,10 +42,8 @@
 
 #include <openthread/types.h>
 
-#include "coap/coap_client.hpp"
-#include "coap/coap_server.hpp"
-#include "coap/secure_coap_client.hpp"
-#include "coap/secure_coap_server.hpp"
+#include "coap/coap.hpp"
+#include "coap/coap_secure.hpp"
 #include "mac/mac.hpp"
 
 #if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
@@ -205,20 +203,12 @@ public:
 #endif  // OPENTHREAD_ENABLE_DNS_CLIENT
 
     /**
-     * This method returns a reference to the CoAP server object.
+     * This method returns a reference to the CoAP object.
      *
-     * @returns A reference to the CoAP server object.
-     *
-     */
-    Coap::Server &GetCoapServer(void) { return mCoapServer; }
-
-    /**
-     * This method returns a reference to the CoAP client object.
-     *
-     * @returns A reference to the CoAP client object.
+     * @returns A reference to the CoAP object.
      *
      */
-    Coap::Client &GetCoapClient(void) { return mCoapClient; }
+    Coap::Coap &GetCoap(void) { return mCoap; }
 
     /**
      * This method returns a reference to the IPv6 filter object.
@@ -342,14 +332,6 @@ public:
      *
      */
     MeshCoP::Commissioner &GetCommissioner(void) { return mCommissioner; }
-
-    /**
-     * This method returns a reference to the secure CoAP server object.
-     *
-     * @returns A reference to the secure CoAP server object.
-     *
-     */
-    Coap::SecureServer &GetSecureCoapServer(void) { return mSecureCoapServer; }
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
 #if OPENTHREAD_ENABLE_DTLS
@@ -360,6 +342,14 @@ public:
      *
      */
     MeshCoP::Dtls &GetDtls(void) { return mDtls; }
+
+    /**
+     * This method returns a reference to the secure CoAP object.
+     *
+     * @returns A reference to the secure CoAP object.
+     *
+     */
+    Coap::CoapSecure &GetCoapSecure(void) { return mCoapSecure; }
 #endif  // OPENTHREAD_ENABLE_DTLS
 
 #if OPENTHREAD_ENABLE_JOINER
@@ -370,14 +360,6 @@ public:
      *
      */
     MeshCoP::Joiner &GetJoiner(void) { return mJoiner; }
-
-    /**
-     * This method returns a reference to the secure CoAP client object.
-     *
-     * @returns A reference to the secure CoAP client object.
-     *
-     */
-    Coap::SecureClient &GetSecureCoapClient(void) { return mSecureCoapClient; }
 #endif  // OPENTHREAD_ENABLE_JOINER
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
@@ -427,8 +409,7 @@ public:
 private:
     static ThreadError TmfFilter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    Coap::Server mCoapServer;
-    Coap::Client mCoapClient;
+    Coap::Coap mCoap;
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
     Dhcp6::Dhcp6Client mDhcp6Client;
 #endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
@@ -454,16 +435,15 @@ private:
     bool mIsUp;
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
-    Coap::SecureServer mSecureCoapServer;
     MeshCoP::Commissioner mCommissioner;
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
 #if OPENTHREAD_ENABLE_DTLS
     MeshCoP::Dtls mDtls;
+    Coap::CoapSecure mCoapSecure;
 #endif// OPENTHREAD_ENABLE_DTLS
 
 #if OPENTHREAD_ENABLE_JOINER
-    Coap::SecureClient mSecureCoapClient;
     MeshCoP::Joiner mJoiner;
 #endif  // OPENTHREAD_ENABLE_JOINER
 

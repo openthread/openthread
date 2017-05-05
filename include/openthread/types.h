@@ -903,10 +903,10 @@ typedef struct otBufferInfo
     uint16_t mMleBuffers;             ///< The number of buffers in the MLE send queue.
     uint16_t mArpMessages;            ///< The number of messages in the ARP send queue.
     uint16_t mArpBuffers;             ///< The number of buffers in the ARP send queue.
-    uint16_t mCoapClientMessages;     ///< The number of messages in the CoAP client send queue.
-    uint16_t mCoapClientBuffers;      ///< The number of buffers in the CoAP client send queue.
-    uint16_t mCoapServerMessages;     ///< The number of messages in the CoAP server responses queue.
-    uint16_t mCoapServerBuffers;      ///< The number of buffers in the CoAP server responses queue.
+    uint16_t mCoapMessages;           ///< The number of messages in the CoAP send queue.
+    uint16_t mCoapBuffers;            ///< The number of buffers in the CoAP send queue.
+    uint16_t mCoapSecureMessages;     ///< The number of messages in the CoAP secure send queue.
+    uint16_t mCoapSecureBuffers;      ///< The number of buffers in the CoAP secure send queue.
 } otBufferInfo;
 
 /**

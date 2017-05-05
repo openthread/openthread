@@ -65,8 +65,7 @@ static const otMasterKey kThreadMasterKey =
 
 ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
     Netif(aIp6, OT_NETIF_INTERFACE_ID_THREAD),
-    mCoapServer(*this, kCoapUdpPort),
-    mCoapClient(*this),
+    mCoap(*this),
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
     mDhcp6Client(*this),
 #endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
@@ -89,14 +88,13 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
     mNetworkDiagnostic(*this),
 #endif
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
-    mSecureCoapServer(*this, OPENTHREAD_CONFIG_JOINER_UDP_PORT),
     mCommissioner(*this),
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 #if OPENTHREAD_ENABLE_DTLS
     mDtls(*this),
+    mCoapSecure(*this),
 #endif
 #if OPENTHREAD_ENABLE_JOINER
-    mSecureCoapClient(*this),
     mJoiner(*this),
 #endif  // OPENTHREAD_ENABLE_JOINER
 #if OPENTHREAD_ENABLE_JAM_DETECTION
@@ -104,7 +102,7 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
 #endif // OPENTHREAD_ENABLE_JAM_DETECTTION
 #if OPENTHREAD_FTD
 #if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
-    mBorderAgentProxy(mMleRouter.GetMeshLocal16(), mCoapServer, mCoapClient),
+    mBorderAgentProxy(mMleRouter.GetMeshLocal16(), mCoap),
 #endif // OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
     mJoinerRouter(*this),
     mLeader(*this),
@@ -118,7 +116,7 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
 
 {
     mKeyManager.SetMasterKey(kThreadMasterKey);
-    mCoapServer.SetInterceptor(&ThreadNetif::TmfFilter);
+    mCoap.SetInterceptor(&ThreadNetif::TmfFilter);
 }
 
 ThreadError ThreadNetif::Up(void)
@@ -127,11 +125,7 @@ ThreadError ThreadNetif::Up(void)
     {
         mIp6.AddNetif(*this);
         mMeshForwarder.Start();
-        mCoapServer.Start();
-        mCoapClient.Start();
-#if OPENTHREAD_ENABLE_JOINER
-        mSecureCoapClient.Start();
-#endif
+        mCoap.Start(kCoapUdpPort);
 #if OPENTHREAD_ENABLE_DNS_CLIENT
         mDnsClient.Start();
 #endif
@@ -145,11 +139,7 @@ ThreadError ThreadNetif::Up(void)
 
 ThreadError ThreadNetif::Down(void)
 {
-    mCoapServer.Stop();
-    mCoapClient.Stop();
-#if OPENTHREAD_ENABLE_JOINER
-    mSecureCoapClient.Stop();
-#endif
+    mCoap.Stop();
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     mDnsClient.Stop();
 #endif

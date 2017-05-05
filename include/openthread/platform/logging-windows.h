@@ -57,12 +57,13 @@
         WPP_DEFINE_BIT(OT_MAC)              /* 0x00000400 */    \
         WPP_DEFINE_BIT(OT_MEM)              /* 0x00000800 */    \
         WPP_DEFINE_BIT(OT_NCP)              /* 0x00001000 */    \
-        WPP_DEFINE_BIT(OT_COAP)             /* 0x00002000 */    \
+        WPP_DEFINE_BIT(OT_MESHCOP)          /* 0x00002000 */    \
         WPP_DEFINE_BIT(OT_DEFAULT)          /* 0x00004000 */    \
         WPP_DEFINE_BIT(OT_MBEDTLS)          /* 0x00008000 */    \
         WPP_DEFINE_BIT(OT_DUMP)             /* 0x00010000 */    \
         WPP_DEFINE_BIT(OT_NDIAG)            /* 0x00020000 */    \
-        WPP_DEFINE_BIT(API_DEFAULT)         /* 0x00040000 */    \
+        WPP_DEFINE_BIT(OT_COAP)             /* 0x00040000 */    \
+        WPP_DEFINE_BIT(API_DEFAULT)         /* 0x00080000 */    \
         )
 
 #define WPP_LEVEL_FLAGS_LOGGER(lvl,flag)                        WPP_FLAG_LOGGER(flag)
@@ -197,31 +198,31 @@
 // otLogDebgNcp{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_NCP}(CTX, MSG, ...);
 // end_wpp
 
-// ==COAP==
+// ==MESHCOP==
 
 // begin_wpp config
-// USEPREFIX (otLogCritMeshCoP, "[%p]COAP%!SPACE!", CTX);
-// otLogCritMeshCoP{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_COAP}(CTX, MSG, ...);
+// USEPREFIX (otLogCritMeshCoP, "[%p]MESHCOP%!SPACE!", CTX);
+// otLogCritMeshCoP{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_MESHCOP}(CTX, MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogWarnMeshCoP, "[%p]COAP%!SPACE!", CTX);
-// otLogWarnMeshCoP{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_COAP}(CTX, MSG, ...);
+// USEPREFIX (otLogWarnMeshCoP, "[%p]MESHCOP%!SPACE!", CTX);
+// otLogWarnMeshCoP{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_MESHCOP}(CTX, MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogInfoMeshCoP, "[%p]COAP%!SPACE!", CTX);
-// otLogInfoMeshCoP{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_COAP}(CTX, MSG, ...);
+// USEPREFIX (otLogInfoMeshCoP, "[%p]MESHCOP%!SPACE!", CTX);
+// otLogInfoMeshCoP{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_MESHCOP}(CTX, MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogDebgMeshCoP, "[%p]COAP%!SPACE!", CTX);
-// otLogDebgMeshCoP{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_COAP}(CTX, MSG, ...);
+// USEPREFIX (otLogDebgMeshCoP, "[%p]MESHCOP%!SPACE!", CTX);
+// otLogDebgMeshCoP{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MESHCOP}(CTX, MSG, ...);
 // end_wpp
 
 // begin_wpp config
-// USEPREFIX (otLogCertMeshCoP, "[%p]COAP%!SPACE!", CTX);
-// otLogCertMeshCoP{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_COAP}(CTX, MSG, ...);
+// USEPREFIX (otLogCertMeshCoP, "[%p]MESHCOP%!SPACE!", CTX);
+// otLogCertMeshCoP{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_MESHCOP}(CTX, MSG, ...);
 // end_wpp
 
 // ==MBEDTLS==
@@ -438,6 +439,34 @@
 // begin_wpp config
 // USEPREFIX (otLogDebgNetDiag, "[%p]NETD%!SPACE!", CTX);
 // otLogDebgNetDiag{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_NDIAG}(CTX, MSG, ...);
+// end_wpp
+
+// ==COAP==
+
+// begin_wpp config
+// USEPREFIX (otLogCritCoap, "[%p]COAP%!SPACE!", CTX);
+// otLogCritCoap{LEVEL=TRACE_LEVEL_ERROR,FLAGS=OT_COAP}(CTX, MSG, ...);
+// end_wpp
+
+// begin_wpp config
+// USEPREFIX (otLogWarnCoap, "[%p]COAP%!SPACE!", CTX);
+// otLogWarnCoap{LEVEL=TRACE_LEVEL_WARNING,FLAGS=OT_COAP}(CTX, MSG, ...);
+// end_wpp
+
+// begin_wpp config
+// USEPREFIX (otLogInfoCoap, "[%p]COAP%!SPACE!", CTX);
+// otLogInfoCoap{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_COAP}(CTX, MSG, ...);
+// end_wpp
+
+// begin_wpp config
+// USEPREFIX (otLogInfoCoapErr, "[%p]COAP%!SPACE!", CTX);
+// otLogInfoCoapErr{LEVEL=TRACE_LEVEL_INFORMATION,FLAGS=OT_COAP}(CTX, EXP, MSG, ...);
+// USESUFFIX(otLogInfoCoapErr, ", %!otError!", EXP);
+// end_wpp
+
+// begin_wpp config
+// USEPREFIX (otLogDebgCoap, "[%p]COAP%!SPACE!", CTX);
+// otLogDebgCoap{LEVEL=TRACE_LEVEL_VERBOSE,FLAGS=OT_COAP}(CTX, MSG, ...);
 // end_wpp
 
 // ==FUNC==

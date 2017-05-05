@@ -622,7 +622,7 @@ ThreadError NetworkData::SendServerDataNotification(uint16_t aRloc16)
     header.AppendUriPathOptions(OPENTHREAD_URI_SERVER_DATA);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMessage(header)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mNetif.GetCoap().NewMessage(header)) != NULL, error = kThreadError_NoBufs);
 
     if (mLocal)
     {
@@ -644,7 +644,7 @@ ThreadError NetworkData::SendServerDataNotification(uint16_t aRloc16)
     mNetif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr());
     messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
     messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = mNetif.GetCoap().SendMessage(*message, messageInfo));
 
     if (mLocal)
     {

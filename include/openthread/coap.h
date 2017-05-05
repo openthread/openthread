@@ -449,11 +449,12 @@ ThreadError otCoapSendRequest(otInstance *aInstance, otMessage *aMessage, const 
  * This function starts the CoAP server.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aPort      The local UDP port to bind to.
  *
  * @retval kThreadError_None  Successfully started the CoAP server.
  *
  */
-ThreadError otCoapServerStart(otInstance *aInstance);
+ThreadError otCoapStart(otInstance *aInstance, uint16_t aPort);
 
 /**
  * This function stops the CoAP server.
@@ -463,18 +464,7 @@ ThreadError otCoapServerStart(otInstance *aInstance);
  * @retval kThreadError_None  Successfully stopped the CoAP server.
  *
  */
-ThreadError otCoapServerStop(otInstance *aInstance);
-
-/**
- * This function sets CoAP server's port number.
- *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aPort  A port number to set.
- *
- * @retval kThreadError_None  Binding with a port succeeded.
- *
- */
-ThreadError otCoapServerSetPort(otInstance *aInstance, uint16_t aPort);
+ThreadError otCoapStop(otInstance *aInstance);
 
 /**
  * This function adds a resource to the CoAP server.
@@ -486,7 +476,7 @@ ThreadError otCoapServerSetPort(otInstance *aInstance, uint16_t aPort);
  * @retval kThreadError_Already  The @p aResource was already added.
  *
  */
-ThreadError otCoapServerAddResource(otInstance *aInstance, otCoapResource *aResource);
+ThreadError otCoapAddResource(otInstance *aInstance, otCoapResource *aResource);
 
 /**
  * This function removes a resource from the CoAP server.
@@ -495,7 +485,7 @@ ThreadError otCoapServerAddResource(otInstance *aInstance, otCoapResource *aReso
  * @param[in]  aResource  A pointer to the resource.
  *
  */
-void otCoapServerRemoveResource(otInstance *aInstance, otCoapResource *aResource);
+void otCoapRemoveResource(otInstance *aInstance, otCoapResource *aResource);
 
 /**
  * This function sends a CoAP response from the server.
