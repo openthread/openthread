@@ -138,6 +138,26 @@ ThreadError otNetDataRemoveRoute(otInstance *aInstance, const otIp6Prefix *aPref
                                                                               aPrefix->mLength);
 }
 
+ThreadError otNetDataGetNextRoute(otInstance *aInstance, bool aLocal, otNetworkDataIterator *aIterator,
+                                  otExternalRouteConfig *aConfig)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aIterator && aConfig, error = kThreadError_InvalidArgs);
+
+    if (aLocal)
+    {
+        error = aInstance->mThreadNetif.GetNetworkDataLocal().GetNextExternalRoute(aIterator, aConfig);
+    }
+    else
+    {
+        error = aInstance->mThreadNetif.GetNetworkDataLeader().GetNextExternalRoute(aIterator, aConfig);
+    }
+
+exit:
+    return error;
+}
+
 ThreadError otNetDataRegister(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetNetworkDataLocal().SendServerDataNotification();

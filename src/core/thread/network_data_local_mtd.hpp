@@ -59,6 +59,7 @@ public:
 
     void GetNetworkData(bool, uint8_t *, uint8_t &aDataLength) { aDataLength = 0; }
     ThreadError GetNextOnMeshPrefix(otNetworkDataIterator *, otBorderRouterConfig *) { return kThreadError_NotFound; }
+    ThreadError GetNextExternalRoute(otNetworkDataIterator *, otExternalRouteConfig *) { return kThreadError_NotFound; }
     void ClearResubmitDelayTimer(void) { }
 
 };
