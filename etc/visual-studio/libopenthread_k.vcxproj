@@ -145,6 +145,7 @@
     <ClCompile Include="..\..\src\core\thread\src_match_controller.cpp" />
     <ClCompile Include="..\..\src\core\thread\thread_netif.cpp" />
     <ClCompile Include="..\..\src\core\thread\topology.cpp" />
+    <ClCompile Include="..\..\src\core\utils\child_supervision.cpp" />
     <ClCompile Include="..\..\src\core\utils\slaac_address.cpp" />
     <ClCompile Include="..\..\src\core\utils\jam_detector.cpp" />
     <ClCompile Include="..\..\src\core\utils\missing_strlcat.c" />
@@ -258,6 +259,7 @@
     <ClInclude Include="..\..\src\core\thread\thread_tlvs.hpp" />
     <ClInclude Include="..\..\src\core\thread\thread_uris.hpp" />
     <ClInclude Include="..\..\src\core\thread\topology.hpp" />
+    <ClInclude Include="..\..\src\core\utils\child_supervision.hpp" />
     <ClInclude Include="..\..\src\core\utils\slaac_address.hpp" />
     <ClInclude Include="..\..\src\core\utils\jam_detector.hpp" />
     <ClInclude Include="..\..\src\core\utils\wrap_string.h" />

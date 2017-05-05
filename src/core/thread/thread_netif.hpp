@@ -66,6 +66,7 @@
 #include <thread/mle_router.hpp>
 #include <thread/network_data_local.hpp>
 #include <thread/panid_query_server.hpp>
+#include <utils/child_supervision.hpp>
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
 #include <utils/jam_detector.hpp>
@@ -398,6 +399,22 @@ public:
 #endif // OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
 
     /**
+     * This method returns a reference to the child supervisor object.
+     *
+     * @returns A reference to the child supervisor object.
+     *
+     */
+    Utils::ChildSupervisor &GetChildSupervisor(void) { return mChildSupervisor; }
+
+    /**
+      * This method returns a reference to the supervision listener object.
+      *
+      * @returns A reference to the supervision listener object.
+      *
+      */
+    Utils::SupervisionListener &GetSupervisionListener(void) { return mSupervisionListener; }
+
+    /**
      * This method returns the pointer to the parent otInstance structure.
      *
      * @returns The pointer to the parent otInstance structure.
@@ -462,6 +479,8 @@ private:
     AddressResolver mAddressResolver;
 #endif  // OPENTHREAD_FTD
 
+    Utils::ChildSupervisor mChildSupervisor;
+    Utils::SupervisionListener mSupervisionListener;
     AnnounceBeginServer mAnnounceBegin;
     PanIdQueryServer mPanIdQuery;
     EnergyScanServer mEnergyScan;

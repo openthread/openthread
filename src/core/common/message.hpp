@@ -203,9 +203,10 @@ class Message: public Buffer
 public:
     enum
     {
-        kTypeIp6         = 0,   ///< A full uncompress IPv6 packet
+        kTypeIp6         = 0,   ///< A full uncompressed IPv6 packet
         kType6lowpan     = 1,   ///< A 6lowpan frame
         kTypeMacDataPoll = 2,   ///< A MAC data poll message
+        kTypeSupervision = 3,   ///< A child supervision frame.
     };
 
     enum
@@ -215,7 +216,7 @@ public:
         kSubTypeMleDiscoverRequest     = 2,  ///< MLE Discover Request
         kSubTypeMleDiscoverResponse    = 3,  ///< MLE Discover Response
         kSubTypeJoinerEntrust          = 4,  ///< Joiner Entrust
-        kSubTypeMplRetransmission      = 5,  ///< MPL next retranmission message
+        kSubTypeMplRetransmission      = 5,  ///< MPL next retransmission message
         kSubTypeMleGeneral             = 6,  ///< General MLE
         kSubTypeJoinerFinalizeResponse = 7,  ///< Joiner Finalize Response
         kSubTypeMleChildUpdateRequest  = 8,  ///< MLE Child Update Request

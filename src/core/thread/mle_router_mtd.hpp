@@ -122,6 +122,8 @@ public:
     void FillConnectivityTlv(ConnectivityTlv &) { }
     void FillRouteTlv(RouteTlv &) { }
 
+    ThreadError SendChildUpdateRequest(void) { return Mle::SendChildUpdateRequest(); }
+
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
     ThreadError SetSteeringData(otExtAddress *) { return kThreadError_NotImplemented; };
 #endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB

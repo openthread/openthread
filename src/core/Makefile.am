@@ -93,6 +93,7 @@ SOURCES_COMMON                      = \
     api/border_agent_proxy_api.cpp    \
     api/coap_api.cpp                  \
     api/commissioner_api.cpp          \
+    api/child_supervision_api.cpp     \
     api/crypto_api.cpp                \
     api/dataset_api.cpp               \
     api/dataset_ftd_api.cpp           \
@@ -179,6 +180,7 @@ SOURCES_COMMON                      = \
     thread/src_match_controller.cpp   \
     thread/thread_netif.cpp           \
     thread/topology.cpp               \
+    utils/child_supervision.cpp       \
     utils/jam_detector.cpp            \
     utils/missing_strlcpy.c           \
     utils/missing_strlcat.c           \
@@ -294,6 +296,7 @@ HEADERS_COMMON                      = \
     thread/thread_tlvs.hpp            \
     thread/thread_uris.hpp            \
     thread/topology.hpp               \
+    utils/child_supervision.hpp       \
     utils/slaac_address.hpp           \
     utils/jam_detector.hpp            \
     utils/wrap_stdbool.h              \
