@@ -237,7 +237,7 @@ ThreadError SourceMatchController::AddPendingEntries(void)
     {
         if (child->IsStateValidOrRestoring() && child->IsIndirectSourceMatchPending())
         {
-            SuccessOrExit(AddAddress(*child));
+            SuccessOrExit(error = AddAddress(*child));
             child->SetIndirectSourceMatchPending(false);
         }
     }

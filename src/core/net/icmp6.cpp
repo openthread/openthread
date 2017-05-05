@@ -156,14 +156,15 @@ ThreadError Icmp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
     IcmpHeader icmp6Header;
     uint16_t checksum;
 
-    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(icmp6Header), &icmp6Header) == sizeof(icmp6Header));
+    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(icmp6Header), &icmp6Header) == sizeof(icmp6Header),
+                 error = kThreadError_Parse);
     payloadLength = aMessage.GetLength() - aMessage.GetOffset();
 
     // verify checksum
     checksum = Ip6::ComputePseudoheaderChecksum(aMessageInfo.GetPeerAddr(), aMessageInfo.GetSockAddr(),
                                                 payloadLength, kProtoIcmp6);
     checksum = aMessage.UpdateChecksum(checksum, aMessage.GetOffset(), payloadLength);
-    VerifyOrExit(checksum == 0xffff);
+    VerifyOrExit(checksum == 0xffff, error = kThreadError_Parse);
 
     if (mIsEchoEnabled && (icmp6Header.GetType() == kIcmp6TypeEchoRequest))
     {

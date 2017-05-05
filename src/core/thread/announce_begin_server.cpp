@@ -89,7 +89,7 @@ ThreadError AnnounceBeginServer::SendAnnounce(uint32_t aChannelMask, uint8_t aCo
     while ((mChannelMask & (1 << mChannel)) == 0)
     {
         mChannel++;
-        VerifyOrExit(mChannel <= kPhyMaxChannel);
+        VerifyOrExit(mChannel <= kPhyMaxChannel, error = kThreadError_InvalidArgs);
     }
 
     mTimer.Start(mPeriod);
