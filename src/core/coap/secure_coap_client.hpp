@@ -135,10 +135,8 @@ public:
     ThreadError SendMessage(Message &aMessage, otCoapResponseHandler aHandler = NULL, void *aContext = NULL);
 
 private:
-    static ThreadError Send(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void Receive(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleDtlsConnected(void *aContext, bool aConnected);

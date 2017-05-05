@@ -50,7 +50,7 @@ namespace ot {
 namespace Coap {
 
 SecureServer::SecureServer(ThreadNetif &aNetif, uint16_t aPort):
-    Server(aNetif, aPort, &SecureServer::Send, &SecureServer::Receive),
+    Server(aNetif, aPort),
     mTransmitCallback(NULL),
     mContext(NULL),
     mNetif(aNetif),
@@ -101,20 +101,10 @@ bool SecureServer::IsConnectionActive(void)
     return mNetif.GetDtls().IsStarted();
 };
 
-ThreadError SecureServer::Send(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    return static_cast<SecureServer *>(aContext)->Send(aMessage, aMessageInfo);
-}
-
 ThreadError SecureServer::Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     (void)aMessageInfo;
     return mNetif.GetDtls().Send(aMessage, aMessage.GetLength());
-}
-
-void SecureServer::Receive(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    return static_cast<SecureServer *>(aContext)->Receive(aMessage, aMessageInfo);
 }
 
 void SecureServer::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -184,7 +174,7 @@ void SecureServer::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
     VerifyOrExit((message = mNetif.GetIp6().mMessagePool.New(Message::kTypeIp6, 0)) != NULL);
     SuccessOrExit(message->Append(aBuf, aLength));
 
-    ProcessReceivedMessage(*message, mPeerAddress);
+    Server::Receive(*message, mPeerAddress);
 
 exit:
 

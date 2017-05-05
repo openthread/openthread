@@ -114,12 +114,10 @@ public:
      */
     ThreadError SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
 
+protected:
+    virtual ThreadError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
 private:
-    static ThreadError Send(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    ThreadError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    static void Receive(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
     static void HandleDtlsConnected(void *aContext, bool aConnected);
     void HandleDtlsConnected(bool aConnected);
 

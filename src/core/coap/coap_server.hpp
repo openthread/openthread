@@ -310,8 +310,7 @@ public:
      * @param[in]  aReceiver A pointer to a function for handling received messages.
      *
      */
-    Server(Ip6::Netif &aNetif, uint16_t aPort, SenderFunction aSender = &Server::Send,
-           ReceiverFunction aReceiver = &Server::Receive);
+    Server(Ip6::Netif &aNetif, uint16_t aPort);
 
     /**
      * This method starts the CoAP server.
@@ -396,17 +395,13 @@ public:
     }
 
 protected:
-    void ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    virtual void Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    virtual ThreadError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo) {
+        return mSocket.SendTo(aMessage, aMessageInfo);
+    }
 
 private:
-    static ThreadError Send(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) {
-        return (static_cast<Server *>(aContext))->mSocket.SendTo(aMessage, aMessageInfo);
-    }
-
-    static void Receive(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) {
-        (static_cast<Server *>(aContext))->ProcessReceivedMessage(aMessage, aMessageInfo);
-    }
-
     uint16_t mPort;
     Resource *mResources;
 

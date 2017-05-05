@@ -44,8 +44,8 @@
 namespace ot {
 namespace Coap {
 
-Server::Server(Ip6::Netif &aNetif, uint16_t aPort, SenderFunction aSender, ReceiverFunction aReceiver):
-    CoapBase(aNetif.GetIp6().mUdp, aSender, aReceiver),
+Server::Server(Ip6::Netif &aNetif, uint16_t aPort) :
+    CoapBase(aNetif.GetIp6().mUdp),
     mResponsesQueue(aNetif)
 {
     mPort = aPort;
@@ -110,7 +110,7 @@ ThreadError Server::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMess
 {
     mResponsesQueue.EnqueueResponse(aMessage, aMessageInfo);
 
-    return mSender(this, aMessage, aMessageInfo);
+    return Send(aMessage, aMessageInfo);
 }
 
 ThreadError Server::SendEmptyAck(const Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo)
@@ -137,7 +137,7 @@ exit:
     return error;
 }
 
-void Server::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void Server::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Header header;
     char uriPath[Resource::kMaxReceivedUriPath] = "";

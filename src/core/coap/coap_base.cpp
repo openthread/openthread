@@ -77,8 +77,8 @@ ThreadError CoapBase::Stop(void)
 
 void CoapBase::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<CoapBase *>(aContext)->mReceiver(aContext, *static_cast<Message *>(aMessage),
-                                                 *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<CoapBase *>(aContext)->Receive(*static_cast<Message *>(aMessage),
+                                               *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 ThreadError CoapBase::SendEmptyMessage(Header::Type aType, const Header &aRequestHeader,
@@ -95,7 +95,7 @@ ThreadError CoapBase::SendEmptyMessage(Header::Type aType, const Header &aReques
 
     VerifyOrExit((message = NewMessage(responseHeader)) != NULL, error = kThreadError_NoBufs);
 
-    SuccessOrExit(error = mSender(this, *message, aMessageInfo));
+    SuccessOrExit(error = Send(*message, aMessageInfo));
 
 exit:
 

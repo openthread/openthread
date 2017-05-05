@@ -171,7 +171,7 @@ public:
      * @param[in]  aReceiver A pointer to a function for handling received messages.
      *
      */
-    Client(Ip6::Netif &aNetif, SenderFunction aSender = &Client::Send, ReceiverFunction aReceiver = &Client::Receive);
+    Client(Ip6::Netif &aNetif);
 
     /**
      * This method starts the CoAP client.
@@ -229,7 +229,12 @@ public:
     const MessageQueue &GetRequestMessages(void) const { return mPendingRequests; }
 
 protected:
-    void ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    virtual void Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    ThreadError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo) {
+        return mSocket.SendTo(aMessage, aMessageInfo);
+    }
+
 
 private:
     Message *CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLength,
@@ -243,14 +248,6 @@ private:
     ThreadError SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     static void HandleRetransmissionTimer(void *aContext);
     void HandleRetransmissionTimer(void);
-
-    static ThreadError Send(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) {
-        return (static_cast<Client *>(aContext))->mSocket.SendTo(aMessage, aMessageInfo);
-    }
-
-    static void Receive(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) {
-        (static_cast<Client *>(aContext))->ProcessReceivedMessage(aMessage, aMessageInfo);
-    }
 
     MessageQueue mPendingRequests;
     uint16_t mMessageId;

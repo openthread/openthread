@@ -50,8 +50,8 @@
 namespace ot {
 namespace Coap {
 
-Client::Client(Ip6::Netif &aNetif, SenderFunction aSender, ReceiverFunction aReceiver):
-    CoapBase(aNetif.GetIp6().mUdp, aSender, aReceiver),
+Client::Client(Ip6::Netif &aNetif):
+    CoapBase(aNetif.GetIp6().mUdp),
     mRetransmissionTimer(aNetif.GetIp6().mTimerScheduler, &Client::HandleRetransmissionTimer, this)
 {
     mMessageId = static_cast<uint16_t>(otPlatRandomGet());
@@ -120,7 +120,7 @@ ThreadError Client::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMess
                      error = kThreadError_NoBufs);
     }
 
-    SuccessOrExit(error = mSender(this, aMessage, aMessageInfo));
+    SuccessOrExit(error = Send(aMessage, aMessageInfo));
 
 exit:
 
@@ -223,7 +223,7 @@ ThreadError Client::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aM
                  error = kThreadError_NoBufs);
 
     // Send the copy.
-    SuccessOrExit(error = mSender(this, *messageCopy, aMessageInfo));
+    SuccessOrExit(error = Send(*messageCopy, aMessageInfo));
 
 exit:
 
@@ -360,7 +360,7 @@ void Client::FinalizeCoapTransaction(Message &aRequest, const RequestMetadata &a
     }
 }
 
-void Client::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void Client::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Header responseHeader;
     Header requestHeader;
