@@ -104,7 +104,7 @@ Now, it may be desirable to squash some of your smaller commits down into a smal
 
 ```bash
 # Rebase all commits on your development branch
-git checkout 
+git checkout
 git rebase -i master
 ```
 
@@ -118,7 +118,7 @@ As part of the cleanup process, you should also run `make pretty-check` to ensur
 
 ```bash
 ./bootstrap
-./configure --enable-ftd --enable-cli --enable-diag --enable-dhcp6-client --enable-dhcp6-server --enable-commissioner --enable-joiner --with-examples=posix
+./configure --enable-cli-app=all --enable-diag --enable-dhcp6-client --enable-dhcp6-server --enable-commissioner --enable-joiner --with-examples=posix
 make pretty-check
 
 ```
