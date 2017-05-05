@@ -37,14 +37,14 @@
 
 #include <string.h>
 
-#include "openthread/openthread.h"
-#include "openthread/platform/alarm.h"
-#include "openthread/platform/logging.h"
-#include "openthread/platform/misc.h"
-#include "openthread/platform/radio.h"
-#include "openthread/platform/random.h"
+#include <openthread/openthread.h>
+#include <openthread/platform/alarm.h>
+#include <openthread/platform/logging.h>
+#include <openthread/platform/misc.h>
+#include <openthread/platform/radio.h>
+#include <openthread/platform/random.h>
 
-#include <common/code_utils.hpp>
+#include "common/code_utils.hpp"
 
 #include "test_util.h"
 

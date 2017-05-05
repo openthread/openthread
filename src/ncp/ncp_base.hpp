@@ -39,15 +39,15 @@
 #include <openthread-config.h>
 #endif
 
-#include "openthread/types.h"
-#include "openthread/message.h"
-#include "openthread/ip6.h"
-#include "openthread/ncp.h"
+#include <openthread/ip6.h>
+#include <openthread/message.h>
+#include <openthread/ncp.h>
+#include <openthread/types.h>
 
-#include <common/tasklet.hpp>
-#include <ncp/ncp_buffer.hpp>
-
+#include "openthread-core-config.h"
 #include "spinel.h"
+#include "common/tasklet.hpp"
+#include "ncp/ncp_buffer.hpp"
 
 namespace ot {
 

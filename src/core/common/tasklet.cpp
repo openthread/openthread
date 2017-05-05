@@ -37,12 +37,13 @@
 #include <openthread-config.h>
 #endif
 
-#include "openthread/openthread.h"
+#include "tasklet.hpp"
 
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <common/tasklet.hpp>
-#include <net/ip6.hpp>
+#include <openthread/openthread.h>
+
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "net/ip6.hpp"
 
 namespace ot {
 

@@ -37,16 +37,17 @@
 #include <openthread-config.h>
 #endif
 
-#include "openthread/openthread.h"
-
-#include <common/debug.hpp>
-#include <common/code_utils.hpp>
-#include <crypto/sha256.hpp>
-#include <mac/mac.hpp>
-#include <net/ip6_address.hpp>
-#include <utils/slaac_address.hpp>
+#include "slaac_address.hpp"
 
 #include "utils/wrap_string.h"
+
+#include <openthread/openthread.h>
+
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "crypto/sha256.hpp"
+#include "mac/mac.hpp"
+#include "net/ip6_address.hpp"
 
 namespace ot {
 namespace Utils {

@@ -34,10 +34,12 @@
 #ifndef DATA_POLL_MANAGER_HPP_
 #define DATA_POLL_MANAGER_HPP_
 
-#include <openthread-core-config.h>
+#include <openthread/types.h>
 
-#include "openthread/types.h"
-#include <common/code_utils.hpp>
+#include "openthread-core-config.h"
+#include "common/code_utils.hpp"
+#include "common/timer.hpp"
+#include "mac/mac_frame.hpp"
 
 namespace ot {
 

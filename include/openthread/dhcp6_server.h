@@ -35,7 +35,7 @@
 #ifndef OPENTHREAD_DHCP6_SERVER_H_
 #define OPENTHREAD_DHCP6_SERVER_H_
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {

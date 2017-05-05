@@ -36,9 +36,9 @@
 
 #include "utils/wrap_stdint.h"
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <crypto/aes_ecb.hpp>
+#include "crypto/aes_ecb.hpp"
 
 namespace ot {
 namespace Crypto {

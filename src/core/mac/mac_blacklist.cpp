@@ -37,10 +37,11 @@
 #include <openthread-config.h>
 #endif
 
+#include "mac_blacklist.hpp"
+
 #include "utils/wrap_string.h"
 
-#include <common/code_utils.hpp>
-#include <mac/mac_blacklist.hpp>
+#include "common/code_utils.hpp"
 
 #if OPENTHREAD_ENABLE_MAC_WHITELIST
 

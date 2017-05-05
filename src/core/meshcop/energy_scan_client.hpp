@@ -34,14 +34,13 @@
 #ifndef ENERGY_SCAN_CLIENT_HPP_
 #define ENERGY_SCAN_CLIENT_HPP_
 
-#include <openthread-core-config.h>
+#include <openthread/commissioner.h>
 
-#include "openthread/commissioner.h"
-
-#include <coap/coap_client.hpp>
-#include <coap/coap_server.hpp>
-#include <net/ip6_address.hpp>
-#include <net/udp6.hpp>
+#include "openthread-core-config.h"
+#include "coap/coap_client.hpp"
+#include "coap/coap_server.hpp"
+#include "net/ip6_address.hpp"
+#include "net/udp6.hpp"
 
 namespace ot {
 

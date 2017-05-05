@@ -31,6 +31,7 @@
  *   This file implements the PAN ID Query Client.
  */
 
+#define WPP_NAME "panid_query_client.tmh"
 
 #ifdef OPENTHREAD_CONFIG_FILE
 #include OPENTHREAD_CONFIG_FILE
@@ -38,19 +39,18 @@
 #include <openthread-config.h>
 #endif
 
-#define WPP_NAME "panid_query_client.tmh"
+#include "panid_query_client.hpp"
 
-#include "openthread/platform/random.h"
+#include <openthread/platform/random.h>
 
-#include <coap/coap_header.hpp>
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <common/logging.hpp>
-#include <meshcop/panid_query_client.hpp>
-#include <meshcop/meshcop.hpp>
-#include <meshcop/meshcop_tlvs.hpp>
-#include <thread/thread_netif.hpp>
-#include <thread/thread_uris.hpp>
+#include "coap/coap_header.hpp"
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/logging.hpp"
+#include "meshcop/meshcop.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
+#include "thread/thread_netif.hpp"
+#include "thread/thread_uris.hpp"
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 

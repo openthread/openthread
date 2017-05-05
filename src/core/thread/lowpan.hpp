@@ -34,10 +34,10 @@
 #ifndef LOWPAN_HPP_
 #define LOWPAN_HPP_
 
-#include <common/message.hpp>
-#include <mac/mac_frame.hpp>
-#include <net/ip6.hpp>
-#include <net/ip6_address.hpp>
+#include "common/message.hpp"
+#include "mac/mac_frame.hpp"
+#include "net/ip6.hpp"
+#include "net/ip6_address.hpp"
 
 namespace ot {
 

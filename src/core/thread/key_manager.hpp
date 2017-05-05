@@ -36,10 +36,10 @@
 
 #include "utils/wrap_stdint.h"
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <common/timer.hpp>
-#include <crypto/hmac_sha256.hpp>
+#include "common/timer.hpp"
+#include "crypto/hmac_sha256.hpp"
 
 namespace ot {
 

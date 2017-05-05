@@ -34,6 +34,11 @@
 #ifndef CLI_COAP_HPP_
 #define CLI_COAP_HPP_
 
+#include <openthread/types.h>
+
+#include "cli/cli.hpp"
+#include "coap/coap_header.hpp"
+
 namespace ot {
 namespace Cli {
 

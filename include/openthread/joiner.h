@@ -35,8 +35,8 @@
 #ifndef OPENTHREAD_JOINER_H_
 #define OPENTHREAD_JOINER_H_
 
-#include "openthread/types.h"
-#include "openthread/platform/toolchain.h"
+#include <openthread/types.h>
+#include <openthread/platform/toolchain.h>
 
 #ifdef __cplusplus
 extern "C" {

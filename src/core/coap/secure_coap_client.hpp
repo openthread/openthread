@@ -29,8 +29,8 @@
 #ifndef SECURE_COAP_CLIENT_HPP_
 #define SECURE_COAP_CLIENT_HPP_
 
-#include <coap/coap_client.hpp>
-#include <meshcop/dtls.hpp>
+#include "coap/coap_client.hpp"
+#include "meshcop/dtls.hpp"
 
 /**
  * @file

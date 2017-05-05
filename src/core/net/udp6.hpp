@@ -34,9 +34,9 @@
 #ifndef UDP6_HPP_
 #define UDP6_HPP_
 
-#include "openthread/udp.h"
+#include <openthread/udp.h>
 
-#include <net/ip6_headers.hpp>
+#include "net/ip6_headers.hpp"
 
 namespace ot {
 namespace Ip6 {

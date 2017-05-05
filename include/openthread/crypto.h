@@ -35,8 +35,8 @@
 #ifndef OPENTHREAD_CRYPTO_H_
 #define OPENTHREAD_CRYPTO_H_
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

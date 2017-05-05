@@ -34,10 +34,11 @@
 #ifndef DEBUG_HPP_
 #define DEBUG_HPP_
 
-#include <openthread-core-config.h>
 #include <ctype.h>
 #include <stdio.h>
 #include "utils/wrap_string.h"
+
+#include "openthread-core-config.h"
 
 #if defined(OPENTHREAD_TARGET_DARWIN) || defined(OPENTHREAD_TARGET_LINUX)
 

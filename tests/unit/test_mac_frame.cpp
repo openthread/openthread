@@ -26,11 +26,14 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "test_util.h"
-#include "openthread/openthread.h"
-#include <common/debug.hpp>
-#include <mac/mac_frame.hpp>
 #include "utils/wrap_string.h"
+
+#include <openthread/openthread.h>
+
+#include "common/debug.hpp"
+#include "mac/mac_frame.hpp"
+
+#include "test_util.h"
 
 namespace ot {
 

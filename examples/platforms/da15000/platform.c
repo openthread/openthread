@@ -34,15 +34,17 @@
 #include <assert.h>
 #include <stdint.h>
 
-#include "openthread/openthread.h"
-#include "openthread/platform/alarm.h"
-#include "openthread/platform/uart.h"
+#include <openthread/openthread.h>
+#include <openthread/platform/alarm.h>
+#include <openthread/platform/uart.h>
+
 #include "platform-da15000.h"
+
 #include "sdk_defs.h"
-#include "hw_cpm.h"
-#include "hw_watchdog.h"
 #include "ftdf.h"
+#include "hw_cpm.h"
 #include "hw_gpio.h"
+#include "hw_watchdog.h"
 
 static bool sBlink = false;
 static int  sMsCounterInit;

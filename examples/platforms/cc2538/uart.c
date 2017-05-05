@@ -34,11 +34,11 @@
 
 #include <stddef.h>
 
-#include "openthread/types.h"
-#include "openthread/platform/uart.h"
+#include <openthread/types.h>
+#include <openthread/platform/uart.h>
 
-#include <utils/code_utils.h>
 #include "platform-cc2538.h"
+#include "utils/code_utils.h"
 
 enum
 {

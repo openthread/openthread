@@ -34,10 +34,11 @@
 #include <openthread-config.h>
 #endif
 
-#include <coap/secure_coap_client.hpp>
-#include <common/logging.hpp>
-#include <meshcop/dtls.hpp>
-#include <thread/thread_netif.hpp>
+#include "secure_coap_client.hpp"
+
+#include "common/logging.hpp"
+#include "meshcop/dtls.hpp"
+#include "thread/thread_netif.hpp"
 
 #if OPENTHREAD_ENABLE_JOINER
 

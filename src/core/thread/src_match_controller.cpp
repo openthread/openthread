@@ -39,12 +39,13 @@
 #include <openthread-config.h>
 #endif
 
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <common/logging.hpp>
-#include <thread/mesh_forwarder.hpp>
-#include <thread/src_match_controller.hpp>
-#include <thread/thread_netif.hpp>
+#include "src_match_controller.hpp"
+
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/logging.hpp"
+#include "thread/mesh_forwarder.hpp"
+#include "thread/thread_netif.hpp"
 
 namespace ot {
 

@@ -34,7 +34,9 @@
 #ifndef LINK_QUALITY_HPP_
 #define LINK_QUALITY_HPP_
 
-#include "openthread/types.h"
+#include <stdio.h>
+
+#include <openthread/types.h>
 
 namespace ot {
 

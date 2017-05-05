@@ -35,8 +35,8 @@
 #ifndef MESHCOP_DATASET_HPP_
 #define MESHCOP_DATASET_HPP_
 
-#include <common/message.hpp>
-#include <meshcop/meshcop_tlvs.hpp>
+#include "common/message.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
 
 namespace ot {
 namespace MeshCoP {

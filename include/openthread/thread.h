@@ -35,9 +35,9 @@
 #ifndef OPENTHREAD_THREAD_H_
 #define OPENTHREAD_THREAD_H_
 
-#include "openthread/types.h"
-#include "openthread/link.h"
-#include "openthread/message.h"
+#include <openthread/link.h>
+#include <openthread/message.h>
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {

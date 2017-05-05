@@ -36,19 +36,19 @@
 
 #include <stddef.h>
 
-#include "openthread/ip6.h"
-#include "openthread/udp.h"
+#include <openthread/ip6.h>
+#include <openthread/udp.h>
 
-#include <common/encoding.hpp>
-#include <common/message.hpp>
-#include <net/icmp6.hpp>
-#include <net/ip6_address.hpp>
-#include <net/ip6_headers.hpp>
-#include <net/ip6_routes.hpp>
-#include <net/ip6_mpl.hpp>
-#include <net/netif.hpp>
-#include <net/socket.hpp>
-#include <net/udp6.hpp>
+#include "common/encoding.hpp"
+#include "common/message.hpp"
+#include "net/icmp6.hpp"
+#include "net/ip6_address.hpp"
+#include "net/ip6_headers.hpp"
+#include "net/ip6_mpl.hpp"
+#include "net/ip6_routes.hpp"
+#include "net/netif.hpp"
+#include "net/socket.hpp"
+#include "net/udp6.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;

@@ -38,8 +38,8 @@
 
 #include <openthread/types.h>
 
-#include <common/encoding.hpp>
-#include <common/message.hpp>
+#include "common/encoding.hpp"
+#include "common/message.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;

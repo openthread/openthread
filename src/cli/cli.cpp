@@ -37,43 +37,45 @@
 #include <openthread-config.h>
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "utils/wrap_string.h"
+#include "cli.hpp"
 
 #ifdef OTDLL
 #include <assert.h>
 #endif
 
-#include "openthread/openthread.h"
-#include "openthread/commissioner.h"
-#include "openthread/joiner.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include "utils/wrap_string.h"
+
+#include <openthread/openthread.h>
+#include <openthread/commissioner.h>
+#include <openthread/joiner.h>
 
 #if OPENTHREAD_FTD
-#include "openthread/dataset_ftd.h"
-#include "openthread/thread_ftd.h"
+#include <openthread/dataset_ftd.h>
+#include <openthread/thread_ftd.h>
 #endif
 
 #ifndef OTDLL
-#include <openthread-instance.h>
-#include "openthread/diag.h"
-#include "openthread/icmp6.h"
+#include <openthread/dhcp6_client.h>
+#include <openthread/dhcp6_server.h>
+#include <openthread/diag.h>
+#include <openthread/icmp6.h>
+#include <openthread/platform/uart.h>
 
-#include <common/new.hpp>
-#include <net/ip6.hpp>
-#include "openthread/dhcp6_client.h"
-#include "openthread/dhcp6_server.h"
-#include "openthread/platform/uart.h"
+#include "openthread-instance.h"
+#include "common/new.hpp"
+#include "net/ip6.hpp"
 #endif
 
-#include <common/encoding.hpp>
-
-#include "cli.hpp"
 #include "cli_dataset.hpp"
 #include "cli_uart.hpp"
+
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 #include "cli_coap.hpp"
 #endif
+
+#include "common/encoding.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;

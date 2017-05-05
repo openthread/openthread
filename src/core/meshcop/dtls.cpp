@@ -31,24 +31,25 @@
  *   This file implements the necessary hooks for mbedTLS.
  */
 
+#define WPP_NAME "dtls.tmh"
+
 #ifdef OPENTHREAD_CONFIG_FILE
 #include OPENTHREAD_CONFIG_FILE
 #else
 #include <openthread-config.h>
 #endif
 
-#define WPP_NAME "dtls.tmh"
-
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <common/encoding.hpp>
-#include <common/logging.hpp>
-#include <common/timer.hpp>
-#include <crypto/sha256.hpp>
-#include <meshcop/dtls.hpp>
-#include <thread/thread_netif.hpp>
+#include "dtls.hpp"
 
 #include <mbedtls/debug.h>
+
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/encoding.hpp"
+#include "common/logging.hpp"
+#include "common/timer.hpp"
+#include "crypto/sha256.hpp"
+#include "thread/thread_netif.hpp"
 
 #if OPENTHREAD_ENABLE_DTLS
 

@@ -37,10 +37,10 @@
 #include <stddef.h>
 #include "utils/wrap_stdint.h"
 
-#include "openthread/types.h"
-#include "openthread/platform/alarm.h"
+#include <openthread/types.h>
+#include <openthread/platform/alarm.h>
 
-#include <common/tasklet.hpp>
+#include "common/tasklet.hpp"
 
 namespace ot {
 

@@ -41,17 +41,18 @@
 #include <openthread-config.h>
 #endif
 
+#include "joiner_router.hpp"
+
 #include <stdio.h>
 
-#include <common/code_utils.hpp>
-#include <common/encoding.hpp>
-#include <common/logging.hpp>
-#include <meshcop/joiner_router.hpp>
-#include <meshcop/meshcop.hpp>
-#include <meshcop/meshcop_tlvs.hpp>
-#include <thread/mle.hpp>
-#include <thread/thread_netif.hpp>
-#include <thread/thread_uris.hpp>
+#include "common/code_utils.hpp"
+#include "common/encoding.hpp"
+#include "common/logging.hpp"
+#include "meshcop/meshcop.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
+#include "thread/mle.hpp"
+#include "thread/thread_netif.hpp"
+#include "thread/thread_uris.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap64;

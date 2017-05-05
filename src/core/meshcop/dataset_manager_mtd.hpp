@@ -35,7 +35,7 @@
 #ifndef MESHCOP_DATASET_MANAGER_MTD_HPP_
 #define MESHCOP_DATASET_MANAGER_MTD_HPP_
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
 namespace ot {
 

@@ -39,12 +39,11 @@
 #include <openthread-config.h>
 #endif
 
-#include "openthread/instance.h"
-#include "openthread/platform/misc.h"
-#include "openthread/platform/settings.h"
+#include <openthread/instance.h>
+#include <openthread/platform/misc.h>
+#include <openthread/platform/settings.h>
 
 #include "openthread-instance.h"
-
 #include "common/logging.hpp"
 #include "common/new.hpp"
 

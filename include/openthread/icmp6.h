@@ -35,8 +35,8 @@
 #ifndef OPENTHREAD_ICMP6_H_
 #define OPENTHREAD_ICMP6_H_
 
-#include <openthread/types.h>
 #include <openthread/message.h>
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {

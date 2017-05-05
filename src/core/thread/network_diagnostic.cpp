@@ -39,22 +39,23 @@
 #include <openthread-config.h>
 #endif
 
-#include "openthread/platform/random.h"
+#include "network_diagnostic.hpp"
 
-#include <coap/coap_header.hpp>
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <common/logging.hpp>
-#include <common/encoding.hpp>
-#include <mac/mac_frame.hpp>
-#include <net/netif.hpp>
-#include <thread/mesh_forwarder.hpp>
-#include <thread/mle_router.hpp>
-#include <thread/thread_netif.hpp>
-#include <thread/thread_tlvs.hpp>
-#include <thread/thread_uris.hpp>
-#include <thread/network_diagnostic.hpp>
-#include <thread/network_diagnostic_tlvs.hpp>
+#include <openthread/platform/random.h>
+
+#include "coap/coap_header.hpp"
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/logging.hpp"
+#include "common/encoding.hpp"
+#include "mac/mac_frame.hpp"
+#include "net/netif.hpp"
+#include "thread/mesh_forwarder.hpp"
+#include "thread/mle_router.hpp"
+#include "thread/thread_netif.hpp"
+#include "thread/thread_tlvs.hpp"
+#include "thread/thread_uris.hpp"
+#include "thread/network_diagnostic_tlvs.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 

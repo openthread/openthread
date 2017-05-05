@@ -37,13 +37,14 @@
 #include <openthread-config.h>
 #endif
 
-#include "openthread/platform/random.h"
+#include "coap_header.hpp"
 
-#include <coap/coap_header.hpp>
-#include <coap/coap_client.hpp>
-#include <common/debug.hpp>
-#include <common/code_utils.hpp>
-#include <common/encoding.hpp>
+#include <openthread/platform/random.h>
+
+#include "coap/coap_client.hpp"
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/encoding.hpp"
 
 namespace ot {
 namespace Coap {

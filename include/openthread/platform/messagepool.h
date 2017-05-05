@@ -37,9 +37,8 @@
 
 #include <stdint.h>
 
-#include "openthread/types.h"
-
-#include "openthread/message.h"
+#include <openthread/message.h>
+#include <openthread/types.h>
 
 /**
  * @defgroup messagepool MessagePool

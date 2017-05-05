@@ -39,7 +39,7 @@
 #include <openthread-config.h>
 #endif
 
-#include <ncp/ncp_base.hpp>
+#include "ncp/ncp_base.hpp"
 
 namespace ot {
 

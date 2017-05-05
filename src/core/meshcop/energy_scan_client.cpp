@@ -31,26 +31,27 @@
  *   This file implements the Energy Scan Client.
  */
 
+#define WPP_NAME "energy_scan_client.tmh"
+
 #ifdef OPENTHREAD_CONFIG_FILE
 #include OPENTHREAD_CONFIG_FILE
 #else
 #include <openthread-config.h>
 #endif
 
-#define WPP_NAME "energy_scan_client.tmh"
+#include "energy_scan_client.hpp"
 
-#include "openthread/platform/random.h"
+#include <openthread/platform/random.h>
 
-#include <coap/coap_header.hpp>
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <common/encoding.hpp>
-#include <common/logging.hpp>
-#include <meshcop/energy_scan_client.hpp>
-#include <meshcop/meshcop.hpp>
-#include <meshcop/meshcop_tlvs.hpp>
-#include <thread/thread_netif.hpp>
-#include <thread/thread_uris.hpp>
+#include "coap/coap_header.hpp"
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/encoding.hpp"
+#include "common/logging.hpp"
+#include "meshcop/meshcop.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
+#include "thread/thread_netif.hpp"
+#include "thread/thread_uris.hpp"
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 

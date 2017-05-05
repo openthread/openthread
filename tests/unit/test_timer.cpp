@@ -27,9 +27,10 @@
  */
 
 #include "test_platform.h"
-#include <common/debug.hpp>
-#include <common/timer.hpp>
-#include <openthread-instance.h>
+
+#include "openthread-instance.h"
+#include "common/debug.hpp"
+#include "common/timer.hpp"
 
 enum
 {

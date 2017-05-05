@@ -34,15 +34,15 @@
 #ifndef DHCP6_CLIENT_HPP_
 #define DHCP6_CLIENT_HPP_
 
-#include "openthread/dhcp6_client.h"
+#include <openthread/dhcp6_client.h>
 
-#include <common/message.hpp>
-#include <common/timer.hpp>
-#include <common/trickle_timer.hpp>
-#include <mac/mac.hpp>
-#include <mac/mac_frame.hpp>
-#include <net/dhcp6.hpp>
-#include <net/udp6.hpp>
+#include "common/message.hpp"
+#include "common/timer.hpp"
+#include "common/trickle_timer.hpp"
+#include "mac/mac.hpp"
+#include "mac/mac_frame.hpp"
+#include "net/dhcp6.hpp"
+#include "net/udp6.hpp"
 
 namespace ot {
 

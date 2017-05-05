@@ -32,15 +32,15 @@
 #include <openthread-config.h>
 #endif
 
+#include "coap_client.hpp"
+
+#include <openthread/platform/random.h>
+
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "net/ip6.hpp"
+#include "net/udp6.hpp"
 #include "utils/wrap_string.h"
-
-#include "openthread/platform/random.h"
-
-#include <coap/coap_client.hpp>
-#include <common/debug.hpp>
-#include <common/code_utils.hpp>
-#include <net/ip6.hpp>
-#include <net/udp6.hpp>
 
 /**
  * @file

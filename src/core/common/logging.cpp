@@ -39,9 +39,9 @@
 #include <openthread-config.h>
 #endif
 
-#include "openthread/openthread.h"
+#include "logging.hpp"
 
-#include <common/logging.hpp>
+#include <openthread/openthread.h>
 
 #ifndef WINDOWS_LOGGING
 #define otLogDump(aFormat, ...)                                             \

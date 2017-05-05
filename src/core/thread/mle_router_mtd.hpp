@@ -36,9 +36,9 @@
 
 #include "utils/wrap_string.h"
 
-#include <thread/mle.hpp>
-#include <thread/mle_tlvs.hpp>
-#include <thread/thread_tlvs.hpp>
+#include "thread/mle.hpp"
+#include "thread/mle_tlvs.hpp"
+#include "thread/thread_tlvs.hpp"
 
 namespace ot {
 namespace Mle {

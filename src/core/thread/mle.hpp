@@ -34,16 +34,16 @@
 #ifndef MLE_HPP_
 #define MLE_HPP_
 
-#include "openthread/openthread.h"
+#include <openthread/openthread.h>
 
-#include <common/encoding.hpp>
-#include <common/timer.hpp>
-#include <mac/mac.hpp>
-#include <net/udp6.hpp>
-#include <thread/mle_constants.hpp>
-#include <thread/mle_tlvs.hpp>
-#include <thread/topology.hpp>
-#include <meshcop/joiner_router.hpp>
+#include "common/encoding.hpp"
+#include "common/timer.hpp"
+#include "mac/mac.hpp"
+#include "meshcop/joiner_router.hpp"
+#include "net/udp6.hpp"
+#include "thread/mle_constants.hpp"
+#include "thread/mle_tlvs.hpp"
+#include "thread/topology.hpp"
 
 namespace ot {
 

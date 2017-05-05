@@ -37,9 +37,10 @@
 #include <openthread-config.h>
 #endif
 
-#include <common/code_utils.hpp>
-#include <common/message.hpp>
-#include <thread/mle_tlvs.hpp>
+#include "tlvs.hpp"
+
+#include "common/code_utils.hpp"
+#include "common/message.hpp"
 
 namespace ot {
 

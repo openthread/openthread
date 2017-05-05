@@ -35,7 +35,7 @@
 #ifndef OPENTHREAD_NETDATA_H_
 #define OPENTHREAD_NETDATA_H_
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {

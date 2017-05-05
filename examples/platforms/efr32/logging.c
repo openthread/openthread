@@ -38,19 +38,10 @@
 #include <openthread-config.h>
 #endif
 
-
+#include <openthread/cli.h>
 #include <openthread/platform/logging.h>
-#if OPENTHREAD_ENABLE_CLI_LOGGING
-#include <ctype.h>
-#include <inttypes.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
 
-#include <utils/code_utils.h>
-#include <cli.h>
-#endif
+#include "utils/code_utils.h"
 
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {

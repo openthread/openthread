@@ -26,11 +26,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "test_util.h"
-#include "openthread/openthread.h"
-#include <thread/link_quality.hpp>
-
 #include "utils/wrap_string.h"
+
+#include <openthread/openthread.h>
+
+#include "thread/link_quality.hpp"
+
+#include "test_util.h"
 
 namespace ot {
 

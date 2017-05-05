@@ -38,12 +38,13 @@
 #include <openthread-config.h>
 #endif
 
-#include <common/code_utils.hpp>
-#include <common/timer.hpp>
-#include <crypto/hmac_sha256.hpp>
-#include <thread/key_manager.hpp>
-#include <thread/mle_router.hpp>
-#include <thread/thread_netif.hpp>
+#include "key_manager.hpp"
+
+#include "common/code_utils.hpp"
+#include "common/timer.hpp"
+#include "crypto/hmac_sha256.hpp"
+#include "thread/mle_router.hpp"
+#include "thread/thread_netif.hpp"
 
 namespace ot {
 

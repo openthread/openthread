@@ -37,13 +37,14 @@
 #include <openthread-config.h>
 #endif
 
+#include "link_quality.hpp"
+
 #include <stdio.h>
 #include "utils/wrap_string.h"
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <common/code_utils.hpp>
-#include <thread/link_quality.hpp>
+#include "common/code_utils.hpp"
 
 namespace ot {
 

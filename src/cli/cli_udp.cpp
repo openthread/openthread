@@ -37,13 +37,14 @@
 #include <openthread-config.h>
 #endif
 
+#include "cli_udp.hpp"
+
 #include <stdarg.h>
 #include <stdio.h>
 #include "utils/wrap_string.h"
 
-#include <cli/cli.hpp>
-#include <cli/cli_udp.hpp>
-#include <common/code_utils.hpp>
+#include "cli/cli.hpp"
+#include "common/code_utils.hpp"
 
 namespace ot {
 namespace Cli {

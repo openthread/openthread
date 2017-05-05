@@ -34,11 +34,11 @@
 #ifndef NET_NETIF_HPP_
 #define NET_NETIF_HPP_
 
-#include <common/message.hpp>
-#include <common/tasklet.hpp>
-#include <mac/mac_frame.hpp>
-#include <net/ip6_address.hpp>
-#include <net/socket.hpp>
+#include "common/message.hpp"
+#include "common/tasklet.hpp"
+#include "mac/mac_frame.hpp"
+#include "net/ip6_address.hpp"
+#include "net/socket.hpp"
 
 namespace ot {
 namespace Ip6 {

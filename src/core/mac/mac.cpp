@@ -39,23 +39,24 @@
 #include <openthread-config.h>
 #endif
 
+#include "mac.hpp"
+
 #include "utils/wrap_string.h"
 
-#include "openthread/platform/random.h"
-#include "openthread/platform/usec-alarm.h"
+#include <openthread/platform/random.h>
+#include <openthread/platform/usec-alarm.h>
 
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <common/encoding.hpp>
-#include <common/logging.hpp>
-#include <crypto/aes_ccm.hpp>
-#include <crypto/sha256.hpp>
-#include <mac/mac.hpp>
-#include <mac/mac_frame.hpp>
-#include <thread/link_quality.hpp>
-#include <thread/mle_router.hpp>
-#include <thread/thread_netif.hpp>
-#include <openthread-instance.h>
+#include "openthread-instance.h"
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/encoding.hpp"
+#include "common/logging.hpp"
+#include "crypto/aes_ccm.hpp"
+#include "crypto/sha256.hpp"
+#include "mac/mac_frame.hpp"
+#include "thread/link_quality.hpp"
+#include "thread/mle_router.hpp"
+#include "thread/thread_netif.hpp"
 
 using ot::Encoding::BigEndian::HostSwap64;
 

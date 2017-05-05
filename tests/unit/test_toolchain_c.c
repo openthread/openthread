@@ -26,12 +26,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
-#include "openthread/platform/toolchain.h"
+#include <openthread/platform/toolchain.h>
 
 #include "test_util.h"
 

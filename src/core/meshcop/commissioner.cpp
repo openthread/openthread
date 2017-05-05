@@ -39,23 +39,24 @@
 #include <openthread-config.h>
 #endif
 
+#include "commissioner.hpp"
+
 #include <stdio.h>
 #include "utils/wrap_string.h"
 
-#include "openthread/platform/random.h"
-
-#include <coap/coap_header.hpp>
-#include <common/encoding.hpp>
-#include <common/logging.hpp>
-#include <crypto/pbkdf2_cmac.h>
-#include <meshcop/commissioner.hpp>
-#include <meshcop/joiner_router.hpp>
-#include <meshcop/meshcop.hpp>
-#include <meshcop/meshcop_tlvs.hpp>
-#include <thread/thread_netif.hpp>
-#include <thread/thread_tlvs.hpp>
-#include <thread/thread_uris.hpp>
 #include <openthread/types.h>
+#include <openthread/platform/random.h>
+
+#include "coap/coap_header.hpp"
+#include "common/encoding.hpp"
+#include "common/logging.hpp"
+#include "crypto/pbkdf2_cmac.h"
+#include "meshcop/joiner_router.hpp"
+#include "meshcop/meshcop.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
+#include "thread/thread_netif.hpp"
+#include "thread/thread_tlvs.hpp"
+#include "thread/thread_uris.hpp"
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
 

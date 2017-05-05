@@ -32,8 +32,9 @@
 #include <openthread-config.h>
 #endif
 
-#include <common/code_utils.hpp>
-#include <coap/coap_base.hpp>
+#include "coap_base.hpp"
+
+#include "common/code_utils.hpp"
 
 /**
  * @file

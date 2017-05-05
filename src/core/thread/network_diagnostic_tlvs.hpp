@@ -36,14 +36,14 @@
 
 #include "utils/wrap_string.h"
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <common/encoding.hpp>
-#include <common/message.hpp>
-#include <common/tlvs.hpp>
-#include <meshcop/meshcop_tlvs.hpp>
-#include <net/ip6_address.hpp>
-#include <thread/mle_constants.hpp>
+#include "common/encoding.hpp"
+#include "common/message.hpp"
+#include "common/tlvs.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
+#include "net/ip6_address.hpp"
+#include "thread/mle_constants.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;

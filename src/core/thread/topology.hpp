@@ -34,13 +34,14 @@
 #ifndef TOPOLOGY_HPP_
 #define TOPOLOGY_HPP_
 
-#include <openthread-core-config.h>
 #include <openthread/platform/random.h>
-#include <mac/mac_frame.hpp>
-#include <net/ip6.hpp>
-#include <thread/mle_tlvs.hpp>
-#include <thread/link_quality.hpp>
-#include <common/message.hpp>
+
+#include "openthread-core-config.h"
+#include "common/message.hpp"
+#include "mac/mac_frame.hpp"
+#include "net/ip6.hpp"
+#include "thread/link_quality.hpp"
+#include "thread/mle_tlvs.hpp"
 
 namespace ot {
 

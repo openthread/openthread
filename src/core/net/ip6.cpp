@@ -39,18 +39,19 @@
 #include <openthread-config.h>
 #endif
 
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <common/logging.hpp>
-#include <common/message.hpp>
-#include <net/icmp6.hpp>
-#include <net/ip6.hpp>
-#include <net/ip6_address.hpp>
-#include <net/ip6_routes.hpp>
-#include <net/netif.hpp>
-#include <net/udp6.hpp>
-#include <thread/mle.hpp>
-#include <openthread-instance.h>
+#include "ip6.hpp"
+
+#include "openthread-instance.h"
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/logging.hpp"
+#include "common/message.hpp"
+#include "net/icmp6.hpp"
+#include "net/ip6_address.hpp"
+#include "net/ip6_routes.hpp"
+#include "net/netif.hpp"
+#include "net/udp6.hpp"
+#include "thread/mle.hpp"
 
 namespace ot {
 namespace Ip6 {

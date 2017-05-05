@@ -33,15 +33,14 @@
  */
 
 #include <openthread-config.h>
+#include <openthread/openthread.h>
+#include <openthread/platform/diag.h>
+#include <openthread/platform/platform.h>
+#include <openthread/platform/radio.h>
 
-#include "openthread/openthread.h"
-#include "openthread/platform/platform.h"
-#include "openthread/platform/radio.h"
-#include "openthread/platform/diag.h"
-
-#include <utils/code_utils.h>
-#include <common/logging.hpp>
 #include "platform-cc2538.h"
+#include "common/logging.hpp"
+#include "utils/code_utils.h"
 
 enum
 {

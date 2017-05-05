@@ -28,8 +28,8 @@
 
 #include "platform-posix.h"
 
-#include "openthread/platform/diag.h"
-#include "openthread/platform/radio.h"
+#include <openthread/platform/diag.h>
+#include <openthread/platform/radio.h>
 
 #include "utils/code_utils.h"
 

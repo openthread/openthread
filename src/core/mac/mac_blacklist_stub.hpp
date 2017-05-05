@@ -36,9 +36,9 @@
 
 #include "utils/wrap_stdint.h"
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <mac/mac_frame.hpp>
+#include "mac/mac_frame.hpp"
 
 namespace ot {
 namespace Mac {

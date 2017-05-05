@@ -37,13 +37,14 @@
 #include <openthread-config.h>
 #endif
 
-#include <ctype.h>
-#include <cli/cli.hpp>
-
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 
-#include <cli/cli_coap.hpp>
-#include <coap/coap_header.hpp>
+#include "cli_coap.hpp"
+
+#include <ctype.h>
+
+#include "cli/cli.hpp"
+#include "coap/coap_header.hpp"
 
 namespace ot {
 namespace Cli {

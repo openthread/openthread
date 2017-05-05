@@ -40,7 +40,7 @@
 #include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
 #endif
 
-#include <openthread-core-default-config.h>
+#include "openthread-core-default-config.h"
 
 #undef OPENTHREAD_CORE_CONFIG_H_IN
 

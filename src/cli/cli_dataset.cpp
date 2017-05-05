@@ -37,18 +37,19 @@
 #include <openthread-config.h>
 #endif
 
+#include "cli_dataset.hpp"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "utils/wrap_string.h"
 
-#include "openthread/openthread.h"
+#include <openthread/openthread.h>
 
 #if OPENTHREAD_FTD
-#include "openthread/dataset_ftd.h"
+#include <openthread/dataset_ftd.h>
 #endif
 
-#include "cli.hpp"
-#include "cli_dataset.hpp"
+#include "cli/cli.hpp"
 
 namespace ot {
 namespace Cli {

@@ -34,9 +34,10 @@
 #ifndef CLI_CONSOLE_HPP_
 #define CLI_CONSOLE_HPP_
 
-#include "openthread/cli.h"
+#include <openthread/cli.h>
 
-#include <cli/cli_server.hpp>
+#include "cli/cli.hpp"
+#include "cli/cli_server.hpp"
 
 namespace ot {
 namespace Cli {

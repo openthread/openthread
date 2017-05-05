@@ -34,19 +34,18 @@
 #ifndef MESH_FORWARDER_HPP_
 #define MESH_FORWARDER_HPP_
 
-#include <openthread-core-config.h>
+#include <openthread/types.h>
 
-#include "openthread/types.h"
-
-#include <common/tasklet.hpp>
-#include <mac/mac.hpp>
-#include <net/ip6.hpp>
-#include <thread/address_resolver.hpp>
-#include <thread/data_poll_manager.hpp>
-#include <thread/src_match_controller.hpp>
-#include <thread/lowpan.hpp>
-#include <thread/network_data_leader.hpp>
-#include <thread/topology.hpp>
+#include "openthread-core-config.h"
+#include "common/tasklet.hpp"
+#include "mac/mac.hpp"
+#include "net/ip6.hpp"
+#include "thread/address_resolver.hpp"
+#include "thread/data_poll_manager.hpp"
+#include "thread/lowpan.hpp"
+#include "thread/network_data_leader.hpp"
+#include "thread/src_match_controller.hpp"
+#include "thread/topology.hpp"
 
 namespace ot {
 

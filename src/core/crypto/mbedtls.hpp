@@ -40,9 +40,9 @@
 #include <openthread-config.h>
 #endif
 
-#include <openthread-core-config.h>
-
 #include <mbedtls/memory_buffer_alloc.h>
+
+#include "openthread-core-config.h"
 
 namespace ot {
 namespace Crypto {
