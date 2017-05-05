@@ -957,22 +957,29 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
     const Address *candidateAddr;
     int8_t candidateId;
     int8_t rvalIface = 0;
+    uint8_t rvalPrefixMatched = 0;
+    uint8_t destinationScope = destination->GetScope();
 
     for (Netif *netif = GetNetifList(); netif; netif = netif->mNext)
     {
         candidateId = netif->GetInterfaceId();
 
+        if (destination->IsLinkLocal() || destination->IsMulticast())
+        {
+            if (interfaceId != candidateId)
+            {
+                continue;
+            }
+        }
+
         for (const NetifUnicastAddress *addr = netif->mUnicastAddresses; addr; addr = addr->GetNext())
         {
-            candidateAddr = &addr->GetAddress();
+            uint8_t overrideScope;
+            uint8_t candidatePrefixMatched;
 
-            if (destination->IsLinkLocal() || destination->IsMulticast())
-            {
-                if (interfaceId != candidateId)
-                {
-                    continue;
-                }
-            }
+            candidateAddr = &addr->GetAddress();
+            candidatePrefixMatched = destination->PrefixMatch(*candidateAddr);
+            overrideScope = (candidatePrefixMatched >= addr->mPrefixLength) ? addr->GetScope() : destinationScope;
 
             if (candidateAddr->IsAnycastRoutingLocator())
             {
@@ -985,29 +992,32 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
                 // Rule 0: Prefer any address
                 rvalAddr = addr;
                 rvalIface = candidateId;
+                rvalPrefixMatched = candidatePrefixMatched;
             }
             else if (*candidateAddr == *destination)
             {
                 // Rule 1: Prefer same address
                 rvalAddr = addr;
                 rvalIface = candidateId;
-                goto exit;
+                ExitNow();
             }
             else if (addr->GetScope() < rvalAddr->GetScope())
             {
                 // Rule 2: Prefer appropriate scope
-                if (addr->GetScope() >= destination->GetScope())
+                if (addr->GetScope() >= overrideScope)
                 {
                     rvalAddr = addr;
                     rvalIface = candidateId;
+                    rvalPrefixMatched = candidatePrefixMatched;
                 }
             }
             else if (addr->GetScope() > rvalAddr->GetScope())
             {
-                if (rvalAddr->GetScope() < destination->GetScope())
+                if (rvalAddr->GetScope() < overrideScope)
                 {
                     rvalAddr = addr;
                     rvalIface = candidateId;
+                    rvalPrefixMatched = candidatePrefixMatched;
                 }
             }
             else if (addr->mPreferred && !rvalAddr->mPreferred)
@@ -1015,6 +1025,7 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
                 // Rule 3: Avoid deprecated addresses
                 rvalAddr = addr;
                 rvalIface = candidateId;
+                rvalPrefixMatched = candidatePrefixMatched;
             }
             else if (aMessageInfo.mInterfaceId != 0 && aMessageInfo.mInterfaceId == candidateId &&
                      rvalIface != candidateId)
@@ -1023,14 +1034,16 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
                 // Rule 5: Prefer outgoing interface
                 rvalAddr = addr;
                 rvalIface = candidateId;
+                rvalPrefixMatched = candidatePrefixMatched;
             }
-            else if (destination->PrefixMatch(*candidateAddr) > destination->PrefixMatch(rvalAddr->GetAddress()))
+            else if (candidatePrefixMatched > rvalPrefixMatched)
             {
                 // Rule 6: Prefer matching label
                 // Rule 7: Prefer public address
                 // Rule 8: Use longest prefix matching
                 rvalAddr = addr;
                 rvalIface = candidateId;
+                rvalPrefixMatched = candidatePrefixMatched;
             }
         }
     }
