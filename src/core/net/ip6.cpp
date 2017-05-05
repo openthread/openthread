@@ -999,7 +999,6 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
                 // Rule 1: Prefer same address
                 rvalAddr = addr;
                 rvalIface = candidateId;
-                rvalPrefixMatched = candidatePrefixMatched;
                 ExitNow();
             }
             else if (addr->GetScope() < rvalAddr->GetScope())
