@@ -529,6 +529,7 @@ typedef enum
     SPINEL_PROP_PHY_CCA_THRESHOLD       = SPINEL_PROP_PHY__BEGIN + 4, ///< dBm [c]
     SPINEL_PROP_PHY_TX_POWER            = SPINEL_PROP_PHY__BEGIN + 5, ///< [c]
     SPINEL_PROP_PHY_RSSI                = SPINEL_PROP_PHY__BEGIN + 6, ///< dBm [c]
+    SPINEL_PROP_PHY_RX_SENSITIVITY      = SPINEL_PROP_PHY__BEGIN + 7, ///< dBm [c]
     SPINEL_PROP_PHY__END                = 0x30,
 
     SPINEL_PROP_PHY_EXT__BEGIN          = 0x1200,

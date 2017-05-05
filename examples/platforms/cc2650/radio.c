@@ -48,6 +48,11 @@
 #include <driverlib/rf_ieee_cmd.h>
 #include <driverlib/chipinfo.h>
 
+enum
+{
+    CC2650_RECEIVE_SENSITIVITY = -100,  // dBm
+};
+
 /* phy state as defined by openthread */
 static volatile cc2650_PhyState sState;
 
@@ -1798,4 +1803,10 @@ void cc2650RadioProcess(otInstance *aInstance)
 
         sReceiveFrame.mLength = 0;
     }
+}
+
+int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
+{
+    (void)aInstance;
+    return CC2650_RECEIVE_SENSITIVITY;
 }

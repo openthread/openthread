@@ -75,6 +75,11 @@ enum
     IEEE802154_MACCMD_DATA_REQ    = 4,
 };
 
+enum
+{
+    POSIX_RECEIVE_SENSITIVITY = -100,  // dBm
+};
+
 OT_TOOL_PACKED_BEGIN
 struct RadioMessage
 {
@@ -748,4 +753,10 @@ void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
 {
     (void)aInstance;
     (void)aPower;
+}
+
+int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
+{
+    (void)aInstance;
+    return POSIX_RECEIVE_SENSITIVITY;
 }

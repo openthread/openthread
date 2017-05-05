@@ -601,12 +601,12 @@ public:
     otMacCounters &GetCounters(void) { return mCounters; }
 
     /**
-     * This method returns the noise floor state.
+     * This method returns the noise floor value (currently use the radio receive sensitivity value).
      *
-     * @returns A reference to the noise floor state.
+     * @returns The noise floor value in dBm.
      *
      */
-    LinkQualityInfo &GetNoiseFloor(void) { return mNoiseFloor; }
+    int8_t GetNoiseFloor(void) { return otPlatRadioGetReceiveSensitivity(GetInstance()); }
 
     /**
      * This method indicates whether or not CSMA backoff is supported by the radio layer.
@@ -713,8 +713,6 @@ private:
     };
     int8_t mEnergyScanCurrentMaxRssi;
     Tasklet mEnergyScanSampleRssiTask;
-
-    LinkQualityInfo mNoiseFloor;
 
     otLinkPcapCallback mPcapCallback;
     void *mPcapCallbackContext;

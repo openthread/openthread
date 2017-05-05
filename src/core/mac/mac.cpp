@@ -156,8 +156,6 @@ Mac::Mac(ThreadNetif &aThreadNetif):
 {
     GenerateExtAddress(&mExtAddress);
 
-    ClearNoiseFloorAverage(mNoiseFloor);
-
     memset(&mCounters, 0, sizeof(otMacCounters));
 
     SetExtendedPanId(sExtendedPanidInit);
@@ -1417,7 +1415,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
 
     if (neighbor != NULL)
     {
-        neighbor->GetLinkInfo().AddRss(mNoiseFloor, aFrame->mPower);
+        neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), aFrame->mPower);
 
         if (aFrame->GetSecurityEnabled() == true)
         {
