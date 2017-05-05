@@ -972,10 +972,11 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
 
         for (const NetifUnicastAddress *addr = netif->mUnicastAddresses; addr; addr = addr->GetNext())
         {
-            candidateAddr = &addr->GetAddress();
-            uint8_t destinationScope = (destination->PrefixMatch(*candidateAddr) >= addr->mPrefixLength) ?
-                                       addr->GetScope() : destination->GetScope();
+            uint8_t destinationScope;
 
+            candidateAddr = &addr->GetAddress();
+            destinationScope = (destination->PrefixMatch(*candidateAddr) >= addr->mPrefixLength) ?
+                               addr->GetScope() : destination->GetScope();
 
             if (candidateAddr->IsAnycastRoutingLocator())
             {
