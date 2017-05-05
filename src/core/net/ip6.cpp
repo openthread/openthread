@@ -957,6 +957,8 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
     const Address *candidateAddr;
     int8_t candidateId;
     int8_t rvalIface = 0;
+    uint8_t rvalPrefixMatched = 0;
+    uint8_t destinationScope = destination->GetScope();
 
     for (Netif *netif = GetNetifList(); netif; netif = netif->mNext)
     {
@@ -972,13 +974,12 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
 
         for (const NetifUnicastAddress *addr = netif->mUnicastAddresses; addr; addr = addr->GetNext())
         {
-            uint8_t destinationScope;
-            uint8_t candidateMatchedLength;
+            uint8_t overrideScope;
+            uint8_t candidatePrefixMatched;
 
             candidateAddr = &addr->GetAddress();
-            candidateMatchedLength = destination->PrefixMatch(*candidateAddr);
-            destinationScope = (candidateMatchedLength >= addr->mPrefixLength) ?
-                               addr->GetScope() : destination->GetScope();
+            candidatePrefixMatched = destination->PrefixMatch(*candidateAddr);
+            overrideScope = (candidatePrefixMatched >= addr->mPrefixLength) ? addr->GetScope() : destinationScope;
 
             if (candidateAddr->IsAnycastRoutingLocator())
             {
@@ -991,29 +992,33 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
                 // Rule 0: Prefer any address
                 rvalAddr = addr;
                 rvalIface = candidateId;
+                rvalPrefixMatched = candidatePrefixMatched;
             }
             else if (*candidateAddr == *destination)
             {
                 // Rule 1: Prefer same address
                 rvalAddr = addr;
                 rvalIface = candidateId;
+                rvalPrefixMatched = candidatePrefixMatched;
                 ExitNow();
             }
             else if (addr->GetScope() < rvalAddr->GetScope())
             {
                 // Rule 2: Prefer appropriate scope
-                if (addr->GetScope() >= destinationScope)
+                if (addr->GetScope() >= overrideScope)
                 {
                     rvalAddr = addr;
                     rvalIface = candidateId;
+                    rvalPrefixMatched = candidatePrefixMatched;
                 }
             }
             else if (addr->GetScope() > rvalAddr->GetScope())
             {
-                if (rvalAddr->GetScope() < destinationScope)
+                if (rvalAddr->GetScope() < overrideScope)
                 {
                     rvalAddr = addr;
                     rvalIface = candidateId;
+                    rvalPrefixMatched = candidatePrefixMatched;
                 }
             }
             else if (addr->mPreferred && !rvalAddr->mPreferred)
@@ -1021,6 +1026,7 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
                 // Rule 3: Avoid deprecated addresses
                 rvalAddr = addr;
                 rvalIface = candidateId;
+                rvalPrefixMatched = candidatePrefixMatched;
             }
             else if (aMessageInfo.mInterfaceId != 0 && aMessageInfo.mInterfaceId == candidateId &&
                      rvalIface != candidateId)
@@ -1029,14 +1035,16 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
                 // Rule 5: Prefer outgoing interface
                 rvalAddr = addr;
                 rvalIface = candidateId;
+                rvalPrefixMatched = candidatePrefixMatched;
             }
-            else if (candidateMatchedLength > destination->PrefixMatch(rvalAddr->GetAddress()))
+            else if (candidatePrefixMatched > rvalPrefixMatched)
             {
                 // Rule 6: Prefer matching label
                 // Rule 7: Prefer public address
                 // Rule 8: Use longest prefix matching
                 rvalAddr = addr;
                 rvalIface = candidateId;
+                rvalPrefixMatched = candidatePrefixMatched;
             }
         }
     }
