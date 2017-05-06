@@ -55,6 +55,14 @@ class Tlv
 {
 public:
     /**
+     * Default constructor.
+     *
+     */
+    Tlv(void):
+        mType(0),
+        mLength(0) {}
+
+    /**
      * This method returns the Type value.
      *
      * @returns The Type value.

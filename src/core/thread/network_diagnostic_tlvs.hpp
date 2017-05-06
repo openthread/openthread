@@ -1157,12 +1157,21 @@ class ChildTableEntry
 {
 public:
     /**
+     * Default constructor.
+     *
+     */
+    ChildTableEntry(void):
+        mMode(0) {
+        mFields.m16 = 0;
+    }
+
+    /**
      * This method returns the Timeout value.
      *
      * @returns The Timeout value.
      *
      */
-    uint8_t GetTimeout(void) const { return (HostSwap16(mTimeoutRsvChildId) & kTimeoutMask) >> kTimeoutOffset; }
+    uint8_t GetTimeout(void) const { return (mFields.m8[0] & kTimeoutMask) >> kTimeoutOffset; }
 
     /**
      * This method sets the Timeout value.
@@ -1171,8 +1180,7 @@ public:
      *
      */
     void SetTimeout(uint8_t aTimeout) {
-        mTimeoutRsvChildId = HostSwap16((HostSwap16(mTimeoutRsvChildId) & ~kTimeoutMask) |
-                                        ((aTimeout << kTimeoutOffset) & kTimeoutMask));
+        mFields.m8[0] = (mFields.m8[0] & ~kTimeoutMask) | ((aTimeout << kTimeoutOffset) & kTimeoutMask);
     }
 
     /**
@@ -1181,7 +1189,7 @@ public:
      * @returns The Child ID value.
      *
      */
-    uint16_t GetChildId(void) const { return HostSwap16(mTimeoutRsvChildId) & kChildIdMask; }
+    uint16_t GetChildId(void) const { return ((mFields.m8[0] & kChildIdMask) | mFields.m8[1]); }
 
     /**
      * This method sets the Child ID value.
@@ -1190,8 +1198,8 @@ public:
      *
      */
     void SetChildId(uint16_t aChildId) {
-        mTimeoutRsvChildId = HostSwap16((HostSwap16(mTimeoutRsvChildId) & ~kChildIdMask) |
-                                        (aChildId & kChildIdMask));
+        mFields.m8[0] |= (aChildId >> 8) & kChildIdMask;
+        mFields.m8[1] = static_cast<uint8_t>(aChildId & 0xff);
     }
 
     /**
@@ -1216,7 +1224,7 @@ public:
      * @returns The Reserved value.
      *
      */
-    uint8_t GetReserved(void) const { return (HostSwap16(mTimeoutRsvChildId) & kReservedMask) >> kReservedOffset; }
+    uint8_t GetReserved(void) const { return (mFields.m8[0] & kReservedMask) >> kReservedOffset; }
 
     /**
      * This method sets the Reserved value.
@@ -1225,21 +1233,28 @@ public:
      *
      */
     void SetReserved(uint8_t aReserved) {
-        mTimeoutRsvChildId = HostSwap16((HostSwap16(mTimeoutRsvChildId) & ~kReservedMask) |
-                                        ((aReserved << kReservedOffset) & kReservedMask));
+        mFields.m8[0] = (mFields.m8[0] & ~kReservedMask) | ((aReserved << kReservedOffset) & kReservedMask);
     }
 
 private:
+    /**
+     * Masks of the first byte.
+     *
+     */
     enum
     {
-        kTimeoutMask = 0xF800,
-        kTimeoutOffset = 11,
-        kReservedMask = 0x0600,
-        kReservedOffset = 9,
-        kChildIdMask = 0x1ff
+        kTimeoutMask    = 0xf8,
+        kTimeoutOffset  = 3,
+        kReservedMask   = 0x06,
+        kReservedOffset = 1,
+        kChildIdMask    = 0x01
     };
 
-    uint16_t mTimeoutRsvChildId;
+    union
+    {
+        uint8_t  m8[2];
+        uint16_t m16;
+    } mFields;
     uint8_t mMode;
 } OT_TOOL_PACKED_END;
 

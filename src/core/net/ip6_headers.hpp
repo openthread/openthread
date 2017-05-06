@@ -338,6 +338,14 @@ class OptionHeader
 {
 public:
     /**
+     * Default constructor.
+     *
+     */
+    OptionHeader(void):
+        mType(0),
+        mLength(0) {}
+
+    /**
      * This method returns the IPv6 Option Type value.
      *
      * @returns The IPv6 Option Type value.
