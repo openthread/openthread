@@ -44,12 +44,12 @@ extern "C" {
  */
 enum
 {
-    kKeyActiveDataset   = 0x0001,
-    kKeyPendingDataset  = 0x0002,
-    kKeyNetworkInfo     = 0x0003,
-    kKeyParentInfo      = 0x0004,
-    kKeyChildInfo       = 0x0005,
-    kKeyThreadAutoStart = 0x0006,
+    kKeyActiveDataset   = 0x0001,  // key id: 01, version: 00
+    kKeyPendingDataset  = 0x0002,  // key id: 02, version: 00
+    kKeyNetworkInfo     = 0x0003,  // key id: 03, version: 00
+    kKeyParentInfo      = 0x0004,  // key id: 04, version: 00
+    kKeyChildInfo       = 0x0005,  // key id: 05, version: 00
+    kKeyThreadAutoStart = 0x0006,  // key id: 06, version: 00
 };
 
 #ifdef __cplusplus
