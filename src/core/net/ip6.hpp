@@ -369,17 +369,17 @@ private:
     void HandleSendQueue(void);
 
     ThreadError ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto,
-                                       bool fromLocalHost);
-    ThreadError HandleExtensionHeaders(Message &message, Header &header, uint8_t &nextHeader, bool forward,
-                                       bool receive);
-    ThreadError HandleFragment(Message &message);
-    ThreadError AddMplOption(Message &message, Header &header);
-    ThreadError AddTunneledMplOption(Message &message, Header &header, MessageInfo &messageInfo);
-    ThreadError InsertMplOption(Message &message, Header &header, MessageInfo &messageInfo);
+                                       bool aFromNcpHost);
+    ThreadError HandleExtensionHeaders(Message &aMessage, Header &aHeader, uint8_t &aNextHeader, bool aForward,
+                                       bool aReceive);
+    ThreadError HandleFragment(Message &aMessage);
+    ThreadError AddMplOption(Message &aMessage, Header &aHeader);
+    ThreadError AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
+    ThreadError InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
     ThreadError RemoveMplOption(Message &aMessage);
-    ThreadError HandleOptions(Message &message, Header &header, bool &forward);
-    ThreadError HandlePayload(Message &message, MessageInfo &messageInfo, uint8_t ipproto);
-    int8_t FindForwardInterfaceId(const MessageInfo &messageInfo);
+    ThreadError HandleOptions(Message &aMessage, Header &aHeader, bool &aForward);
+    ThreadError HandlePayload(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto);
+    int8_t FindForwardInterfaceId(const MessageInfo &aMessageInfo);
 
     bool mForwardingEnabled;
 
