@@ -2085,6 +2085,9 @@ void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const Thre
 
     mScheduleTransmissionTask.Post();
 
+    otLogInfoMac(GetInstance(), "Rx data poll, from:0x%04x, qed_msgs:%d", child->GetRloc16(),
+                 child->GetIndirectMessageCount());
+
 exit:
     return;
 }
