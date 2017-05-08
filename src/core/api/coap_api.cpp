@@ -61,6 +61,11 @@ ThreadError otCoapHeaderAppendOption(otCoapHeader *aHeader, const otCoapOption *
     return static_cast<Coap::Header *>(aHeader)->AppendOption(*static_cast<const Coap::Header::Option *>(aOption));
 }
 
+ThreadError otCoapHeaderAppendUintOption(otCoapHeader *aHeader, uint16_t aNumber, uint32_t aValue)
+{
+    return static_cast<Coap::Header *>(aHeader)->AppendUintOption(aNumber, aValue);
+}
+
 ThreadError otCoapHeaderAppendObserveOption(otCoapHeader *aHeader, uint32_t aObserve)
 {
     return static_cast<Coap::Header *>(aHeader)->AppendObserveOption(aObserve);
