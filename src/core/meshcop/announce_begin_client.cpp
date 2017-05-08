@@ -106,6 +106,7 @@ ThreadError AnnounceBeginClient::SendRequest(uint32_t aChannelMask, uint8_t aCou
     period.SetPeriod(aPeriod);
     SuccessOrExit(error = message->Append(&period, sizeof(period)));
 
+    messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
     messageInfo.SetPeerAddr(aAddress);
     messageInfo.SetPeerPort(kCoapUdpPort);
     messageInfo.SetInterfaceId(mNetif.GetInterfaceId());

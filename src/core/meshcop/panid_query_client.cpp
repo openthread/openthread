@@ -104,6 +104,7 @@ ThreadError PanIdQueryClient::SendQuery(uint16_t aPanId, uint32_t aChannelMask, 
     panId.SetPanId(aPanId);
     SuccessOrExit(error = message->Append(&panId, sizeof(panId)));
 
+    messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
     messageInfo.SetPeerAddr(aAddress);
     messageInfo.SetPeerPort(kCoapUdpPort);
     messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
@@ -154,7 +155,6 @@ void PanIdQueryClient::HandleConflict(Coap::Header &aHeader, Message &aMessage, 
         mCallback(panId.GetPanId(), channelMask.GetMask(), mContext);
     }
 
-    memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
     SuccessOrExit(mNetif.GetCoapServer().SendEmptyAck(aHeader, responseInfo));
 
     otLogInfoMeshCoP(GetInstance(), "sent panid query conflict response");

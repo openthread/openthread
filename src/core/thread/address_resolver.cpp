@@ -439,7 +439,7 @@ void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessag
 
     otLogInfoArp(GetInstance(), "Received address error notification");
 
-    if (!aMessageInfo.GetSockAddr().IsMulticast())
+    if (aHeader.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
     {
         if (mNetif.GetCoapServer().SendEmptyAck(aHeader, aMessageInfo) == kThreadError_None)
         {

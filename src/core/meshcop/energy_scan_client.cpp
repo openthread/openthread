@@ -119,6 +119,7 @@ ThreadError EnergyScanClient::SendQuery(uint32_t aChannelMask, uint8_t aCount, u
     scanDuration.SetScanDuration(aScanDuration);
     SuccessOrExit(error = message->Append(&scanDuration, sizeof(scanDuration)));
 
+    messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
     messageInfo.SetPeerAddr(aAddress);
     messageInfo.SetPeerPort(kCoapUdpPort);
     messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
@@ -175,7 +176,6 @@ void EnergyScanClient::HandleReport(Coap::Header &aHeader, Message &aMessage, co
         mCallback(channelMask.GetMask(), energyList.list, energyList.tlv.GetLength(), mContext);
     }
 
-    memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
     SuccessOrExit(mNetif.GetCoapServer().SendEmptyAck(aHeader, responseInfo));
 
     otLogInfoMeshCoP(GetInstance(), "sent energy scan report response");
