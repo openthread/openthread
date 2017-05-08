@@ -131,7 +131,7 @@ exit:
     switch (error)
     {
     case kThreadError_None:
-        otLogDebgMac(GetInstance(), "Sent poll");
+        otLogDebgMac(GetInstance(), "Sending data poll");
 
         if (mNoBufferRetxMode == true)
         {
@@ -201,10 +201,15 @@ void DataPollManager::HandlePollSent(ThreadError aError)
             shouldRecalculatePollPeriod = true;
         }
 
+        otLogInfoMac(GetInstance(), "Sent data poll");
+
         break;
 
     default:
         mPollTxFailureCounter++;
+
+        otLogInfoMac(GetInstance(), "Failed to send data poll, error:%s, retx:%d/%d",
+                     otThreadErrorToString(aError), mPollTxFailureCounter, kMaxPollRetxAttempts);
 
         if (mPollTxFailureCounter < kMaxPollRetxAttempts)
         {
@@ -216,8 +221,6 @@ void DataPollManager::HandlePollSent(ThreadError aError)
         }
         else
         {
-            otLogWarnMac(GetInstance(), "Data poll tx failed in %d back-to-back attempts.", mPollTxFailureCounter);
-
             mRetxMode = false;
             mPollTxFailureCounter = 0;
             shouldRecalculatePollPeriod = true;
@@ -245,13 +248,14 @@ void DataPollManager::HandlePollTimeout(void)
 
     mPollTimeoutCounter++;
 
-    if (mPollTimeoutCounter <= kQuickPollsAfterTimeout)
+    otLogInfoMac(GetInstance(), "Data poll timeout, retry:%d/%d", mPollTimeoutCounter, kQuickPollsAfterTimeout);
+
+    if (mPollTimeoutCounter < kQuickPollsAfterTimeout)
     {
         SendDataPoll();
     }
     else
     {
-        otLogInfoMac(GetInstance(), "Data poll timeout happened %d times back-to-back.", mPollTimeoutCounter);
         mPollTimeoutCounter = 0;
     }
 
