@@ -329,16 +329,7 @@ void DataPollManager::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
 
     if (mTimer.IsRunning())
     {
-        uint32_t elapsedTime = Timer::GetNow() - mTimer.Gett0();
-
-        if (elapsedTime >= mPollPeriod)
-        {
-            SendDataPoll();
-        }
-        else
-        {
-            mTimer.Start(mPollPeriod - elapsedTime);
-        }
+        mTimer.StartAt(mTimer.Gett0(), mPollPeriod);
     }
     else
     {
