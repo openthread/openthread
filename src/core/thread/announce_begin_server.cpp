@@ -125,7 +125,7 @@ void AnnounceBeginServer::HandleRequest(Coap::Header &aHeader, Message &aMessage
 
     SendAnnounce(channelMask.GetMask(), count.GetCount(), period.GetPeriod());
 
-    if (aHeader.IsConfirmable())
+    if (aHeader.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
     {
         SuccessOrExit(mNetif.GetCoapServer().SendEmptyAck(aHeader, responseInfo));
         otLogInfoMeshCoP(GetInstance(), "sent announce begin response");

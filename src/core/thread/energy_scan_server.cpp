@@ -118,7 +118,7 @@ void EnergyScanServer::HandleRequest(Coap::Header &aHeader, Message &aMessage, c
 
     mCommissioner = aMessageInfo.GetPeerAddr();
 
-    if (aHeader.IsConfirmable())
+    if (aHeader.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
     {
         SuccessOrExit(mNetif.GetCoapServer().SendEmptyAck(aHeader, responseInfo));
         otLogInfoMeshCoP(GetInstance(), "sent energy scan query response");

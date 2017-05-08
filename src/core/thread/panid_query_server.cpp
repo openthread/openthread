@@ -96,7 +96,7 @@ void PanIdQueryServer::HandleQuery(Coap::Header &aHeader, Message &aMessage, con
     mPanId = panId.GetPanId();
     mTimer.Start(kScanDelay);
 
-    if (aHeader.IsConfirmable())
+    if (aHeader.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
     {
         SuccessOrExit(mNetif.GetCoapServer().SendEmptyAck(aHeader, responseInfo));
         otLogInfoMeshCoP(GetInstance(), "sent panid query response");
