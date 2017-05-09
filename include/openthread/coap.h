@@ -258,6 +258,21 @@ void otCoapHeaderGenerateToken(otCoapHeader *aHeader, uint8_t aTokenLength);
 ThreadError otCoapHeaderAppendOption(otCoapHeader *aHeader, const otCoapOption *aOption);
 
 /**
+ * This function appends an unsigned integer CoAP option as specified in
+ * https://tools.ietf.org/html/rfc7252#section-3.2
+ *
+ * @param[inout]  aHeader  A pointer to the CoAP header.
+ * @param[in]     aNumber  The CoAP Option number.
+ * @param[in]     aValue   The CoAP Option unsigned integer value.
+ *
+ * @retval kThreadError_None         Successfully appended the option.
+ * @retval kThreadError_InvalidArgs  The option type is not equal or greater than the last option type.
+ * @retval kThreadError_NoBufs       The option length exceeds the buffer size.
+ *
+ */
+ThreadError otCoapHeaderAppendUintOption(otCoapHeader *aHeader, uint16_t aNumber, uint32_t aValue);
+
+/**
  * This function appends an Observe option.
  *
  * @param[inout]  aHeader   A pointer to the CoAP header.
