@@ -304,7 +304,6 @@ ThreadError DatasetManager::Register(void)
     ThreadError error = kThreadError_None;
     Coap::Header header;
     Message *message;
-    Ip6::Address leader;
     Ip6::MessageInfo messageInfo;
 
     header.Init(kCoapTypeConfirmable, kCoapRequestPost);
@@ -323,9 +322,8 @@ ThreadError DatasetManager::Register(void)
 
     SuccessOrExit(error = message->Append(mLocal.GetBytes(), mLocal.GetSize()));
 
-    mNetif.GetMle().GetLeaderAloc(leader);
-
-    messageInfo.SetPeerAddr(leader);
+    messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
+    mNetif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr());
     messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
 
@@ -736,6 +734,7 @@ ThreadError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset,
         message->SetLength(message->GetLength() - 1);
     }
 
+    messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
     mNetif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr());
     messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
@@ -791,6 +790,7 @@ ThreadError DatasetManager::SendGetRequest(const uint8_t *aTlvTypes, const uint8
         mNetif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr());
     }
 
+    messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
     messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
 
