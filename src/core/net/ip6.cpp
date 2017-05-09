@@ -178,8 +178,7 @@ ThreadError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageI
     ThreadError error = kThreadError_None;
 
     VerifyOrExit(aIp6Header.GetDestination().IsMulticast() &&
-                 aIp6Header.GetDestination().GetScope() >= Address::kRealmLocalScope,
-                 error = kThreadError_InvalidArgs);
+                 aIp6Header.GetDestination().GetScope() >= Address::kRealmLocalScope);
 
     if (aIp6Header.GetDestination().IsRealmLocalMulticast())
     {
@@ -717,7 +716,7 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
         {
             forward = true;
 
-            if (fromLocalHost && header.GetDestination().GetScope() >= Address::kRealmLocalScope)
+            if (fromLocalHost)
             {
                 SuccessOrExit(error = InsertMplOption(message, header, messageInfo));
             }
