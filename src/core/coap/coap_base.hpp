@@ -86,26 +86,6 @@ class CoapBase
 public:
 
     /**
-     * This function pointer is called when CoAP client/server wants to send a message.
-     *
-     * @param[in]  aContext      A pointer to arbitrary context information.
-     * @param[in]  aMessage      A reference to the message to send.
-     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
-     *
-     */
-    typedef ThreadError(* SenderFunction)(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    /**
-     * This function pointer is called when CoAP client/server receives a message.
-     *
-     * @param[in]  aContext      A pointer to arbitrary context information.
-     * @param[in]  aMessage      A reference to the received message.
-     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
-     *
-     */
-    typedef void (* ReceiverFunction)(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    /**
      * This constructor initializes the object.
      *
      * @param[in]  aUdp      A reference to the UDP object.
@@ -113,10 +93,8 @@ public:
      * @param[in]  aReceiver A pointer to a function for handling received messages.
      *
      */
-    CoapBase(Ip6::Udp &aUdp, SenderFunction aSender, ReceiverFunction aReceiver):
-        mSocket(aUdp),
-        mSender(aSender),
-        mReceiver(aReceiver) {};
+    CoapBase(Ip6::Udp &aUdp) :
+        mSocket(aUdp) {};
 
     /**
      * This method creates a new message with a CoAP header.
@@ -171,9 +149,27 @@ protected:
     ThreadError Start(const Ip6::SockAddr &aSockAddr);
     ThreadError Stop(void);
 
+    /**
+     * This method send a message.
+     *
+     * @param[in]  aContext      A pointer to arbitrary context information.
+     * @param[in]  aMessage      A reference to the message to send.
+     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
+     *
+     */
+    virtual ThreadError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo) = 0;
+
+    /**
+     * This method receives a message.
+     *
+     * @param[in]  aContext      A pointer to arbitrary context information.
+     * @param[in]  aMessage      A reference to the received message.
+     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
+     *
+     */
+    virtual void Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo) = 0;
+
     Ip6::UdpSocket mSocket;
-    SenderFunction mSender;
-    ReceiverFunction mReceiver;
 
 private:
     /**
