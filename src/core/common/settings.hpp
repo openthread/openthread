@@ -81,6 +81,7 @@ enum
  */
 struct NetworkInfo
 {
+    // Version 1
     uint8_t          mRole;                    ///< Current Thread role.
     uint8_t          mDeviceMode;              ///< Device mode setting.
     uint16_t         mRloc16;                  ///< RLOC16
@@ -90,6 +91,24 @@ struct NetworkInfo
     uint32_t         mPreviousPartitionId;     ///< PartitionId
     Mac::ExtAddress  mExtAddress;              ///< Extended Address
     uint8_t          mMlIid[OT_IP6_IID_SIZE];  ///< IID from ML-EID
+
+    // Version 2
+    uint8_t          mRouterRoleEnabled;       ///< Is router role enabled.
+};
+
+enum
+{
+    /**
+     * Defines the size (in bytes) of the Network Info version 1 (up to and including `mMlIid` field).
+     *
+     */
+    kNetworkInfoV1Size = offsetof(NetworkInfo, mMlIid) + sizeof(NetworkInfo().mMlIid),
+
+    /**
+    * Defines the size (in bytes) of the Network Info version 2 (up to and including `mRouterRoleEnabeld).
+    *
+    */
+    kNetworkInfoV2Size = sizeof(NetworkInfo),
 };
 
 /**
