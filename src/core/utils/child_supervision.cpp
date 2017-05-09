@@ -35,6 +35,7 @@
 #include "openthread/openthread.h"
 
 #include <common/code_utils.hpp>
+#include <common/logging.hpp>
 #include <utils/child_supervision.hpp>
 #include <thread/thread_netif.hpp>
 
@@ -226,6 +227,8 @@ void SupervisionListener::HandleTimer(void)
 {
     VerifyOrExit((mNetif.GetMle().GetDeviceState() == Mle::kDeviceStateChild) &&
                  (mNetif.GetMeshForwarder().GetRxOnWhenIdle() == false));
+
+    otLogWarnMle(mNetif.GetInstance(), "Supervision timeout. No frame from parent in %d sec", mTimeout);
 
     mNetif.GetMle().SendChildUpdateRequest();
 
