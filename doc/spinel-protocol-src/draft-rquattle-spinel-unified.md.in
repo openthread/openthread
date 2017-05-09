@@ -1,6 +1,6 @@
 %%%
     title           = "Spinel Host-Controller Protocol"
-    abbrev          = "Spinel Protocol (@SOURCE_VERSION@)"
+    abbrev          = "Spinel Protocol (Unified)"
     category        = "info"
     docName         = "draft-rquattle-spinel-unified-@SOURCE_VERSION@"
     ipr             = "noDerivativesTrust200902"
@@ -10,7 +10,6 @@
     
     [pi]
     editing         = "yes"
-    private         = "OpenThread"
     compact         = "yes"
     subcompact      = "yes"
     comments        = "yes"
@@ -33,9 +32,9 @@
     
     [[author]]
     role            = "editor"
-    initials        = "j.h."
-    surname         = "woodyatt"
-    fullname        = "james woodyatt"
+    initials        = "J.H."
+    surname         = "Woodyatt"
+    fullname        = "James Woodyatt"
     organization    = "Nest Labs, Inc."
     
         [author.address]
@@ -51,42 +50,22 @@
 
 .# Abstract
 
-This document describes a general management protocol for enabling a host
-device to communicate with and manage a Network Control Processor (NCP).
+This document describes the Spinel protocol, which facilitates the control and
+management of IPv6 network interfaces on devices where general purpose
+application processors offload network functions at their interfaces to network
+co-processors (NCP) connected by simple communication links like serial data
+channels. While initially developed to support Thread(R), Spinel's layered
+design allows it to be easily adapted to other similar network technologies.
 
-While initially designed to support Thread-based NCPs, the NCP protocol
-has been designed with a layered approach that allows it to be easily
-adapted to other network technologies in the future.
+This document also describes various Spinel specializations, including support
+for the Thread(R) low-power mesh network technology.
 
-.# Status of This Memo
-
-This Internet-Draft is submitted in full conformance with the provisions
-of BCP 78 and BCP 79.
-
-This document is not an Internet Standards Track specification; it is
-published for informational purposes.
-
-This document may not be modified, and derivative works of it may not be
-created, and it may not be published except as an Internet-Draft.
-
-.# Copyright Notice
-
-Copyright (c) 2017 IETF Trust and the persons identified as the document
-authors. All rights reserved.
-
-This document is subject to BCP 78 and the IETF Trust’s Legal Provisions
-Relating to IETF Documents (http://trustee.ietf.org/license-info) in effect
-on the date of publication of this document. Please review these documents
-carefully, as they describe your rights and restrictions with respect to
-this document.
 
 {mainmatter}
 
 # Introduction #
 
-This Network Control Processor (NCP) protocol was designed to enable a
-host device to communicate with and manage a NCP while also achieving
-the following goals:
+Spinel is host-controller protocol designed to enable interoperation over simple serial connections between general purpose device operating systems (OS) and network co-processors (NCP) for the purpose of controlling and managing their IPv6 network interfaces, achieving the following goals:
 
 *   Adopt a layered approach to the protocol design, allowing future
     support for other network protocols.
@@ -108,6 +87,13 @@ This document is currently in a draft status and is changing often.
 This section discusses some ideas for changes to the protocol that
 haven't yet been fully specified, as well as some of the impetus for
 the current design.
+
+### Scope ###
+
+The eventual intent is to have two documents: A Spinel basis document
+which discusses the network-technology-agnostic mechanisms and a
+Thread(R) specialization document which describes all of the Thread(R)-specific
+implementation details. Currently, this document covers both.
 
 ### Renumbering ###
 
@@ -141,169 +127,6 @@ has become clear that some of the initial allocations were inadequate
 and should be revisited if we want to try to achieve the original
 goal.
 
-### Spinel as Application API ###
-
-The current primary host driver implementation is
-[wpantund](http://wpantund.org/). wpantund manages the NCP using the
-Spinel protocol and provides a management API for the application using
-[D-Bus](https://www.freedesktop.org/wiki/Software/dbus/) IPC.
-
-However, some thought has been given to the idea of having a host
-driver daemon which uses Spinel directly as the management API. You
-would have user-space daemon similar to wpantund which would
-communicate directly with the NCP. Using Unix Domain Sockets,
-applications could connect to the daemon by opening a special socket
-file. The protocol for that socket might be (for example)
-HDLC-Lite-encoded ((#hdlc-lite)) spinel frames, as if the application
-were talking directly to the NCP.
-
-Applications aren't necessarily interested in everything that an NCP
-would normally send out unsolicited, so a mechanism for specifying
-which properties should be listened to would need to be defined. This
-mechanism would not be implemented by the NCP but would instead be
-implemented by the daemon to control which notification packets need
-to be directed where.
-
-In the event of transaction ID collisions, the daemon would
-transparently renumber spinel frames so as to not cause TID
-collisions.
-
-Since there can be more than one application that is using the API at
-a time, the `PROP_LOCK` property ((#prop-lock)) would be used to
-ensure exclusive access to the NCP by an application. Only one process
-would be allowed to enable the lock at a time.
-
-Such a IPC mechanism would be desirable because it is, from a spinel
-perspective, future proof. New features can be added and new
-properties assigned and the IPC protocol would not need to be extended
-to support them. It is also simple and has no external dependencies
-other than unix domain sockets.
-
-Security is obviously paramount in a system like this, so a great deal
-of care should be taken to make sure that certain commands and
-properties cannot be executed or changed without the appropriate
-privileges.
-
-### Privileged Commands and Properties ###
-
-The idea here is that some commands should be considered "privileged",
-and actively prevented from letting normal applications access them.
-This is important if the IPC protocol between the application and the
-NCP is Spinel.
-
-Examples of such privileged commands would be debugging commands like
-"peek" or "poke", properties which control bootloader behavior, or
-changing factory-specified constants. These commands should have some
-attribute about them that can be easily filtered to prevent
-applications from using issuing them directly to the NCP.
-
-This would likely be implemented as a part of the renumbering effort
-((#renumbering)).
-
-## Property Overview ##
-
-Spinel is largely a property-based protocol, with a property defined
-for every attribute that needs to be set, changed, or known by the
-host. The inspiration of this approach was memory-mapped hardware
-registers for peripherals. The goal is to avoid, as much as possible,
-the use of large complicated structures and/or method argument lists.
-The reason for avoiding these is because they have a tendency to
-change, especially early in development. Adding or removing a property
-from a structure can render the entire protocol incompatible. By using
-properties, you simply change an additional property.
-
-Almost all features and capabilities are implemented using properties.
-Most new features that are initially proposed as commands can be
-adapted to be property-based instead. Notable exceptions include "Host
-Buffer Offload" ((#feature-host-buffer-offload)) and "Network Save"
-((#feature-network-save)).
-
-In Spinel, properties are keyed by an unsigned integer between 0 and
-2,097,151 (See (#packed-unsigned-integer)).
-
-### Property Methods ###
-
-Properties may support one or more of the following methods:
-
-*   `VALUE_GET`
-*   `VALUE_SET`
-*   `VALUE_INSERT`
-*   `VALUE_REMOVE`
-
-Additionally, the NCP can send updates to the host (either
-synchronously or asynchronously) that inform the host about changes to
-specific properties:
-
-*   `VALUE_IS`
-*   `VALUE_INSERTED`
-*   `VALUE_REMOVED`
-
-### Property Types ###
-
-Conceptually, there are three different types of properties:
-
-*   Single-value properties
-*   Multiple-value (Array) properties
-*   Stream properties
-
-#### Single-Value Properties ####
-
-Single-value properties are properties that have a simple
-representation of a single value. Examples would be:
-
-*   Current radio channel (Represented as a unsigned 8-bit integer)
-*   Network name (Represented as a UTF-8 encoded string)
-*   802\.15.4 PAN ID (Represented as a unsigned 16-bit integer)
-
-The valid operations on these sorts of properties are `GET` and `SET`.
-
-#### Multiple-Value Properties ####
-
-Multiple-Value Properties have more than one value associated with
-them. Examples would be:
-
-*   List of channels supported by the radio hardware.
-*   List of IPv6 addresses assigned to the interface.
-*   List of capabilities supported by the NCP.
-
-The valid operations on these sorts of properties are `VALUE_GET`,
-`VALUE_SET`, `VALUE_INSERT`, and `VALUE_REMOVE`.
-
-When the value is fetched using `VALUE_GET`, the returned value is the
-concatenation of all of the individual values in the list. If the
-length of the value for an individual item in the list is not defined
-by the type then each item returned in the list is prepended with a
-length (See (#arrays)). The order of the returned items, unless
-explicitly defined for that specific property, is undefined.
-
-`VALUE_SET` provides a way to completely replace all previous values.
-Calling `VALUE_SET` with an empty value effectively instructs the NCP
-to clear the value of that property.
-
-`VALUE_INSERT` and `VALUE_REMOVE` provide mechanisms for the insertion
-or removal of individual items *by value*. The payload for these
-commands is a plain single value.
-
-#### Stream Properties ####
-
-Stream properties are special properties representing streams of data.
-Examples would be:
-
-*   Network packet stream ((#prop-stream-net))
-*   Raw packet stream ((#prop-stream-raw))
-*   Debug message stream ((#prop-stream-debug))
-*   Network Beacon stream ((#prop-mac-scan-beacon))
-
-All such properties emit changes asynchronously using the `VALUE_IS`
-command, sent from the NCP to the host. For example, as IPv6 traffic
-is received by the NCP, the IPv6 packets are sent to the host by way
-of asynchronous `VALUE_IS` notifications.
-
-Some of these properties also support the host send data back to the
-NCP. For example, this is how the host sends IPv6 traffic to the NCP.
-
-These types of properties generally do not support `VALUE_GET`, as it
-is meaningless.
 
 {{spinel-frame-format.md}}
 
@@ -340,6 +163,8 @@ is meaningless.
 {{spinel-basis-glossary.md}}
 
 # Acknowledgments #
+
+Thread is a registered trademark of The Thread Group, Inc.
 
 Special thanks to Nick Banks, Jonathan Hui, Abtin Keshavarzian, Piotr
 Szkotak, Arjuna Sivasithambaresan and Martin Turon for their substantial

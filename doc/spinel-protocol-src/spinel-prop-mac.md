@@ -112,7 +112,7 @@ Id | Name                          | Description
 
 See (#prop-stream-raw).
 
-### PROP 57: MAC_ENERGY_SCAN_RESULT {#prop-mac-scan-result}
+### PROP 57: PROP_MAC_ENERGY_SCAN_RESULT {#prop-mac-escan-result}
 * Type: Read-Only-Stream
 * Packed-Encoding: `Cc`
 

@@ -1,5 +1,9 @@
 # Properties
 
+{{spinel-prop-overview.md}}
+
+## Property Numbering
+
 While the majority of the properties that allow the configuration
 of network connectivity are network protocol specific, there are
 several properties that are required in all implementations.

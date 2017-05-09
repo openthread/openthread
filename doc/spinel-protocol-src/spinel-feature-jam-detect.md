@@ -82,7 +82,7 @@ the detection window where the RSSI must be above
 The behavior of the jamming detection feature when `PROP_JAM_DETECT_BUSY`
 is larger than `PROP_JAM_DETECT_WINDOW` is undefined.
 
-### PROP 4613: SPINEL_PROP_JAM_DETECT_HISTORY_BITMAP
+### PROP 4613: PROP_JAM_DETECT_HISTORY_BITMAP
 
 * Type: Read-Only
 * Packed-Encoding: `LL`

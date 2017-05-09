@@ -1,9 +1,9 @@
-# Technology: Thread
+# Technology: Thread(R) {#tech-thread}
 
 This section describes all of the properties and semantics required
-for managing a Thread NCP.
+for managing a Thread(R) NCP.
 
-Thread NCPs have the following requirements:
+Thread(R) NCPs have the following requirements:
 
 * The property `PROP_INTERFACE_TYPE` must be 3.
 * The non-optional properties in the following sections **MUST** be
@@ -12,16 +12,16 @@ Thread NCPs have the following requirements:
 All serious implementations of an NCP **SHOULD** also support the network
 save feature (See (#feature-network-save)).
 
-## Thread Capabilities
+## Capabilities {#thread-caps}
 
-The Thread technology defines the following capabilities:
+The Thread(R) technology defines the following capabilities:
 
-* `CAP_NET_THREAD_1_0` - Indicates that the NCP implements v1.0 of the Thread standard.
-* `CAP_NET_THREAD_1_1` - Indicates that the NCP implements v1.1 of the Thread standard.
+* `CAP_NET_THREAD_1_0` - Indicates that the NCP implements v1.0 of the Thread(R) standard.
+* `CAP_NET_THREAD_1_1` - Indicates that the NCP implements v1.1 of the Thread(R) standard.
 
-## Thread Properties
+## Properties {#thread-properties}
 
-Properties for Thread are allocated out of the `Tech` property
+Properties for Thread(R) are allocated out of the `Tech` property
 section (see (#property-sections)).
 
 ### PROP 80: PROP_THREAD_LEADER_ADDR
@@ -91,7 +91,7 @@ Data per item is:
 * `6`: IPv6 Prefix
 * `C`: Prefix length, in bits
 * `b`: Stable flag
-* `C`: Thread flags
+* `C`: TLV flags
 * `b`: "Is defined locally" flag. Set if this network was locally
   defined. Assumed to be true for set, insert and replace. Clear if
   the on mesh network was defined by another node.
@@ -124,7 +124,7 @@ This allows changes to be aggregated into single events.
 
 This property contains the value of the mode
 TLV for this node. The meaning of the bits in this
-bitfield are defined by section 4.5.2 of the Thread
+bitfield are defined by section 4.5.2 of the Thread(R)
 specification.
 
 ### PROP 5376: PROP_THREAD_CHILD_TIMEOUT
@@ -149,8 +149,8 @@ Used when operating in the Child role.
 * Type: Read-Write
 * Packed-Encoding: `C`
 
-Allows you to get or set the Thread `NETWORK_ID_TIMEOUT` constant, as
-defined by the Thread specification.
+Allows you to get or set the Thread(R) `NETWORK_ID_TIMEOUT` constant, as
+defined by the Thread(R) specification.
 
 ### PROP 5381: PROP_THREAD_ACTIVE_ROUTER_IDS
 * Type: Read-Write/Write-Only
@@ -219,7 +219,7 @@ Data per item is:
 * Packed-Encoding: `C`
 
 Specifies the maximum number of children currently allowed.
-This parameter can only be set when Thread protocol operation
+This parameter can only be set when Thread(R) protocol operation
 has been stopped.
 
 ### PROP 5389: PROP_THREAD_LEADER_NETWORK_DATA
@@ -248,7 +248,7 @@ Data per item is:
 
 Passess Pre-Shared Key for the Device to the NCP in the commissioning process.
 When the Extended address is ommited all Devices which provided a valid PSKd
-are allowed to join the Thread Network.
+are allowed to join the Thread(R) Network.
 
 ### PROP 5392: PROP_THREAD_COMMISSIONER_ENABLED {#prop-thread-commissioner-enabled}
 
@@ -284,7 +284,7 @@ Fields:  | Length | CoAP | locator | port
 
 This property allows the host to send and receive border-agent-related
 CoAP requests/responses from the NCP's RLOC address. This allows the
-host driver to implement a Thread border agent.
+host driver to implement a Thread(R) border agent.
 
 
 ### PROP 5395: PROP_THREAD_DISOVERY_SCAN_JOINER_FLAG {#prop-thread-discovery-scan-joiner-flag}
@@ -292,7 +292,7 @@ host driver to implement a Thread border agent.
 * Type: Read-Write
 * Packed-Encoding:: `b`
 
-This property specifies the value used in Thread MLE Discovery Request
+This property specifies the value used in Thread(R) MLE Discovery Request
 TLV during discovery scan operation. Default value is `false`.
 
 ### PROP 5396: PROP_THREAD_DISCOVERY_SCAN_ENABLE_FILTERING {#prop-thread-discovery-scan-enable-filtering}
@@ -303,7 +303,7 @@ TLV during discovery scan operation. Default value is `false`.
 This property is used to enable/disable EUI64 filtering during discovery
 scan operation. Default value is `false`.
 
-### PROP 5397: SPINEL_PROP_THREAD_DISCOVERY_SCAN_PANID (#prop-thread-discovery-scan-panid)
+### PROP 5397: PROP_THREAD_DISCOVERY_SCAN_PANID {#prop-thread-discovery-scan-panid}
 
 * Type: Read-write
 * Packed-Encoding:: `S`
@@ -312,11 +312,11 @@ This property specifies the PANID used for filtering during discovery
 scan operation. Default value is `0xffff` (broadcast PANID) which disables
 PANID filtering.
 
-### PROP 5398: SPINEL_PROP_THREAD_STEERING_DATA {#prop-thread-steering-data}
+### PROP 5398: PROP_THREAD_STEERING_DATA {#prop-thread-steering-data}
 
 * Type: Write-Only
 * Packed-Encoding: `E`
-* Required capability: `SPINEL_CAP_OOB_STEERING_DATA`
+* Required capability: `CAP_OOB_STEERING_DATA`
 
 This property can be used to set the steering data for MLE Discovery
 Response messages.
