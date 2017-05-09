@@ -3813,6 +3813,7 @@ ThreadError MleRouter::SendAddressRelease(void)
     macAddr64Tlv.SetMacAddr(*mNetif.GetMac().GetExtAddress());
     SuccessOrExit(error = message->Append(&macAddr64Tlv, sizeof(macAddr64Tlv)));
 
+    messageInfo.SetSockAddr(GetMeshLocal16());
     SuccessOrExit(error = GetLeaderAddress(messageInfo.GetPeerAddr()));
     messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));

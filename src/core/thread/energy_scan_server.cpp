@@ -216,6 +216,7 @@ ThreadError EnergyScanServer::SendReport(void)
     SuccessOrExit(error = message->Append(&energyList, sizeof(energyList)));
     SuccessOrExit(error = message->Append(mScanResults, mScanResultsLength));
 
+    messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
     messageInfo.SetPeerAddr(mCommissioner);
     messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));

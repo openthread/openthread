@@ -256,6 +256,7 @@ ThreadError Leader::SendDatasetChanged(const Ip6::Address &aAddress)
     VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapClient(), header)) != NULL,
                  error = kThreadError_NoBufs);
 
+    messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
     messageInfo.SetPeerAddr(aAddress);
     messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
