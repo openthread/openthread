@@ -251,7 +251,7 @@ ThreadError Ip6::RemoveMplOption(Message &aMessage)
 
     aMessage.Read(offset, sizeof(hbh), &hbh);
     endOffset = offset + (hbh.GetLength() + 1) * 8;
-    VerifyOrExit(aMessage.GetLength() >= endOffset);
+    VerifyOrExit(aMessage.GetLength() >= endOffset, error = kThreadError_Parse);
 
     offset += sizeof(hbh);
 
@@ -298,7 +298,7 @@ ThreadError Ip6::RemoveMplOption(Message &aMessage)
     }
 
     // verify that IPv6 Options header is properly formed
-    VerifyOrExit(offset == endOffset);
+    VerifyOrExit(offset == endOffset, error = kThreadError_Parse);
 
     if (remove)
     {

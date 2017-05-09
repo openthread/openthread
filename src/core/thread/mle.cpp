@@ -412,7 +412,7 @@ ThreadError Mle::Discover(uint32_t aScanChannels, uint16_t aPanId, bool aJoiner,
     mDiscoverContext = aContext;
     mNetif.GetMeshForwarder().SetDiscoverParameters(aScanChannels);
 
-    VerifyOrExit((message = NewMleMessage()) != NULL);
+    VerifyOrExit((message = NewMleMessage()) != NULL, error = kThreadError_NoBufs);
     message->SetSubType(Message::kSubTypeMleDiscoverRequest);
     message->SetPanId(aPanId);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandDiscoveryRequest));
@@ -1510,7 +1510,7 @@ ThreadError Mle::SendParentRequest(void)
         break;
     }
 
-    VerifyOrExit((message = NewMleMessage()) != NULL);
+    VerifyOrExit((message = NewMleMessage()) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandParentRequest));
     SuccessOrExit(error = AppendMode(*message, mDeviceMode));
     SuccessOrExit(error = AppendChallenge(*message, mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge)));
@@ -1557,7 +1557,7 @@ ThreadError Mle::SendChildIdRequest(void)
     Message *message;
     Ip6::Address destination;
 
-    VerifyOrExit((message = NewMleMessage()) != NULL);
+    VerifyOrExit((message = NewMleMessage()) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildIdRequest));
     SuccessOrExit(error = AppendResponse(*message, mChildIdRequest.mChallenge, mChildIdRequest.mChallengeLength));
     SuccessOrExit(error = AppendLinkFrameCounter(*message));
@@ -1603,7 +1603,7 @@ ThreadError Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t
     ThreadError error = kThreadError_None;
     Message *message;
 
-    VerifyOrExit((message = NewMleMessage()) != NULL);
+    VerifyOrExit((message = NewMleMessage()) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandDataRequest));
     SuccessOrExit(error = AppendTlvRequest(*message, aTlvs, aTlvsLength));
     SuccessOrExit(error = AppendActiveTimestamp(*message, false));
@@ -1670,7 +1670,7 @@ ThreadError Mle::SendChildUpdateRequest(void)
     mParentRequestTimer.Start(kUnicastRetransmissionDelay);
     mChildUpdateAttempts++;
 
-    VerifyOrExit((message = NewMleMessage()) != NULL);
+    VerifyOrExit((message = NewMleMessage()) != NULL, error = kThreadError_NoBufs);
     message->SetSubType(Message::kSubTypeMleChildUpdateRequest);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildUpdateRequest));
     SuccessOrExit(error = AppendMode(*message, mDeviceMode));
@@ -1738,7 +1738,7 @@ ThreadError Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs,
     Ip6::Address destination;
     Message *message;
 
-    VerifyOrExit((message = NewMleMessage()) != NULL);
+    VerifyOrExit((message = NewMleMessage()) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildUpdateResponse));
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
@@ -1799,7 +1799,7 @@ ThreadError Mle::SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce)
     Ip6::Address destination;
     Message *message;
 
-    VerifyOrExit((message = NewMleMessage()) != NULL);
+    VerifyOrExit((message = NewMleMessage()) != NULL, error = kThreadError_NoBufs);
     message->SetLinkSecurityEnabled(true);
     message->SetSubType(Message::kSubTypeMleAnnounce);
     message->SetChannel(aChannel);
@@ -3002,14 +3002,14 @@ ThreadError Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo 
 
     otLogInfoMle(GetInstance(), "Received announce");
 
-    SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kChannel, sizeof(channel), channel));
-    VerifyOrExit(channel.IsValid());
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kChannel, sizeof(channel), channel));
+    VerifyOrExit(channel.IsValid(), error = kThreadError_Parse);
 
-    SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(timestamp), timestamp));
-    VerifyOrExit(timestamp.IsValid());
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(timestamp), timestamp));
+    VerifyOrExit(timestamp.IsValid(), error = kThreadError_Parse);
 
-    SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kPanId, sizeof(panid), panid));
-    VerifyOrExit(panid.IsValid());
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kPanId, sizeof(panid), panid));
+    VerifyOrExit(panid.IsValid(), error = kThreadError_Parse);
 
     localTimestamp = mNetif.GetActiveDataset().GetNetwork().GetTimestamp();
 

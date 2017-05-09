@@ -220,9 +220,10 @@ ThreadError Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
     checksum = Ip6::ComputePseudoheaderChecksum(aMessageInfo.GetPeerAddr(), aMessageInfo.GetSockAddr(),
                                                 payloadLength, kProtoUdp);
     checksum = aMessage.UpdateChecksum(checksum, aMessage.GetOffset(), payloadLength);
-    VerifyOrExit(checksum == 0xffff);
+    VerifyOrExit(checksum == 0xffff, error = kThreadError_Drop);
 
-    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(udpHeader), &udpHeader) == sizeof(udpHeader));
+    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(udpHeader), &udpHeader) == sizeof(udpHeader),
+                 error = kThreadError_Parse);
     aMessage.MoveOffset(sizeof(udpHeader));
     aMessageInfo.mPeerPort = udpHeader.GetSourcePort();
     aMessageInfo.mSockPort = udpHeader.GetDestinationPort();
