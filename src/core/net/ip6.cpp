@@ -1021,6 +1021,30 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
                     rvalPrefixMatched = candidatePrefixMatched;
                 }
             }
+            else if (rvalAddr->GetScope() == Address::kRealmLocalScope)
+            {
+                // Additional rule: Prefer appropriate realm local address
+                if (overrideScope > Address::kRealmLocalScope)
+                {
+                    if (rvalAddr->GetAddress().IsRoutingLocator())
+                    {
+                        // Prefer EID if destination is not realm local.
+                        rvalAddr = addr;
+                        rvalIface = candidateId;
+                        rvalPrefixMatched = candidatePrefixMatched;
+                    }
+                }
+                else
+                {
+                    if (candidateAddr->IsRoutingLocator())
+                    {
+                        // Prefer RLOC if destination is realm local.
+                        rvalAddr = addr;
+                        rvalIface = candidateId;
+                        rvalPrefixMatched = candidatePrefixMatched;
+                    }
+                }
+            }
             else if (addr->mPreferred && !rvalAddr->mPreferred)
             {
                 // Rule 3: Avoid deprecated addresses
