@@ -1970,11 +1970,13 @@ ThreadError MleRouter::UpdateChildAddresses(const AddressRegistrationTlv &aTlv, 
     Ip6::Address address;
     Lowpan::Context context;
     Child *child;
+    uint8_t count;
     uint8_t index;
+    char stringBuffer[Ip6::Address::kIp6AddressStringSize];
 
     aChild.ClearIp6Addresses();
 
-    for (uint8_t count = 0; count < Child::kMaxIp6AddressPerChild; count++)
+    for (count = 0; count < Child::kMaxIp6AddressPerChild; count++)
     {
         if ((entry = aTlv.GetAddressEntry(count)) == NULL)
         {
@@ -1994,6 +1996,9 @@ ThreadError MleRouter::UpdateChildAddresses(const AddressRegistrationTlv &aTlv, 
         }
 
         aChild.GetIp6Address(count) = address;
+
+        otLogInfoMle(GetInstance(), "Child 0x%04x IPv6 address[%d]=%s", aChild.GetRloc16(), count,
+                     address.ToString(stringBuffer, sizeof(stringBuffer)));
 
         // We check if the same address is in-use by another child, if so
         // remove it. This implements "last-in wins" duplicate address
@@ -2020,6 +2025,18 @@ ThreadError MleRouter::UpdateChildAddresses(const AddressRegistrationTlv &aTlv, 
             }
         }
     }
+
+    if (count == 0)
+    {
+        otLogInfoMle(GetInstance(), "Child 0x%04x has no registered IPv6 address", aChild.GetRloc16());
+    }
+    else
+    {
+        otLogInfoMle(GetInstance(), "Child 0x%04x has %d registered IPv6 address%s", aChild.GetRloc16(), count,
+                     (count == 1) ? "" : "es");
+    }
+
+    (void)stringBuffer;
 
     return kThreadError_None;
 }
