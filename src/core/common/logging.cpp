@@ -405,6 +405,10 @@ const char *otThreadErrorToString(ThreadError aError)
         retval = "NonLowpanDataFrame";
         break;
 
+    case kThreadError_DisabledFeature:
+        retval = "DisabledFeature";
+        break;
+
     case kThreadError_Error:
         retval = "GenericError";
         break;

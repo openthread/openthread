@@ -70,7 +70,7 @@ OTAPI uint8_t OTCALL otThreadGetMaxAllowedChildren(otInstance *aInstance);
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aMaxChildren  The maximum allowed children.
  *
- * @retval  kThreadErrorNone           Successfully set the max.
+ * @retval  kThreadError_None          Successfully set the max.
  * @retval  kThreadError_InvalidArgs   If @p aMaxChildren is not in the range [1, OPENTHREAD_CONFIG_MAX_CHILDREN].
  * @retval  kThreadError_InvalidState  If Thread isn't stopped.
  *
@@ -172,27 +172,30 @@ OTAPI uint16_t OTCALL otThreadGetJoinerUdpPort(otInstance *aInstance);
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  * @param[in]  aJoinerUdpPort  The Joiner UDP Port number.
  *
- * @retval  kThreadErrorNone   Successfully set the Joiner UDP Port.
+ * @retval  kThreadError_None  Successfully set the Joiner UDP Port.
  *
  * @sa otThreadGetJoinerUdpPort
  */
 OTAPI ThreadError OTCALL otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort);
 
-#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
 /**
  * Set Steering data out of band
  *
- * @param[in]  aInstance       A pointer to an OpenThread instance.
- * @param[in]  aExtAddress     Address to indicate steering data.
- *                             All zeros indicate that there is no steering data
- *                             All 0xFFs indicate that there is no filtering
- *                             Specific MAC address
+ * Configuration option `OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB` should be set to enable setting of steering
+ * data out of band. Otherwise calling this function does nothing and it returns `kThreadError_DisabledFeature`
+ * error.
  *
- * @retval  kThreadErrorNone   Successfully set steering data
+ * @param[in]  aInstance       A pointer to an OpenThread instance.
+ * @param[in]  aExtAddress     Address used to update the steering data.
+ *                             All zeros to clear the steering data (no steering data).
+ *                             All 0xFFs to set steering data/bloom filter to accept/allow all.
+ *                             A specific EUI64 which is then added to current steering data/bloom filter.
+ *
+ * @retval  kThreadError_None              Successfully set/updated the steering data.
+ * @retval  kThreadError_DisabledFeature   Feature is disabled, not capable of setting steering data out of band.
  *
  */
 ThreadError otThreadSetSteeringData(otInstance *aInstance, otExtAddress *aExtAddress);
-#endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
 
 /**
  * Get the CONTEXT_ID_REUSE_DELAY parameter used in the Leader role.
@@ -263,7 +266,7 @@ OTAPI void OTCALL otThreadSetRouterUpgradeThreshold(otInstance *aInstance, uint8
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aRouterId  The Router ID to release. Valid range is [0, 62].
  *
- * @retval kThreadErrorNone  Successfully released the Router ID specified by aRouterId.
+ * @retval kThreadError_None  Successfully released the Router ID specified by aRouterId.
  */
 OTAPI ThreadError OTCALL otThreadReleaseRouterId(otInstance *aInstance, uint8_t aRouterId);
 
@@ -272,8 +275,8 @@ OTAPI ThreadError OTCALL otThreadReleaseRouterId(otInstance *aInstance, uint8_t 
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * @retval kThreadErrorNone         Successfully begin attempt to become a router.
- * @retval kThreadErrorInvalidState Thread is disabled.
+ * @retval kThreadError_None         Successfully begin attempt to become a router.
+ * @retval kThreadError_InvalidState Thread is disabled.
  */
 OTAPI ThreadError OTCALL otThreadBecomeRouter(otInstance *aInstance);
 
@@ -282,8 +285,8 @@ OTAPI ThreadError OTCALL otThreadBecomeRouter(otInstance *aInstance);
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * @retval kThreadErrorNone          Successfully became a leader and started a new partition.
- * @retval kThreadErrorInvalidState  Thread is disabled.
+ * @retval kThreadError_None          Successfully became a leader and started a new partition.
+ * @retval kThreadError_InvalidState  Thread is disabled.
  */
 OTAPI ThreadError OTCALL otThreadBecomeLeader(otInstance *aInstance);
 

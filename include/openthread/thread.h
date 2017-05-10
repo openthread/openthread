@@ -112,8 +112,9 @@ OTAPI bool OTCALL otThreadIsSingleton(otInstance *aInstance);
  * @retval kThreadError_Busy  Already performing an Thread Discovery.
  *
  */
-OTAPI ThreadError OTCALL otThreadDiscover(otInstance *aInstance, uint32_t aScanChannels, uint16_t aPanId, bool aJoiner,
-                                          bool aEnableEui64Filtering, otHandleActiveScanResult aCallback, void *aCallbackContext);
+OTAPI ThreadError OTCALL otThreadDiscover(otInstance *aInstance, uint32_t aScanChannels, uint16_t aPanid, bool aJoiner,
+                                          bool aEnableEui64Filtering, otHandleActiveScanResult aCallback,
+                                          void *aCallbackContext);
 
 /**
  * This function determines if an MLE Thread Discovery is currently in progress.
