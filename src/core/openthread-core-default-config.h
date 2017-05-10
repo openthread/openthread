@@ -726,6 +726,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE_NO_DTLS
+ *
+ * The size of mbedTLS heap buffer when DTLS is disabled.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE_NO_DTLS
+#define OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE_NO_DTLS             384
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
  *
  * Enable setting steering data out of band.
