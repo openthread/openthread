@@ -31,7 +31,7 @@
  *   This file implements the CLI interpreter.
  */
 
-#include  "openthread-enable-defines.h"
+#include  " openthread_enable_defines.h"
 
 #include <stdio.h>
 #include <stdlib.h>

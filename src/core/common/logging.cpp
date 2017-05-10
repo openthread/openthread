@@ -33,7 +33,7 @@
 
 #define WPP_NAME "logging.tmh"
 
-#include  "openthread-enable-defines.h"
+#include  " openthread_enable_defines.h"
 
 #include "openthread/openthread.h"
 

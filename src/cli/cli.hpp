@@ -34,7 +34,7 @@
 #ifndef CLI_HPP_
 #define CLI_HPP_
 
-#include  "openthread-enable-defines.h"
+#include  " openthread_enable_defines.h"
 
 #include <stdarg.h>
 

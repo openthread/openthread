@@ -30,7 +30,7 @@
  *   This file implements NCP frame buffer class.
  */
 
-#include  "openthread-enable-defines.h"
+#include  " openthread_enable_defines.h"
 
 #include "utils/wrap_string.h"
 #include <common/code_utils.hpp>

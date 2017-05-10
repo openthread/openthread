@@ -31,7 +31,7 @@
  *   This file implements the Energy Scan Client.
  */
 
-#include  "openthread-enable-defines.h"
+#include  " openthread_enable_defines.h"
 
 #define WPP_NAME "energy_scan_client.tmh"
 

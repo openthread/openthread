@@ -36,7 +36,7 @@
 
 #define WPP_NAME "dataset_manager.tmh"
 
-#include  "openthread-enable-defines.h"
+#include  " openthread_enable_defines.h"
 
 #include <stdio.h>
 

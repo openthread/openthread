@@ -28,7 +28,7 @@
 
 #define WPP_NAME "secure_coap_server.tmh"
 
-#include  "openthread-enable-defines.h"
+#include  " openthread_enable_defines.h"
 
 #include <coap/secure_coap_server.hpp>
 #include <common/logging.hpp>

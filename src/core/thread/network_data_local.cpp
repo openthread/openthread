@@ -33,7 +33,7 @@
 
 #if OPENTHREAD_FTD
 
-#include  "openthread-enable-defines.h"
+#include  " openthread_enable_defines.h"
 
 #include <common/debug.hpp>
 #include <common/logging.hpp>

@@ -31,7 +31,7 @@
  *   This file implements the tasklet scheduler.
  */
 
-#include  "openthread-enable-defines.h"
+#include  " openthread_enable_defines.h"
 
 #include "openthread/openthread.h"
 

@@ -35,7 +35,7 @@
 
 #define WPP_NAME "data_poll_manager.tmh"
 
-#include  "openthread-enable-defines.h"
+#include  " openthread_enable_defines.h"
 
 #include "openthread/platform/random.h"
 

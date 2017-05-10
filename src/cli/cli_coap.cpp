@@ -31,7 +31,7 @@
  *   This file implements a simple CLI coap server and client.
  */
 
-#include  "openthread-enable-defines.h"
+#include  " openthread_enable_defines.h"
 
 #include <ctype.h>
 #include <cli/cli.hpp>
