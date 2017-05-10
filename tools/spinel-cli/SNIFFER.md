@@ -79,6 +79,9 @@ sudo pip install --user ipaddress
 
     -c, --channel
         Set the channel upon which to listen.
+
+    --ti-crc
+        Recalculate crc for NCP sniffer on TI platform.
 ```
 
 ## Quick Start
@@ -87,6 +90,9 @@ From openthread root:
 
 ```
     sudo ./tools/spinel-cli/sniffer.py -c 11 -n 1 -u /dev/ttyUSB0 | wireshark -k -i -
+
+    For TI NCP sniffer
+    sudo ./tools/spinel-cli/sniffer.py -c 11 -n 1 --ti-crc -u /dev/ttyUSB0 | wireshark -k -i -
 ```
 
 This will connect to stock openthread ncp firmware over the given UART,
