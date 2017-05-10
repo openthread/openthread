@@ -31,7 +31,7 @@
  *   This file implements the Thread IPv6 global addresses configuration utilities.
  */
 
-#include  " openthread_enable_defines.h"
+#include  "openthread_enable_defines.h"
 
 #include "openthread/openthread.h"
 

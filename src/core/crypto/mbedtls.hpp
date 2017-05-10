@@ -34,7 +34,7 @@
 #ifndef OT_MBEDTLS_HPP_
 #define OT_MBEDTLS_HPP_
 
-#include  " openthread_enable_defines.h"
+#include  "openthread_enable_defines.h"
 
 #include <openthread-core-config.h>
 

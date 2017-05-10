@@ -31,7 +31,7 @@
  *   This file implements CRC16 computations.
  */
 
-#include  " openthread_enable_defines.h"
+#include  "openthread_enable_defines.h"
 
 #include <common/crc16.hpp>
 

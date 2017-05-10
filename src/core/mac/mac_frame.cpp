@@ -31,7 +31,7 @@
  *   This file implements IEEE 802.15.4 header generation and processing.
  */
 
-#include  " openthread_enable_defines.h"
+#include  "openthread_enable_defines.h"
 
 #include <stdio.h>
 #include "utils/wrap_string.h"

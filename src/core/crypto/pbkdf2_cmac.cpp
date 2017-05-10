@@ -31,7 +31,7 @@
  *   This file implements PBKDF2 using AES-CMAC-PRF-128
  */
 
-#include  " openthread_enable_defines.h"
+#include  "openthread_enable_defines.h"
 
 #include "utils/wrap_string.h"
 #include <crypto/pbkdf2_cmac.h>

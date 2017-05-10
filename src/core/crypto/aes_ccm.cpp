@@ -31,7 +31,7 @@
  *   This file implements AES-CCM.
  */
 
-#include  " openthread_enable_defines.h"
+#include  "openthread_enable_defines.h"
 
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>

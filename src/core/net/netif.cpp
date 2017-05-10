@@ -30,7 +30,7 @@
  * @file
  *   This file implements IPv6 network interfaces.
  */
-#include  " openthread_enable_defines.h"
+#include  "openthread_enable_defines.h"
 
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>

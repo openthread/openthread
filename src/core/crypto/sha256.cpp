@@ -31,7 +31,7 @@
  *   This file implements SHA-256.
  */
 
-#include  " openthread_enable_defines.h"
+#include  "openthread_enable_defines.h"
 
 #include <crypto/sha256.hpp>
 

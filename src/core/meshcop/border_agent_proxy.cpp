@@ -33,7 +33,7 @@
 
 #define WPP_NAME "border_agent_proxy.tmh"
 
-#include  " openthread_enable_defines.h"
+#include  "openthread_enable_defines.h"
 
 #include <openthread/types.h>
 #include <coap/coap_header.hpp>

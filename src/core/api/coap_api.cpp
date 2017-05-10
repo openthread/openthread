@@ -31,7 +31,7 @@
  *   This file implements the OpenThread CoAP API.
  */
 
-#include  " openthread_enable_defines.h"
+#include  "openthread_enable_defines.h"
 
 #include "openthread/coap.h"
 

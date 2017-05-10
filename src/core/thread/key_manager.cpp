@@ -32,7 +32,7 @@
  */
 
 
-#include  " openthread_enable_defines.h"
+#include  "openthread_enable_defines.h"
 
 #include <common/code_utils.hpp>
 #include <common/timer.hpp>

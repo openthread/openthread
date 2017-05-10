@@ -31,7 +31,7 @@
  *   This file implements the CLI server on the CONSOLE service.
  */
 
-#include  " openthread_enable_defines.h"
+#include  "openthread_enable_defines.h"
 
 #include <stdarg.h>
 #include <stdio.h>
