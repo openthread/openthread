@@ -1157,6 +1157,14 @@ class ChildTableEntry
 {
 public:
     /**
+     * Default constructor.
+     *
+     */
+    ChildTableEntry(void):
+        mTimeoutRsvChildId(0),
+        mMode(0) {}
+
+    /**
      * This method returns the Timeout value.
      *
      * @returns The Timeout value.
@@ -1230,17 +1238,21 @@ public:
     }
 
 private:
+    /**
+     * Masks for fields.
+     *
+     */
     enum
     {
-        kTimeoutMask = 0xF800,
-        kTimeoutOffset = 11,
-        kReservedMask = 0x0600,
+        kTimeoutMask    = 0xf800,
+        kTimeoutOffset  = 11,
+        kReservedMask   = 0x0600,
         kReservedOffset = 9,
-        kChildIdMask = 0x1ff
+        kChildIdMask    = 0x1ff
     };
 
     uint16_t mTimeoutRsvChildId;
-    uint8_t mMode;
+    uint8_t  mMode;
 } OT_TOOL_PACKED_END;
 
 /**
