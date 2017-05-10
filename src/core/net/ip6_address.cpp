@@ -31,7 +31,7 @@
  *   This file implements IPv6 addresses.
  */
 
-#include <openthread-enable-defines.h>
+#include  "openthread-enable-defines.h"
 
 #include <stdio.h>
 #include "utils/wrap_string.h"

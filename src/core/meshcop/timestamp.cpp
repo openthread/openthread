@@ -31,7 +31,7 @@
  *   This file implements common MeshCoP timestamp processing.
  */
 
-#include <openthread-enable-defines.h>
+#include  "openthread-enable-defines.h"
 
 #include "utils/wrap_string.h"
 

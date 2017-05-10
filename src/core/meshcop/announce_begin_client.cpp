@@ -33,7 +33,7 @@
 
 #define WPP_NAME "announce_begin_client.tmh"
 
-#include <openthread-enable-defines.h>
+#include  "openthread-enable-defines.h"
 
 #include "openthread/platform/random.h"
 

@@ -33,7 +33,7 @@
 
 #define WPP_NAME "network_data_leader.tmh"
 
-#include <openthread-enable-defines.h>
+#include  "openthread-enable-defines.h"
 
 #include "openthread/platform/random.h"
 

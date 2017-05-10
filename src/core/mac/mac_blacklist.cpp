@@ -31,7 +31,7 @@
  *   This file implements blacklist IEEE 802.15.4 frame filtering based on MAC address.
  */
 
-#include <openthread-enable-defines.h>
+#include  "openthread-enable-defines.h"
 
 #include "utils/wrap_string.h"
 

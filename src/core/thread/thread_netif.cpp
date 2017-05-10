@@ -32,7 +32,7 @@
  *   This file implements the Thread network interface.
  */
 
-#include <openthread-enable-defines.h>
+#include  "openthread-enable-defines.h"
 
 #include <common/code_utils.hpp>
 #include <common/encoding.hpp>

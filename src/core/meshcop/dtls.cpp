@@ -31,7 +31,7 @@
  *   This file implements the necessary hooks for mbedTLS.
  */
 
-#include <openthread-enable-defines.h>
+#include  "openthread-enable-defines.h"
 
 #define WPP_NAME "dtls.tmh"
 

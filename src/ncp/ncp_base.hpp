@@ -33,7 +33,7 @@
 #ifndef NCP_BASE_HPP_
 #define NCP_BASE_HPP_
 
-#include <openthread-enable-defines.h>
+#include  "openthread-enable-defines.h"
 
 #include "openthread/types.h"
 #include "openthread/message.h"

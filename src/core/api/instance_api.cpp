@@ -33,7 +33,7 @@
 
 #define WPP_NAME "instance_api.tmh"
 
-#include <openthread-enable-defines.h>
+#include  "openthread-enable-defines.h"
 
 #include "openthread/instance.h"
 #include "openthread/platform/misc.h"

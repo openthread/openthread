@@ -33,7 +33,7 @@
 
 #if OPENTHREAD_FTD
 
-#include <openthread-enable-defines.h>
+#include  "openthread-enable-defines.h"
 
 #define WPP_NAME "network_data_leader_ftd.tmh"
 

@@ -31,7 +31,7 @@
  *   This file implements the OpenThread ICMPv6 API.
  */
 
-#include <openthread-enable-defines.h>
+#include  "openthread-enable-defines.h"
 
 #include "openthread/icmp6.h"
 

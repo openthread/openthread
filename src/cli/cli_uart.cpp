@@ -31,7 +31,7 @@
  *   This file implements the CLI server on the UART service.
  */
 
-#include <openthread-enable-defines.h>
+#include  "openthread-enable-defines.h"
 
 #include <stdarg.h>
 #include <stdio.h>

@@ -31,7 +31,7 @@
  *   This file implements the OpenThread Joiner API.
  */
 
-#include <openthread-enable-defines.h>
+#include  "openthread-enable-defines.h"
 
 #include "openthread/joiner.h"
 

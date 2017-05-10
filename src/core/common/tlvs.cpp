@@ -31,7 +31,7 @@
  *   This file implements common methods for manipulating MLE TLVs.
  */
 
-#include <openthread-enable-defines.h>
+#include  "openthread-enable-defines.h"
 
 #include <common/code_utils.hpp>
 #include <common/message.hpp>

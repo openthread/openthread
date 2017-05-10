@@ -33,7 +33,7 @@
 #ifndef NCP_FRAME_BUFFER_HPP_
 #define NCP_FRAME_BUFFER_HPP_
 
-#include <openthread-enable-defines.h>
+#include  "openthread-enable-defines.h"
 #include "openthread/types.h"
 #include "openthread/message.h"
 

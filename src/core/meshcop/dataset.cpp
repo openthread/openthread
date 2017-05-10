@@ -32,7 +32,7 @@
  *
  */
 
-#include <openthread-enable-defines.h>
+#include  "openthread-enable-defines.h"
 
 #include <stdio.h>
 

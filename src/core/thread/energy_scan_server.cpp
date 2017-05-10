@@ -33,7 +33,7 @@
 
 #define WPP_NAME "energy_scan_server.tmh"
 
-#include <openthread-enable-defines.h>
+#include  "openthread-enable-defines.h"
 
 #include "openthread/platform/random.h"
 

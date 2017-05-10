@@ -33,7 +33,7 @@
 
 #define WPP_NAME "commissioner.tmh"
 
-#include <openthread-enable-defines.h>
+#include  "openthread-enable-defines.h"
 
 #include <stdio.h>
 #include "utils/wrap_string.h"

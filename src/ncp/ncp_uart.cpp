@@ -30,7 +30,7 @@
  *   This file contains definitions for a UART based NCP interface to the OpenThread stack.
  */
 
-#include <openthread-enable-defines.h>
+#include  "openthread-enable-defines.h"
 
 #include "openthread/ncp.h"
 #include "openthread/platform/logging.h"

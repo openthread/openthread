@@ -33,7 +33,7 @@
 
 #define WPP_NAME "thread_api.tmh"
 
-#include <openthread-enable-defines.h>
+#include  "openthread-enable-defines.h"
 
 #include "openthread/thread.h"
 

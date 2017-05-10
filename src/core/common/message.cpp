@@ -33,7 +33,7 @@
 
 #define WPP_NAME "message.tmh"
 
-#include <openthread-enable-defines.h>
+#include  "openthread-enable-defines.h"
 
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>

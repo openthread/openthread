@@ -31,7 +31,7 @@
  *   This file implements the OpenThread Link Raw API.
  */
 
-#include <openthread-enable-defines.h>
+#include  "openthread-enable-defines.h"
 #include <common/debug.hpp>
 #include <common/logging.hpp>
 #include "openthread/platform/random.h"

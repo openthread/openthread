@@ -31,7 +31,7 @@
  *   This file implements link quality information processing and storage.
  */
 
-#include <openthread-enable-defines.h>
+#include  "openthread-enable-defines.h"
 
 #include <stdio.h>
 #include "utils/wrap_string.h"

@@ -26,7 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread-enable-defines.h>
+#include  "openthread-enable-defines.h"
 
 #if OPENTHREAD_ENABLE_MAC_WHITELIST
 #include "mac_whitelist_impl.hpp"

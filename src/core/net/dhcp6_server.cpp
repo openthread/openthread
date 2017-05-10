@@ -33,7 +33,7 @@
 
 #define WPP_NAME "dhcp6_server.tmh"
 
-#include <openthread-enable-defines.h>
+#include  "openthread-enable-defines.h"
 
 #include "openthread/types.h"
 
