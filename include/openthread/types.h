@@ -199,6 +199,11 @@ typedef enum ThreadError
      */
     kThreadError_ReassemblyTimeout = 32,
 
+    /**
+     * Message is not a TMF Message.
+     */
+    kThreadError_NotTmf = 33,
+
     kThreadError_Error = 255,
 } ThreadError;
 
