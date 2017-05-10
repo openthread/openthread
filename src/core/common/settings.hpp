@@ -34,9 +34,32 @@
 #ifndef SETTINGS_HPP_
 #define SETTINGS_HPP_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "thread/mle.hpp"
+
+namespace ot {
+namespace Settings {
+
+/**
+ * Rules for updating existing value structures.
+ *
+ * 1. Modifying existing otPlatSettings* key value fields MUST only be
+ *    done by appending new fields.  Existing fields MUST NOT be
+ *    deleted or modified in any way.
+ *
+ * 2. To support backward compatibility (rolling back to an older
+ *    software version), code reading and processing key values MUST
+ *    process key values that have longer length.  Additionally, newer
+ *    versions MUST update/maintain values in existing key value
+ *    fields.
+ *
+ * 3. To support forward compatibility (rolling forward to a newer
+ *    software version), code reading and processing key values MUST
+ *    process key values that have shorter length.
+ *
+ * 4. New Key IDs may be defined in the future with the understanding
+ *    that such key values are not backward compatible.
+ *
+ */
 
 /**
  * This enumeration defines the keys of settings
@@ -44,16 +67,53 @@ extern "C" {
  */
 enum
 {
-    kKeyActiveDataset   = 0x0001,
-    kKeyPendingDataset  = 0x0002,
-    kKeyNetworkInfo     = 0x0003,
-    kKeyParentInfo      = 0x0004,
-    kKeyChildInfo       = 0x0005,
-    kKeyThreadAutoStart = 0x0006,
+    kKeyActiveDataset   = 0x0001,  ///< Active Operational Dataset
+    kKeyPendingDataset  = 0x0002,  ///< Pending Operational Dataset
+    kKeyNetworkInfo     = 0x0003,  ///< Thread network information
+    kKeyParentInfo      = 0x0004,  ///< Parent information
+    kKeyChildInfo       = 0x0005,  ///< Child information
+    kKeyThreadAutoStart = 0x0006,  ///< Auto-start information
 };
 
-#ifdef __cplusplus
+/**
+ * This structure represents the device's own network information for settings storage.
+ *
+ */
+struct NetworkInfo
+{
+    uint8_t          mDeviceState;             ///< Current Thread interface state.
+    uint8_t          mDeviceMode;              ///< Device mode setting.
+    uint16_t         mRloc16;                  ///< RLOC16
+    uint32_t         mKeySequence;             ///< Key Sequence
+    uint32_t         mMleFrameCounter;         ///< MLE Frame Counter
+    uint32_t         mMacFrameCounter;         ///< MAC Frame Counter
+    uint32_t         mPreviousPartitionId;     ///< PartitionId
+    Mac::ExtAddress  mExtAddress;              ///< Extended Address
+    uint8_t          mMlIid[OT_IP6_IID_SIZE];  ///< IID from ML-EID
 };
-#endif
+
+/**
+ * This structure represents the parent information for settings storage.
+ *
+ */
+struct ParentInfo
+{
+    Mac::ExtAddress  mExtAddress;   ///< Extended Address
+};
+
+/**
+ * This structure represents the child information for settings storage.
+ *
+ */
+struct ChildInfo
+{
+    Mac::ExtAddress  mExtAddress;    ///< Extended Address
+    uint32_t         mTimeout;       ///< Timeout
+    uint16_t         mRloc16;        ///< RLOC16
+    uint8_t          mMode;          ///< The MLE device mode
+};
+
+}  // namespace Settings
+}  // namespace ot
 
 #endif  // SETTINGS_HPP_

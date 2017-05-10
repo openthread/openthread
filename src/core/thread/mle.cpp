@@ -276,15 +276,15 @@ ThreadError Mle::Stop(bool aClearNetworkDatasets)
 ThreadError Mle::Restore(void)
 {
     ThreadError error = kThreadError_None;
-    NetworkInfo networkInfo;
-    ParentInfo parentInfo;
+    Settings::NetworkInfo networkInfo;
+    Settings::ParentInfo parentInfo;
     uint16_t length;
 
     mNetif.GetActiveDataset().Restore();
     mNetif.GetPendingDataset().Restore();
 
     length = sizeof(networkInfo);
-    SuccessOrExit(error = otPlatSettingsGet(mNetif.GetInstance(), kKeyNetworkInfo, 0,
+    SuccessOrExit(error = otPlatSettingsGet(mNetif.GetInstance(), Settings::kKeyNetworkInfo, 0,
                                             reinterpret_cast<uint8_t *>(&networkInfo), &length));
     VerifyOrExit(length == sizeof(networkInfo), error = kThreadError_NotFound);
     VerifyOrExit(networkInfo.mDeviceState >= kDeviceStateChild, error = kThreadError_NotFound);
@@ -304,7 +304,7 @@ ThreadError Mle::Restore(void)
     if (networkInfo.mDeviceState == kDeviceStateChild)
     {
         length = sizeof(parentInfo);
-        SuccessOrExit(error = otPlatSettingsGet(mNetif.GetInstance(), kKeyParentInfo, 0,
+        SuccessOrExit(error = otPlatSettingsGet(mNetif.GetInstance(), Settings::kKeyParentInfo, 0,
                                                 reinterpret_cast<uint8_t *>(&parentInfo), &length));
         VerifyOrExit(length >= sizeof(parentInfo), error = kThreadError_Parse);
 
@@ -345,8 +345,8 @@ exit:
 ThreadError Mle::Store(void)
 {
     ThreadError error = kThreadError_None;
-    NetworkInfo networkInfo;
-    ParentInfo parentInfo;
+    Settings::NetworkInfo networkInfo;
+    Settings::ParentInfo parentInfo;
 
     VerifyOrExit(IsAttached(), error = kThreadError_InvalidState);
 
@@ -378,11 +378,11 @@ ThreadError Mle::Store(void)
         memset(&parentInfo, 0, sizeof(parentInfo));
         memcpy(&parentInfo.mExtAddress, &mParent.GetExtAddress(), sizeof(parentInfo.mExtAddress));
 
-        SuccessOrExit(error = otPlatSettingsSet(mNetif.GetInstance(), kKeyParentInfo,
+        SuccessOrExit(error = otPlatSettingsSet(mNetif.GetInstance(), Settings::kKeyParentInfo,
                                                 reinterpret_cast<uint8_t *>(&parentInfo), sizeof(parentInfo)));
     }
 
-    SuccessOrExit(error = otPlatSettingsSet(mNetif.GetInstance(), kKeyNetworkInfo,
+    SuccessOrExit(error = otPlatSettingsSet(mNetif.GetInstance(), Settings::kKeyNetworkInfo,
                                             reinterpret_cast<uint8_t *>(&networkInfo), sizeof(networkInfo)));
 
     mNetif.GetKeyManager().SetStoredMleFrameCounter(networkInfo.mMleFrameCounter);

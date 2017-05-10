@@ -186,6 +186,8 @@ public:
     ThreadError AppendMleDatasetTlv(Message &aMessage);
 
 private:
+    uint16_t GetSettingsKey(void);
+
     void Remove(uint8_t *aStart, uint8_t aLength);
 
     Tlv::Type  mType;            ///< Active or Pending
