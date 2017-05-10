@@ -86,7 +86,7 @@ void Dhcp6Client::UpdateAddresses(otInstance *aInstance, otDhcpAddress *aAddress
                                   void *aContext)
 {
     (void)aContext;
-    bool found = false;;
+    bool found = false;
     bool newAgent = false;
     otDhcpAddress *address = NULL;
     otNetworkDataIterator iterator;
