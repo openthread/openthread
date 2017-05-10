@@ -47,11 +47,11 @@ namespace Coap {
 
 Server::Server(Ip6::Netif &aNetif, uint16_t aPort) :
     CoapBase(aNetif.GetIp6().mUdp),
+    mPort(aPort),
+    mResources(NULL),
+    mInterceptor(NULL),
     mResponsesQueue(aNetif)
 {
-    mPort = aPort;
-    mResources = NULL;
-    mInterceptor = NULL;
 }
 
 ThreadError Server::Start(void)

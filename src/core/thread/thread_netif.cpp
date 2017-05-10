@@ -196,18 +196,16 @@ ThreadError ThreadNetif::TmfFilter(const Message &aMessage, const Ip6::MessageIn
 {
     ThreadError error = kThreadError_None;
 
-    // A TMF message must comply one of the following rules:
-    // 1. Source address is RLOC or ALOC, and destination address is RLOC, ALOC or realm-local multicast.
-    // 2. Both source and destination addresses are link-local.(for Joiner Entrust)
-    VerifyOrExit(((aMessageInfo.GetPeerAddr().IsRoutingLocator() ||
-                   aMessageInfo.GetPeerAddr().IsAnycastRoutingLocator()) &&
-                  (aMessageInfo.GetSockAddr().IsRoutingLocator() ||
-                   aMessageInfo.GetSockAddr().IsAnycastRoutingLocator() ||
-                   aMessageInfo.GetSockAddr().IsRealmLocalMulticast())) ||
-                 (aMessageInfo.GetPeerAddr().IsLinkLocal() &&
-                  aMessageInfo.GetSockAddr().IsLinkLocal()),
-                 error = kThreadError_Security);
-
+    // A TMF message must comply at least one of the following rules:
+    // 1. The IPv6 source address is RLOC or ALOC.
+    // 2. The IPv6 destination address is RLOC or ALOC.
+    // 3. The IPv6 destination address is Link-Local address.
+    VerifyOrExit(aMessageInfo.GetPeerAddr().IsRoutingLocator() ||
+                 aMessageInfo.GetPeerAddr().IsAnycastRoutingLocator() ||
+                 aMessageInfo.GetSockAddr().IsRoutingLocator() ||
+                 aMessageInfo.GetSockAddr().IsAnycastRoutingLocator() ||
+                 aMessageInfo.GetSockAddr().IsLinkLocal(),
+                 error = kThreadError_NotTmf);
 exit:
     (void)aMessage;
     return error;

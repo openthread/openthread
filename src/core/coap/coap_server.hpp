@@ -296,7 +296,7 @@ public:
      * @retval  kThreadError_None       Server should continue processing this message, other
      *                                  return values indicates the server should stop processing
      *                                  this message.
-     * @retval  kThreadError_Security   The message does not comply with security rules.
+     * @retval  kThreadError_NotTmf     The message is not a TMF message.
      *
      */
     typedef ThreadError(* Interceptor)(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
