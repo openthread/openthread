@@ -397,6 +397,14 @@ const char *otThreadErrorToString(ThreadError aError)
         retval = "ReassemblyTimeout";
         break;
 
+    case kThreadError_NotTmf:
+        retval = "NotTmf";
+        break;
+
+    case kThreadError_NonLowpanDataFrame:
+        retval = "NonLowpanDataFrame";
+        break;
+
     case kThreadError_Error:
         retval = "GenericError";
         break;

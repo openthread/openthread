@@ -204,6 +204,11 @@ typedef enum ThreadError
      */
     kThreadError_NotTmf = 33,
 
+    /**
+     * Received a non-lowpan data frame.
+     */
+    kThreadError_NonLowpanDataFrame = 34,
+
     kThreadError_Error = 255,
 } ThreadError;
 

@@ -1687,7 +1687,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
     }
 
     SuccessOrExit(error = aFrame.GetSrcAddr(macSource));
-    SuccessOrExit(aFrame.GetDstAddr(macDest));
+    SuccessOrExit(error = aFrame.GetDstAddr(macDest));
 
     aFrame.GetSrcPanId(messageInfo.mPanId);
     messageInfo.mChannel = aFrame.GetChannel();
@@ -1715,10 +1715,13 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
         {
             HandleFragment(payload, payloadLength, macSource, macDest, messageInfo);
         }
-        else if (payloadLength >= 1 &&
-                 Lowpan::Lowpan::IsLowpanHc(payload))
+        else if (payloadLength >= 1 && Lowpan::Lowpan::IsLowpanHc(payload))
         {
             HandleLowpanHC(payload, payloadLength, macSource, macDest, messageInfo);
+        }
+        else
+        {
+            error = kThreadError_NonLowpanDataFrame;
         }
 
         break;
@@ -1730,7 +1733,15 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
         {
             HandleDataRequest(macSource, messageInfo);
         }
+        else
+        {
+            error = kThreadError_Drop;
+        }
 
+        break;
+
+    default:
+        error = kThreadError_Drop;
         break;
     }
 
@@ -1738,7 +1749,12 @@ exit:
 
     if (error != kThreadError_None)
     {
-        otLogDebgMacErr(GetInstance(), error, "Dropping received frame");
+        char stringBuffer[Mac::Frame::kInfoStringSize];
+
+        otLogInfoMac(GetInstance(), "Dropping rx frame, error:%s, %s", otThreadErrorToString(error),
+                     aFrame.ToInfoString(stringBuffer, sizeof(stringBuffer)));
+
+        (void)stringBuffer;
     }
 }
 
@@ -1803,7 +1819,18 @@ exit:
 
     if (error != kThreadError_None)
     {
-        otLogDebgMacErr(GetInstance(), error, "Dropping received mesh frame");
+        char srcStringBuffer[Mac::Address::kAddressStringSize];
+
+        otLogInfoMac(
+            GetInstance(),
+            "Dropping rx mesh frame, error:%s, len:%d, src:%s, sec:%s",
+            otThreadErrorToString(error),
+            aFrameLength,
+            aMacSource.ToString(srcStringBuffer, sizeof(srcStringBuffer)),
+            aMessageInfo.mLinkSecurity ? "yes" : "no"
+        );
+
+        (void)srcStringBuffer;
 
         if (message != NULL)
         {
@@ -1955,7 +1982,24 @@ exit:
     }
     else
     {
-        otLogDebgMacErr(GetInstance(), error, "Dropping received fragment");
+        char srcStringBuffer[Mac::Address::kAddressStringSize];
+        char dstStringBuffer[Mac::Address::kAddressStringSize];
+
+        (void)srcStringBuffer;
+        (void)dstStringBuffer;
+
+        otLogInfoMac(
+            GetInstance(),
+            "Dropping rx frag frame, error:%s, len:%d, src:%s, dst:%s, tag:%d, offset:%d, dglen:%d, sec:%s",
+            otThreadErrorToString(error),
+            aFrameLength,
+            aMacSource.ToString(srcStringBuffer, sizeof(srcStringBuffer)),
+            aMacDest.ToString(dstStringBuffer, sizeof(dstStringBuffer)),
+            datagramTag,
+            fragmentHeader->GetDatagramOffset(),
+            datagramLength,
+            aMessageInfo.mLinkSecurity ? "yes" : "no"
+        );
 
         if (message != NULL)
         {
@@ -2048,7 +2092,21 @@ exit:
     }
     else
     {
-        otLogDebgMacErr(GetInstance(), error, "Dropping received lowpan HC");
+        char srcStringBuffer[Mac::Address::kAddressStringSize];
+        char dstStringBuffer[Mac::Address::kAddressStringSize];
+
+        (void)srcStringBuffer;
+        (void)dstStringBuffer;
+
+        otLogInfoMac(
+            GetInstance(),
+            "Dropping rx lowpan HC frame, error:%s, len:%d, src:%s, dst:%s, sec:%s",
+            otThreadErrorToString(error),
+            aFrameLength,
+            aMacSource.ToString(srcStringBuffer, sizeof(srcStringBuffer)),
+            aMacDest.ToString(dstStringBuffer, sizeof(dstStringBuffer)),
+            aMessageInfo.mLinkSecurity ? "yes" : "no"
+        );
 
         if (message != NULL)
         {
@@ -2068,6 +2126,7 @@ ThreadError MeshForwarder::HandleDatagram(Message &aMessage, const ThreadMessage
 void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const ThreadMessageInfo &aMessageInfo)
 {
     Child *child;
+    uint16_t indirectMsgCount;
 
     // Security Check: only process secure Data Poll frames.
     VerifyOrExit(aMessageInfo.mLinkSecurity);
@@ -2077,16 +2136,16 @@ void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const Thre
     VerifyOrExit((child = mNetif.GetMle().GetChild(aMacSource)) != NULL);
     child->SetLastHeard(Timer::GetNow());
     child->ResetLinkFailures();
+    indirectMsgCount = child->GetIndirectMessageCount();
 
-    if (!mSourceMatchController.IsEnabled() || (child->GetIndirectMessageCount() > 0))
+    if (!mSourceMatchController.IsEnabled() || (indirectMsgCount > 0))
     {
         child->SetDataRequestPending(true);
     }
 
     mScheduleTransmissionTask.Post();
 
-    otLogInfoMac(GetInstance(), "Rx data poll, from:0x%04x, qed_msgs:%d", child->GetRloc16(),
-                 child->GetIndirectMessageCount());
+    otLogInfoMac(GetInstance(), "Rx data poll, src:0x%04x, qed_msgs:%d", child->GetRloc16(), indirectMsgCount);
 
 exit:
     return;
