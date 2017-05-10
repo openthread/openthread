@@ -42,14 +42,14 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup core-dhcp6-server
+ * @addtogroup api-dhcp6
  *
  * @{
  *
  */
 
 /**
- * Update updates DHCP Agents and DHCP Alocs.
+ * Updates DHCP Agents and DHCP Alocs.
  *
  * @param[in]     aInstance      A pointer to an OpenThread instance.
  *

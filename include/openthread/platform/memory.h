@@ -40,8 +40,7 @@ extern "C" {
 #endif
 
 /**
- * @defgroup memory Memory
- * @ingroup platform
+ * @addtogroup plat-memory
  *
  * @brief
  *   This module includes the platform abstraction for dynamic memory allocation.

@@ -44,20 +44,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup thread  Thread
- *
- * @brief
- *   This module includes functions that control Thread-specific functions.
- *
- * @{
- *
- */
-
-/**
- * @defgroup config-general  General
- *
- * @brief
- *   This module includes functions that manage configuration parameters for the Thread Router, and Leader roles.
+ * @addtogroup api-thread-router
  *
  * @{
  *
@@ -127,17 +114,6 @@ OTAPI void OTCALL otThreadSetRouterRoleEnabled(otInstance *aInstance, bool aEnab
  *
  */
 OTAPI ThreadError OTCALL otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId);
-
-
-/**
- * @defgroup config-router  Router/Leader
- *
- * @brief
- *   This module includes functions that manage configuration parameters for the Thread Router and Leader roles.
- *
- * @{
- *
- */
 
 /**
  * Get the Thread Leader Weight used when operating in the Leader role.
@@ -217,16 +193,6 @@ OTAPI ThreadError OTCALL otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_
  */
 ThreadError otThreadSetSteeringData(otInstance *aInstance, otExtAddress *aExtAddress);
 #endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
-
-/**
- * @defgroup config-test  Test
- *
- * @brief
- *   This module includes functions that manage configuration parameters required for Thread Certification testing.
- *
- * @{
- *
- */
 
 /**
  * Get the CONTEXT_ID_REUSE_DELAY parameter used in the Leader role.
@@ -364,25 +330,15 @@ OTAPI uint8_t OTCALL otThreadGetRouterSelectionJitter(otInstance *aInstance);
 OTAPI void OTCALL otThreadSetRouterSelectionJitter(otInstance *aInstance, uint8_t aRouterJitter);
 
 /**
- * @addtogroup diags  Diagnostics
- *
- * @brief
- *   This module includes functions that expose internal state.
- *
- * @{
- *
- */
-
-/**
  * The function retains diagnostic information for an attached Child by its Child ID or RLOC16.
  *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
  * @param[in]   aChildId    The Child ID or RLOC16 for the attached child.
  * @param[out]  aChildInfo  A pointer to where the child information is placed.
  *
- * @retavl kThreadError_None         @p aChildInfo was successfully updated with the info for the given ID.
+ * @retval kThreadError_None         @p aChildInfo was successfully updated with the info for the given ID.
  * @retval kThreadError_NotFound     No valid child with this Child ID.
- * @retavl kThreadError_InvalidArgs  If @p aChildInfo is NULL.
+ * @retval kThreadError_InvalidArgs  If @p aChildInfo is NULL.
  *
  */
 OTAPI ThreadError OTCALL otThreadGetChildInfoById(otInstance *aInstance, uint16_t aChildId, otChildInfo *aChildInfo);
@@ -394,9 +350,9 @@ OTAPI ThreadError OTCALL otThreadGetChildInfoById(otInstance *aInstance, uint16_
  * @param[in]   aChildIndex  The table index.
  * @param[out]  aChildInfo   A pointer to where the child information is placed.
  *
- * @retavl kThreadError_None            @p aChildInfo was successfully updated with the info for the given index.
+ * @retval kThreadError_None            @p aChildInfo was successfully updated with the info for the given index.
  * @retval kThreadError_NotFound        No valid child at this index.
- * @retavl kThreadError_InvalidArgs     Either @p aChildInfo is NULL, or @p aChildIndex is out of range (higher
+ * @retval kThreadError_InvalidArgs     Either @p aChildInfo is NULL, or @p aChildIndex is out of range (higher
  *                                      than max table index).
  *
  * @sa otGetMaxAllowedChildren

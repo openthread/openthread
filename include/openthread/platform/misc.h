@@ -44,6 +44,16 @@ extern "C" {
 #endif
 
 /**
+ * @addtogroup plat-misc
+ *
+ * @brief
+ *   This module includes platform abstractions for miscellaneous behaviors.
+ *
+ * @{
+ *
+ */
+
+/**
  * This function performs a software reset on the platform, if supported.
  *
  * @param[in] aInstance  The OpenThread instance structure.
@@ -88,6 +98,11 @@ otPlatResetReason otPlatGetResetReason(otInstance *aInstance);
  *
  */
 void otPlatAssertFail(const char *aFilename, int aLineNumber);
+
+/**
+ * @}
+ *
+ */
 
 #ifdef __cplusplus
 }  // extern "C"

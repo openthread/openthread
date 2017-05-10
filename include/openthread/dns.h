@@ -49,7 +49,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup dns  DNS
+ * @addtogroup api-dns
  *
  * @brief
  *   This module includes functions that control DNS communication.

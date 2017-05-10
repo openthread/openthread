@@ -42,10 +42,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup dataset  Operational Dataset
- *
- * @brief
- *   This module includes functions for Operational Dataset configuration.
+ * @addtogroup api-thread-general
  *
  * @{
  *

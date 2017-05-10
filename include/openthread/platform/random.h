@@ -44,8 +44,7 @@ extern "C" {
 #endif
 
 /**
- * @defgroup random Random
- * @ingroup platform
+ * @addtogroup plat-random
  *
  * @brief
  *   This module includes the platform abstraction for random number generation.

@@ -42,7 +42,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup messages  Message Buffers
+ * @addtogroup api-message
  *
  * @brief
  *   This module includes functions that manipulate OpenThread message buffers

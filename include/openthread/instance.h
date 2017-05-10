@@ -43,7 +43,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup instance  Instance
+ * @addtogroup api-instance
  *
  * @brief
  *   This module includes functions that control the OpenThread Instance.
@@ -225,9 +225,9 @@ OTAPI ThreadError OTCALL otSetStateChangedCallback(otInstance *aInstance, otStat
 /**
  * This function removes a callback to indicate when certain configuration or state changes within OpenThread.
  *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aCallback  A pointer to a function that is called with certain configuration or state changes.
- * @param[in]  aContext   A pointer to application-specific context.
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[in]  aCallback         A pointer to a function that is called with certain configuration or state changes.
+ * @param[in]  aCallbackContext  A pointer to application-specific context.
  *
  */
 OTAPI void OTCALL otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback aCallback,

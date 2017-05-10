@@ -47,8 +47,7 @@ extern "C" {
 #endif
 
 /**
- * @defgroup diag Diag
- * @ingroup platform
+ * @addtogroup plat-factory-diagnostics
  *
  * @brief
  *   This module includes the platform abstraction for diagnostics features.
@@ -58,51 +57,71 @@ extern "C" {
  */
 
 /**
- * Process the platform specific diagnostics features.
+ * This function processes a factory diagnostics command line.
  *
  * @param[in]   aInstance       The OpenThread instance for current request.
  * @param[in]   argc            The argument counter of diagnostics command line.
  * @param[in]   argv            The argument vector of diagnostics command line.
  * @param[out]  aOutput         The diagnostics execution result.
  * @param[in]   aOutputMaxLen   The output buffer size.
+ *
  */
 void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
 
 /**
- * Set diagnostics mode.
+ * This function enables/disables the factory diagnostics mode.
+ *
+ * @param[in]  aMode  TRUE to enable diagnostics mode, FALSE otherwise.
+ *
  */
 void otPlatDiagModeSet(bool aMode);
 
 /**
- * Get diagnostics mode.
+ * This function indicates whether or not factory diagnostics mode is enabled.
+ *
+ * @returns TRUE if factory diagnostics mode is enabled, FALSE otherwise.
+ *
  */
 bool otPlatDiagModeGet(void);
 
 /**
- * Set diagnostics channel.
+ * This function sets the channel to use for factory diagnostics.
+ *
+ * @param[in]  aChannel  The channel value.
+ *
  */
 void otPlatDiagChannelSet(uint8_t aChannel);
 
 /**
- * Set diagnostics tx power.
+ * This function sets the transmit power to use for factory diagnostics.
+ *
+ * @param[in]  aTxPower  The transmit power value.
+ *
  */
 void otPlatDiagTxPowerSet(int8_t aTxPower);
 
 /**
- * Process the platform specific received frame parsing.
+ * This function processes the received radio frame.
  *
  * @param[in]   aInstance   The OpenThread instance for current request.
  * @param[in]   aFrame      The received radio frame.
  * @param[in]   aError      The received radio frame status.
+ *
  */
 void otPlatDiagRadioReceived(otInstance *aInstance, RadioPacket *aFrame, ThreadError aError);
 
 /**
- * Process the platform specific alarm callback.
+ * This function processes the alarm event.
  *
  * @param[in]   aInstance   The OpenThread instance for current request.
+ *
  */
 void otPlatDiagAlarmCallback(otInstance *aInstance);
+
+/**
+ * @}
+ *
+ */
 
 #ifdef __cplusplus
 }  // end of extern "C"

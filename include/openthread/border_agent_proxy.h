@@ -48,7 +48,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup border-agent-proxy  Border Agent Proxy
+ * @addtogroup api-border-agent
  *
  * @brief
  *   This module includes functions for signal border agent proxy feature.

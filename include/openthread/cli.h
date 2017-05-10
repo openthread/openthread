@@ -44,6 +44,16 @@ extern "C" {
 #endif
 
 /**
+ * @addtogroup api-cli
+ *
+ * @brief
+ *   This module includes functions that control the Thread stack's execution.
+ *
+ * @{
+ *
+ */
+
+/**
  * This function pointer is called to notify about Console output.
  *
  * @param[in]  aBuf        A pointer to a buffer with an output.
@@ -82,6 +92,11 @@ void otCliConsoleInputLine(char *aBuf, uint16_t aBufLength);
  *
  */
 void otCliUartInit(otInstance *aInstance);
+
+/**
+ * @}
+ *
+ */
 
 #ifdef __cplusplus
 }  // extern "C"

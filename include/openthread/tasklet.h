@@ -42,7 +42,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup execution  Execution
+ * @addtogroup api-tasklets
  *
  * @brief
  *   This module includes functions that control the Thread stack's execution.

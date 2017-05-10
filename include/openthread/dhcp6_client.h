@@ -42,7 +42,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup core-dhcp6-client
+ * @addtogroup api-dhcp6
  *
  * @{
  *

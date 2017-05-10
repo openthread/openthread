@@ -29,7 +29,7 @@
 /**
  * @file
  * @brief
- *   This file includes platform abstractions for non-volatile storage of settings.
+ *   This file includes platform abstraction for non-volatile storage of settings.
  */
 
 #ifndef OT_PLATFORM_SETTINGS_H
@@ -40,6 +40,16 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * @addtogroup plat-settings
+ *
+ * @brief
+ *   This module includes the platform abstraction for non-volatile storage of settings.
+ *
+ * @{
+ *
+ */
 
 /**
  * Performs any initialization for the settings subsystem, if necessary.
@@ -147,7 +157,7 @@ ThreadError otPlatSettingsAbandonChange(otInstance *aInstance);
  *                 A pointer to where the value of the setting
  *                 should be written. May be set to NULL if just
  *                 testing for the presence or length of a setting.
- *  @param[in/out] aValueLength
+ *  @param[inout]  aValueLength
  *                 A pointer to the length of the value. When
  *                 called, this pointer should point to an
  *                 integer containing the maximum value size that
@@ -215,7 +225,7 @@ ThreadError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_
  *                A pointer to where the new value of the setting
  *                should be read from. MUST NOT be NULL if aValueLength
  *                is non-zero.
- * @param[in/out] aValueLength
+ * @param[inout]  aValueLength
  *                The length of the data pointed to by aValue.
  *                May be zero.
  *
@@ -259,6 +269,11 @@ ThreadError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aInde
  *             The OpenThread instance structure.
  */
 void otPlatSettingsWipe(otInstance *aInstance);
+
+/**
+ * @}
+ *
+ */
 
 #ifdef __cplusplus
 }  // extern "C"

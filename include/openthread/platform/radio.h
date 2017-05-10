@@ -45,8 +45,7 @@ extern "C" {
 #endif
 
 /**
- * @defgroup radio Radio
- * @ingroup platform
+ * @addtogroup plat-radio
  *
  * @brief
  *   This module includes the platform abstraction for radio communication.
@@ -220,8 +219,8 @@ PhyState otPlatRadioGetState(otInstance *aInstance);
  *
  * @param[in] aInstance  The OpenThread instance structure.
  *
- * @retval ::kThreadError_None     Successfully enabled.
- * @retval ::kThreadError_Failure  The radio could not be enabled.
+ * @retval kThreadError_None     Successfully enabled.
+ * @retval kThreadError_Failure  The radio could not be enabled.
  */
 ThreadError otPlatRadioEnable(otInstance *aInstance);
 
@@ -230,7 +229,7 @@ ThreadError otPlatRadioEnable(otInstance *aInstance);
  *
  * @param[in] aInstance  The OpenThread instance structure.
  *
- * @retval ::kThreadError_None  Successfully transitioned to Disabled.
+ * @retval kThreadError_None  Successfully transitioned to Disabled.
  */
 ThreadError otPlatRadioDisable(otInstance *aInstance);
 
@@ -239,8 +238,8 @@ ThreadError otPlatRadioDisable(otInstance *aInstance);
  *
  * @param[in] aInstance  The OpenThread instance structure.
  *
- * @retval ::true   radio is enabled.
- * @retval ::false  radio is disabled.
+ * @returns TRUE if the radio is enabled, FALSE otherwise.
+ *
  */
 bool otPlatRadioIsEnabled(otInstance *aInstance);
 
@@ -250,9 +249,9 @@ bool otPlatRadioIsEnabled(otInstance *aInstance);
  *
  * @param[in] aInstance  The OpenThread instance structure.
  *
- * @retval ::kThreadError_None         Successfully transitioned to Sleep.
- * @retval ::kThreadError_Busy         The radio was transmitting
- * @retval ::kThreadError_InvalidState The radio was disabled
+ * @retval kThreadError_None         Successfully transitioned to Sleep.
+ * @retval kThreadError_Busy         The radio was transmitting
+ * @retval kThreadError_InvalidState The radio was disabled
  */
 ThreadError otPlatRadioSleep(otInstance *aInstance);
 
@@ -263,8 +262,8 @@ ThreadError otPlatRadioSleep(otInstance *aInstance);
  * @param[in]  aInstance  The OpenThread instance structure.
  * @param[in]  aChannel   The channel to use for receiving.
  *
- * @retval ::kThreadError_None         Successfully transitioned to Receive.
- * @retval ::kThreadError_InvalidState The radio was disabled or transmitting.
+ * @retval kThreadError_None         Successfully transitioned to Receive.
+ * @retval kThreadError_InvalidState The radio was disabled or transmitting.
  */
 ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel);
 
@@ -293,8 +292,8 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable);
  * @param[in]  aInstance      The OpenThread instance structure.
  * @param[in]  aShortAddress  The short address to be added.
  *
- * @retval ::kThreadError_None     Successfully added short address to the source match table.
- * @retval ::kThreadError_NoBufs   No available entry in the source match table.
+ * @retval kThreadError_None     Successfully added short address to the source match table.
+ * @retval kThreadError_NoBufs   No available entry in the source match table.
  */
 ThreadError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress);
 
@@ -304,8 +303,8 @@ ThreadError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16
  * @param[in]  aInstance    The OpenThread instance structure.
  * @param[in]  aExtAddress  The extended address to be added.
  *
- * @retval ::kThreadError_None     Successfully added extended address to the source match table.
- * @retval ::kThreadError_NoBufs   No available entry in the source match table.
+ * @retval kThreadError_None     Successfully added extended address to the source match table.
+ * @retval kThreadError_NoBufs   No available entry in the source match table.
  */
 ThreadError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress);
 
@@ -315,8 +314,8 @@ ThreadError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t 
  * @param[in]  aInstance      The OpenThread instance structure.
  * @param[in]  aShortAddress  The short address to be removed.
  *
- * @retval ::kThreadError_None        Successfully removed short address from the source match table.
- * @retval ::kThreadError_NoAddress   The short address is not in source address match table.
+ * @retval kThreadError_None        Successfully removed short address from the source match table.
+ * @retval kThreadError_NoAddress   The short address is not in source address match table.
  */
 ThreadError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress);
 
@@ -326,8 +325,8 @@ ThreadError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint
  * @param[in]  aInstance    The OpenThread instance structure.
  * @param[in]  aExtAddress  The extended address to be removed.
  *
- * @retval ::kThreadError_None        Successfully removed the extended address from the source match table.
- * @retval ::kThreadError_NoAddress   The extended address is not in source address match table.
+ * @retval kThreadError_None        Successfully removed the extended address from the source match table.
+ * @retval kThreadError_NoAddress   The extended address is not in source address match table.
  */
 ThreadError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress);
 
@@ -352,8 +351,8 @@ void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance);
  *
  * @param[in]  aInstance The OpenThread instance structure.
  * @param[in]  aPacket   A pointer to the received packet or NULL if the receive operation failed.
- * @param[in]  aError    ::kThreadError_None when successfully received a frame, ::kThreadError_Abort when reception
- *                       was aborted and a frame was not received, ::kThreadError_NoBufs when a frame could not be
+ * @param[in]  aError    kThreadError_None when successfully received a frame, kThreadError_Abort when reception
+ *                       was aborted and a frame was not received, kThreadError_NoBufs when a frame could not be
  *                       received due to lack of rx buffer space.
  *
  */
@@ -385,8 +384,8 @@ RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *aInstance);
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aPacket    A pointer to the packet that will be transmitted.
  *
- * @retval ::kThreadError_None         Successfully transitioned to Transmit.
- * @retval ::kThreadError_InvalidState The radio was not in the Receive state.
+ * @retval kThreadError_None         Successfully transitioned to Transmit.
+ * @retval kThreadError_InvalidState The radio was not in the Receive state.
  */
 ThreadError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket);
 
@@ -396,9 +395,9 @@ ThreadError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket);
  * @param[in]  aInstance      The OpenThread instance structure.
  * @param[in]  aPacket        A pointer to the packet that was transmitted.
  * @param[in]  aFramePending  TRUE if an ACK frame was received and the Frame Pending bit was set.
- * @param[in]  aError  ::kThreadError_None when the frame was transmitted, ::kThreadError_NoAck when the frame was
- *                     transmitted but no ACK was received, ::kThreadError_ChannelAccessFailure when the transmission
- *                     could not take place due to activity on the channel, ::kThreadError_Abort when transmission was
+ * @param[in]  aError  kThreadError_None when the frame was transmitted, kThreadError_NoAck when the frame was
+ *                     transmitted but no ACK was received, kThreadError_ChannelAccessFailure when the transmission
+ *                     could not take place due to activity on the channel, kThreadError_Abort when transmission was
  *                     aborted for other reasons.
  *
  */
@@ -456,9 +455,9 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable);
  * @param[in]  aInstance      The OpenThread instance structure.
  * @param[in]  aPacket        A pointer to the packet that was transmitted.
  * @param[in]  aFramePending  TRUE if an ACK frame was received and the Frame Pending bit was set.
- * @param[in]  aError  ::kThreadError_None when the frame was transmitted, ::kThreadError_NoAck when the frame was
- *                     transmitted but no ACK was received, ::kThreadError_ChannelAccessFailure when the transmission
- *                     could not take place due to activity on the channel, ::kThreadError_Abort when transmission was
+ * @param[in]  aError  kThreadError_None when the frame was transmitted, kThreadError_NoAck when the frame was
+ *                     transmitted but no ACK was received, kThreadError_ChannelAccessFailure when the transmission
+ *                     could not take place due to activity on the channel, kThreadError_Abort when transmission was
  *                     aborted for other reasons.
  *
  */
@@ -470,8 +469,8 @@ extern void otPlatDiagRadioTransmitDone(otInstance *aInstance, RadioPacket *aPac
  *
  * @param[in]  aInstance The OpenThread instance structure.
  * @param[in]  aPacket   A pointer to the received packet or NULL if the receive operation failed.
- * @param[in]  aError    ::kThreadError_None when successfully received a frame, ::kThreadError_Abort when reception
- *                       was aborted and a frame was not received, ::kThreadError_NoBufs when a frame could not be
+ * @param[in]  aError    kThreadError_None when successfully received a frame, kThreadError_Abort when reception
+ *                       was aborted and a frame was not received, kThreadError_NoBufs when a frame could not be
  *                       received due to lack of rx buffer space.
  *
  */
@@ -484,8 +483,8 @@ extern void otPlatDiagRadioReceiveDone(otInstance *aInstance, RadioPacket *aPack
  * @param[in] aScanChannel   The channel to perform the energy scan on.
  * @param[in] aScanDuration  The duration, in milliseconds, for the channel to be scanned.
  *
- * @retval ::kThreadError_None            Successfully started scanning the channel.
- * @retval ::kThreadError_NotImplemented  The radio doesn't support energy scanning.
+ * @retval kThreadError_None            Successfully started scanning the channel.
+ * @retval kThreadError_NotImplemented  The radio doesn't support energy scanning.
  */
 ThreadError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration);
 

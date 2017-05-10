@@ -43,7 +43,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup ip6  IPv6
+ * @addtogroup api-ip6
  *
  * @brief
  *   This module includes functions that control IPv6 communication.
