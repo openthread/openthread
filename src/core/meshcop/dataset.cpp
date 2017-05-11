@@ -65,8 +65,7 @@ void Dataset::Clear(bool isLocal)
 
     if (isLocal)
     {
-        otPlatSettingsDelete(mInstance, static_cast<uint16_t>(mType == Tlv::kActiveTimestamp ? kKeyActiveDataset :
-                                                              kKeyPendingDataset), -1);
+        otPlatSettingsDelete(mInstance, GetSettingsKey(), -1);
     }
 }
 
@@ -441,8 +440,7 @@ ThreadError Dataset::Restore(void)
     ThreadError error;
     uint16_t length = sizeof(mTlvs);
 
-    error = otPlatSettingsGet(mInstance, static_cast<uint16_t>(mType == Tlv::kActiveTimestamp ? kKeyActiveDataset :
-                                                               kKeyPendingDataset), 0, mTlvs, &length);
+    error = otPlatSettingsGet(mInstance, GetSettingsKey(), 0, mTlvs, &length);
     mLength = (error == kThreadError_None) ? length : 0;
 
     return error;
@@ -450,8 +448,8 @@ ThreadError Dataset::Restore(void)
 
 ThreadError Dataset::Store(void)
 {
-    uint16_t key = static_cast<uint16_t>((mType == Tlv::kActiveTimestamp) ? kKeyActiveDataset : kKeyPendingDataset);
     ThreadError error;
+    uint16_t key = GetSettingsKey();
 
     if (mLength == 0)
     {
@@ -536,6 +534,22 @@ ThreadError Dataset::AppendMleDatasetTlv(Message &aMessage)
 
 exit:
     return error;
+}
+
+uint16_t Dataset::GetSettingsKey(void)
+{
+    uint16_t rval;
+
+    if (mType == Tlv::kActiveTimestamp)
+    {
+        rval = static_cast<uint16_t>(Settings::kKeyActiveDataset);
+    }
+    else
+    {
+        rval = static_cast<uint16_t>(Settings::kKeyPendingDataset);
+    }
+
+    return rval;
 }
 
 void Dataset::Remove(uint8_t *aStart, uint8_t aLength)

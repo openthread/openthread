@@ -3463,11 +3463,11 @@ ThreadError MleRouter::RestoreChildren(void)
     for (uint8_t i = 0; ; i++)
     {
         Child *child;
-        ChildInfo childInfo;
+        Settings::ChildInfo childInfo;
         uint16_t length;
 
         length = sizeof(childInfo);
-        SuccessOrExit(error = otPlatSettingsGet(mNetif.GetInstance(), kKeyChildInfo, i,
+        SuccessOrExit(error = otPlatSettingsGet(mNetif.GetInstance(), Settings::kKeyChildInfo, i,
                                                 reinterpret_cast<uint8_t *>(&childInfo), &length));
         VerifyOrExit(length >= sizeof(childInfo), error = kThreadError_Parse);
 
@@ -3493,16 +3493,16 @@ ThreadError MleRouter::RemoveStoredChild(uint16_t aChildRloc16)
 
     for (uint8_t i = 0; i < kMaxChildren; i++)
     {
-        ChildInfo childInfo;
+        Settings::ChildInfo childInfo;
         uint16_t length = sizeof(childInfo);
 
-        SuccessOrExit(error = otPlatSettingsGet(mNetif.GetInstance(), kKeyChildInfo, i,
+        SuccessOrExit(error = otPlatSettingsGet(mNetif.GetInstance(), Settings::kKeyChildInfo, i,
                                                 reinterpret_cast<uint8_t *>(&childInfo), &length));
         VerifyOrExit(length == sizeof(childInfo), error = kThreadError_Parse);
 
         if (childInfo.mRloc16 == aChildRloc16)
         {
-            error = otPlatSettingsDelete(mNetif.GetInstance(), kKeyChildInfo, i);
+            error = otPlatSettingsDelete(mNetif.GetInstance(), Settings::kKeyChildInfo, i);
             ExitNow();
         }
     }
@@ -3515,7 +3515,7 @@ ThreadError MleRouter::StoreChild(uint16_t aChildRloc16)
 {
     ThreadError error = kThreadError_None;
     Child *child;
-    ChildInfo childInfo;
+    Settings::ChildInfo childInfo;
 
     VerifyOrExit((child = FindChild(GetChildId(aChildRloc16))) != NULL, error = kThreadError_NotFound);
 
@@ -3528,7 +3528,7 @@ ThreadError MleRouter::StoreChild(uint16_t aChildRloc16)
     childInfo.mRloc16  = child->GetRloc16();
     childInfo.mMode    = child->GetDeviceMode();
 
-    error = otPlatSettingsAdd(mNetif.GetInstance(), kKeyChildInfo, reinterpret_cast<uint8_t *>(&childInfo),
+    error = otPlatSettingsAdd(mNetif.GetInstance(), Settings::kKeyChildInfo, reinterpret_cast<uint8_t *>(&childInfo),
                               sizeof(childInfo));
 
 exit:
@@ -3539,7 +3539,7 @@ ThreadError MleRouter::RefreshStoredChildren(void)
 {
     ThreadError error = kThreadError_None;
 
-    SuccessOrExit(error = otPlatSettingsDelete(mNetif.GetInstance(), kKeyChildInfo, -1));
+    SuccessOrExit(error = otPlatSettingsDelete(mNetif.GetInstance(), Settings::kKeyChildInfo, -1));
 
     for (uint8_t i = 0; i < kMaxChildren; i++)
     {

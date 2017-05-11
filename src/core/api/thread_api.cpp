@@ -489,7 +489,8 @@ bool otThreadGetAutoStart(otInstance *aInstance)
     uint8_t autoStart = 0;
     uint16_t autoStartLength = sizeof(autoStart);
 
-    if (otPlatSettingsGet(aInstance, kKeyThreadAutoStart, 0, &autoStart, &autoStartLength) != kThreadError_None)
+    if (otPlatSettingsGet(aInstance, Settings::kKeyThreadAutoStart, 0, &autoStart, &autoStartLength) !=
+        kThreadError_None)
     {
         autoStart = 0;
     }
@@ -505,7 +506,7 @@ ThreadError otThreadSetAutoStart(otInstance *aInstance, bool aStartAutomatically
 {
 #if OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
     uint8_t autoStart = aStartAutomatically ? 1 : 0;
-    return otPlatSettingsSet(aInstance, kKeyThreadAutoStart, &autoStart, sizeof(autoStart));
+    return otPlatSettingsSet(aInstance, Settings::kKeyThreadAutoStart, &autoStart, sizeof(autoStart));
 #else
     (void)aInstance;
     (void)aStartAutomatically;
