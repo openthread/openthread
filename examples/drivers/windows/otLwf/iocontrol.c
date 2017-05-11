@@ -574,7 +574,7 @@ otLwfIoCtl_otThread(
     }
     else if (*OutBufferLength >= sizeof(BOOLEAN))
     {
-        *(BOOLEAN*)OutBuffer = (otThreadGetDeviceRole(pFilter->otCtx) > kDeviceRoleDisabled) ? TRUE : FALSE;
+        *(BOOLEAN*)OutBuffer = (otThreadGetDeviceRole(pFilter->otCtx) > OT_DEVICE_ROLE_DISABLED) ? TRUE : FALSE;
         *OutBufferLength = sizeof(BOOLEAN);
         status = STATUS_SUCCESS;
     }
@@ -3759,25 +3759,25 @@ otLwfIoCtl_otDeviceRole(
         InBufferLength -= sizeof(uint8_t);
         InBuffer = InBuffer + sizeof(uint8_t);
 
-        if (role == kDeviceRoleLeader)
+        if (role == OT_DEVICE_ROLE_LEADER)
         {
             status = ThreadErrorToNtstatus(
                         otThreadBecomeLeader(pFilter->otCtx)
                         );
         }
-        else if (role == kDeviceRoleRouter)
+        else if (role == OT_DEVICE_ROLE_ROUTER)
         {
             status = ThreadErrorToNtstatus(
                         otThreadBecomeRouter(pFilter->otCtx)
                         );
         }
-        else if (role == kDeviceRoleChild)
+        else if (role == OT_DEVICE_ROLE_CHILD)
         {
             status = ThreadErrorToNtstatus(
                         otThreadBecomeChild(pFilter->otCtx)
                         );
         }
-        else if (role == kDeviceRoleDetached)
+        else if (role == OT_DEVICE_ROLE_DETACHED)
         {
             status = ThreadErrorToNtstatus(
                         otThreadBecomeDetached(pFilter->otCtx)
@@ -3819,13 +3819,13 @@ otLwfTunIoCtl_otDeviceRole(
 
         switch (role)
         {
-        case kDeviceRoleChild:
+        case OT_DEVICE_ROLE_CHILD:
             spinel_role = SPINEL_NET_ROLE_CHILD;
             break;
-        case kDeviceRoleRouter:
+        case OT_DEVICE_ROLE_ROUTER:
             spinel_role = SPINEL_NET_ROLE_ROUTER;
             break;
-        case kDeviceRoleLeader:
+        case OT_DEVICE_ROLE_LEADER:
             spinel_role = SPINEL_NET_ROLE_LEADER;
             break;
         }
@@ -3878,16 +3878,16 @@ otLwfTunIoCtl_otDeviceRole_Handler(
             {
             default:
             case SPINEL_NET_ROLE_DETACHED:
-                *(uint8_t*)OutBuffer = kDeviceRoleDetached;
+                *(uint8_t*)OutBuffer = OT_DEVICE_ROLE_DETACHED;
                 break;
             case SPINEL_NET_ROLE_CHILD:
-                *(uint8_t*)OutBuffer = kDeviceRoleChild;
+                *(uint8_t*)OutBuffer = OT_DEVICE_ROLE_CHILD;
                 break;
             case SPINEL_NET_ROLE_ROUTER:
-                *(uint8_t*)OutBuffer = kDeviceRoleRouter;
+                *(uint8_t*)OutBuffer = OT_DEVICE_ROLE_ROUTER;
                 break;
             case SPINEL_NET_ROLE_LEADER:
-                *(uint8_t*)OutBuffer = kDeviceRoleLeader;
+                *(uint8_t*)OutBuffer = OT_DEVICE_ROLE_LEADER;
                 break;
             }
 

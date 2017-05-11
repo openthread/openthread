@@ -773,7 +773,7 @@ otLwfEventWorkerThread(
     pFilter->otInstanceSize -= sizeof(PMS_FILTER);
 
     // Initialize the OpenThread library
-    pFilter->otCachedRole = kDeviceRoleDisabled;
+    pFilter->otCachedRole = OT_DEVICE_ROLE_DISABLED;
     pFilter->otCtx = otInstanceInit(pFilter->otInstanceBuffer + sizeof(PMS_FILTER), &pFilter->otInstanceSize);
     NT_ASSERT(pFilter->otCtx);
     if (pFilter->otCtx == NULL)

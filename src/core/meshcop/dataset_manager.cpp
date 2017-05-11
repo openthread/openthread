@@ -182,14 +182,14 @@ otError DatasetManager::Set(const otOperationalDataset &aDataset, uint8_t &aFlag
     mLocal.Store();
     aFlags = kFlagLocalUpdated;
 
-    switch (mNetif.GetMle().GetDeviceState())
+    switch (mNetif.GetMle().GetRole())
     {
-    case Mle::kDeviceStateChild:
-    case Mle::kDeviceStateRouter:
+    case OT_DEVICE_ROLE_CHILD:
+    case OT_DEVICE_ROLE_ROUTER:
         mTimer.Start(1000);
         break;
 
-    case Mle::kDeviceStateLeader:
+    case OT_DEVICE_ROLE_LEADER:
         mNetwork = mLocal;
         aFlags |= kFlagNetworkUpdated;
         mNetif.GetNetworkDataLeader().IncrementVersion();
@@ -391,7 +391,7 @@ otError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const Ip6:
     pendingTimestamp.SetLength(0);
     sessionId.SetLength(0);
 
-    VerifyOrExit(mNetif.GetMle().GetDeviceState() == Mle::kDeviceStateLeader, state = StateTlv::kReject);
+    VerifyOrExit(mNetif.GetMle().GetRole() == OT_DEVICE_ROLE_LEADER, state = StateTlv::kReject);
 
     // verify that TLV data size is less than maximum TLV value size
     while (offset < aMessage.GetLength())
@@ -578,7 +578,7 @@ otError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const Ip6:
 
 exit:
 
-    if (mNetif.GetMle().GetDeviceState() == Mle::kDeviceStateLeader)
+    if (mNetif.GetMle().GetRole() == OT_DEVICE_ROLE_LEADER)
     {
         SendSetResponse(aHeader, aMessageInfo, state);
     }
@@ -941,7 +941,7 @@ otError ActiveDatasetBase::Set(const Dataset &aDataset)
     SuccessOrExit(error = DatasetManager::Set(aDataset));
     DatasetManager::ApplyConfiguration();
 
-    if (mNetif.GetMle().GetDeviceState() == Mle::kDeviceStateLeader)
+    if (mNetif.GetMle().GetRole() == OT_DEVICE_ROLE_LEADER)
     {
         mNetif.GetNetworkDataLeader().IncrementVersion();
         mNetif.GetNetworkDataLeader().IncrementStableVersion();

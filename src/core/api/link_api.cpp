@@ -49,7 +49,7 @@ otError otLinkSetChannel(otInstance *aInstance, uint8_t aChannel)
 {
     otError error;
 
-    VerifyOrExit(aInstance->mThreadNetif.GetMle().GetDeviceState() == Mle::kDeviceStateDisabled,
+    VerifyOrExit(aInstance->mThreadNetif.GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED,
                  error = OT_ERROR_INVALID_STATE);
 
     error = aInstance->mThreadNetif.GetMac().SetChannel(aChannel);
@@ -70,7 +70,7 @@ otError otLinkSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExt
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aExtAddress != NULL, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(aInstance->mThreadNetif.GetMle().GetDeviceState() == Mle::kDeviceStateDisabled,
+    VerifyOrExit(aInstance->mThreadNetif.GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED,
                  error = OT_ERROR_INVALID_STATE);
 
     aInstance->mThreadNetif.GetMac().SetExtAddress(*static_cast<const Mac::ExtAddress *>(aExtAddress));
@@ -111,7 +111,7 @@ otError otLinkSetPanId(otInstance *aInstance, otPanId aPanId)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aInstance->mThreadNetif.GetMle().GetDeviceState() == Mle::kDeviceStateDisabled,
+    VerifyOrExit(aInstance->mThreadNetif.GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED,
                  error = OT_ERROR_INVALID_STATE);
 
     error = aInstance->mThreadNetif.GetMac().SetPanId(aPanId);

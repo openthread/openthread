@@ -100,7 +100,7 @@ void Leader::Stop(void)
 
 void Leader::IncrementVersion(void)
 {
-    if (mNetif.GetMle().GetDeviceState() == Mle::kDeviceStateLeader)
+    if (mNetif.GetMle().GetRole() == OT_DEVICE_ROLE_LEADER)
     {
         mVersion++;
         mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
@@ -109,7 +109,7 @@ void Leader::IncrementVersion(void)
 
 void Leader::IncrementStableVersion(void)
 {
-    if (mNetif.GetMle().GetDeviceState() == Mle::kDeviceStateLeader)
+    if (mNetif.GetMle().GetRole() == OT_DEVICE_ROLE_LEADER)
     {
         mStableVersion++;
     }
@@ -203,7 +203,7 @@ void Leader::HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, co
     bool hasValidTlv = false;
     uint16_t sessionId = 0;
 
-    VerifyOrExit(mNetif.GetMle().GetDeviceState() == Mle::kDeviceStateLeader, state = MeshCoP::StateTlv::kReject);
+    VerifyOrExit(mNetif.GetMle().GetRole() == OT_DEVICE_ROLE_LEADER, state = MeshCoP::StateTlv::kReject);
 
     aMessage.Read(offset, length, tlvs);
 
@@ -271,7 +271,7 @@ void Leader::HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, co
 
 exit:
 
-    if (mNetif.GetMle().GetDeviceState() == Mle::kDeviceStateLeader)
+    if (mNetif.GetMle().GetRole() == OT_DEVICE_ROLE_LEADER)
     {
         SendCommissioningSetResponse(aHeader, aMessageInfo, state);
     }

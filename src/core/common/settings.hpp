@@ -81,7 +81,7 @@ enum
  */
 struct NetworkInfo
 {
-    uint8_t          mDeviceState;             ///< Current Thread interface state.
+    uint8_t          mRole;                    ///< Current Thread role.
     uint8_t          mDeviceMode;              ///< Device mode setting.
     uint16_t         mRloc16;                  ///< RLOC16
     uint32_t         mKeySequence;             ///< Key Sequence
