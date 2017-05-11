@@ -762,9 +762,9 @@ typedef struct otExternalRouteConfig
  */
 typedef enum otRoutePreference
 {
-    kRoutePreferenceLow    = -1,  ///< Routes assigned this value are used as a last resort when no other more preferred route exists.
-    kRoutePreferenceMedium =  0,  ///< Routes assigned this value should be selected only in the absence of any kRoutePreferenceHigh routes.
-    kRoutePreferenceHigh   =  1   ///< The most preferred route. Routes assigned this value should be selected over any other route.
+    OT_ROUTE_PREFERENCE_LOW  = -1,  ///< Low route preference.
+    OT_ROUTE_PREFERENCE_MED  = 0,   ///< Medium route preference.
+    OT_ROUTE_PREFERENCE_HIGH = 1,   ///< High route preference.
 } otRoutePreference;
 
 /**

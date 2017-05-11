@@ -1820,15 +1820,15 @@ otError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
     {
         if (strcmp(argv[argcur], "high") == 0)
         {
-            config.mPreference = kRoutePreferenceHigh;
+            config.mPreference = OT_ROUTE_PREFERENCE_HIGH;
         }
         else if (strcmp(argv[argcur], "med") == 0)
         {
-            config.mPreference = kRoutePreferenceMedium;
+            config.mPreference = OT_ROUTE_PREFERENCE_MED;
         }
         else if (strcmp(argv[argcur], "low") == 0)
         {
-            config.mPreference = kRoutePreferenceLow;
+            config.mPreference = OT_ROUTE_PREFERENCE_LOW;
         }
         else
         {
@@ -1962,15 +1962,15 @@ otError Interpreter::ProcessPrefixList(void)
 
         switch (config.mPreference)
         {
-        case kRoutePreferenceLow:
+        case OT_ROUTE_PREFERENCE_LOW:
             sServer->OutputFormat(" low\r\n");
             break;
 
-        case kRoutePreferenceMedium:
+        case OT_ROUTE_PREFERENCE_MED:
             sServer->OutputFormat(" med\r\n");
             break;
 
-        case kRoutePreferenceHigh:
+        case OT_ROUTE_PREFERENCE_HIGH:
             sServer->OutputFormat(" high\r\n");
             break;
         }
@@ -2074,15 +2074,15 @@ otError Interpreter::ProcessRouteAdd(int argc, char *argv[])
         }
         else if (strcmp(argv[argcur], "high") == 0)
         {
-            config.mPreference = kRoutePreferenceHigh;
+            config.mPreference = OT_ROUTE_PREFERENCE_HIGH;
         }
         else if (strcmp(argv[argcur], "med") == 0)
         {
-            config.mPreference = kRoutePreferenceMedium;
+            config.mPreference = OT_ROUTE_PREFERENCE_MED;
         }
         else if (strcmp(argv[argcur], "low") == 0)
         {
-            config.mPreference = kRoutePreferenceLow;
+            config.mPreference = OT_ROUTE_PREFERENCE_LOW;
         }
         else
         {
