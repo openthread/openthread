@@ -42,9 +42,8 @@
 extern "C" {
 #endif
 
-
 /**
- * @addtogroup icmp6  ICMPv6
+ * @addtogroup api-icmp6
  *
  * @brief
  *   This module includes functions that control ICMPv6 communication.

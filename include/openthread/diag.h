@@ -41,13 +41,57 @@
 extern "C" {
 #endif
 
+/**
+ * @addtogroup api-factory-diagnostics
+ *
+ * @brief
+ *   This module includes functions that control the Thread stack's execution.
+ *
+ * @{
+ *
+ */
+
+/**
+ * Initialize the diagnostics module.
+ *
+ * @param[in]  aInstance  A pointer to the OpenThread instance.
+ *
+ */
 void otDiagInit(otInstance *aInstance);
 
+/**
+ * This function processes a factory diagnostics command line.
+ *
+ * @param[in]  argc  The argument counter of diagnostics command line.
+ * @param[in]  argv  The argument vector of diagnostics command line.
+ *
+ * @returns A pointer to the output string.
+ *
+ */
 char *otDiagProcessCmd(int argc, char *argv[]);
 
-char *otDiagProcessCmdLine(char *string);
+/**
+ * This function processes a factory diagnostics command line.
+ *
+ * @param[in]  aString  A NULL-terminated string.
+ *
+ * @returns A pointer to the output string.
+ *
+ */
+char *otDiagProcessCmdLine(char *aString);
 
+/**
+ * This function indicates whether or not the factory diagnostics mode is enabled.
+ *
+ * @returns TRUE if factory diagnostics mode is enabled, FALSE otherwise.
+ *
+ */
 bool otDiagIsEnabled(void);
+
+/**
+ * @}
+ *
+ */
 
 #ifdef __cplusplus
 }  // extern "C"

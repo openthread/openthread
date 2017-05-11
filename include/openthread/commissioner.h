@@ -29,7 +29,7 @@
 /**
  * @file
  * @brief
- *   This file includes the platform abstraction for the Thread Commissioner role.
+ *   This file includes functions for the Thread Commissioner role.
  */
 
 #ifndef OPENTHREAD_COMMISSIONER_H_
@@ -43,7 +43,10 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup core-commissioning
+ * @addtogroup api-commissioner
+ *
+ * @brief
+ *   This module includes functions for the Thread Commissioner role.
  *
  * @{
  *
@@ -102,7 +105,7 @@ OTAPI ThreadError OTCALL otCommissionerAddJoiner(otInstance *aInstance, const ot
  * @note Only use this after successfully started the Commissioner role by otCommissionerStart().
  *
  */
-OTAPI ThreadError OTCALL otCommissionerRemoveJoiner(otInstance *aIntsance, const otExtAddress *aExtAddress);
+OTAPI ThreadError OTCALL otCommissionerRemoveJoiner(otInstance *aInstance, const otExtAddress *aExtAddress);
 
 /**
  * This function sets the Provisioning URL.
@@ -213,7 +216,7 @@ OTAPI ThreadError OTCALL otCommissionerPanIdQuery(otInstance *aInstance, uint16_
  * @retval kThreadError_NoBufs       Insufficient buffer space to send.
  *
  */
-OTAPI ThreadError OTCALL otCommissionerSendMgmtGet(otInstance *, const uint8_t *aTlvs, uint8_t aLength);
+OTAPI ThreadError OTCALL otCommissionerSendMgmtGet(otInstance *aInstance, const uint8_t *aTlvs, uint8_t aLength);
 
 /**
  * This function sends MGMT_COMMISSIONER_SET.
@@ -227,7 +230,7 @@ OTAPI ThreadError OTCALL otCommissionerSendMgmtGet(otInstance *, const uint8_t *
  * @retval kThreadError_NoBufs       Insufficient buffer space to send.
  *
  */
-OTAPI ThreadError OTCALL otCommissionerSendMgmtSet(otInstance *, const otCommissioningDataset *aDataset,
+OTAPI ThreadError OTCALL otCommissionerSendMgmtSet(otInstance *aInstance, const otCommissioningDataset *aDataset,
                                                    const uint8_t *aTlvs, uint8_t aLength);
 
 /**
@@ -238,7 +241,7 @@ OTAPI ThreadError OTCALL otCommissionerSendMgmtSet(otInstance *, const otCommiss
  * @returns The current commissioner session id.
  *
  */
-OTAPI uint16_t OTCALL otCommissionerGetSessionId(otInstance *);
+OTAPI uint16_t OTCALL otCommissionerGetSessionId(otInstance *aInstance);
 
 /**
  * This function returns the Commissioner State.
@@ -250,7 +253,7 @@ OTAPI uint16_t OTCALL otCommissionerGetSessionId(otInstance *);
  * @retval kCommissionerStateActive      Commissioner enabled.
  *
  */
-OTAPI otCommissionerState OTCALL otCommissionerGetState(otInstance *);
+OTAPI otCommissionerState OTCALL otCommissionerGetState(otInstance *aInstance);
 
 /**
  * This method generates PSKc.

@@ -43,7 +43,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup linkraw  Link Raw
+ * @addtogroup api-link-raw
  *
  * @brief
  *   This module includes functions that control the raw link-layer configuration.

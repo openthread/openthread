@@ -50,7 +50,7 @@ extern "C" {
 #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
 
 /**
- * @addtogroup child-supervision  Child Supervision
+ * @addtogroup api-child-supervision
  *
  * @brief
  *   This module includes functions for child supervision feature.

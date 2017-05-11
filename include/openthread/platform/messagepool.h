@@ -41,8 +41,7 @@
 #include <openthread/types.h>
 
 /**
- * @defgroup messagepool MessagePool
- * @ingroup platform
+ * @addtogroup plat-messagepool
  *
  * @brief
  *   This module includes the platform abstraction for the message pool.
@@ -58,6 +57,7 @@ extern "C" {
 /**
  * Initialize the platform implemented message pool.
  *
+ * @param[in] aInstance            A pointer to the OpenThread instance.
  * @param[in] aMinNumFreeBuffers   An uint16 containing the minimum number of free buffers desired by OpenThread.
  * @param[in] aBufferSize          The size in bytes of a Buffer object.
  *
@@ -67,6 +67,8 @@ void otPlatMessagePoolInit(otInstance *aInstance, uint16_t aMinNumFreeBuffers, s
 /**
  * Allocate a buffer from the platform managed buffer pool.
  *
+ * @param[in] aInstance            A pointer to the OpenThread instance.
+ *
  * @returns A pointer to the Buffer or NULL if no Buffers are available.
  *
  */
@@ -75,13 +77,16 @@ otMessage *otPlatMessagePoolNew(otInstance *aInstance);
 /**
  * This function is used to free a Buffer back to the platform managed buffer pool.
  *
- * @param[in]  aBuffer  The Buffer to free.
+ * @param[in]  aInstance  A pointer to the OpenThread instance.
+ * @param[in]  aBuffer    The Buffer to free.
  *
  */
 void otPlatMessagePoolFree(otInstance *aInstance, otMessage *aBuffer);
 
 /**
  * Get the number of free buffers.
+ *
+ * @param[in]  aInstance  A pointer to the OpenThread instance.
  *
  * @returns The number of buffers currently free and available to OpenThread.
  *

@@ -44,8 +44,7 @@ extern "C" {
 #endif
 
 /**
- * @defgroup spi-slave SPI Slave
- * @ingroup platform
+ * @addtogroup plat-spi-slave
  *
  * @brief
  *   This module includes the platform abstraction for SPI slave communication.

@@ -27,8 +27,7 @@
  */
 
 /**
- * @defgroup toolchain Toolchain
- * @ingroup platform
+ * @addtogroup plat-toolchain
  *
  * @brief
  *   This module defines a toolchain abstraction layer through macros.
@@ -82,6 +81,13 @@ extern "C" {
  * @def OT_TOOL_PACKED_END
  *
  * Compiler-specific indication at the end of a byte packed class or struct.
+ *
+ */
+
+/**
+ * @def OT_TOOL_ALIGN
+ *
+ * Compiler-specific alignment modifier.
  *
  */
 
@@ -143,6 +149,20 @@ extern "C" {
 #endif
 
 // =========== TOOLCHAIN SELECTION : END ===========
+
+/**
+ * @def OTAPI
+ *
+ * Compiler-specific modifier for public API declarations.
+ *
+ */
+
+/**
+ * @def OTCALL
+ *
+ * Compiler-specific modifier to export functions in a DLL.
+ *
+ */
 
 #ifdef _MSC_VER
 

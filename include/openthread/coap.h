@@ -51,7 +51,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup coap  CoAP
+ * @addtogroup api-coap
  *
  * @brief
  *   This module includes functions that control CoAP communication.
@@ -75,11 +75,15 @@ typedef enum otCoapType
 } otCoapType;
 
 /**
- * CoAP Code values.
+ * Helper macro to define CoAP Code values.
  *
  */
 #define COAP_CODE(c, d) ((((c) & 0x7) << 5) | ((d) & 0x1f))
 
+/**
+ * CoAP Code values.
+ *
+ */
 typedef enum otCoapCode
 {
     kCoapCodeEmpty                  = COAP_CODE(0, 0),  ///< Empty message code

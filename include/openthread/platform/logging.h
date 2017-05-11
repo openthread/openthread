@@ -42,8 +42,7 @@ extern "C" {
 #endif
 
 /**
- * @defgroup logging Logging
- * @ingroup platform
+ * @addtogroup plat-logging
  *
  * @brief
  *   This module includes the platform abstraction for the debug log service.
@@ -52,11 +51,14 @@ extern "C" {
  *
  */
 
-#define OPENTHREAD_LOG_LEVEL_NONE  0
-#define OPENTHREAD_LOG_LEVEL_CRIT  1
-#define OPENTHREAD_LOG_LEVEL_WARN  2
-#define OPENTHREAD_LOG_LEVEL_INFO  3
-#define OPENTHREAD_LOG_LEVEL_DEBG  4
+/**
+ * Log levels.
+ */
+#define OPENTHREAD_LOG_LEVEL_NONE  0  ///< None
+#define OPENTHREAD_LOG_LEVEL_CRIT  1  ///< Critical
+#define OPENTHREAD_LOG_LEVEL_WARN  2  ///< Warning
+#define OPENTHREAD_LOG_LEVEL_INFO  3  ///< Info
+#define OPENTHREAD_LOG_LEVEL_DEBG  4  ///< Debug
 
 /**
  * This enum represents different log levels.

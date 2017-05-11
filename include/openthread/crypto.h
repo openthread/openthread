@@ -42,6 +42,16 @@
 extern "C" {
 #endif
 
+/**
+ * @addtogroup api-crypto
+ *
+ * @brief
+ *   This module includes cryptographic functions.
+ *
+ * @{
+ *
+ */
+
 #define OT_CRYPTO_HMAC_SHA_HASH_SIZE   32   ///< Length of HMAC SHA (in bytes).
 
 /**
@@ -87,6 +97,10 @@ void otCryptoAesCcm(
     void *aPlainText, void *aCipherText, uint32_t aLength, bool aEncrypt,
     void *aTag);
 
+/**
+ * @}
+ *
+ */
 
 #ifdef __cplusplus
 }  // extern "C"

@@ -42,10 +42,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup netdata  Network Data
- *
- * @brief
- *   This module includes functions that control Network Data configuration.
+ * @addtogroup api-thread-general
  *
  * @{
  *

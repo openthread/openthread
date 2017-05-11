@@ -29,7 +29,7 @@
 /**
  * @file
  * @brief
- *   This file includes the platform abstraction for the Thread Joiner role.
+ *   This file includes functions for the Thread Joiner role.
  */
 
 #ifndef OPENTHREAD_JOINER_H_
@@ -43,7 +43,10 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup core-commissioning
+ * @addtogroup api-joiner
+ *
+ * @brief
+ *   This module includes functions for the Thread Joiner role.
  *
  * @{
  *
@@ -80,7 +83,7 @@ typedef void (OTCALL *otJoinerCallback)(ThreadError aError, void *aContext);
  */
 OTAPI ThreadError OTCALL otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl,
                                        const char *aVendorName, const char *aVendorModel,
-                                       const char *aVendorSwVersion, const char *aVendordata,
+                                       const char *aVendorSwVersion, const char *aVendorData,
                                        otJoinerCallback aCallback, void *aContext);
 
 /**

@@ -44,8 +44,7 @@ extern "C" {
 #endif
 
 /**
- * @defgroup uart UART
- * @ingroup platform
+ * @addtogroup plat-uart
  *
  * @brief
  *   This module includes the platform abstraction for UART communication.
@@ -57,16 +56,18 @@ extern "C" {
 /**
  * Enable the UART.
  *
- * @retval ::kThreadError_None    Successfully enabled the UART.
- * @retval ::kThreadError_Failed  Failed to enabled the UART.
+ * @retval kThreadError_None    Successfully enabled the UART.
+ * @retval kThreadError_Failed  Failed to enabled the UART.
+ *
  */
 ThreadError otPlatUartEnable(void);
 
 /**
  * Disable the UART.
  *
- * @retval ::kThreadError_None    Successfully disabled the UART.
- * @retval ::kThreadError_Failed  Failed to disable the UART.
+ * @retval kThreadError_None    Successfully disabled the UART.
+ * @retval kThreadError_Failed  Failed to disable the UART.
+ *
  */
 ThreadError otPlatUartDisable(void);
 
@@ -76,8 +77,9 @@ ThreadError otPlatUartDisable(void);
  * @param[in] aBuf        A pointer to the data buffer.
  * @param[in] aBufLength  Number of bytes to transmit.
  *
- * @retval ::kThreadError_None    Successfully started transmission.
- * @retval ::kThreadError_Failed  Failed to start the transmission.
+ * @retval kThreadError_None    Successfully started transmission.
+ * @retval kThreadError_Failed  Failed to start the transmission.
+ *
  */
 ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength);
 

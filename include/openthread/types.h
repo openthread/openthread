@@ -220,15 +220,21 @@ typedef enum ThreadError
 #define OT_NETWORK_DIAGNOSTIC_TYPELIST_MAX_ENTRIES   18  ///< Maximum Number of Other Network Diagnostic TLV Types
 
 /**
+ * @struct otMasterKey
+ *
  * This structure represents a Thread Master Key.
  *
  */
 OT_TOOL_PACKED_BEGIN
 struct otMasterKey
 {
-    uint8_t m8[OT_MASTER_KEY_SIZE];
+    uint8_t m8[OT_MASTER_KEY_SIZE];    ///< Byte values
 } OT_TOOL_PACKED_END;
 
+/**
+ * This type represents a Thread Master Key.
+ *
+ */
 typedef struct otMasterKey otMasterKey;
 
 #define OT_NETWORK_NAME_MAX_SIZE   16  ///< Maximum size of the Thread Network Name field (bytes)
@@ -239,7 +245,7 @@ typedef struct otMasterKey otMasterKey;
  */
 typedef struct otNetworkName
 {
-    char m8[OT_NETWORK_NAME_MAX_SIZE + 1];
+    char m8[OT_NETWORK_NAME_MAX_SIZE + 1];  ///< Byte values
 } otNetworkName;
 
 #define OT_EXT_PAN_ID_SIZE         8   ///< Size of a Thread PAN ID (bytes)
@@ -250,7 +256,7 @@ typedef struct otNetworkName
  */
 typedef struct otExtendedPanId
 {
-    uint8_t m8[OT_EXT_PAN_ID_SIZE];
+    uint8_t m8[OT_EXT_PAN_ID_SIZE];   ///< Byte values
 } otExtendedPanId;
 
 #define OT_MESH_LOCAL_PREFIX_SIZE  8  ///< Size of the Mesh Local Prefix (bytes)
@@ -261,7 +267,7 @@ typedef struct otExtendedPanId
  */
 typedef struct otMeshLocalPrefix
 {
-    uint8_t m8[OT_MESH_LOCAL_PREFIX_SIZE];
+    uint8_t m8[OT_MESH_LOCAL_PREFIX_SIZE];  ///< Byte values
 } otMeshLocalPrefix;
 
 #define OT_PSKC_MAX_SIZE                             16  ///< Maximum size of the PSKc (bytes)
@@ -275,7 +281,7 @@ typedef struct otMeshLocalPrefix
   */
 typedef struct otPSKc
 {
-    uint8_t m8[OT_PSKC_MAX_SIZE];
+    uint8_t m8[OT_PSKC_MAX_SIZE];  ///< Byte values
 } otPSKc;
 
 /**
@@ -284,8 +290,8 @@ typedef struct otPSKc
   */
 typedef struct otSecurityPolicy
 {
-    uint16_t mRotationTime;
-    uint8_t mFlags;
+    uint16_t mRotationTime;  ///< The value for thrKeyRotation in units of hours
+    uint8_t mFlags;          ///< Flags as defined in Thread 1.1 Section 8.10.1.15
 } otSecurityPolicy;
 
 /**
@@ -346,7 +352,10 @@ typedef struct otExtAddress
 #define OT_IP6_ADDRESS_SIZE        16  ///< Size of an IPv6 address (bytes)
 
 /**
+ * @struct otIp6Address
+ *
  * This structure represents an IPv6 address.
+ *
  */
 OT_TOOL_PACKED_BEGIN
 struct otIp6Address
@@ -359,6 +368,10 @@ struct otIp6Address
     } mFields;                                                 ///< IPv6 accessor fields
 } OT_TOOL_PACKED_END;
 
+/**
+ * This type represents an IPv6 address.
+ *
+ */
 typedef struct otIp6Address otIp6Address;
 
 
@@ -384,12 +397,6 @@ typedef struct otMessage
     struct otMessage *mNext;  ///< A pointer to the next Message buffer.
 } otMessage;
 
-/**
- * @addtogroup commands  Commands
- *
- * @{
- *
- */
 
 #define OT_PANID_BROADCAST   0xffff      ///< IEEE 802.15.4 Broadcast PAN ID
 
@@ -420,8 +427,8 @@ typedef struct otMessage
  */
 typedef struct otSteeringData
 {
-    uint8_t mLength;
-    uint8_t m8[OT_STEERING_DATA_MAX_LENGTH];
+    uint8_t mLength;                          ///< Length of steering data (bytes)
+    uint8_t m8[OT_STEERING_DATA_MAX_LENGTH];  ///< Byte values
 } otSteeringData;
 
 /**
@@ -453,31 +460,6 @@ typedef struct otEnergyScanResult
     uint8_t mChannel;                ///< IEEE 802.15.4 Channel
     int8_t  mMaxRssi;                ///< The max RSSI (dBm)
 } otEnergyScanResult;
-
-/**
- * @}
- *
- */
-
-/**
- * @addtogroup config  Configuration
- *
- * @brief
- *   This module includes functions for configuration.
- *
- * @{
- *
- */
-
-/**
- * @defgroup config-general  General
- *
- * @brief
- *   This module includes functions that manage configuration parameters for the Thread Child, Router, and Leader roles.
- *
- * @{
- *
- */
 
 /**
  * This structure represents an Active or Pending Operational Dataset.
@@ -625,20 +607,6 @@ enum
 };
 
 /**
- * @}
- */
-
-/**
- * @defgroup config-br  Border Router
- *
- * @brief
- *   This module includes functions that manage configuration parameters that apply to the Thread Border Router role.
- *
- * @{
- *
- */
-
-/**
  * This structure represents an IPv6 prefix.
  */
 typedef struct otIp6Prefix
@@ -739,21 +707,6 @@ typedef enum otRoutePreference
 } otRoutePreference;
 
 /**
- * @}
- *
- */
-
-/**
- * @defgroup config-test  Test
- *
- * @brief
- *   This module includes functions that manage configuration parameters required for Thread Certification testing.
- *
- * @{
- *
- */
-
-/**
  * Represents any restrictions on the attach process.
  */
 typedef enum otMleAttachFilter
@@ -785,26 +738,6 @@ typedef struct otMacBlacklistEntry
     otExtAddress mExtAddress;       ///< IEEE 802.15.4 Extended Address
     bool         mValid;            ///< Indicates whether or not the blacklist entry is valid
 } otMacBlacklistEntry;
-
-/**
- * @}
- *
- */
-
-/**
- * @}
- *
- */
-
-/**
- * @addtogroup diags  Diagnostics
- *
- * @brief
- *   This module includes functions that expose internal state.
- *
- * @{
- *
- */
 
 /**
  * Represents a Thread device role.
@@ -972,11 +905,6 @@ typedef struct otBufferInfo
 } otBufferInfo;
 
 /**
- * @}
- *
- */
-
-/**
  * This structure represents an IPv6 network interface unicast address.
  *
  */
@@ -1029,19 +957,9 @@ typedef struct
 } otSemanticallyOpaqueIidGeneratorData;
 
 /**
- * @addtogroup icmp6  ICMPv6
- *
- * @brief
- *   This module includes functions that control ICMPv6 communication.
- *
- * @{
- *
- */
-
-/**
  * ICMPv6 Message Types
  *
-*/
+ */
 typedef enum otIcmp6Type
 {
     kIcmp6TypeDstUnreach  = 1,     ///< Destination Unreachable
@@ -1061,6 +979,8 @@ typedef enum otIcmp6Code
 #define OT_ICMP6_HEADER_DATA_SIZE  4   ///< Size of an message specific data of ICMPv6 Header.
 
 /**
+ * @struct otIcmp6Header
+ *
  * This structure represents an ICMPv6 header.
  *
  */
@@ -1078,6 +998,10 @@ struct otIcmp6Header
     } mData;                 ///< Message-specific data
 } OT_TOOL_PACKED_END;
 
+/**
+ * This type represents an ICMPv6 header.
+ *
+ */
 typedef struct otIcmp6Header otIcmp6Header;
 
 /**
@@ -1098,25 +1022,10 @@ typedef void (*otIcmp6ReceiveCallback)(void *aContext, otMessage *aMessage, cons
  */
 typedef struct otIcmp6Handler
 {
-    otIcmp6ReceiveCallback  mReceiveCallback;
-    void                   *mContext;
-    struct otIcmp6Handler  *mNext;
+    otIcmp6ReceiveCallback  mReceiveCallback;  ///< The ICMPv6 received callback
+    void                   *mContext;          ///< A pointer to arbitrary context information.
+    struct otIcmp6Handler  *mNext;             ///< A pointer to the next handler in the list.
 } otIcmp6Handler;
-
-/**
- * @}
- *
- */
-
-/**
- * @addtogroup udp  UDP
- *
- * @brief
- *   This module includes functions that control UDP communication.
- *
- * @{
- *
- */
 
 /**
  * This structure represents an IPv6 socket address.
@@ -1141,11 +1050,6 @@ typedef struct otSockAddr
 typedef void (OTCALL *otDeviceAvailabilityChangedCallback)(bool aAdded, const GUID *aDeviceGuid, void *aContext);
 
 #endif // OTDLL
-
-/**
- * @}
- *
- */
 
 #ifdef __cplusplus
 }  // extern "C"
