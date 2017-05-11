@@ -251,7 +251,7 @@
     <ClInclude Include="..\..\src\core\thread\src_match_controller.hpp" />
     <ClInclude Include="..\..\src\core\thread\thread_netif.hpp" />
     <ClInclude Include="..\..\src\core\thread\thread_tlvs.hpp" />
-    <ClInclude Include="..\..\src\core\thread\thread_uris.hpp" />
+    <ClInclude Include="..\..\src\core\thread\thread_uri_paths.hpp" />
     <ClInclude Include="..\..\src\core\thread\topology.hpp" />
     <ClInclude Include="..\..\src\core\utils\child_supervision.hpp" />
     <ClInclude Include="..\..\src\core\utils\slaac_address.hpp" />

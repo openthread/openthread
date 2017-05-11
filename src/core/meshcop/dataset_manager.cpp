@@ -60,7 +60,7 @@
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
-#include "thread/thread_uris.hpp"
+#include "thread/thread_uri_paths.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -311,7 +311,7 @@ ThreadError DatasetManager::Register(void)
     header.AppendUriPathOptions(mUriSet);
     header.SetPayloadMarker();
 
-    if (strcmp(mUriSet, OPENTHREAD_URI_PENDING_SET) == 0)
+    if (strcmp(mUriSet, OT_URI_PATH_PENDING_SET) == 0)
     {
         PendingDatasetBase *pending = static_cast<PendingDatasetBase *>(this);
         pending->UpdateDelayTimer();
@@ -404,7 +404,7 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
     // verify that does not overflow dataset buffer
     VerifyOrExit((offset - aMessage.GetOffset()) <= Dataset::kMaxSize, state = StateTlv::kReject);
 
-    type = (strcmp(mUriSet, OPENTHREAD_URI_ACTIVE_SET) == 0 ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp);
+    type = (strcmp(mUriSet, OT_URI_PATH_ACTIVE_SET) == 0 ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp);
 
     if (Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp) != kThreadError_None)
     {
@@ -900,8 +900,8 @@ exit:
 }
 
 ActiveDatasetBase::ActiveDatasetBase(ThreadNetif &aThreadNetif):
-    DatasetManager(aThreadNetif, Tlv::kActiveTimestamp, OPENTHREAD_URI_ACTIVE_SET, OPENTHREAD_URI_ACTIVE_GET),
-    mResourceGet(OPENTHREAD_URI_ACTIVE_GET, &ActiveDatasetBase::HandleGet, this)
+    DatasetManager(aThreadNetif, Tlv::kActiveTimestamp, OT_URI_PATH_ACTIVE_SET, OT_URI_PATH_ACTIVE_GET),
+    mResourceGet(OT_URI_PATH_ACTIVE_GET, &ActiveDatasetBase::HandleGet, this)
 {
     mNetif.GetCoap().AddResource(mResourceGet);
 }
@@ -986,11 +986,11 @@ void ActiveDatasetBase::HandleGet(Coap::Header &aHeader, Message &aMessage, cons
 }
 
 PendingDatasetBase::PendingDatasetBase(ThreadNetif &aThreadNetif):
-    DatasetManager(aThreadNetif, Tlv::kPendingTimestamp, OPENTHREAD_URI_PENDING_SET, OPENTHREAD_URI_PENDING_GET),
+    DatasetManager(aThreadNetif, Tlv::kPendingTimestamp, OT_URI_PATH_PENDING_SET, OT_URI_PATH_PENDING_GET),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, &PendingDatasetBase::HandleTimer, this),
     mLocalTime(0),
     mNetworkTime(0),
-    mResourceGet(OPENTHREAD_URI_PENDING_GET, &PendingDatasetBase::HandleGet, this)
+    mResourceGet(OT_URI_PATH_PENDING_GET, &PendingDatasetBase::HandleGet, this)
 {
     mNetif.GetCoap().AddResource(mResourceGet);
 }

@@ -50,7 +50,7 @@
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
-#include "thread/thread_uris.hpp"
+#include "thread/thread_uri_paths.hpp"
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
@@ -59,7 +59,7 @@ namespace ot {
 PanIdQueryClient::PanIdQueryClient(ThreadNetif &aThreadNetif) :
     mCallback(NULL),
     mContext(NULL),
-    mPanIdQuery(OPENTHREAD_URI_PANID_CONFLICT, &PanIdQueryClient::HandleConflict, this),
+    mPanIdQuery(OT_URI_PATH_PANID_CONFLICT, &PanIdQueryClient::HandleConflict, this),
     mNetif(aThreadNetif)
 {
     mNetif.GetCoap().AddResource(mPanIdQuery);
@@ -86,7 +86,7 @@ ThreadError PanIdQueryClient::SendQuery(uint16_t aPanId, uint32_t aChannelMask, 
     header.Init(aAddress.IsMulticast() ? kCoapTypeNonConfirmable : kCoapTypeConfirmable,
                 kCoapRequestPost);
     header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_PANID_QUERY);
+    header.AppendUriPathOptions(OT_URI_PATH_PANID_QUERY);
     header.SetPayloadMarker();
 
     VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(mNetif.GetCoap(), header)) != NULL,

@@ -50,7 +50,7 @@
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
-#include "thread/thread_uris.hpp"
+#include "thread/thread_uri_paths.hpp"
 
 namespace ot {
 
@@ -58,7 +58,7 @@ PanIdQueryServer::PanIdQueryServer(ThreadNetif &aThreadNetif) :
     mChannelMask(0),
     mPanId(Mac::kPanIdBroadcast),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, &PanIdQueryServer::HandleTimer, this),
-    mPanIdQuery(OPENTHREAD_URI_PANID_QUERY, &PanIdQueryServer::HandleQuery, this),
+    mPanIdQuery(OT_URI_PATH_PANID_QUERY, &PanIdQueryServer::HandleQuery, this),
     mNetif(aThreadNetif)
 {
     mNetif.GetCoap().AddResource(mPanIdQuery);
@@ -141,7 +141,7 @@ ThreadError PanIdQueryServer::SendConflict(void)
 
     header.Init(kCoapTypeConfirmable, kCoapRequestPost);
     header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_PANID_CONFLICT);
+    header.AppendUriPathOptions(OT_URI_PATH_PANID_CONFLICT);
     header.SetPayloadMarker();
 
     VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(mNetif.GetCoap(), header)) != NULL,

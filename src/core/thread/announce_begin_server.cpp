@@ -49,7 +49,7 @@
 #include "common/logging.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
-#include "thread/thread_uris.hpp"
+#include "thread/thread_uri_paths.hpp"
 
 using ot::Encoding::BigEndian::HostSwap32;
 
@@ -61,7 +61,7 @@ AnnounceBeginServer::AnnounceBeginServer(ThreadNetif &aThreadNetif) :
     mCount(0),
     mChannel(0),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, &AnnounceBeginServer::HandleTimer, this),
-    mAnnounceBegin(OPENTHREAD_URI_ANNOUNCE_BEGIN, &AnnounceBeginServer::HandleRequest, this),
+    mAnnounceBegin(OT_URI_PATH_ANNOUNCE_BEGIN, &AnnounceBeginServer::HandleRequest, this),
     mNetif(aThreadNetif)
 {
     mNetif.GetCoap().AddResource(mAnnounceBegin);

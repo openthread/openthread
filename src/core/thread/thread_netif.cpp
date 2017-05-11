@@ -49,7 +49,7 @@
 #include "net/udp6.hpp"
 #include "thread/mle.hpp"
 #include "thread/thread_tlvs.hpp"
-#include "thread/thread_uris.hpp"
+#include "thread/thread_uri_paths.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 

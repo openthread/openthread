@@ -55,16 +55,16 @@
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
-#include "thread/thread_uris.hpp"
+#include "thread/thread_uri_paths.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
 
 AddressResolver::AddressResolver(ThreadNetif &aThreadNetif) :
-    mAddressError(OPENTHREAD_URI_ADDRESS_ERROR, &AddressResolver::HandleAddressError, this),
-    mAddressQuery(OPENTHREAD_URI_ADDRESS_QUERY, &AddressResolver::HandleAddressQuery, this),
-    mAddressNotification(OPENTHREAD_URI_ADDRESS_NOTIFY, &AddressResolver::HandleAddressNotification, this),
+    mAddressError(OT_URI_PATH_ADDRESS_ERROR, &AddressResolver::HandleAddressError, this),
+    mAddressQuery(OT_URI_PATH_ADDRESS_QUERY, &AddressResolver::HandleAddressQuery, this),
+    mAddressNotification(OT_URI_PATH_ADDRESS_NOTIFY, &AddressResolver::HandleAddressNotification, this),
     mIcmpHandler(&AddressResolver::HandleIcmpReceive, this),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, &AddressResolver::HandleTimer, this),
     mNetif(aThreadNetif)
@@ -244,7 +244,7 @@ ThreadError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
     Ip6::MessageInfo messageInfo;
 
     header.Init(kCoapTypeNonConfirmable, kCoapRequestPost);
-    header.AppendUriPathOptions(OPENTHREAD_URI_ADDRESS_QUERY);
+    header.AppendUriPathOptions(OT_URI_PATH_ADDRESS_QUERY);
     header.SetPayloadMarker();
 
     VerifyOrExit((message = mNetif.GetCoap().NewMessage(header)) != NULL, error = kThreadError_NoBufs);
@@ -379,7 +379,7 @@ ThreadError AddressResolver::SendAddressError(const ThreadTargetTlv &aTarget, co
 
     header.Init(aDestination == NULL ? kCoapTypeNonConfirmable : kCoapTypeConfirmable,
                 kCoapRequestPost);
-    header.AppendUriPathOptions(OPENTHREAD_URI_ADDRESS_ERROR);
+    header.AppendUriPathOptions(OT_URI_PATH_ADDRESS_ERROR);
     header.SetPayloadMarker();
 
     VerifyOrExit((message = mNetif.GetCoap().NewMessage(header)) != NULL, error = kThreadError_NoBufs);
@@ -575,7 +575,7 @@ void AddressResolver::SendAddressQueryResponse(const ThreadTargetTlv &aTargetTlv
     Ip6::MessageInfo messageInfo;
 
     header.Init(kCoapTypeConfirmable, kCoapRequestPost);
-    header.AppendUriPathOptions(OPENTHREAD_URI_ADDRESS_NOTIFY);
+    header.AppendUriPathOptions(OT_URI_PATH_ADDRESS_NOTIFY);
     header.SetPayloadMarker();
 
     VerifyOrExit((message = mNetif.GetCoap().NewMessage(header)) != NULL, error = kThreadError_NoBufs);

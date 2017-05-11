@@ -52,7 +52,7 @@
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/mle.hpp"
 #include "thread/thread_netif.hpp"
-#include "thread/thread_uris.hpp"
+#include "thread/thread_uri_paths.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap64;
@@ -62,7 +62,7 @@ namespace MeshCoP {
 
 JoinerRouter::JoinerRouter(ThreadNetif &aNetif):
     mSocket(aNetif.GetIp6().mUdp),
-    mRelayTransmit(OPENTHREAD_URI_RELAY_TX, &JoinerRouter::HandleRelayTransmit, this),
+    mRelayTransmit(OT_URI_PATH_RELAY_TX, &JoinerRouter::HandleRelayTransmit, this),
     mNetif(aNetif),
     mTimer(aNetif.GetIp6().mTimerScheduler, &JoinerRouter::HandleTimer, this),
     mJoinerUdpPort(0),
@@ -180,7 +180,7 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
 
     header.Init(kCoapTypeNonConfirmable, kCoapRequestPost);
     header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_RELAY_RX);
+    header.AppendUriPathOptions(OT_URI_PATH_RELAY_RX);
     header.SetPayloadMarker();
 
     VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoap(), header)) != NULL, error = kThreadError_NoBufs);
@@ -338,7 +338,7 @@ ThreadError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMes
     otLogFuncEntry();
 
     header.Init(kCoapTypeConfirmable, kCoapRequestPost);
-    header.AppendUriPathOptions(OPENTHREAD_URI_JOINER_ENTRUST);
+    header.AppendUriPathOptions(OT_URI_PATH_JOINER_ENTRUST);
     header.SetPayloadMarker();
 
     VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoap(), header)) != NULL, error = kThreadError_NoBufs);

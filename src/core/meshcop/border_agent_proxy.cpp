@@ -46,7 +46,7 @@
 #include "coap/coap_header.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/thread_tlvs.hpp"
-#include "thread/thread_uris.hpp"
+#include "thread/thread_uri_paths.hpp"
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
 
@@ -54,7 +54,7 @@ namespace ot {
 namespace MeshCoP {
 
 BorderAgentProxy::BorderAgentProxy(const Ip6::Address &aMeshLocal16, Coap::Coap &aCoap):
-    mRelayReceive(OPENTHREAD_URI_RELAY_RX, &BorderAgentProxy::HandleRelayReceive, this),
+    mRelayReceive(OT_URI_PATH_RELAY_RX, &BorderAgentProxy::HandleRelayReceive, this),
     mStreamHandler(NULL),
     mContext(NULL),
     mMeshLocal16(aMeshLocal16),

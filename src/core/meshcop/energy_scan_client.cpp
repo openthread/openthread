@@ -51,7 +51,7 @@
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
-#include "thread/thread_uris.hpp"
+#include "thread/thread_uri_paths.hpp"
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
@@ -61,7 +61,7 @@ using ot::Encoding::BigEndian::HostSwap32;
 namespace ot {
 
 EnergyScanClient::EnergyScanClient(ThreadNetif &aThreadNetif) :
-    mEnergyScan(OPENTHREAD_URI_ENERGY_REPORT, &EnergyScanClient::HandleReport, this),
+    mEnergyScan(OT_URI_PATH_ENERGY_REPORT, &EnergyScanClient::HandleReport, this),
     mNetif(aThreadNetif)
 {
     mContext = NULL;
@@ -93,7 +93,7 @@ ThreadError EnergyScanClient::SendQuery(uint32_t aChannelMask, uint8_t aCount, u
     header.Init(aAddress.IsMulticast() ? kCoapTypeNonConfirmable : kCoapTypeConfirmable,
                 kCoapRequestPost);
     header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_ENERGY_SCAN);
+    header.AppendUriPathOptions(OT_URI_PATH_ENERGY_SCAN);
     header.SetPayloadMarker();
 
     VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(mNetif.GetCoap(), header)) != NULL,

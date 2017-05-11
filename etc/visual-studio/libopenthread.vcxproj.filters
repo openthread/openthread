@@ -473,7 +473,7 @@
     <ClInclude Include="..\..\src\core\thread\thread_tlvs.hpp">
       <Filter>Header Files\thread</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\thread\thread_uris.hpp">
+    <ClInclude Include="..\..\src\core\thread\thread_uri_paths.hpp">
       <Filter>Header Files\thread</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\thread\topology.hpp">

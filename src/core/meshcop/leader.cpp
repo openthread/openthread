@@ -54,14 +54,14 @@
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
-#include "thread/thread_uris.hpp"
+#include "thread/thread_uri_paths.hpp"
 
 namespace ot {
 namespace MeshCoP {
 
 Leader::Leader(ThreadNetif &aThreadNetif):
-    mPetition(OPENTHREAD_URI_LEADER_PETITION, Leader::HandlePetition, this),
-    mKeepAlive(OPENTHREAD_URI_LEADER_KEEP_ALIVE, Leader::HandleKeepAlive, this),
+    mPetition(OT_URI_PATH_LEADER_PETITION, Leader::HandlePetition, this),
+    mKeepAlive(OT_URI_PATH_LEADER_KEEP_ALIVE, Leader::HandleKeepAlive, this),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this),
     mDelayTimerMinimal(DelayTimerTlv::kDelayTimerMinimal),
     mSessionId(0xffff),
@@ -249,7 +249,7 @@ ThreadError Leader::SendDatasetChanged(const Ip6::Address &aAddress)
 
     header.Init(kCoapTypeConfirmable, kCoapRequestPost);
     header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_DATASET_CHANGED);
+    header.AppendUriPathOptions(OT_URI_PATH_DATASET_CHANGED);
 
     VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoap(), header)) != NULL, error = kThreadError_NoBufs);
 
