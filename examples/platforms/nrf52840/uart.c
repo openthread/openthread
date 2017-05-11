@@ -191,7 +191,7 @@ void nrf5UartDeinit(void)
     nrf_uart_int_disable(UART_INSTANCE, NRF_UART_INT_MASK_RXDRDY | NRF_UART_INT_MASK_ERROR);
 }
 
-ThreadError otPlatUartEnable(void)
+otError otPlatUartEnable(void)
 {
     // Start HFCLK
     nrf_drv_clock_hfclk_request(NULL);
@@ -202,10 +202,10 @@ ThreadError otPlatUartEnable(void)
     nrf_uart_enable(UART_INSTANCE);
     nrf_uart_task_trigger(UART_INSTANCE, NRF_UART_TASK_STARTRX);
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError otPlatUartDisable(void)
+otError otPlatUartDisable(void)
 {
     // Disable UART instance.
     nrf_uart_disable(UART_INSTANCE);
@@ -213,14 +213,14 @@ ThreadError otPlatUartDisable(void)
     // Release HF clock.
     nrf_drv_clock_hfclk_release();
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
+otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    otEXPECT_ACTION(sTransmitBuffer == NULL, error = kThreadError_Busy);
+    otEXPECT_ACTION(sTransmitBuffer == NULL, error = OT_ERROR_BUSY);
 
     // Set up transmit buffer and its size without counting first triggered byte.
     sTransmitBuffer = aBuf;

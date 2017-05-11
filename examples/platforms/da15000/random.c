@@ -93,7 +93,7 @@ uint32_t otPlatRandomGet(void)
     return mlcg;
 }
 
-ThreadError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
+otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 {
 
     for (uint16_t length = 0; length < aOutputLength; length++)
@@ -101,5 +101,5 @@ ThreadError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
         aOutput[length] = (uint8_t)otPlatRandomGet();
     }
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }

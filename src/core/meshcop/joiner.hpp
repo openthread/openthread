@@ -82,21 +82,21 @@ public:
      * @param[in]  aCallback         A pointer to a function that is called when the join operation completes.
      * @param[in]  aContext          A pointer to application-specific context.
      *
-     * @retval kThreadError_None  Successfully started the Joiner service.
+     * @retval OT_ERROR_NONE  Successfully started the Joiner service.
      *
      */
-    ThreadError Start(const char *aPSKd, const char *aProvisioningUrl,
-                      const char *aVendorName, const char *aVendorModel,
-                      const char *aVendorSwVersion, const char *aVendorData,
-                      otJoinerCallback aCallback, void *aContext);
+    otError Start(const char *aPSKd, const char *aProvisioningUrl,
+                  const char *aVendorName, const char *aVendorModel,
+                  const char *aVendorSwVersion, const char *aVendorData,
+                  otJoinerCallback aCallback, void *aContext);
 
     /**
      * This method stops the Joiner service.
      *
-     * @retval kThreadError_None  Successfully stopped the Joiner service.
+     * @retval OT_ERROR_NONE  Successfully stopped the Joiner service.
      *
      */
-    ThreadError Stop(void);
+    otError Stop(void);
 
 private:
     enum
@@ -112,16 +112,16 @@ private:
     void HandleTimer(void);
 
     void Close(void);
-    void Complete(ThreadError aError);
+    void Complete(otError aError);
 
     static void HandleSecureCoapClientConnect(bool aConnected, void *aContext);
     void HandleSecureCoapClientConnect(bool aConnected);
 
     void SendJoinerFinalize(void);
     static void HandleJoinerFinalizeResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                                             const otMessageInfo *aMessageInfo, ThreadError aResult);
+                                             const otMessageInfo *aMessageInfo, otError aResult);
     void HandleJoinerFinalizeResponse(Coap::Header *aHeader, Message *aMessage,
-                                      const Ip6::MessageInfo *aMessageInfo, ThreadError aResult);
+                                      const Ip6::MessageInfo *aMessageInfo, otError aResult);
 
     static void HandleJoinerEntrust(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                     const otMessageInfo *aMessageInfo);

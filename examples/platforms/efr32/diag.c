@@ -77,7 +77,7 @@ void otPlatDiagTxPowerSet(int8_t aTxPower)
     (void) aTxPower;
 }
 
-void otPlatDiagRadioReceived(otInstance *aInstance, RadioPacket *aFrame, ThreadError aError)
+void otPlatDiagRadioReceived(otInstance *aInstance, RadioPacket *aFrame, otError aError)
 {
     (void) aInstance;
     (void) aFrame;

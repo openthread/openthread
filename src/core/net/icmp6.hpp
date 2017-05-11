@@ -245,11 +245,11 @@ public:
      *
      * @param[in]  aHandler  A reference to the ICMPv6 handler.
      *
-     * @retval kThreadError_None     Successfully registered the ICMPv6 handler.
-     * @retval kThreadError_Already  The ICMPv6 handler is already registered.
+     * @retval OT_ERROR_NONE     Successfully registered the ICMPv6 handler.
+     * @retval OT_ERROR_ALREADY  The ICMPv6 handler is already registered.
      *
      */
-    ThreadError RegisterHandler(IcmpHandler &aHandler);
+    otError RegisterHandler(IcmpHandler &aHandler);
 
     /**
      * This method sends an ICMPv6 Echo Request message.
@@ -259,11 +259,11 @@ public:
      * @param[in]  aIdentifier   An identifier to aid in matching Echo Replies to this Echo Request.
      *                           May be zero.
      *
-     * @retval kThreadError_None    Successfully enqueued the ICMPv6 Echo Request message.
-     * @retval kThreadError_NoBufs  Insufficient buffers available to generate an ICMPv6 Echo Request message.
+     * @retval OT_ERROR_NONE     Successfully enqueued the ICMPv6 Echo Request message.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to generate an ICMPv6 Echo Request message.
      *
      */
-    ThreadError SendEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo, uint16_t aIdentifier);
+    otError SendEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo, uint16_t aIdentifier);
 
     /**
      * This method sends an ICMPv6 error message.
@@ -273,12 +273,12 @@ public:
      * @param[in]  aMessageInfo  A reference to the message info.
      * @param[in]  aHeader       The IPv6 header of the error-causing message.
      *
-     * @retval kThreadError_None    Successfully enqueued the ICMPv6 error message.
-     * @retval kThreadError_NoBufs  Insufficient buffers available.
+     * @retval OT_ERROR_NONE     Successfully enqueued the ICMPv6 error message.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available.
      *
      */
-    ThreadError SendError(IcmpHeader::Type aType, IcmpHeader::Code aCode, const MessageInfo &aMessageInfo,
-                          const Header &aHeader);
+    otError SendError(IcmpHeader::Type aType, IcmpHeader::Code aCode, const MessageInfo &aMessageInfo,
+                      const Header &aHeader);
 
     /**
      * This method handles an ICMPv6 message.
@@ -286,12 +286,12 @@ public:
      * @param[in]  aMessage      A reference to the ICMPv6 message.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
-     * @retval kThreadError_None    Successfully processed the ICMPv6 message.
-     * @retval kThreadError_NoBufs  Insufficient buffers available to generate the reply.
-     * @retval kThreadError_Drop    The ICMPv6 message was invalid and dropped.
+     * @retval OT_ERROR_NONE     Successfully processed the ICMPv6 message.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to generate the reply.
+     * @retval OT_ERROR_DROP     The ICMPv6 message was invalid and dropped.
      *
      */
-    ThreadError HandleMessage(Message &aMessage, MessageInfo &aMessageInfo);
+    otError HandleMessage(Message &aMessage, MessageInfo &aMessageInfo);
 
     /**
      * This method updates the ICMPv6 checksum.
@@ -299,11 +299,11 @@ public:
      * @param[in]  aMessage               A reference to the ICMPv6 message.
      * @param[in]  aPseudoHeaderChecksum  The pseudo-header checksum value.
      *
-     * @retval kThreadError_None         Successfully updated the ICMPv6 checksum.
-     * @retval kThreadError_InvalidArgs  The message was invalid.
+     * @retval OT_ERROR_NONE          Successfully updated the ICMPv6 checksum.
+     * @retval OT_ERROR_INVALID_ARGS  The message was invalid.
      *
      */
-    ThreadError UpdateChecksum(Message &aMessage, uint16_t aPseudoHeaderChecksum);
+    otError UpdateChecksum(Message &aMessage, uint16_t aPseudoHeaderChecksum);
 
     /**
      * This method indicates whether or not ICMPv6 Echo processing is enabled.
@@ -323,7 +323,7 @@ public:
     void SetEchoEnabled(bool aEnabled) { mIsEchoEnabled = aEnabled; }
 
 private:
-    ThreadError HandleEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo);
+    otError HandleEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo);
 
     IcmpHandler *mHandlers;
 

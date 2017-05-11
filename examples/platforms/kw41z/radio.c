@@ -84,7 +84,7 @@ static bool         sTxDone     = false;
 static bool         sRxDone     = false;
 static bool         sEdScanDone = false;
 static bool         sAckFpState;
-static ThreadError  sTxStatus;
+static otError      sTxStatus;
 
 static RadioPacket  sTxPacket;
 static RadioPacket  sRxPacket;
@@ -102,9 +102,9 @@ static int8_t       rf_lqi_to_rssi(uint8_t lqi);
 static uint32_t     rf_get_timestamp(void);
 static void         rf_set_timeout(uint32_t abs_timeout);
 static uint16_t     rf_get_addr_checksum(uint8_t *pAddr, bool ExtendedAddr, uint16_t PanId);
-static ThreadError  rf_add_addr_table_entry(uint16_t checksum, bool extendedAddr);
-static ThreadError  rf_remove_addr_table_entry(uint16_t checksum);
-static ThreadError  rf_remove_addr_table_entry_index(uint8_t index);
+static otError      rf_add_addr_table_entry(uint16_t checksum, bool extendedAddr);
+static otError      rf_remove_addr_table_entry(uint16_t checksum);
+static otError      rf_remove_addr_table_entry_index(uint8_t index);
 
 PhyState otPlatRadioGetState(otInstance *aInstance)
 {
@@ -163,7 +163,7 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
     ZLL->MACSHORTADDRS0 |= ZLL_MACSHORTADDRS0_MACSHORTADDRS0(aShortAddress);
 }
 
-ThreadError otPlatRadioEnable(otInstance *aInstance)
+otError otPlatRadioEnable(otInstance *aInstance)
 {
     otEXPECT(!otPlatRadioIsEnabled(aInstance));
 
@@ -174,10 +174,10 @@ ThreadError otPlatRadioEnable(otInstance *aInstance)
     sState = kStateSleep;
 
 exit:
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError otPlatRadioDisable(otInstance *aInstance)
+otError otPlatRadioDisable(otInstance *aInstance)
 {
     otEXPECT(otPlatRadioIsEnabled(aInstance));
 
@@ -186,7 +186,7 @@ ThreadError otPlatRadioDisable(otInstance *aInstance)
     sState = kStateDisabled;
 
 exit:
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)
@@ -195,12 +195,12 @@ bool otPlatRadioIsEnabled(otInstance *aInstance)
     return sState != kStateDisabled;
 }
 
-ThreadError otPlatRadioSleep(otInstance *aInstance)
+otError otPlatRadioSleep(otInstance *aInstance)
 {
-    ThreadError status = kThreadError_None;
+    otError status = OT_ERROR_NONE;
     (void) aInstance;
 
-    otEXPECT_ACTION(((sState != kStateTransmit) && (sState != kStateDisabled)), status = kThreadError_InvalidState);
+    otEXPECT_ACTION(((sState != kStateTransmit) && (sState != kStateDisabled)), status = OT_ERROR_INVALID_STATE);
 
     rf_abort();
     sState = kStateSleep;
@@ -209,12 +209,12 @@ exit:
     return status;
 }
 
-ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
+otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
-    ThreadError status = kThreadError_None;
+    otError status = OT_ERROR_NONE;
     (void) aInstance;
 
-    otEXPECT_ACTION(((sState != kStateTransmit) && (sState != kStateDisabled)), status = kThreadError_InvalidState);
+    otEXPECT_ACTION(((sState != kStateTransmit) && (sState != kStateDisabled)), status = OT_ERROR_INVALID_STATE);
 
     sState = kStateReceive;
 
@@ -253,7 +253,7 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
     }
 }
 
-ThreadError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
     (void) aInstance;
     uint16_t checksum = sPanId + aShortAddress;
@@ -261,7 +261,7 @@ ThreadError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16
     return rf_add_addr_table_entry(checksum, false);
 }
 
-ThreadError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
 {
     (void) aInstance;
     uint16_t checksum = rf_get_addr_checksum((uint8_t *)aExtAddress, true, sPanId);
@@ -269,7 +269,7 @@ ThreadError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t 
     return rf_add_addr_table_entry(checksum, true);
 }
 
-ThreadError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
     (void) aInstance;
     uint16_t checksum = sPanId + aShortAddress;
@@ -277,7 +277,7 @@ ThreadError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint
     return rf_remove_addr_table_entry(checksum);
 }
 
-ThreadError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
 {
     (void) aInstance;
     uint16_t checksum = rf_get_addr_checksum((uint8_t *)aExtAddress, true, sPanId);
@@ -321,14 +321,14 @@ RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
     return &sTxPacket;
 }
 
-ThreadError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
+otError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
 {
-    ThreadError status = kThreadError_None;
+    otError status = OT_ERROR_NONE;
     uint32_t timeout;
 
     (void) aInstance;
 
-    otEXPECT_ACTION(((sState != kStateTransmit) && (sState != kStateDisabled)), status = kThreadError_InvalidState);
+    otEXPECT_ACTION(((sState != kStateTransmit) && (sState != kStateDisabled)), status = OT_ERROR_INVALID_STATE);
 
     if (rf_get_state() != XCVR_Idle_c)
     {
@@ -418,13 +418,13 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
     }
 }
 
-ThreadError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
+otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
-    ThreadError status = kThreadError_None;
+    otError status = OT_ERROR_NONE;
     uint32_t timeout;
     (void) aInstance;
 
-    otEXPECT_ACTION(((sState != kStateTransmit) && (sState != kStateDisabled)), status = kThreadError_InvalidState);
+    otEXPECT_ACTION(((sState != kStateTransmit) && (sState != kStateDisabled)), status = OT_ERROR_INVALID_STATE);
 
     if (rf_get_state() != XCVR_Idle_c)
     {
@@ -585,10 +585,10 @@ static uint16_t rf_get_addr_checksum(uint8_t *pAddr, bool ExtendedAddr, uint16_t
     return checksum;
 }
 
-static ThreadError rf_add_addr_table_entry(uint16_t checksum, bool extendedAddr)
+static otError rf_add_addr_table_entry(uint16_t checksum, bool extendedAddr)
 {
     uint8_t index;
-    ThreadError status;
+    otError status;
 
     /* Find first free index */
     ZLL->SAM_TABLE = ZLL_SAM_TABLE_FIND_FREE_IDX_MASK;
@@ -599,7 +599,7 @@ static ThreadError rf_add_addr_table_entry(uint16_t checksum, bool extendedAddr)
 
     index = (ZLL->SAM_FREE_IDX & ZLL_SAM_FREE_IDX_SAP0_1ST_FREE_IDX_MASK) >> ZLL_SAM_FREE_IDX_SAP0_1ST_FREE_IDX_SHIFT;
 
-    otEXPECT_ACTION((index < RADIO_CONFIG_SRC_MATCH_ENTRY_NUM), status = kThreadError_NoBufs);
+    otEXPECT_ACTION((index < RADIO_CONFIG_SRC_MATCH_ENTRY_NUM), status = OT_ERROR_NO_BUFS);
 
     /* Insert the checksum at the index found */
     ZLL->SAM_TABLE = ((uint32_t)index << ZLL_SAM_TABLE_SAM_INDEX_SHIFT)       |
@@ -612,15 +612,15 @@ static ThreadError rf_add_addr_table_entry(uint16_t checksum, bool extendedAddr)
         sExtSrcAddrBitmap[index >> 3] |= 1 << (index & 7);
     }
 
-    status = kThreadError_None;
+    status = OT_ERROR_NONE;
 
 exit:
     return status;
 }
 
-static ThreadError rf_remove_addr_table_entry(uint16_t checksum)
+static otError rf_remove_addr_table_entry(uint16_t checksum)
 {
-    ThreadError status = kThreadError_NoAddress;
+    otError status = OT_ERROR_NO_ADDRESS;
     uint32_t i, temp;
 
     /* Search for an entry to match the provided checksum */
@@ -641,11 +641,11 @@ static ThreadError rf_remove_addr_table_entry(uint16_t checksum)
     return status;
 }
 
-static ThreadError rf_remove_addr_table_entry_index(uint8_t index)
+static otError rf_remove_addr_table_entry_index(uint8_t index)
 {
-    ThreadError status = kThreadError_None;
+    otError status = OT_ERROR_NONE;
 
-    otEXPECT_ACTION(index < RADIO_CONFIG_SRC_MATCH_ENTRY_NUM, status = kThreadError_NoAddress);
+    otEXPECT_ACTION(index < RADIO_CONFIG_SRC_MATCH_ENTRY_NUM, status = OT_ERROR_NO_ADDRESS);
 
     ZLL->SAM_TABLE = ((uint32_t)0xFFFF << ZLL_SAM_TABLE_SAM_CHECKSUM_SHIFT) |
                      ((uint32_t)index << ZLL_SAM_TABLE_SAM_INDEX_SHIFT) |
@@ -726,7 +726,7 @@ void Radio_1_IRQHandler(void)
         {
             rf_abort();
             sState = kStateReceive;
-            sTxStatus = kThreadError_NoAck;
+            sTxStatus = OT_ERROR_NO_ACK;
             sTxDone = true;
         }
     }
@@ -757,12 +757,12 @@ void Radio_1_IRQHandler(void)
 
             if ((ZLL->PHY_CTRL & ZLL_PHY_CTRL_CCABFRTX_MASK) && (irqStatus & ZLL_IRQSTS_CCA_MASK))
             {
-                sTxStatus = kThreadError_ChannelAccessFailure;
+                sTxStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
             }
             else
             {
                 sAckFpState = (irqStatus & ZLL_IRQSTS_RX_FRM_PEND_MASK) > 0;
-                sTxStatus = kThreadError_None;
+                sTxStatus = OT_ERROR_NONE;
             }
 
             sTxDone = true;
@@ -881,12 +881,12 @@ void kw41zRadioProcess(otInstance *aInstance)
 
         if (otPlatDiagModeGet())
         {
-            otPlatDiagRadioReceiveDone(aInstance, &sRxPacket, kThreadError_None);
+            otPlatDiagRadioReceiveDone(aInstance, &sRxPacket, OT_ERROR_NONE);
         }
         else
 #endif
         {
-            otPlatRadioReceiveDone(aInstance, &sRxPacket, kThreadError_None);
+            otPlatRadioReceiveDone(aInstance, &sRxPacket, OT_ERROR_NONE);
         }
 
         sRxDone = false;

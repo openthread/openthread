@@ -94,7 +94,7 @@ exit:
 void ChildSupervisor::SendMessage(Child &aChild)
 {
     Message *message = NULL;
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t childIndex;
 
     VerifyOrExit(aChild.GetIndirectMessageCount() == 0);

@@ -297,46 +297,46 @@ public:
      *
      * @param[in]  aAddress  A reference to the unicast address.
      *
-     * @retval kThreadError_None     Successfully added the unicast address.
-     * @retval kThreadError_Already  The unicast address was already added.
+     * @retval OT_ERROR_NONE      Successfully added the unicast address.
+     * @retval OT_ERROR_ALREADY  The unicast address was already added.
      *
      */
-    ThreadError AddUnicastAddress(NetifUnicastAddress &aAddress);
+    otError AddUnicastAddress(NetifUnicastAddress &aAddress);
 
     /**
      * This method removes a unicast address from the network interface.
      *
      * @param[in]  aAddress  A reference to the unicast address.
      *
-     * @retval kThreadError_None      Successfully removed the unicast address.
-     * @retval kThreadError_NotFound  The unicast address wasn't found to be removed.
+     * @retval OT_ERROR_NONE       Successfully removed the unicast address.
+     * @retval OT_ERROR_NOT_FOUND  The unicast address wasn't found to be removed.
      *
      */
-    ThreadError RemoveUnicastAddress(const NetifUnicastAddress &aAddress);
+    otError RemoveUnicastAddress(const NetifUnicastAddress &aAddress);
 
     /**
      * This method adds an external (to OpenThread) unicast address to the network interface.
      *
      * @param[in]  aAddress  A reference to the unicast address.
      *
-     * @retval kThreadError_None         Successfully added (or updated) the unicast address.
-     * @retval kThreadError_InvalidArgs  The address indicated by @p aAddress is an internal address.
-     * @retval kThreadError_NoBufs       The maximum number of allowed external addresses are already added.
+     * @retval OT_ERROR_NONE          Successfully added (or updated) the unicast address.
+     * @retval OT_ERROR_INVALID_ARGS  The address indicated by @p aAddress is an internal address.
+     * @retval OT_ERROR_NO_BUFS       The maximum number of allowed external addresses are already added.
      *
      */
-    ThreadError AddExternalUnicastAddress(const NetifUnicastAddress &aAddress);
+    otError AddExternalUnicastAddress(const NetifUnicastAddress &aAddress);
 
     /**
      * This method removes a external (to OpenThread) unicast address from the network interface.
      *
      * @param[in]  aAddress  A reference to the unicast address.
      *
-     * @retval kThreadError_None         Successfully removed the unicast address.
-     * @retval kThreadError_InvalidArgs  The address indicated by @p aAddress is an internal address.
-     * @retval kThreadError_NotFound     The unicast address was not found.
+     * @retval OT_ERROR_NONE          Successfully removed the unicast address.
+     * @retval OT_ERROR_INVALID_ARGS  The address indicated by @p aAddress is an internal address.
+     * @retval OT_ERROR_NOT_FOUND     The unicast address was not found.
      *
      */
-    ThreadError RemoveExternalUnicastAddress(const Address &aAddress);
+    otError RemoveExternalUnicastAddress(const Address &aAddress);
 
     /**
      * This method removes all the previously added external (to OpenThread) unicast addresses from the
@@ -391,47 +391,47 @@ public:
      *
      * @param[in]  aAddress  A reference to the multicast address.
      *
-     * @retval kThreadError_None     Successfully subscribed to @p aAddress.
-     * @retval kThreadError_Already  The multicast address is already subscribed.
+     * @retval OT_ERROR_NONE     Successfully subscribed to @p aAddress.
+     * @retval OT_ERROR_ALREADY  The multicast address is already subscribed.
      *
      */
-    ThreadError SubscribeMulticast(NetifMulticastAddress &aAddress);
+    otError SubscribeMulticast(NetifMulticastAddress &aAddress);
 
     /**
      * This method unsubscribes the network interface to a multicast address.
      *
      * @param[in]  aAddress  A reference to the multicast address.
      *
-     * @retval kThreadError_None     Successfully unsubscribed to @p aAddress.
-     * @retval kThreadError_Already  The multicast address is already unsubscribed.
+     * @retval OT_ERROR_NONE     Successfully unsubscribed to @p aAddress.
+     * @retval OT_ERROR_ALREADY  The multicast address is already unsubscribed.
      *
      */
-    ThreadError UnsubscribeMulticast(const NetifMulticastAddress &aAddress);
+    otError UnsubscribeMulticast(const NetifMulticastAddress &aAddress);
 
     /**
      * This method subscribes the network interface to the external (to OpenThread) multicast address.
      *
      * @param[in]  aAddress  A reference to the multicast address.
      *
-     * @retval kThreadError_None         Successfully subscribed to @p aAddress.
-     * @retval kThreadError_Already      The multicast address is already subscribed.
-     * @retval kThreadError_InvalidArgs  The address indicated by @p aAddress is an internal multicast address.
-     * @retval kThreadError_NoBufs       The maximum number of allowed external multicast addresses are already added.
+     * @retval OT_ERROR_NONE          Successfully subscribed to @p aAddress.
+     * @retval OT_ERROR_ALREADY       The multicast address is already subscribed.
+     * @retval OT_ERROR_INVALID_ARGS  The address indicated by @p aAddress is an internal multicast address.
+     * @retval OT_ERROR_NO_BUFS       The maximum number of allowed external multicast addresses are already added.
      *
      */
-    ThreadError SubscribeExternalMulticast(const Address &aAddress);
+    otError SubscribeExternalMulticast(const Address &aAddress);
 
     /**
      * This method unsubscribes the network interface to the external (to OpenThread) multicast address.
      *
      * @param[in]  aAddress  A reference to the multicast address.
      *
-     * @retval kThreadError_None         Successfully unsubscribed to the unicast address.
-     * @retval kThreadError_InvalidArgs  The address indicated by @p aAddress is an internal address.
-     * @retval kThreadError_NotFound     The multicast address was not found.
+     * @retval OT_ERROR_NONE          Successfully unsubscribed to the unicast address.
+     * @retval OT_ERROR_INVALID_ARGS  The address indicated by @p aAddress is an internal address.
+     * @retval OT_ERROR_NOT_FOUND     The multicast address was not found.
      *
      */
-    ThreadError UnsubscribeExternalMulticast(const Address &aAddress);
+    otError UnsubscribeExternalMulticast(const Address &aAddress);
 
     /**
      * This method unsubscribes the network interface from all previously added external (to OpenThread) multicast
@@ -460,20 +460,20 @@ public:
      *
      * @param[in]  aCallback  A reference to the callback.
      *
-     * @retval kThreadError_None    Successfully registered the callback.
-     * @retval kThreadError_Already The callback was already registered.
+     * @retval OT_ERROR_NONE    Successfully registered the callback.
+     * @retval OT_ERROR_ALREADY The callback was already registered.
      */
-    ThreadError RegisterCallback(NetifCallback &aCallback);
+    otError RegisterCallback(NetifCallback &aCallback);
 
     /**
      * This method removes a network interface callback.
      *
      * @param[in]  aCallback  A reference to the callback.
      *
-     * @retval kThreadError_None    Successfully removed the callback.
-     * @retval kThreadError_Already The callback was not in the list.
+     * @retval OT_ERROR_NONE    Successfully removed the callback.
+     * @retval OT_ERROR_ALREADY The callback was not in the list.
      */
-    ThreadError RemoveCallback(NetifCallback &aCallback);
+    otError RemoveCallback(NetifCallback &aCallback);
 
     /**
      * This method indicates whether or not a state changed callback is pending.
@@ -498,20 +498,20 @@ public:
      *
      * @param[in]  aMessage  A reference to the IPv6 message.
      *
-     * @retval kThreadError_None  Successfully enqueued the IPv6 message.
+     * @retval OT_ERROR_NONE  Successfully enqueued the IPv6 message.
      *
      */
-    virtual ThreadError SendMessage(Message &aMessage) = 0;
+    virtual otError SendMessage(Message &aMessage) = 0;
 
     /**
      * This virtual method fills out @p aAddress with the link address.
      *
      * @param[out]  aAddress  A reference to the link address.
      *
-     * @retval kThreadError_None  Successfully retrieved the link address.
+     * @retval OT_ERROR_NONE  Successfully retrieved the link address.
      *
      */
-    virtual ThreadError GetLinkAddress(LinkAddress &aAddress) const = 0;
+    virtual otError GetLinkAddress(LinkAddress &aAddress) const = 0;
 
     /**
      * This virtual method performs a source-destination route lookup.
@@ -520,12 +520,12 @@ public:
      * @param[in]   aDestination  A reference to the IPv6 destination address.
      * @param[out]  aPrefixMatch  The longest prefix match result.
      *
-     * @retval kThreadError_None     Successfully found a route.
-     * @retval kThreadError_NoRoute  No route to destination.
+     * @retval OT_ERROR_NONE      Successfully found a route.
+     * @retval OT_ERROR_NO_ROUTE  No route to destination.
      *
      */
-    virtual ThreadError RouteLookup(const Address &aSource, const Address &aDestination,
-                                    uint8_t *aPrefixMatch) = 0;
+    virtual otError RouteLookup(const Address &aSource, const Address &aDestination,
+                                uint8_t *aPrefixMatch) = 0;
 
 protected:
     Ip6 &mIp6;

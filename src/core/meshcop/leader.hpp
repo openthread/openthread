@@ -82,22 +82,22 @@ public:
      *
      * @param[in]  aAddress   The IPv6 address of destination.
      *
-     * @retval kThreadError_None    Successfully send MGMT_DATASET_CHANGED message.
-     * @retval kThreadError_NoBufs  Insufficient buffers to generate a MGMT_DATASET_CHANGED message.
+     * @retval OT_ERROR_NONE     Successfully send MGMT_DATASET_CHANGED message.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffers to generate a MGMT_DATASET_CHANGED message.
      *
      */
-    ThreadError SendDatasetChanged(const Ip6::Address &aAddress);
+    otError SendDatasetChanged(const Ip6::Address &aAddress);
 
     /**
      * This method sets minimal delay timer.
      *
      * @param[in]  aDelayTimerMinimal The value of minimal delay timer (in ms).
      *
-     * @retval  kThreadError_None        Successfully set the minimal delay timer.
-     * @retval  kThreadError_InvalidArgs If @p aDelayTimerMinimal is not valid.
+     * @retval  OT_ERROR_NONE         Successfully set the minimal delay timer.
+     * @retval  OT_ERROR_INVALID_ARGS If @p aDelayTimerMinimal is not valid.
      *
      */
-    ThreadError SetDelayTimerMinimal(uint32_t aDelayTimerMinimal);
+    otError SetDelayTimerMinimal(uint32_t aDelayTimerMinimal);
 
     /**
      * This method gets minimal delay timer.
@@ -125,14 +125,14 @@ private:
     static void HandlePetition(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                const otMessageInfo *aMessageInfo);
     void HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    ThreadError SendPetitionResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
-                                     StateTlv::State aState);
+    otError SendPetitionResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
+                                 StateTlv::State aState);
 
     static void HandleKeepAlive(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                 const otMessageInfo *aMessageInfo);
     void HandleKeepAlive(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    ThreadError SendKeepAliveResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
-                                      StateTlv::State aState);
+    otError SendKeepAliveResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
+                                  StateTlv::State aState);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 

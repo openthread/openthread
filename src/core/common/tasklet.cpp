@@ -55,7 +55,7 @@ Tasklet::Tasklet(TaskletScheduler &aScheduler, Handler aHandler, void *aContext)
 {
 }
 
-ThreadError Tasklet::Post(void)
+otError Tasklet::Post(void)
 {
     return mScheduler.Post(*this);
 }
@@ -66,11 +66,11 @@ TaskletScheduler::TaskletScheduler(void):
 {
 }
 
-ThreadError TaskletScheduler::Post(Tasklet &aTasklet)
+otError TaskletScheduler::Post(Tasklet &aTasklet)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mTail != &aTasklet && aTasklet.mNext == NULL, error = kThreadError_Already);
+    VerifyOrExit(mTail != &aTasklet && aTasklet.mNext == NULL, error = OT_ERROR_ALREADY);
 
     if (mTail == NULL)
     {

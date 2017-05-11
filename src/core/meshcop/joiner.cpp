@@ -89,18 +89,18 @@ otInstance *Joiner::GetInstance(void)
     return mNetif.GetInstance();
 }
 
-ThreadError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl,
-                          const char *aVendorName, const char *aVendorModel, const char *aVendorSwVersion,
-                          const char *aVendorData, otJoinerCallback aCallback, void *aContext)
+otError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl,
+                      const char *aVendorName, const char *aVendorModel, const char *aVendorSwVersion,
+                      const char *aVendorData, otJoinerCallback aCallback, void *aContext)
 {
-    ThreadError error;
+    otError error;
     Mac::ExtAddress extAddress;
     Crc16 ccitt(Crc16::kCcitt);
     Crc16 ansi(Crc16::kAnsi);
 
     otLogFuncEntry();
 
-    VerifyOrExit(mState == kStateIdle, error = kThreadError_Busy);
+    VerifyOrExit(mState == kStateIdle, error = OT_ERROR_BUSY);
 
     // use extended address based on factory-assigned IEEE EUI-64
     mNetif.GetMac().GetHashMacAddress(&extAddress);
@@ -142,14 +142,14 @@ exit:
     return error;
 }
 
-ThreadError Joiner::Stop(void)
+otError Joiner::Stop(void)
 {
     otLogFuncEntry();
 
     Close();
 
     otLogFuncExit();
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 void Joiner::Close(void)
@@ -162,7 +162,7 @@ void Joiner::Close(void)
     otLogFuncExit();
 }
 
-void Joiner::Complete(ThreadError aError)
+void Joiner::Complete(otError aError)
 {
     mState = kStateIdle;
 
@@ -235,7 +235,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
     else
     {
         otLogDebgMeshCoP(GetInstance(), "No joinable network found");
-        Complete(kThreadError_NotFound);
+        Complete(OT_ERROR_NOT_FOUND);
     }
 
 exit:
@@ -260,7 +260,7 @@ void Joiner::HandleSecureCoapClientConnect(bool aConnected)
         }
         else
         {
-            Complete(kThreadError_Security);
+            Complete(OT_ERROR_SECURITY);
         }
 
         break;
@@ -273,7 +273,7 @@ void Joiner::HandleSecureCoapClientConnect(bool aConnected)
 void Joiner::SendJoinerFinalize(void)
 {
     Coap::Header header;
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     Message *message = NULL;
     StateTlv stateTlv;
     VendorNameTlv vendorNameTlv;
@@ -287,8 +287,7 @@ void Joiner::SendJoinerFinalize(void)
     header.AppendUriPathOptions(OT_URI_PATH_JOINER_FINALIZE);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapSecure(), header)) != NULL,
-                 error = kThreadError_NoBufs);
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapSecure(), header)) != NULL, error = OT_ERROR_NO_BUFS);
 
     stateTlv.Init();
     stateTlv.SetState(MeshCoP::StateTlv::kAccept);
@@ -341,7 +340,7 @@ void Joiner::SendJoinerFinalize(void)
 
 exit:
 
-    if (error != kThreadError_None && message != NULL)
+    if (error != OT_ERROR_NONE && message != NULL)
     {
         message->Free();
     }
@@ -350,7 +349,7 @@ exit:
 }
 
 void Joiner::HandleJoinerFinalizeResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                                          const otMessageInfo *aMessageInfo, ThreadError aResult)
+                                          const otMessageInfo *aMessageInfo, otError aResult)
 {
     static_cast<Joiner *>(aContext)->HandleJoinerFinalizeResponse(
         static_cast<Coap::Header *>(aHeader), static_cast<Message *>(aMessage),
@@ -358,7 +357,7 @@ void Joiner::HandleJoinerFinalizeResponse(void *aContext, otCoapHeader *aHeader,
 }
 
 void Joiner::HandleJoinerFinalizeResponse(Coap::Header *aHeader, Message *aMessage,
-                                          const Ip6::MessageInfo *aMessageInfo, ThreadError aResult)
+                                          const Ip6::MessageInfo *aMessageInfo, otError aResult)
 {
     (void) aMessageInfo;
     StateTlv state;
@@ -366,7 +365,7 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Header *aHeader, Message *aMessa
     otLogFuncEntry();
 
     VerifyOrExit(mState == kStateConnected &&
-                 aResult == kThreadError_None &&
+                 aResult == OT_ERROR_NONE &&
                  aHeader->GetType() == kCoapTypeAcknowledgment &&
                  aHeader->GetCode() == kCoapResponseChanged);
 
@@ -400,7 +399,7 @@ void Joiner::HandleJoinerEntrust(void *aContext, otCoapHeader *aHeader, otMessag
 
 void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadError error;
+    otError error;
 
     NetworkMasterKeyTlv masterKey;
     MeshLocalPrefixTlv meshLocalPrefix;
@@ -413,28 +412,28 @@ void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const
 
     VerifyOrExit(mState == kStateEntrust &&
                  aHeader.GetType() == kCoapTypeConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost, error = kThreadError_Drop);
+                 aHeader.GetCode() == kCoapRequestPost, error = OT_ERROR_DROP);
 
     otLogInfoMeshCoP(GetInstance(), "Received joiner entrust");
     otLogCertMeshCoP(GetInstance(), "[THCI] direction=recv | type=JOIN_ENT.ntf");
 
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kNetworkMasterKey, sizeof(masterKey), masterKey));
-    VerifyOrExit(masterKey.IsValid(), error = kThreadError_Parse);
+    VerifyOrExit(masterKey.IsValid(), error = OT_ERROR_PARSE);
 
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kMeshLocalPrefix, sizeof(meshLocalPrefix), meshLocalPrefix));
-    VerifyOrExit(meshLocalPrefix.IsValid(), error = kThreadError_Parse);
+    VerifyOrExit(meshLocalPrefix.IsValid(), error = OT_ERROR_PARSE);
 
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kExtendedPanId, sizeof(extendedPanId), extendedPanId));
-    VerifyOrExit(extendedPanId.IsValid(), error = kThreadError_Parse);
+    VerifyOrExit(extendedPanId.IsValid(), error = OT_ERROR_PARSE);
 
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kNetworkName, sizeof(networkName), networkName));
-    VerifyOrExit(networkName.IsValid(), error = kThreadError_Parse);
+    VerifyOrExit(networkName.IsValid(), error = OT_ERROR_PARSE);
 
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp));
-    VerifyOrExit(activeTimestamp.IsValid(), error = kThreadError_Parse);
+    VerifyOrExit(activeTimestamp.IsValid(), error = OT_ERROR_PARSE);
 
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kNetworkKeySequence, sizeof(networkKeySeq), networkKeySeq));
-    VerifyOrExit(networkKeySeq.IsValid(), error = kThreadError_Parse);
+    VerifyOrExit(networkKeySeq.IsValid(), error = OT_ERROR_PARSE);
 
     mNetif.GetKeyManager().SetMasterKey(masterKey.GetNetworkMasterKey());
     mNetif.GetKeyManager().SetCurrentKeySequence(networkKeySeq.GetNetworkKeySequence());
@@ -457,7 +456,7 @@ exit:
 void Joiner::SendJoinerEntrustResponse(const Coap::Header &aRequestHeader,
                                        const Ip6::MessageInfo &aRequestInfo)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     Message *message;
     Coap::Header responseHeader;
     Ip6::MessageInfo responseInfo(aRequestInfo);
@@ -466,7 +465,7 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Header &aRequestHeader,
 
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
 
-    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoap(), responseHeader)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoap(), responseHeader)) != NULL, error = OT_ERROR_NO_BUFS);
     message->SetSubType(Message::kSubTypeJoinerEntrust);
 
     memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
@@ -481,7 +480,7 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Header &aRequestHeader,
 
 exit:
 
-    if (error != kThreadError_None && message != NULL)
+    if (error != OT_ERROR_NONE && message != NULL)
     {
         message->Free();
     }
@@ -496,7 +495,7 @@ void Joiner::HandleTimer(void *aContext)
 
 void Joiner::HandleTimer(void)
 {
-    ThreadError error = kThreadError_Error;
+    otError error = OT_ERROR_NONE;
 
     switch (mState)
     {
@@ -508,7 +507,7 @@ void Joiner::HandleTimer(void)
 
     case kStateConnected:
     case kStateEntrust:
-        error = kThreadError_ResponseTimeout;
+        error = OT_ERROR_RESPONSE_TIMEOUT;
         break;
 
     case kStateJoined:
@@ -518,7 +517,7 @@ void Joiner::HandleTimer(void)
         mNetif.GetMac().SetExtAddress(extAddress);
         mNetif.GetMle().UpdateLinkLocalAddress();
 
-        error = kThreadError_None;
+        error = OT_ERROR_NONE;
         break;
 
     }

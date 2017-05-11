@@ -229,9 +229,9 @@ bool Address::operator!=(const Address &aOther) const
     return memcmp(mFields.m8, aOther.mFields.m8, sizeof(mFields.m8)) != 0;
 }
 
-ThreadError Address::FromString(const char *aBuf)
+otError Address::FromString(const char *aBuf)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t *dst = reinterpret_cast<uint8_t *>(mFields.m8);
     uint8_t *endp = reinterpret_cast<uint8_t *>(mFields.m8 + 15);
     uint8_t *colonp = NULL;
@@ -258,7 +258,7 @@ ThreadError Address::FromString(const char *aBuf)
         {
             if (count)
             {
-                VerifyOrExit(dst + 2 <= endp, error = kThreadError_Parse);
+                VerifyOrExit(dst + 2 <= endp, error = OT_ERROR_PARSE);
                 *(dst + 1) = static_cast<uint8_t>(val >> 8);
                 *(dst + 2) = static_cast<uint8_t>(val);
                 dst += 2;
@@ -267,7 +267,7 @@ ThreadError Address::FromString(const char *aBuf)
             }
             else if (ch == ':')
             {
-                VerifyOrExit(colonp == NULL || first, error = kThreadError_Parse);
+                VerifyOrExit(colonp == NULL || first, error = OT_ERROR_PARSE);
                 colonp = dst;
             }
 
@@ -280,12 +280,12 @@ ThreadError Address::FromString(const char *aBuf)
         }
         else
         {
-            VerifyOrExit('0' <= ch && ch <= '9', error = kThreadError_Parse);
+            VerifyOrExit('0' <= ch && ch <= '9', error = OT_ERROR_PARSE);
         }
 
         first = false;
         val = static_cast<uint16_t>((val << 4) | d);
-        VerifyOrExit(++count <= 4, error = kThreadError_Parse);
+        VerifyOrExit(++count <= 4, error = OT_ERROR_PARSE);
     }
 
     while (colonp && dst > colonp)

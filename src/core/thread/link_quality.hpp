@@ -108,11 +108,11 @@ public:
      * @param[out]    aCharBuffer    A char buffer to store the string corresponding to current average value.
      * @param[in]     aBufferLen     The char buffer length.
      *
-     * @retval kThreadError_None     Successfully formed the string in the given char buffer.
-     * @retval kThreadError_NoBufs   The string representation of the average value could not fit in the given buffer.
+     * @retval OT_ERROR_NONE      Successfully formed the string in the given char buffer.
+     * @retval OT_ERROR_NO_BUFS   The string representation of the average value could not fit in the given buffer.
      *
      */
-    ThreadError GetAverageRssAsString(char *aCharBuffer, size_t aBufferLen) const;
+    otError GetAverageRssAsString(char *aCharBuffer, size_t aBufferLen) const;
 
     /**
      * This method returns the link margin. The link margin is calculated using the link's current average received

@@ -87,12 +87,12 @@ typedef void (*otPlatSpiSlaveTransactionCompleteCallback)(void *aContext, uint8_
  * @param[in] aCallback          Pointer to transaction complete callback.
  * @param[in] aContext           Context pointer to be passed to transaction complete callback.
  *
- * @retval kThreadError_None     Successfully enabled the SPI Slave interface.
- * @retval kThreadError_Already  SPI Slave interface is already enabled.
- * @retval kThreadError_Failed   Failed to enable the SPI Slave interface.
+ * @retval OT_ERROR_NONE     Successfully enabled the SPI Slave interface.
+ * @retval OT_ERROR_ALREADY  SPI Slave interface is already enabled.
+ * @retval OT_ERROR_FAILED   Failed to enable the SPI Slave interface.
  *
  */
-ThreadError otPlatSpiSlaveEnable(otPlatSpiSlaveTransactionCompleteCallback aCallback, void *aContext);
+otError otPlatSpiSlaveEnable(otPlatSpiSlaveTransactionCompleteCallback aCallback, void *aContext);
 
 /**
  * Shutdown and disable the SPI slave interface.
@@ -122,7 +122,7 @@ void otPlatSpiSlaveDisable(void);
 * 30 bytes, the value 30 is passed to the transaction complete callback.
  *
  * Any call to this function while a transaction is in progress will cause all of the arguments to be ignored and the
- * return value to be `kThreadError_Busy`.
+ * return value to be `OT_ERROR_BUSY`.
  *
  * @param[in] aOutputBuf              Data to be written to MISO pin
  * @param[in] aOutputBufLen           Size of the output buffer, in bytes
@@ -130,13 +130,13 @@ void otPlatSpiSlaveDisable(void);
  * @param[in] aInputBufLen            Size of the input buffer, in bytes
  * @param[in] aRequestTransactionFlag Set to true if host interrupt should be set
  *
- * @retval kThreadError_None          Transaction was successfully prepared.
- * @retval kThreadError_Busy          A transaction is currently in progress.
- * @retval kThreadError_InvalidState  otPlatSpiSlaveEnable() hasn't been called.
+ * @retval OT_ERROR_NONE           Transaction was successfully prepared.
+ * @retval OT_ERROR_BUSY           A transaction is currently in progress.
+ * @retval OT_ERROR_INVALID_STATE  otPlatSpiSlaveEnable() hasn't been called.
  *
  */
-ThreadError otPlatSpiSlavePrepareTransaction(uint8_t *aOutputBuf, uint16_t aOutputBufLen, uint8_t *aInputBuf,
-                                             uint16_t aInputBufLen, bool aRequestTransactionFlag);
+otError otPlatSpiSlavePrepareTransaction(uint8_t *aOutputBuf, uint16_t aOutputBufLen, uint8_t *aInputBuf,
+                                         uint16_t aInputBufLen, bool aRequestTransactionFlag);
 
 /**
  * @}

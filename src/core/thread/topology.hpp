@@ -379,11 +379,11 @@ public:
      * @param[out] aIndex             Pointer to variable where the index of address is provided if address is found in
      *                                the list. @p aIndex can be set NULL if index is not required.
      *
-     * @retval kThreadError_None      Successfully found the address in IPv6 address list and updated @p aIndex.
-     * @retval kThreadError_NotFound  Could not find the address in the list.
+     * @retval OT_ERROR_NONE          Successfully found the address in IPv6 address list and updated @p aIndex.
+     * @retval OT_ERROR_NOT_FOUND     Could not find the address in the list.
      *
      */
-    ThreadError FindIp6Address(const Ip6::Address &aAddress, uint8_t *aIndex) const;
+    otError FindIp6Address(const Ip6::Address &aAddress, uint8_t *aIndex) const;
 
     /**
      * This method removes the address at index @p aIndex.

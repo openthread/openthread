@@ -101,11 +101,11 @@ public:
      * @param[in]   aAddress  A reference to an IPv6 address.
      * @param[out]  aContext  A reference to 6LoWPAN Context information.
      *
-     * @retval kThreadError_None      Successfully retrieved 6LoWPAN Context information.
-     * @retval kThreadError_NotFound  Could not find the 6LoWPAN Context information.
+     * @retval OT_ERROR_NONE       Successfully retrieved 6LoWPAN Context information.
+     * @retval OT_ERROR_NOT_FOUND  Could not find the 6LoWPAN Context information.
      *
      */
-    ThreadError GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext);
+    otError GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext);
 
     /**
      * This method retrieves the 6LoWPAN Context information based on a given Context ID.
@@ -113,11 +113,11 @@ public:
      * @param[in]   aContextId  The Context ID value.
      * @param[out]  aContext    A reference to the 6LoWPAN Context information.
      *
-     * @retval kThreadError_None      Successfully retrieved 6LoWPAN Context information.
-     * @retval kThreadError_NotFound  Could not find the 6LoWPAN Context information.
+     * @retval OT_ERROR_NONE       Successfully retrieved 6LoWPAN Context information.
+     * @retval OT_ERROR_NOT_FOUND  Could not find the 6LoWPAN Context information.
      *
      */
-    ThreadError GetContext(uint8_t aContextId, Lowpan::Context &aContext);
+    otError GetContext(uint8_t aContextId, Lowpan::Context &aContext);
 
     /**
      * This method indicates whether or not the given IPv6 address is on-mesh.
@@ -138,12 +138,12 @@ public:
      * @param[out]  aPrefixMatch  A pointer to the longest prefix match length in bits.
      * @param[out]  aRloc16       A pointer to the RLOC16 for the selected route.
      *
-     * @retval kThreadError_None     Successfully found a route.
-     * @retval kThreadError_NoRoute  No valid route was found.
+     * @retval OT_ERROR_NONE      Successfully found a route.
+     * @retval OT_ERROR_NO_ROUTE  No valid route was found.
      *
      */
-    ThreadError RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination,
-                            uint8_t *aPrefixMatch, uint16_t *aRloc16);
+    otError RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination,
+                        uint8_t *aPrefixMatch, uint16_t *aRloc16);
 
     /**
      * This method is used by non-Leader devices to set newly received Network Data from the Leader.
@@ -163,11 +163,11 @@ public:
      *
      * @param[in]  aRloc16  The invalid RLOC16 to notify.
      *
-     * @retval kThreadError_None    Successfully enqueued the notification message.
-     * @retval kThreadError_NoBufs  Insufficient message buffers to generate the notification message.
+     * @retval OT_ERROR_NONE     Successfully enqueued the notification message.
+     * @retval OT_ERROR_NO_BUFS  Insufficient message buffers to generate the notification message.
      *
      */
-    ThreadError SendServerDataNotification(uint16_t aRloc16);
+    otError SendServerDataNotification(uint16_t aRloc16);
 
     /**
      * This method returns a pointer to the Commissioning Data.
@@ -203,11 +203,11 @@ public:
      * @param[in]  aValue        A pointer to the Commissioning Data value.
      * @param[in]  aValueLength  The length of @p aValue.
      *
-     * @retval kThreadError_None    Successfully added the Commissioning Data.
-     * @retval kThreadError_NoBufs  Insufficient space to add the Commissioning Data.
+     * @retval OT_ERROR_NONE     Successfully added the Commissioning Data.
+     * @retval OT_ERROR_NO_BUFS  Insufficient space to add the Commissioning Data.
      *
      */
-    ThreadError SetCommissioningData(const uint8_t *aValue, uint8_t aValueLength);
+    otError SetCommissioningData(const uint8_t *aValue, uint8_t aValueLength);
 
 #if OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
     /**
@@ -216,11 +216,11 @@ public:
      * @param[in]  aContextId      A pointer to the Commissioning Data value.
      * @param[out] aRloc16         The reference of which for output the Rloc16.
      *
-     * @retval kThreadError_None      Successfully get the Rloc of Dhcp Agent.
-     * @retval kThreadError_NotFound  The specified @p aContextId could not be found.
+     * @retval OT_ERROR_NONE       Successfully get the Rloc of Dhcp Agent.
+     * @retval OT_ERROR_NOT_FOUND  The specified @p aContextId could not be found.
      *
      */
-    ThreadError GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16);
+    otError GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16);
 #endif  // OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
 
 protected:
@@ -228,11 +228,11 @@ protected:
     uint8_t         mVersion;
 
 private:
-    ThreadError RemoveCommissioningData(void);
+    otError RemoveCommissioningData(void);
 
-    ThreadError ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &destination,
-                                    uint8_t *aPrefixMatch, uint16_t *aRloc16);
-    ThreadError DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16);
+    otError ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &destination,
+                                uint8_t *aPrefixMatch, uint16_t *aRloc16);
+    otError DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16);
 };
 
 /**

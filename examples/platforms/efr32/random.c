@@ -91,11 +91,11 @@ uint32_t otPlatRandomGet(void)
     return random;
 }
 
-ThreadError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
+otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    otEXPECT_ACTION(aOutput, error = kThreadError_InvalidArgs);
+    otEXPECT_ACTION(aOutput, error = OT_ERROR_INVALID_ARGS);
 
     for (uint16_t length = 0; length < aOutputLength; length++)
     {

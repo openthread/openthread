@@ -104,7 +104,7 @@ private:
         kMaxLineLength = 128,
     };
 
-    ThreadError ProcessCommand(void);
+    otError ProcessCommand(void);
     void Send(void);
 
     char mRxBuffer[kRxBufferSize];

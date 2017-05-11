@@ -130,9 +130,9 @@ void PanIdQueryServer::HandleScanResult(Mac::Frame *aFrame)
     }
 }
 
-ThreadError PanIdQueryServer::SendConflict(void)
+otError PanIdQueryServer::SendConflict(void)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     Coap::Header header;
     MeshCoP::ChannelMask0Tlv channelMask;
     MeshCoP::PanIdTlv panId;
@@ -144,8 +144,7 @@ ThreadError PanIdQueryServer::SendConflict(void)
     header.AppendUriPathOptions(OT_URI_PATH_PANID_CONFLICT);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(mNetif.GetCoap(), header)) != NULL,
-                 error = kThreadError_NoBufs);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(mNetif.GetCoap(), header)) != NULL, error = OT_ERROR_NO_BUFS);
 
     channelMask.Init();
     channelMask.SetMask(mChannelMask);
@@ -164,7 +163,7 @@ ThreadError PanIdQueryServer::SendConflict(void)
 
 exit:
 
-    if (error != kThreadError_None && message != NULL)
+    if (error != OT_ERROR_NONE && message != NULL)
     {
         message->Free();
     }

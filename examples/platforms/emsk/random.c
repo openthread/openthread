@@ -64,12 +64,12 @@ uint32_t otPlatRandomGet(void)
     return (uint32_t)rand();
 }
 
-ThreadError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
+otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t channel = 0;
 
-    otEXPECT_ACTION(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
+    otEXPECT_ACTION(aOutput && aOutputLength, error = OT_ERROR_INVALID_ARGS);
 
     /* disable radio*/
     if (otPlatRadioIsEnabled(sInstance))
@@ -85,7 +85,7 @@ ThreadError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
      * Please see Note in `<path-to-openthread>/examples/platforms/emsk/README.md`
      * for TRNG features on EMSK.
      */
-    otEXPECT_ACTION(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
+    otEXPECT_ACTION(aOutput && aOutputLength, error = OT_ERROR_INVALID_ARGS);
 
     for (uint16_t length = 0; length < aOutputLength; length++)
     {

@@ -215,12 +215,12 @@ typedef void (OTCALL *otStateChangedCallback)(uint32_t aFlags, void *aContext);
  * @param[in]  aCallback  A pointer to a function that is called with certain configuration or state changes.
  * @param[in]  aContext   A pointer to application-specific context.
  *
- * @retval kThreadError_None    Added the callback to the list of callbacks.
- * @retval kThreadError_NoBufs  Could not add the callback due to resource constraints.
+ * @retval OT_ERROR_NONE     Added the callback to the list of callbacks.
+ * @retval OT_ERROR_NO_BUFS  Could not add the callback due to resource constraints.
  *
  */
-OTAPI ThreadError OTCALL otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback,
-                                                   void *aContext);
+OTAPI otError OTCALL otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback,
+                                               void *aContext);
 
 /**
  * This function removes a callback to indicate when certain configuration or state changes within OpenThread.
@@ -256,11 +256,11 @@ OTAPI void OTCALL otInstanceFactoryReset(otInstance *aInstance);
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * @retval kThreadError_None  All persistent info/state was erased successfully.
- * @retval kThreadError_InvalidState  Device is not in `disabled` state/role.
+ * @retval OT_ERROR_NONE           All persistent info/state was erased successfully.
+ * @retval OT_ERROR_INVALID_STATE  Device is not in `disabled` state/role.
  *
  */
-ThreadError otInstanceErasePersistentInfo(otInstance *aInstance);
+otError otInstanceErasePersistentInfo(otInstance *aInstance);
 
 /**
  * This function returns the current dynamic log level.
@@ -278,11 +278,11 @@ otLogLevel otGetDynamicLogLevel(otInstance *aInstance);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aLogLevel The dynamic log level.
  *
- * @retval kThreadError_None         The log level was changed successfully.
- * @retval kThreadError_NotCapable   The dynamic log level is not supported.
+ * @retval OT_ERROR_NONE          The log level was changed successfully.
+ * @retval OT_ERROR_NOT_CAPABLE   The dynamic log level is not supported.
  *
  */
-ThreadError otSetDynamicLogLevel(otInstance *aInstance, otLogLevel aLogLevel);
+otError otSetDynamicLogLevel(otInstance *aInstance, otLogLevel aLogLevel);
 
 /**
  * @}

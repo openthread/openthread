@@ -58,11 +58,11 @@ Whitelist::Whitelist(void)
     }
 }
 
-ThreadError Whitelist::GetEntry(uint8_t aIndex, Entry &aEntry) const
+otError Whitelist::GetEntry(uint8_t aIndex, Entry &aEntry) const
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aIndex < kMaxEntries, error = kThreadError_InvalidArgs);
+    VerifyOrExit(aIndex < kMaxEntries, error = OT_ERROR_INVALID_ARGS);
 
     memcpy(&aEntry.mExtAddress, &mWhitelist[aIndex].mExtAddress, sizeof(aEntry.mExtAddress));
     aEntry.mRssi = mWhitelist[aIndex].mRssi;
@@ -141,11 +141,11 @@ void Whitelist::ClearFixedRssi(Entry &aEntry)
     aEntry.mFixedRssi = false;
 }
 
-ThreadError Whitelist::GetFixedRssi(Entry &aEntry, int8_t &rssi) const
+otError Whitelist::GetFixedRssi(Entry &aEntry, int8_t &rssi) const
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aEntry.mValid && aEntry.mFixedRssi, error = kThreadError_Error);
+    VerifyOrExit(aEntry.mValid && aEntry.mFixedRssi, error = OT_ERROR_INVALID_ARGS);
     rssi = aEntry.mRssi;
 
 exit:

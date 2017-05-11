@@ -430,7 +430,7 @@ uint32_t otPlatRandomGet()
     return (uint32_t)RtlRandomEx(&Counter.LowPart);
 }
 
-ThreadError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
+otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 {
     // Just use the system-preferred random number generator algorithm
     NTSTATUS status = 
@@ -444,10 +444,10 @@ ThreadError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
     if (!NT_SUCCESS(status))
     {
         LogError(DRIVER_DEFAULT, "BCryptGenRandom failed, %!STATUS!", status);
-        return kThreadError_Failed;
+        return OT_ERROR_FAILED;
     }
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 void otTaskletsSignalPending(_In_ otInstance *otCtx)
@@ -705,7 +705,7 @@ void otLwfCommissionerPanIdConflictCallback(uint16_t aPanId, uint32_t aChannelMa
     LogFuncExit(DRIVER_DEFAULT);
 }
 
-void otLwfJoinerCallback(ThreadError aError, _In_ void *aContext)
+void otLwfJoinerCallback(otError aError, _In_ void *aContext)
 {
     LogFuncEntry(DRIVER_DEFAULT);
 

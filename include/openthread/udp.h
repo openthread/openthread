@@ -93,8 +93,8 @@ otMessage *otUdpNewMessage(otInstance *aInstance, bool aLinkSecurityEnabled);
  * @param[in]  aCallback  A pointer to the application callback function.
  * @param[in]  aContext   A pointer to application-specific context.
  *
- * @retval kThreadErrorNone         Successfully opened the socket.
- * @retval kThreadErrorInvalidArgs  Given socket structure was already opened.
+ * @retval OT_ERROR_NONE         Successfully opened the socket.
+ * @retval OT_ERROR_INVALID_ARGS  Given socket structure was already opened.
  *
  * @sa otUdpNewMessage
  * @sa otUdpClose
@@ -103,14 +103,14 @@ otMessage *otUdpNewMessage(otInstance *aInstance, bool aLinkSecurityEnabled);
  * @sa otUdpSend
  *
  */
-ThreadError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aContext);
+otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aContext);
 
 /**
  * Close a UDP/IPv6 socket.
  *
  * @param[in]  aSocket  A pointer to a UDP socket structure.
  *
- * @retval kThreadErrorNone  Successfully closed the socket.
+ * @retval OT_ERROR_NONE  Successfully closed the socket.
  *
  * @sa otUdpNewMessage
  * @sa otUdpOpen
@@ -119,7 +119,7 @@ ThreadError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive 
  * @sa otUdpSend
  *
  */
-ThreadError otUdpClose(otUdpSocket *aSocket);
+otError otUdpClose(otUdpSocket *aSocket);
 
 /**
  * Bind a UDP/IPv6 socket.
@@ -127,7 +127,7 @@ ThreadError otUdpClose(otUdpSocket *aSocket);
  * @param[in]  aSocket    A pointer to a UDP socket structure.
  * @param[in]  aSockName  A pointer to an IPv6 socket address structure.
  *
- * @retval kThreadErrorNone  Bind operation was successful.
+ * @retval OT_ERROR_NONE  Bind operation was successful.
  *
  * @sa otUdpNewMessage
  * @sa otUdpOpen
@@ -136,7 +136,7 @@ ThreadError otUdpClose(otUdpSocket *aSocket);
  * @sa otUdpSend
  *
  */
-ThreadError otUdpBind(otUdpSocket *aSocket, otSockAddr *aSockName);
+otError otUdpBind(otUdpSocket *aSocket, otSockAddr *aSockName);
 
 /**
  * Connect a UDP/IPv6 socket.
@@ -144,7 +144,7 @@ ThreadError otUdpBind(otUdpSocket *aSocket, otSockAddr *aSockName);
  * @param[in]  aSocket    A pointer to a UDP socket structure.
  * @param[in]  aSockName  A pointer to an IPv6 socket address structure.
  *
- * @retval kThreadErrorNone  Connect operation was successful.
+ * @retval OT_ERROR_NONE  Connect operation was successful.
  *
  * @sa otUdpNewMessage
  * @sa otUdpOpen
@@ -153,7 +153,7 @@ ThreadError otUdpBind(otUdpSocket *aSocket, otSockAddr *aSockName);
  * @sa otUdpSend
  *
  */
-ThreadError otUdpConnect(otUdpSocket *aSocket, otSockAddr *aSockName);
+otError otUdpConnect(otUdpSocket *aSocket, otSockAddr *aSockName);
 
 /**
  * Send a UDP/IPv6 message.
@@ -170,7 +170,7 @@ ThreadError otUdpConnect(otUdpSocket *aSocket, otSockAddr *aSockName);
  * @sa otUdpSend
  *
  */
-ThreadError otUdpSend(otUdpSocket *aSocket, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+otError otUdpSend(otUdpSocket *aSocket, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
 /**
  * @}

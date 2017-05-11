@@ -77,7 +77,7 @@ const char *Address::ToString(char *aBuf, uint16_t aSize) const
     return aBuf;
 }
 
-ThreadError Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
+otError Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
 {
     uint8_t *bytes = GetPsdu();
     uint8_t length = 0;
@@ -174,12 +174,12 @@ ThreadError Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
 
     SetPsduLength(length + GetFooterLength());
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError Frame::ValidatePsdu(void)
+otError Frame::ValidatePsdu(void)
 {
-    ThreadError error = kThreadError_Parse;
+    otError error = OT_ERROR_PARSE;
     uint8_t offset = 0;
     uint16_t fcf;
     uint8_t footerLength = kFcsSize;
@@ -291,7 +291,7 @@ ThreadError Frame::ValidatePsdu(void)
 
     VerifyOrExit((offset + footerLength) <= GetPsduLength());
 
-    error = kThreadError_None;
+    error = OT_ERROR_NONE;
 
 exit:
     return error;
@@ -379,12 +379,12 @@ exit:
     return cur;
 }
 
-ThreadError Frame::GetDstPanId(PanId &aPanId)
+otError Frame::GetDstPanId(PanId &aPanId)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t *buf;
 
-    VerifyOrExit((buf = FindDstPanId()) != NULL, error = kThreadError_Parse);
+    VerifyOrExit((buf = FindDstPanId()) != NULL, error = OT_ERROR_PARSE);
 
     aPanId = static_cast<uint16_t>((buf[1] << 8) | buf[0]);
 
@@ -392,7 +392,7 @@ exit:
     return error;
 }
 
-ThreadError Frame::SetDstPanId(PanId aPanId)
+otError Frame::SetDstPanId(PanId aPanId)
 {
     uint8_t *buf;
 
@@ -402,7 +402,7 @@ ThreadError Frame::SetDstPanId(PanId aPanId)
     buf[0] = aPanId & 0xff;
     buf[1] = aPanId >> 8;
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 uint8_t *Frame::FindDstAddr(void)
@@ -419,13 +419,13 @@ uint8_t *Frame::FindDstAddr(void)
     return cur;
 }
 
-ThreadError Frame::GetDstAddr(Address &aAddress)
+otError Frame::GetDstAddr(Address &aAddress)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t *buf;
     uint16_t fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
 
-    VerifyOrExit(buf = FindDstAddr(), error = kThreadError_Parse);
+    VerifyOrExit(buf = FindDstAddr(), error = OT_ERROR_PARSE);
 
     switch (fcf & Frame::kFcfDstAddrMask)
     {
@@ -453,7 +453,7 @@ exit:
     return error;
 }
 
-ThreadError Frame::SetDstAddr(ShortAddress aShortAddress)
+otError Frame::SetDstAddr(ShortAddress aShortAddress)
 {
     uint8_t *buf;
     uint16_t fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
@@ -466,10 +466,10 @@ ThreadError Frame::SetDstAddr(ShortAddress aShortAddress)
     buf[0] = aShortAddress & 0xff;
     buf[1] = aShortAddress >> 8;
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError Frame::SetDstAddr(const ExtAddress &aExtAddress)
+otError Frame::SetDstAddr(const ExtAddress &aExtAddress)
 {
     uint8_t *buf;
     uint16_t fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
@@ -484,7 +484,7 @@ ThreadError Frame::SetDstAddr(const ExtAddress &aExtAddress)
         buf[i] = aExtAddress.m8[sizeof(ExtAddress) - 1 - i];
     }
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 uint8_t *Frame::FindSrcPanId(void)
@@ -519,12 +519,12 @@ exit:
     return cur;
 }
 
-ThreadError Frame::GetSrcPanId(PanId &aPanId)
+otError Frame::GetSrcPanId(PanId &aPanId)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t *buf;
 
-    VerifyOrExit((buf = FindSrcPanId()) != NULL, error = kThreadError_Parse);
+    VerifyOrExit((buf = FindSrcPanId()) != NULL, error = OT_ERROR_PARSE);
 
     aPanId = static_cast<uint16_t>((buf[1] << 8) | buf[0]);
 
@@ -532,12 +532,12 @@ exit:
     return error;
 }
 
-ThreadError Frame::SetSrcPanId(PanId aPanId)
+otError Frame::SetSrcPanId(PanId aPanId)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t *buf;
 
-    VerifyOrExit((buf = FindSrcPanId()) != NULL, error = kThreadError_Parse);
+    VerifyOrExit((buf = FindSrcPanId()) != NULL, error = OT_ERROR_PARSE);
 
     buf[0] = aPanId & 0xff;
     buf[1] = aPanId >> 8;
@@ -577,13 +577,13 @@ uint8_t *Frame::FindSrcAddr(void)
     return cur;
 }
 
-ThreadError Frame::GetSrcAddr(Address &address)
+otError Frame::GetSrcAddr(Address &address)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t *buf;
     uint16_t fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
 
-    VerifyOrExit((buf = FindSrcAddr()) != NULL, error = kThreadError_Parse);
+    VerifyOrExit((buf = FindSrcAddr()) != NULL, error = OT_ERROR_PARSE);
 
     switch (fcf & Frame::kFcfSrcAddrMask)
     {
@@ -611,7 +611,7 @@ exit:
     return error;
 }
 
-ThreadError Frame::SetSrcAddr(ShortAddress aShortAddress)
+otError Frame::SetSrcAddr(ShortAddress aShortAddress)
 {
     uint8_t *buf;
     uint16_t fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
@@ -624,10 +624,10 @@ ThreadError Frame::SetSrcAddr(ShortAddress aShortAddress)
     buf[0] = aShortAddress & 0xff;
     buf[1] = aShortAddress >> 8;
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError Frame::SetSrcAddr(const ExtAddress &aExtAddress)
+otError Frame::SetSrcAddr(const ExtAddress &aExtAddress)
 {
     uint8_t *buf;
     uint16_t fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
@@ -642,7 +642,7 @@ ThreadError Frame::SetSrcAddr(const ExtAddress &aExtAddress)
         buf[i] = aExtAddress.m8[sizeof(aExtAddress) - 1 - i];
     }
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 uint8_t *Frame::FindSecurityHeader(void)
@@ -695,12 +695,12 @@ exit:
     return cur;
 }
 
-ThreadError Frame::GetSecurityLevel(uint8_t &aSecurityLevel)
+otError Frame::GetSecurityLevel(uint8_t &aSecurityLevel)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t *buf;
 
-    VerifyOrExit((buf = FindSecurityHeader()) != NULL, error = kThreadError_Parse);
+    VerifyOrExit((buf = FindSecurityHeader()) != NULL, error = OT_ERROR_PARSE);
 
     aSecurityLevel = buf[0] & kSecLevelMask;
 
@@ -708,12 +708,12 @@ exit:
     return error;
 }
 
-ThreadError Frame::GetKeyIdMode(uint8_t &aKeyIdMode)
+otError Frame::GetKeyIdMode(uint8_t &aKeyIdMode)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t *buf;
 
-    VerifyOrExit((buf = FindSecurityHeader()) != NULL, error = kThreadError_Parse);
+    VerifyOrExit((buf = FindSecurityHeader()) != NULL, error = OT_ERROR_PARSE);
 
     aKeyIdMode = buf[0] & kKeyIdModeMask;
 
@@ -721,12 +721,12 @@ exit:
     return error;
 }
 
-ThreadError Frame::GetFrameCounter(uint32_t &aFrameCounter)
+otError Frame::GetFrameCounter(uint32_t &aFrameCounter)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t *buf;
 
-    VerifyOrExit((buf = FindSecurityHeader()) != NULL, error = kThreadError_Parse);
+    VerifyOrExit((buf = FindSecurityHeader()) != NULL, error = OT_ERROR_PARSE);
 
     // Security Control
     buf += kSecurityControlSize;
@@ -740,7 +740,7 @@ exit:
     return error;
 }
 
-ThreadError Frame::SetFrameCounter(uint32_t aFrameCounter)
+otError Frame::SetFrameCounter(uint32_t aFrameCounter)
 {
     uint8_t *buf;
 
@@ -755,7 +755,7 @@ ThreadError Frame::SetFrameCounter(uint32_t aFrameCounter)
     buf[2] = (aFrameCounter >> 16) & 0xff;
     buf[3] = (aFrameCounter >> 24) & 0xff;
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 const uint8_t *Frame::GetKeySource(void)
@@ -812,13 +812,13 @@ void Frame::SetKeySource(const uint8_t *aKeySource)
     memcpy(buf, aKeySource, keySourceLength);
 }
 
-ThreadError Frame::GetKeyId(uint8_t &aKeyId)
+otError Frame::GetKeyId(uint8_t &aKeyId)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t keySourceLength;
     uint8_t *buf;
 
-    VerifyOrExit((buf = FindSecurityHeader()) != NULL, error = kThreadError_Parse);
+    VerifyOrExit((buf = FindSecurityHeader()) != NULL, error = OT_ERROR_PARSE);
 
     keySourceLength = GetKeySourceLength(buf[0] & kKeyIdModeMask);
 
@@ -830,7 +830,7 @@ exit:
     return error;
 }
 
-ThreadError Frame::SetKeyId(uint8_t aKeyId)
+otError Frame::SetKeyId(uint8_t aKeyId)
 {
     uint8_t keySourceLength;
     uint8_t *buf;
@@ -844,27 +844,27 @@ ThreadError Frame::SetKeyId(uint8_t aKeyId)
 
     buf[0] = aKeyId;
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError Frame::GetCommandId(uint8_t &aCommandId)
+otError Frame::GetCommandId(uint8_t &aCommandId)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t *buf;
 
-    VerifyOrExit((buf = GetPayload()) != NULL, error = kThreadError_Parse);
+    VerifyOrExit((buf = GetPayload()) != NULL, error = OT_ERROR_PARSE);
     aCommandId = buf[-1];
 
 exit:
     return error;
 }
 
-ThreadError Frame::SetCommandId(uint8_t aCommandId)
+otError Frame::SetCommandId(uint8_t aCommandId)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t *buf;
 
-    VerifyOrExit((buf = GetPayload()) != NULL, error = kThreadError_Parse);
+    VerifyOrExit((buf = GetPayload()) != NULL, error = OT_ERROR_PARSE);
     buf[-1] = aCommandId;
 
 exit:
@@ -923,10 +923,10 @@ uint8_t Frame::GetPayloadLength(void)
     return GetPsduLength() - (GetHeaderLength() + GetFooterLength());
 }
 
-ThreadError Frame::SetPayloadLength(uint8_t aLength)
+otError Frame::SetPayloadLength(uint8_t aLength)
 {
     SetPsduLength(GetHeaderLength() + GetFooterLength() + aLength);
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 uint8_t *Frame::GetHeader(void)
@@ -1059,7 +1059,7 @@ const char *Frame::ToInfoString(char *aBuf, uint16_t aSize)
         break;
 
     case kFcfFrameMacCmd:
-        if (GetCommandId(commandId) != kThreadError_None)
+        if (GetCommandId(commandId) != OT_ERROR_NONE)
         {
             commandId = 0xff;
         }
@@ -1088,12 +1088,12 @@ const char *Frame::ToInfoString(char *aBuf, uint16_t aSize)
         break;
     }
 
-    if (GetSrcAddr(src) != kThreadError_None)
+    if (GetSrcAddr(src) != OT_ERROR_NONE)
     {
         src.mLength = 0;
     }
 
-    if (GetDstAddr(dst) != kThreadError_None)
+    if (GetDstAddr(dst) != OT_ERROR_NONE)
     {
         dst.mLength = 0;
     }

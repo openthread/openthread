@@ -139,11 +139,11 @@ Encoder::BufferWriteIterator::BufferWriteIterator(void)
     mRemainingLength = 0;
 }
 
-ThreadError Encoder::BufferWriteIterator::WriteByte(uint8_t aByte)
+otError Encoder::BufferWriteIterator::WriteByte(uint8_t aByte)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mRemainingLength > 0, error = kThreadError_NoBufs);
+    VerifyOrExit(mRemainingLength > 0, error = OT_ERROR_NO_BUFS);
 
     *mWritePointer++ = aByte;
     mRemainingLength--;
@@ -162,20 +162,20 @@ Encoder::Encoder(void):
 {
 }
 
-ThreadError Encoder::Init(BufferWriteIterator &aIterator)
+otError Encoder::Init(BufferWriteIterator &aIterator)
 {
     mFcs = kInitFcs;
 
     return aIterator.WriteByte(kFlagSequence);
 }
 
-ThreadError Encoder::Encode(uint8_t aInByte, BufferWriteIterator &aIterator)
+otError Encoder::Encode(uint8_t aInByte, BufferWriteIterator &aIterator)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     if (HdlcByteNeedsEscape(aInByte))
     {
-        VerifyOrExit(aIterator.CanWrite(2) , error = kThreadError_NoBufs);
+        VerifyOrExit(aIterator.CanWrite(2) , error = OT_ERROR_NO_BUFS);
 
         aIterator.WriteByte(kEscapeSequence);
         aIterator.WriteByte(aInByte ^ 0x20);
@@ -191,9 +191,9 @@ exit:
     return error;
 }
 
-ThreadError Encoder::Encode(const uint8_t *aInBuf, uint16_t aInLength, BufferWriteIterator &aIterator)
+otError Encoder::Encode(const uint8_t *aInBuf, uint16_t aInLength, BufferWriteIterator &aIterator)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     BufferWriteIterator oldIterator(aIterator);
     uint16_t oldFcs = mFcs;
 
@@ -203,7 +203,7 @@ ThreadError Encoder::Encode(const uint8_t *aInBuf, uint16_t aInLength, BufferWri
     }
 
 exit:
-    if (error != kThreadError_None)
+    if (error != OT_ERROR_NONE)
     {
         aIterator = oldIterator;
         mFcs = oldFcs;
@@ -212,9 +212,9 @@ exit:
     return error;
 }
 
-ThreadError Encoder::Finalize(BufferWriteIterator &aIterator)
+otError Encoder::Finalize(BufferWriteIterator &aIterator)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     BufferWriteIterator oldIterator(aIterator);
     uint16_t oldFcs = mFcs;
     uint16_t fcs = mFcs;
@@ -227,7 +227,7 @@ ThreadError Encoder::Finalize(BufferWriteIterator &aIterator)
     SuccessOrExit(error = aIterator.WriteByte(kFlagSequence));
 
 exit:
-    if (error != kThreadError_None)
+    if (error != OT_ERROR_NONE)
     {
         aIterator = oldIterator;
         mFcs = oldFcs;
@@ -286,7 +286,7 @@ void Decoder::Decode(const uint8_t *aInBuf, uint16_t aInLength)
                     }
                     else if (mErrorHandler != NULL)
                     {
-                        mErrorHandler(mContext, kThreadError_Parse, mOutBuf, mOutOffset);
+                        mErrorHandler(mContext, OT_ERROR_PARSE, mOutBuf, mOutOffset);
                     }
                 }
 
@@ -305,7 +305,7 @@ void Decoder::Decode(const uint8_t *aInBuf, uint16_t aInLength)
                 {
                     if (mErrorHandler != NULL)
                     {
-                        mErrorHandler(mContext, kThreadError_NoBufs, mOutBuf, mOutOffset);
+                        mErrorHandler(mContext, OT_ERROR_NO_BUFS, mOutBuf, mOutOffset);
                     }
                     mState = kStateNoSync;
                 }
@@ -327,7 +327,7 @@ void Decoder::Decode(const uint8_t *aInBuf, uint16_t aInLength)
             {
                 if (mErrorHandler != NULL)
                 {
-                    mErrorHandler(mContext, kThreadError_NoBufs, mOutBuf, mOutOffset);
+                    mErrorHandler(mContext, OT_ERROR_NO_BUFS, mOutBuf, mOutOffset);
                 }
                 mState = kStateNoSync;
             }

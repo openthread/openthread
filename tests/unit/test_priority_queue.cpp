@@ -236,7 +236,7 @@ void TestPriorityQueue(void)
 
     // Check the failure case for `SetPriority` for invalid argument.
     VerifyOrQuit(
-        msgHigh[2]->SetPriority(ot::Message::kNumPriorities) == kThreadError_InvalidArgs,
+        msgHigh[2]->SetPriority(ot::Message::kNumPriorities) == OT_ERROR_INVALID_ARGS,
         "Message::SetPriority() with out of range value did not fail as expected.\n"
     );
 
@@ -319,11 +319,11 @@ void TestPriorityQueue(void)
     SuccessOrQuit(queue.Enqueue(*msgHigh[0]), "PriorityQueue::Enqueue() failed.\n");
     VerifyPriorityQueueContent(queue, 1, msgHigh[0]);
     VerifyOrQuit(
-        queue.Enqueue(*msgHigh[0]) == kThreadError_Already,
+        queue.Enqueue(*msgHigh[0]) == OT_ERROR_ALREADY,
         "Enqueuing an already queued message did not fail as expected.\n"
     );
     VerifyOrQuit(
-        queue.Dequeue(*msgMed[0]) == kThreadError_NotFound,
+        queue.Dequeue(*msgMed[0]) == OT_ERROR_NOT_FOUND,
         "Dequeuing a message not queued, did not fail as expected.\n"
     );
     SuccessOrQuit(queue.Dequeue(*msgHigh[0]), "PriorityQueue::Dequeue() failed.\n");

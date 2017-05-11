@@ -71,38 +71,38 @@ void otPlatSettingsInit(otInstance *aInstance);
  *  called.
  *
  *  The implementation of this function is optional. If not
- *  implemented, it should return kThreadError_None.
+ *  implemented, it should return OT_ERROR_NONE.
  *
  * @param[in]  aInstance
  *             The OpenThread instance structure.
  *
- *  @retval kThreadError_None    The settings commit lock has been set.
- *  @retval kThreadError_Already The commit lock is already set.
+ *  @retval OT_ERROR_NONE    The settings commit lock has been set.
+ *  @retval OT_ERROR_ALREADY The commit lock is already set.
  *
  *  @sa otPlatSettingsCommitChange(), otPlatSettingsAbandonChange()
  */
-ThreadError otPlatSettingsBeginChange(otInstance *aInstance);
+otError otPlatSettingsBeginChange(otInstance *aInstance);
 
 /// Commit all settings changes since previous call to otPlatSettingsBeginChange()
 /** This function is called at the end of a sequence of changes.
  *  The implementation of this function is optional. If not
- *  implemented, it should return kThreadError_NotImplemented.
+ *  implemented, it should return OT_ERROR_NOT_IMPLEMENTED.
  *
  *  @param[in]  aInstance
  *              The OpenThread instance structure.
  *
- *  @retval kThreadError_None
+ *  @retval OT_ERROR_NONE
  *          The changes made since the last call to
  *          otPlatSettingsBeginChange() have been successfully
  *          committed.
- *  @retval kThreadError_InvalidState
+ *  @retval OT_ERROR_INVALID_STATE
  *          otPlatSettingsBeginChange() has not been called.
- *  @retval kThreadError_NotImplemented
+ *  @retval OT_ERROR_NOT_IMPLEMENTED
  *          This function is not implemented on this platform.
  *
  *  @sa otPlatSettingsBeginChange(), otPlatSettingsAbandonChange()
  */
-ThreadError otPlatSettingsCommitChange(otInstance *aInstance);
+otError otPlatSettingsCommitChange(otInstance *aInstance);
 
 /// Abandon all settings changes since previous call to otPlatSettingsBeginChange()
 /** This function may be called at the end of a sequence of changes.
@@ -111,23 +111,23 @@ ThreadError otPlatSettingsCommitChange(otInstance *aInstance);
  *  rolled back and abandoned.
  *
  *  The implementation of this function is optional. If not
- *  implemented, it should return kThreadError_NotImplemented.
+ *  implemented, it should return OT_ERROR_NOT_IMPLEMENTED.
  *
  *  @param[in]  aInstance
  *              The OpenThread instance structure.
  *
- *  @retval kThreadError_None
+ *  @retval OT_ERROR_NONE
  *          The changes made since the last call to
  *          otPlatSettingsBeginChange() have been successfully
  *          rolled back.
- *  @retval kThreadError_InvalidState
+ *  @retval OT_ERROR_INVALID_STATE
  *          otPlatSettingsBeginChange() has not been called.
- *  @retval kThreadError_NotImplemented
+ *  @retval OT_ERROR_NOT_IMPLEMENTED
  *          This function is not implemented on this platform.
  *
  *  @sa otPlatSettingsBeginChange(), otPlatSettingsCommitChange()
  */
-ThreadError otPlatSettingsAbandonChange(otInstance *aInstance);
+otError otPlatSettingsAbandonChange(otInstance *aInstance);
 
 /// Fetches the value of a setting
 /** This function fetches the value of the setting identified
@@ -165,15 +165,15 @@ ThreadError otPlatSettingsAbandonChange(otInstance *aInstance);
  *                 length of the setting is written. This may be
  *                 set to NULL if performing a presence check.
  *
- *  @retval kThreadError_None
+ *  @retval OT_ERROR_NONE
  *          The given setting was found and fetched successfully.
- *  @retval kThreadError_NotFound
+ *  @retval OT_ERROR_NOT_FOUND
  *          The given setting was not found in the setting store.
- *  @retval kThreadError_NotImplemented
+ *  @retval OT_ERROR_NOT_IMPLEMENTED
  *          This function is not implemented on this platform.
  */
-ThreadError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue,
-                              uint16_t *aValueLength);
+otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue,
+                          uint16_t *aValueLength);
 
 /// Sets or replaces the value of a setting
 /** This function sets or replaces the value of a setting
@@ -196,12 +196,12 @@ ThreadError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, 
  *              The length of the data pointed to by aValue.
  *              May be zero.
  *
- *  @retval kThreadError_None
+ *  @retval OT_ERROR_NONE
  *          The given setting was changed or staged.
- *  @retval kThreadError_NotImplemented
+ *  @retval OT_ERROR_NOT_IMPLEMENTED
  *          This function is not implemented on this platform.
  */
-ThreadError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
+otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
 /// Adds a value to a setting
 /** This function adds the value to a setting
@@ -229,12 +229,12 @@ ThreadError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_
  *                The length of the data pointed to by aValue.
  *                May be zero.
  *
- * @retval kThreadError_None
+ * @retval OT_ERROR_NONE
  *         The given setting was added or staged to be added.
- * @retval kThreadError_NotImplemented
+ * @retval OT_ERROR_NOT_IMPLEMENTED
  *         This function is not implemented on this platform.
  */
-ThreadError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
+otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
 /// Removes a setting from the setting store
 /** This function deletes a specific value from the
@@ -252,14 +252,14 @@ ThreadError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_
  *             The index of the value to be removed. If set to
  *             -1, all values for this aKey will be removed.
  *
- *  @retval kThreadError_None
+ *  @retval OT_ERROR_NONE
  *          The given key and index was found and removed successfully.
- *  @retval kThreadError_NotFound
+ *  @retval OT_ERROR_NOT_FOUND
  *          The given key or index  was not found in the setting store.
- *  @retval kThreadError_NotImplemented
+ *  @retval OT_ERROR_NOT_IMPLEMENTED
  *          This function is not implemented on this platform.
  */
-ThreadError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex);
+otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex);
 
 /// Removes all settings from the setting store
 /** This function deletes all settings from the settings

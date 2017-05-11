@@ -69,7 +69,7 @@ typedef struct RecvBuffer
 
 static RecvBuffer     sReceive;
 
-ThreadError otPlatUartEnable(void)
+otError otPlatUartEnable(void)
 {
     USART_TypeDef           *usart = USART0;
     USART_InitAsync_TypeDef init   = USART_INITASYNC_DEFAULT;
@@ -114,7 +114,7 @@ ThreadError otPlatUartEnable(void)
     /* Finally enable it */
     USART_Enable(usart, usartEnable);
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 void USART0_RX_IRQHandler(void)
@@ -132,16 +132,16 @@ void USART0_RX_IRQHandler(void)
     }
 }
 
-ThreadError otPlatUartDisable(void)
+otError otPlatUartDisable(void)
 {
-    return kThreadError_NotImplemented;
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
+otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    otEXPECT_ACTION(sTransmitBuffer == NULL, error = kThreadError_Busy);
+    otEXPECT_ACTION(sTransmitBuffer == NULL, error = OT_ERROR_BUSY);
 
     sTransmitBuffer = aBuf;
     sTransmitLength = aBufLength;

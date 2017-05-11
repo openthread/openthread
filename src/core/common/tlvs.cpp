@@ -44,9 +44,9 @@
 
 namespace ot {
 
-ThreadError Tlv::Get(const Message &aMessage, uint8_t aType, uint16_t aMaxLength, Tlv &aTlv)
+otError Tlv::Get(const Message &aMessage, uint8_t aType, uint16_t aMaxLength, Tlv &aTlv)
 {
-    ThreadError error = kThreadError_NotFound;
+    otError error = OT_ERROR_NOT_FOUND;
     uint16_t offset;
 
     SuccessOrExit(error = GetOffset(aMessage, aType, offset));
@@ -63,9 +63,9 @@ exit:
     return error;
 }
 
-ThreadError Tlv::GetOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset)
+otError Tlv::GetOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset)
 {
-    ThreadError error = kThreadError_NotFound;
+    otError error = OT_ERROR_NOT_FOUND;
     uint16_t offset = aMessage.GetOffset();
     uint16_t end = aMessage.GetLength();
     Tlv tlv;
@@ -86,7 +86,7 @@ ThreadError Tlv::GetOffset(const Message &aMessage, uint8_t aType, uint16_t &aOf
         else if (tlv.GetType() == aType && (offset + sizeof(tlv) + tlv.GetLength()) <= end)
         {
             aOffset = offset;
-            ExitNow(error = kThreadError_None);
+            ExitNow(error = OT_ERROR_NONE);
         }
         else
         {
@@ -98,9 +98,9 @@ exit:
     return error;
 }
 
-ThreadError Tlv::GetValueOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset, uint16_t &aLength)
+otError Tlv::GetValueOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset, uint16_t &aLength)
 {
-    ThreadError error = kThreadError_NotFound;
+    otError error = OT_ERROR_NOT_FOUND;
     uint16_t offset = aMessage.GetOffset();
     uint16_t end = aMessage.GetLength();
 
@@ -125,7 +125,7 @@ ThreadError Tlv::GetValueOffset(const Message &aMessage, uint8_t aType, uint16_t
         {
             aOffset = offset;
             aLength = length;
-            ExitNow(error = kThreadError_None);
+            ExitNow(error = OT_ERROR_NONE);
         }
 
         offset += length;

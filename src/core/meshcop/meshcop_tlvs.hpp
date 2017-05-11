@@ -142,11 +142,11 @@ public:
      * @param[in]   aMaxLength  Maximum number of bytes to read.
      * @param[out]  aTlv        A reference to the TLV that will be copied to.
      *
-     * @retval kThreadError_None      Successfully copied the TLV.
-     * @retval kThreadError_NotFound  Could not find the TLV with Type @p aType.
+     * @retval OT_ERROR_NONE       Successfully copied the TLV.
+     * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
      *
      */
-    static ThreadError GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv) {
+    static otError GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv) {
         return ot::Tlv::Get(aMessage, static_cast<uint8_t>(aType), aMaxLength, aTlv);
     }
 
@@ -158,11 +158,11 @@ public:
      * @param[out]  aOffset     The offset where the value starts.
      * @param[out]  aLength     The length of the value.
      *
-     * @retval kThreadError_None      Successfully found the TLV.
-     * @retval kThreadError_NotFound  Could not find the TLV with Type @p aType.
+     * @retval OT_ERROR_NONE       Successfully found the TLV.
+     * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
      *
      */
-    static ThreadError GetValueOffset(const Message &aMessage, Type aType, uint16_t &aOffset, uint16_t &aLength) {
+    static otError GetValueOffset(const Message &aMessage, Type aType, uint16_t &aOffset, uint16_t &aLength) {
         return ot::Tlv::GetValueOffset(aMessage, static_cast<uint8_t>(aType), aOffset, aLength);
     }
 
@@ -1528,11 +1528,11 @@ public:
      * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL value.
      *
      */
-    ThreadError SetProvisioningUrl(const char *aProvisioningUrl) {
-        ThreadError error = kThreadError_None;
+    otError SetProvisioningUrl(const char *aProvisioningUrl) {
+        otError error = OT_ERROR_NONE;
         size_t len = aProvisioningUrl ? strnlen(aProvisioningUrl, kMaxLength + 1) : 0;
 
-        VerifyOrExit(len <= kMaxLength, error = kThreadError_InvalidArgs);
+        VerifyOrExit(len <= kMaxLength, error = OT_ERROR_INVALID_ARGS);
         SetLength(static_cast<uint8_t>(len));
 
         if (len > 0) {
@@ -1589,11 +1589,11 @@ public:
      * @param[in]  aVendorName  A pointer to the Vendor Name value.
      *
      */
-    ThreadError SetVendorName(const char *aVendorName) {
-        ThreadError error = kThreadError_None;
+    otError SetVendorName(const char *aVendorName) {
+        otError error = OT_ERROR_NONE;
         size_t len = (aVendorName == NULL) ? 0 : strnlen(aVendorName, sizeof(mVendorName) + 1);
 
-        VerifyOrExit(len <= sizeof(mVendorName), error = kThreadError_InvalidArgs);
+        VerifyOrExit(len <= sizeof(mVendorName), error = OT_ERROR_INVALID_ARGS);
         SetLength(static_cast<uint8_t>(len));
 
         if (len > 0) {
@@ -1650,11 +1650,11 @@ public:
      * @param[in]  aVendorModel  A pointer to the Vendor Model value.
      *
      */
-    ThreadError SetVendorModel(const char *aVendorModel) {
-        ThreadError error = kThreadError_None;
+    otError SetVendorModel(const char *aVendorModel) {
+        otError error = OT_ERROR_NONE;
         size_t len = (aVendorModel == NULL) ? 0 : strnlen(aVendorModel, sizeof(mVendorModel) + 1);
 
-        VerifyOrExit(len <= sizeof(mVendorModel), error = kThreadError_InvalidArgs);
+        VerifyOrExit(len <= sizeof(mVendorModel), error = OT_ERROR_INVALID_ARGS);
         SetLength(static_cast<uint8_t>(len));
 
         if (len > 0) {
@@ -1711,11 +1711,11 @@ public:
      * @param[in]  aVendorSwVersion  A pointer to the Vendor SW Version value.
      *
      */
-    ThreadError SetVendorSwVersion(const char *aVendorSwVersion) {
-        ThreadError error = kThreadError_None;
+    otError SetVendorSwVersion(const char *aVendorSwVersion) {
+        otError error = OT_ERROR_NONE;
         size_t len = (aVendorSwVersion == NULL) ? 0 : strnlen(aVendorSwVersion, sizeof(mVendorSwVersion) + 1);
 
-        VerifyOrExit(len <= sizeof(mVendorSwVersion), error = kThreadError_InvalidArgs);
+        VerifyOrExit(len <= sizeof(mVendorSwVersion), error = OT_ERROR_INVALID_ARGS);
         SetLength(static_cast<uint8_t>(len));
 
         if (len > 0) {
@@ -1772,11 +1772,11 @@ public:
      * @param[in]  aVendorData  A pointer to the Vendor Data value.
      *
      */
-    ThreadError SetVendorData(const char *aVendorData) {
-        ThreadError error = kThreadError_None;
+    otError SetVendorData(const char *aVendorData) {
+        otError error = OT_ERROR_NONE;
         size_t len = (aVendorData == NULL) ? 0 : strnlen(aVendorData, sizeof(mVendorData) + 1);
 
-        VerifyOrExit(len <= sizeof(mVendorData), error = kThreadError_InvalidArgs);
+        VerifyOrExit(len <= sizeof(mVendorData), error = OT_ERROR_INVALID_ARGS);
         SetLength(static_cast<uint8_t>(len));
 
         if (len > 0) {

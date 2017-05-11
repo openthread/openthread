@@ -45,10 +45,10 @@
 namespace ot {
 namespace Crypto {
 
-ThreadError AesCcm::SetKey(const uint8_t *aKey, uint16_t aKeyLength)
+otError AesCcm::SetKey(const uint8_t *aKey, uint16_t aKeyLength)
 {
     mEcb.SetKey(aKey, 8 * aKeyLength);
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 void AesCcm::Init(uint32_t aHeaderLength, uint32_t aPlainTextLength, uint8_t aTagLength,

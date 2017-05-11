@@ -60,10 +60,10 @@ static uint16_t sReceiveHead = 0;
 
 static DEV_UART *consoleUart;
 
-ThreadError otPlatUartEnable(void)
+otError otPlatUartEnable(void)
 {
     int32_t stateUart = 0;
-    ThreadError error = kThreadError_Drop;
+    otError error = OT_ERROR_DROP;
 
     /* UART in embARC */
     consoleUart = uart_get_dev(BOARD_CONSOLE_UART_ID);
@@ -75,12 +75,12 @@ ThreadError otPlatUartEnable(void)
     if (stateUart == E_OPNED)
     {
         consoleUart->uart_control(UART_CMD_SET_BAUD, (void *)(BOARD_CONSOLE_UART_BAUD));
-        error = kThreadError_None;
+        error = OT_ERROR_NONE;
         DBG("Set Console UART Baudrate to %d.\r\n", BOARD_CONSOLE_UART_BAUD);
     }
     else if (stateUart == E_OK)
     {
-        error = kThreadError_None;
+        error = OT_ERROR_NONE;
         DBG("Open Console UART Successfully.\r\n");
     }
     else
@@ -94,16 +94,16 @@ exit:
 
 }
 
-ThreadError otPlatUartDisable(void)
+otError otPlatUartDisable(void)
 {
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
+otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    otEXPECT_ACTION(sTransmitBuffer == NULL, error = kThreadError_Busy);
+    otEXPECT_ACTION(sTransmitBuffer == NULL, error = OT_ERROR_BUSY);
 
     sTransmitBuffer = aBuf;
     sTransmitLength = aBufLength;

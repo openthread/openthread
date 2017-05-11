@@ -111,7 +111,7 @@ void NcpFrameBuffer::Clear(void)
     {
         if (mFrameTransmitCallback != NULL)
         {
-            mFrameTransmitCallback(mFrameTransmitContext, kThreadError_Abort);
+            mFrameTransmitCallback(mFrameTransmitContext, OT_ERROR_ABORT);
             mFrameTransmitCallback = NULL;
             mFrameTransmitMark = NULL;
         }
@@ -126,11 +126,11 @@ void NcpFrameBuffer::SetCallbacks(BufferCallback aEmptyBufferCallback, BufferCal
     mEmptyBufferCallbackContext = aContext;
 }
 
-ThreadError NcpFrameBuffer::SetFrameTransmitCallback(FrameTransmitCallback aFrameTransmitCallback, void *aContext)
+otError NcpFrameBuffer::SetFrameTransmitCallback(FrameTransmitCallback aFrameTransmitCallback, void *aContext)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mFrameTransmitCallback == NULL || aFrameTransmitCallback == NULL, error = kThreadError_Busy);
+    VerifyOrExit(mFrameTransmitCallback == NULL || aFrameTransmitCallback == NULL, error = OT_ERROR_BUSY);
 
     mFrameTransmitCallback = aFrameTransmitCallback;
     mFrameTransmitContext = aContext;
@@ -205,18 +205,18 @@ uint16_t NcpFrameBuffer::ReadUint16At(uint8_t *aBufPtr)
 }
 
 // Writes a bytes at the write tail, discards the frame if buffer gets full.
-ThreadError NcpFrameBuffer::InFrameFeedByte(uint8_t aByte)
+otError NcpFrameBuffer::InFrameFeedByte(uint8_t aByte)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t *newTail = Next(mWriteSegmentTail);
 
-    VerifyOrExit(newTail != mReadFrameStart, error = kThreadError_NoBufs);
+    VerifyOrExit(newTail != mReadFrameStart, error = OT_ERROR_NO_BUFS);
 
     *mWriteSegmentTail = aByte;
     mWriteSegmentTail = newTail;
 
 exit:
-    if (error != kThreadError_None)
+    if (error != OT_ERROR_NONE)
     {
         InFrameDiscard();
     }
@@ -225,9 +225,9 @@ exit:
 }
 
 // This method begins a new segment (if one is not already open)
-ThreadError NcpFrameBuffer::InFrameBeginSegment(void)
+otError NcpFrameBuffer::InFrameBeginSegment(void)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint16_t headerFlags = kSegmentHeaderNoFlag;
 
     // Verify that segment is not yet started (i.e., head and tail are the same).
@@ -297,17 +297,17 @@ void NcpFrameBuffer::InFrameDiscard(void)
     }
 }
 
-ThreadError NcpFrameBuffer::InFrameBegin(void)
+otError NcpFrameBuffer::InFrameBegin(void)
 {
     // Discard any previous frame.
     InFrameDiscard();
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError NcpFrameBuffer::InFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDataBufferLength)
+otError NcpFrameBuffer::InFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDataBufferLength)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     // Begin a new segment (if we are not in middle of segment already).
     SuccessOrExit(error = InFrameBeginSegment());
@@ -322,9 +322,9 @@ exit:
     return error;
 }
 
-ThreadError NcpFrameBuffer::InFrameFeedMessage(otMessage *aMessage)
+otError NcpFrameBuffer::InFrameFeedMessage(otMessage *aMessage)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     // Begin a new segment (if we are not in middle of segment already).
     SuccessOrExit(error = InFrameBeginSegment());
@@ -339,7 +339,7 @@ exit:
     return error;
 }
 
-ThreadError NcpFrameBuffer::InFrameEnd(void)
+otError NcpFrameBuffer::InFrameEnd(void)
 {
     otMessage *message;
     bool wasEmpty = IsEmpty();
@@ -366,7 +366,7 @@ ThreadError NcpFrameBuffer::InFrameEnd(void)
         }
     }
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 bool NcpFrameBuffer::IsEmpty(void) const
@@ -375,9 +375,9 @@ bool NcpFrameBuffer::IsEmpty(void) const
 }
 
 // Start/Prepare a new segment for reading.
-ThreadError NcpFrameBuffer::OutFramePrepareSegment(void)
+otError NcpFrameBuffer::OutFramePrepareSegment(void)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint16_t header;
 
     while (true)
@@ -386,7 +386,7 @@ ThreadError NcpFrameBuffer::OutFramePrepareSegment(void)
         mReadSegmentHead = mReadSegmentTail;
 
         // Ensure there is something to read (i.e. segment head is not at start of frame being written).
-        VerifyOrExit(mReadSegmentHead != mWriteFrameStart, error = kThreadError_NotFound);
+        VerifyOrExit(mReadSegmentHead != mWriteFrameStart, error = OT_ERROR_NOT_FOUND);
 
         // Read the segment header.
         header = ReadUint16At(mReadSegmentHead);
@@ -395,7 +395,7 @@ ThreadError NcpFrameBuffer::OutFramePrepareSegment(void)
         if (header & kSegmentHeaderNewFrameFlag)
         {
             // Ensure that this segment is start of current frame, otherwise the current frame is finished.
-            VerifyOrExit(mReadSegmentHead == mReadFrameStart, error = kThreadError_NotFound);
+            VerifyOrExit(mReadSegmentHead == mReadFrameStart, error = OT_ERROR_NOT_FOUND);
         }
 
         // Find tail/end of current segment.
@@ -415,7 +415,7 @@ ThreadError NcpFrameBuffer::OutFramePrepareSegment(void)
         }
 
         // No data in this segment,  prepare any appended/associated message of this segment.
-        if (OutFramePrepareMessage() == kThreadError_None)
+        if (OutFramePrepareMessage() == OT_ERROR_NONE)
         {
             ExitNow();
         }
@@ -424,7 +424,7 @@ ThreadError NcpFrameBuffer::OutFramePrepareSegment(void)
     }
 
 exit:
-    if (error != kThreadError_None)
+    if (error != OT_ERROR_NONE)
     {
         mReadState = kReadStateDone;
     }
@@ -434,23 +434,23 @@ exit:
 
 // This method prepares an associated message in current segment and fills the message buffer. It returns
 // ThreadError_NotFound if there is no message or if the message has no content.
-ThreadError NcpFrameBuffer::OutFramePrepareMessage(void)
+otError NcpFrameBuffer::OutFramePrepareMessage(void)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint16_t header;
 
     // Read the segment header
     header = ReadUint16At(mReadSegmentHead);
 
     // Ensure that the segment header indicates that there is an associated message or return `NotFound` error.
-    VerifyOrExit((header & kSegmentHeaderMessageIndicatorFlag) != 0, error = kThreadError_NotFound);
+    VerifyOrExit((header & kSegmentHeaderMessageIndicatorFlag) != 0, error = OT_ERROR_NOT_FOUND);
 
     // Update the current message from the queue.
     mReadMessage = (mReadMessage == NULL) ?
         otMessageQueueGetHead(&mMessageQueue) :
         otMessageQueueGetNext(&mMessageQueue, mReadMessage);
 
-    VerifyOrExit(mReadMessage != NULL, error = kThreadError_NotFound);
+    VerifyOrExit(mReadMessage != NULL, error = OT_ERROR_NOT_FOUND);
 
     // Reset the offset for reading the message.
     mReadMessageOffset = 0;
@@ -465,21 +465,21 @@ exit:
     return error;
 }
 
-// This method fills content from current message into the message buffer. It returns kThreadError_NotFound if no more
+// This method fills content from current message into the message buffer. It returns OT_ERROR_NOT_FOUND if no more
 // content in the current message.
-ThreadError NcpFrameBuffer::OutFrameFillMessageBuffer(void)
+otError NcpFrameBuffer::OutFrameFillMessageBuffer(void)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     int readLength;
 
-    VerifyOrExit(mReadMessage != NULL, error = kThreadError_NotFound);
+    VerifyOrExit(mReadMessage != NULL, error = OT_ERROR_NOT_FOUND);
 
-    VerifyOrExit(mReadMessageOffset < otMessageGetLength(mReadMessage), error = kThreadError_NotFound);
+    VerifyOrExit(mReadMessageOffset < otMessageGetLength(mReadMessage), error = OT_ERROR_NOT_FOUND);
 
     // Read portion of current message from the offset into message buffer.
     readLength = otMessageRead(mReadMessage, mReadMessageOffset, mMessageBuffer, sizeof(mMessageBuffer));
 
-    VerifyOrExit(readLength > 0, error = kThreadError_NotFound);
+    VerifyOrExit(readLength > 0, error = OT_ERROR_NOT_FOUND);
 
     // Update the message offset, set up the message tail, and set read pointer to start of message buffer.
 
@@ -493,9 +493,9 @@ exit:
     return error;
 }
 
-ThreadError NcpFrameBuffer::OutFrameBegin(void)
+otError NcpFrameBuffer::OutFrameBegin(void)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     mReadMessage = NULL;
 
@@ -515,7 +515,7 @@ bool NcpFrameBuffer::OutFrameHasEnded(void)
 
 uint8_t NcpFrameBuffer::OutFrameReadByte(void)
 {
-    ThreadError error;
+    otError error;
     uint8_t retval = kReadByteAfterFrameHasEnded;
 
     switch (mReadState)
@@ -539,7 +539,7 @@ uint8_t NcpFrameBuffer::OutFrameReadByte(void)
             error = OutFramePrepareMessage();
 
             // If there is no message, move to next segment (if any).
-            if (error != kThreadError_None)
+            if (error != OT_ERROR_NONE)
             {
                 OutFramePrepareSegment();
             }
@@ -560,7 +560,7 @@ uint8_t NcpFrameBuffer::OutFrameReadByte(void)
             error = OutFrameFillMessageBuffer();
 
             // If no more bytes in the message, move to next segment (if any).
-            if (error != kThreadError_None)
+            if (error != OT_ERROR_NONE)
             {
                 OutFramePrepareSegment();
             }
@@ -584,14 +584,14 @@ uint16_t NcpFrameBuffer::OutFrameRead(uint16_t aReadLength, uint8_t *aDataBuffer
     return bytesRead;
 }
 
-ThreadError NcpFrameBuffer::OutFrameRemove(void)
+otError NcpFrameBuffer::OutFrameRemove(void)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t *bufPtr;
     otMessage *message;
     uint16_t header;
 
-    VerifyOrExit(!IsEmpty(), error = kThreadError_NotFound);
+    VerifyOrExit(!IsEmpty(), error = OT_ERROR_NOT_FOUND);
 
     // Begin at the start of current frame and move through all segments.
 
@@ -644,7 +644,7 @@ ThreadError NcpFrameBuffer::OutFrameRemove(void)
     {
         if (mFrameTransmitCallback != NULL)
         {
-            mFrameTransmitCallback(mFrameTransmitContext, kThreadError_None);
+            mFrameTransmitCallback(mFrameTransmitContext, OT_ERROR_NONE);
             mFrameTransmitCallback = NULL;
             mFrameTransmitMark = NULL;
         }

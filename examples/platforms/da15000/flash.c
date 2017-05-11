@@ -53,14 +53,14 @@ QSPI_SECTION static  uint8_t qspi_get_erase_status(void)
 volatile bool  DisableErase = false;
 
 // Erase QSPI memory section as non-blocking function. Remember to check utilsFlashStatusWait before write or read!!
-ThreadError utilsFlashErasePage(uint32_t aAddress)
+otError utilsFlashErasePage(uint32_t aAddress)
 {
 
     uint32_t flash_offset = (aAddress) & ~(FLASH_SECTOR_SIZE - 1);
 
     if (DisableErase)
     {
-        return kThreadError_None;
+        return OT_ERROR_NONE;
     }
 
     qspi_automode_init();
@@ -68,7 +68,7 @@ ThreadError utilsFlashErasePage(uint32_t aAddress)
 
     CACHE->CACHE_CTRL1_REG = CACHE_CACHE_CTRL1_REG_CACHE_FLUSH_Msk;
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 
@@ -78,7 +78,7 @@ uint32_t utilsFlashGetSize(void)
     return (uint32_t)FLASH_BUFFER_SIZE;
 }
 
-ThreadError utilsFlashStatusWait(uint32_t aTimeout)
+otError utilsFlashStatusWait(uint32_t aTimeout)
 {
 
     sWaitStatusTimeout = otPlatAlarmGetNow();
@@ -87,25 +87,25 @@ ThreadError utilsFlashStatusWait(uint32_t aTimeout)
 
     if (qspi_get_erase_status())
     {
-        return kThreadError_Busy;
+        return OT_ERROR_BUSY;
     }
     else
     {
-        return kThreadError_None;
+        return OT_ERROR_NONE;
     }
 }
 
-ThreadError utilsFlashInit(void)
+otError utilsFlashInit(void)
 {
     qspi_automode_flash_power_up();
 
-    if (utilsFlashStatusWait(1000) == kThreadError_Busy)
+    if (utilsFlashStatusWait(1000) == OT_ERROR_BUSY)
     {
-        return kThreadError_Failed;
+        return OT_ERROR_FAILED;
     }
     else
     {
-        return kThreadError_None;
+        return OT_ERROR_NONE;
     }
 }
 

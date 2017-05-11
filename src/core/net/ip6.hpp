@@ -126,11 +126,11 @@ public:
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      * @param[in]  aIpProto      The Internet Protocol value.
      *
-     * @retval kThreadError_None    Successfully enqueued the message into an output interface.
-     * @retval kThreadError_NoBufs  Insufficient available buffer to add the IPv6 headers.
+     * @retval OT_ERROR_NONE     Successfully enqueued the message into an output interface.
+     * @retval OT_ERROR_NO_BUFS  Insufficient available buffer to add the IPv6 headers.
      *
      */
-    ThreadError SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto aIpProto);
+    otError SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto aIpProto);
 
     /**
      * This method processes a received IPv6 datagram.
@@ -141,12 +141,12 @@ public:
      * @param[in]  aLinkMessageInfo  A pointer to link-specific message information.
      * @param[in]  aFromNcpHost      TRUE if the message was submitted by the NCP host, FALSE otherwise.
      *
-     * @retval kThreadError_None   Successfully processed the message.
-     * @retval kThreadError_Drop   Message processing failed and the message should be dropped.
+     * @retval OT_ERROR_NONE   Successfully processed the message.
+     * @retval OT_ERROR_DROP   Message processing failed and the message should be dropped.
      *
      */
-    ThreadError HandleDatagram(Message &aMessage, Netif *aNetif, int8_t aInterfaceId,
-                               const void *aLinkMessageInfo, bool aFromNcpHost);
+    otError HandleDatagram(Message &aMessage, Netif *aNetif, int8_t aInterfaceId,
+                           const void *aLinkMessageInfo, bool aFromNcpHost);
 
 
     /**
@@ -265,22 +265,22 @@ public:
      *
      * @param  aNetif  A reference to the network interface.
      *
-     * @retval kThreadError_None  Successfully enabled the network interface.
-     * @retval KThreadError_Already  The network interface was already enabled.
+     * @retval OT_ERROR_NONE     Successfully enabled the network interface.
+     * @retval OT_ERROR_ALREADY  The network interface was already enabled.
      *
      */
-    ThreadError AddNetif(Netif &aNetif);
+    otError AddNetif(Netif &aNetif);
 
     /**
      * This method disables the network interface.
      *
      * @param  aNetif  A reference to the network interface.
      *
-     * @retval kThreadError_None  Successfully disabled the network interface.
-     * @retval KThreadError_NotFound  The network interface was already disabled.
+     * @retval OT_ERROR_NONE       Successfully disabled the network interface.
+     * @retval OT_ERROR_NOT_FOUND  The network interface was already disabled.
      *
      */
-    ThreadError RemoveNetif(Netif &aNetif);
+    otError RemoveNetif(Netif &aNetif);
 
     /**
      * This method returns the network interface list.
@@ -368,17 +368,17 @@ private:
     static void HandleSendQueue(void *aContext);
     void HandleSendQueue(void);
 
-    ThreadError ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto,
-                                       bool aFromNcpHost);
-    ThreadError HandleExtensionHeaders(Message &aMessage, Header &aHeader, uint8_t &aNextHeader, bool aForward,
-                                       bool aReceive);
-    ThreadError HandleFragment(Message &aMessage);
-    ThreadError AddMplOption(Message &aMessage, Header &aHeader);
-    ThreadError AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
-    ThreadError InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
-    ThreadError RemoveMplOption(Message &aMessage);
-    ThreadError HandleOptions(Message &aMessage, Header &aHeader, bool &aForward);
-    ThreadError HandlePayload(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto);
+    otError ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto,
+                                   bool aFromNcpHost);
+    otError HandleExtensionHeaders(Message &aMessage, Header &aHeader, uint8_t &aNextHeader, bool aForward,
+                                   bool aReceive);
+    otError HandleFragment(Message &aMessage);
+    otError AddMplOption(Message &aMessage, Header &aHeader);
+    otError AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
+    otError InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
+    otError RemoveMplOption(Message &aMessage);
+    otError HandleOptions(Message &aMessage, Header &aHeader, bool &aForward);
+    otError HandlePayload(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto);
     int8_t FindForwardInterfaceId(const MessageInfo &aMessageInfo);
 
     bool mForwardingEnabled;

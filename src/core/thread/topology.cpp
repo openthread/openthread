@@ -55,9 +55,9 @@ void Neighbor::GenerateChallenge(void)
     }
 }
 
-ThreadError Child::FindIp6Address(const Ip6::Address &aAddress, uint8_t *aIndex) const
+otError Child::FindIp6Address(const Ip6::Address &aAddress, uint8_t *aIndex) const
 {
-    ThreadError error = kThreadError_NotFound;
+    otError error = OT_ERROR_NOT_FOUND;
 
     for (uint8_t index = 0; index < kMaxIp6AddressPerChild; index++)
     {
@@ -68,7 +68,7 @@ ThreadError Child::FindIp6Address(const Ip6::Address &aAddress, uint8_t *aIndex)
                 *aIndex = index;
             }
 
-            error = kThreadError_None;
+            error = OT_ERROR_NONE;
             break;
         }
     }

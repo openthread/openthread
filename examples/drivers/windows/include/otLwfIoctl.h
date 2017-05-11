@@ -37,7 +37,7 @@
 
 #include <openthread/types.h>
 
-__inline LONG ThreadErrorToNtstatus(ThreadError error) { return (LONG)-((int)error); }
+__inline LONG ThreadErrorToNtstatus(otError error) { return (LONG)-((int)error); }
 
 // User-mode IOCTL path for CreateFile
 #define OTLWF_IOCLT_PATH      TEXT("\\\\.\\\\otlwf")
@@ -128,7 +128,7 @@ typedef enum _OTLWF_NOTIF_TYPE
             // Payload for OTLWF_NOTIF_JOINER_COMPLETE
             struct
             {
-                ThreadError             Error;
+                otError             Error;
             } JoinerCompletePayload;
         };
     } OTLWF_NOTIFICATION, *POTLWF_NOTIFICATION;

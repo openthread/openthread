@@ -138,9 +138,9 @@ void Uart::ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
     }
 }
 
-ThreadError Uart::ProcessCommand(void)
+otError Uart::ProcessCommand(void)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     if (mRxBuffer[mRxLength - 1] == '\n')
     {

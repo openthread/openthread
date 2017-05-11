@@ -74,10 +74,10 @@
 #endif // SETTINGS_CONFIG_PAGE_NUM
 #define SETTINGS_CONFIG_PAGE_NUM    1
 
-ThreadError utilsFlashInit(void)
+otError utilsFlashInit(void)
 {
     flash_init();
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 uint32_t utilsFlashGetSize(void)
@@ -85,26 +85,26 @@ uint32_t utilsFlashGetSize(void)
     return (uint32_t)FLASH_SECTOR_SIZE;
 }
 
-ThreadError utilsFlashErasePage(uint32_t aAddress)
+otError utilsFlashErasePage(uint32_t aAddress)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     int32_t status;
 
     otEXPECT_ACTION((aAddress >= OPENTHREAD_FLASH_BASE) && (aAddress < (OPENTHREAD_FLASH_BASE + OPENTHREAD_FLASH_SIZE - 1)),
-                    error = kThreadError_InvalidArgs);
+                    error = OT_ERROR_INVALID_ARGS);
 
     /* Use 2 sectors in the implementation, cannot erase the address over the boundry */
     status = flash_erase(aAddress, FLASH_SECTOR_SIZE);
 
-    otEXPECT_ACTION(status != -1, error = kThreadError_Failed);
+    otEXPECT_ACTION(status != -1, error = OT_ERROR_FAILED);
 
 exit:
     return error;
 }
 
-ThreadError utilsFlashStatusWait(uint32_t aTimeout)
+otError utilsFlashStatusWait(uint32_t aTimeout)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint32_t start = otPlatAlarmGetNow();
     bool busy = true;
     uint32_t status = 0x01;
@@ -115,7 +115,7 @@ ThreadError utilsFlashStatusWait(uint32_t aTimeout)
         busy =  status & 0x01;
     }
 
-    otEXPECT_ACTION(!busy, error = kThreadError_Busy);
+    otEXPECT_ACTION(!busy, error = OT_ERROR_BUSY);
 
 exit:
     return error;

@@ -119,7 +119,7 @@ public:
      * @param[in]  aDelay  The CONTEXT_ID_REUSE_DELAY value.
      *
      */
-    ThreadError SetContextIdReuseDelay(uint32_t aDelay);
+    otError SetContextIdReuseDelay(uint32_t aDelay);
 
     /**
      * This method removes Network Data associated with a given RLOC16.
@@ -134,11 +134,11 @@ public:
      *
      * @param[in]  aRloc16  The invalid RLOC16 to notify.
      *
-     * @retval kThreadError_None    Successfully enqueued the notification message.
-     * @retval kThreadError_NoBufs  Insufficient message buffers to generate the notification message.
+     * @retval OT_ERROR_NONE     Successfully enqueued the notification message.
+     * @retval OT_ERROR_NO_BUFS  Insufficient message buffers to generate the notification message.
      *
      */
-    ThreadError SendServerDataNotification(uint16_t aRloc16);
+    otError SendServerDataNotification(uint16_t aRloc16);
 
 private:
     static void HandleServerData(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
@@ -148,25 +148,25 @@ private:
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
 
-    ThreadError RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLength);
+    otError RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLength);
 
-    ThreadError AddHasRoute(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute);
-    ThreadError AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter);
-    ThreadError AddNetworkData(uint8_t *aTlv, uint8_t aTlvLength);
-    ThreadError AddPrefix(PrefixTlv &aTlv);
+    otError AddHasRoute(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute);
+    otError AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter);
+    otError AddNetworkData(uint8_t *aTlv, uint8_t aTlvLength);
+    otError AddPrefix(PrefixTlv &aTlv);
 
     int AllocateContext(void);
-    ThreadError FreeContext(uint8_t aContextId);
+    otError FreeContext(uint8_t aContextId);
 
-    ThreadError RemoveContext(uint8_t aContextId);
-    ThreadError RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId);
+    otError RemoveContext(uint8_t aContextId);
+    otError RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId);
 
-    ThreadError RemoveCommissioningData(void);
+    otError RemoveCommissioningData(void);
 
-    ThreadError RemoveRloc(uint16_t aRloc16);
-    ThreadError RemoveRloc(PrefixTlv &aPrefix, uint16_t aRloc16);
-    ThreadError RemoveRloc(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute, uint16_t aRloc16);
-    ThreadError RemoveRloc(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter, uint16_t aRloc16);
+    otError RemoveRloc(uint16_t aRloc16);
+    otError RemoveRloc(PrefixTlv &aPrefix, uint16_t aRloc16);
+    otError RemoveRloc(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute, uint16_t aRloc16);
+    otError RemoveRloc(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter, uint16_t aRloc16);
 
     void RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *aTlvs, uint8_t aTlvsLength);
     bool IsStableUpdated(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvsBase,

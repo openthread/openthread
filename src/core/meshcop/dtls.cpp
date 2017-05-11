@@ -88,8 +88,8 @@ otInstance *Dtls::GetInstance(void)
     return mNetif.GetInstance();
 }
 
-ThreadError Dtls::Start(bool aClient, ConnectedHandler aConnectedHandler, ReceiveHandler aReceiveHandler,
-                        SendHandler aSendHandler, void *aContext)
+otError Dtls::Start(bool aClient, ConnectedHandler aConnectedHandler, ReceiveHandler aReceiveHandler,
+                    SendHandler aSendHandler, void *aContext)
 {
     static const int ciphersuites[2] = {0xC0FF, 0}; // EC-JPAKE cipher suite
     otExtAddress eui64;
@@ -154,11 +154,11 @@ exit:
     return MapError(rval);
 }
 
-ThreadError Dtls::Stop(void)
+otError Dtls::Stop(void)
 {
     mbedtls_ssl_close_notify(&mSsl);
     Close();
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 void Dtls::Close(void)
@@ -186,11 +186,11 @@ bool Dtls::IsStarted(void)
     return mStarted;
 }
 
-ThreadError Dtls::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
+otError Dtls::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aPskLength <= sizeof(mPsk), error = kThreadError_InvalidArgs);
+    VerifyOrExit(aPskLength <= sizeof(mPsk), error = OT_ERROR_INVALID_ARGS);
 
     memcpy(mPsk, aPsk, aPskLength);
     mPskLength = aPskLength;
@@ -199,7 +199,7 @@ exit:
     return error;
 }
 
-ThreadError Dtls::SetClientId(const uint8_t *aClientId, uint8_t aLength)
+otError Dtls::SetClientId(const uint8_t *aClientId, uint8_t aLength)
 {
     int rval = mbedtls_ssl_set_client_transport_id(&mSsl, aClientId, aLength);
     return MapError(rval);
@@ -210,12 +210,12 @@ bool Dtls::IsConnected(void)
     return mSsl.state == MBEDTLS_SSL_HANDSHAKE_OVER;
 }
 
-ThreadError Dtls::Send(Message &aMessage, uint16_t aLength)
+otError Dtls::Send(Message &aMessage, uint16_t aLength)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t buffer[kApplicationDataMaxLength];
 
-    VerifyOrExit(aLength <= kApplicationDataMaxLength, error = kThreadError_NoBufs);
+    VerifyOrExit(aLength <= kApplicationDataMaxLength, error = OT_ERROR_NO_BUFS);
 
     // Store message specific sub type.
     mMessageSubType = aMessage.GetSubType();
@@ -229,7 +229,7 @@ exit:
     return error;
 }
 
-ThreadError Dtls::Receive(Message &aMessage, uint16_t aOffset, uint16_t aLength)
+otError Dtls::Receive(Message &aMessage, uint16_t aOffset, uint16_t aLength)
 {
     mReceiveMessage = &aMessage;
     mReceiveOffset = aOffset;
@@ -237,7 +237,7 @@ ThreadError Dtls::Receive(Message &aMessage, uint16_t aOffset, uint16_t aLength)
 
     Process();
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 int Dtls::HandleMbedtlsTransmit(void *aContext, const unsigned char *aBuf, size_t aLength)
@@ -247,7 +247,7 @@ int Dtls::HandleMbedtlsTransmit(void *aContext, const unsigned char *aBuf, size_
 
 int Dtls::HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength)
 {
-    ThreadError error;
+    otError error;
     int rval = 0;
 
     otLogInfoMeshCoP(GetInstance(), "Dtls::HandleMbedtlsTransmit");
@@ -259,11 +259,11 @@ int Dtls::HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength)
 
     switch (error)
     {
-    case kThreadError_None:
+    case OT_ERROR_NONE:
         rval = static_cast<int>(aLength);
         break;
 
-    case kThreadError_NoBufs:
+    case OT_ERROR_NO_BUFS:
         rval = MBEDTLS_ERR_SSL_WANT_WRITE;
         break;
 
@@ -471,18 +471,18 @@ exit:
     }
 }
 
-ThreadError Dtls::MapError(int rval)
+otError Dtls::MapError(int rval)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     switch (rval)
     {
     case MBEDTLS_ERR_SSL_BAD_INPUT_DATA:
-        error = kThreadError_InvalidArgs;
+        error = OT_ERROR_INVALID_ARGS;
         break;
 
     case MBEDTLS_ERR_SSL_ALLOC_FAILED:
-        error = kThreadError_NoBufs;
+        error = OT_ERROR_NO_BUFS;
         break;
 
     default:

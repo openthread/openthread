@@ -89,7 +89,7 @@ private:
     static void TxFrameBufferHasData(void *aContext, NcpFrameBuffer *aNcpFrameBuffer);
     void TxFrameBufferHasData(void);
 
-    ThreadError PrepareNextSpiSendFrame(void);
+    otError PrepareNextSpiSendFrame(void);
 
     TxState mTxState;
     bool mHandlingRxFrame;

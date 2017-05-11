@@ -57,7 +57,7 @@ uint8_t otThreadGetMaxAllowedChildren(otInstance *aInstance)
     return aNumChildren;
 }
 
-ThreadError otThreadSetMaxAllowedChildren(otInstance *aInstance, uint8_t aMaxChildren)
+otError otThreadSetMaxAllowedChildren(otInstance *aInstance, uint8_t aMaxChildren)
 {
     return aInstance->mThreadNetif.GetMle().SetMaxAllowedChildren(aMaxChildren);
 }
@@ -72,7 +72,7 @@ void otThreadSetRouterRoleEnabled(otInstance *aInstance, bool aEnabled)
     aInstance->mThreadNetif.GetMle().SetRouterRoleEnabled(aEnabled);
 }
 
-ThreadError otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId)
+otError otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId)
 {
     return aInstance->mThreadNetif.GetMle().SetPreferredRouterId(aRouterId);
 }
@@ -102,7 +102,7 @@ uint16_t otThreadGetJoinerUdpPort(otInstance *aInstance)
     return aInstance->mThreadNetif.GetJoinerRouter().GetJoinerUdpPort();
 }
 
-ThreadError otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort)
+otError otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort)
 {
     return aInstance->mThreadNetif.GetJoinerRouter().SetJoinerUdpPort(aJoinerUdpPort);
 }
@@ -137,14 +137,14 @@ void otThreadSetRouterUpgradeThreshold(otInstance *aInstance, uint8_t aThreshold
     aInstance->mThreadNetif.GetMle().SetRouterUpgradeThreshold(aThreshold);
 }
 
-ThreadError otThreadReleaseRouterId(otInstance *aInstance, uint8_t aRouterId)
+otError otThreadReleaseRouterId(otInstance *aInstance, uint8_t aRouterId)
 {
     return aInstance->mThreadNetif.GetMle().ReleaseRouterId(aRouterId);
 }
 
-ThreadError otThreadBecomeRouter(otInstance *aInstance)
+otError otThreadBecomeRouter(otInstance *aInstance)
 {
-    ThreadError error = kThreadError_InvalidState;
+    otError error = OT_ERROR_INVALID_STATE;
 
     switch (aInstance->mThreadNetif.GetMle().GetDeviceState())
     {
@@ -158,14 +158,14 @@ ThreadError otThreadBecomeRouter(otInstance *aInstance)
 
     case Mle::kDeviceStateRouter:
     case Mle::kDeviceStateLeader:
-        error = kThreadError_None;
+        error = OT_ERROR_NONE;
         break;
     }
 
     return error;
 }
 
-ThreadError otThreadBecomeLeader(otInstance *aInstance)
+otError otThreadBecomeLeader(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMle().BecomeLeader();
 }
@@ -190,11 +190,11 @@ void otThreadSetRouterSelectionJitter(otInstance *aInstance, uint8_t aRouterJitt
     aInstance->mThreadNetif.GetMle().SetRouterSelectionJitter(aRouterJitter);
 }
 
-ThreadError otThreadGetChildInfoById(otInstance *aInstance, uint16_t aChildId, otChildInfo *aChildInfo)
+otError otThreadGetChildInfoById(otInstance *aInstance, uint16_t aChildId, otChildInfo *aChildInfo)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aChildInfo != NULL, error = kThreadError_InvalidArgs);
+    VerifyOrExit(aChildInfo != NULL, error = OT_ERROR_INVALID_ARGS);
 
     error = aInstance->mThreadNetif.GetMle().GetChildInfoById(aChildId, *aChildInfo);
 
@@ -202,11 +202,11 @@ exit:
     return error;
 }
 
-ThreadError otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex, otChildInfo *aChildInfo)
+otError otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex, otChildInfo *aChildInfo)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aChildInfo != NULL, error = kThreadError_InvalidArgs);
+    VerifyOrExit(aChildInfo != NULL, error = OT_ERROR_INVALID_ARGS);
 
     error = aInstance->mThreadNetif.GetMle().GetChildInfoByIndex(aChildIndex, *aChildInfo);
 
@@ -219,11 +219,11 @@ uint8_t otThreadGetRouterIdSequence(otInstance *aInstance)
     return aInstance->mThreadNetif.GetMle().GetRouterIdSequence();
 }
 
-ThreadError otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRouterInfo *aRouterInfo)
+otError otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRouterInfo *aRouterInfo)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aRouterInfo != NULL, error = kThreadError_InvalidArgs);
+    VerifyOrExit(aRouterInfo != NULL, error = OT_ERROR_INVALID_ARGS);
 
     error = aInstance->mThreadNetif.GetMle().GetRouterInfo(aRouterId, *aRouterInfo);
 
@@ -231,20 +231,20 @@ exit:
     return error;
 }
 
-ThreadError otThreadGetEidCacheEntry(otInstance *aInstance, uint8_t aIndex, otEidCacheEntry *aEntry)
+otError otThreadGetEidCacheEntry(otInstance *aInstance, uint8_t aIndex, otEidCacheEntry *aEntry)
 {
-    ThreadError error;
+    otError error;
 
-    VerifyOrExit(aEntry != NULL, error = kThreadError_InvalidArgs);
+    VerifyOrExit(aEntry != NULL, error = OT_ERROR_INVALID_ARGS);
     error = aInstance->mThreadNetif.GetAddressResolver().GetEntry(aIndex, *aEntry);
 
 exit:
     return error;
 }
 
-ThreadError otThreadSetSteeringData(otInstance *aInstance, otExtAddress *aExtAddress)
+otError otThreadSetSteeringData(otInstance *aInstance, otExtAddress *aExtAddress)
 {
-    ThreadError error;
+    otError error;
 
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
     error = aInstance->mThreadNetif.GetMle().SetSteeringData(aExtAddress);
@@ -252,7 +252,7 @@ ThreadError otThreadSetSteeringData(otInstance *aInstance, otExtAddress *aExtAdd
     (void)aInstance;
     (void)aExtAddress;
 
-    error = kThreadError_DisabledFeature;
+    error = OT_ERROR_DISABLED_FEATURE;
 #endif  // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
 
     return error;
@@ -263,11 +263,12 @@ const uint8_t *otThreadGetPSKc(otInstance *aInstance)
     return aInstance->mThreadNetif.GetKeyManager().GetPSKc();
 }
 
-ThreadError otThreadSetPSKc(otInstance *aInstance, const uint8_t *aPSKc)
+otError otThreadSetPSKc(otInstance *aInstance, const uint8_t *aPSKc)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
+
     VerifyOrExit(aInstance->mThreadNetif.GetMle().GetDeviceState() == Mle::kDeviceStateDisabled,
-                 error = kThreadError_InvalidState);
+                 error = OT_ERROR_INVALID_STATE);
 
     aInstance->mThreadNetif.GetKeyManager().SetPSKc(aPSKc);
     aInstance->mThreadNetif.GetActiveDataset().Clear(false);

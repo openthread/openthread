@@ -71,7 +71,7 @@ typedef struct RecvBuffer
 
 static RecvBuffer sReceive;
 
-ThreadError otPlatUartEnable(void)
+otError otPlatUartEnable(void)
 {
     lpuart_config_t config;
 
@@ -96,20 +96,20 @@ ThreadError otPlatUartEnable(void)
     NVIC_ClearPendingIRQ(LPUART0_IRQn);
     NVIC_EnableIRQ(LPUART0_IRQn);
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError otPlatUartDisable(void)
+otError otPlatUartDisable(void)
 {
     NVIC_DisableIRQ(LPUART0_IRQn);
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
+otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    otEXPECT_ACTION(sTransmitBuffer == NULL, error = kThreadError_Busy);
+    otEXPECT_ACTION(sTransmitBuffer == NULL, error = OT_ERROR_BUSY);
 
     sTransmitBuffer = aBuf + 1;
     sTransmitLength = aBufLength - 1;

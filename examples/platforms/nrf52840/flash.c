@@ -51,13 +51,13 @@ static inline uint32_t mapAddress(uint32_t aAddress)
     return aAddress + FLASH_START_ADDR;
 }
 
-ThreadError utilsFlashInit(void)
+otError utilsFlashInit(void)
 {
     // Just ensure that the start and end addresses are page-aligned.
     assert((FLASH_START_ADDR % FLASH_PAGE_SIZE) == 0);
     assert((FLASH_END_ADDR % FLASH_PAGE_SIZE) == 0);
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 uint32_t utilsFlashGetSize(void)
@@ -65,10 +65,10 @@ uint32_t utilsFlashGetSize(void)
     return FLASH_END_ADDR - FLASH_START_ADDR;
 }
 
-ThreadError utilsFlashErasePage(uint32_t aAddress)
+otError utilsFlashErasePage(uint32_t aAddress)
 {
-    ThreadError error = kThreadError_None;
-    otEXPECT_ACTION(aAddress < utilsFlashGetSize(), error = kThreadError_InvalidArgs);
+    otError error = OT_ERROR_NONE;
+    otEXPECT_ACTION(aAddress < utilsFlashGetSize(), error = OT_ERROR_INVALID_ARGS);
 
     nrf_nvmc_page_erase(mapAddress(aAddress & FLASH_PAGE_ADDR_MASK));
 
@@ -76,15 +76,15 @@ exit:
     return error;
 }
 
-ThreadError utilsFlashStatusWait(uint32_t aTimeout)
+otError utilsFlashStatusWait(uint32_t aTimeout)
 {
-    ThreadError error = kThreadError_Busy;
+    otError error = OT_ERROR_BUSY;
 
     if (aTimeout == 0)
     {
         if (NRF_NVMC->READY == NVMC_READY_READY_Ready)
         {
-            error = kThreadError_None;
+            error = OT_ERROR_NONE;
         }
     }
     else
@@ -95,7 +95,7 @@ ThreadError utilsFlashStatusWait(uint32_t aTimeout)
         {
             if (NRF_NVMC->READY == NVMC_READY_READY_Ready)
             {
-                error = kThreadError_None;
+                error = OT_ERROR_NONE;
                 break;
             }
         }

@@ -62,14 +62,14 @@ int main(int argc, char *argv[])
     return NO_ERROR;
 }
 
-EXTERN_C ThreadError otPlatUartEnable(void)
+EXTERN_C otError otPlatUartEnable(void)
 {
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-EXTERN_C ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
+EXTERN_C otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     if (!skipNextLine)
     {

@@ -263,20 +263,20 @@ public:
      * @param[in]  aFcf     The Frame Control field.
      * @param[in]  aSecCtl  The Security Control field.
      *
-     * @retval kThreadError_None         Successfully initialized the MAC header.
-     * @retval kThreadError_InvalidArgs  Invalid values for @p aFcf and/or @p aSecCtl.
+     * @retval OT_ERROR_NONE          Successfully initialized the MAC header.
+     * @retval OT_ERROR_INVALID_ARGS  Invalid values for @p aFcf and/or @p aSecCtl.
      *
      */
-    ThreadError InitMacHeader(uint16_t aFcf, uint8_t aSecCtl);
+    otError InitMacHeader(uint16_t aFcf, uint8_t aSecCtl);
 
     /**
      * This method validates the frame.
      *
-     * @retval kThreadError_None    Successfully parsed the MAC header.
-     * @retval kThreadError_Parse   Failed to parse through the MAC header.
+     * @retval OT_ERROR_NONE    Successfully parsed the MAC header.
+     * @retval OT_ERROR_PARSE   Failed to parse through the MAC header.
      *
      */
-    ThreadError ValidatePsdu(void);
+    otError ValidatePsdu(void);
 
     /**
      * This method returns the IEEE 802.15.4 Frame Type.
@@ -350,140 +350,140 @@ public:
      *
      * @param[out]  aPanId  The Destination PAN Identifier.
      *
-     * @retval kThreadError_None   Successfully retrieved the Destination PAN Identifier.
+     * @retval OT_ERROR_NONE   Successfully retrieved the Destination PAN Identifier.
      *
      */
-    ThreadError GetDstPanId(PanId &aPanId);
+    otError GetDstPanId(PanId &aPanId);
 
     /**
      * This method sets the Destination PAN Identifier.
      *
      * @param[in]  aPanId  The Destination PAN Identifier.
      *
-     * @retval kThreadError_None   Successfully set the Destination PAN Identifier.
+     * @retval OT_ERROR_NONE   Successfully set the Destination PAN Identifier.
      *
      */
-    ThreadError SetDstPanId(PanId aPanId);
+    otError SetDstPanId(PanId aPanId);
 
     /**
      * This method gets the Destination Address.
      *
      * @param[out]  aAddress  The Destination Address.
      *
-     * @retval kThreadError_None  Successfully retrieved the Destination Address.
+     * @retval OT_ERROR_NONE  Successfully retrieved the Destination Address.
      *
      */
-    ThreadError GetDstAddr(Address &aAddress);
+    otError GetDstAddr(Address &aAddress);
 
     /**
      * This method sets the Destination Address.
      *
      * @param[in]  aShortAddress  The Destination Address.
      *
-     * @retval kThreadError_None  Successfully set the Destination Address.
+     * @retval OT_ERROR_NONE  Successfully set the Destination Address.
      *
      */
-    ThreadError SetDstAddr(ShortAddress aShortAddress);
+    otError SetDstAddr(ShortAddress aShortAddress);
 
     /**
      * This method sets the Destination Address.
      *
      * @param[in]  aExtAddress  The Destination Address.
      *
-     * @retval kThreadError_None  Successfully set the Destination Address.
+     * @retval OT_ERROR_NONE  Successfully set the Destination Address.
      *
      */
-    ThreadError SetDstAddr(const ExtAddress &aExtAddress);
+    otError SetDstAddr(const ExtAddress &aExtAddress);
 
     /**
      * This method gets the Source PAN Identifier.
      *
      * @param[out]  aPanId  The Source PAN Identifier.
      *
-     * @retval kThreadError_None   Successfully retrieved the Source PAN Identifier.
+     * @retval OT_ERROR_NONE   Successfully retrieved the Source PAN Identifier.
      *
      */
-    ThreadError GetSrcPanId(PanId &aPanId);
+    otError GetSrcPanId(PanId &aPanId);
 
     /**
      * This method sets the Source PAN Identifier.
      *
      * @param[in]  aPanId  The Source PAN Identifier.
      *
-     * @retval kThreadError_None   Successfully set the Source PAN Identifier.
+     * @retval OT_ERROR_NONE   Successfully set the Source PAN Identifier.
      *
      */
-    ThreadError SetSrcPanId(PanId aPanId);
+    otError SetSrcPanId(PanId aPanId);
 
     /**
      * This method gets the Source Address.
      *
      * @param[out]  aAddress  The Source Address.
      *
-     * @retval kThreadError_None  Successfully retrieved the Source Address.
+     * @retval OT_ERROR_NONE  Successfully retrieved the Source Address.
      *
      */
-    ThreadError GetSrcAddr(Address &aAddress);
+    otError GetSrcAddr(Address &aAddress);
 
     /**
      * This method gets the Source Address.
      *
      * @param[in]  aShortAddress  The Source Address.
      *
-     * @retval kThreadError_None  Successfully set the Source Address.
+     * @retval OT_ERROR_NONE  Successfully set the Source Address.
      *
      */
-    ThreadError SetSrcAddr(ShortAddress aShortAddress);
+    otError SetSrcAddr(ShortAddress aShortAddress);
 
     /**
      * This method gets the Source Address.
      *
      * @param[in]  aExtAddress  The Source Address.
      *
-     * @retval kThreadError_None  Successfully set the Source Address.
+     * @retval OT_ERROR_NONE  Successfully set the Source Address.
      *
      */
-    ThreadError SetSrcAddr(const ExtAddress &aExtAddress);
+    otError SetSrcAddr(const ExtAddress &aExtAddress);
 
     /**
      * This method gets the Security Level Identifier.
      *
      * @param[out]  aSecurityLevel  The Security Level Identifier.
      *
-     * @retval kThreadError_None  Successfully retrieved the Security Level Identifier.
+     * @retval OT_ERROR_NONE  Successfully retrieved the Security Level Identifier.
      *
      */
-    ThreadError GetSecurityLevel(uint8_t &aSecurityLevel);
+    otError GetSecurityLevel(uint8_t &aSecurityLevel);
 
     /**
      * This method gets the Key Identifier Mode.
      *
      * @param[out]  aSecurityLevel  The Key Identifier Mode.
      *
-     * @retval kThreadError_None  Successfully retrieved the Key Identifier Mode.
+     * @retval OT_ERROR_NONE  Successfully retrieved the Key Identifier Mode.
      *
      */
-    ThreadError GetKeyIdMode(uint8_t &aKeyIdMode);
+    otError GetKeyIdMode(uint8_t &aKeyIdMode);
 
     /**
      * This method gets the Frame Counter.
      *
      * @param[out]  aFrameCounter  The Frame Counter.
      *
-     * @retval kThreadError_None  Successfully retrieved the Frame Counter.
+     * @retval OT_ERROR_NONE  Successfully retrieved the Frame Counter.
      *
      */
-    ThreadError GetFrameCounter(uint32_t &aFrameCounter);
+    otError GetFrameCounter(uint32_t &aFrameCounter);
 
     /**
      * This method sets the Frame Counter.
      *
      * @param[in]  aFrameCounter  The Frame Counter.
      *
-     * @retval kThreadError_None  Successfully set the Frame Counter.
+     * @retval OT_ERROR_NONE  Successfully set the Frame Counter.
      *
      */
-    ThreadError SetFrameCounter(uint32_t aFrameCounter);
+    otError SetFrameCounter(uint32_t aFrameCounter);
 
     /**
      * This method returns a pointer to the Key Source.
@@ -506,40 +506,40 @@ public:
      *
      * @param[out]  aKeyId  The Key Identifier.
      *
-     * @retval kThreadError_None  Successfully retrieved the Key Identifier.
+     * @retval OT_ERROR_NONE  Successfully retrieved the Key Identifier.
      *
      */
-    ThreadError GetKeyId(uint8_t &aKeyId);
+    otError GetKeyId(uint8_t &aKeyId);
 
     /**
      * This method sets the Key Identifier.
      *
      * @param[in]  aKeyId  The Key Identifier.
      *
-     * @retval kThreadError_None  Successfully set the Key Identifier.
+     * @retval OT_ERROR_NONE  Successfully set the Key Identifier.
      *
      */
-    ThreadError SetKeyId(uint8_t aKeyId);
+    otError SetKeyId(uint8_t aKeyId);
 
     /**
      * This method gets the Command ID.
      *
      * @param[out]  aCommandId  The Command ID.
      *
-     * @retval kThreadError_None  Successfully retrieved the Command ID.
+     * @retval OT_ERROR_NONE  Successfully retrieved the Command ID.
      *
      */
-    ThreadError GetCommandId(uint8_t &aCommandId);
+    otError GetCommandId(uint8_t &aCommandId);
 
     /**
      * This method sets the Command ID.
      *
      * @param[in]  aCommandId  The Command ID.
      *
-     * @retval kThreadError_None  Successfully set the Command ID.
+     * @retval OT_ERROR_NONE  Successfully set the Command ID.
      *
      */
-    ThreadError SetCommandId(uint8_t aCommandId);
+    otError SetCommandId(uint8_t aCommandId);
 
     /**
      * This method returns the MAC Frame Length.
@@ -554,11 +554,11 @@ public:
      *
      * @param[in]  aLength  The MAC Frame Length.
      *
-     * @retval kThreadError_None         Successfully set the MAC Frame Length.
-     * @retval kThreadError_InvalidArgs  The @p aLength value was invalid.
+     * @retval OT_ERROR_NONE          Successfully set the MAC Frame Length.
+     * @retval OT_ERROR_INVALID_ARGS  The @p aLength value was invalid.
      *
      */
-    ThreadError SetLength(uint8_t aLength) { SetPsduLength(aLength); return kThreadError_None; }
+    otError SetLength(uint8_t aLength) { SetPsduLength(aLength); return OT_ERROR_NONE; }
 
     /**
      * This method returns the MAC header size.
@@ -595,11 +595,11 @@ public:
     /**
      * This method sets the MAC Payload length.
      *
-     * @retval kThreadError_None         Successfully set the MAC Payload length.
-     * @retval kThreadError_InvalidArgs  The @p aLength value was invalid.
+     * @retval OT_ERROR_NONE          Successfully set the MAC Payload length.
+     * @retval OT_ERROR_INVALID_ARGS  The @p aLength value was invalid.
      *
      */
-    ThreadError SetPayloadLength(uint8_t aLength);
+    otError SetPayloadLength(uint8_t aLength);
 
     /**
      * This method returns the IEEE 802.15.4 channel used for transmission or reception.

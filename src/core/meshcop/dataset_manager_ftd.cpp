@@ -76,12 +76,12 @@ bool ActiveDataset::IsTlvInitialized(Tlv::Type aType)
     return mLocal.Get(aType) != NULL;
 }
 
-ThreadError ActiveDataset::GenerateLocal(void)
+otError ActiveDataset::GenerateLocal(void)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     otOperationalDataset dataset;
 
-    VerifyOrExit(mNetif.GetMle().IsAttached(), error = kThreadError_InvalidState);
+    VerifyOrExit(mNetif.GetMle().IsAttached(), error = OT_ERROR_INVALID_STATE);
 
     memset(&dataset, 0, sizeof(dataset));
 

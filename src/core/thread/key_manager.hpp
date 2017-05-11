@@ -95,11 +95,11 @@ public:
      *
      * @param[in]  aKey        A reference to the Thread Master Key.
      *
-     * @retval kThreadError_None         Successfully set the Thread Master Key.
-     * @retval kThreadError_InvalidArgs  The @p aKeyLength value was invalid.
+     * @retval OT_ERROR_NONE          Successfully set the Thread Master Key.
+     * @retval OT_ERROR_INVALID_ARGS  The @p aKeyLength value was invalid.
      *
      */
-    ThreadError SetMasterKey(const otMasterKey &aKey);
+    otError SetMasterKey(const otMasterKey &aKey);
 
     /**
      * This method returns a pointer to the PSKc.
@@ -276,11 +276,11 @@ public:
      *
      * @param[in]  aKeyRotation  The KeyRotation value in hours.
      *
-     * @retval  kThreadError_None         KeyRotation time updated.
-     * @retval  kThreadError_InvalidArgs  @p aKeyRotation is out of range.
+     * @retval  OT_ERROR_NONE          KeyRotation time updated.
+     * @retval  OT_ERROR_INVALID_ARGS  @p aKeyRotation is out of range.
      *
      */
-    ThreadError SetKeyRotation(uint32_t aKeyRotation);
+    otError SetKeyRotation(uint32_t aKeyRotation);
 
     /**
      * This method returns the KeySwitchGuardTime.
@@ -334,7 +334,7 @@ private:
         kMacKeyOffset = 16,
     };
 
-    ThreadError ComputeKey(uint32_t aKeySequence, uint8_t *aKey);
+    otError ComputeKey(uint32_t aKeySequence, uint8_t *aKey);
 
     static void HandleKeyRotationTimer(void *aContext);
     void HandleKeyRotationTimer(void);

@@ -74,13 +74,13 @@ otInstance *DataPollManager::GetInstance(void)
     return mMeshForwarder.GetInstance();
 }
 
-ThreadError DataPollManager::StartPolling(void)
+otError DataPollManager::StartPolling(void)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(!mEnabled, error = kThreadError_Already);
+    VerifyOrExit(!mEnabled, error = OT_ERROR_ALREADY);
     VerifyOrExit((mMeshForwarder.GetNetif().GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD) == 0,
-                 error = kThreadError_InvalidState);
+                 error = OT_ERROR_INVALID_STATE);
 
     mEnabled = true;
     ScheduleNextPoll(kRecalculatePollPeriod);
@@ -101,27 +101,27 @@ void DataPollManager::StopPolling(void)
     mEnabled = false;
 }
 
-ThreadError DataPollManager::SendDataPoll(void)
+otError DataPollManager::SendDataPoll(void)
 {
-    ThreadError error;
+    otError error;
     Message *message;
 
-    VerifyOrExit(mEnabled, error = kThreadError_InvalidState);
-    VerifyOrExit(!mMeshForwarder.GetNetif().GetMac().GetRxOnWhenIdle(), error = kThreadError_InvalidState);
+    VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!mMeshForwarder.GetNetif().GetMac().GetRxOnWhenIdle(), error = OT_ERROR_INVALID_STATE);
 
     mTimer.Stop();
 
     for (message = mMeshForwarder.GetSendQueue().GetHead(); message; message = message->GetNext())
     {
-        VerifyOrExit(message->GetType() != Message::kTypeMacDataPoll, error = kThreadError_Already);
+        VerifyOrExit(message->GetType() != Message::kTypeMacDataPoll, error = OT_ERROR_ALREADY);
     }
 
     message = mMeshForwarder.GetNetif().GetIp6().mMessagePool.New(Message::kTypeMacDataPoll, 0);
-    VerifyOrExit(message != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
     error = mMeshForwarder.SendMessage(*message);
 
-    if (error != kThreadError_None)
+    if (error != OT_ERROR_NONE)
     {
         message->Free();
     }
@@ -130,7 +130,7 @@ exit:
 
     switch (error)
     {
-    case kThreadError_None:
+    case OT_ERROR_NONE:
         otLogDebgMac(GetInstance(), "Sending data poll");
 
         if (mNoBufferRetxMode == true)
@@ -145,17 +145,17 @@ exit:
 
         break;
 
-    case kThreadError_InvalidState:
+    case OT_ERROR_INVALID_STATE:
         otLogWarnMac(GetInstance(), "Data poll tx requested while data polling was not enabled!");
         StopPolling();
         break;
 
-    case kThreadError_Already:
+    case OT_ERROR_ALREADY:
         otLogDebgMac(GetInstance(), "Data poll tx requested when a previous data request still in send queue.");
         ScheduleNextPoll(kUsePreviousPollPeriod);
         break;
 
-    case kThreadError_NoBufs:
+    case OT_ERROR_NO_BUFS:
     default:
         mNoBufferRetxMode = true;
         ScheduleNextPoll(kRecalculatePollPeriod);
@@ -178,7 +178,7 @@ void DataPollManager::SetExternalPollPeriod(uint32_t aPeriod)
     }
 }
 
-void DataPollManager::HandlePollSent(ThreadError aError)
+void DataPollManager::HandlePollSent(otError aError)
 {
     bool shouldRecalculatePollPeriod = false;
 
@@ -186,7 +186,7 @@ void DataPollManager::HandlePollSent(ThreadError aError)
 
     switch (aError)
     {
-    case kThreadError_None:
+    case OT_ERROR_NONE:
 
         if (mRemainingFastPolls != 0)
         {

@@ -190,9 +190,9 @@ exit:
     return;
 }
 
-ThreadError EnergyScanServer::SendReport(void)
+otError EnergyScanServer::SendReport(void)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     Coap::Header header;
     MeshCoP::ChannelMask0Tlv channelMask;
     MeshCoP::EnergyListTlv energyList;
@@ -205,7 +205,7 @@ ThreadError EnergyScanServer::SendReport(void)
     header.SetPayloadMarker();
 
     VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(mNetif.GetCoap(), header)) != NULL,
-                 error = kThreadError_NoBufs);
+                 error = OT_ERROR_NO_BUFS);
 
     channelMask.Init();
     channelMask.SetMask(mChannelMask);
@@ -225,7 +225,7 @@ ThreadError EnergyScanServer::SendReport(void)
 
 exit:
 
-    if (error != kThreadError_None && message != NULL)
+    if (error != OT_ERROR_NONE && message != NULL)
     {
         message->Free();
     }

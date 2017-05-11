@@ -99,7 +99,7 @@ public:
      * @param[in] aCount        Number of types in aTlvTypes
      *
      */
-    ThreadError SendDiagnosticGet(const Ip6::Address &aDestination, const uint8_t aTlvTypes[], uint8_t aCount);
+    otError SendDiagnosticGet(const Ip6::Address &aDestination, const uint8_t aTlvTypes[], uint8_t aCount);
 
     /**
      * This method sends Diagnostic Reset request.
@@ -109,13 +109,13 @@ public:
      * @param[in] aCount        Number of types in aTlvTypes
      *
      */
-    ThreadError SendDiagnosticReset(const Ip6::Address &aDestination, const uint8_t aTlvTypes[], uint8_t aCount);
+    otError SendDiagnosticReset(const Ip6::Address &aDestination, const uint8_t aTlvTypes[], uint8_t aCount);
 
 private:
 
-    ThreadError AppendIp6AddressList(Message &aMessage);
-    ThreadError AppendChildTable(Message &aMessage);
-    ThreadError FillRequestedTlvs(Message &aRequest, Message &aResponse, NetworkDiagnosticTlv &aNetworkDiagnosticTlv);
+    otError AppendIp6AddressList(Message &aMessage);
+    otError AppendChildTable(Message &aMessage);
+    otError FillRequestedTlvs(Message &aRequest, Message &aResponse, NetworkDiagnosticTlv &aNetworkDiagnosticTlv);
 
     static void HandleDiagnosticGetRequest(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                            const otMessageInfo *aMessageInfo);
@@ -126,9 +126,9 @@ private:
     void HandleDiagnosticGetQuery(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleDiagnosticGetResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                                            const otMessageInfo *aMessageInfo, ThreadError aResult);
+                                            const otMessageInfo *aMessageInfo, otError aResult);
     void HandleDiagnosticGetResponse(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
-                                     ThreadError aResult);
+                                     otError aResult);
 
     static void HandleDiagnosticGetAnswer(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                           const otMessageInfo *aMessageInfo);

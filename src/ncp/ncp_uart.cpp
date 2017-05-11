@@ -187,7 +187,7 @@ exit:
 
     if (len > 0)
     {
-        if (otPlatUartSend(mUartBuffer.GetBuffer(), len) != kThreadError_None)
+        if (otPlatUartSend(mUartBuffer.GetBuffer(), len) != OT_ERROR_NONE)
         {
             assert(false);
         }
@@ -236,12 +236,12 @@ void NcpUart::HandleFrame(uint8_t *aBuf, uint16_t aBufLength)
     super_t::HandleReceive(aBuf, aBufLength);
 }
 
-void NcpUart::HandleError(void *aContext, ThreadError aError, uint8_t *aBuf, uint16_t aBufLength)
+void NcpUart::HandleError(void *aContext, otError aError, uint8_t *aBuf, uint16_t aBufLength)
 {
     static_cast<NcpUart *>(aContext)->HandleError(aError, aBuf, aBufLength);
 }
 
-void NcpUart::HandleError(ThreadError aError, uint8_t *aBuf, uint16_t aBufLength)
+void NcpUart::HandleError(otError aError, uint8_t *aBuf, uint16_t aBufLength)
 {
     char hexbuf[128];
     uint16_t i = 0;
