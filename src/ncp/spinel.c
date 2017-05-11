@@ -1489,6 +1489,151 @@ const char *spinel_status_to_cstr(spinel_status_t status)
     return ret;
 }
 
+const char *spinel_capability_to_cstr(unsigned int capability)
+{
+    const char *ret = "UNKNOWN";
+
+    switch (capability)
+    {
+    case SPINEL_CAP_LOCK:
+        ret = "CAP_LOCK";
+        break;
+
+    case SPINEL_CAP_NET_SAVE:
+        ret = "CAP_NET_SAVE";
+        break;
+
+    case SPINEL_CAP_HBO:
+        ret = "CAP_HBO";
+        break;
+
+    case SPINEL_CAP_POWER_SAVE:
+        ret = "CAP_POWER_SAVE";
+        break;
+
+    case SPINEL_CAP_COUNTERS:
+        ret = "CAP_COUNTERS";
+        break;
+
+    case SPINEL_CAP_JAM_DETECT:
+        ret = "CAP_JAM_DETECT";
+        break;
+
+    case SPINEL_CAP_PEEK_POKE:
+        ret = "CAP_PEEK_POKE";
+        break;
+
+    case SPINEL_CAP_WRITABLE_RAW_STREAM:
+        ret = "CAP_WRITABLE_RAW_STREAM";
+        break;
+
+    case SPINEL_CAP_GPIO:
+        ret = "CAP_GPIO";
+        break;
+
+    case SPINEL_CAP_TRNG:
+        ret = "CAP_TRNG";
+        break;
+
+    case SPINEL_CAP_CMD_MULTI:
+        ret = "CAP_CMD_MULTI";
+        break;
+
+    case SPINEL_CAP_802_15_4_2003:
+        ret = "CAP_802_15_4_2003";
+        break;
+
+    case SPINEL_CAP_802_15_4_2006:
+        ret = "CAP_802_15_4_2006";
+        break;
+
+    case SPINEL_CAP_802_15_4_2011:
+        ret = "CAP_802_15_4_2011";
+        break;
+
+    case SPINEL_CAP_802_15_4_PIB:
+        ret = "CAP_802_15_4_PIB";
+        break;
+
+    case SPINEL_CAP_802_15_4_2450MHZ_OQPSK:
+        ret = "CAP_802_15_4_2450MHZ_OQPSK";
+        break;
+
+    case SPINEL_CAP_802_15_4_915MHZ_OQPSK:
+        ret = "CAP_802_15_4_915MHZ_OQPSK";
+        break;
+
+    case SPINEL_CAP_802_15_4_868MHZ_OQPSK:
+        ret = "CAP_802_15_4_868MHZ_OQPSK";
+        break;
+
+    case SPINEL_CAP_802_15_4_915MHZ_BPSK:
+        ret = "CAP_802_15_4_915MHZ_BPSK";
+        break;
+
+    case SPINEL_CAP_802_15_4_868MHZ_BPSK:
+        ret = "CAP_802_15_4_868MHZ_BPSK";
+        break;
+
+    case SPINEL_CAP_802_15_4_915MHZ_ASK:
+        ret = "CAP_802_15_4_915MHZ_ASK";
+        break;
+
+    case SPINEL_CAP_802_15_4_868MHZ_ASK:
+        ret = "CAP_802_15_4_868MHZ_ASK";
+        break;
+
+    case SPINEL_CAP_ROLE_ROUTER:
+        ret = "CAP_ROLE_ROUTER";
+        break;
+
+    case SPINEL_CAP_ROLE_SLEEPY:
+        ret = "CAP_ROLE_SLEEPY";
+        break;
+
+    case SPINEL_CAP_NET_THREAD_1_0:
+        ret = "CAP_NET_THREAD_1_0";
+        break;
+
+    case SPINEL_CAP_MAC_WHITELIST:
+        ret = "CAP_MAC_WHITELIST";
+        break;
+
+    case SPINEL_CAP_MAC_RAW:
+        ret = "CAP_MAC_RAW";
+        break;
+
+    case SPINEL_CAP_OOB_STEERING_DATA:
+        ret = "CAP_OOB_STEERING_DATA";
+        break;
+
+    case SPINEL_CAP_THREAD_COMMISSIONER:
+        ret = "CAP_THREAD_COMMISSIONER";
+        break;
+
+    case SPINEL_CAP_THREAD_BA_PROXY:
+        ret = "CAP_THREAD_BA_PROXY";
+        break;
+
+    case SPINEL_CAP_NEST_LEGACY_INTERFACE:
+        ret = "CAP_NEST_LEGACY_INTERFACE";
+        break;
+
+    case SPINEL_CAP_NEST_LEGACY_NET_WAKE:
+        ret = "CAP_NEST_LEGACY_NET_WAKE";
+        break;
+
+    case SPINEL_CAP_NEST_TRANSMIT_HOOK:
+        ret = "CAP_NEST_TRANSMIT_HOOK";
+        break;
+
+    default:
+        break;
+    }
+
+    return ret;
+}
+
 // **** LCOV_EXCL_STOP ****
 
 /* -------------------------------------------------------------------------- */
