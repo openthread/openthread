@@ -96,7 +96,7 @@ ThreadError utilsFlashErasePage(uint32_t aAddress)
     /* Use 2 sectors in the implementation, cannot erase the address over the boundry */
     status = flash_erase(aAddress, FLASH_SECTOR_SIZE);
 
-    otEXPECT_ACTION(!(status == -1), error = kThreadError_Failed);
+    otEXPECT_ACTION(status != -1, error = kThreadError_Failed);
 
 exit:
     return error;
