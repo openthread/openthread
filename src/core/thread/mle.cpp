@@ -81,7 +81,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mLastPartitionRouterIdSequence(0),
     mLastPartitionId(0),
     mParentLeaderCost(0),
-    mParentRequestMode(kMleAttachAnyPartition),
+    mParentRequestMode(kAttachAny),
     mParentPriority(0),
     mParentLinkQuality3(0),
     mParentLinkQuality2(0),
@@ -232,13 +232,13 @@ otError Mle::Start(bool aEnableReattach, bool aAnnounceAttach)
 
     if (aAnnounceAttach || (GetRloc16() == Mac::kShortAddrInvalid))
     {
-        BecomeChild(kMleAttachAnyPartition);
+        BecomeChild(kAttachAny);
     }
     else if (IsActiveRouter(GetRloc16()))
     {
         if (mNetif.GetMle().BecomeRouter(ThreadStatusTlv::kTooFewRouters) != OT_ERROR_NONE)
         {
-            BecomeChild(kMleAttachAnyPartition);
+            BecomeChild(kAttachAny);
         }
     }
     else
@@ -479,14 +479,14 @@ otError Mle::BecomeDetached(void)
 
     SetStateDetached();
     SetRloc16(Mac::kShortAddrInvalid);
-    BecomeChild(kMleAttachAnyPartition);
+    BecomeChild(kAttachAny);
 
 exit:
     otLogFuncExitErr(error);
     return error;
 }
 
-otError Mle::BecomeChild(otMleAttachFilter aFilter)
+otError Mle::BecomeChild(AttachMode aMode)
 {
     otError error = OT_ERROR_NONE;
 
@@ -509,9 +509,9 @@ otError Mle::BecomeChild(otMleAttachFilter aFilter)
 
     ResetParentCandidate();
     mParentRequestState = kParentRequestStart;
-    mParentRequestMode = aFilter;
+    mParentRequestMode = aMode;
 
-    if (aFilter != kMleAttachBetterPartition)
+    if (aMode != kAttachBetter)
     {
         memset(&mParent, 0, sizeof(mParent));
 
@@ -521,7 +521,7 @@ otError Mle::BecomeChild(otMleAttachFilter aFilter)
         }
     }
 
-    if (aFilter == kMleAttachAnyPartition)
+    if (aMode == kAttachAny)
     {
         mParent.SetState(Neighbor::kStateInvalid);
         mLastPartitionId = mNetif.GetMle().GetPreviousPartitionId();
@@ -1291,7 +1291,7 @@ void Mle::HandleParentRequestTimer(void)
 
     case kParentSynchronize:
         mParentRequestState = kParentIdle;
-        BecomeChild(kMleAttachAnyPartition);
+        BecomeChild(kAttachAny);
         break;
 
     case kParentRequestStart:
@@ -1354,7 +1354,7 @@ void Mle::HandleParentRequestTimer(void)
             {
                 switch (mParentRequestMode)
                 {
-                case kMleAttachAnyPartition:
+                case kAttachAny:
                     if (mPreviousPanId != Mac::kPanIdBroadcast)
                     {
                         mNetif.GetMac().SetChannel(mPreviousChannel);
@@ -1375,17 +1375,17 @@ void Mle::HandleParentRequestTimer(void)
 
                     break;
 
-                case kMleAttachSamePartition1:
+                case kAttachSame1:
                     mParentRequestState = kParentIdle;
-                    BecomeChild(kMleAttachSamePartition2);
+                    BecomeChild(kAttachSame2);
                     break;
 
-                case kMleAttachSamePartition2:
+                case kAttachSame2:
                     mParentRequestState = kParentIdle;
-                    BecomeChild(kMleAttachAnyPartition);
+                    BecomeChild(kAttachAny);
                     break;
 
-                case kMleAttachBetterPartition:
+                case kAttachBetter:
                     mParentRequestState = kParentIdle;
 
                     if (mDeviceState == kDeviceStateChild)
@@ -1405,7 +1405,7 @@ void Mle::HandleParentRequestTimer(void)
         mParentRequestState = kParentIdle;
         ResetParentCandidate();
 
-        if ((mParentRequestMode == kMleAttachBetterPartition) || (mDeviceState == kDeviceStateRouter) ||
+        if ((mParentRequestMode == kAttachBetter) || (mDeviceState == kDeviceStateRouter) ||
             (mDeviceState == kDeviceStateLeader))
         {
             if (mDeviceState == kDeviceStateChild)
@@ -1493,8 +1493,8 @@ otError Mle::SendParentRequest(void)
     case kParentRequestRouter:
         scanMask = ScanMaskTlv::kRouterFlag;
 
-        if (mParentRequestMode == kMleAttachSamePartition1 ||
-            mParentRequestMode == kMleAttachSamePartition2)
+        if (mParentRequestMode == kAttachSame1 ||
+            mParentRequestMode == kAttachSame2)
         {
             scanMask |= ScanMaskTlv::kEndDeviceFlag;
         }
@@ -2598,18 +2598,18 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
 
         switch (mParentRequestMode)
         {
-        case kMleAttachAnyPartition:
+        case kAttachAny:
             VerifyOrExit(leaderData.GetPartitionId() != mLeaderData.GetPartitionId() || diff > 0);
             break;
 
-        case kMleAttachSamePartition1:
-        case kMleAttachSamePartition2:
+        case kAttachSame1:
+        case kAttachSame2:
             VerifyOrExit(leaderData.GetPartitionId() == mLeaderData.GetPartitionId());
             VerifyOrExit(diff > 0 ||
                          (diff == 0 && mNetif.GetMle().GetLeaderAge() < mNetif.GetMle().GetNetworkIdTimeout()));
             break;
 
-        case kMleAttachBetterPartition:
+        case kAttachBetter:
             VerifyOrExit(leaderData.GetPartitionId() != mLeaderData.GetPartitionId());
             VerifyOrExit(mNetif.GetMle().ComparePartitions(connectivity.GetActiveRouters() <= 1, leaderData,
                                                            mNetif.GetMle().IsSingleton(), mLeaderData) > 0);

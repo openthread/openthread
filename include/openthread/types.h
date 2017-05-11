@@ -768,17 +768,6 @@ typedef enum otRoutePreference
 } otRoutePreference;
 
 /**
- * Represents any restrictions on the attach process.
- */
-typedef enum otMleAttachFilter
-{
-    kMleAttachAnyPartition    = 0,  ///< Attach to any Thread partition.
-    kMleAttachSamePartition1  = 1,  ///< Attach to the same Thread partition (attempt 1).
-    kMleAttachSamePartition2  = 2,  ///< Attach to the same Thread partition (attempt 2).
-    kMleAttachBetterPartition = 3,  ///< Attach to a better (i.e. higher weight/partition id) Thread partition.
-} otMleAttachFilter;
-
-/**
  * This structure represents a whitelist entry.
  *
  */

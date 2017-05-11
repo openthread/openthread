@@ -2451,7 +2451,7 @@ void Interpreter::ProcessState(int argc, char *argv[])
         }
         else if (strcmp(argv[0], "child") == 0)
         {
-            SuccessOrExit(error = otThreadBecomeChild(mInstance, kMleAttachSamePartition1));
+            SuccessOrExit(error = otThreadBecomeChild(mInstance));
         }
 
 #if OPENTHREAD_FTD

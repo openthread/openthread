@@ -4576,7 +4576,7 @@ otError NcpBase::SetPropertyHandler_NET_ROLE(uint8_t header, spinel_prop_key_t k
 #endif  // OPENTHREAD_FTD
 
         case SPINEL_NET_ROLE_CHILD:
-            errorCode = otThreadBecomeChild(mInstance, kMleAttachAnyPartition);
+            errorCode = otThreadBecomeChild(mInstance);
             break;
         }
 

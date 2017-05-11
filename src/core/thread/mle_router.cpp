@@ -349,7 +349,7 @@ otError MleRouter::HandleDetachStart(void)
     return error;
 }
 
-otError MleRouter::HandleChildStart(otMleAttachFilter aFilter)
+otError MleRouter::HandleChildStart(AttachMode aMode)
 {
     otError error = OT_ERROR_NONE;
     mRouterIdSequenceLastUpdated = Timer::GetNow();
@@ -367,10 +367,10 @@ otError MleRouter::HandleChildStart(otMleAttachFilter aFilter)
 
     VerifyOrExit(IsRouterIdValid(mPreviousRouterId), error = OT_ERROR_INVALID_STATE);
 
-    switch (aFilter)
+    switch (aMode)
     {
-    case kMleAttachSamePartition1:
-    case kMleAttachSamePartition2:
+    case kAttachSame1:
+    case kAttachSame2:
 
         // downgrade
         if (GetActiveRouterCount() > mRouterDowngradeThreshold)
@@ -393,8 +393,8 @@ otError MleRouter::HandleChildStart(otMleAttachFilter aFilter)
 
         break;
 
-    case kMleAttachAnyPartition:
-    case kMleAttachBetterPartition:
+    case kAttachAny:
+    case kAttachBetter:
         if (HasChildren() &&
             mPreviousPartitionId != mLeaderData.GetPartitionId())
         {
@@ -1330,7 +1330,7 @@ otError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Messa
         if (ComparePartitions(routerCount <= 1, leaderData, IsSingleton(), mLeaderData) > 0)
         {
             otLogDebgMle(GetInstance(), "trying to migrate");
-            BecomeChild(kMleAttachBetterPartition);
+            BecomeChild(kAttachBetter);
         }
 
         ExitNow(error = OT_ERROR_DROP);
@@ -1791,13 +1791,13 @@ void MleRouter::HandleStateUpdateTimer(void)
 
         if (GetLeaderAge() >= mNetworkIdTimeout)
         {
-            BecomeChild(kMleAttachSamePartition1);
+            BecomeChild(kAttachSame1);
         }
 
         if (routerStateUpdate && GetActiveRouterCount() > mRouterDowngradeThreshold)
         {
             // downgrade to REED
-            BecomeChild(kMleAttachSamePartition1);
+            BecomeChild(kAttachSame1);
         }
 
         break;

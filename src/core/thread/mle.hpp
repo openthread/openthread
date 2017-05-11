@@ -104,6 +104,18 @@ enum DeviceState
 };
 
 /**
+ * MLE Attach modes
+ *
+ */
+enum AttachMode
+{
+    kAttachAny    = 0,  ///< Attach to any Thread partition.
+    kAttachSame1  = 1,  ///< Attach to the same Thread partition (attempt 1).
+    kAttachSame2  = 2,  ///< Attach to the same Thread partition (attempt 2).
+    kAttachBetter = 3,  ///< Attach to a better (i.e. higher weight/partition id) Thread partition.
+};
+
+/**
  * This enumeration represents the allocation of the ALOC Space
  *
  */
@@ -589,14 +601,14 @@ public:
     /**
      * This method causes the Thread interface to attempt an MLE attach.
      *
-     * @param[in]  aFilter  Indicates what partitions to attach to.
+     * @param[in]  aMode  Indicates what partitions to attach to.
      *
      * @retval OT_ERROR_NONE           Successfully began the attach process.
      * @retval OT_ERROR_INVALID_STATE  MLE is Disabled.
      * @retval OT_ERROR_BUSY           An attach process is in progress.
      *
      */
-    otError BecomeChild(otMleAttachFilter aFilter);
+    otError BecomeChild(AttachMode aMode);
 
     /**
      * This method indicates whether or not the Thread device is attached to a Thread network.
@@ -1389,7 +1401,7 @@ private:
         uint8_t mChallenge[ChallengeTlv::kMaxSize];
     } mParentRequest;
 
-    otMleAttachFilter mParentRequestMode;
+    AttachMode mParentRequestMode;
     int8_t mParentPriority;
     uint8_t mParentLinkQuality3;
     uint8_t mParentLinkQuality2;
