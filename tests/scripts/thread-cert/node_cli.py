@@ -382,7 +382,7 @@ class otCli:
         self.pexpect.expect('Done')
 
     def remove_prefix(self, prefix):
-        cmd = ' prefix remove ' + prefix
+        cmd = 'prefix remove ' + prefix
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
