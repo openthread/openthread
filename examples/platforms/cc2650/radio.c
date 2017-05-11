@@ -1219,11 +1219,28 @@ exit:
     return error;
 }
 
+/**
+ * Function documented in platform/radio.h
+ */
 void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
 {
-    // TODO: Create a proper implementation for this driver.
+    unsigned int i;
+    output_config_t const *powerCfg = &(rgOutputPower[0]);
     (void)aInstance;
-    (void)aPower;
+
+    for (i = 1; i < OUTPUT_CONFIG_COUNT; i++)
+    {
+        if (rgOutputPower[i].dbm >= aPower)
+        {
+            powerCfg = &(rgOutputPower[i]);
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    sCurrentOutputPower = powerCfg;
 }
 
 /**
@@ -1513,7 +1530,25 @@ exit:
 void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 {
     (void)aInstance;
-    // TODO - This function needs to be implemented
+
+    if (sReceiveCmd.status == ACTIVE || sReceiveCmd.status == IEEE_SUSPENDED)
+    {
+        unsigned int i;
+
+        for (i = 0; i < CC2650_SHORTADD_SRC_MATCH_NUM; i++)
+        {
+            /* we have a running or backgrounded rx command */
+            otEXPECT(rfCoreModifySourceMatchEntry(i, SHORT_ADDRESS, false) == CMDSTA_Done);
+        }
+    }
+    else
+    {
+        /* we are not running, so we can erase them ourselves */
+        memset((void *)&sSrcMatchShortData, 0, sizeof(sSrcMatchShortData));
+    }
+
+exit:
+    return;
 }
 
 /**
@@ -1522,7 +1557,25 @@ void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 {
     (void)aInstance;
-    // TODO - This function needs to be implemented
+
+    if (sReceiveCmd.status == ACTIVE || sReceiveCmd.status == IEEE_SUSPENDED)
+    {
+        unsigned int i;
+
+        for (i = 0; i < CC2650_EXTADD_SRC_MATCH_NUM; i++)
+        {
+            /* we have a running or backgrounded rx command */
+            otEXPECT(rfCoreModifySourceMatchEntry(i, EXT_ADDRESS, false) == CMDSTA_Done);
+        }
+    }
+    else
+    {
+        /* we are not running, so we can erase them ourselves */
+        memset((void *)&sSrcMatchExtData, 0, sizeof(sSrcMatchExtData));
+    }
+
+exit:
+    return;
 }
 
 /**
