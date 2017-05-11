@@ -42,6 +42,7 @@
 #include "dtls.hpp"
 
 #include <mbedtls/debug.h>
+#include <openthread/platform/radio.h>
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -91,6 +92,7 @@ ThreadError Dtls::Start(bool aClient, ConnectedHandler aConnectedHandler, Receiv
                         SendHandler aSendHandler, void *aContext)
 {
     static const int ciphersuites[2] = {0xC0FF, 0}; // EC-JPAKE cipher suite
+    otExtAddress eui64;
     int rval;
 
     mConnectedHandler = aConnectedHandler;
@@ -108,8 +110,8 @@ ThreadError Dtls::Start(bool aClient, ConnectedHandler aConnectedHandler, Receiv
 
     mbedtls_debug_set_threshold(4);
 
-    // XXX: should set personalization data to hardware address
-    rval = mbedtls_ctr_drbg_seed(&mCtrDrbg, mbedtls_entropy_func, &mEntropy, NULL, 0);
+    otPlatRadioGetIeeeEui64(GetInstance(), eui64.m8);
+    rval = mbedtls_ctr_drbg_seed(&mCtrDrbg, mbedtls_entropy_func, &mEntropy, eui64.m8, sizeof(eui64));
     VerifyOrExit(rval == 0);
 
     rval = mbedtls_ssl_config_defaults(&mConf, mClient ? MBEDTLS_SSL_IS_CLIENT : MBEDTLS_SSL_IS_SERVER,
