@@ -53,6 +53,17 @@ extern "C" {
  */
 
 /**
+ * This enumeration defines the Commissioner State.
+ *
+ */
+typedef enum otCommissionerState
+{
+    OT_COMMISSIONER_STATE_DISABLED = 0, ///< Commissioner role is disabled.
+    OT_COMMISSIONER_STATE_PETITION = 1, ///< Currently petitioning to become a Commissioner.
+    OT_COMMISSIONER_STATE_ACTIVE   = 2, ///< Commissioner role is active.
+} otCommissionerState;
+
+/**
  * This function enables the Thread Commissioner role.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
@@ -248,9 +259,9 @@ OTAPI uint16_t OTCALL otCommissionerGetSessionId(otInstance *aInstance);
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
- * @retval kCommissionerStateDisabled    Commissioner disabled.
- * @retval kCommissionerStatePetition    Becoming the commissioner.
- * @retval kCommissionerStateActive      Commissioner enabled.
+ * @retval OT_COMMISSIONER_STATE_DISABLED  Commissioner disabled.
+ * @retval OT_COMMISSIONER_STATE_PETITION  Becoming the commissioner.
+ * @retval OT_COMMISSIONER_STATE_ACTIVE    Commissioner enabled.
  *
  */
 OTAPI otCommissionerState OTCALL otCommissionerGetState(otInstance *aInstance);

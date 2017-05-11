@@ -601,11 +601,8 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
     VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoap(), header)) != NULL, error = OT_ERROR_NO_BUFS);
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
-    bool isCommissioner;
 
-    isCommissioner = mNetif.GetCommissioner().GetState() != kCommissionerStateDisabled ? true : false;
-
-    if (isCommissioner)
+    if (mNetif.GetCommissioner().IsActive())
     {
         const uint8_t *cur = aTlvs;
         const uint8_t *end = aTlvs + aLength;
