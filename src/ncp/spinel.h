@@ -1313,6 +1313,11 @@ typedef char spinel_datatype_t;
                                         SPINEL_DATATYPE_UTF8_S /* network name */                       \
                                         SPINEL_DATATYPE_DATA_WLEN_S /* xpanid */
 
+#define SPINEL_NET_DATATYPE_MAC_SCAN_RESULT_V2_S                                                        \
+                                        SPINEL_NET_DATATYPE_MAC_SCAN_RESULT_V1_S                        \
+                                        SPINEL_DATATYPE_DATA_WLEN_S /* steering data */
+
+
 #define SPINEL_MAX_UINT_PACKED          2097151
 
 SPINEL_API_EXTERN spinel_ssize_t spinel_datatype_pack(uint8_t *data_out, spinel_size_t data_len,
