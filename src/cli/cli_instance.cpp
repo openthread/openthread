@@ -31,7 +31,7 @@
  *   This file implements the CLI interpreter Instance related functions.
  */
 
-#include  "openthread_enable_defines.h"
+#include  "openthread/openthread_enable_defines.h"
 
 #include <stdio.h>
 #include <stdlib.h>

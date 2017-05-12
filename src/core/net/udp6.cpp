@@ -31,7 +31,7 @@
  *   This file implements UDP/IPv6 sockets.
  */
 
-#include  "openthread_enable_defines.h"
+#include  "openthread/openthread_enable_defines.h"
 
 #include <stdio.h>
 

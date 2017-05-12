@@ -31,7 +31,7 @@
  *   This file implements the CLI server on a UDP socket.
  */
 
-#include  "openthread_enable_defines.h"
+#include  "openthread/openthread_enable_defines.h"
 
 #include <stdarg.h>
 #include <stdio.h>

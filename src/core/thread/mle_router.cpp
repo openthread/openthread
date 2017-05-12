@@ -34,7 +34,7 @@
 
 #define WPP_NAME "mle_router.tmh"
 
-#include  "openthread_enable_defines.h"
+#include  "openthread/openthread_enable_defines.h"
 
 #include "openthread/platform/random.h"
 #include "openthread/platform/settings.h"

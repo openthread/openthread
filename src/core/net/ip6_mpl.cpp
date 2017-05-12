@@ -31,7 +31,7 @@
  *   This file implements MPL.
  */
 
-#include  "openthread_enable_defines.h"
+#include  "openthread/openthread_enable_defines.h"
 
 #include "openthread/platform/random.h"
 

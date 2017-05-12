@@ -31,7 +31,7 @@
  *   This file implements the CoAP server message dispatch.
  */
 
-#include  "openthread_enable_defines.h"
+#include  "openthread/openthread_enable_defines.h"
 
 #include <coap/coap_server.hpp>
 #include <common/code_utils.hpp>

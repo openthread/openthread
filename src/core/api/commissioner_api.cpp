@@ -31,7 +31,7 @@
  *   This file implements the OpenThread Commissioner API.
  */
 
-#include  "openthread_enable_defines.h"
+#include  "openthread/openthread_enable_defines.h"
 
 #include "openthread/commissioner.h"
 

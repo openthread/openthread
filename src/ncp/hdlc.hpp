@@ -32,7 +32,7 @@
 
 #ifndef HDLC_HPP_
 #define HDLC_HPP_
-#include  "openthread_enable_defines.h"
+#include  "openthread/openthread_enable_defines.h"
 #include "openthread/types.h"
 
 namespace ot {

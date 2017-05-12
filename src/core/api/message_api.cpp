@@ -30,7 +30,7 @@
  * @file
  *   This file implements the OpenThread Message API.
  */
-#include  "openthread_enable_defines.h"
+#include  "openthread/openthread_enable_defines.h"
 
 #include "openthread/message.h"
 
