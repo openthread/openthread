@@ -53,7 +53,7 @@
 #include "api/link_raw.hpp"
 #endif
 
-#include "coap/coap_server.hpp"
+#include "coap/coap.hpp"
 #include "crypto/mbedtls.hpp"
 #include "net/ip6.hpp"
 #include "thread/thread_netif.hpp"
@@ -93,7 +93,7 @@ typedef struct otInstance
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
-    ot::Coap::Server mApplicationCoapServer;
+    ot::Coap::Coap mApplicationCoap;
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL

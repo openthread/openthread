@@ -37,9 +37,8 @@
 #include <openthread/commissioner.h>
 
 #include "openthread-core-config.h"
-#include "coap/coap_client.hpp"
-#include "coap/coap_server.hpp"
-#include "coap/secure_coap_server.hpp"
+#include "coap/coap.hpp"
+#include "coap/coap_secure.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
 #include "meshcop/announce_begin_client.hpp"

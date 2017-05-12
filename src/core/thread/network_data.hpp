@@ -36,7 +36,7 @@
 
 #include <openthread/types.h>
 
-#include "coap/coap_client.hpp"
+#include "coap/coap.hpp"
 #include "net/udp6.hpp"
 #include "thread/lowpan.hpp"
 #include "thread/mle_router.hpp"

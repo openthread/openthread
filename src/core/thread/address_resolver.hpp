@@ -37,8 +37,7 @@
 #include <openthread/types.h>
 
 #include "openthread-core-config.h"
-#include "coap/coap_client.hpp"
-#include "coap/coap_server.hpp"
+#include "coap/coap.hpp"
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
 #include "net/icmp6.hpp"

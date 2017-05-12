@@ -36,9 +36,8 @@
 
 #include "utils/wrap_string.h"
 
-#include "coap/coap_client.hpp"
+#include "coap/coap.hpp"
 #include "coap/coap_header.hpp"
-#include "coap/coap_server.hpp"
 #include "common/timer.hpp"
 #include "common/trickle_timer.hpp"
 #include "mac/mac_frame.hpp"

@@ -36,7 +36,7 @@
 
 #include "utils/wrap_stdint.h"
 
-#include "coap/coap_server.hpp"
+#include "coap/coap.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/mle_router.hpp"

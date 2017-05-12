@@ -323,8 +323,8 @@ exit:
 
 void MleRouter::StopLeader(void)
 {
-    mNetif.GetCoapServer().RemoveResource(mAddressSolicit);
-    mNetif.GetCoapServer().RemoveResource(mAddressRelease);
+    mNetif.GetCoap().RemoveResource(mAddressSolicit);
+    mNetif.GetCoap().RemoveResource(mAddressRelease);
     mNetif.GetActiveDataset().StopLeader();
     mNetif.GetPendingDataset().StopLeader();
     mAdvertiseTimer.Stop();
@@ -473,8 +473,8 @@ ThreadError MleRouter::SetStateLeader(uint16_t aRloc16)
     mNetif.GetNetworkDataLeader().Start();
     mNetif.GetActiveDataset().StartLeader();
     mNetif.GetPendingDataset().StartLeader();
-    mNetif.GetCoapServer().AddResource(mAddressSolicit);
-    mNetif.GetCoapServer().AddResource(mAddressRelease);
+    mNetif.GetCoap().AddResource(mAddressSolicit);
+    mNetif.GetCoap().AddResource(mAddressRelease);
     mNetif.GetIp6().SetForwardingEnabled(true);
     mNetif.GetIp6().mMpl.SetTimerExpirations(kMplRouterDataMessageTimerExpirations);
     mNetif.GetMac().SetBeaconEnabled(true);
@@ -3802,7 +3802,7 @@ ThreadError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
     header.AppendUriPathOptions(OPENTHREAD_URI_ADDRESS_SOLICIT);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMessage(header)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mNetif.GetCoap().NewMessage(header)) != NULL, error = kThreadError_NoBufs);
 
     macAddr64Tlv.Init();
     macAddr64Tlv.SetMacAddr(*mNetif.GetMac().GetExtAddress());
@@ -3823,8 +3823,8 @@ ThreadError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
     messageInfo.SetSockAddr(GetMeshLocal16());
     messageInfo.SetPeerPort(kCoapUdpPort);
 
-    SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo,
-                                                             &MleRouter::HandleAddressSolicitResponse, this));
+    SuccessOrExit(error = mNetif.GetCoap().SendMessage(*message, messageInfo,
+                                                       &MleRouter::HandleAddressSolicitResponse, this));
 
     otLogInfoMle(GetInstance(), "Sent address solicit to %04x", HostSwap16(messageInfo.GetPeerAddr().mFields.m16[7]));
 
@@ -3852,7 +3852,7 @@ ThreadError MleRouter::SendAddressRelease(void)
     header.AppendUriPathOptions(OPENTHREAD_URI_ADDRESS_RELEASE);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMessage(header)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mNetif.GetCoap().NewMessage(header)) != NULL, error = kThreadError_NoBufs);
 
     rlocTlv.Init();
     rlocTlv.SetRloc16(GetRloc16(mRouterId));
@@ -3865,7 +3865,7 @@ ThreadError MleRouter::SendAddressRelease(void)
     messageInfo.SetSockAddr(GetMeshLocal16());
     SuccessOrExit(error = GetLeaderAddress(messageInfo.GetPeerAddr()));
     messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = mNetif.GetCoap().SendMessage(*message, messageInfo));
 
     otLogInfoMle(GetInstance(), "Sent address release");
 
@@ -4130,7 +4130,7 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Header &aRequestHeader, u
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoapServer().NewMessage(responseHeader)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mNetif.GetCoap().NewMessage(responseHeader)) != NULL, error = kThreadError_NoBufs);
 
     statusTlv.Init();
     statusTlv.SetStatus(!IsRouterIdValid(aRouterId) ? statusTlv.kNoAddressAvailable : statusTlv.kSuccess);
@@ -4157,7 +4157,7 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Header &aRequestHeader, u
         SuccessOrExit(error = message->Append(&routerMaskTlv, sizeof(routerMaskTlv)));
     }
 
-    SuccessOrExit(error = mNetif.GetCoapServer().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = mNetif.GetCoap().SendMessage(*message, aMessageInfo));
 
     otLogInfoMle(GetInstance(), "Sent address reply");
 
@@ -4204,7 +4204,7 @@ void MleRouter::HandleAddressRelease(Coap::Header &aHeader, Message &aMessage,
 
     ReleaseRouterId(routerId);
 
-    SuccessOrExit(mNetif.GetCoapServer().SendEmptyAck(aHeader, aMessageInfo));
+    SuccessOrExit(mNetif.GetCoap().SendEmptyAck(aHeader, aMessageInfo));
 
     otLogInfoMle(GetInstance(), "Sent address release response");
 

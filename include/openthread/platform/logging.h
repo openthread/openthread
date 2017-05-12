@@ -91,6 +91,7 @@ typedef enum otLogRegion
     kLogRegionMeshCoP  = 10, ///< Mesh Commissioning Protocol
     kLogRegionNetDiag  = 11, ///< Network Diagnostic
     kLogRegionPlatform = 12, ///< Platform
+    kLogRegionCoap     = 13, ///< CoAP
 } otLogRegion;
 
 /**

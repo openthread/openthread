@@ -37,8 +37,7 @@
 #include <openthread/commissioner.h>
 
 #include "openthread-core-config.h"
-#include "coap/coap_client.hpp"
-#include "coap/coap_server.hpp"
+#include "coap/coap.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
 

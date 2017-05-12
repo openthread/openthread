@@ -1165,8 +1165,8 @@ typedef enum
      *      `S`, (MleBuffers)             The number of buffers in the MLE send queue.
      *      `S`, (ArpMessages)            The number of messages in the ARP send queue.
      *      `S`, (ArpBuffers)             The number of buffers in the ARP send queue.
-     *      `S`, (CoapClientMessages)     The number of messages in the CoAP client send queue.
-     *      `S`, (CoapClientBuffers)      The number of buffers in the CoAP client send queue.
+     *      `S`, (CoapMessages)           The number of messages in the CoAP send queue.
+     *      `S`, (CoapBuffers)            The number of buffers in the CoAP send queue.
      */
     SPINEL_PROP_MSG_BUFFER_COUNTERS     = SPINEL_PROP_CNTR__BEGIN + 400,
 

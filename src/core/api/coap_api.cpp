@@ -135,7 +135,7 @@ otMessage *otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader)
 {
     Message *message;
     VerifyOrExit(aHeader != NULL, message = NULL);
-    message = aInstance->mThreadNetif.GetCoapClient().NewMessage(*(static_cast<const Coap::Header *>(aHeader)));
+    message = aInstance->mThreadNetif.GetCoap().NewMessage(*(static_cast<const Coap::Header *>(aHeader)));
 exit:
     return message;
 }
@@ -143,40 +143,35 @@ exit:
 ThreadError otCoapSendRequest(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo,
                               otCoapResponseHandler aHandler, void *aContext)
 {
-    return aInstance->mThreadNetif.GetCoapClient().SendMessage(
+    return aInstance->mThreadNetif.GetCoap().SendMessage(
                *static_cast<Message *>(aMessage),
                *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
                aHandler, aContext);
 }
 
-ThreadError otCoapServerStart(otInstance *aInstance)
+ThreadError otCoapStart(otInstance *aInstance, uint16_t aPort)
 {
-    return aInstance->mApplicationCoapServer.Start();
+    return aInstance->mApplicationCoap.Start(aPort);
 }
 
-ThreadError otCoapServerStop(otInstance *aInstance)
+ThreadError otCoapStop(otInstance *aInstance)
 {
-    return aInstance->mApplicationCoapServer.Stop();
+    return aInstance->mApplicationCoap.Stop();
 }
 
-ThreadError otCoapServerSetPort(otInstance *aInstance, uint16_t aPort)
+ThreadError otCoapAddResource(otInstance *aInstance, otCoapResource *aResource)
 {
-    return aInstance->mApplicationCoapServer.SetPort(aPort);
+    return aInstance->mApplicationCoap.AddResource(*static_cast<Coap::Resource *>(aResource));
 }
 
-ThreadError otCoapServerAddResource(otInstance *aInstance, otCoapResource *aResource)
+void otCoapRemoveResource(otInstance *aInstance, otCoapResource *aResource)
 {
-    return aInstance->mApplicationCoapServer.AddResource(*static_cast<Coap::Resource *>(aResource));
-}
-
-void otCoapServerRemoveResource(otInstance *aInstance, otCoapResource *aResource)
-{
-    aInstance->mApplicationCoapServer.RemoveResource(*static_cast<Coap::Resource *>(aResource));
+    aInstance->mApplicationCoap.RemoveResource(*static_cast<Coap::Resource *>(aResource));
 }
 
 ThreadError otCoapSendResponse(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    return aInstance->mApplicationCoapServer.SendMessage(
+    return aInstance->mApplicationCoap.SendMessage(
                *static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 

@@ -210,6 +210,10 @@ const char *otLogRegionToString(otLogRegion aRegion)
         retval = "-MLE-----";
         break;
 
+    case kLogRegionCoap:
+        retval = "-COAP----";
+        break;
+
     case kLogRegionArp:
         retval = "-ARP-----";
         break;

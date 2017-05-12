@@ -140,14 +140,14 @@ ThreadError Coap::ProcessServer(int argc, char *argv[])
 
     if (strcmp(argv[0], "start") == 0)
     {
-        SuccessOrExit(error = otCoapServerStart(sInstance));
-        SuccessOrExit(error = otCoapServerAddResource(sInstance, &sResource));
+        SuccessOrExit(error = otCoapStart(sInstance, OT_DEFAULT_COAP_PORT));
+        SuccessOrExit(error = otCoapAddResource(sInstance, &sResource));
         sServer->OutputFormat("Server started with resource '%s': ", sResource.mUriPath);
     }
     else if (strcmp(argv[0], "stop") == 0)
     {
-        otCoapServerRemoveResource(sInstance, &sResource);
-        SuccessOrExit(error = otCoapServerStop(sInstance));
+        otCoapRemoveResource(sInstance, &sResource);
+        SuccessOrExit(error = otCoapStop(sInstance));
         sServer->OutputFormat("Server stopped: ");
     }
     else if (strcmp(argv[0], "name") == 0)
