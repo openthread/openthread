@@ -85,6 +85,8 @@ void mbedtls_sha256_update(mbedtls_sha256_context *ctx, const unsigned char *inp
     SHA256_execute(ctx, (uint8_t *)input, (uint32_t)ilen);
 }
 
+char *workaround_cc2650_rom;
+
 /**
  * documented in sha256_alt.h
  */
@@ -94,10 +96,19 @@ void mbedtls_sha256_finish(mbedtls_sha256_context *ctx, unsigned char output[32]
      * Allocate an extra 64 bytes on the stack to make sure we have buffer
      * room. This could be optomized out if you never call this function with
      * a call stack shorter than 16 words, approx. 8 stack frames.
+     *
+     * The simple description is this:
+     *    If the stack pointer is within 64bytes of the end of RAM
+     *    the bug exposes it self.
+     *    If the stack pointer is more then 64bytes from end of RAM
+     *    There is no bug...
+     * Solution:
+     *    Make a 64byte buffer on the stack..
+     *    And force the compiler to think it requires this buffer.
      */
-    __asm("sub sp, #0x40 ");
+    char buffer[ 64 ];
+    workaround_cc2650_rom = &buffer[0];
     SHA256_output(ctx, (uint8_t *)output);
-    __asm("add sp, #0x40 ");
     return;
 }
 

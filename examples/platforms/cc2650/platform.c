@@ -26,10 +26,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdio.h>
 #include <openthread/types.h>
 #include "platform-cc2650.h"
 
-otInstance *sInstance;
+extern const char __ccfg[];
+
+const char *dummy_ccfg_ref = ((const char *)(&(__ccfg[0])));
 
 /**
  * Function documented in platform-cc2650.h
@@ -38,6 +41,16 @@ void PlatformInit(int argc, char *argv[])
 {
     (void) argc;
     (void) argv;
+
+    while (dummy_ccfg_ref == NULL)
+    {
+        /*
+          * This provides a code reference to the customer configuration
+          * area of the flash, otherwise the data is skipped by the
+          * linker and not put into the final flash image.
+          */
+    }
+
     cc2650AlarmInit();
     cc2650RandomInit();
     cc2650RadioInit();
@@ -48,8 +61,6 @@ void PlatformInit(int argc, char *argv[])
  */
 void PlatformProcessDrivers(otInstance *aInstance)
 {
-    sInstance = aInstance;
-
     // should sleep and wait for interrupts here
 
     cc2650UartProcess();

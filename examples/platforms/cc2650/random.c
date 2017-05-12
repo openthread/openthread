@@ -135,18 +135,3 @@ exit:
     return error;
 }
 
-/**
- * Entropy function for the entropy pool in mbedtls.
- *
- * Function defined in mbedtls/entropy_poll.h .
- */
-int mbedtls_hardware_poll(void *data, unsigned char *aOutput, size_t aLen, size_t *oLen)
-{
-    ThreadError error;
-
-    (void)data;
-    error = TRNGPoll(aOutput, aLen);
-    *oLen = aLen;
-
-    return error;
-}
