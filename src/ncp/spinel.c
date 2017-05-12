@@ -1161,19 +1161,19 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         break;
 
     case SPINEL_PROP_THREAD_JOINERS:
-        ret = "SPINEL_PROP_THREAD_JOINERS";
+        ret = "PROP_THREAD_JOINERS";
         break;
 
     case SPINEL_PROP_THREAD_COMMISSIONER_ENABLED:
-        ret = "SPINEL_PROP_THREAD_COMMISSIONER_ENABLED";
+        ret = "PROP_THREAD_COMMISSIONER_ENABLED";
         break;
 
     case SPINEL_PROP_THREAD_BA_PROXY_ENABLED:
-        ret = "SPINEL_PROP_THREAD_BA_PROXY_ENABLED";
+        ret = "PROP_THREAD_BA_PROXY_ENABLED";
         break;
 
     case SPINEL_PROP_THREAD_BA_PROXY_STREAM:
-        ret = "SPINEL_PROP_THREAD_BA_PROXY_STREAM";
+        ret = "PROP_THREAD_BA_PROXY_STREAM";
         break;
 
     case SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU:
@@ -1193,19 +1193,19 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         break;
 
     case SPINEL_PROP_THREAD_DISCOVERY_SCAN_JOINER_FLAG:
-        ret = "SPINEL_PROP_THREAD_DISCOVERY_SCAN_JOINER_FLAG";
+        ret = "PROP_THREAD_DISCOVERY_SCAN_JOINER_FLAG";
         break;
 
     case SPINEL_PROP_THREAD_DISCOVERY_SCAN_ENABLE_FILTERING:
-        ret = "SPINEL_PROP_THREAD_DISCOVERY_SCAN_ENABLE_FILTERING";
+        ret = "PROP_THREAD_DISCOVERY_SCAN_ENABLE_FILTERING";
         break;
 
     case SPINEL_PROP_THREAD_DISCOVERY_SCAN_PANID:
-        ret = "SPINEL_PROP_THREAD_DISCOVERY_SCAN_PANID";
+        ret = "PROP_THREAD_DISCOVERY_SCAN_PANID";
         break;
 
     case SPINEL_PROP_THREAD_STEERING_DATA:
-        ret = "SPINEL_PROP_THREAD_STEERING_DATA";
+        ret = "PROP_THREAD_STEERING_DATA";
         break;
 
     case SPINEL_PROP_MAC_WHITELIST:
@@ -1293,11 +1293,11 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         break;
 
     case SPINEL_PROP_DEBUG_TEST_ASSERT:
-        ret = "SPINEL_PROP_DEBUG_TEST_ASSERT";
+        ret = "PROP_DEBUG_TEST_ASSERT";
         break;
 
     case SPINEL_PROP_DEBUG_NCP_LOG_LEVEL:
-        ret = "SPINEL_PROP_DEBUG_NCP_LOG_LEVEL";
+        ret = "PROP_DEBUG_NCP_LOG_LEVEL";
         break;
 
     default:
