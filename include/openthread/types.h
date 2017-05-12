@@ -209,6 +209,11 @@ typedef enum ThreadError
      */
     kThreadError_NonLowpanDataFrame = 34,
 
+    /**
+     * A feature/functionality disabled by build-time configuration options.
+     */
+    kThreadError_DisabledFeature = 35,
+
     kThreadError_Error = 255,
 } ThreadError;
 
