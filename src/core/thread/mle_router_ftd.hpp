@@ -279,9 +279,9 @@ public:
     /**
      * This method returns the minimum cost to the given router.
      *
-     * @param[in]  aRloc16   The short address of the given router.
+     * @param[in]  aRloc16  The short address of the given router.
      *
-     * @retval  The minimum cost to the given router (via direct link or forwarding).
+     * @returns The minimum cost to the given router (via direct link or forwarding).
      *
      */
     uint8_t GetCost(uint16_t aRloc16);
