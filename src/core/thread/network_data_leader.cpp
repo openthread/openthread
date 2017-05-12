@@ -329,8 +329,7 @@ ThreadError LeaderBase::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Addres
                     if (rvalRoute == NULL ||
                         entry->GetPreference() > rvalRoute->GetPreference() ||
                         (entry->GetPreference() == rvalRoute->GetPreference() &&
-                         mNetif.GetMle().GetRouteCost(entry->GetRloc()) <
-                         mNetif.GetMle().GetRouteCost(rvalRoute->GetRloc())))
+                         mNetif.GetMle().GetCost(entry->GetRloc()) < mNetif.GetMle().GetCost(rvalRoute->GetRloc())))
                     {
                         rvalRoute = entry;
                         rval_plen = static_cast<uint8_t>(plen);
@@ -387,7 +386,7 @@ ThreadError LeaderBase::DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16
             if (route == NULL ||
                 entry->GetPreference() > route->GetPreference() ||
                 (entry->GetPreference() == route->GetPreference() &&
-                 mNetif.GetMle().GetRouteCost(entry->GetRloc()) < mNetif.GetMle().GetRouteCost(route->GetRloc())))
+                 mNetif.GetMle().GetCost(entry->GetRloc()) < mNetif.GetMle().GetCost(route->GetRloc())))
             {
                 route = entry;
             }

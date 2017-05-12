@@ -3376,6 +3376,26 @@ exit:
     return rval;
 }
 
+uint8_t MleRouter::GetCost(uint16_t aRloc16)
+{
+    uint8_t routerId = GetRouterId(aRloc16);
+    uint8_t cost = GetLinkCost(routerId);
+    Router *router = GetRouter(routerId);
+    uint8_t routeCost;
+
+    VerifyOrExit(router != NULL && GetRouter(router->GetNextHop()) != NULL);
+
+    routeCost = GetRouteCost(aRloc16) + GetLinkCost(GetRouter(routerId)->GetNextHop());
+
+    if (cost > routeCost)
+    {
+        cost = routeCost;
+    }
+
+exit:
+    return cost;
+}
+
 uint8_t MleRouter::GetRouteCost(uint16_t aRloc16) const
 {
     uint8_t rval = kMaxRouteCost;

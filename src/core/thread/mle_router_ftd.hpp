@@ -265,6 +265,16 @@ public:
     uint8_t GetLinkCost(uint8_t aRouterId);
 
     /**
+     * This method returns the minimum cost to the given router.
+     *
+     * @param[in]  aRloc16  The short address of the given router.
+     *
+     * @returns The minimum cost to the given router (via direct link or forwarding).
+     *
+     */
+    uint8_t GetCost(uint16_t aRloc16);
+
+    /**
      * This method returns the ROUTER_SELECTION_JITTER value.
      *
      * @returns The ROUTER_SELECTION_JITTER value.
