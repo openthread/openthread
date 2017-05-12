@@ -1344,6 +1344,8 @@ SPINEL_API_EXTERN const char *spinel_net_role_to_cstr(uint8_t net_role);
 
 SPINEL_API_EXTERN const char *spinel_status_to_cstr(spinel_status_t status);
 
+SPINEL_API_EXTERN const char *spinel_capability_to_cstr(unsigned int capability);
+
 // ----------------------------------------------------------------------------
 
 __END_DECLS
