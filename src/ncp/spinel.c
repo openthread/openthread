@@ -43,20 +43,29 @@
 // MARK: -
 // MARK: Headers
 
+#include "spinel.h"
+
+#if SPINEL_PLATFORM_IS_OPENTHREAD
+
 #ifdef OPENTHREAD_CONFIG_FILE
 #include OPENTHREAD_CONFIG_FILE
 #else
 #include <openthread-config.h>
 #endif
 
-#include "spinel.h"
+#endif // #if SPINEL_PLATFORM_IS_OPENTHREAD
 
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "utils/wrap_string.h"
 #include <errno.h>
-#include "utils/wrap_stdbool.h"
+
+#if SPINEL_PLATFORM_IS_OPENTHREAD
+#include "utils/wrap_string.h"
+#else
+#include "<string.h>"
+#endif
+
 // ----------------------------------------------------------------------------
 // MARK: -
 
@@ -102,6 +111,19 @@ static int spinel_errno_workaround_;
 #endif // else SPINEL_PLATFORM_DOESNT_IMPLEMENT_FPRINTF
 #endif
 
+#if SPINEL_PLATFORM_DOESNT_IMPLEMENT_STRNLEN
+// Provide a working strnlen if the platform doesn't have one.
+static size_t spinel_strnlen_(const char *s, size_t maxlen)
+{
+    size_t ret;
+    for (ret = 0; (ret < maxlen) && (s[ret] != 0); ret++)
+    {
+        // Empty loop.
+    }
+    return ret;
+}
+#define strnlen spinel_strnlen_
+#endif
 
 #ifndef require_action
 #if SPINEL_PLATFORM_SHOULD_LOG_ASSERTS
@@ -1641,8 +1663,11 @@ const char *spinel_capability_to_cstr(unsigned int capability)
 #if SPINEL_SELF_TEST
 
 #include <stdlib.h>
+#if SPINEL_PLATFORM_IS_OPENTHREAD
 #include "utils/wrap_string.h"
-
+#else
+#include <string.h>
+#endif
 
 int
 main(void)
