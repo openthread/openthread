@@ -67,29 +67,28 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     mStateUpdateTimer(aThreadNetif.GetIp6().mTimerScheduler, &MleRouter::HandleStateUpdateTimer, this),
     mAddressSolicit(OPENTHREAD_URI_ADDRESS_SOLICIT, &MleRouter::HandleAddressSolicit, this),
     mAddressRelease(OPENTHREAD_URI_ADDRESS_RELEASE, &MleRouter::HandleAddressRelease, this),
+    mRouterIdSequence(0),
+    mRouterIdSequenceLastUpdated(0),
+    mMaxChildrenAllowed(kMaxChildren),
+    mChallengeTimeout(0),
+    mNextChildId(kMaxChildId),
+    mNetworkIdTimeout(kNetworkIdTimeout),
+    mRouterUpgradeThreshold(kRouterUpgradeThreshold),
+    mRouterDowngradeThreshold(kRouterDowngradeThreshold),
+    mLeaderWeight(kLeaderWeight),
+    mFixedLeaderPartitionId(0),
+    mRouterRoleEnabled(true),
+    mIsRouterRestoringChildren(false),
+    mPreviousPartitionId(0),
     mRouterSelectionJitter(kRouterSelectionJitter),
     mRouterSelectionJitterTimeout(0)
 {
     mDeviceMode |= ModeTlv::kModeFFD | ModeTlv::kModeFullNetworkData;
 
-    mChallengeTimeout = 0;
-    mNextChildId = kMaxChildId;
-    mRouterIdSequence = 0;
     memset(mChildren, 0, sizeof(mChildren));
     memset(mRouters, 0, sizeof(mRouters));
 
-    mNetworkIdTimeout = kNetworkIdTimeout;
-    mRouterUpgradeThreshold = kRouterUpgradeThreshold;
-    mRouterDowngradeThreshold = kRouterDowngradeThreshold;
-    mLeaderWeight = kLeaderWeight;
-    mFixedLeaderPartitionId = 0;
-    mMaxChildrenAllowed = kMaxChildren;
-    mIsRouterRestoringChildren = false;
-
     SetRouterId(kInvalidRouterId);
-    mPreviousPartitionId = 0;
-    mRouterIdSequenceLastUpdated = 0;
-    mRouterRoleEnabled = true;
 }
 
 bool MleRouter::IsRouterRoleEnabled(void) const
@@ -3175,6 +3174,11 @@ Neighbor *MleRouter::GetNeighbor(uint16_t aAddress)
 
         for (int i = 0; i <= kMaxRouterId; i++)
         {
+            if (i == mRouterId)
+            {
+                continue;
+            }
+
             if (mRouters[i].GetState() == Neighbor::kStateValid && mRouters[i].GetRloc16() == aAddress)
             {
                 ExitNow(rval = &mRouters[i]);
@@ -3215,6 +3219,11 @@ Neighbor *MleRouter::GetNeighbor(const Mac::ExtAddress &aAddress)
 
         for (int i = 0; i <= kMaxRouterId; i++)
         {
+            if (i == mRouterId)
+            {
+                continue;
+            }
+
             if (mRouters[i].GetState() == Neighbor::kStateValid &&
                 memcmp(&mRouters[i].GetExtAddress(), &aAddress, sizeof(aAddress)) == 0)
             {
@@ -3316,7 +3325,7 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
     {
         router = &mRouters[i];
 
-        if (router->GetState() != Neighbor::kStateValid)
+        if (router->GetState() != Neighbor::kStateValid || i == mRouterId)
         {
             continue;
         }

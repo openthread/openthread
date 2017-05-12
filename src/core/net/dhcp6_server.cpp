@@ -408,7 +408,7 @@ ThreadError Dhcp6Server::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
 
         if (otIp6PrefixMatch(option.GetAddress(), &(prefix->mPrefix)) >= prefix->mLength)
         {
-            mPrefixAgentsMask |= (1 << i);;
+            mPrefixAgentsMask |= (1 << i);
             break;
         }
     }

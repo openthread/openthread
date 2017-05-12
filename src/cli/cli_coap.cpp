@@ -182,7 +182,7 @@ void Coap::HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, otMe
     ThreadError error = kThreadError_None;
     otCoapHeader responseHeader;
     otMessage *responseMessage;
-    otCoapCode responseCode = kCoapCodeEmpty ;
+    otCoapCode responseCode = kCoapCodeEmpty;
     char responseContent = '0';
 
     sServer->OutputFormat("Received CoAP request from [%x:%x:%x:%x:%x:%x:%x:%x]: ",
