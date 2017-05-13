@@ -46,6 +46,7 @@
 #include "openthread-instance.h"
 #include "common/logging.hpp"
 #include "common/new.hpp"
+#include "common/timer.hpp"
 
 #ifndef OPENTHREAD_MULTIPLE_INSTANCE
 static otDEFINE_ALIGNED_VAR(sInstanceRaw, sizeof(otInstance), uint64_t);
@@ -59,6 +60,7 @@ otInstance::otInstance(void) :
     mActiveScanCallbackContext(NULL),
     mEnergyScanCallback(NULL),
     mEnergyScanCallbackContext(NULL),
+    mHandleTimerCallback(NULL),
     mThreadNetif(mIp6)
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     , mLinkRaw(*this)
@@ -69,6 +71,7 @@ otInstance::otInstance(void) :
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
     , mLogLevel(static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL))
 #endif // OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+    , mTimer(mIp6.mTimerScheduler, &otInstance::HandleInstanceTimer, this)
 {
 }
 
@@ -245,4 +248,39 @@ ThreadError otSetDynamicLogLevel(otInstance *aInstance, otLogLevel aLogLevel)
 #endif
 
     return error;
+}
+
+void otTimerSetCallback(otInstance *aInstance, otTimerCallback aHandler)
+{
+    aInstance->mHandleTimerCallback = aHandler;
+}
+
+bool otTimerIsRunning(otInstance *aInstance)
+{
+    return aInstance->mTimer.IsRunning();
+}
+
+void otTimerStart(otInstance *aInstance, uint32_t aDt)
+{
+    aInstance->mTimer.Start(aDt);
+}
+
+void otTimerStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
+{
+    return aInstance->mTimer.StartAt(aT0, aDt);
+}
+
+void otTimerStop(otInstance *aInstance)
+{
+    aInstance->mTimer.Stop();
+}
+
+uint32_t otTimerGetNow(otInstance *aInstance)
+{
+    return aInstance->mTimer.GetNow();
+}
+
+void otInstance::HandleInstanceTimer(void *aContext)
+{
+    static_cast<otInstance *>(aContext)->mHandleTimerCallback(aContext);
 }

@@ -285,6 +285,66 @@ otLogLevel otGetDynamicLogLevel(otInstance *aInstance);
 ThreadError otSetDynamicLogLevel(otInstance *aInstance, otLogLevel aLogLevel);
 
 /**
+ * This function pointer is called when the timer expires.
+ *
+ * @param[in]  aContext  A pointer to application-specific context.
+ *
+ */
+typedef void (OTCALL *otTimerCallback)(void *aContext);
+
+/**
+ * This function registers a callback which will be called when the timer expires.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aHandler  A function pointer will be called when the timer expires.
+ *
+ */
+OTAPI void OTCALL otTimerSetCallback(otInstance *aInstance, otTimerCallback aHandler);
+
+/**
+ * This function schedules the timer to fire a @p dt milliseconds from now.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aDt       The expire time in milliseconds from now.
+ *
+ */
+OTAPI void OTCALL otTimerStart(otInstance *aInstance, uint32_t aDt);
+
+/**
+ * This function schedules the timer to fire at @p dt milliseconds from @p t0.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aT0       The start time in milliseconds.
+ * @param[in]  aDt       The expire time in milliseconds from @p t0.
+ *
+ */
+OTAPI void OTCALL otTimerStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
+
+/**
+ * This function stops the timer.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ */
+OTAPI void OTCALL otTimerStop(otInstance *aInstance);
+
+/**
+ * This function returns the current time in milliseconds.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ */
+OTAPI uint32_t OTCALL otTimerGetNow(otInstance *aInstance);
+
+/**
+ * This method indicates whether or not the timer instance is running.
+ *
+ * @retval TRUE   If the timer is running.
+ * @retval FALSE  If the timer is not running.
+ */
+OTAPI bool OTCALL otTimerIsRunning(otInstance *aInstance);
+
+/**
  * @}
  *
  */
