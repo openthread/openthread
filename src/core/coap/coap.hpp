@@ -227,7 +227,7 @@ public:
     Resource *GetNext(void) const { return static_cast<Resource *>(mNext); };
 
 private:
-    void HandleRequest(Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) {
+    void HandleRequest(Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const {
         mHandler(mContext, &aHeader, &aMessage, &aMessageInfo);
     }
 };

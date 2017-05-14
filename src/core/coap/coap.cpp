@@ -512,7 +512,11 @@ void Coap::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
     }
 
 exit:
-    otLogInfoCoapErr(mNetif.GetInstance(), error, "Receive failed");
+
+    if (error)
+    {
+        otLogInfoCoapErr(mNetif.GetInstance(), error, "Receive failed");
+    }
 }
 
 void Coap::ProcessReceivedResponse(Header &aResponseHeader, Message &aMessage,
@@ -600,7 +604,8 @@ void Coap::ProcessReceivedRequest(Header &aHeader, Message &aMessage, const Ip6:
     char uriPath[Resource::kMaxReceivedUriPath] = "";
     char *curUriPath = uriPath;
     const Header::Option *coapOption;
-    Message *response;
+    Message *response = NULL;
+    ThreadError error = kThreadError_None;
 
     if (mInterceptor != NULL)
     {
@@ -613,9 +618,9 @@ void Coap::ProcessReceivedRequest(Header &aHeader, Message &aMessage, const Ip6:
     switch (mResponsesQueue.GetMatchedResponseCopy(aHeader, aMessageInfo, &response))
     {
     case kThreadError_None:
-        SendMessage(*response, aMessageInfo);
-
-    // fall through
+        error = Send(*response, aMessageInfo);
+        // fall through
+        ;
 
     case kThreadError_NoBufs:
         ExitNow();
@@ -652,7 +657,7 @@ void Coap::ProcessReceivedRequest(Header &aHeader, Message &aMessage, const Ip6:
 
     curUriPath[0] = '\0';
 
-    for (Resource *resource = mResources; resource; resource = resource->GetNext())
+    for (const Resource *resource = mResources; resource; resource = resource->GetNext())
     {
         if (strcmp(resource->mUriPath, uriPath) == 0)
         {
@@ -662,6 +667,12 @@ void Coap::ProcessReceivedRequest(Header &aHeader, Message &aMessage, const Ip6:
     }
 
 exit:
+
+    if (error != kThreadError_None && response != NULL)
+    {
+        response->Free();
+    }
+
     return;
 }
 
