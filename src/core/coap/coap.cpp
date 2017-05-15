@@ -59,7 +59,9 @@ Coap::Coap(ThreadNetif &aNetif):
     mRetransmissionTimer(aNetif.GetIp6().mTimerScheduler, &Coap::HandleRetransmissionTimer, this),
     mResources(NULL),
     mInterceptor(NULL),
-    mResponsesQueue(aNetif)
+    mResponsesQueue(aNetif),
+    mDefaultHandler(NULL),
+    mDefaultHandlerContext(NULL)
 {
     mMessageId = static_cast<uint16_t>(otPlatRandomGet());
 }
@@ -134,6 +136,12 @@ void Coap::RemoveResource(Resource &aResource)
 
 exit:
     aResource.mNext = NULL;
+}
+
+void Coap::SetDefaultHandler(otCoapRequestHandler aHandler, void *aContext)
+{
+    mDefaultHandler = aHandler;
+    mDefaultHandlerContext = aContext;
 }
 
 Message *Coap::NewMessage(const Header &aHeader, uint8_t aPriority)
@@ -664,6 +672,11 @@ void Coap::ProcessReceivedRequest(Header &aHeader, Message &aMessage, const Ip6:
             resource->HandleRequest(aHeader, aMessage, aMessageInfo);
             ExitNow();
         }
+    }
+
+    if (mDefaultHandler)
+    {
+        mDefaultHandler(mDefaultHandlerContext, &aHeader, &aMessage, &aMessageInfo);
     }
 
 exit:
