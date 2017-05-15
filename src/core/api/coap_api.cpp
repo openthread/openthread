@@ -135,7 +135,7 @@ otMessage *otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader)
 {
     Message *message;
     VerifyOrExit(aHeader != NULL, message = NULL);
-    message = aInstance->mThreadNetif.GetCoap().NewMessage(*(static_cast<const Coap::Header *>(aHeader)));
+    message = aInstance->mApplicationCoap.NewMessage(*(static_cast<const Coap::Header *>(aHeader)));
 exit:
     return message;
 }
@@ -143,7 +143,7 @@ exit:
 ThreadError otCoapSendRequest(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo,
                               otCoapResponseHandler aHandler, void *aContext)
 {
-    return aInstance->mThreadNetif.GetCoap().SendMessage(
+    return aInstance->mApplicationCoap.SendMessage(
                *static_cast<Message *>(aMessage),
                *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
                aHandler, aContext);
