@@ -2975,10 +2975,41 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_RLOC16_DEBUG_PASSTHRU(uint8_t hea
 
 ThreadError NcpBase::GetPropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_prop_key_t key)
 {
-    // TODO: Implement get external route table
-    (void)key;
+    ThreadError errorCode = kThreadError_None;
+    otExternalRouteConfig external_route_config;
+    otNetworkDataIterator iter = OT_NETWORK_DATA_ITERATOR_INIT;
+    uint8_t flags;
 
-    return SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+    mDisableStreamWrite = true;
+
+    SuccessOrExit(errorCode = OutboundFrameBegin());
+    SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_COMMAND_PROP_S, header, SPINEL_CMD_PROP_VALUE_IS,
+                                                      key));
+
+    while (otNetDataGetNextRoute(mInstance, false, &iter, &external_route_config) == kThreadError_None)
+    {
+        flags = static_cast<uint8_t>(external_route_config.mPreference);
+        flags <<= SPINEL_NET_FLAG_PREFERENCE_OFFSET;
+
+        SuccessOrExit(errorCode = OutboundFrameFeedPacked(
+            SPINEL_DATATYPE_STRUCT_S(
+                SPINEL_DATATYPE_IPv6ADDR_S      // IPv6 Prefix
+                SPINEL_DATATYPE_UINT8_S         // Prefix Length (in bits)
+                SPINEL_DATATYPE_BOOL_S          // isStable
+                SPINEL_DATATYPE_UINT8_S         // Flags
+            ),
+            &external_route_config.mPrefix.mPrefix,
+            external_route_config.mPrefix.mLength,
+            external_route_config.mStable,
+            flags
+        ));
+    }
+
+    SuccessOrExit(errorCode = OutboundFrameSend());
+
+exit:
+    mDisableStreamWrite = false;
+    return errorCode;
 }
 
 ThreadError NcpBase::GetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_key_t key)
