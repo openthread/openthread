@@ -143,6 +143,12 @@ void NcpUart::EncodeAndSendToUart(void)
         {
         case kStartingFrame:
 
+            if (super_t::ShouldWakeHost())
+            {
+                otPlatHostWake();
+            }
+
+            VerifyOrExit(super_t::ShouldDeferHostSend() == false);
             SuccessOrExit(mFrameEncoder.Init(mUartBuffer));
 
             mTxFrameBuffer.OutFrameBegin();

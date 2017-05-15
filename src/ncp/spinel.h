@@ -190,6 +190,15 @@ typedef enum
     SPINEL_POWER_STATE_ONLINE           = 4,
 } spinel_power_state_t;
 
+typedef enum
+{
+    SPINEL_HOST_POWER_STATE_OFFLINE     = 0,
+    SPINEL_HOST_POWER_STATE_DEEP_SLEEP  = 1,
+    SPINEL_HOST_POWER_STATE_RESERVED    = 2,
+    SPINEL_HOST_POWER_STATE_LOW_POWER   = 3,
+    SPINEL_HOST_POWER_STATE_ONLINE      = 4,
+} spinel_host_power_state_t;
+
 enum
 {
     SPINEL_NET_FLAG_ON_MESH             = (1 << 0),
@@ -399,6 +408,7 @@ typedef enum
     SPINEL_PROP_LOCK                    = 9,        ///< PropLock [b]
     SPINEL_PROP_HBO_MEM_MAX             = 10,       ///< Max offload mem [S]
     SPINEL_PROP_HBO_BLOCK_MAX           = 11,       ///< Max offload block [S]
+    SPINEL_PROP_HOST_POWER_STATE        = 12,       ///< Host MCU power state [C]
 
     SPINEL_PROP_BASE_EXT__BEGIN         = 0x1000,
 

@@ -52,6 +52,15 @@ public:
     typedef void (*BufferCallback)(void *aContext, NcpFrameBuffer *aNcpFrameBuffer);
 
     /**
+     * Defines a function pointer callback which is invoked to inform 
+     *
+     * @param[in]  aContext         A pointer to arbitrary context information.
+     * @param[in]  aError           An error value representing the success or failure of the frame transmit attempt.
+     *
+     */
+    typedef void (*FrameTransmitCallback)(void *aContext, ThreadError aError);
+
+    /**
      * This constructor creates an NCP frame buffer.
      *
      * @param[in]  aBuffer        A pointer to a buffer which will be used by NCP frame buffer.
@@ -234,6 +243,19 @@ public:
      */
     uint16_t OutFrameGetLength(void);
 
+    /**
+     * This method provides a callback to NcpBuffer that it will use when it the current last frame
+     * is transmitted or aborted.
+     *
+     * @param[in]  aFrameTransmitCallback   Callback invoked when NcpBuffer transmits the current last frame.
+     * @param[in]  aContex                  A pointer to arbitrary context information.
+     *
+     * @retval kThreadError_None      Successfully accepted the callback.
+     * @retval kThreadError_Busy      The feature is already in use and busy.
+     *
+     */
+    ThreadError SetFrameTransmitCallback(FrameTransmitCallback aFrameTransmitCallback, void *aContext);
+
 private:
 
     /*
@@ -324,34 +346,38 @@ private:
 
     // Instance variables
 
-    uint8_t * const mBuffer;                    // Pointer to the buffer used to store the data.
-    uint8_t * const mBufferEnd;                 // Points to after the end of buffer.
-    const uint16_t  mBufferLength;              // Length of the the buffer.
+    uint8_t * const         mBuffer;                    // Pointer to the buffer used to store the data.
+    uint8_t * const         mBufferEnd;                 // Points to after the end of buffer.
+    const uint16_t          mBufferLength;              // Length of the the buffer.
 
-    BufferCallback  mEmptyBufferCallback;       // Callback to signal when buffer becomes empty.
-    BufferCallback  mNonEmptyBufferCallback;    // Callback to signal when buffer becomes non-empty.
-    void *          mCallbackContext;           // Context passed to callbacks.
+    BufferCallback          mEmptyBufferCallback;       // Callback to signal when buffer becomes empty.
+    BufferCallback          mNonEmptyBufferCallback;    // Callback to signal when buffer becomes non-empty.
+    void *                  mEmptyBufferCallbackContext;// Context passed to callbacks.
 
-    otMessageQueue  mMessageQueue;              // Main message queue.
+    FrameTransmitCallback   mFrameTransmitCallback;     // Callback to signal when a particular frame has been transmitted.
+    void *                  mFrameTransmitContext;      // Context passed to mFrameTransmitCallback;
+    uint8_t *               mFrameTransmitMark;         // The end position of the desired frame in the frame buffer.
 
-    otMessageQueue  mWriteFrameMessageQueue;    // Message queue for the current frame being written.
-    uint8_t *       mWriteFrameStart;           // Pointer to start of current frame being written.
-    uint8_t *       mWriteSegmentHead;          // Pointer to start of current segment in the frame being written.
-    uint8_t *       mWriteSegmentTail;          // Pointer to end of current segment in the frame being written.
+    otMessageQueue          mMessageQueue;              // Main message queue.
 
-    ReadState       mReadState;                 // Read state.
-    uint16_t        mReadFrameLength;           // Length of current frame being read.
+    otMessageQueue          mWriteFrameMessageQueue;    // Message queue for the current frame being written.
+    uint8_t *               mWriteFrameStart;           // Pointer to start of current frame being written.
+    uint8_t *               mWriteSegmentHead;          // Pointer to start of current segment in the frame being written.
+    uint8_t *               mWriteSegmentTail;          // Pointer to end of current segment in the frame being written.
 
-    uint8_t *       mReadFrameStart;            // Pointer to start of current frame being read.
-    uint8_t *       mReadSegmentHead;           // Pointer to start of current segment in the frame being read.
-    uint8_t *       mReadSegmentTail;           // Pointer to end of current segment in the frame being read.
-    uint8_t *       mReadPointer;               // Pointer to next byte to read (either in segment or in msg buffer).
+    ReadState               mReadState;                 // Read state.
+    uint16_t                mReadFrameLength;           // Length of current frame being read.
 
-    otMessage *     mReadMessage;               // Current Message in the frame being read.
-    uint16_t        mReadMessageOffset;         // Offset within current message being read.
+    uint8_t *               mReadFrameStart;            // Pointer to start of current frame being read.
+    uint8_t *               mReadSegmentHead;           // Pointer to start of current segment in the frame being read.
+    uint8_t *               mReadSegmentTail;           // Pointer to end of current segment in the frame being read.
+    uint8_t *               mReadPointer;               // Pointer to next byte to read (either in segment or in msg buffer).
 
-    uint8_t         mMessageBuffer[kMessageReadBufferSize];   // Buffer to hold part of current message being read.
-    uint8_t *       mReadMessageTail;           // Pointer to end of current part in mMessageBuffer.
+    otMessage *             mReadMessage;               // Current Message in the frame being read.
+    uint16_t                mReadMessageOffset;         // Offset within current message being read.
+
+    uint8_t                 mMessageBuffer[kMessageReadBufferSize];   // Buffer to hold part of current message being read.
+    uint8_t *               mReadMessageTail;           // Pointer to end of current part in mMessageBuffer.
 };
 
 }  // namespace ot

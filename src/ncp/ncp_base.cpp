@@ -119,6 +119,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_POWER_STATE, &NcpBase::GetPropertyHandler_POWER_STATE },
     { SPINEL_PROP_HWADDR, &NcpBase::GetPropertyHandler_HWADDR },
     { SPINEL_PROP_LOCK, &NcpBase::GetPropertyHandler_LOCK },
+    { SPINEL_PROP_HOST_POWER_STATE, &NcpBase::GetPropertyHandler_HOST_POWER_STATE },
 
     { SPINEL_PROP_PHY_ENABLED, &NcpBase::GetPropertyHandler_PHY_ENABLED },
     { SPINEL_PROP_PHY_FREQ, &NcpBase::GetPropertyHandler_PHY_FREQ },
@@ -270,6 +271,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
 const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
 {
     { SPINEL_PROP_POWER_STATE, &NcpBase::SetPropertyHandler_POWER_STATE },
+    { SPINEL_PROP_HOST_POWER_STATE, &NcpBase::SetPropertyHandler_HOST_POWER_STATE },
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     { SPINEL_PROP_PHY_ENABLED, &NcpBase::SetPropertyHandler_PHY_ENABLED },
@@ -566,6 +568,8 @@ NcpBase::NcpBase(otInstance *aInstance):
     mUpdateChangedPropsTask(aInstance->mIp6.mTaskletScheduler, &NcpBase::UpdateChangedProps, this),
     mChangedFlags(NCP_PLAT_RESET_REASON),
     mShouldSignalEndOfScan(false),
+    mHostPowerState(SPINEL_HOST_POWER_STATE_ONLINE),
+    mHostPowerStateInProgress(false),
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     mShouldSignalJamStateChange(false),
 #endif
@@ -1240,6 +1244,19 @@ exit:
 // MARK: Serial Traffic Glue
 // ----------------------------------------------------------------------------
 
+void NcpBase::HandleFrameTransmitDone(void *aContext, ThreadError aError)
+{
+    NcpBase *obj = static_cast<NcpBase *>(aContext);
+    obj->HandleFrameTransmitDone(aError);
+}
+
+void NcpBase::HandleFrameTransmitDone(ThreadError aError)
+{
+    (void) aError;
+
+    mHostPowerStateInProgress = false;
+}
+
 ThreadError NcpBase::OutboundFrameSend(void)
 {
     ThreadError errorCode;
@@ -1264,6 +1281,11 @@ void NcpBase::HandleReceive(const uint8_t *buf, uint16_t bufLength)
 
     parsedLength = spinel_datatype_unpack(buf, bufLength, SPINEL_DATATYPE_COMMAND_S SPINEL_DATATYPE_DATA_S, &header, &command, &arg_ptr, &arg_len);
     tid = SPINEL_HEADER_GET_TID(header);
+
+    // Receiving any message from the host has the side effect of transitioning the host power state to online.
+    mHostPowerState = SPINEL_HOST_POWER_STATE_ONLINE;
+    mHostPowerStateInProgress = false;
+    mTxFrameBuffer.SetFrameTransmitCallback(NULL, NULL);
 
     if (parsedLength == bufLength)
     {
@@ -1371,6 +1393,16 @@ void NcpBase::HandleSpaceAvailableInTxBuffer(void)
 
 exit:
     return;
+}
+
+bool NcpBase::ShouldWakeHost(void)
+{
+    return (mHostPowerState != SPINEL_HOST_POWER_STATE_ONLINE && !mHostPowerStateInProgress);
+}
+
+bool NcpBase::ShouldDeferHostSend(void)
+{
+    return (mHostPowerState == SPINEL_HOST_POWER_STATE_DEEP_SLEEP && !mHostPowerStateInProgress);
 }
 
 void NcpBase::IncrementFrameErrorCounter(void)
@@ -1950,6 +1982,17 @@ ThreadError NcpBase::GetPropertyHandler_LOCK(uint8_t header, spinel_prop_key_t k
     (void)key;
 
     return SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+}
+
+ThreadError GetPropertyHandler_HOST_POWER_STATE(uint8_t header, spinel_prop_key_t key)
+{
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_UINT8_S,
+               mHostPowerState
+           );
 }
 
 ThreadError NcpBase::GetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_key_t key)
@@ -3624,6 +3667,66 @@ ThreadError NcpBase::SetPropertyHandler_POWER_STATE(uint8_t header, spinel_prop_
     (void)value_len;
 
     return SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+}
+
+ThreadError SetPropertyHandler_HOST_POWER_STATE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                    uint16_t value_len)
+{
+    uint8_t value;
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_UINT8_S,
+                       &value
+                   );
+
+    if (parsedLength > 0)
+    {
+        switch (value)
+        {        
+        case SPINEL_HOST_POWER_STATE_OFFLINE:
+        case SPINEL_HOST_POWER_STATE_DEEP_SLEEP:
+        case SPINEL_HOST_POWER_STATE_LOW_POWER:
+        case SPINEL_HOST_POWER_STATE_ONLINE:
+            // Adopt the requested power state.
+            mHostPowerState = value;
+            break;
+
+        case SPINEL_HOST_POWER_STATE_RESERVED:
+            // Per the specification, treat this as synonymous with SPINEL_HOST_POWER_STATE_DEEP_SLEEP.
+            mHostPowerState = SPINEL_HOST_POWER_STATE_DEEP_SLEEP;
+            break;
+
+        default:
+            // Per the specification, treat unrecognized values as synonymous with SPINEL_HOST_POWER_STATE_LOW_POWER.
+            mHostPowerState = SPINEL_HOST_POWER_STATE_LOW_POWER;
+            break;
+        }
+    }
+    else
+    {
+        errorCode = kThreadError_Parse;
+    }
+
+    if (errorCode == kThreadError_None)
+    {
+        errorCode = HandleCommandPropertyGet(header, key);
+
+        if (errorCode == kThreadError_None && mHostPowerState != SPINEL_HOST_POWER_STATE_ONLINE)
+        {
+            mHostPowerStateInProgress = true;
+            mTxFrameBuffer.SetFrameTransmitCallback(&NcpBase::HandleFrameTransmitDone, this);
+        }
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+    }
+
+    return errorCode;
 }
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API

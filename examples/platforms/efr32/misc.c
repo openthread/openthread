@@ -93,3 +93,8 @@ otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 
     return reason;
 }
+
+void otPlatWakeHost(void)
+{
+    // TODO: implement an operation to wake the host from sleep state.
+}

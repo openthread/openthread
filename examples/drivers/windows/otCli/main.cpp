@@ -32,6 +32,7 @@
 #include <openthread/openthread.h>
 #include <openthread/cli.h>
 #include <openthread/platform/uart.h>
+#include <openthread/platform/misc.h>
 
 bool skipNextLine = false;
 
@@ -82,4 +83,9 @@ EXTERN_C ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
     otPlatUartSendDone();
 
     return error;
+}
+
+EXTERN_C void otPlatWakeHost(void)
+{
+
 }
