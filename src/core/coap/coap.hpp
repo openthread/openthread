@@ -499,6 +499,13 @@ public:
      */
     void RemoveResource(Resource &aResource);
 
+    /* This function sets the default handler for unhandled CoAP requests.
+     *
+     * @param[in]  aHandler   A function pointer that shall be called when an unhandled request arrives.
+     * @param[in]  aContext   A pointer to arbitrary context information. May be NULL if not used.
+     */
+    void SetDefaultHandler(otCoapRequestHandler aHandler, void *aContext);
+
     /**
      * This method creates a new message with a CoAP header.
      *
@@ -665,6 +672,9 @@ private:
 
     Interceptor    mInterceptor;
     ResponsesQueue mResponsesQueue;
+
+    otCoapRequestHandler mDefaultHandler;
+    void *mDefaultHandlerContext;
 };
 
 }  // namespace Coap

@@ -169,6 +169,11 @@ void otCoapRemoveResource(otInstance *aInstance, otCoapResource *aResource)
     aInstance->mApplicationCoap.RemoveResource(*static_cast<Coap::Resource *>(aResource));
 }
 
+void otCoapSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandler, void *aContext)
+{
+    aInstance->mApplicationCoap.SetDefaultHandler(aHandler, aContext);
+}
+
 ThreadError otCoapSendResponse(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     return aInstance->mApplicationCoap.SendMessage(
