@@ -6378,9 +6378,6 @@ exit:
 ThreadError NcpBase::InsertPropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_prop_key_t key,
                                                                const uint8_t *value_ptr, uint16_t value_len)
 {
-    const static int kPreferenceOffset = 6;
-    const static int kPreferenceMask = 3 << kPreferenceOffset;
-
     spinel_ssize_t parsedLength;
     ThreadError errorCode = kThreadError_None;
 
@@ -6410,7 +6407,7 @@ ThreadError NcpBase::InsertPropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, s
     {
         ext_route_config.mPrefix.mPrefix = *addr_ptr;
         ext_route_config.mStable = stable;
-        ext_route_config.mPreference = ((flags & kPreferenceMask) >> kPreferenceOffset);
+        ext_route_config.mPreference = ((flags & SPINEL_NET_FLAG_PREFERENCE_MASK) >> SPINEL_NET_FLAG_PREFERENCE_OFFSET);
         errorCode = otNetDataAddRoute(mInstance, &ext_route_config);
 
         if (errorCode == kThreadError_None)
@@ -6440,15 +6437,6 @@ exit:
 ThreadError NcpBase::InsertPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_prop_key_t key,
                                                                const uint8_t *value_ptr, uint16_t value_len)
 {
-    const static int kPreferenceOffset = 6;
-    const static int kPreferenceMask = 3 << kPreferenceOffset;
-    const static int kPreferredFlag = 1 << 5;
-    const static int kSlaacFlag = 1 << 4;
-    const static int kDhcpFlag = 1 << 3;
-    const static int kConfigureFlag = 1 << 2;
-    const static int kDefaultRouteFlag = 1 << 1;
-    const static int kOnMeshFlag = 1 << 0;
-
     spinel_ssize_t parsedLength;
     ThreadError errorCode = kThreadError_None;
 
@@ -6478,13 +6466,14 @@ ThreadError NcpBase::InsertPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, s
     {
         border_router_config.mPrefix.mPrefix = *addr_ptr;
         border_router_config.mStable = stable;
-        border_router_config.mPreference = ((flags & kPreferenceMask) >> kPreferenceOffset);
-        border_router_config.mPreferred = ((flags & kPreferredFlag) == kPreferredFlag);
-        border_router_config.mSlaac = ((flags & kSlaacFlag) == kSlaacFlag);
-        border_router_config.mDhcp = ((flags & kDhcpFlag) == kDhcpFlag);
-        border_router_config.mConfigure = ((flags & kConfigureFlag) == kConfigureFlag);
-        border_router_config.mDefaultRoute = ((flags & kDefaultRouteFlag) == kDefaultRouteFlag);
-        border_router_config.mOnMesh = ((flags & kOnMeshFlag) == kOnMeshFlag);
+        border_router_config.mPreference =
+            ((flags & SPINEL_NET_FLAG_PREFERENCE_MASK) >> SPINEL_NET_FLAG_PREFERENCE_OFFSET);
+        border_router_config.mPreferred = ((flags & SPINEL_NET_FLAG_PREFERRED) != 0);
+        border_router_config.mSlaac = ((flags & SPINEL_NET_FLAG_SLAAC) != 0);
+        border_router_config.mDhcp = ((flags & SPINEL_NET_FLAG_DHCP) != 0);
+        border_router_config.mConfigure = ((flags & SPINEL_NET_FLAG_CONFIGURE) != 0);
+        border_router_config.mDefaultRoute = ((flags & SPINEL_NET_FLAG_DEFAULT_ROUTE) != 0);
+        border_router_config.mOnMesh = ((flags & SPINEL_NET_FLAG_ON_MESH) != 0);
 
         errorCode = otNetDataAddPrefixInfo(mInstance, &border_router_config);
 
