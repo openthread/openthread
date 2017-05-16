@@ -1984,7 +1984,7 @@ ThreadError NcpBase::GetPropertyHandler_LOCK(uint8_t header, spinel_prop_key_t k
     return SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
 }
 
-ThreadError GetPropertyHandler_HOST_POWER_STATE(uint8_t header, spinel_prop_key_t key)
+ThreadError NcpBase::GetPropertyHandler_HOST_POWER_STATE(uint8_t header, spinel_prop_key_t key)
 {
     return SendPropertyUpdate(
                header,
@@ -3669,8 +3669,8 @@ ThreadError NcpBase::SetPropertyHandler_POWER_STATE(uint8_t header, spinel_prop_
     return SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
 }
 
-ThreadError SetPropertyHandler_HOST_POWER_STATE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
-                                                    uint16_t value_len)
+ThreadError NcpBase::SetPropertyHandler_HOST_POWER_STATE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                         uint16_t value_len)
 {
     uint8_t value;
     spinel_ssize_t parsedLength;

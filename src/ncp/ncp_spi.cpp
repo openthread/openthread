@@ -40,6 +40,7 @@
 
 #include <openthread/ncp.h>
 #include <openthread/platform/spi-slave.h>
+#include <openthread/platform/misc.h>
 
 #include "openthread-core-config.h"
 #include "openthread-instance.h"

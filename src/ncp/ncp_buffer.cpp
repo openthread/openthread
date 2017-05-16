@@ -103,7 +103,7 @@ void NcpFrameBuffer::Clear(void)
     {
         if (mEmptyBufferCallback != NULL)
         {
-            mEmptyBufferCallback(mCallbackContext, this);
+            mEmptyBufferCallback(mEmptyBufferCallbackContext, this);
         }
     }
 
