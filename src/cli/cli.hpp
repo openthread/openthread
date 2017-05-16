@@ -263,6 +263,7 @@ private:
     void ProcessSingleton(int argc, char *argv[]);
     void ProcessState(int argc, char *argv[]);
     void ProcessThread(int argc, char *argv[]);
+    void ProcessTxPowerMax(int argc, char *argv[]);
     void ProcessVersion(int argc, char *argv[]);
     void ProcessWhitelist(int argc, char *argv[]);
 
