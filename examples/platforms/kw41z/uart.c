@@ -168,7 +168,7 @@ void LPUART0_IRQHandler(void)
     uint8_t rx_data;
 
     /* Check if data was received */
-    while ((kLPUART_RxDataRegFullFlag) & LPUART_GetStatusFlags(LPUART0))
+    while (LPUART_GetStatusFlags(LPUART0) & (kLPUART_RxDataRegFullFlag))
     {
         rx_data = LPUART_ReadByte(LPUART0);
         LPUART_ClearStatusFlags(LPUART0, kLPUART_RxDataRegFullFlag);
@@ -181,8 +181,8 @@ void LPUART0_IRQHandler(void)
     }
 
     /* Check if data Tx has end */
-    if ((kLPUART_TxDataRegEmptyFlag & LPUART_GetStatusFlags(LPUART0)) &&
-        (kLPUART_TxDataRegEmptyInterruptEnable & interrupts))
+    if ((LPUART_GetStatusFlags(LPUART0) & kLPUART_TxDataRegEmptyFlag) &&
+        (interrupts & kLPUART_TxDataRegEmptyInterruptEnable))
     {
         if (sTransmitLength)
         {
@@ -196,7 +196,7 @@ void LPUART0_IRQHandler(void)
         }
     }
 
-    if (kLPUART_RxOverrunFlag & LPUART_GetStatusFlags(LPUART0))
+    if (LPUART_GetStatusFlags(LPUART0) & kLPUART_RxOverrunFlag)
     {
         LPUART_ClearStatusFlags(LPUART0, kLPUART_RxOverrunFlag);
     }

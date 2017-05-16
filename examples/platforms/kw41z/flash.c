@@ -59,11 +59,11 @@ ThreadError utilsFlashErasePage(uint32_t aAddress)
 
     status = FLASH_Erase(&sFlashConfig, aAddress, FSL_FEATURE_FLASH_PFLASH_BLOCK_SECTOR_SIZE, kFLASH_ApiEraseKey);
 
-    if (kStatus_FLASH_Success == status)
+    if (status == kStatus_FLASH_Success)
     {
         error = kThreadError_None;
     }
-    else if (kStatus_FLASH_AlignmentError == status)
+    else if (status == kStatus_FLASH_AlignmentError)
     {
         error = kThreadError_InvalidArgs;
     }
@@ -95,7 +95,7 @@ ThreadError utilsFlashStatusWait(uint32_t aTimeout)
 
 uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
-    if (kStatus_FLASH_Success != FLASH_Program(&sFlashConfig, aAddress, (uint32_t *)aData, aSize))
+    if (FLASH_Program(&sFlashConfig, aAddress, (uint32_t *)aData, aSize) != kStatus_FLASH_Success)
     {
         aSize = 0;
     }

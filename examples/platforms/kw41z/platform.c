@@ -59,7 +59,7 @@ void PlatformInit(int argc, char *argv[])
     /* Obtain REV ID from SIM */
     revId = (uint8_t)((SIM->SDID & SIM_SDID_REVID_MASK) >> SIM_SDID_REVID_SHIFT);
 
-    if (0 == revId)
+    if (revId == 0)
     {
         tempTrim = RSIM->ANA_TRIM;
         RSIM->ANA_TRIM |= RSIM_ANA_TRIM_BB_LDO_XO_TRIM_MASK; /* max trim for BB LDO for XO */
@@ -76,7 +76,7 @@ void PlatformInit(int argc, char *argv[])
     /* wait for RF_OSC_READY */
     while ((RSIM->CONTROL & RSIM_CONTROL_RF_OSC_READY_MASK) == 0) {}
 
-    if (0 == revId)
+    if (revId == 0)
     {
         SIM->SCGC5 |= SIM_SCGC5_PHYDIG_MASK;
         XCVR_TSM->OVRD0 |= XCVR_TSM_OVRD0_BB_LDO_ADCDAC_EN_OVRD_EN_MASK |
