@@ -63,6 +63,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [singleton](#singleton)
 * [state](#state)
 * [thread](#thread-start)
+* [txpowermax](#txpowermax)
 * [version](#version)
 * [whitelist](#whitelist)
 * [diag](#diag)
@@ -1563,6 +1564,25 @@ Disable Thread protocol operation and detach from a Thread network.
 
 ```bash
 > thread stop
+Done
+```
+
+### txpowermax
+
+Get the maximum transmit power in dBm.
+
+```bash
+> txpowermax
+-10 dBm
+Done
+```
+
+### txpowermax \<txpowermax\>
+
+Set the maximum transmit power.
+
+```bash
+> txpowermax -10
 Done
 ```
 
