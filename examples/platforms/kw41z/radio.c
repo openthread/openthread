@@ -384,7 +384,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     (void)aInstance;
-    return kRadioCapsEnergyScan;
+    return kRadioCapsAckTimeout | kRadioCapsEnergyScan;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
