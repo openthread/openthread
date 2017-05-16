@@ -146,7 +146,7 @@ void NcpUart::EncodeAndSendToUart(void)
 
             if (super_t::ShouldWakeHost())
             {
-                otPlatHostWake();
+                otPlatWakeHost();
             }
 
             VerifyOrExit(super_t::ShouldDeferHostSend() == false);

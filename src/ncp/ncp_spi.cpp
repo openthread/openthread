@@ -242,7 +242,7 @@ ThreadError NcpSpi::PrepareNextSpiSendFrame(void)
 
     if (super_t::ShouldWakeHost())
     {
-        otPlatHostWake();
+        otPlatWakeHost();
     }
 
     SuccessOrExit(errorCode = mTxFrameBuffer.OutFrameBegin());

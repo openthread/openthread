@@ -3692,7 +3692,7 @@ ThreadError NcpBase::SetPropertyHandler_HOST_POWER_STATE(uint8_t header, spinel_
         case SPINEL_HOST_POWER_STATE_LOW_POWER:
         case SPINEL_HOST_POWER_STATE_ONLINE:
             // Adopt the requested power state.
-            mHostPowerState = value;
+            mHostPowerState = static_cast<spinel_host_power_state_t>(value);
             break;
 
         case SPINEL_HOST_POWER_STATE_RESERVED:
