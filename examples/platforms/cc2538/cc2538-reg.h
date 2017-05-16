@@ -80,6 +80,7 @@
 #define RFCORE_XREG_FRMCTRL1                    0x40088628  // Frame handling
 #define RFCORE_XREG_RXENABLE                    0x4008862C  // RX enabling
 #define RFCORE_XREG_FREQCTRL                    0x4008863C  // Controls the RF frequency
+#define RFCORE_XREG_TXPOWER                     0x40088640  // Controls the output power
 #define RFCORE_XREG_FSMSTAT1                    0x4008864C  // Radio status register
 #define RFCORE_XREG_FIFOPCTRL                   0x40088650  // FIFOP threshold
 #define RFCORE_XREG_CCACTRL0                    0x40088658  // CCA threshold
