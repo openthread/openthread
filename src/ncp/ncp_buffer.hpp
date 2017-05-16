@@ -52,7 +52,7 @@ public:
     typedef void (*BufferCallback)(void *aContext, NcpFrameBuffer *aNcpFrameBuffer);
 
     /**
-     * Defines a function pointer callback which is invoked to inform 
+     * Defines a function pointer callback which is invoked to inform that a pre-tagged frame has transmitted.
      *
      * @param[in]  aContext         A pointer to arbitrary context information.
      * @param[in]  aError           An error value representing the success or failure of the frame transmit attempt.
@@ -244,8 +244,8 @@ public:
     uint16_t OutFrameGetLength(void);
 
     /**
-     * This method provides a callback to NcpBuffer that it will use when it the current last frame
-     * is transmitted or aborted.
+     * This method provides a callback to NcpBuffer that it will use when the last successfully written 
+     * frame is removed from the buffer.
      *
      * @param[in]  aFrameTransmitCallback   Callback invoked when NcpBuffer transmits the current last frame.
      * @param[in]  aContex                  A pointer to arbitrary context information.
