@@ -104,19 +104,21 @@ NcpUart::NcpUart(otInstance *aInstance):
     mByte(0),
     mUartSendTask(aInstance->mIp6.mTaskletScheduler, EncodeAndSendToUart, this)
 {
-    mTxFrameBuffer.SetCallbacks(NULL, TxFrameBufferHasData, this);
+    mTxFrameBuffer.SetFrameAddedCallback(HandleFrameAddedToNcpBuffer, this);
 
     otPlatUartEnable();
 }
 
-void NcpUart::TxFrameBufferHasData(void *aContext, NcpFrameBuffer *aNcpFrameBuffer)
+void NcpUart::HandleFrameAddedToNcpBuffer(void *aContext, NcpFrameBuffer::FrameTag aTag,
+                                          NcpFrameBuffer *aNcpFrameBuffer)
 {
     (void)aNcpFrameBuffer;
+    (void)aTag;
 
-    static_cast<NcpUart *>(aContext)->TxFrameBufferHasData();
+    static_cast<NcpUart *>(aContext)->HandleFrameAddedToNcpBuffer();
 }
 
-void NcpUart::TxFrameBufferHasData(void)
+void NcpUart::HandleFrameAddedToNcpBuffer(void)
 {
     if (mUartBuffer.IsEmpty())
     {
@@ -166,9 +168,6 @@ void NcpUart::EncodeAndSendToUart(void)
             }
 
             mTxFrameBuffer.OutFrameRemove();
-
-            // Notify the super/base class that there is space available in tx frame buffer for a new frame.
-            super_t::HandleSpaceAvailableInTxBuffer();
 
             mState = kFinalizingFrame;
 

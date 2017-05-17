@@ -37,12 +37,12 @@
 #endif
 
 #include "ncp_buffer.hpp"
-
 #include "utils/wrap_string.h"
-
 #include "common/code_utils.hpp"
 
 namespace ot {
+
+const NcpFrameBuffer::FrameTag NcpFrameBuffer::kInvalidTag = NULL;
 
 NcpFrameBuffer::NcpFrameBuffer(uint8_t *aBuffer, uint16_t aBufferLen) :
     mBuffer(aBuffer),
@@ -51,26 +51,20 @@ NcpFrameBuffer::NcpFrameBuffer(uint8_t *aBuffer, uint16_t aBufferLen) :
 {
     otMessageQueueInit(&mMessageQueue);
     otMessageQueueInit(&mWriteFrameMessageQueue);
-    SetCallbacks(NULL, NULL, NULL);
-    SetFrameTransmitCallback(NULL, NULL);
-    Clear();
-}
-
-NcpFrameBuffer::~NcpFrameBuffer()
-{
-    SetCallbacks(NULL, NULL, NULL);
+    SetFrameAddedCallback(NULL, NULL);
+    SetFrameRemovedCallback(NULL, NULL);
     Clear();
 }
 
 void NcpFrameBuffer::Clear(void)
 {
     otMessage *message;
-    bool wasEmpty = IsEmpty();
 
     // Write (InFrame) related variables
     mWriteFrameStart = mBuffer;
     mWriteSegmentHead = mBuffer;
     mWriteSegmentTail = mBuffer;
+    mWriteFrameTag = kInvalidTag;
 
     // Read (OutFrame) related variables
     mReadState = kReadStateDone;
@@ -98,57 +92,21 @@ void NcpFrameBuffer::Clear(void)
         otMessageQueueDequeue(&mMessageQueue, message);
         otMessageFree(message);
     }
-
-    if (!wasEmpty)
-    {
-        if (mEmptyBufferCallback != NULL)
-        {
-            mEmptyBufferCallback(mEmptyBufferCallbackContext, this);
-        }
-    }
-
-    if (mFrameTransmitMark == mReadFrameStart)
-    {
-        if (mFrameTransmitCallback != NULL)
-        {
-            mFrameTransmitCallback(mFrameTransmitContext, OT_ERROR_ABORT);
-            mFrameTransmitCallback = NULL;
-            mFrameTransmitMark = NULL;
-        }
-    }
 }
 
-void NcpFrameBuffer::SetCallbacks(BufferCallback aEmptyBufferCallback, BufferCallback aNonEmptyBufferCallback,
-                                  void *aContext)
+void NcpFrameBuffer::SetFrameAddedCallback(BufferCallback aFrameAddedCallback, void *aFrameAddedContext)
 {
-    mEmptyBufferCallback = aEmptyBufferCallback;
-    mNonEmptyBufferCallback = aNonEmptyBufferCallback;
-    mEmptyBufferCallbackContext = aContext;
+    mFrameAddedCallback = aFrameAddedCallback;
+    mFrameAddedContext = aFrameAddedContext;
 }
 
-otError NcpFrameBuffer::SetFrameTransmitCallback(FrameTransmitCallback aFrameTransmitCallback, void *aContext)
+void NcpFrameBuffer::SetFrameRemovedCallback(BufferCallback aFrameRemovedCallback, void *aFrameRemovedContext)
 {
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(mFrameTransmitCallback == NULL || aFrameTransmitCallback == NULL, error = OT_ERROR_BUSY);
-
-    mFrameTransmitCallback = aFrameTransmitCallback;
-    mFrameTransmitContext = aContext;
-
-    if (mFrameTransmitCallback != NULL)
-    {
-        mFrameTransmitMark = mWriteFrameStart;
-    }
-    else
-    {
-        mFrameTransmitMark = NULL;
-    }
-    
-exit:
-    return error;
+    mFrameRemovedCallback = aFrameRemovedCallback;
+    mFrameRemovedContext = aFrameRemovedContext;
 }
 
-// Returns the next buffer pointer addressing the wrap-around at the end of buffer.
+// Increments the buffer pointer by one byte while handling the the wrap-around at the end of buffer.
 uint8_t *NcpFrameBuffer::Next(uint8_t *aBufPtr) const
 {
     aBufPtr++;
@@ -168,7 +126,7 @@ uint8_t *NcpFrameBuffer::Advance(uint8_t *aBufPtr, uint16_t aOffset) const
     return aBufPtr;
 }
 
-// Get the distance between two buffer pointers (adjusts for the wrap-around).
+// Gets the distance between two buffer pointers (adjusts for the wrap-around).
 uint16_t NcpFrameBuffer::GetDistance(uint8_t *aStartPtr, uint8_t *aEndPtr) const
 {
     size_t distance;
@@ -186,14 +144,14 @@ uint16_t NcpFrameBuffer::GetDistance(uint8_t *aStartPtr, uint8_t *aEndPtr) const
     return static_cast<uint16_t>(distance);
 }
 
-// Write a uint16 value at the given buffer pointer (big-endian style).
+// Writes a uint16 value at the given buffer pointer (big-endian style).
 void NcpFrameBuffer::WriteUint16At(uint8_t *aBufPtr, uint16_t aValue)
 {
     *aBufPtr = (aValue >> 8);
     *Next(aBufPtr) = (aValue & 0xff);
 }
 
-// Read a uint16 value at the given buffer pointer (big-endian style).
+// Reads a uint16 value at the given buffer pointer (big-endian style).
 uint16_t NcpFrameBuffer::ReadUint16At(uint8_t *aBufPtr)
 {
     uint16_t value;
@@ -342,10 +300,12 @@ exit:
 otError NcpFrameBuffer::InFrameEnd(void)
 {
     otMessage *message;
-    bool wasEmpty = IsEmpty();
 
     // End/Close the current segment (if any).
     InFrameEndSegment(kSegmentHeaderNoFlag);
+
+    // Save and use the frame start pointer as the tag associated with the frame.
+    mWriteFrameTag = mWriteFrameStart;
 
     // Update the frame start pointer to current segment head to be ready for next frame.
     mWriteFrameStart = mWriteSegmentHead;
@@ -357,16 +317,17 @@ otError NcpFrameBuffer::InFrameEnd(void)
         otMessageQueueEnqueue(&mMessageQueue, message);
     }
 
-    // If buffer was empty before, invoke the callback to signal that buffer is now non-empty.
-    if (wasEmpty)
+    if (mFrameAddedCallback != NULL)
     {
-        if (mNonEmptyBufferCallback != NULL)
-        {
-            mNonEmptyBufferCallback(mEmptyBufferCallbackContext, this);
-        }
+        mFrameAddedCallback(mFrameAddedContext, mWriteFrameTag, this);
     }
 
     return OT_ERROR_NONE;
+}
+
+NcpFrameBuffer::FrameTag NcpFrameBuffer::InFrameGetLastTag(void) const
+{
+    return mWriteFrameTag;
 }
 
 bool NcpFrameBuffer::IsEmpty(void) const
@@ -590,8 +551,12 @@ otError NcpFrameBuffer::OutFrameRemove(void)
     uint8_t *bufPtr;
     otMessage *message;
     uint16_t header;
+    FrameTag tag;
 
     VerifyOrExit(!IsEmpty(), error = OT_ERROR_NOT_FOUND);
+
+    // Save the frame start pointer as the tag associated with the frame being removed.
+    tag = mReadFrameStart;
 
     // Begin at the start of current frame and move through all segments.
 
@@ -631,23 +596,9 @@ otError NcpFrameBuffer::OutFrameRemove(void)
     mReadState = kReadStateDone;
     mReadFrameLength = kUnknownFrameLength;
 
-    // If the remove causes the buffer to become empty, invoke the callback to signal this.
-    if (IsEmpty())
+    if (mFrameRemovedCallback != NULL)
     {
-        if (mEmptyBufferCallback != NULL)
-        {
-            mEmptyBufferCallback(mEmptyBufferCallbackContext, this);
-        }
-    }
-
-    if (mFrameTransmitMark == mReadFrameStart)
-    {
-        if (mFrameTransmitCallback != NULL)
-        {
-            mFrameTransmitCallback(mFrameTransmitContext, OT_ERROR_NONE);
-            mFrameTransmitCallback = NULL;
-            mFrameTransmitMark = NULL;
-        }
+        mFrameRemovedCallback(mFrameRemovedContext, tag, this);
     }
 
 exit:
@@ -711,6 +662,14 @@ uint16_t NcpFrameBuffer::OutFrameGetLength(void)
 
 exit:
     return frameLength;
+}
+
+NcpFrameBuffer::FrameTag NcpFrameBuffer::OutFrameGetTag(void) const
+{
+    // If buffer is empty use `kInvalidTag`, otherwise use the frame start pointer as the tag associated with
+    // current out frame being read
+
+    return IsEmpty() ? kInvalidTag : mReadFrameStart;
 }
 
 }  // namespace ot
