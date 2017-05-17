@@ -570,6 +570,7 @@ NcpBase::NcpBase(otInstance *aInstance):
     mShouldSignalEndOfScan(false),
     mHostPowerState(SPINEL_HOST_POWER_STATE_ONLINE),
     mHostPowerStateInProgress(false),
+    mHostPowerStateHeader(0),
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     mShouldSignalJamStateChange(false),
 #endif
@@ -1388,6 +1389,23 @@ void NcpBase::HandleSpaceAvailableInTxBuffer(void)
         mShouldSignalJamStateChange = false;
     }
 #endif  // OPENTHREAD_ENABLE_JAM_DETECTION
+
+    if (mHostPowerStateHeader)
+    {
+        SuccessOrExit(
+            GetPropertyHandler_HOST_POWER_STATE(
+                mHostPowerStateHeader,
+                SPINEL_PROP_HOST_POWER_STATE
+        ));
+
+        mHostPowerStateHeader = 0;
+
+        if (mHostPowerState != SPINEL_HOST_POWER_STATE_ONLINE)
+        {
+            mTxFrameBuffer.SetFrameTransmitCallback(&NcpBase::HandleFrameTransmitDone, this);
+            mHostPowerStateInProgress = true;
+        }
+    }
 
     UpdateChangedProps();
 
@@ -3713,12 +3731,24 @@ ThreadError NcpBase::SetPropertyHandler_HOST_POWER_STATE(uint8_t header, spinel_
 
     if (errorCode == kThreadError_None)
     {
+        mHostPowerStateHeader = 0;
+
         errorCode = HandleCommandPropertyGet(header, key);
 
-        if (errorCode == kThreadError_None && mHostPowerState != SPINEL_HOST_POWER_STATE_ONLINE)
+        if (mHostPowerState != SPINEL_HOST_POWER_STATE_ONLINE)
         {
+
+            if (errorCode == kThreadError_None)
+            {
+                mTxFrameBuffer.SetFrameTransmitCallback(&NcpBase::HandleFrameTransmitDone, this);
+            }
+
             mHostPowerStateInProgress = true;
-            mTxFrameBuffer.SetFrameTransmitCallback(&NcpBase::HandleFrameTransmitDone, this);
+        }
+
+        if (error != kThreadError_None)
+        {
+            mHostPowerStateHeader = header;
         }
     }
     else

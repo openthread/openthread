@@ -679,6 +679,7 @@ private:
     bool mShouldSignalEndOfScan;
     spinel_host_power_state_t mHostPowerState;
     bool mHostPowerStateInProgress;
+    uint8_t mHostPowerStateHeader;
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     bool mShouldSignalJamStateChange;
