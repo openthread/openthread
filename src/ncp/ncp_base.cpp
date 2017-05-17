@@ -2986,7 +2986,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spin
     SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_COMMAND_PROP_S, header, SPINEL_CMD_PROP_VALUE_IS,
                                                       key));
 
-    while (otNetDataGetNextRoute(mInstance, false, &iter, &external_route_config) == kThreadError_None)
+    while (otNetDataGetNextRoute(mInstance, true, &iter, &external_route_config) == kThreadError_None)
     {
         flags = static_cast<uint8_t>(external_route_config.mPreference);
         flags <<= SPINEL_NET_FLAG_PREFERENCE_OFFSET;
