@@ -3737,7 +3737,6 @@ ThreadError NcpBase::SetPropertyHandler_HOST_POWER_STATE(uint8_t header, spinel_
 
         if (mHostPowerState != SPINEL_HOST_POWER_STATE_ONLINE)
         {
-
             if (errorCode == kThreadError_None)
             {
                 mTxFrameBuffer.SetFrameTransmitCallback(&NcpBase::HandleFrameTransmitDone, this);
@@ -3746,7 +3745,7 @@ ThreadError NcpBase::SetPropertyHandler_HOST_POWER_STATE(uint8_t header, spinel_
             mHostPowerStateInProgress = true;
         }
 
-        if (error != kThreadError_None)
+        if (errorCode != kThreadError_None)
         {
             mHostPowerStateHeader = header;
         }
