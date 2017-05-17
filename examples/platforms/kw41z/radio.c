@@ -115,22 +115,22 @@ PhyState otPlatRadioGetState(otInstance *aInstance)
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
     (void)aInstance;
-    uint32_t i;
-    uint8_t *pSrc;
+    uint32_t addrLo;
+    uint32_t addrHi;
 
     if ((RSIM->MAC_LSB == 0xffffffff) && (RSIM->MAC_MSB == 0xff))
     {
-        pSrc = (uint8_t *)&SIM->UIDML;
+        addrLo = SIM->UIDL;
+        addrHi = SIM->UIDML;
     }
     else
     {
-        pSrc = (uint8_t *)&RSIM->MAC_MSB;
+        addrLo = RSIM->MAC_LSB;
+        addrHi = RSIM->MAC_MSB;
     }
 
-    for (i = 0; i < 8; i++)
-    {
-        aIeeeEui64[i] = pSrc[7 - i];
-    }
+    memcpy(aIeeeEui64, &addrLo, sizeof(addrLo));
+    memcpy(aIeeeEui64 + sizeof(addrLo), &addrHi, sizeof(addrHi));
 }
 
 void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
