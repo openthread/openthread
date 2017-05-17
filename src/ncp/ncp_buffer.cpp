@@ -64,7 +64,6 @@ NcpFrameBuffer::~NcpFrameBuffer()
 void NcpFrameBuffer::Clear(void)
 {
     otMessage *message;
-    bool wasEmpty = IsEmpty();
 
     // Write (InFrame) related variables
     mWriteFrameStart = mBuffer;
@@ -97,21 +96,13 @@ void NcpFrameBuffer::Clear(void)
         otMessageQueueDequeue(&mMessageQueue, message);
         otMessageFree(message);
     }
-
-    if (!wasEmpty)
-    {
-        if (mEmptyBufferCallback != NULL)
-        {
-            mEmptyBufferCallback(mCallbackContext, this);
-        }
-    }
 }
 
-void NcpFrameBuffer::SetCallbacks(BufferCallback aEmptyBufferCallback, BufferCallback aNonEmptyBufferCallback,
+void NcpFrameBuffer::SetCallbacks(BufferCallback aFrameAddedCallback, BufferCallback aFrameRemovedCallback,
                                   void *aContext)
 {
-    mEmptyBufferCallback = aEmptyBufferCallback;
-    mNonEmptyBufferCallback = aNonEmptyBufferCallback;
+    mFrameAddedCallback = aFrameAddedCallback;
+    mFrameRemovedCallback = aFrameRemovedCallback;
     mCallbackContext = aContext;
 }
 
@@ -309,7 +300,6 @@ exit:
 ThreadError NcpFrameBuffer::InFrameEnd(void)
 {
     otMessage *message;
-    bool wasEmpty = IsEmpty();
 
     // End/Close the current segment (if any).
     InFrameEndSegment(kSegmentHeaderNoFlag);
@@ -324,13 +314,9 @@ ThreadError NcpFrameBuffer::InFrameEnd(void)
         otMessageQueueEnqueue(&mMessageQueue, message);
     }
 
-    // If buffer was empty before, invoke the callback to signal that buffer is now non-empty.
-    if (wasEmpty)
+    if (mFrameAddedCallback != NULL)
     {
-        if (mNonEmptyBufferCallback != NULL)
-        {
-            mNonEmptyBufferCallback(mCallbackContext, this);
-        }
+        mFrameAddedCallback(mCallbackContext, this);
     }
 
     return kThreadError_None;
@@ -598,13 +584,9 @@ ThreadError NcpFrameBuffer::OutFrameRemove(void)
     mReadState = kReadStateDone;
     mReadFrameLength = kUnknownFrameLength;
 
-    // If the remove causes the buffer to become empty, invoke the callback to signal this.
-    if (IsEmpty())
+    if (mFrameRemovedCallback != NULL)
     {
-        if (mEmptyBufferCallback != NULL)
-        {
-            mEmptyBufferCallback(mCallbackContext, this);
-        }
+        mFrameRemovedCallback(mCallbackContext, this);
     }
 
 exit:
