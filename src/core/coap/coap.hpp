@@ -427,6 +427,7 @@ public:
      *
      * @param[in]   aMessage        A reference to the message.
      @ @param[in]   aMessageInfo    A reference to the message info associated with @p aMessage.
+     * @param[in]   aContext        A pointer to arbitrary context information.
      *
      * @retval  OT_ERROR_NONE       Server should continue processing this message, other
      *                              return values indicates the server should stop processing
@@ -434,7 +435,7 @@ public:
      * @retval  OT_ERROR_NOT_TMF    The message is not a TMF message.
      *
      */
-    typedef otError(* Interceptor)(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    typedef otError(* Interceptor)(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 
     /**
      * This constructor initializes the object.
@@ -617,10 +618,12 @@ public:
      * This method sets interceptor to be called before processing a CoAP packet.
      *
      * @param[in]   aInterceptor    A pointer to the interceptor.
+     * @param[in]   aContext        A pointer to arbitrary context information.
      *
      */
-    void SetInterceptor(Interceptor aInterpreter) {
+    void SetInterceptor(Interceptor aInterpreter, void *aContext) {
         mInterceptor = aInterpreter;
+        mContext = aContext;
     }
 
     /**
@@ -692,6 +695,7 @@ private:
 
     Resource *mResources;
 
+    void *mContext;
     Interceptor    mInterceptor;
     ResponsesQueue mResponsesQueue;
 

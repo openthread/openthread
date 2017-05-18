@@ -3236,6 +3236,11 @@ bool Mle::IsAnycastLocator(const Ip6::Address &aAddress) const
     return memcmp(&mMeshLocal16, &aAddress, kRlocPrefixLength) == 0 && aAddress.mFields.m8[14] == Ip6::Address::kAloc16Mask;
 }
 
+bool Mle::IsMeshLocalAddress(const Ip6::Address &aAddress) const
+{
+    return aAddress.PrefixMatch(GetMeshLocal16()) >= Ip6::Address::kMeshLocalPrefixLength;
+}
+
 Router *Mle::GetParent(void)
 {
     if ((!mParent.IsStateValidOrRestoring()) && (mParentCandidate.GetState() == Neighbor::kStateValid))

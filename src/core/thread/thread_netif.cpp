@@ -116,7 +116,7 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
 
 {
     mKeyManager.SetMasterKey(kThreadMasterKey);
-    mCoap.SetInterceptor(&ThreadNetif::TmfFilter);
+    mCoap.SetInterceptor(&ThreadNetif::TmfFilter, this);
 }
 
 otError ThreadNetif::Up(void)
@@ -182,20 +182,19 @@ exit:
     return error;
 }
 
-otError ThreadNetif::TmfFilter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+otError ThreadNetif::TmfFilter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext)
 {
     otError error = OT_ERROR_NONE;
 
-    // A TMF message must comply at least one of the following rules:
-    // 1. The IPv6 source address is RLOC or ALOC.
-    // 2. The IPv6 destination address is RLOC or ALOC.
-    // 3. The IPv6 destination address is Link-Local address.
-    VerifyOrExit(aMessageInfo.GetPeerAddr().IsRoutingLocator() ||
-                 aMessageInfo.GetPeerAddr().IsAnycastRoutingLocator() ||
-                 aMessageInfo.GetSockAddr().IsRoutingLocator() ||
-                 aMessageInfo.GetSockAddr().IsAnycastRoutingLocator() ||
-                 aMessageInfo.GetSockAddr().IsLinkLocal(),
-                 error = OT_ERROR_NOT_TMF);
+    // A TMF message must comply with following rules:
+    // 1.The destination is a Mesh Local Prefix based address or a Multicast address, and
+    //   the source is a Mesh Local prefix based address(RLOC, ALOC or ML-EID).
+    // 2.The source and destination are Link-Local addresses.
+    VerifyOrExit(((static_cast<ThreadNetif *>(aContext)->mMleRouter.IsMeshLocalAddress(aMessageInfo.GetSockAddr()) ||
+                   aMessageInfo.GetSockAddr().IsMulticast()) &&
+                  static_cast<ThreadNetif *>(aContext)->mMleRouter.IsMeshLocalAddress(aMessageInfo.GetPeerAddr())) ||
+                 ((aMessageInfo.GetSockAddr().IsLinkLocal()) && aMessageInfo.GetPeerAddr().IsLinkLocal()),
+                 error = kThreadError_NotTmf);
 exit:
     (void)aMessage;
     return error;

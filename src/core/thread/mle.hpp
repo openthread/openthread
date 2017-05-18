@@ -703,6 +703,15 @@ public:
     bool IsAnycastLocator(const Ip6::Address &aAddress) const;
 
     /**
+     * This method indicates whether or not an IPv6 address is a Mesh Local Prefix based address.
+     *
+     * @retval TRUE   If @p aAddress is a Mesh Local Prefix based address.
+     * @retval FALSE  If @p aAddress is not a Mesh Local Prefix based address.
+     *
+     */
+    bool IsMeshLocalAddress(const Ip6::Address &aAddress) const;
+
+    /**
      * This method returns the MLE Timeout value.
      *
      * @returns The MLE Timeout value.
