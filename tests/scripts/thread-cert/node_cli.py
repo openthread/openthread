@@ -94,7 +94,16 @@ class otCli:
             self.pexpect.terminate()
             self.pexpect.close(force=True)
 
+
+    def _clear_buffer(self):
+        try:
+            while True:
+                self.pexpect.read_nonblocking(128, 0)
+        except pexpect.TIMEOUT:
+            pass
+
     def send_command(self, cmd):
+        self._clear_buffer()
         print ("%d: %s" % (self.nodeid, cmd))
         self.pexpect.sendline(cmd)
 
