@@ -43,6 +43,7 @@
 #include <openthread/ncp.h>
 #include <openthread/platform/logging.h>
 #include <openthread/platform/uart.h>
+#include <openthread/platform/misc.h>
 
 #include "openthread-core-config.h"
 #include "openthread-instance.h"
@@ -143,6 +144,12 @@ void NcpUart::EncodeAndSendToUart(void)
         {
         case kStartingFrame:
 
+            if (super_t::ShouldWakeHost())
+            {
+                otPlatWakeHost();
+            }
+
+            VerifyOrExit(super_t::ShouldDeferHostSend() == false);
             SuccessOrExit(mFrameEncoder.Init(mUartBuffer));
 
             mTxFrameBuffer.OutFrameBegin();

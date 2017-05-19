@@ -100,6 +100,13 @@ otPlatResetReason otPlatGetResetReason(otInstance *aInstance);
 void otPlatAssertFail(const char *aFilename, int aLineNumber);
 
 /**
+ * This function performs a platform specific operation to wake the host MCU.
+ * This is used only for NCP configurations.
+ *
+ */
+void otPlatWakeHost(void);
+
+/**
  * @}
  *
  */

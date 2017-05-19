@@ -52,6 +52,7 @@ NcpFrameBuffer::NcpFrameBuffer(uint8_t *aBuffer, uint16_t aBufferLen) :
     otMessageQueueInit(&mMessageQueue);
     otMessageQueueInit(&mWriteFrameMessageQueue);
     SetCallbacks(NULL, NULL, NULL);
+    SetFrameTransmitCallback(NULL, NULL);
     Clear();
 }
 
@@ -102,7 +103,17 @@ void NcpFrameBuffer::Clear(void)
     {
         if (mEmptyBufferCallback != NULL)
         {
-            mEmptyBufferCallback(mCallbackContext, this);
+            mEmptyBufferCallback(mEmptyBufferCallbackContext, this);
+        }
+    }
+
+    if (mFrameTransmitMark == mReadFrameStart)
+    {
+        if (mFrameTransmitCallback != NULL)
+        {
+            mFrameTransmitCallback(mFrameTransmitContext, kThreadError_Abort);
+            mFrameTransmitCallback = NULL;
+            mFrameTransmitMark = NULL;
         }
     }
 }
@@ -112,7 +123,29 @@ void NcpFrameBuffer::SetCallbacks(BufferCallback aEmptyBufferCallback, BufferCal
 {
     mEmptyBufferCallback = aEmptyBufferCallback;
     mNonEmptyBufferCallback = aNonEmptyBufferCallback;
-    mCallbackContext = aContext;
+    mEmptyBufferCallbackContext = aContext;
+}
+
+ThreadError NcpFrameBuffer::SetFrameTransmitCallback(FrameTransmitCallback aFrameTransmitCallback, void *aContext)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(mFrameTransmitCallback == NULL || aFrameTransmitCallback == NULL, error = kThreadError_Busy);
+
+    mFrameTransmitCallback = aFrameTransmitCallback;
+    mFrameTransmitContext = aContext;
+
+    if (mFrameTransmitCallback != NULL)
+    {
+        mFrameTransmitMark = mWriteFrameStart;
+    }
+    else
+    {
+        mFrameTransmitMark = NULL;
+    }
+    
+exit:
+    return error;
 }
 
 // Returns the next buffer pointer addressing the wrap-around at the end of buffer.
@@ -329,7 +362,7 @@ ThreadError NcpFrameBuffer::InFrameEnd(void)
     {
         if (mNonEmptyBufferCallback != NULL)
         {
-            mNonEmptyBufferCallback(mCallbackContext, this);
+            mNonEmptyBufferCallback(mEmptyBufferCallbackContext, this);
         }
     }
 
@@ -603,7 +636,17 @@ ThreadError NcpFrameBuffer::OutFrameRemove(void)
     {
         if (mEmptyBufferCallback != NULL)
         {
-            mEmptyBufferCallback(mCallbackContext, this);
+            mEmptyBufferCallback(mEmptyBufferCallbackContext, this);
+        }
+    }
+
+    if (mFrameTransmitMark == mReadFrameStart)
+    {
+        if (mFrameTransmitCallback != NULL)
+        {
+            mFrameTransmitCallback(mFrameTransmitContext, kThreadError_None);
+            mFrameTransmitCallback = NULL;
+            mFrameTransmitMark = NULL;
         }
     }
 
