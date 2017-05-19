@@ -69,7 +69,6 @@ public:
     /**
      * This method clears the NCP frame buffer. All the frames are cleared/removed.
      *
-     * @returns Nothing (void).
      */
     void Clear(void);
 
@@ -77,14 +76,12 @@ public:
      * This method sets the callbacks and context. Subsequent calls to this method will overwrite the previous
      * callbacks and context.
      *
-     * @param[in]  aEmptyBufferCallback     Callback invoked when buffer become empty.
-     * @param[in]  aNonEmptyBufferCallback  Callback invoked when buffer transition from empty to non-empty.
+     * @param[in]  aFrameAddedCallback      Callback invoked when a new frame is successfully added to buffer
+     * @param[in]  aFrameRemovedCallback    Callback invoked when a frame is removed from buffer.
      * @param[in]  aContex                  A pointer to arbitrary context information.
      *
-     * @returns    Nothing (void).
-     *
      */
-    void SetCallbacks(BufferCallback aEmptyBufferCallback, BufferCallback aNonEmptyBufferCallback, void *aContext);
+    void SetCallbacks(BufferCallback aFrameAddedCallback,  BufferCallback aFrameRemovedCallback, void *aContext);
 
     /**
      * This method begins a new input frame to be added/written to the frame buffer.
@@ -328,8 +325,8 @@ private:
     uint8_t * const mBufferEnd;                 // Points to after the end of buffer.
     const uint16_t  mBufferLength;              // Length of the the buffer.
 
-    BufferCallback  mEmptyBufferCallback;       // Callback to signal when buffer becomes empty.
-    BufferCallback  mNonEmptyBufferCallback;    // Callback to signal when buffer becomes non-empty.
+    BufferCallback  mFrameAddedCallback;        // Callback to signal when a new frame is added
+    BufferCallback  mFrameRemovedCallback;      // Callback to signal when a frame is removed.
     void *          mCallbackContext;           // Context passed to callbacks.
 
     otMessageQueue  mMessageQueue;              // Main message queue.

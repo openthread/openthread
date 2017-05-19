@@ -56,8 +56,6 @@ public:
      */
     NcpSpi(otInstance *aInstance);
 
-    void ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength);
-
 private:
     enum
     {
@@ -73,21 +71,19 @@ private:
         kTxStateHandlingSendDone           // The frame was sent successfully, waiting to prepare the next one (if any)
     };
 
-    uint16_t OutboundFrameSize(void);
-
     static void SpiTransactionComplete(void *context, uint8_t *aOutputBuf, uint16_t aOutputBufLen, uint8_t *aInputBuf,
                                        uint16_t aInputBufLen, uint16_t aTransactionLength);
     void SpiTransactionComplete(uint8_t *aOutputBuf, uint16_t aOutputBufLen, uint8_t *aInputBuf, uint16_t aInputBufLen,
                                 uint16_t aTransactionLength);
 
-    static void HandleRxFrame(void *context);
-    void HandleRxFrame(void);
+    static void HandleFrameAddedToTxBuffer(void *aContext, NcpFrameBuffer *aNcpFrameBuffer);
+    static void HandleFrameRemovedFromTxBuffer(void *aContext, NcpFrameBuffer *aNcpFrameBuffer);
 
     static void PrepareTxFrame(void *context);
     void PrepareTxFrame(void);
 
-    static void TxFrameBufferHasData(void *aContext, NcpFrameBuffer *aNcpFrameBuffer);
-    void TxFrameBufferHasData(void);
+    static void HandleRxFrame(void *context);
+    void HandleRxFrame(void);
 
     ThreadError PrepareNextSpiSendFrame(void);
 

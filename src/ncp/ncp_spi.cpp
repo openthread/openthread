@@ -114,7 +114,7 @@ NcpSpi::NcpSpi(otInstance *aInstance):
     mTxState = kTxStateIdle;
     mHandlingRxFrame = false;
 
-    mTxFrameBuffer.SetCallbacks(NULL, TxFrameBufferHasData, this);
+    mTxFrameBuffer.SetCallbacks(HandleFrameAddedToTxBuffer, HandleFrameRemovedFromTxBuffer, this);
 
     spi_header_set_flag_byte(mSendFrame, SPI_RESET_FLAG|SPI_PATTERN_VALUE);
     spi_header_set_flag_byte(mEmptySendFrame, SPI_RESET_FLAG|SPI_PATTERN_VALUE);
@@ -219,16 +219,16 @@ void NcpSpi::SpiTransactionComplete(uint8_t *aMISOBuf, uint16_t aMISOBufLen, uin
     otPlatSpiSlavePrepareTransaction(aMISOBuf, aMISOBufLen, aMOSIBuf, aMOSIBufLen, (mTxState == kTxStateSending));
 }
 
-void NcpSpi::TxFrameBufferHasData(void *aContext, NcpFrameBuffer *aNcpFrameBuffer)
+void NcpSpi::HandleFrameAddedToTxBuffer(void *aContext, NcpFrameBuffer *aNcpFrameBuffer)
 {
     (void)aNcpFrameBuffer;
-
-    static_cast<NcpSpi *>(aContext)->TxFrameBufferHasData();
+    static_cast<NcpSpi *>(aContext)->mPrepareTxFrameTask.Post();
 }
 
-void NcpSpi::TxFrameBufferHasData(void)
+void NcpSpi::HandleFrameRemovedFromTxBuffer(void *aContext, NcpFrameBuffer *aNcpFrameBuffer)
 {
-    mPrepareTxFrameTask.Post();
+    (void)aNcpFrameBuffer;
+    static_cast<NcpSpi *>(aContext)->HandleSpaceAvailableInTxBuffer();
 }
 
 ThreadError NcpSpi::PrepareNextSpiSendFrame(void)
@@ -274,10 +274,7 @@ ThreadError NcpSpi::PrepareNextSpiSendFrame(void)
         ExitNow();
     }
 
-    // Remove the frame from tx buffer and inform the base
-    // class that space is now available for a new frame.
     mTxFrameBuffer.OutFrameRemove();
-    super_t::HandleSpaceAvailableInTxBuffer();
 
 exit:
     return errorCode;
@@ -285,7 +282,7 @@ exit:
 
 void NcpSpi::PrepareTxFrame(void *aContext)
 {
-    static_cast<NcpSpi*>(aContext)->PrepareTxFrame();
+    static_cast<NcpSpi *>(aContext)->PrepareTxFrame();
 }
 
 void NcpSpi::PrepareTxFrame(void)
@@ -311,7 +308,7 @@ void NcpSpi::PrepareTxFrame(void)
 
 void NcpSpi::HandleRxFrame(void *aContext)
 {
-    static_cast<NcpSpi*>(aContext)->HandleRxFrame();
+    static_cast<NcpSpi *>(aContext)->HandleRxFrame();
 }
 
 void NcpSpi::HandleRxFrame(void)
