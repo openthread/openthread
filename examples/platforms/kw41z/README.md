@@ -107,4 +107,3 @@ The [NXP(Freescale) Test Tool][test-tool] provides a convenient method for flash
 For a list of all available commands, visit [OpenThread CLI Reference README.md][CLI].
 
 [CLI]: https://github.com/openthread/openthread/blob/master/src/cli/README.md
-

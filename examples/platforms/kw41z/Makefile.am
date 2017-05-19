@@ -93,7 +93,6 @@ PLATFORM_SOURCES                                                                
     $(NULL)
 endif
 
-    
 libopenthread_kw41z_a_SOURCES                                                                     += \
     $(PLATFORM_SOURCES)                                                                              \
     $(NULL)
