@@ -2,6 +2,7 @@
 
 This directory contains example platform drivers for the [NXP(Freescale) Kinetis MKW41Z512][mkw41z512]
 based on [FRDM-KW41Z][frdm-kw41z] hardware platform.
+
 [mkw41z512]: http://www.nxp.com/products/microcontrollers-and-processors/arm-processors/kinetis-cortex-m-mcus/w-series-wireless-m0-plus-m4/kinetis-kw41z-2.4-ghz-dual-mode-ble-and-802.15.4-wireless-radio-microcontroller-mcu-based-on-arm-cortex-m0-plus-core:KW41Z
 [frdm-kw41z]: http://www.nxp.com/products/software-and-tools/hardware-development-tools/freedom-development-boards/nxp-freedom-development-kit-for-kinetis-kw41z-31z-21z-mcus:FRDM-KW41Z
 
