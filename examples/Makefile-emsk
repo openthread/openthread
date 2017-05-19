@@ -39,7 +39,7 @@ NM                              = arc-elf32-nm
 RANLIB                          = arc-elf32-ranlib
 OBJCOPY                         = arc-elf32-objcopy
 
-BuildJobs                      ?= 99
+BuildJobs                      ?= 10
 
 configure_OPTIONS               = \
     --enable-cli-app=all          \
