@@ -64,7 +64,7 @@ uint32_t otPlatRandomGet(void)
     return (uint32_t)rand();
 }
 
-ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
+ThreadError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 {
     ThreadError error = kThreadError_None;
     uint8_t channel = 0;
@@ -79,16 +79,21 @@ ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint1
         otPlatRadioDisable(sInstance);
     }
 
+    /*
+     * THE IMPLEMENTATION BELOW IS NOT COMPLIANT WITH THE THREAD SPECIFICATION.
+     *
+     * Please see Note in `<path-to-openthread>/examples/platforms/emsk/README.md`
+     * for TRNG features on EMSK.
+     */
+    otEXPECT_ACTION(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
 
-    /* generate random number */
-    for (uint16_t length = 0; length < aInputLength; length++)
+    for (uint16_t length = 0; length < aOutputLength; length++)
     {
+        /* Get random number */
         aOutput[length] = (uint8_t)otPlatRandomGet();
     }
 
-    *aOutputLength = aInputLength;
-
-    /* enable radio*/
+    /* Enable radio*/
     if (channel)
     {
         emskRadioInit();
