@@ -88,6 +88,11 @@ enum
 
 enum
 {
+    EMSK_RECEIVE_SENSITIVITY = -100,  // dBm
+};
+
+enum
+{
     MRF24J40_RSSI_OFFSET = 90,
     MRF24J40_RSSI_SLOPE = 5
 };
@@ -666,4 +671,10 @@ void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
     // TODO: Create a proper implementation for this driver.
     (void)aInstance;
     (void)aPower;
+}
+
+int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
+{
+    (void)aInstance;
+    return EMSK_RECEIVE_SENSITIVITY;
 }
