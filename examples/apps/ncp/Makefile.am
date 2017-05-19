@@ -123,7 +123,15 @@ LDFLAGS_COMMON                                                        += \
     $(NULL)
 endif
 
+if OPENTHREAD_EXAMPLES_KW41Z
+LDADD_COMMON                                                          += \
+    $(top_builddir)/examples/platforms/kw41z/libopenthread-kw41z.a       \
+    $(NULL)
 
+LDFLAGS_COMMON                                                        += \
+    -T $(top_srcdir)/examples/platforms/kw41z/MKW41Z512xxx4.ld           \
+    $(NULL)
+endif # OPENTHREAD_EXAMPLES_KW41Z
 
 if OPENTHREAD_ENABLE_NCP_FTD
 bin_PROGRAMS                                                          += \
