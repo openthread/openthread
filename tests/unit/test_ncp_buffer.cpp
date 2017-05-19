@@ -27,12 +27,15 @@
  */
 
 #include <ctype.h>
+
+#include <openthread/openthread.h>
+
+#include "openthread-instance.h"
+#include "common/code_utils.hpp"
+#include "common/message.hpp"
+#include "ncp/ncp_buffer.hpp"
+
 #include "test_util.h"
-#include "openthread/openthread.h"
-#include <openthread-instance.h>
-#include <common/code_utils.hpp>
-#include <common/message.hpp>
-#include <ncp/ncp_buffer.hpp>
 
 namespace ot {
 

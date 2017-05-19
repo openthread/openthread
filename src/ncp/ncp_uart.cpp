@@ -36,18 +36,20 @@
 #include <openthread-config.h>
 #endif
 
-#include "openthread/ncp.h"
-#include "openthread/platform/logging.h"
-#include "openthread/platform/uart.h"
+#include "ncp_uart.hpp"
 
 #include <stdio.h>
-#include <common/code_utils.hpp>
-#include <common/new.hpp>
-#include <common/debug.hpp>
-#include <net/ip6.hpp>
-#include <ncp/ncp_uart.hpp>
-#include <core/openthread-core-config.h>
-#include <openthread-instance.h>
+
+#include <openthread/ncp.h>
+#include <openthread/platform/logging.h>
+#include <openthread/platform/uart.h>
+
+#include "openthread-core-config.h"
+#include "openthread-instance.h"
+#include "common/code_utils.hpp"
+#include "common/new.hpp"
+#include "common/debug.hpp"
+#include "net/ip6.hpp"
 
 #if OPENTHREAD_ENABLE_NCP_UART
 

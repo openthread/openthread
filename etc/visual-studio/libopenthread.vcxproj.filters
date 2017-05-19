@@ -114,22 +114,13 @@
     <ClCompile Include="..\..\src\core\api\thread_ftd_api.cpp">
       <Filter>Source Files\api</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\coap\coap_base.cpp">
-      <Filter>Source Files\coap</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\coap\coap_client.cpp">
+    <ClCompile Include="..\..\src\core\coap\coap.cpp">
       <Filter>Source Files\coap</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\coap\coap_header.cpp">
       <Filter>Source Files\coap</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\coap\coap_server.cpp">
-      <Filter>Source Files\coap</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\coap\secure_coap_client.cpp">
-      <Filter>Source Files\coap</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\coap\secure_coap_server.cpp">
+    <ClCompile Include="..\..\src\core\coap\coap_secure.cpp">
       <Filter>Source Files\coap</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\common\logging.cpp">
@@ -279,6 +270,9 @@
     <ClCompile Include="..\..\src\core\meshcop\timestamp.cpp">
       <Filter>Source Files\meshcop</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\meshcop\meshcop_tlvs.cpp">
+      <Filter>Source Files\meshcop</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\crypto\aes_ecb.cpp">
       <Filter>Source Files\crypto</Filter>
     </ClCompile>
@@ -293,6 +287,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\core\crypto\sha256.cpp">
       <Filter>Source Files\crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\utils\child_supervision.cpp">
+      <Filter>Source Files\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\utils\slaac_address.cpp">
       <Filter>Source Files\utils</Filter>
@@ -323,22 +320,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\core\coap\coap_base.hpp">
-      <Filter>Header Files\coap</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\coap\coap_client.hpp">
+    <ClInclude Include="..\..\src\core\coap\coap.hpp">
       <Filter>Header Files\coap</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\coap\coap_header.hpp">
       <Filter>Header Files\coap</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\coap\coap_server.hpp">
-      <Filter>Header Files\coap</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\coap\secure_coap_client.hpp">
-      <Filter>Header Files\coap</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\coap\secure_coap_server.hpp">
+    <ClInclude Include="..\..\src\core\coap\coap_secure.hpp">
       <Filter>Header Files\coap</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\common\code_utils.hpp">
@@ -550,6 +538,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\crypto\sha256.hpp">
       <Filter>Header Files\crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\utils\child_supervision.hpp">
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\utils\slaac_address.hpp">
       <Filter>Header Files\utils</Filter>

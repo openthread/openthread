@@ -44,23 +44,23 @@
 
 #include <stdio.h>
 
-#include "openthread/platform/random.h"
-#include "openthread/platform/radio.h"
+#include <openthread/platform/random.h>
+#include <openthread/platform/radio.h>
 
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <coap/coap_header.hpp>
-#include <common/debug.hpp>
-#include <common/code_utils.hpp>
-#include <common/logging.hpp>
-#include <common/timer.hpp>
-#include <meshcop/dataset.hpp>
-#include <meshcop/dataset_manager.hpp>
-#include <meshcop/tlvs.hpp>
-#include <thread/thread_netif.hpp>
-#include <thread/thread_tlvs.hpp>
-#include <thread/thread_uris.hpp>
-#include <meshcop/leader.hpp>
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "coap/coap_header.hpp"
+#include "common/debug.hpp"
+#include "common/code_utils.hpp"
+#include "common/logging.hpp"
+#include "common/timer.hpp"
+#include "meshcop/dataset.hpp"
+#include "meshcop/dataset_manager.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
+#include "meshcop/leader.hpp"
+#include "thread/thread_netif.hpp"
+#include "thread/thread_tlvs.hpp"
+#include "thread/thread_uris.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -137,7 +137,7 @@ ThreadError ActiveDataset::GenerateLocal(void)
     {
         NetworkMasterKeyTlv tlv;
         tlv.Init();
-        tlv.SetNetworkMasterKey(mNetif.GetKeyManager().GetMasterKey(NULL));
+        tlv.SetNetworkMasterKey(mNetif.GetKeyManager().GetMasterKey());
         mLocal.Set(tlv);
     }
 
@@ -188,12 +188,12 @@ void ActiveDataset::StartLeader(void)
 
     mLocal.Store();
     mNetwork = mLocal;
-    mNetif.GetCoapServer().AddResource(mResourceSet);
+    mNetif.GetCoap().AddResource(mResourceSet);
 }
 
 void ActiveDataset::StopLeader(void)
 {
-    mNetif.GetCoapServer().RemoveResource(mResourceSet);
+    mNetif.GetCoap().RemoveResource(mResourceSet);
 }
 
 void ActiveDataset::HandleSet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
@@ -226,12 +226,12 @@ void PendingDataset::StartLeader(void)
     mNetwork = mLocal;
     ResetDelayTimer(kFlagNetworkUpdated);
 
-    mNetif.GetCoapServer().AddResource(mResourceSet);
+    mNetif.GetCoap().AddResource(mResourceSet);
 }
 
 void PendingDataset::StopLeader(void)
 {
-    mNetif.GetCoapServer().RemoveResource(mResourceSet);
+    mNetif.GetCoap().RemoveResource(mResourceSet);
 }
 
 void PendingDataset::HandleSet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,

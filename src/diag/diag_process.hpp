@@ -36,10 +36,10 @@
 
 #include <stdarg.h>
 
-#include "openthread/types.h"
-#include "openthread/platform/radio.h"
-#include "openthread/platform/alarm.h"
-#include "openthread/platform/diag.h"
+#include <openthread/types.h>
+#include <openthread/platform/alarm.h>
+#include <openthread/platform/diag.h>
+#include <openthread/platform/radio.h>
 
 namespace ot {
 

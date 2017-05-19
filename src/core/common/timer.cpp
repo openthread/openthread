@@ -39,14 +39,15 @@
 #include <openthread-config.h>
 #endif
 
-#include "openthread/platform/alarm.h"
+#include "timer.hpp"
 
-#include <common/code_utils.hpp>
-#include <common/timer.hpp>
-#include <common/debug.hpp>
-#include <common/logging.hpp>
-#include <net/ip6.hpp>
-#include <openthread-instance.h>
+#include <openthread/platform/alarm.h>
+
+#include "openthread-instance.h"
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/logging.hpp"
+#include "net/ip6.hpp"
 
 namespace ot {
 

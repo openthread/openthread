@@ -26,15 +26,15 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SECURE_COAP_CLIENT_HPP_
-#define SECURE_COAP_CLIENT_HPP_
+#ifndef COAP_SECURE_HPP_
+#define COAP_SECURE_HPP_
 
-#include <coap/coap_client.hpp>
-#include <meshcop/dtls.hpp>
+#include "coap/coap.hpp"
+#include "meshcop/dtls.hpp"
 
 /**
  * @file
- *   This file includes definitions for the secure CoAP client.
+ *   This file includes definitions for the secure CoAP agent.
  */
 
 namespace ot {
@@ -43,7 +43,7 @@ class ThreadNetif;
 
 namespace Coap {
 
-class SecureClient: public Client
+class CoapSecure: public Coap
 {
 public:
     /**
@@ -56,17 +56,40 @@ public:
     typedef void (*ConnectedCallback)(bool aConnected, void *aContext);
 
     /**
-     * This constructor initializes the object.
+     * This function pointer is called when secure CoAP server want to send encrypted message.
      *
-     * @param[in]  aNetif  A reference to the network interface that secure CoAP client should be assigned to.
+     * @param[in]  aContext      A pointer to arbitrary context information.
+     * @param[in]  aMessage      A reference to the message to send.
+     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
      */
-    SecureClient(ThreadNetif &aNetif);
+    typedef ThreadError(*TransportCallback)(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
-     * This method stops the secure CoAP client.
+     * This constructor initializes the object.
      *
-     * @retval kThreadError_None  Successfully stopped the secure CoAP client.
+     * @param[in]  aNetif  A reference to the network interface that the secure CoAP agent is bound to.
+     *
+     */
+    CoapSecure(ThreadNetif &aNetif);
+
+    /**
+     * This method starts the secure CoAP agent.
+     *
+     * @param[in]  aPort      The local UDP port to bind to.
+     * @param[in]  aCallback  A pointer to a function for sending messages.
+     *                        If NULL, the message is sent directly to the socket.
+     * @param[in]  aContext   A pointer to arbitrary context information.
+     *
+     * @retval kThreadError_None  Successfully started the CoAP agent.
+     *
+     */
+    ThreadError Start(uint16_t aPort, TransportCallback aCallback = NULL, void *aContext = NULL);
+
+    /**
+     * This method stops the secure CoAP agent.
+     *
+     * @retval kThreadError_None  Successfully stopped the secure CoAP agent.
      *
      */
     ThreadError Stop(void);
@@ -117,6 +140,18 @@ public:
     MeshCoP::Dtls &GetDtls(void);
 
     /**
+     * This method sets the PSK.
+     *
+     * @param[in]  aPSK        A pointer to the PSK.
+     * @param[in]  aPskLength  The PSK length.
+     *
+     * @retval kThreadError_None         Successfully set the PSK.
+     * @retval kThreadError_InvalidArgs  The PSK is invalid.
+     *
+     */
+    ThreadError SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
+
+    /**
      * This method sends a CoAP message over secure DTLS connection.
      *
      * If a response for a request is expected, respective function and context information should be provided.
@@ -134,12 +169,38 @@ public:
      */
     ThreadError SendMessage(Message &aMessage, otCoapResponseHandler aHandler = NULL, void *aContext = NULL);
 
-private:
-    static ThreadError Send(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    ThreadError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    /**
+     * This method sends a CoAP message over secure DTLS connection.
+     *
+     * If a response for a request is expected, respective function and context information should be provided.
+     * If no response is expected, these arguments should be NULL pointers.
+     * If Message Id was not set in the header (equal to 0), this function will assign unique Message Id to the message.
+     *
+     * @param[in]  aMessage      A reference to the message to send.
+     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
+     * @param[in]  aHandler      A function pointer that shall be called on response reception or time-out.
+     * @param[in]  aContext      A pointer to arbitrary context information.
+     *
+     * @retval kThreadError_None         Successfully sent CoAP message.
+     * @retval kThreadError_NoBufs       Failed to allocate retransmission data.
+     * @retvak kThreadError_InvalidState DTLS connection was not initialized.
+     *
+     */
+    ThreadError SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
+                            otCoapResponseHandler aHandler = NULL, void *aContext = NULL);
 
-    static void Receive(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    /**
+     * This method is used to pass messages to the secure CoAP server.
+     * It can be used when messages are received other way that via server's socket.
+     *
+     * @param[in]  aMessage      A reference to the received message.
+     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
+     *
+     */
     void Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+private:
+    virtual ThreadError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleDtlsConnected(void *aContext, bool aConnected);
     void HandleDtlsConnected(bool aConnected);
@@ -155,8 +216,9 @@ private:
 
     Ip6::MessageInfo mPeerAddress;
     ConnectedCallback mConnectedCallback;
-    void *mContext;
-    ThreadNetif &mNetif;
+    void *mConnectedContext;
+    TransportCallback mTransportCallback;
+    void *mTransportContext;
     Message *mTransmitMessage;
     Tasklet mTransmitTask;
 };
@@ -164,4 +226,4 @@ private:
 }  // namespace Coap
 }  // namespace ot
 
-#endif  // SECURE_COAP_CLIENT_HPP_
+#endif  // COAP_SECURE_HPP_

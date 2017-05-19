@@ -40,9 +40,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "utils/wrap_string.h"
-#include <common/code_utils.hpp>
 
 #include "diag_process.hpp"
+#include "common/code_utils.hpp"
 
 namespace ot {
 namespace Diagnostics {

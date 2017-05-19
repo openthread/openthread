@@ -35,29 +35,16 @@
 #ifndef OPENTHREAD_THREAD_H_
 #define OPENTHREAD_THREAD_H_
 
-#include "openthread/types.h"
-#include "openthread/link.h"
-#include "openthread/message.h"
+#include <openthread/link.h>
+#include <openthread/message.h>
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @addtogroup thread  Thread
- *
- * @brief
- *   This module includes functions that control Thread-specific functions.
- *
- * @{
- *
- */
-
-/**
- * @addtogroup config  Configuration
- *
- * @brief
- *   This module includes functions for configuration.
+ * @addtogroup api-thread-general
  *
  * @{
  *
@@ -112,19 +99,22 @@ OTAPI bool OTCALL otThreadIsSingleton(otInstance *aInstance);
 /**
  * This function starts a Thread Discovery scan.
  *
- * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aScanChannels     A bit vector indicating which channels to scan (e.g. OT_CHANNEL_11_MASK).
- * @param[in]  aPanId            The PAN ID filter (set to Broadcast PAN to disable filter).
- * @param[in]  aJoiner           Value of the Joiner Flag in the Discovery Request TLV.
- * @param[in]  aCallback         A pointer to a function called on receiving an MLE Discovery Response or scan completes.
- * @param[in]  aCallbackContext  A pointer to application-specific context.
+ * @param[in]  aInstance              A pointer to an OpenThread instance.
+ * @param[in]  aScanChannels          A bit vector indicating which channels to scan (e.g. OT_CHANNEL_11_MASK).
+ * @param[in]  aPanId                 The PAN ID filter (set to Broadcast PAN to disable filter).
+ * @param[in]  aJoiner                Value of the Joiner Flag in the Discovery Request TLV.
+ * @param[in]  aEnableEui64Filtering  TRUE to filter responses on EUI-64, FALSE otherwise.
+ * @param[in]  aCallback              A pointer to a function called on receiving an MLE Discovery Response or
+ *                                    scan completes.
+ * @param[in]  aCallbackContext       A pointer to application-specific context.
  *
  * @retval kThreadError_None  Accepted the Thread Discovery request.
  * @retval kThreadError_Busy  Already performing an Thread Discovery.
  *
  */
 OTAPI ThreadError OTCALL otThreadDiscover(otInstance *aInstance, uint32_t aScanChannels, uint16_t aPanid, bool aJoiner,
-                                          otHandleActiveScanResult aCallback, void *aCallbackContext);
+                                          bool aEnableEui64Filtering, otHandleActiveScanResult aCallback,
+                                          void *aCallbackContext);
 
 /**
  * This function determines if an MLE Thread Discovery is currently in progress.
@@ -133,16 +123,6 @@ OTAPI ThreadError OTCALL otThreadDiscover(otInstance *aInstance, uint32_t aScanC
  *
  */
 OTAPI bool OTCALL otThreadIsDiscoverInProgress(otInstance *aInstance);
-
-/**
- * @defgroup config-general  General
- *
- * @brief
- *   This module includes functions that manage configuration parameters for the Thread Child, Router, and Leader roles.
- *
- * @{
- *
- */
 
 /**
  * Get the Thread Child Timeout used when operating in the Child role.
@@ -159,8 +139,10 @@ OTAPI uint32_t OTCALL otThreadGetChildTimeout(otInstance *aInstance);
  * Set the Thread Child Timeout used when operating in the Child role.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aTimeout  The timeout value.
  *
  * @sa otThreadSetChildTimeout
+ *
  */
 OTAPI void OTCALL otThreadSetChildTimeout(otInstance *aInstance, uint32_t aTimeout);
 
@@ -232,14 +214,12 @@ OTAPI ThreadError OTCALL otThreadSetLinkMode(otInstance *aInstance, otLinkModeCo
  * Get the thrMasterKey.
  *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
- * @param[out]  aKeyLength  A pointer to an unsigned 8-bit value that the function will set to the number of bytes that
- *                          represent the thrMasterKey. Caller may set to NULL.
  *
  * @returns A pointer to a buffer containing the thrMasterKey.
  *
  * @sa otThreadSetMasterKey
  */
-OTAPI const uint8_t *OTCALL otThreadGetMasterKey(otInstance *aInstance, uint8_t *aKeyLength);
+OTAPI const otMasterKey *OTCALL otThreadGetMasterKey(otInstance *aInstance);
 
 /**
  * Set the thrMasterKey.
@@ -250,7 +230,6 @@ OTAPI const uint8_t *OTCALL otThreadGetMasterKey(otInstance *aInstance, uint8_t 
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aKey        A pointer to a buffer containing the thrMasterKey.
- * @param[in]  aKeyLength  Number of bytes representing the thrMasterKey stored at aKey. Valid range is [0, 16].
  *
  * @retval kThreadErrorNone           Successfully set the thrMasterKey.
  * @retval kThreadErrorInvalidArgs    If aKeyLength is larger than 16.
@@ -258,7 +237,7 @@ OTAPI const uint8_t *OTCALL otThreadGetMasterKey(otInstance *aInstance, uint8_t 
  *
  * @sa otThreadGetMasterKey
  */
-OTAPI ThreadError OTCALL otThreadSetMasterKey(otInstance *aInstance, const uint8_t *aKey, uint8_t aKeyLength);
+OTAPI ThreadError OTCALL otThreadSetMasterKey(otInstance *aInstance, const otMasterKey *aKey);
 
 /**
  * Get the thrPSKc.
@@ -353,24 +332,6 @@ OTAPI const char *OTCALL otThreadGetNetworkName(otInstance *aInstance);
 OTAPI ThreadError OTCALL otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName);
 
 /**
- * @}
- */
-
-/**
- * @}
- */
-
-/**
- * @defgroup config-test  Test
- *
- * @brief
- *   This module includes functions that manage configuration parameters required for Thread Certification testing.
- *
- * @{
- *
- */
-
-/**
  * Get the thrKeySequenceCounter.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
@@ -432,26 +393,6 @@ OTAPI ThreadError OTCALL otThreadBecomeDetached(otInstance *aInstance);
  * @retval kThreadErrorInvalidState  Thread is disabled.
  */
 OTAPI ThreadError OTCALL otThreadBecomeChild(otInstance *aInstance, otMleAttachFilter aFilter);
-
-/**
- * @}
- *
- */
-
-/**
- * @}
- *
- */
-
-/**
- * @addtogroup diags  Diagnostics
- *
- * @brief
- *   This module includes functions that expose internal state.
- *
- * @{
- *
- */
 
 /**
  * This function gets the next neighbor information. It is used to go through the entries of
@@ -589,9 +530,11 @@ void otThreadSetReceiveDiagnosticGetCallback(otInstance *aInstance, otReceiveDia
 /**
  * Send a Network Diagnostic Get request.
  *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aDestination   A pointer to destination address.
  * @param[in]  aTlvTypes      An array of Network Diagnostic TLV types.
  * @param[in]  aCount         Number of types in aTlvTypes
+ *
  */
 OTAPI ThreadError OTCALL otThreadSendDiagnosticGet(otInstance *aInstance, const otIp6Address *aDestination,
                                                    const uint8_t aTlvTypes[], uint8_t aCount);
@@ -603,14 +546,10 @@ OTAPI ThreadError OTCALL otThreadSendDiagnosticGet(otInstance *aInstance, const 
  * @param[in]  aDestination   A pointer to destination address.
  * @param[in]  aTlvTypes      An array of Network Diagnostic TLV types. Currently only Type 9 is allowed.
  * @param[in]  aCount         Number of types in aTlvTypes
+ *
  */
 OTAPI ThreadError OTCALL otThreadSendDiagnosticReset(otInstance *aInstance, const otIp6Address *aDestination,
                                                      const uint8_t aTlvTypes[], uint8_t aCount);
-
-/**
- * @}
- *
- */
 
 /**
  * @}

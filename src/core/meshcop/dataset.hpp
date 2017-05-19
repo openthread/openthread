@@ -35,8 +35,8 @@
 #ifndef MESHCOP_DATASET_HPP_
 #define MESHCOP_DATASET_HPP_
 
-#include <common/message.hpp>
-#include <meshcop/tlvs.hpp>
+#include "common/message.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -186,6 +186,8 @@ public:
     ThreadError AppendMleDatasetTlv(Message &aMessage);
 
 private:
+    uint16_t GetSettingsKey(void);
+
     void Remove(uint8_t *aStart, uint8_t aLength);
 
     Tlv::Type  mType;            ///< Active or Pending

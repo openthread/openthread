@@ -34,7 +34,7 @@
 #ifndef NETWORK_DATA_LOCAL_HPP_
 #define NETWORK_DATA_LOCAL_HPP_
 
-#include <thread/network_data.hpp>
+#include "thread/network_data.hpp"
 
 namespace ot {
 
@@ -59,6 +59,7 @@ public:
 
     void GetNetworkData(bool, uint8_t *, uint8_t &aDataLength) { aDataLength = 0; }
     ThreadError GetNextOnMeshPrefix(otNetworkDataIterator *, otBorderRouterConfig *) { return kThreadError_NotFound; }
+    ThreadError GetNextExternalRoute(otNetworkDataIterator *, otExternalRouteConfig *) { return kThreadError_NotFound; }
     void ClearResubmitDelayTimer(void) { }
 
 };

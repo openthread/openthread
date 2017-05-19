@@ -34,20 +34,19 @@
 #ifndef COMMISSIONER_HPP_
 #define COMMISSIONER_HPP_
 
-#include <openthread-core-config.h>
-#include "openthread/commissioner.h"
+#include <openthread/commissioner.h>
 
-#include <coap/coap_client.hpp>
-#include <coap/coap_server.hpp>
-#include <coap/secure_coap_server.hpp>
-#include <common/timer.hpp>
-#include <mac/mac_frame.hpp>
-#include <meshcop/announce_begin_client.hpp>
-#include <meshcop/dtls.hpp>
-#include <meshcop/energy_scan_client.hpp>
-#include <meshcop/panid_query_client.hpp>
-#include <net/udp6.hpp>
-#include <thread/mle.hpp>
+#include "openthread-core-config.h"
+#include "coap/coap.hpp"
+#include "coap/coap_secure.hpp"
+#include "common/timer.hpp"
+#include "mac/mac_frame.hpp"
+#include "meshcop/announce_begin_client.hpp"
+#include "meshcop/dtls.hpp"
+#include "meshcop/energy_scan_client.hpp"
+#include "meshcop/panid_query_client.hpp"
+#include "net/udp6.hpp"
+#include "thread/mle.hpp"
 
 namespace ot {
 

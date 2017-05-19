@@ -31,12 +31,12 @@
 
 #include "utils/wrap_stdint.h"
 
-#include "openthread/openthread.h"
+#include <openthread/openthread.h>
 
-#include <mac/mac.hpp>
-#include <net/ip6_headers.hpp>
-#include <thread/thread_netif.hpp>
-#include <thread/lowpan.hpp>
+#include "mac/mac.hpp"
+#include "net/ip6_headers.hpp"
+#include "thread/lowpan.hpp"
+#include "thread/thread_netif.hpp"
 
 namespace ot {
 

@@ -35,7 +35,11 @@
 #ifndef MESHCOP_TIMESTAMP_HPP_
 #define MESHCOP_TIMESTAMP_HPP_
 
-#include <common/encoding.hpp>
+#include <string.h>
+
+#include <openthread/platform/toolchain.h>
+
+#include "common/encoding.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 

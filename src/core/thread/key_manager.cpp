@@ -38,12 +38,13 @@
 #include <openthread-config.h>
 #endif
 
-#include <common/code_utils.hpp>
-#include <common/timer.hpp>
-#include <crypto/hmac_sha256.hpp>
-#include <thread/key_manager.hpp>
-#include <thread/mle_router.hpp>
-#include <thread/thread_netif.hpp>
+#include "key_manager.hpp"
+
+#include "common/code_utils.hpp"
+#include "common/timer.hpp"
+#include "crypto/hmac_sha256.hpp"
+#include "thread/mle_router.hpp"
+#include "thread/thread_netif.hpp"
 
 namespace ot {
 
@@ -54,7 +55,6 @@ static const uint8_t kThreadString[] =
 
 KeyManager::KeyManager(ThreadNetif &aThreadNetif):
     mNetif(aThreadNetif),
-    mMasterKeyLength(0),
     mKeySequence(0),
     mMacFrameCounter(0),
     mMleFrameCounter(0),
@@ -92,28 +92,21 @@ void KeyManager::SetPSKc(const uint8_t *aPSKc)
 }
 #endif
 
-const uint8_t *KeyManager::GetMasterKey(uint8_t *aKeyLength) const
+const otMasterKey &KeyManager::GetMasterKey(void) const
 {
-    if (aKeyLength)
-    {
-        *aKeyLength = mMasterKeyLength;
-    }
-
     return mMasterKey;
 }
 
-ThreadError KeyManager::SetMasterKey(const void *aKey, uint8_t aKeyLength)
+ThreadError KeyManager::SetMasterKey(const otMasterKey &aKey)
 {
     ThreadError error = kThreadError_None;
     Router *routers;
     Child *children;
     uint8_t num;
 
-    VerifyOrExit(aKeyLength <= sizeof(mMasterKey), error = kThreadError_InvalidArgs);
-    VerifyOrExit((mMasterKeyLength != aKeyLength) || (memcmp(mMasterKey, aKey, aKeyLength) != 0));
+    VerifyOrExit(memcmp(&mMasterKey, &aKey, sizeof(mMasterKey)) != 0);
 
-    memcpy(mMasterKey, aKey, aKeyLength);
-    mMasterKeyLength = aKeyLength;
+    mMasterKey = aKey;
     mKeySequence = 0;
     ComputeKey(mKeySequence, mKey);
 
@@ -154,7 +147,7 @@ ThreadError KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
     Crypto::HmacSha256 hmac;
     uint8_t keySequenceBytes[4];
 
-    hmac.Start(mMasterKey, mMasterKeyLength);
+    hmac.Start(mMasterKey.m8, sizeof(mMasterKey.m8));
 
     keySequenceBytes[0] = (aKeySequence >> 24) & 0xff;
     keySequenceBytes[1] = (aKeySequence >> 16) & 0xff;

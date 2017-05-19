@@ -37,12 +37,13 @@
 #include <openthread-config.h>
 #endif
 
+#include "udp6.hpp"
+
 #include <stdio.h>
 
-#include <common/code_utils.hpp>
-#include <common/encoding.hpp>
-#include <net/ip6.hpp>
-#include <net/udp6.hpp>
+#include "common/code_utils.hpp"
+#include "common/encoding.hpp"
+#include "net/ip6.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 
@@ -219,9 +220,10 @@ ThreadError Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
     checksum = Ip6::ComputePseudoheaderChecksum(aMessageInfo.GetPeerAddr(), aMessageInfo.GetSockAddr(),
                                                 payloadLength, kProtoUdp);
     checksum = aMessage.UpdateChecksum(checksum, aMessage.GetOffset(), payloadLength);
-    VerifyOrExit(checksum == 0xffff);
+    VerifyOrExit(checksum == 0xffff, error = kThreadError_Drop);
 
-    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(udpHeader), &udpHeader) == sizeof(udpHeader));
+    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(udpHeader), &udpHeader) == sizeof(udpHeader),
+                 error = kThreadError_Parse);
     aMessage.MoveOffset(sizeof(udpHeader));
     aMessageInfo.mPeerPort = udpHeader.GetSourcePort();
     aMessageInfo.mSockPort = udpHeader.GetDestinationPort();

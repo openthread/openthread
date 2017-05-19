@@ -39,24 +39,24 @@
 #include <openthread-config.h>
 #endif
 
+#include "commissioner.hpp"
+
 #include <stdio.h>
 #include "utils/wrap_string.h"
 
-#include "openthread/platform/random.h"
-
-#include <coap/coap_header.hpp>
-#include <common/crc16.hpp>
-#include <common/encoding.hpp>
-#include <common/logging.hpp>
-#include <crypto/pbkdf2_cmac.h>
-#include <meshcop/commissioner.hpp>
-#include <meshcop/joiner_router.hpp>
-#include <meshcop/meshcop.hpp>
-#include <meshcop/tlvs.hpp>
-#include <thread/thread_netif.hpp>
-#include <thread/thread_tlvs.hpp>
-#include <thread/thread_uris.hpp>
 #include <openthread/types.h>
+#include <openthread/platform/random.h>
+
+#include "coap/coap_header.hpp"
+#include "common/encoding.hpp"
+#include "common/logging.hpp"
+#include "crypto/pbkdf2_cmac.h"
+#include "meshcop/joiner_router.hpp"
+#include "meshcop/meshcop.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
+#include "thread/thread_netif.hpp"
+#include "thread/thread_tlvs.hpp"
+#include "thread/thread_uris.hpp"
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
 
@@ -91,16 +91,16 @@ otInstance *Commissioner::GetInstance(void)
 
 void Commissioner::AddCoapResources(void)
 {
-    mNetif.GetCoapServer().AddResource(mRelayReceive);
-    mNetif.GetCoapServer().AddResource(mDatasetChanged);
-    mNetif.GetSecureCoapServer().AddResource(mJoinerFinalize);
+    mNetif.GetCoap().AddResource(mRelayReceive);
+    mNetif.GetCoap().AddResource(mDatasetChanged);
+    mNetif.GetCoapSecure().AddResource(mJoinerFinalize);
 }
 
 void Commissioner::RemoveCoapResources(void)
 {
-    mNetif.GetCoapServer().RemoveResource(mRelayReceive);
-    mNetif.GetCoapServer().AddResource(mDatasetChanged);
-    mNetif.GetSecureCoapServer().AddResource(mJoinerFinalize);
+    mNetif.GetCoap().RemoveResource(mRelayReceive);
+    mNetif.GetCoap().RemoveResource(mDatasetChanged);
+    mNetif.GetCoapSecure().RemoveResource(mJoinerFinalize);
 }
 
 ThreadError Commissioner::Start(void)
@@ -110,7 +110,7 @@ ThreadError Commissioner::Start(void)
     otLogFuncEntry();
     VerifyOrExit(mState == kCommissionerStateDisabled, error = kThreadError_InvalidState);
 
-    SuccessOrExit(error = mNetif.GetSecureCoapServer().Start(SendRelayTransmit, this));
+    SuccessOrExit(error = mNetif.GetCoapSecure().Start(OPENTHREAD_CONFIG_JOINER_UDP_PORT, SendRelayTransmit, this));
 
     mState = kCommissionerStatePetition;
     mTransmitAttempts = 0;
@@ -129,7 +129,7 @@ ThreadError Commissioner::Stop(void)
     otLogFuncEntry();
     VerifyOrExit(mState != kCommissionerStateDisabled, error = kThreadError_InvalidState);
 
-    mNetif.GetSecureCoapServer().Stop();
+    mNetif.GetCoapSecure().Stop();
 
     mState = kCommissionerStateDisabled;
     RemoveCoapResources();
@@ -167,9 +167,6 @@ ThreadError Commissioner::SendCommissionerSet(void)
 
     for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
     {
-        Crc16 ccitt(Crc16::kCcitt);
-        Crc16 ansi(Crc16::kAnsi);
-
         if (!mJoiners[i].mValid)
         {
             continue;
@@ -182,15 +179,7 @@ ThreadError Commissioner::SendCommissionerSet(void)
             break;
         }
 
-        for (size_t j = 0; j < sizeof(mJoiners[i].mExtAddress.m8); j++)
-        {
-            uint8_t byte = mJoiners[i].mExtAddress.m8[j];
-            ccitt.Update(byte);
-            ansi.Update(byte);
-        }
-
-        steeringData.SetBit(ccitt.Get() % steeringData.GetNumBits());
-        steeringData.SetBit(ansi.Get() % steeringData.GetNumBits());
+        steeringData.ComputeBloomFilter(&mJoiners[i].mExtAddress);
     }
 
     // set bloom filter
@@ -431,8 +420,7 @@ ThreadError Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs,
         header.SetPayloadMarker();
     }
 
-    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapClient(), header)) != NULL,
-                 error = kThreadError_NoBufs);
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoap(), header)) != NULL, error = kThreadError_NoBufs);
 
     if (aLength > 0)
     {
@@ -442,10 +430,11 @@ ThreadError Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs,
         SuccessOrExit(error = message->Append(aTlvs, aLength));
     }
 
+    messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
     mNetif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr());
     messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo,
-                                                             Commissioner::HandleMgmtCommissionerGetResponse, this));
+    SuccessOrExit(error = mNetif.GetCoap().SendMessage(*message, messageInfo,
+                                                       Commissioner::HandleMgmtCommissionerGetResponse, this));
 
     otLogInfoMeshCoP(GetInstance(), "sent MGMT_COMMISSIONER_GET.req to leader");
 
@@ -498,8 +487,7 @@ ThreadError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDa
     header.AppendUriPathOptions(OPENTHREAD_URI_COMMISSIONER_SET);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapClient(), header)) != NULL,
-                 error = kThreadError_NoBufs);
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoap(), header)) != NULL, error = kThreadError_NoBufs);
 
     if (aDataset.mIsLocatorSet)
     {
@@ -545,10 +533,11 @@ ThreadError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDa
         message->SetLength(message->GetLength() - 1);
     }
 
+    messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
     mNetif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr());
     messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo,
-                                                             Commissioner::HandleMgmtCommissionerSetResponse, this));
+    SuccessOrExit(error = mNetif.GetCoap().SendMessage(*message, messageInfo,
+                                                       Commissioner::HandleMgmtCommissionerSetResponse, this));
 
     otLogInfoMeshCoP(GetInstance(), "sent MGMT_COMMISSIONER_SET.req to leader");
 
@@ -603,19 +592,18 @@ ThreadError Commissioner::SendPetition(void)
     header.AppendUriPathOptions(OPENTHREAD_URI_LEADER_PETITION);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapClient(), header)) != NULL,
-                 error = kThreadError_NoBufs);
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoap(), header)) != NULL, error = kThreadError_NoBufs);
 
     commissionerId.Init();
     commissionerId.SetCommissionerId("OpenThread Commissioner");
 
     SuccessOrExit(error = message->Append(&commissionerId, sizeof(Tlv) + commissionerId.GetLength()));
 
-    mNetif.GetMle().GetLeaderAloc(*static_cast<Ip6::Address *>(&messageInfo.mPeerAddr));
+    mNetif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr());
     messageInfo.SetPeerPort(kCoapUdpPort);
     messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
-    SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo,
-                                                             Commissioner::HandleLeaderPetitionResponse, this));
+    SuccessOrExit(error = mNetif.GetCoap().SendMessage(*message, messageInfo,
+                                                       Commissioner::HandleLeaderPetitionResponse, this));
 
     otLogInfoMeshCoP(GetInstance(), "sent petition");
 
@@ -704,8 +692,7 @@ ThreadError Commissioner::SendKeepAlive(void)
     header.AppendUriPathOptions(OPENTHREAD_URI_LEADER_KEEP_ALIVE);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapClient(), header)) != NULL,
-                 error = kThreadError_NoBufs);
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoap(), header)) != NULL, error = kThreadError_NoBufs);
 
     state.Init();
     state.SetState(mState == kCommissionerStateActive ? StateTlv::kAccept : StateTlv::kReject);
@@ -715,10 +702,11 @@ ThreadError Commissioner::SendKeepAlive(void)
     sessionId.SetCommissionerSessionId(mSessionId);
     SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
 
-    mNetif.GetMle().GetLeaderAloc(*static_cast<Ip6::Address *>(&messageInfo.mPeerAddr));
+    messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
+    mNetif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr());
     messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo,
-                                                             Commissioner::HandleLeaderKeepAliveResponse, this));
+    SuccessOrExit(error = mNetif.GetCoap().SendMessage(*message, messageInfo,
+                                                       Commissioner::HandleLeaderKeepAliveResponse, this));
 
     otLogInfoMeshCoP(GetInstance(), "sent keep alive");
 
@@ -811,7 +799,7 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
     SuccessOrExit(error = Tlv::GetValueOffset(aMessage, Tlv::kJoinerDtlsEncapsulation, offset, length));
     VerifyOrExit(length <= aMessage.GetLength() - offset, error = kThreadError_Parse);
 
-    if (!mNetif.GetSecureCoapServer().IsConnectionActive())
+    if (!mNetif.GetCoapSecure().IsConnectionActive())
     {
         memcpy(mJoinerIid, joinerIid.GetIid(), sizeof(mJoinerIid));
         mJoinerIid[0] ^= 0x2;
@@ -826,8 +814,8 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
             if (mJoiners[i].mAny || !memcmp(&mJoiners[i].mExtAddress, mJoinerIid, sizeof(mJoiners[i].mExtAddress)))
             {
 
-                error = mNetif.GetSecureCoapServer().SetPsk(reinterpret_cast<const uint8_t *>(mJoiners[i].mPsk),
-                                                            static_cast<uint8_t>(strlen(mJoiners[i].mPsk)));
+                error = mNetif.GetCoapSecure().SetPsk(reinterpret_cast<const uint8_t *>(mJoiners[i].mPsk),
+                                                      static_cast<uint8_t>(strlen(mJoiners[i].mPsk)));
                 SuccessOrExit(error);
                 otLogInfoMeshCoP(GetInstance(), "found joiner, starting new session");
                 enableJoiner = true;
@@ -856,7 +844,7 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
     joinerMessageInfo.GetPeerAddr().SetIid(mJoinerIid);
     joinerMessageInfo.SetPeerPort(mJoinerPort);
 
-    mNetif.GetSecureCoapServer().Receive(aMessage, joinerMessageInfo);
+    mNetif.GetCoapSecure().Receive(aMessage, joinerMessageInfo);
 
 exit:
     (void)aMessageInfo;
@@ -880,7 +868,7 @@ void Commissioner::HandleDatasetChanged(Coap::Header &aHeader, Message &aMessage
     otLogInfoMeshCoP(GetInstance(), "received dataset changed");
     (void)aMessage;
 
-    SuccessOrExit(mNetif.GetCoapServer().SendEmptyAck(aHeader, aMessageInfo));
+    SuccessOrExit(mNetif.GetCoap().SendEmptyAck(aHeader, aMessageInfo));
 
     otLogInfoMeshCoP(GetInstance(), "sent dataset changed acknowledgment");
 
@@ -945,7 +933,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, 
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
 
-    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetSecureCoapServer(), responseHeader)) != NULL,
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapSecure(), responseHeader)) != NULL,
                  error = kThreadError_NoBufs);
 
     message->SetSubType(Message::kSubTypeJoinerFinalizeResponse);
@@ -966,7 +954,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, 
                       message->GetLength() - responseHeader.GetLength());
 #endif
 
-    SuccessOrExit(error = mNetif.GetSecureCoapServer().SendMessage(*message, joinerMessageInfo));
+    SuccessOrExit(error = mNetif.GetCoapSecure().SendMessage(*message, joinerMessageInfo));
 
     memcpy(extAddr.m8, mJoinerIid, sizeof(extAddr.m8));
     extAddr.SetLocal(!extAddr.IsLocal());
@@ -1008,8 +996,7 @@ ThreadError Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::Messag
     header.AppendUriPathOptions(OPENTHREAD_URI_RELAY_TX);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapClient(), header)) != NULL,
-                 error = kThreadError_NoBufs);
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoap(), header)) != NULL, error = kThreadError_NoBufs);
 
     udpPort.Init();
     udpPort.SetUdpPort(mJoinerPort);
@@ -1043,7 +1030,7 @@ ThreadError Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::Messag
     messageInfo.SetPeerPort(kCoapUdpPort);
     messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
 
-    SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = mNetif.GetCoap().SendMessage(*message, messageInfo));
 
     aMessage.Free();
 

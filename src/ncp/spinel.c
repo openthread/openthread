@@ -1161,19 +1161,19 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         break;
 
     case SPINEL_PROP_THREAD_JOINERS:
-        ret = "SPINEL_PROP_THREAD_JOINERS";
+        ret = "PROP_THREAD_JOINERS";
         break;
 
     case SPINEL_PROP_THREAD_COMMISSIONER_ENABLED:
-        ret = "SPINEL_PROP_THREAD_COMMISSIONER_ENABLED";
+        ret = "PROP_THREAD_COMMISSIONER_ENABLED";
         break;
 
     case SPINEL_PROP_THREAD_BA_PROXY_ENABLED:
-        ret = "SPINEL_PROP_THREAD_BA_PROXY_ENABLED";
+        ret = "PROP_THREAD_BA_PROXY_ENABLED";
         break;
 
     case SPINEL_PROP_THREAD_BA_PROXY_STREAM:
-        ret = "SPINEL_PROP_THREAD_BA_PROXY_STREAM";
+        ret = "PROP_THREAD_BA_PROXY_STREAM";
         break;
 
     case SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU:
@@ -1192,6 +1192,22 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_THREAD_CONTEXT_REUSE_DELAY";
         break;
 
+    case SPINEL_PROP_THREAD_DISCOVERY_SCAN_JOINER_FLAG:
+        ret = "PROP_THREAD_DISCOVERY_SCAN_JOINER_FLAG";
+        break;
+
+    case SPINEL_PROP_THREAD_DISCOVERY_SCAN_ENABLE_FILTERING:
+        ret = "PROP_THREAD_DISCOVERY_SCAN_ENABLE_FILTERING";
+        break;
+
+    case SPINEL_PROP_THREAD_DISCOVERY_SCAN_PANID:
+        ret = "PROP_THREAD_DISCOVERY_SCAN_PANID";
+        break;
+
+    case SPINEL_PROP_THREAD_STEERING_DATA:
+        ret = "PROP_THREAD_STEERING_DATA";
+        break;
+
     case SPINEL_PROP_MAC_WHITELIST:
         ret = "PROP_MAC_WHITELIST";
         break;
@@ -1207,7 +1223,6 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
     case SPINEL_PROP_THREAD_CHILD_TIMEOUT:
         ret = "PROP_THREAD_CHILD_TIMEOUT";
         break;
-
 
     case SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING:
         ret = "PROP_NET_REQUIRE_JOIN_EXISTING";
@@ -1278,11 +1293,11 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         break;
 
     case SPINEL_PROP_DEBUG_TEST_ASSERT:
-        ret = "SPINEL_PROP_DEBUG_TEST_ASSERT";
+        ret = "PROP_DEBUG_TEST_ASSERT";
         break;
 
     case SPINEL_PROP_DEBUG_NCP_LOG_LEVEL:
-        ret = "SPINEL_PROP_DEBUG_NCP_LOG_LEVEL";
+        ret = "PROP_DEBUG_NCP_LOG_LEVEL";
         break;
 
     default:
@@ -1465,6 +1480,151 @@ const char *spinel_status_to_cstr(spinel_status_t status)
 
     case SPINEL_STATUS_RESET_WATCHDOG:
         ret = "STATUS_RESET_WATCHDOG";
+        break;
+
+    default:
+        break;
+    }
+
+    return ret;
+}
+
+const char *spinel_capability_to_cstr(unsigned int capability)
+{
+    const char *ret = "UNKNOWN";
+
+    switch (capability)
+    {
+    case SPINEL_CAP_LOCK:
+        ret = "CAP_LOCK";
+        break;
+
+    case SPINEL_CAP_NET_SAVE:
+        ret = "CAP_NET_SAVE";
+        break;
+
+    case SPINEL_CAP_HBO:
+        ret = "CAP_HBO";
+        break;
+
+    case SPINEL_CAP_POWER_SAVE:
+        ret = "CAP_POWER_SAVE";
+        break;
+
+    case SPINEL_CAP_COUNTERS:
+        ret = "CAP_COUNTERS";
+        break;
+
+    case SPINEL_CAP_JAM_DETECT:
+        ret = "CAP_JAM_DETECT";
+        break;
+
+    case SPINEL_CAP_PEEK_POKE:
+        ret = "CAP_PEEK_POKE";
+        break;
+
+    case SPINEL_CAP_WRITABLE_RAW_STREAM:
+        ret = "CAP_WRITABLE_RAW_STREAM";
+        break;
+
+    case SPINEL_CAP_GPIO:
+        ret = "CAP_GPIO";
+        break;
+
+    case SPINEL_CAP_TRNG:
+        ret = "CAP_TRNG";
+        break;
+
+    case SPINEL_CAP_CMD_MULTI:
+        ret = "CAP_CMD_MULTI";
+        break;
+
+    case SPINEL_CAP_802_15_4_2003:
+        ret = "CAP_802_15_4_2003";
+        break;
+
+    case SPINEL_CAP_802_15_4_2006:
+        ret = "CAP_802_15_4_2006";
+        break;
+
+    case SPINEL_CAP_802_15_4_2011:
+        ret = "CAP_802_15_4_2011";
+        break;
+
+    case SPINEL_CAP_802_15_4_PIB:
+        ret = "CAP_802_15_4_PIB";
+        break;
+
+    case SPINEL_CAP_802_15_4_2450MHZ_OQPSK:
+        ret = "CAP_802_15_4_2450MHZ_OQPSK";
+        break;
+
+    case SPINEL_CAP_802_15_4_915MHZ_OQPSK:
+        ret = "CAP_802_15_4_915MHZ_OQPSK";
+        break;
+
+    case SPINEL_CAP_802_15_4_868MHZ_OQPSK:
+        ret = "CAP_802_15_4_868MHZ_OQPSK";
+        break;
+
+    case SPINEL_CAP_802_15_4_915MHZ_BPSK:
+        ret = "CAP_802_15_4_915MHZ_BPSK";
+        break;
+
+    case SPINEL_CAP_802_15_4_868MHZ_BPSK:
+        ret = "CAP_802_15_4_868MHZ_BPSK";
+        break;
+
+    case SPINEL_CAP_802_15_4_915MHZ_ASK:
+        ret = "CAP_802_15_4_915MHZ_ASK";
+        break;
+
+    case SPINEL_CAP_802_15_4_868MHZ_ASK:
+        ret = "CAP_802_15_4_868MHZ_ASK";
+        break;
+
+    case SPINEL_CAP_ROLE_ROUTER:
+        ret = "CAP_ROLE_ROUTER";
+        break;
+
+    case SPINEL_CAP_ROLE_SLEEPY:
+        ret = "CAP_ROLE_SLEEPY";
+        break;
+
+    case SPINEL_CAP_NET_THREAD_1_0:
+        ret = "CAP_NET_THREAD_1_0";
+        break;
+
+    case SPINEL_CAP_MAC_WHITELIST:
+        ret = "CAP_MAC_WHITELIST";
+        break;
+
+    case SPINEL_CAP_MAC_RAW:
+        ret = "CAP_MAC_RAW";
+        break;
+
+    case SPINEL_CAP_OOB_STEERING_DATA:
+        ret = "CAP_OOB_STEERING_DATA";
+        break;
+
+    case SPINEL_CAP_THREAD_COMMISSIONER:
+        ret = "CAP_THREAD_COMMISSIONER";
+        break;
+
+    case SPINEL_CAP_THREAD_BA_PROXY:
+        ret = "CAP_THREAD_BA_PROXY";
+        break;
+
+    case SPINEL_CAP_NEST_LEGACY_INTERFACE:
+        ret = "CAP_NEST_LEGACY_INTERFACE";
+        break;
+
+    case SPINEL_CAP_NEST_LEGACY_NET_WAKE:
+        ret = "CAP_NEST_LEGACY_NET_WAKE";
+        break;
+
+    case SPINEL_CAP_NEST_TRANSMIT_HOOK:
+        ret = "CAP_NEST_TRANSMIT_HOOK";
         break;
 
     default:

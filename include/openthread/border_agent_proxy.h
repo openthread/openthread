@@ -41,14 +41,14 @@
 #include <openthread-config.h>
 #endif
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @addtogroup border-agent-proxy  Border Agent Proxy
+ * @addtogroup api-border-agent
  *
  * @brief
  *   This module includes functions for signal border agent proxy feature.

@@ -43,15 +43,15 @@
 
 #include <stdint.h>
 
-#include "openthread/types.h"
-#include "openthread/message.h"
+#include <openthread/message.h>
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @addtogroup coap  CoAP
+ * @addtogroup api-coap
  *
  * @brief
  *   This module includes functions that control CoAP communication.
@@ -75,22 +75,47 @@ typedef enum otCoapType
 } otCoapType;
 
 /**
+ * Helper macro to define CoAP Code values.
+ *
+ */
+#define COAP_CODE(c, d) ((((c) & 0x7) << 5) | ((d) & 0x1f))
+
+/**
  * CoAP Code values.
  *
  */
 typedef enum otCoapCode
 {
-    kCoapCodeEmpty       = 0x00,  ///< Empty message code
-    kCoapRequestGet      = 0x01,  ///< Get
-    kCoapRequestPost     = 0x02,  ///< Post
-    kCoapRequestPut      = 0x03,  ///< Put
-    kCoapRequestDelete   = 0x04,  ///< Delete
-    kCoapResponseCodeMin = 0x40,  ///< 2.00
-    kCoapResponseCreated = 0x41,  ///< Created
-    kCoapResponseDeleted = 0x42,  ///< Deleted
-    kCoapResponseValid   = 0x43,  ///< Valid
-    kCoapResponseChanged = 0x44,  ///< Changed
-    kCoapResponseContent = 0x45,  ///< Content
+    kCoapCodeEmpty                  = COAP_CODE(0, 0),  ///< Empty message code
+    kCoapRequestGet                 = COAP_CODE(0, 1),  ///< Get
+    kCoapRequestPost                = COAP_CODE(0, 2),  ///< Post
+    kCoapRequestPut                 = COAP_CODE(0, 3),  ///< Put
+    kCoapRequestDelete              = COAP_CODE(0, 4),  ///< Delete
+
+    kCoapResponseCodeMin            = COAP_CODE(2, 0),  ///< 2.00
+    kCoapResponseCreated            = COAP_CODE(2, 1),  ///< Created
+    kCoapResponseDeleted            = COAP_CODE(2, 2),  ///< Deleted
+    kCoapResponseValid              = COAP_CODE(2, 3),  ///< Valid
+    kCoapResponseChanged            = COAP_CODE(2, 4),  ///< Changed
+    kCoapResponseContent            = COAP_CODE(2, 5),  ///< Content
+
+    kCoapResponseBadRequest         = COAP_CODE(4, 0),  ///< Bad Request
+    kCoapResponseUnauthorized       = COAP_CODE(4, 1),  ///< Unauthorized
+    kCoapResponseBadOption          = COAP_CODE(4, 2),  ///< Bad Option
+    kCoapResponseForbidden          = COAP_CODE(4, 3),  ///< Forbidden
+    kCoapResponseNotFound           = COAP_CODE(4, 4),  ///< Not Found
+    kCoapResponseMethodNotAllowed   = COAP_CODE(4, 5),  ///< Method Not Allowed
+    kCoapResponseNotAcceptable      = COAP_CODE(4, 6),  ///< Not Acceptable
+    kCoapResponsePreconditionFailed = COAP_CODE(4, 12), ///< Precondition Failed
+    kCoapResponseRequestTooLarge    = COAP_CODE(4, 13), ///< Request Entity Too Large
+    kCoapResponseUnsupportedFormat  = COAP_CODE(4, 15), ///< Unsupported Content-Format
+
+    kCoapResponseInternalError      = COAP_CODE(5, 0),  ///< Internal Server Error
+    kCoapResponseNotImplemented     = COAP_CODE(5, 1),  ///< Not Implemented
+    kCoapResponseBadGateway         = COAP_CODE(5, 2),  ///< Bad Gateway
+    kCoapResponseServiceUnavailable = COAP_CODE(5, 3),  ///< Service Unavailable
+    kCoapResponseGatewayTimeout     = COAP_CODE(5, 4),  ///< Gateway Timeout
+    kCoapResponseProxyNotSupported  = COAP_CODE(5, 5),  ///< Proxying Not Supported
 } otCoapCode;
 
 /**
@@ -98,11 +123,22 @@ typedef enum otCoapCode
  */
 typedef enum otCoapOptionType
 {
+    kCoapOptionIfMatch       = 1,    ///< If-Match
+    kCoapOptionUriHost       = 3,    ///< Uri-Host
+    kCoapOptionETag          = 4,    ///< ETag
+    kCoapOptionIfNoneMatch   = 5,    ///< If-None-Match
     kCoapOptionObserve       = 6,    ///< Observe
+    kCoapOptionUriPort       = 7,    ///< Uri-Port
+    kCoapOptionLocationPath  = 8,    ///< Location-Path
     kCoapOptionUriPath       = 11,   ///< Uri-Path
     kCoapOptionContentFormat = 12,   ///< Content-Format
     kCoapOptionMaxAge        = 14,   ///< Max-Age
     kCoapOptionUriQuery      = 15,   ///< Uri-Query
+    kCoapOptionAccept        = 17,   ///< Accept
+    kCoapOptionLocationQuery = 20,   ///< Location-Query
+    kCoapOptionProxyUri      = 35,   ///< Proxy-Uri
+    kCoapOptionProxyScheme   = 39,   ///< Proxy-Scheme
+    kCoapOptionSize1         = 60,   ///< Size1
 } otCoapOptionType;
 
 /**
@@ -224,6 +260,21 @@ void otCoapHeaderGenerateToken(otCoapHeader *aHeader, uint8_t aTokenLength);
  *
  */
 ThreadError otCoapHeaderAppendOption(otCoapHeader *aHeader, const otCoapOption *aOption);
+
+/**
+ * This function appends an unsigned integer CoAP option as specified in
+ * https://tools.ietf.org/html/rfc7252#section-3.2
+ *
+ * @param[inout]  aHeader  A pointer to the CoAP header.
+ * @param[in]     aNumber  The CoAP Option number.
+ * @param[in]     aValue   The CoAP Option unsigned integer value.
+ *
+ * @retval kThreadError_None         Successfully appended the option.
+ * @retval kThreadError_InvalidArgs  The option type is not equal or greater than the last option type.
+ * @retval kThreadError_NoBufs       The option length exceeds the buffer size.
+ *
+ */
+ThreadError otCoapHeaderAppendUintOption(otCoapHeader *aHeader, uint16_t aNumber, uint32_t aValue);
 
 /**
  * This function appends an Observe option.
@@ -398,11 +449,12 @@ ThreadError otCoapSendRequest(otInstance *aInstance, otMessage *aMessage, const 
  * This function starts the CoAP server.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aPort      The local UDP port to bind to.
  *
  * @retval kThreadError_None  Successfully started the CoAP server.
  *
  */
-ThreadError otCoapServerStart(otInstance *aInstance);
+ThreadError otCoapStart(otInstance *aInstance, uint16_t aPort);
 
 /**
  * This function stops the CoAP server.
@@ -412,18 +464,7 @@ ThreadError otCoapServerStart(otInstance *aInstance);
  * @retval kThreadError_None  Successfully stopped the CoAP server.
  *
  */
-ThreadError otCoapServerStop(otInstance *aInstance);
-
-/**
- * This function sets CoAP server's port number.
- *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aPort  A port number to set.
- *
- * @retval kThreadError_None  Binding with a port succeeded.
- *
- */
-ThreadError otCoapServerSetPort(otInstance *aInstance, uint16_t aPort);
+ThreadError otCoapStop(otInstance *aInstance);
 
 /**
  * This function adds a resource to the CoAP server.
@@ -435,7 +476,7 @@ ThreadError otCoapServerSetPort(otInstance *aInstance, uint16_t aPort);
  * @retval kThreadError_Already  The @p aResource was already added.
  *
  */
-ThreadError otCoapServerAddResource(otInstance *aInstance, otCoapResource *aResource);
+ThreadError otCoapAddResource(otInstance *aInstance, otCoapResource *aResource);
 
 /**
  * This function removes a resource from the CoAP server.
@@ -444,7 +485,16 @@ ThreadError otCoapServerAddResource(otInstance *aInstance, otCoapResource *aReso
  * @param[in]  aResource  A pointer to the resource.
  *
  */
-void otCoapServerRemoveResource(otInstance *aInstance, otCoapResource *aResource);
+void otCoapRemoveResource(otInstance *aInstance, otCoapResource *aResource);
+
+/**
+ * This function sets the default handler for unhandled CoAP requests.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aHandler   A function pointer that shall be called when an unhandled request arrives.
+ * @param[in]  aContext   A pointer to arbitrary context information. May be NULL if not used.
+ */
+void otCoapSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandler, void *aContext);
 
 /**
  * This function sends a CoAP response from the server.

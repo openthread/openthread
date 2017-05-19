@@ -39,16 +39,17 @@
 #include <openthread-config.h>
 #endif
 
-#include "openthread/types.h"
-#include "openthread/platform/random.h"
+#include "dhcp6_client.hpp"
 
-#include <common/code_utils.hpp>
-#include <common/encoding.hpp>
-#include <common/logging.hpp>
-#include <mac/mac.hpp>
-#include <net/dhcp6.hpp>
-#include <net/dhcp6_client.hpp>
-#include <thread/thread_netif.hpp>
+#include <openthread/types.h>
+#include <openthread/platform/random.h>
+
+#include "common/code_utils.hpp"
+#include "common/encoding.hpp"
+#include "common/logging.hpp"
+#include "mac/mac.hpp"
+#include "net/dhcp6.hpp"
+#include "thread/thread_netif.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
@@ -85,7 +86,7 @@ void Dhcp6Client::UpdateAddresses(otInstance *aInstance, otDhcpAddress *aAddress
                                   void *aContext)
 {
     (void)aContext;
-    bool found = false;;
+    bool found = false;
     bool newAgent = false;
     otDhcpAddress *address = NULL;
     otNetworkDataIterator iterator;

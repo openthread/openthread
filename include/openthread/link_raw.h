@@ -35,15 +35,15 @@
 #ifndef LINK_RAW_H_
 #define LINK_RAW_H_
 
-#include "openthread/types.h"
-#include "platform/radio.h"
+#include <openthread/types.h>
+#include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @addtogroup linkraw  Link Raw
+ * @addtogroup api-link-raw
  *
  * @brief
  *   This module includes functions that control the raw link-layer configuration.

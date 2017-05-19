@@ -36,7 +36,9 @@
 
 #include "utils/wrap_stdint.h"
 
-#include "openthread/types.h"
+#include <openthread/types.h>
+
+#include "mac/mac_frame.hpp"
 
 namespace ot {
 namespace Ip6 {
@@ -74,6 +76,7 @@ public:
     {
         kInterfaceIdentifierSize   = 8,  ///< Interface Identifier size in bytes.
         kIp6AddressStringSize      = 40, ///< Max buffer size in bytes to store an IPv6 address in string format.
+        kMeshLocalPrefixLength     = 64, ///< Length of Thread mesh local prefix.
     };
 
     /**
@@ -337,6 +340,18 @@ public:
      *
      */
     const char *ToString(char *aBuf, uint16_t aSize) const;
+
+    /**
+     * This method returns the number of IPv6 prefix bits that match.
+     *
+     * @param[in]  aPrefixA     A pointer to the prefix to match.
+     * @param[in]  aPrefixB     A pointer to the prefix to match against.
+     * @param[in]  aMaxLength   Number of bytes of the two prefixes.
+     *
+     * @returns The number of prefix bits that match.
+     *
+     */
+    static uint8_t PrefixMatch(const uint8_t *aPrefixA, const uint8_t *aPrefixB, uint8_t aMaxLength);
 
 private:
     enum

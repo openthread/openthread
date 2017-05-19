@@ -35,14 +35,14 @@
 #ifndef OPENTHREAD_MESSAGE_H_
 #define OPENTHREAD_MESSAGE_H_
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @addtogroup messages  Message Buffers
+ * @addtogroup api-message
  *
  * @brief
  *   This module includes functions that manipulate OpenThread message buffers

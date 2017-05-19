@@ -39,12 +39,13 @@
 #include <openthread-config.h>
 #endif
 
-#include <common/debug.hpp>
-#include <common/logging.hpp>
-#include <common/code_utils.hpp>
-#include <mac/mac_frame.hpp>
-#include <thread/network_data_local.hpp>
-#include <thread/thread_netif.hpp>
+#include "network_data_local.hpp"
+
+#include "common/debug.hpp"
+#include "common/logging.hpp"
+#include "common/code_utils.hpp"
+#include "mac/mac_frame.hpp"
+#include "thread/thread_netif.hpp"
 
 namespace ot {
 namespace NetworkData {
@@ -58,8 +59,13 @@ Local::Local(ThreadNetif &aThreadNetif):
 ThreadError Local::AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, int8_t aPrf,
                                    uint8_t aFlags, bool aStable)
 {
+    ThreadError error = kThreadError_None;
     PrefixTlv *prefixTlv;
     BorderRouterTlv *brTlv;
+
+    VerifyOrExit(Ip6::Address::PrefixMatch(aPrefix, mNetif.GetMle().GetMeshLocalPrefix(),
+                                           (aPrefixLength + 7) / 8) < Ip6::Address::kMeshLocalPrefixLength,
+                 error = kThreadError_InvalidArgs);
 
     RemoveOnMeshPrefix(aPrefix, aPrefixLength);
 
@@ -85,7 +91,9 @@ ThreadError Local::AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength
     ClearResubmitDelayTimer();
 
     otDumpDebgNetData(GetInstance(), "add prefix done", mTlvs, mLength);
-    return kThreadError_None;
+
+exit:
+    return error;
 }
 
 ThreadError Local::RemoveOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)

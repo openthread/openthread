@@ -34,7 +34,7 @@
 #ifndef TRICKLE_TIMER_HPP_
 #define TRICKLE_TIMER_HPP_
 
-#include <common/timer.hpp>
+#include "common/timer.hpp"
 
 namespace ot {
 

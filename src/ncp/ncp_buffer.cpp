@@ -36,9 +36,11 @@
 #include <openthread-config.h>
 #endif
 
+#include "ncp_buffer.hpp"
+
 #include "utils/wrap_string.h"
-#include <common/code_utils.hpp>
-#include <ncp/ncp_buffer.hpp>
+
+#include "common/code_utils.hpp"
 
 namespace ot {
 

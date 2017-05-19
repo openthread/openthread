@@ -34,16 +34,16 @@
 #ifndef MLE_HPP_
 #define MLE_HPP_
 
-#include "openthread/openthread.h"
+#include <openthread/openthread.h>
 
-#include <common/encoding.hpp>
-#include <common/timer.hpp>
-#include <mac/mac.hpp>
-#include <net/udp6.hpp>
-#include <thread/mle_constants.hpp>
-#include <thread/mle_tlvs.hpp>
-#include <thread/topology.hpp>
-#include <meshcop/joiner_router.hpp>
+#include "common/encoding.hpp"
+#include "common/timer.hpp"
+#include "mac/mac.hpp"
+#include "meshcop/joiner_router.hpp"
+#include "net/udp6.hpp"
+#include "thread/mle_constants.hpp"
+#include "thread/mle_tlvs.hpp"
+#include "thread/topology.hpp"
 
 namespace ot {
 
@@ -119,33 +119,6 @@ enum AlocAllocation
     kAloc16CommissionerEnd              = 0xfc37,
     kAloc16NeighborDiscoveryAgentStart  = 0xfc40,
     kAloc16NeighborDiscoveryAgentEnd    = 0xfc4e,
-};
-
-/**
-* This structure represents the device's own network information for persistent storage.
-*
-*/
-struct NetworkInfo
-{
-    DeviceState          mDeviceState;                                      ///< Current Thread interface state.
-
-    uint8_t              mDeviceMode;                                       ///< Device mode setting.
-    uint16_t             mRloc16;                                           ///< RLOC16
-    uint32_t             mKeySequence;                                      ///< Key Sequence
-    uint32_t             mMleFrameCounter;                                  ///< MLE Frame Counter
-    uint32_t             mMacFrameCounter;                                  ///< MAC Frame Counter
-    uint32_t             mPreviousPartitionId;                              ///< PartitionId
-    Mac::ExtAddress      mExtAddress;                                       ///< Extended Address
-    uint8_t              mMlIid[OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE];  ///< IID from ML-EID
-};
-
-/**
-* This structure represents the parent information for persistent storage.
-*
-*/
-struct ParentInfo
-{
-    Mac::ExtAddress  mExtAddress;   ///< Extended Address
 };
 
 /**
@@ -563,17 +536,19 @@ public:
     /**
      * This method initiates a Thread Discovery.
      *
-     * @param[in]  aScanChannels  A bit vector indicating which channels to scan.
-     * @param[in]  aPanId         The PAN ID filter (set to Broadcast PAN to disable filter).
-     * @param[in]  aJoiner        Value of the Joiner Flag in the Discovery Request TLV.
-     * @param[in]  aHandler       A pointer to a function that is called on receiving an MLE Discovery Response.
-     * @param[in]  aContext       A pointer to arbitrary context information.
+     * @param[in]  aScanChannels          A bit vector indicating which channels to scan.
+     * @param[in]  aPanId                 The PAN ID filter (set to Broadcast PAN to disable filter).
+     * @param[in]  aJoiner                Value of the Joiner Flag in the Discovery Request TLV.
+     * @param[in]  aEnableEui64Filtering  Enable filtering out MLE discovery responses that don't match our factory assigned EUI64.
+     * @param[in]  aHandler               A pointer to a function that is called on receiving an MLE Discovery Response.
+     * @param[in]  aContext               A pointer to arbitrary context information.
      *
      * @retval kThreadError_None  Successfully started a Thread Discovery.
      * @retval kThreadError_Busy  Thread Discovery is already in progress.
      *
      */
-    ThreadError Discover(uint32_t aScanChannels, uint16_t aPanId, bool aJoiner, DiscoverHandler aCallback,
+    ThreadError Discover(uint32_t aScanChannels, uint16_t aPanId, bool aJoiner, bool aEnableEui64Filtering,
+                         DiscoverHandler aCallback,
                          void *aContext);
 
     /**
@@ -1433,6 +1408,7 @@ private:
     DiscoverHandler mDiscoverHandler;
     void *mDiscoverContext;
     bool mIsDiscoverInProgress;
+    bool mEnableEui64Filtering;
 
     uint8_t mAnnounceChannel;
     uint8_t mPreviousChannel;

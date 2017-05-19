@@ -39,15 +39,15 @@
 #include <openthread-config.h>
 #endif
 
-#include "openthread/types.h"
-#include "openthread/message.h"
-#include "openthread/ip6.h"
-#include "openthread/ncp.h"
+#include <openthread/ip6.h>
+#include <openthread/message.h>
+#include <openthread/ncp.h>
+#include <openthread/types.h>
 
-#include <common/tasklet.hpp>
-#include <ncp/ncp_buffer.hpp>
-
+#include "openthread-core-config.h"
 #include "spinel.h"
+#include "common/tasklet.hpp"
+#include "ncp/ncp_buffer.hpp"
 
 namespace ot {
 
@@ -342,6 +342,7 @@ private:
     ThreadError GetPropertyHandler_PHY_CHAN(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_PHY_RSSI(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_PHY_TX_POWER(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_PHY_RX_SENSITIVITY(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_15_4_PANID(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_15_4_LADDR(uint8_t header, spinel_prop_key_t key);
@@ -396,6 +397,9 @@ private:
     ThreadError GetPropertyHandler_NET_REQUIRE_JOIN_EXISTING(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_DEBUG_TEST_ASSERT(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_DEBUG_NCP_LOG_LEVEL(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_THREAD_DISCOVERY_SCAN_JOINER_FLAG(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_THREAD_DISCOVERY_SCAN_ENABLE_FILTERING(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_THREAD_DISCOVERY_SCAN_PANID(uint8_t header, spinel_prop_key_t key);
 
 #if OPENTHREAD_FTD
     ThreadError GetPropertyHandler_THREAD_CHILD_TABLE(uint8_t header, spinel_prop_key_t key);
@@ -408,13 +412,14 @@ private:
     ThreadError GetPropertyHandler_THREAD_ROUTER_SELECTION_JITTER(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header, spinel_prop_key_t key);
-#endif
+#endif // #if OPENTHREAD_FTD
 
 #if OPENTHREAD_ENABLE_COMMISSIONER
     ThreadError GetPropertyHandler_THREAD_COMMISSIONER_ENABLED(uint8_t header, spinel_prop_key_t key);
 #endif
 
     ThreadError GetPropertyHandler_BA_PROXY_ENABLED(uint8_t header, spinel_prop_key_t key);
+
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     ThreadError GetPropertyHandler_JAM_DETECT_ENABLE(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_JAM_DETECTED(uint8_t header, spinel_prop_key_t key);
@@ -533,8 +538,19 @@ private:
                                                                       const uint8_t *value_ptr, uint16_t value_len);
     ThreadError SetPropertyHandler_THREAD_ROUTER_ROLE_ENABLED(uint8_t header, spinel_prop_key_t key,
                                                               const uint8_t *value_ptr, uint16_t value_len);
+#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+    ThreadError SetPropertyHandler_THREAD_THREAD_STEERING_DATA(uint8_t header, spinel_prop_key_t key,
+                                                               const uint8_t *value_ptr, uint16_t value_len);
 #endif
 
+#endif // #if OPENTHREAD_FTD
+
+    ThreadError SetPropertyHandler_THREAD_DISCOVERY_SCAN_JOINER_FLAG(uint8_t header, spinel_prop_key_t key,
+                                                                     const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError SetPropertyHandler_THREAD_DISCOVERY_SCAN_ENABLE_FILTERING(uint8_t header, spinel_prop_key_t key,
+                                                                          const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError SetPropertyHandler_THREAD_DISCOVERY_SCAN_PANID(uint8_t header, spinel_prop_key_t key,
+                                                               const uint8_t *value_ptr, uint16_t value_len);
     ThreadError SetPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, spinel_prop_key_t key,
                                                           const uint8_t *value_ptr, uint16_t value_len);
     ThreadError SetPropertyHandler_NET_REQUIRE_JOIN_EXISTING(uint8_t header, spinel_prop_key_t key,
@@ -638,6 +654,9 @@ private:
     uint32_t mSupportedChannelMask;
     uint32_t mChannelMask;
     uint16_t mScanPeriod;
+    bool mDiscoveryScanJoinerFlag;
+    bool mDiscoveryScanEnableFiltering;
+    uint16_t mDiscoveryScanPanId;
     Tasklet mUpdateChangedPropsTask;
     uint32_t mChangedFlags;
     bool mShouldSignalEndOfScan;

@@ -33,12 +33,12 @@
 
 #define WPP_NAME "thread_api.tmh"
 
-#include "openthread/thread.h"
+#include <openthread/thread.h>
+#include <openthread/platform/settings.h>
 
 #include "openthread-instance.h"
 #include "common/logging.hpp"
 #include "common/settings.hpp"
-#include "openthread/platform/settings.h"
 
 using namespace ot;
 
@@ -170,19 +170,20 @@ exit:
 }
 #endif
 
-const uint8_t *otThreadGetMasterKey(otInstance *aInstance, uint8_t *aKeyLength)
+const otMasterKey *otThreadGetMasterKey(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetKeyManager().GetMasterKey(aKeyLength);
+    return &aInstance->mThreadNetif.GetKeyManager().GetMasterKey();
 }
 
-ThreadError otThreadSetMasterKey(otInstance *aInstance, const uint8_t *aKey, uint8_t aKeyLength)
+ThreadError otThreadSetMasterKey(otInstance *aInstance, const otMasterKey *aKey)
 {
     ThreadError error = kThreadError_None;
 
+    VerifyOrExit(aKey != NULL, error = kThreadError_InvalidArgs);
     VerifyOrExit(aInstance->mThreadNetif.GetMle().GetDeviceState() == Mle::kDeviceStateDisabled,
                  error = kThreadError_InvalidState);
 
-    error = aInstance->mThreadNetif.GetKeyManager().SetMasterKey(aKey, aKeyLength);
+    error = aInstance->mThreadNetif.GetKeyManager().SetMasterKey(*aKey);
     aInstance->mThreadNetif.GetActiveDataset().Clear(false);
     aInstance->mThreadNetif.GetPendingDataset().Clear(false);
 
@@ -488,7 +489,8 @@ bool otThreadGetAutoStart(otInstance *aInstance)
     uint8_t autoStart = 0;
     uint16_t autoStartLength = sizeof(autoStart);
 
-    if (otPlatSettingsGet(aInstance, kKeyThreadAutoStart, 0, &autoStart, &autoStartLength) != kThreadError_None)
+    if (otPlatSettingsGet(aInstance, Settings::kKeyThreadAutoStart, 0, &autoStart, &autoStartLength) !=
+        kThreadError_None)
     {
         autoStart = 0;
     }
@@ -504,7 +506,7 @@ ThreadError otThreadSetAutoStart(otInstance *aInstance, bool aStartAutomatically
 {
 #if OPENTHREAD_CONFIG_ENABLE_AUTO_START_SUPPORT
     uint8_t autoStart = aStartAutomatically ? 1 : 0;
-    return otPlatSettingsSet(aInstance, kKeyThreadAutoStart, &autoStart, sizeof(autoStart));
+    return otPlatSettingsSet(aInstance, Settings::kKeyThreadAutoStart, &autoStart, sizeof(autoStart));
 #else
     (void)aInstance;
     (void)aStartAutomatically;
@@ -518,9 +520,10 @@ bool otThreadIsSingleton(otInstance *aInstance)
 }
 
 ThreadError otThreadDiscover(otInstance *aInstance, uint32_t aScanChannels, uint16_t aPanId, bool aJoiner,
-                             otHandleActiveScanResult aCallback, void *aCallbackContext)
+                             bool aEnableEui64Filtering, otHandleActiveScanResult aCallback, void *aCallbackContext)
 {
-    return aInstance->mThreadNetif.GetMle().Discover(aScanChannels, aPanId, aJoiner, aCallback, aCallbackContext);
+    return aInstance->mThreadNetif.GetMle().Discover(aScanChannels, aPanId, aJoiner, aEnableEui64Filtering, aCallback,
+                                                     aCallbackContext);
 }
 
 bool otThreadIsDiscoverInProgress(otInstance *aInstance)

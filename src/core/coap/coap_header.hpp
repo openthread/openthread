@@ -36,10 +36,10 @@
 
 #include "utils/wrap_string.h"
 
-#include "openthread/coap.h"
+#include <openthread/coap.h>
 
-#include <common/encoding.hpp>
-#include <common/message.hpp>
+#include "common/encoding.hpp"
+#include "common/message.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 
@@ -272,6 +272,20 @@ public:
      *
      */
     ThreadError AppendOption(const Option &aOption);
+
+    /**
+     * This method appends an unsigned integer CoAP option as specified in
+     * https://tools.ietf.org/html/rfc7252#section-3.2
+     *
+     * @param[in]  aNumber  The CoAP Option number.
+     * @param[in]  aValue   The CoAP Option unsigned integer value.
+     *
+     * @retval kThreadError_None         Successfully appended the option.
+     * @retval kThreadError_InvalidArgs  The option type is not equal or greater than the last option type.
+     * @retval kThreadError_NoBufs       The option length exceeds the buffer size.
+     *
+     */
+    ThreadError AppendUintOption(uint16_t aNumber, uint32_t aValue);
 
     /**
      * This method appends an Observe option.

@@ -35,21 +35,28 @@
 #ifndef OPENTHREADINSTANCE_H_
 #define OPENTHREADINSTANCE_H_
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include "utils/wrap_stdint.h"
 #include "utils/wrap_stdbool.h"
 
-#include <openthread-core-config.h>
+#include <openthread/types.h>
+#include <openthread/platform/logging.h>
 
-#include "openthread/types.h"
-#include "openthread/platform/logging.h"
+#include "openthread-core-config.h"
 
-#include <crypto/mbedtls.hpp>
-#include <net/ip6.hpp>
-#include <thread/thread_netif.hpp>
-#include <coap/coap_server.hpp>
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-#include <api/link_raw.hpp>
+#include "api/link_raw.hpp"
 #endif
+
+#include "coap/coap.hpp"
+#include "crypto/mbedtls.hpp"
+#include "net/ip6.hpp"
+#include "thread/thread_netif.hpp"
 
 /**
  * This type represents all the static / global variables used by OpenThread allocated in one place.
@@ -86,7 +93,7 @@ typedef struct otInstance
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
-    ot::Coap::Server mApplicationCoapServer;
+    ot::Coap::Coap mApplicationCoap;
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL

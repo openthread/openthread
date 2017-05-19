@@ -35,7 +35,8 @@
 #include <string.h>
 
 #include <openthread/platform/uart.h>
-#include <common/logging.hpp>
+
+#include "common/logging.hpp"
 
 #include "pa.h"
 #include "pti.h"

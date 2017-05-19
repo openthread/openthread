@@ -39,16 +39,17 @@
 #include <openthread-config.h>
 #endif
 
-#include "openthread/platform/radio.h"
+#include "announce_begin_server.hpp"
 
-#include <coap/coap_header.hpp>
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <common/logging.hpp>
-#include <meshcop/tlvs.hpp>
-#include <thread/announce_begin_server.hpp>
-#include <thread/thread_netif.hpp>
-#include <thread/thread_uris.hpp>
+#include <openthread/platform/radio.h>
+
+#include "coap/coap_header.hpp"
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/logging.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
+#include "thread/thread_netif.hpp"
+#include "thread/thread_uris.hpp"
 
 using ot::Encoding::BigEndian::HostSwap32;
 
@@ -63,7 +64,7 @@ AnnounceBeginServer::AnnounceBeginServer(ThreadNetif &aThreadNetif) :
     mAnnounceBegin(OPENTHREAD_URI_ANNOUNCE_BEGIN, &AnnounceBeginServer::HandleRequest, this),
     mNetif(aThreadNetif)
 {
-    mNetif.GetCoapServer().AddResource(mAnnounceBegin);
+    mNetif.GetCoap().AddResource(mAnnounceBegin);
 }
 
 otInstance *AnnounceBeginServer::GetInstance(void)
@@ -88,7 +89,7 @@ ThreadError AnnounceBeginServer::SendAnnounce(uint32_t aChannelMask, uint8_t aCo
     while ((mChannelMask & (1 << mChannel)) == 0)
     {
         mChannel++;
-        VerifyOrExit(mChannel <= kPhyMaxChannel);
+        VerifyOrExit(mChannel <= kPhyMaxChannel, error = kThreadError_InvalidArgs);
     }
 
     mTimer.Start(mPeriod);
@@ -124,10 +125,11 @@ void AnnounceBeginServer::HandleRequest(Coap::Header &aHeader, Message &aMessage
 
     SendAnnounce(channelMask.GetMask(), count.GetCount(), period.GetPeriod());
 
-    memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
-    SuccessOrExit(mNetif.GetCoapServer().SendEmptyAck(aHeader, responseInfo));
-
-    otLogInfoMeshCoP(GetInstance(), "sent announce begin response");
+    if (aHeader.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
+    {
+        SuccessOrExit(mNetif.GetCoap().SendEmptyAck(aHeader, responseInfo));
+        otLogInfoMeshCoP(GetInstance(), "sent announce begin response");
+    }
 
 exit:
     return;

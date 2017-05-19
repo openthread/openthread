@@ -35,8 +35,9 @@
 #define ICMP6_HPP_
 
 #include <openthread/types.h>
-#include <common/encoding.hpp>
-#include <net/ip6_headers.hpp>
+
+#include "common/encoding.hpp"
+#include "net/ip6_headers.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 

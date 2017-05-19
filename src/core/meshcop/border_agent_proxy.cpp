@@ -39,27 +39,26 @@
 #include <openthread-config.h>
 #endif
 
-#include <openthread/types.h>
-#include <coap/coap_header.hpp>
-#include <thread/thread_uris.hpp>
-#include <thread/thread_tlvs.hpp>
-#include <net/ip6_address.hpp>
-
 #include "border_agent_proxy.hpp"
+
+#include <openthread/types.h>
+
+#include "coap/coap_header.hpp"
+#include "net/ip6_address.hpp"
+#include "thread/thread_tlvs.hpp"
+#include "thread/thread_uris.hpp"
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
 
 namespace ot {
 namespace MeshCoP {
 
-BorderAgentProxy::BorderAgentProxy(const Ip6::Address &aMeshLocal16, Coap::Server &aCoapServer,
-                                   Coap::Client &aCoapClient):
+BorderAgentProxy::BorderAgentProxy(const Ip6::Address &aMeshLocal16, Coap::Coap &aCoap):
     mRelayReceive(OPENTHREAD_URI_RELAY_RX, &BorderAgentProxy::HandleRelayReceive, this),
     mStreamHandler(NULL),
     mContext(NULL),
     mMeshLocal16(aMeshLocal16),
-    mCoapServer(aCoapServer),
-    mCoapClient(aCoapClient)
+    mCoap(aCoap)
 {
 }
 
@@ -69,7 +68,7 @@ ThreadError BorderAgentProxy::Start(otBorderAgentProxyStreamHandler aStreamHandl
 
     VerifyOrExit(!mStreamHandler, error = kThreadError_Already);
 
-    mCoapServer.AddResource(mRelayReceive);
+    mCoap.AddResource(mRelayReceive);
     mStreamHandler = aStreamHandler;
     mContext = aContext;
 
@@ -83,7 +82,7 @@ ThreadError BorderAgentProxy::Stop(void)
 
     VerifyOrExit(mStreamHandler != NULL, error = kThreadError_Already);
 
-    mCoapServer.RemoveResource(mRelayReceive);
+    mCoap.RemoveResource(mRelayReceive);
 
     mStreamHandler = NULL;
 
@@ -148,6 +147,7 @@ ThreadError BorderAgentProxy::Send(Message &aMessage, uint16_t aLocator, uint16_
 
     VerifyOrExit(mStreamHandler != NULL, error = kThreadError_InvalidState);
 
+    messageInfo.SetSockAddr(mMeshLocal16);
     messageInfo.SetPeerAddr(mMeshLocal16);
     messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(aLocator);
     messageInfo.SetPeerPort(aPort);
@@ -155,11 +155,11 @@ ThreadError BorderAgentProxy::Send(Message &aMessage, uint16_t aLocator, uint16_
     if (aPort == kCoapUdpPort)
     {
         // this is request to server, send with client
-        error = mCoapClient.SendMessage(aMessage, messageInfo, BorderAgentProxy::HandleResponse, this);
+        error = mCoap.SendMessage(aMessage, messageInfo, BorderAgentProxy::HandleResponse, this);
     }
     else
     {
-        error = mCoapServer.SendMessage(aMessage, messageInfo);
+        error = mCoap.SendMessage(aMessage, messageInfo);
     }
 
 exit:

@@ -31,17 +31,19 @@
 * Platform abstraction for radio communication.
 */
 
-#include <utils/code_utils.h>
-#include "openthread/openthread.h"
-#include "openthread/platform/alarm.h"
-#include "openthread/platform/radio.h"
+#include <openthread/openthread.h>
+#include <openthread/platform/alarm.h>
+#include <openthread/platform/radio.h>
+
+#include "utils/code_utils.h"
+
 #include "platform-da15000.h"
 
-#include <ad_ftdf.h>
-#include <ad_ftdf_phy_api.h>
-#include <hw_rf.h>
-#include <internal.h>
-#include <regmap.h>
+#include "ad_ftdf.h"
+#include "ad_ftdf_phy_api.h"
+#include "hw_rf.h"
+#include "internal.h"
+#include "regmap.h"
 
 #define FACTORY_TEST_TIMESTAMP      (0x7F8EA08) // Register holds a timestamp of facotry test of a chip
 #define FACTORY_TESTER_ID           (0x7F8EA0C) // Register holds test machine ID used for factory test
@@ -56,6 +58,11 @@
 #define IEEE802154_FRAME_PENDING        1 << 4
 #define IEEE802154_ACK_REQUEST          1 << 5
 #define IEEE802154_DSN_OFFSET           2
+
+enum
+{
+    DA15000_RECEIVE_SENSITIVITY = -100,  // dBm
+};
 
 static otInstance *sThreadInstance;
 
@@ -500,3 +507,8 @@ void FTDF_rcvFrameTransparent(FTDF_DataLength frameLength,
     }
 }
 
+int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
+{
+    (void)aInstance;
+    return DA15000_RECEIVE_SENSITIVITY;
+}

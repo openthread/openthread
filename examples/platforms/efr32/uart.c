@@ -34,9 +34,10 @@
 
 #include <stddef.h>
 
-#include <utils/code_utils.h>
 #include <openthread/types.h>
 #include <openthread/platform/uart.h>
+
+#include "utils/code_utils.h"
 
 #include "bspconfig.h"
 #include "em_cmu.h"

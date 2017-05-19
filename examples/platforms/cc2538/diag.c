@@ -32,10 +32,10 @@
 #include <sys/time.h>
 
 #include <openthread-config.h>
-#include "openthread/openthread.h"
+#include <openthread/openthread.h>
+#include <openthread/platform/alarm.h>
+#include <openthread/platform/radio.h>
 
-#include "openthread/platform/alarm.h"
-#include "openthread/platform/radio.h"
 #include "platform-cc2538.h"
 
 /**

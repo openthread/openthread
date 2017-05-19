@@ -38,10 +38,11 @@
 #include <stdio.h>
 #include "utils/wrap_string.h"
 
-#include <openthread-core-config.h>
-#include "openthread/types.h"
-#include "openthread/instance.h"
-#include "openthread/platform/logging.h"
+#include <openthread/instance.h>
+#include <openthread/types.h>
+#include <openthread/platform/logging.h>
+
+#include "openthread-core-config.h"
 
 #ifdef WINDOWS_LOGGING
 #ifdef _KERNEL_MODE
@@ -721,6 +722,60 @@ extern "C" {
 #define otLogWarnPlat(aInstance, aFormat, ...)
 #define otLogInfoPlat(aInstance, aFormat, ...)
 #define otLogDebgPlat(aInstance, aFormat, ...)
+#endif
+
+/**
+ * @def otLogCritCoap
+ *
+ * This method generates a log with level critical for the CoAP region.
+ *
+ * @param[in]  aFormat  A pointer to the format string.
+ * @param[in]  ...      Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogWarnCoap
+ *
+ * This method generates a log with level warning for the CoAP region.
+ *
+ * @param[in]  aFormat  A pointer to the format string.
+ * @param[in]  ...      Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogInfoCoap
+ *
+ * This method generates a log with level info for the CoAP region.
+ *
+ * @param[in]  aFormat  A pointer to the format string.
+ * @param[in]  ...      Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogDebgCoap
+ *
+ * This method generates a log with level debug for the CoAP region.
+ *
+ * @param[in]  aFormat  A pointer to the format string.
+ * @param[in]  ...      Arguments for the format specification.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_COAP == 1
+#define otLogCritCoap(aInstance, aFormat, ...) otLogCrit(aInstance, kLogRegionCoap, aFormat, ## __VA_ARGS__)
+#define otLogWarnCoap(aInstance, aFormat, ...) otLogWarn(aInstance, kLogRegionCoap, aFormat, ## __VA_ARGS__)
+#define otLogInfoCoap(aInstance, aFormat, ...) otLogInfo(aInstance, kLogRegionCoap, aFormat, ## __VA_ARGS__)
+#define otLogInfoCoapErr(aInstance, aError, aFormat, ...)               \
+    otLogInfo(aInstance, kLogRegionCoap, "Error %s: " aFormat, otThreadErrorToString(aError), ## __VA_ARGS__)
+#define otLogDebgCoap(aInstance, aFormat, ...) otLogDebg(aInstance, kLogRegionCoap, aFormat, ## __VA_ARGS__)
+#else
+#define otLogCritCoap(aInstance, aFormat, ...)
+#define otLogWarnCoap(aInstance, aFormat, ...)
+#define otLogInfoCoap(aInstance, aFormat, ...)
+#define otLogInfoCoapErr(aInstance, aError, aFormat, ...)
+#define otLogDebgCoap(aInstance, aFormat, ...)
 #endif
 
 #endif // WINDOWS_LOGGING

@@ -39,14 +39,15 @@
 #include <openthread-config.h>
 #endif
 
-#include "openthread/types.h"
+#include "dhcp6_server.hpp"
 
-#include <common/code_utils.hpp>
-#include <common/encoding.hpp>
-#include <common/logging.hpp>
-#include <net/dhcp6_server.hpp>
-#include <thread/mle.hpp>
-#include <thread/thread_netif.hpp>
+#include <openthread/types.h>
+
+#include "common/code_utils.hpp"
+#include "common/encoding.hpp"
+#include "common/logging.hpp"
+#include "thread/mle.hpp"
+#include "thread/thread_netif.hpp"
 
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
 
@@ -407,7 +408,7 @@ ThreadError Dhcp6Server::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
 
         if (otIp6PrefixMatch(option.GetAddress(), &(prefix->mPrefix)) >= prefix->mLength)
         {
-            mPrefixAgentsMask |= (1 << i);;
+            mPrefixAgentsMask |= (1 << i);
             break;
         }
     }

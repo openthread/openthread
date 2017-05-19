@@ -178,6 +178,7 @@ typedef enum
     SPINEL_SCAN_STATE_IDLE              = 0,
     SPINEL_SCAN_STATE_BEACON            = 1,
     SPINEL_SCAN_STATE_ENERGY            = 2,
+    SPINEL_SCAN_STATE_DISCOVER          = 3,
 } spinel_scan_state_t;
 
 typedef enum
@@ -363,6 +364,7 @@ enum
     SPINEL_CAP_OPENTHREAD__BEGIN        = 512,
     SPINEL_CAP_MAC_WHITELIST            = (SPINEL_CAP_OPENTHREAD__BEGIN + 0),
     SPINEL_CAP_MAC_RAW                  = (SPINEL_CAP_OPENTHREAD__BEGIN + 1),
+    SPINEL_CAP_OOB_STEERING_DATA        = (SPINEL_CAP_OPENTHREAD__BEGIN + 2),
     SPINEL_CAP_OPENTHREAD__END          = 640,
 
     SPINEL_CAP_THREAD__BEGIN            = 1024,
@@ -529,6 +531,7 @@ typedef enum
     SPINEL_PROP_PHY_CCA_THRESHOLD       = SPINEL_PROP_PHY__BEGIN + 4, ///< dBm [c]
     SPINEL_PROP_PHY_TX_POWER            = SPINEL_PROP_PHY__BEGIN + 5, ///< [c]
     SPINEL_PROP_PHY_RSSI                = SPINEL_PROP_PHY__BEGIN + 6, ///< dBm [c]
+    SPINEL_PROP_PHY_RX_SENSITIVITY      = SPINEL_PROP_PHY__BEGIN + 7, ///< dBm [c]
     SPINEL_PROP_PHY__END                = 0x30,
 
     SPINEL_PROP_PHY_EXT__BEGIN          = 0x1200,
@@ -850,6 +853,47 @@ typedef enum
      */
     SPINEL_PROP_THREAD_BA_PROXY_STREAM  = SPINEL_PROP_THREAD_EXT__BEGIN + 18,
 
+    /// Thread "joiner" flag used during discovery scan operation
+    /** Format `b`
+     *
+     * This property defines the Joiner Flag value in the Discovery Request TLV.
+     *
+     * Default value is `false`.
+     */
+    SPINEL_PROP_THREAD_DISCOVERY_SCAN_JOINER_FLAG
+                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 19,
+
+    /// Enable EUI64 filtering for discovery scan operation.
+    /** Format `b`
+     *
+     * Default value is `false`
+     */
+    SPINEL_PROP_THREAD_DISCOVERY_SCAN_ENABLE_FILTERING
+                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 20,
+
+    /// PANID used for Discovery scan operation (used for PANID filtering).
+    /** Format: `S`
+     *
+     * Default value is 0xffff (Broadcast PAN) to disable PANID filtering
+     *
+     */
+    SPINEL_PROP_THREAD_DISCOVERY_SCAN_PANID
+                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 21,
+
+    /// Thread (out of band) steering data for MLE Discovery Response.
+    /** Format `E` - Write only
+     *
+     * Required capability: SPINEL_CAP_OOB_STEERING_DATA.
+     *
+     * Writing to this property allows to set/update the the MLE Discovery Response steering data out of band.
+     *
+     *  - All zeros to clear the steering data (indicating that there is no steering data).
+     *  - All 0xFFs to set steering data/bloom filter to accept/allow all.
+     *  - A specific EUI64 which is then added to current steering data/bloom filter.
+     *
+     */
+    SPINEL_PROP_THREAD_STEERING_DATA    = SPINEL_PROP_THREAD_EXT__BEGIN + 22,
+
     SPINEL_PROP_THREAD_EXT__END         = 0x1600,
 
     SPINEL_PROP_IPV6__BEGIN             = 0x60,
@@ -1121,8 +1165,8 @@ typedef enum
      *      `S`, (MleBuffers)             The number of buffers in the MLE send queue.
      *      `S`, (ArpMessages)            The number of messages in the ARP send queue.
      *      `S`, (ArpBuffers)             The number of buffers in the ARP send queue.
-     *      `S`, (CoapClientMessages)     The number of messages in the CoAP client send queue.
-     *      `S`, (CoapClientBuffers)      The number of buffers in the CoAP client send queue.
+     *      `S`, (CoapMessages)           The number of messages in the CoAP send queue.
+     *      `S`, (CoapBuffers)            The number of buffers in the CoAP send queue.
      */
     SPINEL_PROP_MSG_BUFFER_COUNTERS     = SPINEL_PROP_CNTR__BEGIN + 400,
 
@@ -1269,6 +1313,11 @@ typedef char spinel_datatype_t;
                                         SPINEL_DATATYPE_UTF8_S /* network name */                       \
                                         SPINEL_DATATYPE_DATA_WLEN_S /* xpanid */
 
+#define SPINEL_NET_DATATYPE_MAC_SCAN_RESULT_V2_S                                                        \
+                                        SPINEL_NET_DATATYPE_MAC_SCAN_RESULT_V1_S                        \
+                                        SPINEL_DATATYPE_DATA_WLEN_S /* steering data */
+
+
 #define SPINEL_MAX_UINT_PACKED          2097151
 
 SPINEL_API_EXTERN spinel_ssize_t spinel_datatype_pack(uint8_t *data_out, spinel_size_t data_len,
@@ -1294,6 +1343,8 @@ SPINEL_API_EXTERN const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key
 SPINEL_API_EXTERN const char *spinel_net_role_to_cstr(uint8_t net_role);
 
 SPINEL_API_EXTERN const char *spinel_status_to_cstr(spinel_status_t status);
+
+SPINEL_API_EXTERN const char *spinel_capability_to_cstr(unsigned int capability);
 
 // ----------------------------------------------------------------------------
 

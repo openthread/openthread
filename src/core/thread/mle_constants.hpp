@@ -65,6 +65,7 @@ enum
     kMaxResponseDelay              = 1000,  ///< Maximum delay before responding to a multicast request
     kMaxChildIdRequestTimeout      = 5000,  ///< Maximum delay for receiving a Child ID Request
     kMaxChildUpdateResponseTimeout = 2000,  ///< Maximum delay for receiving a Child Update Response
+    kMinTimeout                    = (((kMaxChildKeepAliveAttempts + 1) * kUnicastRetransmissionDelay) / 1000),  ///< Minimum timeout(s)
 };
 
 enum
@@ -100,8 +101,8 @@ enum
     kMaxLeaderToRouterTimeout   = 90,               ///< INFINITE_COST_TIMEOUT (seconds)
     kReedAdvertiseInterval      = 570,              ///< REED_ADVERTISEMENT_INTERVAL (seconds)
     kReedAdvertiseJitter        = 60,               ///< REED_ADVERTISEMENT_JITTER (seconds)
-    kMleEndDeviceTimeout        = 240,              ///< MLE_END_DEVICE_TIMEOUT (seconds)
     kLeaderWeight               = 64,               ///< Default leader weight for the Thread Network Partition
+    kMleEndDeviceTimeout        = OPENTHREAD_CONFIG_DEFAULT_CHILD_TIMEOUT,  ///< MLE_END_DEVICE_TIMEOUT (seconds)
 };
 
 enum

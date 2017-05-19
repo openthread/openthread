@@ -41,15 +41,15 @@
 #include <openthread-config.h>
 #endif
 
-#include <openthread/types.h>
 #include <openthread/message.h>
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @addtogroup dns  DNS
+ * @addtogroup api-dns
  *
  * @brief
  *   This module includes functions that control DNS communication.

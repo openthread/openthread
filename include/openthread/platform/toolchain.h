@@ -27,8 +27,7 @@
  */
 
 /**
- * @defgroup toolchain Toolchain
- * @ingroup platform
+ * @addtogroup plat-toolchain
  *
  * @brief
  *   This module defines a toolchain abstraction layer through macros.
@@ -85,9 +84,16 @@ extern "C" {
  *
  */
 
+/**
+ * @def OT_TOOL_ALIGN
+ *
+ * Compiler-specific alignment modifier.
+ *
+ */
+
 // =========== TOOLCHAIN SELECTION : START ===========
 
-#if defined(__GNUC__) || defined(__clang__) || defined(__CC_ARM)
+#if defined(__GNUC__) || defined(__clang__) || defined(__CC_ARM) || defined(__TI_ARM__)
 
 // https://gcc.gnu.org/onlinedocs/gcc/Common-Variable-Attributes.html
 // http://www.keil.com/support/man/docs/armcc/armcc_chr1359124973480.htm
@@ -143,6 +149,20 @@ extern "C" {
 #endif
 
 // =========== TOOLCHAIN SELECTION : END ===========
+
+/**
+ * @def OTAPI
+ *
+ * Compiler-specific modifier for public API declarations.
+ *
+ */
+
+/**
+ * @def OTCALL
+ *
+ * Compiler-specific modifier to export functions in a DLL.
+ *
+ */
 
 #ifdef _MSC_VER
 

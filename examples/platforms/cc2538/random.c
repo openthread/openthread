@@ -32,12 +32,12 @@
  *
  */
 
-#include "openthread/types.h"
-#include "openthread/platform/radio.h"
-#include "openthread/platform/random.h"
+#include <openthread/types.h>
+#include <openthread/platform/radio.h>
+#include <openthread/platform/random.h>
 
-#include <utils/code_utils.h>
 #include "platform-cc2538.h"
+#include "utils/code_utils.h"
 
 static void generateRandom(uint8_t *aOutput, uint16_t aOutputLength)
 {

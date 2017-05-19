@@ -35,9 +35,9 @@
 #ifndef MESHCOP_DATASET_MANAGER_FTD_HPP_
 #define MESHCOP_DATASET_MANAGER_FTD_HPP_
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <coap/coap_server.hpp>
+#include "coap/coap.hpp"
 
 namespace ot {
 

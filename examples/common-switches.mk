@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2016-2017, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,26 +26,62 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+ifeq ($(BA_PROXY),1)
+configure_OPTIONS              += --enable-border-agent-proxy
+endif
 
-EXTRA_DIST              = \
-    __init__.py           \
-    codec.py              \
-    config.py             \
-    const.py              \
-    hdlc.py               \
-    stream.py             \
-    pcap.py               \
-    tun.py                \
-    util.py               \
-    $(NULL)
+ifeq ($(CERT_LOG),1)
+configure_OPTIONS              += --enable-cert-log
+endif
 
-EXTRA_DIST             += \
-    tests.py              \
-    test_codec.py         \
-    test_hdlc.py          \
-    test_stream.py        \
-    test_sniffer.py       \
-    $(NULL)
+ifeq ($(COMMISSIONER),1)
+configure_OPTIONS              += --enable-commissioner
+endif
 
-include $(abs_top_nlbuild_autotools_dir)/automake/post.am
+ifeq ($(COVERAGE),1)
+configure_OPTIONS              += --enable-coverage
+endif
+
+ifeq ($(DEBUG),1)
+configure_OPTIONS              += --enable-debug --enable-optimization=no
+endif
+
+ifeq ($(DHCP6_CLIENT),1)
+configure_OPTIONS              += --enable-dhcp6-client
+endif
+
+ifeq ($(DHCP6_SERVER),1)
+configure_OPTIONS              += --enable-dhcp6-server
+endif
+
+ifeq ($(DEFAULT_LOGGING),1)
+configure_OPTIONS              += --enable-default-logging
+endif
+
+ifeq ($(DISABLE_DOC),1)
+configure_OPTIONS              += --disable-docs
+endif
+
+ifeq ($(DNS_CLIENT),1)
+configure_OPTIONS              += --enable-dns-client
+endif
+
+ifeq ($(JAM_DETECTION),1)
+configure_OPTIONS              += --enable-jam-detection
+endif
+
+ifeq ($(JOINER),1)
+configure_OPTIONS              += --enable-joiner
+endif
+
+ifeq ($(LEGACY),1)
+configure_OPTIONS              += --enable-legacy
+endif
+
+ifeq ($(MAC_WHITELIST),1)
+configure_OPTIONS              += --enable-mac-whitelist
+endif
+
+ifeq ($(COAP),1)
+configure_OPTIONS              += --enable-application-coap
+endif

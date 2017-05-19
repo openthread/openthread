@@ -36,10 +36,10 @@
 
 #include "utils/wrap_string.h"
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <common/encoding.hpp>
-#include <common/message.hpp>
+#include "common/encoding.hpp"
+#include "common/message.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
@@ -54,6 +54,14 @@ OT_TOOL_PACKED_BEGIN
 class Tlv
 {
 public:
+    /**
+     * Default constructor.
+     *
+     */
+    Tlv(void):
+        mType(0),
+        mLength(0) {}
+
     /**
      * This method returns the Type value.
      *

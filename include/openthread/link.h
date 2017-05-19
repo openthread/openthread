@@ -35,15 +35,15 @@
 #ifndef OPENTHREAD_LINK_H_
 #define OPENTHREAD_LINK_H_
 
-#include "openthread/types.h"
-#include "platform/radio.h"
+#include <openthread/types.h>
+#include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @addtogroup link  Link
+ * @addtogroup api-link-link
  *
  * @brief
  *   This module includes functions that control link-layer configuration.
@@ -171,9 +171,9 @@ OTAPI uint8_t OTCALL otLinkGetChannel(otInstance *aInstance);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aChannel  The IEEE 802.15.4 channel.
  *
- * @retval  kThreadErrorNone           Successfully set the channel.
- * @retval  kThreadErrorInvalidArgs    If @p aChnanel is not in the range [11, 26].
- * @retrval kThreadError_InvalidState  Thread protocols are enabled.
+ * @retval  kThreadErrorNone          Successfully set the channel.
+ * @retval  kThreadErrorInvalidArgs   If @p aChnanel is not in the range [11, 26].
+ * @retval kThreadError_InvalidState  Thread protocols are enabled.
  *
  * @sa otLinkGetChannel
  */
@@ -475,7 +475,7 @@ OTAPI void OTCALL otLinkClearBlacklist(otInstance *aInstance);
  * Enable MAC Blacklist filtering.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @parma[in]  aEnabled   TRUE to enable the blacklist, FALSE otherwise.
+ * @param[in]  aEnabled   TRUE to enable the blacklist, FALSE otherwise.
  *
  * @sa otLinkAddBlacklist
  * @sa otLinkRemoveBlacklist

@@ -37,15 +37,14 @@
 
 #include <stdint.h>
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @defgroup alarm Alarm
- * @ingroup platform
+ * @addtogroup plat-alarm
  *
  * @brief
  *   This module includes the platform abstraction for the alarm service.

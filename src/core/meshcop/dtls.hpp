@@ -34,12 +34,7 @@
 #ifndef DTLS_HPP_
 #define DTLS_HPP_
 
-#include "openthread/types.h"
-
-#include <common/message.hpp>
-#include <common/timer.hpp>
-#include <crypto/sha256.hpp>
-#include <meshcop/tlvs.hpp>
+#include <openthread/types.h>
 
 #include <mbedtls/ssl.h>
 #include <mbedtls/entropy.h>
@@ -47,6 +42,11 @@
 #include <mbedtls/error.h>
 #include <mbedtls/certs.h>
 #include <mbedtls/ssl_cookie.h>
+
+#include "common/message.hpp"
+#include "common/timer.hpp"
+#include "crypto/sha256.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
 
 namespace ot {
 

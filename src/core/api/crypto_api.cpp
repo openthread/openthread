@@ -31,12 +31,12 @@
  *   This file implements the OpenThread Crypto API.
  */
 
-#include "openthread/crypto.h"
+#include <openthread/crypto.h>
 
-#include "common/debug.hpp"
 #include "common/code_utils.hpp"
-#include "crypto/hmac_sha256.hpp"
+#include "common/debug.hpp"
 #include "crypto/aes_ccm.hpp"
+#include "crypto/hmac_sha256.hpp"
 
 using namespace ot::Crypto;
 

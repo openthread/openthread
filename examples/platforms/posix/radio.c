@@ -28,8 +28,8 @@
 
 #include "platform-posix.h"
 
-#include "openthread/platform/diag.h"
-#include "openthread/platform/radio.h"
+#include <openthread/platform/diag.h>
+#include <openthread/platform/radio.h>
 
 #include "utils/code_utils.h"
 
@@ -73,6 +73,11 @@ enum
     IEEE802154_KEY_ID_MODE_MASK   = 3 << 3,
 
     IEEE802154_MACCMD_DATA_REQ    = 4,
+};
+
+enum
+{
+    POSIX_RECEIVE_SENSITIVITY = -100,  // dBm
 };
 
 OT_TOOL_PACKED_BEGIN
@@ -748,4 +753,10 @@ void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
 {
     (void)aInstance;
     (void)aPower;
+}
+
+int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
+{
+    (void)aInstance;
+    return POSIX_RECEIVE_SENSITIVITY;
 }

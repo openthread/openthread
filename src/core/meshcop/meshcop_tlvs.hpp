@@ -37,12 +37,13 @@
 
 #include "utils/wrap_string.h"
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <common/encoding.hpp>
-#include <common/message.hpp>
-#include <common/tlvs.hpp>
-#include <meshcop/timestamp.hpp>
+#include "common/crc16.hpp"
+#include "common/encoding.hpp"
+#include "common/message.hpp"
+#include "common/tlvs.hpp"
+#include "meshcop/timestamp.hpp"
 
 using ot::Encoding::Reverse32;
 using ot::Encoding::BigEndian::HostSwap16;
@@ -436,7 +437,7 @@ public:
      * @returns The Network Master Key value.
      *
      */
-    const uint8_t *GetNetworkMasterKey(void) const { return mNetworkMasterKey; }
+    const otMasterKey &GetNetworkMasterKey(void) const { return mNetworkMasterKey; }
 
     /**
      * This method sets the Network Master Key value.
@@ -444,12 +445,12 @@ public:
      * @param[in]  aNetworkMasterKey  A pointer to the Network Master Key value.
      *
      */
-    void SetNetworkMasterKey(const uint8_t *aNetworkMasterKey) {
-        memcpy(mNetworkMasterKey, aNetworkMasterKey, sizeof(mNetworkMasterKey));
+    void SetNetworkMasterKey(const otMasterKey &aNetworkMasterKey) {
+        mNetworkMasterKey = aNetworkMasterKey;
     }
 
 private:
-    uint8_t mNetworkMasterKey[16];
+    otMasterKey mNetworkMasterKey;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -629,6 +630,23 @@ public:
      *
      */
     void SetBit(uint8_t aBit) { mSteeringData[GetLength() - 1 - (aBit / 8)] |= 1 << (aBit % 8); }
+
+    /**
+     * Ths method indicates whether or not the SteeringData is all zeros.
+     *
+     * @retval TRUE   If the SteeringData is all zeros.
+     * @retval FALSE  If the SteeringData isn't all zeros.
+     *
+     */
+    bool IsCleared(void) const;
+
+    /**
+     * This method computes the Bloom Filter.
+     *
+     * @param[in]  aExtAddress  Extended address
+     *
+     */
+    void ComputeBloomFilter(otExtAddress *aExtAddress);
 
 private:
     uint8_t mSteeringData[OT_STEERING_DATA_MAX_LENGTH];

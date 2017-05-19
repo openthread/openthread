@@ -34,13 +34,14 @@
 #ifndef TOPOLOGY_HPP_
 #define TOPOLOGY_HPP_
 
-#include <openthread-core-config.h>
 #include <openthread/platform/random.h>
-#include <mac/mac_frame.hpp>
-#include <net/ip6.hpp>
-#include <thread/mle_tlvs.hpp>
-#include <thread/link_quality.hpp>
-#include <common/message.hpp>
+
+#include "openthread-core-config.h"
+#include "common/message.hpp"
+#include "mac/mac_frame.hpp"
+#include "net/ip6.hpp"
+#include "thread/link_quality.hpp"
+#include "thread/mle_tlvs.hpp"
 
 namespace ot {
 
@@ -86,7 +87,7 @@ public:
      * Check if the neighbor/child is in valid state or if it is being restored.
      * When in these states messages can be sent to and/or received from the neighbor/child.
      *
-     * @returns `true` if the neighbor is in valid, restored, or being restored states, `false` otherwise.
+     * @returns TRUE if the neighbor is in valid, restored, or being restored states, FALSE otherwise.
      *
      */
     bool IsStateValidOrRestoring(void) const { return (mState == kStateValid) || (mState == kStateRestored); }
@@ -371,6 +372,28 @@ public:
     Ip6::Address &GetIp6Address(uint8_t aIndex) { return mIp6Address[aIndex]; }
 
     /**
+     * This method searches for a given IPv6 address in the child's IPv6 address list and provides the index of the
+     * address in the list if it is found.
+     *
+     * @param[in]  aAddress           The IPv6 address to search for in the IPv6 address list.
+     * @param[out] aIndex             Pointer to variable where the index of address is provided if address is found in
+     *                                the list. @p aIndex can be set NULL if index is not required.
+     *
+     * @retval kThreadError_None      Successfully found the address in IPv6 address list and updated @p aIndex.
+     * @retval kThreadError_NotFound  Could not find the address in the list.
+     *
+     */
+    ThreadError FindIp6Address(const Ip6::Address &aAddress, uint8_t *aIndex) const;
+
+    /**
+     * This method removes the address at index @p aIndex.
+     *
+     * @param[in] aIndex   The index into the IPv6 address list.
+     *
+     */
+    void RemoveIp6Address(uint8_t aIndex);
+
+    /**
      * This method gets the child timeout.
      *
      * @returns The child timeout.
@@ -525,7 +548,7 @@ public:
     void SetIndirectDataSequenceNumber(uint8_t aDsn) { mIndirectDsn = aDsn; }
 
     /**
-     * This method indicates whether or not to source match on the source address.
+     * This method indicates whether or not to source match on the short address.
      *
      * @returns TRUE if using the short address, FALSE if using the extended address.
      *
@@ -533,7 +556,7 @@ public:
     bool IsIndirectSourceMatchShort(void) const { return mUseShortAddress; }
 
     /**
-     * This method sets whether or not to source match on the source address.
+     * This method sets whether or not to source match on the short address.
      *
      * @param[in]  aShort  TRUE if using the short address, FALSE if using the extended address.
      *
@@ -617,6 +640,30 @@ public:
      */
     const Mac::Address &GetMacAddress(Mac::Address &aMacAddress) const;
 
+#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+
+    /**
+     * This method increments the number of seconds since last supervision of the child.
+     *
+     */
+    void IncrementSecondsSinceLastSupervision(void) { mSecondsSinceSupervision++; }
+
+    /**
+     * This method returns the number of seconds since last supervision of the child (last message to the child)
+     *
+     * @returns Number of seconds since last supervision of the child.
+     *
+     */
+    uint16_t GetSecondsSinceLastSupervision(void) const { return mSecondsSinceSupervision; }
+
+    /**
+     * This method resets the number of seconds since last supervision of the child to zero.
+     *
+     */
+    void ResetSecondsSinceLastSupervision(void) { mSecondsSinceSupervision = 0; }
+
+#endif // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+
 private:
     Ip6::Address mIp6Address[kMaxIp6AddressPerChild];  ///< Registered IPv6 addresses
     uint32_t     mTimeout;                             ///< Child timeout
@@ -637,6 +684,11 @@ private:
     uint16_t     mQueuedMessageCount : 13;             ///< Number of queued indirect messages for the child.
     bool         mUseShortAddress : 1;                 ///< Indicates whether to use short or extended address.
     bool         mSourceMatchPending : 1;              ///< Indicates whether or not pending to add to src match table.
+
+#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+    uint16_t     mSecondsSinceSupervision;             ///< Number of seconds since last supervision of the child.
+#endif // OPENTHREAD_ENABLE_CHILD_SUPERVISION
+
 };
 
 /**

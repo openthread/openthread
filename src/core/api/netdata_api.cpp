@@ -31,7 +31,7 @@
  *   This file implements the OpenThread Network Data API.
  */
 
-#include "openthread/netdata.h"
+#include <openthread/netdata.h>
 
 #include "openthread-instance.h"
 
@@ -136,6 +136,26 @@ ThreadError otNetDataRemoveRoute(otInstance *aInstance, const otIp6Prefix *aPref
 {
     return aInstance->mThreadNetif.GetNetworkDataLocal().RemoveHasRoutePrefix(aPrefix->mPrefix.mFields.m8,
                                                                               aPrefix->mLength);
+}
+
+ThreadError otNetDataGetNextRoute(otInstance *aInstance, bool aLocal, otNetworkDataIterator *aIterator,
+                                  otExternalRouteConfig *aConfig)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aIterator && aConfig, error = kThreadError_InvalidArgs);
+
+    if (aLocal)
+    {
+        error = aInstance->mThreadNetif.GetNetworkDataLocal().GetNextExternalRoute(aIterator, aConfig);
+    }
+    else
+    {
+        error = aInstance->mThreadNetif.GetNetworkDataLeader().GetNextExternalRoute(aIterator, aConfig);
+    }
+
+exit:
+    return error;
 }
 
 ThreadError otNetDataRegister(otInstance *aInstance)

@@ -33,31 +33,32 @@
 
 #if OPENTHREAD_FTD
 
+#define WPP_NAME "network_data_leader_ftd.tmh"
+
 #ifdef OPENTHREAD_CONFIG_FILE
 #include OPENTHREAD_CONFIG_FILE
 #else
 #include <openthread-config.h>
 #endif
 
-#define WPP_NAME "network_data_leader_ftd.tmh"
+#include "network_data_leader.hpp"
 
-#include "openthread/platform/random.h"
+#include <openthread/platform/random.h>
 
-#include <coap/coap_header.hpp>
-#include <common/debug.hpp>
-#include <common/logging.hpp>
-#include <common/code_utils.hpp>
-#include <common/encoding.hpp>
-#include <common/message.hpp>
-#include <common/timer.hpp>
-#include <mac/mac_frame.hpp>
-#include <meshcop/meshcop.hpp>
-#include <thread/mle_router.hpp>
-#include <thread/network_data_leader.hpp>
-#include <thread/thread_netif.hpp>
-#include <thread/thread_tlvs.hpp>
-#include <thread/thread_uris.hpp>
-#include <thread/lowpan.hpp>
+#include "coap/coap_header.hpp"
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/encoding.hpp"
+#include "common/logging.hpp"
+#include "common/message.hpp"
+#include "common/timer.hpp"
+#include "mac/mac_frame.hpp"
+#include "meshcop/meshcop.hpp"
+#include "thread/lowpan.hpp"
+#include "thread/mle_router.hpp"
+#include "thread/thread_netif.hpp"
+#include "thread/thread_tlvs.hpp"
+#include "thread/thread_uris.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 
@@ -85,16 +86,16 @@ void Leader::Reset(void)
 
 void Leader::Start(void)
 {
-    mNetif.GetCoapServer().AddResource(mServerData);
-    mNetif.GetCoapServer().AddResource(mCommissioningDataGet);
-    mNetif.GetCoapServer().AddResource(mCommissioningDataSet);
+    mNetif.GetCoap().AddResource(mServerData);
+    mNetif.GetCoap().AddResource(mCommissioningDataGet);
+    mNetif.GetCoap().AddResource(mCommissioningDataSet);
 }
 
 void Leader::Stop(void)
 {
-    mNetif.GetCoapServer().RemoveResource(mServerData);
-    mNetif.GetCoapServer().RemoveResource(mCommissioningDataGet);
-    mNetif.GetCoapServer().RemoveResource(mCommissioningDataSet);
+    mNetif.GetCoap().RemoveResource(mServerData);
+    mNetif.GetCoap().RemoveResource(mCommissioningDataGet);
+    mNetif.GetCoap().RemoveResource(mCommissioningDataSet);
 }
 
 void Leader::IncrementVersion(void)
@@ -176,7 +177,7 @@ void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
                             networkData.GetTlvs(), networkData.GetLength());
     }
 
-    SuccessOrExit(mNetif.GetCoapServer().SendEmptyAck(aHeader, aMessageInfo));
+    SuccessOrExit(mNetif.GetCoap().SendEmptyAck(aHeader, aMessageInfo));
 
     otLogInfoNetData(GetInstance(), "Sent network data registration acknowledgment");
 
@@ -323,7 +324,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Header &aRequestHeader, co
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
 
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(mNetif.GetCoapServer(), responseHeader)) != NULL,
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(mNetif.GetCoap(), responseHeader)) != NULL,
                  error = kThreadError_NoBufs);
 
     for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
@@ -367,7 +368,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Header &aRequestHeader, co
         message->SetLength(message->GetLength() - 1);
     }
 
-    SuccessOrExit(error = mNetif.GetCoapServer().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = mNetif.GetCoap().SendMessage(*message, aMessageInfo));
 
     otLogInfoMeshCoP(GetInstance(), "sent commissioning dataset get response");
 
@@ -390,14 +391,14 @@ void Leader::SendCommissioningSetResponse(const Coap::Header &aRequestHeader, co
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
 
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(mNetif.GetCoapServer(), responseHeader)) != NULL,
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(mNetif.GetCoap(), responseHeader)) != NULL,
                  error = kThreadError_NoBufs);
 
     state.Init();
     state.SetState(aState);
     SuccessOrExit(error = message->Append(&state, sizeof(state)));
 
-    SuccessOrExit(error = mNetif.GetCoapServer().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = mNetif.GetCoap().SendMessage(*message, aMessageInfo));
 
     otLogInfoMeshCoP(GetInstance(), "sent commissioning dataset set response");
 

@@ -34,11 +34,10 @@
 #ifndef BORDER_AGENT_PROXY_HPP_
 #define BORDER_AGENT_PROXY_HPP_
 
-#include <openthread-core-config.h>
 #include <openthread/border_agent_proxy.h>
 
-#include <coap/coap_client.hpp>
-#include <coap/coap_server.hpp>
+#include "openthread-core-config.h"
+#include "coap/coap.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -50,11 +49,10 @@ public:
      * This constructor initializes the border agent proxy.
      *
      * @param[in]   aMeshLocal16    A reference to the Mesh Local Routing Locator.
-     * @param[in]   aCoapServer     A reference to the Management CoAP Server.
-     * @param[in]   aCoapClient     A reference to the CoAP Client.
+     * @param[in]   aCoap           A reference to the Management CoAP Service.
      *
      */
-    BorderAgentProxy(const Ip6::Address &aMeshLocal16, Coap::Server &aCoapServer, Coap::Client &aCoapClient);
+    BorderAgentProxy(const Ip6::Address &aMeshLocal16, Coap::Coap &aCoap);
 
     /**
      * This method enables the border agent proxy service.
@@ -114,8 +112,7 @@ private:
     void *mContext;
 
     const Ip6::Address &mMeshLocal16;
-    Coap::Server &mCoapServer;
-    Coap::Client &mCoapClient;
+    Coap::Coap &mCoap;
 };
 
 }  // namespace MeshCoP

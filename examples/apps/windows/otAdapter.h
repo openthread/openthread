@@ -296,39 +296,31 @@ public:
         String^ get()
         {
             constexpr char hexmap[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-            uint8_t keyLen;
-            auto key = otThreadGetMasterKey(DeviceInstance, &keyLen);
+            auto key = otThreadGetMasterKey(DeviceInstance);
             WCHAR szKey[OT_MASTER_KEY_SIZE * 2 + 1] = { 0 };
-            for (uint8_t i = 0; i < keyLen; i++)
+            for (uint8_t i = 0; i < OT_MASTER_KEY_SIZE; i++)
             {
-                szKey[2 * i]     = hexmap[(key[i] & 0xF0) >> 4];
-                szKey[2 * i + 1] = hexmap[key[i] & 0x0F];
+                szKey[2 * i]     = hexmap[(key->m8[i] & 0xF0) >> 4];
+                szKey[2 * i + 1] = hexmap[key->m8[i] & 0x0F];
             }
             otFreeMemory(key);
             return ref new String(szKey);
         }
         void set(String^ value)
         {
-            uint8_t key[OT_MASTER_KEY_SIZE];
+            otMasterKey key;
             uint8_t keyLen = 0;
-            if (value->Length() % 2 == 0)
+            for (uint32_t i = 0; i < value->Length() - 1; i+=2)
             {
-                for (uint32_t i = 0; i < value->Length(); i+=2)
-                {
-                    key[keyLen++] = (uint8_t)((charToValue(value->Data()[i]) << 4) |
-                        charToValue(value->Data()[i + 1]));
-                }
+                key.m8[keyLen++] = (uint8_t)((charToValue(value->Data()[i]) << 4) |
+                    charToValue(value->Data()[i + 1]));
             }
-            else
+            if (keyLen * 2 == value->Length() - 1)
             {
-                key[keyLen++] = (uint8_t)(charToValue(value->Data()[0]));
-                for (uint32_t i = 1; i < value->Length(); i += 2)
-                {
-                    key[keyLen++] = (uint8_t)((charToValue(value->Data()[i]) << 4) |
-                        charToValue(value->Data()[i + 1]));
-                }
+                key.m8[keyLen++] = (uint8_t)(charToValue(value->Data()[value->Length()-1])) << 4;
             }
-            ThrowOnFailure(otThreadSetMasterKey(DeviceInstance, key, keyLen));
+            memset(key.m8 + keyLen, 0, sizeof(key) - keyLen);
+            ThrowOnFailure(otThreadSetMasterKey(DeviceInstance, &key));
         }
     }
 

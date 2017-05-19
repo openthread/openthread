@@ -36,9 +36,9 @@
 
 #include "utils/wrap_string.h"
 
-#include <thread/mle.hpp>
-#include <thread/mle_tlvs.hpp>
-#include <thread/thread_tlvs.hpp>
+#include "thread/mle.hpp"
+#include "thread/mle_tlvs.hpp"
+#include "thread/thread_tlvs.hpp"
 
 namespace ot {
 namespace Mle {
@@ -69,6 +69,7 @@ public:
 
     uint8_t GetRouteCost(uint16_t) const { return 0; }
     uint8_t GetLinkCost(uint16_t) { return 0; }
+    uint8_t GetCost(uint16_t) { return 0; }
 
     uint8_t GetRouterIdSequence(void) const { return 0; }
 
@@ -121,6 +122,12 @@ public:
 
     void FillConnectivityTlv(ConnectivityTlv &) { }
     void FillRouteTlv(RouteTlv &) { }
+
+    ThreadError SendChildUpdateRequest(void) { return Mle::SendChildUpdateRequest(); }
+
+#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+    ThreadError SetSteeringData(otExtAddress *) { return kThreadError_NotImplemented; };
+#endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
 
 private:
     ThreadError HandleDetachStart(void) { return kThreadError_None; }

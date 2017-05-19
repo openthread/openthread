@@ -29,18 +29,18 @@
 #include "platform-posix.h"
 
 #include <assert.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <termios.h>
 #include <unistd.h>
-#include <errno.h>
-#include <signal.h>
 
-#include "openthread/platform/uart.h"
+#include <openthread/platform/uart.h>
 
-#include <utils/code_utils.h>
+#include "utils/code_utils.h"
 
 #ifdef OPENTHREAD_TARGET_LINUX
 #include <sys/prctl.h>

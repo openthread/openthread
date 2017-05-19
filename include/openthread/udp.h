@@ -35,15 +35,15 @@
 #ifndef OPENTHREAD_UDP_H_
 #define OPENTHREAD_UDP_H_
 
-#include "openthread/types.h"
-#include "openthread/message.h"
+#include <openthread/message.h>
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @addtogroup udp  UDP
+ * @addtogroup api-udp
  *
  * @brief
  *   This module includes functions that control UDP communication.

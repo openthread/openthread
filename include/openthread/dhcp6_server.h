@@ -35,21 +35,21 @@
 #ifndef OPENTHREAD_DHCP6_SERVER_H_
 #define OPENTHREAD_DHCP6_SERVER_H_
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @addtogroup core-dhcp6-server
+ * @addtogroup api-dhcp6
  *
  * @{
  *
  */
 
 /**
- * Update updates DHCP Agents and DHCP Alocs.
+ * Updates DHCP Agents and DHCP Alocs.
  *
  * @param[in]     aInstance      A pointer to an OpenThread instance.
  *

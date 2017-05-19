@@ -34,16 +34,16 @@
 #ifndef JOINER_HPP_
 #define JOINER_HPP_
 
-#include "openthread/joiner.h"
+#include <openthread/joiner.h>
 
-#include <coap/coap_header.hpp>
-#include <coap/coap_server.hpp>
-#include <coap/secure_coap_client.hpp>
-#include <common/message.hpp>
-#include <common/crc16.hpp>
-#include <net/udp6.hpp>
-#include <meshcop/dtls.hpp>
-#include <meshcop/tlvs.hpp>
+#include "coap/coap.hpp"
+#include "coap/coap_header.hpp"
+#include "coap/coap_secure.hpp"
+#include "common/crc16.hpp"
+#include "common/message.hpp"
+#include "meshcop/dtls.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
+#include "net/udp6.hpp"
 
 namespace ot {
 
@@ -142,8 +142,8 @@ private:
     otJoinerCallback mCallback;
     void *mContext;
 
-    Crc16 mCcitt;
-    Crc16 mAnsi;
+    uint16_t mCcitt;
+    uint16_t mAnsi;
 
     uint8_t mJoinerRouterChannel;
     uint16_t mJoinerRouterPanId;

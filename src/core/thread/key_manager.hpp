@@ -36,10 +36,10 @@
 
 #include "utils/wrap_stdint.h"
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <common/timer.hpp>
-#include <crypto/hmac_sha256.hpp>
+#include "common/timer.hpp"
+#include "crypto/hmac_sha256.hpp"
 
 namespace ot {
 
@@ -83,26 +83,23 @@ public:
     void Stop(void);
 
     /**
-     * This method returns a pointer to the Thread Master Key
+     * This method returns a reference to the Thread Master Key
      *
-     * @param[out]  aKeyLength  A pointer where the key length value will be placed.
-     *
-     * @returns A pointer to the Thread Master Key.
+     * @returns A reference to the Thread Master Key.
      *
      */
-    const uint8_t *GetMasterKey(uint8_t *aKeyLength) const;
+    const otMasterKey &GetMasterKey(void) const;
 
     /**
      * This method sets the Thread Master Key.
      *
-     * @param[in]  aKey        A pointer to the Thread Master Key.
-     * @param[in]  aKeyLength  The length of @p aKey.
+     * @param[in]  aKey        A reference to the Thread Master Key.
      *
      * @retval kThreadError_None         Successfully set the Thread Master Key.
      * @retval kThreadError_InvalidArgs  The @p aKeyLength value was invalid.
      *
      */
-    ThreadError SetMasterKey(const void *aKey, uint8_t aKeyLength);
+    ThreadError SetMasterKey(const otMasterKey &aKey);
 
     /**
      * This method returns a pointer to the PSKc.
@@ -344,8 +341,7 @@ private:
 
     ThreadNetif &mNetif;
 
-    uint8_t mMasterKey[kMaxKeyLength];
-    uint8_t mMasterKeyLength;
+    otMasterKey mMasterKey;
 
     uint32_t mKeySequence;
     uint8_t mKey[Crypto::HmacSha256::kHashSize];

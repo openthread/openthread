@@ -35,14 +35,14 @@
 #ifndef MESHCOP_DATASET_MANAGER_HPP_
 #define MESHCOP_DATASET_MANAGER_HPP_
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <coap/coap_server.hpp>
-#include <common/timer.hpp>
-#include <meshcop/dataset.hpp>
-#include <net/udp6.hpp>
-#include <thread/mle.hpp>
-#include <thread/network_data_leader.hpp>
+#include "coap/coap.hpp"
+#include "common/timer.hpp"
+#include "meshcop/dataset.hpp"
+#include "net/udp6.hpp"
+#include "thread/mle.hpp"
+#include "thread/network_data_leader.hpp"
 
 namespace ot {
 

@@ -325,6 +325,11 @@ extern "C" {
         (void)aPower;
     }
 
+    int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
+    {
+        (void)aInstance;
+        return 0;
+    }
     //
     // Random
     //

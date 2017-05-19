@@ -35,11 +35,21 @@
 #ifndef NCP_H_
 #define NCP_H_
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * @addtogroup api-ncp
+ *
+ * @brief
+ *   This module includes functions that control the Thread stack's execution.
+ *
+ * @{
+ *
+ */
 
 /**
  * Initialize the NCP.
@@ -122,11 +132,10 @@ typedef void (*otNcpHandlerSetLegacyUlaPrefix)(const uint8_t *aUlaPrefix);
  */
 typedef struct otNcpLegacyHandlers
 {
-    otNcpHandlerStartLegacy         mStartLegacy;
-    otNcpHandlerStopLegacy          mStopLegacy;
-    otNcpHandlerJoinLegacyNode      mJoinLegacyNode;
-    otNcpHandlerSetLegacyUlaPrefix  mSetLegacyUlaPrefix;
-
+    otNcpHandlerStartLegacy         mStartLegacy;         ///< Start handler
+    otNcpHandlerStopLegacy          mStopLegacy;          ///< Stop handler
+    otNcpHandlerJoinLegacyNode      mJoinLegacyNode;      ///< Join handler
+    otNcpHandlerSetLegacyUlaPrefix  mSetLegacyUlaPrefix;  ///< Set ULA handler
 } otNcpLegacyHandlers;
 
 /**
@@ -154,6 +163,10 @@ void otNcpHandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix);
  */
 void otNcpRegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers);
 
+/**
+ * @}
+ *
+ */
 
 #ifdef __cplusplus
 }  // extern "C"

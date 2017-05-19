@@ -36,7 +36,7 @@
 
 #include <stdarg.h>
 
-#include <cli/cli_server.hpp>
+#include "cli/cli_server.hpp"
 
 namespace ot {
 namespace Cli {

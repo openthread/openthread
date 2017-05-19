@@ -26,7 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define WPP_NAME "secure_coap_server.tmh"
+#define WPP_NAME "coap_secure.tmh"
 
 #ifdef OPENTHREAD_CONFIG_FILE
 #include OPENTHREAD_CONFIG_FILE
@@ -34,52 +34,54 @@
 #include <openthread-config.h>
 #endif
 
-#include <coap/secure_coap_server.hpp>
-#include <common/logging.hpp>
-#include <meshcop/dtls.hpp>
-#include <thread/thread_netif.hpp>
+#include "coap_secure.hpp"
 
-#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#include "common/logging.hpp"
+#include "meshcop/dtls.hpp"
+#include "thread/thread_netif.hpp"
+
+#if OPENTHREAD_ENABLE_DTLS
 
 /**
  * @file
- *   This file implements the secure CoAP server.
+ *   This file implements the secure CoAP agent.
  */
 
 namespace ot {
 namespace Coap {
 
-SecureServer::SecureServer(ThreadNetif &aNetif, uint16_t aPort):
-    Server(aNetif, aPort, &SecureServer::Send, &SecureServer::Receive),
-    mTransmitCallback(NULL),
-    mContext(NULL),
-    mNetif(aNetif),
+CoapSecure::CoapSecure(ThreadNetif &aNetif):
+    Coap(aNetif),
+    mConnectedCallback(NULL),
+    mConnectedContext(NULL),
+    mTransportCallback(NULL),
+    mTransportContext(NULL),
     mTransmitMessage(NULL),
-    mTransmitTask(aNetif.GetIp6().mTaskletScheduler, &SecureServer::HandleUdpTransmit, this)
+    mTransmitTask(aNetif.GetIp6().mTaskletScheduler, &CoapSecure::HandleUdpTransmit, this)
 {
 }
 
-ThreadError SecureServer::Start(TransportCallback aCallback, void *aContext)
+ThreadError CoapSecure::Start(uint16_t aPort, TransportCallback aCallback, void *aContext)
 {
     ThreadError error = kThreadError_None;
-    mTransmitCallback = aCallback;
-    mContext = aContext;
+    mTransportCallback = aCallback;
+    mTransportContext = aContext;
 
-    // Passing mTransmitCallback means that we do not want to use socket
+    // Passing mTransportCallback means that we do not want to use socket
     // to transmit/receive messages, so do not open it in that case.
-    if (mTransmitCallback == NULL)
+    if (mTransportCallback == NULL)
     {
-        error = Server::Start();
+        error = Coap::Start(aPort);
     }
 
     return error;
 }
 
-ThreadError SecureServer::Stop()
+ThreadError CoapSecure::Stop(void)
 {
-    if (mNetif.GetDtls().IsStarted())
+    if (IsConnectionActive())
     {
-        mNetif.GetDtls().Stop();
+        Disconnect();
     }
 
     if (mTransmitMessage != NULL)
@@ -88,36 +90,75 @@ ThreadError SecureServer::Stop()
         mTransmitMessage = NULL;
     }
 
-    mTransmitCallback = NULL;
-    mContext = NULL;
+    mTransportCallback = NULL;
+    mTransportContext = NULL;
 
-    otLogFuncExit();
-
-    return Server::Stop();
+    return Coap::Stop();
 }
 
-bool SecureServer::IsConnectionActive(void)
+ThreadError CoapSecure::Connect(const Ip6::MessageInfo &aMessageInfo, ConnectedCallback aCallback, void *aContext)
+{
+    mPeerAddress = aMessageInfo;
+    mConnectedCallback = aCallback;
+    mConnectedContext = aContext;
+
+    return mNetif.GetDtls().Start(true, &CoapSecure::HandleDtlsConnected, &CoapSecure::HandleDtlsReceive,
+                                  &CoapSecure::HandleDtlsSend, this);
+}
+
+bool CoapSecure::IsConnectionActive(void)
 {
     return mNetif.GetDtls().IsStarted();
-};
-
-ThreadError SecureServer::Send(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    return static_cast<SecureServer *>(aContext)->Send(aMessage, aMessageInfo);
 }
 
-ThreadError SecureServer::Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+bool CoapSecure::IsConnected(void)
+{
+    return mNetif.GetDtls().IsConnected();
+}
+
+ThreadError CoapSecure::Disconnect(void)
+{
+    return mNetif.GetDtls().Stop();
+}
+
+MeshCoP::Dtls &CoapSecure::GetDtls(void)
+{
+    return mNetif.GetDtls();
+}
+
+ThreadError CoapSecure::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
+{
+    return mNetif.GetDtls().SetPsk(aPsk, aPskLength);
+}
+
+ThreadError CoapSecure::SendMessage(Message &aMessage, otCoapResponseHandler aHandler, void *aContext)
+{
+    ThreadError error = kThreadError_None;
+
+    otLogFuncEntry();
+
+    VerifyOrExit(IsConnected(), error = kThreadError_InvalidState);
+
+    error = Coap::SendMessage(aMessage, mPeerAddress, aHandler, aContext);
+
+exit:
+    otLogFuncExitErr(error);
+    return error;
+}
+
+ThreadError CoapSecure::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
+                                    otCoapResponseHandler aHandler, void *aContext)
+{
+    return Coap::SendMessage(aMessage, aMessageInfo, aHandler, aContext);
+}
+
+ThreadError CoapSecure::Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     (void)aMessageInfo;
     return mNetif.GetDtls().Send(aMessage, aMessage.GetLength());
 }
 
-void SecureServer::Receive(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    return static_cast<SecureServer *>(aContext)->Receive(aMessage, aMessageInfo);
-}
-
-void SecureServer::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void CoapSecure::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     otLogFuncEntry();
 
@@ -155,36 +196,34 @@ exit:
     otLogFuncExit();
 }
 
-ThreadError SecureServer::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
+void CoapSecure::HandleDtlsConnected(void *aContext, bool aConnected)
 {
-    return mNetif.GetDtls().SetPsk(aPsk, aPskLength);
+    return static_cast<CoapSecure *>(aContext)->HandleDtlsConnected(aConnected);
 }
 
-void SecureServer::HandleDtlsConnected(void *aContext, bool aConnected)
+void CoapSecure::HandleDtlsConnected(bool aConnected)
 {
-    return static_cast<SecureServer *>(aContext)->HandleDtlsConnected(aConnected);
+    if (mConnectedCallback != NULL)
+    {
+        mConnectedCallback(aConnected, mConnectedContext);
+    }
 }
 
-void SecureServer::HandleDtlsConnected(bool aConnected)
+void CoapSecure::HandleDtlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength)
 {
-    (void)aConnected;
+    return static_cast<CoapSecure *>(aContext)->HandleDtlsReceive(aBuf, aLength);
 }
 
-void SecureServer::HandleDtlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength)
+void CoapSecure::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
 {
-    return static_cast<SecureServer *>(aContext)->HandleDtlsReceive(aBuf, aLength);
-}
-
-void SecureServer::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
-{
-    Message *message;
+    Message *message = NULL;
 
     otLogFuncEntry();
 
     VerifyOrExit((message = mNetif.GetIp6().mMessagePool.New(Message::kTypeIp6, 0)) != NULL);
     SuccessOrExit(message->Append(aBuf, aLength));
 
-    ProcessReceivedMessage(*message, mPeerAddress);
+    Coap::Receive(*message, mPeerAddress);
 
 exit:
 
@@ -196,12 +235,12 @@ exit:
     otLogFuncExit();
 }
 
-ThreadError SecureServer::HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType)
+ThreadError CoapSecure::HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType)
 {
-    return static_cast<SecureServer *>(aContext)->HandleDtlsSend(aBuf, aLength, aMessageSubType);
+    return static_cast<CoapSecure *>(aContext)->HandleDtlsSend(aBuf, aLength, aMessageSubType);
 }
 
-ThreadError SecureServer::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType)
+ThreadError CoapSecure::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType)
 {
     ThreadError error = kThreadError_None;
 
@@ -236,12 +275,12 @@ exit:
     return error;
 }
 
-void SecureServer::HandleUdpTransmit(void *aContext)
+void CoapSecure::HandleUdpTransmit(void *aContext)
 {
-    return static_cast<SecureServer *>(aContext)->HandleUdpTransmit();
+    return static_cast<CoapSecure *>(aContext)->HandleUdpTransmit();
 }
 
-void SecureServer::HandleUdpTransmit(void)
+void CoapSecure::HandleUdpTransmit(void)
 {
     ThreadError error = kThreadError_None;
 
@@ -249,9 +288,9 @@ void SecureServer::HandleUdpTransmit(void)
 
     VerifyOrExit(mTransmitMessage != NULL, error = kThreadError_NoBufs);
 
-    if (mTransmitCallback)
+    if (mTransportCallback)
     {
-        SuccessOrExit(error = mTransmitCallback(mContext, *mTransmitMessage, mPeerAddress));
+        SuccessOrExit(error = mTransportCallback(mTransportContext, *mTransmitMessage, mPeerAddress));
     }
     else
     {
@@ -273,4 +312,4 @@ exit:
 }  // namespace Coap
 }  // namespace ot
 
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif // OPENTHREAD_ENABLE_DTLS

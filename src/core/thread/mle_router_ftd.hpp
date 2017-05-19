@@ -36,18 +36,18 @@
 
 #include "utils/wrap_string.h"
 
-#include <coap/coap_header.hpp>
-#include <coap/coap_server.hpp>
-#include <coap/coap_client.hpp>
-#include <common/timer.hpp>
-#include <common/trickle_timer.hpp>
-#include <mac/mac_frame.hpp>
-#include <net/icmp6.hpp>
-#include <net/udp6.hpp>
-#include <thread/mle.hpp>
-#include <thread/mle_tlvs.hpp>
-#include <thread/thread_tlvs.hpp>
-#include <thread/topology.hpp>
+#include "coap/coap.hpp"
+#include "coap/coap_header.hpp"
+#include "common/timer.hpp"
+#include "common/trickle_timer.hpp"
+#include "mac/mac_frame.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
+#include "net/icmp6.hpp"
+#include "net/udp6.hpp"
+#include "thread/mle.hpp"
+#include "thread/mle_tlvs.hpp"
+#include "thread/thread_tlvs.hpp"
+#include "thread/topology.hpp"
 
 namespace ot {
 namespace Mle {
@@ -64,18 +64,6 @@ class NetworkDataLeader;
  *
  * @{
  */
-
-/**
-* This structure represents the child information for persistent storage.
-*
-*/
-struct ChildInfo
-{
-    Mac::ExtAddress  mExtAddress;    ///< Extended Address
-    uint32_t         mTimeout;       ///< Timeout
-    uint16_t         mRloc16;        ///< RLOC16
-    uint8_t          mMode;          ///< The MLE device mode
-};
 
 /**
  * This class implements MLE functionality required by the Thread Router and Leader roles.
@@ -274,6 +262,16 @@ public:
      *
      */
     uint8_t GetLinkCost(uint8_t aRouterId);
+
+    /**
+     * This method returns the minimum cost to the given router.
+     *
+     * @param[in]  aRloc16  The short address of the given router.
+     *
+     * @returns The minimum cost to the given router (via direct link or forwarding).
+     *
+     */
+    uint8_t GetCost(uint16_t aRloc16);
 
     /**
      * This method returns the ROUTER_SELECTION_JITTER value.
@@ -643,6 +641,30 @@ public:
      */
     void FillRouteTlv(RouteTlv &aTlv);
 
+    /**
+      * This method generates an MLE Child Update Request message to be sent to the parent.
+      *
+      * @retval kThreadError_None    Successfully generated an MLE Child Update Request message.
+      * @retval kThreadError_NoBufs  Insufficient buffers to generate the MLE Child Update Request message.
+      *
+      */
+    ThreadError SendChildUpdateRequest(void) { return Mle::SendChildUpdateRequest(); }
+
+#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+    /**
+     * This method sets steering data out of band
+     *
+     * @param[in]  aExtAddress  Value used to set steering data
+     *                          All zeros clears steering data
+     *                          All 0xFFs sets steering data to 0xFF
+     *                          Anything else is used to compute the bloom filter
+     *
+     * @retval kThreadError_None  Steering data was set
+     *
+     */
+    ThreadError SetSteeringData(otExtAddress *aExtAddress);
+#endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+
 private:
     enum
     {
@@ -765,6 +787,11 @@ private:
 
     uint8_t mRouterSelectionJitter;         ///< The variable to save the assigned jitter value.
     uint8_t mRouterSelectionJitterTimeout;  ///< The Timeout prior to request/release Router ID.
+
+#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+    MeshCoP::SteeringDataTlv mSteeringData;
+#endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+
 };
 
 }  // namespace Mle

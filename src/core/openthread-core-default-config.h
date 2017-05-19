@@ -180,6 +180,16 @@
 #endif  // OPENTHREAD_CONFIG_MAX_CHILDREN
 
 /**
+ * @def OPENTHREAD_CONFIG_DEFAULT_CHILD_TIMEOUT
+ *
+ * The default child timeout value (in seconds).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DEFAULT_CHILD_TIMEOUT
+#define OPENTHREAD_CONFIG_DEFAULT_CHILD_TIMEOUT                 240
+#endif // OPENTHREAD_CONFIG_DEFAULT_CHILD_TIMEOUT
+
+/**
  * @def OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD
  *
  * The minimum number of supported IPv6 address registrations per child.
@@ -540,6 +550,16 @@
 #endif  // OPENTHREAD_CONFIG_LOG_PLATFORM
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_COAP
+ *
+ * Define to enable COAP logging.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_COAP
+#define OPENTHREAD_CONFIG_LOG_COAP                              1
+#endif  // OPENTHREAD_CONFIG_LOG_COAP
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
  *
  * Define to prepend the log level to all log messages
@@ -713,6 +733,71 @@
  */
 #ifndef OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE
 #define OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE                     (2048 * sizeof(void *))
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE_NO_DTLS
+ *
+ * The size of mbedTLS heap buffer when DTLS is disabled.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE_NO_DTLS
+#define OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE_NO_DTLS             384
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+ *
+ * Enable setting steering data out of band.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#define OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB          0
+#endif
+
+/*
+ * @def OPENTHREAD_CONFIG_CHILD_SUPERVISION_INTERVAL
+ *
+ * The default supervision interval in seconds used by parent. Set to zero to disable the supervision process on the
+ * parent.
+ *
+ * Applicable only if child supervision feature is enabled (i.e., `OPENTHREAD_ENABLE_CHILD_SUPERVISION ` is set).
+ *
+ * Child supervision feature provides a mechanism for parent to ensure that a message is sent to each sleepy child
+ * within the supervision interval. If there is no transmission to the child within the supervision interval, child
+ * supervisor will enqueue and send a supervision message (a data message with empty payload) to the child.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CHILD_SUPERVISION_INTERVAL
+#define OPENTHREAD_CONFIG_CHILD_SUPERVISION_INTERVAL            129
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_SUPERVISION_CHECK_TIMEOUT
+ *
+ * The default supervision check timeout interval (in seconds) used by a device in child state. Set to zero to disable
+ * the supervision check process on the child.
+ *
+ * Applicable only if child supervision feature is enabled (i.e., `OPENTHREAD_ENABLE_CHILD_SUPERVISION` is set).
+ *
+ * If the sleepy child does not hear from its parent within the specified timeout interval, it initiates the re-attach
+ * process (MLE Child Update Request/Response exchange with its parent).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SUPERVISION_CHECK_TIMEOUT
+#define OPENTHREAD_CONFIG_SUPERVISION_CHECK_TIMEOUT             190
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_SUPERVISION_MSG_NO_ACK_REQUEST
+ *
+ * Define as 1 to clear/disable 15.4 ack request in the MAC header of a supervision message.
+ *
+ * Applicable only if child supervision feature is enabled (i.e., `OPENTHREAD_ENABLE_CHILD_SUPERVISION` is set).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SUPERVISION_MSG_NO_ACK_REQUEST
+#define OPENTHREAD_CONFIG_SUPERVISION_MSG_NO_ACK_REQUEST       0
 #endif
 
 #endif  // OPENTHREAD_CORE_DEFAULT_CONFIG_H_

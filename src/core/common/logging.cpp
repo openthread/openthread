@@ -39,9 +39,9 @@
 #include <openthread-config.h>
 #endif
 
-#include "openthread/openthread.h"
+#include "logging.hpp"
 
-#include <common/logging.hpp>
+#include <openthread/openthread.h>
 
 #ifndef WINDOWS_LOGGING
 #define otLogDump(aFormat, ...)                                             \
@@ -208,6 +208,10 @@ const char *otLogRegionToString(otLogRegion aRegion)
 
     case kLogRegionMle:
         retval = "-MLE-----";
+        break;
+
+    case kLogRegionCoap:
+        retval = "-COAP----";
         break;
 
     case kLogRegionArp:
@@ -395,6 +399,18 @@ const char *otThreadErrorToString(ThreadError aError)
 
     case kThreadError_ReassemblyTimeout:
         retval = "ReassemblyTimeout";
+        break;
+
+    case kThreadError_NotTmf:
+        retval = "NotTmf";
+        break;
+
+    case kThreadError_NonLowpanDataFrame:
+        retval = "NonLowpanDataFrame";
+        break;
+
+    case kThreadError_DisabledFeature:
+        retval = "DisabledFeature";
         break;
 
     case kThreadError_Error:

@@ -39,22 +39,24 @@
 #include <openthread-config.h>
 #endif
 
+#include "mac.hpp"
+
 #include "utils/wrap_string.h"
 
-#include "openthread/platform/random.h"
-#include "openthread/platform/usec-alarm.h"
+#include <openthread/platform/random.h>
+#include <openthread/platform/usec-alarm.h>
 
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <common/encoding.hpp>
-#include <common/logging.hpp>
-#include <crypto/aes_ccm.hpp>
-#include <crypto/sha256.hpp>
-#include <mac/mac.hpp>
-#include <mac/mac_frame.hpp>
-#include <thread/mle_router.hpp>
-#include <thread/thread_netif.hpp>
-#include <openthread-instance.h>
+#include "openthread-instance.h"
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/encoding.hpp"
+#include "common/logging.hpp"
+#include "crypto/aes_ccm.hpp"
+#include "crypto/sha256.hpp"
+#include "mac/mac_frame.hpp"
+#include "thread/link_quality.hpp"
+#include "thread/mle_router.hpp"
+#include "thread/thread_netif.hpp"
 
 using ot::Encoding::BigEndian::HostSwap64;
 
@@ -122,43 +124,38 @@ Mac::Mac(ThreadNetif &aThreadNetif):
 #endif
     mReceiveTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleReceiveTimer, this),
     mNetif(aThreadNetif),
+    mShortAddress(kShortAddrInvalid),
+    mPanId(kPanIdBroadcast),
+    mChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL),
+    mMaxTransmitPower(OPENTHREAD_CONFIG_DEFAULT_MAX_TRANSMIT_POWER),
+    mSendHead(NULL),
+    mSendTail(NULL),
+    mReceiveHead(NULL),
+    mReceiveTail(NULL),
+    mState(kStateIdle),
+    mBeaconSequence(static_cast<uint8_t>(otPlatRandomGet())),
+    mDataSequence(static_cast<uint8_t>(otPlatRandomGet())),
+    mRxOnWhenIdle(false),
+    mCsmaAttempts(0),
+    mTransmitAttempts(0),
+    mTransmitBeacon(false),
+    mBeaconsEnabled(false),
+    mPendingScanRequest(kScanTypeNone),
+    mScanChannel(kPhyMinChannel),
+    mScanChannels(0xff),
+    mScanDuration(0),
+    mScanContext(NULL),
+    mActiveScanHandler(NULL), // initialize mActiveScanHandler and mEnergyScanHandler union
+    mEnergyScanCurrentMaxRssi(kInvalidRssiValue),
     mEnergyScanSampleRssiTask(aThreadNetif.GetIp6().mTaskletScheduler, &Mac::HandleEnergyScanSampleRssi, this),
+    mPcapCallback(NULL),
+    mPcapCallbackContext(NULL),
     mWhitelist(),
-    mBlacklist()
+    mBlacklist(),
+    mTxFrame(static_cast<Frame *>(otPlatRadioGetTransmitBuffer(aThreadNetif.GetInstance()))),
+    mKeyIdMode2FrameCounter(0)
 {
-    mState = kStateIdle;
-
-    mRxOnWhenIdle = false;
-    mCsmaAttempts = 0;
-    mTransmitAttempts = 0;
-    mTransmitBeacon = false;
-    mBeaconsEnabled = false;
-
-    mPendingScanRequest = kScanTypeNone;
-    mScanChannel = kPhyMinChannel;
-    mScanChannels = 0xff;
-    mScanDuration = 0;
-    mScanContext = NULL;
-    mActiveScanHandler = NULL;
-    mEnergyScanHandler = NULL;
-    mEnergyScanCurrentMaxRssi = kInvalidRssiValue;
-
-    mSendHead = NULL;
-    mSendTail = NULL;
-    mReceiveHead = NULL;
-    mReceiveTail = NULL;
-    mChannel = OPENTHREAD_CONFIG_DEFAULT_CHANNEL;
-    mMaxTransmitPower = OPENTHREAD_CONFIG_DEFAULT_MAX_TRANSMIT_POWER;
-    mPanId = kPanIdBroadcast;
-    mShortAddress = kShortAddrInvalid;
-
-    for (size_t i = 0; i < sizeof(mExtAddress); i++)
-    {
-        mExtAddress.m8[i] = static_cast<uint8_t>(otPlatRandomGet());
-    }
-
-    mExtAddress.SetGroup(false);
-    mExtAddress.SetLocal(true);
+    GenerateExtAddress(&mExtAddress);
 
     memset(&mCounters, 0, sizeof(otMacCounters));
 
@@ -166,18 +163,9 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     SetNetworkName(sNetworkNameInit);
     SetPanId(mPanId);
     SetExtAddress(mExtAddress);
-    SetShortAddress(kShortAddrInvalid);
-
-    mBeaconSequence = static_cast<uint8_t>(otPlatRandomGet());
-    mDataSequence = static_cast<uint8_t>(otPlatRandomGet());
-
-    mPcapCallback = NULL;
-    mPcapCallbackContext = NULL;
+    SetShortAddress(mShortAddress);
 
     otPlatRadioEnable(GetInstance());
-    mTxFrame = static_cast<Frame *>(otPlatRadioGetTransmitBuffer(GetInstance()));
-
-    mKeyIdMode2FrameCounter = 0;
 }
 
 otInstance *Mac::GetInstance(void)
@@ -437,6 +425,17 @@ void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
     {
         NextOperation();
     }
+}
+
+void Mac::GenerateExtAddress(ExtAddress *aExtAddress)
+{
+    for (size_t i = 0; i < sizeof(ExtAddress); i++)
+    {
+        aExtAddress->m8[i] = static_cast<uint8_t>(otPlatRandomGet());
+    }
+
+    aExtAddress->SetGroup(false);
+    aExtAddress->SetLocal(true);
 }
 
 void Mac::SetExtAddress(const ExtAddress &aExtAddress)
@@ -1417,7 +1416,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
 
     if (neighbor != NULL)
     {
-        neighbor->GetLinkInfo().AddRss(mNoiseFloor, aFrame->mPower);
+        neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), aFrame->mPower);
 
         if (aFrame->GetSecurityEnabled() == true)
         {

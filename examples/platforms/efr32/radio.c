@@ -33,14 +33,15 @@
  */
 
 #include <assert.h>
+
 #include <openthread/types.h>
 #include <openthread-config.h>
-
-#include <common/logging.hpp>
-#include <utils/code_utils.h>
 #include <openthread/platform/platform.h>
 #include <openthread/platform/radio.h>
 #include <openthread/platform/diag.h>
+
+#include "common/logging.hpp"
+#include "utils/code_utils.h"
 
 #include "em_core.h"
 #include "em_system.h"
@@ -58,6 +59,11 @@ enum
     IEEE802154_FRAME_PENDING             = 1 << 4,
     IEEE802154_ACK_REQUEST               = 1 << 5,
     IEEE802154_DSN_OFFSET                = 2,
+};
+
+enum
+{
+    EFR32_RECEIVE_SENSITIVITY = -100,  // dBm
 };
 
 static uint16_t       sPanId             = 0;
@@ -841,4 +847,10 @@ void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
 {
     (void)aInstance;
     RAIL_TxPowerSet(aPower);
+}
+
+int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
+{
+    (void)aInstance;
+    return EFR32_RECEIVE_SENSITIVITY;
 }

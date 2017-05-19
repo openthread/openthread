@@ -33,15 +33,14 @@
  */
 
 #include <openthread-config.h>
+#include <openthread/openthread.h>
+#include <openthread/platform/diag.h>
+#include <openthread/platform/platform.h>
+#include <openthread/platform/radio.h>
 
-#include "openthread/openthread.h"
-#include "openthread/platform/platform.h"
-#include "openthread/platform/radio.h"
-#include "openthread/platform/diag.h"
-
-#include <utils/code_utils.h>
-#include <common/logging.hpp>
 #include "platform-cc2538.h"
+#include "common/logging.hpp"
+#include "utils/code_utils.h"
 
 enum
 {
@@ -62,6 +61,36 @@ enum
     CC2538_LQI_BIT_MASK = 0x7f,
 };
 
+enum
+{
+    CC2538_RECEIVE_SENSITIVITY = -100, // dBm
+};
+
+typedef struct TxPowerTable
+{
+    int8_t  mTxPowerVal;
+    uint8_t mTxPowerReg;
+} TxPowerTable;
+
+// The transmit power table, the values are from SmartRF Studio 2.4.0
+static const TxPowerTable sTxPowerTable[] =
+{
+    {  7, 0xFF },
+    {  5, 0xED },
+    {  3, 0xD5 },
+    {  1, 0xC5 },
+    {  0, 0xB6 },
+    { -1, 0xB0 },
+    { -3, 0xA1 },
+    { -5, 0x91 },
+    { -7, 0x88 },
+    { -9, 0x72 },
+    { -11, 0x62 },
+    { -13, 0x58 },
+    { -15, 0x42 },
+    { -24, 0x00 },
+};
+
 static RadioPacket sTransmitFrame;
 static RadioPacket sReceiveFrame;
 static ThreadError sTransmitError;
@@ -70,6 +99,7 @@ static ThreadError sReceiveError;
 static uint8_t sTransmitPsdu[IEEE802154_MAX_LENGTH];
 static uint8_t sReceivePsdu[IEEE802154_MAX_LENGTH];
 static uint8_t sChannel = 0;
+static int8_t sTxPower = 0;
 
 static PhyState sState = kStateDisabled;
 static bool sIsReceiverEnabled = false;
@@ -112,9 +142,9 @@ void disableReceiver(void)
     }
 }
 
-void setChannel(uint8_t channel)
+void setChannel(uint8_t aChannel)
 {
-    if (sChannel != channel)
+    if (sChannel != aChannel)
     {
         bool enabled = false;
 
@@ -124,15 +154,36 @@ void setChannel(uint8_t channel)
             enabled = true;
         }
 
-        otLogInfoPlat(sInstance, "Channel=%d", channel);
+        otLogInfoPlat(sInstance, "Channel=%d", aChannel);
 
-        HWREG(RFCORE_XREG_FREQCTRL) = 11 + (channel - 11) * 5;
-        sChannel = channel;
+        HWREG(RFCORE_XREG_FREQCTRL) = 11 + (aChannel - 11) * 5;
+        sChannel = aChannel;
 
         if (enabled)
         {
             enableReceiver();
         }
+    }
+}
+
+void setTxPower(int8_t aTxPower)
+{
+    uint8_t i = 0;
+
+    if (sTxPower != aTxPower)
+    {
+        otLogInfoPlat(sInstance, "TxPower=%d", aTxPower);
+
+        for (i = sizeof(sTxPowerTable) / sizeof(TxPowerTable) - 1; i > 0; i--)
+        {
+            if (aTxPower < sTxPowerTable[i].mTxPowerVal)
+            {
+                break;
+            }
+        }
+
+        HWREG(RFCORE_XREG_TXPOWER) = sTxPowerTable[i].mTxPowerReg;
+        sTxPower = aTxPower;
     }
 }
 
@@ -147,37 +198,38 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
     }
 }
 
-void otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
+void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanid)
 {
     (void)aInstance;
 
-    otLogInfoPlat(sInstance, "PANID=%X", panid);
+    otLogInfoPlat(sInstance, "PANID=%X", aPanid);
 
-    HWREG(RFCORE_FFSM_PAN_ID0) = panid & 0xFF;
-    HWREG(RFCORE_FFSM_PAN_ID1) = panid >> 8;
+    HWREG(RFCORE_FFSM_PAN_ID0) = aPanid & 0xFF;
+    HWREG(RFCORE_FFSM_PAN_ID1) = aPanid >> 8;
 }
 
-void otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *address)
+void otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *aAddress)
 {
     (void)aInstance;
 
     otLogInfoPlat(sInstance, "ExtAddr=%X%X%X%X%X%X%X%X",
-                  address[7], address[6], address[5], address[4], address[3], address[2], address[1], address[0]);
+                  aAddress[7], aAddress[6], aAddress[5], aAddress[4], aAddress[3],
+                  aAddress[2], aAddress[1], aAddress[0]);
 
     for (int i = 0; i < 8; i++)
     {
-        ((volatile uint32_t *)RFCORE_FFSM_EXT_ADDR0)[i] = address[i];
+        ((volatile uint32_t *)RFCORE_FFSM_EXT_ADDR0)[i] = aAddress[i];
     }
 }
 
-void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t address)
+void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aAddress)
 {
     (void)aInstance;
 
-    otLogInfoPlat(sInstance, "ShortAddr=%X", address);
+    otLogInfoPlat(sInstance, "ShortAddr=%X", aAddress);
 
-    HWREG(RFCORE_FFSM_SHORT_ADDR0) = address & 0xFF;
-    HWREG(RFCORE_FFSM_SHORT_ADDR1) = address >> 8;
+    HWREG(RFCORE_FFSM_SHORT_ADDR0) = aAddress & 0xFF;
+    HWREG(RFCORE_FFSM_SHORT_ADDR1) = aAddress >> 8;
 }
 
 void cc2538RadioInit(void)
@@ -204,6 +256,9 @@ void cc2538RadioInit(void)
 
     // default: SRCMATCH.SRC_MATCH_EN(1), SRCMATCH.AUTOPEND(1),
     // SRCMATCH.PEND_DATAREQ_ONLY(1), RFCORE_XREG_FRMCTRL1_PENDING_OR(0)
+
+    HWREG(RFCORE_XREG_TXPOWER) = sTxPowerTable[0].mTxPowerReg;
+    sTxPower = sTxPowerTable[0].mTxPowerVal;
 
     otLogInfoPlat(sInstance, "Initialized", NULL);
 }
@@ -300,6 +355,7 @@ ThreadError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
         }
 
         setChannel(aPacket->mChannel);
+        setTxPower(aPacket->mPower);
 
         while ((HWREG(RFCORE_XREG_FSMSTAT1) & 1) == 0);
 
@@ -792,4 +848,10 @@ void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
     // TODO: Create a proper implementation for this driver.
     (void)aInstance;
     (void)aPower;
+}
+
+int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
+{
+    (void)aInstance;
+    return CC2538_RECEIVE_SENSITIVITY;
 }

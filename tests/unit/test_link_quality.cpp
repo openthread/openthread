@@ -26,11 +26,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "test_util.h"
-#include "openthread/openthread.h"
-#include <thread/link_quality.hpp>
-
 #include "utils/wrap_string.h"
+
+#include <openthread/openthread.h>
+
+#include "thread/link_quality.hpp"
+
+#include "test_util.h"
 
 namespace ot {
 
@@ -61,7 +63,7 @@ struct RssTestData
     uint8_t       mExpectedLinkQuality;     // Expected final link quality value.
 };
 
-static LinkQualityInfo sNoiseFloor;
+int8_t sNoiseFloor = -100;  // dBm
 
 // Checks the encoded average RSS value to match the value from GetAverageRss().
 void VerifyEncodedRssValue(LinkQualityInfo &aLinkInfo)

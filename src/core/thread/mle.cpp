@@ -31,33 +31,34 @@
  *   This file implements MLE functionality required for the Thread Child, Router and Leader roles.
  */
 
+#define WPP_NAME "mle.tmh"
+
 #ifdef OPENTHREAD_CONFIG_FILE
 #include OPENTHREAD_CONFIG_FILE
 #else
 #include <openthread-config.h>
 #endif
 
-#define WPP_NAME "mle.tmh"
+#include "mle.hpp"
 
-#include "openthread/platform/radio.h"
-#include "openthread/platform/random.h"
-#include "openthread/platform/settings.h"
+#include <openthread/platform/radio.h>
+#include <openthread/platform/random.h>
+#include <openthread/platform/settings.h>
 
-#include <thread/mle.hpp>
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <common/logging.hpp>
-#include <common/encoding.hpp>
-#include <common/settings.hpp>
-#include <crypto/aes_ccm.hpp>
-#include <mac/mac_frame.hpp>
-#include <meshcop/tlvs.hpp>
-#include <net/netif.hpp>
-#include <net/udp6.hpp>
-#include <thread/address_resolver.hpp>
-#include <thread/key_manager.hpp>
-#include <thread/mle_router.hpp>
-#include <thread/thread_netif.hpp>
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/encoding.hpp"
+#include "common/logging.hpp"
+#include "common/settings.hpp"
+#include "crypto/aes_ccm.hpp"
+#include "mac/mac_frame.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
+#include "net/netif.hpp"
+#include "net/udp6.hpp"
+#include "thread/address_resolver.hpp"
+#include "thread/key_manager.hpp"
+#include "thread/mle_router.hpp"
+#include "thread/thread_netif.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 
@@ -93,6 +94,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mDiscoverHandler(NULL),
     mDiscoverContext(NULL),
     mIsDiscoverInProgress(false),
+    mEnableEui64Filtering(false),
     mAnnounceChannel(kPhyMinChannel),
     mPreviousChannel(0),
     mPreviousPanId(Mac::kPanIdBroadcast)
@@ -274,15 +276,15 @@ ThreadError Mle::Stop(bool aClearNetworkDatasets)
 ThreadError Mle::Restore(void)
 {
     ThreadError error = kThreadError_None;
-    NetworkInfo networkInfo;
-    ParentInfo parentInfo;
+    Settings::NetworkInfo networkInfo;
+    Settings::ParentInfo parentInfo;
     uint16_t length;
 
     mNetif.GetActiveDataset().Restore();
     mNetif.GetPendingDataset().Restore();
 
     length = sizeof(networkInfo);
-    SuccessOrExit(error = otPlatSettingsGet(mNetif.GetInstance(), kKeyNetworkInfo, 0,
+    SuccessOrExit(error = otPlatSettingsGet(mNetif.GetInstance(), Settings::kKeyNetworkInfo, 0,
                                             reinterpret_cast<uint8_t *>(&networkInfo), &length));
     VerifyOrExit(length == sizeof(networkInfo), error = kThreadError_NotFound);
     VerifyOrExit(networkInfo.mDeviceState >= kDeviceStateChild, error = kThreadError_NotFound);
@@ -302,7 +304,7 @@ ThreadError Mle::Restore(void)
     if (networkInfo.mDeviceState == kDeviceStateChild)
     {
         length = sizeof(parentInfo);
-        SuccessOrExit(error = otPlatSettingsGet(mNetif.GetInstance(), kKeyParentInfo, 0,
+        SuccessOrExit(error = otPlatSettingsGet(mNetif.GetInstance(), Settings::kKeyParentInfo, 0,
                                                 reinterpret_cast<uint8_t *>(&parentInfo), &length));
         VerifyOrExit(length >= sizeof(parentInfo), error = kThreadError_Parse);
 
@@ -343,8 +345,8 @@ exit:
 ThreadError Mle::Store(void)
 {
     ThreadError error = kThreadError_None;
-    NetworkInfo networkInfo;
-    ParentInfo parentInfo;
+    Settings::NetworkInfo networkInfo;
+    Settings::ParentInfo parentInfo;
 
     VerifyOrExit(IsAttached(), error = kThreadError_InvalidState);
 
@@ -376,11 +378,11 @@ ThreadError Mle::Store(void)
         memset(&parentInfo, 0, sizeof(parentInfo));
         memcpy(&parentInfo.mExtAddress, &mParent.GetExtAddress(), sizeof(parentInfo.mExtAddress));
 
-        SuccessOrExit(error = otPlatSettingsSet(mNetif.GetInstance(), kKeyParentInfo,
+        SuccessOrExit(error = otPlatSettingsSet(mNetif.GetInstance(), Settings::kKeyParentInfo,
                                                 reinterpret_cast<uint8_t *>(&parentInfo), sizeof(parentInfo)));
     }
 
-    SuccessOrExit(error = otPlatSettingsSet(mNetif.GetInstance(), kKeyNetworkInfo,
+    SuccessOrExit(error = otPlatSettingsSet(mNetif.GetInstance(), Settings::kKeyNetworkInfo,
                                             reinterpret_cast<uint8_t *>(&networkInfo), sizeof(networkInfo)));
 
     mNetif.GetKeyManager().SetStoredMleFrameCounter(networkInfo.mMleFrameCounter);
@@ -392,8 +394,8 @@ exit:
     return error;
 }
 
-ThreadError Mle::Discover(uint32_t aScanChannels, uint16_t aPanId, bool aJoiner, DiscoverHandler aCallback,
-                          void *aContext)
+ThreadError Mle::Discover(uint32_t aScanChannels, uint16_t aPanId, bool aJoiner, bool aEnableEui64Filtering,
+                          DiscoverHandler aCallback, void *aContext)
 {
     ThreadError error = kThreadError_None;
     Message *message = NULL;
@@ -404,11 +406,13 @@ ThreadError Mle::Discover(uint32_t aScanChannels, uint16_t aPanId, bool aJoiner,
 
     VerifyOrExit(!mIsDiscoverInProgress, error = kThreadError_Busy);
 
+    mEnableEui64Filtering = aEnableEui64Filtering;
+
     mDiscoverHandler = aCallback;
     mDiscoverContext = aContext;
     mNetif.GetMeshForwarder().SetDiscoverParameters(aScanChannels);
 
-    VerifyOrExit((message = NewMleMessage()) != NULL);
+    VerifyOrExit((message = NewMleMessage()) != NULL, error = kThreadError_NoBufs);
     message->SetSubType(Message::kSubTypeMleDiscoverRequest);
     message->SetPanId(aPanId);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandDiscoveryRequest));
@@ -455,6 +459,7 @@ bool Mle::IsDiscoverInProgress(void)
 void Mle::HandleDiscoverComplete(void)
 {
     mIsDiscoverInProgress = false;
+    mEnableEui64Filtering = false;
     mDiscoverHandler(NULL, mDiscoverContext);
 }
 
@@ -584,7 +589,7 @@ ThreadError Mle::SetStateChild(uint16_t aRloc16)
 
     if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) != 0)
     {
-        mParentRequestTimer.Start(Timer::SecToMsec(mTimeout / kMaxChildKeepAliveAttempts));
+        mParentRequestTimer.Start(Timer::SecToMsec(mTimeout) - kUnicastRetransmissionDelay * kMaxChildKeepAliveAttempts);
     }
 
     if ((mDeviceMode & ModeTlv::kModeFFD) != 0)
@@ -612,9 +617,9 @@ ThreadError Mle::SetTimeout(uint32_t aTimeout)
 {
     VerifyOrExit(mTimeout != aTimeout);
 
-    if (aTimeout < 4)
+    if (aTimeout < kMinTimeout)
     {
-        aTimeout = 4;
+        aTimeout = kMinTimeout;
     }
 
     mTimeout = aTimeout;
@@ -1505,7 +1510,7 @@ ThreadError Mle::SendParentRequest(void)
         break;
     }
 
-    VerifyOrExit((message = NewMleMessage()) != NULL);
+    VerifyOrExit((message = NewMleMessage()) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandParentRequest));
     SuccessOrExit(error = AppendMode(*message, mDeviceMode));
     SuccessOrExit(error = AppendChallenge(*message, mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge)));
@@ -1552,7 +1557,7 @@ ThreadError Mle::SendChildIdRequest(void)
     Message *message;
     Ip6::Address destination;
 
-    VerifyOrExit((message = NewMleMessage()) != NULL);
+    VerifyOrExit((message = NewMleMessage()) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildIdRequest));
     SuccessOrExit(error = AppendResponse(*message, mChildIdRequest.mChallenge, mChildIdRequest.mChallengeLength));
     SuccessOrExit(error = AppendLinkFrameCounter(*message));
@@ -1598,7 +1603,7 @@ ThreadError Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t
     ThreadError error = kThreadError_None;
     Message *message;
 
-    VerifyOrExit((message = NewMleMessage()) != NULL);
+    VerifyOrExit((message = NewMleMessage()) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandDataRequest));
     SuccessOrExit(error = AppendTlvRequest(*message, aTlvs, aTlvsLength));
     SuccessOrExit(error = AppendActiveTimestamp(*message, false));
@@ -1665,7 +1670,7 @@ ThreadError Mle::SendChildUpdateRequest(void)
     mParentRequestTimer.Start(kUnicastRetransmissionDelay);
     mChildUpdateAttempts++;
 
-    VerifyOrExit((message = NewMleMessage()) != NULL);
+    VerifyOrExit((message = NewMleMessage()) != NULL, error = kThreadError_NoBufs);
     message->SetSubType(Message::kSubTypeMleChildUpdateRequest);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildUpdateRequest));
     SuccessOrExit(error = AppendMode(*message, mDeviceMode));
@@ -1733,7 +1738,7 @@ ThreadError Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs,
     Ip6::Address destination;
     Message *message;
 
-    VerifyOrExit((message = NewMleMessage()) != NULL);
+    VerifyOrExit((message = NewMleMessage()) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildUpdateResponse));
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
@@ -1794,7 +1799,7 @@ ThreadError Mle::SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce)
     Ip6::Address destination;
     Message *message;
 
-    VerifyOrExit((message = NewMleMessage()) != NULL);
+    VerifyOrExit((message = NewMleMessage()) != NULL, error = kThreadError_NoBufs);
     message->SetLinkSecurityEnabled(true);
     message->SetSubType(Message::kSubTypeMleAnnounce);
     message->SetChannel(aChannel);
@@ -2964,7 +2969,7 @@ ThreadError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::M
         }
         else
         {
-            mParentRequestTimer.Start(Timer::SecToMsec(mTimeout / kMaxChildKeepAliveAttempts));
+            mParentRequestTimer.Start(Timer::SecToMsec(mTimeout) - kUnicastRetransmissionDelay * kMaxChildKeepAliveAttempts);
             mNetif.GetMeshForwarder().SetRxOnWhenIdle(true);
         }
 
@@ -2997,14 +3002,14 @@ ThreadError Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo 
 
     otLogInfoMle(GetInstance(), "Received announce");
 
-    SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kChannel, sizeof(channel), channel));
-    VerifyOrExit(channel.IsValid());
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kChannel, sizeof(channel), channel));
+    VerifyOrExit(channel.IsValid(), error = kThreadError_Parse);
 
-    SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(timestamp), timestamp));
-    VerifyOrExit(timestamp.IsValid());
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(timestamp), timestamp));
+    VerifyOrExit(timestamp.IsValid(), error = kThreadError_Parse);
 
-    SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kPanId, sizeof(panid), panid));
-    VerifyOrExit(panid.IsValid());
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kPanId, sizeof(panid), panid));
+    VerifyOrExit(panid.IsValid(), error = kThreadError_Parse);
 
     localTimestamp = mNetif.GetActiveDataset().GetNetwork().GetTimestamp();
 
@@ -3103,8 +3108,36 @@ ThreadError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Mes
         case MeshCoP::Tlv::kSteeringData:
             aMessage.Read(offset, sizeof(steeringData), &steeringData);
             VerifyOrExit(steeringData.IsValid(), error = kThreadError_Parse);
+
+            // Pass up MLE discovery responses only if the steering data is set to all 0xFFs,
+            // or if it matches the factory set EUI64.
+            if (mEnableEui64Filtering)
+            {
+                otExtAddress mfgEUI64;
+                Crc16 ccitt(Crc16::kCcitt);
+                Crc16 ansi(Crc16::kAnsi);
+
+                // Get Factory set EUI64
+                otPlatRadioGetIeeeEui64(GetInstance(), mfgEUI64.m8);
+
+                // Compute bloom filter
+                for (size_t i = 0; i < sizeof(mfgEUI64.m8); i++)
+                {
+                    ccitt.Update(mfgEUI64.m8[i]);
+                    ansi.Update(mfgEUI64.m8[i]);
+                }
+
+                // Drop responses that don't match the bloom filter
+                if (!steeringData.GetBit(ccitt.Get() % steeringData.GetNumBits()) ||
+                    !steeringData.GetBit(ansi.Get() % steeringData.GetNumBits()))
+                {
+                    ExitNow(error = kThreadError_None);
+                }
+            }
+
             result.mSteeringData.mLength = steeringData.GetLength();
             memcpy(result.mSteeringData.m8, steeringData.GetValue(), result.mSteeringData.mLength);
+
             break;
 
         case MeshCoP::Tlv::kJoinerUdpPort:
@@ -3202,7 +3235,7 @@ bool Mle::IsAnycastLocator(const Ip6::Address &aAddress) const
     return memcmp(&mMeshLocal16, &aAddress, kRlocPrefixLength) == 0 && aAddress.mFields.m8[14] == Ip6::Address::kAloc16Mask;
 }
 
-Router *Mle::GetParent()
+Router *Mle::GetParent(void)
 {
     if ((!mParent.IsStateValidOrRestoring()) && (mParentCandidate.GetState() == Neighbor::kStateValid))
     {

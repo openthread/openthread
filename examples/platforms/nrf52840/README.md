@@ -123,6 +123,15 @@ Select the correct target device (nRF52) and the target interface "SWD".
 
 The intended log level can be set using `OPENTHREAD_CONFIG_LOG_LEVEL` define.
 
+## Disabling the Mass Storage Device
+
+Due to a known issue in Segger’s J-Link firmware, depending on your version, you might experience data corruption or drops if you use the serial port. You can avoid this issue by disabling the Mass Storage Device:
+
+ - On Linux or macOS (OS X), open JLinkExe from the terminal.
+ - On Microsoft Windows, open the J-Link Commander application.
+
+Run the following command: `MSDDisable`
+
 ## Radio driver documentation
 
 The radio driver comes with documentation that describes the operation of state
@@ -137,7 +146,8 @@ The following toolchains have been used for testing and verification:
   - gcc version 6.2.0
 
 The nRF52840 example has been verified by Nordic Semiconductor with following commits:
-  - `de48acf` - 02.03.2017 (the newest checked)
+  - `030efba` - 22.04.2017 (the newest checked)
+  - `de48acf` - 02.03.2017
   - `50db58d` - 23.01.2017
 
 # Nordic Semiconductor's nRF5 SDK for Thread
@@ -148,6 +158,8 @@ The <i>nRF5 SDK for Thread</i> includes:
  - a pre-built OpenThread stack for the Nordic nRF52840 SoC with ARM® CryptoCell-310 support,
  - unique support for DFU-over-Thread (Device Firmware Upgrade),
  - examples to demonstrate interactions between nodes performing different Thread roles with the use of OpenThread and built-in CoAP protocol,
+ - examples to demonstrate multiprotocol support and switching between BLE peripheral
+  and Thread FTD and MTD roles,
  - support for an OpenThread Network Co-Processor (NCP),
  - Border Router and cloud connectivity example,
  - Thread native commissioning with NFC example,

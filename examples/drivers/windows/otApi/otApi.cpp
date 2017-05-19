@@ -1336,6 +1336,7 @@ otThreadDiscover(
     uint32_t aScanChannels, 
     uint16_t aPanid,
     bool aJoiner,
+    bool aEnableEui64Filtering,
     otHandleActiveScanResult aCallback,
     void *aCallbackContext
     )
@@ -1347,7 +1348,7 @@ otThreadDiscover(
         aInstance->InterfaceGuid, aCallback, aCallbackContext
         );
 
-    PackedBuffer4<GUID,uint32_t,uint16_t, bool> Buffer(aInstance->InterfaceGuid, aScanChannels, aPanid, aJoiner);
+    PackedBuffer5<GUID,uint32_t,uint16_t, uint8_t, uint8_t> Buffer(aInstance->InterfaceGuid, aScanChannels, aPanid, aJoiner, aEnableEui64Filtering);
     return DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_DISCOVER, &Buffer, sizeof(Buffer), nullptr, 0));
 }
 
@@ -1597,34 +1598,22 @@ otThreadSetLinkMode(
 }
 
 OTAPI 
-const uint8_t *
+const otMasterKey *
 OTCALL
 otThreadGetMasterKey(
-    _In_ otInstance *aInstance, 
-    _Out_ uint8_t *aKeyLength
+    _In_ otInstance *aInstance
     )
 {
-    if (aInstance == nullptr || aKeyLength == nullptr) return nullptr;
+    if (aInstance == nullptr) return nullptr;
 
-    *aKeyLength = 0;
-
-    struct otMasterKeyAndLength
-    {
-        otMasterKey Key;
-        uint8_t Length;
-    };
-    otMasterKeyAndLength *Result = (otMasterKeyAndLength*)malloc(sizeof(otMasterKeyAndLength));
+    otMasterKey *Result = (otMasterKey*)malloc(sizeof(otMasterKey));
     if (Result == nullptr) return nullptr;
     if (QueryIOCTL(aInstance, IOCTL_OTLWF_OT_MASTER_KEY, Result) != ERROR_SUCCESS)
     {
         free(Result);
         return nullptr;
     }
-    else
-    {
-        *aKeyLength = Result->Length;
-    }
-    return (uint8_t*)Result;
+    return Result;
 }
 
 OTAPI
@@ -1632,18 +1621,12 @@ ThreadError
 OTCALL
 otThreadSetMasterKey(
     _In_ otInstance *aInstance, 
-    const uint8_t *aKey, 
-    uint8_t aKeyLength
+    const otMasterKey *aKey
     )
 {
     if (aInstance == nullptr) return kThreadError_InvalidArgs;
     
-    BYTE Buffer[sizeof(GUID) + sizeof(otMasterKey) + sizeof(uint8_t)];
-    memcpy_s(Buffer, sizeof(Buffer), &aInstance->InterfaceGuid, sizeof(GUID));
-    memcpy_s(Buffer + sizeof(GUID), sizeof(Buffer) - sizeof(GUID), aKey, aKeyLength);
-    memcpy_s(Buffer + sizeof(GUID) + sizeof(otMasterKey), sizeof(Buffer) - sizeof(GUID) - sizeof(otMasterKey), &aKeyLength, sizeof(aKeyLength));
-    
-    return DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_MASTER_KEY, Buffer, sizeof(Buffer), nullptr, 0));
+    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_MASTER_KEY, aKey));
 }
 
 OTAPI 

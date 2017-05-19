@@ -35,17 +35,14 @@
 #ifndef OPENTHREAD_DATASET_FTD_H_
 #define OPENTHREAD_DATASET_FTD_H_
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @addtogroup dataset  Operational Dataset
- *
- * @brief
- *   This module includes functions for Operational Dataset configuration for FTD.
+ * @addtogroup api-thread-general
  *
  * @{
  *

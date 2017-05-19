@@ -63,3 +63,10 @@ Value is the current RSSI (Received signal strength indication)
 from the radio. This value can be used in energy scans and for
 determining the ambient noise floor for the operating environment.
 
+### PROP 39: PROP_PHY_RX_SENSITIVITY {#prop-phy-rx-sensitivity}
+* Type: Read-Only
+* Packed-Encoding: `c` (int8)
+* Unit: dBm
+
+Value is the radio receive sensitivity. This value can be used as
+lower bound noise floor for link metrics computation.

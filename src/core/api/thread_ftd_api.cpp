@@ -31,12 +31,19 @@
  *   This file implements the OpenThread Thread API (FTD only).
  */
 
-#if OPENTHREAD_FTD
-
 #define WPP_NAME "thread_ftd_api.tmh"
 
-#include "openthread/thread_ftd.h"
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
 
+#if OPENTHREAD_FTD
+
+#include <openthread/thread_ftd.h>
+
+#include "openthread-core-config.h"
 #include "openthread-instance.h"
 
 using namespace ot;
@@ -234,6 +241,23 @@ ThreadError otThreadGetEidCacheEntry(otInstance *aInstance, uint8_t aIndex, otEi
     error = aInstance->mThreadNetif.GetAddressResolver().GetEntry(aIndex, *aEntry);
 
 exit:
+    return error;
+}
+
+
+ThreadError otThreadSetSteeringData(otInstance *aInstance, otExtAddress *aExtAddress)
+{
+    ThreadError error;
+
+#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+    error = aInstance->mThreadNetif.GetMle().SetSteeringData(aExtAddress);
+#else
+    (void)aInstance;
+    (void)aExtAddress;
+
+    error = kThreadError_DisabledFeature;
+#endif  // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+
     return error;
 }
 

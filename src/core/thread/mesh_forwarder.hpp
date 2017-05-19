@@ -34,19 +34,18 @@
 #ifndef MESH_FORWARDER_HPP_
 #define MESH_FORWARDER_HPP_
 
-#include <openthread-core-config.h>
+#include <openthread/types.h>
 
-#include "openthread/types.h"
-
-#include <common/tasklet.hpp>
-#include <mac/mac.hpp>
-#include <net/ip6.hpp>
-#include <thread/address_resolver.hpp>
-#include <thread/data_poll_manager.hpp>
-#include <thread/src_match_controller.hpp>
-#include <thread/lowpan.hpp>
-#include <thread/network_data_leader.hpp>
-#include <thread/topology.hpp>
+#include "openthread-core-config.h"
+#include "common/tasklet.hpp"
+#include "mac/mac.hpp"
+#include "net/ip6.hpp"
+#include "thread/address_resolver.hpp"
+#include "thread/data_poll_manager.hpp"
+#include "thread/lowpan.hpp"
+#include "thread/network_data_leader.hpp"
+#include "thread/src_match_controller.hpp"
+#include "thread/topology.hpp"
 
 namespace ot {
 
@@ -111,7 +110,9 @@ public:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval kThreadError_None  Successfully enqueued the message.
+     * @retval kThreadError_None     Successfully enqueued the message.
+     * @retval kThreadError_Already  The message was already enqueued.
+     * @retval kThreadError_Drop     The message could not be sent and should be dropped.
      *
      */
     ThreadError SendMessage(Message &aMessage);
@@ -169,15 +170,6 @@ public:
      *
      */
     void UpdateIndirectMessages(void);
-
-    /**
-     * This method sets whether or not to perform source matching on the extended or short address for Frame Pending determination.
-     *
-     * @param[in]  aChild       A reference to the child.
-     * @param[in]  aMatchShort  TRUE to match on short source address, FALSE otherwise.
-     *
-     */
-    void SetSrcMatchAsShort(Child &aChild, bool aMatchShort);
 
     /**
      * This method returns a reference to the thread network interface instance.
@@ -241,6 +233,12 @@ private:
          *
          */
         kMaxPollTriggeredTxAttempts = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_INDIRECT_POLLS,
+
+        /**
+         * Indicates whether to set/enable 15.4 ack request in the MAC header of a supervision message.
+         *
+         */
+        kSupervisionMsgAckRequest   = (OPENTHREAD_CONFIG_SUPERVISION_MSG_NO_ACK_REQUEST == 0) ? true : false,
     };
 
     enum MessageAction                   ///< Defines the action parameter in `LogMessageInfo()` method.
@@ -258,6 +256,7 @@ private:
     ThreadError GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     Message *GetDirectTransmission(void);
     Message *GetIndirectTransmission(Child &aChild);
+    ThreadError PrepareDiscoverRequest(void);
     void PrepareIndirectTransmission(Message &aMessage, const Child &aChild);
     void HandleMesh(uint8_t *aFrame, uint8_t aPayloadLength, const Mac::Address &aMacSource,
                     const ThreadMessageInfo &aMessageInfo);
@@ -271,7 +270,7 @@ private:
     ThreadError SendPoll(Message &aMessage, Mac::Frame &aFrame);
     ThreadError SendMesh(Message &aMessage, Mac::Frame &aFrame);
     ThreadError SendFragment(Message &aMessage, Mac::Frame &aFrame);
-    ThreadError SendEmptyFrame(Mac::Frame &aFrame);
+    ThreadError SendEmptyFrame(Mac::Frame &aFrame, bool aAckRequest);
     ThreadError UpdateIp6Route(Message &aMessage);
     ThreadError UpdateMeshRoute(Message &aMessage);
     ThreadError HandleDatagram(Message &aMessage, const ThreadMessageInfo &aMessageInfo,

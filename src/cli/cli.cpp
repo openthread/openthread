@@ -37,43 +37,45 @@
 #include <openthread-config.h>
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "utils/wrap_string.h"
+#include "cli.hpp"
 
 #ifdef OTDLL
 #include <assert.h>
 #endif
 
-#include "openthread/openthread.h"
-#include "openthread/commissioner.h"
-#include "openthread/joiner.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include "utils/wrap_string.h"
+
+#include <openthread/openthread.h>
+#include <openthread/commissioner.h>
+#include <openthread/joiner.h>
 
 #if OPENTHREAD_FTD
-#include "openthread/dataset_ftd.h"
-#include "openthread/thread_ftd.h"
+#include <openthread/dataset_ftd.h>
+#include <openthread/thread_ftd.h>
 #endif
 
 #ifndef OTDLL
-#include <openthread-instance.h>
-#include "openthread/diag.h"
-#include "openthread/icmp6.h"
+#include <openthread/dhcp6_client.h>
+#include <openthread/dhcp6_server.h>
+#include <openthread/diag.h>
+#include <openthread/icmp6.h>
+#include <openthread/platform/uart.h>
 
-#include <common/new.hpp>
-#include <net/ip6.hpp>
-#include "openthread/dhcp6_client.h"
-#include "openthread/dhcp6_server.h"
-#include "openthread/platform/uart.h"
+#include "openthread-instance.h"
+#include "common/new.hpp"
+#include "net/ip6.hpp"
 #endif
 
-#include <common/encoding.hpp>
-
-#include "cli.hpp"
 #include "cli_dataset.hpp"
 #include "cli_uart.hpp"
+
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 #include "cli_coap.hpp"
 #endif
+
+#include "common/encoding.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
@@ -186,6 +188,7 @@ const struct Command Interpreter::sCommands[] =
     { "singleton", &Interpreter::ProcessSingleton },
     { "state", &Interpreter::ProcessState },
     { "thread", &Interpreter::ProcessThread },
+    { "txpowermax", &Interpreter::ProcessTxPowerMax },
     { "version", &Interpreter::ProcessVersion },
     { "whitelist", &Interpreter::ProcessWhitelist },
 };
@@ -467,8 +470,8 @@ void Interpreter::ProcessBufferInfo(int argc, char *argv[])
     sServer->OutputFormat("mpl: %d %d\r\n", bufferInfo.mMplMessages, bufferInfo.mMplBuffers);
     sServer->OutputFormat("mle: %d %d\r\n", bufferInfo.mMleMessages, bufferInfo.mMleBuffers);
     sServer->OutputFormat("arp: %d %d\r\n", bufferInfo.mArpMessages, bufferInfo.mArpBuffers);
-    sServer->OutputFormat("coap client: %d %d\r\n", bufferInfo.mCoapClientMessages, bufferInfo.mCoapClientBuffers);
-    sServer->OutputFormat("coap server: %d %d\r\n", bufferInfo.mCoapServerMessages, bufferInfo.mCoapServerBuffers);
+    sServer->OutputFormat("coap: %d %d\r\n", bufferInfo.mCoapMessages, bufferInfo.mCoapBuffers);
+    sServer->OutputFormat("coap secure: %d %d\r\n", bufferInfo.mCoapSecureMessages, bufferInfo.mCoapSecureBuffers);
 
     AppendResult(kThreadError_None);
 }
@@ -770,7 +773,7 @@ void Interpreter::ProcessDiscover(int argc, char *argv[])
         scanChannels = 1 << value;
     }
 
-    SuccessOrExit(error = otThreadDiscover(mInstance, scanChannels, OT_PANID_BROADCAST, false,
+    SuccessOrExit(error = otThreadDiscover(mInstance, scanChannels, OT_PANID_BROADCAST, false, false,
                                            &Interpreter::s_HandleActiveScanResult, this));
     sServer->OutputFormat("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |\r\n");
     sServer->OutputFormat("+---+------------------+------------------+------+------------------+----+-----+-----+\r\n");
@@ -1354,10 +1357,9 @@ void Interpreter::ProcessMasterKey(int argc, char *argv[])
 
     if (argc == 0)
     {
-        uint8_t keyLength;
-        otBufferPtr key(otThreadGetMasterKey(mInstance, &keyLength));
+        otBufferPtr key(reinterpret_cast<const uint8_t *>(otThreadGetMasterKey(mInstance)));
 
-        for (int i = 0; i < keyLength; i++)
+        for (int i = 0; i < OT_MASTER_KEY_SIZE; i++)
         {
             sServer->OutputFormat("%02x", key[i]);
         }
@@ -1366,11 +1368,10 @@ void Interpreter::ProcessMasterKey(int argc, char *argv[])
     }
     else
     {
-        int keyLength;
-        uint8_t key[OT_MASTER_KEY_SIZE];
+        otMasterKey key;
 
-        VerifyOrExit((keyLength = Hex2Bin(argv[0], key, sizeof(key))) == OT_MASTER_KEY_SIZE, error = kThreadError_Parse);
-        SuccessOrExit(error = otThreadSetMasterKey(mInstance, key, static_cast<uint8_t>(keyLength)));
+        VerifyOrExit(Hex2Bin(argv[0], key.m8, sizeof(key.m8)) == OT_MASTER_KEY_SIZE, error = kThreadError_Parse);
+        SuccessOrExit(error = otThreadSetMasterKey(mInstance, &key));
     }
 
 exit:
@@ -2492,6 +2493,25 @@ void Interpreter::ProcessThread(int argc, char *argv[])
 exit:
     (void)argc;
     (void)argv;
+    AppendResult(error);
+}
+
+void Interpreter::ProcessTxPowerMax(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    long value;
+
+    if (argc == 0)
+    {
+        sServer->OutputFormat("%d dBm\r\n", otLinkGetMaxTransmitPower(mInstance));
+    }
+    else
+    {
+        SuccessOrExit(error = ParseLong(argv[0], value));
+        otLinkSetMaxTransmitPower(mInstance, static_cast<int8_t>(value));
+    }
+
+exit:
     AppendResult(error);
 }
 

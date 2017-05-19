@@ -31,7 +31,7 @@
  *   This file implements the OpenThread UDP API.
  */
 
-#include "openthread/dns.h"
+#include <openthread/dns.h>
 
 #include "openthread-instance.h"
 

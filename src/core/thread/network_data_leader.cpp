@@ -39,22 +39,23 @@
 #include <openthread-config.h>
 #endif
 
-#include "openthread/platform/random.h"
+#include "network_data_leader.hpp"
 
-#include <coap/coap_header.hpp>
-#include <common/debug.hpp>
-#include <common/logging.hpp>
-#include <common/code_utils.hpp>
-#include <common/encoding.hpp>
-#include <common/message.hpp>
-#include <common/timer.hpp>
-#include <mac/mac_frame.hpp>
-#include <thread/mle_router.hpp>
-#include <thread/network_data_leader.hpp>
-#include <thread/thread_netif.hpp>
-#include <thread/thread_tlvs.hpp>
-#include <thread/thread_uris.hpp>
-#include <thread/lowpan.hpp>
+#include <openthread/platform/random.h>
+
+#include "coap/coap_header.hpp"
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/encoding.hpp"
+#include "common/logging.hpp"
+#include "common/message.hpp"
+#include "common/timer.hpp"
+#include "mac/mac_frame.hpp"
+#include "thread/mle_router.hpp"
+#include "thread/lowpan.hpp"
+#include "thread/thread_netif.hpp"
+#include "thread/thread_tlvs.hpp"
+#include "thread/thread_uris.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 
@@ -328,8 +329,7 @@ ThreadError LeaderBase::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Addres
                     if (rvalRoute == NULL ||
                         entry->GetPreference() > rvalRoute->GetPreference() ||
                         (entry->GetPreference() == rvalRoute->GetPreference() &&
-                         mNetif.GetMle().GetRouteCost(entry->GetRloc()) <
-                         mNetif.GetMle().GetRouteCost(rvalRoute->GetRloc())))
+                         mNetif.GetMle().GetCost(entry->GetRloc()) < mNetif.GetMle().GetCost(rvalRoute->GetRloc())))
                     {
                         rvalRoute = entry;
                         rval_plen = static_cast<uint8_t>(plen);
@@ -386,7 +386,7 @@ ThreadError LeaderBase::DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16
             if (route == NULL ||
                 entry->GetPreference() > route->GetPreference() ||
                 (entry->GetPreference() == route->GetPreference() &&
-                 mNetif.GetMle().GetRouteCost(entry->GetRloc()) < mNetif.GetMle().GetRouteCost(route->GetRloc())))
+                 mNetif.GetMle().GetCost(entry->GetRloc()) < mNetif.GetMle().GetCost(route->GetRloc())))
             {
                 route = entry;
             }

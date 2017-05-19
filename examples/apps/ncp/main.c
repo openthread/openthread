@@ -32,13 +32,12 @@
 #include <openthread-config.h>
 #endif
 
-#include "openthread/openthread.h"
-#include "openthread/diag.h"
-#include "openthread/ncp.h"
-#include "openthread/platform/platform.h"
+#include <assert.h>
 
-#include <openthread-core-config.h>
-#include <common/debug.hpp>
+#include <openthread/diag.h>
+#include <openthread/ncp.h>
+#include <openthread/openthread.h>
+#include <openthread/platform/platform.h>
 
 #ifdef OPENTHREAD_MULTIPLE_INSTANCE
 void *otPlatCAlloc(size_t aNum, size_t aSize)

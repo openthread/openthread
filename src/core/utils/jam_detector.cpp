@@ -37,12 +37,13 @@
 #include <openthread-config.h>
 #endif
 
-#include "openthread/openthread.h"
-#include "openthread/platform/random.h"
+#include "jam_detector.hpp"
 
-#include <thread/thread_netif.hpp>
-#include <common/code_utils.hpp>
-#include <utils/jam_detector.hpp>
+#include <openthread/openthread.h>
+#include <openthread/platform/random.h>
+
+#include "common/code_utils.hpp"
+#include "thread/thread_netif.hpp"
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
 

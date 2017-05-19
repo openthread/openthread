@@ -34,12 +34,11 @@
 #ifndef MESHCOP_LEADER_HPP_
 #define MESHCOP_LEADER_HPP_
 
-#include <coap/coap_client.hpp>
-#include <coap/coap_server.hpp>
-#include <common/timer.hpp>
-#include <meshcop/tlvs.hpp>
-#include <net/udp6.hpp>
-#include <thread/mle.hpp>
+#include "coap/coap.hpp"
+#include "common/timer.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
+#include "net/udp6.hpp"
+#include "thread/mle.hpp"
 
 namespace ot {
 namespace MeshCoP {
