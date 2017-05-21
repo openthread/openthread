@@ -335,7 +335,7 @@ void Joiner::SendJoinerFinalize(void)
                       message->GetLength() - header.GetLength());
 #endif
 
-    mNetif.GetCoapSecure().SendMessage(*message, Joiner::HandleJoinerFinalizeResponse, this);
+    SuccessOrExit(error = mNetif.GetCoapSecure().SendMessage(*message, Joiner::HandleJoinerFinalizeResponse, this));
 
     otLogInfoMeshCoP(GetInstance(), "Sent joiner finalize");
 
