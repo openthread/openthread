@@ -144,11 +144,11 @@ void efr32RadioDeinit(void)
     RAIL_IEEE802154_Deinit();
 }
 
-void setChannel(uint8_t channel)
+void setChannel(uint8_t aChannel)
 {
     bool enabled = false;
 
-    otEXPECT(sChannel != channel);
+    otEXPECT(sChannel != aChannel);
 
     if (sIsReceiverEnabled)
     {
@@ -157,13 +157,13 @@ void setChannel(uint8_t channel)
         sIsReceiverEnabled = false;
     }
 
-    otLogInfoPlat(sInstance, "Channel=%d", channel);
+    otLogInfoPlat(sInstance, "Channel=%d", aChannel);
 
-    sChannel = channel;
+    sChannel = aChannel;
 
     if (enabled)
     {
-        if (RAIL_RxStart(channel))
+        if (RAIL_RxStart(aChannel))
         {
             assert(false);
         }
@@ -334,6 +334,7 @@ ThreadError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
 
     tx_data.dataPtr = frame;
     tx_data.dataLength = aPacket->mLength - 1;
+    RAIL_TxPowerSet(aPacket->mPower);
     setChannel(aPacket->mChannel);
     RAIL_RfIdleExt(RAIL_IDLE, true);
 
@@ -798,24 +799,24 @@ void RAILCb_RssiAverageDone(int16_t avgRssi)
     (void)avgRssi;
 }
 
-void RAILCb_RxFifoAlmostFull(uint16_t bytesAvailable)
+void RAILCb_RxFifoAlmostFull(uint16_t aBytesAvailable)
 {
-    (void)bytesAvailable;
+    (void)aBytesAvailable;
 }
 
-void RAILCb_TxFifoAlmostEmpty(uint16_t spaceAvailable)
+void RAILCb_TxFifoAlmostEmpty(uint16_t aSpaceAvailable)
 {
-    (void)spaceAvailable;
+    (void)aSpaceAvailable;
 }
 
-void *RAILCb_AllocateMemory(uint32_t size)
+void *RAILCb_AllocateMemory(uint32_t aSize)
 {
     uint8_t *pointer = NULL;
     CORE_DECLARE_IRQ_STATE;
 
     CORE_ENTER_CRITICAL();
 
-    otEXPECT(size <= (IEEE802154_MAX_LENGTH + 1 + sizeof(RAIL_RxPacketInfo_t)));
+    otEXPECT(aSize <= (IEEE802154_MAX_LENGTH + 1 + sizeof(RAIL_RxPacketInfo_t)));
 
     pointer = sReceiveBuffer;
 
@@ -824,23 +825,23 @@ exit:
     return pointer;
 }
 
-void *RAILCb_BeginWriteMemory(void *handle, uint32_t offset,
+void *RAILCb_BeginWriteMemory(void *aHandle, uint32_t aOffset,
                               uint32_t *available)
 {
     (void)available;
-    return ((uint8_t *)handle) + offset;
+    return ((uint8_t *)aHandle) + aOffset;
 }
 
-void RAILCb_EndWriteMemory(void *handle, uint32_t offset, uint32_t size)
+void RAILCb_EndWriteMemory(void *aHandle, uint32_t aOffset, uint32_t aSize)
 {
-    (void)handle;
-    (void)offset;
-    (void)size;
+    (void)aHandle;
+    (void)aOffset;
+    (void)aSize;
 }
 
-void RAILCb_FreeMemory(void *handle)
+void RAILCb_FreeMemory(void *aHandle)
 {
-    (void)handle;
+    (void)aHandle;
 }
 
 void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
