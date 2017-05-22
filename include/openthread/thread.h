@@ -240,34 +240,6 @@ OTAPI const otMasterKey *OTCALL otThreadGetMasterKey(otInstance *aInstance);
 OTAPI ThreadError OTCALL otThreadSetMasterKey(otInstance *aInstance, const otMasterKey *aKey);
 
 /**
- * Get the thrPSKc.
- *
- * @param[in]   aInstance   A pointer to an OpenThread instance.
- *
- * @returns A pointer to a buffer containing the thrPSKc.
- *
- * @sa otThreadSetPSKc
- */
-OTAPI const uint8_t *OTCALL otThreadGetPSKc(otInstance *aInstance);
-
-/**
- * Set the thrPSKc.
- *
- * This function will only succeed when Thread protocols are disabled.  A successful
- * call to this function will also invalidate the Active and Pending Operational Datasets in
- * non-volatile memory.
- *
- * @param[in]  aInstance   A pointer to an OpenThread instance.
- * @param[in]  aPSKc       A pointer to a buffer containing the thrPSKc.
- *
- * @retval kThreadError_None            Successfully set the thrPSKc.
- * @retval kThreadError_InvalidState    Thread protocols are enabled.
- *
- * @sa otThreadGetPSKc
- */
-OTAPI ThreadError OTCALL otThreadSetPSKc(otInstance *aInstance, const uint8_t *aPSKc);
-
-/**
  * This function returns a pointer to the Mesh Local EID.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.

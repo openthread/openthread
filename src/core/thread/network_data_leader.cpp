@@ -386,7 +386,9 @@ ThreadError LeaderBase::DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16
             if (route == NULL ||
                 entry->GetPreference() > route->GetPreference() ||
                 (entry->GetPreference() == route->GetPreference() &&
-                 mNetif.GetMle().GetCost(entry->GetRloc()) < mNetif.GetMle().GetCost(route->GetRloc())))
+                 (entry->GetRloc() == mNetif.GetMle().GetRloc16() ||
+                  (route->GetRloc() != mNetif.GetMle().GetRloc16() &&
+                   mNetif.GetMle().GetCost(entry->GetRloc()) < mNetif.GetMle().GetCost(route->GetRloc())))))
             {
                 route = entry;
             }

@@ -140,6 +140,16 @@ protected:
      */
     void HandleSpaceAvailableInTxBuffer(void);
 
+    /**
+     * Called by the subclass to learn when the host wake operation must be issued.
+     */
+    bool ShouldWakeHost(void);
+
+    /**
+     * Called by the subclass to learn when the transfer to the host should be deferred.
+     */
+    bool ShouldDeferHostSend(void);
+
 private:
 
     ThreadError OutboundFrameSend(void);
@@ -229,6 +239,10 @@ private:
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
     static void HandleNetifStateChanged(uint32_t flags, void *context);
+
+    static void HandleFrameTransmitDone(void *aContext, ThreadError aError);
+
+    void HandleFrameTransmitDone(ThreadError aError);
 
 private:
 
@@ -336,6 +350,7 @@ private:
     ThreadError GetPropertyHandler_POWER_STATE(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_HWADDR(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_LOCK(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_HOST_POWER_STATE(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_PHY_FREQ(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_PHY_CHAN_SUPPORTED(uint8_t header, spinel_prop_key_t key);
@@ -436,6 +451,8 @@ private:
 
     ThreadError SetPropertyHandler_POWER_STATE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                uint16_t value_len);
+    ThreadError SetPropertyHandler_HOST_POWER_STATE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                    uint16_t value_len);
     ThreadError SetPropertyHandler_PHY_TX_POWER(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                 uint16_t value_len);
     ThreadError SetPropertyHandler_PHY_CHAN(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -660,6 +677,9 @@ private:
     Tasklet mUpdateChangedPropsTask;
     uint32_t mChangedFlags;
     bool mShouldSignalEndOfScan;
+    spinel_host_power_state_t mHostPowerState;
+    bool mHostPowerStateInProgress;
+    uint8_t mHostPowerStateHeader;
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     bool mShouldSignalJamStateChange;

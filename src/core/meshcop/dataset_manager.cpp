@@ -571,9 +571,6 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
 
         memset(&destination, 0, sizeof(destination));
         destination = mNetif.GetMle().GetMeshLocal16();
-        destination.mFields.m16[4] = HostSwap16(0x0000);
-        destination.mFields.m16[5] = HostSwap16(0x00ff);
-        destination.mFields.m16[6] = HostSwap16(0xfe00);
         destination.mFields.m16[7] = HostSwap16(borderAgentLocator->GetBorderAgentLocator());
 
         mNetif.GetLeader().SendDatasetChanged(destination);

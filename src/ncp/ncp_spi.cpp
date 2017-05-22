@@ -40,6 +40,7 @@
 
 #include <openthread/ncp.h>
 #include <openthread/platform/spi-slave.h>
+#include <openthread/platform/misc.h>
 
 #include "openthread-core-config.h"
 #include "openthread-instance.h"
@@ -238,6 +239,11 @@ ThreadError NcpSpi::PrepareNextSpiSendFrame(void)
     uint16_t readLength;
 
     VerifyOrExit(!mTxFrameBuffer.IsEmpty());
+
+    if (super_t::ShouldWakeHost())
+    {
+        otPlatWakeHost();
+    }
 
     SuccessOrExit(errorCode = mTxFrameBuffer.OutFrameBegin());
 

@@ -35,7 +35,7 @@ DIST_SUBDIRS                            = \
     cc2650                                \
     da15000                               \
     efr32                                 \
-    emsk                                  \
+    kw41z                                 \
     nrf52840                              \
     posix                                 \
     utils                                 \
@@ -63,8 +63,8 @@ if OPENTHREAD_EXAMPLES_EFR32
 SUBDIRS                                += efr32
 endif
 
-if OPENTHREAD_EXAMPLES_EMSK
-SUBDIRS                                += emsk
+if OPENTHREAD_EXAMPLES_KW41Z
+SUBDIRS                                += kw41z
 endif
 
 if OPENTHREAD_EXAMPLES_NRF52840
@@ -82,7 +82,7 @@ PRETTY_SUBDIRS                          = \
     cc2650                                \
     da15000                               \
     efr32                                 \
-    emsk                                  \
+    kw41z                                 \
     nrf52840                              \
     posix                                 \
     utils                                 \

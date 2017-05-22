@@ -622,7 +622,6 @@ void Coap::ProcessReceivedRequest(Header &aHeader, Message &aMessage, const Ip6:
         SuccessOrExit(mInterceptor(aMessage, aMessageInfo));
     }
 
-    SuccessOrExit(aHeader.FromMessage(aMessage, 0));
     aMessage.MoveOffset(aHeader.GetLength());
 
     switch (mResponsesQueue.GetMatchedResponseCopy(aHeader, aMessageInfo, &response))

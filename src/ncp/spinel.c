@@ -940,6 +940,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_HBO_BLOCK_MAX";
         break;
 
+    case SPINEL_PROP_HOST_POWER_STATE:
+        ret = "PROP_HOST_POWER_STATE";
+        break;
+
     case SPINEL_PROP_STREAM_DEBUG:
         ret = "PROP_STREAM_DEBUG";
         break;

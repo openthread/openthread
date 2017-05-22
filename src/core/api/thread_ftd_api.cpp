@@ -77,7 +77,6 @@ ThreadError otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterI
     return aInstance->mThreadNetif.GetMle().SetPreferredRouterId(aRouterId);
 }
 
-
 uint8_t otThreadGetLocalLeaderWeight(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMle().GetLeaderWeight();
@@ -232,7 +231,6 @@ exit:
     return error;
 }
 
-
 ThreadError otThreadGetEidCacheEntry(otInstance *aInstance, uint8_t aIndex, otEidCacheEntry *aEntry)
 {
     ThreadError error;
@@ -243,7 +241,6 @@ ThreadError otThreadGetEidCacheEntry(otInstance *aInstance, uint8_t aIndex, otEi
 exit:
     return error;
 }
-
 
 ThreadError otThreadSetSteeringData(otInstance *aInstance, otExtAddress *aExtAddress)
 {
@@ -258,6 +255,25 @@ ThreadError otThreadSetSteeringData(otInstance *aInstance, otExtAddress *aExtAdd
     error = kThreadError_DisabledFeature;
 #endif  // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
 
+    return error;
+}
+
+const uint8_t *otThreadGetPSKc(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetKeyManager().GetPSKc();
+}
+
+ThreadError otThreadSetPSKc(otInstance *aInstance, const uint8_t *aPSKc)
+{
+    ThreadError error = kThreadError_None;
+    VerifyOrExit(aInstance->mThreadNetif.GetMle().GetDeviceState() == Mle::kDeviceStateDisabled,
+                 error = kThreadError_InvalidState);
+
+    aInstance->mThreadNetif.GetKeyManager().SetPSKc(aPSKc);
+    aInstance->mThreadNetif.GetActiveDataset().Clear(false);
+    aInstance->mThreadNetif.GetPendingDataset().Clear(false);
+
+exit:
     return error;
 }
 
