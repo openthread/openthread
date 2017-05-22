@@ -65,7 +65,7 @@ for the Thread(R) low-power mesh network technology.
 
 # Introduction #
 
-Spinel is host-controller protocol designed to enable interoperation over simple serial connections between general purpose device operating systems (OS) and network co-processors (NCP) for the purpose of controlling and managing their IPv6 network interfaces, achieving the following goals:
+Spinel is a host-controller protocol designed to enable interoperation over simple serial connections between general purpose device operating systems (OS) and network co-processors (NCP) for the purpose of controlling and managing their IPv6 network interfaces, achieving the following goals:
 
 *   Adopt a layered approach to the protocol design, allowing future
     support for other network protocols.

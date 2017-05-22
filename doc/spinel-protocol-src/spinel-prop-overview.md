@@ -31,9 +31,9 @@ Conceptually, there are three different types of properties:
 
 Single-value properties are properties that have a simple representation of a single value. Examples would be:
 
-*   Current radio channel (Represented as a unsigned 8-bit integer)
+*   Current radio channel (Represented as an unsigned 8-bit integer)
 *   Network name (Represented as a UTF-8 encoded string)
-*   802\.15.4 PAN ID (Represented as a unsigned 16-bit integer)
+*   802\.15.4 PAN ID (Represented as an unsigned 16-bit integer)
 
 The valid operations on these sorts of properties are `GET` and `SET`.
 
