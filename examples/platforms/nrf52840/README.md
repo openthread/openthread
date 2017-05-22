@@ -132,6 +132,97 @@ Due to a known issue in Segger’s J-Link firmware, depending on your version, y
 
 Run the following command: `MSDDisable`
 
+## Diagnostic module
+
+nRF52840 port extends [OpenThread Diagnostics Module][DIAG].
+
+New commands allow for more accurate low level radio testing.
+
+### New commands
+ * [diag id](#diag-id)
+ * [diag listen](#diag-listen)
+ * [diag transmit](#diag-transmit)
+
+### Diagnostic radio packet
+[diag listen](#diag-listen) and [diag transmit](#diag-transmit) uses radio frame payload specified below.
+
+ ```c
+ struct PlatformDiagMessage
+ {
+     const char mMessageDescriptor[11];
+     uint8_t mChannel;
+     int16_t mID;
+     uint32_t mCnt;
+ };
+ ```
+
+`mMessageDescriptor` is constant string `"DiagMessage"`.<br>
+`mChannel` contains channel number on which packet was transmitted.<br>
+`mID` contains board ID set with [diag id](#diag-id).<br>
+`mCnt` is a counter incremented every time board transmits diagnostic radio packet.
+
+If [listen](#diag-listen) is enabled and OpenThread was built with `DEFAULT_LOGGING` flag, JSON string is printed every time diagnostic radio packet is received.
+
+```JSON
+ {"Frame":{
+   "LocalChannel":"<listening board channel>",
+   "RemoteChannel":"<mChannel>",
+   "CNT":"<mCnt>",
+   "LocalID":"<listening board ID>",
+   "RemoteID":"<mID>",
+   "RSSI":"<packet RSSI>"
+ }}
+```
+
+### diag id
+Get board ID.
+
+### diag id \<id\>
+Set board ID.
+
+Value range 0 to 32 767.
+
+Default: `-1`.
+
+### diag listen
+Get listen state.
+
+### diag listen \<listen\>
+Set listen state.
+
+`0` disable listen.<br>
+`1` enable listen.
+
+Default: listen disabled.
+
+### diag transmit
+Get messages count and interval between them that will be transmitted after `diag transmit start`.
+
+### diag transmit interval \<interval\>
+Set interval in ms between transmitted messages.
+
+Value range 1 to 4 294 967 295.
+
+Default: `1`.
+
+### diag transmit count \<count\>
+Set number of messages to be transmitted.
+
+Value range 1 to 2 147 483 647.
+or
+`-1` continuous transmission.
+
+Default: `1`
+
+### diag transmit stop
+Stop ongoing transmission regardless of remaining number of messages to be sent.
+
+### diag transmit start
+Start transmiting messages with specified interval.
+
+
+[DIAG]: https://github.com/openthread/openthread/blob/master/src/diag/README.md
+
 ## Radio driver documentation
 
 The radio driver comes with documentation that describes the operation of state
