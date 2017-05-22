@@ -113,6 +113,16 @@ LDFLAGS_COMMON                                                        += \
     $(NULL)
 endif # OPENTHREAD_EXAMPLES_EFR32
 
+if OPENTHREAD_EXAMPLES_EMSK
+LDADD_COMMON                                                          += \
+    $(top_builddir)/examples/platforms/emsk/libopenthread-emsk.a         \
+    $(NULL)
+
+LDFLAGS_COMMON                                                        += \
+    -T $(top_srcdir)/examples/platforms/emsk/emsk.ld                     \
+    $(NULL)
+endif # OPENTHREAD_EXAMPLES_EMSK
+
 if OPENTHREAD_EXAMPLES_NRF52840
 LDADD_COMMON                                                          += \
     $(top_builddir)/examples/platforms/nrf52840/libopenthread-nrf52840.a \
