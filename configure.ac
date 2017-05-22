@@ -1098,6 +1098,7 @@ case ${with_examples} in
      emsk)
         OPENTHREAD_EXAMPLES_EMSK=1
         AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_EMSK],[${OPENTHREAD_EXAMPLES_EMSK}],[Define to 1 if you want to use emsk examples])
+        ;;
 
     kw41z)
         OPENTHREAD_EXAMPLES_KW41Z=1
