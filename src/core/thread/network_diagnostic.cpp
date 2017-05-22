@@ -54,7 +54,7 @@
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
-#include "thread/thread_uris.hpp"
+#include "thread/thread_uri_paths.hpp"
 #include "thread/network_diagnostic_tlvs.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
@@ -66,10 +66,10 @@ namespace ot {
 namespace NetworkDiagnostic {
 
 NetworkDiagnostic::NetworkDiagnostic(ThreadNetif &aThreadNetif) :
-    mDiagnosticGetRequest(OPENTHREAD_URI_DIAGNOSTIC_GET_REQUEST, &NetworkDiagnostic::HandleDiagnosticGetRequest, this),
-    mDiagnosticGetQuery(OPENTHREAD_URI_DIAGNOSTIC_GET_QUERY, &NetworkDiagnostic::HandleDiagnosticGetQuery, this),
-    mDiagnosticGetAnswer(OPENTHREAD_URI_DIAGNOSTIC_GET_ANSWER, &NetworkDiagnostic::HandleDiagnosticGetAnswer, this),
-    mDiagnosticReset(OPENTHREAD_URI_DIAGNOSTIC_RESET, &NetworkDiagnostic::HandleDiagnosticReset, this),
+    mDiagnosticGetRequest(OT_URI_PATH_DIAGNOSTIC_GET_REQUEST, &NetworkDiagnostic::HandleDiagnosticGetRequest, this),
+    mDiagnosticGetQuery(OT_URI_PATH_DIAGNOSTIC_GET_QUERY, &NetworkDiagnostic::HandleDiagnosticGetQuery, this),
+    mDiagnosticGetAnswer(OT_URI_PATH_DIAGNOSTIC_GET_ANSWER, &NetworkDiagnostic::HandleDiagnosticGetAnswer, this),
+    mDiagnosticReset(OT_URI_PATH_DIAGNOSTIC_RESET, &NetworkDiagnostic::HandleDiagnosticReset, this),
     mNetif(aThreadNetif),
     mReceiveDiagnosticGetCallback(NULL),
     mReceiveDiagnosticGetCallbackContext(NULL)
@@ -105,14 +105,14 @@ ThreadError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestinatio
     {
         header.Init(kCoapTypeNonConfirmable, kCoapRequestPost);
         header.SetToken(Coap::Header::kDefaultTokenLength);
-        header.AppendUriPathOptions(OPENTHREAD_URI_DIAGNOSTIC_GET_QUERY);
+        header.AppendUriPathOptions(OT_URI_PATH_DIAGNOSTIC_GET_QUERY);
     }
     else
     {
         handler = &NetworkDiagnostic::HandleDiagnosticGetResponse;
         header.Init(kCoapTypeConfirmable, kCoapRequestPost);
         header.SetToken(Coap::Header::kDefaultTokenLength);
-        header.AppendUriPathOptions(OPENTHREAD_URI_DIAGNOSTIC_GET_REQUEST);
+        header.AppendUriPathOptions(OT_URI_PATH_DIAGNOSTIC_GET_REQUEST);
     }
 
     if (aCount > 0)
@@ -466,7 +466,7 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Header &aHeader, Message 
 
     header.Init(kCoapTypeConfirmable, kCoapRequestPost);
     header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_DIAGNOSTIC_GET_ANSWER);
+    header.AppendUriPathOptions(OT_URI_PATH_DIAGNOSTIC_GET_ANSWER);
 
     if (networkDiagnosticTlv.GetLength() > 0)
     {
@@ -558,7 +558,7 @@ ThreadError NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestinat
 
     header.Init(kCoapTypeConfirmable, kCoapRequestPost);
     header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_DIAGNOSTIC_RESET);
+    header.AppendUriPathOptions(OT_URI_PATH_DIAGNOSTIC_RESET);
 
     if (aCount > 0)
     {

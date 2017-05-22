@@ -56,7 +56,7 @@
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
-#include "thread/thread_uris.hpp"
+#include "thread/thread_uri_paths.hpp"
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
 
@@ -76,9 +76,9 @@ Commissioner::Commissioner(ThreadNetif &aThreadNetif):
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this),
     mSessionId(0),
     mTransmitAttempts(0),
-    mRelayReceive(OPENTHREAD_URI_RELAY_RX, &Commissioner::HandleRelayReceive, this),
-    mDatasetChanged(OPENTHREAD_URI_DATASET_CHANGED, &Commissioner::HandleDatasetChanged, this),
-    mJoinerFinalize(OPENTHREAD_URI_JOINER_FINALIZE, &Commissioner::HandleJoinerFinalize, this),
+    mRelayReceive(OT_URI_PATH_RELAY_RX, &Commissioner::HandleRelayReceive, this),
+    mDatasetChanged(OT_URI_PATH_DATASET_CHANGED, &Commissioner::HandleDatasetChanged, this),
+    mJoinerFinalize(OT_URI_PATH_JOINER_FINALIZE, &Commissioner::HandleJoinerFinalize, this),
     mNetif(aThreadNetif)
 {
     memset(mJoiners, 0, sizeof(mJoiners));
@@ -413,7 +413,7 @@ ThreadError Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs,
 
     header.Init(kCoapTypeConfirmable, kCoapRequestPost);
     header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_COMMISSIONER_GET);
+    header.AppendUriPathOptions(OT_URI_PATH_COMMISSIONER_GET);
 
     if (aLength > 0)
     {
@@ -484,7 +484,7 @@ ThreadError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDa
 
     header.Init(kCoapTypeConfirmable, kCoapRequestPost);
     header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_COMMISSIONER_SET);
+    header.AppendUriPathOptions(OT_URI_PATH_COMMISSIONER_SET);
     header.SetPayloadMarker();
 
     VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoap(), header)) != NULL, error = kThreadError_NoBufs);
@@ -589,7 +589,7 @@ ThreadError Commissioner::SendPetition(void)
 
     header.Init(kCoapTypeConfirmable, kCoapRequestPost);
     header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_LEADER_PETITION);
+    header.AppendUriPathOptions(OT_URI_PATH_LEADER_PETITION);
     header.SetPayloadMarker();
 
     VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoap(), header)) != NULL, error = kThreadError_NoBufs);
@@ -689,7 +689,7 @@ ThreadError Commissioner::SendKeepAlive(void)
 
     header.Init(kCoapTypeConfirmable, kCoapRequestPost);
     header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_LEADER_KEEP_ALIVE);
+    header.AppendUriPathOptions(OT_URI_PATH_LEADER_KEEP_ALIVE);
     header.SetPayloadMarker();
 
     VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoap(), header)) != NULL, error = kThreadError_NoBufs);
@@ -993,7 +993,7 @@ ThreadError Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::Messag
     otLogFuncEntry();
 
     header.Init(kCoapTypeNonConfirmable, kCoapRequestPost);
-    header.AppendUriPathOptions(OPENTHREAD_URI_RELAY_TX);
+    header.AppendUriPathOptions(OT_URI_PATH_RELAY_TX);
     header.SetPayloadMarker();
 
     VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoap(), header)) != NULL, error = kThreadError_NoBufs);

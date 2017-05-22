@@ -50,7 +50,7 @@
 #include "mac/mac_frame.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
-#include "thread/thread_uris.hpp"
+#include "thread/thread_uri_paths.hpp"
 
 namespace ot {
 namespace NetworkData {
@@ -619,7 +619,7 @@ ThreadError NetworkData::SendServerDataNotification(uint16_t aRloc16)
 
     header.Init(kCoapTypeConfirmable, kCoapRequestPost);
     header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_SERVER_DATA);
+    header.AppendUriPathOptions(OT_URI_PATH_SERVER_DATA);
     header.SetPayloadMarker();
 
     VerifyOrExit((message = mNetif.GetCoap().NewMessage(header)) != NULL, error = kThreadError_NoBufs);

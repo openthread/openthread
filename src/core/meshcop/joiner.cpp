@@ -54,7 +54,7 @@
 #include "mac/mac_frame.hpp"
 #include "meshcop/meshcop.hpp"
 #include "thread/thread_netif.hpp"
-#include "thread/thread_uris.hpp"
+#include "thread/thread_uri_paths.hpp"
 
 #if OPENTHREAD_ENABLE_JOINER
 
@@ -78,7 +78,7 @@ Joiner::Joiner(ThreadNetif &aNetif):
     mVendorSwVersion(NULL),
     mVendorData(NULL),
     mTimer(aNetif.GetIp6().mTimerScheduler, &Joiner::HandleTimer, this),
-    mJoinerEntrust(OPENTHREAD_URI_JOINER_ENTRUST, &Joiner::HandleJoinerEntrust, this),
+    mJoinerEntrust(OT_URI_PATH_JOINER_ENTRUST, &Joiner::HandleJoinerEntrust, this),
     mNetif(aNetif)
 {
     mNetif.GetCoap().AddResource(mJoinerEntrust);
@@ -284,7 +284,7 @@ void Joiner::SendJoinerFinalize(void)
     otLogFuncEntry();
 
     header.Init(kCoapTypeConfirmable, kCoapRequestPost);
-    header.AppendUriPathOptions(OPENTHREAD_URI_JOINER_FINALIZE);
+    header.AppendUriPathOptions(OT_URI_PATH_JOINER_FINALIZE);
     header.SetPayloadMarker();
 
     VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoapSecure(), header)) != NULL,

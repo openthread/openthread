@@ -54,7 +54,7 @@
 #include "net/icmp6.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
-#include "thread/thread_uris.hpp"
+#include "thread/thread_uri_paths.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 
@@ -65,8 +65,8 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     Mle(aThreadNetif),
     mAdvertiseTimer(aThreadNetif.GetIp6().mTimerScheduler, &MleRouter::HandleAdvertiseTimer, NULL, this),
     mStateUpdateTimer(aThreadNetif.GetIp6().mTimerScheduler, &MleRouter::HandleStateUpdateTimer, this),
-    mAddressSolicit(OPENTHREAD_URI_ADDRESS_SOLICIT, &MleRouter::HandleAddressSolicit, this),
-    mAddressRelease(OPENTHREAD_URI_ADDRESS_RELEASE, &MleRouter::HandleAddressRelease, this),
+    mAddressSolicit(OT_URI_PATH_ADDRESS_SOLICIT, &MleRouter::HandleAddressSolicit, this),
+    mAddressRelease(OT_URI_PATH_ADDRESS_RELEASE, &MleRouter::HandleAddressRelease, this),
     mRouterIdSequence(0),
     mRouterIdSequenceLastUpdated(0),
     mMaxChildrenAllowed(kMaxChildren),
@@ -3799,7 +3799,7 @@ ThreadError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
 
     header.Init(kCoapTypeConfirmable, kCoapRequestPost);
     header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_ADDRESS_SOLICIT);
+    header.AppendUriPathOptions(OT_URI_PATH_ADDRESS_SOLICIT);
     header.SetPayloadMarker();
 
     VerifyOrExit((message = mNetif.GetCoap().NewMessage(header)) != NULL, error = kThreadError_NoBufs);
@@ -3849,7 +3849,7 @@ ThreadError MleRouter::SendAddressRelease(void)
 
     header.Init(kCoapTypeConfirmable, kCoapRequestPost);
     header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_ADDRESS_RELEASE);
+    header.AppendUriPathOptions(OT_URI_PATH_ADDRESS_RELEASE);
     header.SetPayloadMarker();
 
     VerifyOrExit((message = mNetif.GetCoap().NewMessage(header)) != NULL, error = kThreadError_NoBufs);

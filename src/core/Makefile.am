@@ -288,7 +288,7 @@ HEADERS_COMMON                      = \
     thread/src_match_controller.hpp   \
     thread/thread_netif.hpp           \
     thread/thread_tlvs.hpp            \
-    thread/thread_uris.hpp            \
+    thread/thread_uri_paths.hpp       \
     thread/topology.hpp               \
     utils/child_supervision.hpp       \
     utils/slaac_address.hpp           \
