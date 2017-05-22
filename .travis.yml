@@ -53,6 +53,9 @@ matrix:
     - env: BUILD_TARGET="arm-gcc54"
       os: linux
       compiler: gcc
+    - env: BUILD_TARGET="arm-gcc63"
+      os: linux
+      compiler: gcc
     - env: BUILD_TARGET="posix" CC="clang" CXX="clang++"
       os: linux
       compiler: clang
