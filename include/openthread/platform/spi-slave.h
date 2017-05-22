@@ -63,6 +63,11 @@ extern "C" {
  * Note that this function is always called at the end of a transaction, even if `otPlatSpiSlavePrepareTransaction()`
  * has not yet been called. In such cases, `aOutputBufLen` and `aInputBufLen` will be zero.
  *
+ * This callback can be called from ISR context. The return value from this function indicates if any further
+ * processing is required. If `TRUE` is returned the platform spi-slave driver implementation must invoke the
+ * transaction process callback (`aProcessCallback` set in `otPlatSpiSlaveEnable()`) which unlike this callback must be
+ * called from the same OS context that any other OpenThread API/callback is called.
+ *
  * @param[in] aContext           Context pointer passed into `otPlatSpiSlaveEnable()`.
  * @param[in] aOutputBuf         Value of `aOutputBuf` from last call to `otPlatSpiSlavePrepareTransaction()`.
  * @param[in] aOutputBufLen      Value of `aOutputBufLen` from last call to `otPlatSpiSlavePrepareTransaction()`.
@@ -70,10 +75,23 @@ extern "C" {
  * @param[in] aInputBufLen       Value of aInputBufLen from last call to `otPlatSpiSlavePrepareTransaction()`
  * @param[in] aTransactionLength Length of the completed transaction, in bytes.
  *
+ * @returns  TRUE if after this call returns the platform should invoke the the process callback `aProcessCallback`,
+ *           FALSE if there is nothing to process and no need to invoke the process callback.
  */
-typedef void (*otPlatSpiSlaveTransactionCompleteCallback)(void *aContext, uint8_t *aOutputBuf, uint16_t aOutputBufLen,
+typedef bool (*otPlatSpiSlaveTransactionCompleteCallback)(void *aContext, uint8_t *aOutputBuf, uint16_t aOutputBufLen,
                                                           uint8_t *aInputBuf, uint16_t aInputBufLen,
                                                           uint16_t aTransactionLength);
+
+
+/**
+ * Invoked after a transaction complete callback is called and returns `TRUE` to do any further processing required.
+ * Unlike `otPlatSpiSlaveTransactionCompleteCallback` which can be called from any OS context (e.g., ISR), this
+ * callback MUST be called from the same OS context as any other OpenThread API/callback.
+ *
+ * @param[in] aContext           Context pointer passed into `otPlatSpiSlaveEnable()`.
+ *
+ */
+typedef void (*otPlatSpiSlaveTransactionProcessCallback)(void *aContext);
 
 
 /**
@@ -84,15 +102,17 @@ typedef void (*otPlatSpiSlaveTransactionCompleteCallback)(void *aContext, uint8_
  * If `otPlatSPISlavePrepareTransaction() is not called before the master begins a transaction, the resulting SPI
  * transaction will send all `0xFF` bytes and discard all received bytes.
  *
- * @param[in] aCallback          Pointer to transaction complete callback.
- * @param[in] aContext           Context pointer to be passed to transaction complete callback.
+ * @param[in] aCompleteCallback  Pointer to transaction complete callback.
+ * @param[in] aProcessCallback   Pointer to process callback.
+ * @param[in] aContext           Context pointer to be passed to callbacks.
  *
  * @retval OT_ERROR_NONE     Successfully enabled the SPI Slave interface.
  * @retval OT_ERROR_ALREADY  SPI Slave interface is already enabled.
  * @retval OT_ERROR_FAILED   Failed to enable the SPI Slave interface.
  *
  */
-otError otPlatSpiSlaveEnable(otPlatSpiSlaveTransactionCompleteCallback aCallback, void *aContext);
+otError otPlatSpiSlaveEnable(otPlatSpiSlaveTransactionCompleteCallback aCompleteCallback,
+                             otPlatSpiSlaveTransactionProcessCallback aProcessCallback, void *aContext);
 
 /**
  * Shutdown and disable the SPI slave interface.
@@ -122,7 +142,7 @@ void otPlatSpiSlaveDisable(void);
  * clocks out 30 bytes, the value 30 is passed to the transaction complete callback.
  *
  * If a `NULL` pointer is passed in as `aOutputBuf` or `aInputBuf` it means that that buffer pointer should not change
- * from its previous/current value. In this case, the corresponding length argument should  be ignored. For example,
+ * from its previous/current value. In this case, the corresponding length argument should be ignored. For example,
  * `otPlatSpiSlavePrepareTransaction(NULL, 0, aInputBuf, aInputLen, false)` changes the input buffer pointer and its
  * length but keeps the output buffer pointer same as before.
  *

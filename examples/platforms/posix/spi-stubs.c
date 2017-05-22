@@ -36,9 +36,11 @@
 
 // Spi-slave stubs
 
-otError otPlatSpiSlaveEnable(otPlatSpiSlaveTransactionCompleteCallback aCallback, void *aContext)
+otError otPlatSpiSlaveEnable(otPlatSpiSlaveTransactionCompleteCallback aCompleteCallback,
+                             otPlatSpiSlaveTransactionProcessCallback aProcessCallback, void *aContext)
 {
-    (void)aCallback;
+    (void)aCompleteCallback;
+    (void)aProcessCallback;
     (void)aContext;
 
     fprintf(stderr, "\nNo SPI support for posix platform.");

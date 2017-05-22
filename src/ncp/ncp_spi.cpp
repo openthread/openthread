@@ -109,7 +109,6 @@ NcpSpi::NcpSpi(otInstance *aInstance) :
     mTxState(kTxStateIdle),
     mHandlingRxFrame(false),
     mResetFlag(true),
-    mHandleRxFrameTask(aInstance->mIp6.mTaskletScheduler, &NcpSpi::HandleRxFrame, this),
     mPrepareTxFrameTask(aInstance->mIp6.mTaskletScheduler, &NcpSpi::PrepareTxFrame, this),
     mSendFrameLen(0)
 {
@@ -127,7 +126,7 @@ NcpSpi::NcpSpi(otInstance *aInstance) :
     spi_header_set_accept_len(mEmptySendFrameFullAccept, sizeof(mReceiveFrame) - kSpiHeaderLength);
     spi_header_set_accept_len(mEmptySendFrameZeroAccept, 0);
 
-    otPlatSpiSlaveEnable(&NcpSpi::SpiTransactionComplete, this);
+    otPlatSpiSlaveEnable(&NcpSpi::SpiTransactionComplete, &NcpSpi::SpiTransactionProcess, this);
 
     // We signal an interrupt on this first transaction to
     // make sure that the host processor knows that our
@@ -137,14 +136,14 @@ NcpSpi::NcpSpi(otInstance *aInstance) :
                                      true);
 }
 
-void NcpSpi::SpiTransactionComplete(void *aContext, uint8_t *aOutputBuf, uint16_t aOutputBufLen, uint8_t *aInputBuf,
+bool NcpSpi::SpiTransactionComplete(void *aContext, uint8_t *aOutputBuf, uint16_t aOutputBufLen, uint8_t *aInputBuf,
                                     uint16_t aInputBufLen, uint16_t aTransactionLength)
 {
-    static_cast<NcpSpi*>(aContext)->SpiTransactionComplete(aOutputBuf, aOutputBufLen, aInputBuf, aInputBufLen,
+    return static_cast<NcpSpi *>(aContext)->SpiTransactionComplete(aOutputBuf, aOutputBufLen, aInputBuf, aInputBufLen,
                                                            aTransactionLength);
 }
 
-void NcpSpi::SpiTransactionComplete(uint8_t *aOutputBuf, uint16_t aOutputBufLen, uint8_t *aInputBuf,
+bool NcpSpi::SpiTransactionComplete(uint8_t *aOutputBuf, uint16_t aOutputBufLen, uint8_t *aInputBuf,
                                     uint16_t aInputBufLen, uint16_t aTransactionLength)
 {
     // This may be executed from an interrupt context.
@@ -154,6 +153,7 @@ void NcpSpi::SpiTransactionComplete(uint8_t *aOutputBuf, uint16_t aOutputBufLen,
     uint16_t rx_accept_len = 0;
     uint16_t tx_data_len = 0;
     uint16_t tx_accept_len = 0;
+    bool shouldProcess = false;
 
     // TODO: Check `PATTERN` bits of `HDR` and ignore frame if not set.
     //       Holding off on implementing this so as to not cause immediate
@@ -180,7 +180,7 @@ void NcpSpi::SpiTransactionComplete(uint8_t *aOutputBuf, uint16_t aOutputBufLen,
             (rx_data_len <= rx_accept_len))
         {
             mHandlingRxFrame = true;
-            mHandleRxFrameTask.Post();
+            shouldProcess = true;
         }
 
         if ((mTxState == kTxStateSending) &&
@@ -189,7 +189,7 @@ void NcpSpi::SpiTransactionComplete(uint8_t *aOutputBuf, uint16_t aOutputBufLen,
             (tx_data_len <= tx_accept_len))
         {
             mTxState = kTxStateHandlingSendDone;
-            mPrepareTxFrameTask.Post();
+            shouldProcess = true;
         }
     }
 
@@ -226,7 +226,28 @@ void NcpSpi::SpiTransactionComplete(uint8_t *aOutputBuf, uint16_t aOutputBufLen,
         spi_header_set_accept_len(mSendFrame, sizeof(mReceiveFrame) - kSpiHeaderLength);
     }
 
-    otPlatSpiSlavePrepareTransaction(aOutputBuf, aOutputBufLen, aInputBuf, aInputBufLen, (mTxState == kTxStateSending));
+    otPlatSpiSlavePrepareTransaction(aOutputBuf, aOutputBufLen, aInputBuf, aInputBufLen,
+                                     (mTxState == kTxStateSending));
+
+    return shouldProcess;
+}
+
+void NcpSpi::SpiTransactionProcess(void *aContext)
+{
+    static_cast<NcpSpi *>(aContext)->SpiTransactionProcess();
+}
+
+void NcpSpi::SpiTransactionProcess(void)
+{
+    if (mTxState == kTxStateHandlingSendDone)
+    {
+        mPrepareTxFrameTask.Post();
+    }
+
+    if (mHandlingRxFrame)
+    {
+        HandleRxFrame();
+    }
 }
 
 void NcpSpi::TxFrameBufferHasData(void *aContext, NcpFrameBuffer *aNcpFrameBuffer)
@@ -323,11 +344,6 @@ void NcpSpi::PrepareTxFrame(void)
     }
 }
 
-void NcpSpi::HandleRxFrame(void *aContext)
-{
-    static_cast<NcpSpi *>(aContext)->HandleRxFrame();
-}
-
 void NcpSpi::HandleRxFrame(void)
 {
     // Pass the received frame to base class to process.
@@ -363,7 +379,6 @@ void NcpSpi::HandleRxFrame(void)
         // is OK as everything will be set up properly from callback when
         // the current transaction is completed.
     }
-
 }
 
 }  // namespace ot
