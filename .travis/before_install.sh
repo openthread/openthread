@@ -79,6 +79,13 @@ cd /tmp || die
         arm-none-eabi-gcc --version || die
     }
 
+    [ $BUILD_TARGET != arm-gcc63 ] || {
+        wget https://github.com/foss-for-synopsys-dwc-arc-processors/toolchain/releases/download/arc-2017.03-rc2/arc_gnu_2017.03-rc2_prebuilt_elf32_le_linux_install.tar.gz || die
+        tar xzf arc_gnu_2017.03-rc2_prebuilt_elf32_le_linux_install.tar.gz
+        export PATH=/tmp/arc_gnu_2017.03-rc2_prebuilt_elf32_le_linux_install/bin:$PATH || die
+        arc-elf32-gcc --version || die
+    }
+
     [ $BUILD_TARGET != posix-32-bit ] || {
         sudo apt-get install g++-multilib || die
     }
