@@ -35,7 +35,10 @@ four fields, each encoded as a packed unsigned integer:
  *  Major Version Number
  *  Minor Version Number
 
-This document describes major version 4, minor version 1 of this protocol.
+This document describes major version 4, minor version 3 of this protocol.
+
+The host **MUST** only use this property from NLI 0. Behavior when used
+from other NLIs is undefined.
 
 #### Major Version Number
 
@@ -75,6 +78,9 @@ Examples:
 
  *  `OpenThread/1.0d26-25-gb684c7f; DEBUG; May 9 2016 18:22:04`
  *  `ConnectIP/2.0b125 s1 ALPHA; Sept 24 2015 20:49:19`
+
+The host **MUST** only use this property from NLI 0. Behavior when used
+from other NLIs is undefined.
 
 ### PROP 3: PROP_INTERFACE_TYPE {#prop-interface-type}
 
@@ -133,7 +139,8 @@ Currently defined values are:
  * 8: `CAP_WRITABLE_RAW_STREAM`: `PROP_STREAM_RAW` is writable.
  * 9: `CAP_GPIO`: Support for GPIO access. See (#feature-gpio-access).
  * 10: `CAP_TRNG`: Support for true random number generation. See (#feature-trng).
- * 11: `CAP_CMD_MULTI`: Support for `CMD_PROP_VALUE_MULTI_GET` ((#prop-value-multi-get)), `CMD_PROP_VALUE_MULTI_SET` ((#prop-value-multi-set), and `CMD_PROP_VALUES_ARE` ((#prop-values-are)).
+ * 11: `CAP_CMD_MULTI`: Support for `CMD_PROP_VALUE_MULTI_GET` ((#cmd-prop-value-multi-get)), `CMD_PROP_VALUE_MULTI_SET` ((#cmd-prop-value-multi-set), and `CMD_PROP_VALUES_ARE` ((#cmd-prop-values-are)).
+ * 12: `CAP_UNSOL_UPDATE_FILTER`: Support for `PROP_UNSOL_UPDATE_FILTER` ((#prop-unsol-update-filter)) and `PROP_UNSOL_UPDATE_LIST` ((#prop-unsol-update-list)).
  * 16: `CAP_802_15_4_2003`
  * 17: `CAP_802_15_4_2006`
  * 18: `CAP_802_15_4_2011`
@@ -181,6 +188,9 @@ Since the concurrent interface mechanism is still TBD, this value MUST
 always be one.
 
 This value is encoded as an unsigned 8-bit integer.
+
+The host **MUST** only use this property from NLI 0. Behavior when used
+from other NLIs is undefined.
 
 ### PROP 7: PROP_POWER_STATE {#prop-power-state}
 
@@ -307,6 +317,91 @@ response from the NCP acknowledging the command (with `CMD_VALUE_IS`).
 Once that acknowledgement is received the host may enter the low-power
 state.
 
+If the NCP has the `CAP_UNSOL_UPDATE_FILTER` capability, any unsolicited
+property updates masked by `PROP_UNSOL_UPDATE_FILTER` should be honored
+while the host indicates it is in a low-power state. After resuming to the
+`HOST_POWER_STATE_ONLINE` state, the value of `PROP_UNSOL_UPDATE_FILTER`
+**MUST** be unchanged from the value assigned prior to the host indicating
+it was entering a low-power state.
+
+The host **MUST** only use this property from NLI 0. Behavior when used
+from other NLIs is undefined.
+
+### PROP 4104: PROP_UNSOL_UPDATE_FILTER {#prop-unsol-update-filter}
+
+* Required only if `CAP_UNSOL_UPDATE_FILTER` is set.
+* Type: Read-Write
+* Packed-Encoding: `A(I)`
+* Default value: Empty.
+
+Contains a list of properties which are *excluded* from generating
+unsolicited value updates. This property **MUST** be empty after reset.
+
+In other words, the host may opt-out of unsolicited property updates
+for a specific property by adding that property id to this list.
+
+Hosts **SHOULD NOT** add properties to this list which are not
+present in `PROP_UNSOL_UPDATE_LIST`. If such properties are added,
+the NCP **MUST** ignore the unsupported properties.
+
+<!-- RQ
+  -- The justification for the above behavior is to attempt to avoid possible
+     future interop problems by explicitly making sure that unknown
+     properties are ignored. Since unknown properties will obviously not be
+     generating unsolicited updates, it seems fairly harmless. An
+     implementation may print out a warning to the debug stream.
+
+     Note that the error is still detectable: If you VALUE\_SET unsupported
+     properties, the resulting VALUE\_IS would contain only the supported
+     properties of that set(since the unsupported properties would be
+     ignored). If an implementation cares that much about getting this
+     right then it needs to make sure that it checks
+     PROP\_UNSOL\_UPDATE\_LIST first.
+  -- -->
+
+Implementations of this property are only **REQUIRED** to support
+and use the following commands:
+
+* `CMD_PROP_VALUE_GET` ((#cmd-prop-value-get))
+* `CMD_PROP_VALUE_SET` ((#cmd-prop-value-set))
+* `CMD_PROP_VALUE_IS` ((#cmd-prop-value-is))
+
+Implementations of this property **MAY** optionally support and use
+the following commands:
+
+* `CMD_PROP_VALUE_INSERT` ((#cmd-prop-value-insert))
+* `CMD_PROP_VALUE_REMOVE` ((#cmd-prop-value-remove))
+* `CMD_PROP_VALUE_INSERTED` ((#cmd-prop-value-inserted))
+* `CMD_PROP_VALUE_REMOVED` ((#cmd-prop-value-removed))
+
+Host implementations which are aiming to maximize their compatability across
+different firmwre implementations **SHOULD NOT** assume the availability of the
+optional commands for this property.
+
+The value of this property **SHALL** be independent for each NLI.
+
+### PROP 4105: PROP_UNSOL_UPDATE_LIST {#prop-unsol-update-list}
+
+* Required only if `CAP_UNSOL_UPDATE_FILTER` is set.
+* Type: Read-Only
+* Packed-Encoding: `A(I)`
+
+Contains a list of properties which are capable of generating
+unsolicited value updates. This list can be used when populating
+`PROP_UNSOL_UPDATE_FILTER` to disable all unsolicited property
+updates.
+
+This property is intended to effectively behave as a constant
+for a given NCP firmware.
+
+Note that not all properties that support unsolicited updates need to
+be listed here. Scan results, for example, are only generated due to
+direct action on the part of the host, so those properties **MUST NOT**
+not be included in this list.
+
+The value of this property **MAY** be different across available
+NLIs.
+
 ## Stream Properties {#prop-stream}
 
 ### PROP 112: PROP_STREAM_DEBUG {#prop-stream-debug}
@@ -423,7 +518,7 @@ the value of the packet.
 Any data past the end of `FRAME_DATA_LEN` is considered metadata, the
 format of which is described in (#frame-metadata-format).
 
-### PROP 114: PROP_STREAM_NET_INSECURE {#prop-stream-net-insecure}
+### PROP 115: PROP_STREAM_NET_INSECURE {#prop-stream-net-insecure}
 
 * Type: Read-Write-Stream
 * Packed-Encoding: `dD`
