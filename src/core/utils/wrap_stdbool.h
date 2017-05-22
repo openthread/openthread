@@ -44,7 +44,7 @@
 /* c++ has a built in bool */
 #else
 
-#if defined(_MSC_VER)
+#if HAVE__BOOL
 #define bool _Bool
 #else
 typedef _Bool bool;
