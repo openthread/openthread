@@ -63,6 +63,7 @@
 
 #define SHORT_ADDRESS_SIZE    2
 #define EXTENDED_ADDRESS_SIZE 8
+#define PENDING_BIT           0x10
 
 enum
 {
@@ -75,7 +76,7 @@ static RadioPacket sReceivedFrames[RADIO_RX_BUFFERS];
 static RadioPacket sTransmitFrame;
 static uint8_t     sTransmitPsdu[kMaxPHYPacketSize + 1]
 __attribute__((section("nrf_radio_buffer.sTransmiPsdu")));
-static bool        sTransmitPendingBit;
+static uint8_t    *sAckPsdu;
 
 static uint32_t    sEnergyDetectionTime;
 static uint8_t     sEnergyDetectionChannel;
@@ -102,6 +103,8 @@ static void dataInit(void)
     {
         sReceivedFrames[i].mPsdu = NULL;
     }
+
+    sAckPsdu = NULL;
 }
 
 static void convertShortAddress(uint8_t *aTo, uint16_t aFrom)
@@ -515,16 +518,24 @@ void nrf5RadioProcess(otInstance *aInstance)
 
     if (isPendingEventSet(kPendingEventFrameTransmitted))
     {
+        bool pendingBit = ((sAckPsdu != NULL) && (sAckPsdu[1] & PENDING_BIT)) ? true : false;
+
 #if OPENTHREAD_ENABLE_DIAG
 
         if (otPlatDiagModeGet())
         {
-            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, sTransmitPendingBit, OT_ERROR_NONE);
+            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, pendingBit, OT_ERROR_NONE);
         }
         else
 #endif
         {
-            otPlatRadioTransmitDone(aInstance, &sTransmitFrame, sTransmitPendingBit, OT_ERROR_NONE);
+            otPlatRadioTransmitDone(aInstance, &sTransmitFrame, pendingBit, OT_ERROR_NONE);
+        }
+
+        if (sAckPsdu != NULL)
+        {
+            nrf_drv_radio802154_buffer_free(sAckPsdu);
+            sAckPsdu = NULL;
         }
 
         resetPendingEvent(kPendingEventFrameTransmitted);
@@ -595,9 +606,9 @@ void nrf_drv_radio802154_received(uint8_t *p_data, int8_t power, int8_t lqi)
     receivedFrame->mChannel = nrf_drv_radio802154_channel_get();
 }
 
-void nrf_drv_radio802154_transmitted(bool pending_bit)
+void nrf_drv_radio802154_transmitted(uint8_t *aAckPsdu)
 {
-    sTransmitPendingBit = pending_bit;
+    sAckPsdu = aAckPsdu;
 
     setPendingEvent(kPendingEventFrameTransmitted);
 }

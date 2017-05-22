@@ -1439,7 +1439,7 @@ void RADIO_IRQHandler(void)
 
             if (!ack_is_requested(mp_tx_data))
             {
-                nrf_drv_radio802154_transmitted(false);
+                nrf_drv_radio802154_transmitted(NULL);
 
                 state_set(RADIO_STATE_WAITING_RX_FRAME);
             }
@@ -1463,8 +1463,8 @@ void RADIO_IRQHandler(void)
             if ((nrf_radio_event_get(NRF_RADIO_EVENT_MHRMATCH)) &&
                 (nrf_radio_crc_status_get() == NRF_RADIO_CRC_STATUS_OK))
             {
-                nrf_drv_radio802154_transmitted(
-                        (mp_current_rx_buffer->psdu[FRAME_PENDING_OFFSET] & FRAME_PENDING_BIT) != 0);
+                mp_current_rx_buffer->free = false;
+                nrf_drv_radio802154_transmitted(mp_current_rx_buffer->psdu);
 
                 nrf_radio_mhmu_search_pattern_set(0);
                 nrf_radio_event_clear(NRF_RADIO_EVENT_MHRMATCH);
@@ -1679,9 +1679,9 @@ void __attribute__((weak)) nrf_drv_radio802154_received(uint8_t * p_data, int8_t
     (void) lqi;
 }
 
-void __attribute__((weak)) nrf_drv_radio802154_transmitted(bool pending_bit)
+void __attribute__((weak)) nrf_drv_radio802154_transmitted(uint8_t * p_ack)
 {
-    (void) pending_bit;
+    (void) p_ack;
 }
 
 void __attribute__((weak)) nrf_drv_radio802154_busy_channel(void)
