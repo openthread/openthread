@@ -396,7 +396,7 @@ void Coap::HandleClientResponse(otCoapHeader *aHeader, otMessage *aMessage, otMe
 {
     if (aResult != kThreadError_None)
     {
-        sServer->OutputFormat("Error receiving CoAP response message: %d", aResult);
+        sServer->OutputFormat("Error receiving CoAP response message: %d\r\n", aResult);
     }
     else
     {
