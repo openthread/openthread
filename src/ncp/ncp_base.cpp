@@ -161,7 +161,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION, &NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA_VERSION },
     { SPINEL_PROP_THREAD_LEADER_NETWORK_DATA, &NcpBase::GetPropertyHandler_THREAD_LEADER_NETWORK_DATA },
     { SPINEL_PROP_THREAD_STABLE_LEADER_NETWORK_DATA, &NcpBase::GetPropertyHandler_THREAD_STABLE_LEADER_NETWORK_DATA },
-    { SPINEL_PROP_THREAD_LOCAL_ROUTES, &NcpBase::GetPropertyHandler_THREAD_LOCAL_ROUTES },
+    { SPINEL_PROP_THREAD_OFF_MESH_ROUTES, &NcpBase::GetPropertyHandler_THREAD_OFF_MESH_ROUTES },
     { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::GetPropertyHandler_THREAD_ASSISTING_PORTS },
     { SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE, &NcpBase::GetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE },
 
@@ -373,7 +373,7 @@ const NcpBase::InsertPropertyHandlerEntry NcpBase::mInsertPropertyHandlerTable[]
     { SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES, &NcpBase::InsertPropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES },
 #endif
     { SPINEL_PROP_IPV6_ADDRESS_TABLE, &NcpBase::InsertPropertyHandler_IPV6_ADDRESS_TABLE },
-    { SPINEL_PROP_THREAD_LOCAL_ROUTES, &NcpBase::InsertPropertyHandler_THREAD_LOCAL_ROUTES },
+    { SPINEL_PROP_THREAD_OFF_MESH_ROUTES, &NcpBase::InsertPropertyHandler_THREAD_OFF_MESH_ROUTES },
     { SPINEL_PROP_THREAD_ON_MESH_NETS, &NcpBase::InsertPropertyHandler_THREAD_ON_MESH_NETS },
     { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::InsertPropertyHandler_THREAD_ASSISTING_PORTS },
 
@@ -393,7 +393,7 @@ const NcpBase::RemovePropertyHandlerEntry NcpBase::mRemovePropertyHandlerTable[]
     { SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES, &NcpBase::RemovePropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES },
 #endif
     { SPINEL_PROP_IPV6_ADDRESS_TABLE, &NcpBase::RemovePropertyHandler_IPV6_ADDRESS_TABLE },
-    { SPINEL_PROP_THREAD_LOCAL_ROUTES, &NcpBase::RemovePropertyHandler_THREAD_LOCAL_ROUTES },
+    { SPINEL_PROP_THREAD_OFF_MESH_ROUTES, &NcpBase::RemovePropertyHandler_THREAD_OFF_MESH_ROUTES },
     { SPINEL_PROP_THREAD_ON_MESH_NETS, &NcpBase::RemovePropertyHandler_THREAD_ON_MESH_NETS },
     { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::RemovePropertyHandler_THREAD_ASSISTING_PORTS },
     { SPINEL_PROP_MAC_WHITELIST, &NcpBase::RemovePropertyHandler_MAC_WHITELIST },
@@ -3034,7 +3034,7 @@ otError NcpBase::GetPropertyHandler_THREAD_RLOC16_DEBUG_PASSTHRU(uint8_t header,
            );
 }
 
-otError NcpBase::GetPropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_prop_key_t key)
+otError NcpBase::GetPropertyHandler_THREAD_OFF_MESH_ROUTES(uint8_t header, spinel_prop_key_t key)
 {
     otError errorCode = OT_ERROR_NONE;
     otExternalRouteConfig external_route_config;
@@ -3058,13 +3058,37 @@ otError NcpBase::GetPropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_p
                 SPINEL_DATATYPE_UINT8_S         // Prefix Length (in bits)
                 SPINEL_DATATYPE_BOOL_S          // isStable
                 SPINEL_DATATYPE_UINT8_S         // Flags
+                SPINEL_DATATYPE_BOOL_S          // IsLocal
             ),
             &external_route_config.mPrefix.mPrefix,
             external_route_config.mPrefix.mLength,
             external_route_config.mStable,
-            flags
+            flags,
+            false
         ));
     }
+
+    while (otNetDataGetNextRoute(mInstance, true, &iter, &external_route_config) == OT_ERROR_NONE)
+    {
+        flags = static_cast<uint8_t>(external_route_config.mPreference);
+        flags <<= SPINEL_NET_FLAG_PREFERENCE_OFFSET;
+
+        SuccessOrExit(errorCode = OutboundFrameFeedPacked(
+            SPINEL_DATATYPE_STRUCT_S(
+                SPINEL_DATATYPE_IPv6ADDR_S      // IPv6 Prefix
+                SPINEL_DATATYPE_UINT8_S         // Prefix Length (in bits)
+                SPINEL_DATATYPE_BOOL_S          // isStable
+                SPINEL_DATATYPE_UINT8_S         // Flags
+                SPINEL_DATATYPE_BOOL_S          // IsLocal
+            ),
+            &external_route_config.mPrefix.mPrefix,
+            external_route_config.mPrefix.mLength,
+            external_route_config.mStable,
+            flags,
+            true
+        ));
+    }
+
 
     SuccessOrExit(errorCode = OutboundFrameSend());
 
@@ -3735,7 +3759,7 @@ otError NcpBase::SetPropertyHandler_HOST_POWER_STATE(uint8_t header, spinel_prop
     if (parsedLength > 0)
     {
         switch (value)
-        {        
+        {
         case SPINEL_HOST_POWER_STATE_OFFLINE:
         case SPINEL_HOST_POWER_STATE_DEEP_SLEEP:
         case SPINEL_HOST_POWER_STATE_LOW_POWER:
@@ -6538,8 +6562,8 @@ exit:
     return errorCode;
 }
 
-otError NcpBase::InsertPropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_prop_key_t key,
-                                                               const uint8_t *value_ptr, uint16_t value_len)
+otError NcpBase::InsertPropertyHandler_THREAD_OFF_MESH_ROUTES(uint8_t header, spinel_prop_key_t key,
+                                                              const uint8_t *value_ptr, uint16_t value_len)
 {
     spinel_ssize_t parsedLength;
     otError errorCode = OT_ERROR_NONE;
@@ -6965,7 +6989,7 @@ otError NcpBase::RemovePropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel
     return errorCode;
 }
 
-otError NcpBase::RemovePropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_prop_key_t key,
+otError NcpBase::RemovePropertyHandler_THREAD_OFF_MESH_ROUTES(uint8_t header, spinel_prop_key_t key,
                                                                const uint8_t *value_ptr, uint16_t value_len)
 {
     spinel_ssize_t parsedLength;

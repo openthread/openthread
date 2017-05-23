@@ -96,9 +96,9 @@ Data per item is:
   defined. Assumed to be true for set, insert and replace. Clear if
   the on mesh network was defined by another node.
 
-### PROP 91: PROP_THREAD_LOCAL_ROUTES
+### PROP 91: PROP_THREAD_OFF_MESH_ROUTES
 * Type: Read-Write
-* Packed-Encoding: `A(t(6CbC))`
+* Packed-Encoding: `A(t(6CbCb))`
 
 Data per item is:
 
@@ -106,6 +106,10 @@ Data per item is:
 * `C`: Prefix length, in bits
 * `b`: Stable flag
 * `C`: Other flags
+* `b`: "Is defined locally" flag. Set if this route info was locally
+  defined as part of local network data. Assumed to be true for set,
+  insert and replace. Clear if the route is part of partition's network
+  data.
 
 ### PROP 92: PROP_THREAD_ASSISTING_PORTS
 * Type: Read-Write
