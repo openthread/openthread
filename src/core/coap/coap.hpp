@@ -695,7 +695,7 @@ private:
 
     Resource *mResources;
 
-    void *mContext;
+    void           *mContext;
     Interceptor    mInterceptor;
     ResponsesQueue mResponsesQueue;
 
