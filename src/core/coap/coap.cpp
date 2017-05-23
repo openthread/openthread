@@ -245,15 +245,36 @@ exit:
     return error;
 }
 
-ThreadError Coap::SendEmptyAck(const Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo)
+ThreadError Coap::SendHeaderResponse(Header::Code aCode, const Header &aRequestHeader,
+                                     const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadError error = kThreadError_None;
     Header responseHeader;
+    Header::Type requestType;
     Message *message = NULL;
 
-    VerifyOrExit(aRequestHeader.GetType() == kCoapTypeConfirmable, error = kThreadError_InvalidArgs);
+    VerifyOrExit(aRequestHeader.IsRequest(), error = kThreadError_InvalidArgs);
 
-    responseHeader.SetDefaultResponseHeader(aRequestHeader);
+    requestType = aRequestHeader.GetType();
+
+    switch (requestType)
+    {
+    case kCoapTypeConfirmable:
+        responseHeader.Init(kCoapTypeAcknowledgment, aCode);
+        responseHeader.SetMessageId(aRequestHeader.GetMessageId());
+        break;
+
+    case kCoapTypeNonConfirmable:
+        responseHeader.Init(kCoapTypeNonConfirmable, aCode);
+        responseHeader.SetMessageId(mMessageId++);
+        break;
+
+    default:
+        ExitNow(error = kThreadError_InvalidArgs);
+        break;
+    }
+
+    responseHeader.SetToken(aRequestHeader.GetToken(), aRequestHeader.GetTokenLength());
 
     VerifyOrExit((message = NewMessage(responseHeader)) != NULL, error = kThreadError_NoBufs);
 
@@ -614,20 +635,20 @@ void Coap::ProcessReceivedRequest(Header &aHeader, Message &aMessage, const Ip6:
     char uriPath[Resource::kMaxReceivedUriPath] = "";
     char *curUriPath = uriPath;
     const Header::Option *coapOption;
-    Message *response = NULL;
-    ThreadError error = kThreadError_None;
+    Message *cachedResponse = NULL;
+    ThreadError error = kThreadError_NotFound;
 
     if (mInterceptor != NULL)
     {
-        SuccessOrExit(mInterceptor(aMessage, aMessageInfo));
+        SuccessOrExit(error = mInterceptor(aMessage, aMessageInfo));
     }
 
     aMessage.MoveOffset(aHeader.GetLength());
 
-    switch (mResponsesQueue.GetMatchedResponseCopy(aHeader, aMessageInfo, &response))
+    switch (mResponsesQueue.GetMatchedResponseCopy(aHeader, aMessageInfo, &cachedResponse))
     {
     case kThreadError_None:
-        error = Send(*response, aMessageInfo);
+        error = Send(*cachedResponse, aMessageInfo);
         // fall through
         ;
 
@@ -671,6 +692,7 @@ void Coap::ProcessReceivedRequest(Header &aHeader, Message &aMessage, const Ip6:
         if (strcmp(resource->mUriPath, uriPath) == 0)
         {
             resource->HandleRequest(aHeader, aMessage, aMessageInfo);
+            error = kThreadError_None;
             ExitNow();
         }
     }
@@ -678,13 +700,24 @@ void Coap::ProcessReceivedRequest(Header &aHeader, Message &aMessage, const Ip6:
     if (mDefaultHandler)
     {
         mDefaultHandler(mDefaultHandlerContext, &aHeader, &aMessage, &aMessageInfo);
+        error = kThreadError_None;
     }
 
 exit:
 
-    if (error != kThreadError_None && response != NULL)
+    if (error != kThreadError_None)
     {
-        response->Free();
+        otLogInfoCoapErr(mNetif.GetInstance(), error, "Failed to process request");
+
+        if (error == kThreadError_NotFound)
+        {
+            SendNotFound(aHeader, aMessageInfo);
+        }
+
+        if (cachedResponse != NULL)
+        {
+            cachedResponse->Free();
+        }
     }
 
     return;
