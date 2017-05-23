@@ -641,7 +641,7 @@ void Coap::ProcessReceivedRequest(Header &aHeader, Message &aMessage, const Ip6:
 
     if (mInterceptor != NULL)
     {
-        SuccessOrExit(mInterceptor(aMessage, aMessageInfo, mContext));
+        SuccessOrExit(error = mInterceptor(aMessage, aMessageInfo, mContext));
     }
 
     aMessage.MoveOffset(aHeader.GetLength());
