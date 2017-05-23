@@ -61,7 +61,7 @@ extern "C" {
  * transaction to be valid.
  *
  * Note that this function is always called at the end of a transaction, even if `otPlatSpiSlavePrepareTransaction()`
- *  has not yet been called. In such cases, `aOutputBufLen` and `aInputBufLen` will be zero.
+ * has not yet been called. In such cases, `aOutputBufLen` and `aInputBufLen` will be zero.
  *
  * @param[in] aContext           Context pointer passed into `otPlatSpiSlaveEnable()`.
  * @param[in] aOutputBuf         Value of `aOutputBuf` from last call to `otPlatSpiSlavePrepareTransaction()`.
@@ -117,9 +117,14 @@ void otPlatSpiSlaveDisable(void);
  * ignored until the SPI master finishes the transaction.
  *
  * Note that even if `aInputBufLen` or `aOutputBufLen` (or both) are exhausted before the SPI master finishes a
-* transaction, the ongoing size of the transaction must still be kept track of to be passed to the transaction complete
-* callback. For example, if `aInputBufLen` is equal to 10 and `aOutputBufLen` equal to 20 and the SPI master clocks out
-* 30 bytes, the value 30 is passed to the transaction complete callback.
+ * transaction, the ongoing size of the transaction must still be kept track of to be passed to the transaction
+ * complete callback. For example, if `aInputBufLen` is equal to 10 and `aOutputBufLen` equal to 20 and the SPI master
+ * clocks out 30 bytes, the value 30 is passed to the transaction complete callback.
+ *
+ * If a `NULL` pointer is passed in as `aOutputBuf` or `aInputBuf` it means that that buffer pointer should not change
+ * from its previous/current value. In this case, the corresponding length argument should  be ignored. For example,
+ * `otPlatSpiSlavePrepareTransaction(NULL, 0, aInputBuf, aInputLen, false)` changes the input buffer pointer and its
+ * length but keeps the output buffer pointer same as before.
  *
  * Any call to this function while a transaction is in progress will cause all of the arguments to be ignored and the
  * return value to be `OT_ERROR_BUSY`.
