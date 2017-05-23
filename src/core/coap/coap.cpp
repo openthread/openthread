@@ -66,9 +66,9 @@ Coap::Coap(ThreadNetif &aNetif):
     mMessageId = static_cast<uint16_t>(otPlatRandomGet());
 }
 
-ThreadError Coap::Start(uint16_t aPort)
+otError Coap::Start(uint16_t aPort)
 {
-    ThreadError error;
+    otError error;
     Ip6::SockAddr sockaddr;
     sockaddr.mPort = aPort;
 
@@ -79,7 +79,7 @@ exit:
     return error;
 }
 
-ThreadError Coap::Stop(void)
+otError Coap::Stop(void)
 {
     Message *message = mPendingRequests.GetHead();
     Message *messageToRemove;
@@ -92,7 +92,7 @@ ThreadError Coap::Stop(void)
         message = message->GetNext();
 
         coapMetadata.ReadFrom(*messageToRemove);
-        FinalizeCoapTransaction(*messageToRemove, coapMetadata, NULL, NULL, NULL, kThreadError_Abort);
+        FinalizeCoapTransaction(*messageToRemove, coapMetadata, NULL, NULL, NULL, OT_ERROR_ABORT);
     }
 
     mResponsesQueue.DequeueAllResponses();
@@ -100,13 +100,13 @@ ThreadError Coap::Stop(void)
     return mSocket.Close();
 }
 
-ThreadError Coap::AddResource(Resource &aResource)
+otError Coap::AddResource(Resource &aResource)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     for (Resource *cur = mResources; cur; cur = cur->GetNext())
     {
-        VerifyOrExit(cur != &aResource, error = kThreadError_Already);
+        VerifyOrExit(cur != &aResource, error = OT_ERROR_ALREADY);
     }
 
     aResource.mNext = mResources;
@@ -160,10 +160,10 @@ exit:
     return message;
 }
 
-ThreadError Coap::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
-                              otCoapResponseHandler aHandler, void *aContext)
+otError Coap::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
+                          otCoapResponseHandler aHandler, void *aContext)
 {
-    ThreadError error;
+    otError error;
     Header header;
     CoapMetadata coapMetadata;
     Message *storedCopy = NULL;
@@ -199,14 +199,14 @@ ThreadError Coap::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessag
     {
         coapMetadata = CoapMetadata(header.IsConfirmable(), aMessageInfo, aHandler, aContext);
         VerifyOrExit((storedCopy = CopyAndEnqueueMessage(aMessage, copyLength, coapMetadata)) != NULL,
-                     error = kThreadError_NoBufs);
+                     error = OT_ERROR_NO_BUFS);
     }
 
     SuccessOrExit(error = Send(aMessage, aMessageInfo));
 
 exit:
 
-    if (error != kThreadError_None && storedCopy != NULL)
+    if (error != OT_ERROR_NONE && storedCopy != NULL)
     {
         DequeueMessage(*storedCopy);
     }
@@ -214,30 +214,30 @@ exit:
     return error;
 }
 
-ThreadError Coap::Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+otError Coap::Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     return mSocket.SendTo(aMessage, aMessageInfo);
 }
 
-ThreadError Coap::SendEmptyMessage(Header::Type aType, const Header &aRequestHeader,
-                                   const Ip6::MessageInfo &aMessageInfo)
+otError Coap::SendEmptyMessage(Header::Type aType, const Header &aRequestHeader,
+                               const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     Header responseHeader;
     Message *message = NULL;
 
-    VerifyOrExit(aRequestHeader.GetType() == kCoapTypeConfirmable, error = kThreadError_InvalidArgs);
+    VerifyOrExit(aRequestHeader.GetType() == kCoapTypeConfirmable, error = OT_ERROR_INVALID_ARGS);
 
     responseHeader.Init(aType, kCoapCodeEmpty);
     responseHeader.SetMessageId(aRequestHeader.GetMessageId());
 
-    VerifyOrExit((message = NewMessage(responseHeader)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = NewMessage(responseHeader)) != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = Send(*message, aMessageInfo));
 
 exit:
 
-    if (error != kThreadError_None && message != NULL)
+    if (error != OT_ERROR_NONE && message != NULL)
     {
         message->Free();
     }
@@ -245,15 +245,15 @@ exit:
     return error;
 }
 
-ThreadError Coap::SendHeaderResponse(Header::Code aCode, const Header &aRequestHeader,
-                                     const Ip6::MessageInfo &aMessageInfo)
+otError Coap::SendHeaderResponse(Header::Code aCode, const Header &aRequestHeader,
+                                 const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     Header responseHeader;
     Header::Type requestType;
     Message *message = NULL;
 
-    VerifyOrExit(aRequestHeader.IsRequest(), error = kThreadError_InvalidArgs);
+    VerifyOrExit(aRequestHeader.IsRequest(), error = OT_ERROR_INVALID_ARGS);
 
     requestType = aRequestHeader.GetType();
 
@@ -270,19 +270,19 @@ ThreadError Coap::SendHeaderResponse(Header::Code aCode, const Header &aRequestH
         break;
 
     default:
-        ExitNow(error = kThreadError_InvalidArgs);
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
         break;
     }
 
     responseHeader.SetToken(aRequestHeader.GetToken(), aRequestHeader.GetTokenLength());
 
-    VerifyOrExit((message = NewMessage(responseHeader)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = NewMessage(responseHeader)) != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = SendMessage(*message, aMessageInfo));
 
 exit:
 
-    if (error != kThreadError_None && message != NULL)
+    if (error != OT_ERROR_NONE && message != NULL)
     {
         message->Free();
     }
@@ -345,7 +345,7 @@ void Coap::HandleRetransmissionTimer(void)
         else
         {
             // No expected response or acknowledgment.
-            FinalizeCoapTransaction(*message, coapMetadata, NULL, NULL, NULL, kThreadError_ResponseTimeout);
+            FinalizeCoapTransaction(*message, coapMetadata, NULL, NULL, NULL, OT_ERROR_RESPONSE_TIMEOUT);
         }
 
         message = nextMessage;
@@ -359,7 +359,7 @@ void Coap::HandleRetransmissionTimer(void)
 
 void Coap::FinalizeCoapTransaction(Message &aRequest, const CoapMetadata &aCoapMetadata,
                                    Header *aResponseHeader, Message *aResponse,
-                                   const Ip6::MessageInfo *aMessageInfo, ThreadError aResult)
+                                   const Ip6::MessageInfo *aMessageInfo, otError aResult)
 {
     DequeueMessage(aRequest);
 
@@ -370,9 +370,9 @@ void Coap::FinalizeCoapTransaction(Message &aRequest, const CoapMetadata &aCoapM
     }
 }
 
-ThreadError Coap::AbortTransaction(otCoapResponseHandler aHandler, void *aContext)
+otError Coap::AbortTransaction(otCoapResponseHandler aHandler, void *aContext)
 {
-    ThreadError error = kThreadError_NotFound;
+    otError error = OT_ERROR_NOT_FOUND;
     Message *message;
     CoapMetadata coapMetadata;
 
@@ -383,7 +383,7 @@ ThreadError Coap::AbortTransaction(otCoapResponseHandler aHandler, void *aContex
         if (coapMetadata.mResponseHandler == aHandler && coapMetadata.mResponseContext == aContext)
         {
             DequeueMessage(*message);
-            error = kThreadError_None;
+            error = OT_ERROR_NONE;
         }
     }
 
@@ -394,12 +394,12 @@ ThreadError Coap::AbortTransaction(otCoapResponseHandler aHandler, void *aContex
 Message *Coap::CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLength,
                                      const CoapMetadata &aCoapMetadata)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     Message *messageCopy = NULL;
     uint32_t alarmFireTime;
 
     // Create a message copy of requested size.
-    VerifyOrExit((messageCopy = aMessage.Clone(aCopyLength)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((messageCopy = aMessage.Clone(aCopyLength)) != NULL, error = OT_ERROR_NO_BUFS);
 
     // Append the copy with retransmission data.
     SuccessOrExit(error = aCoapMetadata.AppendTo(*messageCopy));
@@ -425,7 +425,7 @@ Message *Coap::CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLeng
 
 exit:
 
-    if (error != kThreadError_None && messageCopy != NULL)
+    if (error != OT_ERROR_NONE && messageCopy != NULL)
     {
         messageCopy->Free();
         messageCopy = NULL;
@@ -451,21 +451,21 @@ void Coap::DequeueMessage(Message &aMessage)
     // the timer would just shoot earlier and then it'd be setup again.
 }
 
-ThreadError Coap::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+otError Coap::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadError error;
+    otError error;
     Message *messageCopy = NULL;
 
     // Create a message copy for lower layers.
     VerifyOrExit((messageCopy = aMessage.Clone(aMessage.GetLength() - sizeof(CoapMetadata))) != NULL,
-                 error = kThreadError_NoBufs);
+                 error = OT_ERROR_NO_BUFS);
 
     // Send the copy.
     SuccessOrExit(error = Send(*messageCopy, aMessageInfo));
 
 exit:
 
-    if (error != kThreadError_None && messageCopy != NULL)
+    if (error != OT_ERROR_NONE && messageCopy != NULL)
     {
         messageCopy->Free();
     }
@@ -487,7 +487,7 @@ Message *Coap::FindRelatedRequest(const Header &aResponseHeader, const Ip6::Mess
              aCoapMetadata.mDestinationAddress.IsAnycastRoutingLocator()) &&
             (aCoapMetadata.mDestinationPort == aMessageInfo.GetPeerPort()))
         {
-            // FromMessage can return kThreadError_Parse if only partial message was stored (header only),
+            // FromMessage can return OT_ERROR_PARSE if only partial message was stored (header only),
             // but payload marker is present. Assume, that stored messages are always valid.
             aRequestHeader.FromMessage(*message, sizeof(CoapMetadata));
 
@@ -528,7 +528,7 @@ void Coap::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessage
 
 void Coap::Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadError error;
+    otError error;
     Header header;
 
     SuccessOrExit(error = header.FromMessage(aMessage, 0));
@@ -556,7 +556,7 @@ void Coap::ProcessReceivedResponse(Header &aResponseHeader, Message &aMessage,
     Header requestHeader;
     CoapMetadata coapMetadata;
     Message *message = NULL;
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     aMessage.MoveOffset(aResponseHeader.GetLength());
 
@@ -572,7 +572,7 @@ void Coap::ProcessReceivedResponse(Header &aResponseHeader, Message &aMessage,
     case kCoapTypeReset:
         if (aResponseHeader.IsEmpty())
         {
-            FinalizeCoapTransaction(*message, coapMetadata, NULL, NULL, NULL, kThreadError_Abort);
+            FinalizeCoapTransaction(*message, coapMetadata, NULL, NULL, NULL, OT_ERROR_ABORT);
         }
 
         // Silently ignore non-empty reset messages (RFC 7252, p. 4.2).
@@ -597,7 +597,7 @@ void Coap::ProcessReceivedResponse(Header &aResponseHeader, Message &aMessage,
         else if (aResponseHeader.IsResponse() && aResponseHeader.IsTokenEqual(requestHeader))
         {
             // Piggybacked response.
-            FinalizeCoapTransaction(*message, coapMetadata, &aResponseHeader, &aMessage, &aMessageInfo, kThreadError_None);
+            FinalizeCoapTransaction(*message, coapMetadata, &aResponseHeader, &aMessage, &aMessageInfo, OT_ERROR_NONE);
         }
 
         // Silently ignore acknowledgments carrying requests (RFC 7252, p. 4.2)
@@ -613,14 +613,14 @@ void Coap::ProcessReceivedResponse(Header &aResponseHeader, Message &aMessage,
 
     case kCoapTypeNonConfirmable:
         // Separate response.
-        FinalizeCoapTransaction(*message, coapMetadata, &aResponseHeader, &aMessage, &aMessageInfo, kThreadError_None);
+        FinalizeCoapTransaction(*message, coapMetadata, &aResponseHeader, &aMessage, &aMessageInfo, OT_ERROR_NONE);
 
         break;
     }
 
 exit:
 
-    if (error == kThreadError_None && message == NULL)
+    if (error == OT_ERROR_NONE && message == NULL)
     {
         if (aResponseHeader.IsConfirmable() || aResponseHeader.IsNonConfirmable())
         {
@@ -636,7 +636,7 @@ void Coap::ProcessReceivedRequest(Header &aHeader, Message &aMessage, const Ip6:
     char *curUriPath = uriPath;
     const Header::Option *coapOption;
     Message *cachedResponse = NULL;
-    ThreadError error = kThreadError_NotFound;
+    otError error = OT_ERROR_NOT_FOUND;
 
     if (mInterceptor != NULL)
     {
@@ -647,15 +647,15 @@ void Coap::ProcessReceivedRequest(Header &aHeader, Message &aMessage, const Ip6:
 
     switch (mResponsesQueue.GetMatchedResponseCopy(aHeader, aMessageInfo, &cachedResponse))
     {
-    case kThreadError_None:
+    case OT_ERROR_NONE:
         error = Send(*cachedResponse, aMessageInfo);
         // fall through
         ;
 
-    case kThreadError_NoBufs:
+    case OT_ERROR_NO_BUFS:
         ExitNow();
 
-    case kThreadError_NotFound:
+    case OT_ERROR_NOT_FOUND:
     default:
         break;
     }
@@ -692,7 +692,7 @@ void Coap::ProcessReceivedRequest(Header &aHeader, Message &aMessage, const Ip6:
         if (strcmp(resource->mUriPath, uriPath) == 0)
         {
             resource->HandleRequest(aHeader, aMessage, aMessageInfo);
-            error = kThreadError_None;
+            error = OT_ERROR_NONE;
             ExitNow();
         }
     }
@@ -700,16 +700,16 @@ void Coap::ProcessReceivedRequest(Header &aHeader, Message &aMessage, const Ip6:
     if (mDefaultHandler)
     {
         mDefaultHandler(mDefaultHandlerContext, &aHeader, &aMessage, &aMessageInfo);
-        error = kThreadError_None;
+        error = OT_ERROR_NONE;
     }
 
 exit:
 
-    if (error != kThreadError_None)
+    if (error != OT_ERROR_NONE)
     {
         otLogInfoCoapErr(mNetif.GetInstance(), error, "Failed to process request");
 
-        if (error == kThreadError_NotFound)
+        if (error == OT_ERROR_NOT_FOUND)
         {
             SendNotFound(aHeader, aMessageInfo);
         }
@@ -757,11 +757,11 @@ ResponsesQueue::ResponsesQueue(ThreadNetif &aNetif):
 {
 }
 
-ThreadError ResponsesQueue::GetMatchedResponseCopy(const Header &aHeader,
-                                                   const Ip6::MessageInfo &aMessageInfo,
-                                                   Message **aResponse)
+otError ResponsesQueue::GetMatchedResponseCopy(const Header &aHeader,
+                                               const Ip6::MessageInfo &aMessageInfo,
+                                               Message **aResponse)
 {
-    ThreadError            error = kThreadError_NotFound;
+    otError                error = OT_ERROR_NOT_FOUND;
     Message               *message;
     EnqueuedResponseHeader enqueuedResponseHeader;
     Ip6::MessageInfo       messageInfo;
@@ -784,7 +784,7 @@ ThreadError ResponsesQueue::GetMatchedResponseCopy(const Header &aHeader,
         }
 
         // Check Message Id
-        if (header.FromMessage(*message, sizeof(EnqueuedResponseHeader)) != kThreadError_None)
+        if (header.FromMessage(*message, sizeof(EnqueuedResponseHeader)) != OT_ERROR_NONE)
         {
             continue;
         }
@@ -795,11 +795,11 @@ ThreadError ResponsesQueue::GetMatchedResponseCopy(const Header &aHeader,
         }
 
         *aResponse = message->Clone();
-        VerifyOrExit(*aResponse != NULL, error = kThreadError_NoBufs);
+        VerifyOrExit(*aResponse != NULL, error = OT_ERROR_NO_BUFS);
 
         EnqueuedResponseHeader::RemoveFrom(**aResponse);
 
-        error = kThreadError_None;
+        error = OT_ERROR_NONE;
         break;
     }
 
@@ -807,12 +807,12 @@ exit:
     return error;
 }
 
-ThreadError ResponsesQueue::GetMatchedResponseCopy(const Message &aRequest,
-                                                   const Ip6::MessageInfo &aMessageInfo,
-                                                   Message **aResponse)
+otError ResponsesQueue::GetMatchedResponseCopy(const Message &aRequest,
+                                               const Ip6::MessageInfo &aMessageInfo,
+                                               Message **aResponse)
 {
-    ThreadError error = kThreadError_None;
-    Header      header;
+    otError error = OT_ERROR_NONE;
+    Header  header;
 
     SuccessOrExit(error = header.FromMessage(aRequest, 0));
 
@@ -834,15 +834,15 @@ void ResponsesQueue::EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &
 
     switch (GetMatchedResponseCopy(aMessage, aMessageInfo, &copy))
     {
-    case kThreadError_NotFound:
+    case OT_ERROR_NOT_FOUND:
         break;
 
-    case kThreadError_None:
+    case OT_ERROR_NONE:
         copy->Free();
 
     // fall through
 
-    case kThreadError_NoBufs:
+    case OT_ERROR_NO_BUFS:
     default:
         ExitNow();
     }

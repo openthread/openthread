@@ -108,7 +108,7 @@ void otPlatDiagTxPowerSet(int8_t aTxPower);
  * @param[in]   aError      The received radio frame status.
  *
  */
-void otPlatDiagRadioReceived(otInstance *aInstance, RadioPacket *aFrame, ThreadError aError);
+void otPlatDiagRadioReceived(otInstance *aInstance, RadioPacket *aFrame, otError aError);
 
 /**
  * This function processes the alarm event.

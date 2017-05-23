@@ -57,20 +57,20 @@ public:
     /**
      * This method enables the border agent proxy service.
      *
-     * @retval kThreadError_None            Successfully started the service.
-     * @retval kThreadError_Already         The service already started.
+     * @retval OT_ERROR_NONE            Successfully started the service.
+     * @retval OT_ERROR_ALREADY         The service already started.
      *
      */
-    ThreadError Start(otBorderAgentProxyStreamHandler aStreamHandler, void *aContext);
+    otError Start(otBorderAgentProxyStreamHandler aStreamHandler, void *aContext);
 
     /**
      * This method disables the border agent proxy service.
      *
-     * @retval kThreadError_None            Successfully stopped the border agent proxy service.
-     * @retval kThreadError_Already         The service already stopped.
+     * @retval OT_ERROR_NONE            Successfully stopped the border agent proxy service.
+     * @retval OT_ERROR_ALREADY         The service already stopped.
      *
      */
-    ThreadError Stop(void);
+    otError Stop(void);
 
     /**
      * This method sends the message into the thread network.
@@ -79,13 +79,13 @@ public:
      * @param[in]   aLocator    The destination's RLOC16 or ALOC16.
      * @param[in]   aPort       The destination port.
      *
-     * @retval kThreadError_None            Successfully send the message.
-     * @retval kThreadError_InvalidState    Border agent proxy is not started.
+     * @retval OT_ERROR_NONE             Successfully send the message.
+     * @retval OT_ERROR_INVALID_STATE    Border agent proxy is not started.
      *
      * @warning No matter the call success or fail, the message is freed.
      *
      */
-    ThreadError Send(Message &aMessage, uint16_t aLocator, uint16_t aPort);
+    otError Send(Message &aMessage, uint16_t aLocator, uint16_t aPort);
 
     /**
      * This method indicates whether or not the border agent proxy service is enabled.
@@ -102,7 +102,7 @@ private:
                                    const otMessageInfo *aMessageInfo);
 
     static void HandleResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                               const otMessageInfo *aMessageInfo, ThreadError aResult);
+                               const otMessageInfo *aMessageInfo, otError aResult);
 
     void DeliverMessage(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 

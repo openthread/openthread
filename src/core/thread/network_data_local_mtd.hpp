@@ -49,17 +49,17 @@ public:
 
     void Clear(void) { }
 
-    ThreadError AddOnMeshPrefix(const uint8_t *, uint8_t, int8_t, uint8_t, bool) { return kThreadError_NotImplemented; }
-    ThreadError RemoveOnMeshPrefix(const uint8_t *, uint8_t) { return kThreadError_NotImplemented; }
+    otError AddOnMeshPrefix(const uint8_t *, uint8_t, int8_t, uint8_t, bool) { return OT_ERROR_NOT_IMPLEMENTED; }
+    otError RemoveOnMeshPrefix(const uint8_t *, uint8_t) { return OT_ERROR_NOT_IMPLEMENTED; }
 
-    ThreadError AddHasRoutePrefix(const uint8_t *, uint8_t, int8_t, bool) { return kThreadError_NotImplemented; }
-    ThreadError RemoveHasRoutePrefix(const uint8_t *, uint8_t) { return kThreadError_NotImplemented; }
+    otError AddHasRoutePrefix(const uint8_t *, uint8_t, int8_t, bool) { return OT_ERROR_NOT_IMPLEMENTED; }
+    otError RemoveHasRoutePrefix(const uint8_t *, uint8_t) { return OT_ERROR_NOT_IMPLEMENTED; }
 
-    ThreadError SendServerDataNotification(void) { return kThreadError_NotImplemented; }
+    otError SendServerDataNotification(void) { return OT_ERROR_NOT_IMPLEMENTED; }
 
     void GetNetworkData(bool, uint8_t *, uint8_t &aDataLength) { aDataLength = 0; }
-    ThreadError GetNextOnMeshPrefix(otNetworkDataIterator *, otBorderRouterConfig *) { return kThreadError_NotFound; }
-    ThreadError GetNextExternalRoute(otNetworkDataIterator *, otExternalRouteConfig *) { return kThreadError_NotFound; }
+    otError GetNextOnMeshPrefix(otNetworkDataIterator *, otBorderRouterConfig *) { return OT_ERROR_NOT_FOUND; }
+    otError GetNextExternalRoute(otNetworkDataIterator *, otExternalRouteConfig *) { return OT_ERROR_NOT_FOUND; }
     void ClearResubmitDelayTimer(void) { }
 
 };

@@ -29,13 +29,13 @@
 
 int mbedtls_hardware_poll(void *data, unsigned char *output, size_t len, size_t *olen)
 {
-    ThreadError error;
+    otError error;
 
     (void)data;
 
     error = otPlatRandomGetTrue((uint8_t *)output, (uint16_t)len);
 
-    if (error != kThreadError_None)
+    if (error != OT_ERROR_NONE)
     {
         return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
     }

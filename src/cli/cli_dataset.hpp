@@ -47,9 +47,8 @@ namespace Cli {
  */
 struct DatasetCommand
 {
-    const char *mName;                                                      ///< A pointer to the command string.
-    ThreadError(*mCommand)(otInstance *aInstance, int argc,
-                           char *argv[]);    ///< A function pointer to process the command.
+    const char *mName;                                                  ///< A pointer to the command string.
+    otError(*mCommand)(otInstance *aInstance, int argc, char *argv[]);  ///< A function pointer to process the command.
 };
 
 /**
@@ -66,31 +65,31 @@ public:
      * @param[in]  argv  A pointer to an array of command line arguments.
      *
      */
-    static ThreadError Process(otInstance *aInstance, int argc, char *argv[], Server &aServer);
+    static otError Process(otInstance *aInstance, int argc, char *argv[], Server &aServer);
 
 private:
     static void OutputBytes(const uint8_t *aBytes, uint8_t aLength);
-    static ThreadError Print(otOperationalDataset &aDataset);
+    static otError Print(otOperationalDataset &aDataset);
 
-    static ThreadError ProcessHelp(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessActive(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessActiveTimestamp(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessChannel(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessChannelMask(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessClear(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessCommit(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessDelay(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessExtPanId(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessMasterKey(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessMeshLocalPrefix(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessNetworkName(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessPanId(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessPending(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessPendingTimestamp(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessMgmtSetCommand(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessMgmtGetCommand(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessPSKc(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessSecurityPolicy(otInstance *aInstance, int argc, char *argv[]);
+    static otError ProcessHelp(otInstance *aInstance, int argc, char *argv[]);
+    static otError ProcessActive(otInstance *aInstance, int argc, char *argv[]);
+    static otError ProcessActiveTimestamp(otInstance *aInstance, int argc, char *argv[]);
+    static otError ProcessChannel(otInstance *aInstance, int argc, char *argv[]);
+    static otError ProcessChannelMask(otInstance *aInstance, int argc, char *argv[]);
+    static otError ProcessClear(otInstance *aInstance, int argc, char *argv[]);
+    static otError ProcessCommit(otInstance *aInstance, int argc, char *argv[]);
+    static otError ProcessDelay(otInstance *aInstance, int argc, char *argv[]);
+    static otError ProcessExtPanId(otInstance *aInstance, int argc, char *argv[]);
+    static otError ProcessMasterKey(otInstance *aInstance, int argc, char *argv[]);
+    static otError ProcessMeshLocalPrefix(otInstance *aInstance, int argc, char *argv[]);
+    static otError ProcessNetworkName(otInstance *aInstance, int argc, char *argv[]);
+    static otError ProcessPanId(otInstance *aInstance, int argc, char *argv[]);
+    static otError ProcessPending(otInstance *aInstance, int argc, char *argv[]);
+    static otError ProcessPendingTimestamp(otInstance *aInstance, int argc, char *argv[]);
+    static otError ProcessMgmtSetCommand(otInstance *aInstance, int argc, char *argv[]);
+    static otError ProcessMgmtGetCommand(otInstance *aInstance, int argc, char *argv[]);
+    static otError ProcessPSKc(otInstance *aInstance, int argc, char *argv[]);
+    static otError ProcessSecurityPolicy(otInstance *aInstance, int argc, char *argv[]);
 
     static const DatasetCommand sCommands[];
     static otOperationalDataset sDataset;

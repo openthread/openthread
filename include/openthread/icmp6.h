@@ -83,7 +83,7 @@ void otIcmp6SetEchoEnabled(otInstance *aInstance, bool aEnabled);
  *                       an ICMPv6 message is received.
  *
  */
-ThreadError otIcmp6RegisterHandler(otInstance *aInstance, otIcmp6Handler *aHandler);
+otError otIcmp6RegisterHandler(otInstance *aInstance, otIcmp6Handler *aHandler);
 
 /**
  * This function sends an ICMPv6 Echo Request via the Thread interface.
@@ -95,8 +95,8 @@ ThreadError otIcmp6RegisterHandler(otInstance *aInstance, otIcmp6Handler *aHandl
  *                           May be zero.
  *
  */
-ThreadError otIcmp6SendEchoRequest(otInstance *aInstance, otMessage *aMessage,
-                                   const otMessageInfo *aMessageInfo, uint16_t aIdentifier);
+otError otIcmp6SendEchoRequest(otInstance *aInstance, otMessage *aMessage,
+                               const otMessageInfo *aMessageInfo, uint16_t aIdentifier);
 
 /**
  * @}

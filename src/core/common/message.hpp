@@ -236,7 +236,7 @@ public:
      * This method frees this message buffer.
      *
      */
-    ThreadError Free(void);
+    otError Free(void);
 
     /**
      * This method returns a pointer to the next message in the same interface list.
@@ -258,12 +258,11 @@ public:
      *
      * @param[in]  aLength  Requested number of bytes in the message.
      *
-     * @retval kThreadError_None    Successfully set the length of the message.
-     * @retval kThreadError_NoBufs  Failed to grow the size of the message because insufficient buffers were
-     *                              available.
+     * @retval OT_ERROR_NONE     Successfully set the length of the message.
+     * @retval OT_ERROR_NO_BUFS  Failed to grow the size of the message because insufficient buffers were available.
      *
      */
-    ThreadError SetLength(uint16_t aLength);
+    otError SetLength(uint16_t aLength);
 
     /**
      * This method returns the number of buffers in the message.
@@ -284,22 +283,22 @@ public:
      *
      * @param[in]  aDelta  The number of bytes to move the current offset, which may be positive or negative.
      *
-     * @retval kThreadError_None         Successfully moved the byte offset.
-     * @retval kThreadError_InvalidArgs  The resulting byte offset is not within the existing message.
+     * @retval OT_ERROR_NONE          Successfully moved the byte offset.
+     * @retval OT_ERROR_INVALID_ARGS  The resulting byte offset is not within the existing message.
      *
      */
-    ThreadError MoveOffset(int aDelta);
+    otError MoveOffset(int aDelta);
 
     /**
      * This method sets the byte offset within the message.
      *
      * @param[in]  aOffset  The number of bytes to move the current offset, which may be positive or negative.
      *
-     * @retval kThreadError_None         Successfully moved the byte offset.
-     * @retval kThreadError_InvalidArgs  The requested byte offset is not within the existing message.
+     * @retval OT_ERROR_NONE          Successfully moved the byte offset.
+     * @retval OT_ERROR_INVALID_ARGS  The requested byte offset is not within the existing message.
      *
      */
-    ThreadError SetOffset(uint16_t aOffset);
+    otError SetOffset(uint16_t aOffset);
 
     /**
      * This method returns the type of the message.
@@ -357,11 +356,11 @@ public:
      *
      * @param[in]  aPrority  The message priority level.
      *
-     * @retval kThreadError_None          Successfully set the priority for the message.
-     * @retval kThreadError_InvalidArgs   Priority level is not invalid.
+     * @retval OT_ERROR_NONE           Successfully set the priority for the message.
+     * @retval OT_ERROR_INVALID_ARGS   Priority level is not invalid.
      *
      */
-    ThreadError SetPriority(uint8_t aPriority);
+    otError SetPriority(uint8_t aPriority);
 
     /**
      * This method prepends bytes to the front of the message.
@@ -371,21 +370,21 @@ public:
      * @param[in]  aBuf     A pointer to a data buffer.
      * @param[in]  aLength  The number of bytes to prepend.
      *
-     * @retval kThreadError_None    Successfully prepended the bytes.
-     * @retval kThreadError_NoBufs  Not enough reserved bytes in the message.
+     * @retval OT_ERROR_NONE     Successfully prepended the bytes.
+     * @retval OT_ERROR_NO_BUFS  Not enough reserved bytes in the message.
      *
      */
-    ThreadError Prepend(const void *aBuf, uint16_t aLength);
+    otError Prepend(const void *aBuf, uint16_t aLength);
 
     /**
      * This method removes header bytes from the message.
      *
      * @param[in]  aLength  Number of header bytes to remove.
      *
-     * @retval kThreadError_None  Successfully removed header bytes from the message.
+     * @retval OT_ERROR_NONE  Successfully removed header bytes from the message.
      *
      */
-    ThreadError RemoveHeader(uint16_t aLength);
+    otError RemoveHeader(uint16_t aLength);
 
     /**
      * This method appends bytes to the end of the message.
@@ -395,11 +394,11 @@ public:
      * @param[in]  aBuf     A pointer to a data buffer.
      * @param[in]  aLength  The number of bytes to append.
      *
-     * @retval kThreadError_None    Successfully appended the bytes.
-     * @retval kThreadError_NoBufs  Insufficient available buffers to grow the message.
+     * @retval OT_ERROR_NONE     Successfully appended the bytes.
+     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
      *
      */
-    ThreadError Append(const void *aBuf, uint16_t aLength);
+    otError Append(const void *aBuf, uint16_t aLength);
 
     /**
      * This method reads bytes from the message.
@@ -746,11 +745,11 @@ private:
      *
      * @param[in]  aLength  The number of bytes that the message buffer needs to handle.
      *
-     * @retval kThreadError_None          Successfully resized the message.
-     * @retval kThreadError_InvalidArags  Could not grow the message due to insufficient available message buffers.
+     * @retval OT_ERROR_NONE     Successfully resized the message.
+     * @retval OT_ERROR_NO_BUFS  Could not grow the message due to insufficient available message buffers.
      *
      */
-    ThreadError ResizeMessage(uint16_t aLength);
+    otError ResizeMessage(uint16_t aLength);
 };
 
 /**
@@ -782,22 +781,22 @@ public:
      *
      * @param[in]  aMessage  The message to add.
      *
-     * @retval kThreadError_None     Successfully added the message to the list.
-     * @retval kThreadError_Already  The message is already enqueued in a list.
+     * @retval OT_ERROR_NONE     Successfully added the message to the list.
+     * @retval OT_ERROR_ALREADY  The message is already enqueued in a list.
      *
      */
-    ThreadError Enqueue(Message &aMessage);
+    otError Enqueue(Message &aMessage);
 
     /**
      * This method removes a message from the list.
      *
      * @param[in]  aMessage  The message to remove.
      *
-     * @retval kThreadError_None      Successfully removed the message from the list.
-     * @retval kThreadError_NotFound  The message is not enqueued in a list.
+     * @retval OT_ERROR_NONE       Successfully removed the message from the list.
+     * @retval OT_ERROR_NOT_FOUND  The message is not enqueued in a list.
      *
      */
-    ThreadError Dequeue(Message &aMessage);
+    otError Dequeue(Message &aMessage);
 
     /**
      * This method returns the number of messages and buffers enqueued.
@@ -886,22 +885,22 @@ public:
      *
      * @param[in]  aMessage  The message to add.
      *
-     * @retval kThreadError_None     Successfully added the message to the list.
-     * @retval kThreadError_Already  The message is already enqueued in a list.
+     * @retval OT_ERROR_NONE     Successfully added the message to the list.
+     * @retval OT_ERROR_ALREADY  The message is already enqueued in a list.
      *
      */
-    ThreadError Enqueue(Message &aMessage);
+    otError Enqueue(Message &aMessage);
 
     /**
      * This method removes a message from the list.
      *
      * @param[in]  aMessage  The message to remove.
      *
-     * @retval kThreadError_None      Successfully removed the message from the list.
-     * @retval kThreadError_NotFound  The message is not enqueued in a list.
+     * @retval OT_ERROR_NONE       Successfully removed the message from the list.
+     * @retval OT_ERROR_NOT_FOUND  The message is not enqueued in a list.
      *
      */
-    ThreadError Dequeue(Message &aMessage);
+    otError Dequeue(Message &aMessage);
 
     /**
      * This method returns the number of messages and buffers enqueued.
@@ -1079,11 +1078,11 @@ public:
      *
      * @param[in]  aMessage  The message to free.
      *
-     * @retval kThreadError_None         Successfully freed the message.
-     * @retval kThreadError_InvalidArgs  The message is already freed.
+     * @retval OT_ERROR_NONE          Successfully freed the message.
+     * @retval OT_ERROR_INVALID_ARGS  The message is already freed.
      *
      */
-    ThreadError Free(Message *aMessage);
+    otError Free(Message *aMessage);
 
     /**
      * This method returns a pointer to the first message (head) in the all-messages list.
@@ -1122,8 +1121,8 @@ private:
     };
 
     Buffer *NewBuffer(void);
-    ThreadError FreeBuffers(Buffer *aBuffer);
-    ThreadError ReclaimBuffers(int aNumBuffers);
+    otError FreeBuffers(Buffer *aBuffer);
+    otError ReclaimBuffers(int aNumBuffers);
     PriorityQueue *GetAllMessagesQueue(void) { return &mAllQueue; }
 
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT == 0

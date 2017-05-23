@@ -119,7 +119,7 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
     mCoap.SetInterceptor(&ThreadNetif::TmfFilter);
 }
 
-ThreadError ThreadNetif::Up(void)
+otError ThreadNetif::Up(void)
 {
     if (!mIsUp)
     {
@@ -134,10 +134,10 @@ ThreadError ThreadNetif::Up(void)
         mIsUp = true;
     }
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError ThreadNetif::Down(void)
+otError ThreadNetif::Down(void)
 {
     mCoap.Stop();
 #if OPENTHREAD_ENABLE_DNS_CLIENT
@@ -155,36 +155,36 @@ ThreadError ThreadNetif::Down(void)
     mDtls.Stop();
 #endif
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError ThreadNetif::GetLinkAddress(Ip6::LinkAddress &address) const
+otError ThreadNetif::GetLinkAddress(Ip6::LinkAddress &address) const
 {
     address.mType = Ip6::LinkAddress::kEui64;
     address.mLength = sizeof(address.mExtAddress);
     memcpy(&address.mExtAddress, mMac.GetExtAddress(), address.mLength);
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError ThreadNetif::RouteLookup(const Ip6::Address &source, const Ip6::Address &destination, uint8_t *prefixMatch)
+otError ThreadNetif::RouteLookup(const Ip6::Address &source, const Ip6::Address &destination, uint8_t *prefixMatch)
 {
-    ThreadError error;
+    otError error;
     uint16_t rloc;
 
     SuccessOrExit(error = mNetworkDataLeader.RouteLookup(source, destination, prefixMatch, &rloc));
 
     if (rloc == mMleRouter.GetRloc16())
     {
-        error = kThreadError_NoRoute;
+        error = OT_ERROR_NO_ROUTE;
     }
 
 exit:
     return error;
 }
 
-ThreadError ThreadNetif::TmfFilter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+otError ThreadNetif::TmfFilter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     // A TMF message must comply at least one of the following rules:
     // 1. The IPv6 source address is RLOC or ALOC.
@@ -195,7 +195,7 @@ ThreadError ThreadNetif::TmfFilter(const Message &aMessage, const Ip6::MessageIn
                  aMessageInfo.GetSockAddr().IsRoutingLocator() ||
                  aMessageInfo.GetSockAddr().IsAnycastRoutingLocator() ||
                  aMessageInfo.GetSockAddr().IsLinkLocal(),
-                 error = kThreadError_NotTmf);
+                 error = OT_ERROR_NOT_TMF);
 exit:
     (void)aMessage;
     return error;

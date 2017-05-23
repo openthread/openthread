@@ -61,10 +61,10 @@ public:
     /**
      * This method starts the CLI server.
      *
-     * @retval kThreadError_None  Successfully started the server.
+     * @retval OT_ERROR_NONE  Successfully started the server.
      *
      */
-    ThreadError Start(void);
+    otError Start(void);
 
     /**
      * This method delivers raw characters to the client.

@@ -71,7 +71,7 @@ void Slaac::UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddresses, u
 
         iterator = OT_NETWORK_DATA_ITERATOR_INIT;
 
-        while (otNetDataGetNextPrefixInfo(aInstance, false, &iterator, &config) == kThreadError_None)
+        while (otNetDataGetNextPrefixInfo(aInstance, false, &iterator, &config) == OT_ERROR_NONE)
         {
             if (config.mSlaac == false)
             {
@@ -96,7 +96,7 @@ void Slaac::UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddresses, u
     // add addresses
     iterator = OT_NETWORK_DATA_ITERATOR_INIT;
 
-    while (otNetDataGetNextPrefixInfo(aInstance, false, &iterator, &config) == kThreadError_None)
+    while (otNetDataGetNextPrefixInfo(aInstance, false, &iterator, &config) == OT_ERROR_NONE)
     {
         bool found = false;
 
@@ -140,7 +140,7 @@ void Slaac::UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddresses, u
                 address->mPreferred = config.mPreferred;
                 address->mValid = true;
 
-                if (aIidCreator(aInstance, address, aContext) != kThreadError_None)
+                if (aIidCreator(aInstance, address, aContext) != OT_ERROR_NONE)
                 {
                     CreateRandomIid(aInstance, address, aContext);
                 }
@@ -152,24 +152,24 @@ void Slaac::UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddresses, u
     }
 }
 
-ThreadError Slaac::CreateRandomIid(otInstance *, otNetifAddress *aAddress, void *)
+otError Slaac::CreateRandomIid(otInstance *, otNetifAddress *aAddress, void *)
 {
     for (size_t i = sizeof(aAddress[i].mAddress) - OT_IP6_IID_SIZE; i < sizeof(aAddress[i].mAddress); i++)
     {
         aAddress->mAddress.mFields.m8[i] = static_cast<uint8_t>(otPlatRandomGet());
     }
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError SemanticallyOpaqueIidGenerator::CreateIid(otInstance *aInstance, otNetifAddress *aAddress)
+otError SemanticallyOpaqueIidGenerator::CreateIid(otInstance *aInstance, otNetifAddress *aAddress)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     for (uint32_t i = 0; i <= kMaxRetries; i++)
     {
         error = CreateIidOnce(aInstance, aAddress);
-        VerifyOrExit(error == kThreadError_Ipv6AddressCreationFailure);
+        VerifyOrExit(error == OT_ERROR_IP6_ADDRESS_CREATION_FAILURE);
 
         mDadCounter++;
     }
@@ -178,9 +178,9 @@ exit:
     return error;
 }
 
-ThreadError SemanticallyOpaqueIidGenerator::CreateIidOnce(otInstance *aInstance, otNetifAddress *aAddress)
+otError SemanticallyOpaqueIidGenerator::CreateIidOnce(otInstance *aInstance, otNetifAddress *aAddress)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     Crypto::Sha256 sha256;
     uint8_t hash[Crypto::Sha256::kHashSize];
     Ip6::Address *address = static_cast<Ip6::Address *>(&aAddress->mAddress);
@@ -189,18 +189,18 @@ ThreadError SemanticallyOpaqueIidGenerator::CreateIidOnce(otInstance *aInstance,
 
     sha256.Update(aAddress->mAddress.mFields.m8, aAddress->mPrefixLength / 8);
 
-    VerifyOrExit(mInterfaceId != NULL, error = kThreadError_InvalidArgs);
+    VerifyOrExit(mInterfaceId != NULL, error = OT_ERROR_INVALID_ARGS);
     sha256.Update(mInterfaceId, mInterfaceIdLength);
 
     if (mNetworkIdLength)
     {
-        VerifyOrExit(mNetworkId != NULL, error = kThreadError_InvalidArgs);
+        VerifyOrExit(mNetworkId != NULL, error = OT_ERROR_INVALID_ARGS);
         sha256.Update(mNetworkId, mNetworkIdLength);
     }
 
     sha256.Update(static_cast<uint8_t *>(&mDadCounter), sizeof(mDadCounter));
 
-    VerifyOrExit(mSecretKey != NULL, error = kThreadError_InvalidArgs);
+    VerifyOrExit(mSecretKey != NULL, error = OT_ERROR_INVALID_ARGS);
     sha256.Update(mSecretKey, mSecretKeyLength);
 
     sha256.Finish(hash);
@@ -208,8 +208,8 @@ ThreadError SemanticallyOpaqueIidGenerator::CreateIidOnce(otInstance *aInstance,
     memcpy(&aAddress->mAddress.mFields.m8[OT_IP6_ADDRESS_SIZE - OT_IP6_IID_SIZE],
            &hash[sizeof(hash) - OT_IP6_IID_SIZE], OT_IP6_IID_SIZE);
 
-    VerifyOrExit(!IsAddressRegistered(aInstance, aAddress), error = kThreadError_Ipv6AddressCreationFailure);
-    VerifyOrExit(!address->IsIidReserved(), error = kThreadError_Ipv6AddressCreationFailure);
+    VerifyOrExit(!IsAddressRegistered(aInstance, aAddress), error = OT_ERROR_IP6_ADDRESS_CREATION_FAILURE);
+    VerifyOrExit(!address->IsIidReserved(), error = OT_ERROR_IP6_ADDRESS_CREATION_FAILURE);
 
 exit:
     return error;

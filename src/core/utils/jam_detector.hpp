@@ -77,20 +77,20 @@ public:
      * @param[in]  aHandler             A pointer to a function called when jamming is detected.
      * @param[in]  aContext             A pointer to application-specific context.
      *
-     * @retval kThreadErrorNone         Successfully started the jamming detection.
-     * @retval kThreadErrorAlready      Jam detection has been started before.
+     * @retval OT_ERROR_NONE            Successfully started the jamming detection.
+     * @retval OT_ERROR_ALREADY         Jam detection has been started before.
      *
      */
-    ThreadError Start(Handler aHandler, void *aContext);
+    otError Start(Handler aHandler, void *aContext);
 
     /**
      * Stop the jamming detection.
      *
-     * @retval kThreadErrorNone         Successfully stopped the jamming detection.
-     * @retval kThreadErrorAlready      Jam detection is already stopped.
+     * @retval OT_ERROR_NONE            Successfully stopped the jamming detection.
+     * @retval OT_ERROR_ALREADY         Jam detection is already stopped.
      *
      */
-    ThreadError Stop(void);
+    otError Stop(void);
 
     /**
      * Get the Jam Detection Status
@@ -111,10 +111,10 @@ public:
      *
      * @param[in]  aRssiThreshold  The RSSI threshold.
      *
-     * @retval kThreadErrorNone    Successfully set the threshold.
+     * @retval OT_ERROR_NONE       Successfully set the threshold.
      *
      */
-    ThreadError SetRssiThreshold(int8_t aThreshold);
+    otError SetRssiThreshold(int8_t aThreshold);
 
     /**
      * Get the Jam Detection RSSI Threshold (in dBm).
@@ -126,13 +126,13 @@ public:
     /**
      * Set the Jam Detection Detection Window (in seconds).
      *
-     * @param[in]  aWindow              The Jam Detection window (valid range is 1 to 63)
+     * @param[in]  aWindow            The Jam Detection window (valid range is 1 to 63)
      *
-     * @retval kThreadErrorNone         Successfully set the window.
-     * @retval kThreadErrorInvalidArgs  The given input parameter not within valid range (1-63)
+     * @retval OT_ERROR_NONE          Successfully set the window.
+     * @retval OT_ERROR_INVALID_ARGS  The given input parameter not within valid range (1-63)
      *
      */
-    ThreadError SetWindow(uint8_t aWindow);
+    otError SetWindow(uint8_t aWindow);
 
     /**
      * Get the Jam Detection Detection Window (in seconds).
@@ -150,11 +150,11 @@ public:
      * @param[in]  aBusyPeriod          The Jam Detection busy period (should be non-zero and
                                         less than or equal to Jam Detection Window)
      *
-     * @retval kThreadErrorNone         Successfully set the window.
-     * @retval kThreadErrorInvalidArgs  The given input is not within the valid range.
+     * @retval OT_ERROR_NONE            Successfully set the window.
+     * @retval OT_ERROR_INVALID_ARGS    The given input is not within the valid range.
      *
      */
-    ThreadError SetBusyPeriod(uint8_t aBusyPeriod);
+    otError SetBusyPeriod(uint8_t aBusyPeriod);
 
     /**
      * Get the Jam Detection Busy Period (in seconds)

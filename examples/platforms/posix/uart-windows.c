@@ -74,16 +74,16 @@ windowsUartWorkerThread(
     return NO_ERROR;
 }
 
-ThreadError otPlatUartEnable(void)
+otError otPlatUartEnable(void)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     // Create the worker thread stop event
-    otEXPECT_ACTION((s_StopWorkerEvent = CreateEvent(NULL, TRUE, FALSE, NULL)) != NULL, error = kThreadError_Error);
+    otEXPECT_ACTION((s_StopWorkerEvent = CreateEvent(NULL, TRUE, FALSE, NULL)) != NULL, error = OT_ERROR_GENERIC);
 
     // Start the worker thread
     otEXPECT_ACTION((s_WorkerThread = CreateThread(NULL, 0, windowsUartWorkerThread, NULL, 0, NULL)) != NULL,
-		    error = kThreadError_Error);
+		    error = OT_ERROR_GENERIC);
 
     return error;
 
@@ -93,9 +93,9 @@ exit:
     return error;
 }
 
-ThreadError otPlatUartDisable(void)
+otError otPlatUartDisable(void)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     // Set the shutdown event
     SetEvent(s_StopWorkerEvent);
@@ -112,13 +112,13 @@ ThreadError otPlatUartDisable(void)
     return error;
 }
 
-ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
+otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     DWORD dwNumCharsWritten = 0;
     otEXPECT_ACTION(WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), aBuf, aBufLength, &dwNumCharsWritten, NULL),
-		    error = kThreadError_Error);
+		    error = OT_ERROR_GENERIC);
 
     otPlatUartSendDone();
 

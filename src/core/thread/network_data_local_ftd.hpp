@@ -75,13 +75,13 @@ public:
      * @param[in]  aFlags         The Border Router Flags value.
      * @param[in]  aStable        The Stable value.
      *
-     * @retval kThreadError_None        Successfully added the Border Router entry.
-     * @retval kThreadError_NoBufs      Insufficient space to add the Border Router entry.
-     * @retval kThreadError_InvalidArgs The prefix is mesh local prefix.
+     * @retval OT_ERROR_NONE         Successfully added the Border Router entry.
+     * @retval OT_ERROR_NO_BUFS      Insufficient space to add the Border Router entry.
+     * @retval OT_ERROR_INVALID_ARGS The prefix is mesh local prefix.
      *
      */
-    ThreadError AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, int8_t aPrf, uint8_t aFlags,
-                                bool aStable);
+    otError AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, int8_t aPrf, uint8_t aFlags,
+                            bool aStable);
 
     /**
      * This method removes a Border Router entry from the Thread Network Data.
@@ -89,11 +89,11 @@ public:
      * @param[in]  aPrefix        A pointer to the prefix.
      * @param[in]  aPrefixLength  The length of @p aPrefix in bytes.
      *
-     * @retval kThreadError_None      Successfully removed the Border Router entry.
-     * @retval kThreadError_NotFound  Could not find the Border Router entry.
+     * @retval OT_ERROR_NONE       Successfully removed the Border Router entry.
+     * @retval OT_ERROR_NOT_FOUND  Could not find the Border Router entry.
      *
      */
-    ThreadError RemoveOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength);
+    otError RemoveOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength);
 
     /**
      * This method adds a Has Route entry to the Thread Network data.
@@ -103,11 +103,11 @@ public:
      * @param[in]  aPrf           The preference value.
      * @param[in]  aStable        The Stable value.
      *
-     * @retval kThreadError_None    Successfully added the Has Route entry.
-     * @retval kThreadError_NoBufs  Insufficient space to add the Has Route entry.
+     * @retval OT_ERROR_NONE     Successfully added the Has Route entry.
+     * @retval OT_ERROR_NO_BUFS  Insufficient space to add the Has Route entry.
      *
      */
-    ThreadError AddHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, int8_t aPrf, bool aStable);
+    otError AddHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, int8_t aPrf, bool aStable);
 
     /**
      * This method removes a Border Router entry from the Thread Network Data.
@@ -115,26 +115,26 @@ public:
      * @param[in]  aPrefix        A pointer to the prefix.
      * @param[in]  aPrefixLength  The length of @p aPrefix in bytes.
      *
-     * @retval kThreadError_None      Successfully removed the Border Router entry.
-     * @retval kThreadError_NotFound  Could not find the Border Router entry.
+     * @retval OT_ERROR_NONE       Successfully removed the Border Router entry.
+     * @retval OT_ERROR_NOT_FOUND  Could not find the Border Router entry.
      *
      */
-    ThreadError RemoveHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength);
+    otError RemoveHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength);
 
     /**
      * This method sends a Server Data Notification message to the Leader.
      *
-     * @retval kThreadError_None    Successfully enqueued the notification message.
-     * @retval kThreadError_NoBufs  Insufficient message buffers to generate the notification message.
+     * @retval OT_ERROR_NONE     Successfully enqueued the notification message.
+     * @retval OT_ERROR_NO_BUFS  Insufficient message buffers to generate the notification message.
      *
      */
-    ThreadError SendServerDataNotification(void);
+    otError SendServerDataNotification(void);
 
 private:
-    ThreadError UpdateRloc(void);
-    ThreadError UpdateRloc(PrefixTlv &aPrefix);
-    ThreadError UpdateRloc(HasRouteTlv &aHasRoute);
-    ThreadError UpdateRloc(BorderRouterTlv &aBorderRouter);
+    otError UpdateRloc(void);
+    otError UpdateRloc(PrefixTlv &aPrefix);
+    otError UpdateRloc(HasRouteTlv &aHasRoute);
+    otError UpdateRloc(BorderRouterTlv &aBorderRouter);
 
     bool IsOnMeshPrefixConsistent(void);
     bool IsExternalRouteConsistent(void);

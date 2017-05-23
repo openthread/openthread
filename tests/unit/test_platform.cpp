@@ -188,7 +188,7 @@ extern "C" {
         }
     }
 
-    ThreadError otPlatRadioEnable(otInstance *aInstance)
+    otError otPlatRadioEnable(otInstance *aInstance)
     {
         if (g_testPlatRadioEnable)
         {
@@ -196,11 +196,11 @@ extern "C" {
         }
         else
         {
-            return kThreadError_None;
+            return OT_ERROR_NONE;
         }
     }
 
-    ThreadError otPlatRadioDisable(otInstance *aInstance)
+    otError otPlatRadioDisable(otInstance *aInstance)
     {
         if (g_testPlatRadioEnable)
         {
@@ -208,16 +208,16 @@ extern "C" {
         }
         else
         {
-            return kThreadError_None;
+            return OT_ERROR_NONE;
         }
     }
 
-    ThreadError otPlatRadioSleep(otInstance *)
+    otError otPlatRadioSleep(otInstance *)
     {
-        return kThreadError_None;
+        return OT_ERROR_NONE;
     }
 
-    ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
+    otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     {
         if (g_testPlatRadioReceive)
         {
@@ -225,11 +225,11 @@ extern "C" {
         }
         else
         {
-            return kThreadError_None;
+            return OT_ERROR_NONE;
         }
     }
 
-    ThreadError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
+    otError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
     {
         (void)aPacket;
 
@@ -239,7 +239,7 @@ extern "C" {
         }
         else
         {
-            return kThreadError_None;
+            return OT_ERROR_NONE;
         }
     }
 
@@ -276,32 +276,32 @@ extern "C" {
         (void)aEnable;
     }
 
-    ThreadError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+    otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
     {
         (void)aInstance;
         (void)aShortAddress;
-        return kThreadError_None;
+        return OT_ERROR_NONE;
     }
 
-    ThreadError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+    otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
     {
         (void)aInstance;
         (void)aExtAddress;
-        return kThreadError_None;
+        return OT_ERROR_NONE;
     }
 
-    ThreadError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+    otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
     {
         (void)aInstance;
         (void)aShortAddress;
-        return kThreadError_None;
+        return OT_ERROR_NONE;
     }
 
-    ThreadError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+    otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
     {
         (void)aInstance;
         (void)aExtAddress;
-        return kThreadError_None;
+        return OT_ERROR_NONE;
     }
 
     void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
@@ -314,9 +314,9 @@ extern "C" {
         (void)aInstance;
     }
 
-    ThreadError otPlatRadioEnergyScan(otInstance *, uint8_t, uint16_t)
+    otError otPlatRadioEnergyScan(otInstance *, uint8_t, uint16_t)
     {
-        return kThreadError_NotImplemented;
+        return OT_ERROR_NOT_IMPLEMENTED;
     }
 
     void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
@@ -343,11 +343,11 @@ extern "C" {
 #endif
     }
 
-    ThreadError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
+    otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
     {
-        ThreadError error = kThreadError_None;
+        otError error = OT_ERROR_NONE;
 
-        VerifyOrExit(aOutput, error = kThreadError_InvalidArgs);
+        VerifyOrExit(aOutput, error = OT_ERROR_INVALID_ARGS);
 
         for (uint16_t length = 0; length < aOutputLength; length++)
         {
@@ -383,11 +383,11 @@ exit:
     {
     }
 
-    void otPlatDiagRadioTransmitDone(otInstance *, RadioPacket *, bool, ThreadError)
+    void otPlatDiagRadioTransmitDone(otInstance *, RadioPacket *, bool, otError)
     {
     }
 
-    void otPlatDiagRadioReceiveDone(otInstance *, RadioPacket *, ThreadError)
+    void otPlatDiagRadioReceiveDone(otInstance *, RadioPacket *, otError)
     {
     }
 
@@ -431,29 +431,29 @@ exit:
         (void)aInstance;
     }
 
-    ThreadError otPlatSettingsBeginChange(otInstance *aInstance)
+    otError otPlatSettingsBeginChange(otInstance *aInstance)
     {
         (void)aInstance;
 
-        return kThreadError_None;
+        return OT_ERROR_NONE;
     }
 
-    ThreadError otPlatSettingsCommitChange(otInstance *aInstance)
+    otError otPlatSettingsCommitChange(otInstance *aInstance)
     {
         (void)aInstance;
 
-        return kThreadError_None;
+        return OT_ERROR_NONE;
     }
 
-    ThreadError otPlatSettingsAbandonChange(otInstance *aInstance)
+    otError otPlatSettingsAbandonChange(otInstance *aInstance)
     {
         (void)aInstance;
 
-        return kThreadError_None;
+        return OT_ERROR_NONE;
     }
 
-    ThreadError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue,
-                                  uint16_t *aValueLength)
+    otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue,
+                              uint16_t *aValueLength)
     {
         (void)aInstance;
         (void)aKey;
@@ -461,36 +461,36 @@ exit:
         (void)aValue;
         (void)aValueLength;
 
-        return kThreadError_None;
+        return OT_ERROR_NONE;
     }
 
-    ThreadError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+    otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
     {
         (void)aInstance;
         (void)aKey;
         (void)aValue;
         (void)aValueLength;
 
-        return kThreadError_None;
+        return OT_ERROR_NONE;
     }
 
-    ThreadError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+    otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
     {
         (void)aInstance;
         (void)aKey;
         (void)aValue;
         (void)aValueLength;
 
-        return kThreadError_None;
+        return OT_ERROR_NONE;
     }
 
-    ThreadError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
+    otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
     {
         (void)aInstance;
         (void)aKey;
         (void)aIndex;
 
-        return kThreadError_None;
+        return OT_ERROR_NONE;
     }
 
     void otPlatSettingsWipe(otInstance *aInstance)

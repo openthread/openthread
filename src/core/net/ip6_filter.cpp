@@ -117,9 +117,9 @@ exit:
     return rval;
 }
 
-ThreadError Filter::AddUnsecurePort(uint16_t aPort)
+otError Filter::AddUnsecurePort(uint16_t aPort)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     for (int i = 0; i < kMaxUnsecurePorts; i++)
     {
@@ -138,15 +138,15 @@ ThreadError Filter::AddUnsecurePort(uint16_t aPort)
         }
     }
 
-    ExitNow(error = kThreadError_NoBufs);
+    ExitNow(error = OT_ERROR_NO_BUFS);
 
 exit:
     return error;
 }
 
-ThreadError Filter::RemoveUnsecurePort(uint16_t aPort)
+otError Filter::RemoveUnsecurePort(uint16_t aPort)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     for (int i = 0; i < kMaxUnsecurePorts; i++)
     {
@@ -165,7 +165,7 @@ ThreadError Filter::RemoveUnsecurePort(uint16_t aPort)
         }
     }
 
-    ExitNow(error = kThreadError_NotFound);
+    ExitNow(error = OT_ERROR_NOT_FOUND);
 
 exit:
     return error;

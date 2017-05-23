@@ -50,7 +50,7 @@ class ActiveDataset: public ActiveDatasetBase
 public:
     ActiveDataset(ThreadNetif &aThreadNetif);
 
-    ThreadError GenerateLocal(void);
+    otError GenerateLocal(void);
 
     void StartLeader(void);
 

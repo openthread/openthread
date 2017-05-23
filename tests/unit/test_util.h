@@ -45,7 +45,7 @@ extern "C" {
 
 #define SuccessOrQuit(ERR, MSG)                 \
   do { \
-    if ((ERR) != kThreadError_None)     \
+    if ((ERR) != OT_ERROR_NONE)     \
     { \
       fprintf(stderr, "%s FAILED: ", __FUNCTION__); \
       fputs(MSG, stderr); \
@@ -68,7 +68,7 @@ extern "C" {
 // I would use the above definition for CompileTimeAssert, but I am getting the following errors
 // when I run 'make -f examples/Makefile-posix distcheck':
 //
-//      error: typedef ‘__C_ASSERT__’ locally defined but not used [-Werror=unused-local-typedefs]
+//      error: typedef "__C_ASSERT__" locally defined but not used [-Werror=unused-local-typedefs]
 //
 #define CompileTimeAssert(COND, MSG)
 
@@ -86,7 +86,7 @@ extern utAssertTrue s_AssertTrue;
 typedef void (*utLogMessage)(const char *format, ...);
 extern utLogMessage s_LogMessage;
 
-#define SuccessOrQuit(ERR, MSG) s_AssertTrue((ERR) == kThreadError_None, L##MSG)
+#define SuccessOrQuit(ERR, MSG) s_AssertTrue((ERR) == OT_ERROR_NONE, L##MSG)
 
 #define VerifyOrQuit(ERR, MSG) s_AssertTrue(ERR, L##MSG)
 

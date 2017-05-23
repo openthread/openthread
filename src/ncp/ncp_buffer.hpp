@@ -58,7 +58,7 @@ public:
      * @param[in]  aError           An error value representing the success or failure of the frame transmit attempt.
      *
      */
-    typedef void (*FrameTransmitCallback)(void *aContext, ThreadError aError);
+    typedef void (*FrameTransmitCallback)(void *aContext, otError aError);
 
     /**
      * This constructor creates an NCP frame buffer.
@@ -101,11 +101,11 @@ public:
      * If there is a previous frame being written (`InFrameEnd()` has not yet been called on the frame), this method
      * will discard and clear the previous unfinished frame.
      *
-     * @retval kThreadError_None      Successfully started a new frame.
-     * @retval kThreadError_NoBufs    Insufficient buffer space available to start a new frame.
+     * @retval OT_ERROR_NONE      Successfully started a new frame.
+     * @retval OT_ERROR_NO_BUFS   Insufficient buffer space available to start a new frame.
      *
      */
-    ThreadError InFrameBegin(void);
+    otError InFrameBegin(void);
 
     /**
      * This method adds data to the current input frame being written to the buffer.
@@ -115,11 +115,11 @@ public:
      * @param[in]  aDataBuffer        A pointer to data buffer.
      * @param[in]  aDataBufferLength  The length of the data buffer.
      *
-     * @retval kThreadError_None      Successfully added new data to the frame.
-     * @retval kThreadError_NoBufs    Insufficient buffer space available to add data.
+     * @retval OT_ERROR_NONE      Successfully added new data to the frame.
+     * @retval OT_ERROR_NO_BUFS   Insufficient buffer space available to add data.
      *
      */
-    ThreadError InFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDataBufferLength);
+    otError InFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDataBufferLength);
 
     /**
      * This method adds a message to the current input frame being written to the buffer.
@@ -130,22 +130,22 @@ public:
      *
      * @param[in]  aMessage         A  message to be added to current frame.
      *
-     * @retval kThreadError_None    Successfully added the message to the frame.
-     * @retval kThreadError_NoBufs  Insufficient buffer space available to add message.
+     * @retval OT_ERROR_NONE     Successfully added the message to the frame.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space available to add message.
      *
      */
-    ThreadError InFrameFeedMessage(otMessage *aMessage);
+    otError InFrameFeedMessage(otMessage *aMessage);
 
     /**
      * This method finalizes/ends the current input frame being written to the buffer.
      *
      * If no buffer space is available, this method will discard and clear the frame before returning an error status.
      *
-     * @retval kThreadError_None    Successfully added the message to the frame.
-     * @retval kThreadError_NoBufs  Insufficient buffer space available to add message.
+     * @retval OT_ERROR_NONE     Successfully added the message to the frame.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space available to add message.
      *
      */
-    ThreadError InFrameEnd(void);
+    otError InFrameEnd(void);
 
     /**
      * This method checks if the buffer is empty. An non-empty buffer contains at least one full frame for reading.
@@ -165,11 +165,11 @@ public:
      * If part of current frame has already been read, a sub-sequent call to this method will reset the read offset
      * back to beginning of current output frame.
      *
-     * @retval kThreadError_None      Successfully started/prepared a new output frame for reading.
-     * @retval kThreadError_NotFound  No frame available in buffer for reading.
+     * @retval OT_ERROR_NONE       Successfully started/prepared a new output frame for reading.
+     * @retval OT_ERROR_NOT_FOUND  No frame available in buffer for reading.
      *
      */
-    ThreadError OutFrameBegin(void);
+    otError OutFrameBegin(void);
 
     /**
      * This method checks if the current output frame (being read) has ended.
@@ -223,11 +223,11 @@ public:
      *
      * If the remove operation causes the buffer to become empty this method will invoke the `EmptyBufferCallback`.
      *
-     * @retval kThreadError_None      Successfully removed the front frame.
-     * @retval kThreadError_NotFound  No frame available in NCP frame buffer to remove.
+     * @retval OT_ERROR_NONE       Successfully removed the front frame.
+     * @retval OT_ERROR_NOT_FOUND  No frame available in NCP frame buffer to remove.
      *
      */
-    ThreadError OutFrameRemove(void);
+    otError OutFrameRemove(void);
 
     /**
      * This method returns the number of bytes (length) of current/front frame in the NCP frame buffer.
@@ -250,11 +250,11 @@ public:
      * @param[in]  aFrameTransmitCallback   Callback invoked when NcpBuffer transmits the current last frame.
      * @param[in]  aContex                  A pointer to arbitrary context information.
      *
-     * @retval kThreadError_None      Successfully accepted the callback.
-     * @retval kThreadError_Busy      The feature is already in use and busy.
+     * @retval OT_ERROR_NONE      Successfully accepted the callback.
+     * @retval OT_ERROR_BUSY      The feature is already in use and busy.
      *
      */
-    ThreadError SetFrameTransmitCallback(FrameTransmitCallback aFrameTransmitCallback, void *aContext);
+    otError SetFrameTransmitCallback(FrameTransmitCallback aFrameTransmitCallback, void *aContext);
 
 private:
 
@@ -334,15 +334,15 @@ private:
     uint16_t        ReadUint16At(uint8_t *aBufPtr);
     void            WriteUint16At(uint8_t *aBufPtr, uint16_t aValue);
 
-    ThreadError     InFrameFeedByte(uint8_t aByte);
-    ThreadError     InFrameBeginSegment(void);
+    otError     InFrameFeedByte(uint8_t aByte);
+    otError     InFrameBeginSegment(void);
     void            InFrameEndSegment(uint16_t aSegmentHeaderFlags);
     void            InFrameDiscard(void);
 
-    ThreadError     OutFramePrepareSegment(void);
+    otError     OutFramePrepareSegment(void);
     void            OutFrameMoveToNextSegment(void);
-    ThreadError     OutFramePrepareMessage(void);
-    ThreadError     OutFrameFillMessageBuffer(void);
+    otError     OutFramePrepareMessage(void);
+    otError     OutFrameFillMessageBuffer(void);
 
     // Instance variables
 

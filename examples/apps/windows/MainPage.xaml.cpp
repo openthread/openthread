@@ -169,7 +169,7 @@ void MainPage::ShowInterfaceDetails(otAdapter^ adapter)
         {
             uint8_t index = 0;
             otChildInfo childInfo;
-            while (kThreadError_None == otThreadGetChildInfoByIndex((otInstance*)(void*)adapter->RawHandle, index, &childInfo))
+            while (OT_ERROR_NONE == otThreadGetChildInfoByIndex((otInstance*)(void*)adapter->RawHandle, index, &childInfo))
             {
                 index++;
             }

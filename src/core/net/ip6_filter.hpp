@@ -80,22 +80,22 @@ public:
      *
      * @param[in]  aPort  The port value.
      *
-     * @retval kThreadError_None    The port was successfully added to the allowed unsecure port list.
-     * @retval kThreadError_NoBufs  The unsecure port list is full.
+     * @retval OT_ERROR_NONE     The port was successfully added to the allowed unsecure port list.
+     * @retval OT_ERROR_NO_BUFS  The unsecure port list is full.
      *
      */
-    ThreadError AddUnsecurePort(uint16_t aPort);
+    otError AddUnsecurePort(uint16_t aPort);
 
     /**
      * This method removes a port from the allowed unsecure port list.
      *
      * @param[in]  aPort  The port value.
      *
-     * @retval kThreadError_None      The port was successfully removed from the allowed unsecure port list.
-     * @retval kThreadError_NotFound  The port was not found in the unsecure port list.
+     * @retval OT_ERROR_NONE       The port was successfully removed from the allowed unsecure port list.
+     * @retval OT_ERROR_NOT_FOUND  The port was not found in the unsecure port list.
      *
      */
-    ThreadError RemoveUnsecurePort(uint16_t aPort);
+    otError RemoveUnsecurePort(uint16_t aPort);
 
     /**
      * This method returns a pointer to the unsecure port list.

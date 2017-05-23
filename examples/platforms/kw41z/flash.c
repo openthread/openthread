@@ -35,13 +35,13 @@
 
 static flash_config_t sFlashConfig;
 
-ThreadError utilsFlashInit(void)
+otError utilsFlashInit(void)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     if (FLASH_Init(&sFlashConfig) != kStatus_FLASH_Success)
     {
-        error = kThreadError_Failed;
+        error = OT_ERROR_FAILED;
     }
 
     return error;
@@ -52,39 +52,39 @@ uint32_t utilsFlashGetSize(void)
     return FSL_FEATURE_FLASH_PFLASH_BLOCK_SIZE;
 }
 
-ThreadError utilsFlashErasePage(uint32_t aAddress)
+otError utilsFlashErasePage(uint32_t aAddress)
 {
-    ThreadError error;
+    otError error;
     status_t status;
 
     status = FLASH_Erase(&sFlashConfig, aAddress, FSL_FEATURE_FLASH_PFLASH_BLOCK_SECTOR_SIZE, kFLASH_ApiEraseKey);
 
     if (status == kStatus_FLASH_Success)
     {
-        error = kThreadError_None;
+        error = OT_ERROR_NONE;
     }
     else if (status == kStatus_FLASH_AlignmentError)
     {
-        error = kThreadError_InvalidArgs;
+        error = OT_ERROR_INVALID_ARGS;
     }
     else
     {
-        error = kThreadError_Failed;
+        error = OT_ERROR_FAILED;
     }
 
     return error;
 }
 
-ThreadError utilsFlashStatusWait(uint32_t aTimeout)
+otError utilsFlashStatusWait(uint32_t aTimeout)
 {
-    ThreadError error = kThreadError_Busy;
+    otError error = OT_ERROR_BUSY;
     uint32_t start = otPlatAlarmGetNow();
 
     do
     {
         if (FTFA->FSTAT & FTFA_FSTAT_CCIF_MASK)
         {
-            error = kThreadError_None;
+            error = OT_ERROR_NONE;
             break;
         }
     }

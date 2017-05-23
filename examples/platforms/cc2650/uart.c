@@ -61,7 +61,7 @@ void UART0_intHandler(void);
 /**
  * Function documented in platform/uart.h
  */
-ThreadError otPlatUartEnable(void)
+otError otPlatUartEnable(void)
 {
     PRCMPowerDomainOn(PRCM_DOMAIN_SERIAL);
 
@@ -81,13 +81,13 @@ ThreadError otPlatUartEnable(void)
     UARTIntEnable(UART0_BASE, UART_INT_RX | UART_INT_RT);
     UARTIntRegister(UART0_BASE, UART0_intHandler);
     UARTEnable(UART0_BASE);
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 /**
  * Function documented in platform/uart.h
  */
-ThreadError otPlatUartDisable(void)
+otError otPlatUartDisable(void)
 {
     UARTDisable(UART0_BASE);
     UARTIntUnregister(UART0_BASE);
@@ -104,16 +104,16 @@ ThreadError otPlatUartDisable(void)
      * serial power domain
      */
     PRCMPowerDomainOff(PRCM_DOMAIN_SERIAL);
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 /**
  * Function documented in platform/uart.h
  */
-ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
+otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    ThreadError error = kThreadError_None;
-    otEXPECT_ACTION(sSendBuffer == NULL, error = kThreadError_Busy);
+    otError error = OT_ERROR_NONE;
+    otEXPECT_ACTION(sSendBuffer == NULL, error = OT_ERROR_BUSY);
 
     sSendBuffer = aBuf;
     sSendLen = aBufLength;

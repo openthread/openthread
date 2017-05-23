@@ -232,9 +232,9 @@ void NcpSpi::TxFrameBufferHasData(void)
     mPrepareTxFrameTask.Post();
 }
 
-ThreadError NcpSpi::PrepareNextSpiSendFrame(void)
+otError NcpSpi::PrepareNextSpiSendFrame(void)
 {
-    ThreadError errorCode = kThreadError_None;
+    otError errorCode = OT_ERROR_NONE;
     uint16_t frameLength;
     uint16_t readLength;
 
@@ -248,7 +248,7 @@ ThreadError NcpSpi::PrepareNextSpiSendFrame(void)
     SuccessOrExit(errorCode = mTxFrameBuffer.OutFrameBegin());
 
     frameLength = mTxFrameBuffer.OutFrameGetLength();
-    VerifyOrExit(frameLength <= sizeof(mSendFrame) - kSpiHeaderLength, errorCode = kThreadError_NoBufs);
+    VerifyOrExit(frameLength <= sizeof(mSendFrame) - kSpiHeaderLength, errorCode = OT_ERROR_NO_BUFS);
 
     spi_header_set_data_len(mSendFrame, frameLength);
 
@@ -256,7 +256,7 @@ ThreadError NcpSpi::PrepareNextSpiSendFrame(void)
     spi_header_set_accept_len(mSendFrame, 0);
 
     readLength = mTxFrameBuffer.OutFrameRead(frameLength, mSendFrame + kSpiHeaderLength);
-    VerifyOrExit(readLength == frameLength, errorCode = kThreadError_Failed);
+    VerifyOrExit(readLength == frameLength, errorCode = OT_ERROR_FAILED);
 
     mSendFrameLen = frameLength + kSpiHeaderLength;
 
@@ -265,15 +265,15 @@ ThreadError NcpSpi::PrepareNextSpiSendFrame(void)
     errorCode = otPlatSpiSlavePrepareTransaction(mSendFrame, mSendFrameLen, mEmptyReceiveFrame,
                                                  sizeof(mEmptyReceiveFrame), true);
 
-    if (errorCode == kThreadError_Busy)
+    if (errorCode == OT_ERROR_BUSY)
     {
         // Being busy is OK. We will get the transaction
         // set up properly when the current transaction
         // is completed.
-        errorCode = kThreadError_None;
+        errorCode = OT_ERROR_NONE;
     }
 
-    if (errorCode != kThreadError_None)
+    if (errorCode != OT_ERROR_NONE)
     {
         mTxState = kTxStateIdle;
         mPrepareTxFrameTask.Post();

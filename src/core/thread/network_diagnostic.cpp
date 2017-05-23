@@ -92,10 +92,10 @@ void NetworkDiagnostic::SetReceiveDiagnosticGetCallback(otReceiveDiagnosticGetCa
     mReceiveDiagnosticGetCallbackContext = aCallbackContext;
 }
 
-ThreadError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestination, const uint8_t aTlvTypes[],
-                                                 uint8_t aCount)
+otError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestination, const uint8_t aTlvTypes[],
+                                             uint8_t aCount)
 {
-    ThreadError error;
+    otError error;
     Message *message;
     Coap::Header header;
     Ip6::MessageInfo messageInfo;
@@ -120,7 +120,7 @@ ThreadError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestinatio
         header.SetPayloadMarker();
     }
 
-    VerifyOrExit((message = mNetif.GetCoap().NewMessage(header)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mNetif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->Append(aTlvTypes, aCount));
 
@@ -135,7 +135,7 @@ ThreadError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestinatio
 
 exit:
 
-    if (error != kThreadError_None && message != NULL)
+    if (error != OT_ERROR_NONE && message != NULL)
     {
         message->Free();
     }
@@ -144,7 +144,7 @@ exit:
 }
 
 void NetworkDiagnostic::HandleDiagnosticGetResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                                                    const otMessageInfo *aMessageInfo, ThreadError aResult)
+                                                    const otMessageInfo *aMessageInfo, otError aResult)
 {
     static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetResponse(*static_cast<Coap::Header *>(aHeader),
                                                                             *static_cast<Message *>(aMessage),
@@ -154,9 +154,9 @@ void NetworkDiagnostic::HandleDiagnosticGetResponse(void *aContext, otCoapHeader
 
 void NetworkDiagnostic::HandleDiagnosticGetResponse(Coap::Header &aHeader, Message &aMessage,
                                                     const Ip6::MessageInfo &aMessageInfo,
-                                                    ThreadError aResult)
+                                                    otError aResult)
 {
-    VerifyOrExit(aResult == kThreadError_None);
+    VerifyOrExit(aResult == OT_ERROR_NONE);
     VerifyOrExit(aHeader.GetCode() == kCoapResponseChanged);
 
     otLogInfoNetDiag(GetInstance(), "Received diagnostic get response");
@@ -199,9 +199,9 @@ exit:
     return;
 }
 
-ThreadError NetworkDiagnostic::AppendIp6AddressList(Message &aMessage)
+otError NetworkDiagnostic::AppendIp6AddressList(Message &aMessage)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     Ip6AddressListTlv tlv;
     uint8_t count = 0;
 
@@ -225,9 +225,9 @@ exit:
     return error;
 }
 
-ThreadError NetworkDiagnostic::AppendChildTable(Message &aMessage)
+otError NetworkDiagnostic::AppendChildTable(Message &aMessage)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t count = 0;
     uint8_t timeout = 0;
     uint8_t numChildren;
@@ -271,10 +271,10 @@ exit:
     return error;
 }
 
-ThreadError NetworkDiagnostic::FillRequestedTlvs(Message &aRequest, Message &aResponse,
-                                                 NetworkDiagnosticTlv &aNetworkDiagnosticTlv)
+otError NetworkDiagnostic::FillRequestedTlvs(Message &aRequest, Message &aResponse,
+                                             NetworkDiagnosticTlv &aNetworkDiagnosticTlv)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint16_t offset = 0;
     uint8_t type;
 
@@ -282,7 +282,7 @@ ThreadError NetworkDiagnostic::FillRequestedTlvs(Message &aRequest, Message &aRe
 
     for (uint32_t i = 0; i < aNetworkDiagnosticTlv.GetLength(); i++)
     {
-        VerifyOrExit(aRequest.Read(offset, sizeof(type), &type) == sizeof(type), error = kThreadError_Drop);
+        VerifyOrExit(aRequest.Read(offset, sizeof(type), &type) == sizeof(type), error = OT_ERROR_DROP);
 
         otLogInfoNetDiag(GetInstance(), "Received diagnostic get type %d", type);
 
@@ -417,7 +417,7 @@ ThreadError NetworkDiagnostic::FillRequestedTlvs(Message &aRequest, Message &aRe
         }
 
         default:
-            ExitNow(error = kThreadError_Drop);
+            ExitNow(error = OT_ERROR_DROP);
         }
 
         offset += sizeof(type);
@@ -438,27 +438,27 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(void *aContext, otCoapHeader *a
 void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Header &aHeader, Message &aMessage,
                                                  const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     Message *message = NULL;
     NetworkDiagnosticTlv networkDiagnosticTlv;
     Coap::Header header;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit(aHeader.GetCode() == kCoapRequestPost, error = kThreadError_Drop);
+    VerifyOrExit(aHeader.GetCode() == kCoapRequestPost, error = OT_ERROR_DROP);
 
     otLogInfoNetDiag(GetInstance(), "Received diagnostic get query");
 
     VerifyOrExit((aMessage.Read(aMessage.GetOffset(), sizeof(NetworkDiagnosticTlv),
-                                &networkDiagnosticTlv) == sizeof(NetworkDiagnosticTlv)), error = kThreadError_Drop);
+                                &networkDiagnosticTlv) == sizeof(NetworkDiagnosticTlv)), error = OT_ERROR_DROP);
 
-    VerifyOrExit(networkDiagnosticTlv.GetType() == NetworkDiagnosticTlv::kTypeList, error = kThreadError_Drop);
+    VerifyOrExit(networkDiagnosticTlv.GetType() == NetworkDiagnosticTlv::kTypeList, error = OT_ERROR_DROP);
 
-    VerifyOrExit((static_cast<TypeListTlv *>(&networkDiagnosticTlv)->IsValid()), error = kThreadError_Drop);
+    VerifyOrExit((static_cast<TypeListTlv *>(&networkDiagnosticTlv)->IsValid()), error = OT_ERROR_DROP);
 
     // DIAG_GET.qry may be sent as a confirmable message.
     if (aHeader.GetType() == kCoapTypeConfirmable)
     {
-        if (mNetif.GetCoap().SendEmptyAck(aHeader, aMessageInfo) == kThreadError_None)
+        if (mNetif.GetCoap().SendEmptyAck(aHeader, aMessageInfo) == OT_ERROR_NONE)
         {
             otLogInfoNetDiag(GetInstance(), "Sent diagnostic get query acknowledgment");
         }
@@ -473,7 +473,7 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Header &aHeader, Message 
         header.SetPayloadMarker();
     }
 
-    VerifyOrExit((message = mNetif.GetCoap().NewMessage(header)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mNetif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
 
     messageInfo.SetPeerAddr(aMessageInfo.GetPeerAddr());
     messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
@@ -488,7 +488,7 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Header &aHeader, Message 
 
 exit:
 
-    if (error != kThreadError_None && message != NULL)
+    if (error != OT_ERROR_NONE && message != NULL)
     {
         message->Free();
     }
@@ -505,28 +505,28 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(void *aContext, otCoapHeader 
 void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Header &aHeader, Message &aMessage,
                                                    const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     Message *message = NULL;
     NetworkDiagnosticTlv networkDiagnosticTlv;
     Coap::Header header;
     Ip6::MessageInfo messageInfo(aMessageInfo);
 
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost, error = kThreadError_Drop);
+                 aHeader.GetCode() == kCoapRequestPost, error = OT_ERROR_DROP);
 
     otLogInfoNetDiag(GetInstance(), "Received diagnostic get request");
 
     VerifyOrExit((aMessage.Read(aMessage.GetOffset(), sizeof(NetworkDiagnosticTlv),
-                                &networkDiagnosticTlv) == sizeof(NetworkDiagnosticTlv)), error = kThreadError_Drop);
+                                &networkDiagnosticTlv) == sizeof(NetworkDiagnosticTlv)), error = OT_ERROR_DROP);
 
-    VerifyOrExit(networkDiagnosticTlv.GetType() == NetworkDiagnosticTlv::kTypeList, error = kThreadError_Drop);
+    VerifyOrExit(networkDiagnosticTlv.GetType() == NetworkDiagnosticTlv::kTypeList, error = OT_ERROR_DROP);
 
-    VerifyOrExit((static_cast<TypeListTlv *>(&networkDiagnosticTlv)->IsValid()), error = kThreadError_Drop);
+    VerifyOrExit((static_cast<TypeListTlv *>(&networkDiagnosticTlv)->IsValid()), error = OT_ERROR_DROP);
 
     header.SetDefaultResponseHeader(aHeader);
     header.SetPayloadMarker();
 
-    VerifyOrExit((message = mNetif.GetCoap().NewMessage(header)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mNetif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = FillRequestedTlvs(aMessage, *message, networkDiagnosticTlv));
 
@@ -542,16 +542,16 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Header &aHeader, Messag
 
 exit:
 
-    if (error != kThreadError_None && message != NULL)
+    if (error != OT_ERROR_NONE && message != NULL)
     {
         message->Free();
     }
 }
 
-ThreadError NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination, const uint8_t aTlvTypes[],
-                                                   uint8_t aCount)
+otError NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination, const uint8_t aTlvTypes[],
+                                               uint8_t aCount)
 {
-    ThreadError error;
+    otError error;
     Message *message;
     Coap::Header header;
     Ip6::MessageInfo messageInfo;
@@ -565,7 +565,7 @@ ThreadError NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestinat
         header.SetPayloadMarker();
     }
 
-    VerifyOrExit((message = mNetif.GetCoap().NewMessage(header)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mNetif.GetCoap().NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->Append(aTlvTypes, aCount));
 
@@ -580,7 +580,7 @@ ThreadError NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestinat
 
 exit:
 
-    if (error != kThreadError_None && message != NULL)
+    if (error != OT_ERROR_NONE && message != NULL)
     {
         message->Free();
     }

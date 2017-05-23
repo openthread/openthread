@@ -55,14 +55,14 @@ extern "C" {
 /**
  * This function pointer is called to notify the completion of a join operation.
  *
- * @param[in]  aError    kThreadError_None if the join process succeeded.
- *                       kThreadError_Security if the join process failed due to security credentials.
- *                       kThreadError_NotFound if no joinable network was discovered.
- *                       kThreadError_ResponseTimeout if a response timed out.
+ * @param[in]  aError    OT_ERROR_NONE if the join process succeeded.
+ *                       OT_ERROR_SECURITY if the join process failed due to security credentials.
+ *                       OT_ERROR_NOT_FOUND if no joinable network was discovered.
+ *                       OT_ERROR_RESPONSE_TIMEOUT if a response timed out.
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void (OTCALL *otJoinerCallback)(ThreadError aError, void *aContext);
+typedef void (OTCALL *otJoinerCallback)(otError aError, void *aContext);
 
 /**
  * This function enables the Thread Joiner role.
@@ -77,14 +77,14 @@ typedef void (OTCALL *otJoinerCallback)(ThreadError aError, void *aContext);
  * @param[in]  aCallback         A pointer to a function that is called when the join operation completes.
  * @param[in]  aContext          A pointer to application-specific context.
  *
- * @retval kThreadError_None         Successfully started the Commissioner role.
- * @retval kThreadError_InvalidArgs  @p aPSKd or @p aProvisioningUrl is invalid.
+ * @retval OT_ERROR_NONE          Successfully started the Commissioner role.
+ * @retval OT_ERROR_INVALID_ARGS  @p aPSKd or @p aProvisioningUrl is invalid.
  *
  */
-OTAPI ThreadError OTCALL otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl,
-                                       const char *aVendorName, const char *aVendorModel,
-                                       const char *aVendorSwVersion, const char *aVendorData,
-                                       otJoinerCallback aCallback, void *aContext);
+OTAPI otError OTCALL otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl,
+                                   const char *aVendorName, const char *aVendorModel,
+                                   const char *aVendorSwVersion, const char *aVendorData,
+                                   otJoinerCallback aCallback, void *aContext);
 
 /**
  * This function disables the Thread Joiner role.
@@ -92,7 +92,7 @@ OTAPI ThreadError OTCALL otJoinerStart(otInstance *aInstance, const char *aPSKd,
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
  */
-OTAPI ThreadError OTCALL otJoinerStop(otInstance *aInstance);
+OTAPI otError OTCALL otJoinerStop(otInstance *aInstance);
 
 /**
  * @}

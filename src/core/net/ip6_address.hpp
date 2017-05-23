@@ -324,11 +324,11 @@ public:
      *
      * @param[in]  aBuf  A pointer to the NULL-terminated string.
      *
-     * @retval kThreadError_None         Successfully parsed the IPv6 address string.
-     * @retval kTheradError_InvalidArgs  Failed to parse the IPv6 address string.
+     * @retval OT_ERROR_NONE          Successfully parsed the IPv6 address string.
+     * @retval OT_ERROR_INVALID_ARGS  Failed to parse the IPv6 address string.
      *
      */
-    ThreadError FromString(const char *aBuf);
+    otError FromString(const char *aBuf);
 
     /**
      * This method converts an IPv6 address object to a NULL-terminated string.

@@ -255,7 +255,7 @@ typedef struct _MS_FILTER
         uint8_t                     otTransmitMessage[kMaxPHYPacketSize];
         RadioPacket                 otReceiveFrame;
         RadioPacket                 otTransmitFrame;
-        ThreadError                 otLastTransmitError;
+        otError                     otLastTransmitError;
         BOOLEAN                     otLastTransmitFramePending;
         CHAR                        otLastEnergyScanMaxRssi;
 

@@ -154,14 +154,14 @@ extern "C" {
 OTAPI const char *OTCALL otGetVersionString(void);
 
 /**
- * This function converts a ThreadError enum into a string.
+ * This function converts a otError enum into a string.
  *
- * @param[in]  aError     A ThreadError enum.
+ * @param[in]  aError     A otError enum.
  *
  * @returns  A string representation of a ThreadError.
  *
  */
-OTAPI const char *OTCALL otThreadErrorToString(ThreadError aError);
+OTAPI const char *OTCALL otThreadErrorToString(otError aError);
 
 #ifdef __cplusplus
 }  // extern "C"

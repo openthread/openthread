@@ -296,14 +296,14 @@ bool otPlatRadioIsEnabled(_In_ otInstance *otCtx)
     return pFilter->otPhyState != kStateDisabled;
 }
 
-ThreadError otPlatRadioEnable(_In_ otInstance *otCtx)
+otError otPlatRadioEnable(_In_ otInstance *otCtx)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
     NTSTATUS status;
 
     NT_ASSERT(pFilter->otPhyState <= kStateSleep);
-    if (pFilter->otPhyState > kStateSleep) return kThreadError_Busy;
+    if (pFilter->otPhyState > kStateSleep) return OT_ERROR_BUSY;
 
     pFilter->otPhyState = kStateSleep;
 
@@ -351,10 +351,10 @@ ThreadError otPlatRadioEnable(_In_ otInstance *otCtx)
         LogError(DRIVER_DEFAULT, "Set SPINEL_PROP_MAC_15_4_SADDR failed, %!STATUS!", status);
     }
 
-    return NT_SUCCESS(status) ? kThreadError_None : kThreadError_Failed;
+    return NT_SUCCESS(status) ? OT_ERROR_NONE : OT_ERROR_FAILED;
 }
 
-ThreadError otPlatRadioDisable(_In_ otInstance *otCtx)
+otError otPlatRadioDisable(_In_ otInstance *otCtx)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
@@ -383,10 +383,10 @@ ThreadError otPlatRadioDisable(_In_ otInstance *otCtx)
 
     LogInfo(DRIVER_DEFAULT, "Filter %p PhyState = kStateDisabled.", pFilter);
 
-    return NT_SUCCESS(status) ? kThreadError_None : kThreadError_Failed;
+    return NT_SUCCESS(status) ? OT_ERROR_NONE : OT_ERROR_FAILED;
 }
 
-ThreadError otPlatRadioSleep(_In_ otInstance *otCtx)
+otError otPlatRadioSleep(_In_ otInstance *otCtx)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
@@ -394,7 +394,7 @@ ThreadError otPlatRadioSleep(_In_ otInstance *otCtx)
     // If we were in the transmit state, cancel the transmit
     if (pFilter->otPhyState == kStateTransmit)
     {
-        pFilter->otLastTransmitError = kThreadError_Abort;
+        pFilter->otLastTransmitError = OT_ERROR_ABORT;
         otLwfRadioTransmitFrameDone(pFilter);
     }
 
@@ -417,16 +417,16 @@ ThreadError otPlatRadioSleep(_In_ otInstance *otCtx)
         }
     }
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError otPlatRadioReceive(_In_ otInstance *otCtx, uint8_t aChannel)
+otError otPlatRadioReceive(_In_ otInstance *otCtx, uint8_t aChannel)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
     
     NT_ASSERT(pFilter->otPhyState != kStateDisabled);
-    if (pFilter->otPhyState == kStateDisabled) return kThreadError_Busy;
+    if (pFilter->otPhyState == kStateDisabled) return OT_ERROR_BUSY;
     
     LogFuncEntryMsg(DRIVER_DATA_PATH, "Filter: %p", pFilter);
 
@@ -479,7 +479,7 @@ ThreadError otPlatRadioReceive(_In_ otInstance *otCtx, uint8_t aChannel)
     
     LogFuncExit(DRIVER_DATA_PATH);
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 RadioPacket *otPlatRadioGetTransmitBuffer(_In_ otInstance *otCtx)
@@ -513,7 +513,7 @@ bool otPlatRadioGetPromiscuous(_In_ otInstance *otCtx)
 VOID 
 otLwfRadioReceiveFrame(
     _In_ PMS_FILTER pFilter,
-    _In_ ThreadError errorCode
+    _In_ otError errorCode
     )
 {    
     NT_ASSERT(pFilter->otReceiveFrame.mChannel >= 11 && pFilter->otReceiveFrame.mChannel <= 26);
@@ -534,11 +534,11 @@ otLwfRadioReceiveFrame(
     LogFuncExit(DRIVER_DATA_PATH);
 }
 
-ThreadError otPlatRadioTransmit(_In_ otInstance *otCtx, _In_ RadioPacket *aPacket)
+otError otPlatRadioTransmit(_In_ otInstance *otCtx, _In_ RadioPacket *aPacket)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
-    ThreadError error = kThreadError_Busy;
+    otError error = OT_ERROR_BUSY;
 
     UNREFERENCED_PARAMETER(aPacket);
 
@@ -547,7 +547,7 @@ ThreadError otPlatRadioTransmit(_In_ otInstance *otCtx, _In_ RadioPacket *aPacke
     NT_ASSERT(pFilter->otPhyState == kStateReceive);
     if (pFilter->otPhyState == kStateReceive)
     {
-        error = kThreadError_None;
+        error = OT_ERROR_NONE;
         pFilter->otPhyState = kStateTransmit;
     
         LogInfo(DRIVER_DEFAULT, "Filter %p PhyState = kStateTransmit.", pFilter);
@@ -587,11 +587,11 @@ otLwfRadioTransmitFrameDone(
         LogInfo(DRIVER_DEFAULT, "Filter %p PhyState = kStateReceive.", pFilter);
         KeSetEvent(&pFilter->EventWorkerThreadProcessNBLs, 0, FALSE);
 
-        if (pFilter->otLastTransmitError != kThreadError_None &&
-            pFilter->otLastTransmitError != kThreadError_ChannelAccessFailure &&
-            pFilter->otLastTransmitError != kThreadError_NoAck)
+        if (pFilter->otLastTransmitError != OT_ERROR_NONE &&
+            pFilter->otLastTransmitError != OT_ERROR_CHANNEL_ACCESS_FAILURE &&
+            pFilter->otLastTransmitError != OT_ERROR_NO_ACK)
         {
-            pFilter->otLastTransmitError = kThreadError_Abort;
+            pFilter->otLastTransmitError = OT_ERROR_ABORT;
         }
 
         otPlatRadioTransmitDone(pFilter->otCtx, &pFilter->otTransmitFrame, pFilter->otLastTransmitFramePending, pFilter->otLastTransmitError);
@@ -625,7 +625,7 @@ void otPlatRadioEnableSrcMatch(_In_ otInstance *otCtx, bool aEnable)
     }
 }
 
-ThreadError otPlatRadioAddSrcMatchShortEntry(_In_ otInstance *otCtx, const uint16_t aShortAddress)
+otError otPlatRadioAddSrcMatchShortEntry(_In_ otInstance *otCtx, const uint16_t aShortAddress)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
@@ -643,10 +643,10 @@ ThreadError otPlatRadioAddSrcMatchShortEntry(_In_ otInstance *otCtx, const uint1
         LogError(DRIVER_DEFAULT, "Insert SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES failed, %!STATUS!", status);
     }
 
-    return NT_SUCCESS(status) ? kThreadError_None : kThreadError_Failed;
+    return NT_SUCCESS(status) ? OT_ERROR_NONE : OT_ERROR_FAILED;
 }
 
-ThreadError otPlatRadioAddSrcMatchExtEntry(_In_ otInstance *otCtx, const uint8_t *aExtAddress)
+otError otPlatRadioAddSrcMatchExtEntry(_In_ otInstance *otCtx, const uint8_t *aExtAddress)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
@@ -664,10 +664,10 @@ ThreadError otPlatRadioAddSrcMatchExtEntry(_In_ otInstance *otCtx, const uint8_t
         LogError(DRIVER_DEFAULT, "Insert SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES failed, %!STATUS!", status);
     }
 
-    return NT_SUCCESS(status) ? kThreadError_None : kThreadError_Failed;
+    return NT_SUCCESS(status) ? OT_ERROR_NONE : OT_ERROR_FAILED;
 }
 
-ThreadError otPlatRadioClearSrcMatchShortEntry(_In_ otInstance *otCtx, const uint16_t aShortAddress)
+otError otPlatRadioClearSrcMatchShortEntry(_In_ otInstance *otCtx, const uint16_t aShortAddress)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
@@ -685,10 +685,10 @@ ThreadError otPlatRadioClearSrcMatchShortEntry(_In_ otInstance *otCtx, const uin
         LogError(DRIVER_DEFAULT, "Remove SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES failed, %!STATUS!", status);
     }
 
-    return NT_SUCCESS(status) ? kThreadError_None : kThreadError_Failed;
+    return NT_SUCCESS(status) ? OT_ERROR_NONE : OT_ERROR_FAILED;
 }
 
-ThreadError otPlatRadioClearSrcMatchExtEntry(_In_ otInstance *otCtx, const uint8_t *aExtAddress)
+otError otPlatRadioClearSrcMatchExtEntry(_In_ otInstance *otCtx, const uint8_t *aExtAddress)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
@@ -706,7 +706,7 @@ ThreadError otPlatRadioClearSrcMatchExtEntry(_In_ otInstance *otCtx, const uint8
         LogError(DRIVER_DEFAULT, "Remove SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES failed, %!STATUS!", status);
     }
 
-    return NT_SUCCESS(status) ? kThreadError_None : kThreadError_Failed;
+    return NT_SUCCESS(status) ? OT_ERROR_NONE : OT_ERROR_FAILED;
 }
 
 void otPlatRadioClearSrcMatchShortEntries(_In_ otInstance *otCtx)
@@ -745,7 +745,7 @@ void otPlatRadioClearSrcMatchExtEntries(_In_ otInstance *otCtx)
     }
 }
 
-ThreadError otPlatRadioEnergyScan(_In_ otInstance *otCtx, uint8_t aScanChannel, uint16_t aScanDuration)
+otError otPlatRadioEnergyScan(_In_ otInstance *otCtx, uint8_t aScanChannel, uint16_t aScanDuration)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
@@ -791,7 +791,7 @@ ThreadError otPlatRadioEnergyScan(_In_ otInstance *otCtx, uint8_t aScanChannel, 
 
 error:
 
-    return NT_SUCCESS(status) ? kThreadError_None : kThreadError_Failed;
+    return NT_SUCCESS(status) ? OT_ERROR_NONE : OT_ERROR_FAILED;
 }
 
 void otPlatRadioSetDefaultTxPower(_In_ otInstance *otCtx, int8_t aPower)

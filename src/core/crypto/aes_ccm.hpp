@@ -64,7 +64,7 @@ public:
      * @param[in]  aKeyLength  Length of the key in bytes.
      *
      */
-    ThreadError SetKey(const uint8_t *aKey, uint16_t aKeyLength);
+    otError SetKey(const uint8_t *aKey, uint16_t aKeyLength);
 
     /**
      * This method initializes the AES CCM computation.
