@@ -621,8 +621,8 @@ public:
      * @param[in]   aContext        A pointer to arbitrary context information.
      *
      */
-    void SetInterceptor(Interceptor aInterpreter, void *aContext) {
-        mInterceptor = aInterpreter;
+    void SetInterceptor(Interceptor aInterceptor, void *aContext) {
+        mInterceptor = aInterceptor;
         mContext = aContext;
     }
 
