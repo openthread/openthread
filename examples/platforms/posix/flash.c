@@ -114,7 +114,7 @@ otError utilsFlashErasePage(uint32_t aAddress)
 
     // Write the page
     ssize_t r;
-    r =  pwrite(sFlashFd, &(dummyPage[0]), FLASH_PAGE_SIZE, address);
+    r =  pwrite(sFlashFd, &(dummyPage[0]), FLASH_PAGE_SIZE, (off_t)address);
     otEXPECT_ACTION(((int)r) == ((int)(FLASH_PAGE_SIZE)), error = OT_ERROR_FAILED);
 
 
@@ -141,7 +141,7 @@ uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
         otEXPECT((ret = utilsFlashRead(aAddress + index, &byte, 1)) == 1);
         // Use bitwise AND to emulate the behavior of flash memory
         byte &= aData[index];
-        otEXPECT((ret = (uint32_t)pwrite(sFlashFd, &byte, 1, aAddress + index)) == 1);
+        otEXPECT((ret = (uint32_t)pwrite(sFlashFd, &byte, 1, (off_t)(aAddress + index))) == 1);
     }
 
 exit:
@@ -153,7 +153,7 @@ uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
     uint32_t ret = 0;
 
     otEXPECT(sFlashFd >= 0 && aAddress < FLASH_SIZE);
-    ret = (uint32_t)pread(sFlashFd, aData, aSize, aAddress);
+    ret = (uint32_t)pread(sFlashFd, aData, aSize, (off_t)aAddress);
 
 exit:
     return ret;

@@ -331,6 +331,7 @@ otError Coap::ProcessClient(int argc, char *argv[])
     if (argc > 3)
     {
         ConvertToLower(argv[3]);
+
         if (strcmp(argv[3], "con") == 0)
         {
             coapType = kCoapTypeConfirmable;
