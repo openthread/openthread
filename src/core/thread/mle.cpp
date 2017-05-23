@@ -261,6 +261,7 @@ otError Mle::Stop(bool aClearNetworkDatasets)
     mNetif.RemoveUnicastAddress(mMeshLocal16);
     mNetif.GetNetworkDataLocal().Clear();
     mNetif.GetNetworkDataLeader().Clear();
+    memset(&mLeaderData, 0, sizeof(mLeaderData));
 
     if (aClearNetworkDatasets)
     {
