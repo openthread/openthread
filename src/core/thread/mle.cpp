@@ -1675,6 +1675,7 @@ otError Mle::SendChildUpdateRequest(void)
     message->SetSubType(Message::kSubTypeMleChildUpdateRequest);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildUpdateRequest));
     SuccessOrExit(error = AppendMode(*message, mDeviceMode));
+    SuccessOrExit(error = AppendSourceAddress(*message));
 
     if ((mDeviceMode & ModeTlv::kModeFFD) == 0)
     {
@@ -1694,7 +1695,6 @@ otError Mle::SendChildUpdateRequest(void)
         break;
 
     case kDeviceStateChild:
-        SuccessOrExit(error = AppendSourceAddress(*message));
         SuccessOrExit(error = AppendLeaderData(*message));
         SuccessOrExit(error = AppendTimeout(*message, mTimeout));
         break;
