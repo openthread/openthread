@@ -359,7 +359,7 @@ void NcpSpi::HandleRxFrame(void)
         otPlatSpiSlavePrepareTransaction(mEmptySendFrameFullAccept, kSpiHeaderLength, mReceiveFrame,
                                          sizeof(mReceiveFrame), false);
 
-        // No need to check the error status. Getting `kThreadError_Busy`
+        // No need to check the error status. Getting `OT_ERROR_BUSY`
         // is OK as everything will be set up properly from callback when
         // the current transaction is completed.
     }
