@@ -2831,7 +2831,7 @@ otError NcpBase::GetPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_p
             64,
             border_router_config.mStable,
             flags,
-            true
+            false
         ));
     }
 
@@ -2859,7 +2859,7 @@ otError NcpBase::GetPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_p
             64,
             border_router_config.mStable,
             flags,
-            false
+            true
         ));
     }
 
