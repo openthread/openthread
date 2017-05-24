@@ -674,8 +674,8 @@ void AddressResolver::HandleIcmpReceive(Message &aMessage, const Ip6::MessageInf
 {
     Ip6::Header ip6Header;
 
-    VerifyOrExit(aIcmpHeader.GetType() == kIcmp6TypeDstUnreach);
-    VerifyOrExit(aIcmpHeader.GetCode() == kIcmp6CodeDstUnreachNoRoute);
+    VerifyOrExit(aIcmpHeader.GetType() == Ip6::IcmpHeader::kTypeDstUnreach);
+    VerifyOrExit(aIcmpHeader.GetCode() == Ip6::IcmpHeader::kCodeDstUnreachNoRoute);
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(ip6Header), &ip6Header) == sizeof(ip6Header));
 
     for (int i = 0; i < kCacheEntries; i++)

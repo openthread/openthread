@@ -34,7 +34,7 @@
 #ifndef ICMP6_HPP_
 #define ICMP6_HPP_
 
-#include <openthread/types.h>
+#include <openthread/icmp6.h>
 
 #include "common/encoding.hpp"
 #include "net/ip6_headers.hpp"
@@ -72,13 +72,21 @@ public:
      * ICMPv6 Message Types
      *
      */
-    typedef otIcmp6Type Type;
+    enum Type
+    {
+        kTypeDstUnreach  = OT_ICMP6_TYPE_DST_UNREACH,   ///< Destination Unreachable
+        kTypeEchoRequest = OT_ICMP6_TYPE_ECHO_REQUEST,  ///< Echo Request
+        kTypeEchoReply   = OT_ICMP6_TYPE_ECHO_REPLY,    ///< Echo Reply
+    };
 
     /**
      * ICMPv6 Message Codes
      *
      */
-    typedef otIcmp6Code Code;
+    enum Code
+    {
+        kCodeDstUnreachNoRoute = OT_ICMP6_CODE_DST_UNREACH_NO_ROUTE,  ///< Destination Unreachable No Route
+    };
 
     /**
      * This method returns the ICMPv6 message type.
