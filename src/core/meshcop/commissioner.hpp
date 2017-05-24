@@ -140,13 +140,21 @@ public:
     uint16_t GetSessionId(void) const;
 
     /**
+     * This method indicates whether or not the Commissioner role is active.
+     *
+     * @returns TRUE if the Commissioner role is active, FALSE otherwise.
+     *
+     */
+    bool IsActive(void) const { return mState == OT_COMMISSIONER_STATE_ACTIVE; }
+
+    /**
      * This function returns the Commissioner State.
      *
      * @param[in]  aInstance  A pointer to an OpenThread instance.
      *
-     * @retval kCommissionerStateDisabled    Commissioner disabled.
-     * @retval kCommissionerStatePetition    Becoming the commissioner.
-     * @retval kCommissionerStateActive      Commissioner enabled.
+     * @retval OT_COMMISSIONER_STATE_DISABLED  Commissioner disabled.
+     * @retval OT_COMMISSIONER_STATE_PETITION  Becoming the commissioner.
+     * @retval OT_COMIMSSIONER_STATE_ACTIVE    Commissioner enabled.
      *
      */
     otCommissionerState GetState(void) const;

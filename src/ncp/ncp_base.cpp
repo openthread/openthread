@@ -3665,7 +3665,7 @@ otError NcpBase::GetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header, sp
 otError NcpBase::GetPropertyHandler_THREAD_COMMISSIONER_ENABLED(uint8_t header, spinel_prop_key_t key)
 {
     bool isEnabled = false;
-    if (otCommissionerGetState(mInstance) == kCommissionerStateActive)
+    if (otCommissionerGetState(mInstance) == OT_COMMISSIONER_STATE_ACTIVE)
         isEnabled = true;
 
     return SendPropertyUpdate(

@@ -88,7 +88,7 @@ otError EnergyScanClient::SendQuery(uint32_t aChannelMask, uint8_t aCount, uint1
     Ip6::MessageInfo messageInfo;
     Message *message = NULL;
 
-    VerifyOrExit(mNetif.GetCommissioner().GetState() == kCommissionerStateActive, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(mNetif.GetCommissioner().IsActive(), error = OT_ERROR_INVALID_STATE);
 
     header.Init(aAddress.IsMulticast() ? kCoapTypeNonConfirmable : kCoapTypeConfirmable,
                 kCoapRequestPost);
