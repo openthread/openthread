@@ -131,7 +131,7 @@ public:
 
 private:
     otError HandleDetachStart(void) { return OT_ERROR_NONE; }
-    otError HandleChildStart(otMleAttachFilter) { return OT_ERROR_NONE; }
+    otError HandleChildStart(AttachMode) { return OT_ERROR_NONE; }
     otError HandleLinkRequest(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
     otError HandleLinkAccept(const Message &, const Ip6::MessageInfo &, uint32_t) { return OT_ERROR_DROP; }
     otError HandleLinkAccept(const Message &, const Ip6::MessageInfo &, uint32_t, bool) { return OT_ERROR_DROP; }

@@ -1406,7 +1406,7 @@ OTNODEAPI int32_t OTCALL otNodeSetState(otNode* aNode, const char *aState)
     }
     else if (strcmp(aState, "child") == 0)
     {
-        error = otThreadBecomeChild(aNode->mInstance, kMleAttachAnyPartition);
+        error = otThreadBecomeChild(aNode->mInstance);
     }
     else if (strcmp(aState, "router") == 0)
     {

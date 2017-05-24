@@ -240,9 +240,9 @@ otError otThreadBecomeDetached(otInstance *aInstance)
     return aInstance->mThreadNetif.GetMle().BecomeDetached();
 }
 
-otError otThreadBecomeChild(otInstance *aInstance, otMleAttachFilter aFilter)
+otError otThreadBecomeChild(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetMle().BecomeChild(aFilter);
+    return aInstance->mThreadNetif.GetMle().BecomeChild(Mle::kAttachAny);
 }
 
 otError otThreadGetNextNeighborInfo(otInstance *aInstance, otNeighborInfoIterator *aIterator, otNeighborInfo *aInfo)

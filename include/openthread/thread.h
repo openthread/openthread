@@ -359,12 +359,11 @@ OTAPI otError OTCALL otThreadBecomeDetached(otInstance *aInstance);
  * Attempt to reattach as a child.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aFilter   Identifies whether to join any, same, or better partition.
  *
  * @retval OT_ERROR_NONE           Successfully begin attempt to become a child.
  * @retval OT_ERROR_INVALID_STATE  Thread is disabled.
  */
-OTAPI otError OTCALL otThreadBecomeChild(otInstance *aInstance, otMleAttachFilter aFilter);
+OTAPI otError OTCALL otThreadBecomeChild(otInstance *aInstance);
 
 /**
  * This function gets the next neighbor information. It is used to go through the entries of
