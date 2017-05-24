@@ -704,10 +704,10 @@ public:
     bool IsAnycastLocator(const Ip6::Address &aAddress) const;
 
     /**
-     * This method indicates whether or not an IPv6 address is a Mesh Local Prefix based address.
+     * This method indicates whether or not an IPv6 address is a Mesh Local Address.
      *
-     * @retval TRUE   If @p aAddress is a Mesh Local Prefix based address.
-     * @retval FALSE  If @p aAddress is not a Mesh Local Prefix based address.
+     * @retval TRUE   If @p aAddress is a Mesh Local Address.
+     * @retval FALSE  If @p aAddress is not a Mesh Local Address.
      *
      */
     bool IsMeshLocalAddress(const Ip6::Address &aAddress) const;

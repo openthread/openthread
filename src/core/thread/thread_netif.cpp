@@ -187,14 +187,14 @@ otError ThreadNetif::TmfFilter(const Message &aMessage, const Ip6::MessageInfo &
     otError error = OT_ERROR_NONE;
 
     // A TMF message must comply with following rules:
-    // 1. The destination is a Mesh Local Prefix based address or a Link-Local Multicast address or a Realm-Local
-    //    Multicast address, and the source is a Mesh Local prefix based address(RLOC, ALOC or ML-EID).
-    // 2. The source and destination are Link-Local addresses.
+    // 1. The destination is a Mesh Local Address or a Link-Local Multicast Address or a Realm-Local Multicast Address,
+    //    and the source is a Mesh Local Address.
+    // 2. Both the destination and the source are Link-Local Addresses.
     VerifyOrExit(((static_cast<ThreadNetif *>(aContext)->mMleRouter.IsMeshLocalAddress(aMessageInfo.GetSockAddr()) ||
                    aMessageInfo.GetSockAddr().IsLinkLocalMulticast() ||
                    aMessageInfo.GetSockAddr().IsRealmLocalMulticast()) &&
                   static_cast<ThreadNetif *>(aContext)->mMleRouter.IsMeshLocalAddress(aMessageInfo.GetPeerAddr())) ||
-                 ((aMessageInfo.GetSockAddr().IsLinkLocal()) && aMessageInfo.GetPeerAddr().IsLinkLocal()),
+                 (aMessageInfo.GetSockAddr().IsLinkLocal() && aMessageInfo.GetPeerAddr().IsLinkLocal()),
                  error = OT_ERROR_NOT_TMF);
 exit:
     (void)aMessage;
