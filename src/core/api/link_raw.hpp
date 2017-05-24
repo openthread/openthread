@@ -84,19 +84,19 @@ public:
      * This method invokes the mReceiveDoneCallback, if set.
      *
      */
-    void InvokeReceiveDone(RadioPacket *aPacket, otError aError);
+    void InvokeReceiveDone(otRadioFrame *aFrame, otError aError);
 
     /**
      * This method starts a (single) Transmit on the link-layer.
      *
      */
-    otError Transmit(RadioPacket *aPacket, otLinkRawTransmitDone aCallback);
+    otError Transmit(otRadioFrame *aFrame, otLinkRawTransmitDone aCallback);
 
     /**
      * This method invokes the mTransmitDoneCallback, if set.
      *
      */
-    void InvokeTransmitDone(RadioPacket *aPacket, bool aFramePending, otError aError);
+    void InvokeTransmitDone(otRadioFrame *aFrame, bool aFramePending, otError aError);
 
     /**
      * This method starts a (single) Enery Scan on the link-layer.
@@ -119,7 +119,7 @@ private:
     otLinkRawTransmitDone   mTransmitDoneCallback;
     otLinkRawEnergyScanDone mEnergyScanDoneCallback;
 
-    otError DoTransmit(RadioPacket *aPacket);
+    otError DoTransmit(otRadioFrame *aFrame);
 
 #if OPENTHREAD_LINKRAW_TIMER_REQUIRED
 

@@ -58,7 +58,7 @@ extern "C" {
  * @defgroup radio-types Types
  *
  * @brief
- *   This module includes the platform abstraction for a radio packet.
+ *   This module includes the platform abstraction for a radio frame.
  *
  * @{
  *
@@ -66,61 +66,60 @@ extern "C" {
 
 enum
 {
-    kMaxPHYPacketSize        = 127,                       ///< aMaxPHYPacketSize (IEEE 802.15.4-2006)
-    kPhyMinChannel           = 11,                        ///< 2.4 GHz IEEE 802.15.4-2006
-    kPhyMaxChannel           = 26,                        ///< 2.4 GHz IEEE 802.15.4-2006
-    kPhySupportedChannelMask = 0xffff << kPhyMinChannel,  ///< 2.4 GHz IEEE 802.15.4-2006
-    kPhySymbolsPerOctet      = 2,                         ///< 2.4 GHz IEEE 802.15.4-2006
-    kPhyBitRate              = 250000,                    ///< 2.4 GHz IEEE 802.15.4 (kilobits per second)
+    OT_RADIO_FRAME_MAX_SIZE     = 127,                             ///< aMaxPHYPacketSize (IEEE 802.15.4-2006)
+    OT_RADIO_CHANNEL_MIN         = 11,                              ///< 2.4 GHz IEEE 802.15.4-2006
+    OT_RADIO_CHANNEL_MAX         = 26,                              ///< 2.4 GHz IEEE 802.15.4-2006
+    OT_RADIO_SUPPORTED_CHANNELS  = 0xffff << OT_RADIO_CHANNEL_MIN,  ///< 2.4 GHz IEEE 802.15.4-2006
+    OT_RADIO_SYMBOLS_PER_OCTET   = 2,                               ///< 2.4 GHz IEEE 802.15.4-2006
+    OT_RADIO_BIT_RATE            = 250000,                          ///< 2.4 GHz IEEE 802.15.4 (kilobits per second)
 
-    kPhyBitsPerOctet    = 8,
-    kPhyUsPerSymbol     = ((kPhyBitsPerOctet / kPhySymbolsPerOctet) * 1000000) / kPhyBitRate,
+    OT_RADIO_BITS_PER_OCTET  = 8,      ///< Number of bits per octet
+    OT_RADIO_SYMBOL_TIME     = ((OT_RADIO_BITS_PER_OCTET / OT_RADIO_SYMBOLS_PER_OCTET) * 1000000) / OT_RADIO_BIT_RATE,
 
-    kPhyNoLqi           = 0,       ///< LQI measurement not supported
-    kPhyInvalidRssi     = 127,     ///< Invalid or unknown RSSI value
+    OT_RADIO_LQI_NONE        = 0,      ///< LQI measurement not supported
+    OT_RADIO_RSSI_INVALID    = 127,    ///< Invalid or unknown RSSI value
 };
 
 /**
- *   This enum represents radio capabilities.
+ * This enum represents radio capabilities.
  *
  */
-
 typedef enum otRadioCaps
 {
-    kRadioCapsNone              = 0,  ///< None
-    kRadioCapsAckTimeout        = 1,  ///< Radio supports AckTime event
-    kRadioCapsEnergyScan        = 2,  ///< Radio supports Energy Scans
-    kRadioCapsTransmitRetries   = 4,  ///< Radio supports transmission retry logic with collision avoidance (CSMA).
-    kRadioCapsCsmaBackOff       = 8,  ///< Radio supports CSMA backoff for frame transmission (but no retry).
+    OT_RADIO_CAPS_NONE              = 0,  ///< None
+    OT_RADIO_CAPS_ACK_TIMEOUT       = 1,  ///< Radio supports AckTime event
+    OT_RADIO_CAPS_ENERGY_SCAN       = 2,  ///< Radio supports Energy Scans
+    OT_RADIO_CAPS_TRANSMIT_RETRIES  = 4,  ///< Radio supports transmission retry logic with collision avoidance (CSMA).
+    OT_RADIO_CAPS_CSMA_BACKOFF      = 8,  ///< Radio supports CSMA backoff for frame transmission (but no retry).
 } otRadioCaps;
 
 /**
  * This structure represents an IEEE 802.15.4 radio frame.
  */
-typedef struct RadioPacket
+typedef struct otRadioFrame
 {
-    uint8_t  *mPsdu;           ///< The PSDU.
-    uint8_t  mLength;          ///< Length of the PSDU.
-    uint8_t  mChannel;         ///< Channel used to transmit/receive the frame.
-    int8_t   mPower;           ///< Transmit/receive power in dBm.
-    uint8_t  mLqi;             ///< Link Quality Indicator for received frames.
-    uint8_t  mMaxTxAttempts;   ///< Max number of transmit attempts for an outbound frame.
+    uint8_t  *mPsdu;            ///< The PSDU.
+    uint8_t  mLength;           ///< Length of the PSDU.
+    uint8_t  mChannel;          ///< Channel used to transmit/receive the frame.
+    int8_t   mPower;            ///< Transmit/receive power in dBm.
+    uint8_t  mLqi;              ///< Link Quality Indicator for received frames.
+    uint8_t  mMaxTxAttempts;    ///< Max number of transmit attempts for an outbound frame.
     bool     mSecurityValid: 1; ///< Security Enabled flag is set and frame passes security checks.
-    bool     mDidTX: 1;        ///< Set to true if this packet sent from the radio. Ignored by radio driver.
-    bool     mIsARetx: 1;      ///< Set to true if this packet is a retransmission. Should be ignored by radio driver.
-} RadioPacket;
+    bool     mDidTX: 1;         ///< Set to true if this frame sent from the radio. Ignored by radio driver.
+    bool     mIsARetx: 1;       ///< Set to true if this frame is a retransmission. Should be ignored by radio driver.
+} otRadioFrame;
 
 /**
  * This structure represents the state of a radio.
  * Initially, a radio is in the Disabled state.
  */
-typedef enum PhyState
+typedef enum otRadioState
 {
-    kStateDisabled = 0,
-    kStateSleep = 1,
-    kStateReceive = 2,
-    kStateTransmit = 3
-} PhyState;
+    OT_RADIO_STATE_DISABLED = 0,
+    OT_RADIO_STATE_SLEEP = 1,
+    OT_RADIO_STATE_RECEIVE = 2,
+    OT_RADIO_STATE_TRANSMIT = 3
+} otRadioState;
 
 /**
  * The following are valid radio state transitions:
@@ -212,7 +211,7 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddress);
  *
  * @return  Current state of the radio.
  */
-PhyState otPlatRadioGetState(otInstance *aInstance);
+otRadioState otPlatRadioGetState(otInstance *aInstance);
 
 /**
  * Enable the radio.
@@ -347,16 +346,16 @@ void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance);
 void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance);
 
 /**
- * The radio driver calls this method to notify OpenThread of a received packet.
+ * The radio driver calls this method to notify OpenThread of a received frame.
  *
  * @param[in]  aInstance The OpenThread instance structure.
- * @param[in]  aPacket   A pointer to the received packet or NULL if the receive operation failed.
+ * @param[in]  aFrame    A pointer to the received frame or NULL if the receive operation failed.
  * @param[in]  aError    OT_ERROR_NONE when successfully received a frame, OT_ERROR_ABORT when reception
  *                       was aborted and a frame was not received, OT_ERROR_NO_BUFS when a frame could not be
  *                       received due to lack of rx buffer space.
  *
  */
-extern void otPlatRadioReceiveDone(otInstance *aInstance, RadioPacket *aPacket, otError aError);
+extern void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
 /**
  * The radio transitions from Transmit to Receive.
@@ -369,40 +368,40 @@ extern void otPlatRadioReceiveDone(otInstance *aInstance, RadioPacket *aPacket, 
  * @returns A pointer to the transmit buffer.
  *
  */
-RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *aInstance);
+otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance);
 
 /**
  * This method begins the transmit sequence on the radio.
  *
  * The caller must form the IEEE 802.15.4 frame in the buffer provided by otPlatRadioGetTransmitBuffer() before
- * requesting transmission.  The channel and transmit power are also included in the RadioPacket structure.
+ * requesting transmission.  The channel and transmit power are also included in the otRadioFrame structure.
  *
  * The transmit sequence consists of:
  * 1. Transitioning the radio to Transmit from Receive.
  * 2. Transmits the psdu on the given channel and at the given transmit power.
  *
  * @param[in] aInstance  The OpenThread instance structure.
- * @param[in] aPacket    A pointer to the packet that will be transmitted.
+ * @param[in] aFrame     A pointer to the frame that will be transmitted.
  *
  * @retval OT_ERROR_NONE          Successfully transitioned to Transmit.
  * @retval OT_ERROR_INVALID_STATE The radio was not in the Receive state.
  */
-otError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket);
+otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame);
 
 /**
  * The radio driver calls this method to notify OpenThread that the transmission has completed,
  * this callback pass up the ACK frame, new add platforms should use this callback function.
  *
- * @param[in]  aInstance      The OpenThread instance structure.
- * @param[in]  aPacket        A pointer to the packet that was transmitted.
- * @param[in]  aAckPacket     A pointer to the ACK packet, NULL if no ACK was received.
- * @param[in]  aError         OT_ERROR_NONE when the frame was transmitted, OT_ERROR_NO_ACK when the frame was
- *                            transmitted but no ACK was received, OT_ERROR_CHANNEL_ACCESS_FAILURE when the transmission
- *                            could not take place due to activity on the channel, OT_ERROR_ABORT when transmission was
- *                            aborted for other reasons.
+ * @param[in]  aInstance  The OpenThread instance structure.
+ * @param[in]  aFrame     A pointer to the frame that was transmitted.
+ * @param[in]  aAckFrame  A pointer to the ACK frame, NULL if no ACK was received.
+ * @param[in]  aError     OT_ERROR_NONE when the frame was transmitted, OT_ERROR_NO_ACK when the frame was
+ *                        transmitted but no ACK was received, OT_ERROR_CHANNEL_ACCESS_FAILURE when the transmission
+ *                        could not take place due to activity on the channel, OT_ERROR_ABORT when transmission was
+ *                        aborted for other reasons.
  *
  */
-extern void otPlatRadioTxDone(otInstance *aInstance, RadioPacket *aPacket, RadioPacket *aAckPacket,
+extern void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRadioFrame *aAckFrame,
                               otError aError);
 
 /**
@@ -410,7 +409,7 @@ extern void otPlatRadioTxDone(otInstance *aInstance, RadioPacket *aPacket, Radio
  * this function is going to be deprecated, new add platfroms should not use this callback function.
  *
  * @param[in]  aInstance      The OpenThread instance structure.
- * @param[in]  aPacket        A pointer to the packet that was transmitted.
+ * @param[in]  aFrame         A pointer to the frame that was transmitted.
  * @param[in]  aFramePending  TRUE if an ACK frame was received and the Frame Pending bit was set.
  * @param[in]  aError         OT_ERROR_NONE when the frame was transmitted, OT_ERROR_NO_ACK when the frame was
  *                            transmitted but no ACK was received, OT_ERROR_CHANNEL_ACCESS_FAILURE when the transmission
@@ -418,7 +417,7 @@ extern void otPlatRadioTxDone(otInstance *aInstance, RadioPacket *aPacket, Radio
  *                            aborted for other reasons.
  *
  */
-extern void otPlatRadioTransmitDone(otInstance *aInstance, RadioPacket *aPacket, bool aFramePending,
+extern void otPlatRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, bool aFramePending,
                                     otError aError);
 
 /**
@@ -470,7 +469,7 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable);
  * The radio driver calls this method to notify OpenThread diagnostics module that the transmission has completed.
  *
  * @param[in]  aInstance      The OpenThread instance structure.
- * @param[in]  aPacket        A pointer to the packet that was transmitted.
+ * @param[in]  aFrame         A pointer to the frame that was transmitted.
  * @param[in]  aFramePending  TRUE if an ACK frame was received and the Frame Pending bit was set.
  * @param[in]  aError  OT_ERROR_NONE when the frame was transmitted, OT_ERROR_NO_ACK when the frame was
  *                     transmitted but no ACK was received, OT_ERROR_CHANNEL_ACCESS_FAILURE when the transmission
@@ -478,20 +477,20 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable);
  *                     aborted for other reasons.
  *
  */
-extern void otPlatDiagRadioTransmitDone(otInstance *aInstance, RadioPacket *aPacket, bool aFramePending,
+extern void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, bool aFramePending,
                                         otError aError);
 
 /**
- * The radio driver calls this method to notify OpenThread diagnostics module of a received packet.
+ * The radio driver calls this method to notify OpenThread diagnostics module of a received frame.
  *
  * @param[in]  aInstance The OpenThread instance structure.
- * @param[in]  aPacket   A pointer to the received packet or NULL if the receive operation failed.
+ * @param[in]  aFrame    A pointer to the received frame or NULL if the receive operation failed.
  * @param[in]  aError    OT_ERROR_NONE when successfully received a frame, OT_ERROR_ABORT when reception
  *                       was aborted and a frame was not received, OT_ERROR_NO_BUFS when a frame could not be
  *                       received due to lack of rx buffer space.
  *
  */
-extern void otPlatDiagRadioReceiveDone(otInstance *aInstance, RadioPacket *aPacket, otError aError);
+extern void otPlatDiagRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
 /**
  * This method begins the energy scan sequence on the radio.

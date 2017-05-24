@@ -69,7 +69,7 @@ public:
     static bool isEnabled(void);
 
     static void DiagTransmitDone(otInstance *aInstance, bool aRxPending, otError aError);
-    static void DiagReceiveDone(otInstance *aInstance, RadioPacket *aFrame, otError aError);
+    static void DiagReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
     static void AlarmFired(otInstance *aInstance);
 
 private:
@@ -93,7 +93,7 @@ private:
     static uint8_t sTxLen;
     static uint32_t sTxPeriod;
     static uint32_t sTxPackets;
-    static RadioPacket *sTxPacket;
+    static otRadioFrame *sTxPacket;
     static otInstance *sContext;
     static bool sRepeatActive;
 };

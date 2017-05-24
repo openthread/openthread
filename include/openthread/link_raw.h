@@ -151,12 +151,12 @@ otError otLinkRawSleep(otInstance *aInstance);
  * This function pointer on receipt of a IEEE 802.15.4 frame.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
- * @param[in]  aPacket      A pointer to the received packet or NULL if the receive operation was aborted.
+ * @param[in]  aFrame       A pointer to the received frame or NULL if the receive operation was aborted.
  * @param[in]  aError       OT_ERROR_NONE when successfully received a frame.
  *                          OT_ERROR_ABORT when reception was aborted and a frame was not received.
  *
  */
-typedef void (OTCALL *otLinkRawReceiveDone)(otInstance *aInstance, RadioPacket *aPacket, otError aError);
+typedef void (OTCALL *otLinkRawReceiveDone)(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
 /**
  * Transitioning the radio from Sleep to Receive.
@@ -184,13 +184,13 @@ otError otLinkRawReceive(otInstance *aInstance, uint8_t aChannel, otLinkRawRecei
  * @returns A pointer to the transmit buffer or NULL if the raw link-layer isn't enabled.
  *
  */
-RadioPacket *otLinkRawGetTransmitBuffer(otInstance *aInstance);
+otRadioFrame *otLinkRawGetTransmitBuffer(otInstance *aInstance);
 
 /**
  * This function pointer on receipt of a IEEE 802.15.4 frame.
  *
  * @param[in]  aInstance        A pointer to an OpenThread instance.
- * @param[in]  aPacket          A pointer to the packet that was transmitted.
+ * @param[in]  aFrame           A pointer to the frame that was transmitted.
  * @param[in]  aFramePending    TRUE if an ACK frame was received and the Frame Pending bit was set.
  * @param[in]  aError           OT_ERROR_NONE when the frame was transmitted.
  *                              OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received
@@ -199,28 +199,28 @@ RadioPacket *otLinkRawGetTransmitBuffer(otInstance *aInstance);
  *                              OT_ERROR_ABORT when transmission was aborted for other reasons.
  *
  */
-typedef void (*otLinkRawTransmitDone)(otInstance *aInstance, RadioPacket *aPacket, bool aFramePending,
+typedef void (*otLinkRawTransmitDone)(otInstance *aInstance, otRadioFrame *aFrame, bool aFramePending,
                                       otError aError);
 
 /**
  * This method begins the transmit sequence on the radio.
  *
  * The caller must form the IEEE 802.15.4 frame in the buffer provided by otLinkRawGetTransmitBuffer() before
- * requesting transmission.  The channel and transmit power are also included in the RadioPacket structure.
+ * requesting transmission.  The channel and transmit power are also included in the otRadioFrame structure.
  *
  * The transmit sequence consists of:
  * 1. Transitioning the radio to Transmit from Receive.
  * 2. Transmits the psdu on the given channel and at the given transmit power.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
- * @param[in]  aPacket      A pointer to the packet that was transmitted.
+ * @param[in]  aFrame       A pointer to the frame that was transmitted.
  * @param[in]  aCallback    A pointer to a function called on completion of the transmission.
  *
  * @retval OT_ERROR_NONE          Successfully transitioned to Transmit.
  * @retval OT_ERROR_INVALID_STATE The radio was not in the Receive state.
  *
  */
-otError otLinkRawTransmit(otInstance *aInstance, RadioPacket *aPacket, otLinkRawTransmitDone aCallback);
+otError otLinkRawTransmit(otInstance *aInstance, otRadioFrame *aFrame, otLinkRawTransmitDone aCallback);
 
 /**
  * Get the most recent RSSI measurement.

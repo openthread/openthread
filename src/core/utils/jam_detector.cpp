@@ -155,7 +155,7 @@ void JamDetector::HandleTimer(void)
 
     // If the RSSI is valid, check if it exceeds the threshold
     // and try to update the history bit map
-    if (rssi != kPhyInvalidRssi)
+    if (rssi != OT_RADIO_RSSI_INVALID)
     {
         didExceedThreshold = (rssi >= mRssiThreshold);
         UpdateHistory(didExceedThreshold);

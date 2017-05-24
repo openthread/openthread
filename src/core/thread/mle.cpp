@@ -95,7 +95,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mDiscoverContext(NULL),
     mIsDiscoverInProgress(false),
     mEnableEui64Filtering(false),
-    mAnnounceChannel(kPhyMinChannel),
+    mAnnounceChannel(OT_RADIO_CHANNEL_MIN),
     mPreviousChannel(0),
     mPreviousPanId(Mac::kPanIdBroadcast)
 {
@@ -1866,9 +1866,9 @@ void Mle::SendOrphanAnnounce(void)
     {
         channel++;
 
-        if (channel > kPhyMaxChannel)
+        if (channel > OT_RADIO_CHANNEL_MAX)
         {
-            channel = kPhyMinChannel;
+            channel = OT_RADIO_CHANNEL_MIN;
         }
 
         VerifyOrExit(channel != mAnnounceChannel);
@@ -1880,9 +1880,9 @@ void Mle::SendOrphanAnnounce(void)
     // Move to next channel
     mAnnounceChannel = channel + 1;
 
-    if (mAnnounceChannel > kPhyMaxChannel)
+    if (mAnnounceChannel > OT_RADIO_CHANNEL_MAX)
     {
-        mAnnounceChannel = kPhyMinChannel;
+        mAnnounceChannel = OT_RADIO_CHANNEL_MIN;
     }
 
 exit:

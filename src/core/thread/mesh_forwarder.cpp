@@ -444,8 +444,8 @@ otError MeshForwarder::PrepareDiscoverRequest(void)
 
     VerifyOrExit(!mScanning);
 
-    mScanChannel = kPhyMinChannel;
-    mScanChannels >>= kPhyMinChannel;
+    mScanChannel = OT_RADIO_CHANNEL_MIN;
+    mScanChannels >>= OT_RADIO_CHANNEL_MIN;
     mRestoreChannel = mNetif.GetMac().GetChannel();
     mRestorePanId = mNetif.GetMac().GetPanId();
 
@@ -454,7 +454,7 @@ otError MeshForwarder::PrepareDiscoverRequest(void)
         mScanChannels >>= 1;
         mScanChannel++;
 
-        if (mScanChannel > kPhyMaxChannel)
+        if (mScanChannel > OT_RADIO_CHANNEL_MAX)
         {
             mNetif.GetMle().HandleDiscoverComplete();
             ExitNow(error = OT_ERROR_DROP);
@@ -1645,7 +1645,7 @@ void MeshForwarder::HandleDiscoverTimer(void)
         mScanChannels >>= 1;
         mScanChannel++;
 
-        if (mScanChannel > kPhyMaxChannel)
+        if (mScanChannel > OT_RADIO_CHANNEL_MAX)
         {
             mSendQueue.Dequeue(*mSendMessage);
             mSendMessage->Free();

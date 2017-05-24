@@ -46,7 +46,7 @@ testPlatAlarmStop               g_testPlatAlarmStop = NULL;
 testPlatAlarmStartAt            g_testPlatAlarmStartAt = NULL;
 testPlatAlarmGetNow             g_testPlatAlarmGetNow = NULL;
 
-otRadioCaps                     g_testPlatRadioCaps = kRadioCapsNone;
+otRadioCaps                     g_testPlatRadioCaps = OT_RADIO_CAPS_NONE;
 testPlatRadioSetPanId           g_testPlatRadioSetPanId = NULL;
 testPlatRadioSetExtendedAddress g_testPlatRadioSetExtendedAddress = NULL;
 testPlatRadioIsEnabled          g_testPlatRadioIsEnabled = NULL;
@@ -65,7 +65,7 @@ void testPlatResetToDefaults(void)
     g_testPlatAlarmStartAt = NULL;
     g_testPlatAlarmGetNow = NULL;
 
-    g_testPlatRadioCaps = kRadioCapsNone;
+    g_testPlatRadioCaps = OT_RADIO_CAPS_NONE;
     g_testPlatRadioSetPanId = NULL;
     g_testPlatRadioSetExtendedAddress = NULL;
     g_testPlatRadioSetShortAddress = NULL;
@@ -229,9 +229,9 @@ extern "C" {
         }
     }
 
-    otError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
+    otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     {
-        (void)aPacket;
+        (void)aFrame;
 
         if (g_testPlatRadioTransmit)
         {
@@ -243,7 +243,7 @@ extern "C" {
         }
     }
 
-    RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
+    otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
     {
         if (g_testPlatRadioGetTransmitBuffer)
         {
@@ -251,7 +251,7 @@ extern "C" {
         }
         else
         {
-            return (RadioPacket *)0;
+            return (otRadioFrame *)0;
         }
     }
 
@@ -383,11 +383,11 @@ exit:
     {
     }
 
-    void otPlatDiagRadioTransmitDone(otInstance *, RadioPacket *, bool, otError)
+    void otPlatDiagRadioTransmitDone(otInstance *, otRadioFrame *, bool, otError)
     {
     }
 
-    void otPlatDiagRadioReceiveDone(otInstance *, RadioPacket *, otError)
+    void otPlatDiagRadioReceiveDone(otInstance *, otRadioFrame *, otError)
     {
     }
 

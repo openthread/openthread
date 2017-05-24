@@ -548,7 +548,7 @@ OTAPI const otMacCounters *OTCALL otLinkGetCounters(otInstance *aInstance);
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void (*otLinkPcapCallback)(const RadioPacket *aFrame, void *aContext);
+typedef void (*otLinkPcapCallback)(const otRadioFrame *aFrame, void *aContext);
 
 /**
  * This function registers a callback to provide received raw IEEE 802.15.4 frames.

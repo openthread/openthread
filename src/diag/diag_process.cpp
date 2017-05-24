@@ -67,7 +67,7 @@ uint8_t Diag::sChannel;
 uint8_t Diag::sTxLen;
 uint32_t Diag::sTxPeriod;
 uint32_t Diag::sTxPackets;
-RadioPacket * Diag::sTxPacket;
+otRadioFrame * Diag::sTxPacket;
 bool Diag::sRepeatActive;
 
 otInstance *Diag::sContext;
@@ -218,7 +218,7 @@ void Diag::ProcessChannel(int argc, char *argv[], char *aOutput, size_t aOutputM
         long value;
 
         SuccessOrExit(error = ParseLong(argv[0], value));
-        VerifyOrExit(value >= kPhyMinChannel && value <= kPhyMaxChannel, error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(value >= OT_RADIO_CHANNEL_MIN && value <= OT_RADIO_CHANNEL_MAX, error = OT_ERROR_INVALID_ARGS);
         sChannel = static_cast<uint8_t>(value);
 
         // listen on the set channel immediately
@@ -267,7 +267,7 @@ void Diag::ProcessSend(int argc, char *argv[], char *aOutput, size_t aOutputMaxL
     sTxPackets = static_cast<uint32_t>(value);
 
     SuccessOrExit(error = ParseLong(argv[1], value));
-    VerifyOrExit(value <= kMaxPHYPacketSize, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(value <= OT_RADIO_FRAME_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
     sTxLen = static_cast<uint8_t>(value);
 
     snprintf(aOutput, aOutputMaxLen, "sending %#x packet(s), length %#x\r\nstatus 0x%02x\r\n", static_cast<int>(sTxPackets), static_cast<int>(sTxLen), error);
@@ -300,7 +300,7 @@ void Diag::ProcessRepeat(int argc, char *argv[], char *aOutput, size_t aOutputMa
         sTxPeriod = static_cast<uint32_t>(value);
 
         SuccessOrExit(error = ParseLong(argv[1], value));
-        VerifyOrExit(value <= kMaxPHYPacketSize, error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(value <= OT_RADIO_FRAME_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
         sTxLen = static_cast<uint8_t>(value);
 
         sRepeatActive = true;
@@ -358,7 +358,7 @@ void Diag::DiagTransmitDone(otInstance *aInstance, bool aRxPending, otError aErr
     }
 }
 
-void Diag::DiagReceiveDone(otInstance *aInstance, RadioPacket *aFrame, otError aError)
+void Diag::DiagReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
     (void)aInstance;
     if (aError == OT_ERROR_NONE)
@@ -396,14 +396,14 @@ extern "C" void otPlatDiagAlarmFired(otInstance *aInstance)
     Diag::AlarmFired(aInstance);
 }
 
-extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, RadioPacket *aPacket, bool aRxPending, otError aError)
+extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, bool aRxPending, otError aError)
 {
-    (void)aPacket;
+    (void)aFrame;
 
     Diag::DiagTransmitDone(aInstance, aRxPending, aError);
 }
 
-extern "C" void otPlatDiagRadioReceiveDone(otInstance *aInstance, RadioPacket *aFrame, otError aError)
+extern "C" void otPlatDiagRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
     Diag::DiagReceiveDone(aInstance, aFrame, aError);
 }
