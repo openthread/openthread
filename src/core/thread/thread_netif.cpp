@@ -191,7 +191,8 @@ otError ThreadNetif::TmfFilter(const Message &aMessage, const Ip6::MessageInfo &
     //    Multicast address, and the source is a Mesh Local prefix based address(RLOC, ALOC or ML-EID).
     // 2. The source and destination are Link-Local addresses.
     VerifyOrExit(((static_cast<ThreadNetif *>(aContext)->mMleRouter.IsMeshLocalAddress(aMessageInfo.GetSockAddr()) ||
-                   aMessageInfo.GetSockAddr().IsLinkLocalMulticast() || aMessageInfo.GetSockAddr().IsRealmLocalMulticast()) &&
+                   aMessageInfo.GetSockAddr().IsLinkLocalMulticast() ||
+                   aMessageInfo.GetSockAddr().IsRealmLocalMulticast()) &&
                   static_cast<ThreadNetif *>(aContext)->mMleRouter.IsMeshLocalAddress(aMessageInfo.GetPeerAddr())) ||
                  ((aMessageInfo.GetSockAddr().IsLinkLocal()) && aMessageInfo.GetPeerAddr().IsLinkLocal()),
                  error = OT_ERROR_NOT_TMF);
