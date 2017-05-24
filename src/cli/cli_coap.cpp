@@ -328,11 +328,14 @@ otError Coap::ProcessClient(int argc, char *argv[])
     }
 
     // CoAP-Type
-    ConvertToLower(argv[3]);
-
-    if ((argc > 3) && (strcmp(argv[3], "con") == 0))
+    if (argc > 3)
     {
-        coapType = kCoapTypeConfirmable;
+        ConvertToLower(argv[3]);
+
+        if (strcmp(argv[3], "con") == 0)
+        {
+            coapType = kCoapTypeConfirmable;
+        }
     }
 
     otCoapHeaderInit(&header, coapType, coapCode);
