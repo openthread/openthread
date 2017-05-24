@@ -407,7 +407,7 @@ public:
     otInstance *GetInstance(void);
 
 private:
-    static otError TmfFilter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static otError TmfFilter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 
     Coap::Coap mCoap;
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT

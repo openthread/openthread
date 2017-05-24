@@ -58,6 +58,7 @@ Coap::Coap(ThreadNetif &aNetif):
     mSocket(aNetif.GetIp6().mUdp),
     mRetransmissionTimer(aNetif.GetIp6().mTimerScheduler, &Coap::HandleRetransmissionTimer, this),
     mResources(NULL),
+    mContext(NULL),
     mInterceptor(NULL),
     mResponsesQueue(aNetif),
     mDefaultHandler(NULL),
@@ -640,7 +641,7 @@ void Coap::ProcessReceivedRequest(Header &aHeader, Message &aMessage, const Ip6:
 
     if (mInterceptor != NULL)
     {
-        SuccessOrExit(error = mInterceptor(aMessage, aMessageInfo));
+        SuccessOrExit(error = mInterceptor(aMessage, aMessageInfo, mContext));
     }
 
     aMessage.MoveOffset(aHeader.GetLength());
