@@ -49,24 +49,24 @@ otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
     switch (SysCtrlResetSourceGet())
     {
     case RSTSRC_PWR_ON:
-        return kPlatResetReason_PowerOn;
+        return OT_PLAT_RESET_REASON_POWER_ON;
 
     case RSTSRC_PIN_RESET:
-        return kPlatResetReason_External;
+        return OT_PLAT_RESET_REASON_EXTERNAL;
 
     case RSTSRC_VDDS_LOSS:
     case RSTSRC_VDD_LOSS:
     case RSTSRC_VDDR_LOSS:
     case RSTSRC_CLK_LOSS:
-        return kPlatResetReason_Crash;
+        return OT_PLAT_RESET_REASON_CRASH;
 
     case RSTSRC_WARMRESET:
     case RSTSRC_SYSRESET:
     case RSTSRC_WAKEUP_FROM_SHUTDOWN:
-        return kPlatResetReason_Software;
+        return OT_PLAT_RESET_REASON_SOFTWARE;
 
     default:
-        return kPlatResetReason_Unknown;
+        return OT_PLAT_RESET_REASON_UNKNOWN;
     }
 }
 
