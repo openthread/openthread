@@ -743,8 +743,7 @@ exit:
     return error;
 }
 
-otError DatasetManager::SendGetRequest(const uint8_t *aTlvTypes, const uint8_t aLength,
-                                       const otIp6Address *aAddress)
+otError DatasetManager::SendGetRequest(const uint8_t *aTlvTypes, uint8_t aLength, const otIp6Address *aAddress)
 {
     otError error = OT_ERROR_NONE;
     Coap::Header header;
