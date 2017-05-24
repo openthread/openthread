@@ -50,13 +50,16 @@
  *  the status is unsuccessful.
  *
  *  @param[in]  aStatus     A scalar status to be evaluated against zero (0).
+ *  @param[in]  ...         An expression or block to execute when the
+ *                          assertion fails.
  *
  */
-#define SuccessOrExit(aStatus)                      \
+#define SuccessOrExit(aStatus, ...)                 \
     do                                              \
     {                                               \
         if ((aStatus) != 0)                         \
         {                                           \
+            __VA_ARGS__;                            \
             goto exit;                              \
         }                                           \
     } while (false)

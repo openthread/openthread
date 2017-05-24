@@ -1768,7 +1768,7 @@ void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Mac:
     Lowpan::MeshHeader meshHeader;
 
     // Check the mesh header
-    VerifyOrExit(meshHeader.Init(aFrame, aFrameLength) == OT_ERROR_NONE, error = OT_ERROR_DROP);
+    SuccessOrExit(meshHeader.Init(aFrame, aFrameLength), error = OT_ERROR_DROP);
 
     // Security Check: only process Mesh Header frames that had security enabled.
     VerifyOrExit(aMessageInfo.mLinkSecurity && meshHeader.IsValid(), error = OT_ERROR_SECURITY);
@@ -1846,7 +1846,7 @@ otError MeshForwarder::CheckReachability(uint8_t *aFrame, uint8_t aFrameLength,
     Ip6::Header ip6Header;
     Lowpan::MeshHeader meshHeader;
 
-    VerifyOrExit(meshHeader.Init(aFrame, aFrameLength) == OT_ERROR_NONE, error = OT_ERROR_DROP);
+    SuccessOrExit(meshHeader.Init(aFrame, aFrameLength) , error = OT_ERROR_DROP);
 
     // skip mesh header
     aFrame += meshHeader.GetHeaderLength();
