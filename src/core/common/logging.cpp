@@ -166,23 +166,23 @@ const char *otLogLevelToString(otLogLevel aLevel)
 
     switch (aLevel)
     {
-    case kLogLevelNone:
+    case OT_LOG_LEVEL_NONE:
         retval = "NONE";
         break;
 
-    case kLogLevelCrit:
+    case OT_LOG_LEVEL_CRIT:
         retval = "CRIT";
         break;
 
-    case kLogLevelWarn:
+    case OT_LOG_LEVEL_WARN:
         retval = "WARN";
         break;
 
-    case kLogLevelInfo:
+    case OT_LOG_LEVEL_INFO:
         retval = "INFO";
         break;
 
-    case kLogLevelDebg:
+    case OT_LOG_LEVEL_DEBG:
         retval = "DEBG";
         break;
 
@@ -202,55 +202,55 @@ const char *otLogRegionToString(otLogRegion aRegion)
 
     switch (aRegion)
     {
-    case kLogRegionApi:
+    case OT_LOG_REGION_API:
         retval = "-API-----";
         break;
 
-    case kLogRegionMle:
+    case OT_LOG_REGION_MLE:
         retval = "-MLE-----";
         break;
 
-    case kLogRegionCoap:
+    case OT_LOG_REGION_COAP:
         retval = "-COAP----";
         break;
 
-    case kLogRegionArp:
+    case OT_LOG_REGION_ARP:
         retval = "-ARP-----";
         break;
 
-    case kLogRegionNetData:
+    case OT_LOG_REGION_NET_DATA:
         retval = "-N-DATA--";
         break;
 
-    case kLogRegionIcmp:
+    case OT_LOG_REGION_ICMP:
         retval = "-ICMP----";
         break;
 
-    case kLogRegionIp6:
+    case OT_LOG_REGION_IP6:
         retval = "-IP6-----";
         break;
 
-    case kLogRegionMac:
+    case OT_LOG_REGION_MAC:
         retval = "-MAC-----";
         break;
 
-    case kLogRegionMem:
+    case OT_LOG_REGION_MEM:
         retval = "-MEM-----";
         break;
 
-    case kLogRegionNcp:
+    case OT_LOG_REGION_NCP:
         retval = "-NCP-----";
         break;
 
-    case kLogRegionMeshCoP:
+    case OT_LOG_REGION_MESH_COP:
         retval = "-MESH-CP-";
         break;
 
-    case kLogRegionNetDiag:
+    case OT_LOG_REGION_NET_DIAG:
         retval = "-DIAG----";
         break;
 
-    case kLogRegionPlatform:
+    case OT_LOG_REGION_PLATFORM:
         retval = "-PLAT----";
         break;
 
