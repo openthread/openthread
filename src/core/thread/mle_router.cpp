@@ -2856,6 +2856,12 @@ otError MleRouter::SendChildUpdateRequest(Child *aChild)
     destination.SetIid(aChild->GetExtAddress());
     SuccessOrExit(error = SendMessage(*message, destination));
 
+    if (aChild->IsRxOnWhenIdle())
+    {
+        // only try to send a single Child Update Request message to an rx-on-when-idle child
+        aChild->SetState(Child::kStateChildUpdateRequest);
+    }
+
     otLogInfoMle(GetInstance(), "Sent Child Update Request to child");
 
 exit:
