@@ -46,35 +46,35 @@ otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 
     if (RCM->SRS0 & RCM_SRS0_POR_MASK)
     {
-        reason = kPlatResetReason_PowerOn;
+        reason = OT_PLAT_RESET_REASON_POWER_ON;
     }
     else if (RCM->SRS1 & RCM_SRS1_SW_MASK)
     {
-        reason = kPlatResetReason_Software;
+        reason = OT_PLAT_RESET_REASON_SOFTWARE;
     }
     else if (RCM->SRS0 & RCM_SRS0_WDOG_MASK)
     {
-        reason = kPlatResetReason_Watchdog;
+        reason = OT_PLAT_RESET_REASON_WATCHDOG;
     }
     else if (RCM->SRS0 & RCM_SRS0_PIN_MASK)
     {
-        reason = kPlatResetReason_External;
+        reason = OT_PLAT_RESET_REASON_EXTERNAL;
     }
     else if ((RCM->SRS0 & RCM_SRS0_LOC_MASK)     ||
              (RCM->SRS1 & RCM_SRS1_SACKERR_MASK) ||
              (RCM->SRS1 & RCM_SRS1_LOCKUP_MASK))
     {
-        reason = kPlatResetReason_Fault;
+        reason = OT_PLAT_RESET_REASON_FAULT;
     }
     else if ((RCM->SRS0 & RCM_SRS0_WAKEUP_MASK)  ||
              (RCM->SRS0 & RCM_SRS0_LVD_MASK)     ||
              (RCM->SRS1 & RCM_SRS1_MDM_AP_MASK))
     {
-        reason = kPlatResetReason_Assert;
+        reason = OT_PLAT_RESET_REASON_ASSERT;
     }
     else
     {
-        reason = kPlatResetReason_Other;
+        reason = OT_PLAT_RESET_REASON_OTHER;
     }
 
     return reason;

@@ -81,7 +81,7 @@ otLwfCmdInitialize(
     {
         pFilter->cmdTIDsInUse = 0;
         pFilter->cmdNextTID = 1;
-        pFilter->cmdResetReason = kPlatResetReason_PowerOn;
+        pFilter->cmdResetReason = OT_PLAT_RESET_REASON_POWER_ON;
 
         NdisAllocateSpinLock(&pFilter->cmdLock);
         InitializeListHead(&pFilter->cmdHandlers);

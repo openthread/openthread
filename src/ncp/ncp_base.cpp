@@ -479,28 +479,28 @@ static spinel_status_t ResetReasonToSpinelStatus(otPlatResetReason reason)
     spinel_status_t ret;
     switch (reason)
     {
-    case kPlatResetReason_PowerOn:
+    case OT_PLAT_RESET_REASON_POWER_ON:
         ret = SPINEL_STATUS_RESET_POWER_ON;
         break;
-    case kPlatResetReason_External:
+    case OT_PLAT_RESET_REASON_EXTERNAL:
         ret = SPINEL_STATUS_RESET_EXTERNAL;
         break;
-    case kPlatResetReason_Software:
+    case OT_PLAT_RESET_REASON_SOFTWARE:
         ret = SPINEL_STATUS_RESET_SOFTWARE;
         break;
-    case kPlatResetReason_Fault:
+    case OT_PLAT_RESET_REASON_FAULT:
         ret = SPINEL_STATUS_RESET_FAULT;
         break;
-    case kPlatResetReason_Crash:
+    case OT_PLAT_RESET_REASON_CRASH:
         ret = SPINEL_STATUS_RESET_CRASH;
         break;
-    case kPlatResetReason_Assert:
+    case OT_PLAT_RESET_REASON_ASSERT:
         ret = SPINEL_STATUS_RESET_ASSERT;
         break;
-    case kPlatResetReason_Watchdog:
+    case OT_PLAT_RESET_REASON_WATCHDOG:
         ret = SPINEL_STATUS_RESET_WATCHDOG;
         break;
-    case kPlatResetReason_Other:
+    case OT_PLAT_RESET_REASON_OTHER:
         ret = SPINEL_STATUS_RESET_OTHER;
         break;
     default:
