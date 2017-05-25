@@ -609,7 +609,7 @@ otError Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageInfo &
                 aMessage.Read(aMessage.GetOffset(), sizeof(icmp), &icmp);
 
                 // do not pass ICMP Echo Request messages
-                VerifyOrExit(icmp.GetType() != kIcmp6TypeEchoRequest, error = OT_ERROR_NO_ROUTE);
+                VerifyOrExit(icmp.GetType() != IcmpHeader::kTypeEchoRequest, error = OT_ERROR_NO_ROUTE);
             }
 
             break;

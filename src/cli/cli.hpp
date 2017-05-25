@@ -298,7 +298,7 @@ private:
 
 #ifndef OTDLL
     void HandleIcmpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
-                           const Ip6::IcmpHeader &aIcmpHeader);
+                           const otIcmp6Header &aIcmpHeader);
     void HandlePingTimer();
 #endif
     void HandleActiveScanResult(otActiveScanResult *aResult);

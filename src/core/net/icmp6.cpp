@@ -101,7 +101,7 @@ otError Icmp::SendEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo
     messageInfoLocal = aMessageInfo;
 
     icmpHeader.Init();
-    icmpHeader.SetType(kIcmp6TypeEchoRequest);
+    icmpHeader.SetType(IcmpHeader::kTypeEchoRequest);
     icmpHeader.SetId(aIdentifier);
     icmpHeader.SetSequence(mEchoSequence++);
 
@@ -166,7 +166,7 @@ otError Icmp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
     checksum = aMessage.UpdateChecksum(checksum, aMessage.GetOffset(), payloadLength);
     VerifyOrExit(checksum == 0xffff, error = OT_ERROR_PARSE);
 
-    if (mIsEchoEnabled && (icmp6Header.GetType() == kIcmp6TypeEchoRequest))
+    if (mIsEchoEnabled && (icmp6Header.GetType() == IcmpHeader::kTypeEchoRequest))
     {
         HandleEchoRequest(aMessage, aMessageInfo);
     }
@@ -193,7 +193,7 @@ otError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMe
     otLogInfoIcmp(GetInstance(), "Received Echo Request");
 
     icmp6Header.Init();
-    icmp6Header.SetType(kIcmp6TypeEchoReply);
+    icmp6Header.SetType(IcmpHeader::kTypeEchoReply);
 
     if ((replyMessage = mIp6.NewMessage(0)) == NULL)
     {
