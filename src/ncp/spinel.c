@@ -1152,8 +1152,8 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_THREAD_ON_MESH_NETS";
         break;
 
-    case SPINEL_PROP_THREAD_LOCAL_ROUTES:
-        ret = "PROP_THREAD_LOCAL_ROUTES";
+    case SPINEL_PROP_THREAD_OFF_MESH_ROUTES:
+        ret = "PROP_THREAD_OFF_MESH_ROUTES";
         break;
 
     case SPINEL_PROP_THREAD_ASSISTING_PORTS:
