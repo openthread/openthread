@@ -90,6 +90,7 @@ OpenThread has been ported to several devices and platforms by both the OpenThre
 * [Nordic Semiconductor nRF52840](https://github.com/openthread/openthread/wiki/Platforms#nordic-semiconductor-nrf52840)
 * [NXP KW41Z](https://github.com/openthread/openthread/wiki/Platforms#nxp-kw41z)
 * [Silicon Labs EFR32](https://github.com/openthread/openthread/wiki/Platforms#silicon-labs-efr32)
+* [Synopsys ARC EMSK with Microchip MRF24J40](https://github.com/openthread/openthread/wiki/Platforms#synopsys-arc-em-with-microchip-mrf24j40)
 * [Texas Instruments CC2538](https://github.com/openthread/openthread/wiki/Platforms#texas-instruments-cc2538)
 * [Texas Instruments CC2650](https://github.com/openthread/openthread/wiki/Platforms#texas-instruments-cc2650)
 * [POSIX Emulation](https://github.com/openthread/openthread/wiki/Platforms#posix-emulation)
