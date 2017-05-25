@@ -244,7 +244,7 @@ void Dataset::Get(otOperationalDataset &aDataset) const
     }
 }
 
-ThreadError Dataset::Set(const Dataset &aDataset)
+otError Dataset::Set(const Dataset &aDataset)
 {
     memcpy(mTlvs, aDataset.mTlvs, aDataset.mLength);
     mLength = aDataset.mLength;
@@ -255,16 +255,16 @@ ThreadError Dataset::Set(const Dataset &aDataset)
         Remove(Tlv::kDelayTimer);
     }
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 #if OPENTHREAD_FTD
-ThreadError Dataset::Set(const otOperationalDataset &aDataset)
+otError Dataset::Set(const otOperationalDataset &aDataset)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     MeshCoP::ActiveTimestampTlv activeTimestampTlv;
 
-    VerifyOrExit(aDataset.mIsActiveTimestampSet, error = kThreadError_InvalidArgs);
+    VerifyOrExit(aDataset.mIsActiveTimestampSet, error = OT_ERROR_INVALID_ARGS);
 
     activeTimestampTlv.Init();
     activeTimestampTlv.SetSeconds(aDataset.mActiveTimestamp);
@@ -275,7 +275,7 @@ ThreadError Dataset::Set(const otOperationalDataset &aDataset)
     {
         MeshCoP::PendingTimestampTlv pendingTimestampTlv;
 
-        VerifyOrExit(aDataset.mIsPendingTimestampSet, error = kThreadError_InvalidArgs);
+        VerifyOrExit(aDataset.mIsPendingTimestampSet, error = OT_ERROR_INVALID_ARGS);
 
         pendingTimestampTlv.Init();
         pendingTimestampTlv.SetSeconds(aDataset.mPendingTimestamp);
@@ -435,20 +435,20 @@ int Dataset::Compare(const Dataset &aCompare) const
     return rval;
 }
 
-ThreadError Dataset::Restore(void)
+otError Dataset::Restore(void)
 {
-    ThreadError error;
+    otError error;
     uint16_t length = sizeof(mTlvs);
 
     error = otPlatSettingsGet(mInstance, GetSettingsKey(), 0, mTlvs, &length);
-    mLength = (error == kThreadError_None) ? length : 0;
+    mLength = (error == OT_ERROR_NONE) ? length : 0;
 
     return error;
 }
 
-ThreadError Dataset::Store(void)
+otError Dataset::Store(void)
 {
-    ThreadError error;
+    otError error;
     uint16_t key = GetSettingsKey();
 
     if (mLength == 0)
@@ -463,9 +463,9 @@ ThreadError Dataset::Store(void)
     return error;
 }
 
-ThreadError Dataset::Set(const Tlv &aTlv)
+otError Dataset::Set(const Tlv &aTlv)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint16_t bytesAvailable = sizeof(mTlvs) - mLength;
     Tlv *old = Get(aTlv.GetType());
 
@@ -474,7 +474,7 @@ ThreadError Dataset::Set(const Tlv &aTlv)
         bytesAvailable += sizeof(Tlv) + old->GetLength();
     }
 
-    VerifyOrExit(sizeof(Tlv) + aTlv.GetLength() <= bytesAvailable, error = kThreadError_NoBufs);
+    VerifyOrExit(sizeof(Tlv) + aTlv.GetLength() <= bytesAvailable, error = OT_ERROR_NO_BUFS);
 
     // remove old TLV
     if (old != NULL)
@@ -490,11 +490,11 @@ exit:
     return error;
 }
 
-ThreadError Dataset::Set(const Message &aMessage, uint16_t aOffset, uint8_t aLength)
+otError Dataset::Set(const Message &aMessage, uint16_t aOffset, uint8_t aLength)
 {
     aMessage.Read(aOffset, aLength, mTlvs);
     mLength = aLength;
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 void Dataset::Remove(Tlv::Type aType)
@@ -508,9 +508,9 @@ exit:
     return;
 }
 
-ThreadError Dataset::AppendMleDatasetTlv(Message &aMessage)
+otError Dataset::AppendMleDatasetTlv(Message &aMessage)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     Mle::Tlv tlv;
     Mle::Tlv::Type type;
     Tlv *cur = reinterpret_cast<Tlv *>(mTlvs);

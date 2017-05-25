@@ -188,7 +188,7 @@ otLwfCmdRemoveProp(
 // General Spinel Helpers
 //
 
-ThreadError
+otError
 SpinelStatusToThreadError(
     spinel_status_t error
     );

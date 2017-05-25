@@ -312,9 +312,9 @@ int Interpreter::Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength)
     return static_cast<int>(cur - aBin);
 }
 
-void Interpreter::AppendResult(ThreadError aError)
+void Interpreter::AppendResult(otError aError)
 {
-    if (aError == kThreadError_None)
+    if (aError == OT_ERROR_NONE)
     {
         sServer->OutputFormat("Done\r\n");
     }
@@ -332,18 +332,18 @@ void Interpreter::OutputBytes(const uint8_t *aBytes, uint8_t aLength)
     }
 }
 
-ThreadError Interpreter::ParseLong(char *argv, long &value)
+otError Interpreter::ParseLong(char *argv, long &value)
 {
     char *endptr;
     value = strtol(argv, &endptr, 0);
-    return (*endptr == '\0') ? kThreadError_None : kThreadError_Parse;
+    return (*endptr == '\0') ? OT_ERROR_NONE : OT_ERROR_PARSE;
 }
 
-ThreadError Interpreter::ParseUnsignedLong(char *argv, unsigned long &value)
+otError Interpreter::ParseUnsignedLong(char *argv, unsigned long &value)
 {
     char *endptr;
     value = strtoul(argv, &endptr, 0);
-    return (*endptr == '\0') ? kThreadError_None : kThreadError_Parse;
+    return (*endptr == '\0') ? OT_ERROR_NONE : OT_ERROR_PARSE;
 }
 
 void Interpreter::ProcessHelp(int argc, char *argv[])
@@ -359,7 +359,7 @@ void Interpreter::ProcessHelp(int argc, char *argv[])
 
 void Interpreter::ProcessAutoStart(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     if (argc == 0)
     {
@@ -382,7 +382,7 @@ void Interpreter::ProcessAutoStart(int argc, char *argv[])
     }
     else
     {
-        error = kThreadError_InvalidArgs;
+        error = OT_ERROR_INVALID_ARGS;
     }
 
     AppendResult(error);
@@ -390,7 +390,7 @@ void Interpreter::ProcessAutoStart(int argc, char *argv[])
 
 void Interpreter::ProcessBlacklist(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     otMacBlacklistEntry entry;
     int argcur = 0;
     uint8_t extAddr[8];
@@ -408,7 +408,7 @@ void Interpreter::ProcessBlacklist(int argc, char *argv[])
 
         for (uint8_t i = 0; ; i++)
         {
-            if (otLinkGetBlacklistEntry(mInstance, i, &entry) != kThreadError_None)
+            if (otLinkGetBlacklistEntry(mInstance, i, &entry) != OT_ERROR_NONE)
             {
                 break;
             }
@@ -425,11 +425,11 @@ void Interpreter::ProcessBlacklist(int argc, char *argv[])
     }
     else if (strcmp(argv[argcur], "add") == 0)
     {
-        VerifyOrExit(++argcur < argc, error = kThreadError_Parse);
-        VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), error = kThreadError_Parse);
+        VerifyOrExit(++argcur < argc, error = OT_ERROR_PARSE);
+        VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), error = OT_ERROR_PARSE);
 
         otLinkAddBlacklist(mInstance, extAddr);
-        VerifyOrExit(otLinkAddBlacklist(mInstance, extAddr) == kThreadError_None, error = kThreadError_Parse);
+        VerifyOrExit(otLinkAddBlacklist(mInstance, extAddr) == OT_ERROR_NONE, error = OT_ERROR_PARSE);
     }
     else if (strcmp(argv[argcur], "clear") == 0)
     {
@@ -445,8 +445,8 @@ void Interpreter::ProcessBlacklist(int argc, char *argv[])
     }
     else if (strcmp(argv[argcur], "remove") == 0)
     {
-        VerifyOrExit(++argcur < argc, error = kThreadError_Parse);
-        VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), error = kThreadError_Parse);
+        VerifyOrExit(++argcur < argc, error = OT_ERROR_PARSE);
+        VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), error = OT_ERROR_PARSE);
         otLinkRemoveBlacklist(mInstance, extAddr);
     }
 
@@ -473,12 +473,12 @@ void Interpreter::ProcessBufferInfo(int argc, char *argv[])
     sServer->OutputFormat("coap: %d %d\r\n", bufferInfo.mCoapMessages, bufferInfo.mCoapBuffers);
     sServer->OutputFormat("coap secure: %d %d\r\n", bufferInfo.mCoapSecureMessages, bufferInfo.mCoapSecureBuffers);
 
-    AppendResult(kThreadError_None);
+    AppendResult(OT_ERROR_NONE);
 }
 
 void Interpreter::ProcessChannel(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     long value;
 
     if (argc == 0)
@@ -498,13 +498,13 @@ exit:
 #if OPENTHREAD_FTD
 void Interpreter::ProcessChild(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     otChildInfo childInfo;
     uint8_t maxChildren;
     long value;
     bool isTable = false;
 
-    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
 
     if (strcmp(argv[0], "list") == 0 || (isTable = (strcmp(argv[0], "table") == 0)))
     {
@@ -521,10 +521,10 @@ void Interpreter::ProcessChild(int argc, char *argv[])
 
             switch (otThreadGetChildInfoByIndex(mInstance, i, &childInfo))
             {
-            case kThreadError_None:
+            case OT_ERROR_NONE:
                 break;
 
-            case kThreadError_NotFound:
+            case OT_ERROR_NOT_FOUND:
                 continue;
 
             default:
@@ -614,7 +614,7 @@ exit:
 
 void Interpreter::ProcessChildMax(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     long value;
 
     if (argc == 0)
@@ -634,7 +634,7 @@ exit:
 
 void Interpreter::ProcessChildTimeout(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     long value;
 
     if (argc == 0)
@@ -655,7 +655,7 @@ exit:
 
 void Interpreter::ProcessCoap(int argc, char *argv[])
 {
-    ThreadError error;
+    otError error;
     error = Coap::Process(mInstance, argc, argv, *sServer);
     AppendResult(error);
 }
@@ -665,7 +665,7 @@ void Interpreter::ProcessCoap(int argc, char *argv[])
 #if OPENTHREAD_FTD
 void Interpreter::ProcessContextIdReuseDelay(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     long value;
 
     if (argc == 0)
@@ -731,7 +731,7 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
 
 void Interpreter::ProcessDataset(int argc, char *argv[])
 {
-    ThreadError error;
+    otError error;
     error = Dataset::Process(mInstance, argc, argv, *sServer);
     AppendResult(error);
 }
@@ -739,7 +739,7 @@ void Interpreter::ProcessDataset(int argc, char *argv[])
 #if OPENTHREAD_FTD
 void Interpreter::ProcessDelayTimerMin(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     if (argc == 0)
     {
@@ -753,7 +753,7 @@ void Interpreter::ProcessDelayTimerMin(int argc, char *argv[])
     }
     else
     {
-        error = kThreadError_InvalidArgs;
+        error = OT_ERROR_INVALID_ARGS;
     }
 
 exit:
@@ -763,7 +763,7 @@ exit:
 
 void Interpreter::ProcessDiscover(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint32_t scanChannels = 0;
     long value;
 
@@ -787,18 +787,18 @@ exit:
 #if OPENTHREAD_ENABLE_DNS_CLIENT
 void Interpreter::ProcessDns(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     long port = OT_DNS_DEFAULT_DNS_SERVER_PORT;
     Ip6::MessageInfo messageInfo;
     otDnsQuery query;
 
-    VerifyOrExit(argc > 0, error = kThreadError_InvalidArgs);
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
 
     if (strcmp(argv[0], "resolve") == 0)
     {
-        VerifyOrExit(!mResolvingInProgress, error = kThreadError_Busy);
-        VerifyOrExit(argc > 1, error = kThreadError_InvalidArgs);
-        VerifyOrExit(strlen(argv[1]) < OT_DNS_MAX_HOSTNAME_LENGTH, error = kThreadError_InvalidArgs);
+        VerifyOrExit(!mResolvingInProgress, error = OT_ERROR_BUSY);
+        VerifyOrExit(argc > 1, error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(strlen(argv[1]) < OT_DNS_MAX_HOSTNAME_LENGTH, error = OT_ERROR_INVALID_ARGS);
 
         strcpy(mResolvingHostname, argv[1]);
 
@@ -833,7 +833,7 @@ void Interpreter::ProcessDns(int argc, char *argv[])
     }
     else
     {
-        ExitNow(error = kThreadError_InvalidArgs);
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 
 exit:
@@ -841,18 +841,18 @@ exit:
 }
 
 void Interpreter::s_HandleDnsResponse(void *aContext, const char *aHostname, otIp6Address *aAddress,
-                                      uint32_t aTtl, ThreadError aResult)
+                                      uint32_t aTtl, otError aResult)
 {
     static_cast<Interpreter *>(aContext)->HandleDnsResponse(aHostname,
                                                             *static_cast<Ip6::Address *>(aAddress),
                                                             aTtl, aResult);
 }
 
-void Interpreter::HandleDnsResponse(const char *aHostname, Ip6::Address &aAddress, uint32_t aTtl, ThreadError aResult)
+void Interpreter::HandleDnsResponse(const char *aHostname, Ip6::Address &aAddress, uint32_t aTtl, otError aResult)
 {
     sServer->OutputFormat("DNS response for %s - ", aHostname);
 
-    if (aResult == kThreadError_None)
+    if (aResult == OT_ERROR_NONE)
     {
         sServer->OutputFormat("[%x:%x:%x:%x:%x:%x:%x:%x] TTL: %d\r\n",
                               HostSwap16(aAddress.mFields.m16[0]),
@@ -903,16 +903,16 @@ void Interpreter::ProcessEidCache(int argc, char *argv[])
 exit:
     (void)argc;
     (void)argv;
-    AppendResult(kThreadError_None);
+    AppendResult(OT_ERROR_NONE);
 }
 #endif  // OPENTHREAD_FTD
 
 void Interpreter::ProcessEui64(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     otExtAddress extAddress;
 
-    VerifyOrExit(argc == 0, error = kThreadError_Parse);
+    VerifyOrExit(argc == 0, error = OT_ERROR_PARSE);
 
     otLinkGetFactoryAssignedIeeeEui64(mInstance, &extAddress);
     OutputBytes(extAddress.m8, OT_EXT_ADDRESS_SIZE);
@@ -925,7 +925,7 @@ exit:
 
 void Interpreter::ProcessExtAddress(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     if (argc == 0)
     {
@@ -937,7 +937,7 @@ void Interpreter::ProcessExtAddress(int argc, char *argv[])
     {
         otExtAddress extAddress;
 
-        VerifyOrExit(Hex2Bin(argv[0], extAddress.m8, sizeof(otExtAddress)) >= 0, error = kThreadError_Parse);
+        VerifyOrExit(Hex2Bin(argv[0], extAddress.m8, sizeof(otExtAddress)) >= 0, error = OT_ERROR_PARSE);
 
         error = otLinkSetExtendedAddress(mInstance, &extAddress);
     }
@@ -957,7 +957,7 @@ void Interpreter::ProcessExit(int argc, char *argv[])
 
 void Interpreter::ProcessExtPanId(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     if (argc == 0)
     {
@@ -969,7 +969,7 @@ void Interpreter::ProcessExtPanId(int argc, char *argv[])
     {
         uint8_t extPanId[8];
 
-        VerifyOrExit(Hex2Bin(argv[0], extPanId, sizeof(extPanId)) >= 0, error = kThreadError_Parse);
+        VerifyOrExit(Hex2Bin(argv[0], extPanId, sizeof(extPanId)) >= 0, error = OT_ERROR_PARSE);
 
         error = otThreadSetExtendedPanId(mInstance, extPanId);
     }
@@ -987,10 +987,10 @@ void Interpreter::ProcessFactoryReset(int argc, char *argv[])
 
 void Interpreter::ProcessHashMacAddress(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     otExtAddress hashMacAddress;
 
-    VerifyOrExit(argc == 0, error = kThreadError_Parse);
+    VerifyOrExit(argc == 0, error = OT_ERROR_PARSE);
 
     otLinkGetJoinerId(mInstance, &hashMacAddress);
     OutputBytes(hashMacAddress.m8, OT_EXT_ADDRESS_SIZE);
@@ -1003,7 +1003,7 @@ exit:
 
 void Interpreter::ProcessIfconfig(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     if (argc == 0)
     {
@@ -1029,12 +1029,12 @@ exit:
     AppendResult(error);
 }
 
-ThreadError Interpreter::ProcessIpAddrAdd(int argc, char *argv[])
+otError Interpreter::ProcessIpAddrAdd(int argc, char *argv[])
 {
-    ThreadError error;
+    otError error;
     otNetifAddress aAddress;
 
-    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
 
     SuccessOrExit(error = otIp6AddressFromString(argv[0], &aAddress.mAddress));
     aAddress.mPrefixLength = 64;
@@ -1046,12 +1046,12 @@ exit:
     return error;
 }
 
-ThreadError Interpreter::ProcessIpAddrDel(int argc, char *argv[])
+otError Interpreter::ProcessIpAddrDel(int argc, char *argv[])
 {
-    ThreadError error;
+    otError error;
     struct otIp6Address address;
 
-    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
 
     SuccessOrExit(error = otIp6AddressFromString(argv[0], &address));
     error = otIp6RemoveUnicastAddress(mInstance, &address);
@@ -1062,7 +1062,7 @@ exit:
 
 void Interpreter::ProcessIpAddr(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     if (argc == 0)
     {
@@ -1098,12 +1098,12 @@ exit:
 }
 
 #ifndef OTDLL
-ThreadError Interpreter::ProcessIpMulticastAddrAdd(int argc, char *argv[])
+otError Interpreter::ProcessIpMulticastAddrAdd(int argc, char *argv[])
 {
-    ThreadError error;
+    otError error;
     struct otIp6Address address;
 
-    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
 
     SuccessOrExit(error = otIp6AddressFromString(argv[0], &address));
     error = otIp6SubscribeMulticastAddress(mInstance, &address);
@@ -1112,12 +1112,12 @@ exit:
     return error;
 }
 
-ThreadError Interpreter::ProcessIpMulticastAddrDel(int argc, char *argv[])
+otError Interpreter::ProcessIpMulticastAddrDel(int argc, char *argv[])
 {
-    ThreadError error;
+    otError error;
     struct otIp6Address address;
 
-    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
 
     SuccessOrExit(error = otIp6AddressFromString(argv[0], &address));
     error = otIp6UnsubscribeMulticastAddress(mInstance, &address);
@@ -1126,9 +1126,9 @@ exit:
     return error;
 }
 
-ThreadError Interpreter::ProcessMulticastPromiscuous(int argc, char *argv[])
+otError Interpreter::ProcessMulticastPromiscuous(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     if (argc == 0)
     {
@@ -1153,7 +1153,7 @@ ThreadError Interpreter::ProcessMulticastPromiscuous(int argc, char *argv[])
         }
         else
         {
-            ExitNow(error = kThreadError_Parse);
+            ExitNow(error = OT_ERROR_PARSE);
         }
     }
 
@@ -1163,7 +1163,7 @@ exit:
 
 void Interpreter::ProcessIpMulticastAddr(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     if (argc == 0)
     {
@@ -1203,10 +1203,10 @@ exit:
 
 void Interpreter::ProcessKeySequence(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     long value;
 
-    VerifyOrExit(argc == 1 || argc == 2, error = kThreadError_Parse);
+    VerifyOrExit(argc == 1 || argc == 2, error = OT_ERROR_PARSE);
 
     if (strcmp(argv[0], "counter") == 0)
     {
@@ -1239,7 +1239,7 @@ exit:
 
 void Interpreter::ProcessLeaderData(int argc, char *argv[])
 {
-    ThreadError error;
+    otError error;
     otLeaderData leaderData;
 
     SuccessOrExit(error = otThreadGetLeaderData(mInstance, &leaderData));
@@ -1259,7 +1259,7 @@ exit:
 #if OPENTHREAD_FTD
 void Interpreter::ProcessLeaderPartitionId(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     unsigned long value;
 
     if (argc == 0)
@@ -1278,7 +1278,7 @@ exit:
 
 void Interpreter::ProcessLeaderWeight(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     long value;
 
     if (argc == 0)
@@ -1298,18 +1298,18 @@ exit:
 
 void Interpreter::ProcessLinkQuality(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t extAddress[8];
     uint8_t linkQuality;
     long value;
 
-    VerifyOrExit(argc > 0, error = kThreadError_InvalidArgs);
-    VerifyOrExit(Hex2Bin(argv[0], extAddress, OT_EXT_ADDRESS_SIZE) >= 0, error = kThreadError_Parse);
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(Hex2Bin(argv[0], extAddress, OT_EXT_ADDRESS_SIZE) >= 0, error = OT_ERROR_PARSE);
 
     if (argc == 1)
     {
-        VerifyOrExit(otLinkGetAssignLinkQuality(mInstance, extAddress, &linkQuality) == kThreadError_None,
-                     error = kThreadError_InvalidArgs);
+        VerifyOrExit(otLinkGetAssignLinkQuality(mInstance, extAddress, &linkQuality) == OT_ERROR_NONE,
+                     error = OT_ERROR_INVALID_ARGS);
         sServer->OutputFormat("%d\r\n", linkQuality);
     }
     else
@@ -1325,7 +1325,7 @@ exit:
 #if OPENTHREAD_FTD
 void Interpreter::ProcessPSKc(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     if (argc == 0)
     {
@@ -1342,7 +1342,7 @@ void Interpreter::ProcessPSKc(int argc, char *argv[])
     {
         uint8_t newPSKc[OT_PSKC_MAX_SIZE];
 
-        VerifyOrExit(Hex2Bin(argv[0], newPSKc, sizeof(newPSKc)) == OT_PSKC_MAX_SIZE, error = kThreadError_Parse);
+        VerifyOrExit(Hex2Bin(argv[0], newPSKc, sizeof(newPSKc)) == OT_PSKC_MAX_SIZE, error = OT_ERROR_PARSE);
         SuccessOrExit(error = otThreadSetPSKc(mInstance, newPSKc));
     }
 
@@ -1353,7 +1353,7 @@ exit:
 
 void Interpreter::ProcessMasterKey(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     if (argc == 0)
     {
@@ -1370,7 +1370,7 @@ void Interpreter::ProcessMasterKey(int argc, char *argv[])
     {
         otMasterKey key;
 
-        VerifyOrExit(Hex2Bin(argv[0], key.m8, sizeof(key.m8)) == OT_MASTER_KEY_SIZE, error = kThreadError_Parse);
+        VerifyOrExit(Hex2Bin(argv[0], key.m8, sizeof(key.m8)) == OT_MASTER_KEY_SIZE, error = OT_ERROR_PARSE);
         SuccessOrExit(error = otThreadSetMasterKey(mInstance, &key));
     }
 
@@ -1380,7 +1380,7 @@ exit:
 
 void Interpreter::ProcessMode(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     otLinkModeConfig linkMode;
 
     memset(&linkMode, 0, sizeof(otLinkModeConfig));
@@ -1434,7 +1434,7 @@ void Interpreter::ProcessMode(int argc, char *argv[])
                 break;
 
             default:
-                ExitNow(error = kThreadError_Parse);
+                ExitNow(error = OT_ERROR_PARSE);
             }
         }
 
@@ -1447,7 +1447,7 @@ exit:
 
 void Interpreter::ProcessNetworkDataRegister(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     SuccessOrExit(error = otNetDataRegister(mInstance));
 
 exit:
@@ -1459,7 +1459,7 @@ exit:
 #if OPENTHREAD_FTD
 void Interpreter::ProcessNetworkIdTimeout(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     long value;
 
     if (argc == 0)
@@ -1479,7 +1479,7 @@ exit:
 
 void Interpreter::ProcessNetworkName(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     if (argc == 0)
     {
@@ -1497,7 +1497,7 @@ exit:
 
 void Interpreter::ProcessPanId(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     long value;
 
     if (argc == 0)
@@ -1516,7 +1516,7 @@ exit:
 
 void Interpreter::ProcessParent(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     otRouterInfo parentInfo;
 
     SuccessOrExit(error = otThreadGetParentInfo(mInstance, &parentInfo));
@@ -1579,12 +1579,12 @@ exit:
 
 void Interpreter::ProcessPing(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t index = 1;
     long value;
 
-    VerifyOrExit(argc > 0, error = kThreadError_Parse);
-    VerifyOrExit(!sPingTimer.IsRunning(), error = kThreadError_Busy);
+    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
+    VerifyOrExit(!sPingTimer.IsRunning(), error = OT_ERROR_BUSY);
 
     memset(&sMessageInfo, 0, sizeof(sMessageInfo));
     SuccessOrExit(error = sMessageInfo.GetPeerAddr().FromString(argv[0]));
@@ -1614,7 +1614,7 @@ void Interpreter::ProcessPing(int argc, char *argv[])
             break;
 
         default:
-            ExitNow(error = kThreadError_Parse);
+            ExitNow(error = OT_ERROR_PARSE);
         }
 
         index++;
@@ -1635,13 +1635,13 @@ void Interpreter::s_HandlePingTimer(void *aContext)
 
 void Interpreter::HandlePingTimer()
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint32_t timestamp = HostSwap32(Timer::GetNow());
 
     otMessage *message;
     const otMessageInfo *messageInfo = static_cast<const otMessageInfo *>(&sMessageInfo);
 
-    VerifyOrExit((message = otIp6NewMessage(mInstance, true)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = otIp6NewMessage(mInstance, true)) != NULL, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = otMessageAppend(message, &timestamp, sizeof(timestamp)));
     SuccessOrExit(error = otMessageSetLength(message, sLength));
     SuccessOrExit(error = otIcmp6SendEchoRequest(mInstance, message, messageInfo, 1));
@@ -1650,7 +1650,7 @@ void Interpreter::HandlePingTimer()
 
 exit:
 
-    if (error != kThreadError_None && message != NULL)
+    if (error != OT_ERROR_NONE && message != NULL)
     {
         otMessageFree(message);
     }
@@ -1664,7 +1664,7 @@ exit:
 
 void Interpreter::ProcessPollPeriod(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     long value;
 
     if (argc == 0)
@@ -1684,7 +1684,7 @@ exit:
 #ifndef OTDLL
 void Interpreter::ProcessPromiscuous(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     if (argc == 0)
     {
@@ -1787,9 +1787,9 @@ void Interpreter::HandleLinkPcapReceive(const RadioPacket *aFrame)
 }
 #endif
 
-ThreadError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
+otError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     otBorderRouterConfig config;
     int argcur = 0;
 
@@ -1811,7 +1811,7 @@ ThreadError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
 
     if (*endptr != '\0')
     {
-        ExitNow(error = kThreadError_Parse);
+        ExitNow(error = OT_ERROR_PARSE);
     }
 
     argcur++;
@@ -1820,15 +1820,15 @@ ThreadError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
     {
         if (strcmp(argv[argcur], "high") == 0)
         {
-            config.mPreference = kRoutePreferenceHigh;
+            config.mPreference = OT_ROUTE_PREFERENCE_HIGH;
         }
         else if (strcmp(argv[argcur], "med") == 0)
         {
-            config.mPreference = kRoutePreferenceMedium;
+            config.mPreference = OT_ROUTE_PREFERENCE_MED;
         }
         else if (strcmp(argv[argcur], "low") == 0)
         {
-            config.mPreference = kRoutePreferenceLow;
+            config.mPreference = OT_ROUTE_PREFERENCE_LOW;
         }
         else
         {
@@ -1865,7 +1865,7 @@ ThreadError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
                     break;
 
                 default:
-                    ExitNow(error = kThreadError_Parse);
+                    ExitNow(error = OT_ERROR_PARSE);
                 }
             }
         }
@@ -1877,9 +1877,9 @@ exit:
     return error;
 }
 
-ThreadError Interpreter::ProcessPrefixRemove(int argc, char *argv[])
+otError Interpreter::ProcessPrefixRemove(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     struct otIp6Prefix prefix;
     int argcur = 0;
 
@@ -1901,7 +1901,7 @@ ThreadError Interpreter::ProcessPrefixRemove(int argc, char *argv[])
 
     if (*endptr != '\0')
     {
-        ExitNow(error = kThreadError_Parse);
+        ExitNow(error = OT_ERROR_PARSE);
     }
 
     error = otNetDataRemovePrefixInfo(mInstance, &prefix);
@@ -1911,12 +1911,12 @@ exit:
     return error;
 }
 
-ThreadError Interpreter::ProcessPrefixList(void)
+otError Interpreter::ProcessPrefixList(void)
 {
     otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     otBorderRouterConfig config;
 
-    while (otNetDataGetNextPrefixInfo(mInstance, true, &iterator, &config) == kThreadError_None)
+    while (otNetDataGetNextPrefixInfo(mInstance, true, &iterator, &config) == OT_ERROR_NONE)
     {
         sServer->OutputFormat("%x:%x:%x:%x::/%d ",
                               HostSwap16(config.mPrefix.mPrefix.mFields.m16[0]),
@@ -1962,26 +1962,26 @@ ThreadError Interpreter::ProcessPrefixList(void)
 
         switch (config.mPreference)
         {
-        case kRoutePreferenceLow:
+        case OT_ROUTE_PREFERENCE_LOW:
             sServer->OutputFormat(" low\r\n");
             break;
 
-        case kRoutePreferenceMedium:
+        case OT_ROUTE_PREFERENCE_MED:
             sServer->OutputFormat(" med\r\n");
             break;
 
-        case kRoutePreferenceHigh:
+        case OT_ROUTE_PREFERENCE_HIGH:
             sServer->OutputFormat(" high\r\n");
             break;
         }
     }
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 void Interpreter::ProcessPrefix(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     if (argc == 0)
     {
@@ -1997,7 +1997,7 @@ void Interpreter::ProcessPrefix(int argc, char *argv[])
     }
     else
     {
-        ExitNow(error = kThreadError_Parse);
+        ExitNow(error = OT_ERROR_PARSE);
     }
 
 exit:
@@ -2007,10 +2007,10 @@ exit:
 #if OPENTHREAD_FTD
 void Interpreter::ProcessReleaseRouterId(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     long value;
 
-    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
 
     SuccessOrExit(error = ParseLong(argv[0], value));
     SuccessOrExit(error = otThreadReleaseRouterId(mInstance, static_cast<uint8_t>(value)));
@@ -2035,9 +2035,9 @@ void Interpreter::ProcessRloc16(int argc, char *argv[])
     (void)argv;
 }
 
-ThreadError Interpreter::ProcessRouteAdd(int argc, char *argv[])
+otError Interpreter::ProcessRouteAdd(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     otExternalRouteConfig config;
     int argcur = 0;
 
@@ -2046,7 +2046,7 @@ ThreadError Interpreter::ProcessRouteAdd(int argc, char *argv[])
     char *prefixLengthStr;
     char *endptr;
 
-    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
 
     if ((prefixLengthStr = strchr(argv[argcur], '/')) == NULL)
     {
@@ -2061,7 +2061,7 @@ ThreadError Interpreter::ProcessRouteAdd(int argc, char *argv[])
 
     if (*endptr != '\0')
     {
-        ExitNow(error = kThreadError_Parse);
+        ExitNow(error = OT_ERROR_PARSE);
     }
 
     argcur++;
@@ -2074,19 +2074,19 @@ ThreadError Interpreter::ProcessRouteAdd(int argc, char *argv[])
         }
         else if (strcmp(argv[argcur], "high") == 0)
         {
-            config.mPreference = kRoutePreferenceHigh;
+            config.mPreference = OT_ROUTE_PREFERENCE_HIGH;
         }
         else if (strcmp(argv[argcur], "med") == 0)
         {
-            config.mPreference = kRoutePreferenceMedium;
+            config.mPreference = OT_ROUTE_PREFERENCE_MED;
         }
         else if (strcmp(argv[argcur], "low") == 0)
         {
-            config.mPreference = kRoutePreferenceLow;
+            config.mPreference = OT_ROUTE_PREFERENCE_LOW;
         }
         else
         {
-            ExitNow(error = kThreadError_Parse);
+            ExitNow(error = OT_ERROR_PARSE);
         }
     }
 
@@ -2096,9 +2096,9 @@ exit:
     return error;
 }
 
-ThreadError Interpreter::ProcessRouteRemove(int argc, char *argv[])
+otError Interpreter::ProcessRouteRemove(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     struct otIp6Prefix prefix;
     int argcur = 0;
 
@@ -2106,7 +2106,7 @@ ThreadError Interpreter::ProcessRouteRemove(int argc, char *argv[])
     char *prefixLengthStr;
     char *endptr;
 
-    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
 
     if ((prefixLengthStr = strchr(argv[argcur], '/')) == NULL)
     {
@@ -2121,7 +2121,7 @@ ThreadError Interpreter::ProcessRouteRemove(int argc, char *argv[])
 
     if (*endptr != '\0')
     {
-        ExitNow(error = kThreadError_Parse);
+        ExitNow(error = OT_ERROR_PARSE);
     }
 
     error = otNetDataRemoveRoute(mInstance, &prefix);
@@ -2132,9 +2132,9 @@ exit:
 
 void Interpreter::ProcessRoute(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
 
     if (strcmp(argv[0], "add") == 0)
     {
@@ -2146,7 +2146,7 @@ void Interpreter::ProcessRoute(int argc, char *argv[])
     }
     else
     {
-        ExitNow(error = kThreadError_Parse);
+        ExitNow(error = OT_ERROR_PARSE);
     }
 
 exit:
@@ -2156,12 +2156,12 @@ exit:
 #if OPENTHREAD_FTD
 void Interpreter::ProcessRouter(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     otRouterInfo routerInfo;
     long value;
     bool isTable = false;
 
-    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
 
     if (strcmp(argv[0], "list") == 0 || (isTable = (strcmp(argv[0], "table") == 0)))
     {
@@ -2173,7 +2173,7 @@ void Interpreter::ProcessRouter(int argc, char *argv[])
 
         for (uint8_t i = 0; ; i++)
         {
-            if (otThreadGetRouterInfo(mInstance, i, &routerInfo) != kThreadError_None)
+            if (otThreadGetRouterInfo(mInstance, i, &routerInfo) != OT_ERROR_NONE)
             {
                 sServer->OutputFormat("\r\n");
                 ExitNow();
@@ -2242,7 +2242,7 @@ exit:
 
 void Interpreter::ProcessRouterDowngradeThreshold(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     long value;
 
     if (argc == 0)
@@ -2261,7 +2261,7 @@ exit:
 
 void Interpreter::ProcessRouterRole(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     if (argc == 0)
     {
@@ -2284,7 +2284,7 @@ void Interpreter::ProcessRouterRole(int argc, char *argv[])
     }
     else
     {
-        ExitNow(error = kThreadError_Parse);
+        ExitNow(error = OT_ERROR_PARSE);
     }
 
 exit:
@@ -2293,7 +2293,7 @@ exit:
 
 void Interpreter::ProcessRouterSelectionJitter(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     long value;
 
     if (argc == 0)
@@ -2303,7 +2303,7 @@ void Interpreter::ProcessRouterSelectionJitter(int argc, char *argv[])
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        VerifyOrExit(0 < value && value < 256, error = kThreadError_InvalidArgs);
+        VerifyOrExit(0 < value && value < 256, error = OT_ERROR_INVALID_ARGS);
         otThreadSetRouterSelectionJitter(mInstance, static_cast<uint8_t>(value));
     }
 
@@ -2313,7 +2313,7 @@ exit:
 
 void Interpreter::ProcessRouterUpgradeThreshold(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     long value;
 
     if (argc == 0)
@@ -2333,7 +2333,7 @@ exit:
 
 void Interpreter::ProcessScan(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint32_t scanChannels = 0;
     long value;
 
@@ -2386,7 +2386,7 @@ exit:
 
 void Interpreter::ProcessSingleton(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     if (otThreadIsSingleton(mInstance))
     {
@@ -2405,7 +2405,7 @@ void Interpreter::ProcessSingleton(int argc, char *argv[])
 
 void Interpreter::ProcessState(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     if (argc == 0)
     {
@@ -2451,7 +2451,7 @@ void Interpreter::ProcessState(int argc, char *argv[])
         }
         else if (strcmp(argv[0], "child") == 0)
         {
-            SuccessOrExit(error = otThreadBecomeChild(mInstance, kMleAttachSamePartition1));
+            SuccessOrExit(error = otThreadBecomeChild(mInstance));
         }
 
 #if OPENTHREAD_FTD
@@ -2467,7 +2467,7 @@ void Interpreter::ProcessState(int argc, char *argv[])
 #endif  // OPENTHREAD_FTD
         else
         {
-            ExitNow(error = kThreadError_Parse);
+            ExitNow(error = OT_ERROR_PARSE);
         }
     }
 
@@ -2477,9 +2477,9 @@ exit:
 
 void Interpreter::ProcessThread(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_Parse;
+    otError error = OT_ERROR_PARSE;
 
-    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
 
     if (strcmp(argv[0], "start") == 0)
     {
@@ -2498,7 +2498,7 @@ exit:
 
 void Interpreter::ProcessTxPowerMax(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     long value;
 
     if (argc == 0)
@@ -2519,7 +2519,7 @@ void Interpreter::ProcessVersion(int argc, char *argv[])
 {
     otStringPtr version(otGetVersionString());
     sServer->OutputFormat("%s\r\n", (const char *)version);
-    AppendResult(kThreadError_None);
+    AppendResult(OT_ERROR_NONE);
     (void)argc;
     (void)argv;
 }
@@ -2528,9 +2528,9 @@ void Interpreter::ProcessVersion(int argc, char *argv[])
 
 void Interpreter::ProcessCommissioner(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
 
     if (strcmp(argv[0], "start") == 0)
     {
@@ -2545,7 +2545,7 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
         otExtAddress addr;
         const otExtAddress *addrPtr;
 
-        VerifyOrExit(argc > 2, error = kThreadError_Parse);
+        VerifyOrExit(argc > 2, error = OT_ERROR_PARSE);
 
         if (strcmp(argv[2], "*") == 0)
         {
@@ -2553,13 +2553,13 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
         }
         else
         {
-            VerifyOrExit(Hex2Bin(argv[2], addr.m8, sizeof(addr)) == sizeof(addr), error = kThreadError_Parse);
+            VerifyOrExit(Hex2Bin(argv[2], addr.m8, sizeof(addr)) == sizeof(addr), error = OT_ERROR_PARSE);
             addrPtr = &addr;
         }
 
         if (strcmp(argv[1], "add") == 0)
         {
-            VerifyOrExit(argc > 3, error = kThreadError_Parse);
+            VerifyOrExit(argc > 3, error = OT_ERROR_PARSE);
             // Timeout parameter is optional - if not specified, use default value.
             unsigned long timeout = kDefaultJoinerTimeout;
 
@@ -2586,7 +2586,7 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
         long period;
         otIp6Address address;
 
-        VerifyOrExit(argc > 4, error = kThreadError_Parse);
+        VerifyOrExit(argc > 4, error = OT_ERROR_PARSE);
 
         // mask
         SuccessOrExit(error = ParseLong(argv[1], mask));
@@ -2614,7 +2614,7 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
         long scanDuration;
         otIp6Address address;
 
-        VerifyOrExit(argc > 5, error = kThreadError_Parse);
+        VerifyOrExit(argc > 5, error = OT_ERROR_PARSE);
 
         // mask
         SuccessOrExit(error = ParseLong(argv[1], mask));
@@ -2646,7 +2646,7 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
         long mask;
         otIp6Address address;
 
-        VerifyOrExit(argc > 3, error = kThreadError_Parse);
+        VerifyOrExit(argc > 3, error = OT_ERROR_PARSE);
 
         // panid
         SuccessOrExit(error = ParseLong(argv[1], panid));
@@ -2672,7 +2672,7 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
 
         for (uint8_t index = 1; index < argc; index++)
         {
-            VerifyOrExit(static_cast<size_t>(length) < sizeof(tlvs), error = kThreadError_NoBufs);
+            VerifyOrExit(static_cast<size_t>(length) < sizeof(tlvs), error = OT_ERROR_NO_BUFS);
 
             if (strcmp(argv[index], "locator") == 0)
             {
@@ -2692,16 +2692,16 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
             }
             else if (strcmp(argv[index], "binary") == 0)
             {
-                VerifyOrExit(++index < argc, error = kThreadError_Parse);
+                VerifyOrExit(++index < argc, error = OT_ERROR_PARSE);
                 value = static_cast<long>(strlen(argv[index]) + 1) / 2;
-                VerifyOrExit(static_cast<size_t>(value) <= (sizeof(tlvs) - static_cast<size_t>(length)), error = kThreadError_NoBufs);
+                VerifyOrExit(static_cast<size_t>(value) <= (sizeof(tlvs) - static_cast<size_t>(length)), error = OT_ERROR_NO_BUFS);
                 VerifyOrExit(Interpreter::Hex2Bin(argv[index], tlvs + length, static_cast<uint16_t>(value)) >= 0,
-                             error = kThreadError_Parse);
+                             error = OT_ERROR_PARSE);
                 length += value;
             }
             else
             {
-                ExitNow(error = kThreadError_Parse);
+                ExitNow(error = OT_ERROR_PARSE);
             }
         }
 
@@ -2714,57 +2714,57 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
         long value;
         int length = 0;
 
-        VerifyOrExit(argc > 0, error = kThreadError_Parse);
+        VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
 
         memset(&dataset, 0, sizeof(dataset));
 
         for (uint8_t index = 1; index < argc; index++)
         {
-            VerifyOrExit(static_cast<size_t>(length) < sizeof(tlvs), error = kThreadError_NoBufs);
+            VerifyOrExit(static_cast<size_t>(length) < sizeof(tlvs), error = OT_ERROR_NO_BUFS);
 
             if (strcmp(argv[index], "locator") == 0)
             {
-                VerifyOrExit(++index < argc, error = kThreadError_Parse);
+                VerifyOrExit(++index < argc, error = OT_ERROR_PARSE);
                 dataset.mIsLocatorSet = true;
                 SuccessOrExit(error = Interpreter::ParseLong(argv[index], value));
                 dataset.mLocator = static_cast<uint16_t>(value);
             }
             else if (strcmp(argv[index], "sessionid") == 0)
             {
-                VerifyOrExit(++index < argc, error = kThreadError_Parse);
+                VerifyOrExit(++index < argc, error = OT_ERROR_PARSE);
                 dataset.mIsSessionIdSet = true;
                 SuccessOrExit(error = Interpreter::ParseLong(argv[index], value));
                 dataset.mSessionId = static_cast<uint16_t>(value);
             }
             else if (strcmp(argv[index], "steeringdata") == 0)
             {
-                VerifyOrExit(++index < argc, error = kThreadError_Parse);
+                VerifyOrExit(++index < argc, error = OT_ERROR_PARSE);
                 dataset.mIsSteeringDataSet = true;
                 length = static_cast<int>((strlen(argv[index]) + 1) / 2);
-                VerifyOrExit(static_cast<size_t>(length) <= OT_STEERING_DATA_MAX_LENGTH, error = kThreadError_NoBufs);
+                VerifyOrExit(static_cast<size_t>(length) <= OT_STEERING_DATA_MAX_LENGTH, error = OT_ERROR_NO_BUFS);
                 VerifyOrExit(Interpreter::Hex2Bin(argv[index], dataset.mSteeringData.m8, static_cast<uint16_t>(length)) >= 0,
-                             error = kThreadError_Parse);
+                             error = OT_ERROR_PARSE);
                 dataset.mSteeringData.mLength = static_cast<uint8_t>(length);
                 length = 0;
             }
             else if (strcmp(argv[index], "joinerudpport") == 0)
             {
-                VerifyOrExit(++index < argc, error = kThreadError_Parse);
+                VerifyOrExit(++index < argc, error = OT_ERROR_PARSE);
                 dataset.mIsJoinerUdpPortSet = true;
                 SuccessOrExit(error = Interpreter::ParseLong(argv[index], value));
                 dataset.mJoinerUdpPort = static_cast<uint16_t>(value);
             }
             else if (strcmp(argv[index], "binary") == 0)
             {
-                VerifyOrExit(++index < argc, error = kThreadError_Parse);
+                VerifyOrExit(++index < argc, error = OT_ERROR_PARSE);
                 length = static_cast<int>((strlen(argv[index]) + 1) / 2);
-                VerifyOrExit(static_cast<size_t>(length) <= sizeof(tlvs), error = kThreadError_NoBufs);
+                VerifyOrExit(static_cast<size_t>(length) <= sizeof(tlvs), error = OT_ERROR_NO_BUFS);
                 VerifyOrExit(Interpreter::Hex2Bin(argv[index], tlvs, static_cast<uint16_t>(length)) >= 0,
-                             error = kThreadError_Parse);
+                             error = OT_ERROR_PARSE);
             }
             else
             {
-                ExitNow(error = kThreadError_Parse);
+                ExitNow(error = OT_ERROR_PARSE);
             }
         }
 
@@ -2814,14 +2814,14 @@ void Interpreter::HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask)
 
 void Interpreter::ProcessJoiner(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+    VerifyOrExit(argc > 0, error = OT_ERROR_PARSE);
 
     if (strcmp(argv[0], "start") == 0)
     {
         const char *provisioningUrl;
-        VerifyOrExit(argc > 1, error = kThreadError_Parse);
+        VerifyOrExit(argc > 1, error = OT_ERROR_PARSE);
         provisioningUrl = (argc > 2) ? argv[2] : NULL;
         otJoinerStart(mInstance, argv[1], provisioningUrl,
                       PACKAGE_NAME, PLATFORM_INFO, PACKAGE_VERSION, NULL,
@@ -2838,16 +2838,16 @@ exit:
 
 #endif // OPENTHREAD_ENABLE_JOINER
 
-void OTCALL Interpreter::s_HandleJoinerCallback(ThreadError aError, void *aContext)
+void OTCALL Interpreter::s_HandleJoinerCallback(otError aError, void *aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleJoinerCallback(aError);
 }
 
-void Interpreter::HandleJoinerCallback(ThreadError aError)
+void Interpreter::HandleJoinerCallback(otError aError)
 {
     switch (aError)
     {
-    case kThreadError_None:
+    case OT_ERROR_NONE:
         sServer->OutputFormat("Join success\r\n");
         break;
 
@@ -2860,7 +2860,7 @@ void Interpreter::HandleJoinerCallback(ThreadError aError)
 #if OPENTHREAD_FTD
 void Interpreter::ProcessJoinerPort(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     long value;
 
     if (argc == 0)
@@ -2880,7 +2880,7 @@ exit:
 
 void Interpreter::ProcessWhitelist(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     otMacWhitelistEntry entry;
     int argcur = 0;
     uint8_t extAddr[8];
@@ -2899,7 +2899,7 @@ void Interpreter::ProcessWhitelist(int argc, char *argv[])
 
         for (uint8_t i = 0; ; i++)
         {
-            if (otLinkGetWhitelistEntry(mInstance, i, &entry) != kThreadError_None)
+            if (otLinkGetWhitelistEntry(mInstance, i, &entry) != OT_ERROR_NONE)
             {
                 break;
             }
@@ -2921,18 +2921,18 @@ void Interpreter::ProcessWhitelist(int argc, char *argv[])
     }
     else if (strcmp(argv[argcur], "add") == 0)
     {
-        VerifyOrExit(++argcur < argc, error = kThreadError_Parse);
-        VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), error = kThreadError_Parse);
+        VerifyOrExit(++argcur < argc, error = OT_ERROR_PARSE);
+        VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), error = OT_ERROR_PARSE);
 
         if (++argcur < argc)
         {
             rssi = static_cast<int8_t>(strtol(argv[argcur], NULL, 0));
-            VerifyOrExit(otLinkAddWhitelistRssi(mInstance, extAddr, rssi) == kThreadError_None, error = kThreadError_Parse);
+            VerifyOrExit(otLinkAddWhitelistRssi(mInstance, extAddr, rssi) == OT_ERROR_NONE, error = OT_ERROR_PARSE);
         }
         else
         {
             otLinkAddWhitelist(mInstance, extAddr);
-            VerifyOrExit(otLinkAddWhitelist(mInstance, extAddr) == kThreadError_None, error = kThreadError_Parse);
+            VerifyOrExit(otLinkAddWhitelist(mInstance, extAddr) == OT_ERROR_NONE, error = OT_ERROR_PARSE);
         }
     }
     else if (strcmp(argv[argcur], "clear") == 0)
@@ -2949,8 +2949,8 @@ void Interpreter::ProcessWhitelist(int argc, char *argv[])
     }
     else if (strcmp(argv[argcur], "remove") == 0)
     {
-        VerifyOrExit(++argcur < argc, error = kThreadError_Parse);
-        VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), error = kThreadError_Parse);
+        VerifyOrExit(++argcur < argc, error = OT_ERROR_PARSE);
+        VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), error = OT_ERROR_PARSE);
         otLinkRemoveWhitelist(mInstance, extAddr);
     }
 
@@ -3013,7 +3013,7 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
     // Error prompt for unsupported commands
     if (i == sizeof(sCommands) / sizeof(sCommands[0]))
     {
-        AppendResult(kThreadError_Parse);
+        AppendResult(OT_ERROR_PARSE);
     }
 
 exit:
@@ -3057,13 +3057,13 @@ exit:
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
 void Interpreter::ProcessNetworkDiagnostic(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     struct otIp6Address address;
     uint8_t payload[2 + OT_NETWORK_DIAGNOSTIC_TYPELIST_MAX_ENTRIES];  // TypeList Type(1B), len(1B), type list
     uint8_t payloadIndex = 0;
     uint8_t paramIndex = 0;
 
-    VerifyOrExit(argc > 1 + 1, error = kThreadError_Parse);
+    VerifyOrExit(argc > 1 + 1, error = OT_ERROR_PARSE);
 
     SuccessOrExit(error = otIp6AddressFromString(argv[1], &address));
 

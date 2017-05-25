@@ -92,39 +92,39 @@ public:
     /**
      * This method enables mesh forwarding and the IEEE 802.15.4 MAC layer.
      *
-     * @retval kThreadError_None          Successfully enabled the mesh forwarder.
+     * @retval OT_ERROR_NONE          Successfully enabled the mesh forwarder.
      *
      */
-    ThreadError Start(void);
+    otError Start(void);
 
     /**
      * This method disables mesh forwarding and the IEEE 802.15.4 MAC layer.
      *
-     * @retval kThreadError_None          Successfully disabled the mesh forwarder.
+     * @retval OT_ERROR_NONE          Successfully disabled the mesh forwarder.
      *
      */
-    ThreadError Stop(void);
+    otError Stop(void);
 
     /**
      * This method submits a message to the mesh forwarder for forwarding.
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval kThreadError_None     Successfully enqueued the message.
-     * @retval kThreadError_Already  The message was already enqueued.
-     * @retval kThreadError_Drop     The message could not be sent and should be dropped.
+     * @retval OT_ERROR_NONE     Successfully enqueued the message.
+     * @retval OT_ERROR_ALREADY  The message was already enqueued.
+     * @retval OT_ERROR_DROP     The message could not be sent and should be dropped.
      *
      */
-    ThreadError SendMessage(Message &aMessage);
+    otError SendMessage(Message &aMessage);
 
     /**
      * This method is called by the address resolver when an EID-to-RLOC mapping has been resolved.
      *
      * @param[in]  aEid    A reference to the EID that has been resolved.
-     * @param[in]  aError  kThreadError_None on success and kThreadError_Drop otherwise.
+     * @param[in]  aError  OT_ERROR_NONE on success and OT_ERROR_DROP otherwise.
      *
      */
-    void HandleResolved(const Ip6::Address &aEid, ThreadError aError);
+    void HandleResolved(const Ip6::Address &aEid, otError aError);
 
     /**
      * This method sets the radio receiver and polling timer off.
@@ -249,14 +249,14 @@ private:
         kMessageDrop,                    ///< Indicates that the message is being dropped from reassembly list.
     };
 
-    ThreadError CheckReachability(uint8_t *aFrame, uint8_t aFrameLength,
-                                  const Mac::Address &aMeshSource, const Mac::Address &aMeshDest);
+    otError CheckReachability(uint8_t *aFrame, uint8_t aFrameLength,
+                              const Mac::Address &aMeshSource, const Mac::Address &aMeshDest);
 
-    ThreadError GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
-    ThreadError GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
+    otError GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
+    otError GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     Message *GetDirectTransmission(void);
     Message *GetIndirectTransmission(Child &aChild);
-    ThreadError PrepareDiscoverRequest(void);
+    otError PrepareDiscoverRequest(void);
     void PrepareIndirectTransmission(Message &aMessage, const Child &aChild);
     void HandleMesh(uint8_t *aFrame, uint8_t aPayloadLength, const Mac::Address &aMacSource,
                     const ThreadMessageInfo &aMessageInfo);
@@ -267,22 +267,22 @@ private:
                         const Mac::Address &aMacSource, const Mac::Address &aMacDest,
                         const ThreadMessageInfo &aMessageInfo);
     void HandleDataRequest(const Mac::Address &aMacSource, const ThreadMessageInfo &aMessageInfo);
-    ThreadError SendPoll(Message &aMessage, Mac::Frame &aFrame);
-    ThreadError SendMesh(Message &aMessage, Mac::Frame &aFrame);
-    ThreadError SendFragment(Message &aMessage, Mac::Frame &aFrame);
-    ThreadError SendEmptyFrame(Mac::Frame &aFrame, bool aAckRequest);
-    ThreadError UpdateIp6Route(Message &aMessage);
-    ThreadError UpdateMeshRoute(Message &aMessage);
-    ThreadError HandleDatagram(Message &aMessage, const ThreadMessageInfo &aMessageInfo,
-                               const Mac::Address &aMacSource);
+    otError SendPoll(Message &aMessage, Mac::Frame &aFrame);
+    otError SendMesh(Message &aMessage, Mac::Frame &aFrame);
+    otError SendFragment(Message &aMessage, Mac::Frame &aFrame);
+    otError SendEmptyFrame(Mac::Frame &aFrame, bool aAckRequest);
+    otError UpdateIp6Route(Message &aMessage);
+    otError UpdateMeshRoute(Message &aMessage);
+    otError HandleDatagram(Message &aMessage, const ThreadMessageInfo &aMessageInfo,
+                           const Mac::Address &aMacSource);
     void ClearReassemblyList(void);
 
     static void HandleReceivedFrame(void *aContext, Mac::Frame &aFrame);
     void HandleReceivedFrame(Mac::Frame &aFrame);
-    static ThreadError HandleFrameRequest(void *aContext, Mac::Frame &aFrame);
-    ThreadError HandleFrameRequest(Mac::Frame &aFrame);
-    static void HandleSentFrame(void *aContext, Mac::Frame &aFrame, ThreadError aError);
-    void HandleSentFrame(Mac::Frame &aFrame, ThreadError aError);
+    static otError HandleFrameRequest(void *aContext, Mac::Frame &aFrame);
+    otError HandleFrameRequest(Mac::Frame &aFrame);
+    static void HandleSentFrame(void *aContext, Mac::Frame &aFrame, otError aError);
+    void HandleSentFrame(Mac::Frame &aFrame, otError aError);
     static void HandleDiscoverTimer(void *aContext);
     void HandleDiscoverTimer(void);
     static void HandleReassemblyTimer(void *aContext);
@@ -291,12 +291,12 @@ private:
     void ScheduleTransmissionTask(void);
     static void HandleDataPollTimeout(void *aContext);
 
-    ThreadError AddPendingSrcMatchEntries(void);
-    ThreadError AddSrcMatchEntry(Child &aChild);
+    otError AddPendingSrcMatchEntries(void);
+    otError AddSrcMatchEntry(Child &aChild);
     void ClearSrcMatchEntry(Child &aChild);
 
     void LogIp6Message(MessageAction aAction, const Message &aMessage, const Mac::Address *aMacAddress,
-                       ThreadError aError);
+                       otError aError);
 
     ThreadNetif &mNetif;
 

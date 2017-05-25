@@ -119,11 +119,11 @@ public:
      * @param[in]   aString  A pointer to the ASCII string.
      * @param[out]  aLong    A reference to where the parsed long is placed.
      *
-     * @retval kThreadError_None   Successfully parsed the ASCII string.
-     * @retval kThreadError_Parse  Could not parse the ASCII string.
+     * @retval OT_ERROR_NONE   Successfully parsed the ASCII string.
+     * @retval OT_ERROR_PARSE  Could not parse the ASCII string.
      *
      */
-    static ThreadError ParseLong(char *aString, long &aLong);
+    static otError ParseLong(char *aString, long &aLong);
 
     /**
      * This method parses an ASCII string as an unsigned long.
@@ -131,11 +131,11 @@ public:
      * @param[in]   aString          A pointer to the ASCII string.
      * @param[out]  aUnsignedLong    A reference to where the parsed unsigned long is placed.
      *
-     * @retval kThreadError_None   Successfully parsed the ASCII string.
-     * @retval kThreadError_Parse  Could not parse the ASCII string.
+     * @retval OT_ERROR_NONE   Successfully parsed the ASCII string.
+     * @retval OT_ERROR_PARSE  Could not parse the ASCII string.
      *
      */
-    static ThreadError ParseUnsignedLong(char *aString, unsigned long &aUnsignedLong);
+    static otError ParseUnsignedLong(char *aString, unsigned long &aUnsignedLong);
 
     /**
      * This method converts a hex string to binary.
@@ -156,7 +156,7 @@ private:
         kDefaultJoinerTimeout = 120,    ///< Default timeout for Joiners, in seconds.
     };
 
-    void AppendResult(ThreadError error);
+    void AppendResult(otError error);
     void OutputBytes(const uint8_t *aBytes, uint8_t aLength);
 
     void ProcessHelp(int argc, char *argv[]);
@@ -203,13 +203,13 @@ private:
     void ProcessHashMacAddress(int argc, char *argv[]);
     void ProcessIfconfig(int argc, char *argv[]);
     void ProcessIpAddr(int argc, char *argv[]);
-    ThreadError ProcessIpAddrAdd(int argc, char *argv[]);
-    ThreadError ProcessIpAddrDel(int argc, char *argv[]);
+    otError ProcessIpAddrAdd(int argc, char *argv[]);
+    otError ProcessIpAddrDel(int argc, char *argv[]);
     void ProcessIpMulticastAddr(int argc, char *argv[]);
 #ifndef OTDLL
-    ThreadError ProcessIpMulticastAddrAdd(int argc, char *argv[]);
-    ThreadError ProcessIpMulticastAddrDel(int argc, char *argv[]);
-    ThreadError ProcessMulticastPromiscuous(int argc, char *argv[]);
+    otError ProcessIpMulticastAddrAdd(int argc, char *argv[]);
+    otError ProcessIpMulticastAddrDel(int argc, char *argv[]);
+    otError ProcessMulticastPromiscuous(int argc, char *argv[]);
 #endif
 #if OPENTHREAD_ENABLE_JOINER
     void ProcessJoiner(int argc, char *argv[]);
@@ -239,9 +239,9 @@ private:
     void ProcessPing(int argc, char *argv[]);
     void ProcessPollPeriod(int argc, char *argv[]);
     void ProcessPrefix(int argc, char *argv[]);
-    ThreadError ProcessPrefixAdd(int argc, char *argv[]);
-    ThreadError ProcessPrefixRemove(int argc, char *argv[]);
-    ThreadError ProcessPrefixList(void);
+    otError ProcessPrefixAdd(int argc, char *argv[]);
+    otError ProcessPrefixRemove(int argc, char *argv[]);
+    otError ProcessPrefixList(void);
     void ProcessPromiscuous(int argc, char *argv[]);
 #if OPENTHREAD_FTD
     void ProcessPSKc(int argc, char *argv[]);
@@ -249,8 +249,8 @@ private:
 #endif
     void ProcessReset(int argc, char *argv[]);
     void ProcessRoute(int argc, char *argv[]);
-    ThreadError ProcessRouteAdd(int argc, char *argv[]);
-    ThreadError ProcessRouteRemove(int argc, char *argv[]);
+    otError ProcessRouteAdd(int argc, char *argv[]);
+    otError ProcessRouteRemove(int argc, char *argv[]);
 #if OPENTHREAD_FTD
     void ProcessRouter(int argc, char *argv[]);
     void ProcessRouterDowngradeThreshold(int argc, char *argv[]);
@@ -289,11 +289,11 @@ private:
     static void OTCALL s_HandleDiagnosticGetResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo,
                                                      void *aContext);
 #endif
-    static void OTCALL s_HandleJoinerCallback(ThreadError aError, void *aContext);
+    static void OTCALL s_HandleJoinerCallback(otError aError, void *aContext);
 
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     static void s_HandleDnsResponse(void *aContext, const char *aHostname, otIp6Address *aAddress,
-                                    uint32_t aTtl, ThreadError aResult);
+                                    uint32_t aTtl, otError aResult);
 #endif
 
 #ifndef OTDLL
@@ -315,10 +315,10 @@ private:
 #ifndef OTDLL
     void HandleDiagnosticGetResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 #endif
-    void HandleJoinerCallback(ThreadError aError);
+    void HandleJoinerCallback(otError aError);
 
 #if OPENTHREAD_ENABLE_DNS_CLIENT
-    void HandleDnsResponse(const char *aHostname, Ip6::Address &aAddress, uint32_t aTtl, ThreadError aResult);
+    void HandleDnsResponse(const char *aHostname, Ip6::Address &aAddress, uint32_t aTtl, otError aResult);
 #endif
 
     static const struct Command sCommands[];

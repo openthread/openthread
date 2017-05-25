@@ -150,12 +150,12 @@ uint32_t otPlatRandomGet(void)
     return (uint32_t)rand();
 }
 
-ThreadError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
+otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    otEXPECT_ACTION(aOutput, error = kThreadError_InvalidArgs);
-    otEXPECT_ACTION(!bufferIsEmpty(), error = kThreadError_Failed);
+    otEXPECT_ACTION(aOutput, error = OT_ERROR_INVALID_ARGS);
+    otEXPECT_ACTION(!bufferIsEmpty(), error = OT_ERROR_FAILED);
 
     uint16_t copyLength = (uint16_t)bufferCount();
 

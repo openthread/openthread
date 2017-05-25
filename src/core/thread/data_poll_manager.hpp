@@ -87,12 +87,12 @@ public:
     /**
      * This method instructs the data poll manager to start sending periodic data polls.
      *
-     * @retval kThreadError_None            Successfully started sending periodic data polls.
-     * @retval kThreadError_Already         Periodic data poll transmission is already started/enabled.
-     * @retval kThreadError_InvalidState    Device is not in rx-off-when-idle mode.
+     * @retval OT_ERROR_NONE            Successfully started sending periodic data polls.
+     * @retval OT_ERROR_ALREADY         Periodic data poll transmission is already started/enabled.
+     * @retval OT_ERROR_INVALID_STATE   Device is not in rx-off-when-idle mode.
      *
      */
-    ThreadError StartPolling(void);
+    otError StartPolling(void);
 
     /**
      * This method instructs the data poll manager to stop sending periodic data polls.
@@ -103,13 +103,13 @@ public:
     /**
      * This method enqueues a data poll (an IEEE 802.15.4 Data Request) message.
      *
-     * @retval kThreadError_None          Successfully enqueued a data poll message
-     * @retval kThreadError_Already       A data poll message is already enqueued.
-     * @retval kThreadError_InvalidState  Device is not in rx-off-when-idle mode.
-     * @retval kThreadError_NoBufs        Insufficient message buffers available.
+     * @retval OT_ERROR_NONE           Successfully enqueued a data poll message
+     * @retval OT_ERROR_ALREADY        A data poll message is already enqueued.
+     * @retval OT_ERROR_INVALID_STATE  Device is not in rx-off-when-idle mode.
+     * @retval OT_ERROR_NO_BUFS        Insufficient message buffers available.
      *
      */
-    ThreadError SendDataPoll(void);
+    otError SendDataPoll(void);
 
     /**
      * This method sets a user-specified/external data poll period.
@@ -143,7 +143,7 @@ public:
      * @param[in] aError   Error status of a data poll message transmission.
      *
      */
-    void HandlePollSent(ThreadError aError);
+    void HandlePollSent(otError aError);
 
     /**
      * This method informs the data poll manager that a data poll timeout happened, i.e., when the ack in response to

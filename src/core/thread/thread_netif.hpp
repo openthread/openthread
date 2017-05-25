@@ -114,13 +114,13 @@ public:
      * This method enables the Thread network interface.
      *
      */
-    ThreadError Up(void);
+    otError Up(void);
 
     /**
      * This method disables the Thread network interface.
      *
      */
-    ThreadError Down(void);
+    otError Down(void);
 
     /**
      * This method indicates whether or not the Thread network interface is enabled.
@@ -137,17 +137,17 @@ public:
      * @param[out]  aAddress  A reference to the link address.
      *
      */
-    virtual ThreadError GetLinkAddress(Ip6::LinkAddress &aAddress) const;
+    virtual otError GetLinkAddress(Ip6::LinkAddress &aAddress) const;
 
     /**
      * This method submits a message to the network interface.
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval kThreadError_None  Successfully submitted the message to the interface.
+     * @retval OT_ERROR_NONE  Successfully submitted the message to the interface.
      *
      */
-    virtual ThreadError SendMessage(Message &aMessage) { return mMeshForwarder.SendMessage(aMessage); }
+    virtual otError SendMessage(Message &aMessage) { return mMeshForwarder.SendMessage(aMessage); }
 
     /**
      * This method performs a route lookup.
@@ -156,11 +156,11 @@ public:
      * @param[in]   aDestination  A reference to the IPv6 destination address.
      * @param[out]  aPrefixMatch  A pointer where the number of prefix match bits for the chosen route is stored.
      *
-     * @retval kThreadError_None     Successfully found a route.
-     * @retval kThreadError_NoRoute  Could not find a valid route.
+     * @retval OT_ERROR_NONE      Successfully found a route.
+     * @retval OT_ERROR_NO_ROUTE  Could not find a valid route.
      *
      */
-    virtual ThreadError RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch);
+    virtual otError RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch);
 
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     /**
@@ -407,7 +407,7 @@ public:
     otInstance *GetInstance(void);
 
 private:
-    static ThreadError TmfFilter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static otError TmfFilter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 
     Coap::Coap mCoap;
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT

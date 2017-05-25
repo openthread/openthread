@@ -63,7 +63,7 @@ public:
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
      */
-    typedef ThreadError(*TransportCallback)(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    typedef otError(*TransportCallback)(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * This constructor initializes the object.
@@ -81,18 +81,18 @@ public:
      *                        If NULL, the message is sent directly to the socket.
      * @param[in]  aContext   A pointer to arbitrary context information.
      *
-     * @retval kThreadError_None  Successfully started the CoAP agent.
+     * @retval OT_ERROR_NONE  Successfully started the CoAP agent.
      *
      */
-    ThreadError Start(uint16_t aPort, TransportCallback aCallback = NULL, void *aContext = NULL);
+    otError Start(uint16_t aPort, TransportCallback aCallback = NULL, void *aContext = NULL);
 
     /**
      * This method stops the secure CoAP agent.
      *
-     * @retval kThreadError_None  Successfully stopped the secure CoAP agent.
+     * @retval OT_ERROR_NONE  Successfully stopped the secure CoAP agent.
      *
      */
-    ThreadError Stop(void);
+    otError Stop(void);
 
     /**
      * This method initializes DTLS session with a peer.
@@ -100,10 +100,10 @@ public:
      * @param[in]  aMessageInfo  A reference to an address of the peer.
      * @param[in]  aCallback     A pointer to a function that will be called once DTLS connection is established.
      *
-     * @retval kThreadError_None  Successfully started DTLS connection.
+     * @retval OT_ERROR_NONE  Successfully started DTLS connection.
      *
      */
-    ThreadError Connect(const Ip6::MessageInfo &aMessageInfo, ConnectedCallback aCallback, void *aContext);
+    otError Connect(const Ip6::MessageInfo &aMessageInfo, ConnectedCallback aCallback, void *aContext);
 
     /**
      * This method indicates whether or not the DTLS session is active.
@@ -126,10 +126,10 @@ public:
     /**
      * This method stops the DTLS connection.
      *
-     * @retval kThreadError_None  Successfully stopped the DTLS connection.
+     * @retval OT_ERROR_NONE  Successfully stopped the DTLS connection.
      *
      */
-    ThreadError Disconnect(void);
+    otError Disconnect(void);
 
     /**
      * This method returns a reference to the DTLS object.
@@ -145,11 +145,11 @@ public:
      * @param[in]  aPSK        A pointer to the PSK.
      * @param[in]  aPskLength  The PSK length.
      *
-     * @retval kThreadError_None         Successfully set the PSK.
-     * @retval kThreadError_InvalidArgs  The PSK is invalid.
+     * @retval OT_ERROR_NONE          Successfully set the PSK.
+     * @retval OT_ERROR_INVALID_ARGS  The PSK is invalid.
      *
      */
-    ThreadError SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
+    otError SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
 
     /**
      * This method sends a CoAP message over secure DTLS connection.
@@ -162,12 +162,12 @@ public:
      * @param[in]  aHandler      A function pointer that shall be called on response reception or time-out.
      * @param[in]  aContext      A pointer to arbitrary context information.
      *
-     * @retval kThreadError_None         Successfully sent CoAP message.
-     * @retval kThreadError_NoBufs       Failed to allocate retransmission data.
-     * @retvak kThreadError_InvalidState DTLS connection was not initialized.
+     * @retval OT_ERROR_NONE           Successfully sent CoAP message.
+     * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
+     * @retvak OT_ERROR_INVALID_STATE  DTLS connection was not initialized.
      *
      */
-    ThreadError SendMessage(Message &aMessage, otCoapResponseHandler aHandler = NULL, void *aContext = NULL);
+    otError SendMessage(Message &aMessage, otCoapResponseHandler aHandler = NULL, void *aContext = NULL);
 
     /**
      * This method sends a CoAP message over secure DTLS connection.
@@ -181,13 +181,13 @@ public:
      * @param[in]  aHandler      A function pointer that shall be called on response reception or time-out.
      * @param[in]  aContext      A pointer to arbitrary context information.
      *
-     * @retval kThreadError_None         Successfully sent CoAP message.
-     * @retval kThreadError_NoBufs       Failed to allocate retransmission data.
-     * @retvak kThreadError_InvalidState DTLS connection was not initialized.
+     * @retval OT_ERROR_NONE           Successfully sent CoAP message.
+     * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
+     * @retvak OT_ERROR_INVALID_STATE  DTLS connection was not initialized.
      *
      */
-    ThreadError SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
-                            otCoapResponseHandler aHandler = NULL, void *aContext = NULL);
+    otError SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
+                        otCoapResponseHandler aHandler = NULL, void *aContext = NULL);
 
     /**
      * This method is used to pass messages to the secure CoAP server.
@@ -200,7 +200,7 @@ public:
     void Receive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 private:
-    virtual ThreadError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    virtual otError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleDtlsConnected(void *aContext, bool aConnected);
     void HandleDtlsConnected(bool aConnected);
@@ -208,8 +208,8 @@ private:
     static void HandleDtlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength);
     void HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength);
 
-    static ThreadError HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
-    ThreadError HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
+    static otError HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
+    otError HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
 
     static void HandleUdpTransmit(void *aContext);
     void HandleUdpTransmit(void);

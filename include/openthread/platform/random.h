@@ -71,12 +71,12 @@ uint32_t otPlatRandomGet(void);
  * @param[out]  aOutput              A pointer to where the true random values are placed.  Must not be NULL.
  * @param[in]   aOutputLength        Size of @p aBuffer.
  *
- * @retval kThreadError_None         Successfully filled @p aBuffer with true random values.
- * @retval kThreadError_Fail         Failed to fill @p aBuffer with true random values.
- * @retval kThreadError_InvalidArgs  @p aBuffer was set to NULL.
+ * @retval OT_ERROR_NONE          Successfully filled @p aBuffer with true random values.
+ * @retval OT_ERROR_FAILED         Failed to fill @p aBuffer with true random values.
+ * @retval OT_ERROR_INVALID_ARGS  @p aBuffer was set to NULL.
  *
  */
-ThreadError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength);
+otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength);
 
 /**
  * @}

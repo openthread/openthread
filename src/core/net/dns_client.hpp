@@ -81,11 +81,11 @@ public:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval kThreadError_None    Successfully appended the bytes.
-     * @retval kThreadError_NoBufs  Insufficient available buffers to grow the message.
+     * @retval OT_ERROR_NONE     Successfully appended the bytes.
+     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
      *
      */
-    ThreadError AppendTo(Message &aMessage) const {
+    otError AppendTo(Message &aMessage) const {
         return aMessage.Append(this, sizeof(*this));
     };
 
@@ -166,18 +166,18 @@ public:
     /**
      * This method starts the DNS client.
      *
-     * @retval kThreadError_None     Successfully started the DNS client.
-     * @retval kThreadError_Already  The socket is already open.
+     * @retval OT_ERROR_NONE     Successfully started the DNS client.
+     * @retval OT_ERROR_ALREADY  The socket is already open.
      */
-    ThreadError Start(void);
+    otError Start(void);
 
     /**
      * This method stops the DNS client.
      *
-     * @retval kThreadError_None  Successfully stopped the DNS client.
+     * @retval OT_ERROR_NONE  Successfully stopped the DNS client.
      *
      */
-    ThreadError Stop(void);
+    otError Stop(void);
 
     /**
      * This method sends a DNS query.
@@ -186,12 +186,12 @@ public:
      * @param[in]  aHandler  A function pointer that shall be called on response reception or time-out.
      * @param[in]  aContext  A pointer to arbitrary context information.
      *
-     * @retval kThreadError_None         Successfully sent DNS query.
-     * @retval kThreadError_NoBufs       Failed to allocate retransmission data.
-     * @retval kThreadError_InvalidArgs  Invalid arguments supplied.
+     * @retval OT_ERROR_NONE          Successfully sent DNS query.
+     * @retval OT_ERROR_NO_BUFS       Failed to allocate retransmission data.
+     * @retval OT_ERROR_INVALID_ARGS  Invalid arguments supplied.
      *
      */
-    ThreadError Query(const otDnsQuery *aQuery, otDnsResponseHandler aHandler, void *aContext);
+    otError Query(const otDnsQuery *aQuery, otDnsResponseHandler aHandler, void *aContext);
 
     /**
      * This method returns a port number used by DNS client.
@@ -233,17 +233,17 @@ private:
     Message *NewMessage(const Header &aHeader);
     Message *CopyAndEnqueueMessage(const Message &aMessage, const QueryMetadata &aQueryMetadata);
     void DequeueMessage(Message &aMessage);
-    ThreadError SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    ThreadError SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    ThreadError AppendCompressedHostname(Message &aMessage, const char *aHostname);
-    ThreadError CompareQuestions(Message &aMessageResponse, Message &aMessageQuery, uint16_t &aOffset);
-    ThreadError SkipHostname(Message &aMessage, uint16_t &aOffset);
+    otError AppendCompressedHostname(Message &aMessage, const char *aHostname);
+    otError CompareQuestions(Message &aMessageResponse, Message &aMessageQuery, uint16_t &aOffset);
+    otError SkipHostname(Message &aMessage, uint16_t &aOffset);
 
     Message *FindRelatedQuery(const Header &aResponseHeader, QueryMetadata &aQueryMetadata);
     void FinalizeDnsTransaction(Message &aQuery, const QueryMetadata &aQueryMetadata,
                                 otIp6Address *aAddress, uint32_t aTtl,
-                                ThreadError aResult);
+                                otError aResult);
 
     static void HandleRetransmissionTimer(void *aContext);
     void HandleRetransmissionTimer(void);

@@ -51,7 +51,7 @@
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
-#include "thread/thread_uris.hpp"
+#include "thread/thread_uri_paths.hpp"
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
@@ -61,7 +61,7 @@ using ot::Encoding::BigEndian::HostSwap32;
 namespace ot {
 
 EnergyScanClient::EnergyScanClient(ThreadNetif &aThreadNetif) :
-    mEnergyScan(OPENTHREAD_URI_ENERGY_REPORT, &EnergyScanClient::HandleReport, this),
+    mEnergyScan(OT_URI_PATH_ENERGY_REPORT, &EnergyScanClient::HandleReport, this),
     mNetif(aThreadNetif)
 {
     mContext = NULL;
@@ -74,11 +74,11 @@ otInstance *EnergyScanClient::GetInstance(void)
     return mNetif.GetInstance();
 }
 
-ThreadError EnergyScanClient::SendQuery(uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod,
-                                        uint16_t aScanDuration, const Ip6::Address &aAddress,
-                                        otCommissionerEnergyReportCallback aCallback, void *aContext)
+otError EnergyScanClient::SendQuery(uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod,
+                                    uint16_t aScanDuration, const Ip6::Address &aAddress,
+                                    otCommissionerEnergyReportCallback aCallback, void *aContext)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     Coap::Header header;
     MeshCoP::CommissionerSessionIdTlv sessionId;
     MeshCoP::ChannelMask0Tlv channelMask;
@@ -88,16 +88,16 @@ ThreadError EnergyScanClient::SendQuery(uint32_t aChannelMask, uint8_t aCount, u
     Ip6::MessageInfo messageInfo;
     Message *message = NULL;
 
-    VerifyOrExit(mNetif.GetCommissioner().GetState() == kCommissionerStateActive, error = kThreadError_InvalidState);
+    VerifyOrExit(mNetif.GetCommissioner().IsActive(), error = OT_ERROR_INVALID_STATE);
 
     header.Init(aAddress.IsMulticast() ? kCoapTypeNonConfirmable : kCoapTypeConfirmable,
                 kCoapRequestPost);
     header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_ENERGY_SCAN);
+    header.AppendUriPathOptions(OT_URI_PATH_ENERGY_SCAN);
     header.SetPayloadMarker();
 
     VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(mNetif.GetCoap(), header)) != NULL,
-                 error = kThreadError_NoBufs);
+                 error = OT_ERROR_NO_BUFS);
 
     sessionId.Init();
     sessionId.SetCommissionerSessionId(mNetif.GetCommissioner().GetSessionId());
@@ -132,7 +132,7 @@ ThreadError EnergyScanClient::SendQuery(uint32_t aChannelMask, uint8_t aCount, u
 
 exit:
 
-    if (error != kThreadError_None && message != NULL)
+    if (error != OT_ERROR_NONE && message != NULL)
     {
         message->Free();
     }

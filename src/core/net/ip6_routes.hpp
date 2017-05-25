@@ -84,22 +84,22 @@ public:
      *
      * @param[in]  aRoute  A reference to the IPv6 route.
      *
-     * @retval kThreadError_None  Successfully added the route.
-     * @retval kThreadError_Already  The route was already added.
+     * @retval OT_ERROR_NONE     Successfully added the route.
+     * @retval OT_ERROR_ALREADY  The route was already added.
      *
      */
-    ThreadError Add(Route &aRoute);
+    otError Add(Route &aRoute);
 
     /**
      * This method removes an IPv6 route.
      *
      * @param[in]  aRoute  A reference to the IPv6 route.
      *
-     * @retval kThreadError_None         Successfully removed the route.
-     * @retval kThreadError_NotFound  The route was not added.
+     * @retval OT_ERROR_NONE       Successfully removed the route.
+     * @retval OT_ERROR_NOT_FOUND  The route was not added.
      *
      */
-    ThreadError Remove(Route &aRoute);
+    otError Remove(Route &aRoute);
 
     /**
      * This method performs source-destination route lookup.

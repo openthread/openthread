@@ -186,13 +186,13 @@ typedef struct otCoapHeader
  * @param[in]  aMessageInfo  A pointer to the message info for @p aMessage. NULL if no response was received.
  * @param[in]  aResult       A result of the CoAP transaction.
  *
- * @retval  kThreadError_None             A response was received successfully.
- * @retval  kThreadError_Abort            A CoAP transaction was reseted by peer.
- * @retval  kThreadError_ResponseTimeout  No response or acknowledgment received during timeout period.
+ * @retval  OT_ERROR_NONE              A response was received successfully.
+ * @retval  OT_ERROR_ABORT             A CoAP transaction was reseted by peer.
+ * @retval  OT_ERROR_RESPONSE_TIMEOUT  No response or acknowledgment received during timeout period.
  *
  */
 typedef void (*otCoapResponseHandler)(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                                      const otMessageInfo *aMessageInfo, ThreadError aResult);
+                                      const otMessageInfo *aMessageInfo, otError aResult);
 
 /**
  * This function pointer is called when a CoAP request with a given Uri-Path is received.
@@ -254,12 +254,12 @@ void otCoapHeaderGenerateToken(otCoapHeader *aHeader, uint8_t aTokenLength);
  * @param[inout]  aHeader  A pointer to the CoAP header.
  * @param[in]     aOption  A pointer to the CoAP option.
  *
- * @retval kThreadError_None         Successfully appended the option.
- * @retval kThreadError_InvalidArgs  The option type is not equal or greater than the last option type.
- * @retval kThreadError_NoBufs       The option length exceeds the buffer size.
+ * @retval OT_ERROR_NONE          Successfully appended the option.
+ * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
+ * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
  *
  */
-ThreadError otCoapHeaderAppendOption(otCoapHeader *aHeader, const otCoapOption *aOption);
+otError otCoapHeaderAppendOption(otCoapHeader *aHeader, const otCoapOption *aOption);
 
 /**
  * This function appends an unsigned integer CoAP option as specified in
@@ -269,12 +269,12 @@ ThreadError otCoapHeaderAppendOption(otCoapHeader *aHeader, const otCoapOption *
  * @param[in]     aNumber  The CoAP Option number.
  * @param[in]     aValue   The CoAP Option unsigned integer value.
  *
- * @retval kThreadError_None         Successfully appended the option.
- * @retval kThreadError_InvalidArgs  The option type is not equal or greater than the last option type.
- * @retval kThreadError_NoBufs       The option length exceeds the buffer size.
+ * @retval OT_ERROR_NONE          Successfully appended the option.
+ * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
+ * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
  *
  */
-ThreadError otCoapHeaderAppendUintOption(otCoapHeader *aHeader, uint16_t aNumber, uint32_t aValue);
+otError otCoapHeaderAppendUintOption(otCoapHeader *aHeader, uint16_t aNumber, uint32_t aValue);
 
 /**
  * This function appends an Observe option.
@@ -282,11 +282,11 @@ ThreadError otCoapHeaderAppendUintOption(otCoapHeader *aHeader, uint16_t aNumber
  * @param[inout]  aHeader   A pointer to the CoAP header.
  * @param[in]     aObserve  Observe field value.
  *
- * @retval kThreadError_None         Successfully appended the option.
- * @retval kThreadError_InvalidArgs  The option type is not equal or greater than the last option type.
- * @retval kThreadError_NoBufs       The option length exceeds the buffer size.
+ * @retval OT_ERROR_NONE          Successfully appended the option.
+ * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
+ * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
  */
-ThreadError otCoapHeaderAppendObserveOption(otCoapHeader *aHeader, uint32_t aObserve);
+otError otCoapHeaderAppendObserveOption(otCoapHeader *aHeader, uint32_t aObserve);
 
 /**
  * This function appends an Uri-Path option.
@@ -294,12 +294,12 @@ ThreadError otCoapHeaderAppendObserveOption(otCoapHeader *aHeader, uint32_t aObs
  * @param[inout]  aHeader   A pointer to the CoAP header.
  * @param[in]     aUriPath  A pointer to a NULL-terminated string.
  *
- * @retval kThreadError_None         Successfully appended the option.
- * @retval kThreadError_InvalidArgs  The option type is not equal or greater than the last option type.
- * @retval kThreadError_NoBufs       The option length exceeds the buffer size.
+ * @retval OT_ERROR_NONE          Successfully appended the option.
+ * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
+ * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
  *
  */
-ThreadError otCoapHeaderAppendUriPathOptions(otCoapHeader *aHeader, const char *aUriPath);
+otError otCoapHeaderAppendUriPathOptions(otCoapHeader *aHeader, const char *aUriPath);
 
 /**
  * This function appends a Max-Age option.
@@ -307,11 +307,11 @@ ThreadError otCoapHeaderAppendUriPathOptions(otCoapHeader *aHeader, const char *
  * @param[inout]  aHeader   A pointer to the CoAP header.
  * @param[in]     aMaxAge   The Max-Age value.
  *
- * @retval kThreadError_None         Successfully appended the option.
- * @retval kThreadError_InvalidArgs  The option type is not equal or greater than the last option type.
- * @retval kThreadError_NoBufs       The option length exceeds the buffer size.
+ * @retval OT_ERROR_NONE          Successfully appended the option.
+ * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
+ * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
  */
-ThreadError otCoapHeaderAppendMaxAgeOption(otCoapHeader *aHeader, uint32_t aMaxAge);
+otError otCoapHeaderAppendMaxAgeOption(otCoapHeader *aHeader, uint32_t aMaxAge);
 
 /**
  * This function appends a single Uri-Query option.
@@ -319,19 +319,19 @@ ThreadError otCoapHeaderAppendMaxAgeOption(otCoapHeader *aHeader, uint32_t aMaxA
  * @param[inout]  aHeader   A pointer to the CoAP header.
  * @param[in]     aUriQuery A pointer to NULL-terminated string, which should contain a single key=value pair.
  *
- * @retval kThreadError_None         Successfully appended the option.
- * @retval kThreadError_InvalidArgs  The option type is not equal or greater than the last option type.
- * @retval kThreadError_NoBufs       The option length exceeds the buffer size.
+ * @retval OT_ERROR_NONE          Successfully appended the option.
+ * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
+ * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
  */
-ThreadError otCoapHeaderAppendUriQueryOption(otCoapHeader *aHeader, const char *aUriQuery);
+otError otCoapHeaderAppendUriQueryOption(otCoapHeader *aHeader, const char *aUriQuery);
 
 /**
  * This function adds Payload Marker indicating beginning of the payload to the CoAP header.
  *
  * @param[inout]  aHeader  A pointer to the CoAP header.
  *
- * @retval kThreadError_None    Payload Marker successfully added.
- * @retval kThreadError_NoBufs  Header Payload Marker exceeds the buffer size.
+ * @retval OT_ERROR_NONE     Payload Marker successfully added.
+ * @retval OT_ERROR_NO_BUFS  Header Payload Marker exceeds the buffer size.
  *
  */
 void otCoapHeaderSetPayloadMarker(otCoapHeader *aHeader);
@@ -438,12 +438,12 @@ otMessage *otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader);
  * @param[in]  aHandler      A function pointer that shall be called on response reception or timeout.
  * @param[in]  aContext      A pointer to arbitrary context information. May be NULL if not used.
  *
- * @retval kThreadError_None   Successfully sent CoAP message.
- * @retval kThreadError_NoBufs Failed to allocate retransmission data.
+ * @retval OT_ERROR_NONE    Successfully sent CoAP message.
+ * @retval OT_ERROR_NO_BUFS Failed to allocate retransmission data.
  *
  */
-ThreadError otCoapSendRequest(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo,
-                              otCoapResponseHandler aHandler, void *aContext);
+otError otCoapSendRequest(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo,
+                          otCoapResponseHandler aHandler, void *aContext);
 
 /**
  * This function starts the CoAP server.
@@ -451,20 +451,20 @@ ThreadError otCoapSendRequest(otInstance *aInstance, otMessage *aMessage, const 
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aPort      The local UDP port to bind to.
  *
- * @retval kThreadError_None  Successfully started the CoAP server.
+ * @retval OT_ERROR_NONE  Successfully started the CoAP server.
  *
  */
-ThreadError otCoapStart(otInstance *aInstance, uint16_t aPort);
+otError otCoapStart(otInstance *aInstance, uint16_t aPort);
 
 /**
  * This function stops the CoAP server.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
- * @retval kThreadError_None  Successfully stopped the CoAP server.
+ * @retval OT_ERROR_NONE  Successfully stopped the CoAP server.
  *
  */
-ThreadError otCoapStop(otInstance *aInstance);
+otError otCoapStop(otInstance *aInstance);
 
 /**
  * This function adds a resource to the CoAP server.
@@ -472,11 +472,11 @@ ThreadError otCoapStop(otInstance *aInstance);
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aResource  A pointer to the resource.
  *
- * @retval kThreadError_None     Successfully added @p aResource.
- * @retval kThreadError_Already  The @p aResource was already added.
+ * @retval OT_ERROR_NONE     Successfully added @p aResource.
+ * @retval OT_ERROR_ALREADY  The @p aResource was already added.
  *
  */
-ThreadError otCoapAddResource(otInstance *aInstance, otCoapResource *aResource);
+otError otCoapAddResource(otInstance *aInstance, otCoapResource *aResource);
 
 /**
  * This function removes a resource from the CoAP server.
@@ -503,11 +503,11 @@ void otCoapSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandle
  * @param[in]  aMessage      A pointer to the CoAP response to send.
  * @param[in]  aMessageInfo  A pointer to the message info associated with @p aMessage.
  *
- * @retval kThreadError_None    Successfully enqueued the CoAP response message.
- * @retval kThreadError_NoBufs  Insufficient buffers available to send the CoAP response.
+ * @retval OT_ERROR_NONE     Successfully enqueued the CoAP response message.
+ * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to send the CoAP response.
  *
  */
-ThreadError otCoapSendResponse(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+otError otCoapSendResponse(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 
 /**

@@ -60,14 +60,14 @@
 #include "meshcop/leader.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
-#include "thread/thread_uris.hpp"
+#include "thread/thread_uri_paths.hpp"
 
 namespace ot {
 namespace MeshCoP {
 
 ActiveDataset::ActiveDataset(ThreadNetif &aThreadNetif):
     ActiveDatasetBase(aThreadNetif),
-    mResourceSet(OPENTHREAD_URI_ACTIVE_SET, &ActiveDataset::HandleSet, this)
+    mResourceSet(OT_URI_PATH_ACTIVE_SET, &ActiveDataset::HandleSet, this)
 {
 }
 
@@ -76,12 +76,12 @@ bool ActiveDataset::IsTlvInitialized(Tlv::Type aType)
     return mLocal.Get(aType) != NULL;
 }
 
-ThreadError ActiveDataset::GenerateLocal(void)
+otError ActiveDataset::GenerateLocal(void)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     otOperationalDataset dataset;
 
-    VerifyOrExit(mNetif.GetMle().IsAttached(), error = kThreadError_InvalidState);
+    VerifyOrExit(mNetif.GetMle().IsAttached(), error = OT_ERROR_INVALID_STATE);
 
     memset(&dataset, 0, sizeof(dataset));
 
@@ -215,7 +215,7 @@ exit:
 
 PendingDataset::PendingDataset(ThreadNetif &aThreadNetif):
     PendingDatasetBase(aThreadNetif),
-    mResourceSet(OPENTHREAD_URI_PENDING_SET, &PendingDataset::HandleSet, this)
+    mResourceSet(OT_URI_PATH_PENDING_SET, &PendingDataset::HandleSet, this)
 {
 }
 

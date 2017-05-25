@@ -201,7 +201,7 @@ public:
      * @param aError  Expected result.
      *
      */
-    void SetError(ThreadError aError) { mError = aError; }
+    void SetError(otError aError) { mError = aError; }
 
     /**
      * This method initializes IPv6 Payload (uncompressed data).
@@ -274,7 +274,7 @@ public:
      *
      */
     Payload           mPayload;
-    ThreadError       mError;
+    otError       mError;
     const char       *mTestName;
 };
 

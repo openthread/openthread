@@ -216,10 +216,10 @@ exit:
     return settingsSize - sSettingsUsedSize;
 }
 
-static ThreadError addSetting(otInstance *aInstance, uint16_t aKey, bool aIndex0, const uint8_t *aValue,
-                              uint16_t aValueLength)
+static otError addSetting(otInstance *aInstance, uint16_t aKey, bool aIndex0, const uint8_t *aValue,
+                          uint16_t aValueLength)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     OT_TOOL_PACKED_BEGIN
     struct addSettingsBlock
     {
@@ -245,7 +245,7 @@ static ThreadError addSetting(otInstance *aInstance, uint16_t aKey, bool aIndex0
         settingsSize)
     {
         otEXPECT_ACTION(swapSettingsBlock(aInstance) >= (getAlignLength(addBlock.block.length) + sizeof(struct settingsBlock)),
-                        error = kThreadError_NoBufs);
+                        error = OT_ERROR_NO_BUFS);
     }
 
     utilsFlashWrite(sSettingsBaseAddress + sSettingsUsedSize,
@@ -320,27 +320,27 @@ void otPlatSettingsInit(otInstance *aInstance)
     }
 }
 
-ThreadError otPlatSettingsBeginChange(otInstance *aInstance)
+otError otPlatSettingsBeginChange(otInstance *aInstance)
 {
     (void)aInstance;
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError otPlatSettingsCommitChange(otInstance *aInstance)
+otError otPlatSettingsCommitChange(otInstance *aInstance)
 {
     (void)aInstance;
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError otPlatSettingsAbandonChange(otInstance *aInstance)
+otError otPlatSettingsAbandonChange(otInstance *aInstance)
 {
     (void)aInstance;
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
+otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
 {
-    ThreadError error = kThreadError_NotFound;
+    otError error = OT_ERROR_NOT_FOUND;
     uint32_t address = sSettingsBaseAddress + kSettingsFlagSize;
     uint16_t valueLength = 0;
     int index = 0;
@@ -379,7 +379,7 @@ ThreadError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, 
                     }
 
                     valueLength = block.length;
-                    error = kThreadError_None;
+                    error = OT_ERROR_NONE;
                 }
 
                 index++;
@@ -397,23 +397,23 @@ ThreadError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, 
     return error;
 }
 
-ThreadError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 {
     return addSetting(aInstance, aKey, true, aValue, aValueLength);
 }
 
-ThreadError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 {
     uint16_t length;
     bool index0;
 
-    index0 = (otPlatSettingsGet(aInstance, aKey, 0, NULL, &length) == kThreadError_NotFound ? true : false);
+    index0 = (otPlatSettingsGet(aInstance, aKey, 0, NULL, &length) == OT_ERROR_NOT_FOUND ? true : false);
     return addSetting(aInstance, aKey, index0, aValue, aValueLength);
 }
 
-ThreadError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
+otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
 {
-    ThreadError error = kThreadError_NotFound;
+    otError error = OT_ERROR_NOT_FOUND;
     uint32_t address = sSettingsBaseAddress + kSettingsFlagSize;
     int index = 0;
 
@@ -436,7 +436,7 @@ ThreadError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aInde
             {
                 if (aIndex == index || aIndex == -1)
                 {
-                    error = kThreadError_None;
+                    error = OT_ERROR_NONE;
                     block.flag &= (~kBlockDeleteFlag);
                     utilsFlashWrite(address, reinterpret_cast<uint8_t *>(&block), sizeof(block));
                 }

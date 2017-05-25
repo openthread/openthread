@@ -50,7 +50,7 @@
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
-#include "thread/thread_uris.hpp"
+#include "thread/thread_uri_paths.hpp"
 
 namespace ot {
 
@@ -63,7 +63,7 @@ EnergyScanServer::EnergyScanServer(ThreadNetif &aThreadNetif) :
     mActive(false),
     mScanResultsLength(0),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, &EnergyScanServer::HandleTimer, this),
-    mEnergyScan(OPENTHREAD_URI_ENERGY_SCAN, &EnergyScanServer::HandleRequest, this),
+    mEnergyScan(OT_URI_PATH_ENERGY_SCAN, &EnergyScanServer::HandleRequest, this),
     mNetif(aThreadNetif)
 {
     mNetifCallback.Set(&EnergyScanServer::HandleNetifStateChanged, this);
@@ -190,9 +190,9 @@ exit:
     return;
 }
 
-ThreadError EnergyScanServer::SendReport(void)
+otError EnergyScanServer::SendReport(void)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     Coap::Header header;
     MeshCoP::ChannelMask0Tlv channelMask;
     MeshCoP::EnergyListTlv energyList;
@@ -201,11 +201,11 @@ ThreadError EnergyScanServer::SendReport(void)
 
     header.Init(kCoapTypeConfirmable, kCoapRequestPost);
     header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_ENERGY_REPORT);
+    header.AppendUriPathOptions(OT_URI_PATH_ENERGY_REPORT);
     header.SetPayloadMarker();
 
     VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(mNetif.GetCoap(), header)) != NULL,
-                 error = kThreadError_NoBufs);
+                 error = OT_ERROR_NO_BUFS);
 
     channelMask.Init();
     channelMask.SetMask(mChannelMask);
@@ -225,7 +225,7 @@ ThreadError EnergyScanServer::SendReport(void)
 
 exit:
 
-    if (error != kThreadError_None && message != NULL)
+    if (error != OT_ERROR_NONE && message != NULL)
     {
         message->Free();
     }

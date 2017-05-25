@@ -40,223 +40,223 @@ namespace ot {
  * The URI Path for Address Query.
  *
  */
-#define OPENTHREAD_URI_ADDRESS_QUERY          "a/aq"
+#define OT_URI_PATH_ADDRESS_QUERY          "a/aq"
 
 /**
- * @def OPENTHREAD_URI_ADDRESS_NOTIFY
+ * @def OT_URI_PATH_ADDRESS_NOTIFY
  *
  * The URI Path for Address Notify.
  *
  */
-#define OPENTHREAD_URI_ADDRESS_NOTIFY         "a/an"
+#define OT_URI_PATH_ADDRESS_NOTIFY         "a/an"
 
 /**
- * @def OPENTHREAD_URI_ADDRESS_ERROR
+ * @def OT_URI_PATH_ADDRESS_ERROR
  *
  * The URI Path for Address Error.
  *
  */
-#define OPENTHREAD_URI_ADDRESS_ERROR          "a/ae"
+#define OT_URI_PATH_ADDRESS_ERROR          "a/ae"
 
 /**
- * @def OPENTHREAD_URI_ADDRESS_RELEASE
+ * @def OT_URI_PATH_ADDRESS_RELEASE
  *
  * The URI Path for Address Release.
  *
  */
-#define OPENTHREAD_URI_ADDRESS_RELEASE        "a/ar"
+#define OT_URI_PATH_ADDRESS_RELEASE        "a/ar"
 
 /**
- * @def OPENTHREAD_URI_ADDRESS_SOLICIT
+ * @def OT_URI_PATH_ADDRESS_SOLICIT
  *
  * The URI Path for Address Solicit.
  *
  */
-#define OPENTHREAD_URI_ADDRESS_SOLICIT        "a/as"
+#define OT_URI_PATH_ADDRESS_SOLICIT        "a/as"
 
 /**
- * @def OPENTHREAD_URI_ACTIVE_GET
+ * @def OT_URI_PATH_ACTIVE_GET
  *
  * The URI Path for MGMT_ACTIVE_GET
  *
  */
-#define OPENTHREAD_URI_ACTIVE_GET             "c/ag"
+#define OT_URI_PATH_ACTIVE_GET             "c/ag"
 
 /**
- * @def OPENTHREAD_URI_ACTIVE_SET
+ * @def OT_URI_PATH_ACTIVE_SET
  *
  * The URI Path for MGMT_ACTIVE_SET
  *
  */
-#define OPENTHREAD_URI_ACTIVE_SET             "c/as"
+#define OT_URI_PATH_ACTIVE_SET             "c/as"
 
 /**
- * @def OPENTHREAD_URI_DATASET_CHANGED
+ * @def OT_URI_PATH_DATASET_CHANGED
  *
  * The URI Path for MGMT_DATASET_CHANGED
  *
  */
-#define OPENTHREAD_URI_DATASET_CHANGED        "c/dc"
+#define OT_URI_PATH_DATASET_CHANGED        "c/dc"
 
 /**
- * @def OPENTHREAD_URI_ENERGY_SCAN
+ * @def OT_URI_PATH_ENERGY_SCAN
  *
  * The URI Path for Energy Scan
  *
  */
-#define OPENTHREAD_URI_ENERGY_SCAN            "c/es"
+#define OT_URI_PATH_ENERGY_SCAN            "c/es"
 
 /**
- * @def OPENTHREAD_URI_ENERGY_REPORT
+ * @def OT_URI_PATH_ENERGY_REPORT
  *
  * The URI Path for Energy Report
  *
  */
-#define OPENTHREAD_URI_ENERGY_REPORT          "c/er"
+#define OT_URI_PATH_ENERGY_REPORT          "c/er"
 
 /**
- * @def OPENTHREAD_URI_PENDING_GET
+ * @def OT_URI_PATH_PENDING_GET
  *
  * The URI Path for MGMT_PENDING_GET
  *
  */
-#define OPENTHREAD_URI_PENDING_GET            "c/pg"
+#define OT_URI_PATH_PENDING_GET            "c/pg"
 
 /**
- * @def OPENTHREAD_URI_PENDING_SET
+ * @def OT_URI_PATH_PENDING_SET
  *
  * The URI Path for MGMT_PENDING_SET
  *
  */
-#define OPENTHREAD_URI_PENDING_SET            "c/ps"
+#define OT_URI_PATH_PENDING_SET            "c/ps"
 
 /**
- * @def OPENTHREAD_URI_SERVER_DATA
+ * @def OT_URI_PATH_SERVER_DATA
  *
  * The URI Path for Server Data Registration.
  *
  */
-#define OPENTHREAD_URI_SERVER_DATA            "a/sd"
+#define OT_URI_PATH_SERVER_DATA            "a/sd"
 
 /**
- * @def OPENTHREAD_URI_ANNOUNCE_BEGIN
+ * @def OT_URI_PATH_ANNOUNCE_BEGIN
  *
  * The URI Path for Announce Begin.
  *
  */
-#define OPENTHREAD_URI_ANNOUNCE_BEGIN         "c/ab"
+#define OT_URI_PATH_ANNOUNCE_BEGIN         "c/ab"
 
 /**
- * @def OPENTHREAD_URI_RELAY_RX
+ * @def OT_URI_PATH_RELAY_RX
  *
  * The URI Path for Relay RX.
  *
  */
-#define OPENTHREAD_URI_RELAY_RX               "c/rx"
+#define OT_URI_PATH_RELAY_RX               "c/rx"
 
 /**
- * @def OPENTHREAD_URI_RELAY_TX
+ * @def OT_URI_PATH_RELAY_TX
  *
  * The URI Path for Relay TX.
  *
  */
-#define OPENTHREAD_URI_RELAY_TX               "c/tx"
+#define OT_URI_PATH_RELAY_TX               "c/tx"
 
 /**
- * @def OPENTHREAD_URI_JOINER_FINALIZE
+ * @def OT_URI_PATH_JOINER_FINALIZE
  *
  * The URI Path for Joiner Finalize
  *
  */
-#define OPENTHREAD_URI_JOINER_FINALIZE        "c/jf"
+#define OT_URI_PATH_JOINER_FINALIZE        "c/jf"
 
 /**
- * @def OPENTHREAD_URI_JOINER_ENTRUST
+ * @def OT_URI_PATH_JOINER_ENTRUST
  *
  * The URI Path for Joiner Entrust
  *
  */
-#define OPENTHREAD_URI_JOINER_ENTRUST         "c/je"
+#define OT_URI_PATH_JOINER_ENTRUST         "c/je"
 
 /**
- * @def OPENTHREAD_URI_LEADER_PETITION
+ * @def OT_URI_PATH_LEADER_PETITION
  *
  * The URI Path for Leader Petition
  *
  */
-#define OPENTHREAD_URI_LEADER_PETITION        "c/lp"
+#define OT_URI_PATH_LEADER_PETITION        "c/lp"
 
 /**
- * @def OPENTHREAD_URI_LEADER_KEEP_ALIVE
+ * @def OT_URI_PATH_LEADER_KEEP_ALIVE
  *
  * The URI Path for Leader Keep Alive
  *
  */
-#define OPENTHREAD_URI_LEADER_KEEP_ALIVE      "c/la"
+#define OT_URI_PATH_LEADER_KEEP_ALIVE      "c/la"
 
 /**
- * @def OPENTHREAD_URI_PANID_CONFLICT
+ * @def OT_URI_PATH_PANID_CONFLICT
  *
  * The URI Path for PAN ID Conflict
  *
  */
-#define OPENTHREAD_URI_PANID_CONFLICT         "c/pc"
+#define OT_URI_PATH_PANID_CONFLICT         "c/pc"
 
 /**
- * @def OPENTHREAD_URI_PANID_QUERY
+ * @def OT_URI_PATH_PANID_QUERY
  *
  * The URI Path for PAN ID Query
  *
  */
-#define OPENTHREAD_URI_PANID_QUERY            "c/pq"
+#define OT_URI_PATH_PANID_QUERY            "c/pq"
 
 /**
- * @def OPENTHREAD_URI_COMMISSIONER_GET
+ * @def OT_URI_PATH_COMMISSIONER_GET
  *
  * The URI Path for MGMT_COMMISSIONER_GET
  *
  */
-#define OPENTHREAD_URI_COMMISSIONER_GET       "c/cg"
+#define OT_URI_PATH_COMMISSIONER_GET       "c/cg"
 
 /**
- * @def OPENTHREAD_URI_COMMISSIONER_SET
+ * @def OT_URI_PATH_COMMISSIONER_SET
  *
  * The URI Path for MGMT_COMMISSIONER_SET
  *
  */
-#define OPENTHREAD_URI_COMMISSIONER_SET       "c/cs"
+#define OT_URI_PATH_COMMISSIONER_SET       "c/cs"
 
 /**
- * @def OPENTHREAD_URI_DIAGNOSTIC_GET_REQUEST
+ * @def OT_URI_PATH_DIAGNOSTIC_GET_REQUEST
  *
  * The URI Path for Network Diagnostic Get Request.
  *
  */
-#define OPENTHREAD_URI_DIAGNOSTIC_GET_REQUEST "d/dg"
+#define OT_URI_PATH_DIAGNOSTIC_GET_REQUEST "d/dg"
 
 /**
- * @def OPENTHREAD_URI_DIAGNOSTIC_GET_QUERY
+ * @def OT_URI_PATH_DIAGNOSTIC_GET_QUERY
  *
  * The URI Path for Network Diagnostic Get Query.
  *
  */
-#define OPENTHREAD_URI_DIAGNOSTIC_GET_QUERY   "d/dq"
+#define OT_URI_PATH_DIAGNOSTIC_GET_QUERY   "d/dq"
 
 /**
- * @def OPENTHREAD_URI_DIAGNOSTIC_GET_ANSWER
+ * @def OT_URI_PATH_DIAGNOSTIC_GET_ANSWER
  *
  * The URI Path for Network Diagnostic Get Answer.
  *
  */
-#define OPENTHREAD_URI_DIAGNOSTIC_GET_ANSWER  "d/da"
+#define OT_URI_PATH_DIAGNOSTIC_GET_ANSWER  "d/da"
 
 /**
- * @def OPENTHREAD_URI_DIAG_RST
+ * @def OT_URI_PATH_DIAG_RST
  *
  * The URI Path for Network Diagnostic Reset.
  *
  */
-#define OPENTHREAD_URI_DIAGNOSTIC_RESET       "d/dr"
+#define OT_URI_PATH_DIAGNOSTIC_RESET       "d/dr"
 
 }  // namespace ot
 

@@ -74,10 +74,10 @@ typedef void (*otJamDetectionCallback)(bool aJamState, void *aContext);
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  * @param[in]  aRssiThreshold  The RSSI threshold.
  *
- * @retval kThreadErrorNone    Successfully set the threshold.
+ * @retval OT_ERROR_NONE    Successfully set the threshold.
  *
  */
-ThreadError otJamDetectionSetRssiThreshold(otInstance *aInstance, int8_t aRssiThreshold);
+otError otJamDetectionSetRssiThreshold(otInstance *aInstance, int8_t aRssiThreshold);
 
 /**
  * Get the Jam Detection RSSI Threshold (in dBm).
@@ -94,11 +94,11 @@ int8_t otJamDetectionGetRssiThreshold(otInstance *aInstance);
  * @param[in]  aInstance            A pointer to an OpenThread instance.
  * @param[in]  aWindow              The Jam Detection window (valid range is 1 to 63)
  *
- * @retval kThreadErrorNone         Successfully set the window.
- * @retval kThreadErrorInvalidArgs  The given input parameter not within valid range (1-63)
+ * @retval OT_ERROR_NONE          Successfully set the window.
+ * @retval OT_ERROR_INVALID_ARGS  The given input parameter not within valid range (1-63)
  *
  */
-ThreadError otJamDetectionSetWindow(otInstance *aInstance, uint8_t aWindow);
+otError otJamDetectionSetWindow(otInstance *aInstance, uint8_t aWindow);
 
 /**
  * Get the Jam Detection Detection Window (in seconds).
@@ -119,11 +119,11 @@ uint8_t otJamDetectionGetWindow(otInstance *aInstance);
  * @param[in]  aBusyPeriod          The Jam Detection busy period (should be non-zero and
                                     less than or equal to Jam Detection Window)
  *
- * @retval kThreadErrorNone         Successfully set the window.
- * @retval kThreadErrorInvalidArgs  The given input is not within the valid range.
+ * @retval OT_ERROR_NONE          Successfully set the window.
+ * @retval OT_ERROR_INVALID_ARGS  The given input is not within the valid range.
  *
  */
-ThreadError otJamDetectionSetBusyPeriod(otInstance *aInstance, uint8_t aBusyPeriod);
+otError otJamDetectionSetBusyPeriod(otInstance *aInstance, uint8_t aBusyPeriod);
 
 /**
  * Get the Jam Detection Busy Period (in seconds)
@@ -141,22 +141,22 @@ uint8_t otJamDetectionGetBusyPeriod(otInstance *aInstance);
  * @param[in]  aCallback            A pointer to a function called to notify of jamming state change.
  * @param[in]  aContext             A pointer to application-specific context.
  *
- * @retval kThreadErrorNone         Successfully started the jamming detection.
- * @retval kThreadErrorAlready      Jam detection has been started before.
+ * @retval OT_ERROR_NONE         Successfully started the jamming detection.
+ * @retval OT_ERROR_ALREADY      Jam detection has been started before.
  *
  */
-ThreadError otJamDetectionStart(otInstance *aInstance, otJamDetectionCallback aCallback, void *aContext);
+otError otJamDetectionStart(otInstance *aInstance, otJamDetectionCallback aCallback, void *aContext);
 
 /**
  * Stop the jamming detection.
  *
  * @param[in]  aInstance            A pointer to an OpenThread instance.
  *
- * @retval kThreadErrorNone         Successfully stopped the jamming detection.
- * @retval kThreadErrorAlready      Jam detection is already stopped.
+ * @retval OT_ERROR_NONE         Successfully stopped the jamming detection.
+ * @retval OT_ERROR_ALREADY      Jam detection is already stopped.
  *
  */
-ThreadError otJamDetectionStop(otInstance *aInstance);
+otError otJamDetectionStop(otInstance *aInstance);
 
 /**
  * Get the Jam Detection Status (enabled/disabled)

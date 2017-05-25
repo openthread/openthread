@@ -581,23 +581,23 @@ private:
 
     static HRESULT
     TheadErrorToHResult(
-        int /* ThreadError */ error
+        int /* otError */ error
     )
     {
         switch (error)
         {
-        case kThreadError_NoBufs:           return E_OUTOFMEMORY;
-        case kThreadError_Drop:
-        case kThreadError_NoRoute:          return HRESULT_FROM_WIN32(ERROR_NETWORK_UNREACHABLE);
-        case kThreadError_InvalidArgs:      return E_INVALIDARG;
-        case kThreadError_Security:         return E_ACCESSDENIED;
-        case kThreadError_NotCapable:
-        case kThreadError_NotImplemented:   return E_NOTIMPL;
-        case kThreadError_InvalidState:     return E_NOT_VALID_STATE;
-        case kThreadError_NotFound:         return HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
-        case kThreadError_Already:          return HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS);
-        case kThreadError_ResponseTimeout:  return HRESULT_FROM_WIN32(ERROR_TIMEOUT);
-        default:                            return E_FAIL;
+        case OT_ERROR_NO_BUFS:           return E_OUTOFMEMORY;
+        case OT_ERROR_DROP:
+        case OT_ERROR_NO_ROUTE:          return HRESULT_FROM_WIN32(ERROR_NETWORK_UNREACHABLE);
+        case OT_ERROR_INVALID_ARGS:      return E_INVALIDARG;
+        case OT_ERROR_SECURITY:          return E_ACCESSDENIED;
+        case OT_ERROR_NOT_CAPABLE:
+        case OT_ERROR_NOT_IMPLEMENTED:   return E_NOTIMPL;
+        case OT_ERROR_INVALID_STATE:     return E_NOT_VALID_STATE;
+        case OT_ERROR_NOT_FOUND:         return HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
+        case OT_ERROR_ALREADY:           return HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS);
+        case OT_ERROR_RESPONSE_TIMEOUT:  return HRESULT_FROM_WIN32(ERROR_TIMEOUT);
+        default:                         return E_FAIL;
         }
     }
 };

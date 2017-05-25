@@ -54,14 +54,14 @@
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
-#include "thread/thread_uris.hpp"
+#include "thread/thread_uri_paths.hpp"
 
 namespace ot {
 namespace MeshCoP {
 
 Leader::Leader(ThreadNetif &aThreadNetif):
-    mPetition(OPENTHREAD_URI_LEADER_PETITION, Leader::HandlePetition, this),
-    mKeepAlive(OPENTHREAD_URI_LEADER_KEEP_ALIVE, Leader::HandleKeepAlive, this),
+    mPetition(OT_URI_PATH_LEADER_PETITION, Leader::HandlePetition, this),
+    mKeepAlive(OT_URI_PATH_LEADER_KEEP_ALIVE, Leader::HandleKeepAlive, this),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this),
     mDelayTimerMinimal(DelayTimerTlv::kDelayTimerMinimal),
     mSessionId(0xffff),
@@ -119,10 +119,10 @@ exit:
     SendPetitionResponse(aHeader, aMessageInfo, state);
 }
 
-ThreadError Leader::SendPetitionResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
-                                         StateTlv::State aState)
+otError Leader::SendPetitionResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
+                                     StateTlv::State aState)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     Coap::Header responseHeader;
     StateTlv state;
     CommissionerSessionIdTlv sessionId;
@@ -131,7 +131,7 @@ ThreadError Leader::SendPetitionResponse(const Coap::Header &aRequestHeader, con
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
 
-    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoap(), responseHeader)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoap(), responseHeader)) != NULL, error = OT_ERROR_NO_BUFS);
 
     state.Init();
     state.SetState(aState);
@@ -156,7 +156,7 @@ ThreadError Leader::SendPetitionResponse(const Coap::Header &aRequestHeader, con
 
 exit:
 
-    if (error != kThreadError_None && message != NULL)
+    if (error != OT_ERROR_NONE && message != NULL)
     {
         message->Free();
     }
@@ -208,10 +208,10 @@ exit:
     return;
 }
 
-ThreadError Leader::SendKeepAliveResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
-                                          StateTlv::State aState)
+otError Leader::SendKeepAliveResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
+                                      StateTlv::State aState)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     Coap::Header responseHeader;
     StateTlv state;
     Message *message;
@@ -220,7 +220,7 @@ ThreadError Leader::SendKeepAliveResponse(const Coap::Header &aRequestHeader, co
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
     responseHeader.SetPayloadMarker();
 
-    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoap(), responseHeader)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoap(), responseHeader)) != NULL, error = OT_ERROR_NO_BUFS);
 
     state.Init();
     state.SetState(aState);
@@ -232,7 +232,7 @@ ThreadError Leader::SendKeepAliveResponse(const Coap::Header &aRequestHeader, co
 
 exit:
 
-    if (error != kThreadError_None && message != NULL)
+    if (error != OT_ERROR_NONE && message != NULL)
     {
         message->Free();
     }
@@ -240,18 +240,18 @@ exit:
     return error;
 }
 
-ThreadError Leader::SendDatasetChanged(const Ip6::Address &aAddress)
+otError Leader::SendDatasetChanged(const Ip6::Address &aAddress)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     Coap::Header header;
     Ip6::MessageInfo messageInfo;
     Message *message;
 
     header.Init(kCoapTypeConfirmable, kCoapRequestPost);
     header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_DATASET_CHANGED);
+    header.AppendUriPathOptions(OT_URI_PATH_DATASET_CHANGED);
 
-    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoap(), header)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = NewMeshCoPMessage(mNetif.GetCoap(), header)) != NULL, error = OT_ERROR_NO_BUFS);
 
     messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
     messageInfo.SetPeerAddr(aAddress);
@@ -262,7 +262,7 @@ ThreadError Leader::SendDatasetChanged(const Ip6::Address &aAddress)
 
 exit:
 
-    if (error != kThreadError_None && message != NULL)
+    if (error != OT_ERROR_NONE && message != NULL)
     {
         message->Free();
     }
@@ -270,11 +270,11 @@ exit:
     return error;
 }
 
-ThreadError Leader::SetDelayTimerMinimal(uint32_t aDelayTimerMinimal)
+otError Leader::SetDelayTimerMinimal(uint32_t aDelayTimerMinimal)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     VerifyOrExit((aDelayTimerMinimal != 0 && aDelayTimerMinimal < DelayTimerTlv::kDelayTimerDefault),
-                 error = kThreadError_InvalidArgs);
+                 error = OT_ERROR_INVALID_ARGS);
     mDelayTimerMinimal = aDelayTimerMinimal;
 
 exit:

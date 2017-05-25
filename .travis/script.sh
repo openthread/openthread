@@ -71,6 +71,15 @@ set -x
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-kw41z || die
+    arm-none-eabi-size  output/kw41z/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/kw41z/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/kw41z/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/kw41z/bin/ot-ncp-mtd || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
     COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-nrf52840 || die
     arm-none-eabi-size  output/nrf52840/bin/ot-cli-ftd || die
     arm-none-eabi-size  output/nrf52840/bin/ot-cli-mtd || die
@@ -109,6 +118,15 @@ set -x
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-kw41z || die
+    arm-none-eabi-size  output/kw41z/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/kw41z/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/kw41z/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/kw41z/bin/ot-ncp-mtd || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
     COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-nrf52840 || die
     arm-none-eabi-size  output/nrf52840/bin/ot-cli-ftd || die
     arm-none-eabi-size  output/nrf52840/bin/ot-cli-mtd || die
@@ -121,6 +139,19 @@ set -x
     make -f examples/Makefile-cc2650 || die
     arm-none-eabi-size  output/cc2650/bin/ot-cli-mtd || die
     arm-none-eabi-size  output/cc2650/bin/ot-ncp-mtd || die
+}
+
+[ $BUILD_TARGET != arm-gcc63 ] || {
+    export PATH=/tmp/arc_gnu_2017.03-rc2_prebuilt_elf32_le_linux_install/bin:$PATH || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-emsk || die
+    arc-elf32-size  output/emsk/bin/ot-cli-ftd || die
+    arc-elf32-size  output/emsk/bin/ot-cli-mtd || die
+    arc-elf32-size  output/emsk/bin/ot-ncp-ftd || die
+    arc-elf32-size  output/emsk/bin/ot-ncp-mtd || die
 }
 
 [ $BUILD_TARGET != posix ] || {

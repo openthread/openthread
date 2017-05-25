@@ -37,8 +37,7 @@ part of the [nRF5x Command Line Tools][nRF5x-Command-Line-Tools].
 [nRF5x-Command-Line-Tools]: https://www.nordicsemi.com/eng/Products/nRF52840#Downloads
 
 ```bash
-$ nrfjprog -f nrf52 --chiperase --program output/nrf52840/bin/ot-cli-ftd.hex
-$ nrfjprog -f nrf52 -r
+$ nrfjprog -f nrf52 --chiperase --program output/nrf52840/bin/ot-cli-ftd.hex --reset
 ```
 
 ## Running the example
@@ -108,7 +107,7 @@ $ nrfjprog -f nrf52 -r
 
 For a list of all available commands, visit [OpenThread CLI Reference README.md][CLI].
 
-[CLI]: https://github.com/openthread/openthread/blob/master/src/cli/README.md
+[CLI]: ./../../../src/cli/README.md
 
 ## Logging module
 
@@ -131,6 +130,15 @@ Due to a known issue in Segger’s J-Link firmware, depending on your version, y
  - On Microsoft Windows, open the J-Link Commander application.
 
 Run the following command: `MSDDisable`
+
+## Diagnostic module
+
+nRF52840 port extends [OpenThread Diagnostics Module][DIAG].
+
+You can read about all the features [here][nRFDIAG].
+
+[DIAG]: ./../../../src/diag/README.md
+[nRFDIAG]: DIAG.md
 
 ## Radio driver documentation
 

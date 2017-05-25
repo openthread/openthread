@@ -91,7 +91,7 @@ private:
     static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);
     void HandleNetifStateChanged(uint32_t aFlags);
 
-    ThreadError SendReport(void);
+    otError SendReport(void);
 
     Ip6::Address mCommissioner;
     uint32_t mChannelMask;

@@ -94,128 +94,184 @@ typedef struct otDeviceList
 /**
  * This enumeration represents error codes used throughout OpenThread.
  */
-typedef enum ThreadError
+typedef enum otError
 {
-    kThreadError_None = 0,
-    kThreadError_Failed = 1,
-    kThreadError_Drop = 2,
-    kThreadError_NoBufs = 3,
-    kThreadError_NoRoute = 4,
-    kThreadError_Busy = 5,
-    kThreadError_Parse = 6,
-    kThreadError_InvalidArgs = 7,
-    kThreadError_Security = 8,
-    kThreadError_AddressQuery = 9,
-    kThreadError_NoAddress = 10,
-    kThreadError_NotReceiving = 11,
-    kThreadError_Abort = 12,
-    kThreadError_NotImplemented = 13,
-    kThreadError_InvalidState = 14,
-    kThreadError_NoTasklets = 15,
+    /**
+     * No error.
+     */
+    OT_ERROR_NONE = 0,
+
+    /**
+     * Operational failed.
+     */
+    OT_ERROR_FAILED = 1,
+
+    /**
+     * Message was dropped.
+     */
+    OT_ERROR_DROP = 2,
+
+    /**
+     * Insufficient buffers.
+     */
+    OT_ERROR_NO_BUFS = 3,
+
+    /**
+     * No route available.
+     */
+    OT_ERROR_NO_ROUTE = 4,
+
+    /**
+     * Service is busy and could not service the operation.
+     */
+    OT_ERROR_BUSY = 5,
+
+    /**
+     * Failed to parse message or arguments.
+     */
+    OT_ERROR_PARSE = 6,
+
+    /**
+     * Input arguments are invalid.
+     */
+    OT_ERROR_INVALID_ARGS = 7,
+
+    /**
+     * Security checks failed.
+     */
+    OT_ERROR_SECURITY = 8,
+
+    /**
+     * Address resolution requires an address query operation.
+     */
+    OT_ERROR_ADDRESS_QUERY = 9,
+
+    /**
+     * Address is not in the source match table.
+     */
+    OT_ERROR_NO_ADDRESS = 10,
+
+    /**
+     * Operation was aborted.
+     */
+    OT_ERROR_ABORT = 11,
+
+    /**
+     * Function or method is not implemented.
+     */
+    OT_ERROR_NOT_IMPLEMENTED = 12,
+
+    /**
+     * Cannot complete due to invalid state.
+     */
+    OT_ERROR_INVALID_STATE = 13,
 
     /**
      * No acknowledgment was received after macMaxFrameRetries (IEEE 802.15.4-2006).
      */
-    kThreadError_NoAck = 16,
+    OT_ERROR_NO_ACK = 14,
 
     /**
      * A transmission could not take place due to activity on the channel, i.e., the CSMA-CA mechanism has failed
      * (IEEE 802.15.4-2006).
      */
-    kThreadError_ChannelAccessFailure = 17,
+    OT_ERROR_CHANNEL_ACCESS_FAILURE = 15,
 
     /**
      * Not currently attached to a Thread Partition.
      */
-    kThreadError_Detached = 18,
+    OT_ERROR_DETACHED = 16,
 
     /**
      * FCS check failure while receiving.
      */
-    kThreadError_FcsErr = 19,
+    OT_ERROR_FCS = 17,
 
     /**
      * No frame received.
      */
-    kThreadError_NoFrameReceived = 20,
+    OT_ERROR_NO_FRAME_RECEIVED = 18,
 
     /**
      * Received a frame from an unknown neighbor.
      */
-    kThreadError_UnknownNeighbor = 21,
+    OT_ERROR_UNKNOWN_NEIGHBOR = 19,
 
     /**
      * Received a frame from an invalid source address.
      */
-    kThreadError_InvalidSourceAddress = 22,
+    OT_ERROR_INVALID_SOURCE_ADDRESS = 20,
 
     /**
      * Received a frame filtered by the whitelist.
      */
-    kThreadError_WhitelistFiltered = 23,
+    OT_ERROR_WHITELIST_FILTERED = 21,
 
     /**
      * Received a frame filtered by the destination address check.
      */
-    kThreadError_DestinationAddressFiltered = 24,
+    OT_ERROR_DESTINATION_ADDRESS_FILTERED = 22,
 
     /**
      * The requested item could not be found.
      */
-    kThreadError_NotFound = 25,
+    OT_ERROR_NOT_FOUND = 23,
 
     /**
      * The operation is already in progress.
      */
-    kThreadError_Already = 26,
+    OT_ERROR_ALREADY = 24,
 
     /**
      * Received a frame filtered by the blacklist.
      */
-    kThreadError_BlacklistFiltered = 27,
+    OT_ERROR_BLACKLIST_FILTERED = 25,
 
     /**
      * The creation of IPv6 address failed.
      */
-    kThreadError_Ipv6AddressCreationFailure = 28,
+    OT_ERROR_IP6_ADDRESS_CREATION_FAILURE = 26,
 
     /**
      * Operation prevented by mode flags
      */
-    kThreadError_NotCapable = 29,
+    OT_ERROR_NOT_CAPABLE = 27,
 
     /**
      * Coap response or acknowledgment or DNS response not received.
      */
-    kThreadError_ResponseTimeout = 30,
+    OT_ERROR_RESPONSE_TIMEOUT = 28,
 
     /**
      * Received a duplicated frame.
      */
-    kThreadError_Duplicated = 31,
+    OT_ERROR_DUPLICATED = 29,
 
     /**
      * Message is being dropped from reassembly list due to timeout.
      */
-    kThreadError_ReassemblyTimeout = 32,
+    OT_ERROR_REASSEMBLY_TIMEOUT = 30,
 
     /**
      * Message is not a TMF Message.
      */
-    kThreadError_NotTmf = 33,
+    OT_ERROR_NOT_TMF = 31,
 
     /**
      * Received a non-lowpan data frame.
      */
-    kThreadError_NonLowpanDataFrame = 34,
+    OT_ERROR_NOT_LOWPAN_DATA_FRAME = 32,
 
     /**
      * A feature/functionality disabled by build-time configuration options.
      */
-    kThreadError_DisabledFeature = 35,
+    OT_ERROR_DISABLED_FEATURE = 33,
 
-    kThreadError_Error = 255,
-} ThreadError;
+    /**
+     * Generic error (should not use).
+     */
+    OT_ERROR_GENERIC = 255,
+} otError;
 
 #define OT_IP6_IID_SIZE            8   ///< Size of an IPv6 Interface Identifier (bytes)
 
@@ -311,18 +367,6 @@ enum
     OT_SECURITY_POLICY_EXTERNAL_COMMISSIONER  = 1 << 4,  ///< External Commissioner allowed
     OT_SECURITY_POLICY_BEACONS                = 1 << 3,  ///< Beacons enabled
 };
-
-/**
-* This enumeration defines the Commissioner State.
-*
-*/
-typedef enum otCommissionerState
-{
-
-    kCommissionerStateDisabled = 0,
-    kCommissionerStatePetition = 1,
-    kCommissionerStateActive = 2,
-} otCommissionerState;
 
 /**
   * This type represents Channel Mask Page 0.
@@ -706,21 +750,10 @@ typedef struct otExternalRouteConfig
  */
 typedef enum otRoutePreference
 {
-    kRoutePreferenceLow    = -1,  ///< Routes assigned this value are used as a last resort when no other more preferred route exists.
-    kRoutePreferenceMedium =  0,  ///< Routes assigned this value should be selected only in the absence of any kRoutePreferenceHigh routes.
-    kRoutePreferenceHigh   =  1   ///< The most preferred route. Routes assigned this value should be selected over any other route.
+    OT_ROUTE_PREFERENCE_LOW  = -1,  ///< Low route preference.
+    OT_ROUTE_PREFERENCE_MED  = 0,   ///< Medium route preference.
+    OT_ROUTE_PREFERENCE_HIGH = 1,   ///< High route preference.
 } otRoutePreference;
-
-/**
- * Represents any restrictions on the attach process.
- */
-typedef enum otMleAttachFilter
-{
-    kMleAttachAnyPartition    = 0,  ///< Attach to any Thread partition.
-    kMleAttachSamePartition1  = 1,  ///< Attach to the same Thread partition (attempt 1).
-    kMleAttachSamePartition2  = 2,  ///< Attach to the same Thread partition (attempt 2).
-    kMleAttachBetterPartition = 3,  ///< Attach to a better (i.e. higher weight/partition id) Thread partition.
-} otMleAttachFilter;
 
 /**
  * This structure represents a whitelist entry.

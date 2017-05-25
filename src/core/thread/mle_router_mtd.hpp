@@ -52,8 +52,8 @@ public:
 
     bool IsSingleton(void) { return false; }
 
-    ThreadError BecomeRouter(ThreadStatusTlv::Status) { return kThreadError_NotCapable; }
-    ThreadError BecomeLeader(void) { return kThreadError_NotCapable; }
+    otError BecomeRouter(ThreadStatusTlv::Status) { return OT_ERROR_NOT_CAPABLE; }
+    otError BecomeLeader(void) { return OT_ERROR_NOT_CAPABLE; }
 
     uint8_t GetActiveRouterCount(void) const { return 0; }
 
@@ -73,8 +73,8 @@ public:
 
     uint8_t GetRouterIdSequence(void) const { return 0; }
 
-    ThreadError RemoveNeighbor(const Mac::Address &) { return BecomeDetached(); }
-    ThreadError RemoveNeighbor(Neighbor &) { return BecomeDetached(); }
+    otError RemoveNeighbor(const Mac::Address &) { return BecomeDetached(); }
+    otError RemoveNeighbor(Neighbor &) { return BecomeDetached(); }
 
     Child *GetChild(uint16_t) { return NULL; }
     Child *GetChild(const Mac::ExtAddress &) { return NULL; }
@@ -90,17 +90,17 @@ public:
         return NULL;
     }
 
-    ThreadError RestoreChildren(void) {return kThreadError_NotImplemented; }
-    ThreadError RemoveStoredChild(uint16_t) {return kThreadError_NotImplemented; }
-    ThreadError StoreChild(uint16_t) {return kThreadError_NotImplemented; }
-    ThreadError RefreshStoredChildren(void) { return kThreadError_NotImplemented; }
+    otError RestoreChildren(void) {return OT_ERROR_NOT_IMPLEMENTED; }
+    otError RemoveStoredChild(uint16_t) {return OT_ERROR_NOT_IMPLEMENTED; }
+    otError StoreChild(uint16_t) {return OT_ERROR_NOT_IMPLEMENTED; }
+    otError RefreshStoredChildren(void) { return OT_ERROR_NOT_IMPLEMENTED; }
 
     Neighbor *GetNeighbor(uint16_t aAddress) { return Mle::GetNeighbor(aAddress); }
     Neighbor *GetNeighbor(const Mac::ExtAddress &aAddress) { return Mle::GetNeighbor(aAddress); }
     Neighbor *GetNeighbor(const Mac::Address &aAddress) { return Mle::GetNeighbor(aAddress); }
     Neighbor *GetNeighbor(const Ip6::Address &aAddress) { return Mle::GetNeighbor(aAddress); }
 
-    ThreadError GetNextNeighborInfo(otNeighborInfoIterator &, otNeighborInfo &) { return kThreadError_NotImplemented; }
+    otError GetNextNeighborInfo(otNeighborInfoIterator &, otNeighborInfo &) { return OT_ERROR_NOT_IMPLEMENTED; }
 
     Router *GetRouters(uint8_t *aNumRouters) {
         if (aNumRouters != NULL) {
@@ -114,7 +114,7 @@ public:
 
     void ResolveRoutingLoops(uint16_t, uint16_t) { }
 
-    ThreadError CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6::Header &aIp6Header) {
+    otError CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6::Header &aIp6Header) {
         return Mle::CheckReachability(aMeshSource, aMeshDest, aIp6Header);
     }
 
@@ -123,30 +123,30 @@ public:
     void FillConnectivityTlv(ConnectivityTlv &) { }
     void FillRouteTlv(RouteTlv &) { }
 
-    ThreadError SendChildUpdateRequest(void) { return Mle::SendChildUpdateRequest(); }
+    otError SendChildUpdateRequest(void) { return Mle::SendChildUpdateRequest(); }
 
 #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
-    ThreadError SetSteeringData(otExtAddress *) { return kThreadError_NotImplemented; };
+    otError SetSteeringData(otExtAddress *) { return OT_ERROR_NOT_IMPLEMENTED; };
 #endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
 
 private:
-    ThreadError HandleDetachStart(void) { return kThreadError_None; }
-    ThreadError HandleChildStart(otMleAttachFilter) { return kThreadError_None; }
-    ThreadError HandleLinkRequest(const Message &, const Ip6::MessageInfo &) { return kThreadError_Drop; }
-    ThreadError HandleLinkAccept(const Message &, const Ip6::MessageInfo &, uint32_t) { return kThreadError_Drop; }
-    ThreadError HandleLinkAccept(const Message &, const Ip6::MessageInfo &, uint32_t, bool) { return kThreadError_Drop; }
-    ThreadError HandleLinkAcceptAndRequest(const Message &, const Ip6::MessageInfo &, uint32_t) { return kThreadError_Drop; }
-    ThreadError HandleAdvertisement(const Message &, const Ip6::MessageInfo &) { return kThreadError_Drop; }
-    ThreadError HandleParentRequest(const Message &, const Ip6::MessageInfo &) { return kThreadError_Drop; }
-    ThreadError HandleChildIdRequest(const Message &, const Ip6::MessageInfo &, uint32_t) { return kThreadError_Drop; }
-    ThreadError HandleChildUpdateRequest(const Message &, const Ip6::MessageInfo &) { return kThreadError_Drop; }
-    ThreadError HandleChildUpdateResponse(const Message &, const Ip6::MessageInfo &, uint32_t) { return kThreadError_Drop; }
-    ThreadError HandleDataRequest(const Message &, const Ip6::MessageInfo &) { return kThreadError_Drop; }
-    ThreadError HandleNetworkDataUpdateRouter(void) { return kThreadError_None; }
-    ThreadError HandleDiscoveryRequest(const Message &, const Ip6::MessageInfo &) { return kThreadError_Drop; }
+    otError HandleDetachStart(void) { return OT_ERROR_NONE; }
+    otError HandleChildStart(AttachMode) { return OT_ERROR_NONE; }
+    otError HandleLinkRequest(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
+    otError HandleLinkAccept(const Message &, const Ip6::MessageInfo &, uint32_t) { return OT_ERROR_DROP; }
+    otError HandleLinkAccept(const Message &, const Ip6::MessageInfo &, uint32_t, bool) { return OT_ERROR_DROP; }
+    otError HandleLinkAcceptAndRequest(const Message &, const Ip6::MessageInfo &, uint32_t) { return OT_ERROR_DROP; }
+    otError HandleAdvertisement(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
+    otError HandleParentRequest(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
+    otError HandleChildIdRequest(const Message &, const Ip6::MessageInfo &, uint32_t) { return OT_ERROR_DROP; }
+    otError HandleChildUpdateRequest(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
+    otError HandleChildUpdateResponse(const Message &, const Ip6::MessageInfo &, uint32_t) { return OT_ERROR_DROP; }
+    otError HandleDataRequest(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
+    otError HandleNetworkDataUpdateRouter(void) { return OT_ERROR_NONE; }
+    otError HandleDiscoveryRequest(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
 
     void StopAdvertiseTimer(void) { }
-    ThreadError ProcessRouteTlv(const RouteTlv &aRoute) { (void)aRoute; return kThreadError_None; }
+    otError ProcessRouteTlv(const RouteTlv &aRoute) { (void)aRoute; return OT_ERROR_NONE; }
 };
 
 }  // namespace Mle

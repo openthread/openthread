@@ -56,32 +56,32 @@ void otCoapHeaderGenerateToken(otCoapHeader *aHeader, uint8_t aTokenLength)
     static_cast<Coap::Header *>(aHeader)->SetToken(aTokenLength);
 }
 
-ThreadError otCoapHeaderAppendOption(otCoapHeader *aHeader, const otCoapOption *aOption)
+otError otCoapHeaderAppendOption(otCoapHeader *aHeader, const otCoapOption *aOption)
 {
     return static_cast<Coap::Header *>(aHeader)->AppendOption(*static_cast<const Coap::Header::Option *>(aOption));
 }
 
-ThreadError otCoapHeaderAppendUintOption(otCoapHeader *aHeader, uint16_t aNumber, uint32_t aValue)
+otError otCoapHeaderAppendUintOption(otCoapHeader *aHeader, uint16_t aNumber, uint32_t aValue)
 {
     return static_cast<Coap::Header *>(aHeader)->AppendUintOption(aNumber, aValue);
 }
 
-ThreadError otCoapHeaderAppendObserveOption(otCoapHeader *aHeader, uint32_t aObserve)
+otError otCoapHeaderAppendObserveOption(otCoapHeader *aHeader, uint32_t aObserve)
 {
     return static_cast<Coap::Header *>(aHeader)->AppendObserveOption(aObserve);
 }
 
-ThreadError otCoapHeaderAppendUriPathOptions(otCoapHeader *aHeader, const char *aUriPath)
+otError otCoapHeaderAppendUriPathOptions(otCoapHeader *aHeader, const char *aUriPath)
 {
     return static_cast<Coap::Header *>(aHeader)->AppendUriPathOptions(aUriPath);
 }
 
-ThreadError otCoapHeaderAppendMaxAgeOption(otCoapHeader *aHeader, uint32_t aMaxAge)
+otError otCoapHeaderAppendMaxAgeOption(otCoapHeader *aHeader, uint32_t aMaxAge)
 {
     return static_cast<Coap::Header *>(aHeader)->AppendMaxAgeOption(aMaxAge);
 }
 
-ThreadError otCoapHeaderAppendUriQueryOption(otCoapHeader *aHeader, const char *aUriQuery)
+otError otCoapHeaderAppendUriQueryOption(otCoapHeader *aHeader, const char *aUriQuery)
 {
     return static_cast<Coap::Header *>(aHeader)->AppendUriQueryOption(aUriQuery);
 }
@@ -140,8 +140,8 @@ exit:
     return message;
 }
 
-ThreadError otCoapSendRequest(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo,
-                              otCoapResponseHandler aHandler, void *aContext)
+otError otCoapSendRequest(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo,
+                          otCoapResponseHandler aHandler, void *aContext)
 {
     return aInstance->mApplicationCoap.SendMessage(
                *static_cast<Message *>(aMessage),
@@ -149,17 +149,17 @@ ThreadError otCoapSendRequest(otInstance *aInstance, otMessage *aMessage, const 
                aHandler, aContext);
 }
 
-ThreadError otCoapStart(otInstance *aInstance, uint16_t aPort)
+otError otCoapStart(otInstance *aInstance, uint16_t aPort)
 {
     return aInstance->mApplicationCoap.Start(aPort);
 }
 
-ThreadError otCoapStop(otInstance *aInstance)
+otError otCoapStop(otInstance *aInstance)
 {
     return aInstance->mApplicationCoap.Stop();
 }
 
-ThreadError otCoapAddResource(otInstance *aInstance, otCoapResource *aResource)
+otError otCoapAddResource(otInstance *aInstance, otCoapResource *aResource)
 {
     return aInstance->mApplicationCoap.AddResource(*static_cast<Coap::Resource *>(aResource));
 }
@@ -174,7 +174,7 @@ void otCoapSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandle
     aInstance->mApplicationCoap.SetDefaultHandler(aHandler, aContext);
 }
 
-ThreadError otCoapSendResponse(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+otError otCoapSendResponse(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     return aInstance->mApplicationCoap.SendMessage(
                *static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));

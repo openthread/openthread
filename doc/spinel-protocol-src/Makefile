@@ -39,7 +39,7 @@ RM_F		      ?= rm -f
 MKDIR_P		      ?= mkdir -p
 
 SOURCE_DATE       := $(shell (TZ=UTC git log -n 1 --date=iso-strict-local --pretty=format:%ad 2> /dev/null || date -u +"%Y-%m-%dT%H:%M:%SZ" ) | sed 's/+00:00$$/Z/')
-SOURCE_VERSION    := $(shell git describe --dirty --always --match "--PoIsOn--" 2> /dev/null)
+SOURCE_VERSION    ?= $(shell git describe --dirty --always --match "--PoIsOn--" 2> /dev/null)
 
 # -------------
 
@@ -61,6 +61,7 @@ $(XML2RFC_CACHE_DIR):
 
 %.xml: %.md
 	$(MMARK) -xml2 -page $< $@
+	$(SED) -i "" -e 's/fullname="James Woodyatt"/fullname="James Woodyatt" role="editor"/' $@
 
 %.html: %.xml $(XML2RFC_CACHE_DIR)
 	$(XML2RFC) --html $<
@@ -70,8 +71,29 @@ $(XML2RFC_CACHE_DIR):
 
 # -------------
 
-draft-spinel-protocol-bis.xml: \
-	draft-spinel-protocol-bis.md \
+draft-rquattle-spinel-basis.xml: \
+	draft-rquattle-spinel-basis.md \
+	spinel-commands.md \
+	spinel-data-packing.md \
+	spinel-example-sessions.md \
+	spinel-feature-host-buffer-offload.md \
+	spinel-feature-network-save.md \
+	spinel-frame-format.md \
+	spinel-framing.md \
+	spinel-prop-core.md \
+	spinel-prop-debug.md \
+	spinel-prop-ipv6.md \
+	spinel-prop-mac.md \
+	spinel-prop-net.md \
+	spinel-prop-phy.md \
+	spinel-prop.md \
+	spinel-status-codes.md \
+	spinel-tech-thread.md \
+	spinel-test-vectors.md \
+	$(NULL)
+
+draft-rquattle-spinel-unified.xml: \
+	draft-rquattle-spinel-unified.md \
 	spinel-commands.md \
 	spinel-data-packing.md \
 	spinel-example-sessions.md \

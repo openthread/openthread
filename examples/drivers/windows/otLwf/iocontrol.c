@@ -3773,12 +3773,9 @@ otLwfIoCtl_otDeviceRole(
         }
         else if (role == kDeviceRoleChild)
         {
-            if (InBufferLength >= sizeof(uint8_t))
-            {
-                status = ThreadErrorToNtstatus(
-                            otThreadBecomeChild(pFilter->otCtx, *(uint8_t*)InBuffer)
-                            );
-            }
+            status = ThreadErrorToNtstatus(
+                        otThreadBecomeChild(pFilter->otCtx)
+                        );
         }
         else if (role == kDeviceRoleDetached)
         {

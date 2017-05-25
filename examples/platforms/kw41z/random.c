@@ -66,13 +66,13 @@ uint32_t otPlatRandomGet(void)
     return (uint32_t)rand();
 }
 
-ThreadError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
+otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 {
-    ThreadError status = kThreadError_None;
+    otError status = OT_ERROR_NONE;
 
-    otEXPECT_ACTION((aOutput != NULL), status = kThreadError_InvalidArgs);
+    otEXPECT_ACTION((aOutput != NULL), status = OT_ERROR_INVALID_ARGS);
 
-    otEXPECT_ACTION(TRNG_GetRandomData(TRNG0, aOutput, aOutputLength) == kStatus_Success, status = kThreadError_Failed);
+    otEXPECT_ACTION(TRNG_GetRandomData(TRNG0, aOutput, aOutputLength) == kStatus_Success, status = OT_ERROR_FAILED);
 
 exit:
     return status;

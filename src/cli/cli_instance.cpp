@@ -93,7 +93,7 @@ void Interpreter::ProcessInstanceList(int argc, char *argv[])
 
 void Interpreter::ProcessInstance(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     long value;
 
     if (argc == 0)
@@ -113,7 +113,7 @@ void Interpreter::ProcessInstance(int argc, char *argv[])
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        VerifyOrExit(value >= 0 && value < mInstancesLength, error = kThreadError_InvalidArgs);
+        VerifyOrExit(value >= 0 && value < mInstancesLength, error = OT_ERROR_INVALID_ARGS);
 
         mInstanceIndex = (uint8_t)value;
         mInstance = mInstances[mInstanceIndex].aInstance;

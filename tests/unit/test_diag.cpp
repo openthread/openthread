@@ -57,14 +57,14 @@ extern "C" void otPlatAlarmFired(otInstance *)
 {
 }
 
-extern "C" void otPlatRadioTransmitDone(otInstance *, RadioPacket *aFrame, bool aRxPending, ThreadError aError)
+extern "C" void otPlatRadioTransmitDone(otInstance *, RadioPacket *aFrame, bool aRxPending, otError aError)
 {
     (void)aFrame;
     (void)aRxPending;
     (void)aError;
 }
 
-extern "C" void otPlatRadioReceiveDone(otInstance *, RadioPacket *aFrame, ThreadError aError)
+extern "C" void otPlatRadioReceiveDone(otInstance *, RadioPacket *aFrame, otError aError)
 {
     (void)aFrame;
     (void)aError;
@@ -88,7 +88,7 @@ void TestDiag()
         },
         {
             "diag send 10 100\n",
-            "failed\r\nstatus 0xe\r\n",
+            "failed\r\nstatus 0xd\r\n",
         },
         {
             "diag start\n",

@@ -85,3 +85,8 @@ void otPlatAssertFail(const char *aFilename, int aLineNumber)
     (void)aFilename;
     (void)aLineNumber;
 }
+
+void otPlatWakeHost(void)
+{
+    // TODO: implement an operation to wake the host from sleep state.
+}

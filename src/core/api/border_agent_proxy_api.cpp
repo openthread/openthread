@@ -39,18 +39,18 @@ using namespace ot;
 
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
 
-ThreadError otBorderAgentProxyStart(otInstance *aInstance, otBorderAgentProxyStreamHandler aBorderAgentProxyCallback,
-                                    void *aContext)
+otError otBorderAgentProxyStart(otInstance *aInstance, otBorderAgentProxyStreamHandler aBorderAgentProxyCallback,
+                                void *aContext)
 {
     return aInstance->mThreadNetif.GetBorderAgentProxy().Start(aBorderAgentProxyCallback, aContext);
 }
 
-ThreadError otBorderAgentProxyStop(otInstance *aInstance)
+otError otBorderAgentProxyStop(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetBorderAgentProxy().Stop();
 }
 
-ThreadError otBorderAgentProxySend(otInstance *aInstance, otMessage *aMessage, uint16_t aLocator, uint16_t aPort)
+otError otBorderAgentProxySend(otInstance *aInstance, otMessage *aMessage, uint16_t aLocator, uint16_t aPort)
 {
     return aInstance->mThreadNetif.GetBorderAgentProxy().Send(*static_cast<Message *>(aMessage), aLocator, aPort);
 }

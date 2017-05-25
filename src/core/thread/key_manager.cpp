@@ -97,9 +97,9 @@ const otMasterKey &KeyManager::GetMasterKey(void) const
     return mMasterKey;
 }
 
-ThreadError KeyManager::SetMasterKey(const otMasterKey &aKey)
+otError KeyManager::SetMasterKey(const otMasterKey &aKey)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     Router *routers;
     Child *children;
     uint8_t num;
@@ -142,7 +142,7 @@ exit:
     return error;
 }
 
-ThreadError KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
+otError KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
 {
     Crypto::HmacSha256 hmac;
     uint8_t keySequenceBytes[4];
@@ -158,7 +158,7 @@ ThreadError KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
 
     hmac.Finish(aKey);
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
@@ -251,12 +251,12 @@ void KeyManager::SetKek(const uint8_t *aKek)
     mKekFrameCounter = 0;
 }
 
-ThreadError KeyManager::SetKeyRotation(uint32_t aKeyRotation)
+otError KeyManager::SetKeyRotation(uint32_t aKeyRotation)
 {
-    ThreadError result = kThreadError_None;
+    otError result = OT_ERROR_NONE;
 
-    VerifyOrExit(aKeyRotation >= static_cast<uint32_t>(kMinKeyRotationTime), result = kThreadError_InvalidArgs);
-    VerifyOrExit(aKeyRotation <= static_cast<uint32_t>(kMaxKeyRotationTime), result = kThreadError_InvalidArgs);
+    VerifyOrExit(aKeyRotation >= static_cast<uint32_t>(kMinKeyRotationTime), result = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aKeyRotation <= static_cast<uint32_t>(kMaxKeyRotationTime), result = OT_ERROR_INVALID_ARGS);
 
     mKeyRotationTime = aKeyRotation;
 

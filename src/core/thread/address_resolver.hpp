@@ -93,11 +93,11 @@ public:
      * @param[in]   aIndex  An index into the EID cache table.
      * @param[out]  aEntry  A pointer to where the EID information is placed.
      *
-     * @retval kThreadError_None         Successfully retrieved the EID cache entry.
-     * @retval kThreadError_InvalidArgs  @p aIndex was out of bounds or @p aEntry was NULL.
+     * @retval OT_ERROR_NONE          Successfully retrieved the EID cache entry.
+     * @retval OT_ERROR_INVALID_ARGS  @p aIndex was out of bounds or @p aEntry was NULL.
      *
      */
-    ThreadError GetEntry(uint8_t aIndex, otEidCacheEntry &aEntry) const;
+    otError GetEntry(uint8_t aIndex, otEidCacheEntry &aEntry) const;
 
     /**
      * This method removes a Router ID from the EID-to-RLOC cache.
@@ -113,11 +113,11 @@ public:
      * @param[in]   aEid     A reference to the EID.
      * @param[out]  aRloc16  The RLOC16 corresponding to @p aEid.
      *
-     * @retval kTheradError_None          Successfully provided the RLOC16.
-     * @retval kThreadError_AddressQuery  Initiated an Address Query.
+     * @retval OT_ERROR_NONE           Successfully provided the RLOC16.
+     * @retval OT_ERROR_ADDRESS_QUERY  Initiated an Address Query.
      *
      */
-    ThreadError Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRloc16);
+    otError Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRloc16);
 
 private:
     enum
@@ -161,9 +161,9 @@ private:
     void MarkCacheEntryAsUsed(Cache &aEntry);
     void InvalidateCacheEntry(Cache &aEntry);
 
-    ThreadError SendAddressQuery(const Ip6::Address &aEid);
-    ThreadError SendAddressError(const ThreadTargetTlv &aTarget, const ThreadMeshLocalEidTlv &aEid,
-                                 const Ip6::Address *aDestination);
+    otError SendAddressQuery(const Ip6::Address &aEid);
+    otError SendAddressError(const ThreadTargetTlv &aTarget, const ThreadMeshLocalEidTlv &aEid,
+                             const Ip6::Address *aDestination);
     void SendAddressQueryResponse(const ThreadTargetTlv &aTargetTlv, const ThreadMeshLocalEidTlv &aMlEidTlv,
                                   const ThreadLastTransactionTimeTlv *aLastTransactionTimeTlv,
                                   const Ip6::Address &aDestination);

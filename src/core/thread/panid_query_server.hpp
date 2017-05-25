@@ -88,7 +88,7 @@ private:
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
-    ThreadError SendConflict(void);
+    otError SendConflict(void);
 
     Ip6::Address mCommissioner;
     uint32_t mChannelMask;

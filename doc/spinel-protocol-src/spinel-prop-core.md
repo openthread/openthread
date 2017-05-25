@@ -89,8 +89,8 @@ This integer identifies what the network protocol for this NCP.
 Currently defined values are:
 
  *  0: Bootloader
- *  2: ZigBeeIP
- *  3: Thread
+ *  2: ZigBee IP(TM)
+ *  3: Thread(R)
 
 The host MUST enter a FAULT state if it does not recognize the
 protocol given by the NCP.

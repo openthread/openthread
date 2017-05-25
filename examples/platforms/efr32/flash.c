@@ -48,32 +48,32 @@ static inline uint32_t mapAddress(uint32_t aAddress)
     return aAddress + FLASH_DATA_START_ADDR;
 }
 
-static ThreadError returnTypeConvert(int32_t aStatus)
+static otError returnTypeConvert(int32_t aStatus)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     switch (aStatus)
     {
     case mscReturnOk:
-        error = kThreadError_None;
+        error = OT_ERROR_NONE;
         break;
 
     case mscReturnInvalidAddr:
     case mscReturnUnaligned:
-        error = kThreadError_InvalidArgs;
+        error = OT_ERROR_INVALID_ARGS;
         break;
 
     default:
-        error = kThreadError_Failed;
+        error = OT_ERROR_FAILED;
     }
 
     return error;
 }
 
-ThreadError utilsFlashInit(void)
+otError utilsFlashInit(void)
 {
     MSC_Init();
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 uint32_t utilsFlashGetSize(void)
@@ -81,7 +81,7 @@ uint32_t utilsFlashGetSize(void)
     return FLASH_DATA_END_ADDR - FLASH_DATA_START_ADDR;
 }
 
-ThreadError utilsFlashErasePage(uint32_t aAddress)
+otError utilsFlashErasePage(uint32_t aAddress)
 {
     int32_t status;
 
@@ -90,16 +90,16 @@ ThreadError utilsFlashErasePage(uint32_t aAddress)
     return returnTypeConvert(status);
 }
 
-ThreadError utilsFlashStatusWait(uint32_t aTimeout)
+otError utilsFlashStatusWait(uint32_t aTimeout)
 {
-    ThreadError error = kThreadError_Busy;
+    otError error = OT_ERROR_BUSY;
     uint32_t start = otPlatAlarmGetNow();
 
     do
     {
         if (MSC->STATUS & MSC_STATUS_WDATAREADY)
         {
-            error = kThreadError_None;
+            error = OT_ERROR_NONE;
             break;
         }
     }
@@ -118,7 +118,7 @@ uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
                     (!(aAddress & 3)) && (!(aSize & 3)), rval = 0);
 
     status = MSC_WriteWord((uint32_t *)mapAddress(aAddress), aData, aSize);
-    otEXPECT_ACTION(returnTypeConvert(status) == kThreadError_None, rval = 0);
+    otEXPECT_ACTION(returnTypeConvert(status) == OT_ERROR_NONE, rval = 0);
 
 exit:
     return rval;

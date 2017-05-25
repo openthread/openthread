@@ -49,7 +49,7 @@
 #include "net/udp6.hpp"
 #include "thread/mle.hpp"
 #include "thread/thread_tlvs.hpp"
-#include "thread/thread_uris.hpp"
+#include "thread/thread_uri_paths.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 
@@ -116,10 +116,10 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
 
 {
     mKeyManager.SetMasterKey(kThreadMasterKey);
-    mCoap.SetInterceptor(&ThreadNetif::TmfFilter);
+    mCoap.SetInterceptor(&ThreadNetif::TmfFilter, this);
 }
 
-ThreadError ThreadNetif::Up(void)
+otError ThreadNetif::Up(void)
 {
     if (!mIsUp)
     {
@@ -134,10 +134,10 @@ ThreadError ThreadNetif::Up(void)
         mIsUp = true;
     }
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError ThreadNetif::Down(void)
+otError ThreadNetif::Down(void)
 {
     mCoap.Stop();
 #if OPENTHREAD_ENABLE_DNS_CLIENT
@@ -155,47 +155,47 @@ ThreadError ThreadNetif::Down(void)
     mDtls.Stop();
 #endif
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError ThreadNetif::GetLinkAddress(Ip6::LinkAddress &address) const
+otError ThreadNetif::GetLinkAddress(Ip6::LinkAddress &address) const
 {
     address.mType = Ip6::LinkAddress::kEui64;
     address.mLength = sizeof(address.mExtAddress);
     memcpy(&address.mExtAddress, mMac.GetExtAddress(), address.mLength);
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError ThreadNetif::RouteLookup(const Ip6::Address &source, const Ip6::Address &destination, uint8_t *prefixMatch)
+otError ThreadNetif::RouteLookup(const Ip6::Address &source, const Ip6::Address &destination, uint8_t *prefixMatch)
 {
-    ThreadError error;
+    otError error;
     uint16_t rloc;
 
     SuccessOrExit(error = mNetworkDataLeader.RouteLookup(source, destination, prefixMatch, &rloc));
 
     if (rloc == mMleRouter.GetRloc16())
     {
-        error = kThreadError_NoRoute;
+        error = OT_ERROR_NO_ROUTE;
     }
 
 exit:
     return error;
 }
 
-ThreadError ThreadNetif::TmfFilter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+otError ThreadNetif::TmfFilter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    // A TMF message must comply at least one of the following rules:
-    // 1. The IPv6 source address is RLOC or ALOC.
-    // 2. The IPv6 destination address is RLOC or ALOC.
-    // 3. The IPv6 destination address is Link-Local address.
-    VerifyOrExit(aMessageInfo.GetPeerAddr().IsRoutingLocator() ||
-                 aMessageInfo.GetPeerAddr().IsAnycastRoutingLocator() ||
-                 aMessageInfo.GetSockAddr().IsRoutingLocator() ||
-                 aMessageInfo.GetSockAddr().IsAnycastRoutingLocator() ||
-                 aMessageInfo.GetSockAddr().IsLinkLocal(),
-                 error = kThreadError_NotTmf);
+    // A TMF message must comply with following rules:
+    // 1. The destination is a Mesh Local Address or a Link-Local Multicast Address or a Realm-Local Multicast Address,
+    //    and the source is a Mesh Local Address.
+    // 2. Both the destination and the source are Link-Local Addresses.
+    VerifyOrExit(((static_cast<ThreadNetif *>(aContext)->mMleRouter.IsMeshLocalAddress(aMessageInfo.GetSockAddr()) ||
+                   aMessageInfo.GetSockAddr().IsLinkLocalMulticast() ||
+                   aMessageInfo.GetSockAddr().IsRealmLocalMulticast()) &&
+                  static_cast<ThreadNetif *>(aContext)->mMleRouter.IsMeshLocalAddress(aMessageInfo.GetPeerAddr())) ||
+                 (aMessageInfo.GetSockAddr().IsLinkLocal() && aMessageInfo.GetPeerAddr().IsLinkLocal()),
+                 error = OT_ERROR_NOT_TMF);
 exit:
     (void)aMessage;
     return error;

@@ -49,7 +49,7 @@
 #include "common/logging.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
-#include "thread/thread_uris.hpp"
+#include "thread/thread_uri_paths.hpp"
 
 using ot::Encoding::BigEndian::HostSwap32;
 
@@ -61,7 +61,7 @@ AnnounceBeginServer::AnnounceBeginServer(ThreadNetif &aThreadNetif) :
     mCount(0),
     mChannel(0),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, &AnnounceBeginServer::HandleTimer, this),
-    mAnnounceBegin(OPENTHREAD_URI_ANNOUNCE_BEGIN, &AnnounceBeginServer::HandleRequest, this),
+    mAnnounceBegin(OT_URI_PATH_ANNOUNCE_BEGIN, &AnnounceBeginServer::HandleRequest, this),
     mNetif(aThreadNetif)
 {
     mNetif.GetCoap().AddResource(mAnnounceBegin);
@@ -72,14 +72,14 @@ otInstance *AnnounceBeginServer::GetInstance(void)
     return mNetif.GetInstance();
 }
 
-ThreadError AnnounceBeginServer::SendAnnounce(uint32_t aChannelMask)
+otError AnnounceBeginServer::SendAnnounce(uint32_t aChannelMask)
 {
     return SendAnnounce(aChannelMask, kDefaultCount, kDefaultPeriod);
 }
 
-ThreadError AnnounceBeginServer::SendAnnounce(uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod)
+otError AnnounceBeginServer::SendAnnounce(uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     mChannelMask = aChannelMask;
     mCount = aCount;
@@ -89,7 +89,7 @@ ThreadError AnnounceBeginServer::SendAnnounce(uint32_t aChannelMask, uint8_t aCo
     while ((mChannelMask & (1 << mChannel)) == 0)
     {
         mChannel++;
-        VerifyOrExit(mChannel <= kPhyMaxChannel, error = kThreadError_InvalidArgs);
+        VerifyOrExit(mChannel <= kPhyMaxChannel, error = OT_ERROR_INVALID_ARGS);
     }
 
     mTimer.Start(mPeriod);

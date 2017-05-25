@@ -52,11 +52,11 @@ bool otDatasetIsCommissioned(otInstance *aInstance)
     return false;
 }
 
-ThreadError otDatasetGetActive(otInstance *aInstance, otOperationalDataset *aDataset)
+otError otDatasetGetActive(otInstance *aInstance, otOperationalDataset *aDataset)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aDataset != NULL, error = kThreadError_InvalidArgs);
+    VerifyOrExit(aDataset != NULL, error = OT_ERROR_INVALID_ARGS);
 
     aInstance->mThreadNetif.GetActiveDataset().GetLocal().Get(*aDataset);
 
@@ -64,11 +64,11 @@ exit:
     return error;
 }
 
-ThreadError otDatasetGetPending(otInstance *aInstance, otOperationalDataset *aDataset)
+otError otDatasetGetPending(otInstance *aInstance, otOperationalDataset *aDataset)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aDataset != NULL, error = kThreadError_InvalidArgs);
+    VerifyOrExit(aDataset != NULL, error = OT_ERROR_INVALID_ARGS);
 
     aInstance->mThreadNetif.GetPendingDataset().GetLocal().Get(*aDataset);
 

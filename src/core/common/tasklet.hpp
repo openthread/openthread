@@ -85,7 +85,7 @@ public:
      * This method puts the tasklet on the run queue.
      *
      */
-    ThreadError Post(void);
+    otError Post(void);
 
 private:
     void RunTask(void) { mHandler(mContext); }
@@ -114,10 +114,10 @@ public:
      *
      * @param[in]  aTasklet  A reference to the tasklet to enqueue.
      *
-     * @retval kThreadError_None  Successfully enqueued the tasklet.
-     * @retval kThreadError_Already  The tasklet was already enqueued.
+     * @retval OT_ERROR_NONE     Successfully enqueued the tasklet.
+     * @retval OT_ERROR_ALREADY  The tasklet was already enqueued.
      */
-    ThreadError Post(Tasklet &aTasklet);
+    otError Post(Tasklet &aTasklet);
 
     /**
      * This method indicates whether or not there are tasklets pending.

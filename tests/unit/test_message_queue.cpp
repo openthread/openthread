@@ -77,7 +77,7 @@ void TestMessageQueue(void)
     ot::MessagePool messagePool(&instance);
     ot::MessageQueue messageQueue;
     ot::Message *msg[kNumTestMessages];
-    ThreadError error;
+    otError error;
     uint16_t msgCount, bufferCount;
 
     for (int i = 0; i < kNumTestMessages; i++)
@@ -142,9 +142,10 @@ void TestMessageQueue(void)
     SuccessOrQuit(messageQueue.Enqueue(*msg[0]), "MessageQueue::Enqueue() failed.\n");
     VerifyMessageQueueContent(messageQueue, 1, msg[0]);
     error = messageQueue.Enqueue(*msg[0]);
-    VerifyOrQuit(error == kThreadError_Already, "Enqueuing an already queued message did not fail as expected.\n");
+    VerifyOrQuit(error == OT_ERROR_ALREADY, "Enqueuing an already queued message did not fail as expected.\n");
     error = messageQueue.Dequeue(*msg[1]);
-    VerifyOrQuit(error == kThreadError_NotFound, "Dequeuing a message not in the queue did not fail as expected.\n");
+    VerifyOrQuit(error == OT_ERROR_NOT_FOUND,
+                 "Dequeuing a message not in the queue did not fail as expected.\n");
 }
 
 // This function verifies the content of the message queue to match the passed in messages
@@ -189,7 +190,7 @@ void TestMessageQueueOtApis(void)
     otMessageQueue queue, queue2;
 
     otMessage *msg[kNumTestMessages];
-    ThreadError error;
+    otError error;
     otMessage *message;
 
 #ifdef OPENTHREAD_MULTIPLE_INSTANCE
@@ -243,9 +244,10 @@ void TestMessageQueueOtApis(void)
 
     // Check the expected failure cases for the enqueue and dequeue:
     error = otMessageQueueEnqueue(&queue, msg[2]);
-    VerifyOrQuit(error == kThreadError_Already, "Enqueuing an already queued message did not fail as expected.\n");
+    VerifyOrQuit(error == OT_ERROR_ALREADY, "Enqueuing an already queued message did not fail as expected.\n");
     error = otMessageQueueDequeue(&queue, msg[0]);
-    VerifyOrQuit(error == kThreadError_NotFound, "Dequeuing a message not in the queue did not fail as expected.\n");
+    VerifyOrQuit(error == OT_ERROR_NOT_FOUND,
+                 "Dequeuing a message not in the queue did not fail as expected.\n");
 
     // Check the failure cases for otMessageQueueGetNext()
     message = otMessageQueueGetNext(&queue, NULL);

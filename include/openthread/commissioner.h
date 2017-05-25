@@ -53,24 +53,35 @@ extern "C" {
  */
 
 /**
+ * This enumeration defines the Commissioner State.
+ *
+ */
+typedef enum otCommissionerState
+{
+    OT_COMMISSIONER_STATE_DISABLED = 0, ///< Commissioner role is disabled.
+    OT_COMMISSIONER_STATE_PETITION = 1, ///< Currently petitioning to become a Commissioner.
+    OT_COMMISSIONER_STATE_ACTIVE   = 2, ///< Commissioner role is active.
+} otCommissionerState;
+
+/**
  * This function enables the Thread Commissioner role.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  *
- * @retval kThreadError_None     Successfully started the Commissioner role.
+ * @retval OT_ERROR_NONE     Successfully started the Commissioner role.
  *
  */
-OTAPI ThreadError OTCALL otCommissionerStart(otInstance *aInstance);
+OTAPI otError OTCALL otCommissionerStart(otInstance *aInstance);
 
 /**
  * This function disables the Thread Commissioner role.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  *
- * @retval kThreadError_None     Successfully stopped the Commissioner role.
+ * @retval OT_ERROR_NONE     Successfully stopped the Commissioner role.
  *
  */
-OTAPI ThreadError OTCALL otCommissionerStop(otInstance *aInstance);
+OTAPI otError OTCALL otCommissionerStop(otInstance *aInstance);
 
 /**
  * This function adds a Joiner entry.
@@ -80,16 +91,16 @@ OTAPI ThreadError OTCALL otCommissionerStop(otInstance *aInstance);
  * @param[in]  aPSKd                 A pointer to the PSKd.
  * @param[in]  aTimeout              A time after which a Joiner is automatically removed, in seconds.
  *
- * @retval kThreadError_None         Successfully added the Joiner.
- * @retval kThreadError_NoBufs       No buffers available to add the Joiner.
- * @retval kThreadError_InvalidArgs  @p aExtAddress or @p aPSKd is invalid.
- * @retval kThreadError_InvalidState The commissioner is not active.
+ * @retval OT_ERROR_NONE          Successfully added the Joiner.
+ * @retval OT_ERROR_NO_BUFS       No buffers available to add the Joiner.
+ * @retval OT_ERROR_INVALID_ARGS  @p aExtAddress or @p aPSKd is invalid.
+ * @retval OT_ERROR_INVALID_STATE The commissioner is not active.
  *
  * @note Only use this after successfully started the Commissioner role by otCommissionerStart().
  *
  */
-OTAPI ThreadError OTCALL otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aExtAddress,
-                                                 const char *aPSKd, uint32_t aTimeout);
+OTAPI otError OTCALL otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aExtAddress,
+                                             const char *aPSKd, uint32_t aTimeout);
 
 /**
  * This function removes a Joiner entry.
@@ -97,15 +108,15 @@ OTAPI ThreadError OTCALL otCommissionerAddJoiner(otInstance *aInstance, const ot
  * @param[in]  aInstance             A pointer to an OpenThread instance.
  * @param[in]  aExtAddress           A pointer to the Joiner's extended address or NULL for any Joiner.
  *
- * @retval kThreadError_None         Successfully removed the Joiner.
- * @retval kThreadError_NotFound     The Joiner specified by @p aExtAddress was not found.
- * @retval kThreadError_InvalidArgs  @p aExtAddress is invalid.
- * @retval kThreadError_InvalidState The commissioner is not active.
+ * @retval OT_ERROR_NONE          Successfully removed the Joiner.
+ * @retval OT_ERROR_NOT_FOUND     The Joiner specified by @p aExtAddress was not found.
+ * @retval OT_ERROR_INVALID_ARGS  @p aExtAddress is invalid.
+ * @retval OT_ERROR_INVALID_STATE The commissioner is not active.
  *
  * @note Only use this after successfully started the Commissioner role by otCommissionerStart().
  *
  */
-OTAPI ThreadError OTCALL otCommissionerRemoveJoiner(otInstance *aInstance, const otExtAddress *aExtAddress);
+OTAPI otError OTCALL otCommissionerRemoveJoiner(otInstance *aInstance, const otExtAddress *aExtAddress);
 
 /**
  * This function sets the Provisioning URL.
@@ -113,11 +124,11 @@ OTAPI ThreadError OTCALL otCommissionerRemoveJoiner(otInstance *aInstance, const
  * @param[in]  aInstance             A pointer to an OpenThread instance.
  * @param[in]  aProvisioningUrl      A pointer to the Provisioning URL (may be NULL).
  *
- * @retval kThreadError_None         Successfully set the Provisioning URL.
- * @retval kThreadError_InvalidArgs  @p aProvisioningUrl is invalid.
+ * @retval OT_ERROR_NONE          Successfully set the Provisioning URL.
+ * @retval OT_ERROR_INVALID_ARGS  @p aProvisioningUrl is invalid.
  *
  */
-OTAPI ThreadError OTCALL otCommissionerSetProvisioningUrl(otInstance *aInstance, const char *aProvisioningUrl);
+OTAPI otError OTCALL otCommissionerSetProvisioningUrl(otInstance *aInstance, const char *aProvisioningUrl);
 
 /**
  * This function sends an Announce Begin message.
@@ -128,16 +139,16 @@ OTAPI ThreadError OTCALL otCommissionerSetProvisioningUrl(otInstance *aInstance,
  * @param[in]  aPeriod               The time between energy measurements (milliseconds).
  * @param[in]  aAddress              A pointer to the IPv6 destination.
  *
- * @retval kThreadError_None         Successfully enqueued the Announce Begin message.
- * @retval kThreadError_NoBufs       Insufficient buffers to generate an Announce Begin message.
- * @retval kThreadError_InvalidState The commissioner is not active.
+ * @retval OT_ERROR_NONE          Successfully enqueued the Announce Begin message.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate an Announce Begin message.
+ * @retval OT_ERROR_INVALID_STATE The commissioner is not active.
  *
  * @note Only use this after successfully started the Commissioner role by otCommissionerStart().
  *
  */
-OTAPI ThreadError OTCALL otCommissionerAnnounceBegin(otInstance *aInstance, uint32_t aChannelMask, uint8_t aCount,
-                                                     uint16_t aPeriod,
-                                                     const otIp6Address *aAddress);
+OTAPI otError OTCALL otCommissionerAnnounceBegin(otInstance *aInstance, uint32_t aChannelMask, uint8_t aCount,
+                                                 uint16_t aPeriod,
+                                                 const otIp6Address *aAddress);
 
 /**
  * This function pointer is called when the Commissioner receives an Energy Report.
@@ -163,16 +174,16 @@ typedef void (OTCALL *otCommissionerEnergyReportCallback)(uint32_t aChannelMask,
  * @param[in]  aCallback             A pointer to a function called on receiving an Energy Report message.
  * @param[in]  aContext              A pointer to application-specific context.
  *
- * @retval kThreadError_None         Successfully enqueued the Energy Scan Query message.
- * @retval kThreadError_NoBufs       Insufficient buffers to generate an Energy Scan Query message.
- * @retval kThreadError_InvalidState The commissioner is not active.
+ * @retval OT_ERROR_NONE          Successfully enqueued the Energy Scan Query message.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate an Energy Scan Query message.
+ * @retval OT_ERROR_INVALID_STATE The commissioner is not active.
  *
  * @note Only use this after successfully started the Commissioner role by otCommissionerStart().
  *
  */
-OTAPI ThreadError OTCALL otCommissionerEnergyScan(otInstance *aInstance, uint32_t aChannelMask, uint8_t aCount,
-                                                  uint16_t aPeriod, uint16_t aScanDuration, const otIp6Address *aAddress,
-                                                  otCommissionerEnergyReportCallback aCallback, void *aContext);
+OTAPI otError OTCALL otCommissionerEnergyScan(otInstance *aInstance, uint32_t aChannelMask, uint8_t aCount,
+                                              uint16_t aPeriod, uint16_t aScanDuration, const otIp6Address *aAddress,
+                                              otCommissionerEnergyReportCallback aCallback, void *aContext);
 
 /**
  * This function pointer is called when the Commissioner receives a PAN ID Conflict message.
@@ -194,16 +205,16 @@ typedef void (OTCALL *otCommissionerPanIdConflictCallback)(uint16_t aPanId, uint
  * @param[in]  aCallback             A pointer to a function called on receiving an Energy Report message.
  * @param[in]  aContext              A pointer to application-specific context.
  *
- * @retval kThreadError_None         Successfully enqueued the PAN ID Query message.
- * @retval kThreadError_NoBufs       Insufficient buffers to generate a PAN ID Query message.
- * @retval kThreadError_InvalidState The commissioner is not active.
+ * @retval OT_ERROR_NONE          Successfully enqueued the PAN ID Query message.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate a PAN ID Query message.
+ * @retval OT_ERROR_INVALID_STATE The commissioner is not active.
  *
  * @note Only use this after successfully started the Commissioner role by otCommissionerStart().
  *
  */
-OTAPI ThreadError OTCALL otCommissionerPanIdQuery(otInstance *aInstance, uint16_t aPanId, uint32_t aChannelMask,
-                                                  const otIp6Address *aAddress,
-                                                  otCommissionerPanIdConflictCallback aCallback, void *aContext);
+OTAPI otError OTCALL otCommissionerPanIdQuery(otInstance *aInstance, uint16_t aPanId, uint32_t aChannelMask,
+                                              const otIp6Address *aAddress,
+                                              otCommissionerPanIdConflictCallback aCallback, void *aContext);
 
 /**
  * This function sends MGMT_COMMISSIONER_GET.
@@ -212,11 +223,11 @@ OTAPI ThreadError OTCALL otCommissionerPanIdQuery(otInstance *aInstance, uint16_
  * @param[in]  aTlvs      A pointer to TLVs.
  * @param[in]  aLength    The length of TLVs.
  *
- * @retval kThreadError_None         Successfully send the meshcop dataset command.
- * @retval kThreadError_NoBufs       Insufficient buffer space to send.
+ * @retval OT_ERROR_NONE          Successfully send the meshcop dataset command.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
  *
  */
-OTAPI ThreadError OTCALL otCommissionerSendMgmtGet(otInstance *aInstance, const uint8_t *aTlvs, uint8_t aLength);
+OTAPI otError OTCALL otCommissionerSendMgmtGet(otInstance *aInstance, const uint8_t *aTlvs, uint8_t aLength);
 
 /**
  * This function sends MGMT_COMMISSIONER_SET.
@@ -226,12 +237,12 @@ OTAPI ThreadError OTCALL otCommissionerSendMgmtGet(otInstance *aInstance, const 
  * @param[in]  aTlvs      A pointer to TLVs.
  * @param[in]  aLength    The length of TLVs.
  *
- * @retval kThreadError_None         Successfully send the meshcop dataset command.
- * @retval kThreadError_NoBufs       Insufficient buffer space to send.
+ * @retval OT_ERROR_NONE          Successfully send the meshcop dataset command.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
  *
  */
-OTAPI ThreadError OTCALL otCommissionerSendMgmtSet(otInstance *aInstance, const otCommissioningDataset *aDataset,
-                                                   const uint8_t *aTlvs, uint8_t aLength);
+OTAPI otError OTCALL otCommissionerSendMgmtSet(otInstance *aInstance, const otCommissioningDataset *aDataset,
+                                               const uint8_t *aTlvs, uint8_t aLength);
 
 /**
  * This function returns the Commissioner Session ID.
@@ -248,9 +259,9 @@ OTAPI uint16_t OTCALL otCommissionerGetSessionId(otInstance *aInstance);
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
- * @retval kCommissionerStateDisabled    Commissioner disabled.
- * @retval kCommissionerStatePetition    Becoming the commissioner.
- * @retval kCommissionerStateActive      Commissioner enabled.
+ * @retval OT_COMMISSIONER_STATE_DISABLED  Commissioner disabled.
+ * @retval OT_COMMISSIONER_STATE_PETITION  Becoming the commissioner.
+ * @retval OT_COMMISSIONER_STATE_ACTIVE    Commissioner enabled.
  *
  */
 OTAPI otCommissionerState OTCALL otCommissionerGetState(otInstance *aInstance);
@@ -266,13 +277,13 @@ OTAPI otCommissionerState OTCALL otCommissionerGetState(otInstance *aInstance);
  * @param[in]  aExtPanId     The extended pan id for PSKc computation.
  * @param[out] aPSKc         A pointer to where the generated PSKc will be placed.
  *
- * @retval kThreadErrorNone          Successfully generate PSKc.
- * @retval kThreadError_InvalidArgs  If any of the input arguments is invalid.
+ * @retval OT_ERROR_NONE          Successfully generate PSKc.
+ * @retval OT_ERROR_INVALID_ARGS  If any of the input arguments is invalid.
  *
  */
-OTAPI ThreadError OTCALL otCommissionerGeneratePSKc(otInstance *aInstance, const char *aPassPhrase,
-                                                    const char *aNetworkName, const uint8_t *aExtPanId,
-                                                    uint8_t *aPSKc);
+OTAPI otError OTCALL otCommissionerGeneratePSKc(otInstance *aInstance, const char *aPassPhrase,
+                                                const char *aNetworkName, const uint8_t *aExtPanId,
+                                                uint8_t *aPSKc);
 
 /**
  * @}

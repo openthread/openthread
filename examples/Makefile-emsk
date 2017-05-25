@@ -135,7 +135,7 @@ ResultPath                      = output
 TopResultDir                    = $(ResultPath)
 AbsTopResultDir                 = $(PWD)/$(TopResultDir)
 
-TargetTuple                     = arc-elf32
+TargetTuple                     = emsk
 
 ARCHS                           = arcem11d
 

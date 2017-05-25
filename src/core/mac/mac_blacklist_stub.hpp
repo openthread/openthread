@@ -56,7 +56,7 @@ public:
 
     int GetMaxEntries(void) const { return 0; }
 
-    ThreadError GetEntry(uint8_t, Entry &) const { return kThreadError_NotImplemented; }
+    otError GetEntry(uint8_t, Entry &) const { return OT_ERROR_NOT_IMPLEMENTED; }
 
     Entry *Add(const ExtAddress &) { return NULL; }
 

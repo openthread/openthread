@@ -155,9 +155,9 @@ uint16_t LinkQualityInfo::GetAverageRssAsEncodedWord(void) const
     return mRssAverage;
 }
 
-ThreadError LinkQualityInfo::GetAverageRssAsString(char *aCharBuffer, size_t aBufferLen) const
+otError LinkQualityInfo::GetAverageRssAsString(char *aCharBuffer, size_t aBufferLen) const
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     int charsWritten = 0;
 
     if (mCount == 0)
@@ -171,9 +171,9 @@ ThreadError LinkQualityInfo::GetAverageRssAsString(char *aCharBuffer, size_t aBu
                                 kLinkQualityDecimalDigitsString[mRssAverage & kRssAveragePrecisionMultipleBitMask]);
     }
 
-    VerifyOrExit(charsWritten >= 0, error = kThreadError_NoBufs);
+    VerifyOrExit(charsWritten >= 0, error = OT_ERROR_NO_BUFS);
 
-    VerifyOrExit(charsWritten < static_cast<int>(aBufferLen), error = kThreadError_NoBufs);
+    VerifyOrExit(charsWritten < static_cast<int>(aBufferLen), error = OT_ERROR_NO_BUFS);
 
 exit:
     return error;

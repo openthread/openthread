@@ -125,11 +125,11 @@ public:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval kThreadError_None    Successfully appended the bytes.
-     * @retval kThreadError_NoBufs  Insufficient available buffers to grow the message.
+     * @retval OT_ERROR_NONE     Successfully appended the bytes.
+     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
      *
      */
-    ThreadError AppendTo(Message &aMessage) const {
+    otError AppendTo(Message &aMessage) const {
         return aMessage.Append(this, sizeof(*this));
     };
 
@@ -260,10 +260,10 @@ public:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval kThreadError_None    Successfully appended the bytes.
-     * @retval kThreadError_NoBufs  Insufficient available buffers to grow the message.
+     * @retval OT_ERROR_NONE     Successfully appended the bytes.
+     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
      */
-    ThreadError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
+    otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
 
     /**
      * This method reads request data from the message.
@@ -284,7 +284,7 @@ public:
      *
      */
     static void RemoveFrom(Message &aMessage) {
-        assert(aMessage.SetLength(aMessage.GetLength() - sizeof(EnqueuedResponseHeader)) == kThreadError_None);
+        assert(aMessage.SetLength(aMessage.GetLength() - sizeof(EnqueuedResponseHeader)) == OT_ERROR_NONE);
     }
 
     /**
@@ -366,14 +366,14 @@ public:
      * @param[in]  aMessageInfo  The message info containing source endpoint address and port.
      * @param[out] aResponse     A pointer to a copy of a cached CoAP response matching given arguments.
      *
-     * @retval kThreadError_None      Matching response found and successfully created a copy.
-     * @retval kThreadError_NoBufs    Matching response found but there is not sufficient buffer to create a copy.
-     * @retval kThreadError_NotFound  Matching response not found.
+     * @retval OT_ERROR_NONE       Matching response found and successfully created a copy.
+     * @retval OT_ERROR_NO_BUFS    Matching response found but there is not sufficient buffer to create a copy.
+     * @retval OT_ERROR_NOT_FOUND  Matching response not found.
      *
      */
-    ThreadError GetMatchedResponseCopy(const Header &aHeader,
-                                       const Ip6::MessageInfo &aMessageInfo,
-                                       Message **aResponse);
+    otError GetMatchedResponseCopy(const Header &aHeader,
+                                   const Ip6::MessageInfo &aMessageInfo,
+                                   Message **aResponse);
 
     /**
      * Get a copy of CoAP response from the cache that matches given Message ID and source endpoint.
@@ -382,15 +382,15 @@ public:
      * @param[in]  aMessageInfo  The message info containing source endpoint address and port.
      * @param[out] aResponse     A pointer to a copy of a cached CoAP response matching given arguments.
      *
-     * @retval kThreadError_None      Matching response found and successfully created a copy.
-     * @retval kThreadError_NoBufs    Matching response found but there is not sufficient buffer to create a copy.
-     * @retval kThreadError_NotFound  Matching response not found.
-     * @retval kThreadError_Parse     Could not parse CoAP header in the request message.
+     * @retval OT_ERROR_NONE       Matching response found and successfully created a copy.
+     * @retval OT_ERROR_NO_BUFS    Matching response found but there is not sufficient buffer to create a copy.
+     * @retval OT_ERROR_NOT_FOUND  Matching response not found.
+     * @retval OT_ERROR_PARSE      Could not parse CoAP header in the request message.
      *
      */
-    ThreadError GetMatchedResponseCopy(const Message &aRequest,
-                                       const Ip6::MessageInfo &aMessageInfo,
-                                       Message **aResponse);
+    otError GetMatchedResponseCopy(const Message &aRequest,
+                                   const Ip6::MessageInfo &aMessageInfo,
+                                   Message **aResponse);
 
     /**
      * Get a reference to the cached CoAP responses queue.
@@ -427,14 +427,15 @@ public:
      *
      * @param[in]   aMessage        A reference to the message.
      @ @param[in]   aMessageInfo    A reference to the message info associated with @p aMessage.
+     * @param[in]   aContext        A pointer to arbitrary context information.
      *
-     * @retval  kThreadError_None       Server should continue processing this message, other
-     *                                  return values indicates the server should stop processing
-     *                                  this message.
-     * @retval  kThreadError_NotTmf     The message is not a TMF message.
+     * @retval  OT_ERROR_NONE       Server should continue processing this message, other
+     *                              return values indicates the server should stop processing
+     *                              this message.
+     * @retval  OT_ERROR_NOT_TMF    The message is not a TMF message.
      *
      */
-    typedef ThreadError(* Interceptor)(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    typedef otError(* Interceptor)(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 
     /**
      * This constructor initializes the object.
@@ -449,18 +450,18 @@ public:
      *
      * @param[in]  aPort  The local UDP port to bind to.
      *
-     * @retval kThreadError_None  Successfully started the CoAP service.
+     * @retval OT_ERROR_NONE  Successfully started the CoAP service.
      *
      */
-    ThreadError Start(uint16_t aPort);
+    otError Start(uint16_t aPort);
 
     /**
      * This method stops the CoAP service.
      *
-     * @retval kThreadError_None  Successfully stopped the CoAP service.
+     * @retval OT_ERROR_NONE  Successfully stopped the CoAP service.
      *
      */
-    ThreadError Stop(void);
+    otError Stop(void);
 
     /**
      * This method returns a port number used by CoAP service.
@@ -471,25 +472,15 @@ public:
     uint16_t GetPort(void) { return mSocket.GetSockName().mPort; };
 
     /**
-     * This method sets CoAP server's port number.
-     *
-     * @param[in]  aPort  A port number to set.
-     *
-     * @retval kThreadError_None  Binding with a port succeeded.
-     *
-     */
-    ThreadError SetPort(uint16_t aPort);
-
-    /**
      * This method adds a resource to the CoAP server.
      *
      * @param[in]  aResource  A reference to the resource.
      *
-     * @retval kThreadError_None     Successfully added @p aResource.
-     * @retval kThreadError_Already  The @p aResource was already added.
+     * @retval OT_ERROR_NONE     Successfully added @p aResource.
+     * @retval OT_ERROR_ALREADY  The @p aResource was already added.
      *
      */
-    ThreadError AddResource(Resource &aResource);
+    otError AddResource(Resource &aResource);
 
     /**
      * This method removes a resource from the CoAP server.
@@ -529,12 +520,12 @@ public:
      * @param[in]  aHandler      A function pointer that shall be called on response reception or time-out.
      * @param[in]  aContext      A pointer to arbitrary context information.
      *
-     * @retval kThreadError_None   Successfully sent CoAP message.
-     * @retval kThreadError_NoBufs Failed to allocate retransmission data.
+     * @retval OT_ERROR_NONE     Successfully sent CoAP message.
+     * @retval OT_ERROR_NO_BUFS  Failed to allocate retransmission data.
      *
      */
-    ThreadError SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
-                            otCoapResponseHandler aHandler = NULL, void *aContext = NULL);
+    otError SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
+                        otCoapResponseHandler aHandler = NULL, void *aContext = NULL);
 
     /**
      * This method sends a CoAP reset message.
@@ -542,14 +533,28 @@ public:
      * @param[in]  aRequestHeader  A reference to the CoAP Header that was used in CoAP request.
      * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
      *
-     * @retval kThreadError_None         Successfully enqueued the CoAP response message.
-     * @retval kThreadError_NoBufs       Insufficient buffers available to send the CoAP response.
-     * @retval kThreadError_InvalidArgs  The @p aRequestHeader header is not of confirmable type.
+     * @retval OT_ERROR_NONE          Successfully enqueued the CoAP response message.
+     * @retval OT_ERROR_NO_BUFS       Insufficient buffers available to send the CoAP response.
+     * @retval OT_ERROR_INVALID_ARGS  The @p aRequestHeader header is not of confirmable type.
      *
      */
-    ThreadError SendReset(Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo) {
+    otError SendReset(Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo) {
         return SendEmptyMessage(kCoapTypeReset, aRequestHeader, aMessageInfo);
     };
+
+    /**
+     * This method sends header-only CoAP response message.
+     *
+     * @param[in]  aCode           The CoAP code of this response.
+     * @param[in]  aRequestHeader  A reference to the CoAP Header that was used in CoAP request.
+     * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
+     *
+     * @retval OT_ERROR_NONE          Successfully enqueued the CoAP response message.
+     * @retval OT_ERROR_NO_BUFS       Insufficient buffers available to send the CoAP response.
+     * @retval OT_ERROR_INVALID_ARGS  The @p aRequestHeader header is not of confirmable type.
+     *
+     */
+    otError SendHeaderResponse(Header::Code aCode, const Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * This method sends a CoAP ACK empty message which is used in Separate Response for confirmable requests.
@@ -557,12 +562,12 @@ public:
      * @param[in]  aRequestHeader  A reference to the CoAP Header that was used in CoAP request.
      * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
      *
-     * @retval kThreadError_None         Successfully enqueued the CoAP response message.
-     * @retval kThreadError_NoBufs       Insufficient buffers available to send the CoAP response.
-     * @retval kThreadError_InvalidArgs  The @p aRequestHeader header is not of confirmable type.
+     * @retval OT_ERROR_NONE          Successfully enqueued the CoAP response message.
+     * @retval OT_ERROR_NO_BUFS       Insufficient buffers available to send the CoAP response.
+     * @retval OT_ERROR_INVALID_ARGS  The @p aRequestHeader header is not of confirmable type.
      *
      */
-    ThreadError SendAck(Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo) {
+    otError SendAck(Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo) {
         return SendEmptyMessage(kCoapTypeAcknowledgment, aRequestHeader, aMessageInfo);
     };
 
@@ -572,12 +577,30 @@ public:
      * @param[in]  aRequestHeader  A reference to the CoAP Header that was used in CoAP request.
      * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
      *
-     * @retval kThreadError_None         Successfully enqueued the CoAP response message.
-     * @retval kThreadError_NoBufs       Insufficient buffers available to send the CoAP response.
-     * @retval kThreadError_InvalidArgs  The @p aRequestHeader header is not of confirmable type.
+     * @retval OT_ERROR_NONE          Successfully enqueued the CoAP response message.
+     * @retval OT_ERROR_NO_BUFS       Insufficient buffers available to send the CoAP response.
+     * @retval OT_ERROR_INVALID_ARGS  The @p aRequestHeader header is not of confirmable type.
      *
      */
-    ThreadError SendEmptyAck(const Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo);
+    otError SendEmptyAck(const Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo) {
+        return (aRequestHeader.GetType() == kCoapTypeConfirmable ?
+                SendHeaderResponse(kCoapResponseChanged, aRequestHeader, aMessageInfo) :
+                OT_ERROR_INVALID_ARGS);
+    }
+
+    /**
+     * This method sends a header-only CoAP message to indicate no resource matched for the request.
+     *
+     * @param[in]  aRequestHeader        A reference to the CoAP Header that was used in CoAP request.
+     * @param[in]  aMessageInfo          The message info corresponding to the CoAP request.
+     *
+     * @retval OT_ERROR_NONE         Successfully enqueued the CoAP response message.
+     * @retval OT_ERROR_NO_BUFS      Insufficient buffers available to send the CoAP response.
+     *
+     */
+    otError SendNotFound(const Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo) {
+        return SendHeaderResponse(kCoapResponseNotFound, aRequestHeader, aMessageInfo);
+    }
 
     /**
      * This method aborts CoAP transactions associated with given handler and context.
@@ -585,20 +608,22 @@ public:
      * @param[in]  aHandler  A function pointer that should be called when the transaction ends.
      * @param[in]  aContext  A pointer to arbitrary context information.
      *
-     * @retval kThreadError_None      Successfully aborted CoAP transactions.
-     * @retval kThreadError_NotFound  CoAP transaction associated with given handler was not found.
+     * @retval OT_ERROR_NONE       Successfully aborted CoAP transactions.
+     * @retval OT_ERROR_NOT_FOUND  CoAP transaction associated with given handler was not found.
      *
      */
-    ThreadError AbortTransaction(otCoapResponseHandler aHandler, void *aContext);
+    otError AbortTransaction(otCoapResponseHandler aHandler, void *aContext);
 
     /**
      * This method sets interceptor to be called before processing a CoAP packet.
      *
      * @param[in]   aInterceptor    A pointer to the interceptor.
+     * @param[in]   aContext        A pointer to arbitrary context information.
      *
      */
-    void SetInterceptor(Interceptor aInterpreter) {
-        mInterceptor = aInterpreter;
+    void SetInterceptor(Interceptor aInterceptor, void *aContext) {
+        mInterceptor = aInterceptor;
+        mContext = aContext;
     }
 
     /**
@@ -625,7 +650,7 @@ protected:
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
      */
-    virtual ThreadError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    virtual otError Send(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * This method receives a message.
@@ -653,14 +678,14 @@ private:
     Message *FindRelatedRequest(const Header &aResponseHeader, const Ip6::MessageInfo &aMessageInfo,
                                 Header &aRequestHeader, CoapMetadata &aCoapMetadata);
     void FinalizeCoapTransaction(Message &aRequest, const CoapMetadata &aCoapMetadata, Header *aResponseHeader,
-                                 Message *aResponse, const Ip6::MessageInfo *aMessageInfo, ThreadError aResult);
+                                 Message *aResponse, const Ip6::MessageInfo *aMessageInfo, otError aResult);
 
     void ProcessReceivedRequest(Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void ProcessReceivedResponse(Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    ThreadError SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    ThreadError SendEmptyMessage(Header::Type aType, const Header &aRequestHeader,
-                                 const Ip6::MessageInfo &aMessageInfo);
+    otError SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError SendEmptyMessage(Header::Type aType, const Header &aRequestHeader,
+                             const Ip6::MessageInfo &aMessageInfo);
     static void HandleRetransmissionTimer(void *aContext);
     void HandleRetransmissionTimer(void);
 
@@ -670,6 +695,7 @@ private:
 
     Resource *mResources;
 
+    void           *mContext;
     Interceptor    mInterceptor;
     ResponsesQueue mResponsesQueue;
 

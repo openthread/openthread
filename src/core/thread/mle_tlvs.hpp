@@ -134,11 +134,11 @@ public:
      * @param[in]   aMaxLength  Maximum number of bytes to read.
      * @param[out]  aTlv        A reference to the TLV that will be copied to.
      *
-     * @retval kThreadError_None      Successfully copied the TLV.
-     * @retval kThreadError_NotFound  Could not find the TLV with Type @p aType.
+     * @retval OT_ERROR_NONE       Successfully copied the TLV.
+     * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
      *
      */
-    static ThreadError GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv) {
+    static otError GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv) {
         return ot::Tlv::Get(aMessage, static_cast<uint8_t>(aType), aMaxLength, aTlv);
     }
 
@@ -149,11 +149,11 @@ public:
      * @param[in]   aType       The Type value to search for.
      * @param[out]  aOffset     A reference to the offset of the TLV.
      *
-     * @retval kThreadError_None      Successfully copied the TLV.
-     * @retval kThreadError_NotFound  Could not find the TLV with Type @p aType.
+     * @retval OT_ERROR_NONE       Successfully copied the TLV.
+     * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
      *
      */
-    static ThreadError GetOffset(const Message &aMessage, Type aType, uint16_t &aOffset) {
+    static otError GetOffset(const Message &aMessage, Type aType, uint16_t &aOffset) {
         return ot::Tlv::GetOffset(aMessage, static_cast<uint8_t>(aType), aOffset);
     }
 
@@ -878,17 +878,17 @@ public:
     /**
      * This method provides the next Tlv in the TlvRequestTlv.
      *
-     * @retval kThreadError_None       Successfully found the next Tlv.
-     * @retval kThreadError_NotFound   No subsequent Tlv exists in TlvRequestTlv.
+     * @retval OT_ERROR_NONE        Successfully found the next Tlv.
+     * @retval OT_ERROR_NOT_FOUND   No subsequent Tlv exists in TlvRequestTlv.
      *
      */
-    ThreadError GetNextTlv(TlvRequestIterator &aIterator, uint8_t &aTlv) {
-        ThreadError error = kThreadError_NotFound;
+    otError GetNextTlv(TlvRequestIterator &aIterator, uint8_t &aTlv) {
+        otError error = OT_ERROR_NOT_FOUND;
 
         if (aIterator < GetLength()) {
             aTlv = mTlvs[aIterator];
             aIterator = static_cast<TlvRequestIterator>(aIterator + sizeof(uint8_t));
-            error = kThreadError_None;
+            error = OT_ERROR_NONE;
         }
 
         return error;

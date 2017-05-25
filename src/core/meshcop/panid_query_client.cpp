@@ -50,7 +50,7 @@
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
-#include "thread/thread_uris.hpp"
+#include "thread/thread_uri_paths.hpp"
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
@@ -59,7 +59,7 @@ namespace ot {
 PanIdQueryClient::PanIdQueryClient(ThreadNetif &aThreadNetif) :
     mCallback(NULL),
     mContext(NULL),
-    mPanIdQuery(OPENTHREAD_URI_PANID_CONFLICT, &PanIdQueryClient::HandleConflict, this),
+    mPanIdQuery(OT_URI_PATH_PANID_CONFLICT, &PanIdQueryClient::HandleConflict, this),
     mNetif(aThreadNetif)
 {
     mNetif.GetCoap().AddResource(mPanIdQuery);
@@ -70,10 +70,10 @@ otInstance *PanIdQueryClient::GetInstance(void)
     return mNetif.GetInstance();
 }
 
-ThreadError PanIdQueryClient::SendQuery(uint16_t aPanId, uint32_t aChannelMask, const Ip6::Address &aAddress,
-                                        otCommissionerPanIdConflictCallback aCallback, void *aContext)
+otError PanIdQueryClient::SendQuery(uint16_t aPanId, uint32_t aChannelMask, const Ip6::Address &aAddress,
+                                    otCommissionerPanIdConflictCallback aCallback, void *aContext)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     Coap::Header header;
     MeshCoP::CommissionerSessionIdTlv sessionId;
     MeshCoP::ChannelMask0Tlv channelMask;
@@ -81,16 +81,16 @@ ThreadError PanIdQueryClient::SendQuery(uint16_t aPanId, uint32_t aChannelMask, 
     Ip6::MessageInfo messageInfo;
     Message *message = NULL;
 
-    VerifyOrExit(mNetif.GetCommissioner().GetState() == kCommissionerStateActive, error = kThreadError_InvalidState);
+    VerifyOrExit(mNetif.GetCommissioner().IsActive(), error = OT_ERROR_INVALID_STATE);
 
     header.Init(aAddress.IsMulticast() ? kCoapTypeNonConfirmable : kCoapTypeConfirmable,
                 kCoapRequestPost);
     header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_PANID_QUERY);
+    header.AppendUriPathOptions(OT_URI_PATH_PANID_QUERY);
     header.SetPayloadMarker();
 
     VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(mNetif.GetCoap(), header)) != NULL,
-                 error = kThreadError_NoBufs);
+                 error = OT_ERROR_NO_BUFS);
 
     sessionId.Init();
     sessionId.SetCommissionerSessionId(mNetif.GetCommissioner().GetSessionId());
@@ -117,7 +117,7 @@ ThreadError PanIdQueryClient::SendQuery(uint16_t aPanId, uint32_t aChannelMask, 
 
 exit:
 
-    if (error != kThreadError_None && message != NULL)
+    if (error != OT_ERROR_NONE && message != NULL)
     {
         message->Free();
     }

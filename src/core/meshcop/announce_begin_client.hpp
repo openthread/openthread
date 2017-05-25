@@ -71,11 +71,11 @@ public:
      * @param[in]  aCount         The number of energy measurements per channel.
      * @param[in]  aPeriod        The time between energy measurements (milliseconds).
      *
-     * @retval kThreadError_None    Successfully enqueued the Announce Begin message.
-     * @retval kThreadError_NoBufs  Insufficient buffers to generate a Announce Begin message.
+     * @retval OT_ERROR_NONE     Successfully enqueued the Announce Begin message.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffers to generate a Announce Begin message.
      *
      */
-    ThreadError SendRequest(uint32_t aChannelMask, uint8_t aCount, uint16_t mPeriod, const Ip6::Address &aAddress);
+    otError SendRequest(uint32_t aChannelMask, uint8_t aCount, uint16_t mPeriod, const Ip6::Address &aAddress);
 
 private:
     ThreadNetif &mNetif;

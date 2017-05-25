@@ -118,9 +118,9 @@ void Ip6::SetReceiveDatagramCallback(otIp6ReceiveCallback aCallback, void *aCall
     mReceiveIp6DatagramCallbackContext = aCallbackContext;
 }
 
-ThreadError Ip6::AddMplOption(Message &aMessage, Header &aHeader)
+otError Ip6::AddMplOption(Message &aMessage, Header &aHeader)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     HopByHopHeader hbhHeader;
     OptionMpl mplOption;
     OptionPadN padOption;
@@ -144,9 +144,9 @@ exit:
     return error;
 }
 
-ThreadError Ip6::AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo)
+otError Ip6::AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     Header tunnelHeader;
     const NetifUnicastAddress *source;
     MessageInfo messageInfo(aMessageInfo);
@@ -163,7 +163,7 @@ ThreadError Ip6::AddTunneledMplOption(Message &aMessage, Header &aHeader, Messag
     tunnelHeader.SetNextHeader(kProtoIp6);
 
     VerifyOrExit((source = SelectSourceAddress(messageInfo)) != NULL,
-                 error = kThreadError_Error);
+                 error = OT_ERROR_INVALID_SOURCE_ADDRESS);
 
     tunnelHeader.SetSource(source->GetAddress());
 
@@ -174,9 +174,9 @@ exit:
     return error;
 }
 
-ThreadError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageInfo &aMessageInfo)
+otError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageInfo &aMessageInfo)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aIp6Header.GetDestination().IsMulticast() &&
                  aIp6Header.GetDestination().GetScope() >= Address::kRealmLocalScope);
@@ -234,9 +234,9 @@ exit:
     return error;
 }
 
-ThreadError Ip6::RemoveMplOption(Message &aMessage)
+otError Ip6::RemoveMplOption(Message &aMessage)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     Header ip6Header;
     HopByHopHeader hbh;
     uint16_t offset;
@@ -252,7 +252,7 @@ ThreadError Ip6::RemoveMplOption(Message &aMessage)
 
     aMessage.Read(offset, sizeof(hbh), &hbh);
     endOffset = offset + (hbh.GetLength() + 1) * 8;
-    VerifyOrExit(aMessage.GetLength() >= endOffset, error = kThreadError_Parse);
+    VerifyOrExit(aMessage.GetLength() >= endOffset, error = OT_ERROR_PARSE);
 
     offset += sizeof(hbh);
 
@@ -299,7 +299,7 @@ ThreadError Ip6::RemoveMplOption(Message &aMessage)
     }
 
     // verify that IPv6 Options header is properly formed
-    VerifyOrExit(offset == endOffset, error = kThreadError_Parse);
+    VerifyOrExit(offset == endOffset, error = OT_ERROR_PARSE);
 
     if (remove)
     {
@@ -351,9 +351,9 @@ void Ip6::EnqueueDatagram(Message &aMessage)
     mSendQueueTask.Post();
 }
 
-ThreadError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto aIpProto)
+otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto aIpProto)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     Header header;
     uint16_t payloadLength = aMessage.GetLength();
     uint16_t checksum;
@@ -368,7 +368,7 @@ ThreadError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpPr
         aMessageInfo.GetSockAddr().IsMulticast())
     {
         VerifyOrExit((source = SelectSourceAddress(aMessageInfo)) != NULL,
-                     error = kThreadError_Error);
+                     error = OT_ERROR_INVALID_SOURCE_ADDRESS);
         header.SetSource(source->GetAddress());
     }
     else
@@ -380,7 +380,7 @@ ThreadError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpPr
 
     if (header.GetDestination().IsLinkLocal() || header.GetDestination().IsLinkLocalMulticast())
     {
-        VerifyOrExit(aMessageInfo.GetInterfaceId() != 0, error = kThreadError_Drop);
+        VerifyOrExit(aMessageInfo.GetInterfaceId() != 0, error = OT_ERROR_DROP);
     }
 
     if (aMessageInfo.GetPeerAddr().IsRealmLocalMulticast())
@@ -416,7 +416,7 @@ ThreadError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpPr
 
 exit:
 
-    if (error == kThreadError_None)
+    if (error == OT_ERROR_NONE)
     {
         aMessage.SetInterfaceId(aMessageInfo.GetInterfaceId());
         EnqueueDatagram(aMessage);
@@ -441,25 +441,25 @@ void Ip6::HandleSendQueue(void)
     }
 }
 
-ThreadError Ip6::HandleOptions(Message &aMessage, Header &aHeader, bool &aForward)
+otError Ip6::HandleOptions(Message &aMessage, Header &aHeader, bool &aForward)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     HopByHopHeader hbhHeader;
     OptionHeader optionHeader;
     uint16_t endOffset;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(hbhHeader), &hbhHeader) == sizeof(hbhHeader),
-                 error = kThreadError_Drop);
+                 error = OT_ERROR_DROP);
     endOffset = aMessage.GetOffset() + (hbhHeader.GetLength() + 1) * 8;
 
-    VerifyOrExit(endOffset <= aMessage.GetLength(), error = kThreadError_Drop);
+    VerifyOrExit(endOffset <= aMessage.GetLength(), error = OT_ERROR_DROP);
 
     aMessage.MoveOffset(sizeof(optionHeader));
 
     while (aMessage.GetOffset() < endOffset)
     {
         VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(optionHeader), &optionHeader) == sizeof(optionHeader),
-                     error = kThreadError_Drop);
+                     error = OT_ERROR_DROP);
 
         if (optionHeader.GetType() == OptionPad1::kType)
         {
@@ -468,7 +468,7 @@ ThreadError Ip6::HandleOptions(Message &aMessage, Header &aHeader, bool &aForwar
         }
 
         VerifyOrExit(aMessage.GetOffset() + sizeof(optionHeader) + optionHeader.GetLength() <= endOffset,
-                     error = kThreadError_Drop);
+                     error = OT_ERROR_DROP);
 
         switch (optionHeader.GetType())
         {
@@ -483,15 +483,15 @@ ThreadError Ip6::HandleOptions(Message &aMessage, Header &aHeader, bool &aForwar
                 break;
 
             case OptionHeader::kActionDiscard:
-                ExitNow(error = kThreadError_Drop);
+                ExitNow(error = OT_ERROR_DROP);
 
             case OptionHeader::kActionForceIcmp:
                 // TODO: send icmp error
-                ExitNow(error = kThreadError_Drop);
+                ExitNow(error = OT_ERROR_DROP);
 
             case OptionHeader::kActionIcmp:
                 // TODO: send icmp error
-                ExitNow(error = kThreadError_Drop);
+                ExitNow(error = OT_ERROR_DROP);
 
             }
 
@@ -505,16 +505,16 @@ exit:
     return error;
 }
 
-ThreadError Ip6::HandleFragment(Message &aMessage)
+otError Ip6::HandleFragment(Message &aMessage)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     FragmentHeader fragmentHeader;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(fragmentHeader), &fragmentHeader) == sizeof(fragmentHeader),
-                 error = kThreadError_Drop);
+                 error = OT_ERROR_DROP);
 
     VerifyOrExit(fragmentHeader.GetOffset() == 0 && fragmentHeader.IsMoreFlagSet() == false,
-                 error = kThreadError_Drop);
+                 error = OT_ERROR_DROP);
 
     aMessage.MoveOffset(sizeof(fragmentHeader));
 
@@ -522,16 +522,16 @@ exit:
     return error;
 }
 
-ThreadError Ip6::HandleExtensionHeaders(Message &aMessage, Header &aHeader, uint8_t &aNextHeader, bool aForward,
-                                        bool aReceive)
+otError Ip6::HandleExtensionHeaders(Message &aMessage, Header &aHeader, uint8_t &aNextHeader, bool aForward,
+                                    bool aReceive)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     ExtensionHeader extHeader;
 
     while (aReceive == true || aNextHeader == kProtoHopOpts)
     {
         VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(extHeader), &extHeader) == sizeof(extHeader),
-                     error = kThreadError_Drop);
+                     error = OT_ERROR_DROP);
 
         switch (aNextHeader)
         {
@@ -552,7 +552,7 @@ ThreadError Ip6::HandleExtensionHeaders(Message &aMessage, Header &aHeader, uint
 
         case kProtoRouting:
         case kProtoNone:
-            ExitNow(error = kThreadError_Drop);
+            ExitNow(error = OT_ERROR_DROP);
 
         default:
             ExitNow();
@@ -565,9 +565,9 @@ exit:
     return error;
 }
 
-ThreadError Ip6::HandlePayload(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto)
+otError Ip6::HandlePayload(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     switch (aIpProto)
     {
@@ -582,14 +582,14 @@ exit:
     return error;
 }
 
-ThreadError Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto,
-                                        bool aFromNcpHost)
+otError Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto,
+                                    bool aFromNcpHost)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     Message *messageCopy = NULL;
 
-    VerifyOrExit(aFromNcpHost == false, error = kThreadError_Drop);
-    VerifyOrExit(mReceiveIp6DatagramCallback != NULL, error = kThreadError_NoRoute);
+    VerifyOrExit(aFromNcpHost == false, error = OT_ERROR_DROP);
+    VerifyOrExit(mReceiveIp6DatagramCallback != NULL, error = OT_ERROR_NO_ROUTE);
 
     if (mIsReceiveIp6FilterEnabled)
     {
@@ -598,7 +598,7 @@ ThreadError Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageIn
                      !aMessageInfo.GetPeerAddr().IsRoutingLocator() &&
                      !aMessageInfo.GetSockAddr().IsAnycastRoutingLocator() &&
                      !aMessageInfo.GetPeerAddr().IsAnycastRoutingLocator(),
-                     error = kThreadError_NoRoute);
+                     error = OT_ERROR_NO_ROUTE);
 
         switch (aIpProto)
         {
@@ -609,7 +609,7 @@ ThreadError Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageIn
                 aMessage.Read(aMessage.GetOffset(), sizeof(icmp), &icmp);
 
                 // do not pass ICMP Echo Request messages
-                VerifyOrExit(icmp.GetType() != kIcmp6TypeEchoRequest, error = kThreadError_NoRoute);
+                VerifyOrExit(icmp.GetType() != kIcmp6TypeEchoRequest, error = OT_ERROR_NO_ROUTE);
             }
 
             break;
@@ -622,7 +622,7 @@ ThreadError Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageIn
                 aMessage.Read(aMessage.GetOffset(), sizeof(udp), &udp);
 
                 // do not pass MLE messages
-                VerifyOrExit(udp.GetDestinationPort() != Mle::kUdpPort, error = kThreadError_NoRoute);
+                VerifyOrExit(udp.GetDestinationPort() != Mle::kUdpPort, error = OT_ERROR_NO_ROUTE);
             }
 
             break;
@@ -633,7 +633,7 @@ ThreadError Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageIn
     }
 
     // make a copy of the datagram to pass to host
-    VerifyOrExit((messageCopy = aMessage.Clone()) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((messageCopy = aMessage.Clone()) != NULL, error = OT_ERROR_NO_BUFS);
     RemoveMplOption(*messageCopy);
     mReceiveIp6DatagramCallback(messageCopy, mReceiveIp6DatagramCallbackContext);
 
@@ -641,12 +641,12 @@ exit:
 
     switch (error)
     {
-    case kThreadError_NoBufs:
+    case OT_ERROR_NO_BUFS:
         otLogInfoIp6(GetInstance(), "Failed to pass up message (len: %d) to host - out of message buffer.",
                      aMessage.GetLength());
         break;
 
-    case kThreadError_Drop:
+    case OT_ERROR_DROP:
         otLogInfoIp6(GetInstance(), "Dropping message (len: %d) from local host since next hop is the host.",
                      aMessage.GetLength());
         break;
@@ -658,10 +658,10 @@ exit:
     return error;
 }
 
-ThreadError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, int8_t aInterfaceId, const void *aLinkMessageInfo,
-                                bool aFromNcpHost)
+otError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, int8_t aInterfaceId, const void *aLinkMessageInfo,
+                            bool aFromNcpHost)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     MessageInfo messageInfo;
     Header header;
     uint16_t payloadLength;
@@ -682,15 +682,15 @@ ThreadError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, int8_t aInterf
 #endif
 
     // check aMessage length
-    VerifyOrExit(aMessage.Read(0, sizeof(header), &header) == sizeof(header), error = kThreadError_Drop);
+    VerifyOrExit(aMessage.Read(0, sizeof(header), &header) == sizeof(header), error = OT_ERROR_DROP);
     payloadLength = header.GetPayloadLength();
 
     // check Version
-    VerifyOrExit(header.IsVersion6(), error = kThreadError_Drop);
+    VerifyOrExit(header.IsVersion6(), error = OT_ERROR_DROP);
 
     // check Payload Length
     VerifyOrExit(sizeof(header) + payloadLength == aMessage.GetLength() &&
-                 sizeof(header) + payloadLength <= Ip6::kMaxDatagramLength, error = kThreadError_Drop);
+                 sizeof(header) + payloadLength <= Ip6::kMaxDatagramLength, error = OT_ERROR_DROP);
 
     messageInfo.SetPeerAddr(header.GetSource());
     messageInfo.SetSockAddr(header.GetDestination());
@@ -794,7 +794,7 @@ ThreadError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, int8_t aInterf
         if (header.GetHopLimit() == 0)
         {
             // send time exceeded
-            ExitNow(error = kThreadError_Drop);
+            ExitNow(error = OT_ERROR_DROP);
         }
         else
         {
@@ -802,14 +802,14 @@ ThreadError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, int8_t aInterf
             aMessage.Write(Header::GetHopLimitOffset(), Header::GetHopLimitSize(), &hopLimit);
 
             // submit aMessage to interface
-            VerifyOrExit((aNetif = GetNetifById(forwardInterfaceId)) != NULL, error = kThreadError_NoRoute);
+            VerifyOrExit((aNetif = GetNetifById(forwardInterfaceId)) != NULL, error = OT_ERROR_NO_ROUTE);
             SuccessOrExit(error = aNetif->SendMessage(aMessage));
         }
     }
 
 exit:
 
-    if (!tunnel && (error != kThreadError_None || !forward))
+    if (!tunnel && (error != OT_ERROR_NONE || !forward))
     {
         aMessage.Free();
     }
@@ -854,9 +854,9 @@ int8_t Ip6::FindForwardInterfaceId(const MessageInfo &aMessageInfo)
     return interfaceId;
 }
 
-ThreadError Ip6::AddNetif(Netif &aNetif)
+otError Ip6::AddNetif(Netif &aNetif)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     Netif *netif;
 
     if (mNetifListHead == NULL)
@@ -871,7 +871,7 @@ ThreadError Ip6::AddNetif(Netif &aNetif)
         {
             if (netif == &aNetif || netif->mInterfaceId == aNetif.mInterfaceId)
             {
-                ExitNow(error = kThreadError_Already);
+                ExitNow(error = OT_ERROR_ALREADY);
             }
         }
         while (netif->mNext);
@@ -885,11 +885,11 @@ exit:
     return error;
 }
 
-ThreadError Ip6::RemoveNetif(Netif &aNetif)
+otError Ip6::RemoveNetif(Netif &aNetif)
 {
-    ThreadError error = kThreadError_NotFound;
+    otError error = OT_ERROR_NOT_FOUND;
 
-    VerifyOrExit(mNetifListHead != NULL, error = kThreadError_NotFound);
+    VerifyOrExit(mNetifListHead != NULL, error = OT_ERROR_NOT_FOUND);
 
     if (mNetifListHead == &aNetif)
     {
@@ -905,7 +905,7 @@ ThreadError Ip6::RemoveNetif(Netif &aNetif)
             }
 
             netif->mNext = aNetif.mNext;
-            error = kThreadError_None;
+            error = OT_ERROR_NONE;
             break;
         }
     }

@@ -419,7 +419,7 @@ void TestNcpFrameBuffer(void)
 
     VerifyOrQuit(ncpBuffer.IsEmpty() == true, "IsEmpty() is incorrect when buffer is empty.");
     VerifyOrQuit(ncpBuffer.OutFrameHasEnded() == true, "OutFrameHasEnded() is incorrect when no data in buffer.");
-    VerifyOrQuit(ncpBuffer.OutFrameRemove() == kThreadError_NotFound,
+    VerifyOrQuit(ncpBuffer.OutFrameRemove() == OT_ERROR_NOT_FOUND,
                  "Remove() returned incorrect error status when buffer is empty.");
     VerifyOrQuit(ncpBuffer.OutFrameGetLength() == 0, "OutFrameGetLength() returned non-zero length when buffer is empty.");
     VerifyOrQuit(oldContext.mEmptyCount + 1 == context.mEmptyCount, "Empty callback was not invoked.");
@@ -432,7 +432,7 @@ void TestNcpFrameBuffer(void)
 
     VerifyOrQuit(ncpBuffer.IsEmpty() == true, "IsEmpty() is incorrect when buffer is empty.");
     VerifyOrQuit(ncpBuffer.OutFrameHasEnded() == true, "OutFrameHasEnded() is incorrect when no data in buffer.");
-    VerifyOrQuit(ncpBuffer.OutFrameRemove() == kThreadError_NotFound,
+    VerifyOrQuit(ncpBuffer.OutFrameRemove() == OT_ERROR_NOT_FOUND,
                  "Remove() returned incorrect error status when buffer is empty.");
     VerifyOrQuit(ncpBuffer.OutFrameGetLength() == 0, "OutFrameGetLength() returned non-zero length when buffer is empty.");
     VerifyOrQuit(oldContext.mEmptyCount + 1 == context.mEmptyCount, "Empty callback was not invoked.");
