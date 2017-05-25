@@ -3735,7 +3735,7 @@ otError NcpBase::SetPropertyHandler_HOST_POWER_STATE(uint8_t header, spinel_prop
     if (parsedLength > 0)
     {
         switch (value)
-        {        
+        {
         case SPINEL_HOST_POWER_STATE_OFFLINE:
         case SPINEL_HOST_POWER_STATE_DEEP_SLEEP:
         case SPINEL_HOST_POWER_STATE_LOW_POWER:
@@ -6025,7 +6025,7 @@ otError NcpBase::SetPropertyHandler_DEBUG_NCP_LOG_LEVEL(uint8_t header, spinel_p
         }
         else
         {
-            if (errorCode == OT_ERROR_NOT_CAPABLE)
+            if (errorCode == OT_ERROR_DISABLED_FEATURE)
             {
                 errorCode = SendLastStatus(header, SPINEL_STATUS_INVALID_COMMAND_FOR_PROP);
             }

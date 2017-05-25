@@ -278,8 +278,9 @@ otLogLevel otGetDynamicLogLevel(otInstance *aInstance);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aLogLevel The dynamic log level.
  *
- * @retval OT_ERROR_NONE          The log level was changed successfully.
- * @retval OT_ERROR_NOT_CAPABLE   The dynamic log level is not supported.
+ * @retval OT_ERROR_NONE               The log level was changed successfully.
+ * @retval OT_ERROR_DISABLED_FEATURE   The dynamic log level feature is disabled.
+ *                                     (@sa `OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL` configuration option).
  *
  */
 otError otSetDynamicLogLevel(otInstance *aInstance, otLogLevel aLogLevel);
