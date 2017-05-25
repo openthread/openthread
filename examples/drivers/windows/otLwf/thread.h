@@ -44,7 +44,7 @@ __inline PMS_FILTER otCtxToFilter(_In_ otInstance* otCtx)
 // Helper function to indicate if a role means it is attached or not
 _inline BOOLEAN IsAttached(_In_ otDeviceRole role)
 {
-    return role > kDeviceRoleDetached;
+    return role > OT_DEVICE_ROLE_DETACHED;
 }
 
 //

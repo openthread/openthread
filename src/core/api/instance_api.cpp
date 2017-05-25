@@ -211,7 +211,7 @@ otError otInstanceErasePersistentInfo(otInstance *aInstance)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(otThreadGetDeviceRole(aInstance) == kDeviceRoleDisabled, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(otThreadGetDeviceRole(aInstance) ==  OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
     otPlatSettingsWipe(aInstance);
 
 exit:

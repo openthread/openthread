@@ -194,7 +194,7 @@ void SupervisionListener::UpdateOnReceive(const Mac::Address &aSourceAddress, bo
 {
     // If listener is enabled and device is a child and it received a secure frame from its parent, restart the timer.
 
-    VerifyOrExit(mTimer.IsRunning() && aIsSecure  && (mNetif.GetMle().GetDeviceState() == Mle::kDeviceStateChild) &&
+    VerifyOrExit(mTimer.IsRunning() && aIsSecure  && (mNetif.GetMle().GetRole() == OT_DEVICE_ROLE_CHILD) &&
                  (mNetif.GetMle().GetNeighbor(aSourceAddress) == mNetif.GetMle().GetParent()));
 
     RestartTimer();
@@ -207,7 +207,7 @@ void SupervisionListener::RestartTimer(void)
 {
     // Restart the timer, if the timeout value is non-zero and the device is a sleepy child.
 
-    if ((mTimeout != 0) && (mNetif.GetMle().GetDeviceState() == Mle::kDeviceStateChild) &&
+    if ((mTimeout != 0) && (mNetif.GetMle().GetRole() == OT_DEVICE_ROLE_CHILD) &&
         (mNetif.GetMeshForwarder().GetRxOnWhenIdle() == false))
     {
         mTimer.Start(Timer::SecToMsec(mTimeout));
@@ -225,7 +225,7 @@ void SupervisionListener::HandleTimer(void *aContext)
 
 void SupervisionListener::HandleTimer(void)
 {
-    VerifyOrExit((mNetif.GetMle().GetDeviceState() == Mle::kDeviceStateChild) &&
+    VerifyOrExit((mNetif.GetMle().GetRole() == OT_DEVICE_ROLE_CHILD) &&
                  (mNetif.GetMeshForwarder().GetRxOnWhenIdle() == false));
 
     otLogWarnMle(mNetif.GetInstance(), "Supervision timeout. No frame from parent in %d sec", mTimeout);

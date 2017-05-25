@@ -236,7 +236,7 @@ otError Local::SendServerDataNotification(void)
 
     if ((mNetif.GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD) != 0 &&
         (mNetif.GetMle().IsRouterRoleEnabled()) &&
-        (mNetif.GetMle().GetDeviceState() < Mle::kDeviceStateRouter) &&
+        (mNetif.GetMle().GetRole() < OT_DEVICE_ROLE_ROUTER) &&
         (mNetif.GetMle().GetActiveRouterCount() < mNetif.GetMle().GetRouterUpgradeThreshold()))
     {
         ExitNow(error = OT_ERROR_INVALID_STATE);

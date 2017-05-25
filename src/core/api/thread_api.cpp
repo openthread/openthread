@@ -62,7 +62,7 @@ otError otThreadSetExtendedPanId(otInstance *aInstance, const uint8_t *aExtended
     otError error = OT_ERROR_NONE;
     uint8_t mlPrefix[8];
 
-    VerifyOrExit(aInstance->mThreadNetif.GetMle().GetDeviceState() == Mle::kDeviceStateDisabled,
+    VerifyOrExit(aInstance->mThreadNetif.GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED,
                  error = OT_ERROR_INVALID_STATE);
 
     aInstance->mThreadNetif.GetMac().SetExtendedPanId(aExtendedPanId);
@@ -159,7 +159,7 @@ otError otThreadSetMasterKey(otInstance *aInstance, const otMasterKey *aKey)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aKey != NULL, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(aInstance->mThreadNetif.GetMle().GetDeviceState() == Mle::kDeviceStateDisabled,
+    VerifyOrExit(aInstance->mThreadNetif.GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED,
                  error = OT_ERROR_INVALID_STATE);
 
     error = aInstance->mThreadNetif.GetKeyManager().SetMasterKey(*aKey);
@@ -184,7 +184,7 @@ otError otThreadSetMeshLocalPrefix(otInstance *aInstance, const uint8_t *aMeshLo
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aInstance->mThreadNetif.GetMle().GetDeviceState() == Mle::kDeviceStateDisabled,
+    VerifyOrExit(aInstance->mThreadNetif.GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED,
                  error = OT_ERROR_INVALID_STATE);
 
     error = aInstance->mThreadNetif.GetMle().SetMeshLocalPrefix(aMeshLocalPrefix);
@@ -204,7 +204,7 @@ otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aInstance->mThreadNetif.GetMle().GetDeviceState() == Mle::kDeviceStateDisabled,
+    VerifyOrExit(aInstance->mThreadNetif.GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED,
                  error = OT_ERROR_INVALID_STATE);
 
     error = aInstance->mThreadNetif.GetMac().SetNetworkName(aNetworkName);
@@ -259,32 +259,7 @@ exit:
 
 otDeviceRole otThreadGetDeviceRole(otInstance *aInstance)
 {
-    otDeviceRole rval = kDeviceRoleDisabled;
-
-    switch (aInstance->mThreadNetif.GetMle().GetDeviceState())
-    {
-    case Mle::kDeviceStateDisabled:
-        rval = kDeviceRoleDisabled;
-        break;
-
-    case Mle::kDeviceStateDetached:
-        rval = kDeviceRoleDetached;
-        break;
-
-    case Mle::kDeviceStateChild:
-        rval = kDeviceRoleChild;
-        break;
-
-    case Mle::kDeviceStateRouter:
-        rval = kDeviceRoleRouter;
-        break;
-
-    case Mle::kDeviceStateLeader:
-        rval = kDeviceRoleLeader;
-        break;
-    }
-
-    return rval;
+    return static_cast<otDeviceRole>(aInstance->mThreadNetif.GetMle().GetRole());
 }
 
 otError otThreadGetLeaderData(otInstance *aInstance, otLeaderData *aLeaderData)

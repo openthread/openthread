@@ -332,13 +332,12 @@ const char* otDeviceRoleToString(otDeviceRole role)
 {
     switch (role)
     {
-    case kDeviceRoleOffline:  return "offline";
-    case kDeviceRoleDisabled: return "disabled";
-    case kDeviceRoleDetached: return "detached";
-    case kDeviceRoleChild:    return "child";
-    case kDeviceRoleRouter:   return "router";
-    case kDeviceRoleLeader:   return "leader";
-    default:                  return "invalid";
+    case OT_DEVICE_ROLE_DISABLED: return "disabled";
+    case OT_DEVICE_ROLE_DETACHED: return "detached";
+    case OT_DEVICE_ROLE_CHILD:    return "child";
+    case OT_DEVICE_ROLE_ROUTER:   return "router";
+    case OT_DEVICE_ROLE_LEADER:   return "leader";
+    default:                      return "invalid";
     }
 }
 
@@ -392,7 +391,7 @@ PingHandlerRecvCallback(
             memcmp(RecvDest, &RealmLocalAllRoutersAddress, sizeof(IN6_ADDR)) == 0)
         {
             auto Role = otThreadGetDeviceRole(aPingHandler->mParentNode->mInstance);
-            if (Role != kDeviceRoleLeader && Role != kDeviceRoleRouter)
+            if (Role != OT_DEVICE_ROLE_LEADER && Role != OT_DEVICE_ROLE_ROUTER)
                 shouldReply = false;
         }
 

@@ -293,7 +293,7 @@ void Leader::HandleTimer(void *aContext)
 
 void Leader::HandleTimer(void)
 {
-    VerifyOrExit(mNetif.GetMle().GetDeviceState() == Mle::kDeviceStateLeader);
+    VerifyOrExit(mNetif.GetMle().GetRole() == OT_DEVICE_ROLE_LEADER);
 
     ResignCommissioner();
 

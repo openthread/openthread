@@ -146,18 +146,18 @@ otError otThreadBecomeRouter(otInstance *aInstance)
 {
     otError error = OT_ERROR_INVALID_STATE;
 
-    switch (aInstance->mThreadNetif.GetMle().GetDeviceState())
+    switch (aInstance->mThreadNetif.GetMle().GetRole())
     {
-    case Mle::kDeviceStateDisabled:
-    case Mle::kDeviceStateDetached:
+    case OT_DEVICE_ROLE_DISABLED:
+    case OT_DEVICE_ROLE_DETACHED:
         break;
 
-    case Mle::kDeviceStateChild:
+    case OT_DEVICE_ROLE_CHILD:
         error = aInstance->mThreadNetif.GetMle().BecomeRouter(ThreadStatusTlv::kHaveChildIdRequest);
         break;
 
-    case Mle::kDeviceStateRouter:
-    case Mle::kDeviceStateLeader:
+    case OT_DEVICE_ROLE_ROUTER:
+    case OT_DEVICE_ROLE_LEADER:
         error = OT_ERROR_NONE;
         break;
     }
@@ -267,7 +267,7 @@ otError otThreadSetPSKc(otInstance *aInstance, const uint8_t *aPSKc)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aInstance->mThreadNetif.GetMle().GetDeviceState() == Mle::kDeviceStateDisabled,
+    VerifyOrExit(aInstance->mThreadNetif.GetMle().GetRole() == OT_DEVICE_ROLE_DISABLED,
                  error = OT_ERROR_INVALID_STATE);
 
     aInstance->mThreadNetif.GetKeyManager().SetPSKc(aPSKc);

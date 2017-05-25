@@ -387,11 +387,11 @@ OTAPI otError OTCALL otThreadGetNextNeighborInfo(otInstance *aInstance, otNeighb
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * @retval ::kDeviceRoleDisabled  The Thread stack is disabled.
- * @retval ::kDeviceRoleDetached  The device is not currently participating in a Thread network/partition.
- * @retval ::kDeviceRoleChild     The device is currently operating as a Thread Child.
- * @retval ::kDeviceRoleRouter    The device is currently operating as a Thread Router.
- * @retval ::kDeviceRoleLeader    The device is currently operating as a Thread Leader.
+ * @retval OT_DEVICE_ROLE_DISABLED  The Thread stack is disabled.
+ * @retval OT_DEVICE_ROLE_DETACHED  The device is not currently participating in a Thread network/partition.
+ * @retval OT_DEVICE_ROLE_CHILD     The device is currently operating as a Thread Child.
+ * @retval OT_DEVICE_ROLE_ROUTER    The device is currently operating as a Thread Router.
+ * @retval OT_DEVICE_ROLE_LEADER    The device is currently operating as a Thread Leader.
  */
 OTAPI otDeviceRole OTCALL otThreadGetDeviceRole(otInstance *aInstance);
 

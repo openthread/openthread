@@ -782,12 +782,11 @@ typedef struct otMacBlacklistEntry
  */
 typedef enum
 {
-    kDeviceRoleOffline,   ///< The Thread device is offline and unavailable.
-    kDeviceRoleDisabled,  ///< The Thread stack is disabled.
-    kDeviceRoleDetached,  ///< Not currently participating in a Thread network/partition.
-    kDeviceRoleChild,     ///< The Thread Child role.
-    kDeviceRoleRouter,    ///< The Thread Router role.
-    kDeviceRoleLeader,    ///< The Thread Leader role.
+    OT_DEVICE_ROLE_DISABLED = 0,  ///< The Thread stack is disabled.
+    OT_DEVICE_ROLE_DETACHED = 1,  ///< Not currently participating in a Thread network/partition.
+    OT_DEVICE_ROLE_CHILD    = 2,  ///< The Thread Child role.
+    OT_DEVICE_ROLE_ROUTER   = 3,  ///< The Thread Router role.
+    OT_DEVICE_ROLE_LEADER   = 4,  ///< The Thread Leader role.
 } otDeviceRole;
 
 /**

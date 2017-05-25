@@ -91,19 +91,6 @@ class MleRouter;
  */
 
 /**
- * MLE Device states
- *
- */
-enum DeviceState
-{
-    kDeviceStateDisabled = 0,   ///< Thread interface is disabled.
-    kDeviceStateDetached = 1,   ///< Thread interface is not attached to a partition.
-    kDeviceStateChild    = 2,   ///< Thread interface participating as a Child.
-    kDeviceStateRouter   = 3,   ///< Thread interface participating as a Router.
-    kDeviceStateLeader   = 4,   ///< Thread interface participating as a Leader.
-};
-
-/**
  * MLE Attach modes
  *
  */
@@ -626,7 +613,7 @@ public:
      * @returns The current Thread interface state.
      *
      */
-    DeviceState GetDeviceState(void) const { return mDeviceState; }
+    otDeviceRole GetRole(void) const { return mRole; }
 
     /**
      * This method returns the Device Mode as reported in the Mode TLV.
@@ -1316,7 +1303,7 @@ protected:
     LeaderDataTlv mLeaderData;              ///< Last received Leader Data TLV.
     bool mRetrieveNewNetworkData;           ///< Indicating new Network Data is needed if set.
 
-    DeviceState mDeviceState;               ///< Current Thread interface state.
+    otDeviceRole mRole;                     ///< Current Thread role.
     Router mParent;                         ///< Parent information.
     uint8_t mDeviceMode;                    ///< Device mode setting.
 

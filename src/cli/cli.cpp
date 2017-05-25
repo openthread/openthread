@@ -2412,29 +2412,25 @@ void Interpreter::ProcessState(int argc, char *argv[])
     {
         switch (otThreadGetDeviceRole(mInstance))
         {
-        case kDeviceRoleOffline:
-            sServer->OutputFormat("offline\r\n");
-            break;
-
-        case kDeviceRoleDisabled:
+        case OT_DEVICE_ROLE_DISABLED:
             sServer->OutputFormat("disabled\r\n");
             break;
 
-        case kDeviceRoleDetached:
+        case OT_DEVICE_ROLE_DETACHED:
             sServer->OutputFormat("detached\r\n");
             break;
 
-        case kDeviceRoleChild:
+        case OT_DEVICE_ROLE_CHILD:
             sServer->OutputFormat("child\r\n");
             break;
 
 #if OPENTHREAD_FTD
 
-        case kDeviceRoleRouter:
+        case OT_DEVICE_ROLE_ROUTER:
             sServer->OutputFormat("router\r\n");
             break;
 
-        case kDeviceRoleLeader:
+        case OT_DEVICE_ROLE_LEADER:
             sServer->OutputFormat("leader\r\n");
             break;
 #endif  // OPENTHREAD_FTD

@@ -74,7 +74,7 @@ otPlatReset(
     pFilter->otPendingMacOffloadEnabled = FALSE;
 
     // Reinitialize the OpenThread library
-    pFilter->otCachedRole = kDeviceRoleDisabled;
+    pFilter->otCachedRole = OT_DEVICE_ROLE_DISABLED;
     pFilter->otCtx = otInstanceInit(pFilter->otInstanceBuffer + sizeof(PMS_FILTER), &pFilter->otInstanceSize);
     ASSERT(pFilter->otCtx);
 

@@ -364,7 +364,7 @@ typedef enum _OTLWF_NOTIF_TYPE
     OTLWF_CTL_CODE(139, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA)
     // GUID - InterfaceGuid
     // otDeviceRole - aRole
-    // otMleAttachFilter - aFilter (only for kDeviceRoleChild)
+    // otMleAttachFilter - aFilter (only for OT_DEVICE_ROLE_CHILD)
 
 #define IOCTL_OTLWF_OT_CHILD_INFO_BY_ID \
     OTLWF_CTL_CODE(140, METHOD_BUFFERED, FILE_READ_DATA)

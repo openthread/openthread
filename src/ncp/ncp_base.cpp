@@ -1129,8 +1129,8 @@ void NcpBase::UpdateChangedProps(void)
             {
                 switch (otThreadGetDeviceRole(mInstance))
                 {
-                case kDeviceRoleDetached:
-                case kDeviceRoleDisabled:
+                case OT_DEVICE_ROLE_DETACHED:
+                case OT_DEVICE_ROLE_DISABLED:
                     break;
 
                 default:
@@ -1138,7 +1138,7 @@ void NcpBase::UpdateChangedProps(void)
                     break;
                 }
 
-                if ( (otThreadGetDeviceRole(mInstance) == kDeviceRoleLeader)
+                if ( (otThreadGetDeviceRole(mInstance) == OT_DEVICE_ROLE_LEADER)
                   && otThreadIsSingleton(mInstance)
 #if OPENTHREAD_ENABLE_LEGACY
                   && !mLegacyNodeDidJoin
@@ -2301,7 +2301,7 @@ otError NcpBase::GetPropertyHandler_NET_STACK_UP(uint8_t header, spinel_prop_key
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_BOOL_S,
-               otThreadGetDeviceRole(mInstance) != kDeviceRoleDisabled
+               otThreadGetDeviceRole(mInstance) != OT_DEVICE_ROLE_DISABLED
            );
 }
 
@@ -2311,21 +2311,20 @@ otError NcpBase::GetPropertyHandler_NET_ROLE(uint8_t header, spinel_prop_key_t k
 
     switch (otThreadGetDeviceRole(mInstance))
     {
-    case kDeviceRoleOffline:
-    case kDeviceRoleDisabled:
-    case kDeviceRoleDetached:
+    case OT_DEVICE_ROLE_DISABLED:
+    case OT_DEVICE_ROLE_DETACHED:
         role = SPINEL_NET_ROLE_DETACHED;
         break;
 
-    case kDeviceRoleChild:
+    case OT_DEVICE_ROLE_CHILD:
         role = SPINEL_NET_ROLE_CHILD;
         break;
 
-    case kDeviceRoleRouter:
+    case OT_DEVICE_ROLE_ROUTER:
         role = SPINEL_NET_ROLE_ROUTER;
         break;
 
-    case kDeviceRoleLeader:
+    case OT_DEVICE_ROLE_LEADER:
         role = SPINEL_NET_ROLE_LEADER;
         break;
     }
@@ -4516,7 +4515,7 @@ otError NcpBase::SetPropertyHandler_NET_STACK_UP(uint8_t header, spinel_prop_key
     if (parsedLength > 0)
     {
         // If the value has changed...
-        if ((value != false) != (otThreadGetDeviceRole(mInstance) != kDeviceRoleDisabled))
+        if ((value != false) != (otThreadGetDeviceRole(mInstance) != OT_DEVICE_ROLE_DISABLED))
         {
             if (value != false)
             {
@@ -7220,7 +7219,7 @@ void NcpBase::RegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers)
 
     VerifyOrExit(mLegacyHandlers != NULL);
 
-    isEnabled = (otThreadGetDeviceRole(mInstance) != kDeviceRoleDisabled);
+    isEnabled = (otThreadGetDeviceRole(mInstance) != OT_DEVICE_ROLE_DISABLED);
 
     if (isEnabled)
     {

@@ -106,15 +106,15 @@ void ExampleProcess(otInstance *aInstance)
 
     switch (devRole)
     {
-    case kDeviceRoleLeader:
+    case OT_DEVICE_ROLE_LEADER:
         thrValue = LEADER_BLINK_TIME;
         break;
 
-    case kDeviceRoleRouter:
+    case OT_DEVICE_ROLE_ROUTER:
         thrValue = ROUTER_BLINK_TIME;
         break;
 
-    case kDeviceRoleChild:
+    case OT_DEVICE_ROLE_CHILD:
         thrValue = CHILD_BLINK_TIME;
         break;
 
