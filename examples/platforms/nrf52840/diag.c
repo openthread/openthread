@@ -254,7 +254,7 @@ void otPlatDiagRadioReceived(otInstance *aInstance, RadioPacket *aFrame, otError
 
             if (strncmp(message->mMessageDescriptor, "DiagMessage", 11) == 0)
             {
-                otPlatLog(kLogLevelDebg, kLogRegionPlatform,
+                otPlatLog(OT_LOG_LEVEL_DEBG, OT_LOG_REGION_PLATFORM,
                           "{\"Frame\":{"
                           "\"LocalChannel\":%u ,"
                           "\"RemoteChannel\":%u,"
@@ -307,7 +307,7 @@ void otPlatDiagAlarmCallback(otInstance *aInstance)
         {
             sTransmitActive = false;
             otPlatAlarmStop(aInstance);
-            otPlatLog(kLogLevelDebg, kLogRegionPlatform, "Transmit done");
+            otPlatLog(OT_LOG_LEVEL_DEBG, OT_LOG_REGION_PLATFORM, "Transmit done");
         }
     }
 }

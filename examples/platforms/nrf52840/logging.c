@@ -76,16 +76,16 @@ static inline const char *levelToString(otLogLevel aLogLevel)
 {
     switch (aLogLevel)
     {
-    case kLogLevelCrit:
+    case OT_LOG_LEVEL_CRIT:
         return RTT_COLOR_CODE_RED;
 
-    case kLogLevelWarn:
+    case OT_LOG_LEVEL_WARN:
         return RTT_COLOR_CODE_YELLOW;
 
-    case kLogLevelInfo:
+    case OT_LOG_LEVEL_INFO:
         return RTT_COLOR_CODE_GREEN;
 
-    case kLogLevelDebg:
+    case OT_LOG_LEVEL_DEBG:
     default:
         return RTT_COLOR_CODE_DEFAULT;
     }

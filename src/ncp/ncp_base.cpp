@@ -3443,23 +3443,23 @@ otError NcpBase::GetPropertyHandler_DEBUG_NCP_LOG_LEVEL(uint8_t header, spinel_p
 
     switch (otGetDynamicLogLevel(mInstance))
     {
-    case kLogLevelNone:
+    case OT_LOG_LEVEL_NONE:
         logLevel = SPINEL_NCP_LOG_LEVEL_EMERG;
         break;
 
-    case kLogLevelCrit:
+    case OT_LOG_LEVEL_CRIT:
         logLevel = SPINEL_NCP_LOG_LEVEL_CRIT;
         break;
 
-    case kLogLevelWarn:
+    case OT_LOG_LEVEL_WARN:
         logLevel = SPINEL_NCP_LOG_LEVEL_WARN;
         break;
 
-    case kLogLevelInfo:
+    case OT_LOG_LEVEL_INFO:
         logLevel = SPINEL_NCP_LOG_LEVEL_INFO;
         break;
 
-    case kLogLevelDebg:
+    case OT_LOG_LEVEL_DEBG:
         logLevel = SPINEL_NCP_LOG_LEVEL_DEBUG;
         break;
     }
@@ -5988,25 +5988,25 @@ otError NcpBase::SetPropertyHandler_DEBUG_NCP_LOG_LEVEL(uint8_t header, spinel_p
         {
         case SPINEL_NCP_LOG_LEVEL_EMERG:
         case SPINEL_NCP_LOG_LEVEL_ALERT:
-            logLevel = kLogLevelNone;
+            logLevel = OT_LOG_LEVEL_NONE;
             break;
 
         case SPINEL_NCP_LOG_LEVEL_CRIT:
-            logLevel = kLogLevelCrit;
+            logLevel = OT_LOG_LEVEL_CRIT;
             break;
 
         case SPINEL_NCP_LOG_LEVEL_ERR:
         case SPINEL_NCP_LOG_LEVEL_WARN:
-            logLevel = kLogLevelWarn;
+            logLevel = OT_LOG_LEVEL_WARN;
             break;
 
         case SPINEL_NCP_LOG_LEVEL_NOTICE:
         case SPINEL_NCP_LOG_LEVEL_INFO:
-            logLevel = kLogLevelInfo;
+            logLevel = OT_LOG_LEVEL_INFO;
             break;
 
         case SPINEL_NCP_LOG_LEVEL_DEBUG:
-            logLevel = kLogLevelDebg;
+            logLevel = OT_LOG_LEVEL_DEBG;
             break;
 
         default:
