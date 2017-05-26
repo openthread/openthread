@@ -35,7 +35,7 @@ instead with the value set to the generated status code for the error.
 
 
 
-## CMD 2: (Host->NCP) CMD_PROP_VALUE_GET {#prop-value-get}
+## CMD 2: (Host->NCP) CMD_PROP_VALUE_GET {#cmd-prop-value-get}
 
 Octets: |    1   |          1         |   1-3
 --------|--------|--------------------|---------
@@ -52,7 +52,7 @@ instead with the value set to the generated status code for the error.
 
 
 
-## CMD 3: (Host->NCP) CMD_PROP_VALUE_SET {#prop-value-set}
+## CMD 3: (Host->NCP) CMD_PROP_VALUE_SET {#cmd-prop-value-set}
 
 Octets: |    1   |          1         |   1-3   |    *n*
 --------|--------|--------------------|---------|------------
@@ -71,7 +71,7 @@ with the value set to the generated status code for the error.
 
 
 
-## CMD 4: (Host->NCP) CMD_PROP_VALUE_INSERT {#prop-value-insert}
+## CMD 4: (Host->NCP) CMD_PROP_VALUE_INSERT {#cmd-prop-value-insert}
 
 Octets: |    1   |          1            |   1-3   |    *n*
 --------|--------|-----------------------|---------|------------
@@ -99,7 +99,7 @@ with the value set to the generated status code for the error.
 
 
 
-## CMD 5: (Host->NCP) CMD_PROP_VALUE_REMOVE {#prop-value-remove}
+## CMD 5: (Host->NCP) CMD_PROP_VALUE_REMOVE {#cmd-prop-value-remove}
 
 Octets: |    1   |          1            |   1-3   |    *n*
 --------|--------|-----------------------|---------|------------
@@ -128,7 +128,7 @@ If an error occurs, the value of `PROP_LAST_STATUS` will be emitted
 with the value set to the generated status code for the error.
 
 
-## CMD 6: (NCP->Host) CMD_PROP_VALUE_IS {#prop-value-is}
+## CMD 6: (NCP->Host) CMD_PROP_VALUE_IS {#cmd-prop-value-is}
 
 Octets: |    1   |          1        |   1-3   |    *n*
 --------|--------|-------------------|---------|------------
@@ -145,7 +145,7 @@ the current value of the given property.
 
 
 
-## CMD 7: (NCP->Host) CMD_PROP_VALUE_INSERTED {#prop-value-inserted}
+## CMD 7: (NCP->Host) CMD_PROP_VALUE_INSERTED {#cmd-prop-value-inserted}
 
 Octets: |    1   |            1            |   1-3   |    *n*
 --------|--------|-------------------------|---------|------------
@@ -170,7 +170,7 @@ helps to eliminate redundant data.
 The resulting order of items in the list is defined by the given
 property.
 
-## CMD 8: (NCP->Host) CMD_PROP_VALUE_REMOVED {#prop-value-removed}
+## CMD 8: (NCP->Host) CMD_PROP_VALUE_REMOVED {#cmd-prop-value-removed}
 
 Octets: |    1   |            1           |   1-3   |    *n*
 --------|--------|------------------------|---------|------------
@@ -247,7 +247,7 @@ See (#security-considerations) for more information.
 
 This command requires the capability `CAP_PEEK_POKE` to be present.
 
-## CMD 21: (Host->NCP) CMD_PROP_VALUE_MULTI_GET {#prop-value-multi-get}
+## CMD 21: (Host->NCP) CMD_PROP_VALUE_MULTI_GET {#cmd-prop-value-multi-get}
 
 *   Argument-Encoding: `A(i)`
 *   Required Capability: `CAP_CMD_MULTI`
@@ -266,7 +266,7 @@ Not all properties can be fetched using this method. As a general rule
 of thumb, any property that blocks when getting will fail for that
 individual property with `STATUS_INVALID_COMMAND_FOR_PROP`.
 
-## CMD 22: (Host->NCP) CMD_PROP_VALUE_MULTI_SET {#prop-value-multi-set}
+## CMD 22: (Host->NCP) CMD_PROP_VALUE_MULTI_SET {#cmd-prop-value-multi-set}
 
 *   Argument-Encoding: `A(iD)`
 *   Required Capability: `CAP_CMD_MULTI`
@@ -299,7 +299,7 @@ Not all properties can be set using this method. As a general rule
 of thumb, any property that blocks when setting will fail for that
 individual property with `STATUS_INVALID_COMMAND_FOR_PROP`.
 
-## CMD 23: (NCP->Host) CMD_PROP_VALUES_ARE {#prop-values-are}
+## CMD 23: (NCP->Host) CMD_PROP_VALUES_ARE {#cmd-prop-values-are}
 
 *   Argument-Encoding: `A(iD)`
 *   Required Capability: `CAP_CMD_MULTI`

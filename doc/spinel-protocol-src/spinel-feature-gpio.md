@@ -13,7 +13,7 @@ Support for this feature can be determined by the presence of `CAP_GPIO`.
 
 *   Argument-Encoding: `A(t(CCU))`
 *   Type: Read-write (Writable only using `CMD_PROP_VALUE_INSERT`,
-    (#prop-value-insert))
+    (#cmd-prop-value-insert))
 
 An array of structures which contain the following fields:
 

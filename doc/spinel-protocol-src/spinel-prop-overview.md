@@ -8,16 +8,16 @@ In Spinel, properties are keyed by an unsigned integer between 0 and 2,097,151 (
 
 Properties may support one or more of the following methods:
 
-*   `VALUE_GET` ((#prop-value-get))
-*   `VALUE_SET` ((#prop-value-set))
-*   `VALUE_INSERT`  ((#prop-value-insert))
-*   `VALUE_REMOVE`  ((#prop-value-remove))
+*   `VALUE_GET` ((#cmd-prop-value-get))
+*   `VALUE_SET` ((#cmd-prop-value-set))
+*   `VALUE_INSERT`  ((#cmd-prop-value-insert))
+*   `VALUE_REMOVE`  ((#cmd-prop-value-remove))
 
 Additionally, the NCP can send updates to the host (either synchronously or asynchronously) that inform the host about changes to specific properties:
 
-*   `VALUE_IS`  ((#prop-value-is))
-*   `VALUE_INSERTED`  ((#prop-value-inserted))
-*   `VALUE_REMOVED`  ((#prop-value-removed))
+*   `VALUE_IS`  ((#cmd-prop-value-is))
+*   `VALUE_INSERTED`  ((#cmd-prop-value-inserted))
+*   `VALUE_REMOVED`  ((#cmd-prop-value-removed))
 
 ## Property Types ###
 
