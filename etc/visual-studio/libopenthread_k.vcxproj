@@ -68,6 +68,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\core\api\commissioner_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\border_router_api.cpp" />
     <ClCompile Include="..\..\src\core\api\dataset_api.cpp" />
     <ClCompile Include="..\..\src\core\api\dataset_ftd_api.cpp" />
     <ClCompile Include="..\..\src\core\api\dhcp6_api.cpp" />
@@ -154,6 +155,7 @@
     <ClInclude Include="..\..\include\openthread\coap.h" />
     <ClInclude Include="..\..\include\openthread\commissioner.h" />
     <ClInclude Include="..\..\include\openthread\crypto.h" />
+    <ClInclude Include="..\..\include\openthread\border_router.h" />
     <ClInclude Include="..\..\include\openthread\dataset.h" />
     <ClInclude Include="..\..\include\openthread\dataset_ftd.h" />
     <ClInclude Include="..\..\include\openthread\dhcp6_client.h" />

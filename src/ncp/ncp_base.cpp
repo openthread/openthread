@@ -45,6 +45,10 @@
 #include <openthread/border_agent_proxy.h>
 #endif
 
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#include <openthread/border_router.h>
+#endif
+
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 #include <meshcop/commissioner.hpp>
 #endif
@@ -154,9 +158,11 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_THREAD_NEIGHBOR_TABLE, &NcpBase::GetPropertyHandler_THREAD_NEIGHBOR_TABLE },
     { SPINEL_PROP_THREAD_LEADER_RID, &NcpBase::GetPropertyHandler_THREAD_LEADER_RID },
     { SPINEL_PROP_THREAD_LEADER_WEIGHT, &NcpBase::GetPropertyHandler_THREAD_LEADER_WEIGHT },
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
     { SPINEL_PROP_THREAD_NETWORK_DATA, &NcpBase::GetPropertyHandler_THREAD_NETWORK_DATA },
-    { SPINEL_PROP_THREAD_NETWORK_DATA_VERSION, &NcpBase::GetPropertyHandler_THREAD_NETWORK_DATA_VERSION },
     { SPINEL_PROP_THREAD_STABLE_NETWORK_DATA, &NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA },
+#endif
+    { SPINEL_PROP_THREAD_NETWORK_DATA_VERSION, &NcpBase::GetPropertyHandler_THREAD_NETWORK_DATA_VERSION },
     { SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION, &NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA_VERSION },
     { SPINEL_PROP_THREAD_LEADER_NETWORK_DATA, &NcpBase::GetPropertyHandler_THREAD_LEADER_NETWORK_DATA },
     { SPINEL_PROP_THREAD_STABLE_LEADER_NETWORK_DATA, &NcpBase::GetPropertyHandler_THREAD_STABLE_LEADER_NETWORK_DATA },
@@ -326,13 +332,14 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_THREAD_DISCOVERY_SCAN_ENABLE_FILTERING,
         &NcpBase::SetPropertyHandler_THREAD_DISCOVERY_SCAN_ENABLE_FILTERING },
     { SPINEL_PROP_THREAD_DISCOVERY_SCAN_PANID, &NcpBase::SetPropertyHandler_THREAD_DISCOVERY_SCAN_PANID },
-
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
+    { SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE, &NcpBase::SetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE },
+#endif
 #if OPENTHREAD_FTD
     { SPINEL_PROP_NET_PSKC, &NcpBase::SetPropertyHandler_NET_PSKC },
     { SPINEL_PROP_THREAD_CHILD_TIMEOUT, &NcpBase::SetPropertyHandler_THREAD_CHILD_TIMEOUT },
     { SPINEL_PROP_THREAD_NETWORK_ID_TIMEOUT, &NcpBase::SetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT },
     { SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT, &NcpBase::SetPropertyHandler_THREAD_LOCAL_LEADER_WEIGHT },
-    { SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE, &NcpBase::SetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE },
     { SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED, &NcpBase::SetPropertyHandler_THREAD_ROUTER_ROLE_ENABLED },
     { SPINEL_PROP_THREAD_CHILD_COUNT_MAX, &NcpBase::SetPropertyHandler_THREAD_CHILD_COUNT_MAX },
     { SPINEL_PROP_THREAD_ROUTER_UPGRADE_THRESHOLD, &NcpBase::SetPropertyHandler_THREAD_ROUTER_UPGRADE_THRESHOLD },
@@ -377,8 +384,10 @@ const NcpBase::InsertPropertyHandlerEntry NcpBase::mInsertPropertyHandlerTable[]
     { SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES, &NcpBase::InsertPropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES },
 #endif
     { SPINEL_PROP_IPV6_ADDRESS_TABLE, &NcpBase::InsertPropertyHandler_IPV6_ADDRESS_TABLE },
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
     { SPINEL_PROP_THREAD_OFF_MESH_ROUTES, &NcpBase::InsertPropertyHandler_THREAD_OFF_MESH_ROUTES },
     { SPINEL_PROP_THREAD_ON_MESH_NETS, &NcpBase::InsertPropertyHandler_THREAD_ON_MESH_NETS },
+#endif
     { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::InsertPropertyHandler_THREAD_ASSISTING_PORTS },
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
     { SPINEL_PROP_THREAD_JOINERS, &NcpBase::NcpBase::InsertPropertyHandler_THREAD_JOINERS },
@@ -397,8 +406,10 @@ const NcpBase::RemovePropertyHandlerEntry NcpBase::mRemovePropertyHandlerTable[]
     { SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES, &NcpBase::RemovePropertyHandler_MAC_SRC_MATCH_EXTENDED_ADDRESSES },
 #endif
     { SPINEL_PROP_IPV6_ADDRESS_TABLE, &NcpBase::RemovePropertyHandler_IPV6_ADDRESS_TABLE },
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
     { SPINEL_PROP_THREAD_OFF_MESH_ROUTES, &NcpBase::RemovePropertyHandler_THREAD_OFF_MESH_ROUTES },
     { SPINEL_PROP_THREAD_ON_MESH_NETS, &NcpBase::RemovePropertyHandler_THREAD_ON_MESH_NETS },
+#endif
     { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::RemovePropertyHandler_THREAD_ASSISTING_PORTS },
 #if OPENTHREAD_ENABLE_MAC_WHITELIST
     { SPINEL_PROP_MAC_WHITELIST, &NcpBase::RemovePropertyHandler_MAC_WHITELIST },
@@ -2547,13 +2558,14 @@ otError NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA_VERSION(uint8_t h
            );
 }
 
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
 otError NcpBase::GetPropertyHandler_THREAD_NETWORK_DATA(uint8_t header, spinel_prop_key_t key)
 {
     otError errorCode = OT_ERROR_NONE;
     uint8_t network_data[255];
     uint8_t network_data_len = 255;
 
-    otNetDataGetLocal(
+    otBorderRouterGetNetData(
         mInstance,
         false, // Stable?
         network_data,
@@ -2581,7 +2593,7 @@ otError NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA(uint8_t header, s
     uint8_t network_data[255];
     uint8_t network_data_len = 255;
 
-    otNetDataGetLocal(
+    otBorderRouterGetNetData(
         mInstance,
         true, // Stable?
         network_data,
@@ -2602,6 +2614,7 @@ otError NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA(uint8_t header, s
 exit:
     return errorCode;
 }
+#endif // OPENTHREAD_ENABLE_BORDER_ROUTER
 
 otError NcpBase::GetPropertyHandler_THREAD_LEADER_NETWORK_DATA(uint8_t header, spinel_prop_key_t key)
 {
@@ -2609,7 +2622,7 @@ otError NcpBase::GetPropertyHandler_THREAD_LEADER_NETWORK_DATA(uint8_t header, s
     uint8_t network_data[255];
     uint8_t network_data_len = 255;
 
-    otNetDataGetLeader(
+    otNetDataGet(
         mInstance,
         false, // Stable?
         network_data,
@@ -2637,7 +2650,7 @@ otError NcpBase::GetPropertyHandler_THREAD_STABLE_LEADER_NETWORK_DATA(uint8_t he
     uint8_t network_data[255];
     uint8_t network_data_len = 255;
 
-    otNetDataGetLeader(
+    otNetDataGet(
         mInstance,
         true, // Stable?
         network_data,
@@ -2969,7 +2982,7 @@ otError NcpBase::GetPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_p
     // Fill from non-local network data first
     for (otNetworkDataIterator iter = OT_NETWORK_DATA_ITERATOR_INIT ;;)
     {
-        errorCode = otNetDataGetNextPrefixInfo(mInstance, false, &iter, &border_router_config);
+        errorCode = otNetDataGetNextOnMeshPrefix(mInstance, &iter, &border_router_config);
 
         if (errorCode != OT_ERROR_NONE)
         {
@@ -2994,10 +3007,11 @@ otError NcpBase::GetPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_p
                                   ));
     }
 
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
     // Fill from local network data last
     for (otNetworkDataIterator iter = OT_NETWORK_DATA_ITERATOR_INIT ;;)
     {
-        errorCode = otNetDataGetNextPrefixInfo(mInstance, true, &iter, &border_router_config);
+        errorCode = otBorderRouterGetNextOnMeshPrefix(mInstance, &iter, &border_router_config);
 
         if (errorCode != OT_ERROR_NONE)
         {
@@ -3021,6 +3035,7 @@ otError NcpBase::GetPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_p
                                       true
                                   ));
     }
+#endif // OPENTHREAD_ENABLE_BORDER_ROUTER
 
     SuccessOrExit(errorCode = OutboundFrameSend());
 
@@ -3246,7 +3261,7 @@ otError NcpBase::GetPropertyHandler_THREAD_OFF_MESH_ROUTES(uint8_t header, spine
                         key
                     ));
 
-    while (otNetDataGetNextRoute(mInstance, false, &iter, &external_route_config) == OT_ERROR_NONE)
+    while (otNetDataGetNextRoute(mInstance, &iter, &external_route_config) == OT_ERROR_NONE)
     {
         flags = static_cast<uint8_t>(external_route_config.mPreference);
         flags <<= SPINEL_NET_FLAG_PREFERENCE_OFFSET;
@@ -3268,7 +3283,8 @@ otError NcpBase::GetPropertyHandler_THREAD_OFF_MESH_ROUTES(uint8_t header, spine
                         ));
     }
 
-    while (otNetDataGetNextRoute(mInstance, true, &iter, &external_route_config) == OT_ERROR_NONE)
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
+    while (otBorderRouterGetNextRoute(mInstance, &iter, &external_route_config) == OT_ERROR_NONE)
     {
         flags = static_cast<uint8_t>(external_route_config.mPreference);
         flags <<= SPINEL_NET_FLAG_PREFERENCE_OFFSET;
@@ -3289,6 +3305,7 @@ otError NcpBase::GetPropertyHandler_THREAD_OFF_MESH_ROUTES(uint8_t header, spine
                             true
                         ));
     }
+#endif // OPENTHREAD_ENABLE_BORDER_ROUTER
 
     SuccessOrExit(errorCode = OutboundFrameSend());
 
@@ -5549,7 +5566,7 @@ otError NcpBase::SetPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, spine
     return errorCode;
 }
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
 otError NcpBase::SetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE(uint8_t header, spinel_prop_key_t key,
                                                                        const uint8_t *value_ptr, uint16_t value_len)
 {
@@ -5588,12 +5605,14 @@ otError NcpBase::SetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE(uint8_t h
 
     if (should_register_with_leader)
     {
-        otNetDataRegister(mInstance);
+        otBorderRouterRegister(mInstance);
     }
 
     return errorCode;
 }
+#endif // OPENTHREAD_ENABLE_BORDER_ROUTER
 
+#if OPENTHREAD_FTD
 otError NcpBase::SetPropertyHandler_THREAD_ROUTER_ROLE_ENABLED(uint8_t header, spinel_prop_key_t key,
                                                                const uint8_t *value_ptr, uint16_t value_len)
 {
@@ -6848,6 +6867,7 @@ exit:
     return errorCode;
 }
 
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
 otError NcpBase::InsertPropertyHandler_THREAD_OFF_MESH_ROUTES(uint8_t header, spinel_prop_key_t key,
                                                               const uint8_t *value_ptr, uint16_t value_len)
 {
@@ -6886,7 +6906,7 @@ otError NcpBase::InsertPropertyHandler_THREAD_OFF_MESH_ROUTES(uint8_t header, sp
         ext_route_config.mPrefix.mPrefix = *addr_ptr;
         ext_route_config.mStable = stable;
         ext_route_config.mPreference = ((flags & SPINEL_NET_FLAG_PREFERENCE_MASK) >> SPINEL_NET_FLAG_PREFERENCE_OFFSET);
-        errorCode = otNetDataAddRoute(mInstance, &ext_route_config);
+        errorCode = otBorderRouterAddRoute(mInstance, &ext_route_config);
 
         if (errorCode == OT_ERROR_NONE)
         {
@@ -6958,7 +6978,7 @@ otError NcpBase::InsertPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spine
         border_router_config.mDefaultRoute = ((flags & SPINEL_NET_FLAG_DEFAULT_ROUTE) != 0);
         border_router_config.mOnMesh = ((flags & SPINEL_NET_FLAG_ON_MESH) != 0);
 
-        errorCode = otNetDataAddPrefixInfo(mInstance, &border_router_config);
+        errorCode = otBorderRouterAddOnMeshPrefix(mInstance, &border_router_config);
 
         if (errorCode == OT_ERROR_NONE)
         {
@@ -6983,6 +7003,7 @@ otError NcpBase::InsertPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spine
 exit:
     return errorCode;
 }
+#endif // OPENTHREAD_ENABLE_BORDER_ROUTER
 
 otError NcpBase::InsertPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, spinel_prop_key_t key,
                                                               const uint8_t *value_ptr, uint16_t value_len)
@@ -7296,6 +7317,7 @@ otError NcpBase::RemovePropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel
     return errorCode;
 }
 
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
 otError NcpBase::RemovePropertyHandler_THREAD_OFF_MESH_ROUTES(uint8_t header, spinel_prop_key_t key,
                                                               const uint8_t *value_ptr, uint16_t value_len)
 {
@@ -7325,7 +7347,7 @@ otError NcpBase::RemovePropertyHandler_THREAD_OFF_MESH_ROUTES(uint8_t header, sp
     if (parsedLength > 0)
     {
         ip6_prefix.mPrefix = *addr_ptr;
-        errorCode = otNetDataRemoveRoute(mInstance, &ip6_prefix);
+        errorCode = otBorderRouterRemoveRoute(mInstance, &ip6_prefix);
 
         if (errorCode == OT_ERROR_NONE)
         {
@@ -7380,7 +7402,7 @@ otError NcpBase::RemovePropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spine
     if (parsedLength > 0)
     {
         ip6_prefix.mPrefix = *addr_ptr;
-        errorCode = otNetDataRemovePrefixInfo(mInstance, &ip6_prefix);
+        errorCode = otBorderRouterRemoveOnMeshPrefix(mInstance, &ip6_prefix);
 
         if (errorCode == OT_ERROR_NONE)
         {
@@ -7405,6 +7427,7 @@ otError NcpBase::RemovePropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spine
 exit:
     return errorCode;
 }
+#endif
 
 otError NcpBase::RemovePropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, spinel_prop_key_t key,
                                                               const uint8_t *value_ptr, uint16_t value_len)

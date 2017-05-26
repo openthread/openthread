@@ -102,6 +102,7 @@ configure_OPTIONS                   = \
     --enable-legacy                   \
     --enable-mac-whitelist            \
     --enable-mtd-network-diagnostic   \
+    --enable-border-router            \
     $(NULL)
 
 ifndef BuildJobs

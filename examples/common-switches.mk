@@ -30,6 +30,10 @@ ifeq ($(BA_PROXY),1)
 configure_OPTIONS              += --enable-border-agent-proxy
 endif
 
+ifeq ($(BORDER_ROUTER),1)
+configure_OPTIONS              += --enable-border-router
+endif
+
 ifeq ($(CERT_LOG),1)
 configure_OPTIONS              += --enable-cert-log
 endif

@@ -95,6 +95,7 @@ SOURCES_COMMON                      = \
     api/commissioner_api.cpp          \
     api/child_supervision_api.cpp     \
     api/crypto_api.cpp                \
+    api/border_router_api.cpp         \
     api/dataset_api.cpp               \
     api/dataset_ftd_api.cpp           \
     api/dhcp6_api.cpp                 \
@@ -279,8 +280,6 @@ HEADERS_COMMON                      = \
     thread/network_data_leader_ftd.hpp \
     thread/network_data_leader_mtd.hpp \
     thread/network_data_local.hpp     \
-    thread/network_data_local_ftd.hpp \
-    thread/network_data_local_mtd.hpp \
     thread/network_data_tlvs.hpp      \
     thread/panid_query_server.hpp     \
     thread/network_diagnostic.hpp     \

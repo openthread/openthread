@@ -258,6 +258,7 @@ public:
      */
     MeshForwarder &GetMeshForwarder(void) { return mMeshForwarder; }
 
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
     /**
      * This method returns a reference to the network data local object.
      *
@@ -265,6 +266,7 @@ public:
      *
      */
     NetworkData::Local &GetNetworkDataLocal(void) { return mNetworkDataLocal; }
+#endif  // OPENTHREAD_ENABLE_BORDER_ROUTER
 
     /**
      * This method returns a reference to the network data leader object.
@@ -427,7 +429,9 @@ private:
     Mac::Mac mMac;
     MeshForwarder mMeshForwarder;
     Mle::MleRouter mMleRouter;
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
     NetworkData::Local mNetworkDataLocal;
+#endif  // OPENTHREAD_ENABLE_BORDER_ROUTER
     NetworkData::Leader mNetworkDataLeader;
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     NetworkDiagnostic::NetworkDiagnostic mNetworkDiagnostic;

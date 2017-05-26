@@ -1806,16 +1806,51 @@ otThreadSetNetworkName(
 OTAPI 
 otError 
 OTCALL
-otNetDataGetNextPrefixInfo(
+otNetDataGetNextOnMeshPrefix(
     _In_ otInstance *aInstance, 
-    bool _aLocal, 
     _Inout_ otNetworkDataIterator *aIterator,
     _Out_ otBorderRouterConfig *aConfig
     )
 {
     if (aInstance == nullptr || aConfig == nullptr) return OT_ERROR_INVALID_ARGS;
     
-    BOOLEAN aLocal = _aLocal ? TRUE : FALSE;
+    BOOLEAN aLocal = FALSE;
+    PackedBuffer3<GUID,BOOLEAN,otNetworkDataIterator> InBuffer(aInstance->InterfaceGuid, aLocal, *aIterator);
+    BYTE OutBuffer[sizeof(uint8_t) + sizeof(otBorderRouterConfig)];
+
+    otError aError =
+        DwordToThreadError(
+            SendIOCTL(
+                aInstance->ApiHandle,
+                IOCTL_OTLWF_OT_NEXT_ON_MESH_PREFIX,
+                &InBuffer, sizeof(InBuffer),
+                OutBuffer, sizeof(OutBuffer)));
+
+    if (aError == OT_ERROR_NONE)
+    {
+        memcpy(aIterator, OutBuffer, sizeof(uint8_t));
+        memcpy(aConfig, OutBuffer + sizeof(uint8_t), sizeof(otBorderRouterConfig));
+    }
+    else
+    {
+        ZeroMemory(aConfig, sizeof(otBorderRouterConfig));
+    }
+
+    return aError;
+}
+
+OTAPI
+otError
+OTCALL
+otBorderRouterGetNextOnMeshPrefix(
+    _In_ otInstance *aInstance,
+    _Inout_ otNetworkDataIterator *aIterator,
+    _Out_ otBorderRouterConfig *aConfig
+    )
+{
+    if (aInstance == nullptr || aConfig == nullptr) return OT_ERROR_INVALID_ARGS;
+
+    BOOLEAN aLocal = TRUE;
     PackedBuffer3<GUID,BOOLEAN,otNetworkDataIterator> InBuffer(aInstance->InterfaceGuid, aLocal, *aIterator);
     BYTE OutBuffer[sizeof(uint8_t) + sizeof(otBorderRouterConfig)];
 
@@ -2467,7 +2502,7 @@ otThreadSetJoinerUdpPort(
 OTAPI
 otError
 OTCALL
-otNetDataAddPrefixInfo(
+otBorderRouterAddOnMeshPrefix(
     _In_ otInstance *aInstance, 
     const otBorderRouterConfig *aConfig
     )
@@ -2479,7 +2514,7 @@ otNetDataAddPrefixInfo(
 OTAPI
 otError
 OTCALL
-otNetDataRemovePrefixInfo(
+otBorderRouterRemoveOnMeshPrefix(
     _In_ otInstance *aInstance, 
     const otIp6Prefix *aPrefix
     )
@@ -2491,7 +2526,7 @@ otNetDataRemovePrefixInfo(
 OTAPI
 otError
 OTCALL
-otNetDataAddRoute(
+otBorderRouterAddRoute(
     _In_ otInstance *aInstance, 
     const otExternalRouteConfig *aConfig
     )
@@ -2503,7 +2538,7 @@ otNetDataAddRoute(
 OTAPI
 otError
 OTCALL
-otNetDataRemoveRoute(
+otBorderRouterRemoveRoute(
     _In_ otInstance *aInstance, 
     const otIp6Prefix *aPrefix
     )
@@ -2515,7 +2550,7 @@ otNetDataRemoveRoute(
 OTAPI
 otError
 OTCALL
-otNetDataRegister(
+otBorderRouterRegister(
     _In_ otInstance *aInstance
     )
 {
