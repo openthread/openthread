@@ -6068,7 +6068,7 @@ otError NcpBase::SetPropertyHandler_DEBUG_NCP_LOG_LEVEL(uint8_t header, spinel_p
         }
         else
         {
-            if (errorCode == OT_ERROR_NOT_CAPABLE)
+            if (errorCode == OT_ERROR_DISABLED_FEATURE)
             {
                 errorCode = SendLastStatus(header, SPINEL_STATUS_INVALID_COMMAND_FOR_PROP);
             }
