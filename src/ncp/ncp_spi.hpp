@@ -85,11 +85,12 @@ private:
     static void SpiTransactionProcess(void *aContext);
     void SpiTransactionProcess(void);
 
+    static void HandleFrameAddedToTxBuffer(void *aContext, NcpFrameBuffer::FrameTag aFrameTag,
+                                           NcpFrameBuffer *aNcpFrameBuffer);
+
     static void PrepareTxFrame(void *context);
     void PrepareTxFrame(void);
     void HandleRxFrame(void);
-
-    static void TxFrameBufferHasData(void *aContext, NcpFrameBuffer *aNcpFrameBuffer);
 
     otError PrepareNextSpiSendFrame(void);
 

@@ -570,6 +570,7 @@ NcpBase::NcpBase(otInstance *aInstance):
     mShouldSignalEndOfScan(false),
     mHostPowerState(SPINEL_HOST_POWER_STATE_ONLINE),
     mHostPowerStateInProgress(false),
+    mHostPowerReplyFrameTag(NcpFrameBuffer::kInvalidTag),
     mHostPowerStateHeader(0),
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     mShouldSignalJamStateChange(false),
@@ -601,6 +602,8 @@ NcpBase::NcpBase(otInstance *aInstance):
     assert(mInstance != NULL);
 
     sNcpInstance = this;
+
+    mTxFrameBuffer.SetFrameRemovedCallback(&NcpBase::HandleFrameRemovedFromNcpBuffer, this);
 
     otSetStateChangedCallback(mInstance, &NcpBase::HandleNetifStateChanged, this);
     otIp6SetReceiveCallback(mInstance, &NcpBase::HandleDatagramFromStack, this);
@@ -644,6 +647,11 @@ otError NcpBase::OutboundFrameFeedMessage(otMessage *aMessage)
 otError NcpBase::OutboundFrameEnd(void)
 {
     return mTxFrameBuffer.InFrameEnd();
+}
+
+NcpFrameBuffer::FrameTag NcpBase::GetLastOutboundFrameTag(void)
+{
+    return mTxFrameBuffer.InFrameGetLastTag();
 }
 
 #if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
@@ -1245,19 +1253,6 @@ exit:
 // MARK: Serial Traffic Glue
 // ----------------------------------------------------------------------------
 
-void NcpBase::HandleFrameTransmitDone(void *aContext, otError aError)
-{
-    NcpBase *obj = static_cast<NcpBase *>(aContext);
-    obj->HandleFrameTransmitDone(aError);
-}
-
-void NcpBase::HandleFrameTransmitDone(otError aError)
-{
-    (void) aError;
-
-    mHostPowerStateInProgress = false;
-}
-
 otError NcpBase::OutboundFrameSend(void)
 {
     otError errorCode;
@@ -1286,7 +1281,6 @@ void NcpBase::HandleReceive(const uint8_t *buf, uint16_t bufLength)
     // Receiving any message from the host has the side effect of transitioning the host power state to online.
     mHostPowerState = SPINEL_HOST_POWER_STATE_ONLINE;
     mHostPowerStateInProgress = false;
-    mTxFrameBuffer.SetFrameTransmitCallback(NULL, NULL);
 
     if (parsedLength == bufLength)
     {
@@ -1333,8 +1327,24 @@ void NcpBase::HandleReceive(const uint8_t *buf, uint16_t bufLength)
     mRxSpinelFrameCounter++;
 }
 
-void NcpBase::HandleSpaceAvailableInTxBuffer(void)
+void NcpBase::HandleFrameRemovedFromNcpBuffer(void *aContext, NcpFrameBuffer::FrameTag aFrameTag, NcpFrameBuffer *aNcpBuffer)
 {
+    (void)aNcpBuffer;
+    static_cast<NcpBase *>(aContext)->HandleFrameRemovedFromNcpBuffer(aFrameTag);
+}
+
+void NcpBase::HandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag)
+{
+    if (mHostPowerStateInProgress == true)
+    {
+        if (aFrameTag == mHostPowerReplyFrameTag)
+        {
+            mHostPowerStateInProgress = false;
+        }
+    }
+
+    // Space is now available in ncp tx frame buffer.
+
     while (mDroppedReplyTid != 0)
     {
         SuccessOrExit(
@@ -1402,7 +1412,7 @@ void NcpBase::HandleSpaceAvailableInTxBuffer(void)
 
         if (mHostPowerState != SPINEL_HOST_POWER_STATE_ONLINE)
         {
-            mTxFrameBuffer.SetFrameTransmitCallback(&NcpBase::HandleFrameTransmitDone, this);
+            mHostPowerReplyFrameTag = GetLastOutboundFrameTag();
             mHostPowerStateInProgress = true;
         }
     }
@@ -3793,7 +3803,11 @@ otError NcpBase::SetPropertyHandler_HOST_POWER_STATE(uint8_t header, spinel_prop
         {
             if (errorCode == OT_ERROR_NONE)
             {
-                mTxFrameBuffer.SetFrameTransmitCallback(&NcpBase::HandleFrameTransmitDone, this);
+                mHostPowerReplyFrameTag = GetLastOutboundFrameTag();
+            }
+            else
+            {
+                mHostPowerReplyFrameTag = NcpFrameBuffer::kInvalidTag;
             }
 
             mHostPowerStateInProgress = true;
@@ -3802,6 +3816,12 @@ otError NcpBase::SetPropertyHandler_HOST_POWER_STATE(uint8_t header, spinel_prop
         if (errorCode != OT_ERROR_NONE)
         {
             mHostPowerStateHeader = header;
+
+            // The reply will be queued when buffer space becomes available
+            // in the NCP tx buffer so we return `success` to avoid sending a
+            // NOMEM status for the same tid through `mDroppedReplyTid` list.
+
+            errorCode = OT_ERROR_NONE;
         }
     }
     else

@@ -116,7 +116,7 @@ NcpSpi::NcpSpi(otInstance *aInstance) :
     memset(mEmptySendFrameZeroAccept, 0, kSpiHeaderLength);
     memset(mEmptySendFrameFullAccept, 0, kSpiHeaderLength);
 
-    mTxFrameBuffer.SetCallbacks(NULL, TxFrameBufferHasData, this);
+    mTxFrameBuffer.SetFrameAddedCallback(HandleFrameAddedToTxBuffer, this);
 
     spi_header_set_flag_byte(mSendFrame, SPI_RESET_FLAG | SPI_PATTERN_VALUE);
     spi_header_set_flag_byte(mEmptySendFrameZeroAccept, SPI_RESET_FLAG | SPI_PATTERN_VALUE);
@@ -250,9 +250,10 @@ void NcpSpi::SpiTransactionProcess(void)
     }
 }
 
-void NcpSpi::TxFrameBufferHasData(void *aContext, NcpFrameBuffer *aNcpFrameBuffer)
+void NcpSpi::HandleFrameAddedToTxBuffer(void *aContext, NcpFrameBuffer::FrameTag aTag, NcpFrameBuffer *aNcpFrameBuffer)
 {
     (void)aNcpFrameBuffer;
+    (void)aTag;
 
     static_cast<NcpSpi *>(aContext)->mPrepareTxFrameTask.Post();
 }
@@ -308,11 +309,7 @@ otError NcpSpi::PrepareNextSpiSendFrame(void)
         ExitNow();
     }
 
-    // Remove the frame from tx buffer and inform the base
-    // class that space is now available for a new frame.
-
     mTxFrameBuffer.OutFrameRemove();
-    HandleSpaceAvailableInTxBuffer();
 
 exit:
     return errorCode;

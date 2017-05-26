@@ -42,23 +42,27 @@ class NcpFrameBuffer
 {
 public:
     /**
-     * Defines a function pointer callback which is invoked to inform state transition of buffer, going from empty
-     * to non-empty or becoming empty.
-     *
-     * @param[in]  aContext         A pointer to arbitrary context information.
-     * @param[in]  aNcpFrameBuffer  A pointer to the NcpFrameBuffer.
+     * Defines the frame tag type. Frame tags can be compared with one another using operator `==`.
      *
      */
-    typedef void (*BufferCallback)(void *aContext, NcpFrameBuffer *aNcpFrameBuffer);
+    typedef const void *FrameTag;
 
     /**
-     * Defines a function pointer callback which is invoked to inform that a pre-tagged frame has transmitted.
-     *
-     * @param[in]  aContext         A pointer to arbitrary context information.
-     * @param[in]  aError           An error value representing the success or failure of the frame transmit attempt.
+     * Defines the tag to indicate an invalid tag (e.g., when there is no frame).
      *
      */
-    typedef void (*FrameTransmitCallback)(void *aContext, otError aError);
+    static const FrameTag kInvalidTag;
+
+    /**
+     * Defines a function pointer callback which is invoked to inform a change in `NcpFrameBuffer` either when a new
+     * frame is added/written to `NcpFrameBuffer` or when a frame is removed from `NcpFrameBuffer`.
+     *
+     * @param[in]  aContext         A pointer to arbitrary context information.
+     * @param[in]  aTag             The tag associated with the frame which is added or removed.
+     * @param[in]  aNcpFrameBuffer  A pointer to the `NcpFrameBuffer`.
+     *
+     */
+    typedef void (*BufferCallback)(void *aContext, FrameTag aTag, NcpFrameBuffer *aNcpFrameBuffer);
 
     /**
      * This constructor creates an NCP frame buffer.
@@ -70,30 +74,32 @@ public:
     NcpFrameBuffer(uint8_t *aBuffer, uint16_t aBufferLength);
 
     /**
-     * This destructor clears the NCP frame buffer and clears all frames..
-     *
-     */
-    ~NcpFrameBuffer();
-
-    /**
      * This method clears the NCP frame buffer. All the frames are cleared/removed.
      *
-     * @returns Nothing (void).
      */
     void Clear(void);
 
     /**
-     * This method sets the callbacks and context. Subsequent calls to this method will overwrite the previous
-     * callbacks and context.
+     * This method sets the `FrameAdded` callback and its context.
      *
-     * @param[in]  aEmptyBufferCallback     Callback invoked when buffer become empty.
-     * @param[in]  aNonEmptyBufferCallback  Callback invoked when buffer transition from empty to non-empty.
-     * @param[in]  aContex                  A pointer to arbitrary context information.
+     * Subsequent calls to this method will overwrite the previous callback and its context.
      *
-     * @returns    Nothing (void).
+     * @param[in]  aFrameAddedCallback      Callback invoked when a new frame is successfully added to buffer.
+     * @param[in]  aFrameAddedContext       A pointer to arbitrary context used with frame added callback.
      *
      */
-    void SetCallbacks(BufferCallback aEmptyBufferCallback, BufferCallback aNonEmptyBufferCallback, void *aContext);
+    void SetFrameAddedCallback(BufferCallback aFrameAddedCallback, void *aFrameAddedContext);
+
+    /**
+     * This method sets the `FrameRemoved` callback and its context.
+     *
+     * Subsequent calls to this method will overwrite the previous callback and its context.
+     *
+     * @param[in]  aFrameRemovedCallback    Callback invoked when a frame is removed from buffer.
+     * @param[in]  aFrameRemovedContext     A pointer to arbitrary context used with frame removed callback.
+     *
+     */
+    void SetFrameRemovedCallback(BufferCallback aFrameRemovedCallback, void *aFrameRemovedContext);
 
     /**
      * This method begins a new input frame to be added/written to the frame buffer.
@@ -148,6 +154,16 @@ public:
     otError InFrameEnd(void);
 
     /**
+     * This method returns the tag assigned to last successfully written/added frame to NcpBuffer (i.e., last input
+     * frame for which `InFrameEnd()` was called and returned success status). The tag is a unique value (within
+     * currently queued frames) associated with each frame in the `NcpFrameBuffer`. The tag can be used to identify the
+     * same frame when it is read and removed from the NcpBuffer. Tags can be compared using operator `==`.
+     *
+     * @returns The tag of last successfully written frame, or `kInvalidTag` if no frame is written so far.
+     */
+    FrameTag InFrameGetLastTag(void) const;
+
+    /**
      * This method checks if the buffer is empty. An non-empty buffer contains at least one full frame for reading.
      *
      * @retval true                 Buffer is not empty and contains at least one full frame for reading.
@@ -160,7 +176,7 @@ public:
      * This method begins/prepares a new output frame to be read from the frame buffer.
      *
      * The NCP buffer maintains a read offset for the current frame being read. Before reading any bytes from the frame
-     * this method should be called to prepare the  frame and set the read offset.
+     * this method should be called to prepare the frame and set the read offset.
      *
      * If part of current frame has already been read, a sub-sequent call to this method will reset the read offset
      * back to beginning of current output frame.
@@ -221,7 +237,7 @@ public:
      *
      * When a frame is removed all its associated messages will be freed.
      *
-     * If the remove operation causes the buffer to become empty this method will invoke the `EmptyBufferCallback`.
+     * If the remove operation is successful, this method will invoke the `FrameRemovedCallback` (if provided).
      *
      * @retval OT_ERROR_NONE       Successfully removed the front frame.
      * @retval OT_ERROR_NOT_FOUND  No frame available in NCP frame buffer to remove.
@@ -244,17 +260,18 @@ public:
     uint16_t OutFrameGetLength(void);
 
     /**
-     * This method provides a callback to NcpBuffer that it will use when the last successfully written 
-     * frame is removed from the buffer.
+     * This method returns the tag value associated to current/front frame in the NCP frame buffer.
      *
-     * @param[in]  aFrameTransmitCallback   Callback invoked when NcpBuffer transmits the current last frame.
-     * @param[in]  aContex                  A pointer to arbitrary context information.
+     * The NCP buffer stores the frames in FIFO order. This method returns the tag of the front frame (which may
+     * be the current output frame being read) from the buffer. There is no need to prepare/begin reading the current
+     * frame before calling this method so this method can be used without a previous call to `OutFrameBegin()`.
      *
-     * @retval OT_ERROR_NONE      Successfully accepted the callback.
-     * @retval OT_ERROR_BUSY      The feature is already in use and busy.
+     * If there is no frame in buffer, this method returns `kInvalidTag`.
+     *
+     * @returns    The tag assigned to the current/from output frame, or `kInvalidTag` if no frame in buffer.
      *
      */
-    otError SetFrameTransmitCallback(FrameTransmitCallback aFrameTransmitCallback, void *aContext);
+    FrameTag OutFrameGetTag(void) const;
 
 private:
 
@@ -346,38 +363,36 @@ private:
 
     // Instance variables
 
-    uint8_t * const         mBuffer;                    // Pointer to the buffer used to store the data.
-    uint8_t * const         mBufferEnd;                 // Points to after the end of buffer.
-    const uint16_t          mBufferLength;              // Length of the the buffer.
+    uint8_t * const  mBuffer;                    // Pointer to the buffer used to store the data.
+    uint8_t * const  mBufferEnd;                 // Points to after the end of buffer.
+    const uint16_t   mBufferLength;              // Length of the the buffer.
 
-    BufferCallback          mEmptyBufferCallback;       // Callback to signal when buffer becomes empty.
-    BufferCallback          mNonEmptyBufferCallback;    // Callback to signal when buffer becomes non-empty.
-    void *                  mEmptyBufferCallbackContext;// Context passed to callbacks.
+    BufferCallback   mFrameAddedCallback;        // Callback to signal when a new frame is added
+    void *           mFrameAddedContext;         // Context passed to `mFrameAddedCallback`.
+    BufferCallback   mFrameRemovedCallback;      // Callback to signal when a frame is removed.
+    void *           mFrameRemovedContext;       // Context passed to `mFrameRemovedCallback`.
 
-    FrameTransmitCallback   mFrameTransmitCallback;     // Callback to signal when a particular frame has been transmitted.
-    void *                  mFrameTransmitContext;      // Context passed to mFrameTransmitCallback;
-    uint8_t *               mFrameTransmitMark;         // The end position of the desired frame in the frame buffer.
+    otMessageQueue   mMessageQueue;              // Main message queue.
 
-    otMessageQueue          mMessageQueue;              // Main message queue.
+    otMessageQueue   mWriteFrameMessageQueue;    // Message queue for the current frame being written.
+    uint8_t *        mWriteFrameStart;           // Pointer to start of current frame being written.
+    uint8_t *        mWriteSegmentHead;          // Pointer to start of current segment in the frame being written.
+    uint8_t *        mWriteSegmentTail;          // Pointer to end of current segment in the frame being written.
+    FrameTag         mWriteFrameTag;             // Tag associated with last successfully written frame.
 
-    otMessageQueue          mWriteFrameMessageQueue;    // Message queue for the current frame being written.
-    uint8_t *               mWriteFrameStart;           // Pointer to start of current frame being written.
-    uint8_t *               mWriteSegmentHead;          // Pointer to start of current segment in the frame being written.
-    uint8_t *               mWriteSegmentTail;          // Pointer to end of current segment in the frame being written.
+    ReadState        mReadState;                 // Read state.
+    uint16_t         mReadFrameLength;           // Length of current frame being read.
 
-    ReadState               mReadState;                 // Read state.
-    uint16_t                mReadFrameLength;           // Length of current frame being read.
+    uint8_t *        mReadFrameStart;            // Pointer to start of current frame being read.
+    uint8_t *        mReadSegmentHead;           // Pointer to start of current segment in the frame being read.
+    uint8_t *        mReadSegmentTail;           // Pointer to end of current segment in the frame being read.
+    uint8_t *        mReadPointer;               // Pointer to next byte to read (either in segment or in msg buffer).
 
-    uint8_t *               mReadFrameStart;            // Pointer to start of current frame being read.
-    uint8_t *               mReadSegmentHead;           // Pointer to start of current segment in the frame being read.
-    uint8_t *               mReadSegmentTail;           // Pointer to end of current segment in the frame being read.
-    uint8_t *               mReadPointer;               // Pointer to next byte to read (either in segment or in msg buffer).
+    otMessage *      mReadMessage;               // Current Message in the frame being read.
+    uint16_t         mReadMessageOffset;         // Offset within current message being read.
 
-    otMessage *             mReadMessage;               // Current Message in the frame being read.
-    uint16_t                mReadMessageOffset;         // Offset within current message being read.
-
-    uint8_t                 mMessageBuffer[kMessageReadBufferSize];   // Buffer to hold part of current message being read.
-    uint8_t *               mReadMessageTail;           // Pointer to end of current part in mMessageBuffer.
+    uint8_t          mMessageBuffer[kMessageReadBufferSize];   // Buffer to hold part of current message being read.
+    uint8_t *        mReadMessageTail;           // Pointer to end of current part in mMessageBuffer.
 };
 
 }  // namespace ot

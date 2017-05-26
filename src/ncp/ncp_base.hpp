@@ -136,11 +136,6 @@ protected:
     void HandleReceive(const uint8_t *buf, uint16_t bufLength);
 
     /**
-     * Called by the subclass to indicate when a frame was removed and some space in tx buffer is available.
-     */
-    void HandleSpaceAvailableInTxBuffer(void);
-
-    /**
      * Called by the subclass to learn when the host wake operation must be issued.
      */
     bool ShouldWakeHost(void);
@@ -154,6 +149,8 @@ private:
 
     otError OutboundFrameSend(void);
 
+    NcpFrameBuffer::FrameTag GetLastOutboundFrameTag(void);
+
 #if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
     /**
      * Trampoline for HandleBorderAgentProxyStream().
@@ -162,6 +159,14 @@ private:
 
     void HandleBorderAgentProxyStream(otMessage *aMessage, uint16_t aLocator, uint16_t aPort);
 #endif // OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
+
+    /**
+     * Trampoline for NcpFrameBuffer FrameRemoved Callback.
+     */
+    static void HandleFrameRemovedFromNcpBuffer(void *aContext, NcpFrameBuffer::FrameTag aFrameTag,
+                                                NcpFrameBuffer *aNcpBuffer);
+
+    void HandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag);
 
     /**
      * Trampoline for HandleDatagramFromStack().
@@ -239,10 +244,6 @@ private:
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
 
     static void HandleNetifStateChanged(uint32_t flags, void *context);
-
-    static void HandleFrameTransmitDone(void *aContext, otError aError);
-
-    void HandleFrameTransmitDone(otError aError);
 
 private:
 
@@ -679,6 +680,7 @@ private:
     bool mShouldSignalEndOfScan;
     spinel_host_power_state_t mHostPowerState;
     bool mHostPowerStateInProgress;
+    NcpFrameBuffer::FrameTag mHostPowerReplyFrameTag;
     uint8_t mHostPowerStateHeader;
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
