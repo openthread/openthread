@@ -504,7 +504,7 @@ void radioReceive(otInstance *aInstance)
         else
 #endif
         {
-            otPlatRadioTransmitDone(aInstance, &sTransmitFrame, isFramePending(sReceiveFrame.mPsdu), OT_ERROR_NONE);
+            otPlatRadioTxDone(aInstance, &sTransmitFrame, &sReceiveFrame, OT_ERROR_NONE);
         }
     }
     else if ((sState == kStateReceive || sState == kStateTransmit) &&
@@ -535,7 +535,7 @@ void radioSendMessage(otInstance *aInstance)
         else
 #endif
         {
-            otPlatRadioTransmitDone(aInstance, &sTransmitFrame, false, OT_ERROR_NONE);
+            otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, OT_ERROR_NONE);
         }
     }
 }

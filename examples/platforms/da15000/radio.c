@@ -429,15 +429,16 @@ void da15000RadioProcess(otInstance *aInstance)
 {
     if (sSendFrameDone)
     {
-        // Check FP bit in ACK response
-        if ((sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST)     != 0 &&
-            (sReceiveFrame.mPsdu[0]  & IEEE802154_FRAME_TYPE_MASK) != 0)
-        {
-            sFramePending = ((sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0);
-        }
-
         sRadioState = kStateReceive;
-        otPlatRadioTransmitDone(aInstance, &sTransmitFrame, sFramePending, sTransmitStatus);
+
+        if (((sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0) || sTransmitStatus != OT_ERROR_NONE)
+        {
+            otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, sTransmitStatus);
+        }
+        else
+        {
+            otPlatRadioTxDone(aInstance, &sTransmitFrame, &sReceiveFrame, sTransmitStatus);
+        }
 
         sFramePending = false;
         sSendFrameDone = false;

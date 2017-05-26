@@ -151,7 +151,7 @@ void TestFuzz(uint32_t aSeconds)
             if (g_fTransmit)
             {
                 g_fTransmit = false;
-                otPlatRadioTransmitDone(aInstance, &g_TransmitRadioPacket, true, OT_ERROR_NONE);
+                otPlatRadioTxDone(aInstance, &g_TransmitRadioPacket, NULL, OT_ERROR_NONE);
 #ifdef DBG_FUZZ
                 Log("<== transmit");
 #endif

@@ -594,7 +594,15 @@ otLwfRadioTransmitFrameDone(
             pFilter->otLastTransmitError = OT_ERROR_ABORT;
         }
 
-        otPlatRadioTransmitDone(pFilter->otCtx, &pFilter->otTransmitFrame, pFilter->otLastTransmitFramePending, pFilter->otLastTransmitError);
+        if (((pFilter->otTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0) ||
+            pFilter->otLastTransmitError != OT_ERROR_NONE)
+        {
+            otPlatRadioTxDone(pFilter->otCtx, &pFilter->otTransmitFrame, NULL, pFilter->otLastTransmitError);
+        }
+        else
+        {
+            otPlatRadioTxDone(pFilter->otCtx, &pFilter->otTransmitFrame, &pFilter->otReceiveFrame, pFilter->otLastTransmitError);
+        }
     }
 
     LogFuncExit(DRIVER_DATA_PATH);

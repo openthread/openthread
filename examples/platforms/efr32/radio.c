@@ -740,7 +740,7 @@ void efr32RadioProcess(otInstance *aInstance)
             else
 #endif
             {
-                otPlatRadioTransmitDone(aInstance, &sTransmitFrame, false, sTransmitError);
+                otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, sTransmitError);
             }
         }
         else if (sReceiveFrame.mLength == IEEE802154_ACK_LENGTH &&
@@ -761,9 +761,7 @@ void efr32RadioProcess(otInstance *aInstance)
 #endif
             {
                 otLogInfoPlat(sInstance, "Received ACK:%d", sReceiveFrame.mLength);
-                otPlatRadioTransmitDone(aInstance, &sTransmitFrame,
-                                        (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0,
-                                        sTransmitError);
+                otPlatRadioTxDone(aInstance, &sTransmitFrame, &sReceiveFrame, sTransmitError);
             }
         }
     }

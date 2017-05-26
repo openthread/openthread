@@ -57,10 +57,10 @@ extern "C" void otPlatAlarmFired(otInstance *)
 {
 }
 
-extern "C" void otPlatRadioTransmitDone(otInstance *, RadioPacket *aFrame, bool aRxPending, otError aError)
+extern "C" void otPlatRadioTxDone(otInstance *, RadioPacket *aFrame, RadioPacket *aAckFrame,  otError aError)
 {
     (void)aFrame;
-    (void)aRxPending;
+    (void)aAckFrame;
     (void)aError;
 }
 
