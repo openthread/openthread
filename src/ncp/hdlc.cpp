@@ -154,7 +154,7 @@ exit:
 
 bool Encoder::BufferWriteIterator::CanWrite(uint16_t aWriteLength) const
 {
-   return (mRemainingLength >= aWriteLength);
+    return (mRemainingLength >= aWriteLength);
 }
 
 Encoder::Encoder(void):
@@ -203,6 +203,7 @@ otError Encoder::Encode(const uint8_t *aInBuf, uint16_t aInLength, BufferWriteIt
     }
 
 exit:
+
     if (error != OT_ERROR_NONE)
     {
         aIterator = oldIterator;
@@ -227,6 +228,7 @@ otError Encoder::Finalize(BufferWriteIterator &aIterator)
     SuccessOrExit(error = aIterator.WriteByte(kFlagSequence));
 
 exit:
+
     if (error != OT_ERROR_NONE)
     {
         aIterator = oldIterator;
@@ -236,7 +238,8 @@ exit:
     return error;
 }
 
-Decoder::Decoder(uint8_t *aOutBuf, uint16_t aOutLength, FrameHandler aFrameHandler, ErrorHandler aErrorHandler, void *aContext):
+Decoder::Decoder(uint8_t *aOutBuf, uint16_t aOutLength, FrameHandler aFrameHandler, ErrorHandler aErrorHandler,
+                 void *aContext):
     mState(kStateNoSync),
     mFrameHandler(aFrameHandler),
     mErrorHandler(aErrorHandler),
@@ -276,6 +279,7 @@ void Decoder::Decode(const uint8_t *aInBuf, uint16_t aInLength)
                 break;
 
             case kFlagSequence:
+
                 // We ignore frames which are smaller
                 // than the size of the CRC check.
                 if (mOutOffset > sizeof(uint16_t))
@@ -307,6 +311,7 @@ void Decoder::Decode(const uint8_t *aInBuf, uint16_t aInLength)
                     {
                         mErrorHandler(mContext, OT_ERROR_NO_BUFS, mOutBuf, mOutOffset);
                     }
+
                     mState = kStateNoSync;
                 }
 
@@ -329,6 +334,7 @@ void Decoder::Decode(const uint8_t *aInBuf, uint16_t aInLength)
                 {
                     mErrorHandler(mContext, OT_ERROR_NO_BUFS, mOutBuf, mOutOffset);
                 }
+
                 mState = kStateNoSync;
             }
 

@@ -252,7 +252,7 @@ void NcpUart::HandleError(otError aError, uint8_t *aBuf, uint16_t aBufLength)
     snprintf(hexbuf, sizeof(hexbuf), "Framing error %d: [", aError);
 
     // Write out the first part of our log message.
-    otNcpStreamWrite(0, reinterpret_cast<uint8_t*>(hexbuf), static_cast<int>(strlen(hexbuf)));
+    otNcpStreamWrite(0, reinterpret_cast<uint8_t *>(hexbuf), static_cast<int>(strlen(hexbuf)));
 
     // The first '3' comes from the trailing "]\n\000" at the end o the string.
     // The second '3' comes from the length of two hex digits and a space.
@@ -261,16 +261,16 @@ void NcpUart::HandleError(otError aError, uint8_t *aBuf, uint16_t aBufLength)
         // We can get away with sprintf because we know
         // `hexbuf` is large enough, based on our calculations
         // above.
-        snprintf(&hexbuf[i*3], sizeof(hexbuf) - i*3, " %02X", static_cast<uint8_t>(aBuf[i]));
+        snprintf(&hexbuf[i * 3], sizeof(hexbuf) - i * 3, " %02X", static_cast<uint8_t>(aBuf[i]));
     }
 
     // Append a final closing bracket and newline character
     // so our log line looks nice.
-    snprintf(&hexbuf[i*3], sizeof(hexbuf) - i*3, "]\n");
+    snprintf(&hexbuf[i * 3], sizeof(hexbuf) - i * 3, "]\n");
 
     // Write out the second part of our log message.
     // We skip the first byte since it has a space in it.
-    otNcpStreamWrite(0, reinterpret_cast<uint8_t*>(hexbuf + 1), static_cast<int>(strlen(hexbuf) - 1));
+    otNcpStreamWrite(0, reinterpret_cast<uint8_t *>(hexbuf + 1), static_cast<int>(strlen(hexbuf) - 1));
 }
 
 #if OPENTHREAD_ENABLE_DEFAULT_LOGGING
@@ -284,6 +284,7 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     va_list args;
 
     va_start(args, aFormat);
+
     if ((charsWritten = vsnprintf(logString, sizeof(logString), aFormat, args)) > 0)
     {
         if (charsWritten > static_cast<int>(sizeof(logString) - 1))
@@ -291,8 +292,9 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
             charsWritten = static_cast<int>(sizeof(logString) - 1);
         }
 
-        otNcpStreamWrite(0, reinterpret_cast<uint8_t*>(logString), charsWritten);
+        otNcpStreamWrite(0, reinterpret_cast<uint8_t *>(logString), charsWritten);
     }
+
     va_end(args);
 
     (void)aLogLevel;

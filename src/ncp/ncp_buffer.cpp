@@ -174,6 +174,7 @@ otError NcpFrameBuffer::InFrameFeedByte(uint8_t aByte)
     mWriteSegmentTail = newTail;
 
 exit:
+
     if (error != OT_ERROR_NONE)
     {
         InFrameDiscard();
@@ -361,7 +362,7 @@ otError NcpFrameBuffer::OutFramePrepareSegment(void)
 
         // Find tail/end of current segment.
         mReadSegmentTail = Advance(mReadSegmentHead,
-				   kSegmentHeaderSize + (header & kSegmentHeaderLengthMask));
+                                   kSegmentHeaderSize + (header & kSegmentHeaderLengthMask));
 
         // Update the current read pointer to skip the segment header.
         mReadPointer = Advance(mReadSegmentHead, kSegmentHeaderSize);
@@ -385,6 +386,7 @@ otError NcpFrameBuffer::OutFramePrepareSegment(void)
     }
 
 exit:
+
     if (error != OT_ERROR_NONE)
     {
         mReadState = kReadStateDone;
@@ -408,8 +410,8 @@ otError NcpFrameBuffer::OutFramePrepareMessage(void)
 
     // Update the current message from the queue.
     mReadMessage = (mReadMessage == NULL) ?
-        otMessageQueueGetHead(&mMessageQueue) :
-        otMessageQueueGetNext(&mMessageQueue, mReadMessage);
+                   otMessageQueueGetHead(&mMessageQueue) :
+                   otMessageQueueGetNext(&mMessageQueue, mReadMessage);
 
     VerifyOrExit(mReadMessage != NULL, error = OT_ERROR_NOT_FOUND);
 
@@ -641,8 +643,8 @@ uint16_t NcpFrameBuffer::OutFrameGetLength(void)
         if (header & kSegmentHeaderMessageIndicatorFlag)
         {
             message = (message == NULL) ?
-                otMessageQueueGetHead(&mMessageQueue) :
-                otMessageQueueGetNext(&mMessageQueue, message);
+                      otMessageQueueGetHead(&mMessageQueue) :
+                      otMessageQueueGetNext(&mMessageQueue, message);
 
             if (message != NULL)
             {
