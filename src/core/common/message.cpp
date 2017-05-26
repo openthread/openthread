@@ -389,7 +389,7 @@ otError Message::SetPriority(uint8_t aPriority)
 
     if (mBuffer.mHead.mInfo.mInPriorityQ)
     {
-        priorityQueue = mBuffer.mHead.mInfo.mPriorityQueue;
+        priorityQueue = mBuffer.mHead.mInfo.mQueue.mPriority;
         priorityQueue->Dequeue(*this);
     }
     else
@@ -786,13 +786,13 @@ uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t 
 
 void Message::SetMessageQueue(MessageQueue *aMessageQueue)
 {
-    mBuffer.mHead.mInfo.mMessageQueue = aMessageQueue;
+    mBuffer.mHead.mInfo.mQueue.mMessage = aMessageQueue;
     mBuffer.mHead.mInfo.mInPriorityQ = false;
 }
 
 void Message::SetPriorityQueue(PriorityQueue *aPriorityQueue)
 {
-    mBuffer.mHead.mInfo.mPriorityQueue = aPriorityQueue;
+    mBuffer.mHead.mInfo.mQueue.mPriority = aPriorityQueue;
     mBuffer.mHead.mInfo.mInPriorityQ = true;
 }
 
