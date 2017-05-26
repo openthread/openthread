@@ -856,10 +856,15 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
+#if PENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
         TransmitDoneTask(mTxFrame, false, OT_ERROR_ABORT);
+#else
+        TransmitDoneTask(mTxFrame, NULL, OT_ERROR_ABORT);
+#endif
     }
 }
 
+#if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
 extern "C" void otPlatRadioTransmitDone(otInstance *aInstance, RadioPacket *aPacket, bool aRxPending,
                                         otError aError)
 {
@@ -946,6 +951,112 @@ void Mac::TransmitDoneTask(RadioPacket *aPacket, bool aRxPending, otError aError
 exit:
     return;
 }
+
+#else // #if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
+extern "C" void otPlatRadioTxDone(otInstance *aInstance, RadioPacket *aPacket, RadioPacket *aAckPacket,
+                                  otError aError)
+{
+    otLogFuncEntryMsg("%!otError!", aError);
+
+#if OPENTHREAD_ENABLE_RAW_LINK_API
+
+    if (aInstance->mLinkRaw.IsEnabled())
+    {
+        aInstance->mLinkRaw.InvokeTransmitDone(aPacket, (static_cast<Frame *>(aAckPacket))->GetFramePending(), aError);
+    }
+    else
+#endif // OPENTHREAD_ENABLE_RAW_LINK_API
+    {
+        aInstance->mThreadNetif.GetMac().TransmitDoneTask(aPacket, aAckPacket, aError);
+    }
+
+    otLogFuncExit();
+}
+
+void Mac::TransmitDoneTask(RadioPacket *aPacket, RadioPacket *aAckPacket, otError aError)
+{
+    Frame *txFrame = static_cast<Frame *>(aPacket);
+    Address addr;
+    bool framePending = false;
+
+    mMacTimer.Stop();
+
+    mCounters.mTxTotal++;
+
+    txFrame->GetDstAddr(addr);
+
+    if (aError == OT_ERROR_NONE && txFrame->GetAckRequest() && aAckPacket != NULL)
+    {
+        Frame *ackFrame = static_cast<Frame *>(aAckPacket);
+        Neighbor *neighbor;
+
+        framePending = ackFrame->GetFramePending();
+        neighbor = mNetif.GetMle().GetNeighbor(addr);
+
+        if (neighbor != NULL)
+        {
+            neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), ackFrame->GetPower());
+        }
+    }
+
+    if (addr.mShortAddress == kShortAddrBroadcast)
+    {
+        // Broadcast packet
+        mCounters.mTxBroadcast++;
+    }
+    else
+    {
+        // Unicast packet
+        mCounters.mTxUnicast++;
+    }
+
+    if (aError == OT_ERROR_ABORT)
+    {
+        mCounters.mTxErrAbort++;
+    }
+
+    if (aError == OT_ERROR_CHANNEL_ACCESS_FAILURE)
+    {
+        mCounters.mTxErrCca++;
+    }
+
+    if (!RadioSupportsCsmaBackoff() &&
+        aError == OT_ERROR_CHANNEL_ACCESS_FAILURE &&
+        mCsmaAttempts < kMaxCSMABackoffs)
+    {
+        mCsmaAttempts++;
+        StartCsmaBackoff();
+
+        ExitNow();
+    }
+
+    mCsmaAttempts = 0;
+
+    switch (mState)
+    {
+    case kStateTransmitData:
+        if (framePending)
+        {
+            mReceiveTimer.Start(kDataPollTimeout);
+        }
+
+    // fall through
+
+    case kStateActiveScan:
+    case kStateTransmitBeacon:
+        SentFrame(aError);
+        break;
+
+    default:
+        assert(false);
+        break;
+    }
+
+exit:
+    return;
+}
+
+#endif // OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
 
 void Mac::HandleMacTimer(void *aContext)
 {

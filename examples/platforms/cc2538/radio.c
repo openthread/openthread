@@ -513,7 +513,7 @@ void cc2538RadioProcess(otInstance *aInstance)
             else
 #endif
             {
-                otPlatRadioTransmitDone(aInstance, &sTransmitFrame, false, sTransmitError);
+                otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, sTransmitError);
             }
         }
         else if (sReceiveFrame.mLength == IEEE802154_ACK_LENGTH &&
@@ -532,8 +532,7 @@ void cc2538RadioProcess(otInstance *aInstance)
             else
 #endif
             {
-                otPlatRadioTransmitDone(aInstance, &sTransmitFrame, (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0,
-                                        sTransmitError);
+                otPlatRadioTxDone(aInstance, &sTransmitFrame, &sReceiveFrame, sTransmitError);
             }
         }
     }

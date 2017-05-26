@@ -390,15 +390,32 @@ RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *aInstance);
 otError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket);
 
 /**
- * The radio driver calls this method to notify OpenThread that the transmission has completed.
+ * The radio driver calls this method to notify OpenThread that the transmission has completed,
+ * this callback pass up the ACK frame, new add platforms should use this callback function.
+ *
+ * @param[in]  aInstance      The OpenThread instance structure.
+ * @param[in]  aPacket        A pointer to the packet that was transmitted.
+ * @param[in]  aAckPacket     A pointer to the ACK packet, NULL if no ACK was received.
+ * @param[in]  aError         OT_ERROR_NONE when the frame was transmitted, OT_ERROR_NO_ACK when the frame was
+ *                            transmitted but no ACK was received, OT_ERROR_CHANNEL_ACCESS_FAILURE when the transmission
+ *                            could not take place due to activity on the channel, OT_ERROR_ABORT when transmission was
+ *                            aborted for other reasons.
+ *
+ */
+extern void otPlatRadioTxDone(otInstance *aInstance, RadioPacket *aPacket, RadioPacket *aAckPacket,
+                              otError aError);
+
+/**
+ * The radio driver calls this method to notify OpenThread that the transmission has completed,
+ * this function is going to be deprecated, new add platfroms should not use this callback function.
  *
  * @param[in]  aInstance      The OpenThread instance structure.
  * @param[in]  aPacket        A pointer to the packet that was transmitted.
  * @param[in]  aFramePending  TRUE if an ACK frame was received and the Frame Pending bit was set.
- * @param[in]  aError  OT_ERROR_NONE when the frame was transmitted, OT_ERROR_NO_ACK when the frame was
- *                     transmitted but no ACK was received, OT_ERROR_CHANNEL_ACCESS_FAILURE when the transmission
- *                     could not take place due to activity on the channel, OT_ERROR_ABORT when transmission was
- *                     aborted for other reasons.
+ * @param[in]  aError         OT_ERROR_NONE when the frame was transmitted, OT_ERROR_NO_ACK when the frame was
+ *                            transmitted but no ACK was received, OT_ERROR_CHANNEL_ACCESS_FAILURE when the transmission
+ *                            could not take place due to activity on the channel, OT_ERROR_ABORT when transmission was
+ *                            aborted for other reasons.
  *
  */
 extern void otPlatRadioTransmitDone(otInstance *aInstance, RadioPacket *aPacket, bool aFramePending,

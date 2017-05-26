@@ -131,4 +131,12 @@
  */
 #define OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE_NO_DTLS             2048
 
+/**
+  * @def OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
+  *
+  * Define to 1 if you want use legacy transmit done.
+  *
+  */
+#define OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE 1
+
 #endif  // OPENTHREAD_CORE_NRF52840_CONFIG_H_
