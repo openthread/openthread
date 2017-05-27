@@ -123,10 +123,14 @@ static inline bool isSecurityEnabled(const uint8_t *frame)
     return (frame[0] & IEEE802154_SECURITY_ENABLED) != 0;
 }
 
+#if OPENTHREAD_ENABLE_DIAG
+
 static inline bool isFramePending(const uint8_t *frame)
 {
     return (frame[0] & IEEE802154_FRAME_PENDING) != 0;
 }
+
+#endif // #if OPENTHREAD_ENABLE_DIAG
 
 static inline bool isAckRequested(const uint8_t *frame)
 {
