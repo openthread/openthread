@@ -91,9 +91,9 @@ struct MessageInfo
     MessagePool     *mMessagePool;       ///< Identifies the message pool for this message.
     union
     {
-        MessageQueue    *mMessageQueue;  ///< Identifies the message queue (if any) where this message is queued.
-        PriorityQueue   *mPriorityQueue; ///< Identifies the priority queue (if any) where this message is queued.
-    };
+        MessageQueue    *mMessage;       ///< Identifies the message queue (if any) where this message is queued.
+        PriorityQueue   *mPriority;      ///< Identifies the priority queue (if any) where this message is queued.
+    } mQueue;                            ///< Identifies the queue (if any) where this message is queued.
 
     uint16_t         mReserved;          ///< Number of header bytes reserved for the message.
     uint16_t         mLength;            ///< Number of bytes within the message.
@@ -107,7 +107,7 @@ struct MessageInfo
     {
         uint16_t     mPanId;             ///< Used for MLE Discover Request and Response messages.
         uint8_t      mChannel;           ///< Used for MLE Announce.
-    };
+    } mPanIdChannel;                     ///< Used for MLE Discover Request, Response, and Announce messages.
 
     uint8_t          mType : 2;          ///< Identifies the type of message.
     uint8_t          mSubType : 4;       ///< Identifies the message sub type.
@@ -518,7 +518,7 @@ public:
      * @returns The IEEE 802.15.4 Destination PAN ID.
      *
      */
-    uint16_t GetPanId(void) const { return mBuffer.mHead.mInfo.mPanId; }
+    uint16_t GetPanId(void) const { return mBuffer.mHead.mInfo.mPanIdChannel.mPanId; }
 
     /**
      * This method sets the IEEE 802.15.4 Destination PAN ID.
@@ -528,7 +528,7 @@ public:
      * @param[in]  aPanId  The IEEE 802.15.4 Destination PAN ID.
      *
      */
-    void SetPanId(uint16_t aPanId) { mBuffer.mHead.mInfo.mPanId = aPanId; }
+    void SetPanId(uint16_t aPanId) { mBuffer.mHead.mInfo.mPanIdChannel.mPanId = aPanId; }
 
     /**
      * This method returns the IEEE 802.15.4 Channel to use for transmission.
@@ -538,7 +538,7 @@ public:
      * @returns The IEEE 802.15.4 Channel to use for transmission.
      *
      */
-    uint8_t GetChannel(void) const { return mBuffer.mHead.mInfo.mChannel; }
+    uint8_t GetChannel(void) const { return mBuffer.mHead.mInfo.mPanIdChannel.mChannel; }
 
     /**
      * This method sets the IEEE 802.15.4 Channel to use for transmission.
@@ -548,7 +548,7 @@ public:
      * @param[in]  aChannel  The IEEE 802.15.4 Channel to use for transmission.
      *
      */
-    void SetChannel(uint8_t aChannel) { mBuffer.mHead.mInfo.mChannel = aChannel; }
+    void SetChannel(uint8_t aChannel) { mBuffer.mHead.mInfo.mPanIdChannel.mChannel = aChannel; }
 
     /**
      * This method returns the timeout used for 6LoWPAN reassembly.
@@ -639,7 +639,7 @@ public:
      *
      */
     MessageQueue *GetMessageQueue(void) const {
-        return (!mBuffer.mHead.mInfo.mInPriorityQ) ? mBuffer.mHead.mInfo.mMessageQueue : NULL;
+        return (!mBuffer.mHead.mInfo.mInPriorityQ) ? mBuffer.mHead.mInfo.mQueue.mMessage : NULL;
     }
 
 private:
@@ -666,7 +666,7 @@ private:
      * @returns `true` if the message is in any queue, `false` otherwise.
      *
      */
-    bool IsInAQueue(void) const { return (mBuffer.mHead.mInfo.mMessageQueue != NULL); }
+    bool IsInAQueue(void) const { return (mBuffer.mHead.mInfo.mQueue.mMessage != NULL); }
 
     /**
      * This method sets the message queue information for the message.
@@ -683,7 +683,7 @@ private:
      *
      */
     PriorityQueue *GetPriorityQueue(void) const {
-        return (mBuffer.mHead.mInfo.mInPriorityQ) ? mBuffer.mHead.mInfo.mPriorityQueue : NULL;
+        return (mBuffer.mHead.mInfo.mInPriorityQ) ? mBuffer.mHead.mInfo.mQueue.mPriority : NULL;
     }
 
     /**
