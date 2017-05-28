@@ -856,7 +856,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-#if PENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
+#if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
         TransmitDoneTask(mTxFrame, false, OT_ERROR_ABORT);
 #else
         TransmitDoneTask(mTxFrame, NULL, OT_ERROR_ABORT);
