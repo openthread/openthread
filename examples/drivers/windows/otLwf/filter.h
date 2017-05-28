@@ -249,12 +249,12 @@ typedef struct _MS_FILTER
         // OpenThread radio variables
         //
         otRadioCaps                 otRadioCapabilities;
-        PhyState                    otPhyState;
+        otRadioState                otRadioState;
         uint8_t                     otCurrentListenChannel;
-        uint8_t                     otReceiveMessage[kMaxPHYPacketSize];
-        uint8_t                     otTransmitMessage[kMaxPHYPacketSize];
-        RadioPacket                 otReceiveFrame;
-        RadioPacket                 otTransmitFrame;
+        uint8_t                     otReceiveMessage[OT_RADIO_FRAME_MAX_SIZE];
+        uint8_t                     otTransmitMessage[OT_RADIO_FRAME_MAX_SIZE];
+        otRadioFrame                otReceiveFrame;
+        otRadioFrame                otTransmitFrame;
         otError                     otLastTransmitError;
         BOOLEAN                     otLastTransmitFramePending;
         CHAR                        otLastEnergyScanMaxRssi;

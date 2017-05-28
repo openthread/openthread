@@ -75,7 +75,7 @@ typedef otError(*testPlatRadioEnable)(otInstance *);
 typedef otError(*testPlatRadioDisable)(otInstance *);
 typedef otError(*testPlatRadioReceive)(otInstance *, uint8_t);
 typedef otError(*testPlatRadioTransmit)(otInstance *);
-typedef RadioPacket *(*testPlatRadioGetTransmitBuffer)(otInstance *);
+typedef otRadioFrame *(*testPlatRadioGetTransmitBuffer)(otInstance *);
 
 extern otRadioCaps                      g_testPlatRadioCaps;
 extern testPlatRadioSetPanId            g_testPlatRadioSetPanId;

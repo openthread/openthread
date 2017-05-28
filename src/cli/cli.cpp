@@ -1716,12 +1716,12 @@ exit:
     AppendResult(error);
 }
 
-void Interpreter::s_HandleLinkPcapReceive(const RadioPacket *aFrame, void *aContext)
+void Interpreter::s_HandleLinkPcapReceive(const otRadioFrame *aFrame, void *aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleLinkPcapReceive(aFrame);
 }
 
-void Interpreter::HandleLinkPcapReceive(const RadioPacket *aFrame)
+void Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame)
 {
     sServer->OutputFormat("\r\n");
 

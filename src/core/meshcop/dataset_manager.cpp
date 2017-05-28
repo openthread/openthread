@@ -430,8 +430,8 @@ otError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const Ip6:
     if (Tlv::GetTlv(aMessage, Tlv::kChannel, sizeof(channel), channel) == OT_ERROR_NONE)
     {
         VerifyOrExit(channel.IsValid() &&
-                     channel.GetChannel() >= kPhyMinChannel &&
-                     channel.GetChannel() <= kPhyMaxChannel,
+                     channel.GetChannel() >= OT_RADIO_CHANNEL_MIN &&
+                     channel.GetChannel() <= OT_RADIO_CHANNEL_MAX,
                      state = StateTlv::kReject);
 
         if (channel.GetChannel() != mNetif.GetMac().GetChannel())

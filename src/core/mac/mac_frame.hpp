@@ -182,7 +182,7 @@ struct Address
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Frame: public RadioPacket
+class Frame: public otRadioFrame
 {
 public:
     enum

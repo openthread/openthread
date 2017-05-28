@@ -242,7 +242,7 @@ void otPlatDiagTxPowerSet(int8_t aTxPower)
     sTxPower = aTxPower;
 }
 
-void otPlatDiagRadioReceived(otInstance *aInstance, RadioPacket *aFrame, otError aError)
+void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
     (void) aInstance;
 
@@ -281,7 +281,7 @@ void otPlatDiagAlarmCallback(otInstance *aInstance)
     {
         if ((sTxCount > 0) || (sTxCount == -1))
         {
-            RadioPacket *sTxPacket = otPlatRadioGetTransmitBuffer(aInstance);
+            otRadioFrame *sTxPacket = otPlatRadioGetTransmitBuffer(aInstance);
 
             sTxPacket->mLength = sizeof(struct PlatformDiagMessage);
             sTxPacket->mChannel = sChannel;

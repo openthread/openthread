@@ -178,9 +178,9 @@ private:
     /**
      * Trampoline for HandleRawFrame().
      */
-    static void HandleRawFrame(const RadioPacket *aFrame, void *aContext);
+    static void HandleRawFrame(const otRadioFrame *aFrame, void *aContext);
 
-    void HandleRawFrame(const RadioPacket *aFrame);
+    void HandleRawFrame(const otRadioFrame *aFrame);
 
     /**
      * Trampoline for HandleActiveScanResult().
@@ -222,17 +222,17 @@ private:
     /**
      * Trampoline for LinkRawReceiveDone().
      */
-    static void LinkRawReceiveDone(otInstance *aInstance, RadioPacket *aPacket, otError aError);
+    static void LinkRawReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
-    void LinkRawReceiveDone(RadioPacket *aPacket, otError aError);
+    void LinkRawReceiveDone(otRadioFrame *aFrame, otError aError);
 
     /**
      * Trampoline for LinkRawTransmitDone().
      */
-    static void LinkRawTransmitDone(otInstance *aInstance, RadioPacket *aPacket, bool aFramePending,
+    static void LinkRawTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, bool aFramePending,
                                     otError aError);
 
-    void LinkRawTransmitDone(RadioPacket *aPacket, bool aFramePending, otError aError);
+    void LinkRawTransmitDone(otRadioFrame *aFrame, bool aFramePending, otError aError);
 
     /**
      * Trampoline for LinkRawEnergyScanDone().

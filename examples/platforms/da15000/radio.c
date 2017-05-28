@@ -66,13 +66,13 @@ enum
 
 static otInstance *sThreadInstance;
 
-static PhyState    sRadioState = kStateDisabled;
-static uint8_t     sChannel = DEFAULT_CHANNEL;
-static uint8_t     sTransmitPsdu[kMaxPHYPacketSize];
-static uint8_t     sReceivePsdu[kMaxPHYPacketSize];
-static RadioPacket sTransmitFrame;
-static RadioPacket sReceiveFrame;
-static otError sTransmitStatus;
+static otRadioState sRadioState = OT_RADIO_STATE_DISABLED;
+static uint8_t      sChannel = DEFAULT_CHANNEL;
+static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE];
+static uint8_t      sReceivePsdu[OT_RADIO_FRAME_MAX_SIZE];
+static otRadioFrame sTransmitFrame;
+static otRadioFrame sReceiveFrame;
+static otError      sTransmitStatus;
 
 static bool sFramePending     = false;
 static bool sSendFrameDone    = false;
@@ -145,7 +145,7 @@ otError otPlatRadioEnable(otInstance *aInstance)
     uint8_t maxRetries;
 
     otError error = OT_ERROR_NONE;
-    otEXPECT_ACTION(sRadioState == kStateDisabled, error = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(sRadioState == OT_RADIO_STATE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
     sThreadInstance = aInstance;
     sTransmitFrame.mPsdu = sTransmitPsdu;
@@ -164,7 +164,7 @@ otError otPlatRadioEnable(otInstance *aInstance)
 
     FTDF_enableTransparentMode(FTDF_TRUE, options);
     otPlatRadioSetPromiscuous(aInstance, false);
-    sRadioState = kStateSleep;
+    sRadioState = OT_RADIO_STATE_SLEEP;
 
 exit:
     return error;
@@ -174,7 +174,7 @@ otError otPlatRadioDisable(otInstance *aInstance)
 {
     (void)aInstance;
 
-    sRadioState = kStateDisabled;
+    sRadioState = OT_RADIO_STATE_DISABLED;
 
     return OT_ERROR_NONE;
 }
@@ -183,14 +183,14 @@ bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
     (void)aInstance;
 
-    return (sRadioState != kStateDisabled);
+    return (sRadioState != OT_RADIO_STATE_DISABLED);
 }
 
 otError otPlatRadioSleep(otInstance *aInstance)
 {
     (void)aInstance;
 
-    if (sRadioState == kStateReceive && sSleepInitDelay == 0)
+    if (sRadioState == OT_RADIO_STATE_RECEIVE && sSleepInitDelay == 0)
     {
         sSleepInitDelay = otPlatAlarmGetNow();
         return OT_ERROR_NONE;
@@ -201,11 +201,11 @@ otError otPlatRadioSleep(otInstance *aInstance)
     }
 
     otError error = OT_ERROR_NONE;
-    otEXPECT_ACTION(((sRadioState == kStateReceive) || (sRadioState == kStateSleep)),
+    otEXPECT_ACTION(((sRadioState == OT_RADIO_STATE_RECEIVE) || (sRadioState == OT_RADIO_STATE_SLEEP)),
                     error = OT_ERROR_INVALID_STATE);
 
     sGoSleep = true;
-    sRadioState = kStateSleep;
+    sRadioState = OT_RADIO_STATE_SLEEP;
 
 exit:
     return error;
@@ -216,7 +216,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     (void)aInstance;
     otError error = OT_ERROR_NONE;
 
-    otEXPECT_ACTION(sRadioState != kStateDisabled, error = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(sRadioState != OT_RADIO_STATE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
     ad_ftdf_wake_up();
     sChannel = aChannel;
@@ -224,7 +224,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
     sEnableRX = 1;
     FTDF_setValue(FTDF_PIB_RX_ON_WHEN_IDLE, &sEnableRX);
-    sRadioState = kStateReceive;
+    sRadioState = OT_RADIO_STATE_RECEIVE;
 
 exit:
     return error;
@@ -356,25 +356,25 @@ void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
     }
 }
 
-RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
+otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
     (void)aInstance;
 
     return &sTransmitFrame;
 }
 
-otError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
+otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
     (void)aInstance;
 
     uint8_t csmaSuppress;
 
     otError error = OT_ERROR_NONE;
-    otEXPECT_ACTION(sRadioState != kStateDisabled, error = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(sRadioState != OT_RADIO_STATE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
     csmaSuppress = 0;
-    ad_ftdf_send_frame_simple(aPacket->mLength, aPacket->mPsdu, aPacket->mChannel, 0, csmaSuppress); //Prio 0 for all.
-    sRadioState = kStateTransmit;
+    ad_ftdf_send_frame_simple(aFrame->mLength, aFrame->mPsdu, aFrame->mChannel, 0, csmaSuppress); //Prio 0 for all.
+    sRadioState = OT_RADIO_STATE_TRANSMIT;
 
 exit:
     return error;
@@ -391,7 +391,7 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     (void)aInstance;
 
-    return kRadioCapsNone;
+    return OT_RADIO_CAPS_NONE;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
@@ -429,7 +429,7 @@ void da15000RadioProcess(otInstance *aInstance)
 {
     if (sSendFrameDone)
     {
-        sRadioState = kStateReceive;
+        sRadioState = OT_RADIO_STATE_RECEIVE;
 
         if (((sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0) || sTransmitStatus != OT_ERROR_NONE)
         {
@@ -444,7 +444,7 @@ void da15000RadioProcess(otInstance *aInstance)
         sSendFrameDone = false;
     }
 
-    if (sRadioState == kStateSleep && sGoSleep)
+    if (sRadioState == OT_RADIO_STATE_SLEEP && sGoSleep)
     {
         sGoSleep = false;
 
@@ -486,7 +486,7 @@ void FTDF_rcvFrameTransparent(FTDF_DataLength frameLength,
                               FTDF_Bitmap32   status,
                               FTDF_LinkQuality lqi)
 {
-    sReceiveFrame.mPower     = kPhyInvalidRssi;
+    sReceiveFrame.mPower     = OT_RADIO_RSSI_INVALID;
     sReceiveFrame.mLqi       = lqi;
 
     sReceiveFrame.mChannel   = sChannel;
@@ -502,9 +502,9 @@ void FTDF_rcvFrameTransparent(FTDF_DataLength frameLength,
         otPlatRadioReceiveDone(sThreadInstance, &sReceiveFrame, OT_ERROR_ABORT);
     }
 
-    if (sRadioState != kStateDisabled)
+    if (sRadioState != OT_RADIO_STATE_DISABLED)
     {
-        sRadioState = kStateReceive;
+        sRadioState = OT_RADIO_STATE_RECEIVE;
     }
 }
 

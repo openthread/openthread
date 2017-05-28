@@ -110,7 +110,7 @@ otError ActiveDataset::GenerateLocal(void)
     {
         ChannelMask0Tlv tlv;
         tlv.Init();
-        tlv.SetMask(kPhySupportedChannelMask);
+        tlv.SetMask(OT_RADIO_SUPPORTED_CHANNELS);
         mLocal.Set(tlv);
     }
 

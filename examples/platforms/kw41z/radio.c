@@ -72,24 +72,24 @@ typedef enum xcvr_cca_type_tag
     XCVR_CCA_MODE3_c      /* 802.15.4 compliant signal detect and energy detect - CCA bit ACTIVE */
 } xcvr_cca_type_t;
 
-static PhyState     sState = kStateDisabled;
-static uint16_t     sPanId;
-static uint8_t      sExtSrcAddrBitmap[(RADIO_CONFIG_SRC_MATCH_ENTRY_NUM + 7) / 8];
-static uint8_t      sChannel;
-static int8_t       sMaxED;
-static int8_t       sAutoTxPwrLevel = 0;
+static otRadioState  sState = OT_RADIO_STATE_DISABLED;
+static uint16_t      sPanId;
+static uint8_t       sExtSrcAddrBitmap[(RADIO_CONFIG_SRC_MATCH_ENTRY_NUM + 7) / 8];
+static uint8_t       sChannel;
+static int8_t        sMaxED;
+static int8_t        sAutoTxPwrLevel = 0;
 
 /* ISR Signaling Flags */
-static bool         sTxDone     = false;
-static bool         sRxDone     = false;
-static bool         sEdScanDone = false;
-static bool         sAckFpState;
-static otError      sTxStatus;
+static bool          sTxDone     = false;
+static bool          sRxDone     = false;
+static bool          sEdScanDone = false;
+static bool          sAckFpState;
+static otError       sTxStatus;
 
-static RadioPacket  sTxPacket;
-static RadioPacket  sRxPacket;
+static otRadioFrame  sTxFrame;
+static otRadioFrame  sRxFrame;
 #if DOUBLE_BUFFERING
-static uint8_t      sRxData[kMaxPHYPacketSize];
+static uint8_t       sRxData[OT_RADIO_FRAME_MAX_SIZE];
 #endif
 
 /* Private functions */
@@ -106,7 +106,7 @@ static otError      rf_add_addr_table_entry(uint16_t checksum, bool extendedAddr
 static otError      rf_remove_addr_table_entry(uint16_t checksum);
 static otError      rf_remove_addr_table_entry_index(uint8_t index);
 
-PhyState otPlatRadioGetState(otInstance *aInstance)
+otRadioState otPlatRadioGetState(otInstance *aInstance)
 {
     (void)aInstance;
     return sState;
@@ -171,7 +171,7 @@ otError otPlatRadioEnable(otInstance *aInstance)
     NVIC_ClearPendingIRQ(Radio_1_IRQn);
     NVIC_EnableIRQ(Radio_1_IRQn);
 
-    sState = kStateSleep;
+    sState = OT_RADIO_STATE_SLEEP;
 
 exit:
     return OT_ERROR_NONE;
@@ -183,7 +183,7 @@ otError otPlatRadioDisable(otInstance *aInstance)
 
     NVIC_DisableIRQ(Radio_1_IRQn);
     rf_abort();
-    sState = kStateDisabled;
+    sState = OT_RADIO_STATE_DISABLED;
 
 exit:
     return OT_ERROR_NONE;
@@ -192,7 +192,7 @@ exit:
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
     (void) aInstance;
-    return sState != kStateDisabled;
+    return sState != OT_RADIO_STATE_DISABLED;
 }
 
 otError otPlatRadioSleep(otInstance *aInstance)
@@ -200,10 +200,11 @@ otError otPlatRadioSleep(otInstance *aInstance)
     otError status = OT_ERROR_NONE;
     (void) aInstance;
 
-    otEXPECT_ACTION(((sState != kStateTransmit) && (sState != kStateDisabled)), status = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(((sState != OT_RADIO_STATE_TRANSMIT) &&
+                     (sState != OT_RADIO_STATE_DISABLED)), status = OT_ERROR_INVALID_STATE);
 
     rf_abort();
-    sState = kStateSleep;
+    sState = OT_RADIO_STATE_SLEEP;
 
 exit:
     return status;
@@ -214,9 +215,10 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     otError status = OT_ERROR_NONE;
     (void) aInstance;
 
-    otEXPECT_ACTION(((sState != kStateTransmit) && (sState != kStateDisabled)), status = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(((sState != OT_RADIO_STATE_TRANSMIT) &&
+                     (sState != OT_RADIO_STATE_DISABLED)), status = OT_ERROR_INVALID_STATE);
 
-    sState = kStateReceive;
+    sState = OT_RADIO_STATE_RECEIVE;
 
     otEXPECT(rf_get_state() != XCVR_RX_c);
 
@@ -225,7 +227,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     /* Set Power level for auto TX */
     rf_set_tx_power(sAutoTxPwrLevel);
     rf_set_channel(aChannel);
-    sRxPacket.mChannel = aChannel;
+    sRxFrame.mChannel = aChannel;
 
     /* Clear all IRQ flags */
     ZLL->IRQSTS = ZLL->IRQSTS;
@@ -315,30 +317,31 @@ void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
     }
 }
 
-RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
+otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
     (void)aInstance;
-    return &sTxPacket;
+    return &sTxFrame;
 }
 
-otError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
+otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
     otError status = OT_ERROR_NONE;
     uint32_t timeout;
 
     (void) aInstance;
 
-    otEXPECT_ACTION(((sState != kStateTransmit) && (sState != kStateDisabled)), status = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(((sState != OT_RADIO_STATE_TRANSMIT) &&
+                     (sState != OT_RADIO_STATE_DISABLED)), status = OT_ERROR_INVALID_STATE);
 
     if (rf_get_state() != XCVR_Idle_c)
     {
         rf_abort();
     }
 
-    rf_set_channel(aPacket->mChannel);
-    rf_set_tx_power(aPacket->mPower);
+    rf_set_channel(aFrame->mChannel);
+    rf_set_tx_power(aFrame->mPower);
 
-    *(uint8_t *)ZLL->PKT_BUFFER_TX = aPacket->mLength;
+    *(uint8_t *)ZLL->PKT_BUFFER_TX = aFrame->mLength;
 
     /* Set CCA mode */
     ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_CCATYPE_MASK;
@@ -348,7 +351,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
     ZLL->IRQSTS = ZLL->IRQSTS;
 
     /* Perform automatic reception of ACK frame, if required */
-    if (aPacket->mPsdu[0] & IEEE802154_ACK_REQUEST)
+    if (aFrame->mPsdu[0] & IEEE802154_ACK_REQUEST)
     {
         ZLL->PHY_CTRL |= ZLL_PHY_CTRL_RXACKRQD_MASK;
         ZLL->PHY_CTRL |= XCVR_TR_c;
@@ -357,7 +360,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
         timeout += (((XCVR_TSM->END_OF_SEQ & XCVR_TSM_END_OF_SEQ_END_OF_TX_WU_MASK) >>
                      XCVR_TSM_END_OF_SEQ_END_OF_TX_WU_SHIFT) >> 4);
         timeout += IEEE802154_CCA_LEN + IEEE802154_TURNAROUND_LEN + IEEE802154_PHY_SHR_LEN +
-                   (1 + aPacket->mLength) * kPhySymbolsPerOctet + IEEE802154_ACK_WAIT;
+                   (1 + aFrame->mLength) * OT_RADIO_SYMBOLS_PER_OCTET + IEEE802154_ACK_WAIT;
         rf_set_timeout(timeout);
     }
     else
@@ -367,7 +370,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
     }
 
     sAckFpState = false;
-    sState = kStateTransmit;
+    sState = OT_RADIO_STATE_TRANSMIT;
     /* Unmask SEQ interrupt */
     ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_SEQMSK_MASK;
 
@@ -384,7 +387,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     (void)aInstance;
-    return kRadioCapsAckTimeout | kRadioCapsEnergyScan;
+    return OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_ENERGY_SCAN;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
@@ -424,7 +427,8 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
     uint32_t timeout;
     (void) aInstance;
 
-    otEXPECT_ACTION(((sState != kStateTransmit) && (sState != kStateDisabled)), status = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(((sState != OT_RADIO_STATE_TRANSMIT) &&
+                     (sState != OT_RADIO_STATE_DISABLED)), status = OT_ERROR_INVALID_STATE);
 
     if (rf_get_state() != XCVR_Idle_c)
     {
@@ -444,7 +448,7 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
     ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_SEQMSK_MASK;
     /* Set Scan time-out */
     timeout  = rf_get_timestamp();
-    timeout += (aScanDuration * 1000) / kPhyUsPerSymbol;
+    timeout += (aScanDuration * 1000) / OT_RADIO_SYMBOL_TIME;
     rf_set_timeout(timeout);
 
 exit:
@@ -725,7 +729,7 @@ void Radio_1_IRQHandler(void)
         else if ((state == XCVR_TR_c) && !(irqStatus & ZLL_IRQSTS_RXIRQ_MASK))
         {
             rf_abort();
-            sState = kStateReceive;
+            sState = OT_RADIO_STATE_RECEIVE;
             sTxStatus = OT_ERROR_NO_ACK;
             sTxDone = true;
         }
@@ -742,18 +746,18 @@ void Radio_1_IRQHandler(void)
         {
         case XCVR_RX_c:
             temp = (ZLL->LQI_AND_RSSI & ZLL_LQI_AND_RSSI_LQI_VALUE_MASK) >> ZLL_LQI_AND_RSSI_LQI_VALUE_SHIFT;
-            sRxPacket.mLength = (ZLL->IRQSTS & ZLL_IRQSTS_RX_FRAME_LENGTH_MASK) >> ZLL_IRQSTS_RX_FRAME_LENGTH_SHIFT;
-            sRxPacket.mLqi = rf_lqi_adjust(temp);
-            sRxPacket.mPower = rf_lqi_to_rssi(sRxPacket.mLqi);
+            sRxFrame.mLength = (ZLL->IRQSTS & ZLL_IRQSTS_RX_FRAME_LENGTH_MASK) >> ZLL_IRQSTS_RX_FRAME_LENGTH_SHIFT;
+            sRxFrame.mLqi = rf_lqi_adjust(temp);
+            sRxFrame.mPower = rf_lqi_to_rssi(sRxFrame.mLqi);
 #if DOUBLE_BUFFERING
-            memcpy(sRxData, (void *)ZLL->PKT_BUFFER_RX, sRxPacket.mLength);
+            memcpy(sRxData, (void *)ZLL->PKT_BUFFER_RX, sRxFrame.mLength);
 #endif
             sRxDone = true;
             break;
 
         case XCVR_TX_c:
         case XCVR_TR_c:
-            sState = kStateReceive;
+            sState = OT_RADIO_STATE_RECEIVE;
 
             if ((ZLL->PHY_CTRL & ZLL_PHY_CTRL_CCABFRTX_MASK) && (irqStatus & ZLL_IRQSTS_CCA_MASK))
             {
@@ -794,7 +798,7 @@ void Radio_1_IRQHandler(void)
         }
     }
 
-    if ((sState == kStateReceive) && (rf_get_state() == XCVR_Idle_c))
+    if ((sState == OT_RADIO_STATE_RECEIVE) && (rf_get_state() == XCVR_Idle_c))
     {
         /* Restart RX */
         while (ZLL->SEQ_STATE & ZLL_SEQ_STATE_SEQ_STATE_MASK) {}
@@ -857,13 +861,13 @@ void kw41zRadioInit(void)
     rf_set_channel(DEFAULT_CHANNEL);
     rf_set_tx_power(0);
 
-    sTxPacket.mLength = 0;
-    sTxPacket.mPsdu = (uint8_t *)ZLL->PKT_BUFFER_TX + 1;
-    sRxPacket.mLength = 0;
+    sTxFrame.mLength = 0;
+    sTxFrame.mPsdu = (uint8_t *)ZLL->PKT_BUFFER_TX + 1;
+    sRxFrame.mLength = 0;
 #if DOUBLE_BUFFERING
-    sRxPacket.mPsdu = sRxData;
+    sRxFrame.mPsdu = sRxData;
 #else
-    sRxPacket.mPsdu = (uint8_t *)ZLL->PKT_BUFFER_RX;
+    sRxFrame.mPsdu = (uint8_t *)ZLL->PKT_BUFFER_RX;
 #endif
 }
 
@@ -871,7 +875,7 @@ void kw41zRadioProcess(otInstance *aInstance)
 {
     if (sTxDone)
     {
-        otPlatRadioTransmitDone(aInstance, &sTxPacket, sAckFpState, sTxStatus);
+        otPlatRadioTransmitDone(aInstance, &sTxFrame, sAckFpState, sTxStatus);
         sTxDone = false;
     }
 
@@ -881,12 +885,12 @@ void kw41zRadioProcess(otInstance *aInstance)
 
         if (otPlatDiagModeGet())
         {
-            otPlatDiagRadioReceiveDone(aInstance, &sRxPacket, OT_ERROR_NONE);
+            otPlatDiagRadioReceiveDone(aInstance, &sRxFrame, OT_ERROR_NONE);
         }
         else
 #endif
         {
-            otPlatRadioReceiveDone(aInstance, &sRxPacket, OT_ERROR_NONE);
+            otPlatRadioReceiveDone(aInstance, &sRxFrame, OT_ERROR_NONE);
         }
 
         sRxDone = false;

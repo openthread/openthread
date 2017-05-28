@@ -1091,7 +1091,7 @@ otLwfEventWorkerThread(
         }
 
         // If we have a frame ready to transmit, do it now if we are allowed to transmit
-        if (pFilter->otPhyState == kStateTransmit && !pFilter->SendPending)
+        if (pFilter->otRadioState == OT_RADIO_STATE_TRANSMIT && !pFilter->SendPending)
         {
             otLwfRadioTransmitFrame(pFilter);
         }

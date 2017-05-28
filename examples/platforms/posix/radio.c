@@ -84,21 +84,21 @@ OT_TOOL_PACKED_BEGIN
 struct RadioMessage
 {
     uint8_t mChannel;
-    uint8_t mPsdu[kMaxPHYPacketSize];
+    uint8_t mPsdu[OT_RADIO_FRAME_MAX_SIZE];
 } OT_TOOL_PACKED_END;
 
-static void radioTransmit(struct RadioMessage *msg, const struct RadioPacket *pkt);
+static void radioTransmit(struct RadioMessage *msg, const struct otRadioFrame *pkt);
 static void radioSendMessage(otInstance *aInstance);
 static void radioSendAck(void);
 static void radioProcessFrame(otInstance *aInstance);
 
-static PhyState sState = kStateDisabled;
+static otRadioState sState = OT_RADIO_STATE_DISABLED;
 static struct RadioMessage sReceiveMessage;
 static struct RadioMessage sTransmitMessage;
 static struct RadioMessage sAckMessage;
-static RadioPacket sReceiveFrame;
-static RadioPacket sTransmitFrame;
-static RadioPacket sAckFrame;
+static otRadioFrame sReceiveFrame;
+static otRadioFrame sTransmitFrame;
+static otRadioFrame sAckFrame;
 
 static uint8_t sExtendedAddress[OT_EXT_ADDRESS_SIZE];
 static uint16_t sShortAddress;
@@ -387,14 +387,14 @@ void platformRadioInit(void)
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
     (void)aInstance;
-    return (sState != kStateDisabled) ? true : false;
+    return (sState != OT_RADIO_STATE_DISABLED) ? true : false;
 }
 
 otError otPlatRadioEnable(otInstance *aInstance)
 {
     if (!otPlatRadioIsEnabled(aInstance))
     {
-        sState = kStateSleep;
+        sState = OT_RADIO_STATE_SLEEP;
     }
 
     return OT_ERROR_NONE;
@@ -404,7 +404,7 @@ otError otPlatRadioDisable(otInstance *aInstance)
 {
     if (otPlatRadioIsEnabled(aInstance))
     {
-        sState = kStateDisabled;
+        sState = OT_RADIO_STATE_DISABLED;
     }
 
     return OT_ERROR_NONE;
@@ -415,10 +415,10 @@ otError otPlatRadioSleep(otInstance *aInstance)
     otError error = OT_ERROR_INVALID_STATE;
     (void)aInstance;
 
-    if (sState == kStateSleep || sState == kStateReceive)
+    if (sState == OT_RADIO_STATE_SLEEP || sState == OT_RADIO_STATE_RECEIVE)
     {
         error = OT_ERROR_NONE;
-        sState = kStateSleep;
+        sState = OT_RADIO_STATE_SLEEP;
     }
 
     return error;
@@ -429,10 +429,10 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     otError error = OT_ERROR_INVALID_STATE;
     (void)aInstance;
 
-    if (sState != kStateDisabled)
+    if (sState != OT_RADIO_STATE_DISABLED)
     {
         error = OT_ERROR_NONE;
-        sState = kStateReceive;
+        sState = OT_RADIO_STATE_RECEIVE;
         sAckWait = false;
         sReceiveFrame.mChannel = aChannel;
     }
@@ -440,22 +440,22 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     return error;
 }
 
-otError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
+otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aRadio)
 {
     otError error = OT_ERROR_INVALID_STATE;
     (void)aInstance;
-    (void)aPacket;
+    (void)aRadio;
 
-    if (sState == kStateReceive)
+    if (sState == OT_RADIO_STATE_RECEIVE)
     {
         error = OT_ERROR_NONE;
-        sState = kStateTransmit;
+        sState = OT_RADIO_STATE_TRANSMIT;
     }
 
     return error;
 }
 
-RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
+otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
     (void)aInstance;
     return &sTransmitFrame;
@@ -470,7 +470,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     (void)aInstance;
-    return kRadioCapsNone;
+    return OT_RADIO_CAPS_NONE;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
@@ -496,7 +496,7 @@ void radioReceive(otInstance *aInstance)
         isFrameTypeAck(sReceiveFrame.mPsdu) &&
         getDsn(sReceiveFrame.mPsdu) == getDsn(sTransmitFrame.mPsdu))
     {
-        sState = kStateReceive;
+        sState = OT_RADIO_STATE_RECEIVE;
         sAckWait = false;
 
 #if OPENTHREAD_ENABLE_DIAG
@@ -511,7 +511,7 @@ void radioReceive(otInstance *aInstance)
             otPlatRadioTxDone(aInstance, &sTransmitFrame, &sReceiveFrame, OT_ERROR_NONE);
         }
     }
-    else if ((sState == kStateReceive || sState == kStateTransmit) &&
+    else if ((sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT) &&
              (sReceiveFrame.mChannel == sReceiveMessage.mChannel))
     {
         radioProcessFrame(aInstance);
@@ -528,7 +528,7 @@ void radioSendMessage(otInstance *aInstance)
 
     if (!sAckWait)
     {
-        sState = kStateReceive;
+        sState = OT_RADIO_STATE_RECEIVE;
 
 #if OPENTHREAD_ENABLE_DIAG
 
@@ -546,7 +546,7 @@ void radioSendMessage(otInstance *aInstance)
 
 void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
 {
-    if (aReadFdSet != NULL && (sState != kStateTransmit || sAckWait))
+    if (aReadFdSet != NULL && (sState != OT_RADIO_STATE_TRANSMIT || sAckWait))
     {
         FD_SET(sSockFd, aReadFdSet);
 
@@ -556,7 +556,7 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMax
         }
     }
 
-    if (aWriteFdSet != NULL && sState == kStateTransmit && !sAckWait)
+    if (aWriteFdSet != NULL && sState == OT_RADIO_STATE_TRANSMIT && !sAckWait)
     {
         FD_SET(sSockFd, aWriteFdSet);
 
@@ -577,13 +577,13 @@ void platformRadioProcess(otInstance *aInstance)
         radioReceive(aInstance);
     }
 
-    if (sState == kStateTransmit && !sAckWait)
+    if (sState == OT_RADIO_STATE_TRANSMIT && !sAckWait)
     {
         radioSendMessage(aInstance);
     }
 }
 
-void radioTransmit(struct RadioMessage *msg, const struct RadioPacket *pkt)
+void radioTransmit(struct RadioMessage *msg, const struct otRadioFrame *pkt)
 {
     uint32_t i;
     struct sockaddr_in sockaddr;
@@ -678,7 +678,7 @@ void radioProcessFrame(otInstance *aInstance)
     }
 
     sReceiveFrame.mPower = -20;
-    sReceiveFrame.mLqi = kPhyNoLqi;
+    sReceiveFrame.mLqi = OT_RADIO_LQI_NONE;
 
     // generate acknowledgment
     if (isAckRequested(sReceiveFrame.mPsdu))

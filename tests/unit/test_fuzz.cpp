@@ -34,7 +34,7 @@
 bool g_fRadioEnabled = false;
 uint8_t g_RecvChannel = 0;
 uint8_t g_TransmitPsdu[128];
-RadioPacket g_TransmitRadioPacket;
+otRadioFrame g_TransmitRadioFrame;
 bool g_fTransmit = false;
 
 bool testFuzzRadioIsEnabled(otInstance *)
@@ -78,18 +78,18 @@ otError testFuzzRadioTransmit(otInstance *)
     return OT_ERROR_NONE;
 }
 
-RadioPacket *testFuzztRadioGetTransmitBuffer(otInstance *)
+otRadioFrame *testFuzztRadioGetTransmitBuffer(otInstance *)
 {
-    return &g_TransmitRadioPacket;
+    return &g_TransmitRadioFrame;
 }
 
 void TestFuzz(uint32_t aSeconds)
 {
     // Set the radio capabilities to disable any Mac related timer dependencies
-    g_testPlatRadioCaps = (otRadioCaps)(kRadioCapsAckTimeout | kRadioCapsTransmitRetries);
+    g_testPlatRadioCaps = (otRadioCaps)(OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_TRANSMIT_RETRIES);
 
     // Set the platform function pointers
-    g_TransmitRadioPacket.mPsdu = g_TransmitPsdu;
+    g_TransmitRadioFrame.mPsdu = g_TransmitPsdu;
     g_testPlatRadioIsEnabled = testFuzzRadioIsEnabled;
     g_testPlatRadioEnable = testFuzzRadioEnable;
     g_testPlatRadioDisable = testFuzzRadioDisable;
@@ -151,7 +151,7 @@ void TestFuzz(uint32_t aSeconds)
             if (g_fTransmit)
             {
                 g_fTransmit = false;
-                otPlatRadioTxDone(aInstance, &g_TransmitRadioPacket, NULL, OT_ERROR_NONE);
+                otPlatRadioTxDone(aInstance, &g_TransmitRadioFrame, NULL, OT_ERROR_NONE);
 #ifdef DBG_FUZZ
                 Log("<== transmit");
 #endif
@@ -160,7 +160,7 @@ void TestFuzz(uint32_t aSeconds)
             if (g_RecvChannel != 0)
             {
                 uint8_t fuzzRecvBuff[128];
-                RadioPacket fuzzPacket;
+                otRadioFrame fuzzPacket;
 
                 // Initialize the radio packet with a random length
                 memset(&fuzzPacket, 0, sizeof(fuzzPacket));

@@ -134,13 +134,13 @@ static uint8_t sRxBuf1[RX_BUF_SIZE] __attribute__((aligned(4)));
 static dataQueue_t sRxDataQueue = { 0 };
 
 /* openthread data primatives */
-static RadioPacket sTransmitFrame;
-static RadioPacket sReceiveFrame;
+static otRadioFrame sTransmitFrame;
+static otRadioFrame sReceiveFrame;
 static otError sTransmitError;
 static otError sReceiveError;
 
-static uint8_t sTransmitPsdu[kMaxPHYPacketSize] __attribute__((aligned(4))) ;
-static uint8_t sReceivePsdu[kMaxPHYPacketSize] __attribute__((aligned(4))) ;
+static uint8_t sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE] __attribute__((aligned(4))) ;
+static uint8_t sReceivePsdu[OT_RADIO_FRAME_MAX_SIZE] __attribute__((aligned(4))) ;
 
 /**
  * Interrupt handlers forward declared for register function
@@ -196,7 +196,7 @@ static void rfCoreInitReceiveParams(void)
         .condition                  = {
             .rule                   = COND_NEVER,
         },
-        .channel                    = kPhyMinChannel,
+        .channel                    = OT_RADIO_CHANNEL_MIN,
         .rxConfig                   =
         {
             .bAutoFlushCrc          = 1,
@@ -1324,7 +1324,7 @@ otError otPlatRadioSleep(otInstance *aInstance)
 /**
  * Function documented in platform/radio.h
  */
-RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
+otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
     (void)aInstance;
     return &sTransmitFrame;
@@ -1333,7 +1333,7 @@ RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 /**
  * Function documented in platform/radio.h
  */
-otError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
+otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
     otError error = OT_ERROR_BUSY;
 
@@ -1343,14 +1343,14 @@ otError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
          * This is the easiest way to setup the frequency synthesizer.
          * And we are supposed to fall into the receive state afterwards.
          */
-        error = otPlatRadioReceive(aInstance, aPacket->mChannel);
+        error = otPlatRadioReceive(aInstance, aFrame->mChannel);
 
         if (error == OT_ERROR_NONE)
         {
             sState = cc2650_stateTransmit;
 
             /* removing 2 bytes of CRC placeholder because we generate that in hardware */
-            otEXPECT_ACTION(rfCoreSendTransmitCmd(aPacket->mPsdu, aPacket->mLength - 2) == CMDSTA_Done,
+            otEXPECT_ACTION(rfCoreSendTransmitCmd(aFrame->mPsdu, aFrame->mLength - 2) == CMDSTA_Done,
                             error = OT_ERROR_FAILED);
             error = OT_ERROR_NONE;
         }
@@ -1376,7 +1376,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     (void)aInstance;
-    return kRadioCapsAckTimeout | kRadioCapsEnergyScan | kRadioCapsTransmitRetries;
+    return OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_ENERGY_SCAN | OT_RADIO_CAPS_TRANSMIT_RETRIES;
 }
 
 /**
@@ -1772,7 +1772,7 @@ static void readFrame(void)
             crcCorr = (rfc_ieeeRxCorrCrc_t *)&payload[len];
             rssi = payload[len - 1];
 
-            if (crcCorr->status.bCrcErr == 0 && (len - 2) < kMaxPHYPacketSize)
+            if (crcCorr->status.bCrcErr == 0 && (len - 2) < OT_RADIO_FRAME_MAX_SIZE)
             {
                 sReceiveFrame.mLength = len;
                 memcpy(sReceiveFrame.mPsdu, &(payload[1]), len - 2);

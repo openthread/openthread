@@ -99,9 +99,9 @@ enum
 
 static void radioTransmitMessage(otInstance *aInstance);
 
-static RadioPacket sTransmitFrame;
-static RadioPacket sReceiveFrame;
-static RadioPacket sAckFrame;
+static otRadioFrame sTransmitFrame;
+static otRadioFrame sReceiveFrame;
+static otRadioFrame sAckFrame;
 
 static otError sTransmitError;
 static otError sReceiveError;
@@ -110,7 +110,7 @@ static uint8_t sTransmitPsdu[IEEE802154_MAX_LENGTH];
 static uint8_t sReceivePsdu[IEEE802154_MAX_LENGTH];
 static uint8_t sAckPsdu[IEEE802154_MAX_LENGTH];
 
-static PhyState sState = kStateDisabled;
+static otRadioState sState = OT_RADIO_STATE_DISABLED;
 static bool sIsReceiverEnabled = false;
 
 static volatile uint8_t Mrf24StatusTx = 0;
@@ -323,14 +323,14 @@ void emskRadioInit(void)
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
     (void)aInstance;
-    return (sState != kStateDisabled);
+    return (sState != OT_RADIO_STATE_DISABLED);
 }
 
 otError otPlatRadioEnable(otInstance *aInstance)
 {
     if (!otPlatRadioIsEnabled(aInstance))
     {
-        sState = kStateSleep;
+        sState = OT_RADIO_STATE_SLEEP;
     }
 
     return OT_ERROR_NONE;
@@ -340,7 +340,7 @@ otError otPlatRadioDisable(otInstance *aInstance)
 {
     if (otPlatRadioIsEnabled(aInstance))
     {
-        sState = kStateDisabled;
+        sState = OT_RADIO_STATE_DISABLED;
     }
 
     return OT_ERROR_NONE;
@@ -351,10 +351,10 @@ otError otPlatRadioSleep(otInstance *aInstance)
     otError error = OT_ERROR_INVALID_STATE;
     (void)aInstance;
 
-    if (sState == kStateSleep || sState == kStateReceive)
+    if (sState == OT_RADIO_STATE_SLEEP || sState == OT_RADIO_STATE_RECEIVE)
     {
         error = OT_ERROR_NONE;
-        sState = kStateSleep;
+        sState = OT_RADIO_STATE_SLEEP;
         disableReceiver();
     }
 
@@ -366,10 +366,10 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     otError error = OT_ERROR_INVALID_STATE;
     (void)aInstance;
 
-    if (sState != kStateDisabled)
+    if (sState != OT_RADIO_STATE_DISABLED)
     {
         error = OT_ERROR_NONE;
-        sState = kStateReceive;
+        sState = OT_RADIO_STATE_RECEIVE;
         setChannel(aChannel);
         sReceiveFrame.mChannel = aChannel;
         enableReceiver();
@@ -378,23 +378,23 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     return error;
 }
 
-otError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
+otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
     otError error = OT_ERROR_INVALID_STATE;
     (void)aInstance;
-    (void)aPacket;
+    (void)aFrame;
 
-    if (sState == kStateReceive)
+    if (sState == OT_RADIO_STATE_RECEIVE)
     {
         error = OT_ERROR_NONE;
-        sState = kStateTransmit;
+        sState = OT_RADIO_STATE_TRANSMIT;
     }
 
     return error;
 
 }
 
-RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
+otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
     (void)aInstance;
     return &sTransmitFrame;
@@ -409,7 +409,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     (void)aInstance;
-    return kRadioCapsNone;
+    return OT_RADIO_CAPS_NONE;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
@@ -441,7 +441,7 @@ void readFrame(void)
 
     memset(readBuffer, 0, MRF24J40_RXFIFO_SIZE);
 
-    otEXPECT_ACTION(sState == kStateReceive || sState == kStateTransmit, ;);
+    otEXPECT_ACTION(sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT, ;);
     otEXPECT_ACTION(Mrf24StatusRx, ;);
 
     if (Mrf24StatusRx == 1)
@@ -538,24 +538,24 @@ void emskRadioProcess(otInstance *aInstance)
         }
     }
 
-    if ((sState == kStateReceive) && (sReceiveFrame.mLength > 0))
+    if ((sState == OT_RADIO_STATE_RECEIVE) && (sReceiveFrame.mLength > 0))
     {
         otPlatRadioReceiveDone(aInstance, &sReceiveFrame, sReceiveError);
     }
 
-    if (sState == kStateTransmit)
+    if (sState == OT_RADIO_STATE_TRANSMIT)
     {
         radioTransmitMessage(aInstance);
 
         if (sTransmitError != OT_ERROR_NONE || (sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0)
         {
-            sState = kStateReceive;
+            sState = OT_RADIO_STATE_RECEIVE;
             otPlatRadioTransmitDone(aInstance, &sTransmitFrame, false, sTransmitError);
         }
         else if (Mrf24StatusTx == 1)
         {
             Mrf24StatusTx = 0;
-            sState = kStateReceive;
+            sState = OT_RADIO_STATE_RECEIVE;
             otPlatRadioTransmitDone(aInstance, &sTransmitFrame,
                                     (mrf24j40_read_short_ctrl_reg(MRF24J40_TXNCON) & MRF24J40_FPSTAT) != 0,
                                     sTransmitError);

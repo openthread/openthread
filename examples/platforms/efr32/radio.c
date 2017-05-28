@@ -72,16 +72,16 @@ static bool           sTransmitBusy      = false;
 static bool           sPromiscuous       = false;
 static bool           sIsReceiverEnabled = false;
 static bool           sIsSrcMatchEnabled = false;
-static PhyState       sState             = kStateDisabled;
+static otRadioState   sState             = OT_RADIO_STATE_DISABLED;
 
 static uint8_t        sReceiveBuffer[IEEE802154_MAX_LENGTH + 1 + sizeof(RAIL_RxPacketInfo_t)];
 static uint8_t        sReceivePsdu[IEEE802154_MAX_LENGTH];
-static RadioPacket    sReceiveFrame;
-static otError    sReceiveError;
+static otRadioFrame   sReceiveFrame;
+static otError        sReceiveError;
 
-static RadioPacket    sTransmitFrame;
+static otRadioFrame   sTransmitFrame;
 static uint8_t        sTransmitPsdu[IEEE802154_MAX_LENGTH];
-static otError    sTransmitError;
+static otError        sTransmitError;
 
 typedef struct        srcMatchEntry
 {
@@ -223,7 +223,7 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aAddress)
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
     (void)aInstance;
-    return (sState != kStateDisabled);
+    return (sState != OT_RADIO_STATE_DISABLED);
 }
 
 otError otPlatRadioEnable(otInstance *aInstance)
@@ -233,8 +233,8 @@ otError otPlatRadioEnable(otInstance *aInstance)
 
     otEXPECT(!otPlatRadioIsEnabled(aInstance));
 
-    otLogInfoPlat(sInstance, "State=kStateSleep", NULL);
-    sState = kStateSleep;
+    otLogInfoPlat(sInstance, "State=OT_RADIO_STATE_SLEEP", NULL);
+    sState = OT_RADIO_STATE_SLEEP;
 
 exit:
     CORE_EXIT_CRITICAL();
@@ -248,8 +248,8 @@ otError otPlatRadioDisable(otInstance *aInstance)
 
     otEXPECT(otPlatRadioIsEnabled(aInstance));
 
-    otLogInfoPlat(sInstance, "State=kStateDisabled", NULL);
-    sState = kStateDisabled;
+    otLogInfoPlat(sInstance, "State=OT_RADIO_STATE_DISABLED", NULL);
+    sState = OT_RADIO_STATE_DISABLED;
 
 exit:
     CORE_EXIT_CRITICAL();
@@ -264,11 +264,11 @@ otError otPlatRadioSleep(otInstance *aInstance)
     CORE_DECLARE_IRQ_STATE;
     CORE_ENTER_CRITICAL();
 
-    otEXPECT_ACTION((sState != kStateTransmit) && (sState != kStateDisabled),
+    otEXPECT_ACTION((sState != OT_RADIO_STATE_TRANSMIT) && (sState != OT_RADIO_STATE_DISABLED),
                     error = OT_ERROR_INVALID_STATE);
 
-    otLogInfoPlat(sInstance, "State=kStateSleep", NULL);
-    sState = kStateSleep;
+    otLogInfoPlat(sInstance, "State=OT_RADIO_STATE_SLEEP", NULL);
+    sState = OT_RADIO_STATE_SLEEP;
 
     if (sIsReceiverEnabled)
     {
@@ -289,10 +289,10 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     CORE_DECLARE_IRQ_STATE;
     CORE_ENTER_CRITICAL();
 
-    otEXPECT_ACTION(sState != kStateDisabled, error = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(sState != OT_RADIO_STATE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
-    otLogInfoPlat(sInstance, "State=kStateReceive", NULL);
-    sState = kStateReceive;
+    otLogInfoPlat(sInstance, "State=OT_RADIO_STATE_RECEIVE", NULL);
+    sState = OT_RADIO_STATE_RECEIVE;
     setChannel(aChannel);
     sReceiveFrame.mChannel = aChannel;
 
@@ -311,7 +311,7 @@ exit:
     return error;
 }
 
-otError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
+otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
     otError error = OT_ERROR_NONE;
     RAIL_CsmaConfig_t csmaConfig = RAIL_CSMA_CONFIG_802_15_4_2003_2p4_GHz_OQPSK_CSMA;
@@ -322,20 +322,20 @@ otError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
     CORE_DECLARE_IRQ_STATE;
     CORE_ENTER_CRITICAL();
 
-    otEXPECT_ACTION((sState != kStateDisabled) && (sState != kStateTransmit),
+    otEXPECT_ACTION((sState != OT_RADIO_STATE_DISABLED) && (sState != OT_RADIO_STATE_TRANSMIT),
                     error = OT_ERROR_INVALID_STATE);
 
-    sState = kStateTransmit;
+    sState = OT_RADIO_STATE_TRANSMIT;
     sTransmitError = OT_ERROR_NONE;
     sTransmitBusy = true;
 
-    frame[0] = aPacket->mLength;
-    memcpy(frame + 1, aPacket->mPsdu, aPacket->mLength);
+    frame[0] = aFrame->mLength;
+    memcpy(frame + 1, aFrame->mPsdu, aFrame->mLength);
 
     tx_data.dataPtr = frame;
-    tx_data.dataLength = aPacket->mLength - 1;
-    RAIL_TxPowerSet(aPacket->mPower);
-    setChannel(aPacket->mChannel);
+    tx_data.dataLength = aFrame->mLength - 1;
+    RAIL_TxPowerSet(aFrame->mPower);
+    setChannel(aFrame->mChannel);
     RAIL_RfIdleExt(RAIL_IDLE, true);
 
     if (RAIL_TxDataLoad(&tx_data))
@@ -343,7 +343,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
         assert(false);
     }
 
-    if (RAIL_TxStart(aPacket->mChannel, RAIL_CcaCsma, &csmaConfig))
+    if (RAIL_TxStart(aFrame->mChannel, RAIL_CcaCsma, &csmaConfig))
     {
         assert(false);
     }
@@ -353,7 +353,7 @@ exit:
     return error;
 }
 
-RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
+otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
     (void)aInstance;
     return &sTransmitFrame;
@@ -368,7 +368,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     (void)aInstance;
-    return kRadioCapsNone;
+    return OT_RADIO_CAPS_NONE;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
@@ -698,8 +698,8 @@ void efr32RadioProcess(otInstance *aInstance)
     CORE_DECLARE_IRQ_STATE;
     CORE_ENTER_CRITICAL();
 
-    if ((sState == kStateReceive && sReceiveFrame.mLength > 0) ||
-        (sState == kStateTransmit && sReceiveFrame.mLength > IEEE802154_ACK_LENGTH))
+    if ((sState == OT_RADIO_STATE_RECEIVE && sReceiveFrame.mLength > 0) ||
+        (sState == OT_RADIO_STATE_TRANSMIT && sReceiveFrame.mLength > IEEE802154_ACK_LENGTH))
     {
 #if OPENTHREAD_ENABLE_DIAG
 
@@ -720,7 +720,7 @@ void efr32RadioProcess(otInstance *aInstance)
         }
     }
 
-    if (sState == kStateTransmit && sTransmitBusy == false)
+    if (sState == OT_RADIO_STATE_TRANSMIT && sTransmitBusy == false)
     {
         if (sTransmitError != OT_ERROR_NONE || (sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0)
         {
@@ -729,7 +729,7 @@ void efr32RadioProcess(otInstance *aInstance)
                 otLogDebgPlat(sInstance, "Transmit failed ErrorCode=%d", sTransmitError);
             }
 
-            sState = kStateReceive;
+            sState = OT_RADIO_STATE_RECEIVE;
 
 #if OPENTHREAD_ENABLE_DIAG
 
@@ -747,7 +747,7 @@ void efr32RadioProcess(otInstance *aInstance)
                  (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK &&
                  (sReceiveFrame.mPsdu[IEEE802154_DSN_OFFSET] == sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET]))
         {
-            sState = kStateReceive;
+            sState = OT_RADIO_STATE_RECEIVE;
 
 #if OPENTHREAD_ENABLE_DIAG
 

@@ -568,8 +568,8 @@ NcpBase::NcpBase(otInstance *aInstance):
     mInstance(aInstance),
     mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer)),
     mLastStatus(SPINEL_STATUS_OK),
-    mSupportedChannelMask(kPhySupportedChannelMask),
-    mChannelMask(kPhySupportedChannelMask),
+    mSupportedChannelMask(OT_RADIO_SUPPORTED_CHANNELS),
+    mChannelMask(OT_RADIO_SUPPORTED_CHANNELS),
     mScanPeriod(200), // ms
     mDiscoveryScanJoinerFlag(false),
     mDiscoveryScanEnableFiltering(false),
@@ -785,12 +785,12 @@ exit:
 // MARK: Raw frame handling
 // ----------------------------------------------------------------------------
 
-void NcpBase::HandleRawFrame(const RadioPacket *aFrame, void *aContext)
+void NcpBase::HandleRawFrame(const otRadioFrame *aFrame, void *aContext)
 {
     static_cast<NcpBase *>(aContext)->HandleRawFrame(aFrame);
 }
 
-void NcpBase::HandleRawFrame(const RadioPacket *aFrame)
+void NcpBase::HandleRawFrame(const otRadioFrame *aFrame)
 {
     otError errorCode = OT_ERROR_NONE;
     uint16_t flags = 0;
@@ -966,19 +966,19 @@ void NcpBase::HandleEnergyScanResult(otEnergyScanResult *aResult)
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
-void NcpBase::LinkRawReceiveDone(otInstance *, RadioPacket *aPacket, otError aError)
+void NcpBase::LinkRawReceiveDone(otInstance *, otRadioFrame *aFrame, otError aError)
 {
-    sNcpInstance->LinkRawReceiveDone(aPacket, aError);
+    sNcpInstance->LinkRawReceiveDone(aFrame, aError);
 }
 
-void NcpBase::LinkRawReceiveDone(RadioPacket *aPacket, otError aError)
+void NcpBase::LinkRawReceiveDone(otRadioFrame *aFrame, otError aError)
 {
     otError errorCode = OT_ERROR_NONE;
     uint16_t flags = 0;
 
     SuccessOrExit(errorCode = OutboundFrameBegin());
 
-    if (aPacket->mDidTX)
+    if (aFrame->mDidTX)
     {
         flags |= SPINEL_MD_FLAG_TX;
     }
@@ -990,13 +990,13 @@ void NcpBase::LinkRawReceiveDone(RadioPacket *aPacket, otError aError)
                         SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
                         SPINEL_CMD_PROP_VALUE_IS,
                         SPINEL_PROP_STREAM_RAW,
-                        (aError == OT_ERROR_NONE) ? aPacket->mLength : 0
+                        (aError == OT_ERROR_NONE) ? aFrame->mLength : 0
                     ));
 
     if (aError == OT_ERROR_NONE)
     {
         // Append the frame contents
-        SuccessOrExit(errorCode = OutboundFrameFeedData(aPacket->mPsdu, aPacket->mLength));
+        SuccessOrExit(errorCode = OutboundFrameFeedData(aFrame->mPsdu, aFrame->mLength));
     }
 
     // Append metadata (rssi, etc)
@@ -1012,12 +1012,12 @@ void NcpBase::LinkRawReceiveDone(RadioPacket *aPacket, otError aError)
                         SPINEL_DATATYPE_STRUCT_S( // Vendor-data
                             SPINEL_DATATYPE_UINT_PACKED_S
                         ),
-                        aPacket->mPower,    // TX Power
-                        -128,               // Noise Floor (Currently unused)
-                        flags,              // Flags
-                        aPacket->mChannel,  // Receive channel
-                        aPacket->mLqi,      // Link quality indicator
-                        aError              // Receive error
+                        aFrame->mPower,    // TX Power
+                        -128,              // Noise Floor (Currently unused)
+                        flags,             // Flags
+                        aFrame->mChannel,  // Receive channel
+                        aFrame->mLqi,      // Link quality indicator
+                        aError             // Receive error
                     ));
 
     SuccessOrExit(errorCode = OutboundFrameSend());
@@ -1026,12 +1026,12 @@ exit:
     return;
 }
 
-void NcpBase::LinkRawTransmitDone(otInstance *, RadioPacket *aPacket, bool aFramePending, otError aError)
+void NcpBase::LinkRawTransmitDone(otInstance *, otRadioFrame *aFrame, bool aFramePending, otError aError)
 {
-    sNcpInstance->LinkRawTransmitDone(aPacket, aFramePending, aError);
+    sNcpInstance->LinkRawTransmitDone(aFrame, aFramePending, aError);
 }
 
-void NcpBase::LinkRawTransmitDone(RadioPacket *, bool aFramePending, otError aError)
+void NcpBase::LinkRawTransmitDone(otRadioFrame *, bool aFramePending, otError aError)
 {
     if (mCurTransmitTID)
     {
@@ -4598,7 +4598,7 @@ otError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t header, spinel_prop_key_t
         uint8_t *frame_buffer(NULL);
         unsigned int frame_len(0);
 
-        RadioPacket *packet = otLinkRawGetTransmitBuffer(mInstance);
+        otRadioFrame *frame = otLinkRawGetTransmitBuffer(mInstance);
 
         parsedLength = spinel_datatype_unpack(
                            value_ptr,
@@ -4608,25 +4608,25 @@ otError NcpBase::SetPropertyHandler_STREAM_RAW(uint8_t header, spinel_prop_key_t
                            SPINEL_DATATYPE_INT8_S,
                            &frame_buffer,
                            &frame_len,
-                           &packet->mChannel,
-                           &packet->mPower
+                           &frame->mChannel,
+                           &frame->mPower
                        );
 
-        if (parsedLength > 0 && frame_len <= kMaxPHYPacketSize)
+        if (parsedLength > 0 && frame_len <= OT_RADIO_FRAME_MAX_SIZE)
         {
             // Cache the transaction ID for async response
             mCurTransmitTID = SPINEL_HEADER_GET_TID(header);
 
-            // Update packet buffer and length
-            packet->mLength = static_cast<uint8_t>(frame_len);
-            memcpy(packet->mPsdu, frame_buffer, packet->mLength);
+            // Update frame buffer and length
+            frame->mLength = static_cast<uint8_t>(frame_len);
+            memcpy(frame->mPsdu, frame_buffer, frame->mLength);
 
             // TODO: This should be later added in the STREAM_RAW argument to allow user to directly specify it.
-            packet->mMaxTxAttempts = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT;
+            frame->mMaxTxAttempts = OPENTHREAD_CONFIG_MAX_TX_ATTEMPTS_DIRECT;
 
-            // Pass packet to the radio layer. Note, this fails if we
+            // Pass frame to the radio layer. Note, this fails if we
             // haven't enabled raw stream or are already transmitting.
-            errorCode = otLinkRawTransmit(mInstance, packet, &NcpBase::LinkRawTransmitDone);
+            errorCode = otLinkRawTransmit(mInstance, frame, &NcpBase::LinkRawTransmitDone);
         }
         else
         {
