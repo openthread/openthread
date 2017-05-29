@@ -233,8 +233,10 @@ void nrf_drv_radio802154_received(uint8_t * p_data, int8_t power, int8_t lqi);
  * @param[in]  p_ack  Pointer to received ACK buffer. The first byte in the buffer is length of the
  *                    frame and following bytes are the ACK frame itself (after PHR).
  *                    If ACK was not requested @p p_ack is set to NULL.
+ * @param[in]  power  RSSI of received ACK frame or 0 if ACK was not requested.
+ * @param[in]  lqi    LQI of received ACK frame or 0 if ACK was not requested.
  */
-void nrf_drv_radio802154_transmitted(uint8_t * p_ack);
+void nrf_drv_radio802154_transmitted(uint8_t * p_ack, int8_t power, int8_t lqi);
 
 /**
  * @brief Notify that frame was not transmitted due to busy channel.
