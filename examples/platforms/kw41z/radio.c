@@ -41,18 +41,25 @@
 #include "openthread/platform/diag.h"
 #include <utils/code_utils.h>
 
-#define DOUBLE_BUFFERING            (1)
-#define DEFAULT_CHANNEL             (11)
-#define IEEE802154_ACK_REQUEST      (1 << 5)
-#define DEFAULT_CCA_MODE            (XCVR_CCA_MODE1_c)
-#define IEEE802154_TURNAROUND_LEN   (12)
-#define IEEE802154_CCA_LEN          (8)
-#define IEEE802154_PHY_SHR_LEN      (10)
-#define IEEE802154_ACK_WAIT         (54)
-#define ZLL_IRQSTS_TMR_ALL_MSK_MASK (ZLL_IRQSTS_TMR1MSK_MASK | \
-                                     ZLL_IRQSTS_TMR2MSK_MASK | \
-                                     ZLL_IRQSTS_TMR3MSK_MASK | \
-                                     ZLL_IRQSTS_TMR4MSK_MASK )
+#define DOUBLE_BUFFERING             (1)
+#define DEFAULT_CHANNEL              (11)
+#define DEFAULT_CCA_MODE             (XCVR_CCA_MODE1_c)
+#define IEEE802154_ACK_REQUEST       (1 << 5)
+#define IEEE802154_MAX_LENGTH        (127)
+#define IEEE802154_MIN_LENGTH        (5)
+#define IEEE802154_ACK_LENGTH        (IEEE802154_MIN_LENGTH)
+#define IEEE802154_FRM_CTL_LO_OFFSET (0)
+#define IEEE802154_DSN_OFFSET        (2)
+#define IEEE802154_FRM_TYPE_MASK     (0x7)
+#define IEEE802154_FRM_TYPE_ACK      (0x2)
+#define IEEE802154_TURNAROUND_LEN    (12)
+#define IEEE802154_CCA_LEN           (8)
+#define IEEE802154_PHY_SHR_LEN       (10)
+#define IEEE802154_ACK_WAIT          (54)
+#define ZLL_IRQSTS_TMR_ALL_MSK_MASK  (ZLL_IRQSTS_TMR1MSK_MASK | \
+                                      ZLL_IRQSTS_TMR2MSK_MASK | \
+                                      ZLL_IRQSTS_TMR3MSK_MASK | \
+                                      ZLL_IRQSTS_TMR4MSK_MASK )
 
 typedef enum xcvr_state_tag
 {
@@ -83,7 +90,9 @@ static int8_t        sAutoTxPwrLevel = 0;
 static bool          sTxDone     = false;
 static bool          sRxDone     = false;
 static bool          sEdScanDone = false;
+#if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
 static bool          sAckFpState;
+#endif
 static otError       sTxStatus;
 
 static otRadioFrame  sTxFrame;
@@ -105,6 +114,7 @@ static uint16_t     rf_get_addr_checksum(uint8_t *pAddr, bool ExtendedAddr, uint
 static otError      rf_add_addr_table_entry(uint16_t checksum, bool extendedAddr);
 static otError      rf_remove_addr_table_entry(uint16_t checksum);
 static otError      rf_remove_addr_table_entry_index(uint8_t index);
+static bool         rf_process_rx_frame(void);
 
 otRadioState otPlatRadioGetState(otInstance *aInstance)
 {
@@ -351,9 +361,11 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     ZLL->IRQSTS = ZLL->IRQSTS;
 
     /* Perform automatic reception of ACK frame, if required */
-    if (aFrame->mPsdu[0] & IEEE802154_ACK_REQUEST)
+    if (aFrame->mPsdu[IEEE802154_FRM_CTL_LO_OFFSET] & IEEE802154_ACK_REQUEST)
     {
+#if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
         ZLL->PHY_CTRL |= ZLL_PHY_CTRL_RXACKRQD_MASK;
+#endif
         ZLL->PHY_CTRL |= XCVR_TR_c;
         /* Set ACK wait time-out */
         timeout  = rf_get_timestamp();
@@ -365,11 +377,15 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     }
     else
     {
+#if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
         ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_RXACKRQD_MASK;
+#endif
         ZLL->PHY_CTRL |= XCVR_TX_c;
     }
-
+#if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
     sAckFpState = false;
+#endif
+    sTxStatus = OT_ERROR_NONE;
     sState = OT_RADIO_STATE_TRANSMIT;
     /* Unmask SEQ interrupt */
     ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_SEQMSK_MASK;
@@ -706,11 +722,37 @@ static void rf_set_timeout(uint32_t abs_timeout)
     ZLL->PHY_CTRL |= ZLL_PHY_CTRL_TMR3CMP_EN_MASK;
 }
 
+static bool rf_process_rx_frame(void)
+{
+    uint8_t temp;
+    bool status = true;
+
+    /* Get Rx length */
+    temp = (ZLL->IRQSTS & ZLL_IRQSTS_RX_FRAME_LENGTH_MASK) >> ZLL_IRQSTS_RX_FRAME_LENGTH_SHIFT;
+
+    /* Check if frame is valid */
+    otEXPECT_ACTION((IEEE802154_MIN_LENGTH <= temp) && (temp <= IEEE802154_MAX_LENGTH), status = false);
+
+    sRxFrame.mLength = temp;
+    temp = (ZLL->LQI_AND_RSSI & ZLL_LQI_AND_RSSI_LQI_VALUE_MASK) >> ZLL_LQI_AND_RSSI_LQI_VALUE_SHIFT;
+    sRxFrame.mLqi = rf_lqi_adjust(temp);
+    sRxFrame.mPower = rf_lqi_to_rssi(sRxFrame.mLqi);
+#if DOUBLE_BUFFERING
+    for (temp=0; temp<sRxFrame.mLength - 2; temp++)
+    {
+        sRxData[temp] = ((uint8_t*)ZLL->PKT_BUFFER_RX)[temp];
+    }
+#endif
+
+exit:
+    return status;
+}
+
 void Radio_1_IRQHandler(void)
 {
     xcvr_state_t state = rf_get_state();
     uint32_t irqStatus = ZLL->IRQSTS;
-    uint8_t temp;
+    int8_t temp;
 
     ZLL->IRQSTS = irqStatus;
 
@@ -745,39 +787,42 @@ void Radio_1_IRQHandler(void)
         switch (state)
         {
         case XCVR_RX_c:
-            temp = (ZLL->LQI_AND_RSSI & ZLL_LQI_AND_RSSI_LQI_VALUE_MASK) >> ZLL_LQI_AND_RSSI_LQI_VALUE_SHIFT;
-            sRxFrame.mLength = (ZLL->IRQSTS & ZLL_IRQSTS_RX_FRAME_LENGTH_MASK) >> ZLL_IRQSTS_RX_FRAME_LENGTH_SHIFT;
-            sRxFrame.mLqi = rf_lqi_adjust(temp);
-            sRxFrame.mPower = rf_lqi_to_rssi(sRxFrame.mLqi);
-#if DOUBLE_BUFFERING
-            memcpy(sRxData, (void *)ZLL->PKT_BUFFER_RX, sRxFrame.mLength);
-#endif
-            sRxDone = true;
+            sRxDone = rf_process_rx_frame();
             break;
 
-        case XCVR_TX_c:
         case XCVR_TR_c:
+#if !OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
+            if (!(irqStatus & ZLL_IRQSTS_RXIRQ_MASK) ||
+                (rf_process_rx_frame() == false) ||
+                (sRxFrame.mLength != IEEE802154_ACK_LENGTH) ||
+                ((sRxFrame.mPsdu[IEEE802154_FRM_CTL_LO_OFFSET] & IEEE802154_FRM_TYPE_MASK) != IEEE802154_FRM_TYPE_ACK) ||
+                (sRxFrame.mPsdu[IEEE802154_DSN_OFFSET] != sTxFrame.mPsdu[IEEE802154_DSN_OFFSET]))
+            {
+                sTxStatus = OT_ERROR_NO_ACK;
+            }
+#endif
+        case XCVR_TX_c:
             sState = OT_RADIO_STATE_RECEIVE;
 
             if ((ZLL->PHY_CTRL & ZLL_PHY_CTRL_CCABFRTX_MASK) && (irqStatus & ZLL_IRQSTS_CCA_MASK))
             {
                 sTxStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
             }
+#if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
             else
             {
                 sAckFpState = (irqStatus & ZLL_IRQSTS_RX_FRM_PEND_MASK) > 0;
-                sTxStatus = OT_ERROR_NONE;
             }
-
+#endif
             sTxDone = true;
             break;
 
         case XCVR_CCA_c:
             temp = (ZLL->LQI_AND_RSSI & ZLL_LQI_AND_RSSI_CCA1_ED_FNL_MASK) >> ZLL_LQI_AND_RSSI_CCA1_ED_FNL_SHIFT;
 
-            if ((int8_t)temp > sMaxED)
+            if (temp > sMaxED)
             {
-                sMaxED = (int8_t)temp;
+                sMaxED = temp;
             }
 
             if (!sEdScanDone)
@@ -838,6 +883,9 @@ void kw41zRadioInit(void)
     ZLL->RX_FRAME_FILTER = ZLL_RX_FRAME_FILTER_FRM_VER_FILTER(3) |
                            ZLL_RX_FRAME_FILTER_CMD_FT_MASK       |
                            ZLL_RX_FRAME_FILTER_DATA_FT_MASK      |
+#if !OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
+                           ZLL_RX_FRAME_FILTER_ACK_FT_MASK       |
+#endif
                            ZLL_RX_FRAME_FILTER_BEACON_FT_MASK;
 
     /* Set prescaller to obtain 1 symbol (16us) timebase */
@@ -875,7 +923,18 @@ void kw41zRadioProcess(otInstance *aInstance)
 {
     if (sTxDone)
     {
+#if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
         otPlatRadioTransmitDone(aInstance, &sTxFrame, sAckFpState, sTxStatus);
+#else
+        if (sTxFrame.mPsdu[IEEE802154_FRM_CTL_LO_OFFSET] & IEEE802154_ACK_REQUEST)
+        {
+            otPlatRadioTxDone(aInstance, &sTxFrame, &sRxFrame, sTxStatus);
+        }
+        else
+        {
+            otPlatRadioTxDone(aInstance, &sTxFrame, NULL, sTxStatus);
+        }       
+#endif
         sTxDone = false;
     }
 

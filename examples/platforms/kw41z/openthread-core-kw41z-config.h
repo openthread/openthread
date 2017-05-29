@@ -81,6 +81,6 @@
   * Define to 1 if you want use legacy transmit done.
   *
   */
-#define OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE 1
+#define OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE 0
 
 #endif  // OPENTHREAD_CORE_KW41Z_CONFIG_H_
