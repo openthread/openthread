@@ -382,6 +382,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 #endif
         ZLL->PHY_CTRL |= XCVR_TX_c;
     }
+
 #if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
     sAckFpState = false;
 #endif
@@ -738,10 +739,12 @@ static bool rf_process_rx_frame(void)
     sRxFrame.mLqi = rf_lqi_adjust(temp);
     sRxFrame.mPower = rf_lqi_to_rssi(sRxFrame.mLqi);
 #if DOUBLE_BUFFERING
-    for (temp=0; temp<sRxFrame.mLength - 2; temp++)
+
+    for (temp = 0; temp < sRxFrame.mLength - 2; temp++)
     {
-        sRxData[temp] = ((uint8_t*)ZLL->PKT_BUFFER_RX)[temp];
+        sRxData[temp] = ((uint8_t *)ZLL->PKT_BUFFER_RX)[temp];
     }
+
 #endif
 
 exit:
@@ -800,7 +803,9 @@ void Radio_1_IRQHandler(void)
             {
                 sTxStatus = OT_ERROR_NO_ACK;
             }
+
 #endif
+
         case XCVR_TX_c:
             sState = OT_RADIO_STATE_RECEIVE;
 
@@ -808,11 +813,13 @@ void Radio_1_IRQHandler(void)
             {
                 sTxStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
             }
+
 #if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
             else
             {
                 sAckFpState = (irqStatus & ZLL_IRQSTS_RX_FRM_PEND_MASK) > 0;
             }
+
 #endif
             sTxDone = true;
             break;
@@ -926,6 +933,7 @@ void kw41zRadioProcess(otInstance *aInstance)
 #if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
         otPlatRadioTransmitDone(aInstance, &sTxFrame, sAckFpState, sTxStatus);
 #else
+
         if (sTxFrame.mPsdu[IEEE802154_FRM_CTL_LO_OFFSET] & IEEE802154_ACK_REQUEST)
         {
             otPlatRadioTxDone(aInstance, &sTxFrame, &sRxFrame, sTxStatus);
@@ -933,7 +941,8 @@ void kw41zRadioProcess(otInstance *aInstance)
         else
         {
             otPlatRadioTxDone(aInstance, &sTxFrame, NULL, sTxStatus);
-        }       
+        }
+
 #endif
         sTxDone = false;
     }
