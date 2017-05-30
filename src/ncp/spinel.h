@@ -453,7 +453,7 @@ typedef enum
      * number and flags fields MUST be present, the GPIO name (if present)
      * would be ignored. This command can only be used to modify the
      * configuration of GPIOs which are already exposed---it cannot be used
-     * by the host to add addional GPIOs.
+     * by the host to add additional GPIOs.
      */
     SPINEL_PROP_GPIO_CONFIG             = SPINEL_PROP_BASE_EXT__BEGIN + 0,
 
@@ -1110,11 +1110,11 @@ typedef enum
     /** Format: `L` (Read-only) */
     SPINEL_PROP_CNTR_RX_PKT_DUP         = SPINEL_PROP_CNTR__BEGIN + 114,
 
-    /// The number of unicast packets recived.
+    /// The number of unicast packets received.
     /** Format: `L` (Read-only) */
     SPINEL_PROP_CNTR_RX_PKT_UNICAST     = SPINEL_PROP_CNTR__BEGIN + 115,
 
-    /// The number of broadcast packets recived.
+    /// The number of broadcast packets received.
     /** Format: `L` (Read-only) */
     SPINEL_PROP_CNTR_RX_PKT_BROADCAST   = SPINEL_PROP_CNTR__BEGIN + 116,
 
