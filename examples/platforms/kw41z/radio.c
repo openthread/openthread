@@ -90,9 +90,6 @@ static int8_t        sAutoTxPwrLevel = 0;
 static bool          sTxDone     = false;
 static bool          sRxDone     = false;
 static bool          sEdScanDone = false;
-#if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
-static bool          sAckFpState;
-#endif
 static otError       sTxStatus;
 
 static otRadioFrame  sTxFrame;
@@ -363,9 +360,6 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     /* Perform automatic reception of ACK frame, if required */
     if (aFrame->mPsdu[IEEE802154_FRM_CTL_LO_OFFSET] & IEEE802154_ACK_REQUEST)
     {
-#if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
-        ZLL->PHY_CTRL |= ZLL_PHY_CTRL_RXACKRQD_MASK;
-#endif
         ZLL->PHY_CTRL |= XCVR_TR_c;
         /* Set ACK wait time-out */
         timeout  = rf_get_timestamp();
@@ -377,15 +371,9 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     }
     else
     {
-#if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
-        ZLL->PHY_CTRL &= ~ZLL_PHY_CTRL_RXACKRQD_MASK;
-#endif
         ZLL->PHY_CTRL |= XCVR_TX_c;
     }
 
-#if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
-    sAckFpState = false;
-#endif
     sTxStatus = OT_ERROR_NONE;
     sState = OT_RADIO_STATE_TRANSMIT;
     /* Unmask SEQ interrupt */
@@ -794,7 +782,6 @@ void Radio_1_IRQHandler(void)
             break;
 
         case XCVR_TR_c:
-#if !OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
             if (!(irqStatus & ZLL_IRQSTS_RXIRQ_MASK) ||
                 (rf_process_rx_frame() == false) ||
                 (sRxFrame.mLength != IEEE802154_ACK_LENGTH) ||
@@ -804,8 +791,6 @@ void Radio_1_IRQHandler(void)
                 sTxStatus = OT_ERROR_NO_ACK;
             }
 
-#endif
-
         case XCVR_TX_c:
             sState = OT_RADIO_STATE_RECEIVE;
 
@@ -814,13 +799,6 @@ void Radio_1_IRQHandler(void)
                 sTxStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
             }
 
-#if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
-            else
-            {
-                sAckFpState = (irqStatus & ZLL_IRQSTS_RX_FRM_PEND_MASK) > 0;
-            }
-
-#endif
             sTxDone = true;
             break;
 
@@ -890,9 +868,7 @@ void kw41zRadioInit(void)
     ZLL->RX_FRAME_FILTER = ZLL_RX_FRAME_FILTER_FRM_VER_FILTER(3) |
                            ZLL_RX_FRAME_FILTER_CMD_FT_MASK       |
                            ZLL_RX_FRAME_FILTER_DATA_FT_MASK      |
-#if !OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
                            ZLL_RX_FRAME_FILTER_ACK_FT_MASK       |
-#endif
                            ZLL_RX_FRAME_FILTER_BEACON_FT_MASK;
 
     /* Set prescaller to obtain 1 symbol (16us) timebase */
@@ -930,10 +906,6 @@ void kw41zRadioProcess(otInstance *aInstance)
 {
     if (sTxDone)
     {
-#if OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
-        otPlatRadioTransmitDone(aInstance, &sTxFrame, sAckFpState, sTxStatus);
-#else
-
         if (sTxFrame.mPsdu[IEEE802154_FRM_CTL_LO_OFFSET] & IEEE802154_ACK_REQUEST)
         {
             otPlatRadioTxDone(aInstance, &sTxFrame, &sRxFrame, sTxStatus);
@@ -943,7 +915,6 @@ void kw41zRadioProcess(otInstance *aInstance)
             otPlatRadioTxDone(aInstance, &sTxFrame, NULL, sTxStatus);
         }
 
-#endif
         sTxDone = false;
     }
 
