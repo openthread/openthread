@@ -54,7 +54,7 @@ The Codelab shows you how easy it is use to OpenThread to simulate a Thread netw
 
 # OpenThread Features
 
-OpenThread implements all features defined in the [Thread 1.1.1 specification](http://threadgroup.org/technology/ourtechnology#specifications), including all Thread networking layers (IPv6, 6LoWPAN, IEEE 802.15.4 with MAC security, Mesh Link Establishment, Mesh Routing) and device roles.
+OpenThread implements all features defined in the [Thread 1.1.1 specification](http://threadgroup.org/technology/ourtechnology#specifications), including all Thread networking layers (IPv6, 6LoWPAN, IEEE 802.15.4 with MAC security, Mesh Link Establishment, Mesh Routing) and device roles, as well as [Border Router](https://github.com/openthread/borderrouter) support.
 
 OpenThread supports both system-on-chip (SoC) and network co-processor (NCP) designs. Other features and enhancements include:
 
@@ -69,12 +69,15 @@ OpenThread supports both system-on-chip (SoC) and network co-processor (NCP) des
     * Spinel - general purpose NCP protocol
     * `wpantund` - user-space NCP network interface driver/daemon
     * Sniffer support via NCP Spinel nodes
+* Border Router
+    * Web UI for configuration and management
+    * Thread Border Agent to support an External Commissioner
+    * NAT64 for connecting to IPv4 networks
+    * Thread interface driver using `wpantund`
 
 ### What's coming?
 
-The development of OpenThread is ongoing to regularly provide additional features not available in the standard. Currently, we are working on:
-
-* Host-side Border Agent support
+The development of OpenThread is ongoing to provide additional features not available in the standard. Check back regularly for new updates, or visit the [openthread-announce](https://groups.google.com/forum/#!forum/openthread-announce) Google Group.
 
 # Who supports OpenThread?
 
@@ -107,6 +110,10 @@ Desktop platforms can also be used to control and interface with a Thread networ
 ### Porting
 
 If you are interested in porting OpenThread to a new platform, see the [Porting Guide](https://github.com/openthread/openthread/wiki/Porting-Guide) for hardware requirements and detailed porting instructions.
+
+### Border Router
+
+A Border Router connects a Thread network to networks at different layers, such as WiFi or Ethernet. [OpenThread Border Router](https://github.com/openthread/borderrouter) provides end-to-end IP via routing between Thread devices and other external IP networks, as well as external Thread Commissioning.
 
 # What tools are available for testing?
 
@@ -144,7 +151,7 @@ There are numerous avenues for OpenThread support:
 * Stack Overflow — [post questions using the `openthread` tag](http://stackoverflow.com/questions/tagged/openthread)
 * Google Groups — discussion and announcements
     * [openthread-announce](https://groups.google.com/forum/#!forum/openthread-announce) — release notes and new updates on OpenThread
-    *  [openthread-users](https://groups.google.com/forum/#!forum/openthread-users) — the best place for users to discuss OpenThread and interact with the OpenThread team
+    * [openthread-users](https://groups.google.com/forum/#!forum/openthread-users) — the best place for users to discuss OpenThread and interact with the OpenThread team
 
 ### Directory Structure
 
