@@ -63,15 +63,15 @@ void Interpreter::CacheInstances()
 
         for (uint8_t i = 0; i < mInstancesLength; i++)
         {
-            mInstances[i].aInterpreter = this;
-            mInstances[i].aInstance = otInstanceInit(mApiInstance, &aDeviceList->aDevices[i]);
-            assert(mInstances[i].aInstance);
-            otSetStateChangedCallback(mInstances[i].aInstance, &Interpreter::s_HandleNetifStateChanged, &mInstances[i]);
+            mInstances[i].mInterpreter = this;
+            mInstances[i].mInstance = otInstanceInit(mApiInstance, &aDeviceList->aDevices[i]);
+            assert(mInstances[i].mInstance);
+            otSetStateChangedCallback(mInstances[i].mInstance, &Interpreter::s_HandleNetifStateChanged, &mInstances[i]);
         }
 
         otFreeMemory(aDeviceList);
 
-        if (mInstancesLength > 0) { mInstance = mInstances[0].aInstance; }
+        if (mInstancesLength > 0) { mInstance = mInstances[0].mInstance; }
     }
 }
 
@@ -80,13 +80,13 @@ void Interpreter::CacheInstances()
 
 void Interpreter::ProcessInstanceList(int argc, char *argv[])
 {
-    sServer->OutputFormat("%d instances found:\r\n", mInstancesLength);
+    mServer->OutputFormat("%d instances found:\r\n", mInstancesLength);
 
     for (uint8_t i = 0; i < mInstancesLength; i++)
     {
-        GUID aDeviceGuid = otGetDeviceGuid(mInstances[i].aInstance);
-        uint32_t aCompartment = otGetCompartmentId(mInstances[i].aInstance);
-        sServer->OutputFormat("[%d] " GUID_FORMAT " (Compartment %u)\r\n",
+        GUID aDeviceGuid = otGetDeviceGuid(mInstances[i].mInstance);
+        uint32_t aCompartment = otGetCompartmentId(mInstances[i].mInstance);
+        mServer->OutputFormat("[%d] " GUID_FORMAT " (Compartment %u)\r\n",
                               i, GUID_ARG(aDeviceGuid), aCompartment);
     }
 }
@@ -100,13 +100,13 @@ void Interpreter::ProcessInstance(int argc, char *argv[])
     {
         if (mInstance == NULL)
         {
-            sServer->OutputFormat("No Instance Set\r\n");
+            mServer->OutputFormat("No Instance Set\r\n");
         }
         else
         {
             GUID aDeviceGuid = otGetDeviceGuid(mInstance);
             uint32_t aCompartment = otGetCompartmentId(mInstance);
-            sServer->OutputFormat("[%d] " GUID_FORMAT " (Compartment %u)\r\n",
+            mServer->OutputFormat("[%d] " GUID_FORMAT " (Compartment %u)\r\n",
                                   mInstanceIndex, GUID_ARG(aDeviceGuid), aCompartment);
         }
     }
@@ -116,7 +116,7 @@ void Interpreter::ProcessInstance(int argc, char *argv[])
         VerifyOrExit(value >= 0 && value < mInstancesLength, error = OT_ERROR_INVALID_ARGS);
 
         mInstanceIndex = (uint8_t)value;
-        mInstance = mInstances[mInstanceIndex].aInstance;
+        mInstance = mInstances[mInstanceIndex].mInstance;
     }
 
 exit:
