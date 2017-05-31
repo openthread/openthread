@@ -84,13 +84,21 @@ public:
     void SetState(State aState) { mState = static_cast<uint8_t>(aState); }
 
     /**
+     * Check if the neighbor/child is being restored.
+     *
+     * @returns TRUE if the neighbor is being restored, FALSE otherwise.
+     *
+     */
+    bool IsStateRestoring(void) const { return (mState == kStateRestored) || (mState == kStateChildUpdateRequest); }
+
+    /**
      * Check if the neighbor/child is in valid state or if it is being restored.
      * When in these states messages can be sent to and/or received from the neighbor/child.
      *
      * @returns TRUE if the neighbor is in valid, restored, or being restored states, FALSE otherwise.
      *
      */
-    bool IsStateValidOrRestoring(void) const { return (mState == kStateValid) || (mState == kStateRestored); }
+    bool IsStateValidOrRestoring(void) const { return (mState == kStateValid) || IsStateRestoring(); }
 
     /**
      * This method gets the device mode flags.

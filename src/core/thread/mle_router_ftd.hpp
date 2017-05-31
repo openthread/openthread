@@ -691,7 +691,8 @@ private:
     otError HandleParentRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError HandleChildIdRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
                                  uint32_t aKeySequence);
-    otError HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
+                                     uint32_t aKeySequence);
     otError HandleChildUpdateResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
                                       uint32_t aKeySequence);
     otError HandleDataRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
