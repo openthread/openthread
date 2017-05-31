@@ -34,6 +34,10 @@ ifeq ($(CERT_LOG),1)
 configure_OPTIONS              += --enable-cert-log
 endif
 
+ifeq ($(COAP),1)
+configure_OPTIONS              += --enable-application-coap
+endif
+
 ifeq ($(COMMISSIONER),1)
 configure_OPTIONS              += --enable-commissioner
 endif
@@ -82,6 +86,6 @@ ifeq ($(MAC_WHITELIST),1)
 configure_OPTIONS              += --enable-mac-whitelist
 endif
 
-ifeq ($(COAP),1)
-configure_OPTIONS              += --enable-application-coap
+ifeq ($(MTD_NETDIAG),1)
+configure_OPTIONS              += --enable-mtd-network-diagnostic
 endif
