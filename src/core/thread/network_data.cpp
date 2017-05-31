@@ -617,7 +617,7 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16)
     VerifyOrExit(!mLastAttemptWait || static_cast<int32_t>(Timer::GetNow() - mLastAttempt) < kDataResubmitDelay,
                  error = OT_ERROR_ALREADY);
 
-    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
+    header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(OT_URI_PATH_SERVER_DATA);
     header.SetPayloadMarker();

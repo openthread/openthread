@@ -539,7 +539,7 @@ public:
      *
      */
     otError SendReset(Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo) {
-        return SendEmptyMessage(kCoapTypeReset, aRequestHeader, aMessageInfo);
+        return SendEmptyMessage(OT_COAP_TYPE_RESET, aRequestHeader, aMessageInfo);
     };
 
     /**
@@ -568,7 +568,7 @@ public:
      *
      */
     otError SendAck(Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo) {
-        return SendEmptyMessage(kCoapTypeAcknowledgment, aRequestHeader, aMessageInfo);
+        return SendEmptyMessage(OT_COAP_TYPE_ACKNOWLEDGMENT, aRequestHeader, aMessageInfo);
     };
 
     /**
@@ -583,8 +583,8 @@ public:
      *
      */
     otError SendEmptyAck(const Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo) {
-        return (aRequestHeader.GetType() == kCoapTypeConfirmable ?
-                SendHeaderResponse(kCoapResponseChanged, aRequestHeader, aMessageInfo) :
+        return (aRequestHeader.GetType() == OT_COAP_TYPE_CONFIRMABLE ?
+                SendHeaderResponse(OT_COAP_CODE_CHANGED, aRequestHeader, aMessageInfo) :
                 OT_ERROR_INVALID_ARGS);
     }
 
@@ -599,7 +599,7 @@ public:
      *
      */
     otError SendNotFound(const Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo) {
-        return SendHeaderResponse(kCoapResponseNotFound, aRequestHeader, aMessageInfo);
+        return SendHeaderResponse(OT_COAP_CODE_NOT_FOUND, aRequestHeader, aMessageInfo);
     }
 
     /**

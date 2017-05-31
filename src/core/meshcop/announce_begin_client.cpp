@@ -81,8 +81,8 @@ otError AnnounceBeginClient::SendRequest(uint32_t aChannelMask, uint8_t aCount, 
 
     VerifyOrExit(mNetif.GetCommissioner().IsActive(), error = OT_ERROR_INVALID_STATE);
 
-    header.Init(aAddress.IsMulticast() ? kCoapTypeNonConfirmable : kCoapTypeConfirmable,
-                kCoapRequestPost);
+    header.Init(aAddress.IsMulticast() ? OT_COAP_TYPE_NON_CONFIRMABLE : OT_COAP_TYPE_CONFIRMABLE,
+                OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(OT_URI_PATH_ANNOUNCE_BEGIN);
     header.SetPayloadMarker();

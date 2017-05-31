@@ -247,7 +247,7 @@ otError Leader::SendDatasetChanged(const Ip6::Address &aAddress)
     Ip6::MessageInfo messageInfo;
     Message *message;
 
-    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
+    header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(OT_URI_PATH_DATASET_CHANGED);
 

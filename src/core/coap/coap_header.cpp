@@ -289,7 +289,7 @@ otError Header::AppendUintOption(uint16_t aNumber, uint32_t aValue)
 
 otError Header::AppendObserveOption(uint32_t aObserve)
 {
-    return AppendUintOption(kCoapOptionObserve, aObserve & 0xFFFFFF);
+    return AppendUintOption(OT_COAP_OPTION_OBSERVE, aObserve & 0xFFFFFF);
 }
 
 otError Header::AppendUriPathOptions(const char *aUriPath)
@@ -299,7 +299,7 @@ otError Header::AppendUriPathOptions(const char *aUriPath)
     const char *end;
     Header::Option coapOption;
 
-    coapOption.mNumber = kCoapOptionUriPath;
+    coapOption.mNumber = OT_COAP_OPTION_URI_PATH;
 
     while ((end = strchr(cur, '/')) != NULL)
     {
@@ -319,19 +319,19 @@ exit:
 
 otError Header::AppendContentFormatOption(MediaType aType)
 {
-    return AppendUintOption(kCoapOptionContentFormat, aType);
+    return AppendUintOption(OT_COAP_OPTION_CONTENT_FORMAT, aType);
 }
 
 otError Header::AppendMaxAgeOption(uint32_t aMaxAge)
 {
-    return AppendUintOption(kCoapOptionMaxAge, aMaxAge);
+    return AppendUintOption(OT_COAP_OPTION_MAX_AGE, aMaxAge);
 }
 
 otError Header::AppendUriQueryOption(const char *aUriQuery)
 {
     Option coapOption;
 
-    coapOption.mNumber = kCoapOptionUriQuery;
+    coapOption.mNumber = OT_COAP_OPTION_URI_QUERY;
     coapOption.mLength = static_cast<uint16_t>(strlen(aUriQuery));
     coapOption.mValue  = reinterpret_cast<const uint8_t *>(aUriQuery);
 
@@ -442,7 +442,7 @@ void Header::SetToken(uint8_t aTokenLength)
 
 void Header::SetDefaultResponseHeader(const Header &aRequestHeader)
 {
-    Init(kCoapTypeAcknowledgment, kCoapResponseChanged);
+    Init(OT_COAP_TYPE_ACKNOWLEDGMENT, OT_COAP_CODE_CHANGED);
     SetMessageId(aRequestHeader.GetMessageId());
     SetToken(aRequestHeader.GetToken(), aRequestHeader.GetTokenLength());
 }

@@ -83,8 +83,8 @@ otError PanIdQueryClient::SendQuery(uint16_t aPanId, uint32_t aChannelMask, cons
 
     VerifyOrExit(mNetif.GetCommissioner().IsActive(), error = OT_ERROR_INVALID_STATE);
 
-    header.Init(aAddress.IsMulticast() ? kCoapTypeNonConfirmable : kCoapTypeConfirmable,
-                kCoapRequestPost);
+    header.Init(aAddress.IsMulticast() ? OT_COAP_TYPE_NON_CONFIRMABLE : OT_COAP_TYPE_CONFIRMABLE,
+                OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(OT_URI_PATH_PANID_QUERY);
     header.SetPayloadMarker();
@@ -139,8 +139,8 @@ void PanIdQueryClient::HandleConflict(Coap::Header &aHeader, Message &aMessage, 
     MeshCoP::ChannelMask0Tlv channelMask;
     Ip6::MessageInfo responseInfo(aMessageInfo);
 
-    VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost);
+    VerifyOrExit(aHeader.GetType() == OT_COAP_TYPE_CONFIRMABLE &&
+                 aHeader.GetCode() == OT_COAP_CODE_POST);
 
     otLogInfoMeshCoP(GetInstance(), "received panid conflict");
 

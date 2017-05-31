@@ -3807,7 +3807,7 @@ otError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
     Ip6::MessageInfo messageInfo;
     Message *message;
 
-    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
+    header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(OT_URI_PATH_ADDRESS_SOLICIT);
     header.SetPayloadMarker();
@@ -3857,7 +3857,7 @@ otError MleRouter::SendAddressRelease(void)
     Ip6::MessageInfo messageInfo;
     Message *message;
 
-    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
+    header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(OT_URI_PATH_ADDRESS_RELEASE);
     header.SetPayloadMarker();
@@ -3913,7 +3913,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
 
     VerifyOrExit(aResult == OT_ERROR_NONE && aHeader != NULL && aMessage != NULL);
 
-    VerifyOrExit(aHeader->GetCode() == kCoapResponseChanged);
+    VerifyOrExit(aHeader->GetCode() == OT_COAP_CODE_CHANGED);
 
     otLogInfoMle(GetInstance(), "Received address reply");
 
@@ -4034,7 +4034,7 @@ void MleRouter::HandleAddressSolicit(Coap::Header &aHeader, Message &aMessage, c
     uint8_t routerId = kInvalidRouterId;
     Router *router = NULL;
 
-    VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable && aHeader.GetCode() == kCoapRequestPost,
+    VerifyOrExit(aHeader.GetType() == OT_COAP_TYPE_CONFIRMABLE && aHeader.GetCode() == OT_COAP_CODE_POST,
                  error = OT_ERROR_PARSE);
 
     otLogInfoMle(GetInstance(), "Received address solicit");
@@ -4195,8 +4195,8 @@ void MleRouter::HandleAddressRelease(Coap::Header &aHeader, Message &aMessage,
     uint8_t routerId;
     Router *router;
 
-    VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost);
+    VerifyOrExit(aHeader.GetType() == OT_COAP_TYPE_CONFIRMABLE &&
+                 aHeader.GetCode() == OT_COAP_CODE_POST);
 
     otLogInfoMle(GetInstance(), "Received address release");
 

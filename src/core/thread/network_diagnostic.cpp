@@ -103,14 +103,14 @@ otError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestination, c
 
     if (aDestination.IsMulticast())
     {
-        header.Init(kCoapTypeNonConfirmable, kCoapRequestPost);
+        header.Init(OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_POST);
         header.SetToken(Coap::Header::kDefaultTokenLength);
         header.AppendUriPathOptions(OT_URI_PATH_DIAGNOSTIC_GET_QUERY);
     }
     else
     {
         handler = &NetworkDiagnostic::HandleDiagnosticGetResponse;
-        header.Init(kCoapTypeConfirmable, kCoapRequestPost);
+        header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
         header.SetToken(Coap::Header::kDefaultTokenLength);
         header.AppendUriPathOptions(OT_URI_PATH_DIAGNOSTIC_GET_REQUEST);
     }
@@ -157,7 +157,7 @@ void NetworkDiagnostic::HandleDiagnosticGetResponse(Coap::Header &aHeader, Messa
                                                     otError aResult)
 {
     VerifyOrExit(aResult == OT_ERROR_NONE);
-    VerifyOrExit(aHeader.GetCode() == kCoapResponseChanged);
+    VerifyOrExit(aHeader.GetCode() == OT_COAP_CODE_CHANGED);
 
     otLogInfoNetDiag(GetInstance(), "Received diagnostic get response");
 
@@ -181,8 +181,8 @@ void NetworkDiagnostic::HandleDiagnosticGetAnswer(void *aContext, otCoapHeader *
 void NetworkDiagnostic::HandleDiagnosticGetAnswer(Coap::Header &aHeader, Message &aMessage,
                                                   const Ip6::MessageInfo &aMessageInfo)
 {
-    VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost);
+    VerifyOrExit(aHeader.GetType() == OT_COAP_TYPE_CONFIRMABLE &&
+                 aHeader.GetCode() == OT_COAP_CODE_POST);
 
     otLogInfoNetDiag(GetInstance(), "Diagnostic get answer received");
 
@@ -444,7 +444,7 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Header &aHeader, Message 
     Coap::Header header;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit(aHeader.GetCode() == kCoapRequestPost, error = OT_ERROR_DROP);
+    VerifyOrExit(aHeader.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_DROP);
 
     otLogInfoNetDiag(GetInstance(), "Received diagnostic get query");
 
@@ -456,7 +456,7 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Header &aHeader, Message 
     VerifyOrExit((static_cast<TypeListTlv *>(&networkDiagnosticTlv)->IsValid()), error = OT_ERROR_DROP);
 
     // DIAG_GET.qry may be sent as a confirmable message.
-    if (aHeader.GetType() == kCoapTypeConfirmable)
+    if (aHeader.GetType() == OT_COAP_TYPE_CONFIRMABLE)
     {
         if (mNetif.GetCoap().SendEmptyAck(aHeader, aMessageInfo) == OT_ERROR_NONE)
         {
@@ -464,7 +464,7 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Header &aHeader, Message 
         }
     }
 
-    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
+    header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(OT_URI_PATH_DIAGNOSTIC_GET_ANSWER);
 
@@ -511,8 +511,8 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Header &aHeader, Messag
     Coap::Header header;
     Ip6::MessageInfo messageInfo(aMessageInfo);
 
-    VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost, error = OT_ERROR_DROP);
+    VerifyOrExit(aHeader.GetType() == OT_COAP_TYPE_CONFIRMABLE &&
+                 aHeader.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_DROP);
 
     otLogInfoNetDiag(GetInstance(), "Received diagnostic get request");
 
@@ -556,7 +556,7 @@ otError NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination,
     Coap::Header header;
     Ip6::MessageInfo messageInfo;
 
-    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
+    header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(OT_URI_PATH_DIAGNOSTIC_RESET);
 
@@ -605,8 +605,8 @@ void NetworkDiagnostic::HandleDiagnosticReset(Coap::Header &aHeader, Message &aM
 
     otLogInfoNetDiag(GetInstance(), "Received diagnostic reset request");
 
-    VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost);
+    VerifyOrExit(aHeader.GetType() == OT_COAP_TYPE_CONFIRMABLE &&
+                 aHeader.GetCode() == OT_COAP_CODE_POST);
 
     VerifyOrExit((aMessage.Read(aMessage.GetOffset(), sizeof(NetworkDiagnosticTlv),
                                 &networkDiagnosticTlv) == sizeof(NetworkDiagnosticTlv)));

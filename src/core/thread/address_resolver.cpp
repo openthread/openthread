@@ -243,7 +243,7 @@ otError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
     ThreadTargetTlv targetTlv;
     Ip6::MessageInfo messageInfo;
 
-    header.Init(kCoapTypeNonConfirmable, kCoapRequestPost);
+    header.Init(OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_POST);
     header.AppendUriPathOptions(OT_URI_PATH_ADDRESS_QUERY);
     header.SetPayloadMarker();
 
@@ -295,8 +295,8 @@ void AddressResolver::HandleAddressNotification(Coap::Header &aHeader, Message &
     ThreadLastTransactionTimeTlv lastTransactionTimeTlv;
     uint32_t lastTransactionTime;
 
-    VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost);
+    VerifyOrExit(aHeader.GetType() == OT_COAP_TYPE_CONFIRMABLE &&
+                 aHeader.GetCode() == OT_COAP_CODE_POST);
 
     otLogInfoArp(GetInstance(), "Received address notification from %04x",
                  HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
@@ -377,8 +377,8 @@ otError AddressResolver::SendAddressError(const ThreadTargetTlv &aTarget, const 
     Coap::Header header;
     Ip6::MessageInfo messageInfo;
 
-    header.Init(aDestination == NULL ? kCoapTypeNonConfirmable : kCoapTypeConfirmable,
-                kCoapRequestPost);
+    header.Init(aDestination == NULL ? OT_COAP_TYPE_NON_CONFIRMABLE : OT_COAP_TYPE_CONFIRMABLE,
+                OT_COAP_CODE_POST);
     header.AppendUriPathOptions(OT_URI_PATH_ADDRESS_ERROR);
     header.SetPayloadMarker();
 
@@ -434,8 +434,8 @@ void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessag
     Mac::ExtAddress macAddr;
     Ip6::Address destination;
 
-    VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost, error = OT_ERROR_DROP);
+    VerifyOrExit(aHeader.GetType() == OT_COAP_TYPE_CONFIRMABLE &&
+                 aHeader.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_DROP);
 
     otLogInfoArp(GetInstance(), "Received address error notification");
 
@@ -515,8 +515,8 @@ void AddressResolver::HandleAddressQuery(Coap::Header &aHeader, Message &aMessag
     Child *children;
     uint8_t numChildren;
 
-    VerifyOrExit(aHeader.GetType() == kCoapTypeNonConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost);
+    VerifyOrExit(aHeader.GetType() == OT_COAP_TYPE_NON_CONFIRMABLE &&
+                 aHeader.GetCode() == OT_COAP_CODE_POST);
 
     otLogInfoArp(GetInstance(), "Received address query from %04x", HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
 
@@ -574,7 +574,7 @@ void AddressResolver::SendAddressQueryResponse(const ThreadTargetTlv &aTargetTlv
     ThreadRloc16Tlv rloc16Tlv;
     Ip6::MessageInfo messageInfo;
 
-    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
+    header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.AppendUriPathOptions(OT_URI_PATH_ADDRESS_NOTIFY);
     header.SetPayloadMarker();
 
