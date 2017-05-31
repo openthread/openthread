@@ -1222,9 +1222,12 @@ void RADIO_IRQHandler(void)
             }
             break;
 
+        case RADIO_STATE_RX_ACK:
+            nrf_radio_task_trigger(NRF_RADIO_TASK_RSSISTART);
+            break;
+
         case RADIO_STATE_TX_ACK:
         case RADIO_STATE_TX_FRAME:
-        case RADIO_STATE_RX_ACK:
         case RADIO_STATE_CCA: // This could happen at the beginning of transmission procedure.
             break;
 
@@ -1439,7 +1442,7 @@ void RADIO_IRQHandler(void)
 
             if (!ack_is_requested(mp_tx_data))
             {
-                nrf_drv_radio802154_transmitted(NULL);
+                nrf_drv_radio802154_transmitted(NULL, 0, 0);
 
                 state_set(RADIO_STATE_WAITING_RX_FRAME);
             }
@@ -1464,7 +1467,9 @@ void RADIO_IRQHandler(void)
                 (nrf_radio_crc_status_get() == NRF_RADIO_CRC_STATUS_OK))
             {
                 mp_current_rx_buffer->free = false;
-                nrf_drv_radio802154_transmitted(mp_current_rx_buffer->psdu);
+                nrf_drv_radio802154_transmitted(mp_current_rx_buffer->psdu,                // psdu
+                                                nrf_drv_radio802154_rssi_last_get(),       // rssi
+                                                RX_FRAME_LQI(mp_current_rx_buffer->psdu)); // lqi
 
                 nrf_radio_mhmu_search_pattern_set(0);
                 nrf_radio_event_clear(NRF_RADIO_EVENT_MHRMATCH);
@@ -1679,9 +1684,11 @@ void __attribute__((weak)) nrf_drv_radio802154_received(uint8_t * p_data, int8_t
     (void) lqi;
 }
 
-void __attribute__((weak)) nrf_drv_radio802154_transmitted(uint8_t * p_ack)
+void __attribute__((weak)) nrf_drv_radio802154_transmitted(uint8_t * p_ack, int8_t power, int8_t lqi)
 {
     (void) p_ack;
+    (void) power;
+    (void) lqi;
 }
 
 void __attribute__((weak)) nrf_drv_radio802154_busy_channel(void)

@@ -76,7 +76,7 @@ static otRadioFrame sReceivedFrames[RADIO_RX_BUFFERS];
 static otRadioFrame sTransmitFrame;
 static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE + 1]
 __attribute__((section("nrf_radio_buffer.sTransmiPsdu")));
-static uint8_t     *sAckPsdu;
+static otRadioFrame sAckFrame;
 
 static uint32_t     sEnergyDetectionTime;
 static uint8_t      sEnergyDetectionChannel;
@@ -104,7 +104,7 @@ static void dataInit(void)
         sReceivedFrames[i].mPsdu = NULL;
     }
 
-    sAckPsdu = NULL;
+    memset(&sAckFrame, 0, sizeof(sAckFrame));
 }
 
 static void convertShortAddress(uint8_t *aTo, uint16_t aFrom)
@@ -518,24 +518,24 @@ void nrf5RadioProcess(otInstance *aInstance)
 
     if (isPendingEventSet(kPendingEventFrameTransmitted))
     {
-        bool pendingBit = ((sAckPsdu != NULL) && (sAckPsdu[1] & PENDING_BIT)) ? true : false;
-
 #if OPENTHREAD_ENABLE_DIAG
 
         if (otPlatDiagModeGet())
         {
+            bool pendingBit = ((sAckFrame.mPsdu != NULL) && (sAckFrame.mPsdu[1] & PENDING_BIT)) ? true : false;
             otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, pendingBit, OT_ERROR_NONE);
         }
         else
 #endif
         {
-            otPlatRadioTransmitDone(aInstance, &sTransmitFrame, pendingBit, OT_ERROR_NONE);
+            otRadioFrame *ackPtr = (sAckFrame.mPsdu == NULL) ? NULL : &sAckFrame;
+            otPlatRadioTxDone(aInstance, &sTransmitFrame, ackPtr, OT_ERROR_NONE);
         }
 
-        if (sAckPsdu != NULL)
+        if (sAckFrame.mPsdu != NULL)
         {
-            nrf_drv_radio802154_buffer_free(sAckPsdu);
-            sAckPsdu = NULL;
+            nrf_drv_radio802154_buffer_free(sAckFrame.mPsdu - 1);
+            sAckFrame.mPsdu = NULL;
         }
 
         resetPendingEvent(kPendingEventFrameTransmitted);
@@ -552,7 +552,7 @@ void nrf5RadioProcess(otInstance *aInstance)
         else
 #endif
         {
-            otPlatRadioTransmitDone(aInstance, &sTransmitFrame, false, OT_ERROR_CHANNEL_ACCESS_FAILURE);
+            otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, OT_ERROR_CHANNEL_ACCESS_FAILURE);
         }
 
         resetPendingEvent(kPendingEventChannelAccessFailure);
@@ -606,9 +606,20 @@ void nrf_drv_radio802154_received(uint8_t *p_data, int8_t power, int8_t lqi)
     receivedFrame->mChannel = nrf_drv_radio802154_channel_get();
 }
 
-void nrf_drv_radio802154_transmitted(uint8_t *aAckPsdu)
+void nrf_drv_radio802154_transmitted(uint8_t *aAckPsdu, int8_t aPower, int8_t aLqi)
 {
-    sAckPsdu = aAckPsdu;
+    if (aAckPsdu == NULL)
+    {
+        sAckFrame.mPsdu = NULL;
+    }
+    else
+    {
+        sAckFrame.mPsdu    = &aAckPsdu[1];
+        sAckFrame.mLength  = aAckPsdu[0];
+        sAckFrame.mPower   = aPower;
+        sAckFrame.mLqi     = aLqi;
+        sAckFrame.mChannel = nrf_drv_radio802154_channel_get();
+    }
 
     setPendingEvent(kPendingEventFrameTransmitted);
 }
