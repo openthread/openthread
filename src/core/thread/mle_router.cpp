@@ -2215,7 +2215,8 @@ exit:
     return error;
 }
 
-otError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+otError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
+                                            uint32_t aKeySequence)
 {
     static const uint8_t kMaxResponseTlvs = 10;
 
@@ -2314,6 +2315,12 @@ otError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const Ip6::
     }
 
     child->SetLastHeard(Timer::GetNow());
+
+    if (child->IsStateRestoring())
+    {
+        SetChildStateToValid(child);
+        child->SetKeySequence(aKeySequence);
+    }
 
     SendChildUpdateResponse(child, aMessageInfo, tlvs, tlvslength, &challenge);
 
