@@ -36,21 +36,12 @@
 
 #include <openthread/types.h>
 
-#include "cli/cli.hpp"
 #include "coap/coap_header.hpp"
 
 namespace ot {
 namespace Cli {
 
-/**
- * This structure represents a CLI command.
- *
- */
-struct CoapCommand
-{
-    const char *mName;                                 ///< A pointer to the command string.
-    otError(*mCommand)(int argc, char *argv[]);    ///< A function pointer to process the command.
-};
+class Interpreter;
 
 /**
  * This class implements the CLI CoAP server and client.
@@ -60,15 +51,21 @@ class Coap
 {
 public:
     /**
-     * This method interprets a list of CLI arguments.
+     * Constructor
      *
-     * @param[in]  aInstance  The OpenThread instance structure.
-     * @param[in]  argc  The number of elements in argv.
-     * @param[in]  argv  A pointer to an array of command line arguments.
-     * @param[in]  aServer  A reference to the CLI server.
+     * @param[in]  aInterpreter  The CLI interpreter.
      *
      */
-    static otError Process(otInstance *aInstance, int argc, char *argv[], Server &aServer);
+    Coap(Interpreter &aInterpreter): mInterpreter(aInterpreter) { }
+
+    /**
+     * This method interprets a list of CLI arguments.
+     *
+     * @param[in]  argc  The number of elements in argv.
+     * @param[in]  argv  A pointer to an array of command line arguments.
+     *
+     */
+    otError Process(int argc, char *argv[]);
 
 private:
     enum
@@ -76,26 +73,24 @@ private:
         kMaxUriLength = 32,
         kMaxBufferSize = 16
     };
-    static void PrintPayload(otMessage *aMessage);
-    static void ConvertToLower(char *aString);
-    static void OutputBytes(const uint8_t *aBytes, uint8_t aLength);
 
-    static otError ProcessClient(int argc, char *argv[]);
-    static otError ProcessServer(int argc, char *argv[]);
+    void PrintPayload(otMessage *aMessage) const;
 
-    static void OTCALL s_HandleServerResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                                              otMessageInfo *aMessageInfo);
-    static void HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, otMessageInfo *aMessageInfo);
-    static void OTCALL s_HandleClientResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                                              otMessageInfo *aMessageInfo, otError aResult);
-    static void HandleClientResponse(otCoapHeader *aHeader, otMessage *aMessage, otMessageInfo *aMessageInfo,
-                                     otError aResult);
+    otError ProcessRequest(int argc, char *argv[]);
 
-    static const CoapCommand sCommands[];
-    static Server *sServer;
-    static otCoapResource sResource;
-    static otInstance *sInstance;
-    static char sUriPath[kMaxUriLength];
+    static void OTCALL HandleServerResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+                                            const otMessageInfo *aMessageInfo);
+    void HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+
+    static void OTCALL HandleClientResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+                                            const otMessageInfo *aMessageInfo, otError aError);
+    void HandleClientResponse(otCoapHeader *aHeader, otMessage *aMessage, const otMessageInfo *aMessageInfo,
+                              otError aError);
+
+    otCoapResource mResource;
+    char mUriPath[kMaxUriLength];
+
+    Interpreter &mInterpreter;
 };
 
 }  // namespace Cli
