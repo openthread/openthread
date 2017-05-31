@@ -320,6 +320,26 @@ private:
      *     \         /                                                             \         /
      *   Segment #1 Header                                                      Segment #2 Header
      *
+     *
+     * Buffer pointers:
+     *
+     *          mReadFrameStart
+     *          |
+     *          |         mReadSegmentHead                             mWriteFrameStart
+     *          |         |                                            |
+     *          |         |   mReadPointer                             |         mWriteSegmentHead
+     *          |         |   |                                        |         |
+     *  mBuffer |         |   |     mReadSegmentTail                   |         |         mWriteSegmentTail mBufferEnd
+     *  |       |         |   |     |                                  |         |         |                      |
+     *  V       V         V   V     V                                  V         V         V                      V
+     * +-------+---------+---------+-------+--------------------------+---------+---------+----------------------+-
+     * | ...   | Seg 1   | Seg 2   | Seg 3 |   . . .                  | Seg 1   | Seg 2   :   . . .              |
+     * +-------+---------+---------+-------+---------------------------+---------+--------+----------------------+-
+     *         \          \        /       /                           \                  /
+     *         |         Cur segment      |                            |                 |
+     *         |                          |                            |                 |
+     *        Current OutFrame (being read)                      Current InFrame (being written)
+     *
      */
 
     enum
@@ -351,17 +371,15 @@ private:
     uint16_t        ReadUint16At(uint8_t *aBufPtr);
     void            WriteUint16At(uint8_t *aBufPtr, uint16_t aValue);
 
-    otError     InFrameFeedByte(uint8_t aByte);
-    otError     InFrameBeginSegment(void);
+    otError         InFrameFeedByte(uint8_t aByte);
+    otError         InFrameBeginSegment(void);
     void            InFrameEndSegment(uint16_t aSegmentHeaderFlags);
     void            InFrameDiscard(void);
 
-    otError     OutFramePrepareSegment(void);
+    otError         OutFramePrepareSegment(void);
     void            OutFrameMoveToNextSegment(void);
-    otError     OutFramePrepareMessage(void);
-    otError     OutFrameFillMessageBuffer(void);
-
-    // Instance variables
+    otError         OutFramePrepareMessage(void);
+    otError         OutFrameFillMessageBuffer(void);
 
     uint8_t * const  mBuffer;                    // Pointer to the buffer used to store the data.
     uint8_t * const  mBufferEnd;                 // Points to after the end of buffer.
