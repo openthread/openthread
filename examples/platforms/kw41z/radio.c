@@ -782,23 +782,30 @@ void Radio_1_IRQHandler(void)
             break;
 
         case XCVR_TR_c:
-            if (!(irqStatus & ZLL_IRQSTS_RXIRQ_MASK) ||
-                (rf_process_rx_frame() == false) ||
-                (sRxFrame.mLength != IEEE802154_ACK_LENGTH) ||
-                ((sRxFrame.mPsdu[IEEE802154_FRM_CTL_LO_OFFSET] & IEEE802154_FRM_TYPE_MASK) != IEEE802154_FRM_TYPE_ACK) ||
-                (sRxFrame.mPsdu[IEEE802154_DSN_OFFSET] != sTxFrame.mPsdu[IEEE802154_DSN_OFFSET]))
+            if ((ZLL->PHY_CTRL & ZLL_PHY_CTRL_CCABFRTX_MASK) && (irqStatus & ZLL_IRQSTS_CCA_MASK))
+            {
+                sTxStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
+            }
+            else if (!(irqStatus & ZLL_IRQSTS_RXIRQ_MASK) ||
+                     (rf_process_rx_frame() == false) ||
+                     (sRxFrame.mLength != IEEE802154_ACK_LENGTH) ||
+                     ((sRxFrame.mPsdu[IEEE802154_FRM_CTL_LO_OFFSET] & IEEE802154_FRM_TYPE_MASK) != IEEE802154_FRM_TYPE_ACK) ||
+                     (sRxFrame.mPsdu[IEEE802154_DSN_OFFSET] != sTxFrame.mPsdu[IEEE802154_DSN_OFFSET]))
             {
                 sTxStatus = OT_ERROR_NO_ACK;
             }
 
-        case XCVR_TX_c:
             sState = OT_RADIO_STATE_RECEIVE;
+            sTxDone = true;
+            break;
 
+        case XCVR_TX_c:
             if ((ZLL->PHY_CTRL & ZLL_PHY_CTRL_CCABFRTX_MASK) && (irqStatus & ZLL_IRQSTS_CCA_MASK))
             {
                 sTxStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
             }
 
+            sState = OT_RADIO_STATE_RECEIVE;
             sTxDone = true;
             break;
 
