@@ -960,6 +960,14 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_STREAM_NET_INSECURE";
         break;
 
+    case SPINEL_PROP_UART_BITRATE:
+        ret = "PROP_UART_BITRATE";
+        break;
+
+    case SPINEL_PROP_UART_XON_XOFF:
+        ret = "PROP_UART_XON_XOFF";
+        break;
+
     case SPINEL_PROP_PHY_ENABLED:
         ret = "PROP_PHY_ENABLED";
         break;
@@ -1294,6 +1302,186 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
 
     case SPINEL_PROP_GPIO_STATE_CLEAR:
         ret = "PROP_GPIO_STATE_CLEAR";
+        break;
+
+    case SPINEL_PROP_CNTR_RESET:
+        ret = "PROP_CNTR_RESET";
+        break;
+
+    case SPINEL_PROP_CNTR_TX_PKT_TOTAL:
+        ret = "PROP_CNTR_TX_PKT_TOTAL";
+        break;
+
+    case SPINEL_PROP_CNTR_TX_PKT_ACK_REQ:
+        ret = "PROP_CNTR_TX_PKT_ACK_REQ";
+        break;
+
+    case SPINEL_PROP_CNTR_TX_PKT_ACKED:
+        ret = "PROP_CNTR_TX_PKT_ACKED";
+        break;
+
+    case SPINEL_PROP_CNTR_TX_PKT_NO_ACK_REQ:
+        ret = "PROP_CNTR_TX_PKT_NO_ACK_REQ";
+        break;
+
+    case SPINEL_PROP_CNTR_TX_PKT_DATA:
+        ret = "PROP_CNTR_TX_PKT_DATA";
+        break;
+
+    case SPINEL_PROP_CNTR_TX_PKT_DATA_POLL:
+        ret = "PROP_CNTR_TX_PKT_DATA_POLL";
+        break;
+
+    case SPINEL_PROP_CNTR_TX_PKT_BEACON:
+        ret = "PROP_CNTR_TX_PKT_BEACON";
+        break;
+
+    case SPINEL_PROP_CNTR_TX_PKT_BEACON_REQ:
+        ret = "PROP_CNTR_TX_PKT_BEACON_REQ";
+        break;
+
+    case SPINEL_PROP_CNTR_TX_PKT_OTHER:
+        ret = "PROP_CNTR_TX_PKT_OTHER";
+        break;
+
+    case SPINEL_PROP_CNTR_TX_PKT_RETRY:
+        ret = "PROP_CNTR_TX_PKT_RETRY";
+        break;
+
+    case SPINEL_PROP_CNTR_TX_ERR_CCA:
+        ret = "PROP_CNTR_TX_ERR_CCA";
+        break;
+
+    case SPINEL_PROP_CNTR_TX_PKT_UNICAST:
+        ret = "PROP_CNTR_TX_PKT_UNICAST";
+        break;
+
+    case SPINEL_PROP_CNTR_TX_PKT_BROADCAST:
+        ret = "PROP_CNTR_TX_PKT_BROADCAST";
+        break;
+
+    case SPINEL_PROP_CNTR_TX_ERR_ABORT:
+        ret = "PROP_CNTR_TX_ERR_ABORT";
+        break;
+
+    case SPINEL_PROP_CNTR_RX_PKT_TOTAL:
+        ret = "PROP_CNTR_RX_PKT_TOTAL";
+        break;
+
+    case SPINEL_PROP_CNTR_RX_PKT_DATA:
+        ret = "PROP_CNTR_RX_PKT_DATA";
+        break;
+
+    case SPINEL_PROP_CNTR_RX_PKT_DATA_POLL:
+        ret = "PROP_CNTR_RX_PKT_DATA_POLL";
+        break;
+
+    case SPINEL_PROP_CNTR_RX_PKT_BEACON:
+        ret = "PROP_CNTR_RX_PKT_BEACON";
+        break;
+
+    case SPINEL_PROP_CNTR_RX_PKT_BEACON_REQ:
+        ret = "PROP_CNTR_RX_PKT_BEACON_REQ";
+        break;
+
+    case SPINEL_PROP_CNTR_RX_PKT_OTHER:
+        ret = "PROP_CNTR_RX_PKT_OTHER";
+        break;
+
+    case SPINEL_PROP_CNTR_RX_PKT_FILT_WL:
+        ret = "PROP_CNTR_RX_PKT_FILT_WL";
+        break;
+
+    case SPINEL_PROP_CNTR_RX_PKT_FILT_DA:
+        ret = "PROP_CNTR_RX_PKT_FILT_DA";
+        break;
+
+    case SPINEL_PROP_CNTR_RX_ERR_EMPTY:
+        ret = "PROP_CNTR_RX_ERR_EMPTY";
+        break;
+
+    case SPINEL_PROP_CNTR_RX_ERR_UKWN_NBR:
+        ret = "PROP_CNTR_RX_ERR_UKWN_NBR";
+        break;
+
+    case SPINEL_PROP_CNTR_RX_ERR_NVLD_SADDR:
+        ret = "PROP_CNTR_RX_ERR_NVLD_SADDR";
+        break;
+
+    case SPINEL_PROP_CNTR_RX_ERR_SECURITY:
+        ret = "PROP_CNTR_RX_ERR_SECURITY";
+        break;
+
+    case SPINEL_PROP_CNTR_RX_ERR_BAD_FCS:
+        ret = "PROP_CNTR_RX_ERR_BAD_FCS";
+        break;
+
+    case SPINEL_PROP_CNTR_RX_ERR_OTHER:
+        ret = "PROP_CNTR_RX_ERR_OTHER";
+        break;
+
+    case SPINEL_PROP_CNTR_RX_PKT_DUP:
+        ret = "PROP_CNTR_RX_PKT_DUP";
+        break;
+
+    case SPINEL_PROP_CNTR_RX_PKT_UNICAST:
+        ret = "PROP_CNTR_RX_PKT_UNICAST";
+        break;
+
+    case SPINEL_PROP_CNTR_RX_PKT_BROADCAST:
+        ret = "PROP_CNTR_RX_PKT_BROADCAST";
+        break;
+
+    case SPINEL_PROP_CNTR_TX_IP_SEC_TOTAL:
+        ret = "PROP_CNTR_TX_IP_SEC_TOTAL";
+        break;
+
+    case SPINEL_PROP_CNTR_TX_IP_INSEC_TOTAL:
+        ret = "PROP_CNTR_TX_IP_INSEC_TOTAL";
+        break;
+
+    case SPINEL_PROP_CNTR_TX_IP_DROPPED:
+        ret = "PROP_CNTR_TX_IP_DROPPED";
+        break;
+
+    case SPINEL_PROP_CNTR_RX_IP_SEC_TOTAL:
+        ret = "PROP_CNTR_RX_IP_SEC_TOTAL";
+        break;
+
+    case SPINEL_PROP_CNTR_RX_IP_INSEC_TOTAL:
+        ret = "PROP_CNTR_RX_IP_INSEC_TOTAL";
+        break;
+
+    case SPINEL_PROP_CNTR_RX_IP_DROPPED:
+        ret = "PROP_CNTR_RX_IP_DROPPED";
+        break;
+
+    case SPINEL_PROP_CNTR_TX_SPINEL_TOTAL:
+        ret = "PROP_CNTR_TX_SPINEL_TOTAL";
+        break;
+
+    case SPINEL_PROP_CNTR_RX_SPINEL_TOTAL:
+        ret = "PROP_CNTR_RX_SPINEL_TOTAL";
+        break;
+
+    case SPINEL_PROP_CNTR_RX_SPINEL_ERR:
+        ret = "PROP_CNTR_RX_SPINEL_ERR";
+        break;
+
+    case SPINEL_PROP_CNTR_RX_SPINEL_OUT_OF_ORDER_TID:
+        ret = "PROP_CNTR_RX_SPINEL_OUT_OF_ORDER_TID";
+        break;
+
+    case SPINEL_PROP_MSG_BUFFER_COUNTERS:
+        ret = "PROP_MSG_BUFFER_COUNTERS";
+        break;
+
+    case SPINEL_PROP_NEST_LEGACY_ULA_PREFIX:
+        ret = "PROP_NEST_LEGACY_ULA_PREFIX";
+        break;
+
+    case SPINEL_PROP_NEST_LEGACY_JOINED_NODE:
+        ret = "PROP_NEST_LEGACY_JOINED_NODE";
         break;
 
     case SPINEL_PROP_DEBUG_TEST_ASSERT:
