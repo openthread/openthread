@@ -66,7 +66,7 @@ extern "C" {
 
 enum
 {
-    OT_RADIO_FRAME_MAX_SIZE     = 127,                             ///< aMaxPHYPacketSize (IEEE 802.15.4-2006)
+    OT_RADIO_FRAME_MAX_SIZE      = 127,                             ///< aMaxPHYPacketSize (IEEE 802.15.4-2006)
     OT_RADIO_CHANNEL_MIN         = 11,                              ///< 2.4 GHz IEEE 802.15.4-2006
     OT_RADIO_CHANNEL_MAX         = 26,                              ///< 2.4 GHz IEEE 802.15.4-2006
     OT_RADIO_SUPPORTED_CHANNELS  = 0xffff << OT_RADIO_CHANNEL_MIN,  ///< 2.4 GHz IEEE 802.15.4-2006
@@ -116,9 +116,9 @@ typedef struct otRadioFrame
 typedef enum otRadioState
 {
     OT_RADIO_STATE_DISABLED = 0,
-    OT_RADIO_STATE_SLEEP = 1,
-    OT_RADIO_STATE_RECEIVE = 2,
-    OT_RADIO_STATE_TRANSMIT = 3
+    OT_RADIO_STATE_SLEEP    = 1,
+    OT_RADIO_STATE_RECEIVE  = 2,
+    OT_RADIO_STATE_TRANSMIT = 3,
 } otRadioState;
 
 /**

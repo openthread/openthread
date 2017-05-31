@@ -72,6 +72,7 @@ static bool           sTransmitBusy      = false;
 static bool           sPromiscuous       = false;
 static bool           sIsReceiverEnabled = false;
 static bool           sIsSrcMatchEnabled = false;
+static bool           sIsAckRequested    = false;
 static otRadioState   sState             = OT_RADIO_STATE_DISABLED;
 
 static uint8_t        sReceiveBuffer[IEEE802154_MAX_LENGTH + 1 + sizeof(RAIL_RxPacketInfo_t)];
@@ -328,6 +329,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     sState = OT_RADIO_STATE_TRANSMIT;
     sTransmitError = OT_ERROR_NONE;
     sTransmitBusy = true;
+    sIsAckRequested = (aFrame->mPsdu[0] & IEEE802154_ACK_REQUEST) ? true : false;
 
     frame[0] = aFrame->mLength;
     memcpy(frame + 1, aFrame->mPsdu, aFrame->mLength);
@@ -368,7 +370,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     (void)aInstance;
-    return OT_RADIO_CAPS_NONE;
+    return OT_RADIO_CAPS_ACK_TIMEOUT;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
@@ -758,15 +760,19 @@ void efr32RadioProcess(otInstance *aInstance)
     CORE_EXIT_CRITICAL();
 }
 
+void RAILCb_RxAckTimeout(void)
+{
+    if (sIsAckRequested)
+    {
+        sTransmitError = OT_ERROR_NO_ACK;
+    }
+}
+
 void RAILCb_RfReady(void)
 {
 }
 
 void RAILCb_CalNeeded(void)
-{
-}
-
-void RAILCb_RxAckTimeout(void)
 {
 }
 
