@@ -195,6 +195,11 @@ exit:
     return error;
 }
 
+const otIp6Address *otThreadGetLinkLocalIp6Address(otInstance *aInstance)
+{
+    return &aInstance->mThreadNetif.GetMle().GetLinkLocalAddress();
+}
+
 const char *otThreadGetNetworkName(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMac().GetNetworkName();

@@ -675,6 +675,11 @@ exit:
     return error;
 }
 
+const Ip6::Address &Mle::GetLinkLocalAddress(void) const
+{
+    return mLinkLocal64.GetAddress();
+}
+
 otError Mle::UpdateLinkLocalAddress(void)
 {
     mNetif.RemoveUnicastAddress(mLinkLocal64);

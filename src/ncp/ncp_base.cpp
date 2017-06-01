@@ -3121,10 +3121,30 @@ otError NcpBase::GetPropertyHandler_IPV6_ML_ADDR(uint8_t header, spinel_prop_key
 
 otError NcpBase::GetPropertyHandler_IPV6_LL_ADDR(uint8_t header, spinel_prop_key_t key)
 {
-    // TODO!
-    (void)key;
+    otError errorCode = OT_ERROR_NONE;
+    const otIp6Address *address = otThreadGetLinkLocalIp6Address(mInstance);
 
-    return SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+    if (address)
+    {
+        errorCode = SendPropertyUpdate(
+                        header,
+                        SPINEL_CMD_PROP_VALUE_IS,
+                        key,
+                        SPINEL_DATATYPE_IPv6ADDR_S,
+                        address
+                    );
+    }
+    else
+    {
+        errorCode = SendPropertyUpdate(
+                        header,
+                        SPINEL_CMD_PROP_VALUE_IS,
+                        key,
+                        SPINEL_DATATYPE_VOID_S
+                    );
+    }
+
+    return errorCode;
 }
 
 otError NcpBase::GetPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel_prop_key_t key)

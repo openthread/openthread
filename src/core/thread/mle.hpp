@@ -651,6 +651,16 @@ public:
     otError SetMeshLocalPrefix(const uint8_t *aPrefix);
 
     /**
+     * This method returns a reference to the Thread link-local address.
+     *
+     * The Thread link local address is derived using IEEE802.15.4 Extended Address as Interface Identifier.
+     *
+     * @returns A reference to the Thread link local address.
+     *
+     */
+    const Ip6::Address &GetLinkLocalAddress(void) const;
+
+    /**
      * This method updates the link local address.
      *
      * Call this method when the IEEE 802.15.4 Extended Address has changed.
