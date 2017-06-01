@@ -33,10 +33,11 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
+#include "mac_blacklist.hpp"
+
 #include "utils/wrap_string.h"
 
-#include <common/code_utils.hpp>
-#include <mac/mac_blacklist.hpp>
+#include "common/code_utils.hpp"
 
 #if OPENTHREAD_ENABLE_MAC_WHITELIST
 
@@ -53,11 +54,11 @@ Blacklist::Blacklist(void)
     }
 }
 
-ThreadError Blacklist::GetEntry(uint8_t aIndex, Entry &aEntry) const
+otError Blacklist::GetEntry(uint8_t aIndex, Entry &aEntry) const
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aIndex < kMaxEntries, error = kThreadError_InvalidArgs);
+    VerifyOrExit(aIndex < kMaxEntries, error = OT_ERROR_INVALID_ARGS);
 
     memcpy(&aEntry.mExtAddress, &mBlacklist[aIndex].mExtAddress, sizeof(aEntry.mExtAddress));
     aEntry.mValid = mBlacklist[aIndex].mValid;

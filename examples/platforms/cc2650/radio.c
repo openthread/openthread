@@ -48,6 +48,11 @@
 #include <driverlib/rf_ieee_cmd.h>
 #include <driverlib/chipinfo.h>
 
+enum
+{
+    CC2650_RECEIVE_SENSITIVITY = -100,  // dBm
+};
+
 /* phy state as defined by openthread */
 static volatile cc2650_PhyState sState;
 
@@ -129,13 +134,13 @@ static uint8_t sRxBuf1[RX_BUF_SIZE] __attribute__((aligned(4)));
 static dataQueue_t sRxDataQueue = { 0 };
 
 /* openthread data primatives */
-static RadioPacket sTransmitFrame;
-static RadioPacket sReceiveFrame;
-static ThreadError sTransmitError;
-static ThreadError sReceiveError;
+static otRadioFrame sTransmitFrame;
+static otRadioFrame sReceiveFrame;
+static otError sTransmitError;
+static otError sReceiveError;
 
-static uint8_t sTransmitPsdu[kMaxPHYPacketSize] __attribute__((aligned(4))) ;
-static uint8_t sReceivePsdu[kMaxPHYPacketSize] __attribute__((aligned(4))) ;
+static uint8_t sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE] __attribute__((aligned(4))) ;
+static uint8_t sReceivePsdu[OT_RADIO_FRAME_MAX_SIZE] __attribute__((aligned(4))) ;
 
 /**
  * Interrupt handlers forward declared for register function
@@ -191,7 +196,7 @@ static void rfCoreInitReceiveParams(void)
         .condition                  = {
             .rule                   = COND_NEVER,
         },
-        .channel                    = kPhyMinChannel,
+        .channel                    = OT_RADIO_CHANNEL_MIN,
         .rxConfig                   =
         {
             .bAutoFlushCrc          = 1,
@@ -1054,7 +1059,7 @@ void RFCCPE0IntHandler(void)
                     }
                     else
                     {
-                        sTransmitError = kThreadError_NoAck;
+                        sTransmitError = OT_ERROR_NO_ACK;
                         /* signal polling function we are done transmitting, we failed to send the packet */
                         sState = cc2650_stateTransmitComplete;
                     }
@@ -1063,20 +1068,20 @@ void RFCCPE0IntHandler(void)
 
                 case IEEE_DONE_ACK:
                     sReceivedAckPendingBit = false;
-                    sTransmitError = kThreadError_None;
+                    sTransmitError = OT_ERROR_NONE;
                     /* signal polling function we are done transmitting */
                     sState = cc2650_stateTransmitComplete;
                     break;
 
                 case IEEE_DONE_ACKPEND:
                     sReceivedAckPendingBit = true;
-                    sTransmitError = kThreadError_None;
+                    sTransmitError = OT_ERROR_NONE;
                     /* signal polling function we are done transmitting */
                     sState = cc2650_stateTransmitComplete;
                     break;
 
                 default:
-                    sTransmitError = kThreadError_Failed;
+                    sTransmitError = OT_ERROR_FAILED;
                     /* signal polling function we are done transmitting */
                     sState = cc2650_stateTransmitComplete;
                     break;
@@ -1090,25 +1095,25 @@ void RFCCPE0IntHandler(void)
                 {
                 case IEEE_DONE_OK:
                     sReceivedAckPendingBit = false;
-                    sTransmitError = kThreadError_None;
+                    sTransmitError = OT_ERROR_NONE;
                     break;
 
                 case IEEE_DONE_TIMEOUT:
-                    sTransmitError = kThreadError_ChannelAccessFailure;
+                    sTransmitError = OT_ERROR_CHANNEL_ACCESS_FAILURE;
                     break;
 
                 case IEEE_ERROR_NO_SETUP:
                 case IEEE_ERROR_NO_FS:
                 case IEEE_ERROR_SYNTH_PROG:
-                    sTransmitError = kThreadError_InvalidState;
+                    sTransmitError = OT_ERROR_INVALID_STATE;
                     break;
 
                 case IEEE_ERROR_TXUNF:
-                    sTransmitError = kThreadError_NoBufs;
+                    sTransmitError = OT_ERROR_NO_BUFS;
                     break;
 
                 default:
-                    sTransmitError = kThreadError_Error;
+                    sTransmitError = OT_ERROR_GENERIC;
                     break;
                 }
 
@@ -1133,25 +1138,25 @@ void cc2650RadioInit(void)
 /**
  * Function documented in platform/radio.h
  */
-ThreadError otPlatRadioEnable(otInstance *aInstance)
+otError otPlatRadioEnable(otInstance *aInstance)
 {
-    ThreadError error = kThreadError_Busy;
+    otError error = OT_ERROR_BUSY;
     (void)aInstance;
 
     if (sState == cc2650_stateSleep)
     {
-        error = kThreadError_None;
+        error = OT_ERROR_NONE;
     }
     else if (sState == cc2650_stateDisabled)
     {
-        otEXPECT_ACTION(rfCorePowerOn() == CMDSTA_Done, error = kThreadError_Failed);
-        otEXPECT_ACTION(rfCoreSendEnableCmd() == DONE_OK, error = kThreadError_Failed);
+        otEXPECT_ACTION(rfCorePowerOn() == CMDSTA_Done, error = OT_ERROR_FAILED);
+        otEXPECT_ACTION(rfCoreSendEnableCmd() == DONE_OK, error = OT_ERROR_FAILED);
         sState = cc2650_stateSleep;
     }
 
 exit:
 
-    if (error == kThreadError_Failed)
+    if (error == OT_ERROR_FAILED)
     {
         rfCorePowerOff();
         sState = cc2650_stateDisabled;
@@ -1172,14 +1177,14 @@ bool otPlatRadioIsEnabled(otInstance *aInstance)
 /**
  * Function documented in platform/radio.h
  */
-ThreadError otPlatRadioDisable(otInstance *aInstance)
+otError otPlatRadioDisable(otInstance *aInstance)
 {
-    ThreadError error = kThreadError_Busy;
+    otError error = OT_ERROR_BUSY;
     (void)aInstance;
 
     if (sState == cc2650_stateDisabled)
     {
-        error = kThreadError_None;
+        error = OT_ERROR_NONE;
     }
     else if (sState == cc2650_stateSleep)
     {
@@ -1189,7 +1194,7 @@ ThreadError otPlatRadioDisable(otInstance *aInstance)
          */
         rfCorePowerOff();
         sState = cc2650_stateDisabled;
-        error = kThreadError_None;
+        error = OT_ERROR_NONE;
     }
 
     return error;
@@ -1198,35 +1203,52 @@ ThreadError otPlatRadioDisable(otInstance *aInstance)
 /**
  * Function documented in platform/radio.h
  */
-ThreadError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
+otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
-    ThreadError error = kThreadError_Busy;
+    otError error = OT_ERROR_BUSY;
     (void)aInstance;
 
     if (sState == cc2650_stateSleep)
     {
         sState = cc2650_stateEdScan;
-        otEXPECT_ACTION(rfCoreSendEdScanCmd(aScanChannel, aScanDuration) == CMDSTA_Done, error = kThreadError_Failed);
-        error = kThreadError_None;
+        otEXPECT_ACTION(rfCoreSendEdScanCmd(aScanChannel, aScanDuration) == CMDSTA_Done, error = OT_ERROR_FAILED);
+        error = OT_ERROR_NONE;
     }
 
 exit:
     return error;
 }
 
+/**
+ * Function documented in platform/radio.h
+ */
 void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
 {
-    // TODO: Create a proper implementation for this driver.
+    unsigned int i;
+    output_config_t const *powerCfg = &(rgOutputPower[0]);
     (void)aInstance;
-    (void)aPower;
+
+    for (i = 1; i < OUTPUT_CONFIG_COUNT; i++)
+    {
+        if (rgOutputPower[i].dbm >= aPower)
+        {
+            powerCfg = &(rgOutputPower[i]);
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    sCurrentOutputPower = powerCfg;
 }
 
 /**
  * Function documented in platform/radio.h
  */
-ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
+otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
-    ThreadError error = kThreadError_Busy;
+    otError error = OT_ERROR_BUSY;
     (void)aInstance;
 
     if (sState == cc2650_stateSleep)
@@ -1238,8 +1260,8 @@ ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
          *      may have changed some values in the rx command
          */
         sReceiveCmd.channel = aChannel;
-        otEXPECT_ACTION(rfCoreSendReceiveCmd() == CMDSTA_Done, error = kThreadError_Failed);
-        error = kThreadError_None;
+        otEXPECT_ACTION(rfCoreSendReceiveCmd() == CMDSTA_Done, error = OT_ERROR_FAILED);
+        error = OT_ERROR_NONE;
     }
     else if (sState == cc2650_stateReceive)
     {
@@ -1247,7 +1269,7 @@ ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
         {
             /* we are already running on the right channel */
             sState = cc2650_stateReceive;
-            error = kThreadError_None;
+            error = OT_ERROR_NONE;
         }
         else
         {
@@ -1255,16 +1277,16 @@ ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
              * we are running on the wrong channel. Either way assume the
              * caller correctly called us and abort all running commands.
              */
-            otEXPECT_ACTION(rfCoreExecuteAbortCmd() == CMDSTA_Done, error = kThreadError_Failed);
+            otEXPECT_ACTION(rfCoreExecuteAbortCmd() == CMDSTA_Done, error = OT_ERROR_FAILED);
 
             /* any frames in the queue will be for the old channel */
-            otEXPECT_ACTION(rfCoreClearReceiveQueue(&sRxDataQueue) == CMDSTA_Done, error = kThreadError_Failed);
+            otEXPECT_ACTION(rfCoreClearReceiveQueue(&sRxDataQueue) == CMDSTA_Done, error = OT_ERROR_FAILED);
 
             sReceiveCmd.channel = aChannel;
-            otEXPECT_ACTION(rfCoreSendReceiveCmd() == CMDSTA_Done, error = kThreadError_Failed);
+            otEXPECT_ACTION(rfCoreSendReceiveCmd() == CMDSTA_Done, error = OT_ERROR_FAILED);
 
             sState = cc2650_stateReceive;
-            error = kThreadError_None;
+            error = OT_ERROR_NONE;
         }
     }
 
@@ -1275,20 +1297,20 @@ exit:
 /**
  * Function documented in platform/radio.h
  */
-ThreadError otPlatRadioSleep(otInstance *aInstance)
+otError otPlatRadioSleep(otInstance *aInstance)
 {
-    ThreadError error = kThreadError_Busy;
+    otError error = OT_ERROR_BUSY;
     (void)aInstance;
 
     if (sState == cc2650_stateSleep)
     {
-        error = kThreadError_None;
+        error = OT_ERROR_NONE;
     }
     else if (sState == cc2650_stateReceive)
     {
         if (rfCoreExecuteAbortCmd() != CMDSTA_Done)
         {
-            error = kThreadError_Busy;
+            error = OT_ERROR_BUSY;
             return error;
         }
 
@@ -1302,7 +1324,7 @@ ThreadError otPlatRadioSleep(otInstance *aInstance)
 /**
  * Function documented in platform/radio.h
  */
-RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
+otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
     (void)aInstance;
     return &sTransmitFrame;
@@ -1311,9 +1333,9 @@ RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 /**
  * Function documented in platform/radio.h
  */
-ThreadError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
+otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
-    ThreadError error = kThreadError_Busy;
+    otError error = OT_ERROR_BUSY;
 
     if (sState == cc2650_stateReceive)
     {
@@ -1321,16 +1343,16 @@ ThreadError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
          * This is the easiest way to setup the frequency synthesizer.
          * And we are supposed to fall into the receive state afterwards.
          */
-        error = otPlatRadioReceive(aInstance, aPacket->mChannel);
+        error = otPlatRadioReceive(aInstance, aFrame->mChannel);
 
-        if (error == kThreadError_None)
+        if (error == OT_ERROR_NONE)
         {
             sState = cc2650_stateTransmit;
 
             /* removing 2 bytes of CRC placeholder because we generate that in hardware */
-            otEXPECT_ACTION(rfCoreSendTransmitCmd(aPacket->mPsdu, aPacket->mLength - 2) == CMDSTA_Done,
-                            error = kThreadError_Failed);
-            error = kThreadError_None;
+            otEXPECT_ACTION(rfCoreSendTransmitCmd(aFrame->mPsdu, aFrame->mLength - 2) == CMDSTA_Done,
+                            error = OT_ERROR_FAILED);
+            error = OT_ERROR_NONE;
         }
     }
 
@@ -1354,7 +1376,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     (void)aInstance;
-    return kRadioCapsAckTimeout | kRadioCapsEnergyScan | kRadioCapsTransmitRetries;
+    return OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_ENERGY_SCAN | OT_RADIO_CAPS_TRANSMIT_RETRIES;
 }
 
 /**
@@ -1379,9 +1401,9 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 /**
  * Function documented in platform/radio.h
  */
-ThreadError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     (void)aInstance;
     uint8_t idx = rfCoreFindShortSrcMatchIdx(aShortAddress);
 
@@ -1389,7 +1411,7 @@ ThreadError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16
     {
         /* the entry does not exist already, add it */
         otEXPECT_ACTION((idx = rfCoreFindEmptyShortSrcMatchIdx()) != CC2650_SRC_MATCH_NONE,
-                        error = kThreadError_NoBufs);
+                        error = OT_ERROR_NO_BUFS);
         sSrcMatchShortData.extAddrEnt[idx].shortAddr = aShortAddress;
         sSrcMatchShortData.extAddrEnt[idx].panId = sReceiveCmd.localPanID;
     }
@@ -1398,7 +1420,7 @@ ThreadError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16
     {
         /* we have a running or backgrounded rx command */
         otEXPECT_ACTION(rfCoreModifySourceMatchEntry(idx, SHORT_ADDRESS, true) == CMDSTA_Done,
-                        error = kThreadError_Failed);
+                        error = OT_ERROR_FAILED);
     }
     else
     {
@@ -1414,19 +1436,19 @@ exit:
 /**
  * Function documented in platform/radio.h
  */
-ThreadError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     (void)aInstance;
     uint8_t idx;
     otEXPECT_ACTION((idx = rfCoreFindShortSrcMatchIdx(aShortAddress)) != CC2650_SRC_MATCH_NONE,
-                    error = kThreadError_NoAddress);
+                    error = OT_ERROR_NO_ADDRESS);
 
     if (sReceiveCmd.status == ACTIVE || sReceiveCmd.status == IEEE_SUSPENDED)
     {
         /* we have a running or backgrounded rx command */
         otEXPECT_ACTION(rfCoreModifySourceMatchEntry(idx, SHORT_ADDRESS, false) == CMDSTA_Done,
-                        error = kThreadError_Failed);
+                        error = OT_ERROR_FAILED);
     }
     else
     {
@@ -1442,16 +1464,16 @@ exit:
 /**
  * Function documented in platform/radio.h
  */
-ThreadError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     (void)aInstance;
     uint8_t idx = rfCoreFindExtSrcMatchIdx((uint64_t *)aExtAddress);
 
     if (idx == CC2650_SRC_MATCH_NONE)
     {
         /* the entry does not exist already, add it */
-        otEXPECT_ACTION((idx = rfCoreFindEmptyExtSrcMatchIdx()) != CC2650_SRC_MATCH_NONE, error = kThreadError_NoBufs);
+        otEXPECT_ACTION((idx = rfCoreFindEmptyExtSrcMatchIdx()) != CC2650_SRC_MATCH_NONE, error = OT_ERROR_NO_BUFS);
         sSrcMatchExtData.extAddrEnt[idx] = *((uint64_t *)aExtAddress);
     }
 
@@ -1459,7 +1481,7 @@ ThreadError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t 
     {
         /* we have a running or backgrounded rx command */
         otEXPECT_ACTION(rfCoreModifySourceMatchEntry(idx, EXT_ADDRESS, true) == CMDSTA_Done,
-                        error = kThreadError_Failed);
+                        error = OT_ERROR_FAILED);
     }
     else
     {
@@ -1475,19 +1497,19 @@ exit:
 /**
  * Function documented in platform/radio.h
  */
-ThreadError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     (void)aInstance;
     uint8_t idx;
     otEXPECT_ACTION((idx = rfCoreFindExtSrcMatchIdx((uint64_t *)aExtAddress)) != CC2650_SRC_MATCH_NONE,
-                    error = kThreadError_NoAddress);
+                    error = OT_ERROR_NO_ADDRESS);
 
     if (sReceiveCmd.status == ACTIVE || sReceiveCmd.status == IEEE_SUSPENDED)
     {
         /* we have a running or backgrounded rx command */
         otEXPECT_ACTION(rfCoreModifySourceMatchEntry(idx, EXT_ADDRESS, false) == CMDSTA_Done,
-                        error = kThreadError_Failed);
+                        error = OT_ERROR_FAILED);
     }
     else
     {
@@ -1508,7 +1530,25 @@ exit:
 void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 {
     (void)aInstance;
-    // TODO - This function needs to be implemented
+
+    if (sReceiveCmd.status == ACTIVE || sReceiveCmd.status == IEEE_SUSPENDED)
+    {
+        unsigned int i;
+
+        for (i = 0; i < CC2650_SHORTADD_SRC_MATCH_NUM; i++)
+        {
+            /* we have a running or backgrounded rx command */
+            otEXPECT(rfCoreModifySourceMatchEntry(i, SHORT_ADDRESS, false) == CMDSTA_Done);
+        }
+    }
+    else
+    {
+        /* we are not running, so we can erase them ourselves */
+        memset((void *)&sSrcMatchShortData, 0, sizeof(sSrcMatchShortData));
+    }
+
+exit:
+    return;
 }
 
 /**
@@ -1517,7 +1557,25 @@ void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 {
     (void)aInstance;
-    // TODO - This function needs to be implemented
+
+    if (sReceiveCmd.status == ACTIVE || sReceiveCmd.status == IEEE_SUSPENDED)
+    {
+        unsigned int i;
+
+        for (i = 0; i < CC2650_EXTADD_SRC_MATCH_NUM; i++)
+        {
+            /* we have a running or backgrounded rx command */
+            otEXPECT(rfCoreModifySourceMatchEntry(i, EXT_ADDRESS, false) == CMDSTA_Done);
+        }
+    }
+    else
+    {
+        /* we are not running, so we can erase them ourselves */
+        memset((void *)&sSrcMatchExtData, 0, sizeof(sSrcMatchExtData));
+    }
+
+exit:
+    return;
 }
 
 /**
@@ -1714,18 +1772,18 @@ static void readFrame(void)
             crcCorr = (rfc_ieeeRxCorrCrc_t *)&payload[len];
             rssi = payload[len - 1];
 
-            if (crcCorr->status.bCrcErr == 0 && (len - 2) < kMaxPHYPacketSize)
+            if (crcCorr->status.bCrcErr == 0 && (len - 2) < OT_RADIO_FRAME_MAX_SIZE)
             {
                 sReceiveFrame.mLength = len;
                 memcpy(sReceiveFrame.mPsdu, &(payload[1]), len - 2);
                 sReceiveFrame.mChannel = sReceiveCmd.channel;
                 sReceiveFrame.mPower = rssi;
                 sReceiveFrame.mLqi = crcCorr->status.corr;
-                sReceiveError = kThreadError_None;
+                sReceiveError = OT_ERROR_NONE;
             }
             else
             {
-                sReceiveError = kThreadError_FcsErr;
+                sReceiveError = OT_ERROR_FCS;
             }
 
             curEntry->status = DATA_ENTRY_PENDING;
@@ -1760,7 +1818,7 @@ void cc2650RadioProcess(otInstance *aInstance)
         }
     }
 
-    if (sState == cc2650_stateTransmitComplete || sTransmitError != kThreadError_None)
+    if (sState == cc2650_stateTransmitComplete || sTransmitError != OT_ERROR_NONE)
     {
         /* we are not looking for an ACK packet, or failed */
         sState = cc2650_stateReceive;
@@ -1768,7 +1826,7 @@ void cc2650RadioProcess(otInstance *aInstance)
 
         if (otPlatDiagModeGet())
         {
-            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, sReceivedAckPendingBit, sTransmitError);
+            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, sTransmitError);
         }
         else
 #endif /* OPENTHREAD_ENABLE_DIAG */
@@ -1798,4 +1856,10 @@ void cc2650RadioProcess(otInstance *aInstance)
 
         sReceiveFrame.mLength = 0;
     }
+}
+
+int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
+{
+    (void)aInstance;
+    return CC2650_RECEIVE_SENSITIVITY;
 }

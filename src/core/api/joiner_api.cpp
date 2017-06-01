@@ -33,7 +33,7 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
-#include "openthread/joiner.h"
+#include <openthread/joiner.h>
 
 #include "openthread-instance.h"
 
@@ -41,7 +41,7 @@ using namespace ot;
 
 #if OPENTHREAD_ENABLE_JOINER
 
-ThreadError otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl,
+otError otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl,
                           const char *aVendorName, const char *aVendorModel,
                           const char *aVendorSwVersion, const char *aVendorData,
                           otJoinerCallback aCallback, void *aContext)
@@ -51,7 +51,7 @@ ThreadError otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *
                                                      aCallback, aContext);
 }
 
-ThreadError otJoinerStop(otInstance *aInstance)
+otError otJoinerStop(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetJoiner().Stop();
 }

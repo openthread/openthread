@@ -34,8 +34,8 @@
 #ifndef SLAAC_ADDRESS_HPP_
 #define SLAAC_ADDRESS_HPP_
 
-#include "openthread/types.h"
-#include "openthread/platform/random.h"
+#include <openthread/types.h>
+#include <openthread/platform/random.h>
 
 namespace ot {
 namespace Utils {
@@ -63,11 +63,11 @@ public:
      * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
      * @param[in]     aContext   A pointer to creator-specific context.
      *
-     * @retval  kThreadError_None    if generated valid IID.
-     * @retval  kThreadError_Failed  if creating IID failed.
+     * @retval  OT_ERROR_NONE    if generated valid IID.
+     * @retval  OT_ERROR_FAILED  if creating IID failed.
      *
      */
-    typedef ThreadError(*IidCreator)(otInstance *aInstance, otNetifAddress *aAddress, void *aContext);
+    typedef otError(*IidCreator)(otInstance *aInstance, otNetifAddress *aAddress, void *aContext);
 
     /**
      * This function update addresses that shall be automatically created using SLAAC.
@@ -89,9 +89,9 @@ public:
      * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
      * @param[in]     aContext   Unused pointer.
      *
-     * @retval  kThreadError_None  Generated valid IID.
+     * @retval  OT_ERROR_NONE  Generated valid IID.
      */
-    static ThreadError CreateRandomIid(otInstance *aInstance, otNetifAddress *aAddress, void *aContext);
+    static otError CreateRandomIid(otInstance *aInstance, otNetifAddress *aAddress, void *aContext);
 };
 
 /**
@@ -110,12 +110,12 @@ public:
      * @param[in]     aInstance  A pointer to an OpenThread instance.
      * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
      *
-     * @retval  kThreadError_None                        Generated valid IID.
-     * @retval  kThreadError_InvalidArgs                 Any given parameter is invalid.
-     * @retval  kThreadError_Ipv6AddressCreationFailure  Could not generate IID due to RFC 7217 restrictions.
+     * @retval  OT_ERROR_NONE                          Generated valid IID.
+     * @retval  OT_ERROR_INVALID_ARGS                  Any given parameter is invalid.
+     * @retval  OT_ERROR_IP6_ADDRESS_CREATION_FAILURE  Could not generate IID due to RFC 7217 restrictions.
      *
      */
-    ThreadError CreateIid(otInstance *aInstance, otNetifAddress *aAddress);
+    otError CreateIid(otInstance *aInstance, otNetifAddress *aAddress);
 
 private:
     enum
@@ -131,12 +131,12 @@ private:
      * @param[in]     aInstance  A pointer to an OpenThread instance.
      * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
      *
-     * @retval  kThreadError_None                        Generated valid IID.
-     * @retval  kThreadError_InvalidArgs                 Any given parameter is invalid.
-     * @retval  kThreadError_Ipv6AddressCreationFailure  Could not generate IID due to RFC 7217 restrictions.
+     * @retval  OT_ERROR_NONE                          Generated valid IID.
+     * @retval  OT_ERROR_INVALID_ARGS                  Any given parameter is invalid.
+     * @retval  OT_ERROR_IP6_ADDRESS_CREATION_FAILURE  Could not generate IID due to RFC 7217 restrictions.
      *
      */
-    ThreadError CreateIidOnce(otInstance *aInstance, otNetifAddress *aAddress);
+    otError CreateIidOnce(otInstance *aInstance, otNetifAddress *aAddress);
 
     /**
      * This method checks if created IPv6 address is already registered in the Thread interface.

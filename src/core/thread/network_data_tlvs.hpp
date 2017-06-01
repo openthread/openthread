@@ -36,8 +36,8 @@
 
 #include "utils/wrap_string.h"
 
-#include <common/encoding.hpp>
-#include <net/ip6_address.hpp>
+#include "common/encoding.hpp"
+#include "net/ip6_address.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 

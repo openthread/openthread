@@ -46,39 +46,13 @@ configure_OPTIONS               = \
     --enable-ncp-app=all          \
     --with-ncp-bus=uart           \
     --enable-diag                 \
-    --enable-default-logging      \
     --with-examples=efr32         \
     --with-platform-info=EFR32    \
     MBEDTLS_CPPFLAGS="$(EFR32_MBEDTLS_CPPFLAGS)" \
     $(NULL)
 
-ifeq ($(CERT_LOG),1)
-configure_OPTIONS              += --enable-cert-log
-endif
-
-ifeq ($(COMMISSIONER),1)
-configure_OPTIONS              += --enable-commissioner
-endif
-
-ifeq ($(JOINER),1)
-configure_OPTIONS              += --enable-joiner
-endif
-
-ifeq ($(DHCP6_SERVER),1)
-configure_OPTIONS              += --enable-dhcp6-server
-endif
-
-ifeq ($(DHCP6_CLIENT),1)
-configure_OPTIONS              += --enable-dhcp6-client
-endif
-
-ifeq ($(JAM_DETECTION),1)
-configure_OPTIONS              += --enable-jam-detection
-endif
-
-ifeq ($(DNS_CLIENT),1)
-configure_OPTIONS              += --enable-dns-client
-endif
+DEFAULT_LOGGING ?= 1
+include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
 
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..

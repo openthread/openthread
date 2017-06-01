@@ -36,9 +36,9 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
-#include <openthread-core-config.h>
-
 #include <mbedtls/memory_buffer_alloc.h>
+
+#include "openthread-core-config.h"
 
 namespace ot {
 namespace Crypto {
@@ -60,9 +60,9 @@ public:
     enum
     {
 #if OPENTHREAD_ENABLE_DTLS
-        kMemorySize = OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE, ///< Size of memory buffer (bytes).
+        kMemorySize = OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE,          ///< Size of memory buffer (bytes).
 #else
-        kMemorySize = 384,                                 ///< Size of memory buffer (bytes).
+        kMemorySize = OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE_NO_DTLS,  ///< Size of memory buffer (bytes).
 #endif
     };
 

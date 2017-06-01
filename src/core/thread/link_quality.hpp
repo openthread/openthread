@@ -34,7 +34,9 @@
 #ifndef LINK_QUALITY_HPP_
 #define LINK_QUALITY_HPP_
 
-#include "openthread/types.h"
+#include <stdio.h>
+
+#include <openthread/types.h>
 
 namespace ot {
 
@@ -76,11 +78,11 @@ public:
     /**
      * This method adds a new received signal strength (RSS) value to the average.
      *
-     * @param[in] aNoiseFloor  A reference to the noise floor state.
+     * @param[in] aNoiseFloor  The noise floor value (in dBm).
      * @param[in] aRss         A new received signal strength value (in dBm) to be added to the average.
      *
      */
-    void AddRss(LinkQualityInfo &aNoiseFloor, int8_t aRss);
+    void AddRss(int8_t aNoiseFloor, int8_t aRss);
 
     /**
      * This method returns the current average signal strength value.
@@ -106,22 +108,22 @@ public:
      * @param[out]    aCharBuffer    A char buffer to store the string corresponding to current average value.
      * @param[in]     aBufferLen     The char buffer length.
      *
-     * @retval kThreadError_None     Successfully formed the string in the given char buffer.
-     * @retval kThreadError_NoBufs   The string representation of the average value could not fit in the given buffer.
+     * @retval OT_ERROR_NONE      Successfully formed the string in the given char buffer.
+     * @retval OT_ERROR_NO_BUFS   The string representation of the average value could not fit in the given buffer.
      *
      */
-    ThreadError GetAverageRssAsString(char *aCharBuffer, size_t aBufferLen) const;
+    otError GetAverageRssAsString(char *aCharBuffer, size_t aBufferLen) const;
 
     /**
      * This method returns the link margin. The link margin is calculated using the link's current average received
      * signal strength (RSS) and average noise floor.
      *
-     * @param[in]  aNoiseFloor  A reference to the noise state.
+     * @param[in]  aNoiseFloor  The noise floor value (in dBm).
      *
      * @returns Link margin derived from average received signal strength and average noise floor.
      *
      */
-    uint8_t GetLinkMargin(LinkQualityInfo &aNoiseFloor) const;
+    uint8_t GetLinkMargin(int8_t aNoiseFloor) const;
 
     /**
      * Returns the current one-way link quality value. The link quality value is a number 0-3.
@@ -134,11 +136,11 @@ public:
      * frequent changes, a hysteresis of 2 dB is applied when determining the link quality. For example, the average
      * link margin must be at least 12 dB to change a quality 1 link to a quality 2 link.
      *
-     * @param[in]  aNoiseFloor  A reference to the noise state.
+     * @param[in]  aNoiseFloor  The noise floor value (in dBm).
      *
      * @returns The current link quality value (value 0-3 as per Thread specification).
      */
-    uint8_t GetLinkQuality(LinkQualityInfo &aNoiseFloor);
+    uint8_t GetLinkQuality(int8_t aNoiseFloor);
 
     /**
      * Returns the most recent RSS value.
@@ -151,13 +153,13 @@ public:
     /**
      * This method converts a received signal strength value to a link margin value.
      *
-     * @param[in]  aNoiseFloor  A reference to the noise state.
+     * @param[in]  aNoiseFloor  The noise floor value (in dBm).
      * @param[in]  aRss         The received signal strength value (in dBm).
      *
      * @returns The link margin value.
      *
      */
-    static uint8_t ConvertRssToLinkMargin(LinkQualityInfo &aNoiseFloor, int8_t aRss);
+    static uint8_t ConvertRssToLinkMargin(int8_t aNoiseFloor, int8_t aRss);
 
     /**
      * This method converts a link margin value to a link quality value.
@@ -172,13 +174,13 @@ public:
     /**
      * This method converts a received signal strength value to a link quality value.
      *
-     * @param[in]  aNoiseFloor  A reference to the noise state.
+     * @param[in]  aNoiseFloor  The noise floor value (in dBm).
      * @param[in]  aRss         The received signal strength value (in dBm).
      *
      * @returns The link quality value (0-3).
      *
      */
-    static uint8_t ConvertRssToLinkQuality(LinkQualityInfo &aNoiseFloor, int8_t aRss);
+    static uint8_t ConvertRssToLinkQuality(int8_t aNoiseFloor, int8_t aRss);
 
 private:
     enum
@@ -208,7 +210,7 @@ private:
     /* Private method to update the mLinkQuality value. This is called when a new RSS value is added to average
      * or when GetLinkQuality() is invoked.
      */
-    void UpdateLinkQuality(LinkQualityInfo &aNoiseFloor);
+    void UpdateLinkQuality(int8_t aNoiseFloor);
 
     /* Static private method to calculate the link quality from a given link margin while taking into account the last
      * link quality value and adding the hysteresis value to the thresholds. If there is no previous value for link
@@ -226,33 +228,6 @@ private:
     uint8_t  mLinkQuality : 2;   // Current link quality value (0-3).
     int8_t   mLastRss;
 };
-
-/**
- * This function returns the current average noise floor level (in dBm).
- *
- * @param[in]  aNoiseFloor  A reference to the noise state.
- *
- * @returns The current average noise floor level (in dBm).
- */
-int8_t GetAverageNoiseFloor(LinkQualityInfo &aNoiseFloor);
-
-/**
- * This function adds a new noise floor value (in dBm) to the running average.
- *
- * @param[in]  aNoiseFloor    A reference to the noise state.
- * @param[in]  aNoise         A new noise floor value (in dBm) to be added to the average.
- *
- */
-void AddNoiseFloor(LinkQualityInfo &aNoiseFloor, int8_t aNoise);
-
-/**
- * This function clears the current average noise floor value.
- *
- * @param[in]  aNoiseFloor  A reference to the noise state.
- *
- */
-void ClearNoiseFloorAverage(LinkQualityInfo &aNoiseFloor);
-
 
 /**
  * @}

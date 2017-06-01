@@ -33,12 +33,13 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
-#include "openthread/openthread.h"
-#include "openthread/platform/random.h"
+#include "jam_detector.hpp"
 
-#include <thread/thread_netif.hpp>
-#include <common/code_utils.hpp>
-#include <utils/jam_detector.hpp>
+#include <openthread/openthread.h>
+#include <openthread/platform/random.h>
+
+#include "common/code_utils.hpp"
+#include "thread/thread_netif.hpp"
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
 
@@ -62,12 +63,12 @@ JamDetector::JamDetector(ThreadNetif &aNetif) :
 {
 }
 
-ThreadError JamDetector::Start(Handler aHandler, void *aContext)
+otError JamDetector::Start(Handler aHandler, void *aContext)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(!mEnabled, error = kThreadError_Already);
-    VerifyOrExit(aHandler != NULL, error = kThreadError_InvalidArgs);
+    VerifyOrExit(!mEnabled, error = OT_ERROR_ALREADY);
+    VerifyOrExit(aHandler != NULL, error = OT_ERROR_INVALID_ARGS);
 
     mHandler = aHandler;
     mContext = aContext;
@@ -86,11 +87,11 @@ exit:
     return error;
 }
 
-ThreadError JamDetector::Stop(void)
+otError JamDetector::Stop(void)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mEnabled, error = kThreadError_Already);
+    VerifyOrExit(mEnabled, error = OT_ERROR_ALREADY);
 
     mEnabled = false;
     mJamState = false;
@@ -101,19 +102,19 @@ exit:
     return error;
 }
 
-ThreadError JamDetector::SetRssiThreshold(int8_t aThreshold)
+otError JamDetector::SetRssiThreshold(int8_t aThreshold)
 {
     mRssiThreshold = aThreshold;
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError JamDetector::SetWindow(uint8_t aWindow)
+otError JamDetector::SetWindow(uint8_t aWindow)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aWindow != 0, error = kThreadError_InvalidArgs);
-    VerifyOrExit(aWindow <= kMaxWindow, error = kThreadError_InvalidArgs);
+    VerifyOrExit(aWindow != 0, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aWindow <= kMaxWindow, error = OT_ERROR_INVALID_ARGS);
 
     mWindow = aWindow;
 
@@ -121,12 +122,12 @@ exit:
     return error;
 }
 
-ThreadError JamDetector::SetBusyPeriod(uint8_t aBusyPeriod)
+otError JamDetector::SetBusyPeriod(uint8_t aBusyPeriod)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aBusyPeriod != 0, error = kThreadError_InvalidArgs);
-    VerifyOrExit(aBusyPeriod <= mWindow, error = kThreadError_InvalidArgs);
+    VerifyOrExit(aBusyPeriod != 0, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aBusyPeriod <= mWindow, error = OT_ERROR_INVALID_ARGS);
 
     mBusyPeriod = aBusyPeriod;
 
@@ -150,7 +151,7 @@ void JamDetector::HandleTimer(void)
 
     // If the RSSI is valid, check if it exceeds the threshold
     // and try to update the history bit map
-    if (rssi != kPhyInvalidRssi)
+    if (rssi != OT_RADIO_RSSI_INVALID)
     {
         didExceedThreshold = (rssi >= mRssiThreshold);
         UpdateHistory(didExceedThreshold);

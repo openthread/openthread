@@ -37,10 +37,10 @@
 
 #include "platform-posix.h"
 
-#include "openthread/types.h"
-#include "openthread/platform/random.h"
+#include <openthread/types.h>
+#include <openthread/platform/random.h>
 
-#include <utils/code_utils.h>
+#include "utils/code_utils.h"
 
 static uint32_t sState = 1;
 
@@ -48,10 +48,10 @@ void platformRandomInit(void)
 {
 #if __SANITIZE_ADDRESS__ == 0
 
-    ThreadError error;
+    otError error;
 
     error = otPlatRandomGetTrue((uint8_t *)&sState, sizeof(sState));
-    assert(error == kThreadError_None);
+    assert(error == OT_ERROR_NONE);
 
 #else  // __SANITIZE_ADDRESS__
 
@@ -83,22 +83,22 @@ uint32_t otPlatRandomGet(void)
     return mlcg;
 }
 
-ThreadError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
+otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
 #if __SANITIZE_ADDRESS__ == 0
 
     FILE *file = NULL;
     size_t readLength;
 
-    otEXPECT_ACTION(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
+    otEXPECT_ACTION(aOutput && aOutputLength, error = OT_ERROR_INVALID_ARGS);
 
     file = fopen("/dev/urandom", "rb");
-    otEXPECT_ACTION(file != NULL, error = kThreadError_Failed);
+    otEXPECT_ACTION(file != NULL, error = OT_ERROR_FAILED);
 
     readLength = fread(aOutput, 1, aOutputLength, file);
-    otEXPECT_ACTION(readLength == aOutputLength, error = kThreadError_Failed);
+    otEXPECT_ACTION(readLength == aOutputLength, error = OT_ERROR_FAILED);
 
 exit:
 
@@ -117,7 +117,7 @@ exit:
      * implementation below is only used to enable continuous
      * integration checks with Address Sanitizer enabled.
      */
-    otEXPECT_ACTION(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
+    otEXPECT_ACTION(aOutput && aOutputLength, error = OT_ERROR_INVALID_ARGS);
 
     for (uint16_t length = 0; length < aOutputLength; length++)
     {

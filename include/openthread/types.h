@@ -41,7 +41,7 @@
 #include <guiddef.h>
 #endif
 
-#include "openthread/platform/toolchain.h"
+#include <openthread/platform/toolchain.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -94,113 +94,184 @@ typedef struct otDeviceList
 /**
  * This enumeration represents error codes used throughout OpenThread.
  */
-typedef enum ThreadError
+typedef enum otError
 {
-    kThreadError_None = 0,
-    kThreadError_Failed = 1,
-    kThreadError_Drop = 2,
-    kThreadError_NoBufs = 3,
-    kThreadError_NoRoute = 4,
-    kThreadError_Busy = 5,
-    kThreadError_Parse = 6,
-    kThreadError_InvalidArgs = 7,
-    kThreadError_Security = 8,
-    kThreadError_AddressQuery = 9,
-    kThreadError_NoAddress = 10,
-    kThreadError_NotReceiving = 11,
-    kThreadError_Abort = 12,
-    kThreadError_NotImplemented = 13,
-    kThreadError_InvalidState = 14,
-    kThreadError_NoTasklets = 15,
+    /**
+     * No error.
+     */
+    OT_ERROR_NONE = 0,
+
+    /**
+     * Operational failed.
+     */
+    OT_ERROR_FAILED = 1,
+
+    /**
+     * Message was dropped.
+     */
+    OT_ERROR_DROP = 2,
+
+    /**
+     * Insufficient buffers.
+     */
+    OT_ERROR_NO_BUFS = 3,
+
+    /**
+     * No route available.
+     */
+    OT_ERROR_NO_ROUTE = 4,
+
+    /**
+     * Service is busy and could not service the operation.
+     */
+    OT_ERROR_BUSY = 5,
+
+    /**
+     * Failed to parse message or arguments.
+     */
+    OT_ERROR_PARSE = 6,
+
+    /**
+     * Input arguments are invalid.
+     */
+    OT_ERROR_INVALID_ARGS = 7,
+
+    /**
+     * Security checks failed.
+     */
+    OT_ERROR_SECURITY = 8,
+
+    /**
+     * Address resolution requires an address query operation.
+     */
+    OT_ERROR_ADDRESS_QUERY = 9,
+
+    /**
+     * Address is not in the source match table.
+     */
+    OT_ERROR_NO_ADDRESS = 10,
+
+    /**
+     * Operation was aborted.
+     */
+    OT_ERROR_ABORT = 11,
+
+    /**
+     * Function or method is not implemented.
+     */
+    OT_ERROR_NOT_IMPLEMENTED = 12,
+
+    /**
+     * Cannot complete due to invalid state.
+     */
+    OT_ERROR_INVALID_STATE = 13,
 
     /**
      * No acknowledgment was received after macMaxFrameRetries (IEEE 802.15.4-2006).
      */
-    kThreadError_NoAck = 16,
+    OT_ERROR_NO_ACK = 14,
 
     /**
      * A transmission could not take place due to activity on the channel, i.e., the CSMA-CA mechanism has failed
      * (IEEE 802.15.4-2006).
      */
-    kThreadError_ChannelAccessFailure = 17,
+    OT_ERROR_CHANNEL_ACCESS_FAILURE = 15,
 
     /**
      * Not currently attached to a Thread Partition.
      */
-    kThreadError_Detached = 18,
+    OT_ERROR_DETACHED = 16,
 
     /**
      * FCS check failure while receiving.
      */
-    kThreadError_FcsErr = 19,
+    OT_ERROR_FCS = 17,
 
     /**
      * No frame received.
      */
-    kThreadError_NoFrameReceived = 20,
+    OT_ERROR_NO_FRAME_RECEIVED = 18,
 
     /**
      * Received a frame from an unknown neighbor.
      */
-    kThreadError_UnknownNeighbor = 21,
+    OT_ERROR_UNKNOWN_NEIGHBOR = 19,
 
     /**
      * Received a frame from an invalid source address.
      */
-    kThreadError_InvalidSourceAddress = 22,
+    OT_ERROR_INVALID_SOURCE_ADDRESS = 20,
 
     /**
      * Received a frame filtered by the whitelist.
      */
-    kThreadError_WhitelistFiltered = 23,
+    OT_ERROR_WHITELIST_FILTERED = 21,
 
     /**
      * Received a frame filtered by the destination address check.
      */
-    kThreadError_DestinationAddressFiltered = 24,
+    OT_ERROR_DESTINATION_ADDRESS_FILTERED = 22,
 
     /**
      * The requested item could not be found.
      */
-    kThreadError_NotFound = 25,
+    OT_ERROR_NOT_FOUND = 23,
 
     /**
      * The operation is already in progress.
      */
-    kThreadError_Already = 26,
+    OT_ERROR_ALREADY = 24,
 
     /**
      * Received a frame filtered by the blacklist.
      */
-    kThreadError_BlacklistFiltered = 27,
+    OT_ERROR_BLACKLIST_FILTERED = 25,
 
     /**
      * The creation of IPv6 address failed.
      */
-    kThreadError_Ipv6AddressCreationFailure = 28,
+    OT_ERROR_IP6_ADDRESS_CREATION_FAILURE = 26,
 
     /**
      * Operation prevented by mode flags
      */
-    kThreadError_NotCapable = 29,
+    OT_ERROR_NOT_CAPABLE = 27,
 
     /**
      * Coap response or acknowledgment or DNS response not received.
      */
-    kThreadError_ResponseTimeout = 30,
+    OT_ERROR_RESPONSE_TIMEOUT = 28,
 
     /**
      * Received a duplicated frame.
      */
-    kThreadError_Duplicated = 31,
+    OT_ERROR_DUPLICATED = 29,
 
     /**
      * Message is being dropped from reassembly list due to timeout.
      */
-    kThreadError_ReassemblyTimeout = 32,
+    OT_ERROR_REASSEMBLY_TIMEOUT = 30,
 
-    kThreadError_Error = 255,
-} ThreadError;
+    /**
+     * Message is not a TMF Message.
+     */
+    OT_ERROR_NOT_TMF = 31,
+
+    /**
+     * Received a non-lowpan data frame.
+     */
+    OT_ERROR_NOT_LOWPAN_DATA_FRAME = 32,
+
+    /**
+     * A feature/functionality disabled by build-time configuration options.
+     */
+    OT_ERROR_DISABLED_FEATURE = 33,
+
+    /**
+     * Generic error (should not use).
+     */
+    OT_ERROR_GENERIC = 255,
+} otError;
 
 #define OT_IP6_IID_SIZE            8   ///< Size of an IPv6 Interface Identifier (bytes)
 
@@ -210,13 +281,22 @@ typedef enum ThreadError
 #define OT_NETWORK_DIAGNOSTIC_TYPELIST_MAX_ENTRIES   18  ///< Maximum Number of Other Network Diagnostic TLV Types
 
 /**
+ * @struct otMasterKey
+ *
  * This structure represents a Thread Master Key.
  *
  */
-typedef struct otMasterKey
+OT_TOOL_PACKED_BEGIN
+struct otMasterKey
 {
-    uint8_t m8[OT_MASTER_KEY_SIZE];
-} otMasterKey;
+    uint8_t m8[OT_MASTER_KEY_SIZE];    ///< Byte values
+} OT_TOOL_PACKED_END;
+
+/**
+ * This type represents a Thread Master Key.
+ *
+ */
+typedef struct otMasterKey otMasterKey;
 
 #define OT_NETWORK_NAME_MAX_SIZE   16  ///< Maximum size of the Thread Network Name field (bytes)
 
@@ -226,7 +306,7 @@ typedef struct otMasterKey
  */
 typedef struct otNetworkName
 {
-    char m8[OT_NETWORK_NAME_MAX_SIZE + 1];
+    char m8[OT_NETWORK_NAME_MAX_SIZE + 1];  ///< Byte values
 } otNetworkName;
 
 #define OT_EXT_PAN_ID_SIZE         8   ///< Size of a Thread PAN ID (bytes)
@@ -237,7 +317,7 @@ typedef struct otNetworkName
  */
 typedef struct otExtendedPanId
 {
-    uint8_t m8[OT_EXT_PAN_ID_SIZE];
+    uint8_t m8[OT_EXT_PAN_ID_SIZE];   ///< Byte values
 } otExtendedPanId;
 
 #define OT_MESH_LOCAL_PREFIX_SIZE  8  ///< Size of the Mesh Local Prefix (bytes)
@@ -248,7 +328,7 @@ typedef struct otExtendedPanId
  */
 typedef struct otMeshLocalPrefix
 {
-    uint8_t m8[OT_MESH_LOCAL_PREFIX_SIZE];
+    uint8_t m8[OT_MESH_LOCAL_PREFIX_SIZE];  ///< Byte values
 } otMeshLocalPrefix;
 
 #define OT_PSKC_MAX_SIZE                             16  ///< Maximum size of the PSKc (bytes)
@@ -262,7 +342,7 @@ typedef struct otMeshLocalPrefix
   */
 typedef struct otPSKc
 {
-    uint8_t m8[OT_PSKC_MAX_SIZE];
+    uint8_t m8[OT_PSKC_MAX_SIZE];  ///< Byte values
 } otPSKc;
 
 /**
@@ -271,8 +351,8 @@ typedef struct otPSKc
   */
 typedef struct otSecurityPolicy
 {
-    uint16_t mRotationTime;
-    uint8_t mFlags;
+    uint16_t mRotationTime;  ///< The value for thrKeyRotation in units of hours
+    uint8_t mFlags;          ///< Flags as defined in Thread 1.1 Section 8.10.1.15
 } otSecurityPolicy;
 
 /**
@@ -287,18 +367,6 @@ enum
     OT_SECURITY_POLICY_EXTERNAL_COMMISSIONER  = 1 << 4,  ///< External Commissioner allowed
     OT_SECURITY_POLICY_BEACONS                = 1 << 3,  ///< Beacons enabled
 };
-
-/**
-* This enumeration defines the Commissioner State.
-*
-*/
-typedef enum otCommissionerState
-{
-
-    kCommissionerStateDisabled = 0,
-    kCommissionerStatePetition = 1,
-    kCommissionerStateActive = 2,
-} otCommissionerState;
 
 /**
   * This type represents Channel Mask Page 0.
@@ -333,7 +401,10 @@ typedef struct otExtAddress
 #define OT_IP6_ADDRESS_SIZE        16  ///< Size of an IPv6 address (bytes)
 
 /**
+ * @struct otIp6Address
+ *
  * This structure represents an IPv6 address.
+ *
  */
 OT_TOOL_PACKED_BEGIN
 struct otIp6Address
@@ -346,6 +417,10 @@ struct otIp6Address
     } mFields;                                                 ///< IPv6 accessor fields
 } OT_TOOL_PACKED_END;
 
+/**
+ * This type represents an IPv6 address.
+ *
+ */
 typedef struct otIp6Address otIp6Address;
 
 
@@ -371,12 +446,6 @@ typedef struct otMessage
     struct otMessage *mNext;  ///< A pointer to the next Message buffer.
 } otMessage;
 
-/**
- * @addtogroup commands  Commands
- *
- * @{
- *
- */
 
 #define OT_PANID_BROADCAST   0xffff      ///< IEEE 802.15.4 Broadcast PAN ID
 
@@ -407,8 +476,8 @@ typedef struct otMessage
  */
 typedef struct otSteeringData
 {
-    uint8_t mLength;
-    uint8_t m8[OT_STEERING_DATA_MAX_LENGTH];
+    uint8_t mLength;                          ///< Length of steering data (bytes)
+    uint8_t m8[OT_STEERING_DATA_MAX_LENGTH];  ///< Byte values
 } otSteeringData;
 
 /**
@@ -440,31 +509,6 @@ typedef struct otEnergyScanResult
     uint8_t mChannel;                ///< IEEE 802.15.4 Channel
     int8_t  mMaxRssi;                ///< The max RSSI (dBm)
 } otEnergyScanResult;
-
-/**
- * @}
- *
- */
-
-/**
- * @addtogroup config  Configuration
- *
- * @brief
- *   This module includes functions for configuration.
- *
- * @{
- *
- */
-
-/**
- * @defgroup config-general  General
- *
- * @brief
- *   This module includes functions that manage configuration parameters for the Thread Child, Router, and Leader roles.
- *
- * @{
- *
- */
 
 /**
  * This structure represents an Active or Pending Operational Dataset.
@@ -612,20 +656,6 @@ enum
 };
 
 /**
- * @}
- */
-
-/**
- * @defgroup config-br  Border Router
- *
- * @brief
- *   This module includes functions that manage configuration parameters that apply to the Thread Border Router role.
- *
- * @{
- *
- */
-
-/**
  * This structure represents an IPv6 prefix.
  */
 typedef struct otIp6Prefix
@@ -720,36 +750,10 @@ typedef struct otExternalRouteConfig
  */
 typedef enum otRoutePreference
 {
-    kRoutePreferenceLow    = -1,  ///< Routes assigned this value are used as a last resort when no other more preferred route exists.
-    kRoutePreferenceMedium =  0,  ///< Routes assigned this value should be selected only in the absence of any kRoutePreferenceHigh routes.
-    kRoutePreferenceHigh   =  1   ///< The most preferred route. Routes assigned this value should be selected over any other route.
+    OT_ROUTE_PREFERENCE_LOW  = -1,  ///< Low route preference.
+    OT_ROUTE_PREFERENCE_MED  = 0,   ///< Medium route preference.
+    OT_ROUTE_PREFERENCE_HIGH = 1,   ///< High route preference.
 } otRoutePreference;
-
-/**
- * @}
- *
- */
-
-/**
- * @defgroup config-test  Test
- *
- * @brief
- *   This module includes functions that manage configuration parameters required for Thread Certification testing.
- *
- * @{
- *
- */
-
-/**
- * Represents any restrictions on the attach process.
- */
-typedef enum otMleAttachFilter
-{
-    kMleAttachAnyPartition    = 0,  ///< Attach to any Thread partition.
-    kMleAttachSamePartition1  = 1,  ///< Attach to the same Thread partition (attempt 1).
-    kMleAttachSamePartition2  = 2,  ///< Attach to the same Thread partition (attempt 2).
-    kMleAttachBetterPartition = 3,  ///< Attach to a better (i.e. higher weight/partition id) Thread partition.
-} otMleAttachFilter;
 
 /**
  * This structure represents a whitelist entry.
@@ -774,36 +778,15 @@ typedef struct otMacBlacklistEntry
 } otMacBlacklistEntry;
 
 /**
- * @}
- *
- */
-
-/**
- * @}
- *
- */
-
-/**
- * @addtogroup diags  Diagnostics
- *
- * @brief
- *   This module includes functions that expose internal state.
- *
- * @{
- *
- */
-
-/**
  * Represents a Thread device role.
  */
 typedef enum
 {
-    kDeviceRoleOffline,   ///< The Thread device is offline and unavailable.
-    kDeviceRoleDisabled,  ///< The Thread stack is disabled.
-    kDeviceRoleDetached,  ///< Not currently participating in a Thread network/partition.
-    kDeviceRoleChild,     ///< The Thread Child role.
-    kDeviceRoleRouter,    ///< The Thread Router role.
-    kDeviceRoleLeader,    ///< The Thread Leader role.
+    OT_DEVICE_ROLE_DISABLED = 0,  ///< The Thread stack is disabled.
+    OT_DEVICE_ROLE_DETACHED = 1,  ///< Not currently participating in a Thread network/partition.
+    OT_DEVICE_ROLE_CHILD    = 2,  ///< The Thread Child role.
+    OT_DEVICE_ROLE_ROUTER   = 3,  ///< The Thread Router role.
+    OT_DEVICE_ROLE_LEADER   = 4,  ///< The Thread Leader role.
 } otDeviceRole;
 
 /**
@@ -952,16 +935,11 @@ typedef struct otBufferInfo
     uint16_t mMleBuffers;             ///< The number of buffers in the MLE send queue.
     uint16_t mArpMessages;            ///< The number of messages in the ARP send queue.
     uint16_t mArpBuffers;             ///< The number of buffers in the ARP send queue.
-    uint16_t mCoapClientMessages;     ///< The number of messages in the CoAP client send queue.
-    uint16_t mCoapClientBuffers;      ///< The number of buffers in the CoAP client send queue.
-    uint16_t mCoapServerMessages;     ///< The number of messages in the CoAP server responses queue.
-    uint16_t mCoapServerBuffers;      ///< The number of buffers in the CoAP server responses queue.
+    uint16_t mCoapMessages;           ///< The number of messages in the CoAP send queue.
+    uint16_t mCoapBuffers;            ///< The number of buffers in the CoAP send queue.
+    uint16_t mCoapSecureMessages;     ///< The number of messages in the CoAP secure send queue.
+    uint16_t mCoapSecureBuffers;      ///< The number of buffers in the CoAP secure send queue.
 } otBufferInfo;
-
-/**
- * @}
- *
- */
 
 /**
  * This structure represents an IPv6 network interface unicast address.
@@ -1016,96 +994,6 @@ typedef struct
 } otSemanticallyOpaqueIidGeneratorData;
 
 /**
- * @addtogroup icmp6  ICMPv6
- *
- * @brief
- *   This module includes functions that control ICMPv6 communication.
- *
- * @{
- *
- */
-
-/**
- * ICMPv6 Message Types
- *
-*/
-typedef enum otIcmp6Type
-{
-    kIcmp6TypeDstUnreach  = 1,     ///< Destination Unreachable
-    kIcmp6TypeEchoRequest = 128,   ///< Echo Request
-    kIcmp6TypeEchoReply   = 129,   ///< Echo Reply
-} otIcmp6Type;
-
-/**
- * ICMPv6 Message Codes
- *
- */
-typedef enum otIcmp6Code
-{
-    kIcmp6CodeDstUnreachNoRoute = 0,  ///< Destination Unreachable No Route
-} otIcmp6Code;
-
-#define OT_ICMP6_HEADER_DATA_SIZE  4   ///< Size of an message specific data of ICMPv6 Header.
-
-/**
- * This structure represents an ICMPv6 header.
- *
- */
-OT_TOOL_PACKED_BEGIN
-struct otIcmp6Header
-{
-    uint8_t      mType;      ///< Type
-    uint8_t      mCode;      ///< Code
-    uint16_t     mChecksum;  ///< Checksum
-    union
-    {
-        uint8_t  m8[OT_ICMP6_HEADER_DATA_SIZE / sizeof(uint8_t)];
-        uint16_t m16[OT_ICMP6_HEADER_DATA_SIZE / sizeof(uint16_t)];
-        uint32_t m32[OT_ICMP6_HEADER_DATA_SIZE / sizeof(uint32_t)];
-    } mData;                 ///< Message-specific data
-} OT_TOOL_PACKED_END;
-
-typedef struct otIcmp6Header otIcmp6Header;
-
-/**
- * This callback allows OpenThread to inform the application of a received ICMPv6 message.
- *
- * @param[in]  aContext      A pointer to arbitrary context information.
- * @param[in]  aMessage      A pointer to the received message.
- * @param[in]  aMessageInfo  A pointer to message information associated with @p aMessage.
- * @param[in]  aIcmpHeader   A pointer to the received ICMPv6 header.
- *
- */
-typedef void (*otIcmp6ReceiveCallback)(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo,
-                                       const otIcmp6Header *aIcmpHeader);
-
-/**
- * This structure implements ICMPv6 message handler.
- *
- */
-typedef struct otIcmp6Handler
-{
-    otIcmp6ReceiveCallback  mReceiveCallback;
-    void                   *mContext;
-    struct otIcmp6Handler  *mNext;
-} otIcmp6Handler;
-
-/**
- * @}
- *
- */
-
-/**
- * @addtogroup udp  UDP
- *
- * @brief
- *   This module includes functions that control UDP communication.
- *
- * @{
- *
- */
-
-/**
  * This structure represents an IPv6 socket address.
  */
 typedef struct otSockAddr
@@ -1128,11 +1016,6 @@ typedef struct otSockAddr
 typedef void (OTCALL *otDeviceAvailabilityChangedCallback)(bool aAdded, const GUID *aDeviceGuid, void *aContext);
 
 #endif // OTDLL
-
-/**
- * @}
- *
- */
 
 #ifdef __cplusplus
 }  // extern "C"

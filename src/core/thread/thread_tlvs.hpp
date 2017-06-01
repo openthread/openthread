@@ -34,13 +34,13 @@
 #ifndef THREAD_TLVS_HPP_
 #define THREAD_TLVS_HPP_
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <common/encoding.hpp>
-#include <common/message.hpp>
-#include <common/tlvs.hpp>
-#include <net/ip6_address.hpp>
-#include <thread/mle.hpp>
+#include "common/encoding.hpp"
+#include "common/message.hpp"
+#include "common/tlvs.hpp"
+#include "net/ip6_address.hpp"
+#include "thread/mle.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
@@ -102,11 +102,11 @@ public:
      * @param[in]   aMaxLength  Maximum number of bytes to read.
      * @param[out]  aTlv        A reference to the TLV that will be copied to.
      *
-     * @retval kThreadError_None      Successfully copied the TLV.
-     * @retval kThreadError_NotFound  Could not find the TLV with Type @p aType.
+     * @retval OT_ERROR_NONE       Successfully copied the TLV.
+     * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
      *
      */
-    static ThreadError GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv) {
+    static otError GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv) {
         return ot::Tlv::Get(aMessage, static_cast<uint8_t>(aType), aMaxLength, aTlv);
     }
 

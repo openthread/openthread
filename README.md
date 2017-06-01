@@ -54,7 +54,7 @@ The Codelab shows you how easy it is use to OpenThread to simulate a Thread netw
 
 # OpenThread Features
 
-OpenThread implements all features defined in the [Thread 1.1.1 specification](http://threadgroup.org/technology/ourtechnology#specifications), including all Thread networking layers (IPv6, 6LoWPAN, IEEE 802.15.4 with MAC security, Mesh Link Establishment, Mesh Routing) and device roles.
+OpenThread implements all features defined in the [Thread 1.1.1 specification](http://threadgroup.org/technology/ourtechnology#specifications), including all Thread networking layers (IPv6, 6LoWPAN, IEEE 802.15.4 with MAC security, Mesh Link Establishment, Mesh Routing) and device roles, as well as [Border Router](https://github.com/openthread/borderrouter) support.
 
 OpenThread supports both system-on-chip (SoC) and network co-processor (NCP) designs. Other features and enhancements include:
 
@@ -69,18 +69,21 @@ OpenThread supports both system-on-chip (SoC) and network co-processor (NCP) des
     * Spinel - general purpose NCP protocol
     * `wpantund` - user-space NCP network interface driver/daemon
     * Sniffer support via NCP Spinel nodes
+* Border Router
+    * Web UI for configuration and management
+    * Thread Border Agent to support an External Commissioner
+    * NAT64 for connecting to IPv4 networks
+    * Thread interface driver using `wpantund`
 
 ### What's coming?
 
-The development of OpenThread is ongoing to regularly provide additional features not available in the standard. Currently, we are working on:
-
-* Host-side Border Agent support
+The development of OpenThread is ongoing to provide additional features not available in the standard. Check back regularly for new updates, or visit the [openthread-announce](https://groups.google.com/forum/#!forum/openthread-announce) Google Group.
 
 # Who supports OpenThread?
 
 Led by Nest, the following companies are contributing to the ongoing development of OpenThread:
 
-<a href="https://www.arm.com/"><img src="doc/images/ot-contrib-arm.png" alt="ARM" width="200px"></a><a href="http://www.atmel.com/"><img src="doc/images/ot-contrib-atmel.png" alt="Atmel" width="200px"></a><a href="http://www.dialog-semiconductor.com/"><img src="doc/images/ot-contrib-dialog.png" alt="Dialog" width="200px"></a><a href="https://www.microsoft.com/en-us/"><img src="doc/images/ot-contrib-ms.png" alt="Microsoft" width="200px"></a><a href="https://nest.com/"><img src="doc/images/ot-contrib-nest.png" alt="Nest" width="200px"></a><a href="http://www.nordicsemi.com/"><img src="doc/images/ot-contrib-nordic.png" alt="Nordic" width="200px"></a><a href="https://www.qualcomm.com/"><img src="doc/images/ot-contrib-qc.png" alt="Qualcomm" width="200px"></a><a href="https://www.ti.com/"><img src="doc/images/ot-contrib-ti.png" alt="Texas Instruments" width="200px"></a>
+<a href="https://www.arm.com/"><img src="doc/images/ot-contrib-arm.png" alt="ARM" width="200px"></a><a href="http://www.atmel.com/"><img src="doc/images/ot-contrib-atmel.png" alt="Atmel" width="200px"></a><a href="http://www.dialog-semiconductor.com/"><img src="doc/images/ot-contrib-dialog.png" alt="Dialog" width="200px"></a><a href="https://www.microsoft.com/en-us/"><img src="doc/images/ot-contrib-ms.png" alt="Microsoft" width="200px"></a><a href="https://nest.com/"><img src="doc/images/ot-contrib-nest.png" alt="Nest" width="200px"></a><a href="http://www.nordicsemi.com/"><img src="doc/images/ot-contrib-nordic.png" alt="Nordic" width="200px"></a><a href="http://www.nxp.com/"><img src="doc/images/ot-contrib-nxp.png" alt="NXP" width="200px"></a><a href="https://www.qualcomm.com/"><img src="doc/images/ot-contrib-qc.png" alt="Qualcomm" width="200px"></a><a href="https://www.synopsys.com/"><img src="doc/images/ot-contrib-synopsys.png" alt="Synopsys" width="200px"></a><a href="https://www.ti.com/"><img src="doc/images/ot-contrib-ti.png" alt="Texas Instruments" width="200px"></a>
 
 OpenThread has been ported to several devices and platforms by both the OpenThread team and the community. Build examples for all supported platforms are included in the OpenThread project.
 
@@ -88,7 +91,9 @@ OpenThread has been ported to several devices and platforms by both the OpenThre
 
 * [Dialog Semiconductor DA15000](https://github.com/openthread/openthread/wiki/Platforms#dialog-da15000)
 * [Nordic Semiconductor nRF52840](https://github.com/openthread/openthread/wiki/Platforms#nordic-semiconductor-nrf52840)
+* [NXP KW41Z](https://github.com/openthread/openthread/wiki/Platforms#nxp-kw41z)
 * [Silicon Labs EFR32](https://github.com/openthread/openthread/wiki/Platforms#silicon-labs-efr32)
+* [Synopsys ARC EMSK with Microchip MRF24J40](https://github.com/openthread/openthread/wiki/Platforms#synopsys-arc-em-with-microchip-mrf24j40)
 * [Texas Instruments CC2538](https://github.com/openthread/openthread/wiki/Platforms#texas-instruments-cc2538)
 * [Texas Instruments CC2650](https://github.com/openthread/openthread/wiki/Platforms#texas-instruments-cc2650)
 * [POSIX Emulation](https://github.com/openthread/openthread/wiki/Platforms#posix-emulation)
@@ -105,6 +110,10 @@ Desktop platforms can also be used to control and interface with a Thread networ
 ### Porting
 
 If you are interested in porting OpenThread to a new platform, see the [Porting Guide](https://github.com/openthread/openthread/wiki/Porting-Guide) for hardware requirements and detailed porting instructions.
+
+### Border Router
+
+A Border Router connects a Thread network to networks at different layers, such as WiFi or Ethernet. [OpenThread Border Router](https://github.com/openthread/borderrouter) provides end-to-end IP via routing between Thread devices and other external IP networks, as well as external Thread Commissioning.
 
 # What tools are available for testing?
 
@@ -142,7 +151,7 @@ There are numerous avenues for OpenThread support:
 * Stack Overflow — [post questions using the `openthread` tag](http://stackoverflow.com/questions/tagged/openthread)
 * Google Groups — discussion and announcements
     * [openthread-announce](https://groups.google.com/forum/#!forum/openthread-announce) — release notes and new updates on OpenThread
-    *  [openthread-users](https://groups.google.com/forum/#!forum/openthread-users) — the best place for users to discuss OpenThread and interact with the OpenThread team
+    * [openthread-users](https://groups.google.com/forum/#!forum/openthread-users) — the best place for users to discuss OpenThread and interact with the OpenThread team
 
 ### Directory Structure
 

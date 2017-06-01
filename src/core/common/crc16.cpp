@@ -33,7 +33,7 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
-#include <common/crc16.hpp>
+#include "crc16.hpp"
 
 namespace ot {
 

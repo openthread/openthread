@@ -32,12 +32,12 @@
  *
  */
 
-#include "openthread/types.h"
-#include "openthread/platform/radio.h"
-#include "openthread/platform/random.h"
+#include <openthread/types.h>
+#include <openthread/platform/radio.h>
+#include <openthread/platform/random.h>
 
-#include <utils/code_utils.h>
 #include "platform-cc2538.h"
+#include "utils/code_utils.h"
 
 static void generateRandom(uint8_t *aOutput, uint16_t aOutputLength)
 {
@@ -91,12 +91,12 @@ uint32_t otPlatRandomGet(void)
     return random;
 }
 
-ThreadError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
+otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t channel = 0;
 
-    otEXPECT_ACTION(aOutput, error = kThreadError_InvalidArgs);
+    otEXPECT_ACTION(aOutput, error = OT_ERROR_INVALID_ARGS);
 
     if (otPlatRadioIsEnabled(sInstance))
     {

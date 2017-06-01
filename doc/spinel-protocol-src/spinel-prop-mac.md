@@ -10,15 +10,20 @@ Possible Values:
 * 0: `SCAN_STATE_IDLE`
 * 1: `SCAN_STATE_BEACON`
 * 2: `SCAN_STATE_ENERGY`
+* 3: `SCAN_STATE_DISCOVER`
 
 Set to `SCAN_STATE_BEACON` to start an active scan.
 Beacons will be emitted from `PROP_MAC_SCAN_BEACON`.
 
 Set to `SCAN_STATE_ENERGY` to start an energy scan.
-Channel energy will be reported by alternating emissions
-of `PROP_PHY_CHAN` and `PROP_PHY_RSSI`.
+Channel energy result will be reported by emissions
+of `PROP_MAC_ENERGY_SCAN_RESULT` (per channel).
 
-Values switches to `SCAN_STATE_IDLE` when scan is complete.
+Set to `SCAN_STATE_DISOVER` to start a Thread MLE discovery
+scan operation. Discovery scan result will be emitted from
+`PROP_MAC_SCAN_BEACON`.
+
+Value switches to `SCAN_STATE_IDLE` when scan is complete.
 
 ### PROP 49: PROP_MAC_SCAN_MASK {#prop-mac-scan-mask}
 * Type: Read-Write
@@ -33,11 +38,11 @@ Values switches to `SCAN_STATE_IDLE` when scan is complete.
 
 ### PROP 51: PROP_MAC_SCAN_BEACON {#prop-mac-scan-beacon}
 * Type: Read-Only-Stream
-* Packed-Encoding: `Ccdd` (or `Cct(ESSc)t(iCUd)`)
+* Packed-Encoding: `Ccdd` (or `Cct(ESSc)t(iCUdd)`)
 
-Octets: | 1  |   1  |    2    |   *n*    |    2    |   *n*  
---------|----|------|---------|----------|---------|----------  
-Fields: | CH | RSSI | MAC_LEN | MAC_DATA | NET_LEN | NET_DATA  
+Octets: | 1  |   1  |    2    |   *n*    |    2    |   *n*
+--------|----|------|---------|----------|---------|----------
+Fields: | CH | RSSI | MAC_LEN | MAC_DATA | NET_LEN | NET_DATA
 
 Scan beacons have two embedded structures which contain
 information about the MAC layer and the NET layer. Their
@@ -56,6 +61,7 @@ The format below is for an 802.15.4 MAC with Thread:
   * `C`: Flags
   * `U`: Network Name
   * `d`: XPANID
+  * `d`: Steering data
 
 Extra parameters may be added to each of the structures
 in the future, so care should be taken to read the length
@@ -105,6 +111,16 @@ Id | Name                          | Description
  2 | `MAC_PROMISCUOUS_MODE_FULL`   | All decoded MAC packets are passed up the stack.
 
 See (#prop-stream-raw).
+
+### PROP 57: PROP_MAC_ENERGY_SCAN_RESULT {#prop-mac-escan-result}
+* Type: Read-Only-Stream
+* Packed-Encoding: `Cc`
+
+This property is emitted during energy scan operation
+per scanned channel with following format:
+
+* `C`: Channel
+* `c`: RSSI (in dBm)
 
 ### PROP 4864: PROP_MAC_WHITELIST  {#prop-mac-whitelist}
 * Type: Read-Write

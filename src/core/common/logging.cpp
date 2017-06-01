@@ -35,9 +35,9 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
-#include "openthread/openthread.h"
+#include "logging.hpp"
 
-#include <common/logging.hpp>
+#include <openthread/openthread.h>
 
 #ifndef WINDOWS_LOGGING
 #define otLogDump(aFormat, ...)                                             \
@@ -162,23 +162,23 @@ const char *otLogLevelToString(otLogLevel aLevel)
 
     switch (aLevel)
     {
-    case kLogLevelNone:
+    case OT_LOG_LEVEL_NONE:
         retval = "NONE";
         break;
 
-    case kLogLevelCrit:
+    case OT_LOG_LEVEL_CRIT:
         retval = "CRIT";
         break;
 
-    case kLogLevelWarn:
+    case OT_LOG_LEVEL_WARN:
         retval = "WARN";
         break;
 
-    case kLogLevelInfo:
+    case OT_LOG_LEVEL_INFO:
         retval = "INFO";
         break;
 
-    case kLogLevelDebg:
+    case OT_LOG_LEVEL_DEBG:
         retval = "DEBG";
         break;
 
@@ -198,51 +198,55 @@ const char *otLogRegionToString(otLogRegion aRegion)
 
     switch (aRegion)
     {
-    case kLogRegionApi:
+    case OT_LOG_REGION_API:
         retval = "-API-----";
         break;
 
-    case kLogRegionMle:
+    case OT_LOG_REGION_MLE:
         retval = "-MLE-----";
         break;
 
-    case kLogRegionArp:
+    case OT_LOG_REGION_COAP:
+        retval = "-COAP----";
+        break;
+
+    case OT_LOG_REGION_ARP:
         retval = "-ARP-----";
         break;
 
-    case kLogRegionNetData:
+    case OT_LOG_REGION_NET_DATA:
         retval = "-N-DATA--";
         break;
 
-    case kLogRegionIcmp:
+    case OT_LOG_REGION_ICMP:
         retval = "-ICMP----";
         break;
 
-    case kLogRegionIp6:
+    case OT_LOG_REGION_IP6:
         retval = "-IP6-----";
         break;
 
-    case kLogRegionMac:
+    case OT_LOG_REGION_MAC:
         retval = "-MAC-----";
         break;
 
-    case kLogRegionMem:
+    case OT_LOG_REGION_MEM:
         retval = "-MEM-----";
         break;
 
-    case kLogRegionNcp:
+    case OT_LOG_REGION_NCP:
         retval = "-NCP-----";
         break;
 
-    case kLogRegionMeshCoP:
+    case OT_LOG_REGION_MESH_COP:
         retval = "-MESH-CP-";
         break;
 
-    case kLogRegionNetDiag:
+    case OT_LOG_REGION_NET_DIAG:
         retval = "-DIAG----";
         break;
 
-    case kLogRegionPlatform:
+    case OT_LOG_REGION_PLATFORM:
         retval = "-PLAT----";
         break;
 
@@ -255,145 +259,149 @@ const char *otLogRegionToString(otLogRegion aRegion)
 }
 #endif // OPENTHREAD_CONFIG_LOG_PREPEND_REGION
 
-const char *otThreadErrorToString(ThreadError aError)
+const char *otThreadErrorToString(otError aError)
 {
     const char *retval;
 
     switch (aError)
     {
-    case kThreadError_None:
+    case OT_ERROR_NONE:
         retval = "None";
         break;
 
-    case kThreadError_Failed:
+    case OT_ERROR_FAILED:
         retval = "Failed";
         break;
 
-    case kThreadError_Drop:
+    case OT_ERROR_DROP:
         retval = "Drop";
         break;
 
-    case kThreadError_NoBufs:
+    case OT_ERROR_NO_BUFS:
         retval = "NoBufs";
         break;
 
-    case kThreadError_NoRoute:
+    case OT_ERROR_NO_ROUTE:
         retval = "NoRoute";
         break;
 
-    case kThreadError_Busy:
+    case OT_ERROR_BUSY:
         retval = "Busy";
         break;
 
-    case kThreadError_Parse:
+    case OT_ERROR_PARSE:
         retval = "Parse";
         break;
 
-    case kThreadError_InvalidArgs:
+    case OT_ERROR_INVALID_ARGS:
         retval = "InvalidArgs";
         break;
 
-    case kThreadError_Security:
+    case OT_ERROR_SECURITY:
         retval = "Security";
         break;
 
-    case kThreadError_AddressQuery:
+    case OT_ERROR_ADDRESS_QUERY:
         retval = "AddressQuery";
         break;
 
-    case kThreadError_NoAddress:
+    case OT_ERROR_NO_ADDRESS:
         retval = "NoAddress";
         break;
 
-    case kThreadError_NotReceiving:
-        retval = "NotReceiving";
-        break;
-
-    case kThreadError_Abort:
+    case OT_ERROR_ABORT:
         retval = "Abort";
         break;
 
-    case kThreadError_NotImplemented:
+    case OT_ERROR_NOT_IMPLEMENTED:
         retval = "NotImplemented";
         break;
 
-    case kThreadError_InvalidState:
+    case OT_ERROR_INVALID_STATE:
         retval = "InvalidState";
         break;
 
-    case kThreadError_NoTasklets:
-        retval = "NoTasklets";
-        break;
-
-    case kThreadError_NoAck:
+    case OT_ERROR_NO_ACK:
         retval = "NoAck";
         break;
 
-    case kThreadError_ChannelAccessFailure:
+    case OT_ERROR_CHANNEL_ACCESS_FAILURE:
         retval = "ChannelAccessFailure";
         break;
 
-    case kThreadError_Detached:
+    case OT_ERROR_DETACHED:
         retval = "Detached";
         break;
 
-    case kThreadError_FcsErr:
+    case OT_ERROR_FCS:
         retval = "FcsErr";
         break;
 
-    case kThreadError_NoFrameReceived:
+    case OT_ERROR_NO_FRAME_RECEIVED:
         retval = "NoFrameReceived";
         break;
 
-    case kThreadError_UnknownNeighbor:
+    case OT_ERROR_UNKNOWN_NEIGHBOR:
         retval = "UnknownNeighbor";
         break;
 
-    case kThreadError_InvalidSourceAddress:
+    case OT_ERROR_INVALID_SOURCE_ADDRESS:
         retval = "InvalidSourceAddress";
         break;
 
-    case kThreadError_WhitelistFiltered:
+    case OT_ERROR_WHITELIST_FILTERED:
         retval = "WhitelistFiltered";
         break;
 
-    case kThreadError_DestinationAddressFiltered:
+    case OT_ERROR_DESTINATION_ADDRESS_FILTERED:
         retval = "DestinationAddressFiltered";
         break;
 
-    case kThreadError_NotFound:
+    case OT_ERROR_NOT_FOUND:
         retval = "NotFound";
         break;
 
-    case kThreadError_Already:
+    case OT_ERROR_ALREADY:
         retval = "Already";
         break;
 
-    case kThreadError_BlacklistFiltered:
+    case OT_ERROR_BLACKLIST_FILTERED:
         retval = "BlacklistFiltered";
         break;
 
-    case kThreadError_Ipv6AddressCreationFailure:
+    case OT_ERROR_IP6_ADDRESS_CREATION_FAILURE:
         retval = "Ipv6AddressCreationFailure";
         break;
 
-    case kThreadError_NotCapable:
+    case OT_ERROR_NOT_CAPABLE:
         retval = "NotCapable";
         break;
 
-    case kThreadError_ResponseTimeout:
+    case OT_ERROR_RESPONSE_TIMEOUT:
         retval = "ResponseTimeout";
         break;
 
-    case kThreadError_Duplicated:
+    case OT_ERROR_DUPLICATED:
         retval = "Duplicated";
         break;
 
-    case kThreadError_ReassemblyTimeout:
+    case OT_ERROR_REASSEMBLY_TIMEOUT:
         retval = "ReassemblyTimeout";
         break;
 
-    case kThreadError_Error:
+    case OT_ERROR_NOT_TMF:
+        retval = "NotTmf";
+        break;
+
+    case OT_ERROR_NOT_LOWPAN_DATA_FRAME:
+        retval = "NonLowpanDataFrame";
+        break;
+
+    case OT_ERROR_DISABLED_FEATURE:
+        retval = "DisabledFeature";
+        break;
+
+    case OT_ERROR_GENERIC:
         retval = "GenericError";
         break;
 

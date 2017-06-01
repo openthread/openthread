@@ -26,12 +26,15 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "test_util.h"
-#include "openthread/openthread.h"
-#include <common/debug.hpp>
-#include <crypto/aes_ccm.hpp>
-#include <crypto/mbedtls.hpp>
 #include "utils/wrap_string.h"
+
+#include <openthread/openthread.h>
+
+#include "common/debug.hpp"
+#include "crypto/aes_ccm.hpp"
+#include "crypto/mbedtls.hpp"
+
+#include "test_util.h"
 
 #ifndef OPENTHREAD_MULTIPLE_INSTANCE
 static ot::Crypto::MbedTls mbedtls;

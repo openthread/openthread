@@ -34,9 +34,10 @@
 #ifndef CLI_UDP_HPP_
 #define CLI_UDP_HPP_
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <cli/cli_server.hpp>
+#include "cli/cli.hpp"
+#include "cli/cli_server.hpp"
 
 namespace ot {
 namespace Cli {
@@ -60,10 +61,10 @@ public:
     /**
      * This method starts the CLI server.
      *
-     * @retval kThreadError_None  Successfully started the server.
+     * @retval OT_ERROR_NONE  Successfully started the server.
      *
      */
-    ThreadError Start(void);
+    otError Start(void);
 
     /**
      * This method delivers raw characters to the client.

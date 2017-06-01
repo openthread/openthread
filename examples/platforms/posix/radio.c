@@ -28,8 +28,8 @@
 
 #include "platform-posix.h"
 
-#include "openthread/platform/diag.h"
-#include "openthread/platform/radio.h"
+#include <openthread/platform/diag.h>
+#include <openthread/platform/radio.h>
 
 #include "utils/code_utils.h"
 
@@ -75,25 +75,30 @@ enum
     IEEE802154_MACCMD_DATA_REQ    = 4,
 };
 
+enum
+{
+    POSIX_RECEIVE_SENSITIVITY = -100,  // dBm
+};
+
 OT_TOOL_PACKED_BEGIN
 struct RadioMessage
 {
     uint8_t mChannel;
-    uint8_t mPsdu[kMaxPHYPacketSize];
+    uint8_t mPsdu[OT_RADIO_FRAME_MAX_SIZE];
 } OT_TOOL_PACKED_END;
 
-static void radioTransmit(struct RadioMessage *msg, const struct RadioPacket *pkt);
+static void radioTransmit(struct RadioMessage *msg, const struct otRadioFrame *pkt);
 static void radioSendMessage(otInstance *aInstance);
 static void radioSendAck(void);
 static void radioProcessFrame(otInstance *aInstance);
 
-static PhyState sState = kStateDisabled;
+static otRadioState sState = OT_RADIO_STATE_DISABLED;
 static struct RadioMessage sReceiveMessage;
 static struct RadioMessage sTransmitMessage;
 static struct RadioMessage sAckMessage;
-static RadioPacket sReceiveFrame;
-static RadioPacket sTransmitFrame;
-static RadioPacket sAckFrame;
+static otRadioFrame sReceiveFrame;
+static otRadioFrame sTransmitFrame;
+static otRadioFrame sAckFrame;
 
 static uint8_t sExtendedAddress[OT_EXT_ADDRESS_SIZE];
 static uint16_t sShortAddress;
@@ -116,11 +121,6 @@ static inline bool isFrameTypeMacCmd(const uint8_t *frame)
 static inline bool isSecurityEnabled(const uint8_t *frame)
 {
     return (frame[0] & IEEE802154_SECURITY_ENABLED) != 0;
-}
-
-static inline bool isFramePending(const uint8_t *frame)
-{
-    return (frame[0] & IEEE802154_FRAME_PENDING) != 0;
 }
 
 static inline bool isAckRequested(const uint8_t *frame)
@@ -378,52 +378,52 @@ void platformRadioInit(void)
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
     (void)aInstance;
-    return (sState != kStateDisabled) ? true : false;
+    return (sState != OT_RADIO_STATE_DISABLED) ? true : false;
 }
 
-ThreadError otPlatRadioEnable(otInstance *aInstance)
+otError otPlatRadioEnable(otInstance *aInstance)
 {
     if (!otPlatRadioIsEnabled(aInstance))
     {
-        sState = kStateSleep;
+        sState = OT_RADIO_STATE_SLEEP;
     }
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError otPlatRadioDisable(otInstance *aInstance)
+otError otPlatRadioDisable(otInstance *aInstance)
 {
     if (otPlatRadioIsEnabled(aInstance))
     {
-        sState = kStateDisabled;
+        sState = OT_RADIO_STATE_DISABLED;
     }
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError otPlatRadioSleep(otInstance *aInstance)
+otError otPlatRadioSleep(otInstance *aInstance)
 {
-    ThreadError error = kThreadError_InvalidState;
+    otError error = OT_ERROR_INVALID_STATE;
     (void)aInstance;
 
-    if (sState == kStateSleep || sState == kStateReceive)
+    if (sState == OT_RADIO_STATE_SLEEP || sState == OT_RADIO_STATE_RECEIVE)
     {
-        error = kThreadError_None;
-        sState = kStateSleep;
+        error = OT_ERROR_NONE;
+        sState = OT_RADIO_STATE_SLEEP;
     }
 
     return error;
 }
 
-ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
+otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
-    ThreadError error = kThreadError_InvalidState;
+    otError error = OT_ERROR_INVALID_STATE;
     (void)aInstance;
 
-    if (sState != kStateDisabled)
+    if (sState != OT_RADIO_STATE_DISABLED)
     {
-        error = kThreadError_None;
-        sState = kStateReceive;
+        error = OT_ERROR_NONE;
+        sState = OT_RADIO_STATE_RECEIVE;
         sAckWait = false;
         sReceiveFrame.mChannel = aChannel;
     }
@@ -431,22 +431,22 @@ ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     return error;
 }
 
-ThreadError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
+otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aRadio)
 {
-    ThreadError error = kThreadError_InvalidState;
+    otError error = OT_ERROR_INVALID_STATE;
     (void)aInstance;
-    (void)aPacket;
+    (void)aRadio;
 
-    if (sState == kStateReceive)
+    if (sState == OT_RADIO_STATE_RECEIVE)
     {
-        error = kThreadError_None;
-        sState = kStateTransmit;
+        error = OT_ERROR_NONE;
+        sState = OT_RADIO_STATE_TRANSMIT;
     }
 
     return error;
 }
 
-RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
+otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
     (void)aInstance;
     return &sTransmitFrame;
@@ -461,7 +461,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     (void)aInstance;
-    return kRadioCapsNone;
+    return OT_RADIO_CAPS_NONE;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
@@ -487,22 +487,12 @@ void radioReceive(otInstance *aInstance)
         isFrameTypeAck(sReceiveFrame.mPsdu) &&
         getDsn(sReceiveFrame.mPsdu) == getDsn(sTransmitFrame.mPsdu))
     {
-        sState = kStateReceive;
+        sState = OT_RADIO_STATE_RECEIVE;
         sAckWait = false;
 
-#if OPENTHREAD_ENABLE_DIAG
-
-        if (otPlatDiagModeGet())
-        {
-            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
-        }
-        else
-#endif
-        {
-            otPlatRadioTransmitDone(aInstance, &sTransmitFrame, isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
-        }
+        otPlatRadioTxDone(aInstance, &sTransmitFrame, &sReceiveFrame, OT_ERROR_NONE);
     }
-    else if ((sState == kStateReceive || sState == kStateTransmit) &&
+    else if ((sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT) &&
              (sReceiveFrame.mChannel == sReceiveMessage.mChannel))
     {
         radioProcessFrame(aInstance);
@@ -519,25 +509,25 @@ void radioSendMessage(otInstance *aInstance)
 
     if (!sAckWait)
     {
-        sState = kStateReceive;
+        sState = OT_RADIO_STATE_RECEIVE;
 
 #if OPENTHREAD_ENABLE_DIAG
 
         if (otPlatDiagModeGet())
         {
-            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, false, kThreadError_None);
+            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, OT_ERROR_NONE);
         }
         else
 #endif
         {
-            otPlatRadioTransmitDone(aInstance, &sTransmitFrame, false, kThreadError_None);
+            otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, OT_ERROR_NONE);
         }
     }
 }
 
 void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
 {
-    if (aReadFdSet != NULL && (sState != kStateTransmit || sAckWait))
+    if (aReadFdSet != NULL && (sState != OT_RADIO_STATE_TRANSMIT || sAckWait))
     {
         FD_SET(sSockFd, aReadFdSet);
 
@@ -547,7 +537,7 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMax
         }
     }
 
-    if (aWriteFdSet != NULL && sState == kStateTransmit && !sAckWait)
+    if (aWriteFdSet != NULL && sState == OT_RADIO_STATE_TRANSMIT && !sAckWait)
     {
         FD_SET(sSockFd, aWriteFdSet);
 
@@ -568,13 +558,13 @@ void platformRadioProcess(otInstance *aInstance)
         radioReceive(aInstance);
     }
 
-    if (sState == kStateTransmit && !sAckWait)
+    if (sState == OT_RADIO_STATE_TRANSMIT && !sAckWait)
     {
         radioSendMessage(aInstance);
     }
 }
 
-void radioTransmit(struct RadioMessage *msg, const struct RadioPacket *pkt)
+void radioTransmit(struct RadioMessage *msg, const struct otRadioFrame *pkt)
 {
     uint32_t i;
     struct sockaddr_in sockaddr;
@@ -635,12 +625,12 @@ void radioSendAck(void)
 
 void radioProcessFrame(otInstance *aInstance)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     otPanId dstpan;
     otShortAddress short_address;
     otExtAddress ext_address;
 
-    otEXPECT_ACTION(sPromiscuous == false, error = kThreadError_None);
+    otEXPECT_ACTION(sPromiscuous == false, error = OT_ERROR_NONE);
 
     switch (sReceiveFrame.mPsdu[1] & IEEE802154_DST_ADDR_MASK)
     {
@@ -652,7 +642,7 @@ void radioProcessFrame(otInstance *aInstance)
         short_address = getShortAddress(sReceiveFrame.mPsdu);
         otEXPECT_ACTION((dstpan == IEEE802154_BROADCAST || dstpan == sPanid) &&
                         (short_address == IEEE802154_BROADCAST || short_address == sShortAddress),
-                        error = kThreadError_Abort);
+                        error = OT_ERROR_ABORT);
         break;
 
     case IEEE802154_DST_ADDR_EXT:
@@ -660,16 +650,16 @@ void radioProcessFrame(otInstance *aInstance)
         getExtAddress(sReceiveFrame.mPsdu, &ext_address);
         otEXPECT_ACTION((dstpan == IEEE802154_BROADCAST || dstpan == sPanid) &&
                         memcmp(&ext_address, sExtendedAddress, sizeof(ext_address)) == 0,
-                        error = kThreadError_Abort);
+                        error = OT_ERROR_ABORT);
         break;
 
     default:
-        error = kThreadError_Abort;
+        error = OT_ERROR_ABORT;
         goto exit;
     }
 
     sReceiveFrame.mPower = -20;
-    sReceiveFrame.mLqi = kPhyNoLqi;
+    sReceiveFrame.mLqi = OT_RADIO_LQI_NONE;
 
     // generate acknowledgment
     if (isAckRequested(sReceiveFrame.mPsdu))
@@ -683,12 +673,12 @@ exit:
 
     if (otPlatDiagModeGet())
     {
-        otPlatDiagRadioReceiveDone(aInstance, error == kThreadError_None ? &sReceiveFrame : NULL, error);
+        otPlatDiagRadioReceiveDone(aInstance, error == OT_ERROR_NONE ? &sReceiveFrame : NULL, error);
     }
     else
 #endif
     {
-        otPlatRadioReceiveDone(aInstance, error == kThreadError_None ? &sReceiveFrame : NULL, error);
+        otPlatRadioReceiveDone(aInstance, error == OT_ERROR_NONE ? &sReceiveFrame : NULL, error);
     }
 }
 
@@ -698,32 +688,32 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
     (void)aEnable;
 }
 
-ThreadError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
     (void)aInstance;
     (void)aShortAddress;
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
 {
     (void)aInstance;
     (void)aExtAddress;
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
     (void)aInstance;
     (void)aShortAddress;
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
 {
     (void)aInstance;
     (void)aExtAddress;
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
@@ -736,16 +726,22 @@ void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
     (void)aInstance;
 }
 
-ThreadError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
+otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
     (void)aInstance;
     (void)aScanChannel;
     (void)aScanDuration;
-    return kThreadError_NotImplemented;
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
 {
     (void)aInstance;
     (void)aPower;
+}
+
+int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
+{
+    (void)aInstance;
+    return POSIX_RECEIVE_SENSITIVITY;
 }

@@ -34,13 +34,11 @@ DIST_SUBDIRS                            = \
     harness-automation                    \
     harness-thci                          \
     spi-hdlc-adapter                      \
-    spinel-cli                            \
     $(NULL)
 
 # Always build (e.g. for 'make all') these subdirectories.
 
 SUBDIRS                                 = \
-    spinel-cli                            \
     $(NULL)
 
 if OPENTHREAD_BUILD_TOOLS

@@ -40,6 +40,7 @@
 #include <openthread-config.h>
 #include <openthread/platform/alarm.h>
 #include <openthread/platform/radio.h>
+
 #include "platform-efr32.h"
 
 /**
@@ -76,7 +77,7 @@ void otPlatDiagTxPowerSet(int8_t aTxPower)
     (void) aTxPower;
 }
 
-void otPlatDiagRadioReceived(otInstance *aInstance, RadioPacket *aFrame, ThreadError aError)
+void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
     (void) aInstance;
     (void) aFrame;

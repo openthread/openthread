@@ -37,15 +37,14 @@
 
 #include <stdint.h>
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @defgroup spi-slave SPI Slave
- * @ingroup platform
+ * @addtogroup plat-spi-slave
  *
  * @brief
  *   This module includes the platform abstraction for SPI slave communication.
@@ -62,7 +61,12 @@ extern "C" {
  * transaction to be valid.
  *
  * Note that this function is always called at the end of a transaction, even if `otPlatSpiSlavePrepareTransaction()`
- *  has not yet been called. In such cases, `aOutputBufLen` and `aInputBufLen` will be zero.
+ * has not yet been called. In such cases, `aOutputBufLen` and `aInputBufLen` will be zero.
+ *
+ * This callback can be called from ISR context. The return value from this function indicates if any further
+ * processing is required. If `TRUE` is returned the platform spi-slave driver implementation must invoke the
+ * transaction process callback (`aProcessCallback` set in `otPlatSpiSlaveEnable()`) which unlike this callback must be
+ * called from the same OS context that any other OpenThread API/callback is called.
  *
  * @param[in] aContext           Context pointer passed into `otPlatSpiSlaveEnable()`.
  * @param[in] aOutputBuf         Value of `aOutputBuf` from last call to `otPlatSpiSlavePrepareTransaction()`.
@@ -71,10 +75,23 @@ extern "C" {
  * @param[in] aInputBufLen       Value of aInputBufLen from last call to `otPlatSpiSlavePrepareTransaction()`
  * @param[in] aTransactionLength Length of the completed transaction, in bytes.
  *
+ * @returns  TRUE if after this call returns the platform should invoke the the process callback `aProcessCallback`,
+ *           FALSE if there is nothing to process and no need to invoke the process callback.
  */
-typedef void (*otPlatSpiSlaveTransactionCompleteCallback)(void *aContext, uint8_t *aOutputBuf, uint16_t aOutputBufLen,
+typedef bool (*otPlatSpiSlaveTransactionCompleteCallback)(void *aContext, uint8_t *aOutputBuf, uint16_t aOutputBufLen,
                                                           uint8_t *aInputBuf, uint16_t aInputBufLen,
                                                           uint16_t aTransactionLength);
+
+
+/**
+ * Invoked after a transaction complete callback is called and returns `TRUE` to do any further processing required.
+ * Unlike `otPlatSpiSlaveTransactionCompleteCallback` which can be called from any OS context (e.g., ISR), this
+ * callback MUST be called from the same OS context as any other OpenThread API/callback.
+ *
+ * @param[in] aContext           Context pointer passed into `otPlatSpiSlaveEnable()`.
+ *
+ */
+typedef void (*otPlatSpiSlaveTransactionProcessCallback)(void *aContext);
 
 
 /**
@@ -85,15 +102,17 @@ typedef void (*otPlatSpiSlaveTransactionCompleteCallback)(void *aContext, uint8_
  * If `otPlatSPISlavePrepareTransaction() is not called before the master begins a transaction, the resulting SPI
  * transaction will send all `0xFF` bytes and discard all received bytes.
  *
- * @param[in] aCallback          Pointer to transaction complete callback.
- * @param[in] aContext           Context pointer to be passed to transaction complete callback.
+ * @param[in] aCompleteCallback  Pointer to transaction complete callback.
+ * @param[in] aProcessCallback   Pointer to process callback.
+ * @param[in] aContext           Context pointer to be passed to callbacks.
  *
- * @retval kThreadError_None     Successfully enabled the SPI Slave interface.
- * @retval kThreadError_Already  SPI Slave interface is already enabled.
- * @retval kThreadError_Failed   Failed to enable the SPI Slave interface.
+ * @retval OT_ERROR_NONE     Successfully enabled the SPI Slave interface.
+ * @retval OT_ERROR_ALREADY  SPI Slave interface is already enabled.
+ * @retval OT_ERROR_FAILED   Failed to enable the SPI Slave interface.
  *
  */
-ThreadError otPlatSpiSlaveEnable(otPlatSpiSlaveTransactionCompleteCallback aCallback, void *aContext);
+otError otPlatSpiSlaveEnable(otPlatSpiSlaveTransactionCompleteCallback aCompleteCallback,
+                             otPlatSpiSlaveTransactionProcessCallback aProcessCallback, void *aContext);
 
 /**
  * Shutdown and disable the SPI slave interface.
@@ -118,12 +137,17 @@ void otPlatSpiSlaveDisable(void);
  * ignored until the SPI master finishes the transaction.
  *
  * Note that even if `aInputBufLen` or `aOutputBufLen` (or both) are exhausted before the SPI master finishes a
-* transaction, the ongoing size of the transaction must still be kept track of to be passed to the transaction complete
-* callback. For example, if `aInputBufLen` is equal to 10 and `aOutputBufLen` equal to 20 and the SPI master clocks out
-* 30 bytes, the value 30 is passed to the transaction complete callback.
+ * transaction, the ongoing size of the transaction must still be kept track of to be passed to the transaction
+ * complete callback. For example, if `aInputBufLen` is equal to 10 and `aOutputBufLen` equal to 20 and the SPI master
+ * clocks out 30 bytes, the value 30 is passed to the transaction complete callback.
+ *
+ * If a `NULL` pointer is passed in as `aOutputBuf` or `aInputBuf` it means that that buffer pointer should not change
+ * from its previous/current value. In this case, the corresponding length argument should be ignored. For example,
+ * `otPlatSpiSlavePrepareTransaction(NULL, 0, aInputBuf, aInputLen, false)` changes the input buffer pointer and its
+ * length but keeps the output buffer pointer same as before.
  *
  * Any call to this function while a transaction is in progress will cause all of the arguments to be ignored and the
- * return value to be `kThreadError_Busy`.
+ * return value to be `OT_ERROR_BUSY`.
  *
  * @param[in] aOutputBuf              Data to be written to MISO pin
  * @param[in] aOutputBufLen           Size of the output buffer, in bytes
@@ -131,13 +155,13 @@ void otPlatSpiSlaveDisable(void);
  * @param[in] aInputBufLen            Size of the input buffer, in bytes
  * @param[in] aRequestTransactionFlag Set to true if host interrupt should be set
  *
- * @retval kThreadError_None          Transaction was successfully prepared.
- * @retval kThreadError_Busy          A transaction is currently in progress.
- * @retval kThreadError_InvalidState  otPlatSpiSlaveEnable() hasn't been called.
+ * @retval OT_ERROR_NONE           Transaction was successfully prepared.
+ * @retval OT_ERROR_BUSY           A transaction is currently in progress.
+ * @retval OT_ERROR_INVALID_STATE  otPlatSpiSlaveEnable() hasn't been called.
  *
  */
-ThreadError otPlatSpiSlavePrepareTransaction(uint8_t *aOutputBuf, uint16_t aOutputBufLen, uint8_t *aInputBuf,
-                                             uint16_t aInputBufLen, bool aRequestTransactionFlag);
+otError otPlatSpiSlavePrepareTransaction(uint8_t *aOutputBuf, uint16_t aOutputBufLen, uint8_t *aInputBuf,
+                                         uint16_t aInputBufLen, bool aRequestTransactionFlag);
 
 /**
  * @}

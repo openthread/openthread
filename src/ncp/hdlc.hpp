@@ -33,7 +33,7 @@
 #ifndef HDLC_HPP_
 #define HDLC_HPP_
 #include  "openthread/openthread_enable_defines.h"
-#include "openthread/types.h"
+#include <openthread/types.h>
 
 namespace ot {
 
@@ -66,11 +66,11 @@ public:
         /**
          * This method writes a byte to the buffer and updates the iterator (if space is available).
          *
-         * @retval kThreadError_None    Successfully wrote the byte and updates the iterator.
-         * @retval kThreadError_NoBufs  Insufficient buffer space.
+         * @retval OT_ERROR_NONE     Successfully wrote the byte and updates the iterator.
+         * @retval OT_ERROR_NO_BUFS  Insufficient buffer space.
          *
          */
-        ThreadError WriteByte(uint8_t aByte);
+        otError WriteByte(uint8_t aByte);
 
         /**
          * This method checks if there is buffer space available to write @p aWriteLength bytes.
@@ -102,11 +102,11 @@ public:
      *
      * @param[inout] aIterator      A reference to a buffer write iterator. On successful exit, the iterator is updated.
      *
-     * @retval kThreadError_None    Successfully started the HDLC frame.
-     * @retval kThreadError_NoBufs  Insufficient buffer space available to start the HDLC frame.
+     * @retval OT_ERROR_NONE     Successfully started the HDLC frame.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space available to start the HDLC frame.
      *
      */
-    ThreadError Init(BufferWriteIterator &aIterator);
+    otError Init(BufferWriteIterator &aIterator);
 
     /**
      * This method encodes a single byte into a buffer at @p aIterator.
@@ -116,11 +116,11 @@ public:
      * @param[in]    aInByte        A byte to encode and add.
      * @param[inout] aIterator      A reference to a write buffer iterator. On successful exit, the iterator is updated.
      *
-     * @retval kThreadError_None    Successfully encoded and added the byte.
-     * @retval kThreadError_NoBufs  Insufficient buffer space available to encode and add the byte.
+     * @retval OT_ERROR_NONE     Successfully encoded and added the byte.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space available to encode and add the byte.
      *
      */
-    ThreadError Encode(uint8_t aInByte, BufferWriteIterator &aIterator);
+    otError Encode(uint8_t aInByte, BufferWriteIterator &aIterator);
 
     /**
      * This method encodes the frame into a buffer at @p aIterator.
@@ -132,22 +132,22 @@ public:
      * @param[in]    aInLength      The number of bytes in @p aInBuf to encode.
      * @param[inout] aIterator      A reference to a write buffer iterator. On successful exit, the iterator is updated.
      *
-     * @retval kThreadError_None    Successfully encoded the HDLC frame.
-     * @retval kThreadError_NoBufs  Insufficient buffer space available to encode the HDLC frame.
+     * @retval OT_ERROR_NONE     Successfully encoded the HDLC frame.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space available to encode the HDLC frame.
      *
      */
-    ThreadError Encode(const uint8_t *aInBuf, uint16_t aInLength, BufferWriteIterator &aIterator);
+    otError Encode(const uint8_t *aInBuf, uint16_t aInLength, BufferWriteIterator &aIterator);
 
     /**
      * This method finalizes an HDLC frame.
      *
      * @param[inout] aIterator      A reference to a write buffer iterator. On successful exit, the iterator is updated.
      *
-     * @retval kThreadError_None    Successfully ended the HDLC frame.
-     * @retval kThreadError_NoBufs  Insufficient buffer space available to end the HDLC frame.
+     * @retval OT_ERROR_NONE     Successfully ended the HDLC frame.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space available to end the HDLC frame.
      *
      */
-    ThreadError Finalize(BufferWriteIterator &aIterator);
+    otError Finalize(BufferWriteIterator &aIterator);
 
 private:
     uint16_t mFcs;
@@ -179,7 +179,7 @@ public:
      * @param[in]  aFrameLength  The frame length in bytes.
      *
      */
-    typedef void (*ErrorHandler)(void *aContext, ThreadError aError, uint8_t *aFrame, uint16_t aFrameLength);
+    typedef void (*ErrorHandler)(void *aContext, otError aError, uint8_t *aFrame, uint16_t aFrameLength);
 
     /**
      * This constructor initializes the decoder.

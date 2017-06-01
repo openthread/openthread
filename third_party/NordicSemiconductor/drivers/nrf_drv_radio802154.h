@@ -224,12 +224,19 @@ void nrf_drv_radio802154_received(uint8_t * p_data, int8_t power, int8_t lqi);
  * @brief Notify that frame was transmitted.
  *
  * @note If ACK was requested for transmitted frame this function is called after proper ACK is
- *       received. If ACK was not requested this function is called just after transmission is
- *       ended.
+ *       received. If ACK was not requested this function is called just after transmission ends.
+ * @note Buffer pointed by the p_ack pointer is not modified by the radio driver (and can't
+ *       be used to receive a frame) until nrf_drv_radio802154_buffer_free() function is called.
+ * @note Buffer pointed by the p_ack pointer may be modified by the function handler (and other
+ *       modules) until nrf_drv_radio802154_buffer_free() function is called.
  *
- * @param[in]  pending_bit  Value of pending bit in received ACK or false if ACK was not requested.
+ * @param[in]  p_ack  Pointer to received ACK buffer. The first byte in the buffer is length of the
+ *                    frame and following bytes are the ACK frame itself (after PHR).
+ *                    If ACK was not requested @p p_ack is set to NULL.
+ * @param[in]  power  RSSI of received ACK frame or 0 if ACK was not requested.
+ * @param[in]  lqi    LQI of received ACK frame or 0 if ACK was not requested.
  */
-void nrf_drv_radio802154_transmitted(bool pending_bit);
+void nrf_drv_radio802154_transmitted(uint8_t * p_ack, int8_t power, int8_t lqi);
 
 /**
  * @brief Notify that frame was not transmitted due to busy channel.

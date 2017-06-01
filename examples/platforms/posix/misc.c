@@ -28,8 +28,8 @@
 
 #include "platform-posix.h"
 
-#include "openthread/types.h"
-#include "openthread/platform/misc.h"
+#include <openthread/types.h>
+#include <openthread/platform/misc.h>
 
 void otPlatReset(otInstance *aInstance)
 {
@@ -40,5 +40,10 @@ void otPlatReset(otInstance *aInstance)
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
     (void)aInstance;
-    return kPlatResetReason_PowerOn;
+    return OT_PLAT_RESET_REASON_POWER_ON;
+}
+
+void otPlatWakeHost(void)
+{
+    // TODO: implement an operation to wake the host from sleep state.
 }

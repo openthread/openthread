@@ -34,6 +34,11 @@
 #ifndef CLI_COAP_HPP_
 #define CLI_COAP_HPP_
 
+#include <openthread/types.h>
+
+#include "cli/cli.hpp"
+#include "coap/coap_header.hpp"
+
 namespace ot {
 namespace Cli {
 
@@ -44,7 +49,7 @@ namespace Cli {
 struct CoapCommand
 {
     const char *mName;                                 ///< A pointer to the command string.
-    ThreadError(*mCommand)(int argc, char *argv[]);    ///< A function pointer to process the command.
+    otError(*mCommand)(int argc, char *argv[]);    ///< A function pointer to process the command.
 };
 
 /**
@@ -63,7 +68,7 @@ public:
      * @param[in]  aServer  A reference to the CLI server.
      *
      */
-    static ThreadError Process(otInstance *aInstance, int argc, char *argv[], Server &aServer);
+    static otError Process(otInstance *aInstance, int argc, char *argv[], Server &aServer);
 
 private:
     enum
@@ -75,16 +80,16 @@ private:
     static void ConvertToLower(char *aString);
     static void OutputBytes(const uint8_t *aBytes, uint8_t aLength);
 
-    static ThreadError ProcessClient(int argc, char *argv[]);
-    static ThreadError ProcessServer(int argc, char *argv[]);
+    static otError ProcessClient(int argc, char *argv[]);
+    static otError ProcessServer(int argc, char *argv[]);
 
     static void OTCALL s_HandleServerResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                               otMessageInfo *aMessageInfo);
     static void HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, otMessageInfo *aMessageInfo);
     static void OTCALL s_HandleClientResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                                              otMessageInfo *aMessageInfo, ThreadError aResult);
+                                              otMessageInfo *aMessageInfo, otError aResult);
     static void HandleClientResponse(otCoapHeader *aHeader, otMessage *aMessage, otMessageInfo *aMessageInfo,
-                                     ThreadError aResult);
+                                     otError aResult);
 
     static const CoapCommand sCommands[];
     static Server *sServer;

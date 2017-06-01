@@ -28,12 +28,13 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
+#include "dns_client.hpp"
+
 #include "utils/wrap_string.h"
 
-#include <common/debug.hpp>
-#include <common/code_utils.hpp>
-#include <net/dns_client.hpp>
-#include <net/udp6.hpp>
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "net/udp6.hpp"
 
 #if OPENTHREAD_ENABLE_DNS_CLIENT
 
@@ -47,9 +48,9 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 namespace Dns {
 
-ThreadError Client::Start(void)
+otError Client::Start(void)
 {
-    ThreadError error;
+    otError error;
     Ip6::SockAddr addr;
 
     SuccessOrExit(error = mSocket.Open(&Client::HandleUdpReceive, this));
@@ -59,7 +60,7 @@ exit:
     return error;
 }
 
-ThreadError Client::Stop(void)
+otError Client::Stop(void)
 {
     Message *message = mPendingQueries.GetHead();
     Message *messageToRemove;
@@ -72,15 +73,15 @@ ThreadError Client::Stop(void)
         message = message->GetNext();
 
         queryMetadata.ReadFrom(*messageToRemove);
-        FinalizeDnsTransaction(*messageToRemove, queryMetadata, NULL, 0, kThreadError_Abort);
+        FinalizeDnsTransaction(*messageToRemove, queryMetadata, NULL, 0, OT_ERROR_ABORT);
     }
 
     return mSocket.Close();
 }
 
-ThreadError Client::Query(const otDnsQuery *aQuery, otDnsResponseHandler aHandler, void *aContext)
+otError Client::Query(const otDnsQuery *aQuery, otDnsResponseHandler aHandler, void *aContext)
 {
-    ThreadError error;
+    otError error;
     QueryMetadata queryMetadata(aHandler, aContext);
     Message *message = NULL;
     Message *messageCopy = NULL;
@@ -89,7 +90,7 @@ ThreadError Client::Query(const otDnsQuery *aQuery, otDnsResponseHandler aHandle
     const Ip6::MessageInfo *messageInfo;
 
     VerifyOrExit(aQuery->mHostname != NULL && aQuery->mMessageInfo != NULL,
-                 error = kThreadError_InvalidArgs);
+                 error = OT_ERROR_INVALID_ARGS);
 
     header.SetMessageId(mMessageId++);
     header.SetType(Header::kTypeQuery);
@@ -102,7 +103,7 @@ ThreadError Client::Query(const otDnsQuery *aQuery, otDnsResponseHandler aHandle
 
     header.SetQuestionCount(1);
 
-    VerifyOrExit((message = NewMessage(header)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = NewMessage(header)) != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = AppendCompressedHostname(*message, aQuery->mHostname));
     SuccessOrExit(error = question.AppendTo(*message));
@@ -117,12 +118,12 @@ ThreadError Client::Query(const otDnsQuery *aQuery, otDnsResponseHandler aHandle
     queryMetadata.mRetransmissionCount = 0;
 
     VerifyOrExit((messageCopy = CopyAndEnqueueMessage(*message, queryMetadata)) != NULL,
-                 error = kThreadError_NoBufs);
+                 error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = SendMessage(*message, *messageInfo));
 
 exit:
 
-    if (error != kThreadError_None)
+    if (error != OT_ERROR_NONE)
     {
         if (message)
         {
@@ -152,13 +153,13 @@ exit:
 
 Message *Client::CopyAndEnqueueMessage(const Message &aMessage, const QueryMetadata &aQueryMetadata)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint32_t now = Timer::GetNow();
     Message *messageCopy = NULL;
     uint32_t nextTransmissionTime;
 
     // Create a message copy for further retransmissions.
-    VerifyOrExit((messageCopy = aMessage.Clone()) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((messageCopy = aMessage.Clone()) != NULL, error = OT_ERROR_NO_BUFS);
 
     // Append the copy with retransmission data and add it to the queue.
     SuccessOrExit(error = aQueryMetadata.AppendTo(*messageCopy));
@@ -182,7 +183,7 @@ Message *Client::CopyAndEnqueueMessage(const Message &aMessage, const QueryMetad
 
 exit:
 
-    if (error != kThreadError_None && messageCopy != NULL)
+    if (error != OT_ERROR_NONE && messageCopy != NULL)
     {
         messageCopy->Free();
         messageCopy = NULL;
@@ -205,26 +206,26 @@ void Client::DequeueMessage(Message &aMessage)
     aMessage.Free();
 }
 
-ThreadError Client::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+otError Client::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     return mSocket.SendTo(aMessage, aMessageInfo);
 }
 
-ThreadError Client::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+otError Client::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadError error;
+    otError error;
     Message *messageCopy = NULL;
 
     // Create a message copy for lower layers.
     VerifyOrExit((messageCopy = aMessage.Clone(aMessage.GetLength() - sizeof(QueryMetadata))) != NULL,
-                 error = kThreadError_NoBufs);
+                 error = OT_ERROR_NO_BUFS);
 
     // Send the copy.
     SuccessOrExit(error = SendMessage(*messageCopy, aMessageInfo));
 
 exit:
 
-    if (error != kThreadError_None && messageCopy != NULL)
+    if (error != OT_ERROR_NONE && messageCopy != NULL)
     {
         messageCopy->Free();
     }
@@ -232,9 +233,9 @@ exit:
     return error;
 }
 
-ThreadError Client::AppendCompressedHostname(Message &aMessage, const char *aHostname)
+otError Client::AppendCompressedHostname(Message &aMessage, const char *aHostname)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t index = 0;
     uint8_t labelPosition = 0;
     uint8_t labelSize = 0;
@@ -244,7 +245,7 @@ ThreadError Client::AppendCompressedHostname(Message &aMessage, const char *aHos
         // Look for string separator.
         if (aHostname[index] == kLabelSeparator || aHostname[index] == kLabelTerminator)
         {
-            VerifyOrExit(labelSize > 0, error = kThreadError_InvalidArgs);
+            VerifyOrExit(labelSize > 0, error = OT_ERROR_INVALID_ARGS);
             SuccessOrExit(error = aMessage.Append(&labelSize, 1));
             SuccessOrExit(error = aMessage.Append(&aHostname[labelPosition], labelSize));
 
@@ -272,9 +273,9 @@ exit:
     return error;
 }
 
-ThreadError Client::CompareQuestions(Message &aMessageResponse, Message &aMessageQuery, uint16_t &aOffset)
+otError Client::CompareQuestions(Message &aMessageResponse, Message &aMessageQuery, uint16_t &aOffset)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t bufQuery[kBufSize];
     uint8_t bufResponse[kBufSize];
     uint16_t read = 0;
@@ -288,11 +289,11 @@ ThreadError Client::CompareQuestions(Message &aMessageResponse, Message &aMessag
     {
         VerifyOrExit((read = aMessageQuery.Read(offset,
                                                 length < sizeof(bufQuery) ? length : sizeof(bufQuery),
-                                                bufQuery)) > 0, error = kThreadError_Parse);
+                                                bufQuery)) > 0, error = OT_ERROR_PARSE);
         VerifyOrExit(aMessageResponse.Read(aOffset, read, bufResponse) == read,
-                     error = kThreadError_Parse);
+                     error = OT_ERROR_PARSE);
 
-        VerifyOrExit(memcmp(bufResponse, bufQuery, read) == 0, error = kThreadError_NotFound);
+        VerifyOrExit(memcmp(bufResponse, bufQuery, read) == 0, error = OT_ERROR_NOT_FOUND);
 
         aOffset += read;
         offset  += read;
@@ -303,9 +304,9 @@ exit:
     return error;
 }
 
-ThreadError Client::SkipHostname(Message &aMessage, uint16_t &aOffset)
+otError Client::SkipHostname(Message &aMessage, uint16_t &aOffset)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t buf[kBufSize];
     uint16_t index;
     uint16_t read = 0;
@@ -315,7 +316,7 @@ ThreadError Client::SkipHostname(Message &aMessage, uint16_t &aOffset)
     while (length > 0)
     {
         VerifyOrExit((read = aMessage.Read(offset, sizeof(buf), buf)) > 0,
-                     error = kThreadError_Parse);
+                     error = OT_ERROR_PARSE);
 
         index = 0;
 
@@ -338,7 +339,7 @@ ThreadError Client::SkipHostname(Message &aMessage, uint16_t &aOffset)
         length -= read;
     }
 
-    ExitNow(error = kThreadError_Parse);
+    ExitNow(error = OT_ERROR_PARSE);
 
 exit:
     return error;
@@ -369,7 +370,7 @@ exit:
 
 void Client::FinalizeDnsTransaction(Message &aQuery, const QueryMetadata &aQueryMetadata,
                                     otIp6Address *aAddress, uint32_t aTtl,
-                                    ThreadError aResult)
+                                    otError aResult)
 {
     DequeueMessage(aQuery);
 
@@ -430,7 +431,7 @@ void Client::HandleRetransmissionTimer(void)
         else
         {
             // No expected response.
-            FinalizeDnsTransaction(*message, queryMetadata, NULL, 0, kThreadError_ResponseTimeout);
+            FinalizeDnsTransaction(*message, queryMetadata, NULL, 0, OT_ERROR_RESPONSE_TIMEOUT);
         }
 
         message = nextMessage;
@@ -450,7 +451,7 @@ void Client::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessa
 
 void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     Header responseHeader;
     QueryMetadata queryMetadata;
     ResourceRecordAaaa record;
@@ -474,7 +475,7 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
 
     if (responseHeader.GetResponseCode() != Header::kResponseSuccess)
     {
-        ExitNow(error = kThreadError_Failed);
+        ExitNow(error = OT_ERROR_FAILED);
     }
 
     // Parse and check the question section.
@@ -487,7 +488,7 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
 
         if (offset + sizeof(ResourceRecord) > aMessage.GetLength())
         {
-            ExitNow(error = kThreadError_Parse);
+            ExitNow(error = OT_ERROR_PARSE);
         }
 
         if (aMessage.Read(offset, sizeof(record), &record) != sizeof(record) ||
@@ -500,16 +501,16 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
         }
 
         // Return the first found IPv6 address.
-        FinalizeDnsTransaction(*message, queryMetadata, &record.GetAddress(), record.GetTtl(), kThreadError_None);
+        FinalizeDnsTransaction(*message, queryMetadata, &record.GetAddress(), record.GetTtl(), OT_ERROR_NONE);
 
         ExitNow();
     }
 
-    ExitNow(error = kThreadError_NotFound);
+    ExitNow(error = OT_ERROR_NOT_FOUND);
 
 exit:
 
-    if (message != NULL && error != kThreadError_None)
+    if (message != NULL && error != OT_ERROR_NONE)
     {
         FinalizeDnsTransaction(*message, queryMetadata, NULL, 0, error);
     }

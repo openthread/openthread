@@ -942,18 +942,18 @@ SetIOCTL(
     return SendIOCTL(aInstance->ApiHandle, dwIoControlCode, &aInstance->InterfaceGuid, sizeof(GUID), nullptr, 0);
 }
 
-ThreadError
+otError
 DwordToThreadError(
     DWORD dwError
     )
 {
     if (((int)dwError) > 0)
     {
-        return kThreadError_Error;
+        return OT_ERROR_GENERIC;
     }
     else
     {
-        return (ThreadError)(-(int)dwError);
+        return (otError)(-(int)dwError);
     }
 }
 
@@ -1189,14 +1189,14 @@ otGetVersionString()
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL
 otIp6SetEnabled(
     _In_ otInstance *aInstance,
     bool aEnabled
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_INTERFACE, (BOOLEAN)aEnabled));
 }
 
@@ -1213,26 +1213,26 @@ otIp6IsEnabled(
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL
 otThreadSetEnabled(
     _In_ otInstance *aInstance,
     bool aEnabled
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_THREAD, (BOOLEAN)aEnabled));
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otThreadSetAutoStart(
     _In_ otInstance *aInstance,
     bool aStartAutomatically
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_THREAD_AUTO_START, (BOOLEAN)(aStartAutomatically ? TRUE : FALSE)));
 }
 
@@ -1261,7 +1261,7 @@ otThreadIsSingleton(
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL
 otLinkActiveScan(
     _In_ otInstance *aInstance, 
@@ -1271,7 +1271,7 @@ otLinkActiveScan(
     _In_ void *aCallbackContext
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
 
     aInstance->ApiHandle->SetCallback(
         aInstance->ApiHandle->ActiveScanCallbacks,
@@ -1295,7 +1295,7 @@ otLinkIsActiveScanInProgress(
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL 
 otLinkEnergyScan(
     _In_ otInstance *aInstance, 
@@ -1305,7 +1305,7 @@ otLinkEnergyScan(
     _In_ void *aCallbackContext
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
 
     aInstance->ApiHandle->SetCallback(
         aInstance->ApiHandle->EnergyScanCallbacks,
@@ -1329,25 +1329,26 @@ otLinkIsEnergyScanInProgress(
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL
 otThreadDiscover(
     _In_ otInstance *aInstance, 
     uint32_t aScanChannels, 
     uint16_t aPanid,
     bool aJoiner,
+    bool aEnableEui64Filtering,
     otHandleActiveScanResult aCallback,
     void *aCallbackContext
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
 
     aInstance->ApiHandle->SetCallback(
         aInstance->ApiHandle->DiscoverCallbacks,
         aInstance->InterfaceGuid, aCallback, aCallbackContext
         );
 
-    PackedBuffer4<GUID,uint32_t,uint16_t, bool> Buffer(aInstance->InterfaceGuid, aScanChannels, aPanid, aJoiner);
+    PackedBuffer5<GUID,uint32_t,uint16_t, uint8_t, uint8_t> Buffer(aInstance->InterfaceGuid, aScanChannels, aPanid, aJoiner, aEnableEui64Filtering);
     return DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_DISCOVER, &Buffer, sizeof(Buffer), nullptr, 0));
 }
 
@@ -1364,15 +1365,15 @@ otIsDiscoverInProgress(
 }
 
 OTAPI 
-ThreadError
+otError
 OTCALL
 otLinkSendDataRequest(
     _In_ otInstance *aInstance
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     UNREFERENCED_PARAMETER(aInstance);
-    return kThreadError_NotImplemented; // TODO
+    return OT_ERROR_NOT_IMPLEMENTED; // TODO
 }
 
 OTAPI 
@@ -1388,29 +1389,29 @@ otLinkGetChannel(
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL
 otLinkSetChannel(
     _In_ otInstance *aInstance, 
     uint8_t aChannel
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_CHANNEL, aChannel));
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otDatasetSetDelayTimerMinimal(
     _In_ otInstance *aInstance,
     uint32_t aDelayTimerMinimal
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     // TODO
     UNREFERENCED_PARAMETER(aDelayTimerMinimal);
-    return kThreadError_NotImplemented;
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 OTAPI
@@ -1438,14 +1439,14 @@ otThreadGetMaxAllowedChildren(
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL
 otThreadSetMaxAllowedChildren(
     _In_ otInstance *aInstance, 
     uint8_t aMaxChildren
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_MAX_CHILDREN, aMaxChildren));
 }
 
@@ -1493,14 +1494,14 @@ otLinkGetExtendedAddress(
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL
 otLinkSetExtendedAddress(
     _In_ otInstance *aInstance, 
     const otExtAddress *aExtendedAddress
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_EXTENDED_ADDRESS, aExtendedAddress));
 }
 
@@ -1523,14 +1524,14 @@ otThreadGetExtendedPanId(
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL
 otThreadSetExtendedPanId(
     _In_ otInstance *aInstance, 
     const uint8_t *aExtendedPanId
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_EXTENDED_PANID, (const otExtendedPanId*)aExtendedPanId));
 }
 
@@ -1559,14 +1560,14 @@ otLinkGetJoinerId(
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL
 otThreadGetLeaderRloc(
     _In_ otInstance *aInstance, 
     _Out_ otIp6Address *aLeaderRloc
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(QueryIOCTL(aInstance, IOCTL_OTLWF_OT_LEADER_RLOC, aLeaderRloc));
 }
 
@@ -1584,66 +1585,48 @@ otThreadGetLinkMode(
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL
 otThreadSetLinkMode(
     _In_ otInstance *aInstance, 
     otLinkModeConfig aConfig
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     static_assert(sizeof(otLinkModeConfig) == 4, "The size of otLinkModeConfig should be 4 bytes");
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_LINK_MODE, aConfig));
 }
 
 OTAPI 
-const uint8_t *
+const otMasterKey *
 OTCALL
 otThreadGetMasterKey(
-    _In_ otInstance *aInstance, 
-    _Out_ uint8_t *aKeyLength
+    _In_ otInstance *aInstance
     )
 {
-    if (aInstance == nullptr || aKeyLength == nullptr) return nullptr;
+    if (aInstance == nullptr) return nullptr;
 
-    *aKeyLength = 0;
-
-    struct otMasterKeyAndLength
-    {
-        otMasterKey Key;
-        uint8_t Length;
-    };
-    otMasterKeyAndLength *Result = (otMasterKeyAndLength*)malloc(sizeof(otMasterKeyAndLength));
+    otMasterKey *Result = (otMasterKey*)malloc(sizeof(otMasterKey));
     if (Result == nullptr) return nullptr;
     if (QueryIOCTL(aInstance, IOCTL_OTLWF_OT_MASTER_KEY, Result) != ERROR_SUCCESS)
     {
         free(Result);
         return nullptr;
     }
-    else
-    {
-        *aKeyLength = Result->Length;
-    }
-    return (uint8_t*)Result;
+    return Result;
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otThreadSetMasterKey(
     _In_ otInstance *aInstance, 
-    const uint8_t *aKey, 
-    uint8_t aKeyLength
+    const otMasterKey *aKey
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     
-    BYTE Buffer[sizeof(GUID) + sizeof(otMasterKey) + sizeof(uint8_t)];
-    memcpy_s(Buffer, sizeof(Buffer), &aInstance->InterfaceGuid, sizeof(GUID));
-    memcpy_s(Buffer + sizeof(GUID), sizeof(Buffer) - sizeof(GUID), aKey, aKeyLength);
-    memcpy_s(Buffer + sizeof(GUID) + sizeof(otMasterKey), sizeof(Buffer) - sizeof(GUID) - sizeof(otMasterKey), &aKeyLength, sizeof(aKeyLength));
-    
-    return DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_MASTER_KEY, Buffer, sizeof(Buffer), nullptr, 0));
+    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_MASTER_KEY, aKey));
 }
 
 OTAPI 
@@ -1666,14 +1649,14 @@ otThreadGetPSKc(
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otThreadSetPSKc(
     _In_ otInstance *aInstance, 
     const uint8_t *aPSKc 
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     
     BYTE Buffer[sizeof(GUID) + sizeof(otPSKc)];
     memcpy_s(Buffer, sizeof(Buffer), &aInstance->InterfaceGuid, sizeof(GUID));
@@ -1740,19 +1723,19 @@ otThreadGetMeshLocalPrefix(
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otThreadSetMeshLocalPrefix(
     _In_ otInstance *aInstance, 
     const uint8_t *aMeshLocalPrefix
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_MESH_LOCAL_PREFIX, (const otMeshLocalPrefix*)aMeshLocalPrefix));
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otThreadGetNetworkDataLeader(
     _In_ otInstance *aInstance, 
@@ -1761,16 +1744,16 @@ otThreadGetNetworkDataLeader(
     _Out_ uint8_t *aDataLength
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     UNREFERENCED_PARAMETER(aInstance);
     UNREFERENCED_PARAMETER(aStable);
     UNREFERENCED_PARAMETER(aData);
     UNREFERENCED_PARAMETER(aDataLength);
-    return kThreadError_NotImplemented; // TODO
+    return OT_ERROR_NOT_IMPLEMENTED; // TODO
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otThreadGetNetworkDataLocal(
     _In_ otInstance *aInstance, 
@@ -1779,12 +1762,12 @@ otThreadGetNetworkDataLocal(
     _Out_ uint8_t *aDataLength
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     UNREFERENCED_PARAMETER(aInstance);
     UNREFERENCED_PARAMETER(aStable);
     UNREFERENCED_PARAMETER(aData);
     UNREFERENCED_PARAMETER(aDataLength);
-    return kThreadError_NotImplemented; // TODO
+    return OT_ERROR_NOT_IMPLEMENTED; // TODO
 }
 
 OTAPI
@@ -1806,14 +1789,14 @@ otThreadGetNetworkName(
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otThreadSetNetworkName(
     _In_ otInstance *aInstance, 
     _In_ const char *aNetworkName
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
 
     otNetworkName Buffer = {0};
     strcpy_s(Buffer.m8, sizeof(Buffer), aNetworkName);
@@ -1821,7 +1804,7 @@ otThreadSetNetworkName(
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL
 otNetDataGetNextPrefixInfo(
     _In_ otInstance *aInstance, 
@@ -1830,13 +1813,13 @@ otNetDataGetNextPrefixInfo(
     _Out_ otBorderRouterConfig *aConfig
     )
 {
-    if (aInstance == nullptr || aConfig == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr || aConfig == nullptr) return OT_ERROR_INVALID_ARGS;
     
     BOOLEAN aLocal = _aLocal ? TRUE : FALSE;
     PackedBuffer3<GUID,BOOLEAN,otNetworkDataIterator> InBuffer(aInstance->InterfaceGuid, aLocal, *aIterator);
     BYTE OutBuffer[sizeof(uint8_t) + sizeof(otBorderRouterConfig)];
 
-    ThreadError aError = 
+    otError aError = 
         DwordToThreadError(
             SendIOCTL(
                 aInstance->ApiHandle, 
@@ -1844,7 +1827,7 @@ otNetDataGetNextPrefixInfo(
                 &InBuffer, sizeof(InBuffer), 
                 OutBuffer, sizeof(OutBuffer)));
 
-    if (aError == kThreadError_None)
+    if (aError == OT_ERROR_NONE)
     {
         memcpy(aIterator, OutBuffer, sizeof(uint8_t));
         memcpy(aConfig, OutBuffer + sizeof(uint8_t), sizeof(otBorderRouterConfig));
@@ -1870,14 +1853,14 @@ otLinkGetPanId(
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otLinkSetPanId(
     _In_ otInstance *aInstance, 
     otPanId aPanId
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_PAN_ID, aPanId));
 }
 
@@ -1905,14 +1888,14 @@ otThreadSetRouterRoleEnabled(
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otThreadSetPreferredRouterId(
     _In_ otInstance *aInstance,
     uint8_t aRouterId
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_PAN_ID, aRouterId));
 }
 
@@ -2066,14 +2049,14 @@ otIp6GetUnicastAddresses(
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otIp6AddUnicastAddress(
     _In_ otInstance *aInstance, 
     const otNetifAddress *aAddress
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
 
     // Put the current thead in the correct compartment
     bool RevertCompartmentOnExit = false;
@@ -2084,7 +2067,7 @@ otIp6AddUnicastAddress(
         if ((dwError = SetCurrentThreadCompartmentId(aInstance->CompartmentID)) != ERROR_SUCCESS)
         {
             LogError(API_DEFAULT, "SetCurrentThreadCompartmentId failed, %!WINERROR!", dwError);
-            return kThreadError_Failed;
+            return OT_ERROR_FAILED;
         }
         RevertCompartmentOnExit = true;
     }
@@ -2126,21 +2109,21 @@ otIp6AddUnicastAddress(
     if (dwError != ERROR_SUCCESS)
     {
         LogError(API_DEFAULT, "CreateUnicastIpAddressEntry failed %!WINERROR!", dwError);
-        return kThreadError_Failed;
+        return OT_ERROR_FAILED;
     }
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otIp6RemoveUnicastAddress(
     _In_ otInstance *aInstance, 
     const otIp6Address *aAddress
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
 
     // Put the current thead in the correct compartment
     bool RevertCompartmentOnExit = false;
@@ -2151,7 +2134,7 @@ otIp6RemoveUnicastAddress(
         if ((dwError = SetCurrentThreadCompartmentId(aInstance->CompartmentID)) != ERROR_SUCCESS)
         {
             LogError(API_DEFAULT, "SetCurrentThreadCompartmentId failed, %!WINERROR!", dwError);
-            return kThreadError_Failed;
+            return OT_ERROR_FAILED;
         }
         RevertCompartmentOnExit = true;
     }
@@ -2176,14 +2159,14 @@ otIp6RemoveUnicastAddress(
     if (dwError != ERROR_SUCCESS)
     {
         LogError(API_DEFAULT, "DeleteUnicastIpAddressEntry failed %!WINERROR!", dwError);
-        return kThreadError_Failed;
+        return OT_ERROR_FAILED;
     }
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 OTAPI
-ThreadError 
+otError 
 OTCALL
 otSetStateChangedCallback(
     _In_ otInstance *aInstance, 
@@ -2191,13 +2174,13 @@ otSetStateChangedCallback(
     _In_ void *aContext
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     bool success = 
         aInstance->ApiHandle->SetCallback(
             aInstance->ApiHandle->StateChangedCallbacks,
             aInstance->InterfaceGuid, aCallback, aContext
             );
-    return success ? kThreadError_None : kThreadError_Already;
+    return success ? OT_ERROR_NONE : OT_ERROR_ALREADY;
 }
 
 OTAPI
@@ -2217,55 +2200,55 @@ otRemoveStateChangeCallback(
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otDatasetGetActive(
     _In_ otInstance *aInstance, 
     _Out_ otOperationalDataset *aDataset
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(QueryIOCTL(aInstance, IOCTL_OTLWF_OT_ACTIVE_DATASET, aDataset));
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otDatasetSetActive(
     _In_ otInstance *aInstance, 
     const otOperationalDataset *aDataset
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_ACTIVE_DATASET, aDataset));
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otDatasetGetPending(
     _In_ otInstance *aInstance, 
     _Out_ otOperationalDataset *aDataset
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(QueryIOCTL(aInstance, IOCTL_OTLWF_OT_PENDING_DATASET, aDataset));
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otDatasetSetPending(
     _In_ otInstance *aInstance, 
     const otOperationalDataset *aDataset
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_PENDING_DATASET, aDataset));
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL
 otDatasetSendMgmtActiveGet(
     _In_ otInstance *aInstance, 
@@ -2274,13 +2257,13 @@ otDatasetSendMgmtActiveGet(
     _In_opt_ const otIp6Address *aAddress
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
-    if (aTlvTypes == nullptr && aLength != 0) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
+    if (aTlvTypes == nullptr && aLength != 0) return OT_ERROR_INVALID_ARGS;
     
     DWORD BufferSize = sizeof(GUID) + sizeof(uint8_t) + aLength;
     if (aAddress) BufferSize += sizeof(otIp6Address);
     PBYTE Buffer = (PBYTE)malloc(BufferSize);
-    if (Buffer == nullptr) return kThreadError_NoBufs;
+    if (Buffer == nullptr) return OT_ERROR_NO_BUFS;
 
     memcpy_s(Buffer, BufferSize, &aInstance->InterfaceGuid, sizeof(GUID));
     memcpy_s(Buffer + sizeof(GUID), BufferSize - sizeof(GUID), &aLength, sizeof(aLength));
@@ -2289,7 +2272,7 @@ otDatasetSendMgmtActiveGet(
     if (aAddress)
         memcpy_s(Buffer + sizeof(GUID) + sizeof(uint8_t) + aLength, BufferSize - sizeof(GUID) - sizeof(uint8_t) - aLength, aAddress, sizeof(otIp6Address));
     
-    ThreadError result = 
+    otError result = 
         DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_SEND_ACTIVE_GET, Buffer, BufferSize, nullptr, 0));
 
     free(Buffer);
@@ -2297,7 +2280,7 @@ otDatasetSendMgmtActiveGet(
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL
 otDatasetSendMgmtActiveSet(
     _In_ otInstance *aInstance, 
@@ -2306,12 +2289,12 @@ otDatasetSendMgmtActiveSet(
     uint8_t aLength
     )
 {
-    if (aInstance == nullptr || aDataset == nullptr) return kThreadError_InvalidArgs;
-    if (aTlvs == nullptr && aLength != 0) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr || aDataset == nullptr) return OT_ERROR_INVALID_ARGS;
+    if (aTlvs == nullptr && aLength != 0) return OT_ERROR_INVALID_ARGS;
     
     DWORD BufferSize = sizeof(GUID) + sizeof(otOperationalDataset) + sizeof(uint8_t) + aLength;
     PBYTE Buffer = (PBYTE)malloc(BufferSize);
-    if (Buffer == nullptr) return kThreadError_NoBufs;
+    if (Buffer == nullptr) return OT_ERROR_NO_BUFS;
 
     memcpy_s(Buffer, BufferSize, &aInstance->InterfaceGuid, sizeof(GUID));
     memcpy_s(Buffer + sizeof(GUID), BufferSize - sizeof(GUID), aDataset, sizeof(otOperationalDataset));
@@ -2319,7 +2302,7 @@ otDatasetSendMgmtActiveSet(
     if (aLength > 0)
         memcpy_s(Buffer + sizeof(GUID) + sizeof(otOperationalDataset) + sizeof(uint8_t), BufferSize - sizeof(GUID) - sizeof(otOperationalDataset) - sizeof(uint8_t), aTlvs, aLength);
     
-    ThreadError result = 
+    otError result = 
         DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_SEND_ACTIVE_SET, Buffer, BufferSize, nullptr, 0));
 
     free(Buffer);
@@ -2327,7 +2310,7 @@ otDatasetSendMgmtActiveSet(
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL
 otDatasetSendMgmtPendingGet(
     _In_ otInstance *aInstance, 
@@ -2336,13 +2319,13 @@ otDatasetSendMgmtPendingGet(
     _In_opt_ const otIp6Address *aAddress
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
-    if (aTlvTypes == nullptr && aLength != 0) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
+    if (aTlvTypes == nullptr && aLength != 0) return OT_ERROR_INVALID_ARGS;
     
     DWORD BufferSize = sizeof(GUID) + sizeof(uint8_t) + aLength;
     if (aAddress) BufferSize += sizeof(otIp6Address);
     PBYTE Buffer = (PBYTE)malloc(BufferSize);
-    if (Buffer == nullptr) return kThreadError_NoBufs;
+    if (Buffer == nullptr) return OT_ERROR_NO_BUFS;
 
     memcpy_s(Buffer, BufferSize, &aInstance->InterfaceGuid, sizeof(GUID));
     memcpy_s(Buffer + sizeof(GUID), BufferSize - sizeof(GUID), &aLength, sizeof(aLength));
@@ -2351,7 +2334,7 @@ otDatasetSendMgmtPendingGet(
     if (aAddress)
         memcpy_s(Buffer + sizeof(GUID) + sizeof(uint8_t) + aLength, BufferSize - sizeof(GUID) - sizeof(uint8_t) - aLength, aAddress, sizeof(otIp6Address));
     
-    ThreadError result = 
+    otError result = 
         DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_SEND_PENDING_GET, Buffer, BufferSize, nullptr, 0));
 
     free(Buffer);
@@ -2359,7 +2342,7 @@ otDatasetSendMgmtPendingGet(
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL
 otDatasetSendMgmtPendingSet(
     _In_ otInstance *aInstance, 
@@ -2368,12 +2351,12 @@ otDatasetSendMgmtPendingSet(
     uint8_t aLength
     )
 {
-    if (aInstance == nullptr || aDataset == nullptr) return kThreadError_InvalidArgs;
-    if (aTlvs == nullptr && aLength != 0) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr || aDataset == nullptr) return OT_ERROR_INVALID_ARGS;
+    if (aTlvs == nullptr && aLength != 0) return OT_ERROR_INVALID_ARGS;
     
     DWORD BufferSize = sizeof(GUID) + sizeof(otOperationalDataset) + sizeof(uint8_t) + aLength;
     PBYTE Buffer = (PBYTE)malloc(BufferSize);
-    if (Buffer == nullptr) return kThreadError_NoBufs;
+    if (Buffer == nullptr) return OT_ERROR_NO_BUFS;
 
     memcpy_s(Buffer, BufferSize, &aInstance->InterfaceGuid, sizeof(GUID));
     memcpy_s(Buffer + sizeof(GUID), BufferSize - sizeof(GUID), aDataset, sizeof(otOperationalDataset));
@@ -2381,7 +2364,7 @@ otDatasetSendMgmtPendingSet(
     if (aLength > 0)
         memcpy_s(Buffer + sizeof(GUID) + sizeof(otOperationalDataset) + sizeof(uint8_t), BufferSize - sizeof(GUID) - sizeof(otOperationalDataset) - sizeof(uint8_t), aTlvs, aLength);
     
-    ThreadError result = 
+    otError result = 
         DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_SEND_PENDING_SET, Buffer, BufferSize, nullptr, 0));
 
     free(Buffer);
@@ -2470,73 +2453,73 @@ otThreadGetJoinerUdpPort(
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL 
 otThreadSetJoinerUdpPort(
     _In_ otInstance *aInstance, 
     uint16_t aJoinerUdpPort
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_JOINER_UDP_PORT, aJoinerUdpPort));
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otNetDataAddPrefixInfo(
     _In_ otInstance *aInstance, 
     const otBorderRouterConfig *aConfig
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_ADD_BORDER_ROUTER, aConfig));
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otNetDataRemovePrefixInfo(
     _In_ otInstance *aInstance, 
     const otIp6Prefix *aPrefix
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_REMOVE_BORDER_ROUTER, aPrefix));
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otNetDataAddRoute(
     _In_ otInstance *aInstance, 
     const otExternalRouteConfig *aConfig
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_ADD_EXTERNAL_ROUTE, aConfig));
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otNetDataRemoveRoute(
     _In_ otInstance *aInstance, 
     const otIp6Prefix *aPrefix
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_REMOVE_EXTERNAL_ROUTE, aPrefix));
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otNetDataRegister(
     _In_ otInstance *aInstance
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_SEND_SERVER_DATA));
 }
 
@@ -2702,31 +2685,31 @@ otThreadSetRouterSelectionJitter(
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otThreadReleaseRouterId(
     _In_ otInstance *aInstance, 
     uint8_t aRouterId
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_RELEASE_ROUTER_ID, aRouterId));
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otLinkAddWhitelist(
     _In_ otInstance *aInstance, 
     const uint8_t *aExtAddr
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_ADD_MAC_WHITELIST, (const otExtAddress*)aExtAddr));
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otLinkAddWhitelistRssi(
     _In_ otInstance *aInstance, 
@@ -2734,7 +2717,7 @@ otLinkAddWhitelistRssi(
     int8_t aRssi
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     
     PackedBuffer3<GUID,otExtAddress,int8_t> Buffer(aInstance->InterfaceGuid, *(otExtAddress*)aExtAddr, aRssi);
     return DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_ADD_MAC_WHITELIST, &Buffer, sizeof(Buffer), nullptr, 0));
@@ -2752,7 +2735,7 @@ otLinkRemoveWhitelist(
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otLinkGetWhitelistEntry(
     _In_ otInstance *aInstance, 
@@ -2760,7 +2743,7 @@ otLinkGetWhitelistEntry(
     _Out_ otMacWhitelistEntry *aEntry
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(QueryIOCTL(aInstance, IOCTL_OTLWF_OT_MAC_WHITELIST_ENTRY, &aIndex, aEntry));
 }
 
@@ -2798,64 +2781,58 @@ otLinkIsWhitelistEnabled(
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otThreadBecomeDetached(
     _In_ otInstance *aInstance
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
-    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_DEVICE_ROLE, (uint8_t)kDeviceRoleDetached));
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
+    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_DEVICE_ROLE, (uint8_t)OT_DEVICE_ROLE_DETACHED));
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otThreadBecomeChild(
-    _In_ otInstance *aInstance, 
-    otMleAttachFilter aFilter
+    _In_ otInstance *aInstance
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
-
-    uint8_t Role = kDeviceRoleDetached;
-    uint8_t Filter = (uint8_t)aFilter;
-
-    PackedBuffer3<GUID,uint8_t,uint8_t> Buffer(aInstance->InterfaceGuid, Role, Filter);
-    return DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_DEVICE_ROLE, &Buffer, sizeof(Buffer), nullptr, 0));
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
+    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_DEVICE_ROLE, (uint8_t)OT_DEVICE_ROLE_CHILD));
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otThreadBecomeRouter(
     _In_ otInstance *aInstance
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
-    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_DEVICE_ROLE, (uint8_t)kDeviceRoleRouter));
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
+    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_DEVICE_ROLE, (uint8_t)OT_DEVICE_ROLE_ROUTER));
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otThreadBecomeLeader(
     _In_ otInstance *aInstance
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
-    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_DEVICE_ROLE, (uint8_t)kDeviceRoleLeader));
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
+    return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_DEVICE_ROLE, (uint8_t)OT_DEVICE_ROLE_LEADER));
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otLinkAddBlacklist(
     _In_ otInstance *aInstance, 
     const uint8_t *aExtAddr
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_ADD_MAC_BLACKLIST, (const otExtAddress*)aExtAddr));
 }
 
@@ -2871,7 +2848,7 @@ otLinkRemoveBlacklist(
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otLinkGetBlacklistEntry(
     _In_ otInstance *aInstance, 
@@ -2879,7 +2856,7 @@ otLinkGetBlacklistEntry(
     _Out_ otMacBlacklistEntry *aEntry
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(QueryIOCTL(aInstance, IOCTL_OTLWF_OT_MAC_BLACKLIST_ENTRY, &aIndex, aEntry));
 }
 
@@ -2917,7 +2894,7 @@ otLinkIsBlacklistEnabled(
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL
 otLinkGetAssignLinkQuality(
     _In_ otInstance *aInstance, 
@@ -2925,7 +2902,7 @@ otLinkGetAssignLinkQuality(
     _Out_ uint8_t *aLinkQuality
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(QueryIOCTL(aInstance, IOCTL_OTLWF_OT_ASSIGN_LINK_QUALITY, (otExtAddress*)aExtAddr, aLinkQuality));
 }
 
@@ -2964,7 +2941,7 @@ otInstanceFactoryReset(
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otThreadGetChildInfoById(
     _In_ otInstance *aInstance, 
@@ -2972,12 +2949,12 @@ otThreadGetChildInfoById(
     _Out_ otChildInfo *aChildInfo
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(QueryIOCTL(aInstance, IOCTL_OTLWF_OT_CHILD_INFO_BY_ID, &aChildId, aChildInfo));
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otThreadGetChildInfoByIndex(
     _In_ otInstance *aInstance, 
@@ -2985,12 +2962,12 @@ otThreadGetChildInfoByIndex(
     _Out_ otChildInfo *aChildInfo
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(QueryIOCTL(aInstance, IOCTL_OTLWF_OT_CHILD_INFO_BY_INDEX, &aChildIndex, aChildInfo));
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otThreadGetNextNeighborInfo(
     _In_ otInstance *aInstance,
@@ -2998,10 +2975,10 @@ otThreadGetNextNeighborInfo(
     _Out_ otNeighborInfo *aInfo
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     UNREFERENCED_PARAMETER(aIterator);
     UNREFERENCED_PARAMETER(aInfo);
-    return kThreadError_NotImplemented; // TODO
+    return OT_ERROR_NOT_IMPLEMENTED; // TODO
 }
 
 OTAPI
@@ -3011,13 +2988,13 @@ otThreadGetDeviceRole(
     _In_ otInstance *aInstance
     )
 {
-    uint8_t Result = kDeviceRoleOffline;
+    uint8_t Result = OT_DEVICE_ROLE_DISABLED;
     if (aInstance) (void)QueryIOCTL(aInstance, IOCTL_OTLWF_OT_DEVICE_ROLE, &Result);
     return (otDeviceRole)Result;
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otThreadGetEidCacheEntry(
     _In_ otInstance *aInstance, 
@@ -3025,19 +3002,19 @@ otThreadGetEidCacheEntry(
     _Out_ otEidCacheEntry *aEntry
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(QueryIOCTL(aInstance, IOCTL_OTLWF_OT_EID_CACHE_ENTRY, &aIndex, aEntry));
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otThreadGetLeaderData(
     _In_ otInstance *aInstance, 
     _Out_ otLeaderData *aLeaderData
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(QueryIOCTL(aInstance, IOCTL_OTLWF_OT_LEADER_DATA, aLeaderData));
 }
 
@@ -3114,7 +3091,7 @@ otThreadGetRouterIdSequence(
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otThreadGetRouterInfo(
     _In_ otInstance *aInstance, 
@@ -3122,19 +3099,19 @@ otThreadGetRouterInfo(
     _Out_ otRouterInfo *aRouterInfo
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(QueryIOCTL(aInstance, IOCTL_OTLWF_OT_ROUTER_INFO, &aRouterId, aRouterInfo));
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL
 otThreadGetParentInfo(
     _In_ otInstance *aInstance, 
     _Out_ otRouterInfo *aParentInfo
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     static_assert(sizeof(otRouterInfo) == 20, "The size of otRouterInfo should be 20 bytes");
     return DwordToThreadError(QueryIOCTL(aInstance, IOCTL_OTLWF_OT_PARENT_INFO, aParentInfo));
 }
@@ -3196,14 +3173,14 @@ otIsIp6AddressEqual(
 }
 
 OTAPI
-ThreadError 
+otError 
 OTCALL
 otIp6AddressFromString(
     const char *str, 
     otIp6Address *address
     )
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t *dst = reinterpret_cast<uint8_t *>(address->mFields.m8);
     uint8_t *endp = reinterpret_cast<uint8_t *>(address->mFields.m8 + 15);
     uint8_t *colonp = NULL;
@@ -3232,7 +3209,7 @@ otIp6AddressFromString(
             {
                 if (dst + 2 > endp)
                 {
-                    error = kThreadError_Parse;
+                    error = OT_ERROR_PARSE;
                     goto exit;
                 }
                 *(dst + 1) = static_cast<uint8_t>(val >> 8);
@@ -3245,7 +3222,7 @@ otIp6AddressFromString(
             {
                 if (!(colonp == nullptr || first))
                 {
-                    error = kThreadError_Parse;
+                    error = OT_ERROR_PARSE;
                     goto exit;
                 }
                 colonp = dst;
@@ -3262,7 +3239,7 @@ otIp6AddressFromString(
         {
             if (!('0' <= ch && ch <= '9'))
             {
-                error = kThreadError_Parse;
+                error = OT_ERROR_PARSE;
                 goto exit;
             }
         }
@@ -3271,7 +3248,7 @@ otIp6AddressFromString(
         val = static_cast<uint16_t>((val << 4) | d);
         if (!(++count <= 4))
         {
-            error = kThreadError_Parse;
+            error = OT_ERROR_PARSE;
             goto exit;
         }
     }
@@ -3328,142 +3305,134 @@ OTAPI
 const char *
 OTCALL
 otThreadErrorToString(
-    ThreadError aError
+    otError aError
     )
 {
     const char *retval;
 
     switch (aError)
     {
-    case kThreadError_None:
+    case OT_ERROR_NONE:
         retval = "None";
         break;
 
-    case kThreadError_Failed:
+    case OT_ERROR_FAILED:
         retval = "Failed";
         break;
 
-    case kThreadError_Drop:
+    case OT_ERROR_DROP:
         retval = "Drop";
         break;
 
-    case kThreadError_NoBufs:
+    case OT_ERROR_NO_BUFS:
         retval = "NoBufs";
         break;
 
-    case kThreadError_NoRoute:
+    case OT_ERROR_NO_ROUTE:
         retval = "NoRoute";
         break;
 
-    case kThreadError_Busy:
+    case OT_ERROR_BUSY:
         retval = "Busy";
         break;
 
-    case kThreadError_Parse:
+    case OT_ERROR_PARSE:
         retval = "Parse";
         break;
 
-    case kThreadError_InvalidArgs:
+    case OT_ERROR_INVALID_ARGS:
         retval = "InvalidArgs";
         break;
 
-    case kThreadError_Security:
+    case OT_ERROR_SECURITY:
         retval = "Security";
         break;
 
-    case kThreadError_AddressQuery:
+    case OT_ERROR_ADDRESS_QUERY:
         retval = "AddressQuery";
         break;
 
-    case kThreadError_NoAddress:
+    case OT_ERROR_NO_ADDRESS:
         retval = "NoAddress";
         break;
 
-    case kThreadError_NotReceiving:
-        retval = "NotReceiving";
-        break;
-
-    case kThreadError_Abort:
+    case OT_ERROR_ABORT:
         retval = "Abort";
         break;
 
-    case kThreadError_NotImplemented:
+    case OT_ERROR_NOT_IMPLEMENTED:
         retval = "NotImplemented";
         break;
 
-    case kThreadError_InvalidState:
+    case OT_ERROR_INVALID_STATE:
         retval = "InvalidState";
         break;
 
-    case kThreadError_NoTasklets:
-        retval = "NoTasklets";
-        break;
-
-    case kThreadError_NoAck:
+    case OT_ERROR_NO_ACK:
         retval = "NoAck";
         break;
 
-    case kThreadError_ChannelAccessFailure:
+    case OT_ERROR_CHANNEL_ACCESS_FAILURE:
         retval = "ChannelAccessFailure";
         break;
 
-    case kThreadError_Detached:
+    case OT_ERROR_DETACHED:
         retval = "Detached";
         break;
 
-    case kThreadError_FcsErr:
+    case OT_ERROR_FCS:
         retval = "FcsErr";
         break;
 
-    case kThreadError_NoFrameReceived:
+    case OT_ERROR_NO_FRAME_RECEIVED:
         retval = "NoFrameReceived";
         break;
 
-    case kThreadError_UnknownNeighbor:
+    case OT_ERROR_UNKNOWN_NEIGHBOR:
         retval = "UnknownNeighbor";
         break;
 
-    case kThreadError_InvalidSourceAddress:
+    case OT_ERROR_INVALID_SOURCE_ADDRESS:
         retval = "InvalidSourceAddress";
         break;
 
-    case kThreadError_WhitelistFiltered:
+    case OT_ERROR_WHITELIST_FILTERED:
         retval = "WhitelistFiltered";
         break;
 
-    case kThreadError_DestinationAddressFiltered:
+    case OT_ERROR_DESTINATION_ADDRESS_FILTERED:
         retval = "DestinationAddressFiltered";
         break;
 
-    case kThreadError_NotFound:
+    case OT_ERROR_NOT_FOUND:
         retval = "NotFound";
         break;
 
-    case kThreadError_Already:
+    case OT_ERROR_ALREADY:
         retval = "Already";
         break;
 
-    case kThreadError_BlacklistFiltered:
+    case OT_ERROR_BLACKLIST_FILTERED:
         retval = "BlacklistFiltered";
         break;
 
-    case kThreadError_Ipv6AddressCreationFailure:
+    case OT_ERROR_IP6_ADDRESS_CREATION_FAILURE:
         retval = "Ipv6AddressCreationFailure";
         break;
 
-    case kThreadError_NotCapable:
+    case OT_ERROR_NOT_CAPABLE:
         retval = "NotCapable";
         break;
 
-    case kThreadError_ResponseTimeout:
+    case OT_ERROR_RESPONSE_TIMEOUT:
         retval = "ResponseTimeout";
         break;
 
-    case kThreadError_Duplicated:
+    case OT_ERROR_DUPLICATED:
         retval = "Duplicated";
         break;
 
-    case kThreadError_Error:
+    case OT_ERROR_GENERIC:
         retval = "GenericError";
         break;
 
@@ -3476,7 +3445,7 @@ otThreadErrorToString(
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL 
 otThreadSendDiagnosticGet(
     _In_ otInstance *aInstance, 
@@ -3485,19 +3454,19 @@ otThreadSendDiagnosticGet(
     uint8_t aCount
     )
 {
-    if (aInstance == nullptr || aDestination == nullptr) return kThreadError_InvalidArgs;
-    if (aTlvTypes == nullptr && aCount != 0) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr || aDestination == nullptr) return OT_ERROR_INVALID_ARGS;
+    if (aTlvTypes == nullptr && aCount != 0) return OT_ERROR_INVALID_ARGS;
     
     DWORD BufferSize = sizeof(GUID) + sizeof(otIp6Address) + sizeof(uint8_t) + aCount;
     PBYTE Buffer = (PBYTE)malloc(BufferSize);
-    if (Buffer == nullptr) return kThreadError_NoBufs;
+    if (Buffer == nullptr) return OT_ERROR_NO_BUFS;
 
     memcpy_s(Buffer, BufferSize, &aInstance->InterfaceGuid, sizeof(GUID));
     memcpy_s(Buffer + sizeof(GUID), BufferSize - sizeof(GUID), aDestination, sizeof(otIp6Address));
     memcpy_s(Buffer + sizeof(GUID) + sizeof(otIp6Address), BufferSize - sizeof(GUID) - sizeof(otIp6Address), &aCount, sizeof(aCount));
     memcpy_s(Buffer + sizeof(GUID) + sizeof(otIp6Address) + sizeof(uint8_t), BufferSize - sizeof(GUID) - sizeof(otIp6Address) - sizeof(uint8_t), aTlvTypes, aCount);
     
-    ThreadError result = 
+    otError result = 
         DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_SEND_DIAGNOSTIC_GET, Buffer, BufferSize, nullptr, 0));
 
     free(Buffer);
@@ -3505,7 +3474,7 @@ otThreadSendDiagnosticGet(
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL 
 otThreadSendDiagnosticReset(
     _In_ otInstance *aInstance, 
@@ -3514,19 +3483,19 @@ otThreadSendDiagnosticReset(
     uint8_t aCount
     )
 {
-    if (aInstance == nullptr || aDestination == nullptr) return kThreadError_InvalidArgs;
-    if (aTlvTypes == nullptr && aCount != 0) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr || aDestination == nullptr) return OT_ERROR_INVALID_ARGS;
+    if (aTlvTypes == nullptr && aCount != 0) return OT_ERROR_INVALID_ARGS;
     
     DWORD BufferSize = sizeof(GUID) + sizeof(otIp6Address) + sizeof(uint8_t) + aCount;
     PBYTE Buffer = (PBYTE)malloc(BufferSize);
-    if (Buffer == nullptr) return kThreadError_NoBufs;
+    if (Buffer == nullptr) return OT_ERROR_NO_BUFS;
 
     memcpy_s(Buffer, BufferSize, &aInstance->InterfaceGuid, sizeof(GUID));
     memcpy_s(Buffer + sizeof(GUID), BufferSize - sizeof(GUID), aDestination, sizeof(otIp6Address));
     memcpy_s(Buffer + sizeof(GUID) + sizeof(otIp6Address), BufferSize - sizeof(GUID) - sizeof(otIp6Address), &aCount, sizeof(aCount));
     memcpy_s(Buffer + sizeof(GUID) + sizeof(otIp6Address) + sizeof(uint8_t), BufferSize - sizeof(GUID) - sizeof(otIp6Address) - sizeof(uint8_t), aTlvTypes, aCount);
     
-    ThreadError result = 
+    otError result = 
         DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_SEND_DIAGNOSTIC_RESET, Buffer, BufferSize, nullptr, 0));
 
     free(Buffer);
@@ -3534,18 +3503,18 @@ otThreadSendDiagnosticReset(
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL
 otCommissionerStart(
     _In_ otInstance *aInstance
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_COMMISIONER_START));
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL
 otCommissionerAddJoiner(
     _In_ otInstance *aInstance, 
@@ -3554,12 +3523,12 @@ otCommissionerAddJoiner(
     uint32_t aTimeout
     )
 {
-    if (aInstance == nullptr || aPSKd == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr || aPSKd == nullptr) return OT_ERROR_INVALID_ARGS;
 
     size_t aPSKdLength = strnlen(aPSKd, OPENTHREAD_PSK_MAX_LENGTH + 1);
     if (aPSKdLength > OPENTHREAD_PSK_MAX_LENGTH)
     {
-        return kThreadError_InvalidArgs;
+        return OT_ERROR_INVALID_ARGS;
     }
 
     uint8_t aExtAddressValid = aExtAddress ? 1 : 0;
@@ -3577,14 +3546,14 @@ otCommissionerAddJoiner(
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL
 otCommissionerRemoveJoiner(
     _In_ otInstance *aInstance, 
     const otExtAddress *aExtAddress
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
 
     uint8_t aExtAddressValid = aExtAddress ? 1 : 0;
     
@@ -3598,19 +3567,19 @@ otCommissionerRemoveJoiner(
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL
 otCommissionerSetProvisioningUrl(
     _In_ otInstance *aInstance,
     const char *aProvisioningUrl
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
 
     size_t aProvisioningUrlLength = aProvisioningUrl ? strnlen(aProvisioningUrl, OPENTHREAD_PROV_URL_MAX_LENGTH + 1) : 0;
     if (aProvisioningUrlLength > OPENTHREAD_PROV_URL_MAX_LENGTH)
     {
-        return kThreadError_InvalidArgs;
+        return OT_ERROR_INVALID_ARGS;
     }
     
     const ULONG BufferLength = sizeof(GUID) + (ULONG)aProvisioningUrlLength + 1;
@@ -3623,7 +3592,7 @@ otCommissionerSetProvisioningUrl(
 }
 
 OTAPI
-ThreadError
+otError
 OTCALL
 otCommissionerAnnounceBegin(
     otInstance *aInstance,
@@ -3633,25 +3602,25 @@ otCommissionerAnnounceBegin(
     const otIp6Address *aAddress
     )
 {
-    if (aInstance == nullptr || aAddress == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr || aAddress == nullptr) return OT_ERROR_INVALID_ARGS;
 
     PackedBuffer5<GUID,uint32_t,uint8_t,uint16_t,otIp6Address> Buffer(aInstance->InterfaceGuid, aChannelMask, aCount, aPeriod, *aAddress);
     return DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_COMMISIONER_ANNOUNCE_BEGIN, &Buffer, sizeof(Buffer), nullptr, 0));
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL
 otCommissionerStop(
     _In_ otInstance *aInstance
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_COMMISIONER_STOP));
 }
 
 OTAPI
-ThreadError 
+otError 
 OTCALL
 otCommissionerEnergyScan(
     _In_ otInstance *aInstance, 
@@ -3664,7 +3633,7 @@ otCommissionerEnergyScan(
     _In_ void *aContext
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
 
     aInstance->ApiHandle->SetCallback(
         aInstance->ApiHandle->CommissionerEnergyReportCallbacks,
@@ -3676,7 +3645,7 @@ otCommissionerEnergyScan(
 }
 
 OTAPI
-ThreadError 
+otError 
 OTCALL
 otCommissionerPanIdQuery(
     _In_ otInstance *aInstance, 
@@ -3687,7 +3656,7 @@ otCommissionerPanIdQuery(
     _In_ void *aContext
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
 
     aInstance->ApiHandle->SetCallback(
         aInstance->ApiHandle->CommissionerPanIdConflictCallbacks,
@@ -3699,7 +3668,7 @@ otCommissionerPanIdQuery(
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL 
 otCommissionerSendMgmtGet(
     _In_ otInstance *aInstance, 
@@ -3707,19 +3676,19 @@ otCommissionerSendMgmtGet(
     uint8_t aLength
 )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
-    if (aTlvs == nullptr && aLength != 0) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
+    if (aTlvs == nullptr && aLength != 0) return OT_ERROR_INVALID_ARGS;
     
     DWORD BufferSize = sizeof(GUID) + sizeof(uint8_t) + aLength;
     PBYTE Buffer = (PBYTE)malloc(BufferSize);
-    if (Buffer == nullptr) return kThreadError_NoBufs;
+    if (Buffer == nullptr) return OT_ERROR_NO_BUFS;
 
     memcpy_s(Buffer, BufferSize, &aInstance->InterfaceGuid, sizeof(GUID));
     memcpy_s(Buffer + sizeof(GUID), BufferSize - sizeof(GUID), &aLength, sizeof(aLength));
     if (aLength > 0)
         memcpy_s(Buffer + sizeof(GUID) + sizeof(uint8_t), BufferSize - sizeof(GUID) - sizeof(uint8_t), aTlvs, aLength);
     
-    ThreadError result = 
+    otError result = 
         DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_SEND_MGMT_COMMISSIONER_GET, Buffer, BufferSize, nullptr, 0));
 
     free(Buffer);
@@ -3727,7 +3696,7 @@ otCommissionerSendMgmtGet(
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL 
 otCommissionerSendMgmtSet(
     _In_ otInstance *aInstance,
@@ -3736,12 +3705,12 @@ otCommissionerSendMgmtSet(
     uint8_t aLength
     )
 {
-    if (aInstance == nullptr || aDataset == nullptr) return kThreadError_InvalidArgs;
-    if (aTlvs == nullptr && aLength != 0) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr || aDataset == nullptr) return OT_ERROR_INVALID_ARGS;
+    if (aTlvs == nullptr && aLength != 0) return OT_ERROR_INVALID_ARGS;
     
     DWORD BufferSize = sizeof(GUID) + sizeof(otCommissioningDataset) + sizeof(uint8_t) + aLength;
     PBYTE Buffer = (PBYTE)malloc(BufferSize);
-    if (Buffer == nullptr) return kThreadError_NoBufs;
+    if (Buffer == nullptr) return OT_ERROR_NO_BUFS;
 
     memcpy_s(Buffer, BufferSize, &aInstance->InterfaceGuid, sizeof(GUID));
     memcpy_s(Buffer + sizeof(GUID), BufferSize - sizeof(GUID), aDataset, sizeof(otCommissioningDataset));
@@ -3749,7 +3718,7 @@ otCommissionerSendMgmtSet(
     if (aLength > 0)
         memcpy_s(Buffer + sizeof(GUID) + sizeof(otCommissioningDataset) + sizeof(uint8_t), BufferSize - sizeof(GUID) - sizeof(otCommissioningDataset) - sizeof(uint8_t), aTlvs, aLength);
     
-    ThreadError result = 
+    otError result = 
         DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_SEND_MGMT_COMMISSIONER_SET, Buffer, BufferSize, nullptr, 0));
 
     free(Buffer);
@@ -3769,7 +3738,7 @@ otCommissionerGetSessionId(
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL
 otJoinerStart(
     _In_ otInstance *aInstance,
@@ -3783,7 +3752,7 @@ otJoinerStart(
     _In_ void *aCallbackContext
     )
 {
-    if (aInstance == nullptr || aPSKd == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr || aPSKd == nullptr) return OT_ERROR_INVALID_ARGS;
 
     otCommissionConfig config = {0};
 
@@ -3801,7 +3770,7 @@ otJoinerStart(
         aVendorSwVersionLength > OPENTHREAD_VENDOR_SW_VERSION_MAX_LENGTH ||
         aVendorDataLength > OPENTHREAD_VENDOR_DATA_MAX_LENGTH)
     {
-        return kThreadError_InvalidArgs;
+        return OT_ERROR_INVALID_ARGS;
     }
 
     memcpy_s(config.PSKd, sizeof(config.PSKd), aPSKd, aPSKdLength);
@@ -3818,7 +3787,7 @@ otJoinerStart(
 
     auto ret = DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_JOINER_START, (const otCommissionConfig*)&config));
 
-    if (ret != kThreadError_None)
+    if (ret != OT_ERROR_NONE)
     {
         aInstance->ApiHandle->SetCallback(
             aInstance->ApiHandle->JoinerCallbacks,
@@ -3830,12 +3799,12 @@ otJoinerStart(
 }
 
 OTAPI 
-ThreadError 
+otError 
 OTCALL
 otJoinerStop(
     _In_ otInstance *aInstance
     )
 {
-    if (aInstance == nullptr) return kThreadError_InvalidArgs;
+    if (aInstance == nullptr) return OT_ERROR_INVALID_ARGS;
     return DwordToThreadError(SetIOCTL(aInstance, IOCTL_OTLWF_OT_JOINER_STOP));
 }

@@ -37,15 +37,14 @@
 
 #include <stdint.h>
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @defgroup uart UART
- * @ingroup platform
+ * @addtogroup plat-uart
  *
  * @brief
  *   This module includes the platform abstraction for UART communication.
@@ -57,18 +56,20 @@ extern "C" {
 /**
  * Enable the UART.
  *
- * @retval ::kThreadError_None    Successfully enabled the UART.
- * @retval ::kThreadError_Failed  Failed to enabled the UART.
+ * @retval OT_ERROR_NONE    Successfully enabled the UART.
+ * @retval OT_ERROR_FAILED  Failed to enabled the UART.
+ *
  */
-ThreadError otPlatUartEnable(void);
+otError otPlatUartEnable(void);
 
 /**
  * Disable the UART.
  *
- * @retval ::kThreadError_None    Successfully disabled the UART.
- * @retval ::kThreadError_Failed  Failed to disable the UART.
+ * @retval OT_ERROR_NONE    Successfully disabled the UART.
+ * @retval OT_ERROR_FAILED  Failed to disable the UART.
+ *
  */
-ThreadError otPlatUartDisable(void);
+otError otPlatUartDisable(void);
 
 /**
  * Send bytes over the UART.
@@ -76,10 +77,11 @@ ThreadError otPlatUartDisable(void);
  * @param[in] aBuf        A pointer to the data buffer.
  * @param[in] aBufLength  Number of bytes to transmit.
  *
- * @retval ::kThreadError_None    Successfully started transmission.
- * @retval ::kThreadError_Failed  Failed to start the transmission.
+ * @retval OT_ERROR_NONE    Successfully started transmission.
+ * @retval OT_ERROR_FAILED  Failed to start the transmission.
+ *
  */
-ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength);
+otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength);
 
 /**
  * The UART driver calls this method to notify OpenThread that the requested bytes have been sent.

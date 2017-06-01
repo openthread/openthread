@@ -34,14 +34,12 @@
 #ifndef ANNOUNCE_BEGIN_SERVER_HPP_
 #define ANNOUNCE_BEGIN_SERVER_HPP_
 
-#include <openthread-core-config.h>
+#include <openthread/types.h>
 
-#include "openthread/types.h"
-
-#include <coap/coap_client.hpp>
-#include <coap/coap_server.hpp>
-#include <common/timer.hpp>
-#include <net/ip6_address.hpp>
+#include "openthread-core-config.h"
+#include "coap/coap.hpp"
+#include "common/timer.hpp"
+#include "net/ip6_address.hpp"
 
 namespace ot {
 
@@ -73,10 +71,10 @@ public:
      *
      * @param[in]  aChannelMask   The channels to use for transmission.
      *
-     * @retval kThreadError_None  Successfully started the transmission process.
+     * @retval OT_ERROR_NONE  Successfully started the transmission process.
      *
      */
-    ThreadError SendAnnounce(uint32_t aChannelMask);
+    otError SendAnnounce(uint32_t aChannelMask);
 
     /**
      * This method begins the MLE Announce transmission process.
@@ -85,10 +83,10 @@ public:
      * @param[in]  aCount         The number of transmissions per channel.
      * @param[in]  aPeriod        The time between transmissions (milliseconds).
      *
-     * @retval kThreadError_None  Successfully started the transmission process.
+     * @retval OT_ERROR_NONE  Successfully started the transmission process.
      *
      */
-    ThreadError SendAnnounce(uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod);
+    otError SendAnnounce(uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod);
 
 private:
     enum

@@ -34,14 +34,12 @@
 #ifndef PANID_QUERY_CLIENT_HPP_
 #define PANID_QUERY_CLIENT_HPP_
 
-#include <openthread-core-config.h>
+#include <openthread/commissioner.h>
 
-#include "openthread/commissioner.h"
-
-#include <coap/coap_client.hpp>
-#include <coap/coap_server.hpp>
-#include <net/ip6_address.hpp>
-#include <net/udp6.hpp>
+#include "openthread-core-config.h"
+#include "coap/coap.hpp"
+#include "net/ip6_address.hpp"
+#include "net/udp6.hpp"
 
 namespace ot {
 
@@ -77,12 +75,12 @@ public:
      * @param[in]  aCallback      A pointer to a function called on receiving an Energy Report message.
      * @param[in]  aContext       A pointer to application-specific context.
      *
-     * @retval kThreadError_None    Successfully enqueued the PAN ID Query message.
-     * @retval kThreadError_NoBufs  Insufficient buffers to generate a PAN ID Query message.
+     * @retval OT_ERROR_NONE     Successfully enqueued the PAN ID Query message.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffers to generate a PAN ID Query message.
      *
      */
-    ThreadError SendQuery(uint16_t aPanId, uint32_t aChannelMask, const Ip6::Address &aAddress,
-                          otCommissionerPanIdConflictCallback aCallback, void *aContext);
+    otError SendQuery(uint16_t aPanId, uint32_t aChannelMask, const Ip6::Address &aAddress,
+                      otCommissionerPanIdConflictCallback aCallback, void *aContext);
 
 private:
     static void HandleConflict(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,

@@ -32,17 +32,17 @@
  */
 #include  "openthread/openthread_enable_defines.h"
 
-#include "openthread/netdata.h"
+#include <openthread/netdata.h>
 
 #include "openthread-instance.h"
 
 using namespace ot;
 
-ThreadError otNetDataGetLeader(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength)
+otError otNetDataGetLeader(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aData != NULL && aDataLength != NULL, error = kThreadError_InvalidArgs);
+    VerifyOrExit(aData != NULL && aDataLength != NULL, error = OT_ERROR_INVALID_ARGS);
 
     aInstance->mThreadNetif.GetNetworkDataLeader().GetNetworkData(aStable, aData, *aDataLength);
 
@@ -50,11 +50,11 @@ exit:
     return error;
 }
 
-ThreadError otNetDataGetLocal(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength)
+otError otNetDataGetLocal(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aData != NULL && aDataLength != NULL, error = kThreadError_InvalidArgs);
+    VerifyOrExit(aData != NULL && aDataLength != NULL, error = OT_ERROR_INVALID_ARGS);
 
     aInstance->mThreadNetif.GetNetworkDataLocal().GetNetworkData(aStable, aData, *aDataLength);
 
@@ -62,7 +62,7 @@ exit:
     return error;
 }
 
-ThreadError otNetDataAddPrefixInfo(otInstance *aInstance, const otBorderRouterConfig *aConfig)
+otError otNetDataAddPrefixInfo(otInstance *aInstance, const otBorderRouterConfig *aConfig)
 {
     uint8_t flags = 0;
 
@@ -101,17 +101,17 @@ ThreadError otNetDataAddPrefixInfo(otInstance *aInstance, const otBorderRouterCo
                                                                          aConfig->mPreference, flags, aConfig->mStable);
 }
 
-ThreadError otNetDataRemovePrefixInfo(otInstance *aInstance, const otIp6Prefix *aPrefix)
+otError otNetDataRemovePrefixInfo(otInstance *aInstance, const otIp6Prefix *aPrefix)
 {
     return aInstance->mThreadNetif.GetNetworkDataLocal().RemoveOnMeshPrefix(aPrefix->mPrefix.mFields.m8, aPrefix->mLength);
 }
 
-ThreadError otNetDataGetNextPrefixInfo(otInstance *aInstance, bool aLocal, otNetworkDataIterator *aIterator,
-                                       otBorderRouterConfig *aConfig)
+otError otNetDataGetNextPrefixInfo(otInstance *aInstance, bool aLocal, otNetworkDataIterator *aIterator,
+                                   otBorderRouterConfig *aConfig)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aIterator && aConfig, error = kThreadError_InvalidArgs);
+    VerifyOrExit(aIterator && aConfig, error = OT_ERROR_INVALID_ARGS);
 
     if (aLocal)
     {
@@ -126,20 +126,40 @@ exit:
     return error;
 }
 
-ThreadError otNetDataAddRoute(otInstance *aInstance, const otExternalRouteConfig *aConfig)
+otError otNetDataAddRoute(otInstance *aInstance, const otExternalRouteConfig *aConfig)
 {
     return aInstance->mThreadNetif.GetNetworkDataLocal().AddHasRoutePrefix(aConfig->mPrefix.mPrefix.mFields.m8,
                                                                            aConfig->mPrefix.mLength,
                                                                            aConfig->mPreference, aConfig->mStable);
 }
 
-ThreadError otNetDataRemoveRoute(otInstance *aInstance, const otIp6Prefix *aPrefix)
+otError otNetDataRemoveRoute(otInstance *aInstance, const otIp6Prefix *aPrefix)
 {
     return aInstance->mThreadNetif.GetNetworkDataLocal().RemoveHasRoutePrefix(aPrefix->mPrefix.mFields.m8,
                                                                               aPrefix->mLength);
 }
 
-ThreadError otNetDataRegister(otInstance *aInstance)
+otError otNetDataGetNextRoute(otInstance *aInstance, bool aLocal, otNetworkDataIterator *aIterator,
+                              otExternalRouteConfig *aConfig)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aIterator && aConfig, error = OT_ERROR_INVALID_ARGS);
+
+    if (aLocal)
+    {
+        error = aInstance->mThreadNetif.GetNetworkDataLocal().GetNextExternalRoute(aIterator, aConfig);
+    }
+    else
+    {
+        error = aInstance->mThreadNetif.GetNetworkDataLeader().GetNextExternalRoute(aIterator, aConfig);
+    }
+
+exit:
+    return error;
+}
+
+otError otNetDataRegister(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetNetworkDataLocal().SendServerDataNotification();
 }

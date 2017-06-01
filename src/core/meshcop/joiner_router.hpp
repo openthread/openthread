@@ -34,18 +34,16 @@
 #ifndef JOINER_ROUTER_HPP_
 #define JOINER_ROUTER_HPP_
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <coap/coap_header.hpp>
-#include <coap/coap_client.hpp>
-#include <coap/coap_server.hpp>
-#include <coap/coap_base.hpp>
-#include <common/message.hpp>
-#include <common/timer.hpp>
-#include <mac/mac_frame.hpp>
-#include <meshcop/tlvs.hpp>
-#include <net/udp6.hpp>
-#include <thread/key_manager.hpp>
+#include "coap/coap.hpp"
+#include "coap/coap_header.hpp"
+#include "common/message.hpp"
+#include "common/timer.hpp"
+#include "mac/mac_frame.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
+#include "net/udp6.hpp"
+#include "thread/key_manager.hpp"
 
 namespace ot {
 
@@ -85,10 +83,10 @@ public:
      *
      * @param[in]  The Joiner UDP Port number.
      *
-     * @retval kThreadError_None    Successfully set the Joiner UDP Port.
+     * @retval OT_ERROR_NONE    Successfully set the Joiner UDP Port.
      *
      */
-    ThreadError SetJoinerUdpPort(uint16_t aJoinerUdpPort);
+    otError SetJoinerUdpPort(uint16_t aJoinerUdpPort);
 
 private:
     enum
@@ -107,18 +105,18 @@ private:
     void HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleJoinerEntrustResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                                            const otMessageInfo *aMessageInfo, ThreadError result);
+                                            const otMessageInfo *aMessageInfo, otError result);
     void HandleJoinerEntrustResponse(Coap::Header *aHeader, Message *aMessage,
-                                     const Ip6::MessageInfo *aMessageInfo, ThreadError result);
+                                     const Ip6::MessageInfo *aMessageInfo, otError result);
 
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
 
-    ThreadError DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const JoinerRouterKekTlv &aKek);
+    otError DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const JoinerRouterKekTlv &aKek);
     void SendDelayedJoinerEntrust(void);
-    ThreadError SendJoinerEntrust(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError SendJoinerEntrust(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    ThreadError GetBorderAgentRloc(uint16_t &aRloc);
+    otError GetBorderAgentRloc(uint16_t &aRloc);
 
     Ip6::NetifCallback mNetifCallback;
 
@@ -166,11 +164,11 @@ public:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval kThreadError_None    Successfully appended the bytes.
-     * @retval kThreadError_NoBufs  Insufficient available buffers to grow the message.
+     * @retval OT_ERROR_NONE     Successfully appended the bytes.
+     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
      *
      */
-    ThreadError AppendTo(Message &aMessage) {
+    otError AppendTo(Message &aMessage) {
         return aMessage.Append(this, sizeof(*this));
     }
 
@@ -191,10 +189,10 @@ public:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval kThreadError_None  Successfully removed the header.
+     * @retval OT_ERROR_NONE  Successfully removed the header.
      *
      */
-    static ThreadError RemoveFrom(Message &aMessage) {
+    static otError RemoveFrom(Message &aMessage) {
         return aMessage.SetLength(aMessage.GetLength() - sizeof(DelayedJoinEntHeader));
     }
 

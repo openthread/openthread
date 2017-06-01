@@ -35,8 +35,8 @@
 #ifndef PBKDF2_CMAC_H_
 #define PBKDF2_CMAC_H_
 
-#include "utils/wrap_stdint.h"
 #include "utils/wrap_stdbool.h"
+#include "utils/wrap_stdint.h"
 
 #ifdef __cplusplus
 extern "C" {

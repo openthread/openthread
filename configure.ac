@@ -807,6 +807,37 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_LEGACY], [test "${enable_legacy}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_LEGACY],[${OPENTHREAD_ENABLE_LEGACY}],[Define to 1 if you want to use legacy network support])
 
 #
+# Child Supervision
+#
+
+AC_ARG_ENABLE(child_supervision,
+    [AS_HELP_STRING([--enable-child-supervision],[Enable child supervision feature @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_child_supervision=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_child_supervision} for --enable-child-supervision])
+            ;;
+        esac
+    ],
+    [enable_child_supervision=no])
+
+if test "$enable_child_supervision" = "yes"; then
+    OPENTHREAD_ENABLE_CHILD_SUPERVISION=1
+else
+    OPENTHREAD_ENABLE_CHILD_SUPERVISION=0
+fi
+
+AC_MSG_RESULT(${enable_child_supervision})
+AC_SUBST(OPENTHREAD_ENABLE_CHILD_SUPERVISION)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_CHILD_SUPERVISION], [test "${enable_child_supervision}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_CHILD_SUPERVISION],[${OPENTHREAD_ENABLE_CHILD_SUPERVISION}],[Define to 1 if you want to use child supervision feature])
+
+#
 # Default Logging
 #
 
@@ -1022,11 +1053,11 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_RAW_LINK_API],[${OPENTHREAD_ENABLE_RAW_LIN
 
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
-        [Specify the examples from one of: none, posix, cc2538, cc2650, da15000, efr32, nrf52840 @<:@default=none@:>@.])],
+        [Specify the examples from one of: none, posix, cc2538, cc2650, da15000, efr32, emsk, kw41z, nrf52840 @<:@default=none@:>@.])],
     [
         case "${with_examples}" in
 
-        none|posix|cc2538|cc2650|da15000|efr32|nrf52840)
+        none|posix|cc2538|cc2650|da15000|efr32|emsk|kw41z|nrf52840)
             ;;
         *)
             AC_MSG_ERROR([Invalid value ${with_examples} for --with-examples])
@@ -1064,6 +1095,16 @@ case ${with_examples} in
         AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_EFR32],[${OPENTHREAD_EXAMPLES_EFR32}],[Define to 1 if you want to use efr32 examples])
         ;;
 
+     emsk)
+        OPENTHREAD_EXAMPLES_EMSK=1
+        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_EMSK],[${OPENTHREAD_EXAMPLES_EMSK}],[Define to 1 if you want to use emsk examples])
+        ;;
+
+    kw41z)
+        OPENTHREAD_EXAMPLES_KW41Z=1
+        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_KW41Z],[${OPENTHREAD_EXAMPLES_KW41Z}],[Define to 1 if you want to use kw41z examples])
+        ;;
+
     nrf52840)
         OPENTHREAD_EXAMPLES_NRF52840=1
         AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_NRF52840],[${OPENTHREAD_EXAMPLES_NRF52840}],[Define to 1 if you want to use nrf52840 examples])
@@ -1092,6 +1133,12 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_DA15000], [test "${OPENTHREAD_EXAMPLES}" = "
 
 AC_SUBST(OPENTHREAD_EXAMPLES_EFR32)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EFR32], [test "${OPENTHREAD_EXAMPLES}" = "efr32"])
+
+AC_SUBST(OPENTHREAD_EXAMPLES_EMSK)
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EMSK], [test "${OPENTHREAD_EXAMPLES}" = "emsk"])
+
+AC_SUBST(OPENTHREAD_EXAMPLES_KW41Z)
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_KW41Z], [test "${OPENTHREAD_EXAMPLES}" = "kw41z"])
 
 AC_SUBST(OPENTHREAD_EXAMPLES_NRF52840)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52840], [test "${OPENTHREAD_EXAMPLES}" = "nrf52840"])
@@ -1256,6 +1303,8 @@ examples/platforms/cc2538/Makefile
 examples/platforms/cc2650/Makefile
 examples/platforms/da15000/Makefile
 examples/platforms/efr32/Makefile
+examples/platforms/emsk/Makefile
+examples/platforms/kw41z/Makefile
 examples/platforms/nrf52840/Makefile
 examples/platforms/posix/Makefile
 examples/platforms/utils/Makefile
@@ -1263,8 +1312,6 @@ tools/Makefile
 tools/harness-automation/Makefile
 tools/harness-thci/Makefile
 tools/spi-hdlc-adapter/Makefile
-tools/spinel-cli/Makefile
-tools/spinel-cli/spinel/Makefile
 tests/Makefile
 tests/scripts/Makefile
 tests/scripts/thread-cert/Makefile
@@ -1344,6 +1391,7 @@ AC_MSG_NOTICE([
   OpenThread Jam Detection support          : ${enable_jam_detection}
   OpenThread MAC Whitelist support          : ${enable_mac_whitelist}
   OpenThread Diagnostics support            : ${enable_diag}
+  OpenThread Child Supervision support      : ${enable_child_supervision}
   OpenThread Legacy network support         : ${enable_legacy}
   OpenThread Default logging support        : ${enable_default_logging}
   OpenThread Certification log support      : ${enable_cert_log}

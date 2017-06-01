@@ -32,11 +32,12 @@
  */
 #include  "openthread/openthread_enable_defines.h"
 
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <common/message.hpp>
-#include <net/ip6.hpp>
-#include <net/netif.hpp>
+#include "netif.hpp"
+
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/message.hpp"
+#include "net/ip6.hpp"
 
 namespace ot {
 namespace Ip6 {
@@ -66,15 +67,15 @@ Netif::Netif(Ip6 &aIp6, int8_t aInterfaceId):
     }
 }
 
-ThreadError Netif::RegisterCallback(NetifCallback &aCallback)
+otError Netif::RegisterCallback(NetifCallback &aCallback)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     for (NetifCallback *cur = mCallbacks; cur; cur = cur->mNext)
     {
         if (cur == &aCallback)
         {
-            ExitNow(error = kThreadError_Already);
+            ExitNow(error = OT_ERROR_ALREADY);
         }
     }
 
@@ -85,9 +86,9 @@ exit:
     return error;
 }
 
-ThreadError Netif::RemoveCallback(NetifCallback &aCallback)
+otError Netif::RemoveCallback(NetifCallback &aCallback)
 {
-    ThreadError error = kThreadError_Already;
+    otError error = OT_ERROR_ALREADY;
     NetifCallback *prev = NULL;
 
     for (NetifCallback *cur = mCallbacks; cur; cur = cur->mNext)
@@ -104,7 +105,7 @@ ThreadError Netif::RemoveCallback(NetifCallback &aCallback)
             }
 
             cur->mNext = NULL;
-            error = kThreadError_None;
+            error = OT_ERROR_NONE;
             break;
         }
 
@@ -140,15 +141,15 @@ exit:
     return rval;
 }
 
-ThreadError Netif::SubscribeMulticast(NetifMulticastAddress &aAddress)
+otError Netif::SubscribeMulticast(NetifMulticastAddress &aAddress)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     for (NetifMulticastAddress *cur = mMulticastAddresses; cur; cur = cur->GetNext())
     {
         if (cur == &aAddress)
         {
-            ExitNow(error = kThreadError_Already);
+            ExitNow(error = OT_ERROR_ALREADY);
         }
     }
 
@@ -159,9 +160,9 @@ exit:
     return error;
 }
 
-ThreadError Netif::UnsubscribeMulticast(const NetifMulticastAddress &aAddress)
+otError Netif::UnsubscribeMulticast(const NetifMulticastAddress &aAddress)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     if (mMulticastAddresses == &aAddress)
     {
@@ -180,21 +181,21 @@ ThreadError Netif::UnsubscribeMulticast(const NetifMulticastAddress &aAddress)
         }
     }
 
-    ExitNow(error = kThreadError_Error);
+    ExitNow(error = OT_ERROR_NOT_FOUND);
 
 exit:
     return error;
 }
 
-ThreadError Netif::SubscribeExternalMulticast(const Address &aAddress)
+otError Netif::SubscribeExternalMulticast(const Address &aAddress)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     NetifMulticastAddress *entry;
     size_t num = sizeof(mExtMulticastAddresses) / sizeof(mExtMulticastAddresses[0]);
 
     if (IsMulticastSubscribed(aAddress))
     {
-        ExitNow(error = kThreadError_Already);
+        ExitNow(error = OT_ERROR_ALREADY);
     }
 
     // Find an available entry in the `mExtMulticastAddresses` array.
@@ -207,7 +208,7 @@ ThreadError Netif::SubscribeExternalMulticast(const Address &aAddress)
         }
     }
 
-    VerifyOrExit(num > 0, error = kThreadError_NoBufs);
+    VerifyOrExit(num > 0, error = OT_ERROR_NO_BUFS);
 
     // Copy the address into the available entry and add it to linked-list.
     entry->mAddress = aAddress;
@@ -218,9 +219,9 @@ exit:
     return error;
 }
 
-ThreadError Netif::UnsubscribeExternalMulticast(const Address &aAddress)
+otError Netif::UnsubscribeExternalMulticast(const Address &aAddress)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     NetifMulticastAddress *entry;
     NetifMulticastAddress *last = NULL;
     size_t num = sizeof(mExtMulticastAddresses) / sizeof(mExtMulticastAddresses[0]);
@@ -230,7 +231,7 @@ ThreadError Netif::UnsubscribeExternalMulticast(const Address &aAddress)
         if (memcmp(&entry->mAddress, &aAddress, sizeof(otIp6Address)) == 0)
         {
             VerifyOrExit((entry >= &mExtMulticastAddresses[0]) && (entry < &mExtMulticastAddresses[num]),
-                         error = kThreadError_InvalidArgs);
+                         error = OT_ERROR_INVALID_ARGS);
 
             if (last)
             {
@@ -247,7 +248,7 @@ ThreadError Netif::UnsubscribeExternalMulticast(const Address &aAddress)
         last = entry;
     }
 
-    VerifyOrExit(entry != NULL, error = kThreadError_NotFound);
+    VerifyOrExit(entry != NULL, error = OT_ERROR_NOT_FOUND);
 
     // To mark the address entry as unused/available, set the `mNext` pointer back to the entry itself.
     entry->mNext = entry;
@@ -270,15 +271,15 @@ void Netif::UnsubscribeAllExternalMulticastAddresses(void)
     }
 }
 
-ThreadError Netif::AddUnicastAddress(NetifUnicastAddress &aAddress)
+otError Netif::AddUnicastAddress(NetifUnicastAddress &aAddress)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     for (NetifUnicastAddress *cur = mUnicastAddresses; cur; cur = cur->GetNext())
     {
         if (cur == &aAddress)
         {
-            ExitNow(error = kThreadError_Already);
+            ExitNow(error = OT_ERROR_ALREADY);
         }
     }
 
@@ -291,9 +292,9 @@ exit:
     return error;
 }
 
-ThreadError Netif::RemoveUnicastAddress(const NetifUnicastAddress &aAddress)
+otError Netif::RemoveUnicastAddress(const NetifUnicastAddress &aAddress)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     if (mUnicastAddresses == &aAddress)
     {
@@ -312,11 +313,11 @@ ThreadError Netif::RemoveUnicastAddress(const NetifUnicastAddress &aAddress)
         }
     }
 
-    ExitNow(error = kThreadError_NotFound);
+    ExitNow(error = OT_ERROR_NOT_FOUND);
 
 exit:
 
-    if (error != kThreadError_NotFound)
+    if (error != OT_ERROR_NOT_FOUND)
     {
         SetStateChangedFlags(aAddress.mRloc ? OT_IP6_RLOC_REMOVED : OT_IP6_ADDRESS_REMOVED);
     }
@@ -324,9 +325,9 @@ exit:
     return error;
 }
 
-ThreadError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
+otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     NetifUnicastAddress *entry;
     size_t num = sizeof(mExtUnicastAddresses) / sizeof(mExtUnicastAddresses[0]);
 
@@ -335,7 +336,7 @@ ThreadError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress
         if (memcmp(&entry->mAddress, &aAddress.mAddress, sizeof(otIp6Address)) == 0)
         {
             VerifyOrExit((entry >= &mExtUnicastAddresses[0]) && (entry < &mExtUnicastAddresses[num]),
-                         error = kThreadError_InvalidArgs);
+                         error = OT_ERROR_INVALID_ARGS);
 
             entry->mPrefixLength = aAddress.mPrefixLength;
             entry->mPreferred = aAddress.mPreferred;
@@ -354,7 +355,7 @@ ThreadError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress
         }
     }
 
-    VerifyOrExit(num > 0, error = kThreadError_NoBufs);
+    VerifyOrExit(num > 0, error = OT_ERROR_NO_BUFS);
 
     // Copy the new address into the available entry and insert it in linked-list.
     *entry = aAddress;
@@ -367,9 +368,9 @@ exit:
     return error;
 }
 
-ThreadError Netif::RemoveExternalUnicastAddress(const Address &aAddress)
+otError Netif::RemoveExternalUnicastAddress(const Address &aAddress)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     NetifUnicastAddress *entry;
     NetifUnicastAddress *last = NULL;
     size_t num = sizeof(mExtUnicastAddresses) / sizeof(mExtUnicastAddresses[0]);
@@ -379,7 +380,7 @@ ThreadError Netif::RemoveExternalUnicastAddress(const Address &aAddress)
         if (memcmp(&entry->mAddress, &aAddress, sizeof(otIp6Address)) == 0)
         {
             VerifyOrExit((entry >= &mExtUnicastAddresses[0]) && (entry < &mExtUnicastAddresses[num]),
-                         error = kThreadError_InvalidArgs);
+                         error = OT_ERROR_INVALID_ARGS);
 
             if (last)
             {
@@ -396,7 +397,7 @@ ThreadError Netif::RemoveExternalUnicastAddress(const Address &aAddress)
         last = entry;
     }
 
-    VerifyOrExit(entry != NULL, error = kThreadError_NotFound);
+    VerifyOrExit(entry != NULL, error = OT_ERROR_NOT_FOUND);
 
     // To mark the address entry as unused/available, set the `mNext` pointer back to the entry itself.
     entry->mNext = entry;

@@ -122,31 +122,15 @@ static int TRNGPoll(unsigned char *aOutput, size_t aLen)
 /**
  * Function documented in platform/random.h
  */
-ThreadError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
+otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     size_t length = aOutputLength;
 
-    otEXPECT_ACTION(aOutput, error = kThreadError_InvalidArgs);
+    otEXPECT_ACTION(aOutput, error = OT_ERROR_INVALID_ARGS);
 
-    otEXPECT_ACTION(TRNGPoll((unsigned char *)aOutput, length) != 0, error = kThreadError_Failed);
+    otEXPECT_ACTION(TRNGPoll((unsigned char *)aOutput, length) != 0, error = OT_ERROR_FAILED);
 
 exit:
-    return error;
-}
-
-/**
- * Entropy function for the entropy pool in mbedtls.
- *
- * Function defined in mbedtls/entropy_poll.h .
- */
-int mbedtls_hardware_poll(void *data, unsigned char *aOutput, size_t aLen, size_t *oLen)
-{
-    ThreadError error;
-
-    (void)data;
-    error = TRNGPoll(aOutput, aLen);
-    *oLen = aLen;
-
     return error;
 }

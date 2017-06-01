@@ -35,12 +35,11 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
-#include "openthread/instance.h"
-#include "openthread/platform/misc.h"
-#include "openthread/platform/settings.h"
+#include <openthread/instance.h>
+#include <openthread/platform/misc.h>
+#include <openthread/platform/settings.h>
 
 #include "openthread-instance.h"
-
 #include "common/logging.hpp"
 #include "common/new.hpp"
 
@@ -61,7 +60,7 @@ otInstance::otInstance(void) :
     , mLinkRaw(*this)
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
-    , mApplicationCoapServer(mThreadNetif, OT_DEFAULT_COAP_PORT)
+    , mApplicationCoap(mThreadNetif)
 #endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
     , mLogLevel(static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL))
@@ -82,10 +81,10 @@ void otInstancePostConstructor(otInstance *aInstance)
     // If auto start is configured, do that now
     if (otThreadGetAutoStart(aInstance))
     {
-        if (otIp6SetEnabled(aInstance, true) == kThreadError_None)
+        if (otIp6SetEnabled(aInstance, true) == OT_ERROR_NONE)
         {
             // Only try to start Thread if we could bring up the interface
-            if (otThreadSetEnabled(aInstance, true) != kThreadError_None)
+            if (otThreadSetEnabled(aInstance, true) != OT_ERROR_NONE)
             {
                 // Bring the interface down if Thread failed to start
                 otIp6SetEnabled(aInstance, false);
@@ -163,9 +162,9 @@ void otInstanceFinalize(otInstance *aInstance)
     otLogFuncExit();
 }
 
-ThreadError otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aCallbackContext)
+otError otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aCallbackContext)
 {
-    ThreadError error = kThreadError_NoBufs;
+    otError error = OT_ERROR_NO_BUFS;
 
     for (size_t i = 0; i < OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS; i++)
     {
@@ -204,11 +203,11 @@ void otInstanceFactoryReset(otInstance *aInstance)
     otPlatReset(aInstance);
 }
 
-ThreadError otInstanceErasePersistentInfo(otInstance *aInstance)
+otError otInstanceErasePersistentInfo(otInstance *aInstance)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(otThreadGetDeviceRole(aInstance) == kDeviceRoleDisabled, error = kThreadError_InvalidState);
+    VerifyOrExit(otThreadGetDeviceRole(aInstance) ==  OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
     otPlatSettingsWipe(aInstance);
 
 exit:
@@ -229,14 +228,14 @@ otLogLevel otGetDynamicLogLevel(otInstance *aInstance)
     return logLevel;
 }
 
-ThreadError otSetDynamicLogLevel(otInstance *aInstance, otLogLevel aLogLevel)
+otError otSetDynamicLogLevel(otInstance *aInstance, otLogLevel aLogLevel)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
     aInstance->mLogLevel = aLogLevel;
 #else
-    error = kThreadError_NotCapable;
+    error = OT_ERROR_DISABLED_FEATURE;
     (void)aInstance;
     (void)aLogLevel;
 #endif

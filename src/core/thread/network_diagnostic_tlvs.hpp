@@ -36,14 +36,14 @@
 
 #include "utils/wrap_string.h"
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <common/encoding.hpp>
-#include <common/message.hpp>
-#include <common/tlvs.hpp>
-#include <meshcop/tlvs.hpp>
-#include <net/ip6_address.hpp>
-#include <thread/mle_constants.hpp>
+#include "common/encoding.hpp"
+#include "common/message.hpp"
+#include "common/tlvs.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
+#include "net/ip6_address.hpp"
+#include "thread/mle_constants.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
@@ -124,11 +124,11 @@ public:
      * @param[in]   aMaxLength  Maximum number of bytes to read.
      * @param[out]  aTlv        A reference to the TLV that will be copied to.
      *
-     * @retval kThreadError_None      Successfully copied the TLV.
-     * @retval kThreadError_NotFound  Could not find the TLV with Type @p aType.
+     * @retval OT_ERROR_NONE       Successfully copied the TLV.
+     * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
      *
      */
-    static ThreadError GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv) {
+    static otError GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv) {
         return ot::Tlv::Get(aMessage, static_cast<uint8_t>(aType), aMaxLength, aTlv);
     }
 
@@ -139,11 +139,11 @@ public:
      * @param[in]   aType       The Type value to search for.
      * @param[out]  aOffset     A reference to the offset of the TLV.
      *
-     * @retval kThreadError_None      Successfully copied the TLV.
-     * @retval kThreadError_NotFound  Could not find the TLV with Type @p aType.
+     * @retval OT_ERROR_NONE       Successfully copied the TLV.
+     * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
      *
      */
-    static ThreadError GetOffset(const Message &aMessage, Type aType, uint16_t &aOffset) {
+    static otError GetOffset(const Message &aMessage, Type aType, uint16_t &aOffset) {
         return ot::Tlv::GetOffset(aMessage, static_cast<uint8_t>(aType), aOffset);
     }
 
@@ -1157,6 +1157,14 @@ class ChildTableEntry
 {
 public:
     /**
+     * Default constructor.
+     *
+     */
+    ChildTableEntry(void):
+        mTimeoutRsvChildId(0),
+        mMode(0) {}
+
+    /**
      * This method returns the Timeout value.
      *
      * @returns The Timeout value.
@@ -1230,17 +1238,21 @@ public:
     }
 
 private:
+    /**
+     * Masks for fields.
+     *
+     */
     enum
     {
-        kTimeoutMask = 0xF800,
-        kTimeoutOffset = 11,
-        kReservedMask = 0x0600,
+        kTimeoutMask    = 0xf800,
+        kTimeoutOffset  = 11,
+        kReservedMask   = 0x0600,
         kReservedOffset = 9,
-        kChildIdMask = 0x1ff
+        kChildIdMask    = 0x1ff
     };
 
     uint16_t mTimeoutRsvChildId;
-    uint8_t mMode;
+    uint8_t  mMode;
 } OT_TOOL_PACKED_END;
 
 /**

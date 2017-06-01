@@ -47,6 +47,7 @@ PRETTY_SUBDIRS                          = \
     $(NULL)
 
 openthread_headers                      = \
+    child_supervision.h                   \
     cli.h                                 \
     border_agent_proxy.h                  \
     coap.h                                \

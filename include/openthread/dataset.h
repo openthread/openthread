@@ -35,17 +35,14 @@
 #ifndef OPENTHREAD_DATASET_H_
 #define OPENTHREAD_DATASET_H_
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @addtogroup dataset  Operational Dataset
- *
- * @brief
- *   This module includes functions for Operational Dataset configuration.
+ * @addtogroup api-thread-general
  *
  * @{
  *
@@ -67,11 +64,11 @@ OTAPI bool OTCALL otDatasetIsCommissioned(otInstance *aInstance);
  * @param[in]   aInstance A pointer to an OpenThread instance.
  * @param[out]  aDataset  A pointer to where the Active Operational Dataset will be placed.
  *
- * @retval kThreadError_None         Successfully retrieved the Active Operational Dataset.
- * @retval kThreadError_InvalidArgs  @p aDataset was NULL.
+ * @retval OT_ERROR_NONE          Successfully retrieved the Active Operational Dataset.
+ * @retval OT_ERROR_INVALID_ARGS  @p aDataset was NULL.
  *
  */
-OTAPI ThreadError OTCALL otDatasetGetActive(otInstance *aInstance, otOperationalDataset *aDataset);
+OTAPI otError OTCALL otDatasetGetActive(otInstance *aInstance, otOperationalDataset *aDataset);
 
 /**
  * This function gets the Pending Operational Dataset.
@@ -79,11 +76,11 @@ OTAPI ThreadError OTCALL otDatasetGetActive(otInstance *aInstance, otOperational
  * @param[in]   aInstance A pointer to an OpenThread instance.
  * @param[out]  aDataset  A pointer to where the Pending Operational Dataset will be placed.
  *
- * @retval kThreadError_None         Successfully retrieved the Pending Operational Dataset.
- * @retval kThreadError_InvalidArgs  @p aDataset was NULL.
+ * @retval OT_ERROR_NONE          Successfully retrieved the Pending Operational Dataset.
+ * @retval OT_ERROR_INVALID_ARGS  @p aDataset was NULL.
  *
  */
-OTAPI ThreadError OTCALL otDatasetGetPending(otInstance *aInstance, otOperationalDataset *aDataset);
+OTAPI otError OTCALL otDatasetGetPending(otInstance *aInstance, otOperationalDataset *aDataset);
 
 /**
  * @}

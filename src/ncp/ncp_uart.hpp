@@ -35,8 +35,8 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
-#include <ncp/ncp_base.hpp>
-#include <ncp/hdlc.hpp>
+#include "ncp/hdlc.hpp"
+#include "ncp/ncp_base.hpp"
 
 namespace ot {
 
@@ -97,13 +97,15 @@ private:
 
     void            EncodeAndSendToUart(void);
     void            HandleFrame(uint8_t *aBuf, uint16_t aBufLength);
-    void            HandleError(ThreadError aError, uint8_t *aBuf, uint16_t aBufLength);
+    void            HandleError(otError aError, uint8_t *aBuf, uint16_t aBufLength);
     void            TxFrameBufferHasData(void);
+    void            HandleFrameAddedToNcpBuffer(void);
 
     static void     EncodeAndSendToUart(void *aContext);
     static void     HandleFrame(void *context, uint8_t *aBuf, uint16_t aBufLength);
-    static void     HandleError(void *context, ThreadError aError, uint8_t *aBuf, uint16_t aBufLength);
-    static void     TxFrameBufferHasData(void *aContext, NcpFrameBuffer *aNcpFrameBuffer);
+    static void     HandleError(void *context, otError aError, uint8_t *aBuf, uint16_t aBufLength);
+    static void     HandleFrameAddedToNcpBuffer(void *aContext, NcpFrameBuffer::FrameTag aTag,
+                                                NcpFrameBuffer *aNcpFrameBuffer);
 
     Hdlc::Encoder   mFrameEncoder;
     Hdlc::Decoder   mFrameDecoder;

@@ -113,6 +113,16 @@ LDFLAGS_COMMON                                                        += \
     $(NULL)
 endif # OPENTHREAD_EXAMPLES_EFR32
 
+if OPENTHREAD_EXAMPLES_EMSK
+LDADD_COMMON                                                          += \
+    $(top_builddir)/examples/platforms/emsk/libopenthread-emsk.a         \
+    $(NULL)
+
+LDFLAGS_COMMON                                                        += \
+    -T $(top_srcdir)/examples/platforms/emsk/emsk.ld                     \
+    $(NULL)
+endif # OPENTHREAD_EXAMPLES_EMSK
+
 if OPENTHREAD_EXAMPLES_NRF52840
 LDADD_COMMON                                                          += \
     $(top_builddir)/examples/platforms/nrf52840/libopenthread-nrf52840.a \
@@ -123,6 +133,15 @@ LDFLAGS_COMMON                                                        += \
     $(NULL)
 endif
 
+if OPENTHREAD_EXAMPLES_KW41Z
+LDADD_COMMON                                                          += \
+    $(top_builddir)/examples/platforms/kw41z/libopenthread-kw41z.a       \
+    $(NULL)
+
+LDFLAGS_COMMON                                                        += \
+    -T $(top_srcdir)/examples/platforms/kw41z/MKW41Z512xxx4.ld           \
+    $(NULL)
+endif # OPENTHREAD_EXAMPLES_KW41Z
 
 if OPENTHREAD_ENABLE_CLI_FTD
 bin_PROGRAMS                                                          += \

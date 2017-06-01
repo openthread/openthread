@@ -140,7 +140,7 @@ _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID
 otLwfCmdSendMacFrameAsync(
     _In_ PMS_FILTER pFilter,
-    _In_ RadioPacket* Packet
+    _In_ otRadioFrame* Packet
     );
 
 //
@@ -188,7 +188,7 @@ otLwfCmdRemoveProp(
 // General Spinel Helpers
 //
 
-ThreadError
+otError
 SpinelStatusToThreadError(
     spinel_status_t error
     );

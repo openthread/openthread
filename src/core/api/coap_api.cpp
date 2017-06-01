@@ -33,7 +33,7 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
-#include "openthread/coap.h"
+#include <openthread/coap.h>
 
 #include "openthread-instance.h"
 #include "coap/coap_header.hpp"
@@ -58,27 +58,32 @@ void otCoapHeaderGenerateToken(otCoapHeader *aHeader, uint8_t aTokenLength)
     static_cast<Coap::Header *>(aHeader)->SetToken(aTokenLength);
 }
 
-ThreadError otCoapHeaderAppendOption(otCoapHeader *aHeader, const otCoapOption *aOption)
+otError otCoapHeaderAppendOption(otCoapHeader *aHeader, const otCoapOption *aOption)
 {
     return static_cast<Coap::Header *>(aHeader)->AppendOption(*static_cast<const Coap::Header::Option *>(aOption));
 }
 
-ThreadError otCoapHeaderAppendObserveOption(otCoapHeader *aHeader, uint32_t aObserve)
+otError otCoapHeaderAppendUintOption(otCoapHeader *aHeader, uint16_t aNumber, uint32_t aValue)
+{
+    return static_cast<Coap::Header *>(aHeader)->AppendUintOption(aNumber, aValue);
+}
+
+otError otCoapHeaderAppendObserveOption(otCoapHeader *aHeader, uint32_t aObserve)
 {
     return static_cast<Coap::Header *>(aHeader)->AppendObserveOption(aObserve);
 }
 
-ThreadError otCoapHeaderAppendUriPathOptions(otCoapHeader *aHeader, const char *aUriPath)
+otError otCoapHeaderAppendUriPathOptions(otCoapHeader *aHeader, const char *aUriPath)
 {
     return static_cast<Coap::Header *>(aHeader)->AppendUriPathOptions(aUriPath);
 }
 
-ThreadError otCoapHeaderAppendMaxAgeOption(otCoapHeader *aHeader, uint32_t aMaxAge)
+otError otCoapHeaderAppendMaxAgeOption(otCoapHeader *aHeader, uint32_t aMaxAge)
 {
     return static_cast<Coap::Header *>(aHeader)->AppendMaxAgeOption(aMaxAge);
 }
 
-ThreadError otCoapHeaderAppendUriQueryOption(otCoapHeader *aHeader, const char *aUriQuery)
+otError otCoapHeaderAppendUriQueryOption(otCoapHeader *aHeader, const char *aUriQuery)
 {
     return static_cast<Coap::Header *>(aHeader)->AppendUriQueryOption(aUriQuery);
 }
@@ -132,48 +137,48 @@ otMessage *otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader)
 {
     Message *message;
     VerifyOrExit(aHeader != NULL, message = NULL);
-    message = aInstance->mThreadNetif.GetCoapClient().NewMessage(*(static_cast<const Coap::Header *>(aHeader)));
+    message = aInstance->mApplicationCoap.NewMessage(*(static_cast<const Coap::Header *>(aHeader)));
 exit:
     return message;
 }
 
-ThreadError otCoapSendRequest(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo,
+otError otCoapSendRequest(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo,
                               otCoapResponseHandler aHandler, void *aContext)
 {
-    return aInstance->mThreadNetif.GetCoapClient().SendMessage(
+    return aInstance->mApplicationCoap.SendMessage(
                *static_cast<Message *>(aMessage),
                *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
                aHandler, aContext);
 }
 
-ThreadError otCoapServerStart(otInstance *aInstance)
+otError otCoapStart(otInstance *aInstance, uint16_t aPort)
 {
-    return aInstance->mApplicationCoapServer.Start();
+    return aInstance->mApplicationCoap.Start(aPort);
 }
 
-ThreadError otCoapServerStop(otInstance *aInstance)
+otError otCoapStop(otInstance *aInstance)
 {
-    return aInstance->mApplicationCoapServer.Stop();
+    return aInstance->mApplicationCoap.Stop();
 }
 
-ThreadError otCoapServerSetPort(otInstance *aInstance, uint16_t aPort)
+otError otCoapAddResource(otInstance *aInstance, otCoapResource *aResource)
 {
-    return aInstance->mApplicationCoapServer.SetPort(aPort);
+    return aInstance->mApplicationCoap.AddResource(*static_cast<Coap::Resource *>(aResource));
 }
 
-ThreadError otCoapServerAddResource(otInstance *aInstance, otCoapResource *aResource)
+void otCoapRemoveResource(otInstance *aInstance, otCoapResource *aResource)
 {
-    return aInstance->mApplicationCoapServer.AddResource(*static_cast<Coap::Resource *>(aResource));
+    aInstance->mApplicationCoap.RemoveResource(*static_cast<Coap::Resource *>(aResource));
 }
 
-void otCoapServerRemoveResource(otInstance *aInstance, otCoapResource *aResource)
+void otCoapSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandler, void *aContext)
 {
-    aInstance->mApplicationCoapServer.RemoveResource(*static_cast<Coap::Resource *>(aResource));
+    aInstance->mApplicationCoap.SetDefaultHandler(aHandler, aContext);
 }
 
-ThreadError otCoapSendResponse(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+otError otCoapSendResponse(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    return aInstance->mApplicationCoapServer.SendMessage(
+    return aInstance->mApplicationCoap.SendMessage(
                *static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 

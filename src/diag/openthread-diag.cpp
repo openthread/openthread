@@ -37,8 +37,9 @@
 #include <stdlib.h>
 #include "utils/wrap_string.h"
 
-#include "openthread/diag.h"
-#include <diag_process.hpp>
+#include <openthread/diag.h>
+
+#include "diag_process.hpp"
 
 using namespace ot::Diagnostics;
 

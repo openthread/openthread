@@ -36,9 +36,9 @@
 
 #include "utils/wrap_stdint.h"
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <mac/mac_frame.hpp>
+#include "mac/mac_frame.hpp"
 
 namespace ot {
 namespace Mac {
@@ -56,7 +56,7 @@ public:
 
     int GetMaxEntries(void) const { return 0; }
 
-    ThreadError GetEntry(uint8_t, Entry &) const { return kThreadError_NotImplemented; }
+    otError GetEntry(uint8_t, Entry &) const { return OT_ERROR_NOT_IMPLEMENTED; }
 
     Entry *Add(const ExtAddress &) { return NULL; }
 

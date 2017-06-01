@@ -36,9 +36,9 @@
 
 #include "utils/wrap_stdint.h"
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <mac/mac_frame.hpp>
+#include "mac/mac_frame.hpp"
 
 namespace ot {
 namespace Mac {
@@ -101,11 +101,11 @@ public:
      * @param[in]   aIndex  An index into the MAC blacklist table.
      * @param[out]  aEntry  A reference to where the information is placed.
      *
-     * @retval kThreadError_None         Successfully retrieved the MAC blacklist entry.
-     * @retval kThreadError_InvalidArgs  @p aIndex is out of bounds or @p aEntry is NULL.
+     * @retval OT_ERROR_NONE          Successfully retrieved the MAC blacklist entry.
+     * @retval OT_ERROR_INVALID_ARGS  @p aIndex is out of bounds or @p aEntry is NULL.
      *
      */
-    ThreadError GetEntry(uint8_t aIndex, Entry &aEntry) const;
+    otError GetEntry(uint8_t aIndex, Entry &aEntry) const;
 
     /**
      * This method adds an Extended Address to the blacklist filter.

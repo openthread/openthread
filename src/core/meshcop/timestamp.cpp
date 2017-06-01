@@ -33,11 +33,11 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
+#include "timestamp.hpp"
+
 #include "utils/wrap_string.h"
 
-#include "openthread/types.h"
-
-#include <meshcop/timestamp.hpp>
+#include <openthread/types.h>
 
 namespace ot {
 namespace MeshCoP {

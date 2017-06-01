@@ -39,7 +39,9 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "openthread/platform/alarm.h"
+
+#include <openthread/platform/alarm.h>
+
 #include "hw_timer0.h"
 #include "hw_gpio.h"
 #include "platform-da15000.h"

@@ -34,7 +34,7 @@
 bool g_fRadioEnabled = false;
 uint8_t g_RecvChannel = 0;
 uint8_t g_TransmitPsdu[128];
-RadioPacket g_TransmitRadioPacket;
+otRadioFrame g_TransmitRadioFrame;
 bool g_fTransmit = false;
 
 bool testFuzzRadioIsEnabled(otInstance *)
@@ -42,54 +42,54 @@ bool testFuzzRadioIsEnabled(otInstance *)
     return g_fRadioEnabled;
 }
 
-ThreadError testFuzzRadioEnable(otInstance *)
+otError testFuzzRadioEnable(otInstance *)
 {
 #ifdef DBG_FUZZ
     Log("Radio enabled");
 #endif
     g_fRadioEnabled = true;
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError testFuzzRadioDisable(otInstance *)
+otError testFuzzRadioDisable(otInstance *)
 {
 #ifdef DBG_FUZZ
     Log("Radio disabled");
 #endif
     g_fRadioEnabled = false;
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError testFuzzRadioReceive(otInstance *, uint8_t aChannel)
+otError testFuzzRadioReceive(otInstance *, uint8_t aChannel)
 {
 #ifdef DBG_FUZZ
     Log("==> receive");
 #endif
     g_RecvChannel = aChannel;
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError testFuzzRadioTransmit(otInstance *)
+otError testFuzzRadioTransmit(otInstance *)
 {
 #ifdef DBG_FUZZ
     Log("==> transmit");
 #endif
     g_fTransmit = true;
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-RadioPacket *testFuzztRadioGetTransmitBuffer(otInstance *)
+otRadioFrame *testFuzztRadioGetTransmitBuffer(otInstance *)
 {
-    return &g_TransmitRadioPacket;
+    return &g_TransmitRadioFrame;
 }
 
 void TestFuzz(uint32_t aSeconds)
 {
     // Set the radio capabilities to disable any Mac related timer dependencies
-    g_testPlatRadioCaps = (otRadioCaps)(kRadioCapsAckTimeout | kRadioCapsTransmitRetries);
+    g_testPlatRadioCaps = (otRadioCaps)(OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_TRANSMIT_RETRIES);
 
     // Set the platform function pointers
-    g_TransmitRadioPacket.mPsdu = g_TransmitPsdu;
+    g_TransmitRadioFrame.mPsdu = g_TransmitPsdu;
     g_testPlatRadioIsEnabled = testFuzzRadioIsEnabled;
     g_testPlatRadioEnable = testFuzzRadioEnable;
     g_testPlatRadioDisable = testFuzzRadioDisable;
@@ -151,7 +151,7 @@ void TestFuzz(uint32_t aSeconds)
             if (g_fTransmit)
             {
                 g_fTransmit = false;
-                otPlatRadioTransmitDone(aInstance, &g_TransmitRadioPacket, true, kThreadError_None);
+                otPlatRadioTxDone(aInstance, &g_TransmitRadioFrame, NULL, OT_ERROR_NONE);
 #ifdef DBG_FUZZ
                 Log("<== transmit");
 #endif
@@ -160,7 +160,7 @@ void TestFuzz(uint32_t aSeconds)
             if (g_RecvChannel != 0)
             {
                 uint8_t fuzzRecvBuff[128];
-                RadioPacket fuzzPacket;
+                otRadioFrame fuzzPacket;
 
                 // Initialize the radio packet with a random length
                 memset(&fuzzPacket, 0, sizeof(fuzzPacket));
@@ -178,7 +178,7 @@ void TestFuzz(uint32_t aSeconds)
                 g_RecvChannel = 0;
 
                 // Indicate the receive complete
-                otPlatRadioReceiveDone(aInstance, &fuzzPacket, kThreadError_None);
+                otPlatRadioReceiveDone(aInstance, &fuzzPacket, OT_ERROR_NONE);
 
                 countRecv++;
 #ifdef DBG_FUZZ

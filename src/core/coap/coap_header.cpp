@@ -33,13 +33,14 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
-#include "openthread/platform/random.h"
+#include "coap_header.hpp"
 
-#include <coap/coap_header.hpp>
-#include <coap/coap_client.hpp>
-#include <common/debug.hpp>
-#include <common/code_utils.hpp>
-#include <common/encoding.hpp>
+#include <openthread/platform/random.h>
+
+#include "coap/coap.hpp"
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/encoding.hpp"
 
 namespace ot {
 namespace Coap {
@@ -62,9 +63,9 @@ void Header::Init(Type aType, Code aCode)
     SetCode(aCode);
 }
 
-ThreadError Header::FromMessage(const Message &aMessage, uint16_t aMetadataSize)
+otError Header::FromMessage(const Message &aMessage, uint16_t aMetadataSize)
 {
-    ThreadError error = kThreadError_Parse;
+    otError error = OT_ERROR_PARSE;
     uint16_t offset = aMessage.GetOffset();
     uint16_t length = aMessage.GetLength() - aMessage.GetOffset();
     uint8_t tokenLength;
@@ -76,16 +77,16 @@ ThreadError Header::FromMessage(const Message &aMessage, uint16_t aMetadataSize)
 
     Init();
 
-    VerifyOrExit(length >= kTokenOffset, error = kThreadError_Parse);
+    VerifyOrExit(length >= kTokenOffset, error = OT_ERROR_PARSE);
     aMessage.Read(offset, kTokenOffset, mHeader.mBytes);
     mHeaderLength = kTokenOffset;
     offset += kTokenOffset;
     length -= kTokenOffset;
 
-    VerifyOrExit(GetVersion() == 1, error = kThreadError_Parse);
+    VerifyOrExit(GetVersion() == 1, error = OT_ERROR_PARSE);
 
     tokenLength = GetTokenLength();
-    VerifyOrExit(tokenLength <= kMaxTokenLength && tokenLength <= length, error = kThreadError_Parse);
+    VerifyOrExit(tokenLength <= kMaxTokenLength && tokenLength <= length, error = OT_ERROR_PARSE);
     aMessage.Read(offset, tokenLength, mHeader.mBytes + mHeaderLength);
     mHeaderLength += tokenLength;
     offset += tokenLength;
@@ -101,8 +102,8 @@ ThreadError Header::FromMessage(const Message &aMessage, uint16_t aMetadataSize)
             length -= sizeof(uint8_t);
             // RFC7252: The presence of a marker followed by a zero-length payload MUST be processed
             // as a message format error.
-            VerifyOrExit(length > 0, error = kThreadError_Parse);
-            ExitNow(error = kThreadError_None);
+            VerifyOrExit(length > 0, error = OT_ERROR_PARSE);
+            ExitNow(error = OT_ERROR_NONE);
         }
 
         if (firstOption)
@@ -137,7 +138,7 @@ ThreadError Header::FromMessage(const Message &aMessage, uint16_t aMetadataSize)
         }
         else
         {
-            ExitNow(error = kThreadError_Parse);
+            ExitNow(error = OT_ERROR_PARSE);
         }
 
         if (optionLength < kOption1ByteExtension)
@@ -161,7 +162,7 @@ ThreadError Header::FromMessage(const Message &aMessage, uint16_t aMetadataSize)
         }
         else
         {
-            ExitNow(error = kThreadError_Parse);
+            ExitNow(error = OT_ERROR_PARSE);
         }
 
         if (firstOption)
@@ -173,7 +174,7 @@ ThreadError Header::FromMessage(const Message &aMessage, uint16_t aMetadataSize)
             firstOption = false;
         }
 
-        VerifyOrExit(optionLength <= length, error = kThreadError_Parse);
+        VerifyOrExit(optionLength <= length, error = OT_ERROR_PARSE);
         aMessage.Read(offset, optionLength, mHeader.mBytes + mHeaderLength);
         mHeaderLength += static_cast<uint8_t>(optionLength);
         offset += optionLength;
@@ -183,13 +184,13 @@ ThreadError Header::FromMessage(const Message &aMessage, uint16_t aMetadataSize)
     if (length == 0)
     {
         // No payload present - return success.
-        error = kThreadError_None;
+        error = OT_ERROR_NONE;
     }
 
 exit:
 
     // In case any step failed, prevent access to corrupt Option
-    if (error != kThreadError_None)
+    if (error != OT_ERROR_NONE)
     {
         mFirstOptionOffset = 0;
     }
@@ -197,16 +198,16 @@ exit:
     return error;
 }
 
-ThreadError Header::AppendOption(const Option &aOption)
+otError Header::AppendOption(const Option &aOption)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t *buf = mHeader.mBytes + mHeaderLength;
     uint8_t *cur = buf + 1;
     uint16_t optionDelta = aOption.mNumber - mOptionLast;
     uint16_t optionLength;
 
     // Assure that no option is inserted out of order.
-    VerifyOrExit(aOption.mNumber >= mOptionLast, error = kThreadError_InvalidArgs);
+    VerifyOrExit(aOption.mNumber >= mOptionLast, error = OT_ERROR_INVALID_ARGS);
 
     // Calculate the total option size and check the buffers.
     optionLength = 1 + aOption.mLength;
@@ -214,7 +215,7 @@ ThreadError Header::AppendOption(const Option &aOption)
                     (optionDelta < kOption2ByteExtensionOffset ? 1 : 2);
     optionLength += aOption.mLength < kOption1ByteExtensionOffset ? 0 :
                     (aOption.mLength < kOption2ByteExtensionOffset ? 1 : 2);
-    VerifyOrExit(mHeaderLength + optionLength < kMaxHeaderLength, error = kThreadError_NoBufs);
+    VerifyOrExit(mHeaderLength + optionLength < kMaxHeaderLength, error = OT_ERROR_NO_BUFS);
 
     // Insert option delta.
     if (optionDelta < kOption1ByteExtensionOffset)
@@ -263,17 +264,17 @@ exit:
     return error;
 }
 
-ThreadError Header::AppendObserveOption(uint32_t aObserve)
+otError Header::AppendUintOption(uint16_t aNumber, uint32_t aValue)
 {
     Option coapOption;
 
-    aObserve = Encoding::BigEndian::HostSwap32(aObserve & 0xFFFFFF);
-    coapOption.mNumber = kCoapOptionObserve;
+    aValue = Encoding::BigEndian::HostSwap32(aValue);
+    coapOption.mNumber = aNumber;
     coapOption.mLength = 4;
-    coapOption.mValue = reinterpret_cast<uint8_t *>(&aObserve);
+    coapOption.mValue = reinterpret_cast<uint8_t *>(&aValue);
 
-    // skip preceding zeros, but make sure mLength is at least 1
-    while (coapOption.mValue[0] == 0 && coapOption.mLength > 1)
+    // skip preceding zeros
+    while (coapOption.mValue[0] == 0 && coapOption.mLength > 0)
     {
         coapOption.mValue++;
         coapOption.mLength--;
@@ -282,9 +283,14 @@ ThreadError Header::AppendObserveOption(uint32_t aObserve)
     return AppendOption(coapOption);
 }
 
-ThreadError Header::AppendUriPathOptions(const char *aUriPath)
+otError Header::AppendObserveOption(uint32_t aObserve)
 {
-    ThreadError error = kThreadError_None;
+    return AppendUintOption(kCoapOptionObserve, aObserve & 0xFFFFFF);
+}
+
+otError Header::AppendUriPathOptions(const char *aUriPath)
+{
+    otError error = OT_ERROR_NONE;
     const char *cur = aUriPath;
     const char *end;
     Header::Option coapOption;
@@ -307,38 +313,17 @@ exit:
     return error;
 }
 
-ThreadError Header::AppendContentFormatOption(MediaType aType)
+otError Header::AppendContentFormatOption(MediaType aType)
 {
-    Option coapOption;
-    uint8_t type = static_cast<uint8_t>(aType);
-
-    coapOption.mNumber = kCoapOptionContentFormat;
-    coapOption.mLength = 1;
-    coapOption.mValue = &type;
-
-    return AppendOption(coapOption);
+    return AppendUintOption(kCoapOptionContentFormat, aType);
 }
 
-ThreadError Header::AppendMaxAgeOption(uint32_t aMaxAge)
+otError Header::AppendMaxAgeOption(uint32_t aMaxAge)
 {
-    Option coapOption;
-
-    aMaxAge = Encoding::BigEndian::HostSwap32(aMaxAge);
-    coapOption.mNumber = kCoapOptionMaxAge;
-    coapOption.mLength = 4;
-    coapOption.mValue = reinterpret_cast<uint8_t *>(&aMaxAge);
-
-    // skip preceding zeros, but make sure mLength is at least 1
-    while (coapOption.mValue[0] == 0 && coapOption.mLength > 1)
-    {
-        coapOption.mValue++;
-        coapOption.mLength--;
-    }
-
-    return AppendOption(coapOption);
+    return AppendUintOption(kCoapOptionMaxAge, aMaxAge);
 }
 
-ThreadError Header::AppendUriQueryOption(const char *aUriQuery)
+otError Header::AppendUriQueryOption(const char *aUriQuery)
 {
     Option coapOption;
 
@@ -426,11 +411,11 @@ exit:
     return rval;
 }
 
-ThreadError Header::SetPayloadMarker(void)
+otError Header::SetPayloadMarker(void)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mHeaderLength < kMaxHeaderLength, error = kThreadError_NoBufs);
+    VerifyOrExit(mHeaderLength < kMaxHeaderLength, error = OT_ERROR_NO_BUFS);
     mHeader.mBytes[mHeaderLength++] = 0xff;
 
 exit:

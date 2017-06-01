@@ -33,7 +33,7 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
-#include <crypto/sha256.hpp>
+#include "sha256.hpp"
 
 namespace ot {
 namespace Crypto {

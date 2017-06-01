@@ -36,52 +36,53 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <coap/coap_server.hpp>
-#include <coap/coap_client.hpp>
-#include <coap/secure_coap_client.hpp>
-#include <coap/secure_coap_server.hpp>
-#include <mac/mac.hpp>
-#include <meshcop/dataset_manager.hpp>
-#include <meshcop/joiner_router.hpp>
-#include <meshcop/leader.hpp>
-#include <net/dhcp6.hpp>
-#include <net/dhcp6_client.hpp>
-#include <net/dhcp6_server.hpp>
-#include <net/dns_client.hpp>
-#include <net/ip6_filter.hpp>
-#include <net/netif.hpp>
-#include <thread/address_resolver.hpp>
-#include <thread/announce_begin_server.hpp>
-#include <thread/energy_scan_server.hpp>
-#include <thread/network_diagnostic.hpp>
-#include <thread/key_manager.hpp>
-#include <thread/mesh_forwarder.hpp>
-#include <thread/mle.hpp>
-#include <thread/mle_router.hpp>
-#include <thread/network_data_local.hpp>
-#include <thread/panid_query_server.hpp>
-
-#if OPENTHREAD_ENABLE_JAM_DETECTION
-#include <utils/jam_detector.hpp>
-#endif // OPENTHREAD_ENABLE_JAM_DETECTION
+#include "coap/coap.hpp"
+#include "coap/coap_secure.hpp"
+#include "mac/mac.hpp"
 
 #if OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
-#include <meshcop/border_agent_proxy.hpp>
+#include "meshcop/border_agent_proxy.hpp"
 #endif // OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
-#include <meshcop/commissioner.hpp>
+#include "meshcop/commissioner.hpp"
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
+#include "meshcop/dataset_manager.hpp"
+
 #if OPENTHREAD_ENABLE_DTLS
-#include <meshcop/dtls.hpp>
+#include "meshcop/dtls.hpp"
 #endif  // OPENTHREAD_ENABLE_DTLS
 
 #if OPENTHREAD_ENABLE_JOINER
-#include <meshcop/joiner.hpp>
+#include "meshcop/joiner.hpp"
 #endif  // OPENTHREAD_ENABLE_JOINER
+
+#include "meshcop/joiner_router.hpp"
+#include "meshcop/leader.hpp"
+#include "net/dhcp6.hpp"
+#include "net/dhcp6_client.hpp"
+#include "net/dhcp6_server.hpp"
+#include "net/dns_client.hpp"
+#include "net/ip6_filter.hpp"
+#include "net/netif.hpp"
+#include "thread/address_resolver.hpp"
+#include "thread/announce_begin_server.hpp"
+#include "thread/energy_scan_server.hpp"
+#include "thread/network_diagnostic.hpp"
+#include "thread/key_manager.hpp"
+#include "thread/mesh_forwarder.hpp"
+#include "thread/mle.hpp"
+#include "thread/mle_router.hpp"
+#include "thread/network_data_local.hpp"
+#include "thread/panid_query_server.hpp"
+#include "utils/child_supervision.hpp"
+
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+#include "utils/jam_detector.hpp"
+#endif // OPENTHREAD_ENABLE_JAM_DETECTION
 
 namespace ot {
 
@@ -109,13 +110,13 @@ public:
      * This method enables the Thread network interface.
      *
      */
-    ThreadError Up(void);
+    otError Up(void);
 
     /**
      * This method disables the Thread network interface.
      *
      */
-    ThreadError Down(void);
+    otError Down(void);
 
     /**
      * This method indicates whether or not the Thread network interface is enabled.
@@ -132,17 +133,17 @@ public:
      * @param[out]  aAddress  A reference to the link address.
      *
      */
-    virtual ThreadError GetLinkAddress(Ip6::LinkAddress &aAddress) const;
+    virtual otError GetLinkAddress(Ip6::LinkAddress &aAddress) const;
 
     /**
      * This method submits a message to the network interface.
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval kThreadError_None  Successfully submitted the message to the interface.
+     * @retval OT_ERROR_NONE  Successfully submitted the message to the interface.
      *
      */
-    virtual ThreadError SendMessage(Message &aMessage) { return mMeshForwarder.SendMessage(aMessage); }
+    virtual otError SendMessage(Message &aMessage) { return mMeshForwarder.SendMessage(aMessage); }
 
     /**
      * This method performs a route lookup.
@@ -151,11 +152,11 @@ public:
      * @param[in]   aDestination  A reference to the IPv6 destination address.
      * @param[out]  aPrefixMatch  A pointer where the number of prefix match bits for the chosen route is stored.
      *
-     * @retval kThreadError_None     Successfully found a route.
-     * @retval kThreadError_NoRoute  Could not find a valid route.
+     * @retval OT_ERROR_NONE      Successfully found a route.
+     * @retval OT_ERROR_NO_ROUTE  Could not find a valid route.
      *
      */
-    virtual ThreadError RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch);
+    virtual otError RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch);
 
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     /**
@@ -198,20 +199,12 @@ public:
 #endif  // OPENTHREAD_ENABLE_DNS_CLIENT
 
     /**
-     * This method returns a reference to the CoAP server object.
+     * This method returns a reference to the CoAP object.
      *
-     * @returns A reference to the CoAP server object.
-     *
-     */
-    Coap::Server &GetCoapServer(void) { return mCoapServer; }
-
-    /**
-     * This method returns a reference to the CoAP client object.
-     *
-     * @returns A reference to the CoAP client object.
+     * @returns A reference to the CoAP object.
      *
      */
-    Coap::Client &GetCoapClient(void) { return mCoapClient; }
+    Coap::Coap &GetCoap(void) { return mCoap; }
 
     /**
      * This method returns a reference to the IPv6 filter object.
@@ -335,14 +328,6 @@ public:
      *
      */
     MeshCoP::Commissioner &GetCommissioner(void) { return mCommissioner; }
-
-    /**
-     * This method returns a reference to the secure CoAP server object.
-     *
-     * @returns A reference to the secure CoAP server object.
-     *
-     */
-    Coap::SecureServer &GetSecureCoapServer(void) { return mSecureCoapServer; }
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
 
 #if OPENTHREAD_ENABLE_DTLS
@@ -353,6 +338,14 @@ public:
      *
      */
     MeshCoP::Dtls &GetDtls(void) { return mDtls; }
+
+    /**
+     * This method returns a reference to the secure CoAP object.
+     *
+     * @returns A reference to the secure CoAP object.
+     *
+     */
+    Coap::CoapSecure &GetCoapSecure(void) { return mCoapSecure; }
 #endif  // OPENTHREAD_ENABLE_DTLS
 
 #if OPENTHREAD_ENABLE_JOINER
@@ -363,14 +356,6 @@ public:
      *
      */
     MeshCoP::Joiner &GetJoiner(void) { return mJoiner; }
-
-    /**
-     * This method returns a reference to the secure CoAP client object.
-     *
-     * @returns A reference to the secure CoAP client object.
-     *
-     */
-    Coap::SecureClient &GetSecureCoapClient(void) { return mSecureCoapClient; }
 #endif  // OPENTHREAD_ENABLE_JOINER
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
@@ -394,6 +379,22 @@ public:
 #endif // OPENTHREAD_ENABLE_BORDER_AGENT_PROXY && OPENTHREAD_FTD
 
     /**
+     * This method returns a reference to the child supervisor object.
+     *
+     * @returns A reference to the child supervisor object.
+     *
+     */
+    Utils::ChildSupervisor &GetChildSupervisor(void) { return mChildSupervisor; }
+
+    /**
+      * This method returns a reference to the supervision listener object.
+      *
+      * @returns A reference to the supervision listener object.
+      *
+      */
+    Utils::SupervisionListener &GetSupervisionListener(void) { return mSupervisionListener; }
+
+    /**
      * This method returns the pointer to the parent otInstance structure.
      *
      * @returns The pointer to the parent otInstance structure.
@@ -402,10 +403,9 @@ public:
     otInstance *GetInstance(void);
 
 private:
-    static ThreadError TmfFilter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static otError TmfFilter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 
-    Coap::Server mCoapServer;
-    Coap::Client mCoapClient;
+    Coap::Coap mCoap;
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
     Dhcp6::Dhcp6Client mDhcp6Client;
 #endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
@@ -431,16 +431,15 @@ private:
     bool mIsUp;
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
-    Coap::SecureServer mSecureCoapServer;
     MeshCoP::Commissioner mCommissioner;
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
 #if OPENTHREAD_ENABLE_DTLS
     MeshCoP::Dtls mDtls;
+    Coap::CoapSecure mCoapSecure;
 #endif// OPENTHREAD_ENABLE_DTLS
 
 #if OPENTHREAD_ENABLE_JOINER
-    Coap::SecureClient mSecureCoapClient;
     MeshCoP::Joiner mJoiner;
 #endif  // OPENTHREAD_ENABLE_JOINER
 
@@ -458,6 +457,8 @@ private:
     AddressResolver mAddressResolver;
 #endif  // OPENTHREAD_FTD
 
+    Utils::ChildSupervisor mChildSupervisor;
+    Utils::SupervisionListener mSupervisionListener;
     AnnounceBeginServer mAnnounceBegin;
     PanIdQueryServer mPanIdQuery;
     EnergyScanServer mEnergyScan;

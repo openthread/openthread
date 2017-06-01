@@ -37,7 +37,7 @@
 
 #include <stdint.h>
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,10 +46,10 @@ extern "C" {
 /**
  * Perform any initialization for flash driver.
  *
- * @retval ::kThreadError_None    Initialize flash driver success.
- * @retval ::kThreadError_Failed  Initialize flash driver fail.
+ * @retval ::OT_ERROR_NONE    Initialize flash driver success.
+ * @retval ::OT_ERROR_FAILED  Initialize flash driver fail.
  */
-ThreadError utilsFlashInit(void);
+otError utilsFlashInit(void);
 
 /**
  * Get the size of flash that can be read/write by the caller.
@@ -69,11 +69,11 @@ uint32_t utilsFlashGetSize(void);
  *
  * @param[in]  aAddress  The start address of the flash to erase.
  *
- * @retval kThreadError_None           Erase flash operation is started.
- * @retval kThreadError_Failed         Erase flash operation is not started.
- * @retval kThreadError_InvalidArgs    aAddress is out of range of flash or not aligend.
+ * @retval OT_ERROR_NONE           Erase flash operation is started.
+ * @retval OT_ERROR_FAILED         Erase flash operation is not started.
+ * @retval OT_ERROR_INVALID_ARGS    aAddress is out of range of flash or not aligend.
  */
-ThreadError utilsFlashErasePage(uint32_t aAddress);
+otError utilsFlashErasePage(uint32_t aAddress);
 
 /**
   * Check whether flash is ready or busy.
@@ -82,10 +82,10 @@ ThreadError utilsFlashErasePage(uint32_t aAddress);
   *                       zero indicates that it is a polling function, and returns current status of flash immediately.
   *                       non-zero indicates that it is blocking there until the operation is done and become ready, or timeout expires.
   *
-  * @retval kThreadError_None           Flash is ready for any operation.
-  * @retval kThreadError_Busy           Flash is busy.
+  * @retval OT_ERROR_NONE           Flash is ready for any operation.
+  * @retval OT_ERROR_BUSY           Flash is busy.
   */
-ThreadError utilsFlashStatusWait(uint32_t aTimeout);
+otError utilsFlashStatusWait(uint32_t aTimeout);
 
 /**
  * Write flash. The write operation only clears bits, but never set bits.

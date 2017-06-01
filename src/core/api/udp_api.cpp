@@ -32,8 +32,7 @@
  */
 
 #include  "openthread/openthread_enable_defines.h"
-
-#include "openthread/udp.h"
+#include <openthread/udp.h>
 
 #include "openthread-instance.h"
 
@@ -51,9 +50,9 @@ otMessage *otUdpNewMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
     return message;
 }
 
-ThreadError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aCallbackContext)
+otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aCallbackContext)
 {
-    ThreadError error = kThreadError_InvalidArgs;
+    otError error = OT_ERROR_INVALID_ARGS;
     Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
 
     if (socket->mTransport == NULL)
@@ -65,16 +64,16 @@ ThreadError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive 
     return error;
 }
 
-ThreadError otUdpClose(otUdpSocket *aSocket)
+otError otUdpClose(otUdpSocket *aSocket)
 {
-    ThreadError error = kThreadError_InvalidState;
+    otError error = OT_ERROR_INVALID_STATE;
     Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
 
     if (socket->mTransport != NULL)
     {
         error = socket->Close();
 
-        if (error == kThreadError_None)
+        if (error == OT_ERROR_NONE)
         {
             socket->mTransport = NULL;
         }
@@ -83,19 +82,19 @@ ThreadError otUdpClose(otUdpSocket *aSocket)
     return error;
 }
 
-ThreadError otUdpBind(otUdpSocket *aSocket, otSockAddr *aSockName)
+otError otUdpBind(otUdpSocket *aSocket, otSockAddr *aSockName)
 {
     Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
     return socket->Bind(*static_cast<const Ip6::SockAddr *>(aSockName));
 }
 
-ThreadError otUdpConnect(otUdpSocket *aSocket, otSockAddr *aSockName)
+otError otUdpConnect(otUdpSocket *aSocket, otSockAddr *aSockName)
 {
     Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
     return socket->Connect(*static_cast<const Ip6::SockAddr *>(aSockName));
 }
 
-ThreadError otUdpSend(otUdpSocket *aSocket, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+otError otUdpSend(otUdpSocket *aSocket, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
     return socket->SendTo(*static_cast<Message *>(aMessage),

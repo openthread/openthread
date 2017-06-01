@@ -81,7 +81,7 @@ otLwfCmdInitialize(
     {
         pFilter->cmdTIDsInUse = 0;
         pFilter->cmdNextTID = 1;
-        pFilter->cmdResetReason = kPlatResetReason_PowerOn;
+        pFilter->cmdResetReason = OT_PLAT_RESET_REASON_POWER_ON;
 
         NdisAllocateSpinLock(&pFilter->cmdLock);
         InitializeListHead(&pFilter->cmdHandlers);
@@ -899,7 +899,7 @@ otLwfCmdSendMacFrameComplete(
 {
     UNREFERENCED_PARAMETER(Context);
 
-    pFilter->otLastTransmitError = kThreadError_Abort;
+    pFilter->otLastTransmitError = OT_ERROR_ABORT;
 
     if (Data && Command == SPINEL_CMD_PROP_VALUE_IS)
     {
@@ -911,7 +911,7 @@ otLwfCmdSendMacFrameComplete(
             {
                 if (spinel_status == SPINEL_STATUS_OK)
                 {
-                    pFilter->otLastTransmitError = kThreadError_None;
+                    pFilter->otLastTransmitError = OT_ERROR_NONE;
                     (void)spinel_datatype_unpack(
                         Data + packed_len,
                         DataLength - (spinel_size_t)packed_len,
@@ -934,7 +934,7 @@ _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID
 otLwfCmdSendMacFrameAsync(
     _In_ PMS_FILTER     pFilter,
-    _In_ RadioPacket*   Packet
+    _In_ otRadioFrame*  Packet
     )
 {
     // Reset the completion event
@@ -961,7 +961,7 @@ otLwfCmdSendMacFrameAsync(
     if (!NT_SUCCESS(status))
     {
         LogError(DRIVER_DEFAULT, "Set SPINEL_PROP_STREAM_RAW failed, %!STATUS!", status);
-        pFilter->otLastTransmitError = kThreadError_Abort;
+        pFilter->otLastTransmitError = OT_ERROR_ABORT;
         KeSetEvent(&pFilter->SendNetBufferListComplete, IO_NO_INCREMENT, FALSE);
     }
 }
@@ -1015,7 +1015,7 @@ otLwfGetPropHandler(
         }
         else
         {
-            ThreadError errorCode = SpinelStatusToThreadError(spinel_status);
+            otError errorCode = SpinelStatusToThreadError(spinel_status);
             LogVerbose(DRIVER_DEFAULT, "Get key=%u failed with %!otError!", CmdContext->Key, errorCode);
             CmdContext->Status = ThreadErrorToNtstatus(errorCode);
         }
@@ -1170,7 +1170,7 @@ otLwfSetPropHandler(
         }
         else
         {
-            ThreadError errorCode = SpinelStatusToThreadError(spinel_status);
+            otError errorCode = SpinelStatusToThreadError(spinel_status);
             LogVerbose(DRIVER_DEFAULT, "Set key=%u failed with %!otError!", CmdContext->Key, errorCode);
             CmdContext->Status = ThreadErrorToNtstatus(errorCode);
         }
@@ -1333,75 +1333,75 @@ otLwfCmdRemoveProp(
 // General Spinel Helpers
 //
 
-ThreadError
+otError
 SpinelStatusToThreadError(
     spinel_status_t error
     )
 {
-    ThreadError ret;
+    otError ret;
 
     switch (error)
     {
     case SPINEL_STATUS_OK:
-        ret = kThreadError_None;
+        ret = OT_ERROR_NONE;
         break;
 
     case SPINEL_STATUS_FAILURE:
-        ret = kThreadError_Failed;
+        ret = OT_ERROR_FAILED;
         break;
 
     case SPINEL_STATUS_DROPPED:
-        ret = kThreadError_Drop;
+        ret = OT_ERROR_DROP;
         break;
 
     case SPINEL_STATUS_NOMEM:
-        ret = kThreadError_NoBufs;
+        ret = OT_ERROR_NO_BUFS;
         break;
 
     case SPINEL_STATUS_BUSY:
-        ret = kThreadError_Busy;
+        ret = OT_ERROR_BUSY;
         break;
 
     case SPINEL_STATUS_PARSE_ERROR:
-        ret = kThreadError_Parse;
+        ret = OT_ERROR_PARSE;
         break;
 
     case SPINEL_STATUS_INVALID_ARGUMENT:
-        ret = kThreadError_InvalidArgs;
+        ret = OT_ERROR_INVALID_ARGS;
         break;
 
     case SPINEL_STATUS_UNIMPLEMENTED:
-        ret = kThreadError_NotImplemented;
+        ret = OT_ERROR_NOT_IMPLEMENTED;
         break;
 
     case SPINEL_STATUS_INVALID_STATE:
-        ret = kThreadError_InvalidState;
+        ret = OT_ERROR_INVALID_STATE;
         break;
 
     case SPINEL_STATUS_NO_ACK:
-        ret = kThreadError_NoAck;
+        ret = OT_ERROR_NO_ACK;
         break;
 
     case SPINEL_STATUS_CCA_FAILURE:
-        ret = kThreadError_ChannelAccessFailure;
+        ret = OT_ERROR_CHANNEL_ACCESS_FAILURE;
         break;
 
     case SPINEL_STATUS_ALREADY:
-        ret = kThreadError_Already;
+        ret = OT_ERROR_ALREADY;
         break;
 
     case SPINEL_STATUS_ITEM_NOT_FOUND:
-        ret = kThreadError_NotFound;
+        ret = OT_ERROR_NOT_FOUND;
         break;
 
     default:
         if (error >= SPINEL_STATUS_STACK_NATIVE__BEGIN && error <= SPINEL_STATUS_STACK_NATIVE__END)
         {
-            ret = (ThreadError)(error - SPINEL_STATUS_STACK_NATIVE__BEGIN);
+            ret = (otError)(error - SPINEL_STATUS_STACK_NATIVE__BEGIN);
         }
         else
         {
-            ret = kThreadError_Failed;
+            ret = OT_ERROR_FAILED;
         }
         break;
     }

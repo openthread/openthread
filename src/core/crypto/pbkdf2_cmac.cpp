@@ -33,8 +33,10 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
+#include "pbkdf2_cmac.h"
+
 #include "utils/wrap_string.h"
-#include <crypto/pbkdf2_cmac.h>
+
 #include <mbedtls/cmac.h>
 
 #if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD

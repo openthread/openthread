@@ -33,13 +33,14 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
+#include "cli_udp.hpp"
+
 #include <stdarg.h>
 #include <stdio.h>
 #include "utils/wrap_string.h"
 
-#include <cli/cli.hpp>
-#include <cli/cli_udp.hpp>
-#include <common/code_utils.hpp>
+#include "cli/cli.hpp"
+#include "common/code_utils.hpp"
 
 namespace ot {
 namespace Cli {
@@ -52,9 +53,9 @@ Udp::Udp(otInstance *aInstance, Interpreter *aInterpreter):
     memset(&mPeer, 0, sizeof(mPeer));
 }
 
-ThreadError Udp::Start(void)
+otError Udp::Start(void)
 {
-    ThreadError error;
+    otError error;
 
     otSockAddr sockaddr;
     memset(&sockaddr, 0, sizeof(otSockAddr));
@@ -100,17 +101,17 @@ exit:
 
 int Udp::Output(const char *aBuf, uint16_t aBufLength)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     otMessage *message;
 
-    VerifyOrExit((message = otUdpNewMessage(mInstance, true)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = otUdpNewMessage(mInstance, true)) != NULL, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = otMessageSetLength(message, aBufLength));
     otMessageWrite(message, 0, aBuf, aBufLength);
     SuccessOrExit(error = otUdpSend(&mSocket, message, &mPeer));
 
 exit:
 
-    if (error != kThreadError_None && message != NULL)
+    if (error != OT_ERROR_NONE && message != NULL)
     {
         otMessageFree(message);
         aBufLength = 0;

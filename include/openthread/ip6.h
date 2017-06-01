@@ -35,15 +35,15 @@
 #ifndef OPENTHREAD_IP6_H_
 #define OPENTHREAD_IP6_H_
 
-#include "openthread/message.h"
-#include "platform/radio.h"
+#include <openthread/message.h>
+#include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @addtogroup ip6  IPv6
+ * @addtogroup api-ip6
  *
  * @brief
  *   This module includes functions that control IPv6 communication.
@@ -60,11 +60,11 @@ extern "C" {
  * @param[in] aInstance A pointer to an OpenThread instance.
  * @param[in] aEnabled  TRUE to enable IPv6, FALSE otherwise.
  *
- * @retval kThreadError_None          Successfully enabled the IPv6 interface,
- *                                    or the interface was already enabled.
+ * @retval OT_ERROR_NONE          Successfully enabled the IPv6 interface,
+ *                                or the interface was already enabled.
  *
  */
-OTAPI ThreadError OTCALL otIp6SetEnabled(otInstance *aInstance, bool aEnabled);
+OTAPI otError OTCALL otIp6SetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
  * This function indicates whether or not the IPv6 interface is up.
@@ -86,11 +86,11 @@ OTAPI bool OTCALL otIp6IsEnabled(otInstance *aInstance);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aAddress  A pointer to a Network Interface Address.
  *
- * @retval kThreadErrorNone          Successfully added (or updated) the Network Interface Address.
- * @retval kThreadError_InvalidArgs  The IP Address indicated by @p aAddress is an internal address.
- * @retval kThreadError_NoBufs       The Network Interface is already storing the maximum allowed external addresses.
+ * @retval OT_ERROR_NONE          Successfully added (or updated) the Network Interface Address.
+ * @retval OT_ERROR_INVALID_ARGS  The IP Address indicated by @p aAddress is an internal address.
+ * @retval OT_ERROR_NO_BUFS       The Network Interface is already storing the maximum allowed external addresses.
  */
-OTAPI ThreadError OTCALL otIp6AddUnicastAddress(otInstance *aInstance, const otNetifAddress *aAddress);
+OTAPI otError OTCALL otIp6AddUnicastAddress(otInstance *aInstance, const otNetifAddress *aAddress);
 
 /**
  * Remove a Network Interface Address from the Thread interface.
@@ -98,11 +98,11 @@ OTAPI ThreadError OTCALL otIp6AddUnicastAddress(otInstance *aInstance, const otN
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aAddress  A pointer to an IP Address.
  *
- * @retval kThreadErrorNone          Successfully removed the Network Interface Address.
- * @retval kThreadError_InvalidArgs  The IP Address indicated by @p aAddress is an internal address.
- * @retval kThreadError_NotFound     The IP Address indicated by @p aAddress was not found.
+ * @retval OT_ERROR_NONE          Successfully removed the Network Interface Address.
+ * @retval OT_ERROR_INVALID_ARGS  The IP Address indicated by @p aAddress is an internal address.
+ * @retval OT_ERROR_NOT_FOUND     The IP Address indicated by @p aAddress was not found.
  */
-OTAPI ThreadError OTCALL otIp6RemoveUnicastAddress(otInstance *aInstance, const otIp6Address *aAddress);
+OTAPI otError OTCALL otIp6RemoveUnicastAddress(otInstance *aInstance, const otIp6Address *aAddress);
 
 /**
  * Get the list of IPv6 addresses assigned to the Thread interface.
@@ -122,11 +122,11 @@ OTAPI const otNetifAddress *OTCALL otIp6GetUnicastAddresses(otInstance *aInstanc
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aAddress  A pointer to an IP Address.
  *
- * @retval kThreadErrorNone          Successfully subscribed to the Network Interface Multicast Address.
- * @retval kThreadError_InvalidArgs  The IP Address indicated by @p aAddress is invalid address.
- * @retval kThreadError_NoBufs       The Network Interface is already storing the maximum allowed external multicast addresses.
+ * @retval OT_ERROR_NONE          Successfully subscribed to the Network Interface Multicast Address.
+ * @retval OT_ERROR_INVALID_ARGS  The IP Address indicated by @p aAddress is invalid address.
+ * @retval OT_ERROR_NO_BUFS       The Network Interface is already storing the maximum allowed external multicast addresses.
  */
-ThreadError otIp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress);
+otError otIp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress);
 
 /**
  * Unsubscribe the Thread interface to a Network Interface Multicast Address.
@@ -134,11 +134,11 @@ ThreadError otIp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6Add
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aAddress  A pointer to an IP Address.
  *
- * @retval kThreadErrorNone          Successfully unsubscribed to the Network Interface Multicast Address.
- * @retval kThreadError_InvalidArgs  The IP Address indicated by @p aAddress is an internal address.
- * @retval kThreadError_NotFound     The IP Address indicated by @p aAddress was not found.
+ * @retval OT_ERROR_NONE          Successfully unsubscribed to the Network Interface Multicast Address.
+ * @retval OT_ERROR_INVALID_ARGS  The IP Address indicated by @p aAddress is an internal address.
+ * @retval OT_ERROR_NOT_FOUND     The IP Address indicated by @p aAddress was not found.
  */
-ThreadError otIp6UnsubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress);
+otError otIp6UnsubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress);
 
 /**
  * Get the list of IPv6 multicast addresses subscribed to the Thread interface.
@@ -175,11 +175,11 @@ void otIp6SetMulticastPromiscuousEnabled(otInstance *aInstance, bool aEnabled);
  * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
  * @param[inout]  aContext   A pointer to creator-specific context.
  *
- * @retval kThreadError_None                        Created valid IID for given IPv6 address.
- * @retval kThreadError_Ipv6AddressCreationFailure  Creation of valid IID for given IPv6 address failed.
+ * @retval OT_ERROR_NONE                        Created valid IID for given IPv6 address.
+ * @retval OT_ERROR_IP6_ADDRESS_CREATION_FAILURE  Creation of valid IID for given IPv6 address failed.
  *
  */
-typedef ThreadError(*otIp6SlaacIidCreate)(otInstance *aInstance, otNetifAddress *aAddress, void *aContext);
+typedef otError(*otIp6SlaacIidCreate)(otInstance *aInstance, otNetifAddress *aAddress, void *aContext);
 
 /**
  * Update all automatically created IPv6 addresses for prefixes from current Network Data with SLAAC procedure.
@@ -201,10 +201,10 @@ void otIp6SlaacUpdate(otInstance *aInstance, otNetifAddress *aAddresses, uint32_
  * @param[inout]  aAddresses  A pointer to structure containing IPv6 address for which IID is being created.
  * @param[in]     aContext    A pointer to unused data.
  *
- * @retval kThreadError_None  Created valid IID for given IPv6 address.
+ * @retval OT_ERROR_NONE  Created valid IID for given IPv6 address.
  *
  */
-ThreadError otIp6CreateRandomIid(otInstance *aInstance, otNetifAddress *aAddresses, void *aContext);
+otError otIp6CreateRandomIid(otInstance *aInstance, otNetifAddress *aAddresses, void *aContext);
 
 /**
  * Create IID for given IPv6 address using extended MAC address.
@@ -213,10 +213,10 @@ ThreadError otIp6CreateRandomIid(otInstance *aInstance, otNetifAddress *aAddress
  * @param[inout]  aAddresses  A pointer to structure containing IPv6 address for which IID is being created.
  * @param[in]     aContext    A pointer to unused data.
  *
- * @retval kThreadError_None  Created valid IID for given IPv6 address.
+ * @retval OT_ERROR_NONE  Created valid IID for given IPv6 address.
  *
  */
-ThreadError otIp6CreateMacIid(otInstance *aInstance, otNetifAddress *aAddresses, void *aContext);
+otError otIp6CreateMacIid(otInstance *aInstance, otNetifAddress *aAddresses, void *aContext);
 
 /**
  * Create semantically opaque IID for given IPv6 address.
@@ -225,11 +225,11 @@ ThreadError otIp6CreateMacIid(otInstance *aInstance, otNetifAddress *aAddresses,
  * @param[inout]  aAddresses  A pointer to structure containing IPv6 address for which IID is being created.
  * @param[inout]  aContext    A pointer to a otSemanticallyOpaqueIidGeneratorData structure.
  *
- * @retval kThreadError_None                        Created valid IID for given IPv6 address.
- * @retval kThreadError_Ipv6AddressCreationFailure  Could not create valid IID for given IPv6 address.
+ * @retval OT_ERROR_NONE                         Created valid IID for given IPv6 address.
+ * @retval OT_ERROR_IP6_ADDRESS_CREATION_FAILURE  Could not create valid IID for given IPv6 address.
  *
  */
-ThreadError otIp6CreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddress *aAddresses, void *aContext);
+otError otIp6CreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddress *aAddresses, void *aContext);
 
 /**
  * Allocate a new message buffer for sending an IPv6 message.
@@ -303,7 +303,7 @@ void otIp6SetReceiveFilterEnabled(otInstance *aInstance, bool aEnabled);
  * @param[in]  aMessage  A pointer to the message buffer containing the IPv6 datagram.
  *
  */
-ThreadError otIp6Send(otInstance *aInstance, otMessage *aMessage);
+otError otIp6Send(otInstance *aInstance, otMessage *aMessage);
 
 /**
  * This function adds a port to the allowed unsecured port list.
@@ -311,11 +311,11 @@ ThreadError otIp6Send(otInstance *aInstance, otMessage *aMessage);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aPort     The port value.
  *
- * @retval kThreadError_None    The port was successfully added to the allowed unsecure port list.
- * @retval kThreadError_NoBufs  The unsecure port list is full.
+ * @retval OT_ERROR_NONE     The port was successfully added to the allowed unsecure port list.
+ * @retval OT_ERROR_NO_BUFS  The unsecure port list is full.
  *
  */
-ThreadError otIp6AddUnsecurePort(otInstance *aInstance, uint16_t aPort);
+otError otIp6AddUnsecurePort(otInstance *aInstance, uint16_t aPort);
 
 /**
  * This function removes a port from the allowed unsecure port list.
@@ -323,11 +323,11 @@ ThreadError otIp6AddUnsecurePort(otInstance *aInstance, uint16_t aPort);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aPort     The port value.
  *
- * @retval kThreadError_None      The port was successfully removed from the allowed unsecure port list.
- * @retval kThreadError_NotFound  The port was not found in the unsecure port list.
+ * @retval OT_ERROR_NONE       The port was successfully removed from the allowed unsecure port list.
+ * @retval OT_ERROR_NOT_FOUND  The port was not found in the unsecure port list.
  *
  */
-ThreadError otIp6RemoveUnsecurePort(otInstance *aInstance, uint16_t aPort);
+otError otIp6RemoveUnsecurePort(otInstance *aInstance, uint16_t aPort);
 
 /**
  * This function returns a pointer to the unsecure port list.
@@ -359,10 +359,10 @@ OTAPI bool OTCALL otIp6IsAddressEqual(const otIp6Address *a, const otIp6Address 
  * @param[in]   aString   A pointer to a NULL-terminated string.
  * @param[out]  aAddress  A pointer to an IPv6 address.
  *
- * @retval kThreadErrorNone        Successfully parsed the string.
- * @retval kThreadErrorInvalidArg  Failed to parse the string.
+ * @retval OT_ERROR_NONE          Successfully parsed the string.
+ * @retval OT_ERROR_INVALID_ARGS  Failed to parse the string.
  */
-OTAPI ThreadError OTCALL otIp6AddressFromString(const char *aString, otIp6Address *aAddress);
+OTAPI otError OTCALL otIp6AddressFromString(const char *aString, otIp6Address *aAddress);
 
 /**
  * This function returns the prefix match length (bits) for two IPv6 addresses.

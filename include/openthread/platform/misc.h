@@ -37,11 +37,21 @@
 
 #include <stdint.h>
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * @addtogroup plat-misc
+ *
+ * @brief
+ *   This module includes platform abstractions for miscellaneous behaviors.
+ *
+ * @{
+ *
+ */
 
 /**
  * This function performs a software reset on the platform, if supported.
@@ -59,17 +69,17 @@ void otPlatReset(otInstance *aInstance);
  */
 typedef enum
 {
-    kPlatResetReason_PowerOn        = 0,
-    kPlatResetReason_External       = 1,
-    kPlatResetReason_Software       = 2,
-    kPlatResetReason_Fault          = 3,
-    kPlatResetReason_Crash          = 4,
-    kPlatResetReason_Assert         = 5,
-    kPlatResetReason_Other          = 6,
-    kPlatResetReason_Unknown        = 7,
-    kPlatResetReason_Watchdog       = 8,
+    OT_PLAT_RESET_REASON_POWER_ON       = 0,
+    OT_PLAT_RESET_REASON_EXTERNAL       = 1,
+    OT_PLAT_RESET_REASON_SOFTWARE       = 2,
+    OT_PLAT_RESET_REASON_FAULT          = 3,
+    OT_PLAT_RESET_REASON_CRASH          = 4,
+    OT_PLAT_RESET_REASON_ASSERT         = 5,
+    OT_PLAT_RESET_REASON_OTHER          = 6,
+    OT_PLAT_RESET_REASON_UNKNOWN        = 7,
+    OT_PLAT_RESET_REASON_WATCHDOG       = 8,
 
-    kPlatResetReason_Count,
+    OT_PLAT_RESET_REASON_COUNT,
 } otPlatResetReason;
 
 /**
@@ -88,6 +98,18 @@ otPlatResetReason otPlatGetResetReason(otInstance *aInstance);
  *
  */
 void otPlatAssertFail(const char *aFilename, int aLineNumber);
+
+/**
+ * This function performs a platform specific operation to wake the host MCU.
+ * This is used only for NCP configurations.
+ *
+ */
+void otPlatWakeHost(void);
+
+/**
+ * @}
+ *
+ */
 
 #ifdef __cplusplus
 }  // extern "C"

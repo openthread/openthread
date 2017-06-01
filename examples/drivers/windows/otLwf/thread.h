@@ -44,7 +44,7 @@ __inline PMS_FILTER otCtxToFilter(_In_ otInstance* otCtx)
 // Helper function to indicate if a role means it is attached or not
 _inline BOOLEAN IsAttached(_In_ otDeviceRole role)
 {
-    return role > kDeviceRoleDetached;
+    return role > OT_DEVICE_ROLE_DETACHED;
 }
 
 //
@@ -162,7 +162,7 @@ void otLwfEnergyScanCallback(_In_ otEnergyScanResult *aResult, _In_ void *aConte
 void otLwfDiscoverCallback(_In_ otActiveScanResult *aResult, _In_ void *aContext);
 void otLwfCommissionerEnergyReportCallback(uint32_t aChannelMask, const uint8_t *aEnergyList, uint8_t aEnergyListLength, void *aContext);
 void otLwfCommissionerPanIdConflictCallback(uint16_t aPanId, uint32_t aChannelMask, _In_ void *aContext);
-void otLwfJoinerCallback(ThreadError aError, _In_ void *aContext);
+void otLwfJoinerCallback(otError aError, _In_ void *aContext);
 
 //
 // Value Callbacks

@@ -33,7 +33,7 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
-#include "openthread/jam_detection.h"
+#include <openthread/jam_detection.h>
 
 #include "openthread-instance.h"
 
@@ -41,7 +41,7 @@ using namespace ot;
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
 
-ThreadError otJamDetectionSetRssiThreshold(otInstance *aInstance, int8_t aRssiThreshold)
+otError otJamDetectionSetRssiThreshold(otInstance *aInstance, int8_t aRssiThreshold)
 {
     return aInstance->mThreadNetif.GetJamDetector().SetRssiThreshold(aRssiThreshold);
 }
@@ -51,7 +51,7 @@ int8_t otJamDetectionGetRssiThreshold(otInstance *aInstance)
     return aInstance->mThreadNetif.GetJamDetector().GetRssiThreshold();
 }
 
-ThreadError otJamDetectionSetWindow(otInstance *aInstance, uint8_t aWindow)
+otError otJamDetectionSetWindow(otInstance *aInstance, uint8_t aWindow)
 {
     return aInstance->mThreadNetif.GetJamDetector().SetWindow(aWindow);
 }
@@ -61,7 +61,7 @@ uint8_t otJamDetectionGetWindow(otInstance *aInstance)
     return aInstance->mThreadNetif.GetJamDetector().GetWindow();
 }
 
-ThreadError otJamDetectionSetBusyPeriod(otInstance *aInstance, uint8_t aBusyPeriod)
+otError otJamDetectionSetBusyPeriod(otInstance *aInstance, uint8_t aBusyPeriod)
 {
     return aInstance->mThreadNetif.GetJamDetector().SetBusyPeriod(aBusyPeriod);
 }
@@ -71,12 +71,12 @@ uint8_t otJamDetectionGetBusyPeriod(otInstance *aInstance)
     return aInstance->mThreadNetif.GetJamDetector().GetBusyPeriod();
 }
 
-ThreadError otJamDetectionStart(otInstance *aInstance, otJamDetectionCallback aCallback, void *aContext)
+otError otJamDetectionStart(otInstance *aInstance, otJamDetectionCallback aCallback, void *aContext)
 {
     return aInstance->mThreadNetif.GetJamDetector().Start(aCallback, aContext);
 }
 
-ThreadError otJamDetectionStop(otInstance *aInstance)
+otError otJamDetectionStop(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetJamDetector().Stop();
 }

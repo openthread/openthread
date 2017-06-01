@@ -41,14 +41,14 @@
 #include <openthread-config.h>
 #endif
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @addtogroup border-agent-proxy  Border Agent Proxy
+ * @addtogroup api-border-agent
  *
  * @brief
  *   This module includes functions for signal border agent proxy feature.
@@ -73,22 +73,22 @@ typedef void (*otBorderAgentProxyStreamHandler)(otMessage *aMessage, uint16_t aL
  * @param[in]  aHandler             A pointer to a function called to deliver packet to border agent.
  * @param[in]  aContext             A pointer to application-specific context.
  *
- * @retval kThreadError_None        Successfully started the border agent proxy.
- * @retval kThreadError_Already     Border agent proxy has been started before.
+ * @retval OT_ERROR_NONE        Successfully started the border agent proxy.
+ * @retval OT_ERROR_ALREADY     Border agent proxy has been started before.
  *
  */
-ThreadError otBorderAgentProxyStart(otInstance *aInstance, otBorderAgentProxyStreamHandler aHandler, void *aContext);
+otError otBorderAgentProxyStart(otInstance *aInstance, otBorderAgentProxyStreamHandler aHandler, void *aContext);
 
 /**
  * Stop the border agent proxy.
  *
  * @param[in]  aInstance            A pointer to an OpenThread instance.
  *
- * @retval kThreadError_None        Successfully stopped the border agent proxy.
- * @retval kThreadError_Already     Border agent proxy is already stopped.
+ * @retval OT_ERROR_NONE        Successfully stopped the border agent proxy.
+ * @retval OT_ERROR_ALREADY     Border agent proxy is already stopped.
  *
  */
-ThreadError otBorderAgentProxyStop(otInstance *aInstance);
+otError otBorderAgentProxyStop(otInstance *aInstance);
 
 /**
  * Send packet through border agent proxy.
@@ -98,14 +98,14 @@ ThreadError otBorderAgentProxyStop(otInstance *aInstance);
  * @param[in]  aLocator             Rloc of destination.
  * @param[in]  aPort                Port of destination.
  *
- * @retval kThreadError_None            Successfully send the message.
- * @retval kThreadError_InvalidState    Border agent proxy is not started.
+ * @retval OT_ERROR_NONE             Successfully send the message.
+ * @retval OT_ERROR_INVALID_STATE    Border agent proxy is not started.
  *
  * @warning No matter the call success or fail, the message is freed.
  *
  */
-ThreadError otBorderAgentProxySend(otInstance *aInstance, otMessage *aMessage,
-                                   uint16_t aLocator, uint16_t aPort);
+otError otBorderAgentProxySend(otInstance *aInstance, otMessage *aMessage,
+                               uint16_t aLocator, uint16_t aPort);
 
 /**
  * Get the border agent proxy status (enabled/disabled)

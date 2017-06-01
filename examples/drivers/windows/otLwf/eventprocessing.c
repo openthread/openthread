@@ -773,7 +773,7 @@ otLwfEventWorkerThread(
     pFilter->otInstanceSize -= sizeof(PMS_FILTER);
 
     // Initialize the OpenThread library
-    pFilter->otCachedRole = kDeviceRoleDisabled;
+    pFilter->otCachedRole = OT_DEVICE_ROLE_DISABLED;
     pFilter->otCtx = otInstanceInit(pFilter->otInstanceBuffer + sizeof(PMS_FILTER), &pFilter->otInstanceSize);
     NT_ASSERT(pFilter->otCtx);
     if (pFilter->otCtx == NULL)
@@ -901,7 +901,7 @@ otLwfEventWorkerThread(
                             // Copy NB data into message
                             if (NT_SUCCESS(CopyDataBuffer(CurrNb, NET_BUFFER_DATA_LENGTH(CurrNb), MessageBuffer)))
                             {
-                                ThreadError error = kThreadError_None;
+                                otError error = OT_ERROR_NONE;
 
                                 // Create a new message
                                 otMessage *message = otIp6NewMessage(pFilter->otCtx, TRUE);
@@ -909,7 +909,7 @@ otLwfEventWorkerThread(
                                 {
                                     // Write to the message
                                     error = otMessageAppend(message, MessageBuffer, (uint16_t)NET_BUFFER_DATA_LENGTH(CurrNb));
-                                    if (error != kThreadError_None)
+                                    if (error != OT_ERROR_NONE)
                                     {
                                         LogError(DRIVER_DATA_PATH, "otAppendMessage failed with %!otError!", error);
                                         otMessageFree(message);
@@ -928,7 +928,7 @@ otLwfEventWorkerThread(
 
                                         // Send message (it will free 'message')
                                         error = otIp6Send(pFilter->otCtx, message);
-                                        if (error != kThreadError_None)
+                                        if (error != OT_ERROR_NONE)
                                         {
                                             LogError(DRIVER_DATA_PATH, "otSendIp6Datagram failed with %!otError!", error);
                                         }
@@ -1003,7 +1003,7 @@ otLwfEventWorkerThread(
                         length -= pFilter->otReceiveFrame.mLength;
                     }
 
-                    ThreadError errorCode;
+                    otError errorCode;
                     int8_t noiseFloor = -128;
                     uint16_t flags = 0;
                     if (try_spinel_datatype_unpack(
@@ -1091,7 +1091,7 @@ otLwfEventWorkerThread(
         }
 
         // If we have a frame ready to transmit, do it now if we are allowed to transmit
-        if (pFilter->otPhyState == kStateTransmit && !pFilter->SendPending)
+        if (pFilter->otRadioState == OT_RADIO_STATE_TRANSMIT && !pFilter->SendPending)
         {
             otLwfRadioTransmitFrame(pFilter);
         }

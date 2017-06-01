@@ -41,15 +41,15 @@
 #include <openthread-config.h>
 #endif
 
-#include <openthread/types.h>
 #include <openthread/message.h>
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @addtogroup dns  DNS
+ * @addtogroup api-dns
  *
  * @brief
  *   This module includes functions that control DNS communication.
@@ -83,16 +83,16 @@ typedef struct otDnsQuery
  * @param[in]  aTtl       Specifies the maximum time in seconds that the resource record may be cached.
  * @param[in]  aResult    A result of the DNS transaction.
  *
- * @retval  kThreadError_None             A response was received successfully and IPv6 address is provided
- *                                        in @p aAddress.
- * @retval  kThreadError_Abort            A DNS transaction was aborted by stack.
- * @retval  kThreadError_ResponseTimeout  No DNS response has been received within timeout.
- * @retval  kThreadError_NotFound         A response was received but no IPv6 address has been found.
- * @retval  kThreadError_Failed           A response was received but status code is different than success.
+ * @retval  OT_ERROR_NONE              A response was received successfully and IPv6 address is provided
+ *                                     in @p aAddress.
+ * @retval  OT_ERROR_ABORT             A DNS transaction was aborted by stack.
+ * @retval  OT_ERROR_RESPONSE_TIMEOUT  No DNS response has been received within timeout.
+ * @retval  OT_ERROR_NOT_FOUND         A response was received but no IPv6 address has been found.
+ * @retval  OT_ERROR_FAILED            A response was received but status code is different than success.
  *
  */
 typedef void (*otDnsResponseHandler)(void *aContext, const char *aHostname, otIp6Address *aAddress,
-                                     uint32_t aTtl, ThreadError aResult);
+                                     uint32_t aTtl, otError aResult);
 
 #if OPENTHREAD_ENABLE_DNS_CLIENT
 /**
@@ -104,8 +104,8 @@ typedef void (*otDnsResponseHandler)(void *aContext, const char *aHostname, otIp
  * @param[in]  aContext    A pointer to arbitrary context information.
  *
  */
-ThreadError otDnsClientQuery(otInstance *aInstance, const otDnsQuery *aQuery, otDnsResponseHandler aHandler,
-                             void *aContext);
+otError otDnsClientQuery(otInstance *aInstance, const otDnsQuery *aQuery, otDnsResponseHandler aHandler,
+                         void *aContext);
 #endif
 
 /**

@@ -34,9 +34,9 @@
 #ifndef UDP6_HPP_
 #define UDP6_HPP_
 
-#include "openthread/udp.h"
+#include <openthread/udp.h>
 
-#include <net/ip6_headers.hpp>
+#include "net/ip6_headers.hpp"
 
 namespace ot {
 namespace Ip6 {
@@ -86,39 +86,38 @@ public:
      * @param[in]  aHandler  A pointer to a function that is called when receiving UDP messages.
      * @param[in]  aContext  A pointer to arbitrary context information.
      *
-     * @retval kThreadError_None     Successfully opened the socket.
-     * @retval kThreadError_Already  The socket is already open.
+     * @retval OT_ERROR_NONE     Successfully opened the socket.
+     * @retval OT_ERROR_ALREADY  The socket is already open.
      *
      */
-    ThreadError Open(otUdpReceive aHandler, void *aContext);
+    otError Open(otUdpReceive aHandler, void *aContext);
 
     /**
      * This method binds the UDP socket.
      *
      * @param[in]  aSockAddr  A reference to the socket address.
      *
-     * @retval kThreadError_None  Successfully bound the socket.
+     * @retval OT_ERROR_NONE  Successfully bound the socket.
      *
      */
-    ThreadError Bind(const SockAddr &aSockAddr);
+    otError Bind(const SockAddr &aSockAddr);
 
     /**
      * This method connects the UDP socket.
      *
      * @param[in]  aSockAddr  A reference to the socket address.
      *
-     * @retval kThreadError_None  Successfully connected the socket.
+     * @retval OT_ERROR_NONE  Successfully connected the socket.
      */
-    ThreadError Connect(const SockAddr &aSockAddr);
+    otError Connect(const SockAddr &aSockAddr);
 
     /**
      * This method closes the UDP socket.
      *
-     * @retval kThreadError_None  Successfully closed the UDP socket.
-     * @retval kThreadErrorBusy   The socket is already closed.
+     * @retval OT_ERROR_NONE  Successfully closed the UDP socket.
      *
      */
-    ThreadError Close(void);
+    otError Close(void);
 
     /**
      * This method sends a UDP message.
@@ -126,11 +125,11 @@ public:
      * @param[in]  aMessage      The message to send.
      * @param[in]  aMessageInfo  The message info associated with @p aMessage.
      *
-     * @retval kThreadError_None    Successfully sent the UDP message.
-     * @retval kThreadError_NoBufs  Insufficient available buffer to add the UDP and IPv6 headers.
+     * @retval OT_ERROR_NONE     Successfully sent the UDP message.
+     * @retval OT_ERROR_NO_BUFS  Insufficient available buffer to add the UDP and IPv6 headers.
      *
      */
-    ThreadError SendTo(Message &aMessage, const MessageInfo &aMessageInfo);
+    otError SendTo(Message &aMessage, const MessageInfo &aMessageInfo);
 
     /**
      * This method returns the local socket address.
@@ -179,20 +178,20 @@ public:
      *
      * @param[in]  aSocket  A reference to the UDP socket.
      *
-     * @retval kThreadError_None  Successfully added the UDP socket.
+     * @retval OT_ERROR_NONE  Successfully added the UDP socket.
      *
      */
-    ThreadError AddSocket(UdpSocket &aSocket);
+    otError AddSocket(UdpSocket &aSocket);
 
     /**
      * This method removes a UDP socket.
      *
      * @param[in]  aSocket  A reference to the UDP socket.
      *
-     * @retval kThreadError_None  Successfully removed the UDP socket.
+     * @retval OT_ERROR_NONE  Successfully removed the UDP socket.
      *
      */
-    ThreadError RemoveSocket(UdpSocket &aSocket);
+    otError RemoveSocket(UdpSocket &aSocket);
 
     /**
      * This method returns a new ephemeral port.
@@ -219,11 +218,11 @@ public:
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      * @param[in]  aIpProto      The Internet Protocol value.
      *
-     * @retval kThreadError_None    Successfully enqueued the message into an output interface.
-     * @retval kThreadError_NoBufs  Insufficient available buffer to add the IPv6 headers.
+     * @retval OT_ERROR_NONE     Successfully enqueued the message into an output interface.
+     * @retval OT_ERROR_NO_BUFS  Insufficient available buffer to add the IPv6 headers.
      *
      */
-    ThreadError SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto aIpProto);
+    otError SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto aIpProto);
 
     /**
      * This method handles a received UDP message.
@@ -231,11 +230,11 @@ public:
      * @param[in]  aMessage      A reference to the UDP message to process.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
-     * @retval kThreadError_None  Successfully processed the UDP message.
-     * @retval kThreadError_Drop  Could not fully process the UDP message.
+     * @retval OT_ERROR_NONE  Successfully processed the UDP message.
+     * @retval OT_ERROR_DROP  Could not fully process the UDP message.
      *
      */
-    ThreadError HandleMessage(Message &aMessage, MessageInfo &aMessageInfo);
+    otError HandleMessage(Message &aMessage, MessageInfo &aMessageInfo);
 
     /**
      * This method updates the UDP checksum.
@@ -243,11 +242,11 @@ public:
      * @param[in]  aMessage               A reference to the UDP message.
      * @param[in]  aPseudoHeaderChecksum  The pseudo-header checksum value.
      *
-     * @retval kThreadError_None         Successfully updated the UDP checksum.
-     * @retval kThreadError_InvalidArgs  The message was invalid.
+     * @retval OT_ERROR_NONE          Successfully updated the UDP checksum.
+     * @retval OT_ERROR_INVALID_ARGS  The message was invalid.
      *
      */
-    ThreadError UpdateChecksum(Message &aMessage, uint16_t aPseudoHeaderChecksum);
+    otError UpdateChecksum(Message &aMessage, uint16_t aPseudoHeaderChecksum);
 
 private:
     enum

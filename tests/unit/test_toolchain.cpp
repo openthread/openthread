@@ -29,9 +29,9 @@
 #include <stdio.h>
 #include "utils/wrap_stdint.h"
 
-#include "openthread/platform/toolchain.h"
+#include <openthread/platform/toolchain.h>
 
-#include <thread/topology.hpp>
+#include "thread/topology.hpp"
 #include "test_util.h"
 
 extern "C" {

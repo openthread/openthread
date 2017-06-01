@@ -61,35 +61,40 @@ otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 
     if (sResetCause & RMU_RSTCAUSE_PORST)
     {
-        reason = kPlatResetReason_PowerOn;
+        reason = OT_PLAT_RESET_REASON_POWER_ON;
     }
     else if (sResetCause & RMU_RSTCAUSE_SYSREQRST)
     {
-        reason = kPlatResetReason_Software;
+        reason = OT_PLAT_RESET_REASON_SOFTWARE;
     }
     else if (sResetCause & RMU_RSTCAUSE_WDOGRST)
     {
-        reason = kPlatResetReason_Watchdog;
+        reason = OT_PLAT_RESET_REASON_WATCHDOG;
     }
     else if (sResetCause & RMU_RSTCAUSE_EXTRST)
     {
-        reason = kPlatResetReason_External;
+        reason = OT_PLAT_RESET_REASON_EXTERNAL;
     }
     else if (sResetCause & RMU_RSTCAUSE_LOCKUPRST)
     {
-        reason = kPlatResetReason_Fault;
+        reason = OT_PLAT_RESET_REASON_FAULT;
     }
     else if ((sResetCause & RMU_RSTCAUSE_AVDDBOD) ||
              (sResetCause & RMU_RSTCAUSE_DECBOD)  ||
              (sResetCause & RMU_RSTCAUSE_DVDDBOD) ||
              (sResetCause & RMU_RSTCAUSE_EM4RST))
     {
-        reason = kPlatResetReason_Assert;
+        reason = OT_PLAT_RESET_REASON_ASSERT;
     }
     else
     {
-        reason = kPlatResetReason_Unknown;
+        reason = OT_PLAT_RESET_REASON_UNKNOWN;
     }
 
     return reason;
+}
+
+void otPlatWakeHost(void)
+{
+    // TODO: implement an operation to wake the host from sleep state.
 }

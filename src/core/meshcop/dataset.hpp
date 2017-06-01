@@ -35,8 +35,8 @@
 #ifndef MESHCOP_DATASET_HPP_
 #define MESHCOP_DATASET_HPP_
 
-#include <common/message.hpp>
-#include <meshcop/tlvs.hpp>
+#include "common/message.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -134,38 +134,38 @@ public:
     /**
      * This method restores dataset from non-volatile memory.
      *
-     * @retval kThreadError_None      Successfully restore the dataset.
-     * @retval kThreadError_NotFound  There is no corresponding dataset stored in non-volatile memory.
+     * @retval OT_ERROR_NONE       Successfully restore the dataset.
+     * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
      *
      */
-    ThreadError Restore(void);
+    otError Restore(void);
 
     /**
      * This method stores dataset into non-volatile memory.
      *
-     * @retval kThreadError_None      Successfully store the dataset.
-     * @retval kThreadError_NoBufs    Could not store the dataset due to insufficient memory space.
+     * @retval OT_ERROR_NONE       Successfully store the dataset.
+     * @retval OT_ERROR_NO_BUFS    Could not store the dataset due to insufficient memory space.
      *
      */
-    ThreadError Store(void);
+    otError Store(void);
 
     /**
      * This method sets a TLV in the Dataset.
      *
      * @param[in]  aTlv  A reference to the TLV.
      *
-     * @retval kThreadError_None    Successfully set the TLV.
-     * @retval kThreadError_NoBufs  Could not set the TLV due to insufficient buffer space.
+     * @retval OT_ERROR_NONE     Successfully set the TLV.
+     * @retval OT_ERROR_NO_BUFS  Could not set the TLV due to insufficient buffer space.
      *
      */
-    ThreadError Set(const Tlv &aTlv);
+    otError Set(const Tlv &aTlv);
 
-    ThreadError Set(const Message &aMessage, uint16_t aOffset, uint8_t aLength);
+    otError Set(const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
-    ThreadError Set(const Dataset &aDataset);
+    otError Set(const Dataset &aDataset);
 
 #if OPENTHREAD_FTD
-    ThreadError Set(const otOperationalDataset &aDataset);
+    otError Set(const otOperationalDataset &aDataset);
 #endif
 
     /**
@@ -179,13 +179,15 @@ public:
     /**
      * This method appends the MLE Dataset TLV but excluding MeshCoP Sub Timestamp TLV.
      *
-     * @retval kThreadError_None    Successfully append MLE Dataset TLV without MeshCoP Sub Timestamp TLV.
-     * @retval kThreadError_NoBufs  Insufficient available buffers to append the message with MLE Dataset TLV.
+     * @retval OT_ERROR_NONE     Successfully append MLE Dataset TLV without MeshCoP Sub Timestamp TLV.
+     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to append the message with MLE Dataset TLV.
      *
      */
-    ThreadError AppendMleDatasetTlv(Message &aMessage);
+    otError AppendMleDatasetTlv(Message &aMessage);
 
 private:
+    uint16_t GetSettingsKey(void);
+
     void Remove(uint8_t *aStart, uint8_t aLength);
 
     Tlv::Type  mType;            ///< Active or Pending

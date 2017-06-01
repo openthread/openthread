@@ -35,7 +35,10 @@ four fields, each encoded as a packed unsigned integer:
  *  Major Version Number
  *  Minor Version Number
 
-This document describes major version 4, minor version 1 of this protocol.
+This document describes major version 4, minor version 3 of this protocol.
+
+The host **MUST** only use this property from NLI 0. Behavior when used
+from other NLIs is undefined.
 
 #### Major Version Number
 
@@ -76,6 +79,9 @@ Examples:
  *  `OpenThread/1.0d26-25-gb684c7f; DEBUG; May 9 2016 18:22:04`
  *  `ConnectIP/2.0b125 s1 ALPHA; Sept 24 2015 20:49:19`
 
+The host **MUST** only use this property from NLI 0. Behavior when used
+from other NLIs is undefined.
+
 ### PROP 3: PROP_INTERFACE_TYPE {#prop-interface-type}
 
 * Type: Read-Only
@@ -89,8 +95,8 @@ This integer identifies what the network protocol for this NCP.
 Currently defined values are:
 
  *  0: Bootloader
- *  2: ZigBeeIP
- *  3: Thread
+ *  2: ZigBee IP(TM)
+ *  3: Thread(R)
 
 The host MUST enter a FAULT state if it does not recognize the
 protocol given by the NCP.
@@ -133,7 +139,8 @@ Currently defined values are:
  * 8: `CAP_WRITABLE_RAW_STREAM`: `PROP_STREAM_RAW` is writable.
  * 9: `CAP_GPIO`: Support for GPIO access. See (#feature-gpio-access).
  * 10: `CAP_TRNG`: Support for true random number generation. See (#feature-trng).
- * 11: `CAP_CMD_MULTI`: Support for `CMD_PROP_VALUE_MULTI_GET` ((#prop-value-multi-get)), `CMD_PROP_VALUE_MULTI_SET` ((#prop-value-multi-set), and `CMD_PROP_VALUES_ARE` ((#prop-values-are)).
+ * 11: `CAP_CMD_MULTI`: Support for `CMD_PROP_VALUE_MULTI_GET` ((#cmd-prop-value-multi-get)), `CMD_PROP_VALUE_MULTI_SET` ((#cmd-prop-value-multi-set), and `CMD_PROP_VALUES_ARE` ((#cmd-prop-values-are)).
+ * 12: `CAP_UNSOL_UPDATE_FILTER`: Support for `PROP_UNSOL_UPDATE_FILTER` ((#prop-unsol-update-filter)) and `PROP_UNSOL_UPDATE_LIST` ((#prop-unsol-update-list)).
  * 16: `CAP_802_15_4_2003`
  * 17: `CAP_802_15_4_2006`
  * 18: `CAP_802_15_4_2011`
@@ -149,8 +156,11 @@ Currently defined values are:
  * 49: `CAP_ROLE_SLEEPY`
  * 52: `CAP_NET_THREAD_1_0`
  * 512: `CAP_MAC_WHITELIST`
+ * 513: `CAP_MAC_RAW`
+ * 514: `CAP_OOB_STEERING_DATA`
  * 1024: `CAP_THREAD_COMMISSIONER`
  * 1025: `CAP_THREAD_BA_PROXY`
+
 
 Additionally, future capability allocations SHALL be made from the
 following allocation plan:
@@ -179,6 +189,9 @@ always be one.
 
 This value is encoded as an unsigned 8-bit integer.
 
+The host **MUST** only use this property from NLI 0. Behavior when used
+from other NLIs is undefined.
+
 ### PROP 7: PROP_POWER_STATE {#prop-power-state}
 
 * Type: Read-Write
@@ -206,9 +219,15 @@ Defined values are:
  *  4: `POWER_STATE_ONLINE`: NCP is fully powered. (e.g. "Parent"
     node)
 
+<!-- RQ
+  -- We should consider reversing the numbering here so that 0 is
+     `POWER_STATE_ONLINE`. We may also want to include some extra
+     values between the defined values for future expansion, so
+     that we can preserve the ordered relationship. -- -->
+
 ### PROP 8: PROP_HWADDR {#prop-hwaddr}
 
-* Type: Read-Only*
+* Type: Read-Only\*
 * Packed-Encoding: `E`
 
 Octets: |    8
@@ -238,6 +257,150 @@ This property is only supported if the `CAP_LOCK` capability is present.
 Unlike most other properties, setting this property to true when the
 value of the property is already true **MUST** fail with a last status
 of `STATUS_ALREADY`.
+
+### PROP 10: PROP_HOST_POWER_STATE {#prop-host-power-state}
+
+* Type: Read-Write
+* Packed-Encoding: `C`
+* Default value: 4
+
+Octets: |        1
+--------|------------------
+Fields: | `HOST_POWER_STATE`
+
+Describes the current power state of the *host*. This property is used
+by the host to inform the NCP when it has changed power states. The
+NCP can then use this state to determine which properties need
+asynchronous updates. Enumeration is encoded as a single unsigned
+byte. These states are defined in similar terms to `PROP_POWER_STATE`
+((#prop-power-state)).
+
+Defined values are:
+
+*   0: `HOST_POWER_STATE_OFFLINE`: Host is physically powered off and
+    cannot be woken by the NCP. All asynchronous commands are
+    squelched.
+*   1: `HOST_POWER_STATE_DEEP_SLEEP`: The host is in a low power state
+    where it can be woken by the NCP but will potentially require more
+    than two seconds to become fully responsive. The NCP **MUST**
+    avoid sending unnecessary property updates, such as child table
+    updates or non-critical messages on the debug stream. If the NCP
+    needs to wake the host for traffic, the NCP **MUST** first take
+    action to wake the host. Once the NCP signals to the host that it
+    should wake up, the NCP **MUST** wait for some activity from the
+    host (indicating that it is fully awake) before sending frames.
+*   2: **RESERVED**. This value **MUST NOT** be set by the host. If
+    received by the NCP, the NCP **SHOULD** consider this as a synonym
+    of `HOST_POWER_STATE_DEEP_SLEEP`.
+*   3: `HOST_POWER_STATE_LOW_POWER`: The host is in a low power state
+    where it can be immediately woken by the NCP. The NCP **SHOULD**
+    avoid sending unnecessary property updates, such as child table
+    updates or non-critical messages on the debug stream.
+*   4: `HOST_POWER_STATE_ONLINE`: The host is awake and responsive. No
+    special filtering is performed by the NCP on asynchronous updates.
+*   All other values are **RESERVED**. They MUST NOT be set by the
+    host. If received by the NCP, the NCP **SHOULD** consider the value as
+    a synonym of `HOST_POWER_STATE_LOW_POWER`.
+
+<!-- RQ
+  -- We should consider reversing the numbering here so that 0 is
+     `POWER_STATE_ONLINE`. We may also want to include some extra
+     values between the defined values for future expansion, so
+     that we can preserve the ordered relationship. -- -->
+
+After setting this power state, any further commands from the host to
+the NCP will cause `HOST_POWER_STATE` to automatically revert to
+`HOST_POWER_STATE_ONLINE`.
+
+When the host is entering a low-power state, it should wait for the
+response from the NCP acknowledging the command (with `CMD_VALUE_IS`).
+Once that acknowledgement is received the host may enter the low-power
+state.
+
+If the NCP has the `CAP_UNSOL_UPDATE_FILTER` capability, any unsolicited
+property updates masked by `PROP_UNSOL_UPDATE_FILTER` should be honored
+while the host indicates it is in a low-power state. After resuming to the
+`HOST_POWER_STATE_ONLINE` state, the value of `PROP_UNSOL_UPDATE_FILTER`
+**MUST** be unchanged from the value assigned prior to the host indicating
+it was entering a low-power state.
+
+The host **MUST** only use this property from NLI 0. Behavior when used
+from other NLIs is undefined.
+
+### PROP 4104: PROP_UNSOL_UPDATE_FILTER {#prop-unsol-update-filter}
+
+* Required only if `CAP_UNSOL_UPDATE_FILTER` is set.
+* Type: Read-Write
+* Packed-Encoding: `A(I)`
+* Default value: Empty.
+
+Contains a list of properties which are *excluded* from generating
+unsolicited value updates. This property **MUST** be empty after reset.
+
+In other words, the host may opt-out of unsolicited property updates
+for a specific property by adding that property id to this list.
+
+Hosts **SHOULD NOT** add properties to this list which are not
+present in `PROP_UNSOL_UPDATE_LIST`. If such properties are added,
+the NCP **MUST** ignore the unsupported properties.
+
+<!-- RQ
+  -- The justification for the above behavior is to attempt to avoid possible
+     future interop problems by explicitly making sure that unknown
+     properties are ignored. Since unknown properties will obviously not be
+     generating unsolicited updates, it seems fairly harmless. An
+     implementation may print out a warning to the debug stream.
+
+     Note that the error is still detectable: If you VALUE\_SET unsupported
+     properties, the resulting VALUE\_IS would contain only the supported
+     properties of that set(since the unsupported properties would be
+     ignored). If an implementation cares that much about getting this
+     right then it needs to make sure that it checks
+     PROP\_UNSOL\_UPDATE\_LIST first.
+  -- -->
+
+Implementations of this property are only **REQUIRED** to support
+and use the following commands:
+
+* `CMD_PROP_VALUE_GET` ((#cmd-prop-value-get))
+* `CMD_PROP_VALUE_SET` ((#cmd-prop-value-set))
+* `CMD_PROP_VALUE_IS` ((#cmd-prop-value-is))
+
+Implementations of this property **MAY** optionally support and use
+the following commands:
+
+* `CMD_PROP_VALUE_INSERT` ((#cmd-prop-value-insert))
+* `CMD_PROP_VALUE_REMOVE` ((#cmd-prop-value-remove))
+* `CMD_PROP_VALUE_INSERTED` ((#cmd-prop-value-inserted))
+* `CMD_PROP_VALUE_REMOVED` ((#cmd-prop-value-removed))
+
+Host implementations which are aiming to maximize their compatability across
+different firmwre implementations **SHOULD NOT** assume the availability of the
+optional commands for this property.
+
+The value of this property **SHALL** be independent for each NLI.
+
+### PROP 4105: PROP_UNSOL_UPDATE_LIST {#prop-unsol-update-list}
+
+* Required only if `CAP_UNSOL_UPDATE_FILTER` is set.
+* Type: Read-Only
+* Packed-Encoding: `A(I)`
+
+Contains a list of properties which are capable of generating
+unsolicited value updates. This list can be used when populating
+`PROP_UNSOL_UPDATE_FILTER` to disable all unsolicited property
+updates.
+
+This property is intended to effectively behave as a constant
+for a given NCP firmware.
+
+Note that not all properties that support unsolicited updates need to
+be listed here. Scan results, for example, are only generated due to
+direct action on the part of the host, so those properties **MUST NOT**
+not be included in this list.
+
+The value of this property **MAY** be different across available
+NLIs.
 
 ## Stream Properties {#prop-stream}
 
@@ -355,7 +518,7 @@ the value of the packet.
 Any data past the end of `FRAME_DATA_LEN` is considered metadata, the
 format of which is described in (#frame-metadata-format).
 
-### PROP 114: PROP_STREAM_NET_INSECURE {#prop-stream-net-insecure}
+### PROP 115: PROP_STREAM_NET_INSECURE {#prop-stream-net-insecure}
 
 * Type: Read-Write-Stream
 * Packed-Encoding: `dD`

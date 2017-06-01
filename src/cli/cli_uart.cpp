@@ -33,21 +33,22 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
+#include "cli_uart.hpp"
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "utils/wrap_string.h"
 
-#include "openthread/cli.h"
-#include "openthread/platform/logging.h"
-#include "openthread/platform/uart.h"
+#include <openthread/cli.h>
+#include <openthread/platform/logging.h>
+#include <openthread/platform/uart.h>
 
-#include <cli/cli.hpp>
-#include <cli/cli_uart.hpp>
-#include <common/code_utils.hpp>
-#include <common/encoding.hpp>
-#include <common/new.hpp>
-#include <common/tasklet.hpp>
+#include "cli/cli.hpp"
+#include "common/code_utils.hpp"
+#include "common/encoding.hpp"
+#include "common/new.hpp"
+#include "common/tasklet.hpp"
 
 namespace ot {
 namespace Cli {
@@ -133,9 +134,9 @@ void Uart::ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
     }
 }
 
-ThreadError Uart::ProcessCommand(void)
+otError Uart::ProcessCommand(void)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     if (mRxBuffer[mRxLength - 1] == '\n')
     {

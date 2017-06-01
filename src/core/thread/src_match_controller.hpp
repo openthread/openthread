@@ -34,10 +34,10 @@
 #ifndef SOURCE_MATCH_CONTROLLER_HPP_
 #define SOURCE_MATCH_CONTROLLER_HPP_
 
-#include <openthread-core-config.h>
+#include <openthread/types.h>
 
-#include "openthread/types.h"
-#include <thread/topology.hpp>
+#include "openthread-core-config.h"
+#include "thread/topology.hpp"
 
 namespace ot {
 
@@ -176,20 +176,20 @@ private:
      *
      * @param[in] aChild            A reference to the child
      *
-     * @retval kThreadError_None    Child's address was added successfully to the source match table.
-     * @retval kThreadError_NoBufs  No available space in the source match table.
+     * @retval OT_ERROR_NONE     Child's address was added successfully to the source match table.
+     * @retval OT_ERROR_NO_BUFS  No available space in the source match table.
      *
      */
-    ThreadError AddAddress(const Child &aChild);
+    otError AddAddress(const Child &aChild);
 
     /**
      * This method adds all pending entries to the source match table.
      *
-     * @retval kThreadError_None    All pending entries were successfully added.
-     * @retval kThreadError_NoBufs  No available space in the source match table.
+     * @retval OT_ERROR_NONE     All pending entries were successfully added.
+     * @retval OT_ERROR_NO_BUFS  No available space in the source match table.
      *
      */
-    ThreadError AddPendingEntries(void);
+    otError AddPendingEntries(void);
 
     MeshForwarder &mMeshForwarder;
     bool mEnabled;

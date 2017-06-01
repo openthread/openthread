@@ -35,15 +35,15 @@
 #ifndef OPENTHREAD_LINK_H_
 #define OPENTHREAD_LINK_H_
 
-#include "openthread/types.h"
-#include "platform/radio.h"
+#include <openthread/types.h>
+#include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @addtogroup link  Link
+ * @addtogroup api-link-link
  *
  * @brief
  *   This module includes functions that control link-layer configuration.
@@ -71,12 +71,12 @@ typedef void (OTCALL *otHandleActiveScanResult)(otActiveScanResult *aResult, voi
  * @param[in]  aCallback         A pointer to a function called on receiving a beacon or scan completes.
  * @param[in]  aCallbackContext  A pointer to application-specific context.
  *
- * @retval kThreadError_None  Accepted the Active Scan request.
- * @retval kThreadError_Busy  Already performing an Active Scan.
+ * @retval OT_ERROR_NONE  Accepted the Active Scan request.
+ * @retval OT_ERROR_BUSY  Already performing an Active Scan.
  *
  */
-OTAPI ThreadError OTCALL otLinkActiveScan(otInstance *aInstance, uint32_t aScanChannels, uint16_t aScanDuration,
-                                          otHandleActiveScanResult aCallback, void *aCallbackContext);
+OTAPI otError OTCALL otLinkActiveScan(otInstance *aInstance, uint32_t aScanChannels, uint16_t aScanDuration,
+                                      otHandleActiveScanResult aCallback, void *aCallbackContext);
 
 /**
  * This function indicates whether or not an IEEE 802.15.4 Active Scan is currently in progress.
@@ -106,12 +106,12 @@ typedef void (OTCALL *otHandleEnergyScanResult)(otEnergyScanResult *aResult, voi
  * @param[in]  aCallback         A pointer to a function called to pass on scan result on indicate scan completion.
  * @param[in]  aCallbackContext  A pointer to application-specific context.
  *
- * @retval kThreadError_None  Accepted the Energy Scan request.
- * @retval kThreadError_Busy  Could not start the energy scan.
+ * @retval OT_ERROR_NONE  Accepted the Energy Scan request.
+ * @retval OT_ERROR_BUSY  Could not start the energy scan.
  *
  */
-OTAPI ThreadError OTCALL otLinkEnergyScan(otInstance *aInstance, uint32_t aScanChannels, uint16_t aScanDuration,
-                                          otHandleEnergyScanResult aCallback, void *aCallbackContext);
+OTAPI otError OTCALL otLinkEnergyScan(otInstance *aInstance, uint32_t aScanChannels, uint16_t aScanDuration,
+                                      otHandleEnergyScanResult aCallback, void *aCallbackContext);
 
 /**
  * This function indicates whether or not an IEEE 802.15.4 Energy Scan is currently in progress.
@@ -128,13 +128,13 @@ OTAPI bool OTCALL otLinkIsEnergyScanInProgress(otInstance *aInstance);
  *
  * @param[in] aInstance  A pointer to an OpenThread instance.
  *
- * @retval kThreadError_None          Successfully enqueued an IEEE 802.15.4 Data Request message.
- * @retval kThreadError_Already       An IEEE 802.15.4 Data Request message is already enqueued.
- * @retval kThreadError_InvalidState  Device is not in rx-off-when-idle mode.
- * @retval kThreadError_NoBufs        Insufficient message buffers available.
+ * @retval OT_ERROR_NONE           Successfully enqueued an IEEE 802.15.4 Data Request message.
+ * @retval OT_ERROR_ALREADY        An IEEE 802.15.4 Data Request message is already enqueued.
+ * @retval OT_ERROR_INVALID_STATE  Device is not in rx-off-when-idle mode.
+ * @retval OT_ERROR_NO_BUFS        Insufficient message buffers available.
  *
  */
-OTAPI ThreadError OTCALL otLinkSendDataRequest(otInstance *aInstance);
+OTAPI otError OTCALL otLinkSendDataRequest(otInstance *aInstance);
 
 /**
  * This function indicates whether or not an IEEE 802.15.4 MAC is in the transmit state.
@@ -171,13 +171,13 @@ OTAPI uint8_t OTCALL otLinkGetChannel(otInstance *aInstance);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aChannel  The IEEE 802.15.4 channel.
  *
- * @retval  kThreadErrorNone           Successfully set the channel.
- * @retval  kThreadErrorInvalidArgs    If @p aChnanel is not in the range [11, 26].
- * @retrval kThreadError_InvalidState  Thread protocols are enabled.
+ * @retval  OT_ERROR_NONE           Successfully set the channel.
+ * @retval  OT_ERROR_INVALID_ARGS   If @p aChnanel is not in the range [11, 26].
+ * @retval  OT_ERROR_INVALID_STATE  Thread protocols are enabled.
  *
  * @sa otLinkGetChannel
  */
-OTAPI ThreadError OTCALL otLinkSetChannel(otInstance *aInstance, uint8_t aChannel);
+OTAPI otError OTCALL otLinkSetChannel(otInstance *aInstance, uint8_t aChannel);
 
 /**
  * Get the IEEE 802.15.4 Extended Address.
@@ -196,12 +196,12 @@ OTAPI const uint8_t *OTCALL otLinkGetExtendedAddress(otInstance *aInstance);
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aExtendedAddress  A pointer to the IEEE 802.15.4 Extended Address.
  *
- * @retval kThreadError_None          Successfully set the IEEE 802.15.4 Extended Address.
- * @retval kThreadError_InvalidArgs   @p aExtendedAddress was NULL.
- * @retval kThraedError_InvalidState  Thread protocols are enabled.
+ * @retval OT_ERROR_NONE           Successfully set the IEEE 802.15.4 Extended Address.
+ * @retval OT_ERROR_INVALID_ARGS   @p aExtendedAddress was NULL.
+ * @retval OT_ERROR_INVALID_STATE  Thread protocols are enabled.
  *
  */
-OTAPI ThreadError OTCALL otLinkSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtendedAddress);
+OTAPI otError OTCALL otLinkSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtendedAddress);
 
 /**
  * Get the factory-assigned IEEE EUI-64.
@@ -264,13 +264,13 @@ OTAPI otPanId OTCALL otLinkGetPanId(otInstance *aInstance);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aPanId    The IEEE 802.15.4 PAN ID.
  *
- * @retval kThreadError_None          Successfully set the PAN ID.
- * @retval kThreadError_InvalidArgs   If aPanId is not in the range [0, 65534].
- * @retval kThreadError_InvalidState  Thread protocols are enabled.
+ * @retval OT_ERROR_NONE           Successfully set the PAN ID.
+ * @retval OT_ERROR_INVALID_ARGS   If aPanId is not in the range [0, 65534].
+ * @retval OT_ERROR_INVALID_STATE  Thread protocols are enabled.
  *
  * @sa otLinkGetPanId
  */
-OTAPI ThreadError OTCALL otLinkSetPanId(otInstance *aInstance, otPanId aPanId);
+OTAPI otError OTCALL otLinkSetPanId(otInstance *aInstance, otPanId aPanId);
 
 /**
  * Get the data poll period of sleepy end device.
@@ -311,8 +311,8 @@ OTAPI otShortAddress OTCALL otLinkGetShortAddress(otInstance *aInstance);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
  *
- * @retval kThreadErrorNone    Successfully added to the MAC whitelist.
- * @retval kThreadErrorNoBufs  No buffers available for a new MAC whitelist entry.
+ * @retval OT_ERROR_NONE     Successfully added to the MAC whitelist.
+ * @retval OT_ERROR_NO_BUFS  No buffers available for a new MAC whitelist entry.
  *
  * @sa otLinkAddWhitelistRssi
  * @sa otLinkRemoveWhitelist
@@ -320,7 +320,7 @@ OTAPI otShortAddress OTCALL otLinkGetShortAddress(otInstance *aInstance);
  * @sa otLinkGetWhitelistEntry
  * @sa otLinkSetWhitelistEnabled
  */
-OTAPI ThreadError OTCALL otLinkAddWhitelist(otInstance *aInstance, const uint8_t *aExtAddr);
+OTAPI otError OTCALL otLinkAddWhitelist(otInstance *aInstance, const uint8_t *aExtAddr);
 
 /**
  * Add an IEEE 802.15.4 Extended Address to the MAC whitelist and fix the RSSI value.
@@ -329,8 +329,8 @@ OTAPI ThreadError OTCALL otLinkAddWhitelist(otInstance *aInstance, const uint8_t
  * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
  * @param[in]  aRssi     The RSSI in dBm to use when receiving messages from aExtAddr.
  *
- * @retval kThreadErrorNone    Successfully added to the MAC whitelist.
- * @retval kThreadErrorNoBufs  No buffers available for a new MAC whitelist entry.
+ * @retval OT_ERROR_NONE     Successfully added to the MAC whitelist.
+ * @retval OT_ERROR_NO_BUFS  No buffers available for a new MAC whitelist entry.
  *
  * @sa otLinkAddWhitelistRssi
  * @sa otLinkRemoveWhitelist
@@ -339,7 +339,7 @@ OTAPI ThreadError OTCALL otLinkAddWhitelist(otInstance *aInstance, const uint8_t
  * @sa otLinkIsWhitelistEnabled
  * @sa otLinkSetWhitelistEnabled
  */
-OTAPI ThreadError OTCALL otLinkAddWhitelistRssi(otInstance *aInstance, const uint8_t *aExtAddr, int8_t aRssi);
+OTAPI otError OTCALL otLinkAddWhitelistRssi(otInstance *aInstance, const uint8_t *aExtAddr, int8_t aRssi);
 
 /**
  * Remove an IEEE 802.15.4 Extended Address from the MAC whitelist.
@@ -363,11 +363,11 @@ OTAPI void OTCALL otLinkRemoveWhitelist(otInstance *aInstance, const uint8_t *aE
  * @param[in]   aIndex    An index into the MAC whitelist table.
  * @param[out]  aEntry    A pointer to where the information is placed.
  *
- * @retval kThreadError_None         Successfully retrieved the MAC whitelist entry.
- * @retval kThreadError_InvalidArgs  @p aIndex is out of bounds or @p aEntry is NULL.
+ * @retval OT_ERROR_NONE          Successfully retrieved the MAC whitelist entry.
+ * @retval OT_ERROR_INVALID_ARGS  @p aIndex is out of bounds or @p aEntry is NULL.
  *
  */
-OTAPI ThreadError OTCALL otLinkGetWhitelistEntry(otInstance *aInstance, uint8_t aIndex, otMacWhitelistEntry *aEntry);
+OTAPI otError OTCALL otLinkGetWhitelistEntry(otInstance *aInstance, uint8_t aIndex, otMacWhitelistEntry *aEntry);
 
 /**
  * Remove all entries from the MAC whitelist.
@@ -420,8 +420,8 @@ OTAPI bool OTCALL otLinkIsWhitelistEnabled(otInstance *aInstance);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
  *
- * @retval kThreadErrorNone    Successfully added to the MAC blacklist.
- * @retval kThreadErrorNoBufs  No buffers available for a new MAC blacklist entry.
+ * @retval OT_ERROR_NONE     Successfully added to the MAC blacklist.
+ * @retval OT_ERROR_NO_BUFS  No buffers available for a new MAC blacklist entry.
  *
  * @sa otLinkRemoveBlacklist
  * @sa otLinkClearBlacklist
@@ -429,7 +429,7 @@ OTAPI bool OTCALL otLinkIsWhitelistEnabled(otInstance *aInstance);
  * @sa otLinkIsBlacklistEnabled
  * @sa otLinkSetBlacklistEnabled
  */
-OTAPI ThreadError OTCALL otLinkAddBlacklist(otInstance *aInstance, const uint8_t *aExtAddr);
+OTAPI otError OTCALL otLinkAddBlacklist(otInstance *aInstance, const uint8_t *aExtAddr);
 
 /**
  * Remove an IEEE 802.15.4 Extended Address from the MAC blacklist.
@@ -452,11 +452,11 @@ OTAPI void OTCALL otLinkRemoveBlacklist(otInstance *aInstance, const uint8_t *aE
  * @param[in]   aIndex    An index into the MAC Blacklist table.
  * @param[out]  aEntry    A pointer to where the information is placed.
  *
- * @retval kThreadError_None         Successfully retrieved the MAC Blacklist entry.
- * @retval kThreadError_InvalidArgs  @p aIndex is out of bounds or @p aEntry is NULL.
+ * @retval OT_ERROR_NONE          Successfully retrieved the MAC Blacklist entry.
+ * @retval OT_ERROR_INVALID_ARGS  @p aIndex is out of bounds or @p aEntry is NULL.
  *
  */
-OTAPI ThreadError OTCALL otLinkGetBlacklistEntry(otInstance *aInstance, uint8_t aIndex, otMacBlacklistEntry *aEntry);
+OTAPI otError OTCALL otLinkGetBlacklistEntry(otInstance *aInstance, uint8_t aIndex, otMacBlacklistEntry *aEntry);
 
 /**
  *  Remove all entries from the MAC Blacklist.
@@ -475,7 +475,7 @@ OTAPI void OTCALL otLinkClearBlacklist(otInstance *aInstance);
  * Enable MAC Blacklist filtering.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @parma[in]  aEnabled   TRUE to enable the blacklist, FALSE otherwise.
+ * @param[in]  aEnabled   TRUE to enable the blacklist, FALSE otherwise.
  *
  * @sa otLinkAddBlacklist
  * @sa otLinkRemoveBlacklist
@@ -508,13 +508,13 @@ OTAPI bool OTCALL otLinkIsBlacklistEnabled(otInstance *aInstance);
  * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
  * @param[in]  aLinkQuality A pointer to the assigned link quality.
  *
- * @retval kThreadError_None  Successfully retrieved the link quality to aLinkQuality.
- * @retval kThreadError_InvalidState  No attached child matches with a given extended address.
+ * @retval OT_ERROR_NONE           Successfully retrieved the link quality to aLinkQuality.
+ * @retval OT_ERROR_INVALID_STATE  No attached child matches with a given extended address.
  *
  * @sa otLinkSetAssignLinkQuality
  */
-OTAPI ThreadError OTCALL otLinkGetAssignLinkQuality(otInstance *aInstance, const uint8_t *aExtAddr,
-                                                    uint8_t *aLinkQuality);
+OTAPI otError OTCALL otLinkGetAssignLinkQuality(otInstance *aInstance, const uint8_t *aExtAddr,
+                                                uint8_t *aLinkQuality);
 
 /**
  * Set the link quality which is on the link to a given extended address.
@@ -548,7 +548,7 @@ OTAPI const otMacCounters *OTCALL otLinkGetCounters(otInstance *aInstance);
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void (*otLinkPcapCallback)(const RadioPacket *aFrame, void *aContext);
+typedef void (*otLinkPcapCallback)(const otRadioFrame *aFrame, void *aContext);
 
 /**
  * This function registers a callback to provide received raw IEEE 802.15.4 frames.
@@ -580,12 +580,12 @@ bool otLinkIsPromiscuous(otInstance *aInstance);
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aPromiscuous  true to enable promiscuous mode, or false otherwise.
  *
- * @retval kThreadError_None          Successfully enabled promiscuous mode.
- * @retval kThreadError_InvalidState  Could not enable promiscuous mode because
- *                                    the Thread interface is enabled.
+ * @retval OT_ERROR_NONE           Successfully enabled promiscuous mode.
+ * @retval OT_ERROR_INVALID_STATE  Could not enable promiscuous mode because
+ *                                 the Thread interface is enabled.
  *
  */
-ThreadError otLinkSetPromiscuous(otInstance *aInstance, bool aPromiscuous);
+otError otLinkSetPromiscuous(otInstance *aInstance, bool aPromiscuous);
 
 /**
  * @}

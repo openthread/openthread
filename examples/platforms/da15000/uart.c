@@ -36,21 +36,22 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <hw_uart.h>
 
-#include "openthread/platform/uart.h"
+#include <openthread/platform/uart.h>
 
-#include <common/code_utils.hpp>
+#include "common/code_utils.hpp"
+
 #include "hw_gpio.h"
+#include "hw_uart.h"
 #include "platform-da15000.h"
 
 static int sInFd;
 static int sOutFd;
 void UartBuffClear(void);
 
-ThreadError otPlatUartEnable(void)
+otError otPlatUartEnable(void)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uart_config uart_init =
     {
         .baud_rate = HW_UART_BAUDRATE_9600,
@@ -75,9 +76,9 @@ ThreadError otPlatUartEnable(void)
     return error;
 }
 
-ThreadError otPlatUartDisable(void)
+otError otPlatUartDisable(void)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     close(sInFd);
     close(sOutFd);
@@ -116,9 +117,9 @@ void UartBuffClear(void)
 }
 
 
-ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
+otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     hw_uart_write_buffer(HW_UART1, aBuf, aBufLength);
 
     otPlatUartSendDone();

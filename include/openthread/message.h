@@ -35,14 +35,14 @@
 #ifndef OPENTHREAD_MESSAGE_H_
 #define OPENTHREAD_MESSAGE_H_
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @addtogroup messages  Message Buffers
+ * @addtogroup api-message
  *
  * @brief
  *   This module includes functions that manipulate OpenThread message buffers
@@ -56,7 +56,7 @@ extern "C" {
  *
  * @param[in]  aMessage  A pointer to a message buffer.
  *
- * @retval kThreadErrorNone  Successfully freed the message buffer.
+ * @retval OT_ERROR_NONE  Successfully freed the message buffer.
  *
  * @sa otMessageAppend
  * @sa otMessageGetLength
@@ -66,7 +66,7 @@ extern "C" {
  * @sa otMessageRead
  * @sa otMessageWrite
  */
-ThreadError otMessageFree(otMessage *aMessage);
+otError otMessageFree(otMessage *aMessage);
 
 /**
  * Get the message length in bytes.
@@ -92,8 +92,8 @@ uint16_t otMessageGetLength(otMessage *aMessage);
  * @param[in]  aMessage  A pointer to a message buffer.
  * @param[in]  aLength   A length in bytes.
  *
- * @retval kThreadErrorNone    Successfully set the message length.
- * @retval kThreadErrorNoBufs  No available buffers to grow the message.
+ * @retval OT_ERROR_NONE     Successfully set the message length.
+ * @retval OT_ERROR_NO_BUFS  No available buffers to grow the message.
  *
  * @sa otMessageFree
  * @sa otMessageAppend
@@ -103,7 +103,7 @@ uint16_t otMessageGetLength(otMessage *aMessage);
  * @sa otMessageRead
  * @sa otMessageWrite
  */
-ThreadError otMessageSetLength(otMessage *aMessage, uint16_t aLength);
+otError otMessageSetLength(otMessage *aMessage, uint16_t aLength);
 
 /**
  * Get the message offset in bytes.
@@ -128,8 +128,8 @@ uint16_t otMessageGetOffset(otMessage *aMessage);
  * @param[in]  aMessage  A pointer to a message buffer.
  * @param[in]  aOffset   An offset in bytes.
  *
- * @retval kThreadErrorNone        Successfully set the message offset.
- * @retval kThreadErrorInvalidArg  The offset is beyond the message length.
+ * @retval OT_ERROR_NONE          Successfully set the message offset.
+ * @retval OT_ERROR_INVALID_ARGS  The offset is beyond the message length.
  *
  * @sa otMessageFree
  * @sa otMessageAppend
@@ -139,7 +139,7 @@ uint16_t otMessageGetOffset(otMessage *aMessage);
  * @sa otMessageRead
  * @sa otMessageWrite
  */
-ThreadError otMessageSetOffset(otMessage *aMessage, uint16_t aOffset);
+otError otMessageSetOffset(otMessage *aMessage, uint16_t aOffset);
 
 /**
  * This function indicates whether or not link security is enabled for the message.
@@ -170,8 +170,8 @@ void otMessageSetDirectTransmission(otMessage *aMessage, bool aEnabled);
  * @param[in]  aBuf      A pointer to the data to append.
  * @param[in]  aLength   Number of bytes to append.
  *
- * @retval kThreadErrorNone    Successfully appended to the message
- * @retval kThreadErrorNoBufs  No available buffers to grow the message.
+ * @retval OT_ERROR_NONE     Successfully appended to the message
+ * @retval OT_ERROR_NO_BUFS  No available buffers to grow the message.
  *
  * @sa otMessageFree
  * @sa otMessageGetLength
@@ -181,7 +181,7 @@ void otMessageSetDirectTransmission(otMessage *aMessage, bool aEnabled);
  * @sa otMessageRead
  * @sa otMessageWrite
  */
-ThreadError otMessageAppend(otMessage *aMessage, const void *aBuf, uint16_t aLength);
+otError otMessageAppend(otMessage *aMessage, const void *aBuf, uint16_t aLength);
 
 /**
  * Read bytes from a message.
@@ -250,11 +250,11 @@ void otMessageQueueInit(otMessageQueue *aQueue);
  * @param[in]  aQueue    A pointer to the message queue.
  * @param[in]  aMessage  The message to add.
  *
- * @retval kThreadError_None     Successfully added the message to the queue.
- * @retval kThreadError_Already  The message is already enqueued in a queue.
+ * @retval OT_ERROR_NONE     Successfully added the message to the queue.
+ * @retval OT_ERROR_ALREADY  The message is already enqueued in a queue.
  *
  */
-ThreadError otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage *aMessage);
+otError otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage *aMessage);
 
 /**
  * This function removes a message from the given message queue.
@@ -262,11 +262,11 @@ ThreadError otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage *aMessage);
  * @param[in]  aQueue    A pointer to the message queue.
  * @param[in]  aMessage  The message to remove.
  *
- * @retval kThreadError_None      Successfully removed the message from the queue.
- * @retval kThreadError_NotFound  The message is not enqueued in this queue.
+ * @retval OT_ERROR_NONE       Successfully removed the message from the queue.
+ * @retval OT_ERROR_NOT_FOUND  The message is not enqueued in this queue.
  *
  */
-ThreadError otMessageQueueDequeue(otMessageQueue *aQueue, otMessage *aMessage);
+otError otMessageQueueDequeue(otMessageQueue *aQueue, otMessage *aMessage);
 
 /**
  * This function returns a pointer to the message at the head of the queue.

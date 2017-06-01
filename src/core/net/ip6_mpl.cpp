@@ -33,12 +33,13 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
-#include "openthread/platform/random.h"
+#include "ip6_mpl.hpp"
 
-#include <common/code_utils.hpp>
-#include <common/message.hpp>
-#include <net/ip6.hpp>
-#include <net/ip6_mpl.hpp>
+#include <openthread/platform/random.h>
+
+#include "common/code_utils.hpp"
+#include "common/message.hpp"
+#include "net/ip6.hpp"
 
 namespace ot {
 namespace Ip6 {
@@ -85,9 +86,9 @@ void Mpl::InitOption(OptionMpl &aOption, const Address &aAddress)
     }
 }
 
-ThreadError Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
+otError Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     MplSeedEntry *entry = NULL;
     int8_t diff;
 
@@ -106,13 +107,13 @@ ThreadError Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
             entry = &mSeedSet[i];
             diff = static_cast<int8_t>(aSequence - entry->GetSequence());
 
-            VerifyOrExit(diff > 0, error = kThreadError_Drop);
+            VerifyOrExit(diff > 0, error = OT_ERROR_DROP);
 
             break;
         }
     }
 
-    VerifyOrExit(entry != NULL, error = kThreadError_Drop);
+    VerifyOrExit(entry != NULL, error = OT_ERROR_DROP);
 
     entry->SetSeedId(aSeedId);
     entry->SetSequence(aSequence);
@@ -163,19 +164,19 @@ exit:
 void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound)
 {
     uint32_t now = Timer::GetNow();
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     Message *messageCopy = NULL;
     MplBufferedMessageMetadata messageMetadata;
     uint32_t nextTransmissionTime;
     uint8_t hopLimit = 0;
 
     VerifyOrExit(GetTimerExpirations() > 0);
-    VerifyOrExit((messageCopy = aMessage.Clone()) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((messageCopy = aMessage.Clone()) != NULL, error = OT_ERROR_NO_BUFS);
 
     if (!aIsOutbound)
     {
         aMessage.Read(Header::GetHopLimitOffset(), Header::GetHopLimitSize(), &hopLimit);
-        VerifyOrExit(hopLimit-- > 1, error = kThreadError_Drop);
+        VerifyOrExit(hopLimit-- > 1, error = OT_ERROR_DROP);
         messageCopy->Write(Header::GetHopLimitOffset(), Header::GetHopLimitSize(), &hopLimit);
     }
 
@@ -206,21 +207,21 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
 
 exit:
 
-    if (error != kThreadError_None && messageCopy != NULL)
+    if (error != OT_ERROR_NONE && messageCopy != NULL)
     {
         messageCopy->Free();
     }
 }
 
-ThreadError Mpl::ProcessOption(Message &aMessage, const Address &aAddress, bool aIsOutbound)
+otError Mpl::ProcessOption(Message &aMessage, const Address &aAddress, bool aIsOutbound)
 {
-    ThreadError error;
+    otError error;
     OptionMpl option;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(option), &option) >= OptionMpl::kMinLength &&
                  (option.GetSeedIdLength() == OptionMpl::kSeedIdLength0 ||
                   option.GetSeedIdLength() == OptionMpl::kSeedIdLength2),
-                 error = kThreadError_Drop);
+                 error = OT_ERROR_DROP);
 
     if (option.GetSeedIdLength() == OptionMpl::kSeedIdLength0)
     {
@@ -234,7 +235,7 @@ ThreadError Mpl::ProcessOption(Message &aMessage, const Address &aAddress, bool 
     // Check if the MPL Data Message is new.
     error = UpdateSeedSet(option.GetSeedId(), option.GetSequence());
 
-    if (error == kThreadError_None)
+    if (error == OT_ERROR_NONE)
     {
         AddBufferedMessage(aMessage, option.GetSeedId(), option.GetSequence(), aIsOutbound);
     }
@@ -242,7 +243,7 @@ ThreadError Mpl::ProcessOption(Message &aMessage, const Address &aAddress, bool 
     {
         // In case MPL Data Message is generated locally, ignore potential error of the MPL Seed Set
         // to allow subsequent retransmissions with the same sequence number.
-        ExitNow(error = kThreadError_None);
+        ExitNow(error = OT_ERROR_NONE);
     }
 
 exit:

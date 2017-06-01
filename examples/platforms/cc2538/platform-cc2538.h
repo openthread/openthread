@@ -37,7 +37,7 @@
 
 #include <stdint.h>
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
 #include "cc2538-reg.h"
 

@@ -33,7 +33,7 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
-#include "openthread/icmp6.h"
+#include <openthread/icmp6.h>
 
 #include "openthread-instance.h"
 
@@ -49,12 +49,12 @@ void otIcmp6SetEchoEnabled(otInstance *aInstance, bool aEnabled)
     aInstance->mIp6.mIcmp.SetEchoEnabled(aEnabled);
 }
 
-ThreadError otIcmp6RegisterHandler(otInstance *aInstance, otIcmp6Handler *aHandler)
+otError otIcmp6RegisterHandler(otInstance *aInstance, otIcmp6Handler *aHandler)
 {
     return aInstance->mIp6.mIcmp.RegisterHandler(*static_cast<Ip6::IcmpHandler *>(aHandler));
 }
 
-ThreadError otIcmp6SendEchoRequest(otInstance *aInstance, otMessage *aMessage,
+otError otIcmp6SendEchoRequest(otInstance *aInstance, otMessage *aMessage,
                                    const otMessageInfo *aMessageInfo, uint16_t aIdentifier)
 {
     return aInstance->mIp6.mIcmp.SendEchoRequest(*static_cast<Message *>(aMessage),

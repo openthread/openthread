@@ -26,18 +26,18 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <fcntl.h>
 
 #include <openthread-config.h>
-#include "openthread/platform/alarm.h"
-#include <utils/flash.h>
+#include <openthread/platform/alarm.h>
 
-#include <utils/code_utils.h>
 #include "platform-cc2538.h"
 #include "rom-utility.h"
+#include "utils/code_utils.h"
+#include "utils/flash.h"
 
 #define FLASH_CTRL_FCTL_BUSY   0x00000080
 
@@ -46,34 +46,34 @@ enum
     FLASH_PAGE_SIZE = 0x800,
 };
 
-static ThreadError romStatusToThread(int32_t aStatus)
+static otError romStatusToThread(int32_t aStatus)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     switch (aStatus)
     {
     case 0:
-        error = kThreadError_None;
+        error = OT_ERROR_NONE;
         break;
 
     case -1:
-        error = kThreadError_Failed;
+        error = OT_ERROR_FAILED;
         break;
 
     case -2:
-        error = kThreadError_InvalidArgs;
+        error = OT_ERROR_INVALID_ARGS;
         break;
 
     default:
-        error = kThreadError_Abort;
+        error = OT_ERROR_ABORT;
     }
 
     return error;
 }
 
-ThreadError utilsFlashInit(void)
+otError utilsFlashInit(void)
 {
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 uint32_t utilsFlashGetSize(void)
@@ -83,13 +83,13 @@ uint32_t utilsFlashGetSize(void)
     return reg ? (0x20000 * reg) : 0x10000;
 }
 
-ThreadError utilsFlashErasePage(uint32_t aAddress)
+otError utilsFlashErasePage(uint32_t aAddress)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     int32_t status;
     uint32_t address;
 
-    otEXPECT_ACTION(aAddress < utilsFlashGetSize(), error = kThreadError_InvalidArgs);
+    otEXPECT_ACTION(aAddress < utilsFlashGetSize(), error = OT_ERROR_INVALID_ARGS);
 
     address = FLASH_BASE + aAddress - (aAddress & (FLASH_PAGE_SIZE - 1));
     status = ROM_PageErase(address, FLASH_PAGE_SIZE);
@@ -99,9 +99,9 @@ exit:
     return error;
 }
 
-ThreadError utilsFlashStatusWait(uint32_t aTimeout)
+otError utilsFlashStatusWait(uint32_t aTimeout)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint32_t start = otPlatAlarmGetNow();
     uint32_t busy = 1;
 
@@ -110,7 +110,7 @@ ThreadError utilsFlashStatusWait(uint32_t aTimeout)
         busy = HWREG(FLASH_CTRL_FCTL) & FLASH_CTRL_FCTL_BUSY;
     }
 
-    otEXPECT_ACTION(!busy, error = kThreadError_Busy);
+    otEXPECT_ACTION(!busy, error = OT_ERROR_BUSY);
 
 exit:
     return error;
@@ -137,7 +137,7 @@ uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
             busy = HWREG(FLASH_CTRL_FCTL) & FLASH_CTRL_FCTL_BUSY;
         }
 
-        otEXPECT(romStatusToThread(status) == kThreadError_None);
+        otEXPECT(romStatusToThread(status) == OT_ERROR_NONE);
         size += 4;
         data++;
         aAddress += 4;

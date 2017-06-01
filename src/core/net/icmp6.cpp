@@ -35,14 +35,15 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
+#include "icmp6.hpp"
+
 #include "utils/wrap_string.h"
 
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <common/logging.hpp>
-#include <common/message.hpp>
-#include <net/icmp6.hpp>
-#include <net/ip6.hpp>
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/logging.hpp"
+#include "common/message.hpp"
+#include "net/ip6.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 
@@ -67,15 +68,15 @@ Message *Icmp::NewMessage(uint16_t aReserved)
     return mIp6.NewMessage(sizeof(IcmpHeader) + aReserved);
 }
 
-ThreadError Icmp::RegisterHandler(IcmpHandler &aHandler)
+otError Icmp::RegisterHandler(IcmpHandler &aHandler)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     for (IcmpHandler *cur = mHandlers; cur; cur = cur->GetNext())
     {
         if (cur == &aHandler)
         {
-            ExitNow(error = kThreadError_Already);
+            ExitNow(error = OT_ERROR_ALREADY);
         }
     }
 
@@ -86,17 +87,17 @@ exit:
     return error;
 }
 
-ThreadError Icmp::SendEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo,
-                                  uint16_t aIdentifier)
+otError Icmp::SendEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo,
+                              uint16_t aIdentifier)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     MessageInfo messageInfoLocal;
     IcmpHeader icmpHeader;
 
     messageInfoLocal = aMessageInfo;
 
     icmpHeader.Init();
-    icmpHeader.SetType(kIcmp6TypeEchoRequest);
+    icmpHeader.SetType(IcmpHeader::kTypeEchoRequest);
     icmpHeader.SetId(aIdentifier);
     icmpHeader.SetSequence(mEchoSequence++);
 
@@ -110,17 +111,17 @@ exit:
     return error;
 }
 
-ThreadError Icmp::SendError(IcmpHeader::Type aType, IcmpHeader::Code aCode, const MessageInfo &aMessageInfo,
-                            const Header &aHeader)
+otError Icmp::SendError(IcmpHeader::Type aType, IcmpHeader::Code aCode, const MessageInfo &aMessageInfo,
+                        const Header &aHeader)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     MessageInfo messageInfoLocal;
     Message *message = NULL;
     IcmpHeader icmp6Header;
 
     messageInfoLocal = aMessageInfo;
 
-    VerifyOrExit((message = mIp6.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mIp6.NewMessage(0)) != NULL, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = message->SetLength(sizeof(icmp6Header) + sizeof(aHeader)));
 
     message->Write(sizeof(icmp6Header), sizeof(aHeader), &aHeader);
@@ -136,7 +137,7 @@ ThreadError Icmp::SendError(IcmpHeader::Type aType, IcmpHeader::Code aCode, cons
 
 exit:
 
-    if (error != kThreadError_None && message != NULL)
+    if (error != OT_ERROR_NONE && message != NULL)
     {
         message->Free();
     }
@@ -144,23 +145,24 @@ exit:
     return error;
 }
 
-ThreadError Icmp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
+otError Icmp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint16_t payloadLength;
     IcmpHeader icmp6Header;
     uint16_t checksum;
 
-    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(icmp6Header), &icmp6Header) == sizeof(icmp6Header));
+    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(icmp6Header), &icmp6Header) == sizeof(icmp6Header),
+                 error = OT_ERROR_PARSE);
     payloadLength = aMessage.GetLength() - aMessage.GetOffset();
 
     // verify checksum
     checksum = Ip6::ComputePseudoheaderChecksum(aMessageInfo.GetPeerAddr(), aMessageInfo.GetSockAddr(),
                                                 payloadLength, kProtoIcmp6);
     checksum = aMessage.UpdateChecksum(checksum, aMessage.GetOffset(), payloadLength);
-    VerifyOrExit(checksum == 0xffff);
+    VerifyOrExit(checksum == 0xffff, error = OT_ERROR_PARSE);
 
-    if (mIsEchoEnabled && (icmp6Header.GetType() == kIcmp6TypeEchoRequest))
+    if (mIsEchoEnabled && (icmp6Header.GetType() == IcmpHeader::kTypeEchoRequest))
     {
         HandleEchoRequest(aMessage, aMessageInfo);
     }
@@ -176,9 +178,9 @@ exit:
     return error;
 }
 
-ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMessageInfo)
+otError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMessageInfo)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     IcmpHeader icmp6Header;
     Message *replyMessage = NULL;
     MessageInfo replyMessageInfo;
@@ -187,7 +189,7 @@ ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo 
     otLogInfoIcmp(GetInstance(), "Received Echo Request");
 
     icmp6Header.Init();
-    icmp6Header.SetType(kIcmp6TypeEchoReply);
+    icmp6Header.SetType(IcmpHeader::kTypeEchoReply);
 
     if ((replyMessage = mIp6.NewMessage(0)) == NULL)
     {
@@ -218,7 +220,7 @@ ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo 
 
 exit:
 
-    if (error != kThreadError_None && replyMessage != NULL)
+    if (error != OT_ERROR_NONE && replyMessage != NULL)
     {
         replyMessage->Free();
     }
@@ -226,7 +228,7 @@ exit:
     return error;
 }
 
-ThreadError Icmp::UpdateChecksum(Message &aMessage, uint16_t aChecksum)
+otError Icmp::UpdateChecksum(Message &aMessage, uint16_t aChecksum)
 {
     aChecksum = aMessage.UpdateChecksum(aChecksum, aMessage.GetOffset(),
                                         aMessage.GetLength() - aMessage.GetOffset());
@@ -238,7 +240,7 @@ ThreadError Icmp::UpdateChecksum(Message &aMessage, uint16_t aChecksum)
 
     aChecksum = HostSwap16(aChecksum);
     aMessage.Write(aMessage.GetOffset() + IcmpHeader::GetChecksumOffset(), sizeof(aChecksum), &aChecksum);
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 }  // namespace Ip6

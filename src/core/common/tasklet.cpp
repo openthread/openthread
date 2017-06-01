@@ -33,12 +33,13 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
-#include "openthread/openthread.h"
+#include "tasklet.hpp"
 
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <common/tasklet.hpp>
-#include <net/ip6.hpp>
+#include <openthread/openthread.h>
+
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "net/ip6.hpp"
 
 namespace ot {
 
@@ -50,7 +51,7 @@ Tasklet::Tasklet(TaskletScheduler &aScheduler, Handler aHandler, void *aContext)
 {
 }
 
-ThreadError Tasklet::Post(void)
+otError Tasklet::Post(void)
 {
     return mScheduler.Post(*this);
 }
@@ -61,11 +62,11 @@ TaskletScheduler::TaskletScheduler(void):
 {
 }
 
-ThreadError TaskletScheduler::Post(Tasklet &aTasklet)
+otError TaskletScheduler::Post(Tasklet &aTasklet)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mTail != &aTasklet && aTasklet.mNext == NULL, error = kThreadError_Already);
+    VerifyOrExit(mTail != &aTasklet && aTasklet.mNext == NULL, error = OT_ERROR_ALREADY);
 
     if (mTail == NULL)
     {

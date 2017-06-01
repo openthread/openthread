@@ -34,15 +34,17 @@
 #include <assert.h>
 #include <stdint.h>
 
-#include "openthread/openthread.h"
-#include "openthread/platform/alarm.h"
-#include "openthread/platform/uart.h"
+#include <openthread/openthread.h>
+#include <openthread/platform/alarm.h>
+#include <openthread/platform/uart.h>
+
 #include "platform-da15000.h"
+
 #include "sdk_defs.h"
-#include "hw_cpm.h"
-#include "hw_watchdog.h"
 #include "ftdf.h"
+#include "hw_cpm.h"
 #include "hw_gpio.h"
+#include "hw_watchdog.h"
 
 static bool sBlink = false;
 static int  sMsCounterInit;
@@ -104,15 +106,15 @@ void ExampleProcess(otInstance *aInstance)
 
     switch (devRole)
     {
-    case kDeviceRoleLeader:
+    case OT_DEVICE_ROLE_LEADER:
         thrValue = LEADER_BLINK_TIME;
         break;
 
-    case kDeviceRoleRouter:
+    case OT_DEVICE_ROLE_ROUTER:
         thrValue = ROUTER_BLINK_TIME;
         break;
 
-    case kDeviceRoleChild:
+    case OT_DEVICE_ROLE_CHILD:
         thrValue = CHILD_BLINK_TIME;
         break;
 

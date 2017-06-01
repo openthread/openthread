@@ -42,7 +42,7 @@
         OPENTHREAD_FTD=1;
         OPENTHREAD_MULTIPLE_INSTANCE;
         OPENTHREAD_ENABLE_NCP_SPI=0;
-        OOPENTHREAD_ENABLE_NCP_UART=1;
+        OPENTHREAD_ENABLE_NCP_UART=1;
       </PreprocessorDefinitions>
       <AdditionalIncludeDirectories>
         %(AdditionalIncludeDirectories);

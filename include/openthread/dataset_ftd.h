@@ -35,17 +35,14 @@
 #ifndef OPENTHREAD_DATASET_FTD_H_
 #define OPENTHREAD_DATASET_FTD_H_
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @addtogroup dataset  Operational Dataset
- *
- * @brief
- *   This module includes functions for Operational Dataset configuration for FTD.
+ * @addtogroup api-thread-general
  *
  * @{
  *
@@ -57,12 +54,12 @@ extern "C" {
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aDataset  A pointer to the Active Operational Dataset.
  *
- * @retval kThreadError_None         Successfully set the Active Operational Dataset.
- * @retval kThreadError_NoBufs       Insufficient buffer space to set the Active Operational Datset.
- * @retval kThreadError_InvalidArgs  @p aDataset was NULL.
+ * @retval OT_ERROR_NONE          Successfully set the Active Operational Dataset.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to set the Active Operational Datset.
+ * @retval OT_ERROR_INVALID_ARGS  @p aDataset was NULL.
  *
  */
-OTAPI ThreadError OTCALL otDatasetSetActive(otInstance *aInstance, const otOperationalDataset *aDataset);
+OTAPI otError OTCALL otDatasetSetActive(otInstance *aInstance, const otOperationalDataset *aDataset);
 
 /**
  * This function sets the Pending Operational Dataset.
@@ -70,12 +67,12 @@ OTAPI ThreadError OTCALL otDatasetSetActive(otInstance *aInstance, const otOpera
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aDataset  A pointer to the Pending Operational Dataset.
  *
- * @retval kThreadError_None         Successfully set the Pending Operational Dataset.
- * @retval kThreadError_NoBufs       Insufficient buffer space to set the Pending Operational Dataset.
- * @retval kThreadError_InvalidArgs  @p aDataset was NULL.
+ * @retval OT_ERROR_NONE          Successfully set the Pending Operational Dataset.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to set the Pending Operational Dataset.
+ * @retval OT_ERROR_INVALID_ARGS  @p aDataset was NULL.
  *
  */
-OTAPI ThreadError OTCALL otDatasetSetPending(otInstance *aInstance, const otOperationalDataset *aDataset);
+OTAPI otError OTCALL otDatasetSetPending(otInstance *aInstance, const otOperationalDataset *aDataset);
 
 /**
  * This function sends MGMT_ACTIVE_GET.
@@ -85,12 +82,12 @@ OTAPI ThreadError OTCALL otDatasetSetPending(otInstance *aInstance, const otOper
  * @param[in]  aLength    The length of TLV Types.
  * @param[in]  aAddress   A pointer to the IPv6 destination, if it is NULL, will use Leader ALOC as default.
  *
- * @retval kThreadError_None         Successfully send the meshcop dataset command.
- * @retval kThreadError_NoBufs       Insufficient buffer space to send.
+ * @retval OT_ERROR_NONE          Successfully send the meshcop dataset command.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
  *
  */
-OTAPI ThreadError OTCALL otDatasetSendMgmtActiveGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength,
-                                                    const otIp6Address *aAddress);
+OTAPI otError OTCALL otDatasetSendMgmtActiveGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength,
+                                                const otIp6Address *aAddress);
 
 /**
  * This function sends MGMT_ACTIVE_SET.
@@ -100,12 +97,12 @@ OTAPI ThreadError OTCALL otDatasetSendMgmtActiveGet(otInstance *aInstance, const
  * @param[in]  aTlvs      A pointer to TLVs.
  * @param[in]  aLength    The length of TLVs.
  *
- * @retval kThreadError_None         Successfully send the meshcop dataset command.
- * @retval kThreadError_NoBufs       Insufficient buffer space to send.
+ * @retval OT_ERROR_NONE          Successfully send the meshcop dataset command.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
  *
  */
-OTAPI ThreadError OTCALL otDatasetSendMgmtActiveSet(otInstance *aInstance, const otOperationalDataset *aDataset,
-                                                    const uint8_t *aTlvs, uint8_t aLength);
+OTAPI otError OTCALL otDatasetSendMgmtActiveSet(otInstance *aInstance, const otOperationalDataset *aDataset,
+                                                const uint8_t *aTlvs, uint8_t aLength);
 
 /**
  * This function sends MGMT_PENDING_GET.
@@ -115,12 +112,12 @@ OTAPI ThreadError OTCALL otDatasetSendMgmtActiveSet(otInstance *aInstance, const
  * @param[in]  aLength    The length of TLV Types.
  * @param[in]  aAddress   A pointer to the IPv6 destination, if it is NULL, will use Leader ALOC as default.
  *
- * @retval kThreadError_None         Successfully send the meshcop dataset command.
- * @retval kThreadError_NoBufs       Insufficient buffer space to send.
+ * @retval OT_ERROR_NONE          Successfully send the meshcop dataset command.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
  *
  */
-OTAPI ThreadError OTCALL otDatasetSendMgmtPendingGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength,
-                                                     const otIp6Address *aAddress);
+OTAPI otError OTCALL otDatasetSendMgmtPendingGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength,
+                                                 const otIp6Address *aAddress);
 
 /**
  * This function sends MGMT_PENDING_SET.
@@ -130,12 +127,12 @@ OTAPI ThreadError OTCALL otDatasetSendMgmtPendingGet(otInstance *aInstance, cons
  * @param[in]  aTlvs      A pointer to TLVs.
  * @param[in]  aLength    The length of TLVs.
  *
- * @retval kThreadError_None         Successfully send the meshcop dataset command.
- * @retval kThreadError_NoBufs       Insufficient buffer space to send.
+ * @retval OT_ERROR_NONE          Successfully send the meshcop dataset command.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
  *
  */
-OTAPI ThreadError OTCALL otDatasetSendMgmtPendingSet(otInstance *aInstance, const otOperationalDataset *aDataset,
-                                                     const uint8_t *aTlvs, uint8_t aLength);
+OTAPI otError OTCALL otDatasetSendMgmtPendingSet(otInstance *aInstance, const otOperationalDataset *aDataset,
+                                                 const uint8_t *aTlvs, uint8_t aLength);
 
 /**
  * Get minimal delay timer.
@@ -153,11 +150,11 @@ OTAPI uint32_t OTCALL otDatasetGetDelayTimerMinimal(otInstance *aInstance);
  * @param[in]  aInstance           A pointer to an OpenThread instance.
  * @param[in]  aDelayTimerMinimal  The value of minimal delay timer (in ms).
  *
- * @retval  kThreadError_None         Successfully set minimal delay timer.
- * @retval  kThreadError_InvalidArgs  If @p aDelayTimerMinimal is not valid.
+ * @retval  OT_ERROR_NONE          Successfully set minimal delay timer.
+ * @retval  OT_ERROR_INVALID_ARGS  If @p aDelayTimerMinimal is not valid.
  *
  */
-OTAPI ThreadError OTCALL otDatasetSetDelayTimerMinimal(otInstance *aInstance, uint32_t aDelayTimerMinimal);
+OTAPI otError OTCALL otDatasetSetDelayTimerMinimal(otInstance *aInstance, uint32_t aDelayTimerMinimal);
 
 /**
  * @}

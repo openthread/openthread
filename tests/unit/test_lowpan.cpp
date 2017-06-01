@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "test_util.hpp"
 #include "test_lowpan.hpp"
+#include "test_util.hpp"
 
 using namespace ot;
 using ot::Encoding::BigEndian::HostSwap16;
@@ -181,7 +181,7 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
         int compressBytes = sMockLowpan.Compress(*message, aVector.mMacSource, aVector.mMacDestination,
                                                  result);
 
-        if (aVector.mError == kThreadError_None)
+        if (aVector.mError == OT_ERROR_NONE)
         {
             // Append payload to the LOWPAN_IPHC.
             message->Read(message->GetOffset(),
@@ -216,7 +216,7 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
 
         message->Read(0, message->GetLength(), result);
 
-        if (aVector.mError == kThreadError_None)
+        if (aVector.mError == OT_ERROR_NONE)
         {
             // Append payload to the IPv6 Packet.
             memcpy(result + message->GetLength(), iphc + decompressedBytes,
@@ -279,7 +279,7 @@ static void TestFullyCompressableLongAddresses(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -305,7 +305,7 @@ static void TestFullyCompressableShortAddresses(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -331,7 +331,7 @@ static void TestFullyCompressableShortLongAddresses(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -357,7 +357,7 @@ static void TestFullyCompressableLongShortAddresses(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -383,7 +383,7 @@ static void TestSourceUnspecifiedAddress(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -414,7 +414,7 @@ static void TestSource128bitDestination128bitAddresses(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -443,7 +443,7 @@ static void TestSource64bitDestination64bitLongAddresses(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -472,7 +472,7 @@ static void TestSource64bitDestination64bitShortAddresses(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -498,7 +498,7 @@ static void TestSource16bitDestination16bitAddresses(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -524,7 +524,7 @@ static void TestSourceCompressedDestination16bitAddresses(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -553,7 +553,7 @@ static void TestSourceCompressedDestination128bitAddresses(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -583,7 +583,7 @@ static void TestMulticast128bitAddress(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -611,7 +611,7 @@ static void TestMulticast48bitAddress(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -639,7 +639,7 @@ static void TestMulticast32bitAddress(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -665,7 +665,7 @@ static void TestMulticast8bitAddress(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -694,7 +694,7 @@ static void TestStatefulSource64bitDestination64bitContext0(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -723,7 +723,7 @@ static void TestStatefulSource64bitDestination64bitContext0IfContextInLine(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform decompression test only.
     Test(testVector, false, true);
@@ -749,7 +749,7 @@ static void TestStatefulSource16bitDestination16bitContext0(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -775,7 +775,7 @@ static void TestStatefulCompressableLongAddressesContext0(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -801,7 +801,7 @@ static void TestStatefulCompressableShortAddressesContext0(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -827,7 +827,7 @@ static void TestStatefulCompressableLongShortAddressesContext0(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -857,7 +857,7 @@ static void TestStatefulSource64bitDestination128bitContext1(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -886,7 +886,7 @@ static void TestStatefulSource64bitDestination64bitContext1(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -917,7 +917,7 @@ static void TestStatefulSourceDestinationInlineContext2CIDFalse(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression test only.
     Test(testVector, true, false);
@@ -945,7 +945,7 @@ static void TestStatefulMulticastDestination48bitContext0(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform decompression tests.
     Test(testVector, true, true);
@@ -971,7 +971,7 @@ static void TestTrafficClassFlowLabel3Bytes(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -997,7 +997,7 @@ static void TestTrafficClassFlowLabel1Byte(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -1023,7 +1023,7 @@ static void TestTrafficClassFlowLabel1ByteEcnOnly(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -1049,7 +1049,7 @@ static void TestTrafficClassFlowLabelInline(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -1075,7 +1075,7 @@ static void TestHopLimit1(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -1101,7 +1101,7 @@ static void TestHopLimit255(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -1127,7 +1127,7 @@ static void TestHopLimitInline(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -1156,7 +1156,7 @@ static void TestUdpSourceDestinationInline(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(48);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -1185,7 +1185,7 @@ static void TestUdpSourceInlineDestination8bit(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(48);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -1214,7 +1214,7 @@ static void TestUdpSource8bitDestinationInline(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(48);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -1243,7 +1243,7 @@ static void TestUdpFullyCompressed(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(48);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -1272,7 +1272,7 @@ static void TestUdpFullyCompressedMulticast(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(48);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -1298,7 +1298,7 @@ static void TestUdpWithoutNhc(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(40);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform only decompression test.
     Test(testVector, false, true);
@@ -1330,7 +1330,7 @@ static void TestExtensionHeaderHopByHopNoPadding(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(48);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -1362,7 +1362,7 @@ static void TestExtensionHeaderHopByHopPad1(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(48);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -1394,7 +1394,7 @@ static void TestExtensionHeaderHopByHopPadN2(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(48);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -1426,7 +1426,7 @@ static void TestExtensionHeaderHopByHopPadN3(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(48);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -1458,7 +1458,7 @@ static void TestExtensionHeaderHopByHopPadN4(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(48);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -1493,7 +1493,7 @@ static void TestExtensionHeaderHopByHopPadN5(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(56);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -1530,7 +1530,7 @@ static void TestExtensionHeaderHopByHopPadN6(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(64);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -1566,7 +1566,7 @@ static void TestExtensionHeaderHopByHopPadN7(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(64);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -1601,7 +1601,7 @@ static void TestExtensionHeaderHopByHopPadN2UdpFullyCompressed(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(56);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -1643,7 +1643,7 @@ static void TestIpInIpHopByHopPadN2UdpSourceDestinationInline(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(96);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -1676,7 +1676,7 @@ static void TestIpInIpWithoutExtensionHeader(void)
     // Set payload and error.
     testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
     testVector.SetPayloadOffset(80);
-    testVector.SetError(kThreadError_None);
+    testVector.SetError(OT_ERROR_NONE);
 
     // Perform compression and decompression tests.
     Test(testVector, true, true);
@@ -1695,7 +1695,7 @@ static void TestErrorNoIphcDispatch(void)
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
     // Set payload and error.
-    testVector.SetError(kThreadError_Parse);
+    testVector.SetError(OT_ERROR_PARSE);
 
     // Perform decompression test.
     Test(testVector, false, true);
@@ -1714,7 +1714,7 @@ static void TestErrorTruncatedIphc(void)
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
     // Set payload and error.
-    testVector.SetError(kThreadError_Parse);
+    testVector.SetError(OT_ERROR_PARSE);
 
     // Perform decompression test.
     Test(testVector, false, true);
@@ -1733,7 +1733,7 @@ static void TestErrorReservedValueDestination0100(void)
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
     // Set payload and error.
-    testVector.SetError(kThreadError_Parse);
+    testVector.SetError(OT_ERROR_PARSE);
 
     // Perform decompression test.
     Test(testVector, false, true);
@@ -1752,7 +1752,7 @@ static void TestErrorReservedValueDestination1101(void)
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
     // Set payload and error.
-    testVector.SetError(kThreadError_Parse);
+    testVector.SetError(OT_ERROR_PARSE);
 
     // Perform decompression test.
     Test(testVector, false, true);
@@ -1771,7 +1771,7 @@ static void TestErrorReservedValueDestination1110(void)
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
     // Set payload and error.
-    testVector.SetError(kThreadError_Parse);
+    testVector.SetError(OT_ERROR_PARSE);
 
     // Perform decompression test.
     Test(testVector, false, true);
@@ -1790,7 +1790,7 @@ static void TestErrorReservedValueDestination1111(void)
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
     // Set payload and error.
-    testVector.SetError(kThreadError_Parse);
+    testVector.SetError(OT_ERROR_PARSE);
 
     // Perform decompression test.
     Test(testVector, false, true);
@@ -1809,7 +1809,7 @@ static void TestErrorUnknownNhc(void)
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
     // Set payload and error.
-    testVector.SetError(kThreadError_Parse);
+    testVector.SetError(OT_ERROR_PARSE);
 
     // Perform decompression test.
     Test(testVector, false, true);
@@ -1828,7 +1828,7 @@ static void TestErrorReservedNhc5(void)
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
     // Set payload and error.
-    testVector.SetError(kThreadError_Parse);
+    testVector.SetError(OT_ERROR_PARSE);
 
     // Perform decompression test.
     Test(testVector, false, true);
@@ -1847,7 +1847,7 @@ static void TestErrorReservedNhc6(void)
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
     // Set payload and error.
-    testVector.SetError(kThreadError_Parse);
+    testVector.SetError(OT_ERROR_PARSE);
 
     // Perform decompression test.
     Test(testVector, false, true);

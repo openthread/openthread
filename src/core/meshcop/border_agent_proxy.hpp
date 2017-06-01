@@ -34,11 +34,10 @@
 #ifndef BORDER_AGENT_PROXY_HPP_
 #define BORDER_AGENT_PROXY_HPP_
 
-#include <openthread-core-config.h>
 #include <openthread/border_agent_proxy.h>
 
-#include <coap/coap_client.hpp>
-#include <coap/coap_server.hpp>
+#include "openthread-core-config.h"
+#include "coap/coap.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -50,29 +49,28 @@ public:
      * This constructor initializes the border agent proxy.
      *
      * @param[in]   aMeshLocal16    A reference to the Mesh Local Routing Locator.
-     * @param[in]   aCoapServer     A reference to the Management CoAP Server.
-     * @param[in]   aCoapClient     A reference to the CoAP Client.
+     * @param[in]   aCoap           A reference to the Management CoAP Service.
      *
      */
-    BorderAgentProxy(const Ip6::Address &aMeshLocal16, Coap::Server &aCoapServer, Coap::Client &aCoapClient);
+    BorderAgentProxy(const Ip6::Address &aMeshLocal16, Coap::Coap &aCoap);
 
     /**
      * This method enables the border agent proxy service.
      *
-     * @retval kThreadError_None            Successfully started the service.
-     * @retval kThreadError_Already         The service already started.
+     * @retval OT_ERROR_NONE            Successfully started the service.
+     * @retval OT_ERROR_ALREADY         The service already started.
      *
      */
-    ThreadError Start(otBorderAgentProxyStreamHandler aStreamHandler, void *aContext);
+    otError Start(otBorderAgentProxyStreamHandler aStreamHandler, void *aContext);
 
     /**
      * This method disables the border agent proxy service.
      *
-     * @retval kThreadError_None            Successfully stopped the border agent proxy service.
-     * @retval kThreadError_Already         The service already stopped.
+     * @retval OT_ERROR_NONE            Successfully stopped the border agent proxy service.
+     * @retval OT_ERROR_ALREADY         The service already stopped.
      *
      */
-    ThreadError Stop(void);
+    otError Stop(void);
 
     /**
      * This method sends the message into the thread network.
@@ -81,13 +79,13 @@ public:
      * @param[in]   aLocator    The destination's RLOC16 or ALOC16.
      * @param[in]   aPort       The destination port.
      *
-     * @retval kThreadError_None            Successfully send the message.
-     * @retval kThreadError_InvalidState    Border agent proxy is not started.
+     * @retval OT_ERROR_NONE             Successfully send the message.
+     * @retval OT_ERROR_INVALID_STATE    Border agent proxy is not started.
      *
      * @warning No matter the call success or fail, the message is freed.
      *
      */
-    ThreadError Send(Message &aMessage, uint16_t aLocator, uint16_t aPort);
+    otError Send(Message &aMessage, uint16_t aLocator, uint16_t aPort);
 
     /**
      * This method indicates whether or not the border agent proxy service is enabled.
@@ -104,7 +102,7 @@ private:
                                    const otMessageInfo *aMessageInfo);
 
     static void HandleResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                               const otMessageInfo *aMessageInfo, ThreadError aResult);
+                               const otMessageInfo *aMessageInfo, otError aResult);
 
     void DeliverMessage(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -114,8 +112,7 @@ private:
     void *mContext;
 
     const Ip6::Address &mMeshLocal16;
-    Coap::Server &mCoapServer;
-    Coap::Client &mCoapClient;
+    Coap::Coap &mCoap;
 };
 
 }  // namespace MeshCoP

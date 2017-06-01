@@ -123,4 +123,12 @@
  */
 #define OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE                     (4096 * sizeof(void *))
 
+/**
+ * @def OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE_NO_DTLS
+ *
+ * The size of mbedTLS heap buffer when DTLS is disabled.
+ *
+ */
+#define OPENTHREAD_CONFIG_MBEDTLS_HEAP_SIZE_NO_DTLS             2048
+
 #endif  // OPENTHREAD_CORE_NRF52840_CONFIG_H_

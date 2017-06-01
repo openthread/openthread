@@ -68,13 +68,13 @@ otPlatReset(
     otLwfReleaseInstance(pFilter);
 
     // Reset radio layer
-    pFilter->otPhyState = kStateDisabled;
+    pFilter->otRadioState = OT_RADIO_STATE_DISABLED;
     pFilter->otCurrentListenChannel = 0xFF;
     pFilter->otPromiscuous = false;
     pFilter->otPendingMacOffloadEnabled = FALSE;
 
     // Reinitialize the OpenThread library
-    pFilter->otCachedRole = kDeviceRoleDisabled;
+    pFilter->otCachedRole = OT_DEVICE_ROLE_DISABLED;
     pFilter->otCtx = otInstanceInit(pFilter->otInstanceBuffer + sizeof(PMS_FILTER), &pFilter->otInstanceSize);
     ASSERT(pFilter->otCtx);
 
@@ -152,13 +152,13 @@ otLwfRadioInit(
     // Initialize the OpenThread radio capability flags
     pFilter->otRadioCapabilities = 0;
     if ((pFilter->DeviceCapabilities & OTLWF_DEVICE_CAP_RADIO_ACK_TIMEOUT) != 0)
-        pFilter->otRadioCapabilities |= kRadioCapsAckTimeout;
+        pFilter->otRadioCapabilities |= OT_RADIO_CAPS_ACK_TIMEOUT;
     if ((pFilter->DeviceCapabilities & OTLWF_DEVICE_CAP_RADIO_MAC_RETRY_AND_COLLISION_AVOIDANCE) != 0)
-        pFilter->otRadioCapabilities |= kRadioCapsTransmitRetries;
+        pFilter->otRadioCapabilities |= OT_RADIO_CAPS_TRANSMIT_RETRIES;
     if ((pFilter->DeviceCapabilities & OTLWF_DEVICE_CAP_RADIO_ENERGY_SCAN) != 0)
-        pFilter->otRadioCapabilities |= kRadioCapsEnergyScan;
+        pFilter->otRadioCapabilities |= OT_RADIO_CAPS_ENERGY_SCAN;
 
-    pFilter->otPhyState = kStateDisabled;
+    pFilter->otRadioState = OT_RADIO_STATE_DISABLED;
     pFilter->otCurrentListenChannel = 0xFF;
     pFilter->otPromiscuous = false;
 
@@ -170,7 +170,7 @@ otLwfRadioInit(
     // Cache the factory address
     otLwfRadioGetFactoryAddress(pFilter);
     
-    LogInfo(DRIVER_DEFAULT, "Filter %p PhyState = kStateDisabled.", pFilter);
+    LogInfo(DRIVER_DEFAULT, "Filter %p RadioState = OT_RADIO_STATE_DISABLED.", pFilter);
     
     LogFuncExit(DRIVER_DEFAULT);
 }
@@ -192,7 +192,7 @@ void otPlatRadioSetPanId(_In_ otInstance *otCtx, uint16_t panid)
 
     pFilter->otPanID = panid;
 
-    if (pFilter->otPhyState != kStateDisabled &&
+    if (pFilter->otRadioState != OT_RADIO_STATE_DISABLED &&
         pFilter->otPanID != 0xFFFF)
     {
         // Indicate to the miniport
@@ -250,7 +250,7 @@ void otPlatRadioSetShortAddress(_In_ otInstance *otCtx, uint16_t address)
 
     pFilter->otShortAddress = address;
 
-    if (pFilter->otPhyState != kStateDisabled)
+    if (pFilter->otRadioState != OT_RADIO_STATE_DISABLED)
     {
         // Indicate to the miniport
         status =
@@ -293,19 +293,19 @@ bool otPlatRadioIsEnabled(_In_ otInstance *otCtx)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
-    return pFilter->otPhyState != kStateDisabled;
+    return pFilter->otRadioState != OT_RADIO_STATE_DISABLED;
 }
 
-ThreadError otPlatRadioEnable(_In_ otInstance *otCtx)
+otError otPlatRadioEnable(_In_ otInstance *otCtx)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
     NTSTATUS status;
 
-    NT_ASSERT(pFilter->otPhyState <= kStateSleep);
-    if (pFilter->otPhyState > kStateSleep) return kThreadError_Busy;
+    NT_ASSERT(pFilter->otRadioState <= OT_RADIO_STATE_SLEEP);
+    if (pFilter->otRadioState > OT_RADIO_STATE_SLEEP) return OT_ERROR_BUSY;
 
-    pFilter->otPhyState = kStateSleep;
+    pFilter->otRadioState = OT_RADIO_STATE_SLEEP;
 
     // Indicate to the miniport
     status =
@@ -320,7 +320,7 @@ ThreadError otPlatRadioEnable(_In_ otInstance *otCtx)
         LogError(DRIVER_DEFAULT, "Set SPINEL_PROP_PHY_ENABLED (true) failed, %!STATUS!", status);
     }
 
-    LogInfo(DRIVER_DEFAULT, "Filter %p PhyState = kStateSleep.", pFilter);
+    LogInfo(DRIVER_DEFAULT, "Filter %p RadioState = OT_RADIO_STATE_SLEEP.", pFilter);
 
     if (pFilter->otPanID != 0xFFFF)
     {
@@ -351,22 +351,22 @@ ThreadError otPlatRadioEnable(_In_ otInstance *otCtx)
         LogError(DRIVER_DEFAULT, "Set SPINEL_PROP_MAC_15_4_SADDR failed, %!STATUS!", status);
     }
 
-    return NT_SUCCESS(status) ? kThreadError_None : kThreadError_Failed;
+    return NT_SUCCESS(status) ? OT_ERROR_NONE : OT_ERROR_FAILED;
 }
 
-ThreadError otPlatRadioDisable(_In_ otInstance *otCtx)
+otError otPlatRadioDisable(_In_ otInstance *otCtx)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
     NTSTATUS status;
 
     // First make sure we are in the Sleep state if we weren't already
-    if (pFilter->otPhyState > kStateSleep)
+    if (pFilter->otRadioState > OT_RADIO_STATE_SLEEP)
     {
         (void)otPlatRadioSleep(otCtx);
     }
 
-    pFilter->otPhyState = kStateDisabled;
+    pFilter->otRadioState = OT_RADIO_STATE_DISABLED;
 
     // Indicate to the miniport
     status =
@@ -381,27 +381,27 @@ ThreadError otPlatRadioDisable(_In_ otInstance *otCtx)
         LogError(DRIVER_DEFAULT, "Set SPINEL_PROP_PHY_ENABLED (false) failed, %!STATUS!", status);
     }
 
-    LogInfo(DRIVER_DEFAULT, "Filter %p PhyState = kStateDisabled.", pFilter);
+    LogInfo(DRIVER_DEFAULT, "Filter %p RadioState = OT_RADIO_STATE_DISABLED.", pFilter);
 
-    return NT_SUCCESS(status) ? kThreadError_None : kThreadError_Failed;
+    return NT_SUCCESS(status) ? OT_ERROR_NONE : OT_ERROR_FAILED;
 }
 
-ThreadError otPlatRadioSleep(_In_ otInstance *otCtx)
+otError otPlatRadioSleep(_In_ otInstance *otCtx)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
 
     // If we were in the transmit state, cancel the transmit
-    if (pFilter->otPhyState == kStateTransmit)
+    if (pFilter->otRadioState == OT_RADIO_STATE_TRANSMIT)
     {
-        pFilter->otLastTransmitError = kThreadError_Abort;
+        pFilter->otLastTransmitError = OT_ERROR_ABORT;
         otLwfRadioTransmitFrameDone(pFilter);
     }
 
-    if (pFilter->otPhyState != kStateSleep)
+    if (pFilter->otRadioState != OT_RADIO_STATE_SLEEP)
     {
-        pFilter->otPhyState = kStateSleep;
-        LogInfo(DRIVER_DEFAULT, "Filter %p PhyState = kStateSleep.", pFilter);
+        pFilter->otRadioState = OT_RADIO_STATE_SLEEP;
+        LogInfo(DRIVER_DEFAULT, "Filter %p RadioState = OT_RADIO_STATE_SLEEP.", pFilter);
 
         // Indicate to the miniport
         NTSTATUS status =
@@ -417,16 +417,16 @@ ThreadError otPlatRadioSleep(_In_ otInstance *otCtx)
         }
     }
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError otPlatRadioReceive(_In_ otInstance *otCtx, uint8_t aChannel)
+otError otPlatRadioReceive(_In_ otInstance *otCtx, uint8_t aChannel)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
     
-    NT_ASSERT(pFilter->otPhyState != kStateDisabled);
-    if (pFilter->otPhyState == kStateDisabled) return kThreadError_Busy;
+    NT_ASSERT(pFilter->otRadioState != OT_RADIO_STATE_DISABLED);
+    if (pFilter->otRadioState == OT_RADIO_STATE_DISABLED) return OT_ERROR_BUSY;
     
     LogFuncEntryMsg(DRIVER_DATA_PATH, "Filter: %p", pFilter);
 
@@ -456,10 +456,10 @@ ThreadError otPlatRadioReceive(_In_ otInstance *otCtx, uint8_t aChannel)
 
     // Only transition to the receive state if we were sleeping; otherwise we
     // are already in receive or transmit state.
-    if (pFilter->otPhyState == kStateSleep)
+    if (pFilter->otRadioState == OT_RADIO_STATE_SLEEP)
     {
-        pFilter->otPhyState = kStateReceive;
-        LogInfo(DRIVER_DEFAULT, "Filter %p PhyState = kStateReceive.", pFilter);
+        pFilter->otRadioState = OT_RADIO_STATE_RECEIVE;
+        LogInfo(DRIVER_DEFAULT, "Filter %p RadioState = OT_RADIO_STATE_RECEIVE.", pFilter);
 
         NTSTATUS status =
             otLwfCmdSetProp(
@@ -479,10 +479,10 @@ ThreadError otPlatRadioReceive(_In_ otInstance *otCtx, uint8_t aChannel)
     
     LogFuncExit(DRIVER_DATA_PATH);
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-RadioPacket *otPlatRadioGetTransmitBuffer(_In_ otInstance *otCtx)
+otRadioFrame *otPlatRadioGetTransmitBuffer(_In_ otInstance *otCtx)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
@@ -513,7 +513,7 @@ bool otPlatRadioGetPromiscuous(_In_ otInstance *otCtx)
 VOID 
 otLwfRadioReceiveFrame(
     _In_ PMS_FILTER pFilter,
-    _In_ ThreadError errorCode
+    _In_ otError errorCode
     )
 {    
     NT_ASSERT(pFilter->otReceiveFrame.mChannel >= 11 && pFilter->otReceiveFrame.mChannel <= 26);
@@ -522,7 +522,7 @@ otLwfRadioReceiveFrame(
 
     LogMacRecv(pFilter, pFilter->otReceiveFrame.mLength, pFilter->otReceiveFrame.mPsdu);
 
-    if (pFilter->otPhyState > kStateDisabled)
+    if (pFilter->otRadioState > OT_RADIO_STATE_DISABLED)
     {
         otPlatRadioReceiveDone(pFilter->otCtx, &pFilter->otReceiveFrame, errorCode);
     }
@@ -534,23 +534,23 @@ otLwfRadioReceiveFrame(
     LogFuncExit(DRIVER_DATA_PATH);
 }
 
-ThreadError otPlatRadioTransmit(_In_ otInstance *otCtx, _In_ RadioPacket *aPacket)
+otError otPlatRadioTransmit(_In_ otInstance *otCtx, _In_ otRadioFrame *aFrame)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
-    ThreadError error = kThreadError_Busy;
+    otError error = OT_ERROR_BUSY;
 
-    UNREFERENCED_PARAMETER(aPacket);
+    UNREFERENCED_PARAMETER(aFrame);
 
     LogFuncEntryMsg(DRIVER_DATA_PATH, "Filter: %p", pFilter);
 
-    NT_ASSERT(pFilter->otPhyState == kStateReceive);
-    if (pFilter->otPhyState == kStateReceive)
+    NT_ASSERT(pFilter->otRadioState == OT_RADIO_STATE_RECEIVE);
+    if (pFilter->otRadioState == OT_RADIO_STATE_RECEIVE)
     {
-        error = kThreadError_None;
-        pFilter->otPhyState = kStateTransmit;
+        error = OT_ERROR_NONE;
+        pFilter->otRadioState = OT_RADIO_STATE_TRANSMIT;
     
-        LogInfo(DRIVER_DEFAULT, "Filter %p PhyState = kStateTransmit.", pFilter);
+        LogInfo(DRIVER_DEFAULT, "Filter %p RadioState = OT_RADIO_STATE_TRANSMIT.", pFilter);
     }
 
     LogFuncExitMsg(DRIVER_DATA_PATH, "%u", error);
@@ -560,7 +560,7 @@ ThreadError otPlatRadioTransmit(_In_ otInstance *otCtx, _In_ RadioPacket *aPacke
 
 VOID otLwfRadioTransmitFrame(_In_ PMS_FILTER pFilter)
 {
-    NT_ASSERT(pFilter->otPhyState == kStateTransmit);
+    NT_ASSERT(pFilter->otRadioState == OT_RADIO_STATE_TRANSMIT);
 
     LogMacSend(pFilter, pFilter->otTransmitFrame.mLength, pFilter->otTransmitFrame.mPsdu);
 
@@ -578,23 +578,31 @@ otLwfRadioTransmitFrameDone(
 {
     LogFuncEntryMsg(DRIVER_DATA_PATH, "Filter: %p", pFilter);
 
-    if (pFilter->otPhyState == kStateTransmit)
+    if (pFilter->otRadioState == OT_RADIO_STATE_TRANSMIT)
     {
         pFilter->SendPending = FALSE;
 
         // Now that we are completing a send, fall back to receive state and set the event
-        pFilter->otPhyState = kStateReceive;
-        LogInfo(DRIVER_DEFAULT, "Filter %p PhyState = kStateReceive.", pFilter);
+        pFilter->otRadioState = OT_RADIO_STATE_RECEIVE;
+        LogInfo(DRIVER_DEFAULT, "Filter %p RadioState = OT_RADIO_STATE_RECEIVE.", pFilter);
         KeSetEvent(&pFilter->EventWorkerThreadProcessNBLs, 0, FALSE);
 
-        if (pFilter->otLastTransmitError != kThreadError_None &&
-            pFilter->otLastTransmitError != kThreadError_ChannelAccessFailure &&
-            pFilter->otLastTransmitError != kThreadError_NoAck)
+        if (pFilter->otLastTransmitError != OT_ERROR_NONE &&
+            pFilter->otLastTransmitError != OT_ERROR_CHANNEL_ACCESS_FAILURE &&
+            pFilter->otLastTransmitError != OT_ERROR_NO_ACK)
         {
-            pFilter->otLastTransmitError = kThreadError_Abort;
+            pFilter->otLastTransmitError = OT_ERROR_ABORT;
         }
 
-        otPlatRadioTransmitDone(pFilter->otCtx, &pFilter->otTransmitFrame, pFilter->otLastTransmitFramePending, pFilter->otLastTransmitError);
+        if (((pFilter->otTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0) ||
+            pFilter->otLastTransmitError != OT_ERROR_NONE)
+        {
+            otPlatRadioTxDone(pFilter->otCtx, &pFilter->otTransmitFrame, NULL, pFilter->otLastTransmitError);
+        }
+        else
+        {
+            otPlatRadioTxDone(pFilter->otCtx, &pFilter->otTransmitFrame, &pFilter->otReceiveFrame, pFilter->otLastTransmitError);
+        }
     }
 
     LogFuncExit(DRIVER_DATA_PATH);
@@ -625,7 +633,7 @@ void otPlatRadioEnableSrcMatch(_In_ otInstance *otCtx, bool aEnable)
     }
 }
 
-ThreadError otPlatRadioAddSrcMatchShortEntry(_In_ otInstance *otCtx, const uint16_t aShortAddress)
+otError otPlatRadioAddSrcMatchShortEntry(_In_ otInstance *otCtx, const uint16_t aShortAddress)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
@@ -643,10 +651,10 @@ ThreadError otPlatRadioAddSrcMatchShortEntry(_In_ otInstance *otCtx, const uint1
         LogError(DRIVER_DEFAULT, "Insert SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES failed, %!STATUS!", status);
     }
 
-    return NT_SUCCESS(status) ? kThreadError_None : kThreadError_Failed;
+    return NT_SUCCESS(status) ? OT_ERROR_NONE : OT_ERROR_FAILED;
 }
 
-ThreadError otPlatRadioAddSrcMatchExtEntry(_In_ otInstance *otCtx, const uint8_t *aExtAddress)
+otError otPlatRadioAddSrcMatchExtEntry(_In_ otInstance *otCtx, const uint8_t *aExtAddress)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
@@ -664,10 +672,10 @@ ThreadError otPlatRadioAddSrcMatchExtEntry(_In_ otInstance *otCtx, const uint8_t
         LogError(DRIVER_DEFAULT, "Insert SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES failed, %!STATUS!", status);
     }
 
-    return NT_SUCCESS(status) ? kThreadError_None : kThreadError_Failed;
+    return NT_SUCCESS(status) ? OT_ERROR_NONE : OT_ERROR_FAILED;
 }
 
-ThreadError otPlatRadioClearSrcMatchShortEntry(_In_ otInstance *otCtx, const uint16_t aShortAddress)
+otError otPlatRadioClearSrcMatchShortEntry(_In_ otInstance *otCtx, const uint16_t aShortAddress)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
@@ -685,10 +693,10 @@ ThreadError otPlatRadioClearSrcMatchShortEntry(_In_ otInstance *otCtx, const uin
         LogError(DRIVER_DEFAULT, "Remove SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES failed, %!STATUS!", status);
     }
 
-    return NT_SUCCESS(status) ? kThreadError_None : kThreadError_Failed;
+    return NT_SUCCESS(status) ? OT_ERROR_NONE : OT_ERROR_FAILED;
 }
 
-ThreadError otPlatRadioClearSrcMatchExtEntry(_In_ otInstance *otCtx, const uint8_t *aExtAddress)
+otError otPlatRadioClearSrcMatchExtEntry(_In_ otInstance *otCtx, const uint8_t *aExtAddress)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
@@ -706,7 +714,7 @@ ThreadError otPlatRadioClearSrcMatchExtEntry(_In_ otInstance *otCtx, const uint8
         LogError(DRIVER_DEFAULT, "Remove SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES failed, %!STATUS!", status);
     }
 
-    return NT_SUCCESS(status) ? kThreadError_None : kThreadError_Failed;
+    return NT_SUCCESS(status) ? OT_ERROR_NONE : OT_ERROR_FAILED;
 }
 
 void otPlatRadioClearSrcMatchShortEntries(_In_ otInstance *otCtx)
@@ -745,7 +753,7 @@ void otPlatRadioClearSrcMatchExtEntries(_In_ otInstance *otCtx)
     }
 }
 
-ThreadError otPlatRadioEnergyScan(_In_ otInstance *otCtx, uint8_t aScanChannel, uint16_t aScanDuration)
+otError otPlatRadioEnergyScan(_In_ otInstance *otCtx, uint8_t aScanChannel, uint16_t aScanDuration)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
@@ -791,7 +799,7 @@ ThreadError otPlatRadioEnergyScan(_In_ otInstance *otCtx, uint8_t aScanChannel, 
 
 error:
 
-    return NT_SUCCESS(status) ? kThreadError_None : kThreadError_Failed;
+    return NT_SUCCESS(status) ? OT_ERROR_NONE : OT_ERROR_FAILED;
 }
 
 void otPlatRadioSetDefaultTxPower(_In_ otInstance *otCtx, int8_t aPower)
@@ -812,6 +820,31 @@ void otPlatRadioSetDefaultTxPower(_In_ otInstance *otCtx, int8_t aPower)
     {
         LogError(DRIVER_DEFAULT, "Set SPINEL_PROP_PHY_TX_POWER failed, %!STATUS!", status);
     }
+}
+
+int8_t otPlatRadioGetReceiveSensitivity(_In_ otInstance *otCtx)
+{
+    NT_ASSERT(otCtx);
+    PMS_FILTER pFilter = otCtxToFilter(otCtx);
+    NTSTATUS status;
+    int8_t receiveSensitivity;
+
+    status =
+        otLwfCmdGetProp(
+            pFilter,
+            NULL,
+            SPINEL_PROP_PHY_RX_SENSITIVITY,
+            SPINEL_DATATYPE_INT8_S,
+            &receiveSensitivity
+        );
+
+    if (!NT_SUCCESS(status))
+    {
+        LogError(DRIVER_DEFAULT, "Get SPINEL_PROP_PHY_RX_SENSITIVITY, failed, %!STATUS!", status);
+        return -100;  // return default value -100dBm
+    }
+
+    return receiveSensitivity;
 }
 
 inline USHORT getDstShortAddress(const UCHAR *frame)

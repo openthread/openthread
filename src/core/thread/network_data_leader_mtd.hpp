@@ -53,7 +53,7 @@ public:
     void IncrementVersion(void) { }
     void IncrementStableVersion(void) { }
 
-    ThreadError SendServerDataNotification(uint16_t) { return kThreadError_NotImplemented; }
+    otError SendServerDataNotification(uint16_t) { return OT_ERROR_NOT_IMPLEMENTED; }
 };
 
 }  // namespace NetworkData

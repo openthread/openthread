@@ -37,29 +37,35 @@
 
 #include <stdint.h>
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @defgroup usec-alarm Microsecond alarm
- * @ingroup alarm
- *
- * @brief
- *   This module includes the platform abstraction for the microsecond alarm service.
+ * @addtogroup plat-alarm
  *
  * @{
  *
  */
 
+/**
+ * This structure represents time in microseconds.
+ *
+ */
 typedef struct
 {
     uint32_t mMs;  ///< Time in milliseconds.
     uint16_t mUs;  ///< Time fraction in microseconds.
 } otPlatUsecAlarmTime;
 
+/**
+ * This defines the callback for indicating when the alarm has expired.
+ *
+ * @param[in]  aContext  A pointer to arbitrary context information.
+ *
+ */
 typedef void (*otPlatUsecAlarmHandler)(void *aContext);
 
 /**
@@ -70,6 +76,7 @@ typedef void (*otPlatUsecAlarmHandler)(void *aContext);
  * @param[in]  aDt        The time delay in milliseconds and microseconds from @p aT0.
  * @param[in]  aHandler   A pointer to a function that is called when the timer expires.
  * @param[in]  aContext   A pointer to arbitrary context information.
+ *
  */
 void otPlatUsecAlarmStartAt(otInstance *aInstance,
                             const otPlatUsecAlarmTime *aT0,
@@ -81,6 +88,7 @@ void otPlatUsecAlarmStartAt(otInstance *aInstance,
  * Stop the alarm.
  *
  * @param[in] aInstance  The OpenThread instance structure.
+ *
  */
 void otPlatUsecAlarmStop(otInstance *aInstance);
 
@@ -88,6 +96,7 @@ void otPlatUsecAlarmStop(otInstance *aInstance);
  * Get the current time.
  *
  * @param[out]  aNow  The current time in milliseconds and microseconds.
+ *
  */
 void otPlatUsecAlarmGetNow(otPlatUsecAlarmTime *aNow);
 

@@ -34,10 +34,9 @@
 #include <sys/time.h>
 
 #include <openthread-config.h>
-#include "openthread/openthread.h"
-
-#include "openthread/platform/alarm.h"
-#include "openthread/platform/radio.h"
+#include <openthread/openthread.h>
+#include <openthread/platform/alarm.h>
+#include <openthread/platform/radio.h>
 
 /**
  * Diagnostics mode variables.
@@ -73,7 +72,7 @@ void otPlatDiagTxPowerSet(int8_t aTxPower)
     (void) aTxPower;
 }
 
-void otPlatDiagRadioReceived(otInstance *aInstance, RadioPacket *aFrame, ThreadError aError)
+void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
     (void) aInstance;
     (void) aFrame;

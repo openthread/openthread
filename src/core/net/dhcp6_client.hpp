@@ -34,15 +34,15 @@
 #ifndef DHCP6_CLIENT_HPP_
 #define DHCP6_CLIENT_HPP_
 
-#include "openthread/dhcp6_client.h"
+#include <openthread/dhcp6_client.h>
 
-#include <common/message.hpp>
-#include <common/timer.hpp>
-#include <common/trickle_timer.hpp>
-#include <mac/mac.hpp>
-#include <mac/mac_frame.hpp>
-#include <net/dhcp6.hpp>
-#include <net/udp6.hpp>
+#include "common/message.hpp"
+#include "common/timer.hpp"
+#include "common/trickle_timer.hpp"
+#include "mac/mac.hpp"
+#include "mac/mac_frame.hpp"
+#include "net/dhcp6.hpp"
+#include "net/udp6.hpp"
 
 namespace ot {
 
@@ -198,33 +198,33 @@ public:
     void UpdateAddresses(otInstance *aInstance, otDhcpAddress *aAddresses, uint32_t aNumAddresses, void *aContext);
 
 private:
-    ThreadError Start(void);
-    ThreadError Stop(void);
+    otError Start(void);
+    otError Stop(void);
 
-    ThreadError Solicit(uint16_t aRloc16);
+    otError Solicit(uint16_t aRloc16);
 
     void AddIdentityAssociation(uint16_t aRloc16, otIp6Prefix &aIp6Prefix);
     void RemoveIdentityAssociation(uint16_t aRloc16, otIp6Prefix &aIp6Prefix);
 
     bool ProcessNextIdentityAssociation(void);
 
-    ThreadError AppendHeader(Message &aMessage);
-    ThreadError AppendClientIdentifier(Message &aMessage);
-    ThreadError AppendIaNa(Message &aMessage, uint16_t aRloc16);
-    ThreadError AppendIaAddress(Message &aMessage, uint16_t aRloc16);
-    ThreadError AppendElapsedTime(Message &aMessage);
-    ThreadError AppendRapidCommit(Message &aMessage);
+    otError AppendHeader(Message &aMessage);
+    otError AppendClientIdentifier(Message &aMessage);
+    otError AppendIaNa(Message &aMessage, uint16_t aRloc16);
+    otError AppendIaAddress(Message &aMessage, uint16_t aRloc16);
+    otError AppendElapsedTime(Message &aMessage);
+    otError AppendRapidCommit(Message &aMessage);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     void ProcessReply(Message &aMessage);
     uint16_t FindOption(Message &aMessage, uint16_t aOffset, uint16_t aLength, Code aCode);
-    ThreadError ProcessServerIdentifier(Message &aMessage, uint16_t aOffset);
-    ThreadError ProcessClientIdentifier(Message &aMessage, uint16_t aOffset);
-    ThreadError ProcessIaNa(Message &aMessage, uint16_t aOffset);
-    ThreadError ProcessStatusCode(Message &aMessage, uint16_t aOffset);
-    ThreadError ProcessIaAddress(Message &aMessage, uint16_t aOffset);
+    otError ProcessServerIdentifier(Message &aMessage, uint16_t aOffset);
+    otError ProcessClientIdentifier(Message &aMessage, uint16_t aOffset);
+    otError ProcessIaNa(Message &aMessage, uint16_t aOffset);
+    otError ProcessStatusCode(Message &aMessage, uint16_t aOffset);
+    otError ProcessIaAddress(Message &aMessage, uint16_t aOffset);
 
     static bool HandleTrickleTimer(void *aContext);
     bool HandleTrickleTimer(void);

@@ -34,20 +34,19 @@
 #ifndef COMMISSIONER_HPP_
 #define COMMISSIONER_HPP_
 
-#include <openthread-core-config.h>
-#include "openthread/commissioner.h"
+#include <openthread/commissioner.h>
 
-#include <coap/coap_client.hpp>
-#include <coap/coap_server.hpp>
-#include <coap/secure_coap_server.hpp>
-#include <common/timer.hpp>
-#include <mac/mac_frame.hpp>
-#include <meshcop/announce_begin_client.hpp>
-#include <meshcop/dtls.hpp>
-#include <meshcop/energy_scan_client.hpp>
-#include <meshcop/panid_query_client.hpp>
-#include <net/udp6.hpp>
-#include <thread/mle.hpp>
+#include "openthread-core-config.h"
+#include "coap/coap.hpp"
+#include "coap/coap_secure.hpp"
+#include "common/timer.hpp"
+#include "mac/mac_frame.hpp"
+#include "meshcop/announce_begin_client.hpp"
+#include "meshcop/dtls.hpp"
+#include "meshcop/energy_scan_client.hpp"
+#include "meshcop/panid_query_client.hpp"
+#include "net/udp6.hpp"
+#include "thread/mle.hpp"
 
 namespace ot {
 
@@ -77,18 +76,18 @@ public:
     /**
      * This method starts the Commissioner service.
      *
-     * @retval kThreadError_None  Successfully started the Commissioner service.
+     * @retval OT_ERROR_NONE  Successfully started the Commissioner service.
      *
      */
-    ThreadError Start(void);
+    otError Start(void);
 
     /**
      * This method stops the Commissioner service.
      *
-     * @retval kThreadError_None  Successfully stopped the Commissioner service.
+     * @retval OT_ERROR_NONE  Successfully stopped the Commissioner service.
      *
      */
-    ThreadError Stop(void);
+    otError Stop(void);
 
     /**
      * This method clears all Joiner entries.
@@ -103,11 +102,11 @@ public:
      * @param[in]  aPSKd            A pointer to the PSKd.
      * @param[in]  aTimeout         A time after which a Joiner is automatically removed, in seconds.
      *
-     * @retval kThreadError_None    Successfully added the Joiner.
-     * @retval kThreadError_NoBufs  No buffers available to add the Joiner.
+     * @retval OT_ERROR_NONE     Successfully added the Joiner.
+     * @retval OT_ERROR_NO_BUFS  No buffers available to add the Joiner.
      *
      */
-    ThreadError AddJoiner(const Mac::ExtAddress *aExtAddress, const char *aPSKd, uint32_t aTimeout);
+    otError AddJoiner(const Mac::ExtAddress *aExtAddress, const char *aPSKd, uint32_t aTimeout);
 
     /**
      * This method removes a Joiner entry.
@@ -115,22 +114,22 @@ public:
      * @param[in]  aExtAddress        A pointer to the Joiner's extended address or NULL for any Joiner.
      * @param[in]  aDelay             The delay to remove Joiner (in seconds).
      *
-     * @retval kThreadError_None      Successfully added the Joiner.
-     * @retval kThreadError_NotFound  The Joiner specified by @p aExtAddress was not found.
+     * @retval OT_ERROR_NONE       Successfully added the Joiner.
+     * @retval OT_ERROR_NOT_FOUND  The Joiner specified by @p aExtAddress was not found.
      *
      */
-    ThreadError RemoveJoiner(const Mac::ExtAddress *aExtAddress, uint32_t aDelay);
+    otError RemoveJoiner(const Mac::ExtAddress *aExtAddress, uint32_t aDelay);
 
     /**
      * This method sets the Provisioning URL.
      *
      * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
      *
-     * @retval kThreadError_None         Successfully added the Joiner.
-     * @retval kThreadError_InvalidArgs  @p aProvisioningUrl is invalid.
+     * @retval OT_ERROR_NONE          Successfully added the Joiner.
+     * @retval OT_ERROR_INVALID_ARGS  @p aProvisioningUrl is invalid.
      *
      */
-    ThreadError SetProvisioningUrl(const char *aProvisioningUrl);
+    otError SetProvisioningUrl(const char *aProvisioningUrl);
 
     /**
      * This method returns the Commissioner Session ID.
@@ -141,13 +140,21 @@ public:
     uint16_t GetSessionId(void) const;
 
     /**
+     * This method indicates whether or not the Commissioner role is active.
+     *
+     * @returns TRUE if the Commissioner role is active, FALSE otherwise.
+     *
+     */
+    bool IsActive(void) const { return mState == OT_COMMISSIONER_STATE_ACTIVE; }
+
+    /**
      * This function returns the Commissioner State.
      *
      * @param[in]  aInstance  A pointer to an OpenThread instance.
      *
-     * @retval kCommissionerStateDisabled    Commissioner disabled.
-     * @retval kCommissionerStatePetition    Becoming the commissioner.
-     * @retval kCommissionerStateActive      Commissioner enabled.
+     * @retval OT_COMMISSIONER_STATE_DISABLED  Commissioner disabled.
+     * @retval OT_COMMISSIONER_STATE_PETITION  Becoming the commissioner.
+     * @retval OT_COMIMSSIONER_STATE_ACTIVE    Commissioner enabled.
      *
      */
     otCommissionerState GetState(void) const;
@@ -158,11 +165,11 @@ public:
      * @param[in]  aTlvs        A pointer to Commissioning Data TLVs.
      * @param[in]  aLength      The length of requested TLVs in bytes.
      *
-     * @retval kThreadError_None     Send MGMT_COMMISSIONER_GET successfully.
-     * @retval kThreadError_Failed   Send MGMT_COMMISSIONER_GET fail.
+     * @retval OT_ERROR_NONE     Send MGMT_COMMISSIONER_GET successfully.
+     * @retval OT_ERROR_FAILED   Send MGMT_COMMISSIONER_GET fail.
      *
      */
-    ThreadError SendMgmtCommissionerGetRequest(const uint8_t *aTlvs, uint8_t aLength);
+    otError SendMgmtCommissionerGetRequest(const uint8_t *aTlvs, uint8_t aLength);
 
     /**
      * This method sends MGMT_COMMISSIONER_SET.
@@ -171,12 +178,12 @@ public:
      * @param[in]  aTlvs        A pointer to user specific Commissioning Data TLVs.
      * @param[in]  aLength      The length of user specific TLVs in bytes.
      *
-     * @retval kThreadError_None     Send MGMT_COMMISSIONER_SET successfully.
-     * @retval kThreadError_Failed   Send MGMT_COMMISSIONER_SET fail.
+     * @retval OT_ERROR_NONE     Send MGMT_COMMISSIONER_SET successfully.
+     * @retval OT_ERROR_FAILED   Send MGMT_COMMISSIONER_SET fail.
      *
      */
-    ThreadError SendMgmtCommissionerSetRequest(const otCommissioningDataset &aDataset,
-                                               const uint8_t *aTlvs, uint8_t aLength);
+    otError SendMgmtCommissionerSetRequest(const otCommissioningDataset &aDataset,
+                                           const uint8_t *aTlvs, uint8_t aLength);
 
     /**
      * This static method generates PSKc.
@@ -188,12 +195,12 @@ public:
      * @param[in]  aExtPanId     The extended pan id for PSKc computation.
      * @param[out] aPSKc         A pointer to where the generated PSKc will be placed.
      *
-     * @retval kThreadErrorNone          Successfully generate PSKc.
-     * @retval kThreadError_InvalidArgs  If the length of passphrase is out of range.
+     * @retval OT_ERROR_NONE          Successfully generate PSKc.
+     * @retval OT_ERROR_INVALID_ARGS  If the length of passphrase is out of range.
      *
      */
-    static ThreadError GeneratePSKc(const char *aPassPhrase, const char *aNetworkName, const uint8_t *aExtPanId,
-                                    uint8_t *aPSKc);
+    static otError GeneratePSKc(const char *aPassPhrase, const char *aNetworkName, const uint8_t *aExtPanId,
+                                uint8_t *aPSKc);
 
     AnnounceBeginClient mAnnounceBegin;
     EnergyScanClient mEnergyScan;
@@ -221,21 +228,21 @@ private:
     void UpdateJoinerExpirationTimer(void);
 
     static void HandleMgmtCommissionerSetResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                                                  const otMessageInfo *aMessageInfo, ThreadError aResult);
+                                                  const otMessageInfo *aMessageInfo, otError aResult);
     void HandleMgmtCommissisonerSetResponse(Coap::Header *aHeader, Message *aMessage,
-                                            const Ip6::MessageInfo *aMessageInfo, ThreadError aResult);
+                                            const Ip6::MessageInfo *aMessageInfo, otError aResult);
     static void HandleMgmtCommissionerGetResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                                                  const otMessageInfo *aMessageInfo, ThreadError aResult);
+                                                  const otMessageInfo *aMessageInfo, otError aResult);
     void HandleMgmtCommissisonerGetResponse(Coap::Header *aHeader, Message *aMessage,
-                                            const Ip6::MessageInfo *aMessageInfo, ThreadError aResult);
+                                            const Ip6::MessageInfo *aMessageInfo, otError aResult);
     static void HandleLeaderPetitionResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                                             const otMessageInfo *aMessageInfo, ThreadError aResult);
+                                             const otMessageInfo *aMessageInfo, otError aResult);
     void HandleLeaderPetitionResponse(Coap::Header *aHeader, Message *aMessage,
-                                      const Ip6::MessageInfo *aMessageInfo, ThreadError aResult);
+                                      const Ip6::MessageInfo *aMessageInfo, otError aResult);
     static void HandleLeaderKeepAliveResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                                              const otMessageInfo *aMessageInfo, ThreadError aResult);
+                                              const otMessageInfo *aMessageInfo, otError aResult);
     void HandleLeaderKeepAliveResponse(Coap::Header *aHeader, Message *aMessage,
-                                       const Ip6::MessageInfo *aMessageInfo, ThreadError aResult);
+                                       const Ip6::MessageInfo *aMessageInfo, otError aResult);
 
     static void HandleRelayReceive(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
                                    const otMessageInfo *aMessageInfo);
@@ -251,12 +258,12 @@ private:
 
     void SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, StateTlv::State aState);
 
-    static ThreadError SendRelayTransmit(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    ThreadError SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static otError SendRelayTransmit(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    ThreadError SendCommissionerSet(void);
-    ThreadError SendPetition(void);
-    ThreadError SendKeepAlive(void);
+    otError SendCommissionerSet(void);
+    otError SendPetition(void);
+    otError SendKeepAlive(void);
 
     otCommissionerState mState;
 

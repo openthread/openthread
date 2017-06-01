@@ -35,29 +35,16 @@
 #ifndef OPENTHREAD_THREAD_FTD_H_
 #define OPENTHREAD_THREAD_FTD_H_
 
-#include "openthread/types.h"
-#include "openthread/link.h"
-#include "openthread/message.h"
+#include <openthread/link.h>
+#include <openthread/message.h>
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @addtogroup thread  Thread
- *
- * @brief
- *   This module includes functions that control Thread-specific functions.
- *
- * @{
- *
- */
-
-/**
- * @defgroup config-general  General
- *
- * @brief
- *   This module includes functions that manage configuration parameters for the Thread Router, and Leader roles.
+ * @addtogroup api-thread-router
  *
  * @{
  *
@@ -83,13 +70,13 @@ OTAPI uint8_t OTCALL otThreadGetMaxAllowedChildren(otInstance *aInstance);
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aMaxChildren  The maximum allowed children.
  *
- * @retval  kThreadErrorNone           Successfully set the max.
- * @retval  kThreadError_InvalidArgs   If @p aMaxChildren is not in the range [1, OPENTHREAD_CONFIG_MAX_CHILDREN].
- * @retval  kThreadError_InvalidState  If Thread isn't stopped.
+ * @retval  OT_ERROR_NONE           Successfully set the max.
+ * @retval  OT_ERROR_INVALID_ARGS   If @p aMaxChildren is not in the range [1, OPENTHREAD_CONFIG_MAX_CHILDREN].
+ * @retval  OT_ERROR_INVALID_STATE  If Thread isn't stopped.
  *
  * @sa otThreadGetMaxAllowedChildren, otThreadStop
  */
-OTAPI ThreadError OTCALL otThreadSetMaxAllowedChildren(otInstance *aInstance, uint8_t aMaxChildren);
+OTAPI otError OTCALL otThreadSetMaxAllowedChildren(otInstance *aInstance, uint8_t aMaxChildren);
 
 /**
  * This function indicates whether or not the Router Role is enabled.
@@ -122,22 +109,11 @@ OTAPI void OTCALL otThreadSetRouterRoleEnabled(otInstance *aInstance, bool aEnab
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aRouterId    The preferred Router Id.
  *
- * @retval kThreadError_None         Successfully set the preferred Router Id.
- * @retval kThreadError_InvalidState Could not set (role is not detached or disabled)
+ * @retval OT_ERROR_NONE          Successfully set the preferred Router Id.
+ * @retval OT_ERROR_INVALID_STATE Could not set (role is not detached or disabled)
  *
  */
-OTAPI ThreadError OTCALL otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId);
-
-
-/**
- * @defgroup config-router  Router/Leader
- *
- * @brief
- *   This module includes functions that manage configuration parameters for the Thread Router and Leader roles.
- *
- * @{
- *
- */
+OTAPI otError OTCALL otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId);
 
 /**
  * Get the Thread Leader Weight used when operating in the Leader role.
@@ -196,21 +172,30 @@ OTAPI uint16_t OTCALL otThreadGetJoinerUdpPort(otInstance *aInstance);
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  * @param[in]  aJoinerUdpPort  The Joiner UDP Port number.
  *
- * @retval  kThreadErrorNone   Successfully set the Joiner UDP Port.
+ * @retval  OT_ERROR_NONE  Successfully set the Joiner UDP Port.
  *
  * @sa otThreadGetJoinerUdpPort
  */
-OTAPI ThreadError OTCALL otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort);
+OTAPI otError OTCALL otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort);
 
 /**
- * @defgroup config-test  Test
+ * Set Steering data out of band
  *
- * @brief
- *   This module includes functions that manage configuration parameters required for Thread Certification testing.
+ * Configuration option `OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB` should be set to enable setting of steering
+ * data out of band. Otherwise calling this function does nothing and it returns `OT_ERROR_DISABLED_FEATURE`
+ * error.
  *
- * @{
+ * @param[in]  aInstance       A pointer to an OpenThread instance.
+ * @param[in]  aExtAddress     Address used to update the steering data.
+ *                             All zeros to clear the steering data (no steering data).
+ *                             All 0xFFs to set steering data/bloom filter to accept/allow all.
+ *                             A specific EUI64 which is then added to current steering data/bloom filter.
+ *
+ * @retval  OT_ERROR_NONE              Successfully set/updated the steering data.
+ * @retval  OT_ERROR_DISABLED_FEATURE  Feature is disabled, not capable of setting steering data out of band.
  *
  */
+otError otThreadSetSteeringData(otInstance *aInstance, otExtAddress *aExtAddress);
 
 /**
  * Get the CONTEXT_ID_REUSE_DELAY parameter used in the Leader role.
@@ -281,29 +266,29 @@ OTAPI void OTCALL otThreadSetRouterUpgradeThreshold(otInstance *aInstance, uint8
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aRouterId  The Router ID to release. Valid range is [0, 62].
  *
- * @retval kThreadErrorNone  Successfully released the Router ID specified by aRouterId.
+ * @retval OT_ERROR_NONE  Successfully released the Router ID specified by aRouterId.
  */
-OTAPI ThreadError OTCALL otThreadReleaseRouterId(otInstance *aInstance, uint8_t aRouterId);
+OTAPI otError OTCALL otThreadReleaseRouterId(otInstance *aInstance, uint8_t aRouterId);
 
 /**
  * Attempt to become a router.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * @retval kThreadErrorNone         Successfully begin attempt to become a router.
- * @retval kThreadErrorInvalidState Thread is disabled.
+ * @retval OT_ERROR_NONE           Successfully begin attempt to become a router.
+ * @retval OT_ERROR_INVALID_STATE  Thread is disabled.
  */
-OTAPI ThreadError OTCALL otThreadBecomeRouter(otInstance *aInstance);
+OTAPI otError OTCALL otThreadBecomeRouter(otInstance *aInstance);
 
 /**
  * Become a leader and start a new partition.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * @retval kThreadErrorNone          Successfully became a leader and started a new partition.
- * @retval kThreadErrorInvalidState  Thread is disabled.
+ * @retval OT_ERROR_NONE           Successfully became a leader and started a new partition.
+ * @retval OT_ERROR_INVALID_STATE  Thread is disabled.
  */
-OTAPI ThreadError OTCALL otThreadBecomeLeader(otInstance *aInstance);
+OTAPI otError OTCALL otThreadBecomeLeader(otInstance *aInstance);
 
 /**
  * Get the ROUTER_DOWNGRADE_THRESHOLD parameter used in the Router role.
@@ -348,28 +333,18 @@ OTAPI uint8_t OTCALL otThreadGetRouterSelectionJitter(otInstance *aInstance);
 OTAPI void OTCALL otThreadSetRouterSelectionJitter(otInstance *aInstance, uint8_t aRouterJitter);
 
 /**
- * @addtogroup diags  Diagnostics
- *
- * @brief
- *   This module includes functions that expose internal state.
- *
- * @{
- *
- */
-
-/**
  * The function retains diagnostic information for an attached Child by its Child ID or RLOC16.
  *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
  * @param[in]   aChildId    The Child ID or RLOC16 for the attached child.
  * @param[out]  aChildInfo  A pointer to where the child information is placed.
  *
- * @retavl kThreadError_None         @p aChildInfo was successfully updated with the info for the given ID.
- * @retval kThreadError_NotFound     No valid child with this Child ID.
- * @retavl kThreadError_InvalidArgs  If @p aChildInfo is NULL.
+ * @retval OT_ERROR_NONE          @p aChildInfo was successfully updated with the info for the given ID.
+ * @retval OT_ERROR_NOT_FOUND     No valid child with this Child ID.
+ * @retval OT_ERROR_INVALID_ARGS  If @p aChildInfo is NULL.
  *
  */
-OTAPI ThreadError OTCALL otThreadGetChildInfoById(otInstance *aInstance, uint16_t aChildId, otChildInfo *aChildInfo);
+OTAPI otError OTCALL otThreadGetChildInfoById(otInstance *aInstance, uint16_t aChildId, otChildInfo *aChildInfo);
 
 /**
  * The function retains diagnostic information for an attached Child by the internal table index.
@@ -378,16 +353,16 @@ OTAPI ThreadError OTCALL otThreadGetChildInfoById(otInstance *aInstance, uint16_
  * @param[in]   aChildIndex  The table index.
  * @param[out]  aChildInfo   A pointer to where the child information is placed.
  *
- * @retavl kThreadError_None            @p aChildInfo was successfully updated with the info for the given index.
- * @retval kThreadError_NotFound        No valid child at this index.
- * @retavl kThreadError_InvalidArgs     Either @p aChildInfo is NULL, or @p aChildIndex is out of range (higher
- *                                      than max table index).
+ * @retval OT_ERROR_NONE             @p aChildInfo was successfully updated with the info for the given index.
+ * @retval OT_ERROR_NOT_FOUND        No valid child at this index.
+ * @retval OT_ERROR_INVALID_ARGS     Either @p aChildInfo is NULL, or @p aChildIndex is out of range (higher
+ *                                   than max table index).
  *
  * @sa otGetMaxAllowedChildren
  *
  */
-OTAPI ThreadError OTCALL otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex,
-                                                     otChildInfo *aChildInfo);
+OTAPI otError OTCALL otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex,
+                                                 otChildInfo *aChildInfo);
 
 /**
  * Get the current Router ID Sequence.
@@ -406,7 +381,7 @@ OTAPI uint8_t OTCALL otThreadGetRouterIdSequence(otInstance *aInstance);
  * @param[out]  aRouterInfo  A pointer to where the router information is placed.
  *
  */
-OTAPI ThreadError OTCALL otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRouterInfo *aRouterInfo);
+OTAPI otError OTCALL otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRouterInfo *aRouterInfo);
 
 /**
  * This function gets an EID cache entry.
@@ -415,11 +390,39 @@ OTAPI ThreadError OTCALL otThreadGetRouterInfo(otInstance *aInstance, uint16_t a
  * @param[in]   aIndex    An index into the EID cache table.
  * @param[out]  aEntry    A pointer to where the EID information is placed.
  *
- * @retval kThreadError_None         Successfully retrieved the EID cache entry.
- * @retval kThreadError_InvalidArgs  @p aIndex was out of bounds or @p aEntry was NULL.
+ * @retval OT_ERROR_NONE          Successfully retrieved the EID cache entry.
+ * @retval OT_ERROR_INVALID_ARGS  @p aIndex was out of bounds or @p aEntry was NULL.
  *
  */
-OTAPI ThreadError OTCALL otThreadGetEidCacheEntry(otInstance *aInstance, uint8_t aIndex, otEidCacheEntry *aEntry);
+OTAPI otError OTCALL otThreadGetEidCacheEntry(otInstance *aInstance, uint8_t aIndex, otEidCacheEntry *aEntry);
+
+/**
+ * Get the thrPSKc.
+ *
+ * @param[in]   aInstance   A pointer to an OpenThread instance.
+ *
+ * @returns A pointer to a buffer containing the thrPSKc.
+ *
+ * @sa otThreadSetPSKc
+ */
+OTAPI const uint8_t *OTCALL otThreadGetPSKc(otInstance *aInstance);
+
+/**
+ * Set the thrPSKc.
+ *
+ * This function will only succeed when Thread protocols are disabled.  A successful
+ * call to this function will also invalidate the Active and Pending Operational Datasets in
+ * non-volatile memory.
+ *
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[in]  aPSKc       A pointer to a buffer containing the thrPSKc.
+ *
+ * @retval OT_ERROR_NONE           Successfully set the thrPSKc.
+ * @retval OT_ERROR_INVALID_STATE  Thread protocols are enabled.
+ *
+ * @sa otThreadGetPSKc
+ */
+OTAPI otError OTCALL otThreadSetPSKc(otInstance *aInstance, const uint8_t *aPSKc);
 
 /**
  * @}

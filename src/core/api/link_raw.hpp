@@ -34,8 +34,10 @@
 #ifndef LINK_RAW_HPP_
 #define LINK_RAW_HPP_
 
-#include <openthread-core-config.h>
-#include "openthread/link_raw.h"
+#include <openthread/link_raw.h>
+
+#include "openthread-core-config.h"
+#include "common/timer.hpp"
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT || OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT || OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 #define OPENTHREAD_LINKRAW_TIMER_REQUIRED 1
@@ -76,31 +78,31 @@ public:
      * This method starts a (recurring) Receive on the link-layer.
      *
      */
-    ThreadError Receive(uint8_t aChannel, otLinkRawReceiveDone aCallback);
+    otError Receive(uint8_t aChannel, otLinkRawReceiveDone aCallback);
 
     /**
      * This method invokes the mReceiveDoneCallback, if set.
      *
      */
-    void InvokeReceiveDone(RadioPacket *aPacket, ThreadError aError);
+    void InvokeReceiveDone(otRadioFrame *aFrame, otError aError);
 
     /**
      * This method starts a (single) Transmit on the link-layer.
      *
      */
-    ThreadError Transmit(RadioPacket *aPacket, otLinkRawTransmitDone aCallback);
+    otError Transmit(otRadioFrame *aFrame, otLinkRawTransmitDone aCallback);
 
     /**
      * This method invokes the mTransmitDoneCallback, if set.
      *
      */
-    void InvokeTransmitDone(RadioPacket *aPacket, bool aFramePending, ThreadError aError);
+    void InvokeTransmitDone(otRadioFrame *aFrame, bool aFramePending, otError aError);
 
     /**
      * This method starts a (single) Enery Scan on the link-layer.
      *
      */
-    ThreadError EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration, otLinkRawEnergyScanDone aCallback);
+    otError EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration, otLinkRawEnergyScanDone aCallback);
 
     /**
      * This method invokes the mEnergyScanDoneCallback, if set.
@@ -117,7 +119,7 @@ private:
     otLinkRawTransmitDone   mTransmitDoneCallback;
     otLinkRawEnergyScanDone mEnergyScanDoneCallback;
 
-    ThreadError DoTransmit(RadioPacket *aPacket);
+    otError DoTransmit(otRadioFrame *aFrame);
 
 #if OPENTHREAD_LINKRAW_TIMER_REQUIRED
 

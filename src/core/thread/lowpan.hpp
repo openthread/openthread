@@ -34,10 +34,10 @@
 #ifndef LOWPAN_HPP_
 #define LOWPAN_HPP_
 
-#include <common/message.hpp>
-#include <mac/mac_frame.hpp>
-#include <net/ip6.hpp>
-#include <net/ip6_address.hpp>
+#include "common/message.hpp"
+#include "mac/mac_frame.hpp"
+#include "net/ip6.hpp"
+#include "net/ip6_address.hpp"
 
 namespace ot {
 
@@ -205,10 +205,10 @@ private:
 
     int DecompressExtensionHeader(Message &message, const uint8_t *aBuf, uint16_t aBufLength);
     int DecompressUdpHeader(Message &message, const uint8_t *aBuf, uint16_t aBufLength, uint16_t datagramLength);
-    ThreadError DispatchToNextHeader(uint8_t dispatch, Ip6::IpProto &nextHeader);
+    otError DispatchToNextHeader(uint8_t dispatch, Ip6::IpProto &nextHeader);
 
-    static ThreadError CopyContext(const Context &aContext, Ip6::Address &aAddress);
-    static ThreadError ComputeIid(const Mac::Address &aMacAddr, const Context &aContext, Ip6::Address &aIpAddress);
+    static otError CopyContext(const Context &aContext, Ip6::Address &aAddress);
+    static otError ComputeIid(const Mac::Address &aMacAddr, const Context &aContext, Ip6::Address &aIpAddress);
 
     NetworkData::Leader &mNetworkData;
 };
@@ -244,22 +244,22 @@ public:
      * @param[in]  aFrame        The pointer to the frame.
      * @param[in]  aFrameLength  The length of the frame.
      *
-     * @retval kThreadError_None     Mesh Header initialized successfully.
-     * @retval kThreadError_Failed   Mesh header could not be initialized from @p aFrame (e.g., frame not long enough).
+     * @retval OT_ERROR_NONE     Mesh Header initialized successfully.
+     * @retval OT_ERROR_FAILED   Mesh header could not be initialized from @p aFrame (e.g., frame not long enough).
      *
      */
-    ThreadError Init(const uint8_t *aFrame, uint8_t aFrameLength);
+    otError Init(const uint8_t *aFrame, uint8_t aFrameLength);
 
     /**
      * This method initializes the mesh header from a message object @p aMessage.
      *
      * @param[in]  aMessage  The message object.
      *
-     * @retval kThreadError_None     Mesh Header initialized successfully.
-     * @retval kThreadError_Failed   Mesh header could not be initialized from @ aMessage(e.g., not long enough).
+     * @retval OT_ERROR_NONE     Mesh Header initialized successfully.
+     * @retval OT_ERROR_FAILED   Mesh header could not be initialized from @ aMessage(e.g., not long enough).
      *
      */
-    ThreadError Init(const Message &aMessage);
+    otError Init(const Message &aMessage);
 
     /**
      * This method indicates whether or not the header is a Mesh Header.

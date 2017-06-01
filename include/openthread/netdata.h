@@ -35,17 +35,14 @@
 #ifndef OPENTHREAD_NETDATA_H_
 #define OPENTHREAD_NETDATA_H_
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @addtogroup netdata  Network Data
- *
- * @brief
- *   This module includes functions that control Network Data configuration.
+ * @addtogroup api-thread-general
  *
  * @{
  *
@@ -60,8 +57,8 @@ extern "C" {
  * @param[inout]  aDataLength  On entry, size of the data buffer pointed to by @p aData.
  *                             On exit, number of copied bytes.
  */
-OTAPI ThreadError OTCALL otNetDataGetLeader(otInstance *aInstance, bool aStable, uint8_t *aData,
-                                            uint8_t *aDataLength);
+OTAPI otError OTCALL otNetDataGetLeader(otInstance *aInstance, bool aStable, uint8_t *aData,
+                                        uint8_t *aDataLength);
 
 /**
  * This method provides a full or stable copy of the local Thread Network Data.
@@ -72,8 +69,8 @@ OTAPI ThreadError OTCALL otNetDataGetLeader(otInstance *aInstance, bool aStable,
  * @param[inout]  aDataLength  On entry, size of the data buffer pointed to by @p aData.
  *                             On exit, number of copied bytes.
  */
-OTAPI ThreadError OTCALL otNetDataGetLocal(otInstance *aInstance, bool aStable, uint8_t *aData,
-                                           uint8_t *aDataLength);
+OTAPI otError OTCALL otNetDataGetLocal(otInstance *aInstance, bool aStable, uint8_t *aData,
+                                       uint8_t *aDataLength);
 
 /**
  * This function gets the next On Mesh Prefix in the Network Data.
@@ -84,12 +81,12 @@ OTAPI ThreadError OTCALL otNetDataGetLocal(otInstance *aInstance, bool aStable, 
                              it should be set to OT_NETWORK_DATA_ITERATOR_INIT.
  * @param[out]    aConfig    A pointer to where the On Mesh Prefix information will be placed.
  *
- * @retval kThreadError_None      Successfully found the next On Mesh prefix.
- * @retval kThreadError_NotFound  No subsequent On Mesh prefix exists in the Thread Network Data.
+ * @retval OT_ERROR_NONE       Successfully found the next On Mesh prefix.
+ * @retval OT_ERROR_NOT_FOUND  No subsequent On Mesh prefix exists in the Thread Network Data.
  *
  */
-OTAPI ThreadError OTCALL otNetDataGetNextPrefixInfo(otInstance *aInstance, bool aLocal,
-                                                    otNetworkDataIterator *aIterator, otBorderRouterConfig *aConfig);
+OTAPI otError OTCALL otNetDataGetNextPrefixInfo(otInstance *aInstance, bool aLocal,
+                                                otNetworkDataIterator *aIterator, otBorderRouterConfig *aConfig);
 
 /**
  * Add a border router configuration to the local network data.
@@ -97,14 +94,14 @@ OTAPI ThreadError OTCALL otNetDataGetNextPrefixInfo(otInstance *aInstance, bool 
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aConfig   A pointer to the border router configuration.
  *
- * @retval kThreadErrorNone         Successfully added the configuration to the local network data.
- * @retval kThreadErrorInvalidArgs  One or more configuration parameters were invalid.
- * @retval kThreadErrorSize         Not enough room is available to add the configuration to the local network data.
+ * @retval OT_ERROR_NONE          Successfully added the configuration to the local network data.
+ * @retval OT_ERROR_INVALID_ARGS  One or more configuration parameters were invalid.
+ * @retval OT_ERROR_NO_BUFS       Not enough room is available to add the configuration to the local network data.
  *
  * @sa otRemoveBorderRouter
  * @sa otSendServerData
  */
-OTAPI ThreadError OTCALL otNetDataAddPrefixInfo(otInstance *aInstance, const otBorderRouterConfig *aConfig);
+OTAPI otError OTCALL otNetDataAddPrefixInfo(otInstance *aInstance, const otBorderRouterConfig *aConfig);
 
 /**
  * Remove a border router configuration from the local network data.
@@ -112,12 +109,12 @@ OTAPI ThreadError OTCALL otNetDataAddPrefixInfo(otInstance *aInstance, const otB
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aPrefix   A pointer to an IPv6 prefix.
  *
- * @retval kThreadErrorNone  Successfully removed the configuration from the local network data.
+ * @retval OT_ERROR_NONE  Successfully removed the configuration from the local network data.
  *
  * @sa otAddBorderRouter
  * @sa otSendServerData
  */
-OTAPI ThreadError OTCALL otNetDataRemovePrefixInfo(otInstance *aInstance, const otIp6Prefix *aPrefix);
+OTAPI otError OTCALL otNetDataRemovePrefixInfo(otInstance *aInstance, const otIp6Prefix *aPrefix);
 
 /**
  * Add an external route configuration to the local network data.
@@ -125,14 +122,14 @@ OTAPI ThreadError OTCALL otNetDataRemovePrefixInfo(otInstance *aInstance, const 
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aConfig   A pointer to the external route configuration.
  *
- * @retval kThreadErrorNone         Successfully added the configuration to the local network data.
- * @retval kThreadErrorInvalidArgs  One or more configuration parameters were invalid.
- * @retval kThreadErrorSize         Not enough room is available to add the configuration to the local network data.
+ * @retval OT_ERROR_NONE          Successfully added the configuration to the local network data.
+ * @retval OT_ERROR_INVALID_ARGS  One or more configuration parameters were invalid.
+ * @retval OT_ERROR_NO_BUFS       Not enough room is available to add the configuration to the local network data.
  *
  * @sa otRemoveExternalRoute
  * @sa otSendServerData
  */
-OTAPI ThreadError OTCALL otNetDataAddRoute(otInstance *aInstance, const otExternalRouteConfig *aConfig);
+OTAPI otError OTCALL otNetDataAddRoute(otInstance *aInstance, const otExternalRouteConfig *aConfig);
 
 /**
  * Remove an external route configuration from the local network data.
@@ -140,26 +137,42 @@ OTAPI ThreadError OTCALL otNetDataAddRoute(otInstance *aInstance, const otExtern
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aPrefix   A pointer to an IPv6 prefix.
  *
- * @retval kThreadErrorNone  Successfully removed the configuration from the local network data.
+ * @retval OT_ERROR_NONE  Successfully removed the configuration from the local network data.
  *
  * @sa otAddExternalRoute
  * @sa otSendServerData
  */
-OTAPI ThreadError OTCALL otNetDataRemoveRoute(otInstance *aInstance, const otIp6Prefix *aPrefix);
+OTAPI otError OTCALL otNetDataRemoveRoute(otInstance *aInstance, const otIp6Prefix *aPrefix);
+
+/**
+ * This function gets the next external route in the Network Data.
+ *
+ * @param[in]     aInstance  A pointer to an OpenThread instance.
+ * @param[in]     aLocal     TRUE to retrieve from the local Network Data, FALSE for partition's Network Data
+ * @param[inout]  aIterator  A pointer to the Network Data iterator context. To get the first external route entry
+                             it should be set to OT_NETWORK_DATA_ITERATOR_INIT.
+ * @param[out]    aConfig    A pointer to where the External Route information will be placed.
+ *
+ * @retval OT_ERROR_NONE       Successfully found the next External Route.
+ * @retval OT_ERROR_NOT_FOUND  No subsequent external route entry exists in the Thread Network Data.
+ *
+ */
+otError otNetDataGetNextRoute(otInstance *aInstance, bool aLocal, otNetworkDataIterator *aIterator,
+                              otExternalRouteConfig *aConfig);
 
 /**
  * Immediately register the local network data with the Leader.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * retval kThreadErrorNone  Successfully queued a Server Data Request message for delivery.
+ * retval OT_ERROR_NONE  Successfully queued a Server Data Request message for delivery.
  *
  * @sa otAddBorderRouter
  * @sa otRemoveBorderRouter
  * @sa otAddExternalRoute
  * @sa otRemoveExternalRoute
  */
-OTAPI ThreadError OTCALL otNetDataRegister(otInstance *aInstance);
+OTAPI otError OTCALL otNetDataRegister(otInstance *aInstance);
 
 /**
  * Get the Network Data Version.

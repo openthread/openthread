@@ -26,12 +26,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "test_util.h"
 #include "utils/wrap_string.h"
 
-#include "openthread/diag.h"
-#include "openthread/platform/platform.h"
-#include "openthread/platform/radio.h"
+#include <openthread/diag.h>
+#include <openthread/platform/platform.h>
+#include <openthread/platform/radio.h>
+
+#include "test_util.h"
 
 extern "C" void otTaskletsSignalPending(otInstance *)
 {
@@ -56,14 +57,14 @@ extern "C" void otPlatAlarmFired(otInstance *)
 {
 }
 
-extern "C" void otPlatRadioTransmitDone(otInstance *, RadioPacket *aFrame, bool aRxPending, ThreadError aError)
+extern "C" void otPlatRadioTxDone(otInstance *, otRadioFrame *aFrame, otRadioFrame *aAckFrame,  otError aError)
 {
     (void)aFrame;
-    (void)aRxPending;
+    (void)aAckFrame;
     (void)aError;
 }
 
-extern "C" void otPlatRadioReceiveDone(otInstance *, RadioPacket *aFrame, ThreadError aError)
+extern "C" void otPlatRadioReceiveDone(otInstance *, otRadioFrame *aFrame, otError aError)
 {
     (void)aFrame;
     (void)aError;
@@ -87,7 +88,7 @@ void TestDiag()
         },
         {
             "diag send 10 100\n",
-            "failed\r\nstatus 0xe\r\n",
+            "failed\r\nstatus 0xd\r\n",
         },
         {
             "diag start\n",

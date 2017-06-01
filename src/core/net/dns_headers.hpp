@@ -38,8 +38,8 @@
 
 #include <openthread/types.h>
 
-#include <common/encoding.hpp>
-#include <common/message.hpp>
+#include "common/encoding.hpp"
+#include "common/message.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
@@ -567,11 +567,11 @@ public:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval kThreadError_None    Successfully appended the bytes.
-     * @retval kThreadError_NoBufs  Insufficient available buffers to grow the message.
+     * @retval OT_ERROR_NONE     Successfully appended the bytes.
+     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
      *
      */
-    ThreadError AppendTo(Message &aMessage) const {
+    otError AppendTo(Message &aMessage) const {
         return aMessage.Append(this, sizeof(*this));
     };
 

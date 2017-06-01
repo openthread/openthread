@@ -35,14 +35,14 @@
 #ifndef MESHCOP_DATASET_MANAGER_HPP_
 #define MESHCOP_DATASET_MANAGER_HPP_
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <coap/coap_server.hpp>
-#include <common/timer.hpp>
-#include <meshcop/dataset.hpp>
-#include <net/udp6.hpp>
-#include <thread/mle.hpp>
-#include <thread/network_data_leader.hpp>
+#include "coap/coap.hpp"
+#include "common/timer.hpp"
+#include "meshcop/dataset.hpp"
+#include "net/udp6.hpp"
+#include "thread/mle.hpp"
+#include "thread/network_data_leader.hpp"
 
 namespace ot {
 
@@ -65,7 +65,7 @@ public:
     Dataset &GetLocal(void) { return mLocal; }
     Dataset &GetNetwork(void) { return mNetwork; }
 
-    ThreadError ApplyConfiguration(void);
+    otError ApplyConfiguration(void);
 
 protected:
     enum
@@ -76,12 +76,12 @@ protected:
 
     DatasetManager(ThreadNetif &aThreadNetif, const Tlv::Type aType, const char *aUriSet, const char *aUriGet);
 
-    ThreadError Clear(uint8_t &aFlags, bool aOnlyClearNetwork);
+    otError Clear(uint8_t &aFlags, bool aOnlyClearNetwork);
 
-    ThreadError Set(const Dataset &aDataset);
+    otError Set(const Dataset &aDataset);
 
-    ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength,
-                    uint8_t &aFlags);
+    otError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength,
+                uint8_t &aFlags);
 
     void Get(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -99,7 +99,7 @@ private:
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
 
-    ThreadError Register(void);
+    otError Register(void);
     void SendGetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
                          uint8_t *aTlvs, uint8_t aLength);
 
@@ -110,12 +110,12 @@ private:
 
 #if OPENTHREAD_FTD
 public:
-    ThreadError SendSetRequest(const otOperationalDataset &aDataset, const uint8_t *aTlvs, uint8_t aLength);
-    ThreadError SendGetRequest(const uint8_t *aTlvTypes, uint8_t aLength, const otIp6Address *aAddress);
+    otError SendSetRequest(const otOperationalDataset &aDataset, const uint8_t *aTlvs, uint8_t aLength);
+    otError SendGetRequest(const uint8_t *aTlvTypes, uint8_t aLength, const otIp6Address *aAddress);
 
 protected:
-    ThreadError Set(const otOperationalDataset &aDataset, uint8_t &aFlags);
-    ThreadError Set(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError Set(const otOperationalDataset &aDataset, uint8_t &aFlags);
+    otError Set(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 private:
     void SendSetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo, StateTlv::State aState);
@@ -127,17 +127,17 @@ class ActiveDatasetBase: public DatasetManager
 public:
     ActiveDatasetBase(ThreadNetif &aThreadNetif);
 
-    ThreadError Restore(void);
+    otError Restore(void);
 
-    ThreadError Clear(bool aOnlyClearNetwork);
+    otError Clear(bool aOnlyClearNetwork);
 
 #if OPENTHREAD_FTD
-    ThreadError Set(const otOperationalDataset &aDataset);
+    otError Set(const otOperationalDataset &aDataset);
 #endif
 
-    ThreadError Set(const Dataset &aDataset);
+    otError Set(const Dataset &aDataset);
 
-    ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
+    otError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
 private:
     static void HandleGet(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
@@ -152,17 +152,17 @@ class PendingDatasetBase: public DatasetManager
 public:
     PendingDatasetBase(ThreadNetif &aThreadNetif);
 
-    ThreadError Restore(void);
+    otError Restore(void);
 
-    ThreadError Clear(bool aOnlyClearNetwork);
+    otError Clear(bool aOnlyClearNetwork);
 
 #if OPENTHREAD_FTD
-    ThreadError Set(const otOperationalDataset &aDataset);
+    otError Set(const otOperationalDataset &aDataset);
 #endif
 
-    ThreadError Set(const Dataset &aDataset);
+    otError Set(const Dataset &aDataset);
 
-    ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
+    otError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
     void UpdateDelayTimer(void);
 

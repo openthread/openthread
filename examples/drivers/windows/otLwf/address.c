@@ -343,11 +343,11 @@ otLwfEventProcessingAddressChanged(
                 LogInfo(DRIVER_DEFAULT, "Filter %p trying to add/update address: %!IPV6ADDR!", pFilter, pAddr);
 
                 // Add (or update) the address to OpenThread
-                ThreadError otError = otIp6AddUnicastAddress(pFilter->otCtx, &otAddr);
-                if (otError != kThreadError_None)
+                otError otError = otIp6AddUnicastAddress(pFilter->otCtx, &otAddr);
+                if (otError != OT_ERROR_NONE)
                 {
                     LogError(DRIVER_DEFAULT, "otIp6AddUnicastAddress failed, %!otError!", otError);
-                    ShouldDelete = otError == kThreadError_NoBufs ? TRUE : FALSE;
+                    ShouldDelete = otError == OT_ERROR_NO_BUFS ? TRUE : FALSE;
                 }
             }
 

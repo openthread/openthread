@@ -33,14 +33,15 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
+#include "cli_console.hpp"
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "utils/wrap_string.h"
 
-#include <cli/cli.hpp>
-#include <cli/cli_console.hpp>
-#include <common/new.hpp>
+#include "cli/cli.hpp"
+#include "common/new.hpp"
 
 namespace ot {
 namespace Cli {

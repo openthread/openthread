@@ -28,16 +28,17 @@
 
 #include "platform-posix.h"
 
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/stat.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include <openthread-config.h>
-#include <utils/flash.h>
-#include <utils/code_utils.h>
+
+#include "utils/code_utils.h"
+#include "utils/flash.h"
 
 static int sFlashFd;
 uint32_t sEraseAddress;
@@ -49,9 +50,9 @@ enum
     FLASH_PAGE_NUM = 128,
 };
 
-ThreadError utilsFlashInit(void)
+otError utilsFlashInit(void)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     char fileName[20];
     struct stat st;
     bool create = false;
@@ -76,13 +77,14 @@ ThreadError utilsFlashInit(void)
     sFlashFd = open(fileName, O_RDWR | O_CREAT, 0666);
     lseek(sFlashFd, 0, SEEK_SET);
 
-    otEXPECT_ACTION(sFlashFd >= 0, error = kThreadError_Failed);
+    otEXPECT_ACTION(sFlashFd >= 0, error = OT_ERROR_FAILED);
 
     if (create)
     {
         for (uint16_t index = 0; index < FLASH_PAGE_NUM; index++)
         {
-            SuccessOrExit(error = utilsFlashErasePage(index * FLASH_PAGE_SIZE));
+            error = utilsFlashErasePage(index * FLASH_PAGE_SIZE);
+            otEXPECT(error == OT_ERROR_NONE);
         }
     }
 
@@ -95,14 +97,14 @@ uint32_t utilsFlashGetSize(void)
     return FLASH_SIZE;
 }
 
-ThreadError utilsFlashErasePage(uint32_t aAddress)
+otError utilsFlashErasePage(uint32_t aAddress)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint32_t address;
     uint8_t dummyPage[ FLASH_SIZE ];
 
-    otEXPECT_ACTION(sFlashFd >= 0, error = kThreadError_Failed);
-    otEXPECT_ACTION(aAddress < FLASH_SIZE, error = kThreadError_InvalidArgs);
+    otEXPECT_ACTION(sFlashFd >= 0, error = OT_ERROR_FAILED);
+    otEXPECT_ACTION(aAddress < FLASH_SIZE, error = OT_ERROR_INVALID_ARGS);
 
     // Get start address of the flash page that includes aAddress
     address = aAddress & (~(uint32_t)(FLASH_PAGE_SIZE - 1));
@@ -112,18 +114,18 @@ ThreadError utilsFlashErasePage(uint32_t aAddress)
 
     // Write the page
     ssize_t r;
-    r =  pwrite(sFlashFd, &(dummyPage[0]), FLASH_PAGE_SIZE, address);
-    VerifyOrExit(((int)r) == ((int)(FLASH_PAGE_SIZE)), error = kThreadError_Failed);
+    r =  pwrite(sFlashFd, &(dummyPage[0]), FLASH_PAGE_SIZE, (off_t)address);
+    otEXPECT_ACTION(((int)r) == ((int)(FLASH_PAGE_SIZE)), error = OT_ERROR_FAILED);
 
 
 exit:
     return error;
 }
 
-ThreadError utilsFlashStatusWait(uint32_t aTimeout)
+otError utilsFlashStatusWait(uint32_t aTimeout)
 {
     (void)aTimeout;
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
@@ -139,7 +141,7 @@ uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
         otEXPECT((ret = utilsFlashRead(aAddress + index, &byte, 1)) == 1);
         // Use bitwise AND to emulate the behavior of flash memory
         byte &= aData[index];
-        otEXPECT((ret = (uint32_t)pwrite(sFlashFd, &byte, 1, aAddress + index)) == 1);
+        otEXPECT((ret = (uint32_t)pwrite(sFlashFd, &byte, 1, (off_t)(aAddress + index))) == 1);
     }
 
 exit:
@@ -151,7 +153,7 @@ uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
     uint32_t ret = 0;
 
     otEXPECT(sFlashFd >= 0 && aAddress < FLASH_SIZE);
-    ret = (uint32_t)pread(sFlashFd, aData, aSize, aAddress);
+    ret = (uint32_t)pread(sFlashFd, aData, aSize, (off_t)aAddress);
 
 exit:
     return ret;

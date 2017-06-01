@@ -66,8 +66,8 @@ HANDLE gDeviceArrivalEvent = nullptr;
 
 otApiInstance *gApiInstance = nullptr;
 
-_Success_(return == kThreadError_None)
-ThreadError otNodeParsePrefix(const char *aStrPrefix, _Out_ otIp6Prefix *aPrefix)
+_Success_(return == OT_ERROR_NONE)
+otError otNodeParsePrefix(const char *aStrPrefix, _Out_ otIp6Prefix *aPrefix)
 {
     char *prefixLengthStr;
     char *endptr;
@@ -75,13 +75,13 @@ ThreadError otNodeParsePrefix(const char *aStrPrefix, _Out_ otIp6Prefix *aPrefix
     if ((prefixLengthStr = (char*)strchr(aStrPrefix, '/')) == NULL)
     {
         printf("invalid prefix (%s)!\r\n", aStrPrefix);
-        return kThreadError_InvalidArgs;
+        return OT_ERROR_INVALID_ARGS;
     }
 
     *prefixLengthStr++ = '\0';
     
     auto error = otIp6AddressFromString(aStrPrefix, &aPrefix->mPrefix);
-    if (error != kThreadError_None)
+    if (error != OT_ERROR_NONE)
     {
         printf("ipaddr (%s) to string failed, 0x%x!\r\n", aStrPrefix, error);
         return error;
@@ -92,10 +92,10 @@ ThreadError otNodeParsePrefix(const char *aStrPrefix, _Out_ otIp6Prefix *aPrefix
     if (*endptr != '\0')
     {
         printf("invalid prefix ending (%s)!\r\n", aStrPrefix);
-        return kThreadError_Parse;
+        return OT_ERROR_PARSE;
     }
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
 void OTCALL otNodeDeviceAvailabilityChanged(bool aAdded, const GUID *, void *)
@@ -332,13 +332,12 @@ const char* otDeviceRoleToString(otDeviceRole role)
 {
     switch (role)
     {
-    case kDeviceRoleOffline:  return "offline";
-    case kDeviceRoleDisabled: return "disabled";
-    case kDeviceRoleDetached: return "detached";
-    case kDeviceRoleChild:    return "child";
-    case kDeviceRoleRouter:   return "router";
-    case kDeviceRoleLeader:   return "leader";
-    default:                  return "invalid";
+    case OT_DEVICE_ROLE_DISABLED: return "disabled";
+    case OT_DEVICE_ROLE_DETACHED: return "detached";
+    case OT_DEVICE_ROLE_CHILD:    return "child";
+    case OT_DEVICE_ROLE_ROUTER:   return "router";
+    case OT_DEVICE_ROLE_LEADER:   return "leader";
+    default:                      return "invalid";
     }
 }
 
@@ -392,7 +391,7 @@ PingHandlerRecvCallback(
             memcmp(RecvDest, &RealmLocalAllRoutersAddress, sizeof(IN6_ADDR)) == 0)
         {
             auto Role = otThreadGetDeviceRole(aPingHandler->mParentNode->mInstance);
-            if (Role != kDeviceRoleLeader && Role != kDeviceRoleRouter)
+            if (Role != OT_DEVICE_ROLE_LEADER && Role != OT_DEVICE_ROLE_ROUTER)
                 shouldReply = false;
         }
 
@@ -1012,7 +1011,7 @@ OTNODEAPI int32_t OTCALL otNodeCommissionerJoinerAdd(otNode* aNode, const char *
 
     const uint32_t kDefaultJoinerTimeout = 120;
 
-    ThreadError error;
+    otError error;
     
     if (strcmp(aExtAddr, "*") == 0)
     {
@@ -1022,7 +1021,7 @@ OTNODEAPI int32_t OTCALL otNodeCommissionerJoinerAdd(otNode* aNode, const char *
     {
         otExtAddress extAddr;
         if (Hex2Bin(aExtAddr, extAddr.m8, sizeof(extAddr)) != sizeof(extAddr))
-            return kThreadError_Parse;
+            return OT_ERROR_PARSE;
 
         error = otCommissionerAddJoiner(aNode->mInstance, &extAddr, aPSKd, kDefaultJoinerTimeout);
     }
@@ -1104,9 +1103,9 @@ OTNODEAPI int32_t OTCALL otNodeAddWhitelist(otNode* aNode, const char *aExtAddr,
 
     uint8_t extAddr[8];
     if (Hex2Bin(aExtAddr, extAddr, sizeof(extAddr)) != sizeof(extAddr))
-        return kThreadError_Parse;
+        return OT_ERROR_PARSE;
 
-    ThreadError error;
+    otError error;
     if (aRssi == 0)
     {
         error = otLinkAddWhitelist(aNode->mInstance, extAddr);
@@ -1126,7 +1125,7 @@ OTNODEAPI int32_t OTCALL otNodeRemoveWhitelist(otNode* aNode, const char *aExtAd
 
     uint8_t extAddr[8];
     if (Hex2Bin(aExtAddr, extAddr, sizeof(extAddr)) != sizeof(extAddr))
-        return kThreadError_InvalidArgs;
+        return OT_ERROR_INVALID_ARGS;
 
     otLinkRemoveWhitelist(aNode->mInstance, extAddr);
     otLogFuncExit();
@@ -1200,14 +1199,14 @@ OTNODEAPI int32_t OTCALL otNodeSetMasterkey(otNode* aNode, const char *aMasterke
     printf("%d: masterkey %s\r\n", aNode->mId, aMasterkey);
 
     int keyLength;
-    uint8_t key[OT_MASTER_KEY_SIZE];
-    if ((keyLength = Hex2Bin(aMasterkey, key, sizeof(key))) != OT_MASTER_KEY_SIZE)
+    otMasterKey key;
+    if ((keyLength = Hex2Bin(aMasterkey, key.m8, sizeof(key.m8))) != OT_MASTER_KEY_SIZE)
     {
         printf("invalid length key %d\r\n", keyLength);
-        return kThreadError_Parse;
+        return OT_ERROR_PARSE;
     }
 
-    auto error = otThreadSetMasterKey(aNode->mInstance, key, (uint8_t)keyLength);
+    auto error = otThreadSetMasterKey(aNode->mInstance, &key);
     otLogFuncExit();
     return error;
 }
@@ -1215,15 +1214,14 @@ OTNODEAPI int32_t OTCALL otNodeSetMasterkey(otNode* aNode, const char *aMasterke
 OTNODEAPI const char* OTCALL otNodeGetMasterkey(otNode* aNode)
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
-    uint8_t aKeyLength = 0;
-    auto aMasterKey = otThreadGetMasterKey(aNode->mInstance, &aKeyLength);
-    uint8_t strLength = 2*aKeyLength + 1;
+    auto aMasterKey = otThreadGetMasterKey(aNode->mInstance);
+    uint8_t strLength = 2*sizeof(otMasterKey) + 1;
     char* str = (char*)malloc(strLength);
     if (str != nullptr)
     {
         aNode->mMemoryToFree.push_back(str);
-        for (int i = 0; i < aKeyLength; i++)
-            sprintf_s(str + i * 2, strLength - (2 * i), "%02x", aMasterKey[i]);
+        for (int i = 0; i < sizeof(otMasterKey); i++)
+            sprintf_s(str + i * 2, strLength - (2 * i), "%02x", aMasterKey->m8[i]);
         printf("%d: masterkey\r\n%s\r\n", aNode->mId, str);
     }
     otFreeMemory(aMasterKey);
@@ -1240,7 +1238,7 @@ OTNODEAPI int32_t OTCALL otNodeSetPSKc(otNode* aNode, const char *aPSKc)
     if (Hex2Bin(aPSKc, pskc, sizeof(pskc)) != OT_PSKC_MAX_SIZE)
     {
         printf("invalid pskc %s\r\n", aPSKc);
-        return kThreadError_Parse;
+        return OT_ERROR_PARSE;
     }
 
     auto error = otThreadSetPSKc(aNode->mInstance, pskc);
@@ -1400,14 +1398,14 @@ OTNODEAPI int32_t OTCALL otNodeSetState(otNode* aNode, const char *aState)
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: state %s\r\n", aNode->mId, aState);
 
-    ThreadError error;
+    otError error;
     if (strcmp(aState, "detached") == 0)
     {
         error = otThreadBecomeDetached(aNode->mInstance);
     }
     else if (strcmp(aState, "child") == 0)
     {
-        error = otThreadBecomeChild(aNode->mInstance, kMleAttachAnyPartition);
+        error = otThreadBecomeChild(aNode->mInstance);
     }
     else if (strcmp(aState, "router") == 0)
     {
@@ -1419,7 +1417,7 @@ OTNODEAPI int32_t OTCALL otNodeSetState(otNode* aNode, const char *aState)
     }
     else
     {
-        error = kThreadError_InvalidArgs;
+        error = OT_ERROR_INVALID_ARGS;
     }
     otLogFuncExit();
     return error;
@@ -1468,7 +1466,7 @@ OTNODEAPI int32_t OTCALL otNodeAddIpAddr(otNode* aNode, const char *aAddr)
 
     otNetifAddress aAddress;
     auto error = otIp6AddressFromString(aAddr, &aAddress.mAddress);
-    if (error != kThreadError_None) return error;
+    if (error != OT_ERROR_NONE) return error;
 
     aAddress.mPrefixLength = 64;
     aAddress.mPreferred = true;
@@ -1560,7 +1558,7 @@ OTNODEAPI int32_t OTCALL otNodeAddPrefix(otNode* aNode, const char *aPrefix, con
     otBorderRouterConfig config = {0};
 
     auto error = otNodeParsePrefix(aPrefix, &config.mPrefix);
-    if (error != kThreadError_None) return error;
+    if (error != OT_ERROR_NONE) return error;
     
     const char *index = aFlags;
     while (*index)
@@ -1589,7 +1587,7 @@ OTNODEAPI int32_t OTCALL otNodeAddPrefix(otNode* aNode, const char *aPrefix, con
             config.mStable = true;
             break;
         default:
-            return kThreadError_InvalidArgs;
+            return OT_ERROR_INVALID_ARGS;
         }
 
         index++;
@@ -1597,19 +1595,19 @@ OTNODEAPI int32_t OTCALL otNodeAddPrefix(otNode* aNode, const char *aPrefix, con
     
     if (strcmp(aPreference, "high") == 0)
     {
-        config.mPreference = kRoutePreferenceHigh;
+        config.mPreference = OT_ROUTE_PREFERENCE_HIGH;
     }
     else if (strcmp(aPreference, "med") == 0)
     {
-        config.mPreference = kRoutePreferenceMedium;
+        config.mPreference = OT_ROUTE_PREFERENCE_MED;
     }
     else if (strcmp(aPreference, "low") == 0)
     {
-        config.mPreference = kRoutePreferenceLow;
+        config.mPreference = OT_ROUTE_PREFERENCE_LOW;
     }
     else
     {
-        return kThreadError_InvalidArgs;
+        return OT_ERROR_INVALID_ARGS;
     }
 
     auto result = otNetDataAddPrefixInfo(aNode->mInstance, &config);
@@ -1623,7 +1621,7 @@ OTNODEAPI int32_t OTCALL otNodeRemovePrefix(otNode* aNode, const char *aPrefix)
 
     otIp6Prefix prefix;
     auto error = otNodeParsePrefix(aPrefix, &prefix);
-    if (error != kThreadError_None) return error;
+    if (error != OT_ERROR_NONE) return error;
 
     auto result = otNetDataRemovePrefixInfo(aNode->mInstance, &prefix);
     otLogFuncExit();
@@ -1636,23 +1634,23 @@ OTNODEAPI int32_t OTCALL otNodeAddRoute(otNode* aNode, const char *aPrefix, cons
     otExternalRouteConfig config = {0};
 
     auto error = otNodeParsePrefix(aPrefix, &config.mPrefix);
-    if (error != kThreadError_None) return error;
+    if (error != OT_ERROR_NONE) return error;
     
     if (strcmp(aPreference, "high") == 0)
     {
-        config.mPreference = kRoutePreferenceHigh;
+        config.mPreference = OT_ROUTE_PREFERENCE_HIGH;
     }
     else if (strcmp(aPreference, "med") == 0)
     {
-        config.mPreference = kRoutePreferenceMedium;
+        config.mPreference = OT_ROUTE_PREFERENCE_MED;
     }
     else if (strcmp(aPreference, "low") == 0)
     {
-        config.mPreference = kRoutePreferenceLow;
+        config.mPreference = OT_ROUTE_PREFERENCE_LOW;
     }
     else
     {
-        return kThreadError_InvalidArgs;
+        return OT_ERROR_INVALID_ARGS;
     }
 
     auto result = otNetDataAddRoute(aNode->mInstance, &config);
@@ -1666,7 +1664,7 @@ OTNODEAPI int32_t OTCALL otNodeRemoveRoute(otNode* aNode, const char *aPrefix)
 
     otIp6Prefix prefix;
     auto error = otNodeParsePrefix(aPrefix, &prefix);
-    if (error != kThreadError_None) return error;
+    if (error != OT_ERROR_NONE) return error;
 
     auto result = otNetDataRemoveRoute(aNode->mInstance, &prefix);
     otLogFuncExit();
@@ -1701,7 +1699,7 @@ OTNODEAPI int32_t OTCALL otNodeEnergyScan(otNode* aNode, uint32_t aMask, uint8_t
 
     otIp6Address address = {0};
     auto error = otIp6AddressFromString(aAddr, &address);
-    if (error != kThreadError_None)
+    if (error != OT_ERROR_NONE)
     {
         printf("otIp6AddressFromString(%s) failed, 0x%x!\r\n", aAddr, error);
         return error;
@@ -1710,13 +1708,13 @@ OTNODEAPI int32_t OTCALL otNodeEnergyScan(otNode* aNode, uint32_t aMask, uint8_t
     ResetEvent(aNode->mEnergyScanEvent);
 
     error = otCommissionerEnergyScan(aNode->mInstance, aMask, aCount, aPeriod, aDuration, &address, otNodeCommissionerEnergyReportCallback, aNode);
-    if (error != kThreadError_None)
+    if (error != OT_ERROR_NONE)
     {
         printf("otCommissionerEnergyScan failed, 0x%x!\r\n", error);
         return error;
     }
 
-    auto result = WaitForSingleObject(aNode->mEnergyScanEvent, 8000) == WAIT_OBJECT_0 ? kThreadError_None : kThreadError_NotFound;
+    auto result = WaitForSingleObject(aNode->mEnergyScanEvent, 8000) == WAIT_OBJECT_0 ? OT_ERROR_NONE : OT_ERROR_NOT_FOUND;
     otLogFuncExit();
     return result;
 }
@@ -1735,7 +1733,7 @@ OTNODEAPI int32_t OTCALL otNodePanIdQuery(otNode* aNode, uint16_t aPanId, uint32
 
     otIp6Address address = {0};
     auto error = otIp6AddressFromString(aAddr, &address);
-    if (error != kThreadError_None)
+    if (error != OT_ERROR_NONE)
     {
         printf("otIp6AddressFromString(%s) failed, 0x%x!\r\n", aAddr, error);
         return error;
@@ -1744,13 +1742,13 @@ OTNODEAPI int32_t OTCALL otNodePanIdQuery(otNode* aNode, uint16_t aPanId, uint32
     ResetEvent(aNode->mPanIdConflictEvent);
 
     error = otCommissionerPanIdQuery(aNode->mInstance, aPanId, aMask, &address, otNodeCommissionerPanIdConflictCallback, aNode);
-    if (error != kThreadError_None)
+    if (error != OT_ERROR_NONE)
     {
         printf("otCommissionerPanIdQuery failed, 0x%x!\r\n", error);
         return error;
     }
 
-    auto result = WaitForSingleObject(aNode->mPanIdConflictEvent, 8000) == WAIT_OBJECT_0 ? kThreadError_None : kThreadError_NotFound;
+    auto result = WaitForSingleObject(aNode->mPanIdConflictEvent, 8000) == WAIT_OBJECT_0 ? OT_ERROR_NONE : OT_ERROR_NOT_FOUND;
     otLogFuncExit();
     return result;
 }
@@ -1771,7 +1769,7 @@ OTNODEAPI uint32_t OTCALL otNodePing(otNode* aNode, const char *aAddr, uint16_t 
     // Convert string to destination address
     otIp6Address otDestinationAddress = {0};
     auto error = otIp6AddressFromString(aAddr, &otDestinationAddress);
-    if (error != kThreadError_None)
+    if (error != OT_ERROR_NONE)
     {
         printf("otIp6AddressFromString(%s) failed!\r\n", aAddr);
         return 0;
@@ -1941,7 +1939,7 @@ OTNODEAPI int32_t OTCALL otNodeCommissionerAnnounceBegin(otNode* aNode, uint32_t
 
     otIp6Address aAddress;
     auto error = otIp6AddressFromString(aAddr, &aAddress);
-    if (error != kThreadError_None) return error;
+    if (error != OT_ERROR_NONE) return error;
 
     auto result = otCommissionerAnnounceBegin(aNode->mInstance, aChannelMask, aCount, aPeriod, &aAddress);
     otLogFuncExit();
@@ -1982,7 +1980,7 @@ OTNODEAPI int32_t OTCALL otNodeSetActiveDataset(otNode* aNode, uint64_t aTimesta
         if ((keyLength = Hex2Bin(aMasterKey, aDataset.mMasterKey.m8, sizeof(aDataset.mMasterKey))) != OT_MASTER_KEY_SIZE)
         {
             printf("invalid length key %d\r\n", keyLength);
-            return kThreadError_Parse;
+            return OT_ERROR_PARSE;
         }
         aDataset.mIsMasterKeySet = true;
     }
@@ -2071,7 +2069,7 @@ OTNODEAPI int32_t OTCALL otNodeSendPendingSet(otNode* aNode, uint64_t aActiveTim
         if ((keyLength = Hex2Bin(aMasterKey, aDataset.mMasterKey.m8, sizeof(aDataset.mMasterKey))) != OT_MASTER_KEY_SIZE)
         {
             printf("invalid length key %d\r\n", keyLength);
-            return kThreadError_Parse;
+            return OT_ERROR_PARSE;
         }
         aDataset.mIsMasterKeySet = true;
     }
@@ -2080,7 +2078,7 @@ OTNODEAPI int32_t OTCALL otNodeSendPendingSet(otNode* aNode, uint64_t aActiveTim
     {
         otIp6Address prefix;
         auto error = otIp6AddressFromString(aMeshLocal, &prefix);
-        if (error != kThreadError_None) return error;
+        if (error != OT_ERROR_NONE) return error;
         memcpy(aDataset.mMeshLocalPrefix.m8, prefix.mFields.m8, sizeof(aDataset.mMeshLocalPrefix.m8));
         aDataset.mIsMeshLocalPrefixSet = true;
     }
@@ -2134,7 +2132,7 @@ OTNODEAPI int32_t OTCALL otNodeSendActiveSet(otNode* aNode, uint64_t aActiveTime
         if ((keyLength = Hex2Bin(aExtPanId, aDataset.mExtendedPanId.m8, sizeof(aDataset.mExtendedPanId))) != OT_EXT_PAN_ID_SIZE)
         {
             printf("invalid length ext pan id %d\r\n", keyLength);
-            return kThreadError_Parse;
+            return OT_ERROR_PARSE;
         }
         aDataset.mIsExtendedPanIdSet = true;
     }
@@ -2145,7 +2143,7 @@ OTNODEAPI int32_t OTCALL otNodeSendActiveSet(otNode* aNode, uint64_t aActiveTime
         if ((keyLength = Hex2Bin(aMasterKey, aDataset.mMasterKey.m8, sizeof(aDataset.mMasterKey))) != OT_MASTER_KEY_SIZE)
         {
             printf("invalid length key %d\r\n", keyLength);
-            return kThreadError_Parse;
+            return OT_ERROR_PARSE;
         }
         aDataset.mIsMasterKeySet = true;
     }
@@ -2154,7 +2152,7 @@ OTNODEAPI int32_t OTCALL otNodeSendActiveSet(otNode* aNode, uint64_t aActiveTime
     {
         otIp6Address prefix;
         auto error = otIp6AddressFromString(aMeshLocal, &prefix);
-        if (error != kThreadError_None) return error;
+        if (error != OT_ERROR_NONE) return error;
         memcpy(aDataset.mMeshLocalPrefix.m8, prefix.mFields.m8, sizeof(aDataset.mMeshLocalPrefix.m8));
         aDataset.mIsMeshLocalPrefixSet = true;
     }
@@ -2171,7 +2169,7 @@ OTNODEAPI int32_t OTCALL otNodeSendActiveSet(otNode* aNode, uint64_t aActiveTime
         if ((length = Hex2Bin(aBinary,tlvs, sizeof(tlvs))) < 0)
         {
             printf("invalid length tlvs %d\r\n", length);
-            return kThreadError_Parse;
+            return OT_ERROR_PARSE;
         }
         tlvsLength = (uint8_t)length;
     }

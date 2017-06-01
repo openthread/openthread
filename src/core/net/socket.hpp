@@ -34,9 +34,9 @@
 #ifndef NET_SOCKET_HPP_
 #define NET_SOCKET_HPP_
 
-#include "openthread/openthread.h"
+#include <openthread/openthread.h>
 
-#include <net/ip6_address.hpp>
+#include "net/ip6_address.hpp"
 
 namespace ot {
 namespace Ip6 {

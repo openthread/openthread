@@ -35,14 +35,14 @@
 #ifndef OPENTHREAD_DHCP6_CLIENT_H_
 #define OPENTHREAD_DHCP6_CLIENT_H_
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @addtogroup core-dhcp6-client
+ * @addtogroup api-dhcp6
  *
  * @{
  *

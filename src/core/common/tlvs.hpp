@@ -36,10 +36,10 @@
 
 #include "utils/wrap_string.h"
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <common/encoding.hpp>
-#include <common/message.hpp>
+#include "common/encoding.hpp"
+#include "common/message.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
@@ -54,6 +54,14 @@ OT_TOOL_PACKED_BEGIN
 class Tlv
 {
 public:
+    /**
+     * Default constructor.
+     *
+     */
+    Tlv(void):
+        mType(0),
+        mLength(0) {}
+
     /**
      * This method returns the Type value.
      *
@@ -138,11 +146,11 @@ public:
      * @param[in]   aMaxLength  Maximum number of bytes to read.
      * @param[out]  aTlv        A reference to the TLV that will be copied to.
      *
-     * @retval kThreadError_None      Successfully copied the TLV.
-     * @retval kThreadError_NotFound  Could not find the TLV with Type @p aType.
+     * @retval OT_ERROR_NONE       Successfully copied the TLV.
+     * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
      *
      */
-    static ThreadError Get(const Message &aMessage, uint8_t aType, uint16_t aMaxLength, Tlv &aTlv);
+    static otError Get(const Message &aMessage, uint8_t aType, uint16_t aMaxLength, Tlv &aTlv);
 
     /**
      * This static method obtains the offset of a TLV within @p aMessage.
@@ -151,11 +159,11 @@ public:
      * @param[in]   aType       The Type value to search for.
      * @param[out]  aOffset     A reference to the offset of the TLV.
      *
-     * @retval kThreadError_None      Successfully copied the TLV.
-     * @retval kThreadError_NotFound  Could not find the TLV with Type @p aType.
+     * @retval OT_ERROR_NONE       Successfully copied the TLV.
+     * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
      *
      */
-    static ThreadError GetOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset);
+    static otError GetOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset);
 
     /**
      * This static method finds the offset and length of a given TLV type.
@@ -165,11 +173,11 @@ public:
      * @param[out]  aOffset     The offset where the value starts.
      * @param[out]  aLength     The length of the value.
      *
-     * @retval kThreadError_None      Successfully found the TLV.
-     * @retval kThreadError_NotFound  Could not find the TLV with Type @p aType.
+     * @retval OT_ERROR_NONE       Successfully found the TLV.
+     * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
      *
      */
-    static ThreadError GetValueOffset(const Message &aMesasge, uint8_t aType, uint16_t &aOffset, uint16_t &aLength);
+    static otError GetValueOffset(const Message &aMesasge, uint8_t aType, uint16_t &aOffset, uint16_t &aLength);
 
 protected:
     /**

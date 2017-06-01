@@ -29,7 +29,7 @@
 #ifndef PLATFORM_DA15000_H_
 #define PLATFORM_DA15000_H_
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
 /**
  * This function initializes the radio service used by OpenThread.

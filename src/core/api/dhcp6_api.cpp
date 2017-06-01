@@ -32,9 +32,9 @@
  */
 
 #include  "openthread/openthread_enable_defines.h"
+#include <openthread/dhcp6_client.h>
 
-#include "openthread/dhcp6_client.h"
-#include "openthread/dhcp6_server.h"
+#include <openthread/dhcp6_server.h>
 
 #include "openthread-instance.h"
 

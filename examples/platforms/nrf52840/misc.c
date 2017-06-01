@@ -70,19 +70,19 @@ otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 
     if (sResetReason & POWER_RESETREAS_RESETPIN_Msk)
     {
-        reason = kPlatResetReason_External;
+        reason = OT_PLAT_RESET_REASON_EXTERNAL;
     }
     else if (sResetReason & POWER_RESETREAS_DOG_Msk)
     {
-        reason = kPlatResetReason_Watchdog;
+        reason = OT_PLAT_RESET_REASON_WATCHDOG;
     }
     else if (sResetReason & POWER_RESETREAS_SREQ_Msk)
     {
-        reason = kPlatResetReason_Software;
+        reason = OT_PLAT_RESET_REASON_SOFTWARE;
     }
     else if (sResetReason & POWER_RESETREAS_LOCKUP_Msk)
     {
-        reason = kPlatResetReason_Fault;
+        reason = OT_PLAT_RESET_REASON_FAULT;
     }
     else if ((sResetReason & POWER_RESETREAS_OFF_Msk)    ||
              (sResetReason & POWER_RESETREAS_LPCOMP_Msk) ||
@@ -90,12 +90,17 @@ otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
              (sResetReason & POWER_RESETREAS_NFC_Msk)    ||
              (sResetReason & POWER_RESETREAS_VBUS_Msk))
     {
-        reason = kPlatResetReason_Other;
+        reason = OT_PLAT_RESET_REASON_OTHER;
     }
     else
     {
-        reason = kPlatResetReason_PowerOn;
+        reason = OT_PLAT_RESET_REASON_POWER_ON;
     }
 
     return reason;
+}
+
+void otPlatWakeHost(void)
+{
+    // TODO: implement an operation to wake the host from sleep state.
 }

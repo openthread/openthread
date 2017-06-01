@@ -35,11 +35,21 @@
 #ifndef NCP_H_
 #define NCP_H_
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * @addtogroup api-ncp
+ *
+ * @brief
+ *   This module includes functions that control the Thread stack's execution.
+ *
+ * @{
+ *
+ */
 
 /**
  * Initialize the NCP.
@@ -66,12 +76,12 @@ void otNcpInit(otInstance *aInstance);
  *                        If aDataLen is non-zero, this param MUST NOT be NULL.
  * @param[in]  aDataLen   The number of bytes of data from aDataPtr to send.
  *
- * @retval kThreadError_None  The data was queued for delivery to the host.
- * @retval kThreadError_Busy  There are not enough resources to complete this
- *                            request. This is usually a temporary condition.
- * @retval kThreadError_InvalidArgs The given aStreamId was invalid.
+ * @retval OT_ERROR_NONE         The data was queued for delivery to the host.
+ * @retval OT_ERROR_BUSY         There are not enough resources to complete this
+ *                               request. This is usually a temporary condition.
+ * @retval OT_ERROR_INVALID_ARGS The given aStreamId was invalid.
 */
-ThreadError otNcpStreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen);
+otError otNcpStreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen);
 
 
 //-----------------------------------------------------------------------------------------
@@ -122,11 +132,10 @@ typedef void (*otNcpHandlerSetLegacyUlaPrefix)(const uint8_t *aUlaPrefix);
  */
 typedef struct otNcpLegacyHandlers
 {
-    otNcpHandlerStartLegacy         mStartLegacy;
-    otNcpHandlerStopLegacy          mStopLegacy;
-    otNcpHandlerJoinLegacyNode      mJoinLegacyNode;
-    otNcpHandlerSetLegacyUlaPrefix  mSetLegacyUlaPrefix;
-
+    otNcpHandlerStartLegacy         mStartLegacy;         ///< Start handler
+    otNcpHandlerStopLegacy          mStopLegacy;          ///< Stop handler
+    otNcpHandlerJoinLegacyNode      mJoinLegacyNode;      ///< Join handler
+    otNcpHandlerSetLegacyUlaPrefix  mSetLegacyUlaPrefix;  ///< Set ULA handler
 } otNcpLegacyHandlers;
 
 /**
@@ -154,6 +163,10 @@ void otNcpHandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix);
  */
 void otNcpRegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers);
 
+/**
+ * @}
+ *
+ */
 
 #ifdef __cplusplus
 }  // extern "C"

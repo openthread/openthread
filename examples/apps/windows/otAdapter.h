@@ -296,39 +296,31 @@ public:
         String^ get()
         {
             constexpr char hexmap[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-            uint8_t keyLen;
-            auto key = otThreadGetMasterKey(DeviceInstance, &keyLen);
+            auto key = otThreadGetMasterKey(DeviceInstance);
             WCHAR szKey[OT_MASTER_KEY_SIZE * 2 + 1] = { 0 };
-            for (uint8_t i = 0; i < keyLen; i++)
+            for (uint8_t i = 0; i < OT_MASTER_KEY_SIZE; i++)
             {
-                szKey[2 * i]     = hexmap[(key[i] & 0xF0) >> 4];
-                szKey[2 * i + 1] = hexmap[key[i] & 0x0F];
+                szKey[2 * i]     = hexmap[(key->m8[i] & 0xF0) >> 4];
+                szKey[2 * i + 1] = hexmap[key->m8[i] & 0x0F];
             }
             otFreeMemory(key);
             return ref new String(szKey);
         }
         void set(String^ value)
         {
-            uint8_t key[OT_MASTER_KEY_SIZE];
+            otMasterKey key;
             uint8_t keyLen = 0;
-            if (value->Length() % 2 == 0)
+            for (uint32_t i = 0; i < value->Length() - 1; i+=2)
             {
-                for (uint32_t i = 0; i < value->Length(); i+=2)
-                {
-                    key[keyLen++] = (uint8_t)((charToValue(value->Data()[i]) << 4) |
-                        charToValue(value->Data()[i + 1]));
-                }
+                key.m8[keyLen++] = (uint8_t)((charToValue(value->Data()[i]) << 4) |
+                    charToValue(value->Data()[i + 1]));
             }
-            else
+            if (keyLen * 2 == value->Length() - 1)
             {
-                key[keyLen++] = (uint8_t)(charToValue(value->Data()[0]));
-                for (uint32_t i = 1; i < value->Length(); i += 2)
-                {
-                    key[keyLen++] = (uint8_t)((charToValue(value->Data()[i]) << 4) |
-                        charToValue(value->Data()[i + 1]));
-                }
+                key.m8[keyLen++] = (uint8_t)(charToValue(value->Data()[value->Length()-1])) << 4;
             }
-            ThrowOnFailure(otThreadSetMasterKey(DeviceInstance, key, keyLen));
+            memset(key.m8 + keyLen, 0, sizeof(key) - keyLen);
+            ThrowOnFailure(otThreadSetMasterKey(DeviceInstance, &key));
         }
     }
 
@@ -589,23 +581,23 @@ private:
 
     static HRESULT
     TheadErrorToHResult(
-        int /* ThreadError */ error
+        int /* otError */ error
     )
     {
         switch (error)
         {
-        case kThreadError_NoBufs:           return E_OUTOFMEMORY;
-        case kThreadError_Drop:
-        case kThreadError_NoRoute:          return HRESULT_FROM_WIN32(ERROR_NETWORK_UNREACHABLE);
-        case kThreadError_InvalidArgs:      return E_INVALIDARG;
-        case kThreadError_Security:         return E_ACCESSDENIED;
-        case kThreadError_NotCapable:
-        case kThreadError_NotImplemented:   return E_NOTIMPL;
-        case kThreadError_InvalidState:     return E_NOT_VALID_STATE;
-        case kThreadError_NotFound:         return HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
-        case kThreadError_Already:          return HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS);
-        case kThreadError_ResponseTimeout:  return HRESULT_FROM_WIN32(ERROR_TIMEOUT);
-        default:                            return E_FAIL;
+        case OT_ERROR_NO_BUFS:           return E_OUTOFMEMORY;
+        case OT_ERROR_DROP:
+        case OT_ERROR_NO_ROUTE:          return HRESULT_FROM_WIN32(ERROR_NETWORK_UNREACHABLE);
+        case OT_ERROR_INVALID_ARGS:      return E_INVALIDARG;
+        case OT_ERROR_SECURITY:          return E_ACCESSDENIED;
+        case OT_ERROR_NOT_CAPABLE:
+        case OT_ERROR_NOT_IMPLEMENTED:   return E_NOTIMPL;
+        case OT_ERROR_INVALID_STATE:     return E_NOT_VALID_STATE;
+        case OT_ERROR_NOT_FOUND:         return HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
+        case OT_ERROR_ALREADY:           return HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS);
+        case OT_ERROR_RESPONSE_TIMEOUT:  return HRESULT_FROM_WIN32(ERROR_TIMEOUT);
+        default:                         return E_FAIL;
         }
     }
 };

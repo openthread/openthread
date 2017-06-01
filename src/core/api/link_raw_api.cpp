@@ -34,17 +34,20 @@
 #include  "openthread/openthread_enable_defines.h"
 #include <common/debug.hpp>
 #include <common/logging.hpp>
-#include "openthread/platform/random.h"
-#include "openthread/platform/usec-alarm.h"
+#include <openthread/platform/random.h>
+#include <openthread/platform/usec-alarm.h>
+
 #include "openthread-instance.h"
+#include "common/debug.hpp"
+#include "common/logging.hpp"
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
-ThreadError otLinkRawSetEnable(otInstance *aInstance, bool aEnabled)
+otError otLinkRawSetEnable(otInstance *aInstance, bool aEnabled)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(!aInstance->mThreadNetif.IsUp(), error = kThreadError_InvalidState);
+    VerifyOrExit(!aInstance->mThreadNetif.IsUp(), error = OT_ERROR_INVALID_STATE);
 
     otLogInfoPlat(aInstance, "LinkRaw Enabled=%d", aEnabled ? 1 : 0);
 
@@ -59,11 +62,11 @@ bool otLinkRawIsEnabled(otInstance *aInstance)
     return aInstance->mLinkRaw.IsEnabled();
 }
 
-ThreadError otLinkRawSetPanId(otInstance *aInstance, uint16_t aPanId)
+otError otLinkRawSetPanId(otInstance *aInstance, uint16_t aPanId)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = kThreadError_InvalidState);
+    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     otPlatRadioSetPanId(aInstance, aPanId);
 
@@ -71,12 +74,12 @@ exit:
     return error;
 }
 
-ThreadError otLinkRawSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtendedAddress)
+otError otLinkRawSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtendedAddress)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     uint8_t buf[sizeof(otExtAddress)];
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = kThreadError_InvalidState);
+    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     for (size_t i = 0; i < sizeof(buf); i++)
     {
@@ -89,11 +92,11 @@ exit:
     return error;
 }
 
-ThreadError otLinkRawSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
+otError otLinkRawSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = kThreadError_InvalidState);
+    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     otPlatRadioSetShortAddress(aInstance, aShortAddress);
 
@@ -106,11 +109,11 @@ bool otLinkRawGetPromiscuous(otInstance *aInstance)
     return otPlatRadioGetPromiscuous(aInstance);
 }
 
-ThreadError otLinkRawSetPromiscuous(otInstance *aInstance, bool aEnable)
+otError otLinkRawSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = kThreadError_InvalidState);
+    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     otLogInfoPlat(aInstance, "LinkRaw Promiscuous=%d", aEnable ? 1 : 0);
 
@@ -120,11 +123,11 @@ exit:
     return error;
 }
 
-ThreadError otLinkRawSleep(otInstance *aInstance)
+otError otLinkRawSleep(otInstance *aInstance)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = kThreadError_InvalidState);
+    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     otLogInfoPlat(aInstance, "LinkRaw Sleep");
 
@@ -134,15 +137,15 @@ exit:
     return error;
 }
 
-ThreadError otLinkRawReceive(otInstance *aInstance, uint8_t aChannel, otLinkRawReceiveDone aCallback)
+otError otLinkRawReceive(otInstance *aInstance, uint8_t aChannel, otLinkRawReceiveDone aCallback)
 {
     otLogInfoPlat(aInstance, "LinkRaw Recv (Channel %d)", aChannel);
     return aInstance->mLinkRaw.Receive(aChannel, aCallback);
 }
 
-RadioPacket *otLinkRawGetTransmitBuffer(otInstance *aInstance)
+otRadioFrame *otLinkRawGetTransmitBuffer(otInstance *aInstance)
 {
-    RadioPacket *buffer = NULL;
+    otRadioFrame *buffer = NULL;
 
     VerifyOrExit(aInstance->mLinkRaw.IsEnabled());
 
@@ -152,10 +155,10 @@ exit:
     return buffer;
 }
 
-ThreadError otLinkRawTransmit(otInstance *aInstance, RadioPacket *aPacket, otLinkRawTransmitDone aCallback)
+otError otLinkRawTransmit(otInstance *aInstance, otRadioFrame *aFrame, otLinkRawTransmitDone aCallback)
 {
-    otLogInfoPlat(aInstance, "LinkRaw Transmit (%d bytes on channel %d)", aPacket->mLength, aPacket->mChannel);
-    return aInstance->mLinkRaw.Transmit(aPacket, aCallback);
+    otLogInfoPlat(aInstance, "LinkRaw Transmit (%d bytes on channel %d)", aFrame->mLength, aFrame->mChannel);
+    return aInstance->mLinkRaw.Transmit(aFrame, aCallback);
 }
 
 int8_t otLinkRawGetRssi(otInstance *aInstance)
@@ -168,17 +171,17 @@ otRadioCaps otLinkRawGetCaps(otInstance *aInstance)
     return aInstance->mLinkRaw.GetCaps();
 }
 
-ThreadError otLinkRawEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration,
+otError otLinkRawEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration,
                                 otLinkRawEnergyScanDone aCallback)
 {
     return aInstance->mLinkRaw.EnergyScan(aScanChannel, aScanDuration, aCallback);
 }
 
-ThreadError otLinkRawSrcMatchEnable(otInstance *aInstance, bool aEnable)
+otError otLinkRawSrcMatchEnable(otInstance *aInstance, bool aEnable)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = kThreadError_InvalidState);
+    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     otPlatRadioEnableSrcMatch(aInstance, aEnable);
 
@@ -186,11 +189,11 @@ exit:
     return error;
 }
 
-ThreadError otLinkRawSrcMatchAddShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+otError otLinkRawSrcMatchAddShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = kThreadError_InvalidState);
+    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     error = otPlatRadioAddSrcMatchShortEntry(aInstance, aShortAddress);
 
@@ -198,11 +201,11 @@ exit:
     return error;
 }
 
-ThreadError otLinkRawSrcMatchAddExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+otError otLinkRawSrcMatchAddExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = kThreadError_InvalidState);
+    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     error = otPlatRadioAddSrcMatchExtEntry(aInstance, aExtAddress);
 
@@ -210,11 +213,11 @@ exit:
     return error;
 }
 
-ThreadError otLinkRawSrcMatchClearShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+otError otLinkRawSrcMatchClearShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = kThreadError_InvalidState);
+    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     error = otPlatRadioClearSrcMatchShortEntry(aInstance, aShortAddress);
 
@@ -222,11 +225,11 @@ exit:
     return error;
 }
 
-ThreadError otLinkRawSrcMatchClearExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+otError otLinkRawSrcMatchClearExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = kThreadError_InvalidState);
+    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     error = otPlatRadioClearSrcMatchExtEntry(aInstance, aExtAddress);
 
@@ -234,11 +237,11 @@ exit:
     return error;
 }
 
-ThreadError otLinkRawSrcMatchClearShortEntries(otInstance *aInstance)
+otError otLinkRawSrcMatchClearShortEntries(otInstance *aInstance)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = kThreadError_InvalidState);
+    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     otPlatRadioClearSrcMatchShortEntries(aInstance);
 
@@ -246,11 +249,11 @@ exit:
     return error;
 }
 
-ThreadError otLinkRawSrcMatchClearExtEntries(otInstance *aInstance)
+otError otLinkRawSrcMatchClearExtEntries(otInstance *aInstance)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = kThreadError_InvalidState);
+    VerifyOrExit(aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
     otPlatRadioClearSrcMatchExtEntries(aInstance);
 
@@ -287,26 +290,26 @@ otRadioCaps LinkRaw::GetCaps()
     // time included into the raw link-layer code.
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
-    assert((RadioCaps & kRadioCapsAckTimeout) == 0);
-    RadioCaps = (otRadioCaps)(RadioCaps | kRadioCapsAckTimeout);
+    assert((RadioCaps & OT_RADIO_CAPS_ACK_TIMEOUT) == 0);
+    RadioCaps = (otRadioCaps)(RadioCaps | OT_RADIO_CAPS_ACK_TIMEOUT);
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
-    assert((RadioCaps & kRadioCapsTransmitRetries) == 0);
-    RadioCaps = (otRadioCaps)(RadioCaps | kRadioCapsTransmitRetries);
+    assert((RadioCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) == 0);
+    RadioCaps = (otRadioCaps)(RadioCaps | OT_RADIO_CAPS_TRANSMIT_RETRIES);
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
-    assert((RadioCaps & kRadioCapsEnergyScan) == 0);
-    RadioCaps = (otRadioCaps)(RadioCaps | kRadioCapsEnergyScan);
+    assert((RadioCaps & OT_RADIO_CAPS_ENERGY_SCAN) == 0);
+    RadioCaps = (otRadioCaps)(RadioCaps | OT_RADIO_CAPS_ENERGY_SCAN);
 #endif // OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
 
     return RadioCaps;
 }
 
-ThreadError LinkRaw::Receive(uint8_t aChannel, otLinkRawReceiveDone aCallback)
+otError LinkRaw::Receive(uint8_t aChannel, otLinkRawReceiveDone aCallback)
 {
-    ThreadError error = kThreadError_InvalidState;
+    otError error = OT_ERROR_INVALID_STATE;
 
     if (mEnabled)
     {
@@ -318,57 +321,57 @@ ThreadError LinkRaw::Receive(uint8_t aChannel, otLinkRawReceiveDone aCallback)
     return error;
 }
 
-void LinkRaw::InvokeReceiveDone(RadioPacket *aPacket, ThreadError aError)
+void LinkRaw::InvokeReceiveDone(otRadioFrame *aFrame, otError aError)
 {
     if (mReceiveDoneCallback)
     {
-        if (aError == kThreadError_None)
+        if (aError == OT_ERROR_NONE)
         {
-            otLogInfoPlat(&mInstance, "LinkRaw Invoke Receive Done (%d bytes)", aPacket->mLength);
+            otLogInfoPlat(&mInstance, "LinkRaw Invoke Receive Done (%d bytes)", aFrame->mLength);
         }
         else
         {
             otLogWarnPlat(&mInstance, "LinkRaw Invoke Receive Done (err=0x%x)", aError);
         }
 
-        mReceiveDoneCallback(&mInstance, aPacket, aError);
+        mReceiveDoneCallback(&mInstance, aFrame, aError);
     }
 }
 
-ThreadError LinkRaw::Transmit(RadioPacket *aPacket, otLinkRawTransmitDone aCallback)
+otError LinkRaw::Transmit(otRadioFrame *aFrame, otLinkRawTransmitDone aCallback)
 {
-    ThreadError error = kThreadError_InvalidState;
+    otError error = OT_ERROR_INVALID_STATE;
 
     if (mEnabled)
     {
         mTransmitDoneCallback = aCallback;
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
-        (void)aPacket;
+        (void)aFrame;
         mTransmitAttempts = 0;
         mCsmaAttempts = 0;
 
         // Start the transmission backlog logic
         StartCsmaBackoff();
-        error = kThreadError_None;
+        error = OT_ERROR_NONE;
 #else
         // Let the hardware do the transmission logic
-        error = DoTransmit(aPacket);
+        error = DoTransmit(aFrame);
 #endif
     }
 
     return error;
 }
 
-ThreadError LinkRaw::DoTransmit(RadioPacket *aPacket)
+otError LinkRaw::DoTransmit(otRadioFrame *aFrame)
 {
-    ThreadError error = otPlatRadioTransmit(&mInstance, aPacket);
+    otError error = otPlatRadioTransmit(&mInstance, aFrame);
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
 
     // If we are implementing the ACK timeout logic, start a timer here (if ACK request)
     // to fire if we don't get a transmit done callback in time.
-    if (static_cast<Mac::Frame *>(aPacket)->GetAckRequest())
+    if (static_cast<Mac::Frame *>(aFrame)->GetAckRequest())
     {
         otLogDebgPlat(aInstance, "LinkRaw Starting AckTimeout Timer");
         mTimerReason = kTimerReasonAckTimeout;
@@ -380,7 +383,7 @@ ThreadError LinkRaw::DoTransmit(RadioPacket *aPacket)
     return error;
 }
 
-void LinkRaw::InvokeTransmitDone(RadioPacket *aPacket, bool aFramePending, ThreadError aError)
+void LinkRaw::InvokeTransmitDone(otRadioFrame *aFrame, bool aFramePending, otError aError)
 {
     otLogDebgPlat(aInstance, "LinkRaw Transmit Done (err=0x%x)", aError);
 
@@ -390,7 +393,7 @@ void LinkRaw::InvokeTransmitDone(RadioPacket *aPacket, bool aFramePending, Threa
 
 #if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
 
-    if (aError == kThreadError_ChannelAccessFailure)
+    if (aError == OT_ERROR_CHANNEL_ACCESS_FAILURE)
     {
         if (mCsmaAttempts < Mac::kMaxCSMABackoffs)
         {
@@ -404,9 +407,9 @@ void LinkRaw::InvokeTransmitDone(RadioPacket *aPacket, bool aFramePending, Threa
         mCsmaAttempts = 0;
     }
 
-    if (aError == kThreadError_NoAck)
+    if (aError == OT_ERROR_NO_ACK)
     {
-        if (mTransmitAttempts < aPacket->mMaxTxAttempts)
+        if (mTransmitAttempts < aFrame->mMaxTxAttempts)
         {
             mTransmitAttempts++;
             StartCsmaBackoff();
@@ -421,7 +424,7 @@ void LinkRaw::InvokeTransmitDone(RadioPacket *aPacket, bool aFramePending, Threa
 
     if (mTransmitDoneCallback)
     {
-        if (aError == kThreadError_None)
+        if (aError == OT_ERROR_NONE)
         {
             otLogInfoPlat(aInstance, "LinkRaw Invoke Transmit Done");
         }
@@ -430,7 +433,7 @@ void LinkRaw::InvokeTransmitDone(RadioPacket *aPacket, bool aFramePending, Threa
             otLogWarnPlat(aInstance, "LinkRaw Invoke Transmit Failed (err=0x%x)", aError);
         }
 
-        mTransmitDoneCallback(&mInstance, aPacket, aFramePending, aError);
+        mTransmitDoneCallback(&mInstance, aFrame, aFramePending, aError);
         mTransmitDoneCallback = NULL;
     }
 
@@ -440,9 +443,9 @@ exit:
 #endif
 }
 
-ThreadError LinkRaw::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration, otLinkRawEnergyScanDone aCallback)
+otError LinkRaw::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration, otLinkRawEnergyScanDone aCallback)
 {
-    ThreadError error = kThreadError_InvalidState;
+    otError error = OT_ERROR_INVALID_STATE;
 
     if (mEnabled)
     {
@@ -497,7 +500,7 @@ void LinkRaw::HandleTimer(void)
         otPlatRadioReceive(&mInstance, mReceiveChannel);
 
         // Invoke completion callback for transmit
-        InvokeTransmitDone(otPlatRadioGetTransmitBuffer(&mInstance), false, kThreadError_NoAck);
+        InvokeTransmitDone(otPlatRadioGetTransmitBuffer(&mInstance), false, OT_ERROR_NO_ACK);
         break;
     }
 
@@ -507,14 +510,14 @@ void LinkRaw::HandleTimer(void)
 
     case kTimerReasonRetransmitTimeout:
     {
-        RadioPacket *aPacket = otPlatRadioGetTransmitBuffer(&mInstance);
+        otRadioFrame *aFrame = otPlatRadioGetTransmitBuffer(&mInstance);
 
         // Start the  transmit now
-        ThreadError error = DoTransmit(aPacket);
+        otError error = DoTransmit(aFrame);
 
-        if (error != kThreadError_None)
+        if (error != OT_ERROR_NONE)
         {
-            InvokeTransmitDone(aPacket, false, error);
+            InvokeTransmitDone(aFrame, false, error);
         }
 
         break;
@@ -553,7 +556,7 @@ void LinkRaw::StartCsmaBackoff(void)
     }
 
     backoff = (otPlatRandomGet() % (1UL << backoffExponent));
-    backoff *= (Mac::kUnitBackoffPeriod * kPhyUsPerSymbol);
+    backoff *= (Mac::kUnitBackoffPeriod * OT_RADIO_SYMBOL_TIME);
 
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
     otPlatUsecAlarmTime now;

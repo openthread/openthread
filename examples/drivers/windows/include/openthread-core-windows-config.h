@@ -83,7 +83,7 @@
  * The log level.
  *
  */
-#define OPENTHREAD_CONFIG_LOG_LEVEL                         OPENTHREAD_LOG_LEVEL_DEBG
+#define OPENTHREAD_CONFIG_LOG_LEVEL                         OT_LOG_LEVEL_DEBG
 
  /**
  * @def OPENTHREAD_CONFIG_LOG_PKT_DUMP

@@ -33,11 +33,12 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
-#include "openthread/platform/random.h"
+#include "trickle_timer.hpp"
 
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <common/trickle_timer.hpp>
+#include <openthread/platform/random.h>
+
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
 
 namespace ot {
 

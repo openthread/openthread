@@ -93,6 +93,7 @@ SOURCES_COMMON                      = \
     api/border_agent_proxy_api.cpp    \
     api/coap_api.cpp                  \
     api/commissioner_api.cpp          \
+    api/child_supervision_api.cpp     \
     api/crypto_api.cpp                \
     api/dataset_api.cpp               \
     api/dataset_ftd_api.cpp           \
@@ -112,12 +113,9 @@ SOURCES_COMMON                      = \
     api/thread_api.cpp                \
     api/thread_ftd_api.cpp            \
     api/udp_api.cpp                   \
-    coap/coap_base.cpp                \
-    coap/coap_client.cpp              \
+    coap/coap.cpp                     \
     coap/coap_header.cpp              \
-    coap/coap_server.cpp              \
-    coap/secure_coap_client.cpp       \
-    coap/secure_coap_server.cpp       \
+    coap/coap_secure.cpp              \
     common/crc16.cpp                  \
     common/logging.cpp                \
     common/message.cpp                \
@@ -148,6 +146,7 @@ SOURCES_COMMON                      = \
     meshcop/leader.cpp                \
     meshcop/panid_query_client.cpp    \
     meshcop/timestamp.cpp             \
+    meshcop/meshcop_tlvs.cpp          \
     net/dhcp6_client.cpp              \
     net/dhcp6_server.cpp              \
     net/dns_client.cpp                \
@@ -178,6 +177,7 @@ SOURCES_COMMON                      = \
     thread/src_match_controller.cpp   \
     thread/thread_netif.cpp           \
     thread/topology.cpp               \
+    utils/child_supervision.cpp       \
     utils/jam_detector.cpp            \
     utils/missing_strlcpy.c           \
     utils/missing_strlcat.c           \
@@ -199,12 +199,9 @@ HEADERS_COMMON                      = \
     openthread-core-default-config.h  \
     openthread-instance.h             \
     api/link_raw.hpp                  \
-    coap/coap_base.hpp                \
-    coap/coap_client.hpp              \
+    coap/coap.hpp                     \
     coap/coap_header.hpp              \
-    coap/coap_server.hpp              \
-    coap/secure_coap_client.hpp       \
-    coap/secure_coap_server.hpp       \
+    coap/coap_secure.hpp              \
     common/code_utils.hpp             \
     common/crc16.hpp                  \
     common/debug.hpp                  \
@@ -246,7 +243,7 @@ HEADERS_COMMON                      = \
     meshcop/meshcop.hpp               \
     meshcop/panid_query_client.hpp    \
     meshcop/timestamp.hpp             \
-    meshcop/tlvs.hpp                  \
+    meshcop/meshcop_tlvs.hpp          \
     net/dhcp6.hpp                     \
     net/dhcp6_client.hpp              \
     net/dhcp6_server.hpp              \
@@ -291,8 +288,9 @@ HEADERS_COMMON                      = \
     thread/src_match_controller.hpp   \
     thread/thread_netif.hpp           \
     thread/thread_tlvs.hpp            \
-    thread/thread_uris.hpp            \
+    thread/thread_uri_paths.hpp       \
     thread/topology.hpp               \
+    utils/child_supervision.hpp       \
     utils/slaac_address.hpp           \
     utils/jam_detector.hpp            \
     utils/wrap_stdbool.h              \

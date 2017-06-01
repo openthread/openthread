@@ -36,10 +36,10 @@
 
 #include "utils/wrap_string.h"
 
-#include "openthread/coap.h"
+#include <openthread/coap.h>
 
-#include <common/encoding.hpp>
-#include <common/message.hpp>
+#include "common/encoding.hpp"
+#include "common/message.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 
@@ -111,11 +111,11 @@ public:
      * @param[in]  aMessage       A reference to the message.
      * @param[in]  aMetadataSize  A size of metadata appended to the message.
      *
-     * @retval kThreadError_None   Successfully parsed the message.
-     * @retval kThreadError_Parse  Failed to parse the message.
+     * @retval OT_ERROR_NONE   Successfully parsed the message.
+     * @retval OT_ERROR_PARSE  Failed to parse the message.
      *
      */
-    ThreadError FromMessage(const Message &aMessage, uint16_t aMetadataSize);
+    otError FromMessage(const Message &aMessage, uint16_t aMetadataSize);
 
     /**
      * This method returns the Version value.
@@ -266,35 +266,49 @@ public:
      *
      * @param[in]  aOption  The CoAP Option.
      *
-     * @retval kThreadError_None         Successfully appended the option.
-     * @retval kThreadError_InvalidArgs  The option type is not equal or greater than the last option type.
-     * @retval kThreadError_NoBufs       The option length exceeds the buffer size.
+     * @retval OT_ERROR_NONE          Successfully appended the option.
+     * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
+     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
      *
      */
-    ThreadError AppendOption(const Option &aOption);
+    otError AppendOption(const Option &aOption);
+
+    /**
+     * This method appends an unsigned integer CoAP option as specified in
+     * https://tools.ietf.org/html/rfc7252#section-3.2
+     *
+     * @param[in]  aNumber  The CoAP Option number.
+     * @param[in]  aValue   The CoAP Option unsigned integer value.
+     *
+     * @retval OT_ERROR_NONE          Successfully appended the option.
+     * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
+     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+     *
+     */
+    otError AppendUintOption(uint16_t aNumber, uint32_t aValue);
 
     /**
      * This method appends an Observe option.
      *
      * @param[in]  aObserve  Observe field value.
      *
-     * @retval kThreadError_None         Successfully appended the option.
-     * @retval kThreadError_InvalidArgs  The option type is not equal or greater than the last option type.
-     * @retval kThreadError_NoBufs       The option length exceeds the buffer size.
+     * @retval OT_ERROR_NONE          Successfully appended the option.
+     * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
+     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
      */
-    ThreadError AppendObserveOption(uint32_t aObserve);
+    otError AppendObserveOption(uint32_t aObserve);
 
     /**
      * This method appends a Uri-Path option.
      *
      * @param[in]  aUriPath  A pointer to a NULL-terminated string.
      *
-     * @retval kThreadError_None         Successfully appended the option.
-     * @retval kThreadError_InvalidArgs  The option type is not equal or greater than the last option type.
-     * @retval kThreadError_NoBufs       The option length exceeds the buffer size.
+     * @retval OT_ERROR_NONE          Successfully appended the option.
+     * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
+     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
      *
      */
-    ThreadError AppendUriPathOptions(const char *aUriPath);
+    otError AppendUriPathOptions(const char *aUriPath);
 
     /**
      * Media Types
@@ -310,34 +324,34 @@ public:
      *
      * @param[in]  aType  The Media Type value.
      *
-     * @retval kThreadError_None         Successfully appended the option.
-     * @retval kThreadError_InvalidArgs  The option type is not equal or greater than the last option type.
-     * @retval kThreadError_NoBufs       The option length exceeds the buffer size.
+     * @retval OT_ERROR_NONE          Successfully appended the option.
+     * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
+     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
      *
      */
-    ThreadError AppendContentFormatOption(MediaType aType);
+    otError AppendContentFormatOption(MediaType aType);
 
     /**
      * This method appends a Max-Age option.
      *
      * @param[in]  aMaxAge  The Max-Age value.
      *
-     * @retval kThreadError_None         Successfully appended the option.
-     * @retval kThreadError_InvalidArgs  The option type is not equal or greater than the last option type.
-     * @retval kThreadError_NoBufs       The option length exceeds the buffer size.
+     * @retval OT_ERROR_NONE          Successfully appended the option.
+     * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
+     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
      */
-    ThreadError AppendMaxAgeOption(uint32_t aMaxAge);
+    otError AppendMaxAgeOption(uint32_t aMaxAge);
 
     /**
      * This method appends a single Uri-Query option.
      *
      * @param[in]  aUriQuery  A pointer to NULL-terminated string, which should contain a single key=value pair.
      *
-     * @retval kThreadError_None         Successfully appended the option.
-     * @retval kThreadError_InvalidArgs  The option type is not equal or greater than the last option type.
-     * @retval kThreadError_NoBufs       The option length exceeds the buffer size.
+     * @retval OT_ERROR_NONE          Successfully appended the option.
+     * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
+     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
      */
-    ThreadError AppendUriQueryOption(const char *aUriQuery);
+    otError AppendUriQueryOption(const char *aUriQuery);
 
     /**
      * This method returns a pointer to the first option.
@@ -358,11 +372,11 @@ public:
     /**
      * This method adds Payload Marker indicating beginning of the payload to the CoAP header.
      *
-     * @retval kThreadError_None    Payload Marker successfully added.
-     * @retval kThreadError_NoBufs  Header Payload Marker exceeds the buffer size.
+     * @retval OT_ERROR_NONE     Payload Marker successfully added.
+     * @retval OT_ERROR_NO_BUFS  Header Payload Marker exceeds the buffer size.
      *
      */
-    ThreadError SetPayloadMarker(void);
+    otError SetPayloadMarker(void);
 
     /**
      * This method returns a pointer to the first byte of the header.

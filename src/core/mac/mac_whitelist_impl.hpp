@@ -36,9 +36,9 @@
 
 #include "utils/wrap_stdint.h"
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <mac/mac_frame.hpp>
+#include "mac/mac_frame.hpp"
 
 namespace ot {
 namespace Mac {
@@ -101,11 +101,11 @@ public:
      * @param[in]   aIndex  An index into the MAC whitelist table.
      * @param[out]  aEntry  A reference to where the information is placed.
      *
-     * @retval kThreadError_None         Successfully retrieved the MAC whitelist entry.
-     * @retval kThreadError_InvalidArgs  @p aIndex is out of bounds or @p aEntry is NULL.
+     * @retval OT_ERROR_NONE          Successfully retrieved the MAC whitelist entry.
+     * @retval OT_ERROR_INVALID_ARGS  @p aIndex is out of bounds or @p aEntry is NULL.
      *
      */
-    ThreadError GetEntry(uint8_t aIndex, Entry &aEntry) const;
+    otError GetEntry(uint8_t aIndex, Entry &aEntry) const;
 
     /**
      * This method adds an Extended Address to the whitelist filter.
@@ -155,11 +155,11 @@ public:
      * @param[in]   aEntry  A reference to the whitelist entry.
      * @param[out]  aRssi   A reference to the RSSI variable.
      *
-     * @retval kThreadError_None        A fixed RSSI is set and written to @p aRssi.
-     * @retval kThreadError_InvalidArg  A fixed RSSI was not set.
+     * @retval OT_ERROR_NONE          A fixed RSSI is set and written to @p aRssi.
+     * @retval OT_ERROR_INVALID_ARGS  A fixed RSSI was not set.
      *
      */
-    ThreadError GetFixedRssi(Entry &aEntry, int8_t &aRssi) const;
+    otError GetFixedRssi(Entry &aEntry, int8_t &aRssi) const;
 
     /**
      * This method sets a fixed RSSI value for all received messages matching @p aEntry.

@@ -35,7 +35,7 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
-#include "openthread/ip6.h"
+#include <openthread/ip6.h>
 
 #include "openthread-instance.h"
 #include "common/logging.hpp"
@@ -43,23 +43,23 @@
 
 using namespace ot;
 
-ThreadError otIp6SetEnabled(otInstance *aInstance, bool aEnabled)
+otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled)
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
 
     otLogFuncEntry();
 
     if (aEnabled)
     {
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-        VerifyOrExit(!aInstance->mLinkRaw.IsEnabled(), error = kThreadError_InvalidState);
+        VerifyOrExit(!aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
         error = aInstance->mThreadNetif.Up();
     }
     else
     {
 #if OPENTHREAD_ENABLE_RAW_LINK_API
-        VerifyOrExit(!aInstance->mLinkRaw.IsEnabled(), error = kThreadError_InvalidState);
+        VerifyOrExit(!aInstance->mLinkRaw.IsEnabled(), error = OT_ERROR_INVALID_STATE);
 #endif // OPENTHREAD_ENABLE_RAW_LINK_API
         error = aInstance->mThreadNetif.Down();
     }
@@ -81,12 +81,12 @@ const otNetifAddress *otIp6GetUnicastAddresses(otInstance *aInstance)
     return aInstance->mThreadNetif.GetUnicastAddresses();
 }
 
-ThreadError otIp6AddUnicastAddress(otInstance *aInstance, const otNetifAddress *address)
+otError otIp6AddUnicastAddress(otInstance *aInstance, const otNetifAddress *address)
 {
     return aInstance->mThreadNetif.AddExternalUnicastAddress(*static_cast<const Ip6::NetifUnicastAddress *>(address));
 }
 
-ThreadError otIp6RemoveUnicastAddress(otInstance *aInstance, const otIp6Address *address)
+otError otIp6RemoveUnicastAddress(otInstance *aInstance, const otIp6Address *address)
 {
     return aInstance->mThreadNetif.RemoveExternalUnicastAddress(*static_cast<const Ip6::Address *>(address));
 }
@@ -96,12 +96,12 @@ const otNetifMulticastAddress *otIp6GetMulticastAddresses(otInstance *aInstance)
     return aInstance->mThreadNetif.GetMulticastAddresses();
 }
 
-ThreadError otIp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress)
+otError otIp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress)
 {
     return aInstance->mThreadNetif.SubscribeExternalMulticast(*static_cast<const Ip6::Address *>(aAddress));
 }
 
-ThreadError otIp6UnsubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress)
+otError otIp6UnsubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress)
 {
     return aInstance->mThreadNetif.UnsubscribeExternalMulticast(*static_cast<const Ip6::Address *>(aAddress));
 }
@@ -122,21 +122,21 @@ void otIp6SlaacUpdate(otInstance *aInstance, otNetifAddress *aAddresses, uint32_
     Utils::Slaac::UpdateAddresses(aInstance, aAddresses, aNumAddresses, aIidCreate, aContext);
 }
 
-ThreadError otIp6CreateRandomIid(otInstance *aInstance, otNetifAddress *aAddress, void *aContext)
+otError otIp6CreateRandomIid(otInstance *aInstance, otNetifAddress *aAddress, void *aContext)
 {
     return Utils::Slaac::CreateRandomIid(aInstance, aAddress, aContext);
 }
 
-ThreadError otIp6CreateMacIid(otInstance *aInstance, otNetifAddress *aAddress, void *)
+otError otIp6CreateMacIid(otInstance *aInstance, otNetifAddress *aAddress, void *)
 {
     memcpy(&aAddress->mAddress.mFields.m8[OT_IP6_ADDRESS_SIZE - OT_IP6_IID_SIZE],
            aInstance->mThreadNetif.GetMac().GetExtAddress(), OT_IP6_IID_SIZE);
     aAddress->mAddress.mFields.m8[OT_IP6_ADDRESS_SIZE - OT_IP6_IID_SIZE] ^= 0x02;
 
-    return kThreadError_None;
+    return OT_ERROR_NONE;
 }
 
-ThreadError otIp6CreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddress *aAddress, void *aContext)
+otError otIp6CreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddress *aAddress, void *aContext)
 {
     return static_cast<Utils::SemanticallyOpaqueIidGenerator *>(aContext)->CreateIid(aInstance, aAddress);
 }
@@ -156,9 +156,9 @@ void otIp6SetReceiveFilterEnabled(otInstance *aInstance, bool aEnabled)
     aInstance->mIp6.SetReceiveIp6FilterEnabled(aEnabled);
 }
 
-ThreadError otIp6Send(otInstance *aInstance, otMessage *aMessage)
+otError otIp6Send(otInstance *aInstance, otMessage *aMessage)
 {
-    ThreadError error;
+    otError error;
 
     otLogFuncEntry();
 
@@ -182,12 +182,12 @@ otMessage *otIp6NewMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
     return message;
 }
 
-ThreadError otIp6AddUnsecurePort(otInstance *aInstance, uint16_t aPort)
+otError otIp6AddUnsecurePort(otInstance *aInstance, uint16_t aPort)
 {
     return aInstance->mThreadNetif.GetIp6Filter().AddUnsecurePort(aPort);
 }
 
-ThreadError otIp6RemoveUnsecurePort(otInstance *aInstance, uint16_t aPort)
+otError otIp6RemoveUnsecurePort(otInstance *aInstance, uint16_t aPort)
 {
     return aInstance->mThreadNetif.GetIp6Filter().RemoveUnsecurePort(aPort);
 }
@@ -202,7 +202,7 @@ bool otIp6IsAddressEqual(const otIp6Address *a, const otIp6Address *b)
     return *static_cast<const Ip6::Address *>(a) == *static_cast<const Ip6::Address *>(b);
 }
 
-ThreadError otIp6AddressFromString(const char *str, otIp6Address *address)
+otError otIp6AddressFromString(const char *str, otIp6Address *address)
 {
     return static_cast<Ip6::Address *>(address)->FromString(str);
 }

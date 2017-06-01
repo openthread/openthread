@@ -34,12 +34,7 @@
 #ifndef DTLS_HPP_
 #define DTLS_HPP_
 
-#include "openthread/types.h"
-
-#include <common/message.hpp>
-#include <common/timer.hpp>
-#include <crypto/sha256.hpp>
-#include <meshcop/tlvs.hpp>
+#include <openthread/types.h>
 
 #include <mbedtls/ssl.h>
 #include <mbedtls/entropy.h>
@@ -47,6 +42,11 @@
 #include <mbedtls/error.h>
 #include <mbedtls/certs.h>
 #include <mbedtls/ssl_cookie.h>
+
+#include "common/message.hpp"
+#include "common/timer.hpp"
+#include "crypto/sha256.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
 
 namespace ot {
 
@@ -107,7 +107,7 @@ public:
      * @param[in]  aMessageSubtype  A message sub type information for the sender.
      *
      */
-    typedef ThreadError(*SendHandler)(void *aContext, const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
+    typedef otError(*SendHandler)(void *aContext, const uint8_t *aBuf, uint16_t aLength, uint8_t aMessageSubType);
 
     /**
      * This method starts the DTLS service.
@@ -118,19 +118,19 @@ public:
      * @param[in]  aSendHandler       A pointer to the send handler.
      * @param[in]  aContext           A pointer to application-specific context.
      *
-     * @retval kThreadError_None      Successfully started the DTLS service.
+     * @retval OT_ERROR_NONE      Successfully started the DTLS service.
      *
      */
-    ThreadError Start(bool aClient, ConnectedHandler aConnectedHandler, ReceiveHandler aReceiveHandler,
-                      SendHandler aSendHandler, void *aContext);
+    otError Start(bool aClient, ConnectedHandler aConnectedHandler, ReceiveHandler aReceiveHandler,
+                  SendHandler aSendHandler, void *aContext);
 
     /**
      * This method stops the DTLS service.
      *
-     * @retval kThreadError_None  Successfully stopped the DTLS service.
+     * @retval OT_ERROR_NONE  Successfully stopped the DTLS service.
      *
      */
-    ThreadError Stop(void);
+    otError Stop(void);
 
     /**
      * This method indicates whether or not the DTLS service is active.
@@ -145,11 +145,11 @@ public:
      *
      * @param[in]  aPSK  A pointer to the PSK.
      *
-     * @retval kThreadError_None         Successfully set the PSK.
-     * @retval kThreadError_InvalidArgs  The PSK is invalid.
+     * @retval OT_ERROR_NONE          Successfully set the PSK.
+     * @retval OT_ERROR_INVALID_ARGS  The PSK is invalid.
      *
      */
-    ThreadError SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
+    otError SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
 
     /**
      * This method sets the Client ID used for generating the Hello Cookie.
@@ -157,10 +157,10 @@ public:
      * @param[in]  aClientId  A pointer to the Client ID.
      * @param[in]  aLength    Number of bytes in the Client ID.
      *
-     * @retval kThreadError_None  Successfully set the Client ID.
+     * @retval OT_ERROR_NONE  Successfully set the Client ID.
      *
      */
-    ThreadError SetClientId(const uint8_t *aClientId, uint8_t aLength);
+    otError SetClientId(const uint8_t *aClientId, uint8_t aLength);
 
     /**
      * This method indicates whether or not the DTLS session is connected.
@@ -177,11 +177,11 @@ public:
      * @param[in]  aMessage  A message to send via DTLS.
      * @param[in]  aLength   Number of bytes in the data buffer.
      *
-     * @retval kThreadError_None    Successfully sent the data via the DTLS session.
-     * @retval kThreadError_NoBufs  A message is too long.
+     * @retval OT_ERROR_NONE     Successfully sent the data via the DTLS session.
+     * @retval OT_ERROR_NO_BUFS  A message is too long.
      *
      */
-    ThreadError Send(Message &aMessage, uint16_t aLength);
+    otError Send(Message &aMessage, uint16_t aLength);
 
     /**
      * This method provides a received DTLS message to the DTLS object.
@@ -190,10 +190,10 @@ public:
      * @param[in]  aOffset   The offset within @p aMessage where the DTLS message starts.
      * @param[in]  aLength   The size of the DTLS message (bytes).
      *
-     * @retval kThreadError_None  Successfully processed the received DTLS message.
+     * @retval OT_ERROR_NONE  Successfully processed the received DTLS message.
      *
      */
-    ThreadError Receive(Message &aMessage, uint16_t aOffset, uint16_t aLength);
+    otError Receive(Message &aMessage, uint16_t aOffset, uint16_t aLength);
 
     /**
      * The provisioning URL is placed here so that both the Commissioner and Joiner can share the same object.
@@ -202,7 +202,7 @@ public:
     ProvisioningUrlTlv mProvisioningUrl;
 
 private:
-    static ThreadError MapError(int rval);
+    static otError MapError(int rval);
 
     static void HandleMbedtlsDebug(void *ctx, int level, const char *file, int line, const char *str);
 

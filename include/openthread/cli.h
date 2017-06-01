@@ -37,11 +37,21 @@
 
 #include <stdint.h>
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * @addtogroup api-cli
+ *
+ * @brief
+ *   This module includes functions that control the Thread stack's execution.
+ *
+ * @{
+ *
+ */
 
 /**
  * This function pointer is called to notify about Console output.
@@ -82,6 +92,11 @@ void otCliConsoleInputLine(char *aBuf, uint16_t aBufLength);
  *
  */
 void otCliUartInit(otInstance *aInstance);
+
+/**
+ * @}
+ *
+ */
 
 #ifdef __cplusplus
 }  // extern "C"

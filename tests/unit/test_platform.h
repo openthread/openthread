@@ -37,14 +37,14 @@
 
 #include <string.h>
 
-#include "openthread/openthread.h"
-#include "openthread/platform/alarm.h"
-#include "openthread/platform/logging.h"
-#include "openthread/platform/misc.h"
-#include "openthread/platform/radio.h"
-#include "openthread/platform/random.h"
+#include <openthread/openthread.h>
+#include <openthread/platform/alarm.h>
+#include <openthread/platform/logging.h>
+#include <openthread/platform/misc.h>
+#include <openthread/platform/radio.h>
+#include <openthread/platform/random.h>
 
-#include <common/code_utils.hpp>
+#include "common/code_utils.hpp"
 
 #include "test_util.h"
 
@@ -71,11 +71,11 @@ typedef void (*testPlatRadioSetExtendedAddress)(otInstance *, uint8_t *);
 typedef void (*testPlatRadioSetShortAddress)(otInstance *, uint16_t);
 
 typedef bool(*testPlatRadioIsEnabled)(otInstance *);
-typedef ThreadError(*testPlatRadioEnable)(otInstance *);
-typedef ThreadError(*testPlatRadioDisable)(otInstance *);
-typedef ThreadError(*testPlatRadioReceive)(otInstance *, uint8_t);
-typedef ThreadError(*testPlatRadioTransmit)(otInstance *);
-typedef RadioPacket *(*testPlatRadioGetTransmitBuffer)(otInstance *);
+typedef otError(*testPlatRadioEnable)(otInstance *);
+typedef otError(*testPlatRadioDisable)(otInstance *);
+typedef otError(*testPlatRadioReceive)(otInstance *, uint8_t);
+typedef otError(*testPlatRadioTransmit)(otInstance *);
+typedef otRadioFrame *(*testPlatRadioGetTransmitBuffer)(otInstance *);
 
 extern otRadioCaps                      g_testPlatRadioCaps;
 extern testPlatRadioSetPanId            g_testPlatRadioSetPanId;

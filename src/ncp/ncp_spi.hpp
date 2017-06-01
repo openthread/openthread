@@ -35,69 +35,73 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
-#include <ncp/ncp_base.hpp>
+#include "ncp/ncp_base.hpp"
 
 namespace ot {
 
 class NcpSpi : public NcpBase
 {
-    typedef NcpBase super_t;
-
 public:
     /**
-     * Constructor
+     * This constructor initializes the object.
      *
-     * @param[in]  aInstance  The OpenThread instance structure.
+     * @param[in]  aInstance  A pointer to the OpenThread instance structure.
      *
      */
     NcpSpi(otInstance *aInstance);
 
-    void ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength);
-
 private:
     enum
     {
-        kSpiBufferSize   = OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE, // Spi buffer size (should be large enough to fit a
-                                                                  // max length frame + spi header).
-        kSpiHeaderLength = 5,                                     // Size of spi header.
+        /**
+         * SPI tx and rx buffer size (should fit a max length frame + SPI header).
+         *
+         */
+        kSpiBufferSize   = OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE,
+
+        /**
+         * Size of SPI header in bytes.
+         *
+         */
+        kSpiHeaderLength = 5,
     };
 
     enum TxState
     {
-        kTxStateIdle,                      // No frame to send
-        kTxStateSending,                   // A frame is ready to be sent
-        kTxStateHandlingSendDone           // The frame was sent successfully, waiting to prepare the next one (if any)
+        kTxStateIdle,               // No frame to send.
+        kTxStateSending,            // A frame is ready to be sent.
+        kTxStateHandlingSendDone    // The frame was sent successfully, waiting to prepare the next one (if any).
     };
 
-    uint16_t OutboundFrameSize(void);
-
-    static void SpiTransactionComplete(void *context, uint8_t *aOutputBuf, uint16_t aOutputBufLen, uint8_t *aInputBuf,
+    static bool SpiTransactionComplete(void *aContext, uint8_t *aOutputBuf, uint16_t aOutputBufLen, uint8_t *aInputBuf,
                                        uint16_t aInputBufLen, uint16_t aTransactionLength);
-    void SpiTransactionComplete(uint8_t *aOutputBuf, uint16_t aOutputBufLen, uint8_t *aInputBuf, uint16_t aInputBufLen,
+    bool SpiTransactionComplete(uint8_t *aOutputBuf, uint16_t aOutputBufLen, uint8_t *aInputBuf, uint16_t aInputBufLen,
                                 uint16_t aTransactionLength);
 
-    static void HandleRxFrame(void *context);
-    void HandleRxFrame(void);
+    static void SpiTransactionProcess(void *aContext);
+    void SpiTransactionProcess(void);
+
+    static void HandleFrameAddedToTxBuffer(void *aContext, NcpFrameBuffer::FrameTag aFrameTag,
+                                           NcpFrameBuffer *aNcpFrameBuffer);
 
     static void PrepareTxFrame(void *context);
     void PrepareTxFrame(void);
+    void HandleRxFrame(void);
 
-    static void TxFrameBufferHasData(void *aContext, NcpFrameBuffer *aNcpFrameBuffer);
-    void TxFrameBufferHasData(void);
+    otError PrepareNextSpiSendFrame(void);
 
-    ThreadError PrepareNextSpiSendFrame(void);
+    volatile TxState mTxState;
+    volatile bool mHandlingRxFrame;
+    volatile bool mResetFlag;
 
-    TxState mTxState;
-    bool mHandlingRxFrame;
-
-    Tasklet mHandleRxFrameTask;
     Tasklet mPrepareTxFrameTask;
 
-    uint8_t mSendFrame[kSpiBufferSize];
     uint16_t mSendFrameLen;
+    uint8_t mSendFrame[kSpiBufferSize];
     uint8_t mReceiveFrame[kSpiBufferSize];
 
-    uint8_t mEmptySendFrame[kSpiHeaderLength];
+    uint8_t mEmptySendFrameZeroAccept[kSpiHeaderLength];
+    uint8_t mEmptySendFrameFullAccept[kSpiHeaderLength];
     uint8_t mEmptyReceiveFrame[kSpiHeaderLength];
 };
 

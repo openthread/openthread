@@ -42,8 +42,7 @@ extern "C" {
 #endif
 
 /**
- * @defgroup logging Logging
- * @ingroup platform
+ * @addtogroup plat-logging
  *
  * @brief
  *   This module includes the platform abstraction for the debug log service.
@@ -52,24 +51,16 @@ extern "C" {
  *
  */
 
-#define OPENTHREAD_LOG_LEVEL_NONE  0
-#define OPENTHREAD_LOG_LEVEL_CRIT  1
-#define OPENTHREAD_LOG_LEVEL_WARN  2
-#define OPENTHREAD_LOG_LEVEL_INFO  3
-#define OPENTHREAD_LOG_LEVEL_DEBG  4
-
 /**
- * This enum represents different log levels.
- *
+ * Log levels.
  */
-typedef enum otLogLevel
-{
-    kLogLevelNone      = OPENTHREAD_LOG_LEVEL_NONE,  ///< None
-    kLogLevelCrit      = OPENTHREAD_LOG_LEVEL_CRIT,  ///< Critical
-    kLogLevelWarn      = OPENTHREAD_LOG_LEVEL_WARN,  ///< Warning
-    kLogLevelInfo      = OPENTHREAD_LOG_LEVEL_INFO,  ///< Info
-    kLogLevelDebg      = OPENTHREAD_LOG_LEVEL_DEBG,  ///< Debug
-} otLogLevel;
+#define OT_LOG_LEVEL_NONE  0  ///< None
+#define OT_LOG_LEVEL_CRIT  1  ///< Critical
+#define OT_LOG_LEVEL_WARN  2  ///< Warning
+#define OT_LOG_LEVEL_INFO  3  ///< Info
+#define OT_LOG_LEVEL_DEBG  4  ///< Debug
+
+typedef uint8_t otLogLevel;
 
 /**
  * This enum represents log regions.
@@ -77,18 +68,19 @@ typedef enum otLogLevel
  */
 typedef enum otLogRegion
 {
-    kLogRegionApi      = 1,  ///< OpenThread API
-    kLogRegionMle      = 2,  ///< MLE
-    kLogRegionArp      = 3,  ///< EID-to-RLOC mapping.
-    kLogRegionNetData  = 4,  ///< Network Data
-    kLogRegionIcmp     = 5,  ///< ICMPv6
-    kLogRegionIp6      = 6,  ///< IPv6
-    kLogRegionMac      = 7,  ///< IEEE 802.15.4 MAC
-    kLogRegionMem      = 8,  ///< Memory
-    kLogRegionNcp      = 9,  ///< NCP
-    kLogRegionMeshCoP  = 10, ///< Mesh Commissioning Protocol
-    kLogRegionNetDiag  = 11, ///< Network Diagnostic
-    kLogRegionPlatform = 12, ///< Platform
+    OT_LOG_REGION_API      = 1,  ///< OpenThread API
+    OT_LOG_REGION_MLE      = 2,  ///< MLE
+    OT_LOG_REGION_ARP      = 3,  ///< EID-to-RLOC mapping.
+    OT_LOG_REGION_NET_DATA = 4,  ///< Network Data
+    OT_LOG_REGION_ICMP     = 5,  ///< ICMPv6
+    OT_LOG_REGION_IP6      = 6,  ///< IPv6
+    OT_LOG_REGION_MAC      = 7,  ///< IEEE 802.15.4 MAC
+    OT_LOG_REGION_MEM      = 8,  ///< Memory
+    OT_LOG_REGION_NCP      = 9,  ///< NCP
+    OT_LOG_REGION_MESH_COP = 10, ///< Mesh Commissioning Protocol
+    OT_LOG_REGION_NET_DIAG = 11, ///< Network Diagnostic
+    OT_LOG_REGION_PLATFORM = 12, ///< Platform
+    OT_LOG_REGION_COAP     = 13, ///< CoAP
 } otLogRegion;
 
 /**

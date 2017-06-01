@@ -33,7 +33,7 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
-#include <crypto/mbedtls.hpp>
+#include "mbedtls.hpp"
 
 namespace ot {
 namespace Crypto {

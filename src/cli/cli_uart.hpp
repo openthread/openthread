@@ -34,10 +34,11 @@
 #ifndef CLI_UART_HPP_
 #define CLI_UART_HPP_
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <cli/cli_server.hpp>
-#include <common/tasklet.hpp>
+#include "cli/cli.hpp"
+#include "cli/cli_server.hpp"
+#include "common/tasklet.hpp"
 
 namespace ot {
 namespace Cli {
@@ -103,7 +104,7 @@ private:
         kMaxLineLength = 128,
     };
 
-    ThreadError ProcessCommand(void);
+    otError ProcessCommand(void);
     void Send(void);
 
     char mRxBuffer[kRxBufferSize];

@@ -35,15 +35,15 @@
 #ifndef OPENTHREAD_INSTANCE_H_
 #define OPENTHREAD_INSTANCE_H_
 
-#include "openthread/types.h"
-#include "openthread/platform/logging.h"
+#include <openthread/types.h>
+#include <openthread/platform/logging.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @addtogroup instance  Instance
+ * @addtogroup api-instance
  *
  * @brief
  *   This module includes functions that control the OpenThread Instance.
@@ -215,19 +215,19 @@ typedef void (OTCALL *otStateChangedCallback)(uint32_t aFlags, void *aContext);
  * @param[in]  aCallback  A pointer to a function that is called with certain configuration or state changes.
  * @param[in]  aContext   A pointer to application-specific context.
  *
- * @retval kThreadError_None    Added the callback to the list of callbacks.
- * @retval kThreadError_NoBufs  Could not add the callback due to resource constraints.
+ * @retval OT_ERROR_NONE     Added the callback to the list of callbacks.
+ * @retval OT_ERROR_NO_BUFS  Could not add the callback due to resource constraints.
  *
  */
-OTAPI ThreadError OTCALL otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback,
-                                                   void *aContext);
+OTAPI otError OTCALL otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback,
+                                               void *aContext);
 
 /**
  * This function removes a callback to indicate when certain configuration or state changes within OpenThread.
  *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aCallback  A pointer to a function that is called with certain configuration or state changes.
- * @param[in]  aContext   A pointer to application-specific context.
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[in]  aCallback         A pointer to a function that is called with certain configuration or state changes.
+ * @param[in]  aCallbackContext  A pointer to application-specific context.
  *
  */
 OTAPI void OTCALL otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback aCallback,
@@ -256,11 +256,11 @@ OTAPI void OTCALL otInstanceFactoryReset(otInstance *aInstance);
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * @retval kThreadError_None  All persistent info/state was erased successfully.
- * @retval kThreadError_InvalidState  Device is not in `disabled` state/role.
+ * @retval OT_ERROR_NONE           All persistent info/state was erased successfully.
+ * @retval OT_ERROR_INVALID_STATE  Device is not in `disabled` state/role.
  *
  */
-ThreadError otInstanceErasePersistentInfo(otInstance *aInstance);
+otError otInstanceErasePersistentInfo(otInstance *aInstance);
 
 /**
  * This function returns the current dynamic log level.
@@ -278,11 +278,12 @@ otLogLevel otGetDynamicLogLevel(otInstance *aInstance);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aLogLevel The dynamic log level.
  *
- * @retval kThreadError_None         The log level was changed successfully.
- * @retval kThreadError_NotCapable   The dynamic log level is not supported.
+ * @retval OT_ERROR_NONE               The log level was changed successfully.
+ * @retval OT_ERROR_DISABLED_FEATURE   The dynamic log level feature is disabled.
+ *                                     (@sa `OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL` configuration option).
  *
  */
-ThreadError otSetDynamicLogLevel(otInstance *aInstance, otLogLevel aLogLevel);
+otError otSetDynamicLogLevel(otInstance *aInstance, otLogLevel aLogLevel);
 
 /**
  * @}

@@ -33,13 +33,14 @@
 
 #include  "openthread/openthread_enable_defines.h"
 
+#include "link_quality.hpp"
+
 #include <stdio.h>
 #include "utils/wrap_string.h"
 
-#include "openthread/types.h"
+#include <openthread/types.h>
 
-#include <common/code_utils.hpp>
-#include <thread/link_quality.hpp>
+#include "common/code_utils.hpp"
 
 namespace ot {
 
@@ -72,7 +73,7 @@ void LinkQualityInfo::Clear(void)
     mLastRss     = 0;
 }
 
-void LinkQualityInfo::AddRss(LinkQualityInfo &aNoiseFloor, int8_t aRss)
+void LinkQualityInfo::AddRss(int8_t aNoiseFloor, int8_t aRss)
 {
     uint16_t    newValue;
     uint16_t    oldAverage;
@@ -150,9 +151,9 @@ uint16_t LinkQualityInfo::GetAverageRssAsEncodedWord(void) const
     return mRssAverage;
 }
 
-ThreadError LinkQualityInfo::GetAverageRssAsString(char *aCharBuffer, size_t aBufferLen) const
+otError LinkQualityInfo::GetAverageRssAsString(char *aCharBuffer, size_t aBufferLen) const
 {
-    ThreadError error = kThreadError_None;
+    otError error = OT_ERROR_NONE;
     int charsWritten = 0;
 
     if (mCount == 0)
@@ -166,20 +167,20 @@ ThreadError LinkQualityInfo::GetAverageRssAsString(char *aCharBuffer, size_t aBu
                                 kLinkQualityDecimalDigitsString[mRssAverage & kRssAveragePrecisionMultipleBitMask]);
     }
 
-    VerifyOrExit(charsWritten >= 0, error = kThreadError_NoBufs);
+    VerifyOrExit(charsWritten >= 0, error = OT_ERROR_NO_BUFS);
 
-    VerifyOrExit(charsWritten < static_cast<int>(aBufferLen), error = kThreadError_NoBufs);
+    VerifyOrExit(charsWritten < static_cast<int>(aBufferLen), error = OT_ERROR_NO_BUFS);
 
 exit:
     return error;
 }
 
-uint8_t LinkQualityInfo::GetLinkMargin(LinkQualityInfo &aNoiseFloor) const
+uint8_t LinkQualityInfo::GetLinkMargin(int8_t aNoiseFloor) const
 {
     return ConvertRssToLinkMargin(aNoiseFloor, GetAverageRss());
 }
 
-uint8_t LinkQualityInfo::GetLinkQuality(LinkQualityInfo &aNoiseFloor)
+uint8_t LinkQualityInfo::GetLinkQuality(int8_t aNoiseFloor)
 {
     UpdateLinkQuality(aNoiseFloor);
 
@@ -191,7 +192,7 @@ int8_t LinkQualityInfo::GetLastRss(void) const
     return mLastRss;
 }
 
-void LinkQualityInfo::UpdateLinkQuality(LinkQualityInfo &aNoiseFloor)
+void LinkQualityInfo::UpdateLinkQuality(int8_t aNoiseFloor)
 {
     if (mCount != 0)
     {
@@ -203,9 +204,9 @@ void LinkQualityInfo::UpdateLinkQuality(LinkQualityInfo &aNoiseFloor)
     }
 }
 
-uint8_t LinkQualityInfo::ConvertRssToLinkMargin(LinkQualityInfo &aNoiseFloor, int8_t aRss)
+uint8_t LinkQualityInfo::ConvertRssToLinkMargin(int8_t aNoiseFloor, int8_t aRss)
 {
-    int8_t linkMargin = aRss - GetAverageNoiseFloor(aNoiseFloor);
+    int8_t linkMargin = aRss - aNoiseFloor;
 
     if (linkMargin < 0 || aRss == kUnknownRss)
     {
@@ -220,7 +221,7 @@ uint8_t LinkQualityInfo::ConvertLinkMarginToLinkQuality(uint8_t aLinkMargin)
     return CalculateLinkQuality(aLinkMargin, kNoLastLinkQualityValue);
 }
 
-uint8_t LinkQualityInfo::ConvertRssToLinkQuality(LinkQualityInfo &aNoiseFloor, int8_t aRss)
+uint8_t LinkQualityInfo::ConvertRssToLinkQuality(int8_t aNoiseFloor, int8_t aRss)
 {
     return ConvertLinkMarginToLinkQuality(ConvertRssToLinkMargin(aNoiseFloor, aRss));
 }
@@ -271,28 +272,6 @@ uint8_t LinkQualityInfo::CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLast
     }
 
     return linkQuality;
-}
-
-int8_t GetAverageNoiseFloor(LinkQualityInfo &aNoiseFloor)
-{
-    int8_t averageNoiseFloor = aNoiseFloor.GetAverageRss();
-
-    if (averageNoiseFloor == LinkQualityInfo::kUnknownRss)
-    {
-        averageNoiseFloor = kDefaultNoiseFloor;
-    }
-
-    return averageNoiseFloor;
-}
-
-void AddNoiseFloor(LinkQualityInfo &aNoiseFloor, int8_t aNoise)
-{
-    aNoiseFloor.AddRss(aNoiseFloor, aNoise);
-}
-
-void ClearNoiseFloorAverage(LinkQualityInfo &aNoiseFloor)
-{
-    aNoiseFloor.Clear();
 }
 
 }  // namespace ot
