@@ -508,7 +508,7 @@ void cc2538RadioProcess(otInstance *aInstance)
 
             if (otPlatDiagModeGet())
             {
-                otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, false, sTransmitError);
+                otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, sTransmitError);
             }
             else
 #endif
@@ -522,18 +522,7 @@ void cc2538RadioProcess(otInstance *aInstance)
         {
             sState = OT_RADIO_STATE_RECEIVE;
 
-#if OPENTHREAD_ENABLE_DIAG
-
-            if (otPlatDiagModeGet())
-            {
-                otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0,
-                                            sTransmitError);
-            }
-            else
-#endif
-            {
-                otPlatRadioTxDone(aInstance, &sTransmitFrame, &sReceiveFrame, sTransmitError);
-            }
+            otPlatRadioTxDone(aInstance, &sTransmitFrame, &sReceiveFrame, sTransmitError);
         }
     }
 

@@ -1826,7 +1826,7 @@ void cc2650RadioProcess(otInstance *aInstance)
 
         if (otPlatDiagModeGet())
         {
-            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, sReceivedAckPendingBit, sTransmitError);
+            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, sTransmitError);
         }
         else
 #endif /* OPENTHREAD_ENABLE_DIAG */

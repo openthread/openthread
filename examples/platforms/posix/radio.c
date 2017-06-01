@@ -123,15 +123,6 @@ static inline bool isSecurityEnabled(const uint8_t *frame)
     return (frame[0] & IEEE802154_SECURITY_ENABLED) != 0;
 }
 
-#if OPENTHREAD_ENABLE_DIAG
-
-static inline bool isFramePending(const uint8_t *frame)
-{
-    return (frame[0] & IEEE802154_FRAME_PENDING) != 0;
-}
-
-#endif // #if OPENTHREAD_ENABLE_DIAG
-
 static inline bool isAckRequested(const uint8_t *frame)
 {
     return (frame[0] & IEEE802154_ACK_REQUEST) != 0;
@@ -499,17 +490,7 @@ void radioReceive(otInstance *aInstance)
         sState = OT_RADIO_STATE_RECEIVE;
         sAckWait = false;
 
-#if OPENTHREAD_ENABLE_DIAG
-
-        if (otPlatDiagModeGet())
-        {
-            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, isFramePending(sReceiveFrame.mPsdu), OT_ERROR_NONE);
-        }
-        else
-#endif
-        {
-            otPlatRadioTxDone(aInstance, &sTransmitFrame, &sReceiveFrame, OT_ERROR_NONE);
-        }
+        otPlatRadioTxDone(aInstance, &sTransmitFrame, &sReceiveFrame, OT_ERROR_NONE);
     }
     else if ((sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT) &&
              (sReceiveFrame.mChannel == sReceiveMessage.mChannel))
@@ -534,7 +515,7 @@ void radioSendMessage(otInstance *aInstance)
 
         if (otPlatDiagModeGet())
         {
-            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, false, OT_ERROR_NONE);
+            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, OT_ERROR_NONE);
         }
         else
 #endif
