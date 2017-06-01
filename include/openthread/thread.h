@@ -276,6 +276,17 @@ OTAPI const uint8_t *OTCALL otThreadGetMeshLocalPrefix(otInstance *aInstance);
 OTAPI otError OTCALL otThreadSetMeshLocalPrefix(otInstance *aInstance, const uint8_t *aMeshLocalPrefix);
 
 /**
+ * This function returns the Thread link-local IPv6 address.
+ *
+ * The Thread link local address is derived using IEEE802.15.4 Extended Address as Interface Identifier.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns A pointer to Thread link-local IPv6 address.
+ */
+const otIp6Address *otThreadGetLinkLocalIp6Address(otInstance *aInstance);
+
+/**
  * Get the Thread Network Name.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
