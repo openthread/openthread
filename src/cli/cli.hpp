@@ -323,7 +323,7 @@ private:
 
     static const struct Command sCommands[];
 
-    Server *sServer;
+    Server *mServer;
 
 #ifdef OTDLL
 
@@ -333,8 +333,8 @@ private:
 
     struct otCliContext
     {
-        Interpreter *aInterpreter;
-        otInstance  *aInstance;
+        Interpreter *mInterpreter;
+        otInstance  *mInstance;
     };
     otCliContext mInstances[MAX_CLI_OT_INSTANCES];
     uint8_t mInstancesLength;
@@ -342,12 +342,12 @@ private:
 
 #else
 
-    Ip6::MessageInfo sMessageInfo;
+    Ip6::MessageInfo mMessageInfo;
 
-    uint16_t sLength;
-    uint16_t sCount;
-    uint32_t sInterval;
-    Timer sPingTimer;
+    uint16_t mLength;
+    uint16_t mCount;
+    uint32_t mInterval;
+    Timer mPingTimer;
 
     otNetifAddress  mSlaacAddresses[OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES];
 #if OPENTHREAD_ENABLE_DHCP6_CLIENT
