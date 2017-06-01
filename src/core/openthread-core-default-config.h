@@ -600,6 +600,19 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT
+ *
+ * Define to 1 to enable default log output.
+ *
+ * When enabled OpenThread provides a default implementation for `otPlatLog()` which is tied to either NCP or CLI
+ * stream writes.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT
+#define OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT             0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES
  *
  * The number of dhcp prefixes.
