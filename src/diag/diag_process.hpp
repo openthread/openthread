@@ -68,7 +68,7 @@ public:
     static char *ProcessCmd(int argc, char *argv[]);
     static bool isEnabled(void);
 
-    static void DiagTransmitDone(otInstance *aInstance, bool aRxPending, otError aError);
+    static void DiagTransmitDone(otInstance *aInstance, otError aError);
     static void DiagReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
     static void AlarmFired(otInstance *aInstance);
 

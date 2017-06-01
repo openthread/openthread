@@ -522,8 +522,7 @@ void nrf5RadioProcess(otInstance *aInstance)
 
         if (otPlatDiagModeGet())
         {
-            bool pendingBit = ((sAckFrame.mPsdu != NULL) && (sAckFrame.mPsdu[1] & PENDING_BIT)) ? true : false;
-            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, pendingBit, OT_ERROR_NONE);
+            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, OT_ERROR_NONE);
         }
         else
 #endif
@@ -547,7 +546,7 @@ void nrf5RadioProcess(otInstance *aInstance)
 
         if (otPlatDiagModeGet())
         {
-            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, false, OT_ERROR_CHANNEL_ACCESS_FAILURE);
+            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, OT_ERROR_CHANNEL_ACCESS_FAILURE);
         }
         else
 #endif

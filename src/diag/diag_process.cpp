@@ -187,11 +187,6 @@ otError Diag::ParseLong(char *argv, long &value)
 
 void Diag::TxPacket()
 {
-    if (sTxPackets > 0)
-    {
-        sTxPackets--;
-    }
-
     sTxPacket->mLength = sTxLen;
     sTxPacket->mChannel = sChannel;
     sTxPacket->mPower = sTxPower;
@@ -344,17 +339,22 @@ exit:
     AppendErrorResult(error, aOutput, aOutputMaxLen);
 }
 
-void Diag::DiagTransmitDone(otInstance *aInstance, bool aRxPending, otError aError)
+void Diag::DiagTransmitDone(otInstance *aInstance, otError aError)
 {
     (void)aInstance;
-    if (!aRxPending && aError == OT_ERROR_NONE)
+    if (aError == OT_ERROR_NONE)
     {
         sStats.sent_packets++;
 
-        if (sTxPackets > 0)
+        if (sTxPackets > 1)
         {
+            sTxPackets--;
             TxPacket();
         }
+    }
+    else
+    {
+        TxPacket();
     }
 }
 
@@ -396,11 +396,11 @@ extern "C" void otPlatDiagAlarmFired(otInstance *aInstance)
     Diag::AlarmFired(aInstance);
 }
 
-extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, bool aRxPending, otError aError)
+extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
     (void)aFrame;
 
-    Diag::DiagTransmitDone(aInstance, aRxPending, aError);
+    Diag::DiagTransmitDone(aInstance, aError);
 }
 
 extern "C" void otPlatDiagRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)

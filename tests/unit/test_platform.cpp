@@ -383,7 +383,7 @@ exit:
     {
     }
 
-    void otPlatDiagRadioTransmitDone(otInstance *, otRadioFrame *, bool, otError)
+    void otPlatDiagRadioTransmitDone(otInstance *, otRadioFrame *, otError)
     {
     }
 

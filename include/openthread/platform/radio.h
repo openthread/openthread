@@ -470,15 +470,12 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable);
  *
  * @param[in]  aInstance      The OpenThread instance structure.
  * @param[in]  aFrame         A pointer to the frame that was transmitted.
- * @param[in]  aFramePending  TRUE if an ACK frame was received and the Frame Pending bit was set.
- * @param[in]  aError  OT_ERROR_NONE when the frame was transmitted, OT_ERROR_NO_ACK when the frame was
- *                     transmitted but no ACK was received, OT_ERROR_CHANNEL_ACCESS_FAILURE when the transmission
- *                     could not take place due to activity on the channel, OT_ERROR_ABORT when transmission was
- *                     aborted for other reasons.
+ * @param[in]  aError         OT_ERROR_NONE when the frame was transmitted, OT_ERROR_CHANNEL_ACCESS_FAILURE when the
+ *                            transmission could not take place due to activity on the channel, OT_ERROR_ABORT when
+ *                            transmission was aborted for other reasons.
  *
  */
-extern void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, bool aFramePending,
-                                        otError aError);
+extern void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
 /**
  * The radio driver calls this method to notify OpenThread diagnostics module of a received frame.
