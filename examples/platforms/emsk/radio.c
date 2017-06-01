@@ -550,15 +550,13 @@ void emskRadioProcess(otInstance *aInstance)
         if (sTransmitError != OT_ERROR_NONE || (sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0)
         {
             sState = OT_RADIO_STATE_RECEIVE;
-            otPlatRadioTransmitDone(aInstance, &sTransmitFrame, false, sTransmitError);
+            otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, sTransmitError);
         }
         else if (Mrf24StatusTx == 1)
         {
             Mrf24StatusTx = 0;
             sState = OT_RADIO_STATE_RECEIVE;
-            otPlatRadioTransmitDone(aInstance, &sTransmitFrame,
-                                    (mrf24j40_read_short_ctrl_reg(MRF24J40_TXNCON) & MRF24J40_FPSTAT) != 0,
-                                    sTransmitError);
+            otPlatRadioTxDone(aInstance, &sTransmitFrame, &sReceiveFrame, sTransmitError);
         }
     }
 
