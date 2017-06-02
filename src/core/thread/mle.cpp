@@ -36,12 +36,6 @@
 
 #include  "openthread/openthread_enable_defines.h"
 #include "mle.hpp"
-
-
-
-#include "openthread/platform/radio.h"
-#include "openthread/platform/random.h"
-#include "openthread/platform/settings.h"
 #include <openthread/platform/radio.h>
 #include <openthread/platform/random.h>
 #include <openthread/platform/settings.h>
