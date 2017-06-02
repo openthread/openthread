@@ -76,6 +76,7 @@ COMMON_SOURCES                      = \
     ncp_buffer.hpp                    \
     spinel.c                          \
     spinel.h                          \
+    spinel_platform_config.h          \
     ncp_spi.cpp                       \
     ncp_spi.hpp                       \
     hdlc.cpp                          \
