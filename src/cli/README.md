@@ -14,7 +14,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [child](#child-list)
 * [childmax](#childmax)
 * [childtimeout](#childtimeout)
-* [coap](#coap-server-phase)
+* [coap](#coap-start)
 * [commissioner](#commissioner-start-provisioningurl)
 * [contextreusedelay](#contextreusedelay)
 * [counter](#counter)
@@ -271,55 +271,57 @@ Set the Thread Child Timeout value.
 Done
 ```
 
-### coap server \<phase\>
+### coap start
 
-Starts and stops the simple CoAP server.
-
-* phase: Either "start" or "stop" the server.
+Starts the application coap service.
 
 ```bash
-> coap server start
-Server started with resource '': Done
-> coap server stop
-Server stopped: Done
+> coap start
+Coap service started: Done
 ```
 
-### coap server name \[URI\]
+### coap stop
 
-Outputs the currently used URI String of the CoAP resource.
-
-* URI: If provided the URI String will be changed to the new value.
+Stops the application coap service.
 
 ```bash
-> coap server name
-Current resource name is '': Done
-> coap server name test
-Changing resource name to 'test': Done
+> coap start
+Coap service stopped: Done
 ```
 
-### coap client \<method\> \<IPv6address\> \<URI\> \[payload\] \[messageType\]
+### coap resource \[uri-path\]
 
-Simple CoAP client that can send Non-/Confirmable GET/PUT/POST/DELETE messages.
+Sets the URI-Path for the test resource.
+
+```bash
+> coap resource test
+Resource name is 'test': Done
+> coap resource
+Resource name is 'test': Done
+```
+
+### coap \<method\> \<address\> \<uri\> \[payload\] \[type\]
 
 * method: CoAP method to be used (GET/PUT/POST/DELETE).
-* IPv6address: IP address of the CoAP server to query.
-* URI: URI String of the resource on the CoAP server.
+* address: IP address of the CoAP server to query.
+* uri: URI String of the resource on the CoAP server.
 * payload: In case of PUT/POST/DELETE a payload can be encapsulated.
-* messageType: Switch between confirmable ("con") and non-confirmable (default).
+* type: Switch between confirmable ("con") and non-confirmable (default).
 
 ```bash
-> coap client get fdde:ad00:beef:0:dbaa:f1d0:8afb:30dc test
-Sending CoAP message: Done
-Received CoAP request from [fdde:ad00:beef:0:dbaa:f1d0:8afb:30dc]: GET
-CoAP response sent successfully!
-Received CoAP response with payload: 30
-> coap client put fdde:ad00:beef:0:dbaa:f1d0:8afb:30dc test non-con somePayload
-Sending CoAP message: Done
-> coap client put fdde:ad00:beef:0:dbaa:f1d0:8afb:30dc test con 123
-Sending CoAP message: Done
-Received CoAP request from [fdde:ad00:beef:0:dbaa:f1d0:8afb:30dc]: PUT with payload: ba 00 00 20
-CoAP response sent successfully!
-Received CoAP response
+> coap get fdde:ad00:beef:0:dbaa:f1d0:8afb:30dc test
+Sending coap message: Done
+Received coap request from [fdde:ad00:beef:0:dbaa:f1d0:8afb:30dc]: GET
+coap response sent successfully!
+Received coap response with payload: 30
+> coap put fdde:ad00:beef:0:dbaa:f1d0:8afb:30dc test non-con somePayload
+Sending coap message: Done
+Received coap request from [fdde:ad00:beef:0:dbaa:f1d0:8afb:30dc]: PUT with payload: 73 6f 6d 65 50 61 79 6c 6f 61 64
+> coap put fdde:ad00:beef:0:dbaa:f1d0:8afb:30dc test con 123
+Sending coap message: Done
+Received coap request from [fdde:ad00:beef:0:dbaa:f1d0:8afb:30dc]: PUT with payload: 31 32 33
+coap response sent successfully!
+Received coap response
 ```
 
 ### commissioner start \<provisioningUrl\>

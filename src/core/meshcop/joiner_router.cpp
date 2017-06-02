@@ -174,7 +174,7 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
 
     SuccessOrExit(error = GetBorderAgentRloc(borderAgentRloc));
 
-    header.Init(kCoapTypeNonConfirmable, kCoapRequestPost);
+    header.Init(OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(OT_URI_PATH_RELAY_RX);
     header.SetPayloadMarker();
@@ -252,8 +252,8 @@ void JoinerRouter::HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage,
     Ip6::MessageInfo messageInfo;
 
     otLogFuncEntry();
-    VerifyOrExit(aHeader.GetType() == kCoapTypeNonConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost, error = OT_ERROR_DROP);
+    VerifyOrExit(aHeader.GetType() == OT_COAP_TYPE_NON_CONFIRMABLE &&
+                 aHeader.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_DROP);
 
     otLogInfoMeshCoP(GetInstance(), "Received relay transmit");
 
@@ -333,7 +333,7 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
 
     otLogFuncEntry();
 
-    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
+    header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.AppendUriPathOptions(OT_URI_PATH_JOINER_ENTRUST);
     header.SetPayloadMarker();
 
@@ -520,7 +520,7 @@ void JoinerRouter::HandleJoinerEntrustResponse(Coap::Header *aHeader, Message *a
 
     VerifyOrExit(aResult == OT_ERROR_NONE && aHeader != NULL && aMessage != NULL);
 
-    VerifyOrExit(aHeader->GetCode() == kCoapResponseChanged);
+    VerifyOrExit(aHeader->GetCode() == OT_COAP_CODE_CHANGED);
 
     otLogInfoMeshCoP(GetInstance(), "Receive joiner entrust response");
     otLogCertMeshCoP(GetInstance(), "[THCI] direction=recv | type=JOIN_ENT.rsp");

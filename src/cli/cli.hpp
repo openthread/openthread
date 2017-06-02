@@ -46,6 +46,7 @@
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 #include <coap/coap_header.hpp>
+#include "cli/cli_coap.hpp"
 #endif
 
 #include "common/code_utils.hpp"
@@ -90,6 +91,8 @@ struct Command
  */
 class Interpreter
 {
+    friend class Coap;
+
 public:
 
     /**
@@ -152,8 +155,8 @@ private:
         kDefaultJoinerTimeout = 120,    ///< Default timeout for Joiners, in seconds.
     };
 
-    void AppendResult(otError error);
-    void OutputBytes(const uint8_t *aBytes, uint8_t aLength);
+    void AppendResult(otError error) const;
+    void OutputBytes(const uint8_t *aBytes, uint8_t aLength) const;
 
     void ProcessHelp(int argc, char *argv[]);
     void ProcessAutoStart(int argc, char *argv[]);
@@ -316,6 +319,12 @@ private:
 #if OPENTHREAD_ENABLE_DNS_CLIENT
     void HandleDnsResponse(const char *aHostname, Ip6::Address &aAddress, uint32_t aTtl, otError aResult);
 #endif
+
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
+
+    Coap mCoap;
+
+#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
 
     static const struct Command sCommands[];
 

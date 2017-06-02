@@ -7032,7 +7032,7 @@ otError NcpBase::InsertPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop
     int8_t rssi = RSSI_OVERRIDE_DISABLED;
 
 
-    if (value_len > static_cast<spinel_ssize_t>(sizeof(ext_addr)))
+    if (value_len > static_cast<spinel_ssize_t>(sizeof(otExtAddress)))
     {
         parsedLength = spinel_datatype_unpack(
                            value_ptr,

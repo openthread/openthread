@@ -302,7 +302,7 @@ otError DatasetManager::Register(void)
     Message *message;
     Ip6::MessageInfo messageInfo;
 
-    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
+    header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(mUriSet);
     header.SetPayloadMarker();
@@ -589,7 +589,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
     Message *message;
     Ip6::MessageInfo messageInfo;
 
-    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
+    header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(mUriSet);
     header.SetPayloadMarker();
@@ -747,7 +747,7 @@ otError DatasetManager::SendGetRequest(const uint8_t *aTlvTypes, uint8_t aLength
     Ip6::MessageInfo messageInfo;
     Tlv tlv;
 
-    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
+    header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(mUriGet);
 

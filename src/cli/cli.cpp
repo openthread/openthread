@@ -219,6 +219,9 @@ typedef otPtr<const uint8_t> otBufferPtr;
 typedef otPtr<const char> otStringPtr;
 
 Interpreter::Interpreter(otInstance *aInstance):
+#if OPENTHREAD_ENABLE_APPLICATION_COAP
+    mCoap(*this),
+#endif
     mServer(NULL),
 #ifdef OTDLL
     mApiInstance(otApiInit()),
@@ -309,7 +312,7 @@ int Interpreter::Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength)
     return static_cast<int>(cur - aBin);
 }
 
-void Interpreter::AppendResult(otError aError)
+void Interpreter::AppendResult(otError aError) const
 {
     if (aError == OT_ERROR_NONE)
     {
@@ -321,7 +324,7 @@ void Interpreter::AppendResult(otError aError)
     }
 }
 
-void Interpreter::OutputBytes(const uint8_t *aBytes, uint8_t aLength)
+void Interpreter::OutputBytes(const uint8_t *aBytes, uint8_t aLength) const
 {
     for (int i = 0; i < aLength; i++)
     {
@@ -653,7 +656,7 @@ exit:
 void Interpreter::ProcessCoap(int argc, char *argv[])
 {
     otError error;
-    error = Coap::Process(mInstance, argc, argv, *mServer);
+    error = mCoap.Process(argc, argv);
     AppendResult(error);
 }
 
@@ -1527,6 +1530,9 @@ void Interpreter::ProcessParent(int argc, char *argv[])
     mServer->OutputFormat("\r\n");
 
     mServer->OutputFormat("Rloc: %x\r\n", parentInfo.mRloc16);
+    mServer->OutputFormat("Link Quality In: %d\r\n", parentInfo.mLinkQualityIn);
+    mServer->OutputFormat("Link Quality Out: %d\r\n", parentInfo.mLinkQualityOut);
+    mServer->OutputFormat("Age: %d\r\n", parentInfo.mAge);
 
 exit:
     (void)argc;

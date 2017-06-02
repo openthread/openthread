@@ -407,7 +407,7 @@ otError Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs,
 
     otLogFuncEntry();
 
-    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
+    header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(OT_URI_PATH_COMMISSIONER_GET);
 
@@ -461,7 +461,7 @@ void Commissioner::HandleMgmtCommissisonerGetResponse(Coap::Header *aHeader, Mes
 
     otLogFuncEntry();
 
-    VerifyOrExit(aResult == OT_ERROR_NONE && aHeader->GetCode() == kCoapResponseChanged);
+    VerifyOrExit(aResult == OT_ERROR_NONE && aHeader->GetCode() == OT_COAP_CODE_CHANGED);
     otLogInfoMeshCoP(GetInstance(), "received MGMT_COMMISSIONER_GET response");
 
 exit:
@@ -478,7 +478,7 @@ otError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDatase
 
     otLogFuncEntry();
 
-    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
+    header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(OT_URI_PATH_COMMISSIONER_SET);
     header.SetPayloadMarker();
@@ -564,7 +564,7 @@ void Commissioner::HandleMgmtCommissisonerSetResponse(Coap::Header *aHeader, Mes
 
     otLogFuncEntry();
 
-    VerifyOrExit(aResult == OT_ERROR_NONE && aHeader->GetCode() == kCoapResponseChanged);
+    VerifyOrExit(aResult == OT_ERROR_NONE && aHeader->GetCode() == OT_COAP_CODE_CHANGED);
     otLogInfoMeshCoP(GetInstance(), "received MGMT_COMMISSIONER_SET response");
 
 exit:
@@ -583,7 +583,7 @@ otError Commissioner::SendPetition(void)
 
     mTransmitAttempts++;
 
-    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
+    header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(OT_URI_PATH_LEADER_PETITION);
     header.SetPayloadMarker();
@@ -635,7 +635,7 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Header *aHeader, Message *
     otLogFuncEntry();
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_PETITION, mState = OT_COMMISSIONER_STATE_DISABLED);
-    VerifyOrExit(aResult == OT_ERROR_NONE && aHeader->GetCode() == kCoapResponseChanged, retransmit = true);
+    VerifyOrExit(aResult == OT_ERROR_NONE && aHeader->GetCode() == OT_COAP_CODE_CHANGED, retransmit = true);
 
     otLogInfoMeshCoP(GetInstance(), "received Leader Petition response");
 
@@ -682,7 +682,7 @@ otError Commissioner::SendKeepAlive(void)
 
     otLogFuncEntry();
 
-    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
+    header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(OT_URI_PATH_LEADER_KEEP_ALIVE);
     header.SetPayloadMarker();
@@ -734,7 +734,7 @@ void Commissioner::HandleLeaderKeepAliveResponse(Coap::Header *aHeader, Message 
     otLogFuncEntry();
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, mState = OT_COMMISSIONER_STATE_DISABLED);
-    VerifyOrExit(aResult == OT_ERROR_NONE && aHeader->GetCode() == kCoapResponseChanged,
+    VerifyOrExit(aResult == OT_ERROR_NONE && aHeader->GetCode() == OT_COAP_CODE_CHANGED,
                  mState = OT_COMMISSIONER_STATE_DISABLED);
 
     otLogInfoMeshCoP(GetInstance(), "received Leader Petition response");
@@ -779,8 +779,8 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, error = OT_ERROR_INVALID_STATE);
 
-    VerifyOrExit(aHeader.GetType() == kCoapTypeNonConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost);
+    VerifyOrExit(aHeader.GetType() == OT_COAP_TYPE_NON_CONFIRMABLE &&
+                 aHeader.GetCode() == OT_COAP_CODE_POST);
 
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kJoinerUdpPort, sizeof(joinerPort), joinerPort));
     VerifyOrExit(joinerPort.IsValid(), error = OT_ERROR_PARSE);
@@ -857,8 +857,8 @@ void Commissioner::HandleDatasetChanged(void *aContext, otCoapHeader *aHeader, o
 void Commissioner::HandleDatasetChanged(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     otLogFuncEntry();
-    VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost);
+    VerifyOrExit(aHeader.GetType() == OT_COAP_TYPE_CONFIRMABLE &&
+                 aHeader.GetCode() == OT_COAP_CODE_POST);
 
     otLogInfoMeshCoP(GetInstance(), "received dataset changed");
     (void)aMessage;
@@ -987,7 +987,7 @@ otError Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInf
 
     otLogFuncEntry();
 
-    header.Init(kCoapTypeNonConfirmable, kCoapRequestPost);
+    header.Init(OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_POST);
     header.AppendUriPathOptions(OT_URI_PATH_RELAY_TX);
     header.SetPayloadMarker();
 
