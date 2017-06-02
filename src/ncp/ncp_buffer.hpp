@@ -177,7 +177,7 @@ public:
      * This method begins/prepares a new output frame to be read from the frame buffer.
      *
      * The NCP buffer maintains a read offset for the current frame being read. Before reading any bytes from the frame
-     * this method should be called to prepare the  frame and set the read offset.
+     * this method should be called to prepare the frame and set the read offset.
      *
      * If part of current frame has already been read, a sub-sequent call to this method will reset the read offset
      * back to beginning of current output frame.

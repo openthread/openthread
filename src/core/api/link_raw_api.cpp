@@ -38,8 +38,6 @@
 #include <openthread/platform/usec-alarm.h>
 
 #include "openthread-instance.h"
-#include "common/debug.hpp"
-#include "common/logging.hpp"
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 
