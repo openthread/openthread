@@ -1531,6 +1531,9 @@ void Interpreter::ProcessParent(int argc, char *argv[])
     mServer->OutputFormat("\r\n");
 
     mServer->OutputFormat("Rloc: %x\r\n", parentInfo.mRloc16);
+    mServer->OutputFormat("Link Quality In: %d\r\n", parentInfo.mLinkQualityIn);
+    mServer->OutputFormat("Link Quality Out: %d\r\n", parentInfo.mLinkQualityOut);
+    mServer->OutputFormat("Age: %d\r\n", parentInfo.mAge);
 
 exit:
     (void)argc;
