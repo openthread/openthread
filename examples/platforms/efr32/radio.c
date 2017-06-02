@@ -72,7 +72,6 @@ static bool           sTransmitBusy      = false;
 static bool           sPromiscuous       = false;
 static bool           sIsReceiverEnabled = false;
 static bool           sIsSrcMatchEnabled = false;
-static bool           sIsAckRequested    = false;
 static otRadioState   sState             = OT_RADIO_STATE_DISABLED;
 
 static uint8_t        sReceiveBuffer[IEEE802154_MAX_LENGTH + 1 + sizeof(RAIL_RxPacketInfo_t)];
@@ -299,10 +298,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
     if (!sIsReceiverEnabled)
     {
-        if (RAIL_RxStart(aChannel))
-        {
-            assert(false);
-        }
+        otEXPECT_ACTION(RAIL_RxStart(aChannel) == RAIL_STATUS_NO_ERROR, error = OT_ERROR_FAILED);
 
         sIsReceiverEnabled = true;
     }
@@ -316,8 +312,10 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
     otError error = OT_ERROR_NONE;
     RAIL_CsmaConfig_t csmaConfig = RAIL_CSMA_CONFIG_802_15_4_2003_2p4_GHz_OQPSK_CSMA;
-    RAIL_TxData_t tx_data;
+    RAIL_TxData_t txData;
+    RAIL_TxOptions_t txOption;
     uint8_t frame[IEEE802154_MAX_LENGTH + 1];
+    bool isAckRequested = (aFrame->mPsdu[0] & IEEE802154_ACK_REQUEST) ? true : false;
     (void)aInstance;
 
     CORE_DECLARE_IRQ_STATE;
@@ -329,25 +327,29 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     sState = OT_RADIO_STATE_TRANSMIT;
     sTransmitError = OT_ERROR_NONE;
     sTransmitBusy = true;
-    sIsAckRequested = (aFrame->mPsdu[0] & IEEE802154_ACK_REQUEST) ? true : false;
 
     frame[0] = aFrame->mLength;
     memcpy(frame + 1, aFrame->mPsdu, aFrame->mLength);
 
-    tx_data.dataPtr = frame;
-    tx_data.dataLength = aFrame->mLength - 1;
+    txData.dataPtr = frame;
+    txData.dataLength = aFrame->mLength - 1;
     RAIL_TxPowerSet(aFrame->mPower);
     setChannel(aFrame->mChannel);
     RAIL_RfIdleExt(RAIL_IDLE, true);
 
-    if (RAIL_TxDataLoad(&tx_data))
-    {
-        assert(false);
-    }
+    otEXPECT_ACTION(RAIL_TxDataLoad(&txData) == RAIL_STATUS_NO_ERROR, error = OT_ERROR_FAILED);
 
-    if (RAIL_TxStart(aFrame->mChannel, RAIL_CcaCsma, &csmaConfig))
+    if (isAckRequested)
     {
-        assert(false);
+        otEXPECT_ACTION(RAIL_TxStart(aFrame->mChannel, RAIL_CcaCsma, &csmaConfig) == RAIL_STATUS_NO_ERROR,
+                        error = OT_ERROR_FAILED);
+    }
+    else
+    {
+        txOption.waitForAck = false;
+
+        otEXPECT_ACTION(RAIL_TxStartWithOptions(aFrame->mChannel, &txOption, RAIL_CcaCsma, &csmaConfig) == RAIL_STATUS_NO_ERROR,
+                        error = OT_ERROR_FAILED);
     }
 
 exit:
@@ -762,10 +764,7 @@ void efr32RadioProcess(otInstance *aInstance)
 
 void RAILCb_RxAckTimeout(void)
 {
-    if (sIsAckRequested)
-    {
-        sTransmitError = OT_ERROR_NO_ACK;
-    }
+    sTransmitError = OT_ERROR_NO_ACK;
 }
 
 void RAILCb_RfReady(void)
