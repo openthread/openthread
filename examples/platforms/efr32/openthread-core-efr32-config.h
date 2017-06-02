@@ -36,14 +36,6 @@
 #define OPENTHREAD_CORE_EFR32_CONFIG_H_
 
 /**
- * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
- *
- * Define to 1 if you want to enable software ACK timeout logic.
- *
- */
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT          1
-
-/**
  * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
  *
  * Define to 1 if you want to enable software retransmission logic.
