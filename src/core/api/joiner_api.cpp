@@ -42,9 +42,9 @@ using namespace ot;
 #if OPENTHREAD_ENABLE_JOINER
 
 otError otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl,
-                          const char *aVendorName, const char *aVendorModel,
-                          const char *aVendorSwVersion, const char *aVendorData,
-                          otJoinerCallback aCallback, void *aContext)
+                      const char *aVendorName, const char *aVendorModel,
+                      const char *aVendorSwVersion, const char *aVendorData,
+                      otJoinerCallback aCallback, void *aContext)
 {
     return aInstance->mThreadNetif.GetJoiner().Start(aPSKd, aProvisioningUrl,
                                                      aVendorName, aVendorModel, aVendorSwVersion, aVendorData,

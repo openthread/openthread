@@ -52,7 +52,7 @@ static otDEFINE_ALIGNED_VAR(sCliConsoleRaw, sizeof(Console), uint64_t);
 
 extern "C" void otCliConsoleInit(otInstance *aInstance, otCliConsoleOutputCallback aCallback, void *aContext)
 {
-    sServer = new(&sCliConsoleRaw) Console(aInstance);
+    sServer = new (&sCliConsoleRaw) Console(aInstance);
     sServer->SetOutputCallback(aCallback);
     sServer->SetContext(aContext);
 }

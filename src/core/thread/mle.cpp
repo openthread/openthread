@@ -1608,7 +1608,7 @@ exit:
 }
 
 otError Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength,
-                                 uint16_t aDelay)
+                             uint16_t aDelay)
 {
     otError error = OT_ERROR_NONE;
     Message *message;
@@ -2551,7 +2551,7 @@ void Mle::ResetParentCandidate(void)
 }
 
 otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
-                                      uint32_t aKeySequence)
+                                  uint32_t aKeySequence)
 {
     otError error = OT_ERROR_NONE;
     const ThreadMessageInfo *threadMessageInfo = static_cast<const ThreadMessageInfo *>(aMessageInfo.GetLinkInfo());

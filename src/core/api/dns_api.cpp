@@ -41,7 +41,7 @@ using namespace ot;
 
 #if OPENTHREAD_ENABLE_DNS_CLIENT
 otError otDnsClientQuery(otInstance *aInstance, const otDnsQuery *aQuery, otDnsResponseHandler aHandler,
-                             void *aContext)
+                         void *aContext)
 {
     return aInstance->mThreadNetif.GetDnsClient().Query(aQuery, aHandler, aContext);
 }

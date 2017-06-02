@@ -55,7 +55,7 @@ otError otIcmp6RegisterHandler(otInstance *aInstance, otIcmp6Handler *aHandler)
 }
 
 otError otIcmp6SendEchoRequest(otInstance *aInstance, otMessage *aMessage,
-                                   const otMessageInfo *aMessageInfo, uint16_t aIdentifier)
+                               const otMessageInfo *aMessageInfo, uint16_t aIdentifier)
 {
     return aInstance->mIp6.mIcmp.SendEchoRequest(*static_cast<Message *>(aMessage),
                                                  *static_cast<const Ip6::MessageInfo *>(aMessageInfo),

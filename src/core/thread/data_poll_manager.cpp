@@ -335,9 +335,9 @@ void DataPollManager::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
     if (mTimer.IsRunning())
     {
         mTimer.StartAt(mTimer.Gett0(), mPollPeriod);
-        }
-        else
-        {
+    }
+    else
+    {
         mTimer.Start(mPollPeriod);
     }
 }

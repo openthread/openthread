@@ -120,7 +120,7 @@ void EnergyScanServer::HandleRequest(Coap::Header &aHeader, Message &aMessage, c
     if (aHeader.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
     {
         SuccessOrExit(mNetif.GetCoap().SendEmptyAck(aHeader, responseInfo));
-    otLogInfoMeshCoP(GetInstance(), "sent energy scan query response");
+        otLogInfoMeshCoP(GetInstance(), "sent energy scan query response");
     }
 
 exit:

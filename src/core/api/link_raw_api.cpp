@@ -172,7 +172,7 @@ otRadioCaps otLinkRawGetCaps(otInstance *aInstance)
 }
 
 otError otLinkRawEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration,
-                                otLinkRawEnergyScanDone aCallback)
+                            otLinkRawEnergyScanDone aCallback)
 {
     return aInstance->mLinkRaw.EnergyScan(aScanChannel, aScanDuration, aCallback);
 }

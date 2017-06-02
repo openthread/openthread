@@ -143,7 +143,7 @@ exit:
 }
 
 otError otCoapSendRequest(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo,
-                              otCoapResponseHandler aHandler, void *aContext)
+                          otCoapResponseHandler aHandler, void *aContext)
 {
     return aInstance->mApplicationCoap.SendMessage(
                *static_cast<Message *>(aMessage),

@@ -86,7 +86,7 @@ otInstance *Dtls::GetInstance(void)
 }
 
 otError Dtls::Start(bool aClient, ConnectedHandler aConnectedHandler, ReceiveHandler aReceiveHandler,
-                        SendHandler aSendHandler, void *aContext)
+                    SendHandler aSendHandler, void *aContext)
 {
     static const int ciphersuites[2] = {0xC0FF, 0}; // EC-JPAKE cipher suite
     otExtAddress eui64;

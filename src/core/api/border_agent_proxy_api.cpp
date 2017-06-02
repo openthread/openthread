@@ -42,7 +42,7 @@ using namespace ot;
 #if OPENTHREAD_FTD && OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
 
 otError otBorderAgentProxyStart(otInstance *aInstance, otBorderAgentProxyStreamHandler aBorderAgentProxyCallback,
-                                    void *aContext)
+                                void *aContext)
 {
     return aInstance->mThreadNetif.GetBorderAgentProxy().Start(aBorderAgentProxyCallback, aContext);
 }

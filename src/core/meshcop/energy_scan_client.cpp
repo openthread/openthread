@@ -74,8 +74,8 @@ otInstance *EnergyScanClient::GetInstance(void)
 }
 
 otError EnergyScanClient::SendQuery(uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod,
-                                        uint16_t aScanDuration, const Ip6::Address &aAddress,
-                                        otCommissionerEnergyReportCallback aCallback, void *aContext)
+                                    uint16_t aScanDuration, const Ip6::Address &aAddress,
+                                    otCommissionerEnergyReportCallback aCallback, void *aContext)
 {
     otError error = OT_ERROR_NONE;
     Coap::Header header;

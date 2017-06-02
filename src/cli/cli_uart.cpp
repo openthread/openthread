@@ -62,7 +62,7 @@ static otDEFINE_ALIGNED_VAR(sCliUartRaw, sizeof(Uart), uint64_t);
 
 extern "C" void otCliUartInit(otInstance *aInstance)
 {
-    Uart::sUartServer = new(&sCliUartRaw) Uart(aInstance);
+    Uart::sUartServer = new (&sCliUartRaw) Uart(aInstance);
 }
 
 Uart::Uart(otInstance *aInstance):

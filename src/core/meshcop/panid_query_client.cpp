@@ -68,7 +68,7 @@ otInstance *PanIdQueryClient::GetInstance(void)
 }
 
 otError PanIdQueryClient::SendQuery(uint16_t aPanId, uint32_t aChannelMask, const Ip6::Address &aAddress,
-                                        otCommissionerPanIdConflictCallback aCallback, void *aContext)
+                                    otCommissionerPanIdConflictCallback aCallback, void *aContext)
 {
     otError error = OT_ERROR_NONE;
     Coap::Header header;

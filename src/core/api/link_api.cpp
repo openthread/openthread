@@ -292,7 +292,7 @@ const otMacCounters *otLinkGetCounters(otInstance *aInstance)
 }
 
 otError otLinkActiveScan(otInstance *aInstance, uint32_t aScanChannels, uint16_t aScanDuration,
-                             otHandleActiveScanResult aCallback, void *aCallbackContext)
+                         otHandleActiveScanResult aCallback, void *aCallbackContext)
 {
     aInstance->mActiveScanCallback = aCallback;
     aInstance->mActiveScanCallbackContext = aCallbackContext;
@@ -318,7 +318,7 @@ exit:
 }
 
 otError otLinkEnergyScan(otInstance *aInstance, uint32_t aScanChannels, uint16_t aScanDuration,
-                             otHandleEnergyScanResult aCallback, void *aCallbackContext)
+                         otHandleEnergyScanResult aCallback, void *aCallbackContext)
 {
     aInstance->mEnergyScanCallback = aCallback;
     aInstance->mEnergyScanCallbackContext = aCallbackContext;

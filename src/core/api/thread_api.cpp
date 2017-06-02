@@ -404,7 +404,7 @@ void otThreadSetReceiveDiagnosticGetCallback(otInstance *aInstance, otReceiveDia
 }
 
 otError otThreadSendDiagnosticGet(otInstance *aInstance, const otIp6Address *aDestination,
-                                      const uint8_t aTlvTypes[], uint8_t aCount)
+                                  const uint8_t aTlvTypes[], uint8_t aCount)
 {
     return aInstance->mThreadNetif.GetNetworkDiagnostic().SendDiagnosticGet(*static_cast<const Ip6::Address *>
                                                                             (aDestination),
@@ -413,7 +413,7 @@ otError otThreadSendDiagnosticGet(otInstance *aInstance, const otIp6Address *aDe
 }
 
 otError otThreadSendDiagnosticReset(otInstance *aInstance, const otIp6Address *aDestination,
-                                        const uint8_t aTlvTypes[], uint8_t aCount)
+                                    const uint8_t aTlvTypes[], uint8_t aCount)
 {
     return aInstance->mThreadNetif.GetNetworkDiagnostic().SendDiagnosticReset(*static_cast<const Ip6::Address *>
                                                                               (aDestination),
