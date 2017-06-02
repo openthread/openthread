@@ -283,7 +283,7 @@ void Joiner::SendJoinerFinalize(void)
 
     otLogFuncEntry();
 
-    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
+    header.Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
     header.AppendUriPathOptions(OT_URI_PATH_JOINER_FINALIZE);
     header.SetPayloadMarker();
 
@@ -366,8 +366,8 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Header *aHeader, Message *aMessa
 
     VerifyOrExit(mState == kStateConnected &&
                  aResult == OT_ERROR_NONE &&
-                 aHeader->GetType() == kCoapTypeAcknowledgment &&
-                 aHeader->GetCode() == kCoapResponseChanged);
+                 aHeader->GetType() == OT_COAP_TYPE_ACKNOWLEDGMENT &&
+                 aHeader->GetCode() == OT_COAP_CODE_CHANGED);
 
     SuccessOrExit(Tlv::GetTlv(*aMessage, Tlv::kState, sizeof(state), state));
     VerifyOrExit(state.IsValid());
@@ -411,8 +411,8 @@ void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const
     otLogFuncEntry();
 
     VerifyOrExit(mState == kStateEntrust &&
-                 aHeader.GetType() == kCoapTypeConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost, error = OT_ERROR_DROP);
+                 aHeader.GetType() == OT_COAP_TYPE_CONFIRMABLE &&
+                 aHeader.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_DROP);
 
     otLogInfoMeshCoP(GetInstance(), "Received joiner entrust");
     otLogCertMeshCoP(GetInstance(), "[THCI] direction=recv | type=JOIN_ENT.ntf");

@@ -182,7 +182,7 @@ void Coap::HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, otMe
     otError error = OT_ERROR_NONE;
     otCoapHeader responseHeader;
     otMessage *responseMessage;
-    otCoapCode responseCode = kCoapCodeEmpty;
+    otCoapCode responseCode = OT_COAP_CODE_EMPTY;
     char responseContent = '0';
 
     sServer->OutputFormat("Received CoAP request from [%x:%x:%x:%x:%x:%x:%x:%x]: ",
@@ -197,19 +197,19 @@ void Coap::HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, otMe
 
     switch (otCoapHeaderGetCode(aHeader))
     {
-    case kCoapRequestGet:
+    case OT_COAP_CODE_GET:
         sServer->OutputFormat("GET");
         break;
 
-    case kCoapRequestDelete:
+    case OT_COAP_CODE_DELETE:
         sServer->OutputFormat("DELETE");
         break;
 
-    case kCoapRequestPut:
+    case OT_COAP_CODE_PUT:
         sServer->OutputFormat("PUT");
         break;
 
-    case kCoapRequestPost:
+    case OT_COAP_CODE_POST:
         sServer->OutputFormat("POST");
         break;
 
@@ -220,22 +220,22 @@ void Coap::HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, otMe
 
     PrintPayload(aMessage);
 
-    if ((otCoapHeaderGetType(aHeader) == kCoapTypeConfirmable) || otCoapHeaderGetCode(aHeader) == kCoapRequestGet)
+    if ((otCoapHeaderGetType(aHeader) == OT_COAP_TYPE_CONFIRMABLE) || otCoapHeaderGetCode(aHeader) == OT_COAP_CODE_GET)
     {
-        if (otCoapHeaderGetCode(aHeader) == kCoapRequestGet)
+        if (otCoapHeaderGetCode(aHeader) == OT_COAP_CODE_GET)
         {
-            responseCode = kCoapResponseContent;
+            responseCode = OT_COAP_CODE_CONTENT;
         }
         else
         {
-            responseCode = kCoapResponseValid;
+            responseCode = OT_COAP_CODE_VALID;
         }
 
-        otCoapHeaderInit(&responseHeader, kCoapTypeAcknowledgment, responseCode);
+        otCoapHeaderInit(&responseHeader, OT_COAP_TYPE_ACKNOWLEDGMENT, responseCode);
         otCoapHeaderSetMessageId(&responseHeader, otCoapHeaderGetMessageId(aHeader));
         otCoapHeaderSetToken(&responseHeader, otCoapHeaderGetToken(aHeader), otCoapHeaderGetTokenLength(aHeader));
 
-        if (otCoapHeaderGetCode(aHeader) == kCoapRequestGet)
+        if (otCoapHeaderGetCode(aHeader) == OT_COAP_CODE_GET)
         {
             otCoapHeaderSetPayloadMarker(&responseHeader);
         }
@@ -243,7 +243,7 @@ void Coap::HandleServerResponse(otCoapHeader *aHeader, otMessage *aMessage, otMe
         responseMessage = otCoapNewMessage(sInstance, &responseHeader);
         VerifyOrExit(responseMessage != NULL, error = OT_ERROR_NO_BUFS);
 
-        if (otCoapHeaderGetCode(aHeader) == kCoapRequestGet)
+        if (otCoapHeaderGetCode(aHeader) == OT_COAP_CODE_GET)
         {
             SuccessOrExit(error = otMessageAppend(responseMessage, &responseContent, sizeof(responseContent)));
         }
@@ -260,7 +260,7 @@ exit:
     }
     else
     {
-        if (responseCode >= kCoapResponseCodeMin)
+        if (responseCode >= OT_COAP_CODE_RESPONSE_MIN)
         {
             sServer->OutputFormat("CoAP response sent successfully!\r\n");
         }
@@ -277,8 +277,8 @@ otError Coap::ProcessClient(int argc, char *argv[])
 
     // Default parameters
     char coapUri[kMaxUriLength] = "test";
-    otCoapType coapType = kCoapTypeNonConfirmable;
-    otCoapCode coapCode = kCoapRequestGet;
+    otCoapType coapType = OT_COAP_TYPE_NON_CONFIRMABLE;
+    otCoapCode coapCode = OT_COAP_CODE_GET;
     otIp6Address coapDestinationIp;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
@@ -288,19 +288,19 @@ otError Coap::ProcessClient(int argc, char *argv[])
 
     if (strcmp(argv[0], "get") == 0)
     {
-        coapCode = kCoapRequestGet;
+        coapCode = OT_COAP_CODE_GET;
     }
     else if (strcmp(argv[0], "post") == 0)
     {
-        coapCode = kCoapRequestPost;
+        coapCode = OT_COAP_CODE_POST;
     }
     else if (strcmp(argv[0], "put") == 0)
     {
-        coapCode = kCoapRequestPut;
+        coapCode = OT_COAP_CODE_PUT;
     }
     else if (strcmp(argv[0], "delete") == 0)
     {
-        coapCode = kCoapRequestDelete;
+        coapCode = OT_COAP_CODE_DELETE;
     }
     else
     {
@@ -334,7 +334,7 @@ otError Coap::ProcessClient(int argc, char *argv[])
 
         if (strcmp(argv[3], "con") == 0)
         {
-            coapType = kCoapTypeConfirmable;
+            coapType = OT_COAP_TYPE_CONFIRMABLE;
         }
     }
 
@@ -366,7 +366,7 @@ otError Coap::ProcessClient(int argc, char *argv[])
     messageInfo.mPeerPort = OT_DEFAULT_COAP_PORT;
     messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
 
-    if ((coapType == kCoapTypeConfirmable) || coapCode == kCoapRequestGet)
+    if ((coapType == OT_COAP_TYPE_CONFIRMABLE) || coapCode == OT_COAP_CODE_GET)
     {
         error = otCoapSendRequest(sInstance, message, &messageInfo,
                                   (otCoapResponseHandler) &Coap::s_HandleClientResponse, NULL);

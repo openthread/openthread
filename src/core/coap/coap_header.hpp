@@ -418,7 +418,7 @@ public:
      * @retval FALSE  Header is not a request header.
      *
      */
-    bool IsRequest(void) const { return (GetCode() >= kCoapRequestGet && GetCode() <= kCoapRequestDelete); };
+    bool IsRequest(void) const { return (GetCode() >= OT_COAP_CODE_GET && GetCode() <= OT_COAP_CODE_DELETE); };
 
     /**
      * This method checks if a header is a response header.
@@ -427,7 +427,7 @@ public:
      * @retval FALSE  Header is not a response header.
      *
      */
-    bool IsResponse(void) const { return (GetCode() >= kCoapResponseCodeMin); };
+    bool IsResponse(void) const { return (GetCode() >= OT_COAP_CODE_RESPONSE_MIN); };
 
     /**
      * This method checks if a header is a CON message header.
@@ -436,7 +436,7 @@ public:
      * @retval FALSE  Header is not is a CON message header.
      *
      */
-    bool IsConfirmable(void) const { return (GetType() == kCoapTypeConfirmable); };
+    bool IsConfirmable(void) const { return (GetType() == OT_COAP_TYPE_CONFIRMABLE); };
 
     /**
      * This method checks if a header is a NON message header.
@@ -445,7 +445,7 @@ public:
      * @retval FALSE  Header is not is a NON message header.
      *
      */
-    bool IsNonConfirmable(void) const { return (GetType() == kCoapTypeNonConfirmable); };
+    bool IsNonConfirmable(void) const { return (GetType() == OT_COAP_TYPE_NON_CONFIRMABLE); };
 
     /**
      * This method checks if a header is a ACK message header.
@@ -454,7 +454,7 @@ public:
      * @retval FALSE  Header is not is a ACK message header.
      *
      */
-    bool IsAck(void) const { return (GetType() == kCoapTypeAcknowledgment); };
+    bool IsAck(void) const { return (GetType() == OT_COAP_TYPE_ACKNOWLEDGMENT); };
 
     /**
      * This method checks if a header is a RST message header.
@@ -463,7 +463,7 @@ public:
      * @retval FALSE  Header is not is a RST message header.
      *
      */
-    bool IsReset(void) const { return (GetType() == kCoapTypeReset);  };
+    bool IsReset(void) const { return (GetType() == OT_COAP_TYPE_RESET);  };
 
 private:
     /**
