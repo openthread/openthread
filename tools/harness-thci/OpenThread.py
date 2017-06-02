@@ -55,8 +55,8 @@ class OpenThread(IThci):
     isPowerDown = False              # indicate if Thread device experiences a power down event
     isWhiteListEnabled = False       # indicate if Thread device enables white list filter
     isBlackListEnabled = False       # indicate if Thread device enables black list filter
-    whiteList = set()                # cache whitelist devices when white list filter is enabled
-    blackList = set()                # cache blacklist devices when black list filter is enabled
+    _whiteList = set()               # cache whitelist devices when white list filter is enabled
+    _blackList = set()               # cache blacklist devices when black list filter is enabled
     isActiveCommissioner = False     # indicate if Thread device is an active commissioner
     _is_net = False                  # whether device is through ser2net
     _lines = None                    # buffered lines read from device
@@ -467,13 +467,13 @@ class OpenThread(IThci):
             # restore whitelist if rejoin after reset
             if self.isPowerDown and self.isWhiteListEnabled:
                 self.__enableWhiteList()
-                for addr in self.whiteList:
+                for addr in self._whiteList:
                     self.addAllowMAC(addr)
 
             # restore blacklist if rejoin after reset
             if self.isPowerDown and self.isBlackListEnabled:
                 self.__enableBlackList()
-                for addr in self.blackList:
+                for addr in self._blackList:
                     self.addBlockedMAC(addr)
 
             if self.__sendCommand('ifconfig up')[0] == 'Done':
@@ -935,7 +935,7 @@ class OpenThread(IThci):
 
             cmd = 'blacklist add %s' % macAddr
             print cmd
-            self.blackList.add(macAddr)
+            self._blackList.add(macAddr)
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("addBlockedMAC() Error: " + str(e))
@@ -963,7 +963,7 @@ class OpenThread(IThci):
 
             cmd = 'whitelist add %s' % macAddr
             print cmd
-            self.whiteList.add(macAddr)
+            self._whiteList.add(macAddr)
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("addAllowMAC() Error: " + str(e))
@@ -981,7 +981,7 @@ class OpenThread(IThci):
         try:
             if self.__sendCommand('blacklist clear')[0] == 'Done':
                 self.__disableBlackList()
-                self.blackList.clear()
+                self._blackList.clear()
                 return True
             else:
                 return False
@@ -1001,7 +1001,7 @@ class OpenThread(IThci):
         try:
             if self.__sendCommand('whitelist clear')[0] == 'Done':
                 self.__disableWhiteList()
-                self.whiteList.clear()
+                self._whiteList.clear()
                 self.clearBlockList()
                 return True
             else:
@@ -1298,9 +1298,9 @@ class OpenThread(IThci):
             self.setActiveTimestamp(self.activetimestamp)
 
             self.isWhiteListEnabled = False
-            self.whiteList.clear()
+            self._whiteList.clear()
             self.isBlackListEnabled = False
-            self.blackList.clear()
+            self._blackList.clear()
             self.isActiveCommissioner = False
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setDefaultValue() Error: " + str(e))
