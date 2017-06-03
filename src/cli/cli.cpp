@@ -514,8 +514,8 @@ void Interpreter::ProcessChild(int argc, char *argv[])
     {
         if (isTable)
         {
-            mServer->OutputFormat("| ID  | RLOC16 | Timeout    | Age        | LQI In | C_VN |R|S|D|N| Extended MAC     |\r\n");
-            mServer->OutputFormat("+-----+--------+------------+------------+--------+------+-+-+-+-+------------------+\r\n");
+            mServer->OutputFormat("| ID  | RLOC16 | Timeout    | Age        | LQ In | C_VN |R|S|D|N| Extended MAC     |\r\n");
+            mServer->OutputFormat("+-----+--------+------------+------------+-------+------+-+-+-+-+------------------+\r\n");
         }
 
         maxChildren = otThreadGetMaxAllowedChildren(mInstance);
@@ -544,7 +544,7 @@ void Interpreter::ProcessChild(int argc, char *argv[])
                     mServer->OutputFormat("| 0x%04x ", childInfo.mRloc16);
                     mServer->OutputFormat("| %10d ", childInfo.mTimeout);
                     mServer->OutputFormat("| %10d ", childInfo.mAge);
-                    mServer->OutputFormat("| %6d ", childInfo.mLinkQualityIn);
+                    mServer->OutputFormat("| %5d ", childInfo.mLinkQualityIn);
                     mServer->OutputFormat("| %4d ", childInfo.mNetworkDataVersion);
                     mServer->OutputFormat("|%1d", childInfo.mRxOnWhenIdle);
                     mServer->OutputFormat("|%1d", childInfo.mSecureDataRequest);
@@ -609,7 +609,7 @@ void Interpreter::ProcessChild(int argc, char *argv[])
     mServer->OutputFormat("Net Data: %d\r\n", childInfo.mNetworkDataVersion);
     mServer->OutputFormat("Timeout: %d\r\n", childInfo.mTimeout);
     mServer->OutputFormat("Age: %d\r\n", childInfo.mAge);
-    mServer->OutputFormat("LQI: %d\r\n", childInfo.mLinkQualityIn);
+    mServer->OutputFormat("Link Quality In: %d\r\n", childInfo.mLinkQualityIn);
     mServer->OutputFormat("RSSI: %d\r\n", childInfo.mAverageRssi);
 
 exit:
@@ -2174,8 +2174,8 @@ void Interpreter::ProcessRouter(int argc, char *argv[])
     {
         if (isTable)
         {
-            mServer->OutputFormat("| ID | RLOC16 | Next Hop | Path Cost | LQI In | LQI Out | Age | Extended MAC     |\r\n");
-            mServer->OutputFormat("+----+--------+----------+-----------+--------+---------+-----+------------------+\r\n");
+            mServer->OutputFormat("| ID | RLOC16 | Next Hop | Path Cost | LQ In | LQ Out | Age | Extended MAC     |\r\n");
+            mServer->OutputFormat("+----+--------+----------+-----------+-------+--------+-----+------------------+\r\n");
         }
 
         for (uint8_t i = 0; ; i++)
@@ -2194,8 +2194,8 @@ void Interpreter::ProcessRouter(int argc, char *argv[])
                     mServer->OutputFormat("| 0x%04x ", routerInfo.mRloc16);
                     mServer->OutputFormat("| %8d ", routerInfo.mNextHop);
                     mServer->OutputFormat("| %9d ", routerInfo.mPathCost);
-                    mServer->OutputFormat("| %6d ", routerInfo.mLinkQualityIn);
-                    mServer->OutputFormat("| %7d ", routerInfo.mLinkQualityOut);
+                    mServer->OutputFormat("| %5d ", routerInfo.mLinkQualityIn);
+                    mServer->OutputFormat("| %6d ", routerInfo.mLinkQualityOut);
                     mServer->OutputFormat("| %3d ", routerInfo.mAge);
                     mServer->OutputFormat("| ");
 
@@ -2237,8 +2237,8 @@ void Interpreter::ProcessRouter(int argc, char *argv[])
 
             mServer->OutputFormat("\r\n");
             mServer->OutputFormat("Cost: %d\r\n", routerInfo.mPathCost);
-            mServer->OutputFormat("LQI In: %d\r\n", routerInfo.mLinkQualityIn);
-            mServer->OutputFormat("LQI Out: %d\r\n", routerInfo.mLinkQualityOut);
+            mServer->OutputFormat("Link Quality In: %d\r\n", routerInfo.mLinkQualityIn);
+            mServer->OutputFormat("Link Quality Out: %d\r\n", routerInfo.mLinkQualityOut);
             mServer->OutputFormat("Age: %d\r\n", routerInfo.mAge);
         }
     }

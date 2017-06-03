@@ -208,10 +208,10 @@ Print table of attached children.
 
 ```bash
 > child table
-| ID  | RLOC16 | Timeout    | Age        | LQI In | C_VN |R|S|D|N| Extended MAC     |
-+-----+--------+------------+------------+--------+------+-+-+-+-+------------------+
-|   1 | 0xe001 |        240 |         44 |      3 |  237 |1|1|1|1| d28d7f875888fccb |
-|   2 | 0xe002 |        240 |         27 |      3 |  237 |0|1|0|1| e2b3540590b0fd87 |
+| ID  | RLOC16 | Timeout    | Age        | LQ In | C_VN |R|S|D|N| Extended MAC     |
++-----+--------+------------+------------+-------+------+-+-+-+-+------------------+
+|   1 | 0xe001 |        240 |         44 |     3 |  237 |1|1|1|1| d28d7f875888fccb |
+|   2 | 0xe002 |        240 |         27 |     3 |  237 |0|1|0|1| e2b3540590b0fd87 |
 Done
 ```
 
@@ -228,7 +228,7 @@ Mode: rsn
 Net Data: 184
 Timeout: 100
 Age: 0
-LQI: 3
+Link Quality In: 3
 RSSI: -20
 Done
 ```
@@ -1237,6 +1237,9 @@ Get the diagnostic information for a Thread Router as parent.
 > parent
 Ext Addr: be1857c6c21dce55
 Rloc: 5c00
+Link Quality In: 3
+Link Quality Out: 3
+Age: 20
 Done
 ```
 
@@ -1385,10 +1388,10 @@ Print table of routers.
 
 ```bash
 > router table
-| ID | RLOC16 | Next Hop | Path Cost | LQI In | LQI Out | Age | Extended MAC     |
-+----+--------+----------+-----------+--------+---------+-----+------------------+
-| 21 | 0x5400 |       21 |         0 |      3 |       3 |   5 | d28d7f875888fccb |
-| 56 | 0xe000 |       56 |         0 |      0 |       0 | 182 | f2d92a82c8d8fe43 |
+| ID | RLOC16 | Next Hop | Path Cost | LQ In | LQ Out | Age | Extended MAC     |
++----+--------+----------+-----------+-------+--------+-----+------------------+
+| 21 | 0x5400 |       21 |         0 |     3 |      3 |   5 | d28d7f875888fccb |
+| 56 | 0xe000 |       56 |         0 |     0 |      0 | 182 | f2d92a82c8d8fe43 |
 Done
 ```
 
@@ -1405,8 +1408,8 @@ Next Hop: c800
 Link: 1
 Ext Addr: e2b3540590b0fd87
 Cost: 0
-LQI In: 3
-LQI Out: 3
+Link Quality In: 3
+Link Quality Out: 3
 Age: 3
 Done
 ```
@@ -1420,8 +1423,8 @@ Next Hop: c800
 Link: 1
 Ext Addr: e2b3540590b0fd87
 Cost: 0
-LQI In: 3
-LQI Out: 3
+Link Quality In: 3
+Link Quality Out: 3
 Age: 7
 Done
 ```
