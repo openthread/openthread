@@ -668,6 +668,20 @@ typedef enum
      */
     SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES
                                         = SPINEL_PROP_MAC_EXT__BEGIN + 5,
+
+    /// MAC Blacklist
+    /** Format: `A(t(E))`
+     *
+     * Structure Parameters:
+     *
+     * * `E`: EUI64 address of node
+     */
+    SPINEL_PROP_MAC_BLACKLIST           = SPINEL_PROP_MAC_EXT__BEGIN + 6,
+
+    /// MAC Blacklist Enabled Flag
+    /** Format: `b`
+     */
+    SPINEL_PROP_MAC_BLACKLIST_ENABLED   = SPINEL_PROP_MAC_EXT__BEGIN + 7,
     SPINEL_PROP_MAC_EXT__END            = 0x1400,
 
     SPINEL_PROP_NET__BEGIN              = 0x40,

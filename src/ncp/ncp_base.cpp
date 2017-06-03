@@ -3738,12 +3738,12 @@ otError NcpBase::GetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop_ke
 
     SuccessOrExit(errorCode = OutboundFrameBegin());
     SuccessOrExit(
-            errorCode = OutboundFrameFeedPacked(
-                            SPINEL_DATATYPE_COMMAND_PROP_S,
-                            header,
-                            SPINEL_CMD_PROP_VALUE_IS,
-                            key
-                        ));
+        errorCode = OutboundFrameFeedPacked(
+                        SPINEL_DATATYPE_COMMAND_PROP_S,
+                        header,
+                        SPINEL_CMD_PROP_VALUE_IS,
+                        key
+                    ));
 
     for (uint8_t i = 0; (i != 255) && (errorCode == OT_ERROR_NONE); i++)
     {
@@ -3790,6 +3790,62 @@ otError NcpBase::GetPropertyHandler_MAC_WHITELIST_ENABLED(uint8_t header, spinel
                otLinkIsWhitelistEnabled(mInstance)
            );
 }
+
+otError NcpBase::GetPropertyHandler_MAC_BLACKLIST(uint8_t header, spinel_prop_key_t key)
+{
+    otMacBlacklistEntry entry;
+    otError errorCode = OT_ERROR_NONE;
+
+    mDisableStreamWrite = true;
+
+    SuccessOrExit(errorCode = OutboundFrameBegin());
+    SuccessOrExit(
+        errorCode = OutboundFrameFeedPacked(
+                        SPINEL_DATATYPE_COMMAND_PROP_S,
+                        header,
+                        SPINEL_CMD_PROP_VALUE_IS,
+                        key
+                    ));
+
+    for (uint8_t i = 0; (i != 255) && (errorCode == OT_ERROR_NONE); i++)
+    {
+        errorCode = otLinkGetBlacklistEntry(mInstance, i, &entry);
+
+        if (errorCode != OT_ERROR_NONE)
+        {
+            break;
+        }
+
+        if (entry.mValid)
+        {
+            SuccessOrExit(
+                errorCode = OutboundFrameFeedPacked(
+                                SPINEL_DATATYPE_STRUCT_S(
+                                    SPINEL_DATATYPE_EUI64_S   // Extended address
+                                ),
+                                entry.mExtAddress.m8
+                            ));
+        }
+    }
+
+    SuccessOrExit(errorCode = OutboundFrameSend());
+
+exit:
+    mDisableStreamWrite = false;
+    return errorCode;
+}
+
+otError NcpBase::GetPropertyHandler_MAC_BLACKLIST_ENABLED(uint8_t header, spinel_prop_key_t key)
+{
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_BOOL_S,
+               otLinkIsBlacklistEnabled(mInstance)
+           );
+}
+
 
 #endif // OPENTHREAD_ENABLE_MAC_WHITELIST
 
@@ -5852,6 +5908,88 @@ otError NcpBase::SetPropertyHandler_MAC_WHITELIST_ENABLED(uint8_t header, spinel
     return errorCode;
 }
 
+otError NcpBase::SetPropertyHandler_MAC_BLACKLIST(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                  uint16_t value_len)
+{
+    otError errorCode = OT_ERROR_NONE;
+    spinel_ssize_t parsedLength = 1;
+
+    // First, clear the blacklist.
+    otLinkClearBlacklist(mInstance);
+
+    while ((errorCode == OT_ERROR_NONE)
+           && (parsedLength > 0)
+           && (value_len > 0)
+          )
+    {
+        otExtAddress *ext_addr = NULL;
+
+        parsedLength = spinel_datatype_unpack(
+                           value_ptr,
+                           value_len,
+                           SPINEL_DATATYPE_STRUCT_S(
+                               SPINEL_DATATYPE_EUI64_S
+                           ),
+                           &ext_addr
+                       );
+
+        if (parsedLength <= 0)
+        {
+            errorCode = OT_ERROR_PARSE;
+            break;
+        }
+
+        errorCode = otLinkAddBlacklist(mInstance, ext_addr->m8);
+
+        value_ptr += parsedLength;
+        value_len -= parsedLength;
+    }
+
+    if (errorCode == OT_ERROR_NONE)
+    {
+        errorCode = HandleCommandPropertyGet(header, key);
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+
+        // We had an error, but we may have actually changed
+        // the state of the blacklist---so we need to report
+        // those incomplete changes via an asynchronous
+        // change event.
+        HandleCommandPropertyGet(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, key);
+    }
+
+    return errorCode;
+}
+
+otError NcpBase::SetPropertyHandler_MAC_BLACKLIST_ENABLED(uint8_t header, spinel_prop_key_t key,
+                                                          const uint8_t *value_ptr, uint16_t value_len)
+{
+    bool isEnabled;
+    spinel_ssize_t parsedLength;
+    otError errorCode = OT_ERROR_NONE;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_BOOL_S,
+                       &isEnabled
+                   );
+
+    if (parsedLength > 0)
+    {
+        otLinkSetBlacklistEnabled(mInstance, isEnabled);
+        errorCode = HandleCommandPropertyGet(header, key);
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
 #endif // OPENTHREAD_ENABLE_MAC_WHITELIST
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
@@ -7035,7 +7173,6 @@ otError NcpBase::InsertPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop
     otExtAddress *ext_addr = NULL;
     int8_t rssi = RSSI_OVERRIDE_DISABLED;
 
-
     if (value_len > static_cast<spinel_ssize_t>(sizeof(otExtAddress)))
     {
         parsedLength = spinel_datatype_unpack(
@@ -7066,6 +7203,47 @@ otError NcpBase::InsertPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop
         {
             errorCode = otLinkAddWhitelistRssi(mInstance, ext_addr->m8, rssi);
         }
+
+        if (errorCode == OT_ERROR_NONE)
+        {
+            errorCode = SendPropertyUpdate(
+                            header,
+                            SPINEL_CMD_PROP_VALUE_INSERTED,
+                            key,
+                            value_ptr,
+                            value_len
+                        );
+        }
+        else
+        {
+            errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+        }
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
+otError NcpBase::InsertPropertyHandler_MAC_BLACKLIST(uint8_t header, spinel_prop_key_t key,
+                                                     const uint8_t *value_ptr, uint16_t value_len)
+{
+    otError errorCode = OT_ERROR_NONE;
+    spinel_ssize_t parsedLength;
+    otExtAddress *ext_addr = NULL;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_EUI64_S,
+                       &ext_addr
+                   );
+
+    if (parsedLength > 0)
+    {
+        errorCode = otLinkAddBlacklist(mInstance, ext_addr->m8);
 
         if (errorCode == OT_ERROR_NONE)
         {
@@ -7509,6 +7687,40 @@ otError NcpBase::RemovePropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop
     if (parsedLength > 0)
     {
         otLinkRemoveWhitelist(mInstance, ext_addr_ptr->m8);
+
+        errorCode = SendPropertyUpdate(
+                        header,
+                        SPINEL_CMD_PROP_VALUE_REMOVED,
+                        key,
+                        value_ptr,
+                        value_len
+                    );
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
+otError NcpBase::RemovePropertyHandler_MAC_BLACKLIST(uint8_t header, spinel_prop_key_t key,
+                                                     const uint8_t *value_ptr, uint16_t value_len)
+{
+    otError errorCode = OT_ERROR_NONE;
+    spinel_ssize_t parsedLength;
+    otExtAddress *ext_addr_ptr = NULL;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_EUI64_S,
+                       &ext_addr_ptr
+                   );
+
+    if (parsedLength > 0)
+    {
+        otLinkRemoveBlacklist(mInstance, ext_addr_ptr->m8);
 
         errorCode = SendPropertyUpdate(
                         header,
