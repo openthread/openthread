@@ -30,6 +30,7 @@
 
 #define OTDLL 1
 #include <openthread/openthread.h>
+#include <openthread/border_router.h>
 #include <openthread/thread_ftd.h>
 #include <openthread/commissioner.h>
 #include <openthread/joiner.h>

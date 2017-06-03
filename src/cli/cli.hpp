@@ -229,7 +229,9 @@ private:
     void ProcessLinkQuality(int argc, char *argv[]);
     void ProcessMasterKey(int argc, char *argv[]);
     void ProcessMode(int argc, char *argv[]);
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
     void ProcessNetworkDataRegister(int argc, char *argv[]);
+#endif
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     void ProcessNetworkDiagnostic(int argc, char *argv[]);
 #endif // OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
@@ -241,19 +243,23 @@ private:
     void ProcessParent(int argc, char *argv[]);
     void ProcessPing(int argc, char *argv[]);
     void ProcessPollPeriod(int argc, char *argv[]);
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
     void ProcessPrefix(int argc, char *argv[]);
     otError ProcessPrefixAdd(int argc, char *argv[]);
     otError ProcessPrefixRemove(int argc, char *argv[]);
     otError ProcessPrefixList(void);
+#endif
     void ProcessPromiscuous(int argc, char *argv[]);
 #if OPENTHREAD_FTD
     void ProcessPSKc(int argc, char *argv[]);
     void ProcessReleaseRouterId(int argc, char *argv[]);
 #endif
     void ProcessReset(int argc, char *argv[]);
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
     void ProcessRoute(int argc, char *argv[]);
     otError ProcessRouteAdd(int argc, char *argv[]);
     otError ProcessRouteRemove(int argc, char *argv[]);
+#endif
 #if OPENTHREAD_FTD
     void ProcessRouter(int argc, char *argv[]);
     void ProcessRouterDowngradeThreshold(int argc, char *argv[]);

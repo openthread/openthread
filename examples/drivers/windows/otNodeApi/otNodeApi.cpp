@@ -1610,7 +1610,7 @@ OTNODEAPI int32_t OTCALL otNodeAddPrefix(otNode* aNode, const char *aPrefix, con
         return OT_ERROR_INVALID_ARGS;
     }
 
-    auto result = otNetDataAddPrefixInfo(aNode->mInstance, &config);
+    auto result = otBorderRouterAddOnMeshPrefix(aNode->mInstance, &config);
     otLogFuncExit();
     return result;
 }
@@ -1623,7 +1623,7 @@ OTNODEAPI int32_t OTCALL otNodeRemovePrefix(otNode* aNode, const char *aPrefix)
     auto error = otNodeParsePrefix(aPrefix, &prefix);
     if (error != OT_ERROR_NONE) return error;
 
-    auto result = otNetDataRemovePrefixInfo(aNode->mInstance, &prefix);
+    auto result = otBorderRouterRemoveOnMeshPrefix(aNode->mInstance, &prefix);
     otLogFuncExit();
     return result;
 }
@@ -1653,7 +1653,7 @@ OTNODEAPI int32_t OTCALL otNodeAddRoute(otNode* aNode, const char *aPrefix, cons
         return OT_ERROR_INVALID_ARGS;
     }
 
-    auto result = otNetDataAddRoute(aNode->mInstance, &config);
+    auto result = otBorderRouterAddRoute(aNode->mInstance, &config);
     otLogFuncExit();
     return result;
 }
@@ -1666,7 +1666,7 @@ OTNODEAPI int32_t OTCALL otNodeRemoveRoute(otNode* aNode, const char *aPrefix)
     auto error = otNodeParsePrefix(aPrefix, &prefix);
     if (error != OT_ERROR_NONE) return error;
 
-    auto result = otNetDataRemoveRoute(aNode->mInstance, &prefix);
+    auto result = otBorderRouterRemoveRoute(aNode->mInstance, &prefix);
     otLogFuncExit();
     return result;
 }
@@ -1675,7 +1675,7 @@ OTNODEAPI int32_t OTCALL otNodeRegisterNetdata(otNode* aNode)
 {
     otLogFuncEntryMsg("[%d]", aNode->mId);
     printf("%d: registernetdata\r\n", aNode->mId);
-    auto result = otNetDataRegister(aNode->mInstance);
+    auto result = otBorderRouterRegister(aNode->mInstance);
     otLogFuncExit();
     return result;
 }

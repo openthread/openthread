@@ -22,6 +22,7 @@
 #define OTAPI EXTERN_C __declspec(dllexport)
 
 #include <openthread/openthread.h>
+#include <openthread/border_router.h>
 #include <openthread/dataset_ftd.h>
 #include <openthread/thread_ftd.h>
 #include <openthread/commissioner.h>

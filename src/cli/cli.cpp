@@ -57,6 +57,10 @@
 #include <openthread/thread_ftd.h>
 #endif
 
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#include <openthread/border_router.h>
+#endif
+
 #ifndef OTDLL
 #include <openthread/dhcp6_client.h>
 #include <openthread/dhcp6_server.h>
@@ -153,7 +157,9 @@ const struct Command Interpreter::sCommands[] =
     { "linkquality", &Interpreter::ProcessLinkQuality },
     { "masterkey", &Interpreter::ProcessMasterKey },
     { "mode", &Interpreter::ProcessMode },
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
     { "netdataregister", &Interpreter::ProcessNetworkDataRegister },
+#endif
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     { "networkdiagnostic", &Interpreter::ProcessNetworkDiagnostic },
 #endif // OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
@@ -170,14 +176,18 @@ const struct Command Interpreter::sCommands[] =
 #ifndef OTDLL
     { "promiscuous", &Interpreter::ProcessPromiscuous },
 #endif
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
     { "prefix", &Interpreter::ProcessPrefix },
+#endif
 #if OPENTHREAD_FTD
     { "pskc", &Interpreter::ProcessPSKc },
     { "releaserouterid", &Interpreter::ProcessReleaseRouterId },
 #endif
     { "reset", &Interpreter::ProcessReset },
     { "rloc16", &Interpreter::ProcessRloc16 },
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
     { "route", &Interpreter::ProcessRoute },
+#endif
 #if OPENTHREAD_FTD
     { "router", &Interpreter::ProcessRouter },
     { "routerdowngradethreshold", &Interpreter::ProcessRouterDowngradeThreshold },
@@ -1449,16 +1459,18 @@ exit:
     AppendResult(error);
 }
 
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
 void Interpreter::ProcessNetworkDataRegister(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
-    SuccessOrExit(error = otNetDataRegister(mInstance));
+    SuccessOrExit(error = otBorderRouterRegister(mInstance));
 
 exit:
     (void)argc;
     (void)argv;
     AppendResult(error);
 }
+#endif  // OPENTHREAD_ENABLE_BORDER_ROUTER
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessNetworkIdTimeout(int argc, char *argv[])
@@ -1794,6 +1806,7 @@ void Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame)
 }
 #endif
 
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
 otError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
@@ -1878,7 +1891,7 @@ otError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
         }
     }
 
-    error = otNetDataAddPrefixInfo(mInstance, &config);
+    error = otBorderRouterAddOnMeshPrefix(mInstance, &config);
 
 exit:
     return error;
@@ -1911,7 +1924,7 @@ otError Interpreter::ProcessPrefixRemove(int argc, char *argv[])
         ExitNow(error = OT_ERROR_PARSE);
     }
 
-    error = otNetDataRemovePrefixInfo(mInstance, &prefix);
+    error = otBorderRouterRemoveOnMeshPrefix(mInstance, &prefix);
 
 exit:
     (void)argc;
@@ -1923,7 +1936,7 @@ otError Interpreter::ProcessPrefixList(void)
     otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     otBorderRouterConfig config;
 
-    while (otNetDataGetNextPrefixInfo(mInstance, true, &iterator, &config) == OT_ERROR_NONE)
+    while (otBorderRouterGetNextOnMeshPrefix(mInstance, &iterator, &config) == OT_ERROR_NONE)
     {
         mServer->OutputFormat("%x:%x:%x:%x::/%d ",
                               HostSwap16(config.mPrefix.mPrefix.mFields.m16[0]),
@@ -2010,6 +2023,7 @@ void Interpreter::ProcessPrefix(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
+#endif  // OPENTHREAD_ENABLE_BORDER_ROUTER
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessReleaseRouterId(int argc, char *argv[])
@@ -2042,6 +2056,7 @@ void Interpreter::ProcessRloc16(int argc, char *argv[])
     (void)argv;
 }
 
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
 otError Interpreter::ProcessRouteAdd(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
@@ -2097,7 +2112,7 @@ otError Interpreter::ProcessRouteAdd(int argc, char *argv[])
         }
     }
 
-    error = otNetDataAddRoute(mInstance, &config);
+    error = otBorderRouterAddRoute(mInstance, &config);
 
 exit:
     return error;
@@ -2131,7 +2146,7 @@ otError Interpreter::ProcessRouteRemove(int argc, char *argv[])
         ExitNow(error = OT_ERROR_PARSE);
     }
 
-    error = otNetDataRemoveRoute(mInstance, &prefix);
+    error = otBorderRouterRemoveRoute(mInstance, &prefix);
 
 exit:
     return error;
@@ -2159,6 +2174,7 @@ void Interpreter::ProcessRoute(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
+#endif  // OPENTHREAD_ENABLE_BORDER_ROUTER
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessRouter(int argc, char *argv[])

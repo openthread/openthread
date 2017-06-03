@@ -43,6 +43,7 @@ AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-dhcp6-server             \
     --enable-dns-client               \
     --enable-application-coap         \
+    --enable-border-router            \
     $(NULL)
 
 SUBDIRS                             = \

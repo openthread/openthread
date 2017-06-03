@@ -26,11 +26,128 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if OPENTHREAD_MTD
-#include "network_data_local_mtd.hpp"
-#elif OPENTHREAD_FTD
-#include "network_data_local_ftd.hpp"
-#else
-#error "Please define OPENTHREAD_MTD=1 or OPENTHREAD_FTD=1"
-#endif
+/**
+ * @file
+ *   This file includes definitions for manipulating local Thread Network Data.
+ */
 
+#ifndef NETWORK_DATA_LOCAL_HPP_
+#define NETWORK_DATA_LOCAL_HPP_
+
+#include "thread/network_data.hpp"
+
+namespace ot {
+
+class ThreadNetif;
+
+/**
+ * @addtogroup core-netdata-local
+ *
+ * @brief
+ *   This module includes definitions for manipulating local Thread Network Data.
+ *
+ * @{
+ */
+
+namespace NetworkData {
+
+/**
+ * This class implements the Thread Network Data contributed by the local device.
+ *
+ */
+class Local: public NetworkData
+{
+public:
+    /**
+     * This constructor initializes the local Network Data.
+     *
+     * @param[in]  aNetif  A reference to the Thread network interface.
+     *
+     */
+    explicit Local(ThreadNetif &aNetif);
+
+    /**
+     * This method adds a Border Router entry to the Thread Network Data.
+     *
+     * @param[in]  aPrefix        A pointer to the prefix.
+     * @param[in]  aPrefixLength  The length of @p aPrefix in bytes.
+     * @param[in]  aPrf           The preference value.
+     * @param[in]  aFlags         The Border Router Flags value.
+     * @param[in]  aStable        The Stable value.
+     *
+     * @retval OT_ERROR_NONE         Successfully added the Border Router entry.
+     * @retval OT_ERROR_NO_BUFS      Insufficient space to add the Border Router entry.
+     * @retval OT_ERROR_INVALID_ARGS The prefix is mesh local prefix.
+     *
+     */
+    otError AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, int8_t aPrf, uint8_t aFlags,
+                            bool aStable);
+
+    /**
+     * This method removes a Border Router entry from the Thread Network Data.
+     *
+     * @param[in]  aPrefix        A pointer to the prefix.
+     * @param[in]  aPrefixLength  The length of @p aPrefix in bytes.
+     *
+     * @retval OT_ERROR_NONE       Successfully removed the Border Router entry.
+     * @retval OT_ERROR_NOT_FOUND  Could not find the Border Router entry.
+     *
+     */
+    otError RemoveOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength);
+
+    /**
+     * This method adds a Has Route entry to the Thread Network data.
+     *
+     * @param[in]  aPrefix        A pointer to the prefix.
+     * @param[in]  aPrefixLength  The length of @p aPrefix in bytes.
+     * @param[in]  aPrf           The preference value.
+     * @param[in]  aStable        The Stable value.
+     *
+     * @retval OT_ERROR_NONE     Successfully added the Has Route entry.
+     * @retval OT_ERROR_NO_BUFS  Insufficient space to add the Has Route entry.
+     *
+     */
+    otError AddHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, int8_t aPrf, bool aStable);
+
+    /**
+     * This method removes a Border Router entry from the Thread Network Data.
+     *
+     * @param[in]  aPrefix        A pointer to the prefix.
+     * @param[in]  aPrefixLength  The length of @p aPrefix in bytes.
+     *
+     * @retval OT_ERROR_NONE       Successfully removed the Border Router entry.
+     * @retval OT_ERROR_NOT_FOUND  Could not find the Border Router entry.
+     *
+     */
+    otError RemoveHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength);
+
+    /**
+     * This method sends a Server Data Notification message to the Leader.
+     *
+     * @retval OT_ERROR_NONE     Successfully enqueued the notification message.
+     * @retval OT_ERROR_NO_BUFS  Insufficient message buffers to generate the notification message.
+     *
+     */
+    otError SendServerDataNotification(void);
+
+private:
+    otError UpdateRloc(void);
+    otError UpdateRloc(PrefixTlv &aPrefix);
+    otError UpdateRloc(HasRouteTlv &aHasRoute);
+    otError UpdateRloc(BorderRouterTlv &aBorderRouter);
+
+    bool IsOnMeshPrefixConsistent(void);
+    bool IsExternalRouteConsistent(void);
+
+    uint16_t mOldRloc;
+};
+
+}  // namespace NetworkData
+
+/**
+ * @}
+ */
+
+}  // namespace ot
+
+#endif  // NETWORK_DATA_LOCAL_HPP_
