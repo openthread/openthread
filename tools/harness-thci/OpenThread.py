@@ -50,7 +50,6 @@ LINESEPX = re.compile(r'\r\n|\n')
 """regex: used to split lines"""
 
 class OpenThread(IThci):
-    UIStatusMsg = ''
     LOWEST_POSSIBLE_PARTATION_ID = 0x1
     LINK_QUALITY_CHANGE_TIME = 100
 
@@ -62,6 +61,7 @@ class OpenThread(IThci):
                       Includes 'EUI' and 'SerialPort'
         """
         try:
+            self.UIStatusMsg = ''
             self.mac = kwargs.get('EUI')
             self.port = kwargs.get('SerialPort')
             self.handle = None
