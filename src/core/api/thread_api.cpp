@@ -304,9 +304,6 @@ otError otThreadGetParentInfo(otInstance *aInstance, otRouterInfo *aParentInfo)
     otError error = OT_ERROR_NONE;
     Router *parent;
 
-    VerifyOrExit(aInstance->mThreadNetif.GetMle().GetRole() == OT_DEVICE_ROLE_CHILD,
-                 error = OT_ERROR_INVALID_STATE);
-
     VerifyOrExit(aParentInfo != NULL, error = OT_ERROR_INVALID_ARGS);
 
     parent = aInstance->mThreadNetif.GetMle().GetParent();
