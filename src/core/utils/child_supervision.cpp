@@ -31,13 +31,19 @@
  *   This file implements the child supervision feature.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
 
-#include "openthread/openthread.h"
+#include "child_supervision.hpp"
 
-#include <common/code_utils.hpp>
-#include <common/logging.hpp>
-#include <utils/child_supervision.hpp>
-#include <thread/thread_netif.hpp>
+#include <openthread/openthread.h>
+
+#include "common/code_utils.hpp"
+#include "common/logging.hpp"
+#include "thread/thread_netif.hpp"
 
 namespace ot {
 namespace Utils {

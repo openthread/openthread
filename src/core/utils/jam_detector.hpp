@@ -40,9 +40,8 @@
 #include <openthread-config.h>
 #endif
 
-#include "utils/wrap_stdint.h"
-
 #include "common/timer.hpp"
+#include "utils/wrap_stdint.h"
 
 namespace ot {
 
