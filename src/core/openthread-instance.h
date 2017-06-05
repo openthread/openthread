@@ -57,6 +57,7 @@
 #include "crypto/mbedtls.hpp"
 #include "net/ip6.hpp"
 #include "thread/thread_netif.hpp"
+#include "common/timer.hpp"
 
 /**
  * This type represents all the static / global variables used by OpenThread allocated in one place.
@@ -77,6 +78,9 @@ typedef struct otInstance
 
     otHandleEnergyScanResult mEnergyScanCallback;
     void *mEnergyScanCallbackContext;
+
+    otTimerCallback mHandleTimerCallback;
+    static void HandleInstanceTimer(void *aContext);
 
     //
     // State
@@ -99,6 +103,8 @@ typedef struct otInstance
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
     otLogLevel mLogLevel;
 #endif // OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+
+    ot::Timer mTimer;
 
     // Constructor
     otInstance(void);
