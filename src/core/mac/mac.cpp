@@ -33,7 +33,7 @@
 
 #define WPP_NAME "mac.tmh"
 
-#include  "openthread/openthread_enable_defines.h"
+#include <openthread/openthread_enable_defines.h>
 
 #include "mac.hpp"
 

@@ -34,7 +34,7 @@
 #define WPP_NAME "mle.tmh"
 
 
-#include  "openthread/openthread_enable_defines.h"
+#include <openthread/openthread_enable_defines.h>
 #include "mle.hpp"
 #include <openthread/platform/radio.h>
 #include <openthread/platform/random.h>

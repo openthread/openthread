@@ -43,7 +43,7 @@
 
 
 
-#include  "openthread/openthread_enable_defines.h"
+#include <openthread/openthread_enable_defines.h>
 #include <openthread/thread_ftd.h>
 #include "openthread-core-config.h"
 #include "openthread-instance.h"

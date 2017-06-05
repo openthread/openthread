@@ -32,7 +32,7 @@
  */
 
 
-#include  "openthread/openthread_enable_defines.h"
+#include <openthread/openthread_enable_defines.h>
 
 #include "key_manager.hpp"
 

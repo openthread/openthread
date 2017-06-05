@@ -30,7 +30,7 @@
  *   This file implements a Spinel interface to the OpenThread stack.
  */
 
-#include  "openthread/openthread_enable_defines.h"
+#include <openthread/openthread_enable_defines.h>
 
 #include "ncp_base.hpp"
 

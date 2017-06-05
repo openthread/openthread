@@ -31,7 +31,7 @@
  *   This file implements a simple CLI for the CoAP service.
  */
 
-#include  "openthread/openthread_enable_defines.h"
+#include <openthread/openthread_enable_defines.h>
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 

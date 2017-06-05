@@ -31,7 +31,7 @@
  *   This file implements the trickle timer logic.
  */
 
-#include  "openthread/openthread_enable_defines.h"
+#include <openthread/openthread_enable_defines.h>
 
 #include "trickle_timer.hpp"
 

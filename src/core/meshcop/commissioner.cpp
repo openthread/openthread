@@ -33,7 +33,7 @@
 
 #define WPP_NAME "commissioner.tmh"
 
-#include  "openthread/openthread_enable_defines.h"
+#include <openthread/openthread_enable_defines.h>
 
 #include "commissioner.hpp"
 

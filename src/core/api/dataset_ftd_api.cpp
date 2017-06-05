@@ -31,7 +31,7 @@
  *   This file implements the OpenThread Operational Dataset API (FTD only).
  */
 
-#include  "openthread/openthread_enable_defines.h"
+#include <openthread/openthread_enable_defines.h>
 
 #if OPENTHREAD_FTD
 

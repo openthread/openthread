@@ -34,7 +34,7 @@
 #ifndef DIAG_PROCESS_HPP_
 #define DIAG_PROCESS_HPP_
 
-#include  "openthread/openthread_enable_defines.h"
+#include <openthread/openthread_enable_defines.h>
 
 #include <stdarg.h>
 

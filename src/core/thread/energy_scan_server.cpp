@@ -32,7 +32,7 @@
  */
 
 #define WPP_NAME "energy_scan_server.tmh"
-#include  "openthread/openthread_enable_defines.h"
+#include <openthread/openthread_enable_defines.h>
 
 
 

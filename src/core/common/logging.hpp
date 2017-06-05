@@ -34,7 +34,7 @@
 #ifndef LOGGING_HPP_
 #define LOGGING_HPP_
 
-#include  "openthread/openthread_enable_defines.h"
+#include <openthread/openthread_enable_defines.h>
 
 #include <ctype.h>
 #include <stdio.h>
