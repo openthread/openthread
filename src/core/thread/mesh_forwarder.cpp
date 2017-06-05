@@ -696,37 +696,39 @@ otError MeshForwarder::UpdateIp6Route(Message &aMessage)
         break;
 
     case OT_DEVICE_ROLE_CHILD:
-        if (aMessage.IsLinkSecurityEnabled())
+    case OT_DEVICE_ROLE_ROUTER:
+    case OT_DEVICE_ROLE_LEADER:
+        if (mNetif.GetMle().IsMinimalEndDevice())
         {
-            mMacDest.mLength = sizeof(mMacDest.mShortAddress);
-
-            if (ip6Header.GetDestination().IsLinkLocalMulticast())
+            if (aMessage.IsLinkSecurityEnabled())
             {
-                mMacDest.mShortAddress = Mac::kShortAddrBroadcast;
+                mMacDest.mLength = sizeof(mMacDest.mShortAddress);
+
+                if (ip6Header.GetDestination().IsLinkLocalMulticast())
+                {
+                    mMacDest.mShortAddress = Mac::kShortAddrBroadcast;
+                }
+                else
+                {
+                    mMacDest.mShortAddress = mNetif.GetMle().GetNextHop(Mac::kShortAddrBroadcast);
+                }
+
+                GetMacSourceAddress(ip6Header.GetSource(), mMacSource);
+            }
+            else if (ip6Header.GetDestination().IsLinkLocal() || ip6Header.GetDestination().IsLinkLocalMulticast())
+            {
+                GetMacDestinationAddress(ip6Header.GetDestination(), mMacDest);
+                GetMacSourceAddress(ip6Header.GetSource(), mMacSource);
             }
             else
             {
-                mMacDest.mShortAddress = mNetif.GetMle().GetNextHop(Mac::kShortAddrBroadcast);
+                ExitNow(error = OT_ERROR_DROP);
             }
-
-            GetMacSourceAddress(ip6Header.GetSource(), mMacSource);
         }
-        else if (ip6Header.GetDestination().IsLinkLocal() || ip6Header.GetDestination().IsLinkLocalMulticast())
-        {
-            GetMacDestinationAddress(ip6Header.GetDestination(), mMacDest);
-            GetMacSourceAddress(ip6Header.GetSource(), mMacSource);
-        }
-        else
-        {
-            ExitNow(error = OT_ERROR_DROP);
-        }
-
-        break;
 
 #if OPENTHREAD_FTD
+        else
         {
-        case OT_DEVICE_ROLE_ROUTER:
-        case OT_DEVICE_ROLE_LEADER:
             uint16_t rloc16;
             uint16_t aloc16;
             Neighbor *neighbor;
@@ -827,10 +829,10 @@ otError MeshForwarder::UpdateIp6Route(Message &aMessage)
                     mAddMeshHeader = true;
                 }
             }
-
-            break;
         }
+
 #endif  // OPENTHREAD_FTD
+        break;
 
     default:
         break;
