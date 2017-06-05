@@ -254,7 +254,9 @@ otError Mle::Stop(bool aClearNetworkDatasets)
     mNetif.GetKeyManager().Stop();
     SetStateDetached();
     mNetif.RemoveUnicastAddress(mMeshLocal16);
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
     mNetif.GetNetworkDataLocal().Clear();
+#endif
     mNetif.GetNetworkDataLeader().Clear();
     memset(&mLeaderData, 0, sizeof(mLeaderData));
 
@@ -596,7 +598,9 @@ otError Mle::SetStateChild(uint16_t aRloc16)
         mNetif.GetMle().HandleChildStart(mParentRequestMode);
     }
 
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
     mNetif.GetNetworkDataLocal().ClearResubmitDelayTimer();
+#endif
     mNetif.GetIp6().SetForwardingEnabled(false);
     mNetif.GetIp6().mMpl.SetTimerExpirations(kMplChildDataMessageTimerExpirations);
 
@@ -1259,7 +1263,9 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags)
             mSendChildUpdateRequest.Post();
         }
 
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
         mNetif.GetNetworkDataLocal().SendServerDataNotification();
+#endif
     }
 
     if (aFlags & (OT_NET_ROLE | OT_NET_KEY_SEQUENCE_COUNTER))

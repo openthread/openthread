@@ -53,6 +53,10 @@
 #include <openthread/thread_ftd.h>
 #endif
 
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#include <openthread/border_router.h>
+#endif
+
 #ifndef OTDLL
 #include <openthread/dhcp6_client.h>
 #include <openthread/dhcp6_server.h>
@@ -149,7 +153,9 @@ const struct Command Interpreter::sCommands[] =
     { "linkquality", &Interpreter::ProcessLinkQuality },
     { "masterkey", &Interpreter::ProcessMasterKey },
     { "mode", &Interpreter::ProcessMode },
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
     { "netdataregister", &Interpreter::ProcessNetworkDataRegister },
+#endif
 #if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
     { "networkdiagnostic", &Interpreter::ProcessNetworkDiagnostic },
 #endif // OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
@@ -166,14 +172,18 @@ const struct Command Interpreter::sCommands[] =
 #ifndef OTDLL
     { "promiscuous", &Interpreter::ProcessPromiscuous },
 #endif
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
     { "prefix", &Interpreter::ProcessPrefix },
+#endif
 #if OPENTHREAD_FTD
     { "pskc", &Interpreter::ProcessPSKc },
     { "releaserouterid", &Interpreter::ProcessReleaseRouterId },
 #endif
     { "reset", &Interpreter::ProcessReset },
     { "rloc16", &Interpreter::ProcessRloc16 },
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
     { "route", &Interpreter::ProcessRoute },
+#endif
 #if OPENTHREAD_FTD
     { "router", &Interpreter::ProcessRouter },
     { "routerdowngradethreshold", &Interpreter::ProcessRouterDowngradeThreshold },
@@ -510,8 +520,8 @@ void Interpreter::ProcessChild(int argc, char *argv[])
     {
         if (isTable)
         {
-            mServer->OutputFormat("| ID  | RLOC16 | Timeout    | Age        | LQI In | C_VN |R|S|D|N| Extended MAC     |\r\n");
-            mServer->OutputFormat("+-----+--------+------------+------------+--------+------+-+-+-+-+------------------+\r\n");
+            mServer->OutputFormat("| ID  | RLOC16 | Timeout    | Age        | LQ In | C_VN |R|S|D|N| Extended MAC     |\r\n");
+            mServer->OutputFormat("+-----+--------+------------+------------+-------+------+-+-+-+-+------------------+\r\n");
         }
 
         maxChildren = otThreadGetMaxAllowedChildren(mInstance);
@@ -540,7 +550,7 @@ void Interpreter::ProcessChild(int argc, char *argv[])
                     mServer->OutputFormat("| 0x%04x ", childInfo.mRloc16);
                     mServer->OutputFormat("| %10d ", childInfo.mTimeout);
                     mServer->OutputFormat("| %10d ", childInfo.mAge);
-                    mServer->OutputFormat("| %6d ", childInfo.mLinkQualityIn);
+                    mServer->OutputFormat("| %5d ", childInfo.mLinkQualityIn);
                     mServer->OutputFormat("| %4d ", childInfo.mNetworkDataVersion);
                     mServer->OutputFormat("|%1d", childInfo.mRxOnWhenIdle);
                     mServer->OutputFormat("|%1d", childInfo.mSecureDataRequest);
@@ -605,7 +615,7 @@ void Interpreter::ProcessChild(int argc, char *argv[])
     mServer->OutputFormat("Net Data: %d\r\n", childInfo.mNetworkDataVersion);
     mServer->OutputFormat("Timeout: %d\r\n", childInfo.mTimeout);
     mServer->OutputFormat("Age: %d\r\n", childInfo.mAge);
-    mServer->OutputFormat("LQI: %d\r\n", childInfo.mLinkQualityIn);
+    mServer->OutputFormat("Link Quality In: %d\r\n", childInfo.mLinkQualityIn);
     mServer->OutputFormat("RSSI: %d\r\n", childInfo.mAverageRssi);
 
 exit:
@@ -1445,16 +1455,18 @@ exit:
     AppendResult(error);
 }
 
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
 void Interpreter::ProcessNetworkDataRegister(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
-    SuccessOrExit(error = otNetDataRegister(mInstance));
+    SuccessOrExit(error = otBorderRouterRegister(mInstance));
 
 exit:
     (void)argc;
     (void)argv;
     AppendResult(error);
 }
+#endif  // OPENTHREAD_ENABLE_BORDER_ROUTER
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessNetworkIdTimeout(int argc, char *argv[])
@@ -1790,6 +1802,7 @@ void Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame)
 }
 #endif
 
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
 otError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
@@ -1874,7 +1887,7 @@ otError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
         }
     }
 
-    error = otNetDataAddPrefixInfo(mInstance, &config);
+    error = otBorderRouterAddOnMeshPrefix(mInstance, &config);
 
 exit:
     return error;
@@ -1907,7 +1920,7 @@ otError Interpreter::ProcessPrefixRemove(int argc, char *argv[])
         ExitNow(error = OT_ERROR_PARSE);
     }
 
-    error = otNetDataRemovePrefixInfo(mInstance, &prefix);
+    error = otBorderRouterRemoveOnMeshPrefix(mInstance, &prefix);
 
 exit:
     (void)argc;
@@ -1919,7 +1932,7 @@ otError Interpreter::ProcessPrefixList(void)
     otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     otBorderRouterConfig config;
 
-    while (otNetDataGetNextPrefixInfo(mInstance, true, &iterator, &config) == OT_ERROR_NONE)
+    while (otBorderRouterGetNextOnMeshPrefix(mInstance, &iterator, &config) == OT_ERROR_NONE)
     {
         mServer->OutputFormat("%x:%x:%x:%x::/%d ",
                               HostSwap16(config.mPrefix.mPrefix.mFields.m16[0]),
@@ -2006,6 +2019,7 @@ void Interpreter::ProcessPrefix(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
+#endif  // OPENTHREAD_ENABLE_BORDER_ROUTER
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessReleaseRouterId(int argc, char *argv[])
@@ -2038,6 +2052,7 @@ void Interpreter::ProcessRloc16(int argc, char *argv[])
     (void)argv;
 }
 
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
 otError Interpreter::ProcessRouteAdd(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
@@ -2093,7 +2108,7 @@ otError Interpreter::ProcessRouteAdd(int argc, char *argv[])
         }
     }
 
-    error = otNetDataAddRoute(mInstance, &config);
+    error = otBorderRouterAddRoute(mInstance, &config);
 
 exit:
     return error;
@@ -2127,7 +2142,7 @@ otError Interpreter::ProcessRouteRemove(int argc, char *argv[])
         ExitNow(error = OT_ERROR_PARSE);
     }
 
-    error = otNetDataRemoveRoute(mInstance, &prefix);
+    error = otBorderRouterRemoveRoute(mInstance, &prefix);
 
 exit:
     return error;
@@ -2155,6 +2170,7 @@ void Interpreter::ProcessRoute(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
+#endif  // OPENTHREAD_ENABLE_BORDER_ROUTER
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessRouter(int argc, char *argv[])
@@ -2170,8 +2186,8 @@ void Interpreter::ProcessRouter(int argc, char *argv[])
     {
         if (isTable)
         {
-            mServer->OutputFormat("| ID | RLOC16 | Next Hop | Path Cost | LQI In | LQI Out | Age | Extended MAC     |\r\n");
-            mServer->OutputFormat("+----+--------+----------+-----------+--------+---------+-----+------------------+\r\n");
+            mServer->OutputFormat("| ID | RLOC16 | Next Hop | Path Cost | LQ In | LQ Out | Age | Extended MAC     |\r\n");
+            mServer->OutputFormat("+----+--------+----------+-----------+-------+--------+-----+------------------+\r\n");
         }
 
         for (uint8_t i = 0; ; i++)
@@ -2190,8 +2206,8 @@ void Interpreter::ProcessRouter(int argc, char *argv[])
                     mServer->OutputFormat("| 0x%04x ", routerInfo.mRloc16);
                     mServer->OutputFormat("| %8d ", routerInfo.mNextHop);
                     mServer->OutputFormat("| %9d ", routerInfo.mPathCost);
-                    mServer->OutputFormat("| %6d ", routerInfo.mLinkQualityIn);
-                    mServer->OutputFormat("| %7d ", routerInfo.mLinkQualityOut);
+                    mServer->OutputFormat("| %5d ", routerInfo.mLinkQualityIn);
+                    mServer->OutputFormat("| %6d ", routerInfo.mLinkQualityOut);
                     mServer->OutputFormat("| %3d ", routerInfo.mAge);
                     mServer->OutputFormat("| ");
 
@@ -2233,8 +2249,8 @@ void Interpreter::ProcessRouter(int argc, char *argv[])
 
             mServer->OutputFormat("\r\n");
             mServer->OutputFormat("Cost: %d\r\n", routerInfo.mPathCost);
-            mServer->OutputFormat("LQI In: %d\r\n", routerInfo.mLinkQualityIn);
-            mServer->OutputFormat("LQI Out: %d\r\n", routerInfo.mLinkQualityOut);
+            mServer->OutputFormat("Link Quality In: %d\r\n", routerInfo.mLinkQualityIn);
+            mServer->OutputFormat("Link Quality Out: %d\r\n", routerInfo.mLinkQualityOut);
             mServer->OutputFormat("Age: %d\r\n", routerInfo.mAge);
         }
     }

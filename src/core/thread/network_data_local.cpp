@@ -31,8 +31,6 @@
  *   This file implements the local Thread Network Data.
  */
 
-#if OPENTHREAD_FTD
-
 #include  "openthread/openthread_enable_defines.h"
 
 #include "network_data_local.hpp"
@@ -42,6 +40,8 @@
 #include "common/code_utils.hpp"
 #include "mac/mac_frame.hpp"
 #include "thread/thread_netif.hpp"
+
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
 
 namespace ot {
 namespace NetworkData {
@@ -230,6 +230,9 @@ otError Local::SendServerDataNotification(void)
     otError error = OT_ERROR_NONE;
     uint16_t rloc = mNetif.GetMle().GetRloc16();
 
+#if OPENTHREAD_FTD
+
+    // Don't send this Server Data Notification if the device is going to upgrade to Router
     if ((mNetif.GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD) != 0 &&
         (mNetif.GetMle().IsRouterRoleEnabled()) &&
         (mNetif.GetMle().GetRole() < OT_DEVICE_ROLE_ROUTER) &&
@@ -237,6 +240,8 @@ otError Local::SendServerDataNotification(void)
     {
         ExitNow(error = OT_ERROR_INVALID_STATE);
     }
+
+#endif
 
     UpdateRloc();
 
@@ -257,4 +262,4 @@ exit:
 }  // namespace NetworkData
 }  // namespace ot
 
-#endif // OPENTHREAD_FTD
+#endif // OPENTHREAD_ENABLE_BORDER_ROUTER

@@ -1048,6 +1048,36 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_RAW_LINK_API], [test "${enable_raw_link_api}" 
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_RAW_LINK_API],[${OPENTHREAD_ENABLE_RAW_LINK_API}],[Define to 1 if you want to enable raw link-layer API])
 
 #
+# Border Router
+#
+
+AC_ARG_ENABLE(border_router,
+    [AS_HELP_STRING([--enable-border-router],[Enable Border Router support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_border_router=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_border_router} for --enable-border-router])
+            ;;
+        esac
+    ],
+    [enable_border_router=no])
+
+if test "$enable_border_router" = "yes"; then
+    OPENTHREAD_ENABLE_BORDER_ROUTER=1
+else
+    OPENTHREAD_ENABLE_BORDER_ROUTER=0
+fi
+
+AC_SUBST(OPENTHREAD_ENABLE_BORDER_ROUTER)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_BORDER_ROUTER], [test "${enable_border_router}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_BORDER_ROUTER],[${OPENTHREAD_ENABLE_BORDER_ROUTER}],[Define to 1 if you want to enable Border Router])
+
+#
 # Examples
 #
 
@@ -1400,6 +1430,7 @@ AC_MSG_NOTICE([
   OpenThread DNS Client support             : ${enable_dns_client}
   OpenThread Application CoAP support       : ${enable_application_coap}
   OpenThread Raw Link-Layer support         : ${enable_raw_link_api}
+  OpenThread Border Router support          : ${enable_border_router}
   OpenThread examples                       : ${OPENTHREAD_EXAMPLES}
   OpenThread platform information           : ${PLATFORM_INFO}
 

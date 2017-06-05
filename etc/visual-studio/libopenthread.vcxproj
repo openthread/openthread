@@ -58,6 +58,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\core\api\commissioner_api.cpp" />
+    <ClCompile Include="..\..\src\core\api\border_router_api.cpp" />
     <ClCompile Include="..\..\src\core\api\dataset_api.cpp" />
     <ClCompile Include="..\..\src\core\api\dataset_ftd_api.cpp" />
     <ClCompile Include="..\..\src\core\api\dhcp6_api.cpp" />

@@ -736,7 +736,7 @@ private:
                                      const otMessageInfo *aMessageInfo);
     void HandleAddressSolicit(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static uint8_t LqiToCost(uint8_t aLqi);
+    static uint8_t LinkQualityToCost(uint8_t aLinkQuality);
 
     Child *NewChild(void);
     Child *FindChild(uint16_t aChildId);

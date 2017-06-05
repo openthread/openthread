@@ -75,6 +75,9 @@
     <ClCompile Include="..\..\src\core\api\commissioner_api.cpp">
       <Filter>Source Files\api</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\api\border_router_api.cpp">
+      <Filter>Source Files\api</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\api\dataset_api.cpp">
       <Filter>Source Files\api</Filter>
     </ClCompile>
@@ -579,6 +582,9 @@
       <Filter>Header Files\openthread</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\openthread\crypto.h">
+      <Filter>Header Files\openthread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread\border_router.h">
       <Filter>Header Files\openthread</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\openthread\dataset.h">

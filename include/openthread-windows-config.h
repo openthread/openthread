@@ -72,6 +72,9 @@
 #define OPENTHREAD_ENABLE_RAW_LINK_API 1
 #endif
 
+/* Define to 1 to enable Border Router feature. */
+#define OPENTHREAD_ENABLE_BORDER_ROUTER 1
+
 /* Name of package */
 #define PACKAGE "openthread"
 

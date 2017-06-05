@@ -53,6 +53,7 @@ openthread_headers                      = \
     coap.h                                \
     commissioner.h                        \
     crypto.h                              \
+    border_router.h                       \
     dataset.h                             \
     dataset_ftd.h                         \
     diag.h                                \
