@@ -416,6 +416,16 @@
 #endif  // OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD
 
 /**
+  * @def OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
+  *
+  * Define to 1 if you want use legacy transmit done.
+  *
+  */
+#ifndef OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
+#define OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE                  0
+#endif // OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL
  *
  * The log level (used at compile time).
