@@ -26,4 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
- #define MBEDTLS_SHA256_ALT
+/* MBEDTLS_SHA256_ALT was used to redefine context structure.
+   Undefine it now to enable default mbedTLS implementation. */
+#undef MBEDTLS_SHA256_ALT

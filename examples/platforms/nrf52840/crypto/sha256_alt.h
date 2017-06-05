@@ -107,8 +107,4 @@ void mbedtls_sha256_process(mbedtls_sha256_context *ctx, const unsigned char dat
 #endif
 
 #endif /* MBEDTLS_SHA256_ALT */
-
-/* MBEDTLS_SHA256_ALT was used to redifine context structure. Undefine it now to enable default mbedTLS implementation. */
-#undef MBEDTLS_SHA256_ALT
-
 #endif /* MBEDTLS_SHA256_ALT_H */
