@@ -409,6 +409,8 @@ private:
 #if OPENTHREAD_ENABLE_MAC_WHITELIST
     otError GetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop_key_t key);
     otError GetPropertyHandler_MAC_WHITELIST_ENABLED(uint8_t header, spinel_prop_key_t key);
+    otError GetPropertyHandler_MAC_BLACKLIST(uint8_t header, spinel_prop_key_t key);
+    otError GetPropertyHandler_MAC_BLACKLIST_ENABLED(uint8_t header, spinel_prop_key_t key);
 #endif
     otError GetPropertyHandler_THREAD_MODE(uint8_t header, spinel_prop_key_t key);
     otError GetPropertyHandler_THREAD_CHILD_TIMEOUT(uint8_t header, spinel_prop_key_t key);
@@ -523,6 +525,10 @@ private:
                                              uint16_t value_len);
     otError SetPropertyHandler_MAC_WHITELIST_ENABLED(uint8_t header, spinel_prop_key_t key,
                                                      const uint8_t *value_ptr, uint16_t value_len);
+    otError SetPropertyHandler_MAC_BLACKLIST(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                             uint16_t value_len);
+    otError SetPropertyHandler_MAC_BLACKLIST_ENABLED(uint8_t header, spinel_prop_key_t key,
+                                                     const uint8_t *value_ptr, uint16_t value_len);
 #endif
 #if OPENTHREAD_ENABLE_RAW_LINK_API
     otError SetPropertyHandler_MAC_SRC_MATCH_ENABLED(uint8_t header, spinel_prop_key_t key,
@@ -633,6 +639,8 @@ private:
 #if OPENTHREAD_ENABLE_MAC_WHITELIST
     otError InsertPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                 uint16_t value_len);
+    otError InsertPropertyHandler_MAC_BLACKLIST(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                uint16_t value_len);
 #endif
 #if OPENTHREAD_ENABLE_COMMISSIONER
     otError InsertPropertyHandler_THREAD_JOINERS(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -657,6 +665,8 @@ private:
                                                          const uint8_t *value_ptr, uint16_t value_len);
 #if OPENTHREAD_ENABLE_MAC_WHITELIST
     otError RemovePropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                uint16_t value_len);
+    otError RemovePropertyHandler_MAC_BLACKLIST(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                 uint16_t value_len);
 #endif
 #if OPENTHREAD_FTD

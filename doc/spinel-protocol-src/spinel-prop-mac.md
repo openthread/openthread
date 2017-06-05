@@ -125,7 +125,7 @@ per scanned channel with following format:
 ### PROP 4864: PROP_MAC_WHITELIST  {#prop-mac-whitelist}
 * Type: Read-Write
 * Packed-Encoding: `A(T(Ec))`
-* **OPTIONAL**
+* Required capability: `CAP_MAC_WHITELIST`
 
 Structure Parameters:
 
@@ -139,6 +139,7 @@ Structure Parameters:
 ### PROP 4865: PROP_MAC_WHITELIST_ENABLED  {#prop-mac-whitelist-enabled}
 * Type: Read-Write
 * Packed-Encoding: `b`
+* Required capability: `CAP_MAC_WHITELIST`
 
 ### PROP 4867: SPINEL_PROP_MAC_SRC_MATCH_ENABLED  {#prop-mac-src-match-enabled}
 * Type: Write
@@ -170,4 +171,18 @@ is only available if the `SPINEL_CAP_MAC_RAW` capability is present.
 Structure Parameters:
 
 * `E`: EUI64 address for hardware generated ACKs
+
+### PROP 4870: PROP_MAC_BLACKLIST  {#prop-mac-blacklist}
+* Type: Read-Write
+* Packed-Encoding: `A(T(E))`
+* Required capability: `CAP_MAC_WHITELIST`
+
+Structure Parameters:
+
+* `E`: EUI64 address of node
+
+### PROP 4871: PROP_MAC_BLACKLIST_ENABLED  {#prop-mac-blacklist-enabled}
+* Type: Read-Write
+* Packed-Encoding: `b`
+* Required capability: `CAP_MAC_WHITELIST`
 
