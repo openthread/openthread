@@ -53,6 +53,11 @@
 uint32_t NODE_ID = 1;
 uint32_t WELLKNOWN_NODE_ID = 34;
 
+#ifndef _WIN32
+int     gArgumentsCount = 0;
+char  **gArguments = NULL;
+#endif
+
 void PlatformInit(int argc, char *argv[])
 {
     char *endptr;
@@ -65,6 +70,9 @@ void PlatformInit(int argc, char *argv[])
 #ifndef _WIN32
     openlog(basename(argv[0]), LOG_PID, LOG_USER);
     setlogmask(setlogmask(0) & LOG_UPTO(LOG_NOTICE));
+
+    gArgumentsCount = argc;
+    gArguments = argv;
 #endif
 
     NODE_ID = (uint32_t)strtol(argv[1], &endptr, 0);
