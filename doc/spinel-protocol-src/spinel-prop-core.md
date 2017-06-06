@@ -159,7 +159,7 @@ Currently defined values are:
  * 513: `CAP_MAC_RAW`
  * 514: `CAP_OOB_STEERING_DATA`
  * 1024: `CAP_THREAD_COMMISSIONER`
- * 1025: `CAP_THREAD_BA_PROXY`
+ * 1025: `CAP_THREAD_TMF_PROXY`
 
 
 Additionally, future capability allocations SHALL be made from the

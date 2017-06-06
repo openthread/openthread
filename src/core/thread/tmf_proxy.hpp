@@ -28,45 +28,44 @@
 
 /**
  * @file
- *   This file includes definitions for border agent proxy.
+ *   This file includes definitions for TMF proxy.
  */
 
-#ifndef BORDER_AGENT_PROXY_HPP_
-#define BORDER_AGENT_PROXY_HPP_
+#ifndef TMF_PROXY_HPP_
+#define TMF_PROXY_HPP_
 
-#include <openthread/border_agent_proxy.h>
+#include <openthread/tmf_proxy.h>
 
 #include "openthread-core-config.h"
 #include "coap/coap.hpp"
 
 namespace ot {
-namespace MeshCoP {
 
-class BorderAgentProxy
+class TmfProxy
 {
 public:
     /**
-     * This constructor initializes the border agent proxy.
+     * This constructor initializes the TMF proxy.
      *
      * @param[in]   aMeshLocal16    A reference to the Mesh Local Routing Locator.
      * @param[in]   aCoap           A reference to the Management CoAP Service.
      *
      */
-    BorderAgentProxy(const Ip6::Address &aMeshLocal16, Coap::Coap &aCoap);
+    TmfProxy(const Ip6::Address &aMeshLocal16, Coap::Coap &aCoap);
 
     /**
-     * This method enables the border agent proxy service.
+     * This method enables the TMF proxy service.
      *
      * @retval OT_ERROR_NONE            Successfully started the service.
      * @retval OT_ERROR_ALREADY         The service already started.
      *
      */
-    otError Start(otBorderAgentProxyStreamHandler aStreamHandler, void *aContext);
+    otError Start(otTmfProxyStreamHandler aStreamHandler, void *aContext);
 
     /**
-     * This method disables the border agent proxy service.
+     * This method disables the TMF proxy service.
      *
-     * @retval OT_ERROR_NONE            Successfully stopped the border agent proxy service.
+     * @retval OT_ERROR_NONE            Successfully stopped the TMF proxy service.
      * @retval OT_ERROR_ALREADY         The service already stopped.
      *
      */
@@ -88,7 +87,7 @@ public:
     otError Send(Message &aMessage, uint16_t aLocator, uint16_t aPort);
 
     /**
-     * This method indicates whether or not the border agent proxy service is enabled.
+     * This method indicates whether or not the TMF proxy service is enabled.
      *
      * @retval  TRUE    If the service is enabled.
      * @retval  FALSE   If the service is disabled.
@@ -108,14 +107,13 @@ private:
 
 
     Coap::Resource mRelayReceive;
-    otBorderAgentProxyStreamHandler mStreamHandler;
+    otTmfProxyStreamHandler mStreamHandler;
     void *mContext;
 
     const Ip6::Address &mMeshLocal16;
     Coap::Coap &mCoap;
 };
 
-}  // namespace MeshCoP
 }  // namespace ot
 
-#endif  // BORDER_AGENT_PROXY_HPP_
+#endif  // TMF_PROXY_HPP_

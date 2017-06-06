@@ -262,19 +262,19 @@ are allowed to join the Thread(R) Network.
 
 Set to true to enable the native commissioner. It is mandatory before adding the joiner to the network.
 
-### PROP 5393: PROP_THREAD_BA_PROXY_ENABLED {#prop-thread-ba-proxy-enabled}
+### PROP 5393: PROP_THREAD_TMF_PROXY_ENABLED {#prop-thread-tmf-proxy-enabled}
 
 * Type: Read-Write
 * Packed-Encoding: `b`
-* Required capability: `CAP_THREAD_BA_PROXY`
+* Required capability: `CAP_THREAD_TMF_PROXY`
 
-Set to true to enable the border agent proxy.
+Set to true to enable the TMF proxy.
 
-### PROP 5394: PROP_THREAD_BA_PROXY_STREAM {#prop-thread-ba-proxy-stream}
+### PROP 5394: PROP_THREAD_TMF_PROXY_STREAM {#prop-thread-tmf-proxy-stream}
 
 * Type: Read-Write-Stream
 * Packed-Encoding: `dSS`
-* Required capability: `CAP_THREAD_BA_PROXY`
+* Required capability: `CAP_THREAD_TMF_PROXY`
 
 Data per item is:
 
@@ -286,9 +286,8 @@ Octects: | 2      | *n*  |    2    |  2
 ---------|--------|------|---------|-------
 Fields:  | Length | CoAP | locator | port
 
-This property allows the host to send and receive border-agent-related
-CoAP requests/responses from the NCP's RLOC address. This allows the
-host driver to implement a Thread(R) border agent.
+This property allows the host to send and receive TMF messages from
+the NCP's RLOC address and support Thread-specific border router functions.
 
 
 ### PROP 5395: PROP_THREAD_DISOVERY_SCAN_JOINER_FLAG {#prop-thread-discovery-scan-joiner-flag}

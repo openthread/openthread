@@ -26,8 +26,8 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-ifeq ($(BA_PROXY),1)
-configure_OPTIONS              += --enable-border-agent-proxy
+ifeq ($(TMF_PROXY),1)
+configure_OPTIONS              += --enable-tmf-proxy
 endif
 
 ifeq ($(BORDER_ROUTER),1)

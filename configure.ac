@@ -537,36 +537,36 @@ AC_MSG_RESULT(${enable_builtin_mbedtls})
 AM_CONDITIONAL([OPENTHREAD_ENABLE_BUILTIN_MBEDTLS], [test "${enable_builtin_mbedtls}" = "yes"])
 
 #
-# Thread Border Agent Proxy
+# Thread TMF Proxy
 #
 
-AC_MSG_CHECKING([whether to enable border router proxy])
-AC_ARG_ENABLE(border_agent_proxy,
-    [AS_HELP_STRING([--enable-border-agent-proxy],[Enable border agent proxy support @<:@default=no@:>@.])],
+AC_MSG_CHECKING([whether to enable TMF proxy])
+AC_ARG_ENABLE(tmf_proxy,
+    [AS_HELP_STRING([--enable-tmf-proxy],[Enable TMF proxy support @<:@default=no@:>@.])],
     [
         case "${enableval}" in
 
         no|yes)
-            enable_border_agent_proxy=${enableval}
+            enable_tmf_proxy=${enableval}
             ;;
 
         *)
-            AC_MSG_ERROR([Invalid value ${enable_border_agent_proxy} for --enable-border-agent-proxy])
+            AC_MSG_ERROR([Invalid value ${enable_tmf_proxy} for --enable-tmf-proxy])
             ;;
         esac
     ],
-    [enable_border_agent_proxy=no])
+    [enable_tmf_proxy=no])
 
-if test "$enable_border_agent_proxy" = "yes"; then
-    OPENTHREAD_ENABLE_BORDER_AGENT_PROXY=1
+if test "$enable_tmf_proxy" = "yes"; then
+    OPENTHREAD_ENABLE_TMF_PROXY=1
 else
-    OPENTHREAD_ENABLE_BORDER_AGENT_PROXY=0
+    OPENTHREAD_ENABLE_TMF_PROXY=0
 fi
 
-AC_MSG_RESULT(${enable_border_agent_proxy})
-AC_SUBST(OPENTHREAD_ENABLE_BORDER_AGENT_PROXY)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_BORDER_AGENT_PROXY], [test "${enable_border_agent_proxy}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_BORDER_AGENT_PROXY],[${OPENTHREAD_ENABLE_BORDER_AGENT_PROXY}],[Define to 1 to enable the border agent proxy feature.])
+AC_MSG_RESULT(${enable_tmf_proxy})
+AC_SUBST(OPENTHREAD_ENABLE_TMF_PROXY)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_TMF_PROXY], [test "${enable_tmf_proxy}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_TMF_PROXY],[${OPENTHREAD_ENABLE_TMF_PROXY}],[Define to 1 to enable the TMF proxy feature.])
 
 #
 # Thread Network Diagnostic for MTD
@@ -1384,7 +1384,7 @@ AC_MSG_NOTICE([
   OpenThread NCP-BUS Configuration          : ${with_ncp_bus}
   OpenThread MTD Network Diagnostic support : ${enable_mtd_network_diagnostic}
   OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}
-  OpenThread Border Agent Proxy support     : ${enable_border_agent_proxy}
+  OpenThread TMF Proxy support              : ${enable_tmf_proxy}
   OpenThread Commissioner support           : ${enable_commissioner}
   OpenThread Joiner support                 : ${enable_joiner}
   OpenThread DTLS support                   : ${enable_dtls}
