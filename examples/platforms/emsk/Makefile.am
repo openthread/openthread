@@ -46,7 +46,7 @@ override CXXFLAGS                                       := $(filter-out -Werror,
 override CFLAGS                                         := $(filter-out -Wformat,$(CFLAGS))
 override CXXFLAGS                                       := $(filter-out -Wformat,$(CXXFLAGS))
 
-libopenthread_emsk_a_CPPFLAGS                                                                     = \
+COMMONCPPFLAGS                                                                                    = \
     -I$(top_srcdir)/include                                                                         \
     -I$(top_srcdir)/examples/platforms                                                              \
     -I$(top_srcdir)/src/core                                                                        \
@@ -65,7 +65,7 @@ libopenthread_emsk_a_CPPFLAGS                                                   
     -Wno-unused-label                                                                               \
     $(NULL)
 
-libopenthread_emsk_a_SOURCES                                                                      = \
+PLATFORM_SOURCES                                                                                  = \
     alarm.c                                                                                         \
     flash.c                                                                                         \
     misc.c                                                                                          \
@@ -73,12 +73,10 @@ libopenthread_emsk_a_SOURCES                                                    
     radio.c                                                                                         \
     random.c                                                                                        \
     uart.c                                                                                          \
+    platform-emsk.h                                                                                 \
     $(NULL)
 
-# EMSK BSP DIR
-top_emsk_bspdir = @top_builddir@/third_party/synopsys/embarc_emsk_bsp
-
-libopenthread_emsk_a_SOURCES                                                                     += \
+SYNOPSYS_SOURCES                                                                                  = \
     @top_builddir@/third_party/synopsys/embarc_emsk_bsp/arc/startup/arc_cxx_support.c               \
     @top_builddir@/third_party/synopsys/embarc_emsk_bsp/arc/startup/arc_startup.S                   \
     @top_builddir@/third_party/synopsys/embarc_emsk_bsp/arc/arc_cache.c                             \
@@ -101,9 +99,6 @@ libopenthread_emsk_a_SOURCES                                                    
     @top_builddir@/third_party/synopsys/embarc_emsk_bsp/device/designware/gpio/dw_gpio.c            \
     @top_builddir@/third_party/synopsys/embarc_emsk_bsp/device/designware/spi/dw_spi.c              \
     @top_builddir@/third_party/synopsys/embarc_emsk_bsp/device/designware/uart/dw_uart.c            \
-    $(NULL)
-
-libopenthread_emsk_a_SOURCES                                                                     += \
     @top_builddir@/third_party/synopsys/embarc_emsk_bsp/library/clib/embARC_misc.c                  \
     @top_builddir@/third_party/synopsys/embarc_emsk_bsp/library/clib/embARC_sbrk.c                  \
     @top_builddir@/third_party/synopsys/embarc_emsk_bsp/library/clib/embARC_syscalls.c              \
@@ -113,12 +108,16 @@ libopenthread_emsk_a_SOURCES                                                    
     @top_builddir@/third_party/synopsys/embarc_emsk_bsp/library/clib/ya_getopt.c                    \
     $(NULL)
 
-
-noinst_HEADERS                                                                                    = \
-    platform-emsk.h                                                                                 \
+libopenthread_emsk_a_CPPFLAGS                                                                     = \
+    $(COMMONCPPFLAGS)                                                                               \
     $(NULL)
 
-noinst_HEADERS                                                                                   += \
+libopenthread_emsk_a_SOURCES                                                                      = \
+    $(PLATFORM_SOURCES)                                                                             \
+    $(SYNOPSYS_SOURCES)                                                                             \
+    $(NULL)
+
+noinst_HEADERS                                                                                    = \
     $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/board/emsk/common/emsk_timer.h               \
     $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/board/emsk/common/mux.h                      \
     $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/board/emsk/common/mux_hal.h                  \
@@ -155,9 +154,6 @@ noinst_HEADERS                                                                  
     $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/inc/embARC_toolchain.h                       \
     $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/arc_core_config.h                            \
     $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/embARC_BSP_config.h                          \
-    $(NULL)
-
-noinst_HEADERS                                                                                   += \
     $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/library/clib/dirent.h                        \
     $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/library/clib/embARC_syscalls.h               \
     $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/library/clib/embARC_target.h                 \
@@ -165,7 +161,12 @@ noinst_HEADERS                                                                  
     $(top_srcdir)/third_party/synopsys/embarc_emsk_bsp/library/clib/ya_getopt.h                     \
     $(NULL)
 
+PRETTY_FILES                                                                                      = \
+    $(PLATFORM_SOURCES)                                                                             \
+    $(NULL)
+
 Dash                                                                                              = -
+
 libopenthread_emsk_a_LIBADD                                                                       = \
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
