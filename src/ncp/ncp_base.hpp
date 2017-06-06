@@ -334,10 +334,12 @@ private:
     otError CommandHandler_PROP_VALUE_REMOVE(uint8_t header, unsigned int command, const uint8_t *arg_ptr,
                                              uint16_t arg_len);
     otError CommandHandler_NET_SAVE(uint8_t header, unsigned int command, const uint8_t *arg_ptr, uint16_t arg_len);
-    otError CommandHandler_NET_CLEAR(uint8_t header, unsigned int command, const uint8_t *arg_ptr,
-                                     uint16_t arg_len);
-    otError CommandHandler_NET_RECALL(uint8_t header, unsigned int command, const uint8_t *arg_ptr,
-                                      uint16_t arg_len);
+    otError CommandHandler_NET_CLEAR(uint8_t header, unsigned int command, const uint8_t *arg_ptr, uint16_t arg_len);
+    otError CommandHandler_NET_RECALL(uint8_t header, unsigned int command, const uint8_t *arg_ptr, uint16_t arg_len);
+#if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
+    otError CommandHandler_PEEK(uint8_t header, unsigned int command, const uint8_t *arg_ptr, uint16_t arg_len);
+    otError CommandHandler_POKE(uint8_t header, unsigned int command, const uint8_t *arg_ptr, uint16_t arg_len);
+#endif
 
     otError GetPropertyHandler_ChannelMaskHelper(uint8_t header, spinel_prop_key_t key, uint32_t channel_mask);
 
@@ -677,6 +679,11 @@ private:
 public:
     otError StreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen);
 
+#if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
+    void RegisterPeekPokeDelagates(otNcpDelegateAllowPeekPoke aAllowPeekDelegate,
+                                   otNcpDelegateAllowPeekPoke aAllowPokeDelegate);
+#endif
+
 #if OPENTHREAD_ENABLE_LEGACY
 public:
     void HandleLegacyNodeDidJoin(const otExtAddress *aExtAddr);
@@ -712,6 +719,11 @@ private:
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
     bool mShouldSignalJamStateChange;
+#endif
+
+#if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
+    otNcpDelegateAllowPeekPoke mAllowPeekDelegate;
+    otNcpDelegateAllowPeekPoke mAllowPokeDelegate;
 #endif
 
     spinel_tid_t mDroppedReplyTid;
