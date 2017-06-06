@@ -2365,7 +2365,6 @@ otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &a
     PendingTimestampTlv pendingTimestamp;
     uint16_t activeDatasetOffset = 0;
     uint16_t pendingDatasetOffset = 0;
-    bool dataRequest = false;
     Tlv tlv;
     uint16_t delay;
 
@@ -2417,7 +2416,7 @@ otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &a
         if ((timestamp == NULL || timestamp->Compare(activeTimestamp) != 0) &&
             (Tlv::GetOffset(aMessage, Tlv::kActiveDataset, activeDatasetOffset) != OT_ERROR_NONE))
         {
-            ExitNow(dataRequest = true);
+            ExitNow(mRetrieveNewNetworkData = true);
         }
     }
     else
@@ -2438,7 +2437,7 @@ otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &a
         if ((timestamp == NULL || timestamp->Compare(pendingTimestamp) != 0) &&
             (Tlv::GetOffset(aMessage, Tlv::kPendingDataset, pendingDatasetOffset) != OT_ERROR_NONE))
         {
-            ExitNow(dataRequest = true);
+            ExitNow(mRetrieveNewNetworkData = true);
         }
     }
     else
@@ -2495,7 +2494,7 @@ exit:
 
     (void)aMessageInfo;
 
-    if (dataRequest)
+    if (mRetrieveNewNetworkData)
     {
         static const uint8_t tlvs[] = {Tlv::kNetworkData};
 
