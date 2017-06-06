@@ -743,6 +743,15 @@ typedef struct otExternalRouteConfig
      * TRUE, if this configuration is considered Stable Network Data.  FALSE, otherwise.
      */
     bool mStable : 1;
+
+    /**
+     * TRUE if the external route entry's next hop is this device itself (i.e., the route was added earlier by this
+     * device). FALSE otherwise.
+     *
+     * This value is ignored when adding an external route. For any added route the next hop is this device.
+     */
+    bool mNextHopIsThisDevice : 1;
+
 } otExternalRouteConfig;
 
 /**

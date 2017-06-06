@@ -202,6 +202,7 @@ otError NetworkData::GetNextExternalRoute(otNetworkDataIterator *aIterator, uint
         aConfig->mPrefix.mLength = prefix->GetPrefixLength();
         aConfig->mPreference = hasRouteEntry->GetPreference();
         aConfig->mStable = cur->IsStable();
+        aConfig->mNextHopIsThisDevice = (hasRouteEntry->GetRloc() == mNetif.GetMle().GetRloc16());
 
         *aIterator = static_cast<otNetworkDataIterator>(reinterpret_cast<uint8_t *>(cur->GetNext()) - mTlvs);
 
