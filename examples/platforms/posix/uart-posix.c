@@ -69,6 +69,12 @@ static void restore_stdout_termios(void)
     tcsetattr(s_out_fd, TCSAFLUSH, &original_stdout_termios);
 }
 
+void platformUartRestore(void)
+{
+    restore_stdin_termios();
+    restore_stdout_termios();
+}
+
 otError otPlatUartEnable(void)
 {
     otError error = OT_ERROR_NONE;
