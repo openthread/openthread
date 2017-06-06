@@ -53,6 +53,9 @@
 uint32_t NODE_ID = 1;
 uint32_t WELLKNOWN_NODE_ID = 34;
 
+int     gArgumentsCount = 0;
+char  **gArguments = NULL;
+
 void PlatformInit(int argc, char *argv[])
 {
     char *endptr;
@@ -74,6 +77,9 @@ void PlatformInit(int argc, char *argv[])
         fprintf(stderr, "Invalid NODE_ID: %s\n", argv[1]);
         exit(EXIT_FAILURE);
     }
+
+    gArgumentsCount = argc;
+    gArguments = argv;
 
     platformAlarmInit();
     platformRadioInit();
