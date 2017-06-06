@@ -1805,6 +1805,14 @@ class VendorStackVersionTlv: public Tlv
 {
 public:
     /**
+     * Default constructor.
+     *
+     */
+    VendorStackVersionTlv(void) :
+        mBuildRevision(0),
+        mMinorMajor(0) {}
+
+    /**
      * This method initializes the TLV.
      *
      */
