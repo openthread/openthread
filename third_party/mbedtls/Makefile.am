@@ -99,6 +99,7 @@ MBEDTLS_ABS_SRCDIR                           := $(abspath $(top_srcdir)/third_pa
 
 EXTRA_DIST                                                         += \
     patch/0001-Fix-commissioning-problem-with-retransmissions.patch   \
+    patch/0002-Fix-warning-dead-store.patch                           \
     $(NULL)
 
 repo/library/libmbedcrypto_a-ssl_tls.$(OBJEXT): $(MBEDTLS_SRCDIR)/library/ssl_tls.c.patched
@@ -110,11 +111,22 @@ $(MBEDTLS_SRCDIR)/library/ssl_tls.c.patched: $(MBEDTLS_ABS_SRCDIR)/patch/0001-Fi
 	patch $(MBEDTLS_ABS_SRCDIR)/repo/library/ssl_tls.c $<
 	cp $(MBEDTLS_ABS_SRCDIR)/patch/0001-Fix-commissioning-problem-with-retransmissions.patch $@
 
+repo/library/libmbedcrypto_a-ssl_srv.$(OBJEXT): $(MBEDTLS_SRCDIR)/library/ssl_srv.c.patched
+
+$(MBEDTLS_SRCDIR)/library/ssl_srv.c.patched: $(MBEDTLS_ABS_SRCDIR)/patch/0002-Fix-warning-dead-store.patch
+	chmod u+w $(MBEDTLS_ABS_SRCDIR)/repo/library/
+	chmod u+w $(MBEDTLS_ABS_SRCDIR)/repo/library/ssl_srv.c
+	if [ -e $@ ]; then patch -R $(MBEDTLS_ABS_SRCDIR)/repo/library/ssl_srv.c $@; fi
+	patch $(MBEDTLS_ABS_SRCDIR)/repo/library/ssl_srv.c $<
+	cp $(MBEDTLS_ABS_SRCDIR)/patch/0002-Fix-warning-dead-store.patch $@
+
 all-local: libmbedcrypto.a
 	if [ -e $(MBEDTLS_SRCDIR)/library/ssl_tls.c.patched ]; then patch -R $(MBEDTLS_ABS_SRCDIR)/repo/library/ssl_tls.c $(MBEDTLS_ABS_SRCDIR)/patch/0001-Fix-commissioning-problem-with-retransmissions.patch; rm -f $(MBEDTLS_SRCDIR)/library/ssl_tls.c.patched; fi
+	if [ -e $(MBEDTLS_SRCDIR)/library/ssl_srv.c.patched ]; then patch -R $(MBEDTLS_ABS_SRCDIR)/repo/library/ssl_srv.c $(MBEDTLS_ABS_SRCDIR)/patch/0002-Fix-warning-dead-store.patch; rm -f $(MBEDTLS_SRCDIR)/library/ssl_srv.c.patched; fi
 
 clean-local:
 	if [ -e $(MBEDTLS_SRCDIR)/library/ssl_tls.c.patched ]; then patch -R $(MBEDTLS_ABS_SRCDIR)/repo/library/ssl_tls.c $(MBEDTLS_ABS_SRCDIR)/patch/0001-Fix-commissioning-problem-with-retransmissions.patch; rm -f $(MBEDTLS_SRCDIR)/library/ssl_tls.c.patched; fi
+	if [ -e $(MBEDTLS_SRCDIR)/library/ssl_srv.c.patched ]; then patch -R $(MBEDTLS_ABS_SRCDIR)/repo/library/ssl_srv.c $(MBEDTLS_ABS_SRCDIR)/patch/0002-Fix-warning-dead-store.patch; rm -f $(MBEDTLS_SRCDIR)/library/ssl_srv.c.patched; fi
 
 endif  # OPENTHREAD_ENABLE_DTLS
 
