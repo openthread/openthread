@@ -54,14 +54,14 @@ void PlatformInit(int argc, char *argv[])
     nrf5MiscInit();
     nrf5CryptoInit();
     nrf5RadioInit();
-#if (OPENTHREAD_ENABLE_DEFAULT_LOGGING == 0)
+#if (OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT == 0)
     nrf5LogInit();
 #endif
 }
 
 void PlatformDeinit(void)
 {
-#if (OPENTHREAD_ENABLE_DEFAULT_LOGGING == 0)
+#if (OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT == 0)
     nrf5LogDeinit();
 #endif
     nrf5RadioDeinit();

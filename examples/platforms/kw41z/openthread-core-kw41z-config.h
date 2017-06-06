@@ -36,6 +36,14 @@
 #define OPENTHREAD_CORE_KW41Z_CONFIG_H_
 
 /**
+ * @def OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT
+ *
+ * Define to 1 to enable default log output.
+ *
+ */
+#define OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT             1
+
+/**
  * @def SETTINGS_CONFIG_BASE_ADDRESS
  *
  * The base address of settings.

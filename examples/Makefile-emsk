@@ -45,7 +45,6 @@ configure_OPTIONS               = \
     --enable-cli-app=all          \
     --enable-ncp-app=all          \
     --with-ncp-bus=uart           \
-    --enable-default-logging      \
     --with-examples=emsk          \
     --with-platform-info=EMSK     \
     $(NULL)

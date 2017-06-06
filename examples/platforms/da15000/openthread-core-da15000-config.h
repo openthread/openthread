@@ -36,6 +36,14 @@
 
 #define SETTINGS_CONFIG_BASE_ADDRESS 		(0x7B000)
 
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT
+ *
+ * Define to 1 to enable default log output.
+ *
+ */
+#define OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT             1
+
  /**
   * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
   *

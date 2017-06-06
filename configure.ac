@@ -838,36 +838,6 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_CHILD_SUPERVISION], [test "${enable_child_supe
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_CHILD_SUPERVISION],[${OPENTHREAD_ENABLE_CHILD_SUPERVISION}],[Define to 1 if you want to use child supervision feature])
 
 #
-# Default Logging
-#
-
-AC_ARG_ENABLE(default_logging,
-    [AS_HELP_STRING([--enable-default-logging],[Enable default logging support @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_default_logging=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_default_logging} for --enable-default-logging])
-            ;;
-        esac
-    ],
-    [enable_default_logging=no])
-
-if test "$enable_default_logging" = "yes"; then
-    OPENTHREAD_ENABLE_DEFAULT_LOGGING=1
-else
-    OPENTHREAD_ENABLE_DEFAULT_LOGGING=0
-fi
-
-AC_SUBST(OPENTHREAD_ENABLE_DEFAULT_LOGGING)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_DEFAULT_LOGGING], [test "${enable_default_logging}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DEFAULT_LOGGING],[${OPENTHREAD_ENABLE_DEFAULT_LOGGING}],[Define to 1 if you want to enable default logging])
-
-#
 # Log for certification test
 #
 
