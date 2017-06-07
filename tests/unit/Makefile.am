@@ -96,6 +96,7 @@ check_PROGRAMS                                                      = \
     test-message                                                      \
     test-message-queue                                                \
     test-priority-queue                                               \
+    test-pskc                                                         \
     test-strlcat                                                      \
     test-strlcpy                                                      \
     test-strnlen                                                      \
@@ -172,6 +173,9 @@ test_ncp_buffer_SOURCES      = test_platform.cpp test_ncp_buffer.cpp
 
 test_priority_queue_LDADD    = $(COMMON_LDADD)
 test_priority_queue_SOURCES  = test_platform.cpp test_priority_queue.cpp
+
+test_pskc_LDADD              = $(COMMON_LDADD)
+test_pskc_SOURCES            = test_platform.cpp test_pskc.cpp
 
 test_strlcat_LDADD           = $(COMMON_LDADD)
 test_strlcat_SOURCES         = test_strlcat.c
