@@ -49,7 +49,6 @@ PRETTY_SUBDIRS                          = \
 openthread_headers                      = \
     child_supervision.h                   \
     cli.h                                 \
-    border_agent_proxy.h                  \
     coap.h                                \
     commissioner.h                        \
     crypto.h                              \
@@ -74,6 +73,7 @@ openthread_headers                      = \
     tasklet.h                             \
     thread.h                              \
     thread_ftd.h                          \
+    tmf_proxy.h                           \
     types.h                               \
     udp.h                                 \
     $(NULL)

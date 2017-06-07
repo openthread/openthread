@@ -98,7 +98,7 @@ configure_OPTIONS                   = \
     --with-examples=posix             \
     --with-platform-info=POSIX        \
     --enable-application-coap         \
-    --enable-border-agent-proxy       \
+    --enable-tmf-proxy                \
     --enable-cert-log                 \
     --enable-commissioner             \
     --enable-dhcp6-client             \

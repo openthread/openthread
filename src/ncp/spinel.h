@@ -378,7 +378,7 @@ enum
 
     SPINEL_CAP_THREAD__BEGIN            = 1024,
     SPINEL_CAP_THREAD_COMMISSIONER      = (SPINEL_CAP_THREAD__BEGIN + 0),
-    SPINEL_CAP_THREAD_BA_PROXY          = (SPINEL_CAP_THREAD__BEGIN + 1),
+    SPINEL_CAP_THREAD_TMF_PROXY         = (SPINEL_CAP_THREAD__BEGIN + 1),
     SPINEL_CAP_THREAD__END              = 1152,
 
     SPINEL_CAP_NEST__BEGIN              = 15296,
@@ -865,17 +865,18 @@ typedef enum
     SPINEL_PROP_THREAD_COMMISSIONER_ENABLED
                                         = SPINEL_PROP_THREAD_EXT__BEGIN + 16,
 
-    /// Thread border agent proxy enable
+    /// Thread TMF proxy enable
     /** Format `b`
      *
      * Default value is `false`.
      */
-    SPINEL_PROP_THREAD_BA_PROXY_ENABLED = SPINEL_PROP_THREAD_EXT__BEGIN + 17,
+    SPINEL_PROP_THREAD_TMF_PROXY_ENABLED
+                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 17,
 
-    /// Thread border agent proxy stream
+    /// Thread TMF proxy stream
     /** Format `dSS`
      */
-    SPINEL_PROP_THREAD_BA_PROXY_STREAM  = SPINEL_PROP_THREAD_EXT__BEGIN + 18,
+    SPINEL_PROP_THREAD_TMF_PROXY_STREAM = SPINEL_PROP_THREAD_EXT__BEGIN + 18,
 
     /// Thread "joiner" flag used during discovery scan operation
     /** Format `b`

@@ -90,7 +90,6 @@ libopenthread_mtd_a_CPPFLAGS        = \
 #
 
 SOURCES_COMMON                      = \
-    api/border_agent_proxy_api.cpp    \
     api/coap_api.cpp                  \
     api/commissioner_api.cpp          \
     api/child_supervision_api.cpp     \
@@ -113,6 +112,7 @@ SOURCES_COMMON                      = \
     api/tasklet_api.cpp               \
     api/thread_api.cpp                \
     api/thread_ftd_api.cpp            \
+    api/tmf_proxy_api.cpp             \
     api/udp_api.cpp                   \
     coap/coap.cpp                     \
     coap/coap_header.cpp              \
@@ -135,7 +135,6 @@ SOURCES_COMMON                      = \
     mac/mac_frame.cpp                 \
     mac/mac_whitelist.cpp             \
     meshcop/announce_begin_client.cpp \
-    meshcop/border_agent_proxy.cpp    \
     meshcop/commissioner.cpp          \
     meshcop/dataset.cpp               \
     meshcop/dataset_manager.cpp       \
@@ -177,6 +176,7 @@ SOURCES_COMMON                      = \
     thread/panid_query_server.cpp     \
     thread/src_match_controller.cpp   \
     thread/thread_netif.cpp           \
+    thread/tmf_proxy.cpp              \
     thread/topology.cpp               \
     utils/child_supervision.cpp       \
     utils/jam_detector.cpp            \
@@ -230,7 +230,6 @@ HEADERS_COMMON                      = \
     mac/mac_whitelist_impl.hpp        \
     mac/mac_whitelist_stub.hpp        \
     meshcop/announce_begin_client.hpp \
-    meshcop/border_agent_proxy.hpp    \
     meshcop/commissioner.hpp          \
     meshcop/dataset.hpp               \
     meshcop/dataset_manager.hpp       \
@@ -288,6 +287,7 @@ HEADERS_COMMON                      = \
     thread/thread_netif.hpp           \
     thread/thread_tlvs.hpp            \
     thread/thread_uri_paths.hpp       \
+    thread/tmf_proxy.hpp              \
     thread/topology.hpp               \
     utils/child_supervision.hpp       \
     utils/slaac_address.hpp           \

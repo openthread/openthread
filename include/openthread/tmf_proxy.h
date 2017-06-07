@@ -29,11 +29,11 @@
 /**
  * @file
  * @brief
- *   This file includes the OpenThread API for Border Agent Proxy feature.
+ *   This file includes the OpenThread API for TMF Proxy feature.
  */
 
-#ifndef OPENTHREAD_BORDER_AGENT_PROXY_H_
-#define OPENTHREAD_BORDER_AGENT_PROXY_H_
+#ifndef OPENTHREAD_TMF_PROXY_H_
+#define OPENTHREAD_TMF_PROXY_H_
 
 #ifdef OPENTHREAD_CONFIG_FILE
 #include OPENTHREAD_CONFIG_FILE
@@ -48,50 +48,51 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup api-border-agent
+ * @addtogroup api-tmf-proxy
  *
  * @brief
- *   This module includes functions for signal border agent proxy feature.
+ *   This module includes functions for TMF proxy feature.
  *
  * @{
  *
  */
 
 /**
- * This function pointer is called when a CoAP packet for border agent is received.
+ * This function pointer is called when a TMF packet for host is received.
  *
  * @param[in]  aMessage  A pointer to the CoAP Message.
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void (*otBorderAgentProxyStreamHandler)(otMessage *aMessage, uint16_t aLocator, uint16_t aPort, void *aContext);
+typedef void (*otTmfProxyStreamHandler)(otMessage *aMessage, uint16_t aLocator, uint16_t aPort,
+                                        void *aContext);
 
 /**
- * Start the border agent proxy.
+ * Start the TMF proxy.
  *
  * @param[in]  aInstance            A pointer to an OpenThread instance.
- * @param[in]  aHandler             A pointer to a function called to deliver packet to border agent.
+ * @param[in]  aHandler             A pointer to a function called to deliver TMF packet to host.
  * @param[in]  aContext             A pointer to application-specific context.
  *
- * @retval OT_ERROR_NONE        Successfully started the border agent proxy.
+ * @retval OT_ERROR_NONE        Successfully started the TMF proxy.
  * @retval OT_ERROR_ALREADY     Border agent proxy has been started before.
  *
  */
-otError otBorderAgentProxyStart(otInstance *aInstance, otBorderAgentProxyStreamHandler aHandler, void *aContext);
+otError otTmfProxyStart(otInstance *aInstance, otTmfProxyStreamHandler aHandler, void *aContext);
 
 /**
- * Stop the border agent proxy.
+ * Stop the TMF proxy.
  *
  * @param[in]  aInstance            A pointer to an OpenThread instance.
  *
- * @retval OT_ERROR_NONE        Successfully stopped the border agent proxy.
+ * @retval OT_ERROR_NONE        Successfully stopped the TMF proxy.
  * @retval OT_ERROR_ALREADY     Border agent proxy is already stopped.
  *
  */
-otError otBorderAgentProxyStop(otInstance *aInstance);
+otError otTmfProxyStop(otInstance *aInstance);
 
 /**
- * Send packet through border agent proxy.
+ * Send packet through TMF proxy.
  *
  * @param[in]  aInstance            A pointer to an OpenThread instance.
  * @param[in]  aMessage             A pointer to the CoAP Message.
@@ -104,17 +105,17 @@ otError otBorderAgentProxyStop(otInstance *aInstance);
  * @warning No matter the call success or fail, the message is freed.
  *
  */
-otError otBorderAgentProxySend(otInstance *aInstance, otMessage *aMessage,
-                               uint16_t aLocator, uint16_t aPort);
+otError otTmfProxySend(otInstance *aInstance, otMessage *aMessage,
+                       uint16_t aLocator, uint16_t aPort);
 
 /**
- * Get the border agent proxy status (enabled/disabled)
+ * Get the TMF proxy status (enabled/disabled)
  *
  * @param[in]  aInstance            A pointer to an OpenThread instance.
  *
- * @returns The border agent proxy status (true if enabled, false otherwise).
+ * @returns The TMF proxy status (true if enabled, false otherwise).
  */
-bool otBorderAgentProxyIsEnabled(otInstance *aInstance);
+bool otTmfProxyIsEnabled(otInstance *aInstance);
 
 /**
  * @}
@@ -125,4 +126,4 @@ bool otBorderAgentProxyIsEnabled(otInstance *aInstance);
 }  // extern "C"
 #endif
 
-#endif  // OPENTHREAD_BORDER_AGENT_PROXY_H_
+#endif  // OPENTHREAD_TMF_PROXY_H_
