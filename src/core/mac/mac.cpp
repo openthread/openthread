@@ -149,7 +149,8 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mWhitelist(),
     mBlacklist(),
     mTxFrame(static_cast<Frame *>(otPlatRadioGetTransmitBuffer(aThreadNetif.GetInstance()))),
-    mKeyIdMode2FrameCounter(0)
+    mKeyIdMode2FrameCounter(0),
+    mWaitingForData(false)
 {
     GenerateExtAddress(&mExtAddress);
 
@@ -574,6 +575,8 @@ void Mac::NextOperation(void)
 
 void Mac::ScheduleNextTransmission(void)
 {
+    VerifyOrExit(!mWaitingForData);
+
     if (mPendingScanRequest == kScanTypeActive)
     {
         mPendingScanRequest = kScanTypeNone;
@@ -602,6 +605,9 @@ void Mac::ScheduleNextTransmission(void)
     }
 
     NextOperation();
+
+exit:
+    return;
 }
 
 void Mac::GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel, uint8_t *aNonce)
@@ -928,6 +934,7 @@ void Mac::TransmitDoneTask(otRadioFrame *aFrame, bool aRxPending, otError aError
     case kStateTransmitData:
         if (aRxPending)
         {
+            mWaitingForData = true;
             mReceiveTimer.Start(kDataPollTimeout);
         }
 
@@ -1032,6 +1039,7 @@ void Mac::TransmitDoneTask(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otErro
     case kStateTransmitData:
         if (framePending)
         {
+            mWaitingForData = true;
             mReceiveTimer.Start(kDataPollTimeout);
         }
 
@@ -1125,17 +1133,19 @@ void Mac::HandleReceiveTimer(void *aContext)
 
 void Mac::HandleReceiveTimer(void)
 {
-    otLogDebgMac(GetInstance(), "Data poll timeout");
-
-    for (Receiver *receiver = mReceiveHead; receiver; receiver = receiver->mNext)
+    if (mWaitingForData)
     {
-        receiver->HandleDataPollTimeout();
+        otLogDebgMac(GetInstance(), "Data poll timeout");
+
+        mWaitingForData = false;
+
+        for (Receiver *receiver = mReceiveHead; receiver; receiver = receiver->mNext)
+        {
+            receiver->HandleDataPollTimeout();
+        }
     }
 
-    if (mState == kStateIdle)
-    {
-        NextOperation();
-    }
+    ScheduleNextTransmission();
 }
 
 void Mac::SentFrame(otError aError)
@@ -1413,6 +1423,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
     int8_t rssi;
     bool receive = false;
     uint8_t commandId;
+    bool mScheduleNextTransmission = false;
     otError error = aError;
 
     mCounters.mRxTotal++;
@@ -1566,7 +1577,8 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
         if (!mRxOnWhenIdle && dstaddr.mLength != 0)
         {
             mReceiveTimer.Stop();
-            otPlatRadioSleep(GetInstance());
+            mWaitingForData = false;
+            mScheduleNextTransmission = true;
         }
 
         switch (aFrame->GetType())
@@ -1609,6 +1621,11 @@ void Mac::ReceiveDoneTask(Frame *aFrame, otError aError)
     }
 
 exit:
+
+    if (mScheduleNextTransmission)
+    {
+        ScheduleNextTransmission();
+    }
 
     if (error != OT_ERROR_NONE)
     {

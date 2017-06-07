@@ -751,6 +751,9 @@ private:
 
     otMacCounters mCounters;
     uint32_t mKeyIdMode2FrameCounter;
+
+    bool mWaitingForData;
+
 };
 
 /**
