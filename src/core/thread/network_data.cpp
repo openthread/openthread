@@ -83,6 +83,7 @@ void NetworkData::GetNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLen
 
     if (aStable)
     {
+        SetCommissioningDataStable(aData, aDataLength);
         RemoveTemporaryData(aData, aDataLength);
     }
 }
@@ -424,6 +425,22 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Pref
             aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - length);
             aDataLength -= length;
         }
+    }
+}
+
+void NetworkData::SetCommissioningDataStable(uint8_t *aData, uint8_t aDataLength)
+{
+    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aData);
+    NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(aData + aDataLength);
+
+    while (cur < end)
+    {
+        if (cur->GetType() == NetworkDataTlv::kTypeCommissioningData)
+        {
+            cur->SetStable();
+        }
+
+        cur = cur->GetNext();
     }
 }
 

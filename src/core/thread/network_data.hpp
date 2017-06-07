@@ -329,6 +329,15 @@ protected:
     void RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, PrefixTlv &aPrefix);
 
     /**
+     * This method sets stable bit in Commissioning Data TLV.
+     *
+     * @param[inout]  aData        A pointer to the Network Data to modify.
+     * @param[in]     aDataLength  The size of the Network Data in bytes.
+     *
+     */
+    void SetCommissioningDataStable(uint8_t *aData, uint8_t aDataLength);
+
+    /**
      * This method computes the number of IPv6 Prefix bits that match.
      *
      * @param[in]  a        A pointer to the first IPv6 Prefix.
