@@ -43,20 +43,20 @@
 // MARK: -
 // MARK: Headers
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
-
 #include "spinel.h"
 
 #include <assert.h>
+#include <errno.h>
+
+#ifndef SPINEL_PLATFORM_HEADER
+/* These are all already included in the spinel platform header
+ * if SPINEL_PLATFORM_HEADER was defined.
+ */
 #include <stdio.h>
 #include <stdlib.h>
-#include "utils/wrap_string.h"
-#include <errno.h>
-#include "utils/wrap_stdbool.h"
+#include <string.h>
+#endif // #ifndef SPINEL_PLATFORM_HEADER
+
 // ----------------------------------------------------------------------------
 // MARK: -
 

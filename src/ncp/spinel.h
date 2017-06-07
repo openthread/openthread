@@ -28,9 +28,13 @@
 #ifndef SPINEL_HEADER_INCLUDED
 #define SPINEL_HEADER_INCLUDED 1
 
+#ifdef SPINEL_PLATFORM_HEADER
+#include SPINEL_PLATFORM_HEADER
+#else // ifdef SPINEL_PLATFORM_HEADER
 #include <stdarg.h>
-#include "utils/wrap_stdbool.h"
-#include "utils/wrap_stdint.h"
+#include <stdbool.h>
+#include <stdint.h>
+#endif // else SPINEL_PLATFORM_HEADER
 
 // ----------------------------------------------------------------------------
 
