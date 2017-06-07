@@ -216,6 +216,13 @@ enum
     SPINEL_NET_FLAG_PREFERENCE_MASK     = (3 << SPINEL_NET_FLAG_PREFERENCE_OFFSET),
 };
 
+enum
+{
+    SPINEL_ROUTE_PREFERENCE_HIGH        = (1 << SPINEL_NET_FLAG_PREFERENCE_OFFSET),
+    SPINEL_ROUTE_PREFERENCE_MEDIUM      = (0 << SPINEL_NET_FLAG_PREFERENCE_OFFSET),
+    SPINEL_ROUTE_PREFERENCE_LOW         = (3 << SPINEL_NET_FLAG_PREFERENCE_OFFSET),
+};
+
 enum {
     SPINEL_GPIO_FLAG_DIR_INPUT          = 0,
     SPINEL_GPIO_FLAG_DIR_OUTPUT         = SPINEL_BIT_MASK(0, 8),
@@ -744,7 +751,28 @@ typedef enum
     SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION
                                         = SPINEL_PROP_THREAD__BEGIN + 9,  ///< [S]
     SPINEL_PROP_THREAD_ON_MESH_NETS     = SPINEL_PROP_THREAD__BEGIN + 10, ///< array(ipv6prefix,prefixlen,stable,flags,isLocal) [A(t(6CbCb))]
-    SPINEL_PROP_THREAD_OFF_MESH_ROUTES  = SPINEL_PROP_THREAD__BEGIN + 11, ///< array(ipv6prefix,prefixlen,stable,flags,isLocal) [A(t(6CbCb))]
+
+    /// Off-mesh routes
+    /** Format: [A(t(6CbCbb))]
+     *
+     * Data per item is:
+     *
+     *  `6`: Route Prefix
+     *  `C`: Prefix length in bits
+     *  `b`: Stable flag
+     *  `C`: Route preference flags
+     *  `b`: "Is defined locally" flag. Set if this route info was locally
+     *       defined as part of local network data. Assumed to be true for set,
+     *       insert and replace. Clear if the route is part of partition's network
+     *       data.
+     *  `b`: "Next hop is this device" flag. Set if the next hop for the
+     *       route is this device itself (i.e., route was added by this device)
+     *       This value is ignored when adding an external route. For any added
+     *       route the next hop is this device.
+     *
+     */
+    SPINEL_PROP_THREAD_OFF_MESH_ROUTES  = SPINEL_PROP_THREAD__BEGIN + 11,
+
     SPINEL_PROP_THREAD_ASSISTING_PORTS  = SPINEL_PROP_THREAD__BEGIN + 12, ///< array(portn) [A(S)]
     SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE
                                         = SPINEL_PROP_THREAD__BEGIN + 13, ///< [b]
