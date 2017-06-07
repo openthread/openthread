@@ -77,6 +77,7 @@ enum
 
     kAckTimeout           = 16,                    ///< Timeout for waiting on an ACK (milliseconds).
     kDataPollTimeout      = 100,                   ///< Timeout for receiving Data Frame (milliseconds).
+    kSleepDelay           = 300,                   ///< Max sleep delay when frame is pending (milliseconds).
     kNonceSize            = 13,                    ///< Size of IEEE 802.15.4 Nonce (bytes).
 
     kScanChannelsAll      = OT_CHANNEL_ALL,        ///< All channels.
@@ -690,6 +691,10 @@ private:
     void StartCsmaBackoff(void);
     otError Scan(ScanType aType, uint32_t aScanChannels, uint16_t aScanDuration, void *aContext);
 
+    otError RadioTransmit(Frame *aSendFrame);
+    otError RadioReceive(uint8_t aChannel);
+    void RadioSleep(void);
+
     Timer mMacTimer;
 #if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
     Timer mBackoffTimer;
@@ -752,8 +757,10 @@ private:
     otMacCounters mCounters;
     uint32_t mKeyIdMode2FrameCounter;
 
+#if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
+    bool mDelaySleep;
+#endif
     bool mWaitingForData;
-
 };
 
 /**
