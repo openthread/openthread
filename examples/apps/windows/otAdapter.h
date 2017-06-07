@@ -519,62 +519,62 @@ private:
         IInspectable* pInspectable = (IInspectable*)aContext;
         otAdapter^ pThis = reinterpret_cast<otAdapter^>(pInspectable);
 
-        if (aFlags & OT_IP6_ADDRESS_ADDED)
+        if (aFlags & OT_CHANGED_IP6_ADDRESS_ADDED)
         {
             pThis->IpAddressAdded(pThis);
         }
 
-        if (aFlags & OT_IP6_ADDRESS_REMOVED)
+        if (aFlags & OT_CHANGED_IP6_ADDRESS_REMOVED)
         {
             pThis->IpAddressRemoved(pThis);
         }
 
-        if (aFlags & OT_IP6_RLOC_ADDED)
+        if (aFlags & OT_CHANGED_THREAD_RLOC_ADDED)
         {
             pThis->IpRlocAdded(pThis);
         }
 
-        if (aFlags & OT_IP6_RLOC_REMOVED)
+        if (aFlags & OT_CHANGED_THREAD_RLOC_REMOVED)
         {
             pThis->IpRlocRemoved(pThis);
         }
 
-        if (aFlags & OT_IP6_LL_ADDR_CHANGED)
+        if (aFlags & OT_CHANGED_THREAD_LL_ADDR)
         {
             pThis->IpLinkLocalAddresChanged(pThis);
         }
 
-        if (aFlags & OT_IP6_ML_ADDR_CHANGED)
+        if (aFlags & OT_CHANGED_THREAD_ML_ADDR)
         {
             pThis->IpMeshLocalAddresChanged(pThis);
         }
 
-        if (aFlags & OT_NET_ROLE)
+        if (aFlags & OT_CHANGED_THREAD_ROLE)
         {
             pThis->NetRoleChanged(pThis);
         }
 
-        if (aFlags & OT_NET_PARTITION_ID)
+        if (aFlags & OT_CHANGED_THREAD_PARTITION_ID)
         {
             pThis->NetPartitionIdChanged(pThis);
         }
 
-        if (aFlags & OT_NET_KEY_SEQUENCE_COUNTER)
+        if (aFlags & OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER)
         {
             pThis->NetKeySequenceCounterChanged(pThis);
         }
 
-        if (aFlags & OT_THREAD_CHILD_ADDED)
+        if (aFlags & OT_CHANGED_THREAD_CHILD_ADDED)
         {
             pThis->ThreadChildAdded(pThis);
         }
 
-        if (aFlags & OT_THREAD_CHILD_REMOVED)
+        if (aFlags & OT_CHANGED_THREAD_CHILD_REMOVED)
         {
             pThis->ThreadChildRemoved(pThis);
         }
 
-        if (aFlags & OT_THREAD_NETDATA_UPDATED)
+        if (aFlags & OT_CHANGED_THREAD_NETDATA)
         {
             pThis->ThreadNetDataUpdated(pThis);
         }

@@ -290,7 +290,7 @@ otError Netif::AddUnicastAddress(NetifUnicastAddress &aAddress)
     aAddress.mNext = mUnicastAddresses;
     mUnicastAddresses = &aAddress;
 
-    SetStateChangedFlags(aAddress.mRloc ? OT_IP6_RLOC_ADDED : OT_IP6_ADDRESS_ADDED);
+    SetStateChangedFlags(aAddress.mRloc ? OT_CHANGED_THREAD_RLOC_ADDED : OT_CHANGED_IP6_ADDRESS_ADDED);
 
 exit:
     return error;
@@ -323,7 +323,7 @@ exit:
 
     if (error != OT_ERROR_NOT_FOUND)
     {
-        SetStateChangedFlags(aAddress.mRloc ? OT_IP6_RLOC_REMOVED : OT_IP6_ADDRESS_REMOVED);
+        SetStateChangedFlags(aAddress.mRloc ? OT_CHANGED_THREAD_RLOC_REMOVED : OT_CHANGED_IP6_ADDRESS_REMOVED);
     }
 
     return error;
@@ -366,7 +366,7 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
     entry->mNext = mUnicastAddresses;
     mUnicastAddresses = entry;
 
-    SetStateChangedFlags(OT_IP6_ADDRESS_ADDED);
+    SetStateChangedFlags(OT_CHANGED_IP6_ADDRESS_ADDED);
 
 exit:
     return error;
@@ -406,7 +406,7 @@ otError Netif::RemoveExternalUnicastAddress(const Address &aAddress)
     // To mark the address entry as unused/available, set the `mNext` pointer back to the entry itself.
     entry->mNext = entry;
 
-    SetStateChangedFlags(OT_IP6_ADDRESS_REMOVED);
+    SetStateChangedFlags(OT_CHANGED_IP6_ADDRESS_REMOVED);
 
 exit:
     return error;

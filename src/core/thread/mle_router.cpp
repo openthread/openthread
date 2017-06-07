@@ -419,7 +419,7 @@ otError MleRouter::SetStateRouter(uint16_t aRloc16)
 {
     if (mRole != OT_DEVICE_ROLE_ROUTER)
     {
-        mNetif.SetStateChangedFlags(OT_NET_ROLE);
+        mNetif.SetStateChangedFlags(OT_CHANGED_THREAD_ROLE);
     }
 
     SetRloc16(aRloc16);
@@ -454,7 +454,7 @@ otError MleRouter::SetStateLeader(uint16_t aRloc16)
 {
     if (mRole != OT_DEVICE_ROLE_LEADER)
     {
-        mNetif.SetStateChangedFlags(OT_NET_ROLE);
+        mNetif.SetStateChangedFlags(OT_CHANGED_THREAD_ROLE);
     }
 
     SetRloc16(aRloc16);
@@ -3117,7 +3117,7 @@ otError MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
         {
             aNeighbor.SetState(Neighbor::kStateInvalid);
             mNetif.GetMeshForwarder().UpdateIndirectMessages();
-            mNetif.SetStateChangedFlags(OT_THREAD_CHILD_REMOVED);
+            mNetif.SetStateChangedFlags(OT_CHANGED_THREAD_CHILD_REMOVED);
             mNetif.GetNetworkDataLeader().SendServerDataNotification(aNeighbor.GetRloc16());
             RemoveStoredChild(aNeighbor.GetRloc16());
         }
@@ -4579,7 +4579,7 @@ void MleRouter::SetChildStateToValid(Child *aChild)
     VerifyOrExit(aChild->GetState() != Neighbor::kStateValid);
 
     aChild->SetState(Neighbor::kStateValid);
-    mNetif.SetStateChangedFlags(OT_THREAD_CHILD_ADDED);
+    mNetif.SetStateChangedFlags(OT_CHANGED_THREAD_CHILD_ADDED);
     StoreChild(aChild->GetRloc16());
 
 exit:
@@ -4610,7 +4610,7 @@ void MleRouter::RemoveChildren(void)
         switch (mChildren[i].GetState())
         {
         case Neighbor::kStateValid:
-            mNetif.SetStateChangedFlags(OT_THREAD_CHILD_REMOVED);
+            mNetif.SetStateChangedFlags(OT_CHANGED_THREAD_CHILD_REMOVED);
 
         // Fall-through to next case
 

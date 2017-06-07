@@ -707,14 +707,14 @@ void OTCALL otNodeStateChangedCallback(uint32_t aFlags, void *aContext)
     otLogFuncEntry();
     otNode* aNode = (otNode*)aContext;
 
-    if ((aFlags & OT_NET_ROLE) != 0)
+    if ((aFlags & OT_CHANGED_THREAD_ROLE) != 0)
     {
         auto Role = otThreadGetDeviceRole(aNode->mInstance);
         printf("%d: new role: %s\r\n", aNode->mId, otDeviceRoleToString(Role));
     }
 
-    if ((aFlags & OT_IP6_ADDRESS_ADDED) != 0 || (aFlags & OT_IP6_ADDRESS_REMOVED) != 0 ||
-        (aFlags & OT_IP6_RLOC_ADDED) != 0 || (aFlags & OT_IP6_RLOC_REMOVED) != 0)
+    if ((aFlags & OT_CHANGED_IP6_ADDRESS_ADDED) != 0 || (aFlags & OT_CHANGED_IP6_ADDRESS_REMOVED) != 0 ||
+        (aFlags & OT_CHANGED_THREAD_RLOC_ADDED) != 0 || (aFlags & OT_CHANGED_THREAD_RLOC_REMOVED) != 0)
     {
         HandleAddressChanges(aNode);
     }
