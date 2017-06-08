@@ -1140,7 +1140,7 @@ void NcpBase::UpdateChangedProps(void)
 
             mChangedFlags &= ~static_cast<uint32_t>(NCP_PLAT_RESET_REASON);
         }
-        else if ((mChangedFlags & OT_IP6_LL_ADDR_CHANGED) != 0)
+        else if ((mChangedFlags & OT_CHANGED_THREAD_LL_ADDR) != 0)
         {
             SuccessOrExit(
                 HandleCommandPropertyGet(
@@ -1148,9 +1148,9 @@ void NcpBase::UpdateChangedProps(void)
                     SPINEL_PROP_IPV6_LL_ADDR
                 ));
 
-            mChangedFlags &= ~static_cast<uint32_t>(OT_IP6_LL_ADDR_CHANGED);
+            mChangedFlags &= ~static_cast<uint32_t>(OT_CHANGED_THREAD_LL_ADDR);
         }
-        else if ((mChangedFlags & OT_IP6_ML_ADDR_CHANGED) != 0)
+        else if ((mChangedFlags & OT_CHANGED_THREAD_ML_ADDR) != 0)
         {
             SuccessOrExit(
                 HandleCommandPropertyGet(
@@ -1158,9 +1158,9 @@ void NcpBase::UpdateChangedProps(void)
                     SPINEL_PROP_IPV6_ML_ADDR
                 ));
 
-            mChangedFlags &= ~static_cast<uint32_t>(OT_IP6_ML_ADDR_CHANGED);
+            mChangedFlags &= ~static_cast<uint32_t>(OT_CHANGED_THREAD_ML_ADDR);
         }
-        else if ((mChangedFlags & OT_NET_ROLE) != 0)
+        else if ((mChangedFlags & OT_CHANGED_THREAD_ROLE) != 0)
         {
             if (mRequireJoinExistingNetwork)
             {
@@ -1182,7 +1182,7 @@ void NcpBase::UpdateChangedProps(void)
 #endif
                    )
                 {
-                    mChangedFlags &= ~static_cast<uint32_t>(OT_NET_PARTITION_ID);
+                    mChangedFlags &= ~static_cast<uint32_t>(OT_CHANGED_THREAD_PARTITION_ID);
                     otThreadSetEnabled(mInstance, false);
 
                     // TODO: It would be nice to be able to indicate
@@ -1216,9 +1216,9 @@ void NcpBase::UpdateChangedProps(void)
                     SPINEL_PROP_NET_ROLE
                 ));
 
-            mChangedFlags &= ~static_cast<uint32_t>(OT_NET_ROLE);
+            mChangedFlags &= ~static_cast<uint32_t>(OT_CHANGED_THREAD_ROLE);
         }
-        else if ((mChangedFlags & OT_NET_PARTITION_ID) != 0)
+        else if ((mChangedFlags & OT_CHANGED_THREAD_PARTITION_ID) != 0)
         {
             SuccessOrExit(
                 HandleCommandPropertyGet(
@@ -1226,9 +1226,9 @@ void NcpBase::UpdateChangedProps(void)
                     SPINEL_PROP_NET_PARTITION_ID
                 ));
 
-            mChangedFlags &= ~static_cast<uint32_t>(OT_NET_PARTITION_ID);
+            mChangedFlags &= ~static_cast<uint32_t>(OT_CHANGED_THREAD_PARTITION_ID);
         }
-        else if ((mChangedFlags & OT_NET_KEY_SEQUENCE_COUNTER) != 0)
+        else if ((mChangedFlags & OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER) != 0)
         {
             SuccessOrExit(
                 HandleCommandPropertyGet(
@@ -1236,9 +1236,9 @@ void NcpBase::UpdateChangedProps(void)
                     SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER
                 ));
 
-            mChangedFlags &= ~static_cast<uint32_t>(OT_NET_KEY_SEQUENCE_COUNTER);
+            mChangedFlags &= ~static_cast<uint32_t>(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER);
         }
-        else if ((mChangedFlags & (OT_IP6_ADDRESS_ADDED | OT_IP6_ADDRESS_REMOVED)) != 0)
+        else if ((mChangedFlags & (OT_CHANGED_IP6_ADDRESS_ADDED | OT_CHANGED_IP6_ADDRESS_REMOVED)) != 0)
         {
             SuccessOrExit(
                 HandleCommandPropertyGet(
@@ -1246,9 +1246,9 @@ void NcpBase::UpdateChangedProps(void)
                     SPINEL_PROP_IPV6_ADDRESS_TABLE
                 ));
 
-            mChangedFlags &= ~static_cast<uint32_t>(OT_IP6_ADDRESS_ADDED | OT_IP6_ADDRESS_REMOVED);
+            mChangedFlags &= ~static_cast<uint32_t>(OT_CHANGED_IP6_ADDRESS_ADDED | OT_CHANGED_IP6_ADDRESS_REMOVED);
         }
-        else if ((mChangedFlags & (OT_THREAD_CHILD_ADDED | OT_THREAD_CHILD_REMOVED)) != 0)
+        else if ((mChangedFlags & (OT_CHANGED_THREAD_CHILD_ADDED | OT_CHANGED_THREAD_CHILD_REMOVED)) != 0)
         {
             SuccessOrExit(
                 HandleCommandPropertyGet(
@@ -1256,9 +1256,9 @@ void NcpBase::UpdateChangedProps(void)
                     SPINEL_PROP_THREAD_CHILD_TABLE
                 ));
 
-            mChangedFlags &= ~static_cast<uint32_t>(OT_THREAD_CHILD_ADDED | OT_THREAD_CHILD_REMOVED);
+            mChangedFlags &= ~static_cast<uint32_t>(OT_CHANGED_THREAD_CHILD_ADDED | OT_CHANGED_THREAD_CHILD_REMOVED);
         }
-        else if ((mChangedFlags & OT_THREAD_NETDATA_UPDATED) != 0)
+        else if ((mChangedFlags & OT_CHANGED_THREAD_NETDATA) != 0)
         {
             SuccessOrExit(
                 HandleCommandPropertyGet(
@@ -1266,7 +1266,7 @@ void NcpBase::UpdateChangedProps(void)
                     SPINEL_PROP_THREAD_LEADER_NETWORK_DATA
                 ));
 
-            mChangedFlags &= ~static_cast<uint32_t>(OT_THREAD_NETDATA_UPDATED);
+            mChangedFlags &= ~static_cast<uint32_t>(OT_CHANGED_THREAD_NETDATA);
 
             // If the network data is updated, after successfully sending (or queuing) the
             // network data spinel message, we add `NCP_ON_MESH_NETS_CHANGED_BIT_FLAG` to
@@ -1284,9 +1284,9 @@ void NcpBase::UpdateChangedProps(void)
 
             mChangedFlags &= ~static_cast<uint32_t>(NCP_ON_MESH_NETS_CHANGED_BIT_FLAG);
         }
-        else if ((mChangedFlags & (OT_IP6_RLOC_ADDED | OT_IP6_RLOC_REMOVED)) != 0)
+        else if ((mChangedFlags & (OT_CHANGED_THREAD_RLOC_ADDED | OT_CHANGED_THREAD_RLOC_REMOVED)) != 0)
         {
-            mChangedFlags &= ~static_cast<uint32_t>(OT_IP6_RLOC_ADDED | OT_IP6_RLOC_REMOVED);
+            mChangedFlags &= ~static_cast<uint32_t>(OT_CHANGED_THREAD_RLOC_ADDED | OT_CHANGED_THREAD_RLOC_REMOVED);
         }
     }
 

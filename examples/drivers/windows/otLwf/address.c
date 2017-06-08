@@ -479,7 +479,7 @@ otLwfTunAddressesUpdated(
                 {
                     memcpy_s(&addr.mAddress, sizeof(addr.mAddress), pAddr, sizeof(IN6_ADDR));
                     otLwfOnAddressAdded(pFilter, &addr, TRUE);
-                    *aNotifFlags |= OT_IP6_ADDRESS_ADDED;
+                    *aNotifFlags |= OT_CHANGED_IP6_ADDRESS_ADDED;
                 }
                 else
                 {
@@ -499,7 +499,7 @@ otLwfTunAddressesUpdated(
         if ((FoundInOpenThread & (1 << i)) == 0)
         {
             otLwfOnAddressRemoved(pFilter, (ULONG)i, TRUE);
-            *aNotifFlags |= OT_IP6_ADDRESS_REMOVED;
+            *aNotifFlags |= OT_CHANGED_IP6_ADDRESS_REMOVED;
         }
     }
     

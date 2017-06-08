@@ -450,27 +450,27 @@ otLwfTunValueIs(
             MediaConnectStateDisconnected);
 
         // Set flag to indicate we should send a notification
-        aNotifFlags = OT_NET_ROLE;
+        aNotifFlags = OT_CHANGED_THREAD_ROLE;
     }
     else if (key == SPINEL_PROP_IPV6_LL_ADDR)
     {
         // Set flag to indicate we should send a notification
-        aNotifFlags = OT_IP6_LL_ADDR_CHANGED;
+        aNotifFlags = OT_CHANGED_THREAD_LL_ADDR;
     }
     else if (key == SPINEL_PROP_IPV6_ML_ADDR)
     {
         // Set flag to indicate we should send a notification
-        aNotifFlags = OT_IP6_ML_ADDR_CHANGED;
+        aNotifFlags = OT_CHANGED_THREAD_ML_ADDR;
     }
     else if (key == SPINEL_PROP_NET_PARTITION_ID)
     {
         // Set flag to indicate we should send a notification
-        aNotifFlags = OT_NET_PARTITION_ID;
+        aNotifFlags = OT_CHANGED_THREAD_PARTITION_ID;
     }
     else if (key == SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER)
     {
         // Set flag to indicate we should send a notification
-        aNotifFlags = OT_NET_KEY_SEQUENCE_COUNTER;
+        aNotifFlags = OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER;
     }
     else if (key == SPINEL_PROP_IPV6_ADDRESS_TABLE)
     {
@@ -486,7 +486,7 @@ otLwfTunValueIs(
         // TODO - Slaac
 
         // Set flag to indicate we should send a notification
-        aNotifFlags = OT_THREAD_NETDATA_UPDATED;
+        aNotifFlags = OT_CHANGED_THREAD_NETDATA;
     }
     else if ((key == SPINEL_PROP_STREAM_NET) || (key == SPINEL_PROP_STREAM_NET_INSECURE))
     {
