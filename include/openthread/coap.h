@@ -148,6 +148,20 @@ typedef struct otCoapOption
     const uint8_t *mValue;   ///< A pointer to the Option Value
 } otCoapOption;
 
+/**
+ * CoAP Content Format codes.  The full list is documented at
+ * https://tools.ietf.org/html/rfc7252#page-92
+ */
+typedef enum otCoapOptionContentFormat
+{
+    OT_COAP_OPTION_CONTENT_FORMAT_TEXT_PLAIN    = 0,    ///< text/plain
+    OT_COAP_OPTION_CONTENT_FORMAT_LINK_FORMAT   = 40,   ///< application/link-format
+    OT_COAP_OPTION_CONTENT_FORMAT_XML           = 41,   ///< application/xml
+    OT_COAP_OPTION_CONTENT_FORMAT_OCTET_STREAM  = 42,   ///< application/octet-stream
+    OT_COAP_OPTION_CONTENT_FORMAT_EXI           = 47,   ///< application/exi
+    OT_COAP_OPTION_CONTENT_FORMAT_JSON          = 50,   ///< application/json
+} otCoapOptionContentFormat;
+
 #define OT_COAP_HEADER_MAX_LENGTH       128  ///< Max CoAP header length (bytes)
 
 /**
@@ -243,6 +257,25 @@ void otCoapHeaderSetToken(otCoapHeader *aHeader, const uint8_t *aToken, uint8_t 
  *
  */
 void otCoapHeaderGenerateToken(otCoapHeader *aHeader, uint8_t aTokenLength);
+
+/**
+ * This function appends the Content Format CoAP option as specified in
+ * https://tools.ietf.org/html/rfc7252#page-92.  This *must* be called before
+ * setting otCoapHeaderSetPayloadMarker if a payload is to be included in the
+ * message.
+ *
+ * The function is a convenience wrapper around otCoapHeaderAppendUintOption,
+ * and if the desired format type code isn't listed in otCoapOptionContentFormat,
+ * this base function should be used instead.
+ *
+ * @param[inout]  aHeader           A pointer to the CoAP header.
+ * @param[in]     aContentFormat    One of the content formats listed in
+ *                                  otCoapOptionContentFormat above.
+ * @retval OT_ERROR_NONE          Successfully appended the option.
+ * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
+ * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+ */
+otError otCoapHeaderAppendContentFormatOption(otCoapHeader *aHeader, otCoapOptionContentFormat aContentFormat);
 
 /**
  * This function appends a CoAP option in a header.
