@@ -34,7 +34,6 @@
 #include <openthread/openthread_config.h>
 #include <openthread/crypto.h>
 
-
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "crypto/aes_ccm.hpp"

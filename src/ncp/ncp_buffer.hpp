@@ -382,36 +382,36 @@ private:
     otError         OutFramePrepareMessage(void);
     otError         OutFrameFillMessageBuffer(void);
 
-    uint8_t * const mBuffer;                    // Pointer to the buffer used to store the data.
-    uint8_t * const mBufferEnd;                 // Points to after the end of buffer.
-    const uint16_t  mBufferLength;              // Length of the the buffer.
+    uint8_t * const  mBuffer;                    // Pointer to the buffer used to store the data.
+    uint8_t * const  mBufferEnd;                 // Points to after the end of buffer.
+    const uint16_t   mBufferLength;              // Length of the the buffer.
 
     BufferCallback   mFrameAddedCallback;        // Callback to signal when a new frame is added
     void *           mFrameAddedContext;         // Context passed to `mFrameAddedCallback`.
     BufferCallback   mFrameRemovedCallback;      // Callback to signal when a frame is removed.
     void *           mFrameRemovedContext;       // Context passed to `mFrameRemovedCallback`.
 
-    otMessageQueue  mMessageQueue;              // Main message queue.
+    otMessageQueue   mMessageQueue;              // Main message queue.
 
-    otMessageQueue  mWriteFrameMessageQueue;    // Message queue for the current frame being written.
-    uint8_t *       mWriteFrameStart;           // Pointer to start of current frame being written.
-    uint8_t *       mWriteSegmentHead;          // Pointer to start of current segment in the frame being written.
-    uint8_t *       mWriteSegmentTail;          // Pointer to end of current segment in the frame being written.
+    otMessageQueue   mWriteFrameMessageQueue;    // Message queue for the current frame being written.
+    uint8_t *        mWriteFrameStart;           // Pointer to start of current frame being written.
+    uint8_t *        mWriteSegmentHead;          // Pointer to start of current segment in the frame being written.
+    uint8_t *        mWriteSegmentTail;          // Pointer to end of current segment in the frame being written.
     FrameTag         mWriteFrameTag;             // Tag associated with last successfully written frame.
 
-    ReadState       mReadState;                 // Read state.
-    uint16_t        mReadFrameLength;           // Length of current frame being read.
+    ReadState        mReadState;                 // Read state.
+    uint16_t         mReadFrameLength;           // Length of current frame being read.
 
-    uint8_t *       mReadFrameStart;            // Pointer to start of current frame being read.
-    uint8_t *       mReadSegmentHead;           // Pointer to start of current segment in the frame being read.
-    uint8_t *       mReadSegmentTail;           // Pointer to end of current segment in the frame being read.
-    uint8_t *       mReadPointer;               // Pointer to next byte to read (either in segment or in msg buffer).
+    uint8_t *        mReadFrameStart;            // Pointer to start of current frame being read.
+    uint8_t *        mReadSegmentHead;           // Pointer to start of current segment in the frame being read.
+    uint8_t *        mReadSegmentTail;           // Pointer to end of current segment in the frame being read.
+    uint8_t *        mReadPointer;               // Pointer to next byte to read (either in segment or in msg buffer).
 
-    otMessage *     mReadMessage;               // Current Message in the frame being read.
-    uint16_t        mReadMessageOffset;         // Offset within current message being read.
+    otMessage *      mReadMessage;               // Current Message in the frame being read.
+    uint16_t         mReadMessageOffset;         // Offset within current message being read.
 
-    uint8_t         mMessageBuffer[kMessageReadBufferSize];   // Buffer to hold part of current message being read.
-    uint8_t *       mReadMessageTail;           // Pointer to end of current part in mMessageBuffer.
+    uint8_t          mMessageBuffer[kMessageReadBufferSize];   // Buffer to hold part of current message being read.
+    uint8_t *        mReadMessageTail;           // Pointer to end of current part in mMessageBuffer.
 };
 
 }  // namespace ot
