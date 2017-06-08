@@ -93,6 +93,11 @@ MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
     mNetif.GetMac().RegisterReceiver(mMacReceiver);
     mMacSource.mLength = 0;
     mMacDest.mLength = 0;
+
+    mIpCounters.mTxSuccess = 0;
+    mIpCounters.mRxSuccess = 0;
+    mIpCounters.mTxFailure = 0;
+    mIpCounters.mRxFailure = 0;
 }
 
 otInstance *MeshForwarder::GetInstance(void)
@@ -2210,10 +2215,21 @@ void MeshForwarder::LogIp6Message(MessageAction aAction, const Message &aMessage
     {
     case kMessageReceive:
         actionText = "Received";
+        mIpCounters.mRxSuccess++;
         break;
 
     case kMessageTransmit:
-        actionText = (aError == OT_ERROR_NONE) ? "Sent" : "Failed to send";
+        if (aError == OT_ERROR_NONE)
+        {
+            actionText = "Sent";
+            mIpCounters.mTxSuccess++;
+        }
+        else
+        {
+            actionText = "Failed to send";
+            mIpCounters.mTxFailure++;
+        }
+
         break;
 
     case kMessagePrepareIndirect:
@@ -2223,6 +2239,7 @@ void MeshForwarder::LogIp6Message(MessageAction aAction, const Message &aMessage
 
     case kMessageDrop:
         actionText = "Dropping";
+        mIpCounters.mRxFailure++;
         break;
 
     default:

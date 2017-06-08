@@ -403,6 +403,7 @@ private:
     otError GetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE(uint8_t header, spinel_prop_key_t key);
     otError GetPropertyHandler_MAC_CNTR(uint8_t header, spinel_prop_key_t key);
     otError GetPropertyHandler_NCP_CNTR(uint8_t header, spinel_prop_key_t key);
+    otError GetPropertyHandler_IP_CNTR(uint8_t header, spinel_prop_key_t key);
     otError GetPropertyHandler_MSG_BUFFER_COUNTERS(uint8_t header, spinel_prop_key_t key);
 #if OPENTHREAD_ENABLE_MAC_WHITELIST
     otError GetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop_key_t key);

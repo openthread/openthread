@@ -917,6 +917,17 @@ typedef struct otMacCounters
 } otMacCounters;
 
 /**
+ * This structure represents the IP level counters
+ */
+typedef struct otIpCounters
+{
+    uint32_t mTxSuccess;
+    uint32_t mRxSuccess;
+    uint32_t mTxFailure;
+    uint32_t mRxFailure;
+} otIpCounters;
+
+/**
  * This structure represents the message buffer information.
  */
 typedef struct otBufferInfo
