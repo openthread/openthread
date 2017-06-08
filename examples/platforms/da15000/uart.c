@@ -54,7 +54,7 @@ otError otPlatUartEnable(void)
     otError error = OT_ERROR_NONE;
     uart_config uart_init =
     {
-        .baud_rate = HW_UART_BAUDRATE_9600,
+        .baud_rate = HW_UART_BAUDRATE_115200,
         .data      = HW_UART_DATABITS_8,
         .stop      = HW_UART_STOPBITS_1,
         .parity    = HW_UART_PARITY_NONE,
