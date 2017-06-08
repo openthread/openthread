@@ -30,7 +30,7 @@
  *   This file implements a SPI interface to the OpenThread stack.
  */
 
-#include <openthread/openthread_enable_defines.h>
+#include <openthread/openthread_config.h>
 
 #include "ncp_spi.hpp"
 

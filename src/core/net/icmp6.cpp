@@ -33,7 +33,7 @@
 
 #define WPP_NAME "icmp6.tmh"
 
-#include <openthread/openthread_enable_defines.h>
+#include <openthread/openthread_config.h>
 
 #include "icmp6.hpp"
 

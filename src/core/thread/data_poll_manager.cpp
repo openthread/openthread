@@ -32,7 +32,7 @@
  */
 
 #define WPP_NAME "data_poll_manager.tmh"
-#include <openthread/openthread_enable_defines.h>
+#include <openthread/openthread_config.h>
 
 
 

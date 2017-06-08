@@ -33,7 +33,7 @@
 
 #define WPP_NAME "network_diagnostic.tmh"
 
-#include <openthread/openthread_enable_defines.h>
+#include <openthread/openthread_config.h>
 
 #include "network_diagnostic.hpp"
 

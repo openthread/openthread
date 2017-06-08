@@ -31,11 +31,7 @@
 * Platform abstraction for the alarm
 */
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread/openthread_config.h>
 
 #include <stdbool.h>
 #include <stdint.h>

@@ -35,7 +35,7 @@
 
 #define WPP_NAME "joiner_router.tmh"
 
-#include <openthread/openthread_enable_defines.h>
+#include <openthread/openthread_config.h>
 
 #include "joiner_router.hpp"
 

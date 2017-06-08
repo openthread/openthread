@@ -33,7 +33,7 @@
 #ifndef NCP_SPI_HPP_
 #define NCP_SPI_HPP_
 
-#include <openthread/openthread_enable_defines.h>
+#include <openthread/openthread_config.h>
 
 #include "ncp/ncp_base.hpp"
 

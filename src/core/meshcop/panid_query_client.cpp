@@ -33,10 +33,9 @@
 
 #define WPP_NAME "panid_query_client.tmh"
 
-#include <openthread/openthread_enable_defines.h>
+#include <openthread/openthread_config.h>
+
 #include "panid_query_client.hpp"
-
-
 
 #include <openthread/platform/random.h>
 

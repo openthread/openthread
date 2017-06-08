@@ -35,11 +35,7 @@
 #ifndef OPENTHREAD_BORDER_AGENT_PROXY_H_
 #define OPENTHREAD_BORDER_AGENT_PROXY_H_
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread/openthread_config.h>
 
 #include <openthread/types.h>
 

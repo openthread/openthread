@@ -31,7 +31,7 @@
  *   This file implements the local Thread Network Data.
  */
 
-#include <openthread/openthread_enable_defines.h>
+#include <openthread/openthread_config.h>
 
 #include "network_data_local.hpp"
 

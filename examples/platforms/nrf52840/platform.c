@@ -38,7 +38,7 @@
 #include "platform-nrf5.h"
 
 #include <openthread-core-config.h>
-#include <openthread-config.h>
+#include <openthread/openthread_config.h>
 
 void __cxa_pure_virtual(void) { while (1); }
 

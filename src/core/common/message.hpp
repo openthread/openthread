@@ -34,11 +34,7 @@
 #ifndef MESSAGE_HPP_
 #define MESSAGE_HPP_
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread/openthread_config.h>
 
 #include "utils/wrap_stdint.h"
 #include "utils/wrap_string.h"

@@ -29,20 +29,19 @@
 /**
  * @file
  * @brief
- *  This file includes required enable defines header.
+ *  This file includes required defines config header.
  */
 
-#ifndef OPENTHREAD_ENABLE_DEFINES_H_
-#define OPENTHREAD_ENABLE_DEFINES_H_
+#ifndef OPENTHREAD_CONFIG_H_
+#define OPENTHREAD_CONFIG_H_
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
+#if  !defined(OPENTHREAD_CONFIG_FILE)
+#define OPENTHREAD_CONFIG_FILE <openthread-config-generic.h>
 #endif
 
+#include OPENTHREAD_CONFIG_FILE
 
-#endif //OPENTHREAD_ENABLE_DEFINES_H_
+#endif //OPENTHREAD_CONFIG_H_
 
 
 

@@ -32,9 +32,7 @@
  */
 
 #define WPP_NAME "dtls.tmh"
-#include <openthread/openthread_enable_defines.h>
-
-
+#include <openthread/openthread_config.h>
 
 #include "dtls.hpp"
 

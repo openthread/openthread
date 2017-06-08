@@ -31,7 +31,7 @@
  *   This file implements common methods for manipulating MLE TLVs.
  */
 
-#include <openthread/openthread_enable_defines.h>
+#include <openthread/openthread_config.h>
 
 #include "tlvs.hpp"
 

@@ -31,7 +31,7 @@
  *   This file implements the OpenThread Link API.
  */
 
-#include <openthread/openthread_enable_defines.h>
+#include <openthread/openthread_config.h>
 
 #include <openthread/link.h>
 

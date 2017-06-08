@@ -31,7 +31,7 @@
  *   This file implements the jam detector feature.
  */
 
-#include <openthread/openthread_enable_defines.h>
+#include <openthread/openthread_config.h>
 
 #include "jam_detector.hpp"
 
