@@ -297,6 +297,8 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
 
     va_end(args);
 
+    otNcpStreamWrite(0, reinterpret_cast<const uint8_t*>("\r\n"), 2);
+
     (void)aLogLevel;
     (void)aLogRegion;
 }
