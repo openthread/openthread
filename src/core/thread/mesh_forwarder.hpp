@@ -224,7 +224,8 @@ public:
      * @returns A reference to the IP level counters.
      *
      */
-    const otIpCounters &GetCounters(void) { return mIpCounters; }
+    const otIpCounters &GetCounters(void) const { return mIpCounters; }
+
 private:
     enum
     {
