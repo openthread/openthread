@@ -5387,7 +5387,6 @@ otError NcpBase::SetPropertyHandler_IPV6_ML_PREFIX(uint8_t header, spinel_prop_k
     if (value_len >= 8)
     {
         errorCode = otThreadSetMeshLocalPrefix(mInstance, value_ptr);
-        HandleCommandPropertyGet(header, key);
     }
     else
     {
