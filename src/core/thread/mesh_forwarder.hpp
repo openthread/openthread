@@ -305,7 +305,7 @@ private:
     void LogIp6Message(MessageAction aAction, const Message &aMessage, const Mac::Address *aMacAddress,
                        otError aError);
 
-    
+
     ThreadNetif           &mNetif;
 
     Mac::Receiver         mMacReceiver;
