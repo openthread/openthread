@@ -44,6 +44,8 @@
 #include "ftdf.h"
 #include "hw_cpm.h"
 #include "hw_gpio.h"
+#include "hw_qspi.h"
+#include "hw_otpc.h"
 #include "hw_watchdog.h"
 
 static bool sBlink = false;
@@ -54,13 +56,12 @@ static int  sMsCounter;
 #define ROUTER_BLINK_TIME     (500)
 #define CHILD_BLINK_TIME      (2000)
 
+#define SET_CLOCK_TO_96MHZ
 
 otInstance *sInstance;
 
-
 void ClkInit(void)
 {
-
     NVIC_ClearPendingIRQ(XTAL16RDY_IRQn);
     NVIC_EnableIRQ(XTAL16RDY_IRQn);                 // Activate XTAL16 Ready IRQ
     hw_cpm_set_divn(false);                         // External crystal is 16MHz
@@ -77,9 +78,19 @@ void ClkInit(void)
 
     hw_watchdog_freeze();                           // Stop watchdog
     hw_cpm_set_recharge_period((uint16_t)dg_configSET_RECHARGE_PERIOD);
-    hw_cpm_set_sysclk(SYS_CLK_IS_XTAL16M);
-    hw_cpm_set_hclk_div(0);
+    hw_watchdog_unfreeze();                         // Start watchdog
+    hw_cpm_pll_sys_on();                            // Turn on PLL
+    hw_watchdog_freeze();                           // Stop watchdog
+
+    hw_qspi_set_div(HW_QSPI_DIV_2);                 // Set QSPI div by 2
+
+    hw_cpm_disable_pll_divider();                   // Disable divider (div by 2)
+    hw_cpm_set_sysclk(SYS_CLK_IS_PLL);
+    hw_cpm_set_hclk_div(ahb_div2);
     hw_cpm_set_pclk_div(0);
+
+    hw_otpc_init();
+    hw_otpc_set_speed(HW_OTPC_SYS_CLK_FREQ_48);
 }
 
 /*
@@ -157,8 +168,8 @@ void PlatformProcessDrivers(otInstance *aInstance)
 {
     sInstance = aInstance;
 
-    da15000AlarmProcess(aInstance);
     da15000UartProcess();
     da15000RadioProcess(aInstance);
+    da15000AlarmProcess(aInstance);
     ExampleProcess(aInstance);
 }

@@ -43,15 +43,13 @@ extern void main(void);
 extern void __cpu_startup(void);
 extern void __gcc_program_start(void);
 
-extern uint32_t __rwdata_start__;  // End of .text region in FLASH
 extern uint32_t _sdata;            // Start of .data region in RAM
 extern uint32_t _edata;            // End of .data region in RAM
-
 extern uint32_t __bss_start__;
 extern uint32_t __bss_end__;
-
 extern uint32_t __init_array_start;
 extern uint32_t __init_array_end;
+extern uint32_t __rwdata_start__;  // End of .text region in FLASH
 
 /********************************************************************/
 void cstartup_rwdata()

@@ -34,13 +34,15 @@
 #include <openthread/openthread.h>
 #include <openthread/platform/alarm.h>
 #include <openthread/platform/radio.h>
-
 #include "utils/code_utils.h"
+
+#include <string.h>
 
 #include "platform-da15000.h"
 
 #include "ad_ftdf.h"
 #include "ad_ftdf_phy_api.h"
+#include "hw_otpc.h"
 #include "hw_rf.h"
 #include "internal.h"
 #include "regmap.h"
@@ -59,28 +61,59 @@
 #define IEEE802154_ACK_REQUEST          1 << 5
 #define IEEE802154_DSN_OFFSET           2
 
+#define RSSI_TABLE_SIZE                 8
+#define EUI64_TABLE_SIZE                8
+
 enum
 {
     DA15000_RECEIVE_SENSITIVITY = -100,  // dBm
 };
 
-static otInstance *sThreadInstance;
+static void          da15000OtpRead(void);
+static uint8_t       eui64[EUI64_TABLE_SIZE] = {0};
 
-static otRadioState sRadioState = OT_RADIO_STATE_DISABLED;
-static uint8_t      sChannel = DEFAULT_CHANNEL;
-static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE];
-static uint8_t      sReceivePsdu[OT_RADIO_FRAME_MAX_SIZE];
-static otRadioFrame sTransmitFrame;
-static otRadioFrame sReceiveFrame;
-static otError      sTransmitStatus;
+static otInstance   *sThreadInstance;
+static otRadioState  sRadioState             = OT_RADIO_STATE_DISABLED;
+static otRadioFrame  sReceiveFrame;
+static otRadioFrame  sTransmitFrame;
+static otError       sTransmitStatus;
+static bool          sFramePending           = false;
+static bool          sRadioPromiscuous       = false;
+static bool          sRssiInit               = true;
+static uint8_t       sChannel                = DEFAULT_CHANNEL;
+static uint8_t       sRssiCtr                = 0;
+static uint32_t      sSleepInitDelay         = 0;
 
-static bool sFramePending     = false;
-static bool sSendFrameDone    = false;
-static bool sRadioPromiscuous = false;
-static bool sGoSleep          = false;
+static uint8_t       sReceivePsdu[OT_RADIO_FRAME_MAX_SIZE];
+static uint8_t       sRssiTable[RSSI_TABLE_SIZE];
+static uint8_t       sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE];
 
 PRIVILEGED_DATA static uint8_t sEnableRX;
-static uint32_t sSleepInitDelay = 0;
+
+static void da15000OtpRead(void)
+{
+    hw_otpc_init();         // Start clock.
+    hw_otpc_disable();      // Make sure it is in standby mode.
+    hw_otpc_init();         // Restart clock.
+    hw_otpc_manual_read_on(false);
+
+    __DMB();
+    uint32_t *factoryTestTimeStamp  = (uint32_t *) FACTORY_TEST_TIMESTAMP;
+    uint32_t *factoryTestId         = (uint32_t *) FACTORY_TESTER_ID;
+    __DMB();
+
+    eui64[0] = 0x80;    //80-EA-CA is for Dialog Semiconductor
+    eui64[1] = 0xEA;
+    eui64[2] = 0xCA;
+    eui64[3] = (*factoryTestId        >>  8) & 0xff;
+    eui64[4] = (*factoryTestTimeStamp >> 24) & 0xff;
+    eui64[5] = (*factoryTestTimeStamp >> 16) & 0xff;
+    eui64[6] = (*factoryTestTimeStamp >>  8) & 0xff;
+    eui64[7] =  *factoryTestTimeStamp        & 0xff;
+
+    hw_otpc_manual_read_off();
+    hw_otpc_disable();
+}
 
 void da15000RadioInit(void)
 {
@@ -100,22 +133,18 @@ void da15000RadioInit(void)
     hw_rf_system_init();
 
     ad_ftdf_init_phy_api();
+
+    da15000OtpRead();
+
+    sChannel             = DEFAULT_CHANNEL;
+    sTransmitFrame.mPsdu = sTransmitPsdu;
+    sReceiveFrame.mPsdu  = sReceivePsdu;
 }
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
     (void)aInstance;
-    uint32_t *factoryTestTimeStamp  = (uint32_t *) FACTORY_TEST_TIMESTAMP;
-    uint32_t *factoryTestId         = (uint32_t *) FACTORY_TESTER_ID;
-
-    aIeeeEui64[0] = 0x80;    //80-EA-CA is for Dialog Semiconductor
-    aIeeeEui64[1] = 0xEA;
-    aIeeeEui64[2] = 0xCA;
-    aIeeeEui64[3] = (*factoryTestId        >>  8) & 0xff;
-    aIeeeEui64[4] = (*factoryTestTimeStamp >> 24) & 0xff;
-    aIeeeEui64[5] = (*factoryTestTimeStamp >> 16) & 0xff;
-    aIeeeEui64[6] = (*factoryTestTimeStamp >>  8) & 0xff;
-    aIeeeEui64[7] =  *factoryTestTimeStamp        & 0xff;
+    memcpy(aIeeeEui64, eui64, EUI64_TABLE_SIZE);
 }
 
 void otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
@@ -141,20 +170,16 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t address)
 
 otError otPlatRadioEnable(otInstance *aInstance)
 {
-    uint8_t defaultChannel;
     uint8_t maxRetries;
 
     otError error = OT_ERROR_NONE;
     otEXPECT_ACTION(sRadioState == OT_RADIO_STATE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
     sThreadInstance = aInstance;
-    sTransmitFrame.mPsdu = sTransmitPsdu;
-    sReceiveFrame.mPsdu = sReceivePsdu;
 
     sEnableRX = 1;
     FTDF_setValue(FTDF_PIB_RX_ON_WHEN_IDLE, &sEnableRX);
-    defaultChannel = DEFAULT_CHANNEL;
-    FTDF_setValue(FTDF_PIB_CURRENT_CHANNEL, &defaultChannel);
+    FTDF_setValue(FTDF_PIB_CURRENT_CHANNEL, &sChannel);
     maxRetries = 0;
     FTDF_setValue(FTDF_PIB_MAX_FRAME_RETRIES, &maxRetries);
 
@@ -173,6 +198,11 @@ exit:
 otError otPlatRadioDisable(otInstance *aInstance)
 {
     (void)aInstance;
+    sEnableRX = 0;
+    FTDF_setValue(FTDF_PIB_RX_ON_WHEN_IDLE, &sEnableRX);
+    ad_ftdf_sleep_when_possible(FTDF_TRUE);
+
+    FTDF_fpprReset();
 
     sRadioState = OT_RADIO_STATE_DISABLED;
 
@@ -195,17 +225,18 @@ otError otPlatRadioSleep(otInstance *aInstance)
         sSleepInitDelay = otPlatAlarmGetNow();
         return OT_ERROR_NONE;
     }
-    else if ((otPlatAlarmGetNow() - sSleepInitDelay) < 3000)
+    else if ((otPlatAlarmGetNow() - sSleepInitDelay) < dg_configINITIAL_SLEEP_DELAY_TIME)
     {
         return OT_ERROR_NONE;
     }
 
     otError error = OT_ERROR_NONE;
-    otEXPECT_ACTION(((sRadioState == OT_RADIO_STATE_RECEIVE) || (sRadioState == OT_RADIO_STATE_SLEEP)),
-                    error = OT_ERROR_INVALID_STATE);
+    otEXPECT_ACTION(sRadioState == OT_RADIO_STATE_RECEIVE, error = OT_ERROR_INVALID_STATE);
 
-    sGoSleep = true;
     sRadioState = OT_RADIO_STATE_SLEEP;
+    sEnableRX = 0;
+    FTDF_setValue(FTDF_PIB_RX_ON_WHEN_IDLE, &sEnableRX);
+    ad_ftdf_sleep_when_possible(FTDF_TRUE);
 
 exit:
     return error;
@@ -219,6 +250,10 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     otEXPECT_ACTION(sRadioState != OT_RADIO_STATE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
     ad_ftdf_wake_up();
+
+    sEnableRX = 0;
+    FTDF_setValue(FTDF_PIB_RX_ON_WHEN_IDLE, &sEnableRX);
+
     sChannel = aChannel;
     FTDF_setValue(FTDF_PIB_CURRENT_CHANNEL, &aChannel);
 
@@ -239,12 +274,12 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
     (void)aInstance;
-
+    otError error = OT_ERROR_NONE;
     uint8_t entry;
     uint8_t entryIdx;
 
     // check if address already stored
-    otError error = OT_ERROR_NONE;
+
     otEXPECT(!FTDF_fpprLookupShortAddress(aShortAddress, &entry, &entryIdx));
 
     otEXPECT_ACTION(FTDF_fpprGetFreeShortAddress(&entry, &entryIdx), error = OT_ERROR_NO_BUFS);
@@ -266,8 +301,8 @@ otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aEx
     uint32_t addrL;
     uint64_t addrH;
 
-    addrL = (aExtAddress[4] << 24) | (aExtAddress[5] << 16) | (aExtAddress[6] << 8) | (aExtAddress[7] << 0);
-    addrH = (aExtAddress[0] << 24) | (aExtAddress[1] << 16) | (aExtAddress[2] << 8) | (aExtAddress[3] << 0);
+    addrL = (aExtAddress[3] << 24) | (aExtAddress[2] << 16) | (aExtAddress[1] << 8) | (aExtAddress[0] << 0);
+    addrH = (aExtAddress[7] << 24) | (aExtAddress[6] << 16) | (aExtAddress[5] << 8) | (aExtAddress[4] << 0);
     addr = addrL | (addrH << 32);
 
     // check if address already stored
@@ -286,11 +321,11 @@ exit:
 otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
     (void)aInstance;
-
+    otError error = OT_ERROR_NONE;
     uint8_t entry;
     uint8_t entryIdx;
 
-    otError error = OT_ERROR_NONE;
+
     otEXPECT_ACTION(FTDF_fpprLookupShortAddress(aShortAddress, &entry, &entryIdx), error = OT_ERROR_NO_ADDRESS);
 
     FTDF_fpprSetShortAddress(entry, entryIdx, 0);
@@ -309,8 +344,8 @@ otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *a
     uint32_t addrL;
     uint64_t addrH;
 
-    addrL = (aExtAddress[4] << 24) | (aExtAddress[5] << 16) | (aExtAddress[6] << 8) | (aExtAddress[7] << 0);
-    addrH = (aExtAddress[0] << 24) | (aExtAddress[1] << 16) | (aExtAddress[2] << 8) | (aExtAddress[3] << 0);
+    addrL = (aExtAddress[3] << 24) | (aExtAddress[2] << 16) | (aExtAddress[1] << 8) | (aExtAddress[0] << 0);
+    addrH = (aExtAddress[7] << 24) | (aExtAddress[6] << 16) | (aExtAddress[5] << 8) | (aExtAddress[4] << 0);
     addr = addrL | (addrH << 32);
 
     otError error = OT_ERROR_NONE;
@@ -383,15 +418,47 @@ exit:
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
     (void)aInstance;
+    uint16_t result = 0;
 
-    return 0;
+    // fill table with same value for init
+    if (sRssiInit)
+    {
+        for (uint8_t i = 0; i < RSSI_TABLE_SIZE; i++)
+        {
+            sRssiTable[i] = sReceiveFrame.mLqi;
+        }
+
+        sRssiInit = false;
+    }
+    else
+    {
+        ASSERT_ERROR(sRssiCtr < RSSI_TABLE_SIZE);
+        sRssiTable[sRssiCtr] = sReceiveFrame.mLqi;
+        sRssiCtr++;
+
+        if (sRssiCtr >= RSSI_TABLE_SIZE)
+        {
+            sRssiCtr = 0;
+        }
+    }
+
+    // average of 8 last lqi
+    for (uint8_t i = 0; i < RSSI_TABLE_SIZE; i++)
+    {
+        result += sRssiTable[i];
+    }
+
+    result = result / RSSI_TABLE_SIZE;
+
+    // Approximation to dB scale by divide by 9
+    return result / 9;
 }
 
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     (void)aInstance;
 
-    return OT_RADIO_CAPS_NONE;
+    return OT_RADIO_CAPS_ACK_TIMEOUT;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
@@ -420,38 +487,30 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
 
 void otPlatRadioSetDefaultTxPower(otInstance *aInstance, int8_t aPower)
 {
-    // TODO: Create a proper implementation for this driver.
     (void)aInstance;
-    (void)aPower;
+
+    FTDF_setValue(FTDF_PIB_TX_POWER, &aPower);
 }
 
 void da15000RadioProcess(otInstance *aInstance)
 {
-    if (sSendFrameDone)
+    (void)aInstance;
+    uint32_t ftdfCe = *FTDF_GET_REG_ADDR(ON_OFF_REGMAP_FTDF_CE);
+
+    FTDF_confirmLmacInterrupt();
+
+    if (ftdfCe & FTDF_MSK_RX_CE)
     {
-        sRadioState = OT_RADIO_STATE_RECEIVE;
-
-        if (((sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0) || sTransmitStatus != OT_ERROR_NONE)
-        {
-            otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, sTransmitStatus);
-        }
-        else
-        {
-            otPlatRadioTxDone(aInstance, &sTransmitFrame, &sReceiveFrame, sTransmitStatus);
-        }
-
-        sFramePending = false;
-        sSendFrameDone = false;
+        FTDF_processRxEvent();
     }
 
-    if (sRadioState == OT_RADIO_STATE_SLEEP && sGoSleep)
+    if (ftdfCe & FTDF_MSK_TX_CE)
     {
-        sGoSleep = false;
-
-        sEnableRX = 0;
-        FTDF_setValue(FTDF_PIB_RX_ON_WHEN_IDLE, &sEnableRX);
-        ad_ftdf_sleep_when_possible(true);
+        FTDF_processTxEvent();
     }
+
+    volatile uint32_t *ftdfCm = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_FTDF_CM);
+    *ftdfCm = FTDF_MSK_TX_CE | FTDF_MSK_RX_CE | FTDF_MSK_SYMBOL_TMR_CE;
 }
 
 void FTDF_sendFrameTransparentConfirm(void *handle, FTDF_Bitmap32 status)
@@ -470,7 +529,6 @@ void FTDF_sendFrameTransparentConfirm(void *handle, FTDF_Bitmap32 status)
 
     case FTDF_TRANSPARENT_NO_ACK:
         sTransmitStatus = OT_ERROR_NO_ACK;
-        sSleepInitDelay = 0;
         break;
 
     default:
@@ -478,7 +536,16 @@ void FTDF_sendFrameTransparentConfirm(void *handle, FTDF_Bitmap32 status)
         break;
     }
 
-    sSendFrameDone = true;
+    sRadioState = OT_RADIO_STATE_RECEIVE;
+
+    if (((sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0) || sTransmitStatus != OT_ERROR_NONE)
+    {
+        otPlatRadioTxDone(sThreadInstance, &sTransmitFrame, NULL, sTransmitStatus);
+    }
+    else
+    {
+        otPlatRadioTxDone(sThreadInstance, &sTransmitFrame, &sReceiveFrame, sTransmitStatus);
+    }
 }
 
 void FTDF_rcvFrameTransparent(FTDF_DataLength frameLength,
@@ -486,12 +553,22 @@ void FTDF_rcvFrameTransparent(FTDF_DataLength frameLength,
                               FTDF_Bitmap32   status,
                               FTDF_LinkQuality lqi)
 {
-    sReceiveFrame.mPower     = OT_RADIO_RSSI_INVALID;
-    sReceiveFrame.mLqi       = lqi;
-
     sReceiveFrame.mChannel   = sChannel;
     sReceiveFrame.mLength    = frameLength;
     sReceiveFrame.mPsdu      = frame;
+    sReceiveFrame.mLqi       = lqi;
+    sReceiveFrame.mPower     = otPlatRadioGetRssi(sThreadInstance);
+
+    if (sRadioState != OT_RADIO_STATE_DISABLED)
+    {
+        sRadioState = OT_RADIO_STATE_RECEIVE;
+    }
+
+    if ((sReceiveFrame.mPsdu[0]  & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK &&
+        ((sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0))
+    {
+        sFramePending = true;
+    }
 
     if (status == FTDF_TRANSPARENT_RCV_SUCCESSFUL)
     {
@@ -502,10 +579,6 @@ void FTDF_rcvFrameTransparent(FTDF_DataLength frameLength,
         otPlatRadioReceiveDone(sThreadInstance, &sReceiveFrame, OT_ERROR_ABORT);
     }
 
-    if (sRadioState != OT_RADIO_STATE_DISABLED)
-    {
-        sRadioState = OT_RADIO_STATE_RECEIVE;
-    }
 }
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
