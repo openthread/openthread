@@ -576,6 +576,58 @@ static uint8_t BorderRouterConfigToFlagByte(const otBorderRouterConfig &config)
     return flags;
 }
 
+static uint8_t ExternalRoutePreferenceToFlagByte(int aPreference)
+{
+    uint8_t flags;
+
+    switch (aPreference)
+    {
+    case OT_ROUTE_PREFERENCE_LOW:
+        flags = SPINEL_ROUTE_PREFERENCE_LOW;
+        break;
+
+    case OT_ROUTE_PREFERENCE_MED:
+        flags = SPINEL_ROUTE_PREFERENCE_MEDIUM;
+        break;
+
+    case OT_ROUTE_PREFERENCE_HIGH:
+        flags = SPINEL_ROUTE_PREFERENCE_HIGH;
+        break;
+
+    default:
+        flags = SPINEL_ROUTE_PREFERENCE_MEDIUM;
+        break;
+    }
+
+    return flags;
+}
+
+#if OPENTHREAD_ENABLE_BORDER_ROUTER
+
+static int FlagByteToExternalRoutePreference(uint8_t aFlags)
+{
+    int route_preference = 0;
+
+    switch (aFlags & SPINEL_NET_FLAG_PREFERENCE_MASK)
+    {
+    case SPINEL_ROUTE_PREFERENCE_HIGH:
+        route_preference = OT_ROUTE_PREFERENCE_HIGH;
+        break;
+
+    case SPINEL_ROUTE_PREFERENCE_MEDIUM:
+        route_preference = OT_ROUTE_PREFERENCE_MED;
+        break;
+
+    case SPINEL_ROUTE_PREFERENCE_LOW:
+        route_preference = OT_ROUTE_PREFERENCE_LOW;
+        break;
+    }
+
+    return route_preference;
+}
+
+#endif // OPENTHREAD_ENABLE_BORDER_ROUTER
+
 // ----------------------------------------------------------------------------
 // MARK: Class Boilerplate
 // ----------------------------------------------------------------------------
@@ -3248,7 +3300,6 @@ otError NcpBase::GetPropertyHandler_THREAD_OFF_MESH_ROUTES(uint8_t header, spine
     otError errorCode = OT_ERROR_NONE;
     otExternalRouteConfig external_route_config;
     otNetworkDataIterator iter = OT_NETWORK_DATA_ITERATOR_INIT;
-    uint8_t flags;
 
     mDisableStreamWrite = true;
 
@@ -3263,46 +3314,44 @@ otError NcpBase::GetPropertyHandler_THREAD_OFF_MESH_ROUTES(uint8_t header, spine
 
     while (otNetDataGetNextRoute(mInstance, &iter, &external_route_config) == OT_ERROR_NONE)
     {
-        flags = static_cast<uint8_t>(external_route_config.mPreference);
-        flags <<= SPINEL_NET_FLAG_PREFERENCE_OFFSET;
-
         SuccessOrExit(
             errorCode = OutboundFrameFeedPacked(
                             SPINEL_DATATYPE_STRUCT_S(
                                 SPINEL_DATATYPE_IPv6ADDR_S      // IPv6 Prefix
                                 SPINEL_DATATYPE_UINT8_S         // Prefix Length (in bits)
-                                SPINEL_DATATYPE_BOOL_S          // isStable
-                                SPINEL_DATATYPE_UINT8_S         // Flags
+                                SPINEL_DATATYPE_BOOL_S          // IsStable
+                                SPINEL_DATATYPE_UINT8_S         // Route Preference Flags
                                 SPINEL_DATATYPE_BOOL_S          // IsLocal
+                                SPINEL_DATATYPE_BOOL_S          // NextHopIsThisDevice
                             ),
                             &external_route_config.mPrefix.mPrefix,
                             external_route_config.mPrefix.mLength,
                             external_route_config.mStable,
-                            flags,
-                            false
+                            ExternalRoutePreferenceToFlagByte(external_route_config.mPreference),
+                            false,
+                            external_route_config.mNextHopIsThisDevice
                         ));
     }
 
 #if OPENTHREAD_ENABLE_BORDER_ROUTER
     while (otBorderRouterGetNextRoute(mInstance, &iter, &external_route_config) == OT_ERROR_NONE)
     {
-        flags = static_cast<uint8_t>(external_route_config.mPreference);
-        flags <<= SPINEL_NET_FLAG_PREFERENCE_OFFSET;
-
         SuccessOrExit(
             errorCode = OutboundFrameFeedPacked(
                             SPINEL_DATATYPE_STRUCT_S(
                                 SPINEL_DATATYPE_IPv6ADDR_S      // IPv6 Prefix
                                 SPINEL_DATATYPE_UINT8_S         // Prefix Length (in bits)
-                                SPINEL_DATATYPE_BOOL_S          // isStable
-                                SPINEL_DATATYPE_UINT8_S         // Flags
+                                SPINEL_DATATYPE_BOOL_S          // IsStable
+                                SPINEL_DATATYPE_UINT8_S         // Route Preference Flags
                                 SPINEL_DATATYPE_BOOL_S          // IsLocal
+                                SPINEL_DATATYPE_BOOL_S          // NextHopIsThisDevice
                             ),
                             &external_route_config.mPrefix.mPrefix,
                             external_route_config.mPrefix.mLength,
                             external_route_config.mStable,
-                            flags,
-                            true
+                            ExternalRoutePreferenceToFlagByte(external_route_config.mPreference),
+                            true,
+                            external_route_config.mNextHopIsThisDevice
                         ));
     }
 #endif // OPENTHREAD_ENABLE_BORDER_ROUTER
@@ -7030,7 +7079,7 @@ otError NcpBase::InsertPropertyHandler_THREAD_OFF_MESH_ROUTES(uint8_t header, sp
                            SPINEL_DATATYPE_IPv6ADDR_S  // Route prefix
                            SPINEL_DATATYPE_UINT8_S     // Prefix length (in bits)
                            SPINEL_DATATYPE_BOOL_S      // Stable
-                           SPINEL_DATATYPE_UINT8_S     // Flags
+                           SPINEL_DATATYPE_UINT8_S     // Flags (Route Preference)
                        ),
                        &addr_ptr,
                        &ext_route_config.mPrefix.mLength,
@@ -7042,7 +7091,8 @@ otError NcpBase::InsertPropertyHandler_THREAD_OFF_MESH_ROUTES(uint8_t header, sp
     {
         ext_route_config.mPrefix.mPrefix = *addr_ptr;
         ext_route_config.mStable = stable;
-        ext_route_config.mPreference = ((flags & SPINEL_NET_FLAG_PREFERENCE_MASK) >> SPINEL_NET_FLAG_PREFERENCE_OFFSET);
+        ext_route_config.mPreference = FlagByteToExternalRoutePreference(flags);
+
         errorCode = otBorderRouterAddRoute(mInstance, &ext_route_config);
 
         if (errorCode == OT_ERROR_NONE)

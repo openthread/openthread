@@ -89,7 +89,7 @@ The local stable network data.
 Data per item is:
 
 * `6`: IPv6 Prefix
-* `C`: Prefix length, in bits
+* `C`: Prefix length in bits
 * `b`: Stable flag
 * `C`: TLV flags
 * `b`: "Is defined locally" flag. Set if this network was locally
@@ -98,18 +98,22 @@ Data per item is:
 
 ### PROP 91: PROP_THREAD_OFF_MESH_ROUTES
 * Type: Read-Write
-* Packed-Encoding: `A(t(6CbCb))`
+* Packed-Encoding: `A(t(6CbCbb))`
 
 Data per item is:
 
-* `6`: IPv6 Prefix
-* `C`: Prefix length, in bits
+* `6`: Route Prefix
+* `C`: Prefix length in bits
 * `b`: Stable flag
-* `C`: Other flags
+* `C`: Route preference flags
 * `b`: "Is defined locally" flag. Set if this route info was locally
   defined as part of local network data. Assumed to be true for set,
   insert and replace. Clear if the route is part of partition's network
   data.
+* `b`: "Next hop is this device" flag. Set if the next hop for the
+  route is this device itself (i.e., route was added by this device)
+  This value is ignored when adding an external route. For any added
+  route the next hop is this device.
 
 ### PROP 92: PROP_THREAD_ASSISTING_PORTS
 * Type: Read-Write
