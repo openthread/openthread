@@ -34,8 +34,9 @@
 #include <openthread/openthread.h>
 #include <openthread/platform/alarm.h>
 #include <openthread/platform/radio.h>
-#include <string.h>
 #include "utils/code_utils.h"
+
+#include <string.h>
 
 #include "platform-da15000.h"
 
