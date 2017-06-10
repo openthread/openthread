@@ -50,24 +50,14 @@ COMMON_CPPFLAGS                                   = \
     $(OPENTHREAD_TARGET_DEFINES)                    \
     $(NULL)
 
-
-COMMON_CXXFLAGS                                   = \
-    -I$(top_srcdir)/include                         \
-    -I$(top_srcdir)/src                             \
-    -I$(top_srcdir)/src/core                        \
-    -I$(top_srcdir)/third_party                     \
-    -D_GNU_SOURCE                                   \
-    $(OPENTHREAD_TARGET_DEFINES)                    \
-    $(NULL)
-
 libopenthread_ncp_mtd_a_CPPFLAGS                  = \
     -DOPENTHREAD_MTD=1                              \
-    $(COMMON_CXXFLAGS)                              \
+    $(COMMON_CPPFLAGS)                              \
     $(NULL)
 
 libopenthread_ncp_ftd_a_CPPFLAGS                  = \
     -DOPENTHREAD_FTD=1                              \
-    $(COMMON_CXXFLAGS)                              \
+    $(COMMON_CPPFLAGS)                              \
     $(NULL)
 
 COMMON_SOURCES                                    = \
@@ -101,7 +91,7 @@ if OPENTHREAD_BUILD_TESTS
 
 noinst_PROGRAMS                                   = spinel-test
 spinel_test_SOURCES                               = spinel.c
-spinel_test_CFLAGS                                = -DSPINEL_SELF_TEST=1 -D_GNU_SOURCE -I$(top_srcdir)/src/core
+spinel_test_CFLAGS                                = -DSPINEL_SELF_TEST=1 $(COMMON_CPPFLAGS)
 
 TESTS                                             = spinel-test
 
