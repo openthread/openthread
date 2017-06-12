@@ -35,7 +35,7 @@
 #ifndef OPENTHREAD_CONFIG_H_
 #define OPENTHREAD_CONFIG_H_
 
-#if  !defined(OPENTHREAD_CONFIG_FILE)
+#if !defined(OPENTHREAD_CONFIG_FILE)
 #define OPENTHREAD_CONFIG_FILE <openthread-config-generic.h>
 #endif
 
