@@ -35,7 +35,7 @@
 #ifndef OPENTHREAD_CHILD_SUPERVISION_H_
 #define OPENTHREAD_CHILD_SUPERVISION_H_
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "openthread/types.h"
 

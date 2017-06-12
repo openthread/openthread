@@ -33,7 +33,7 @@
 
 #define WPP_NAME "announce_begin_server.tmh"
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "announce_begin_server.hpp"
 

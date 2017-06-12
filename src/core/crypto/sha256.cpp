@@ -31,7 +31,7 @@
  *   This file implements SHA-256.
  */
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "sha256.hpp"
 

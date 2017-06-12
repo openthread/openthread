@@ -35,7 +35,7 @@
 #include <assert.h>
 
 #include <openthread/types.h>
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 #include <openthread/platform/platform.h>
 #include <openthread/platform/radio.h>
 #include <openthread/platform/diag.h>

@@ -31,7 +31,7 @@
  *   This file implements the CLI server on the CONSOLE service.
  */
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "cli_console.hpp"
 

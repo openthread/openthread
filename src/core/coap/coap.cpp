@@ -28,7 +28,7 @@
 
 #define WPP_NAME "coap.tmh"
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "coap.hpp"
 

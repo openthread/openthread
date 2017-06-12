@@ -35,7 +35,7 @@
 #ifndef OPENTHREADINSTANCE_H_
 #define OPENTHREADINSTANCE_H_
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "utils/wrap_stdint.h"
 #include "utils/wrap_stdbool.h"

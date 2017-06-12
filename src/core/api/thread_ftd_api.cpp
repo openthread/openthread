@@ -33,7 +33,7 @@
 
 #define WPP_NAME "thread_ftd_api.tmh"
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #if OPENTHREAD_FTD
 

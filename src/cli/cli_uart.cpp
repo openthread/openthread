@@ -31,7 +31,7 @@
  *   This file implements the CLI server on the UART service.
  */
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "cli_uart.hpp"
 

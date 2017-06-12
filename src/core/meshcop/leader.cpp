@@ -35,7 +35,7 @@
 
 #define WPP_NAME "leader.tmh"
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "leader.hpp"
 

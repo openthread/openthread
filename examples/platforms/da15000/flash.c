@@ -26,7 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 #include <openthread/types.h>
 #include <openthread/platform/alarm.h>
 

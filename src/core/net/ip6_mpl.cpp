@@ -31,7 +31,7 @@
  *   This file implements MPL.
  */
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "ip6_mpl.hpp"
 

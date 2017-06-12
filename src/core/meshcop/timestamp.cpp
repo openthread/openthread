@@ -31,7 +31,7 @@
  *   This file implements common MeshCoP timestamp processing.
  */
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "timestamp.hpp"
 

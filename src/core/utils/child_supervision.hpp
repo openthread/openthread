@@ -35,7 +35,7 @@
 #ifndef CHILD_SUPERVISION_HPP_
 #define CHILD_SUPERVISION_HPP_
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "common/message.hpp"
 #include "common/timer.hpp"

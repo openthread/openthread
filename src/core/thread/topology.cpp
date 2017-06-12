@@ -33,7 +33,7 @@
 
 #define WPP_NAME "topology.tmh"
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "topology.hpp"
 

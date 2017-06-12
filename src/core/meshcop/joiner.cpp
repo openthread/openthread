@@ -33,7 +33,7 @@
 
 #define WPP_NAME "joiner.tmh"
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "joiner.hpp"
 

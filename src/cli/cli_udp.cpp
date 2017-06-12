@@ -31,7 +31,7 @@
  *   This file implements the CLI server on a UDP socket.
  */
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "cli_udp.hpp"
 

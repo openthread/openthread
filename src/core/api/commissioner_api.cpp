@@ -31,7 +31,7 @@
  *   This file implements the OpenThread Commissioner API.
  */
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include <openthread/commissioner.h>
 

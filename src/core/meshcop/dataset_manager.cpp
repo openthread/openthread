@@ -34,7 +34,7 @@
 
 #define WPP_NAME "dataset_manager.tmh"
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "dataset_manager.hpp"
 

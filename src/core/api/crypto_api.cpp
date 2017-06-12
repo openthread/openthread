@@ -31,7 +31,7 @@
  *   This file implements the OpenThread Crypto API.
  */
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 #include <openthread/crypto.h>
 
 #include "common/code_utils.hpp"

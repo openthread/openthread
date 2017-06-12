@@ -30,7 +30,7 @@
  *   This file implements an HDLC-lite encoder and decoder.
  */
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "hdlc.hpp"
 

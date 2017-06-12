@@ -28,87 +28,92 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-EXTRA_DIST                          = \
-    PROTOCOL.md                       \
+EXTRA_DIST                                        = \
+    PROTOCOL.md                                     \
     $(NULL)
 
 # Pull in the sources that comprise the OpenThread NCP library.
 
-lib_LIBRARIES                       = \
-    libopenthread-ncp-mtd.a           \
-    libopenthread-ncp-ftd.a           \
+lib_LIBRARIES                                     = \
+    libopenthread-ncp-mtd.a                         \
+    libopenthread-ncp-ftd.a                         \
     $(NULL)
 
 
-COMMON_CPPFLAGS        = \
-    -I$(top_srcdir)/include             \
-    -I$(top_srcdir)/src                 \
-    -I$(top_srcdir)/src/core            \
-    -I$(top_srcdir)/third_party         \
-    -D_GNU_SOURCE                       \
+COMMON_CPPFLAGS                                   = \
+    -I$(top_srcdir)/include                         \
+    -I$(top_srcdir)/src                             \
+    -I$(top_srcdir)/src/core                        \
+    -I$(top_srcdir)/third_party                     \
+    -D_GNU_SOURCE                                   \
     -DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"  \
-    $(OPENTHREAD_TARGET_DEFINES)        \
+    $(OPENTHREAD_TARGET_DEFINES)                    \
     $(NULL)
 
 
-COMMON_CXXFLAGS                     = \
-    -I$(top_srcdir)/include           \
-    -I$(top_srcdir)/src               \
-    -I$(top_srcdir)/src/core          \
-    -I$(top_srcdir)/third_party       \
-    -D_GNU_SOURCE                     \
-    $(OPENTHREAD_TARGET_DEFINES)      \
+COMMON_CXXFLAGS                                   = \
+    -I$(top_srcdir)/include                         \
+    -I$(top_srcdir)/src                             \
+    -I$(top_srcdir)/src/core                        \
+    -I$(top_srcdir)/third_party                     \
+    -D_GNU_SOURCE                                   \
+    $(OPENTHREAD_TARGET_DEFINES)                    \
     $(NULL)
 
-libopenthread_ncp_mtd_a_CPPFLAGS    = \
-    -DOPENTHREAD_MTD=1                \
-    $(COMMON_CXXFLAGS)                \
+libopenthread_ncp_mtd_a_CPPFLAGS                  = \
+    -DOPENTHREAD_MTD=1                              \
+    $(COMMON_CXXFLAGS)                              \
     $(NULL)
 
-libopenthread_ncp_ftd_a_CPPFLAGS    = \
-    -DOPENTHREAD_FTD=1                \
-    $(COMMON_CXXFLAGS)                \
+libopenthread_ncp_ftd_a_CPPFLAGS                  = \
+    -DOPENTHREAD_FTD=1                              \
+    $(COMMON_CXXFLAGS)                              \
     $(NULL)
 
-COMMON_SOURCES                      = \
-    ncp_base.cpp                      \
-    ncp_base.hpp                      \
-    ncp_buffer.cpp                    \
-    ncp_buffer.hpp                    \
-    spinel.c                          \
-    spinel.h                          \
+COMMON_SOURCES                                    = \
+    ncp_base.cpp                                    \
+    ncp_base.hpp                                    \
+    ncp_buffer.cpp                                  \
+    ncp_buffer.hpp                                  \
+    spinel.c                                        \
+    spinel.h                                        \
     spinel_platform.h                               \
-    ncp_spi.cpp                       \
-    ncp_spi.hpp                       \
-    hdlc.cpp                          \
-    hdlc.hpp                          \
-    ncp_uart.cpp                      \
-    ncp_uart.hpp                      \
+    ncp_spi.cpp                                     \
+    ncp_spi.hpp                                     \
+    hdlc.cpp                                        \
+    hdlc.hpp                                        \
+    ncp_uart.cpp                                    \
+    ncp_uart.hpp                                    \
     $(NULL)
 
-libopenthread_ncp_mtd_a_SOURCES     = \
-   $(COMMON_SOURCES)                  \
+libopenthread_ncp_mtd_a_SOURCES                   = \
+   $(COMMON_SOURCES)                                \
    $(NULL)
 
-libopenthread_ncp_ftd_a_SOURCES     = \
-   $(COMMON_SOURCES)                  \
+libopenthread_ncp_ftd_a_SOURCES                   = \
+   $(COMMON_SOURCES)                                \
    $(NULL)
 
-include_HEADERS                     = \
+include_HEADERS                                   = \
     $(NULL)
 
 if OPENTHREAD_BUILD_TESTS
 
-noinst_PROGRAMS                     = spinel-test
-spinel_test_SOURCES                 = spinel.c
-spinel_test_CFLAGS                  = -DSPINEL_SELF_TEST=1 -D_GNU_SOURCE -I$(top_srcdir)/src/core -I$(top_srcdir)/include
+noinst_PROGRAMS                                   = spinel-test
+spinel_test_SOURCES                               = spinel.c
+spinel_test_CFLAGS                                = \
+    -DSPINEL_SELF_TEST=1                            \
+    -D_GNU_SOURCE                                   \
+    -I$(top_srcdir)/src/core                        \
+    -I$(top_srcdir)/include                         \
+    $(NULL)
 
-TESTS = spinel-test
+TESTS                                             = spinel-test
 
 install-headers: install-includeHEADERS
 
 if OPENTHREAD_BUILD_COVERAGE
-CLEANFILES                          = $(wildcard *.gcda *.gcno)
+CLEANFILES                                        = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
 endif # OPENTHREAD_BUILD_TESTS
 

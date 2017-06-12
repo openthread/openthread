@@ -34,7 +34,7 @@
 #ifndef JAM_DETECTOR_HPP_
 #define JAM_DETECTOR_HPP_
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "common/timer.hpp"
 #include "utils/wrap_stdint.h"

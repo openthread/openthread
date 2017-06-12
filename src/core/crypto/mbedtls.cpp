@@ -31,7 +31,7 @@
  *   This file implements the use of mbedTLS.
  */
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "mbedtls.hpp"
 

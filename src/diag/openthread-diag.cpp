@@ -31,7 +31,7 @@
  *   This file implements the top-level interface to diagnostics module.
  */
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include <stdio.h>
 #include <stdlib.h>

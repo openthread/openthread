@@ -35,7 +35,7 @@
 #include <stdint.h>
 #include "fsl_device_registers.h"
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "openthread/platform/logging.h"
 #if OPENTHREAD_ENABLE_CLI_LOGGING

@@ -31,7 +31,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 #include <openthread/platform/alarm.h>
 
 #include "platform-cc2538.h"

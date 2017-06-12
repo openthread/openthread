@@ -31,7 +31,7 @@
 * Platform abstraction for the alarm
 */
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include <stdbool.h>
 #include <stdint.h>

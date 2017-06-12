@@ -42,7 +42,7 @@
 #include "platform-nrf5.h"
 
 #include <openthread-core-config.h>
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 #include <openthread/types.h>
 
 #if (OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT == 0)

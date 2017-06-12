@@ -32,7 +32,7 @@
  *
  */
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 #include "openthread/platform/alarm.h"
 #include <utils/flash.h>
 #include <utils/code_utils.h>

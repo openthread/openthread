@@ -34,7 +34,7 @@
 #ifndef NETWORK_DATA_LEADER_HPP_
 #define NETWORK_DATA_LEADER_HPP_
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "utils/wrap_stdint.h"
 

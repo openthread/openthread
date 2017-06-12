@@ -44,7 +44,7 @@
 // MARK: Headers
 
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "spinel.h"
 

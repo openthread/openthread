@@ -31,7 +31,7 @@
  *   This file implements the tasklet scheduler.
  */
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "tasklet.hpp"
 

@@ -31,7 +31,7 @@
  *   This file implements the trickle timer logic.
  */
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "trickle_timer.hpp"
 

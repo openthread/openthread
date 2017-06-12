@@ -35,7 +35,7 @@
 
 
 #define WPP_NAME "network_data_leader_ftd.tmh"
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "network_data_leader.hpp"
 #include <openthread/platform/random.h>

@@ -35,7 +35,7 @@
 #ifndef PLATFORM_POSIX_H_
 #define PLATFORM_POSIX_H_
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include <assert.h>
 #include <stdlib.h>

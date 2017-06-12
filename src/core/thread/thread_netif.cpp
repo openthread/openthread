@@ -32,7 +32,7 @@
  *   This file implements the Thread network interface.
  */
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "thread_netif.hpp"
 

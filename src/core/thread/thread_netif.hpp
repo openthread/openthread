@@ -34,7 +34,7 @@
 #ifndef THREAD_NETIF_HPP_
 #define THREAD_NETIF_HPP_
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include <openthread/types.h>
 

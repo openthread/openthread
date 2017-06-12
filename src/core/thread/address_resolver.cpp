@@ -35,7 +35,7 @@
 
 #define WPP_NAME "address_resolver.tmh"
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "address_resolver.hpp"
 

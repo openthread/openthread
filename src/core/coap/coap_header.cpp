@@ -31,7 +31,7 @@
  *   This file implements the CoAP header generation and parsing.
  */
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "coap_header.hpp"
 

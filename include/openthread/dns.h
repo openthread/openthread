@@ -35,7 +35,7 @@
 #ifndef OPENTHREAD_DNS_H_
 #define OPENTHREAD_DNS_H_
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include <openthread/message.h>
 #include <openthread/types.h>

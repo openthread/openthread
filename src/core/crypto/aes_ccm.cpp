@@ -31,7 +31,7 @@
  *   This file implements AES-CCM.
  */
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "aes_ccm.hpp"
 

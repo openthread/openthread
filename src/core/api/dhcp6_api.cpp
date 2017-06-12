@@ -31,7 +31,7 @@
  *   This file implements the OpenThread DHCPv6 API.
  */
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 #include <openthread/dhcp6_client.h>
 
 #include <openthread/dhcp6_server.h>

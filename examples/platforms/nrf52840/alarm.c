@@ -46,7 +46,7 @@
 #include "drivers/nrf_drv_clock.h"
 #include "hal/nrf_rtc.h"
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 #include <openthread/types.h>
 
 #define RTC_FREQUENCY       32768ULL

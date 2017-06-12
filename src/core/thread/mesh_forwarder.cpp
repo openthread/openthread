@@ -33,7 +33,7 @@
 
 #define WPP_NAME "mesh_forwarder.tmh"
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "mesh_forwarder.hpp"
 

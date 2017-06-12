@@ -51,6 +51,7 @@ openthread_headers                      = \
     cli.h                                 \
     coap.h                                \
     commissioner.h                        \
+    config.h                              \
     crypto.h                              \
     border_router.h                       \
     dataset.h                             \
@@ -70,7 +71,6 @@ openthread_headers                      = \
     ncp.h                                 \
     netdata.h                             \
     openthread.h                          \
-    openthread_config.h                   \
     tasklet.h                             \
     thread.h                              \
     thread_ftd.h                          \

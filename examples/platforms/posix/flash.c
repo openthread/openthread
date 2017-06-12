@@ -35,7 +35,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "utils/code_utils.h"
 #include "utils/flash.h"

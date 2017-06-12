@@ -31,7 +31,7 @@
  *   This file implements the CLI interpreter Instance related functions.
  */
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include <assert.h>
 #include <stdio.h>

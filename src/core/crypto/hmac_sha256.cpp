@@ -31,7 +31,7 @@
  *   This file implements HMAC SHA-256.
  */
 
-#include <openthread/openthread_config.h>
+#include <openthread/config.h>
 
 #include "hmac_sha256.hpp"
 
