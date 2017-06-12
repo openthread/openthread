@@ -313,9 +313,9 @@ exit:
     return error;
 }
 
-otError Header::AppendContentFormatOption(MediaType aType)
+otError Header::AppendContentFormatOption(otCoapOptionContentFormat aContentFormat)
 {
-    return AppendUintOption(OT_COAP_OPTION_CONTENT_FORMAT, aType);
+    return AppendUintOption(OT_COAP_OPTION_CONTENT_FORMAT, (uint32_t)aContentFormat);
 }
 
 otError Header::AppendMaxAgeOption(uint32_t aMaxAge)

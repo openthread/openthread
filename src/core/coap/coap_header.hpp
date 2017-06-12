@@ -311,25 +311,16 @@ public:
     otError AppendUriPathOptions(const char *aUriPath);
 
     /**
-     * Media Types
-     *
-     */
-    enum MediaType
-    {
-        kApplicationOctetStream = 42,  ///< application/octet-stream
-    };
-
-    /**
      * This method appends a Content-Format option.
      *
-     * @param[in]  aType  The Media Type value.
+     * @param[in]  aContentFormat  The Content Format value.
      *
      * @retval OT_ERROR_NONE          Successfully appended the option.
      * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
      * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
      *
      */
-    otError AppendContentFormatOption(MediaType aType);
+    otError AppendContentFormatOption(otCoapOptionContentFormat aContentFormat);
 
     /**
      * This method appends a Max-Age option.
