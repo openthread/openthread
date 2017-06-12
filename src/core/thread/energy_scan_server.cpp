@@ -241,7 +241,7 @@ void EnergyScanServer::HandleNetifStateChanged(uint32_t aFlags, void *aContext)
 
 void EnergyScanServer::HandleNetifStateChanged(uint32_t aFlags)
 {
-    if ((aFlags & OT_THREAD_NETDATA_UPDATED) != 0 &&
+    if ((aFlags & OT_CHANGED_THREAD_NETDATA) != 0 &&
         !mActive &&
         mNetif.GetNetworkDataLeader().GetCommissioningData() == NULL)
     {

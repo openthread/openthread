@@ -28,9 +28,13 @@
 #ifndef SPINEL_HEADER_INCLUDED
 #define SPINEL_HEADER_INCLUDED 1
 
+#ifdef SPINEL_PLATFORM_HEADER
+#include SPINEL_PLATFORM_HEADER
+#else // ifdef SPINEL_PLATFORM_HEADER
 #include <stdarg.h>
-#include "utils/wrap_stdbool.h"
-#include "utils/wrap_stdint.h"
+#include <stdbool.h>
+#include <stdint.h>
+#endif // else SPINEL_PLATFORM_HEADER
 
 // ----------------------------------------------------------------------------
 
@@ -212,6 +216,13 @@ enum
     SPINEL_NET_FLAG_PREFERENCE_MASK     = (3 << SPINEL_NET_FLAG_PREFERENCE_OFFSET),
 };
 
+enum
+{
+    SPINEL_ROUTE_PREFERENCE_HIGH        = (1 << SPINEL_NET_FLAG_PREFERENCE_OFFSET),
+    SPINEL_ROUTE_PREFERENCE_MEDIUM      = (0 << SPINEL_NET_FLAG_PREFERENCE_OFFSET),
+    SPINEL_ROUTE_PREFERENCE_LOW         = (3 << SPINEL_NET_FLAG_PREFERENCE_OFFSET),
+};
+
 enum {
     SPINEL_GPIO_FLAG_DIR_INPUT          = 0,
     SPINEL_GPIO_FLAG_DIR_OUTPUT         = SPINEL_BIT_MASK(0, 8),
@@ -378,7 +389,7 @@ enum
 
     SPINEL_CAP_THREAD__BEGIN            = 1024,
     SPINEL_CAP_THREAD_COMMISSIONER      = (SPINEL_CAP_THREAD__BEGIN + 0),
-    SPINEL_CAP_THREAD_BA_PROXY          = (SPINEL_CAP_THREAD__BEGIN + 1),
+    SPINEL_CAP_THREAD_TMF_PROXY         = (SPINEL_CAP_THREAD__BEGIN + 1),
     SPINEL_CAP_THREAD__END              = 1152,
 
     SPINEL_CAP_NEST__BEGIN              = 15296,
@@ -668,6 +679,20 @@ typedef enum
      */
     SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES
                                         = SPINEL_PROP_MAC_EXT__BEGIN + 5,
+
+    /// MAC Blacklist
+    /** Format: `A(t(E))`
+     *
+     * Structure Parameters:
+     *
+     * * `E`: EUI64 address of node
+     */
+    SPINEL_PROP_MAC_BLACKLIST           = SPINEL_PROP_MAC_EXT__BEGIN + 6,
+
+    /// MAC Blacklist Enabled Flag
+    /** Format: `b`
+     */
+    SPINEL_PROP_MAC_BLACKLIST_ENABLED   = SPINEL_PROP_MAC_EXT__BEGIN + 7,
     SPINEL_PROP_MAC_EXT__END            = 0x1400,
 
     SPINEL_PROP_NET__BEGIN              = 0x40,
@@ -726,7 +751,28 @@ typedef enum
     SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION
                                         = SPINEL_PROP_THREAD__BEGIN + 9,  ///< [S]
     SPINEL_PROP_THREAD_ON_MESH_NETS     = SPINEL_PROP_THREAD__BEGIN + 10, ///< array(ipv6prefix,prefixlen,stable,flags,isLocal) [A(t(6CbCb))]
-    SPINEL_PROP_THREAD_OFF_MESH_ROUTES  = SPINEL_PROP_THREAD__BEGIN + 11, ///< array(ipv6prefix,prefixlen,stable,flags,isLocal) [A(t(6CbCb))]
+
+    /// Off-mesh routes
+    /** Format: [A(t(6CbCbb))]
+     *
+     * Data per item is:
+     *
+     *  `6`: Route Prefix
+     *  `C`: Prefix length in bits
+     *  `b`: Stable flag
+     *  `C`: Route preference flags
+     *  `b`: "Is defined locally" flag. Set if this route info was locally
+     *       defined as part of local network data. Assumed to be true for set,
+     *       insert and replace. Clear if the route is part of partition's network
+     *       data.
+     *  `b`: "Next hop is this device" flag. Set if the next hop for the
+     *       route is this device itself (i.e., route was added by this device)
+     *       This value is ignored when adding an external route. For any added
+     *       route the next hop is this device.
+     *
+     */
+    SPINEL_PROP_THREAD_OFF_MESH_ROUTES  = SPINEL_PROP_THREAD__BEGIN + 11,
+
     SPINEL_PROP_THREAD_ASSISTING_PORTS  = SPINEL_PROP_THREAD__BEGIN + 12, ///< array(portn) [A(S)]
     SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE
                                         = SPINEL_PROP_THREAD__BEGIN + 13, ///< [b]
@@ -851,17 +897,18 @@ typedef enum
     SPINEL_PROP_THREAD_COMMISSIONER_ENABLED
                                         = SPINEL_PROP_THREAD_EXT__BEGIN + 16,
 
-    /// Thread border agent proxy enable
+    /// Thread TMF proxy enable
     /** Format `b`
      *
      * Default value is `false`.
      */
-    SPINEL_PROP_THREAD_BA_PROXY_ENABLED = SPINEL_PROP_THREAD_EXT__BEGIN + 17,
+    SPINEL_PROP_THREAD_TMF_PROXY_ENABLED
+                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 17,
 
-    /// Thread border agent proxy stream
+    /// Thread TMF proxy stream
     /** Format `dSS`
      */
-    SPINEL_PROP_THREAD_BA_PROXY_STREAM  = SPINEL_PROP_THREAD_EXT__BEGIN + 18,
+    SPINEL_PROP_THREAD_TMF_PROXY_STREAM = SPINEL_PROP_THREAD_EXT__BEGIN + 18,
 
     /// Thread "joiner" flag used during discovery scan operation
     /** Format `b`

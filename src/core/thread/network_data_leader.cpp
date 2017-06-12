@@ -69,7 +69,7 @@ void LeaderBase::Reset(void)
     mVersion = static_cast<uint8_t>(otPlatRandomGet());
     mStableVersion = static_cast<uint8_t>(otPlatRandomGet());
     mLength = 0;
-    mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
+    mNetif.SetStateChangedFlags(OT_CHANGED_THREAD_NETDATA);
 }
 
 otError LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext)
@@ -419,7 +419,7 @@ void LeaderBase::SetNetworkData(uint8_t aVersion, uint8_t aStableVersion, bool a
 
     otDumpDebgNetData(GetInstance(), "set network data", mTlvs, mLength);
 
-    mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
+    mNetif.SetStateChangedFlags(OT_CHANGED_THREAD_NETDATA);
 }
 
 otError LeaderBase::SetCommissioningData(const uint8_t *aValue, uint8_t aValueLength)
@@ -442,7 +442,7 @@ otError LeaderBase::SetCommissioningData(const uint8_t *aValue, uint8_t aValueLe
     }
 
     mVersion++;
-    mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
+    mNetif.SetStateChangedFlags(OT_CHANGED_THREAD_NETDATA);
 
 exit:
     return error;

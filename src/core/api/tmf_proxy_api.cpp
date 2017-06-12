@@ -28,38 +28,34 @@
 
 /**
  * @file
- *   This file implements the OpenThread Border Agent Proxy API.
+ *   This file implements the OpenThread TMF proxy API.
  */
 
 #include <openthread/openthread_config.h>
-
-#include <openthread/border_agent_proxy.h>
+#include <openthread/tmf_proxy.h>
 
 #include "openthread-instance.h"
 
-using namespace ot;
+#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_TMF_PROXY
 
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
-
-otError otBorderAgentProxyStart(otInstance *aInstance, otBorderAgentProxyStreamHandler aBorderAgentProxyCallback,
-                                void *aContext)
+otError otTmfProxyStart(otInstance *aInstance, otTmfProxyStreamHandler aTmfProxyCallback, void *aContext)
 {
-    return aInstance->mThreadNetif.GetBorderAgentProxy().Start(aBorderAgentProxyCallback, aContext);
+    return aInstance->mThreadNetif.GetTmfProxy().Start(aTmfProxyCallback, aContext);
 }
 
-otError otBorderAgentProxyStop(otInstance *aInstance)
+otError otTmfProxyStop(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetBorderAgentProxy().Stop();
+    return aInstance->mThreadNetif.GetTmfProxy().Stop();
 }
 
-otError otBorderAgentProxySend(otInstance *aInstance, otMessage *aMessage, uint16_t aLocator, uint16_t aPort)
+otError otTmfProxySend(otInstance *aInstance, otMessage *aMessage, uint16_t aLocator, uint16_t aPort)
 {
-    return aInstance->mThreadNetif.GetBorderAgentProxy().Send(*static_cast<Message *>(aMessage), aLocator, aPort);
+    return aInstance->mThreadNetif.GetTmfProxy().Send(*static_cast<ot::Message *>(aMessage), aLocator, aPort);
 }
 
-bool otBorderAgentProxyIsEnabled(otInstance *aInstance)
+bool otTmfProxyIsEnabled(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetBorderAgentProxy().IsEnabled();
+    return aInstance->mThreadNetif.GetTmfProxy().IsEnabled();
 }
 
-#endif // OPENTHREAD_FTD && OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
+#endif // OPENTHREAD_FTD && OPENTHREAD_ENABLE_TMF_PROXY

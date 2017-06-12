@@ -56,9 +56,7 @@ otError utilsFlashInit(void)
     char fileName[20];
     struct stat st;
     bool create = false;
-    struct timeval tv;
-
-    gettimeofday(&tv, NULL);
+    const char *offset = getenv("PORT_OFFSET");
 
     memset(&st, 0, sizeof(st));
 
@@ -67,7 +65,12 @@ otError utilsFlashInit(void)
         mkdir("tmp", 0777);
     }
 
-    snprintf(fileName, sizeof(fileName), "tmp/%d_%d.flash", NODE_ID, (uint32_t)tv.tv_usec);
+    if (offset == NULL)
+    {
+        offset = "0";
+    }
+
+    snprintf(fileName, sizeof(fileName), "tmp/%s_%d.flash", offset, NODE_ID);
 
     if (access(fileName, 0))
     {

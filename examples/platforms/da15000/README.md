@@ -52,7 +52,7 @@ Board will indicate state of device according to LED blink speed.
 | 0.5Hz | End Device |
 
 
-1. Open terminal to /dev/ttyACM0 (serial port settings: 9600 8-N-1).
+1. Open terminal to /dev/ttyACM0 (serial port settings: 115200 8-N-1).
 2. Type help for list of commands
 
 ## Examples:

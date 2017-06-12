@@ -159,4 +159,10 @@ void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aE
  */
 void platformUartProcess(void);
 
+/**
+ * This function restores the Uart.
+ *
+ */
+void platformUartRestore(void);
+
 #endif  // PLATFORM_POSIX_H_

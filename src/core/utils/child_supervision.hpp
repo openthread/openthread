@@ -37,11 +37,11 @@
 
 #include <openthread/openthread_config.h>
 
-#include <stdint.h>
-#include <common/timer.hpp>
-#include <common/message.hpp>
-#include <mac/mac_frame.hpp>
-#include <thread/topology.hpp>
+#include "common/message.hpp"
+#include "common/timer.hpp"
+#include "mac/mac_frame.hpp"
+#include "thread/topology.hpp"
+#include "utils/wrap_stdint.h"
 
 namespace ot {
 

@@ -510,8 +510,8 @@
 <link href="#rfc.section.7.2.30" rel="Chapter" title="7.2.30 PROP 5390: PROP_THREAD_STABLE_LEADER_NETWORK_DATA"/>
 <link href="#rfc.section.7.2.31" rel="Chapter" title="7.2.31 PROP 5391: PROP_THREAD_JOINERS"/>
 <link href="#rfc.section.7.2.32" rel="Chapter" title="7.2.32 PROP 5392: PROP_THREAD_COMMISSIONER_ENABLED"/>
-<link href="#rfc.section.7.2.33" rel="Chapter" title="7.2.33 PROP 5393: PROP_THREAD_BA_PROXY_ENABLED"/>
-<link href="#rfc.section.7.2.34" rel="Chapter" title="7.2.34 PROP 5394: PROP_THREAD_BA_PROXY_STREAM"/>
+<link href="#rfc.section.7.2.33" rel="Chapter" title="7.2.33 PROP 5393: PROP_THREAD_TMF_PROXY_ENABLED"/>
+<link href="#rfc.section.7.2.34" rel="Chapter" title="7.2.34 PROP 5394: PROP_THREAD_TMF_PROXY_STREAM"/>
 <link href="#rfc.section.8" rel="Chapter" title="8 Feature: Network Save"/>
 <link href="#rfc.section.8.1" rel="Chapter" title="8.1 Commands"/>
 <link href="#rfc.section.8.1.1" rel="Chapter" title="8.1.1 CMD 9: (Host-&gt;NCP) CMD_NET_SAVE"/>
@@ -784,8 +784,8 @@
 <li>7.2.30.   <a href="#rfc.section.7.2.30">PROP 5390: PROP_THREAD_STABLE_LEADER_NETWORK_DATA</a></li>
 <li>7.2.31.   <a href="#rfc.section.7.2.31">PROP 5391: PROP_THREAD_JOINERS</a></li>
 <li>7.2.32.   <a href="#rfc.section.7.2.32">PROP 5392: PROP_THREAD_COMMISSIONER_ENABLED</a></li>
-<li>7.2.33.   <a href="#rfc.section.7.2.33">PROP 5393: PROP_THREAD_BA_PROXY_ENABLED</a></li>
-<li>7.2.34.   <a href="#rfc.section.7.2.34">PROP 5394: PROP_THREAD_BA_PROXY_STREAM</a></li>
+<li>7.2.33.   <a href="#rfc.section.7.2.33">PROP 5393: PROP_THREAD_TMF_PROXY_ENABLED</a></li>
+<li>7.2.34.   <a href="#rfc.section.7.2.34">PROP 5394: PROP_THREAD_TMF_PROXY_STREAM</a></li>
 </ul></ul><li>8.   <a href="#rfc.section.8">Feature: Network Save</a></li>
 <ul><li>8.1.   <a href="#rfc.section.8.1">Commands</a></li>
 <ul><li>8.1.1.   <a href="#rfc.section.8.1.1">CMD 9: (Host-&gt;NCP) CMD_NET_SAVE</a></li>
@@ -2013,7 +2013,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
   <li>52: <samp>CAP_NET_THREAD_1_0</samp></li>
   <li>512: <samp>CAP_MAC_WHITELIST</samp></li>
   <li>1024: <samp>CAP_THREAD_COMMISSIONER</samp></li>
-  <li>1025: <samp>CAP_THREAD_BA_PROXY</samp></li>
+  <li>1025: <samp>CAP_THREAD_TMF_PROXY</samp></li>
 </ul>
 
 <p> </p>
@@ -3362,24 +3362,24 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 
 <p> </p>
 <p id="rfc.section.7.2.32.p.2">Set to true to enable the native commissioner. It is mandatory before adding the joiner to the network.  </p>
-<h1 id="rfc.section.7.2.33"><a href="#rfc.section.7.2.33">7.2.33.</a> <a href="#prop-thread-ba-proxy-enabled" id="prop-thread-ba-proxy-enabled">PROP 5393: PROP_THREAD_BA_PROXY_ENABLED</a></h1>
+<h1 id="rfc.section.7.2.33"><a href="#rfc.section.7.2.33">7.2.33.</a> <a href="#prop-thread-tmf-proxy-enabled" id="prop-thread-tmf-proxy-enabled">PROP 5393: PROP_THREAD_TMF_PROXY_ENABLED</a></h1>
 <p/>
 
 <ul>
   <li>Type: Read-Write</li>
   <li>Packed-Encoding: <samp>b</samp></li>
-  <li>Required capability: <samp>CAP_THREAD_BA_PROXY</samp></li>
+  <li>Required capability: <samp>CAP_THREAD_TMF_PROXY</samp></li>
 </ul>
 
 <p> </p>
-<p id="rfc.section.7.2.33.p.2">Set to true to enable the border agent proxy.  </p>
-<h1 id="rfc.section.7.2.34"><a href="#rfc.section.7.2.34">7.2.34.</a> <a href="#prop-thread-ba-proxy-stream" id="prop-thread-ba-proxy-stream">PROP 5394: PROP_THREAD_BA_PROXY_STREAM</a></h1>
+<p id="rfc.section.7.2.33.p.2">Set to true to enable the TMF proxy.  </p>
+<h1 id="rfc.section.7.2.34"><a href="#rfc.section.7.2.34">7.2.34.</a> <a href="#prop-thread-tmf-proxy-stream" id="prop-thread-tmf-proxy-stream">PROP 5394: PROP_THREAD_TMF_PROXY_STREAM</a></h1>
 <p/>
 
 <ul>
   <li>Type: Read-Write-Stream</li>
   <li>Packed-Encoding: <samp>dSS</samp></li>
-  <li>Required capability: <samp>CAP_THREAD_BA_PROXY</samp></li>
+  <li>Required capability: <samp>CAP_THREAD_TMF_PROXY</samp></li>
 </ul>
 
 <p> </p>
@@ -3413,7 +3413,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.7.2.34.p.4">This property allows the host to send and receive border-agent-related CoAP requests/responses from the NCP's RLOC address. This allows the host driver to implement a Thread border agent.  </p>
+<p id="rfc.section.7.2.34.p.4">This property allows the host to send and receive TMF messages from the NCP's RLOC address and support Thread-specific border router functions.  </p>
 <h1 id="rfc.section.8"><a href="#rfc.section.8">8.</a> <a href="#feature-network-save" id="feature-network-save">Feature: Network Save</a></h1>
 <p id="rfc.section.8.p.1">The network save/recall feature is an optional NCP capability that, when present, allows the host to save and recall network credentials and state to and from nonvolatile storage.  </p>
 <p id="rfc.section.8.p.2">The presence of the save/recall feature can be detected by checking for the presence of the <samp>CAP_NET_SAVE</samp> capability in <samp>PROP_CAPS</samp>.  </p>

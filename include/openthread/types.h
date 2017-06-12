@@ -637,22 +637,18 @@ typedef struct otLinkModeConfig
  */
 enum
 {
-    OT_IP6_ADDRESS_ADDED         = 1 << 0,  ///< IPv6 address was added
-    OT_IP6_ADDRESS_REMOVED       = 1 << 1,  ///< IPv6 address was removed
-
-    OT_NET_ROLE                  = 1 << 3,  ///< Device role (disabled, detached, child, router, leader) changed
-    OT_NET_PARTITION_ID          = 1 << 4,  ///< Partition ID changed
-    OT_NET_KEY_SEQUENCE_COUNTER  = 1 << 5,  ///< Thread Key Sequence changed
-
-    OT_THREAD_CHILD_ADDED        = 1 << 6,  ///< Child was added
-    OT_THREAD_CHILD_REMOVED      = 1 << 7,  ///< Child was removed
-    OT_THREAD_NETDATA_UPDATED    = 1 << 8,  ///< Thread Network Data updated
-
-    OT_IP6_LL_ADDR_CHANGED       = 1 << 9,  ///< The link-local address has changed
-    OT_IP6_ML_ADDR_CHANGED       = 1 << 10, ///< The mesh-local address has changed
-
-    OT_IP6_RLOC_ADDED            = 1 << 11, ///< RLOC was added
-    OT_IP6_RLOC_REMOVED          = 1 << 12, ///< RLOC was removed
+    OT_CHANGED_IP6_ADDRESS_ADDED            = 1 << 0,   ///< IPv6 address was added
+    OT_CHANGED_IP6_ADDRESS_REMOVED          = 1 << 1,   ///< IPv6 address was removed
+    OT_CHANGED_THREAD_ROLE                  = 1 << 2,   ///< Role (disabled, detached, child, router, leader) changed
+    OT_CHANGED_THREAD_LL_ADDR               = 1 << 3,   ///< The link-local address changed
+    OT_CHANGED_THREAD_ML_ADDR               = 1 << 4,   ///< The mesh-local address changed
+    OT_CHANGED_THREAD_RLOC_ADDED            = 1 << 5,   ///< RLOC was added
+    OT_CHANGED_THREAD_RLOC_REMOVED          = 1 << 6,   ///< RLOC was removed
+    OT_CHANGED_THREAD_PARTITION_ID          = 1 << 7,   ///< Partition ID changed
+    OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER  = 1 << 8,   ///< Thread Key Sequence changed
+    OT_CHANGED_THREAD_NETDATA               = 1 << 9,   ///< Thread Network Data changed
+    OT_CHANGED_THREAD_CHILD_ADDED           = 1 << 10,  ///< Child was added
+    OT_CHANGED_THREAD_CHILD_REMOVED         = 1 << 11,  ///< Child was removed
 };
 
 /**
@@ -743,6 +739,15 @@ typedef struct otExternalRouteConfig
      * TRUE, if this configuration is considered Stable Network Data.  FALSE, otherwise.
      */
     bool mStable : 1;
+
+    /**
+     * TRUE if the external route entry's next hop is this device itself (i.e., the route was added earlier by this
+     * device). FALSE otherwise.
+     *
+     * This value is ignored when adding an external route. For any added route the next hop is this device.
+     */
+    bool mNextHopIsThisDevice : 1;
+
 } otExternalRouteConfig;
 
 /**

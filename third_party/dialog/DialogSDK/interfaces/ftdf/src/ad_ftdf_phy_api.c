@@ -158,8 +158,8 @@ void ad_ftdf_init_phy_api(void)
     NVIC_ClearPendingIRQ(FTDF_WAKEUP_IRQn);
     NVIC_EnableIRQ(FTDF_WAKEUP_IRQn);
 
-    NVIC_ClearPendingIRQ(FTDF_GEN_IRQn);
-    NVIC_EnableIRQ(FTDF_GEN_IRQn);
+    //NVIC_ClearPendingIRQ(FTDF_GEN_IRQn);    // Disable ftdf interrupts
+    //NVIC_EnableIRQ(FTDF_GEN_IRQn);          // ftdf will be handled by poiling
     sleep_status = BLOCK_ACTIVE;
 #ifndef OS_FREERTOS
     uxCriticalNesting = 0;

@@ -1,0 +1,4 @@
+enum34==1.1.2
+ipaddress==1.0.16
+pexpect==4.0.1
+pycryptodome==3.4.3

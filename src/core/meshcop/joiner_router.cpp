@@ -84,7 +84,7 @@ void JoinerRouter::HandleNetifStateChanged(uint32_t aFlags, void *aContext)
 void JoinerRouter::HandleNetifStateChanged(uint32_t aFlags)
 {
     VerifyOrExit(mNetif.GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD);
-    VerifyOrExit(aFlags & OT_THREAD_NETDATA_UPDATED);
+    VerifyOrExit(aFlags & OT_CHANGED_THREAD_NETDATA);
 
     mNetif.GetIp6Filter().RemoveUnsecurePort(mSocket.GetSockName().mPort);
 
@@ -145,7 +145,7 @@ otError JoinerRouter::SetJoinerUdpPort(uint16_t aJoinerUdpPort)
     otLogFuncEntry();
     mJoinerUdpPort = aJoinerUdpPort;
     mIsJoinerPortConfigured = true;
-    HandleNetifStateChanged(OT_THREAD_NETDATA_UPDATED);
+    HandleNetifStateChanged(OT_CHANGED_THREAD_NETDATA);
     otLogFuncExit();
     return OT_ERROR_NONE;
 }

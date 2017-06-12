@@ -43,7 +43,27 @@ set -x
 
 [ $BUILD_TARGET != scan-build ] || {
     ./bootstrap || die
-    scan-build ./configure --with-examples=posix --enable-cli-app=all --enable-ncp-app=all --with-ncp-bus=uart || die
+    scan-build ./configure                \
+        --enable-cli-app=all              \
+        --enable-ncp-app=all              \
+        --with-ncp-bus=uart               \
+        --enable-diag                     \
+        --enable-default-logging          \
+        --enable-raw-link-api=yes         \
+        --with-examples=posix             \
+        --with-platform-info=POSIX        \
+        --enable-application-coap         \
+        --enable-border-agent-proxy       \
+        --enable-cert-log                 \
+        --enable-commissioner             \
+        --enable-dhcp6-client             \
+        --enable-dhcp6-server             \
+        --enable-dns-client               \
+        --enable-jam-detection            \
+        --enable-joiner                   \
+        --enable-legacy                   \
+        --enable-mac-whitelist            \
+        --enable-mtd-network-diagnostic || die
     scan-build --status-bugs -analyze-headers -v make || die
 }
 

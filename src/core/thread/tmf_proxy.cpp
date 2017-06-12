@@ -28,14 +28,14 @@
 
 /**
  * @file
- *   This file implements the border agent proxy.
+ *   This file implements the TMF proxy.
  */
 
-#define WPP_NAME "border_agent_proxy.tmh"
+#define WPP_NAME "tmf_proxy.tmh"
 
 #include <openthread/openthread_config.h>
 
-#include "border_agent_proxy.hpp"
+#include "tmf_proxy.hpp"
 
 #include <openthread/types.h>
 
@@ -44,13 +44,12 @@
 #include "thread/thread_tlvs.hpp"
 #include "thread/thread_uri_paths.hpp"
 
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
+#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_TMF_PROXY
 
 namespace ot {
-namespace MeshCoP {
 
-BorderAgentProxy::BorderAgentProxy(const Ip6::Address &aMeshLocal16, Coap::Coap &aCoap):
-    mRelayReceive(OT_URI_PATH_RELAY_RX, &BorderAgentProxy::HandleRelayReceive, this),
+TmfProxy::TmfProxy(const Ip6::Address &aMeshLocal16, Coap::Coap &aCoap):
+    mRelayReceive(OT_URI_PATH_RELAY_RX, &TmfProxy::HandleRelayReceive, this),
     mStreamHandler(NULL),
     mContext(NULL),
     mMeshLocal16(aMeshLocal16),
@@ -58,7 +57,7 @@ BorderAgentProxy::BorderAgentProxy(const Ip6::Address &aMeshLocal16, Coap::Coap 
 {
 }
 
-otError BorderAgentProxy::Start(otBorderAgentProxyStreamHandler aStreamHandler, void *aContext)
+otError TmfProxy::Start(otTmfProxyStreamHandler aStreamHandler, void *aContext)
 {
     otError error = OT_ERROR_NONE;
 
@@ -72,7 +71,7 @@ exit:
     return error;
 }
 
-otError BorderAgentProxy::Stop(void)
+otError TmfProxy::Stop(void)
 {
     otError error = OT_ERROR_NONE;
 
@@ -86,33 +85,33 @@ exit:
     return error;
 }
 
-bool BorderAgentProxy::IsEnabled(void) const
+bool TmfProxy::IsEnabled(void) const
 {
     return mStreamHandler != NULL;
 }
 
-void BorderAgentProxy::HandleRelayReceive(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                                          const otMessageInfo *aMessageInfo)
+void TmfProxy::HandleRelayReceive(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+                                  const otMessageInfo *aMessageInfo)
 {
-    static_cast<BorderAgentProxy *>(aContext)->DeliverMessage(
+    static_cast<TmfProxy *>(aContext)->DeliverMessage(
         *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
         *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-void BorderAgentProxy::HandleResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
-                                      const otMessageInfo *aMessageInfo, otError aResult)
+void TmfProxy::HandleResponse(void *aContext, otCoapHeader *aHeader, otMessage *aMessage,
+                              const otMessageInfo *aMessageInfo, otError aResult)
 {
     VerifyOrExit(aResult == OT_ERROR_NONE);
 
-    static_cast<BorderAgentProxy *>(aContext)->DeliverMessage(*static_cast<Coap::Header *>(aHeader),
-                                                              *static_cast<Message *>(aMessage),
-                                                              *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<TmfProxy *>(aContext)->DeliverMessage(*static_cast<Coap::Header *>(aHeader),
+                                                      *static_cast<Message *>(aMessage),
+                                                      *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 exit:
     return;
 }
 
-void BorderAgentProxy::DeliverMessage(Coap::Header &aHeader, Message &aMessage,
-                                      const Ip6::MessageInfo &aMessageInfo)
+void TmfProxy::DeliverMessage(Coap::Header &aHeader, Message &aMessage,
+                              const Ip6::MessageInfo &aMessageInfo)
 {
     otError error = OT_ERROR_NONE;
     uint16_t rloc;
@@ -136,7 +135,7 @@ exit:
     }
 }
 
-otError BorderAgentProxy::Send(Message &aMessage, uint16_t aLocator, uint16_t aPort)
+otError TmfProxy::Send(Message &aMessage, uint16_t aLocator, uint16_t aPort)
 {
     otError error = OT_ERROR_NONE;
     Ip6::MessageInfo messageInfo;
@@ -151,7 +150,7 @@ otError BorderAgentProxy::Send(Message &aMessage, uint16_t aLocator, uint16_t aP
     if (aPort == kCoapUdpPort)
     {
         // this is request to server, send with client
-        error = mCoap.SendMessage(aMessage, messageInfo, BorderAgentProxy::HandleResponse, this);
+        error = mCoap.SendMessage(aMessage, messageInfo, TmfProxy::HandleResponse, this);
     }
     else
     {
@@ -168,7 +167,6 @@ exit:
     return error;
 }
 
-}  // namespace MeshCoP
 }  // namespace ot
 
-#endif // OPENTHREAD_FTD && OPENTHREAD_ENABLE_BORDER_AGENT_PROXY
+#endif // OPENTHREAD_FTD && OPENTHREAD_ENABLE_TMF_PROXY

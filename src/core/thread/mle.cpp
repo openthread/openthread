@@ -215,7 +215,7 @@ otError Mle::Start(bool aEnableReattach, bool aAnnounceAttach)
     VerifyOrExit(mNetif.IsUp(), error = OT_ERROR_INVALID_STATE);
 
     mRole = OT_DEVICE_ROLE_DETACHED;
-    mNetif.SetStateChangedFlags(OT_NET_ROLE);
+    mNetif.SetStateChangedFlags(OT_CHANGED_THREAD_ROLE);
     SetStateDetached();
 
     mNetif.GetKeyManager().Start();
@@ -549,7 +549,7 @@ otError Mle::SetStateDetached(void)
 {
     if (mRole != OT_DEVICE_ROLE_DETACHED)
     {
-        mNetif.SetStateChangedFlags(OT_NET_ROLE);
+        mNetif.SetStateChangedFlags(OT_CHANGED_THREAD_ROLE);
     }
 
     if (mRole == OT_DEVICE_ROLE_LEADER)
@@ -574,7 +574,7 @@ otError Mle::SetStateChild(uint16_t aRloc16)
 {
     if (mRole != OT_DEVICE_ROLE_CHILD)
     {
-        mNetif.SetStateChangedFlags(OT_NET_ROLE);
+        mNetif.SetStateChangedFlags(OT_CHANGED_THREAD_ROLE);
     }
 
     if (mRole == OT_DEVICE_ROLE_LEADER)
@@ -685,7 +685,7 @@ otError Mle::UpdateLinkLocalAddress(void)
     mLinkLocal64.GetAddress().SetIid(*mNetif.GetMac().GetExtAddress());
     mNetif.AddUnicastAddress(mLinkLocal64);
 
-    mNetif.SetStateChangedFlags(OT_IP6_LL_ADDR_CHANGED);
+    mNetif.SetStateChangedFlags(OT_CHANGED_THREAD_LL_ADDR);
 
     return OT_ERROR_NONE;
 }
@@ -731,7 +731,7 @@ otError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
     }
 
     // Changing the prefix also causes the mesh local address to be different.
-    mNetif.SetStateChangedFlags(OT_IP6_ML_ADDR_CHANGED);
+    mNetif.SetStateChangedFlags(OT_CHANGED_THREAD_ML_ADDR);
 
 exit:
     return OT_ERROR_NONE;
@@ -778,7 +778,7 @@ void Mle::SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLead
 {
     if (mLeaderData.GetPartitionId() != aPartitionId)
     {
-        mNetif.SetStateChangedFlags(OT_NET_PARTITION_ID);
+        mNetif.SetStateChangedFlags(OT_CHANGED_THREAD_PARTITION_ID);
     }
 
     mLeaderData.SetPartitionId(aPartitionId);
@@ -1232,7 +1232,7 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags)
 {
     VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED);
 
-    if ((aFlags & (OT_IP6_ADDRESS_ADDED | OT_IP6_ADDRESS_REMOVED)) != 0)
+    if ((aFlags & (OT_CHANGED_IP6_ADDRESS_ADDED | OT_CHANGED_IP6_ADDRESS_REMOVED)) != 0)
     {
         if (!mNetif.IsUnicastAddress(mMeshLocal64.GetAddress()))
         {
@@ -1243,7 +1243,7 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags)
             }
 
             mNetif.AddUnicastAddress(mMeshLocal64);
-            mNetif.SetStateChangedFlags(OT_IP6_ML_ADDR_CHANGED);
+            mNetif.SetStateChangedFlags(OT_CHANGED_THREAD_ML_ADDR);
         }
 
         if (mRole == OT_DEVICE_ROLE_CHILD && (mDeviceMode & ModeTlv::kModeFFD) == 0)
@@ -1252,13 +1252,13 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags)
         }
     }
 
-    if ((aFlags & OT_THREAD_NETDATA_UPDATED) != 0)
+    if ((aFlags & OT_CHANGED_THREAD_NETDATA) != 0)
     {
         if (mDeviceMode & ModeTlv::kModeFFD)
         {
             mNetif.GetMle().HandleNetworkDataUpdateRouter();
         }
-        else if ((aFlags & OT_NET_ROLE) == 0)
+        else if ((aFlags & OT_CHANGED_THREAD_ROLE) == 0)
         {
             mSendChildUpdateRequest.Post();
         }
@@ -1268,7 +1268,7 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags)
 #endif
     }
 
-    if (aFlags & (OT_NET_ROLE | OT_NET_KEY_SEQUENCE_COUNTER))
+    if (aFlags & (OT_CHANGED_THREAD_ROLE | OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER))
     {
         Store();
     }

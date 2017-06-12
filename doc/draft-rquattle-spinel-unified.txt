@@ -213,8 +213,8 @@ Quattlebaum & woodyatt  Expires November 2, 2017                [Page 3]
        7.2.30. PROP 5390: PROP_THREAD_STABLE_LEADER_NETWORK_DATA . .  51
        7.2.31. PROP 5391: PROP_THREAD_JOINERS  . . . . . . . . . . .  51
        7.2.32. PROP 5392: PROP_THREAD_COMMISSIONER_ENABLED . . . . .  51
-       7.2.33. PROP 5393: PROP_THREAD_BA_PROXY_ENABLED . . . . . . .  51
-       7.2.34. PROP 5394: PROP_THREAD_BA_PROXY_STREAM  . . . . . . .  52
+       7.2.33. PROP 5393: PROP_THREAD_TMF_PROXY_ENABLED  . . . . . .  51
+       7.2.34. PROP 5394: PROP_THREAD_TMF_PROXY_STREAM . . . . . . .  52
    8.  Feature: Network Save . . . . . . . . . . . . . . . . . . . .  52
      8.1.  Commands  . . . . . . . . . . . . . . . . . . . . . . . .  52
        8.1.1.  CMD 9: (Host->NCP) CMD_NET_SAVE . . . . . . . . . . .  52
@@ -1591,7 +1591,7 @@ Quattlebaum & woodyatt  Expires November 2, 2017               [Page 28]
    o  52: "CAP_NET_THREAD_1_0"
    o  512: "CAP_MAC_WHITELIST"
    o  1024: "CAP_THREAD_COMMISSIONER"
-   o  1025: "CAP_THREAD_BA_PROXY"
+   o  1025: "CAP_THREAD_TMF_PROXY"
 
    Additionally, future capability allocations SHALL be made from the
    following allocation plan:
@@ -2845,11 +2845,11 @@ Quattlebaum & woodyatt  Expires November 2, 2017               [Page 50]
    Set to true to enable the native commissioner.  It is mandatory
    before adding the joiner to the network.
 
-7.2.33.  PROP 5393: PROP_THREAD_BA_PROXY_ENABLED
+7.2.33.  PROP 5393: PROP_THREAD_TMF_PROXY_ENABLED
 
    o  Type: Read-Write
    o  Packed-Encoding: "b"
-   o  Required capability: "CAP_THREAD_BA_PROXY"
+   o  Required capability: "CAP_THREAD_TMF_PROXY"
 
 
 
@@ -2858,13 +2858,13 @@ Quattlebaum & woodyatt  Expires November 2, 2017               [Page 51]
                     Spinel Protocol (86157e99-dirty)            May 2017
 
 
-   Set to true to enable the border agent proxy.
+   Set to true to enable the TMF proxy.
 
-7.2.34.  PROP 5394: PROP_THREAD_BA_PROXY_STREAM
+7.2.34.  PROP 5394: PROP_THREAD_TMF_PROXY_STREAM
 
    o  Type: Read-Write-Stream
    o  Packed-Encoding: "dSS"
-   o  Required capability: "CAP_THREAD_BA_PROXY"
+   o  Required capability: "CAP_THREAD_TMF_PROXY"
 
    Data per item is:
 
@@ -2878,9 +2878,9 @@ Quattlebaum & woodyatt  Expires November 2, 2017               [Page 51]
                | Fields:  | Length | CoAP | locator | port |
                +----------+--------+------+---------+------+
 
-   This property allows the host to send and receive border-agent-
-   related CoAP requests/responses from the NCP's RLOC address.  This
-   allows the host driver to implement a Thread border agent.
+   This property allows the host to send and receive TMF messages
+   from the NCP's RLOC address and support Thread-specific border
+   router functions.
 
 8.  Feature: Network Save
 

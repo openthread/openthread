@@ -132,7 +132,7 @@ otError KeyManager::SetMasterKey(const otMasterKey &aKey)
         children[i].SetMleFrameCounter(0);
     }
 
-    mNetif.SetStateChangedFlags(OT_NET_KEY_SEQUENCE_COUNTER);
+    mNetif.SetStateChangedFlags(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER);
 
 exit:
     return error;
@@ -203,7 +203,7 @@ void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
         mKeyRotationTimer.Start(Timer::HoursToMsec(mKeyRotationTime));
     }
 
-    mNetif.SetStateChangedFlags(OT_NET_KEY_SEQUENCE_COUNTER);
+    mNetif.SetStateChangedFlags(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER);
 
 exit:
     return;

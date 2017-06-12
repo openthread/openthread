@@ -28,12 +28,38 @@
 
 #include "platform-posix.h"
 
+#ifndef _WIN32
+#include <unistd.h>
+#endif
+
 #include <openthread/types.h>
 #include <openthread/platform/misc.h>
 
+#ifndef _WIN32
+extern int      gArgumentsCount;
+extern char   **gArguments;
+#endif
+
 void otPlatReset(otInstance *aInstance)
 {
-    // This function does nothing on the Posix platform.
+#ifndef _WIN32
+    char *argv[gArgumentsCount + 1];
+
+    for (int i = 0; i < gArgumentsCount; ++i)
+    {
+        argv[i] = gArguments[i];
+    }
+
+    argv[gArgumentsCount] = NULL;
+
+    platformUartRestore();
+
+    execvp(argv[0], argv);
+    perror("reset failed");
+    exit(EXIT_FAILURE);
+#else
+    // This function does nothing on the Windows platform.
+#endif // _WIN32
     (void)aInstance;
 }
 

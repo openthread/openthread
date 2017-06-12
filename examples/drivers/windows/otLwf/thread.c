@@ -489,59 +489,59 @@ void otLwfStateChangedCallback(uint32_t aFlags, _In_ void *aContext)
     // Process the notification internally
     //
 
-    if ((aFlags & OT_IP6_ADDRESS_ADDED) != 0)
+    if ((aFlags & OT_CHANGED_IP6_ADDRESS_ADDED) != 0)
     {
-        LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_IP6_ADDRESS_ADDED", pFilter);
+        LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_CHANGED_IP6_ADDRESS_ADDED", pFilter);
         otLwfRadioAddressesUpdated(pFilter);
     }
 
-    if ((aFlags & OT_IP6_ADDRESS_REMOVED) != 0)
+    if ((aFlags & OT_CHANGED_IP6_ADDRESS_REMOVED) != 0)
     {
-        LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_IP6_ADDRESS_REMOVED", pFilter);
+        LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_CHANGED_IP6_ADDRESS_REMOVED", pFilter);
         otLwfRadioAddressesUpdated(pFilter);
     }
 
-    if ((aFlags & OT_IP6_RLOC_ADDED) != 0)
+    if ((aFlags & OT_CHANGED_THREAD_RLOC_ADDED) != 0)
     {
-        LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_IP6_RLOC_ADDED", pFilter);
+        LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_CHANGED_THREAD_RLOC_ADDED", pFilter);
         otLwfRadioAddressesUpdated(pFilter);
     }
 
-    if ((aFlags & OT_IP6_RLOC_REMOVED) != 0)
+    if ((aFlags & OT_CHANGED_THREAD_RLOC_REMOVED) != 0)
     {
-        LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_IP6_RLOC_REMOVED", pFilter);
+        LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_CHANGED_THREAD_RLOC_REMOVED", pFilter);
         otLwfRadioAddressesUpdated(pFilter);
     }
 
-    if ((aFlags & OT_NET_ROLE) != 0)
+    if ((aFlags & OT_CHANGED_THREAD_ROLE) != 0)
     {
-        LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_NET_ROLE", pFilter);
+        LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_CHANGED_THREAD_ROLE", pFilter);
         otLwfProcessRoleStateChange(pFilter);
     }
 
-    if ((aFlags & OT_NET_PARTITION_ID) != 0)
+    if ((aFlags & OT_CHANGED_THREAD_PARTITION_ID) != 0)
     {
-        LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_NET_PARTITION_ID", pFilter);
+        LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_CHANGED_THREAD_PARTITION_ID", pFilter);
     }
 
-    if ((aFlags & OT_NET_KEY_SEQUENCE_COUNTER) != 0)
+    if ((aFlags & OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER) != 0)
     {
-        LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_NET_KEY_SEQUENCE_COUNTER", pFilter);
+        LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER", pFilter);
     }
 
-    if ((aFlags & OT_THREAD_CHILD_ADDED) != 0)
+    if ((aFlags & OT_CHANGED_THREAD_CHILD_ADDED) != 0)
     {
-        LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_THREAD_CHILD_ADDED", pFilter);
+        LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_CHANGED_THREAD_CHILD_ADDED", pFilter);
     }
 
-    if ((aFlags & OT_THREAD_CHILD_REMOVED) != 0)
+    if ((aFlags & OT_CHANGED_THREAD_CHILD_REMOVED) != 0)
     {
-        LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_THREAD_CHILD_REMOVED", pFilter);
+        LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_CHANGED_THREAD_CHILD_REMOVED", pFilter);
     }
 
-    if ((aFlags & OT_THREAD_NETDATA_UPDATED) != 0)
+    if ((aFlags & OT_CHANGED_THREAD_NETDATA) != 0)
     {
-        LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_THREAD_NETDATA_UPDATED", pFilter);
+        LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_CHANGED_THREAD_NETDATA", pFilter);
         otIp6SlaacUpdate(pFilter->otCtx, pFilter->otAutoAddresses, ARRAYSIZE(pFilter->otAutoAddresses), otIp6CreateRandomIid, NULL);
 
 #if OPENTHREAD_ENABLE_DHCP6_SERVER
@@ -553,9 +553,9 @@ void otLwfStateChangedCallback(uint32_t aFlags, _In_ void *aContext)
 #endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
     }
 
-    if ((aFlags & OT_IP6_ML_ADDR_CHANGED) != 0)
+    if ((aFlags & OT_CHANGED_THREAD_ML_ADDR) != 0)
     {
-        LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_IP6_ML_ADDR_CHANGED", pFilter);
+        LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_CHANGED_THREAD_ML_ADDR", pFilter);
     }
     
     //

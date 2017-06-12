@@ -43,16 +43,23 @@
 // MARK: -
 // MARK: Headers
 
+
 #include <openthread/openthread_config.h>
 
 #include "spinel.h"
 
 #include <assert.h>
+#include <errno.h>
+
+#ifndef SPINEL_PLATFORM_HEADER
+/* These are all already included in the spinel platform header
+ * if SPINEL_PLATFORM_HEADER was defined.
+ */
 #include <stdio.h>
 #include <stdlib.h>
-#include "utils/wrap_string.h"
-#include <errno.h>
-#include "utils/wrap_stdbool.h"
+#include <string.h>
+#endif // #ifndef SPINEL_PLATFORM_HEADER
+
 // ----------------------------------------------------------------------------
 // MARK: -
 
@@ -1088,6 +1095,14 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES";
         break;
 
+    case SPINEL_PROP_MAC_BLACKLIST:
+        ret = "PROP_MAC_BLACKLIST";
+        break;
+
+    case SPINEL_PROP_MAC_BLACKLIST_ENABLED:
+        ret = "PROP_MAC_BLACKLIST_ENABLED";
+        break;
+
     case SPINEL_PROP_NET_SAVED:
         ret = "PROP_NET_SAVED";
         break;
@@ -1264,12 +1279,12 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_THREAD_COMMISSIONER_ENABLED";
         break;
 
-    case SPINEL_PROP_THREAD_BA_PROXY_ENABLED:
-        ret = "PROP_THREAD_BA_PROXY_ENABLED";
+    case SPINEL_PROP_THREAD_TMF_PROXY_ENABLED:
+        ret = "PROP_THREAD_TMF_PROXY_ENABLED";
         break;
 
-    case SPINEL_PROP_THREAD_BA_PROXY_STREAM:
-        ret = "PROP_THREAD_BA_PROXY_STREAM";
+    case SPINEL_PROP_THREAD_TMF_PROXY_STREAM:
+        ret = "PROP_THREAD_TMF_PROXY_STREAM";
         break;
 
     case SPINEL_PROP_THREAD_DISCOVERY_SCAN_JOINER_FLAG:
@@ -1851,8 +1866,8 @@ const char *spinel_capability_to_cstr(unsigned int capability)
         ret = "CAP_THREAD_COMMISSIONER";
         break;
 
-    case SPINEL_CAP_THREAD_BA_PROXY:
-        ret = "CAP_THREAD_BA_PROXY";
+    case SPINEL_CAP_THREAD_TMF_PROXY:
+        ret = "CAP_THREAD_TMF_PROXY";
         break;
 
     case SPINEL_CAP_NEST_LEGACY_INTERFACE:

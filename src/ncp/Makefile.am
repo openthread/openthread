@@ -46,6 +46,7 @@ COMMON_CPPFLAGS        = \
     -I$(top_srcdir)/src/core            \
     -I$(top_srcdir)/third_party         \
     -D_GNU_SOURCE                       \
+    -DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"  \
     $(OPENTHREAD_TARGET_DEFINES)        \
     $(NULL)
 
@@ -76,6 +77,7 @@ COMMON_SOURCES                      = \
     ncp_buffer.hpp                    \
     spinel.c                          \
     spinel.h                          \
+    spinel_platform.h                               \
     ncp_spi.cpp                       \
     ncp_spi.hpp                       \
     hdlc.cpp                          \

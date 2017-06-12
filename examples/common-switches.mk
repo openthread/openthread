@@ -26,8 +26,8 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-ifeq ($(BA_PROXY),1)
-configure_OPTIONS              += --enable-border-agent-proxy
+ifeq ($(TMF_PROXY),1)
+configure_OPTIONS              += --enable-tmf-proxy
 endif
 
 ifeq ($(BORDER_ROUTER),1)
@@ -60,10 +60,6 @@ endif
 
 ifeq ($(DHCP6_SERVER),1)
 configure_OPTIONS              += --enable-dhcp6-server
-endif
-
-ifeq ($(DEFAULT_LOGGING),1)
-configure_OPTIONS              += --enable-default-logging
 endif
 
 ifeq ($(DISABLE_DOC),1)

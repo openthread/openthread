@@ -32,8 +32,8 @@
 /* Define to 1 to enable the NCP SPI interface. */
 // On the command line: #define OPENTHREAD_ENABLE_NCP_SPI  1
 
-/* Define to 1 if you want to enable default logging */
-#define OPENTHREAD_ENABLE_DEFAULT_LOGGING 1
+/* Define to 1 if you want to enable default log output. */
+#define OPENTHREAD_CONFIG_ENABLE_DEFAULT_LOG_OUTPUT 1
 
 /* Define to 1 to enable the commissioner role. */
 #define OPENTHREAD_ENABLE_COMMISSIONER 1
@@ -62,8 +62,8 @@
 /* Define to 1 to enable MAC whitelist/blacklist feature. */
 #define OPENTHREAD_ENABLE_MAC_WHITELIST 1
 
-/* Define to 1 to enable border agent proxy feature. */
-#define OPENTHREAD_ENABLE_BORDER_AGENT_PROXY 0
+/* Define to 1 to enable TMF proxy feature. */
+#define OPENTHREAD_ENABLE_TMF_PROXY 0
 
 /* Define to 1 to enable raw link-layer API. */
 #ifdef _KERNEL_MODE

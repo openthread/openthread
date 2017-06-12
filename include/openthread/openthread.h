@@ -93,7 +93,7 @@ extern "C" {
  *
  * @{
  *
- * @defgroup api-border-agent   Border Agent
+ * @defgroup api-tmf-proxy      TMF Proxy
  * @defgroup api-commissioner   Commissioner
  * @defgroup api-thread-general General
  * @brief This module includes functions for all Thread roles.
