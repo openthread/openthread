@@ -3066,23 +3066,9 @@ otError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Message
 
     VerifyOrExit(mIsDiscoverInProgress, error = OT_ERROR_DROP);
 
-    offset = aMessage.GetOffset();
-    end = aMessage.GetLength();
-
     // find MLE Discovery TLV
-    while (offset < end)
-    {
-        aMessage.Read(offset, sizeof(tlv), &tlv);
-
-        if (tlv.GetType() == Tlv::kDiscovery)
-        {
-            break;
-        }
-
-        offset += sizeof(tlv) + tlv.GetLength();
-    }
-
-    VerifyOrExit(offset < end, error = OT_ERROR_PARSE);
+    VerifyOrExit(Tlv::GetOffset(aMessage, Tlv::kDiscovery, offset) == OT_ERROR_NONE, error = OT_ERROR_PARSE);
+    aMessage.Read(offset, sizeof(tlv), &tlv);
 
     offset += sizeof(tlv);
     end = offset + tlv.GetLength();
