@@ -335,7 +335,7 @@ otError otThreadGetParentAverageRssi(otInstance *aInstance, int8_t *aParentRssi)
     parent = aInstance->mThreadNetif.GetMle().GetParent();
     *aParentRssi = parent->GetLinkInfo().GetAverageRss();
 
-    VerifyOrExit(*aParentRssi != LinkQualityInfo::kUnknownRss, error = OT_ERROR_FAILED);
+    VerifyOrExit(*aParentRssi != OT_RADIO_RSSI_INVALID, error = OT_ERROR_FAILED);
 
 exit:
     return error;
@@ -351,7 +351,7 @@ otError otThreadGetParentLastRssi(otInstance *aInstance, int8_t *aLastRssi)
     parent = aInstance->mThreadNetif.GetMle().GetParent();
     *aLastRssi = parent->GetLinkInfo().GetLastRss();
 
-    VerifyOrExit(*aLastRssi != LinkQualityInfo::kUnknownRss, error = OT_ERROR_FAILED);
+    VerifyOrExit(*aLastRssi != OT_RADIO_RSSI_INVALID, error = OT_ERROR_FAILED);
 
 exit:
     return error;

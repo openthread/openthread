@@ -1895,10 +1895,6 @@ const char *spinel_capability_to_cstr(unsigned int capability)
 
 #if SPINEL_SELF_TEST
 
-#include <stdlib.h>
-#include "utils/wrap_string.h"
-
-
 int
 main(void)
 {

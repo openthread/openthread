@@ -36,6 +36,7 @@
 
 #include <stdio.h>
 
+#include <openthread/platform/radio.h>
 #include <openthread/types.h>
 
 namespace ot {
@@ -58,11 +59,6 @@ namespace ot {
 class LinkQualityInfo
 {
 public:
-    enum
-    {
-        kUnknownRss = 127,     ///< Indicates an unknown signal strength value or average.
-    };
-
     /**
      * This constructor initializes an instance of the LinkQualityInfo class.
      *
@@ -87,7 +83,7 @@ public:
     /**
      * This method returns the current average signal strength value.
      *
-     * @returns The current average value or @c kUnknownRss if no average is available.
+     * @returns The current average value or @c OT_RADIO_RSSI_INVALID if no average is available.
      *
      */
     int8_t GetAverageRss(void) const;
