@@ -51,9 +51,11 @@
 
 #define RTC_FREQUENCY       32768ULL
 
+#define CEIL_DIV(A, B)      (((A) + (B) - 1ULL) / (B))
+
 #define US_PER_MS           1000ULL
 #define US_PER_S            1000000ULL
-#define US_PER_TICK         ((US_PER_S + RTC_FREQUENCY - 1ULL) / RTC_FREQUENCY)
+#define US_PER_TICK         CEIL_DIV(US_PER_S, RTC_FREQUENCY)
 
 #define MS_PER_S            1000UL
 #define MS_PER_OVERFLOW     (512UL * MS_PER_S)  ///< Time that has passed between overflow events. On full RTC speed, it occurs every 512 s.
@@ -106,12 +108,12 @@ static void HandleOverflow(void);
 static inline uint32_t TimeToTicks(otPlatUsecAlarmTime aTime)
 {
     uint64_t microseconds = US_PER_MS * (uint64_t)aTime.mMs + (uint64_t)aTime.mUs;
-    return (uint32_t)((microseconds * RTC_FREQUENCY) / US_PER_S) & RTC_CC_COMPARE_Msk;
+    return (uint32_t)CEIL_DIV((microseconds * RTC_FREQUENCY), US_PER_S) & RTC_CC_COMPARE_Msk;
 }
 
 static inline otPlatUsecAlarmTime TicksToTime(uint32_t aTicks)
 {
-    uint64_t microseconds = (US_PER_S * (uint64_t)aTicks) / RTC_FREQUENCY;
+    uint64_t microseconds = CEIL_DIV((US_PER_S * (uint64_t)aTicks), RTC_FREQUENCY);
     return (otPlatUsecAlarmTime) {microseconds / US_PER_MS, microseconds % US_PER_MS};
 }
 
@@ -204,15 +206,15 @@ static inline bool AlarmShallStrike(otPlatUsecAlarmTime aNow, AlarmIndex aIndex)
     return false;
 }
 
-static void HandleCompareMatch(AlarmIndex aIndex)
+static void HandleCompareMatch(AlarmIndex aIndex, bool aSkipCheck)
 {
     nrf_rtc_event_clear(RTC_INSTANCE, sChannelData[aIndex].mCompareEvent);
 
-    otPlatUsecAlarmTime now = AlarmGetCurrentTimeRtcProtected();
+    otPlatUsecAlarmTime now = AlarmGetCurrentTime();
 
     // In case the target time was larger than single overflow,
     // we should only strike the timer on final compare event.
-    if (AlarmShallStrike(now, aIndex))
+    if (aSkipCheck || AlarmShallStrike(now, aIndex))
     {
         nrf_rtc_event_disable(RTC_INSTANCE, sChannelData[aIndex].mCompareEventMask);
         nrf_rtc_int_disable(RTC_INSTANCE, sChannelData[aIndex].mCompareInt);
@@ -248,7 +250,7 @@ static void AlarmStartAt(const otPlatUsecAlarmTime *aT0, const otPlatUsecAlarmTi
 
     if (AlarmShallStrike(now, aIndex))
     {
-        HandleCompareMatch(aIndex);
+        HandleCompareMatch(aIndex, true);
     }
     else
     {
@@ -412,7 +414,7 @@ void RTC_IRQ_HANDLER(void)
         if (nrf_rtc_int_is_enabled(RTC_INSTANCE, sChannelData[i].mCompareInt) &&
             nrf_rtc_event_pending(RTC_INSTANCE, sChannelData[i].mCompareEvent))
         {
-            HandleCompareMatch(i);
+            HandleCompareMatch(i, false);
         }
     }
 }
