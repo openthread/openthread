@@ -71,7 +71,7 @@ void VerifyEncodedRssValue(LinkQualityInfo &aLinkInfo)
     int8_t   rss = aLinkInfo.GetAverageRss();
     uint16_t encodedRss = aLinkInfo.GetAverageRssAsEncodedWord();
 
-    if (rss != LinkQualityInfo::kUnknownRss)
+    if (rss != OT_RADIO_RSSI_INVALID)
     {
         VerifyOrQuit(rss == -static_cast<int16_t>((encodedRss + (kEncodedAverageMultiple / 2)) >> kEncodedAverageBitShift),
                      "TestLinkQualityInfo failed - Ecoded RSS does not match the value from GetAverageRss().");
@@ -141,7 +141,7 @@ void TestRssAveraging(void)
     // Values after initialization.
 
     printf("\nAfter Initialization: ");
-    VerifyOrQuit(linkInfo.GetAverageRss() == LinkQualityInfo::kUnknownRss,
+    VerifyOrQuit(linkInfo.GetAverageRss() == OT_RADIO_RSSI_INVALID,
                  "TestLinkQualityInfo failed - Inital value from GetAverageRss() is incorrect.");
     VerifyOrQuit(linkInfo.GetLinkMargin(sNoiseFloor) == 0,
                  "TestLinkQualityInfo failed - Inital value for link margin is incorrect.");
@@ -163,7 +163,7 @@ void TestRssAveraging(void)
 
     printf("Clear(): ");
     linkInfo.Clear();
-    VerifyOrQuit(linkInfo.GetAverageRss() == LinkQualityInfo::kUnknownRss,
+    VerifyOrQuit(linkInfo.GetAverageRss() == OT_RADIO_RSSI_INVALID,
                  "TestLinkQualityInfo failed - GetAverageRss() after Clear() is incorrect.");
     VerifyOrQuit(linkInfo.GetLinkMargin(sNoiseFloor) == 0,
                  "TestLinkQualityInfo failed - link margin value after Clear() is incorrect.");

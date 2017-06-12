@@ -42,8 +42,6 @@
 #include <stdio.h>
 #include "utils/wrap_string.h"
 
-#include <openthread/types.h>
-
 #include "common/code_utils.hpp"
 
 namespace ot {
@@ -82,7 +80,7 @@ void LinkQualityInfo::AddRss(int8_t aNoiseFloor, int8_t aRss)
     uint16_t    newValue;
     uint16_t    oldAverage;
 
-    VerifyOrExit(aRss != kUnknownRss);
+    VerifyOrExit(aRss != OT_RADIO_RSSI_INVALID);
 
     mLastRss = aRss;
 
@@ -133,7 +131,7 @@ exit:
 
 int8_t LinkQualityInfo::GetAverageRss(void) const
 {
-    int8_t average = kUnknownRss;
+    int8_t average = OT_RADIO_RSSI_INVALID;
 
     if (mCount != 0)
     {
@@ -212,7 +210,7 @@ uint8_t LinkQualityInfo::ConvertRssToLinkMargin(int8_t aNoiseFloor, int8_t aRss)
 {
     int8_t linkMargin = aRss - aNoiseFloor;
 
-    if (linkMargin < 0 || aRss == kUnknownRss)
+    if (linkMargin < 0 || aRss == OT_RADIO_RSSI_INVALID)
     {
         linkMargin = 0;
     }
