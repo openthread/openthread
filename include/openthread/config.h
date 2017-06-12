@@ -28,37 +28,20 @@
 
 /**
  * @file
- *   This file implements the OpenThread platform abstraction for logging.
- *
+ * @brief
+ *  This file includes required defines config header.
  */
 
-#include <stdint.h>
-#include "fsl_device_registers.h"
+#ifndef OPENTHREAD_CONFIG_H_
+#define OPENTHREAD_CONFIG_H_
 
-#include <openthread/config.h>
-
-#include "openthread/platform/logging.h"
-#if OPENTHREAD_ENABLE_CLI_LOGGING
-#include <ctype.h>
-#include <inttypes.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
-
-#include <utils/code_utils.h>
-#include <cli/cli-uart.h>
+#if !defined(OPENTHREAD_CONFIG_FILE)
+#define OPENTHREAD_CONFIG_FILE <openthread-config-generic.h>
 #endif
 
-void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
-{
-#if OPENTHREAD_ENABLE_CLI_LOGGING
-    va_list args;
-    va_start(args, aFormat);
-    otCliLog(aLogLevel, aLogRegion, aFormat, args);
-    va_end(args);
-#else
-    (void)aLogLevel;
-    (void)aLogRegion;
-    (void)aFormat;
-#endif // OPENTHREAD_ENABLE_CLI_LOGGING
-}
+#include OPENTHREAD_CONFIG_FILE
+
+#endif //OPENTHREAD_CONFIG_H_
+
+
+

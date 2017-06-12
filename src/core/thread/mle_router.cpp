@@ -34,11 +34,7 @@
 
 #define WPP_NAME "mle_router.tmh"
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread/config.h>
 
 #include "mle_router.hpp"
 

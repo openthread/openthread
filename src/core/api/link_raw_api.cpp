@@ -31,12 +31,13 @@
  *   This file implements the OpenThread Link Raw API.
  */
 
+#include <openthread/config.h>
+#include <common/debug.hpp>
+#include <common/logging.hpp>
 #include <openthread/platform/random.h>
 #include <openthread/platform/usec-alarm.h>
 
 #include "openthread-instance.h"
-#include "common/debug.hpp"
-#include "common/logging.hpp"
 
 #if OPENTHREAD_ENABLE_RAW_LINK_API
 

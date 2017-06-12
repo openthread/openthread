@@ -30,11 +30,7 @@
  *   This file implements a Spinel interface to the OpenThread stack.
  */
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread/config.h>
 
 #include "ncp_base.hpp"
 

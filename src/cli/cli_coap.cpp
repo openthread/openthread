@@ -31,11 +31,7 @@
  *   This file implements a simple CLI for the CoAP service.
  */
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread/config.h>
 
 #if OPENTHREAD_ENABLE_APPLICATION_COAP
 

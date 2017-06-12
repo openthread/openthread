@@ -32,14 +32,13 @@
  */
 
 #define WPP_NAME "energy_scan_server.tmh"
+#include <openthread/config.h>
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+
 
 #include "energy_scan_server.hpp"
+
+
 
 #include <openthread/platform/random.h>
 

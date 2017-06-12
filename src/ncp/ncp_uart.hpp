@@ -33,11 +33,7 @@
 #ifndef NCP_UART_HPP_
 #define NCP_UART_HPP_
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread/config.h>
 
 #include "ncp/hdlc.hpp"
 #include "ncp/ncp_base.hpp"

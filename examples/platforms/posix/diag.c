@@ -33,7 +33,7 @@
 #include <string.h>
 #include <sys/time.h>
 
-#include <openthread-config.h>
+#include <openthread/config.h>
 #include <openthread/openthread.h>
 #include <openthread/platform/alarm.h>
 #include <openthread/platform/radio.h>

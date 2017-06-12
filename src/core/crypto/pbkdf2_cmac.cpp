@@ -31,11 +31,7 @@
  *   This file implements PBKDF2 using AES-CMAC-PRF-128
  */
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread/config.h>
 
 #include "pbkdf2_cmac.h"
 

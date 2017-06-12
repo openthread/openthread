@@ -31,11 +31,7 @@
  *   This file implements 6LoWPAN header compression.
  */
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread/config.h>
 
 #include "lowpan.hpp"
 

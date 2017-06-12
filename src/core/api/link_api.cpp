@@ -31,6 +31,8 @@
  *   This file implements the OpenThread Link API.
  */
 
+#include <openthread/config.h>
+
 #include <openthread/link.h>
 
 #include "openthread-instance.h"

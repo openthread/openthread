@@ -32,11 +32,7 @@
  *
  */
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread/config.h>
 // NRF tools use #define PACKAGE - for other purposes
 // ie: the physical package the chip comes in
 // This conflicts with the GNU Autoconf "PACAKGE" define
@@ -58,7 +54,7 @@
 #include "drivers/nrf_drv_radio802154.h"
 
 #include <openthread-core-config.h>
-#include <openthread-config.h>
+#include <openthread/config.h>
 #include <openthread/types.h>
 
 #define SHORT_ADDRESS_SIZE    2

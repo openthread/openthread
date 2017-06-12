@@ -33,6 +33,7 @@
 
 #define WPP_NAME "tasklet_api.tmh"
 
+#include <openthread/config.h>
 #include <openthread/tasklet.h>
 
 #include "openthread-instance.h"

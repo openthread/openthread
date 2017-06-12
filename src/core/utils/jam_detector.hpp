@@ -34,11 +34,7 @@
 #ifndef JAM_DETECTOR_HPP_
 #define JAM_DETECTOR_HPP_
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread/config.h>
 
 #include "common/timer.hpp"
 #include "utils/wrap_stdint.h"

@@ -51,6 +51,7 @@ openthread_headers                      = \
     cli.h                                 \
     coap.h                                \
     commissioner.h                        \
+    config.h                              \
     crypto.h                              \
     border_router.h                       \
     dataset.h                             \

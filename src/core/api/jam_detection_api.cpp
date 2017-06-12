@@ -31,6 +31,8 @@
  *   This file implements the OpenThread Jam Detection API.
  */
 
+#include <openthread/config.h>
+
 #include <openthread/jam_detection.h>
 
 #include "openthread-instance.h"

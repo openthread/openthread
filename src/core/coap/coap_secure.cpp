@@ -28,11 +28,7 @@
 
 #define WPP_NAME "coap_secure.tmh"
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread/config.h>
 
 #include "coap_secure.hpp"
 

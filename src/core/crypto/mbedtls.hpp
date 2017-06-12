@@ -34,11 +34,7 @@
 #ifndef OT_MBEDTLS_HPP_
 #define OT_MBEDTLS_HPP_
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread/config.h>
 
 #include <mbedtls/memory_buffer_alloc.h>
 

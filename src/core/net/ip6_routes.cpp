@@ -31,11 +31,7 @@
  *   This file implements IPv6 route tables.
  */
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread/config.h>
 
 #include "ip6_routes.hpp"
 

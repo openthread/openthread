@@ -33,11 +33,7 @@
 
 #define WPP_NAME "panid_query_client.tmh"
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread/config.h>
 
 #include "panid_query_client.hpp"
 

@@ -31,11 +31,7 @@
  *   This file implements link quality information processing and storage.
  */
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread/config.h>
 
 #include "link_quality.hpp"
 

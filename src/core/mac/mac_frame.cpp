@@ -31,11 +31,7 @@
  *   This file implements IEEE 802.15.4 header generation and processing.
  */
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread/config.h>
 
 #include "mac_frame.hpp"
 

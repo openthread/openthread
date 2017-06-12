@@ -31,11 +31,7 @@
  *   This file implements the child supervision feature.
  */
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread/config.h>
 
 #include "child_supervision.hpp"
 

@@ -31,6 +31,7 @@
  *   This file implements the OpenThread TMF proxy API.
  */
 
+#include <openthread/config.h>
 #include <openthread/tmf_proxy.h>
 
 #include "openthread-instance.h"

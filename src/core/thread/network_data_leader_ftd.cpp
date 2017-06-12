@@ -33,16 +33,11 @@
 
 #if OPENTHREAD_FTD
 
-#define WPP_NAME "network_data_leader_ftd.tmh"
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#define WPP_NAME "network_data_leader_ftd.tmh"
+#include <openthread/config.h>
 
 #include "network_data_leader.hpp"
-
 #include <openthread/platform/random.h>
 
 #include "coap/coap_header.hpp"

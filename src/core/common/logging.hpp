@@ -34,6 +34,8 @@
 #ifndef LOGGING_HPP_
 #define LOGGING_HPP_
 
+#include <openthread/config.h>
+
 #include <ctype.h>
 #include <stdio.h>
 #include "utils/wrap_string.h"

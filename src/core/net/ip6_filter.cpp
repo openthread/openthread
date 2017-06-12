@@ -31,11 +31,7 @@
  *   This file implements IPv6 datagram filtering.
  */
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include <openthread/config.h>
 
 #include "ip6_filter.hpp"
 
