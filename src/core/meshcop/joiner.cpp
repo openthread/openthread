@@ -446,6 +446,7 @@ void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const
     mTimer.Start(kConfigExtAddressDelay);
 
 exit:
+    OT_UNUSED_VARIABLE(error);
     otLogFuncExit();
 }
 

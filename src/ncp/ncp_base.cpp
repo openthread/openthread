@@ -475,7 +475,7 @@ static spinel_status_t ThreadErrorToSpinelStatus(otError aError)
 
     default:
         // Unknown error code. Wrap it as a Spinel status and return that.
-        ret = static_cast<spinel_status_t>(SPINEL_STATUS_STACK_NATIVE__BEGIN + aError);
+        ret = static_cast<spinel_status_t>(SPINEL_STATUS_STACK_NATIVE__BEGIN + static_cast<uint32_t>(aError));
         break;
     }
 
@@ -907,6 +907,7 @@ void NcpBase::HandleRawFrame(const otRadioFrame *aFrame)
     SuccessOrExit(error = OutboundFrameSend());
 
 exit:
+    OT_UNUSED_VARIABLE(error);
     return;
 }
 
@@ -1091,6 +1092,7 @@ void NcpBase::LinkRawReceiveDone(otRadioFrame *aFrame, otError aError)
     SuccessOrExit(error = OutboundFrameSend());
 
 exit:
+    OT_UNUSED_VARIABLE(error);
     return;
 }
 
@@ -3694,7 +3696,6 @@ otError NcpBase::GetPropertyHandler_MAC_CNTR(uint8_t aHeader, spinel_prop_key_t 
     default:
         error = SendLastStatus(aHeader, SPINEL_STATUS_INTERNAL_ERROR);
         ExitNow();
-        break;
     }
 
     error = SendPropertyUpdate(
@@ -3759,7 +3760,6 @@ otError NcpBase::GetPropertyHandler_NCP_CNTR(uint8_t aHeader, spinel_prop_key_t 
     default:
         error = SendLastStatus(aHeader, SPINEL_STATUS_INTERNAL_ERROR);
         ExitNow();
-        break;
     }
 
     error = SendPropertyUpdate(
@@ -3886,13 +3886,15 @@ otError NcpBase::GetPropertyHandler_DEBUG_TEST_ASSERT(uint8_t aHeader, spinel_pr
     // In such a case we return `false` as the
     // property value to indicate this.
 
-    return SendPropertyUpdate(
-               aHeader,
-               SPINEL_CMD_PROP_VALUE_IS,
-               aKey,
-               SPINEL_DATATYPE_BOOL_S,
-               false
-           );
+    OT_UNREACHABLE_CODE(
+        return SendPropertyUpdate(
+                aHeader,
+                SPINEL_CMD_PROP_VALUE_IS,
+                aKey,
+                SPINEL_DATATYPE_BOOL_S,
+                false
+            );
+    )
 }
 
 otError NcpBase::GetPropertyHandler_DEBUG_NCP_LOG_LEVEL(uint8_t aHeader, spinel_prop_key_t aKey)
@@ -5125,9 +5127,9 @@ otError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t aHeader, spinel_
 
     // We ignore metadata for now.
     // May later include TX power, allow retransmits, etc...
-    (void)metaPtr;
-    (void)metaLen;
-    (void)parsedLength;
+    OT_UNUSED_VARIABLE(metaPtr);
+    OT_UNUSED_VARIABLE(metaLen);
+    OT_UNUSED_VARIABLE(parsedLength);
 
     SuccessOrExit(error = otMessageAppend(message, framePtr, static_cast<uint16_t>(frameLen)));
 
@@ -5268,9 +5270,9 @@ otError NcpBase::SetPropertyHandler_STREAM_NET(uint8_t aHeader, spinel_prop_key_
 
     // We ignore metadata for now.
     // May later include TX power, allow retransmits, etc...
-    (void)metaPtr;
-    (void)metaLen;
-    (void)parsedLength;
+    OT_UNUSED_VARIABLE(metaPtr);
+    OT_UNUSED_VARIABLE(metaLen);
+    OT_UNUSED_VARIABLE(parsedLength);
 
     SuccessOrExit(error = otMessageAppend(message, framePtr, static_cast<uint16_t>(frameLen)));
 
@@ -5306,7 +5308,7 @@ exit:
         error = SendLastStatus(aHeader, ThreadErrorToSpinelStatus(error));
     }
 
-    (void)aKey;
+    OT_UNUSED_VARIABLE(aKey);
 
     return error;
 }

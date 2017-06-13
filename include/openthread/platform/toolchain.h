@@ -190,6 +190,45 @@ extern "C" {
 #endif
 
 /**
+ * @def OT_UNUSED_VARIABLE
+ *
+ * Suppress unused variable warning in specific toolchains.
+ *
+ */
+
+/**
+ * @def OT_UNREACHABLE_CODE
+ *
+ * Suppress Unreachable code warning in specific toolchains.
+ *
+ */
+
+#if defined(__ICCARM__)
+
+#define OT_UNUSED_VARIABLE(VARIABLE)    \
+    do                                  \
+    {                                   \
+        if (VARIABLE) {}                \
+    } while (false)
+
+#define OT_UNREACHABLE_CODE(CODE)       \
+    _Pragma("diag_suppress=Pe111")      \
+    CODE                                \
+    _Pragma("diag_default=Pe111")
+
+#else
+
+#define OT_UNUSED_VARIABLE(VARIABLE)    \
+    do                                  \
+    {                                   \
+        (void)(VARIABLE);               \
+    } while (false)
+
+#define OT_UNREACHABLE_CODE(CODE)  CODE
+
+#endif
+
+/**
  * @}
  *
  */

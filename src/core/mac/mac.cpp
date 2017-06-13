@@ -96,7 +96,7 @@ void Mac::StartCsmaBackoff(void)
         }
 
         backoff = (otPlatRandomGet() % (1UL << backoffExponent));
-        backoff *= (kUnitBackoffPeriod * OT_RADIO_SYMBOL_TIME);
+        backoff *= (static_cast<uint32_t>(kUnitBackoffPeriod) * OT_RADIO_SYMBOL_TIME);
 
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
         otPlatUsecAlarmTime now;
@@ -1665,6 +1665,8 @@ exit:
             break;
         }
     }
+
+    OT_UNUSED_VARIABLE(blacklistEntry);
 }
 
 otError Mac::HandleMacCommand(Frame &aFrame)

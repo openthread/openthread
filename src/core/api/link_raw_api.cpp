@@ -554,7 +554,7 @@ void LinkRaw::StartCsmaBackoff(void)
     }
 
     backoff = (otPlatRandomGet() % (1UL << backoffExponent));
-    backoff *= (Mac::kUnitBackoffPeriod * OT_RADIO_SYMBOL_TIME);
+    backoff *= (static_cast<uint32_t>(Mac::kUnitBackoffPeriod) * OT_RADIO_SYMBOL_TIME);
 
 #if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_BACKOFF_TIMER
     otPlatUsecAlarmTime now;

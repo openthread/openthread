@@ -491,6 +491,7 @@ void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessag
     }
 
 exit:
+    OT_UNUSED_VARIABLE(error);
     return;
 }
 

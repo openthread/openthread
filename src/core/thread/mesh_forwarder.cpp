@@ -333,7 +333,7 @@ void MeshForwarder::ScheduleTransmissionTask(void)
     }
 
 exit:
-    (void) error;
+    OT_UNUSED_VARIABLE(error);
 }
 
 otError MeshForwarder::SendMessage(Message &aMessage)
