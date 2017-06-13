@@ -146,10 +146,10 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion,
 {
     (void) aLogRegion;
 
-    otEXPECT(sLogInitialized == true);
-
-    char logString[LOG_PARSE_BUFFER_SIZE + 1];
     uint16_t length = 0;
+    char logString[LOG_PARSE_BUFFER_SIZE + 1];
+
+    otEXPECT(sLogInitialized == true);
 
 #if (LOG_TIMESTAMP_ENABLE == 1)
     length += logTimestamp(logString, LOG_PARSE_BUFFER_SIZE);

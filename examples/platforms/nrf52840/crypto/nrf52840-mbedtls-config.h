@@ -26,4 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
- #define MBEDTLS_SHA256_ALT
+#define MBEDTLS_SHA256_ALT
+
+#if defined(__ICCARM__)
+    _Pragma("diag_suppress=Pe549")
+#endif

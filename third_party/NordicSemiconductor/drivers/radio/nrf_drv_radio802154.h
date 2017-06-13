@@ -1,4 +1,4 @@
-/* Copyright (c) 2016, Nordic Semiconductor ASA
+/* Copyright (c) 2017, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,8 +33,8 @@
  *
  */
 
-#ifndef NRF_RADIO802154_H_
-#define NRF_RADIO802154_H_
+#ifndef NRF_DRV_RADIO802154_H_
+#define NRF_DRV_RADIO802154_H_
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -185,15 +185,16 @@ bool nrf_drv_radio802154_transmit(const uint8_t *p_data, uint8_t channel, int8_t
 /**
  * @brief Change radio state to Energy Detection.
  *
- * @note This function should be called in Receive state. In other states energy detection
- *       procedure will be scheduled.
+ * @note This function should be called in Receive state or Sleep state.
+ * @note If this function is called in Sleep state nrf_drv_radio802154_energy_detected() may be
+ *       called before nrf_drv_radio802154_energy_detection() returns result.
  *
  * In Energy Detection state radio detects maximum energy for given time. Result of the detection
- * is reported to the higher layer by nrf_radio802154_energy_detected() call.
+ * is reported to the higher layer by nrf_drv_radio802154_energy_detected() call.
  *
  * @param[in]  channel  Channel number on which radio will detect energy.
  * @param[in]  time_us  Duration of energy detection procedure. Given value is rounded up to
- *                      multiplication of 10s (128 us).
+ *                      multiplication of 8s (128 us).
  *
  * @return  true   If the energy detection procedure was scheduled.
  * @return  false  If the driver could not schedule the energy detection procedure.
@@ -218,39 +219,40 @@ bool nrf_drv_radio802154_energy_detection(uint8_t channel, uint32_t time_us);
  * @param[in]  power   RSSI of received frame.
  * @param[in]  lqi     LQI of received frame.
  */
-void nrf_drv_radio802154_received(uint8_t * p_data, int8_t power, int8_t lqi);
+extern void nrf_drv_radio802154_received(uint8_t * p_data, int8_t power, int8_t lqi);
 
 /**
  * @brief Notify that frame was transmitted.
  *
  * @note If ACK was requested for transmitted frame this function is called after proper ACK is
- *       received. If ACK was not requested this function is called just after transmission ends.
+ *       received. If ACK was not requested this function is called just after transmission is
+ *       ended.
  * @note Buffer pointed by the p_ack pointer is not modified by the radio driver (and can't
  *       be used to receive a frame) until nrf_drv_radio802154_buffer_free() function is called.
  * @note Buffer pointed by the p_ack pointer may be modified by the function handler (and other
  *       modules) until nrf_drv_radio802154_buffer_free() function is called.
  *
- * @param[in]  p_ack  Pointer to received ACK buffer. The first byte in the buffer is length of the
+ * @param[in]  p_ack  Pointer to received ACK buffer. Fist byte in the buffer is length of the
  *                    frame and following bytes are the ACK frame itself (after PHR).
  *                    If ACK was not requested @p p_ack is set to NULL.
- * @param[in]  power  RSSI of received ACK frame or 0 if ACK was not requested.
- * @param[in]  lqi    LQI of received ACK frame or 0 if ACK was not requested.
+ * @param[in]  power  RSSI of received frame or 0 if ACK was not requested.
+ * @param[in]  lqi    LQI of received frame or 0 if ACK was not requested.
  */
-void nrf_drv_radio802154_transmitted(uint8_t * p_ack, int8_t power, int8_t lqi);
+extern void nrf_drv_radio802154_transmitted(uint8_t * p_ack, int8_t power, int8_t lqi);
 
 /**
  * @brief Notify that frame was not transmitted due to busy channel.
  *
  * This function is called if CCA procedure (performed just before transmission) fails.
  */
-void nrf_drv_radio802154_busy_channel(void);
+extern void nrf_drv_radio802154_busy_channel(void);
 
 /**
  * @brief Notify that Energy Detection procedure finished.
  *
  * @param[in]  result  Maximum energy detected during Energy Detection procedure.
  */
-void nrf_drv_radio802154_energy_detected(int8_t result);
+extern void nrf_drv_radio802154_energy_detected(int8_t result);
 
 
 /**
@@ -297,6 +299,8 @@ int8_t nrf_drv_radio802154_rssi_last_get(void);
 /**
  * @brief Enable or disable promiscuous radio mode.
  *
+ * @note Promiscuous mode is disabled by default.
+ *
  * In promiscuous mode driver notifies higher layer that it received any frame (regardless
  * frame type or destination address).
  * In normal mode (not promiscuous) higher layer is not notified about ACK frames and frames with
@@ -316,11 +320,40 @@ bool nrf_drv_radio802154_promiscuous_get(void);
 
 
 /**
- * @section Setting pending bit in automatically transmitted ACK frames.
+ * @section Auto ACK management.
  */
 
 /**
+ * @brief Enable or disable auto ACK procedure.
+ *
+ * @note Auto ACK procedure is enabled by default.
+ *
+ * If auto ACK procedure is enabled the driver prepares and sends ACK frames automatically
+ * aTurnaroundTime (192 us) after proper frame is received. The driver sets sequence number in
+ * the ACK frame and pending bit according to auto pending bit feature settings. When auto ACK
+ * procedure is enabled the driver notifies the next higher layer about received frame after ACK
+ * frame is transmitted.
+ * If auto ACK procedure is disabled the driver does not transmit ACK frames. It notifies the next
+ * higher layer about received frame when a frame is received. In this mode the next higher layer
+ * is responsible for sending ACK frame. ACK frames should be sent using
+ * nrf_drv_radio802154_transmit() function.
+ *
+ * @param[in]  enabled  If auto ACK procedure should be enabled.
+ */
+void nrf_drv_radio802154_auto_ack_set(bool enabled);
+
+/**
+ * @brief Check if auto ACK procedure is enabled.
+ *
+ * @retval True   Auto ACK procedure is enabled.
+ * @retval False  Auto ACK procedure is disabled.
+ */
+bool nrf_drv_radio802154_auto_ack_get(void);
+
+/**
  * @brief Enable or disable setting pending bit in automatically transmitted ACK frames.
+ *
+ * @note Setting pending bit in automatically transmitted ACK frames is enabled by default.
  *
  * Radio driver automatically sends ACK frames in response to unicast frames destined to this node.
  * Pending bit in ACK frame can be set or cleared regarding data in pending buffer destined to ACK
@@ -372,4 +405,4 @@ void nrf_drv_radio802154_pending_bit_for_addr_reset(bool extended);
 }
 #endif
 
-#endif /* NRF_RADIO802154_H_ */
+#endif /* NRF_DRV_RADIO802154_H_ */

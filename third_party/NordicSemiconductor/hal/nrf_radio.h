@@ -318,6 +318,28 @@ __STATIC_INLINE void nrf_radio_shorts_disable(uint32_t radio_short_mask)
 }
 
 /**
+ * @brief Function for setting shortcuts.
+ *
+ * @param[in]  radio_short_mask             Mask of shortcuts.
+ *
+ */
+__STATIC_INLINE void nrf_radio_shorts_set(uint32_t radio_short_mask)
+{
+    NRF_RADIO->SHORTS = radio_short_mask;
+}
+
+/**
+ * @brief Function for getting shortcuts.
+ *
+ * @return  Mask of shortcuts.
+ *
+ */
+__STATIC_INLINE uint32_t nrf_radio_shorts_get(void)
+{
+    return NRF_RADIO->SHORTS;
+}
+
+/**
  * @brief Function for getting present state of the radio module.
  */
 __STATIC_INLINE nrf_radio_state_t nrf_radio_state_get(void)
