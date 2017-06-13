@@ -51,13 +51,15 @@
 
 otInstance *sInstance;
 
+void HAL_Init(void);
+
 void PlatformInit(int argc, char *argv[])
 {
     (void)argc;
     (void)argv;
 
     CHIP_Init();
-    efr32HalInit();
+    HAL_Init();
     BSP_Init(BSP_INIT_BCC);
 
     otPlatUartEnable();
@@ -142,7 +144,7 @@ void halInitChipSpecific(void)
     CMU_ClockEnable(cmuClock_CORELE, true);
 }
 
-void efr32HalInit(void)
+void HAL_Init(void)
 {
     halInitChipSpecific();
 }
