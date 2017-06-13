@@ -921,10 +921,10 @@ typedef struct otMacCounters
  */
 typedef struct otIpCounters
 {
-    uint32_t mTxSuccess;
-    uint32_t mRxSuccess;
-    uint32_t mTxFailure;
-    uint32_t mRxFailure;
+    uint32_t mTxSuccess;              ///< The number of IPv6 packets successfully transmitted.
+    uint32_t mRxSuccess;              ///< The number of IPv6 packets successfully received.
+    uint32_t mTxFailure;              ///< The number of IPv6 packets failed to transmit.
+    uint32_t mRxFailure;              ///< The number of IPv6 packets failed to receive.
 } otIpCounters;
 
 /**

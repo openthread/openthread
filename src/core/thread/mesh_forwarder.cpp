@@ -1614,6 +1614,15 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, otError aError)
     if (mMessageNextOffset >= mSendMessage->GetLength())
     {
         LogIp6Message(kMessageTransmit, *mSendMessage, &macDest, aError);
+
+        if (aError == OT_ERROR_NONE)
+        {
+            mIpCounters.mTxSuccess++;
+        }
+        else
+        {
+            mIpCounters.mTxFailure++;
+        }
     }
 
     if (mSendMessage->GetDirectTransmission() == false && mSendMessage->IsChildPending() == false)
@@ -2024,6 +2033,7 @@ void MeshForwarder::ClearReassemblyList(void)
         mReassemblyList.Dequeue(*message);
 
         LogIp6Message(kMessageDrop, *message, NULL, OT_ERROR_NO_FRAME_RECEIVED);
+        mIpCounters.mRxFailure++;
 
         message->Free();
     }
@@ -2053,6 +2063,7 @@ void MeshForwarder::HandleReassemblyTimer()
             mReassemblyList.Dequeue(*message);
 
             LogIp6Message(kMessageDrop, *message, NULL, OT_ERROR_REASSEMBLY_TIMEOUT);
+            mIpCounters.mRxFailure++;
 
             message->Free();
         }
@@ -2124,6 +2135,7 @@ otError MeshForwarder::HandleDatagram(Message &aMessage, const ThreadMessageInfo
                                       const Mac::Address &aMacSource)
 {
     LogIp6Message(kMessageReceive, aMessage, &aMacSource, OT_ERROR_NONE);
+    mIpCounters.mRxSuccess++;
 
     return mNetif.GetIp6().HandleDatagram(aMessage, &mNetif, mNetif.GetInterfaceId(), &aMessageInfo, false);
 }
@@ -2215,19 +2227,16 @@ void MeshForwarder::LogIp6Message(MessageAction aAction, const Message &aMessage
     {
     case kMessageReceive:
         actionText = "Received";
-        mIpCounters.mRxSuccess++;
         break;
 
     case kMessageTransmit:
         if (aError == OT_ERROR_NONE)
         {
             actionText = "Sent";
-            mIpCounters.mTxSuccess++;
         }
         else
         {
             actionText = "Failed to send";
-            mIpCounters.mTxFailure++;
         }
 
         break;
@@ -2239,7 +2248,6 @@ void MeshForwarder::LogIp6Message(MessageAction aAction, const Message &aMessage
 
     case kMessageDrop:
         actionText = "Dropping";
-        mIpCounters.mRxFailure++;
         break;
 
     default:
